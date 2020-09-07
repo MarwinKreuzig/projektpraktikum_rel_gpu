@@ -131,7 +131,7 @@ public:
 	}
 
 	void add_edge_weights(std::ifstream& file, const NeuronIdMap& neuron_id_map) {
-		struct { double x, y, z; } src_pos, tgt_pos;
+		struct { double x, y, z; } src_pos, tgt_pos = { 0, 0, 0 };
 		NeuronIdMap::RankNeuronId src_id, tgt_id;
 		std::string line;
 		bool ret, success;

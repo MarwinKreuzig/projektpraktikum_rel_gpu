@@ -80,6 +80,7 @@ void setSpecificParameters(Parameters& params, int argc, char** argv) {
 	params.accept_criterion = accept_criterion;             // CHANGE
 	params.naive_method = naive_method;                 // CHANGE
 	params.file_with_neuron_positions = (argc >= 6) ? argv[5] : "";
+	params.file_with_network = (argc >= 7) ? argv[6] : "";
 	params.seed_octree = strtol(argv[3], nullptr, 10);
 
 	/**
@@ -288,7 +289,7 @@ int main(int argc, char** argv) {
 	}
 
 	NeuronsInSubdomain* neurons_in_subdomain;
-	if (5 < argc) {  
+	if (5 < argc) {
 		// Neuron positions provided in file
 		std::ifstream file(params.file_with_neuron_positions);
 		neurons_in_subdomain = new SubdomainFromFile(params.num_neurons, file);
@@ -424,13 +425,9 @@ int main(int argc, char** argv) {
 	 */
 	NetworkGraph network_graph(partition.get_my_num_neurons());
 	// Neuronal connections provided in file
-	if (5 < argc) {
-		//std::ifstream file(params.file_with_network);
-		//network_graph.add_edge_weights(file, neuron_id_map);
-
-  //  	==TODO==
-  //  	define params.file_with_network
-		//Add synaptic elements based on network
+	if (6 < argc) {
+		std::ifstream file(params.file_with_network);
+		network_graph.add_edge_weights(file, neuron_id_map);
 	}
 	LogMessages::print_message_rank("Network graph created", 0);
 

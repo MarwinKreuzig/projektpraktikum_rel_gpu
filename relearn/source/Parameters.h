@@ -41,6 +41,7 @@ public:
 
 	// Input
 	std::string file_with_neuron_positions;  // Name of the file containing neuron positions as input for the simulation
+	std::string file_with_network;  // Name of the file containing neuron positions as input for the simulation
 
 	// Output
 	size_t num_log_files;         // Number of log files to create
