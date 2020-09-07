@@ -106,7 +106,7 @@ public:
 	 * Static function to get current time in string
 	 */
 	static std::string wall_clock_time() {
-#ifdef UNIX
+#ifdef __linux__ 
 		time_t rawtime;
 		struct tm* timeinfo;
 		char* string;
@@ -118,7 +118,7 @@ public:
 		// Remove linebreak in string
 		string[24] = '\0';
 
-		return std::string(char_buff);
+		return std::string(string);
 #else
 		time_t rawtime;
 		struct tm timeinfo;

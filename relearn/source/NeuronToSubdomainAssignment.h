@@ -37,7 +37,7 @@ protected:
 
 	double frac_neurons_exc_;
 
-	inline bool position_in_box(const Position& pos, const Position& box_min, const Position& box_max) const;
+	inline bool position_in_box(const Position& pos, const Position& box_min, const Position& box_max) const noexcept;
 
 public:
 	virtual ~NeuronsInSubdomain() {};
@@ -52,7 +52,7 @@ public:
 	}
 
 	// Ratio of EXCITATORY neurons
-	double ratio_neurons_exc() const;
+	double ratio_neurons_exc() const noexcept;
 
 	// Return number of neurons which have positions in the range [min, max) in every dimension
 	virtual size_t num_neurons(size_t subdomain_idx, size_t num_subdomains,
@@ -70,10 +70,6 @@ public:
 	// Return neurons which have positions in the range [min, max) in every dimension
 	virtual void neuron_area_names(size_t subdomain_idx, size_t num_subdomains,
 		const Position& min, const Position& max, std::vector<std::string>& areas) const;
-
-	// Return neurons which have positions in the range [min, max) in every dimension
-	virtual void neuron_area_names(size_t subdomain_idx, size_t num_subdomains,
-		const Position& min, const Position& max, std::vector<std::string>& areas) const = 0;
 };
 
 // This class fills every subdomain with neurons at

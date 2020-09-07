@@ -59,6 +59,8 @@ public:
 	LogFiles& operator=(LogFiles&& other) noexcept {
 		std::swap(num_files, other.num_files);
 		std::swap(files, other.files);
+
+		return *this;
 	}
 
 	// Take array with file name suffixes

@@ -126,6 +126,12 @@ public:
 
 	int rank;        // MPI rank of the owner
 	size_t neuron_id; // Neuron id on the owner
+
+	friend std::ostream& operator<< (std::ostream& os, const RankNeuronId& rni) {
+		os << "Rank: " << rni.rank << "\t id: " << rni.neuron_id << "\n";
+
+		return os;
+	}
 };
 
 

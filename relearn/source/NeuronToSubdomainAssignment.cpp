@@ -48,7 +48,7 @@ inline bool NeuronsInSubdomain::position_in_box(const Position& pos, const Posit
 		(pos.z >= box_min.z && pos.z < box_max.z));
 }
 
-inline double NeuronsInSubdomain::ratio_neurons_exc() const noexcept {
+double NeuronsInSubdomain::ratio_neurons_exc() const noexcept {
 	return frac_neurons_exc_;
 }
 
