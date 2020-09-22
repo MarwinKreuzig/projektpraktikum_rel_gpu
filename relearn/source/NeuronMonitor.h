@@ -52,7 +52,7 @@ public:
 		const double& calcium = neurons_to_monitor.calcium[target_neuron_id];
 		const double& x = neurons_to_monitor.neuron_models.x[target_neuron_id];
 		const bool& fired = neurons_to_monitor.neuron_models.fired[target_neuron_id] > 0;
-		const bool& refrac = neurons_to_monitor.neuron_models.refrac[target_neuron_id] > 0;
+		const bool& refrac = neurons_to_monitor.neuron_models.u[target_neuron_id] > 0;
 		const double& I_sync = neurons_to_monitor.neuron_models.I_syn[target_neuron_id];
 
 		const double& axons = neurons_to_monitor.axons.cnts[target_neuron_id];

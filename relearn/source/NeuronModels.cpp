@@ -9,29 +9,21 @@
 #include "MPIInfos.h"
 #include "Random.h"
 
-NeuronModels::NeuronModels(size_t num_neurons, double x_0, double tau_x, double k, double tau_C, double beta, int h, double refrac_time) :
-	my_num_neurons(num_neurons),
-	x_0(x_0),
-	tau_x(tau_x),
-	k(k),
-	tau_C(tau_C),
-	beta(beta),
-	refrac_time(refrac_time),
-	h(h),
-	x(num_neurons, 0),
-	fired(num_neurons, 0),
-	refrac(num_neurons, 0),
-	I_syn(num_neurons, 0),
-	random_number_distribution(0.0, nextafter(1.0, 2.0)), // Init random number distribution to [0,1]
-	random_number_generator(RandomHolder<NeuronModels>::get_random_generator()) {
-
-	// Init variables for my neurons only
-	for (size_t i = 0; i < my_num_neurons; i++) {
-		// Random init of the firing rate from interval [0,1]
-		x[i] = random_number_distribution(random_number_generator);
-		fired[i] = Theta(x[i]);
-		refrac[i] = static_cast<int>(fired[i] * refrac_time);
-	}
+NeuronModels::NeuronModels(size_t num_neurons, double x_0, double tau_x, double k, double tau_C, double beta, int h, double refrac_time)
+	: my_num_neurons(num_neurons),
+	  model{Models::Model_Ifc::create<Models::ModelA>(k, tau_C, beta, refrac_time)},
+	  // model{Models::Model_Ifc::create<Models::IzhikevichModel>()},
+	  // model{Models::Model_Ifc::create<Models::FitzHughNagumoModel>()},
+	  k(k),
+	  tau_C(tau_C),
+	  beta(beta),
+	  h(h),
+	  x(num_neurons, 0),
+	  fired(num_neurons, 0),
+	  u(num_neurons, 0),
+	  I_syn(num_neurons, 0)
+{
+	model->init_neurons(x, u, fired);
 }
 
 /* Performs one iteration step of update in electrical activity */
@@ -174,24 +166,12 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 
 	GlobalTimers::timers.start(TimerRegion::CALC_ACTIVITY);
 	// For my neurons
-	for (size_t i = 0; i < my_num_neurons; i++) {
-		for (int integration_steps = 0; integration_steps < h; integration_steps++) {
-			// Update the membrane potential
-			x[i] += (1 / static_cast<double>(h)) * ((x_0 - x[i]) / tau_x + I_syn[i]);
-		}
+	for (size_t i = 0; i < my_num_neurons; i++)
+	{
+		model->update_activity(x[i], u[i], I_syn[i], fired[i], static_cast<double>(h));
 
-		// Neuron ready to fire again
-		if (refrac[i] == 0) {
-			fired[i] = Theta(x[i]);             // Decide whether a neuron fires depending on its firing rate
-			refrac[i] = static_cast<int>(fired[i] * refrac_time);  // After having fired, a neuron is in a refractory state
-		}
-		// Neuron now/still in refractory state
-		else {
-			fired[i] = 0;  // Set neuron inactive
-			--refrac[i];   // Decrease refractory time
-		}
-
-		for (int integration_steps = 0; integration_steps < h; integration_steps++) {
+		for (int integration_steps = 0; integration_steps < h; integration_steps++)
+		{
 			// Update calcium depending on the firing
 			C[i] += (1 / (double)h) * (-C[i] / tau_C + beta * fired[i]);
 		}

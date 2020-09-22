@@ -13,10 +13,191 @@
 #include <algorithm>
 #include <vector>
 #include <mpi.h>
+#include <memory>
 #include "NetworkGraph.h"
 #include "MPIInfos.h"
 #include "LogMessages.h"
 #include "Timers.h"
+#include "Random.h"
+
+namespace Models
+{
+	class Model_Ifc
+	{
+	public:
+		virtual void update_activity(double &x, double &refrac, double &I_syn, unsigned short &fired, const double h) = 0;
+		virtual void init_neurons(std::vector<double> &x, std::vector<double> &refrac, std::vector<unsigned short> &fired) = 0;
+
+		template <typename T, typename... Ts>
+		[[nodiscard]] static std::unique_ptr<Model_Ifc> create(Ts... args) { return std::make_unique<T>(args...); }
+	};
+
+	class ModelA : public Model_Ifc
+	{
+	public:
+		ModelA(const double x_0, const double tau_x, const double k, const double refrac_time) : x_0{x_0}, tau_x{tau_x}, k{k}, refrac_time{refrac_time} {}
+
+		void update_activity(double &x, double &refrac, double &I_syn, unsigned short &fired, const double h) final
+		{
+			for (int integration_steps = 0; integration_steps < h; integration_steps++)
+			{
+				// Update the membrane potential
+				x += iter_x(x, I_syn) / h;
+			}
+
+			// Neuron ready to fire again
+			if (refrac == 0)
+			{
+				fired = static_cast<unsigned short>(theta(x));	   // Decide whether a neuron fires depending on its firing rate
+				refrac = static_cast<double>(fired * refrac_time); // After having fired, a neuron is in a refractory state
+			}
+			// Neuron now/still in refractory state
+			else
+			{
+				fired = 0; // Set neuron inactive
+				--refrac;  // Decrease refractory time
+			}
+		}
+
+		void init_neurons(std::vector<double> &x, std::vector<double> &refrac, std::vector<unsigned short> &fired) final
+		{
+			for (size_t i = 0; i < x.size(); ++i)
+			{
+				x[i] = random_number_distribution(random_number_generator);
+				fired[i] = static_cast<unsigned short>(theta(x[i]));
+				refrac[i] = static_cast<double>(fired[i]) * refrac_time;
+			}
+		}
+
+	private:
+		[[nodiscard]] double iter_x(const double x, const double I_syn) const { return ((x_0 - x) / tau_x + I_syn); }
+
+		[[nodiscard]] bool theta(const double x)
+		{
+			// 1: fire, 0: inactive
+			const double threshold = random_number_distribution(random_number_generator);
+			return x >= threshold;
+		}
+
+		double x_0;			// Background or resting activity
+		double tau_x;		// Decay time of firing rate in msec
+		double k;			// Proportionality factor for synapses in Hz
+		double refrac_time; // Length of refractory period in msec. After an action potential a neuron cannot fire for this time
+
+		// Random number generator for this class (C++11)
+		std::mt19937 &random_number_generator{RandomHolder<ModelA>::get_random_generator()};
+		// Random number distribution used together with "random_number_generator" (C++11)
+		// Uniform distribution for interval [0, 1]
+		std::uniform_real_distribution<double> random_number_distribution{0.0, nextafter(1.0, 2.0)};
+	};
+
+	class IzhikevichModel : public Model_Ifc
+	{
+	public:
+		explicit IzhikevichModel(const double k1 = 0.04, const double k2 = 5., const double k3 = 140., const double a = 0.1, const double b = 0.2, const double c = -65., const double d = 2.) : k1{k1}, k2{k2}, k3{k3}, a{a}, b{b}, c{c}, d{d} {}
+
+		void update_activity(double &x, double &refrac, double &I_syn, unsigned short &fired, const double h) final
+		{
+			// Update the membrane potential
+			// (1)
+			for (int integration_steps = 0; integration_steps < h; ++integration_steps)
+			{
+				x += iter_x(x, refrac, I_syn) / h;
+
+				refrac += iter_refrac(refrac, x) / h;
+
+				if (x >= 30.)
+					break;
+			}
+
+			// Neuron ready to fire again
+			// (2)
+			fired = static_cast<unsigned short>(x >= 30.);
+
+			if (static_cast<bool>(fired))
+			{
+				x = c;
+				refrac = refrac + d;
+			}
+		}
+
+		void init_neurons(std::vector<double> &x, std::vector<double> &refrac, std::vector<unsigned short> &fired) final
+		{
+			// Random number generator for this class (C++11)
+			std::mt19937 &random_number_generator{RandomHolder<IzhikevichModel>::get_random_generator()};
+			// Random number distribution used together with "random_number_generator" (C++11)
+			// Uniform distribution for interval [0, 1]
+			std::uniform_real_distribution<double> random_number_distribution{0.0, nextafter(1.0, 2.0)};
+
+			for (auto i = 0; i < x.size(); ++i)
+			{
+				x[i] = c - random_number_distribution(random_number_generator) * (-c + 35.);
+				refrac[i] = iter_refrac(b * c, x[i]);
+				fired[i] = static_cast<unsigned short>(x[i] >= 30.);
+			}
+		}
+
+	private:
+		[[nodiscard]] double iter_x(const double x, const double refrac, const double I_syn) const { return k1 * x * x + k2 * x + k3 - refrac + I_syn; }
+		[[nodiscard]] double iter_refrac(const double refrac, const double x) const { return a * (b * x - refrac); }
+
+		double k1;
+		double k2;
+		double k3;
+
+		double a; // time-scale of membrane recovery u
+		double b; // sensitivity of membrane recovery to membrane potential v (x)
+		double c; // after-spike reset value for membrane potential v (x)
+		double d; // after-spike reset of membrane recovery u
+	};
+
+	class FitzHughNagumoModel : public Model_Ifc
+	{
+	public:
+		explicit FitzHughNagumoModel(const double a = 0.7, const double b = 0.8, const double phi = 0.08) : a{a}, b{b}, phi{phi} {}
+
+		void update_activity(double &x, double &refrac, double &I_syn, unsigned short &fired, const double h) final
+		{
+			fired = 0;
+
+			// Update the membrane potential
+			for (int integration_steps = 0; integration_steps < h; ++integration_steps)
+			{
+				x += iter_x(x, refrac, I_syn) / h;
+
+				refrac += iter_refrac(refrac, x) / h;
+
+				if (x >= 1.8)
+					fired = 1;
+			}
+		}
+
+		void init_neurons(std::vector<double> &x, std::vector<double> &refrac, std::vector<unsigned short> &fired) final
+		{
+			// Random number generator for this class (C++11)
+			std::mt19937 &random_number_generator{RandomHolder<FitzHughNagumoModel>::get_random_generator()};
+			// Random number distribution used together with "random_number_generator" (C++11)
+			// Uniform distribution for interval [0, 1]
+			std::uniform_real_distribution<double> random_number_distribution{0.0, nextafter(1.0, 2.0)};
+
+			for (auto i = 0; i < x.size(); ++i)
+			{
+				x[i] = -1.2 - random_number_distribution(random_number_generator) * (1.2 + 1.8);
+				refrac[i] = iter_refrac(-.6, x[i]);
+				fired[i] = static_cast<unsigned short>(x[i] >= 1.8);
+			}
+		}
+
+	private:
+		[[nodiscard]] double iter_x(const double x, const double refrac, const double I_syn) const { return x - x * x * x / 3 - refrac + I_syn; }
+		[[nodiscard]] double iter_refrac(const double refrac, const double x) const { return phi * (x + a - b * refrac); };
+
+		double a;
+		double b;
+		double phi;
+	};
+
+} // namespace Models
 
 class NeuronMonitor;
 
@@ -30,7 +211,7 @@ public:
 	class FiringNeuronIds {
 	public:
 		// Return size
-		size_t size() const noexcept { return neuron_ids.size(); }
+		[[nodiscard]] size_t size() { return neuron_ids.size(); }
 
 		// Resize the number of neuron ids
 		void resize(size_t size) { neuron_ids.resize(size); }
@@ -49,17 +230,17 @@ public:
 		}
 
 		// Test if "neuron_id" exists
-		bool find(size_t neuron_id) const {
+		[[nodiscard]] bool find(size_t neuron_id) const {
 			return std::binary_search(neuron_ids.begin(), neuron_ids.end(), neuron_id);
 		}
 
 		// Get neuron id at index "neuron_id_index"
-		size_t get_neuron_id(size_t neuron_id_index) const noexcept { return neuron_ids[neuron_id_index]; }
+		[[nodiscard]] size_t get_neuron_id(size_t neuron_id_index) { return neuron_ids[neuron_id_index]; }
 
 		// Get pointer to data
-		size_t* get_neuron_ids() noexcept { return neuron_ids.data(); }
+		[[nodiscard]] size_t* get_neuron_ids() { return neuron_ids.data(); }
 
-		size_t get_neuron_ids_size_in_bytes() const noexcept { return neuron_ids.size() * sizeof(size_t); }
+		[[nodiscard]] size_t  get_neuron_ids_size_in_bytes() { return neuron_ids.size() * sizeof(size_t); }
 
 	private:
 		std::vector<size_t> neuron_ids;  // Firing neuron ids
@@ -70,9 +251,10 @@ public:
 	 * Map of (MPI rank; FiringNeuronIds)
 	 * The MPI rank specifies the corresponding process
 	 */
-	typedef std::map<int, FiringNeuronIds> MapFiringNeuronIds;
+	using MapFiringNeuronIds = std::map<int, FiringNeuronIds>;
 
 	NeuronModels(size_t num_neurons, double x_0, double tau_x, double k, double tau_C, double beta, int h, double refrac_time);
+	NeuronModels(size_t num_neurons, double k, double tau_C, double beta, int h, std::unique_ptr<Models::Model_Ifc> model);
 
 public:
 	~NeuronModels() = default;
@@ -99,59 +281,46 @@ public:
 	//}
 	NeuronModels& operator=(NeuronModels&& other) = default;
 
-	double get_beta() const noexcept {
+	[[nodiscard]] double get_beta() const noexcept {
 		return beta;
 	}
 
-	int get_fired(size_t i) const noexcept {
-		return fired[i];
+	[[nodiscard]] bool get_fired(size_t i) const {
+		return static_cast<bool>(fired[i]);
 	}
 
-	double get_x(size_t i) const noexcept {
-		return this->x[i];
+	[[nodiscard]] double get_x(size_t i) const {
+		return x[i];
 	}
 
-	const std::vector<double>& get_x() const noexcept {
+	[[nodiscard]] const std::vector<double>& get_x() const noexcept {
 		return x;
 	}
 
-	int get_refrac(size_t i) const noexcept {
-		return refrac[i];
+	[[nodiscard]] int get_refrac(size_t i) const {
+		return u[i];
 	}
 
 	/* Performs one iteration step of update in electrical activity */
 	void update_electrical_activity(const NetworkGraph& network_graph, std::vector<double>& C);
 
 private:
-	int Theta(double x) {
-		// 1: fire, 0: inactive
-		const double threshold = random_number_distribution(random_number_generator);
-		return (x >= threshold);
-	}
-
 	// My local number of neurons
 	size_t my_num_neurons;
 
-	// Model parameters for all neurons
-	double x_0;         // Background or resting activity
-	double tau_x;       // Decay time of firing rate in msec
+	std::unique_ptr<Models::Model_Ifc> model;
+
+	// // Model parameters for all neurons
 	double k;           // Proportionality factor for synapses in Hz
 	double tau_C;       // Decay time of calcium
 	double beta;        // Increase in calcium each time a neuron fires
-	double refrac_time; // Length of refractory period in msec. After an action potential a neuron cannot fire for this time
 	int    h;           // Precision for Euler integration
 
-	// Variables for each neuron where the array index denotes the neuron ID
-	std::vector<double> x;      // Firing rate in Hz
-	std::vector<int> fired;  // 1: neuron has fired, 0: neuron is inactive
-	std::vector<int> refrac; // Remaining refractory time, prevents neurons from firing, 0: neuron can fire, >0: neuron cannot fire
-	std::vector<double> I_syn;  // Synaptic input
-
-	// Randpm number generator for this class (C++11)
-	std::mt19937& random_number_generator;
-	// Random number distribution used together with "random_number_generator" (C++11)
-	// Uniform distribution for interval [0, 1]
-	std::uniform_real_distribution<double> random_number_distribution;
+	// // Variables for each neuron where the array index denotes the neuron ID
+	std::vector<double> x;			   // membrane potential v
+	std::vector<double> u;			   // membrane recovery u
+	std::vector<unsigned short> fired; // 1: neuron has fired, 0: neuron is inactive
+	std::vector<double> I_syn;		   // Synaptic input
 };
 
 #endif	/* NEURONMODELS_H */
