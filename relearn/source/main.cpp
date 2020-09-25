@@ -9,6 +9,7 @@
 #include <errno.h>
 
 #include <iostream>
+#include <locale>
 #include <mpi.h>
 
 #include "Timers.h"
@@ -28,6 +29,7 @@
 #include "NeuronToSubdomainAssignment.h"
 #include "NeuronIdMap.h"
 #include "Utility.h"
+#include "NeuronMonitor.h"
 
 
 struct RMABufferOctreeNodes {
@@ -43,12 +45,12 @@ void setDefaultParameters(Parameters& params) noexcept {
 	params.tau_C = 10000; //5000;   //very old 60.0;
 	params.beta = 0.001;  //very old 0.05;
 	params.h = 10;
-	params.C_target = 0.7; // gold 0.5;
+	params.C_target = 0.5; // gold 0.5;
 	params.refrac_time = 4.0;
-	params.eta_A = 0.4; //0.4; // gold 0.0;
-	params.eta_D_ex = 0.1; //0.1, // gold 0.0;
+	params.eta_A = 0; //0.4; // gold 0.0;
+	params.eta_D_ex = 0; //0.1, // gold 0.0;
 	params.eta_D_in = 0.0;
-	params.nu = 1e-5; // gold 1e-5; // element growth rate
+	params.nu = 1e-4; // gold 1e-5; // element growth rate
 	params.vacant_retract_ratio = 0;
 	params.sigma = 750.0;
 	params.num_log_files = 9;  // NOT USED
@@ -236,6 +238,43 @@ void printTimers(const MPI_RMA_MemAllocator<OctreeNode>& mpi_rma_mem_allocator) 
 		MPI_Type_free(&mpi_datatype_3_double);
 		MPI_Op_free(&mpi_op);
 	}
+}
+
+void printNeuronMonitor(const NeuronMonitor& nm, size_t neuron_id) {
+	std::ofstream outfile(std::to_string(neuron_id) + ".csv", std::ios::trunc);
+	outfile << std::setprecision(5);
+
+	outfile.imbue(std::locale("German_germany"));
+
+	outfile << "Step;Fired;Refrac;x;Ca;I_sync;axons;axons_connected;dendrites_exc;dendrites_exc_connected;dendrites_inh;dendrites_inh_connected";
+	outfile << "\n";
+
+	const auto& infos = nm.get_informations();
+
+	const auto filler = ";";
+	const auto width = 6;
+
+	auto ctr = 0;
+
+	for (auto& info : infos) {
+		outfile << ctr << filler;
+		outfile << /*std::setw(width) <<*/ info.fired << filler;
+		outfile << /*std::setw(width) <<*/ info.refrac << filler;
+		outfile << /*std::setw(width) <<*/ info.x << filler;
+		outfile << /*std::setw(width) <<*/ info.calcium << filler;
+		outfile << /*std::setw(width) <<*/ info.I_sync << filler;
+		outfile << /*std::setw(width) <<*/ info.axons << filler;
+		outfile << /*std::setw(width) <<*/ info.axons_connected << filler;
+		outfile << /*std::setw(width) <<*/ info.dendrites_exc << filler;
+		outfile << /*std::setw(width) <<*/ info.dendrites_exc_connected << filler;
+		outfile << /*std::setw(width) <<*/ info.dendrites_inh << filler;
+		outfile << /*std::setw(width) <<*/ info.dendrites_inh_connected << "\n";
+
+		ctr++;
+	}
+
+	outfile.flush();
+	outfile.close();
 }
 
 int main(int argc, char** argv) {
@@ -441,6 +480,17 @@ int main(int argc, char** argv) {
 	uint64_t total_creations = 0;
 	uint64_t total_deletions = 0;
 
+	const auto step_monitor = 100;
+
+	NeuronMonitor::max_steps = params.simulation_time / step_monitor;
+	NeuronMonitor::current_step = 0;
+
+	std::vector<NeuronMonitor> monitors;
+
+	for (size_t i = 0; i < 1; i++) {
+		monitors.emplace_back(i, neurons);
+	}
+
 	// Start timing simulation loop
 	GlobalTimers::timers.start(TimerRegion::SIMULATION_LOOP);
 
@@ -448,6 +498,14 @@ int main(int argc, char** argv) {
 	 * Simulation loop
 	 */
 	for (size_t step = 1; step <= params.simulation_time; step++) {
+
+		if (step % step_monitor == 0) {
+			for (auto& mn : monitors) {
+				mn.record_data();
+			}
+
+			NeuronMonitor::current_step++;
+		}
 
 		// Provide neuronal network to neuron models for one iteration step
 		GlobalTimers::timers.start(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
@@ -460,10 +518,10 @@ int main(int argc, char** argv) {
 		neurons.update_number_synaptic_elements_delta();
 		GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
 
-		if (0 == MPIInfos::my_rank && step % 50 == 0) {
-			std::cout << "** STATE AFTER: " << step << " of " << params.simulation_time
-				<< " msec ** [" << Timers::wall_clock_time() << "]\n";
-		}
+		//if (0 == MPIInfos::my_rank && step % 50 == 0) {
+		//	std::cout << "** STATE AFTER: " << step << " of " << params.simulation_time
+		//		<< " msec ** [" << Timers::wall_clock_time() << "]\n";
+		//}
 
 		// Update connectivity every 100 ms
 		if (step % 100 == 0) {
@@ -523,6 +581,9 @@ int main(int argc, char** argv) {
 
 	// Stop timing simulation loop
 	GlobalTimers::timers.stop_and_add(TimerRegion::SIMULATION_LOOP);
+
+	for (auto& monitor : monitors)
+		printNeuronMonitor(monitor, monitor.get_target_id());
 
 	neurons.print_network_graph_to_log_file(Logs::get("network_rank_" + MPIInfos::my_rank_str), network_graph,
 		params, neuron_id_map);

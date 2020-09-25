@@ -78,15 +78,15 @@ public:
 
 private:
 
-	inline void set_bit(uint64_t& variable, uint8_t bit) const noexcept {
+	 void set_bit(uint64_t& variable, uint8_t bit) const noexcept {
 		variable |= (static_cast<uint64_t>(1) << bit);
 	}
 
-	inline void unset_bit(uint64_t& variable, uint8_t bit) const noexcept {
+	 void unset_bit(uint64_t& variable, uint8_t bit) const noexcept {
 		variable &= ~(static_cast<uint64_t>(1) << bit);
 	}
 
-	inline void copy_bit(const uint64_t& source, uint8_t source_bit, uint64_t& destination, uint8_t destination_bit) const noexcept {
+	 void copy_bit(const uint64_t& source, uint8_t source_bit, uint64_t& destination, uint8_t destination_bit) const noexcept {
 		// Not sure if this is correct and how it works.
 		// That's why I provide a simpler solution below.
 		// Please feel free to use your version if it's correct.
@@ -101,7 +101,7 @@ private:
 		}
 	}
 
-	inline uint64_t select_bit(uint64_t number, uint8_t bit) const noexcept {
+	 uint64_t select_bit(uint64_t number, uint8_t bit) const noexcept {
 		return ((number & (static_cast<uint64_t>(1) << bit)) >> bit);
 	}
 

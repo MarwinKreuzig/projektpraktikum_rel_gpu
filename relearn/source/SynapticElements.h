@@ -14,7 +14,10 @@
 #include <cmath>
 #include "MPIInfos.h"
 
+class NeuronMonitor;
+
 class SynapticElements {
+	friend class NeuronMonitor;
 
 public:
 	enum ElementType : int { AXON = 0, DENDRITE = 1 };
@@ -50,7 +53,7 @@ public:
 	 * 1. Delete vacant elements
 	 * 2. Delete bound elements
 	 */
-	inline unsigned int update_number_elements(size_t neuron_id) {
+	unsigned int update_number_elements(size_t neuron_id) {
 		assert(neuron_id < size);
 		assert(cnts[neuron_id] >= 0);
 		assert(connected_cnts[neuron_id] >= 0);
@@ -108,10 +111,7 @@ public:
 		for (size_t i = 0; i < this->size; ++i) {
 			const auto inc = gaussian_growth_curve(calcium[i], min_C_level_to_grow, C_target, nu);
 			delta_cnts[i] += inc;
-			//std::cout << delta_cnts[i] << " ";
 		}
-		//std::cout << std::endl;
-		//std::cout << __func__ << "...[OK]" << std::endl;
 	}
 
 private:

@@ -416,7 +416,7 @@ private:
 	 */
 	OctreeNode* select_subinterval(const ProbabilitySubintervalList& list);
 
-	inline bool node_is_local(const OctreeNode& node) noexcept {
+	 bool node_is_local(const OctreeNode& node) noexcept {
 		return node.rank == MPIInfos::my_rank;
 	}
 

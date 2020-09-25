@@ -35,12 +35,12 @@ public:
 		return Vec3d{ x_dims[idx], y_dims[idx], z_dims[idx] };
 	}
 
-	inline void set_x(size_t neuron_id, double x) noexcept { x_dims[neuron_id] = x; };
-	inline void set_y(size_t neuron_id, double y) noexcept { y_dims[neuron_id] = y; };
-	inline void set_z(size_t neuron_id, double z) noexcept { z_dims[neuron_id] = z; };
-	inline double get_x(size_t neuron_id) const noexcept { return x_dims[neuron_id]; };
-	inline double get_y(size_t neuron_id) const noexcept { return y_dims[neuron_id]; };
-	inline double get_z(size_t neuron_id) const noexcept { return z_dims[neuron_id]; };
+	 void set_x(size_t neuron_id, double x) noexcept { x_dims[neuron_id] = x; };
+	 void set_y(size_t neuron_id, double y) noexcept { y_dims[neuron_id] = y; };
+	 void set_z(size_t neuron_id, double z) noexcept { z_dims[neuron_id] = z; };
+	 double get_x(size_t neuron_id) const noexcept { return x_dims[neuron_id]; };
+	 double get_y(size_t neuron_id) const noexcept { return y_dims[neuron_id]; };
+	 double get_z(size_t neuron_id) const noexcept { return z_dims[neuron_id]; };
 
 private:
 	size_t size;

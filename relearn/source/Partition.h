@@ -301,15 +301,15 @@ public:
 		}
 	}
 
-	inline size_t get_my_num_neurons() const noexcept {
+	 size_t get_my_num_neurons() const noexcept {
 		return my_num_neurons;
 	}
 
-	inline size_t get_my_num_subdomains() const noexcept {
+	 size_t get_my_num_subdomains() const noexcept {
 		return my_num_subdomains;
 	}
 
-	inline void get_simulation_box_size(Vec3d& min, Vec3d& max) const noexcept {
+	 void get_simulation_box_size(Vec3d& min, Vec3d& max) const noexcept {
 		min = Vec3d(0);
 		max = Vec3d(simulation_box_length);
 	}
@@ -320,19 +320,19 @@ public:
 		return subdomains[subdomain_id].octree;
 	}
 
-	inline size_t get_my_subdomain_id_start() const noexcept {
+	 size_t get_my_subdomain_id_start() const noexcept {
 		return my_subdomain_id_start;
 	}
 
-	inline size_t get_my_subdomain_id_end() const noexcept {
+	 size_t get_my_subdomain_id_end() const noexcept {
 		return my_subdomain_id_end;
 	}
 
-	inline size_t get_level_of_subdomain_trees() const noexcept {
+	 size_t get_level_of_subdomain_trees() const noexcept {
 		return level_of_subdomain_trees;
 	}
 
-	inline size_t get_total_num_subdomains() const noexcept {
+	 size_t get_total_num_subdomains() const noexcept {
 		return total_num_subdomains;
 	}
 

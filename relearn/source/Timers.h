@@ -76,22 +76,22 @@ public:
 
 	size_t get_num_timers() const noexcept { return num_timers; }
 
-	inline void start(size_t timer_id) noexcept {
+	 void start(size_t timer_id) noexcept {
 		assert(timer_id < num_timers);
 		time_start[timer_id] = high_resolution_clock::now();
 	}
 
-	inline void stop(size_t timer_id) noexcept {
+	 void stop(size_t timer_id) noexcept {
 		assert(timer_id < num_timers);
 		time_stop[timer_id] = high_resolution_clock::now();
 	}
 
-	inline void stop_and_add(size_t timer_id) noexcept {
+	 void stop_and_add(size_t timer_id) noexcept {
 		stop(timer_id);
 		add_start_stop_diff_to_elapsed(timer_id);
 	}
 
-	inline void add_start_stop_diff_to_elapsed(size_t timer_id) noexcept {
+	 void add_start_stop_diff_to_elapsed(size_t timer_id) noexcept {
 		assert(timer_id < num_timers);
 		time_elapsed[timer_id] += duration_cast<duration<double>>(time_stop[timer_id] - time_start[timer_id]);
 	}

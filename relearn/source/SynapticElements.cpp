@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <cstdlib>
 
-
 SynapticElements::SynapticElements(ElementType type, size_t s, double min_C_level_to_grow, double C_target, double nu, double vacant_retract_ratio) :
 	type(type),
 	size(s),
@@ -24,7 +23,7 @@ SynapticElements::SynapticElements(ElementType type, size_t s, double min_C_leve
 
 	// Init num elements to 0
 	for (size_t i = 0; i < size; i++) {
-		cnts[i] = 2;
+		cnts[i] = 0;
 		connected_cnts[i] = 0;
 		delta_cnts[i] = 0;
 	}

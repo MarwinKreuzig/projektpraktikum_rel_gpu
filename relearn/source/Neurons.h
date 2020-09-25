@@ -37,6 +37,7 @@
   * are outside of the class Neurons so that the class Octree can use them                          *
   ***************************************************************************************************/
 
+class NeuronMonitor;
 
   // Types
 typedef SynapticElements Axons;
@@ -111,6 +112,8 @@ typedef std::map<int, SynapseCreationRequests> MapSynapseCreationRequests;
 
 
 class Neurons {
+	friend class NeuronMonitor;
+
 	/**
 	 * Identifies a neuron by the MPI rank of its owner
 	 * and its neuron id on the owner, i.e., the pair <rank, neuron_id>
@@ -267,6 +270,7 @@ public:
 		const MPI_Win& mpi_window,
 		const Partition& partition,
 		size_t& num_synapses_deleted, size_t& num_synapses_created) {
+
 		delete_synapses(num_synapses_deleted, network_graph);
 		create_synapses(num_synapses_created, mpi_window, local_trees, partition, rma_buffer_branch_nodes, num_rma_buffer_branch_nodes, global_tree, network_graph);
 	}
