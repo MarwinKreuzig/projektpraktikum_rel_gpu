@@ -2,7 +2,7 @@
 #define UTILITY_H
 
 namespace Util {
-	inline int num_digits(int val) {
+	constexpr inline int num_digits(int val) noexcept {
 		int num_digits = 0;
 
 		do {

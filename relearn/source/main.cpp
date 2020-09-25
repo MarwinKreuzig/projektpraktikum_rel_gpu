@@ -29,17 +29,13 @@
 #include "NeuronIdMap.h"
 #include "Utility.h"
 
-// Types
-typedef SynapticElements Axons;
-typedef SynapticElements DendritesExc;
-typedef SynapticElements DendritesInh;
 
 struct RMABufferOctreeNodes {
 	OctreeNode* ptr;
 	size_t num_nodes;
 };
 
-void setDefaultParameters(Parameters& params) {
+void setDefaultParameters(Parameters& params) noexcept {
 	params.frac_neurons_exc = 0.8;                          // CHANGE
 	params.x_0 = 0.05;
 	params.tau_x = 5.0;
@@ -99,7 +95,7 @@ void setSpecificParameters(Parameters& params, int argc, char** argv) {
 
 	// Number of ranks must be 2^n so that
 	// the connectivity update works correctly
-	std::bitset<sizeof(int) * 8> bitset_num_ranks(MPIInfos::num_ranks);
+	const std::bitset<sizeof(int) * 8> bitset_num_ranks(MPIInfos::num_ranks);
 	if (1 != bitset_num_ranks.count() && (0 == MPIInfos::my_rank)) {
 		sstring << __FUNCTION__ << ": Number of ranks must be of the form 2^n";
 		LogMessages::print_error(sstring.str().c_str());
@@ -108,7 +104,7 @@ void setSpecificParameters(Parameters& params, int argc, char** argv) {
 	}
 }
 
-void printTimers(MPI_RMA_MemAllocator<OctreeNode>& mpi_rma_mem_allocator) {
+void printTimers(const MPI_RMA_MemAllocator<OctreeNode>& mpi_rma_mem_allocator) {
 	using namespace std;
 	/**
 	 * Print timers and memory usage
@@ -122,7 +118,7 @@ void printTimers(MPI_RMA_MemAllocator<OctreeNode>& mpi_rma_mem_allocator) {
 	MPI_Type_contiguous(3, MPI_DOUBLE, &mpi_datatype_3_double);
 	MPI_Type_commit(&mpi_datatype_3_double);
 
-	double timers_local[3 * TimerRegion::NUM_TIMER_REGIONS];
+	double timers_local[3 * TimerRegion::NUM_TIMER_REGIONS] = { 0.0 };
 	for (int i = 0; i < TimerRegion::NUM_TIMER_REGIONS; ++i) {
 		for (int j = 0; j < 3; ++j) {
 			timers_local[3 * i + j] = GlobalTimers::timers.get_elapsed(i);
@@ -150,7 +146,7 @@ void printTimers(MPI_RMA_MemAllocator<OctreeNode>& mpi_rma_mem_allocator) {
 
 	if (0 == MPIInfos::my_rank) {
 		// Set precision for aligned double output
-		int old_precision = (int)cout.precision();
+		const auto old_precision = cout.precision();
 		cout.precision(6);
 
 		cout << "\n======== TIMERS GLOBAL OVER ALL RANKS ========" << endl;
@@ -288,7 +284,7 @@ int main(int argc, char** argv) {
 		sstring.str("");
 	}
 
-	NeuronsInSubdomain* neurons_in_subdomain;
+	NeuronsInSubdomain* neurons_in_subdomain = nullptr;
 	if (5 < argc) {
 		// Neuron positions provided in file
 		std::ifstream file(params.file_with_neuron_positions);
@@ -299,7 +295,7 @@ int main(int argc, char** argv) {
 	}
 
 	// Set parameter based on actual neuron population
-	params.frac_neurons_exc = neurons_in_subdomain->ratio_neurons_exc();
+	params.frac_neurons_exc = neurons_in_subdomain->desired_ratio_neurons_exc();
 
 	if (0 == MPIInfos::my_rank) {
 		std::cout << params << std::endl;
@@ -320,8 +316,7 @@ int main(int argc, char** argv) {
 	/**
 	 * Calculate what my partition of the domain consist of
 	 */
-	Partition partition(params.num_neurons, MPIInfos::num_ranks, MPIInfos::my_rank,
-		mpi_rma_mem_allocator, *neurons_in_subdomain);
+	Partition partition(params.num_neurons, MPIInfos::num_ranks, MPIInfos::my_rank, mpi_rma_mem_allocator, *neurons_in_subdomain);
 	partition.print_my_subdomains_info_rank(0);
 
 	// Check if int type can contain total size of branch nodes to receive in bytes
@@ -360,7 +355,7 @@ int main(int argc, char** argv) {
 	/**
 	 * Create neuron population
 	 */
-	Neurons<NeuronModels, Axons, DendritesExc, DendritesInh> neurons(partition.get_my_num_neurons(), params);
+	Neurons/*<NeuronModels, Axons, DendritesExc, DendritesInh>*/ neurons(partition.get_my_num_neurons(), params);
 	LogMessages::print_message_rank("Neurons created", 0);
 
 	/**********************************************************************************/
@@ -443,8 +438,8 @@ int main(int argc, char** argv) {
 
 	GlobalTimers::timers.stop_and_add(TimerRegion::INITIALIZATION);
 
-	auto total_creations = 0.0;
-	auto total_deletions = 0.0;
+	uint64_t total_creations = 0;
+	uint64_t total_deletions = 0;
 
 	// Start timing simulation loop
 	GlobalTimers::timers.start(TimerRegion::SIMULATION_LOOP);
@@ -472,8 +467,8 @@ int main(int argc, char** argv) {
 
 		// Update connectivity every 100 ms
 		if (step % 100 == 0) {
-			size_t num_synapses_deleted, num_synapses_created;
-			num_synapses_deleted = num_synapses_created = 0;
+			size_t num_synapses_deleted = 0;
+			size_t num_synapses_created = 0;
 
 			if (0 == MPIInfos::my_rank) {
 				std::cout << "** UPDATE CONNECTIVITY AFTER: " << step << " of " << params.simulation_time
@@ -495,16 +490,16 @@ int main(int argc, char** argv) {
 			GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_CONNECTIVITY);
 
 			// Get total number of synapses deleted and created
-			double cnts_local[2] = { (double)num_synapses_deleted, (double)num_synapses_created };
-			double cnts_global[2];
+			const uint64_t cnts_local[2] = { static_cast<uint64_t>(num_synapses_deleted), static_cast<uint64_t>(num_synapses_created) };
+			uint64_t cnts_global[2];
 
-			MPI_Reduce(cnts_local, cnts_global, 2, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+			MPI_Reduce(cnts_local, cnts_global, 2, MPI_UINT64_T, MPI_SUM, 0, MPI_COMM_WORLD);
 
 			if (0 == MPIInfos::my_rank) {
 				std::cout << "\n";
 
-				total_deletions += cnts_global[0];
-				total_creations += cnts_global[1];
+				total_deletions += cnts_global[0] / 2;
+				total_creations += cnts_global[1] / 2;
 			}
 			sstring << "Sum (all processes) number synapses deleted: " << cnts_global[0] / 2;
 			LogMessages::print_message_rank(sstring.str().c_str(), 0);

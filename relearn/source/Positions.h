@@ -12,21 +12,35 @@
 #include <random>
 #include <iostream>
 
+#include "Vec3.h"
+
 class Positions {
 
 public:
 	Positions(size_t);
 	~Positions();
 
-	double* get_x_dims() const { return x_dims; };
-	double* get_y_dims() const { return y_dims; };
-	double* get_z_dims() const { return z_dims; };
-	inline void set_x(size_t neuron_id, double x) { x_dims[neuron_id] = x; };
-	inline void set_y(size_t neuron_id, double y) { y_dims[neuron_id] = y; };
-	inline void set_z(size_t neuron_id, double z) { z_dims[neuron_id] = z; };
-	inline double get_x(size_t neuron_id) { return x_dims[neuron_id]; };
-	inline double get_y(size_t neuron_id) { return y_dims[neuron_id]; };
-	inline double get_z(size_t neuron_id) { return z_dims[neuron_id]; };
+	Positions(const Positions& other) = delete;
+	Positions(Positions&& other) = delete;
+
+	Positions& operator = (const Positions& other) = delete;
+	Positions& operator = (Positions&& other) = delete;
+
+	double* get_x_dims() const noexcept { return x_dims; };
+	double* get_y_dims() const noexcept { return y_dims; };
+	double* get_z_dims() const noexcept { return z_dims; };
+
+	Vec3d get_position(size_t idx) const noexcept {
+		assert(idx < size && "Idx must be smaller than size in Positions");
+		return Vec3d{ x_dims[idx], y_dims[idx], z_dims[idx] };
+	}
+
+	inline void set_x(size_t neuron_id, double x) noexcept { x_dims[neuron_id] = x; };
+	inline void set_y(size_t neuron_id, double y) noexcept { y_dims[neuron_id] = y; };
+	inline void set_z(size_t neuron_id, double z) noexcept { z_dims[neuron_id] = z; };
+	inline double get_x(size_t neuron_id) const noexcept { return x_dims[neuron_id]; };
+	inline double get_y(size_t neuron_id) const noexcept { return y_dims[neuron_id]; };
+	inline double get_z(size_t neuron_id) const noexcept { return z_dims[neuron_id]; };
 
 private:
 	size_t size;

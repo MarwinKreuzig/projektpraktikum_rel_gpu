@@ -13,8 +13,14 @@
 
 class OctreeNode {
 public:
-	OctreeNode();
-	~OctreeNode();
+	OctreeNode() noexcept;
+	~OctreeNode() noexcept;
+
+	OctreeNode(const OctreeNode& other) = default;
+	OctreeNode(OctreeNode&& other) = default;
+
+	OctreeNode& operator = (const OctreeNode & other) = default;
+	OctreeNode& operator = (OctreeNode && other) = default;
 
 	void print() const;
 

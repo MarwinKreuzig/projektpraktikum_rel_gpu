@@ -31,7 +31,7 @@ NeuronIdMap::NeuronIdMap(size_t my_num_neurons,
 }
 
 bool NeuronIdMap::rank_neuron_id2glob_id(const RankNeuronId&
-	rank_neuron_id, size_t& glob_id) const {
+	rank_neuron_id, size_t& glob_id) const noexcept {
 	// Rank is not valid
 	if (rank_neuron_id.rank < 0 ||
 		rank_neuron_id.rank > rank_to_start_neuron_id.size() - 1)
@@ -60,7 +60,7 @@ bool NeuronIdMap::pos2rank_neuron_id(double x, double y, double z,
 void NeuronIdMap::create_rank_to_start_neuron_id_mapping(
 	const std::vector<size_t>& rank_to_num_neurons,
 	std::vector<size_t>& rank_to_start_neuron_id) {
-	size_t num_ranks = rank_to_num_neurons.size();
+	const size_t num_ranks = rank_to_num_neurons.size();
 	rank_to_start_neuron_id.resize(num_ranks);
 
 	// Store global start neuron id of every rank
@@ -81,13 +81,12 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 	MPI_Comm_size(mpi_comm, &num_ranks);
 	MPI_Comm_rank(mpi_comm, &my_rank);
 
-	size_t total_num_neurons = rank_to_start_neuron_id[(long long)num_ranks - 1] + rank_to_num_neurons[(long long)num_ranks - 1];
+	const size_t total_num_neurons = rank_to_start_neuron_id[static_cast<long long>(num_ranks) - 1] + rank_to_num_neurons[static_cast<long long>(num_ranks) - 1];
 	std::vector<double> xyz_pos(total_num_neurons * 3);
 
 	// Copy my neuron positions as xyz-triple into the send buffer
-	size_t idx;
 	for (size_t i = 0; i < my_num_neurons; i++) {
-		idx = (rank_to_start_neuron_id[my_rank] + i) * 3;
+		auto idx = (rank_to_start_neuron_id[my_rank] + i) * 3;
 		assert(idx < total_num_neurons * 3);
 
 		xyz_pos[idx] = x[i];
@@ -111,7 +110,7 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 	}
 
 	// Receive all neuron positions as xyz-triples
-	MPI_Allgatherv(MPI_IN_PLACE, (int)total_num_neurons, type,
+	MPI_Allgatherv(MPI_IN_PLACE, static_cast<int>(total_num_neurons), type,
 		xyz_pos.data(), recvcounts.data(),
 		displs.data(), type, mpi_comm);
 
@@ -119,20 +118,16 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 
 	// Map every neuron position to one (rank, neuron_id) pair
 	size_t glob_neuron_id = 0;
-	Position key;
-	RankNeuronId val;
 	for (int rank = 0; rank < num_ranks; rank++) {
+		RankNeuronId val;
 		val.rank = rank;
 		for (size_t neuron_id = 0; neuron_id < rank_to_num_neurons[rank]; neuron_id++) {
 			assert(glob_neuron_id < total_num_neurons);
 
-			idx = glob_neuron_id * 3;
+			const auto idx = glob_neuron_id * 3;
 
 			assert(idx < xyz_pos.size());
-			key.x = xyz_pos[idx];
-			key.y = xyz_pos[idx + 1];
-			key.z = xyz_pos[idx + 2];
-
+			Position key{ xyz_pos[idx], xyz_pos[idx + 1], xyz_pos[idx + 2] };
 			val.neuron_id = neuron_id;
 
 			auto ret = pos_to_rank_neuron_id.insert(std::make_pair(key, val));

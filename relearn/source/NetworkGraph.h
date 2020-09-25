@@ -13,6 +13,7 @@
 #include <cassert>
 #include <sstream>
 
+#include "Vec3.h"
 #include "MPIInfos.h"
 #include "LogMessages.h"
 #include "NeuronIdMap.h"
@@ -46,12 +47,12 @@ public:
 	}
 
 	// Return in edges of neuron "neuron_id"
-	const Edges& get_in_edges(size_t neuron_id) const {
+	const Edges& get_in_edges(size_t neuron_id) const noexcept {
 		return neuron_neighborhood[neuron_id].in_edges;
 	}
 
 	// Return out edges of neuron "neuron_id"
-	const Edges& get_out_edges(size_t neuron_id) const {
+	const Edges& get_out_edges(size_t neuron_id) const noexcept {
 		return neuron_neighborhood[neuron_id].out_edges;
 	}
 
@@ -64,11 +65,10 @@ public:
 	void add_edge_weight(size_t target_neuron_id, int target_rank,
 		size_t source_neuron_id, int source_rank,
 		int weight) {
-		EdgesKey rank_neuron_id_pair;
-		int sum;
 
 		// Target neuron is mine
 		if (target_rank == MPIInfos::my_rank) {
+			EdgesKey rank_neuron_id_pair;
 			rank_neuron_id_pair.first = source_rank;
 			rank_neuron_id_pair.second = source_neuron_id;
 
@@ -78,7 +78,7 @@ public:
 			// Edge found
 			if (it_in_edge != in_edges.end()) {
 				// Current edge weight + additional weight
-				sum = it_in_edge->second + weight;
+				const auto sum = it_in_edge->second + weight;
 
 				// Edge weight becomes 0, so delete edge
 				if (0 == sum) {
@@ -100,6 +100,7 @@ public:
 
 		// Source neuron is mine
 		if (source_rank == MPIInfos::my_rank) {
+			EdgesKey rank_neuron_id_pair;
 			rank_neuron_id_pair.first = target_rank;
 			rank_neuron_id_pair.second = target_neuron_id;
 
@@ -109,7 +110,7 @@ public:
 			// Edge found
 			if (it_out_edge != out_edges.end()) {
 				// Current edge weight + additional weight
-				sum = it_out_edge->second + weight;
+				const auto sum = it_out_edge->second + weight;
 
 				// Edge weight becomes 0, so delete edge
 				if (0 == sum) {
@@ -131,10 +132,13 @@ public:
 	}
 
 	void add_edge_weights(std::ifstream& file, const NeuronIdMap& neuron_id_map) {
-		struct { double x, y, z; } src_pos, tgt_pos = { 0, 0, 0 };
-		NeuronIdMap::RankNeuronId src_id, tgt_id;
+		Vec3d src_pos{ 0.0 };
+		Vec3d tgt_pos{ 0.0 };
+		NeuronIdMap::RankNeuronId src_id{ 0 };
+		NeuronIdMap::RankNeuronId tgt_id{ 0 };
 		std::string line;
-		bool ret, success;
+		bool ret = false;
+		bool success = false;
 
 		while (std::getline(file, line)) {
 			// Skip line with comments
@@ -169,9 +173,7 @@ public:
 
 	// Print network using global neuron ids
 	void print(std::ostream& os, const NeuronIdMap& neuron_id_map) const {
-		bool ret;
-		size_t glob_tgt, glob_src;
-		NeuronIdMap::RankNeuronId rank_neuron_id;
+
 
 		// For my neurons
 		for (size_t target_neuron_id = my_neuron_id_start; target_neuron_id <= my_neuron_id_end; target_neuron_id++) {
@@ -179,14 +181,18 @@ public:
 			const NetworkGraph::Edges& in_edges = get_in_edges(target_neuron_id);
 			NetworkGraph::Edges::const_iterator it_in_edge;
 
+			NeuronIdMap::RankNeuronId rank_neuron_id;
 			rank_neuron_id.rank = MPIInfos::my_rank;
 			rank_neuron_id.neuron_id = target_neuron_id;
-			ret = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id, glob_tgt);
+			size_t glob_tgt = 0;
+
+			auto ret = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id, glob_tgt);
 			assert(ret);
 			for (it_in_edge = in_edges.begin(); it_in_edge != in_edges.end(); ++it_in_edge) {
 				rank_neuron_id.rank = it_in_edge->first.first;        // src rank
 				rank_neuron_id.neuron_id = it_in_edge->first.second;  // src neuron id
-
+				
+				size_t glob_src = 0;
 				ret = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id, glob_src);
 				assert(ret);
 

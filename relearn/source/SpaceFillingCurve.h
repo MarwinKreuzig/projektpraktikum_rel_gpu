@@ -18,14 +18,20 @@ using BoxCoordinates = Vec3<uint64_t>;
 
 class Morton {
 public:
-	Morton()
+	Morton() noexcept
 		: refinement_level(0) {
 	}
 
-	~Morton() {
+	~Morton() noexcept {
 	}
 
-	void map_1d_to_3d(uint64_t idx, BoxCoordinates& coords) const {
+	Morton(const Morton& other) = delete;
+	Morton(Morton&& other) = delete;
+
+	Morton& operator=(const Morton& other) = delete;
+	Morton& operator=(Morton&& other) = delete;
+
+	void map_1d_to_3d(uint64_t idx, BoxCoordinates& coords) const noexcept {
 		// clear coordinates
 		coords.x = coords.y = coords.z = 0;
 
@@ -47,11 +53,11 @@ public:
 		}
 	}
 
-	uint64_t map_3d_to_1d(const BoxCoordinates& coords) const {
+	uint64_t map_3d_to_1d(const BoxCoordinates& coords) const noexcept {
 		uint64_t result = 0;
 		for (size_t i = 0; i < refinement_level; ++i) {
 			uint64_t block = 0;
-			uint8_t short_i = (uint8_t)i;
+			const uint8_t short_i = static_cast<uint8_t>(i);
 			block = ((select_bit(coords.z, short_i) << 2)
 				+ (select_bit(coords.y, short_i) << 1)
 				+ (select_bit(coords.x, short_i)));
@@ -62,31 +68,31 @@ public:
 		return result;
 	}
 
-	size_t get_refinement_level() const {
+	size_t get_refinement_level() const noexcept {
 		return this->refinement_level;
 	}
 
-	void set_refinement_level(size_t refinement_level) {
+	void set_refinement_level(size_t refinement_level) noexcept {
 		this->refinement_level = refinement_level;
 	}
 
 private:
 
-	inline void set_bit(uint64_t& variable, uint8_t bit) const {
+	inline void set_bit(uint64_t& variable, uint8_t bit) const noexcept {
 		variable |= (static_cast<uint64_t>(1) << bit);
 	}
 
-	inline void unset_bit(uint64_t& variable, uint8_t bit) const {
+	inline void unset_bit(uint64_t& variable, uint8_t bit) const noexcept {
 		variable &= ~(static_cast<uint64_t>(1) << bit);
 	}
 
-	inline void copy_bit(uint64_t& source, uint8_t source_bit, uint64_t& destination, uint8_t destination_bit) const {
+	inline void copy_bit(const uint64_t& source, uint8_t source_bit, uint64_t& destination, uint8_t destination_bit) const noexcept {
 		// Not sure if this is correct and how it works.
 		// That's why I provide a simpler solution below.
 		// Please feel free to use your version if it's correct.
 		//destination ^= (-select_bit(source, source_bit) ^ destination) & (1 << destination_bit);
 
-		uint64_t bit_in_source = select_bit(source, source_bit);
+		const uint64_t bit_in_source = select_bit(source, source_bit);
 		if (1 == bit_in_source) {
 			set_bit(destination, destination_bit);
 		}
@@ -95,8 +101,8 @@ private:
 		}
 	}
 
-	inline uint64_t select_bit(uint64_t number, uint8_t bit) const {
-		return ((number & ((uint64_t)1 << bit)) >> bit);
+	inline uint64_t select_bit(uint64_t number, uint8_t bit) const noexcept {
+		return ((number & (static_cast<uint64_t>(1) << bit)) >> bit);
 	}
 
 	size_t refinement_level;
@@ -106,22 +112,28 @@ template<class T>
 class SpaceFillingCurve {
 public:
 
-	SpaceFillingCurve() {
+	SpaceFillingCurve() noexcept {
 		set_refinement_level(0);
-	};
+	}
 
 	SpaceFillingCurve(uint8_t refinement_level) {
 		set_refinement_level(refinement_level);
 	}
 
-	~SpaceFillingCurve() {
-	};
+	SpaceFillingCurve(const SpaceFillingCurve& other) = delete;
+	SpaceFillingCurve(SpaceFillingCurve&& other) = delete;
+
+	SpaceFillingCurve& operator = (const SpaceFillingCurve & other) = delete;
+	SpaceFillingCurve& operator = (SpaceFillingCurve && other) = delete;
+
+	~SpaceFillingCurve() noexcept {
+	}
 
 	size_t get_refinement_level() const {
 		return curve.get_refinement_level();
 	}
 
-	void set_refinement_level(size_t num_subdivisions) {
+	void set_refinement_level(size_t num_subdivisions) noexcept{
 		// With 64-bit keys we can only support 20 subdivisions per
 		// dimension (i.e, 2^20 boxes per dimension)
 		assert(num_subdivisions <= 20);
@@ -129,7 +141,7 @@ public:
 		curve.set_refinement_level(num_subdivisions);
 	}
 
-	void map_1d_to_3d(uint64_t idx, BoxCoordinates& coords) {
+	void map_1d_to_3d(uint64_t idx, BoxCoordinates& coords) noexcept {
 		curve.map_1d_to_3d(idx, coords);
 	}
 

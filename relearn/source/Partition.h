@@ -38,7 +38,9 @@ public:
 		size_t neuron_id_end;
 
 		size_t index_1d;
-		size_t index_3d[3];  // [0] = x, [1] = y, [2] = z
+		//size_t index_3d[3];  // [0] = x, [1] = y, [2] = z
+
+		Vec3<size_t> index_3d;
 
 		// The octree contains all neurons in
 		// this subdomain. It is only used as a container
@@ -56,8 +58,6 @@ public:
 		my_rank(my_rank),
 		mpi_rma_mem_allocator(mpi_rma_mem_allocator),
 		random_number_generator(RandomHolder<Partition>::get_random_generator()) {
-		std::stringstream sstream;
-		size_t rest;
 
 		// Init seed of random number generator
 		random_number_generator.seed(randomNumberSeeds::partition);
@@ -68,7 +68,7 @@ public:
 		 * Total number of subdomains is smallest power of 8 that is >= num_ranks.
 		 * We choose power of 8 as every domain subdivision creates 8 subdomains (in 3d).
 		 */
-		size_t k = (size_t)ceil(log(num_ranks) / log(8.));
+		const size_t k = static_cast<size_t>(ceil(log(num_ranks) / log(8.)));
 		total_num_subdomains = 1ull << (3 * k); // 8^k
 		level_of_subdomain_trees = k;
 
@@ -90,6 +90,7 @@ public:
 		/**
 		 * Output all parameters calculated so far
 		 */
+		std::stringstream sstream;
 		sstream << "Simulation box length          : " << simulation_box_length << " (height = width = depth)";
 		LogMessages::print_message_rank(sstream.str().c_str(), 0);
 		sstream.str("");
@@ -118,8 +119,14 @@ public:
 		 * For #procs = 2^n and 8^k subdomains, every proc's #subdomains is the same power of two of {1, 2, 4}.
 		 */
 		my_num_subdomains = total_num_subdomains / num_ranks;
-		rest = total_num_subdomains % num_ranks;
+		const size_t rest = total_num_subdomains % num_ranks;
 		my_num_subdomains += (my_rank < rest) ? 1 : 0;
+
+		if (rest != 0) {
+			sstream << "My rank is: " << my_rank << "; There are " << num_ranks << " ranks in total; The rest is: " << rest << "\n";
+			std::cout << sstream.str().c_str() << std::flush;
+			sstream.str("");
+		}
 
 		// Calc start and end index of subdomain
 		my_subdomain_id_start = (total_num_subdomains / num_ranks) * my_rank;
@@ -135,36 +142,35 @@ public:
 		BoxCoordinates box_coords;
 		my_num_neurons = 0;
 		for (size_t i = 0; i < my_num_subdomains; i++) {
+			auto& current_subdomain = subdomains[i];
+
 			// Set space filling curve indices in 1d and 3d
-			subdomains[i].index_1d = my_subdomain_id_start + i;
-			space_curve.map_1d_to_3d((uint64_t)subdomains[i].index_1d, box_coords);
-			subdomains[i].index_3d[0] = box_coords.x;
-			subdomains[i].index_3d[1] = box_coords.y;
-			subdomains[i].index_3d[2] = box_coords.z;
+			current_subdomain.index_1d = my_subdomain_id_start + i;
+			space_curve.map_1d_to_3d(static_cast<uint64_t>(current_subdomain.index_1d), box_coords);
+			current_subdomain.index_3d = box_coords;
 
 			// Set position of subdomain
-			for (int j = 0; j < 3; j++) {
-				subdomains[i].xyz_min[j] = subdomains[i].index_3d[j] * subdomain_length;
-				subdomains[i].xyz_max[j] = subdomains[i].xyz_min[j] + subdomain_length;
-			}
+			neurons_in_subdomain.get_subdomain_boundaries(current_subdomain.index_3d,
+				num_subdomains_per_dimension, current_subdomain.xyz_min, current_subdomain.xyz_max);
 
 			// Set number of neurons in this subdomain
-			NeuronsInSubdomain::Position xyz_min =
-			{ subdomains[i].xyz_min[0], subdomains[i].xyz_min[1], subdomains[i].xyz_min[2] };
-			NeuronsInSubdomain::Position xyz_max =
-			{ subdomains[i].xyz_max[0], subdomains[i].xyz_max[1], subdomains[i].xyz_max[2] };
+			const auto& xyz_min = current_subdomain.xyz_min;
+			const auto& xyz_max = current_subdomain.xyz_max;
 
-			subdomains[i].num_neurons =
-				neurons_in_subdomain.num_neurons(subdomains[i].index_1d,
+			neurons_in_subdomain.lazily_fill(current_subdomain.index_1d,
+				total_num_subdomains, xyz_min, xyz_max);
+
+			current_subdomain.num_neurons =
+				neurons_in_subdomain.num_neurons(current_subdomain.index_1d,
 					total_num_subdomains, xyz_min, xyz_max);
 
 			// Add subdomain's number of neurons to rank's number of neurons
-			my_num_neurons += subdomains[i].num_neurons;
+			my_num_neurons += current_subdomain.num_neurons;
 
 			// Set start and end of local neuron ids
 			// 0-th subdomain starts with neuron id 0
-			subdomains[i].neuron_id_start = (i == 0) ? 0 : (subdomains[i - 1].neuron_id_end + 1);
-			subdomains[i].neuron_id_end = subdomains[i].neuron_id_start + subdomains[i].num_neurons - 1;
+			current_subdomain.neuron_id_start = (i == 0) ? 0 : (subdomains[i - 1].neuron_id_end + 1);
+			current_subdomain.neuron_id_end = current_subdomain.neuron_id_start + current_subdomain.num_neurons - 1;
 
 			/**
 			 * Set octree parameters.
@@ -172,25 +178,31 @@ public:
 			 * inserting neurons into the tree
 			 */
 			 // Init domain size
-			subdomains[i].octree.set_size(subdomains[i].xyz_min, subdomains[i].xyz_max);
+			current_subdomain.octree.set_size(current_subdomain.xyz_min, current_subdomain.xyz_max);
 			// Set tree's root level
 			// It determines later at which level this
 			// local tree will be inserted into the global tree
-			subdomains[i].octree.set_root_level(level_of_subdomain_trees);
+			current_subdomain.octree.set_root_level(level_of_subdomain_trees);
 
 			// Tree's destructor should not free the tree nodes
 			// The freeing is done by the global tree destructor later
 			// as the nodes in this tree will be attached to the global tree
-			subdomains[i].octree.set_no_free_in_destructor();
+			current_subdomain.octree.set_no_free_in_destructor();
 
 			// Provide MPI RMA memory allocator
-			subdomains[i].octree.set_mpi_rma_mem_allocator(&mpi_rma_mem_allocator);
+			current_subdomain.octree.set_mpi_rma_mem_allocator(&mpi_rma_mem_allocator);
 		}
 	}
 
 	~Partition() {
 		delete[] subdomains;
 	}
+
+	Partition(const Partition& other) = delete;
+	Partition(Partition&& other) = delete;
+
+	Partition& operator=(const Partition& other) = delete;
+	Partition& operator=(Partition&& other) = delete;
 
 	void print_my_subdomains_info_rank(int rank) {
 		std::stringstream sstream;
@@ -252,14 +264,8 @@ public:
 		Positions& neuron_positions, SynapticElements& axons,
 		std::vector<std::string>& area_names) {
 		for (size_t i = 0; i < my_num_subdomains; i++) {
-			NeuronsInSubdomain::Position subdomain_pos_min, subdomain_pos_max;
-			subdomain_pos_min.x = subdomains[i].xyz_min[0];
-			subdomain_pos_min.y = subdomains[i].xyz_min[1];
-			subdomain_pos_min.z = subdomains[i].xyz_min[2];
-
-			subdomain_pos_max.x = subdomains[i].xyz_max[0];
-			subdomain_pos_max.y = subdomains[i].xyz_max[1];
-			subdomain_pos_max.z = subdomains[i].xyz_max[2];
+			const auto subdomain_pos_min = subdomains[i].xyz_min;
+			const auto subdomain_pos_max = subdomains[i].xyz_max;
 
 			// Get neuron positions in subdomain i
 			std::vector<NeuronsInSubdomain::Position> vec_pos;
@@ -288,7 +294,7 @@ public:
 				axons.set_signal_type(neuron_id, vec_type[j]);
 
 				// Insert neuron into tree
-				subdomains[i].octree.insert(vec_pos[j].x, vec_pos[j].y, vec_pos[j].z, neuron_id, my_rank);
+				subdomains[i].octree.insert({ vec_pos[j].x, vec_pos[j].y, vec_pos[j].z }, neuron_id, my_rank);
 
 				neuron_id++;
 			}
@@ -308,7 +314,7 @@ public:
 		max = Vec3d(simulation_box_length);
 	}
 
-	Octree& get_subdomain_tree(size_t subdomain_id) {
+	Octree& get_subdomain_tree(size_t subdomain_id) noexcept {
 		assert(subdomain_id < my_num_subdomains);
 
 		return subdomains[subdomain_id].octree;

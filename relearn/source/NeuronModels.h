@@ -25,7 +25,7 @@ public:
 	class FiringNeuronIds {
 	public:
 		// Return size
-		size_t size() { return neuron_ids.size(); }
+		size_t size() const noexcept { return neuron_ids.size(); }
 
 		// Resize the number of neuron ids
 		void resize(size_t size) { neuron_ids.resize(size); }
@@ -37,7 +37,8 @@ public:
 		// That is they must be sorted. Otherwise, behavior is undefined.
 		void append_if_not_found_sorted(size_t neuron_id) {
 			// Neuron id not included yet
-			if (!std::binary_search(neuron_ids.begin(), neuron_ids.end(), neuron_id)) {
+			const bool found = find(neuron_id);
+			if (!found) {
 				neuron_ids.push_back(neuron_id);
 			}
 		}
@@ -48,12 +49,12 @@ public:
 		}
 
 		// Get neuron id at index "neuron_id_index"
-		size_t get_neuron_id(size_t neuron_id_index) { return neuron_ids[neuron_id_index]; }
+		size_t get_neuron_id(size_t neuron_id_index) const noexcept { return neuron_ids[neuron_id_index]; }
 
 		// Get pointer to data
-		size_t* get_neuron_ids() { return neuron_ids.data(); }
+		size_t* get_neuron_ids() noexcept { return neuron_ids.data(); }
 
-		size_t  get_neuron_ids_size_in_bytes() { return neuron_ids.size() * sizeof(size_t); }
+		size_t get_neuron_ids_size_in_bytes() const noexcept { return neuron_ids.size() * sizeof(size_t); }
 
 	private:
 		std::vector<size_t> neuron_ids;  // Firing neuron ids
@@ -66,53 +67,47 @@ public:
 	 */
 	typedef std::map<int, FiringNeuronIds> MapFiringNeuronIds;
 
-
 	NeuronModels(size_t num_neurons, double x_0, double tau_x, double k, double tau_C, double beta, int h, double refrac_time);
-
-	// No copy constructor and no assignment operator are available
-	NeuronModels(const NeuronModels&) = delete;
-	NeuronModels& operator=(const NeuronModels&) = delete;
 
 public:
 	~NeuronModels();
 
-	double get_beta() {
+	NeuronModels(const NeuronModels& other) = delete;
+	NeuronModels& operator=(const NeuronModels& other) = delete;
+
+	NeuronModels(NeuronModels&& other) = delete;
+	NeuronModels& operator=(NeuronModels&& other) = delete;
+
+	double get_beta() const noexcept {
 		return beta;
 	}
 
-	int get_fired(size_t i) {
+	int get_fired(size_t i) const noexcept {
 		return fired[i];
 	}
 
-	double get_x(size_t i) {
+	double get_x(size_t i) const noexcept {
 		return this->x[i];
 	}
 
-	const double* get_x() {
+	const double* get_x() const noexcept {
 		return x;
 	}
 
-	int get_refrac(size_t i) {
+	int get_refrac(size_t i) const noexcept {
 		return refrac[i];
 	}
 
 	/* Performs one iteration step of update in electrical activity */
-	void update_electrical_activity(NetworkGraph& network_graph, double* C) {
-		MapFiringNeuronIds map_firing_neuron_ids_outgoing, map_firing_neuron_ids_incoming;
-		typename MapFiringNeuronIds::iterator map_it;
-		std::vector<size_t> num_firing_neuron_ids_for_ranks(MPIInfos::num_ranks, 0);
-		std::vector<size_t> num_firing_neuron_ids_from_ranks(MPIInfos::num_ranks, 112233);
-		size_t neuron_id, num_neuron_ids, target_neuron_id;
-		int mpi_requests_index, rank, target_rank, size_in_bytes;
-		void* buffer;
-
+	void update_electrical_activity(const NetworkGraph& network_graph, double* C) {
+		MapFiringNeuronIds map_firing_neuron_ids_outgoing;
 		/**
 		 * Check which of my neurons fired and determine which ranks need to know about it.
 		 * That is, they contain the neurons connecting the axons of my firing neurons.
 		 */
 		GlobalTimers::timers.start(TimerRegion::PREPARE_SENDING_SPIKES);
 		// For my neurons
-		for (neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
+		for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
 			// My neuron fired
 			if (fired[neuron_id]) {
 				const NetworkGraph::Edges& out_edges = network_graph.get_out_edges(neuron_id);
@@ -121,8 +116,8 @@ public:
 				// Find all target neurons which should receive the signal fired.
 				// That is, neurons which connect axons from neuron "neuron_id"
 				for (it_out_edge = out_edges.begin(); it_out_edge != out_edges.end(); ++it_out_edge) {
-					target_neuron_id = it_out_edge->first.second;
-					target_rank = it_out_edge->first.first;
+					//target_neuron_id = it_out_edge->first.second;
+					auto target_rank = it_out_edge->first.first;
 
 					// Don't send firing neuron id to myself as I already have this info
 					if (target_rank != MPIInfos::my_rank) {
@@ -141,10 +136,13 @@ public:
 		 * Send to every rank the number of firing neuron ids it should prepare for from me.
 		 * Likewise, receive the number of firing neuron ids that I should prepare for from every rank.
 		 */
-		 // Fill vector with my number of firing neuron ids for every rank (excluding me)
-		for (map_it = map_firing_neuron_ids_outgoing.begin(); map_it != map_firing_neuron_ids_outgoing.end(); ++map_it) {
-			rank = map_it->first;
-			num_neuron_ids = (map_it->second).size();
+		std::vector<size_t> num_firing_neuron_ids_for_ranks(MPIInfos::num_ranks, 0);
+		std::vector<size_t> num_firing_neuron_ids_from_ranks(MPIInfos::num_ranks, 112233);
+
+		// Fill vector with my number of firing neuron ids for every rank (excluding me)
+		for (auto map_it = map_firing_neuron_ids_outgoing.begin(); map_it != map_firing_neuron_ids_outgoing.end(); ++map_it) {
+			auto rank = map_it->first;
+			auto num_neuron_ids = (map_it->second).size();
 
 			num_firing_neuron_ids_for_ranks[rank] = num_neuron_ids;
 		}
@@ -152,16 +150,17 @@ public:
 
 		GlobalTimers::timers.start(TimerRegion::ALL_TO_ALL);
 		// Send and receive the number of firing neuron ids
-		MPI_Alltoall((char*)num_firing_neuron_ids_for_ranks.data(), sizeof(size_t), MPI_CHAR,
-			(char*)num_firing_neuron_ids_from_ranks.data(), sizeof(size_t), MPI_CHAR,
+		MPI_Alltoall(num_firing_neuron_ids_for_ranks.data(), sizeof(size_t), MPI_CHAR,
+			num_firing_neuron_ids_from_ranks.data(), sizeof(size_t), MPI_CHAR,
 			MPI_COMM_WORLD);
 		GlobalTimers::timers.stop_and_add(TimerRegion::ALL_TO_ALL);
 
 		GlobalTimers::timers.start(TimerRegion::ALLOC_MEM_FOR_NEURON_IDS);
 		// Now I know how many neuron ids I will get from every rank.
 		// Allocate memory for all incoming neuron ids.
-		for (rank = 0; rank < MPIInfos::num_ranks; ++rank) {
-			num_neuron_ids = num_firing_neuron_ids_from_ranks[rank];
+		MapFiringNeuronIds map_firing_neuron_ids_incoming;
+		for (auto rank = 0; rank < MPIInfos::num_ranks; ++rank) {
+			auto num_neuron_ids = num_firing_neuron_ids_from_ranks[rank];
 			if (0 != num_neuron_ids) { // Only create key-value pair in map for "rank" if necessary
 				map_firing_neuron_ids_incoming[rank].resize(num_neuron_ids);
 			}
@@ -175,22 +174,23 @@ public:
 		/**
 		 * Send and receive actual neuron ids
 		 */
-		mpi_requests_index = 0;
+		auto mpi_requests_index = 0;
 
 		// Receive actual neuron ids
-		for (map_it = map_firing_neuron_ids_incoming.begin(); map_it != map_firing_neuron_ids_incoming.end(); ++map_it) {
-			rank = map_it->first;
-			buffer = (map_it->second).get_neuron_ids();
-			size_in_bytes = (int)((map_it->second).get_neuron_ids_size_in_bytes());
+		for (auto map_it = map_firing_neuron_ids_incoming.begin(); map_it != map_firing_neuron_ids_incoming.end(); ++map_it) {
+			auto rank = map_it->first;
+			auto buffer = (map_it->second).get_neuron_ids();
+			const auto size_in_bytes = static_cast<int>((map_it->second).get_neuron_ids_size_in_bytes());
 
 			MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 			++mpi_requests_index;
 		}
+
 		// Send actual neuron ids
-		for (map_it = map_firing_neuron_ids_outgoing.begin(); map_it != map_firing_neuron_ids_outgoing.end(); ++map_it) {
-			rank = map_it->first;
-			buffer = (map_it->second).get_neuron_ids();
-			size_in_bytes = (int)((map_it->second).get_neuron_ids_size_in_bytes());
+		for (auto map_it = map_firing_neuron_ids_outgoing.begin(); map_it != map_firing_neuron_ids_outgoing.end(); ++map_it) {
+			auto rank = map_it->first;
+			const auto buffer = (map_it->second).get_neuron_ids();
+			const auto size_in_bytes = static_cast<int>((map_it->second).get_neuron_ids_size_in_bytes());
 
 			MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 			++mpi_requests_index;
@@ -208,9 +208,7 @@ public:
 		 */
 		GlobalTimers::timers.start(TimerRegion::CALC_SYNAPTIC_INPUT);
 		// For my neurons
-		int spike;
-		size_t src_neuron_id;
-		for (neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
+		for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
 			I_syn[neuron_id] = 0.0;
 
 			/**
@@ -221,9 +219,10 @@ public:
 			NetworkGraph::Edges::const_iterator it_in_edge;
 
 			for (it_in_edge = in_edges.begin(); it_in_edge != in_edges.end(); ++it_in_edge) {
-				rank = it_in_edge->first.first;
-				src_neuron_id = it_in_edge->first.second;
+				auto rank = it_in_edge->first.first;
+				auto src_neuron_id = it_in_edge->first.second;
 
+				int spike = 0;
 				if (rank == MPIInfos::my_rank) {
 					spike = fired[src_neuron_id];
 				}
@@ -231,7 +230,7 @@ public:
 					MapFiringNeuronIds::const_iterator it = map_firing_neuron_ids_incoming.find(rank);
 					spike = (it != map_firing_neuron_ids_incoming.end()) && (it->second.find(src_neuron_id));
 				}
-				I_syn[neuron_id] += k * (it_in_edge->second) * (double)spike;
+				I_syn[neuron_id] += k * (it_in_edge->second) * static_cast<double>(spike);
 			}
 		}
 		GlobalTimers::timers.stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
@@ -241,7 +240,7 @@ public:
 		for (size_t i = 0; i < my_num_neurons; i++) {
 			for (int integration_steps = 0; integration_steps < h; integration_steps++) {
 				// Update the membrane potential
-				x[i] += (1 / (double)h) * ((x_0 - x[i]) / tau_x + I_syn[i]);
+				x[i] += (1 / static_cast<double>(h)) * ((x_0 - x[i]) / tau_x + I_syn[i]);
 			}
 
 			// Neuron ready to fire again

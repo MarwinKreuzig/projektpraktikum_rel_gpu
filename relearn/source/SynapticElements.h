@@ -21,19 +21,26 @@ public:
 	enum SignalType : int { EXCITATORY = 0, INHIBITORY = 1 };
 
 	SynapticElements(ElementType, size_t, double, double, double, double);
+
+	SynapticElements(const SynapticElements& other) = delete;
+	SynapticElements(SynapticElements&& other) = delete;
+
+	SynapticElements& operator = (const SynapticElements& other) = delete;
+	SynapticElements& operator = (SynapticElements&& other) = delete;
+
 	~SynapticElements();
 
-	double* get_cnts() const { return cnts; }
-	double* get_connected_cnts() const { return connected_cnts; }
-	double* get_delta_cnts() const { return delta_cnts; }
-	SignalType* get_signal_types() { return signal_types; }
+	double* get_cnts() const noexcept { return cnts; }
+	double* get_connected_cnts() const noexcept { return connected_cnts; }
+	double* get_delta_cnts() const noexcept { return delta_cnts; }
+	SignalType* get_signal_types() noexcept { return signal_types; }
 
-	double get_cnt(size_t neuron_id) { return cnts[neuron_id]; }
-	double get_connected_cnt(size_t neuron_id) { return connected_cnts[neuron_id]; }
-	double get_delta_cnt(size_t neuron_id) { return delta_cnts[neuron_id]; }
-	enum SignalType get_signal_type(size_t neuron_id) { return signal_types[neuron_id]; }
-	void set_signal_type(size_t neuron_id, SignalType signal_type) { signal_types[neuron_id] = signal_type; }
-	ElementType get_element_type() { return type; }
+	double get_cnt(size_t neuron_id) const noexcept { return cnts[neuron_id]; }
+	double get_connected_cnt(size_t neuron_id) const noexcept { return connected_cnts[neuron_id]; }
+	double get_delta_cnt(size_t neuron_id) const noexcept { return delta_cnts[neuron_id]; }
+	enum SignalType get_signal_type(size_t neuron_id) const noexcept { return signal_types[neuron_id]; }
+	void set_signal_type(size_t neuron_id, SignalType signal_type) noexcept { signal_types[neuron_id] = signal_type; }
+	ElementType get_element_type() const noexcept { return type; }
 
 	/**
 	 * Updates the number of synaptic elements for neuron "neuron_id"
@@ -49,12 +56,10 @@ public:
 		assert(connected_cnts[neuron_id] >= 0);
 		assert(cnts[neuron_id] >= connected_cnts[neuron_id]);
 
-		double num_vacant, num_vacant_plus_delta;
-		double connected_cnt_old, connected_cnt_floor;
-		unsigned int num_delete_connected;
+		unsigned int num_delete_connected = 0;
 
-		num_vacant = cnts[neuron_id] - connected_cnts[neuron_id];
-		num_vacant_plus_delta = num_vacant + delta_cnts[neuron_id];
+		double num_vacant = cnts[neuron_id] - connected_cnts[neuron_id];
+		const double num_vacant_plus_delta = num_vacant + delta_cnts[neuron_id];
 
 		// No deletion of bound synaptic elements required
 		if (num_vacant_plus_delta >= 0) {
@@ -63,7 +68,7 @@ public:
 		}
 		// Delete bound synaptic elements if available
 		else {
-			connected_cnt_old = connected_cnts[neuron_id];
+			const double connected_cnt_old = connected_cnts[neuron_id];
 
 			/**
 			 * More bound elements should be deleted than are available.
@@ -75,7 +80,7 @@ public:
 			}
 			else {
 				connected_cnts[neuron_id] += num_vacant_plus_delta;             // Result is >= 0
-				connected_cnt_floor = floor(connected_cnts[neuron_id]);  // Round down for integer value
+				const double connected_cnt_floor = floor(connected_cnts[neuron_id]);  // Round down for integer value
 				num_vacant = connected_cnts[neuron_id] - connected_cnt_floor;   // Amount lost by rounding down
 				assert(num_vacant >= 0);
 
@@ -98,14 +103,10 @@ public:
 		return num_delete_connected;
 	}
 
-	void update_number_elements_delta(double* calcium) {
-		double inc;
-
-		//std::cout << __func__ << ": ";
-
+	void update_number_elements_delta(const double* const calcium) noexcept {
 		// For my neurons
 		for (size_t i = 0; i < this->size; ++i) {
-			inc = gaussian_growth_curve(calcium[i], min_C_level_to_grow, C_target, nu);
+			const auto inc = gaussian_growth_curve(calcium[i], min_C_level_to_grow, C_target, nu);
 			delta_cnts[i] += inc;
 			//std::cout << delta_cnts[i] << " ";
 		}
@@ -114,7 +115,7 @@ public:
 	}
 
 private:
-	double gaussian_growth_curve(double Ca, double eta, double epsilon, double growth_rate) {
+	double gaussian_growth_curve(double Ca, double eta, double epsilon, double growth_rate) const noexcept {
 		/**
 		 * gaussian_growth_curve generates a gaussian curve that is compressed by
 		 * growth-factor nu and intersects the x-axis at
@@ -123,15 +124,10 @@ private:
 		 * See Butz and van Ooyen, 2013 PloS Comp Biol, Equation 4.
 		 */
 
-		double xi;
-		double zeta;
-		double dz;
+		const auto xi = (eta + epsilon) / 2;
+		const auto zeta = (eta - epsilon) / (2 * sqrt(-log(0.5)));
 
-		xi = (eta + epsilon) / 2;
-		zeta = (eta - epsilon) / (2 * sqrt(-log(0.5)));
-
-		dz = growth_rate * (2 * exp(-pow((Ca - xi) / zeta, 2)) - 1);
-		//std::cout << "Ca: " << Ca << " dz: " << dz << " eta: " << eta << " epsilon: " << epsilon << " xi: " << xi << " zeta: " << zeta << "\n";
+		const auto dz = growth_rate * (2 * exp(-pow((Ca - xi) / zeta, 2)) - 1);
 		return dz;
 	}
 

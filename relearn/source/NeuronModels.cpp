@@ -18,8 +18,8 @@ NeuronModels::NeuronModels(size_t num_neurons, double x_0, double tau_x, double 
 	beta(beta),
 	refrac_time(refrac_time),
 	h(h),
-	random_number_distribution(0.0, nextafter(1.0, 2.0)),
-	random_number_generator(RandomHolder<NeuronModels>::get_random_generator()) // Init random number distribution to [0,1]
+	random_number_distribution(0.0, nextafter(1.0, 2.0)), // Init random number distribution to [0,1]
+	random_number_generator(RandomHolder<NeuronModels>::get_random_generator())
 {
 	// Allocate variables for all neurons
 	x = new double[my_num_neurons];

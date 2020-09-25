@@ -13,7 +13,7 @@ private:
 	static std::mt19937 random_generator;
 
 public:
-	static std::mt19937& get_random_generator() {
+	static std::mt19937& get_random_generator() noexcept {
 		return random_generator;
 	}
 };

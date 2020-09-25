@@ -1,30 +1,48 @@
 #pragma once
 
+#include <type_traits>
+#include <cmath>
+
 template<typename T>
 struct Vec3 {
 	T x;
 	T y;
 	T z;
 
-	Vec3() : x(0), y(0), z(0) {
+	Vec3() noexcept : x(0), y(0), z(0) {
 
 	}
 
-	Vec3(T val) : x(val), y(val), z(val) {
+	~Vec3() = default;
+
+	explicit Vec3(const T val) noexcept : x(val), y(val), z(val) {
 
 	}
 
-	Vec3(T _x, T _y, T _z) :
+	Vec3(const T& _x, const T& _y, const T& _z) noexcept :
 		x(_x), y(_y), z(_z) {
 
 	}
 
-	bool operator==(const Vec3<T>& other) {
+	Vec3(const Vec3<T>& other) = default;
+	Vec3<T>& operator=(const Vec3<T>& other) = default;
+
+	Vec3(Vec3<T>&& other) = default;
+	Vec3<T>& operator=(Vec3<T>&& other) = default;
+
+
+	template<typename K>
+	operator Vec3<K>() const noexcept {
+		Vec3<K> res{ (K)x, (K)y, (K)z };
+		return res;
+	}
+
+	bool operator==(const Vec3<T>& other) const noexcept {
 		return (x == other.x) && (y == other.y) && (z == other.z);
 	}
 
 	template <typename K>
-	T& operator[](const K& index) {
+	T& operator[](const K& index) noexcept {
 		if (index == 0) {
 			return x;
 		}
@@ -35,8 +53,90 @@ struct Vec3 {
 		return z;
 	}
 
+	template <typename K>
+	const T& operator[](const K& index) const noexcept {
+		if (index == 0) {
+			return x;
+		}
+		if (index == 1) {
+			return y;
+		}
+		assert(index == 2);
+		return z;
+	}
+
+	Vec3<T> operator-(const Vec3<T>& other) const noexcept {
+		Vec3<T> res{ x - other.x, y - other.y, z - other.z };
+		return res;
+	}
+
+	Vec3<T> operator+(const Vec3<T>& other) const noexcept {
+		Vec3<T> res{ x + other.x, y + other.y, z + other.z };
+		return res;
+	}
+
+	Vec3<T> operator+(const T& scalar) const noexcept {
+		Vec3<T> res = *this;
+		res += scalar;
+		return res;
+	}
+
+	//template<typename = typename std::enable_if<std::is_integral<T>::value, void>::type>
+	//Vec3<T> operator*(const T& scalar) const {
+	//	Vec3<T> res = *this;
+	//	res *= scalar;
+	//	return res;
+	//}
+
+	Vec3<T> operator*(const double& scalar) const noexcept {
+		Vec3<T> res = *this;
+		res.x *= scalar;
+		res.y *= scalar;
+		res.z *= scalar;
+		return res;
+	}
+
+	void round_to_larger_multiple(const T& multiple) noexcept {
+		x = ceil((x - 0.001) / multiple) * multiple;
+		y = ceil((y - 0.001) / multiple) * multiple;
+		z = ceil((z - 0.001) / multiple) * multiple;
+	}
+
+	T get_volume() const noexcept {
+		return x * y * z;
+	}
+
+	Vec3<T>& operator*=(const T& scalar) noexcept {
+		x *= scalar;
+		y *= scalar;
+		z *= scalar;
+		return *this;
+	}
+
+	Vec3<T>& operator+=(const T& scalar) noexcept {
+		x += scalar;
+		y += scalar;
+		z += scalar;
+		return *this;
+	}
+
+	/**
+	 * Calculates the p-Norm. Assumens p >= 1.0
+	 */
+	double calculate_p_norm(double p) const noexcept {
+		assert(p >= 1.0 && "p-norm is only valid for p >= 1.0");
+
+		const auto xx = pow(abs(static_cast<double>(x)), p);
+		const auto yy = pow(abs(static_cast<double>(y)), p);
+		const auto zz = pow(abs(static_cast<double>(z)), p);
+
+		const auto sum = xx + yy + zz;
+		const auto norm = pow(sum, 1.0 / p);
+		return norm;
+	}
+
 	struct less {
-		bool operator() (const Vec3<T>& lhs, const Vec3<T>& rhs) const {
+		bool operator() (const Vec3<T>& lhs, const Vec3<T>& rhs) const noexcept {
 			return  lhs.x < rhs.x ||
 				(lhs.x == rhs.x && lhs.y < rhs.y) ||
 				(lhs.x == rhs.x && lhs.y == rhs.y && lhs.z < rhs.z);
@@ -45,3 +145,5 @@ struct Vec3 {
 };
 
 using Vec3d = Vec3<double>;
+
+

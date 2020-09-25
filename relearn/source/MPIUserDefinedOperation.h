@@ -14,8 +14,9 @@ namespace MPIUserDefinedOperation {
 
 	// This combination function assumes that it's called with the
 	// correct MPI datatype
-	void min_sum_max(int* invec, int* inoutvec, int* len, MPI_Datatype* dtype) {
-		double* in = (double*)invec, * inout = (double*)inoutvec;
+	void min_sum_max(const int* invec, int* inoutvec, const int* const len, MPI_Datatype* dtype) noexcept {
+		const double* in = (const double*)invec;
+		double*inout = (double*)inoutvec;
 
 		for (int i = 0; i < *len; i++) {
 			inout[3 * i] = std::min(in[3 * i], inout[3 * i]);

@@ -15,7 +15,7 @@ public:
 	};
 
 	NeuronIdMap(size_t my_num_neurons, const double* x, const double* y, const double* z, MPI_Comm mpi_comm);
-	bool rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id, size_t& glob_id) const;
+	bool rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id, size_t& glob_id) const noexcept;
 	bool pos2rank_neuron_id(double x, double y, double z, RankNeuronId& result) const;
 
 private:
@@ -24,7 +24,7 @@ private:
 		double x, y, z;
 
 		struct less {
-			bool operator() (const Position& lhs, const Position& rhs) const {
+			bool operator() (const Position& lhs, const Position& rhs) const noexcept {
 				return  lhs.x < rhs.x ||
 					(lhs.x == rhs.x && lhs.y < rhs.y) ||
 					(lhs.x == rhs.x && lhs.y == rhs.y && lhs.z < rhs.z);

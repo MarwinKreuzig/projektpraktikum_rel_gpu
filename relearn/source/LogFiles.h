@@ -51,6 +51,9 @@ public:
 		}
 	}
 
+	LogFiles(const LogFiles& other) = delete;
+	LogFiles& operator=(const LogFiles& other) = delete;
+
 	LogFiles(LogFiles&& other) noexcept {
 		std::swap(num_files, other.num_files);
 		std::swap(files, other.files);
@@ -79,7 +82,7 @@ public:
 		}
 	}
 
-	~LogFiles() {
+	~LogFiles() noexcept(false) {
 		// Close all files
 		for (size_t i = 0; i < num_files; i++) {
 			files[i].close();
@@ -87,7 +90,7 @@ public:
 		delete[] files;
 	}
 
-	size_t get_num_files() { return num_files; }
+	size_t get_num_files() const noexcept { return num_files; }
 
 	// Get pointer to file stream
 	std::ofstream* get_file(size_t file_id) {

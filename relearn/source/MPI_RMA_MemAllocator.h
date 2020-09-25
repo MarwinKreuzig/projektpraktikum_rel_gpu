@@ -9,6 +9,8 @@
 #define MPI_RMA_MEMALLOCATOR_H
 
 #include <set>
+#include <list>
+#include <vector>
 #include <sstream>
 #include <algorithm>
 #include <mpi.h>
@@ -30,6 +32,12 @@ public:
 		base_ptr_offset = 0;
 		avail_initialized = 0;
 	}
+
+	MPI_RMA_MemAllocator(const MPI_RMA_MemAllocator& other) = delete;
+	MPI_RMA_MemAllocator(MPI_RMA_MemAllocator&& other) = delete;
+
+	MPI_RMA_MemAllocator& operator=(const MPI_RMA_MemAllocator& other) = delete;
+	MPI_RMA_MemAllocator& operator=(MPI_RMA_MemAllocator&& other) = delete;
 
 	~MPI_RMA_MemAllocator() {
 	}
@@ -69,7 +77,7 @@ public:
 
 	// Create MPI RMA window with all the memory of the allocator
 	// This call is collective over MPI_COMM_WORLD
-	void create_rma_window() {
+	void create_rma_window() noexcept {
 		// Set window's displacement unit
 		displ_unit = 1;
 
@@ -87,14 +95,14 @@ public:
 		// Vector must have space for one pointer from each rank
 		base_pointers.resize(num_ranks);
 
-		MPI_Allgather((MPI_Aint*)&base_ptr, 1, MPI_AINT, base_pointers.data(), 1, MPI_AINT, MPI_COMM_WORLD);
+		MPI_Allgather(&base_ptr, 1, MPI_AINT, base_pointers.data(), 1, MPI_AINT, MPI_COMM_WORLD);
 	}
 
 	// (i)   Allocate object of type T
 	// (ii)  Call its constructor
 	// (iii) Return pointer to object
 	T* newObject() {
-		T* ptr;
+		T* ptr = nullptr;
 
 		// No free objects available?
 		if (avail.empty()) {
@@ -136,7 +144,7 @@ public:
 		}
 	}
 
-	const MPI_Aint* get_base_pointers() {
+	const MPI_Aint* get_base_pointers() const noexcept {
 		return base_pointers.data();
 	}
 
@@ -162,7 +170,7 @@ public:
 		return ret;
 	}
 
-	size_t get_min_num_avail_objects() {
+	size_t get_min_num_avail_objects() const noexcept {
 		return min_num_avail_objects;
 	}
 

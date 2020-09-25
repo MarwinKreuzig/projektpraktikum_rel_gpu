@@ -57,7 +57,7 @@ namespace MPIInfos {
 		num_neurons_of_ranks = new int[num_ranks];
 		num_neurons_of_ranks_displs = new int[num_ranks];
 
-		int num_digits = Util::num_digits(MPIInfos::num_ranks - 1);
+		const int num_digits = Util::num_digits(MPIInfos::num_ranks - 1);
 
 		std::stringstream sstring;
 		sstring << std::setw(num_digits) << std::setfill('0') << MPIInfos::my_rank;
@@ -82,8 +82,8 @@ namespace MPIInfos {
 		 * Info about how much to receive (num_neurons) from every process and where to store it (displs)
 		 */
 		int displ = 0;
-		int rest = (int)num_neurons % num_ranks;
-		int block_size = (int)num_neurons / num_ranks;
+		const int rest = static_cast<int>(num_neurons) % num_ranks;
+		const int block_size = static_cast<int>(num_neurons) / num_ranks;
 		for (int i = 0; i < num_ranks; i++) {
 			num_neurons_of_ranks[i] = block_size;
 			num_neurons_of_ranks[i] += (i < rest) ? 1 : 0;
@@ -103,7 +103,7 @@ namespace MPIInfos {
 		my_neuron_id_end = my_neuron_id_start + (my_num_neurons - 1);
 	}
 
-	void finalize() {
+	void finalize() noexcept {
 		delete[] num_neurons_of_ranks;
 		delete[] num_neurons_of_ranks_displs;
 	}
