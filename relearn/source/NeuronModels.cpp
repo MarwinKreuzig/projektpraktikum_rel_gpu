@@ -129,33 +129,37 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	GlobalTimers::timers.stop_and_add(TimerRegion::EXCHANGE_NEURON_IDS);
 
 	/**
-	* Now the fired[] array contains spikes only from my own neurons
-	* (spikes from local neurons)
-	*
-	* The incoming spikes of neurons from other ranks are in map_firing_neuron_ids_incoming
-	* (spikes from neurons from other ranks)
-	*/
+	 * Now the fired[] array contains spikes only from my own neurons
+	 * (spikes from local neurons)
+	 *
+	 * The incoming spikes of neurons from other ranks are in map_firing_neuron_ids_incoming
+	 * (spikes from neurons from other ranks)
+	 */
 	GlobalTimers::timers.start(TimerRegion::CALC_SYNAPTIC_INPUT);
 	// For my neurons
-	for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
+	for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id)
+	{
 		I_syn[neuron_id] = 0.0;
 
 		/**
-		* Determine synaptic input from neurons connected to me
-		*/
+		 * Determine synaptic input from neurons connected to me
+		 */
 		// Walk through in-edges of my neuron
-		const NetworkGraph::Edges& in_edges = network_graph.get_in_edges(neuron_id);
+		const NetworkGraph::Edges &in_edges = network_graph.get_in_edges(neuron_id);
 		NetworkGraph::Edges::const_iterator it_in_edge;
 
-		for (it_in_edge = in_edges.begin(); it_in_edge != in_edges.end(); ++it_in_edge) {
+		for (it_in_edge = in_edges.begin(); it_in_edge != in_edges.end(); ++it_in_edge)
+		{
 			auto rank = it_in_edge->first.first;
 			auto src_neuron_id = it_in_edge->first.second;
 
-			int spike = 0;
-			if (rank == MPIInfos::my_rank) {
-				spike = fired[src_neuron_id];
+			bool spike;
+			if (rank == MPIInfos::my_rank)
+			{
+				spike = static_cast<bool>(fired[src_neuron_id]);
 			}
-			else {
+			else
+			{
 				MapFiringNeuronIds::const_iterator it = map_firing_neuron_ids_incoming.find(rank);
 				spike = (it != map_firing_neuron_ids_incoming.end()) && (it->second.find(src_neuron_id));
 			}
@@ -165,15 +169,16 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	GlobalTimers::timers.stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
 
 	GlobalTimers::timers.start(TimerRegion::CALC_ACTIVITY);
+
 	// For my neurons
-	for (size_t i = 0; i < my_num_neurons; i++)
+	for (size_t i = 0; i < my_num_neurons; ++i)
 	{
 		model->update_activity(x[i], u[i], I_syn[i], fired[i], static_cast<double>(h));
 
-		for (int integration_steps = 0; integration_steps < h; integration_steps++)
+		for (int integration_steps = 0; integration_steps < h; ++integration_steps)
 		{
 			// Update calcium depending on the firing
-			C[i] += (1 / (double)h) * (-C[i] / tau_C + beta * fired[i]);
+			C[i] += (1 / static_cast<double>(h)) * (-C[i] / tau_C + beta * static_cast<double>(fired[i]));
 		}
 	}
 

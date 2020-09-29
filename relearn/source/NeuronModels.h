@@ -281,25 +281,17 @@ public:
 	//}
 	NeuronModels& operator=(NeuronModels&& other) = default;
 
-	[[nodiscard]] double get_beta() const noexcept {
-		return beta;
-	}
+	[[nodiscard]] double get_beta() const noexcept { return beta; }
 
-	[[nodiscard]] bool get_fired(size_t i) const {
-		return static_cast<bool>(fired[i]);
-	}
+	[[nodiscard]] bool get_fired(size_t i) const { return static_cast<bool>(fired[i]); }
 
-	[[nodiscard]] double get_x(size_t i) const {
-		return x[i];
-	}
+	[[nodiscard]] double get_x(size_t i) const { return x[i]; }
 
 	[[nodiscard]] const std::vector<double>& get_x() const noexcept {
 		return x;
 	}
 
-	[[nodiscard]] int get_refrac(size_t i) const {
-		return u[i];
-	}
+	[[nodiscard]] int get_refrac(size_t i) const { return u[i]; }
 
 	/* Performs one iteration step of update in electrical activity */
 	void update_electrical_activity(const NetworkGraph& network_graph, std::vector<double>& C);
