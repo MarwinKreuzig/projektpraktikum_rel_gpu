@@ -172,7 +172,7 @@ public:
 	void lazily_fill(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) override;
 
 private:
-	void read_nodes_from_file(std::ifstream& file, Nodes* ptr_nodes);
+	void read_nodes_from_file(std::ifstream& file, Nodes& ptr_nodes);
 	double largest_dimension(const Nodes& nodes);
 
 	double max_dimension_;

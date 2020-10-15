@@ -77,7 +77,7 @@ void NeuronsInSubdomain::neuron_area_names(size_t subdomain_idx, size_t num_subd
 
 
 SubdomainFromFile::SubdomainFromFile(size_t num_neurons, std::ifstream& file) {
-	read_nodes_from_file(file, &nodes_);
+	read_nodes_from_file(file, nodes_);
 	max_dimension_ = largest_dimension(nodes_);
 
 	currently_frac_neurons_exc_ = 1.0;
@@ -98,8 +98,7 @@ double SubdomainFromFile::simulation_box_length() const noexcept {
 	return std::nextafter(max_dimension_, max_dimension_ + 1);
 }
 
-void SubdomainFromFile::read_nodes_from_file(std::ifstream& file, Nodes* ptr_nodes) {
-	Nodes& nodes = *ptr_nodes;
+void SubdomainFromFile::read_nodes_from_file(std::ifstream& file, Nodes& nodes) {
 	std::string line;
 	Node node;
 	bool success = false;
