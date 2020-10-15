@@ -131,7 +131,7 @@ namespace Models
 
 			for (auto i = 0; i < x.size(); ++i)
 			{
-				x[i] = c - random_number_distribution(random_number_generator) * (-c + 35.);
+				x[i] = c + random_number_distribution(random_number_generator) * (abs(c) + 35.);
 				refrac[i] = iter_refrac(b * c, x[i]);
 				fired[i] = static_cast<unsigned short>(x[i] >= 30.);
 			}
@@ -182,7 +182,7 @@ namespace Models
 
 			for (auto i = 0; i < x.size(); ++i)
 			{
-				x[i] = -1.2 - random_number_distribution(random_number_generator) * (1.2 + 1.8);
+				x[i] = -1.2 + random_number_distribution(random_number_generator) * (1.2 + 1.8);
 				refrac[i] = iter_refrac(-.6, x[i]);
 				fired[i] = static_cast<unsigned short>(x[i] >= 1.8);
 			}
