@@ -197,6 +197,58 @@ namespace Models
 		double phi;
 	};
 
+	class AEIFModel : public Model_Ifc
+	{
+	public:
+		void update_activity(double &x, double &refrac, double &I_syn, unsigned short &fired, const double h) final
+		{
+			for (int integration_steps = 0; integration_steps < h; ++integration_steps)
+			{
+				x += iter_x(x, refrac, I_syn) / h;
+				refrac += iter_refrac(refrac, x) / h;
+
+				if (x >= V_peak)
+				{
+					fired = 1;
+					x = E_L;
+					break;
+				}
+			}
+		}
+
+		void init_neurons(std::vector<double> &x, std::vector<double> &refrac, std::vector<unsigned short> &fired) final
+		{
+			// Random number generator for this class (C++11)
+			std::mt19937 &random_number_generator{RandomHolder<AEIFModel>::get_random_generator()};
+			// Random number distribution used together with "random_number_generator" (C++11)
+			// Uniform distribution for interval [0, 1]
+			std::uniform_real_distribution<double> random_number_distribution{0.0, nextafter(1.0, 2.0)};
+
+			for (int i = 0; i < x.size(); ++i)
+			{
+				x[i] = E_L + random_number_distribution(random_number_generator) * (abs(E_L) + V_peak);
+				refrac[i] = iter_refrac(0, x[i]);
+				fired[i] = static_cast<unsigned short>(x[i] >= V_peak);
+			}
+		}
+
+	private:
+		[[nodiscard]] double f(const double x) const { return -g_L * (x - E_L) + g_L * d_T * exp((x - V_T) / d_T); }
+		[[nodiscard]] double iter_x(const double x, const double refrac, const double I_syn) const { return (f(x) - refrac + I_syn) / C; }
+		[[nodiscard]] double iter_refrac(const double refrac, const double x) const { return (a * (x - E_L) - refrac) / tau_w; }
+
+		double C = 281.;	 // membrance capacitance
+		double g_L = 30.;	 // leak conductance
+		double E_L = -70.6;	 // leak reversal potential
+		double V_T = -50.4;	 // spike threshold
+		double d_T = 2.;	 // slope factor
+		double tau_w = 144.; // adaptation time constant
+		double a = 4.;		 // subthreshold
+		double b = 0.0805;	 // spike-triggered adaptation
+
+		constexpr static double V_peak = 20.; // spike trigger
+	};
+
 } // namespace Models
 
 class NeuronMonitor;
