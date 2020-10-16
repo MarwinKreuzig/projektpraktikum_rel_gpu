@@ -25,20 +25,28 @@ public:
 	enum ElementType : int { AXON = 0, DENDRITE = 1 };
 	enum SignalType : int { EXCITATORY = 0, INHIBITORY = 1 };
 
-	SynapticElements(ElementType, size_t, double, double, double, double);
+	SynapticElements(ElementType type, size_t s, double min_C_level_to_grow, double C_target, double nu, double vacant_retract_ratio) :
+		type(type),
+		size(s),
+		min_C_level_to_grow(min_C_level_to_grow),
+		C_target(C_target),
+		nu(nu),
+		vacant_retract_ratio(vacant_retract_ratio),
+		cnts(size, 0.0), connected_cnts(size, 0.0), delta_cnts(size, 0.0), signal_types(size) {
+	}
 
 	SynapticElements(const SynapticElements& other) = delete;
-	SynapticElements(SynapticElements&& other) = delete;
+	SynapticElements(SynapticElements&& other) = default;
 
 	SynapticElements& operator = (const SynapticElements& other) = delete;
-	SynapticElements& operator = (SynapticElements&& other) = delete;
+	SynapticElements& operator = (SynapticElements&& other) = default;
 
-	~SynapticElements();
+	~SynapticElements() = default;
 
-	double* get_cnts() const noexcept { return cnts; }
-	double* get_connected_cnts() const noexcept { return connected_cnts; }
-	double* get_delta_cnts() const noexcept { return delta_cnts; }
-	SignalType* get_signal_types() noexcept { return signal_types; }
+	double* get_cnts() const noexcept { return cnts.data(); }
+	double* get_connected_cnts() const noexcept { return connected_cnts.data(); }
+	double* get_delta_cnts() const noexcept { return delta_cnts.data(); }
+	SignalType* get_signal_types() noexcept { return signal_types.data(); }
 
 	double get_cnt(size_t neuron_id) const noexcept { return cnts[neuron_id]; }
 	double get_connected_cnt(size_t neuron_id) const noexcept { return connected_cnts[neuron_id]; }
@@ -135,10 +143,10 @@ private:
 
 	ElementType type;            // Denotes the type of all synaptic elements, which is AXON or DENDRITE
 	size_t size;
-	double* cnts;
-	double* delta_cnts;          // Keeps track of changes in number of elements until those changes are applied in next connectivity update
-	double* connected_cnts;
-	SignalType* signal_types;    // Signal type of synaptic elements, i.e., EXCITATORY or INHIBITORY.
+	mutable std::vector<double> cnts;
+	mutable std::vector<double> delta_cnts;          // Keeps track of changes in number of elements until those changes are applied in next connectivity update
+	mutable std::vector<double> connected_cnts;
+	mutable std::vector<SignalType> signal_types;    // Signal type of synaptic elements, i.e., EXCITATORY or INHIBITORY.
 								 // Note: Given that currently exc. and inh. dendrites are in different objects, this would only be needed for axons.
 								 //       A more memory-efficient solution would be to use a different class for axons which has the signal_types array.
 

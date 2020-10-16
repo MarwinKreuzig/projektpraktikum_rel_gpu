@@ -372,47 +372,34 @@ int main(int argc, char** argv) {
 	mpi_rma_mem_allocator.gather_rma_window_base_pointers();
 
 	RMABufferOctreeNodes rma_buffer_branch_nodes;
-
 	// Get memory for the branch nodes
 	rma_buffer_branch_nodes.num_nodes = partition.get_total_num_subdomains();
 	rma_buffer_branch_nodes.ptr =
 		mpi_rma_mem_allocator.get_block_of_objects_memory(rma_buffer_branch_nodes.num_nodes);
 	mpi_rma_mem_allocator.init_free_object_list();
 
-	partition.fill_subdomains_with_neurons(*neurons_in_subdomain);
-	partition.set_mpi_rma_mem_allocator(mpi_rma_mem_allocator);
-	partition.print_my_subdomains_info_rank(0);
-	partition.print_my_subdomains_info_rank(1);
-
-	/**
-	 * Create neuron population
-	 */
-	Neurons neurons(partition.get_my_num_neurons(), params);
-	LogMessages::print_message_rank("Neurons created", 0);
-
-	/**********************************************************************************/
-
 	// Lock local RMA memory for local stores
 	MPI_Win_lock(MPI_LOCK_EXCLUSIVE, MPIInfos::my_rank, MPI_MODE_NOCHECK, mpi_rma_mem_allocator.mpi_window);
 
 	/**
-	 * Fill my subdomains with neurons and set the positions of
-	 * my neurons and their types (exc./inh.) accordingly.
-	 * Each subdomain gets one octree with its neurons.
+	 * Create neuron population
 	 */
-	partition.insert_neurons_into_my_subdomains(*neurons_in_subdomain, neurons.get_positions(),
-		neurons.get_axons(), neurons.get_area_names());
+	partition.set_mpi_rma_mem_allocator(mpi_rma_mem_allocator);
 
+	Neurons neurons = partition.get_local_neurons(params, *neurons_in_subdomain);
+
+	partition.print_my_subdomains_info_rank(0);
+	partition.print_my_subdomains_info_rank(1);
+
+	LogMessages::print_message_rank("Neurons created", 0);
+
+	/**********************************************************************************/
 	NeuronIdMap neuron_id_map(neurons.get_num_neurons(),
 		neurons.get_positions().get_x_dims(),
 		neurons.get_positions().get_y_dims(),
 		neurons.get_positions().get_z_dims(),
 		MPI_COMM_WORLD);
 	LogMessages::print_message_rank("Neuron id map created", 0);
-
-
-	Vec3d xyz_min, xyz_max;
-	partition.get_simulation_box_size(xyz_min, xyz_max);
 
 	// Get local trees from subdomains
 	std::vector<Octree*> local_trees(partition.get_my_num_subdomains());

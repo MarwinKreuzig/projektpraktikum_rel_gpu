@@ -1,4 +1,5 @@
 #include "Neurons.h"
+#include "Partition.h"
 
 Neurons::Neurons(size_t s, Parameters params) :
 	num_neurons(s),
@@ -1239,9 +1240,9 @@ void Neurons::print_pending_synapse_deletions(std::list<PendingSynapseDeletion>&
 }
 
 void Neurons::delete_synapses(std::list<PendingSynapseDeletion>& list,
-	const SynapticElements& axons,
-	const SynapticElements& dendrites_exc,
-	const SynapticElements& dendrites_inh,
+	SynapticElements& axons,
+	SynapticElements& dendrites_exc,
+	SynapticElements& dendrites_inh,
 	NetworkGraph& network_graph,
 	size_t& num_synapses_deleted) {
 

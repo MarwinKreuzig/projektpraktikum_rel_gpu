@@ -23,24 +23,10 @@ public:
 	~Positions() = default;
 
 	Positions(const Positions& other) = delete;
-	Positions(Positions&& other) noexcept {
-		std::swap(size, other.size);
-		std::swap(x_dims, other.x_dims);
-		std::swap(y_dims, other.y_dims);
-		std::swap(z_dims, other.z_dims);
-	}
+	Positions(Positions&& other) = default;
 
 	Positions& operator = (const Positions& other) = delete;
-	Positions& operator = (Positions&& other) noexcept {
-		std::swap(size, other.size);
-		std::swap(x_dims, other.x_dims);
-		std::swap(y_dims, other.y_dims);
-		std::swap(z_dims, other.z_dims);
-	}
-
-	//double* get_x_dims() noexcept { return x_dims.data(); };
-	//double* get_y_dims() noexcept { return y_dims.data(); };
-	//double* get_z_dims() noexcept { return z_dims.data(); };
+	Positions& operator = (Positions&& other) = default;
 
 	const std::vector<double>& get_x_dims() noexcept { return x_dims; };
 	const std::vector<double>& get_y_dims() noexcept { return y_dims; };

@@ -28,7 +28,6 @@
 #include "Timers.h"
 #include "MPIInfos.h"
 #include "NetworkGraph.h"
-#include "Partition.h"
 #include "NeuronIdMap.h"
 #include "Random.h"
 
@@ -37,6 +36,7 @@
   * are outside of the class Neurons so that the class Octree can use them                          *
   ***************************************************************************************************/
 
+class Partition;
 class NeuronMonitor;
 
   // Types
@@ -232,10 +232,10 @@ public:
 	~Neurons() = default;
 
 	Neurons(const Neurons& other) = delete;
-	Neurons(Neurons&& other) = delete;
+	Neurons(Neurons&& other) = default;
 
 	Neurons& operator=(const Neurons& other) = delete;
-	Neurons& operator=(Neurons&& other) = delete;
+	Neurons& operator=(Neurons&& other) = default;
 
 	size_t get_num_neurons() const noexcept { return num_neurons; }
 	Positions& get_positions() noexcept { return positions; }
@@ -366,9 +366,9 @@ private:
 	void print_pending_synapse_deletions(std::list<PendingSynapseDeletion>& list);
 
 	void delete_synapses(std::list<PendingSynapseDeletion>& list,
-		const SynapticElements& axons,
-		const SynapticElements& dendrites_exc,
-		const SynapticElements& dendrites_inh,
+		SynapticElements& axons,
+		SynapticElements& dendrites_exc,
+		SynapticElements& dendrites_inh,
 		NetworkGraph& network_graph,
 		size_t& num_synapses_deleted);
 

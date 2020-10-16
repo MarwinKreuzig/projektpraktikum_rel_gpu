@@ -80,8 +80,24 @@ public:
 	NeuronModels(const NeuronModels& other) = delete;
 	NeuronModels& operator=(const NeuronModels& other) = delete;
 
-	NeuronModels(NeuronModels&& other) = delete;
-	NeuronModels& operator=(NeuronModels&& other) = delete;
+	NeuronModels(NeuronModels&& other) = default;
+	//	: random_number_generator(other.random_number_generator)
+	//{
+	//	my_num_neurons = other.my_num_neurons;
+	//	x_0 = other.x_0;
+	//	tau_x = other.tau_x;
+	//	k = other.k;
+	//	tau_C = other.tau_C;
+	//	beta = other.beta;
+	//	refrac_time = other.refrac_time;
+	//	h = other.h;
+	//	x = std::move(other.x);
+	//	fired = std::move(other.fired);
+	//	refrac = std::move(other.refrac);
+	//	I_syn = std::move(other.I_syn);
+	//	random_number_distribution = std::move(other.random_number_distribution);
+	//}
+	NeuronModels& operator=(NeuronModels&& other) = default;
 
 	double get_beta() const noexcept {
 		return beta;

@@ -14,6 +14,7 @@
 
 #include "Neurons.h"
 #include "randomNumberSeeds.h"
+#include "Partition.h"
 #include "Random.h"
 
 Octree::Octree() :
