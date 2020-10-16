@@ -2,6 +2,7 @@
 
 Neurons::Neurons(size_t s, Parameters params) :
 	num_neurons(s),
+	calcium(s),
 	neuron_models(s, params.x_0, params.tau_x, params.k, params.tau_C, params.beta, params.h, params.refrac_time),
 	axons(SynapticElements::AXON, s, params.eta_A, params.C_target, params.nu, params.vacant_retract_ratio),
 	dendrites_exc(SynapticElements::DENDRITE, s, params.eta_D_ex, params.C_target, params.nu, params.vacant_retract_ratio),
@@ -10,8 +11,6 @@ Neurons::Neurons(size_t s, Parameters params) :
 	area_names(s),
 	random_number_generator(RandomHolder<Neurons/*<NeuronModels, Axons, DendritesExc, DendritesInh>*/>::get_random_generator()),
 	random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
-
-	calcium = new double[num_neurons];
 
 	// Init member variables
 	for (size_t i = 0; i < num_neurons; i++) {
@@ -28,9 +27,9 @@ bool Neurons::get_vacant_axon(size_t& neuron_id, Vec3d& xyz_pos, Cell::DendriteT
 	const double* axons_cnts = axons.get_cnts();
 	const double* axons_connected_cnts = axons.get_connected_cnts();
 	const SynapticElements::SignalType* axons_signal_types = axons.get_signal_types();
-	const double* axons_x_dims = positions.get_x_dims();
-	const double* axons_y_dims = positions.get_y_dims();
-	const double* axons_z_dims = positions.get_z_dims();
+	const std::vector<double>& axons_x_dims = positions.get_x_dims();
+	const std::vector<double>& axons_y_dims = positions.get_y_dims();
+	const std::vector<double>& axons_z_dims = positions.get_z_dims();
 
 	while (i < num_neurons) {
 		// neuron's vacant axons
@@ -801,10 +800,10 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles
 	using namespace std;
 
 	const StatisticalMeasures<double> calcium_statistics =
-		global_statistics(calcium, num_neurons, params.num_neurons, 0, MPI_COMM_WORLD);
+		global_statistics(calcium.data(), num_neurons, params.num_neurons, 0, MPI_COMM_WORLD);
 
 	const StatisticalMeasures<double> activity_statistics =
-		global_statistics(neuron_models.get_x(), num_neurons, params.num_neurons, 0, MPI_COMM_WORLD);
+		global_statistics(neuron_models.get_x().data(), num_neurons, params.num_neurons, 0, MPI_COMM_WORLD);
 
 	// Output data
 	if (0 == MPIInfos::my_rank) {
@@ -865,7 +864,6 @@ void Neurons::print_network_graph_to_log_file(LogFiles& log_file, const NetworkG
 void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& params, const NeuronIdMap& neuron_id_map) {
 	using namespace std;
 
-	double* xyz_dims[3];
 	ofstream* file;
 
 	file = log_file.get_file(0);
@@ -874,9 +872,9 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& 
 	*file << "# " << params.num_neurons << endl;
 	*file << "# " << "<global id> <pos x> <pos y> <pos z> <area>" << endl;
 
-	xyz_dims[0] = positions.get_x_dims();
-	xyz_dims[1] = positions.get_y_dims();
-	xyz_dims[2] = positions.get_z_dims();
+	const std::vector<double>& axons_x_dims = positions.get_x_dims();
+	const std::vector<double>& axons_y_dims = positions.get_y_dims();
+	const std::vector<double>& axons_z_dims = positions.get_z_dims();
 
 	// Print global ids, positions, and areas of local neurons
 	bool ret;
@@ -891,9 +889,9 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& 
 		assert(ret);
 
 		*file << glob_id << " "
-			<< xyz_dims[0][neuron_id] << " "
-			<< xyz_dims[1][neuron_id] << " "
-			<< xyz_dims[2][neuron_id] << " "
+			<< axons_x_dims[neuron_id] << " "
+			<< axons_y_dims[neuron_id] << " "
+			<< axons_z_dims[neuron_id] << " "
 			<< area_names[neuron_id] << "\n";
 	}
 	*file << endl;
@@ -922,9 +920,9 @@ void Neurons::print() {
 void Neurons::print_info_for_barnes_hut() {
 	using namespace std;
 
-	const double* x_dims = positions.get_x_dims();
-	const double* y_dims = positions.get_y_dims();
-	const double* z_dims = positions.get_z_dims();
+	const std::vector<double>& x_dims = positions.get_x_dims();
+	const std::vector<double>& y_dims = positions.get_y_dims();
+	const std::vector<double>& z_dims = positions.get_z_dims();
 
 	const double* axons_cnts = axons.get_cnts();
 	const double* dendrites_exc_cnts = dendrites_exc.get_cnts();

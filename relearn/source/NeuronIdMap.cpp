@@ -9,7 +9,7 @@
 #include <mpi.h>
 
 NeuronIdMap::NeuronIdMap(size_t my_num_neurons,
-	const double* x, const double* y, const double* z,
+	const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z,
 	MPI_Comm mpi_comm) {
 	int num_ranks;
 	MPI_Comm_size(mpi_comm, &num_ranks);
@@ -74,7 +74,7 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 	const std::vector<size_t>& rank_to_num_neurons,
 	const std::vector<size_t>& rank_to_start_neuron_id,
 	size_t my_num_neurons,
-	const double* x, const double* y, const double* z,
+	const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z,
 	MPI_Comm mpi_comm,
 	std::map<Position, RankNeuronId, Position::less>& pos_to_rank_neuron_id) {
 	int num_ranks, my_rank;

@@ -11,8 +11,7 @@
 #include <chrono>
 #include <cassert>
 #include <string>
-
-using namespace std::chrono;
+#include <vector>
 
 enum TimerRegion : int {
 	INITIALIZATION,
@@ -51,11 +50,7 @@ class Timers {
 
 public:
 	Timers(size_t num_timers) :
-		num_timers(num_timers) {
-		time_start = new high_resolution_clock::time_point[num_timers];
-		time_stop = new high_resolution_clock::time_point[num_timers];
-		time_elapsed = new duration<double>[num_timers];
-
+		num_timers(num_timers), time_start(num_timers) , time_stop(num_timers), time_elapsed(num_timers) {
 		// Reset elapsed to zero
 		for (size_t i = 0; i < num_timers; i++) {
 			reset_elapsed(i);
@@ -68,37 +63,33 @@ public:
 	Timers& operator=(const Timers& other) = delete;
 	Timers& operator=(Timers&& other) = delete;
 
-	~Timers() noexcept {
-		delete[] time_start;
-		delete[] time_stop;
-		delete[] time_elapsed;
-	}
+	~Timers() = default;
 
 	size_t get_num_timers() const noexcept { return num_timers; }
 
-	 void start(size_t timer_id) noexcept {
+	void start(size_t timer_id) noexcept {
 		assert(timer_id < num_timers);
-		time_start[timer_id] = high_resolution_clock::now();
+		time_start[timer_id] = std::chrono::high_resolution_clock::now();
 	}
 
-	 void stop(size_t timer_id) noexcept {
+	void stop(size_t timer_id) noexcept {
 		assert(timer_id < num_timers);
-		time_stop[timer_id] = high_resolution_clock::now();
+		time_stop[timer_id] = std::chrono::high_resolution_clock::now();
 	}
 
-	 void stop_and_add(size_t timer_id) noexcept {
+	void stop_and_add(size_t timer_id) noexcept {
 		stop(timer_id);
 		add_start_stop_diff_to_elapsed(timer_id);
 	}
 
-	 void add_start_stop_diff_to_elapsed(size_t timer_id) noexcept {
+	void add_start_stop_diff_to_elapsed(size_t timer_id) noexcept {
 		assert(timer_id < num_timers);
-		time_elapsed[timer_id] += duration_cast<duration<double>>(time_stop[timer_id] - time_start[timer_id]);
+		time_elapsed[timer_id] += std::chrono::duration_cast<std::chrono::duration<double>>(time_stop[timer_id] - time_start[timer_id]);
 	}
 
 	void reset_elapsed(size_t timer_id) noexcept {
 		assert(timer_id < num_timers);
-		time_elapsed[timer_id] = duration<double>::zero();
+		time_elapsed[timer_id] = std::chrono::duration<double>::zero();
 	}
 
 	// Return elapsed time in seconds
@@ -142,9 +133,11 @@ public:
 
 private:
 	size_t num_timers;     // Number of timers
-	high_resolution_clock::time_point* time_start;
-	high_resolution_clock::time_point* time_stop;
-	duration<double>* time_elapsed;
+
+	std::vector<std::chrono::high_resolution_clock::time_point> time_start;
+	std::vector<std::chrono::high_resolution_clock::time_point> time_stop;
+
+	std::vector<std::chrono::duration<double>> time_elapsed;
 };
 
 #endif /* TIMERS_H */

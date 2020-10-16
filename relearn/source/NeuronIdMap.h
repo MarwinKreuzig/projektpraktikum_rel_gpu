@@ -14,7 +14,7 @@ public:
 		size_t neuron_id;
 	};
 
-	NeuronIdMap(size_t my_num_neurons, const double* x, const double* y, const double* z, MPI_Comm mpi_comm);
+	NeuronIdMap(size_t my_num_neurons, const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, MPI_Comm mpi_comm);
 	bool rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id, size_t& glob_id) const noexcept;
 	bool pos2rank_neuron_id(double x, double y, double z, RankNeuronId& result) const;
 
@@ -40,7 +40,7 @@ private:
 		const std::vector<size_t>& rank_to_num_neurons,
 		const std::vector<size_t>& rank_to_start_neuron_id,
 		size_t my_num_neurons,
-		const double* x, const double* y, const double* z,
+		const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z,
 		MPI_Comm mpi_comm,
 		std::map<Position, RankNeuronId, Position::less>& pos_to_rank_neuron_id);
 

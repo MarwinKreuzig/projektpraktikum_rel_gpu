@@ -229,10 +229,7 @@ public:
 	typedef std::map<int, SynapseDeletionRequests> MapSynapseDeletionRequests;
 
 	Neurons(size_t s, Parameters params);
-
-	~Neurons() {
-		delete[] calcium;
-	}
+	~Neurons() = default;
 
 	Neurons(const Neurons& other) = delete;
 	Neurons(Neurons&& other) = delete;
@@ -385,7 +382,7 @@ private:
 	DendritesInh dendrites_inh;
 
 	Positions positions;  // Position of every neuron
-	double* calcium;      // Intracellular calcium concentration of every neuron
+	std::vector<double> calcium;      // Intracellular calcium concentration of every neuron
 	std::vector<std::string> area_names;  // Area name of every neuron
 
 

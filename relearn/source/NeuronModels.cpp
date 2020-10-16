@@ -18,16 +18,12 @@ NeuronModels::NeuronModels(size_t num_neurons, double x_0, double tau_x, double 
 	beta(beta),
 	refrac_time(refrac_time),
 	h(h),
+	x(num_neurons, 0),
+	fired(num_neurons, 0),
+	refrac(num_neurons, 0),
+	I_syn(num_neurons, 0),
 	random_number_distribution(0.0, nextafter(1.0, 2.0)), // Init random number distribution to [0,1]
 	random_number_generator(RandomHolder<NeuronModels>::get_random_generator()) {
-	// Allocate variables for all neurons
-	x = new double[my_num_neurons];
-	fired = new int[my_num_neurons];  // Initialize array to zero.
-							// This is important for those neurons that I don't own
-							// as they are only set when they fire and reset afterwards.
-							// That is why, the default should be 0 (not firing)
-	refrac = new int[my_num_neurons];
-	I_syn = new double[my_num_neurons]();
 
 	// Init variables for my neurons only
 	for (size_t i = 0; i < my_num_neurons; i++) {
@@ -38,16 +34,9 @@ NeuronModels::NeuronModels(size_t num_neurons, double x_0, double tau_x, double 
 	}
 }
 
-NeuronModels::~NeuronModels() {
-	delete[] x;
-	delete[] fired;
-	delete[] refrac;
-	delete[] I_syn;
-}
-
 /* Performs one iteration step of update in electrical activity */
 
-void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph, double* C) {
+void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph, std::vector<double>& C) {
 	MapFiringNeuronIds map_firing_neuron_ids_outgoing;
 	/**
 	* Check which of my neurons fired and determine which ranks need to know about it.

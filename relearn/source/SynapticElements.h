@@ -12,6 +12,8 @@
 #include <iostream>
 #include <cstddef>
 #include <cmath>
+#include <vector>
+
 #include "MPIInfos.h"
 
 class NeuronMonitor;
@@ -106,7 +108,7 @@ public:
 		return num_delete_connected;
 	}
 
-	void update_number_elements_delta(const double* const calcium) noexcept {
+	void update_number_elements_delta(const std::vector<double>& calcium) noexcept {
 		// For my neurons
 		for (size_t i = 0; i < this->size; ++i) {
 			const auto inc = gaussian_growth_curve(calcium[i], min_C_level_to_grow, C_target, nu);

@@ -348,15 +348,9 @@ int main(int argc, char** argv) {
 	GlobalTimers::timers.start(TimerRegion::INITIALIZATION);
 
 	/**
-	 * Create MPI RMA memory allocator
-	 */
-	MPI_RMA_MemAllocator<OctreeNode> mpi_rma_mem_allocator(params.mpi_rma_mem_size);
-
-	/**
 	 * Calculate what my partition of the domain consist of
 	 */
-	Partition partition(params.num_neurons, MPIInfos::num_ranks, MPIInfos::my_rank, mpi_rma_mem_allocator, *neurons_in_subdomain);
-	partition.print_my_subdomains_info_rank(0);
+	Partition partition(MPIInfos::num_ranks, MPIInfos::my_rank);
 
 	// Check if int type can contain total size of branch nodes to receive in bytes
 	// Every rank sends the same number of branch nodes, which is partition.get_my_num_subdomains()
@@ -369,8 +363,9 @@ int main(int argc, char** argv) {
 	}
 
 	/**
-	 * MPI RMA setup
+	 * Create MPI RMA memory allocator
 	 */
+	MPI_RMA_MemAllocator<OctreeNode> mpi_rma_mem_allocator(params.mpi_rma_mem_size);
 	 // Set up RMA memory allocator
 	mpi_rma_mem_allocator.allocate_rma_mem();
 	mpi_rma_mem_allocator.create_rma_window();  // collective
@@ -384,17 +379,15 @@ int main(int argc, char** argv) {
 		mpi_rma_mem_allocator.get_block_of_objects_memory(rma_buffer_branch_nodes.num_nodes);
 	mpi_rma_mem_allocator.init_free_object_list();
 
-
-	// Get local trees from subdomains
-	std::vector<Octree*> local_trees(partition.get_my_num_subdomains());
-	for (size_t i = 0; i < local_trees.size(); i++) {
-		local_trees[i] = &partition.get_subdomain_tree(i);
-	}
+	partition.fill_subdomains_with_neurons(*neurons_in_subdomain);
+	partition.set_mpi_rma_mem_allocator(mpi_rma_mem_allocator);
+	partition.print_my_subdomains_info_rank(0);
+	partition.print_my_subdomains_info_rank(1);
 
 	/**
 	 * Create neuron population
 	 */
-	Neurons/*<NeuronModels, Axons, DendritesExc, DendritesInh>*/ neurons(partition.get_my_num_neurons(), params);
+	Neurons neurons(partition.get_my_num_neurons(), params);
 	LogMessages::print_message_rank("Neurons created", 0);
 
 	/**********************************************************************************/
@@ -420,6 +413,12 @@ int main(int argc, char** argv) {
 
 	Vec3d xyz_min, xyz_max;
 	partition.get_simulation_box_size(xyz_min, xyz_max);
+
+	// Get local trees from subdomains
+	std::vector<Octree*> local_trees(partition.get_my_num_subdomains());
+	for (size_t i = 0; i < local_trees.size(); i++) {
+		local_trees[i] = &partition.get_subdomain_tree(i);
+	}
 
 	/**
 	 * Init global tree parameters

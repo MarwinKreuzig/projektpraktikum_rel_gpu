@@ -10,7 +10,7 @@
 #include <cassert>
 #include <cmath>
 
-#include <stdint.h>
+#include <cstdint>
 
 #include "Vec3.h"
 
@@ -77,31 +77,29 @@ public:
 	}
 
 private:
-
-	 void set_bit(uint64_t& variable, uint8_t bit) const noexcept {
+	void set_bit(uint64_t& variable, uint8_t bit) const noexcept {
 		variable |= (static_cast<uint64_t>(1) << bit);
 	}
 
-	 void unset_bit(uint64_t& variable, uint8_t bit) const noexcept {
+	void unset_bit(uint64_t& variable, uint8_t bit) const noexcept {
 		variable &= ~(static_cast<uint64_t>(1) << bit);
 	}
 
-	 void copy_bit(const uint64_t& source, uint8_t source_bit, uint64_t& destination, uint8_t destination_bit) const noexcept {
-		// Not sure if this is correct and how it works.
-		// That's why I provide a simpler solution below.
-		// Please feel free to use your version if it's correct.
-		//destination ^= (-select_bit(source, source_bit) ^ destination) & (1 << destination_bit);
+	void copy_bit(const uint64_t& source, uint8_t source_bit, uint64_t& destination, uint8_t destination_bit) const noexcept {
+		// A simpler solution might be:
+		// destination ^= (-select_bit(source, source_bit) ^ destination) & (1 << destination_bit);
 
 		const uint64_t bit_in_source = select_bit(source, source_bit);
 		if (1 == bit_in_source) {
 			set_bit(destination, destination_bit);
 		}
 		else {
+			assert(0 == bit_in_source && "In Morton, copy_bit, bit_in_source is neither 0 nor 1");
 			unset_bit(destination, destination_bit);
 		}
 	}
 
-	 uint64_t select_bit(uint64_t number, uint8_t bit) const noexcept {
+	uint64_t select_bit(uint64_t number, uint8_t bit) const noexcept {
 		return ((number & (static_cast<uint64_t>(1) << bit)) >> bit);
 	}
 
@@ -111,41 +109,36 @@ private:
 template<class T>
 class SpaceFillingCurve {
 public:
-
-	SpaceFillingCurve() noexcept {
-		set_refinement_level(0);
-	}
-
-	SpaceFillingCurve(uint8_t refinement_level) {
+	SpaceFillingCurve(uint8_t refinement_level = 0) noexcept {
 		set_refinement_level(refinement_level);
 	}
 
 	SpaceFillingCurve(const SpaceFillingCurve& other) = delete;
 	SpaceFillingCurve(SpaceFillingCurve&& other) = delete;
 
-	SpaceFillingCurve& operator = (const SpaceFillingCurve & other) = delete;
-	SpaceFillingCurve& operator = (SpaceFillingCurve && other) = delete;
+	SpaceFillingCurve& operator = (const SpaceFillingCurve& other) = delete;
+	SpaceFillingCurve& operator = (SpaceFillingCurve&& other) = delete;
 
 	~SpaceFillingCurve() noexcept {
 	}
 
-	size_t get_refinement_level() const {
+	size_t get_refinement_level() const noexcept {
 		return curve.get_refinement_level();
 	}
 
-	void set_refinement_level(size_t num_subdivisions) noexcept{
+	void set_refinement_level(size_t num_subdivisions) noexcept {
 		// With 64-bit keys we can only support 20 subdivisions per
 		// dimension (i.e, 2^20 boxes per dimension)
-		assert(num_subdivisions <= 20);
+		assert(num_subdivisions <= 20 && "Number of subdivisions is too large");
 
 		curve.set_refinement_level(num_subdivisions);
 	}
 
-	void map_1d_to_3d(uint64_t idx, BoxCoordinates& coords) noexcept {
+	void map_1d_to_3d(uint64_t idx, BoxCoordinates& coords) const noexcept {
 		curve.map_1d_to_3d(idx, coords);
 	}
 
-	uint64_t map_3d_to_1d(const BoxCoordinates& coords) {
+	uint64_t map_3d_to_1d(const BoxCoordinates& coords) const noexcept {
 		return curve.map_3d_to_1d(coords);
 	}
 

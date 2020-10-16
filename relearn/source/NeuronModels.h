@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <random>
 #include <algorithm>
+#include <vector>
 #include <mpi.h>
 #include "NetworkGraph.h"
 #include "MPIInfos.h"
@@ -74,7 +75,7 @@ public:
 	NeuronModels(size_t num_neurons, double x_0, double tau_x, double k, double tau_C, double beta, int h, double refrac_time);
 
 public:
-	~NeuronModels();
+	~NeuronModels() = default;
 
 	NeuronModels(const NeuronModels& other) = delete;
 	NeuronModels& operator=(const NeuronModels& other) = delete;
@@ -94,7 +95,7 @@ public:
 		return this->x[i];
 	}
 
-	const double* get_x() const noexcept {
+	const std::vector<double>& get_x() const noexcept {
 		return x;
 	}
 
@@ -103,7 +104,7 @@ public:
 	}
 
 	/* Performs one iteration step of update in electrical activity */
-	void update_electrical_activity(const NetworkGraph& network_graph, double* C);
+	void update_electrical_activity(const NetworkGraph& network_graph, std::vector<double>& C);
 
 private:
 	int Theta(double x) {
@@ -124,11 +125,10 @@ private:
 	int    h;           // Precision for Euler integration
 
 	// Variables for each neuron where the array index denotes the neuron ID
-	double* x;      // Firing rate in Hz
-	int* fired;  // 1: neuron has fired, 0: neuron is inactive
-	int* refrac; // Remaining refractory time, prevents neurons from firing
-					// 0: neuron can fire, >0: neuron cannot fire
-	double* I_syn;  // Synaptic input
+	std::vector<double> x;      // Firing rate in Hz
+	std::vector<int> fired;  // 1: neuron has fired, 0: neuron is inactive
+	std::vector<int> refrac; // Remaining refractory time, prevents neurons from firing, 0: neuron can fire, >0: neuron cannot fire
+	std::vector<double> I_syn;  // Synaptic input
 
 	// Randpm number generator for this class (C++11)
 	std::mt19937& random_number_generator;
