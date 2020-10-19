@@ -9,11 +9,27 @@
 #include "MPIInfos.h"
 #include "Random.h"
 
-NeuronModels::NeuronModels(size_t num_neurons, double x_0, double tau_x, double k, double tau_C, double beta, int h, double refrac_time)
+NeuronModels::NeuronModels(size_t num_neurons, double x_0, double tau_x, double k, double tau_C, double beta, int h, double refrac_time) :
+	my_num_neurons(num_neurons),
+	model{models::Model_Ifc::create<models::ModelA>(x_0,tau_x,refrac_time)},
+	// model{models::Model_Ifc::create<models::IzhikevichModel>()},
+	// model{models::Model_Ifc::create<models::FitzHughNagumoModel>()},
+	// model{models::Model_Ifc::create<models::AEIFModel>()},
+	k(k),
+	tau_C(tau_C),
+	beta(beta),
+	h(h),
+	x(num_neurons),
+	u(num_neurons),
+	fired(num_neurons),
+	I_syn(num_neurons)
+{
+	model->init_neurons(x, u, fired);
+}
+
+NeuronModels::NeuronModels(size_t num_neurons, double k, double tau_C, double beta, int h, std::unique_ptr<models::Model_Ifc> model_)
 	: my_num_neurons(num_neurons),
-	  model{Models::Model_Ifc::create<Models::ModelA>(k, tau_C, beta, refrac_time)},
-	  // model{Models::Model_Ifc::create<Models::IzhikevichModel>()},
-	  // model{Models::Model_Ifc::create<Models::FitzHughNagumoModel>()},
+	  model{std::move(model_)},
 	  k(k),
 	  tau_C(tau_C),
 	  beta(beta),
