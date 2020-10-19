@@ -292,7 +292,6 @@ public:
 	NeuronModels(size_t num_neurons, double x_0, double tau_x, double k, double tau_C, double beta, int h, double refrac_time);
 	NeuronModels(size_t num_neurons, double k, double tau_C, double beta, int h, std::unique_ptr<models::Model_Ifc> model);
 
-public:
 	~NeuronModels() = default;
 
 	NeuronModels(const NeuronModels& other) = delete;
