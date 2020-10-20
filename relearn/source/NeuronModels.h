@@ -157,7 +157,7 @@ namespace models
 				x += iter_x(x, refrac, I_syn) / h;
 				refrac += iter_refrac(refrac, x) / h;
 
-				if (x >= 1.8)
+				if (spiked(x, refrac))
 				{
 					fired = 1;
 				}
@@ -170,13 +170,15 @@ namespace models
 			{
 				x[i] = -1.2;
 				refrac[i] = iter_refrac(-.6, x[i]);
-				fired[i] = static_cast<unsigned short>(x[i] >= 1.8);
+				fired[i] = static_cast<unsigned short>(spiked(x[i], refrac[i]));
 			}
 		}
 
 	private:
 		[[nodiscard]] double iter_x(const double x, const double refrac, const double I_syn) const { return x - x * x * x / 3 - refrac + I_syn; }
 		[[nodiscard]] double iter_refrac(const double refrac, const double x) const { return phi * (x + a - b * refrac); };
+
+		[[nodiscard]] bool spiked(const double x, const double refrac) { return refrac > iter_x(x, 0, 0) && x > 1.; }
 
 		double a{0.7};
 		double b{0.8};
