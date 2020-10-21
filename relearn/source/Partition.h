@@ -189,7 +189,7 @@ public:
 		}
 	}
 
-	Neurons get_local_neurons(const Parameters& params, NeuronsInSubdomain& neurons_in_subdomain) {
+	Neurons get_local_neurons(const Parameters& params, NeuronToSubdomainAssignment& neurons_in_subdomain) {
 		Neurons neurons = load_neurons(params, neurons_in_subdomain);
 		return neurons;
 	}
@@ -235,22 +235,26 @@ public:
 
 private:
 	// We need the "axons" parameter to set for every neuron the type of axons it grows (exc./inh.)
-	Neurons load_neurons(const Parameters& params, NeuronsInSubdomain& neurons_in_subdomain) {
+	Neurons load_neurons(const Parameters& params, NeuronToSubdomainAssignment& neurons_in_subdomain) {
 
-		simulation_box_length = neurons_in_subdomain.simulation_box_length();
+		simulation_box_length = neurons_in_subdomain.get_simulation_box_length();
 
 		// Set subdomain length
-		double subdomain_length = simulation_box_length / num_subdomains_per_dimension;
+		Vec3d subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
 
 		/**
 		 * Output all parameters calculated so far
 		 */
 		std::stringstream sstream;
-		sstream << "Simulation box length          : " << simulation_box_length << " (height = width = depth)";
+		sstream << "Simulation box length          : " << simulation_box_length.x << " (height)" << "\n";
+		sstream << "Simulation box length          : " << simulation_box_length.y << " (width)" << "\n";
+		sstream << "Simulation box length          : " << simulation_box_length.z << " (depth)" << "\n";
 		LogMessages::print_message_rank(sstream.str().c_str(), 0);
 		sstream.str("");
 
-		sstream << "Subdomain length               : " << subdomain_length << " (height = width = depth)";
+		sstream << "Subdomain length          : " << subdomain_length.x << " (height)" << "\n";
+		sstream << "Subdomain length          : " << subdomain_length.y << " (width)" << "\n";
+		sstream << "Subdomain length          : " << subdomain_length.z << " (depth)" << "\n";
 		LogMessages::print_message_rank(sstream.str().c_str(), 0);
 		sstream.str("");
 
@@ -266,7 +270,7 @@ private:
 			const auto& xyz_min = current_subdomain.xyz_min;
 			const auto& xyz_max = current_subdomain.xyz_max;
 
-			neurons_in_subdomain.lazily_fill(current_subdomain.index_1d,
+			neurons_in_subdomain.fill_subdomain(current_subdomain.index_1d,
 				total_num_subdomains, xyz_min, xyz_max);
 
 			current_subdomain.num_neurons =
@@ -310,7 +314,7 @@ private:
 			const auto subdomain_pos_max = subdomains[i].xyz_max;
 
 			// Get neuron positions in subdomain i
-			std::vector<NeuronsInSubdomain::Position> vec_pos;
+			std::vector<NeuronToSubdomainAssignment::Position> vec_pos;
 			neurons_in_subdomain.neuron_positions(i, total_num_subdomains,
 				subdomain_pos_min, subdomain_pos_max, vec_pos);
 
@@ -356,7 +360,7 @@ private:
 	size_t my_subdomain_id_start;
 	size_t my_subdomain_id_end;
 
-	double simulation_box_length;
+	Vec3d simulation_box_length;
 
 	std::vector<Subdomain> subdomains;
 	SpaceFillingCurve<Morton> space_curve;

@@ -27,6 +27,8 @@
 #include "MPIUserDefinedOperation.h"
 #include "randomNumberSeeds.h"
 #include "NeuronToSubdomainAssignment.h"
+#include "SubdomainFromFile.h"
+#include "SubdomainFromNeuronDensity.h"
 #include "NeuronIdMap.h"
 #include "Utility.h"
 #include "NeuronMonitor.h"
@@ -323,11 +325,9 @@ int main(int argc, char** argv) {
 		sstring.str("");
 	}
 
-	NeuronsInSubdomain* neurons_in_subdomain = nullptr;
+	NeuronToSubdomainAssignment* neurons_in_subdomain = nullptr;
 	if (5 < argc) {
-		// Neuron positions provided in file
-		std::ifstream file(params.file_with_neuron_positions);
-		neurons_in_subdomain = new SubdomainFromFile(params.num_neurons, file);
+		neurons_in_subdomain = new SubdomainFromFile(params.file_with_neuron_positions, params.num_neurons);
 	}
 	else {
 		neurons_in_subdomain = new SubdomainFromNeuronDensity(params.num_neurons, params.frac_neurons_exc);
@@ -443,7 +443,7 @@ int main(int argc, char** argv) {
 	/**
 	 * Create and init neural network
 	 */
-	NetworkGraph network_graph(partition.get_my_num_neurons());
+	NetworkGraph network_graph(neurons.get_num_neurons());
 	// Neuronal connections provided in file
 	if (6 < argc) {
 		std::ifstream file(params.file_with_network);
