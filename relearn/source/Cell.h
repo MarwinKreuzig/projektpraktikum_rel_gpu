@@ -53,9 +53,10 @@ public:
 	 * Assumes that the cell is cubic
 	 */
 	double get_length() const noexcept {
-		const auto diff = xyz_max - xyz_min;
-		assert(diff.x == diff.y && diff.y == diff.z);
-		return diff.x;
+		const auto diff_vector = xyz_max - xyz_min;
+		const auto diff = diff_vector.get_maximum();
+		//assert(diff.x == diff.y && diff.y == diff.z);
+		return diff;
 	}
 
 	void set_neuron_position(const Vec3d& pos, bool valid) noexcept {

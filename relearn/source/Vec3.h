@@ -2,6 +2,7 @@
 
 #include <type_traits>
 #include <cmath>
+#include <algorithm>
 
 template<typename T>
 struct Vec3 {

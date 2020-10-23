@@ -1,32 +1,14 @@
 #include "SubdomainFromFile.h"
+#include "NeuronToSubdomainAssignment.h"
 #include "LogMessages.h"
 
 #include <iostream>
 #include <sstream>
-
+#include <cmath>
 
 SubdomainFromFile::SubdomainFromFile(std::string file_path, size_t num_neurons) : file(file_path) {
-	//read_nodes_from_file(nodes_);
 	read_dimensions_from_file();
-	//max_dimension_ = largest_dimension(nodes_);
-
-	currently_frac_neurons_exc_ = 1.0;
-	desired_frac_neurons_exc_ = 1.0;
-
-	// Num neurons expected != num neurons read from file
-	if (num_neurons != nodes_.size()) {
-		std::stringstream sstring;
-		sstring << __FUNCTION__ << ": expected number of neurons != number of neurons read from file";
-		LogMessages::print_error(sstring.str().c_str());
-		exit(EXIT_FAILURE);
-	}
 }
-
-//// Make sure that the length is larger than the largest coordinate of any neuron.
-//// That is, for all neuron coordinates (x,y,z), x,y,z in [0 , length).
-//double SubdomainFromFile::simulation_box_length() const noexcept {
-//	return std::nextafter(max_dimension_, max_dimension_ + 1);
-//}
 
 void SubdomainFromFile::read_dimensions_from_file() {
 	Vec3d minimum(std::numeric_limits<double>::max());
@@ -37,6 +19,9 @@ void SubdomainFromFile::read_dimensions_from_file() {
 
 	Vec3d tmp;
 	std::string area_name;
+
+	double found_ex_neurons = 0.0;
+	double found_in_neurons = 0.0;
 
 	while (std::getline(file, line)) {
 		// Skip line with comments
@@ -53,11 +38,29 @@ void SubdomainFromFile::read_dimensions_from_file() {
 		minimum.calculate_pointwise_minimum(tmp);
 		maximum.calculate_pointwise_maximum(tmp);
 
+		if (area_name == "ex") {
+			found_ex_neurons++;
+		}
+		else {
+			found_in_neurons++;
+		}
+
 		if (!success) {
 			std::cerr << "Skipping line: \"" << line << "\"\n";
 			continue;
 		}
 	}
+
+	{
+		maximum.x = std::nextafter(maximum.x, maximum.x + 0.1);
+		maximum.y = std::nextafter(maximum.y, maximum.y + 0.1);
+		maximum.z = std::nextafter(maximum.z, maximum.z + 0.1);
+	}
+
+	const double total_neurons = found_ex_neurons + found_in_neurons;
+
+	currently_frac_neurons_exc_ = found_ex_neurons / total_neurons;
+	desired_frac_neurons_exc_ = found_ex_neurons / total_neurons;
 
 	this->simulation_box_length = maximum - minimum;
 	offset = minimum;
@@ -67,11 +70,20 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
 	std::string line;
 	Node node;
 	bool success = false;
+	
+	file.clear();
+	file.seekg(0);
+
+	double placed_ex_neurons = 0.0;
+	double placed_in_neurons = 0.0;
+
 	while (std::getline(file, line)) {
 		// Skip line with comments
 		if (!line.empty() && '#' == line[0]) {
 			continue;
 		}
+
+		std::cout << line << std::endl;
 
 		std::stringstream sstream(line);
 		success = (sstream >> node.pos.x) &&
@@ -92,28 +104,27 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
 			continue;
 		}
 
-		node.signal_type = SynapticElements::EXCITATORY;
+		if (node.area_name == "ex") {
+			node.signal_type = SynapticElements::EXCITATORY;
+			placed_ex_neurons++;
+		}
+		else {
+			node.signal_type = SynapticElements::INHIBITORY;
+			placed_in_neurons++;
+		}
+
 		nodes.insert(node);
 	}
 }
 
-//double SubdomainFromFile::largest_dimension(const Nodes& nodes) {
-//	double max_of_all = 0.0;
-//
-//	for (const Node& node : nodes) {
-//		auto max_of_node = std::max(node.pos.x, std::max(node.pos.y, node.pos.z));
-//		max_of_all = std::max(max_of_node, max_of_all);
-//	}
-//
-//	return max_of_all;
-//}
-
 void SubdomainFromFile::fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) {
-	if (filled_subdomains_.find(subdomain_idx) != filled_subdomains_.end()) {
+	const bool subdomain_already_filled = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
+	if (subdomain_already_filled) {
+		assert(false && "Tried to fill an already filled subdomain.");
 		return;
 	}
 
-	filled_subdomains_.insert(subdomain_idx);
+	Nodes& nodes = neurons_in_subdomain[subdomain_idx];
 
-	read_nodes_from_file(min, max, this->nodes_);
+	read_nodes_from_file(min, max, nodes);
 }

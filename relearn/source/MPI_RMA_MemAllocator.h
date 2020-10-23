@@ -14,23 +14,15 @@
 #include <sstream>
 #include <algorithm>
 #include <mpi.h>
+
 #include "LogMessages.h"
+#include "OctreeNode.h"
 
 template<class T>
 class MPI_RMA_MemAllocator {
 public:
-	MPI_RMA_MemAllocator(size_t size_requested) :
-		size_requested(size_requested),
-		avail_size(0) {
-		// Number of objects "size_requested" Bytes correspond to
-		max_num_objects = size_requested / sizeof(T);
-		max_size = max_num_objects * sizeof(T);
+	MPI_RMA_MemAllocator() {
 
-		// Store size of MPI_COMM_WORLD
-		MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
-
-		base_ptr_offset = 0;
-		avail_initialized = 0;
 	}
 
 	MPI_RMA_MemAllocator(const MPI_RMA_MemAllocator& other) = delete;
@@ -40,6 +32,21 @@ public:
 	MPI_RMA_MemAllocator& operator=(MPI_RMA_MemAllocator&& other) = delete;
 
 	~MPI_RMA_MemAllocator() {
+	}
+
+	void set_size_requested(size_t size_requested) {
+		this->size_requested = size_requested;
+		this->avail_size = 0;
+
+		// Number of objects "size_requested" Bytes correspond to
+		max_num_objects = size_requested / sizeof(T);
+		max_size = max_num_objects * sizeof(T);
+
+		// Store size of MPI_COMM_WORLD
+		MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
+
+		base_ptr_offset = 0;
+		avail_initialized = 0;
 	}
 
 	/**

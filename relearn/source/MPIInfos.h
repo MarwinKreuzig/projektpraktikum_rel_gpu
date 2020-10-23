@@ -10,6 +10,11 @@
 
 #include <string>
 
+#include "OctreeNode.h"
+#include "MPI_RMA_MemAllocator.h"
+
+class Octree;
+
 namespace MPIInfos {
 	/**
 	 * Global variables
@@ -29,6 +34,8 @@ namespace MPIInfos {
 	extern int thread_level_provided;         // Thread level provided by MPI
 
 	extern std::string my_rank_str;
+
+	extern MPI_RMA_MemAllocator<OctreeNode> mpi_rma_mem_allocator;
 
 	/**
 	 * Functions

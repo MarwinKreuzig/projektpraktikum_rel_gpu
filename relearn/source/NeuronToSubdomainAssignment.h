@@ -7,6 +7,7 @@
 
 #include <set>
 #include <vector>
+#include <map>
 
 // Interface that has to be implemented by any class that
 // wants to provide a neuron-to-subdomain assignment
@@ -15,39 +16,6 @@ public:
 	// Helper class to store neuron positions
 	using Position = Vec3<double>;
 
-protected:
-	struct Node {
-		Position pos;
-		SynapticElements::SignalType signal_type;
-		std::string area_name;
-
-		struct less {
-			bool operator() (const Node& lhs, const Node& rhs) const noexcept {
-				Position::less less;
-				return  less(lhs.pos, rhs.pos);
-			}
-		};
-	};
-
-	using Nodes = std::set<Node, Node::less>;
-	Nodes nodes_;
-
-	double desired_frac_neurons_exc_;
-	size_t desired_num_neurons_;
-
-	double currently_frac_neurons_exc_;
-	size_t currently_num_neurons_;
-
-	Vec3d simulation_box_length;
-
-	std::set<size_t> filled_subdomains_;
-	
-	bool position_in_box(const Position& pos, const Position& box_min, const Position& box_max) const noexcept;
-
-	NeuronToSubdomainAssignment() noexcept {
-	}
-
-public:
 	virtual ~NeuronToSubdomainAssignment() {};
 
 	NeuronToSubdomainAssignment(const NeuronToSubdomainAssignment& other) = delete;
@@ -92,7 +60,7 @@ public:
 
 	// Return number of neurons which have positions in the range [min, max) in every dimension
 	virtual size_t num_neurons(size_t subdomain_idx, size_t num_subdomains,
-		const Position& min, const Position& max);
+		const Position& min, const Position& max) const;
 
 	// Return neurons which have positions in the range [min, max) in every dimension
 	virtual void neuron_positions(size_t subdomain_idx, size_t num_subdomains,
@@ -106,6 +74,38 @@ public:
 	// Return neurons which have positions in the range [min, max) in every dimension
 	virtual void neuron_area_names(size_t subdomain_idx, size_t num_subdomains,
 		const Position& min, const Position& max, std::vector<std::string>& areas) const;
+
+	virtual void write_neurons_to_file(const std::string& filename_prefix) const;
+
+protected:
+	struct Node {
+		Position pos;
+		SynapticElements::SignalType signal_type;
+		std::string area_name;
+
+		struct less {
+			bool operator() (const Node& lhs, const Node& rhs) const noexcept {
+				Position::less less;
+				return  less(lhs.pos, rhs.pos);
+			}
+		};
+	};
+
+	using Nodes = std::set<Node, Node::less>;
+	std::map<size_t, Nodes> neurons_in_subdomain;
+
+	double desired_frac_neurons_exc_;
+	size_t desired_num_neurons_;
+
+	double currently_frac_neurons_exc_;
+	size_t currently_num_neurons_;
+
+	Vec3d simulation_box_length;
+
+	bool position_in_box(const Position& pos, const Position& box_min, const Position& box_max) const noexcept;
+
+	NeuronToSubdomainAssignment() noexcept {
+	}
 };
 
 #endif /* NEURON_TO_SUBDOMAIN_ASSIGNMENT_H_ */

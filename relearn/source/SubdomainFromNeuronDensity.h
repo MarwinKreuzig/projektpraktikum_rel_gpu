@@ -33,10 +33,10 @@ public:
 private:
 	const double um_per_neuron_;  // Micrometer per neuron in one dimension
 
-	void SubdomainFromNeuronDensity::place_neurons_in_area(
+	void place_neurons_in_area(
 		const NeuronToSubdomainAssignment::Position& offset,
 		const NeuronToSubdomainAssignment::Position& length_of_box,
-		size_t num_neurons);
+		size_t num_neurons, size_t subdomain_idx);
 
 	std::mt19937& random_number_generator;
 	std::uniform_real_distribution<double> random_number_distribution;

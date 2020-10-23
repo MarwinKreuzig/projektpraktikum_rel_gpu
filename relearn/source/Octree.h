@@ -22,7 +22,6 @@
 #include "OctreeNode.h"
 #include "MPI_RMA_MemAllocator.h"
 #include "Cell.h"
-#include "MPIInfos.h"
 #include "LogMessages.h"
 #include "NeuronModels.h"
 #include "SynapticElements.h"
@@ -286,7 +285,7 @@ public:
 		max_num_pending_vacant_axons = max;
 	}
 
-	OctreeNode* Octree::get_root() const noexcept {
+	OctreeNode* get_root() const noexcept {
 		return root;
 	}
 
@@ -416,9 +415,7 @@ private:
 	 */
 	OctreeNode* select_subinterval(const ProbabilitySubintervalList& list);
 
-	 bool node_is_local(const OctreeNode& node) noexcept {
-		return node.rank == MPIInfos::my_rank;
-	}
+	bool node_is_local(const OctreeNode& node) noexcept;
 
 	void append_node(OctreeNode* node, ProbabilitySubintervalList& list);
 	void append_children(OctreeNode* node, ProbabilitySubintervalList& list, AccessEpochsStarted& epochs_started);

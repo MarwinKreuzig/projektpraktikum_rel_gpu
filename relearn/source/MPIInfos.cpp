@@ -14,6 +14,7 @@
 
 #include "Utility.h"
 #include "LogMessages.h"
+#include "MPI_RMA_MemAllocator.h"
 
 namespace MPIInfos {
 	/**
@@ -44,6 +45,8 @@ namespace MPIInfos {
 	int thread_level_provided;         // Thread level provided by MPI
 
 	std::string my_rank_str;
+
+	MPI_RMA_MemAllocator<OctreeNode> mpi_rma_mem_allocator;
 
 	/**
 	 * Functions

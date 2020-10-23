@@ -29,8 +29,6 @@ private:
 
 	void read_nodes_from_file(const Position& min, const Position& max, std::set<Node, Node::less>&);
 
-	//double largest_dimension(const Nodes& nodes);
-
 	Vec3d offset;
 	double max_dimension_;
 
