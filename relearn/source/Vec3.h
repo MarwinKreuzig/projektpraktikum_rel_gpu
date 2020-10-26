@@ -2,6 +2,7 @@
 
 #include <type_traits>
 #include <cmath>
+#include <algorithm>
 
 template<typename T>
 struct Vec3 {
@@ -96,6 +97,14 @@ struct Vec3 {
 		return res;
 	}
 
+	Vec3<T> operator/(const double& scalar) const noexcept {
+		Vec3<T> res = *this;
+		res.x /= scalar;
+		res.y /= scalar;
+		res.z /= scalar;
+		return res;
+	}
+
 	void round_to_larger_multiple(const T& multiple) noexcept {
 		x = ceil((x - 0.001) / multiple) * multiple;
 		y = ceil((y - 0.001) / multiple) * multiple;
@@ -133,6 +142,38 @@ struct Vec3 {
 		const auto sum = xx + yy + zz;
 		const auto norm = pow(sum, 1.0 / p);
 		return norm;
+	}
+
+	void calculate_pointwise_maximum(const Vec3<T>& other) noexcept {
+		if (other.x > x) {
+			x = other.x;
+		}
+		if (other.y > y) {
+			y = other.y;
+		}
+		if (other.z > z) {
+			z = other.z;
+		}
+	}
+
+	void calculate_pointwise_minimum(const Vec3<T>& other) noexcept {
+		if (other.x < x) {
+			x = other.x;
+		}
+		if (other.y < y) {
+			y = other.y;
+		}
+		if (other.z < z) {
+			z = other.z;
+		}
+	}
+
+	T get_maximum() const noexcept {
+		return std::max({ x, y, z });
+	}
+
+	T get_minimum() const noexcept {
+		return std::min({ x, y, z });
 	}
 
 	struct less {

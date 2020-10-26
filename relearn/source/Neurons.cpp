@@ -1,17 +1,18 @@
 #include "Neurons.h"
 #include "Partition.h"
 
-Neurons::Neurons(size_t s, Parameters params) :
-	num_neurons(s),
-	calcium(s),
-	neuron_models(s, params.x_0, params.tau_x, params.k, params.tau_C, params.beta, params.h, params.refrac_time),
-	axons(SynapticElements::AXON, s, params.eta_A, params.C_target, params.nu, params.vacant_retract_ratio),
-	dendrites_exc(SynapticElements::DENDRITE, s, params.eta_D_ex, params.C_target, params.nu, params.vacant_retract_ratio),
-	dendrites_inh(SynapticElements::DENDRITE, s, params.eta_D_in, params.C_target, params.nu, params.vacant_retract_ratio),
-	positions(s),
-	area_names(s),
+Neurons::Neurons(size_t num_neurons, Parameters params, const Partition& partition) :
+	num_neurons(num_neurons),
+	calcium(num_neurons),
+	neuron_models(num_neurons, params.x_0, params.tau_x, params.k, params.tau_C, params.beta, params.h, params.refrac_time),
+	axons(SynapticElements::AXON, num_neurons, params.eta_A, params.C_target, params.nu, params.vacant_retract_ratio),
+	dendrites_exc(SynapticElements::DENDRITE, num_neurons, params.eta_D_ex, params.C_target, params.nu, params.vacant_retract_ratio),
+	dendrites_inh(SynapticElements::DENDRITE, num_neurons, params.eta_D_in, params.C_target, params.nu, params.vacant_retract_ratio),
+	positions(num_neurons),
+	area_names(num_neurons),
 	random_number_generator(RandomHolder<Neurons/*<NeuronModels, Axons, DendritesExc, DendritesInh>*/>::get_random_generator()),
-	random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
+	random_number_distribution(0.0, std::nextafter(1.0, 2.0)),
+	partition(partition) {
 
 	// Init member variables
 	for (size_t i = 0; i < num_neurons; i++) {
@@ -325,7 +326,6 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 void Neurons::create_synapses(size_t& num_synapses_created,
 	const MPI_Win& mpi_window,
 	std::vector<Octree*>& local_trees,
-	const Partition& partition,
 	OctreeNode rma_buffer_branch_nodes[],
 	const size_t& num_rma_buffer_branch_nodes,
 	Octree& global_tree,
@@ -665,6 +665,8 @@ void Neurons::create_synapses(size_t& num_synapses_created,
 				size_t target_neuron_id;
 				size_t dendrite_type_needed;
 				requests.get_request(request_index, source_neuron_id, target_neuron_id, dendrite_type_needed);
+
+				//std::cout << "From: " << source_neuron_id << " to " << target_neuron_id << ": " << dendrite_type_needed << std::endl;
 
 				// Request to form synapse succeeded
 				if (connected) {

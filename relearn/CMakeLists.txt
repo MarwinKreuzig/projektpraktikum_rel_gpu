@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.10)
 project(relearn)
 
 file(GLOB_RECURSE TOP_SRC "source/*.cpp" "source/*.c")

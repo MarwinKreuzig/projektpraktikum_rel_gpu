@@ -2,7 +2,11 @@
 
 #include <random>
 
+#define private public
+#define protected public
+
 #include "../source/NeuronToSubdomainAssignment.h"
+#include "../source/SubdomainFromNeuronDensity.h"
 
 
 void check_types_fraction(std::vector<SynapticElements::SignalType>& types, double& frac_ex, unsigned long long total_subdomains, const size_t& num_neurons) {
@@ -22,7 +26,7 @@ void check_types_fraction(std::vector<SynapticElements::SignalType>& types, doub
 	EXPECT_NEAR(frac_ex, frac_ex_, static_cast<double>(total_subdomains) / static_cast<double>(num_neurons));
 }
 
-void check_positions(std::vector<NeuronsInSubdomain::Position>& pos, double um_per_neuron, size_t& expected_neurons_per_dimension, bool* flags) {
+void check_positions(std::vector<NeuronToSubdomainAssignment::Position>& pos, double um_per_neuron, size_t& expected_neurons_per_dimension, bool* flags) {
 	std::vector<Vec3<size_t>> pos_fixed;
 	for (auto& p : pos) {
 		pos_fixed.emplace_back((Vec3<size_t>)(p * (1 / um_per_neuron)));
@@ -88,11 +92,11 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill) {
 
 		SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
 
-		auto box_length = sfnd.simulation_box_length();
+		auto box_length = sfnd.simulation_box_length.get_maximum();
 
 		EXPECT_GE(box_length, 0);
 
-		sfnd.lazily_fill(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
+		sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
 
 		auto num_neurons_ = sfnd.desired_num_neurons();
 		auto frac_ex_ = sfnd.desired_ratio_neurons_exc();
@@ -120,14 +124,14 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_multiple) {
 
 		SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
 
-		auto box_length = sfnd.simulation_box_length();
+		auto box_length = sfnd.simulation_box_length.get_maximum();
 
 		EXPECT_GE(box_length, 0);
 
 		auto num_fills = uid(mt);
 
 		for (auto j = 0; j < num_fills; j++) {
-			sfnd.lazily_fill(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
+			sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
 		}
 
 		auto num_neurons_ = sfnd.desired_num_neurons();
@@ -161,9 +165,9 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions) {
 
 		SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
 
-		auto box_length = sfnd.simulation_box_length();
+		auto box_length = sfnd.simulation_box_length.get_maximum();
 
-		sfnd.lazily_fill(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
+		sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
 
 		std::vector<Vec3d> pos;
 		sfnd.neuron_positions(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, pos);
@@ -240,13 +244,13 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions_multiple_subdomains) 
 
 		SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
 
-		auto box_length = sfnd.simulation_box_length();
+		auto box_length = sfnd.simulation_box_length.get_maximum();
 
 		auto subdomain_length_x = box_length / subdomains_x;
 		auto subdomain_length_y = box_length / subdomains_y;
 		auto subdomain_length_z = box_length / subdomains_z;
 
-		sfnd.lazily_fill(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
+		sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
 
 		std::vector<Vec3d> pos;
 		for (auto x_it = 0; x_it < subdomains_x; x_it++) {
@@ -336,7 +340,7 @@ TEST(TestRandomNeuronPlacement, test_multiple_lazily_fill_positions_multiple_sub
 
 		SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
 
-		auto box_length = sfnd.simulation_box_length();
+		auto box_length = sfnd.simulation_box_length.get_maximum();
 
 		auto subdomain_length_x = box_length / subdomains_x;
 		auto subdomain_length_y = box_length / subdomains_y;
@@ -354,7 +358,7 @@ TEST(TestRandomNeuronPlacement, test_multiple_lazily_fill_positions_multiple_sub
 					Vec3<size_t> subdomain_pos{ x_it, y_it, z_it };
 					sfnd.get_subdomain_boundaries(subdomain_pos, subdomains, subdomain_min, subdomain_max);
 
-					sfnd.lazily_fill(current_idx, total_subdomains, subdomain_min, subdomain_max);
+					sfnd.fill_subdomain(current_idx, total_subdomains, subdomain_min, subdomain_max);
 					sfnd.neuron_positions(current_idx, total_subdomains, subdomain_min, subdomain_max, pos);
 				}
 			}

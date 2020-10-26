@@ -1,0 +1,171 @@
+
+#include <cassert>
+
+#include "MPIInfos.h"
+#include "SubdomainFromNeuronDensity.h"
+
+SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(size_t num_neurons, double desired_frac_neurons_exc, double um_per_neuron)
+	: um_per_neuron_(um_per_neuron),
+	random_number_generator(RandomHolder<SubdomainFromNeuronDensity>::get_random_generator()),
+	random_number_distribution(0.0, 1.0) {
+
+	random_number_generator.seed(MPIInfos::my_rank);
+
+	// Calculate size of simulation box based on neuron density
+	// num_neurons^(1/3) == #neurons per dimension
+	const double approx_number_of_neurons_per_dimension = ceil(pow(static_cast<double>(num_neurons), 1. / 3));
+	const double simulation_box_length_ = approx_number_of_neurons_per_dimension * um_per_neuron;
+
+	this->simulation_box_length = Vec3d(simulation_box_length_);
+
+	this->desired_frac_neurons_exc_ = desired_frac_neurons_exc;
+	this->desired_num_neurons_ = num_neurons;
+
+	this->currently_frac_neurons_exc_ = 0.0;
+	this->currently_num_neurons_ = 0;
+}
+
+void SubdomainFromNeuronDensity::place_neurons_in_area(
+	const NeuronToSubdomainAssignment::Position& offset,
+	const NeuronToSubdomainAssignment::Position& length_of_box,
+	size_t num_neurons, size_t subdomain_idx) {
+
+	const double simulation_box_length_ = get_simulation_box_length().get_maximum();
+
+	assert(length_of_box.x <= simulation_box_length_ && length_of_box.y <= simulation_box_length_ && length_of_box.z <= simulation_box_length_ &&
+		"Requesting to fill neurons where no simulationbox is");
+
+	const auto box = length_of_box - offset;
+
+	const auto neurons_on_x = static_cast<size_t>(round(box.x / um_per_neuron_));
+	const auto neurons_on_y = static_cast<size_t>(round(box.y / um_per_neuron_));
+	const auto neurons_on_z = static_cast<size_t>(round(box.z / um_per_neuron_));
+
+	const auto calculated_num_neurons = neurons_on_x * neurons_on_y * neurons_on_z;
+	assert(calculated_num_neurons >= num_neurons && "Should emplace more neurons than space in box");
+	assert(neurons_on_x < 65536 && neurons_on_y < 65536 && neurons_on_z < 65536 && "Should emplace more neurons in a dimension than possible");
+
+	Nodes& nodes = neurons_in_subdomain[subdomain_idx];
+
+	const size_t expected_number_in = num_neurons - static_cast<size_t>(ceil(num_neurons * desired_frac_neurons_exc_));
+	const size_t expected_number_ex = num_neurons - expected_number_in;
+
+	size_t placed_neurons = 0;
+	size_t placed_in_neurons = 0;
+	size_t placed_ex_neurons = 0;
+
+	size_t random_counter = 0;
+	std::vector<size_t> positions(calculated_num_neurons);
+	for (size_t x_it = 0; x_it < neurons_on_x; x_it++) {
+		for (size_t y_it = 0; y_it < neurons_on_y; y_it++) {
+			for (size_t z_it = 0; z_it < neurons_on_z; z_it++) {
+				size_t random_position = 0;
+				random_position |= (z_it);
+				random_position |= (y_it << 16);
+				random_position |= (x_it << 32);
+				positions[random_counter] = random_position;
+				random_counter++;
+			}
+		}
+	}
+
+	std::shuffle(positions.begin(), positions.end(), random_number_generator);
+
+	for (auto i = 0; i < num_neurons; i++) {
+		const size_t pos_bitmask = positions[i];
+		const size_t x_it = (pos_bitmask >> 32) & 0xFFFF;
+		const size_t y_it = (pos_bitmask >> 16) & 0xFFFF;
+		const size_t z_it = pos_bitmask & 0xFFFF;
+
+		const double x_pos_rnd = random_number_distribution(random_number_generator) + x_it;
+		const double y_pos_rnd = random_number_distribution(random_number_generator) + y_it;
+		const double z_pos_rnd = random_number_distribution(random_number_generator) + z_it;
+
+		Position pos_rnd{ x_pos_rnd, y_pos_rnd, z_pos_rnd };
+		pos_rnd *= um_per_neuron_;
+
+		const Position pos = pos_rnd + offset;
+
+		const double type_indicator = random_number_distribution(random_number_generator);
+
+		if (placed_ex_neurons < expected_number_ex && (type_indicator < desired_frac_neurons_exc_ || placed_in_neurons == expected_number_in)) {
+			Node node{ pos, SynapticElements::EXCITATORY };
+			placed_ex_neurons++;
+			nodes.emplace(node);
+		}
+		else {
+			Node node{ pos, SynapticElements::INHIBITORY };
+			placed_in_neurons++;
+			nodes.emplace(node);
+		}
+
+		placed_neurons++;
+
+		if (placed_neurons == num_neurons) {
+			const auto former_ex_neurons = this->currently_num_neurons_ * this->currently_frac_neurons_exc_;
+			const auto former_in_neurons = this->currently_num_neurons_ - former_ex_neurons;
+
+			this->currently_num_neurons_ += placed_neurons;
+
+			const auto now_ex_neurons = former_ex_neurons + placed_ex_neurons;
+			const auto now_in_neurons = former_in_neurons + placed_in_neurons;
+
+			currently_frac_neurons_exc_ = static_cast<double>(now_ex_neurons) / static_cast<double>(this->currently_num_neurons_);
+			return;
+		}
+	}
+
+	assert(false && "In SubdomainFromNeuronDensity, shouldn't be here");
+}
+
+void SubdomainFromNeuronDensity::fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) {
+	const bool subdomain_already_filled = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
+	if (subdomain_already_filled) {
+		assert(false && "Tried to fill an already filled subdomain.");
+		return;
+	}
+
+	const auto diff = max - min;
+	const auto volume = diff.get_volume();
+
+	const auto total_volume = get_simulation_box_length().get_volume();
+
+	const auto neuron_portion = total_volume / volume;
+	const auto neurons_in_subdomain = static_cast<size_t>(round(desired_num_neurons_ / neuron_portion));
+
+	place_neurons_in_area(min, max, neurons_in_subdomain, subdomain_idx);
+}
+
+
+void SubdomainFromNeuronDensity::get_subdomain_boundaries(
+	const Vec3<size_t>& subdomain_3idx,
+	size_t num_subdomains_per_axis,
+	Position& min,
+	Position& max) const noexcept {
+	const auto length = get_simulation_box_length().get_maximum();
+	const auto one_subdomain_length = length / num_subdomains_per_axis;
+
+	min = ((Vec3d)subdomain_3idx) * one_subdomain_length;
+	max = ((Vec3d)(subdomain_3idx + 1)) * one_subdomain_length;
+
+	min.round_to_larger_multiple(um_per_neuron_);
+	max.round_to_larger_multiple(um_per_neuron_);
+}
+
+void SubdomainFromNeuronDensity::get_subdomain_boundaries(
+	const Vec3<size_t>& subdomain_3idx,
+	const Vec3<size_t>& num_subdomains_per_axis,
+	Position& min,
+	Position& max) const noexcept {
+
+	const auto length = get_simulation_box_length().get_maximum();
+	const auto x_subdomain_length = length / num_subdomains_per_axis.x;
+	const auto y_subdomain_length = length / num_subdomains_per_axis.y;
+	const auto z_subdomain_length = length / num_subdomains_per_axis.z;
+
+	min = Vec3d{ subdomain_3idx.x * x_subdomain_length, subdomain_3idx.y * y_subdomain_length, subdomain_3idx.z * z_subdomain_length };
+	max = Vec3d{ (subdomain_3idx.x + 1) * x_subdomain_length, (subdomain_3idx.y + 1) * y_subdomain_length, (subdomain_3idx.z + 1) * z_subdomain_length };
+
+	min.round_to_larger_multiple(um_per_neuron_);
+	max.round_to_larger_multiple(um_per_neuron_);
+}

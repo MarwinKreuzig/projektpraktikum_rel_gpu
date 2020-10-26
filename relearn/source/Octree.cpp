@@ -483,6 +483,10 @@ OctreeNode* Octree::select_subinterval(const ProbabilitySubintervalList& list) {
 	return (*it)->ptr;
 }
 
+inline bool Octree::node_is_local(const OctreeNode& node) noexcept {
+	return node.rank == MPIInfos::my_rank;
+}
+
 void Octree::append_node(OctreeNode* node, ProbabilitySubintervalList& list) {
 	list.push_back(new ProbabilitySubinterval(node));
 }
@@ -539,7 +543,7 @@ void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list,
 				MPI_Get(child->ptr, sizeof(OctreeNode), MPI_CHAR,
 					target_rank, target_child_displ, sizeof(OctreeNode), MPI_CHAR,
 					mpi_rma_node_allocator->mpi_window);
-				child->mpi_request = static_cast<MPI_Request>(!MPI_REQUEST_NULL);
+				child->mpi_request = (MPI_Request)(!MPI_REQUEST_NULL);
 				child->request_rank = target_rank;
 			}
 			else {

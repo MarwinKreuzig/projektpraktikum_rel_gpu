@@ -1,0 +1,36 @@
+#pragma once
+
+#include "NeuronToSubdomainAssignment.h"
+#include "Vec3.h"
+
+#include <set>
+#include <string>
+#include <fstream>
+
+// This class reads the neurons with their positions from a file
+// and, based on this, determines the size of the simulation box
+// and the number of neurons in every individual subdomain.
+class SubdomainFromFile : public NeuronToSubdomainAssignment {
+public:
+	SubdomainFromFile(std::string file_path, size_t num_neurons);
+
+	SubdomainFromFile(const SubdomainFromFile& other) = delete;
+	SubdomainFromFile(SubdomainFromFile&& other) = delete;
+
+	SubdomainFromFile& operator=(const SubdomainFromFile& other) = delete;
+	SubdomainFromFile& operator=(SubdomainFromFile&& other) = delete;
+
+	~SubdomainFromFile() {}
+
+	void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) override;
+
+private:
+	void read_dimensions_from_file();
+
+	void read_nodes_from_file(const Position& min, const Position& max, std::set<Node, Node::less>&);
+
+	Vec3d offset;
+	double max_dimension_;
+
+	std::ifstream file;
+};

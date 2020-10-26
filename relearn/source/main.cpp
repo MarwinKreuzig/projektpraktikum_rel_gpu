@@ -27,6 +27,8 @@
 #include "MPIUserDefinedOperation.h"
 #include "randomNumberSeeds.h"
 #include "NeuronToSubdomainAssignment.h"
+#include "SubdomainFromFile.h"
+#include "SubdomainFromNeuronDensity.h"
 #include "NeuronIdMap.h"
 #include "Utility.h"
 #include "NeuronMonitor.h"
@@ -323,18 +325,17 @@ int main(int argc, char** argv) {
 		sstring.str("");
 	}
 
-	NeuronsInSubdomain* neurons_in_subdomain = nullptr;
-	if (5 < argc) {
-		// Neuron positions provided in file
-		std::ifstream file(params.file_with_neuron_positions);
-		neurons_in_subdomain = new SubdomainFromFile(params.num_neurons, file);
+	bool force_random = true;
+
+	NeuronToSubdomainAssignment* neurons_in_subdomain = nullptr;
+	if (5 < argc && !force_random) {
+		neurons_in_subdomain = new SubdomainFromFile(params.file_with_neuron_positions, params.num_neurons);
+		// Set parameter based on actual neuron population
+		params.frac_neurons_exc = neurons_in_subdomain->desired_ratio_neurons_exc();
 	}
 	else {
 		neurons_in_subdomain = new SubdomainFromNeuronDensity(params.num_neurons, params.frac_neurons_exc);
 	}
-
-	// Set parameter based on actual neuron population
-	params.frac_neurons_exc = neurons_in_subdomain->desired_ratio_neurons_exc();
 
 	if (0 == MPIInfos::my_rank) {
 		std::cout << params << std::endl;
@@ -365,7 +366,8 @@ int main(int argc, char** argv) {
 	/**
 	 * Create MPI RMA memory allocator
 	 */
-	MPI_RMA_MemAllocator<OctreeNode> mpi_rma_mem_allocator(params.mpi_rma_mem_size);
+	MPI_RMA_MemAllocator<OctreeNode> mpi_rma_mem_allocator;
+	mpi_rma_mem_allocator.set_size_requested(params.mpi_rma_mem_size);
 	 // Set up RMA memory allocator
 	mpi_rma_mem_allocator.allocate_rma_mem();
 	mpi_rma_mem_allocator.create_rma_window();  // collective
@@ -443,7 +445,7 @@ int main(int argc, char** argv) {
 	/**
 	 * Create and init neural network
 	 */
-	NetworkGraph network_graph(partition.get_my_num_neurons());
+	NetworkGraph network_graph(neurons.get_num_neurons());
 	// Neuronal connections provided in file
 	if (6 < argc) {
 		std::ifstream file(params.file_with_network);
@@ -527,7 +529,6 @@ int main(int argc, char** argv) {
 				rma_buffer_branch_nodes.ptr,
 				rma_buffer_branch_nodes.num_nodes,
 				mpi_rma_mem_allocator.mpi_window,
-				partition,
 				num_synapses_deleted,
 				num_synapses_created);
 
@@ -540,18 +541,21 @@ int main(int argc, char** argv) {
 			MPI_Reduce(cnts_local, cnts_global, 2, MPI_UINT64_T, MPI_SUM, 0, MPI_COMM_WORLD);
 
 			if (0 == MPIInfos::my_rank) {
-				std::cout << "\n";
-
 				total_deletions += cnts_global[0] / 2;
 				total_creations += cnts_global[1] / 2;
 			}
-			sstring << "Sum (all processes) number synapses deleted: " << cnts_global[0] / 2;
-			LogMessages::print_message_rank(sstring.str().c_str(), 0);
-			sstring.str("");
 
-			sstring << "Sum (all processes) number synapses created: " << cnts_global[1] / 2;
-			LogMessages::print_message_rank(sstring.str().c_str(), 0);
-			sstring.str("");
+			if (cnts_global[0] != 0.0) {
+				sstring << "Sum (all processes) number synapses deleted: " << cnts_global[0] / 2;
+				LogMessages::print_message_rank(sstring.str().c_str(), 0);
+				sstring.str("");
+			}
+
+			if (cnts_global[1] != 0.0) {
+				sstring << "Sum (all processes) number synapses created: " << cnts_global[1] / 2;
+				LogMessages::print_message_rank(sstring.str().c_str(), 0);
+				sstring.str("");
+			}
 
 			neurons.print_sums_of_synapses_and_elements_to_log_file_on_rank_0(
 				step, Logs::get("sums"), params, num_synapses_deleted, num_synapses_created);
@@ -578,6 +582,7 @@ int main(int argc, char** argv) {
 	printTimers(mpi_rma_mem_allocator);
 
 	// Free object created based on command line parameters
+	neurons_in_subdomain->write_neurons_to_file("output_positions.txt");
 	delete neurons_in_subdomain;
 
 	MPI_Barrier(MPI_COMM_WORLD);

@@ -125,7 +125,8 @@ public:
 private:
 	int Theta(double x) {
 		// 1: fire, 0: inactive
-		return (x >= random_number_distribution(random_number_generator));
+		const double threshold = random_number_distribution(random_number_generator);
+		return (x >= threshold);
 	}
 
 	// My local number of neurons
