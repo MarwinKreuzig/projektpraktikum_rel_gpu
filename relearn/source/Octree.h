@@ -266,7 +266,7 @@ public:
 	}
 
 	void set_mpi_rma_mem_allocator(MPI_RMA_MemAllocator<OctreeNode>* allocator) noexcept {
-		//this->mpi_rma_node_allocator = allocator;
+		assert(false && "Don't use this function any more! set_rma_mem_allocator in octree.h");
 	}
 
 	void set_root_level(size_t root_level) noexcept {

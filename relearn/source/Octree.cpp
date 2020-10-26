@@ -246,7 +246,7 @@ void Octree::get_nodes_for_interval(
 			rank_addr_pair.first = target_rank;
 
 			// Start access epoch to remote rank
-			MPI_Win_lock(MPI_LOCK_SHARED, target_rank, MPI_MODE_NOCHECK, mpi_rma_node_allocator.mpi_window);
+			MPIInfos::lock_window(target_rank, MPI_Locktype::shared);
 
 			// Fetch remote children if they exist
 			for (auto i = 7; i >= 0; i--) {
@@ -285,7 +285,7 @@ void Octree::get_nodes_for_interval(
 			}
 
 			// Complete access epoch
-			MPI_Win_unlock(target_rank, mpi_rma_node_allocator.mpi_window);
+			MPIInfos::unlock_window(target_rank);
 
 			// Push root's children onto stack
 			for (auto i = 7; i >= 0; i--) {
@@ -342,7 +342,7 @@ void Octree::get_nodes_for_interval(
 				rank_addr_pair.first = target_rank;
 
 				// Start access epoch to remote rank
-				MPI_Win_lock(MPI_LOCK_SHARED, target_rank, MPI_MODE_NOCHECK, mpi_rma_node_allocator.mpi_window);
+				MPIInfos::lock_window(target_rank, MPI_Locktype::shared);
 
 				// Fetch remote children if they exist
 				for (auto i = 7; i >= 0; i--) {
@@ -381,7 +381,7 @@ void Octree::get_nodes_for_interval(
 				}
 
 				// Complete access epoch
-				MPI_Win_unlock(target_rank, mpi_rma_node_allocator.mpi_window);
+				MPIInfos::unlock_window(target_rank);
 
 				// Push node's children onto stack
 				for (auto i = 7; i >= 0; i--) {
@@ -514,7 +514,7 @@ void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list,
 	// Start access epoch if necessary
 	if (!epochs_started[target_rank]) {
 		// Start access epoch to remote rank
-		MPI_Win_lock(MPI_LOCK_SHARED, target_rank, MPI_MODE_NOCHECK, mpi_rma_node_allocator.mpi_window);
+		MPIInfos::lock_window(target_rank, MPI_Locktype::shared);
 		epochs_started[target_rank] = true;
 	}
 
@@ -686,7 +686,7 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 	// Complete all started access epochs
 	for (auto i = 0; i < access_epochs_started.size(); i++) {
 		if (access_epochs_started[i]) {
-			MPI_Win_unlock(i, mpi_rma_node_allocator.mpi_window);
+			MPIInfos::unlock_window(i);
 		}
 	}
 }
@@ -827,7 +827,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
 		// Init octree node
 		root->rank = MPIInfos::my_rank;
 		root->level = root_level;
-		root->is_parent = 1;  // node will become parent
+		root->is_parent = true;  // node will become parent
 
 							  // Init cell in octree node
 							  // cell size becomes tree's box size
@@ -900,7 +900,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
 				// Init octree node
 				new_node->rank = MPIInfos::my_rank;
 				new_node->level = next_level;
-				new_node->is_parent = 1;  // node will become parent
+				new_node->is_parent = true;  // node will become parent
 
 										  // Init cell in octree node
 										  // cell size becomes size of new node's octant

@@ -65,9 +65,9 @@ public:
 	void set_mpi_rma_mem_allocator(MPI_RMA_MemAllocator<OctreeNode>& mpi_rma_mem_allocator) {
 		for (Subdomain& current_subdomain : subdomains) {
 			// Provide MPI RMA memory allocator
-			current_subdomain.octree.set_mpi_rma_mem_allocator(&mpi_rma_mem_allocator);
+			//current_subdomain.octree.set_mpi_rma_mem_allocator(&mpi_rma_mem_allocator);
 		}
-		//assert(false && "Don't use this function any more! set_mpi_rma_mem_allocator in partition.h");
+		assert(false && "Don't use this function any more! set_mpi_rma_mem_allocator in partition.h");
 	}
 
 	Neurons get_local_neurons(const Parameters& params, NeuronToSubdomainAssignment& neurons_in_subdomain) {

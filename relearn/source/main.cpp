@@ -376,7 +376,7 @@ int main(int argc, char** argv) {
 	/**
 	 * Create neuron population
 	 */
-	partition.set_mpi_rma_mem_allocator(MPIInfos::mpi_rma_mem_allocator);
+	//partition.set_mpi_rma_mem_allocator(MPIInfos::mpi_rma_mem_allocator);
 
 	Neurons neurons = partition.get_local_neurons(params, *neurons_in_subdomain);
 
