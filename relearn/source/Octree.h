@@ -266,7 +266,7 @@ public:
 	}
 
 	void set_mpi_rma_mem_allocator(MPI_RMA_MemAllocator<OctreeNode>* allocator) noexcept {
-		this->mpi_rma_node_allocator = allocator;
+		//this->mpi_rma_node_allocator = allocator;
 	}
 
 	void set_root_level(size_t root_level) noexcept {
@@ -449,7 +449,7 @@ private:
 										  // finding a target neuron
 
 	// Allocator for MPI passive target sync. memory for tree nodes
-	MPI_RMA_MemAllocator<OctreeNode>* mpi_rma_node_allocator;
+	MPI_RMA_MemAllocator<OctreeNode>& mpi_rma_node_allocator;
 
 	// Cache with nodes owned by other ranks
 	typedef std::pair<int, OctreeNode*> NodesCacheKey;
