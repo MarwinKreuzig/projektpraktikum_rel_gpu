@@ -34,10 +34,10 @@
 #include "NeuronMonitor.h"
 
 
-struct RMABufferOctreeNodes {
-	OctreeNode* ptr;
-	size_t num_nodes;
-};
+//struct RMABufferOctreeNodes {
+//	OctreeNode* ptr;
+//	size_t num_nodes;
+//};
 
 void setDefaultParameters(Parameters& params) noexcept {
 	params.frac_neurons_exc = 0.8;                          // CHANGE

@@ -15,6 +15,16 @@
 
 class Octree;
 
+struct RMABufferOctreeNodes {
+	OctreeNode* ptr;
+	size_t num_nodes;
+};
+
+enum MPI_Locktype : int {
+	exclusive = 234,
+	shared = 235,
+};
+
 namespace MPIInfos {
 	/**
 	 * Global variables
@@ -36,12 +46,19 @@ namespace MPIInfos {
 	extern std::string my_rank_str;
 
 	extern MPI_RMA_MemAllocator<OctreeNode> mpi_rma_mem_allocator;
+	extern RMABufferOctreeNodes rma_buffer_branch_nodes;
 
 	/**
 	 * Functions
 	 */
 	void init(int argc, char** argv);
-	void init_neurons(const size_t num_neurons);
+	void init_neurons(size_t num_neurons);
+	void init_mem_allocator(size_t mem_size);
+	void init_buffer_octree(size_t num_partitions);
+
+	void lock_window(int rank, MPI_Locktype lock_type);
+	void unlock_window(int rank);
+
 	void finalize() noexcept;
 	void print_infos_rank(int rank);
 }

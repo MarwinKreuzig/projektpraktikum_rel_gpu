@@ -12,6 +12,7 @@
 #include <sstream>
 #include <iomanip>
 
+#include "MPIInfos.h"
 #include "Utility.h"
 #include "LogMessages.h"
 #include "MPI_RMA_MemAllocator.h"
@@ -48,6 +49,8 @@ namespace MPIInfos {
 
 	MPI_RMA_MemAllocator<OctreeNode> mpi_rma_mem_allocator;
 
+	RMABufferOctreeNodes rma_buffer_branch_nodes;
+
 	/**
 	 * Functions
 	 */
@@ -68,7 +71,7 @@ namespace MPIInfos {
 		my_rank_str = sstring.str();
 	}
 
-	void init_neurons(const size_t num_neurons) {
+	void init_neurons(size_t num_neurons) {
 		/**
 		 * Sanity check for use of MPI
 		 *
@@ -106,9 +109,38 @@ namespace MPIInfos {
 		my_neuron_id_end = my_neuron_id_start + (my_num_neurons - 1);
 	}
 
+	void init_mem_allocator(size_t mem_size) {
+		mpi_rma_mem_allocator.set_size_requested(mem_size);
+		mpi_rma_mem_allocator.allocate_rma_mem();
+		mpi_rma_mem_allocator.create_rma_window();  // collective
+		mpi_rma_mem_allocator.gather_rma_window_base_pointers();
+	}
+
+	void init_buffer_octree(size_t num_partitions) {
+		rma_buffer_branch_nodes.num_nodes = num_partitions;
+		rma_buffer_branch_nodes.ptr = mpi_rma_mem_allocator.get_block_of_objects_memory(num_partitions);
+
+		mpi_rma_mem_allocator.init_free_object_list();
+	}
+
+	void lock_window(int rank, MPI_Locktype lock_type_enum) {
+		int lock_type = static_cast<int>(lock_type_enum);
+		MPI_Win_lock(lock_type, rank, MPI_MODE_NOCHECK, mpi_rma_mem_allocator.mpi_window);
+	}
+
+	void unlock_window(int rank) {
+		MPI_Win_unlock(rank, mpi_rma_mem_allocator.mpi_window);
+	}
+
 	void finalize() noexcept {
+		// Free RMA window (MPI collective)
+		// mpi_rma_mem_allocator.free_rma_window();
+		// mpi_rma_mem_allocator.deallocate_rma_mem();
+
 		delete[] num_neurons_of_ranks;
 		delete[] num_neurons_of_ranks_displs;
+
+		MPI_Finalize();
 	}
 
 	// Print which neurons "rank" is responsible for

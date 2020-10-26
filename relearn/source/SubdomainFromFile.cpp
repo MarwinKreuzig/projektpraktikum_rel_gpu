@@ -7,6 +7,14 @@
 #include <cmath>
 
 SubdomainFromFile::SubdomainFromFile(std::string file_path, size_t num_neurons) : file(file_path) {
+	const bool file_is_good = file.good();
+	const bool file_is_not_good = file.fail() || file.eof();
+
+	if (!file_is_good || file_is_not_good) {
+		std::cout << "Opening the file was not successful" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
 	read_dimensions_from_file();
 }
 
@@ -70,7 +78,7 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
 	std::string line;
 	Node node;
 	bool success = false;
-	
+
 	file.clear();
 	file.seekg(0);
 

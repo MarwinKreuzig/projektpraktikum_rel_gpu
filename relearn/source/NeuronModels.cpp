@@ -5,6 +5,8 @@
  * Created on September 26, 2014, 9:31 PM
  */
 
+#include <mpi.h>
+
 #include "NeuronModels.h"
 #include "MPIInfos.h"
 #include "Random.h"
