@@ -366,27 +366,17 @@ int main(int argc, char** argv) {
 	/**
 	 * Create MPI RMA memory allocator
 	 */
-	MPI_RMA_MemAllocator<OctreeNode> mpi_rma_mem_allocator;
-	mpi_rma_mem_allocator.set_size_requested(params.mpi_rma_mem_size);
-	 // Set up RMA memory allocator
-	mpi_rma_mem_allocator.allocate_rma_mem();
-	mpi_rma_mem_allocator.create_rma_window();  // collective
-	mpi_rma_mem_allocator.gather_rma_window_base_pointers();
 
-	RMABufferOctreeNodes rma_buffer_branch_nodes;
-	// Get memory for the branch nodes
-	rma_buffer_branch_nodes.num_nodes = partition.get_total_num_subdomains();
-	rma_buffer_branch_nodes.ptr =
-		mpi_rma_mem_allocator.get_block_of_objects_memory(rma_buffer_branch_nodes.num_nodes);
-	mpi_rma_mem_allocator.init_free_object_list();
+	MPIInfos::init_mem_allocator(params.mpi_rma_mem_size);
+	MPIInfos::init_buffer_octree(partition.get_total_num_subdomains());
 
 	// Lock local RMA memory for local stores
-	MPI_Win_lock(MPI_LOCK_EXCLUSIVE, MPIInfos::my_rank, MPI_MODE_NOCHECK, mpi_rma_mem_allocator.mpi_window);
+	MPIInfos::lock_window(MPIInfos::my_rank, MPI_Locktype::exclusive);
 
 	/**
 	 * Create neuron population
 	 */
-	partition.set_mpi_rma_mem_allocator(mpi_rma_mem_allocator);
+	partition.set_mpi_rma_mem_allocator(MPIInfos::mpi_rma_mem_allocator);
 
 	Neurons neurons = partition.get_local_neurons(params, *neurons_in_subdomain);
 
@@ -413,7 +403,7 @@ int main(int argc, char** argv) {
 	 * Init global tree parameters
 	 */
 	Octree global_tree(partition, params);
-	global_tree.set_mpi_rma_mem_allocator(&mpi_rma_mem_allocator);
+	global_tree.set_mpi_rma_mem_allocator(&MPIInfos::mpi_rma_mem_allocator);
 	global_tree.set_no_free_in_destructor(); // This needs to be changed later,
 										 // as it's cleaner to free the nodes at destruction
 
@@ -430,7 +420,7 @@ int main(int argc, char** argv) {
 	}
 
 	// Unlock local RMA memory and make local stores visible in public window copy
-	MPI_Win_unlock(MPIInfos::my_rank, mpi_rma_mem_allocator.mpi_window);
+	MPIInfos::unlock_window(MPIInfos::my_rank);
 
 	/**********************************************************************************/
 
@@ -526,9 +516,6 @@ int main(int argc, char** argv) {
 			neurons.update_connectivity(global_tree,
 				local_trees,
 				network_graph,
-				rma_buffer_branch_nodes.ptr,
-				rma_buffer_branch_nodes.num_nodes,
-				mpi_rma_mem_allocator.mpi_window,
 				num_synapses_deleted,
 				num_synapses_created);
 
@@ -579,7 +566,7 @@ int main(int argc, char** argv) {
 		params, neuron_id_map);
 	neurons.print_positions_to_log_file(Logs::get("positions_rank_" + MPIInfos::my_rank_str), params, neuron_id_map);
 
-	printTimers(mpi_rma_mem_allocator);
+	printTimers(MPIInfos::mpi_rma_mem_allocator);
 
 	// Free object created based on command line parameters
 	neurons_in_subdomain->write_neurons_to_file("output_positions.txt");

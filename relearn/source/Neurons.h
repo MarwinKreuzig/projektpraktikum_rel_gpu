@@ -262,14 +262,11 @@ public:
 	void update_connectivity(Octree& global_tree,
 		std::vector<Octree*>& local_trees,
 		NetworkGraph& network_graph,
-		OctreeNode rma_buffer_branch_nodes[],
-		size_t num_rma_buffer_branch_nodes,
-		const MPI_Win& mpi_window,
-		size_t& num_synapses_deleted, 
+		size_t& num_synapses_deleted,
 		size_t& num_synapses_created) {
 
 		delete_synapses(num_synapses_deleted, network_graph);
-		create_synapses(num_synapses_created, mpi_window, local_trees, rma_buffer_branch_nodes, num_rma_buffer_branch_nodes, global_tree, network_graph);
+		create_synapses(num_synapses_created, local_trees, global_tree, network_graph);
 	}
 
 	void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, LogFiles& log_file, const Parameters& params, size_t sum_synapses_deleted, size_t sum_synapses_created);
@@ -292,7 +289,7 @@ public:
 private:
 	void delete_synapses(size_t& num_synapses_deleted, NetworkGraph& network_graph);
 
-	void create_synapses(size_t& num_synapses_created, const MPI_Win& mpi_window, std::vector<Octree*>& local_trees, OctreeNode rma_buffer_branch_nodes[], const size_t& num_rma_buffer_branch_nodes, Octree& global_tree, NetworkGraph& network_graph);
+	void create_synapses(size_t& num_synapses_created, std::vector<Octree*>& local_trees, Octree& global_tree, NetworkGraph& network_graph);
 
 	template<typename T>
 	StatisticalMeasures<T> global_statistics(const T* local_values, size_t num_local_values, size_t total_num_values, int root, MPI_Comm mpi_comm) {

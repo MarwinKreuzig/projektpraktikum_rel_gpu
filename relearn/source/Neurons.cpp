@@ -323,13 +323,7 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 	GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
 }
 
-void Neurons::create_synapses(size_t& num_synapses_created,
-	const MPI_Win& mpi_window,
-	std::vector<Octree*>& local_trees,
-	OctreeNode rma_buffer_branch_nodes[],
-	const size_t& num_rma_buffer_branch_nodes,
-	Octree& global_tree,
-	NetworkGraph& network_graph) {
+void Neurons::create_synapses(size_t& num_synapses_created, std::vector<Octree*>& local_trees, Octree& global_tree, NetworkGraph& network_graph) {
 	/**
 	* 2. Create Synapses
 	*
@@ -355,7 +349,7 @@ void Neurons::create_synapses(size_t& num_synapses_created,
 	/**********************************************************************************/
 
 	// Lock local RMA memory for local stores
-	MPI_Win_lock(MPI_LOCK_EXCLUSIVE, MPIInfos::my_rank, MPI_MODE_NOCHECK, mpi_window);
+	MPIInfos::lock_window(MPIInfos::my_rank, MPI_Locktype::exclusive);
 
 	// Update my local trees bottom-up
 	GlobalTimers::timers.start(TimerRegion::UPDATE_LOCAL_TREES);
@@ -371,6 +365,7 @@ void Neurons::create_synapses(size_t& num_synapses_created,
 	* Exchange branch nodes
 	*/
 	GlobalTimers::timers.start(TimerRegion::EXCHANGE_BRANCH_NODES);
+	OctreeNode* rma_buffer_branch_nodes = MPIInfos::rma_buffer_branch_nodes.ptr;
 	// Copy local trees' root nodes to correct positions in receive buffer
 	for (size_t i = 0; i < local_trees.size(); i++) {
 		const size_t global_subdomain_id = partition.get_my_subdomain_id_start() + i;
@@ -389,6 +384,7 @@ void Neurons::create_synapses(size_t& num_synapses_created,
 	// Insert only received branch nodes into global tree
 	// The local ones are already in the global tree
 	GlobalTimers::timers.start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
+	const size_t num_rma_buffer_branch_nodes = MPIInfos::rma_buffer_branch_nodes.num_nodes;
 	for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
 		if (i < partition.get_my_subdomain_id_start() ||
 			i > partition.get_my_subdomain_id_end()) {
@@ -408,7 +404,7 @@ void Neurons::create_synapses(size_t& num_synapses_created,
 	GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
 
 	// Unlock local RMA memory and make local stores visible in public window copy
-	MPI_Win_unlock(MPIInfos::my_rank, mpi_window);
+	MPIInfos::unlock_window(MPIInfos::my_rank);
 
 	/**********************************************************************************/
 
@@ -1083,7 +1079,7 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 					<< "list_synapses.size() (" << list_synapses.size() << ")\n";
 			}
 		}
-		
+
 		assert(num_synapses_to_delete <= list_synapses.size());
 
 		for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
@@ -1253,7 +1249,7 @@ void Neurons::delete_synapses(std::list<PendingSynapseDeletion>& list,
 		assert(dendrites_exc.get_cnts()[i] >= dendrites_exc.get_connected_cnts()[i]);
 		assert(dendrites_inh.get_cnts()[i] >= dendrites_inh.get_connected_cnts()[i]);
 	}
-	
+
 	double* axons_connected_cnts = axons.get_connected_cnts();
 	double* dendrites_exc_connected_cnts = dendrites_exc.get_connected_cnts();
 	double* dendrites_inh_connected_cnts = dendrites_inh.get_connected_cnts();
