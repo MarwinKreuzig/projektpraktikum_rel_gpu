@@ -9,27 +9,8 @@
 #include "MPIInfos.h"
 #include "Random.h"
 
-NeuronModels::NeuronModels(size_t num_neurons, double x_0, double tau_x, double k, double tau_C, double beta, int h, double refrac_time) :
-	my_num_neurons(num_neurons),
-	model{models::Model_Ifc::create<models::ModelA>(x_0,tau_x,refrac_time)},
-	// model{models::Model_Ifc::create<models::IzhikevichModel>()},
-	// model{models::Model_Ifc::create<models::FitzHughNagumoModel>()},
-	// model{models::Model_Ifc::create<models::AEIFModel>()},
-	k(k),
-	tau_C(tau_C),
-	beta(beta),
-	h(h),
-	x(num_neurons),
-	u(num_neurons),
-	fired(num_neurons),
-	I_syn(num_neurons)
-{
-	model->init_neurons(x, u, fired);
-}
-
-NeuronModels::NeuronModels(size_t num_neurons, double k, double tau_C, double beta, int h, std::unique_ptr<models::Model_Ifc> model_)
+NeuronModels::NeuronModels(size_t num_neurons, double k, double tau_C, double beta, int h)
 	: my_num_neurons(num_neurons),
-	  model{std::move(model_)},
 	  k(k),
 	  tau_C(tau_C),
 	  beta(beta),
@@ -37,10 +18,7 @@ NeuronModels::NeuronModels(size_t num_neurons, double k, double tau_C, double be
 	  x(num_neurons, 0),
 	  fired(num_neurons, 0),
 	  u(num_neurons, 0),
-	  I_syn(num_neurons, 0)
-{
-	model->init_neurons(x, u, fired);
-}
+	  I_syn(num_neurons, 0) {}
 
 /* Performs one iteration step of update in electrical activity */
 
@@ -54,7 +32,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	// For my neurons
 	for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
 		// My neuron fired
-		if (fired[neuron_id]) {
+		if (static_cast<bool>(fired[neuron_id])) {
 			const NetworkGraph::Edges& out_edges = network_graph.get_out_edges(neuron_id);
 			NetworkGraph::Edges::const_iterator it_out_edge;
 
@@ -85,9 +63,9 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	std::vector<size_t> num_firing_neuron_ids_from_ranks(MPIInfos::num_ranks, 112233);
 
 	// Fill vector with my number of firing neuron ids for every rank (excluding me)
-	for (auto map_it = map_firing_neuron_ids_outgoing.begin(); map_it != map_firing_neuron_ids_outgoing.end(); ++map_it) {
-		auto rank = map_it->first;
-		auto num_neuron_ids = (map_it->second).size();
+	for (auto & map_it : map_firing_neuron_ids_outgoing) {
+		auto rank = map_it.first;
+		auto num_neuron_ids = map_it.second.size();
 
 		num_firing_neuron_ids_for_ranks[rank] = num_neuron_ids;
 	}
@@ -122,20 +100,20 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	auto mpi_requests_index = 0;
 
 	// Receive actual neuron ids
-	for (auto map_it = map_firing_neuron_ids_incoming.begin(); map_it != map_firing_neuron_ids_incoming.end(); ++map_it) {
-		auto rank = map_it->first;
-		auto buffer = (map_it->second).get_neuron_ids();
-		const auto size_in_bytes = static_cast<int>((map_it->second).get_neuron_ids_size_in_bytes());
+	for (auto & map_it : map_firing_neuron_ids_incoming) {
+		auto rank = map_it.first;
+		auto buffer = map_it.second.get_neuron_ids();
+		const auto size_in_bytes = static_cast<int>(map_it.second.get_neuron_ids_size_in_bytes());
 
 		MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 		++mpi_requests_index;
 	}
 
 	// Send actual neuron ids
-	for (auto map_it = map_firing_neuron_ids_outgoing.begin(); map_it != map_firing_neuron_ids_outgoing.end(); ++map_it) {
-		auto rank = map_it->first;
-		const auto buffer = (map_it->second).get_neuron_ids();
-		const auto size_in_bytes = static_cast<int>((map_it->second).get_neuron_ids_size_in_bytes());
+	for (auto & map_it : map_firing_neuron_ids_outgoing) {
+		auto rank = map_it.first;
+		const auto buffer = map_it.second.get_neuron_ids();
+		const auto size_in_bytes = static_cast<int>(map_it.second.get_neuron_ids_size_in_bytes());
 
 		MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 		++mpi_requests_index;
@@ -169,7 +147,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 			auto rank = it_in_edge->first.first;
 			auto src_neuron_id = it_in_edge->first.second;
 
-			bool spike;
+			bool spike{false};
 			if (rank == MPIInfos::my_rank)
 			{
 				spike = static_cast<bool>(fired[src_neuron_id]);
@@ -189,7 +167,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	// For my neurons
 	for (size_t i = 0; i < my_num_neurons; ++i)
 	{
-		model->update_activity(x[i], u[i], I_syn[i], fired[i], static_cast<double>(h));
+		update_activity(i);
 
 		for (int integration_steps = 0; integration_steps < h; ++integration_steps)
 		{

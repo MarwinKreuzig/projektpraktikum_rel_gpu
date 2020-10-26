@@ -228,7 +228,8 @@ public:
 	 */
 	typedef std::map<int, SynapseDeletionRequests> MapSynapseDeletionRequests;
 
-	Neurons(size_t neurons_count, Parameters params, const Partition&);
+	Neurons(size_t num_neurons, const Parameters &params, const Partition &);
+	Neurons(size_t num_neurons, const Parameters &params, const Partition &, std::unique_ptr<NeuronModels> model);
 	~Neurons() = default;
 
 	Neurons(const Neurons& other) = delete;
@@ -237,20 +238,25 @@ public:
 	Neurons& operator=(const Neurons& other) = delete;
 	Neurons& operator=(Neurons&& other) = default;
 
+	void set_model(std::unique_ptr<NeuronModels> model)
+	{
+		neuron_models = std::move(model);
+	}
+
 	size_t get_num_neurons() const noexcept { return num_neurons; }
 	Positions& get_positions() noexcept { return positions; }
 	std::vector<std::string>& get_area_names() noexcept { return area_names; }
 	Axons& get_axons() noexcept { return axons; }
 	const DendritesExc& get_dendrites_exc() const noexcept { return dendrites_exc; }
 	const DendritesInh& get_dendrites_inh() const noexcept { return dendrites_inh; }
-	NeuronModels& get_neuron_models() noexcept { return neuron_models; }
+	NeuronModels& get_neuron_models() noexcept { return *neuron_models; }
 
 	bool get_vacant_axon(size_t& neuron_id, Vec3d& xyz_pos, Cell::DendriteType& dendrite_type_needed) noexcept;
 
 	void init_synaptic_elements() noexcept;
 
 	void update_electrical_activity(const NetworkGraph& network_graph) {
-		neuron_models.update_electrical_activity(network_graph, calcium);
+		neuron_models->update_electrical_activity(network_graph, calcium);
 	}
 
 	void update_number_synaptic_elements_delta() noexcept {
@@ -377,7 +383,7 @@ private:
 
 	const Partition& partition;
 
-	NeuronModels neuron_models;
+	std::unique_ptr<NeuronModels> neuron_models;
 
 	Axons axons;
 	DendritesExc dendrites_exc;
