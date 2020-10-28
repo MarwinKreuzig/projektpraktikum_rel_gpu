@@ -309,6 +309,36 @@ TEST(TestVector, test_vector_operator_mul_scalar) {
 	}
 }
 
+TEST(TestVector, test_vector_operator_div_scalar) {
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < 10; i++) {
+		auto x1 = urd(mt);
+		auto y1 = urd(mt);
+		auto z1 = urd(mt);
+
+		Vec3<double> v{ x1, y1, z1 };
+
+		auto scalar = urd(mt);
+		auto scalar_copy = scalar;
+
+		auto prod = v / scalar;
+
+		EXPECT_EQ(x1, v.x);
+		EXPECT_EQ(y1, v.y);
+		EXPECT_EQ(z1, v.z);
+
+		EXPECT_EQ(x1 / scalar, prod.x);
+		EXPECT_EQ(y1 / scalar, prod.y);
+		EXPECT_EQ(z1 / scalar, prod.z);
+
+		EXPECT_EQ(scalar, scalar_copy);
+	}
+}
+
 TEST(TestVector, test_vector_operator_plus_assign_scalar) {
 	std::mt19937 mt;
 	std::uniform_real_distribution<double> urd(-100.0, 100.0);
@@ -384,3 +414,169 @@ TEST(TestVector, test_vector_volume) {
 	}
 }
 
+TEST(TestVector, test_vector_cast)
+{
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < 10; i++)
+	{
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		Vec3<double> v{x, y, z};
+
+		Vec3<int> vc = static_cast<Vec3<int>>(v);
+
+		EXPECT_EQ(static_cast<int>(x), vc.x);
+		EXPECT_EQ(static_cast<int>(y), vc.y);
+		EXPECT_EQ(static_cast<int>(z), vc.z);
+	}
+}
+
+TEST(TestVector, test_vector_round_to_larger_multiple)
+{
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < 10; i++)
+	{
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		Vec3<double> v{x, y, z};
+
+		auto r = urd(mt);
+
+		v.round_to_larger_multiple(r);
+
+		// is next higher multiple of r
+		EXPECT_EQ(v.x / r, ceil(x / r));
+		EXPECT_EQ(v.y / r, ceil(y / r));
+		EXPECT_EQ(v.z / r, ceil(z / r));
+	}
+}
+
+TEST(TestVector, test_vector_calculate_pointwise_maximum)
+{
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < 10; i++)
+	{
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		Vec3<double> v{x, y, z};
+
+		auto x2 = urd(mt);
+		auto y2 = urd(mt);
+		auto z2 = urd(mt);
+
+		Vec3<double> v2{x2, y2, z2};
+
+		v.calculate_pointwise_maximum(v2);
+
+		EXPECT_EQ(v.x, std::max(v.x, v2.x));
+		EXPECT_EQ(v.y, std::max(v.y, v2.y));
+		EXPECT_EQ(v.z, std::max(v.z, v2.z));
+	}
+}
+
+TEST(TestVector, test_vector_calculate_pointwise_minimum)
+{
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < 10; i++)
+	{
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		Vec3<double> v{x, y, z};
+
+		auto x2 = urd(mt);
+		auto y2 = urd(mt);
+		auto z2 = urd(mt);
+
+		Vec3<double> v2{x2, y2, z2};
+
+		v.calculate_pointwise_minimum(v2);
+
+		EXPECT_EQ(v.x, std::min(v.x, v2.x));
+		EXPECT_EQ(v.y, std::min(v.y, v2.y));
+		EXPECT_EQ(v.z, std::min(v.z, v2.z));
+	}
+}
+
+TEST(TestVector, test_vector_get_maximum)
+{
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < 10; i++)
+	{
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		Vec3<double> v{x, y, z};
+
+		EXPECT_EQ(v.get_maximum(), std::max({x, y, z}));
+	}
+}
+
+TEST(TestVector, test_vector_get_minimum)
+{
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < 10; i++)
+	{
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		Vec3<double> v{x, y, z};
+
+		EXPECT_EQ(v.get_minimum(), std::min({x, y, z}));
+	}
+}
+
+TEST(TestVector, test_vector_calculate_p_norm)
+{
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+
+	mt.seed(rand());
+
+	auto x = 3.;
+	auto y = -2.;
+	auto z = 6.;
+
+	Vec3<double> v{x, y, z};
+
+	const auto p1 = v.calculate_p_norm(1.);
+	const auto p2 = v.calculate_p_norm(2.);
+	const auto p3 = v.calculate_p_norm(3.);
+
+	EXPECT_EQ(p1, 11.);
+	EXPECT_EQ(p2, 7.);
+	EXPECT_EQ(p3, pow(251, 1. / 3.));
+}
