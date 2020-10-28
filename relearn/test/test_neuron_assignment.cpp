@@ -72,6 +72,13 @@ TEST(TestRandomNeuronPlacement, test_constructor) {
 		EXPECT_EQ(num_neurons, num_neurons_);
 
 		EXPECT_NEAR(frac_ex, frac_ex_, 4.0 / num_neurons);
+
+		EXPECT_NEAR(sfnd.get_simulation_box_length().x,
+					ceil(pow(static_cast<double>(num_neurons), 1 / 3.)) * um_per_neuron,
+					1.0 / num_neurons);
+
+		EXPECT_EQ(0, sfnd.placed_num_neurons());
+		EXPECT_EQ(0, sfnd.placed_ratio_neurons_exc());
 	}
 }
 
@@ -104,6 +111,11 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill) {
 		EXPECT_EQ(num_neurons, num_neurons_);
 
 		EXPECT_NEAR(frac_ex, frac_ex_, 1.0 / num_neurons);
+
+		EXPECT_EQ(sfnd.desired_num_neurons(), sfnd.placed_num_neurons());
+		EXPECT_NEAR(sfnd.desired_ratio_neurons_exc(), sfnd.placed_ratio_neurons_exc(), 1.0 / num_neurons);
+
+		EXPECT_LE(sfnd.desired_ratio_neurons_exc(), sfnd.placed_ratio_neurons_exc());
 	}
 }
 
@@ -140,6 +152,11 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_multiple) {
 		EXPECT_EQ(num_neurons, num_neurons_);
 
 		EXPECT_NEAR(frac_ex, frac_ex_, 1.0 / num_neurons);
+
+		EXPECT_EQ(sfnd.desired_num_neurons(), sfnd.placed_num_neurons());
+		EXPECT_NEAR(sfnd.desired_ratio_neurons_exc(), sfnd.placed_ratio_neurons_exc(), 1.0 / num_neurons);
+
+		EXPECT_LE(sfnd.desired_ratio_neurons_exc(), sfnd.placed_ratio_neurons_exc());
 	}
 }
 
@@ -158,10 +175,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions) {
 		auto expected_neurons_per_dimension = static_cast<size_t>(ceil(pow(num_neurons, 1.0 / 3.0)));
 		auto size = expected_neurons_per_dimension * expected_neurons_per_dimension * expected_neurons_per_dimension;
 
-		auto flags = new bool[size];
-		for (auto j = 0; j < size; j++) {
-			flags[j] = false;
-		}
+		std::vector<bool> flags(size, false);
 
 		SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
 
@@ -189,9 +203,8 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions) {
 			EXPECT_LE(z, expected_neurons_per_dimension);
 
 			auto idx = x * expected_neurons_per_dimension * expected_neurons_per_dimension + y * expected_neurons_per_dimension + z;
-			auto& val = flags[idx];
-			EXPECT_FALSE(val);
-			val = true;
+			EXPECT_FALSE(flags[idx]);
+			flags[idx] = true;
 		}
 
 		std::vector<SynapticElements::SignalType> types;
@@ -237,10 +250,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions_multiple_subdomains) 
 		auto expected_neurons_per_dimension = static_cast<size_t>(ceil(pow(num_neurons, 1.0 / 3.0)));
 		auto size = expected_neurons_per_dimension * expected_neurons_per_dimension * expected_neurons_per_dimension;
 
-		auto flags = new bool[size];
-		for (auto j = 0; j < size; j++) {
-			flags[j] = false;
-		}
+		std::vector<bool> flags(size, false);
 
 		SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
 
@@ -283,9 +293,8 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions_multiple_subdomains) 
 			EXPECT_LE(z, expected_neurons_per_dimension);
 
 			auto idx = x * expected_neurons_per_dimension * expected_neurons_per_dimension + y * expected_neurons_per_dimension + z;
-			auto& val = flags[idx];
-			EXPECT_FALSE(val);
-			val = true;
+			EXPECT_FALSE(flags[idx]);
+			flags[idx] = true;
 		}
 
 		std::vector<SynapticElements::SignalType> types;
@@ -373,5 +382,7 @@ TEST(TestRandomNeuronPlacement, test_multiple_lazily_fill_positions_multiple_sub
 		sfnd.neuron_types(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, types);
 
 		check_types_fraction(types, frac_ex, total_subdomains, num_neurons);
+
+		free(flags);
 	}
 }
