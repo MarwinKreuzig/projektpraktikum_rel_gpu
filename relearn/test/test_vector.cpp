@@ -279,6 +279,36 @@ TEST(TestVector, test_vector_operator_plus_scalar) {
 	}
 }
 
+TEST(TestVector, test_vector_operator_minus_scalar) {
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < 10; i++) {
+		auto x1 = urd(mt);
+		auto y1 = urd(mt);
+		auto z1 = urd(mt);
+
+		Vec3<double> v{ x1, y1, z1 };
+
+		auto scalar = urd(mt);
+		auto scalar_copy = scalar;
+
+		auto sum = v - scalar;
+
+		EXPECT_EQ(x1, v.x);
+		EXPECT_EQ(y1, v.y);
+		EXPECT_EQ(z1, v.z);
+
+		EXPECT_EQ(x1 - scalar, sum.x);
+		EXPECT_EQ(y1 - scalar, sum.y);
+		EXPECT_EQ(z1 - scalar, sum.z);
+
+		EXPECT_EQ(scalar, scalar_copy);
+	}
+}
+
 TEST(TestVector, test_vector_operator_mul_scalar) {
 	std::mt19937 mt;
 	std::uniform_real_distribution<double> urd(-100.0, 100.0);

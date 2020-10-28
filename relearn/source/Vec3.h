@@ -66,14 +66,14 @@ struct Vec3 {
 		return z;
 	}
 
-	Vec3<T> operator-(const Vec3<T>& other) const noexcept {
-		Vec3<T> res{ x - other.x, y - other.y, z - other.z };
-		return res;
+	friend Vec3<T> operator-(const Vec3<T> &lhs, const Vec3<T> &rhs) noexcept
+	{
+		return {lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z};
 	}
 
-	Vec3<T> operator+(const Vec3<T>& other) const noexcept {
-		Vec3<T> res{ x + other.x, y + other.y, z + other.z };
-		return res;
+	friend Vec3<T> operator+(const Vec3<T> &lhs, const Vec3<T> &rhs) noexcept
+	{
+		return {lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z};
 	}
 
 	Vec3<T> operator+(const T& scalar) const noexcept {
@@ -82,26 +82,21 @@ struct Vec3 {
 		return res;
 	}
 
-	//template<typename = typename std::enable_if<std::is_integral<T>::value, void>::type>
-	//Vec3<T> operator*(const T& scalar) const {
-	//	Vec3<T> res = *this;
-	//	res *= scalar;
-	//	return res;
-	//}
+	Vec3<T> operator-(const T& scalar) const noexcept {
+		Vec3<T> res = *this;
+		res -= scalar;
+		return res;
+	}
 
 	Vec3<T> operator*(const double& scalar) const noexcept {
 		Vec3<T> res = *this;
-		res.x *= scalar;
-		res.y *= scalar;
-		res.z *= scalar;
+		res *= scalar;
 		return res;
 	}
 
 	Vec3<T> operator/(const double& scalar) const noexcept {
 		Vec3<T> res = *this;
-		res.x /= scalar;
-		res.y /= scalar;
-		res.z /= scalar;
+		res /= scalar;
 		return res;
 	}
 
@@ -122,10 +117,24 @@ struct Vec3 {
 		return *this;
 	}
 
+	Vec3<T>& operator/=(const T& scalar) noexcept {
+		x /= scalar;
+		y /= scalar;
+		z /= scalar;
+		return *this;
+	}
+
 	Vec3<T>& operator+=(const T& scalar) noexcept {
 		x += scalar;
 		y += scalar;
 		z += scalar;
+		return *this;
+	}
+
+	Vec3<T>& operator-=(const T& scalar) noexcept {
+		x -= scalar;
+		y -= scalar;
+		z -= scalar;
 		return *this;
 	}
 
