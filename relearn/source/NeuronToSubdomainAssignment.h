@@ -82,13 +82,16 @@ public:
 protected:
 	struct Node {
 		Position pos;
+		size_t id;
 		SynapticElements::SignalType signal_type;
 		std::string area_name;
 
 		struct less {
 			bool operator() (const Node& lhs, const Node& rhs) const noexcept {
 				Position::less less;
-				return  less(lhs.pos, rhs.pos);
+				bool less_struct = less(lhs.pos, rhs.pos);
+				bool less_operator = lhs.pos < rhs.pos;
+				return less_struct;
 			}
 		};
 	};

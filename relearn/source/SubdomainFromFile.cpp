@@ -99,7 +99,7 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
 
 		std::stringstream sstream(line);
 		success =
-			//(sstream >> node.id) &&
+			(sstream >> node.id) &&
 			(sstream >> node.pos.x) &&
 			(sstream >> node.pos.y) &&
 			(sstream >> node.pos.z) &&
