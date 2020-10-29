@@ -293,7 +293,14 @@ public:
 		return level_of_branch_nodes;
 	}
 
+	size_t get_num_local_trees() const noexcept {
+		return local_trees.size();
+	}
 
+	OctreeNode* get_local_root(size_t local_id) {
+		Octree* local_tree = local_trees[local_id];
+		return local_tree->get_root();
+	}
 
 	void print();
 
@@ -305,6 +312,8 @@ public:
 	// Insert an octree node with its subtree into the tree
 	void insert(OctreeNode* node_to_insert);
 
+	void insert_local_tree(Octree* node_to_insert);
+
 	void update(double* dendrites_exc_cnts, double* dendrites_exc_connected_cnts,
 		double* dendrites_inh_cnts, double* dendrites_inh_connected_cnts,
 		size_t num_neurons);
@@ -312,6 +321,15 @@ public:
 	// The caller must ensure that only inner nodes are visited.
 	// "max_level" must be chosen correctly for this
 	void update_from_level(size_t max_level);
+
+	void update_local_trees(SynapticElements& dendrites_exc, SynapticElements& dendrites_inh, size_t& num_neurons) {
+		for (size_t i = 0; i < local_trees.size(); i++) {
+			local_trees[i]->update(
+				dendrites_exc.get_cnts(), dendrites_exc.get_connected_cnts(),
+				dendrites_inh.get_cnts(), dendrites_inh.get_connected_cnts(),
+				num_neurons);
+		}
+	}
 
 	bool find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed, size_t& target_neuron_id, int& target_rank);
 
@@ -430,6 +448,8 @@ public:
 private:
 	// Root of the tree
 	OctreeNode* root;
+
+	std::vector<Octree*> local_trees;
 
 	// Level which is assigned to the root of the tree (default = 0)
 	size_t root_level;

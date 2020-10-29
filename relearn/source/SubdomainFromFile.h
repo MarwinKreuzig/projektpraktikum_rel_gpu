@@ -24,10 +24,13 @@ public:
 
 	void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) override;
 
+	void neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
+		size_t local_id_start, size_t local_id_end, std::vector<size_t>& global_ids) const override;
+
 private:
 	void read_dimensions_from_file();
 
-	void read_nodes_from_file(const Position& min, const Position& max, std::set<Node, Node::less>&);
+	void read_nodes_from_file(const Position& min, const Position& max, Nodes& nodes);
 
 	Vec3d offset;
 	double max_dimension_;

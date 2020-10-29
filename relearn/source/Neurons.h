@@ -260,13 +260,12 @@ public:
 	}
 
 	void update_connectivity(Octree& global_tree,
-		std::vector<Octree*>& local_trees,
 		NetworkGraph& network_graph,
 		size_t& num_synapses_deleted,
 		size_t& num_synapses_created) {
 
 		delete_synapses(num_synapses_deleted, network_graph);
-		create_synapses(num_synapses_created, local_trees, global_tree, network_graph);
+		create_synapses(num_synapses_created, global_tree, network_graph);
 	}
 
 	void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, LogFiles& log_file, const Parameters& params, size_t sum_synapses_deleted, size_t sum_synapses_created);
@@ -289,7 +288,7 @@ public:
 private:
 	void delete_synapses(size_t& num_synapses_deleted, NetworkGraph& network_graph);
 
-	void create_synapses(size_t& num_synapses_created, std::vector<Octree*>& local_trees, Octree& global_tree, NetworkGraph& network_graph);
+	void create_synapses(size_t& num_synapses_created, Octree& global_tree, NetworkGraph& network_graph);
 
 	template<typename T>
 	StatisticalMeasures<T> global_statistics(const T* local_values, size_t num_local_values, size_t total_num_values, int root, MPI_Comm mpi_comm) {
@@ -371,6 +370,7 @@ private:
 
 
 	size_t num_neurons;       // Local number of neurons
+	std::vector<size_t> local_ids;
 
 	const Partition& partition;
 
@@ -383,7 +383,6 @@ private:
 	Positions positions;  // Position of every neuron
 	std::vector<double> calcium;      // Intracellular calcium concentration of every neuron
 	std::vector<std::string> area_names;  // Area name of every neuron
-
 
 	// Random number generator for this class (C++11)
 	std::mt19937& random_number_generator;

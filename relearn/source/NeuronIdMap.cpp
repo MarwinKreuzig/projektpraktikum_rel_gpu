@@ -41,16 +41,13 @@ bool NeuronIdMap::rank_neuron_id2glob_id(const RankNeuronId&
 	return true;
 }
 
-bool NeuronIdMap::pos2rank_neuron_id(double x, double y, double z,
-	RankNeuronId& result) const {
-	Position key;
-	key.x = x; key.y = y; key.z = z;
-
-	auto it = pos_to_rank_neuron_id.find(key);
+bool NeuronIdMap::pos2rank_neuron_id(const Vec3d& pos, RankNeuronId& result) const {
+	auto it = pos_to_rank_neuron_id.find(pos);
 
 	// Neuron position not found
-	if (it == pos_to_rank_neuron_id.end())
+	if (it == pos_to_rank_neuron_id.end()) {
 		return false;
+	}
 
 	// Return rank and neuron id
 	result = it->second;
@@ -76,7 +73,7 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 	size_t my_num_neurons,
 	const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z,
 	MPI_Comm mpi_comm,
-	std::map<Position, RankNeuronId, Position::less>& pos_to_rank_neuron_id) {
+	std::map<Vec3d, RankNeuronId>& pos_to_rank_neuron_id) {
 	int num_ranks, my_rank;
 	MPI_Comm_size(mpi_comm, &num_ranks);
 	MPI_Comm_rank(mpi_comm, &my_rank);
@@ -127,7 +124,7 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 			const auto idx = glob_neuron_id * 3;
 
 			assert(idx < xyz_pos.size());
-			Position key{ xyz_pos[idx], xyz_pos[idx + 1], xyz_pos[idx + 2] };
+			Vec3d key{ xyz_pos[idx], xyz_pos[idx + 1], xyz_pos[idx + 2] };
 			val.neuron_id = neuron_id;
 
 			auto ret = pos_to_rank_neuron_id.insert(std::make_pair(key, val));

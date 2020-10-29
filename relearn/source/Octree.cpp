@@ -802,7 +802,6 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 }
 
 // Insert an octree node with its subtree into the tree
-
 void Octree::insert(OctreeNode* node_to_insert) {
 	const auto target_level = node_to_insert->level;
 
@@ -914,6 +913,21 @@ void Octree::insert(OctreeNode* node_to_insert) {
 			next_level++;
 		} // target level not yet reached
 	} // while
+}
+
+void Octree::insert_local_tree(Octree* node_to_insert) {
+
+	OctreeNode* local_root = node_to_insert->get_root();
+	if (!local_root) {
+		std::stringstream s;
+		s << "Local tree is empty, probably because the corresponding subdomain contains no neuron. "
+			<< "Currently, it is a requirement that every subdomain contains at least one neuron.\n";
+		LogMessages::print_error(s.str().c_str());
+		std::abort();
+	}
+
+	insert(local_root);
+	local_trees.emplace_back(node_to_insert);
 }
 
 void Octree::print() {

@@ -3,6 +3,7 @@
 #include <limits>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -33,12 +34,6 @@
 #include "Utility.h"
 #include "NeuronMonitor.h"
 
-
-//struct RMABufferOctreeNodes {
-//	OctreeNode* ptr;
-//	size_t num_nodes;
-//};
-
 void setDefaultParameters(Parameters& params) noexcept {
 	params.frac_neurons_exc = 0.8;                          // CHANGE
 	params.x_0 = 0.05;
@@ -59,7 +54,6 @@ void setDefaultParameters(Parameters& params) noexcept {
 	params.log_start_neuron = 0;  // NOT USED
 	params.mpi_rma_mem_size = 300 * 1024 * 1024;  // 300 MB
 	params.max_num_pending_vacant_axons = 1000;
-	// params.seed_octree    (set below)
 	// params.seed_partition (No global parameter. Every process uses a different seed, its rank. See below)
 }
 
@@ -87,13 +81,11 @@ void setSpecificParameters(Parameters& params, int argc, char** argv) {
 	* Parameter sanity checks
 	*/
 
-	std::stringstream sstring;
-
 	// Needed to avoid creating autapses
 	if (!(params.accept_criterion <= 0.5)) {
+		std::stringstream sstring;
 		sstring << __FUNCTION__ << ": accept_criterion > 0.5";
 		LogMessages::print_error(sstring.str().c_str());
-		sstring.str("");
 		exit(EXIT_FAILURE);
 	}
 
@@ -101,14 +93,14 @@ void setSpecificParameters(Parameters& params, int argc, char** argv) {
 	// the connectivity update works correctly
 	const std::bitset<sizeof(int) * 8> bitset_num_ranks(MPIInfos::num_ranks);
 	if (1 != bitset_num_ranks.count() && (0 == MPIInfos::my_rank)) {
+		std::stringstream sstring;
 		sstring << __FUNCTION__ << ": Number of ranks must be of the form 2^n";
 		LogMessages::print_error(sstring.str().c_str());
-		sstring.str("");
 		exit(EXIT_FAILURE);
 	}
 }
 
-void printTimers(const MPI_RMA_MemAllocator<OctreeNode>& mpi_rma_mem_allocator) {
+void printTimers() {
 	using namespace std;
 	/**
 	 * Print timers and memory usage
@@ -235,7 +227,7 @@ void printTimers(const MPI_RMA_MemAllocator<OctreeNode>& mpi_rma_mem_allocator) 
 		//cout << "\n======== MEMORY USAGE RANK 0 ========" << endl;
 
 		cout << "\n======== RMA MEMORY ALLOCATOR RANK 0 ========" << endl;
-		cout << "Min num objects available: " << mpi_rma_mem_allocator.get_min_num_avail_objects() << endl;
+		cout << "Min num objects available: " << MPIInfos::mpi_rma_mem_allocator.get_min_num_avail_objects() << endl;
 
 		MPI_Type_free(&mpi_datatype_3_double);
 		MPI_Op_free(&mpi_op);
@@ -314,21 +306,16 @@ int main(int argc, char** argv) {
 	randomNumberSeeds::partition = static_cast<long int>(MPIInfos::my_rank);
 	randomNumberSeeds::octree = strtol(argv[3], nullptr, 10);
 
-	std::stringstream sstring; // For output generation
-
 	// Rank 0 prints start time of simulation
 	MPI_Barrier(MPI_COMM_WORLD);
 	if (0 == MPIInfos::my_rank) {
-		sstring << "START: " << Timers::wall_clock_time() << "\n";
-		std::cout << "\n";
+		std::stringstream sstring; // For output generation
+		sstring << "\nSTART: " << Timers::wall_clock_time() << "\n";
 		LogMessages::print_message_rank(sstring.str().c_str(), 0);
-		sstring.str("");
 	}
 
-	bool force_random = true;
-
 	NeuronToSubdomainAssignment* neurons_in_subdomain = nullptr;
-	if (5 < argc && !force_random) {
+	if (5 < argc) {
 		neurons_in_subdomain = new SubdomainFromFile(params.file_with_neuron_positions, params.num_neurons);
 		// Set parameter based on actual neuron population
 		params.frac_neurons_exc = neurons_in_subdomain->desired_ratio_neurons_exc();
@@ -347,7 +334,6 @@ int main(int argc, char** argv) {
 	Logs::init();
 
 	GlobalTimers::timers.start(TimerRegion::INITIALIZATION);
-
 	/**
 	 * Calculate what my partition of the domain consist of
 	 */
@@ -356,17 +342,16 @@ int main(int argc, char** argv) {
 	// Check if int type can contain total size of branch nodes to receive in bytes
 	// Every rank sends the same number of branch nodes, which is partition.get_my_num_subdomains()
 	if (std::numeric_limits<int>::max() < (partition.get_my_num_subdomains() * sizeof(OctreeNode))) {
+		std::stringstream sstring; // For output generation
 		sstring << __FUNCTION__ << ": int type is too small to hold the size in bytes of the branch "
 			"                     nodes that are received from every rank in MPI_Allgather()";
 		LogMessages::print_error(sstring.str().c_str());
-		sstring.str("");
 		exit(EXIT_FAILURE);
 	}
 
 	/**
 	 * Create MPI RMA memory allocator
 	 */
-
 	MPIInfos::init_mem_allocator(params.mpi_rma_mem_size);
 	MPIInfos::init_buffer_octree(partition.get_total_num_subdomains());
 
@@ -376,8 +361,6 @@ int main(int argc, char** argv) {
 	/**
 	 * Create neuron population
 	 */
-	//partition.set_mpi_rma_mem_allocator(MPIInfos::mpi_rma_mem_allocator);
-
 	Neurons neurons = partition.get_local_neurons(params, *neurons_in_subdomain);
 
 	partition.print_my_subdomains_info_rank(0);
@@ -386,37 +369,26 @@ int main(int argc, char** argv) {
 	LogMessages::print_message_rank("Neurons created", 0);
 
 	/**********************************************************************************/
-	NeuronIdMap neuron_id_map(neurons.get_num_neurons(),
+	NeuronIdMap neuron_id_map(
+		neurons.get_num_neurons(),
 		neurons.get_positions().get_x_dims(),
 		neurons.get_positions().get_y_dims(),
 		neurons.get_positions().get_z_dims(),
 		MPI_COMM_WORLD);
-	LogMessages::print_message_rank("Neuron id map created", 0);
 
-	// Get local trees from subdomains
-	std::vector<Octree*> local_trees(partition.get_my_num_subdomains());
-	for (size_t i = 0; i < local_trees.size(); i++) {
-		local_trees[i] = &partition.get_subdomain_tree(i);
-	}
+	LogMessages::print_message_rank("Neuron id map created", 0);
 
 	/**
 	 * Init global tree parameters
 	 */
 	Octree global_tree(partition, params);
-	global_tree.set_mpi_rma_mem_allocator(&MPIInfos::mpi_rma_mem_allocator);
-	global_tree.set_no_free_in_destructor(); // This needs to be changed later,
-										 // as it's cleaner to free the nodes at destruction
+	global_tree.set_no_free_in_destructor(); // This needs to be changed later, as it's cleaner to free the nodes at destruction
+
 
 	// Insert my local (subdomain) trees into my global tree
-	for (size_t i = 0; i < local_trees.size(); i++) {
-		if (!local_trees[i]->get_root()) {
-			std::stringstream s;
-			s << "Local tree " << i << " is empty, probably because the corresponding subdomain contains no neuron. "
-				<< "Currently, it is a requirement that every subdomain contains at least one neuron.\n";
-			LogMessages::print_error(s.str().c_str());
-			std::abort();
-		}
-		global_tree.insert(local_trees[i]->get_root());
+	for (size_t i = 0; i < partition.get_my_num_subdomains(); i++) {
+		Octree* local_tree = &partition.get_subdomain_tree(i);
+		global_tree.insert_local_tree(local_tree);
 	}
 
 	// Unlock local RMA memory and make local stores visible in public window copy
@@ -438,8 +410,7 @@ int main(int argc, char** argv) {
 	NetworkGraph network_graph(neurons.get_num_neurons());
 	// Neuronal connections provided in file
 	if (6 < argc) {
-		std::ifstream file(params.file_with_network);
-		network_graph.add_edge_weights(file, neuron_id_map);
+		//network_graph.add_edge_weights(params.file_with_network, neuron_id_map);
 	}
 	LogMessages::print_message_rank("Network graph created", 0);
 
@@ -513,11 +484,7 @@ int main(int argc, char** argv) {
 
 			GlobalTimers::timers.start(TimerRegion::UPDATE_CONNECTIVITY);
 
-			neurons.update_connectivity(global_tree,
-				local_trees,
-				network_graph,
-				num_synapses_deleted,
-				num_synapses_created);
+			neurons.update_connectivity(global_tree, network_graph, num_synapses_deleted, num_synapses_created);
 
 			GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_CONNECTIVITY);
 
@@ -533,15 +500,15 @@ int main(int argc, char** argv) {
 			}
 
 			if (cnts_global[0] != 0.0) {
+				std::stringstream sstring; // For output generation
 				sstring << "Sum (all processes) number synapses deleted: " << cnts_global[0] / 2;
 				LogMessages::print_message_rank(sstring.str().c_str(), 0);
-				sstring.str("");
 			}
 
 			if (cnts_global[1] != 0.0) {
+				std::stringstream sstring; // For output generation
 				sstring << "Sum (all processes) number synapses created: " << cnts_global[1] / 2;
 				LogMessages::print_message_rank(sstring.str().c_str(), 0);
-				sstring.str("");
 			}
 
 			neurons.print_sums_of_synapses_and_elements_to_log_file_on_rank_0(
@@ -566,30 +533,26 @@ int main(int argc, char** argv) {
 		params, neuron_id_map);
 	neurons.print_positions_to_log_file(Logs::get("positions_rank_" + MPIInfos::my_rank_str), params, neuron_id_map);
 
-	printTimers(MPIInfos::mpi_rma_mem_allocator);
+	printTimers();
 
 	// Free object created based on command line parameters
 	neurons_in_subdomain->write_neurons_to_file("output_positions.txt");
+	//network_graph.write_synapses_to_file("output_edges.txt", neuron_id_map);
 	delete neurons_in_subdomain;
 
 	MPI_Barrier(MPI_COMM_WORLD);
 	if (0 == MPIInfos::my_rank) {
+		std::stringstream sstring; // For output generation
+		sstring << "\n";
 		sstring << "\n" << "Total creations: " << total_creations << "\n";
 		sstring << "Total deletions: " << total_deletions << "\n";
 		sstring << "END: " << Timers::wall_clock_time() << "\n";
-		std::cout << "\n";
 		LogMessages::print_message_rank(sstring.str().c_str(), 0);
-		sstring.str("");
 	}
-
-	// Free RMA window (MPI collective)
-	//mpi_rma_mem_allocator.free_rma_window();
-	//mpi_rma_mem_allocator.deallocate_rma_mem();
 
 	/**
 	 * Finalize MPI
 	 */
-	MPI_Finalize();
 	MPIInfos::finalize();
 
 	return 0;

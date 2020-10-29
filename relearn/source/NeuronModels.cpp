@@ -48,25 +48,27 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	// For my neurons
 	for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
 		// My neuron fired
-		if (fired[neuron_id]) {
-			const NetworkGraph::Edges& out_edges = network_graph.get_out_edges(neuron_id);
-			NetworkGraph::Edges::const_iterator it_out_edge;
+		if (!fired[neuron_id]) {
+			continue;
+		}
 
-			// Find all target neurons which should receive the signal fired.
-			// That is, neurons which connect axons from neuron "neuron_id"
-			for (it_out_edge = out_edges.begin(); it_out_edge != out_edges.end(); ++it_out_edge) {
-				//target_neuron_id = it_out_edge->first.second;
-				auto target_rank = it_out_edge->first.first;
+		const NetworkGraph::Edges& out_edges = network_graph.get_out_edges(neuron_id);
 
-				// Don't send firing neuron id to myself as I already have this info
-				if (target_rank != MPIInfos::my_rank) {
-					// Function expects to insert neuron ids in sorted order
-					// Append if it is not already in
-					map_firing_neuron_ids_outgoing[target_rank].
-						append_if_not_found_sorted(neuron_id);
-				}
+		// Find all target neurons which should receive the signal fired.
+		// That is, neurons which connect axons from neuron "neuron_id"
+		for (const auto& it_out_edge : out_edges) {
+			//target_neuron_id = it_out_edge->first.second;
+			auto target_rank = it_out_edge.first.first;
+
+			// Don't send firing neuron id to myself as I already have this info
+			if (target_rank != MPIInfos::my_rank) {
+				// Function expects to insert neuron ids in sorted order
+				// Append if it is not already in
+				map_firing_neuron_ids_outgoing[target_rank].
+					append_if_not_found_sorted(neuron_id);
 			}
-		} // My neuron fired
+		}
+
 	} // For my neurons
 	GlobalTimers::timers.stop_and_add(TimerRegion::PREPARE_SENDING_SPIKES);
 
@@ -79,9 +81,9 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	std::vector<size_t> num_firing_neuron_ids_from_ranks(MPIInfos::num_ranks, 112233);
 
 	// Fill vector with my number of firing neuron ids for every rank (excluding me)
-	for (auto map_it = map_firing_neuron_ids_outgoing.begin(); map_it != map_firing_neuron_ids_outgoing.end(); ++map_it) {
-		auto rank = map_it->first;
-		auto num_neuron_ids = (map_it->second).size();
+	for (const auto& map_it : map_firing_neuron_ids_outgoing) {
+		auto rank = map_it.first;
+		auto num_neuron_ids = map_it.second.size();
 
 		num_firing_neuron_ids_for_ranks[rank] = num_neuron_ids;
 	}
@@ -116,20 +118,20 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	auto mpi_requests_index = 0;
 
 	// Receive actual neuron ids
-	for (auto map_it = map_firing_neuron_ids_incoming.begin(); map_it != map_firing_neuron_ids_incoming.end(); ++map_it) {
-		auto rank = map_it->first;
-		auto buffer = (map_it->second).get_neuron_ids();
-		const auto size_in_bytes = static_cast<int>((map_it->second).get_neuron_ids_size_in_bytes());
+	for (auto& map_it : map_firing_neuron_ids_incoming) {
+		auto rank = map_it.first;
+		auto buffer = map_it.second.get_neuron_ids();
+		const auto size_in_bytes = static_cast<int>(map_it.second.get_neuron_ids_size_in_bytes());
 
 		MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 		++mpi_requests_index;
 	}
 
 	// Send actual neuron ids
-	for (auto map_it = map_firing_neuron_ids_outgoing.begin(); map_it != map_firing_neuron_ids_outgoing.end(); ++map_it) {
-		auto rank = map_it->first;
-		const auto buffer = (map_it->second).get_neuron_ids();
-		const auto size_in_bytes = static_cast<int>((map_it->second).get_neuron_ids_size_in_bytes());
+	for (const auto& map_it : map_firing_neuron_ids_outgoing) {
+		auto rank = map_it.first;
+		const auto buffer = map_it.second.get_neuron_ids();
+		const auto size_in_bytes = static_cast<int>(map_it.second.get_neuron_ids_size_in_bytes());
 
 		MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 		++mpi_requests_index;
@@ -155,11 +157,10 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 		*/
 		// Walk through in-edges of my neuron
 		const NetworkGraph::Edges& in_edges = network_graph.get_in_edges(neuron_id);
-		NetworkGraph::Edges::const_iterator it_in_edge;
 
-		for (it_in_edge = in_edges.begin(); it_in_edge != in_edges.end(); ++it_in_edge) {
-			auto rank = it_in_edge->first.first;
-			auto src_neuron_id = it_in_edge->first.second;
+		for (const auto& it_in_edge : in_edges) {
+			auto rank = it_in_edge.first.first;
+			auto src_neuron_id = it_in_edge.first.second;
 
 			int spike = 0;
 			if (rank == MPIInfos::my_rank) {
@@ -169,7 +170,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 				MapFiringNeuronIds::const_iterator it = map_firing_neuron_ids_incoming.find(rank);
 				spike = (it != map_firing_neuron_ids_incoming.end()) && (it->second.find(src_neuron_id));
 			}
-			I_syn[neuron_id] += k * (it_in_edge->second) * static_cast<double>(spike);
+			I_syn[neuron_id] += k * (it_in_edge.second) * static_cast<double>(spike);
 		}
 	}
 	GlobalTimers::timers.stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);

@@ -137,6 +137,11 @@ void SubdomainFromNeuronDensity::fill_subdomain(size_t subdomain_idx, size_t num
 }
 
 
+void SubdomainFromNeuronDensity::neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
+	size_t local_id_start, size_t local_id_end, std::vector<size_t>& global_ids) const {
+
+}
+
 void SubdomainFromNeuronDensity::get_subdomain_boundaries(
 	const Vec3<size_t>& subdomain_3idx,
 	size_t num_subdomains_per_axis,

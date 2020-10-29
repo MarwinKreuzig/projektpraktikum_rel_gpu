@@ -58,6 +58,8 @@ public:
 		// Get pointer to data
 		size_t* get_neuron_ids() noexcept { return neuron_ids.data(); }
 
+		const size_t* get_neuron_ids() const noexcept { return neuron_ids.data(); }
+
 		size_t get_neuron_ids_size_in_bytes() const noexcept { return neuron_ids.size() * sizeof(size_t); }
 
 	private:

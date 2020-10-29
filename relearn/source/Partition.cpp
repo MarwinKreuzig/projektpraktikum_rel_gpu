@@ -50,6 +50,7 @@ Partition::Partition(int num_ranks, int my_rank) {
 		sstream << "My rank is: " << my_rank << "; There are " << num_ranks << " ranks in total; The rest is: " << rest << "\n";
 		std::cout << sstream.str().c_str() << std::flush;
 		sstream.str("");
+		assert(false && "rest != 0");
 	}
 
 	// Calc start and end index of subdomain
@@ -173,8 +174,16 @@ Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssig
 
 		// Set start and end of local neuron ids
 		// 0-th subdomain starts with neuron id 0
-		current_subdomain.neuron_id_start = (i == 0) ? 0 : (subdomains[i - 1].neuron_id_end + 1);
-		current_subdomain.neuron_id_end = current_subdomain.neuron_id_start + current_subdomain.num_neurons - 1;
+		current_subdomain.neuron_local_id_start = (i == 0) ? 0 : (subdomains[i - 1].neuron_local_id_end + 1);
+		current_subdomain.neuron_local_id_end = current_subdomain.neuron_local_id_start + current_subdomain.num_neurons - 1;
+
+		neurons_in_subdomain.neuron_global_ids(current_subdomain.index_1d,
+			total_num_subdomains,
+			current_subdomain.neuron_local_id_start,
+			current_subdomain.neuron_local_id_end,
+			current_subdomain.global_neuron_ids);
+
+		std::sort(current_subdomain.global_neuron_ids.begin(), current_subdomain.global_neuron_ids.end());
 
 		/**
 		* Set octree parameters.
@@ -206,7 +215,7 @@ Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssig
 
 		const auto subdomain_idx = i + my_subdomain_id_start;
 
-		const auto subdomain_num_neurons = 
+		const auto subdomain_num_neurons =
 			neurons_in_subdomain.num_neurons(subdomain_idx, my_num_subdomains, subdomain_pos_min, subdomain_pos_max);
 
 		// Get neuron positions in subdomain i
@@ -227,7 +236,7 @@ Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssig
 		neurons_in_subdomain.neuron_types(subdomain_idx, total_num_subdomains,
 			subdomain_pos_min, subdomain_pos_max, vec_type);
 
-		size_t neuron_id = subdomains[i].neuron_id_start;
+		size_t neuron_id = subdomains[i].neuron_local_id_start;
 		for (size_t j = 0; j < subdomains[i].num_neurons; j++) {
 			neuron_positions.set_x(neuron_id, vec_pos[j].x);
 			neuron_positions.set_y(neuron_id, vec_pos[j].y);

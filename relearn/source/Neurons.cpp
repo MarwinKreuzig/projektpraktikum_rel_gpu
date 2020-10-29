@@ -323,7 +323,7 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 	GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
 }
 
-void Neurons::create_synapses(size_t& num_synapses_created, std::vector<Octree*>& local_trees, Octree& global_tree, NetworkGraph& network_graph) {
+void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree, NetworkGraph& network_graph) {
 	/**
 	* 2. Create Synapses
 	*
@@ -353,12 +353,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, std::vector<Octree*>
 
 	// Update my local trees bottom-up
 	GlobalTimers::timers.start(TimerRegion::UPDATE_LOCAL_TREES);
-	for (size_t i = 0; i < local_trees.size(); i++) {
-		local_trees[i]->update(
-			dendrites_exc.get_cnts(), dendrites_exc.get_connected_cnts(),
-			dendrites_inh.get_cnts(), dendrites_inh.get_connected_cnts(),
-			num_neurons);
-	}
+	global_tree.update_local_trees(dendrites_exc, dendrites_inh, num_neurons);
 	GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
 
 	/**
@@ -367,17 +362,19 @@ void Neurons::create_synapses(size_t& num_synapses_created, std::vector<Octree*>
 	GlobalTimers::timers.start(TimerRegion::EXCHANGE_BRANCH_NODES);
 	OctreeNode* rma_buffer_branch_nodes = MPIInfos::rma_buffer_branch_nodes.ptr;
 	// Copy local trees' root nodes to correct positions in receive buffer
-	for (size_t i = 0; i < local_trees.size(); i++) {
+
+	size_t num_local_trees = global_tree.get_num_local_trees();
+	for (size_t i = 0; i < num_local_trees; i++) {
 		const size_t global_subdomain_id = partition.get_my_subdomain_id_start() + i;
-		const OctreeNode& root_node = *(local_trees[i]->get_root());
+		const OctreeNode* root_node = global_tree.get_local_root(i);
 
 		// This assignment copies memberwise
-		rma_buffer_branch_nodes[global_subdomain_id] = root_node;
+		rma_buffer_branch_nodes[global_subdomain_id] = *root_node;
 	}
 
 	// Allgather in-place branch nodes from every rank
 	MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, rma_buffer_branch_nodes,
-		static_cast<int>(local_trees.size()) * sizeof(OctreeNode),
+		static_cast<int>(num_local_trees) * sizeof(OctreeNode),
 		MPI_CHAR, MPI_COMM_WORLD);
 	GlobalTimers::timers.stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
 
@@ -893,7 +890,8 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& 
 			<< axons_z_dims[neuron_id] << " "
 			<< area_names[neuron_id] << "\n";
 	}
-	*file << endl;
+
+	*file << flush;
 	*file << std::defaultfloat;
 }
 

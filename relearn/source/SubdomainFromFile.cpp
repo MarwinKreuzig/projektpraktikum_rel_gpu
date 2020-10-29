@@ -7,6 +7,7 @@
 #include <cmath>
 
 SubdomainFromFile::SubdomainFromFile(std::string file_path, size_t num_neurons) : file(file_path) {
+	std::cout << "Loading: " << file_path << std::endl;
 	const bool file_is_good = file.good();
 	const bool file_is_not_good = file.fail() || file.eof();
 
@@ -26,6 +27,7 @@ void SubdomainFromFile::read_dimensions_from_file() {
 	bool success = false;
 
 	Vec3d tmp;
+	size_t id;
 	std::string area_name;
 
 	double found_ex_neurons = 0.0;
@@ -38,7 +40,9 @@ void SubdomainFromFile::read_dimensions_from_file() {
 		}
 
 		std::stringstream sstream(line);
-		success = (sstream >> tmp.x) &&
+		success =
+			(sstream >> id) &&
+			(sstream >> tmp.x) &&
 			(sstream >> tmp.y) &&
 			(sstream >> tmp.z) &&
 			(sstream >> area_name);
@@ -74,7 +78,7 @@ void SubdomainFromFile::read_dimensions_from_file() {
 	offset = minimum;
 }
 
-void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position& max, std::set<Node, Node::less>& nodes) {
+void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position& max, Nodes& nodes) {
 	std::string line;
 	Node node;
 	bool success = false;
@@ -94,7 +98,9 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
 		std::cout << line << std::endl;
 
 		std::stringstream sstream(line);
-		success = (sstream >> node.pos.x) &&
+		success =
+			//(sstream >> node.id) &&
+			(sstream >> node.pos.x) &&
 			(sstream >> node.pos.y) &&
 			(sstream >> node.pos.z) &&
 			(sstream >> node.area_name);
@@ -122,6 +128,21 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
 		}
 
 		nodes.insert(node);
+	}
+}
+
+void SubdomainFromFile::neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
+	size_t local_id_start, size_t local_id_end, std::vector<size_t>& global_ids) const {
+
+	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
+	if (!contains) {
+		assert(false && "Wanted to have neuron_global_ids of subdomain_idx that is not present");
+		return;
+	}
+
+	const Nodes& nodes = neurons_in_subdomain.at(subdomain_idx);
+	for (const Node& node : nodes) {
+		//global_ids.push_back(node.id);
 	}
 }
 

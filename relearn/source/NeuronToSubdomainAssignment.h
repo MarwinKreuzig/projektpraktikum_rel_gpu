@@ -77,6 +77,8 @@ public:
 
 	virtual void write_neurons_to_file(const std::string& filename_prefix) const;
 
+	virtual void neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
+		size_t local_id_start, size_t local_id_end, std::vector<size_t>& global_ids) const = 0;
 protected:
 	struct Node {
 		Position pos;

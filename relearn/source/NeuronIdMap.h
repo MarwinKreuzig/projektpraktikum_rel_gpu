@@ -6,6 +6,8 @@
 
 #include <mpi.h>
 
+#include "Vec3.h"
+
 class NeuronIdMap {
 public:
 	// Rank and local neuron id
@@ -16,22 +18,9 @@ public:
 
 	NeuronIdMap(size_t my_num_neurons, const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, MPI_Comm mpi_comm);
 	bool rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id, size_t& glob_id) const noexcept;
-	bool pos2rank_neuron_id(double x, double y, double z, RankNeuronId& result) const;
+	bool pos2rank_neuron_id(const Vec3d& pos, RankNeuronId& result) const;
 
 private:
-	// Helper class to store neuron positions
-	struct Position {
-		double x, y, z;
-
-		struct less {
-			bool operator() (const Position& lhs, const Position& rhs) const noexcept {
-				return  lhs.x < rhs.x ||
-					(lhs.x == rhs.x && lhs.y < rhs.y) ||
-					(lhs.x == rhs.x && lhs.y == rhs.y && lhs.z < rhs.z);
-			}
-		};
-	};
-
 	void create_rank_to_start_neuron_id_mapping(
 		const std::vector<size_t>& rank_to_num_neurons,
 		std::vector<size_t>& rank_to_start_neuron_id);
@@ -42,10 +31,10 @@ private:
 		size_t my_num_neurons,
 		const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z,
 		MPI_Comm mpi_comm,
-		std::map<Position, RankNeuronId, Position::less>& pos_to_rank_neuron_id);
+		std::map<Vec3d, RankNeuronId>& pos_to_rank_neuron_id);
 
 	std::vector<size_t> rank_to_start_neuron_id;  // Global neuron id of every rank's first local neuron
-	std::map<Position, RankNeuronId, Position::less> pos_to_rank_neuron_id;
+	std::map<Vec3d, RankNeuronId> pos_to_rank_neuron_id;
 };
 
 #endif /* NEURONIDMAP_H */

@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <cmath>
 #include <algorithm>
+#include <cassert>
 
 template<typename T>
 struct Vec3 {
@@ -111,6 +112,14 @@ struct Vec3 {
 		z = ceil((z - 0.001) / multiple) * multiple;
 	}
 
+	Vec3<size_t> floor_componentwise() const noexcept {
+		const size_t floored_x = static_cast<size_t>(floor(x));
+		const size_t floored_y = static_cast<size_t>(floor(y));
+		const size_t floored_z = static_cast<size_t>(floor(z));
+
+		return Vec3<size_t>(floored_x, floored_y, floored_z);
+	}
+
 	T get_volume() const noexcept {
 		return x * y * z;
 	}
@@ -174,6 +183,12 @@ struct Vec3 {
 
 	T get_minimum() const noexcept {
 		return std::min({ x, y, z });
+	}
+
+	bool operator< (const Vec3<T>& other) const noexcept {
+		return x < other.x ||
+			(x == other.x && y < other.y) ||
+			(x == other.x && y == other.y && z < other.z);
 	}
 
 	struct less {
