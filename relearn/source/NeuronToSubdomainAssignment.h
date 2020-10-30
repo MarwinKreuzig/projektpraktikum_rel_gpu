@@ -82,12 +82,17 @@ public:
 protected:
 	struct Node {
 		Position pos;
-		size_t id;
+		size_t id = 1111222233334444;
 		SynapticElements::SignalType signal_type;
 		std::string area_name;
 
 		struct less {
 			bool operator() (const Node& lhs, const Node& rhs) const noexcept {
+				assert(lhs.id != 1111222233334444 && "lhs id is a dummy one");
+				assert(rhs.id != 1111222233334444 && "rhs id is a dummy one");
+
+				return lhs.id < rhs.id;
+
 				Position::less less;
 				bool less_struct = less(lhs.pos, rhs.pos);
 				bool less_operator = lhs.pos < rhs.pos;

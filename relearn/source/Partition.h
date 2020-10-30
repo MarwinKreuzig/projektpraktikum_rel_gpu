@@ -156,7 +156,8 @@ public:
 			}
 		}
 
-		assert(false && "Didn't find local id in Partition.h");
+		return local_id;
+		//assert(false && "Didn't find local id in Partition.h");
 	}
 
 	size_t get_local_id(size_t global_id) const noexcept {

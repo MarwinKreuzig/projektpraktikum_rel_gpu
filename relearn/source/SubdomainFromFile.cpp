@@ -142,7 +142,7 @@ void SubdomainFromFile::neuron_global_ids(size_t subdomain_idx, size_t num_subdo
 
 	const Nodes& nodes = neurons_in_subdomain.at(subdomain_idx);
 	for (const Node& node : nodes) {
-		//global_ids.push_back(node.id);
+		global_ids.push_back(node.id);
 	}
 }
 

@@ -11,7 +11,7 @@
 # max vertex degree: 1246
 # Vertices: 51842
 # Add offset (x y z) to get original positions: (-71.652210 -122.577140 -30.200880)
-# ID, Position (x y z),	Area
+# ID, Position (x y z),	Area [,type]
 1	19.370560 54.467470 63.900310 	lh.bankssts
 2	17.849990 54.501960 64.244110 	lh.bankssts
 3	18.383060 62.295130 58.847790 	lh.bankssts

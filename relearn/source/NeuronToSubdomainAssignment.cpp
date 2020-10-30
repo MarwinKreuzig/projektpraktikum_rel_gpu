@@ -93,14 +93,18 @@ void NeuronToSubdomainAssignment::write_neurons_to_file(const std::string& filen
 	std::ofstream of(filename, std::ios::binary | std::ios::out);
 
 	of << std::setprecision(std::numeric_limits<double>::digits10);
+	of << "# ID, Position (x y z),	Area [,type] \n";
 
 	for (const auto it : neurons_in_subdomain) {
 		const Nodes& nodes = it.second;
 
 		for (const auto& node : nodes) {
-			of << node.pos.x << " "
+			of
+				<< node.id << "\t"
+				<< node.pos.x << " "
 				<< node.pos.y << " "
-				<< node.pos.z << " ";
+				<< node.pos.z << " "
+				<< node.area_name << " \t";
 
 			if (node.signal_type == SynapticElements::SignalType::EXCITATORY) {
 				of << "ex\n";

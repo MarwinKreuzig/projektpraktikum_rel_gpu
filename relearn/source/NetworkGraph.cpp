@@ -66,8 +66,8 @@ void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, siz
 	}
 
 	if (source_rank == MPIInfos::my_rank) {
-		Edges& in_edges = neuron_neighborhood[source_neuron_id].out_edges;
-		add_edge(in_edges, target_rank, target_neuron_id, weight);
+		Edges& out_edges = neuron_neighborhood[source_neuron_id].out_edges;
+		add_edge(out_edges, target_rank, target_neuron_id, weight);
 	}
 }
 
@@ -227,6 +227,7 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 		size_t* buffer = global_ids_to_send[rank].data();
 		int size_in_bytes = global_ids_to_send[rank].size() * sizeof(size_t);
 
+		// Reserve enough space for the answer - it will be as long as the request
 		global_ids_local_value[rank].resize(global_ids_to_send[rank].size());
 
 		MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[request_counter]);
@@ -244,6 +245,7 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 		}
 	}
 
+	mpi_requests = std::vector<MPI_Request>(num_ranks * 2 - 2);
 	request_counter = 0;
 
 	for (auto rank = 0; rank < num_ranks; rank++) {
@@ -276,6 +278,8 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 	for (auto rank = 0; rank < num_ranks; rank++) {
 		std::vector<size_t>& translated_ids = global_ids_local_value[rank];
 		std::vector<size_t>& global_ids = global_ids_to_send[rank];
+
+		assert(translated_ids.size() == global_ids.size() && "The vectors have not the same size in load network");
 
 		for (auto i = 0; i < translated_ids.size(); i++) {
 			size_t local_id = translated_ids[i];
@@ -451,15 +455,18 @@ void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) con
 			assert(ret);
 
 			// <target neuron id>  <source neuron id>  <weight>
-			os << glob_tgt << " "
-				<< glob_src << " "
+			os 
+				<< glob_src << "\t"
+				<< glob_tgt << "\t"
 				<< it_in_edge->second << "\n";
 		}
 	}
 }
 
-void NetworkGraph::write_synapses_to_file(const std::string& filename, const NeuronIdMap& neuron_id_map) {
+void NetworkGraph::write_synapses_to_file(const std::string& filename, const NeuronIdMap& neuron_id_map, const Partition& partition) {
 	std::ofstream ofstream(filename, std::ios::binary | std::ios::out);
+
+	ofstream << "# <source neuron id> <target neuron id> <weight> \n";
 
 	for (size_t source_neuron_id = my_neuron_id_start; source_neuron_id <= my_neuron_id_end; source_neuron_id++) {
 		// Walk through in-edges of my neuron
@@ -472,7 +479,10 @@ void NetworkGraph::write_synapses_to_file(const std::string& filename, const Neu
 			const size_t& target_neuron_id = ek.second;
 			const int& target_neuron_rank = ek.first;
 
-			ofstream << source_neuron_id << " " << target_neuron_id << " " << ev << "\n";
+			const size_t global_source_neuron_id = partition.get_global_id(source_neuron_id);
+			const size_t global_target_neuron_id = partition.get_global_id(target_neuron_id);
+
+			ofstream << source_neuron_id << "\t" << target_neuron_id << "\t" << ev << "\n";
 		}
 	}
 }

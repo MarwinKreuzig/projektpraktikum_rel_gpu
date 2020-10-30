@@ -411,8 +411,12 @@ int main(int argc, char** argv) {
 	// Neuronal connections provided in file
 	if (6 < argc) {
 		//network_graph.add_edge_weights(params.file_with_network, neuron_id_map);
+		network_graph.add_edges_from_file(params.file_with_network, params.file_with_neuron_positions, neuron_id_map, partition);
+		network_graph.print(std::cout, neuron_id_map);
+		return 0;
 	}
 	LogMessages::print_message_rank("Network graph created", 0);
+	
 
 	// Init number of synaptic elements and assign EXCITATORY or INHIBITORY signal type
 	// to the dendrites. Assignment of the signal type to the axons is done in
@@ -537,7 +541,7 @@ int main(int argc, char** argv) {
 
 	// Free object created based on command line parameters
 	neurons_in_subdomain->write_neurons_to_file("output_positions.txt");
-	//network_graph.write_synapses_to_file("output_edges.txt", neuron_id_map);
+	network_graph.write_synapses_to_file("output_edges.txt", neuron_id_map, partition);
 	delete neurons_in_subdomain;
 
 	MPI_Barrier(MPI_COMM_WORLD);
