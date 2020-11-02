@@ -17,7 +17,7 @@ struct Vec3 {
 
 	~Vec3() = default;
 
-	explicit Vec3(const T val) noexcept : x(val), y(val), z(val) {
+	explicit Vec3(const T& val) noexcept : x(val), y(val), z(val) {
 
 	}
 
@@ -90,7 +90,7 @@ struct Vec3 {
 	//	return res;
 	//}
 
-	Vec3<T> operator*(const double& scalar) const noexcept {
+	Vec3<T> operator*(const double scalar) const noexcept {
 		Vec3<T> res = *this;
 		res.x *= scalar;
 		res.y *= scalar;
@@ -98,7 +98,7 @@ struct Vec3 {
 		return res;
 	}
 
-	Vec3<T> operator/(const double& scalar) const noexcept {
+	Vec3<T> operator/(const double scalar) const noexcept {
 		Vec3<T> res = *this;
 		res.x /= scalar;
 		res.y /= scalar;
@@ -113,6 +113,10 @@ struct Vec3 {
 	}
 
 	Vec3<size_t> floor_componentwise() const noexcept {
+		assert(x >= 0 && "floor_componentwise must be used on a positive vector: x");
+		assert(y >= 0 && "floor_componentwise must be used on a positive vector: y");
+		assert(z >= 0 && "floor_componentwise must be used on a positive vector: z");
+
 		const size_t floored_x = static_cast<size_t>(floor(x));
 		const size_t floored_y = static_cast<size_t>(floor(y));
 		const size_t floored_z = static_cast<size_t>(floor(z));
@@ -141,7 +145,7 @@ struct Vec3 {
 	/**
 	 * Calculates the p-Norm. Assumens p >= 1.0
 	 */
-	double calculate_p_norm(double p) const noexcept {
+	double calculate_p_norm(const double p) const noexcept {
 		assert(p >= 1.0 && "p-norm is only valid for p >= 1.0");
 
 		const auto xx = pow(abs(static_cast<double>(x)), p);
@@ -153,7 +157,7 @@ struct Vec3 {
 		return norm;
 	}
 
-	void calculate_pointwise_maximum(const Vec3<T>& other) noexcept {
+	void calculate_componentwise_maximum(const Vec3<T>& other) noexcept {
 		if (other.x > x) {
 			x = other.x;
 		}
@@ -165,7 +169,7 @@ struct Vec3 {
 		}
 	}
 
-	void calculate_pointwise_minimum(const Vec3<T>& other) noexcept {
+	void calculate_componentwise_minimum(const Vec3<T>& other) noexcept {
 		if (other.x < x) {
 			x = other.x;
 		}
@@ -193,9 +197,7 @@ struct Vec3 {
 
 	struct less {
 		bool operator() (const Vec3<T>& lhs, const Vec3<T>& rhs) const noexcept {
-			return  lhs.x < rhs.x ||
-				(lhs.x == rhs.x && lhs.y < rhs.y) ||
-				(lhs.x == rhs.x && lhs.y == rhs.y && lhs.z < rhs.z);
+			return  lhs < rhs;
 		}
 	};
 };

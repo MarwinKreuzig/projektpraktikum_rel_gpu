@@ -47,8 +47,8 @@ void SubdomainFromFile::read_dimensions_from_file() {
 			(sstream >> tmp.z) &&
 			(sstream >> area_name);
 
-		minimum.calculate_pointwise_minimum(tmp);
-		maximum.calculate_pointwise_maximum(tmp);
+		minimum.calculate_componentwise_minimum(tmp);
+		maximum.calculate_componentwise_maximum(tmp);
 
 		if (area_name == "ex") {
 			found_ex_neurons++;

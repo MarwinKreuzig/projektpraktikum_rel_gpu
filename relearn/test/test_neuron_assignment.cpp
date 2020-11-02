@@ -110,6 +110,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill) {
 TEST(TestRandomNeuronPlacement, test_lazily_fill_multiple) {
 	std::mt19937 mt;
 	std::uniform_int_distribution<size_t> uid(1, 10000);
+	std::uniform_int_distribution<size_t> uid_fills(1, 10);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
 
 	mt.seed(rand());
@@ -128,10 +129,15 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_multiple) {
 
 		EXPECT_GE(box_length, 0);
 
-		auto num_fills = uid(mt);
+		auto num_fills = uid_fills(mt);
 
 		for (auto j = 0; j < num_fills; j++) {
-			sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
+			if (j >= 1) {
+				EXPECT_DEATH(sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length }), "\c*");
+			}
+			else {
+				sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
+			}
 		}
 
 		auto num_neurons_ = sfnd.desired_num_neurons();
@@ -261,7 +267,12 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions_multiple_subdomains) 
 
 					auto current_idx = z_it + y_it * subdomains_z + x_it * subdomains_z * subdomains_y;
 
-					sfnd.neuron_positions(current_idx, total_subdomains, subdomain_min, subdomain_max, pos);
+					if (x_it == 0 && y_it == 0 && z_it == 0) {
+						sfnd.neuron_positions(current_idx, total_subdomains, subdomain_min, subdomain_max, pos);
+					}
+					else {
+						EXPECT_DEATH(sfnd.neuron_positions(current_idx, total_subdomains, subdomain_min, subdomain_max, pos), "\c*");
+					}
 				}
 			}
 		}

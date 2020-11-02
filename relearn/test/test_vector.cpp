@@ -4,9 +4,13 @@
 
 #include "../source/Vec3.h"
 
+constexpr const double lower_bound = -100.0;
+constexpr const double upper_bound = 100.0;
+constexpr const int iterations = 10;
+constexpr const double eps = 0.00001;
 
 TEST(TestVector, test_vector_constructor_empty) {
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		Vec3<double> v{ };
 
 		EXPECT_EQ(0.0, v.x);
@@ -17,11 +21,11 @@ TEST(TestVector, test_vector_constructor_empty) {
 
 TEST(TestVector, test_vector_constructor_one) {
 	std::mt19937 mt;
-	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto val = urd(mt);
 
 		Vec3<double> v{ val };
@@ -34,11 +38,11 @@ TEST(TestVector, test_vector_constructor_one) {
 
 TEST(TestVector, test_vector_constructor_three) {
 	std::mt19937 mt;
-	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto x = urd(mt);
 		auto y = urd(mt);
 		auto z = urd(mt);
@@ -53,11 +57,11 @@ TEST(TestVector, test_vector_constructor_three) {
 
 TEST(TestVector, test_vector_copy_construct) {
 	std::mt19937 mt;
-	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto x = urd(mt);
 		auto y = urd(mt);
 		auto z = urd(mt);
@@ -74,11 +78,11 @@ TEST(TestVector, test_vector_copy_construct) {
 
 TEST(TestVector, test_vector_copy_assign) {
 	std::mt19937 mt;
-	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto x = urd(mt);
 		auto y = urd(mt);
 		auto z = urd(mt);
@@ -96,11 +100,11 @@ TEST(TestVector, test_vector_copy_assign) {
 
 TEST(TestVector, test_vector_move_construct) {
 	std::mt19937 mt;
-	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto x = urd(mt);
 		auto y = urd(mt);
 		auto z = urd(mt);
@@ -117,11 +121,11 @@ TEST(TestVector, test_vector_move_construct) {
 
 TEST(TestVector, test_vector_move_assign) {
 	std::mt19937 mt;
-	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto x = urd(mt);
 		auto y = urd(mt);
 		auto z = urd(mt);
@@ -139,11 +143,11 @@ TEST(TestVector, test_vector_move_assign) {
 
 TEST(TestVector, test_vector_operator_index_read) {
 	std::mt19937 mt;
-	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto x = urd(mt);
 		auto y = urd(mt);
 		auto z = urd(mt);
@@ -156,13 +160,51 @@ TEST(TestVector, test_vector_operator_index_read) {
 	}
 }
 
-TEST(TestVector, test_vector_operator_index_write) {
+TEST(TestVector, test_vector_operator_index_read_assert) {
 	std::mt19937 mt;
-	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		Vec3<double> v{ x, y, z };
+
+		auto idx = urd(mt);
+		while (idx == 0.0 || idx == 1.0 || idx == 2.0) {
+			idx = urd(mt);
+		}
+
+		EXPECT_DEATH(v[idx], "\c*");
+	}
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		Vec3<double> v{ x, y, z };
+
+		auto idx = round(urd(mt));
+		while (idx == 0.0 || idx == 1.0 || idx == 2.0) {
+			idx = urd(mt);
+		}
+
+		auto idx_int = static_cast<int>(idx);
+		EXPECT_DEATH(v[idx_int], "\c*");
+	}
+}
+
+TEST(TestVector, test_vector_operator_index_write) {
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < iterations; i++) {
 		auto x = urd(mt);
 		auto y = urd(mt);
 		auto z = urd(mt);
@@ -179,13 +221,51 @@ TEST(TestVector, test_vector_operator_index_write) {
 	}
 }
 
-TEST(TestVector, test_vector_operator_plus_vec) {
+TEST(TestVector, test_vector_operator_index_write_assert) {
 	std::mt19937 mt;
-	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		Vec3<double> v{ x, y, z };
+
+		auto idx = urd(mt);
+		while (idx == 0.0 || idx == 1.0 || idx == 2.0) {
+			idx = urd(mt);
+		}
+
+		EXPECT_DEATH(v[idx] = 0.0, "\c*");
+	}
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		Vec3<double> v{ x, y, z };
+
+		auto idx = round(urd(mt));
+		while (idx == 0.0 || idx == 1.0 || idx == 2.0) {
+			idx = urd(mt);
+		}
+
+		auto idx_int = static_cast<int>(idx);
+		EXPECT_DEATH(v[idx_int] = 0.0, "\c*");
+	}
+}
+
+TEST(TestVector, test_vector_operator_plus_vec) {
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < iterations; i++) {
 		auto x1 = urd(mt);
 		auto y1 = urd(mt);
 		auto z1 = urd(mt);
@@ -216,11 +296,11 @@ TEST(TestVector, test_vector_operator_plus_vec) {
 
 TEST(TestVector, test_vector_operator_minus_vec) {
 	std::mt19937 mt;
-	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto x1 = urd(mt);
 		auto y1 = urd(mt);
 		auto z1 = urd(mt);
@@ -251,11 +331,11 @@ TEST(TestVector, test_vector_operator_minus_vec) {
 
 TEST(TestVector, test_vector_operator_plus_scalar) {
 	std::mt19937 mt;
-	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto x1 = urd(mt);
 		auto y1 = urd(mt);
 		auto z1 = urd(mt);
@@ -281,11 +361,11 @@ TEST(TestVector, test_vector_operator_plus_scalar) {
 
 TEST(TestVector, test_vector_operator_mul_scalar) {
 	std::mt19937 mt;
-	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto x1 = urd(mt);
 		auto y1 = urd(mt);
 		auto z1 = urd(mt);
@@ -309,13 +389,47 @@ TEST(TestVector, test_vector_operator_mul_scalar) {
 	}
 }
 
-TEST(TestVector, test_vector_operator_plus_assign_scalar) {
+TEST(TestVector, test_vector_operator_div_scalar) {
 	std::mt19937 mt;
-	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
+		auto x1 = urd(mt);
+		auto y1 = urd(mt);
+		auto z1 = urd(mt);
+
+		Vec3<double> v{ x1, y1, z1 };
+
+		auto scalar = urd(mt);
+		while (scalar == 0.0) {
+			scalar = urd(mt);
+		}
+
+		auto scalar_copy = scalar;
+
+		auto prod = v / scalar;
+
+		EXPECT_EQ(x1, v.x);
+		EXPECT_EQ(y1, v.y);
+		EXPECT_EQ(z1, v.z);
+
+		EXPECT_EQ(x1 / scalar, prod.x);
+		EXPECT_EQ(y1 / scalar, prod.y);
+		EXPECT_EQ(z1 / scalar, prod.z);
+
+		EXPECT_EQ(scalar, scalar_copy);
+	}
+}
+
+TEST(TestVector, test_vector_operator_plus_assign_scalar) {
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < iterations; i++) {
 		auto x1 = urd(mt);
 		auto y1 = urd(mt);
 		auto z1 = urd(mt);
@@ -337,11 +451,11 @@ TEST(TestVector, test_vector_operator_plus_assign_scalar) {
 
 TEST(TestVector, test_vector_operator_mul_assign_scalar) {
 	std::mt19937 mt;
-	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto x1 = urd(mt);
 		auto y1 = urd(mt);
 		auto z1 = urd(mt);
@@ -363,11 +477,11 @@ TEST(TestVector, test_vector_operator_mul_assign_scalar) {
 
 TEST(TestVector, test_vector_volume) {
 	std::mt19937 mt;
-	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto x = urd(mt);
 		auto y = urd(mt);
 		auto z = urd(mt);
@@ -384,3 +498,409 @@ TEST(TestVector, test_vector_volume) {
 	}
 }
 
+TEST(TestVector, test_vector_equal) {
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		Vec3<double> v_1{ x, y, z };
+		Vec3<double> v_2{ x, y, z };
+
+		auto is_equal = v_1 == v_2;
+
+		EXPECT_TRUE(is_equal);
+	}
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = x + 1;
+		auto z = y + 1;
+
+		Vec3<double> v_1{ x, y, z };
+		Vec3<double> v_2{ x, z, y };
+		Vec3<double> v_3{ y, x, z };
+		Vec3<double> v_4{ y, z, x };
+		Vec3<double> v_5{ z, x, y };
+		Vec3<double> v_6{ z, y, x };
+
+		auto is_equal_2 = v_1 == v_2;
+		auto is_equal_3 = v_1 == v_3;
+		auto is_equal_4 = v_1 == v_4;
+		auto is_equal_5 = v_1 == v_5;
+		auto is_equal_6 = v_1 == v_6;
+
+		EXPECT_FALSE(is_equal_2);
+		EXPECT_FALSE(is_equal_3);
+		EXPECT_FALSE(is_equal_4);
+		EXPECT_FALSE(is_equal_5);
+		EXPECT_FALSE(is_equal_6);
+	}
+}
+
+TEST(TestVector, test_vector_componentwise_min_max) {
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x_1 = urd(mt);
+		auto y_1 = urd(mt);
+		auto z_1 = urd(mt);
+
+		auto x_2 = urd(mt);
+		auto y_2 = urd(mt);
+		auto z_2 = urd(mt);
+
+		auto x_max = std::max(x_1, x_2);
+		auto x_min = std::min(x_1, x_2);
+		auto y_max = std::max(y_1, y_2);
+		auto y_min = std::min(y_1, y_2);
+		auto z_max = std::max(z_1, z_2);
+		auto z_min = std::min(z_1, z_2);
+
+		Vec3<double> v_1{ x_1, y_1, z_1 };
+		Vec3<double> v_2{ x_2, y_2, z_2 };
+
+		Vec3<double> v_max{ x_max, y_max, z_max };
+		Vec3<double> v_min{ x_min, y_min, z_min };
+
+		v_1.calculate_componentwise_maximum(v_2);
+		auto is_equal = v_1 == v_max;
+		EXPECT_TRUE(is_equal);
+
+		v_1 = Vec3<double>( x_1, y_1, z_1 );
+
+		v_1.calculate_componentwise_minimum(v_2);
+		is_equal = v_1 == v_min;
+		EXPECT_TRUE(is_equal);
+	}
+}
+
+TEST(TestVector, test_vector_min_max) {
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		Vec3<double> v{ x, y, z };
+
+		auto max = v.get_maximum();
+		auto min = v.get_minimum();
+
+		auto is_there = (x == max) || (y == max) || (z == max);
+		auto is_bound = (x <= max) || (y <= max) || (z <= max);
+
+		auto is_equal = is_there && is_bound;
+
+		EXPECT_TRUE(is_equal);
+
+		is_there = (x == min) || (y == min) || (z == min);
+		is_bound = (x >= min) || (y >= min) || (z >= min);
+
+		is_equal = is_there && is_bound;
+
+		EXPECT_TRUE(is_equal);
+
+
+	}
+}
+
+TEST(TestVector, test_vector_componentwise_floor) {
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(0.0001, upper_bound);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		auto x_floor = floor(x);
+		auto y_floor = floor(y);
+		auto z_floor = floor(z);
+
+		auto x_size_t = static_cast<size_t>(x_floor);
+		auto y_size_t = static_cast<size_t>(y_floor);
+		auto z_size_t = static_cast<size_t>(z_floor);
+
+		Vec3<double> v{ x, y, z };
+		Vec3<size_t> v_size_t{ x_size_t, y_size_t, z_size_t };
+
+		Vec3<size_t> v_floored = v.floor_componentwise();
+
+		auto is_equal = v_size_t == v_floored;
+
+		EXPECT_TRUE(is_equal);
+	}
+}
+
+TEST(TestVector, test_vector_componentwise_floor_assert) {
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(0.0001, upper_bound);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		x *= -1.0;
+
+		Vec3<double> v{ x, y, z };
+		EXPECT_DEATH(Vec3<size_t> v_floored = v.floor_componentwise(), "\c*");
+	}
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		y *= -1.0;
+
+		Vec3<double> v{ x, y, z };
+		EXPECT_DEATH(Vec3<size_t> v_floored = v.floor_componentwise(), "\c*");
+	}
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		z *= -1.0;
+
+		Vec3<double> v{ x, y, z };
+		EXPECT_DEATH(Vec3<size_t> v_floored = v.floor_componentwise(), "\c*");
+	}
+}
+
+TEST(TestVector, test_vector_norm) {
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
+	std::uniform_real_distribution<double> urd_p(1.0, 10.1);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		auto p = urd_p(mt);
+
+		Vec3<double> v{ x, y, z };
+
+		auto v_normed = v.calculate_p_norm(p);
+
+		auto x_p = pow(abs(x), p);
+		auto y_p = pow(abs(y), p);
+		auto z_p = pow(abs(z), p);
+
+		auto sum = x_p + y_p + z_p;
+		auto p_norm = pow(sum, 1.0 / p);
+
+		EXPECT_NEAR(v_normed, p_norm, eps);
+	}
+}
+
+TEST(TestVector, test_vector_norm_assert) {
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
+	std::uniform_real_distribution<double> urd_bad_p(lower_bound, 1.0);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		auto p = urd_bad_p(mt);
+
+		Vec3<double> v{ x, y, z };
+
+		EXPECT_DEATH(auto v_normed = v.calculate_p_norm(p), "\c*");
+	}
+}
+
+TEST(TestVector, test_vector_rounding) {
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
+	std::uniform_real_distribution<double> urd_multiple(1.0, 10.1);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		auto multiple = urd_multiple(mt);
+
+		auto x_div = x / multiple;
+		auto y_div = y / multiple;
+		auto z_div = z / multiple;
+
+		Vec3<double> v{ x, y, z };
+
+		v.round_to_larger_multiple(multiple);
+
+		auto x_rounded = v.x;
+		auto y_rounded = v.y;
+		auto z_rounded = v.z;
+
+		auto x_rounded_div = x_rounded / multiple;
+		auto y_rounded_div = y_rounded / multiple;
+		auto z_rounded_div = z_rounded / multiple;
+
+		auto x_in_expected = x_div <= x_rounded_div && x_rounded_div <= x_div + 1;
+		auto y_in_expected = y_div <= y_rounded_div && y_rounded_div <= y_div + 1;
+		auto z_in_expected = z_div <= z_rounded_div && z_rounded_div <= z_div + 1;
+
+		auto x_rounded_div_rounded = round(x_rounded_div);
+		auto y_rounded_div_rounded = round(y_rounded_div);
+		auto z_rounded_div_rounded = round(z_rounded_div);
+
+		EXPECT_TRUE(x_in_expected);
+		EXPECT_TRUE(y_in_expected);
+		EXPECT_TRUE(z_in_expected);
+
+		EXPECT_NEAR(x_rounded_div, x_rounded_div_rounded, eps);
+		EXPECT_NEAR(y_rounded_div, y_rounded_div_rounded, eps);
+		EXPECT_NEAR(z_rounded_div, z_rounded_div_rounded, eps);
+	}
+}
+
+TEST(TestVector, test_vector_order) {
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
+	std::uniform_real_distribution<double> urd_offset(1.0, 10.1);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		Vec3<double> v_1{ x, y, z };
+		Vec3<double> v_2{ x, y, z };
+
+		auto is_smaller = v_1 < v_2;
+		EXPECT_FALSE(is_smaller);
+	}
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		auto offset = urd_offset(mt);
+
+		Vec3<double> v_1{ x, y, z };
+		Vec3<double> v_2{ x + offset, y, z };
+
+		auto is_smaller = v_1 < v_2;
+		EXPECT_TRUE(is_smaller);
+
+		is_smaller = v_2 < v_1;
+		EXPECT_FALSE(is_smaller);
+	}
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		auto offset = urd_offset(mt);
+
+		Vec3<double> v_1{ x, y, z };
+		Vec3<double> v_2{ x, y + offset, z };
+
+		auto is_smaller = v_1 < v_2;
+		EXPECT_TRUE(is_smaller);
+
+		is_smaller = v_2 < v_1;
+		EXPECT_FALSE(is_smaller);
+	}
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		auto offset = urd_offset(mt);
+
+		Vec3<double> v_1{ x, y, z };
+		Vec3<double> v_2{ x, y, z + offset };
+
+		auto is_smaller = v_1 < v_2;
+		EXPECT_TRUE(is_smaller);
+
+		is_smaller = v_2 < v_1;
+		EXPECT_FALSE(is_smaller);
+	}
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x_1 = urd(mt);
+		auto y_1 = urd(mt);
+		auto z_1 = urd(mt);
+
+		auto x_2 = urd(mt);
+		auto y_2 = urd(mt);
+		auto z_2 = urd(mt);
+
+		Vec3<double> v_1{ x_1, y_1, z_1 };
+		Vec3<double> v_2{ x_2, y_2, z_2 };
+
+		auto is_smaller_1_2 = v_1 < v_2;
+		auto is_smaller_2_1 = v_2 < v_1;
+
+		auto connected = is_smaller_1_2 || is_smaller_2_1;
+
+		if (connected) {
+			EXPECT_FALSE(is_smaller_1_2 && is_smaller_2_1);
+		}
+		else {
+			auto is_equal = v_1 == v_2;
+			EXPECT_TRUE(is_equal);
+		}
+	}
+}
+
+TEST(TestVector, test_vector_cast) {
+	std::mt19937 mt;
+	std::uniform_real_distribution<double> urd(0.0, upper_bound);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < iterations; i++) {
+		auto x = urd(mt);
+		auto y = urd(mt);
+		auto z = urd(mt);
+
+		auto x_size_t = static_cast<size_t>(x);
+		auto y_size_t = static_cast<size_t>(y);
+		auto z_size_t = static_cast<size_t>(z);
+
+		Vec3<double> v{ x, y, z };
+		Vec3<size_t> v_casted = static_cast<Vec3<size_t>>(v);
+		Vec3<size_t> v_size_t{ x_size_t, y_size_t, z_size_t };
+
+		auto is_equal = v_casted == v_size_t;
+		EXPECT_TRUE(is_equal);
+	}
+}
