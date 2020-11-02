@@ -1,5 +1,5 @@
 /*
- * File:   Neurons.h
+ * File: Neurons.h
  * Author: naveau
  *
  * Created on September 26, 2014, 10:23 AM
@@ -32,9 +32,9 @@
 #include "Random.h"
 
  /***************************************************************************************************
-  * NOTE: The following two type declarations (SynapseCreationRequests, MapSynapseCreationRequests) *
-  * are outside of the class Neurons so that the class Octree can use them                          *
-  ***************************************************************************************************/
+ * NOTE: The following two type declarations (SynapseCreationRequests, MapSynapseCreationRequests) *
+ * are outside of the class Neurons so that the class Octree can use them *
+ ***************************************************************************************************/
 
 class Partition;
 class NeuronMonitor;
@@ -85,23 +85,39 @@ public:
 		connected = responses[request_index];
 	}
 
-	size_t* get_requests() noexcept { return requests.data(); }
+	size_t* get_requests() noexcept {
+		return requests.data();
+	}
 
-	char* get_responses() noexcept { return responses.data(); }
+	const size_t* get_requests() const noexcept {
+		return requests.data();
+	}
 
-	size_t get_requests_size_in_bytes() const noexcept { return requests.size() * sizeof(size_t); }
+	char* get_responses() noexcept {
+		return responses.data();
+	}
 
-	size_t get_responses_size_in_bytes() const noexcept { return responses.size() * sizeof(char); }
+	const char* get_responses() const noexcept {
+		return responses.data();
+	}
+
+	size_t get_requests_size_in_bytes() const noexcept {
+		return requests.size() * sizeof(size_t);
+	}
+
+	size_t get_responses_size_in_bytes() const noexcept {
+		return responses.size() * sizeof(char);
+	}
 
 private:
-	size_t num_requests;           // Number of synapse creation requests
-	std::vector<size_t> requests;  // Each request to form a synapse is a 3-tuple: (source_neuron_id, target_neuron_id, dendrite_type_needed)
-								   // That is why requests.size() == 3*responses.size()
-								   // Note, a more memory-efficient implementation would use a smaller data type (not size_t) for dendrite_type_needed.
-								   // This vector is used as MPI communication buffer
-	std::vector<char> responses;   // Response if the corresponding request was accepted and thus the synapse was formed
-								   // responses[i] refers to requests[3*i,...,3*i+2]
-								   // This vector is used as MPI communication buffer
+	size_t num_requests; // Number of synapse creation requests
+	std::vector<size_t> requests; // Each request to form a synapse is a 3-tuple: (source_neuron_id, target_neuron_id, dendrite_type_needed)
+								 // That is why requests.size() == 3*responses.size()
+								 // Note, a more memory-efficient implementation would use a smaller data type (not size_t) for dendrite_type_needed.
+								 // This vector is used as MPI communication buffer
+	std::vector<char> responses; // Response if the corresponding request was accepted and thus the synapse was formed
+								 // responses[i] refers to requests[3*i,...,3*i+2]
+								 // This vector is used as MPI communication buffer
 };
 
 /**
@@ -184,32 +200,40 @@ class Neurons {
 		}
 
 		// Get pointer to data
-		size_t* get_requests() noexcept { return requests.data(); }
+		size_t* get_requests() noexcept {
+			return requests.data();
+		}
 
-		size_t  get_requests_size_in_bytes() const noexcept { return requests.size() * sizeof(size_t); }
+		const size_t* get_requests() const noexcept {
+			return requests.data();
+		}
+
+		size_t get_requests_size_in_bytes() const noexcept {
+			return requests.size() * sizeof(size_t);
+		}
 
 	private:
-		size_t num_requests;           // Number of synapse deletion requests
-		std::vector<size_t> requests;  // Each request to delete a synapse is a 6-tuple:
-									   // (src_neuron_id, tgt_neuron_id, affected_neuron_id, affected_element_type, signal_type, synapse_id)
-									   // That is why requests.size() == 6*num_requests
-									   // Note, a more memory-efficient implementation would use a smaller data type (not size_t)
-									   // for affected_element_type, signal_type.
-									   // This vector is used as MPI communication buffer
+		size_t num_requests;			// Number of synapse deletion requests
+		std::vector<size_t> requests;	// Each request to delete a synapse is a 6-tuple:
+										// (src_neuron_id, tgt_neuron_id, affected_neuron_id, affected_element_type, signal_type, synapse_id)
+										// That is why requests.size() == 6*num_requests
+										// Note, a more memory-efficient implementation would use a smaller data type (not size_t)
+										// for affected_element_type, signal_type.
+										// This vector is used as MPI communication buffer
 	};
 
 	/**
 	* Type for list element used to store pending synapse deletion
 	*/
 	struct PendingSynapseDeletion {
-		RankNeuronId src_neuron_id;                               // Synapse source neuron id
-		RankNeuronId tgt_neuron_id;                               // Synapse target neuron id
-		RankNeuronId affected_neuron_id;                          // Neuron whose synaptic element should be set vacant
-		SynapticElements::ElementType affected_element_type;  // Type of the element (axon/dendrite) to be set vacant
-		SynapticElements::SignalType signal_type;             // Signal type (exc/inh) of the synapse
-		unsigned int synapse_id;                              // Synapse id of the synapse to be deleted
-		bool affected_element_already_deleted;                // "True" if the element to be set vacant was already deleted by the neuron owning it
-															  // "False" if the element must be set vacant
+		RankNeuronId src_neuron_id; // Synapse source neuron id
+		RankNeuronId tgt_neuron_id; // Synapse target neuron id
+		RankNeuronId affected_neuron_id; // Neuron whose synaptic element should be set vacant
+		SynapticElements::ElementType affected_element_type; // Type of the element (axon/dendrite) to be set vacant
+		SynapticElements::SignalType signal_type; // Signal type (exc/inh) of the synapse
+		unsigned int synapse_id; // Synapse id of the synapse to be deleted
+		bool affected_element_already_deleted; // "True" if the element to be set vacant was already deleted by the neuron owning it
+															 // "False" if the element must be set vacant
 	};
 
 	template<typename T>
@@ -228,8 +252,8 @@ public:
 	 */
 	typedef std::map<int, SynapseDeletionRequests> MapSynapseDeletionRequests;
 
-	Neurons(size_t num_neurons, const Parameters &params, const Partition &);
-	Neurons(size_t num_neurons, const Parameters &params, const Partition &, std::unique_ptr<NeuronModels> model);
+	Neurons(size_t num_neurons, const Parameters& params, const Partition&);
+	Neurons(size_t num_neurons, const Parameters& params, const Partition&, std::unique_ptr<NeuronModels> model);
 	~Neurons() = default;
 
 	Neurons(const Neurons& other) = delete;
@@ -238,8 +262,7 @@ public:
 	Neurons& operator=(const Neurons& other) = delete;
 	Neurons& operator=(Neurons&& other) = default;
 
-	void set_model(std::unique_ptr<NeuronModels> model)
-	{
+	void set_model(std::unique_ptr<NeuronModels> model) {
 		neuron_models = std::move(model);
 	}
 
@@ -375,7 +398,7 @@ private:
 		size_t& num_synapses_deleted);
 
 
-	size_t num_neurons;       // Local number of neurons
+	size_t num_neurons; // Local number of neurons
 	std::vector<size_t> local_ids;
 
 	const Partition& partition;
@@ -386,9 +409,9 @@ private:
 	DendritesExc dendrites_exc;
 	DendritesInh dendrites_inh;
 
-	Positions positions;  // Position of every neuron
-	std::vector<double> calcium;      // Intracellular calcium concentration of every neuron
-	std::vector<std::string> area_names;  // Area name of every neuron
+	Positions positions; // Position of every neuron
+	std::vector<double> calcium; // Intracellular calcium concentration of every neuron
+	std::vector<std::string> area_names; // Area name of every neuron
 
 	// Random number generator for this class (C++11)
 	std::mt19937& random_number_generator;

@@ -1,28 +1,27 @@
 #include "Neurons.h"
 #include "Partition.h"
 
-Neurons::Neurons(size_t num_neurons, const Parameters &params, const Partition &partition)
-	: Neurons{num_neurons, params, partition, NeuronModels::create<models::ModelA>(num_neurons, params.k, params.tau_C, params.beta, params.h, params.x_0, params.tau_x, params.refrac_time)}
-{
+Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& partition)
+	: Neurons{ num_neurons, params, partition,
+	NeuronModels::create<models::ModelA>(num_neurons, params.k, params.tau_C, params.beta, params.h, params.x_0, params.tau_x, params.refrac_time) } {
 }
 
-Neurons::Neurons(size_t num_neurons, const Parameters &params, const Partition &partition, std::unique_ptr<NeuronModels> model)
+Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& partition, std::unique_ptr<NeuronModels> model)
 	: num_neurons(num_neurons),
-	  calcium(num_neurons),
-	  neuron_models(std::move(model)),
-	  axons(SynapticElements::AXON, num_neurons, params.eta_A, params.C_target, params.nu, params.vacant_retract_ratio),
-	  dendrites_exc(SynapticElements::DENDRITE, num_neurons, params.eta_D_ex, params.C_target, params.nu, params.vacant_retract_ratio),
-	  dendrites_inh(SynapticElements::DENDRITE, num_neurons, params.eta_D_in, params.C_target, params.nu, params.vacant_retract_ratio),
-	  positions(num_neurons),
-	  area_names(num_neurons),
-	  random_number_generator(RandomHolder<Neurons /*<NeuronModels, Axons, DendritesExc, DendritesInh>*/>::get_random_generator()),
-	  random_number_distribution(0.0, std::nextafter(1.0, 2.0)),
-	  partition(partition)
+	calcium(num_neurons),
+	neuron_models(std::move(model)),
+	axons(SynapticElements::AXON, num_neurons, params.eta_A, params.C_target, params.nu, params.vacant_retract_ratio),
+	dendrites_exc(SynapticElements::DENDRITE, num_neurons, params.eta_D_ex, params.C_target, params.nu, params.vacant_retract_ratio),
+	dendrites_inh(SynapticElements::DENDRITE, num_neurons, params.eta_D_in, params.C_target, params.nu, params.vacant_retract_ratio),
+	positions(num_neurons),
+	area_names(num_neurons),
+	random_number_generator(RandomHolder<Neurons /*<NeuronModels, Axons, DendritesExc, DendritesInh>*/>::get_random_generator()),
+	random_number_distribution(0.0, std::nextafter(1.0, 2.0)),
+	partition(partition)
 
 {
 	// Init member variables
-	for (size_t i = 0; i < num_neurons; i++)
-	{
+	for (size_t i = 0; i < num_neurons; i++) {
 		// Set calcium concentration
 		calcium[i] = neuron_models->get_beta() * neuron_models->get_fired(i);
 	}
@@ -175,19 +174,19 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 
 	MapSynapseDeletionRequests map_synapse_deletion_requests_outgoing;
 	// All pending deletion requests
-	for (auto list_it = list_with_pending_deletions.begin(); list_it != list_with_pending_deletions.end(); ++list_it) {
-		const auto target_rank = list_it->affected_neuron_id.rank;
+	for (const auto& list_it : list_with_pending_deletions) {
+		const auto target_rank = list_it.affected_neuron_id.rank;
 
 		// Affected neuron of deletion request resides on different rank.
 		// Thus the request needs to be communicated.
 		if (target_rank != MPIInfos::my_rank) {
 			map_synapse_deletion_requests_outgoing[target_rank].append(
-				list_it->src_neuron_id.neuron_id,
-				list_it->tgt_neuron_id.neuron_id,
-				list_it->affected_neuron_id.neuron_id,
-				list_it->affected_element_type,
-				list_it->signal_type,
-				list_it->synapse_id);
+				list_it.src_neuron_id.neuron_id,
+				list_it.tgt_neuron_id.neuron_id,
+				list_it.affected_neuron_id.neuron_id,
+				list_it.affected_element_type,
+				list_it.signal_type,
+				list_it.synapse_id);
 		}
 	}
 
@@ -199,9 +198,9 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 	std::vector<size_t> num_synapse_deletion_requests_for_ranks(MPIInfos::num_ranks, 0);
 	// Fill vector with my number of synapse deletion requests for every rank
 	// Requests to myself are kept local and not sent to myself again.
-	for (auto map_it = map_synapse_deletion_requests_outgoing.begin(); map_it != map_synapse_deletion_requests_outgoing.end(); ++map_it) {
-		auto rank = map_it->first;
-		auto num_requests = (map_it->second).size();
+	for (const auto& map_it : map_synapse_deletion_requests_outgoing) {
+		auto rank = map_it.first;
+		auto num_requests = map_it.second.size();
 
 		num_synapse_deletion_requests_for_ranks[rank] = num_requests;
 	}
@@ -233,20 +232,20 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 	auto mpi_requests_index = 0;
 
 	// Receive actual synapse deletion requests
-	for (auto map_it = map_synapse_deletion_requests_incoming.begin(); map_it != map_synapse_deletion_requests_incoming.end(); ++map_it) {
-		const auto rank = map_it->first;
-		auto buffer = (map_it->second).get_requests();
-		const auto size_in_bytes = static_cast<int>((map_it->second).get_requests_size_in_bytes());
+	for (auto& map_it : map_synapse_deletion_requests_incoming) {
+		const auto rank = map_it.first;
+		auto buffer = map_it.second.get_requests();
+		const auto size_in_bytes = static_cast<int>(map_it.second.get_requests_size_in_bytes());
 
 		MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 		++mpi_requests_index;
 	}
 
 	// Send actual synapse deletion requests
-	for (auto map_it = map_synapse_deletion_requests_outgoing.begin(); map_it != map_synapse_deletion_requests_outgoing.end(); ++map_it) {
-		const auto rank = map_it->first;
-		const auto buffer = (map_it->second).get_requests();
-		const auto size_in_bytes = static_cast<int>((map_it->second).get_requests_size_in_bytes());
+	for (const auto& map_it : map_synapse_deletion_requests_outgoing) {
+		const auto rank = map_it.first;
+		const auto buffer = map_it.second.get_requests();
+		const auto size_in_bytes = static_cast<int>(map_it.second.get_requests_size_in_bytes());
 
 		MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 		++mpi_requests_index;
@@ -534,19 +533,19 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 		auto mpi_requests_index = 0;
 
 		// Receive actual synapse requests
-		for (auto it = map_synapse_creation_requests_incoming.begin(); it != map_synapse_creation_requests_incoming.end(); it++) {
-			const auto rank = it->first;
-			auto buffer = (it->second).get_requests();
-			const auto size_in_bytes = static_cast<int>((it->second).get_requests_size_in_bytes());
+		for (auto& it : map_synapse_creation_requests_incoming) {
+			const auto rank = it.first;
+			auto buffer = it.second.get_requests();
+			const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
 
 			MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 			mpi_requests_index++;
 		}
 		// Send actual synapse requests
-		for (auto it = map_synapse_creation_requests_outgoing.begin(); it != map_synapse_creation_requests_outgoing.end(); it++) {
-			const auto rank = it->first;
-			const auto buffer = (it->second).get_requests();
-			const auto size_in_bytes = static_cast<int>((it->second).get_requests_size_in_bytes());
+		for (const auto& it : map_synapse_creation_requests_outgoing) {
+			const auto rank = it.first;
+			const auto buffer = it.second.get_requests();
+			const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
 
 			MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 			mpi_requests_index++;
@@ -626,19 +625,19 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 		mpi_requests_index = 0;
 
 		// Receive responses
-		for (auto it = map_synapse_creation_requests_outgoing.begin(); it != map_synapse_creation_requests_outgoing.end(); it++) {
-			const auto rank = it->first;
-			auto buffer = (it->second).get_responses();
-			const auto size_in_bytes = static_cast<int>((it->second).get_responses_size_in_bytes());
+		for (auto& it : map_synapse_creation_requests_outgoing) {
+			const auto rank = it.first;
+			auto buffer = it.second.get_responses();
+			const auto size_in_bytes = static_cast<int>(it.second.get_responses_size_in_bytes());
 
 			MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 			mpi_requests_index++;
 		}
 		// Send responses
-		for (auto it = map_synapse_creation_requests_incoming.begin(); it != map_synapse_creation_requests_incoming.end(); it++) {
-			const auto rank = it->first;
-			const auto buffer = (it->second).get_responses();
-			const auto size_in_bytes = static_cast<int>((it->second).get_responses_size_in_bytes());
+		for (const auto& it : map_synapse_creation_requests_incoming) {
+			const auto rank = it.first;
+			const auto buffer = it.second.get_responses();
+			const auto size_in_bytes = static_cast<int>(it.second.get_responses_size_in_bytes());
 
 			MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 			mpi_requests_index++;

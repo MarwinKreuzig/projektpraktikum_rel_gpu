@@ -13,17 +13,17 @@
 
 NeuronModels::NeuronModels(size_t num_neurons, double k, double tau_C, double beta, int h)
 	: my_num_neurons(num_neurons),
-	  k(k),
-	  tau_C(tau_C),
-	  beta(beta),
-	  h(h),
-	  x(num_neurons, 0),
-	  fired(num_neurons, 0),
-	  u(num_neurons, 0),
-	  I_syn(num_neurons, 0) {}
+	k(k),
+	tau_C(tau_C),
+	beta(beta),
+	h(h),
+	x(num_neurons, 0),
+	fired(num_neurons, 0),
+	u(num_neurons, 0),
+	I_syn(num_neurons, 0) {
+}
 
 /* Performs one iteration step of update in electrical activity */
-
 void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph, std::vector<double>& C) {
 	MapFiringNeuronIds map_firing_neuron_ids_outgoing;
 	/**
@@ -36,13 +36,12 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 		// My neuron fired
 		if (static_cast<bool>(fired[neuron_id])) {
 			const NetworkGraph::Edges& out_edges = network_graph.get_out_edges(neuron_id);
-			NetworkGraph::Edges::const_iterator it_out_edge;
 
 			// Find all target neurons which should receive the signal fired.
 			// That is, neurons which connect axons from neuron "neuron_id"
-			for (it_out_edge = out_edges.begin(); it_out_edge != out_edges.end(); ++it_out_edge) {
+			for (const auto& it_out_edge : out_edges) {
 				//target_neuron_id = it_out_edge->first.second;
-				auto target_rank = it_out_edge->first.first;
+				auto target_rank = it_out_edge.first.first;
 
 				// Don't send firing neuron id to myself as I already have this info
 				if (target_rank != MPIInfos::my_rank) {
@@ -102,7 +101,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	auto mpi_requests_index = 0;
 
 	// Receive actual neuron ids
-	for (auto & map_it : map_firing_neuron_ids_incoming) {
+	for (auto& map_it : map_firing_neuron_ids_incoming) {
 		auto rank = map_it.first;
 		auto buffer = map_it.second.get_neuron_ids();
 		const auto size_in_bytes = static_cast<int>(map_it.second.get_neuron_ids_size_in_bytes());
@@ -112,7 +111,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	}
 
 	// Send actual neuron ids
-	for (auto & map_it : map_firing_neuron_ids_outgoing) {
+	for (const auto& map_it : map_firing_neuron_ids_outgoing) {
 		auto rank = map_it.first;
 		const auto buffer = map_it.second.get_neuron_ids();
 		const auto size_in_bytes = static_cast<int>(map_it.second.get_neuron_ids_size_in_bytes());
@@ -133,27 +132,24 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	 */
 	GlobalTimers::timers.start(TimerRegion::CALC_SYNAPTIC_INPUT);
 	// For my neurons
-	for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id)
-	{
+	for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
 		I_syn[neuron_id] = 0.0;
 
 		/**
 		 * Determine synaptic input from neurons connected to me
 		 */
-		// Walk through in-edges of my neuron
+		 // Walk through in-edges of my neuron
 		const NetworkGraph::Edges& in_edges = network_graph.get_in_edges(neuron_id);
 
 		for (const auto& it_in_edge : in_edges) {
 			auto rank = it_in_edge.first.first;
 			auto src_neuron_id = it_in_edge.first.second;
 
-			bool spike{false};
-			if (rank == MPIInfos::my_rank)
-			{
+			bool spike{ false };
+			if (rank == MPIInfos::my_rank) {
 				spike = static_cast<bool>(fired[src_neuron_id]);
 			}
-			else
-			{
+			else {
 				MapFiringNeuronIds::const_iterator it = map_firing_neuron_ids_incoming.find(rank);
 				spike = (it != map_firing_neuron_ids_incoming.end()) && (it->second.find(src_neuron_id));
 			}
@@ -165,12 +161,10 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	GlobalTimers::timers.start(TimerRegion::CALC_ACTIVITY);
 
 	// For my neurons
-	for (size_t i = 0; i < my_num_neurons; ++i)
-	{
+	for (size_t i = 0; i < my_num_neurons; ++i) {
 		update_activity(i);
 
-		for (int integration_steps = 0; integration_steps < h; ++integration_steps)
-		{
+		for (int integration_steps = 0; integration_steps < h; ++integration_steps) {
 			// Update calcium depending on the firing
 			C[i] += (1 / static_cast<double>(h)) * (-C[i] / tau_C + beta * static_cast<double>(fired[i]));
 		}

@@ -22,12 +22,11 @@ struct NeuronInformation {
 		double c = 0.0, double x = 0.0, bool f = false, bool r = false, double i = 0.0,
 		double ax = 0.0, double ax_c = 0.0, double de = 0.0, double de_c = 0.0, double di = 0.0, double di_c = 0.0) :
 		calcium(c), x(x), fired(f), refrac(r), I_sync(i), axons(ax), axons_connected(ax_c),
-		dendrites_exc(de), dendrites_exc_connected(de_c), dendrites_inh(di), dendrites_inh_connected(di_c)
-	{ }
+		dendrites_exc(de), dendrites_exc_connected(de_c), dendrites_inh(di), dendrites_inh_connected(di_c) {
+	}
 };
 
 class NeuronMonitor {
-
 	const Neurons& neurons_to_monitor;
 	size_t target_neuron_id;
 
@@ -38,7 +37,8 @@ public:
 	static size_t current_step;
 
 	NeuronMonitor(size_t neuron_id, const Neurons& neurons)
-		: neurons_to_monitor(neurons), target_neuron_id(neuron_id), informations(max_steps) { }
+		: neurons_to_monitor(neurons), target_neuron_id(neuron_id), informations(max_steps) {
+	}
 
 	size_t get_target_id() const noexcept {
 		return target_neuron_id;
