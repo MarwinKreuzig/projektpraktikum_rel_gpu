@@ -238,7 +238,7 @@ void printNeuronMonitor(const NeuronMonitor& nm, size_t neuron_id) {
 	std::ofstream outfile(std::to_string(neuron_id) + ".csv", std::ios::trunc);
 	outfile << std::setprecision(5);
 
-	outfile.imbue(std::locale("German_germany"));
+	outfile.imbue(std::locale());
 
 	outfile << "Step;Fired;Refrac;x;Ca;I_sync;axons;axons_connected;dendrites_exc;dendrites_exc_connected;dendrites_inh;dendrites_inh_connected";
 	outfile << "\n";

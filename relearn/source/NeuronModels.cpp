@@ -11,30 +11,16 @@
 #include "MPIInfos.h"
 #include "Random.h"
 
-NeuronModels::NeuronModels(size_t num_neurons, double x_0, double tau_x, double k, double tau_C, double beta, int h, double refrac_time) :
-	my_num_neurons(num_neurons),
-	x_0(x_0),
-	tau_x(tau_x),
-	k(k),
-	tau_C(tau_C),
-	beta(beta),
-	refrac_time(refrac_time),
-	h(h),
-	x(num_neurons, 0),
-	fired(num_neurons, 0),
-	refrac(num_neurons, 0),
-	I_syn(num_neurons, 0),
-	random_number_distribution(0.0, nextafter(1.0, 2.0)), // Init random number distribution to [0,1]
-	random_number_generator(RandomHolder<NeuronModels>::get_random_generator()) {
-
-	// Init variables for my neurons only
-	for (size_t i = 0; i < my_num_neurons; i++) {
-		// Random init of the firing rate from interval [0,1]
-		x[i] = random_number_distribution(random_number_generator);
-		fired[i] = Theta(x[i]);
-		refrac[i] = static_cast<int>(fired[i] * refrac_time);
-	}
-}
+NeuronModels::NeuronModels(size_t num_neurons, double k, double tau_C, double beta, int h)
+	: my_num_neurons(num_neurons),
+	  k(k),
+	  tau_C(tau_C),
+	  beta(beta),
+	  h(h),
+	  x(num_neurons, 0),
+	  fired(num_neurons, 0),
+	  u(num_neurons, 0),
+	  I_syn(num_neurons, 0) {}
 
 /* Performs one iteration step of update in electrical activity */
 
@@ -48,27 +34,25 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	// For my neurons
 	for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
 		// My neuron fired
-		if (!fired[neuron_id]) {
-			continue;
-		}
+		if (static_cast<bool>(fired[neuron_id])) {
+			const NetworkGraph::Edges& out_edges = network_graph.get_out_edges(neuron_id);
+			NetworkGraph::Edges::const_iterator it_out_edge;
 
-		const NetworkGraph::Edges& out_edges = network_graph.get_out_edges(neuron_id);
+			// Find all target neurons which should receive the signal fired.
+			// That is, neurons which connect axons from neuron "neuron_id"
+			for (it_out_edge = out_edges.begin(); it_out_edge != out_edges.end(); ++it_out_edge) {
+				//target_neuron_id = it_out_edge->first.second;
+				auto target_rank = it_out_edge->first.first;
 
-		// Find all target neurons which should receive the signal fired.
-		// That is, neurons which connect axons from neuron "neuron_id"
-		for (const auto& it_out_edge : out_edges) {
-			//target_neuron_id = it_out_edge->first.second;
-			auto target_rank = it_out_edge.first.first;
-
-			// Don't send firing neuron id to myself as I already have this info
-			if (target_rank != MPIInfos::my_rank) {
-				// Function expects to insert neuron ids in sorted order
-				// Append if it is not already in
-				map_firing_neuron_ids_outgoing[target_rank].
-					append_if_not_found_sorted(neuron_id);
+				// Don't send firing neuron id to myself as I already have this info
+				if (target_rank != MPIInfos::my_rank) {
+					// Function expects to insert neuron ids in sorted order
+					// Append if it is not already in
+					map_firing_neuron_ids_outgoing[target_rank].
+						append_if_not_found_sorted(neuron_id);
+				}
 			}
-		}
-
+		} // My neuron fired
 	} // For my neurons
 	GlobalTimers::timers.stop_and_add(TimerRegion::PREPARE_SENDING_SPIKES);
 
@@ -118,7 +102,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	auto mpi_requests_index = 0;
 
 	// Receive actual neuron ids
-	for (auto& map_it : map_firing_neuron_ids_incoming) {
+	for (auto & map_it : map_firing_neuron_ids_incoming) {
 		auto rank = map_it.first;
 		auto buffer = map_it.second.get_neuron_ids();
 		const auto size_in_bytes = static_cast<int>(map_it.second.get_neuron_ids_size_in_bytes());
@@ -128,7 +112,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	}
 
 	// Send actual neuron ids
-	for (const auto& map_it : map_firing_neuron_ids_outgoing) {
+	for (auto & map_it : map_firing_neuron_ids_outgoing) {
 		auto rank = map_it.first;
 		const auto buffer = map_it.second.get_neuron_ids();
 		const auto size_in_bytes = static_cast<int>(map_it.second.get_neuron_ids_size_in_bytes());
@@ -141,20 +125,21 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	GlobalTimers::timers.stop_and_add(TimerRegion::EXCHANGE_NEURON_IDS);
 
 	/**
-	* Now the fired[] array contains spikes only from my own neurons
-	* (spikes from local neurons)
-	*
-	* The incoming spikes of neurons from other ranks are in map_firing_neuron_ids_incoming
-	* (spikes from neurons from other ranks)
-	*/
+	 * Now the fired[] array contains spikes only from my own neurons
+	 * (spikes from local neurons)
+	 *
+	 * The incoming spikes of neurons from other ranks are in map_firing_neuron_ids_incoming
+	 * (spikes from neurons from other ranks)
+	 */
 	GlobalTimers::timers.start(TimerRegion::CALC_SYNAPTIC_INPUT);
 	// For my neurons
-	for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
+	for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id)
+	{
 		I_syn[neuron_id] = 0.0;
 
 		/**
-		* Determine synaptic input from neurons connected to me
-		*/
+		 * Determine synaptic input from neurons connected to me
+		 */
 		// Walk through in-edges of my neuron
 		const NetworkGraph::Edges& in_edges = network_graph.get_in_edges(neuron_id);
 
@@ -162,11 +147,13 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 			auto rank = it_in_edge.first.first;
 			auto src_neuron_id = it_in_edge.first.second;
 
-			int spike = 0;
-			if (rank == MPIInfos::my_rank) {
-				spike = fired[src_neuron_id];
+			bool spike{false};
+			if (rank == MPIInfos::my_rank)
+			{
+				spike = static_cast<bool>(fired[src_neuron_id]);
 			}
-			else {
+			else
+			{
 				MapFiringNeuronIds::const_iterator it = map_firing_neuron_ids_incoming.find(rank);
 				spike = (it != map_firing_neuron_ids_incoming.end()) && (it->second.find(src_neuron_id));
 			}
@@ -176,27 +163,16 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	GlobalTimers::timers.stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
 
 	GlobalTimers::timers.start(TimerRegion::CALC_ACTIVITY);
+
 	// For my neurons
-	for (size_t i = 0; i < my_num_neurons; i++) {
-		for (int integration_steps = 0; integration_steps < h; integration_steps++) {
-			// Update the membrane potential
-			x[i] += (1 / static_cast<double>(h)) * ((x_0 - x[i]) / tau_x + I_syn[i]);
-		}
+	for (size_t i = 0; i < my_num_neurons; ++i)
+	{
+		update_activity(i);
 
-		// Neuron ready to fire again
-		if (refrac[i] == 0) {
-			fired[i] = Theta(x[i]);             // Decide whether a neuron fires depending on its firing rate
-			refrac[i] = static_cast<int>(fired[i] * refrac_time);  // After having fired, a neuron is in a refractory state
-		}
-		// Neuron now/still in refractory state
-		else {
-			fired[i] = 0;  // Set neuron inactive
-			--refrac[i];   // Decrease refractory time
-		}
-
-		for (int integration_steps = 0; integration_steps < h; integration_steps++) {
+		for (int integration_steps = 0; integration_steps < h; ++integration_steps)
+		{
 			// Update calcium depending on the firing
-			C[i] += (1 / (double)h) * (-C[i] / tau_C + beta * fired[i]);
+			C[i] += (1 / static_cast<double>(h)) * (-C[i] / tau_C + beta * static_cast<double>(fired[i]));
 		}
 	}
 

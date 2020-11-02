@@ -1,23 +1,30 @@
 #include "Neurons.h"
 #include "Partition.h"
 
-Neurons::Neurons(size_t num_neurons, Parameters params, const Partition& partition) :
-	num_neurons(num_neurons),
-	calcium(num_neurons),
-	neuron_models(num_neurons, params.x_0, params.tau_x, params.k, params.tau_C, params.beta, params.h, params.refrac_time),
-	axons(SynapticElements::AXON, num_neurons, params.eta_A, params.C_target, params.nu, params.vacant_retract_ratio),
-	dendrites_exc(SynapticElements::DENDRITE, num_neurons, params.eta_D_ex, params.C_target, params.nu, params.vacant_retract_ratio),
-	dendrites_inh(SynapticElements::DENDRITE, num_neurons, params.eta_D_in, params.C_target, params.nu, params.vacant_retract_ratio),
-	positions(num_neurons),
-	area_names(num_neurons),
-	random_number_generator(RandomHolder<Neurons/*<NeuronModels, Axons, DendritesExc, DendritesInh>*/>::get_random_generator()),
-	random_number_distribution(0.0, std::nextafter(1.0, 2.0)),
-	partition(partition) {
+Neurons::Neurons(size_t num_neurons, const Parameters &params, const Partition &partition)
+	: Neurons{num_neurons, params, partition, NeuronModels::create<models::ModelA>(num_neurons, params.k, params.tau_C, params.beta, params.h, params.x_0, params.tau_x, params.refrac_time)}
+{
+}
 
+Neurons::Neurons(size_t num_neurons, const Parameters &params, const Partition &partition, std::unique_ptr<NeuronModels> model)
+	: num_neurons(num_neurons),
+	  calcium(num_neurons),
+	  neuron_models(std::move(model)),
+	  axons(SynapticElements::AXON, num_neurons, params.eta_A, params.C_target, params.nu, params.vacant_retract_ratio),
+	  dendrites_exc(SynapticElements::DENDRITE, num_neurons, params.eta_D_ex, params.C_target, params.nu, params.vacant_retract_ratio),
+	  dendrites_inh(SynapticElements::DENDRITE, num_neurons, params.eta_D_in, params.C_target, params.nu, params.vacant_retract_ratio),
+	  positions(num_neurons),
+	  area_names(num_neurons),
+	  random_number_generator(RandomHolder<Neurons /*<NeuronModels, Axons, DendritesExc, DendritesInh>*/>::get_random_generator()),
+	  random_number_distribution(0.0, std::nextafter(1.0, 2.0)),
+	  partition(partition)
+
+{
 	// Init member variables
-	for (size_t i = 0; i < num_neurons; i++) {
+	for (size_t i = 0; i < num_neurons; i++)
+	{
 		// Set calcium concentration
-		calcium[i] = neuron_models.get_beta() * neuron_models.get_fired(i);
+		calcium[i] = neuron_models->get_beta() * neuron_models->get_fired(i);
 	}
 }
 
@@ -799,7 +806,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles
 		global_statistics(calcium.data(), num_neurons, params.num_neurons, 0, MPI_COMM_WORLD);
 
 	const StatisticalMeasures<double> activity_statistics =
-		global_statistics(neuron_models.get_x().data(), num_neurons, params.num_neurons, 0, MPI_COMM_WORLD);
+		global_statistics(neuron_models->get_x().data(), num_neurons, params.num_neurons, 0, MPI_COMM_WORLD);
 
 	// Output data
 	if (0 == MPIInfos::my_rank) {
@@ -908,8 +915,8 @@ void Neurons::print() {
 
 	// Values
 	for (size_t i = 0; i < num_neurons; i++) {
-		cout << left << setw(cwidth_left) << i << setw(cwidth) << neuron_models.get_x(i) << setw(cwidth) << neuron_models.get_fired(i);
-		cout << setw(cwidth) << neuron_models.get_refrac(i) << setw(cwidth) << calcium[i] << setw(cwidth) << axons.get_cnt(i);
+		cout << left << setw(cwidth_left) << i << setw(cwidth) << neuron_models->get_x(i) << setw(cwidth) << neuron_models->get_fired(i);
+		cout << setw(cwidth) << neuron_models->get_refrac(i) << setw(cwidth) << calcium[i] << setw(cwidth) << axons.get_cnt(i);
 		cout << setw(cwidth) << dendrites_exc.get_cnt(i) << setw(cwidth) << dendrites_inh.get_cnt(i) << "\n";
 	}
 }
