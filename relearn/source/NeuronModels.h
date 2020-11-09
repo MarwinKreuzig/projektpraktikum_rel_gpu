@@ -120,9 +120,7 @@ public:
 		return x;
 	}
 
-	[[nodiscard]] int get_refrac(const size_t i) const noexcept {
-		return u[i];
-	}
+	[[nodiscard]] virtual int get_refrac(const size_t i) const noexcept = 0;
 
 	/* Performs one iteration step of update in electrical activity */
 	void update_electrical_activity(const NetworkGraph& network_graph, std::vector<double>& C);
@@ -136,14 +134,13 @@ protected:
 	size_t my_num_neurons;
 
 	// // Model parameters for all neurons
-	double k;	 // Proportionality factor for synapses in Hz 
+	double k;	 // Proportionality factor for synapses in Hz
 	double tau_C; // Decay time of calcium
 	double beta; // Increase in calcium each time a neuron fires
 	int h;		 // Precision for Euler integration
 
 	// // Variables for each neuron where the array index denotes the neuron ID
 	std::vector<double> x;			  // membrane potential v
-	std::vector<double> u;			  // membrane recovery u
 	std::vector<unsigned short> fired; // 1: neuron has fired, 0: neuron is inactive
 	std::vector<double> I_syn;		  // Synaptic input
 };
@@ -153,7 +150,7 @@ namespace models {
 	public:
 		ModelA(size_t num_neurons, double k, double tau_C, double beta, int h,
 			const double x_0, const double tau_x, const double refrac_time)
-			: NeuronModels{ num_neurons, k, tau_C, beta, h }, x_0{ x_0 }, tau_x{ tau_x }, refrac_time{ refrac_time }
+			: NeuronModels{ num_neurons, k, tau_C, beta, h }, refrac(num_neurons), x_0{ x_0 }, tau_x{ tau_x }, refrac_time{ refrac_time }
 		{
 			init_neurons();
 		}
@@ -161,6 +158,10 @@ namespace models {
 		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final {
 			return std::make_unique<ModelA>(my_num_neurons, k, tau_C, beta, h,
 				x_0, tau_x, refrac_time);
+		}
+
+		[[nodiscard]] int get_refrac(const size_t i) const noexcept final {
+			return refrac[i];
 		}
 
 	protected:
@@ -171,14 +172,14 @@ namespace models {
 			}
 
 			// Neuron ready to fire again
-			if (u[i] == 0) {
+			if (refrac[i] == 0) {
 				fired[i] = static_cast<unsigned short>(theta(x[i])); // Decide whether a neuron fires depending on its firing rate
-				u[i] = static_cast<double>(fired[i] * refrac_time);	 // After having fired, a neuron is in a refractory state
+				refrac[i] = static_cast<double>(fired[i] * refrac_time);	 // After having fired, a neuron is in a refractory state
 			}
 			// Neuron now/still in refractory state
 			else {
 				fired[i] = 0; // Set neuron inactive
-				--u[i];		  // Decrease refractory time
+				--refrac[i];		  // Decrease refractory time
 			}
 		}
 
@@ -186,7 +187,7 @@ namespace models {
 			for (size_t i = 0; i < x.size(); ++i) {
 				x[i] = random_number_distribution(random_number_generator);
 				fired[i] = static_cast<unsigned short>(theta(x[i]));
-				u[i] = static_cast<double>(fired[i]) * refrac_time;
+				refrac[i] = static_cast<double>(fired[i]) * refrac_time;
 			}
 		}
 
@@ -200,6 +201,8 @@ namespace models {
 			const double threshold = random_number_distribution(random_number_generator);
 			return x >= threshold;
 		}
+
+		std::vector<int> refrac; // refractory time
 
 		double x_0;			// Background or resting activity
 		double tau_x;		// Decay time of firing rate in msec
@@ -217,7 +220,7 @@ namespace models {
 		IzhikevichModel(size_t num_neurons, double k, double tau_C, double beta, int h,
 			const double a = 0.1, const double b = 0.2, const double c = -65., const double d = 2.,
 			const double V_spike = 30., const double k1 = 0.04, const double k2 = 5., const double k3 = 140.)
-			: NeuronModels{ num_neurons, k, tau_C, beta, h }, a{ a }, b{ b }, c{ c }, d{ d }, V_spike{ V_spike }, k1{ k1 }, k2{ k2 }, k3{ k3 }
+			: NeuronModels{ num_neurons, k, tau_C, beta, h }, u(num_neurons), a{ a }, b{ b }, c{ c }, d{ d }, V_spike{ V_spike }, k1{ k1 }, k2{ k2 }, k3{ k3 }
 		{
 			init_neurons();
 		}
@@ -225,6 +228,10 @@ namespace models {
 		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final {
 			return std::make_unique<IzhikevichModel>(my_num_neurons, k, tau_C, beta, h,
 				a, b, c, d, V_spike, k1, k2, k3);
+		}
+
+		[[nodiscard]] int get_refrac(const size_t i) const noexcept final {
+			return u[i];
 		}
 
 	protected:
@@ -262,6 +269,8 @@ namespace models {
 			return x >= V_spike;
 		}
 
+		std::vector<double> u; // membrane recovery
+
 		double a; // time-scale of membrane recovery u
 		double b; // sensitivity of membrane recovery to membrane potential v (x)
 		double c; // after-spike reset value for membrane potential v (x)
@@ -278,7 +287,7 @@ namespace models {
 	public:
 		FitzHughNagumoModel(size_t num_neurons, double k, double tau_C, double beta, int h,
 			const double a = 0.7, const double b = 0.8, const double phi = 0.08)
-			: NeuronModels{ num_neurons, k, tau_C, beta, h }, a{ a }, b{ b }, phi{ phi }
+			: NeuronModels{ num_neurons, k, tau_C, beta, h }, w(num_neurons), a{ a }, b{ b }, phi{ phi }
 		{
 			init_neurons();
 		}
@@ -288,16 +297,20 @@ namespace models {
 				a, b, phi);
 		}
 
+		[[nodiscard]] int get_refrac(const size_t i) const noexcept final {
+			return w[i];
+		}
+
 	protected:
 		void update_activity(const size_t i) final {
 			fired[i] = 0;
 
 			// Update the membrane potential
 			for (int integration_steps = 0; integration_steps < h; ++integration_steps) {
-				x[i] += iter_x(x[i], u[i], I_syn[i]) / h;
-				u[i] += iter_refrac(u[i], x[i]) / h;
+				x[i] += iter_x(x[i], w[i], I_syn[i]) / h;
+				w[i] += iter_refrac(w[i], x[i]) / h;
 
-				if (spiked(x[i], u[i])) {
+				if (spiked(x[i], w[i])) {
 					fired[i] = 1;
 				}
 			}
@@ -306,8 +319,8 @@ namespace models {
 		void init_neurons() final {
 			for (auto i = 0; i < x.size(); ++i) {
 				x[i] = -1.2;
-				u[i] = iter_refrac(-.6, x[i]);
-				fired[i] = static_cast<unsigned short>(spiked(x[i], u[i]));
+				w[i] = iter_refrac(-.6, x[i]);
+				fired[i] = static_cast<unsigned short>(spiked(x[i], w[i]));
 			}
 		}
 
@@ -324,6 +337,8 @@ namespace models {
 			return refrac > iter_x(x, 0, 0) && x > 1.;
 		}
 
+		std::vector<double> w; // recovery variable
+
 		double a;
 		double b;
 		double phi;
@@ -334,7 +349,7 @@ namespace models {
 		AEIFModel(size_t num_neurons, double k, double tau_C, double beta, int h,
 			const double C = 281., const double g_L = 30., const double E_L = -70.6, const double V_T = -50.4,
 			const double d_T = 2., const double tau_w = 144., const double a = 4., const double b = 0.0805, const double V_peak = 20.)
-			: NeuronModels{ num_neurons, k, tau_C, beta, h }, C{ C }, g_L{ g_L }, E_L{ E_L }, V_T{ V_T }, d_T{ d_T }, tau_w{ tau_w }, a{ a }, b{ b }, V_peak{ V_peak }
+			: NeuronModels{ num_neurons, k, tau_C, beta, h }, w(num_neurons), C{ C }, g_L{ g_L }, E_L{ E_L }, V_T{ V_T }, d_T{ d_T }, tau_w{ tau_w }, a{ a }, b{ b }, V_peak{ V_peak }
 		{
 			init_neurons();
 		}
@@ -344,17 +359,21 @@ namespace models {
 				C, g_L, E_L, V_T, d_T, tau_w, a, b, V_peak);
 		}
 
+		[[nodiscard]] int get_refrac(const size_t i) const noexcept final {
+			return w[i];
+		}
+
 	protected:
 		void update_activity(const size_t i) final
 		{
 			for (int integration_steps = 0; integration_steps < h; ++integration_steps) {
-				x[i] += iter_x(x[i], u[i], I_syn[i]) / h;
-				u[i] += iter_refrac(u[i], x[i]) / h;
+				x[i] += iter_x(x[i], w[i], I_syn[i]) / h;
+				w[i] += iter_refrac(w[i], x[i]) / h;
 
 				if (x[i] >= V_peak) {
 					fired[i] = 1;
 					x[i] = E_L;
-					u[i] += b;
+					w[i] += b;
 				}
 			}
 		}
@@ -362,7 +381,7 @@ namespace models {
 		void init_neurons() final {
 			for (int i = 0; i < x.size(); ++i) {
 				x[i] = E_L;
-				u[i] = iter_refrac(0, x[i]);
+				w[i] = iter_refrac(0, x[i]);
 				fired[i] = static_cast<unsigned short>(x[i] >= V_peak);
 			}
 		}
@@ -379,6 +398,8 @@ namespace models {
 		[[nodiscard]] double iter_refrac(const double refrac, const double x) const noexcept {
 			return (a * (x - E_L) - refrac) / tau_w;
 		}
+
+		std::vector<double> w; // adaption variable
 
 		double C;	 // membrance capacitance
 		double g_L;	 // leak conductance
