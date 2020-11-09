@@ -164,7 +164,7 @@ namespace models {
 		}
 
 	protected:
-	void update_activity(const size_t i) final {
+		void update_activity(const size_t i) final {
 			for (int integration_steps = 0; integration_steps < h; integration_steps++) {
 				// Update the membrane potential
 				x[i] += iter_x(x[i], I_syn[i]) / h;
@@ -237,7 +237,6 @@ namespace models {
 					fired[i] = 1;
 					x[i] = c;
 					u[i] += d;
-					break;
 				}
 			}
 		}
@@ -356,7 +355,6 @@ namespace models {
 					fired[i] = 1;
 					x[i] = E_L;
 					u[i] += b;
-					break;
 				}
 			}
 		}
