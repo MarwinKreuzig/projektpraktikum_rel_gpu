@@ -128,13 +128,9 @@ public:
 	void update_electrical_activity(const NetworkGraph& network_graph, std::vector<double>& C);
 
 protected:
-	void update_activity(const size_t i) {
-		update_activity(x[i], u[i], I_syn[i], fired[i], static_cast<double>(h));
-	}
+	virtual void update_activity(const size_t i) = 0;
 
-	virtual void update_activity(double& x, double& refrac, const double& I_syn, unsigned short& fired, const double h) = 0;
-
-	virtual void init_neurons(std::vector<double>& x, std::vector<double>& refrac, std::vector<unsigned short>& fired) = 0;
+	virtual void init_neurons() = 0;
 
 	// My local number of neurons
 	size_t my_num_neurons;
@@ -159,7 +155,7 @@ namespace models {
 			const double x_0, const double tau_x, const double refrac_time)
 			: NeuronModels{ num_neurons, k, tau_C, beta, h }, x_0{ x_0 }, tau_x{ tau_x }, refrac_time{ refrac_time }
 		{
-			init_neurons(x, u, fired);
+			init_neurons();
 		}
 
 		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final {
@@ -168,34 +164,34 @@ namespace models {
 		}
 
 	protected:
-		void update_activity(double& x, double& refrac, const double& I_syn, unsigned short& fired, const double h) final {
+	void update_activity(const size_t i) final {
 			for (int integration_steps = 0; integration_steps < h; integration_steps++) {
 				// Update the membrane potential
-				x += iter_x(x, I_syn) / h;
+				x[i] += iter_x(x[i], I_syn[i]) / h;
 			}
 
 			// Neuron ready to fire again
-			if (refrac == 0) {
-				fired = static_cast<unsigned short>(theta(x));	  // Decide whether a neuron fires depending on its firing rate
-				refrac = static_cast<double>(fired * refrac_time); // After having fired, a neuron is in a refractory state
+			if (u[i] == 0) {
+				fired[i] = static_cast<unsigned short>(theta(x[i])); // Decide whether a neuron fires depending on its firing rate
+				u[i] = static_cast<double>(fired[i] * refrac_time);	 // After having fired, a neuron is in a refractory state
 			}
 			// Neuron now/still in refractory state
 			else {
-				fired = 0; // Set neuron inactive
-				--refrac; // Decrease refractory time
+				fired[i] = 0; // Set neuron inactive
+				--u[i];		  // Decrease refractory time
 			}
 		}
 
-		void init_neurons(std::vector<double>& x, std::vector<double>& refrac, std::vector<unsigned short>& fired) final {
+		void init_neurons() final {
 			for (size_t i = 0; i < x.size(); ++i) {
 				x[i] = random_number_distribution(random_number_generator);
 				fired[i] = static_cast<unsigned short>(theta(x[i]));
-				refrac[i] = static_cast<double>(fired[i]) * refrac_time;
+				u[i] = static_cast<double>(fired[i]) * refrac_time;
 			}
 		}
 
 	private:
-		[[nodiscard]] double iter_x(const double x, const double I_syn) const {
+		[[nodiscard]] double iter_x(const double x, const double I_syn) const noexcept {
 			return ((x_0 - x) / tau_x + I_syn);
 		}
 
@@ -223,7 +219,7 @@ namespace models {
 			const double V_spike = 30., const double k1 = 0.04, const double k2 = 5., const double k3 = 140.)
 			: NeuronModels{ num_neurons, k, tau_C, beta, h }, a{ a }, b{ b }, c{ c }, d{ d }, V_spike{ V_spike }, k1{ k1 }, k2{ k2 }, k3{ k3 }
 		{
-			init_neurons(x, u, fired);
+			init_neurons();
 		}
 
 		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final {
@@ -232,38 +228,38 @@ namespace models {
 		}
 
 	protected:
-		void update_activity(double& x, double& refrac, const double& I_syn, unsigned short& fired, const double h) final {
+		void update_activity(const size_t i) final {
 			for (int integration_steps = 0; integration_steps < h; ++integration_steps) {
-				x += iter_x(x, refrac, I_syn) / h;
-				refrac += iter_refrac(refrac, x) / h;
+				x[i] += iter_x(x[i], u[i], I_syn[i]) / h;
+				u[i] += iter_refrac(u[i], x[i]) / h;
 
-				if (spiked(x)) {
-					fired = 1;
-					x = c;
-					refrac += d;
+				if (spiked(x[i])) {
+					fired[i] = 1;
+					x[i] = c;
+					u[i] += d;
 					break;
 				}
 			}
 		}
 
-		void init_neurons(std::vector<double>& x, std::vector<double>& refrac, std::vector<unsigned short>& fired) final {
+		void init_neurons() final {
 			for (auto i = 0; i < x.size(); ++i) {
 				x[i] = c;
-				refrac[i] = iter_refrac(b * c, x[i]);
+				u[i] = iter_refrac(b * c, x[i]);
 				fired[i] = static_cast<unsigned short>(x[i] >= V_spike);
 			}
 		}
 
 	private:
-		[[nodiscard]] double iter_x(const double x, const double refrac, const double I_syn) const {
+		[[nodiscard]] double iter_x(const double x, const double refrac, const double I_syn) const noexcept {
 			return k1 * x * x + k2 * x + k3 - refrac + I_syn;
 		}
 
-		[[nodiscard]] double iter_refrac(const double refrac, const double x) const {
+		[[nodiscard]] double iter_refrac(const double refrac, const double x) const noexcept {
 			return a * (b * x - refrac);
 		}
 
-		[[nodiscard]] bool spiked(const double x) const {
+		[[nodiscard]] bool spiked(const double x) const noexcept {
 			return x >= V_spike;
 		}
 
@@ -285,7 +281,7 @@ namespace models {
 			const double a = 0.7, const double b = 0.8, const double phi = 0.08)
 			: NeuronModels{ num_neurons, k, tau_C, beta, h }, a{ a }, b{ b }, phi{ phi }
 		{
-			init_neurons(x, u, fired);
+			init_neurons();
 		}
 
 		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final {
@@ -294,38 +290,38 @@ namespace models {
 		}
 
 	protected:
-		void update_activity(double& x, double& refrac, const double& I_syn, unsigned short& fired, const double h) final {
-			fired = 0;
+		void update_activity(const size_t i) final {
+			fired[i] = 0;
 
 			// Update the membrane potential
 			for (int integration_steps = 0; integration_steps < h; ++integration_steps) {
-				x += iter_x(x, refrac, I_syn) / h;
-				refrac += iter_refrac(refrac, x) / h;
+				x[i] += iter_x(x[i], u[i], I_syn[i]) / h;
+				u[i] += iter_refrac(u[i], x[i]) / h;
 
-				if (spiked(x, refrac)) {
-					fired = 1;
+				if (spiked(x[i], u[i])) {
+					fired[i] = 1;
 				}
 			}
 		}
 
-		void init_neurons(std::vector<double>& x, std::vector<double>& refrac, std::vector<unsigned short>& fired) final {
+		void init_neurons() final {
 			for (auto i = 0; i < x.size(); ++i) {
 				x[i] = -1.2;
-				refrac[i] = iter_refrac(-.6, x[i]);
-				fired[i] = static_cast<unsigned short>(spiked(x[i], refrac[i]));
+				u[i] = iter_refrac(-.6, x[i]);
+				fired[i] = static_cast<unsigned short>(spiked(x[i], u[i]));
 			}
 		}
 
 	private:
-		[[nodiscard]] double iter_x(const double x, const double refrac, const double I_syn) const {
+		[[nodiscard]] static double iter_x(const double x, const double refrac, const double I_syn) noexcept {
 			return x - x * x * x / 3 - refrac + I_syn;
 		}
 
-		[[nodiscard]] double iter_refrac(const double refrac, const double x) const {
+		[[nodiscard]] double iter_refrac(const double refrac, const double x) const noexcept {
 			return phi * (x + a - b * refrac);
 		}
 
-		[[nodiscard]] bool spiked(const double x, const double refrac) {
+		[[nodiscard]] static bool spiked(const double x, const double refrac) noexcept{
 			return refrac > iter_x(x, 0, 0) && x > 1.;
 		}
 
@@ -341,7 +337,7 @@ namespace models {
 			const double d_T = 2., const double tau_w = 144., const double a = 4., const double b = 0.0805, const double V_peak = 20.)
 			: NeuronModels{ num_neurons, k, tau_C, beta, h }, C{ C }, g_L{ g_L }, E_L{ E_L }, V_T{ V_T }, d_T{ d_T }, tau_w{ tau_w }, a{ a }, b{ b }, V_peak{ V_peak }
 		{
-			init_neurons(x, u, fired);
+			init_neurons();
 		}
 
 		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final {
@@ -350,24 +346,25 @@ namespace models {
 		}
 
 	protected:
-		void update_activity(double& x, double& refrac, const double& I_syn, unsigned short& fired, const double h) final {
+		void update_activity(const size_t i) final
+		{
 			for (int integration_steps = 0; integration_steps < h; ++integration_steps) {
-				x += iter_x(x, refrac, I_syn) / h;
-				refrac += iter_refrac(refrac, x) / h;
+				x[i] += iter_x(x[i], u[i], I_syn[i]) / h;
+				u[i] += iter_refrac(u[i], x[i]) / h;
 
-				if (x >= V_peak) {
-					fired = 1;
-					x = E_L;
-					refrac += b;
+				if (x[i] >= V_peak) {
+					fired[i] = 1;
+					x[i] = E_L;
+					u[i] += b;
 					break;
 				}
 			}
 		}
 
-		void init_neurons(std::vector<double>& x, std::vector<double>& refrac, std::vector<unsigned short>& fired) final {
+		void init_neurons() final {
 			for (int i = 0; i < x.size(); ++i) {
 				x[i] = E_L;
-				refrac[i] = iter_refrac(0, x[i]);
+				u[i] = iter_refrac(0, x[i]);
 				fired[i] = static_cast<unsigned short>(x[i] >= V_peak);
 			}
 		}
@@ -381,7 +378,7 @@ namespace models {
 			return (f(x) - refrac + I_syn) / C;
 		}
 
-		[[nodiscard]] double iter_refrac(const double refrac, const double x) const {
+		[[nodiscard]] double iter_refrac(const double refrac, const double x) const noexcept {
 			return (a * (x - E_L) - refrac) / tau_w;
 		}
 
