@@ -12,6 +12,7 @@
 #include <random>
 #include <algorithm>
 #include <vector>
+#include <memory>
 #include "NetworkGraph.h"
 #include "MPIInfos.h"
 #include "LogMessages.h"
