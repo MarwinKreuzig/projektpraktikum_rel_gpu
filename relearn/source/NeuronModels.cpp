@@ -19,7 +19,6 @@ NeuronModels::NeuronModels(size_t num_neurons, double k, double tau_C, double be
 	h(h),
 	x(num_neurons, 0),
 	fired(num_neurons, 0),
-	u(num_neurons, 0),
 	I_syn(num_neurons, 0) {
 }
 
