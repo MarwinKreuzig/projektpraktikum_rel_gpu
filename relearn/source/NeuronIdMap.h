@@ -17,7 +17,7 @@ public:
 	};
 
 	NeuronIdMap(size_t my_num_neurons, const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, MPI_Comm mpi_comm);
-	bool rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id, size_t& glob_id) const noexcept;
+	bool rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id, size_t& glob_id) const /*noexcept*/;
 	bool pos2rank_neuron_id(const Vec3d& pos, RankNeuronId& result) const;
 
 private:

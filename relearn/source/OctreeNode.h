@@ -13,8 +13,8 @@
 
 class OctreeNode {
 public:
-	OctreeNode() noexcept;
-	~OctreeNode() noexcept;
+	OctreeNode() /*noexcept*/;
+	~OctreeNode() /*noexcept*/;
 
 	OctreeNode(const OctreeNode& other) = default;
 	OctreeNode(OctreeNode&& other) = default;

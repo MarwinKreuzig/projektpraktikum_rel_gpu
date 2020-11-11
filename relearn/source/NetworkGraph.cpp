@@ -1,5 +1,4 @@
 #include <fstream>
-#include <cassert>
 #include <sstream>
 
 #include "NetworkGraph.h"
@@ -7,8 +6,7 @@
 #include "LogMessages.h"
 #include "NeuronIdMap.h"
 #include "Partition.h"
-
-
+#include "RelearnException.h"
 
 NetworkGraph::NetworkGraph(size_t my_num_neurons) :
 	neuron_neighborhood(my_num_neurons),
@@ -17,17 +15,17 @@ NetworkGraph::NetworkGraph(size_t my_num_neurons) :
 	my_neuron_id_end(my_num_neurons - 1) {
 }
 
-const NetworkGraph::Edges& NetworkGraph::get_in_edges(size_t neuron_id) const noexcept {
-	assert(neuron_id < neuron_neighborhood.size() && "In get_in_edges, tried with a too large id");
+const NetworkGraph::Edges& NetworkGraph::get_in_edges(size_t neuron_id) const {
+	RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_in_edges, tried with a too large id");
 	return neuron_neighborhood[neuron_id].in_edges;
 }
 
-const NetworkGraph::Edges& NetworkGraph::get_out_edges(size_t neuron_id) const noexcept {
-	assert(neuron_id < neuron_neighborhood.size() && "In get_out_edges, tried with a too large id");
+const NetworkGraph::Edges& NetworkGraph::get_out_edges(size_t neuron_id) const {
+	RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_out_edges, tried with a too large id");
 	return neuron_neighborhood[neuron_id].out_edges;
 }
 
-void NetworkGraph::add_edge(Edges& edges, int rank, int neuron_id, int weight) {
+void NetworkGraph::add_edge(Edges& edges, int rank, size_t neuron_id, int weight) {
 	EdgesKey rank_neuron_id_pair;
 	rank_neuron_id_pair.first = rank;
 	rank_neuron_id_pair.second = neuron_id;
@@ -55,7 +53,7 @@ void NetworkGraph::add_edge(Edges& edges, int rank, int neuron_id, int weight) {
 
 void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, size_t source_neuron_id, int source_rank, int weight) {
 	if (weight == 0) {
-		assert(false && "weight of edge to add is zero");
+		RelearnException::check(false, "weight of edge to add is zero");
 		return;
 	}
 
@@ -96,12 +94,12 @@ void NetworkGraph::add_edge_weights(const std::string& filename, const NeuronIdM
 			(sstream >> tgt_pos.y) &&
 			(sstream >> tgt_pos.z);
 
-		assert(success);
+		RelearnException::check(success);
 
 		ret = neuron_id_map.pos2rank_neuron_id(src_pos, src_id);
-		assert(ret);
+		RelearnException::check(ret);
 		ret = neuron_id_map.pos2rank_neuron_id(tgt_pos, tgt_id);
-		assert(ret);
+		RelearnException::check(ret);
 
 		add_edge_weight(tgt_id.neuron_id, tgt_id.rank,
 			src_id.neuron_id, src_id.rank, 1);
@@ -120,7 +118,7 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
 
 	std::set<size_t> foreing_ids;
 
-	std::map<size_t, size_t> id_to_rank;
+	std::map<size_t, int> id_to_rank;
 	std::map<size_t, Vec3d> id_to_pos;
 
 	load_synapses(path_synapses, partition, foreing_ids, local_synapses, out_synapses, in_synapses);
@@ -130,7 +128,7 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
 		const auto& id = it.first;
 		const auto& pos = it.second;
 
-		const size_t rank = partition.get_subdomain_id_from_pos(pos);
+		const int rank = static_cast<int>(partition.get_subdomain_id_from_pos(pos));
 		id_to_rank[id] = rank;
 	}
 
@@ -141,40 +139,40 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
 	}
 
 	for (const auto& synapse : local_synapses) {
-		size_t source_neuron_id = std::get<0>(synapse);
-		size_t target_neuron_id = std::get<1>(synapse);
-		int weight = std::get<2>(synapse);
+		const size_t source_neuron_id = std::get<0>(synapse);
+		const size_t target_neuron_id = std::get<1>(synapse);
+		const int weight = std::get<2>(synapse);
 
-		int source_rank = MPIInfos::my_rank;
-		int target_rank = MPIInfos::my_rank;
+		const int source_rank = MPIInfos::my_rank;
+		const int target_rank = MPIInfos::my_rank;
 
 		add_edge_weight(target_neuron_id, target_rank, source_neuron_id, source_rank, weight);
 	}
 
 	for (const auto& synapse : out_synapses) {
-		size_t source_neuron_id = std::get<0>(synapse);
-		size_t target_neuron_id = std::get<1>(synapse);
-		int weight = std::get<2>(synapse);
+		const size_t source_neuron_id = std::get<0>(synapse);
+		const size_t target_neuron_id = std::get<1>(synapse);
+		const int weight = std::get<2>(synapse);
 
-		int source_rank = MPIInfos::my_rank;
-		int target_rank = id_to_rank[target_neuron_id];
+		const int source_rank = MPIInfos::my_rank;
+		const int target_rank = id_to_rank[target_neuron_id];
 
 		add_edge_weight(target_neuron_id, target_rank, source_neuron_id, source_rank, weight);
 	}
 
 	for (const auto& synapse : in_synapses) {
-		size_t source_neuron_id = std::get<0>(synapse);
-		size_t target_neuron_id = std::get<1>(synapse);
-		int weight = std::get<2>(synapse);
+		const size_t source_neuron_id = std::get<0>(synapse);
+		const size_t target_neuron_id = std::get<1>(synapse);
+		const int weight = std::get<2>(synapse);
 
-		int source_rank = id_to_rank[source_neuron_id];
-		int target_rank = MPIInfos::my_rank;
+		const int source_rank = id_to_rank[source_neuron_id];
+		const int target_rank = MPIInfos::my_rank;
 
 		add_edge_weight(target_neuron_id, target_rank, source_neuron_id, source_rank, weight);
 	}
 }
 
-void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids, const std::map<size_t, size_t>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id) {
+void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids, const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id) {
 
 	const int num_ranks = MPIInfos::num_ranks;
 
@@ -197,15 +195,15 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 
 	for (auto rank = 0; rank < num_ranks; rank++) {
 		if (MPIInfos::my_rank == rank) {
-			assert(global_ids_to_receive[rank].size() == 0 && "Should receive ids from myself");
+			RelearnException::check(global_ids_to_receive[rank].size() == 0, "Should receive ids from myself");
 			continue;
 		}
 
 		global_ids_to_receive[rank].resize(num_foreign_ids_from_ranks[rank]);
 	}
 
-	std::vector<MPI_Request> mpi_requests(num_ranks * 2 - 2);
-	size_t request_counter = 0;
+	std::vector<MPI_Request> mpi_requests(static_cast<size_t>(num_ranks) * 2 - 2);
+	int request_counter = 0;
 
 	for (auto rank = 0; rank < num_ranks; rank++) {
 		if (MPIInfos::my_rank == rank) {
@@ -213,7 +211,7 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 		}
 
 		size_t* buffer = global_ids_to_receive[rank].data();
-		int size_in_bytes = global_ids_to_receive[rank].size() * sizeof(size_t);
+		const int size_in_bytes = static_cast<int>(global_ids_to_receive[rank].size() * sizeof(size_t));
 
 		MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[request_counter]);
 		request_counter++;
@@ -224,8 +222,8 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 			continue;
 		}
 
-		size_t* buffer = global_ids_to_send[rank].data();
-		int size_in_bytes = global_ids_to_send[rank].size() * sizeof(size_t);
+		const size_t* buffer = global_ids_to_send[rank].data();
+		const int size_in_bytes = static_cast<int>(global_ids_to_send[rank].size() * sizeof(size_t));
 
 		// Reserve enough space for the answer - it will be as long as the request
 		global_ids_local_value[rank].resize(global_ids_to_send[rank].size());
@@ -239,13 +237,13 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 
 	for (auto& vec : global_ids_to_receive) {
 		for (auto i = 0; i < vec.size(); i++) {
-			size_t global_id = vec[i];
-			size_t local_id = partition.get_local_id(global_id);
+			const size_t global_id = vec[i];
+			const size_t local_id = partition.get_local_id(global_id);
 			vec[i] = local_id;
 		}
 	}
 
-	mpi_requests = std::vector<MPI_Request>(num_ranks * 2 - 2);
+	mpi_requests = std::vector<MPI_Request>(static_cast<size_t>(num_ranks) * 2 - 2);
 	request_counter = 0;
 
 	for (auto rank = 0; rank < num_ranks; rank++) {
@@ -254,7 +252,7 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 		}
 
 		size_t* buffer = global_ids_local_value[rank].data();
-		int size_in_bytes = global_ids_local_value[rank].size() * sizeof(size_t);
+		const int size_in_bytes = static_cast<int>(global_ids_local_value[rank].size() * sizeof(size_t));
 
 		MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[request_counter]);
 		request_counter++;
@@ -265,8 +263,8 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 			continue;
 		}
 
-		size_t* buffer = global_ids_to_receive[rank].data();
-		int size_in_bytes = global_ids_to_receive[rank].size() * sizeof(size_t);
+		const size_t* buffer = global_ids_to_receive[rank].data();
+		const int size_in_bytes = static_cast<int>(global_ids_to_receive[rank].size() * sizeof(size_t));
 
 		MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[request_counter]);
 		request_counter++;
@@ -277,13 +275,13 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 
 	for (auto rank = 0; rank < num_ranks; rank++) {
 		std::vector<size_t>& translated_ids = global_ids_local_value[rank];
-		std::vector<size_t>& global_ids = global_ids_to_send[rank];
+		std::vector<size_t>& local_global_ids = global_ids_to_send[rank];
 
-		assert(translated_ids.size() == global_ids.size() && "The vectors have not the same size in load network");
+		RelearnException::check(translated_ids.size() == local_global_ids.size(), "The vectors have not the same size in load network");
 
 		for (auto i = 0; i < translated_ids.size(); i++) {
-			size_t local_id = translated_ids[i];
-			size_t global_id = global_ids[i];
+			const size_t local_id = translated_ids[i];
+			const size_t global_id = local_global_ids[i];
 
 			global_id_to_local_id[global_id] = local_id;
 		}
@@ -334,7 +332,7 @@ void NetworkGraph::load_neuron_positions(const std::string& path_neurons, std::s
 
 void NetworkGraph::load_synapses(const std::string& path_synapses, const Partition& partition, std::set<size_t>& foreing_ids, std::vector<std::tuple<size_t, size_t, int>>& local_synapses, std::vector<std::tuple<size_t, size_t, int>>& out_synapses, std::vector<std::tuple<size_t, size_t, int>>& in_synapses) {
 
-	enum f_status : char {
+	enum class f_status : char {
 		not_known = 0,
 		local = 1,
 		not_local = 2,
@@ -352,9 +350,9 @@ void NetworkGraph::load_synapses(const std::string& path_synapses, const Partiti
 			continue;
 		}
 
-		size_t source_id;
-		size_t target_id;
-		int weight;
+		size_t source_id = 0;
+		size_t target_id = 0;
+		int weight = 0;
 
 		std::stringstream sstream(line);
 		const bool success =
@@ -362,7 +360,7 @@ void NetworkGraph::load_synapses(const std::string& path_synapses, const Partiti
 			(sstream >> target_id) &&
 			(sstream >> weight);
 
-		assert(success);
+		RelearnException::check(success);
 
 		const f_status source_f = id_is_local[source_id];
 		const f_status target_f = id_is_local[target_id];
@@ -423,7 +421,7 @@ void NetworkGraph::load_synapses(const std::string& path_synapses, const Partiti
 			continue;
 		}
 
-		assert(false && "In loading synapses, target and source are not conform.");
+		RelearnException::check(false, "In loading synapses, target and source are not conform.");
 	}
 
 	file_synapses.close();
@@ -439,20 +437,19 @@ void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) con
 		const NetworkGraph::Edges& in_edges = get_in_edges(target_neuron_id);
 		NetworkGraph::Edges::const_iterator it_in_edge;
 
-		NeuronIdMap::RankNeuronId rank_neuron_id;
-		rank_neuron_id.rank = MPIInfos::my_rank;
-		rank_neuron_id.neuron_id = target_neuron_id;
+		NeuronIdMap::RankNeuronId rank_neuron_id{ MPIInfos::my_rank, target_neuron_id };
 		size_t glob_tgt = 0;
 
 		auto ret = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id, glob_tgt);
-		assert(ret);
+		RelearnException::check(ret);
+
 		for (it_in_edge = in_edges.begin(); it_in_edge != in_edges.end(); ++it_in_edge) {
 			rank_neuron_id.rank = it_in_edge->first.first;        // src rank
 			rank_neuron_id.neuron_id = it_in_edge->first.second;  // src neuron id
 
 			size_t glob_src = 0;
 			ret = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id, glob_src);
-			assert(ret);
+			RelearnException::check(ret);
 
 			// <target neuron id>  <source neuron id>  <weight>
 			os 

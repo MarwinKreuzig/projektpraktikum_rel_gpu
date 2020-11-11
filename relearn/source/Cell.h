@@ -8,9 +8,9 @@
 #ifndef CELL_H
 #define CELL_H
 
-#include <cassert>
 #include <iostream>
 
+#include "RelearnException.h"
 #include "Vec3.h"
 
 class Cell {
@@ -55,7 +55,7 @@ public:
 	double get_length() const noexcept {
 		const auto diff_vector = xyz_max - xyz_min;
 		const auto diff = diff_vector.get_maximum();
-		//assert(diff.x == diff.y && diff.y == diff.z);
+
 		return diff;
 	}
 
@@ -64,12 +64,13 @@ public:
 		set_neuron_position_inh(pos, valid);
 	}
 
-	void get_neuron_position(Vec3d& pos, bool& valid) const noexcept {
+	void get_neuron_position(Vec3d& pos, bool& valid) const {
 		const auto diff = dendrites[INHIBITORY].xyz_pos - dendrites[EXCITATORY].xyz_pos;
 
 		const bool exc_position_equals_inh_position = diff.x == 0.0 && diff.y == 0.0 && diff.z == 0.0;
-		assert(exc_position_equals_inh_position);
-		assert(dendrites[EXCITATORY].xyz_pos_valid == dendrites[INHIBITORY].xyz_pos_valid);
+
+		RelearnException::check(exc_position_equals_inh_position);
+		RelearnException::check(dendrites[EXCITATORY].xyz_pos_valid == dendrites[INHIBITORY].xyz_pos_valid);
 
 		pos = dendrites[EXCITATORY].xyz_pos;
 		valid = dendrites[EXCITATORY].xyz_pos_valid;
@@ -129,16 +130,16 @@ public:
 		this->neuron_id = neuron_id;
 	}
 
-	unsigned char get_neuron_octant() const noexcept {
+	unsigned char get_neuron_octant() const {
 		const auto diff = dendrites[INHIBITORY].xyz_pos - dendrites[EXCITATORY].xyz_pos;
 
 		const auto exc_position_equals_inh_position = diff.x == 0.0 && diff.y == 0.0 && diff.z == 0.0;
-		assert(exc_position_equals_inh_position);
+		RelearnException::check(exc_position_equals_inh_position);
 
 		return get_octant_for_position(dendrites[INHIBITORY].xyz_pos);
 	}
 
-	unsigned char get_octant_for_position(const Vec3d& pos) const noexcept {
+	unsigned char get_octant_for_position(const Vec3d& pos) const {
 		unsigned char idx = 0;
 
 		const auto& x = pos.x;
@@ -150,9 +151,9 @@ public:
 		 * This check returns false if negative coordinates are used.
 		 * Thus make sure to use positions >=0.
 		 */
-		assert(x >= xyz_min.x && x <= xyz_min.x + xyz_max.x);
-		assert(y >= xyz_min.y && y <= xyz_min.y + xyz_max.y);
-		assert(z >= xyz_min.z && z <= xyz_min.z + xyz_max.z);
+		RelearnException::check(x >= xyz_min.x && x <= xyz_min.x + xyz_max.x);
+		RelearnException::check(y >= xyz_min.y && y <= xyz_min.y + xyz_max.y);
+		RelearnException::check(z >= xyz_min.z && z <= xyz_min.z + xyz_max.z);
 
 		/**
 		 * Figure below shows the binary numbering of the octants (subcells) in a cell.
@@ -180,7 +181,7 @@ public:
 		return idx;
 	}
 
-	void get_size_for_octant(unsigned char idx, Vec3d& xyz_min, Vec3d& xyz_max) const noexcept {
+	void get_size_for_octant(unsigned char idx, Vec3d& xyz_min, Vec3d& xyz_max) const /*noexcept*/ {
 		unsigned char mask = 1;
 
 		// Check whether 2nd or 1st octant for each dimension

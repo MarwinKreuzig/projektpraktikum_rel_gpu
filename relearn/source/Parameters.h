@@ -13,7 +13,7 @@
 class Parameters {
 public:
 	size_t num_neurons;           // Number of neurons
-	double frac_neurons_exc;      // Fraction of EXCITATORY neurons [0.8 .. 0.9] (Should be 80-90% of all neurons)
+	double frac_neurons_exc;      // Fraction of DendriteType::EXCITATORY neurons [0.8 .. 0.9] (Should be 80-90% of all neurons)
 	size_t simulation_time;       // Simulation time
 
 	// Neuron model
@@ -28,8 +28,8 @@ public:
 	// Synaptic elements
 	double C_target;              // Desired calcium level (possible extension of the model: Give all neurons individual C_target values!)
 	double eta_A;                 // Minimum level of calcium needed for axonal elements to grow
-	double eta_D_ex;              // Minimum level of calcium needed for dendritic EXCITATORY elements to grow
-	double eta_D_in;              // Minimum level of calcium needed for dendritic INHIBITORY elements to grow
+	double eta_D_ex;              // Minimum level of calcium needed for dendritic DendriteType::EXCITATORY elements to grow
+	double eta_D_in;              // Minimum level of calcium needed for dendritic DendriteType::INHIBITORY elements to grow
 	double nu;                    // Growth rate for synaptic elements in ms^-1. Needs to be much smaller than 1 to seperate activity and structural dynamics.
 	double vacant_retract_ratio;  // Percentage of how many vacant synaptic elements should be deleted during each connectivity update
 

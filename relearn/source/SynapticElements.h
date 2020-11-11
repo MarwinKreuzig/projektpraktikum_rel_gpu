@@ -8,13 +8,13 @@
 #ifndef SYNAPTICELEMENT_H
 #define	SYNAPTICELEMENT_H
 
-#include <assert.h>
 #include <iostream>
 #include <cstddef>
 #include <cmath>
 #include <vector>
 
 #include "MPIInfos.h"
+#include "RelearnException.h"
 
 class NeuronMonitor;
 
@@ -64,10 +64,10 @@ public:
 	 * 2. Delete bound elements
 	 */
 	unsigned int update_number_elements(size_t neuron_id) {
-		assert(neuron_id < size);
-		assert(cnts[neuron_id] >= 0);
-		assert(connected_cnts[neuron_id] >= 0);
-		assert(cnts[neuron_id] >= connected_cnts[neuron_id]);
+		RelearnException::check(neuron_id < size);
+		RelearnException::check(cnts[neuron_id] >= 0);
+		RelearnException::check(connected_cnts[neuron_id] >= 0);
+		RelearnException::check(cnts[neuron_id] >= connected_cnts[neuron_id]);
 
 		unsigned int num_delete_connected = 0;
 
@@ -95,7 +95,8 @@ public:
 				connected_cnts[neuron_id] += num_vacant_plus_delta;             // Result is >= 0
 				const double connected_cnt_floor = floor(connected_cnts[neuron_id]);  // Round down for integer value
 				num_vacant = connected_cnts[neuron_id] - connected_cnt_floor;   // Amount lost by rounding down
-				assert(num_vacant >= 0);
+
+				RelearnException::check(num_vacant >= 0);
 
 				connected_cnts[neuron_id] = connected_cnt_floor;
 				cnts[neuron_id] = connected_cnts[neuron_id] + num_vacant;
@@ -104,14 +105,15 @@ public:
 				std::cout << "connected_cnt_old: " << connected_cnt_old << "\n"
 					<< "connected_cnts[neuron_id]: " << connected_cnts[neuron_id] << "\n";
 			}
-			assert(connected_cnt_old >= connected_cnts[neuron_id]);
+
+			RelearnException::check(connected_cnt_old >= connected_cnts[neuron_id]);
 			num_delete_connected = static_cast<unsigned int>(connected_cnt_old - connected_cnts[neuron_id]);
 		}
 
 		// Reset delta counts
 		delta_cnts[neuron_id] = 0;
 
-		assert(cnts[neuron_id] >= connected_cnts[neuron_id]);
+		RelearnException::check(cnts[neuron_id] >= connected_cnts[neuron_id]);
 
 		return num_delete_connected;
 	}

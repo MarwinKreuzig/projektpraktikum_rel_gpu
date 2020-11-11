@@ -26,6 +26,7 @@
 #include "NeuronModels.h"
 #include "SynapticElements.h"
 #include "Vec3.h"
+#include "RelearnException.h"
 
  // Forward declarations of Neurons.h
 class SynapseCreationRequests;
@@ -126,7 +127,7 @@ private:
 		}
 		FunctorUpdateNode() noexcept {}
 
-		void operator()(OctreeNode* node) noexcept {
+		void operator()(OctreeNode* node) /*noexcept*/ {
 			// I'm inner node, i.e., I have a super neuron
 			if (node->is_parent) {
 				Vec3d temp_xyz_pos_exc;
@@ -155,8 +156,10 @@ private:
 						/**
 						 * We can use position if it's valid or if corresponding num of dendrites is 0 (due to multiplying position with 0)
 						 */
-						assert(valid_pos_exc || (0 == temp_num_dendrites_exc));
-						assert(valid_pos_inh || (0 == temp_num_dendrites_inh));
+
+						RelearnException::check(valid_pos_exc || (0 == temp_num_dendrites_exc));
+						RelearnException::check(valid_pos_inh || (0 == temp_num_dendrites_inh));
+
 						for (auto j = 0; j < 3; j++) {
 							xyz_pos_exc[j] += static_cast<double>(temp_num_dendrites_exc) * temp_xyz_pos_exc[j];
 							xyz_pos_inh[j] += static_cast<double>(temp_num_dendrites_inh) * temp_xyz_pos_inh[j];
@@ -197,7 +200,8 @@ private:
 				const size_t neuron_id = node->cell.get_neuron_id();
 
 				// Calculate number of vacant dendrites for my neuron
-				assert(neuron_id < num_neurons);
+				RelearnException::check(neuron_id < num_neurons);
+
 				const unsigned int num_vacant_dendrites_exc = static_cast<unsigned int>(dendrites_exc_cnts[neuron_id] - dendrites_exc_connected_cnts[neuron_id]);
 				const unsigned int num_vacant_dendrites_inh = static_cast<unsigned int>(dendrites_inh_cnts[neuron_id] - dendrites_inh_connected_cnts[neuron_id]);
 
@@ -234,7 +238,7 @@ private:
 
 public:
 	Octree(const Partition& part, const Parameters& params);
-	~Octree() noexcept(false);
+	~Octree() /*noexcept(false)*/;
 
 	Octree(const Octree& other) = delete;
 	Octree(Octree&& other) = delete;
@@ -265,8 +269,8 @@ public:
 		this->naive_method = naive_method;
 	}
 
-	void set_mpi_rma_mem_allocator(MPI_RMA_MemAllocator<OctreeNode>* allocator) noexcept {
-		assert(false && "Don't use this function any more! set_rma_mem_allocator in octree.h");
+	void set_mpi_rma_mem_allocator(MPI_RMA_MemAllocator<OctreeNode>* allocator) /*noexcept*/ {
+		RelearnException::check(false, "Don't use this function any more! set_rma_mem_allocator in octree.h");
 	}
 
 	void set_root_level(size_t root_level) noexcept {
@@ -297,8 +301,8 @@ public:
 		return local_trees.size();
 	}
 
-	OctreeNode* get_local_root(size_t local_id) {
-		Octree* local_tree = local_trees[local_id];
+	OctreeNode* get_local_root(size_t local_id) noexcept {
+		const Octree* local_tree = local_trees[local_id];
 		return local_tree->get_root();
 	}
 
@@ -322,7 +326,7 @@ public:
 	// "max_level" must be chosen correctly for this
 	void update_from_level(size_t max_level);
 
-	void update_local_trees(SynapticElements& dendrites_exc, SynapticElements& dendrites_inh, size_t& num_neurons) {
+	void update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, const size_t& num_neurons) {
 		for (size_t i = 0; i < local_trees.size(); i++) {
 			local_trees[i]->update(
 				dendrites_exc.get_cnts(), dendrites_exc.get_connected_cnts(),
@@ -363,7 +367,7 @@ private:
 
 			// Node should be visited now?
 			if (elem.flag) {
-				assert(elem.ptr->level <= max_level);
+				RelearnException::check(elem.ptr->level <= max_level);
 
 				// Apply action to node
 				visit(elem.ptr);
@@ -403,7 +407,7 @@ private:
 		const OctreeNode* const node_with_dendrite,
 		Cell::DendriteType dendrite_type_needed,
 		bool naive_method,
-		bool& has_vacant_dendrites) const noexcept;
+		bool& has_vacant_dendrites) const /*noexcept*/;
 
 	/**
 	 * Returns list with nodes for creating the probability interval
@@ -426,14 +430,14 @@ private:
 	 * Returns attractiveness for connecting two given nodes
 	 * NOTE: This is not a probability yet as it could be >1
 	 */
-	double calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, const OctreeNode& node_with_dendrite, Cell::DendriteType dendrite_type_needed) const noexcept;
+	double calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, const OctreeNode& node_with_dendrite, Cell::DendriteType dendrite_type_needed) const /*noexcept*/;
 
 	/**
 	 * Randomly select node from probability interval
 	 */
 	OctreeNode* select_subinterval(const ProbabilitySubintervalList& list);
 
-	bool node_is_local(const OctreeNode& node) noexcept;
+	bool node_is_local(const OctreeNode& node) /*noexcept*/;
 
 	void append_node(OctreeNode* node, ProbabilitySubintervalList& list);
 	void append_children(OctreeNode* node, ProbabilitySubintervalList& list, AccessEpochsStarted& epochs_started);

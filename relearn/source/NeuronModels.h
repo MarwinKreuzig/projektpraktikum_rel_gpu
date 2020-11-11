@@ -12,6 +12,8 @@
 #include <random>
 #include <algorithm>
 #include <vector>
+#include <memory>
+
 #include "NetworkGraph.h"
 #include "MPIInfos.h"
 #include "LogMessages.h"
@@ -194,7 +196,7 @@ namespace models {
 		}
 
 	private:
-		[[nodiscard]] double iter_x(const double x, const double I_syn) const {
+		[[nodiscard]] double iter_x(const double x, const double I_syn) const noexcept {
 			return ((x_0 - x) / tau_x + I_syn);
 		}
 
@@ -231,7 +233,7 @@ namespace models {
 		}
 
 	protected:
-		void update_activity(double& x, double& refrac, const double& I_syn, unsigned short& fired, const double h) final {
+		void update_activity(double& x, double& refrac, const double& I_syn, unsigned short& fired, const double h) noexcept final {
 			for (int integration_steps = 0; integration_steps < h; ++integration_steps) {
 				x += iter_x(x, refrac, I_syn) / h;
 				refrac += iter_refrac(refrac, x) / h;
@@ -245,7 +247,7 @@ namespace models {
 			}
 		}
 
-		void init_neurons(std::vector<double>& x, std::vector<double>& refrac, std::vector<unsigned short>& fired) final {
+		void init_neurons(std::vector<double>& x, std::vector<double>& refrac, std::vector<unsigned short>& fired) noexcept final {
 			for (auto i = 0; i < x.size(); ++i) {
 				x[i] = c;
 				refrac[i] = iter_refrac(b * c, x[i]);
@@ -254,15 +256,15 @@ namespace models {
 		}
 
 	private:
-		[[nodiscard]] double iter_x(const double x, const double refrac, const double I_syn) const {
+		[[nodiscard]] double iter_x(const double x, const double refrac, const double I_syn) const noexcept {
 			return k1 * x * x + k2 * x + k3 - refrac + I_syn;
 		}
 
-		[[nodiscard]] double iter_refrac(const double refrac, const double x) const {
+		[[nodiscard]] double iter_refrac(const double refrac, const double x) const noexcept {
 			return a * (b * x - refrac);
 		}
 
-		[[nodiscard]] bool spiked(const double x) const {
+		[[nodiscard]] bool spiked(const double x) const noexcept {
 			return x >= V_spike;
 		}
 
@@ -293,7 +295,7 @@ namespace models {
 		}
 
 	protected:
-		void update_activity(double& x, double& refrac, const double& I_syn, unsigned short& fired, const double h) final {
+		void update_activity(double& x, double& refrac, const double& I_syn, unsigned short& fired, const double h) noexcept final {
 			fired = 0;
 
 			// Update the membrane potential
@@ -307,7 +309,7 @@ namespace models {
 			}
 		}
 
-		void init_neurons(std::vector<double>& x, std::vector<double>& refrac, std::vector<unsigned short>& fired) final {
+		void init_neurons(std::vector<double>& x, std::vector<double>& refrac, std::vector<unsigned short>& fired) noexcept final {
 			for (auto i = 0; i < x.size(); ++i) {
 				x[i] = -1.2;
 				refrac[i] = iter_refrac(-.6, x[i]);
@@ -316,15 +318,15 @@ namespace models {
 		}
 
 	private:
-		[[nodiscard]] double iter_x(const double x, const double refrac, const double I_syn) const {
+		[[nodiscard]] double iter_x(const double x, const double refrac, const double I_syn) const noexcept {
 			return x - x * x * x / 3 - refrac + I_syn;
 		}
 
-		[[nodiscard]] double iter_refrac(const double refrac, const double x) const {
+		[[nodiscard]] double iter_refrac(const double refrac, const double x) const noexcept {
 			return phi * (x + a - b * refrac);
 		}
 
-		[[nodiscard]] bool spiked(const double x, const double refrac) {
+		[[nodiscard]] bool spiked(const double x, const double refrac) noexcept {
 			return refrac > iter_x(x, 0, 0) && x > 1.;
 		}
 
@@ -349,7 +351,7 @@ namespace models {
 		}
 
 	protected:
-		void update_activity(double& x, double& refrac, const double& I_syn, unsigned short& fired, const double h) final {
+		void update_activity(double& x, double& refrac, const double& I_syn, unsigned short& fired, const double h) noexcept final {
 			for (int integration_steps = 0; integration_steps < h; ++integration_steps) {
 				x += iter_x(x, refrac, I_syn) / h;
 				refrac += iter_refrac(refrac, x) / h;
@@ -363,7 +365,7 @@ namespace models {
 			}
 		}
 
-		void init_neurons(std::vector<double>& x, std::vector<double>& refrac, std::vector<unsigned short>& fired) final {
+		void init_neurons(std::vector<double>& x, std::vector<double>& refrac, std::vector<unsigned short>& fired) noexcept final {
 			for (int i = 0; i < x.size(); ++i) {
 				x[i] = E_L;
 				refrac[i] = iter_refrac(0, x[i]);
@@ -372,15 +374,15 @@ namespace models {
 		}
 
 	private:
-		[[nodiscard]] double f(const double x) const {
+		[[nodiscard]] double f(const double x) const noexcept {
 			return -g_L * (x - E_L) + g_L * d_T * exp((x - V_T) / d_T);
 		}
 
-		[[nodiscard]] double iter_x(const double x, const double refrac, const double I_syn) const {
+		[[nodiscard]] double iter_x(const double x, const double refrac, const double I_syn) const noexcept {
 			return (f(x) - refrac + I_syn) / C;
 		}
 
-		[[nodiscard]] double iter_refrac(const double refrac, const double x) const {
+		[[nodiscard]] double iter_refrac(const double refrac, const double x) const noexcept {
 			return (a * (x - E_L) - refrac) / tau_w;
 		}
 

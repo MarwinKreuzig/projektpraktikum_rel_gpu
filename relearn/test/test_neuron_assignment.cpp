@@ -7,6 +7,7 @@
 
 #include "../source/NeuronToSubdomainAssignment.h"
 #include "../source/SubdomainFromNeuronDensity.h"
+#include "../source/RelearnException.h"
 
 
 void check_types_fraction(std::vector<SynapticElements::SignalType>& types, double& frac_ex, unsigned long long total_subdomains, const size_t& num_neurons) {
@@ -133,7 +134,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_multiple) {
 
 		for (auto j = 0; j < num_fills; j++) {
 			if (j >= 1) {
-				EXPECT_DEATH(sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length }), "\c*");
+				EXPECT_THROW(sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length }), RelearnException);
 			}
 			else {
 				sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
@@ -271,7 +272,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions_multiple_subdomains) 
 						sfnd.neuron_positions(current_idx, total_subdomains, subdomain_min, subdomain_max, pos);
 					}
 					else {
-						EXPECT_DEATH(sfnd.neuron_positions(current_idx, total_subdomains, subdomain_min, subdomain_max, pos), "\c*");
+						EXPECT_THROW(sfnd.neuron_positions(current_idx, total_subdomains, subdomain_min, subdomain_max, pos), RelearnException);
 					}
 				}
 			}

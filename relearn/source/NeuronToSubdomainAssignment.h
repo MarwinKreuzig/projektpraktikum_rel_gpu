@@ -4,6 +4,7 @@
 #include "SynapticElements.h"
 #include "Random.h"
 #include "Vec3.h"
+#include "RelearnException.h"
 
 #include <set>
 #include <vector>
@@ -34,12 +35,12 @@ public:
 		return currently_num_neurons_;
 	}
 
-	// Ratio of EXCITATORY neurons
+	// Ratio of DendriteType::EXCITATORY neurons
 	double desired_ratio_neurons_exc() const noexcept {
 		return desired_frac_neurons_exc_;
 	}
 
-	// Ratio of EXCITATORY neurons already placed
+	// Ratio of DendriteType::EXCITATORY neurons already placed
 	double placed_ratio_neurons_exc() const noexcept {
 		return currently_frac_neurons_exc_;
 	}
@@ -79,23 +80,24 @@ public:
 
 	virtual void neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
 		size_t local_id_start, size_t local_id_end, std::vector<size_t>& global_ids) const = 0;
+
 protected:
 	struct Node {
-		Position pos;
+		Position pos = Position(0);
 		size_t id = 1111222233334444;
-		SynapticElements::SignalType signal_type;
-		std::string area_name;
+		SynapticElements::SignalType signal_type = SynapticElements::SignalType::EXCITATORY;
+		std::string area_name = "NOT SET";
 
 		struct less {
-			bool operator() (const Node& lhs, const Node& rhs) const noexcept {
-				assert(lhs.id != 1111222233334444 && "lhs id is a dummy one");
-				assert(rhs.id != 1111222233334444 && "rhs id is a dummy one");
+			bool operator() (const Node& lhs, const Node& rhs) const /*noexcept*/ {
+				RelearnException::check(lhs.id != 1111222233334444, "lhs id is a dummy one");
+				RelearnException::check(rhs.id != 1111222233334444, "rhs id is a dummy one");
 
 				return lhs.id < rhs.id;
 
 				Position::less less;
-				bool less_struct = less(lhs.pos, rhs.pos);
-				bool less_operator = lhs.pos < rhs.pos;
+				const bool less_struct = less(lhs.pos, rhs.pos);
+				const bool less_operator = lhs.pos < rhs.pos;
 				return less_struct;
 			}
 		};
@@ -114,7 +116,7 @@ protected:
 
 	bool position_in_box(const Position& pos, const Position& box_min, const Position& box_max) const noexcept;
 
-	NeuronToSubdomainAssignment() noexcept {
+	NeuronToSubdomainAssignment() noexcept : desired_frac_neurons_exc_(0.0), desired_num_neurons_(0), currently_frac_neurons_exc_(0.0), currently_num_neurons_(0), simulation_box_length(0)  {
 	}
 };
 

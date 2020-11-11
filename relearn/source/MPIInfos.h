@@ -20,7 +20,7 @@ struct RMABufferOctreeNodes {
 	size_t num_nodes;
 };
 
-enum MPI_Locktype : int {
+enum class MPI_Locktype : int {
 	exclusive = 234,
 	shared = 235,
 };
@@ -59,7 +59,7 @@ namespace MPIInfos {
 	void lock_window(int rank, MPI_Locktype lock_type);
 	void unlock_window(int rank);
 
-	void finalize() noexcept;
+	void finalize() /*noexcept*/;
 	void print_infos_rank(int rank);
 }
 

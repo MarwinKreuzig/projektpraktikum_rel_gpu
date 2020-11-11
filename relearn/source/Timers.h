@@ -9,9 +9,10 @@
 #define TIMERS_H
 
 #include <chrono>
-#include <cassert>
 #include <string>
 #include <vector>
+
+#include "RelearnException.h"
 
 enum TimerRegion : int {
 	INITIALIZATION,
@@ -67,34 +68,34 @@ public:
 
 	size_t get_num_timers() const noexcept { return num_timers; }
 
-	void start(size_t timer_id) noexcept {
-		assert(timer_id < num_timers);
+	void start(size_t timer_id) /*noexcept*/ {
+		RelearnException::check(timer_id < num_timers);
 		time_start[timer_id] = std::chrono::high_resolution_clock::now();
 	}
 
-	void stop(size_t timer_id) noexcept {
-		assert(timer_id < num_timers);
+	void stop(size_t timer_id) /*noexcept*/ {
+		RelearnException::check(timer_id < num_timers);
 		time_stop[timer_id] = std::chrono::high_resolution_clock::now();
 	}
 
-	void stop_and_add(size_t timer_id) noexcept {
+	void stop_and_add(size_t timer_id) /*noexcept*/ {
 		stop(timer_id);
 		add_start_stop_diff_to_elapsed(timer_id);
 	}
 
-	void add_start_stop_diff_to_elapsed(size_t timer_id) noexcept {
-		assert(timer_id < num_timers);
+	void add_start_stop_diff_to_elapsed(size_t timer_id) /*noexcept*/ {
+		RelearnException::check(timer_id < num_timers);
 		time_elapsed[timer_id] += std::chrono::duration_cast<std::chrono::duration<double>>(time_stop[timer_id] - time_start[timer_id]);
 	}
 
-	void reset_elapsed(size_t timer_id) noexcept {
-		assert(timer_id < num_timers);
+	void reset_elapsed(size_t timer_id) /*noexcept*/ {
+		RelearnException::check(timer_id < num_timers);
 		time_elapsed[timer_id] = std::chrono::duration<double>::zero();
 	}
 
 	// Return elapsed time in seconds
-	double get_elapsed(size_t timer_id) noexcept {
-		assert(timer_id < num_timers);
+	double get_elapsed(size_t timer_id) /*noexcept*/ {
+		RelearnException::check(timer_id < num_timers);
 		return time_elapsed[timer_id].count();
 	}
 

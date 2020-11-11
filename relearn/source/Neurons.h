@@ -81,7 +81,7 @@ public:
 		responses[request_index] = connected;
 	}
 
-	void get_response(size_t request_index, char& connected) noexcept {
+	void get_response(size_t request_index, char& connected) const noexcept {
 		connected = responses[request_index];
 	}
 
@@ -262,7 +262,7 @@ public:
 	Neurons& operator=(const Neurons& other) = delete;
 	Neurons& operator=(Neurons&& other) = default;
 
-	void set_model(std::unique_ptr<NeuronModels> model) {
+	void set_model(std::unique_ptr<NeuronModels> model) noexcept {
 		neuron_models = std::move(model);
 	}
 
@@ -276,7 +276,7 @@ public:
 
 	bool get_vacant_axon(size_t& neuron_id, Vec3d& xyz_pos, Cell::DendriteType& dendrite_type_needed) noexcept;
 
-	void init_synaptic_elements() noexcept;
+	void init_synaptic_elements();
 
 	void update_electrical_activity(const NetworkGraph& network_graph) {
 		neuron_models->update_electrical_activity(network_graph, calcium);
@@ -391,9 +391,9 @@ private:
 	void print_pending_synapse_deletions(std::list<PendingSynapseDeletion>& list);
 
 	void delete_synapses(std::list<PendingSynapseDeletion>& list,
-		SynapticElements& axons,
-		SynapticElements& dendrites_exc,
-		SynapticElements& dendrites_inh,
+		const SynapticElements& axons,
+		const SynapticElements& dendrites_exc,
+		const SynapticElements& dendrites_inh,
 		NetworkGraph& network_graph,
 		size_t& num_synapses_deleted);
 

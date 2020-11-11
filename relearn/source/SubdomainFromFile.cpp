@@ -1,6 +1,7 @@
 #include "SubdomainFromFile.h"
 #include "NeuronToSubdomainAssignment.h"
 #include "LogMessages.h"
+#include "RelearnException.h"
 
 #include <iostream>
 #include <sstream>
@@ -136,7 +137,7 @@ void SubdomainFromFile::neuron_global_ids(size_t subdomain_idx, size_t num_subdo
 
 	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (!contains) {
-		assert(false && "Wanted to have neuron_global_ids of subdomain_idx that is not present");
+		RelearnException::check(false, "Wanted to have neuron_global_ids of subdomain_idx that is not present");
 		return;
 	}
 
@@ -149,7 +150,7 @@ void SubdomainFromFile::neuron_global_ids(size_t subdomain_idx, size_t num_subdo
 void SubdomainFromFile::fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) {
 	const bool subdomain_already_filled = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (subdomain_already_filled) {
-		assert(false && "Tried to fill an already filled subdomain.");
+		RelearnException::check(false, "Tried to fill an already filled subdomain.");
 		return;
 	}
 

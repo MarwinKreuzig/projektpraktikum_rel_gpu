@@ -1,10 +1,10 @@
 #include <fstream>
 #include <iomanip>
-#include <cassert>
 
 #include "NeuronToSubdomainAssignment.h"
 #include "SynapticElements.h"
 #include "LogMessages.h"
+#include "RelearnException.h"
 
 void NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, size_t num_subdomains_per_axis, Position& min, Position& max) const noexcept {
 	get_subdomain_boundaries(subdomain_3idx, Vec3<size_t>{num_subdomains_per_axis}, min, max);
@@ -26,12 +26,12 @@ size_t NeuronToSubdomainAssignment::num_neurons(size_t subdomain_idx, size_t num
 
 	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (!contains) {
-		assert(false && "Wanted to have num_neurons of subdomain_idx that is not present");
+		RelearnException::check(false, "Wanted to have num_neurons of subdomain_idx that is not present");
 		return 0;
 	}
 
 	const Nodes& nodes = neurons_in_subdomain.at(subdomain_idx);
-	size_t cnt = nodes.size();
+	const size_t cnt = nodes.size();
 	return cnt;
 }
 
@@ -40,7 +40,7 @@ void NeuronToSubdomainAssignment::neuron_positions(size_t subdomain_idx, size_t 
 
 	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (!contains) {
-		assert(false && "Wanted to have neuron_positions of subdomain_idx that is not present");
+		RelearnException::check(false, "Wanted to have neuron_positions of subdomain_idx that is not present");
 		return;
 	}
 
@@ -58,7 +58,7 @@ void NeuronToSubdomainAssignment::neuron_types(size_t subdomain_idx, size_t num_
 
 	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (!contains) {
-		assert(false && "Wanted to have neuron_types of subdomain_idx that is not present");
+		RelearnException::check(false, "Wanted to have neuron_types of subdomain_idx that is not present");
 		return;
 	}
 
@@ -73,7 +73,7 @@ void NeuronToSubdomainAssignment::neuron_area_names(size_t subdomain_idx, size_t
 
 	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (!contains) {
-		assert(false && "Wanted to have neuron_area_names of subdomain_idx that is not present");
+		RelearnException::check(false, "Wanted to have neuron_area_names of subdomain_idx that is not present");
 		return;
 	}
 
@@ -95,7 +95,7 @@ void NeuronToSubdomainAssignment::write_neurons_to_file(const std::string& filen
 	of << std::setprecision(std::numeric_limits<double>::digits10);
 	of << "# ID, Position (x y z),	Area [,type] \n";
 
-	for (const auto it : neurons_in_subdomain) {
+	for (const auto& it : neurons_in_subdomain) {
 		const Nodes& nodes = it.second;
 
 		for (const auto& node : nodes) {

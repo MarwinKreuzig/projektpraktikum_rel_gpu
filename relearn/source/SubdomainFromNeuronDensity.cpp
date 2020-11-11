@@ -1,8 +1,6 @@
-
-#include <cassert>
-
 #include "MPIInfos.h"
 #include "SubdomainFromNeuronDensity.h"
+#include "RelearnException.h"
 
 SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(size_t num_neurons, double desired_frac_neurons_exc, double um_per_neuron)
 	: um_per_neuron_(um_per_neuron),
@@ -32,7 +30,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
 	const double simulation_box_length_ = get_simulation_box_length().get_maximum();
 
-	assert(length_of_box.x <= simulation_box_length_ && length_of_box.y <= simulation_box_length_ && length_of_box.z <= simulation_box_length_ &&
+	RelearnException::check(length_of_box.x <= simulation_box_length_ && length_of_box.y <= simulation_box_length_ && length_of_box.z <= simulation_box_length_,
 		"Requesting to fill neurons where no simulationbox is");
 
 	const auto box = length_of_box - offset;
@@ -42,8 +40,8 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 	const auto neurons_on_z = static_cast<size_t>(round(box.z / um_per_neuron_));
 
 	const auto calculated_num_neurons = neurons_on_x * neurons_on_y * neurons_on_z;
-	assert(calculated_num_neurons >= num_neurons && "Should emplace more neurons than space in box");
-	assert(neurons_on_x < 65536 && neurons_on_y < 65536 && neurons_on_z < 65536 && "Should emplace more neurons in a dimension than possible");
+	RelearnException::check(calculated_num_neurons >= num_neurons, "Should emplace more neurons than space in box");
+	RelearnException::check(neurons_on_x < 65536 && neurons_on_y < 65536 && neurons_on_z < 65536, "Should emplace more neurons in a dimension than possible");
 
 	Nodes& nodes = neurons_in_subdomain[subdomain_idx];
 
@@ -71,7 +69,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
 	std::shuffle(positions.begin(), positions.end(), random_number_generator);
 
-	for (auto i = 0; i < num_neurons; i++) {
+	for (size_t i = 0; i < num_neurons; i++) {
 		const size_t pos_bitmask = positions[i];
 		const size_t x_it = (pos_bitmask >> 32) & 0xFFFF;
 		const size_t y_it = (pos_bitmask >> 16) & 0xFFFF;
@@ -115,13 +113,13 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 		}
 	}
 
-	assert(false && "In SubdomainFromNeuronDensity, shouldn't be here");
+	RelearnException::check(false, "In SubdomainFromNeuronDensity, shouldn't be here");
 }
 
 void SubdomainFromNeuronDensity::fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) {
 	const bool subdomain_already_filled = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (subdomain_already_filled) {
-		assert(false && "Tried to fill an already filled subdomain.");
+		RelearnException::check(false, "Tried to fill an already filled subdomain.");
 		return;
 	}
 
@@ -131,9 +129,9 @@ void SubdomainFromNeuronDensity::fill_subdomain(size_t subdomain_idx, size_t num
 	const auto total_volume = get_simulation_box_length().get_volume();
 
 	const auto neuron_portion = total_volume / volume;
-	const auto neurons_in_subdomain = static_cast<size_t>(round(desired_num_neurons_ / neuron_portion));
+	const auto neurons_in_subdomain_count = static_cast<size_t>(round(desired_num_neurons_ / neuron_portion));
 
-	place_neurons_in_area(min, max, neurons_in_subdomain, subdomain_idx);
+	place_neurons_in_area(min, max, neurons_in_subdomain_count, subdomain_idx);
 }
 
 

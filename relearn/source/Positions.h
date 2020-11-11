@@ -8,11 +8,11 @@
 #ifndef POSITION_H
 #define	POSITION_H
 
-#include <cassert>
 #include <utility>
 #include <vector>
 
 #include "Vec3.h"
+#include "RelearnException.h"
 
 class Positions {
 
@@ -32,8 +32,8 @@ public:
 	const std::vector<double>& get_y_dims() noexcept { return y_dims; };
 	const std::vector<double>& get_z_dims() noexcept { return z_dims; };
 
-	Vec3d get_position(size_t idx) const noexcept {
-		assert(idx < size && "Idx must be smaller than size in Positions");
+	Vec3d get_position(size_t idx) const /*noexcept*/ {
+		RelearnException::check(idx < size, "Idx must be smaller than size in Positions");
 		return Vec3d{ x_dims[idx], y_dims[idx], z_dims[idx] };
 	}
 

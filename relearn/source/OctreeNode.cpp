@@ -7,8 +7,10 @@
 
 #include "OctreeNode.h"
 
-OctreeNode::OctreeNode() noexcept :
-	is_parent(0) {
+OctreeNode::OctreeNode() /*noexcept*/ :
+	is_parent(0),
+	level(0),
+	rank(0) {
 	int i;
 
 	for (i = 0; i < 8; i++) {
@@ -16,7 +18,7 @@ OctreeNode::OctreeNode() noexcept :
 	}
 }
 
-OctreeNode::~OctreeNode() noexcept {}
+OctreeNode::~OctreeNode() /*noexcept*/ {}
 
 void OctreeNode::print() const {
 	using namespace std;

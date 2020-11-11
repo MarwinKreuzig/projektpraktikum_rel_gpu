@@ -34,7 +34,7 @@
 #include "Utility.h"
 #include "NeuronMonitor.h"
 
-void setDefaultParameters(Parameters& params) noexcept {
+void setDefaultParameters(Parameters& params) /*noexcept*/ {
 	params.frac_neurons_exc = 0.8;                          // CHANGE
 	params.x_0 = 0.05;
 	params.tau_x = 5.0;

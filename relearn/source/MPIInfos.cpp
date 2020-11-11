@@ -132,7 +132,7 @@ namespace MPIInfos {
 		MPI_Win_unlock(rank, mpi_rma_mem_allocator.mpi_window);
 	}
 
-	void finalize() noexcept {
+	void finalize() /*noexcept*/ {
 		// Free RMA window (MPI collective)
 		// mpi_rma_mem_allocator.free_rma_window();
 		// mpi_rma_mem_allocator.deallocate_rma_mem();

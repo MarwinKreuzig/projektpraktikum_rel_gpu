@@ -1,4 +1,5 @@
 #include "Partition.h"
+#include "RelearnException.h"
 
 // We need the "axons" parameter to set for every neuron the type of axons it grows (exc./inh.)
 
@@ -12,7 +13,7 @@ Partition::Partition(int num_ranks, int my_rank) {
 	total_num_subdomains = 1ull << (3 * level_of_subdomain_trees); // 8^level_of_subdomain_trees
 
 																   // Every rank should get at least one subdomain
-	assert(total_num_subdomains >= num_ranks);
+	RelearnException::check(total_num_subdomains >= num_ranks);
 
 	/**
 	* Set parameter of space filling curve before it can be used.
@@ -50,7 +51,7 @@ Partition::Partition(int num_ranks, int my_rank) {
 		sstream << "My rank is: " << my_rank << "; There are " << num_ranks << " ranks in total; The rest is: " << rest << "\n";
 		std::cout << sstream.str().c_str() << std::flush;
 		sstream.str("");
-		assert(false && "rest != 0");
+		RelearnException::check(false, "rest != 0");
 	}
 
 	// Calc start and end index of subdomain
@@ -244,7 +245,7 @@ Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssig
 
 			area_names[neuron_id] = vec_area[j];
 
-			// Mark neuron as EXCITATORY or INHIBITORY
+			// Mark neuron as DendriteType::EXCITATORY or DendriteType::INHIBITORY
 			axons.set_signal_type(neuron_id, vec_type[j]);
 
 			// Insert neuron into tree

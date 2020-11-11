@@ -9,7 +9,6 @@
 #define PARTITION_H
 
 #include <cmath>
-#include <cassert>
 #include <algorithm>
 #include <sstream>
 #include <vector>
@@ -25,6 +24,7 @@
 #include "NeuronToSubdomainAssignment.h"
 #include "Random.h"
 #include "Vec3.h"
+#include "RelearnException.h"
 
 #include "Neurons.h"
 
@@ -65,10 +65,10 @@ public:
 	void print_my_subdomains_info_rank(int rank);
 
 	void set_mpi_rma_mem_allocator(MPI_RMA_MemAllocator<OctreeNode>& mpi_rma_mem_allocator) {
-		assert(false && "Don't use this function any more! set_mpi_rma_mem_allocator in partition.h");
+		RelearnException::check(false, "Don't use this function any more! set_mpi_rma_mem_allocator in partition.h");
 	}
 
-	bool is_neuron_local(size_t neuron_id) const noexcept {
+	bool is_neuron_local(size_t neuron_id) const /*noexcept*/ {
 		for (const Subdomain& subdomain : subdomains) {
 			const bool found = std::binary_search(subdomain.global_neuron_ids.begin(), subdomain.global_neuron_ids.end(), neuron_id);
 			if (found) {
@@ -92,7 +92,7 @@ public:
 		return my_num_subdomains;
 	}
 
-	//size_t get_num_subdomains_per_axis() const noexcept {
+	//size_t get_num_subdomains_per_axis() const /*noexcept*/ {
 	//	const double subdomains_d = static_cast<double>(total_num_subdomains);
 	//	const double third_root = std::pow(subdomains_d, (1.0 / 3.0));
 	//	const size_t subdomains_per_axis = static_cast<size_t>(std::round(third_root));
@@ -108,8 +108,8 @@ public:
 		return simulation_box_length;
 	}
 
-	Octree& get_subdomain_tree(size_t subdomain_id) noexcept {
-		assert(subdomain_id < my_num_subdomains);
+	Octree& get_subdomain_tree(size_t subdomain_id) /*noexcept*/ {
+		RelearnException::check(subdomain_id < my_num_subdomains);
 
 		return subdomains[subdomain_id].octree;
 	}
@@ -134,12 +134,12 @@ public:
 		return num_subdomains_per_dimension;
 	}
 
-	size_t get_subdomain_id_from_pos(const Vec3d& pos) const noexcept {
-		Vec3d new_pos = pos / num_subdomains_per_dimension;
-		Vec3<size_t> id_3d = new_pos.floor_componentwise();
-		size_t id_1d = space_curve.map_3d_to_1d(id_3d);
+	size_t get_subdomain_id_from_pos(const Vec3d& pos) const /*noexcept*/ {
+		const 	Vec3d new_pos = pos / static_cast<double>(num_subdomains_per_dimension);
+		const Vec3<size_t> id_3d = new_pos.floor_componentwise();
+		const size_t id_1d = space_curve.map_3d_to_1d(id_3d);
 
-		size_t rank = id_1d / my_num_subdomains;
+		const size_t rank = id_1d / my_num_subdomains;
 
 		return rank;
 	}
@@ -147,20 +147,19 @@ public:
 	size_t get_global_id(size_t local_id) const noexcept {
 		size_t counter = 0;
 		for (size_t i = 0; i < subdomains.size(); i++) {
-			size_t old_counter = counter;
+			const size_t old_counter = counter;
 
 			counter += subdomains[i].global_neuron_ids.size();
 			if (local_id < counter) {
-				size_t local_local_id = local_id - old_counter;
+				const size_t local_local_id = local_id - old_counter;
 				return subdomains[i].global_neuron_ids[local_local_id];
 			}
 		}
 
 		return local_id;
-		//assert(false && "Didn't find local id in Partition.h");
 	}
 
-	size_t get_local_id(size_t global_id) const noexcept {
+	size_t get_local_id(size_t global_id) const /*noexcept*/ {
 		size_t id = 0;
 
 		for (const Subdomain& current_subdomain : subdomains) {
@@ -175,8 +174,8 @@ public:
 			id += ids.size();
 		}
 
-		assert(false && "Didn't find global id in Partition.h");
-
+		RelearnException::check(false, "Didn't find global id in Partition.h");
+		return 0;
 	}
 
 private:

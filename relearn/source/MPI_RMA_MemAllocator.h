@@ -84,7 +84,7 @@ public:
 
 	// Create MPI RMA window with all the memory of the allocator
 	// This call is collective over MPI_COMM_WORLD
-	void create_rma_window() noexcept {
+	void create_rma_window() /*noexcept*/ {
 		// Set window's displacement unit
 		displ_unit = 1;
 
@@ -151,7 +151,7 @@ public:
 		}
 	}
 
-	const MPI_Aint* get_base_pointers() const noexcept {
+	const MPI_Aint* get_base_pointers() const /*noexcept*/ {
 		return base_pointers.data();
 	}
 
@@ -177,7 +177,7 @@ public:
 		return ret;
 	}
 
-	size_t get_min_num_avail_objects() const noexcept {
+	size_t get_min_num_avail_objects() const /*noexcept*/ {
 		return min_num_avail_objects;
 	}
 

@@ -3,6 +3,7 @@
 #include <random>
 
 #include "../source/Vec3.h"
+#include "../source/RelearnException.h"
 
 constexpr const double lower_bound = -100.0;
 constexpr const double upper_bound = 100.0;
@@ -178,7 +179,7 @@ TEST(TestVector, test_vector_operator_index_read_assert) {
 			idx = urd(mt);
 		}
 
-		EXPECT_DEATH(v[idx], "\c*");
+		EXPECT_THROW(v[idx], RelearnException);
 	}
 
 	for (auto i = 0; i < iterations; i++) {
@@ -194,7 +195,7 @@ TEST(TestVector, test_vector_operator_index_read_assert) {
 		}
 
 		auto idx_int = static_cast<int>(idx);
-		EXPECT_DEATH(v[idx_int], "\c*");
+		EXPECT_THROW(v[idx_int], RelearnException);
 	}
 }
 
@@ -239,7 +240,7 @@ TEST(TestVector, test_vector_operator_index_write_assert) {
 			idx = urd(mt);
 		}
 
-		EXPECT_DEATH(v[idx] = 0.0, "\c*");
+		EXPECT_THROW(v[idx] = 0.0, RelearnException);
 	}
 
 	for (auto i = 0; i < iterations; i++) {
@@ -255,7 +256,7 @@ TEST(TestVector, test_vector_operator_index_write_assert) {
 		}
 
 		auto idx_int = static_cast<int>(idx);
-		EXPECT_DEATH(v[idx_int] = 0.0, "\c*");
+		EXPECT_THROW(v[idx_int] = 0.0, RelearnException);
 	}
 }
 
@@ -661,7 +662,7 @@ TEST(TestVector, test_vector_componentwise_floor_assert) {
 		x *= -1.0;
 
 		Vec3<double> v{ x, y, z };
-		EXPECT_DEATH(Vec3<size_t> v_floored = v.floor_componentwise(), "\c*");
+		EXPECT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException);
 	}
 
 	for (auto i = 0; i < iterations; i++) {
@@ -672,7 +673,7 @@ TEST(TestVector, test_vector_componentwise_floor_assert) {
 		y *= -1.0;
 
 		Vec3<double> v{ x, y, z };
-		EXPECT_DEATH(Vec3<size_t> v_floored = v.floor_componentwise(), "\c*");
+		EXPECT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException);
 	}
 
 	for (auto i = 0; i < iterations; i++) {
@@ -683,7 +684,7 @@ TEST(TestVector, test_vector_componentwise_floor_assert) {
 		z *= -1.0;
 
 		Vec3<double> v{ x, y, z };
-		EXPECT_DEATH(Vec3<size_t> v_floored = v.floor_componentwise(), "\c*");
+		EXPECT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException);
 	}
 }
 
@@ -732,7 +733,7 @@ TEST(TestVector, test_vector_norm_assert) {
 
 		Vec3<double> v{ x, y, z };
 
-		EXPECT_DEATH(auto v_normed = v.calculate_p_norm(p), "\c*");
+		EXPECT_THROW(auto v_normed = v.calculate_p_norm(p), RelearnException);
 	}
 }
 

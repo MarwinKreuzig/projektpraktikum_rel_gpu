@@ -3,7 +3,8 @@
 #include <type_traits>
 #include <cmath>
 #include <algorithm>
-#include <cassert>
+
+#include "RelearnException.h"
 
 template<typename T>
 struct Vec3 {
@@ -39,31 +40,33 @@ struct Vec3 {
 		return res;
 	}
 
-	bool operator==(const Vec3<T>& other) const noexcept {
+	bool operator==(const Vec3<T>& other) const /*noexcept*/ {
 		return (x == other.x) && (y == other.y) && (z == other.z);
 	}
 
 	template <typename K>
-	T& operator[](const K& index) noexcept {
+	T& operator[](const K& index) /*noexcept*/ {
 		if (index == 0) {
 			return x;
 		}
 		if (index == 1) {
 			return y;
 		}
-		assert(index == 2);
+
+		RelearnException::check(index == 2, "indexing with number unequal to 0, 1, 2");
 		return z;
 	}
 
 	template <typename K>
-	const T& operator[](const K& index) const noexcept {
+	const T& operator[](const K& index) const /*noexcept*/ {
 		if (index == 0) {
 			return x;
 		}
 		if (index == 1) {
 			return y;
 		}
-		assert(index == 2);
+
+		RelearnException::check(index == 2, "indexing with number unequal to 0, 1, 2");
 		return z;
 	}
 
@@ -112,10 +115,10 @@ struct Vec3 {
 		z = ceil((z - 0.001) / multiple) * multiple;
 	}
 
-	Vec3<size_t> floor_componentwise() const noexcept {
-		assert(x >= 0 && "floor_componentwise must be used on a positive vector: x");
-		assert(y >= 0 && "floor_componentwise must be used on a positive vector: y");
-		assert(z >= 0 && "floor_componentwise must be used on a positive vector: z");
+	Vec3<size_t> floor_componentwise() const /*noexcept*/ {
+		RelearnException::check(x >= 0, "floor_componentwise must be used on a positive vector: x");
+		RelearnException::check(y >= 0, "floor_componentwise must be used on a positive vector: y");
+		RelearnException::check(z >= 0, "floor_componentwise must be used on a positive vector: z");
 
 		const size_t floored_x = static_cast<size_t>(floor(x));
 		const size_t floored_y = static_cast<size_t>(floor(y));
@@ -145,8 +148,8 @@ struct Vec3 {
 	/**
 	 * Calculates the p-Norm. Assumens p >= 1.0
 	 */
-	double calculate_p_norm(const double p) const noexcept {
-		assert(p >= 1.0 && "p-norm is only valid for p >= 1.0");
+	double calculate_p_norm(const double p) const {
+		RelearnException::check(p >= 1.0, "p-norm is only valid for p >= 1.0");
 
 		const auto xx = pow(abs(static_cast<double>(x)), p);
 		const auto yy = pow(abs(static_cast<double>(y)), p);

@@ -16,6 +16,7 @@
 #include "randomNumberSeeds.h"
 #include "Partition.h"
 #include "Random.h"
+#include "RelearnException.h"
 
 Octree::Octree() :
 	root(nullptr),
@@ -23,8 +24,8 @@ Octree::Octree() :
 	no_free_in_destructor(false),
 	level_of_branch_nodes(-1),
 	random_number_generator(RandomHolder<Octree>::get_random_generator()),
-	random_number_distribution(0.0, std::nextafter(1.0, 2.0)),
-	mpi_rma_node_allocator(MPIInfos::mpi_rma_mem_allocator) {
+	mpi_rma_node_allocator(MPIInfos::mpi_rma_mem_allocator),
+	random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
 
 	random_number_generator.seed(randomNumberSeeds::octree);
 }
@@ -35,12 +36,12 @@ Octree::Octree(const Partition& part, const Parameters& params) :
 	no_free_in_destructor(false),
 	acceptance_criterion(params.accept_criterion),
 	sigma(params.sigma),
-	level_of_branch_nodes(part.get_level_of_subdomain_trees()),
 	naive_method(params.naive_method),
+	level_of_branch_nodes(part.get_level_of_subdomain_trees()),
 	max_num_pending_vacant_axons(params.max_num_pending_vacant_axons),
-	random_number_distribution(0.0, std::nextafter(1.0, 2.0)),
+	mpi_rma_node_allocator(MPIInfos::mpi_rma_mem_allocator),
 	random_number_generator(RandomHolder<Octree>::get_random_generator()),
-	mpi_rma_node_allocator(MPIInfos::mpi_rma_mem_allocator) {
+	random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
 
 	random_number_generator.seed(randomNumberSeeds::octree);
 
@@ -50,7 +51,7 @@ Octree::Octree(const Partition& part, const Parameters& params) :
 	set_size(xyz_min, xyz_max);
 }
 
-Octree::~Octree() noexcept(false) {
+Octree::~Octree() /*noexcept(false)*/ {
 	if (!no_free_in_destructor) {
 		// Free all nodes
 		free();
@@ -106,7 +107,7 @@ void Octree::postorder_print() {
 			std::cout << "Number dendrites (exc, inh): (" << elem.ptr->cell.get_neuron_num_dendrites_exc()
 				<< ", " << elem.ptr->cell.get_neuron_num_dendrites_inh() << ")\n";
 
-			// Print position EXCITATORY
+			// Print position DendriteType::EXCITATORY
 			bool pos_valid = false;
 			elem.ptr->cell.get_neuron_position_exc(xyz_pos, pos_valid);
 			for (auto j = 0; j < depth; j++) {
@@ -117,7 +118,7 @@ void Octree::postorder_print() {
 			if (!pos_valid) {
 				std::cout << "-- invalid!";
 			} std::cout << "\n";
-			// Print position INHIBITORY
+			// Print position DendriteType::INHIBITORY
 			elem.ptr->cell.get_neuron_position_inh(xyz_pos, pos_valid);
 			for (auto j = 0; j < depth; j++) {
 				std::cout << " ";
@@ -163,7 +164,7 @@ bool Octree::acceptance_criterion_test(const Vec3d& axon_pos_xyz,
 	const OctreeNode* const node_with_dendrite,
 	Cell::DendriteType dendrite_type_needed,
 	bool naive_method,
-	bool& has_vacant_dendrites) const noexcept {
+	bool& has_vacant_dendrites) const /*noexcept*/ {
 
 	// Use naive method
 	if (naive_method) {
@@ -191,7 +192,7 @@ bool Octree::acceptance_criterion_test(const Vec3d& axon_pos_xyz,
 		node_with_dendrite->cell.get_neuron_position_for(dendrite_type_needed, target_xyz, pos_valid);
 
 		// NOTE: This assertion fails when considering inner nodes that don't have dendrites.
-		assert(pos_valid);
+		RelearnException::check(pos_valid);
 
 		// Calc Euclidean distance between source and target neuron
 		const auto distance_vector = target_xyz - axon_pos_xyz;
@@ -433,7 +434,7 @@ double Octree::calc_attractiveness_to_connect(
 	size_t src_neuron_id,
 	const Vec3d& axon_pos_xyz,
 	const OctreeNode& node_with_dendrite,
-	Cell::DendriteType dendrite_type_needed) const noexcept {
+	Cell::DendriteType dendrite_type_needed) const /*noexcept*/ {
 
 	/**
 	* If the axon's neuron itself is considered as target neuron, set attractiveness to 0 to avoid forming an autapse (connection to itself).
@@ -448,7 +449,7 @@ double Octree::calc_attractiveness_to_connect(
 	Vec3d target_xyz;
 	bool pos_valid;
 	node_with_dendrite.cell.get_neuron_position_for(dendrite_type_needed, target_xyz, pos_valid);
-	assert(pos_valid);
+	RelearnException::check(pos_valid);
 
 	const auto num_dendrites = node_with_dendrite.cell.get_neuron_num_dendrites_for(dendrite_type_needed);
 
@@ -485,7 +486,7 @@ OctreeNode* Octree::select_subinterval(const ProbabilitySubintervalList& list) {
 	return (*it)->ptr;
 }
 
-inline bool Octree::node_is_local(const OctreeNode& node) noexcept {
+inline bool Octree::node_is_local(const OctreeNode& node) /*noexcept*/ {
 	return node.rank == MPIInfos::my_rank;
 }
 
@@ -560,7 +561,7 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 	Neurons& neurons) {
 
 	VacantAxonList vacant_axons;
-	bool axon_added;
+	bool axon_added = false;
 
 	AccessEpochsStarted access_epochs_started(MPIInfos::num_ranks, false);
 
@@ -695,7 +696,7 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 	// Create new tree node for the neuron
 	OctreeNode* new_node = mpi_rma_node_allocator.newObject(); // new OctreeNode();
-	assert(new_node);
+	RelearnException::check(new_node);
 
 	new_node->cell.set_neuron_position(position, true);
 	new_node->cell.set_neuron_id(neuron_id);
@@ -730,6 +731,7 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 		curr = curr->children[my_idx];
 	}
 
+	RelearnException::check(prev);
 
 	/**
 	* Found my octant, but
@@ -867,7 +869,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
 			// NOTE:
 			// This assertion is not valid anymore as the same branch nodes
 			// are inserted repeatedly at the same position
-			// assert(curr->children[my_idx] == nullptr);
+			// RelearnException::check(curr->children[my_idx] == nullptr);
 
 			curr->children[my_idx] = node_to_insert;
 

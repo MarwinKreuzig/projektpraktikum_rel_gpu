@@ -1,9 +1,9 @@
 #include "NeuronIdMap.h"
+#include "RelearnException.h"
 
 #include <vector>
 #include <map>
 #include <utility>
-#include <cassert>
 #include <limits>
 
 #include <mpi.h>
@@ -31,7 +31,7 @@ NeuronIdMap::NeuronIdMap(size_t my_num_neurons,
 }
 
 bool NeuronIdMap::rank_neuron_id2glob_id(const RankNeuronId&
-	rank_neuron_id, size_t& glob_id) const noexcept {
+	rank_neuron_id, size_t& glob_id) const /*noexcept*/ {
 	// Rank is not valid
 	if (rank_neuron_id.rank < 0 ||
 		rank_neuron_id.rank > rank_to_start_neuron_id.size() - 1)
@@ -84,7 +84,7 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 	// Copy my neuron positions as xyz-triple into the send buffer
 	for (size_t i = 0; i < my_num_neurons; i++) {
 		auto idx = (rank_to_start_neuron_id[my_rank] + i) * 3;
-		assert(idx < total_num_neurons * 3);
+		RelearnException::check(idx < total_num_neurons * 3);
 
 		xyz_pos[idx] = x[i];
 		xyz_pos[idx + 1] = y[i];
@@ -99,10 +99,10 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 	std::vector<int> recvcounts(num_ranks);
 	std::vector<int> displs(num_ranks);
 	for (int i = 0; i < num_ranks; i++) {
-		assert(rank_to_num_neurons[i] <= std::numeric_limits<int>::max());
+		RelearnException::check(rank_to_num_neurons[i] <= std::numeric_limits<int>::max());
 		recvcounts[i] = static_cast<int>(rank_to_num_neurons[i]);
 
-		assert(rank_to_start_neuron_id[i] <= std::numeric_limits<int>::max());
+		RelearnException::check(rank_to_start_neuron_id[i] <= std::numeric_limits<int>::max());
 		displs[i] = static_cast<int>(rank_to_start_neuron_id[i]);
 	}
 
@@ -119,16 +119,16 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 		RankNeuronId val;
 		val.rank = rank;
 		for (size_t neuron_id = 0; neuron_id < rank_to_num_neurons[rank]; neuron_id++) {
-			assert(glob_neuron_id < total_num_neurons);
+			RelearnException::check(glob_neuron_id < total_num_neurons);
 
 			const auto idx = glob_neuron_id * 3;
 
-			assert(idx < xyz_pos.size());
+			RelearnException::check(idx < xyz_pos.size());
 			Vec3d key{ xyz_pos[idx], xyz_pos[idx + 1], xyz_pos[idx + 2] };
 			val.neuron_id = neuron_id;
 
 			auto ret = pos_to_rank_neuron_id.insert(std::make_pair(key, val));
-			assert(ret.second); // New element was inserted, otherwise duplicates exist
+			RelearnException::check(ret.second); // New element was inserted, otherwise duplicates exist
 
 			glob_neuron_id++;
 		}

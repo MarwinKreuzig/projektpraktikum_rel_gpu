@@ -7,12 +7,11 @@
 #ifndef SPACEFILLINGCURVE_H
 #define SPACEFILLINGCURVE_H
 
-#include <cassert>
 #include <cmath>
-
 #include <cstdint>
 
 #include "Vec3.h"
+#include "RelearnException.h"
 
 using BoxCoordinates = Vec3<uint64_t>;
 
@@ -31,7 +30,7 @@ public:
 	Morton& operator=(const Morton& other) = delete;
 	Morton& operator=(Morton&& other) = delete;
 
-	void map_1d_to_3d(uint64_t idx, BoxCoordinates& coords) const noexcept {
+	void map_1d_to_3d(uint64_t idx, BoxCoordinates& coords) const {
 		// clear coordinates
 		coords.x = coords.y = coords.z = 0;
 
@@ -85,7 +84,7 @@ private:
 		variable &= ~(static_cast<uint64_t>(1) << bit);
 	}
 
-	void copy_bit(const uint64_t& source, uint8_t source_bit, uint64_t& destination, uint8_t destination_bit) const noexcept {
+	void copy_bit(const uint64_t& source, uint8_t source_bit, uint64_t& destination, uint8_t destination_bit) const /*noexcept*/ {
 		// A simpler solution might be:
 		// destination ^= (-select_bit(source, source_bit) ^ destination) & (1 << destination_bit);
 
@@ -94,7 +93,7 @@ private:
 			set_bit(destination, destination_bit);
 		}
 		else {
-			assert(0 == bit_in_source && "In Morton, copy_bit, bit_in_source is neither 0 nor 1");
+			RelearnException::check(0 == bit_in_source, "In Morton, copy_bit, bit_in_source is neither 0 nor 1");
 			unset_bit(destination, destination_bit);
 		}
 	}
@@ -109,7 +108,7 @@ private:
 template<class T>
 class SpaceFillingCurve {
 public:
-	SpaceFillingCurve(uint8_t refinement_level = 0) noexcept {
+	SpaceFillingCurve(uint8_t refinement_level = 0) /*noexcept*/ {
 		set_refinement_level(refinement_level);
 	}
 
@@ -119,17 +118,17 @@ public:
 	SpaceFillingCurve& operator = (const SpaceFillingCurve& other) = delete;
 	SpaceFillingCurve& operator = (SpaceFillingCurve&& other) = delete;
 
-	~SpaceFillingCurve() noexcept {
+	~SpaceFillingCurve() /*noexcept*/ {
 	}
 
-	size_t get_refinement_level() const noexcept {
+	size_t get_refinement_level() const /*noexcept*/ {
 		return curve.get_refinement_level();
 	}
 
-	void set_refinement_level(size_t num_subdivisions) noexcept {
+	void set_refinement_level(size_t num_subdivisions) /*noexcept*/ {
 		// With 64-bit keys we can only support 20 subdivisions per
 		// dimension (i.e, 2^20 boxes per dimension)
-		assert(num_subdivisions <= 20 && "Number of subdivisions is too large");
+		RelearnException::check(num_subdivisions <= 20, "Number of subdivisions is too large");
 
 		curve.set_refinement_level(num_subdivisions);
 	}
