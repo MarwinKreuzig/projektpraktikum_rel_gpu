@@ -14,6 +14,7 @@
 #include <string>
 
 #include <map>
+#include <vector>
 
 #include "MPIInfos.h"
 
@@ -21,10 +22,10 @@ class LogFiles {
 public:
 	// One log file only at the MPI rank "on_rank"
 	// on_rank == -1 means all ranks
-	LogFiles(std::string file_name, int on_rank);
+	LogFiles(const std::string& file_name, int on_rank);
 
 	// Generate series of file name suffixes automatically
-	LogFiles(size_t num_files, std::string prefix);
+	LogFiles(size_t num_files, const std::string& prefix);
 
 	LogFiles(const LogFiles& other) = delete;
 	LogFiles& operator=(const LogFiles& other) = delete;
@@ -39,18 +40,18 @@ public:
 	}
 
 	// Take array with file name suffixes
-	LogFiles(size_t num_files, std::string prefix, size_t* suffixes);
+	LogFiles(size_t num_files, const std::string& prefix, std::vector<size_t> suffixes);
 
 	~LogFiles() noexcept(false);
 
 	size_t get_num_files() const noexcept { return num_files; }
 
 	// Get pointer to file stream
-	std::ofstream* get_file(size_t file_id);
+	std::ofstream& get_file(size_t file_id);
 
 private:
 	size_t num_files = 0;      // Number of files
-	std::ofstream* files = nullptr;  // All file streams
+	std::vector<std::ofstream> files;  // All file streams
 };
 
 namespace Logs {

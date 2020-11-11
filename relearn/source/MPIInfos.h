@@ -5,8 +5,7 @@
  * Created on Apr 17, 2016
  */
 
-#ifndef MPIINFOS_H
-#define MPIINFOS_H
+#pragma once
 
 #include <string>
 
@@ -38,8 +37,8 @@ namespace MPIInfos {
 	extern int    my_neuron_id_end;           // ID of my last neuron
 
 	// Needed for Allgatherv
-	extern int* num_neurons_of_ranks;         // Number of neurons that each rank is responsible for
-	extern int* num_neurons_of_ranks_displs;  // Displacements based on "num_neurons_of_ranks" (exclusive prefix sums, i.e. Exscan)
+	extern std::vector<int> num_neurons_of_ranks;         // Number of neurons that each rank is responsible for
+	extern std::vector<int> num_neurons_of_ranks_displs;  // Displacements based on "num_neurons_of_ranks" (exclusive prefix sums, i.e. Exscan)
 
 	extern int thread_level_provided;         // Thread level provided by MPI
 
@@ -61,6 +60,5 @@ namespace MPIInfos {
 
 	void finalize() /*noexcept*/;
 	void print_infos_rank(int rank);
-}
+} // namespace MPIInfos
 
-#endif /* MPIINFOS_H */

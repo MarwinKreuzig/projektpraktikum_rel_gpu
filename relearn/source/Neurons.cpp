@@ -766,14 +766,14 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 
 	// Output data
 	if (0 == MPIInfos::my_rank) {
-		ofstream* file = log_file.get_file(0);
+		ofstream& file = log_file.get_file(0);
 		const int cwidth = 20;  // Column width
 
 								// Write headers to file if not already done so
 		if (0 == step) {
-			*file << params << endl;
-			*file << "# SUMS OVER ALL NEURONS\n";
-			*file << left
+			file << params << endl;
+			file << "# SUMS OVER ALL NEURONS\n";
+			file << left
 				<< setw(cwidth) << "# step"
 				<< setw(cwidth) << "Axons exc. (vacant)"
 				<< setw(cwidth) << "Axons inh. (vacant)"
@@ -785,7 +785,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 		}
 
 		// Write data at step "step"
-		*file << left
+		file << left
 			<< setw(cwidth) << step
 			<< setw(cwidth) << sums_global[0]
 			<< setw(cwidth) << sums_global[1]
@@ -810,14 +810,14 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles
 
 	// Output data
 	if (0 == MPIInfos::my_rank) {
-		ofstream* file = log_file.get_file(0);
+		ofstream& file = log_file.get_file(0);
 		const int cwidth = 16;  // Column width
 
 								// Write headers to file if not already done so
 		if (0 == step) {
-			*file << params << endl;
-			*file << "# ALL NEURONS\n";
-			*file << left
+			file << params << endl;
+			file << "# ALL NEURONS\n";
+			file << left
 				<< setw(cwidth) << "# step"
 				<< setw(cwidth) << "C (avg)"
 				<< setw(cwidth) << "C (min)"
@@ -833,7 +833,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles
 		}
 
 		// Write data at step "step"
-		*file << left
+		file << left
 			<< setw(cwidth) << step
 			<< setw(cwidth) << calcium_statistics.avg
 			<< setw(cwidth) << calcium_statistics.min
@@ -851,29 +851,25 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles
 
 void Neurons::print_network_graph_to_log_file(LogFiles& log_file, const NetworkGraph& network_graph, const Parameters& params, const NeuronIdMap& neuron_id_map) {
 	using namespace std;
-	ofstream* file;
-
-	file = log_file.get_file(0);
+	ofstream& file = log_file.get_file(0);
 
 	// Write output format to file
-	*file << "# " << params.num_neurons << endl; // Total number of neurons
-	*file << "# <target neuron id> <source neuron id> <weight>" << endl;
+	file << "# " << params.num_neurons << endl; // Total number of neurons
+	file << "# <target neuron id> <source neuron id> <weight>" << endl;
 
 	// Write network graph to file
 	//*file << network_graph << endl;
-	network_graph.print(*file, neuron_id_map);
+	network_graph.print(file, neuron_id_map);
 }
 
 void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& params, const NeuronIdMap& neuron_id_map) {
 	using namespace std;
 
-	ofstream* file;
-
-	file = log_file.get_file(0);
+	ofstream& file = log_file.get_file(0);
 
 	// Write total number of neurons to log file
-	*file << "# " << params.num_neurons << endl;
-	*file << "# " << "<global id> <pos x> <pos y> <pos z> <area>" << endl;
+	file << "# " << params.num_neurons << endl;
+	file << "# " << "<global id> <pos x> <pos y> <pos z> <area>" << endl;
 
 	const std::vector<double>& axons_x_dims = positions.get_x_dims();
 	const std::vector<double>& axons_y_dims = positions.get_y_dims();
@@ -885,21 +881,21 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& 
 	NeuronIdMap::RankNeuronId rank_neuron_id{ 0, 0 };
 
 	rank_neuron_id.rank = MPIInfos::my_rank;
-	*file << std::fixed << std::setprecision(6);
+	file << std::fixed << std::setprecision(6);
 	for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
 		rank_neuron_id.neuron_id = neuron_id;
 		ret = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id, glob_id);
 		RelearnException::check(ret);
 
-		*file << glob_id << " "
+		file << glob_id << " "
 			<< axons_x_dims[neuron_id] << " "
 			<< axons_y_dims[neuron_id] << " "
 			<< axons_z_dims[neuron_id] << " "
 			<< area_names[neuron_id] << "\n";
 	}
 
-	*file << flush;
-	*file << std::defaultfloat;
+	file << flush;
+	file << std::defaultfloat;
 }
 
 void Neurons::print() {

@@ -21,7 +21,7 @@
 template<class T>
 class MPI_RMA_MemAllocator {
 public:
-	MPI_RMA_MemAllocator() {
+	MPI_RMA_MemAllocator() noexcept {
 
 	}
 

@@ -1,12 +1,13 @@
-#include <fstream>
-#include <sstream>
-
 #include "NetworkGraph.h"
-#include "MPIInfos.h"
+
 #include "LogMessages.h"
+#include "MPIInfos.h"
 #include "NeuronIdMap.h"
 #include "Partition.h"
 #include "RelearnException.h"
+
+#include <fstream>
+#include <sstream>
 
 NetworkGraph::NetworkGraph(size_t my_num_neurons) :
 	neuron_neighborhood(my_num_neurons),
@@ -189,13 +190,14 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 		global_ids_to_send[rank].emplace_back(id);
 	}
 
-	MPI_Alltoall(num_foreign_ids_from_ranks.data(), sizeof(size_t), MPI_CHAR,
-		num_foreign_ids_from_ranks.data(), sizeof(size_t), MPI_CHAR,
+	MPI_Alltoall(
+		reinterpret_cast<char*>(num_foreign_ids_from_ranks.data()), sizeof(size_t), MPI_CHAR,
+		reinterpret_cast<char*>(num_foreign_ids_from_ranks.data()), sizeof(size_t), MPI_CHAR,
 		MPI_COMM_WORLD);
 
 	for (auto rank = 0; rank < num_ranks; rank++) {
 		if (MPIInfos::my_rank == rank) {
-			RelearnException::check(global_ids_to_receive[rank].size() == 0, "Should receive ids from myself");
+			RelearnException::check(global_ids_to_receive[rank].empty(), "Should receive ids from myself");
 			continue;
 		}
 
@@ -236,10 +238,8 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 	MPI_Waitall(request_counter, mpi_requests.data(), MPI_STATUSES_IGNORE);
 
 	for (auto& vec : global_ids_to_receive) {
-		for (auto i = 0; i < vec.size(); i++) {
-			const size_t global_id = vec[i];
-			const size_t local_id = partition.get_local_id(global_id);
-			vec[i] = local_id;
+		for (auto& global_id : vec) {
+			global_id = partition.get_local_id(global_id);
 		}
 	}
 

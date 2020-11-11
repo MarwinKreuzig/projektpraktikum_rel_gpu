@@ -5,17 +5,20 @@
  * Created on Apr 17, 2016
  */
 
-#include <mpi.h>
-#include <limits>
-#include <string>
-#include <cstdlib>
-#include <sstream>
-#include <iomanip>
-
 #include "MPIInfos.h"
-#include "Utility.h"
+
 #include "LogMessages.h"
 #include "MPI_RMA_MemAllocator.h"
+#include "Utility.h"
+
+#include <mpi.h>
+
+#include <cstdlib>
+#include <iomanip>
+#include <limits>
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace MPIInfos {
 	/**
@@ -40,8 +43,8 @@ namespace MPIInfos {
 	int    my_neuron_id_start;         // ID of my first neuron
 	int    my_neuron_id_end;           // ID of my last neuron
 
-	int* num_neurons_of_ranks;         // Number of neurons that each rank is responsible for
-	int* num_neurons_of_ranks_displs;  // Displacements based on "num_neurons_of_ranks" (exclusive prefix sums, i.e. Exscan)
+	std::vector<int> num_neurons_of_ranks;         // Number of neurons that each rank is responsible for
+	std::vector<int> num_neurons_of_ranks_displs;  // Displacements based on "num_neurons_of_ranks" (exclusive prefix sums, i.e. Exscan)
 
 	int thread_level_provided;         // Thread level provided by MPI
 
@@ -57,11 +60,13 @@ namespace MPIInfos {
 	void init(int argc, char** argv) {
 		MPI_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &MPIInfos::thread_level_provided);
 
+		// NOLINTNEXTLINE
 		MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
+		// NOLINTNEXTLINE
 		MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-		num_neurons_of_ranks = new int[num_ranks];
-		num_neurons_of_ranks_displs = new int[num_ranks];
+		num_neurons_of_ranks.resize(num_ranks);
+		num_neurons_of_ranks_displs.resize(num_ranks);
 
 		const int num_digits = Util::num_digits(MPIInfos::num_ranks - 1);
 
@@ -78,7 +83,7 @@ namespace MPIInfos {
 		 * Check if num_neurons fits in int value (see IMPORTANT notice above)
 		 */
 		if (num_neurons > std::numeric_limits<int>::max()) {
-			LogMessages::print_error(std::string(__FUNCTION__).append(": num_neurons does not fit in \"int\" data type").c_str());
+			LogMessages::print_error("init_neurons: num_neurons does not fit in \"int\" data type");
 			exit(EXIT_FAILURE);
 		}
 
@@ -123,9 +128,9 @@ namespace MPIInfos {
 		mpi_rma_mem_allocator.init_free_object_list();
 	}
 
-	void lock_window(int rank, MPI_Locktype lock_type_enum) {
-		int lock_type = static_cast<int>(lock_type_enum);
-		MPI_Win_lock(lock_type, rank, MPI_MODE_NOCHECK, mpi_rma_mem_allocator.mpi_window);
+	void lock_window(int rank, MPI_Locktype lock_type) {
+		int lock_type_int = static_cast<int>(lock_type);
+		MPI_Win_lock(lock_type_int, rank, MPI_MODE_NOCHECK, mpi_rma_mem_allocator.mpi_window);
 	}
 
 	void unlock_window(int rank) {
@@ -136,9 +141,6 @@ namespace MPIInfos {
 		// Free RMA window (MPI collective)
 		// mpi_rma_mem_allocator.free_rma_window();
 		// mpi_rma_mem_allocator.deallocate_rma_mem();
-
-		delete[] num_neurons_of_ranks;
-		delete[] num_neurons_of_ranks_displs;
 
 		MPI_Finalize();
 	}
@@ -151,4 +153,4 @@ namespace MPIInfos {
 				<< " [start_id,end_id]: [" << my_neuron_id_start << "," << my_neuron_id_end << "]\n";
 		}
 	}
-}
+} // namespace MPIInfos
