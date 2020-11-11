@@ -912,7 +912,7 @@ void Neurons::print() {
 	// Values
 	for (size_t i = 0; i < num_neurons; i++) {
 		cout << left << setw(cwidth_left) << i << setw(cwidth) << neuron_models->get_x(i) << setw(cwidth) << neuron_models->get_fired(i);
-		cout << setw(cwidth) << neuron_models->get_refrac(i) << setw(cwidth) << calcium[i] << setw(cwidth) << axons.get_cnt(i);
+		cout << setw(cwidth) << neuron_models->get_secondary_variable(i) << setw(cwidth) << calcium[i] << setw(cwidth) << axons.get_cnt(i);
 		cout << setw(cwidth) << dendrites_exc.get_cnt(i) << setw(cwidth) << dendrites_inh.get_cnt(i) << "\n";
 	}
 }

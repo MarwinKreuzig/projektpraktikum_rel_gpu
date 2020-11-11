@@ -121,7 +121,7 @@ public:
 		return x;
 	}
 
-	[[nodiscard]] virtual int get_refrac(const size_t i) const noexcept = 0;
+	[[nodiscard]] virtual double get_secondary_variable(const size_t i) const noexcept = 0;
 
 	/* Performs one iteration step of update in electrical activity */
 	void update_electrical_activity(const NetworkGraph& network_graph, std::vector<double>& C);
@@ -161,7 +161,7 @@ namespace models {
 				x_0, tau_x, refrac_time);
 		}
 
-		[[nodiscard]] int get_refrac(const size_t i) const noexcept final {
+		[[nodiscard]] double get_secondary_variable(const size_t i) const noexcept final {
 			return refrac[i];
 		}
 
@@ -231,7 +231,7 @@ namespace models {
 				a, b, c, d, V_spike, k1, k2, k3);
 		}
 
-		[[nodiscard]] int get_refrac(const size_t i) const noexcept final {
+		[[nodiscard]] double get_secondary_variable(const size_t i) const noexcept final {
 			return u[i];
 		}
 
@@ -258,12 +258,12 @@ namespace models {
 		}
 
 	private:
-		[[nodiscard]] double iter_x(const double x, const double refrac, const double I_syn) const noexcept {
-			return k1 * x * x + k2 * x + k3 - refrac + I_syn;
+		[[nodiscard]] double iter_x(const double x, const double u, const double I_syn) const noexcept {
+			return k1 * x * x + k2 * x + k3 - u + I_syn;
 		}
 
-		[[nodiscard]] double iter_refrac(const double refrac, const double x) const noexcept {
-			return a * (b * x - refrac);
+		[[nodiscard]] double iter_refrac(const double u, const double x) const noexcept {
+			return a * (b * x - u);
 		}
 
 		[[nodiscard]] bool spiked(const double x) const noexcept {
@@ -298,7 +298,7 @@ namespace models {
 				a, b, phi);
 		}
 
-		[[nodiscard]] int get_refrac(const size_t i) const noexcept final {
+		[[nodiscard]] double get_secondary_variable(const size_t i) const noexcept final {
 			return w[i];
 		}
 
@@ -326,16 +326,16 @@ namespace models {
 		}
 
 	private:
-		[[nodiscard]] static double iter_x(const double x, const double refrac, const double I_syn) noexcept {
-			return x - x * x * x / 3 - refrac + I_syn;
+		[[nodiscard]] static double iter_x(const double x, const double w, const double I_syn) noexcept {
+			return x - x * x * x / 3 - w + I_syn;
 		}
 
-		[[nodiscard]] double iter_refrac(const double refrac, const double x) const noexcept {
-			return phi * (x + a - b * refrac);
+		[[nodiscard]] double iter_refrac(const double w, const double x) const noexcept {
+			return phi * (x + a - b * w);
 		}
 
-		[[nodiscard]] static bool spiked(const double x, const double refrac) noexcept{
-			return refrac > iter_x(x, 0, 0) && x > 1.;
+		[[nodiscard]] static bool spiked(const double x, const double w) noexcept {
+			return w > iter_x(x, 0, 0) && x > 1.;
 		}
 
 		std::vector<double> w; // recovery variable
@@ -360,13 +360,12 @@ namespace models {
 				C, g_L, E_L, V_T, d_T, tau_w, a, b, V_peak);
 		}
 
-		[[nodiscard]] int get_refrac(const size_t i) const noexcept final {
+		[[nodiscard]] double get_secondary_variable(const size_t i) const noexcept final {
 			return w[i];
 		}
 
 	protected:
-		void update_activity(const size_t i) final
-		{
+		void update_activity(const size_t i) final {
 			for (int integration_steps = 0; integration_steps < h; ++integration_steps) {
 				x[i] += iter_x(x[i], w[i], I_syn[i]) / h;
 				w[i] += iter_refrac(w[i], x[i]) / h;
@@ -392,12 +391,12 @@ namespace models {
 			return -g_L * (x - E_L) + g_L * d_T * exp((x - V_T) / d_T);
 		}
 
-		[[nodiscard]] double iter_x(const double x, const double refrac, const double I_syn) const noexcept {
-			return (f(x) - refrac + I_syn) / C;
+		[[nodiscard]] double iter_x(const double x, const double w, const double I_syn) const noexcept {
+			return (f(x) - w + I_syn) / C;
 		}
 
-		[[nodiscard]] double iter_refrac(const double refrac, const double x) const noexcept {
-			return (a * (x - E_L) - refrac) / tau_w;
+		[[nodiscard]] double iter_refrac(const double w, const double x) const noexcept {
+			return (a * (x - E_L) - w) / tau_w;
 		}
 
 		std::vector<double> w; // adaption variable
