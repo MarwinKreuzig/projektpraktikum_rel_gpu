@@ -53,9 +53,9 @@ public:
 		RelearnException::check(cnts[neuron_id] >= 0.0);
 	}
 
-	void update_conn_cnt(size_t neuron_id, double delta) {
+	void update_conn_cnt(size_t neuron_id, double delta, const char* mess) {
 		if (neuron_id == 94) {
-			std::cerr << "94 update: type: " << type << " now: " << connected_cnts[neuron_id] << " delta: " << delta;
+			std::cerr << "94 update: type: " << mess << " now: " << connected_cnts[neuron_id] << " delta: " << delta;
 		}
 		connected_cnts[neuron_id] += delta;
 		if (neuron_id == 94) {
@@ -86,55 +86,56 @@ public:
 	 */
 	unsigned int update_number_elements(size_t neuron_id) {
 		RelearnException::check(neuron_id < size);
-		RelearnException::check(cnts[neuron_id] >= 0, std::to_string(cnts[neuron_id]));
-		RelearnException::check(connected_cnts[neuron_id] >= 0, std::to_string(connected_cnts[neuron_id]));
-		RelearnException::check(cnts[neuron_id] >= connected_cnts[neuron_id], std::to_string(cnts[neuron_id] - connected_cnts[neuron_id]));
 
-		unsigned int num_delete_connected = 0;
+		const double current_count = cnts[neuron_id];
+		const double current_connected_count = connected_cnts[neuron_id];
+		const double current_vacant = current_count - current_connected_count;
+		const double current_delta = delta_cnts[neuron_id];
 
-		double num_vacant = cnts[neuron_id] - connected_cnts[neuron_id];
-		const double num_vacant_plus_delta = num_vacant + delta_cnts[neuron_id];
+		RelearnException::check(current_count >= 0.0, std::to_string(current_count));
+		RelearnException::check(current_connected_count >= 0.0, std::to_string(current_connected_count));
+		RelearnException::check(current_vacant >= 0.0, std::to_string(current_count - current_connected_count));
 
-		// No deletion of bound synaptic elements required
-		if (num_vacant_plus_delta >= 0) {
-			cnts[neuron_id] = (1 - vacant_retract_ratio) * num_vacant_plus_delta + connected_cnts[neuron_id];
-			num_delete_connected = 0;
-		}
-		// Delete bound synaptic elements if available
-		else {
-			const double connected_cnt_old = connected_cnts[neuron_id];
+		// The vacant portion after caring for the delta
+		const double new_vacant = current_vacant + current_delta;
 
-			/**
-			 * More bound elements should be deleted than are available.
-			 * Now, neither vacant (see if branch above) nor bound elements are left.
-			 */
-			if ((connected_cnts[neuron_id] + num_vacant_plus_delta) < 0) {
-				connected_cnts[neuron_id] = 0;
-				cnts[neuron_id] = 0;
-			}
-			else {
-				connected_cnts[neuron_id] += num_vacant_plus_delta;             // Result is >= 0
-				const double connected_cnt_floor = floor(connected_cnts[neuron_id]);  // Round down for integer value
-				num_vacant = connected_cnts[neuron_id] - connected_cnt_floor;   // Amount lost by rounding down
+		// No deletion of bound synaptic elements required, connected_cnts stays the same
+		if (new_vacant >= 0.0) {
+			const double new_count = (1 - vacant_retract_ratio) * new_vacant + current_connected_count;
+			RelearnException::check(new_count >= current_connected_count);
 
-				RelearnException::check(num_vacant >= 0);
-
-				connected_cnts[neuron_id] = connected_cnt_floor;
-				cnts[neuron_id] = connected_cnts[neuron_id] + num_vacant;
-			}
-			if (connected_cnt_old < connected_cnts[neuron_id]) {
-				std::cout << "connected_cnt_old: " << connected_cnt_old << "\n"
-					<< "connected_cnts[neuron_id]: " << connected_cnts[neuron_id] << "\n";
-			}
-
-			RelearnException::check(connected_cnt_old >= connected_cnts[neuron_id]);
-			num_delete_connected = static_cast<unsigned int>(connected_cnt_old - connected_cnts[neuron_id]);
+			cnts[neuron_id] = new_count;
+			delta_cnts[neuron_id] = 0.0;
+			return 0;
 		}
 
-		// Reset delta counts
-		delta_cnts[neuron_id] = 0;
+		/**
+		 * More bound elements should be deleted than are available.
+		 * Now, neither vacant (see if branch above) nor bound elements are left.
+		 */
+		if (current_count + current_delta < 0.0) {
+			connected_cnts[neuron_id] = 0.0;
+			cnts[neuron_id] = 0.0;
+			delta_cnts[neuron_id] = 0.0;
 
-		RelearnException::check(cnts[neuron_id] >= connected_cnts[neuron_id]);
+			unsigned int num_delete_connected = static_cast<unsigned int>(current_connected_count);
+			return num_delete_connected;
+		}
+
+		const double new_cnts = current_count + current_delta;
+		const double new_connected_cnt = floor(new_cnts);
+		const auto num_vacant = new_cnts - new_connected_cnt;
+
+		RelearnException::check(num_vacant >= 0);
+
+		connected_cnts[neuron_id] = new_connected_cnt;
+		cnts[neuron_id] = new_cnts;
+		delta_cnts[neuron_id] = 0.0;
+
+		const double deleted_cnts = current_connected_count - new_connected_cnt;
+
+		RelearnException::check(deleted_cnts >= 0.0);
+		unsigned int num_delete_connected = static_cast<unsigned int>(deleted_cnts);
 
 		return num_delete_connected;
 	}

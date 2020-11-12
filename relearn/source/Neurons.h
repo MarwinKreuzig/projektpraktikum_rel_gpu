@@ -156,10 +156,10 @@ class Neurons {
 	 * Type for list element used to represent a synapse for synapse selection
 	 */
 	struct Synapse {
-		const RankNeuronId& rank_neuron_id;
-		const unsigned int synapse_id; // Id of the synapse. Used to distinguish multiple synapses between the same neuron pair
+		RankNeuronId rank_neuron_id;
+		unsigned int synapse_id; // Id of the synapse. Used to distinguish multiple synapses between the same neuron pair
 
-		Synapse(const RankNeuronId& rank_neuron_id, unsigned int synapse_id) noexcept :
+		Synapse(RankNeuronId rank_neuron_id, unsigned int synapse_id) noexcept :
 			rank_neuron_id(rank_neuron_id), synapse_id(synapse_id) {
 		}
 	};

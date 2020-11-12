@@ -141,7 +141,9 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 			* This function only deletes elements (bound and unbound), no synapses.
 			*/
 			const auto num_synapses_to_delete = synaptic_elements->update_number_elements(neuron_id);
-
+			if (num_synapses_to_delete == 0) {
+				continue;
+			}
 			/**
 			* Create a list with all pending synapse deletions.
 			* During creating this list, the possibility that neurons want to delete the same
@@ -283,8 +285,8 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 					RankNeuronId(MPIInfos::my_rank, src_neuron_id),
 					RankNeuronId(other_rank, tgt_neuron_id),
 					RankNeuronId(MPIInfos::my_rank, affected_neuron_id),
-					(SynapticElements::ElementType) affected_element_type,
-					(SynapticElements::SignalType) signal_type,
+					(SynapticElements::ElementType)affected_element_type,
+					(SynapticElements::SignalType)signal_type,
 					(unsigned int)synapse_id,
 					list_with_pending_deletions);
 			}
@@ -294,8 +296,8 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 					RankNeuronId(other_rank, src_neuron_id),
 					RankNeuronId(MPIInfos::my_rank, tgt_neuron_id),
 					RankNeuronId(MPIInfos::my_rank, affected_neuron_id),
-					(SynapticElements::ElementType) affected_element_type,
-					(SynapticElements::SignalType) signal_type,
+					(SynapticElements::ElementType)affected_element_type,
+					(SynapticElements::SignalType)signal_type,
 					(unsigned int)synapse_id,
 					list_with_pending_deletions);
 			}
@@ -585,10 +587,10 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 					//dendrites_connected_cnts[target_neuron_id]++;
 
 					if (Cell::DendriteType::INHIBITORY == dendrite_type_needed) {
-						dendrites_inh.update_conn_cnt(target_neuron_id, 1.0);
+						dendrites_inh.update_conn_cnt(target_neuron_id, 1.0, "inh");
 					}
 					else {
-						dendrites_exc.update_conn_cnt(target_neuron_id, 1.0);
+						dendrites_exc.update_conn_cnt(target_neuron_id, 1.0, "exc");
 					}
 
 					// Update network
@@ -661,7 +663,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 				// Request to form synapse succeeded
 				if (connected) {
 					// Increment num of connected axons
-					axons.update_conn_cnt(source_neuron_id, 1.0);
+					axons.update_conn_cnt(source_neuron_id, 1.0, "ax");
 					//axons_connected_cnts[source_neuron_id]++;
 					num_synapses_created++;
 
@@ -721,8 +723,8 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 	sum_axons_exc_cnts = sum_axons_exc_connected_cnts = 0;
 	sum_axons_inh_cnts = sum_axons_inh_connected_cnts = 0;
 
-	const double * cnts = axons.get_cnts();
-	const double * connected_cnts = axons.get_connected_cnts();
+	const double* cnts = axons.get_cnts();
+	const double* connected_cnts = axons.get_connected_cnts();
 	const SynapticElements::SignalType* signal_types = axons.get_signal_types();
 
 	for (size_t neuron_id = 0; neuron_id < this->num_neurons; ++neuron_id) {
@@ -1068,10 +1070,17 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 			* Create "edge weight" number of synapses and add them to the synapse list
 			* NOTE: We take abs(it->second) here as DendriteType::INHIBITORY synapses have count < 0
 			*/
-			const unsigned int rounded = static_cast<unsigned int>(abs(it->second));
-			for (unsigned int synapse_id = 0; synapse_id < rounded; ++synapse_id) {
-				const RankNeuronId rank_neuron_id(it->first.first, it->first.second);
-				list_synapses.push_back(Synapse(rank_neuron_id, synapse_id));
+			const auto rank = it->first.first;
+			const auto id = it->first.second;
+
+			const auto abs_synapse_weight = abs(it->second);
+			if (abs_synapse_weight == 0) {
+				continue;
+			}
+
+			for (auto synapse_id = 0; synapse_id < abs_synapse_weight; ++synapse_id) {
+				RankNeuronId rank_neuron_id(rank, id);
+				list_synapses.emplace_back(rank_neuron_id, synapse_id);
 			}
 		}
 
@@ -1128,11 +1137,17 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 			* Create "edge weight" number of synapses and add them to the synapse list
 			* NOTE: We take positive entries only as those are DendriteType::EXCITATORY synapses
 			*/
-			if (it->second > 0) {
-				for (unsigned int synapse_id = 0; synapse_id < static_cast<unsigned int>(it->second); ++synapse_id) {
-					const RankNeuronId rank_neuron_id(it->first.first, it->first.second);
-					list_synapses.push_back(Synapse(rank_neuron_id, synapse_id));
-				}
+			const auto rank = it->first.first;
+			const auto id = it->first.second;
+
+			const auto abs_synapse_weight = abs(it->second);
+			if (abs_synapse_weight == 0) {
+				continue;
+			}
+
+			for (auto synapse_id = 0; synapse_id < abs_synapse_weight; ++synapse_id) {
+				RankNeuronId rank_neuron_id(rank, id);
+				list_synapses.emplace_back(rank_neuron_id, synapse_id);
 			}
 		}
 
@@ -1187,12 +1202,17 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 			*
 			* NOTE: We take negative entries only as those are DendriteType::INHIBITORY synapses
 			*/
-			if (it->second < 0) {
-				const unsigned int rounded = static_cast<unsigned int>(abs(it->second));
-				for (unsigned int synapse_id = 0; synapse_id < rounded; ++synapse_id) {
-					const RankNeuronId rank_neuron_id(it->first.first, it->first.second);
-					list_synapses.push_back(Synapse(rank_neuron_id, synapse_id));
-				}
+			const auto rank = it->first.first;
+			const auto id = it->first.second;
+
+			const auto abs_synapse_weight = abs(it->second);
+			if (abs_synapse_weight == 0) {
+				continue;
+			}
+
+			for (auto synapse_id = 0; synapse_id < abs_synapse_weight; ++synapse_id) {
+				RankNeuronId rank_neuron_id(rank, id);
+				list_synapses.emplace_back(rank_neuron_id, synapse_id);
 			}
 		}
 
@@ -1306,12 +1326,12 @@ void Neurons::delete_synapses(std::list<PendingSynapseDeletion>& list,
 		if (it->affected_neuron_id.rank == MPIInfos::my_rank && !it->affected_element_already_deleted) {
 			if (SynapticElements::AXON == it->affected_element_type) {
 				//--axons_connected_cnts[affected_neuron_id];
-				axons.update_conn_cnt(affected_neuron_id, -1.0);
+				axons.update_conn_cnt(affected_neuron_id, -1.0, "ax");
 			}
 			else if ((SynapticElements::DENDRITE == it->affected_element_type) &&
 				(SynapticElements::EXCITATORY == it->signal_type)) {
 				//--dendrites_exc_connected_cnts[affected_neuron_id];
-				dendrites_exc.update_conn_cnt(affected_neuron_id, -1.0);
+				dendrites_exc.update_conn_cnt(affected_neuron_id, -1.0, "exc");
 
 				if (!(dendrites_exc.get_cnts()[affected_neuron_id] >=
 					dendrites_exc.get_connected_cnts()[affected_neuron_id])) {
@@ -1324,7 +1344,7 @@ void Neurons::delete_synapses(std::list<PendingSynapseDeletion>& list,
 			else if ((SynapticElements::DENDRITE == it->affected_element_type) &&
 				(SynapticElements::INHIBITORY == it->signal_type)) {
 				//--dendrites_inh_connected_cnts[affected_neuron_id];
-				dendrites_inh.update_conn_cnt(affected_neuron_id, -1.0);
+				dendrites_inh.update_conn_cnt(affected_neuron_id, -1.0, "inh");
 			}
 			else {
 				std::cout << "Invalid list element for pending synapse deletion." << std::endl;

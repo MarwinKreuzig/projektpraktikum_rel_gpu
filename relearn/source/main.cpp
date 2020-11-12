@@ -485,7 +485,7 @@ int main(int argc, char** argv) {
 				std::cout << "** UPDATE CONNECTIVITY AFTER: " << step << " of " << params.simulation_time
 					<< " msec ** [" << Timers::wall_clock_time() << "]\n";
 			}
-
+			
 			GlobalTimers::timers.start(TimerRegion::UPDATE_CONNECTIVITY);
 
 			neurons.update_connectivity(global_tree, network_graph, num_synapses_deleted, num_synapses_created);
