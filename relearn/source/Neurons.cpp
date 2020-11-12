@@ -97,14 +97,14 @@ void Neurons::init_synaptic_elements() {
 
 	// TODO: Look here
 
-	double* axons_cnts = axons.get_cnts();
-	double* dendrites_inh_cnts = dendrites_inh.get_cnts();
-	double* dendrites_exc_cnts = dendrites_exc.get_cnts();
+	const double* axons_cnts = axons.get_cnts();
+	const double* dendrites_inh_cnts = dendrites_inh.get_cnts();
+	const double* dendrites_exc_cnts = dendrites_exc.get_cnts();
 
 	for (auto i = 0; i < num_neurons; i++) {
-		axons_cnts[i] += num_axons;
-		dendrites_inh_cnts[i] += num_dends;
-		dendrites_exc_cnts[i] += num_dends;
+		axons.update_cnt(i, num_axons);
+		dendrites_inh.update_cnt(i, num_dends);
+		dendrites_exc.update_cnt(i, num_dends);
 
 		RelearnException::check(axons_cnts[i] >= axons.get_connected_cnts()[i]);
 		RelearnException::check(dendrites_inh_cnts[i] >= dendrites_inh.get_connected_cnts()[i]);
@@ -122,11 +122,7 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 
 	num_synapses_deleted = 0;
 
-	for (size_t i = 0; i < num_neurons; i++) {
-		RelearnException::check(axons.get_cnts()[i] >= axons.get_connected_cnts()[i]);
-		RelearnException::check(dendrites_exc.get_cnts()[i] >= dendrites_exc.get_connected_cnts()[i]);
-		RelearnException::check(dendrites_inh.get_cnts()[i] >= dendrites_inh.get_connected_cnts()[i]);
-	}
+	debug_check_counts();
 
 	std::list<PendingSynapseDeletion> list_with_pending_deletions;
 
@@ -321,11 +317,7 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 	/* Delete all synapses pending for deletion */
 	delete_synapses(list_with_pending_deletions, axons, dendrites_exc, dendrites_inh, network_graph, num_synapses_deleted);
 
-	for (size_t i = 0; i < num_neurons; i++) {
-		RelearnException::check(axons.get_cnts()[i] >= axons.get_connected_cnts()[i]);
-		RelearnException::check(dendrites_exc.get_cnts()[i] >= dendrites_exc.get_connected_cnts()[i]);
-		RelearnException::check(dendrites_inh.get_cnts()[i] >= dendrites_inh.get_connected_cnts()[i]);
-	}
+	debug_check_counts();
 
 	GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
 }
@@ -342,11 +334,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 	*/
 	num_synapses_created = 0;
 
-	for (size_t i = 0; i < num_neurons; i++) {
-		RelearnException::check(axons.get_cnts()[i] >= axons.get_connected_cnts()[i]);
-		RelearnException::check(dendrites_exc.get_cnts()[i] >= dendrites_exc.get_connected_cnts()[i]);
-		RelearnException::check(dendrites_inh.get_cnts()[i] >= dendrites_inh.get_connected_cnts()[i]);
-	}
+	debug_check_counts();
 
 	/**
 	* Update global tree bottom-up with current number
@@ -422,13 +410,14 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 	*/
 	GlobalTimers::timers.start(TimerRegion::FIND_TARGET_NEURONS);
 
-	double* dendrites_cnts = nullptr, * dendrites_connected_cnts = nullptr;
+	const double* dendrites_cnts = nullptr;
+	const double* dendrites_connected_cnts = nullptr;
 
 	int num_axons_connected_increment = 0;
 	MapSynapseCreationRequests map_synapse_creation_requests_outgoing;
 
 	const double* axons_cnts = axons.get_cnts();
-	double* axons_connected_cnts = axons.get_connected_cnts();
+	const double* axons_connected_cnts = axons.get_connected_cnts();
 	const SynapticElements::SignalType* axons_signal_types = axons.get_signal_types();
 
 	// For my neurons
@@ -441,16 +430,10 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 		// DendriteType::INHIBITORY axon
 		if (SynapticElements::INHIBITORY == axons_signal_types[neuron_id]) {
 			dendrite_type_needed = Cell::DendriteType::INHIBITORY;
-			//dendrites_cnts           = dendrites_inh.get_cnts();
-			//dendrites_connected_cnts = dendrites_inh.get_connected_cnts();
-			//num_axons_connected_increment = -1;
 		}
 		// DendriteType::EXCITATORY axon
 		else {
 			dendrite_type_needed = Cell::DendriteType::EXCITATORY;
-			//dendrites_cnts           = dendrites_exc.get_cnts();
-			//dendrites_connected_cnts = dendrites_exc.get_connected_cnts();
-			//num_axons_connected_increment = +1;
 		}
 
 		// Position of current neuron
@@ -599,7 +582,14 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 				if (static_cast<unsigned int>(dendrites_cnts[target_neuron_id] - dendrites_connected_cnts[target_neuron_id])) {
 
 					// Increment num of connected dendrites
-					dendrites_connected_cnts[target_neuron_id]++;
+					//dendrites_connected_cnts[target_neuron_id]++;
+
+					if (Cell::DendriteType::INHIBITORY == dendrite_type_needed) {
+						dendrites_inh.update_conn_cnt(target_neuron_id, 1.0);
+					}
+					else {
+						dendrites_exc.update_conn_cnt(target_neuron_id, 1.0);
+					}
 
 					// Update network
 					network_graph.add_edge_weight(target_neuron_id, MPIInfos::my_rank, source_neuron_id, source_rank, num_axons_connected_increment);
@@ -671,10 +661,12 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 				// Request to form synapse succeeded
 				if (connected) {
 					// Increment num of connected axons
-					axons_connected_cnts[source_neuron_id]++;
+					axons.update_conn_cnt(source_neuron_id, 1.0);
+					//axons_connected_cnts[source_neuron_id]++;
 					num_synapses_created++;
 
-					RelearnException::check(axons.get_cnts()[source_neuron_id] - axons.get_connected_cnts()[source_neuron_id] >= 0);
+					const double delta = axons.get_cnt(source_neuron_id) - axons.get_connected_cnt(source_neuron_id);
+					RelearnException::check(delta >= 0, std::to_string(delta));
 
 					// I have already created the synapse in the network
 					// if the response comes from myself
@@ -693,10 +685,25 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 	}
 
 	GlobalTimers::timers.stop_and_add(TimerRegion::CREATE_SYNAPSES);
+	debug_check_counts();
+}
+
+void Neurons::debug_check_counts() {
+	const double* axs_count = axons.get_cnts();
+	const double* axs_conn_count = axons.get_connected_cnts();
+	const double* de_count = dendrites_exc.get_cnts();
+	const double* de_conn_count = dendrites_exc.get_connected_cnts();
+	const double* di_count = dendrites_inh.get_cnts();
+	const double* di_conn_count = dendrites_inh.get_connected_cnts();
+
 	for (size_t i = 0; i < num_neurons; i++) {
-		RelearnException::check(axons.get_cnts()[i] >= axons.get_connected_cnts()[i]);
-		RelearnException::check(dendrites_exc.get_cnts()[i] >= dendrites_exc.get_connected_cnts()[i]);
-		RelearnException::check(dendrites_inh.get_cnts()[i] >= dendrites_inh.get_connected_cnts()[i]);
+		const double diff_axs = axs_count[i] - axs_conn_count[i];
+		const double diff_de = de_count[i] >= de_conn_count[i];
+		const double diff_di = di_count[i] >= di_conn_count[i];
+
+		RelearnException::check(diff_axs >= 0.0, std::to_string(diff_axs));
+		RelearnException::check(diff_de >= 0.0, std::to_string(diff_de));
+		RelearnException::check(diff_di >= 0.0, std::to_string(diff_di));
 	}
 }
 
@@ -709,15 +716,15 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 	unsigned int sum_dends_inh_cnts, sum_dends_inh_connected_cnts;
 	unsigned int sum_axons_exc_vacant, sum_axons_inh_vacant;
 	unsigned int sum_dends_exc_vacant, sum_dends_inh_vacant;
-	double* cnts, * connected_cnts;
-	SynapticElements::SignalType* signal_types;
 
 	// My vacant axons (exc./inh.)
 	sum_axons_exc_cnts = sum_axons_exc_connected_cnts = 0;
 	sum_axons_inh_cnts = sum_axons_inh_connected_cnts = 0;
-	cnts = axons.get_cnts();
-	connected_cnts = axons.get_connected_cnts();
-	signal_types = axons.get_signal_types();
+
+	const double * cnts = axons.get_cnts();
+	const double * connected_cnts = axons.get_connected_cnts();
+	const SynapticElements::SignalType* signal_types = axons.get_signal_types();
+
 	for (size_t neuron_id = 0; neuron_id < this->num_neurons; ++neuron_id) {
 		if (SynapticElements::EXCITATORY == signal_types[neuron_id]) {
 			sum_axons_exc_cnts += static_cast<unsigned int>(cnts[neuron_id]);
@@ -1239,21 +1246,17 @@ void Neurons::print_pending_synapse_deletions(std::list<PendingSynapseDeletion>&
 }
 
 void Neurons::delete_synapses(std::list<PendingSynapseDeletion>& list,
-	const SynapticElements& axons,
-	const SynapticElements& dendrites_exc,
-	const SynapticElements& dendrites_inh,
+	SynapticElements& axons,
+	SynapticElements& dendrites_exc,
+	SynapticElements& dendrites_inh,
 	NetworkGraph& network_graph,
 	size_t& num_synapses_deleted) {
 
-	for (size_t i = 0; i < num_neurons; i++) {
-		RelearnException::check(axons.get_cnts()[i] >= axons.get_connected_cnts()[i]);
-		RelearnException::check(dendrites_exc.get_cnts()[i] >= dendrites_exc.get_connected_cnts()[i]);
-		RelearnException::check(dendrites_inh.get_cnts()[i] >= dendrites_inh.get_connected_cnts()[i]);
-	}
+	debug_check_counts();
 
-	double* axons_connected_cnts = axons.get_connected_cnts();
-	double* dendrites_exc_connected_cnts = dendrites_exc.get_connected_cnts();
-	double* dendrites_inh_connected_cnts = dendrites_inh.get_connected_cnts();
+	//double* axons_connected_cnts = axons.get_connected_cnts();
+	//double* dendrites_exc_connected_cnts = dendrites_exc.get_connected_cnts();
+	//double* dendrites_inh_connected_cnts = dendrites_inh.get_connected_cnts();
 
 	/* Execute pending synapse deletions */
 	for (auto it = list.begin(); it != list.end(); ++it) {
@@ -1302,11 +1305,14 @@ void Neurons::delete_synapses(std::list<PendingSynapseDeletion>& list,
 
 		if (it->affected_neuron_id.rank == MPIInfos::my_rank && !it->affected_element_already_deleted) {
 			if (SynapticElements::AXON == it->affected_element_type) {
-				--axons_connected_cnts[affected_neuron_id];
+				//--axons_connected_cnts[affected_neuron_id];
+				axons.update_conn_cnt(affected_neuron_id, -1.0);
 			}
 			else if ((SynapticElements::DENDRITE == it->affected_element_type) &&
 				(SynapticElements::EXCITATORY == it->signal_type)) {
-				--dendrites_exc_connected_cnts[affected_neuron_id];
+				//--dendrites_exc_connected_cnts[affected_neuron_id];
+				dendrites_exc.update_conn_cnt(affected_neuron_id, -1.0);
+
 				if (!(dendrites_exc.get_cnts()[affected_neuron_id] >=
 					dendrites_exc.get_connected_cnts()[affected_neuron_id])) {
 					std::cout << "neuron_id: " << affected_neuron_id << "\n"
@@ -1317,22 +1323,15 @@ void Neurons::delete_synapses(std::list<PendingSynapseDeletion>& list,
 			}
 			else if ((SynapticElements::DENDRITE == it->affected_element_type) &&
 				(SynapticElements::INHIBITORY == it->signal_type)) {
-				--dendrites_inh_connected_cnts[affected_neuron_id];
+				//--dendrites_inh_connected_cnts[affected_neuron_id];
+				dendrites_inh.update_conn_cnt(affected_neuron_id, -1.0);
 			}
 			else {
 				std::cout << "Invalid list element for pending synapse deletion." << std::endl;
 			}
 		}
-		for (size_t i = 0; i < num_neurons; i++) {
-			RelearnException::check(axons.get_cnts()[i] >= axons.get_connected_cnts()[i]);
-			RelearnException::check(dendrites_exc.get_cnts()[i] >= dendrites_exc.get_connected_cnts()[i]);
-			RelearnException::check(dendrites_inh.get_cnts()[i] >= dendrites_inh.get_connected_cnts()[i]);
-		}
+		debug_check_counts();
 	}
 
-	for (size_t i = 0; i < num_neurons; i++) {
-		RelearnException::check(axons.get_cnts()[i] >= axons.get_connected_cnts()[i]);
-		RelearnException::check(dendrites_exc.get_cnts()[i] >= dendrites_exc.get_connected_cnts()[i]);
-		RelearnException::check(dendrites_inh.get_cnts()[i] >= dendrites_inh.get_connected_cnts()[i]);
-	}
+	debug_check_counts();
 }

@@ -319,6 +319,8 @@ private:
 
 	void create_synapses(size_t& num_synapses_created, Octree& global_tree, NetworkGraph& network_graph);
 
+	void debug_check_counts();
+
 	template<typename T>
 	StatisticalMeasures<T> global_statistics(const T* local_values, size_t num_local_values, size_t total_num_values, int root, MPI_Comm mpi_comm) {
 		const auto result = std::minmax_element(&local_values[0], &local_values[num_neurons]);
@@ -391,9 +393,9 @@ private:
 	void print_pending_synapse_deletions(std::list<PendingSynapseDeletion>& list);
 
 	void delete_synapses(std::list<PendingSynapseDeletion>& list,
-		const SynapticElements& axons,
-		const SynapticElements& dendrites_exc,
-		const SynapticElements& dendrites_inh,
+		SynapticElements& axons,
+		SynapticElements& dendrites_exc,
+		SynapticElements& dendrites_inh,
 		NetworkGraph& network_graph,
 		size_t& num_synapses_deleted);
 

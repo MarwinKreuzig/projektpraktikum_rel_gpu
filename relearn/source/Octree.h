@@ -116,8 +116,8 @@ private:
 	 */
 	class FunctorUpdateNode {
 	public:
-		FunctorUpdateNode(double* dendrites_exc_cnts, double* dendrites_exc_connected_cnts,
-			double* dendrites_inh_cnts, double* dendrites_inh_connected_cnts,
+		FunctorUpdateNode(const double* dendrites_exc_cnts, const double* dendrites_exc_connected_cnts,
+			const double* dendrites_inh_cnts, const double* dendrites_inh_connected_cnts,
 			size_t num_neurons) noexcept :
 			dendrites_exc_cnts(dendrites_exc_cnts),
 			dendrites_exc_connected_cnts(dendrites_exc_connected_cnts),
@@ -211,10 +211,10 @@ private:
 		}
 
 	private:
-		double* dendrites_exc_cnts = nullptr;
-		double* dendrites_exc_connected_cnts = nullptr;
-		double* dendrites_inh_cnts = nullptr;
-		double* dendrites_inh_connected_cnts = nullptr;
+		const double* dendrites_exc_cnts = nullptr;
+		const double* dendrites_exc_connected_cnts = nullptr;
+		const double* dendrites_inh_cnts = nullptr;
+		const double* dendrites_inh_connected_cnts = nullptr;
 		size_t num_neurons = 0;
 	};
 
@@ -318,8 +318,8 @@ public:
 
 	void insert_local_tree(Octree* node_to_insert);
 
-	void update(double* dendrites_exc_cnts, double* dendrites_exc_connected_cnts,
-		double* dendrites_inh_cnts, double* dendrites_inh_connected_cnts,
+	void update(const double* dendrites_exc_cnts, const double* dendrites_exc_connected_cnts,
+		const double* dendrites_inh_cnts, const double* dendrites_inh_connected_cnts,
 		size_t num_neurons);
 
 	// The caller must ensure that only inner nodes are visited.

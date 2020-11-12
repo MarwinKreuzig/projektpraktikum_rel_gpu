@@ -1,6 +1,7 @@
 #pragma once
 
 #include <exception>
+#include <iostream>
 #include <string>
 
 class RelearnException : std::exception {
@@ -12,7 +13,7 @@ public:
 	}
 
 	explicit RelearnException(std::string&& mes) : message(mes) {
-		
+
 	}
 
 	const char* what() const noexcept override {
@@ -27,11 +28,14 @@ public:
 		throw RelearnException{};
 	}
 
-	static void check(bool condition, const char* message) {
+	static void check(bool condition, std::string&& message) {
 		if (condition) {
 			return;
 		}
 
-		throw RelearnException{ message };
+		std::cerr << "There was an error!" << std::endl;
+		std::cerr << message << std::endl;
+
+		throw RelearnException{ std::move(message) };
 	}
 };

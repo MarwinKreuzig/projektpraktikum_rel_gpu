@@ -944,7 +944,8 @@ void Octree::free() {
 	tree_walk_postorder<FunctorFreeNode>(free_node);
 }
 
-void Octree::update(double* dendrites_exc_cnts, double* dendrites_exc_connected_cnts, double* dendrites_inh_cnts, double* dendrites_inh_connected_cnts, size_t num_neurons) {
+void Octree::update(const double* dendrites_exc_cnts, const double* dendrites_exc_connected_cnts,
+	const double* dendrites_inh_cnts, const double* dendrites_inh_connected_cnts, size_t num_neurons) {
 	// Init parameters to be used in function object
 	const FunctorUpdateNode update_node(dendrites_exc_cnts, dendrites_exc_connected_cnts,
 		dendrites_inh_cnts, dendrites_inh_connected_cnts, num_neurons);
