@@ -6,12 +6,17 @@
 #include <tuple>
 #include <sstream>
 #include <fstream>
+#include <algorithm>
+#include <vector>
+#include <tuple>
+#include <set>
 
 #define private public
 #define protected public
 
 #include "../source/NeuronToSubdomainAssignment.h"
 #include "../source/SubdomainFromNeuronDensity.h"
+#include "../source/SubdomainFromFile.h"
 #include "../source/RelearnException.h"
 
 
@@ -509,5 +514,61 @@ TEST(TestRandomNeuronPlacement, test_saving) {
 			EXPECT_TRUE(area == desired_area_name);
 			EXPECT_TRUE(type == desired_signal_type);
 		}
+	}
+}
+
+bool operator<(const NeuronToSubdomainAssignment::Node &a, const NeuronToSubdomainAssignment::Node &b) {
+	return NeuronToSubdomainAssignment::Node::less()(a, b);
+}
+
+TEST(TestNeuronPlacementStoreLoad, test_neuron_placement_store_and_load) {
+	const std::string file{"./test_output_positions_id.txt"};
+
+	constexpr auto subdomain_id = 0;
+	constexpr auto num_neurons = 10;
+	constexpr auto frac_neurons_exc = 0.5;
+
+	// create from density
+	SubdomainFromNeuronDensity sdnd{num_neurons, frac_neurons_exc};
+	// fill_subdomain
+	sdnd.fill_subdomain(subdomain_id, 1, Vec3d{0}, Vec3d{sdnd.simulation_box_length.get_maximum()});
+	// save to file
+	sdnd.write_neurons_to_file(file);
+
+	// load from file
+	SubdomainFromFile sdff{file};
+	// fill_subdomain from file
+	sdff.fill_subdomain(subdomain_id, 1, Vec3d{0}, Vec3d{sdff.simulation_box_length.get_maximum()});
+
+	// check neuron placement numbers
+	EXPECT_EQ(sdff.desired_num_neurons(), sdnd.desired_num_neurons());
+	EXPECT_EQ(sdff.placed_num_neurons(), sdnd.placed_num_neurons());
+	EXPECT_EQ(sdff.desired_ratio_neurons_exc(), sdnd.desired_ratio_neurons_exc());
+	EXPECT_EQ(sdff.placed_ratio_neurons_exc(), sdnd.placed_ratio_neurons_exc());
+
+	// check simulation_box_length
+	// sdnd sets a box size in which it places neurons via estimation
+	// sdff reads the file and uses a box size which fits the maximum position of any neuron, in which the neurons fit
+	EXPECT_LE(sdff.get_simulation_box_length().x, sdnd.get_simulation_box_length().x);
+	EXPECT_LE(sdff.get_simulation_box_length().y, sdnd.get_simulation_box_length().y);
+	EXPECT_LE(sdff.get_simulation_box_length().z, sdnd.get_simulation_box_length().z);
+
+	// check for same number of subdomains
+	EXPECT_EQ(sdff.neurons_in_subdomain.size(), sdnd.neurons_in_subdomain.size());
+
+	// compare both neurons_in_subdomain maps for differences
+	std::vector<decltype(sdff.neurons_in_subdomain)::value_type> diff{};
+	std::set_symmetric_difference(std::begin(sdff.neurons_in_subdomain), std::end(sdff.neurons_in_subdomain),
+								  std::begin(sdnd.neurons_in_subdomain), std::end(sdnd.neurons_in_subdomain),
+								  std::back_inserter(diff));
+	EXPECT_EQ(diff.size(), 0);
+
+	// compare the written files of sdnd and sdff
+	std::ifstream saved1{file};
+	sdff.write_neurons_to_file("./test_output_positions_id2.txt");
+	std::ifstream saved2{"./test_output_positions_id2.txt"};
+
+	for (std::string line1{}, line2{}; std::getline(saved1, line1) && std::getline(saved2, line2);)	{
+		EXPECT_EQ(line1, line2);
 	}
 }

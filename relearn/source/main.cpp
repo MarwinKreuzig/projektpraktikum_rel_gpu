@@ -319,7 +319,7 @@ int main(int argc, char** argv) {
 
 	NeuronToSubdomainAssignment* neurons_in_subdomain = nullptr;
 	if (5 < argc) {
-		neurons_in_subdomain = new SubdomainFromFile(params.file_with_neuron_positions, params.num_neurons);
+		neurons_in_subdomain = new SubdomainFromFile(params.file_with_neuron_positions);
 		// Set parameter based on actual neuron population
 		params.frac_neurons_exc = neurons_in_subdomain->desired_ratio_neurons_exc();
 	}

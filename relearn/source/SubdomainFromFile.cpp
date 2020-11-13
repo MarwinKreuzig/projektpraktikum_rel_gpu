@@ -18,7 +18,7 @@
 #include <iostream>
 #include <sstream>
 
-SubdomainFromFile::SubdomainFromFile(const std::string& file_path, size_t num_neurons) : file(file_path) {
+SubdomainFromFile::SubdomainFromFile(const std::string &file_path) : file(file_path) {
 	std::cout << "Loading: " << file_path << std::endl;
 	const bool file_is_good = file.good();
 	const bool file_is_not_good = file.fail() || file.eof();
@@ -35,34 +35,33 @@ void SubdomainFromFile::read_dimensions_from_file() {
 	Vec3d minimum(std::numeric_limits<double>::max());
 	Vec3d maximum(std::numeric_limits<double>::min());
 
-	std::string line;
-	bool success = false;
+	size_t found_ex_neurons = 0;
+	size_t found_in_neurons = 0;
 
-	Vec3d tmp;
-	size_t id;
-	std::string area_name;
-
-	double found_ex_neurons = 0.0;
-	double found_in_neurons = 0.0;
-
-	while (std::getline(file, line)) {
+	for (std::string line{}; std::getline(file, line);) {
 		// Skip line with comments
 		if (!line.empty() && '#' == line[0]) {
 			continue;
 		}
 
+		size_t id{};
+		Vec3d tmp{};
+		std::string area_name{};
+		std::string signal_type{};
+
 		std::stringstream sstream(line);
-		success =
+		bool success =
 			(sstream >> id) &&
 			(sstream >> tmp.x) &&
 			(sstream >> tmp.y) &&
 			(sstream >> tmp.z) &&
-			(sstream >> area_name);
+			(sstream >> area_name) &&
+			(sstream >> signal_type);
 
 		minimum.calculate_componentwise_minimum(tmp);
 		maximum.calculate_componentwise_maximum(tmp);
 
-		if (area_name == "ex") {
+		if (signal_type == "ex") {
 			found_ex_neurons++;
 		}
 		else {
@@ -81,66 +80,67 @@ void SubdomainFromFile::read_dimensions_from_file() {
 		maximum.z = std::nextafter(maximum.z, maximum.z + 0.1);
 	}
 
-	const double total_neurons = found_ex_neurons + found_in_neurons;
+	desired_num_neurons_ = found_ex_neurons + found_in_neurons;
+	desired_frac_neurons_exc_ = static_cast<double>(found_ex_neurons) / static_cast<double>(desired_num_neurons_);
 
-	currently_frac_neurons_exc_ = found_ex_neurons / total_neurons;
-	desired_frac_neurons_exc_ = found_ex_neurons / total_neurons;
-
-	this->simulation_box_length = maximum - minimum;
+	simulation_box_length = maximum - minimum;
 	offset = minimum;
 }
 
 void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position& max, Nodes& nodes) {
-	std::string line;
-	Node node;
-	bool success = false;
-
 	file.clear();
 	file.seekg(0);
 
 	double placed_ex_neurons = 0.0;
 	double placed_in_neurons = 0.0;
 
-	while (std::getline(file, line)) {
+	for (std::string line{}; std::getline(file, line);) {
 		// Skip line with comments
 		if (!line.empty() && '#' == line[0]) {
 			continue;
 		}
 
-		std::cout << line << std::endl;
+		std::cout << line << "\n";
+
+		std::string signal_type{};
+
+		Node node{};
 
 		std::stringstream sstream(line);
-		success =
+		bool success =
 			(sstream >> node.id) &&
 			(sstream >> node.pos.x) &&
 			(sstream >> node.pos.y) &&
 			(sstream >> node.pos.z) &&
-			(sstream >> node.area_name);
+			(sstream >> node.area_name) &&
+			(sstream >> signal_type);
 
 		if (!success) {
 			std::cerr << "Skipping line: \"" << line << "\"\n";
 			continue;
 		}
 
-		node.pos = node.pos - this->offset;
+		node.pos = node.pos - offset;
 
-		bool is_in_subdomain = this->position_in_box(node.pos, min, max);
+		bool is_in_subdomain = position_in_box(node.pos, min, max);
 
 		if (!is_in_subdomain) {
 			continue;
 		}
 
-		if (node.area_name == "ex") {
+		if (signal_type == "ex") {
 			node.signal_type = SynapticElements::EXCITATORY;
-			placed_ex_neurons++;
+			++placed_ex_neurons;
 		}
 		else {
 			node.signal_type = SynapticElements::INHIBITORY;
-			placed_in_neurons++;
+			++placed_in_neurons;
 		}
 
+		++currently_num_neurons_;
 		nodes.insert(node);
 	}
+	currently_frac_neurons_exc_ = placed_ex_neurons / static_cast<double>(currently_num_neurons_);
 }
 
 void SubdomainFromFile::neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,

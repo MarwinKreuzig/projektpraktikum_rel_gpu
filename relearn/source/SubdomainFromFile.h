@@ -22,7 +22,7 @@
 // and the number of neurons in every individual subdomain.
 class SubdomainFromFile : public NeuronToSubdomainAssignment {
 public:
-	SubdomainFromFile(const std::string& file_path, size_t num_neurons);
+	SubdomainFromFile(const std::string &file_path);
 
 	SubdomainFromFile(const SubdomainFromFile& other) = delete;
 	SubdomainFromFile(SubdomainFromFile&& other) = delete;
@@ -43,7 +43,6 @@ private:
 	void read_nodes_from_file(const Position& min, const Position& max, Nodes& nodes);
 
 	Vec3d offset;
-	double max_dimension_;
 
 	std::ifstream file;
 };
