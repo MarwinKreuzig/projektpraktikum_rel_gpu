@@ -79,7 +79,7 @@ void NeuronToSubdomainAssignment::neuron_area_names(size_t subdomain_idx, size_t
 
 	const Nodes& nodes = neurons_in_subdomain.at(subdomain_idx);
 	for (const Node& node : nodes) {
-		areas.push_back("no_area");
+		areas.push_back(node.area_name);
 	}
 }
 
@@ -103,8 +103,8 @@ void NeuronToSubdomainAssignment::write_neurons_to_file(const std::string& filen
 				<< node.id << "\t"
 				<< node.pos.x << " "
 				<< node.pos.y << " "
-				<< node.pos.z << " "
-				<< node.area_name << " \t";
+				<< node.pos.z << "\t"
+				<< node.area_name << "\t";
 
 			if (node.signal_type == SynapticElements::SignalType::EXCITATORY) {
 				of << "ex\n";

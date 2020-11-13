@@ -1,6 +1,11 @@
 #include "../googletest/include/gtest/gtest.h"
 
 #include <random>
+#include <string>
+#include <vector>
+#include <tuple>
+#include <sstream>
+#include <fstream>
 
 #define private public
 #define protected public
@@ -396,5 +401,113 @@ TEST(TestRandomNeuronPlacement, test_multiple_lazily_fill_positions_multiple_sub
 		check_types_fraction(types, frac_ex, total_subdomains, num_neurons);
 
 		free(flags);
+	}
+}
+
+TEST(TestRandomNeuronPlacement, test_saving) {
+	std::mt19937 mt;
+	std::uniform_int_distribution<size_t> uid(1, 1000);
+	std::uniform_real_distribution<double> urd(0.0, 1.0);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < 10; i++) {
+		auto num_neurons = uid(mt);
+		auto frac_ex = urd(mt);
+		auto um_per_neuron = urd(mt) * 100;
+
+		SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
+
+		auto num_neurons_ = sfnd.desired_num_neurons();
+
+		EXPECT_EQ(num_neurons, num_neurons_);
+
+		auto box_length = sfnd.simulation_box_length.get_maximum();
+
+		sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
+
+		std::vector<Vec3d> positions;
+		sfnd.neuron_positions(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, positions);
+
+		std::vector<std::string> area_names;
+		sfnd.neuron_area_names(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, area_names);
+
+		std::vector<SynapticElements::SignalType> types;
+		sfnd.neuron_types(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, types);
+
+		EXPECT_EQ(num_neurons, positions.size());
+		EXPECT_EQ(num_neurons, area_names.size());
+		EXPECT_EQ(num_neurons, types.size());
+
+		sfnd.write_neurons_to_file("neurons.tmp");
+
+		std::ifstream file("neurons.tmp", std::ios::binary | std::ios::in);
+
+		std::vector<std::string> lines;
+
+		std::string str;
+		while (std::getline(file, str)) {
+			if (str[0] == '#') {
+				continue;
+			}
+
+			lines.emplace_back(str);
+		}
+
+		file.close();
+
+		EXPECT_EQ(num_neurons, lines.size());
+
+		size_t highest_id_until_know;
+
+		std::vector<bool> is_there(num_neurons);
+
+		for (auto j = 0; j < num_neurons; j++) {
+			const Vec3d& desired_position = positions[j];
+			const std::string& desired_area_name = area_names[j];
+			const SynapticElements::SignalType& desired_signal_type = types[j];
+
+			const std::string& current_line = lines[j];
+
+			std::stringstream sstream(current_line);
+
+			size_t id;
+			double x;
+			double y;
+			double z;
+			std::string area;
+			std::string type_string;
+			
+			sstream
+				>> id
+				>> x
+				>> y
+				>> z
+				>> area
+				>> type_string;
+
+			EXPECT_TRUE(id < num_neurons);
+
+			EXPECT_FALSE(is_there[id]);
+			is_there[id] = true;
+
+			EXPECT_NEAR(x, desired_position.x, 1e-5);
+			EXPECT_NEAR(y, desired_position.y, 1e-5);
+			EXPECT_NEAR(z, desired_position.z, 1e-5);
+
+			SynapticElements::SignalType type;
+			if (type_string == "ex") {
+				type = SynapticElements::SignalType::EXCITATORY;
+			}
+			else if (type_string == "in") {
+				type = SynapticElements::SignalType::INHIBITORY;
+			}
+			else {
+				EXPECT_TRUE(false);
+			}
+
+			EXPECT_TRUE(area == desired_area_name);
+			EXPECT_TRUE(type == desired_signal_type);
+		}
 	}
 }

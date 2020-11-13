@@ -76,7 +76,7 @@ public:
 	virtual void neuron_area_names(size_t subdomain_idx, size_t num_subdomains,
 		const Position& min, const Position& max, std::vector<std::string>& areas) const;
 
-	virtual void write_neurons_to_file(const std::string& filename_prefix) const;
+	virtual void write_neurons_to_file(const std::string& filename) const;
 
 	virtual void neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
 		size_t local_id_start, size_t local_id_end, std::vector<size_t>& global_ids) const = 0;
