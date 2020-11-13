@@ -95,9 +95,9 @@ void NeuronToSubdomainAssignment::neuron_area_names(size_t subdomain_idx, size_t
 }
 
 bool NeuronToSubdomainAssignment::position_in_box(const Position& pos, const Position& box_min, const Position& box_max) const noexcept {
-	return ((pos.x >= box_min.x && pos.x < box_max.x) &&
-		(pos.y >= box_min.y && pos.y < box_max.y) &&
-		(pos.z >= box_min.z && pos.z < box_max.z));
+	return ((pos.x >= box_min.x && pos.x <= box_max.x) &&
+		(pos.y >= box_min.y && pos.y <= box_max.y) &&
+		(pos.z >= box_min.z && pos.z <= box_max.z));
 }
 
 void NeuronToSubdomainAssignment::write_neurons_to_file(const std::string& filename) const {

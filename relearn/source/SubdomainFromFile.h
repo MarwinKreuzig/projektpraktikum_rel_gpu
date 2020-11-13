@@ -42,7 +42,5 @@ private:
 
 	void read_nodes_from_file(const Position& min, const Position& max, Nodes& nodes);
 
-	Vec3d offset;
-
 	std::ifstream file;
 };

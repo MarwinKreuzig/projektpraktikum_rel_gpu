@@ -83,8 +83,7 @@ void SubdomainFromFile::read_dimensions_from_file() {
 	desired_num_neurons_ = found_ex_neurons + found_in_neurons;
 	desired_frac_neurons_exc_ = static_cast<double>(found_ex_neurons) / static_cast<double>(desired_num_neurons_);
 
-	simulation_box_length = maximum - minimum;
-	offset = minimum;
+	simulation_box_length = maximum;
 }
 
 void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position& max, Nodes& nodes) {
@@ -119,8 +118,6 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
 			std::cerr << "Skipping line: \"" << line << "\"\n";
 			continue;
 		}
-
-		node.pos = node.pos - offset;
 
 		bool is_in_subdomain = position_in_box(node.pos, min, max);
 
