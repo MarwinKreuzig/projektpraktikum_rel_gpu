@@ -118,8 +118,8 @@ private:
 	 */
 	class FunctorUpdateNode {
 	public:
-		FunctorUpdateNode(const double* dendrites_exc_cnts, const double* dendrites_exc_connected_cnts,
-			const double* dendrites_inh_cnts, const double* dendrites_inh_connected_cnts,
+		FunctorUpdateNode(const std::vector<double>& dendrites_exc_cnts, const std::vector<double>& dendrites_exc_connected_cnts,
+			const std::vector<double>& dendrites_inh_cnts, const std::vector<double>& dendrites_inh_connected_cnts,
 			size_t num_neurons) noexcept :
 			dendrites_exc_cnts(dendrites_exc_cnts),
 			dendrites_exc_connected_cnts(dendrites_exc_connected_cnts),
@@ -127,7 +127,13 @@ private:
 			dendrites_inh_connected_cnts(dendrites_inh_connected_cnts),
 			num_neurons(num_neurons) {
 		}
-		FunctorUpdateNode() noexcept {}
+
+		FunctorUpdateNode() noexcept :
+			dendrites_exc_cnts(std::vector<double>{}),
+			dendrites_exc_connected_cnts(std::vector<double>{}),
+			dendrites_inh_cnts(std::vector<double>{}),
+			dendrites_inh_connected_cnts(std::vector<double>{})
+		{}
 
 		void operator()(OctreeNode* node) /*noexcept*/ {
 			// I'm inner node, i.e., I have a super neuron
@@ -213,10 +219,10 @@ private:
 		}
 
 	private:
-		const double* dendrites_exc_cnts = nullptr;
-		const double* dendrites_exc_connected_cnts = nullptr;
-		const double* dendrites_inh_cnts = nullptr;
-		const double* dendrites_inh_connected_cnts = nullptr;
+		const std::vector<double>& dendrites_exc_cnts;
+		const std::vector<double>& dendrites_exc_connected_cnts;
+		const std::vector<double>& dendrites_inh_cnts;
+		const std::vector<double>& dendrites_inh_connected_cnts;
 		size_t num_neurons = 0;
 	};
 
@@ -320,8 +326,8 @@ public:
 
 	void insert_local_tree(Octree* node_to_insert);
 
-	void update(const double* dendrites_exc_cnts, const double* dendrites_exc_connected_cnts,
-		const double* dendrites_inh_cnts, const double* dendrites_inh_connected_cnts,
+	void update(const std::vector<double>& dendrites_exc_cnts, const std::vector<double>& dendrites_exc_connected_cnts,
+		const std::vector<double>& dendrites_inh_cnts, const std::vector<double>& dendrites_inh_connected_cnts,
 		size_t num_neurons);
 
 	// The caller must ensure that only inner nodes are visited.

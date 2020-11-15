@@ -45,10 +45,21 @@ public:
 
 	~SynapticElements() = default;
 
-	const double* get_cnts() const noexcept { return cnts.data(); }
-	const double* get_connected_cnts() const noexcept { return connected_cnts.data(); }
-	const double* get_delta_cnts() const noexcept { return delta_cnts.data(); }
-	SignalType* get_signal_types() noexcept { return signal_types.data(); }
+	const std::vector<double>& get_cnts() const noexcept {
+		return cnts;
+	}
+
+	const std::vector<double>& get_connected_cnts() const noexcept {
+		return connected_cnts; 
+	}
+	
+	const std::vector<double>& get_delta_cnts() const noexcept {
+		return delta_cnts;
+	}
+	
+	SignalType* get_signal_types() noexcept {
+		return signal_types.data(); 
+	}
 
 	void update_cnt(size_t neuron_id, double delta) {
 		cnts[neuron_id] += delta;
@@ -56,13 +67,7 @@ public:
 	}
 
 	void update_conn_cnt(size_t neuron_id, double delta, const char* mess) {
-		if (neuron_id == 94) {
-			std::cerr << "94 update: type: " << mess << " now: " << connected_cnts[neuron_id] << " delta: " << delta;
-		}
 		connected_cnts[neuron_id] += delta;
-		if (neuron_id == 94) {
-			std::cerr << " and now: " << connected_cnts[neuron_id] << std::endl;
-		}
 		RelearnException::check(connected_cnts[neuron_id] >= 0.0);
 	}
 
@@ -71,12 +76,29 @@ public:
 		RelearnException::check(delta_cnts[neuron_id] >= 0.0);
 	}
 
-	double get_cnt(size_t neuron_id) const noexcept { return cnts[neuron_id]; }
-	double get_connected_cnt(size_t neuron_id) const noexcept { return connected_cnts[neuron_id]; }
-	double get_delta_cnt(size_t neuron_id) const noexcept { return delta_cnts[neuron_id]; }
-	enum SignalType get_signal_type(size_t neuron_id) const noexcept { return signal_types[neuron_id]; }
-	void set_signal_type(size_t neuron_id, SignalType signal_type) noexcept { signal_types[neuron_id] = signal_type; }
-	ElementType get_element_type() const noexcept { return type; }
+	double get_cnt(size_t neuron_id) const noexcept {
+		return cnts[neuron_id]; 
+	}
+	
+	double get_connected_cnt(size_t neuron_id) const noexcept { 
+		return connected_cnts[neuron_id];
+	}
+	
+	double get_delta_cnt(size_t neuron_id) const noexcept { 
+		return delta_cnts[neuron_id];
+	}
+
+	enum SignalType get_signal_type(size_t neuron_id) const noexcept { 
+		return signal_types[neuron_id]; 
+	}
+
+	void set_signal_type(size_t neuron_id, SignalType signal_type) noexcept { 
+		signal_types[neuron_id] = signal_type;
+	}
+
+	ElementType get_element_type() const noexcept { 
+		return type; 
+	}
 
 	/**
 	 * Updates the number of synaptic elements for neuron "neuron_id"
