@@ -265,8 +265,9 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 	}
 
 	// Wait for all sends and receives to complete
-	MPI_Waitall(mpi_requests_index, mpi_requests.data(), MPI_STATUSES_IGNORE);
+	//MPI_Waitall(mpi_requests_index, mpi_requests.data(), MPI_STATUSES_IGNORE);
 
+	MPIWrapper::wait_all_tokens(mpi_requests);
 	/**
 	* Go through all received deletion requests and add them to the list with pending requests.
 	*/
@@ -538,7 +539,9 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 			auto buffer = it.second.get_requests();
 			const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
 
-			MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
+			MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+
+			//MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 			mpi_requests_index++;
 		}
 		// Send actual synapse requests
@@ -547,12 +550,14 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 			const auto buffer = it.second.get_requests();
 			const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
 
-			MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
+			MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+			//MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 			mpi_requests_index++;
 		}
 		// Wait for all sends and receives to complete
-		MPI_Waitall(mpi_requests_index, mpi_requests.data(), MPI_STATUSES_IGNORE);
+		//MPI_Waitall(mpi_requests_index, mpi_requests.data(), MPI_STATUSES_IGNORE);
 
+		MPIWrapper::wait_all_tokens(mpi_requests);
 
 		/**
 		* Go through all received requests and try to connect.
@@ -637,7 +642,9 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 			auto buffer = it.second.get_responses();
 			const auto size_in_bytes = static_cast<int>(it.second.get_responses_size_in_bytes());
 
-			MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
+			//MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
+			MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+
 			mpi_requests_index++;
 		}
 		// Send responses
@@ -646,11 +653,15 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 			const auto buffer = it.second.get_responses();
 			const auto size_in_bytes = static_cast<int>(it.second.get_responses_size_in_bytes());
 
-			MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
+			MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+			//MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
+
 			mpi_requests_index++;
 		}
 		// Wait for all sends and receives to complete
-		MPI_Waitall(mpi_requests_index, mpi_requests.data(), MPI_STATUSES_IGNORE);
+		//MPI_Waitall(mpi_requests_index, mpi_requests.data(), MPI_STATUSES_IGNORE);
+
+		MPIWrapper::wait_all_tokens(mpi_requests);
 
 		/**
 		* Register which axons could be connected

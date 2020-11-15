@@ -43,6 +43,8 @@ public:
 		none = 4
 	};
 
+	typedef MPI_Request AsyncToken;
+
 	/**
 	 * Global variables
 	 */
@@ -80,9 +82,47 @@ public:
 
 	static void all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst, Scope scope);
 
+	template <typename T>
+	static void async_send(const T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
+		auto mpi_scope = MPI_Comm(0);
+
+		switch (scope) {
+		case Scope::global:
+			// NOLINTNEXTLINE
+			mpi_scope = MPI_COMM_WORLD;
+			break;
+		default:
+			RelearnException::check(false, "In async_send, got wrong scope");
+			return;
+		}
+
+		const int errorcode = MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, mpi_scope, &token);
+		RelearnException::check(errorcode == 0);
+	}
+
+	template <typename T>
+	static void async_receive(T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
+		auto mpi_scope = MPI_Comm(0);
+
+		switch (scope) {
+		case Scope::global:
+			// NOLINTNEXTLINE
+			mpi_scope = MPI_COMM_WORLD;
+			break;
+		default:
+			RelearnException::check(false, "In async_receive, got wrong scope");
+			return;
+		}
+
+		const int errorcode = MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, mpi_scope, &token);
+		RelearnException::check(errorcode == 0);
+	}
+
+	static void wait_all_tokens(std::vector<AsyncToken>& tokens);
+
 	static void lock_window(int rank, MPI_Locktype lock_type);
 	static void unlock_window(int rank);
 
 	static void finalize() /*noexcept*/;
 	static void print_infos_rank(int rank);
-}; // namespace MPIWrapper
+}; 

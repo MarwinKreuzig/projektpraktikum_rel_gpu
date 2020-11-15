@@ -132,7 +132,7 @@ void MPIWrapper::init_buffer_octree(size_t num_partitions) {
 }
 
 void MPIWrapper::barrier(Scope scope) {
-	int mpi_scope = 0;
+	auto mpi_scope = MPI_Comm(0);
 
 	switch (scope) {
 	case Scope::global:
@@ -140,7 +140,7 @@ void MPIWrapper::barrier(Scope scope) {
 		mpi_scope = MPI_COMM_WORLD;
 		break;
 	default:
-		RelearnException::check(false && "In barrier, got wrong scope");
+		RelearnException::check(false, "In barrier, got wrong scope");
 		return;
 	}
 
@@ -149,7 +149,7 @@ void MPIWrapper::barrier(Scope scope) {
 }
 
 double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, Scope scope) {
-	int mpi_scope = 0;
+	auto mpi_scope = MPI_Comm(0);
 
 	switch (scope) {
 	case Scope::global:
@@ -157,11 +157,11 @@ double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, 
 		mpi_scope = MPI_COMM_WORLD;
 		break;
 	default:
-		RelearnException::check(false && "In reduce, got wrong scope");
+		RelearnException::check(false, "In reduce, got wrong scope");
 		return 0.0;
 	}
 
-	int mpi_reduce_function = 0;
+	auto mpi_reduce_function = MPI_Op(0);
 
 	switch (function) {
 	case ReduceFunction::min:
@@ -177,7 +177,7 @@ double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, 
 		mpi_reduce_function = MPI_SUM;
 		break;
 	default:
-		RelearnException::check(false && "In reduce, got wrong function");
+		RelearnException::check(false, "In reduce, got wrong function");
 		return 0.0;
 	}
 
@@ -190,7 +190,7 @@ double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, 
 }
 
 double MPIWrapper::all_reduce(double value, ReduceFunction function, Scope scope) {
-	int mpi_scope = 0;
+	auto mpi_scope = MPI_Comm(0);
 
 	switch (scope) {
 	case Scope::global:
@@ -198,11 +198,11 @@ double MPIWrapper::all_reduce(double value, ReduceFunction function, Scope scope
 		mpi_scope = MPI_COMM_WORLD;
 		break;
 	default:
-		RelearnException::check(false && "In all_reduce, got wrong scope");
+		RelearnException::check(false, "In all_reduce, got wrong scope");
 		return 0.0;
 	}
 
-	int mpi_reduce_function = 0;
+	auto mpi_reduce_function = MPI_Op(0);
 
 	switch (function) {
 	case ReduceFunction::min:
@@ -218,7 +218,7 @@ double MPIWrapper::all_reduce(double value, ReduceFunction function, Scope scope
 		mpi_reduce_function = MPI_SUM;
 		break;
 	default:
-		RelearnException::check(false && "In all_reduce, got wrong function");
+		RelearnException::check(false, "In all_reduce, got wrong function");
 		return 0.0;
 	}
 
@@ -236,7 +236,7 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
 
 	RelearnException::check(count_src == count_dst);
 
-	int mpi_scope = 0;
+	auto mpi_scope = MPI_Comm(0);
 
 	switch (scope) {
 	case Scope::global:
@@ -244,21 +244,28 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
 		mpi_scope = MPI_COMM_WORLD;
 		break;
 	default:
-		RelearnException::check(false && "In all_to_all, got wrong scope");
+		RelearnException::check(false, "In all_to_all, got wrong scope");
 		return;
 	}
 
-	MPI_Alltoall(src.data(), sizeof(size_t), MPI_CHAR, dst.data(), sizeof(size_t), MPI_CHAR, mpi_scope);
+	const int errorcode = MPI_Alltoall(src.data(), sizeof(size_t), MPI_CHAR, dst.data(), sizeof(size_t), MPI_CHAR, mpi_scope);
+	RelearnException::check(errorcode == 0);
+}
+
+void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
+	MPI_Waitall(tokens.size(), tokens.data(), MPI_STATUSES_IGNORE);
 }
 
 void MPIWrapper::lock_window(int rank, MPI_Locktype lock_type) {
 	const auto lock_type_int = static_cast<int>(lock_type);
 	// NOLINTNEXTLINE
-	MPI_Win_lock(lock_type_int, rank, MPI_MODE_NOCHECK, mpi_rma_mem_allocator.mpi_window);
+	const int errorcode = MPI_Win_lock(lock_type_int, rank, MPI_MODE_NOCHECK, mpi_rma_mem_allocator.mpi_window);
+	RelearnException::check(errorcode == 0);
 }
 
 void MPIWrapper::unlock_window(int rank) {
-	MPI_Win_unlock(rank, mpi_rma_mem_allocator.mpi_window);
+	const int errorcode = MPI_Win_unlock(rank, mpi_rma_mem_allocator.mpi_window);
+	RelearnException::check(errorcode == 0);
 }
 
 void MPIWrapper::finalize() /*noexcept*/ {
@@ -266,7 +273,8 @@ void MPIWrapper::finalize() /*noexcept*/ {
 	// mpi_rma_mem_allocator.free_rma_window();
 	// mpi_rma_mem_allocator.deallocate_rma_mem();
 
-	MPI_Finalize();
+	const int errorcode = MPI_Finalize();
+	RelearnException::check(errorcode == 0);
 }
 
 // Print which neurons "rank" is responsible for
