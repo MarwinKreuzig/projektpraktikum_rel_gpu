@@ -11,7 +11,7 @@
 #include "NetworkGraph.h"
 
 #include "LogMessages.h"
-#include "MPIInfos.h"
+#include "MPIWrapper.h"
 #include "NeuronIdMap.h"
 #include "Partition.h"
 #include "RelearnException.h"
@@ -69,12 +69,12 @@ void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, siz
 	}
 
 	// Target neuron is mine
-	if (target_rank == MPIInfos::my_rank) {
+	if (target_rank == MPIWrapper::my_rank) {
 		Edges& in_edges = neuron_neighborhood[target_neuron_id].in_edges;
 		add_edge(in_edges, source_rank, source_neuron_id, weight);
 	}
 
-	if (source_rank == MPIInfos::my_rank) {
+	if (source_rank == MPIWrapper::my_rank) {
 		Edges& out_edges = neuron_neighborhood[source_neuron_id].out_edges;
 		add_edge(out_edges, target_rank, target_neuron_id, weight);
 	}
@@ -154,8 +154,8 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
 		const size_t target_neuron_id = std::get<1>(synapse);
 		const int weight = std::get<2>(synapse);
 
-		const int source_rank = MPIInfos::my_rank;
-		const int target_rank = MPIInfos::my_rank;
+		const int source_rank = MPIWrapper::my_rank;
+		const int target_rank = MPIWrapper::my_rank;
 
 		add_edge_weight(target_neuron_id, target_rank, source_neuron_id, source_rank, weight);
 	}
@@ -165,7 +165,7 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
 		const size_t target_neuron_id = std::get<1>(synapse);
 		const int weight = std::get<2>(synapse);
 
-		const int source_rank = MPIInfos::my_rank;
+		const int source_rank = MPIWrapper::my_rank;
 		const int target_rank = id_to_rank[target_neuron_id];
 
 		add_edge_weight(target_neuron_id, target_rank, source_neuron_id, source_rank, weight);
@@ -177,7 +177,7 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
 		const int weight = std::get<2>(synapse);
 
 		const int source_rank = id_to_rank[source_neuron_id];
-		const int target_rank = MPIInfos::my_rank;
+		const int target_rank = MPIWrapper::my_rank;
 
 		add_edge_weight(target_neuron_id, target_rank, source_neuron_id, source_rank, weight);
 	}
@@ -185,7 +185,7 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
 
 void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids, const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id) {
 
-	const int num_ranks = MPIInfos::num_ranks;
+	const int num_ranks = MPIWrapper::num_ranks;
 
 	std::vector<size_t> num_foreign_ids_from_ranks(num_ranks, 0);
 
@@ -200,13 +200,15 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 		global_ids_to_send[rank].emplace_back(id);
 	}
 
-	MPI_Alltoall(
-		reinterpret_cast<char*>(num_foreign_ids_from_ranks.data()), sizeof(size_t), MPI_CHAR,
-		reinterpret_cast<char*>(num_foreign_ids_from_ranks.data()), sizeof(size_t), MPI_CHAR,
-		MPI_COMM_WORLD);
+	MPIWrapper::all_to_all(num_foreign_ids_from_ranks, num_foreign_ids_from_ranks, MPIWrapper::Scope::global);
+
+	//MPI_Alltoall(
+	//	reinterpret_cast<char*>(num_foreign_ids_from_ranks.data()), sizeof(size_t), MPI_CHAR,
+	//	reinterpret_cast<char*>(num_foreign_ids_from_ranks.data()), sizeof(size_t), MPI_CHAR,
+	//	MPI_COMM_WORLD);
 
 	for (auto rank = 0; rank < num_ranks; rank++) {
-		if (MPIInfos::my_rank == rank) {
+		if (MPIWrapper::my_rank == rank) {
 			RelearnException::check(global_ids_to_receive[rank].empty(), "Should receive ids from myself");
 			continue;
 		}
@@ -218,7 +220,7 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 	int request_counter = 0;
 
 	for (auto rank = 0; rank < num_ranks; rank++) {
-		if (MPIInfos::my_rank == rank) {
+		if (MPIWrapper::my_rank == rank) {
 			continue;
 		}
 
@@ -230,7 +232,7 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 	}
 
 	for (auto rank = 0; rank < num_ranks; rank++) {
-		if (MPIInfos::my_rank == rank) {
+		if (MPIWrapper::my_rank == rank) {
 			continue;
 		}
 
@@ -257,7 +259,7 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 	request_counter = 0;
 
 	for (auto rank = 0; rank < num_ranks; rank++) {
-		if (MPIInfos::my_rank == rank) {
+		if (MPIWrapper::my_rank == rank) {
 			continue;
 		}
 
@@ -269,7 +271,7 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 	}
 
 	for (auto rank = 0; rank < num_ranks; rank++) {
-		if (MPIInfos::my_rank == rank) {
+		if (MPIWrapper::my_rank == rank) {
 			continue;
 		}
 
@@ -447,7 +449,7 @@ void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) con
 		const NetworkGraph::Edges& in_edges = get_in_edges(target_neuron_id);
 		NetworkGraph::Edges::const_iterator it_in_edge;
 
-		NeuronIdMap::RankNeuronId rank_neuron_id{ MPIInfos::my_rank, target_neuron_id };
+		NeuronIdMap::RankNeuronId rank_neuron_id{ MPIWrapper::my_rank, target_neuron_id };
 		size_t glob_tgt = 0;
 
 		auto ret = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id, glob_tgt);

@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "MPIInfos.h"
+#include "MPIWrapper.h"
 #include "RelearnException.h"
 
 #include <cmath>

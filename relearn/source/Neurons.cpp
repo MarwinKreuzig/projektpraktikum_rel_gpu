@@ -8,6 +8,7 @@
  *
  */
 
+#include "MPIWrapper.h"
 #include "Neurons.h"
 
 #include "Partition.h"
@@ -190,7 +191,7 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 
 		// Affected neuron of deletion request resides on different rank.
 		// Thus the request needs to be communicated.
-		if (target_rank != MPIInfos::my_rank) {
+		if (target_rank != MPIWrapper::my_rank) {
 			map_synapse_deletion_requests_outgoing[target_rank].append(
 				list_it.src_neuron_id.neuron_id,
 				list_it.tgt_neuron_id.neuron_id,
@@ -206,7 +207,7 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 	* Likewise, receive the number of deletion requests that I should prepare for from every rank.
 	*/
 
-	std::vector<size_t> num_synapse_deletion_requests_for_ranks(MPIInfos::num_ranks, 0);
+	std::vector<size_t> num_synapse_deletion_requests_for_ranks(MPIWrapper::num_ranks, 0);
 	// Fill vector with my number of synapse deletion requests for every rank
 	// Requests to myself are kept local and not sent to myself again.
 	for (const auto& map_it : map_synapse_deletion_requests_outgoing) {
@@ -217,17 +218,18 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 	}
 
 
-	std::vector<size_t> num_synapse_deletion_requests_from_ranks(MPIInfos::num_ranks, 112233);
+	std::vector<size_t> num_synapse_deletion_requests_from_ranks(MPIWrapper::num_ranks, 112233);
 	// Send and receive the number of synapse deletion requests
-	MPI_Alltoall(num_synapse_deletion_requests_for_ranks.data(), sizeof(size_t), MPI_CHAR,
-		num_synapse_deletion_requests_from_ranks.data(), sizeof(size_t), MPI_CHAR,
-		MPI_COMM_WORLD);
+	MPIWrapper::all_to_all(num_synapse_deletion_requests_for_ranks, num_synapse_deletion_requests_from_ranks, MPIWrapper::Scope::global);
+	//MPI_Alltoall(num_synapse_deletion_requests_for_ranks.data(), sizeof(size_t), MPI_CHAR,
+	//	num_synapse_deletion_requests_from_ranks.data(), sizeof(size_t), MPI_CHAR,
+	//	MPI_COMM_WORLD);
 
 
 	MapSynapseDeletionRequests map_synapse_deletion_requests_incoming;
 	// Now I know how many requests I will get from every rank.
 	// Allocate memory for all incoming synapse deletion requests.
-	for (auto rank = 0; rank < MPIInfos::num_ranks; ++rank) {
+	for (auto rank = 0; rank < MPIWrapper::num_ranks; ++rank) {
 		auto num_requests = num_synapse_deletion_requests_from_ranks[rank];
 		if (0 != num_requests) {
 			map_synapse_deletion_requests_incoming[rank].resize(num_requests);
@@ -294,9 +296,9 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 			// My affected neuron is the source neuron of the synapse
 			if (SynapticElements::ElementType::AXON == affected_element_type) {
 				add_synapse_to_pending_deletions(
-					RankNeuronId(MPIInfos::my_rank, src_neuron_id),
+					RankNeuronId(MPIWrapper::my_rank, src_neuron_id),
 					RankNeuronId(other_rank, tgt_neuron_id),
-					RankNeuronId(MPIInfos::my_rank, affected_neuron_id),
+					RankNeuronId(MPIWrapper::my_rank, affected_neuron_id),
 					(SynapticElements::ElementType)affected_element_type,
 					(SynapticElements::SignalType)signal_type,
 					(unsigned int)synapse_id,
@@ -306,8 +308,8 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 			else if (SynapticElements::ElementType::DENDRITE == affected_element_type) {
 				add_synapse_to_pending_deletions(
 					RankNeuronId(other_rank, src_neuron_id),
-					RankNeuronId(MPIInfos::my_rank, tgt_neuron_id),
-					RankNeuronId(MPIInfos::my_rank, affected_neuron_id),
+					RankNeuronId(MPIWrapper::my_rank, tgt_neuron_id),
+					RankNeuronId(MPIWrapper::my_rank, affected_neuron_id),
 					(SynapticElements::ElementType)affected_element_type,
 					(SynapticElements::SignalType)signal_type,
 					(unsigned int)synapse_id,
@@ -358,7 +360,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 	/**********************************************************************************/
 
 	// Lock local RMA memory for local stores
-	MPIInfos::lock_window(MPIInfos::my_rank, MPI_Locktype::exclusive);
+	MPIWrapper::lock_window(MPIWrapper::my_rank, MPI_Locktype::exclusive);
 
 	// Update my local trees bottom-up
 	GlobalTimers::timers.start(TimerRegion::UPDATE_LOCAL_TREES);
@@ -369,7 +371,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 	* Exchange branch nodes
 	*/
 	GlobalTimers::timers.start(TimerRegion::EXCHANGE_BRANCH_NODES);
-	OctreeNode* rma_buffer_branch_nodes = MPIInfos::rma_buffer_branch_nodes.ptr;
+	OctreeNode* rma_buffer_branch_nodes = MPIWrapper::rma_buffer_branch_nodes.ptr;
 	// Copy local trees' root nodes to correct positions in receive buffer
 
 	const size_t num_local_trees = global_tree.get_num_local_trees();
@@ -390,7 +392,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 	// Insert only received branch nodes into global tree
 	// The local ones are already in the global tree
 	GlobalTimers::timers.start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
-	const size_t num_rma_buffer_branch_nodes = MPIInfos::rma_buffer_branch_nodes.num_nodes;
+	const size_t num_rma_buffer_branch_nodes = MPIWrapper::rma_buffer_branch_nodes.num_nodes;
 	for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
 		if (i < partition.get_my_subdomain_id_start() ||
 			i > partition.get_my_subdomain_id_end()) {
@@ -410,14 +412,13 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 	GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
 
 	// Unlock local RMA memory and make local stores visible in public window copy
-	MPIInfos::unlock_window(MPIInfos::my_rank);
+	MPIWrapper::unlock_window(MPIWrapper::my_rank);
 
 	/**********************************************************************************/
 
 	// Makes sure that all ranks finished their local access epoch
 	// before a remote origin opens an access epoch
-	MPI_Barrier(MPI_COMM_WORLD);
-
+	MPIWrapper::barrier(MPIWrapper::Scope::global);
 
 	/**
 	* Find target neuron for every vacant axon
@@ -497,7 +498,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 		* Send to every rank the number of requests it should prepare for from me.
 		* Likewise, receive the number of requests that I should prepare for from every rank.
 		*/
-		std::vector<size_t> num_synapse_requests_for_ranks(MPIInfos::num_ranks, 0);
+		std::vector<size_t> num_synapse_requests_for_ranks(MPIWrapper::num_ranks, 0);
 		// Fill vector with my number of synapse requests for every rank (including me)
 		for (const auto& it : map_synapse_creation_requests_outgoing) {
 			auto rank = it.first;
@@ -506,16 +507,17 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 			num_synapse_requests_for_ranks[rank] = num_requests;
 		}
 
-		std::vector<size_t> num_synapse_requests_from_ranks(MPIInfos::num_ranks, 112233);
+		std::vector<size_t> num_synapse_requests_from_ranks(MPIWrapper::num_ranks, 112233);
 		// Send and receive the number of synapse requests
-		MPI_Alltoall(num_synapse_requests_for_ranks.data(), sizeof(size_t), MPI_CHAR,
-			num_synapse_requests_from_ranks.data(), sizeof(size_t), MPI_CHAR,
-			MPI_COMM_WORLD);
+		MPIWrapper::all_to_all(num_synapse_requests_for_ranks, num_synapse_requests_from_ranks, MPIWrapper::Scope::global);
+		//MPI_Alltoall(num_synapse_requests_for_ranks.data(), sizeof(size_t), MPI_CHAR,
+		//	num_synapse_requests_from_ranks.data(), sizeof(size_t), MPI_CHAR,
+		//	MPI_COMM_WORLD);
 
 		MapSynapseCreationRequests map_synapse_creation_requests_incoming;
 		// Now I know how many requests I will get from every rank.
 		// Allocate memory for all incoming synapse requests.
-		for (auto rank = 0; rank < MPIInfos::num_ranks; rank++) {
+		for (auto rank = 0; rank < MPIWrapper::num_ranks; rank++) {
 			auto num_requests = num_synapse_requests_from_ranks[rank];
 			if (0 != num_requests) {
 				map_synapse_creation_requests_incoming[rank].resize(num_requests);
@@ -606,7 +608,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 					}
 
 					// Update network
-					network_graph.add_edge_weight(target_neuron_id, MPIInfos::my_rank, source_neuron_id, source_rank, num_axons_connected_increment);
+					network_graph.add_edge_weight(target_neuron_id, MPIWrapper::my_rank, source_neuron_id, source_rank, num_axons_connected_increment);
 
 					// Set response to "connected" (success)
 					requests.set_response(request_index, 1);
@@ -684,10 +686,10 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 
 					// I have already created the synapse in the network
 					// if the response comes from myself
-					if (target_rank != MPIInfos::my_rank) {
+					if (target_rank != MPIWrapper::my_rank) {
 						// Update network
 						num_axons_connected_increment = (Cell::DendriteType::INHIBITORY == dendrite_type_needed) ? -1 : +1;
-						network_graph.add_edge_weight(target_neuron_id, target_rank, source_neuron_id, MPIInfos::my_rank, num_axons_connected_increment);
+						network_graph.add_edge_weight(target_neuron_id, target_rank, source_neuron_id, MPIWrapper::my_rank, num_axons_connected_increment);
 					}
 				}
 				else {
@@ -786,7 +788,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 
 
 	// Output data
-	if (0 == MPIInfos::my_rank) {
+	if (0 == MPIWrapper::my_rank) {
 		ofstream& file = log_file.get_file(0);
 		const int cwidth = 20;  // Column width
 
@@ -824,13 +826,13 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles
 	using namespace std;
 
 	const StatisticalMeasures<double> calcium_statistics =
-		global_statistics(calcium.data(), num_neurons, params.num_neurons, 0, MPI_COMM_WORLD);
+		global_statistics(calcium.data(), num_neurons, params.num_neurons, 0, MPIWrapper::Scope::global);
 
 	const StatisticalMeasures<double> activity_statistics =
-		global_statistics(neuron_models->get_x().data(), num_neurons, params.num_neurons, 0, MPI_COMM_WORLD);
+		global_statistics(neuron_models->get_x().data(), num_neurons, params.num_neurons, 0, MPIWrapper::Scope::global);
 
 	// Output data
-	if (0 == MPIInfos::my_rank) {
+	if (0 == MPIWrapper::my_rank) {
 		ofstream& file = log_file.get_file(0);
 		const int cwidth = 16;  // Column width
 
@@ -901,7 +903,7 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& 
 	size_t glob_id = 0;
 	NeuronIdMap::RankNeuronId rank_neuron_id{ 0, 0 };
 
-	rank_neuron_id.rank = MPIInfos::my_rank;
+	rank_neuron_id.rank = MPIWrapper::my_rank;
 	file << std::fixed << std::setprecision(6);
 	for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
 		rank_neuron_id.neuron_id = neuron_id;
@@ -1119,7 +1121,7 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 
 															 // Check if synapse is already in pending deletions, if not, add it.
 			add_synapse_to_pending_deletions(
-				RankNeuronId(MPIInfos::my_rank, neuron_id),
+				RankNeuronId(MPIWrapper::my_rank, neuron_id),
 				synapse_selected->rank_neuron_id,
 				synapse_selected->rank_neuron_id,
 				SynapticElements::DENDRITE,
@@ -1185,7 +1187,7 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 			// Check if synapse is already in pending deletions, if not, add it.
 			add_synapse_to_pending_deletions(
 				synapse_selected->rank_neuron_id,
-				RankNeuronId(MPIInfos::my_rank, neuron_id),
+				RankNeuronId(MPIWrapper::my_rank, neuron_id),
 				synapse_selected->rank_neuron_id,
 				SynapticElements::AXON,
 				signal_type,
@@ -1250,7 +1252,7 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 															 // Check if synapse is already in pending deletions, if not, add it.
 			add_synapse_to_pending_deletions(
 				synapse_selected->rank_neuron_id,
-				RankNeuronId(MPIInfos::my_rank, neuron_id),
+				RankNeuronId(MPIWrapper::my_rank, neuron_id),
 				synapse_selected->rank_neuron_id,
 				SynapticElements::AXON,
 				signal_type,
@@ -1295,9 +1297,9 @@ void Neurons::delete_synapses(std::list<PendingSynapseDeletion>& list,
 		// Pending synapse deletion is valid (not completely) if source or
 		// target neuron belong to me. To be completely valid, things such as
 		// the neuron id need to be validated as well.
-		RelearnException::check(it.src_neuron_id.rank == MPIInfos::my_rank || it.tgt_neuron_id.rank == MPIInfos::my_rank);
+		RelearnException::check(it.src_neuron_id.rank == MPIWrapper::my_rank || it.tgt_neuron_id.rank == MPIWrapper::my_rank);
 
-		if (it.src_neuron_id.rank == MPIInfos::my_rank && it.tgt_neuron_id.rank == MPIInfos::my_rank) {
+		if (it.src_neuron_id.rank == MPIWrapper::my_rank && it.tgt_neuron_id.rank == MPIWrapper::my_rank) {
 			/**
 			* Count the deleted synapse once for each connected neuron.
 			* The reason is that synapses where neurons are on different ranks are also
@@ -1335,7 +1337,7 @@ void Neurons::delete_synapses(std::list<PendingSynapseDeletion>& list,
 		*/
 		const auto affected_neuron_id = it.affected_neuron_id.neuron_id;
 
-		if (it.affected_neuron_id.rank == MPIInfos::my_rank && !it.affected_element_already_deleted) {
+		if (it.affected_neuron_id.rank == MPIWrapper::my_rank && !it.affected_element_already_deleted) {
 			if (SynapticElements::AXON == it.affected_element_type) {
 				//--axons_connected_cnts[affected_neuron_id];
 				axons.update_conn_cnt(affected_neuron_id, -1.0, "ax");

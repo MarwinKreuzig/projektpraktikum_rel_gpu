@@ -10,7 +10,7 @@
 
 #include "SubdomainFromNeuronDensity.h"
 
-#include "MPIInfos.h"
+#include "MPIWrapper.h"
 #include "RelearnException.h"
 
 SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(size_t num_neurons, double desired_frac_neurons_exc, double um_per_neuron)
@@ -18,7 +18,7 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(size_t num_neurons, doubl
 	random_number_generator(RandomHolder<SubdomainFromNeuronDensity>::get_random_generator()),
 	random_number_distribution(0.0, 1.0) {
 
-	random_number_generator.seed(MPIInfos::my_rank);
+	random_number_generator.seed(MPIWrapper::my_rank);
 
 	// Calculate size of simulation box based on neuron density
 	// num_neurons^(1/3) == #neurons per dimension

@@ -26,7 +26,7 @@ Octree::Octree() :
 	no_free_in_destructor(false),
 	level_of_branch_nodes(-1),
 	random_number_generator(RandomHolder<Octree>::get_random_generator()),
-	mpi_rma_node_allocator(MPIInfos::mpi_rma_mem_allocator),
+	mpi_rma_node_allocator(MPIWrapper::mpi_rma_mem_allocator),
 	random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
 
 	random_number_generator.seed(randomNumberSeeds::octree);
@@ -41,7 +41,7 @@ Octree::Octree(const Partition& part, const Parameters& params) :
 	naive_method(params.naive_method),
 	level_of_branch_nodes(part.get_level_of_subdomain_trees()),
 	max_num_pending_vacant_axons(params.max_num_pending_vacant_axons),
-	mpi_rma_node_allocator(MPIInfos::mpi_rma_mem_allocator),
+	mpi_rma_node_allocator(MPIWrapper::mpi_rma_mem_allocator),
 	random_number_generator(RandomHolder<Octree>::get_random_generator()),
 	random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
 
@@ -250,7 +250,7 @@ void Octree::get_nodes_for_interval(
 			rank_addr_pair.first = target_rank;
 
 			// Start access epoch to remote rank
-			MPIInfos::lock_window(target_rank, MPI_Locktype::shared);
+			MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
 
 			// Fetch remote children if they exist
 			for (auto i = 7; i >= 0; i--) {
@@ -289,7 +289,7 @@ void Octree::get_nodes_for_interval(
 			}
 
 			// Complete access epoch
-			MPIInfos::unlock_window(target_rank);
+			MPIWrapper::unlock_window(target_rank);
 
 			// Push root's children onto stack
 			for (auto i = 7; i >= 0; i--) {
@@ -346,7 +346,7 @@ void Octree::get_nodes_for_interval(
 				rank_addr_pair.first = target_rank;
 
 				// Start access epoch to remote rank
-				MPIInfos::lock_window(target_rank, MPI_Locktype::shared);
+				MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
 
 				// Fetch remote children if they exist
 				for (auto i = 7; i >= 0; i--) {
@@ -385,7 +385,7 @@ void Octree::get_nodes_for_interval(
 				}
 
 				// Complete access epoch
-				MPIInfos::unlock_window(target_rank);
+				MPIWrapper::unlock_window(target_rank);
 
 				// Push node's children onto stack
 				for (auto i = 7; i >= 0; i--) {
@@ -490,7 +490,7 @@ OctreeNode* Octree::select_subinterval(const ProbabilitySubintervalList& list) {
 }
 
 inline bool Octree::node_is_local(const OctreeNode& node) /*noexcept*/ {
-	return node.rank == MPIInfos::my_rank;
+	return node.rank == MPIWrapper::my_rank;
 }
 
 void Octree::append_node(OctreeNode* node, ProbabilitySubintervalList& list) {
@@ -518,7 +518,7 @@ void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list,
 	// Start access epoch if necessary
 	if (!epochs_started[target_rank]) {
 		// Start access epoch to remote rank
-		MPIInfos::lock_window(target_rank, MPI_Locktype::shared);
+		MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
 		epochs_started[target_rank] = true;
 	}
 
@@ -566,7 +566,7 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 	VacantAxonList vacant_axons;
 	bool axon_added = false;
 
-	AccessEpochsStarted access_epochs_started(MPIInfos::num_ranks, false);
+	AccessEpochsStarted access_epochs_started(MPIWrapper::num_ranks, false);
 
 	do {
 		axon_added = false;
@@ -690,7 +690,7 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 	// Complete all started access epochs
 	for (auto i = 0; i < access_epochs_started.size(); i++) {
 		if (access_epochs_started[i]) {
-			MPIInfos::unlock_window(i);
+			MPIWrapper::unlock_window(i);
 		}
 	}
 }
@@ -829,7 +829,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
 		root = mpi_rma_node_allocator.newObject();
 
 		// Init octree node
-		root->rank = MPIInfos::my_rank;
+		root->rank = MPIWrapper::my_rank;
 		root->level = root_level;
 		root->is_parent = true;  // node will become parent
 
@@ -902,7 +902,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
 			//LogMessages::print_debug("    Node allocated.");
 
 			// Init octree node
-			new_node->rank = MPIInfos::my_rank;
+			new_node->rank = MPIWrapper::my_rank;
 			new_node->level = next_level;
 			new_node->is_parent = true;  // node will become parent
 

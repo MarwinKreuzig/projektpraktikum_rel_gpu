@@ -1,0 +1,88 @@
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
+
+#pragma once
+
+#include "MPI_RMA_MemAllocator.h"
+#include "OctreeNode.h"
+
+#include <string>
+
+class Octree;
+
+struct RMABufferOctreeNodes {
+	OctreeNode* ptr;
+	size_t num_nodes;
+};
+
+enum class MPI_Locktype : int {
+	exclusive = 234,
+	shared = 235,
+};
+
+class MPIWrapper {
+public:
+
+	enum class Scope : char {
+		global = 0,
+		none = 1
+	};
+
+	enum class ReduceFunction : char {
+		min = 0,
+		max = 1,
+		avg = 2,
+		sum = 3,
+		none = 4
+	};
+
+	/**
+	 * Global variables
+	 */
+	static int num_ranks;                     // Number of ranks in MPI_COMM_WORLD
+	static int my_rank;                       // My rank in MPI_COMM_WORLD
+
+	static size_t num_neurons;                // Total number of neurons
+	static int    my_num_neurons;             // My number of neurons I'm responsible for
+	static int    my_neuron_id_start;         // ID of my first neuron
+	static int    my_neuron_id_end;           // ID of my last neuron
+
+	// Needed for Allgatherv
+	static std::vector<int> num_neurons_of_ranks;         // Number of neurons that each rank is responsible for
+	static std::vector<int> num_neurons_of_ranks_displs;  // Displacements based on "num_neurons_of_ranks" (exclusive prefix sums, i.e. Exscan)
+
+	static int thread_level_provided;         // Thread level provided by MPI
+
+	static std::string my_rank_str;
+
+	static MPI_RMA_MemAllocator<OctreeNode> mpi_rma_mem_allocator;
+	static RMABufferOctreeNodes rma_buffer_branch_nodes;
+
+	/**
+	 * Functions
+	 */
+	static void init(int argc, char** argv);
+	static void init_neurons(size_t num_neurons);
+	static void init_mem_allocator(size_t mem_size);
+	static void init_buffer_octree(size_t num_partitions);
+
+	static void barrier(Scope scope);
+
+	static double reduce(double value, ReduceFunction function, int root_rank, Scope scope);
+	static double all_reduce(double value, ReduceFunction function, Scope scope);
+
+	static void all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst, Scope scope);
+
+	static void lock_window(int rank, MPI_Locktype lock_type);
+	static void unlock_window(int rank);
+
+	static void finalize() /*noexcept*/;
+	static void print_infos_rank(int rank);
+}; // namespace MPIWrapper

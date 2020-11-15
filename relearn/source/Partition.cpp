@@ -258,7 +258,7 @@ Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssig
 			axons.set_signal_type(neuron_id, vec_type[j]);
 
 			// Insert neuron into tree
-			subdomains[i].octree.insert(vec_pos[j], neuron_id, MPIInfos::my_rank);
+			subdomains[i].octree.insert(vec_pos[j], neuron_id, MPIWrapper::my_rank);
 
 			neuron_id++;
 		}

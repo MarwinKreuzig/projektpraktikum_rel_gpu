@@ -10,8 +10,8 @@
 
 #include "LogFiles.h"
 #include "LogMessages.h"
-#include "MPIInfos.h"
 #include "MPIUserDefinedOperation.h"
+#include "MPIWrapper.h"
 #include "MPI_RMA_MemAllocator.h"
 #include "NetworkGraph.h"
 #include "NeuronIdMap.h"
@@ -100,8 +100,8 @@ void setSpecificParameters(Parameters& params, int argc, char** argv) {
 
 	// Number of ranks must be 2^n so that
 	// the connectivity update works correctly
-	const std::bitset<sizeof(int) * 8> bitset_num_ranks(MPIInfos::num_ranks);
-	if (1 != bitset_num_ranks.count() && (0 == MPIInfos::my_rank)) {
+	const std::bitset<sizeof(int) * 8> bitset_num_ranks(MPIWrapper::num_ranks);
+	if (1 != bitset_num_ranks.count() && (0 == MPIWrapper::my_rank)) {
 		std::stringstream sstring;
 		sstring << __FUNCTION__ << ": Number of ranks must be of the form 2^n";
 		LogMessages::print_error(sstring.str().c_str());
@@ -140,16 +140,16 @@ void printTimers() {
 	for (int i = 0; i < 3 * TimerRegion::NUM_TIMER_REGIONS; i++) {
 		sstring << timers_global[i] << " ";
 	}
-	LogMessages::print_message_rank(sstring.str().c_str(), MPIInfos::my_rank);
+	LogMessages::print_message_rank(sstring.str().c_str(), MPIWrapper::my_rank);
 #endif
 
 	// Divide second entry of (min, sum, max), i.e., sum, by the number of ranks
 	// so that sum becomes average
 	for (int i = 0; i < TimerRegion::NUM_TIMER_REGIONS; i++) {
-		timers_global[3 * i + 1] /= MPIInfos::num_ranks;
+		timers_global[3 * i + 1] /= MPIWrapper::num_ranks;
 	}
 
-	if (0 == MPIInfos::my_rank) {
+	if (0 == MPIWrapper::my_rank) {
 		// Set precision for aligned double output
 		const auto old_precision = cout.precision();
 		cout.precision(6);
@@ -236,7 +236,7 @@ void printTimers() {
 		//cout << "\n======== MEMORY USAGE RANK 0 ========" << endl;
 
 		cout << "\n======== RMA MEMORY ALLOCATOR RANK 0 ========" << endl;
-		cout << "Min num objects available: " << MPIInfos::mpi_rma_mem_allocator.get_min_num_avail_objects() << endl;
+		cout << "Min num objects available: " << MPIWrapper::mpi_rma_mem_allocator.get_min_num_avail_objects() << endl;
 
 		MPI_Type_free(&mpi_datatype_3_double);
 		MPI_Op_free(&mpi_op);
@@ -299,7 +299,7 @@ int main(int argc, char** argv) {
 	/**
 	 * Init MPI and store some MPI infos
 	 */
-	MPIInfos::init(argc, argv);
+	MPIWrapper::init(argc, argv);
 
 	/**
 	 * Simulation parameters
@@ -308,16 +308,16 @@ int main(int argc, char** argv) {
 	setDefaultParameters(params);
 	setSpecificParameters(params, argc, argv);
 
-	MPIInfos::init_neurons(params.num_neurons);
-	MPIInfos::print_infos_rank(0);
+	MPIWrapper::init_neurons(params.num_neurons);
+	MPIWrapper::print_infos_rank(0);
 
 	// Init random number seeds
-	randomNumberSeeds::partition = static_cast<long int>(MPIInfos::my_rank);
+	randomNumberSeeds::partition = static_cast<long int>(MPIWrapper::my_rank);
 	randomNumberSeeds::octree = strtol(argv[3], nullptr, 10);
 
 	// Rank 0 prints start time of simulation
-	MPI_Barrier(MPI_COMM_WORLD);
-	if (0 == MPIInfos::my_rank) {
+	MPIWrapper::barrier(MPIWrapper::Scope::global);
+	if (0 == MPIWrapper::my_rank) {
 		std::stringstream sstring; // For output generation
 		sstring << "\nSTART: " << Timers::wall_clock_time() << "\n";
 		LogMessages::print_message_rank(sstring.str().c_str(), 0);
@@ -333,7 +333,7 @@ int main(int argc, char** argv) {
 		neurons_in_subdomain = new SubdomainFromNeuronDensity(params.num_neurons, params.frac_neurons_exc);
 	}
 
-	if (0 == MPIInfos::my_rank) {
+	if (0 == MPIWrapper::my_rank) {
 		std::cout << params << std::endl;
 	}
 
@@ -346,7 +346,7 @@ int main(int argc, char** argv) {
 	/**
 	 * Calculate what my partition of the domain consist of
 	 */
-	Partition partition(MPIInfos::num_ranks, MPIInfos::my_rank);
+	Partition partition(MPIWrapper::num_ranks, MPIWrapper::my_rank);
 
 	// Check if int type can contain total size of branch nodes to receive in bytes
 	// Every rank sends the same number of branch nodes, which is partition.get_my_num_subdomains()
@@ -361,11 +361,11 @@ int main(int argc, char** argv) {
 	/**
 	 * Create MPI RMA memory allocator
 	 */
-	MPIInfos::init_mem_allocator(params.mpi_rma_mem_size);
-	MPIInfos::init_buffer_octree(partition.get_total_num_subdomains());
+	MPIWrapper::init_mem_allocator(params.mpi_rma_mem_size);
+	MPIWrapper::init_buffer_octree(partition.get_total_num_subdomains());
 
 	// Lock local RMA memory for local stores
-	MPIInfos::lock_window(MPIInfos::my_rank, MPI_Locktype::exclusive);
+	MPIWrapper::lock_window(MPIWrapper::my_rank, MPI_Locktype::exclusive);
 
 	/**
 	 * Create neuron population
@@ -401,14 +401,14 @@ int main(int argc, char** argv) {
 	}
 
 	// Unlock local RMA memory and make local stores visible in public window copy
-	MPIInfos::unlock_window(MPIInfos::my_rank);
+	MPIWrapper::unlock_window(MPIWrapper::my_rank);
 
 	/**********************************************************************************/
 
 	// The barrier ensures that every rank finished its local stores.
 	// Otherwise, a "fast" rank might try to read from the RMA window of another
 	// rank which has not finished (or even begun) its local stores
-	MPI_Barrier(MPI_COMM_WORLD); // TODO Really needed?
+	MPIWrapper::barrier(MPIWrapper::Scope::global);// TODO Really needed?
 
 	LogMessages::print_message_rank("Neurons inserted into subdomains", 0);
 	LogMessages::print_message_rank("Subdomains inserted into global tree", 0);
@@ -480,7 +480,7 @@ int main(int argc, char** argv) {
 		neurons.update_number_synaptic_elements_delta();
 		GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
 
-		//if (0 == MPIInfos::my_rank && step % 50 == 0) {
+		//if (0 == MPIWrapper::my_rank && step % 50 == 0) {
 		//	std::cout << "** STATE AFTER: " << step << " of " << params.simulation_time
 		//		<< " msec ** [" << Timers::wall_clock_time() << "]\n";
 		//}
@@ -490,7 +490,7 @@ int main(int argc, char** argv) {
 			size_t num_synapses_deleted = 0;
 			size_t num_synapses_created = 0;
 
-			if (0 == MPIInfos::my_rank) {
+			if (0 == MPIWrapper::my_rank) {
 				std::cout << "** UPDATE CONNECTIVITY AFTER: " << step << " of " << params.simulation_time
 					<< " msec ** [" << Timers::wall_clock_time() << "]\n";
 			}
@@ -507,7 +507,7 @@ int main(int argc, char** argv) {
 
 			MPI_Reduce(cnts_local, cnts_global, 2, MPI_UINT64_T, MPI_SUM, 0, MPI_COMM_WORLD);
 
-			if (0 == MPIInfos::my_rank) {
+			if (0 == MPIWrapper::my_rank) {
 				total_deletions += cnts_global[0] / 2;
 				total_creations += cnts_global[1] / 2;
 			}
@@ -543,9 +543,9 @@ int main(int argc, char** argv) {
 		printNeuronMonitor(monitor, monitor.get_target_id());
 	}
 
-	neurons.print_network_graph_to_log_file(Logs::get("network_rank_" + MPIInfos::my_rank_str), network_graph,
+	neurons.print_network_graph_to_log_file(Logs::get("network_rank_" + MPIWrapper::my_rank_str), network_graph,
 		params, neuron_id_map);
-	neurons.print_positions_to_log_file(Logs::get("positions_rank_" + MPIInfos::my_rank_str), params, neuron_id_map);
+	neurons.print_positions_to_log_file(Logs::get("positions_rank_" + MPIWrapper::my_rank_str), params, neuron_id_map);
 
 	printTimers();
 
@@ -554,8 +554,8 @@ int main(int argc, char** argv) {
 	network_graph.write_synapses_to_file("output_edges.txt", neuron_id_map, partition);
 	delete neurons_in_subdomain;
 
-	MPI_Barrier(MPI_COMM_WORLD);
-	if (0 == MPIInfos::my_rank) {
+	MPIWrapper::barrier(MPIWrapper::Scope::global);
+	if (0 == MPIWrapper::my_rank) {
 		std::stringstream sstring; // For output generation
 		sstring << "\n";
 		sstring << "\n" << "Total creations: " << total_creations << "\n";
@@ -567,7 +567,7 @@ int main(int argc, char** argv) {
 	/**
 	 * Finalize MPI
 	 */
-	MPIInfos::finalize();
+	MPIWrapper::finalize();
 
 	return 0;
 }

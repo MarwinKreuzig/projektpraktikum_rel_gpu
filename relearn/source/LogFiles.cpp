@@ -9,9 +9,8 @@
  */
 
 #include "LogFiles.h"
+#include "MPIWrapper.h"
 #include "RelearnException.h"
-
-#include <mpi.h>
 
 #include <filesystem>
 
@@ -23,7 +22,7 @@ namespace Logs {
 	void init() {
 		Logs::output_dir = "../output/";
 
-		if (0 == MPIInfos::my_rank) {
+		if (0 == MPIWrapper::my_rank) {
 			std::filesystem::path output_path(Logs::output_dir);
 			if (!std::filesystem::exists(output_path)) {
 				std::filesystem::create_directory(output_path);
@@ -31,8 +30,7 @@ namespace Logs {
 		}
 
 		// Wait until directory is created before any rank proceeds
-		// NOLINTNEXTLINE
-		MPI_Barrier(MPI_COMM_WORLD);
+		MPIWrapper::barrier(MPIWrapper::Scope::global);
 
 		// Neurons to create log file for
 		//size_t num_neurons_to_log = 3;
@@ -48,10 +46,10 @@ namespace Logs {
 		Logs::addLogFile("sums", 0);
 
 		// Create log file for network on all ranks
-		Logs::addLogFile("network_rank_" + MPIInfos::my_rank_str, -1);
+		Logs::addLogFile("network_rank_" + MPIWrapper::my_rank_str, -1);
 
 		// Create log file for positions on all ranks
-		Logs::addLogFile("positions_rank_" + MPIInfos::my_rank_str, -1);
+		Logs::addLogFile("positions_rank_" + MPIWrapper::my_rank_str, -1);
 	}
 
 	void addLogFile(const std::string& name, int rank) {
@@ -63,7 +61,7 @@ namespace Logs {
 // One log file only at the MPI rank "on_rank"
 // on_rank == -1 means all ranks
 LogFiles::LogFiles(const std::string& file_name, int on_rank) {
-	if (-1 == on_rank || MPIInfos::my_rank == on_rank) {
+	if (-1 == on_rank || MPIWrapper::my_rank == on_rank) {
 		num_files = 1;
 		files.resize(num_files);
 

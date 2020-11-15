@@ -11,7 +11,7 @@
 #pragma once
 
 #include "LogMessages.h"
-#include "MPIInfos.h"
+#include "MPIWrapper.h"
 #include "NetworkGraph.h"
 #include "Random.h"
 #include "Timers.h"

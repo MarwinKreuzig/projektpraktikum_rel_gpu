@@ -11,7 +11,7 @@
 #pragma once
 
 #include "LogFiles.h"
-#include "MPIInfos.h"
+#include "MPIWrapper.h"
 #include "NetworkGraph.h"
 #include "NeuronIdMap.h"
 #include "Octree.h"
@@ -20,8 +20,6 @@
 #include "Random.h"
 #include "SynapticElements.h"
 #include "Timers.h"
-
-#include <mpi.h>
 
 #include <algorithm>
 #include <cmath>
@@ -323,7 +321,7 @@ private:
 	void debug_check_counts();
 
 	template<typename T>
-	StatisticalMeasures<T> global_statistics(const T* local_values, size_t num_local_values, size_t total_num_values, int root, MPI_Comm mpi_comm) {
+	StatisticalMeasures<T> global_statistics(const T* local_values, size_t num_local_values, size_t total_num_values, int root, MPIWrapper::Scope scope) {
 		const auto result = std::minmax_element(&local_values[0], &local_values[num_neurons]);
 		const T my_min = *result.first;
 		const T my_max = *result.second;
@@ -334,13 +332,12 @@ private:
 		// Get global min and max at rank "root"
 		const double d_my_min = static_cast<double>(my_min);
 		const double d_my_max = static_cast<double>(my_max);
-		double d_min, d_max;
-		MPI_Reduce(&d_my_min, &d_min, 1, MPI_DOUBLE, MPI_MIN, root, mpi_comm);
-		MPI_Reduce(&d_my_max, &d_max, 1, MPI_DOUBLE, MPI_MAX, root, mpi_comm);
+
+		const double d_min = MPIWrapper::reduce(d_my_min, MPIWrapper::ReduceFunction::min, root, scope);
+		const double d_max = MPIWrapper::reduce(d_my_max, MPIWrapper::ReduceFunction::max, root, scope);
 
 		// Get global avg at all ranks (needed for variance)
-		double avg;
-		MPI_Allreduce(&my_avg, &avg, 1, MPI_DOUBLE, MPI_SUM, mpi_comm);
+		const double avg = MPIWrapper::all_reduce(my_avg, MPIWrapper::ReduceFunction::sum, scope);
 
 		/**
 		* Calc variance
@@ -352,8 +349,7 @@ private:
 		my_var /= total_num_values;
 
 		// Get global variance at rank "root"
-		double var;
-		MPI_Reduce(&my_var, &var, 1, MPI_DOUBLE, MPI_SUM, root, mpi_comm);
+		double var = MPIWrapper::reduce(my_var, MPIWrapper::ReduceFunction::sum, root, scope);
 
 		// Calc standard deviation
 		const double std = sqrt(var);
