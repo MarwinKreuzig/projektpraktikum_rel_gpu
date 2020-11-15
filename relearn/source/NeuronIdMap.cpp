@@ -1,12 +1,23 @@
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
+
 #include "NeuronIdMap.h"
+
 #include "RelearnException.h"
 
-#include <vector>
+#include <mpi.h>
+
+#include <limits>
 #include <map>
 #include <utility>
-#include <limits>
-
-#include <mpi.h>
+#include <vector>
 
 NeuronIdMap::NeuronIdMap(size_t my_num_neurons,
 	const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z,

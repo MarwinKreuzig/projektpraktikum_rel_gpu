@@ -1,22 +1,26 @@
 /*
- * File:   MPI_RMA_MemAllocator.h
- * Author: rinke
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on Feb 16, 2017
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#ifndef MPI_RMA_MEMALLOCATOR_H
-#define MPI_RMA_MEMALLOCATOR_H
-
-#include <set>
-#include <list>
-#include <vector>
-#include <sstream>
-#include <algorithm>
-#include <mpi.h>
+#pragma once
 
 #include "LogMessages.h"
 #include "OctreeNode.h"
+
+#include <mpi.h>
+
+#include <algorithm>
+#include <list>
+#include <iostream>
+#include <set>
+#include <sstream>
+#include <vector>
 
 template<class T>
 class MPI_RMA_MemAllocator {
@@ -32,6 +36,7 @@ public:
 	MPI_RMA_MemAllocator& operator=(MPI_RMA_MemAllocator&& other) = delete;
 
 	~MPI_RMA_MemAllocator() {
+
 	}
 
 	void set_size_requested(size_t size_requested) {
@@ -202,5 +207,3 @@ private:
 	int displ_unit;                       // RMA window displacement unit
 	std::vector<MPI_Aint> base_pointers;  // RMA window base pointers of all procs
 };
-
-#endif /* MPI_RMA_MEMALLOCATOR_H */

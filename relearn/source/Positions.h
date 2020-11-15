@@ -1,18 +1,20 @@
 /*
- * File:   Positions.h
- * Author: naveau
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on September 26, 2014, 1:28 PM
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#ifndef POSITION_H
-#define	POSITION_H
+#pragma once
+
+#include "RelearnException.h"
+#include "Vec3.h"
 
 #include <utility>
 #include <vector>
-
-#include "Vec3.h"
-#include "RelearnException.h"
 
 class Positions {
 
@@ -52,5 +54,3 @@ private:
 	std::vector<double> y_dims;
 	std::vector<double> z_dims;
 };
-
-#endif	/* POSITION_H */

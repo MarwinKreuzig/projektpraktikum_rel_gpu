@@ -1,11 +1,21 @@
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
+
 #pragma once
 
 #include "NeuronToSubdomainAssignment.h"
 #include "Vec3.h"
 
+#include <fstream>
 #include <set>
 #include <string>
-#include <fstream>
 
 // This class reads the neurons with their positions from a file
 // and, based on this, determines the size of the simulation box

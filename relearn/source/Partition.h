@@ -1,32 +1,31 @@
 /*
- * File:   Partition.h
- * Author: rinke
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on Feb 27, 2017
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#ifndef PARTITION_H
-#define PARTITION_H
+#pragma once
 
-#include <cmath>
+#include "LogMessages.h"
+#include "MPI_RMA_MemAllocator.h"
+#include "Neurons.h"
+#include "NeuronToSubdomainAssignment.h"
+#include "Octree.h"
+#include "Positions.h"
+#include "Random.h"
+#include "RelearnException.h"
+#include "SpaceFillingCurve.h"
+#include "SynapticElements.h"
+#include "Vec3.h"
+
 #include <algorithm>
+#include <cmath>
 #include <sstream>
 #include <vector>
-
-
-#include "SpaceFillingCurve.h"
-#include "LogMessages.h"
-#include "Octree.h"
-#include "MPI_RMA_MemAllocator.h"
-#include "Positions.h"
-#include "SynapticElements.h"
-#include "randomNumberSeeds.h"
-#include "NeuronToSubdomainAssignment.h"
-#include "Random.h"
-#include "Vec3.h"
-#include "RelearnException.h"
-
-#include "Neurons.h"
 
 class Partition {
 public:
@@ -198,5 +197,3 @@ private:
 	std::vector<Subdomain> subdomains;
 	SpaceFillingCurve<Morton> space_curve;
 };
-
-#endif /* PARTITION_H */

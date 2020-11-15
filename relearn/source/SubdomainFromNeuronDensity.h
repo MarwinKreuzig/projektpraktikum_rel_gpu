@@ -1,9 +1,19 @@
-#pragma once
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
 
-#include <random>
+#pragma once
 
 #include "NeuronToSubdomainAssignment.h"
 #include "Vec3.h"
+
+#include <random>
 
 // This class fills every subdomain with neurons at
 // random positions. The size of the simulation box and the number of neurons per

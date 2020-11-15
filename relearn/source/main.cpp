@@ -1,38 +1,47 @@
-#include <iomanip>
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
+
+#include "LogFiles.h"
+#include "LogMessages.h"
+#include "MPI_RMA_MemAllocator.h"
+#include "MPIInfos.h"
+#include "MPIUserDefinedOperation.h"
+#include "NetworkGraph.h"
+#include "NeuronModels.h"
+#include "NeuronMonitor.h"
+#include "NeuronIdMap.h"
+#include "Neurons.h"
+#include "NeuronToSubdomainAssignment.h"
+#include "Octree.h"
+#include "Parameters.h"
+#include "Partition.h"
+#include "SubdomainFromFile.h"
+#include "SubdomainFromNeuronDensity.h"
+#include "SynapticElements.h"
+#include "Timers.h"
+#include "Utility.h"
+
+#include <errno.h>
+#include <mpi.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #include <bitset>
-#include <limits>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
-
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <errno.h>
-
-#include <iostream>
+#include <limits>
 #include <locale>
-#include <mpi.h>
+#include <iomanip>
+#include <iostream>
 
-#include "Timers.h"
-#include "Neurons.h"
-#include "NeuronModels.h"
-#include "SynapticElements.h"
-#include "Octree.h"
-#include "Parameters.h"
-#include "LogFiles.h"
-#include "LogMessages.h"
-#include "MPIInfos.h"
-#include "NetworkGraph.h"
-#include "MPI_RMA_MemAllocator.h"
-#include "Partition.h"
-#include "MPIUserDefinedOperation.h"
-#include "randomNumberSeeds.h"
-#include "NeuronToSubdomainAssignment.h"
-#include "SubdomainFromFile.h"
-#include "SubdomainFromNeuronDensity.h"
-#include "NeuronIdMap.h"
-#include "Utility.h"
-#include "NeuronMonitor.h"
 
 void setDefaultParameters(Parameters& params) /*noexcept*/ {
 	params.frac_neurons_exc = 0.8;                          // CHANGE

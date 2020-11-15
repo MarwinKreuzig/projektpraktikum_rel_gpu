@@ -1,22 +1,21 @@
 /*
- * File:   LogFiles.h
- * Author: rinke
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on Sep 18, 2015
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#ifndef LOGFILES_H
-#define LOGFILES_H
-
-#include <iostream>
-#include <fstream>
-#include <filesystem>
-#include <string>
-
-#include <map>
-#include <vector>
+#pragma once
 
 #include "MPIInfos.h"
+
+#include <fstream>
+#include <map>
+#include <string>
+#include <vector>
 
 class LogFiles {
 public:
@@ -65,6 +64,3 @@ namespace Logs {
 
 	inline LogFiles& get(const std::string& name) { return logfiles.find(name)->second; }
 }
-
-
-#endif /* LOGFILES_H */

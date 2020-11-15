@@ -1,15 +1,18 @@
 /*
- * File:   OctreeNode.h
- * Author: rinke
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on Oct 28, 2014
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#ifndef OCTREENODE_H
-#define OCTREENODE_H
+#pragma once
+
+#include "Cell.h"
 
 #include <cstddef>
-#include "Cell.h"
 
 class OctreeNode {
 public:
@@ -19,8 +22,8 @@ public:
 	OctreeNode(const OctreeNode& other) = default;
 	OctreeNode(OctreeNode&& other) = default;
 
-	OctreeNode& operator = (const OctreeNode & other) = default;
-	OctreeNode& operator = (OctreeNode && other) = default;
+	OctreeNode& operator=(const OctreeNode& other) = default;
+	OctreeNode& operator=(OctreeNode&& other) = default;
 
 	void print() const;
 
@@ -31,6 +34,3 @@ public:
 	int rank;             // MPI rank who owns this octree node
 	size_t level;         // Level in the tree [0 (= root) ... depth of tree]
 };
-
-
-#endif /* OCTREENODE_H */

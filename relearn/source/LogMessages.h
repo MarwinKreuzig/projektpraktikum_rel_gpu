@@ -1,12 +1,14 @@
 /*
- * File:   LogMessages.h
- * Author: rinke
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on Apr 13, 2016
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#ifndef LOGMESSAGES_H
-#define LOGMESSAGES_H
+#pragma once
 
 class LogMessages {
 public:
@@ -23,5 +25,3 @@ public:
 
 	static void print_debug(char const* string);
 };
-
-#endif /* LOGMESSAGES_H */

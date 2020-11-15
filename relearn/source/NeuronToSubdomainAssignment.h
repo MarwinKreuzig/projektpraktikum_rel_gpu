@@ -1,14 +1,23 @@
-#ifndef NEURON_TO_SUBDOMAIN_ASSIGNMENT_H_
-#define NEURON_TO_SUBDOMAIN_ASSIGNMENT_H_
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
 
-#include "SynapticElements.h"
+#pragma once 
+
 #include "Random.h"
-#include "Vec3.h"
 #include "RelearnException.h"
+#include "SynapticElements.h"
+#include "Vec3.h"
 
+#include <map>
 #include <set>
 #include <vector>
-#include <map>
 
 // Interface that has to be implemented by any class that
 // wants to provide a neuron-to-subdomain assignment
@@ -119,5 +128,3 @@ protected:
 	NeuronToSubdomainAssignment() noexcept : desired_frac_neurons_exc_(0.0), desired_num_neurons_(0), currently_frac_neurons_exc_(0.0), currently_num_neurons_(0), simulation_box_length(0)  {
 	}
 };
-
-#endif /* NEURON_TO_SUBDOMAIN_ASSIGNMENT_H_ */

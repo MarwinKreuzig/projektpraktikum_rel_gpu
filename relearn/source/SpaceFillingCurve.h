@@ -1,17 +1,20 @@
 /*
- * File:   SpaceFillingCurve.h
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on Feb 28, 2017
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#ifndef SPACEFILLINGCURVE_H
-#define SPACEFILLINGCURVE_H
+#pragma once
+
+#include "RelearnException.h"
+#include "Vec3.h"
 
 #include <cmath>
 #include <cstdint>
-
-#include "Vec3.h"
-#include "RelearnException.h"
 
 using BoxCoordinates = Vec3<uint64_t>;
 
@@ -144,5 +147,3 @@ public:
 private:
 	T curve;
 };
-
-#endif /* SPACEFILLINGCURVE_H */

@@ -1,8 +1,11 @@
 /*
- * File:   Octree.cpp
- * Author: rinke
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on October 10, 2014
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
  /*********************************************************************************
@@ -13,7 +16,6 @@
 #include "Octree.h"
 
 #include "Neurons.h"
-#include "randomNumberSeeds.h"
 #include "Partition.h"
 #include "Random.h"
 #include "RelearnException.h"

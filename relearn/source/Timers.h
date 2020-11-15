@@ -1,18 +1,20 @@
 /*
- * File:   Timers.h
- * Author: rinke
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on Oct 21, 2015
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#ifndef TIMERS_H
-#define TIMERS_H
+#pragma once 
+
+#include "RelearnException.h"
 
 #include <chrono>
 #include <string>
 #include <vector>
-
-#include "RelearnException.h"
 
 enum TimerRegion : int {
 	INITIALIZATION,
@@ -140,5 +142,3 @@ private:
 
 	std::vector<std::chrono::duration<double>> time_elapsed;
 };
-
-#endif /* TIMERS_H */

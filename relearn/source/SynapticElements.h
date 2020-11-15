@@ -1,20 +1,22 @@
 /*
- * File:   SynapticElements.h
- * Author: naveau
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on September 26, 2014, 2:33 PM
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#ifndef SYNAPTICELEMENT_H
-#define	SYNAPTICELEMENT_H
-
-#include <iostream>
-#include <cstddef>
-#include <cmath>
-#include <vector>
+#pragma once
 
 #include "MPIInfos.h"
 #include "RelearnException.h"
+
+#include <cmath>
+#include <cstddef>
+#include <iostream>
+#include <vector>
 
 class NeuronMonitor;
 
@@ -180,6 +182,3 @@ private:
 	double nu;                    // Growth rate for synaptic elements in ms^-1. Needs to be much smaller than 1 to separate activity and structural dynamics.
 	double vacant_retract_ratio;  // Percentage of how many vacant synaptic elements should be deleted during each connectivity update
 };
-
-#endif	/* SYNAPTICELEMENT_H */
-

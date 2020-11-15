@@ -1,12 +1,21 @@
-#ifndef NEURONIDMAP_H
-#define NEURONIDMAP_H
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
 
-#include <vector>
-#include <map>
+#pragma once 
+
+#include "Vec3.h"
 
 #include <mpi.h>
 
-#include "Vec3.h"
+#include <map>
+#include <vector>
 
 class NeuronIdMap {
 public:
@@ -36,5 +45,3 @@ private:
 	std::vector<size_t> rank_to_start_neuron_id;  // Global neuron id of every rank's first local neuron
 	std::map<Vec3d, RankNeuronId> pos_to_rank_neuron_id;
 };
-
-#endif /* NEURONIDMAP_H */

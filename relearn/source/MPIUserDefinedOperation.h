@@ -1,17 +1,20 @@
 /*
- * File:   MPIUserDefinedOperation.h
- * Author: rinke
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on Mar 21, 2017
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#ifndef MPIUSERDEFINEDOPERATION_H
-#define MPIUSERDEFINEDOPERATION_H
+#pragma once 
+
+#include <mpi.h>
 
 #include <algorithm>
 
 namespace MPIUserDefinedOperation {
-
 	// This combination function assumes that it's called with the
 	// correct MPI datatype
 	void min_sum_max(const int* invec, int* inoutvec, const int* const len, MPI_Datatype* dtype) /*noexcept*/ {
@@ -25,5 +28,3 @@ namespace MPIUserDefinedOperation {
 		}
 	}
 }
-
-#endif /* MPIUSERDEFINEDOPERATION */

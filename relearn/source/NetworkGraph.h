@@ -1,20 +1,23 @@
 /*
- * File:   NetworkGraph.h
- * Author: rinke
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on May 2, 2016
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#ifndef NETWORKGRAPH_H
-#define NETWORKGRAPH_H
-
-#include <map>
-#include <vector>
-#include <set>
-#include <string>
-#include <ostream>
+#pragma once
 
 #include "Vec3.h"
+
+#include <map>
+#include <ostream>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 class Partition;
 class NeuronIdMap;
@@ -37,7 +40,6 @@ public:
 	};
 	typedef std::vector<Neighbors> NeuronNeighborhood; // Neighbors for each neuron
 													   // The index into the vector is the neuron's local id
-
 
 	NetworkGraph(size_t my_num_neurons);
 
@@ -86,5 +88,3 @@ private:
 											 // some of their edges. That is why it does not make sense to store incomplete information
 											 // on other processes
 };
-
-#endif /* NETWORKGRAPH_H */

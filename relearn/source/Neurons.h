@@ -1,35 +1,36 @@
 /*
- * File: Neurons.h
- * Author: naveau
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on September 26, 2014, 10:23 AM
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#ifndef NEURONS_H
-#define	NEURONS_H
+#pragma once
 
-#include <random>
-#include <iomanip>
-#include <algorithm>
-#include <vector>
-#include <cstdlib>
-#include <cstring>
-#include <cmath>
-#include <numeric>
-#include <mpi.h>
-
-
-#include "Positions.h"
-#include "Parameters.h"
-#include "Octree.h"
-#include "SynapticElements.h"
 #include "LogFiles.h"
-#include "Parameters.h"
-#include "Timers.h"
 #include "MPIInfos.h"
 #include "NetworkGraph.h"
 #include "NeuronIdMap.h"
+#include "Octree.h"
+#include "Parameters.h"
+#include "Positions.h"
 #include "Random.h"
+#include "SynapticElements.h"
+#include "Timers.h"
+
+#include <mpi.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
+#include <iomanip>
+#include <numeric>
+#include <random>
+#include <vector>
 
  /***************************************************************************************************
  * NOTE: The following two type declarations (SynapseCreationRequests, MapSynapseCreationRequests) *
@@ -421,5 +422,3 @@ private:
 	// Uniform distribution for interval [0, 1) (see constructor for initialization)
 	std::uniform_real_distribution<double> random_number_distribution;
 };
-
-#endif	/* NEURONS_H */

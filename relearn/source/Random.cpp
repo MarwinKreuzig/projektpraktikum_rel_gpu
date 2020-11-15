@@ -8,8 +8,7 @@
  *
  */
 
-#include "Timers.h"
-
-namespace GlobalTimers {
-	Timers timers(TimerRegion::NUM_TIMER_REGIONS);
+namespace randomNumberSeeds {
+	long int partition;
+	long int octree;
 }

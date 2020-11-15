@@ -1,32 +1,34 @@
 /*
- * File:   Octree.h
- * Author: rinke
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on October 10, 2014
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#ifndef OCTREE_H
-#define	OCTREE_H
+#pragma once
 
-#include <cstddef>
-#include <cmath>
-#include <iostream>
-#include <stack>
-#include <map>
-#include <list>
-#include <limits>
-#include <random>
-#include <sstream>
-
-#include "Parameters.h"
-#include "OctreeNode.h"
-#include "MPI_RMA_MemAllocator.h"
 #include "Cell.h"
 #include "LogMessages.h"
+#include "MPI_RMA_MemAllocator.h"
 #include "NeuronModels.h"
+#include "OctreeNode.h"
+#include "Parameters.h"
+#include "RelearnException.h"
 #include "SynapticElements.h"
 #include "Vec3.h"
-#include "RelearnException.h"
+
+#include <cmath>
+#include <cstddef>
+#include <iostream>
+#include <limits>
+#include <list>
+#include <map>
+#include <random>
+#include <sstream>
+#include <stack>
 
  // Forward declarations of Neurons.h
 class SynapseCreationRequests;
@@ -487,5 +489,3 @@ private:
 	// Uniform distribution for interval [0, 1] (see constructor for initialization)
 	std::uniform_real_distribution<double> random_number_distribution;
 };
-
-#endif	/* OCTTREE_H */

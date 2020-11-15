@@ -1,24 +1,26 @@
 /*
- * File:  NeuronModels.h
- * Author: naveau
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on September 26, 2014, 9:31 PM
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#ifndef NEURONMODELS_H
-#define	NEURONMODELS_H
+#pragma once
 
-#include <cstddef>
-#include <random>
-#include <algorithm>
-#include <vector>
-#include <memory>
-
-#include "NetworkGraph.h"
-#include "MPIInfos.h"
 #include "LogMessages.h"
-#include "Timers.h"
+#include "MPIInfos.h"
+#include "NetworkGraph.h"
 #include "Random.h"
+#include "Timers.h"
+
+#include <algorithm>
+#include <cstddef>
+#include <memory>
+#include <random>
+#include <vector>
 
 class NeuronMonitor;
 
@@ -414,5 +416,3 @@ namespace models {
 	};
 
 } // namespace models
-
-#endif /* NEURONMODELS_H */

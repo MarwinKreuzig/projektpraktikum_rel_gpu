@@ -1,11 +1,22 @@
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
+
 #include "SubdomainFromFile.h"
-#include "NeuronToSubdomainAssignment.h"
+
 #include "LogMessages.h"
+#include "NeuronToSubdomainAssignment.h"
 #include "RelearnException.h"
 
+#include <cmath>
 #include <iostream>
 #include <sstream>
-#include <cmath>
 
 SubdomainFromFile::SubdomainFromFile(std::string file_path, size_t num_neurons) : file(file_path) {
 	std::cout << "Loading: " << file_path << std::endl;

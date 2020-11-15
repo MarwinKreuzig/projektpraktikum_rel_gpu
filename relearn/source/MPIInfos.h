@@ -1,16 +1,19 @@
 /*
- * File:   MPIInfos.h
- * Author: rinke
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on Apr 17, 2016
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
 #pragma once
 
-#include <string>
-
-#include "OctreeNode.h"
 #include "MPI_RMA_MemAllocator.h"
+#include "OctreeNode.h"
+
+#include <string>
 
 class Octree;
 
@@ -61,4 +64,3 @@ namespace MPIInfos {
 	void finalize() /*noexcept*/;
 	void print_infos_rank(int rank);
 } // namespace MPIInfos
-

@@ -1,17 +1,19 @@
 /*
- * File:   Cell.h
- * Author: rinke
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on Oct 28, 2014
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#ifndef CELL_H
-#define CELL_H
-
-#include <iostream>
+#pragma once
 
 #include "RelearnException.h"
 #include "Vec3.h"
+
+#include <iostream>
 
 class Cell {
 public:
@@ -96,13 +98,13 @@ public:
 		dendrites[INHIBITORY].xyz_pos_valid = valid;
 	}
 
-	void get_neuron_position_for(const DendriteType dendrite_type, Vec3d& xyz, bool& valid) const noexcept {
+	void get_neuron_position_for(DendriteType dendrite_type, Vec3d& xyz, bool& valid) const noexcept {
 		// Use dendrite_type as index into array
 		xyz = dendrites[dendrite_type].xyz_pos;
 		valid = dendrites[dendrite_type].xyz_pos_valid;
 	}
 
-	void set_neuron_num_dendrites_exc(const unsigned int num_dendrites) noexcept {
+	void set_neuron_num_dendrites_exc(unsigned int num_dendrites) noexcept {
 		dendrites[EXCITATORY].num_dendrites = num_dendrites;
 	}
 
@@ -110,7 +112,7 @@ public:
 		return dendrites[EXCITATORY].num_dendrites;
 	}
 
-	void set_neuron_num_dendrites_inh(const unsigned int num_dendrites) noexcept {
+	void set_neuron_num_dendrites_inh(unsigned int num_dendrites) noexcept {
 		dendrites[INHIBITORY].num_dendrites = num_dendrites;
 	}
 
@@ -118,7 +120,7 @@ public:
 		return dendrites[INHIBITORY].num_dendrites;
 	}
 
-	unsigned int get_neuron_num_dendrites_for(const DendriteType dendrite_type) const noexcept {
+	unsigned int get_neuron_num_dendrites_for(DendriteType dendrite_type) const noexcept {
 		return dendrites[dendrite_type].num_dendrites;
 	}
 
@@ -255,5 +257,3 @@ private:
 	 */
 	size_t neuron_id;
 };
-
-#endif /* CELL_H */

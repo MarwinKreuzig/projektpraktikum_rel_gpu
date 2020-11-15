@@ -1,10 +1,21 @@
-#include <fstream>
-#include <iomanip>
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
 
 #include "NeuronToSubdomainAssignment.h"
-#include "SynapticElements.h"
+
 #include "LogMessages.h"
 #include "RelearnException.h"
+#include "SynapticElements.h"
+
+#include <fstream>
+#include <iomanip>
 
 void NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, size_t num_subdomains_per_axis, Position& min, Position& max) const noexcept {
 	get_subdomain_boundaries(subdomain_3idx, Vec3<size_t>{num_subdomains_per_axis}, min, max);

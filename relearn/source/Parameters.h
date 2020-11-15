@@ -1,12 +1,14 @@
 /*
- * File:   Parameters.h
- * Author: rinke
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on Jun 17, 2015
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#ifndef PARAMETERS_H
-#define PARAMETERS_H
+#pragma once 
 
 #include <iomanip>
 
@@ -94,5 +96,3 @@ private:
 	// Width of column containing parameter names
 	static const int column_width = 28;
 };
-
-#endif /* PARAMETERS_H */

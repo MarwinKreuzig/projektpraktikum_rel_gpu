@@ -1,7 +1,16 @@
-#include "Partition.h"
-#include "RelearnException.h"
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
 
-// We need the "axons" parameter to set for every neuron the type of axons it grows (exc./inh.)
+#include "Partition.h"
+
+#include "RelearnException.h"
 
 Partition::Partition(int num_ranks, int my_rank) {
 	/**

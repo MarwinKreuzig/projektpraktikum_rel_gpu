@@ -1,15 +1,19 @@
 /*
- * File:   NeuronModels.cpp
- * Author: naveau
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Created on September 26, 2014, 9:31 PM
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
 
-#include <mpi.h>
-
 #include "NeuronModels.h"
+
 #include "MPIInfos.h"
 #include "Random.h"
+
+#include <mpi.h>
 
 NeuronModels::NeuronModels(size_t num_neurons, double k, double tau_C, double beta, int h)
 	: my_num_neurons(num_neurons),
