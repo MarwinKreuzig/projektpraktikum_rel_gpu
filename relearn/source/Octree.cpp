@@ -544,7 +544,7 @@ void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list,
 
 				const MPI_Aint* base_pointers = mpi_rma_node_allocator.get_base_pointers();
 				// Calc displacement from absolute address
-				const MPI_Aint target_child_displ = (MPI_Aint)(child - base_pointers[target_rank]);
+				const auto target_child_displ = (MPI_Aint)(child - base_pointers[target_rank]);
 
 				MPI_Get(child->ptr, sizeof(OctreeNode), MPI_CHAR,
 					target_rank, target_child_displ, sizeof(OctreeNode), MPI_CHAR,

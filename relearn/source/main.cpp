@@ -14,9 +14,9 @@
 #include "MPIUserDefinedOperation.h"
 #include "MPI_RMA_MemAllocator.h"
 #include "NetworkGraph.h"
+#include "NeuronIdMap.h"
 #include "NeuronModels.h"
 #include "NeuronMonitor.h"
-#include "NeuronIdMap.h"
 #include "Neurons.h"
 #include "NeuronToSubdomainAssignment.h"
 #include "Octree.h"
@@ -37,10 +37,10 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
-#include <limits>
-#include <locale>
 #include <iomanip>
 #include <iostream>
+#include <limits>
+#include <locale>
 
 
 void setDefaultParameters(Parameters& params) /*noexcept*/ {

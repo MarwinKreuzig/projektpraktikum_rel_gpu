@@ -132,7 +132,7 @@ namespace MPIInfos {
 	}
 
 	void lock_window(int rank, MPI_Locktype lock_type) {
-		int lock_type_int = static_cast<int>(lock_type);
+		const auto lock_type_int = static_cast<int>(lock_type);
 		MPI_Win_lock(lock_type_int, rank, MPI_MODE_NOCHECK, mpi_rma_mem_allocator.mpi_window);
 	}
 

@@ -139,7 +139,7 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
 		const auto& id = it.first;
 		const auto& pos = it.second;
 
-		const int rank = static_cast<int>(partition.get_subdomain_id_from_pos(pos));
+		const auto rank = static_cast<int>(partition.get_subdomain_id_from_pos(pos));
 		id_to_rank[id] = rank;
 	}
 
@@ -223,7 +223,7 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 		}
 
 		size_t* buffer = global_ids_to_receive[rank].data();
-		const int size_in_bytes = static_cast<int>(global_ids_to_receive[rank].size() * sizeof(size_t));
+		const auto size_in_bytes = static_cast<int>(global_ids_to_receive[rank].size() * sizeof(size_t));
 
 		MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[request_counter]);
 		request_counter++;
@@ -235,7 +235,7 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 		}
 
 		const size_t* buffer = global_ids_to_send[rank].data();
-		const int size_in_bytes = static_cast<int>(global_ids_to_send[rank].size() * sizeof(size_t));
+		const auto size_in_bytes = static_cast<int>(global_ids_to_send[rank].size() * sizeof(size_t));
 
 		// Reserve enough space for the answer - it will be as long as the request
 		global_ids_local_value[rank].resize(global_ids_to_send[rank].size());
@@ -262,7 +262,7 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 		}
 
 		size_t* buffer = global_ids_local_value[rank].data();
-		const int size_in_bytes = static_cast<int>(global_ids_local_value[rank].size() * sizeof(size_t));
+		const auto size_in_bytes = static_cast<int>(global_ids_local_value[rank].size() * sizeof(size_t));
 
 		MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[request_counter]);
 		request_counter++;
@@ -274,7 +274,7 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 		}
 
 		const size_t* buffer = global_ids_to_receive[rank].data();
-		const int size_in_bytes = static_cast<int>(global_ids_to_receive[rank].size() * sizeof(size_t));
+		const auto size_in_bytes = static_cast<int>(global_ids_to_receive[rank].size() * sizeof(size_t));
 
 		MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[request_counter]);
 		request_counter++;
