@@ -132,6 +132,7 @@ void MPIWrapper::init_buffer_octree(size_t num_partitions) {
 }
 
 void MPIWrapper::barrier(Scope scope) {
+	// NOLINTNEXTLINE
 	auto mpi_scope = MPI_Comm(0);
 
 	switch (scope) {
@@ -149,6 +150,7 @@ void MPIWrapper::barrier(Scope scope) {
 }
 
 double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, Scope scope) {
+	// NOLINTNEXTLINE
 	auto mpi_scope = MPI_Comm(0);
 
 	switch (scope) {
@@ -161,6 +163,7 @@ double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, 
 		return 0.0;
 	}
 
+	// NOLINTNEXTLINE
 	auto mpi_reduce_function = MPI_Op(0);
 
 	switch (function) {
@@ -190,6 +193,7 @@ double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, 
 }
 
 double MPIWrapper::all_reduce(double value, ReduceFunction function, Scope scope) {
+	// NOLINTNEXTLINE
 	auto mpi_scope = MPI_Comm(0);
 
 	switch (scope) {
@@ -202,6 +206,7 @@ double MPIWrapper::all_reduce(double value, ReduceFunction function, Scope scope
 		return 0.0;
 	}
 
+	// NOLINTNEXTLINE
 	auto mpi_reduce_function = MPI_Op(0);
 
 	switch (function) {
@@ -236,6 +241,7 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
 
 	RelearnException::check(count_src == count_dst);
 
+	// NOLINTNEXTLINE
 	auto mpi_scope = MPI_Comm(0);
 
 	switch (scope) {
@@ -248,11 +254,13 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
 		return;
 	}
 
+	// NOLINTNEXTLINE
 	const int errorcode = MPI_Alltoall(src.data(), sizeof(size_t), MPI_CHAR, dst.data(), sizeof(size_t), MPI_CHAR, mpi_scope);
 	RelearnException::check(errorcode == 0);
 }
 
 void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
+	// NOLINTNEXTLINE
 	MPI_Waitall(tokens.size(), tokens.data(), MPI_STATUSES_IGNORE);
 }
 

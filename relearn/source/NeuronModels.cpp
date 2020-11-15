@@ -13,8 +13,6 @@
 #include "MPIWrapper.h"
 #include "Random.h"
 
-#include <mpi.h>
-
 NeuronModels::NeuronModels(size_t num_neurons, double k, double tau_C, double beta, int h)
 	: my_num_neurons(num_neurons),
 	k(k),
@@ -77,9 +75,6 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 
 	GlobalTimers::timers.start(TimerRegion::ALL_TO_ALL);
 	// Send and receive the number of firing neuron ids
-	//MPI_Alltoall(num_firing_neuron_ids_for_ranks.data(), sizeof(size_t), MPI_CHAR,
-	//	num_firing_neuron_ids_from_ranks.data(), sizeof(size_t), MPI_CHAR,
-	//	MPI_COMM_WORLD);
 	MPIWrapper::all_to_all(num_firing_neuron_ids_for_ranks, num_firing_neuron_ids_from_ranks, MPIWrapper::Scope::global);
 	GlobalTimers::timers.stop_and_add(TimerRegion::ALL_TO_ALL);
 
@@ -96,7 +91,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	GlobalTimers::timers.stop_and_add(TimerRegion::ALLOC_MEM_FOR_NEURON_IDS);
 
 	GlobalTimers::timers.start(TimerRegion::EXCHANGE_NEURON_IDS);
-	std::vector<MPI_Request>
+	std::vector<MPIWrapper::AsyncToken>
 		mpi_requests(map_firing_neuron_ids_outgoing.size() + map_firing_neuron_ids_incoming.size());
 
 	/**
@@ -110,7 +105,8 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 		auto buffer = map_it.second.get_neuron_ids();
 		const auto size_in_bytes = static_cast<int>(map_it.second.get_neuron_ids_size_in_bytes());
 
-		MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
+		MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+
 		++mpi_requests_index;
 	}
 
@@ -120,11 +116,13 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 		const auto buffer = map_it.second.get_neuron_ids();
 		const auto size_in_bytes = static_cast<int>(map_it.second.get_neuron_ids_size_in_bytes());
 
-		MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
+		MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+
 		++mpi_requests_index;
 	}
 	// Wait for all sends and receives to complete
-	MPI_Waitall(mpi_requests_index, mpi_requests.data(), MPI_STATUSES_IGNORE);
+	MPIWrapper::wait_all_tokens(mpi_requests);
+
 	GlobalTimers::timers.stop_and_add(TimerRegion::EXCHANGE_NEURON_IDS);
 
 	/**

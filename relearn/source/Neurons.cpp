@@ -221,10 +221,6 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 	std::vector<size_t> num_synapse_deletion_requests_from_ranks(MPIWrapper::num_ranks, 112233);
 	// Send and receive the number of synapse deletion requests
 	MPIWrapper::all_to_all(num_synapse_deletion_requests_for_ranks, num_synapse_deletion_requests_from_ranks, MPIWrapper::Scope::global);
-	//MPI_Alltoall(num_synapse_deletion_requests_for_ranks.data(), sizeof(size_t), MPI_CHAR,
-	//	num_synapse_deletion_requests_from_ranks.data(), sizeof(size_t), MPI_CHAR,
-	//	MPI_COMM_WORLD);
-
 
 	MapSynapseDeletionRequests map_synapse_deletion_requests_incoming;
 	// Now I know how many requests I will get from every rank.
@@ -236,7 +232,7 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 		}
 	}
 
-	std::vector<MPI_Request> mpi_requests(map_synapse_deletion_requests_outgoing.size() + map_synapse_deletion_requests_incoming.size());
+	std::vector<MPIWrapper::AsyncToken> mpi_requests(map_synapse_deletion_requests_outgoing.size() + map_synapse_deletion_requests_incoming.size());
 
 	/**
 	* Send and receive actual synapse deletion requests
@@ -250,7 +246,8 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 		auto buffer = map_it.second.get_requests();
 		const auto size_in_bytes = static_cast<int>(map_it.second.get_requests_size_in_bytes());
 
-		MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
+		MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+
 		++mpi_requests_index;
 	}
 
@@ -260,14 +257,14 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 		const auto buffer = map_it.second.get_requests();
 		const auto size_in_bytes = static_cast<int>(map_it.second.get_requests_size_in_bytes());
 
-		MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
+		MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+		
 		++mpi_requests_index;
 	}
 
 	// Wait for all sends and receives to complete
-	//MPI_Waitall(mpi_requests_index, mpi_requests.data(), MPI_STATUSES_IGNORE);
-
 	MPIWrapper::wait_all_tokens(mpi_requests);
+
 	/**
 	* Go through all received deletion requests and add them to the list with pending requests.
 	*/
@@ -511,9 +508,6 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 		std::vector<size_t> num_synapse_requests_from_ranks(MPIWrapper::num_ranks, 112233);
 		// Send and receive the number of synapse requests
 		MPIWrapper::all_to_all(num_synapse_requests_for_ranks, num_synapse_requests_from_ranks, MPIWrapper::Scope::global);
-		//MPI_Alltoall(num_synapse_requests_for_ranks.data(), sizeof(size_t), MPI_CHAR,
-		//	num_synapse_requests_from_ranks.data(), sizeof(size_t), MPI_CHAR,
-		//	MPI_COMM_WORLD);
 
 		MapSynapseCreationRequests map_synapse_creation_requests_incoming;
 		// Now I know how many requests I will get from every rank.
@@ -525,7 +519,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 			}
 		}
 
-		std::vector<MPI_Request>
+		std::vector<MPIWrapper::AsyncToken>
 			mpi_requests(map_synapse_creation_requests_outgoing.size() + map_synapse_creation_requests_incoming.size());
 
 		/**
@@ -541,7 +535,6 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 
 			MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
 
-			//MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 			mpi_requests_index++;
 		}
 		// Send actual synapse requests
@@ -551,12 +544,11 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 			const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
 
 			MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
-			//MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
+
 			mpi_requests_index++;
 		}
-		// Wait for all sends and receives to complete
-		//MPI_Waitall(mpi_requests_index, mpi_requests.data(), MPI_STATUSES_IGNORE);
 
+		// Wait for all sends and receives to complete
 		MPIWrapper::wait_all_tokens(mpi_requests);
 
 		/**
@@ -642,7 +634,6 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 			auto buffer = it.second.get_responses();
 			const auto size_in_bytes = static_cast<int>(it.second.get_responses_size_in_bytes());
 
-			//MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 			MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
 
 			mpi_requests_index++;
@@ -654,13 +645,10 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 			const auto size_in_bytes = static_cast<int>(it.second.get_responses_size_in_bytes());
 
 			MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
-			//MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[mpi_requests_index]);
 
 			mpi_requests_index++;
 		}
 		// Wait for all sends and receives to complete
-		//MPI_Waitall(mpi_requests_index, mpi_requests.data(), MPI_STATUSES_IGNORE);
-
 		MPIWrapper::wait_all_tokens(mpi_requests);
 
 		/**
