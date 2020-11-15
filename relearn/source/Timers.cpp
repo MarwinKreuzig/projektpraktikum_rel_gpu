@@ -12,4 +12,4 @@
 
 namespace GlobalTimers {
 	Timers timers(TimerRegion::NUM_TIMER_REGIONS);
-}
+} // namespace GlobalTimers

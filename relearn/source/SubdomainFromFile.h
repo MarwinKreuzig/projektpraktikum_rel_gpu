@@ -22,7 +22,7 @@
 // and the number of neurons in every individual subdomain.
 class SubdomainFromFile : public NeuronToSubdomainAssignment {
 public:
-	SubdomainFromFile(std::string file_path, size_t num_neurons);
+	SubdomainFromFile(const std::string& file_path, size_t num_neurons);
 
 	SubdomainFromFile(const SubdomainFromFile& other) = delete;
 	SubdomainFromFile(SubdomainFromFile&& other) = delete;

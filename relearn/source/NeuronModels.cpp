@@ -153,7 +153,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 				spike = static_cast<bool>(fired[src_neuron_id]);
 			}
 			else {
-				MapFiringNeuronIds::const_iterator it = map_firing_neuron_ids_incoming.find(rank);
+				const auto it = map_firing_neuron_ids_incoming.find(rank);
 				spike = (it != map_firing_neuron_ids_incoming.end()) && (it->second.find(src_neuron_id));
 			}
 			I_syn[neuron_id] += k * (it_in_edge.second) * static_cast<double>(spike);

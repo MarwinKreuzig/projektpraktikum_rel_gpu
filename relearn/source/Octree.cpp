@@ -65,7 +65,7 @@ void Octree::postorder_print() {
 	std::stack<StackElement> stack;
 
 	// Tree is empty
-	if (!root) {
+	if (root == nullptr) {
 		return;
 	}
 
@@ -141,9 +141,10 @@ void Octree::postorder_print() {
 			for (auto j = 0; j < depth; j++) {
 				std::cout << " ";
 			}
+
 			std::cout << "Child indices: ";
 			for (auto i = 0; i < 8; i++) {
-				if (elem.ptr->children[i]) {
+				if (elem.ptr->children[i] != nullptr) {
 					std::cout << i << " ";
 				}
 			}
@@ -152,7 +153,7 @@ void Octree::postorder_print() {
 			* increasing order of child indices
 			*/
 			for (auto i = 7; i >= 0; i--) {
-				if (elem.ptr->children[i]) {
+				if (elem.ptr->children[i] != nullptr) {
 					stack.emplace(elem.ptr->children[i], false, static_cast<size_t>(depth) + 1);
 				}
 			}
@@ -175,7 +176,7 @@ bool Octree::acceptance_criterion_test(const Vec3d& axon_pos_xyz,
 		return is_child;
 	}
 
-	has_vacant_dendrites = node_with_dendrite->cell.get_neuron_num_dendrites_for(dendrite_type_needed);
+	has_vacant_dendrites = node_with_dendrite->cell.get_neuron_num_dendrites_for(dendrite_type_needed) != 0;
 
 	// There are vacant dendrites available
 	if (has_vacant_dendrites) {
@@ -218,7 +219,7 @@ void Octree::get_nodes_for_interval(
 	bool naive_method) {
 
 	/* Subtree is not empty AND (Dendrites are available OR We use naive method) */
-	const auto flag = root && (root->cell.get_neuron_num_dendrites_for(dendrite_type_needed) || naive_method);
+	const auto flag = root && (root->cell.get_neuron_num_dendrites_for(dendrite_type_needed) != 0 || naive_method);
 	if (!flag) {
 		return;
 	}
@@ -237,7 +238,7 @@ void Octree::get_nodes_for_interval(
 		if (node_is_local(*root)) {
 			// Push root's children onto stack
 			for (auto i = 7; i >= 0; i--) {
-				if (root->children[i]) {
+				if (root->children[i] != nullptr) {
 					stack.push(root->children[i]);
 				}
 			}
@@ -267,7 +268,7 @@ void Octree::get_nodes_for_interval(
 					// Cache entry just inserted as it was not in cache
 					// So, we still need to init the entry by fetching
 					// from the target rank
-					if (ret.second == true) {
+					if (ret.second) {
 						ret.first->second = mpi_rma_node_allocator.newObject();
 						auto local_child_addr = ret.first->second;
 
@@ -333,7 +334,7 @@ void Octree::get_nodes_for_interval(
 			if (node_is_local(*stack_elem)) {
 				// Push node's children onto stack
 				for (auto i = 7; i >= 0; i--) {
-					if (stack_elem->children[i]) {
+					if (stack_elem->children[i] != nullptr) {
 						stack.push(stack_elem->children[i]);
 					}
 				}
@@ -363,7 +364,7 @@ void Octree::get_nodes_for_interval(
 						// Cache entry just inserted as it was not in cache
 						// So, we still need to init the entry by fetching
 						// from the target rank
-						if (ret.second == true) {
+						if (ret.second) {
 							ret.first->second = mpi_rma_node_allocator.newObject();
 							auto local_child_addr = ret.first->second;
 
@@ -388,7 +389,7 @@ void Octree::get_nodes_for_interval(
 
 				// Push node's children onto stack
 				for (auto i = 7; i >= 0; i--) {
-					if (local_children[i]) {
+					if (local_children[i] != nullptr) {
 						stack.push(local_children[i]);
 					}
 				}
@@ -477,7 +478,7 @@ OctreeNode* Octree::select_subinterval(const ProbabilitySubintervalList& list) {
 	* Also check for it != list.end() to account for that, due to numeric inaccuracies in summation,
 	* it might happen that random_number > sum_probabilities in the end
 	*/
-	std::list<ProbabilitySubinterval*>::const_iterator it = list.cbegin();
+	auto it = list.cbegin();
 	double sum_probabilities = (*it)->probability;
 	it++; // Point to second element
 	while (random_number > sum_probabilities && it != list.cend()) {
@@ -500,9 +501,9 @@ void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list,
 	// Node is local
 	if (node_is_local(*node)) {
 		// Append all children != nullptr
-		for (auto j = 0; j < 8; j++) {
-			if (node->children[j]) {
-				list.push_back(new ProbabilitySubinterval(node->children[j]));
+		for (auto& child : node->children) {
+			if (child != nullptr) {
+				list.push_back(new ProbabilitySubinterval(child));
 			}
 		}
 
@@ -521,9 +522,9 @@ void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list,
 		epochs_started[target_rank] = true;
 	}
 
-	for (auto j = 0; j < 8; j++) {
-		if (node->children[j]) {
-			rank_addr_pair.second = node->children[j];
+	for (auto& child : node->children) {
+		if (child != nullptr) {
+			rank_addr_pair.second = child;
 
 			std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair;
 			cache_key_val_pair.first = rank_addr_pair;
@@ -532,18 +533,18 @@ void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list,
 			// Get cache entry for "cache_key_val_pair"
 			std::pair<NodesCache::iterator, bool> ret = remote_nodes_cache.insert(cache_key_val_pair);
 
-			// TODO: Kill pointer here
-			ProbabilitySubinterval* child = new ProbabilitySubinterval();
+			// TODO(fabian): Kill pointer here
+			auto child = new ProbabilitySubinterval();
 			// Cache entry just inserted as it was not in cache
 			// So, we still need to init the entry by fetching
 			// from the target rank
-			if (ret.second == true) {
+			if (ret.second) {
 				// Create new object which contains the remote node's information
 				ret.first->second = child->ptr = mpi_rma_node_allocator.newObject();
 
 				const MPI_Aint* base_pointers = mpi_rma_node_allocator.get_base_pointers();
 				// Calc displacement from absolute address
-				const MPI_Aint target_child_displ = (MPI_Aint)((node->children[j]) - base_pointers[target_rank]);
+				const MPI_Aint target_child_displ = (MPI_Aint)(child - base_pointers[target_rank]);
 
 				MPI_Get(child->ptr, sizeof(OctreeNode), MPI_CHAR,
 					target_rank, target_child_displ, sizeof(OctreeNode), MPI_CHAR,
@@ -698,7 +699,7 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 	// Create new tree node for the neuron
 	OctreeNode* new_node = mpi_rma_node_allocator.newObject(); // new OctreeNode();
-	RelearnException::check(new_node);
+	RelearnException::check(new_node != nullptr);
 
 	new_node->cell.set_neuron_position(position, true);
 	new_node->cell.set_neuron_id(neuron_id);
@@ -733,7 +734,7 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 		curr = curr->children[my_idx];
 	}
 
-	RelearnException::check(prev);
+	RelearnException::check(prev != nullptr);
 
 	/**
 	* Found my octant, but
@@ -774,7 +775,7 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 			* It is not used for inner nodes.
 			*/
 			prev->cell.set_neuron_id(NEURON_ID_PARENT);
-			prev->is_parent = 1;  // Mark node as parent
+			prev->is_parent = true;  // Mark node as parent
 
 								  // MPI rank who owns this node
 			prev->children[idx]->rank = prev->rank;
@@ -879,50 +880,50 @@ void Octree::insert(OctreeNode* node_to_insert) {
 			break;
 		}
 		// Target level not yet reached
+
+		//LogMessages::print_debug("Target level not yet reached.");
+
+		// A node exists on my index in the
+		// children array, so follow this node.
+		if (curr->children[my_idx] != nullptr) {
+			curr = curr->children[my_idx];
+			//LogMessages::print_debug("  I follow node on my index.");
+		}
+		// New node must be created which
+		// I can then follow
 		else {
-			//LogMessages::print_debug("Target level not yet reached.");
+			//LogMessages::print_debug("  New node must be created which I can then follow.");
+			OctreeNode* new_node;
+			Vec3d new_node_xyz_min, new_node_xyz_max;
 
-			// A node exists on my index in the
-			// children array, so follow this node.
-			if (curr->children[my_idx]) {
-				curr = curr->children[my_idx];
-				//LogMessages::print_debug("  I follow node on my index.");
-			}
-			// New node must be created which
-			// I can then follow
-			else {
-				//LogMessages::print_debug("  New node must be created which I can then follow.");
-				OctreeNode* new_node;
-				Vec3d new_node_xyz_min, new_node_xyz_max;
+			//LogMessages::print_debug("    Trying to allocate node.");
+			// Create node
+			new_node = mpi_rma_node_allocator.newObject();
+			//LogMessages::print_debug("    Node allocated.");
 
-				//LogMessages::print_debug("    Trying to allocate node.");
-				// Create node
-				new_node = mpi_rma_node_allocator.newObject();
-				//LogMessages::print_debug("    Node allocated.");
+			// Init octree node
+			new_node->rank = MPIInfos::my_rank;
+			new_node->level = next_level;
+			new_node->is_parent = true;  // node will become parent
 
-				// Init octree node
-				new_node->rank = MPIInfos::my_rank;
-				new_node->level = next_level;
-				new_node->is_parent = true;  // node will become parent
+									  // Init cell in octree node
+									  // cell size becomes size of new node's octant
+			curr->cell.get_size_for_octant(my_idx, new_node_xyz_min, new_node_xyz_max);
+			new_node->cell.set_size(new_node_xyz_min, new_node_xyz_max);
+			new_node->cell.set_neuron_id(NEURON_ID_PARENT);
 
-										  // Init cell in octree node
-										  // cell size becomes size of new node's octant
-				curr->cell.get_size_for_octant(my_idx, new_node_xyz_min, new_node_xyz_max);
-				new_node->cell.set_size(new_node_xyz_min, new_node_xyz_max);
-				new_node->cell.set_neuron_id(NEURON_ID_PARENT);
+			curr->children[my_idx] = new_node;
+			curr = new_node;
+		}
+		next_level++;
 
-				curr->children[my_idx] = new_node;
-				curr = new_node;
-			}
-			next_level++;
-		} // target level not yet reached
 	} // while
 }
 
 void Octree::insert_local_tree(Octree* node_to_insert) {
 
 	OctreeNode* local_root = node_to_insert->get_root();
-	if (!local_root) {
+	if (local_root == nullptr) {
 		std::stringstream s;
 		s << "Local tree is empty, probably because the corresponding subdomain contains no neuron. "
 			<< "Currently, it is a requirement that every subdomain contains at least one neuron.\n";

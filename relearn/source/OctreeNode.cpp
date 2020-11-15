@@ -11,7 +11,7 @@
 #include "OctreeNode.h"
 
 OctreeNode::OctreeNode() /*noexcept*/ :
-	is_parent(0),
+	is_parent(false),
 	level(0),
 	rank(0) {
 	int i;
@@ -20,8 +20,6 @@ OctreeNode::OctreeNode() /*noexcept*/ :
 		children[i] = nullptr;
 	}
 }
-
-OctreeNode::~OctreeNode() /*noexcept*/ {}
 
 void OctreeNode::print() const {
 	using namespace std;

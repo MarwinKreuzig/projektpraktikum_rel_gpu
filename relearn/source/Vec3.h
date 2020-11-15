@@ -170,9 +170,9 @@ struct Vec3 {
 	double calculate_p_norm(const double p) const {
 		RelearnException::check(p >= 1.0, "p-norm is only valid for p >= 1.0");
 
-		const auto xx = pow(abs(static_cast<double>(x)), p);
-		const auto yy = pow(abs(static_cast<double>(y)), p);
-		const auto zz = pow(abs(static_cast<double>(z)), p);
+		const auto xx = pow(std::abs(static_cast<double>(x)), p);
+		const auto yy = pow(std::abs(static_cast<double>(y)), p);
+		const auto zz = pow(std::abs(static_cast<double>(z)), p);
 
 		const auto sum = xx + yy + zz;
 		const auto norm = pow(sum, 1.0 / p);

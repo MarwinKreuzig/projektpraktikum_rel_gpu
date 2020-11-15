@@ -10,9 +10,9 @@
 
 #include "LogFiles.h"
 #include "LogMessages.h"
-#include "MPI_RMA_MemAllocator.h"
 #include "MPIInfos.h"
 #include "MPIUserDefinedOperation.h"
+#include "MPI_RMA_MemAllocator.h"
 #include "NetworkGraph.h"
 #include "NeuronModels.h"
 #include "NeuronMonitor.h"
@@ -28,12 +28,12 @@
 #include "Timers.h"
 #include "Utility.h"
 
-#include <errno.h>
 #include <mpi.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
 #include <bitset>
+#include <cerrno>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -71,7 +71,7 @@ void setSpecificParameters(Parameters& params, int argc, char** argv) {
 	bool naive_method = false;
 
 	// Parameter equal to "naive"
-	if (!strcoll(argv[1], "naive")) {
+	if (strcoll(argv[1], "naive") == 0) {
 		naive_method = true;
 	}
 	else {
@@ -539,8 +539,9 @@ int main(int argc, char** argv) {
 	// Stop timing simulation loop
 	GlobalTimers::timers.stop_and_add(TimerRegion::SIMULATION_LOOP);
 
-	for (auto& monitor : monitors)
+	for (auto& monitor : monitors) {
 		printNeuronMonitor(monitor, monitor.get_target_id());
+	}
 
 	neurons.print_network_graph_to_log_file(Logs::get("network_rank_" + MPIInfos::my_rank_str), network_graph,
 		params, neuron_id_map);

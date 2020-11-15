@@ -45,7 +45,7 @@ bool NeuronIdMap::rank_neuron_id2glob_id(const RankNeuronId&
 	rank_neuron_id, size_t& glob_id) const /*noexcept*/ {
 	// Rank is not valid
 	if (rank_neuron_id.rank < 0 ||
-		rank_neuron_id.rank > rank_to_start_neuron_id.size() - 1)
+		rank_neuron_id.rank > (rank_to_start_neuron_id.size() - 1))
 		return false;
 
 	glob_id = rank_to_start_neuron_id[rank_neuron_id.rank] + rank_neuron_id.neuron_id;
@@ -127,7 +127,7 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 	// Map every neuron position to one (rank, neuron_id) pair
 	size_t glob_neuron_id = 0;
 	for (int rank = 0; rank < num_ranks; rank++) {
-		RankNeuronId val;
+		RankNeuronId val{ 0, 0 };
 		val.rank = rank;
 		for (size_t neuron_id = 0; neuron_id < rank_to_num_neurons[rank]; neuron_id++) {
 			RelearnException::check(glob_neuron_id < total_num_neurons);

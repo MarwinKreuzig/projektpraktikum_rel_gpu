@@ -11,4 +11,4 @@
 namespace randomNumberSeeds {
 	long int partition;
 	long int octree;
-}
+} // namespace randomNumberSeeds

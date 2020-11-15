@@ -18,7 +18,7 @@
 #include <iostream>
 #include <sstream>
 
-SubdomainFromFile::SubdomainFromFile(std::string file_path, size_t num_neurons) : file(file_path) {
+SubdomainFromFile::SubdomainFromFile(const std::string& file_path, size_t num_neurons) : file(file_path) {
 	std::cout << "Loading: " << file_path << std::endl;
 	const bool file_is_good = file.good();
 	const bool file_is_not_good = file.fail() || file.eof();
