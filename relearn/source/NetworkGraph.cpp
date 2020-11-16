@@ -202,11 +202,6 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 
 	MPIWrapper::all_to_all(num_foreign_ids_from_ranks, num_foreign_ids_from_ranks, MPIWrapper::Scope::global);
 
-	//MPI_Alltoall(
-	//	reinterpret_cast<char*>(num_foreign_ids_from_ranks.data()), sizeof(size_t), MPI_CHAR,
-	//	reinterpret_cast<char*>(num_foreign_ids_from_ranks.data()), sizeof(size_t), MPI_CHAR,
-	//	MPI_COMM_WORLD);
-
 	for (auto rank = 0; rank < num_ranks; rank++) {
 		if (MPIWrapper::my_rank == rank) {
 			RelearnException::check(global_ids_to_receive[rank].empty(), "Should receive ids from myself");
@@ -216,7 +211,7 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 		global_ids_to_receive[rank].resize(num_foreign_ids_from_ranks[rank]);
 	}
 
-	std::vector<MPI_Request> mpi_requests(static_cast<size_t>(num_ranks) * 2 - 2);
+	std::vector<MPIWrapper::AsyncToken> mpi_requests(static_cast<size_t>(num_ranks) * 2 - 2);
 	int request_counter = 0;
 
 	for (auto rank = 0; rank < num_ranks; rank++) {
@@ -227,7 +222,7 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 		size_t* buffer = global_ids_to_receive[rank].data();
 		const auto size_in_bytes = static_cast<int>(global_ids_to_receive[rank].size() * sizeof(size_t));
 
-		MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[request_counter]);
+		MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[request_counter]);
 		request_counter++;
 	}
 
@@ -242,12 +237,12 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 		// Reserve enough space for the answer - it will be as long as the request
 		global_ids_local_value[rank].resize(global_ids_to_send[rank].size());
 
-		MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[request_counter]);
+		MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[request_counter]);
 		request_counter++;
 	}
 
 	// Wait for all sends and receives to complete
-	MPI_Waitall(request_counter, mpi_requests.data(), MPI_STATUSES_IGNORE);
+	MPIWrapper::wait_all_tokens(mpi_requests);
 
 	for (auto& vec : global_ids_to_receive) {
 		for (auto& global_id : vec) {
@@ -255,7 +250,7 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 		}
 	}
 
-	mpi_requests = std::vector<MPI_Request>(static_cast<size_t>(num_ranks) * 2 - 2);
+	mpi_requests = std::vector<MPIWrapper::AsyncToken>(static_cast<size_t>(num_ranks) * 2 - 2);
 	request_counter = 0;
 
 	for (auto rank = 0; rank < num_ranks; rank++) {
@@ -266,7 +261,7 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 		size_t* buffer = global_ids_local_value[rank].data();
 		const auto size_in_bytes = static_cast<int>(global_ids_local_value[rank].size() * sizeof(size_t));
 
-		MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[request_counter]);
+		MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[request_counter]);
 		request_counter++;
 	}
 
@@ -278,12 +273,12 @@ void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids,
 		const size_t* buffer = global_ids_to_receive[rank].data();
 		const auto size_in_bytes = static_cast<int>(global_ids_to_receive[rank].size() * sizeof(size_t));
 
-		MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &mpi_requests[request_counter]);
+		MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[request_counter]);
 		request_counter++;
 	}
 
 	// Wait for all sends and receives to complete
-	MPI_Waitall(request_counter, mpi_requests.data(), MPI_STATUSES_IGNORE);
+	MPIWrapper::wait_all_tokens(mpi_requests);
 
 	for (auto rank = 0; rank < num_ranks; rank++) {
 		std::vector<size_t>& translated_ids = global_ids_local_value[rank];
