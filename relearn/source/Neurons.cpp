@@ -8,11 +8,13 @@
  *
  */
 
-#include "MPIWrapper.h"
 #include "Neurons.h"
 
+#include "MPIWrapper.h"
 #include "Partition.h"
 #include "RelearnException.h"
+
+#include <array>
 
 Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& partition)
 	: Neurons{ num_neurons, params, partition,
@@ -775,16 +777,16 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 	sum_dends_inh_vacant = sum_dends_inh_cnts - sum_dends_inh_connected_cnts;
 
 	// Get global sums at rank 0
-	const unsigned int sums_local[6]{ sum_axons_exc_vacant,
+	std::array<unsigned int, 6> sums_local = { sum_axons_exc_vacant,
 		sum_axons_inh_vacant,
 		sum_dends_exc_vacant,
 		sum_dends_inh_vacant,
 		static_cast<unsigned int>(sum_synapses_deleted),
 		static_cast<unsigned int>(sum_synapses_created) };
-	unsigned int sums_global[6]{ 123 }; // Init all to zero
 
-	MPI_Reduce(sums_local, sums_global, 6, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD);
+	std::array<unsigned int, 6> sums_global{ 0, 0, 0, 0, 0, 0 }; // Init all to zero
 
+	MPIWrapper::reduce(sums_local, sums_global, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
 
 	// Output data
 	if (0 == MPIWrapper::my_rank) {

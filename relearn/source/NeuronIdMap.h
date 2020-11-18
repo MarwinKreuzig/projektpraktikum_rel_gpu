@@ -25,7 +25,7 @@ public:
 		size_t neuron_id;
 	};
 
-	NeuronIdMap(size_t my_num_neurons, const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z, MPI_Comm mpi_comm);
+	NeuronIdMap(size_t my_num_neurons, const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z);
 	bool rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id, size_t& glob_id) const /*noexcept*/;
 	bool pos2rank_neuron_id(const Vec3d& pos, RankNeuronId& result) const;
 
@@ -39,7 +39,6 @@ private:
 		const std::vector<size_t>& rank_to_start_neuron_id,
 		size_t my_num_neurons,
 		const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z,
-		MPI_Comm mpi_comm,
 		std::map<Vec3d, RankNeuronId>& pos_to_rank_neuron_id);
 
 	std::vector<size_t> rank_to_start_neuron_id;  // Global neuron id of every rank's first local neuron

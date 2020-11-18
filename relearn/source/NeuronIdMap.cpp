@@ -10,6 +10,7 @@
 
 #include "NeuronIdMap.h"
 
+#include "MPIWrapper.h"
 #include "RelearnException.h"
 
 #include <mpi.h>
@@ -20,15 +21,13 @@
 #include <vector>
 
 NeuronIdMap::NeuronIdMap(size_t my_num_neurons,
-	const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z,
-	MPI_Comm mpi_comm) {
-	int num_ranks;
-	MPI_Comm_size(mpi_comm, &num_ranks);
+	const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z) {
+	int num_ranks = MPIWrapper::num_ranks;
 
 	// Gather the number of neurons of every process
 	std::vector<size_t> rank_to_num_neurons(num_ranks);
-	MPI_Allgather(&my_num_neurons, sizeof(size_t), MPI_CHAR, rank_to_num_neurons.data(),
-		sizeof(size_t), MPI_CHAR, mpi_comm);
+
+	MPIWrapper::all_gather(my_num_neurons, rank_to_num_neurons, MPIWrapper::Scope::global);
 
 	create_rank_to_start_neuron_id_mapping(rank_to_num_neurons, rank_to_start_neuron_id);
 
@@ -37,7 +36,6 @@ NeuronIdMap::NeuronIdMap(size_t my_num_neurons,
 		rank_to_start_neuron_id,
 		my_num_neurons,
 		x, y, z,
-		mpi_comm,
 		pos_to_rank_neuron_id);
 }
 
@@ -83,11 +81,10 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 	const std::vector<size_t>& rank_to_start_neuron_id,
 	size_t my_num_neurons,
 	const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z,
-	MPI_Comm mpi_comm,
 	std::map<Vec3d, RankNeuronId>& pos_to_rank_neuron_id) {
-	int num_ranks, my_rank;
-	MPI_Comm_size(mpi_comm, &num_ranks);
-	MPI_Comm_rank(mpi_comm, &my_rank);
+
+	int num_ranks = MPIWrapper::num_ranks;
+	int my_rank = MPIWrapper::my_rank;
 
 	const size_t total_num_neurons = rank_to_start_neuron_id[static_cast<long long>(num_ranks) - 1] + rank_to_num_neurons[static_cast<long long>(num_ranks) - 1];
 	std::vector<double> xyz_pos(total_num_neurons * 3);
@@ -95,12 +92,15 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 	// Copy my neuron positions as xyz-triple into the send buffer
 	for (size_t i = 0; i < my_num_neurons; i++) {
 		auto idx = (rank_to_start_neuron_id[my_rank] + i) * 3;
-		RelearnException::check(idx < total_num_neurons * 3);
+		RelearnException::check(idx < total_num_neurons * 3, "idx is too large in neuronidmap");
 
 		xyz_pos[idx] = x[i];
 		xyz_pos[idx + 1] = y[i];
 		xyz_pos[idx + 2] = z[i];
 	}
+
+	std::cout << num_ranks << std::endl;
+	std::cout << my_rank << std::endl;
 
 	// Create MPI data type for three doubles
 	MPI_Datatype type;
@@ -110,19 +110,24 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 	std::vector<int> recvcounts(num_ranks);
 	std::vector<int> displs(num_ranks);
 	for (int i = 0; i < num_ranks; i++) {
-		RelearnException::check(rank_to_num_neurons[i] <= std::numeric_limits<int>::max());
+		RelearnException::check(rank_to_num_neurons[i] <= std::numeric_limits<int>::max(), "rank to neuron is too large in neuronidmap");
 		recvcounts[i] = static_cast<int>(rank_to_num_neurons[i]);
 
-		RelearnException::check(rank_to_start_neuron_id[i] <= std::numeric_limits<int>::max());
+		RelearnException::check(rank_to_start_neuron_id[i] <= std::numeric_limits<int>::max(), "rank to start is too large in neuronidmap");
 		displs[i] = static_cast<int>(rank_to_start_neuron_id[i]);
 	}
+
+	std::cout << "Before allgather" << std::endl;
+
+	MPIWrapper::barrier(MPIWrapper::Scope::global);
 
 	// Receive all neuron positions as xyz-triples
 	MPI_Allgatherv(MPI_IN_PLACE, static_cast<int>(total_num_neurons), type,
 		xyz_pos.data(), recvcounts.data(),
-		displs.data(), type, mpi_comm);
+		displs.data(), type, MPI_COMM_WORLD);
 
 	MPI_Type_free(&type);
+	std::cout << "after allgather" << std::endl;
 
 	// Map every neuron position to one (rank, neuron_id) pair
 	size_t glob_neuron_id = 0;
@@ -130,16 +135,16 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 		RankNeuronId val{ 0, 0 };
 		val.rank = rank;
 		for (size_t neuron_id = 0; neuron_id < rank_to_num_neurons[rank]; neuron_id++) {
-			RelearnException::check(glob_neuron_id < total_num_neurons);
+			RelearnException::check(glob_neuron_id < total_num_neurons, "global id is too large in neuronidmap");
 
 			const auto idx = glob_neuron_id * 3;
 
-			RelearnException::check(idx < xyz_pos.size());
+			RelearnException::check(idx < xyz_pos.size(), "idx is too large in neuronidmap");
 			Vec3d key{ xyz_pos[idx], xyz_pos[idx + 1], xyz_pos[idx + 2] };
 			val.neuron_id = neuron_id;
 
 			auto ret = pos_to_rank_neuron_id.insert(std::make_pair(key, val));
-			RelearnException::check(ret.second); // New element was inserted, otherwise duplicates exist
+			RelearnException::check(ret.second, "there is a duplicate in neuronidmap"); // New element was inserted, otherwise duplicates exist
 
 			glob_neuron_id++;
 		}

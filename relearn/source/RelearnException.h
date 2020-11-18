@@ -35,6 +35,9 @@ public:
 			return;
 		}
 
+		std::cerr << "There was an error!" << std::endl;
+		std::cerr << "But no error message" << std::endl;
+
 		throw RelearnException{};
 	}
 

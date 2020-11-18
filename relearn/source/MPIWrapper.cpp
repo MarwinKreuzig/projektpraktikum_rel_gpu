@@ -38,6 +38,8 @@
   /**
    * Global variables
    */
+MPI_Op MPIWrapper::minsummax;
+
 int MPIWrapper::num_ranks;                     // Number of ranks in MPI_COMM_WORLD
 int MPIWrapper::my_rank;                       // My rank in MPI_COMM_WORLD
 
@@ -67,6 +69,8 @@ void MPIWrapper::init(int argc, char** argv) {
 	MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
 	// NOLINTNEXTLINE
 	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+	register_custom_function();
 
 	num_neurons_of_ranks.resize(num_ranks);
 	num_neurons_of_ranks_displs.resize(num_ranks);
@@ -132,6 +136,82 @@ void MPIWrapper::init_buffer_octree(size_t num_partitions) {
 }
 
 void MPIWrapper::barrier(Scope scope) {
+	auto mpi_scope = translate_scope(scope);
+
+	const int errorcode = MPI_Barrier(mpi_scope);
+	RelearnException::check(errorcode == 0, "Error in barrier");
+}
+
+double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, Scope scope) {
+	auto mpi_scope = translate_scope(scope);
+	auto mpi_reduce_function = translate_reduce_function(function);
+
+	double result = 0.0;
+	// NOLINTNEXTLINE
+	const int errorcode = MPI_Reduce(&value, &result, 1, MPI_DOUBLE, mpi_reduce_function, root_rank, mpi_scope);
+	RelearnException::check(errorcode == 0, "Error in reduce");
+
+	return result;
+}
+
+double MPIWrapper::all_reduce(double value, ReduceFunction function, Scope scope) {
+	auto mpi_scope = translate_scope(scope);
+	auto mpi_reduce_function = translate_reduce_function(function);
+
+	double result = 0.0;
+	// NOLINTNEXTLINE
+	const int errorcode = MPI_Allreduce(&value, &result, 1, MPI_DOUBLE, mpi_reduce_function, mpi_scope);
+	RelearnException::check(errorcode == 0, "Error in all reduce");
+
+	return result;
+}
+
+void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst, Scope scope) {
+	size_t count_src = src.size();
+	size_t count_dst = dst.size();
+
+	RelearnException::check(count_src == count_dst, "Error in all to all: size");
+
+	auto mpi_scope = translate_scope(scope);
+
+	// NOLINTNEXTLINE
+	const int errorcode = MPI_Alltoall(src.data(), sizeof(size_t), MPI_CHAR, dst.data(), sizeof(size_t), MPI_CHAR, mpi_scope);
+	RelearnException::check(errorcode == 0, "Error in all to all, mpi");
+}
+
+void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
+	// NOLINTNEXTLINE
+	MPI_Waitall(tokens.size(), tokens.data(), MPI_STATUSES_IGNORE);
+}
+
+MPI_Op MPIWrapper::translate_reduce_function(ReduceFunction rf) {
+	auto mpi_reduce_function = MPI_Op(0);
+
+	switch (rf) {
+	case ReduceFunction::min:
+		// NOLINTNEXTLINE
+		mpi_reduce_function = MPI_MIN;
+		break;
+	case ReduceFunction::max:
+		// NOLINTNEXTLINE
+		mpi_reduce_function = MPI_MAX;
+		break;
+	case ReduceFunction::sum:
+		// NOLINTNEXTLINE
+		mpi_reduce_function = MPI_SUM;
+		break;
+	case ReduceFunction::minsummax:
+		mpi_reduce_function = minsummax;
+		break;
+	default:
+		RelearnException::check(false, "In reduce, got wrong function");
+		break;
+	}
+
+	return mpi_reduce_function;
+}
+
+MPI_Comm MPIWrapper::translate_scope(Scope scope) {
 	// NOLINTNEXTLINE
 	auto mpi_scope = MPI_Comm(0);
 
@@ -142,147 +222,41 @@ void MPIWrapper::barrier(Scope scope) {
 		break;
 	default:
 		RelearnException::check(false, "In barrier, got wrong scope");
-		return;
+		break;
 	}
 
-	const int errorcode = MPI_Barrier(mpi_scope);
-	RelearnException::check(errorcode == 0);
+	return mpi_scope;
 }
 
-double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, Scope scope) {
-	// NOLINTNEXTLINE
-	auto mpi_scope = MPI_Comm(0);
-
-	switch (scope) {
-	case Scope::global:
-		// NOLINTNEXTLINE
-		mpi_scope = MPI_COMM_WORLD;
-		break;
-	default:
-		RelearnException::check(false, "In reduce, got wrong scope");
-		return 0.0;
-	}
-
-	// NOLINTNEXTLINE
-	auto mpi_reduce_function = MPI_Op(0);
-
-	switch (function) {
-	case ReduceFunction::min:
-		// NOLINTNEXTLINE
-		mpi_reduce_function = MPI_MIN;
-		break;
-	case ReduceFunction::max:
-		// NOLINTNEXTLINE
-		mpi_reduce_function = MPI_MAX;
-		break;
-	case ReduceFunction::sum:
-		// NOLINTNEXTLINE
-		mpi_reduce_function = MPI_SUM;
-		break;
-	default:
-		RelearnException::check(false, "In reduce, got wrong function");
-		return 0.0;
-	}
-
-	double result = 0.0;
-	// NOLINTNEXTLINE
-	const int errorcode = MPI_Reduce(&value, &result, 1, MPI_DOUBLE, mpi_reduce_function, root_rank, mpi_scope);
-	RelearnException::check(errorcode == 0);
-
-	return result;
+void MPIWrapper::register_custom_function() {
+	MPI_Op_create((MPI_User_function*)MPIUserDefinedOperation::min_sum_max, 1, &minsummax);
 }
 
-double MPIWrapper::all_reduce(double value, ReduceFunction function, Scope scope) {
-	// NOLINTNEXTLINE
-	auto mpi_scope = MPI_Comm(0);
-
-	switch (scope) {
-	case Scope::global:
-		// NOLINTNEXTLINE
-		mpi_scope = MPI_COMM_WORLD;
-		break;
-	default:
-		RelearnException::check(false, "In all_reduce, got wrong scope");
-		return 0.0;
-	}
-
-	// NOLINTNEXTLINE
-	auto mpi_reduce_function = MPI_Op(0);
-
-	switch (function) {
-	case ReduceFunction::min:
-		// NOLINTNEXTLINE
-		mpi_reduce_function = MPI_MIN;
-		break;
-	case ReduceFunction::max:
-		// NOLINTNEXTLINE
-		mpi_reduce_function = MPI_MAX;
-		break;
-	case ReduceFunction::sum:
-		// NOLINTNEXTLINE
-		mpi_reduce_function = MPI_SUM;
-		break;
-	default:
-		RelearnException::check(false, "In all_reduce, got wrong function");
-		return 0.0;
-	}
-
-	double result = 0.0;
-	// NOLINTNEXTLINE
-	const int errorcode = MPI_Allreduce(&value, &result, 1, MPI_DOUBLE, mpi_reduce_function, mpi_scope);
-	RelearnException::check(errorcode == 0);
-
-	return result;
-}
-
-void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst, Scope scope) {
-	size_t count_src = src.size();
-	size_t count_dst = dst.size();
-
-	RelearnException::check(count_src == count_dst);
-
-	// NOLINTNEXTLINE
-	auto mpi_scope = MPI_Comm(0);
-
-	switch (scope) {
-	case Scope::global:
-		// NOLINTNEXTLINE
-		mpi_scope = MPI_COMM_WORLD;
-		break;
-	default:
-		RelearnException::check(false, "In all_to_all, got wrong scope");
-		return;
-	}
-
-	// NOLINTNEXTLINE
-	const int errorcode = MPI_Alltoall(src.data(), sizeof(size_t), MPI_CHAR, dst.data(), sizeof(size_t), MPI_CHAR, mpi_scope);
-	RelearnException::check(errorcode == 0);
-}
-
-void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
-	// NOLINTNEXTLINE
-	MPI_Waitall(tokens.size(), tokens.data(), MPI_STATUSES_IGNORE);
+void MPIWrapper::free_custom_function() {
+	MPI_Op_free(&minsummax);
 }
 
 void MPIWrapper::lock_window(int rank, MPI_Locktype lock_type) {
 	const auto lock_type_int = static_cast<int>(lock_type);
 	// NOLINTNEXTLINE
 	const int errorcode = MPI_Win_lock(lock_type_int, rank, MPI_MODE_NOCHECK, mpi_rma_mem_allocator.mpi_window);
-	RelearnException::check(errorcode == 0);
+	RelearnException::check(errorcode == 0, "Error in lock window");
 }
 
 void MPIWrapper::unlock_window(int rank) {
 	const int errorcode = MPI_Win_unlock(rank, mpi_rma_mem_allocator.mpi_window);
-	RelearnException::check(errorcode == 0);
+	RelearnException::check(errorcode == 0, "Error in unlock window");
 }
 
 void MPIWrapper::finalize() /*noexcept*/ {
+	free_custom_function();
+
 	// Free RMA window (MPI collective)
 	// mpi_rma_mem_allocator.free_rma_window();
 	// mpi_rma_mem_allocator.deallocate_rma_mem();
 
 	const int errorcode = MPI_Finalize();
-	RelearnException::check(errorcode == 0);
+	RelearnException::check(errorcode == 0, "Error in finalize");
 }
 
 // Print which neurons "rank" is responsible for
@@ -291,5 +265,21 @@ void MPIWrapper::print_infos_rank(int rank) {
 		std::cout << "Number ranks: " << num_ranks << "\n";
 		std::cout << "Partitioning based on number neurons would be: Rank " << my_rank << ": my_num_neurons: " << my_num_neurons
 			<< " [start_id,end_id]: [" << my_neuron_id_start << "," << my_neuron_id_end << "]\n";
+	}
+}
+
+// This combination function assumes that it's called with the correct MPI datatype
+void MPIUserDefinedOperation::min_sum_max(const int* invec, int* inoutvec, const int* const len, MPI_Datatype* dtype) /*noexcept*/ {
+	std::cout << "Length is: " << *len << std::endl;
+
+	const auto real_length = *len / sizeof(double) / 3;
+
+	const double* in = (const double*)invec;
+	double* inout = (double*)inoutvec;
+
+	for (int i = 0; i < real_length; i++) {
+		inout[3 * i] = std::min(in[3 * i], inout[3 * i]);
+		inout[3 * i + 1] += in[3 * i + 1];
+		inout[3 * i + 2] = std::max(in[3 * i + 2], inout[3 * i + 2]);
 	}
 }

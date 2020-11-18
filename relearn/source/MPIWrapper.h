@@ -13,6 +13,7 @@
 #include "MPI_RMA_MemAllocator.h"
 #include "OctreeNode.h"
 
+#include <array>
 #include <string>
 
 class Octree;
@@ -27,6 +28,12 @@ enum class MPI_Locktype : int {
 	shared = 235,
 };
 
+namespace MPIUserDefinedOperation {
+	// This combination function assumes that it's called with the
+	// correct MPI datatype
+	void min_sum_max(const int* invec, int* inoutvec, const int* const len, MPI_Datatype* dtype);
+}
+
 class MPIWrapper {
 public:
 
@@ -40,11 +47,24 @@ public:
 		max = 1,
 		avg = 2,
 		sum = 3,
-		none = 4
+		none = 4,
+		minsummax = 100
 	};
 
 	typedef MPI_Request AsyncToken;
 
+private:
+	static MPI_Op minsummax;
+
+	static MPI_Op translate_reduce_function(ReduceFunction rf);
+
+	static MPI_Comm translate_scope(Scope scope);
+
+	static void register_custom_function();
+
+	static void free_custom_function();
+
+public:
 	/**
 	 * Global variables
 	 */
@@ -84,42 +104,39 @@ public:
 
 	template <typename T>
 	static void async_send(const T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
-		// NOLINTNEXTLINE
-		auto mpi_scope = MPI_Comm(0);
-
-		switch (scope) {
-		case Scope::global:
-			// NOLINTNEXTLINE
-			mpi_scope = MPI_COMM_WORLD;
-			break;
-		default:
-			RelearnException::check(false, "In async_send, got wrong scope");
-			return;
-		}
+		auto mpi_scope = translate_scope(scope);
 
 		// NOLINTNEXTLINE
 		const int errorcode = MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, mpi_scope, &token);
-		RelearnException::check(errorcode == 0);
+		RelearnException::check(errorcode == 0, "Error in async send");
 	}
 
 	template <typename T>
 	static void async_receive(T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
-		// NOLINTNEXTLINE
-		auto mpi_scope = MPI_Comm(0);
-
-		switch (scope) {
-		case Scope::global:
-			// NOLINTNEXTLINE
-			mpi_scope = MPI_COMM_WORLD;
-			break;
-		default:
-			RelearnException::check(false, "In async_receive, got wrong scope");
-			return;
-		}
+		auto mpi_scope = translate_scope(scope);
 
 		// NOLINTNEXTLINE
 		const int errorcode = MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, mpi_scope, &token);
-		RelearnException::check(errorcode == 0);
+		RelearnException::check(errorcode == 0, "Error in async receive");
+	}
+
+	template <typename T, size_t size>
+	static void reduce(const std::array<T, size>& src, std::array<T, size>& dst, ReduceFunction function, int root_rank, Scope scope) {
+		RelearnException::check(src.size() == dst.size(), "Sizes of vectors don't match");
+		
+		auto mpi_scope = translate_scope(scope);
+		auto mpi_reduce_function = translate_reduce_function(function);
+
+		// NOLINTNEXTLINE
+		const int errorcode = MPI_Reduce(src.data(), dst.data(), sizeof(T) * src.size(), MPI_CHAR, mpi_reduce_function, root_rank, mpi_scope);
+		RelearnException::check(errorcode == 0, "Error in reduce: " + std::to_string(errorcode));
+	}
+
+	template<typename T>
+	static void all_gather(T own_data, std::vector<T>& results, Scope scope) {
+		auto mpi_scope = translate_scope(scope);
+		const int errorcode = MPI_Allgather(&own_data, sizeof(T), MPI_CHAR, results.data(), sizeof(T), MPI_CHAR, mpi_scope);
+		RelearnException::check(errorcode == 0, "Error in all gather");
 	}
 
 	static void wait_all_tokens(std::vector<AsyncToken>& tokens);
@@ -129,4 +146,4 @@ public:
 
 	static void finalize() /*noexcept*/;
 	static void print_infos_rank(int rank);
-}; 
+};

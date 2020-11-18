@@ -489,7 +489,7 @@ OctreeNode* Octree::select_subinterval(const ProbabilitySubintervalList& list) {
 	return (*it)->ptr;
 }
 
-inline bool Octree::node_is_local(const OctreeNode& node) /*noexcept*/ {
+bool Octree::node_is_local(const OctreeNode& node) /*noexcept*/ {
 	return node.rank == MPIWrapper::my_rank;
 }
 

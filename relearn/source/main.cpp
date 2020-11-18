@@ -10,7 +10,6 @@
 
 #include "LogFiles.h"
 #include "LogMessages.h"
-#include "MPIUserDefinedOperation.h"
 #include "MPIWrapper.h"
 #include "MPI_RMA_MemAllocator.h"
 #include "NetworkGraph.h"
@@ -32,6 +31,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <array>
 #include <bitset>
 #include <cerrno>
 #include <cstring>
@@ -114,25 +114,19 @@ void printTimers() {
 	/**
 	 * Print timers and memory usage
 	 */
+	RelearnException::check(3 * TimerRegion::NUM_TIMER_REGIONS == 69);
 
-	MPI_Op mpi_op;
-	MPI_Datatype mpi_datatype_3_double;
+	std::array<double, 69> timers_local{};
 
-	MPI_Op_create((MPI_User_function*)MPIUserDefinedOperation::min_sum_max, 1, &mpi_op);
-
-	MPI_Type_contiguous(3, MPI_DOUBLE, &mpi_datatype_3_double);
-	MPI_Type_commit(&mpi_datatype_3_double);
-
-	double timers_local[3 * TimerRegion::NUM_TIMER_REGIONS] = { 0.0 };
 	for (int i = 0; i < TimerRegion::NUM_TIMER_REGIONS; ++i) {
 		for (int j = 0; j < 3; ++j) {
 			timers_local[3 * i + j] = GlobalTimers::timers.get_elapsed(i);
 		}
 	}
 
-	double timers_global[3 * TimerRegion::NUM_TIMER_REGIONS];
+	std::array<double, 69> timers_global{};
 
-	MPI_Reduce(timers_local, timers_global, TimerRegion::NUM_TIMER_REGIONS, mpi_datatype_3_double, mpi_op, 0, MPI_COMM_WORLD);
+	MPIWrapper::reduce(timers_local, timers_global, MPIWrapper::ReduceFunction::minsummax, 0, MPIWrapper::Scope::global);
 
 #ifndef NDEBUG
 	stringstream sstring;
@@ -237,11 +231,11 @@ void printTimers() {
 
 		cout << "\n======== RMA MEMORY ALLOCATOR RANK 0 ========" << endl;
 		cout << "Min num objects available: " << MPIWrapper::mpi_rma_mem_allocator.get_min_num_avail_objects() << endl;
-
-		MPI_Type_free(&mpi_datatype_3_double);
-		MPI_Op_free(&mpi_op);
 	}
 }
+
+
+
 
 void printNeuronMonitor(const NeuronMonitor& nm, size_t neuron_id) {
 	std::ofstream outfile(std::to_string(neuron_id) + ".csv", std::ios::trunc);
@@ -382,10 +376,8 @@ int main(int argc, char** argv) {
 		neurons.get_num_neurons(),
 		neurons.get_positions().get_x_dims(),
 		neurons.get_positions().get_y_dims(),
-		neurons.get_positions().get_z_dims(),
-		MPI_COMM_WORLD);
-
-	LogMessages::print_message_rank("Neuron id map created", 0);
+		neurons.get_positions().get_z_dims());
+	std::cout << "After neuron id map" << std::endl;
 
 	/**
 	 * Init global tree parameters
@@ -425,7 +417,7 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 	LogMessages::print_message_rank("Network graph created", 0);
-	
+
 
 	// Init number of synaptic elements and assign EXCITATORY or INHIBITORY signal type
 	// to the dendrites. Assignment of the signal type to the axons is done in
@@ -494,7 +486,7 @@ int main(int argc, char** argv) {
 				std::cout << "** UPDATE CONNECTIVITY AFTER: " << step << " of " << params.simulation_time
 					<< " msec ** [" << Timers::wall_clock_time() << "]\n";
 			}
-			
+
 			GlobalTimers::timers.start(TimerRegion::UPDATE_CONNECTIVITY);
 
 			neurons.update_connectivity(global_tree, network_graph, num_synapses_deleted, num_synapses_created);
@@ -502,25 +494,25 @@ int main(int argc, char** argv) {
 			GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_CONNECTIVITY);
 
 			// Get total number of synapses deleted and created
-			const uint64_t cnts_local[2] = { static_cast<uint64_t>(num_synapses_deleted), static_cast<uint64_t>(num_synapses_created) };
-			uint64_t cnts_global[2];
+			std::array<uint64_t, 2> local_cnts = { static_cast<uint64_t>(num_synapses_deleted), static_cast<uint64_t>(num_synapses_created) };
+			std::array<uint64_t, 2> global_cnts{};
 
-			MPI_Reduce(cnts_local, cnts_global, 2, MPI_UINT64_T, MPI_SUM, 0, MPI_COMM_WORLD);
+			MPIWrapper::reduce(local_cnts, global_cnts, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
 
 			if (0 == MPIWrapper::my_rank) {
-				total_deletions += cnts_global[0] / 2;
-				total_creations += cnts_global[1] / 2;
+				total_deletions += global_cnts[0] / 2;
+				total_creations += global_cnts[1] / 2;
 			}
 
-			if (cnts_global[0] != 0.0) {
+			if (global_cnts[0] != 0.0) {
 				std::stringstream sstring; // For output generation
-				sstring << "Sum (all processes) number synapses deleted: " << cnts_global[0] / 2;
+				sstring << "Sum (all processes) number synapses deleted: " << global_cnts[0] / 2;
 				LogMessages::print_message_rank(sstring.str().c_str(), 0);
 			}
 
-			if (cnts_global[1] != 0.0) {
+			if (global_cnts[1] != 0.0) {
 				std::stringstream sstring; // For output generation
-				sstring << "Sum (all processes) number synapses created: " << cnts_global[1] / 2;
+				sstring << "Sum (all processes) number synapses created: " << global_cnts[1] / 2;
 				LogMessages::print_message_rank(sstring.str().c_str(), 0);
 			}
 
