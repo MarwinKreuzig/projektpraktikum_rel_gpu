@@ -15,8 +15,6 @@
 #include "RelearnException.h"
 #include "Utility.h"
 
-#include <mpi.h>
-
 #include <cstdlib>
 #include <iomanip>
 #include <limits>
@@ -177,6 +175,27 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
 	// NOLINTNEXTLINE
 	const int errorcode = MPI_Alltoall(src.data(), sizeof(size_t), MPI_CHAR, dst.data(), sizeof(size_t), MPI_CHAR, mpi_scope);
 	RelearnException::check(errorcode == 0, "Error in all to all, mpi");
+}
+
+void MPIWrapper::all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs) {
+	// Create MPI data type for three doubles
+	MPI_Datatype type;
+	const int errorcode_1 = MPI_Type_contiguous(3, MPI_DOUBLE, &type);
+	RelearnException::check(errorcode_1 == 0, "Error in all to all, mpi");
+
+	const int errorcode_2 = MPI_Type_commit(&type);
+	RelearnException::check(errorcode_2 == 0, "Error in all to all, mpi");
+
+	barrier(Scope::global);
+
+	// Receive all neuron positions as xyz-triples
+	const int errorcode_3 = MPI_Allgatherv(MPI_IN_PLACE, static_cast<int>(total_num_neurons), type,
+		xyz_pos.data(), recvcounts.data(),
+		displs.data(), type, MPI_COMM_WORLD);
+	RelearnException::check(errorcode_3 == 0, "Error in all to all, mpi");
+
+	const int errorcode_4 = MPI_Type_free(&type);
+	RelearnException::check(errorcode_4 == 0, "Error in all to all, mpi");
 }
 
 void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
