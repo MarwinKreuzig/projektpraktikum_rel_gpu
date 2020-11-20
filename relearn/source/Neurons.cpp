@@ -50,7 +50,7 @@ bool Neurons::get_vacant_axon(size_t& neuron_id, Vec3d& xyz_pos, Cell::DendriteT
 
 	const std::vector<double>& axons_cnts = axons.get_cnts();
 	const std::vector<double>& axons_connected_cnts = axons.get_connected_cnts();
-	const SynapticElements::SignalType* axons_signal_types = axons.get_signal_types();
+	const std::vector<SynapticElements::SignalType>& axons_signal_types = axons.get_signal_types();
 	const std::vector<double>& axons_x_dims = positions.get_x_dims();
 	const std::vector<double>& axons_y_dims = positions.get_y_dims();
 	const std::vector<double>& axons_z_dims = positions.get_z_dims();
@@ -82,25 +82,21 @@ bool Neurons::get_vacant_axon(size_t& neuron_id, Vec3d& xyz_pos, Cell::DendriteT
 
 			return true;
 		}
-		else {
-			i++;
-			j = 0;
-		}
+
+		i++;
+		j = 0;
 	} // while
 
 	return false;
 }
 
 void Neurons::init_synaptic_elements() {
-	SynapticElements::SignalType* dendrites_exc_signal_types = dendrites_exc.get_signal_types();
-	SynapticElements::SignalType* dendrites_inh_signal_types = dendrites_inh.get_signal_types();
-
 	/**
 	* Mark dendrites as exc./inh.
 	*/
 	for (auto i = 0; i < num_neurons; i++) {
-		dendrites_exc_signal_types[i] = SynapticElements::EXCITATORY;  // Mark DendriteType::EXCITATORY dendrites as DendriteType::EXCITATORY
-		dendrites_inh_signal_types[i] = SynapticElements::INHIBITORY;  // Mark DendriteType::INHIBITORY dendrites as DendriteType::INHIBITORY
+		dendrites_exc.set_signal_type(i, SynapticElements::EXCITATORY);
+		dendrites_inh.set_signal_type(i, SynapticElements::INHIBITORY);
 	}
 
 	// Give unbound synaptic elements as well
@@ -260,7 +256,7 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 		const auto size_in_bytes = static_cast<int>(map_it.second.get_requests_size_in_bytes());
 
 		MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
-		
+
 		++mpi_requests_index;
 	}
 
@@ -272,9 +268,9 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 	*/
 
 	// From smallest to largest rank that sent deletion request
-	for (auto map_it = map_synapse_deletion_requests_incoming.begin(); map_it != map_synapse_deletion_requests_incoming.end(); ++map_it) {
-		const SynapseDeletionRequests& requests = map_it->second;
-		const int other_rank = map_it->first;
+	for (const auto& map_it : map_synapse_deletion_requests_incoming) {
+		const SynapseDeletionRequests& requests = map_it.second;
+		const int other_rank = map_it.first;
 		const auto num_requests = requests.size();
 
 		// All requests of a rank
@@ -299,9 +295,9 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 					RankNeuronId(MPIWrapper::my_rank, src_neuron_id),
 					RankNeuronId(other_rank, tgt_neuron_id),
 					RankNeuronId(MPIWrapper::my_rank, affected_neuron_id),
-					(SynapticElements::ElementType)affected_element_type,
-					(SynapticElements::SignalType)signal_type,
-					(unsigned int)synapse_id,
+					static_cast<SynapticElements::ElementType>(affected_element_type),
+					static_cast<SynapticElements::SignalType>(signal_type),
+					static_cast<unsigned int>(synapse_id),
 					list_with_pending_deletions);
 			}
 			// My affected neuron is the target neuron of the synapse
@@ -310,9 +306,9 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 					RankNeuronId(other_rank, src_neuron_id),
 					RankNeuronId(MPIWrapper::my_rank, tgt_neuron_id),
 					RankNeuronId(MPIWrapper::my_rank, affected_neuron_id),
-					(SynapticElements::ElementType)affected_element_type,
-					(SynapticElements::SignalType)signal_type,
-					(unsigned int)synapse_id,
+					static_cast<SynapticElements::ElementType>(affected_element_type),
+					static_cast<SynapticElements::SignalType>(signal_type),
+					static_cast<unsigned int>(synapse_id),
 					list_with_pending_deletions);
 			}
 			else {
@@ -384,9 +380,8 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 	}
 
 	// Allgather in-place branch nodes from every rank
-	MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, rma_buffer_branch_nodes,
-		static_cast<int>(num_local_trees) * sizeof(OctreeNode),
-		MPI_CHAR, MPI_COMM_WORLD);
+	MPIWrapper::all_gather_inline(rma_buffer_branch_nodes, num_local_trees, MPIWrapper::Scope::global);
+
 	GlobalTimers::timers.stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
 
 	// Insert only received branch nodes into global tree
@@ -433,7 +428,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 
 	const std::vector<double>& axons_cnts = axons.get_cnts();
 	const std::vector<double>& axons_connected_cnts = axons.get_connected_cnts();
-	const SynapticElements::SignalType* axons_signal_types = axons.get_signal_types();
+	const std::vector<SynapticElements::SignalType>& axons_signal_types = axons.get_signal_types();
 
 	// For my neurons
 	for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
@@ -594,8 +589,9 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 
 				// Target neuron has still dendrite available, so connect
 				RelearnException::check((*dendrites_cnts)[target_neuron_id] - (*dendrites_connected_cnts)[target_neuron_id] >= 0);
-				if (static_cast<unsigned int>((*dendrites_cnts)[target_neuron_id] - (*dendrites_connected_cnts)[target_neuron_id])) {
 
+				const auto diff = static_cast<unsigned int>((*dendrites_cnts)[target_neuron_id] - (*dendrites_connected_cnts)[target_neuron_id]);
+				if (diff != 0) {
 					// Increment num of connected dendrites
 					//dendrites_connected_cnts[target_neuron_id]++;
 
@@ -676,7 +672,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 				//std::cout << "From: " << source_neuron_id << " to " << target_neuron_id << ": " << dendrite_type_needed << std::endl;
 
 				// Request to form synapse succeeded
-				if (connected) {
+				if (connected != 0) {
 					// Increment num of connected axons
 					axons.update_conn_cnt(source_neuron_id, 1.0, "ax");
 					//axons_connected_cnts[source_neuron_id]++;
@@ -740,7 +736,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 
 	const std::vector<double>& cnts_ax = axons.get_cnts();
 	const std::vector<double>& connected_cnts_ax = axons.get_connected_cnts();
-	const SynapticElements::SignalType* signal_types = axons.get_signal_types();
+	const std::vector<SynapticElements::SignalType>& signal_types = axons.get_signal_types();
 
 	for (size_t neuron_id = 0; neuron_id < this->num_neurons; ++neuron_id) {
 		if (SynapticElements::EXCITATORY == signal_types[neuron_id]) {
@@ -973,7 +969,11 @@ void Neurons::print_info_for_barnes_hut() {
 	for (size_t i = 0; i < num_neurons; i++) {
 		cout << left << setw(cwidth_small) << i;
 
-		my_string = "(" + to_string((unsigned int)x_dims[i]) + "," + to_string((unsigned int)y_dims[i]) + "," + to_string((unsigned int)z_dims[i]) + ")";
+		const auto x = static_cast<unsigned int>(x_dims[i]);
+		const auto y = static_cast<unsigned int>(y_dims[i]);
+		const auto z = static_cast<unsigned int>(z_dims[i]);
+
+		my_string = "(" + to_string(x) + "," + to_string(y) + "," + to_string(z) + ")";
 		cout << setw(cwidth_medium) << my_string;
 
 		my_string = to_string(axons_cnts[i]) + "|" + to_string(axons_connected_cnts[i]);

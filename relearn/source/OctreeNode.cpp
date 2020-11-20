@@ -13,30 +13,23 @@
 OctreeNode::OctreeNode() /*noexcept*/ :
 	is_parent(false),
 	level(0),
-	rank(0) {
-	int i;
-
-	for (i = 0; i < 8; i++) {
-		children[i] = nullptr;
-	}
+	rank(0), children(std::array<OctreeNode*, 8>{nullptr}) {
 }
 
 void OctreeNode::print() const {
-	using namespace std;
+	std::cout << "== OctreeNode (" << this << ") ==\n";
 
-	cout << "== OctreeNode (" << this << ") ==\n";
-
-	cout << "  children[8]: ";
-	for (int i = 0; i < 8; i++) {
-		cout << children[i] << " ";
+	std::cout << "  children[8]: ";
+	for (const auto child : children) {
+		std::cout << child << " ";
 	}
-	cout << "\n";
+	std::cout << "\n";
 
-	cout << "  is_parent  : " << is_parent << "\n\n";
-	cout << "  rank       : " << rank << "\n";
-	cout << "  level      : " << level << "\n\n";
+	std::cout << "  is_parent  : " << is_parent << "\n\n";
+	std::cout << "  rank       : " << rank << "\n";
+	std::cout << "  level      : " << level << "\n\n";
 
 	cell.print();
 
-	cout << endl;
+	std::cout << std::endl;
 }

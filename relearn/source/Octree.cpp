@@ -20,6 +20,8 @@
 #include "Random.h"
 #include "RelearnException.h"
 
+#include <mpi.h>
+
 Octree::Octree() :
 	root(nullptr),
 	root_level(0),
@@ -219,7 +221,7 @@ void Octree::get_nodes_for_interval(
 	bool naive_method) {
 
 	/* Subtree is not empty AND (Dendrites are available OR We use naive method) */
-	const auto flag = root && (root->cell.get_neuron_num_dendrites_for(dendrite_type_needed) != 0 || naive_method);
+	const auto flag = (root != nullptr) && (root->cell.get_neuron_num_dendrites_for(dendrite_type_needed) != 0 || naive_method);
 	if (!flag) {
 		return;
 	}
@@ -293,7 +295,7 @@ void Octree::get_nodes_for_interval(
 
 			// Push root's children onto stack
 			for (auto i = 7; i >= 0; i--) {
-				if (local_children[i]) {
+				if (local_children[i] != nullptr) {
 					stack.push(local_children[i]);
 				}
 			}

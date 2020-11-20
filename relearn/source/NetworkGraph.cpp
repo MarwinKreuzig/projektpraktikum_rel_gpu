@@ -481,10 +481,10 @@ void NetworkGraph::write_synapses_to_file(const std::string& filename, const Neu
 			const EdgesVal& ev = out_edge.second;
 
 			const size_t& target_neuron_id = ek.second;
-			const int& target_neuron_rank = ek.first;
+			//const int& target_neuron_rank = ek.first;
 
-			const size_t global_source_neuron_id = partition.get_global_id(source_neuron_id);
-			const size_t global_target_neuron_id = partition.get_global_id(target_neuron_id);
+			//const size_t global_source_neuron_id = partition.get_global_id(source_neuron_id);
+			//const size_t global_target_neuron_id = partition.get_global_id(target_neuron_id);
 
 			ofstream << source_neuron_id << "\t" << target_neuron_id << "\t" << ev << "\n";
 		}

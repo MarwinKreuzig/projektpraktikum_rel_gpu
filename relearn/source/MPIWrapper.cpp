@@ -89,6 +89,8 @@ void MPIWrapper::init_neurons(size_t num_neurons) {
 	 */
 	if (num_neurons > std::numeric_limits<int>::max()) {
 		LogMessages::print_error("init_neurons: num_neurons does not fit in \"int\" data type");
+
+		// NOLINTNEXTLINE
 		exit(EXIT_FAILURE);
 	}
 
@@ -180,6 +182,8 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
 void MPIWrapper::all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs) {
 	// Create MPI data type for three doubles
 	MPI_Datatype type;
+
+	// NOLINTNEXTLINE
 	const int errorcode_1 = MPI_Type_contiguous(3, MPI_DOUBLE, &type);
 	RelearnException::check(errorcode_1 == 0, "Error in all to all, mpi");
 
@@ -189,9 +193,9 @@ void MPIWrapper::all_gather_v(size_t total_num_neurons, std::vector<double>& xyz
 	barrier(Scope::global);
 
 	// Receive all neuron positions as xyz-triples
-	const int errorcode_3 = MPI_Allgatherv(MPI_IN_PLACE, static_cast<int>(total_num_neurons), type,
-		xyz_pos.data(), recvcounts.data(),
-		displs.data(), type, MPI_COMM_WORLD);
+
+	// NOLINTNEXTLINE
+	const int errorcode_3 = MPI_Allgatherv(MPI_IN_PLACE, static_cast<int>(total_num_neurons), type, xyz_pos.data(), recvcounts.data(), displs.data(), type, MPI_COMM_WORLD);
 	RelearnException::check(errorcode_3 == 0, "Error in all to all, mpi");
 
 	const int errorcode_4 = MPI_Type_free(&type);
@@ -204,6 +208,7 @@ void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
 }
 
 MPI_Op MPIWrapper::translate_reduce_function(ReduceFunction rf) {
+	// NOLINTNEXTLINE
 	auto mpi_reduce_function = MPI_Op(0);
 
 	switch (rf) {
@@ -248,6 +253,7 @@ MPI_Comm MPIWrapper::translate_scope(Scope scope) {
 }
 
 void MPIWrapper::register_custom_function() {
+	// NOLINTNEXTLINE
 	MPI_Op_create((MPI_User_function*)MPIUserDefinedOperation::min_sum_max, 1, &minsummax);
 }
 
@@ -257,6 +263,7 @@ void MPIWrapper::free_custom_function() {
 
 void MPIWrapper::lock_window(int rank, MPI_Locktype lock_type) {
 	const auto lock_type_int = static_cast<int>(lock_type);
+
 	// NOLINTNEXTLINE
 	const int errorcode = MPI_Win_lock(lock_type_int, rank, MPI_MODE_NOCHECK, mpi_rma_mem_allocator.mpi_window);
 	RelearnException::check(errorcode == 0, "Error in lock window");
@@ -288,13 +295,13 @@ void MPIWrapper::print_infos_rank(int rank) {
 }
 
 // This combination function assumes that it's called with the correct MPI datatype
-void MPIUserDefinedOperation::min_sum_max(const int* invec, int* inoutvec, const int* const len, MPI_Datatype* dtype) /*noexcept*/ {
+void MPIUserDefinedOperation::min_sum_max(const int* invec, int* inoutvec, const int* const len, [[maybe_unused]] MPI_Datatype* dtype) /*noexcept*/ {
 	std::cout << "Length is: " << *len << std::endl;
 
 	const auto real_length = *len / sizeof(double) / 3;
 
-	const double* in = (const double*)invec;
-	double* inout = (double*)inoutvec;
+	const auto in = reinterpret_cast<const double*>(invec);
+	auto inout = reinterpret_cast<double*>(inoutvec);
 
 	for (int i = 0; i < real_length; i++) {
 		inout[3 * i] = std::min(in[3 * i], inout[3 * i]);

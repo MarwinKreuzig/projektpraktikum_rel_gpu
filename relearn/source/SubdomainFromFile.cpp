@@ -140,8 +140,8 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
 	currently_frac_neurons_exc_ = placed_ex_neurons / static_cast<double>(currently_num_neurons_);
 }
 
-void SubdomainFromFile::neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
-	size_t local_id_start, size_t local_id_end, std::vector<size_t>& global_ids) const {
+void SubdomainFromFile::neuron_global_ids(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
+	[[maybe_unused]] size_t local_id_start, [[maybe_unused]] size_t local_id_end, std::vector<size_t>& global_ids) const {
 
 	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (!contains) {
@@ -155,7 +155,7 @@ void SubdomainFromFile::neuron_global_ids(size_t subdomain_idx, size_t num_subdo
 	}
 }
 
-void SubdomainFromFile::fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) {
+void SubdomainFromFile::fill_subdomain(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains, const Position& min, const Position& max) {
 	const bool subdomain_already_filled = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (subdomain_already_filled) {
 		RelearnException::check(false, "Tried to fill an already filled subdomain.");

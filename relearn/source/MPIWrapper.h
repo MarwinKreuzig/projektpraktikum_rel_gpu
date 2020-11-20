@@ -137,8 +137,18 @@ public:
 	template<typename T>
 	static void all_gather(T own_data, std::vector<T>& results, Scope scope) {
 		auto mpi_scope = translate_scope(scope);
+
+		// NOLINTNEXTLINE
 		const int errorcode = MPI_Allgather(&own_data, sizeof(T), MPI_CHAR, results.data(), sizeof(T), MPI_CHAR, mpi_scope);
 		RelearnException::check(errorcode == 0, "Error in all gather");
+	}
+
+	template <typename T>
+	static void all_gather_inline(T* ptr, int count, Scope scope) {
+		auto mpi_scope = translate_scope(scope);
+
+		// NOLINTNEXTLINE
+		MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, ptr, count * sizeof(T), MPI_CHAR, MPI_COMM_WORLD);
 	}
 
 	static void all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs);

@@ -12,6 +12,7 @@
 
 #include "Cell.h"
 
+#include <array>
 #include <cstddef>
 
 class OctreeNode {
@@ -28,7 +29,7 @@ public:
 	void print() const;
 
 	Cell cell;
-	OctreeNode* children[8];
+	std::array<OctreeNode*, 8> children;
 	bool is_parent;
 
 	int rank;             // MPI rank who owns this octree node

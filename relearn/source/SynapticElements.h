@@ -57,8 +57,8 @@ public:
 		return delta_cnts;
 	}
 	
-	SignalType* get_signal_types() noexcept {
-		return signal_types.data(); 
+	const std::vector<SignalType>& get_signal_types() const noexcept {
+		return signal_types; 
 	}
 
 	void update_cnt(size_t neuron_id, double delta) {
@@ -76,6 +76,10 @@ public:
 		RelearnException::check(delta_cnts[neuron_id] >= 0.0);
 	}
 
+	void set_signal_type(size_t neuron_id, SignalType type) noexcept {
+		signal_types[neuron_id] = type;
+	}
+
 	double get_cnt(size_t neuron_id) const noexcept {
 		return cnts[neuron_id]; 
 	}
@@ -88,12 +92,8 @@ public:
 		return delta_cnts[neuron_id];
 	}
 
-	enum SignalType get_signal_type(size_t neuron_id) const noexcept { 
+	SignalType get_signal_type(size_t neuron_id) const noexcept { 
 		return signal_types[neuron_id]; 
-	}
-
-	void set_signal_type(size_t neuron_id, SignalType signal_type) noexcept { 
-		signal_types[neuron_id] = signal_type;
 	}
 
 	ElementType get_element_type() const noexcept { 

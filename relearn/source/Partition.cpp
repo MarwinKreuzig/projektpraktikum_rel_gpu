@@ -12,7 +12,7 @@
 
 #include "RelearnException.h"
 
-Partition::Partition(int num_ranks, int my_rank) {
+Partition::Partition(int num_ranks, int my_rank) : my_num_neurons(0), total_num_neurons(0) {
 	/**
 	* Total number of subdomains is smallest power of 8 that is >= num_ranks.
 	* We choose power of 8 as every domain subdivision creates 8 subdomains (in 3d).
@@ -65,7 +65,7 @@ Partition::Partition(int num_ranks, int my_rank) {
 
 	// Calc start and end index of subdomain
 	my_subdomain_id_start = (total_num_subdomains / num_ranks) * my_rank;
-	my_subdomain_id_start += std::min(rest, (size_t)my_rank);
+	my_subdomain_id_start += std::min(rest, static_cast<size_t>(my_rank));
 	my_subdomain_id_end = my_subdomain_id_start + my_num_subdomains - 1;
 
 	// Allocate vector with my number of subdomains

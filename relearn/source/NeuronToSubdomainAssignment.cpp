@@ -32,8 +32,8 @@ void NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3<size_t>& s
 }
 
 
-size_t NeuronToSubdomainAssignment::num_neurons(size_t subdomain_idx, size_t num_subdomains,
-	const Position& min, const Position& max) const {
+size_t NeuronToSubdomainAssignment::num_neurons(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
+	[[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max) const {
 
 	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (!contains) {
@@ -46,8 +46,8 @@ size_t NeuronToSubdomainAssignment::num_neurons(size_t subdomain_idx, size_t num
 	return cnt;
 }
 
-void NeuronToSubdomainAssignment::neuron_positions(size_t subdomain_idx, size_t num_subdomains,
-	const Position& min, const Position& max, std::vector<Position>& pos) const {
+void NeuronToSubdomainAssignment::neuron_positions(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
+	[[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max, std::vector<Position>& pos) const {
 
 	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (!contains) {
@@ -63,8 +63,8 @@ void NeuronToSubdomainAssignment::neuron_positions(size_t subdomain_idx, size_t 
 	}
 }
 
-void NeuronToSubdomainAssignment::neuron_types(size_t subdomain_idx, size_t num_subdomains,
-	const Position& min, const Position& max,
+void NeuronToSubdomainAssignment::neuron_types(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
+	[[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max,
 	std::vector<SynapticElements::SignalType>& types) const {
 
 	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
@@ -79,8 +79,8 @@ void NeuronToSubdomainAssignment::neuron_types(size_t subdomain_idx, size_t num_
 	}
 }
 
-void NeuronToSubdomainAssignment::neuron_area_names(size_t subdomain_idx, size_t num_subdomains,
-	const Position& min, const Position& max, std::vector<std::string>& areas) const {
+void NeuronToSubdomainAssignment::neuron_area_names(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
+	[[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max, std::vector<std::string>& areas) const {
 
 	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (!contains) {
