@@ -135,7 +135,7 @@ public:
 
 		/**
 		 * More bound elements should be deleted than are available.
-		 * Now, neither vacant (see if branch above) nor bound elements are left.
+		 * Now, neither vacant (see if branch above) nor bound elements are std::left.
 		 */
 		if (current_count + current_delta < 0.0) {
 			connected_cnts[neuron_id] = 0.0;

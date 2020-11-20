@@ -55,7 +55,7 @@ void NeuronToSubdomainAssignment::neuron_positions(size_t subdomain_idx, [[maybe
 		return;
 	}
 
-	// TODO: This loads the positions, that are only used once, into another vector.
+	// TODO(later): This loads the positions, that are only used once, into another vector.
 
 	const Nodes& nodes = neurons_in_subdomain.at(subdomain_idx);
 	for (const Node& node : nodes) {

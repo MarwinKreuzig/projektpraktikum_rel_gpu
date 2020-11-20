@@ -160,7 +160,11 @@ public:
 		RelearnException::check(errorcode == 0, "Error in get");
 	}
 
-	static MPI_Request get_non_null_request();
+	static void wait_request(AsyncToken& request);
+
+	static AsyncToken get_non_null_request();
+
+	static AsyncToken get_null_request();
 
 	static void all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs);
 

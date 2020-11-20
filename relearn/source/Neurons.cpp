@@ -106,8 +106,6 @@ void Neurons::init_synaptic_elements() {
 	const int num_axons = 0;
 	const int num_dends = 0;
 
-	// TODO: Look here
-
 	const std::vector<double>& axons_cnts = axons.get_cnts();
 	const std::vector<double>& dendrites_inh_cnts = dendrites_inh.get_cnts();
 	const std::vector<double>& dendrites_exc_cnts = dendrites_exc.get_cnts();
@@ -391,7 +389,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 	for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
 		if (i < partition.get_my_subdomain_id_start() ||
 			i > partition.get_my_subdomain_id_end()) {
-			global_tree.insert(&rma_buffer_branch_nodes[i]);
+			global_tree.insert(rma_buffer_branch_nodes + i);
 		}
 	}
 	GlobalTimers::timers.stop_and_add(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
@@ -455,7 +453,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 			* Find target neuron for connecting and
 			* connect if target neuron has still dendrite available.
 			*
-			* The target neuron might not have any dendrites left
+			* The target neuron might not have any dendrites std::left
 			* as other axons might already have connected to them.
 			* Right now, those collisions are handled in a first-come-first-served fashion.
 			*/
@@ -721,8 +719,6 @@ void Neurons::debug_check_counts() {
 }
 
 void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, LogFiles& log_file, const Parameters& params, size_t sum_synapses_deleted, size_t sum_synapses_created) {
-	using namespace std;
-
 	unsigned int sum_axons_exc_cnts, sum_axons_exc_connected_cnts;
 	unsigned int sum_axons_inh_cnts, sum_axons_inh_connected_cnts;
 	unsigned int sum_dends_exc_cnts, sum_dends_exc_connected_cnts;
@@ -786,33 +782,33 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 
 	// Output data
 	if (0 == MPIWrapper::my_rank) {
-		ofstream& file = log_file.get_file(0);
+		std::ofstream& file = log_file.get_file(0);
 		const int cwidth = 20;  // Column width
 
 								// Write headers to file if not already done so
 		if (0 == step) {
-			file << params << endl;
+			file << params << std::endl;
 			file << "# SUMS OVER ALL NEURONS\n";
-			file << left
-				<< setw(cwidth) << "# step"
-				<< setw(cwidth) << "Axons exc. (vacant)"
-				<< setw(cwidth) << "Axons inh. (vacant)"
-				<< setw(cwidth) << "Dends exc. (vacant)"
-				<< setw(cwidth) << "Dends inh. (vacant)"
-				<< setw(cwidth) << "Synapses deleted"
-				<< setw(cwidth) << "Synapses created"
+			file << std::left
+				<< std::setw(cwidth) << "# step"
+				<< std::setw(cwidth) << "Axons exc. (vacant)"
+				<< std::setw(cwidth) << "Axons inh. (vacant)"
+				<< std::setw(cwidth) << "Dends exc. (vacant)"
+				<< std::setw(cwidth) << "Dends inh. (vacant)"
+				<< std::setw(cwidth) << "Synapses deleted"
+				<< std::setw(cwidth) << "Synapses created"
 				<< "\n";
 		}
 
 		// Write data at step "step"
-		file << left
-			<< setw(cwidth) << step
-			<< setw(cwidth) << sums_global[0]
-			<< setw(cwidth) << sums_global[1]
-			<< setw(cwidth) << sums_global[2]
-			<< setw(cwidth) << sums_global[3]
-			<< setw(cwidth) << sums_global[4] / 2 // As counted on both of the neurons
-			<< setw(cwidth) << sums_global[5] / 2 // As counted on both of the neurons
+		file << std::left
+			<< std::setw(cwidth) << step
+			<< std::setw(cwidth) << sums_global[0]
+			<< std::setw(cwidth) << sums_global[1]
+			<< std::setw(cwidth) << sums_global[2]
+			<< std::setw(cwidth) << sums_global[3]
+			<< std::setw(cwidth) << sums_global[4] / 2 // As counted on both of the neurons
+			<< std::setw(cwidth) << sums_global[5] / 2 // As counted on both of the neurons
 			<< "\n";
 	}
 }
@@ -820,8 +816,6 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 // Print global information about all neurons at rank 0
 
 void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles& log_file, const Parameters& params) {
-	using namespace std;
-
 	const StatisticalMeasures<double> calcium_statistics =
 		global_statistics(calcium.data(), num_neurons, params.num_neurons, 0, MPIWrapper::Scope::global);
 
@@ -830,66 +824,63 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles
 
 	// Output data
 	if (0 == MPIWrapper::my_rank) {
-		ofstream& file = log_file.get_file(0);
+		std::ofstream& file = log_file.get_file(0);
 		const int cwidth = 16;  // Column width
 
 								// Write headers to file if not already done so
 		if (0 == step) {
-			file << params << endl;
+			file << params << std::endl;
 			file << "# ALL NEURONS\n";
-			file << left
-				<< setw(cwidth) << "# step"
-				<< setw(cwidth) << "C (avg)"
-				<< setw(cwidth) << "C (min)"
-				<< setw(cwidth) << "C (max)"
-				<< setw(cwidth) << "C (var)"
-				<< setw(cwidth) << "C (std_dev)"
-				<< setw(cwidth) << "activity (avg)"
-				<< setw(cwidth) << "activity (min)"
-				<< setw(cwidth) << "activity (max)"
-				<< setw(cwidth) << "activity (var)"
-				<< setw(cwidth) << "activity (std_dev)"
+			file << std::left
+				<< std::setw(cwidth) << "# step"
+				<< std::setw(cwidth) << "C (avg)"
+				<< std::setw(cwidth) << "C (min)"
+				<< std::setw(cwidth) << "C (max)"
+				<< std::setw(cwidth) << "C (var)"
+				<< std::setw(cwidth) << "C (std_dev)"
+				<< std::setw(cwidth) << "activity (avg)"
+				<< std::setw(cwidth) << "activity (min)"
+				<< std::setw(cwidth) << "activity (max)"
+				<< std::setw(cwidth) << "activity (var)"
+				<< std::setw(cwidth) << "activity (std_dev)"
 				<< "\n";
 		}
 
 		// Write data at step "step"
-		file << left
-			<< setw(cwidth) << step
-			<< setw(cwidth) << calcium_statistics.avg
-			<< setw(cwidth) << calcium_statistics.min
-			<< setw(cwidth) << calcium_statistics.max
-			<< setw(cwidth) << calcium_statistics.var
-			<< setw(cwidth) << calcium_statistics.std
-			<< setw(cwidth) << activity_statistics.avg
-			<< setw(cwidth) << activity_statistics.min
-			<< setw(cwidth) << activity_statistics.max
-			<< setw(cwidth) << activity_statistics.var
-			<< setw(cwidth) << activity_statistics.std
+		file << std::left
+			<< std::setw(cwidth) << step
+			<< std::setw(cwidth) << calcium_statistics.avg
+			<< std::setw(cwidth) << calcium_statistics.min
+			<< std::setw(cwidth) << calcium_statistics.max
+			<< std::setw(cwidth) << calcium_statistics.var
+			<< std::setw(cwidth) << calcium_statistics.std
+			<< std::setw(cwidth) << activity_statistics.avg
+			<< std::setw(cwidth) << activity_statistics.min
+			<< std::setw(cwidth) << activity_statistics.max
+			<< std::setw(cwidth) << activity_statistics.var
+			<< std::setw(cwidth) << activity_statistics.std
 			<< "\n";
 	}
 }
 
 void Neurons::print_network_graph_to_log_file(LogFiles& log_file, const NetworkGraph& network_graph, const Parameters& params, const NeuronIdMap& neuron_id_map) {
-	using namespace std;
-	ofstream& file = log_file.get_file(0);
+	std::ofstream& file = log_file.get_file(0);
 
 	// Write output format to file
-	file << "# " << params.num_neurons << endl; // Total number of neurons
-	file << "# <target neuron id> <source neuron id> <weight>" << endl;
+	file << "# " << params.num_neurons << std::endl; // Total number of neurons
+	file << "# <target neuron id> <source neuron id> <weight>" << std::endl;
 
 	// Write network graph to file
-	//*file << network_graph << endl;
+	//*file << network_graph << std::endl;
 	network_graph.print(file, neuron_id_map);
 }
 
 void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& params, const NeuronIdMap& neuron_id_map) {
-	using namespace std;
-
-	ofstream& file = log_file.get_file(0);
+	std::ofstream& file = log_file.get_file(0);
 
 	// Write total number of neurons to log file
-	file << "# " << params.num_neurons << endl;
-	file << "# " << "<global id> <pos x> <pos y> <pos z> <area>" << endl;
+	file << "# " << params.num_neurons << std::endl;
+	file << "# " << "<global id> <pos x> <pos y> <pos z> <area>" << std::endl;
 
 	const std::vector<double>& axons_x_dims = positions.get_x_dims();
 	const std::vector<double>& axons_y_dims = positions.get_y_dims();
@@ -914,32 +905,28 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& 
 			<< area_names[neuron_id] << "\n";
 	}
 
-	file << flush;
+	file << std::flush;
 	file << std::defaultfloat;
 }
 
 void Neurons::print() {
-	using namespace std;
-
 	// Column widths
 	const int cwidth_left = 6;
 	const int cwidth = 16;
 
 	// Heading
-	cout << left << setw(cwidth_left) << "gid" << setw(cwidth) << "x" << setw(cwidth) << "AP";
-	cout << setw(cwidth) << "refrac" << setw(cwidth) << "C" << setw(cwidth) << "A" << setw(cwidth) << "D_ex" << setw(cwidth) << "D_in" << "\n";
+	std::cout << std::left << std::setw(cwidth_left) << "gid" << std::setw(cwidth) << "x" << std::setw(cwidth) << "AP";
+	std::cout << std::setw(cwidth) << "refrac" << std::setw(cwidth) << "C" << std::setw(cwidth) << "A" << std::setw(cwidth) << "D_ex" << std::setw(cwidth) << "D_in" << "\n";
 
 	// Values
 	for (size_t i = 0; i < num_neurons; i++) {
-		cout << left << setw(cwidth_left) << i << setw(cwidth) << neuron_models->get_x(i) << setw(cwidth) << neuron_models->get_fired(i);
-		cout << setw(cwidth) << neuron_models->get_secondary_variable(i) << setw(cwidth) << calcium[i] << setw(cwidth) << axons.get_cnt(i);
-		cout << setw(cwidth) << dendrites_exc.get_cnt(i) << setw(cwidth) << dendrites_inh.get_cnt(i) << "\n";
+		std::cout << std::left << std::setw(cwidth_left) << i << std::setw(cwidth) << neuron_models->get_x(i) << std::setw(cwidth) << neuron_models->get_fired(i);
+		std::cout << std::setw(cwidth) << neuron_models->get_secondary_variable(i) << std::setw(cwidth) << calcium[i] << std::setw(cwidth) << axons.get_cnt(i);
+		std::cout << std::setw(cwidth) << dendrites_exc.get_cnt(i) << std::setw(cwidth) << dendrites_inh.get_cnt(i) << "\n";
 	}
 }
 
 void Neurons::print_info_for_barnes_hut() {
-	using namespace std;
-
 	const std::vector<double>& x_dims = positions.get_x_dims();
 	const std::vector<double>& y_dims = positions.get_y_dims();
 	const std::vector<double>& z_dims = positions.get_z_dims();
@@ -957,35 +944,35 @@ void Neurons::print_info_for_barnes_hut() {
 	const int cwidth_medium = 16;
 	const int cwidth_big = 27;
 
-	string my_string;
+	std::string my_string;
 
 
 	// Heading
-	cout << left << setw(cwidth_small) << "gid" << setw(cwidth_small) << "region" << setw(cwidth_medium) << "position";
-	cout << setw(cwidth_big) << "axon (exist|connected)" << setw(cwidth_big) << "exc_den (exist|connected)";
-	cout << setw(cwidth_big) << "inh_den (exist|connected)" << "\n";
+	std::cout << std::left << std::setw(cwidth_small) << "gid" << std::setw(cwidth_small) << "region" << std::setw(cwidth_medium) << "position";
+	std::cout << std::setw(cwidth_big) << "axon (exist|connected)" << std::setw(cwidth_big) << "exc_den (exist|connected)";
+	std::cout << std::setw(cwidth_big) << "inh_den (exist|connected)" << "\n";
 
 	// Values
 	for (size_t i = 0; i < num_neurons; i++) {
-		cout << left << setw(cwidth_small) << i;
+		std::cout << std::left << std::setw(cwidth_small) << i;
 
 		const auto x = static_cast<unsigned int>(x_dims[i]);
 		const auto y = static_cast<unsigned int>(y_dims[i]);
 		const auto z = static_cast<unsigned int>(z_dims[i]);
 
-		my_string = "(" + to_string(x) + "," + to_string(y) + "," + to_string(z) + ")";
-		cout << setw(cwidth_medium) << my_string;
+		my_string = "(" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")";
+		std::cout << std::setw(cwidth_medium) << my_string;
 
-		my_string = to_string(axons_cnts[i]) + "|" + to_string(axons_connected_cnts[i]);
-		cout << setw(cwidth_big) << my_string;
+		my_string = std::to_string(axons_cnts[i]) + "|" + std::to_string(axons_connected_cnts[i]);
+		std::cout << std::setw(cwidth_big) << my_string;
 
-		my_string = to_string(dendrites_exc_cnts[i]) + "|" + to_string(dendrites_exc_connected_cnts[i]);
-		cout << setw(cwidth_big) << my_string;
+		my_string = std::to_string(dendrites_exc_cnts[i]) + "|" + std::to_string(dendrites_exc_connected_cnts[i]);
+		std::cout << std::setw(cwidth_big) << my_string;
 
-		my_string = to_string(dendrites_inh_cnts[i]) + "|" + to_string(dendrites_inh_connected_cnts[i]);
-		cout << setw(cwidth_big) << my_string;
+		my_string = std::to_string(dendrites_inh_cnts[i]) + "|" + std::to_string(dendrites_inh_connected_cnts[i]);
+		std::cout << std::setw(cwidth_big) << my_string;
 
-		cout << endl;
+		std::cout << std::endl;
 	}
 }
 
@@ -1023,7 +1010,7 @@ void Neurons::add_synapse_to_pending_deletions(const RankNeuronId& src_neuron_id
 			/**
 			* As the synapse was selected by both neurons connected through it for deletion,
 			* both already deleted their respective synaptic elements of this synapse.
-			* I.e., no element is left to be set vacant.
+			* I.e., no element is std::left to be set vacant.
 			*/
 			it->affected_element_already_deleted = true;
 

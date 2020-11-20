@@ -122,7 +122,8 @@ void NetworkGraph::add_edge_weights(const std::string& filename, const NeuronIdM
 	}
 }
 
-void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, const NeuronIdMap& neuron_id_map, const Partition& partition) {
+void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, 
+	[[maybe_unused]] const NeuronIdMap& neuron_id_map, const Partition& partition) {
 	std::vector<std::tuple<size_t, size_t, int>> local_synapses;
 	std::vector<std::tuple<size_t, size_t, int>> out_synapses;
 	std::vector<std::tuple<size_t, size_t, int>> in_synapses;
@@ -467,7 +468,7 @@ void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) con
 	}
 }
 
-void NetworkGraph::write_synapses_to_file(const std::string& filename, const NeuronIdMap& neuron_id_map, const Partition& partition) {
+void NetworkGraph::write_synapses_to_file(const std::string& filename, [[maybe_unused]] const NeuronIdMap& neuron_id_map, [[maybe_unused]] const Partition& partition) {
 	std::ofstream ofstream(filename, std::ios::binary | std::ios::out);
 
 	ofstream << "# <source neuron id> <target neuron id> <weight> \n";

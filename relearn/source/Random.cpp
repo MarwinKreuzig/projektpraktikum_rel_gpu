@@ -8,7 +8,9 @@
  *
  */
 
+#include "Random.h"
+
 namespace randomNumberSeeds {
-	long int partition;
-	long int octree;
+	long long partition;
+	long long octree;
 } // namespace randomNumberSeeds

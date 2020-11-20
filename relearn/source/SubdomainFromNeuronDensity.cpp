@@ -70,8 +70,8 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 			for (size_t z_it = 0; z_it < neurons_on_z; z_it++) {
 				size_t random_position = 0;
 				random_position |= (z_it);
-				random_position |= (y_it << 16);
-				random_position |= (x_it << 32);
+				random_position |= (y_it << 16u);
+				random_position |= (x_it << 32u);
 				positions[random_counter] = random_position;
 				random_counter++;
 			}
@@ -82,9 +82,9 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
 	for (size_t i = 0; i < num_neurons; i++) {
 		const size_t pos_bitmask = positions[i];
-		const size_t x_it = (pos_bitmask >> 32) & 0xFFFF;
-		const size_t y_it = (pos_bitmask >> 16) & 0xFFFF;
-		const size_t z_it = pos_bitmask & 0xFFFF;
+		const size_t x_it = (pos_bitmask >> 32u) & 0xFFFFu;
+		const size_t y_it = (pos_bitmask >> 16u) & 0xFFFFu;
+		const size_t z_it = pos_bitmask & 0xFFFFu;
 
 		const double x_pos_rnd = random_number_distribution(random_number_generator) + x_it;
 		const double y_pos_rnd = random_number_distribution(random_number_generator) + y_it;
@@ -112,7 +112,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
 		if (placed_neurons == num_neurons) {
 			const auto former_ex_neurons = this->currently_num_neurons_ * this->currently_frac_neurons_exc_;
-			const auto former_in_neurons = this->currently_num_neurons_ - former_ex_neurons;
+			//const auto former_in_neurons = this->currently_num_neurons_ - former_ex_neurons;
 
 			this->currently_num_neurons_ += placed_neurons;
 
@@ -159,8 +159,8 @@ void SubdomainFromNeuronDensity::get_subdomain_boundaries(
 	const auto length = get_simulation_box_length().get_maximum();
 	const auto one_subdomain_length = length / num_subdomains_per_axis;
 
-	min = ((Vec3d)subdomain_3idx) * one_subdomain_length;
-	max = ((Vec3d)(subdomain_3idx + 1)) * one_subdomain_length;
+	min = static_cast<Vec3d>(subdomain_3idx) * one_subdomain_length;
+	max = static_cast<Vec3d>(subdomain_3idx + 1) * one_subdomain_length;
 
 	min.round_to_larger_multiple(um_per_neuron_);
 	max.round_to_larger_multiple(um_per_neuron_);

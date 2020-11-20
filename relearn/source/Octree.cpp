@@ -26,7 +26,11 @@ Octree::Octree() :
 	root(nullptr),
 	root_level(0),
 	no_free_in_destructor(false),
+	acceptance_criterion(0.0),
+	sigma(150.0),
+	naive_method(true),
 	level_of_branch_nodes(-1),
+	max_num_pending_vacant_axons(10),
 	random_number_generator(RandomHolder<Octree>::get_random_generator()),
 	mpi_rma_node_allocator(MPIWrapper::mpi_rma_mem_allocator),
 	random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
@@ -603,9 +607,7 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 
 				// Node is from different rank and MPI request still open
 				// So complete getting the contents of the remote node
-				if (MPI_REQUEST_NULL != node_to_visit.mpi_request) {
-					MPI_Wait(&node_to_visit.mpi_request, MPI_STATUS_IGNORE);
-				}
+				MPIWrapper::wait_request(node_to_visit.mpi_request);
 
 				bool has_vacant_dendrites = false;
 				const auto accept = acceptance_criterion_test(axon.xyz_pos, node_to_visit.ptr, axon.dendrite_type_needed, false, has_vacant_dendrites);

@@ -13,8 +13,8 @@
 #include <random>
 
 namespace randomNumberSeeds {
-	extern long int partition;
-	extern long int octree;
+	extern long long partition;
+	extern long long octree;
 }
 
 template<typename T>

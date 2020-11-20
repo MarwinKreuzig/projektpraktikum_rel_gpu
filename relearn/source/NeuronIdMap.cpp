@@ -43,8 +43,9 @@ bool NeuronIdMap::rank_neuron_id2glob_id(const RankNeuronId&
 	rank_neuron_id, size_t& glob_id) const /*noexcept*/ {
 	// Rank is not valid
 	if (rank_neuron_id.rank < 0 ||
-		rank_neuron_id.rank > (rank_to_start_neuron_id.size() - 1))
+		rank_neuron_id.rank > (rank_to_start_neuron_id.size() - 1)) { 
 		return false;
+	}
 
 	glob_id = rank_to_start_neuron_id[rank_neuron_id.rank] + rank_neuron_id.neuron_id;
 	return true;

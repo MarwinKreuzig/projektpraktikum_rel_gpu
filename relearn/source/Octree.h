@@ -51,20 +51,20 @@ public:
 		ProbabilitySubinterval() noexcept :
 			ptr(nullptr),
 			probability(0),
-			mpi_request(MPI_REQUEST_NULL),
+			mpi_request(MPIWrapper::get_null_request()),
 			request_rank(-1) {
 		}
 
 		ProbabilitySubinterval(OctreeNode* node) noexcept :
 			ptr(node),
 			probability(0),
-			mpi_request(MPI_REQUEST_NULL),
+			mpi_request(MPIWrapper::get_null_request()),
 			request_rank(-1) {
 		}
 
 		OctreeNode* ptr;
 		double probability;
-		MPI_Request mpi_request;
+		MPIWrapper::AsyncToken mpi_request;
 		int request_rank;
 	};
 	typedef std::list<ProbabilitySubinterval*> ProbabilitySubintervalList;
