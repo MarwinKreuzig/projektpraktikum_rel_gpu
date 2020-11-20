@@ -67,7 +67,7 @@ public:
 		MPIWrapper::AsyncToken mpi_request;
 		int request_rank;
 	};
-	typedef std::list<ProbabilitySubinterval*> ProbabilitySubintervalList;
+	typedef std::list<std::shared_ptr<ProbabilitySubinterval>> ProbabilitySubintervalList;
 
 	/**
 	 * Type for vacant axon for which a target neuron needs to be found

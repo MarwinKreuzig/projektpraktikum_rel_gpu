@@ -332,7 +332,7 @@ void Octree::get_nodes_for_interval(
 		if (accept) {
 			//std::cout << "accepted: " << stack_elem->cell.get_neuron_id() << std::endl;
 			// Insert node into list
-			auto list_elem = new ProbabilitySubinterval;
+			auto list_elem = std::make_shared<ProbabilitySubinterval>();
 			list_elem->ptr = stack_elem;
 			list.push_back(list_elem);
 		}
@@ -428,7 +428,6 @@ void Octree::create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Ce
 
 		// Remove node that has probability 0
 		if ((*it)->probability == 0.0) { // We want exact comparison of double to constant 0 here
-			delete* it;                // Free memory for list element structure
 			it = list.erase(it);       // "it" points now to successor element
 									   //std::cout << __func__ << ": probability == 0, node removed" << std::endl;
 		}
@@ -499,7 +498,7 @@ bool Octree::node_is_local(const OctreeNode& node) /*noexcept*/ {
 }
 
 void Octree::append_node(OctreeNode* node, ProbabilitySubintervalList& list) {
-	list.push_back(new ProbabilitySubinterval(node));
+	list.emplace_back(std::make_shared<ProbabilitySubinterval>(node));
 }
 
 void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list, AccessEpochsStarted& epochs_started) {
@@ -508,7 +507,7 @@ void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list,
 		// Append all children != nullptr
 		for (auto& child : node->children) {
 			if (child != nullptr) {
-				list.push_back(new ProbabilitySubinterval(child));
+				list.emplace_back(std::make_shared<ProbabilitySubinterval>(child));
 			}
 		}
 
@@ -539,27 +538,27 @@ void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list,
 			std::pair<NodesCache::iterator, bool> ret = remote_nodes_cache.insert(cache_key_val_pair);
 
 			// TODO(fabian): Kill pointer here
-			auto child = new ProbabilitySubinterval();
+			auto prob_sub = std::make_shared< ProbabilitySubinterval>();
 			// Cache entry just inserted as it was not in cache
 			// So, we still need to init the entry by fetching
 			// from the target rank
 			if (ret.second) {
 				// Create new object which contains the remote node's information
-				ret.first->second = child->ptr = mpi_rma_node_allocator.newObject();
+				ret.first->second = prob_sub->ptr = mpi_rma_node_allocator.newObject();
 
 				const MPI_Aint* base_pointers = mpi_rma_node_allocator.get_base_pointers();
 				// Calc displacement from absolute address
 				const auto target_child_displ = MPI_Aint(child - base_pointers[target_rank]);
 
-				MPIWrapper::get(child->ptr, target_rank, target_child_displ, mpi_rma_node_allocator.mpi_window);
+				MPIWrapper::get(prob_sub->ptr, target_rank, target_child_displ, mpi_rma_node_allocator.mpi_window);
 
-				child->mpi_request = MPIWrapper::get_non_null_request();
-				child->request_rank = target_rank;
+				prob_sub->mpi_request = MPIWrapper::get_non_null_request();
+				prob_sub->request_rank = target_rank;
 			}
 			else {
-				child->ptr = ret.first->second;
+				prob_sub->ptr = ret.first->second;
 			}
-			list.push_back(child);
+			list.emplace_back(prob_sub);
 		}
 	} // for all children
 }
@@ -603,24 +602,23 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 
 			// Go through all nodes to visit of this axon
 			for (size_t i = 0; i < axon.nodes_to_visit.size(); i++) {
-				ProbabilitySubinterval& node_to_visit = *(axon.nodes_to_visit.front());
+				auto node_to_visit = axon.nodes_to_visit.front();
 
 				// Node is from different rank and MPI request still open
 				// So complete getting the contents of the remote node
-				MPIWrapper::wait_request(node_to_visit.mpi_request);
+				MPIWrapper::wait_request(node_to_visit->mpi_request);
 
 				bool has_vacant_dendrites = false;
-				const auto accept = acceptance_criterion_test(axon.xyz_pos, node_to_visit.ptr, axon.dendrite_type_needed, false, has_vacant_dendrites);
+				const auto accept = acceptance_criterion_test(axon.xyz_pos, node_to_visit->ptr, axon.dendrite_type_needed, false, has_vacant_dendrites);
 				// Check if the node is accepted and if yes, append it to nodes_accepted
 				if (accept) {
-					axon.nodes_accepted.push_back(&node_to_visit);
+					axon.nodes_accepted.emplace_back(node_to_visit);
 				}
 				else {
 					// Node was rejected only because it's too close
 					if (has_vacant_dendrites) {
-						append_children(node_to_visit.ptr, axon.nodes_to_visit, access_epochs_started);
+						append_children(node_to_visit->ptr, axon.nodes_to_visit, access_epochs_started);
 					}
-					delete& node_to_visit;
 				}
 
 				// Node is visited now, so remove it
@@ -643,10 +641,7 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 				auto node_selected = select_subinterval(axon.nodes_accepted);
 
 				// Clear nodes_accepted list for next interval creation
-				for (auto it = axon.nodes_accepted.begin(); it != axon.nodes_accepted.end(); ) {
-					delete* it;
-					it = axon.nodes_accepted.erase(it);
-				}
+				axon.nodes_accepted.clear();
 
 				// Now nodes_accepted and nodes_to_visit are empty
 
@@ -996,12 +991,6 @@ bool Octree::find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz,
 		* Select node with target neuron
 		*/
 		node_selected = select_subinterval(list);
-
-		// Clear list for next interval creation
-		for (auto it = list.begin(); it != list.end(); ) {
-			delete* it;
-			it = list.erase(it);
-		}
 
 		/**
 		* Leave loop if no node was selected OR
