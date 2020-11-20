@@ -13,6 +13,8 @@
 #include "MPI_RMA_MemAllocator.h"
 #include "OctreeNode.h"
 
+#include <mpi.h>
+
 #include <array>
 #include <string>
 
@@ -138,6 +140,8 @@ public:
 		const int errorcode = MPI_Allgather(&own_data, sizeof(T), MPI_CHAR, results.data(), sizeof(T), MPI_CHAR, mpi_scope);
 		RelearnException::check(errorcode == 0, "Error in all gather");
 	}
+
+	static void all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs);
 
 	static void wait_all_tokens(std::vector<AsyncToken>& tokens);
 

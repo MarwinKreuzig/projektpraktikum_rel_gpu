@@ -102,11 +102,6 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 	std::cout << num_ranks << std::endl;
 	std::cout << my_rank << std::endl;
 
-	// Create MPI data type for three doubles
-	MPI_Datatype type;
-	MPI_Type_contiguous(3, MPI_DOUBLE, &type);
-	MPI_Type_commit(&type);
-
 	std::vector<int> recvcounts(num_ranks);
 	std::vector<int> displs(num_ranks);
 	for (int i = 0; i < num_ranks; i++) {
@@ -117,17 +112,7 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 		displs[i] = static_cast<int>(rank_to_start_neuron_id[i]);
 	}
 
-	std::cout << "Before allgather" << std::endl;
-
-	MPIWrapper::barrier(MPIWrapper::Scope::global);
-
-	// Receive all neuron positions as xyz-triples
-	MPI_Allgatherv(MPI_IN_PLACE, static_cast<int>(total_num_neurons), type,
-		xyz_pos.data(), recvcounts.data(),
-		displs.data(), type, MPI_COMM_WORLD);
-
-	MPI_Type_free(&type);
-	std::cout << "after allgather" << std::endl;
+	MPIWrapper::all_gather_v(total_num_neurons, xyz_pos, recvcounts, displs);
 
 	// Map every neuron position to one (rank, neuron_id) pair
 	size_t glob_neuron_id = 0;
