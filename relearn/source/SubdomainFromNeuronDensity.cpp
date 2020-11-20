@@ -117,7 +117,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 			this->currently_num_neurons_ += placed_neurons;
 
 			const auto now_ex_neurons = former_ex_neurons + placed_ex_neurons;
-			const auto now_in_neurons = former_in_neurons + placed_in_neurons;
+			//const auto now_in_neurons = former_in_neurons + placed_in_neurons;
 
 			currently_frac_neurons_exc_ = static_cast<double>(now_ex_neurons) / static_cast<double>(this->currently_num_neurons_);
 			return;

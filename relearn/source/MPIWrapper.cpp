@@ -179,6 +179,11 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
 	RelearnException::check(errorcode == 0, "Error in all to all, mpi");
 }
 
+MPI_Request MPIWrapper::get_non_null_request() {
+	// NOLINTNEXTLINE
+	return (MPI_Request)(!MPI_REQUEST_NULL);
+}
+
 void MPIWrapper::all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs) {
 	// Create MPI data type for three doubles
 	MPI_Datatype type;

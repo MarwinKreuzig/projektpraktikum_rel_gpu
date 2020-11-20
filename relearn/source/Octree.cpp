@@ -94,9 +94,10 @@ void Octree::postorder_print() {
 			for (auto j = 0; j < depth; j++) {
 				std::cout << " ";
 			}
-			std::cout << "Cell extent: (" << (double)xyz_min[0] << " .. " << (double)xyz_max[0] << ", "
-				<< (double)xyz_min[1] << " .. " << (double)xyz_max[1] << ", "
-				<< (double)xyz_min[2] << " .. " << (double)xyz_max[2] << ")\n";
+
+			std::cout << "Cell extent: (" << xyz_min[0] << " .. " << xyz_max[0] << ", "
+				<< xyz_min[1] << " .. " << xyz_max[1] << ", "
+				<< xyz_min[2] << " .. " << xyz_max[2] << ")\n";
 
 			// Print neuron ID
 			for (auto j = 0; j < depth; j++) {
@@ -117,7 +118,7 @@ void Octree::postorder_print() {
 			for (auto j = 0; j < depth; j++) {
 				std::cout << " ";
 			}
-			std::cout << "Position exc: (" << (double)xyz_pos[0] << ", " << (double)xyz_pos[1] << ", " << (double)xyz_pos[2] << ") ";
+			std::cout << "Position exc: (" << xyz_pos[0] << ", " << xyz_pos[1] << ", " << xyz_pos[2] << ") ";
 			// Note if position is invalid
 			if (!pos_valid) {
 				std::cout << "-- invalid!";
@@ -127,7 +128,7 @@ void Octree::postorder_print() {
 			for (auto j = 0; j < depth; j++) {
 				std::cout << " ";
 			}
-			std::cout << "Position inh: (" << (double)xyz_pos[0] << ", " << (double)xyz_pos[1] << ", " << (double)xyz_pos[2] << ") ";
+			std::cout << "Position inh: (" << xyz_pos[0] << ", " << xyz_pos[1] << ", " << xyz_pos[2] << ") ";
 			// Note if position is invalid
 			if (!pos_valid) {
 				std::cout << "-- invalid!";
@@ -145,10 +146,12 @@ void Octree::postorder_print() {
 			}
 
 			std::cout << "Child indices: ";
-			for (auto i = 0; i < 8; i++) {
-				if (elem.ptr->children[i] != nullptr) {
-					std::cout << i << " ";
+			int id = 0;
+			for (auto& child : elem.ptr->children) {
+				if (child != nullptr) {
+					std::cout << id << " ";
 				}
+				id++;
 			}
 			/**
 			* Push in reverse order so that visiting happens in
@@ -275,11 +278,9 @@ void Octree::get_nodes_for_interval(
 						auto local_child_addr = ret.first->second;
 
 						// Calc displacement from absolute address
-						const auto target_child_displ = (MPI_Aint)root->children[i] - base_pointers[target_rank];
+						const auto target_child_displ = MPI_Aint(root->children[i]) - base_pointers[target_rank];
 
-						MPI_Get(local_child_addr, sizeof(OctreeNode), MPI_CHAR,
-							target_rank, target_child_displ, sizeof(OctreeNode), MPI_CHAR,
-							mpi_rma_node_allocator.mpi_window);
+						MPIWrapper::get(local_child_addr, target_rank, target_child_displ, mpi_rma_node_allocator.mpi_window);
 					}
 
 					// Remember address of node
@@ -371,11 +372,9 @@ void Octree::get_nodes_for_interval(
 							auto local_child_addr = ret.first->second;
 
 							// Calc displacement from absolute address
-							const auto target_child_displ = (MPI_Aint)stack_elem->children[i] - base_pointers[target_rank];
+							const auto target_child_displ = MPI_Aint(stack_elem->children[i]) - base_pointers[target_rank];
 
-							MPI_Get(local_child_addr, sizeof(OctreeNode), MPI_CHAR,
-								target_rank, target_child_displ, sizeof(OctreeNode), MPI_CHAR,
-								mpi_rma_node_allocator.mpi_window);
+							MPIWrapper::get(local_child_addr, target_rank, target_child_displ, mpi_rma_node_allocator.mpi_window);
 						}
 
 						// Remember local address of node
@@ -546,12 +545,11 @@ void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list,
 
 				const MPI_Aint* base_pointers = mpi_rma_node_allocator.get_base_pointers();
 				// Calc displacement from absolute address
-				const auto target_child_displ = (MPI_Aint)(child - base_pointers[target_rank]);
+				const auto target_child_displ = MPI_Aint(child - base_pointers[target_rank]);
 
-				MPI_Get(child->ptr, sizeof(OctreeNode), MPI_CHAR,
-					target_rank, target_child_displ, sizeof(OctreeNode), MPI_CHAR,
-					mpi_rma_node_allocator.mpi_window);
-				child->mpi_request = (MPI_Request)(!MPI_REQUEST_NULL);
+				MPIWrapper::get(child->ptr, target_rank, target_child_displ, mpi_rma_node_allocator.mpi_window);
+
+				child->mpi_request = MPIWrapper::get_non_null_request();
 				child->request_rank = target_rank;
 			}
 			else {

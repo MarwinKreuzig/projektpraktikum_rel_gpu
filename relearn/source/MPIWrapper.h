@@ -125,7 +125,7 @@ public:
 	template <typename T, size_t size>
 	static void reduce(const std::array<T, size>& src, std::array<T, size>& dst, ReduceFunction function, int root_rank, Scope scope) {
 		RelearnException::check(src.size() == dst.size(), "Sizes of vectors don't match");
-		
+
 		auto mpi_scope = translate_scope(scope);
 		auto mpi_reduce_function = translate_reduce_function(function);
 
@@ -148,8 +148,19 @@ public:
 		auto mpi_scope = translate_scope(scope);
 
 		// NOLINTNEXTLINE
-		MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, ptr, count * sizeof(T), MPI_CHAR, MPI_COMM_WORLD);
+		const int errorcode = MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, ptr, count * sizeof(T), MPI_CHAR, MPI_COMM_WORLD);
+		RelearnException::check(errorcode == 0, "Error in all gather inline");
 	}
+
+	template <typename T>
+	static void get(T* ptr, int target_rank, MPI_Aint target_display, MPI_Win& win) {
+
+		// NOLINTNEXTLINE
+		const int errorcode = MPI_Get(ptr, sizeof(T), MPI_CHAR, target_rank, target_display, sizeof(T), MPI_CHAR, win);
+		RelearnException::check(errorcode == 0, "Error in get");
+	}
+
+	static MPI_Request get_non_null_request();
 
 	static void all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs);
 
