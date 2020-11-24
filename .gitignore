@@ -331,8 +331,8 @@ ASALocalRun/
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
 
-relearn/build
-relearn/build-windows
-relearn/build-linux
-relearn/output
-relearn/bw2
+*/build
+*/build-windows
+*/build-linux
+*/output
+*/bw2
