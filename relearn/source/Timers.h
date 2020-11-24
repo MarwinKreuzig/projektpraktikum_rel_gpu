@@ -52,11 +52,11 @@ namespace GlobalTimers {
 class Timers {
 
 public:
-	Timers(size_t num_timers) :
+	Timers(size_t num_timers) noexcept :
 		num_timers(num_timers), time_start(num_timers) , time_stop(num_timers), time_elapsed(num_timers) {
 		// Reset elapsed to zero
 		for (size_t i = 0; i < num_timers; i++) {
-			reset_elapsed(i);
+			time_elapsed[i] = std::chrono::duration<double>::zero();
 		}
 	}
 
