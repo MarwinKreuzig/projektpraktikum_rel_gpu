@@ -1,19 +1,22 @@
-#ifndef POSITION_H_
-#define POSITION_H_
+#pragma once
+
+#include <algorithm>
 
 // Position of vertex
 struct Position {
 	double x, y, z;
 
-	Position() { }
+	Position() : x(0.0), y(0.0), z(0.0) {}
+
 	Position(double x, double y, double z)
-	: x(x), y(y), z(z) { }
+		: x(x), y(y), z(z) {
+	}
 
 	struct less {
 		bool operator() (const Position& lhs, const Position& rhs) const {
 			return  lhs.x < rhs.x ||
-					(lhs.x == rhs.x && lhs.y < rhs.y) ||
-					(lhs.x == rhs.x && lhs.y == rhs.y && lhs.z < rhs.z);
+				(lhs.x == rhs.x && lhs.y < rhs.y) ||
+				(lhs.x == rhs.x && lhs.y == rhs.y && lhs.z < rhs.z);
 		}
 	};
 
@@ -29,5 +32,3 @@ struct Position {
 		z += pos.z;
 	}
 };
-
-#endif /* POSITION_H_ */

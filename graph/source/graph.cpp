@@ -1,21 +1,17 @@
 #include "graph.h"
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <limits>
-#include <tuple>
-#include <algorithm>
-#include <utility>
-
 #include <boost/property_map/property_map.hpp>
 #include <boost/graph/adjacency_list.hpp>
 
-const Graph::BGLGraph& Graph::BGL_Graph() {
-	return graph;
-}
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <limits>
+#include <string>
+#include <tuple>
+#include <utility>
 
-bool Graph::Init(std::ifstream& input_filestream) {
+bool Graph::init(std::ifstream& input_filestream) {
 	std::string line;
 
 	// Consume table headers
@@ -30,14 +26,15 @@ bool Graph::Init(std::ifstream& input_filestream) {
 	while (std::getline(input_filestream, line)) {
 		std::stringstream sstream(line);
 
-		success = (sstream >> origin_name) &&
-				  (sstream >> origin_pos.x) &&
-				  (sstream >> origin_pos.y) &&
-				  (sstream >> origin_pos.z) &&
-				  (sstream >> target_name) &&
-				  (sstream >> target_pos.x) &&
-				  (sstream >> target_pos.y) &&
-				  (sstream >> target_pos.z);
+		success =
+			(sstream >> origin_name) &&
+			(sstream >> origin_pos.x) &&
+			(sstream >> origin_pos.y) &&
+			(sstream >> origin_pos.z) &&
+			(sstream >> target_name) &&
+			(sstream >> target_pos.x) &&
+			(sstream >> target_pos.y) &&
+			(sstream >> target_pos.z);
 
 		if (!success) {
 			std::cerr << "Skipping line: \"" << line << "\"\n";
@@ -46,8 +43,8 @@ bool Graph::Init(std::ifstream& input_filestream) {
 
 		// Add origin and target to graph, if not there
 		Vertex origin_vtx, target_vtx;
-		std::tie(origin_vtx, std::ignore) = AddVertex(origin_pos, origin_name);
-		std::tie(target_vtx, std::ignore) = AddVertex(target_pos, target_name);
+		std::tie(origin_vtx, std::ignore) = add_vertex(origin_pos, origin_name);
+		std::tie(target_vtx, std::ignore) = add_vertex(target_pos, target_name);
 
 		// Check whether edge already exists
 		Edge edge;
@@ -56,7 +53,8 @@ bool Graph::Init(std::ifstream& input_filestream) {
 		// Add edge to graph, if not there
 		if (!success) {
 			boost::add_edge(origin_vtx, target_vtx, graph);
-		} else {
+		}
+		else {
 			std::cerr << "Edge already in graph\n";
 			continue;
 		}
@@ -64,7 +62,7 @@ bool Graph::Init(std::ifstream& input_filestream) {
 	return true;
 }
 
-std::pair<Graph::Vertex, bool> Graph::AddVertex(const Position& pos, const std::string& name) {
+std::pair<Graph::Vertex, bool> Graph::add_vertex(const Position& pos, const std::string& name) {
 	// Add vertex to graph, if not there
 	auto it = pos_to_vtx.find(pos);
 
@@ -83,14 +81,16 @@ std::pair<Graph::Vertex, bool> Graph::AddVertex(const Position& pos, const std::
 		return std::make_pair(vtx, true);
 	}
 	Vertex vtx = it->second;
-//	std::cerr << "Vertex already in graph\n";
+	//	std::cerr << "Vertex already in graph\n";
 	return std::make_pair(vtx, false);
 }
 
-std::tuple<double, double, double>
-	Graph::SmallestCoordinatePerDimension() {
+const Graph::BGLGraph& Graph::BGL_Graph() {
+	return graph;
+}
 
-	const double max_double = std::numeric_limits<double>::max();
+std::tuple<double, double, double> Graph::smallest_coordinate_per_dimension() {
+	constexpr const double max_double = std::numeric_limits<double>::max();
 	Position min_coords(max_double, max_double, max_double);
 
 	VertexIterator it_vtx, it_vtx_end;
@@ -103,7 +103,7 @@ std::tuple<double, double, double>
 	return std::make_tuple(min_coords.x, min_coords.y, min_coords.z);
 }
 
-void Graph::AddOffsetToPositions(const Position& offset) {
+void Graph::add_offset_to_positions(const Position& offset) {
 	this->offset.Add(offset);  // Update offset
 
 	VertexIterator it_vtx, it_vtx_end;
@@ -113,61 +113,61 @@ void Graph::AddOffsetToPositions(const Position& offset) {
 	}
 }
 
-std::pair<int, int> Graph::MinMaxDegree() {
-    VertexIterator it_vtx, it_vtx_end;
-    int max_deg = 0;
-    int min_deg = std::numeric_limits<int>::max();
+std::pair<int, int> Graph::min_max_degree() {
+	VertexIterator it_vtx, it_vtx_end;
+	int max_deg = 0;
+	int min_deg = std::numeric_limits<int>::max();
 
-    std::tie(it_vtx, it_vtx_end) = boost::vertices(graph);
-    for (; it_vtx != it_vtx_end; ++it_vtx) {
-    	max_deg =
-    			std::max(max_deg, static_cast<int>(boost::out_degree(*it_vtx, graph) +
-     					 boost::in_degree(*it_vtx, graph)));
-    	min_deg =
-    			std::min(min_deg, static_cast<int>(boost::out_degree(*it_vtx, graph) +
-    					 boost::in_degree(*it_vtx, graph)));
-    }
+	std::tie(it_vtx, it_vtx_end) = boost::vertices(graph);
+	for (; it_vtx != it_vtx_end; ++it_vtx) {
+		max_deg =
+			std::max(max_deg, static_cast<int>(boost::out_degree(*it_vtx, graph) +
+				boost::in_degree(*it_vtx, graph)));
+		min_deg =
+			std::min(min_deg, static_cast<int>(boost::out_degree(*it_vtx, graph) +
+				boost::in_degree(*it_vtx, graph)));
+	}
 
-    return std::make_pair(min_deg, max_deg);
+	return std::make_pair(min_deg, max_deg);
 }
 
-void Graph::PrintVertex(Vertex v, std::ostream& os) {
+void Graph::print_vertex(Vertex v, std::ostream& os) {
 	os << graph[v].pos.x << " " << graph[v].pos.y << " " << graph[v].pos.z << " " <<
-		  "\t" << graph[v].name << "\n";
+		"\t" << graph[v].name << "\n";
 }
 
-void Graph::PrintVertices(std::ostream& os) {
+void Graph::print_vertices(std::ostream& os) {
 	os << "# Vertices: " << boost::num_vertices(graph) << "\n";
 	os << "# Add offset (x y z) to get original positions: (" <<
-		  -offset.x << " " << -offset.y << " " << -offset.z << ")\n";
+		-offset.x << " " << -offset.y << " " << -offset.z << ")\n";
 	os << "# Position (x y z)\tArea" << "\n";
 
 	VertexIterator it, it_end;
 	std::tie(it, it_end) = boost::vertices(graph);
 	for (; it != it_end; ++it) {
-		PrintVertex(*it, os);
+		print_vertex(*it, os);
 	}
 }
 
-void Graph::PrintEdge(Edge e, std::ostream& os) {
+void Graph::print_edge(Edge e, std::ostream& os) {
 	Vertex u, v;
 
 	u = source(e, graph);
 	v = target(e, graph);
 
 	os << graph[u].pos.x << " " << graph[u].pos.y << " " << graph[u].pos.z << "  "
-	   << graph[v].pos.x << " " << graph[v].pos.y << " " << graph[v].pos.z
-	   << "\n";
+		<< graph[v].pos.x << " " << graph[v].pos.y << " " << graph[v].pos.z
+		<< "\n";
 }
 
-void Graph::PrintEdges(std::ostream& os) {
+void Graph::print_edges(std::ostream& os) {
 	os << "# <src pos x> <src pos y> <src pos z>  "
-	   << "<tgt pos x> <tgt pos y> <tgt pos z>"
-	   << "\n";
+		<< "<tgt pos x> <tgt pos y> <tgt pos z>"
+		<< "\n";
 
 	EdgeIterator it, it_end;
 	std::tie(it, it_end) = boost::edges(graph);
 	for (; it != it_end; ++it) {
-		PrintEdge(*it, os);
+		print_edge(*it, os);
 	}
 }
