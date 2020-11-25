@@ -318,7 +318,9 @@ void MPIUserDefinedOperation::min_sum_max(const int* invec, int* inoutvec, const
 
 	const auto real_length = *len / sizeof(double) / 3;
 
+	// NOLINTNEXTLINE
 	const auto in = reinterpret_cast<const double*>(invec);
+	// NOLINTNEXTLINE
 	auto inout = reinterpret_cast<double*>(inoutvec);
 
 	for (int i = 0; i < real_length; i++) {

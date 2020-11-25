@@ -15,6 +15,7 @@
 
 #include <mpi.h>
 
+#include <cstdint>
 #include <limits>
 #include <map>
 #include <utility>
@@ -87,7 +88,7 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 	int num_ranks = MPIWrapper::num_ranks;
 	int my_rank = MPIWrapper::my_rank;
 
-	const size_t total_num_neurons = rank_to_start_neuron_id[static_cast<long long>(num_ranks) - 1] + rank_to_num_neurons[static_cast<long long>(num_ranks) - 1];
+	const size_t total_num_neurons = rank_to_start_neuron_id[static_cast<int64_t>(num_ranks) - 1] + rank_to_num_neurons[static_cast<int64_t>(num_ranks) - 1];
 	std::vector<double> xyz_pos(total_num_neurons * 3);
 
 	// Copy my neuron positions as xyz-triple into the send buffer

@@ -26,6 +26,7 @@
 #include <limits>
 #include <list>
 #include <map>
+#include <memory>
 #include <random>
 #include <sstream>
 #include <stack>
@@ -85,7 +86,7 @@ public:
 		Vec3d xyz_pos;
 		Cell::DendriteType dendrite_type_needed;
 	};
-	typedef std::list<VacantAxon*> VacantAxonList;
+	typedef std::list<std::shared_ptr<VacantAxon>> VacantAxonList;
 
 private:
 	/**

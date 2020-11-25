@@ -13,11 +13,11 @@
 #include "MPIWrapper.h"
 #include "MPI_RMA_MemAllocator.h"
 #include "NetworkGraph.h"
-#include "Neurons.h"
 #include "NeuronIdMap.h"
 #include "NeuronModels.h"
 #include "NeuronMonitor.h"
 #include "NeuronToSubdomainAssignment.h"
+#include "Neurons.h"
 #include "Octree.h"
 #include "Parameters.h"
 #include "Partition.h"
@@ -34,6 +34,7 @@
 #include <array>
 #include <bitset>
 #include <cerrno>
+#include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -43,30 +44,33 @@
 #include <locale>
 
 
-void setDefaultParameters(Parameters& params) /*noexcept*/ {
-	params.frac_neurons_exc = 0.8;                          // CHANGE
-	params.x_0 = 0.05;
-	params.tau_x = 5.0;
-	params.k = 0.03;
-	params.tau_C = 10000; //5000;   //very old 60.0;
-	params.beta = 0.001;  //very old 0.05;
-	params.h = 10;
-	params.C_target = 0.5; // gold 0.5;
-	params.refrac_time = 4.0;
-	params.eta_A = 0; //0.4; // gold 0.0;
-	params.eta_D_ex = 0; //0.1, // gold 0.0;
-	params.eta_D_in = 0.0;
-	params.nu = 1e-4; // gold 1e-5; // element growth rate
-	params.vacant_retract_ratio = 0;
-	params.sigma = 750.0;
-	params.num_log_files = 9;  // NOT USED
-	params.log_start_neuron = 0;  // NOT USED
-	params.mpi_rma_mem_size = 300 * 1024 * 1024;  // 300 MB
-	params.max_num_pending_vacant_axons = 1000;
-	// params.seed_partition (No global parameter. Every process uses a different seed, its rank. See below)
+void setDefaultParameters(Parameters* params) /*noexcept*/ {
+	RelearnException::check(params != nullptr);
+
+	params->frac_neurons_exc = 0.8;                          // CHANGE
+	params->x_0 = 0.05;
+	params->tau_x = 5.0;
+	params->k = 0.03;
+	params->tau_C = 10000; //5000;   //very old 60.0;
+	params->beta = 0.001;  //very old 0.05;
+	params->h = 10;
+	params->C_target = 0.5; // gold 0.5;
+	params->refrac_time = 4.0;
+	params->eta_A = 0; //0.4; // gold 0.0;
+	params->eta_D_ex = 0; //0.1, // gold 0.0;
+	params->eta_D_in = 0.0;
+	params->nu = 1e-4; // gold 1e-5; // element growth rate
+	params->vacant_retract_ratio = 0;
+	params->sigma = 750.0;
+	params->num_log_files = 9;  // NOT USED
+	params->log_start_neuron = 0;  // NOT USED
+	params->mpi_rma_mem_size = 300 * 1024 * 1024;  // 300 MB
+	params->max_num_pending_vacant_axons = 1000;
+	// params->seed_partition (No global parameter. Every process uses a different seed, its rank. See below)
 }
 
-void setSpecificParameters(Parameters& params, const std::vector<std::string>& arguments) {
+void setSpecificParameters(Parameters* params, const std::vector<std::string>& arguments) {
+	RelearnException::check(params != nullptr);
 
 	double accept_criterion = 0.0;
 	bool naive_method = false;
@@ -79,20 +83,20 @@ void setSpecificParameters(Parameters& params, const std::vector<std::string>& a
 		accept_criterion = std::stod(arguments[1], nullptr);
 	}
 
-	params.simulation_time = stoull(arguments[4], nullptr, 10);  //6000000;
-	params.num_neurons = stoull(arguments[2], nullptr, 10);        // CHANGE
-	params.accept_criterion = accept_criterion;             // CHANGE
-	params.naive_method = naive_method;                 // CHANGE
-	params.file_with_neuron_positions = (arguments.size() >= 6) ? arguments[5] : "";
-	params.file_with_network = (arguments.size() >= 7) ? arguments[6] : "";
-	params.seed_octree = stol(arguments[3], nullptr, 10);
+	params->simulation_time = stoull(arguments[4], nullptr, 10);  //6000000;
+	params->num_neurons = stoull(arguments[2], nullptr, 10);        // CHANGE
+	params->accept_criterion = accept_criterion;             // CHANGE
+	params->naive_method = naive_method;                 // CHANGE
+	params->file_with_neuron_positions = (arguments.size() >= 6) ? arguments[5] : "";
+	params->file_with_network = (arguments.size() >= 7) ? arguments[6] : "";
+	params->seed_octree = stol(arguments[3], nullptr, 10);
 
 	/**
 	* Parameter sanity checks
 	*/
 
 	// Needed to avoid creating autapses
-	if (!(params.accept_criterion <= 0.5)) {
+	if (!(params->accept_criterion <= 0.5)) {
 		RelearnException::check(false, "Acceptance criterion must be smaller or equal to 0.5");
 	}
 
@@ -293,15 +297,15 @@ int main(int argc, char** argv) {
 	 * Simulation parameters
 	 */
 	Parameters params;
-	setDefaultParameters(params);
-	setSpecificParameters(params, arguments);
+	setDefaultParameters(&params);
+	setSpecificParameters(&params, arguments);
 
 	MPIWrapper::init_neurons(params.num_neurons);
 	MPIWrapper::print_infos_rank(0);
 
 	// Init random number seeds
-	randomNumberSeeds::partition = static_cast<long int>(MPIWrapper::my_rank);
-	randomNumberSeeds::octree = stol(arguments[3], nullptr, 10);
+	randomNumberSeeds::partition = static_cast<int64_t>(MPIWrapper::my_rank);
+	randomNumberSeeds::octree = static_cast<int64_t>(stol(arguments[3], nullptr, 10));
 
 	// Rank 0 prints start time of simulation
 	MPIWrapper::barrier(MPIWrapper::Scope::global);

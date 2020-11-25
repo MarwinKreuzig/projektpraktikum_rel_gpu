@@ -11,10 +11,11 @@
 #pragma once
 
 #include <random>
+#include <cstdint>
 
 namespace randomNumberSeeds {
-	extern long long partition;
-	extern long long octree;
+	extern int64_t partition;
+	extern int64_t octree;
 }
 
 template<typename T>

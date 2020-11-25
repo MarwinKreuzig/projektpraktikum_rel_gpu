@@ -582,66 +582,67 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 		// Append one vacant axon to list of pending axons if too few are pending
 		if ((vacant_axons.size() < max_num_pending_vacant_axons) &&
 			(neurons.get_vacant_axon(source_neuron_id, xyz_pos, dendrite_type_needed))) {
-			VacantAxon& axon = *(new VacantAxon(source_neuron_id, xyz_pos, dendrite_type_needed));
-			vacant_axons.push_back(&axon);
+			auto axon = std::make_shared<VacantAxon>(source_neuron_id, xyz_pos, dendrite_type_needed);
 
 			if (root->is_parent) {
-				append_children(root, axon.nodes_to_visit, access_epochs_started);
+				append_children(root, axon->nodes_to_visit, access_epochs_started);
 			}
 			else {
-				append_node(root, axon.nodes_to_visit);
+				append_node(root, axon->nodes_to_visit);
 			}
+
+			vacant_axons.emplace_back(std::move(axon));
 
 			axon_added = true;
 		}
 
 		// Vacant axons exist
 		if (!vacant_axons.empty()) {
-			VacantAxon& axon = *(vacant_axons.front());
+			std::shared_ptr<VacantAxon> axon = vacant_axons.front();
 			bool delete_axon = false;
 
 			// Go through all nodes to visit of this axon
-			for (size_t i = 0; i < axon.nodes_to_visit.size(); i++) {
-				auto& node_to_visit = axon.nodes_to_visit.front();
+			for (size_t i = 0; i < axon->nodes_to_visit.size(); i++) {
+				auto& node_to_visit = axon->nodes_to_visit.front();
 
 				// Node is from different rank and MPI request still open
 				// So complete getting the contents of the remote node
 				MPIWrapper::wait_request(node_to_visit->mpi_request);
 
 				bool has_vacant_dendrites = false;
-				const auto accept = acceptance_criterion_test(axon.xyz_pos, node_to_visit->ptr, axon.dendrite_type_needed, false, has_vacant_dendrites);
+				const auto accept = acceptance_criterion_test(axon->xyz_pos, node_to_visit->ptr, axon->dendrite_type_needed, false, has_vacant_dendrites);
 				// Check if the node is accepted and if yes, append it to nodes_accepted
 				if (accept) {
-					axon.nodes_accepted.emplace_back(node_to_visit);
+					axon->nodes_accepted.emplace_back(node_to_visit);
 				}
 				else {
 					// Node was rejected only because it's too close
 					if (has_vacant_dendrites) {
-						append_children(node_to_visit->ptr, axon.nodes_to_visit, access_epochs_started);
+						append_children(node_to_visit->ptr, axon->nodes_to_visit, access_epochs_started);
 					}
 				}
 
 				// Node is visited now, so remove it
-				axon.nodes_to_visit.pop_front();
+				axon->nodes_to_visit.pop_front();
 			}
 
 			// No nodes to visit anymore
-			if (axon.nodes_to_visit.empty()) {
+			if (axon->nodes_to_visit.empty()) {
 				/**
 				 * Assign a probability to each node in the nodes_accepted list.
 				 * The probability for connecting to the same neuron (i.e., the axon's neuron) is set 0.
 				 * Nodes with 0 probability are removed.
 				 * The probabilities of all list elements sum up to 1.
 				 */
-				create_interval(axon.neuron_id, axon.xyz_pos, axon.dendrite_type_needed, axon.nodes_accepted);
+				create_interval(axon->neuron_id, axon->xyz_pos, axon->dendrite_type_needed, axon->nodes_accepted);
 
 				/**
 				 * Select node with target neuron
 				 */
-				auto node_selected = select_subinterval(axon.nodes_accepted);
+				auto node_selected = select_subinterval(axon->nodes_accepted);
 
 				// Clear nodes_accepted list for next interval creation
-				axon.nodes_accepted.clear();
+				axon->nodes_accepted.clear();
 
 				// Now nodes_accepted and nodes_to_visit are empty
 
@@ -650,15 +651,15 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 					// Selected node is parent. A parent cannot be a target neuron.
 					// So append its children to nodes_to_visit
 					if (node_selected->is_parent) {
-						append_children(node_selected, axon.nodes_to_visit, access_epochs_started);
+						append_children(node_selected, axon->nodes_to_visit, access_epochs_started);
 					}
 					else {
 						// Target neuron found
 						// Create synapse creation request for the target neuron
 						map_synapse_creation_requests_outgoing[node_selected->rank].append(
-							axon.neuron_id,
+							axon->neuron_id,
 							node_selected->cell.get_neuron_id(),
-							axon.dendrite_type_needed);
+							axon->dendrite_type_needed);
 						delete_axon = true;
 					}
 				}
@@ -672,14 +673,8 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 			// Remove current axon from front of list
 			vacant_axons.pop_front();
 
-			if (delete_axon) {
-				// Delete contents of axon
-				delete& axon;
-			}
-			else {
-				// Move axon to end of list so that another axon
-				// is examined in the next iteration
-				vacant_axons.push_back(&axon);
+			if (!delete_axon) {
+				vacant_axons.emplace_back(std::move(axon));
 			}
 		}
 	} while (axon_added || !vacant_axons.empty());
