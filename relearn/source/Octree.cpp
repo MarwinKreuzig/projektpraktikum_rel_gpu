@@ -340,9 +340,9 @@ void Octree::get_nodes_for_interval(
 			// Node is owned by this rank
 			if (node_is_local(*stack_elem)) {
 				// Push node's children onto stack
-				for (auto i = 7; i >= 0; i--) {
-					if (stack_elem->children[i] != nullptr) {
-						stack.push(stack_elem->children[i]);
+				for (auto it = stack_elem->children.crbegin(); it != stack_elem->children.crend(); ++it) {
+					if (*it != nullptr) {
+						stack.push(*it);
 					}
 				}
 			}
@@ -393,9 +393,9 @@ void Octree::get_nodes_for_interval(
 				MPIWrapper::unlock_window(target_rank);
 
 				// Push node's children onto stack
-				for (auto i = 7; i >= 0; i--) {
-					if (local_children[i] != nullptr) {
-						stack.push(local_children[i]);
+				for (auto it = local_children.crbegin(); it != local_children.crend(); ++it) {
+					if (*it != nullptr) {
+						stack.push(*it);
 					}
 				}
 			} // Node owned by different rank
