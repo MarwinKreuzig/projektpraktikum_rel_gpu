@@ -161,9 +161,9 @@ void Octree::postorder_print() {
 			* Push in reverse order so that visiting happens in
 			* increasing order of child indices
 			*/
-			for (auto i = 7; i >= 0; i--) {
-				if (elem.ptr->children[i] != nullptr) {
-					stack.emplace(elem.ptr->children[i], false, static_cast<size_t>(depth) + 1);
+			for (auto it = elem.ptr->children.crbegin(); it != elem.ptr->children.crend(); ++it) {
+				if (*it != nullptr) {
+					stack.emplace(*it, false, static_cast<size_t>(depth) + 1);
 				}
 			}
 			std::cout << std::endl;
@@ -246,9 +246,9 @@ void Octree::get_nodes_for_interval(
 		// Node is owned by this rank
 		if (node_is_local(*root)) {
 			// Push root's children onto stack
-			for (auto i = 7; i >= 0; i--) {
-				if (root->children[i] != nullptr) {
-					stack.push(root->children[i]);
+			for (auto it = root->children.crbegin(); it != root->children.crend(); ++it) {
+				if (*it != nullptr) {
+					stack.push(*it);
 				}
 			}
 		}
@@ -299,9 +299,9 @@ void Octree::get_nodes_for_interval(
 			MPIWrapper::unlock_window(target_rank);
 
 			// Push root's children onto stack
-			for (auto i = 7; i >= 0; i--) {
-				if (local_children[i] != nullptr) {
-					stack.push(local_children[i]);
+			for (auto it = local_children.crbegin(); it != local_children.crend(); ++it) {
+				if (*it != nullptr) {
+					stack.push(*it);
 				}
 			}
 		} // Node owned by different rank
