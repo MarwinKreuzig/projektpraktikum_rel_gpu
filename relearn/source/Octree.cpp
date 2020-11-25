@@ -263,36 +263,36 @@ void Octree::get_nodes_for_interval(
 
 			// Fetch remote children if they exist
 			for (auto i = 7; i >= 0; i--) {
-				if (nullptr != root->children[i]) {
-					rank_addr_pair.second = root->children[i];
-
-					std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair;
-					cache_key_val_pair.first = rank_addr_pair;
-					cache_key_val_pair.second = nullptr;
-
-					// Get cache entry for "cache_key_val_pair"
-					// It is created if it does not exist yet
-					std::pair<NodesCache::iterator, bool> ret = remote_nodes_cache.insert(cache_key_val_pair);
-
-					// Cache entry just inserted as it was not in cache
-					// So, we still need to init the entry by fetching
-					// from the target rank
-					if (ret.second) {
-						ret.first->second = mpi_rma_node_allocator.newObject();
-						auto local_child_addr = ret.first->second;
-
-						// Calc displacement from absolute address
-						const auto target_child_displ = MPI_Aint(root->children[i]) - base_pointers[target_rank];
-
-						MPIWrapper::get(local_child_addr, target_rank, target_child_displ, mpi_rma_node_allocator.mpi_window);
-					}
-
-					// Remember address of node
-					local_children[i] = ret.first->second;
-				}
-				else {
+				if (nullptr == root->children[i]) {
 					local_children[i] = nullptr;
+					continue;
 				}
+
+				rank_addr_pair.second = root->children[i];
+
+				std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair;
+				cache_key_val_pair.first = rank_addr_pair;
+				cache_key_val_pair.second = nullptr;
+
+				// Get cache entry for "cache_key_val_pair"
+				// It is created if it does not exist yet
+				std::pair<NodesCache::iterator, bool> ret = remote_nodes_cache.insert(cache_key_val_pair);
+
+				// Cache entry just inserted as it was not in cache
+				// So, we still need to init the entry by fetching
+				// from the target rank
+				if (ret.second) {
+					ret.first->second = mpi_rma_node_allocator.newObject();
+					auto local_child_addr = ret.first->second;
+
+					// Calc displacement from absolute address
+					const auto target_child_displ = MPI_Aint(root->children[i]) - base_pointers[target_rank];
+
+					MPIWrapper::get(local_child_addr, target_rank, target_child_displ, mpi_rma_node_allocator.mpi_window);
+				}
+
+				// Remember address of node
+				local_children[i] = ret.first->second;
 			}
 
 			// Complete access epoch
@@ -357,36 +357,36 @@ void Octree::get_nodes_for_interval(
 
 				// Fetch remote children if they exist
 				for (auto i = 7; i >= 0; i--) {
-					if (nullptr != stack_elem->children[i]) {
-						rank_addr_pair.second = stack_elem->children[i];
-
-						std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair;
-						cache_key_val_pair.first = rank_addr_pair;
-						cache_key_val_pair.second = nullptr;
-
-						// Get cache entry for "rank_addr_pair"
-						// It is created if it does not exist yet
-						std::pair<NodesCache::iterator, bool> ret = remote_nodes_cache.insert(cache_key_val_pair);
-
-						// Cache entry just inserted as it was not in cache
-						// So, we still need to init the entry by fetching
-						// from the target rank
-						if (ret.second) {
-							ret.first->second = mpi_rma_node_allocator.newObject();
-							auto local_child_addr = ret.first->second;
-
-							// Calc displacement from absolute address
-							const auto target_child_displ = MPI_Aint(stack_elem->children[i]) - base_pointers[target_rank];
-
-							MPIWrapper::get(local_child_addr, target_rank, target_child_displ, mpi_rma_node_allocator.mpi_window);
-						}
-
-						// Remember local address of node
-						local_children[i] = ret.first->second;
-					}
-					else {
+					if (nullptr == stack_elem->children[i]) {
 						local_children[i] = nullptr;
+						continue;
 					}
+
+					rank_addr_pair.second = stack_elem->children[i];
+
+					std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair;
+					cache_key_val_pair.first = rank_addr_pair;
+					cache_key_val_pair.second = nullptr;
+
+					// Get cache entry for "rank_addr_pair"
+					// It is created if it does not exist yet
+					std::pair<NodesCache::iterator, bool> ret = remote_nodes_cache.insert(cache_key_val_pair);
+
+					// Cache entry just inserted as it was not in cache
+					// So, we still need to init the entry by fetching
+					// from the target rank
+					if (ret.second) {
+						ret.first->second = mpi_rma_node_allocator.newObject();
+						auto local_child_addr = ret.first->second;
+
+						// Calc displacement from absolute address
+						const auto target_child_displ = MPI_Aint(stack_elem->children[i]) - base_pointers[target_rank];
+
+						MPIWrapper::get(local_child_addr, target_rank, target_child_displ, mpi_rma_node_allocator.mpi_window);
+					}
+
+					// Remember local address of node
+					local_children[i] = ret.first->second;
 				}
 
 				// Complete access epoch
@@ -602,7 +602,7 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 
 			// Go through all nodes to visit of this axon
 			for (size_t i = 0; i < axon.nodes_to_visit.size(); i++) {
-				auto node_to_visit = axon.nodes_to_visit.front();
+				auto& node_to_visit = axon.nodes_to_visit.front();
 
 				// Node is from different rank and MPI request still open
 				// So complete getting the contents of the remote node
