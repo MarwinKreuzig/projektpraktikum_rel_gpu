@@ -234,7 +234,7 @@ void Octree::get_nodes_for_interval(
 	}
 
 	std::stack<OctreeNode*> stack;
-	OctreeNode* local_children[8] = { nullptr };
+	std::array<OctreeNode*, 8> local_children = { nullptr };
 
 	const MPI_Aint* base_pointers = mpi_rma_node_allocator.get_base_pointers();
 
