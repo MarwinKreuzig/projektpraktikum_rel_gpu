@@ -567,9 +567,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 
 				// Sanity check: if the request received is targeted for me
 				if (target_neuron_id >= num_neurons) {
-					std::stringstream sstream;
-					sstream << __FUNCTION__ << ": \"target_neuron_id\": " << target_neuron_id << " exceeds my neuron ids";
-					LogMessages::print_error(sstream.str().c_str());
+					RelearnException::check(false, "Target_neuron_id exceeds my neurons");
 					exit(EXIT_FAILURE);
 				}
 				// DendriteType::INHIBITORY dendrite requested
@@ -1089,17 +1087,7 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 		/**
 		* Select synapses for deletion
 		*/
-		{
-			const bool valid = num_synapses_to_delete <= list_synapses.size();
-			if (!valid) {
-				std::cout << __func__
-					<< "num_synapses_to_delete (" << num_synapses_to_delete << ") "
-					<< "> "
-					<< "list_synapses.size() (" << list_synapses.size() << ")\n";
-			}
-		}
-
-		RelearnException::check(num_synapses_to_delete <= list_synapses.size());
+		RelearnException::check(num_synapses_to_delete <= list_synapses.size(), "num_synapses_to_delete > last_synapses.size()");
 
 		for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
 			// Randomly select synapse for deletion
@@ -1156,16 +1144,8 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 		/**
 		* Select synapses for deletion
 		*/
-		{
-			const bool valid = num_synapses_to_delete <= list_synapses.size();
-			if (!valid) {
-				std::cout << __func__
-					<< "num_synapses_to_delete (" << num_synapses_to_delete << ") "
-					<< "> "
-					<< "list_synapses.size() (" << list_synapses.size() << ")\n";
-			}
-		}
-		RelearnException::check(num_synapses_to_delete <= list_synapses.size());
+		RelearnException::check(num_synapses_to_delete <= list_synapses.size(), "num_synapses_to_delete > last_synapses.size()");
+
 		for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
 			// Randomly select synapse for deletion
 			typename std::list<Synapse>::iterator synapse_selected;
@@ -1221,16 +1201,8 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 		/**
 		* Select synapses for deletion
 		*/
-		{
-			const bool valid = num_synapses_to_delete <= list_synapses.size();
-			if (!valid) {
-				std::cout << __func__
-					<< "num_synapses_to_delete (" << num_synapses_to_delete << ") "
-					<< "> "
-					<< "list_synapses.size() (" << list_synapses.size() << ")\n";
-			}
-		}
-		RelearnException::check(num_synapses_to_delete <= list_synapses.size());
+		RelearnException::check(num_synapses_to_delete <= list_synapses.size(), "num_synapses_to_delete > last_synapses.size()");
+
 		for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
 			// Randomly select synapse for deletion
 			typename std::list<Synapse>::iterator synapse_selected;

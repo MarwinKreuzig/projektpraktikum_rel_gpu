@@ -180,6 +180,8 @@ public:
 		idx = idx | ((y < (xyz_min.y + xyz_max.y) / 2.0) ? 0 : 2);  // idx | (pos_y < midpoint_dim_y) ? 0 : 2
 		idx = idx | ((z < (xyz_min.z + xyz_max.z) / 2.0) ? 0 : 4);  // idx | (pos_z < midpoint_dim_z) ? 0 : 4
 
+		RelearnException::check(idx < 8 && "Octree octant must be smaller than 8");
+
 		return idx;
 	}
 
