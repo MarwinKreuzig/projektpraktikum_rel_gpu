@@ -99,9 +99,9 @@ void Octree::postorder_print() {
 				std::cout << " ";
 			}
 
-			std::cout << "Cell extent: (" << xyz_min[0] << " .. " << xyz_max[0] << ", "
-				<< xyz_min[1] << " .. " << xyz_max[1] << ", "
-				<< xyz_min[2] << " .. " << xyz_max[2] << ")\n";
+			std::cout << "Cell extent: (" << xyz_min.x << " .. " << xyz_max.x << ", "
+				<< xyz_min.y << " .. " << xyz_max.y << ", "
+				<< xyz_min.z << " .. " << xyz_max.z << ")\n";
 
 			// Print neuron ID
 			for (auto j = 0; j < depth; j++) {
@@ -122,7 +122,7 @@ void Octree::postorder_print() {
 			for (auto j = 0; j < depth; j++) {
 				std::cout << " ";
 			}
-			std::cout << "Position exc: (" << xyz_pos[0] << ", " << xyz_pos[1] << ", " << xyz_pos[2] << ") ";
+			std::cout << "Position exc: (" << xyz_pos.x << ", " << xyz_pos.y << ", " << xyz_pos.z << ") ";
 			// Note if position is invalid
 			if (!pos_valid) {
 				std::cout << "-- invalid!";
@@ -132,7 +132,7 @@ void Octree::postorder_print() {
 			for (auto j = 0; j < depth; j++) {
 				std::cout << " ";
 			}
-			std::cout << "Position inh: (" << xyz_pos[0] << ", " << xyz_pos[1] << ", " << xyz_pos[2] << ") ";
+			std::cout << "Position inh: (" << xyz_pos.x << ", " << xyz_pos.y << ", " << xyz_pos.z << ") ";
 			// Note if position is invalid
 			if (!pos_valid) {
 				std::cout << "-- invalid!";
@@ -747,7 +747,8 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 
 			// Determine octant for neuron
 			idx = prev->cell.get_neuron_octant();
-			prev->children[idx] = mpi_rma_node_allocator.newObject();  // new OctreeNode();
+			OctreeNode* new_node = mpi_rma_node_allocator.newObject(); // new OctreeNode();
+			prev->children[idx] = new_node;
 
 			/**
 			* Init this new node properly
@@ -756,17 +757,17 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 			Vec3d xyz_min, xyz_max;
 			prev->cell.get_size_for_octant(idx, xyz_min, xyz_max);
 
-			prev->children[idx]->cell.set_size(xyz_min, xyz_max);
+			new_node->cell.set_size(xyz_min, xyz_max);
 
 			// Neuron position
 			Vec3d inner_pos;
 			bool valid_pos = false;
 			prev->cell.get_neuron_position(inner_pos, valid_pos);
-			prev->children[idx]->cell.set_neuron_position(inner_pos, valid_pos);
+			new_node->cell.set_neuron_position(inner_pos, valid_pos);
 
 			// Neuron ID
 			const auto prev_neuron_id = prev->cell.get_neuron_id();
-			prev->children[idx]->cell.set_neuron_id(prev_neuron_id);
+			new_node->cell.set_neuron_id(prev_neuron_id);
 			/**
 			* Set neuron ID of parent (inner node) to NEURON_ID_PARENT.
 			* It is not used for inner nodes.
@@ -775,16 +776,16 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 			prev->is_parent = true;  // Mark node as parent
 
 								  // MPI rank who owns this node
-			prev->children[idx]->rank = prev->rank;
+			new_node->rank = prev->rank;
 
 			// New node is one level below
-			prev->children[idx]->level = prev->level + 1;
+			new_node->level = prev->level + 1;
 
 			// Determine my octant
 			my_idx = prev->cell.get_octant_for_position(position);
 
 			if (my_idx == idx) {
-				prev = prev->children[idx];
+				prev = new_node;
 			}
 		} while (my_idx == idx);
 	}
