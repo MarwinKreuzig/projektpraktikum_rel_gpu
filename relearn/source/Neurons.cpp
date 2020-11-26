@@ -567,7 +567,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 
 				// Sanity check: if the request received is targeted for me
 				if (target_neuron_id >= num_neurons) {
-					RelearnException::check(false, "Target_neuron_id exceeds my neurons");
+					RelearnException::fail("Target_neuron_id exceeds my neurons");
 					exit(EXIT_FAILURE);
 				}
 				// DendriteType::INHIBITORY dendrite requested

@@ -124,13 +124,13 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 		}
 	}
 
-	RelearnException::check(false, "In SubdomainFromNeuronDensity, shouldn't be here");
+	RelearnException::fail("In SubdomainFromNeuronDensity, shouldn't be here");
 }
 
 void SubdomainFromNeuronDensity::fill_subdomain(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains, const Position& min, const Position& max) {
 	const bool subdomain_already_filled = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (subdomain_already_filled) {
-		RelearnException::check(false, "Tried to fill an already filled subdomain.");
+		RelearnException::fail("Tried to fill an already filled subdomain.");
 		return;
 	}
 
@@ -144,7 +144,6 @@ void SubdomainFromNeuronDensity::fill_subdomain(size_t subdomain_idx, [[maybe_un
 
 	place_neurons_in_area(min, max, neurons_in_subdomain_count, subdomain_idx);
 }
-
 
 void SubdomainFromNeuronDensity::neuron_global_ids([[maybe_unused]] size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
 	[[maybe_unused]] size_t local_id_start, [[maybe_unused]] size_t local_id_end, [[maybe_unused]] std::vector<size_t>& global_ids) const {

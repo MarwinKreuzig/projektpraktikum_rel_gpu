@@ -97,14 +97,14 @@ void setSpecificParameters(Parameters* params, const std::vector<std::string>& a
 
 	// Needed to avoid creating autapses
 	if (!(params->accept_criterion <= 0.5)) {
-		RelearnException::check(false, "Acceptance criterion must be smaller or equal to 0.5");
+		RelearnException::fail("Acceptance criterion must be smaller or equal to 0.5");
 	}
 
 	// Number of ranks must be 2^n so that
 	// the connectivity update works correctly
 	const std::bitset<sizeof(int) * 8> bitset_num_ranks(MPIWrapper::num_ranks);
 	if (1 != bitset_num_ranks.count() && (0 == MPIWrapper::my_rank)) {
-		RelearnException::check(false, "Number of ranks must be of the form 2^n");
+		RelearnException::fail("Number of ranks must be of the form 2^n");
 	}
 }
 
@@ -343,7 +343,7 @@ int main(int argc, char** argv) {
 	// Check if int type can contain total size of branch nodes to receive in bytes
 	// Every rank sends the same number of branch nodes, which is partition.get_my_num_subdomains()
 	if (std::numeric_limits<int>::max() < (partition.get_my_num_subdomains() * sizeof(OctreeNode))) {
-		RelearnException::check(false, "int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
+		RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
 		exit(EXIT_FAILURE);
 	}
 

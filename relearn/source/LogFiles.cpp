@@ -68,7 +68,7 @@ LogFiles::LogFiles(const std::string& file_name, int on_rank) {
 		// Open file and overwrite if it already exists
 		files[0].open(file_name, std::ios::trunc);
 		if (files[0].fail()) {
-			RelearnException::check(false, "Opening file failed");
+			RelearnException::fail("Opening file failed");
 		}
 	}
 }
@@ -83,7 +83,7 @@ LogFiles::LogFiles(size_t num_files, const std::string& prefix) :
 		// Open file and overwrite if it already exists
 		files[i].open(prefix + std::to_string(i), std::ios::trunc);
 		if (files[i].fail()) {
-			RelearnException::check(false, "Opening file failed");
+			RelearnException::fail("Opening file failed");
 		}
 	}
 }
@@ -106,7 +106,7 @@ LogFiles::LogFiles(size_t num_files, const std::string& prefix, std::vector<size
 		// Open file and overwrite if it already exists
 		files[i].open(prefix + std::to_string(suffixes[i]), std::ios::trunc);
 		if (files[i].fail()) {
-			RelearnException::check(false, "Opening file failed");
+			RelearnException::fail("Opening file failed");
 		}
 	}
 }
@@ -125,6 +125,6 @@ std::ofstream& LogFiles::get_file(size_t file_id) {
 		return files[file_id];
 	}
 
-	RelearnException::check(false, "File id was too large");
+	RelearnException::fail("File id was too large");
 	std::terminate();
 }

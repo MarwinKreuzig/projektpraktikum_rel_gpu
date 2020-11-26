@@ -41,11 +41,25 @@ public:
 		throw RelearnException{};
 	}
 
+	static void fail() {
+		std::cerr << "There was an error!" << std::endl;
+		std::cerr << "But no error message" << std::endl;
+
+		throw RelearnException{};
+	}
+
 	static void check(bool condition, std::string&& message) {
 		if (condition) {
 			return;
 		}
 
+		std::cerr << "There was an error!" << std::endl;
+		std::cerr << message << std::endl;
+
+		throw RelearnException{ std::move(message) };
+	}
+	
+	static void fail(std::string&& message) {
 		std::cerr << "There was an error!" << std::endl;
 		std::cerr << message << std::endl;
 

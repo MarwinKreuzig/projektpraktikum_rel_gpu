@@ -246,7 +246,7 @@ MPI_Op MPIWrapper::translate_reduce_function(ReduceFunction rf) {
 		mpi_reduce_function = minsummax;
 		break;
 	default:
-		RelearnException::check(false, "In reduce, got wrong function");
+		RelearnException::fail("In reduce, got wrong function");
 		break;
 	}
 
@@ -263,7 +263,7 @@ MPI_Comm MPIWrapper::translate_scope(Scope scope) {
 		mpi_scope = MPI_COMM_WORLD;
 		break;
 	default:
-		RelearnException::check(false, "In barrier, got wrong scope");
+		RelearnException::fail("In barrier, got wrong scope");
 		break;
 	}
 

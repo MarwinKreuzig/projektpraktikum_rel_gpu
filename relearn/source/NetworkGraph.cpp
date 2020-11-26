@@ -64,7 +64,7 @@ void NetworkGraph::add_edge(Edges& edges, int rank, size_t neuron_id, int weight
 
 void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, size_t source_neuron_id, int source_rank, int weight) {
 	if (weight == 0) {
-		RelearnException::check(false, "weight of edge to add is zero");
+		RelearnException::fail("weight of edge to add is zero");
 		return;
 	}
 
@@ -429,7 +429,7 @@ void NetworkGraph::load_synapses(const std::string& path_synapses, const Partiti
 			continue;
 		}
 
-		RelearnException::check(false, "In loading synapses, target and source are not conform.");
+		RelearnException::fail("In loading synapses, target and source are not conform.");
 	}
 
 	file_synapses.close();

@@ -60,7 +60,7 @@ Partition::Partition(int num_ranks, int my_rank) : my_num_neurons(0), total_num_
 		sstream << "My rank is: " << my_rank << "; There are " << num_ranks << " ranks in total; The rest is: " << rest << "\n";
 		std::cout << sstream.str().c_str() << std::flush;
 		sstream.str("");
-		RelearnException::check(false, "rest != 0");
+		RelearnException::fail("rest != 0");
 	}
 
 	// Calc start and end index of subdomain

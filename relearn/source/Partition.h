@@ -64,7 +64,7 @@ public:
 	void print_my_subdomains_info_rank(int rank);
 
 	void set_mpi_rma_mem_allocator(MPI_RMA_MemAllocator<OctreeNode>& mpi_rma_mem_allocator) {
-		RelearnException::check(false, "Don't use this function any more! set_mpi_rma_mem_allocator in partition.h");
+		RelearnException::fail("Don't use this function any more! set_mpi_rma_mem_allocator in partition.h");
 	}
 
 	bool is_neuron_local(size_t neuron_id) const /*noexcept*/ {
@@ -173,7 +173,7 @@ public:
 			id += ids.size();
 		}
 
-		RelearnException::check(false, "Didn't find global id in Partition.h");
+		RelearnException::fail("Didn't find global id in Partition.h");
 		return 0;
 	}
 

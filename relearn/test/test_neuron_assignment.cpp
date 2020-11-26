@@ -19,6 +19,8 @@
 #include "../source/SubdomainFromFile.h"
 #include "../source/RelearnException.h"
 
+constexpr const int iterations = 10;
+constexpr const double eps = 0.00001;
 
 void check_types_fraction(std::vector<SynapticElements::SignalType>& types, double& frac_ex, unsigned long long total_subdomains, const size_t& num_neurons) {
 	size_t neurons_ex = 0;

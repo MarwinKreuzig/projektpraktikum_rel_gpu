@@ -37,7 +37,7 @@ size_t NeuronToSubdomainAssignment::num_neurons(size_t subdomain_idx, [[maybe_un
 
 	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (!contains) {
-		RelearnException::check(false, "Wanted to have num_neurons of subdomain_idx that is not present");
+		RelearnException::fail("Wanted to have num_neurons of subdomain_idx that is not present");
 		return 0;
 	}
 
@@ -51,7 +51,7 @@ void NeuronToSubdomainAssignment::neuron_positions(size_t subdomain_idx, [[maybe
 
 	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (!contains) {
-		RelearnException::check(false, "Wanted to have neuron_positions of subdomain_idx that is not present");
+		RelearnException::fail("Wanted to have neuron_positions of subdomain_idx that is not present");
 		return;
 	}
 
@@ -69,7 +69,7 @@ void NeuronToSubdomainAssignment::neuron_types(size_t subdomain_idx, [[maybe_unu
 
 	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (!contains) {
-		RelearnException::check(false, "Wanted to have neuron_types of subdomain_idx that is not present");
+		RelearnException::fail("Wanted to have neuron_types of subdomain_idx that is not present");
 		return;
 	}
 
@@ -84,7 +84,7 @@ void NeuronToSubdomainAssignment::neuron_area_names(size_t subdomain_idx, [[mayb
 
 	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (!contains) {
-		RelearnException::check(false, "Wanted to have neuron_area_names of subdomain_idx that is not present");
+		RelearnException::fail("Wanted to have neuron_area_names of subdomain_idx that is not present");
 		return;
 	}
 

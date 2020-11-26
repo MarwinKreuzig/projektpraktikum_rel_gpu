@@ -145,7 +145,7 @@ void SubdomainFromFile::neuron_global_ids(size_t subdomain_idx, [[maybe_unused]]
 
 	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (!contains) {
-		RelearnException::check(false, "Wanted to have neuron_global_ids of subdomain_idx that is not present");
+		RelearnException::fail("Wanted to have neuron_global_ids of subdomain_idx that is not present");
 		return;
 	}
 
@@ -158,7 +158,7 @@ void SubdomainFromFile::neuron_global_ids(size_t subdomain_idx, [[maybe_unused]]
 void SubdomainFromFile::fill_subdomain(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains, const Position& min, const Position& max) {
 	const bool subdomain_already_filled = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
 	if (subdomain_already_filled) {
-		RelearnException::check(false, "Tried to fill an already filled subdomain.");
+		RelearnException::fail("Tried to fill an already filled subdomain.");
 		return;
 	}
 

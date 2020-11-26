@@ -362,11 +362,11 @@ TEST(TestVector, test_vector_operator_plus_scalar) {
 
 TEST(TestVector, test_vector_operator_minus_scalar) {
 	std::mt19937 mt;
-	std::uniform_real_distribution<double> urd(-100.0, 100.0);
+	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto x1 = urd(mt);
 		auto y1 = urd(mt);
 		auto z1 = urd(mt);
