@@ -606,7 +606,7 @@ TEST(TestVector, test_vector_componentwise_min_max) {
 		auto is_equal = v_1 == v_max;
 		EXPECT_TRUE(is_equal);
 
-		v_1 = Vec3<double>( x_1, y_1, z_1 );
+		v_1 = Vec3<double>(x_1, y_1, z_1);
 
 		v_1.calculate_componentwise_minimum(v_2);
 		is_equal = v_1 == v_min;

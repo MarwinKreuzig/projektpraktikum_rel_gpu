@@ -69,13 +69,10 @@ TEST(TestRandomNeuronPlacement, test_constructor) {
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto num_neurons = uid(mt);
 		auto frac_ex = urd(mt);
 		auto um_per_neuron = urd(mt) * 100;
-
-		auto lower_bound_ex = static_cast<size_t>(floor(num_neurons * frac_ex));
-		auto upper_bound_ex = static_cast<size_t>(ceil(num_neurons * frac_ex));
 
 		SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
 
@@ -84,11 +81,11 @@ TEST(TestRandomNeuronPlacement, test_constructor) {
 
 		EXPECT_EQ(num_neurons, num_neurons_);
 
-		EXPECT_NEAR(frac_ex, frac_ex_, 4.0 / num_neurons);
+		EXPECT_NEAR(frac_ex, frac_ex_, 1.0 / num_neurons);
 
 		EXPECT_NEAR(sfnd.get_simulation_box_length().x,
-					ceil(pow(static_cast<double>(num_neurons), 1 / 3.)) * um_per_neuron,
-					1.0 / num_neurons);
+			ceil(pow(static_cast<double>(num_neurons), 1 / 3.)) * um_per_neuron,
+			1.0 / num_neurons);
 
 		EXPECT_EQ(0, sfnd.placed_num_neurons());
 		EXPECT_EQ(0, sfnd.placed_ratio_neurons_exc());
@@ -102,7 +99,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill) {
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto num_neurons = uid(mt);
 		auto frac_ex = urd(mt);
 		auto um_per_neuron = urd(mt) * 100;
@@ -140,7 +137,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_multiple) {
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto num_neurons = uid(mt);
 		auto frac_ex = urd(mt);
 		auto um_per_neuron = urd(mt) * 100;
@@ -186,7 +183,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions) {
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto num_neurons = uid(mt);
 		auto frac_ex = urd(mt);
 		auto um_per_neuron = urd(mt) * 100;
@@ -255,7 +252,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions_multiple_subdomains) 
 
 	std::uniform_int_distribution<size_t> uid_subdomains(1, 5);
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto num_neurons = uid(mt);
 		auto frac_ex = urd(mt);
 		auto um_per_neuron = urd(mt) * 100;
@@ -350,7 +347,7 @@ TEST(TestRandomNeuronPlacement, test_multiple_lazily_fill_positions_multiple_sub
 
 	std::uniform_int_distribution<size_t> uid_subdomains(1, 5);
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto num_neurons = uid(mt);
 		auto frac_ex = urd(mt);
 		auto um_per_neuron = urd(mt) * 100;
@@ -418,7 +415,7 @@ TEST(TestRandomNeuronPlacement, test_saving) {
 
 	mt.seed(rand());
 
-	for (auto i = 0; i < 10; i++) {
+	for (auto i = 0; i < iterations; i++) {
 		auto num_neurons = uid(mt);
 		auto frac_ex = urd(mt);
 		auto um_per_neuron = urd(mt) * 100;
@@ -465,8 +462,6 @@ TEST(TestRandomNeuronPlacement, test_saving) {
 
 		EXPECT_EQ(num_neurons, lines.size());
 
-		size_t highest_id_until_know;
-
 		std::vector<bool> is_there(num_neurons);
 
 		for (auto j = 0; j < num_neurons; j++) {
@@ -484,7 +479,7 @@ TEST(TestRandomNeuronPlacement, test_saving) {
 			double z;
 			std::string area;
 			std::string type_string;
-			
+
 			sstream
 				>> id
 				>> x
@@ -498,9 +493,9 @@ TEST(TestRandomNeuronPlacement, test_saving) {
 			EXPECT_FALSE(is_there[id]);
 			is_there[id] = true;
 
-			EXPECT_NEAR(x, desired_position.x, 1e-5);
-			EXPECT_NEAR(y, desired_position.y, 1e-5);
-			EXPECT_NEAR(z, desired_position.z, 1e-5);
+			EXPECT_NEAR(x, desired_position.x, eps);
+			EXPECT_NEAR(y, desired_position.y, eps);
+			EXPECT_NEAR(z, desired_position.z, eps);
 
 			SynapticElements::SignalType type;
 			if (type_string == "ex") {
@@ -519,28 +514,28 @@ TEST(TestRandomNeuronPlacement, test_saving) {
 	}
 }
 
-bool operator<(const NeuronToSubdomainAssignment::Node &a, const NeuronToSubdomainAssignment::Node &b) {
+bool operator<(const NeuronToSubdomainAssignment::Node& a, const NeuronToSubdomainAssignment::Node& b) {
 	return NeuronToSubdomainAssignment::Node::less()(a, b);
 }
 
 TEST(TestNeuronPlacementStoreLoad, test_neuron_placement_store_and_load) {
-	const std::string file{"./test_output_positions_id.txt"};
+	const std::string file{ "./test_output_positions_id.txt" };
 
 	constexpr auto subdomain_id = 0;
 	constexpr auto num_neurons = 10;
 	constexpr auto frac_neurons_exc = 0.5;
 
 	// create from density
-	SubdomainFromNeuronDensity sdnd{num_neurons, frac_neurons_exc};
+	SubdomainFromNeuronDensity sdnd{ num_neurons, frac_neurons_exc };
 	// fill_subdomain
-	sdnd.fill_subdomain(subdomain_id, 1, Vec3d{0}, Vec3d{sdnd.simulation_box_length.get_maximum()});
+	sdnd.fill_subdomain(subdomain_id, 1, Vec3d{ 0 }, Vec3d{ sdnd.simulation_box_length.get_maximum() });
 	// save to file
 	sdnd.write_neurons_to_file(file);
 
 	// load from file
-	SubdomainFromFile sdff{file};
+	SubdomainFromFile sdff{ file };
 	// fill_subdomain from file
-	sdff.fill_subdomain(subdomain_id, 1, Vec3d{0}, Vec3d{sdff.simulation_box_length.get_maximum()});
+	sdff.fill_subdomain(subdomain_id, 1, Vec3d{ 0 }, Vec3d{ sdff.simulation_box_length.get_maximum() });
 
 	// check neuron placement numbers
 	EXPECT_EQ(sdff.desired_num_neurons(), sdnd.desired_num_neurons());
@@ -561,16 +556,16 @@ TEST(TestNeuronPlacementStoreLoad, test_neuron_placement_store_and_load) {
 	// compare both neurons_in_subdomain maps for differences
 	std::vector<decltype(sdff.neurons_in_subdomain)::value_type> diff{};
 	std::set_symmetric_difference(std::begin(sdff.neurons_in_subdomain), std::end(sdff.neurons_in_subdomain),
-								  std::begin(sdnd.neurons_in_subdomain), std::end(sdnd.neurons_in_subdomain),
-								  std::back_inserter(diff));
+		std::begin(sdnd.neurons_in_subdomain), std::end(sdnd.neurons_in_subdomain),
+		std::back_inserter(diff));
 	EXPECT_EQ(diff.size(), 0);
 
 	// compare the written files of sdnd and sdff
-	std::ifstream saved1{file};
+	std::ifstream saved1{ file };
 	sdff.write_neurons_to_file("./test_output_positions_id2.txt");
-	std::ifstream saved2{"./test_output_positions_id2.txt"};
+	std::ifstream saved2{ "./test_output_positions_id2.txt" };
 
-	for (std::string line1{}, line2{}; std::getline(saved1, line1) && std::getline(saved2, line2);)	{
+	for (std::string line1{}, line2{}; std::getline(saved1, line1) && std::getline(saved2, line2);) {
 		EXPECT_EQ(line1, line2);
 	}
 }
