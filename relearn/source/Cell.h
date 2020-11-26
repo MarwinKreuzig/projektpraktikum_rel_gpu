@@ -176,8 +176,13 @@ public:
 
 		 */
 
+		//NOLINTNEXTLINE
 		idx = idx | ((x < (xyz_min.x + xyz_max.x) / 2.0) ? 0 : 1);  // idx | (pos_x < midpoint_dim_x) ? 0 : 1
+
+		//NOLINTNEXTLINE
 		idx = idx | ((y < (xyz_min.y + xyz_max.y) / 2.0) ? 0 : 2);  // idx | (pos_y < midpoint_dim_y) ? 0 : 2
+
+		//NOLINTNEXTLINE
 		idx = idx | ((z < (xyz_min.z + xyz_max.z) / 2.0) ? 0 : 4);  // idx | (pos_z < midpoint_dim_z) ? 0 : 4
 
 		RelearnException::check(idx < 8 && "Octree octant must be smaller than 8");

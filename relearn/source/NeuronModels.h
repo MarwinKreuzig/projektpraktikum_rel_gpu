@@ -112,7 +112,7 @@ public:
 	}
 
 	[[nodiscard]] bool get_fired(const size_t i) const noexcept {
-		return static_cast<bool>(fired[i]);
+		return fired[i];
 	}
 
 	[[nodiscard]] double get_x(const size_t i) const noexcept {
@@ -143,9 +143,9 @@ protected:
 	int h;		 // Precision for Euler integration
 
 	// // Variables for each neuron where the array index denotes the neuron ID
-	std::vector<double> x;			  // membrane potential v
-	std::vector<unsigned short> fired; // 1: neuron has fired, 0: neuron is inactive
-	std::vector<double> I_syn;		  // Synaptic input
+	std::vector<double> x;				// membrane potential v
+	std::vector<bool> fired;			// 1: neuron has fired, 0: neuron is inactive
+	std::vector<double> I_syn;			// Synaptic input
 };
 
 namespace models {
@@ -176,21 +176,23 @@ namespace models {
 
 			// Neuron ready to fire again
 			if (refrac[i] == 0) {
-				fired[i] = static_cast<unsigned short>(theta(x[i])); // Decide whether a neuron fires depending on its firing rate
-				refrac[i] = static_cast<double>(fired[i] * refrac_time);	 // After having fired, a neuron is in a refractory state
+				const bool f = theta(x[i]);
+				fired[i] = f;							// Decide whether a neuron fires depending on its firing rate
+				refrac[i] = f ? refrac_time : 0;		// After having fired, a neuron is in a refractory state
 			}
 			// Neuron now/still in refractory state
 			else {
-				fired[i] = 0; // Set neuron inactive
-				--refrac[i];		  // Decrease refractory time
+				fired[i] = false;						// Set neuron inactive
+				--refrac[i];							// Decrease refractory time
 			}
 		}
 
 		void init_neurons() final {
 			for (size_t i = 0; i < x.size(); ++i) {
 				x[i] = random_number_distribution(random_number_generator);
-				fired[i] = static_cast<unsigned short>(theta(x[i]));
-				refrac[i] = static_cast<double>(fired[i]) * refrac_time;
+				const bool f = theta(x[i]);
+				fired[i] = f;							// Decide whether a neuron fires depending on its firing rate
+				refrac[i] = f ? refrac_time : 0;		// After having fired, a neuron is in a refractory state
 			}
 		}
 
@@ -244,7 +246,7 @@ namespace models {
 				u[i] += iter_refrac(u[i], x[i]) / h;
 
 				if (spiked(x[i])) {
-					fired[i] = 1;
+					fired[i] = true;
 					x[i] = c;
 					u[i] += d;
 				}
@@ -255,7 +257,7 @@ namespace models {
 			for (auto i = 0; i < x.size(); ++i) {
 				x[i] = c;
 				u[i] = iter_refrac(b * c, x[i]);
-				fired[i] = static_cast<unsigned short>(x[i] >= V_spike);
+				fired[i] =x[i] >= V_spike;
 			}
 		}
 
@@ -306,7 +308,7 @@ namespace models {
 
 	protected:
 		void update_activity(const size_t i) final {
-			fired[i] = 0;
+			fired[i] = false;
 
 			// Update the membrane potential
 			for (int integration_steps = 0; integration_steps < h; ++integration_steps) {
@@ -314,7 +316,7 @@ namespace models {
 				w[i] += iter_refrac(w[i], x[i]) / h;
 
 				if (spiked(x[i], w[i])) {
-					fired[i] = 1;
+					fired[i] = true;
 				}
 			}
 		}
@@ -323,7 +325,7 @@ namespace models {
 			for (auto i = 0; i < x.size(); ++i) {
 				x[i] = -1.2;
 				w[i] = iter_refrac(-.6, x[i]);
-				fired[i] = static_cast<unsigned short>(spiked(x[i], w[i]));
+				fired[i] = spiked(x[i], w[i]);
 			}
 		}
 
@@ -373,7 +375,7 @@ namespace models {
 				w[i] += iter_refrac(w[i], x[i]) / h;
 
 				if (x[i] >= V_peak) {
-					fired[i] = 1;
+					fired[i] = true;
 					x[i] = E_L;
 					w[i] += b;
 				}
@@ -384,7 +386,7 @@ namespace models {
 			for (int i = 0; i < x.size(); ++i) {
 				x[i] = E_L;
 				w[i] = iter_refrac(0, x[i]);
-				fired[i] = static_cast<unsigned short>(x[i] >= V_peak);
+				fired[i] = x[i] >= V_peak;
 			}
 		}
 
