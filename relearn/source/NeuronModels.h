@@ -152,7 +152,7 @@ namespace models {
 	class ModelA : public NeuronModels {
 	public:
 		ModelA(size_t num_neurons, double k, double tau_C, double beta, int h,
-			const double x_0, const double tau_x, const double refrac_time)
+			const double x_0, const double tau_x, unsigned int refrac_time)
 			: NeuronModels{ num_neurons, k, tau_C, beta, h }, refrac(num_neurons), x_0{ x_0 }, tau_x{ tau_x }, refrac_time{ refrac_time }
 		{
 			init_neurons();
@@ -207,11 +207,11 @@ namespace models {
 			return x >= threshold;
 		}
 
-		std::vector<int> refrac; // refractory time
+		std::vector<unsigned int> refrac; // refractory time
 
 		double x_0;			// Background or resting activity
 		double tau_x;		// Decay time of firing rate in msec
-		double refrac_time; // Length of refractory period in msec. After an action potential a neuron cannot fire for this time
+		unsigned int refrac_time; // Length of refractory period in msec. After an action potential a neuron cannot fire for this time
 
 		// Random number generator for this class (C++11)
 		std::mt19937& random_number_generator{ RandomHolder<ModelA>::get_random_generator() };
