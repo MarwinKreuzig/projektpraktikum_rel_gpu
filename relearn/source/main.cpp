@@ -372,7 +372,6 @@ int main(int argc, char** argv) {
 		neurons.get_positions().get_x_dims(),
 		neurons.get_positions().get_y_dims(),
 		neurons.get_positions().get_z_dims());
-	std::cout << "After neuron id map" << std::endl;
 
 	/**
 	 * Init global tree parameters

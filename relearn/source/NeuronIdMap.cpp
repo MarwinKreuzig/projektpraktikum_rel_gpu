@@ -101,9 +101,6 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 		xyz_pos[idx + 2] = z[i];
 	}
 
-	std::cout << num_ranks << std::endl;
-	std::cout << my_rank << std::endl;
-
 	std::vector<int> recvcounts(num_ranks);
 	std::vector<int> displs(num_ranks);
 	for (int i = 0; i < num_ranks; i++) {

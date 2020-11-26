@@ -58,19 +58,19 @@ void SubdomainFromFile::read_dimensions_from_file() {
 			(sstream >> area_name) &&
 			(sstream >> signal_type);
 
-		minimum.calculate_componentwise_minimum(tmp);
-		maximum.calculate_componentwise_maximum(tmp);
-
-		if (signal_type == "ex") {
-			found_ex_neurons++;
-		}
-		else {
-			found_in_neurons++;
-		}
-
 		if (!success) {
 			std::cerr << "Skipping line: \"" << line << "\"\n";
 			continue;
+		}
+
+		minimum.calculate_componentwise_minimum(tmp);
+		maximum.calculate_componentwise_maximum(tmp);
+
+		if (signal_type == "in") {
+			found_in_neurons++;
+		}
+		else {
+			found_ex_neurons++;
 		}
 	}
 
@@ -98,8 +98,6 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
 		if (!line.empty() && '#' == line[0]) {
 			continue;
 		}
-
-		std::cout << line << "\n";
 
 		std::string signal_type{};
 
@@ -137,6 +135,7 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
 		++currently_num_neurons_;
 		nodes.insert(node);
 	}
+
 	currently_frac_neurons_exc_ = placed_ex_neurons / static_cast<double>(currently_num_neurons_);
 }
 
