@@ -1,26 +1,37 @@
 #include "../googletest/include/gtest/gtest.h"
 
-#include <random>
-#include <string>
-#include <vector>
-#include <tuple>
-#include <sstream>
-#include <fstream>
 #include <algorithm>
-#include <vector>
-#include <tuple>
+#include <array>
+#include <fstream>
+#include <numeric>
+#include <random>
 #include <set>
+#include <sstream>
+#include <string>
+#include <tuple>
+#include <vector>
 
 #define private public
 #define protected public
 
 #include "../source/NeuronToSubdomainAssignment.h"
+#include "../source/Partition.h"
 #include "../source/SubdomainFromNeuronDensity.h"
 #include "../source/SubdomainFromFile.h"
 #include "../source/RelearnException.h"
 
 constexpr const int iterations = 10;
 constexpr const double eps = 0.00001;
+
+std::mt19937 mt;
+
+void sort_indices(const std::vector<Vec3d>& vectors, std::vector<int>& sequence) {
+	sequence = std::vector<int>(vectors.size());
+	std::iota(sequence.begin(), sequence.end(), 0);
+
+	std::stable_sort(sequence.begin(), sequence.end(),
+		[&vectors](int i1, int i2) {return vectors[i1] < vectors[i2]; });
+}
 
 void check_types_fraction(std::vector<SynapticElements::SignalType>& types, double& frac_ex, unsigned long long total_subdomains, const size_t& num_neurons) {
 	size_t neurons_ex = 0;
@@ -61,9 +72,38 @@ void check_positions(std::vector<NeuronToSubdomainAssignment::Position>& pos, do
 	}
 }
 
+void generate_neuron_positions(std::vector<Vec3d>& positions,
+	std::vector<std::string>& area_names, std::vector<SynapticElements::SignalType>& types) {
+
+	std::uniform_int_distribution<size_t> uid(1, 1000);
+	std::uniform_real_distribution<double> urd(0.0, 1.0);
+
+	auto num_neurons = uid(mt);
+	auto frac_ex = urd(mt);
+	auto um_per_neuron = urd(mt) * 100;
+
+	SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
+
+	auto num_neurons_ = sfnd.desired_num_neurons();
+
+	EXPECT_EQ(num_neurons, num_neurons_);
+
+	auto box_length = sfnd.simulation_box_length.get_maximum();
+
+	sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
+
+	sfnd.neuron_positions(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, positions);
+	sfnd.neuron_area_names(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, area_names);
+	sfnd.neuron_types(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, types);
+
+	EXPECT_EQ(num_neurons, positions.size());
+	EXPECT_EQ(num_neurons, area_names.size());
+	EXPECT_EQ(num_neurons, types.size());
+
+	sfnd.write_neurons_to_file("neurons.tmp");
+}
 
 TEST(TestRandomNeuronPlacement, test_constructor) {
-	std::mt19937 mt;
 	std::uniform_int_distribution<size_t> uid(1, 10000);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -93,7 +133,6 @@ TEST(TestRandomNeuronPlacement, test_constructor) {
 }
 
 TEST(TestRandomNeuronPlacement, test_lazily_fill) {
-	std::mt19937 mt;
 	std::uniform_int_distribution<size_t> uid(1, 10000);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -130,7 +169,6 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill) {
 }
 
 TEST(TestRandomNeuronPlacement, test_lazily_fill_multiple) {
-	std::mt19937 mt;
 	std::uniform_int_distribution<size_t> uid(1, 10000);
 	std::uniform_int_distribution<size_t> uid_fills(1, 10);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
@@ -177,7 +215,6 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_multiple) {
 }
 
 TEST(TestRandomNeuronPlacement, test_lazily_fill_positions) {
-	std::mt19937 mt;
 	std::uniform_int_distribution<size_t> uid(1, 10000);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -244,7 +281,6 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions) {
 }
 
 TEST(TestRandomNeuronPlacement, test_lazily_fill_positions_multiple_subdomains) {
-	std::mt19937 mt;
 	std::uniform_int_distribution<size_t> uid(1, 10000);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -339,7 +375,6 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions_multiple_subdomains) 
 }
 
 TEST(TestRandomNeuronPlacement, test_multiple_lazily_fill_positions_multiple_subdomains) {
-	std::mt19937 mt;
 	std::uniform_int_distribution<size_t> uid(1, 10000);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -409,41 +444,19 @@ TEST(TestRandomNeuronPlacement, test_multiple_lazily_fill_positions_multiple_sub
 }
 
 TEST(TestRandomNeuronPlacement, test_saving) {
-	std::mt19937 mt;
 	std::uniform_int_distribution<size_t> uid(1, 1000);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
 
 	mt.seed(rand());
 
 	for (auto i = 0; i < iterations; i++) {
-		auto num_neurons = uid(mt);
-		auto frac_ex = urd(mt);
-		auto um_per_neuron = urd(mt) * 100;
-
-		SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
-
-		auto num_neurons_ = sfnd.desired_num_neurons();
-
-		EXPECT_EQ(num_neurons, num_neurons_);
-
-		auto box_length = sfnd.simulation_box_length.get_maximum();
-
-		sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
-
 		std::vector<Vec3d> positions;
-		sfnd.neuron_positions(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, positions);
-
 		std::vector<std::string> area_names;
-		sfnd.neuron_area_names(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, area_names);
-
 		std::vector<SynapticElements::SignalType> types;
-		sfnd.neuron_types(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, types);
 
-		EXPECT_EQ(num_neurons, positions.size());
-		EXPECT_EQ(num_neurons, area_names.size());
-		EXPECT_EQ(num_neurons, types.size());
+		generate_neuron_positions(positions, area_names, types);
 
-		sfnd.write_neurons_to_file("neurons.tmp");
+		auto num_neurons = positions.size();
 
 		std::ifstream file("neurons.tmp", std::ios::binary | std::ios::in);
 
@@ -513,6 +526,149 @@ TEST(TestRandomNeuronPlacement, test_saving) {
 		}
 	}
 }
+
+TEST(TestRandomNeuronPlacement, test_reloading) {
+	std::uniform_int_distribution<size_t> uid(1, 1000);
+	std::uniform_real_distribution<double> urd(0.0, 1.0);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < iterations; i++) {
+		std::vector<Vec3d> positions;
+		std::vector<std::string> area_names;
+		std::vector<SynapticElements::SignalType> types;
+
+		generate_neuron_positions(positions, area_names, types);
+
+		auto num_neurons = positions.size();
+
+		SubdomainFromFile sff{ "neurons.tmp" };
+
+		std::vector<Vec3d> loaded_positions;
+		std::vector<std::string> loaded_area_names;
+		std::vector<SynapticElements::SignalType> loaded_types;
+
+		const auto box_length = sff.get_simulation_box_length().get_maximum();
+
+		sff.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
+
+		sff.neuron_positions(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, loaded_positions);
+		sff.neuron_area_names(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, loaded_area_names);
+		sff.neuron_types(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, loaded_types);
+
+		for (auto j = 0; j < num_neurons; j++) {
+			const auto& curr_pos = positions[j];
+			const auto& curr_loaded_pos = loaded_positions[j];
+
+			EXPECT_NEAR(curr_pos.x, curr_loaded_pos.x, eps);
+			EXPECT_NEAR(curr_pos.y, curr_loaded_pos.y, eps);
+			EXPECT_NEAR(curr_pos.z, curr_loaded_pos.z, eps);
+
+			const auto& curr_name = area_names[j];
+			const auto& curr_loaded_name = loaded_area_names[j];
+
+			EXPECT_EQ(curr_name, curr_loaded_name);
+
+			const auto& curr_type = types[j];
+			const auto& curr_loaded_type = loaded_types[j];
+
+			EXPECT_EQ(curr_type, curr_loaded_type);
+		}
+	}
+}
+
+TEST(TestRandomNeuronPlacement, test_reloading_multiple) {
+	std::uniform_int_distribution<size_t> uid(1, 1000);
+	std::uniform_real_distribution<double> urd(0.0, 1.0);
+
+	mt.seed(rand());
+
+	for (auto i = 0; i < iterations; i++) {
+		std::vector<Vec3d> positions;
+		std::vector<std::string> area_names;
+		std::vector<SynapticElements::SignalType> types;
+
+		generate_neuron_positions(positions, area_names, types);
+
+		auto num_neurons = positions.size();
+
+		SubdomainFromFile sff{ "neurons.tmp" };
+
+		std::array<std::vector<Vec3d>, 8> loaded_positions;
+		std::array<std::vector<std::string>, 8> loaded_area_names;
+		std::array<std::vector<SynapticElements::SignalType>, 8> loaded_types;
+
+		std::vector<Vec3<size_t>> indices;
+		indices.emplace_back(0, 0, 0);
+		indices.emplace_back(0, 0, 1);
+		indices.emplace_back(0, 1, 0);
+		indices.emplace_back(1, 0, 0);
+		indices.emplace_back(0, 1, 1);
+		indices.emplace_back(1, 0, 1);
+		indices.emplace_back(1, 1, 0);
+		indices.emplace_back(1, 1, 1);
+
+		const auto box_length = sff.get_simulation_box_length().get_maximum();
+
+		std::vector<Vec3d> total_loaded_positions;
+		std::vector<std::string> total_loaded_area_names;
+		std::vector<SynapticElements::SignalType> total_loaded_types;
+
+		for (auto j = 0; j < 8; j++) {
+			const auto& idx = indices[j];
+
+			Vec3d min{ 0 };
+			Vec3d max{ 0 };
+
+			sff.get_subdomain_boundaries(idx, { 2, 2, 2 }, min, max);
+
+			sff.fill_subdomain(j, 8, min, max);
+
+			sff.neuron_positions(j, 8, min, max, loaded_positions[j]);
+			sff.neuron_area_names(j, 8, min, max, loaded_area_names[j]);
+			sff.neuron_types(j, 8, min, max, loaded_types[j]);
+
+			total_loaded_positions.insert(total_loaded_positions.end(), loaded_positions[j].begin(), loaded_positions[j].end());
+			total_loaded_area_names.insert(total_loaded_area_names.end(), loaded_area_names[j].begin(), loaded_area_names[j].end());
+			total_loaded_types.insert(total_loaded_types.end(), loaded_types[j].begin(), loaded_types[j].end());
+		}
+
+		EXPECT_EQ(num_neurons, total_loaded_positions.size());
+		EXPECT_EQ(num_neurons, total_loaded_area_names.size());
+		EXPECT_EQ(num_neurons, total_loaded_types.size());
+
+		std::vector<int> random_sequence;
+		sort_indices(positions, random_sequence);
+
+		std::vector<int> total_loaded_sequence;
+		sort_indices(total_loaded_positions, total_loaded_sequence);
+
+		for (auto j = 0; j < num_neurons; j++) {
+			auto random_idx = random_sequence[j];
+			auto total_loaded_idx = total_loaded_sequence[j];
+
+			const auto& curr_pos = positions[random_idx];
+			const auto& curr_loaded_pos = total_loaded_positions[total_loaded_idx];
+
+			EXPECT_NEAR(curr_pos.x, curr_loaded_pos.x, eps);
+			EXPECT_NEAR(curr_pos.y, curr_loaded_pos.y, eps);
+			EXPECT_NEAR(curr_pos.z, curr_loaded_pos.z, eps);
+
+			const auto& curr_name = area_names[random_idx];
+			const auto& curr_loaded_name = total_loaded_area_names[total_loaded_idx];
+
+			EXPECT_EQ(curr_name, curr_loaded_name);
+
+			const auto& curr_type = types[random_idx];
+			const auto& curr_loaded_type = total_loaded_types[total_loaded_idx];
+
+			//EXPECT_EQ(curr_type, curr_loaded_type);
+		}
+	}
+}
+
+
+
 
 bool operator<(const NeuronToSubdomainAssignment::Node& a, const NeuronToSubdomainAssignment::Node& b) {
 	return NeuronToSubdomainAssignment::Node::less()(a, b);
