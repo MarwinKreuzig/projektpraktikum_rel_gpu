@@ -269,7 +269,7 @@ public:
 	Neurons& operator=(const Neurons& other) = delete;
 	Neurons& operator=(Neurons&& other) = default;
 
-	void set_model(std::unique_ptr<NeuronModels> model) noexcept {
+	void set_model(std::unique_ptr<NeuronModels>&& model) noexcept {
 		neuron_models = std::move(model);
 	}
 
