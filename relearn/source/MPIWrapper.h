@@ -33,8 +33,8 @@ enum class MPI_Locktype : int {
 namespace MPIUserDefinedOperation {
 	// This combination function assumes that it's called with the
 	// correct MPI datatype
-	void min_sum_max(const int* invec, int* inoutvec, const int* const len, MPI_Datatype* dtype);
-}
+	void min_sum_max(const int* invec, int* inoutvec, const int* len, MPI_Datatype* dtype);
+} // namespace MPIUserDefinedOperation
 
 class MPIWrapper {
 public:
@@ -53,7 +53,7 @@ public:
 		minsummax = 100
 	};
 
-	typedef MPI_Request AsyncToken;
+	using AsyncToken = MPI_Request;
 
 private:
 	static MPI_Op minsummax;

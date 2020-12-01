@@ -123,13 +123,13 @@ public:
 		return x;
 	}
 
-	[[nodiscard]] virtual double get_secondary_variable(const size_t i) const noexcept = 0;
+	[[nodiscard]] virtual double get_secondary_variable(size_t i) const noexcept = 0;
 
 	/* Performs one iteration step of update in electrical activity */
 	void update_electrical_activity(const NetworkGraph& network_graph, std::vector<double>& C);
 
 protected:
-	virtual void update_activity(const size_t i) = 0;
+	virtual void update_activity(size_t i) = 0;
 
 	virtual void init_neurons() = 0;
 

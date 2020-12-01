@@ -31,17 +31,17 @@ public:
 	/**
 	 * Type definitions
 	 */
-	typedef std::pair<int, size_t> EdgesKey;    // Pair of (rank, neuron id)
-	typedef int EdgesVal;
-	typedef std::map<EdgesKey, EdgesVal> Edges; // Map of neuron id to edge weight
+	using EdgesKey = std::pair<int, size_t>;    // Pair of (rank, neuron id)
+	using EdgesVal = int;
+	using Edges = std::map<EdgesKey, EdgesVal>; // Map of neuron id to edge weight
 	struct Neighbors {                          // Neighbors of a neuron given by in and out edges
 		Edges in_edges;
 		Edges out_edges;
 	};
-	typedef std::vector<Neighbors> NeuronNeighborhood; // Neighbors for each neuron
+	using NeuronNeighborhood = std::vector<Neighbors>; // Neighbors for each neuron
 													   // The index into the vector is the neuron's local id
 
-	NetworkGraph(size_t my_num_neurons);
+	explicit NetworkGraph(size_t my_num_neurons);
 
 	// Return in edges of neuron "neuron_id"
 	const Edges& get_in_edges(size_t neuron_id) const /*noexcept*/;

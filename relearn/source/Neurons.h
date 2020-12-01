@@ -39,9 +39,9 @@ class Partition;
 class NeuronMonitor;
 
 // Types
-typedef SynapticElements Axons;
-typedef SynapticElements DendritesExc;
-typedef SynapticElements DendritesInh;
+using Axons = SynapticElements;
+using DendritesExc = SynapticElements;
+using DendritesInh = SynapticElements;
 
 /**
 * Type for synapse creation requests which are used with MPI
@@ -123,7 +123,7 @@ private:
  * Map of (MPI rank; SynapseCreationRequests)
  * The MPI rank specifies the corresponding process
  */
-typedef std::map<int, SynapseCreationRequests> MapSynapseCreationRequests;
+using MapSynapseCreationRequests = std::map<int, SynapseCreationRequests>;
 
 
 class Neurons {
@@ -167,7 +167,7 @@ class Neurons {
 	 * Type for synapse deletion requests which are used with MPI
 	 */
 	struct SynapseDeletionRequests {
-		SynapseDeletionRequests() noexcept : num_requests(0) {}
+		SynapseDeletionRequests() noexcept = default;
 
 		size_t size() const noexcept { return num_requests; }
 
@@ -212,7 +212,7 @@ class Neurons {
 		}
 
 	private:
-		size_t num_requests;			// Number of synapse deletion requests
+		size_t num_requests{ 0 };			// Number of synapse deletion requests
 		std::vector<size_t> requests;	// Each request to delete a synapse is a 6-tuple:
 										// (src_neuron_id, tgt_neuron_id, affected_neuron_id, affected_element_type, signal_type, synapse_id)
 										// That is why requests.size() == 6*num_requests
@@ -249,7 +249,7 @@ public:
 	 * Map of (MPI rank; SynapseDeletionRequests)
 	 * The MPI rank specifies the corresponding process
 	 */
-	typedef std::map<int, SynapseDeletionRequests> MapSynapseDeletionRequests;
+	using MapSynapseDeletionRequests = std::map<int, SynapseDeletionRequests>;
 
 	Neurons(size_t num_neurons, const Parameters& params, const Partition&);
 	Neurons(size_t num_neurons, const Parameters& params, const Partition&, std::unique_ptr<NeuronModels> model);
@@ -321,17 +321,17 @@ private:
 	void debug_check_counts();
 
 	template<typename T>
-	StatisticalMeasures<T> global_statistics(const T* local_values, size_t num_local_values, size_t total_num_values, int root, MPIWrapper::Scope scope) {
-		const auto result = std::minmax_element(&local_values[0], &local_values[num_neurons]);
+	StatisticalMeasures<T> global_statistics(const T* local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root, MPIWrapper::Scope scope) {
+		const auto result = std::minmax_element(local_values, local_values + num_neurons);
 		const T my_min = *result.first;
 		const T my_max = *result.second;
 
-		double my_avg = std::accumulate(&local_values[0], &local_values[num_neurons], 0.0);
+		double my_avg = std::accumulate(local_values, local_values + num_neurons, 0.0);
 		my_avg /= total_num_values;
 
 		// Get global min and max at rank "root"
-		const double d_my_min = static_cast<double>(my_min);
-		const double d_my_max = static_cast<double>(my_max);
+		const auto d_my_min = static_cast<double>(my_min);
+		const auto d_my_max = static_cast<double>(my_max);
 
 		const double d_min = MPIWrapper::reduce(d_my_min, MPIWrapper::ReduceFunction::min, root, scope);
 		const double d_max = MPIWrapper::reduce(d_my_max, MPIWrapper::ReduceFunction::max, root, scope);

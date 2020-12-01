@@ -58,4 +58,4 @@ namespace Logs {
 	void init();
 
 	inline LogFiles& get(const std::string& name) { return logfiles.find(name)->second; }
-}
+} // namespace Logs

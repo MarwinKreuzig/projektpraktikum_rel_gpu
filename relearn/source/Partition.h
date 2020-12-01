@@ -12,8 +12,8 @@
 
 #include "LogMessages.h"
 #include "MPI_RMA_MemAllocator.h"
-#include "Neurons.h"
 #include "NeuronToSubdomainAssignment.h"
+#include "Neurons.h"
 #include "Octree.h"
 #include "Positions.h"
 #include "Random.h"

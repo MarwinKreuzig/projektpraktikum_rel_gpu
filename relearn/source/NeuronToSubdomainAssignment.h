@@ -26,7 +26,7 @@ public:
 	// Helper class to store neuron positions
 	using Position = Vec3<double>;
 
-	virtual ~NeuronToSubdomainAssignment() {};
+	virtual ~NeuronToSubdomainAssignment() = default;
 
 	NeuronToSubdomainAssignment(const NeuronToSubdomainAssignment& other) = delete;
 	NeuronToSubdomainAssignment(NeuronToSubdomainAssignment&& other) = delete;
@@ -92,10 +92,10 @@ public:
 
 protected:
 	struct Node {
-		Position pos = Position(0);
-		size_t id = 1111222233334444;
-		SynapticElements::SignalType signal_type = SynapticElements::SignalType::EXCITATORY;
-		std::string area_name = "NOT SET";
+		Position pos{ 0 };
+		size_t id{ 1111222233334444 };
+		SynapticElements::SignalType signal_type{ SynapticElements::SignalType::EXCITATORY };
+		std::string area_name{ "NOT SET" };
 
 		struct less {
 			bool operator() (const Node& lhs, const Node& rhs) const /*noexcept*/ {
@@ -115,16 +115,15 @@ protected:
 	using Nodes = std::set<Node, Node::less>;
 	std::map<size_t, Nodes> neurons_in_subdomain;
 
-	double desired_frac_neurons_exc_;
-	size_t desired_num_neurons_;
+	double desired_frac_neurons_exc_{ 0.0 };
+	size_t desired_num_neurons_{ 0 };
 
-	double currently_frac_neurons_exc_;
-	size_t currently_num_neurons_;
+	double currently_frac_neurons_exc_{ 0.0 };
+	size_t currently_num_neurons_{ 0 };
 
-	Vec3d simulation_box_length;
+	Vec3d simulation_box_length{ 0 };
 
 	bool position_in_box(const Position& pos, const Position& box_min, const Position& box_max) const noexcept;
 
-	NeuronToSubdomainAssignment() noexcept : desired_frac_neurons_exc_(0.0), desired_num_neurons_(0), currently_frac_neurons_exc_(0.0), currently_num_neurons_(0), simulation_box_length(0)  {
-	}
+	NeuronToSubdomainAssignment() noexcept = default;
 };

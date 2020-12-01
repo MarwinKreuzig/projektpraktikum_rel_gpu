@@ -41,11 +41,11 @@ struct Vec3 {
 	Vec3<T>& operator=(const Vec3<T>& other) = default;
 
 	Vec3(Vec3<T>&& other) = default;
-	Vec3<T>& operator=(Vec3<T>&& other) = default;
+	Vec3<T>& operator=(Vec3<T>&& other) noexcept = default;
 
 
 	template<typename K>
-	operator Vec3<K>() const noexcept {
+	explicit operator Vec3<K>() const noexcept {
 		Vec3<K> res{ (K)x, (K)y, (K)z };
 		return res;
 	}
@@ -125,9 +125,9 @@ struct Vec3 {
 		RelearnException::check(y >= 0, "floor_componentwise must be used on a positive vector: y");
 		RelearnException::check(z >= 0, "floor_componentwise must be used on a positive vector: z");
 
-		const size_t floored_x = static_cast<size_t>(floor(x));
-		const size_t floored_y = static_cast<size_t>(floor(y));
-		const size_t floored_z = static_cast<size_t>(floor(z));
+		const auto floored_x = static_cast<size_t>(floor(x));
+		const auto floored_y = static_cast<size_t>(floor(y));
+		const auto floored_z = static_cast<size_t>(floor(z));
 
 		return Vec3<size_t>(floored_x, floored_y, floored_z);
 	}

@@ -19,7 +19,7 @@
 class Positions {
 
 public:
-	Positions(size_t s) : size(s), x_dims(s), y_dims(s), z_dims(s) {
+	explicit Positions(size_t s) : size(s), x_dims(s), y_dims(s), z_dims(s) {
 
 	}
 	~Positions() = default;

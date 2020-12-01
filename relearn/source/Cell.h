@@ -25,15 +25,13 @@ public:
 		// Mark if xyz_pos[] values are valid and can be used
 		bool xyz_pos_valid = false;
 		unsigned int num_dendrites = 0;
-		// TODO
+		// TODO(future)
 		// List colliding_axons;
 	};
 
-	Cell() noexcept : neuron_id(1111222233334444) {
-	}
-
+	Cell() noexcept = default;
 	~Cell() = default;
-	 
+
 	Cell(const Cell& other) = default;
 	Cell(Cell&& other) = default;
 
@@ -67,61 +65,61 @@ public:
 	}
 
 	void get_neuron_position(Vec3d& pos, bool& valid) const {
-		const auto diff = dendrites[INHIBITORY].xyz_pos - dendrites[EXCITATORY].xyz_pos;
+		const auto diff = dendrites[static_cast<int>(INHIBITORY)].xyz_pos - dendrites[static_cast<int>(EXCITATORY)].xyz_pos;
 
 		const bool exc_position_equals_inh_position = diff.x == 0.0 && diff.y == 0.0 && diff.z == 0.0;
 
 		RelearnException::check(exc_position_equals_inh_position);
-		RelearnException::check(dendrites[EXCITATORY].xyz_pos_valid == dendrites[INHIBITORY].xyz_pos_valid);
+		RelearnException::check(dendrites[static_cast<int>(EXCITATORY)].xyz_pos_valid == dendrites[static_cast<int>(INHIBITORY)].xyz_pos_valid);
 
-		pos = dendrites[EXCITATORY].xyz_pos;
-		valid = dendrites[EXCITATORY].xyz_pos_valid;
+		pos = dendrites[static_cast<int>(EXCITATORY)].xyz_pos;
+		valid = dendrites[static_cast<int>(EXCITATORY)].xyz_pos_valid;
 	}
 
 	void get_neuron_position_exc(Vec3d& position, bool& valid) const noexcept {
-		position = dendrites[EXCITATORY].xyz_pos;
-		valid = dendrites[EXCITATORY].xyz_pos_valid;
+		position = dendrites[static_cast<int>(EXCITATORY)].xyz_pos;
+		valid = dendrites[static_cast<int>(EXCITATORY)].xyz_pos_valid;
 	}
 
 	void set_neuron_position_exc(const Vec3d& position, bool valid) noexcept {
-		dendrites[EXCITATORY].xyz_pos = position;
-		dendrites[EXCITATORY].xyz_pos_valid = valid;
+		dendrites[static_cast<int>(EXCITATORY)].xyz_pos = position;
+		dendrites[static_cast<int>(EXCITATORY)].xyz_pos_valid = valid;
 	}
 
 	void get_neuron_position_inh(Vec3d& position, bool& valid) const noexcept {
-		position = dendrites[INHIBITORY].xyz_pos;
-		valid = dendrites[INHIBITORY].xyz_pos_valid;
+		position = dendrites[static_cast<int>(INHIBITORY)].xyz_pos;
+		valid = dendrites[static_cast<int>(INHIBITORY)].xyz_pos_valid;
 	}
 
 	void set_neuron_position_inh(const Vec3d& position, bool valid) noexcept {
-		dendrites[INHIBITORY].xyz_pos = position;
-		dendrites[INHIBITORY].xyz_pos_valid = valid;
+		dendrites[static_cast<int>(INHIBITORY)].xyz_pos = position;
+		dendrites[static_cast<int>(INHIBITORY)].xyz_pos_valid = valid;
 	}
 
 	void get_neuron_position_for(DendriteType dendrite_type, Vec3d& xyz, bool& valid) const noexcept {
 		// Use dendrite_type as index into array
-		xyz = dendrites[dendrite_type].xyz_pos;
-		valid = dendrites[dendrite_type].xyz_pos_valid;
+		xyz = dendrites[static_cast<int>(dendrite_type)].xyz_pos;
+		valid = dendrites[static_cast<int>(dendrite_type)].xyz_pos_valid;
 	}
 
 	void set_neuron_num_dendrites_exc(unsigned int num_dendrites) noexcept {
-		dendrites[EXCITATORY].num_dendrites = num_dendrites;
+		dendrites[static_cast<int>(EXCITATORY)].num_dendrites = num_dendrites;
 	}
 
 	unsigned int get_neuron_num_dendrites_exc() const noexcept {
-		return dendrites[EXCITATORY].num_dendrites;
+		return dendrites[static_cast<int>(EXCITATORY)].num_dendrites;
 	}
 
 	void set_neuron_num_dendrites_inh(unsigned int num_dendrites) noexcept {
-		dendrites[INHIBITORY].num_dendrites = num_dendrites;
+		dendrites[static_cast<int>(INHIBITORY)].num_dendrites = num_dendrites;
 	}
 
 	unsigned int get_neuron_num_dendrites_inh() const noexcept {
-		return dendrites[INHIBITORY].num_dendrites;
+		return dendrites[static_cast<int>(INHIBITORY)].num_dendrites;
 	}
 
 	unsigned int get_neuron_num_dendrites_for(DendriteType dendrite_type) const noexcept {
-		return dendrites[dendrite_type].num_dendrites;
+		return dendrites[static_cast<int>(dendrite_type)].num_dendrites;
 	}
 
 	size_t get_neuron_id() const noexcept {
@@ -133,12 +131,12 @@ public:
 	}
 
 	unsigned char get_neuron_octant() const {
-		const auto diff = dendrites[INHIBITORY].xyz_pos - dendrites[EXCITATORY].xyz_pos;
+		const auto diff = dendrites[static_cast<int>(INHIBITORY)].xyz_pos - dendrites[static_cast<int>(EXCITATORY)].xyz_pos;
 
 		const auto exc_position_equals_inh_position = diff.x == 0.0 && diff.y == 0.0 && diff.z == 0.0;
 		RelearnException::check(exc_position_equals_inh_position);
 
-		return get_octant_for_position(dendrites[INHIBITORY].xyz_pos);
+		return get_octant_for_position(dendrites[static_cast<int>(INHIBITORY)].xyz_pos);
 	}
 
 	unsigned char get_octant_for_position(const Vec3d& pos) const {
@@ -176,7 +174,7 @@ public:
 
 		 */
 
-		//NOLINTNEXTLINE
+		 //NOLINTNEXTLINE
 		idx = idx | ((x < (xyz_min.x + xyz_max.x) / 2.0) ? 0 : 1);  // idx | (pos_x < midpoint_dim_x) ? 0 : 1
 
 		//NOLINTNEXTLINE
@@ -185,7 +183,7 @@ public:
 		//NOLINTNEXTLINE
 		idx = idx | ((z < (xyz_min.z + xyz_max.z) / 2.0) ? 0 : 4);  // idx | (pos_z < midpoint_dim_z) ? 0 : 4
 
-		RelearnException::check(idx < 8 && "Octree octant must be smaller than 8");
+		RelearnException::check(idx < 8, "Octree octant must be smaller than 8");
 
 		return idx;
 	}
@@ -196,7 +194,7 @@ public:
 		// Check whether 2nd or 1st octant for each dimension
 		for (auto i = 0; i < 3; i++) {
 			// Use bit mask "mask" to see which bit is set for idx
-			if (mask & idx) {
+			if ((mask & idx) != 0) {
 				xyz_min[i] = (this->xyz_min[i] + this->xyz_max[i]) / 2.0;
 				xyz_max[i] = this->xyz_max[i];
 			}
@@ -210,35 +208,33 @@ public:
 	}
 
 	void print() const {
-		using namespace std;
+		std::cout << "  == Cell (" << this << ") ==\n";
 
-		cout << "  == Cell (" << this << ") ==\n";
-
-		cout << "    xyz_min[3]: ";
+		std::cout << "    xyz_min[3]: ";
 		for (int i = 0; i < 3; i++) {
-			cout << xyz_min[i] << " ";
+			std::cout << xyz_min[i] << " ";
 		}
-		cout << "\n";
+		std::cout << "\n";
 
-		cout << "    xyz_max[3]: ";
+		std::cout << "    xyz_max[3]: ";
 		for (int i = 0; i < 3; i++) {
-			cout << xyz_max[i] << " ";
+			std::cout << xyz_max[i] << " ";
 		}
-		cout << "\n";
+		std::cout << "\n";
 
-		cout << "    dendrites[EXCITATORY].num_dendrites: " << dendrites[EXCITATORY].num_dendrites;
-		cout << "    dendrites[EXCITATORY].xyz_pos[3]   : ";
+		std::cout << "    dendrites[EXCITATORY].num_dendrites: " << dendrites[static_cast<int>(EXCITATORY)].num_dendrites;
+		std::cout << "    dendrites[EXCITATORY].xyz_pos[3]   : ";
 		for (int i = 0; i < 3; i++) {
-			cout << dendrites[EXCITATORY].xyz_pos[i] << " ";
+			std::cout << dendrites[static_cast<int>(EXCITATORY)].xyz_pos[i] << " ";
 		}
-		cout << "\n";
+		std::cout << "\n";
 
-		cout << "    dendrites[INHIBITORY].num_dendrites: " << dendrites[INHIBITORY].num_dendrites;
-		cout << "    dendrites[INHIBITORY].xyz_pos[3]   : ";
+		std::cout << "    dendrites[INHIBITORY].num_dendrites: " << dendrites[static_cast<int>(INHIBITORY)].num_dendrites;
+		std::cout << "    dendrites[INHIBITORY].xyz_pos[3]   : ";
 		for (int i = 0; i < 3; i++) {
-			cout << dendrites[INHIBITORY].xyz_pos[i] << " ";
+			std::cout << dendrites[static_cast<int>(INHIBITORY)].xyz_pos[i] << " ";
 		}
-		cout << "\n";
+		std::cout << "\n";
 	}
 
 private:
@@ -262,5 +258,5 @@ private:
 	 * For those with a super neuron, it has no meaning.
 	 * This info is used to identify (return) the target neuron for a given axon
 	 */
-	size_t neuron_id;
+	size_t neuron_id{ 1111222233334444 };
 };

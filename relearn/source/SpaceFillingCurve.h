@@ -20,12 +20,8 @@ using BoxCoordinates = Vec3<uint64_t>;
 
 class Morton {
 public:
-	Morton() noexcept
-		: refinement_level(0) {
-	}
-
-	~Morton() noexcept {
-	}
+	Morton() noexcept = default;
+	~Morton() noexcept = default;
 
 	Morton(const Morton& other) = delete;
 	Morton(Morton&& other) = delete;
@@ -60,13 +56,13 @@ private:
 		return ((number & (static_cast<uint64_t>(1) << bit)) >> bit);
 	}
 
-	size_t refinement_level;
+	size_t refinement_level{ 0 };
 };
 
 template<class T>
 class SpaceFillingCurve {
 public:
-	SpaceFillingCurve(uint8_t refinement_level = 0) /*noexcept*/ {
+	explicit SpaceFillingCurve(uint8_t refinement_level = 0) {
 		set_refinement_level(refinement_level);
 	}
 
@@ -76,14 +72,13 @@ public:
 	SpaceFillingCurve& operator = (const SpaceFillingCurve& other) = delete;
 	SpaceFillingCurve& operator = (SpaceFillingCurve&& other) = delete;
 
-	~SpaceFillingCurve() /*noexcept*/ {
-	}
+	~SpaceFillingCurve() noexcept = default;
 
-	size_t get_refinement_level() const /*noexcept*/ {
+	size_t get_refinement_level() const noexcept {
 		return curve.get_refinement_level();
 	}
 
-	void set_refinement_level(size_t num_subdivisions) /*noexcept*/ {
+	void set_refinement_level(size_t num_subdivisions) {
 		// With 64-bit keys we can only support 20 subdivisions per
 		// dimension (i.e, 2^20 boxes per dimension)
 		RelearnException::check(num_subdivisions <= 20, "Number of subdivisions is too large");

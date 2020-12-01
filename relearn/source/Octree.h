@@ -33,7 +33,7 @@
 
  // Forward declarations of Neurons.h
 class SynapseCreationRequests;
-typedef std::map<int, SynapseCreationRequests> MapSynapseCreationRequests;
+using MapSynapseCreationRequests = std::map<int, SynapseCreationRequests>;
 
 class Neurons;
 
@@ -43,18 +43,13 @@ class Octree {
 public:
 	friend class Partition;
 
-	typedef std::vector<bool> AccessEpochsStarted;
+	using AccessEpochsStarted = std::vector<bool>;
 
 	/**
 	 * Type for list elements used to create probability subinterval
 	 */
 	struct ProbabilitySubinterval {
-		ProbabilitySubinterval() noexcept :
-			ptr(nullptr),
-			probability(0),
-			mpi_request(MPIWrapper::get_null_request()),
-			request_rank(-1) {
-		}
+		ProbabilitySubinterval() noexcept = default;
 
 		ProbabilitySubinterval(OctreeNode* node) noexcept :
 			ptr(node),
@@ -63,12 +58,12 @@ public:
 			request_rank(-1) {
 		}
 
-		OctreeNode* ptr;
-		double probability;
-		MPIWrapper::AsyncToken mpi_request;
-		int request_rank;
+		OctreeNode* ptr{ nullptr };
+		double probability{ 0.0 };
+		MPIWrapper::AsyncToken mpi_request{ MPIWrapper::get_null_request() };
+		int request_rank{ -1 };
 	};
-	typedef std::list<std::shared_ptr<ProbabilitySubinterval>> ProbabilitySubintervalList;
+	using ProbabilitySubintervalList = std::list<std::shared_ptr<ProbabilitySubinterval>>;
 
 	/**
 	 * Type for vacant axon for which a target neuron needs to be found
@@ -86,7 +81,7 @@ public:
 		Vec3d xyz_pos;
 		Cell::DendriteType dendrite_type_needed;
 	};
-	typedef std::list<std::shared_ptr<VacantAxon>> VacantAxonList;
+	using VacantAxonList = std::list<std::shared_ptr<VacantAxon>>;
 
 private:
 	/**
@@ -133,8 +128,8 @@ private:
 			dendrites_exc_cnts(std::vector<double>{}),
 			dendrites_exc_connected_cnts(std::vector<double>{}),
 			dendrites_inh_cnts(std::vector<double>{}),
-			dendrites_inh_connected_cnts(std::vector<double>{})
-		{}
+			dendrites_inh_connected_cnts(std::vector<double>{}) {
+		}
 
 		void operator()(OctreeNode* node) /*noexcept*/ {
 			// I'm inner node, i.e., I have a super neuron
@@ -151,29 +146,32 @@ private:
 				auto num_dendrites_inh = 0;
 
 				// For all my children
-				for (auto i = 0; i < 8; i++) {
-					if (node->children[i]) {
-						// Sum up number of dendrites
-						auto temp_num_dendrites_exc = node->children[i]->cell.get_neuron_num_dendrites_exc();
-						auto temp_num_dendrites_inh = node->children[i]->cell.get_neuron_num_dendrites_inh();
-						num_dendrites_exc += temp_num_dendrites_exc;
-						num_dendrites_inh += temp_num_dendrites_inh;
-
-						// Average the position by using the number of dendrites as weights
-						node->children[i]->cell.get_neuron_position_exc(temp_xyz_pos_exc, valid_pos_exc);
-						node->children[i]->cell.get_neuron_position_inh(temp_xyz_pos_inh, valid_pos_inh);
-						/**
-						 * We can use position if it's valid or if corresponding num of dendrites is 0 (due to multiplying position with 0)
-						 */
-
-						RelearnException::check(valid_pos_exc || (0 == temp_num_dendrites_exc));
-						RelearnException::check(valid_pos_inh || (0 == temp_num_dendrites_inh));
-
-						for (auto j = 0; j < 3; j++) {
-							xyz_pos_exc[j] += static_cast<double>(temp_num_dendrites_exc) * temp_xyz_pos_exc[j];
-							xyz_pos_inh[j] += static_cast<double>(temp_num_dendrites_inh) * temp_xyz_pos_inh[j];
-						}
+				for (const auto& child : node->children) {
+					if (child == nullptr) {
+						continue;
 					}
+
+					// Sum up number of dendrites
+					auto temp_num_dendrites_exc = child->cell.get_neuron_num_dendrites_exc();
+					auto temp_num_dendrites_inh = child->cell.get_neuron_num_dendrites_inh();
+					num_dendrites_exc += temp_num_dendrites_exc;
+					num_dendrites_inh += temp_num_dendrites_inh;
+
+					// Average the position by using the number of dendrites as weights
+					child->cell.get_neuron_position_exc(temp_xyz_pos_exc, valid_pos_exc);
+					child->cell.get_neuron_position_inh(temp_xyz_pos_inh, valid_pos_inh);
+					/**
+					 * We can use position if it's valid or if corresponding num of dendrites is 0 (due to multiplying position with 0)
+					 */
+
+					RelearnException::check(valid_pos_exc || (0 == temp_num_dendrites_exc));
+					RelearnException::check(valid_pos_inh || (0 == temp_num_dendrites_inh));
+
+					for (auto j = 0; j < 3; j++) {
+						xyz_pos_exc[j] += static_cast<double>(temp_num_dendrites_exc) * temp_xyz_pos_exc[j];
+						xyz_pos_inh[j] += static_cast<double>(temp_num_dendrites_inh) * temp_xyz_pos_inh[j];
+					}
+
 				}
 				/**
 				 * For calculating the new weighted position, make sure that we don't
@@ -211,8 +209,8 @@ private:
 				// Calculate number of vacant dendrites for my neuron
 				RelearnException::check(neuron_id < num_neurons);
 
-				const unsigned int num_vacant_dendrites_exc = static_cast<unsigned int>(dendrites_exc_cnts[neuron_id] - dendrites_exc_connected_cnts[neuron_id]);
-				const unsigned int num_vacant_dendrites_inh = static_cast<unsigned int>(dendrites_inh_cnts[neuron_id] - dendrites_inh_connected_cnts[neuron_id]);
+				const auto num_vacant_dendrites_exc = static_cast<unsigned int>(dendrites_exc_cnts[neuron_id] - dendrites_exc_connected_cnts[neuron_id]);
+				const auto num_vacant_dendrites_inh = static_cast<unsigned int>(dendrites_inh_cnts[neuron_id] - dendrites_inh_connected_cnts[neuron_id]);
 
 				node->cell.set_neuron_num_dendrites_exc(num_vacant_dendrites_exc);
 				node->cell.set_neuron_num_dendrites_inh(num_vacant_dendrites_inh);
@@ -235,7 +233,7 @@ private:
 	public:
 		// The functor needs to know the allocator before
 		// it can use it to free objects with it
-		FunctorFreeNode(MPI_RMA_MemAllocator<OctreeNode>& allocator) noexcept : allocator(allocator) {}
+		explicit FunctorFreeNode(MPI_RMA_MemAllocator<OctreeNode>& allocator) noexcept : allocator(allocator) {}
 
 		void operator()(OctreeNode* node) { allocator.deleteObject(node); }
 	private:
@@ -332,8 +330,8 @@ public:
 	void update_from_level(size_t max_level);
 
 	void update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, const size_t& num_neurons) {
-		for (size_t i = 0; i < local_trees.size(); i++) {
-			local_trees[i]->update(
+		for (auto& local_tree : local_trees) {
+			local_tree->update(
 				dendrites_exc.get_cnts(), dendrites_exc.get_connected_cnts(),
 				dendrites_inh.get_cnts(), dendrites_inh.get_connected_cnts(),
 				num_neurons);
@@ -388,9 +386,10 @@ private:
 				// they don't exceed "max_level"
 				if (depth < max_level) {
 					// Push node's children onto stack
-					for (auto i = 7; i >= 0; i--) {
-						if (elem.ptr->children[i]) {
-							stack.emplace(elem.ptr->children[i], false, depth + 1);
+					
+					for (auto it = elem.ptr->children.crbegin(); it != elem.ptr->children.crend(); ++it) {
+						if (*it != nullptr) {
+							stack.emplace(*it, false, depth + 1);
 						}
 					}
 				}
@@ -409,7 +408,7 @@ private:
 	 * Returns true if accepted, false otherwise
 	 */
 	bool acceptance_criterion_test(const Vec3d& axon_pos_xyz,
-		const OctreeNode* const node_with_dendrite,
+		const OctreeNode* node_with_dendrite,
 		Cell::DendriteType dendrite_type_needed,
 		bool naive_method,
 		bool& has_vacant_dendrites) const /*noexcept*/;
@@ -481,9 +480,9 @@ private:
 	MPI_RMA_MemAllocator<OctreeNode>& mpi_rma_node_allocator;
 
 	// Cache with nodes owned by other ranks
-	typedef std::pair<int, OctreeNode*> NodesCacheKey;
-	typedef OctreeNode* NodesCacheValue;
-	typedef std::map<NodesCacheKey, NodesCacheValue> NodesCache;
+	using NodesCacheKey = std::pair<int, OctreeNode*>;
+	using NodesCacheValue = OctreeNode*;
+	using NodesCache = std::map<NodesCacheKey, NodesCacheValue>;
 	NodesCache remote_nodes_cache;
 
 	// Randpm number generator for this class (C++11)

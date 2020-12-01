@@ -16,8 +16,8 @@
 #include <mpi.h>
 
 #include <algorithm>
-#include <list>
 #include <iostream>
+#include <list>
 #include <set>
 #include <sstream>
 #include <vector>
@@ -25,9 +25,7 @@
 template<class T>
 class MPI_RMA_MemAllocator {
 public:
-	MPI_RMA_MemAllocator() noexcept {
-
-	}
+	MPI_RMA_MemAllocator() noexcept = default;
 
 	MPI_RMA_MemAllocator(const MPI_RMA_MemAllocator& other) = delete;
 	MPI_RMA_MemAllocator(MPI_RMA_MemAllocator&& other) = delete;
@@ -48,7 +46,8 @@ public:
 		max_size = max_num_objects * sizeof(T);
 
 		// Store size of MPI_COMM_WORLD
-		MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
+		// MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
+		num_ranks = MPIWrapper::num_ranks;
 
 		base_ptr_offset = 0;
 		avail_initialized = 0;
@@ -188,22 +187,22 @@ public:
 
 	MPI_Win mpi_window;       // RMA window object
 private:
-	size_t size_requested;    // Bytes requested for the allocator
-	size_t max_size;          // Size in Bytes of MPI-allocated memory
-	size_t max_num_objects;   // Max number objects that are available
-	T* base_ptr;              // Start address of MPI-allocated memory
-	size_t base_ptr_offset;   // base_ptr + base_ptr_offset marks where free object list begins
+	size_t size_requested{ 1111222233334444 };    // Bytes requested for the allocator
+	size_t max_size{ 1111222233334444 };          // Size in Bytes of MPI-allocated memory
+	size_t max_num_objects{ 1111222233334444 };   // Max number objects that are available
+	T* base_ptr{ nullptr };              // Start address of MPI-allocated memory
+	size_t base_ptr_offset{ 1111222233334444 };   // base_ptr + base_ptr_offset marks where free object list begins
 
-	bool avail_initialized;   // List with free objects has been initialzed
-	size_t min_num_avail_objects;  // Minimum number of objects available
+	bool avail_initialized{ false };   // List with free objects has been initialzed
+	size_t min_num_avail_objects{ 1111222233334444 };  // Minimum number of objects available
 
 	std::list<T*> avail;      // List of pointers to free memory blocks (each block of size sizeof(T))
-	size_t avail_size;        // Size of avail. We don't use std::list.size() as some older stdlibc++ versions take O(n)
+	size_t avail_size{ 1111222233334444 };        // Size of avail. We don't use std::list.size() as some older stdlibc++ versions take O(n)
 							  // and not O(1). This is a bug which we ran into on the Blue Gene/Q JUQUEEN
 	std::set<T*> unavail;     // Set of pointers to used memory blocks (each block of size sizeof(T))
 							  // A block can only be either in "avail" or "unavail". Blocks are moved between both.
 
-	int num_ranks;                        // Number of ranks in MPI_COMM_WORLD
-	int displ_unit;                       // RMA window displacement unit
+	size_t num_ranks{ 1111222233334444 };                        // Number of ranks in MPI_COMM_WORLD
+	int displ_unit{ -1 };                       // RMA window displacement unit
 	std::vector<MPI_Aint> base_pointers;  // RMA window base pointers of all procs
 };

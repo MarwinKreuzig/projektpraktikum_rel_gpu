@@ -10,13 +10,13 @@
 
 #pragma once
 
-#include <random>
 #include <cstdint>
+#include <random>
 
 namespace randomNumberSeeds {
 	extern int64_t partition;
 	extern int64_t octree;
-}
+} // namespace randomNumberSeeds
 
 template<typename T>
 class RandomHolder {
