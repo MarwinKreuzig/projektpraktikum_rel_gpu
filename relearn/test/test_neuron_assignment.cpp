@@ -417,7 +417,7 @@ TEST(TestRandomNeuronPlacement, test_multiple_lazily_fill_positions_multiple_sub
 					Vec3d subdomain_max{};
 
 					Vec3<size_t> subdomain_pos{ x_it, y_it, z_it };
-					sfnd.get_subdomain_boundaries(subdomain_pos, subdomains, subdomain_min, subdomain_max);
+					std::tie(subdomain_min, subdomain_max) = sfnd.get_subdomain_boundaries(subdomain_pos, subdomains);
 
 					sfnd.fill_subdomain(current_idx, total_subdomains, subdomain_min, subdomain_max);
 					sfnd.neuron_positions(current_idx, total_subdomains, subdomain_min, subdomain_max, pos);
@@ -616,7 +616,7 @@ TEST(TestRandomNeuronPlacement, test_reloading_multiple) {
 			Vec3d min{ 0 };
 			Vec3d max{ 0 };
 
-			sff.get_subdomain_boundaries(idx, { 2, 2, 2 }, min, max);
+			std::tie(min, max) = sff.get_subdomain_boundaries(idx, { 2, 2, 2 });
 
 			sff.fill_subdomain(j, 8, min, max);
 

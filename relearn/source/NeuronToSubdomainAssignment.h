@@ -17,6 +17,7 @@
 
 #include <map>
 #include <set>
+#include <tuple>
 #include <vector>
 
 // Interface that has to be implemented by any class that
@@ -59,11 +60,9 @@ public:
 	}
 
 
-	virtual void get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, size_t num_subdomains_per_axis,
-		Position& min, Position& max) const noexcept;
+	virtual std::tuple<Position, Position> get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, size_t num_subdomains_per_axis) const noexcept;
 
-	virtual void get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, const Vec3<size_t>& num_subdomains_per_axis,
-		Position& min, Position& max) const noexcept;
+	virtual std::tuple<Position, Position> get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, const Vec3<size_t>& num_subdomains_per_axis) const noexcept;
 
 	virtual void fill_subdomain(size_t subdomain_idx, size_t num_subdomains,
 		const Position& min, const Position& max) = 0;

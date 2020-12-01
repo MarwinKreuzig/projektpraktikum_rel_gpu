@@ -40,29 +40,28 @@ NeuronIdMap::NeuronIdMap(size_t my_num_neurons,
 		pos_to_rank_neuron_id);
 }
 
-bool NeuronIdMap::rank_neuron_id2glob_id(const RankNeuronId&
-	rank_neuron_id, size_t& glob_id) const /*noexcept*/ {
+std::tuple<bool, size_t> NeuronIdMap::rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id) const /*noexcept*/ {
 	// Rank is not valid
 	if (rank_neuron_id.rank < 0 ||
 		rank_neuron_id.rank > (rank_to_start_neuron_id.size() - 1)) { 
-		return false;
+		return std::make_tuple(false, 1111222233334444);
 	}
 
-	glob_id = rank_to_start_neuron_id[rank_neuron_id.rank] + rank_neuron_id.neuron_id;
-	return true;
+	size_t glob_id = rank_to_start_neuron_id[rank_neuron_id.rank] + rank_neuron_id.neuron_id;
+	return std::make_tuple(true, glob_id);
 }
 
-bool NeuronIdMap::pos2rank_neuron_id(const Vec3d& pos, RankNeuronId& result) const {
+std::tuple<bool, NeuronIdMap::RankNeuronId> NeuronIdMap::pos2rank_neuron_id(const Vec3d& pos) const {
 	auto it = pos_to_rank_neuron_id.find(pos);
 
 	// Neuron position not found
 	if (it == pos_to_rank_neuron_id.end()) {
-		return false;
+		return std::make_tuple(false, NeuronIdMap::RankNeuronId{ 1111222233334444, 1111222233334444 });
 	}
 
 	// Return rank and neuron id
-	result = it->second;
-	return true;
+	NeuronIdMap::RankNeuronId result = it->second;
+	return std::make_tuple(true, result);
 }
 
 void NeuronIdMap::create_rank_to_start_neuron_id_mapping(

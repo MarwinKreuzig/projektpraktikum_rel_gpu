@@ -565,7 +565,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 				size_t source_neuron_id;
 				size_t target_neuron_id;
 				size_t dendrite_type_needed;
-				requests.get_request(request_index, source_neuron_id, target_neuron_id, dendrite_type_needed);
+				std::tie(source_neuron_id, target_neuron_id, dendrite_type_needed) = requests.get_request(request_index);
 
 				// Sanity check: if the request received is targeted for me
 				if (target_neuron_id >= num_neurons) {
@@ -660,12 +660,11 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 
 			// All responses from a rank
 			for (auto request_index = 0; request_index < num_requests; request_index++) {
-				char connected;
-				requests.get_response(request_index, connected);
+				char connected = requests.get_response(request_index);
 				size_t source_neuron_id;
 				size_t target_neuron_id;
 				size_t dendrite_type_needed;
-				requests.get_request(request_index, source_neuron_id, target_neuron_id, dendrite_type_needed);
+				std::tie(source_neuron_id, target_neuron_id, dendrite_type_needed) = requests.get_request(request_index);
 
 				//std::cout << "From: " << source_neuron_id << " to " << target_neuron_id << ": " << dendrite_type_needed << std::endl;
 
@@ -895,7 +894,7 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& 
 	file << std::fixed << std::setprecision(6);
 	for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
 		rank_neuron_id.neuron_id = neuron_id;
-		ret = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id, glob_id);
+		std::tie(ret, glob_id) = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id);
 		RelearnException::check(ret);
 
 		file << glob_id << " "

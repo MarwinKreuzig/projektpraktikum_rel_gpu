@@ -13,6 +13,7 @@
 #include "Vec3.h"
 
 #include <map>
+#include <tuple>
 #include <vector>
 
 class NeuronIdMap {
@@ -24,8 +25,8 @@ public:
 	};
 
 	NeuronIdMap(size_t my_num_neurons, const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z);
-	bool rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id, size_t& glob_id) const /*noexcept*/;
-	bool pos2rank_neuron_id(const Vec3d& pos, RankNeuronId& result) const;
+	std::tuple<bool, size_t> rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id) const /*noexcept*/;
+	std::tuple<bool, RankNeuronId> pos2rank_neuron_id(const Vec3d& pos) const;
 
 private:
 	void create_rank_to_start_neuron_id_mapping(

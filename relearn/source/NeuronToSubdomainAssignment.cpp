@@ -17,18 +17,20 @@
 #include <fstream>
 #include <iomanip>
 
-void NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, size_t num_subdomains_per_axis, Position& min, Position& max) const noexcept {
-	get_subdomain_boundaries(subdomain_3idx, Vec3<size_t>{num_subdomains_per_axis}, min, max);
+std::tuple<NeuronToSubdomainAssignment::Position, NeuronToSubdomainAssignment::Position> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, size_t num_subdomains_per_axis) const noexcept {
+	return get_subdomain_boundaries(subdomain_3idx, Vec3<size_t>{num_subdomains_per_axis});
 }
 
-void NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, const Vec3<size_t>& num_subdomains_per_axis, Position& min, Position& max) const noexcept {
+std::tuple<NeuronToSubdomainAssignment::Position, NeuronToSubdomainAssignment::Position> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, const Vec3<size_t>& num_subdomains_per_axis) const noexcept {
 	const auto lengths = get_simulation_box_length();
 	const auto x_subdomain_length = lengths.x / num_subdomains_per_axis.x;
 	const auto y_subdomain_length = lengths.y / num_subdomains_per_axis.y;
 	const auto z_subdomain_length = lengths.z / num_subdomains_per_axis.z;
 
-	min = Vec3d{ subdomain_3idx.x * x_subdomain_length, subdomain_3idx.y * y_subdomain_length, subdomain_3idx.z * z_subdomain_length };
-	max = Vec3d{ (subdomain_3idx.x + 1) * x_subdomain_length, (subdomain_3idx.y + 1) * y_subdomain_length, (subdomain_3idx.z + 1) * z_subdomain_length };
+	auto min = Vec3d{ subdomain_3idx.x * x_subdomain_length, subdomain_3idx.y * y_subdomain_length, subdomain_3idx.z * z_subdomain_length };
+	auto max = Vec3d{ (subdomain_3idx.x + 1) * x_subdomain_length, (subdomain_3idx.y + 1) * y_subdomain_length, (subdomain_3idx.z + 1) * z_subdomain_length };
+
+	return std::make_tuple(min, max);
 }
 
 

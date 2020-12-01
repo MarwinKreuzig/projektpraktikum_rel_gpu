@@ -227,8 +227,8 @@ Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssig
 		Subdomain& current_subdomain = subdomains[i];
 
 		// Set position of subdomain
-		neurons_in_subdomain.get_subdomain_boundaries(current_subdomain.index_3d,
-			num_subdomains_per_dimension, current_subdomain.xyz_min, current_subdomain.xyz_max);
+		std::tie(current_subdomain.xyz_min, current_subdomain.xyz_max) = neurons_in_subdomain.get_subdomain_boundaries(current_subdomain.index_3d,
+			num_subdomains_per_dimension);
 
 		// Set number of neurons in this subdomain
 		const auto& xyz_min = current_subdomain.xyz_min;

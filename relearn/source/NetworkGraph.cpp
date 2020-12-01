@@ -107,9 +107,9 @@ void NetworkGraph::add_edge_weights(const std::string& filename, const NeuronIdM
 
 		RelearnException::check(success);
 
-		ret = neuron_id_map.pos2rank_neuron_id(src_pos, src_id);
+		std::tie(ret, src_id) = neuron_id_map.pos2rank_neuron_id(src_pos);
 		RelearnException::check(ret);
-		ret = neuron_id_map.pos2rank_neuron_id(tgt_pos, tgt_id);
+		std::tie(ret, tgt_id) = neuron_id_map.pos2rank_neuron_id(tgt_pos);
 		RelearnException::check(ret);
 
 		add_edge_weight(tgt_id.neuron_id, tgt_id.rank,
@@ -448,7 +448,8 @@ void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) con
 		NeuronIdMap::RankNeuronId rank_neuron_id{ MPIWrapper::my_rank, target_neuron_id };
 		size_t glob_tgt = 0;
 
-		auto ret = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id, glob_tgt);
+		bool ret;
+		std::tie(ret, glob_tgt) = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id);
 		RelearnException::check(ret);
 
 		for (it_in_edge = in_edges.begin(); it_in_edge != in_edges.end(); ++it_in_edge) {
@@ -456,7 +457,7 @@ void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) con
 			rank_neuron_id.neuron_id = it_in_edge->first.second;  // src neuron id
 
 			size_t glob_src = 0;
-			ret = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id, glob_src);
+			std::tie(ret, glob_src) = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id);
 			RelearnException::check(ret);
 
 			// <target neuron id>  <source neuron id>  <weight>

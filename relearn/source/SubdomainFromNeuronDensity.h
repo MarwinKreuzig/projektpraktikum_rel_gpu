@@ -32,11 +32,9 @@ public:
 
 	~SubdomainFromNeuronDensity() override = default;
 
-	void get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, size_t num_subdomains_per_axis,
-		Position& min, Position& max) const noexcept override;
+	std::tuple<Position, Position> get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, size_t num_subdomains_per_axis) const noexcept override;
 
-	void get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, const Vec3<size_t>& num_subdomains_per_axis,
-		Position& min, Position& max) const noexcept override;
+	std::tuple<Position, Position> get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, const Vec3<size_t>& num_subdomains_per_axis) const noexcept override;
 
 	void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) override;
 

@@ -28,6 +28,7 @@
 #include <iomanip>
 #include <numeric>
 #include <random>
+#include <tuple>
 #include <vector>
 
  /***************************************************************************************************
@@ -68,20 +69,22 @@ public:
 		responses.resize(responses.size() + 1);
 	}
 
-	void get_request(size_t request_index, size_t& source_neuron_id, size_t& target_neuron_id, size_t& dendrite_type_needed) const noexcept {
+	std::tuple<size_t, size_t, size_t> get_request(size_t request_index) const noexcept {
 		const size_t base_index = 3 * request_index;
 
-		source_neuron_id = requests[base_index];
-		target_neuron_id = requests[base_index + 1];
-		dendrite_type_needed = requests[base_index + 2];
+		const size_t source_neuron_id = requests[base_index];
+		const size_t target_neuron_id = requests[base_index + 1];
+		const size_t dendrite_type_needed = requests[base_index + 2];
+
+		return std::make_tuple(source_neuron_id, target_neuron_id, dendrite_type_needed);
 	}
 
 	void set_response(size_t request_index, char connected) noexcept {
 		responses[request_index] = connected;
 	}
 
-	void get_response(size_t request_index, char& connected) const noexcept {
-		connected = responses[request_index];
+	char get_response(size_t request_index) const noexcept {
+		return responses[request_index];
 	}
 
 	size_t* get_requests() noexcept {
