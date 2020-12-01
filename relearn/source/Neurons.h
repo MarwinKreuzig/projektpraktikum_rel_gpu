@@ -167,7 +167,7 @@ class Neurons {
 	 * Type for synapse deletion requests which are used with MPI
 	 */
 	struct SynapseDeletionRequests {
-		SynapseDeletionRequests() noexcept = default;
+		SynapseDeletionRequests() = default;
 
 		size_t size() const noexcept { return num_requests; }
 

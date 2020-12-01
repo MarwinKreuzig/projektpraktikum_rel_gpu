@@ -18,7 +18,7 @@ class RelearnException : std::exception {
 	std::string message;
 
 public:
-	RelearnException() noexcept = default;
+	RelearnException() = default;
 
 	explicit RelearnException(std::string&& mes) : message(mes) {
 

@@ -41,7 +41,7 @@ struct Vec3 {
 	Vec3<T>& operator=(const Vec3<T>& other) = default;
 
 	Vec3(Vec3<T>&& other) = default;
-	Vec3<T>& operator=(Vec3<T>&& other) noexcept = default;
+	Vec3<T>& operator=(Vec3<T>&& other) = default;
 
 
 	template<typename K>

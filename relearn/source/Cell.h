@@ -29,7 +29,7 @@ public:
 		// List colliding_axons;
 	};
 
-	Cell() noexcept = default;
+	Cell() = default;
 	~Cell() = default;
 
 	Cell(const Cell& other) = default;

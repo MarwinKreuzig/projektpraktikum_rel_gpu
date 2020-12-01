@@ -25,7 +25,7 @@
 template<class T>
 class MPI_RMA_MemAllocator {
 public:
-	MPI_RMA_MemAllocator() noexcept = default;
+	MPI_RMA_MemAllocator() = default;
 
 	MPI_RMA_MemAllocator(const MPI_RMA_MemAllocator& other) = delete;
 	MPI_RMA_MemAllocator(MPI_RMA_MemAllocator&& other) = delete;
@@ -46,8 +46,10 @@ public:
 		max_size = max_num_objects * sizeof(T);
 
 		// Store size of MPI_COMM_WORLD
-		// MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
-		num_ranks = MPIWrapper::num_ranks;
+		// NOLINTNEXTLINE
+		int my_num_ranks;
+		MPI_Comm_size(MPI_COMM_WORLD, &my_num_ranks);
+		num_ranks = static_cast<size_t>(my_num_ranks);
 
 		base_ptr_offset = 0;
 		avail_initialized = 0;

@@ -125,5 +125,5 @@ protected:
 
 	bool position_in_box(const Position& pos, const Position& box_min, const Position& box_max) const noexcept;
 
-	NeuronToSubdomainAssignment() noexcept = default;
+	NeuronToSubdomainAssignment() = default;
 };

@@ -49,7 +49,7 @@ public:
 	 * Type for list elements used to create probability subinterval
 	 */
 	struct ProbabilitySubinterval {
-		ProbabilitySubinterval() noexcept = default;
+		ProbabilitySubinterval() = default;
 
 		ProbabilitySubinterval(OctreeNode* node) noexcept :
 			ptr(node),

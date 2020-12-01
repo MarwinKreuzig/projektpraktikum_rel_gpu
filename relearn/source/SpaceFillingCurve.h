@@ -20,8 +20,8 @@ using BoxCoordinates = Vec3<uint64_t>;
 
 class Morton {
 public:
-	Morton() noexcept = default;
-	~Morton() noexcept = default;
+	Morton() = default;
+	~Morton() = default;
 
 	Morton(const Morton& other) = delete;
 	Morton(Morton&& other) = delete;
@@ -72,7 +72,7 @@ public:
 	SpaceFillingCurve& operator = (const SpaceFillingCurve& other) = delete;
 	SpaceFillingCurve& operator = (SpaceFillingCurve&& other) = delete;
 
-	~SpaceFillingCurve() noexcept = default;
+	~SpaceFillingCurve() = default;
 
 	size_t get_refinement_level() const noexcept {
 		return curve.get_refinement_level();
