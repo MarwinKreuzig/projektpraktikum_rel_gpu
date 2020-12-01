@@ -11,8 +11,7 @@
 #include <tuple>
 #include <vector>
 
-#define private public
-#define protected public
+#include "commons.h"
 
 #include "../source/NeuronToSubdomainAssignment.h"
 #include "../source/Partition.h"
@@ -20,10 +19,7 @@
 #include "../source/SubdomainFromFile.h"
 #include "../source/RelearnException.h"
 
-constexpr const int iterations = 10;
-constexpr const double eps = 0.00001;
 
-std::mt19937 mt;
 
 void sort_indices(const std::vector<Vec3d>& vectors, std::vector<int>& sequence) {
 	sequence = std::vector<int>(vectors.size());
@@ -662,7 +658,7 @@ TEST(TestRandomNeuronPlacement, test_reloading_multiple) {
 			const auto& curr_type = types[random_idx];
 			const auto& curr_loaded_type = total_loaded_types[total_loaded_idx];
 
-			//EXPECT_EQ(curr_type, curr_loaded_type);
+			EXPECT_EQ(curr_type, curr_loaded_type);
 		}
 	}
 }

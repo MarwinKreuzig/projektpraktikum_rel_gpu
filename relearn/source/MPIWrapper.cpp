@@ -38,8 +38,8 @@
    */
 MPI_Op MPIWrapper::minsummax;
 
-int MPIWrapper::num_ranks;                     // Number of ranks in MPI_COMM_WORLD
-int MPIWrapper::my_rank;                       // My rank in MPI_COMM_WORLD
+size_t MPIWrapper::num_ranks;                     // Number of ranks in MPI_COMM_WORLD
+size_t MPIWrapper::my_rank;                       // My rank in MPI_COMM_WORLD
 
 size_t MPIWrapper::num_neurons;                // Total number of neurons
 int    MPIWrapper::my_num_neurons;             // My number of neurons I'm responsible for
@@ -63,10 +63,16 @@ RMABufferOctreeNodes MPIWrapper::rma_buffer_branch_nodes;
 void MPIWrapper::init(int argc, char** argv) {
 	MPI_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &thread_level_provided);
 
+	int num_ranks_mpi = 0;
 	// NOLINTNEXTLINE
-	MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
+	MPI_Comm_size(MPI_COMM_WORLD, &num_ranks_mpi);
+
+	int my_rank_mpi = 0;
 	// NOLINTNEXTLINE
-	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank_mpi);
+
+	num_ranks = static_cast<size_t>(num_ranks_mpi);
+	my_rank = static_cast<size_t>(my_rank_mpi);
 
 	register_custom_function();
 

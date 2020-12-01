@@ -70,8 +70,8 @@ public:
 	/**
 	 * Global variables
 	 */
-	static int num_ranks;                     // Number of ranks in MPI_COMM_WORLD
-	static int my_rank;                       // My rank in MPI_COMM_WORLD
+	static size_t num_ranks;                     // Number of ranks in MPI_COMM_WORLD
+	static size_t my_rank;                       // My rank in MPI_COMM_WORLD
 
 	static size_t num_neurons;                // Total number of neurons
 	static int    my_num_neurons;             // My number of neurons I'm responsible for

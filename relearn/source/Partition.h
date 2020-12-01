@@ -51,7 +51,7 @@ public:
 		Octree octree;
 	};
 
-	Partition(int num_ranks, int my_rank);
+	Partition(size_t num_ranks, size_t my_rank);
 
 	~Partition() = default;
 
@@ -63,11 +63,8 @@ public:
 
 	void print_my_subdomains_info_rank(int rank);
 
-	void set_mpi_rma_mem_allocator(MPI_RMA_MemAllocator<OctreeNode>& mpi_rma_mem_allocator) {
-		RelearnException::fail("Don't use this function any more! set_mpi_rma_mem_allocator in partition.h");
-	}
-
-	bool is_neuron_local(size_t neuron_id) const /*noexcept*/ {
+	bool is_neuron_local(size_t neuron_id) const {
+		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
 		for (const Subdomain& subdomain : subdomains) {
 			const bool found = std::binary_search(subdomain.global_neuron_ids.begin(), subdomain.global_neuron_ids.end(), neuron_id);
 			if (found) {
@@ -83,7 +80,8 @@ public:
 		return neurons;
 	}
 
-	size_t get_my_num_neurons() const noexcept {
+	size_t get_my_num_neurons() const {
+		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
 		return my_num_neurons;
 	}
 
@@ -91,23 +89,19 @@ public:
 		return my_num_subdomains;
 	}
 
-	//size_t get_num_subdomains_per_axis() const /*noexcept*/ {
-	//	const double subdomains_d = static_cast<double>(total_num_subdomains);
-	//	const double third_root = std::pow(subdomains_d, (1.0 / 3.0));
-	//	const size_t subdomains_per_axis = static_cast<size_t>(std::round(third_root));
-	//	return subdomains_per_axis;
-	//}
-
-	void get_simulation_box_size(Vec3d& min, Vec3d& max) const noexcept {
+	void get_simulation_box_size(Vec3d& min, Vec3d& max) const {
+		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
 		min = Vec3d(0);
 		max = simulation_box_length;
 	}
 
-	Vec3d get_simulation_box_size() const noexcept {
+	Vec3d get_simulation_box_size() const {
+		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
 		return simulation_box_length;
 	}
 
-	Octree& get_subdomain_tree(size_t subdomain_id) /*noexcept*/ {
+	Octree& get_subdomain_tree(size_t subdomain_id) {
+		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
 		RelearnException::check(subdomain_id < my_num_subdomains);
 
 		return subdomains[subdomain_id].octree;
@@ -133,8 +127,9 @@ public:
 		return num_subdomains_per_dimension;
 	}
 
-	size_t get_subdomain_id_from_pos(const Vec3d& pos) const /*noexcept*/ {
-		const 	Vec3d new_pos = pos / static_cast<double>(num_subdomains_per_dimension);
+	size_t get_subdomain_id_from_pos(const Vec3d& pos) const {
+		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
+		const Vec3d new_pos = pos / static_cast<double>(num_subdomains_per_dimension);
 		const Vec3<size_t> id_3d = new_pos.floor_componentwise();
 		const size_t id_1d = space_curve.map_3d_to_1d(id_3d);
 
@@ -143,7 +138,8 @@ public:
 		return rank;
 	}
 
-	size_t get_global_id(size_t local_id) const noexcept {
+	size_t get_global_id(size_t local_id) const {
+		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
 		size_t counter = 0;
 		for (size_t i = 0; i < subdomains.size(); i++) {
 			const size_t old_counter = counter;
@@ -158,7 +154,8 @@ public:
 		return local_id;
 	}
 
-	size_t get_local_id(size_t global_id) const /*noexcept*/ {
+	size_t get_local_id(size_t global_id) const {
+		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
 		size_t id = 0;
 
 		for (const Subdomain& current_subdomain : subdomains) {
@@ -177,9 +174,11 @@ public:
 		return 0;
 	}
 
-private:
+protected:
 	// We need the "axons" parameter to set for every neuron the type of axons it grows (exc./inh.)
 	Neurons load_neurons(const Parameters& params, NeuronToSubdomainAssignment& neurons_in_subdomain);
+
+	bool neurons_loaded;
 
 	size_t total_num_neurons;
 	size_t my_num_neurons;

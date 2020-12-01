@@ -2,13 +2,13 @@
 
 #include <random>
 
+#include "commons.h"
+
 #include "../source/Vec3.h"
 #include "../source/RelearnException.h"
 
 constexpr const double lower_bound = -100.0;
 constexpr const double upper_bound = 100.0;
-constexpr const int iterations = 10;
-constexpr const double eps = 0.00001;
 
 TEST(TestVector, test_vector_constructor_empty) {
 	for (auto i = 0; i < iterations; i++) {
@@ -21,7 +21,6 @@ TEST(TestVector, test_vector_constructor_empty) {
 }
 
 TEST(TestVector, test_vector_constructor_one) {
-	std::mt19937 mt;
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -38,7 +37,6 @@ TEST(TestVector, test_vector_constructor_one) {
 }
 
 TEST(TestVector, test_vector_constructor_three) {
-	std::mt19937 mt;
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -57,7 +55,6 @@ TEST(TestVector, test_vector_constructor_three) {
 }
 
 TEST(TestVector, test_vector_copy_construct) {
-	std::mt19937 mt;
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -78,7 +75,6 @@ TEST(TestVector, test_vector_copy_construct) {
 }
 
 TEST(TestVector, test_vector_copy_assign) {
-	std::mt19937 mt;
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -100,7 +96,6 @@ TEST(TestVector, test_vector_copy_assign) {
 }
 
 TEST(TestVector, test_vector_move_construct) {
-	std::mt19937 mt;
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -121,7 +116,6 @@ TEST(TestVector, test_vector_move_construct) {
 }
 
 TEST(TestVector, test_vector_move_assign) {
-	std::mt19937 mt;
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -143,7 +137,6 @@ TEST(TestVector, test_vector_move_assign) {
 }
 
 TEST(TestVector, test_vector_operator_index_read) {
-	std::mt19937 mt;
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -162,7 +155,6 @@ TEST(TestVector, test_vector_operator_index_read) {
 }
 
 TEST(TestVector, test_vector_operator_index_read_assert) {
-	std::mt19937 mt;
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -200,7 +192,6 @@ TEST(TestVector, test_vector_operator_index_read_assert) {
 }
 
 TEST(TestVector, test_vector_operator_index_write) {
-	std::mt19937 mt;
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -223,7 +214,6 @@ TEST(TestVector, test_vector_operator_index_write) {
 }
 
 TEST(TestVector, test_vector_operator_index_write_assert) {
-	std::mt19937 mt;
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -261,7 +251,7 @@ TEST(TestVector, test_vector_operator_index_write_assert) {
 }
 
 TEST(TestVector, test_vector_operator_plus_vec) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -296,7 +286,7 @@ TEST(TestVector, test_vector_operator_plus_vec) {
 }
 
 TEST(TestVector, test_vector_operator_minus_vec) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -331,7 +321,7 @@ TEST(TestVector, test_vector_operator_minus_vec) {
 }
 
 TEST(TestVector, test_vector_operator_plus_scalar) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -361,7 +351,7 @@ TEST(TestVector, test_vector_operator_plus_scalar) {
 }
 
 TEST(TestVector, test_vector_operator_minus_scalar) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -391,7 +381,7 @@ TEST(TestVector, test_vector_operator_minus_scalar) {
 }
 
 TEST(TestVector, test_vector_operator_mul_scalar) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -421,7 +411,7 @@ TEST(TestVector, test_vector_operator_mul_scalar) {
 }
 
 TEST(TestVector, test_vector_operator_div_scalar) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -455,7 +445,7 @@ TEST(TestVector, test_vector_operator_div_scalar) {
 }
 
 TEST(TestVector, test_vector_operator_plus_assign_scalar) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -481,7 +471,7 @@ TEST(TestVector, test_vector_operator_plus_assign_scalar) {
 }
 
 TEST(TestVector, test_vector_operator_mul_assign_scalar) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -507,7 +497,7 @@ TEST(TestVector, test_vector_operator_mul_assign_scalar) {
 }
 
 TEST(TestVector, test_vector_volume) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -530,7 +520,7 @@ TEST(TestVector, test_vector_volume) {
 }
 
 TEST(TestVector, test_vector_equal) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -575,7 +565,7 @@ TEST(TestVector, test_vector_equal) {
 }
 
 TEST(TestVector, test_vector_componentwise_min_max) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -615,7 +605,7 @@ TEST(TestVector, test_vector_componentwise_min_max) {
 }
 
 TEST(TestVector, test_vector_min_max) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -649,7 +639,7 @@ TEST(TestVector, test_vector_min_max) {
 }
 
 TEST(TestVector, test_vector_componentwise_floor) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(0.0001, upper_bound);
 
 	mt.seed(rand());
@@ -679,7 +669,7 @@ TEST(TestVector, test_vector_componentwise_floor) {
 }
 
 TEST(TestVector, test_vector_componentwise_floor_assert) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(0.0001, upper_bound);
 
 	mt.seed(rand());
@@ -719,7 +709,7 @@ TEST(TestVector, test_vector_componentwise_floor_assert) {
 }
 
 TEST(TestVector, test_vector_norm) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 	std::uniform_real_distribution<double> urd_p(1.0, 10.1);
 
@@ -748,7 +738,7 @@ TEST(TestVector, test_vector_norm) {
 }
 
 TEST(TestVector, test_vector_norm_assert) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 	std::uniform_real_distribution<double> urd_bad_p(lower_bound, 1.0);
 
@@ -768,7 +758,7 @@ TEST(TestVector, test_vector_norm_assert) {
 }
 
 TEST(TestVector, test_vector_rounding) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 	std::uniform_real_distribution<double> urd_multiple(1.0, 10.1);
 
@@ -816,7 +806,7 @@ TEST(TestVector, test_vector_rounding) {
 }
 
 TEST(TestVector, test_vector_order) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 	std::uniform_real_distribution<double> urd_offset(1.0, 10.1);
 
@@ -913,7 +903,7 @@ TEST(TestVector, test_vector_order) {
 }
 
 TEST(TestVector, test_vector_cast) {
-	std::mt19937 mt;
+	
 	std::uniform_real_distribution<double> urd(0.0, upper_bound);
 
 	mt.seed(rand());

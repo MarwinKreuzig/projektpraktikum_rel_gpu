@@ -12,7 +12,10 @@
 
 #include "RelearnException.h"
 
-Partition::Partition(int num_ranks, int my_rank) : my_num_neurons(0), total_num_neurons(0) {
+Partition::Partition(size_t num_ranks, size_t my_rank) : my_num_neurons(0), total_num_neurons(0), neurons_loaded(false) {
+	RelearnException::check(num_ranks > 0, "Number of MPI ranks must be a positive number");
+	RelearnException::check(num_ranks > my_rank, "My rank must be smaller than number of ranks");
+
 	/**
 	* Total number of subdomains is smallest power of 8 that is >= num_ranks.
 	* We choose power of 8 as every domain subdivision creates 8 subdomains (in 3d).
@@ -23,23 +26,6 @@ Partition::Partition(int num_ranks, int my_rank) : my_num_neurons(0), total_num_
 
 																   // Every rank should get at least one subdomain
 	RelearnException::check(total_num_subdomains >= num_ranks);
-
-	/**
-	* Set parameter of space filling curve before it can be used.
-	* total_num_subdomains = 8^level_of_subdomain_trees = (2^3)^level_of_subdomain_trees = 2^(3*level_of_subdomain_trees).
-	* Thus, number of subdomains per dimension (3d) is (2^(3*level_of_subdomain_trees))^(1/3) = 2^level_of_subdomain_trees.
-	*/
-	num_subdomains_per_dimension = 1ull << level_of_subdomain_trees;
-	space_curve.set_refinement_level(level_of_subdomain_trees);
-
-	std::stringstream sstream;
-	sstream << "Total number subdomains        : " << total_num_subdomains;
-	LogMessages::print_message_rank(sstream.str().c_str(), 0);
-	sstream.str("");
-
-	sstream << "Number subdomains per dimension: " << num_subdomains_per_dimension;
-	LogMessages::print_message_rank(sstream.str().c_str(), 0);
-	sstream.str("");
 
 	/**
 	* Calc my number of subdomains
@@ -60,12 +46,28 @@ Partition::Partition(int num_ranks, int my_rank) : my_num_neurons(0), total_num_
 		sstream << "My rank is: " << my_rank << "; There are " << num_ranks << " ranks in total; The rest is: " << rest << "\n";
 		std::cout << sstream.str().c_str() << std::flush;
 		sstream.str("");
-		RelearnException::fail("rest != 0");
+		RelearnException::fail("Number of ranks must be of the form 2^n");
 	}
+
+	/**
+	* Set parameter of space filling curve before it can be used.
+	* total_num_subdomains = 8^level_of_subdomain_trees = (2^3)^level_of_subdomain_trees = 2^(3*level_of_subdomain_trees).
+	* Thus, number of subdomains per dimension (3d) is (2^(3*level_of_subdomain_trees))^(1/3) = 2^level_of_subdomain_trees.
+	*/
+	num_subdomains_per_dimension = 1ull << level_of_subdomain_trees;
+	space_curve.set_refinement_level(level_of_subdomain_trees);
+
+	std::stringstream sstream;
+	sstream << "Total number subdomains        : " << total_num_subdomains;
+	LogMessages::print_message_rank(sstream.str().c_str(), 0);
+	sstream.str("");
+
+	sstream << "Number subdomains per dimension: " << num_subdomains_per_dimension;
+	LogMessages::print_message_rank(sstream.str().c_str(), 0);
+	sstream.str("");
 
 	// Calc start and end index of subdomain
 	my_subdomain_id_start = (total_num_subdomains / num_ranks) * my_rank;
-	my_subdomain_id_start += std::min(rest, static_cast<size_t>(my_rank));
 	my_subdomain_id_end = my_subdomain_id_start + my_num_subdomains - 1;
 
 	// Allocate vector with my number of subdomains
@@ -138,6 +140,7 @@ void Partition::print_my_subdomains_info_rank(int rank) {
 }
 
 Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssignment& neurons_in_subdomain) {
+	RelearnException::check(!neurons_loaded, "Neurons are already loaded, cannot load anymore");
 
 	simulation_box_length = neurons_in_subdomain.get_simulation_box_length();
 
@@ -263,6 +266,8 @@ Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssig
 			neuron_id++;
 		}
 	}
+
+	neurons_loaded = true;
 
 	return neurons;
 }
