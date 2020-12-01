@@ -26,9 +26,9 @@ uint64_t Morton::map_3d_to_1d(const BoxCoordinates& coords) const noexcept {
 	uint64_t result = 0;
 	for (size_t i = 0; i < refinement_level; ++i) {
 		uint64_t block = 0;
-		const uint8_t short_i = static_cast<uint8_t>(i);
-		block = ((select_bit(coords.z, short_i) << 2)
-			+ (select_bit(coords.y, short_i) << 1)
+		const auto short_i = static_cast<uint8_t>(i);
+		block = ((select_bit(coords.z, short_i) << 2u)
+			+ (select_bit(coords.y, short_i) << 1u)
 			+ (select_bit(coords.x, short_i)));
 
 		result |= block << (3 * i);

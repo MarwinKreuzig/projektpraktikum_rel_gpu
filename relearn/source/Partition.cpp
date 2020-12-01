@@ -165,13 +165,13 @@ size_t Partition::get_subdomain_id_from_pos(const Vec3d& pos) const {
 size_t Partition::get_global_id(size_t local_id) const {
 	RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
 	size_t counter = 0;
-	for (size_t i = 0; i < subdomains.size(); i++) {
+	for (const auto& subdomain : subdomains) {
 		const size_t old_counter = counter;
 
-		counter += subdomains[i].global_neuron_ids.size();
+		counter += subdomain.global_neuron_ids.size();
 		if (local_id < counter) {
 			const size_t local_local_id = local_id - old_counter;
-			return subdomains[i].global_neuron_ids[local_local_id];
+			return subdomain.global_neuron_ids[local_local_id];
 		}
 	}
 

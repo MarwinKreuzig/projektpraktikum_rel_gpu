@@ -19,7 +19,7 @@ class NeuronIdMap {
 public:
 	// Rank and local neuron id
 	struct RankNeuronId {
-		int rank;
+		size_t rank;
 		size_t neuron_id;
 	};
 

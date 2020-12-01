@@ -43,7 +43,7 @@ unsigned int SynapticElements::update_number_elements(size_t neuron_id) {
 		cnts[neuron_id] = 0.0;
 		delta_cnts[neuron_id] = 0.0;
 
-		unsigned int num_delete_connected = static_cast<unsigned int>(current_connected_count);
+		const auto num_delete_connected = static_cast<unsigned int>(current_connected_count);
 		return num_delete_connected;
 	}
 
@@ -60,7 +60,7 @@ unsigned int SynapticElements::update_number_elements(size_t neuron_id) {
 	const double deleted_cnts = current_connected_count - new_connected_cnt;
 
 	RelearnException::check(deleted_cnts >= 0.0);
-	unsigned int num_delete_connected = static_cast<unsigned int>(deleted_cnts);
+	const auto num_delete_connected = static_cast<unsigned int>(deleted_cnts);
 
 	return num_delete_connected;
 }
