@@ -31,12 +31,7 @@ public:
 
 	LogFiles(LogFiles&& other) noexcept;
 
-	LogFiles& operator=(LogFiles&& other) noexcept {
-		std::swap(num_files, other.num_files);
-		std::swap(files, other.files);
-
-		return *this;
-	}
+	LogFiles& operator=(LogFiles&& other) noexcept;
 
 	// Take array with file name suffixes
 	LogFiles(size_t num_files, const std::string& prefix, std::vector<size_t> suffixes);

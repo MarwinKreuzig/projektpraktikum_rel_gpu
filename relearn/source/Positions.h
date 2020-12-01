@@ -34,7 +34,7 @@ public:
 	const std::vector<double>& get_y_dims() noexcept { return y_dims; };
 	const std::vector<double>& get_z_dims() noexcept { return z_dims; };
 
-	Vec3d get_position(size_t idx) const /*noexcept*/ {
+	Vec3d get_position(size_t idx) const {
 		RelearnException::check(idx < size, "Idx must be smaller than size in Positions");
 		return Vec3d{ x_dims[idx], y_dims[idx], z_dims[idx] };
 	}

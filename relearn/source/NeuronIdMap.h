@@ -39,8 +39,6 @@ private:
 		const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z,
 		std::map<Vec3d, RankNeuronId>& pos_to_rank_neuron_id);
 
-	void all_gather_v(const size_t& total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs);
-
 	std::vector<size_t> rank_to_start_neuron_id;  // Global neuron id of every rank's first local neuron
 	std::map<Vec3d, RankNeuronId> pos_to_rank_neuron_id;
 };

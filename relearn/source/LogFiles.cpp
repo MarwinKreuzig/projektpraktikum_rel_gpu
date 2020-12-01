@@ -93,8 +93,14 @@ LogFiles::LogFiles(LogFiles&& other) noexcept {
 	std::swap(files, other.files);
 }
 
-// Take array with file name suffixes
+LogFiles& LogFiles::operator=(LogFiles&& other) noexcept {
+	std::swap(num_files, other.num_files);
+	std::swap(files, other.files);
 
+	return *this;
+}
+
+// Take array with file name suffixes
 LogFiles::LogFiles(size_t num_files, const std::string& prefix, std::vector<size_t> suffixes) :
 	num_files(num_files) {
 	RelearnException::check(suffixes.size() == num_files, "Number of suffixes does not match number of files");

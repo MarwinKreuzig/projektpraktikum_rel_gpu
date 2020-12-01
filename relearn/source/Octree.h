@@ -278,10 +278,6 @@ public:
 		this->naive_method = naive_method;
 	}
 
-	void set_mpi_rma_mem_allocator(MPI_RMA_MemAllocator<OctreeNode>* allocator) /*noexcept*/ {
-		RelearnException::fail("Don't use this function any more! set_rma_mem_allocator in octree.h");
-	}
-
 	void set_root_level(size_t root_level) noexcept {
 		this->root_level = root_level;
 	}
