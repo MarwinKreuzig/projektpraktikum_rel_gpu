@@ -29,7 +29,7 @@ public:
 	Morton& operator=(const Morton& other) = delete;
 	Morton& operator=(Morton&& other) = default;
 
-	void map_1d_to_3d(uint64_t idx, BoxCoordinates& coords) const;
+	BoxCoordinates map_1d_to_3d(uint64_t idx) const;
 
 	uint64_t map_3d_to_1d(const BoxCoordinates& coords) const noexcept;
 
@@ -42,15 +42,15 @@ public:
 	}
 
 private:
-	void set_bit(uint64_t& variable, uint8_t bit) const noexcept {
-		variable |= (static_cast<uint64_t>(1) << bit);
+	uint64_t set_bit(uint64_t variable, uint8_t bit) const noexcept {
+		return variable |= (static_cast<uint64_t>(1) << bit);
 	}
 
-	void unset_bit(uint64_t& variable, uint8_t bit) const noexcept {
-		variable &= ~(static_cast<uint64_t>(1) << bit);
+	uint64_t unset_bit(uint64_t variable, uint8_t bit) const noexcept {
+		return variable &= ~(static_cast<uint64_t>(1) << bit);
 	}
 
-	void copy_bit(const uint64_t& source, uint8_t source_bit, uint64_t& destination, uint8_t destination_bit) const;
+	uint64_t copy_bit(uint64_t source, uint8_t source_bit, uint64_t destination, uint8_t destination_bit) const;
 
 	uint64_t select_bit(uint64_t number, uint8_t bit) const noexcept {
 		return ((number & (static_cast<uint64_t>(1) << bit)) >> bit);
@@ -86,8 +86,8 @@ public:
 		curve.set_refinement_level(num_subdivisions);
 	}
 
-	void map_1d_to_3d(uint64_t idx, BoxCoordinates& coords) const noexcept {
-		curve.map_1d_to_3d(idx, coords);
+	BoxCoordinates map_1d_to_3d(uint64_t idx) const noexcept {
+		return curve.map_1d_to_3d(idx);
 	}
 
 	uint64_t map_3d_to_1d(const BoxCoordinates& coords) const noexcept {

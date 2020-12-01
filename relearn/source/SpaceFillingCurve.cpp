@@ -1,25 +1,27 @@
 #include "SpaceFillingCurve.h"
 
-void Morton::map_1d_to_3d(uint64_t idx, BoxCoordinates& coords) const {
+BoxCoordinates Morton::map_1d_to_3d(uint64_t idx) const {
 	// clear coordinates
-	coords.x = coords.y = coords.z = 0;
+	BoxCoordinates coords{ 0 };
 
 	// run over each bit and copy it to respective coordinate
 	uint8_t coords_bit = 0;
 	for (uint8_t idx_bit = 0; idx_bit < 60; idx_bit += 3) {
-		copy_bit(idx, idx_bit, coords.x, coords_bit);
+		coords.x = copy_bit(idx, idx_bit, coords.x, coords_bit);
 		++coords_bit;
 	}
 	coords_bit = 0;
 	for (uint8_t idx_bit = 1; idx_bit < 60; idx_bit += 3) {
-		copy_bit(idx, idx_bit, coords.y, coords_bit);
+		coords.y = copy_bit(idx, idx_bit, coords.y, coords_bit);
 		++coords_bit;
 	}
 	coords_bit = 0;
 	for (uint8_t idx_bit = 2; idx_bit < 60; idx_bit += 3) {
-		copy_bit(idx, idx_bit, coords.z, coords_bit);
+		coords.z = copy_bit(idx, idx_bit, coords.z, coords_bit);
 		++coords_bit;
 	}
+
+	return coords;
 }
 
 uint64_t Morton::map_3d_to_1d(const BoxCoordinates& coords) const noexcept {
@@ -37,16 +39,18 @@ uint64_t Morton::map_3d_to_1d(const BoxCoordinates& coords) const noexcept {
 	return result;
 }
 
-void Morton::copy_bit(const uint64_t& source, uint8_t source_bit, uint64_t& destination, uint8_t destination_bit) const /*noexcept*/ {
+uint64_t Morton::copy_bit(uint64_t source, uint8_t source_bit, uint64_t destination, uint8_t destination_bit) const /*noexcept*/ {
 	// A simpler solution might be:
 	// destination ^= (-select_bit(source, source_bit) ^ destination) & (1 << destination_bit);
 
 	const uint64_t bit_in_source = select_bit(source, source_bit);
 	if (1 == bit_in_source) {
-		set_bit(destination, destination_bit);
+		destination = set_bit(destination, destination_bit);
+		return destination;
 	}
 	else {
 		RelearnException::check(0 == bit_in_source, "In Morton, copy_bit, bit_in_source is neither 0 nor 1");
-		unset_bit(destination, destination_bit);
+		destination = unset_bit(destination, destination_bit);
+		return destination;
 	}
 }
