@@ -273,7 +273,7 @@ public:
 	const DendritesInh& get_dendrites_inh() const noexcept { return dendrites_inh; }
 	NeuronModels& get_neuron_models() noexcept { return *neuron_models; }
 
-	bool get_vacant_axon(size_t& neuron_id, Vec3d& xyz_pos, Cell::DendriteType& dendrite_type_needed) noexcept;
+	bool get_vacant_axon(size_t& neuron_id, Vec3d& xyz_pos, Cell::DendriteType& dendrite_type_needed) const noexcept;
 
 	void init_synaptic_elements();
 

@@ -68,7 +68,6 @@ TEST(TestPartition, test_partition_constructor) {
 
 			EXPECT_THROW(partition.is_neuron_local(0), RelearnException);
 			EXPECT_THROW(partition.get_my_num_neurons(), RelearnException);
-			EXPECT_THROW(partition.get_simulation_box_size(min, max), RelearnException);
 			EXPECT_THROW(partition.get_simulation_box_size(), RelearnException);
 			EXPECT_THROW(partition.get_subdomain_tree(0), RelearnException);
 			EXPECT_THROW(partition.get_subdomain_id_from_pos(min), RelearnException);

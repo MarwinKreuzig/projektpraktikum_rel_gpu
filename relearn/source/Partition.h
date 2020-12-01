@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <cmath>
 #include <sstream>
+#include <tuple>
 #include <vector>
 
 class Partition {
@@ -33,15 +34,15 @@ public:
 		Vec3d xyz_min;
 		Vec3d xyz_max;
 
-		size_t num_neurons;
+		size_t num_neurons{ 1111222233334444 };
 
 		// Local start and end neuron id
-		size_t neuron_local_id_start;
-		size_t neuron_local_id_end;
+		size_t neuron_local_id_start{ 1111222233334444 };
+		size_t neuron_local_id_end{ 1111222233334444 };
 
 		std::vector<size_t> global_neuron_ids;
 
-		size_t index_1d;
+		size_t index_1d{ 1111222233334444 };
 
 		Vec3<size_t> index_3d;
 
@@ -79,15 +80,12 @@ public:
 		return my_num_subdomains;
 	}
 
-	void get_simulation_box_size(Vec3d& min, Vec3d& max) const {
+	std::tuple<Vec3d, Vec3d> get_simulation_box_size() const {
 		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
-		min = Vec3d(0);
-		max = simulation_box_length;
-	}
+		Vec3d min{ 0 };
+		Vec3d max{ simulation_box_length };
 
-	Vec3d get_simulation_box_size() const {
-		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
-		return simulation_box_length;
+		return std::make_tuple(min, max);
 	}
 
 	Octree& get_subdomain_tree(size_t subdomain_id) {

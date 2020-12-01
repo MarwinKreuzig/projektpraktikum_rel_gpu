@@ -77,8 +77,8 @@ Partition::Partition(size_t num_ranks, size_t my_rank) : my_num_neurons(0), tota
 		Subdomain& current_subdomain = subdomains[i];
 
 		// Set space filling curve indices in 1d and 3d
-		BoxCoordinates box_coords;
 		current_subdomain.index_1d = my_subdomain_id_start + i;
+		BoxCoordinates box_coords;
 		space_curve.map_1d_to_3d(static_cast<uint64_t>(current_subdomain.index_1d), box_coords);
 		current_subdomain.index_3d = box_coords;
 	}

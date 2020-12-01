@@ -78,7 +78,7 @@ public:
 		min_num_avail_objects = avail_size;
 
 		std::stringstream sstring;
-		sstring << __FUNCTION__ << ": max_num_objects: " << max_num_objects << "  sizeof(OctreeNode): " << sizeof(OctreeNode);
+		sstring << "init_free_object_list: max_num_objects: " << max_num_objects << "  sizeof(OctreeNode): " << sizeof(OctreeNode);
 		LogMessages::print_message_rank(sstring.str().c_str(), 0);
 		sstring.str("");
 	}
@@ -164,18 +164,17 @@ public:
 
 	// This can only be called before init_free_object_list()
 	T* get_block_of_objects_memory(size_t num_objects) {
-		T* ret = nullptr;
-
 		if (avail_initialized) {
-			std::cout << __FUNCTION__ << ": This function must not be called anymore as init_free_object_list()"
-				" was called already." << std::endl;
-			return ret;
+			RelearnException::fail("get_block_of_objects_memory must not be called anymore as init_free_object_list() was called already.");
+			return nullptr;
 		}
 
 		if ((max_num_objects - num_objects) < 0) {
-			std::cout << __FUNCTION__ << ": Not enough free MPI-allocated memory available." << std::endl;
-			return ret;
+			RelearnException::fail("get_block_of_objects_memory not enough free MPI-allocated memory available.");
+			return nullptr;
 		}
+
+		T* ret = nullptr;
 
 		max_num_objects -= num_objects;
 		ret = base_ptr + base_ptr_offset;

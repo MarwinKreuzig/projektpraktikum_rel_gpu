@@ -30,9 +30,9 @@ public:
 	Positions& operator = (const Positions& other) = delete;
 	Positions& operator = (Positions&& other) = default;
 
-	const std::vector<double>& get_x_dims() noexcept { return x_dims; };
-	const std::vector<double>& get_y_dims() noexcept { return y_dims; };
-	const std::vector<double>& get_z_dims() noexcept { return z_dims; };
+	const std::vector<double>& get_x_dims() const noexcept { return x_dims; };
+	const std::vector<double>& get_y_dims() const noexcept { return y_dims; };
+	const std::vector<double>& get_z_dims() const noexcept { return z_dims; };
 
 	Vec3d get_position(size_t idx) const {
 		RelearnException::check(idx < size, "Idx must be smaller than size in Positions");

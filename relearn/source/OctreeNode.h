@@ -30,8 +30,8 @@ public:
 
 	Cell cell;
 	std::array<OctreeNode*, 8> children;
-	bool is_parent;
+	bool is_parent{ false };
 
-	int rank;             // MPI rank who owns this octree node
-	size_t level;         // Level in the tree [0 (= root) ... depth of tree]
+	size_t rank{ 1111222233334444 };             // MPI rank who owns this octree node
+	size_t level{ 1111222233334444 };         // Level in the tree [0 (= root) ... depth of tree]
 };

@@ -45,7 +45,7 @@ Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& 
 
 // NOTE: The static variables must be reset to 0 before this function can be used
 // for the synapse creation phase in the next connectivity update
-bool Neurons::get_vacant_axon(size_t& neuron_id, Vec3d& xyz_pos, Cell::DendriteType& dendrite_type_needed) noexcept {
+bool Neurons::get_vacant_axon(size_t& neuron_id, Vec3d& xyz_pos, Cell::DendriteType& dendrite_type_needed) const noexcept {
 	static size_t i = 0, j = 0;
 
 	const std::vector<double>& axons_cnts = axons.get_cnts();
@@ -459,7 +459,9 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 			*/
 			size_t target_neuron_id;
 			int target_rank;
-			const auto target_neuron_found = global_tree.find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed, target_neuron_id, target_rank);
+			bool target_neuron_found;
+			target_neuron_found = global_tree.find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed,target_neuron_id, target_rank);
+
 			if (target_neuron_found) {
 				/*
 				* Append request for synapse creation to rank "target_rank"

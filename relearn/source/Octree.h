@@ -155,8 +155,8 @@ private:
 					num_dendrites_inh += temp_num_dendrites_inh;
 
 					// Average the position by using the number of dendrites as weights
-					child->cell.get_neuron_position_exc(temp_xyz_pos_exc, valid_pos_exc);
-					child->cell.get_neuron_position_inh(temp_xyz_pos_inh, valid_pos_inh);
+					std::tie(temp_xyz_pos_exc, valid_pos_exc) = child->cell.get_neuron_position_exc();
+					std::tie(temp_xyz_pos_inh, valid_pos_inh) = child->cell.get_neuron_position_inh();
 					/**
 					 * We can use position if it's valid or if corresponding num of dendrites is 0 (due to multiplying position with 0)
 					 */
