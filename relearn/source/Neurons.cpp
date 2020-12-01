@@ -45,8 +45,12 @@ Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& 
 
 // NOTE: The static variables must be reset to 0 before this function can be used
 // for the synapse creation phase in the next connectivity update
-bool Neurons::get_vacant_axon(size_t& neuron_id, Vec3d& xyz_pos, Cell::DendriteType& dendrite_type_needed) const noexcept {
+std::tuple<bool, size_t, Vec3d, Cell::DendriteType> Neurons::get_vacant_axon() const noexcept {
 	static size_t i = 0, j = 0;
+
+	size_t neuron_id;
+	Vec3d xyz_pos;
+	Cell::DendriteType dendrite_type_needed;
 
 	const std::vector<double>& axons_cnts = axons.get_cnts();
 	const std::vector<double>& axons_connected_cnts = axons.get_connected_cnts();
@@ -80,14 +84,14 @@ bool Neurons::get_vacant_axon(size_t& neuron_id, Vec3d& xyz_pos, Cell::DendriteT
 				dendrite_type_needed = Cell::DendriteType::EXCITATORY;
 			}
 
-			return true;
+			return std::make_tuple(true, neuron_id, xyz_pos, dendrite_type_needed);
 		}
 
 		i++;
 		j = 0;
 	} // while
 
-	return false;
+	return std::make_tuple(false, neuron_id, xyz_pos, dendrite_type_needed);
 }
 
 void Neurons::init_synaptic_elements() {
@@ -273,15 +277,14 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 
 		// All requests of a rank
 		for (auto request_index = 0; request_index < num_requests; ++request_index) {
-			size_t src_neuron_id, tgt_neuron_id, affected_neuron_id, affected_element_type, signal_type, synapse_id;
-			requests.get_request(
-				request_index,
-				src_neuron_id,
-				tgt_neuron_id,
-				affected_neuron_id,
-				affected_element_type,
-				signal_type,
-				synapse_id);
+			std::array<size_t, 6> arr = requests.get_request(request_index);
+
+			size_t src_neuron_id = arr[0];
+			size_t tgt_neuron_id = arr[1];
+			size_t affected_neuron_id = arr[2];
+			size_t affected_element_type = arr[3];
+			size_t signal_type = arr[4];
+			size_t synapse_id = arr[5];
 
 			/**
 			* Add received synapse deletion request to list with pending synapse deletions
@@ -979,15 +982,17 @@ void Neurons::print_info_for_barnes_hut() {
 * Returns iterator to randomly chosen synapse from list
 */
 
-void Neurons::select_synapse(std::list<Synapse>& list, typename std::list<Synapse>::iterator& it) {
+typename std::list<Neurons::Synapse>::const_iterator Neurons::select_synapse(const std::list<Synapse>& list) {
 	// Point to first synapse
-	it = list.begin();
+	auto it = list.begin();
 
 	// Draw random number from [0,1)
 	const double random_number = random_number_distribution(random_number_generator);
 
 	// Make iterator point to selected element
 	std::advance(it, static_cast<int>(list.size() * random_number));
+
+	return it;
 }
 
 void Neurons::add_synapse_to_pending_deletions(const RankNeuronId& src_neuron_id,
@@ -1092,8 +1097,7 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 
 		for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
 			// Randomly select synapse for deletion
-			typename std::list<Synapse>::iterator synapse_selected;
-			select_synapse(list_synapses, synapse_selected);
+			typename std::list<Synapse>::const_iterator synapse_selected = select_synapse(list_synapses);
 			RelearnException::check(synapse_selected != list_synapses.end()); // Make sure that valid synapse was selected
 
 															 // Check if synapse is already in pending deletions, if not, add it.
@@ -1149,8 +1153,7 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 
 		for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
 			// Randomly select synapse for deletion
-			typename std::list<Synapse>::iterator synapse_selected;
-			select_synapse(list_synapses, synapse_selected);
+			typename std::list<Synapse>::const_iterator synapse_selected = select_synapse(list_synapses);
 			RelearnException::check(synapse_selected != list_synapses.end()); // Make sure that valid synapse was selected
 
 			// Check if synapse is already in pending deletions, if not, add it.
@@ -1206,8 +1209,7 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 
 		for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
 			// Randomly select synapse for deletion
-			typename std::list<Synapse>::iterator synapse_selected;
-			select_synapse(list_synapses, synapse_selected);
+			typename std::list<Synapse>::const_iterator synapse_selected= select_synapse(list_synapses);
 			RelearnException::check(synapse_selected != list_synapses.end()); // Make sure that valid synapse was selected
 
 															 // Check if synapse is already in pending deletions, if not, add it.
@@ -1228,7 +1230,7 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 	}
 }
 
-void Neurons::print_pending_synapse_deletions(std::list<PendingSynapseDeletion>& list) {
+void Neurons::print_pending_synapse_deletions(const std::list<PendingSynapseDeletion>& list) {
 	for (const auto& it : list) {
 		std::cout << "src_neuron_id: " << it.src_neuron_id << "\n";
 		std::cout << "tgt_neuron_id: " << it.tgt_neuron_id << "\n";

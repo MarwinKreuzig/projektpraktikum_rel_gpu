@@ -579,9 +579,11 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 		size_t source_neuron_id;
 		Vec3d xyz_pos;
 
+		bool ret;
+
+		std::tie(ret, source_neuron_id, xyz_pos, dendrite_type_needed) = neurons.get_vacant_axon();
 		// Append one vacant axon to list of pending axons if too few are pending
-		if ((vacant_axons.size() < max_num_pending_vacant_axons) &&
-			(neurons.get_vacant_axon(source_neuron_id, xyz_pos, dendrite_type_needed))) {
+		if ((vacant_axons.size() < max_num_pending_vacant_axons) && ret) {
 			auto axon = std::make_shared<VacantAxon>(source_neuron_id, xyz_pos, dendrite_type_needed);
 
 			if (root->is_parent) {

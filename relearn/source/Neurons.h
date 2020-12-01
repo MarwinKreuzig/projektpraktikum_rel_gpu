@@ -22,6 +22,7 @@
 #include "Timers.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -190,15 +191,19 @@ class Neurons {
 			requests.push_back(synapse_id);
 		}
 
-		void get_request(size_t request_index, size_t& src_neuron_id, size_t& tgt_neuron_id, size_t& affected_neuron_id, size_t& affected_element_type, size_t& signal_type, size_t& synapse_id) const noexcept {
+		std::array<size_t, 6> get_request(size_t request_index) const noexcept {
 			const size_t base_index = 6 * request_index;
 
-			src_neuron_id = requests[base_index];
-			tgt_neuron_id = requests[base_index + 1];
-			affected_neuron_id = requests[base_index + 2];
-			affected_element_type = requests[base_index + 3];
-			signal_type = requests[base_index + 4];
-			synapse_id = requests[base_index + 5];
+			std::array<size_t, 6> arr;
+
+			arr[0] = requests[base_index];
+			arr[1] = requests[base_index + 1];
+			arr[2] = requests[base_index + 2];
+			arr[3] = requests[base_index + 3];
+			arr[4] = requests[base_index + 4];
+			arr[5] = requests[base_index + 5];
+
+			return arr;
 		}
 
 		// Get pointer to data
@@ -276,7 +281,7 @@ public:
 	const DendritesInh& get_dendrites_inh() const noexcept { return dendrites_inh; }
 	NeuronModels& get_neuron_models() noexcept { return *neuron_models; }
 
-	bool get_vacant_axon(size_t& neuron_id, Vec3d& xyz_pos, Cell::DendriteType& dendrite_type_needed) const noexcept;
+	std::tuple<bool, size_t, Vec3d, Cell::DendriteType> get_vacant_axon() const noexcept;
 
 	void init_synaptic_elements();
 
@@ -364,7 +369,7 @@ private:
 	/**
 	 * Returns iterator to randomly chosen synapse from list
 	 */
-	void select_synapse(std::list<Synapse>& list, typename std::list<Synapse>::iterator& it);
+	typename std::list<Neurons::Synapse>::const_iterator Neurons::select_synapse(const std::list<Synapse>& list);
 
 	void add_synapse_to_pending_deletions(const RankNeuronId& src_neuron_id,
 		const RankNeuronId& tgt_neuron_id,
@@ -390,7 +395,7 @@ private:
 		const NetworkGraph& network_graph,
 		std::list<PendingSynapseDeletion>& list_pending_deletions);
 
-	void print_pending_synapse_deletions(std::list<PendingSynapseDeletion>& list);
+	void print_pending_synapse_deletions(const std::list<PendingSynapseDeletion>& list);
 
 	void delete_synapses(std::list<PendingSynapseDeletion>& list,
 		SynapticElements& axons,
