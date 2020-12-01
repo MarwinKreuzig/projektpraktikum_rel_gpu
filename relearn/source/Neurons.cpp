@@ -984,7 +984,7 @@ void Neurons::print_info_for_barnes_hut() {
 
 typename std::list<Neurons::Synapse>::const_iterator Neurons::select_synapse(const std::list<Synapse>& list) {
 	// Point to first synapse
-	auto it = list.begin();
+	auto it = list.cbegin();
 
 	// Draw random number from [0,1)
 	const double random_number = random_number_distribution(random_number_generator);
@@ -1098,7 +1098,7 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 		for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
 			// Randomly select synapse for deletion
 			typename std::list<Synapse>::const_iterator synapse_selected = select_synapse(list_synapses);
-			RelearnException::check(synapse_selected != list_synapses.end()); // Make sure that valid synapse was selected
+			RelearnException::check(synapse_selected != list_synapses.cend()); // Make sure that valid synapse was selected
 
 															 // Check if synapse is already in pending deletions, if not, add it.
 			add_synapse_to_pending_deletions(
@@ -1154,7 +1154,7 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 		for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
 			// Randomly select synapse for deletion
 			typename std::list<Synapse>::const_iterator synapse_selected = select_synapse(list_synapses);
-			RelearnException::check(synapse_selected != list_synapses.end()); // Make sure that valid synapse was selected
+			RelearnException::check(synapse_selected != list_synapses.cend()); // Make sure that valid synapse was selected
 
 			// Check if synapse is already in pending deletions, if not, add it.
 			add_synapse_to_pending_deletions(
@@ -1210,7 +1210,7 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 		for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
 			// Randomly select synapse for deletion
 			typename std::list<Synapse>::const_iterator synapse_selected= select_synapse(list_synapses);
-			RelearnException::check(synapse_selected != list_synapses.end()); // Make sure that valid synapse was selected
+			RelearnException::check(synapse_selected != list_synapses.cend()); // Make sure that valid synapse was selected
 
 															 // Check if synapse is already in pending deletions, if not, add it.
 			add_synapse_to_pending_deletions(

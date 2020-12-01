@@ -369,7 +369,7 @@ private:
 	/**
 	 * Returns iterator to randomly chosen synapse from list
 	 */
-	typename std::list<Neurons::Synapse>::const_iterator Neurons::select_synapse(const std::list<Synapse>& list);
+	typename std::list<Synapse>::const_iterator select_synapse(const std::list<Synapse>& list);
 
 	void add_synapse_to_pending_deletions(const RankNeuronId& src_neuron_id,
 		const RankNeuronId& tgt_neuron_id,
