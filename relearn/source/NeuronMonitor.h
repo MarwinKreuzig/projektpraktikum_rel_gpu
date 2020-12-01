@@ -28,7 +28,7 @@ struct NeuronInformation {
 	double dendrites_inh;
 	double dendrites_inh_connected;
 
-	NeuronInformation(
+	explicit NeuronInformation(
 		double c = 0.0, double x = 0.0, bool f = false, bool r = false, double i = 0.0,
 		double ax = 0.0, double ax_c = 0.0, double de = 0.0, double de_c = 0.0, double di = 0.0, double di_c = 0.0) :
 		calcium(c), x(x), fired(f), refrac(r), I_sync(i), axons(ax), axons_connected(ax_c),
@@ -61,7 +61,7 @@ public:
 
 		const double& calcium = neurons_to_monitor.calcium[target_neuron_id];
 		const double& x = neurons_to_monitor.neuron_models->x[target_neuron_id];
-		const bool& fired = neurons_to_monitor.neuron_models->fired[target_neuron_id] > 0;
+		const bool& fired = neurons_to_monitor.neuron_models->fired[target_neuron_id];
 		const bool& refrac = neurons_to_monitor.neuron_models->get_secondary_variable(target_neuron_id) > 0;
 		const double& I_sync = neurons_to_monitor.neuron_models->I_syn[target_neuron_id];
 

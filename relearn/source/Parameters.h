@@ -10,6 +10,7 @@
 
 #pragma once 
 
+#include <cstdint>
 #include <iomanip>
 
 class Parameters {
@@ -53,13 +54,11 @@ public:
 	size_t mpi_rma_mem_size;      // Memory size (Byte) that should be allocated with MPI_Alloc_mem
 
 	// Random number seeds
-	long int seed_octree;         // Random number seed of Octree
-	long int seed_partition;      // Random number seed of Partition
+	int64_t seed_octree;         // Random number seed of Octree
+	int64_t seed_partition;      // Random number seed of Partition
 
 	// Overload << operator for proper output
 	friend std::ostream& operator<< (std::ostream& os, const Parameters& params) {
-		using namespace std;
-
 		os << "** PARAMETERS **\n\n";
 		os << std::left << std::setw(column_width) << "num_neurons" << " : " << params.num_neurons << "\n";
 		os << std::left << std::setw(column_width) << "frac_neurons_exc" << " : " << params.frac_neurons_exc << "\n";

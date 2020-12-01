@@ -12,6 +12,7 @@
 
 #include "LogMessages.h"
 #include "OctreeNode.h"
+#include "RelearnException.h"
 
 #include <mpi.h>
 
@@ -33,9 +34,7 @@ public:
 	MPI_RMA_MemAllocator& operator=(const MPI_RMA_MemAllocator& other) = delete;
 	MPI_RMA_MemAllocator& operator=(MPI_RMA_MemAllocator&& other) = delete;
 
-	~MPI_RMA_MemAllocator() {
-
-	}
+	~MPI_RMA_MemAllocator() = default;
 
 	void set_size_requested(size_t size_requested) {
 		this->size_requested = size_requested;
@@ -46,8 +45,8 @@ public:
 		max_size = max_num_objects * sizeof(T);
 
 		// Store size of MPI_COMM_WORLD
-		// NOLINTNEXTLINE
 		int my_num_ranks;
+		// NOLINTNEXTLINE
 		MPI_Comm_size(MPI_COMM_WORLD, &my_num_ranks);
 		num_ranks = static_cast<size_t>(my_num_ranks);
 
@@ -63,9 +62,9 @@ public:
 	 */
 	void allocate_rma_mem() {
 		// Allocate block of memory which is managed later on
+		// NOLINTNEXTLINE
 		if (MPI_SUCCESS != MPI_Alloc_mem(max_size, MPI_INFO_NULL, &base_ptr)) {
-			std::cout << __FUNCTION__ << ": MPI_Alloc_mem failed.";
-			return;
+			RelearnException::fail("MPI_Alloc_mem failed");
 		}
 	}
 
@@ -94,6 +93,7 @@ public:
 		// Set window's displacement unit
 		displ_unit = 1;
 
+		// NOLINTNEXTLINE
 		MPI_Win_create(base_ptr, max_size, displ_unit, MPI_INFO_NULL, MPI_COMM_WORLD, &mpi_window);
 	}
 
@@ -108,6 +108,7 @@ public:
 		// Vector must have space for one pointer from each rank
 		base_pointers.resize(num_ranks);
 
+		// NOLINTNEXTLINE
 		MPI_Allgather(&base_ptr, 1, MPI_AINT, base_pointers.data(), 1, MPI_AINT, MPI_COMM_WORLD);
 	}
 
@@ -187,7 +188,7 @@ public:
 		return min_num_avail_objects;
 	}
 
-	MPI_Win mpi_window;       // RMA window object
+	MPI_Win mpi_window{ 0 };       // RMA window object
 private:
 	size_t size_requested{ 1111222233334444 };    // Bytes requested for the allocator
 	size_t max_size{ 1111222233334444 };          // Size in Bytes of MPI-allocated memory

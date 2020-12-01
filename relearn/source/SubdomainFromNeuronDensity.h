@@ -30,7 +30,7 @@ public:
 	SubdomainFromNeuronDensity& operator=(const SubdomainFromNeuronDensity& other) = delete;
 	SubdomainFromNeuronDensity& operator=(SubdomainFromNeuronDensity&& other) = delete;
 
-	~SubdomainFromNeuronDensity() {}
+	~SubdomainFromNeuronDensity() override = default;
 
 	void get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, size_t num_subdomains_per_axis,
 		Position& min, Position& max) const noexcept override;

@@ -51,11 +51,8 @@ public:
 	struct ProbabilitySubinterval {
 		ProbabilitySubinterval() = default;
 
-		ProbabilitySubinterval(OctreeNode* node) noexcept :
-			ptr(node),
-			probability(0),
-			mpi_request(MPIWrapper::get_null_request()),
-			request_rank(-1) {
+		explicit ProbabilitySubinterval(OctreeNode* node) noexcept :
+			ptr(node) {
 		}
 
 		OctreeNode* ptr{ nullptr };

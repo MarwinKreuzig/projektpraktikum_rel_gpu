@@ -92,7 +92,7 @@ public:
 
 	NeuronModels(size_t num_neurons, double k, double tau_C, double beta, int h);
 
-	~NeuronModels() = default;
+	virtual ~NeuronModels() = default;
 
 	NeuronModels(const NeuronModels& other) = delete;
 	NeuronModels& operator=(const NeuronModels& other) = delete;

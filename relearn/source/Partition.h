@@ -56,10 +56,10 @@ public:
 	~Partition() = default;
 
 	Partition(const Partition& other) = delete;
-	Partition(Partition&& other) = delete;
+	Partition(Partition&& other) = default;
 
 	Partition& operator=(const Partition& other) = delete;
-	Partition& operator=(Partition&& other) = delete;
+	Partition& operator=(Partition&& other) = default;
 
 	void print_my_subdomains_info_rank(int rank);
 

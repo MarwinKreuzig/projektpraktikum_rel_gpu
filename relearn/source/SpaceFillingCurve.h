@@ -24,10 +24,10 @@ public:
 	~Morton() = default;
 
 	Morton(const Morton& other) = delete;
-	Morton(Morton&& other) = delete;
+	Morton(Morton&& other) = default;
 
 	Morton& operator=(const Morton& other) = delete;
-	Morton& operator=(Morton&& other) = delete;
+	Morton& operator=(Morton&& other) = default;
 
 	void map_1d_to_3d(uint64_t idx, BoxCoordinates& coords) const;
 
@@ -67,10 +67,10 @@ public:
 	}
 
 	SpaceFillingCurve(const SpaceFillingCurve& other) = delete;
-	SpaceFillingCurve(SpaceFillingCurve&& other) = delete;
+	SpaceFillingCurve(SpaceFillingCurve&& other) = default;
 
 	SpaceFillingCurve& operator = (const SpaceFillingCurve& other) = delete;
-	SpaceFillingCurve& operator = (SpaceFillingCurve&& other) = delete;
+	SpaceFillingCurve& operator = (SpaceFillingCurve&& other) = default;
 
 	~SpaceFillingCurve() = default;
 

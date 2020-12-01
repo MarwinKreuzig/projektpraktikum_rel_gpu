@@ -40,13 +40,13 @@ struct Vec3 {
 	Vec3(const Vec3<T>& other) = default;
 	Vec3<T>& operator=(const Vec3<T>& other) = default;
 
-	Vec3(Vec3<T>&& other) = default;
-	Vec3<T>& operator=(Vec3<T>&& other) = default;
+	Vec3(Vec3<T>&& other) noexcept = default;
+	Vec3<T>& operator=(Vec3<T>&& other) noexcept = default;
 
 
 	template<typename K>
 	explicit operator Vec3<K>() const noexcept {
-		Vec3<K> res{ (K)x, (K)y, (K)z };
+		Vec3<K> res{ static_cast<K>(x), static_cast<K>(y), static_cast<K>(z) };
 		return res;
 	}
 

@@ -22,7 +22,7 @@
 // and the number of neurons in every individual subdomain.
 class SubdomainFromFile : public NeuronToSubdomainAssignment {
 public:
-	SubdomainFromFile(const std::string &file_path);
+	explicit SubdomainFromFile(const std::string &file_path);
 
 	SubdomainFromFile(const SubdomainFromFile& other) = delete;
 	SubdomainFromFile(SubdomainFromFile&& other) = delete;
@@ -30,7 +30,7 @@ public:
 	SubdomainFromFile& operator=(const SubdomainFromFile& other) = delete;
 	SubdomainFromFile& operator=(SubdomainFromFile&& other) = delete;
 
-	~SubdomainFromFile() {}
+	~SubdomainFromFile() override = default;
 
 	void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) override;
 

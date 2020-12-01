@@ -48,7 +48,7 @@ using DendritesInh = SynapticElements;
 */
 class SynapseCreationRequests {
 public:
-	SynapseCreationRequests() noexcept : num_requests(0) {}
+	SynapseCreationRequests() = default;
 
 	size_t size() const noexcept { return num_requests; }
 
@@ -109,7 +109,7 @@ public:
 	}
 
 private:
-	size_t num_requests; // Number of synapse creation requests
+	size_t num_requests{ 0 }; // Number of synapse creation requests
 	std::vector<size_t> requests; // Each request to form a synapse is a 3-tuple: (source_neuron_id, target_neuron_id, dendrite_type_needed)
 								 // That is why requests.size() == 3*responses.size()
 								 // Note, a more memory-efficient implementation would use a smaller data type (not size_t) for dendrite_type_needed.
