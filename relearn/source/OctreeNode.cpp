@@ -10,12 +10,6 @@
 
 #include "OctreeNode.h"
 
-OctreeNode::OctreeNode() /*noexcept*/ :
-	is_parent(false),
-	level(0),
-	rank(0), children(std::array<OctreeNode*, 8>{nullptr}) {
-}
-
 void OctreeNode::print() const {
 	std::cout << "== OctreeNode (" << this << ") ==\n";
 

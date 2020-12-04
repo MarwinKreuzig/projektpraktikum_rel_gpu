@@ -20,14 +20,9 @@ namespace randomNumberSeeds {
 
 template<typename T>
 class RandomHolder {
-private:
-	static std::mt19937 random_generator;
-
 public:
 	static std::mt19937& get_random_generator() noexcept {
+		static std::mt19937 random_generator;
 		return random_generator;
 	}
 };
-
-template<typename T>
-std::mt19937 RandomHolder<T>::random_generator{};

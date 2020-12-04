@@ -337,7 +337,7 @@ public:
 
 	bool find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed, size_t& target_neuron_id, int& target_rank);
 
-	void find_target_neurons(MapSynapseCreationRequests&, Neurons&);
+	void find_target_neurons(MapSynapseCreationRequests& map_synapse_creation_requests_outgoing, const Neurons& neurons);
 
 	void empty_remote_nodes_cache();
 
@@ -452,25 +452,25 @@ public:
 	static constexpr const size_t NEURON_ID_PARENT = 111222333444;
 private:
 	// Root of the tree
-	OctreeNode* root;
+	OctreeNode* root{ nullptr };
 
 	std::vector<Octree*> local_trees;
 
 	// Level which is assigned to the root of the tree (default = 0)
-	size_t root_level;
+	size_t root_level{ 1111222233334444 };
 
 	// 'True' if destructor should not free the tree nodes
-	bool no_free_in_destructor;
+	bool no_free_in_destructor{ false };
 
 	// Two points describe simulation box size of the tree
 	Vec3d xyz_min;
 	Vec3d xyz_max;
 
-	double acceptance_criterion;  // Acceptance criterion
-	double sigma;                 // Probability parameter
-	bool   naive_method;          // If true, expand every cell regardless of whether dendrites are available or not
-	size_t level_of_branch_nodes;
-	size_t max_num_pending_vacant_axons;  // Maximum number of vacant axons which are considered at the same time for
+	double acceptance_criterion{ 0.3 };  // Acceptance criterion
+	double sigma{ 150.0 };                 // Probability parameter
+	bool   naive_method{ false };          // If true, expand every cell regardless of whether dendrites are available or not
+	size_t level_of_branch_nodes{ 1111222233334444 };
+	size_t max_num_pending_vacant_axons{ 10 };  // Maximum number of vacant axons which are considered at the same time for
 										  // finding a target neuron
 
 	// Allocator for MPI passive target sync. memory for tree nodes

@@ -17,7 +17,7 @@
 
 class OctreeNode {
 public:
-	OctreeNode() /*noexcept*/;
+	OctreeNode() = default;
 	~OctreeNode() = default;
 
 	OctreeNode(const OctreeNode& other) = default;
@@ -29,9 +29,9 @@ public:
 	void print() const;
 
 	Cell cell;
-	std::array<OctreeNode*, 8> children;
+	std::array<OctreeNode*, 8> children{ nullptr };
 	bool is_parent{ false };
 
-	size_t rank{ 1111222233334444 };             // MPI rank who owns this octree node
-	size_t level{ 1111222233334444 };         // Level in the tree [0 (= root) ... depth of tree]
+	size_t rank{ 0 };             // MPI rank who owns this octree node
+	size_t level{ 0 };         // Level in the tree [0 (= root) ... depth of tree]
 };

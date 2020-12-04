@@ -115,6 +115,7 @@ public:
 		string = asctime(timeinfo);
 
 		// Remove linebreak in string
+		// NOLINTNEXTLINE
 		string[24] = '\0';
 
 		return std::string(string);
@@ -128,6 +129,7 @@ public:
 		asctime_s(char_buff, &timeinfo);
 
 		// Remove linebreak in string
+		// NOLINTNEXTLINE
 		char_buff[24] = '\0';
 
 		return std::string(char_buff);

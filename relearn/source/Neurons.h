@@ -194,7 +194,7 @@ class Neurons {
 		std::array<size_t, 6> get_request(size_t request_index) const noexcept {
 			const size_t base_index = 6 * request_index;
 
-			std::array<size_t, 6> arr;
+			std::array<size_t, 6> arr{};
 
 			arr[0] = requests[base_index];
 			arr[1] = requests[base_index + 1];
@@ -259,8 +259,8 @@ public:
 	 */
 	using MapSynapseDeletionRequests = std::map<int, SynapseDeletionRequests>;
 
-	Neurons(size_t num_neurons, const Parameters& params, const Partition&);
-	Neurons(size_t num_neurons, const Parameters& params, const Partition&, std::unique_ptr<NeuronModels> model);
+	Neurons(size_t num_neurons, const Parameters& params, const Partition& partition);
+	Neurons(size_t num_neurons, const Parameters& params, const Partition& partition, std::unique_ptr<NeuronModels> model);
 	~Neurons() = default;
 
 	Neurons(const Neurons& other) = delete;
@@ -408,7 +408,7 @@ private:
 	size_t num_neurons; // Local number of neurons
 	std::vector<size_t> local_ids;
 
-	const Partition& partition;
+	const Partition* partition;
 
 	std::unique_ptr<NeuronModels> neuron_models;
 

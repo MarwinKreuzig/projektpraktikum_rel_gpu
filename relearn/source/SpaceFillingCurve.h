@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <utility>
 
 using BoxCoordinates = Vec3<uint64_t>;
 
@@ -23,10 +24,10 @@ public:
 	Morton() = default;
 	~Morton() = default;
 
-	Morton(const Morton& other) = delete;
+	Morton(const Morton& other) = default;
 	Morton(Morton&& other) = default;
 
-	Morton& operator=(const Morton& other) = delete;
+	Morton& operator=(const Morton& other) = default;
 	Morton& operator=(Morton&& other) = default;
 
 	BoxCoordinates map_1d_to_3d(uint64_t idx) const;
@@ -66,11 +67,11 @@ public:
 		set_refinement_level(refinement_level);
 	}
 
-	SpaceFillingCurve(const SpaceFillingCurve& other) = delete;
-	SpaceFillingCurve(SpaceFillingCurve&& other) = default;
+	SpaceFillingCurve(const SpaceFillingCurve& other) = default;
+	SpaceFillingCurve(SpaceFillingCurve&& other) noexcept(std::is_nothrow_move_constructible<T>::value) = default;
 
-	SpaceFillingCurve& operator = (const SpaceFillingCurve& other) = delete;
-	SpaceFillingCurve& operator = (SpaceFillingCurve&& other) = default;
+	SpaceFillingCurve& operator=(const SpaceFillingCurve& other) = default;
+	SpaceFillingCurve& operator=(SpaceFillingCurve&& other) noexcept(std::is_nothrow_move_assignable<T>::value) = default;
 
 	~SpaceFillingCurve() = default;
 

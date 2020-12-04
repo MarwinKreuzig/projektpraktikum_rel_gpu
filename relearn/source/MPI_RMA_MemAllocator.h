@@ -116,29 +116,27 @@ public:
 	// (ii)  Call its constructor
 	// (iii) Return pointer to object
 	T* newObject() {
-		T* ptr = nullptr;
-
 		// No free objects available?
 		if (avail.empty()) {
-			std::cout << __FUNCTION__ << ": No free MPI-allocated memory available." << std::endl;
-			ptr = nullptr;
+			RelearnException::fail("No free MPI-allocated memory available.");
+			return nullptr;
 		}
-		else {
-			ptr = avail.front();
-			avail.pop_front();
-			avail_size--;
 
-			// Placement new operator
-			// Only call constructor of object,
-			// i.e. construct object at specified address "ptr"
-			new (ptr) T;
+		T* ptr = avail.front();
+		avail.pop_front();
+		avail_size--;
 
-			// Mark object as allocated (unavailable)
-			unavail.insert(ptr);
+		// Placement new operator
+		// Only call constructor of object,
+		// i.e. construct object at specified address "ptr"
+		new (ptr) T;
 
-			// Update min number of available objects
-			min_num_avail_objects = std::min(avail_size, min_num_avail_objects);
-		}
+		// Mark object as allocated (unavailable)
+		unavail.insert(ptr);
+
+		// Update min number of available objects
+		min_num_avail_objects = std::min(avail_size, min_num_avail_objects);
+
 		return ptr;
 	}
 
@@ -154,7 +152,7 @@ public:
 			avail_size++;
 		}
 		else {
-			std::cout << __FUNCTION__ << ": Object's address unknown.\n";
+			RelearnException::fail("Object's address unknown.");
 		}
 	}
 
@@ -187,6 +185,7 @@ public:
 		return min_num_avail_objects;
 	}
 
+	//NOLINTNEXTLINE
 	MPI_Win mpi_window{ 0 };       // RMA window object
 private:
 	size_t size_requested{ 1111222233334444 };    // Bytes requested for the allocator

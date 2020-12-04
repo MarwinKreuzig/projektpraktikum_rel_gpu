@@ -23,7 +23,7 @@ Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& 
 
 Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& partition, std::unique_ptr<NeuronModels> model)
 	: num_neurons(num_neurons),
-	partition(partition),
+	partition(&partition),
 	neuron_models(std::move(model)),
 	axons(SynapticElements::AXON, num_neurons, params.eta_A, params.C_target, params.nu, params.vacant_retract_ratio),
 	dendrites_exc(SynapticElements::DENDRITE, num_neurons, params.eta_D_ex, params.C_target, params.nu, params.vacant_retract_ratio),
@@ -373,7 +373,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 
 	const size_t num_local_trees = global_tree.get_num_local_trees();
 	for (size_t i = 0; i < num_local_trees; i++) {
-		const size_t global_subdomain_id = partition.get_my_subdomain_id_start() + i;
+		const size_t global_subdomain_id = partition->get_my_subdomain_id_start() + i;
 		const OctreeNode* root_node = global_tree.get_local_root(i);
 
 		// This assignment copies memberwise
@@ -390,8 +390,8 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 	GlobalTimers::timers.start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
 	const size_t num_rma_buffer_branch_nodes = MPIWrapper::rma_buffer_branch_nodes.num_nodes;
 	for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
-		if (i < partition.get_my_subdomain_id_start() ||
-			i > partition.get_my_subdomain_id_end()) {
+		if (i < partition->get_my_subdomain_id_start() ||
+			i > partition->get_my_subdomain_id_end()) {
 			global_tree.insert(rma_buffer_branch_nodes + i);
 		}
 	}
@@ -1097,7 +1097,7 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 
 		for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
 			// Randomly select synapse for deletion
-			typename std::list<Synapse>::const_iterator synapse_selected = select_synapse(list_synapses);
+			const auto synapse_selected = select_synapse(list_synapses);
 			RelearnException::check(synapse_selected != list_synapses.cend()); // Make sure that valid synapse was selected
 
 															 // Check if synapse is already in pending deletions, if not, add it.
@@ -1153,7 +1153,7 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 
 		for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
 			// Randomly select synapse for deletion
-			typename std::list<Synapse>::const_iterator synapse_selected = select_synapse(list_synapses);
+			const auto synapse_selected = select_synapse(list_synapses);
 			RelearnException::check(synapse_selected != list_synapses.cend()); // Make sure that valid synapse was selected
 
 			// Check if synapse is already in pending deletions, if not, add it.
@@ -1209,7 +1209,7 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 
 		for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
 			// Randomly select synapse for deletion
-			typename std::list<Synapse>::const_iterator synapse_selected= select_synapse(list_synapses);
+			const auto synapse_selected= select_synapse(list_synapses);
 			RelearnException::check(synapse_selected != list_synapses.cend()); // Make sure that valid synapse was selected
 
 															 // Check if synapse is already in pending deletions, if not, add it.

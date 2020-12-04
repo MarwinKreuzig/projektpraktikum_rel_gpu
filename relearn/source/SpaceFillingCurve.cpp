@@ -48,9 +48,8 @@ uint64_t Morton::copy_bit(uint64_t source, uint8_t source_bit, uint64_t destinat
 		destination = set_bit(destination, destination_bit);
 		return destination;
 	}
-	else {
-		RelearnException::check(0 == bit_in_source, "In Morton, copy_bit, bit_in_source is neither 0 nor 1");
-		destination = unset_bit(destination, destination_bit);
-		return destination;
-	}
+
+	RelearnException::check(0 == bit_in_source, "In Morton, copy_bit, bit_in_source is neither 0 nor 1");
+	destination = unset_bit(destination, destination_bit);
+	return destination;
 }
