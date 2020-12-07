@@ -1,8 +1,4 @@
-# This file is a template, and might need editing before it works on your project.
-# use the official gcc image, based on debian
-# can use verions as well, like gcc:5.2
-# see https://hub.docker.com/_/gcc/
-image: gcc
+image: relearn-ci
 
 build:
   stage: build
@@ -10,11 +6,13 @@ build:
   # install the necessary build tools when needed
   # before_script:
   #   - apt update && apt -y install make autoconf
+  before_script:
+    - cd relearn && mkdir build-docker && cd build-docker  
   script:
-    - g++ helloworld.cpp -o mybinary
-  artifacts:
-    paths:
-      - mybinary
+    - cmake .. && make 
+  #artifacts:
+    #paths:
+      #- mybinary
       # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
       # cache:
       #   paths:
@@ -24,4 +22,4 @@ build:
 test:
   stage: test
   script:
-    - ./runmytests.sh
+    - ./runTests
