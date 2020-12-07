@@ -946,7 +946,12 @@ void Octree::update(const std::vector<double>& dendrites_exc_cnts, const std::ve
 
 // The caller must ensure that only inner nodes are visited. "max_level" must be chosen correctly for this
 void Octree::update_from_level(size_t max_level) {
-	const FunctorUpdateNode update_node;
+	std::vector<double> dendrites_exc_cnts;
+	std::vector<double> dendrites_exc_connected_cnts;
+	std::vector<double> dendrites_inh_cnts;
+	std::vector<double> dendrites_inh_connected_cnts;
+
+	const FunctorUpdateNode update_node(dendrites_exc_cnts, dendrites_exc_connected_cnts, dendrites_inh_cnts, dendrites_inh_connected_cnts, 0);
 
 	/**
 	* NOTE: It *must* be ensured that in tree_walk_postorder() only inner nodes
