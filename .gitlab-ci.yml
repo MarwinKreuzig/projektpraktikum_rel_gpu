@@ -9,9 +9,10 @@ build:
   before_script:
     - cd relearn && mkdir build-docker && cd build-docker  
   script:
-    - cmake .. && make 
-  #artifacts:
-    #paths:
+    - cmake .. && make
+  artifacts:
+    paths:
+      - relearn/build-docker
       #- mybinary
       # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
       # cache:
@@ -21,5 +22,6 @@ build:
 # run tests using the binary built before
 test:
   stage: test
-  script:
     - ./runTests
+  dependencies: 
+    - build
