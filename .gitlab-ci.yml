@@ -23,6 +23,9 @@ build:
 test:
   stage: test
   script:
-    - relearn/runTests
+    - relearn/build-docker/runTests
   dependencies: 
     - build
+  artifacts:
+    paths:
+      - relearn/build-docker
