@@ -9,7 +9,7 @@ build:
   before_script:
     - cd relearn && mkdir build-docker && cd build-docker  
   script:
-    - cmake .. && make
+    - cmake -Dnoclangtidy=1 .. && make -j 16
   artifacts:
     paths:
       - relearn/build-docker
@@ -23,6 +23,6 @@ build:
 test:
   stage: test
   script:
-    - ./runTests
+    - relearn/runTests
   dependencies: 
     - build
