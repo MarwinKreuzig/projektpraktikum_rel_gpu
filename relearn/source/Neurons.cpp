@@ -882,7 +882,7 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& 
 
 	// Write total number of neurons to log file
 	file << "# " << params.num_neurons << std::endl;
-	file << "# " << "<global id> <pos x> <pos y> <pos z> <area>" << std::endl;
+	file << "# " << "<global id> <pos x> <pos y> <pos z> <area> <type>" << std::endl;
 
 	const std::vector<double>& axons_x_dims = positions.get_x_dims();
 	const std::vector<double>& axons_y_dims = positions.get_y_dims();
