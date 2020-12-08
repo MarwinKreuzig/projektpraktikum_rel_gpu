@@ -536,8 +536,8 @@ int main(int argc, char** argv) {
 	printTimers();
 
 	// Free object created based on command line parameters
-	neurons_in_subdomain->write_neurons_to_file("output_positions.txt");
-	network_graph.write_synapses_to_file("output_edges.txt", neuron_id_map, partition);
+	neurons_in_subdomain->write_neurons_to_file("output_positions_" + MPIWrapper::my_rank_str + ".txt");
+	network_graph.write_synapses_to_file("output_edges_" + MPIWrapper::my_rank_str + ".txt", neuron_id_map, partition);
 
 	MPIWrapper::barrier(MPIWrapper::Scope::global);
 	if (0 == MPIWrapper::my_rank) {
