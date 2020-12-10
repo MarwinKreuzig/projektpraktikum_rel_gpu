@@ -461,9 +461,9 @@ void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) con
 			RelearnException::check(ret);
 
 			// <target neuron id>  <source neuron id>  <weight>
-			os 
-				<< glob_src << "\t"
+			os
 				<< glob_tgt << "\t"
+				<< glob_src << "\t"
 				<< it_in_edge->second << "\n";
 		}
 	}

@@ -9,7 +9,7 @@
 #include "../source/RelearnException.h"
 
 constexpr const int upper_bound_my_rank = 32;
-constexpr const int upper_bount_num_ranks = 32;
+constexpr const int upper_bound_num_ranks = 32;
 
 size_t round_to_next_exponent(size_t numToRound, size_t exponent) {
 	auto log = std::log(static_cast<double>(numToRound)) / std::log(static_cast<double>(exponent));
@@ -20,7 +20,7 @@ size_t round_to_next_exponent(size_t numToRound, size_t exponent) {
 
 TEST(TestPartition, test_partition_constructor_arguments) {
 	std::uniform_int_distribution<size_t> uid_my_rank(0, upper_bound_my_rank);
-	std::uniform_int_distribution<size_t> uid_num_ranks(0, upper_bount_num_ranks);
+	std::uniform_int_distribution<size_t> uid_num_ranks(0, upper_bound_num_ranks);
 
 	for (auto i = 0; i < iterations; i++) {
 		auto my_rank = uid_my_rank(mt);
@@ -40,7 +40,7 @@ TEST(TestPartition, test_partition_constructor_arguments) {
 }
 
 TEST(TestPartition, test_partition_constructor) {
-	std::uniform_int_distribution<size_t> uid_num_ranks(0, upper_bount_num_ranks);
+	std::uniform_int_distribution<size_t> uid_num_ranks(1, upper_bound_num_ranks);
 
 	for (auto i = 0; i < iterations; i++) {
 		auto my_ranks_rand = uid_num_ranks(mt);
