@@ -529,15 +529,14 @@ int main(int argc, char** argv) {
 		printNeuronMonitor(monitor, monitor.get_target_id());
 	}
 
+	neurons.print_positions_to_log_file(Logs::get("positions_rank_" + MPIWrapper::my_rank_str), params, neuron_id_map);
 	neurons.print_network_graph_to_log_file(Logs::get("network_rank_" + MPIWrapper::my_rank_str), network_graph,
 		params, neuron_id_map);
-	neurons.print_positions_to_log_file(Logs::get("positions_rank_" + MPIWrapper::my_rank_str), params, neuron_id_map);
 
 	printTimers();
 
-	// Free object created based on command line parameters
-	neurons_in_subdomain->write_neurons_to_file("output_positions_" + MPIWrapper::my_rank_str + ".txt");
-	network_graph.write_synapses_to_file("output_edges_" + MPIWrapper::my_rank_str + ".txt", neuron_id_map, partition);
+	//neurons_in_subdomain->write_neurons_to_file("output_positions_" + MPIWrapper::my_rank_str + ".txt");
+	//network_graph.write_synapses_to_file("output_edges_" + MPIWrapper::my_rank_str + ".txt", neuron_id_map, partition);
 
 	MPIWrapper::barrier(MPIWrapper::Scope::global);
 	if (0 == MPIWrapper::my_rank) {

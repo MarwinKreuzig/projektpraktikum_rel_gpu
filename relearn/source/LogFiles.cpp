@@ -53,7 +53,7 @@ namespace Logs {
 	}
 
 	void addLogFile(const std::string& name, int rank) {
-		LogFiles lf(output_dir + name, rank);
+		LogFiles lf(output_dir + name + ".txt", rank);
 		logfiles.insert(std::pair<const std::string, LogFiles>(name, std::move(lf)));
 	}
 } //namespace Logs
