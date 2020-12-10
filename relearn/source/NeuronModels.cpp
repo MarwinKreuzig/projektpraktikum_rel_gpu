@@ -13,7 +13,7 @@
 #include "MPIWrapper.h"
 #include "Random.h"
 
-NeuronModels::NeuronModels(size_t num_neurons, double k, double tau_C, double beta, int h)
+NeuronModels::NeuronModels(size_t num_neurons, double k, double tau_C, double beta, unsigned int h)
 	: my_num_neurons(num_neurons),
 	k(k),
 	tau_C(tau_C),
@@ -33,7 +33,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	*/
 	GlobalTimers::timers.start(TimerRegion::PREPARE_SENDING_SPIKES);
 	// For my neurons
-	for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
+	for (size_t neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
 		// My neuron fired
 		if (static_cast<bool>(fired[neuron_id])) {
 			const NetworkGraph::Edges& out_edges = network_graph.get_out_edges(neuron_id);
@@ -134,7 +134,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	 */
 	GlobalTimers::timers.start(TimerRegion::CALC_SYNAPTIC_INPUT);
 	// For my neurons
-	for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
+	for (size_t neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
 		I_syn[neuron_id] = 0.0;
 
 		/**
@@ -166,11 +166,20 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	for (size_t i = 0; i < my_num_neurons; ++i) {
 		update_activity(i);
 
-		for (int integration_steps = 0; integration_steps < h; ++integration_steps) {
+		for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
 			// Update calcium depending on the firing
 			C[i] += (1 / static_cast<double>(h)) * (-C[i] / tau_C + beta * static_cast<double>(fired[i]));
 		}
 	}
 
 	GlobalTimers::timers.stop_and_add(TimerRegion::CALC_ACTIVITY);
+}
+
+std::vector<std::unique_ptr<NeuronModels>> NeuronModels::get_models() {
+	std::vector<std::unique_ptr<NeuronModels>> res(4);
+	res.push_back(NeuronModels::create<models::ModelA>(0));
+	res.push_back(NeuronModels::create<models::IzhikevichModel>(0));
+	res.push_back(NeuronModels::create<models::FitzHughNagumoModel>(0));
+	res.push_back(NeuronModels::create<models::AEIFModel>(0));
+	return res;
 }
