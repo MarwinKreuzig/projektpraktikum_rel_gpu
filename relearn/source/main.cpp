@@ -253,7 +253,7 @@ void printNeuronMonitor(const NeuronMonitor& nm, size_t neuron_id) {
 	for (auto& info : infos) {
 		outfile << ctr << filler;
 		outfile << /*std::setw(width) <<*/ info.fired << filler;
-		outfile << /*std::setw(width) <<*/ info.refrac << filler;
+		outfile << /*std::setw(width) <<*/ info.secondary << filler;
 		outfile << /*std::setw(width) <<*/ info.x << filler;
 		outfile << /*std::setw(width) <<*/ info.calcium << filler;
 		outfile << /*std::setw(width) <<*/ info.I_sync << filler;
