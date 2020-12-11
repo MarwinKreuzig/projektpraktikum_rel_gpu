@@ -13,6 +13,8 @@
 #include "MPIWrapper.h"
 #include "Random.h"
 
+using ModelParameter = NeuronModels::ModelParameter;
+
 NeuronModels::NeuronModels(size_t num_neurons, double k, double tau_C, double beta, unsigned int h)
 	: my_num_neurons(num_neurons),
 	k(k),
@@ -182,4 +184,20 @@ std::vector<std::unique_ptr<NeuronModels>> NeuronModels::get_models() {
 	res.push_back(NeuronModels::create<models::FitzHughNagumoModel>(0));
 	res.push_back(NeuronModels::create<models::AEIFModel>(0));
 	return res;
+}
+
+std::vector<ModelParameter> NeuronModels::get_parameter() {
+	return {
+		Parameter<size_t>{ "my_num_neurons", my_num_neurons, 0, 10000000000 },
+		Parameter<double>{ "k", k, 0., 1. },
+		Parameter<double>{ "tau_C", tau_C, 0., 10.e+6 },
+		Parameter<double>{ "beta", beta, 0., 1. },
+		Parameter<unsigned int>{ "h", h, 0, 1000 },
+	};
+}
+
+void NeuronModels::init() {
+	x.resize(my_num_neurons);
+	fired.resize(my_num_neurons);
+	I_syn.resize(my_num_neurons);
 }
