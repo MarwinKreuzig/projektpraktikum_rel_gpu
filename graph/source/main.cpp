@@ -17,17 +17,27 @@
 
 int main(int argc, char** argv) {
 	// Check number of parameters
-	if (argc < 2) {
-		std::cout << "Usage: " << argv[0] << " <input network file with positions>" << std::endl;
+	if (argc != 2) {
+		std::cout << "Usage: " << argv[0] << " <folder that contains positions and edges>" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
-	// Open input file
-	std::string filename_input(argv[1]);
-	std::ifstream input_file(filename_input);
-	if (input_file.fail()) {
-		std::cout << "Opening file " << filename_input << " failed." << std::endl;
-		exit(EXIT_FAILURE);
+	std::vector<std::filesystem::path> position_paths;
+	std::vector<std::filesystem::path> edges_paths;
+
+	std::filesystem::path input_path(argv[1]);
+
+	for (const auto& entry : std::filesystem::directory_iterator(input_path)) {
+		const std::filesystem::path& p = entry.path();
+		const std::filesystem::path filename = p.filename();
+		const std::string filename_str = filename.string();
+
+		if (filename_str.rfind("positions", 0) == 0) {
+			position_paths.emplace_back(p);
+		}
+		else if (filename_str.rfind("network", 0) == 0) {
+			edges_paths.emplace_back(p);
+		}
 	}
 
 	// Create output directory
@@ -35,28 +45,20 @@ int main(int argc, char** argv) {
 	std::filesystem::create_directory(output_path);
 
 	std::filesystem::path output_path_pos = output_path.concat("positions.txt");
-	std::filesystem::path output_path_net = output_path.concat("network.txt");
-
-	//mkdir(output_dir.c_str(), S_IRWXU);
-
-	// Open output file for positions
-	// std::string filename_positions(output_path_pos);
-	std::ofstream file_positions(output_path_pos, std::ios::trunc);
-	if (file_positions.fail()) {
-		std::cout << "Opening file " << output_path_pos << " failed." << std::endl;
-		exit(EXIT_FAILURE);
-	}
-
-	// Open output file for network
-	//std::string filename_network(output_dir + "network.txt");
-	std::ofstream file_network(output_path_net, std::ios::trunc);
-	if (file_network.fail()) {
-		std::cout << "Opening file " << output_path_net << " failed." << std::endl;
-		exit(EXIT_FAILURE);
-	}
+	std::filesystem::path output_path_net = output_path.replace_filename("network.txt");
 
 	Graph graph;
-	graph.init(input_file);
+
+	for (const auto& path : position_paths) {
+		graph.add_vertices_from_file(path);
+	}
+
+	for (const auto& path : edges_paths) {
+		graph.add_edges_from_file(path);
+	}
+
+	std::ofstream file_positions(output_path_pos, std::ios::trunc);
+	std::ofstream file_network(output_path_net, std::ios::trunc);
 
 	// Print vertices
 	file_positions << "# num_vertices: " << boost::num_vertices(graph.BGL_Graph()) << "\n";

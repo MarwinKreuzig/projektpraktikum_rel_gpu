@@ -888,6 +888,8 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& 
 	const std::vector<double>& axons_y_dims = positions.get_y_dims();
 	const std::vector<double>& axons_z_dims = positions.get_z_dims();
 
+	const std::vector<SynapticElements::SignalType>& signal_types = axons.get_signal_types();
+
 	// Print global ids, positions, and areas of local neurons
 	bool ret = false;
 	size_t glob_id = 0;
@@ -900,11 +902,14 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& 
 		std::tie(ret, glob_id) = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id);
 		RelearnException::check(ret);
 
+		auto signal_type_name = signal_types[neuron_id] == SynapticElements::SignalType::EXCITATORY ? "ex" : "in";
+
 		file << glob_id << " "
 			<< axons_x_dims[neuron_id] << " "
 			<< axons_y_dims[neuron_id] << " "
 			<< axons_z_dims[neuron_id] << " "
-			<< area_names[neuron_id] << "\n";
+			<< area_names[neuron_id] << " "
+			<< signal_type_name << "\n";
 	}
 
 	file << std::flush;

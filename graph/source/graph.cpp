@@ -11,78 +11,101 @@
 #include <tuple>
 #include <utility>
 
-bool Graph::init(std::ifstream& input_filestream) {
+void Graph::add_vertices_from_file(const std::filesystem::path& file_path) {
+	std::ifstream file(file_path);
+
 	std::string line;
 
-	// Consume table headers
-	if (!std::getline(input_filestream, line)) {
-		std::cerr << "Could not read table headers\n";
-		return false;
-	}
-
-	std::string origin_name, target_name;
-	Position origin_pos, target_pos;
-	bool success;
-	while (std::getline(input_filestream, line)) {
-		std::stringstream sstream(line);
-
-		success =
-			(sstream >> origin_name) &&
-			(sstream >> origin_pos.x) &&
-			(sstream >> origin_pos.y) &&
-			(sstream >> origin_pos.z) &&
-			(sstream >> target_name) &&
-			(sstream >> target_pos.x) &&
-			(sstream >> target_pos.y) &&
-			(sstream >> target_pos.z);
-
-		if (!success) {
-			std::cerr << "Skipping line: \"" << line << "\"\n";
+	while (std::getline(file, line)) {
+		if (line[0] == '#') {
 			continue;
 		}
 
-		// Add origin and target to graph, if not there
-		Vertex origin_vtx, target_vtx;
-		std::tie(origin_vtx, std::ignore) = add_vertex(origin_pos, origin_name);
-		std::tie(target_vtx, std::ignore) = add_vertex(target_pos, target_name);
+		std::stringstream sstream(line);
 
-		// Check whether edge already exists
-		Edge edge;
-		std::tie(edge, success) = boost::edge(origin_vtx, target_vtx, graph);
+		size_t id;
+		Position pos;
+		std::string area, type;
 
-		// Add edge to graph, if not there
+		bool success = (sstream >> id) &&
+			(sstream >> pos.x) &&
+			(sstream >> pos.y) &&
+			(sstream >> pos.z) &&
+			(sstream >> area) &&
+			(sstream >> type);
+
 		if (!success) {
-			boost::add_edge(origin_vtx, target_vtx, graph);
+			continue;
+		}
+
+		Vertex vtx;
+		std::tie(vtx, std::ignore) = add_vertex(pos, area + " " + type, id);
+	}
+}
+
+void Graph::add_edges_from_file(const std::filesystem::path& file_path) {
+	std::ifstream file(file_path);
+
+	std::string line;
+
+	while (std::getline(file, line)) {
+		if (line[0] == '#') {
+			continue;
+		}
+
+		std::stringstream sstream(line);
+
+		size_t src_id;
+		size_t dst_id;
+		int weight;
+
+		bool success = (sstream >> dst_id) &&
+			(sstream >> src_id) &&
+			(sstream >> weight);
+
+		if (!success) {
+			continue;
+		}
+
+		Vertex dst_vtx = id_to_vtx[dst_id];
+		Vertex src_vtx = id_to_vtx[src_id];
+
+		Edge edge;
+		std::tie(edge, success) = boost::edge(src_vtx, dst_vtx, graph);
+
+		if (!success) {
+			boost::add_edge(src_vtx, dst_vtx, graph);
 		}
 		else {
 			std::cerr << "Edge already in graph\n";
 			continue;
 		}
 	}
-	return true;
 }
 
-std::pair<Graph::Vertex, bool> Graph::add_vertex(const Position& pos, const std::string& name) {
-	// Add vertex to graph, if not there
-	auto it = pos_to_vtx.find(pos);
+void Graph::print_vertices(std::ostream& os) {
+	os << "# Vertices: " << boost::num_vertices(graph) << "\n";
+	os << "# Add offset (x y z) to get original positions: (" <<
+		-offset.x << " " << -offset.y << " " << -offset.z << ")\n";
+	os << "# Position (x y z)\tArea" << "\n";
 
-	if (it == pos_to_vtx.end()) {
-		Vertex vtx = boost::add_vertex(graph);
-
-		// Set vertex properties
-		graph[vtx].name = name;
-		graph[vtx].pos = pos;
-
-		// Add key-value pairs (pos, vtx) and
-		// (vtx, pos)
-		pos_to_vtx[pos] = vtx;
-		vtx_to_pos[vtx] = pos;
-
-		return std::make_pair(vtx, true);
+	VertexIterator it, it_end;
+	std::tie(it, it_end) = boost::vertices(graph);
+	for (; it != it_end; ++it) {
+		print_vertex(*it, os);
 	}
-	Vertex vtx = it->second;
-	//	std::cerr << "Vertex already in graph\n";
-	return std::make_pair(vtx, false);
+}
+
+void Graph::print_edges(std::ostream& os) {
+	os << "# <src pos x> <src pos y> <src pos z>  "
+		<< "<tgt pos x> <tgt pos y> <tgt pos z>"
+		<< "\n";
+
+	EdgeIterator it, it_end;
+	std::tie(it, it_end) = boost::edges(graph);
+	for (; it != it_end; ++it) {
+		print_edge(*it, os);
+	}
 }
 
 const Graph::BGLGraph& Graph::BGL_Graph() {
@@ -131,22 +154,36 @@ std::pair<int, int> Graph::min_max_degree() {
 	return std::make_pair(min_deg, max_deg);
 }
 
+std::pair<Graph::Vertex, bool> Graph::add_vertex(const Position& pos, const std::string& name, size_t id) {
+	// Add vertex to graph, if not there
+	auto it = pos_to_vtx.find(pos);
+
+	if (it == pos_to_vtx.end()) {
+		Vertex vtx = boost::add_vertex(graph);
+
+		// Set vertex properties
+		graph[vtx].name = name;
+		graph[vtx].pos = pos;
+
+		// Add key-value pairs 
+		// (pos, vtx)
+		// (vtx, pos)
+		// (id, vtx)
+
+		pos_to_vtx[pos] = vtx;
+		vtx_to_pos[vtx] = pos;
+		id_to_vtx[id] = vtx;
+
+		return std::make_pair(vtx, true);
+	}
+	Vertex vtx = it->second;
+	//	std::cerr << "Vertex already in graph\n";
+	return std::make_pair(vtx, false);
+}
+
 void Graph::print_vertex(Vertex v, std::ostream& os) {
 	os << graph[v].pos.x << " " << graph[v].pos.y << " " << graph[v].pos.z << " " <<
 		"\t" << graph[v].name << "\n";
-}
-
-void Graph::print_vertices(std::ostream& os) {
-	os << "# Vertices: " << boost::num_vertices(graph) << "\n";
-	os << "# Add offset (x y z) to get original positions: (" <<
-		-offset.x << " " << -offset.y << " " << -offset.z << ")\n";
-	os << "# Position (x y z)\tArea" << "\n";
-
-	VertexIterator it, it_end;
-	std::tie(it, it_end) = boost::vertices(graph);
-	for (; it != it_end; ++it) {
-		print_vertex(*it, os);
-	}
 }
 
 void Graph::print_edge(Edge e, std::ostream& os) {
@@ -158,16 +195,4 @@ void Graph::print_edge(Edge e, std::ostream& os) {
 	os << graph[u].pos.x << " " << graph[u].pos.y << " " << graph[u].pos.z << "  "
 		<< graph[v].pos.x << " " << graph[v].pos.y << " " << graph[v].pos.z
 		<< "\n";
-}
-
-void Graph::print_edges(std::ostream& os) {
-	os << "# <src pos x> <src pos y> <src pos z>  "
-		<< "<tgt pos x> <tgt pos y> <tgt pos z>"
-		<< "\n";
-
-	EdgeIterator it, it_end;
-	std::tie(it, it_end) = boost::edges(graph);
-	for (; it != it_end; ++it) {
-		print_edge(*it, os);
-	}
 }
