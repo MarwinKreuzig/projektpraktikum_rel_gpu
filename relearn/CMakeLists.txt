@@ -17,7 +17,7 @@ set(CMAKE_BUILD_TYPE Release)
 
 if(noclangtidy)
 else()
-	set(CMAKE_CXX_CLANG_TIDY clang-tidy "-header-filter=^((?!(mpi|gtest)).)*$" "-checks=*,-fuchsia*")
+	set(CMAKE_CXX_CLANG_TIDY clang-tidy "-header-filter=." "-checks=*,-fuchsia*")
 endif()
 
 find_package (Threads)
