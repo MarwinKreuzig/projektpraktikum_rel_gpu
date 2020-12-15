@@ -31,4 +31,12 @@ struct Position {
 		y += pos.y;
 		z += pos.z;
 	}
+
+	double CalcEuclDist(const Position& other) {
+		auto diff_x = (x - other.x) * (x - other.x);
+		auto diff_y = (y - other.y) * (y - other.y);
+		auto diff_z = (z - other.z) * (z - other.z);
+
+		return sqrt(diff_x + diff_y + diff_z);
+	}
 };

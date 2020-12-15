@@ -47,25 +47,25 @@ int main(int argc, char** argv) {
 	std::filesystem::path output_path_pos = output_path.concat("positions.txt");
 	std::filesystem::path output_path_net = output_path.replace_filename("network.txt");
 
-	Graph graph;
+	Graph full_graph;
 
 	for (const auto& path : position_paths) {
-		graph.add_vertices_from_file(path);
+		full_graph.add_vertices_from_file(path);
 	}
 
 	for (const auto& path : edges_paths) {
-		graph.add_edges_from_file(path);
+		full_graph.add_edges_from_file(path);
 	}
 
 	std::ofstream file_positions(output_path_pos, std::ios::trunc);
 	std::ofstream file_network(output_path_net, std::ios::trunc);
 
 	// Print vertices
-	file_positions << "# num_vertices: " << boost::num_vertices(graph.BGL_Graph()) << "\n";
-	file_positions << "# num_edges: " << boost::num_edges(graph.BGL_Graph()) << "\n";
+	file_positions << "# num_vertices: " << full_graph.get_num_vertices() << "\n";
+	file_positions << "# num_edges: " << full_graph.get_num_edges() << "\n";
 
 	double min_x, min_y, min_z;
-	std::tie(min_x, min_y, min_z) = graph.smallest_coordinate_per_dimension();
+	std::tie(min_x, min_y, min_z) = full_graph.smallest_coordinate_per_dimension();
 
 	file_positions << "# min_x: " << min_x << "\n";
 	file_positions << "# min_y: " << min_y << "\n";
@@ -76,9 +76,9 @@ int main(int argc, char** argv) {
 	offset.y = min_y < 0 ? -min_y : 0;
 	offset.z = min_z < 0 ? -min_z : 0;
 
-	graph.add_offset_to_positions(offset);
+	full_graph.add_offset_to_positions(offset);
 
-	std::tie(min_x, min_y, min_z) = graph.smallest_coordinate_per_dimension();
+	std::tie(min_x, min_y, min_z) = full_graph.smallest_coordinate_per_dimension();
 
 	file_positions << "# Offset added\n";
 	file_positions << "# min_x: " << min_x << "\n";
@@ -86,19 +86,19 @@ int main(int argc, char** argv) {
 	file_positions << "# min_z: " << min_z << "\n";
 
 	int min_degree, max_degree;
-	std::tie(min_degree, max_degree) = graph.min_max_degree();
+	std::tie(min_degree, max_degree) = full_graph.min_max_degree();
 
 	file_positions << "# min vertex degree: " << min_degree << "\n";
 	file_positions << "# max vertex degree: " << max_degree << "\n";
 
 	file_positions << std::fixed << std::setprecision(6);
-	graph.print_vertices(file_positions);
+	full_graph.print_vertices(file_positions);
 	file_positions << std::defaultfloat;
 	std::cout << "Created " << output_path_pos << "\n";
 
 	// Print edges
 	file_network << std::fixed << std::setprecision(6);
-	graph.print_edges(file_network);
+	full_graph.print_edges(file_network);
 	file_network << std::defaultfloat;
 	std::cout << "Created " << output_path_net << "\n";
 

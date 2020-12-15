@@ -2,36 +2,50 @@
 
 #include "position.h"
 
-#include <boost/property_map/property_map.hpp>
 #include <boost/graph/adjacency_list.hpp>
 
 #include <filesystem>
 
 class Graph {
 public:
-	// Vertex properties (bundled properties)
+	// FullVertex properties (bundled properties)
 	struct VertexProperties {
 		std::string name;
 		Position pos;
 	};
 
-	using BGLGraph = boost::adjacency_list<
-		boost::vecS,        	  // OutEdgeList
-		boost::vecS,              // VertexList
-		boost::bidirectionalS,    // Bidirectional
-		VertexProperties,         // VertexProperties
-		boost::no_property        // EdgeProperties
+	struct EdgeProperties {
+		double weight;
+		double weight_inverse;
+		double weight_div_max_weight;
+		double weight_one;
+	};
+
+	using FullGraph = boost::adjacency_list<
+		boost::vecS,        		// OutEdgeList
+		boost::vecS,				// VertexList
+		boost::bidirectionalS,		// Bidirectional
+		VertexProperties,			// VertexProperties
+		EdgeProperties				// EdgeProperties
 	>;
 
-	using Vertex = boost::graph_traits<BGLGraph>::vertex_descriptor;
-	using VertexIterator = boost::graph_traits<BGLGraph>::vertex_iterator;
+	using ConnectivityGraph = boost::adjacency_list<
+		boost::vecS,        		// OutEdgeList
+		boost::vecS,				// VertexList
+		boost::undirectedS			// Unidirectional
+	>;
 
-	using Edge = boost::graph_traits<BGLGraph>::edge_descriptor;
-	using EdgeIterator = boost::graph_traits<BGLGraph>::edge_iterator;
+	using FullVertex = boost::graph_traits<FullGraph>::vertex_descriptor;
+	using FullVertexIterator = boost::graph_traits<FullGraph>::vertex_iterator;
 
-	using PositionToVtxMap = std::map<Position, Vertex, Position::less>;
-	using VtxToPositionMap = std::map<Vertex, Position>;
-	using IdToVtxMap = std::map<size_t, Vertex>;
+	using FullEdge = boost::graph_traits<FullGraph>::edge_descriptor;
+	using FullEdgeIterator = boost::graph_traits<FullGraph>::edge_iterator;
+
+	using ConnectivityVertex = boost::graph_traits<ConnectivityGraph>::vertex_descriptor;
+	using ConnectivityVertexIterator = boost::graph_traits<ConnectivityGraph>::vertex_iterator;
+
+	using ConnectivityEdge = boost::graph_traits<ConnectivityGraph>::edge_descriptor;
+	using ConnectivityEdgeIterator = boost::graph_traits<ConnectivityGraph>::edge_iterator;
 
 	void add_vertices_from_file(const std::filesystem::path& file_path);
 
@@ -41,25 +55,37 @@ public:
 
 	void print_edges(std::ostream& os);
 
-	const BGLGraph& BGL_Graph();
-
 	std::tuple<double, double, double> smallest_coordinate_per_dimension();
 
 	void add_offset_to_positions(const Position& offset);
 
 	std::pair<int, int> min_max_degree();
 
+	size_t get_num_vertices();
+
+	size_t get_num_edges();
+
 private:
 
-	std::pair<Vertex, bool> add_vertex(const Position& pos, const std::string& name, size_t id);
+	void init_edge_weight();
 
-	void print_vertex(Vertex v, std::ostream& os);
+	double calculate_average_euclidean_distance();
 
-	void print_edge(Edge e, std::ostream& os);
+	void add_vertex(const Position& pos, const std::string& name, size_t id);
 
-	BGLGraph graph;
-	PositionToVtxMap pos_to_vtx;
-	VtxToPositionMap vtx_to_pos;
-	IdToVtxMap id_to_vtx;
+	void add_edge(size_t src_id, size_t dst_id, int weight);
+
+	void print_vertex(FullVertex v, std::ostream& os);
+
+	void print_edge(FullEdge e, std::ostream& os);
+
+	FullGraph full_graph;
+	ConnectivityGraph conn_graph;
+
+	std::map<Position, FullVertex, Position::less> pos_to_vtx;
+	std::map<FullVertex, Position> vtx_to_pos;
+	std::map<size_t, FullVertex> id_to_vtx_full;
+	std::map<size_t, FullVertex> id_to_vtx_conn;
+
 	Position offset;
 };
