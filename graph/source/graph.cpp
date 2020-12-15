@@ -2,6 +2,11 @@
 
 #include <boost/property_map/property_map.hpp>
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/betweenness_centrality.hpp>
+#include <boost/graph/clustering_coefficient.hpp>
+#include <boost/graph/exterior_property.hpp>
+#include <boost/graph/johnson_all_pairs_shortest.hpp>
+#include <boost/variant/get.hpp>
 
 #include <algorithm>
 #include <fstream>
@@ -10,6 +15,7 @@
 #include <string>
 #include <tuple>
 #include <utility>
+#include <vector>
 
 void Graph::add_vertices_from_file(const std::filesystem::path& file_path) {
 	std::ifstream file(file_path);
@@ -111,6 +117,32 @@ void Graph::print_edges(std::ostream& os) {
 	}
 }
 
+void Graph::calculate_metrics(std::ostream& os) {
+	os << "Calculating different metrics\n";
+	
+	os << "There are " << get_num_vertices() << " many vertices and " << get_num_edges() << " many edges in the graph\n";
+	std::pair<int, int> min_max = min_max_degree();
+	os << "The minimum number of edges is: " << min_max.first << " and the maximum is: " << min_max.second << "\n";
+
+	os << "Calculating average euclidean distance...\n";
+	const double avg_eucl_dist = calculate_average_euclidean_distance();
+	os << "It was: " << avg_eucl_dist << "\n";
+
+	os << "Calculating all pairs shortest paths...\n";
+	double avg, glob_eff;
+	std::tie(avg, glob_eff) = calculate_all_pairs_shortest_paths();
+	os << "Average shortest path was: " << avg << "\n";
+	os << "Global efficiency was: " << glob_eff << "\n";
+
+	os << "Calculating average betweenness centrality...\n";
+	const double avg_betw_cent = calculate_average_betweenness_centrality();
+	os << "It was: " << avg_betw_cent << "\n";
+
+	os << "Calculating clustering coefficient...\n";
+	const double clust_coeff = calculate_clustering_coefficient();
+	os << "It was: " << clust_coeff << "\n";
+}
+
 std::tuple<double, double, double> Graph::smallest_coordinate_per_dimension() {
 	constexpr const double max_double = std::numeric_limits<double>::max();
 	Position min_coords(max_double, max_double, max_double);
@@ -202,6 +234,79 @@ double Graph::calculate_average_euclidean_distance() {
 	return avg_eucl_dist / sum_weights;
 }
 
+std::tuple<double, double> Graph::calculate_all_pairs_shortest_paths() {
+	auto num_neurons = get_num_vertices();
+
+	std::vector<std::vector<double>> distances(num_neurons);
+	for (size_t i = 0; i < num_neurons; i++) {
+		distances[i].resize(num_neurons);
+	}
+
+	boost::johnson_all_pairs_shortest_paths(full_graph, distances, boost::weight_map(boost::get(&EdgeProperties::weight_inverse, full_graph)));
+
+	size_t number_values = 0;
+
+	double avg = 0.0;
+	double sum = 0.0;
+
+	for (size_t i = 0; i < num_neurons; i++) {
+		for (size_t j = 0; j < num_neurons; j++) {
+			// Consider pairs of different neurons only
+			if (i != j) {
+				double val = distances[i][j];
+
+				// Average
+				number_values++;
+				double delta = val - avg;
+				avg += delta / number_values;
+
+				// Sum
+				sum += 1 / val;
+			}
+		}
+	}
+
+	double global_efficiency = sum / (num_neurons * (num_neurons - 1));
+
+	return std::make_tuple(avg, global_efficiency);
+}
+
+double Graph::calculate_average_betweenness_centrality() {
+	auto num_neurons = get_num_vertices();
+	std::vector<double> v_centrality_vec(num_neurons, 0.0);
+
+	boost::iterator_property_map<std::vector<double>::iterator, boost::identity_property_map>
+		v_centrality_map(v_centrality_vec.begin());
+
+	boost::brandes_betweenness_centrality(full_graph, 
+		centrality_map(v_centrality_map).weight_map(boost::get(&EdgeProperties::weight_inverse, full_graph)));
+
+	double average_bc = 0;
+	for (size_t i = 0; i < v_centrality_vec.size(); i++) {
+		average_bc += v_centrality_vec[i];
+	}
+
+	return average_bc / num_neurons;
+}
+
+double Graph::calculate_clustering_coefficient() {
+	average_clustering_coefficient(full_graph, WeightInverse<FullGraph>(full_graph));
+	average_clustering_coefficient(full_graph, WeightOne<FullGraph>(full_graph));
+	average_clustering_coefficient(full_graph, WeightDivMaxWeight<FullGraph>(full_graph));
+
+	average_clustering_coefficient_unweighted_undirected(full_graph);
+
+	typedef boost::exterior_vertex_property<ConnectivityGraph, double> ClusteringProperty;
+	typedef ClusteringProperty::container_type ClusteringContainer;
+	typedef ClusteringProperty::map_type ClusteringMap;
+
+	ClusteringContainer coefs(num_vertices(conn_graph));
+	ClusteringMap cm(coefs, conn_graph);
+	double cc = all_clustering_coefficients(conn_graph, cm);
+
+	return cc;
+}
+
 void Graph::add_vertex(const Position& pos, const std::string& name, size_t id) {
 	// Add vertex to full_graph, if not there
 	auto it = pos_to_vtx.find(pos);
@@ -248,7 +353,6 @@ void Graph::add_edge(size_t src_id, size_t dst_id, int weight) {
 	ConnectivityVertex dst_vtx_conn = id_to_vtx_full[dst_id];
 	ConnectivityVertex src_vtx_conn = id_to_vtx_full[src_id];
 
-	bool success;
 	ConnectivityEdge edge_conn;
 	std::tie(edge_conn, success) = boost::edge(src_vtx_conn, dst_vtx_conn, conn_graph);
 
