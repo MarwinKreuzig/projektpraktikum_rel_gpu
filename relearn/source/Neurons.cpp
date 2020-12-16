@@ -600,10 +600,10 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 					//dendrites_connected_cnts[target_neuron_id]++;
 
 					if (1 == dendrite_type_needed) {
-						dendrites_inh.update_conn_cnt(target_neuron_id, 1.0, "inh");
+						dendrites_inh.update_conn_cnt(target_neuron_id, 1.0, std::to_string(target_neuron_id) + " updating inh + 1");
 					}
 					else {
-						dendrites_exc.update_conn_cnt(target_neuron_id, 1.0, "exc");
+						dendrites_exc.update_conn_cnt(target_neuron_id, 1.0, std::to_string(target_neuron_id) + " updating exc + 1");
 					}
 
 					// Update network
@@ -1322,7 +1322,7 @@ void Neurons::delete_synapses(std::list<PendingSynapseDeletion>& list,
 			else if ((SynapticElements::DENDRITE == it.affected_element_type) &&
 				(SynapticElements::EXCITATORY == it.signal_type)) {
 				//--dendrites_exc_connected_cnts[affected_neuron_id];
-				dendrites_exc.update_conn_cnt(affected_neuron_id, -1.0, "exc");
+				dendrites_exc.update_conn_cnt(affected_neuron_id, -1.0, std::to_string(affected_neuron_id) + " updating exc - 1");
 
 				if (!(dendrites_exc.get_cnts()[affected_neuron_id] >=
 					dendrites_exc.get_connected_cnts()[affected_neuron_id])) {
@@ -1335,7 +1335,7 @@ void Neurons::delete_synapses(std::list<PendingSynapseDeletion>& list,
 			else if ((SynapticElements::DENDRITE == it.affected_element_type) &&
 				(SynapticElements::INHIBITORY == it.signal_type)) {
 				//--dendrites_inh_connected_cnts[affected_neuron_id];
-				dendrites_inh.update_conn_cnt(affected_neuron_id, -1.0, "inh");
+				dendrites_inh.update_conn_cnt(affected_neuron_id, -1.0, std::to_string(affected_neuron_id) + " updating inh - 1");
 			}
 			else {
 				std::cout << "Invalid list element for pending synapse deletion." << std::endl;

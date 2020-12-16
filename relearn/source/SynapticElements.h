@@ -66,9 +66,9 @@ public:
 		RelearnException::check(cnts[neuron_id] >= 0.0);
 	}
 
-	void update_conn_cnt(size_t neuron_id, double delta, const char* mess) {
+	void update_conn_cnt(size_t neuron_id, double delta, std::string&& mess) {
 		connected_cnts[neuron_id] += delta;
-		RelearnException::check(connected_cnts[neuron_id] >= 0.0, mess);
+		RelearnException::check(connected_cnts[neuron_id] >= 0.0, std::move(mess));
 	}
 
 	void update_delta_cnt(size_t neuron_id, double delta) {
