@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "Cell.h"
 #include "LogFiles.h"
 #include "MPIWrapper.h"
 #include "NetworkGraph.h"
@@ -68,6 +69,20 @@ public:
 		requests.push_back(dendrite_type_needed);
 
 		responses.resize(responses.size() + 1);
+	}
+
+	void append(size_t source_neuron_id, size_t target_neuron_id, Cell::DendriteType dendrite_type_needed) {
+		size_t dendrite_type_val = 0;
+		
+		if (dendrite_type_needed == Cell::DendriteType::INHIBITORY) {
+			dendrite_type_val = 1;
+		}
+		else {
+			RelearnException::check(dendrite_type_needed == Cell::DendriteType::EXCITATORY);
+		}
+		
+		
+		append(source_neuron_id, target_neuron_id, dendrite_type_val);
 	}
 
 	std::tuple<size_t, size_t, size_t> get_request(size_t request_index) const noexcept {

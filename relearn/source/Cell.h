@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "Commons.h"
 #include "RelearnException.h"
 #include "Vec3.h"
 
@@ -18,7 +19,7 @@
 
 class Cell {
 public:
-	enum DendriteType : int { EXCITATORY = 0, INHIBITORY = 1 };
+	enum class DendriteType : char { EXCITATORY, INHIBITORY };
 
 	struct Dendrites {
 		// All dendrites have the same position
@@ -44,7 +45,7 @@ public:
 		xyz_max = max;
 	}
 
-	std::tuple<Vec3d, Vec3d> get_size() const noexcept {
+	[[nodiscard]] std::tuple<Vec3d, Vec3d> get_size() const noexcept {
 		return std::make_tuple(xyz_min, xyz_max);
 	}
 
@@ -52,7 +53,7 @@ public:
 	 * Returns edge length of the cell
 	 * Assumes that the cell is cubic
 	 */
-	double get_length() const noexcept {
+	[[nodiscard]] double get_length() const noexcept {
 		const auto diff_vector = xyz_max - xyz_min;
 		const auto diff = diff_vector.get_maximum();
 
@@ -64,73 +65,87 @@ public:
 		set_neuron_position_inh(pos, valid);
 	}
 
-	std::tuple<Vec3d, bool> get_neuron_position() const {
-		const auto diff = dendrites[static_cast<int>(INHIBITORY)].xyz_pos - dendrites[static_cast<int>(EXCITATORY)].xyz_pos;
+	[[nodiscard]] std::tuple<Vec3d, bool> get_neuron_position() const {
+		const auto diff = dendrites_in.xyz_pos - dendrites_ex.xyz_pos;
 
 		const bool exc_position_equals_inh_position = diff.x == 0.0 && diff.y == 0.0 && diff.z == 0.0;
 
 		RelearnException::check(exc_position_equals_inh_position);
-		RelearnException::check(dendrites[static_cast<int>(EXCITATORY)].xyz_pos_valid == dendrites[static_cast<int>(INHIBITORY)].xyz_pos_valid);
+		RelearnException::check(dendrites_ex.xyz_pos_valid == dendrites_in.xyz_pos_valid);
 
-		const auto position = dendrites[static_cast<int>(EXCITATORY)].xyz_pos;
-		const auto valid = dendrites[static_cast<int>(EXCITATORY)].xyz_pos_valid;
+		const auto position = dendrites_ex.xyz_pos;
+		const auto valid = dendrites_ex.xyz_pos_valid;
 
 		return std::make_tuple(position, valid);
 	}
 
-	std::tuple<Vec3d, bool> get_neuron_position_exc() const noexcept {
-		const auto position = dendrites[static_cast<int>(EXCITATORY)].xyz_pos;
-		const auto valid = dendrites[static_cast<int>(EXCITATORY)].xyz_pos_valid;
+	[[nodiscard]] std::tuple<Vec3d, bool> get_neuron_position_exc() const noexcept {
+		const auto position = dendrites_ex.xyz_pos;
+		const auto valid = dendrites_ex.xyz_pos_valid;
 
 		return std::make_tuple(position, valid);
 	}
 
 	void set_neuron_position_exc(const Vec3d& position, bool valid) noexcept {
-		dendrites[static_cast<int>(EXCITATORY)].xyz_pos = position;
-		dendrites[static_cast<int>(EXCITATORY)].xyz_pos_valid = valid;
+		dendrites_ex.xyz_pos = position;
+		dendrites_ex.xyz_pos_valid = valid;
 	}
 
-	std::tuple<Vec3d, bool> get_neuron_position_inh() const noexcept {
-		const auto position = dendrites[static_cast<int>(INHIBITORY)].xyz_pos;
-		const auto valid = dendrites[static_cast<int>(INHIBITORY)].xyz_pos_valid;
+	[[nodiscard]] std::tuple<Vec3d, bool> get_neuron_position_inh() const noexcept {
+		const auto position = dendrites_in.xyz_pos;
+		const auto valid = dendrites_in.xyz_pos_valid;
 
 		return std::make_tuple(position, valid);
 	}
 
 	void set_neuron_position_inh(const Vec3d& position, bool valid) noexcept {
-		dendrites[static_cast<int>(INHIBITORY)].xyz_pos = position;
-		dendrites[static_cast<int>(INHIBITORY)].xyz_pos_valid = valid;
+		dendrites_in.xyz_pos = position;
+		dendrites_in.xyz_pos_valid = valid;
 	}
 
-	std::tuple<Vec3d, bool> get_neuron_position_for(DendriteType dendrite_type) const noexcept {
-		// Use dendrite_type as index into array
-		const auto position = dendrites[static_cast<int>(dendrite_type)].xyz_pos;
-		const auto valid = dendrites[static_cast<int>(dendrite_type)].xyz_pos_valid;
+	[[nodiscard]] std::tuple<Vec3d, bool> get_neuron_position_for(DendriteType dendrite_type) const noexcept {
+		if (dendrite_type == DendriteType::EXCITATORY) {
+			const auto position = dendrites_ex.xyz_pos;
+			const auto valid = dendrites_ex.xyz_pos_valid;
+
+			return std::make_tuple(position, valid);
+		}
+
+		RelearnException::check(dendrite_type == DendriteType::INHIBITORY);
+
+		const auto position = dendrites_in.xyz_pos;
+		const auto valid = dendrites_in.xyz_pos_valid;
 
 		return std::make_tuple(position, valid);
 	}
 
 	void set_neuron_num_dendrites_exc(unsigned int num_dendrites) noexcept {
-		dendrites[static_cast<int>(EXCITATORY)].num_dendrites = num_dendrites;
+		dendrites_ex.num_dendrites = num_dendrites;
 	}
 
-	unsigned int get_neuron_num_dendrites_exc() const noexcept {
-		return dendrites[static_cast<int>(EXCITATORY)].num_dendrites;
+	[[nodiscard]] unsigned int get_neuron_num_dendrites_exc() const noexcept {
+		return dendrites_ex.num_dendrites;
 	}
 
 	void set_neuron_num_dendrites_inh(unsigned int num_dendrites) noexcept {
-		dendrites[static_cast<int>(INHIBITORY)].num_dendrites = num_dendrites;
+		dendrites_in.num_dendrites = num_dendrites;
 	}
 
-	unsigned int get_neuron_num_dendrites_inh() const noexcept {
-		return dendrites[static_cast<int>(INHIBITORY)].num_dendrites;
+	[[nodiscard]] unsigned int get_neuron_num_dendrites_inh() const noexcept {
+		return dendrites_in.num_dendrites;
 	}
 
-	unsigned int get_neuron_num_dendrites_for(DendriteType dendrite_type) const noexcept {
-		return dendrites[static_cast<int>(dendrite_type)].num_dendrites;
+	[[nodiscard]] unsigned int get_neuron_num_dendrites_for(DendriteType dendrite_type) const noexcept {
+		if (dendrite_type == DendriteType::EXCITATORY) {
+			return dendrites_ex.num_dendrites;
+		}
+
+		RelearnException::check(dendrite_type == DendriteType::INHIBITORY);
+
+		return dendrites_in.num_dendrites;
 	}
 
-	size_t get_neuron_id() const noexcept {
+	[[nodiscard]] size_t get_neuron_id() const noexcept {
 		return neuron_id;
 	}
 
@@ -138,16 +153,16 @@ public:
 		this->neuron_id = neuron_id;
 	}
 
-	unsigned char get_neuron_octant() const {
-		const auto diff = dendrites[static_cast<int>(INHIBITORY)].xyz_pos - dendrites[static_cast<int>(EXCITATORY)].xyz_pos;
+	[[nodiscard]] unsigned char get_neuron_octant() const {
+		const auto diff = dendrites_in.xyz_pos - dendrites_ex.xyz_pos;
 
 		const auto exc_position_equals_inh_position = diff.x == 0.0 && diff.y == 0.0 && diff.z == 0.0;
 		RelearnException::check(exc_position_equals_inh_position);
 
-		return get_octant_for_position(dendrites[static_cast<int>(INHIBITORY)].xyz_pos);
+		return get_octant_for_position(dendrites_in.xyz_pos);
 	}
 
-	unsigned char get_octant_for_position(const Vec3d& pos) const {
+	[[nodiscard]] unsigned char get_octant_for_position(const Vec3d& pos) const {
 		unsigned char idx = 0;
 
 		const auto& x = pos.x;
@@ -191,12 +206,12 @@ public:
 		//NOLINTNEXTLINE
 		idx = idx | ((z < (xyz_min.z + xyz_max.z) / 2.0) ? 0 : 4);  // idx | (pos_z < midpoint_dim_z) ? 0 : 4
 
-		RelearnException::check(idx < 8, "Octree octant must be smaller than 8");
+		RelearnException::check(idx < Constants::number_oct, "Octree octant must be smaller than 8");
 
 		return idx;
 	}
 
-	std::tuple<Vec3d, Vec3d> get_size_for_octant(unsigned char idx) const /*noexcept*/ {
+	[[nodiscard]] std::tuple<Vec3d, Vec3d> get_size_for_octant(unsigned char idx) const /*noexcept*/ {
 		Vec3d xyz_min;
 		Vec3d xyz_max;
 		unsigned char mask = 1;
@@ -234,17 +249,17 @@ public:
 		}
 		std::cout << "\n";
 
-		std::cout << "    dendrites[EXCITATORY].num_dendrites: " << dendrites[static_cast<int>(EXCITATORY)].num_dendrites;
-		std::cout << "    dendrites[EXCITATORY].xyz_pos[3]   : ";
+		std::cout << "    dendrites_ex.num_dendrites: " << dendrites_ex.num_dendrites;
+		std::cout << "    dendrites_ex.xyz_pos[3]   : ";
 		for (int i = 0; i < 3; i++) {
-			std::cout << dendrites[static_cast<int>(EXCITATORY)].xyz_pos[i] << " ";
+			std::cout << dendrites_ex.xyz_pos[i] << " ";
 		}
 		std::cout << "\n";
 
-		std::cout << "    dendrites[INHIBITORY].num_dendrites: " << dendrites[static_cast<int>(INHIBITORY)].num_dendrites;
-		std::cout << "    dendrites[INHIBITORY].xyz_pos[3]   : ";
+		std::cout << "    dendrites_in.num_dendrites: " << dendrites_in.num_dendrites;
+		std::cout << "    dendrites_in.xyz_pos[3]   : ";
 		for (int i = 0; i < 3; i++) {
-			std::cout << dendrites[static_cast<int>(INHIBITORY)].xyz_pos[i] << " ";
+			std::cout << dendrites_in.xyz_pos[i] << " ";
 		}
 		std::cout << "\n";
 	}
@@ -257,12 +272,15 @@ private:
 	/**
 	 * Cell contains info for one neuron, which could be a "super" neuron
 	 *
-	 * Info about EXCITATORY dendrites at dendrites[0]
-	 * Info about INHIBITORY dendrites at dendrites[1]
+	 * Info about EXCITATORY dendrites: dendrites_ex
+	 * Info about INHIBITORY dendrites: dendrites_in
 	 *
 	 * Type DendriteType (see declaration) is used as indices to access the array elements
 	 */
 	Dendrites dendrites[2];
+
+	Dendrites dendrites_ex;
+	Dendrites dendrites_in;
 
 	/**
 	 * ID of the neuron in the cell.
@@ -270,5 +288,5 @@ private:
 	 * For those with a super neuron, it has no meaning.
 	 * This info is used to identify (return) the target neuron for a given axon
 	 */
-	size_t neuron_id{ 1111222233334444 };
+	size_t neuron_id{ Constants::uninitialized };
 };

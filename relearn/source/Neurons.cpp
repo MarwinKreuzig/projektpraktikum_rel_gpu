@@ -576,7 +576,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 					exit(EXIT_FAILURE);
 				}
 				// DendriteType::INHIBITORY dendrite requested
-				if (Cell::DendriteType::INHIBITORY == dendrite_type_needed) {
+				if (1 == dendrite_type_needed) {
 					dendrites_cnts = &dendrites_inh.get_cnts();
 					dendrites_connected_cnts = &dendrites_inh.get_connected_cnts();
 					num_axons_connected_increment = -1;
@@ -596,7 +596,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 					// Increment num of connected dendrites
 					//dendrites_connected_cnts[target_neuron_id]++;
 
-					if (Cell::DendriteType::INHIBITORY == dendrite_type_needed) {
+					if (1 == dendrite_type_needed) {
 						dendrites_inh.update_conn_cnt(target_neuron_id, 1.0, "inh");
 					}
 					else {
@@ -685,7 +685,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 					// if the response comes from myself
 					if (target_rank != MPIWrapper::my_rank) {
 						// Update network
-						num_axons_connected_increment = (Cell::DendriteType::INHIBITORY == dendrite_type_needed) ? -1 : +1;
+						num_axons_connected_increment = (1 == dendrite_type_needed) ? -1 : +1;
 						network_graph.add_edge_weight(target_neuron_id, target_rank, source_neuron_id, MPIWrapper::my_rank, num_axons_connected_increment);
 					}
 				}
