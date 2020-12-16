@@ -1,11 +1,8 @@
 Cell.h:223:58: warning: 2.0 is a magic number; consider replacing it with a named constant 
                                 xyz_min[i] = (this->xyz_min[i] + this->xyz_max[i]) / 2.0;
                                                 
-Cell.h:223:58: warning: 2.0 is a magic number; consider replacing it with a named constant 
 Cell.h:228:58: warning: 2.0 is a magic number; consider replacing it with a named constant 
                                 xyz_max[i] = (this->xyz_min[i] + this->xyz_max[i]) / 2.0;
-                                                
-Cell.h:228:58: warning: 2.0 is a magic number; consider replacing it with a named constant 
 
 MPI_RMA_MemAllocator.h:75:29: warning: do not use pointer arithmetic 
                         avail.push_back(base_ptr + base_ptr_offset + i);
@@ -73,10 +70,10 @@ NeuronIdMap.h:36:24: warning: non-const reference parameter 'rank_to_start_neuro
 NeuronIdMap.h:43:34: warning: non-const reference parameter 'pos_to_rank_neuron_id', make it const or use a pointer 
                 std::map<Vec3d, RankNeuronId>& pos_to_rank_neuron_id);
 
-Neurons.h:285:2: warning: move assignment operator is explicitly defaulted but implicitly deleted, probably because a base class or a non-static data member is not assignable, e.g. because the latter is marked 'const'; definition can either be removed or explicitly deleted [readability-deleted-default]
+Neurons.h:285:2: warning: move assignment operator is explicitly defaulted but implicitly deleted, probably because a base class or a non-static data member is not assignable, e.g. because the latter is marked 'const'; definition can either be removed or explicitly deleted 
         Neurons& operator=(Neurons&& other) = default;
 
-Neurons.h:285:11: warning: explicitly defaulted move assignment operator is implicitly deleted [clang-diagnostic-defaulted-function-deleted]
+Neurons.h:285:11: warning: explicitly defaulted move assignment operator is implicitly deleted 
         Neurons& operator=(Neurons&& other) = default;
 
 Neurons.h:459:16: note: move assignment operator of 'Neurons' is implicitly deleted because field 'random_number_generator' is of reference type 'std::mt19937 &' (aka 'mersenne_twister_engine<unsigned long, 32, 624, 397, 31, 2567483615UL, 11, 4294967295UL, 7, 2636928640UL, 15, 4022730752UL, 18, 1812433253UL> &')
@@ -172,7 +169,7 @@ NeuronToSubdomainAssignment.h:91:68: warning: non-const reference parameter 'glo
 Octree.h:234:62: warning: non-const reference parameter 'allocator', make it const or use a pointer 
                 explicit FunctorFreeNode(MPI_RMA_MemAllocator<OctreeNode>& allocator) noexcept : allocator(allocator) {}
 
-Octree.h:245:2: warning: an exception may be thrown in function '~Octree' which should not throw exceptions [bugprone-exception-escape]
+Octree.h:245:2: warning: an exception may be thrown in function '~Octree' which should not throw exceptions 
         ~Octree() /*noexcept(false)*/;
 
 Octree.h:338:138: warning: non-const reference parameter 'target_neuron_id', make it const or use a pointer 
@@ -202,7 +199,7 @@ Octree.h:444:69: warning: non-const reference parameter 'list', make it const or
 Octree.h:444:96: warning: non-const reference parameter 'epochs_started', make it const or use a pointer 
         void append_children(OctreeNode* node, ProbabilitySubintervalList& list, AccessEpochsStarted& epochs_started);
 
-Parameters.h:16:7: warning: constructor does not initialize these fields: num_neurons, frac_neurons_exc, simulation_time, x_0, tau_x, k, tau_C, beta, refrac_time, h, C_target, eta_A, eta_D_ex, eta_D_in, nu, vacant_retract_ratio, accept_criterion, sigma, naive_method, max_num_pending_vacant_axons, num_log_files, log_start_neuron, mpi_rma_mem_size, seed_octree, seed_partition [cppcoreguidelines-pro-type-member-init]
+Parameters.h:16:7: warning: constructor does not initialize these fields: num_neurons, frac_neurons_exc, simulation_time, x_0, tau_x, k, tau_C, beta, refrac_time, h, C_target, eta_A, eta_D_ex, eta_D_in, nu, vacant_retract_ratio, accept_criterion, sigma, naive_method, max_num_pending_vacant_axons, num_log_files, log_start_neuron, mpi_rma_mem_size, seed_octree, seed_partition
 class Parameters {
 
 Partition.h:70:97: warning: non-const reference parameter 'neurons_in_subdomain', make it const or use a pointer 
@@ -211,10 +208,8 @@ Partition.h:70:97: warning: non-const reference parameter 'neurons_in_subdomain'
 Partition.h:127:92: warning: non-const reference parameter 'neurons_in_subdomain', make it const or use a pointer 
         [[nodiscard]] Neurons load_neurons(const Parameters& params, NeuronToSubdomainAssignment& neurons_in_subdomain);
 
-Random.h:25:23: warning: random number generator seeded with a default argument will generate a predictable sequence of values [cert-msc32-c]
-                static std::mt19937 random_generator;
-
-Random.h:25:23: warning: random number generator seeded with a default argument will generate a predictable sequence of values [cert-msc51-cpp]						
+Random.h:25:23: warning: random number generator seeded with a default argument will generate a predictable sequence of values
+                static std::mt19937 random_generator;				
 
 SubdomainFromFile.h:43:77: warning: non-const reference parameter 'nodes', make it const or use a pointer 
         void read_nodes_from_file(const Position& min, const Position& max, Nodes& nodes);
@@ -225,13 +220,13 @@ SubdomainFromNeuronDensity.h:25:26: warning: 26 is a magic number; consider repl
 Utility.h:20:11: warning: 10 is a magic number; consider replacing it with a named constant 
                         val /= 10;				
 	
-MPIWrapper.cpp:82:25: warning: narrowing conversion from 'unsigned int' to signed type 'int' is implementation-defined [bugprone-narrowing-conversions]
+MPIWrapper.cpp:82:25: warning: narrowing conversion from 'unsigned int' to signed type 'int' is implementation-defined 
         const int num_digits = Util::num_digits(num_ranks - 1);
 
-MPIWrapper.cpp:109:19: warning: narrowing conversion from 'unsigned long' to signed type 'int' is implementation-defined [bugprone-narrowing-conversions]
+MPIWrapper.cpp:109:19: warning: narrowing conversion from 'unsigned long' to signed type 'int' is implementation-defined 
         const int rest = static_cast<int>(num_neurons) % num_ranks;
 
-MPIWrapper.cpp:110:25: warning: narrowing conversion from 'unsigned long' to signed type 'int' is implementation-defined [bugprone-narrowing-conversions]
+MPIWrapper.cpp:110:25: warning: narrowing conversion from 'unsigned long' to signed type 'int' is implementation-defined 
         const int block_size = static_cast<int>(num_neurons) / num_ranks;
 
 MPIWrapper.cpp:334:3: warning: do not use pointer arithmetic 
@@ -258,13 +253,13 @@ MPIWrapper.cpp:336:31: warning: do not use pointer arithmetic
 MPIWrapper.cpp:336:46: warning: do not use pointer arithmetic 
                 inout[3 * i + 2] = std::max(in[3 * i + 2], inout[3 * i + 2]);											
 
-NeuronToSubdomainAssignment.cpp:31:20: warning: narrowing conversion from 'unsigned long' to 'double' [bugprone-narrowing-conversions]
+NeuronToSubdomainAssignment.cpp:31:20: warning: narrowing conversion from 'unsigned long' to 'double' 
         auto max = Vec3d{ (subdomain_3idx.x + 1) * x_subdomain_length, (subdomain_3idx.y + 1) * y_subdomain_length, (subdomain_3idx.z + 1) * z_subdomain_length };
 
-NeuronToSubdomainAssignment.cpp:31:65: warning: narrowing conversion from 'unsigned long' to 'double' [bugprone-narrowing-conversions]
+NeuronToSubdomainAssignment.cpp:31:65: warning: narrowing conversion from 'unsigned long' to 'double' 
         auto max = Vec3d{ (subdomain_3idx.x + 1) * x_subdomain_length, (subdomain_3idx.y + 1) * y_subdomain_length, (subdomain_3idx.z + 1) * z_subdomain_length };
 
-NeuronToSubdomainAssignment.cpp:31:110: warning: narrowing conversion from 'unsigned long' to 'double' [bugprone-narrowing-conversions]
+NeuronToSubdomainAssignment.cpp:31:110: warning: narrowing conversion from 'unsigned long' to 'double' 
         auto max = Vec3d{ (subdomain_3idx.x + 1) * x_subdomain_length, (subdomain_3idx.y + 1) * y_subdomain_length, (subdomain_3idx.z + 1) * z_subdomain_length };
 		
 Neurons.cpp:35:54: warning: 2.0 is a magic number; consider replacing it with a named constant 
@@ -285,10 +280,8 @@ Neurons.cpp:814:40: warning: 5 is a magic number; consider replacing it with a n
 Neurons.cpp:900:42: warning: 6 is a magic number; consider replacing it with a named constant 
         file << std::fixed << std::setprecision(6);
 
-Neurons.cpp:906:40: warning: do not implicitly decay an array into a pointer; consider using gsl::array_view or an explicit cast instead [cppcoreguidelines-pro-bounds-array-to-pointer-decay]
-                const char* const signal_type_name = signal_types[neuron_id] == SynapticElements::SignalType::EXCITATORY ? "ex" : "in";
-
 Neurons.cpp:906:40: warning: do not implicitly decay an array into a pointer; consider using gsl::array_view or an explicit cast instead 
+                const char* const signal_type_name = signal_types[neuron_id] == SynapticElements::SignalType::EXCITATORY ? "ex" : "in";
 
 Octree.cpp:28:54: warning: 2.0 is a magic number; consider replacing it with a named constant 
         random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
@@ -296,7 +289,7 @@ Octree.cpp:28:54: warning: 2.0 is a magic number; consider replacing it with a n
 Octree.cpp:42:54: warning: 2.0 is a magic number; consider replacing it with a named constant 
         random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
 
-Octree.cpp:52:9: warning: an exception may be thrown in function '~Octree' which should not throw exceptions [bugprone-exception-escape]
+Octree.cpp:52:9: warning: an exception may be thrown in function '~Octree' which should not throw exceptions 
 Octree::~Octree() /*noexcept(false)*/ {
 
 Octree.cpp:255:18: warning: 7 is a magic number; consider replacing it with a named constant 
@@ -380,7 +373,7 @@ SpaceFillingCurve.cpp:14:38: warning: 60 is a magic number; consider replacing i
 SpaceFillingCurve.cpp:19:38: warning: 60 is a magic number; consider replacing it with a named constant 
         for (uint8_t idx_bit = 2; idx_bit < 60; idx_bit += 3) {
 
-SubdomainFromNeuronDensity.cpp:44:12: warning: consider replacing 'unsigned short' with 'uint16' [google-runtime-int]
+SubdomainFromNeuronDensity.cpp:44:12: warning: consider replacing 'unsigned short' with 'uint16'
         constexpr unsigned short max_short = std::numeric_limits<unsigned short>().max();
 
 SubdomainFromNeuronDensity.cpp:77:33: warning: 16U is a magic number; consider replacing it with a named constant 
@@ -389,13 +382,13 @@ SubdomainFromNeuronDensity.cpp:77:33: warning: 16U is a magic number; consider r
 SubdomainFromNeuronDensity.cpp:78:33: warning: 32U is a magic number; consider replacing it with a named constant 
                                 random_position |= (x_it << 32U);
 
-SubdomainFromNeuronDensity.cpp:182:13: warning: narrowing conversion from 'unsigned long' to 'double' [bugprone-narrowing-conversions]
+SubdomainFromNeuronDensity.cpp:182:13: warning: narrowing conversion from 'unsigned long' to 'double' 
         Vec3d max{ (subdomain_3idx.x + 1) * x_subdomain_length, (subdomain_3idx.y + 1) * y_subdomain_length, (subdomain_3idx.z + 1) * z_subdomain_length };
 
-SubdomainFromNeuronDensity.cpp:182:58: warning: narrowing conversion from 'unsigned long' to 'double' [bugprone-narrowing-conversions]
+SubdomainFromNeuronDensity.cpp:182:58: warning: narrowing conversion from 'unsigned long' to 'double' 
         Vec3d max{ (subdomain_3idx.x + 1) * x_subdomain_length, (subdomain_3idx.y + 1) * y_subdomain_length, (subdomain_3idx.z + 1) * z_subdomain_length };
 
-SubdomainFromNeuronDensity.cpp:182:103: warning: narrowing conversion from 'unsigned long' to 'double' [bugprone-narrowing-conversions]
+SubdomainFromNeuronDensity.cpp:182:103: warning: narrowing conversion from 'unsigned long' to 'double' 
         Vec3d max{ (subdomain_3idx.x + 1) * x_subdomain_length, (subdomain_3idx.y + 1) * y_subdomain_length, (subdomain_3idx.z + 1) * z_subdomain_length };
 
 main.cpp:50:29: warning: 0.8 is a magic number; consider replacing it with a named constant 
@@ -491,7 +484,7 @@ main.cpp:149:23: warning: 6 is a magic number; consider replacing it with a name
 main.cpp:239:31: warning: 5 is a magic number; consider replacing it with a named constant 
         outfile << std::setprecision(5);
 
-main.cpp:274:5: warning: an exception may be thrown in function 'main' which should not throw exceptions [bugprone-exception-escape]
+main.cpp:274:5: warning: an exception may be thrown in function 'main' which should not throw exceptions 
 int main(int argc, char** argv) {
 
 main.cpp:275:49: warning: do not use pointer arithmetic 
