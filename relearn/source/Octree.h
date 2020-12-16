@@ -438,9 +438,9 @@ private:
 	 */
 	[[nodiscard]] OctreeNode* select_subinterval(const ProbabilitySubintervalList& list);
 
-	[[nodiscard]] bool node_is_local(const OctreeNode& node) /*noexcept*/;
+	[[nodiscard]] static bool node_is_local(const OctreeNode& node) /*noexcept*/;
 
-	void append_node(OctreeNode* node, ProbabilitySubintervalList& list);
+	static void append_node(OctreeNode* node, ProbabilitySubintervalList& list);
 	void append_children(OctreeNode* node, ProbabilitySubintervalList& list, AccessEpochsStarted& epochs_started);
 
 	// Root of the tree

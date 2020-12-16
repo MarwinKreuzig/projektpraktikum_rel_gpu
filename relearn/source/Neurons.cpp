@@ -46,9 +46,10 @@ Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& 
 // NOTE: The static variables must be reset to 0 before this function can be used
 // for the synapse creation phase in the next connectivity update
 std::tuple<bool, size_t, Vec3d, Cell::DendriteType> Neurons::get_vacant_axon() const noexcept {
-	static size_t i = 0, j = 0;
+	static size_t i = 0;
+	static size_t j = 0;
 
-	size_t neuron_id;
+	size_t neuron_id{ Constants::uninitialized };
 	Vec3d xyz_pos;
 	Cell::DendriteType dendrite_type_needed;
 
@@ -218,7 +219,7 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 	}
 
 
-	std::vector<size_t> num_synapse_deletion_requests_from_ranks(MPIWrapper::num_ranks, 112233);
+	std::vector<size_t> num_synapse_deletion_requests_from_ranks(MPIWrapper::num_ranks, Constants::uninitialized);
 	// Send and receive the number of synapse deletion requests
 	MPIWrapper::all_to_all(num_synapse_deletion_requests_for_ranks, num_synapse_deletion_requests_from_ranks, MPIWrapper::Scope::global);
 
@@ -243,7 +244,7 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 	// Receive actual synapse deletion requests
 	for (auto& map_it : map_synapse_deletion_requests_incoming) {
 		const auto rank = map_it.first;
-		auto buffer = map_it.second.get_requests();
+		auto* buffer = map_it.second.get_requests();
 		const auto size_in_bytes = static_cast<int>(map_it.second.get_requests_size_in_bytes());
 
 		MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
@@ -254,7 +255,7 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 	// Send actual synapse deletion requests
 	for (const auto& map_it : map_synapse_deletion_requests_outgoing) {
 		const auto rank = map_it.first;
-		const auto buffer = map_it.second.get_requests();
+		const auto* const buffer = map_it.second.get_requests();
 		const auto size_in_bytes = static_cast<int>(map_it.second.get_requests_size_in_bytes());
 
 		MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
@@ -460,10 +461,10 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 			* as other axons might already have connected to them.
 			* Right now, those collisions are handled in a first-come-first-served fashion.
 			*/
-			size_t target_neuron_id;
-			int target_rank;
-			bool target_neuron_found;
-			target_neuron_found = global_tree.find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed,target_neuron_id, target_rank);
+			size_t target_neuron_id{ Constants::uninitialized };
+			int target_rank = -1;
+			bool target_neuron_found = false;
+			target_neuron_found = global_tree.find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed, target_neuron_id, target_rank);
 
 			if (target_neuron_found) {
 				/*
@@ -505,7 +506,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 			num_synapse_requests_for_ranks[rank] = num_requests;
 		}
 
-		std::vector<size_t> num_synapse_requests_from_ranks(MPIWrapper::num_ranks, 112233);
+		std::vector<size_t> num_synapse_requests_from_ranks(MPIWrapper::num_ranks, Constants::uninitialized);
 		// Send and receive the number of synapse requests
 		MPIWrapper::all_to_all(num_synapse_requests_for_ranks, num_synapse_requests_from_ranks, MPIWrapper::Scope::global);
 
@@ -530,7 +531,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 		// Receive actual synapse requests
 		for (auto& it : map_synapse_creation_requests_incoming) {
 			const auto rank = it.first;
-			auto buffer = it.second.get_requests();
+			auto* buffer = it.second.get_requests();
 			const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
 
 			MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
@@ -540,7 +541,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 		// Send actual synapse requests
 		for (const auto& it : map_synapse_creation_requests_outgoing) {
 			const auto rank = it.first;
-			const auto buffer = it.second.get_requests();
+			const auto* const buffer = it.second.get_requests();
 			const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
 
 			MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
@@ -565,9 +566,9 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 
 			// All requests of a rank
 			for (auto request_index = 0; request_index < num_requests; request_index++) {
-				size_t source_neuron_id;
-				size_t target_neuron_id;
-				size_t dendrite_type_needed;
+				size_t source_neuron_id{ Constants::uninitialized };
+				size_t target_neuron_id{ Constants::uninitialized };
+				size_t dendrite_type_needed{ Constants::uninitialized };
 				std::tie(source_neuron_id, target_neuron_id, dendrite_type_needed) = requests.get_request(request_index);
 
 				// Sanity check: if the request received is targeted for me
@@ -630,7 +631,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 		// Receive responses
 		for (auto& it : map_synapse_creation_requests_outgoing) {
 			const auto rank = it.first;
-			auto buffer = it.second.get_responses();
+			auto* buffer = it.second.get_responses();
 			const auto size_in_bytes = static_cast<int>(it.second.get_responses_size_in_bytes());
 
 			MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
@@ -640,7 +641,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 		// Send responses
 		for (const auto& it : map_synapse_creation_requests_incoming) {
 			const auto rank = it.first;
-			const auto buffer = it.second.get_responses();
+			const auto* const buffer = it.second.get_responses();
 			const auto size_in_bytes = static_cast<int>(it.second.get_responses_size_in_bytes());
 
 			MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
@@ -664,9 +665,9 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 			// All responses from a rank
 			for (auto request_index = 0; request_index < num_requests; request_index++) {
 				char connected = requests.get_response(request_index);
-				size_t source_neuron_id;
-				size_t target_neuron_id;
-				size_t dendrite_type_needed;
+				size_t source_neuron_id{ Constants::uninitialized };
+				size_t target_neuron_id{ Constants::uninitialized };
+				size_t dendrite_type_needed{ Constants::uninitialized };
 				std::tie(source_neuron_id, target_neuron_id, dendrite_type_needed) = requests.get_request(request_index);
 
 				//std::cout << "From: " << source_neuron_id << " to " << target_neuron_id << ": " << dendrite_type_needed << std::endl;
@@ -902,7 +903,7 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& 
 		std::tie(ret, glob_id) = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id);
 		RelearnException::check(ret);
 
-		auto signal_type_name = signal_types[neuron_id] == SynapticElements::SignalType::EXCITATORY ? "ex" : "in";
+		const char* const signal_type_name = signal_types[neuron_id] == SynapticElements::SignalType::EXCITATORY ? "ex" : "in";
 
 		file << glob_id << " "
 			<< axons_x_dims[neuron_id] << " "
@@ -1214,7 +1215,7 @@ void Neurons::find_synapses_for_deletion(size_t neuron_id,
 
 		for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
 			// Randomly select synapse for deletion
-			const auto synapse_selected= select_synapse(list_synapses);
+			const auto synapse_selected = select_synapse(list_synapses);
 			RelearnException::check(synapse_selected != list_synapses.cend()); // Make sure that valid synapse was selected
 
 															 // Check if synapse is already in pending deletions, if not, add it.

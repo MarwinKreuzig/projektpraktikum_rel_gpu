@@ -60,7 +60,7 @@ public:
 		int weight);
 
 
-	void add_edge(Edges& edges, int rank, size_t neuron_id, int weight);
+	static void add_edge(Edges& edges, int rank, size_t neuron_id, int weight);
 
 	void add_edge_weights(const std::string& filename, const NeuronIdMap& neuron_id_map);
 
@@ -69,13 +69,13 @@ public:
 
 	void add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, const NeuronIdMap& neuron_id_map, const Partition& partition);
 
-	void translate_global_to_local(const std::set<size_t>& global_ids, const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id);
+	static void translate_global_to_local(const std::set<size_t>& global_ids, const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id);
 
-	void load_neuron_positions(const std::string& path_neurons, std::set<size_t>& foreing_ids, std::map<size_t, Vec3d>& id_to_pos);
+	static void load_neuron_positions(const std::string& path_neurons, std::set<size_t>& foreing_ids, std::map<size_t, Vec3d>& id_to_pos);
 
-	void load_synapses(const std::string& path_synapses, const Partition& partition, std::set<size_t>& foreing_ids, std::vector<std::tuple<size_t, size_t, int>>& local_synapses, std::vector<std::tuple<size_t, size_t, int>>& out_synapses, std::vector<std::tuple<size_t, size_t, int>>& in_synapses);
+	void load_synapses(const std::string& path_synapses, const Partition& partition, std::set<size_t>& foreing_ids, std::vector<std::tuple<size_t, size_t, int>>& local_synapses, std::vector<std::tuple<size_t, size_t, int>>& out_synapses, std::vector<std::tuple<size_t, size_t, int>>& in_synapses) const;
 
-	void write_synapses_to_file(const std::string& filename, const NeuronIdMap& neuron_id_map, const Partition& partition);
+	void write_synapses_to_file(const std::string& filename, const NeuronIdMap& neuron_id_map, const Partition& partition) const;
 
 
 private:

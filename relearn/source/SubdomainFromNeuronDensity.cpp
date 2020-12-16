@@ -13,6 +13,8 @@
 #include "MPIWrapper.h"
 #include "RelearnException.h"
 
+#include <limits>
+
 SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(size_t num_neurons, double desired_frac_neurons_exc, double um_per_neuron)
 	: um_per_neuron_(um_per_neuron),
 	random_number_generator(RandomHolder<SubdomainFromNeuronDensity>::get_random_generator()),
@@ -39,6 +41,8 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 	const NeuronToSubdomainAssignment::Position& length_of_box,
 	size_t num_neurons, size_t subdomain_idx) {
 
+	constexpr unsigned short max_short = std::numeric_limits<unsigned short>().max();
+
 	const double simulation_box_length_ = get_simulation_box_length().get_maximum();
 
 	RelearnException::check(length_of_box.x <= simulation_box_length_ && length_of_box.y <= simulation_box_length_ && length_of_box.z <= simulation_box_length_,
@@ -52,7 +56,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
 	const auto calculated_num_neurons = neurons_on_x * neurons_on_y * neurons_on_z;
 	RelearnException::check(calculated_num_neurons >= num_neurons, "Should emplace more neurons than space in box");
-	RelearnException::check(neurons_on_x < 65536 && neurons_on_y < 65536 && neurons_on_z < 65536, "Should emplace more neurons in a dimension than possible");
+	RelearnException::check(neurons_on_x <= max_short && neurons_on_y <= max_short && neurons_on_z <= max_short, "Should emplace more neurons in a dimension than possible");
 
 	Nodes& nodes = neurons_in_subdomain[subdomain_idx];
 
@@ -70,8 +74,8 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 			for (size_t z_it = 0; z_it < neurons_on_z; z_it++) {
 				size_t random_position = 0;
 				random_position |= (z_it);
-				random_position |= (y_it << 16u);
-				random_position |= (x_it << 32u);
+				random_position |= (y_it << 16U);
+				random_position |= (x_it << 32U);
 				positions[random_counter] = random_position;
 				random_counter++;
 			}
@@ -82,9 +86,9 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
 	for (size_t i = 0; i < num_neurons; i++) {
 		const size_t pos_bitmask = positions[i];
-		const size_t x_it = (pos_bitmask >> 32u) & 0xFFFFu;
-		const size_t y_it = (pos_bitmask >> 16u) & 0xFFFFu;
-		const size_t z_it = pos_bitmask & 0xFFFFu;
+		const size_t x_it = (pos_bitmask >> 32U) & max_short;
+		const size_t y_it = (pos_bitmask >> 16U) & max_short;
+		const size_t z_it = pos_bitmask & max_short;
 
 		const double x_pos_rnd = random_number_distribution(random_number_generator) + x_it;
 		const double y_pos_rnd = random_number_distribution(random_number_generator) + y_it;

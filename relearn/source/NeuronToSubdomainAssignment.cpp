@@ -96,7 +96,7 @@ void NeuronToSubdomainAssignment::neuron_area_names(size_t subdomain_idx, [[mayb
 	}
 }
 
-bool NeuronToSubdomainAssignment::position_in_box(const Position& pos, const Position& box_min, const Position& box_max) const noexcept {
+bool NeuronToSubdomainAssignment::position_in_box(const Position& pos, const Position& box_min, const Position& box_max) noexcept {
 	return ((pos.x >= box_min.x && pos.x <= box_max.x) &&
 		(pos.y >= box_min.y && pos.y <= box_max.y) &&
 		(pos.z >= box_min.z && pos.z <= box_max.z));

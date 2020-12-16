@@ -123,7 +123,7 @@ protected:
 
 	Vec3d simulation_box_length{ 0 };
 
-	[[nodiscard]] bool position_in_box(const Position& pos, const Position& box_min, const Position& box_max) const noexcept;
+	[[nodiscard]] static bool position_in_box(const Position& pos, const Position& box_min, const Position& box_max) noexcept;
 
 	NeuronToSubdomainAssignment() = default;
 };

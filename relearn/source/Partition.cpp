@@ -22,7 +22,7 @@ Partition::Partition(size_t num_ranks, size_t my_rank) : my_num_neurons(0), tota
 	*/
 	const double smallest_exponent = ceil(log(num_ranks) / log(8.0));
 	level_of_subdomain_trees = static_cast<size_t>(smallest_exponent);
-	total_num_subdomains = 1ull << (3 * level_of_subdomain_trees); // 8^level_of_subdomain_trees
+	total_num_subdomains = 1ULL << (3 * level_of_subdomain_trees); // 8^level_of_subdomain_trees
 
 																   // Every rank should get at least one subdomain
 	RelearnException::check(total_num_subdomains >= num_ranks);
@@ -54,7 +54,7 @@ Partition::Partition(size_t num_ranks, size_t my_rank) : my_num_neurons(0), tota
 	* total_num_subdomains = 8^level_of_subdomain_trees = (2^3)^level_of_subdomain_trees = 2^(3*level_of_subdomain_trees).
 	* Thus, number of subdomains per dimension (3d) is (2^(3*level_of_subdomain_trees))^(1/3) = 2^level_of_subdomain_trees.
 	*/
-	num_subdomains_per_dimension = 1ull << level_of_subdomain_trees;
+	num_subdomains_per_dimension = 1ULL << level_of_subdomain_trees;
 	space_curve.set_refinement_level(level_of_subdomain_trees);
 
 	std::stringstream sstream;
@@ -320,7 +320,8 @@ Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssig
 			axons.set_signal_type(neuron_id, vec_type[j]);
 
 			// Insert neuron into tree
-			subdomains[i].octree.insert(vec_pos[j], neuron_id, MPIWrapper::my_rank);
+			auto* node = subdomains[i].octree.insert(vec_pos[j], neuron_id, MPIWrapper::my_rank);
+			RelearnException::check(node != nullptr);
 
 			neuron_id++;
 		}

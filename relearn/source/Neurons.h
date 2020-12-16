@@ -406,7 +406,7 @@ private:
 	 */
 	typename std::list<Synapse>::const_iterator select_synapse(const std::list<Synapse>& list);
 
-	void add_synapse_to_pending_deletions(const RankNeuronId& src_neuron_id,
+	static void add_synapse_to_pending_deletions(const RankNeuronId& src_neuron_id,
 		const RankNeuronId& tgt_neuron_id,
 		const RankNeuronId& affected_neuron_id,
 		SynapticElements::ElementType affected_element_type,
@@ -430,7 +430,7 @@ private:
 		const NetworkGraph& network_graph,
 		std::list<PendingSynapseDeletion>& list_pending_deletions);
 
-	void print_pending_synapse_deletions(const std::list<PendingSynapseDeletion>& list);
+	static void print_pending_synapse_deletions(const std::list<PendingSynapseDeletion>& list);
 
 	void delete_synapses(std::list<PendingSynapseDeletion>& list,
 		SynapticElements& axons,

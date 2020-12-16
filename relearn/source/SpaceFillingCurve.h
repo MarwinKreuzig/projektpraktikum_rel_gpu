@@ -31,7 +31,7 @@ public:
 	Morton& operator=(const Morton& other) = default;
 	Morton& operator=(Morton&& other) = default;
 
-	[[nodiscard]] BoxCoordinates map_1d_to_3d(uint64_t idx) const;
+	[[nodiscard]] static BoxCoordinates map_1d_to_3d(uint64_t idx);
 
 	[[nodiscard]] uint64_t map_3d_to_1d(const BoxCoordinates& coords) const noexcept;
 

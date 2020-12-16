@@ -245,12 +245,12 @@ void printNeuronMonitor(const NeuronMonitor& nm, size_t neuron_id) {
 
 	const auto& infos = nm.get_informations();
 
-	const auto filler = ";";
+	const char * const filler = ";";
 	const auto width = 6;
 
 	auto ctr = 0;
 
-	for (auto& info : infos) {
+	for (const auto& info : infos) {
 		outfile << ctr << filler;
 		outfile << /*std::setw(width) <<*/ info.fired << filler;
 		outfile << /*std::setw(width) <<*/ info.secondary << filler;

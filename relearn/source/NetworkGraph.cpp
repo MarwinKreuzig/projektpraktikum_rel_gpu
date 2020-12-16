@@ -308,9 +308,9 @@ void NetworkGraph::load_neuron_positions(const std::string& path_neurons, std::s
 
 		std::cout << line << std::endl;
 
-		size_t id;
-		Vec3d pos;
-		std::string area_name;
+		size_t id{};
+		Vec3d pos{};
+		std::string area_name{};
 
 		std::stringstream sstream(line);
 		const bool success =
@@ -338,7 +338,7 @@ void NetworkGraph::load_neuron_positions(const std::string& path_neurons, std::s
 	file_neurons.close();
 }
 
-void NetworkGraph::load_synapses(const std::string& path_synapses, const Partition& partition, std::set<size_t>& foreing_ids, std::vector<std::tuple<size_t, size_t, int>>& local_synapses, std::vector<std::tuple<size_t, size_t, int>>& out_synapses, std::vector<std::tuple<size_t, size_t, int>>& in_synapses) {
+void NetworkGraph::load_synapses(const std::string& path_synapses, const Partition& partition, std::set<size_t>& foreing_ids, std::vector<std::tuple<size_t, size_t, int>>& local_synapses, std::vector<std::tuple<size_t, size_t, int>>& out_synapses, std::vector<std::tuple<size_t, size_t, int>>& in_synapses) const {
 
 	enum class f_status : char {
 		not_known = 0,
@@ -448,7 +448,7 @@ void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) con
 		NeuronIdMap::RankNeuronId rank_neuron_id{ MPIWrapper::my_rank, target_neuron_id };
 		size_t glob_tgt = 0;
 
-		bool ret;
+		bool ret = true;
 		std::tie(ret, glob_tgt) = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id);
 		RelearnException::check(ret);
 
@@ -469,7 +469,7 @@ void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) con
 	}
 }
 
-void NetworkGraph::write_synapses_to_file(const std::string& filename, [[maybe_unused]] const NeuronIdMap& neuron_id_map, [[maybe_unused]] const Partition& partition) {
+void NetworkGraph::write_synapses_to_file(const std::string& filename, [[maybe_unused]] const NeuronIdMap& neuron_id_map, [[maybe_unused]] const Partition& partition) const {
 	std::ofstream ofstream(filename, std::ios::binary | std::ios::out);
 
 	ofstream << "# <source neuron id> <target neuron id> <weight> \n";
