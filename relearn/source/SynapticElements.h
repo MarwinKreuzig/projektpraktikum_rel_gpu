@@ -45,19 +45,19 @@ public:
 
 	~SynapticElements() = default;
 
-	const std::vector<double>& get_cnts() const noexcept {
+	[[nodiscard]] const std::vector<double>& get_cnts() const noexcept {
 		return cnts;
 	}
 
-	const std::vector<double>& get_connected_cnts() const noexcept {
+	[[nodiscard]] const std::vector<double>& get_connected_cnts() const noexcept {
 		return connected_cnts; 
 	}
 	
-	const std::vector<double>& get_delta_cnts() const noexcept {
+	[[nodiscard]] const std::vector<double>& get_delta_cnts() const noexcept {
 		return delta_cnts;
 	}
 	
-	const std::vector<SignalType>& get_signal_types() const noexcept {
+	[[nodiscard]] const std::vector<SignalType>& get_signal_types() const noexcept {
 		return signal_types; 
 	}
 
@@ -80,23 +80,23 @@ public:
 		signal_types[neuron_id] = type;
 	}
 
-	double get_cnt(size_t neuron_id) const noexcept {
+	[[nodiscard]] double get_cnt(size_t neuron_id) const noexcept {
 		return cnts[neuron_id]; 
 	}
 	
-	double get_connected_cnt(size_t neuron_id) const noexcept { 
+	[[nodiscard]] double get_connected_cnt(size_t neuron_id) const noexcept {
 		return connected_cnts[neuron_id];
 	}
 	
-	double get_delta_cnt(size_t neuron_id) const noexcept { 
+	[[nodiscard]] double get_delta_cnt(size_t neuron_id) const noexcept {
 		return delta_cnts[neuron_id];
 	}
 
-	SignalType get_signal_type(size_t neuron_id) const noexcept { 
+	[[nodiscard]] SignalType get_signal_type(size_t neuron_id) const noexcept {
 		return signal_types[neuron_id]; 
 	}
 
-	ElementType get_element_type() const noexcept { 
+	[[nodiscard]] ElementType get_element_type() const noexcept {
 		return type; 
 	}
 
@@ -108,7 +108,7 @@ public:
 	 * 1. Delete vacant elements
 	 * 2. Delete bound elements
 	 */
-	unsigned int update_number_elements(size_t neuron_id);
+	[[nodiscard]] unsigned int update_number_elements(size_t neuron_id);
 
 	void update_number_elements_delta(const std::vector<double>& calcium) noexcept {
 		// For my neurons
@@ -119,7 +119,7 @@ public:
 	}
 
 private:
-	double gaussian_growth_curve(double Ca, double eta, double epsilon, double growth_rate) const noexcept {
+	[[nodiscard]] static double gaussian_growth_curve(double Ca, double eta, double epsilon, double growth_rate) noexcept {
 		/**
 		 * gaussian_growth_curve generates a gaussian curve that is compressed by
 		 * growth-factor nu and intersects the x-axis at

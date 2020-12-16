@@ -228,7 +228,7 @@ public:
 				xyz_max[i] = (this->xyz_min[i] + this->xyz_max[i]) / 2.0;
 			}
 
-			mask <<= 1u;
+			mask <<= 1U;
 		}
 
 		return std::make_tuple(xyz_min, xyz_max);

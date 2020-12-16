@@ -17,7 +17,7 @@ set(CMAKE_BUILD_TYPE Release)
 
 if(noclangtidy)
 else()
-	set(CMAKE_CXX_CLANG_TIDY clang-tidy "-header-filter=." "-checks=*,-fuchsia*,-modernize-use-trailing-return-type,-llvm-header-guard,-misc-non-private-member-variables-in-classes")
+	set(CMAKE_CXX_CLANG_TIDY clang-tidy "-header-filter=." "-checks=*,-fuchsia*,-modernize-use-trailing-return-type,-llvm-header-guard,-misc-non-private-member-variables-in-classes,-cppcoreguidelines-non-private-member-variables-in-classes")
 endif()
 
 find_package (Threads)

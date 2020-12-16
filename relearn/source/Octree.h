@@ -443,7 +443,6 @@ private:
 	void append_node(OctreeNode* node, ProbabilitySubintervalList& list);
 	void append_children(OctreeNode* node, ProbabilitySubintervalList& list, AccessEpochsStarted& epochs_started);
 
-private:
 	// Root of the tree
 	OctreeNode* root{ nullptr };
 

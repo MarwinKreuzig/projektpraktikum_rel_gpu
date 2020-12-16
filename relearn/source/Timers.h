@@ -68,7 +68,7 @@ public:
 
 	~Timers() = default;
 
-	size_t get_num_timers() const noexcept { return num_timers; }
+	[[nodiscard]] size_t get_num_timers() const noexcept { return num_timers; }
 
 	void start(size_t timer_id) /*noexcept*/ {
 		RelearnException::check(timer_id < num_timers);
@@ -96,7 +96,7 @@ public:
 	}
 
 	// Return elapsed time in seconds
-	double get_elapsed(size_t timer_id) /*noexcept*/ {
+	[[nodiscard]] double get_elapsed(size_t timer_id) /*noexcept*/ {
 		RelearnException::check(timer_id < num_timers);
 		return time_elapsed[timer_id].count();
 	}
@@ -104,7 +104,7 @@ public:
 	/**
 	 * Static function to get current time in string
 	 */
-	static std::string wall_clock_time() {
+	[[nodiscard]] static std::string wall_clock_time() {
 #ifdef __linux__ 
 		time_t rawtime;
 		struct tm* timeinfo;

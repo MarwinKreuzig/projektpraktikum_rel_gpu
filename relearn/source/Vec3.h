@@ -120,7 +120,7 @@ struct Vec3 {
 		z = ceil((z - 0.001) / multiple) * multiple;
 	}
 
-	Vec3<size_t> floor_componentwise() const /*noexcept*/ {
+	[[nodiscard]] Vec3<size_t> floor_componentwise() const /*noexcept*/ {
 		RelearnException::check(x >= 0, "floor_componentwise must be used on a positive vector: x");
 		RelearnException::check(y >= 0, "floor_componentwise must be used on a positive vector: y");
 		RelearnException::check(z >= 0, "floor_componentwise must be used on a positive vector: z");

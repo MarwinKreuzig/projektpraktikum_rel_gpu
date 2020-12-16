@@ -53,7 +53,7 @@ class SynapseCreationRequests {
 public:
 	SynapseCreationRequests() = default;
 
-	size_t size() const noexcept { return num_requests; }
+	[[nodiscard]] size_t size() const noexcept { return num_requests; }
 
 	void resize(size_t size) {
 		num_requests = size;
@@ -85,7 +85,7 @@ public:
 		append(source_neuron_id, target_neuron_id, dendrite_type_val);
 	}
 
-	std::tuple<size_t, size_t, size_t> get_request(size_t request_index) const noexcept {
+	[[nodiscard]] std::tuple<size_t, size_t, size_t> get_request(size_t request_index) const noexcept {
 		const size_t base_index = 3 * request_index;
 
 		const size_t source_neuron_id = requests[base_index];
@@ -99,31 +99,31 @@ public:
 		responses[request_index] = connected;
 	}
 
-	char get_response(size_t request_index) const noexcept {
+	[[nodiscard]] char get_response(size_t request_index) const noexcept {
 		return responses[request_index];
 	}
 
-	size_t* get_requests() noexcept {
+	[[nodiscard]] size_t* get_requests() noexcept {
 		return requests.data();
 	}
 
-	const size_t* get_requests() const noexcept {
+	[[nodiscard]] const size_t* get_requests() const noexcept {
 		return requests.data();
 	}
 
-	char* get_responses() noexcept {
+	[[nodiscard]] char* get_responses() noexcept {
 		return responses.data();
 	}
 
-	const char* get_responses() const noexcept {
+	[[nodiscard]] const char* get_responses() const noexcept {
 		return responses.data();
 	}
 
-	size_t get_requests_size_in_bytes() const noexcept {
+	[[nodiscard]] size_t get_requests_size_in_bytes() const noexcept {
 		return requests.size() * sizeof(size_t);
 	}
 
-	size_t get_responses_size_in_bytes() const noexcept {
+	[[nodiscard]] size_t get_responses_size_in_bytes() const noexcept {
 		return responses.size() * sizeof(char);
 	}
 
@@ -188,7 +188,7 @@ class Neurons {
 	struct SynapseDeletionRequests {
 		SynapseDeletionRequests() = default;
 
-		size_t size() const noexcept { return num_requests; }
+		[[nodiscard]] size_t size() const noexcept { return num_requests; }
 
 		void resize(size_t size) {
 			num_requests = size;
@@ -206,7 +206,7 @@ class Neurons {
 			requests.push_back(synapse_id);
 		}
 
-		std::array<size_t, 6> get_request(size_t request_index) const noexcept {
+		[[nodiscard]] std::array<size_t, 6> get_request(size_t request_index) const noexcept {
 			const size_t base_index = 6 * request_index;
 
 			std::array<size_t, 6> arr{};
@@ -222,15 +222,15 @@ class Neurons {
 		}
 
 		// Get pointer to data
-		size_t* get_requests() noexcept {
+		[[nodiscard]] size_t* get_requests() noexcept {
 			return requests.data();
 		}
 
-		const size_t* get_requests() const noexcept {
+		[[nodiscard]] const size_t* get_requests() const noexcept {
 			return requests.data();
 		}
 
-		size_t get_requests_size_in_bytes() const noexcept {
+		[[nodiscard]] size_t get_requests_size_in_bytes() const noexcept {
 			return requests.size() * sizeof(size_t);
 		}
 
@@ -288,15 +288,35 @@ public:
 		neuron_models = std::move(model);
 	}
 
-	size_t get_num_neurons() const noexcept { return num_neurons; }
-	Positions& get_positions() noexcept { return positions; }
-	std::vector<std::string>& get_area_names() noexcept { return area_names; }
-	Axons& get_axons() noexcept { return axons; }
-	const DendritesExc& get_dendrites_exc() const noexcept { return dendrites_exc; }
-	const DendritesInh& get_dendrites_inh() const noexcept { return dendrites_inh; }
-	NeuronModels& get_neuron_models() noexcept { return *neuron_models; }
+	[[nodiscard]] size_t get_num_neurons() const noexcept { 
+		return num_neurons;
+	}
 
-	std::tuple<bool, size_t, Vec3d, Cell::DendriteType> get_vacant_axon() const noexcept;
+	[[nodiscard]] Positions& get_positions() noexcept {
+		return positions; 
+	}
+
+	[[nodiscard]] std::vector<std::string>& get_area_names() noexcept { 
+		return area_names; 
+	}
+
+	[[nodiscard]] Axons& get_axons() noexcept { 
+		return axons;
+	}
+
+	[[nodiscard]] const DendritesExc& get_dendrites_exc() const noexcept { 
+		return dendrites_exc; 
+	}
+
+	[[nodiscard]] const DendritesInh& get_dendrites_inh() const noexcept { 
+		return dendrites_inh;
+	}
+
+	[[nodiscard]] NeuronModels& get_neuron_models() noexcept { 
+		return *neuron_models; 
+	}
+
+	[[nodiscard]] std::tuple<bool, size_t, Vec3d, Cell::DendriteType> get_vacant_axon() const noexcept;
 
 	void init_synaptic_elements();
 
@@ -344,7 +364,7 @@ private:
 	void debug_check_counts();
 
 	template<typename T>
-	StatisticalMeasures<T> global_statistics(const T* local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root, MPIWrapper::Scope scope) {
+	[[nodiscard]] StatisticalMeasures<T> global_statistics(const T* local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root, MPIWrapper::Scope scope) {
 		const auto result = std::minmax_element(local_values, local_values + num_neurons);
 		const T my_min = *result.first;
 		const T my_max = *result.second;
