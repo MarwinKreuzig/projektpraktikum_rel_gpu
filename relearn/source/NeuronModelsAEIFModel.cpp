@@ -14,9 +14,8 @@ using namespace models;
 
 using ModelParameter = NeuronModels::ModelParameter;
 
-AEIFModel::AEIFModel(size_t num_neurons, double k, double tau_C, double beta, unsigned int h, const double C, const double g_L, const double E_L, const double V_T, const double, const double tau_w, const double a, const double b, const double V_peak)
-  : NeuronModels{ num_neurons, k, tau_C, beta, h },
-	w(num_neurons),
+AEIFModel::AEIFModel(double k, double tau_C, double beta, unsigned int h, const double C, const double g_L, const double E_L, const double V_T, const double, const double tau_w, const double a, const double b, const double V_peak)
+  : NeuronModels{ k, tau_C, beta, h },
 	C{ C },
 	g_L{ g_L },
 	E_L{ E_L },
@@ -26,11 +25,10 @@ AEIFModel::AEIFModel(size_t num_neurons, double k, double tau_C, double beta, un
 	a{ a },
 	b{ b },
 	V_peak{ V_peak } {
-	init_neurons();
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModels> AEIFModel::clone() const {
-	return std::make_unique<AEIFModel>(my_num_neurons, k, tau_C, beta, h, C, g_L, E_L, V_T, d_T, tau_w, a, b, V_peak);
+	return std::make_unique<AEIFModel>(k, tau_C, beta, h, C, g_L, E_L, V_T, d_T, tau_w, a, b, V_peak);
 }
 
 [[nodiscard]] double AEIFModel::get_secondary_variable(const size_t i) const noexcept {
@@ -56,8 +54,9 @@ AEIFModel::AEIFModel(size_t num_neurons, double k, double tau_C, double beta, un
 	return "AEIFModel";
 }
 
-void AEIFModel::init() {
-	NeuronModels::init();
+void AEIFModel::init(size_t num_neurons) {
+	NeuronModels::init(num_neurons);
+	w.resize(num_neurons);
 	init_neurons();
 }
 

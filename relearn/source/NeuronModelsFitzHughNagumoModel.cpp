@@ -14,17 +14,15 @@ using namespace models;
 
 using ModelParameter = NeuronModels::ModelParameter;
 
-FitzHughNagumoModel::FitzHughNagumoModel(size_t num_neurons, double k, double tau_C, double beta, unsigned int h, const double a, const double b, const double phi)
-  : NeuronModels{ num_neurons, k, tau_C, beta, h },
-	w(num_neurons),
+FitzHughNagumoModel::FitzHughNagumoModel(double k, double tau_C, double beta, unsigned int h, const double a, const double b, const double phi)
+  : NeuronModels{ k, tau_C, beta, h },
 	a{ a },
 	b{ b },
 	phi{ phi } {
-	init_neurons();
 }
 
 std::unique_ptr<NeuronModels> FitzHughNagumoModel::clone() const {
-	return std::make_unique<FitzHughNagumoModel>(my_num_neurons, k, tau_C, beta, h, a, b, phi);
+	return std::make_unique<FitzHughNagumoModel>(k, tau_C, beta, h, a, b, phi);
 }
 
 double FitzHughNagumoModel::get_secondary_variable(const size_t i) const noexcept {
@@ -44,14 +42,13 @@ std::string FitzHughNagumoModel::name() {
 	return "FitzHughNagumoModel";
 }
 
-void FitzHughNagumoModel::init() {
-	NeuronModels::init();
+void FitzHughNagumoModel::init(size_t num_neurons) {
+	NeuronModels::init(num_neurons);
+	w.resize(num_neurons);
 	init_neurons();
 }
 
 void FitzHughNagumoModel::update_activity(const size_t i) {
-	fired[i] = false;
-
 	// Update the membrane potential
 	for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
 		x[i] += iter_x(x[i], w[i], I_syn[i]) / h;

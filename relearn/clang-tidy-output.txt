@@ -508,19 +508,3 @@ main.cpp:319:6: warning: 5 is a magic number; consider replacing it with a named
 
 main.cpp:407:6: warning: 6 is a magic number; consider replacing it with a named constant 
         if (6 < argc) {
-
-NeuronModels.cpp:65:78: warning: 112233 is a magic number; consider replacing it with a named constant 
-        std::vector<size_t> num_firing_neuron_ids_from_ranks(MPIWrapper::num_ranks, 112233);
-
-NeuronModels.cpp:105:3: warning: 'auto buffer' can be declared as 'auto *buffer' [llvm-qualified-auto]
-                auto buffer = map_it.second.get_neuron_ids();
-
-note: this fix will not be applied because it overlaps with another fix
-NeuronModels.cpp:105:3: warning: 'auto buffer' can be declared as 'auto *buffer' [readability-qualified-auto]
-note: this fix will not be applied because it overlaps with another fix
-NeuronModels.cpp:116:3: warning: 'const auto buffer' can be declared as 'const auto *const buffer' [llvm-qualified-auto]
-                const auto buffer = map_it.second.get_neuron_ids();
-
-note: this fix will not be applied because it overlaps with another fix
-NeuronModels.cpp:116:3: warning: 'const auto buffer' can be declared as 'const auto *const buffer' [readability-qualified-auto]
-note: this fix will not be applied because it overlaps with another fix						

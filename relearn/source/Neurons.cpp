@@ -18,7 +18,7 @@
 
 Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& partition)
 	: Neurons{ num_neurons, params, partition,
-	NeuronModels::create<models::ModelA>(num_neurons, params.k, params.tau_C, params.beta, params.h, params.x_0, params.tau_x, params.refrac_time) } {
+	NeuronModels::create<models::ModelA>(params.k, params.tau_C, params.beta, params.h, params.x_0, params.tau_x, params.refrac_time) } {
 }
 
 Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& partition, std::unique_ptr<NeuronModels> model)
@@ -35,6 +35,8 @@ Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& 
 	random_number_distribution(0.0, std::nextafter(1.0, 2.0))
 
 {
+	neuron_models->init(num_neurons);
+
 	// Init member variables
 	for (size_t i = 0; i < num_neurons; i++) {
 		// Set calcium concentration

@@ -10,20 +10,18 @@
 
 #include "NeuronModels.h"
 
+#include "Commons.h"
 #include "MPIWrapper.h"
 #include "Random.h"
 
 using ModelParameter = NeuronModels::ModelParameter;
 
-NeuronModels::NeuronModels(size_t num_neurons, double k, double tau_C, double beta, unsigned int h)
-	: my_num_neurons(num_neurons),
+NeuronModels::NeuronModels(double k, double tau_C, double beta, unsigned int h)
+	: my_num_neurons(0),
 	k(k),
 	tau_C(tau_C),
 	beta(beta),
-	h(h),
-	x(num_neurons, 0),
-	fired(num_neurons, false),
-	I_syn(num_neurons, 0) {
+	h(h) {
 }
 
 /* Performs one iteration step of update in electrical activity */
@@ -64,7 +62,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	* Likewise, receive the number of firing neuron ids that I should prepare for from every rank.
 	*/
 	std::vector<size_t> num_firing_neuron_ids_for_ranks(MPIWrapper::num_ranks, 0);
-	std::vector<size_t> num_firing_neuron_ids_from_ranks(MPIWrapper::num_ranks, 112233);
+	std::vector<size_t> num_firing_neuron_ids_from_ranks(MPIWrapper::num_ranks, Constants::uninitialized);
 
 	// Fill vector with my number of firing neuron ids for every rank (excluding me)
 	for (const auto& map_it : map_firing_neuron_ids_outgoing) {
@@ -104,7 +102,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	// Receive actual neuron ids
 	for (auto& map_it : map_firing_neuron_ids_incoming) {
 		auto rank = map_it.first;
-		auto buffer = map_it.second.get_neuron_ids();
+		auto* buffer = map_it.second.get_neuron_ids();
 		const auto size_in_bytes = static_cast<int>(map_it.second.get_neuron_ids_size_in_bytes());
 
 		MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
@@ -115,7 +113,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	// Send actual neuron ids
 	for (const auto& map_it : map_firing_neuron_ids_outgoing) {
 		auto rank = map_it.first;
-		const auto buffer = map_it.second.get_neuron_ids();
+		const auto* buffer = map_it.second.get_neuron_ids();
 		const auto size_in_bytes = static_cast<int>(map_it.second.get_neuron_ids_size_in_bytes());
 
 		MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
@@ -196,8 +194,9 @@ std::vector<ModelParameter> NeuronModels::get_parameter() {
 	};
 }
 
-void NeuronModels::init() {
-	x.resize(my_num_neurons);
-	fired.resize(my_num_neurons);
-	I_syn.resize(my_num_neurons);
+void NeuronModels::init(size_t num_neurons) {
+	my_num_neurons = num_neurons;
+	x.resize(num_neurons, 0.0);
+	fired.resize(num_neurons, false);
+	I_syn.resize(num_neurons, 0.0);
 }

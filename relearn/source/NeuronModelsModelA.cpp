@@ -14,17 +14,15 @@ using namespace models;
 
 using ModelParameter = NeuronModels::ModelParameter;
 
-ModelA::ModelA(size_t num_neurons, double k, double tau_C, double beta, unsigned int h, const double x_0, const double tau_x, unsigned int refrac_time)
-  : NeuronModels{ num_neurons, k, tau_C, beta, h },
-	refrac(num_neurons),
+ModelA::ModelA(double k, double tau_C, double beta, unsigned int h, const double x_0, const double tau_x, unsigned int refrac_time)
+  : NeuronModels{ k, tau_C, beta, h },
 	x_0{ x_0 },
 	tau_x{ tau_x },
 	refrac_time{ refrac_time } {
-	init_neurons();
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModels> ModelA::clone() const {
-	return std::make_unique<ModelA>(my_num_neurons, k, tau_C, beta, h, x_0, tau_x, refrac_time);
+	return std::make_unique<ModelA>(k, tau_C, beta, h, x_0, tau_x, refrac_time);
 }
 
 [[nodiscard]] double ModelA::get_secondary_variable(const size_t i) const noexcept {
@@ -44,9 +42,9 @@ ModelA::ModelA(size_t num_neurons, double k, double tau_C, double beta, unsigned
 	return "ModelA";
 }
 
-void ModelA::init() {
-	NeuronModels::init();
-	refrac.resize(my_num_neurons);
+void ModelA::init(size_t num_neurons) {
+	NeuronModels::init(num_neurons);
+	refrac.resize(my_num_neurons, 0);
 	init_neurons();
 }
 

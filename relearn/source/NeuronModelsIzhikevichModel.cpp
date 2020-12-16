@@ -14,9 +14,8 @@ using namespace models;
 
 using ModelParameter = NeuronModels::ModelParameter;
 
-IzhikevichModel::IzhikevichModel(size_t num_neurons, double k, double tau_C, double beta, unsigned int h, const double a, const double b, const double c, const double d, const double V_spike, const double k1, const double k2, const double k3)
-  : NeuronModels{ num_neurons, k, tau_C, beta, h },
-	u(num_neurons),
+IzhikevichModel::IzhikevichModel(double k, double tau_C, double beta, unsigned int h, const double a, const double b, const double c, const double d, const double V_spike, const double k1, const double k2, const double k3)
+  : NeuronModels{ k, tau_C, beta, h },
 	a{ a },
 	b{ b },
 	c{ c },
@@ -25,11 +24,10 @@ IzhikevichModel::IzhikevichModel(size_t num_neurons, double k, double tau_C, dou
 	k1{ k1 },
 	k2{ k2 },
 	k3{ k3 } {
-	init_neurons();
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModels> IzhikevichModel::clone() const {
-	return std::make_unique<IzhikevichModel>(my_num_neurons, k, tau_C, beta, h, a, b, c, d, V_spike, k1, k2, k3);
+	return std::make_unique<IzhikevichModel>(k, tau_C, beta, h, a, b, c, d, V_spike, k1, k2, k3);
 }
 
 [[nodiscard]] double IzhikevichModel::get_secondary_variable(const size_t i) const noexcept {
@@ -54,8 +52,9 @@ IzhikevichModel::IzhikevichModel(size_t num_neurons, double k, double tau_C, dou
 	return "IzhikevichModel";
 }
 
-void IzhikevichModel::init() {
-	NeuronModels::init();
+void IzhikevichModel::init(size_t num_neurons) {
+	NeuronModels::init(num_neurons);
+	u.resize(num_neurons);
 	init_neurons();
 }
 

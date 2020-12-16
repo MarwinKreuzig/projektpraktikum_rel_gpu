@@ -133,7 +133,7 @@ public:
 	 */
 	using MapFiringNeuronIds = std::map<int, FiringNeuronIds>;
 
-	NeuronModels(size_t num_neurons, double k, double tau_C, double beta, unsigned int h);
+	NeuronModels(double k, double tau_C, double beta, unsigned int h);
 
 	virtual ~NeuronModels() = default;
 
@@ -184,7 +184,7 @@ public:
 	/**
 	 * Resizes the vectors and initializes their values
 	 */
-	virtual void init();
+	virtual void init(size_t num_neurons);
 
 	/**
 	 * Returns the name of the model
@@ -196,7 +196,6 @@ protected:
 
 	virtual void init_neurons() = 0;
 
-	static constexpr size_t default_my_num_neurons{ 100 };
 	static constexpr double default_k{ 0.03 };
 	static constexpr double default_tau_C{ 10000 };
 	static constexpr double default_beta{ 0.001 };
@@ -220,7 +219,7 @@ protected:
 namespace models {
 	class ModelA : public NeuronModels {
 	public:
-		explicit ModelA(size_t num_neurons = NeuronModels::default_my_num_neurons, double k = NeuronModels::default_k, double tau_C = NeuronModels::default_tau_C, double beta = NeuronModels::default_beta, unsigned int h = NeuronModels::default_h, const double x_0 = 0.05, const double tau_x = 5., unsigned int refrac_time = 4);
+		explicit ModelA(double k = NeuronModels::default_k, double tau_C = NeuronModels::default_tau_C, double beta = NeuronModels::default_beta, unsigned int h = NeuronModels::default_h, const double x_0 = 0.05, const double tau_x = 5., unsigned int refrac_time = 4);
 
 		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
@@ -230,7 +229,7 @@ namespace models {
 
 		[[nodiscard]] virtual std::string name();
 
-		void init() final;
+		void init(size_t num_neurons) final;
 
 	protected:
 		void update_activity(const size_t i) final;
@@ -257,7 +256,7 @@ namespace models {
 
 	class IzhikevichModel : public NeuronModels {
 	public:
-		explicit IzhikevichModel(size_t num_neurons = NeuronModels::default_my_num_neurons, double k = NeuronModels::default_k, double tau_C = NeuronModels::default_tau_C, double beta = NeuronModels::default_beta, unsigned int h = NeuronModels::default_h, const double a = 0.1, const double b = 0.2, const double c = -65., const double d = 2., const double V_spike = 30., const double k1 = 0.04, const double k2 = 5., const double k3 = 140.);
+		explicit IzhikevichModel(double k = NeuronModels::default_k, double tau_C = NeuronModels::default_tau_C, double beta = NeuronModels::default_beta, unsigned int h = NeuronModels::default_h, const double a = 0.1, const double b = 0.2, const double c = -65., const double d = 2., const double V_spike = 30., const double k1 = 0.04, const double k2 = 5., const double k3 = 140.);
 
 		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
@@ -267,7 +266,7 @@ namespace models {
 
 		[[nodiscard]] virtual std::string name();
 
-		void init() final;
+		void init(size_t num_neurons) final;
 
 	protected:
 		void update_activity(const size_t i) final;
@@ -297,7 +296,7 @@ namespace models {
 
 	class FitzHughNagumoModel : public NeuronModels {
 	public:
-		explicit FitzHughNagumoModel(size_t num_neurons = NeuronModels::default_my_num_neurons, double k = NeuronModels::default_k, double tau_C = NeuronModels::default_tau_C, double beta = NeuronModels::default_beta, unsigned int h = NeuronModels::default_h, const double a = 0.7, const double b = 0.8, const double phi = 0.08);
+		explicit FitzHughNagumoModel(double k = NeuronModels::default_k, double tau_C = NeuronModels::default_tau_C, double beta = NeuronModels::default_beta, unsigned int h = NeuronModels::default_h, const double a = 0.7, const double b = 0.8, const double phi = 0.08);
 
 		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
@@ -307,7 +306,7 @@ namespace models {
 
 		[[nodiscard]] virtual std::string name();
 
-		void init() final;
+		void init(size_t num_neurons) final;
 
 	protected:
 		void update_activity(const size_t i) final;
@@ -330,7 +329,7 @@ namespace models {
 
 	class AEIFModel : public NeuronModels {
 	public:
-		explicit AEIFModel(size_t num_neurons = NeuronModels::default_my_num_neurons, double k = NeuronModels::default_k, double tau_C = NeuronModels::default_tau_C, double beta = NeuronModels::default_beta, unsigned int h = NeuronModels::default_h, const double C = 281., const double g_L = 30., const double E_L = -70.6, const double V_T = -50.4, const double d_T = 2., const double tau_w = 144., const double a = 4., const double b = 0.0805, const double V_peak = 20.);
+		explicit AEIFModel(double k = NeuronModels::default_k, double tau_C = NeuronModels::default_tau_C, double beta = NeuronModels::default_beta, unsigned int h = NeuronModels::default_h, const double C = 281., const double g_L = 30., const double E_L = -70.6, const double V_T = -50.4, const double d_T = 2., const double tau_w = 144., const double a = 4., const double b = 0.0805, const double V_peak = 20.);
 
 		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
@@ -340,7 +339,7 @@ namespace models {
 
 		[[nodiscard]] virtual std::string name();
 
-		void init() final;
+		void init(size_t num_neurons) final;
 
 	protected:
 		void update_activity(const size_t i) final;
