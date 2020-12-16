@@ -416,7 +416,7 @@ int main(int argc, char** argv) {
 	// Init number of synaptic elements and assign EXCITATORY or INHIBITORY signal type
 	// to the dendrites. Assignment of the signal type to the axons is done in
 	// Partition::insert_neurons_into_my_subdomains
-	neurons.init_synaptic_elements();
+	neurons.init_synaptic_elements(network_graph);
 	//    neurons.init_synaptic_elements(network_graph);
 	LogMessages::print_message_rank("Synaptic elements initialized \n", 0);
 

@@ -16,6 +16,7 @@
 #include "Partition.h"
 #include "RelearnException.h"
 
+#include <cmath>
 #include <fstream>
 #include <sstream>
 
@@ -34,6 +35,49 @@ const NetworkGraph::Edges& NetworkGraph::get_in_edges(size_t neuron_id) const {
 const NetworkGraph::Edges& NetworkGraph::get_out_edges(size_t neuron_id) const {
 	RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_out_edges, tried with a too large id");
 	return neuron_neighborhood[neuron_id].out_edges;
+}
+
+size_t NetworkGraph::get_num_in_edges_ex(size_t neuron_id) const {
+	RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_num_in_edges, tried with a too large id");
+
+	size_t total_num_ports = 0;
+
+	for (const auto& edge : neuron_neighborhood[neuron_id].in_edges) {
+		int connection_strength = edge.second;
+		if (connection_strength > 0) {
+			total_num_ports += connection_strength;
+		}
+	}
+
+	return total_num_ports;
+}
+
+size_t NetworkGraph::get_num_in_edges_in(size_t neuron_id) const {
+	RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_num_in_edges, tried with a too large id");
+
+	size_t total_num_ports = 0;
+
+	for (const auto& edge : neuron_neighborhood[neuron_id].in_edges) {
+		int connection_strength = edge.second;
+		if (connection_strength < 0) {
+			total_num_ports += -connection_strength;
+		}
+	}
+
+	return total_num_ports;
+}
+
+size_t NetworkGraph::get_num_out_edges(size_t neuron_id) const {
+	RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_num_out_edges, tried with a too large id");
+
+	size_t total_num_ports = 0;
+
+	for (const auto& edge : neuron_neighborhood[neuron_id].out_edges) {
+		int connection_strength = edge.second;
+		total_num_ports += std::abs(connection_strength);
+	}
+
+	return total_num_ports;
 }
 
 void NetworkGraph::add_edge(Edges& edges, int rank, size_t neuron_id, int weight) {

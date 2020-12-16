@@ -49,6 +49,12 @@ public:
 	// Return out edges of neuron "neuron_id"
 	[[nodiscard]] const Edges& get_out_edges(size_t neuron_id) const /*noexcept*/;
 
+	[[nodiscard]] size_t get_num_in_edges_ex(size_t neuron_id) const;
+
+	[[nodiscard]] size_t get_num_in_edges_in(size_t neuron_id) const;
+
+	[[nodiscard]] size_t get_num_out_edges(size_t neuron_id) const;
+
 	/**
 	 * Add weight to an edge.
 	 * The edge is created if it does not exist yet and parameter weight != 0.
