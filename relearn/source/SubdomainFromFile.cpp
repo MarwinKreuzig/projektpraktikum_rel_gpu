@@ -10,6 +10,7 @@
 
 #include "SubdomainFromFile.h"
 
+#include "Commons.h"
 #include "LogMessages.h"
 #include "NeuronToSubdomainAssignment.h"
 #include "RelearnException.h"
@@ -75,9 +76,9 @@ void SubdomainFromFile::read_dimensions_from_file() {
 	}
 
 	{
-		maximum.x = std::nextafter(maximum.x, maximum.x + 0.1);
-		maximum.y = std::nextafter(maximum.y, maximum.y + 0.1);
-		maximum.z = std::nextafter(maximum.z, maximum.z + 0.1);
+		maximum.x = std::nextafter(maximum.x, maximum.x + Constants::eps);
+		maximum.y = std::nextafter(maximum.y, maximum.y + Constants::eps);
+		maximum.z = std::nextafter(maximum.z, maximum.z + Constants::eps);
 	}
 
 	desired_num_neurons_ = found_ex_neurons + found_in_neurons;

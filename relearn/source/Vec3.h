@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "Commons.h"
 #include "RelearnException.h"
 
 #include <algorithm>
@@ -115,9 +116,9 @@ struct Vec3 {
 	}
 
 	void round_to_larger_multiple(const T& multiple) noexcept {
-		x = ceil((x - 0.001) / multiple) * multiple;
-		y = ceil((y - 0.001) / multiple) * multiple;
-		z = ceil((z - 0.001) / multiple) * multiple;
+		x = ceil((x - Constants::eps) / multiple) * multiple;
+		y = ceil((y - Constants::eps) / multiple) * multiple;
+		z = ceil((z - Constants::eps) / multiple) * multiple;
 	}
 
 	[[nodiscard]] Vec3<size_t> floor_componentwise() const /*noexcept*/ {

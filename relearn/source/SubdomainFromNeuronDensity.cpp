@@ -41,7 +41,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 	const NeuronToSubdomainAssignment::Position& length_of_box,
 	size_t num_neurons, size_t subdomain_idx) {
 
-	constexpr unsigned short max_short = std::numeric_limits<unsigned short>().max();
+	constexpr unsigned short max_short = std::numeric_limits<unsigned short>::max();
 
 	const double simulation_box_length_ = get_simulation_box_length().get_maximum();
 

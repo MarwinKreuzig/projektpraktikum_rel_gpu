@@ -8,6 +8,7 @@
  *
  */
 
+#include "Commons.h"
 #include "LogFiles.h"
 #include "LogMessages.h"
 #include "MPIWrapper.h"
@@ -149,77 +150,77 @@ void printTimers() {
 		std::cout.precision(6);
 
 		std::cout << "\n======== TIMERS GLOBAL OVER ALL RANKS ========" << std::endl;
-		std::cout << "                                                (" << std::setw(12) << "    min" << " | " << std::setw(12) << "    avg" << " | " << std::setw(12) << "    max" << ") sec." << std::endl;
+		std::cout << "                                                (" << std::setw(Constants::print_width) << "    min" << " | " << std::setw(Constants::print_width) << "    avg" << " | " << std::setw(Constants::print_width) << "    max" << ") sec." << std::endl;
 		std::cout << "TIMERS: main()" << std::endl;
-		std::cout << "  Initialization                               : " << std::setw(12) << timers_global[3 * TimerRegion::INITIALIZATION] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::INITIALIZATION + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::INITIALIZATION + 2] << std::endl;
-		std::cout << "  Simulation loop                              : " << std::setw(12) << timers_global[3 * TimerRegion::SIMULATION_LOOP] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::SIMULATION_LOOP + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::SIMULATION_LOOP + 2] << std::endl;
-		std::cout << "    Update electrical activity                 : " << std::setw(12) << timers_global[3 * TimerRegion::UPDATE_ELECTRICAL_ACTIVITY] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::UPDATE_ELECTRICAL_ACTIVITY + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::UPDATE_ELECTRICAL_ACTIVITY + 2] << std::endl;
-		std::cout << "      Barrier 1                                : " << std::setw(12) << timers_global[3 * TimerRegion::BARRIER_1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::BARRIER_1 + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::BARRIER_1 + 2] << std::endl;
-		std::cout << "      Prepare sending spikes                   : " << std::setw(12) << timers_global[3 * TimerRegion::PREPARE_SENDING_SPIKES] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::PREPARE_SENDING_SPIKES + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::PREPARE_SENDING_SPIKES + 2] << std::endl;
-		std::cout << "      Prepare num neuron ids                   : " << std::setw(12) << timers_global[3 * TimerRegion::PREPARE_NUM_NEURON_IDS] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::PREPARE_NUM_NEURON_IDS + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::PREPARE_NUM_NEURON_IDS + 2] << std::endl;
-		std::cout << "      Barrier 2                                : " << std::setw(12) << timers_global[3 * TimerRegion::BARRIER_2] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::BARRIER_2 + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::BARRIER_2 + 2] << std::endl;
-		std::cout << "      All to all                               : " << std::setw(12) << timers_global[3 * TimerRegion::ALL_TO_ALL] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::ALL_TO_ALL + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::ALL_TO_ALL + 2] << std::endl;
-		std::cout << "      Alloc mem for neuron ids                 : " << std::setw(12) << timers_global[3 * TimerRegion::ALLOC_MEM_FOR_NEURON_IDS] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::ALLOC_MEM_FOR_NEURON_IDS + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::ALLOC_MEM_FOR_NEURON_IDS + 2] << std::endl;
-		std::cout << "      Barrier 3                                : " << std::setw(12) << timers_global[3 * TimerRegion::BARRIER_3] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::BARRIER_3 + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::BARRIER_3 + 2] << std::endl;
-		std::cout << "      Exchange neuron ids                      : " << std::setw(12) << timers_global[3 * TimerRegion::EXCHANGE_NEURON_IDS] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::EXCHANGE_NEURON_IDS + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::EXCHANGE_NEURON_IDS + 2] << std::endl;
-		std::cout << "      Calculate synaptic input                 : " << std::setw(12) << timers_global[3 * TimerRegion::CALC_SYNAPTIC_INPUT] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::CALC_SYNAPTIC_INPUT + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::CALC_SYNAPTIC_INPUT + 2] << std::endl;
-		std::cout << "      Calculate activity                       : " << std::setw(12) << timers_global[3 * TimerRegion::CALC_ACTIVITY] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::CALC_ACTIVITY + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::CALC_ACTIVITY + 2] << std::endl;
-		std::cout << "    Update #synaptic elements delta            : " << std::setw(12) << timers_global[3 * TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA + 2] << std::endl;
-		std::cout << "    Connectivity update                        : " << std::setw(12) << timers_global[3 * TimerRegion::UPDATE_CONNECTIVITY] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::UPDATE_CONNECTIVITY + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::UPDATE_CONNECTIVITY + 2] << std::endl;
-		std::cout << "      Update #synaptic elements + del synapses : " << std::setw(12) << timers_global[3 * TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES + 2] << std::endl;
-		std::cout << "      Update local trees                       : " << std::setw(12) << timers_global[3 * TimerRegion::UPDATE_LOCAL_TREES] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::UPDATE_LOCAL_TREES + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::UPDATE_LOCAL_TREES + 2] << std::endl;
-		std::cout << "      Exchange branch nodes (w/ Allgather)     : " << std::setw(12) << timers_global[3 * TimerRegion::EXCHANGE_BRANCH_NODES] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::EXCHANGE_BRANCH_NODES + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::EXCHANGE_BRANCH_NODES + 2] << std::endl;
-		std::cout << "      Insert branch nodes into global tree     : " << std::setw(12) << timers_global[3 * TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE + 2] << std::endl;
-		std::cout << "      Update global tree                       : " << std::setw(12) << timers_global[3 * TimerRegion::UPDATE_GLOBAL_TREE] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::UPDATE_GLOBAL_TREE + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::UPDATE_GLOBAL_TREE + 2] << std::endl;
-		std::cout << "      Find target neurons (w/ RMA)             : " << std::setw(12) << timers_global[3 * TimerRegion::FIND_TARGET_NEURONS] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::FIND_TARGET_NEURONS + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::FIND_TARGET_NEURONS + 2] << std::endl;
-		std::cout << "      Empty remote nodes cache                 : " << std::setw(12) << timers_global[3 * TimerRegion::EMPTY_REMOTE_NODES_CACHE] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::EMPTY_REMOTE_NODES_CACHE + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::EMPTY_REMOTE_NODES_CACHE + 2] << std::endl;
-		std::cout << "      Create synapses (w/ Alltoall)            : " << std::setw(12) << timers_global[3 * TimerRegion::CREATE_SYNAPSES] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::CREATE_SYNAPSES + 1] << " | "
-			<< std::setw(12) << timers_global[3 * TimerRegion::CREATE_SYNAPSES + 2] << std::endl;
+		std::cout << "  Initialization                               : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::INITIALIZATION] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::INITIALIZATION + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::INITIALIZATION + 2] << std::endl;
+		std::cout << "  Simulation loop                              : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::SIMULATION_LOOP] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::SIMULATION_LOOP + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::SIMULATION_LOOP + 2] << std::endl;
+		std::cout << "    Update electrical activity                 : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_ELECTRICAL_ACTIVITY] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_ELECTRICAL_ACTIVITY + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_ELECTRICAL_ACTIVITY + 2] << std::endl;
+		std::cout << "      Barrier 1                                : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_1 + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_1 + 2] << std::endl;
+		std::cout << "      Prepare sending spikes                   : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_SENDING_SPIKES] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_SENDING_SPIKES + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_SENDING_SPIKES + 2] << std::endl;
+		std::cout << "      Prepare num neuron ids                   : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_NUM_NEURON_IDS] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_NUM_NEURON_IDS + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_NUM_NEURON_IDS + 2] << std::endl;
+		std::cout << "      Barrier 2                                : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_2] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_2 + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_2 + 2] << std::endl;
+		std::cout << "      All to all                               : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALL_TO_ALL] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALL_TO_ALL + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALL_TO_ALL + 2] << std::endl;
+		std::cout << "      Alloc mem for neuron ids                 : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALLOC_MEM_FOR_NEURON_IDS] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALLOC_MEM_FOR_NEURON_IDS + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALLOC_MEM_FOR_NEURON_IDS + 2] << std::endl;
+		std::cout << "      Barrier 3                                : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_3] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_3 + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_3 + 2] << std::endl;
+		std::cout << "      Exchange neuron ids                      : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_NEURON_IDS] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_NEURON_IDS + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_NEURON_IDS + 2] << std::endl;
+		std::cout << "      Calculate synaptic input                 : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_SYNAPTIC_INPUT] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_SYNAPTIC_INPUT + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_SYNAPTIC_INPUT + 2] << std::endl;
+		std::cout << "      Calculate activity                       : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_ACTIVITY] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_ACTIVITY + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_ACTIVITY + 2] << std::endl;
+		std::cout << "    Update #synaptic elements delta            : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA + 2] << std::endl;
+		std::cout << "    Connectivity update                        : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_CONNECTIVITY] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_CONNECTIVITY + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_CONNECTIVITY + 2] << std::endl;
+		std::cout << "      Update #synaptic elements + del synapses : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES + 2] << std::endl;
+		std::cout << "      Update local trees                       : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_LOCAL_TREES] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_LOCAL_TREES + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_LOCAL_TREES + 2] << std::endl;
+		std::cout << "      Exchange branch nodes (w/ Allgather)     : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_BRANCH_NODES] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_BRANCH_NODES + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_BRANCH_NODES + 2] << std::endl;
+		std::cout << "      Insert branch nodes into global tree     : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE + 2] << std::endl;
+		std::cout << "      Update global tree                       : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_GLOBAL_TREE] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_GLOBAL_TREE + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_GLOBAL_TREE + 2] << std::endl;
+		std::cout << "      Find target neurons (w/ RMA)             : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::FIND_TARGET_NEURONS] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::FIND_TARGET_NEURONS + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::FIND_TARGET_NEURONS + 2] << std::endl;
+		std::cout << "      Empty remote nodes cache                 : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EMPTY_REMOTE_NODES_CACHE] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EMPTY_REMOTE_NODES_CACHE + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EMPTY_REMOTE_NODES_CACHE + 2] << std::endl;
+		std::cout << "      Create synapses (w/ Alltoall)            : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CREATE_SYNAPSES] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CREATE_SYNAPSES + 1] << " | "
+			<< std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CREATE_SYNAPSES + 2] << std::endl;
 
 		// Restore old precision
 		std::cout.precision(old_precision);
@@ -322,7 +323,7 @@ int main(int argc, char** argv) {
 		params.frac_neurons_exc = neurons_in_subdomain->desired_ratio_neurons_exc();
 	}
 	else {
-		neurons_in_subdomain = std::make_shared<SubdomainFromNeuronDensity>(params.num_neurons, params.frac_neurons_exc);
+		neurons_in_subdomain = std::make_shared<SubdomainFromNeuronDensity>(params.num_neurons, params.frac_neurons_exc, 26);
 	}
 
 	if (0 == MPIWrapper::my_rank) {
@@ -472,7 +473,7 @@ int main(int argc, char** argv) {
 		//}
 
 		// Update connectivity every 100 ms
-		if (step % 100 == 0) {
+		if (step % Constants::plasticity_update_step == 0) {
 			size_t num_synapses_deleted = 0;
 			size_t num_synapses_created = 0;
 
@@ -517,7 +518,7 @@ int main(int argc, char** argv) {
 		}
 
 		// Print details every 500 ms
-		if (step % 500 == 0) {
+		if (step % Constants::logfile_update_step == 0) {
 			neurons.print_neurons_overview_to_log_file_on_rank_0(step, Logs::get("neurons_overview"), params);
 		}
 	}

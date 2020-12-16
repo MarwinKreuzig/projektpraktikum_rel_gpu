@@ -21,4 +21,13 @@ namespace Constants {
 	constexpr size_t num_pend_vacant = 10;
 
 	constexpr size_t max_lvl_subdomains = 20;
+
+	constexpr size_t num_items_per_request = 6;
+
+	constexpr double eps = 0.001;
+
+	constexpr size_t print_width = 12;
+
+	constexpr size_t plasticity_update_step = 100;
+	constexpr size_t logfile_update_step = 500,
 } // namespace Constants

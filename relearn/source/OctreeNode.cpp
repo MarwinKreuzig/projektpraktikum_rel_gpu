@@ -14,7 +14,7 @@ void OctreeNode::print() const {
 	std::cout << "== OctreeNode (" << this << ") ==\n";
 
 	std::cout << "  children[8]: ";
-	for (const auto child : children) {
+	for (const auto * const child : children) {
 		std::cout << child << " ";
 	}
 	std::cout << "\n";

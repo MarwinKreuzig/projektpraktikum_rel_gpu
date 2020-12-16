@@ -278,7 +278,7 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 
 		// All requests of a rank
 		for (auto request_index = 0; request_index < num_requests; ++request_index) {
-			std::array<size_t, 6> arr = requests.get_request(request_index);
+			std::array<size_t, Constants::num_items_per_request> arr = requests.get_request(request_index);
 
 			size_t src_neuron_id = arr[0];
 			size_t tgt_neuron_id = arr[1];
@@ -722,12 +722,18 @@ void Neurons::debug_check_counts() {
 }
 
 void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, LogFiles& log_file, const Parameters& params, size_t sum_synapses_deleted, size_t sum_synapses_created) {
-	unsigned int sum_axons_exc_cnts, sum_axons_exc_connected_cnts;
-	unsigned int sum_axons_inh_cnts, sum_axons_inh_connected_cnts;
-	unsigned int sum_dends_exc_cnts, sum_dends_exc_connected_cnts;
-	unsigned int sum_dends_inh_cnts, sum_dends_inh_connected_cnts;
-	unsigned int sum_axons_exc_vacant, sum_axons_inh_vacant;
-	unsigned int sum_dends_exc_vacant, sum_dends_inh_vacant;
+	unsigned int sum_axons_exc_cnts= 0; 
+	unsigned int sum_axons_exc_connected_cnts= 0;
+	unsigned int sum_axons_inh_cnts= 0;
+	unsigned int sum_axons_inh_connected_cnts= 0;
+	unsigned int sum_dends_exc_cnts= 0;
+	unsigned int sum_dends_exc_connected_cnts= 0;
+	unsigned int sum_dends_inh_cnts= 0;
+	unsigned int sum_dends_inh_connected_cnts= 0;
+	unsigned int sum_axons_exc_vacant= 0;
+	unsigned int sum_axons_inh_vacant= 0;
+	unsigned int sum_dends_exc_vacant= 0; 
+	unsigned int sum_dends_inh_vacant= 0;
 
 	// My vacant axons (exc./inh.)
 	sum_axons_exc_cnts = sum_axons_exc_connected_cnts = 0;
@@ -772,14 +778,14 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 	sum_dends_inh_vacant = sum_dends_inh_cnts - sum_dends_inh_connected_cnts;
 
 	// Get global sums at rank 0
-	std::array<unsigned int, 6> sums_local = { sum_axons_exc_vacant,
+	std::array<unsigned int, Constants::num_items_per_request> sums_local = { sum_axons_exc_vacant,
 		sum_axons_inh_vacant,
 		sum_dends_exc_vacant,
 		sum_dends_inh_vacant,
 		static_cast<unsigned int>(sum_synapses_deleted),
 		static_cast<unsigned int>(sum_synapses_created) };
 
-	std::array<unsigned int, 6> sums_global{ 0, 0, 0, 0, 0, 0 }; // Init all to zero
+	std::array<unsigned int, Constants::num_items_per_request> sums_global{ 0, 0, 0, 0, 0, 0 }; // Init all to zero
 
 	MPIWrapper::reduce(sums_local, sums_global, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
 

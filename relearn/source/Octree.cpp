@@ -43,7 +43,8 @@ Octree::Octree(const Partition& part, const Parameters& params) :
 
 	random_number_generator.seed(randomNumberSeeds::octree);
 
-	Vec3d xyz_min, xyz_max;
+	Vec3d xyz_min;
+	Vec3d xyz_max;
 	std::tie(xyz_min, xyz_max) = part.get_simulation_box_size();
 
 	set_size(xyz_min, xyz_max);
@@ -75,7 +76,9 @@ void Octree::postorder_print() {
 
 		// Visit node now
 		if (elem.flag) {
-			Vec3d xyz_min, xyz_max, xyz_pos;
+			Vec3d xyz_min;
+			Vec3d xyz_max;
+			Vec3d xyz_pos;
 
 			// Print node's address
 			for (auto j = 0; j < depth; j++) {
@@ -741,7 +744,8 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 			* Init this new node properly
 			*/
 			// Cell size
-			Vec3d xyz_min, xyz_max;
+			Vec3d xyz_min;
+			Vec3d xyz_max;
 			std::tie(xyz_min, xyz_max) = prev->cell.get_size_for_octant(idx);
 
 			new_node->cell.set_size(xyz_min, xyz_max);
@@ -784,7 +788,8 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 	prev->children[my_idx] = new_node;
 	new_node->level = prev->level + 1;  // Now we know level of me
 
-	Vec3d xyz_min, xyz_max;
+	Vec3d xyz_min;
+	Vec3d xyz_max;
 	std::tie(xyz_min, xyz_max) = prev->cell.get_size_for_octant(my_idx);
 	prev->children[my_idx]->cell.set_size(xyz_min, xyz_max);
 
@@ -833,7 +838,8 @@ void Octree::insert(OctreeNode* node_to_insert) {
 
 	unsigned char my_idx = 0;
 	// Calc midpoint of node's cell
-	Vec3d cell_xyz_min, cell_xyz_max;
+	Vec3d cell_xyz_min;
+	Vec3d cell_xyz_max;
 	std::tie(cell_xyz_min, cell_xyz_max) = node_to_insert->cell.get_size();
 	const double cell_length_half = node_to_insert->cell.get_length() / 2;
 	const auto cell_xyz_mid = cell_xyz_min + cell_length_half;
@@ -878,7 +884,8 @@ void Octree::insert(OctreeNode* node_to_insert) {
 		// I can then follow
 		else {
 			//LogMessages::print_debug("  New node must be created which I can then follow.");
-			Vec3d new_node_xyz_min, new_node_xyz_max;
+			Vec3d new_node_xyz_min; 
+			Vec3d new_node_xyz_max;
 
 			//LogMessages::print_debug("    Trying to allocate node.");
 			// Create node

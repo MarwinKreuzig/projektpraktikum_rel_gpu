@@ -106,13 +106,10 @@ public:
 	 */
 	[[nodiscard]] static std::string wall_clock_time() {
 #ifdef __linux__ 
-		time_t rawtime;
-		struct tm* timeinfo;
-		char* string;
-
+		time_t rawtime = 0;
 		time(&rawtime);
-		timeinfo = localtime(&rawtime);
-		string = asctime(timeinfo);
+		struct tm* timeinfo = localtime(&rawtime);
+		char* string = asctime(timeinfo);
 
 		// Remove linebreak in string
 		// NOLINTNEXTLINE
@@ -120,7 +117,7 @@ public:
 
 		return std::string(string);
 #else
-		time_t rawtime;
+		time_t rawtime = 0;
 		struct tm timeinfo;
 		char char_buff[30];
 

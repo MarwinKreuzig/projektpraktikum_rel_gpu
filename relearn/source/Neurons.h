@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Cell.h"
+#include "Commons.h"
 #include "LogFiles.h"
 #include "MPIWrapper.h"
 #include "NetworkGraph.h"
@@ -192,7 +193,7 @@ class Neurons {
 
 		void resize(size_t size) {
 			num_requests = size;
-			requests.resize(6 * size);
+			requests.resize(Constants::num_items_per_request * size);
 		}
 
 		void append(size_t src_neuron_id, size_t tgt_neuron_id, size_t affected_neuron_id, size_t affected_element_type, size_t signal_type, size_t synapse_id) {
@@ -206,17 +207,14 @@ class Neurons {
 			requests.push_back(synapse_id);
 		}
 
-		[[nodiscard]] std::array<size_t, 6> get_request(size_t request_index) const noexcept {
-			const size_t base_index = 6 * request_index;
+		[[nodiscard]] std::array<size_t, Constants::num_items_per_request> get_request(size_t request_index) const noexcept {
+			const size_t base_index = Constants::num_items_per_request * request_index;
 
-			std::array<size_t, 6> arr{};
+			std::array<size_t, Constants::num_items_per_request> arr{};
 
-			arr[0] = requests[base_index];
-			arr[1] = requests[base_index + 1];
-			arr[2] = requests[base_index + 2];
-			arr[3] = requests[base_index + 3];
-			arr[4] = requests[base_index + 4];
-			arr[5] = requests[base_index + 5];
+			for (auto i = 0; i < Constants::num_items_per_request; i++) {
+				arr[i] = requests[base_index + i];
+			}
 
 			return arr;
 		}
@@ -344,7 +342,7 @@ public:
 	// Print global information about all neurons at rank 0
 	void print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles& log_file, const Parameters& params);
 
-	void print_network_graph_to_log_file(LogFiles& log_file,
+	static void print_network_graph_to_log_file(LogFiles& log_file,
 		const NetworkGraph& network_graph,
 		const Parameters& params,
 		const NeuronIdMap& neuron_id_map);

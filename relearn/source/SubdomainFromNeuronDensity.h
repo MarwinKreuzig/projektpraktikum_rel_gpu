@@ -21,8 +21,7 @@
 // in each of the three dimensions.
 class SubdomainFromNeuronDensity : public NeuronToSubdomainAssignment {
 public:
-	SubdomainFromNeuronDensity(size_t num_neurons, double desired_frac_neurons_exc,
-		double um_per_neuron = 26);
+	SubdomainFromNeuronDensity(size_t num_neurons, double desired_frac_neurons_exc, double um_per_neuron);
 
 	SubdomainFromNeuronDensity(const SubdomainFromNeuronDensity& other) = delete;
 	SubdomainFromNeuronDensity(SubdomainFromNeuronDensity&& other) = delete;
