@@ -333,6 +333,7 @@ ASALocalRun/
 
 */build
 */build-windows
+*/build-docker
 */build-linux
 */output
 */bw2
