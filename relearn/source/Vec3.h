@@ -132,7 +132,7 @@ struct Vec3 {
 		return Vec3<size_t>(floored_x, floored_y, floored_z);
 	}
 
-	T get_volume() const noexcept {
+	[[nodiscard]] T get_volume() const noexcept {
 		return x * y * z;
 	}
 
@@ -167,7 +167,7 @@ struct Vec3 {
 	/**
 	 * Calculates the p-Norm. Assumens p >= 1.0
 	 */
-	double calculate_p_norm(const double p) const {
+	[[nodiscard]] double calculate_p_norm(const double p) const {
 		RelearnException::check(p >= 1.0, "p-norm is only valid for p >= 1.0");
 
 		const auto xx = pow(std::abs(static_cast<double>(x)), p);
@@ -203,11 +203,11 @@ struct Vec3 {
 		}
 	}
 
-	T get_maximum() const noexcept {
+	[[nodiscard]] T get_maximum() const noexcept {
 		return std::max({ x, y, z });
 	}
 
-	T get_minimum() const noexcept {
+	[[nodiscard]] T get_minimum() const noexcept {
 		return std::min({ x, y, z });
 	}
 

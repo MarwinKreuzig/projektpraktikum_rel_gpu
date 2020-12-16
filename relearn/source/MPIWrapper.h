@@ -106,7 +106,7 @@ public:
 
 	template <typename T>
 	static void async_send(const T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
-		auto mpi_scope = translate_scope(scope);
+		MPI_Comm mpi_scope = translate_scope(scope);
 
 		// NOLINTNEXTLINE
 		const int errorcode = MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, mpi_scope, &token);
@@ -115,7 +115,7 @@ public:
 
 	template <typename T>
 	static void async_receive(T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
-		auto mpi_scope = translate_scope(scope);
+		MPI_Comm mpi_scope = translate_scope(scope);
 
 		// NOLINTNEXTLINE
 		const int errorcode = MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, mpi_scope, &token);
@@ -126,7 +126,7 @@ public:
 	static void reduce(const std::array<T, size>& src, std::array<T, size>& dst, ReduceFunction function, int root_rank, Scope scope) {
 		RelearnException::check(src.size() == dst.size(), "Sizes of vectors don't match");
 
-		auto mpi_scope = translate_scope(scope);
+		MPI_Comm mpi_scope = translate_scope(scope);
 		auto mpi_reduce_function = translate_reduce_function(function);
 
 		// NOLINTNEXTLINE
@@ -136,7 +136,7 @@ public:
 
 	template<typename T>
 	static void all_gather(T own_data, std::vector<T>& results, Scope scope) {
-		auto mpi_scope = translate_scope(scope);
+		MPI_Comm mpi_scope = translate_scope(scope);
 
 		// NOLINTNEXTLINE
 		const int errorcode = MPI_Allgather(&own_data, sizeof(T), MPI_CHAR, results.data(), sizeof(T), MPI_CHAR, mpi_scope);
@@ -145,7 +145,7 @@ public:
 
 	template <typename T>
 	static void all_gather_inline(T* ptr, int count, Scope scope) {
-		auto mpi_scope = translate_scope(scope);
+		MPI_Comm mpi_scope = translate_scope(scope);
 
 		// NOLINTNEXTLINE
 		const int errorcode = MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, ptr, count * sizeof(T), MPI_CHAR, MPI_COMM_WORLD);
