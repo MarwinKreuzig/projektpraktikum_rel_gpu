@@ -44,10 +44,10 @@ public:
 	explicit NetworkGraph(size_t my_num_neurons);
 
 	// Return in edges of neuron "neuron_id"
-	const Edges& get_in_edges(size_t neuron_id) const /*noexcept*/;
+	[[nodiscard]] const Edges& get_in_edges(size_t neuron_id) const /*noexcept*/;
 
 	// Return out edges of neuron "neuron_id"
-	const Edges& get_out_edges(size_t neuron_id) const /*noexcept*/;
+	[[nodiscard]] const Edges& get_out_edges(size_t neuron_id) const /*noexcept*/;
 
 	/**
 	 * Add weight to an edge.

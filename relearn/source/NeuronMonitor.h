@@ -50,7 +50,7 @@ public:
 		: neurons_to_monitor(neurons), target_neuron_id(neuron_id), informations(max_steps) {
 	}
 
-	size_t get_target_id() const /*noexcept*/ {
+	[[nodiscard]] size_t get_target_id() const /*noexcept*/ {
 		return target_neuron_id;
 	}
 
@@ -75,7 +75,7 @@ public:
 		informations[current_step] = NeuronInformation(calcium, x, fired, secondary, I_sync, axons, axons_connected, dendrites_exc, dendrites_exc_connected, dendrites_inh, dendrites_inh_connected);
 	}
 
-	const std::vector<NeuronInformation>& get_informations() const /*noexcept*/ {
+	[[nodiscard]] const std::vector<NeuronInformation>& get_informations() const /*noexcept*/ {
 		return informations;
 	}
 };

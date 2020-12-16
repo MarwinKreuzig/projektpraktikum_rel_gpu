@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "Commons.h"
 #include "LogMessages.h"
 #include "MPI_RMA_MemAllocator.h"
 #include "NeuronToSubdomainAssignment.h"
@@ -34,15 +35,15 @@ public:
 		Vec3d xyz_min;
 		Vec3d xyz_max;
 
-		size_t num_neurons{ 1111222233334444 };
+		size_t num_neurons{ Constants::uninitialized };
 
 		// Local start and end neuron id
-		size_t neuron_local_id_start{ 1111222233334444 };
-		size_t neuron_local_id_end{ 1111222233334444 };
+		size_t neuron_local_id_start{ Constants::uninitialized };
+		size_t neuron_local_id_end{ Constants::uninitialized };
 
 		std::vector<size_t> global_neuron_ids;
 
-		size_t index_1d{ 1111222233334444 };
+		size_t index_1d{ Constants::uninitialized };
 
 		Vec3<size_t> index_3d;
 

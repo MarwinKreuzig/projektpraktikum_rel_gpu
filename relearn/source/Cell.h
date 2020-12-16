@@ -103,7 +103,7 @@ public:
 		dendrites_in.xyz_pos_valid = valid;
 	}
 
-	[[nodiscard]] std::tuple<Vec3d, bool> get_neuron_position_for(DendriteType dendrite_type) const noexcept {
+	[[nodiscard]] std::tuple<Vec3d, bool> get_neuron_position_for(DendriteType dendrite_type) const {
 		if (dendrite_type == DendriteType::EXCITATORY) {
 			const auto position = dendrites_ex.xyz_pos;
 			const auto valid = dendrites_ex.xyz_pos_valid;
@@ -135,7 +135,7 @@ public:
 		return dendrites_in.num_dendrites;
 	}
 
-	[[nodiscard]] unsigned int get_neuron_num_dendrites_for(DendriteType dendrite_type) const noexcept {
+	[[nodiscard]] unsigned int get_neuron_num_dendrites_for(DendriteType dendrite_type) const {
 		if (dendrite_type == DendriteType::EXCITATORY) {
 			return dendrites_ex.num_dendrites;
 		}
@@ -228,7 +228,7 @@ public:
 				xyz_max[i] = (this->xyz_min[i] + this->xyz_max[i]) / 2.0;
 			}
 
-			mask <<= 1;
+			mask <<= 1u;
 		}
 
 		return std::make_tuple(xyz_min, xyz_max);
@@ -274,11 +274,7 @@ private:
 	 *
 	 * Info about EXCITATORY dendrites: dendrites_ex
 	 * Info about INHIBITORY dendrites: dendrites_in
-	 *
-	 * Type DendriteType (see declaration) is used as indices to access the array elements
 	 */
-	Dendrites dendrites[2];
-
 	Dendrites dendrites_ex;
 	Dendrites dendrites_in;
 

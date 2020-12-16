@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Cell.h"
+#include "Commons.h"
 #include "LogMessages.h"
 #include "MPI_RMA_MemAllocator.h"
 #include "NeuronModels.h"
@@ -457,7 +458,7 @@ private:
 	std::vector<Octree*> local_trees;
 
 	// Level which is assigned to the root of the tree (default = 0)
-	size_t root_level{ 1111222233334444 };
+	size_t root_level{ Constants::uninitialized };
 
 	// 'True' if destructor should not free the tree nodes
 	bool no_free_in_destructor{ false };
@@ -469,7 +470,7 @@ private:
 	double acceptance_criterion{ 0.3 };  // Acceptance criterion
 	double sigma{ 150.0 };                 // Probability parameter
 	bool   naive_method{ false };          // If true, expand every cell regardless of whether dendrites are available or not
-	size_t level_of_branch_nodes{ 1111222233334444 };
+	size_t level_of_branch_nodes{ Constants::uninitialized };
 	size_t max_num_pending_vacant_axons{ 10 };  // Maximum number of vacant axons which are considered at the same time for
 										  // finding a target neuron
 

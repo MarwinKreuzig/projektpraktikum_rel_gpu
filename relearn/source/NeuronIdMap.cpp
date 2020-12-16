@@ -10,6 +10,7 @@
 
 #include "NeuronIdMap.h"
 
+#include "Commons.h"
 #include "MPIWrapper.h"
 #include "RelearnException.h"
 
@@ -44,7 +45,7 @@ std::tuple<bool, size_t> NeuronIdMap::rank_neuron_id2glob_id(const RankNeuronId&
 	// Rank is not valid
 	if (rank_neuron_id.rank < 0 ||
 		rank_neuron_id.rank > (rank_to_start_neuron_id.size() - 1)) { 
-		return std::make_tuple(false, 1111222233334444);
+		return std::make_tuple(false, Constants::uninitialized);
 	}
 
 	size_t glob_id = rank_to_start_neuron_id[rank_neuron_id.rank] + rank_neuron_id.neuron_id;
@@ -56,7 +57,7 @@ std::tuple<bool, NeuronIdMap::RankNeuronId> NeuronIdMap::pos2rank_neuron_id(cons
 
 	// Neuron position not found
 	if (it == pos_to_rank_neuron_id.end()) {
-		return std::make_tuple(false, NeuronIdMap::RankNeuronId{ 1111222233334444, 1111222233334444 });
+		return std::make_tuple(false, NeuronIdMap::RankNeuronId{ Constants::uninitialized, Constants::uninitialized });
 	}
 
 	// Return rank and neuron id

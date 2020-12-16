@@ -10,6 +10,7 @@
 
 #pragma once 
 
+#include "Commons.h"
 #include "Random.h"
 #include "RelearnException.h"
 #include "SynapticElements.h"
@@ -36,39 +37,39 @@ public:
 	NeuronToSubdomainAssignment& operator=(NeuronToSubdomainAssignment&& other) = delete;
 
 	// Total number of neurons
-	size_t desired_num_neurons() const noexcept {
+	[[nodiscard]] size_t desired_num_neurons() const noexcept {
 		return desired_num_neurons_;
 	}
 
 	// Total number of neurons already placed
-	size_t placed_num_neurons() const noexcept {
+	[[nodiscard]] size_t placed_num_neurons() const noexcept {
 		return currently_num_neurons_;
 	}
 
 	// Ratio of DendriteType::EXCITATORY neurons
-	double desired_ratio_neurons_exc() const noexcept {
+	[[nodiscard]] double desired_ratio_neurons_exc() const noexcept {
 		return desired_frac_neurons_exc_;
 	}
 
 	// Ratio of DendriteType::EXCITATORY neurons already placed
-	double placed_ratio_neurons_exc() const noexcept {
+	[[nodiscard]] double placed_ratio_neurons_exc() const noexcept {
 		return currently_frac_neurons_exc_;
 	}
 
-	Vec3d get_simulation_box_length() const noexcept {
+	[[nodiscard]] Vec3d get_simulation_box_length() const noexcept {
 		return simulation_box_length;
 	}
 
 
-	virtual std::tuple<Position, Position> get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, size_t num_subdomains_per_axis) const noexcept;
+	[[nodiscard]] virtual std::tuple<Position, Position> get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, size_t num_subdomains_per_axis) const noexcept;
 
-	virtual std::tuple<Position, Position> get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, const Vec3<size_t>& num_subdomains_per_axis) const noexcept;
+	[[nodiscard]] virtual std::tuple<Position, Position> get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, const Vec3<size_t>& num_subdomains_per_axis) const noexcept;
 
 	virtual void fill_subdomain(size_t subdomain_idx, size_t num_subdomains,
 		const Position& min, const Position& max) = 0;
 
 	// Return number of neurons which have positions in the range [min, max) in every dimension
-	virtual size_t num_neurons(size_t subdomain_idx, size_t num_subdomains,
+	[[nodiscard]] virtual size_t num_neurons(size_t subdomain_idx, size_t num_subdomains,
 		const Position& min, const Position& max) const;
 
 	// Return neurons which have positions in the range [min, max) in every dimension
@@ -92,14 +93,14 @@ public:
 protected:
 	struct Node {
 		Position pos{ 0 };
-		size_t id{ 1111222233334444 };
+		size_t id{ Constants::uninitialized };
 		SynapticElements::SignalType signal_type{ SynapticElements::SignalType::EXCITATORY };
 		std::string area_name{ "NOT SET" };
 
 		struct less {
 			bool operator() (const Node& lhs, const Node& rhs) const /*noexcept*/ {
-				RelearnException::check(lhs.id != 1111222233334444, "lhs id is a dummy one");
-				RelearnException::check(rhs.id != 1111222233334444, "rhs id is a dummy one");
+				RelearnException::check(lhs.id != Constants::uninitialized, "lhs id is a dummy one");
+				RelearnException::check(rhs.id != Constants::uninitialized, "rhs id is a dummy one");
 
 				return lhs.id < rhs.id;
 
@@ -122,7 +123,7 @@ protected:
 
 	Vec3d simulation_box_length{ 0 };
 
-	bool position_in_box(const Position& pos, const Position& box_min, const Position& box_max) const noexcept;
+	[[nodiscard]] bool position_in_box(const Position& pos, const Position& box_min, const Position& box_max) const noexcept;
 
 	NeuronToSubdomainAssignment() = default;
 };

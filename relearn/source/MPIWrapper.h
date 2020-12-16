@@ -127,7 +127,7 @@ public:
 		RelearnException::check(src.size() == dst.size(), "Sizes of vectors don't match");
 
 		MPI_Comm mpi_scope = translate_scope(scope);
-		auto mpi_reduce_function = translate_reduce_function(function);
+		MPI_Op mpi_reduce_function = translate_reduce_function(function);
 
 		// NOLINTNEXTLINE
 		const int errorcode = MPI_Reduce(src.data(), dst.data(), sizeof(T) * src.size(), MPI_CHAR, mpi_reduce_function, root_rank, mpi_scope);

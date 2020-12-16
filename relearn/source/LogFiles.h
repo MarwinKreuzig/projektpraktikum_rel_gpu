@@ -38,10 +38,10 @@ public:
 
 	~LogFiles() noexcept(false);
 
-	size_t get_num_files() const noexcept { return num_files; }
+	[[nodiscard]] size_t get_num_files() const noexcept { return num_files; }
 
 	// Get pointer to file stream
-	std::ofstream& get_file(size_t file_id);
+	[[nodiscard]] std::ofstream& get_file(size_t file_id);
 
 private:
 	size_t num_files = 0;      // Number of files
