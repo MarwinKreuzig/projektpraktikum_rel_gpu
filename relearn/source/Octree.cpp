@@ -758,10 +758,10 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 			const auto prev_neuron_id = prev->cell.get_neuron_id();
 			new_node->cell.set_neuron_id(prev_neuron_id);
 			/**
-			* Set neuron ID of parent (inner node) to NEURON_ID_PARENT.
+			* Set neuron ID of parent (inner node) to uninitialized.
 			* It is not used for inner nodes.
 			*/
-			prev->cell.set_neuron_id(NEURON_ID_PARENT);
+			prev->cell.set_neuron_id(Constants::uninitialized);
 			prev->is_parent = true;  // Mark node as parent
 
 								  // MPI rank who owns this node
@@ -823,7 +823,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
 							  // Init cell in octree node
 							  // cell size becomes tree's box size
 		root->cell.set_size(this->xyz_min, this->xyz_max);
-		root->cell.set_neuron_id(NEURON_ID_PARENT);
+		root->cell.set_neuron_id(Constants::uninitialized);
 
 		//LogMessages::print_debug("ROOT: new node as root inserted.");
 	}
@@ -897,7 +897,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
 									  // cell size becomes size of new node's octant
 			std::tie(new_node_xyz_min, new_node_xyz_max) = curr->cell.get_size_for_octant(my_idx);
 			new_node->cell.set_size(new_node_xyz_min, new_node_xyz_max);
-			new_node->cell.set_neuron_id(NEURON_ID_PARENT);
+			new_node->cell.set_neuron_id(Constants::uninitialized);
 
 			curr->children[my_idx] = new_node;
 			curr = new_node;

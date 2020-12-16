@@ -39,7 +39,7 @@ uint64_t Morton::map_3d_to_1d(const BoxCoordinates& coords) const noexcept {
 	return result;
 }
 
-uint64_t Morton::copy_bit(uint64_t source, uint8_t source_bit, uint64_t destination, uint8_t destination_bit) const /*noexcept*/ {
+uint64_t Morton::copy_bit(uint64_t source, uint8_t source_bit, uint64_t destination, uint8_t destination_bit) /*noexcept*/ {
 	// A simpler solution might be:
 	// destination ^= (-select_bit(source, source_bit) ^ destination) & (1 << destination_bit);
 
