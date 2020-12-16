@@ -122,6 +122,10 @@ public:
 
 	[[nodiscard]] size_t get_local_id(size_t global_id) const;
 
+	[[nodiscard]] size_t get_total_num_neurons() const noexcept;
+
+	void set_total_num_neurons(size_t total_num) noexcept;
+
 protected:
 	// We need the "axons" parameter to set for every neuron the type of axons it grows (exc./inh.)
 	[[nodiscard]] Neurons load_neurons(const Parameters& params, NeuronToSubdomainAssignment& neurons_in_subdomain);

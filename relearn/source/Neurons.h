@@ -316,7 +316,7 @@ public:
 
 	[[nodiscard]] std::tuple<bool, size_t, Vec3d, Cell::DendriteType> get_vacant_axon() const noexcept;
 
-	void init_synaptic_elements();
+	void init_synaptic_elements(const NetworkGraph& network_graph);
 
 	void update_electrical_activity(const NetworkGraph& network_graph) {
 		neuron_models->update_electrical_activity(network_graph, calcium);

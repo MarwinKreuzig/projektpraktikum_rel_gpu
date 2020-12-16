@@ -97,7 +97,7 @@ std::tuple<bool, size_t, Vec3d, Cell::DendriteType> Neurons::get_vacant_axon() c
 	return std::make_tuple(false, neuron_id, xyz_pos, dendrite_type_needed);
 }
 
-void Neurons::init_synaptic_elements() {
+void Neurons::init_synaptic_elements(const NetworkGraph& network_graph) {
 	/**
 	* Mark dendrites as exc./inh.
 	*/
@@ -110,23 +110,30 @@ void Neurons::init_synaptic_elements() {
 
 	//            int num_axons = 1;
 	//            int num_dends = 1;
-	const int num_axons = 0;
-	const int num_dends = 0;
+	const double num_axons_offset = 0;
+	const double num_dends_offset = 0;
 
 	const std::vector<double>& axons_cnts = axons.get_cnts();
 	const std::vector<double>& dendrites_inh_cnts = dendrites_inh.get_cnts();
 	const std::vector<double>& dendrites_exc_cnts = dendrites_exc.get_cnts();
 
 	for (auto i = 0; i < num_neurons; i++) {
-		axons.update_cnt(i, num_axons);
-		dendrites_inh.update_cnt(i, num_dends);
-		dendrites_exc.update_cnt(i, num_dends);
+		const double axon_connections = network_graph.get_num_out_edges(i);
+		const double dendrites_ex_connections = network_graph.get_num_in_edges_ex(i);
+		const double dendrites_in_connections = network_graph.get_num_in_edges_in(i);
+
+		axons.update_cnt(i, axon_connections);
+		dendrites_exc.update_cnt(i, dendrites_ex_connections);
+		dendrites_inh.update_cnt(i, dendrites_in_connections);
+
+		axons.update_conn_cnt(i, axon_connections, std::to_string(i) + " initializing update_conn axons");
+		dendrites_exc.update_conn_cnt(i, dendrites_ex_connections, std::to_string(i) + " initializing update_conn dend ex");
+		dendrites_inh.update_conn_cnt(i, dendrites_in_connections, std::to_string(i) + " initializing update_conn dend in");
 
 		RelearnException::check(axons_cnts[i] >= axons.get_connected_cnts()[i]);
 		RelearnException::check(dendrites_inh_cnts[i] >= dendrites_inh.get_connected_cnts()[i]);
 		RelearnException::check(dendrites_exc_cnts[i] >= dendrites_exc.get_connected_cnts()[i]);
 	}
-
 }
 
 void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& network_graph) {

@@ -316,20 +316,6 @@ int main(int argc, char** argv) {
 		LogMessages::print_message_rank(sstring.str().c_str(), 0);
 	}
 
-	std::shared_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain;
-	if (5 < argc) {
-		neurons_in_subdomain = std::make_shared<SubdomainFromFile>(params.file_with_neuron_positions);
-		// Set parameter based on actual neuron population
-		params.frac_neurons_exc = neurons_in_subdomain->desired_ratio_neurons_exc();
-	}
-	else {
-		neurons_in_subdomain = std::make_shared<SubdomainFromNeuronDensity>(params.num_neurons, params.frac_neurons_exc, 26);
-	}
-
-	if (0 == MPIWrapper::my_rank) {
-		std::cout << params << std::endl;
-	}
-
 	/**
 	 * Initialize the simuliation log files
 	 */
@@ -346,6 +332,20 @@ int main(int argc, char** argv) {
 	if (std::numeric_limits<int>::max() < (partition.get_my_num_subdomains() * sizeof(OctreeNode))) {
 		RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
 		exit(EXIT_FAILURE);
+	}
+
+	std::shared_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain;
+	if (5 < argc) {
+		neurons_in_subdomain = std::make_shared<SubdomainFromFile>(params.file_with_neuron_positions, partition);
+		// Set parameter based on actual neuron population
+		params.frac_neurons_exc = neurons_in_subdomain->desired_ratio_neurons_exc();
+	}
+	else {
+		neurons_in_subdomain = std::make_shared<SubdomainFromNeuronDensity>(params.num_neurons, params.frac_neurons_exc, 26);
+	}
+
+	if (0 == MPIWrapper::my_rank) {
+		std::cout << params << std::endl;
 	}
 
 	/**
@@ -408,8 +408,7 @@ int main(int argc, char** argv) {
 	if (6 < argc) {
 		//network_graph.add_edge_weights(params.file_with_network, neuron_id_map);
 		network_graph.add_edges_from_file(params.file_with_network, params.file_with_neuron_positions, neuron_id_map, partition);
-		network_graph.print(std::cout, neuron_id_map);
-		return 0;
+		//network_graph.print(std::cout, neuron_id_map);
 	}
 	LogMessages::print_message_rank("Network graph created", 0);
 
@@ -417,7 +416,7 @@ int main(int argc, char** argv) {
 	// Init number of synaptic elements and assign EXCITATORY or INHIBITORY signal type
 	// to the dendrites. Assignment of the signal type to the axons is done in
 	// Partition::insert_neurons_into_my_subdomains
-	neurons.init_synaptic_elements();
+	neurons.init_synaptic_elements(network_graph);
 	//    neurons.init_synaptic_elements(network_graph);
 	LogMessages::print_message_rank("Synaptic elements initialized \n", 0);
 
