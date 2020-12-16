@@ -29,5 +29,5 @@ namespace Constants {
 	constexpr size_t print_width = 12;
 
 	constexpr size_t plasticity_update_step = 100;
-	constexpr size_t logfile_update_step = 500,
+	constexpr size_t logfile_update_step = 500;
 } // namespace Constants

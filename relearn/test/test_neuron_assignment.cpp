@@ -678,7 +678,7 @@ TEST(TestNeuronPlacementStoreLoad, test_neuron_placement_store_and_load) {
 	constexpr auto frac_neurons_exc = 0.5;
 
 	// create from density
-	SubdomainFromNeuronDensity sdnd{ num_neurons, frac_neurons_exc };
+	SubdomainFromNeuronDensity sdnd{ num_neurons, frac_neurons_exc, 26 };
 	// fill_subdomain
 	sdnd.fill_subdomain(subdomain_id, 1, Vec3d{ 0 }, Vec3d{ sdnd.simulation_box_length.get_maximum() });
 	// save to file
