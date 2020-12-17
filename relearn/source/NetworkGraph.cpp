@@ -518,6 +518,9 @@ void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) con
 			std::tie(ret, glob_src) = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id);
 			RelearnException::check(ret);
 
+			glob_src++;
+			glob_tgt++;
+
 			// <target neuron id>  <source neuron id>  <weight>
 			os
 				<< glob_tgt << "\t"

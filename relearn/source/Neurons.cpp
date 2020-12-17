@@ -920,6 +920,8 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& 
 
 		const char* const signal_type_name = signal_types[neuron_id] == SynapticElements::SignalType::EXCITATORY ? "ex" : "in";
 
+		glob_id++;
+
 		file << glob_id << " "
 			<< axons_x_dims[neuron_id] << " "
 			<< axons_y_dims[neuron_id] << " "

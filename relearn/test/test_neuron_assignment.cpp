@@ -497,7 +497,8 @@ TEST(TestRandomNeuronPlacement, test_saving) {
 				>> area
 				>> type_string;
 
-			EXPECT_TRUE(id < num_neurons);
+			EXPECT_TRUE(0 < id);
+			EXPECT_TRUE(id <= num_neurons);
 
 			EXPECT_FALSE(is_there[id]);
 			is_there[id] = true;
