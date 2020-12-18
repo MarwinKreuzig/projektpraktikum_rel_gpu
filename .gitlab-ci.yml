@@ -9,7 +9,7 @@ build:
   before_script:
     - cd relearn && mkdir build-docker && cd build-docker  
   script:
-    - cmake -Dnoclangtidy=1 -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON .. && make -j 16
+    - cmake -Dnoclangtidy=1 .. && make -j 16
   artifacts:
     paths:
       - relearn/build-docker
