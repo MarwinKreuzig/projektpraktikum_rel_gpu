@@ -20,7 +20,6 @@ else()
 	set(CMAKE_CXX_CLANG_TIDY clang-tidy "-header-filter=^((?!mpi).)*$" "--checks=*,-fuchsia*,-modernize-use-trailing-return-type,-llvm-header-guard,-misc-non-private-member-variables-in-classes,-cppcoreguidelines-non-private-member-variables-in-classes")
 endif()
 
-find_package (Threads)
 find_package (MPI REQUIRED)
 
 source_group("tests" FILES ${TOP_TST})
@@ -37,7 +36,6 @@ target_include_directories (relearn PRIVATE ${MPI_CXX_INCLUDE_PATH} )
 target_compile_options (relearn PRIVATE ${MPI_CXX_COMPILE_FLAGS})
 
 target_link_libraries (relearn ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
-target_link_libraries (relearn ${CMAKE_THREAD_LIBS_INIT})
 
 if (UNIX)
 	target_link_libraries (relearn stdc++fs)
@@ -82,7 +80,6 @@ target_include_directories (runTests PRIVATE ${MPI_CXX_INCLUDE_PATH} )
 target_compile_options (runTests PRIVATE ${MPI_CXX_COMPILE_FLAGS})
 
 target_link_libraries (runTests ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
-target_link_libraries (runTests ${CMAKE_THREAD_LIBS_INIT})
 
 if (UNIX)
 	target_link_libraries (runTests stdc++fs)
