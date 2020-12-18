@@ -233,6 +233,13 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
 
 		add_edge_weight(translated_target_neuron_id, target_rank, source_neuron_id, source_rank, weight);
 	}
+
+	std::stringstream sstream;
+
+	sstream << "I'm rank: " << MPIWrapper::my_rank << " of " << MPIWrapper::num_ranks << ".\n";
+	sstream << "I've loaded: " << local_synapses.size() << " + " << out_synapses.size() << " + " << in_synapses.size() << " = " << (local_synapses.size() + out_synapses.size() + in_synapses.size()) << " many synapses." << std::endl;
+
+	std::cout << sstream.str();
 }
 
 void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids, const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id) {
