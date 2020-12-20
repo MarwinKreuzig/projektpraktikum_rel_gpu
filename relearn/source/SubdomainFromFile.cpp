@@ -135,11 +135,11 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
 		}
 
 		if (signal_type == "ex") {
-			node.signal_type = SynapticElements::EXCITATORY;
+			node.signal_type = SynapticElements::SignalType::EXCITATORY;
 			++placed_ex_neurons;
 		}
 		else {
-			node.signal_type = SynapticElements::INHIBITORY;
+			node.signal_type = SynapticElements::SignalType::INHIBITORY;
 			++placed_in_neurons;
 		}
 

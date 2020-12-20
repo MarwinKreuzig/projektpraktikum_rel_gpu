@@ -207,6 +207,21 @@ class Neurons {
 			requests.push_back(synapse_id);
 		}
 
+		void append(size_t src_neuron_id, size_t tgt_neuron_id, size_t affected_neuron_id,
+			SynapticElements::ElementType affected_element_type, SynapticElements::SignalType signal_type, size_t synapse_id) {
+			num_requests++;
+
+			size_t affected_element_type_converted = affected_element_type == SynapticElements::ElementType::AXON ? 0 : 1;
+			size_t signal_type_converted = signal_type == SynapticElements::SignalType::EXCITATORY ? 0 : 1;
+
+			requests.push_back(src_neuron_id);
+			requests.push_back(tgt_neuron_id);
+			requests.push_back(affected_neuron_id);
+			requests.push_back(affected_element_type_converted);
+			requests.push_back(signal_type_converted);
+			requests.push_back(synapse_id);
+		}
+
 		[[nodiscard]] std::array<size_t, Constants::num_items_per_request> get_request(size_t request_index) const noexcept {
 			const size_t base_index = Constants::num_items_per_request * request_index;
 

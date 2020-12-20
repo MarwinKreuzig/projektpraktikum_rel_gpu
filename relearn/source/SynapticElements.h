@@ -24,8 +24,8 @@ class SynapticElements {
 	friend class NeuronMonitor;
 
 public:
-	enum ElementType : int { AXON = 0, DENDRITE = 1 };
-	enum SignalType : int { EXCITATORY = 0, INHIBITORY = 1 };
+	enum class ElementType { AXON, DENDRITE };
+	enum class SignalType { EXCITATORY, INHIBITORY };
 
 	SynapticElements(ElementType type, size_t s, double min_C_level_to_grow, double C_target, double nu, double vacant_retract_ratio) :
 		type(type),
@@ -50,15 +50,15 @@ public:
 	}
 
 	[[nodiscard]] const std::vector<double>& get_connected_cnts() const noexcept {
-		return connected_cnts; 
+		return connected_cnts;
 	}
-	
+
 	[[nodiscard]] const std::vector<double>& get_delta_cnts() const noexcept {
 		return delta_cnts;
 	}
-	
+
 	[[nodiscard]] const std::vector<SignalType>& get_signal_types() const noexcept {
-		return signal_types; 
+		return signal_types;
 	}
 
 	void update_cnt(size_t neuron_id, double delta) {
@@ -81,23 +81,23 @@ public:
 	}
 
 	[[nodiscard]] double get_cnt(size_t neuron_id) const noexcept {
-		return cnts[neuron_id]; 
+		return cnts[neuron_id];
 	}
-	
+
 	[[nodiscard]] double get_connected_cnt(size_t neuron_id) const noexcept {
 		return connected_cnts[neuron_id];
 	}
-	
+
 	[[nodiscard]] double get_delta_cnt(size_t neuron_id) const noexcept {
 		return delta_cnts[neuron_id];
 	}
 
 	[[nodiscard]] SignalType get_signal_type(size_t neuron_id) const noexcept {
-		return signal_types[neuron_id]; 
+		return signal_types[neuron_id];
 	}
 
 	[[nodiscard]] ElementType get_element_type() const noexcept {
-		return type; 
+		return type;
 	}
 
 	/**
