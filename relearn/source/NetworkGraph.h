@@ -65,15 +65,14 @@ public:
 		size_t source_neuron_id, int source_rank,
 		int weight);
 
-
-	static void add_edge(Edges& edges, int rank, size_t neuron_id, int weight);
-
-	void add_edge_weights(const std::string& filename, const NeuronIdMap& neuron_id_map);
-
 	// Print network using global neuron ids
 	void print(std::ostream& os, const NeuronIdMap& neuron_id_map) const;
 
 	void add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, const NeuronIdMap& neuron_id_map, const Partition& partition);
+
+private:
+
+	static void add_edge(Edges& edges, int rank, size_t neuron_id, int weight);
 
 	static void translate_global_to_local(const std::set<size_t>& global_ids, const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id);
 
@@ -81,10 +80,10 @@ public:
 
 	void load_synapses(const std::string& path_synapses, const Partition& partition, std::set<size_t>& foreing_ids, std::vector<std::tuple<size_t, size_t, int>>& local_synapses, std::vector<std::tuple<size_t, size_t, int>>& out_synapses, std::vector<std::tuple<size_t, size_t, int>>& in_synapses) const;
 
+	void add_edge_weights(const std::string& filename, const NeuronIdMap& neuron_id_map);
+
 	void write_synapses_to_file(const std::string& filename, const NeuronIdMap& neuron_id_map, const Partition& partition) const;
 
-
-private:
 	NeuronNeighborhood neuron_neighborhood;  // Neurons with their neighbors
 	size_t my_num_neurons;                   // My number of neurons
 	size_t my_neuron_id_start;               // Start neuron id I am allowed to create a neuron for in the graph

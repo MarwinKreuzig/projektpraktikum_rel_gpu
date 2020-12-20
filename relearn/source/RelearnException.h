@@ -15,9 +15,12 @@
 #include <string>
 
 class RelearnException : std::exception {
+private:	
 	std::string message;
 
 public:
+	static bool hide_messages;
+
 	RelearnException() = default;
 
 	explicit RelearnException(std::string&& mes) : message(mes) {

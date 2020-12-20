@@ -14,6 +14,8 @@
 
 #include <sstream>
 
+bool RelearnException::hide_messages = false;
+
 [[nodiscard]] const char* RelearnException::what() const noexcept {
 	return message.c_str();
 }
@@ -27,6 +29,10 @@ void RelearnException::check(bool condition) {
 }
 
 void RelearnException::fail() {
+	if (hide_messages) {
+		throw RelearnException{};
+	}
+
 	int my_rank = MPIWrapper::my_rank;
 	int num_ranks = MPIWrapper::num_ranks;
 
@@ -54,6 +60,10 @@ void RelearnException::check(bool condition, std::string&& message) {
 }
 
 void RelearnException::fail(std::string&& message) {
+	if (hide_messages) {
+		throw RelearnException{};
+	}
+	
 	int my_rank = MPIWrapper::my_rank;
 	int num_ranks = MPIWrapper::num_ranks;
 

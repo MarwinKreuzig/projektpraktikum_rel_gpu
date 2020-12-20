@@ -165,6 +165,8 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill) {
 }
 
 TEST(TestRandomNeuronPlacement, test_lazily_fill_multiple) {
+	setup();
+
 	std::uniform_int_distribution<size_t> uid(1, 10000);
 	std::uniform_int_distribution<size_t> uid_fills(1, 10);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
@@ -277,6 +279,8 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions) {
 }
 
 TEST(TestRandomNeuronPlacement, test_lazily_fill_positions_multiple_subdomains) {
+	setup();
+
 	std::uniform_int_distribution<size_t> uid(1, 10000);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
 

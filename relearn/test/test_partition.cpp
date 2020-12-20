@@ -19,6 +19,8 @@ size_t round_to_next_exponent(size_t numToRound, size_t exponent) {
 }
 
 TEST(TestPartition, test_partition_constructor_arguments) {
+	setup();
+
 	std::uniform_int_distribution<size_t> uid_my_rank(0, upper_bound_my_rank);
 	std::uniform_int_distribution<size_t> uid_num_ranks(0, upper_bound_num_ranks);
 
@@ -40,6 +42,8 @@ TEST(TestPartition, test_partition_constructor_arguments) {
 }
 
 TEST(TestPartition, test_partition_constructor) {
+	setup();
+
 	std::uniform_int_distribution<size_t> uid_num_ranks(1, upper_bound_num_ranks);
 
 	for (auto i = 0; i < iterations; i++) {

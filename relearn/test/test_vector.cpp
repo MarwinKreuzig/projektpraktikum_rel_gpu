@@ -155,6 +155,8 @@ TEST(TestVector, test_vector_operator_index_read) {
 }
 
 TEST(TestVector, test_vector_operator_index_read_assert) {
+	setup();
+
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -214,6 +216,8 @@ TEST(TestVector, test_vector_operator_index_write) {
 }
 
 TEST(TestVector, test_vector_operator_index_write_assert) {
+	setup();
+
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
 	mt.seed(rand());
@@ -669,6 +673,7 @@ TEST(TestVector, test_vector_componentwise_floor) {
 }
 
 TEST(TestVector, test_vector_componentwise_floor_assert) {
+	setup();
 	
 	std::uniform_real_distribution<double> urd(0.0001, upper_bound);
 
@@ -738,7 +743,8 @@ TEST(TestVector, test_vector_norm) {
 }
 
 TEST(TestVector, test_vector_norm_assert) {
-	
+	setup();
+
 	std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 	std::uniform_real_distribution<double> urd_bad_p(lower_bound, 1.0);
 

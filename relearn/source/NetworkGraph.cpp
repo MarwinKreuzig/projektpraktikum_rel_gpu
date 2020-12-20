@@ -38,7 +38,8 @@ const NetworkGraph::Edges& NetworkGraph::get_out_edges(size_t neuron_id) const {
 }
 
 size_t NetworkGraph::get_num_in_edges_ex(size_t neuron_id) const {
-	RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_num_in_edges, tried with a too large id");
+	RelearnException::check(neuron_id < neuron_neighborhood.size(), 
+		"In get_num_in_edges, tried with a too large id: " + std::to_string(neuron_id) + " " + std::to_string(my_num_neurons));
 
 	size_t total_num_ports = 0;
 
@@ -53,7 +54,8 @@ size_t NetworkGraph::get_num_in_edges_ex(size_t neuron_id) const {
 }
 
 size_t NetworkGraph::get_num_in_edges_in(size_t neuron_id) const {
-	RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_num_in_edges, tried with a too large id");
+	RelearnException::check(neuron_id < neuron_neighborhood.size(),
+		"In get_num_in_edges, tried with a too large id: " + std::to_string(neuron_id) + " " + std::to_string(my_num_neurons));
 
 	size_t total_num_ports = 0;
 
@@ -68,7 +70,8 @@ size_t NetworkGraph::get_num_in_edges_in(size_t neuron_id) const {
 }
 
 size_t NetworkGraph::get_num_out_edges(size_t neuron_id) const {
-	RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_num_out_edges, tried with a too large id");
+	RelearnException::check(neuron_id < neuron_neighborhood.size(), 
+		"In get_num_out_edges, tried with a too large id: " + std::to_string(neuron_id) + " " + std::to_string(my_num_neurons));
 
 	size_t total_num_ports = 0;
 
@@ -114,11 +117,17 @@ void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, siz
 
 	// Target neuron is mine
 	if (target_rank == MPIWrapper::my_rank) {
+		RelearnException::check(target_neuron_id < my_num_neurons, 
+			"Want to add an in-edge with a too larget id: " + std::to_string(target_neuron_id) + " " + std::to_string(my_num_neurons));
+
 		Edges& in_edges = neuron_neighborhood[target_neuron_id].in_edges;
 		add_edge(in_edges, source_rank, source_neuron_id, weight);
 	}
 
 	if (source_rank == MPIWrapper::my_rank) {
+		RelearnException::check(source_neuron_id < my_num_neurons, 
+			"Want to add an out-edge with a too larget id: " + std::to_string(target_neuron_id) + " " + std::to_string(my_num_neurons));
+
 		Edges& out_edges = neuron_neighborhood[source_neuron_id].out_edges;
 		add_edge(out_edges, target_rank, target_neuron_id, weight);
 	}
