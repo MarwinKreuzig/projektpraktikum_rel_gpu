@@ -1,0 +1,13 @@
+Checks: '
+        *,
+        -fuchsia*,
+        -modernize-use-trailing-return-type,
+        -llvm-header-guard,
+        -*non-private-member-variables*,
+        -*uppercase-literal-suffix,
+        -google-runtime-references,
+        -modernize-use-default-member-init
+        '
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*'
+FormatStyle:     none
