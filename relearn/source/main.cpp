@@ -38,6 +38,7 @@
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
+#include <functional>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -436,7 +437,7 @@ int main(int argc, char** argv) {
 	std::vector<NeuronMonitor> monitors;
 
 	for (size_t i = 0; i < 1; i++) {
-		monitors.emplace_back(i, neurons);
+		monitors.emplace_back(i, std::cref(neurons));
 	}
 
 	// Start timing simulation loop
