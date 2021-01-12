@@ -19,7 +19,6 @@
 #include "Octree.h"
 #include "Parameters.h"
 #include "Positions.h"
-#include "Random.h"
 #include "SynapticElements.h"
 #include "Timers.h"
 
@@ -453,9 +452,6 @@ private:
 	std::vector<double> calcium; // Intracellular calcium concentration of every neuron
 	std::vector<std::string> area_names; // Area name of every neuron
 
-	// Random number generator for this class (C++11)
-	std::mt19937& random_number_generator;
-	// Random number distribution used together with "random_number_generator" (C++11)
-	// Uniform distribution for interval [0, 1) (see constructor for initialization)
+	// Uniform distribution for interval [0, 1)
 	std::uniform_real_distribution<double> random_number_distribution;
 };

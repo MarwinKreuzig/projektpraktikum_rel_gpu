@@ -12,6 +12,7 @@
 
 #include "MPIWrapper.h"
 #include "Partition.h"
+#include "Random.h"
 #include "RelearnException.h"
 
 #include <array>
@@ -31,7 +32,6 @@ Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& 
 	positions(num_neurons),
 	calcium(num_neurons),
 	area_names(num_neurons),
-	random_number_generator(RandomHolder<Neurons /*<NeuronModels, Axons, DendritesExc, DendritesInh>*/>::get_random_generator()),
 	random_number_distribution(0.0, std::nextafter(1.0, 2.0))
 
 {
@@ -1008,7 +1008,7 @@ void Neurons::print_info_for_barnes_hut() {
 typename std::list<Neurons::Synapse>::const_iterator Neurons::select_synapse(const std::list<Synapse>& list) {
 	// Point to first synapse
 	auto it = list.cbegin();
-
+	std::mt19937& random_number_generator = RandomHolder<Neurons>::get_random_generator();
 	// Draw random number from [0,1)
 	const double random_number = random_number_distribution(random_number_generator);
 
