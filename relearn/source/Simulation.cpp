@@ -40,7 +40,7 @@ Simulation::Simulation(double accept_criterion, std::shared_ptr<Partition> parti
 	parameters->naive_method = parameters->accept_criterion == 0.0;
 
 	if (0 == MPIWrapper::my_rank) {
-		std::cout << parameters << std::endl;
+		std::cout << parameters.get() << std::endl;
 	}
 }
 

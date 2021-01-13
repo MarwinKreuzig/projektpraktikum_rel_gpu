@@ -13,6 +13,7 @@
 #include "Vec3.h"
 
 #include <map>
+#include <memory>
 #include <ostream>
 #include <set>
 #include <string>
