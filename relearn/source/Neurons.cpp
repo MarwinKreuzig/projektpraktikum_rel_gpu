@@ -16,11 +16,6 @@
 
 #include <array>
 
-Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& partition)
-	: Neurons{ num_neurons, params, partition,
-	NeuronModels::create<models::ModelA>() } {
-}
-
 Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& partition, std::unique_ptr<NeuronModels> model)
 	: num_neurons(num_neurons),
 	partition(&partition),

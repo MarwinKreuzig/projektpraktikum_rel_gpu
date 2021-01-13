@@ -288,7 +288,10 @@ public:
 	 */
 	using MapSynapseDeletionRequests = std::map<int, SynapseDeletionRequests>;
 
-	Neurons(size_t num_neurons, const Parameters& params, const Partition& partition);
+	Neurons(size_t num_neurons, const Parameters& params, const Partition& partition) : Neurons{ num_neurons, params, partition, NeuronModels::create<models::ModelA>() } {
+
+	}
+
 	Neurons(size_t num_neurons, const Parameters& params, const Partition& partition, std::unique_ptr<NeuronModels> model);
 	~Neurons() = default;
 
