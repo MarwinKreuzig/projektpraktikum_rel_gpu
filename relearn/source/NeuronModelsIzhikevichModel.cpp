@@ -12,8 +12,6 @@
 
 using namespace models;
 
-using ModelParameter = NeuronModels::ModelParameter;
-
 IzhikevichModel::IzhikevichModel(double k, double tau_C, double beta, unsigned int h, const double a, const double b, const double c, const double d, const double V_spike, const double k1, const double k2, const double k3)
   : NeuronModels{ k, tau_C, beta, h },
 	a{ a },

@@ -12,8 +12,6 @@
 
 using namespace models;
 
-using ModelParameter = NeuronModels::ModelParameter;
-
 FitzHughNagumoModel::FitzHughNagumoModel(double k, double tau_C, double beta, unsigned int h, const double a, const double b, const double phi)
   : NeuronModels{ k, tau_C, beta, h },
 	a{ a },

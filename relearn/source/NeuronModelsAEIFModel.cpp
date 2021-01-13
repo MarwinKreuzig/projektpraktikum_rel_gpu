@@ -12,8 +12,6 @@
 
 using namespace models;
 
-using ModelParameter = NeuronModels::ModelParameter;
-
 AEIFModel::AEIFModel(double k, double tau_C, double beta, unsigned int h, const double C, const double g_L, const double E_L, const double V_T, const double, const double tau_w, const double a, const double b, const double V_peak)
   : NeuronModels{ k, tau_C, beta, h },
 	C{ C },

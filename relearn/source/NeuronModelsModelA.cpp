@@ -12,8 +12,6 @@
 
 using namespace models;
 
-using ModelParameter = NeuronModels::ModelParameter;
-
 ModelA::ModelA(double k, double tau_C, double beta, unsigned int h, const double x_0, const double tau_x, unsigned int refrac_time)
   : NeuronModels{ k, tau_C, beta, h },
 	x_0{ x_0 },

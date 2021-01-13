@@ -24,10 +24,10 @@ Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& 
 Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& partition, std::unique_ptr<NeuronModels> model)
 	: num_neurons(num_neurons),
 	partition(&partition),
-	neuron_models(std::move(model)),
-	axons(SynapticElements::ElementType::AXON, num_neurons, params.eta_A, params.C_target, params.nu, params.vacant_retract_ratio),
-	dendrites_exc(SynapticElements::ElementType::DENDRITE, num_neurons, params.eta_D_ex, params.C_target, params.nu, params.vacant_retract_ratio),
-	dendrites_inh(SynapticElements::ElementType::DENDRITE, num_neurons, params.eta_D_in, params.C_target, params.nu, params.vacant_retract_ratio),
+	neuron_model(std::move(model)),
+	axons(SynapticElements::ElementType::AXON, num_neurons, SynapticElements::default_eta_Axons),
+	dendrites_exc(SynapticElements::ElementType::DENDRITE, num_neurons, SynapticElements::default_eta_Dendrites_exc),
+	dendrites_inh(SynapticElements::ElementType::DENDRITE, num_neurons, SynapticElements::default_eta_Dendrites_inh),
 	positions(num_neurons),
 	calcium(num_neurons),
 	area_names(num_neurons),
@@ -35,13 +35,13 @@ Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& 
 	random_number_distribution(0.0, std::nextafter(1.0, 2.0))
 
 {
-	neuron_models->init(num_neurons);
+	neuron_model->init(num_neurons);
 
 	// Init member variables
 	for (size_t i = 0; i < num_neurons; i++) {
 		// Set calcium concentration
-		const auto fired = neuron_models->get_fired(i);
-		calcium[i] = fired ? neuron_models->get_beta() : 0.0;
+		const auto fired = neuron_model->get_fired(i);
+		calcium[i] = fired ? neuron_model->get_beta() : 0.0;
 	}
 }
 
@@ -95,6 +95,11 @@ std::tuple<bool, size_t, Vec3d, Cell::DendriteType> Neurons::get_vacant_axon() c
 	} // while
 
 	return std::make_tuple(false, neuron_id, xyz_pos, dendrite_type_needed);
+}
+
+std::vector<ModelParameter> Neurons::get_parameter() {
+	return {
+	};
 }
 
 void Neurons::init_synaptic_elements(const NetworkGraph& network_graph) {
@@ -841,10 +846,10 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 
 void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles& log_file, const Parameters& params) {
 	const StatisticalMeasures<double> calcium_statistics =
-		global_statistics(calcium.data(), num_neurons, params.num_neurons, 0, MPIWrapper::Scope::global);
+		global_statistics(calcium.data(), num_neurons, params.total_num_neurons, 0, MPIWrapper::Scope::global);
 
 	const StatisticalMeasures<double> activity_statistics =
-		global_statistics(neuron_models->get_x().data(), num_neurons, params.num_neurons, 0, MPIWrapper::Scope::global);
+		global_statistics(neuron_model->get_x().data(), num_neurons, params.total_num_neurons, 0, MPIWrapper::Scope::global);
 
 	// Output data
 	if (0 == MPIWrapper::my_rank) {
@@ -891,7 +896,7 @@ void Neurons::print_network_graph_to_log_file(LogFiles& log_file, const NetworkG
 	std::ofstream& file = log_file.get_file(0);
 
 	// Write output format to file
-	file << "# " << params.num_neurons << std::endl; // Total number of neurons
+	file << "# " << params.total_num_neurons << std::endl; // Total number of neurons
 	file << "# <target neuron id> <source neuron id> <weight>" << std::endl;
 
 	// Write network graph to file
@@ -903,7 +908,7 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& 
 	std::ofstream& file = log_file.get_file(0);
 
 	// Write total number of neurons to log file
-	file << "# " << params.num_neurons << std::endl;
+	file << "# " << params.total_num_neurons << std::endl;
 	file << "# " << "<global id> <pos x> <pos y> <pos z> <area> <type>" << std::endl;
 
 	const std::vector<double>& axons_x_dims = positions.get_x_dims();
@@ -951,8 +956,8 @@ void Neurons::print() {
 
 	// Values
 	for (size_t i = 0; i < num_neurons; i++) {
-		std::cout << std::left << std::setw(cwidth_left) << i << std::setw(cwidth) << neuron_models->get_x(i) << std::setw(cwidth) << neuron_models->get_fired(i);
-		std::cout << std::setw(cwidth) << neuron_models->get_secondary_variable(i) << std::setw(cwidth) << calcium[i] << std::setw(cwidth) << axons.get_cnt(i);
+		std::cout << std::left << std::setw(cwidth_left) << i << std::setw(cwidth) << neuron_model->get_x(i) << std::setw(cwidth) << neuron_model->get_fired(i);
+		std::cout << std::setw(cwidth) << neuron_model->get_secondary_variable(i) << std::setw(cwidth) << calcium[i] << std::setw(cwidth) << axons.get_cnt(i);
 		std::cout << std::setw(cwidth) << dendrites_exc.get_cnt(i) << std::setw(cwidth) << dendrites_inh.get_cnt(i) << "\n";
 	}
 }

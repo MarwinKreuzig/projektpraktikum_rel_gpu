@@ -13,6 +13,7 @@
 #include "Cell.h"
 #include "Commons.h"
 #include "LogFiles.h"
+#include "ModelParameter.h"
 #include "MPIWrapper.h"
 #include "NetworkGraph.h"
 #include "NeuronIdMap.h"
@@ -297,8 +298,10 @@ public:
 	Neurons& operator=(const Neurons& other) = delete;
 	Neurons& operator=(Neurons&& other) = default;
 
+	std::vector<ModelParameter> get_parameter();
+
 	void set_model(std::unique_ptr<NeuronModels>&& model) noexcept {
-		neuron_models = std::move(model);
+		neuron_model = std::move(model);
 	}
 
 	[[nodiscard]] size_t get_num_neurons() const noexcept { 
@@ -325,8 +328,8 @@ public:
 		return dendrites_inh;
 	}
 
-	[[nodiscard]] NeuronModels& get_neuron_models() noexcept { 
-		return *neuron_models; 
+	[[nodiscard]] NeuronModels& get_neuron_model() noexcept { 
+		return *neuron_model; 
 	}
 
 	[[nodiscard]] std::tuple<bool, size_t, Vec3d, Cell::DendriteType> get_vacant_axon() const noexcept;
@@ -334,7 +337,7 @@ public:
 	void init_synaptic_elements(const NetworkGraph& network_graph);
 
 	void update_electrical_activity(const NetworkGraph& network_graph) {
-		neuron_models->update_electrical_activity(network_graph, calcium);
+		neuron_model->update_electrical_activity(network_graph, calcium);
 	}
 
 	void update_number_synaptic_elements_delta() noexcept {
@@ -458,7 +461,7 @@ private:
 
 	const Partition* partition;
 
-	std::unique_ptr<NeuronModels> neuron_models;
+	std::unique_ptr<NeuronModels> neuron_model;
 
 	Axons axons;
 	DendritesExc dendrites_exc;

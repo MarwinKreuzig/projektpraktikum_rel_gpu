@@ -14,8 +14,6 @@
 #include "MPIWrapper.h"
 #include "Random.h"
 
-using ModelParameter = NeuronModels::ModelParameter;
-
 NeuronModels::NeuronModels(double k, double tau_C, double beta, unsigned int h)
 	: my_num_neurons(0),
 	k(k),

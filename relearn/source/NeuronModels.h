@@ -11,6 +11,7 @@
 #pragma once
 
 #include "LogMessages.h"
+#include "ModelParameter.h"
 #include "MPIWrapper.h"
 #include "NetworkGraph.h"
 #include "Random.h"
@@ -84,48 +85,6 @@ public:
 		std::vector<size_t> neuron_ids; // Firing neuron ids
 										 // This vector is used as MPI communication buffer
 	};
-
-	/**
-	 * Parameter of a model of type T
-	 */
-	template <typename T>
-	class Parameter {
-	public:
-		using value_type = T;
-
-		Parameter(std::string name, T& value, const T& min, const T& max) : name_{ std::move(name) }, value_{ value }, min_{ min }, max_{ max } {}
-
-		[[nodiscard]] const std::string& name() const noexcept {
-			return name_;
-		}
-
-		[[nodiscard]] value_type& value() noexcept {
-			return value_;
-		}
-
-		[[nodiscard]] const value_type& value() const noexcept {
-			return value_;
-		}
-
-		[[nodiscard]] const value_type& min() const noexcept {
-			return min_;
-		}
-
-		[[nodiscard]] const value_type& max() const noexcept {
-			return max_;
-		}
-
-	private:
-		const std::string name_{}; // name of the parameter
-		T& value_{};			   // value of the parameter
-		const T min_{};			   // minimum value of the parameter
-		const T max_{};			   // maximum value of the parameter
-	};
-
-	/**
-	 * Variant of every Parameter of type T
-	 */
-	using ModelParameter = std::variant<Parameter<unsigned int>, Parameter<double>, Parameter<size_t>>;
 
 	/**
 	 * Map of (MPI rank; FiringNeuronIds)
@@ -219,7 +178,14 @@ protected:
 namespace models {
 	class ModelA : public NeuronModels {
 	public:
-		explicit ModelA(double k = NeuronModels::default_k, double tau_C = NeuronModels::default_tau_C, double beta = NeuronModels::default_beta, unsigned int h = NeuronModels::default_h, const double x_0 = 0.05, const double tau_x = 5., unsigned int refrac_time = 4);
+		explicit ModelA(
+			double k = NeuronModels::default_k, 
+			double tau_C = NeuronModels::default_tau_C, 
+			double beta = NeuronModels::default_beta, 
+			unsigned int h = NeuronModels::default_h, 
+			double x_0 = ModelA::default_x_0,
+			double tau_x = ModelA::default_tau_x,
+			unsigned int refrac_time = ModelA::default_refrac_time);
 
 		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
@@ -241,6 +207,10 @@ namespace models {
 
 		[[nodiscard]] bool theta(const double x);
 
+		static constexpr double default_x_0{ 0.05 };
+		static constexpr double default_tau_x{ 5.0 };
+		static constexpr unsigned int default_refrac_time{ 4 };
+
 		std::vector<unsigned int> refrac; // refractory time
 
 		double x_0;				  // Background or resting activity
@@ -256,7 +226,19 @@ namespace models {
 
 	class IzhikevichModel : public NeuronModels {
 	public:
-		explicit IzhikevichModel(double k = NeuronModels::default_k, double tau_C = NeuronModels::default_tau_C, double beta = NeuronModels::default_beta, unsigned int h = NeuronModels::default_h, const double a = 0.1, const double b = 0.2, const double c = -65., const double d = 2., const double V_spike = 30., const double k1 = 0.04, const double k2 = 5., const double k3 = 140.);
+		explicit IzhikevichModel(
+			double k = NeuronModels::default_k, 
+			double tau_C = NeuronModels::default_tau_C, 
+			double beta = NeuronModels::default_beta, 
+			unsigned int h = NeuronModels::default_h, 
+			double a = IzhikevichModel::default_a,
+			double b = IzhikevichModel::default_b,
+			double c = IzhikevichModel::default_c,
+			double d = IzhikevichModel::default_d,
+			double V_spike = IzhikevichModel::default_V_spike,
+			double k1 = IzhikevichModel::default_k1,
+			double k2 = IzhikevichModel::default_k2,
+			double k3 = IzhikevichModel::default_k3);
 
 		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
@@ -280,6 +262,15 @@ namespace models {
 
 		[[nodiscard]] bool spiked(const double x) const noexcept;
 
+		static constexpr double default_a{ 0.1 };
+		static constexpr double default_b{ 0.2 };
+		static constexpr double default_c{ -65.0 };
+		static constexpr double default_d{ 2.0 };
+		static constexpr double default_V_spike{ 30.0 };
+		static constexpr double default_k1{ 0.04 };
+		static constexpr double default_k2{ 5.0 };
+		static constexpr double default_k3{ 140.0 };
+
 		std::vector<double> u; // membrane recovery
 
 		double a; // time-scale of membrane recovery u
@@ -296,7 +287,14 @@ namespace models {
 
 	class FitzHughNagumoModel : public NeuronModels {
 	public:
-		explicit FitzHughNagumoModel(double k = NeuronModels::default_k, double tau_C = NeuronModels::default_tau_C, double beta = NeuronModels::default_beta, unsigned int h = NeuronModels::default_h, const double a = 0.7, const double b = 0.8, const double phi = 0.08);
+		explicit FitzHughNagumoModel(
+			double k = NeuronModels::default_k, 
+			double tau_C = NeuronModels::default_tau_C, 
+			double beta = NeuronModels::default_beta,
+			unsigned int h = NeuronModels::default_h,
+			const double a = FitzHughNagumoModel::default_a,
+			const double b = FitzHughNagumoModel::default_b,
+			const double phi = FitzHughNagumoModel::default_phi);
 
 		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
@@ -320,6 +318,10 @@ namespace models {
 
 		[[nodiscard]] static bool spiked(const double x, const double w) noexcept;
 
+		static constexpr double default_a{ 0.7 };
+		static constexpr double default_b{ 0.8 };
+		static constexpr double default_phi{ 0.08 };
+
 		std::vector<double> w; // recovery variable
 
 		double a;
@@ -329,7 +331,20 @@ namespace models {
 
 	class AEIFModel : public NeuronModels {
 	public:
-		explicit AEIFModel(double k = NeuronModels::default_k, double tau_C = NeuronModels::default_tau_C, double beta = NeuronModels::default_beta, unsigned int h = NeuronModels::default_h, const double C = 281., const double g_L = 30., const double E_L = -70.6, const double V_T = -50.4, const double d_T = 2., const double tau_w = 144., const double a = 4., const double b = 0.0805, const double V_peak = 20.);
+		explicit AEIFModel(
+			double k = NeuronModels::default_k, 
+			double tau_C = NeuronModels::default_tau_C, 
+			double beta = NeuronModels::default_beta, 
+			unsigned int h = NeuronModels::default_h, 
+			const double C = AEIFModel::default_C,
+			const double g_L = AEIFModel::default_g_L,
+			const double E_L = AEIFModel::default_E_L,
+			const double V_T = AEIFModel::default_V_T,
+			const double d_T = AEIFModel::default_d_T,
+			const double tau_w = AEIFModel::default_tau_w,
+			const double a = AEIFModel::default_a,
+			const double b = AEIFModel::default_b,
+			const double V_peak = AEIFModel::default_V_peak);
 
 		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
@@ -352,6 +367,16 @@ namespace models {
 		[[nodiscard]] double iter_x(const double x, const double w, const double I_syn) const noexcept;
 
 		[[nodiscard]] double iter_refrac(const double w, const double x) const noexcept;
+
+		static constexpr double default_C{ 281.0 };
+		static constexpr double default_g_L{ 30.0 };
+		static constexpr double default_E_L{ -70.6 };
+		static constexpr double default_V_T{ -50.4 };
+		static constexpr double default_d_T{ 2.0 };
+		static constexpr double default_tau_w{ 144.0 };
+		static constexpr double default_a{ 4.0 };
+		static constexpr double default_b{ 0.0805 };
+		static constexpr double default_V_peak{ 20.0 };
 
 		std::vector<double> w; // adaption variable
 
