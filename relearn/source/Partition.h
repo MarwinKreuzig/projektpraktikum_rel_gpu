@@ -67,8 +67,8 @@ public:
 
 	[[nodiscard]] bool is_neuron_local(size_t neuron_id) const;
 
-	[[nodiscard]] Neurons get_local_neurons(const Parameters& params, NeuronToSubdomainAssignment& neurons_in_subdomain) {
-		Neurons neurons = load_neurons(params, neurons_in_subdomain);
+	[[nodiscard]] Neurons get_local_neurons(NeuronToSubdomainAssignment& neurons_in_subdomain) {
+		Neurons neurons = load_neurons(neurons_in_subdomain);
 		return neurons;
 	}
 
@@ -128,7 +128,7 @@ public:
 
 protected:
 	// We need the "axons" parameter to set for every neuron the type of axons it grows (exc./inh.)
-	[[nodiscard]] Neurons load_neurons(const Parameters& params, NeuronToSubdomainAssignment& neurons_in_subdomain);
+	[[nodiscard]] Neurons load_neurons(NeuronToSubdomainAssignment& neurons_in_subdomain);
 
 	bool neurons_loaded;
 

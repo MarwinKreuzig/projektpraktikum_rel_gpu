@@ -208,7 +208,7 @@ void Partition::set_total_num_neurons(size_t total_num) noexcept {
 	total_num_neurons = total_num;
 }
 
-Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssignment& neurons_in_subdomain) {
+Neurons Partition::load_neurons(NeuronToSubdomainAssignment& neurons_in_subdomain) {
 	RelearnException::check(!neurons_loaded, "Neurons are already loaded, cannot load anymore");
 
 	simulation_box_length = neurons_in_subdomain.get_simulation_box_length();
@@ -285,7 +285,7 @@ Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssig
 		current_subdomain.octree.set_no_free_in_destructor();
 	}
 
-	Neurons neurons(params, *this);
+	Neurons neurons(*this);
 	neurons.init(my_num_neurons);
 
 	Positions& neuron_positions = neurons.get_positions();

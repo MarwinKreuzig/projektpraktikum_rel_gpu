@@ -76,8 +76,8 @@ void Simulation::loadNeuronsFromFile(const std::string& path_to_positions, const
 
 	LogMessages::print_message_rank("Synaptic elements initialized \n", 0);
 
-	neurons->print_neurons_overview_to_log_file_on_rank_0(0, Logs::get("neurons_overview"), *parameters);
-	neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, Logs::get("sums"), *parameters, 0, 0);
+	neurons->print_neurons_overview_to_log_file_on_rank_0(0, Logs::get("neurons_overview"));
+	neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, Logs::get("sums"), 0, 0);
 }
 
 void Simulation::simulate(size_t number_steps, size_t step_monitor) {
@@ -151,15 +151,14 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 				LogMessages::print_message_rank(sstring.str().c_str(), 0);
 			}
 
-			neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(
-				step, Logs::get("sums"), *parameters, num_synapses_deleted, num_synapses_created);
+			neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, Logs::get("sums"), num_synapses_deleted, num_synapses_created);
 
 			std::cout << std::flush;
 		}
 
 		// Print details every 500 ms
 		if (step % Constants::logfile_update_step == 0) {
-			neurons->print_neurons_overview_to_log_file_on_rank_0(step, Logs::get("neurons_overview"), *parameters);
+			neurons->print_neurons_overview_to_log_file_on_rank_0(step, Logs::get("neurons_overview"));
 		}
 	}
 
@@ -168,9 +167,8 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 
 	printNeuronMonitors();
 
-	neurons->print_positions_to_log_file(Logs::get("positions_rank_" + MPIWrapper::my_rank_str), *parameters, *neuron_id_map);
-	neurons->print_network_graph_to_log_file(Logs::get("network_rank_" + MPIWrapper::my_rank_str), *network_graph,
-		*parameters, *neuron_id_map);
+	neurons->print_positions_to_log_file(Logs::get("positions_rank_" + MPIWrapper::my_rank_str), *neuron_id_map);
+	neurons->print_network_graph_to_log_file(Logs::get("network_rank_" + MPIWrapper::my_rank_str), *network_graph, *neuron_id_map);
 }
 
 void Simulation::finalize() {
@@ -192,7 +190,7 @@ std::vector<std::unique_ptr<NeuronModels>> Simulation::getModels() {
 }
 
 void Simulation::doStuffAndSuch() {
-	Neurons neurs = partition->get_local_neurons(*parameters, *neuron_to_subdomain_assignment);
+	Neurons neurs = partition->get_local_neurons(*neuron_to_subdomain_assignment);
 	neurons = std::make_shared<Neurons>(std::move(neurs));
 
 	NeuronMonitor::neurons_to_monitor = neurons;

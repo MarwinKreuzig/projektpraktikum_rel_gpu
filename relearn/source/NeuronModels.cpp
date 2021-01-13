@@ -184,7 +184,6 @@ std::vector<std::unique_ptr<NeuronModels>> NeuronModels::get_models() {
 
 std::vector<ModelParameter> NeuronModels::get_parameter() {
 	return {
-		Parameter<size_t>{ "Number neurons", my_num_neurons, 0, 10000000000 },
 		Parameter<double>{ "k", k, 0., 1. },
 		Parameter<double>{ "tau_C", tau_C, 0., 10.e+6 },
 		Parameter<double>{ "beta", beta, 0., 1. },

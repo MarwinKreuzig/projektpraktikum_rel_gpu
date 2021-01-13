@@ -287,11 +287,11 @@ public:
 	 */
 	using MapSynapseDeletionRequests = std::map<int, SynapseDeletionRequests>;
 
-	Neurons(const Parameters& params, const Partition& partition) : Neurons{ params, partition, NeuronModels::create<models::ModelA>() } {
+	Neurons(const Partition& partition) : Neurons{ partition, NeuronModels::create<models::ModelA>() } {
 
 	}
 
-	Neurons(const Parameters& params, const Partition& partition, std::unique_ptr<NeuronModels> model);
+	Neurons(const Partition& partition, std::unique_ptr<NeuronModels> model);
 	~Neurons() = default;
 
 	Neurons(const Neurons& other) = delete;
@@ -321,7 +321,7 @@ public:
 		}
 	}
 
-	std::vector<ModelParameter> get_parameter();
+	std::vector<ModelParameter> get_parameter(SynapticElements::ElementType element_type, SynapticElements::SignalType signal_type);
 
 	void set_model(std::unique_ptr<NeuronModels>&& model) noexcept {
 		neuron_model = std::move(model);
@@ -378,18 +378,16 @@ public:
 		create_synapses(num_synapses_created, global_tree, network_graph);
 	}
 
-	void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, LogFiles& log_file, const Parameters& params, size_t sum_synapses_deleted, size_t sum_synapses_created);
+	void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, LogFiles& log_file, size_t sum_synapses_deleted, size_t sum_synapses_created);
 
 	// Print global information about all neurons at rank 0
-	void print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles& log_file, const Parameters& params);
+	void print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles& log_file);
 
-	static void print_network_graph_to_log_file(LogFiles& log_file,
+	void print_network_graph_to_log_file(LogFiles& log_file,
 		const NetworkGraph& network_graph,
-		const Parameters& params,
 		const NeuronIdMap& neuron_id_map);
 
-	void print_positions_to_log_file(LogFiles& log_file, const Parameters& params,
-		const NeuronIdMap& neuron_id_map);
+	void print_positions_to_log_file(LogFiles& log_file, const NeuronIdMap& neuron_id_map);
 
 	void print();
 
@@ -479,7 +477,7 @@ private:
 		size_t& num_synapses_deleted);
 
 
-	size_t num_neurons; // Local number of neurons
+	size_t num_neurons = 0; // Local number of neurons
 	std::vector<size_t> local_ids;
 
 	const Partition* partition;

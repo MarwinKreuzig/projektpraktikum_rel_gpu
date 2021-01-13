@@ -17,13 +17,12 @@
 
 #include <array>
 
-Neurons::Neurons(const Parameters& params, const Partition& partition, std::unique_ptr<NeuronModels> model)
+Neurons::Neurons(const Partition& partition, std::unique_ptr<NeuronModels> model)
 	: partition(&partition),
 	neuron_model(std::move(model)),
 	axons(SynapticElements::ElementType::AXON, SynapticElements::default_eta_Axons),
 	dendrites_exc(SynapticElements::ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc),
 	dendrites_inh(SynapticElements::ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh),
-	random_number_generator(RandomHolder<Neurons>::get_random_generator()),
 	random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
 }
 
@@ -79,9 +78,16 @@ std::tuple<bool, size_t, Vec3d, Cell::DendriteType> Neurons::get_vacant_axon() c
 	return std::make_tuple(false, neuron_id, xyz_pos, dendrite_type_needed);
 }
 
-std::vector<ModelParameter> Neurons::get_parameter() {
-	return {
-	};
+std::vector<ModelParameter> Neurons::get_parameter(SynapticElements::ElementType element_type, SynapticElements::SignalType signal_type) {
+	if (element_type == SynapticElements::ElementType::AXON) {
+		return axons.get_parameter();
+	}
+
+	if (signal_type == SynapticElements::SignalType::EXCITATORY) {
+		return dendrites_exc.get_parameter();
+	}
+
+	return dendrites_inh.get_parameter();
 }
 
 void Neurons::init_synaptic_elements(const NetworkGraph& network_graph) {
@@ -723,7 +729,7 @@ void Neurons::debug_check_counts() {
 	}
 }
 
-void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, LogFiles& log_file, const Parameters& params, size_t sum_synapses_deleted, size_t sum_synapses_created) {
+void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, LogFiles& log_file, size_t sum_synapses_deleted, size_t sum_synapses_created) {
 	unsigned int sum_axons_exc_cnts = 0;
 	unsigned int sum_axons_exc_connected_cnts = 0;
 	unsigned int sum_axons_inh_cnts = 0;
@@ -796,9 +802,8 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 		std::ofstream& file = log_file.get_file(0);
 		const int cwidth = 20;  // Column width
 
-								// Write headers to file if not already done so
+		// Write headers to file if not already done so
 		if (0 == step) {
-			file << params << std::endl;
 			file << "# SUMS OVER ALL NEURONS\n";
 			file << std::left
 				<< std::setw(cwidth) << "# step"
@@ -826,12 +831,12 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 
 // Print global information about all neurons at rank 0
 
-void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles& log_file, const Parameters& params) {
+void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles& log_file) {
 	const StatisticalMeasures<double> calcium_statistics =
-		global_statistics(calcium.data(), num_neurons, params.total_num_neurons, 0, MPIWrapper::Scope::global);
+		global_statistics(calcium.data(), num_neurons, partition->get_total_num_neurons(), 0, MPIWrapper::Scope::global);
 
 	const StatisticalMeasures<double> activity_statistics =
-		global_statistics(neuron_model->get_x().data(), num_neurons, params.total_num_neurons, 0, MPIWrapper::Scope::global);
+		global_statistics(neuron_model->get_x().data(), num_neurons, partition->get_total_num_neurons(), 0, MPIWrapper::Scope::global);
 
 	// Output data
 	if (0 == MPIWrapper::my_rank) {
@@ -840,7 +845,6 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles
 
 								// Write headers to file if not already done so
 		if (0 == step) {
-			file << params << std::endl;
 			file << "# ALL NEURONS\n";
 			file << std::left
 				<< std::setw(cwidth) << "# step"
@@ -874,11 +878,11 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles
 	}
 }
 
-void Neurons::print_network_graph_to_log_file(LogFiles& log_file, const NetworkGraph& network_graph, const Parameters& params, const NeuronIdMap& neuron_id_map) {
+void Neurons::print_network_graph_to_log_file(LogFiles& log_file, const NetworkGraph& network_graph, const NeuronIdMap& neuron_id_map) {
 	std::ofstream& file = log_file.get_file(0);
 
 	// Write output format to file
-	file << "# " << params.total_num_neurons << std::endl; // Total number of neurons
+	file << "# " << partition->get_total_num_neurons() << std::endl; // Total number of neurons
 	file << "# <target neuron id> <source neuron id> <weight>" << std::endl;
 
 	// Write network graph to file
@@ -886,11 +890,11 @@ void Neurons::print_network_graph_to_log_file(LogFiles& log_file, const NetworkG
 	network_graph.print(file, neuron_id_map);
 }
 
-void Neurons::print_positions_to_log_file(LogFiles& log_file, const Parameters& params, const NeuronIdMap& neuron_id_map) {
+void Neurons::print_positions_to_log_file(LogFiles& log_file, const NeuronIdMap& neuron_id_map) {
 	std::ofstream& file = log_file.get_file(0);
 
 	// Write total number of neurons to log file
-	file << "# " << params.total_num_neurons << std::endl;
+	file << "# " << partition->get_total_num_neurons() << std::endl;
 	file << "# " << "<global id> <pos x> <pos y> <pos z> <area> <type>" << std::endl;
 
 	const std::vector<double>& axons_x_dims = positions.get_x_dims();

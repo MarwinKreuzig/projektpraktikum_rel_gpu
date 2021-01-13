@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "ModelParameter.h"
 #include "MPIWrapper.h"
 #include "RelearnException.h"
 
@@ -52,6 +53,15 @@ public:
 		connected_cnts.resize(size, 0.0);
 		delta_cnts.resize(size, 0.0);
 		signal_types.resize(size);
+	}
+
+	std::vector<ModelParameter> get_parameter() {
+		return {
+			Parameter<double>{ "Minimum calcium to grow", min_C_level_to_grow, 0.0, 10.0 },
+			Parameter<double>{ "Target calcium", C_target, 0.0, 100.0 },
+			Parameter<double>{ "nu", nu, 0.0, 1.0 },
+			Parameter<double>{ "Vacant synapse retract ratio", vacant_retract_ratio, 0.0, 1.0 },
+		};
 	}
 
 	[[nodiscard]] const std::vector<double>& get_cnts() const noexcept {
