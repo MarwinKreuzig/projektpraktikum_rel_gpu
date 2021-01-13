@@ -18,7 +18,7 @@
 
 Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& partition)
 	: Neurons{ num_neurons, params, partition,
-	NeuronModels::create<models::ModelA>(params.k, params.tau_C, params.beta, params.h, params.x_0, params.tau_x, params.refrac_time) } {
+	NeuronModels::create<models::ModelA>() } {
 }
 
 Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& partition, std::unique_ptr<NeuronModels> model)

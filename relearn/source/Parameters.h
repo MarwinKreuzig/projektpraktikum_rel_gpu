@@ -17,15 +17,6 @@ class Parameters {
 public:
 	size_t total_num_neurons;           // Number of neurons
 
-	// Neuron model
-	double x_0;                   // Background or resting activity
-	double tau_x;                 // Decay time of firing rate in msec
-	double k;                     // Proportionality factor for synapses in Hz
-	double tau_C;                 // Decay time of calcium
-	double beta;                  // Increase in calcium each time a neuron fires
-	double refrac_time;           // Length of refractory period in msec. After an action potential a neuron cannot fire for this time
-	int    h;                     // Precision for Euler integration
-
 	// Connectivity
 	double accept_criterion;      // Barnes-Hut acceptance criterion
 	double sigma;                 // Probability parameter in MSP (dispersion). The higher sigma the more likely to form synapses with remote neurons
@@ -36,15 +27,8 @@ public:
 	friend std::ostream& operator<< (std::ostream& os, const Parameters& params) {
 		os << "** PARAMETERS **\n\n";
 		os << std::left << std::setw(column_width) << "num_neurons" << " : " << params.total_num_neurons << "\n";
-		os << std::left << std::setw(column_width) << "x_0" << " : " << params.x_0 << "\n";
-		os << std::left << std::setw(column_width) << "tau_x" << " : " << params.tau_x << "\n";
-		os << std::left << std::setw(column_width) << "k" << " : " << params.k << "\n";
-		os << std::left << std::setw(column_width) << "tau_C" << " : " << params.tau_C << "\n";
-		os << std::left << std::setw(column_width) << "beta" << " : " << params.beta << "\n";
-		os << std::left << std::setw(column_width) << "refrac_time" << " : " << params.refrac_time << "\n";
-		os << std::left << std::setw(column_width) << "h" << " : " << params.h << "\n";
-		os << std::left << std::setw(column_width) << "sigma" << " : " << params.sigma << "\n";
 		os << std::left << std::setw(column_width) << "accept_criterion (BH)" << " : " << params.accept_criterion << "\n";
+		os << std::left << std::setw(column_width) << "sigma" << " : " << params.sigma << "\n";
 		os << std::left << std::setw(column_width) << "naive_method (BH)" << " : " << params.naive_method << "\n";
 		os << std::left << std::setw(column_width) << "max_num_pending_vacant_axons" << " : " << params.max_num_pending_vacant_axons << "\n";
 		os << std::left << std::setw(column_width) << "seed_octree" << " : " << randomNumberSeeds::octree << "\n";

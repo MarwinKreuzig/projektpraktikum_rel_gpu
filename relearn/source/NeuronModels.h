@@ -156,8 +156,8 @@ protected:
 	virtual void init_neurons() = 0;
 
 	static constexpr double default_k{ 0.03 };
-	static constexpr double default_tau_C{ 10000 };
-	static constexpr double default_beta{ 0.001 };
+	static constexpr double default_tau_C{ 10000 }; //5000;   //very old 60.0;
+	static constexpr double default_beta{ 0.001 }; //very old 0.05;
 	static constexpr unsigned int default_h{ 10 };
 
 	// My local number of neurons

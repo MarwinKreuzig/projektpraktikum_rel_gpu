@@ -34,14 +34,6 @@ Simulation::Simulation(double accept_criterion) : parameters(std::make_unique<Pa
 		RelearnException::fail("Acceptance criterion must be smaller or equal to 0.5");
 	}
 
-	//parameters->frac_neurons_exc = 0.8;                          // CHANGE
-	parameters->x_0 = 0.05;
-	parameters->tau_x = 5.0;
-	parameters->k = 0.03;
-	parameters->tau_C = 10000; //5000;   //very old 60.0;
-	parameters->beta = 0.001;  //very old 0.05;
-	parameters->h = 10;
-	parameters->refrac_time = 4.0;
 	parameters->sigma = 750.0;
 	parameters->max_num_pending_vacant_axons = 1000;
 	parameters->accept_criterion = accept_criterion;
