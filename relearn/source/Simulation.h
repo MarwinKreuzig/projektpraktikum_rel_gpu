@@ -15,11 +15,9 @@
 #include <utility>
 #include <vector>
 
-#include "MPIWrapper.h"
-#include "RelearnException.h"
-
 class NetworkGraph;
 class NeuronIdMap;
+class NeuronModels;
 class NeuronMonitor;
 class Neurons;
 class NeuronToSubdomainAssignment;
@@ -31,10 +29,9 @@ class Simulation {
 public:
 	Simulation(double accept_criterion);
 
-	void setPartition(std::unique_ptr<Partition> part) {
-		RelearnException::check(part != nullptr, "part should not be null");
-		partition = std::move(part);
-	}
+	void registerNeuronMonitor(size_t neuron_id);
+
+	void setPartition(std::unique_ptr<Partition> part);
 
 	void placeRandomNeurons(size_t num_neurons, double frac_exc);
 
@@ -42,11 +39,11 @@ public:
 
 	void loadNeuronsFromFile(const std::string& path_to_positions, const std::string& path_to_connections);
 
-	void registerNeuronMonitor(size_t neuron_id);
-
 	void simulate(size_t number_steps = 6000000, size_t step_monitor = 100);
 
 	void finalize();
+
+	static std::vector<std::unique_ptr<NeuronModels>> getModels();
 
 private:
 	void doStuffAndSuch();

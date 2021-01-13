@@ -9,26 +9,13 @@
  */
 
 #include "Commons.h"
-#include "LogFiles.h"
-#include "LogMessages.h"
 #include "MPIWrapper.h"
-#include "MPI_RMA_MemAllocator.h"
-#include "NetworkGraph.h"
-#include "NeuronIdMap.h"
-#include "NeuronModels.h"
 #include "NeuronMonitor.h"
-#include "NeuronToSubdomainAssignment.h"
-#include "Neurons.h"
-#include "Octree.h"
-#include "Parameters.h"
 #include "Partition.h"
+#include "Random.h"
 #include "RelearnException.h"
 #include "Simulation.h"
-#include "SubdomainFromFile.h"
-#include "SubdomainFromNeuronDensity.h"
-#include "SynapticElements.h"
 #include "Timers.h"
-#include "Utility.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -171,11 +158,11 @@ void printTimers() {
 	}
 }
 
-int main(int argc, char** argv) {
-	std::vector<std::string> arguments{ argv, argv + argc };
+int main(int argc, char** argv) {	
 	/**
 	 * Read command line parameters
 	 */
+	std::vector<std::string> arguments{ argv, argv + argc };
 	if (arguments.size() < 5) {
 		std::cout << "Usage: " << arguments[0]
 			<< " <acceptance criterion (theta)>"
@@ -193,32 +180,24 @@ int main(int argc, char** argv) {
 	 */
 	MPIWrapper::init(argc, argv);
 
-	size_t num_neurons = stoull(arguments[2], nullptr, 10);
-	size_t simulation_steps = stoull(arguments[4], nullptr, 10);
-
-	/**
-	 * Simulation parameters
-	 */
-	
-
 	double accept_criterion = 0.0;
 	if (arguments[1] == "naive") {
 		accept_criterion = 0.0;
 	}
 	else {
 		accept_criterion = std::stod(arguments[1], nullptr);
-		// Needed to avoid creating autapses
-		if (accept_criterion > 0.5) {
-			RelearnException::fail("Acceptance criterion must be smaller or equal to 0.5");
-		}
 	}
+
+	size_t num_neurons = stoull(arguments[2], nullptr, 10);
+	size_t seed_octree = stol(arguments[3], nullptr, 10);
+	size_t simulation_steps = stoull(arguments[4], nullptr, 10);
 
 	//MPIWrapper::init_neurons(params->num_neurons);
 	MPIWrapper::print_infos_rank(0);
 
 	// Init random number seeds
 	randomNumberSeeds::partition = static_cast<int64_t>(MPIWrapper::my_rank);
-	randomNumberSeeds::octree = static_cast<int64_t>(stol(arguments[3], nullptr, 10));
+	randomNumberSeeds::octree = static_cast<int64_t>(seed_octree);
 
 	// Rank 0 prints start time of simulation
 	MPIWrapper::barrier(MPIWrapper::Scope::global);
@@ -234,10 +213,10 @@ int main(int argc, char** argv) {
 	Logs::init();
 
 	GlobalTimers::timers.start(TimerRegion::INITIALIZATION);
+	
 	/**
 	 * Calculate what my partition of the domain consist of
 	 */
-
 	auto partition = std::make_unique<Partition>(MPIWrapper::num_ranks, MPIWrapper::my_rank);
 	const size_t my_num_subdomains = partition->get_my_num_subdomains();
 	const size_t total_num_subdomains = partition->get_total_num_subdomains();

@@ -12,29 +12,27 @@
 
 #include "Commons.h"
 #include "LogFiles.h"
+#include "MPIWrapper.h"
 #include "NetworkGraph.h"
 #include "NeuronIdMap.h"
 #include "NeuronModels.h"
 #include "NeuronMonitor.h"
 #include "Neurons.h"
 #include "NeuronToSubdomainAssignment.h"
-
+#include "RelearnException.h"
 #include "SubdomainFromFile.h"
 #include "SubdomainFromNeuronDensity.h"
-
 #include "Timers.h"
 
 #include <fstream>
 #include <sstream>
 
 
-void Simulation::registerNeuronMonitor(size_t neuron_id) {
-	monitors.emplace_back(neuron_id);
-}
-
-Simulation::Simulation(double accept_criterion) {
-	auto params = std::make_unique<Parameters>();
-	parameters = std::move(params);
+Simulation::Simulation(double accept_criterion) : parameters(std::make_unique<Parameters>()) {
+	// Needed to avoid creating autapses
+	if (accept_criterion > 0.5) {
+		RelearnException::fail("Acceptance criterion must be smaller or equal to 0.5");
+	}
 
 	parameters->frac_neurons_exc = 0.8;                          // CHANGE
 	parameters->x_0 = 0.05;
@@ -61,6 +59,15 @@ Simulation::Simulation(double accept_criterion) {
 	if (0 == MPIWrapper::my_rank) {
 		std::cout << parameters << std::endl;
 	}
+}
+
+void Simulation::registerNeuronMonitor(size_t neuron_id) {
+	monitors.emplace_back(neuron_id);
+}
+
+void Simulation::setPartition(std::unique_ptr<Partition> part) {
+	RelearnException::check(part != nullptr, "part should not be null");
+	partition = std::move(part);
 }
 
 void Simulation::placeRandomNeurons(size_t num_neurons, double frac_exc) {
@@ -92,7 +99,6 @@ void Simulation::loadNeuronsFromFile(const std::string& path_to_positions, const
 
 void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 	GlobalTimers::timers.start(TimerRegion::SIMULATION_LOOP);
-
 
 	/**
 	* Simulation loop
@@ -198,6 +204,10 @@ void Simulation::finalize() {
 	}
 }
 
+std::vector<std::unique_ptr<NeuronModels>> Simulation::getModels() {
+	return NeuronModels::get_models();
+}
+
 void Simulation::doStuffAndSuch() {
 	Neurons neurs = partition->get_local_neurons(*parameters, *neuron_to_subdomain_assignment);
 	neurons = std::make_shared<Neurons>(std::move(neurs));
@@ -265,4 +275,3 @@ void Simulation::printNeuronMonitors() {
 		outfile.close();
 	}
 }
-

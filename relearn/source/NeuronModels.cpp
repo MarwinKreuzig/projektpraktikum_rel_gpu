@@ -176,7 +176,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 }
 
 std::vector<std::unique_ptr<NeuronModels>> NeuronModels::get_models() {
-	std::vector<std::unique_ptr<NeuronModels>> res(4);
+	std::vector<std::unique_ptr<NeuronModels>> res;
 	res.push_back(NeuronModels::create<models::ModelA>(0));
 	res.push_back(NeuronModels::create<models::IzhikevichModel>(0));
 	res.push_back(NeuronModels::create<models::FitzHughNagumoModel>(0));
