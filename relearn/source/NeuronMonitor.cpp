@@ -10,5 +10,6 @@
 
 #include "NeuronMonitor.h"
 
+std::shared_ptr<Neurons> NeuronMonitor::neurons_to_monitor{};
 size_t NeuronMonitor::current_step = 0;
 size_t NeuronMonitor::max_steps = 0;

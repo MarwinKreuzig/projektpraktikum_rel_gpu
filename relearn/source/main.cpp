@@ -45,71 +45,6 @@
 #include <limits>
 #include <locale>
 
-
-void setDefaultParameters(Parameters* params) /*noexcept*/ {
-	RelearnException::check(params != nullptr);
-
-	params->frac_neurons_exc = 0.8;                          // CHANGE
-	params->x_0 = 0.05;
-	params->tau_x = 5.0;
-	params->k = 0.03;
-	params->tau_C = 10000; //5000;   //very old 60.0;
-	params->beta = 0.001;  //very old 0.05;
-	params->h = 10;
-	params->C_target = 0.5; // gold 0.5;
-	params->refrac_time = 4.0;
-	params->eta_A = 0; //0.4; // gold 0.0;
-	params->eta_D_ex = 0; //0.1, // gold 0.0;
-	params->eta_D_in = 0.0;
-	params->nu = 1e-4; // gold 1e-5; // element growth rate
-	params->vacant_retract_ratio = 0;
-	params->sigma = 750.0;
-	params->num_log_files = 9;  // NOT USED
-	params->log_start_neuron = 0;  // NOT USED
-	params->mpi_rma_mem_size = 300 * 1024 * 1024;  // 300 MB
-	params->max_num_pending_vacant_axons = 1000;
-	// params->seed_partition (No global parameter. Every process uses a different seed, its rank. See below)
-}
-
-void setSpecificParameters(Parameters* params, const std::vector<std::string>& arguments) {
-	RelearnException::check(params != nullptr);
-
-	double accept_criterion = 0.0;
-	bool naive_method = false;
-
-	// Parameter equal to "naive"
-	if (arguments[1] == "naive") {
-		naive_method = true;
-	}
-	else {
-		accept_criterion = std::stod(arguments[1], nullptr);
-	}
-
-	params->simulation_time = stoull(arguments[4], nullptr, 10);  //6000000;
-	params->num_neurons = stoull(arguments[2], nullptr, 10);        // CHANGE
-	params->accept_criterion = accept_criterion;             // CHANGE
-	params->naive_method = naive_method;                 // CHANGE
-	params->file_with_neuron_positions = (arguments.size() >= 6) ? arguments[5] : "";
-	params->file_with_network = (arguments.size() >= 7) ? arguments[6] : "";
-	params->seed_octree = stol(arguments[3], nullptr, 10);
-
-	/**
-	* Parameter sanity checks
-	*/
-
-	// Needed to avoid creating autapses
-	if (!(params->accept_criterion <= 0.5)) {
-		RelearnException::fail("Acceptance criterion must be smaller or equal to 0.5");
-	}
-
-	// Number of ranks must be 2^n so that
-	// the connectivity update works correctly
-	const std::bitset<sizeof(int) * 8> bitset_num_ranks(MPIWrapper::num_ranks);
-	if (1 != bitset_num_ranks.count() && (0 == MPIWrapper::my_rank)) {
-		RelearnException::fail("Number of ranks must be of the form 2^n");
-	}
-}
-
 void printTimers() {
 	/**
 	 * Print timers and memory usage
@@ -258,16 +193,27 @@ int main(int argc, char** argv) {
 	 */
 	MPIWrapper::init(argc, argv);
 
+	size_t num_neurons = stoull(arguments[2], nullptr, 10);
 	size_t simulation_steps = stoull(arguments[4], nullptr, 10);
 
 	/**
 	 * Simulation parameters
 	 */
-	auto params = std::make_unique<Parameters>();;
-	setDefaultParameters(params.get());
-	setSpecificParameters(params.get(), arguments);
+	
 
-	MPIWrapper::init_neurons(params->num_neurons);
+	double accept_criterion = 0.0;
+	if (arguments[1] == "naive") {
+		accept_criterion = 0.0;
+	}
+	else {
+		accept_criterion = std::stod(arguments[1], nullptr);
+		// Needed to avoid creating autapses
+		if (accept_criterion > 0.5) {
+			RelearnException::fail("Acceptance criterion must be smaller or equal to 0.5");
+		}
+	}
+
+	//MPIWrapper::init_neurons(params->num_neurons);
 	MPIWrapper::print_infos_rank(0);
 
 	// Init random number seeds
@@ -306,14 +252,13 @@ int main(int argc, char** argv) {
 	/**
 	* Create MPI RMA memory allocator
 	*/
-	MPIWrapper::init_mem_allocator(params->mpi_rma_mem_size);
+	MPIWrapper::init_mem_allocator(300 * 1024 * 1024);
 	MPIWrapper::init_buffer_octree(total_num_subdomains);
 
 	// Lock local RMA memory for local stores
 	MPIWrapper::lock_window(MPIWrapper::my_rank, MPI_Locktype::exclusive);
 
-	Simulation sim(params->seed_octree);
-	sim.setParameters(std::move(params));
+	Simulation sim(accept_criterion);
 	sim.setPartition(std::move(partition));
 
 	if (5 < argc) {
@@ -328,7 +273,8 @@ int main(int argc, char** argv) {
 		}
 	}
 	else {
-		sim.placeRandomNeurons();
+		double frac_exc = 0.8;
+		sim.placeRandomNeurons(num_neurons, frac_exc);
 	}
 
 	// Unlock local RMA memory and make local stores visible in public window copy
@@ -343,11 +289,16 @@ int main(int argc, char** argv) {
 
 	GlobalTimers::timers.stop_and_add(TimerRegion::INITIALIZATION);
 
+	const auto step_monitor = 100;
+
+	NeuronMonitor::max_steps = simulation_steps / step_monitor;
+	NeuronMonitor::current_step = 0;
+
 	for (size_t i = 0; i < 1; i++) {
 		sim.registerNeuronMonitor(i);
 	}
 
-	sim.simulate(simulation_steps);
+	sim.simulate(simulation_steps, step_monitor);
 
 	printTimers();
 

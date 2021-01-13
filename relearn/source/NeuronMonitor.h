@@ -12,6 +12,7 @@
 
 #include "Neurons.h"
 
+#include <memory>
 #include <vector>
 
 struct NeuronInformation {
@@ -37,17 +38,16 @@ struct NeuronInformation {
 };
 
 class NeuronMonitor {
-	const Neurons& neurons_to_monitor;
 	size_t target_neuron_id;
 
 	std::vector<NeuronInformation> informations;
 
 public:
+	static std::shared_ptr<Neurons> neurons_to_monitor;
 	static size_t max_steps;
 	static size_t current_step;
 
-	NeuronMonitor(size_t neuron_id, const Neurons& neurons)
-		: neurons_to_monitor(neurons), target_neuron_id(neuron_id), informations(max_steps) {
+	NeuronMonitor(size_t neuron_id): target_neuron_id(neuron_id), informations(max_steps) {
 	}
 
 	[[nodiscard]] size_t get_target_id() const /*noexcept*/ {
@@ -55,22 +55,22 @@ public:
 	}
 
 	void record_data() {
-		if (current_step >= max_steps) {
+		if (current_step >= informations.size()) {
 			return;
 		}
 
-		const double& calcium = neurons_to_monitor.calcium[target_neuron_id];
-		const double& x = neurons_to_monitor.neuron_models->x[target_neuron_id];
-		const bool& fired = neurons_to_monitor.neuron_models->fired[target_neuron_id];
-		const double& secondary = neurons_to_monitor.neuron_models->get_secondary_variable(target_neuron_id);
-		const double& I_sync = neurons_to_monitor.neuron_models->I_syn[target_neuron_id];
+		const double& calcium = neurons_to_monitor->calcium[target_neuron_id];
+		const double& x = neurons_to_monitor->neuron_models->x[target_neuron_id];
+		const bool& fired = neurons_to_monitor->neuron_models->fired[target_neuron_id];
+		const double& secondary = neurons_to_monitor->neuron_models->get_secondary_variable(target_neuron_id);
+		const double& I_sync = neurons_to_monitor->neuron_models->I_syn[target_neuron_id];
 
-		const double& axons = neurons_to_monitor.axons.cnts[target_neuron_id];
-		const double& axons_connected = neurons_to_monitor.axons.connected_cnts[target_neuron_id];
-		const double& dendrites_exc = neurons_to_monitor.dendrites_exc.cnts[target_neuron_id];
-		const double& dendrites_exc_connected = neurons_to_monitor.dendrites_exc.connected_cnts[target_neuron_id];
-		const double& dendrites_inh = neurons_to_monitor.dendrites_inh.cnts[target_neuron_id];
-		const double& dendrites_inh_connected = neurons_to_monitor.dendrites_inh.connected_cnts[target_neuron_id];
+		const double& axons = neurons_to_monitor->axons.cnts[target_neuron_id];
+		const double& axons_connected = neurons_to_monitor->axons.connected_cnts[target_neuron_id];
+		const double& dendrites_exc = neurons_to_monitor->dendrites_exc.cnts[target_neuron_id];
+		const double& dendrites_exc_connected = neurons_to_monitor->dendrites_exc.connected_cnts[target_neuron_id];
+		const double& dendrites_inh = neurons_to_monitor->dendrites_inh.cnts[target_neuron_id];
+		const double& dendrites_inh_connected = neurons_to_monitor->dendrites_inh.connected_cnts[target_neuron_id];
 
 		informations[current_step] = NeuronInformation(calcium, x, fired, secondary, I_sync, axons, axons_connected, dendrites_exc, dendrites_exc_connected, dendrites_inh, dendrites_inh_connected);
 	}

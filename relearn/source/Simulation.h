@@ -29,25 +29,14 @@ class Partition;
 
 class Simulation {
 public:
-	Simulation(size_t random_seed) {
-
-	}
-
-	void setParameters(std::unique_ptr<Parameters> params) {
-		RelearnException::check(params != nullptr, "params should not be null");
-		parameters = std::move(params);
-
-		if (0 == MPIWrapper::my_rank) {
-			std::cout << params << std::endl;
-		}
-	}
+	Simulation(double accept_criterion);
 
 	void setPartition(std::unique_ptr<Partition> part) {
 		RelearnException::check(part != nullptr, "part should not be null");
 		partition = std::move(part);
 	}
 
-	void placeRandomNeurons();
+	void placeRandomNeurons(size_t num_neurons, double frac_exc);
 
 	void loadNeuronsFromFile(const std::string& path_to_positions);
 
@@ -55,7 +44,7 @@ public:
 
 	void registerNeuronMonitor(size_t neuron_id);
 
-	void simulate(size_t number_steps);
+	void simulate(size_t number_steps = 6000000, size_t step_monitor = 100);
 
 	void finalize();
 
@@ -64,13 +53,12 @@ private:
 
 	void printNeuronMonitors();
 
-
 	std::unique_ptr<Parameters> parameters;
 	std::unique_ptr<Partition> partition;
 
 	std::unique_ptr<NeuronToSubdomainAssignment> neuron_to_subdomain_assignment;
 
-	std::unique_ptr<Neurons> neurons;
+	std::shared_ptr<Neurons> neurons;
 	std::unique_ptr<NeuronIdMap> neuron_id_map;
 
 	std::unique_ptr<Octree> global_tree;

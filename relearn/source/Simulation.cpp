@@ -16,8 +16,8 @@
 #include "NeuronIdMap.h"
 #include "NeuronModels.h"
 #include "NeuronMonitor.h"
-#include "NeuronToSubdomainAssignment.h"
 #include "Neurons.h"
+#include "NeuronToSubdomainAssignment.h"
 
 #include "SubdomainFromFile.h"
 #include "SubdomainFromNeuronDensity.h"
@@ -29,11 +29,42 @@
 
 
 void Simulation::registerNeuronMonitor(size_t neuron_id) {
-
+	monitors.emplace_back(neuron_id);
 }
 
-void Simulation::placeRandomNeurons() {
-	neuron_to_subdomain_assignment = std::make_unique<SubdomainFromNeuronDensity>(parameters->num_neurons, parameters->frac_neurons_exc, 26);
+Simulation::Simulation(double accept_criterion) {
+	auto params = std::make_unique<Parameters>();
+	parameters = std::move(params);
+
+	parameters->frac_neurons_exc = 0.8;                          // CHANGE
+	parameters->x_0 = 0.05;
+	parameters->tau_x = 5.0;
+	parameters->k = 0.03;
+	parameters->tau_C = 10000; //5000;   //very old 60.0;
+	parameters->beta = 0.001;  //very old 0.05;
+	parameters->h = 10;
+	parameters->C_target = 0.5; // gold 0.5;
+	parameters->refrac_time = 4.0;
+	parameters->eta_A = 0; //0.4; // gold 0.0;
+	parameters->eta_D_ex = 0; //0.1, // gold 0.0;
+	parameters->eta_D_in = 0.0;
+	parameters->nu = 1e-4; // gold 1e-5; // element growth rate
+	parameters->vacant_retract_ratio = 0;
+	parameters->sigma = 750.0;
+	parameters->num_log_files = 9;  // NOT USED
+	parameters->log_start_neuron = 0;  // NOT USED
+	parameters->mpi_rma_mem_size = 300 * 1024 * 1024;  // 300 MB
+	parameters->max_num_pending_vacant_axons = 1000;
+	parameters->accept_criterion = accept_criterion;
+	parameters->naive_method = parameters->accept_criterion == 0.0;
+
+	if (0 == MPIWrapper::my_rank) {
+		std::cout << parameters << std::endl;
+	}
+}
+
+void Simulation::placeRandomNeurons(size_t num_neurons, double frac_exc) {
+	neuron_to_subdomain_assignment = std::make_unique<SubdomainFromNeuronDensity>(num_neurons, frac_exc, 26);
 	doStuffAndSuch();
 	network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
 }
@@ -59,13 +90,9 @@ void Simulation::loadNeuronsFromFile(const std::string& path_to_positions, const
 	neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, Logs::get("sums"), *parameters, 0, 0);
 }
 
-void Simulation::simulate(size_t number_steps) {
+void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 	GlobalTimers::timers.start(TimerRegion::SIMULATION_LOOP);
 
-	const auto step_monitor = 100;
-
-	NeuronMonitor::max_steps = number_steps / step_monitor;
-	NeuronMonitor::current_step = 0;
 
 	/**
 	* Simulation loop
@@ -173,7 +200,9 @@ void Simulation::finalize() {
 
 void Simulation::doStuffAndSuch() {
 	Neurons neurs = partition->get_local_neurons(*parameters, *neuron_to_subdomain_assignment);
-	neurons = std::make_unique<Neurons>(std::move(neurs));
+	neurons = std::make_shared<Neurons>(std::move(neurs));
+
+	NeuronMonitor::neurons_to_monitor = neurons;
 
 	partition->print_my_subdomains_info_rank(0);
 	partition->print_my_subdomains_info_rank(1);

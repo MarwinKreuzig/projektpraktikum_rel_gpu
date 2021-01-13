@@ -53,10 +53,6 @@ public:
 	// MPI RMA (remote memory access)
 	size_t mpi_rma_mem_size;      // Memory size (Byte) that should be allocated with MPI_Alloc_mem
 
-	// Random number seeds
-	int64_t seed_octree;         // Random number seed of Octree
-	int64_t seed_partition;      // Random number seed of Partition
-
 	// Overload << operator for proper output
 	friend std::ostream& operator<< (std::ostream& os, const Parameters& params) {
 		os << "** PARAMETERS **\n\n";
@@ -84,7 +80,7 @@ public:
 		os << std::left << std::setw(column_width) << "log_start_neuron" << " : " << params.log_start_neuron << "\n";
 		os << std::left << std::setw(column_width) << "mpi_rma_mem_size (Byte)" << " : " << params.mpi_rma_mem_size << "\n";
 		os << std::left << std::setw(column_width) << "max_num_pending_vacant_axons" << " : " << params.max_num_pending_vacant_axons << "\n";
-		os << std::left << std::setw(column_width) << "seed_octree" << " : " << params.seed_octree << "\n";
+		os << std::left << std::setw(column_width) << "seed_octree" << " : " << randomNumberSeeds::octree << "\n";
 		//os << std::left << std::setw(column_width) << "seed_partition" << " : " << params.seed_partition << "\n";
 		os << std::left << std::setw(column_width) << "seed_partition" << " : " << "Local MPI rank" << "\n";
 

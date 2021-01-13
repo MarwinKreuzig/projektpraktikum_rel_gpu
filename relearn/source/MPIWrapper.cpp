@@ -15,6 +15,7 @@
 #include "RelearnException.h"
 #include "Utility.h"
 
+#include <bitset>
 #include <cstdlib>
 #include <iomanip>
 #include <limits>
@@ -74,6 +75,13 @@ void MPIWrapper::init(int argc, char** argv) {
 	num_ranks = static_cast<size_t>(num_ranks_mpi);
 	my_rank = static_cast<size_t>(my_rank_mpi);
 
+	// Number of ranks must be 2^n so that
+	// the connectivity update works correctly
+	const std::bitset<sizeof(int) * 8> bitset_num_ranks(num_ranks);
+	if (1 != bitset_num_ranks.count() && (0 == my_rank)) {
+		RelearnException::fail("Number of ranks must be of the form 2^n");
+	}
+
 	register_custom_function();
 
 	num_neurons_of_ranks.resize(num_ranks);
@@ -100,7 +108,7 @@ void MPIWrapper::init_neurons(size_t num_neurons) {
 		exit(EXIT_FAILURE);
 	}
 
-	num_neurons = num_neurons;
+	MPIWrapper::num_neurons = num_neurons;
 
 	/*
 	 * Info about how much to receive (num_neurons) from every process and where to store it (displs)
