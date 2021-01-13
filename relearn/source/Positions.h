@@ -19,9 +19,10 @@
 class Positions {
 
 public:
-	explicit Positions(size_t s) : size(s), x_dims(s), y_dims(s), z_dims(s) {
+	explicit Positions() {
 
 	}
+
 	~Positions() = default;
 
 	Positions(const Positions& other) = delete;
@@ -29,6 +30,13 @@ public:
 
 	Positions& operator = (const Positions& other) = delete;
 	Positions& operator = (Positions&& other) = default;
+
+	void init(size_t num_neurons) {
+		size = num_neurons;
+		x_dims.resize(num_neurons);
+		y_dims.resize(num_neurons);
+		z_dims.resize(num_neurons);
+	}
 
 	[[nodiscard]] const std::vector<double>& get_x_dims() const noexcept {
 		return x_dims;
@@ -75,7 +83,7 @@ public:
 	}
 
 private:
-	size_t size;
+	size_t size = 0;
 
 	std::vector<double> x_dims;
 	std::vector<double> y_dims;

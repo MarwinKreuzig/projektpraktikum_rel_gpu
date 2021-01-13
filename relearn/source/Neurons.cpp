@@ -16,28 +16,14 @@
 
 #include <array>
 
-Neurons::Neurons(size_t num_neurons, const Parameters& params, const Partition& partition, std::unique_ptr<NeuronModels> model)
-	: num_neurons(num_neurons),
-	partition(&partition),
+Neurons::Neurons(const Parameters& params, const Partition& partition, std::unique_ptr<NeuronModels> model)
+	: partition(&partition),
 	neuron_model(std::move(model)),
-	axons(SynapticElements::ElementType::AXON, num_neurons, SynapticElements::default_eta_Axons),
-	dendrites_exc(SynapticElements::ElementType::DENDRITE, num_neurons, SynapticElements::default_eta_Dendrites_exc),
-	dendrites_inh(SynapticElements::ElementType::DENDRITE, num_neurons, SynapticElements::default_eta_Dendrites_inh),
-	positions(num_neurons),
-	calcium(num_neurons),
-	area_names(num_neurons),
+	axons(SynapticElements::ElementType::AXON, SynapticElements::default_eta_Axons),
+	dendrites_exc(SynapticElements::ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc),
+	dendrites_inh(SynapticElements::ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh),
 	random_number_generator(RandomHolder<Neurons>::get_random_generator()),
-	random_number_distribution(0.0, std::nextafter(1.0, 2.0))
-
-{
-	neuron_model->init(num_neurons);
-
-	// Init member variables
-	for (size_t i = 0; i < num_neurons; i++) {
-		// Set calcium concentration
-		const auto fired = neuron_model->get_fired(i);
-		calcium[i] = fired ? neuron_model->get_beta() : 0.0;
-	}
+	random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
 }
 
 // NOTE: The static variables must be reset to 0 before this function can be used
@@ -296,7 +282,7 @@ void Neurons::delete_synapses(size_t& num_synapses_deleted, NetworkGraph& networ
 			size_t signal_type_converted = arr[4];
 			size_t synapse_id = arr[5];
 
-			SynapticElements::ElementType affected_element_type = 
+			SynapticElements::ElementType affected_element_type =
 				affected_element_type_converted == 0 ? SynapticElements::ElementType::AXON : SynapticElements::ElementType::DENDRITE;
 
 			SynapticElements::SignalType signal_type =
@@ -737,18 +723,18 @@ void Neurons::debug_check_counts() {
 }
 
 void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, LogFiles& log_file, const Parameters& params, size_t sum_synapses_deleted, size_t sum_synapses_created) {
-	unsigned int sum_axons_exc_cnts= 0; 
-	unsigned int sum_axons_exc_connected_cnts= 0;
-	unsigned int sum_axons_inh_cnts= 0;
-	unsigned int sum_axons_inh_connected_cnts= 0;
-	unsigned int sum_dends_exc_cnts= 0;
-	unsigned int sum_dends_exc_connected_cnts= 0;
-	unsigned int sum_dends_inh_cnts= 0;
-	unsigned int sum_dends_inh_connected_cnts= 0;
-	unsigned int sum_axons_exc_vacant= 0;
-	unsigned int sum_axons_inh_vacant= 0;
-	unsigned int sum_dends_exc_vacant= 0; 
-	unsigned int sum_dends_inh_vacant= 0;
+	unsigned int sum_axons_exc_cnts = 0;
+	unsigned int sum_axons_exc_connected_cnts = 0;
+	unsigned int sum_axons_inh_cnts = 0;
+	unsigned int sum_axons_inh_connected_cnts = 0;
+	unsigned int sum_dends_exc_cnts = 0;
+	unsigned int sum_dends_exc_connected_cnts = 0;
+	unsigned int sum_dends_inh_cnts = 0;
+	unsigned int sum_dends_inh_connected_cnts = 0;
+	unsigned int sum_axons_exc_vacant = 0;
+	unsigned int sum_axons_inh_vacant = 0;
+	unsigned int sum_dends_exc_vacant = 0;
+	unsigned int sum_dends_inh_vacant = 0;
 
 	// My vacant axons (exc./inh.)
 	sum_axons_exc_cnts = sum_axons_exc_connected_cnts = 0;

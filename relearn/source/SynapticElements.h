@@ -27,17 +27,15 @@ public:
 	enum class ElementType { AXON, DENDRITE };
 	enum class SignalType { EXCITATORY, INHIBITORY };
 
-	SynapticElements(ElementType type, size_t s, double min_C_level_to_grow, 
-		double C_target = SynapticElements::default_C_target, 
-		double nu = SynapticElements::default_nu, 
+	SynapticElements(ElementType type, double min_C_level_to_grow,
+		double C_target = SynapticElements::default_C_target,
+		double nu = SynapticElements::default_nu,
 		double vacant_retract_ratio = SynapticElements::default_vacant_retract_ratio) :
 		type(type),
-		size(s),
 		min_C_level_to_grow(min_C_level_to_grow),
 		C_target(C_target),
 		nu(nu),
-		vacant_retract_ratio(vacant_retract_ratio),
-		cnts(size, 0.0), connected_cnts(size, 0.0), delta_cnts(size, 0.0), signal_types(size) {
+		vacant_retract_ratio(vacant_retract_ratio) {
 	}
 
 	SynapticElements(const SynapticElements& other) = delete;
@@ -47,6 +45,14 @@ public:
 	SynapticElements& operator = (SynapticElements&& other) = default;
 
 	~SynapticElements() = default;
+
+	void init(size_t number_neurons) {
+		size = number_neurons;
+		cnts.resize(size, 0.0);
+		connected_cnts.resize(size, 0.0);
+		delta_cnts.resize(size, 0.0);
+		signal_types.resize(size);
+	}
 
 	[[nodiscard]] const std::vector<double>& get_cnts() const noexcept {
 		return cnts;
@@ -148,7 +154,7 @@ public:
 
 private:
 	ElementType type;            // Denotes the type of all synaptic elements, which is AXON or DENDRITE
-	size_t size;
+	size_t size = 0;
 	std::vector<double> cnts;
 	std::vector<double> delta_cnts;          // Keeps track of changes in number of elements until those changes are applied in next connectivity update
 	std::vector<double> connected_cnts;

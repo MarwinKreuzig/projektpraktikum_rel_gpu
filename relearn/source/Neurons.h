@@ -75,15 +75,15 @@ public:
 
 	void append(size_t source_neuron_id, size_t target_neuron_id, Cell::DendriteType dendrite_type_needed) {
 		size_t dendrite_type_val = 0;
-		
+
 		if (dendrite_type_needed == Cell::DendriteType::INHIBITORY) {
 			dendrite_type_val = 1;
 		}
 		else {
 			RelearnException::check(dendrite_type_needed == Cell::DendriteType::EXCITATORY);
 		}
-		
-		
+
+
 		append(source_neuron_id, target_neuron_id, dendrite_type_val);
 	}
 
@@ -288,11 +288,11 @@ public:
 	 */
 	using MapSynapseDeletionRequests = std::map<int, SynapseDeletionRequests>;
 
-	Neurons(size_t num_neurons, const Parameters& params, const Partition& partition) : Neurons{ num_neurons, params, partition, NeuronModels::create<models::ModelA>() } {
+	Neurons(const Parameters& params, const Partition& partition) : Neurons{ params, partition, NeuronModels::create<models::ModelA>() } {
 
 	}
 
-	Neurons(size_t num_neurons, const Parameters& params, const Partition& partition, std::unique_ptr<NeuronModels> model);
+	Neurons(const Parameters& params, const Partition& partition, std::unique_ptr<NeuronModels> model);
 	~Neurons() = default;
 
 	Neurons(const Neurons& other) = delete;
@@ -301,38 +301,59 @@ public:
 	Neurons& operator=(const Neurons& other) = delete;
 	Neurons& operator=(Neurons&& other) = default;
 
+	void init(size_t number_neurons) {
+		num_neurons = number_neurons;
+
+		neuron_model->init(num_neurons);
+		positions.init(num_neurons);
+
+		axons.init(number_neurons);
+		dendrites_exc.init(number_neurons);
+		dendrites_inh.init(number_neurons);
+
+		calcium.resize(num_neurons);
+		area_names.resize(num_neurons);
+
+		// Init member variables
+		for (size_t i = 0; i < num_neurons; i++) {
+			// Set calcium concentration
+			const auto fired = neuron_model->get_fired(i);
+			calcium[i] = fired ? neuron_model->get_beta() : 0.0;
+		}
+	}
+
 	std::vector<ModelParameter> get_parameter();
 
 	void set_model(std::unique_ptr<NeuronModels>&& model) noexcept {
 		neuron_model = std::move(model);
 	}
 
-	[[nodiscard]] size_t get_num_neurons() const noexcept { 
+	[[nodiscard]] size_t get_num_neurons() const noexcept {
 		return num_neurons;
 	}
 
 	[[nodiscard]] Positions& get_positions() noexcept {
-		return positions; 
+		return positions;
 	}
 
-	[[nodiscard]] std::vector<std::string>& get_area_names() noexcept { 
-		return area_names; 
+	[[nodiscard]] std::vector<std::string>& get_area_names() noexcept {
+		return area_names;
 	}
 
-	[[nodiscard]] Axons& get_axons() noexcept { 
+	[[nodiscard]] Axons& get_axons() noexcept {
 		return axons;
 	}
 
-	[[nodiscard]] const DendritesExc& get_dendrites_exc() const noexcept { 
-		return dendrites_exc; 
+	[[nodiscard]] const DendritesExc& get_dendrites_exc() const noexcept {
+		return dendrites_exc;
 	}
 
-	[[nodiscard]] const DendritesInh& get_dendrites_inh() const noexcept { 
+	[[nodiscard]] const DendritesInh& get_dendrites_inh() const noexcept {
 		return dendrites_inh;
 	}
 
-	[[nodiscard]] NeuronModels& get_neuron_model() noexcept { 
-		return *neuron_model; 
+	[[nodiscard]] NeuronModels& get_neuron_model() noexcept {
+		return *neuron_model;
 	}
 
 	[[nodiscard]] std::tuple<bool, size_t, Vec3d, Cell::DendriteType> get_vacant_axon() const noexcept;

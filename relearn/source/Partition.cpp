@@ -285,7 +285,8 @@ Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssig
 		current_subdomain.octree.set_no_free_in_destructor();
 	}
 
-	Neurons neurons(my_num_neurons, params, *this);
+	Neurons neurons(params, *this);
+	neurons.init(my_num_neurons);
 
 	Positions& neuron_positions = neurons.get_positions();
 	SynapticElements& axons = neurons.get_axons();
