@@ -23,6 +23,7 @@
 #include "Parameters.h"
 #include "Partition.h"
 #include "RelearnException.h"
+#include "Simulation.h"
 #include "SubdomainFromFile.h"
 #include "SubdomainFromNeuronDensity.h"
 #include "SynapticElements.h"
@@ -235,43 +236,6 @@ void printTimers() {
 	}
 }
 
-void printNeuronMonitor(const NeuronMonitor& nm, size_t neuron_id) {
-	std::ofstream outfile(std::to_string(neuron_id) + ".csv", std::ios::trunc);
-	outfile << std::setprecision(5);
-
-	outfile.imbue(std::locale());
-
-	outfile << "Step;Fired;Refrac;x;Ca;I_sync;axons;axons_connected;dendrites_exc;dendrites_exc_connected;dendrites_inh;dendrites_inh_connected";
-	outfile << "\n";
-
-	const auto& infos = nm.get_informations();
-
-	const char * const filler = ";";
-	const auto width = 6;
-
-	auto ctr = 0;
-
-	for (const auto& info : infos) {
-		outfile << ctr << filler;
-		outfile << /*std::setw(width) <<*/ info.fired << filler;
-		outfile << /*std::setw(width) <<*/ info.secondary << filler;
-		outfile << /*std::setw(width) <<*/ info.x << filler;
-		outfile << /*std::setw(width) <<*/ info.calcium << filler;
-		outfile << /*std::setw(width) <<*/ info.I_sync << filler;
-		outfile << /*std::setw(width) <<*/ info.axons << filler;
-		outfile << /*std::setw(width) <<*/ info.axons_connected << filler;
-		outfile << /*std::setw(width) <<*/ info.dendrites_exc << filler;
-		outfile << /*std::setw(width) <<*/ info.dendrites_exc_connected << filler;
-		outfile << /*std::setw(width) <<*/ info.dendrites_inh << filler;
-		outfile << /*std::setw(width) <<*/ info.dendrites_inh_connected << "\n";
-
-		ctr++;
-	}
-
-	outfile.flush();
-	outfile.close();
-}
-
 int main(int argc, char** argv) {
 	std::vector<std::string> arguments{ argv, argv + argc };
 	/**
@@ -294,14 +258,16 @@ int main(int argc, char** argv) {
 	 */
 	MPIWrapper::init(argc, argv);
 
+	size_t simulation_steps = stoull(arguments[4], nullptr, 10);
+
 	/**
 	 * Simulation parameters
 	 */
-	Parameters params;
-	setDefaultParameters(&params);
-	setSpecificParameters(&params, arguments);
+	auto params = std::make_unique<Parameters>();;
+	setDefaultParameters(params.get());
+	setSpecificParameters(params.get(), arguments);
 
-	MPIWrapper::init_neurons(params.num_neurons);
+	MPIWrapper::init_neurons(params->num_neurons);
 	MPIWrapper::print_infos_rank(0);
 
 	// Init random number seeds
@@ -325,66 +291,44 @@ int main(int argc, char** argv) {
 	/**
 	 * Calculate what my partition of the domain consist of
 	 */
-	Partition partition(MPIWrapper::num_ranks, MPIWrapper::my_rank);
+
+	auto partition = std::make_unique<Partition>(MPIWrapper::num_ranks, MPIWrapper::my_rank);
+	const size_t my_num_subdomains = partition->get_my_num_subdomains();
+	const size_t total_num_subdomains = partition->get_total_num_subdomains();
 
 	// Check if int type can contain total size of branch nodes to receive in bytes
-	// Every rank sends the same number of branch nodes, which is partition.get_my_num_subdomains()
-	if (std::numeric_limits<int>::max() < (partition.get_my_num_subdomains() * sizeof(OctreeNode))) {
+	// Every rank sends the same number of branch nodes, which is Partition::get_my_num_subdomains()
+	if (std::numeric_limits<int>::max() < (my_num_subdomains * sizeof(OctreeNode))) {
 		RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
 		exit(EXIT_FAILURE);
 	}
 
-	std::shared_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain;
-	if (5 < argc) {
-		neurons_in_subdomain = std::make_shared<SubdomainFromFile>(params.file_with_neuron_positions, partition);
-		// Set parameter based on actual neuron population
-		params.frac_neurons_exc = neurons_in_subdomain->desired_ratio_neurons_exc();
-	}
-	else {
-		neurons_in_subdomain = std::make_shared<SubdomainFromNeuronDensity>(params.num_neurons, params.frac_neurons_exc, 26);
-	}
-
-	if (0 == MPIWrapper::my_rank) {
-		std::cout << params << std::endl;
-	}
-
 	/**
-	 * Create MPI RMA memory allocator
-	 */
-	MPIWrapper::init_mem_allocator(params.mpi_rma_mem_size);
-	MPIWrapper::init_buffer_octree(partition.get_total_num_subdomains());
+	* Create MPI RMA memory allocator
+	*/
+	MPIWrapper::init_mem_allocator(params->mpi_rma_mem_size);
+	MPIWrapper::init_buffer_octree(total_num_subdomains);
 
 	// Lock local RMA memory for local stores
 	MPIWrapper::lock_window(MPIWrapper::my_rank, MPI_Locktype::exclusive);
 
-	/**
-	 * Create neuron population
-	 */
-	Neurons neurons = partition.get_local_neurons(params, *neurons_in_subdomain);
+	Simulation sim(params->seed_octree);
+	sim.setParameters(std::move(params));
+	sim.setPartition(std::move(partition));
 
-	partition.print_my_subdomains_info_rank(0);
-	partition.print_my_subdomains_info_rank(1);
+	if (5 < argc) {
+		std::string file_positions(arguments[5]);
 
-	LogMessages::print_message_rank("Neurons created", 0);
-
-	/**********************************************************************************/
-	NeuronIdMap neuron_id_map(
-		neurons.get_num_neurons(),
-		neurons.get_positions().get_x_dims(),
-		neurons.get_positions().get_y_dims(),
-		neurons.get_positions().get_z_dims());
-
-	/**
-	 * Init global tree parameters
-	 */
-	Octree global_tree(partition, params);
-	global_tree.set_no_free_in_destructor(); // This needs to be changed later, as it's cleaner to free the nodes at destruction
-
-
-	// Insert my local (subdomain) trees into my global tree
-	for (size_t i = 0; i < partition.get_my_num_subdomains(); i++) {
-		Octree* local_tree = &partition.get_subdomain_tree(i);
-		global_tree.insert_local_tree(local_tree);
+		if (6 < argc) {
+			std::string file_network(arguments[6]);
+			sim.loadNeuronsFromFile(file_positions, file_network);
+		}
+		else {
+			sim.loadNeuronsFromFile(file_positions);
+		}
+	}
+	else {
+		sim.placeRandomNeurons();
 	}
 
 	// Unlock local RMA memory and make local stores visible in public window copy
@@ -397,160 +341,19 @@ int main(int argc, char** argv) {
 	// rank which has not finished (or even begun) its local stores
 	MPIWrapper::barrier(MPIWrapper::Scope::global);// TODO(future) Really needed?
 
-	LogMessages::print_message_rank("Neurons inserted into subdomains", 0);
-	LogMessages::print_message_rank("Subdomains inserted into global tree", 0);
-
-	/**
-	 * Create and init neural network
-	 */
-	NetworkGraph network_graph(neurons.get_num_neurons());
-	// Neuronal connections provided in file
-	if (6 < argc) {
-		//network_graph.add_edge_weights(params.file_with_network, neuron_id_map);
-		network_graph.add_edges_from_file(params.file_with_network, params.file_with_neuron_positions, neuron_id_map, partition);
-		//network_graph.print(std::cout, neuron_id_map);
-	}
-	LogMessages::print_message_rank("Network graph created", 0);
-
-
-	// Init number of synaptic elements and assign EXCITATORY or INHIBITORY signal type
-	// to the dendrites. Assignment of the signal type to the axons is done in
-	// Partition::insert_neurons_into_my_subdomains
-	neurons.init_synaptic_elements(network_graph);
-	//    neurons.init_synaptic_elements(network_graph);
-	LogMessages::print_message_rank("Synaptic elements initialized \n", 0);
-
-	neurons.print_neurons_overview_to_log_file_on_rank_0(0, Logs::get("neurons_overview"), params);
-	neurons.print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, Logs::get("sums"), params, 0, 0);
-
 	GlobalTimers::timers.stop_and_add(TimerRegion::INITIALIZATION);
 
-	uint64_t total_creations = 0;
-	uint64_t total_deletions = 0;
-
-	const auto step_monitor = 100;
-
-	NeuronMonitor::max_steps = params.simulation_time / step_monitor;
-	NeuronMonitor::current_step = 0;
-
-	std::vector<NeuronMonitor> monitors;
-
 	for (size_t i = 0; i < 1; i++) {
-		monitors.emplace_back(i, neurons);
+		sim.registerNeuronMonitor(i);
 	}
 
-	// Start timing simulation loop
-	GlobalTimers::timers.start(TimerRegion::SIMULATION_LOOP);
-
-	/**
-	 * Simulation loop
-	 */
-	for (size_t step = 1; step <= params.simulation_time; step++) {
-
-		if (step % step_monitor == 0) {
-			for (auto& mn : monitors) {
-				mn.record_data();
-			}
-
-			NeuronMonitor::current_step++;
-		}
-
-		// Provide neuronal network to neuron models for one iteration step
-		GlobalTimers::timers.start(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
-		neurons.update_electrical_activity(network_graph);
-		GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
-
-		// Calc how many synaptic elements grow/retract
-		// Apply the change in number of elements during connectivity update
-		GlobalTimers::timers.start(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
-		neurons.update_number_synaptic_elements_delta();
-		GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
-
-		//if (0 == MPIWrapper::my_rank && step % 50 == 0) {
-		//	std::cout << "** STATE AFTER: " << step << " of " << params.simulation_time
-		//		<< " msec ** [" << Timers::wall_clock_time() << "]\n";
-		//}
-
-		// Update connectivity every 100 ms
-		if (step % Constants::plasticity_update_step == 0) {
-			size_t num_synapses_deleted = 0;
-			size_t num_synapses_created = 0;
-
-			if (0 == MPIWrapper::my_rank) {
-				std::cout << "** UPDATE CONNECTIVITY AFTER: " << step << " of " << params.simulation_time
-					<< " msec ** [" << Timers::wall_clock_time() << "]\n";
-			}
-
-			GlobalTimers::timers.start(TimerRegion::UPDATE_CONNECTIVITY);
-
-			neurons.update_connectivity(global_tree, network_graph, num_synapses_deleted, num_synapses_created);
-
-			GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_CONNECTIVITY);
-
-			// Get total number of synapses deleted and created
-			std::array<uint64_t, 2> local_cnts = { static_cast<uint64_t>(num_synapses_deleted), static_cast<uint64_t>(num_synapses_created) };
-			std::array<uint64_t, 2> global_cnts{};
-
-			MPIWrapper::reduce(local_cnts, global_cnts, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
-
-			if (0 == MPIWrapper::my_rank) {
-				total_deletions += global_cnts[0] / 2;
-				total_creations += global_cnts[1] / 2;
-			}
-
-			if (global_cnts[0] != 0.0) {
-				std::stringstream sstring; // For output generation
-				sstring << "Sum (all processes) number synapses deleted: " << global_cnts[0] / 2;
-				LogMessages::print_message_rank(sstring.str().c_str(), 0);
-			}
-
-			if (global_cnts[1] != 0.0) {
-				std::stringstream sstring; // For output generation
-				sstring << "Sum (all processes) number synapses created: " << global_cnts[1] / 2;
-				LogMessages::print_message_rank(sstring.str().c_str(), 0);
-			}
-
-			neurons.print_sums_of_synapses_and_elements_to_log_file_on_rank_0(
-				step, Logs::get("sums"), params, num_synapses_deleted, num_synapses_created);
-
-			std::cout << std::flush;
-		}
-
-		// Print details every 500 ms
-		if (step % Constants::logfile_update_step == 0) {
-			neurons.print_neurons_overview_to_log_file_on_rank_0(step, Logs::get("neurons_overview"), params);
-		}
-	}
-
-	// Stop timing simulation loop
-	GlobalTimers::timers.stop_and_add(TimerRegion::SIMULATION_LOOP);
-
-	for (auto& monitor : monitors) {
-		printNeuronMonitor(monitor, monitor.get_target_id());
-	}
-
-	neurons.print_positions_to_log_file(Logs::get("positions_rank_" + MPIWrapper::my_rank_str), params, neuron_id_map);
-	neurons.print_network_graph_to_log_file(Logs::get("network_rank_" + MPIWrapper::my_rank_str), network_graph,
-		params, neuron_id_map);
+	sim.simulate(simulation_steps);
 
 	printTimers();
 
-	//neurons_in_subdomain->write_neurons_to_file("output_positions_" + MPIWrapper::my_rank_str + ".txt");
-	//network_graph.write_synapses_to_file("output_edges_" + MPIWrapper::my_rank_str + ".txt", neuron_id_map, partition);
-
 	MPIWrapper::barrier(MPIWrapper::Scope::global);
-	if (0 == MPIWrapper::my_rank) {
-		std::stringstream sstring; // For output generation
-		sstring << "\n";
-		sstring << "\n" << "Total creations: " << total_creations << "\n";
-		sstring << "Total deletions: " << total_deletions << "\n";
-		sstring << "END: " << Timers::wall_clock_time() << "\n";
-		LogMessages::print_message_rank(sstring.str().c_str(), 0);
-	}
+	sim.finalize();
 
-	/**
-	 * Finalize MPI
-	 */
 	MPIWrapper::finalize();
 
 	return 0;
