@@ -70,15 +70,6 @@ NeuronIdMap.h:36:24: warning: non-const reference parameter 'rank_to_start_neuro
 NeuronIdMap.h:43:34: warning: non-const reference parameter 'pos_to_rank_neuron_id', make it const or use a pointer 
                 std::map<Vec3d, RankNeuronId>& pos_to_rank_neuron_id);
 
-Neurons.h:285:2: warning: move assignment operator is explicitly defaulted but implicitly deleted, probably because a base class or a non-static data member is not assignable, e.g. because the latter is marked 'const'; definition can either be removed or explicitly deleted 
-        Neurons& operator=(Neurons&& other) = default;
-
-Neurons.h:285:11: warning: explicitly defaulted move assignment operator is implicitly deleted 
-        Neurons& operator=(Neurons&& other) = default;
-
-Neurons.h:459:16: note: move assignment operator of 'Neurons' is implicitly deleted because field 'random_number_generator' is of reference type 'std::mt19937 &' (aka 'mersenne_twister_engine<unsigned long, 32, 624, 397, 31, 2567483615UL, 11, 4294967295UL, 7, 2636928640UL, 15, 4022730752UL, 18, 1812433253UL> &')
-        std::mt19937& random_number_generator;
-
 Neurons.h:333:35: warning: non-const reference parameter 'global_tree', make it const or use a pointer 
         void update_connectivity(Octree& global_tree,
 

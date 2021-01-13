@@ -50,6 +50,9 @@ public:
 	NeuronMonitor(size_t neuron_id): target_neuron_id(neuron_id), informations(max_steps) {
 	}
 
+	NeuronMonitor(NeuronMonitor&& other) noexcept = default;
+	NeuronMonitor& operator=(NeuronMonitor&& other) noexcept = default;
+
 	[[nodiscard]] size_t get_target_id() const /*noexcept*/ {
 		return target_neuron_id;
 	}
