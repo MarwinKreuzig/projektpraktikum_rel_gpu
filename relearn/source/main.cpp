@@ -10,6 +10,7 @@
 
 #include "Commons.h"
 #include "MPIWrapper.h"
+#include "NeuronModels.h"
 #include "NeuronMonitor.h"
 #include "Partition.h"
 #include "Random.h"
@@ -32,6 +33,7 @@
 #include <iostream>
 #include <limits>
 #include <locale>
+#include <memory>
 
 void printTimers() {
 	/**
@@ -218,7 +220,7 @@ int main(int argc, char** argv) {
 	/**
 	 * Calculate what my partition of the domain consist of
 	 */
-	auto partition = std::make_unique<Partition>(MPIWrapper::num_ranks, MPIWrapper::my_rank);
+	auto partition = std::make_shared<Partition>(MPIWrapper::num_ranks, MPIWrapper::my_rank);
 	const size_t my_num_subdomains = partition->get_my_num_subdomains();
 	const size_t total_num_subdomains = partition->get_total_num_subdomains();
 
@@ -238,23 +240,23 @@ int main(int argc, char** argv) {
 	// Lock local RMA memory for local stores
 	MPIWrapper::lock_window(MPIWrapper::my_rank, MPI_Locktype::exclusive);
 
-	Simulation sim(accept_criterion);
-	sim.setPartition(std::move(partition));
+	Simulation sim(accept_criterion, partition);
+	sim.set_neuron_models(std::make_unique<models::ModelA>());
 
 	if (5 < argc) {
 		std::string file_positions(arguments[5]);
 
 		if (6 < argc) {
 			std::string file_network(arguments[6]);
-			sim.loadNeuronsFromFile(file_positions, file_network);
+			sim.load_neurons_from_file(file_positions, file_network);
 		}
 		else {
-			sim.loadNeuronsFromFile(file_positions);
+			sim.load_neurons_from_file(file_positions);
 		}
 	}
 	else {
 		double frac_exc = 0.8;
-		sim.placeRandomNeurons(num_neurons, frac_exc);
+		sim.place_random_neurons(num_neurons, frac_exc);
 	}
 
 	// Unlock local RMA memory and make local stores visible in public window copy
@@ -275,7 +277,7 @@ int main(int argc, char** argv) {
 	NeuronMonitor::current_step = 0;
 
 	for (size_t i = 0; i < 1; i++) {
-		sim.registerNeuronMonitor(i);
+		sim.register_neuron_monitor(i);
 	}
 
 	sim.simulate(simulation_steps, step_monitor);

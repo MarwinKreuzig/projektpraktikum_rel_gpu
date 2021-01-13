@@ -44,23 +44,27 @@ Simulation::Simulation(double accept_criterion, std::shared_ptr<Partition> parti
 	}
 }
 
-void Simulation::registerNeuronMonitor(size_t neuron_id) {
+void Simulation::register_neuron_monitor(size_t neuron_id) {
 	monitors.emplace_back(neuron_id);
 }
 
-void Simulation::placeRandomNeurons(size_t num_neurons, double frac_exc) {
+void Simulation::set_neuron_models(std::unique_ptr<NeuronModels> nm) {
+	neuron_models = std::move(nm);
+}
+
+void Simulation::place_random_neurons(size_t num_neurons, double frac_exc) {
 	neuron_to_subdomain_assignment = std::make_unique<SubdomainFromNeuronDensity>(num_neurons, frac_exc, 26);
-	doStuffAndSuch();
+	initialize();
 	network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
 }
 
-void Simulation::loadNeuronsFromFile(const std::string& path_to_positions) {
+void Simulation::load_neurons_from_file(const std::string& path_to_positions) {
 	neuron_to_subdomain_assignment = std::make_unique<SubdomainFromFile>(path_to_positions, partition);
-	doStuffAndSuch();
+	initialize();
 }
 
-void Simulation::loadNeuronsFromFile(const std::string& path_to_positions, const std::string& path_to_connections) {
-	loadNeuronsFromFile(path_to_positions);
+void Simulation::load_neurons_from_file(const std::string& path_to_positions, const std::string& path_to_connections) {
+	load_neurons_from_file(path_to_positions);
 
 	network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
 	network_graph->add_edges_from_file(path_to_connections, path_to_positions, *neuron_id_map, partition);
@@ -160,7 +164,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 	// Stop timing simulation loop
 	GlobalTimers::timers.stop_and_add(TimerRegion::SIMULATION_LOOP);
 
-	printNeuronMonitors();
+	print_neuron_monitors();
 
 	neurons->print_positions_to_log_file(Logs::get("positions_rank_" + MPIWrapper::my_rank_str), *neuron_id_map);
 	neurons->print_network_graph_to_log_file(Logs::get("network_rank_" + MPIWrapper::my_rank_str), *network_graph, *neuron_id_map);
@@ -180,13 +184,12 @@ void Simulation::finalize() {
 	}
 }
 
-std::vector<std::unique_ptr<NeuronModels>> Simulation::getModels() {
+std::vector<std::unique_ptr<NeuronModels>> Simulation::get_models() {
 	return NeuronModels::get_models();
 }
 
-void Simulation::doStuffAndSuch() {
-	Neurons neurs = partition->get_local_neurons(*neuron_to_subdomain_assignment);
-	neurons = std::make_shared<Neurons>(std::move(neurs));
+void Simulation::initialize() {
+	neurons = partition->load_neurons(std::move(neuron_to_subdomain_assignment), neuron_models->clone());
 
 	NeuronMonitor::neurons_to_monitor = neurons;
 
@@ -213,7 +216,7 @@ void Simulation::doStuffAndSuch() {
 	LogMessages::print_message_rank("Subdomains inserted into global tree", 0);
 }
 
-void Simulation::printNeuronMonitors() {
+void Simulation::print_neuron_monitors() {
 	for (auto& monitor : monitors) {
 		std::ofstream outfile(std::to_string(monitor.get_target_id()) + ".csv", std::ios::trunc);
 		outfile << std::setprecision(5);

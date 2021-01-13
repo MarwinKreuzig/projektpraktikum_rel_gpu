@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <fstream>
+#include <memory>
 #include <numeric>
 #include <random>
 #include <set>
@@ -534,7 +535,7 @@ TEST(TestRandomNeuronPlacement, test_reloading) {
 
 	mt.seed(rand());
 
-	Partition part(1, 0);
+	auto part = std::make_shared<Partition>(1, 0);
 
 	for (auto i = 0; i < iterations; i++) {
 		std::vector<Vec3d> positions;
@@ -586,7 +587,7 @@ TEST(TestRandomNeuronPlacement, test_reloading_multiple) {
 
 	mt.seed(rand());
 
-	Partition part(1, 0);
+	auto part = std::make_shared<Partition>(1, 0);
 
 	for (auto i = 0; i < iterations; i++) {
 		std::vector<Vec3d> positions;
@@ -693,7 +694,7 @@ TEST(TestNeuronPlacementStoreLoad, test_neuron_placement_store_and_load) {
 	// save to file
 	sdnd.write_neurons_to_file(file);
 
-	Partition part(1, 0);
+	auto part = std::make_shared<Partition>(1, 0);
 	// load from file
 	SubdomainFromFile sdff{ file, part };
 	// fill_subdomain from file

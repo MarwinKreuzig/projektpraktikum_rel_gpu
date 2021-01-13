@@ -67,10 +67,7 @@ public:
 
 	[[nodiscard]] bool is_neuron_local(size_t neuron_id) const;
 
-	[[nodiscard]] Neurons get_local_neurons(NeuronToSubdomainAssignment& neurons_in_subdomain) {
-		Neurons neurons = load_neurons(neurons_in_subdomain);
-		return neurons;
-	}
+	[[nodiscard]] std::shared_ptr<Neurons> load_neurons(std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain, std::unique_ptr<NeuronModels> neuron_models);
 
 	[[nodiscard]] size_t get_my_num_neurons() const {
 		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
@@ -127,9 +124,6 @@ public:
 	void set_total_num_neurons(size_t total_num) noexcept;
 
 protected:
-	// We need the "axons" parameter to set for every neuron the type of axons it grows (exc./inh.)
-	[[nodiscard]] Neurons load_neurons(NeuronToSubdomainAssignment& neurons_in_subdomain);
-
 	bool neurons_loaded;
 
 	size_t total_num_neurons;
