@@ -27,11 +27,9 @@ class Partition;
 
 class Simulation {
 public:
-	Simulation(double accept_criterion);
+	Simulation(double accept_criterion, std::shared_ptr<Partition> partition);
 
 	void registerNeuronMonitor(size_t neuron_id);
-
-	void setPartition(std::unique_ptr<Partition> part);
 
 	void placeRandomNeurons(size_t num_neurons, double frac_exc);
 
@@ -51,7 +49,7 @@ private:
 	void printNeuronMonitors();
 
 	std::unique_ptr<Parameters> parameters;
-	std::unique_ptr<Partition> partition;
+	std::shared_ptr<Partition> partition;
 
 	std::unique_ptr<NeuronToSubdomainAssignment> neuron_to_subdomain_assignment;
 

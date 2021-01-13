@@ -68,7 +68,7 @@ public:
 	// Print network using global neuron ids
 	void print(std::ostream& os, const NeuronIdMap& neuron_id_map) const;
 
-	void add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, const NeuronIdMap& neuron_id_map, const Partition& partition);
+	void add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, const NeuronIdMap& neuron_id_map, std::shared_ptr<Partition> part);
 
 private:
 

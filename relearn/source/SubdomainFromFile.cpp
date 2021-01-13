@@ -20,7 +20,7 @@
 #include <iostream>
 #include <sstream>
 
-SubdomainFromFile::SubdomainFromFile(const std::string &file_path, Partition& partition) : file(file_path) {
+SubdomainFromFile::SubdomainFromFile(const std::string &file_path, std::shared_ptr<Partition> partition) : file(file_path) {
 	std::cout << "Loading: " << file_path << std::endl;
 	const bool file_is_good = file.good();
 	const bool file_is_not_good = file.fail() || file.eof();
@@ -30,10 +30,12 @@ SubdomainFromFile::SubdomainFromFile(const std::string &file_path, Partition& pa
 		exit(EXIT_FAILURE);
 	}
 
+	RelearnException::check(partition.get() != nullptr);
+
 	read_dimensions_from_file(partition);
 }
 
-void SubdomainFromFile::read_dimensions_from_file(Partition& partition) {
+void SubdomainFromFile::read_dimensions_from_file(std::shared_ptr<Partition> partition) {
 	Vec3d minimum(std::numeric_limits<double>::max());
 	Vec3d maximum(std::numeric_limits<double>::min());
 
@@ -86,7 +88,7 @@ void SubdomainFromFile::read_dimensions_from_file(Partition& partition) {
 		maximum.z = std::nextafter(maximum.z, maximum.z + Constants::eps);
 	}
 
-	partition.set_total_num_neurons(total_number_neurons);
+	partition->set_total_num_neurons(total_number_neurons);
 
 	desired_num_neurons_ = found_ex_neurons + found_in_neurons;
 	desired_frac_neurons_exc_ = static_cast<double>(found_ex_neurons) / static_cast<double>(desired_num_neurons_);

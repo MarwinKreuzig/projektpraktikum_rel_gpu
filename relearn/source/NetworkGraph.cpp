@@ -176,7 +176,7 @@ void NetworkGraph::add_edge_weights(const std::string& filename, const NeuronIdM
 }
 
 void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons,
-	[[maybe_unused]] const NeuronIdMap& neuron_id_map, const Partition& partition) {
+	[[maybe_unused]] const NeuronIdMap& neuron_id_map, std::shared_ptr<Partition> part) {
 	std::vector<std::tuple<size_t, size_t, int>> local_synapses;
 	std::vector<std::tuple<size_t, size_t, int>> out_synapses;
 	std::vector<std::tuple<size_t, size_t, int>> in_synapses;
@@ -185,6 +185,8 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
 
 	std::map<size_t, int> id_to_rank;
 	std::map<size_t, Vec3d> id_to_pos;
+
+	const Partition& partition = *part;
 
 	load_synapses(path_synapses, partition, foreing_ids, local_synapses, out_synapses, in_synapses);
 	load_neuron_positions(path_neurons, foreing_ids, id_to_pos);

@@ -241,7 +241,7 @@ private:
 	Octree();
 
 public:
-	Octree(const Partition& part, const Parameters& params);
+	Octree(std::shared_ptr<Partition> part, const Parameters& params);
 	~Octree() /*noexcept(false)*/;
 
 	Octree(const Octree& other) = delete;

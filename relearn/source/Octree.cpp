@@ -30,12 +30,12 @@ Octree::Octree() :
 	random_number_generator.seed(randomNumberSeeds::octree);
 }
 
-Octree::Octree(const Partition& part, const Parameters& params) :
+Octree::Octree(std::shared_ptr<Partition> part, const Parameters& params) :
 	root_level(0),
 	acceptance_criterion(params.accept_criterion),
 	sigma(params.sigma),
 	naive_method(params.naive_method),
-	level_of_branch_nodes(part.get_level_of_subdomain_trees()),
+	level_of_branch_nodes(part->get_level_of_subdomain_trees()),
 	max_num_pending_vacant_axons(params.max_num_pending_vacant_axons),
 	mpi_rma_node_allocator(MPIWrapper::mpi_rma_mem_allocator),
 	random_number_generator(RandomHolder<Octree>::get_random_generator()),
@@ -45,7 +45,7 @@ Octree::Octree(const Partition& part, const Parameters& params) :
 
 	Vec3d xyz_min;
 	Vec3d xyz_max;
-	std::tie(xyz_min, xyz_max) = part.get_simulation_box_size();
+	std::tie(xyz_min, xyz_max) = part->get_simulation_box_size();
 
 	set_size(xyz_min, xyz_max);
 }

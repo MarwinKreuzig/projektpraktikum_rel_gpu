@@ -28,7 +28,7 @@
 #include <sstream>
 
 
-Simulation::Simulation(double accept_criterion) : parameters(std::make_unique<Parameters>()) {
+Simulation::Simulation(double accept_criterion, std::shared_ptr<Partition> partition) : parameters(std::make_unique<Parameters>()), partition(partition) {
 	// Needed to avoid creating autapses
 	if (accept_criterion > 0.5) {
 		RelearnException::fail("Acceptance criterion must be smaller or equal to 0.5");
@@ -48,11 +48,6 @@ void Simulation::registerNeuronMonitor(size_t neuron_id) {
 	monitors.emplace_back(neuron_id);
 }
 
-void Simulation::setPartition(std::unique_ptr<Partition> part) {
-	RelearnException::check(part != nullptr, "part should not be null");
-	partition = std::move(part);
-}
-
 void Simulation::placeRandomNeurons(size_t num_neurons, double frac_exc) {
 	neuron_to_subdomain_assignment = std::make_unique<SubdomainFromNeuronDensity>(num_neurons, frac_exc, 26);
 	doStuffAndSuch();
@@ -60,7 +55,7 @@ void Simulation::placeRandomNeurons(size_t num_neurons, double frac_exc) {
 }
 
 void Simulation::loadNeuronsFromFile(const std::string& path_to_positions) {
-	neuron_to_subdomain_assignment = std::make_unique<SubdomainFromFile>(path_to_positions, *partition);
+	neuron_to_subdomain_assignment = std::make_unique<SubdomainFromFile>(path_to_positions, partition);
 	doStuffAndSuch();
 }
 
@@ -68,7 +63,7 @@ void Simulation::loadNeuronsFromFile(const std::string& path_to_positions, const
 	loadNeuronsFromFile(path_to_positions);
 
 	network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
-	network_graph->add_edges_from_file(path_to_connections, path_to_positions, *neuron_id_map, *partition);
+	network_graph->add_edges_from_file(path_to_connections, path_to_positions, *neuron_id_map, partition);
 
 	LogMessages::print_message_rank("Network graph created", 0);
 
@@ -205,12 +200,12 @@ void Simulation::doStuffAndSuch() {
 		neurons->get_positions().get_y_dims(),
 		neurons->get_positions().get_z_dims());
 
-	global_tree = std::make_unique<Octree>(*partition, *parameters);
+	global_tree = std::make_unique<Octree>(partition, *parameters);
 	global_tree->set_no_free_in_destructor(); // This needs to be changed later, as it's cleaner to free the nodes at destruction
 
 	// Insert my local (subdomain) trees into my global tree
 	for (size_t i = 0; i < partition->get_my_num_subdomains(); i++) {
-		Octree* local_tree = &partition->get_subdomain_tree(i);
+		Octree* local_tree = &(partition->get_subdomain_tree(i));
 		global_tree->insert_local_tree(local_tree);
 	}
 
@@ -237,17 +232,17 @@ void Simulation::printNeuronMonitors() {
 
 		for (const auto& info : infos) {
 			outfile << ctr << filler;
-			outfile << /*std::setw(width) <<*/ info.fired << filler;
-			outfile << /*std::setw(width) <<*/ info.secondary << filler;
-			outfile << /*std::setw(width) <<*/ info.x << filler;
-			outfile << /*std::setw(width) <<*/ info.calcium << filler;
-			outfile << /*std::setw(width) <<*/ info.I_sync << filler;
-			outfile << /*std::setw(width) <<*/ info.axons << filler;
-			outfile << /*std::setw(width) <<*/ info.axons_connected << filler;
-			outfile << /*std::setw(width) <<*/ info.dendrites_exc << filler;
-			outfile << /*std::setw(width) <<*/ info.dendrites_exc_connected << filler;
-			outfile << /*std::setw(width) <<*/ info.dendrites_inh << filler;
-			outfile << /*std::setw(width) <<*/ info.dendrites_inh_connected << "\n";
+			outfile << info.fired << filler;
+			outfile << info.secondary << filler;
+			outfile << info.x << filler;
+			outfile << info.calcium << filler;
+			outfile << info.I_sync << filler;
+			outfile << info.axons << filler;
+			outfile << info.axons_connected << filler;
+			outfile << info.dendrites_exc << filler;
+			outfile << info.dendrites_exc_connected << filler;
+			outfile << info.dendrites_inh << filler;
+			outfile << info.dendrites_inh_connected << "\n";
 
 			ctr++;
 		}
