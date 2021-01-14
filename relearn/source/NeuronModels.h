@@ -87,48 +87,6 @@ public:
 	};
 
 	/**
-	 * Parameter of a model of type T
-	 */
-	template <typename T>
-	class Parameter {
-	public:
-		using value_type = T;
-
-		Parameter(std::string name, T& value, const T& min, const T& max) : name_{ std::move(name) }, value_{ value }, min_{ min }, max_{ max } {}
-
-		[[nodiscard]] const std::string& name() const noexcept {
-			return name_;
-		}
-
-		[[nodiscard]] value_type& value() noexcept {
-			return value_;
-		}
-
-		[[nodiscard]] const value_type& value() const noexcept {
-			return value_;
-		}
-
-		[[nodiscard]] const value_type& min() const noexcept {
-			return min_;
-		}
-
-		[[nodiscard]] const value_type& max() const noexcept {
-			return max_;
-		}
-
-	private:
-		const std::string name_{}; // name of the parameter
-		T& value_{};			   // value of the parameter
-		const T min_{};			   // minimum value of the parameter
-		const T max_{};			   // maximum value of the parameter
-	};
-
-	/**
-	 * Variant of every Parameter of type T
-	 */
-	using ModelParameter = std::variant<Parameter<unsigned int>, Parameter<double>, Parameter<size_t>>;
-
-	/**
 	 * Map of (MPI rank; FiringNeuronIds)
 	 * The MPI rank specifies the corresponding process
 	 */
@@ -397,30 +355,6 @@ namespace models {
 		[[nodiscard]] virtual std::string name();
 
 		void init(size_t num_neurons) final;
-
-		[[nodiscard]] std::vector<ModelParameter> get_parameter() final {
-			auto res{ NeuronModels::get_parameter() };
-			res.reserve(res.size() + 9);
-			res.emplace_back(Parameter<double>{ "C", C, 100., 500. });
-			res.emplace_back(Parameter<double>{ "g_L", g_L, 0., 100. });
-			res.emplace_back(Parameter<double>{ "E_L", E_L, -150., -20. });
-			res.emplace_back(Parameter<double>{ "V_T", V_T, -150., 0. });
-			res.emplace_back(Parameter<double>{ "d_T", d_T, 0., 10. });
-			res.emplace_back(Parameter<double>{ "tau_w", tau_w, 100., 200. });
-			res.emplace_back(Parameter<double>{ "a", a, 0., 10. });
-			res.emplace_back(Parameter<double>{ "b", b, 0., .3 });
-			res.emplace_back(Parameter<double>{ "V_peak", V_peak, 0., 1. });
-			return res;
-		}
-
-		[[nodiscard]] virtual std::string name() {
-			return "AEIFModel";
-		}
-
-		void init() final {
-			NeuronModels::init();
-			init_neurons();
-		}
 
 	protected:
 		void update_activity(const size_t i) final;
