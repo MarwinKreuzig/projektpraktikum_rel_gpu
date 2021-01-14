@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <fstream>
+#include <memory>
 #include <numeric>
 #include <random>
 #include <set>
@@ -165,6 +166,8 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill) {
 }
 
 TEST(TestRandomNeuronPlacement, test_lazily_fill_multiple) {
+	setup();
+
 	std::uniform_int_distribution<size_t> uid(1, 10000);
 	std::uniform_int_distribution<size_t> uid_fills(1, 10);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
@@ -277,6 +280,8 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions) {
 }
 
 TEST(TestRandomNeuronPlacement, test_lazily_fill_positions_multiple_subdomains) {
+	setup();
+
 	std::uniform_int_distribution<size_t> uid(1, 10000);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -497,7 +502,8 @@ TEST(TestRandomNeuronPlacement, test_saving) {
 				>> area
 				>> type_string;
 
-			EXPECT_TRUE(id < num_neurons);
+			EXPECT_TRUE(0 < id);
+			EXPECT_TRUE(id <= num_neurons);
 
 			EXPECT_FALSE(is_there[id]);
 			is_there[id] = true;
@@ -529,6 +535,8 @@ TEST(TestRandomNeuronPlacement, test_reloading) {
 
 	mt.seed(rand());
 
+	auto part = std::make_shared<Partition>(1, 0);
+
 	for (auto i = 0; i < iterations; i++) {
 		std::vector<Vec3d> positions;
 		std::vector<std::string> area_names;
@@ -538,7 +546,7 @@ TEST(TestRandomNeuronPlacement, test_reloading) {
 
 		auto num_neurons = positions.size();
 
-		SubdomainFromFile sff{ "neurons.tmp" };
+		SubdomainFromFile sff{ "neurons.tmp", part };
 
 		std::vector<Vec3d> loaded_positions;
 		std::vector<std::string> loaded_area_names;
@@ -579,6 +587,8 @@ TEST(TestRandomNeuronPlacement, test_reloading_multiple) {
 
 	mt.seed(rand());
 
+	auto part = std::make_shared<Partition>(1, 0);
+
 	for (auto i = 0; i < iterations; i++) {
 		std::vector<Vec3d> positions;
 		std::vector<std::string> area_names;
@@ -588,7 +598,7 @@ TEST(TestRandomNeuronPlacement, test_reloading_multiple) {
 
 		auto num_neurons = positions.size();
 
-		SubdomainFromFile sff{ "neurons.tmp" };
+		SubdomainFromFile sff{ "neurons.tmp", part };
 
 		std::array<std::vector<Vec3d>, 8> loaded_positions;
 		std::array<std::vector<std::string>, 8> loaded_area_names;
@@ -678,14 +688,15 @@ TEST(TestNeuronPlacementStoreLoad, test_neuron_placement_store_and_load) {
 	constexpr auto frac_neurons_exc = 0.5;
 
 	// create from density
-	SubdomainFromNeuronDensity sdnd{ num_neurons, frac_neurons_exc };
+	SubdomainFromNeuronDensity sdnd{ num_neurons, frac_neurons_exc, 26 };
 	// fill_subdomain
 	sdnd.fill_subdomain(subdomain_id, 1, Vec3d{ 0 }, Vec3d{ sdnd.simulation_box_length.get_maximum() });
 	// save to file
 	sdnd.write_neurons_to_file(file);
 
+	auto part = std::make_shared<Partition>(1, 0);
 	// load from file
-	SubdomainFromFile sdff{ file };
+	SubdomainFromFile sdff{ file, part };
 	// fill_subdomain from file
 	sdff.fill_subdomain(subdomain_id, 1, Vec3d{ 0 }, Vec3d{ sdff.simulation_box_length.get_maximum() });
 

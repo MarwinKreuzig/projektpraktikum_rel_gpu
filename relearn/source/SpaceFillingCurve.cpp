@@ -1,6 +1,6 @@
 #include "SpaceFillingCurve.h"
 
-BoxCoordinates Morton::map_1d_to_3d(uint64_t idx) const {
+BoxCoordinates Morton::map_1d_to_3d(uint64_t idx) {
 	// clear coordinates
 	BoxCoordinates coords{ 0 };
 
@@ -29,8 +29,8 @@ uint64_t Morton::map_3d_to_1d(const BoxCoordinates& coords) const noexcept {
 	for (size_t i = 0; i < refinement_level; ++i) {
 		uint64_t block = 0;
 		const auto short_i = static_cast<uint8_t>(i);
-		block = ((select_bit(coords.z, short_i) << 2u)
-			+ (select_bit(coords.y, short_i) << 1u)
+		block = ((select_bit(coords.z, short_i) << 2U)
+			+ (select_bit(coords.y, short_i) << 1U)
 			+ (select_bit(coords.x, short_i)));
 
 		result |= block << (3 * i);
@@ -39,7 +39,7 @@ uint64_t Morton::map_3d_to_1d(const BoxCoordinates& coords) const noexcept {
 	return result;
 }
 
-uint64_t Morton::copy_bit(uint64_t source, uint8_t source_bit, uint64_t destination, uint8_t destination_bit) const /*noexcept*/ {
+uint64_t Morton::copy_bit(uint64_t source, uint8_t source_bit, uint64_t destination, uint8_t destination_bit) /*noexcept*/ {
 	// A simpler solution might be:
 	// destination ^= (-select_bit(source, source_bit) ^ destination) & (1 << destination_bit);
 

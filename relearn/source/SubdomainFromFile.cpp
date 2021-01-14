@@ -10,15 +10,17 @@
 
 #include "SubdomainFromFile.h"
 
+#include "Commons.h"
 #include "LogMessages.h"
 #include "NeuronToSubdomainAssignment.h"
+#include "Partition.h"
 #include "RelearnException.h"
 
 #include <cmath>
 #include <iostream>
 #include <sstream>
 
-SubdomainFromFile::SubdomainFromFile(const std::string &file_path) : file(file_path) {
+SubdomainFromFile::SubdomainFromFile(const std::string &file_path, std::shared_ptr<Partition> partition) : file(file_path) {
 	std::cout << "Loading: " << file_path << std::endl;
 	const bool file_is_good = file.good();
 	const bool file_is_not_good = file.fail() || file.eof();
@@ -28,15 +30,19 @@ SubdomainFromFile::SubdomainFromFile(const std::string &file_path) : file(file_p
 		exit(EXIT_FAILURE);
 	}
 
-	read_dimensions_from_file();
+	RelearnException::check(partition.get() != nullptr);
+
+	read_dimensions_from_file(partition);
 }
 
-void SubdomainFromFile::read_dimensions_from_file() {
+void SubdomainFromFile::read_dimensions_from_file(std::shared_ptr<Partition> partition) {
 	Vec3d minimum(std::numeric_limits<double>::max());
 	Vec3d maximum(std::numeric_limits<double>::min());
 
 	size_t found_ex_neurons = 0;
 	size_t found_in_neurons = 0;
+
+	size_t total_number_neurons = 0;
 
 	for (std::string line{}; std::getline(file, line);) {
 		// Skip line with comments
@@ -63,6 +69,8 @@ void SubdomainFromFile::read_dimensions_from_file() {
 			continue;
 		}
 
+		total_number_neurons++;
+
 		minimum.calculate_componentwise_minimum(tmp);
 		maximum.calculate_componentwise_maximum(tmp);
 
@@ -75,10 +83,12 @@ void SubdomainFromFile::read_dimensions_from_file() {
 	}
 
 	{
-		maximum.x = std::nextafter(maximum.x, maximum.x + 0.1);
-		maximum.y = std::nextafter(maximum.y, maximum.y + 0.1);
-		maximum.z = std::nextafter(maximum.z, maximum.z + 0.1);
+		maximum.x = std::nextafter(maximum.x, maximum.x + Constants::eps);
+		maximum.y = std::nextafter(maximum.y, maximum.y + Constants::eps);
+		maximum.z = std::nextafter(maximum.z, maximum.z + Constants::eps);
 	}
+
+	partition->set_total_num_neurons(total_number_neurons);
 
 	desired_num_neurons_ = found_ex_neurons + found_in_neurons;
 	desired_frac_neurons_exc_ = static_cast<double>(found_ex_neurons) / static_cast<double>(desired_num_neurons_);
@@ -117,6 +127,9 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
 			continue;
 		}
 
+		// Ids start with 1
+		node.id--;
+
 		bool is_in_subdomain = position_in_box(node.pos, min, max);
 
 		if (!is_in_subdomain) {
@@ -124,11 +137,11 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
 		}
 
 		if (signal_type == "ex") {
-			node.signal_type = SynapticElements::EXCITATORY;
+			node.signal_type = SynapticElements::SignalType::EXCITATORY;
 			++placed_ex_neurons;
 		}
 		else {
-			node.signal_type = SynapticElements::INHIBITORY;
+			node.signal_type = SynapticElements::SignalType::INHIBITORY;
 			++placed_in_neurons;
 		}
 

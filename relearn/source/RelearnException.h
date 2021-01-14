@@ -15,52 +15,25 @@
 #include <string>
 
 class RelearnException : std::exception {
+private:	
 	std::string message;
 
 public:
+	static bool hide_messages;
+
 	RelearnException() = default;
 
 	explicit RelearnException(std::string&& mes) : message(mes) {
 
 	}
 
-	const char* what() const noexcept override {
-		return message.c_str();
-	}
+	[[nodiscard]] const char* what() const noexcept override;
 
-	static void check(bool condition) {
-		if (condition) {
-			return;
-		}
+	static void check(bool condition);
 
-		std::cerr << "There was an error!" << std::endl;
-		std::cerr << "But no error message" << std::endl;
+	static void fail();
 
-		throw RelearnException{};
-	}
-
-	static void fail() {
-		std::cerr << "There was an error!" << std::endl;
-		std::cerr << "But no error message" << std::endl;
-
-		throw RelearnException{};
-	}
-
-	static void check(bool condition, std::string&& message) {
-		if (condition) {
-			return;
-		}
-
-		std::cerr << "There was an error!" << std::endl;
-		std::cerr << message << std::endl;
-
-		throw RelearnException{ std::move(message) };
-	}
+	static void check(bool condition, std::string&& message);
 	
-	static void fail(std::string&& message) {
-		std::cerr << "There was an error!" << std::endl;
-		std::cerr << message << std::endl;
-
-		throw RelearnException{ std::move(message) };
-	}
+	static void fail(std::string&& message);
 };

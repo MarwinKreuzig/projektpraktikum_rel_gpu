@@ -11,6 +11,7 @@
 #pragma once
 
 #include "LogMessages.h"
+#include "ModelParameter.h"
 #include "MPIWrapper.h"
 #include "NetworkGraph.h"
 #include "Random.h"
@@ -133,7 +134,7 @@ public:
 	 */
 	using MapFiringNeuronIds = std::map<int, FiringNeuronIds>;
 
-	NeuronModels(size_t num_neurons, double k, double tau_C, double beta, unsigned int h);
+	NeuronModels(double k, double tau_C, double beta, unsigned int h);
 
 	virtual ~NeuronModels() = default;
 
@@ -179,24 +180,12 @@ public:
 	/**
 	 * Returns a vector of ModelParameter of the model
 	 */
-	[[nodiscard]] virtual std::vector<ModelParameter> get_parameter() {
-		return {
-			Parameter<size_t>{ "my_num_neurons", my_num_neurons, 0, 10000000000 },
-			Parameter<double>{ "k", k, 0., 1. },
-			Parameter<double>{ "tau_C", tau_C, 0., 10.e+6 },
-			Parameter<double>{ "beta", beta, 0., 1. },
-			Parameter<unsigned int>{ "h", h, 0, 1000 },
-		};
-	}
+	[[nodiscard]] virtual std::vector<ModelParameter> get_parameter();
 
 	/**
 	 * Resizes the vectors and initializes their values
 	 */
-	virtual void init() {
-		x.resize(my_num_neurons);
-		fired.resize(my_num_neurons);
-		I_syn.resize(my_num_neurons);
-	}
+	virtual void init(size_t num_neurons);
 
 	/**
 	 * Returns the name of the model
@@ -208,10 +197,9 @@ protected:
 
 	virtual void init_neurons() = 0;
 
-	static constexpr size_t default_my_num_neurons{ 100 };
 	static constexpr double default_k{ 0.03 };
-	static constexpr double default_tau_C{ 10000 };
-	static constexpr double default_beta{ 0.001 };
+	static constexpr double default_tau_C{ 10000 }; //5000;   //very old 60.0;
+	static constexpr double default_beta{ 0.001 }; //very old 0.05;
 	static constexpr unsigned int default_h{ 10 };
 
 	// My local number of neurons
@@ -232,81 +220,38 @@ protected:
 namespace models {
 	class ModelA : public NeuronModels {
 	public:
-		explicit ModelA(size_t num_neurons = NeuronModels::default_my_num_neurons, double k = NeuronModels::default_k, double tau_C = NeuronModels::default_tau_C, double beta = NeuronModels::default_beta, unsigned int h = NeuronModels::default_h, const double x_0 = 0.05, const double tau_x = 5., unsigned int refrac_time = 4)
-		  : NeuronModels{ num_neurons, k, tau_C, beta, h },
-			refrac(num_neurons),
-			x_0{ x_0 },
-			tau_x{ tau_x },
-			refrac_time{ refrac_time } {
-			init_neurons();
-		}
+		explicit ModelA(
+			double k = NeuronModels::default_k, 
+			double tau_C = NeuronModels::default_tau_C, 
+			double beta = NeuronModels::default_beta, 
+			unsigned int h = NeuronModels::default_h, 
+			double x_0 = ModelA::default_x_0,
+			double tau_x = ModelA::default_tau_x,
+			unsigned int refrac_time = ModelA::default_refrac_time);
 
-		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final {
-			return std::make_unique<ModelA>(my_num_neurons, k, tau_C, beta, h, x_0, tau_x, refrac_time);
-		}
+		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
-		[[nodiscard]] double get_secondary_variable(const size_t i) const noexcept final {
-			return refrac[i];
-		}
+		[[nodiscard]] double get_secondary_variable(const size_t i) const noexcept final;
 
-		[[nodiscard]] std::vector<ModelParameter> get_parameter() final {
-			auto res{ NeuronModels::get_parameter() };
-			res.reserve(res.size() + 3);
-			res.emplace_back(Parameter<double>{ "x_0", x_0, 0., 1. });
-			res.emplace_back(Parameter<double>{ "tau_x", tau_x, 0., 1000. });
-			res.emplace_back(Parameter<unsigned int>{ "refrac_time", refrac_time, 0, 1000 });
-			return res;
-		}
+		[[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
-		[[nodiscard]] virtual std::string name() {
-			return "ModelA";
-		}
+		[[nodiscard]] virtual std::string name();
 
-		void init() final {
-			NeuronModels::init();
-			refrac.resize(my_num_neurons);
-			init_neurons();
-		}
+		void init(size_t num_neurons) final;
 
 	protected:
-		void update_activity(const size_t i) final {
-			for (unsigned int integration_steps = 0; integration_steps < h; integration_steps++) {
-				// Update the membrane potential
-				x[i] += iter_x(x[i], I_syn[i]) / h;
-			}
+		void update_activity(const size_t i) final;
 
-			// Neuron ready to fire again
-			if (refrac[i] == 0) {
-				const bool f = theta(x[i]);
-				fired[i] = f;					 // Decide whether a neuron fires depending on its firing rate
-				refrac[i] = f ? refrac_time : 0; // After having fired, a neuron is in a refractory state
-			}
-			// Neuron now/still in refractory state
-			else {
-				fired[i] = false; // Set neuron inactive
-				--refrac[i];	  // Decrease refractory time
-			}
-		}
-
-		void init_neurons() final {
-			for (size_t i = 0; i < x.size(); ++i) {
-				x[i] = random_number_distribution(random_number_generator);
-				const bool f = theta(x[i]);
-				fired[i] = f;					 // Decide whether a neuron fires depending on its firing rate
-				refrac[i] = f ? refrac_time : 0; // After having fired, a neuron is in a refractory state
-			}
-		}
+		void init_neurons() final;
 
 	private:
-		[[nodiscard]] double iter_x(const double x, const double I_syn) const noexcept {
-			return ((x_0 - x) / tau_x + I_syn);
-		}
+		[[nodiscard]] double iter_x(const double x, const double I_syn) const noexcept;
 
-		[[nodiscard]] bool theta(const double x) {
-			// 1: fire, 0: inactive
-			const double threshold = random_number_distribution(random_number_generator);
-			return x >= threshold;
-		}
+		[[nodiscard]] bool theta(const double x);
+
+		static constexpr double default_x_0{ 0.05 };
+		static constexpr double default_tau_x{ 5.0 };
+		static constexpr unsigned int default_refrac_time{ 4 };
 
 		std::vector<unsigned int> refrac; // refractory time
 
@@ -323,85 +268,50 @@ namespace models {
 
 	class IzhikevichModel : public NeuronModels {
 	public:
-		explicit IzhikevichModel(size_t num_neurons = NeuronModels::default_my_num_neurons, double k = NeuronModels::default_k, double tau_C = NeuronModels::default_tau_C, double beta = NeuronModels::default_beta, unsigned int h = NeuronModels::default_h, const double a = 0.1, const double b = 0.2, const double c = -65., const double d = 2., const double V_spike = 30., const double k1 = 0.04, const double k2 = 5., const double k3 = 140.)
-		  : NeuronModels{ num_neurons, k, tau_C, beta, h },
-			u(num_neurons),
-			a{ a },
-			b{ b },
-			c{ c },
-			d{ d },
-			V_spike{ V_spike },
-			k1{ k1 },
-			k2{ k2 },
-			k3{ k3 } {
-			init_neurons();
-		}
+		explicit IzhikevichModel(
+			double k = NeuronModels::default_k, 
+			double tau_C = NeuronModels::default_tau_C, 
+			double beta = NeuronModels::default_beta, 
+			unsigned int h = NeuronModels::default_h, 
+			double a = IzhikevichModel::default_a,
+			double b = IzhikevichModel::default_b,
+			double c = IzhikevichModel::default_c,
+			double d = IzhikevichModel::default_d,
+			double V_spike = IzhikevichModel::default_V_spike,
+			double k1 = IzhikevichModel::default_k1,
+			double k2 = IzhikevichModel::default_k2,
+			double k3 = IzhikevichModel::default_k3);
 
-		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final {
-			return std::make_unique<IzhikevichModel>(my_num_neurons, k, tau_C, beta, h, a, b, c, d, V_spike, k1, k2, k3);
-		}
+		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
-		[[nodiscard]] double get_secondary_variable(const size_t i) const noexcept final {
-			return u[i];
-		}
+		[[nodiscard]] double get_secondary_variable(const size_t i) const noexcept final;
 
-		[[nodiscard]] std::vector<ModelParameter> get_parameter() final {
-			auto res{ NeuronModels::get_parameter() };
-			res.reserve(res.size() + 8);
-			res.emplace_back(Parameter<double>{ "a", a, 0., 1. });
-			res.emplace_back(Parameter<double>{ "b", b, 0., 1. });
-			res.emplace_back(Parameter<double>{ "c", c, -150., -50. });
-			res.emplace_back(Parameter<double>{ "d", d, 0., 10. });
-			res.emplace_back(Parameter<double>{ "V_spike", V_spike, 0., 100. });
-			res.emplace_back(Parameter<double>{ "k1", k1, 0., 1. });
-			res.emplace_back(Parameter<double>{ "k2", k2, 0., 10. });
-			res.emplace_back(Parameter<double>{ "k3", k3, 50., 200. });
-			return res;
-		}
+		[[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
-		[[nodiscard]] virtual std::string name() {
-			return "IzhikevichModel";
-		}
+		[[nodiscard]] virtual std::string name();
 
-		void init() final {
-			NeuronModels::init();
-			init_neurons();
-		}
+		void init(size_t num_neurons) final;
 
 	protected:
-		void update_activity(const size_t i) final {
-			for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-				x[i] += iter_x(x[i], u[i], I_syn[i]) / h;
-				u[i] += iter_refrac(u[i], x[i]) / h;
+		void update_activity(const size_t i) final;
 
-				if (spiked(x[i])) {
-					fired[i] = true;
-					x[i] = c;
-					u[i] += d;
-				}
-			}
-		}
-
-		void init_neurons() final {
-			for (size_t i = 0; i < x.size(); ++i) {
-				x[i] = c;
-				u[i] = iter_refrac(b * c, x[i]);
-				fired[i] = x[i] >= V_spike;
-			}
-		}
+		void init_neurons() final;
 
 	private:
-		[[nodiscard]] double iter_x(const double x, const double u, const double I_syn) const noexcept {
-			return k1 * x * x + k2 * x + k3 - u + I_syn;
-		}
+		[[nodiscard]] double iter_x(const double x, const double u, const double I_syn) const noexcept;
 
-		[[nodiscard]] double iter_refrac(const double u, const double x) const noexcept {
-			return a * (b * x - u);
-		}
+		[[nodiscard]] double iter_refrac(const double u, const double x) const noexcept;
 
-		[[nodiscard]] bool spiked(const double x) const noexcept {
-			return x >= V_spike;
-		}
+		[[nodiscard]] bool spiked(const double x) const noexcept;
+
+		static constexpr double default_a{ 0.1 };
+		static constexpr double default_b{ 0.2 };
+		static constexpr double default_c{ -65.0 };
+		static constexpr double default_d{ 2.0 };
+		static constexpr double default_V_spike{ 30.0 };
+		static constexpr double default_k1{ 0.04 };
+		static constexpr double default_k2{ 5.0 };
+		static constexpr double default_k3{ 140.0 };
 
 		std::vector<double> u; // membrane recovery
 
@@ -419,76 +329,40 @@ namespace models {
 
 	class FitzHughNagumoModel : public NeuronModels {
 	public:
-		explicit FitzHughNagumoModel(size_t num_neurons = NeuronModels::default_my_num_neurons, double k = NeuronModels::default_k, double tau_C = NeuronModels::default_tau_C, double beta = NeuronModels::default_beta, unsigned int h = NeuronModels::default_h, const double a = 0.7, const double b = 0.8, const double phi = 0.08)
-		  : NeuronModels{ num_neurons, k, tau_C, beta, h },
-			w(num_neurons),
-			a{ a },
-			b{ b },
-			phi{ phi } {
-			init_neurons();
-		}
+		explicit FitzHughNagumoModel(
+			double k = NeuronModels::default_k, 
+			double tau_C = NeuronModels::default_tau_C, 
+			double beta = NeuronModels::default_beta,
+			unsigned int h = NeuronModels::default_h,
+			const double a = FitzHughNagumoModel::default_a,
+			const double b = FitzHughNagumoModel::default_b,
+			const double phi = FitzHughNagumoModel::default_phi);
 
-		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final {
-			return std::make_unique<FitzHughNagumoModel>(my_num_neurons, k, tau_C, beta, h, a, b, phi);
-		}
+		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
-		[[nodiscard]] double get_secondary_variable(const size_t i) const noexcept final {
-			return w[i];
-		}
+		[[nodiscard]] double get_secondary_variable(const size_t i) const noexcept final;
 
-		[[nodiscard]] std::vector<ModelParameter> get_parameter() final {
-			auto res{ NeuronModels::get_parameter() };
-			res.reserve(res.size() + 3);
-			res.emplace_back(Parameter<double>{ "a", a, 0., 5. });
-			res.emplace_back(Parameter<double>{ "b", b, 0., 5. });
-			res.emplace_back(Parameter<double>{ "phi", phi, 0., .3 });
-			return res;
-		}
+		[[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
-		[[nodiscard]] virtual std::string name() {
-			return "FitzHughNagumoModel";
-		}
+		[[nodiscard]] virtual std::string name();
 
-		void init() final {
-			NeuronModels::init();
-			init_neurons();
-		}
+		void init(size_t num_neurons) final;
 
 	protected:
-		void update_activity(const size_t i) final {
-			fired[i] = false;
+		void update_activity(const size_t i) final;
 
-			// Update the membrane potential
-			for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-				x[i] += iter_x(x[i], w[i], I_syn[i]) / h;
-				w[i] += iter_refrac(w[i], x[i]) / h;
-
-				if (spiked(x[i], w[i])) {
-					fired[i] = true;
-				}
-			}
-		}
-
-		void init_neurons() final {
-			for (size_t i = 0; i < x.size(); ++i) {
-				x[i] = -1.2;
-				w[i] = iter_refrac(-.6, x[i]);
-				fired[i] = spiked(x[i], w[i]);
-			}
-		}
+		void init_neurons() final;
 
 	private:
-		[[nodiscard]] static double iter_x(const double x, const double w, const double I_syn) noexcept {
-			return x - x * x * x / 3 - w + I_syn;
-		}
+		[[nodiscard]] static double iter_x(const double x, const double w, const double I_syn) noexcept;
 
-		[[nodiscard]] double iter_refrac(const double w, const double x) const noexcept {
-			return phi * (x + a - b * w);
-		}
+		[[nodiscard]] double iter_refrac(const double w, const double x) const noexcept;
 
-		[[nodiscard]] static bool spiked(const double x, const double w) noexcept {
-			return w > iter_x(x, 0, 0) && x > 1.;
-		}
+		[[nodiscard]] static bool spiked(const double x, const double w) noexcept;
+
+		static constexpr double default_a{ 0.7 };
+		static constexpr double default_b{ 0.8 };
+		static constexpr double default_phi{ 0.08 };
 
 		std::vector<double> w; // recovery variable
 
@@ -499,28 +373,30 @@ namespace models {
 
 	class AEIFModel : public NeuronModels {
 	public:
-		explicit AEIFModel(size_t num_neurons = NeuronModels::default_my_num_neurons, double k = NeuronModels::default_k, double tau_C = NeuronModels::default_tau_C, double beta = NeuronModels::default_beta, unsigned int h = NeuronModels::default_h, const double C = 281., const double g_L = 30., const double E_L = -70.6, const double V_T = -50.4, const double d_T = 2., const double tau_w = 144., const double a = 4., const double b = 0.0805, const double V_peak = 20.)
-		  : NeuronModels{ num_neurons, k, tau_C, beta, h },
-			w(num_neurons),
-			C{ C },
-			g_L{ g_L },
-			E_L{ E_L },
-			V_T{ V_T },
-			d_T{ d_T },
-			tau_w{ tau_w },
-			a{ a },
-			b{ b },
-			V_peak{ V_peak } {
-			init_neurons();
-		}
+		explicit AEIFModel(
+			double k = NeuronModels::default_k, 
+			double tau_C = NeuronModels::default_tau_C, 
+			double beta = NeuronModels::default_beta, 
+			unsigned int h = NeuronModels::default_h, 
+			const double C = AEIFModel::default_C,
+			const double g_L = AEIFModel::default_g_L,
+			const double E_L = AEIFModel::default_E_L,
+			const double V_T = AEIFModel::default_V_T,
+			const double d_T = AEIFModel::default_d_T,
+			const double tau_w = AEIFModel::default_tau_w,
+			const double a = AEIFModel::default_a,
+			const double b = AEIFModel::default_b,
+			const double V_peak = AEIFModel::default_V_peak);
 
-		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final {
-			return std::make_unique<AEIFModel>(my_num_neurons, k, tau_C, beta, h, C, g_L, E_L, V_T, d_T, tau_w, a, b, V_peak);
-		}
+		[[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
-		[[nodiscard]] double get_secondary_variable(const size_t i) const noexcept final {
-			return w[i];
-		}
+		[[nodiscard]] double get_secondary_variable(const size_t i) const noexcept final;
+
+		[[nodiscard]] std::vector<ModelParameter> get_parameter() final;
+
+		[[nodiscard]] virtual std::string name();
+
+		void init(size_t num_neurons) final;
 
 		[[nodiscard]] std::vector<ModelParameter> get_parameter() final {
 			auto res{ NeuronModels::get_parameter() };
@@ -547,39 +423,26 @@ namespace models {
 		}
 
 	protected:
-		void update_activity(const size_t i) final {
-			for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-				x[i] += iter_x(x[i], w[i], I_syn[i]) / h;
-				w[i] += iter_refrac(w[i], x[i]) / h;
+		void update_activity(const size_t i) final;
 
-				if (x[i] >= V_peak) {
-					fired[i] = true;
-					x[i] = E_L;
-					w[i] += b;
-				}
-			}
-		}
-
-		void init_neurons() final {
-			for (size_t i = 0; i < x.size(); ++i) {
-				x[i] = E_L;
-				w[i] = iter_refrac(0, x[i]);
-				fired[i] = x[i] >= V_peak;
-			}
-		}
+		void init_neurons() final;
 
 	private:
-		[[nodiscard]] double f(const double x) const noexcept {
-			return -g_L * (x - E_L) + g_L * d_T * exp((x - V_T) / d_T);
-		}
+		[[nodiscard]] double f(const double x) const noexcept;
 
-		[[nodiscard]] double iter_x(const double x, const double w, const double I_syn) const noexcept {
-			return (f(x) - w + I_syn) / C;
-		}
+		[[nodiscard]] double iter_x(const double x, const double w, const double I_syn) const noexcept;
 
-		[[nodiscard]] double iter_refrac(const double w, const double x) const noexcept {
-			return (a * (x - E_L) - w) / tau_w;
-		}
+		[[nodiscard]] double iter_refrac(const double w, const double x) const noexcept;
+
+		static constexpr double default_C{ 281.0 };
+		static constexpr double default_g_L{ 30.0 };
+		static constexpr double default_E_L{ -70.6 };
+		static constexpr double default_V_T{ -50.4 };
+		static constexpr double default_d_T{ 2.0 };
+		static constexpr double default_tau_w{ 144.0 };
+		static constexpr double default_a{ 4.0 };
+		static constexpr double default_b{ 0.0805 };
+		static constexpr double default_V_peak{ 20.0 };
 
 		std::vector<double> w; // adaption variable
 

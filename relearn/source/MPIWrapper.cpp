@@ -15,6 +15,7 @@
 #include "RelearnException.h"
 #include "Utility.h"
 
+#include <bitset>
 #include <cstdlib>
 #include <iomanip>
 #include <limits>
@@ -74,6 +75,13 @@ void MPIWrapper::init(int argc, char** argv) {
 	num_ranks = static_cast<size_t>(num_ranks_mpi);
 	my_rank = static_cast<size_t>(my_rank_mpi);
 
+	// Number of ranks must be 2^n so that
+	// the connectivity update works correctly
+	const std::bitset<sizeof(int) * 8> bitset_num_ranks(num_ranks);
+	if (1 != bitset_num_ranks.count() && (0 == my_rank)) {
+		RelearnException::fail("Number of ranks must be of the form 2^n");
+	}
+
 	register_custom_function();
 
 	num_neurons_of_ranks.resize(num_ranks);
@@ -100,7 +108,7 @@ void MPIWrapper::init_neurons(size_t num_neurons) {
 		exit(EXIT_FAILURE);
 	}
 
-	num_neurons = num_neurons;
+	MPIWrapper::num_neurons = num_neurons;
 
 	/*
 	 * Info about how much to receive (num_neurons) from every process and where to store it (displs)
@@ -142,15 +150,15 @@ void MPIWrapper::init_buffer_octree(size_t num_partitions) {
 }
 
 void MPIWrapper::barrier(Scope scope) {
-	auto mpi_scope = translate_scope(scope);
+	MPI_Comm mpi_scope = translate_scope(scope);
 
 	const int errorcode = MPI_Barrier(mpi_scope);
 	RelearnException::check(errorcode == 0, "Error in barrier");
 }
 
 double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, Scope scope) {
-	auto mpi_scope = translate_scope(scope);
-	auto mpi_reduce_function = translate_reduce_function(function);
+	MPI_Comm mpi_scope = translate_scope(scope);
+	MPI_Op mpi_reduce_function = translate_reduce_function(function);
 
 	double result = 0.0;
 	// NOLINTNEXTLINE
@@ -161,8 +169,8 @@ double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, 
 }
 
 double MPIWrapper::all_reduce(double value, ReduceFunction function, Scope scope) {
-	auto mpi_scope = translate_scope(scope);
-	auto mpi_reduce_function = translate_reduce_function(function);
+	MPI_Comm mpi_scope = translate_scope(scope);
+	MPI_Op mpi_reduce_function = translate_reduce_function(function);
 
 	double result = 0.0;
 	// NOLINTNEXTLINE
@@ -178,7 +186,7 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
 
 	RelearnException::check(count_src == count_dst, "Error in all to all: size");
 
-	auto mpi_scope = translate_scope(scope);
+	MPI_Comm mpi_scope = translate_scope(scope);
 
 	// NOLINTNEXTLINE
 	const int errorcode = MPI_Alltoall(src.data(), sizeof(size_t), MPI_CHAR, dst.data(), sizeof(size_t), MPI_CHAR, mpi_scope);
@@ -205,6 +213,7 @@ MPIWrapper::AsyncToken MPIWrapper::get_null_request() {
 
 void MPIWrapper::all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs) {
 	// Create MPI data type for three doubles
+	// NOLINTNEXTLINE
 	MPI_Datatype type;
 
 	// NOLINTNEXTLINE

@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "ModelParameter.h"
 #include "MPIWrapper.h"
 #include "RelearnException.h"
 
@@ -24,17 +25,18 @@ class SynapticElements {
 	friend class NeuronMonitor;
 
 public:
-	enum ElementType : int { AXON = 0, DENDRITE = 1 };
-	enum SignalType : int { EXCITATORY = 0, INHIBITORY = 1 };
+	enum class ElementType { AXON, DENDRITE };
+	enum class SignalType { EXCITATORY, INHIBITORY };
 
-	SynapticElements(ElementType type, size_t s, double min_C_level_to_grow, double C_target, double nu, double vacant_retract_ratio) :
+	SynapticElements(ElementType type, double min_C_level_to_grow,
+		double C_target = SynapticElements::default_C_target,
+		double nu = SynapticElements::default_nu,
+		double vacant_retract_ratio = SynapticElements::default_vacant_retract_ratio) :
 		type(type),
-		size(s),
 		min_C_level_to_grow(min_C_level_to_grow),
 		C_target(C_target),
 		nu(nu),
-		vacant_retract_ratio(vacant_retract_ratio),
-		cnts(size, 0.0), connected_cnts(size, 0.0), delta_cnts(size, 0.0), signal_types(size) {
+		vacant_retract_ratio(vacant_retract_ratio) {
 	}
 
 	SynapticElements(const SynapticElements& other) = delete;
@@ -45,20 +47,37 @@ public:
 
 	~SynapticElements() = default;
 
-	const std::vector<double>& get_cnts() const noexcept {
+	void init(size_t number_neurons) {
+		size = number_neurons;
+		cnts.resize(size, 0.0);
+		connected_cnts.resize(size, 0.0);
+		delta_cnts.resize(size, 0.0);
+		signal_types.resize(size);
+	}
+
+	std::vector<ModelParameter> get_parameter() {
+		return {
+			Parameter<double>{ "Minimum calcium to grow", min_C_level_to_grow, 0.0, 10.0 },
+			Parameter<double>{ "Target calcium", C_target, 0.0, 100.0 },
+			Parameter<double>{ "nu", nu, 0.0, 1.0 },
+			Parameter<double>{ "Vacant synapse retract ratio", vacant_retract_ratio, 0.0, 1.0 },
+		};
+	}
+
+	[[nodiscard]] const std::vector<double>& get_cnts() const noexcept {
 		return cnts;
 	}
 
-	const std::vector<double>& get_connected_cnts() const noexcept {
-		return connected_cnts; 
+	[[nodiscard]] const std::vector<double>& get_connected_cnts() const noexcept {
+		return connected_cnts;
 	}
-	
-	const std::vector<double>& get_delta_cnts() const noexcept {
+
+	[[nodiscard]] const std::vector<double>& get_delta_cnts() const noexcept {
 		return delta_cnts;
 	}
-	
-	const std::vector<SignalType>& get_signal_types() const noexcept {
-		return signal_types; 
+
+	[[nodiscard]] const std::vector<SignalType>& get_signal_types() const noexcept {
+		return signal_types;
 	}
 
 	void update_cnt(size_t neuron_id, double delta) {
@@ -66,9 +85,9 @@ public:
 		RelearnException::check(cnts[neuron_id] >= 0.0);
 	}
 
-	void update_conn_cnt(size_t neuron_id, double delta, const char* mess) {
+	void update_conn_cnt(size_t neuron_id, double delta, std::string&& mess) {
 		connected_cnts[neuron_id] += delta;
-		RelearnException::check(connected_cnts[neuron_id] >= 0.0, mess);
+		RelearnException::check(connected_cnts[neuron_id] >= 0.0, std::move(mess));
 	}
 
 	void update_delta_cnt(size_t neuron_id, double delta) {
@@ -80,24 +99,24 @@ public:
 		signal_types[neuron_id] = type;
 	}
 
-	double get_cnt(size_t neuron_id) const noexcept {
-		return cnts[neuron_id]; 
+	[[nodiscard]] double get_cnt(size_t neuron_id) const noexcept {
+		return cnts[neuron_id];
 	}
-	
-	double get_connected_cnt(size_t neuron_id) const noexcept { 
+
+	[[nodiscard]] double get_connected_cnt(size_t neuron_id) const noexcept {
 		return connected_cnts[neuron_id];
 	}
-	
-	double get_delta_cnt(size_t neuron_id) const noexcept { 
+
+	[[nodiscard]] double get_delta_cnt(size_t neuron_id) const noexcept {
 		return delta_cnts[neuron_id];
 	}
 
-	SignalType get_signal_type(size_t neuron_id) const noexcept { 
-		return signal_types[neuron_id]; 
+	[[nodiscard]] SignalType get_signal_type(size_t neuron_id) const noexcept {
+		return signal_types[neuron_id];
 	}
 
-	ElementType get_element_type() const noexcept { 
-		return type; 
+	[[nodiscard]] ElementType get_element_type() const noexcept {
+		return type;
 	}
 
 	/**
@@ -108,7 +127,7 @@ public:
 	 * 1. Delete vacant elements
 	 * 2. Delete bound elements
 	 */
-	unsigned int update_number_elements(size_t neuron_id);
+	[[nodiscard]] unsigned int update_number_elements(size_t neuron_id);
 
 	void update_number_elements_delta(const std::vector<double>& calcium) noexcept {
 		// For my neurons
@@ -119,7 +138,7 @@ public:
 	}
 
 private:
-	double gaussian_growth_curve(double Ca, double eta, double epsilon, double growth_rate) const noexcept {
+	[[nodiscard]] static double gaussian_growth_curve(double Ca, double eta, double epsilon, double growth_rate) noexcept {
 		/**
 		 * gaussian_growth_curve generates a gaussian curve that is compressed by
 		 * growth-factor nu and intersects the x-axis at
@@ -135,8 +154,17 @@ private:
 		return dz;
 	}
 
+public:
+	static constexpr double default_C_target{ 0.5 }; // gold 0.5;
+	static constexpr double default_eta_Axons{ 0.0 }; //0.4; // gold 0.0;
+	static constexpr double default_eta_Dendrites_exc{ 0.0 }; //0.1, // gold 0.0;
+	static constexpr double default_eta_Dendrites_inh{ 0.0 };
+	static constexpr double default_nu{ 1e-4 }; // gold 1e-5; // element growth rate
+	static constexpr double default_vacant_retract_ratio{ 0 };
+
+private:
 	ElementType type;            // Denotes the type of all synaptic elements, which is AXON or DENDRITE
-	size_t size;
+	size_t size = 0;
 	std::vector<double> cnts;
 	std::vector<double> delta_cnts;          // Keeps track of changes in number of elements until those changes are applied in next connectivity update
 	std::vector<double> connected_cnts;

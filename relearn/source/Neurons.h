@@ -10,14 +10,16 @@
 
 #pragma once
 
+#include "Cell.h"
+#include "Commons.h"
 #include "LogFiles.h"
+#include "ModelParameter.h"
 #include "MPIWrapper.h"
 #include "NetworkGraph.h"
 #include "NeuronIdMap.h"
 #include "Octree.h"
 #include "Parameters.h"
 #include "Positions.h"
-#include "Random.h"
 #include "SynapticElements.h"
 #include "Timers.h"
 
@@ -52,7 +54,7 @@ class SynapseCreationRequests {
 public:
 	SynapseCreationRequests() = default;
 
-	size_t size() const noexcept { return num_requests; }
+	[[nodiscard]] size_t size() const noexcept { return num_requests; }
 
 	void resize(size_t size) {
 		num_requests = size;
@@ -70,7 +72,21 @@ public:
 		responses.resize(responses.size() + 1);
 	}
 
-	std::tuple<size_t, size_t, size_t> get_request(size_t request_index) const noexcept {
+	void append(size_t source_neuron_id, size_t target_neuron_id, Cell::DendriteType dendrite_type_needed) {
+		size_t dendrite_type_val = 0;
+
+		if (dendrite_type_needed == Cell::DendriteType::INHIBITORY) {
+			dendrite_type_val = 1;
+		}
+		else {
+			RelearnException::check(dendrite_type_needed == Cell::DendriteType::EXCITATORY);
+		}
+
+
+		append(source_neuron_id, target_neuron_id, dendrite_type_val);
+	}
+
+	[[nodiscard]] std::tuple<size_t, size_t, size_t> get_request(size_t request_index) const noexcept {
 		const size_t base_index = 3 * request_index;
 
 		const size_t source_neuron_id = requests[base_index];
@@ -84,31 +100,31 @@ public:
 		responses[request_index] = connected;
 	}
 
-	char get_response(size_t request_index) const noexcept {
+	[[nodiscard]] char get_response(size_t request_index) const noexcept {
 		return responses[request_index];
 	}
 
-	size_t* get_requests() noexcept {
+	[[nodiscard]] size_t* get_requests() noexcept {
 		return requests.data();
 	}
 
-	const size_t* get_requests() const noexcept {
+	[[nodiscard]] const size_t* get_requests() const noexcept {
 		return requests.data();
 	}
 
-	char* get_responses() noexcept {
+	[[nodiscard]] char* get_responses() noexcept {
 		return responses.data();
 	}
 
-	const char* get_responses() const noexcept {
+	[[nodiscard]] const char* get_responses() const noexcept {
 		return responses.data();
 	}
 
-	size_t get_requests_size_in_bytes() const noexcept {
+	[[nodiscard]] size_t get_requests_size_in_bytes() const noexcept {
 		return requests.size() * sizeof(size_t);
 	}
 
-	size_t get_responses_size_in_bytes() const noexcept {
+	[[nodiscard]] size_t get_responses_size_in_bytes() const noexcept {
 		return responses.size() * sizeof(char);
 	}
 
@@ -173,11 +189,11 @@ class Neurons {
 	struct SynapseDeletionRequests {
 		SynapseDeletionRequests() = default;
 
-		size_t size() const noexcept { return num_requests; }
+		[[nodiscard]] size_t size() const noexcept { return num_requests; }
 
 		void resize(size_t size) {
 			num_requests = size;
-			requests.resize(6 * size);
+			requests.resize(Constants::num_items_per_request * size);
 		}
 
 		void append(size_t src_neuron_id, size_t tgt_neuron_id, size_t affected_neuron_id, size_t affected_element_type, size_t signal_type, size_t synapse_id) {
@@ -191,31 +207,43 @@ class Neurons {
 			requests.push_back(synapse_id);
 		}
 
-		std::array<size_t, 6> get_request(size_t request_index) const noexcept {
-			const size_t base_index = 6 * request_index;
+		void append(size_t src_neuron_id, size_t tgt_neuron_id, size_t affected_neuron_id,
+			SynapticElements::ElementType affected_element_type, SynapticElements::SignalType signal_type, size_t synapse_id) {
+			num_requests++;
 
-			std::array<size_t, 6> arr{};
+			size_t affected_element_type_converted = affected_element_type == SynapticElements::ElementType::AXON ? 0 : 1;
+			size_t signal_type_converted = signal_type == SynapticElements::SignalType::EXCITATORY ? 0 : 1;
 
-			arr[0] = requests[base_index];
-			arr[1] = requests[base_index + 1];
-			arr[2] = requests[base_index + 2];
-			arr[3] = requests[base_index + 3];
-			arr[4] = requests[base_index + 4];
-			arr[5] = requests[base_index + 5];
+			requests.push_back(src_neuron_id);
+			requests.push_back(tgt_neuron_id);
+			requests.push_back(affected_neuron_id);
+			requests.push_back(affected_element_type_converted);
+			requests.push_back(signal_type_converted);
+			requests.push_back(synapse_id);
+		}
+
+		[[nodiscard]] std::array<size_t, Constants::num_items_per_request> get_request(size_t request_index) const noexcept {
+			const size_t base_index = Constants::num_items_per_request * request_index;
+
+			std::array<size_t, Constants::num_items_per_request> arr{};
+
+			for (auto i = 0; i < Constants::num_items_per_request; i++) {
+				arr[i] = requests[base_index + i];
+			}
 
 			return arr;
 		}
 
 		// Get pointer to data
-		size_t* get_requests() noexcept {
+		[[nodiscard]] size_t* get_requests() noexcept {
 			return requests.data();
 		}
 
-		const size_t* get_requests() const noexcept {
+		[[nodiscard]] const size_t* get_requests() const noexcept {
 			return requests.data();
 		}
 
-		size_t get_requests_size_in_bytes() const noexcept {
+		[[nodiscard]] size_t get_requests_size_in_bytes() const noexcept {
 			return requests.size() * sizeof(size_t);
 		}
 
@@ -259,8 +287,11 @@ public:
 	 */
 	using MapSynapseDeletionRequests = std::map<int, SynapseDeletionRequests>;
 
-	Neurons(size_t num_neurons, const Parameters& params, const Partition& partition);
-	Neurons(size_t num_neurons, const Parameters& params, const Partition& partition, std::unique_ptr<NeuronModels> model);
+	Neurons(const Partition& partition) : Neurons{ partition, NeuronModels::create<models::ModelA>() } {
+
+	}
+
+	Neurons(const Partition& partition, std::unique_ptr<NeuronModels> model);
 	~Neurons() = default;
 
 	Neurons(const Neurons& other) = delete;
@@ -269,24 +300,67 @@ public:
 	Neurons& operator=(const Neurons& other) = delete;
 	Neurons& operator=(Neurons&& other) = default;
 
-	void set_model(std::unique_ptr<NeuronModels>&& model) noexcept {
-		neuron_models = std::move(model);
+	void init(size_t number_neurons) {
+		num_neurons = number_neurons;
+
+		neuron_model->init(num_neurons);
+		positions.init(num_neurons);
+
+		axons.init(number_neurons);
+		dendrites_exc.init(number_neurons);
+		dendrites_inh.init(number_neurons);
+
+		calcium.resize(num_neurons);
+		area_names.resize(num_neurons);
+
+		// Init member variables
+		for (size_t i = 0; i < num_neurons; i++) {
+			// Set calcium concentration
+			const auto fired = neuron_model->get_fired(i);
+			calcium[i] = fired ? neuron_model->get_beta() : 0.0;
+		}
 	}
 
-	size_t get_num_neurons() const noexcept { return num_neurons; }
-	Positions& get_positions() noexcept { return positions; }
-	std::vector<std::string>& get_area_names() noexcept { return area_names; }
-	Axons& get_axons() noexcept { return axons; }
-	const DendritesExc& get_dendrites_exc() const noexcept { return dendrites_exc; }
-	const DendritesInh& get_dendrites_inh() const noexcept { return dendrites_inh; }
-	NeuronModels& get_neuron_models() noexcept { return *neuron_models; }
+	std::vector<ModelParameter> get_parameter(SynapticElements::ElementType element_type, SynapticElements::SignalType signal_type);
 
-	std::tuple<bool, size_t, Vec3d, Cell::DendriteType> get_vacant_axon() const noexcept;
+	void set_model(std::unique_ptr<NeuronModels>&& model) noexcept {
+		neuron_model = std::move(model);
+	}
 
-	void init_synaptic_elements();
+	[[nodiscard]] size_t get_num_neurons() const noexcept {
+		return num_neurons;
+	}
+
+	[[nodiscard]] Positions& get_positions() noexcept {
+		return positions;
+	}
+
+	[[nodiscard]] std::vector<std::string>& get_area_names() noexcept {
+		return area_names;
+	}
+
+	[[nodiscard]] Axons& get_axons() noexcept {
+		return axons;
+	}
+
+	[[nodiscard]] const DendritesExc& get_dendrites_exc() const noexcept {
+		return dendrites_exc;
+	}
+
+	[[nodiscard]] const DendritesInh& get_dendrites_inh() const noexcept {
+		return dendrites_inh;
+	}
+
+	[[nodiscard]] NeuronModels& get_neuron_model() noexcept {
+		return *neuron_model;
+	}
+
+	[[nodiscard]] std::tuple<bool, size_t, Vec3d, Cell::DendriteType> get_vacant_axon() const noexcept;
+
+	void init_synaptic_elements(const NetworkGraph& network_graph);
 
 	void update_electrical_activity(const NetworkGraph& network_graph) {
-		neuron_models->update_electrical_activity(network_graph, calcium);
+		neuron_model->update_electrical_activity(network_graph, calcium);
 	}
 
 	void update_number_synaptic_elements_delta() noexcept {
@@ -304,18 +378,16 @@ public:
 		create_synapses(num_synapses_created, global_tree, network_graph);
 	}
 
-	void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, LogFiles& log_file, const Parameters& params, size_t sum_synapses_deleted, size_t sum_synapses_created);
+	void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, LogFiles& log_file, size_t sum_synapses_deleted, size_t sum_synapses_created);
 
 	// Print global information about all neurons at rank 0
-	void print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles& log_file, const Parameters& params);
+	void print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles& log_file);
 
 	void print_network_graph_to_log_file(LogFiles& log_file,
 		const NetworkGraph& network_graph,
-		const Parameters& params,
 		const NeuronIdMap& neuron_id_map);
 
-	void print_positions_to_log_file(LogFiles& log_file, const Parameters& params,
-		const NeuronIdMap& neuron_id_map);
+	void print_positions_to_log_file(LogFiles& log_file, const NeuronIdMap& neuron_id_map);
 
 	void print();
 
@@ -329,7 +401,7 @@ private:
 	void debug_check_counts();
 
 	template<typename T>
-	StatisticalMeasures<T> global_statistics(const T* local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root, MPIWrapper::Scope scope) {
+	[[nodiscard]] StatisticalMeasures<T> global_statistics(const T* local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root, MPIWrapper::Scope scope) {
 		const auto result = std::minmax_element(local_values, local_values + num_neurons);
 		const T my_min = *result.first;
 		const T my_max = *result.second;
@@ -371,7 +443,7 @@ private:
 	 */
 	typename std::list<Synapse>::const_iterator select_synapse(const std::list<Synapse>& list);
 
-	void add_synapse_to_pending_deletions(const RankNeuronId& src_neuron_id,
+	static void add_synapse_to_pending_deletions(const RankNeuronId& src_neuron_id,
 		const RankNeuronId& tgt_neuron_id,
 		const RankNeuronId& affected_neuron_id,
 		SynapticElements::ElementType affected_element_type,
@@ -395,7 +467,7 @@ private:
 		const NetworkGraph& network_graph,
 		std::list<PendingSynapseDeletion>& list_pending_deletions);
 
-	void print_pending_synapse_deletions(const std::list<PendingSynapseDeletion>& list);
+	static void print_pending_synapse_deletions(const std::list<PendingSynapseDeletion>& list);
 
 	void delete_synapses(std::list<PendingSynapseDeletion>& list,
 		SynapticElements& axons,
@@ -405,12 +477,12 @@ private:
 		size_t& num_synapses_deleted);
 
 
-	size_t num_neurons; // Local number of neurons
+	size_t num_neurons = 0; // Local number of neurons
 	std::vector<size_t> local_ids;
 
 	const Partition* partition;
 
-	std::unique_ptr<NeuronModels> neuron_models;
+	std::unique_ptr<NeuronModels> neuron_model;
 
 	Axons axons;
 	DendritesExc dendrites_exc;
@@ -420,9 +492,6 @@ private:
 	std::vector<double> calcium; // Intracellular calcium concentration of every neuron
 	std::vector<std::string> area_names; // Area name of every neuron
 
-	// Random number generator for this class (C++11)
-	std::mt19937& random_number_generator;
-	// Random number distribution used together with "random_number_generator" (C++11)
-	// Uniform distribution for interval [0, 1) (see constructor for initialization)
+	// Uniform distribution for interval [0, 1)
 	std::uniform_real_distribution<double> random_number_distribution;
 };

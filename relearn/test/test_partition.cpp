@@ -19,6 +19,8 @@ size_t round_to_next_exponent(size_t numToRound, size_t exponent) {
 }
 
 TEST(TestPartition, test_partition_constructor_arguments) {
+	setup();
+
 	std::uniform_int_distribution<size_t> uid_my_rank(0, upper_bound_my_rank);
 	std::uniform_int_distribution<size_t> uid_num_ranks(0, upper_bound_num_ranks);
 
@@ -40,6 +42,8 @@ TEST(TestPartition, test_partition_constructor_arguments) {
 }
 
 TEST(TestPartition, test_partition_constructor) {
+	setup();
+
 	std::uniform_int_distribution<size_t> uid_num_ranks(1, upper_bound_num_ranks);
 
 	for (auto i = 0; i < iterations; i++) {
@@ -66,13 +70,13 @@ TEST(TestPartition, test_partition_constructor) {
 			EXPECT_EQ(partition.get_level_of_subdomain_trees(), oct_exponent);
 			EXPECT_EQ(partition.get_num_subdomains_per_dimension(), num_subdomains_per_dim);
 
-			EXPECT_THROW(partition.is_neuron_local(0), RelearnException);
-			EXPECT_THROW(partition.get_my_num_neurons(), RelearnException);
-			EXPECT_THROW(partition.get_simulation_box_size(), RelearnException);
-			EXPECT_THROW(partition.get_subdomain_tree(0), RelearnException);
-			EXPECT_THROW(partition.get_subdomain_id_from_pos(min), RelearnException);
-			EXPECT_THROW(partition.get_global_id(0), RelearnException);
-			EXPECT_THROW(partition.get_local_id(0), RelearnException);
+			EXPECT_THROW(auto err = partition.is_neuron_local(0), RelearnException);
+			EXPECT_THROW(auto err = partition.get_my_num_neurons(), RelearnException);
+			EXPECT_THROW(auto err = partition.get_simulation_box_size(), RelearnException);
+			EXPECT_THROW(const auto& err = partition.get_subdomain_tree(0), RelearnException);
+			EXPECT_THROW(auto err = partition.get_subdomain_id_from_pos(min), RelearnException);
+			EXPECT_THROW(auto err = partition.get_global_id(0), RelearnException);
+			EXPECT_THROW(auto err = partition.get_local_id(0), RelearnException);
 		}
 	}
 }

@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Cell.h"
+#include "Commons.h"
 #include "LogMessages.h"
 #include "MPI_RMA_MemAllocator.h"
 #include "NeuronModels.h"
@@ -237,11 +238,10 @@ private:
 		MPI_RMA_MemAllocator<OctreeNode>& allocator;
 	};
 
-private:
 	Octree();
 
 public:
-	Octree(const Partition& part, const Parameters& params);
+	Octree(std::shared_ptr<Partition> part, const Parameters& params);
 	~Octree() /*noexcept(false)*/;
 
 	Octree(const Octree& other) = delete;
@@ -289,19 +289,19 @@ public:
 		max_num_pending_vacant_axons = max;
 	}
 
-	OctreeNode* get_root() const noexcept {
+	[[nodiscard]] OctreeNode* get_root() const noexcept {
 		return root;
 	}
 
-	size_t get_level_of_branch_nodes() const noexcept {
+	[[nodiscard]] size_t get_level_of_branch_nodes() const noexcept {
 		return level_of_branch_nodes;
 	}
 
-	size_t get_num_local_trees() const noexcept {
+	[[nodiscard]] size_t get_num_local_trees() const noexcept {
 		return local_trees.size();
 	}
 
-	OctreeNode* get_local_root(size_t local_id) noexcept {
+	[[nodiscard]] OctreeNode* get_local_root(size_t local_id) noexcept {
 		const Octree* local_tree = local_trees[local_id];
 		return local_tree->get_root();
 	}
@@ -311,7 +311,7 @@ public:
 	void free();
 
 	// Insert neuron into the tree
-	OctreeNode* insert(const Vec3d& position, size_t neuron_id, int rank);
+	[[nodiscard]] OctreeNode* insert(const Vec3d& position, size_t neuron_id, int rank);
 
 	// Insert an octree node with its subtree into the tree
 	void insert(OctreeNode* node_to_insert);
@@ -335,7 +335,7 @@ public:
 		}
 	}
 
-	bool find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed, size_t& target_neuron_id, int& target_rank);
+	[[nodiscard]] bool find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed, size_t& target_neuron_id, int& target_rank);
 
 	void find_target_neurons(MapSynapseCreationRequests& map_synapse_creation_requests_outgoing, const Neurons& neurons);
 
@@ -431,33 +431,25 @@ private:
 	 * Returns attractiveness for connecting two given nodes
 	 * NOTE: This is not a probability yet as it could be >1
 	 */
-	double calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, const OctreeNode& node_with_dendrite, Cell::DendriteType dendrite_type_needed) const /*noexcept*/;
+	[[nodiscard]] double calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, const OctreeNode& node_with_dendrite, Cell::DendriteType dendrite_type_needed) const /*noexcept*/;
 
 	/**
 	 * Randomly select node from probability interval
 	 */
-	OctreeNode* select_subinterval(const ProbabilitySubintervalList& list);
+	[[nodiscard]] OctreeNode* select_subinterval(const ProbabilitySubintervalList& list);
 
-	bool node_is_local(const OctreeNode& node) /*noexcept*/;
+	[[nodiscard]] static bool node_is_local(const OctreeNode& node) /*noexcept*/;
 
-	void append_node(OctreeNode* node, ProbabilitySubintervalList& list);
+	static void append_node(OctreeNode* node, ProbabilitySubintervalList& list);
 	void append_children(OctreeNode* node, ProbabilitySubintervalList& list, AccessEpochsStarted& epochs_started);
 
-
-public:
-	/**
-	 * Neuron ID for parent (inner node)
-	 * Used to easily recognize inner nodes during debugging
-	 */
-	static constexpr const size_t NEURON_ID_PARENT = 111222333444;
-private:
 	// Root of the tree
 	OctreeNode* root{ nullptr };
 
 	std::vector<Octree*> local_trees;
 
 	// Level which is assigned to the root of the tree (default = 0)
-	size_t root_level{ 1111222233334444 };
+	size_t root_level{ Constants::uninitialized };
 
 	// 'True' if destructor should not free the tree nodes
 	bool no_free_in_destructor{ false };
@@ -466,11 +458,11 @@ private:
 	Vec3d xyz_min;
 	Vec3d xyz_max;
 
-	double acceptance_criterion{ 0.3 };  // Acceptance criterion
-	double sigma{ 150.0 };                 // Probability parameter
+	double acceptance_criterion{ Constants::theta };  // Acceptance criterion
+	double sigma{ Constants::sigma };                 // Probability parameter
 	bool   naive_method{ false };          // If true, expand every cell regardless of whether dendrites are available or not
-	size_t level_of_branch_nodes{ 1111222233334444 };
-	size_t max_num_pending_vacant_axons{ 10 };  // Maximum number of vacant axons which are considered at the same time for
+	size_t level_of_branch_nodes{ Constants::uninitialized };
+	size_t max_num_pending_vacant_axons{ Constants::num_pend_vacant };  // Maximum number of vacant axons which are considered at the same time for
 										  // finding a target neuron
 
 	// Allocator for MPI passive target sync. memory for tree nodes

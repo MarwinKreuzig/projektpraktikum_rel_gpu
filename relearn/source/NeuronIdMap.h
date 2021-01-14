@@ -25,15 +25,17 @@ public:
 	};
 
 	NeuronIdMap(size_t my_num_neurons, const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z);
-	std::tuple<bool, size_t> rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id) const /*noexcept*/;
-	std::tuple<bool, RankNeuronId> pos2rank_neuron_id(const Vec3d& pos) const;
+
+	[[nodiscard]] std::tuple<bool, size_t> rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id) const /*noexcept*/;
+
+	[[nodiscard]] std::tuple<bool, RankNeuronId> pos2rank_neuron_id(const Vec3d& pos) const;
 
 private:
-	void create_rank_to_start_neuron_id_mapping(
+	static void create_rank_to_start_neuron_id_mapping(
 		const std::vector<size_t>& rank_to_num_neurons,
 		std::vector<size_t>& rank_to_start_neuron_id);
 
-	void create_pos_to_rank_neuron_id_mapping(
+	static void create_pos_to_rank_neuron_id_mapping(
 		const std::vector<size_t>& rank_to_num_neurons,
 		const std::vector<size_t>& rank_to_start_neuron_id,
 		size_t my_num_neurons,

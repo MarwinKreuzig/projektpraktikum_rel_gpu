@@ -13,6 +13,7 @@
 #include "Vec3.h"
 
 #include <map>
+#include <memory>
 #include <ostream>
 #include <set>
 #include <string>
@@ -44,10 +45,16 @@ public:
 	explicit NetworkGraph(size_t my_num_neurons);
 
 	// Return in edges of neuron "neuron_id"
-	const Edges& get_in_edges(size_t neuron_id) const /*noexcept*/;
+	[[nodiscard]] const Edges& get_in_edges(size_t neuron_id) const /*noexcept*/;
 
 	// Return out edges of neuron "neuron_id"
-	const Edges& get_out_edges(size_t neuron_id) const /*noexcept*/;
+	[[nodiscard]] const Edges& get_out_edges(size_t neuron_id) const /*noexcept*/;
+
+	[[nodiscard]] size_t get_num_in_edges_ex(size_t neuron_id) const;
+
+	[[nodiscard]] size_t get_num_in_edges_in(size_t neuron_id) const;
+
+	[[nodiscard]] size_t get_num_out_edges(size_t neuron_id) const;
 
 	/**
 	 * Add weight to an edge.
@@ -59,26 +66,25 @@ public:
 		size_t source_neuron_id, int source_rank,
 		int weight);
 
-
-	void add_edge(Edges& edges, int rank, size_t neuron_id, int weight);
-
-	void add_edge_weights(const std::string& filename, const NeuronIdMap& neuron_id_map);
-
 	// Print network using global neuron ids
 	void print(std::ostream& os, const NeuronIdMap& neuron_id_map) const;
 
-	void add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, const NeuronIdMap& neuron_id_map, const Partition& partition);
-
-	void translate_global_to_local(const std::set<size_t>& global_ids, const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id);
-
-	void load_neuron_positions(const std::string& path_neurons, std::set<size_t>& foreing_ids, std::map<size_t, Vec3d>& id_to_pos);
-
-	void load_synapses(const std::string& path_synapses, const Partition& partition, std::set<size_t>& foreing_ids, std::vector<std::tuple<size_t, size_t, int>>& local_synapses, std::vector<std::tuple<size_t, size_t, int>>& out_synapses, std::vector<std::tuple<size_t, size_t, int>>& in_synapses);
-
-	void write_synapses_to_file(const std::string& filename, const NeuronIdMap& neuron_id_map, const Partition& partition);
-
+	void add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, const NeuronIdMap& neuron_id_map, std::shared_ptr<Partition> part);
 
 private:
+
+	static void add_edge(Edges& edges, int rank, size_t neuron_id, int weight);
+
+	static void translate_global_to_local(const std::set<size_t>& global_ids, const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id);
+
+	static void load_neuron_positions(const std::string& path_neurons, std::set<size_t>& foreing_ids, std::map<size_t, Vec3d>& id_to_pos);
+
+	void load_synapses(const std::string& path_synapses, const Partition& partition, std::set<size_t>& foreing_ids, std::vector<std::tuple<size_t, size_t, int>>& local_synapses, std::vector<std::tuple<size_t, size_t, int>>& out_synapses, std::vector<std::tuple<size_t, size_t, int>>& in_synapses) const;
+
+	void add_edge_weights(const std::string& filename, const NeuronIdMap& neuron_id_map);
+
+	void write_synapses_to_file(const std::string& filename, const NeuronIdMap& neuron_id_map, const Partition& partition) const;
+
 	NeuronNeighborhood neuron_neighborhood;  // Neurons with their neighbors
 	size_t my_num_neurons;                   // My number of neurons
 	size_t my_neuron_id_start;               // Start neuron id I am allowed to create a neuron for in the graph

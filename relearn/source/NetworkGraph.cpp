@@ -16,6 +16,7 @@
 #include "Partition.h"
 #include "RelearnException.h"
 
+#include <cmath>
 #include <fstream>
 #include <sstream>
 
@@ -34,6 +35,52 @@ const NetworkGraph::Edges& NetworkGraph::get_in_edges(size_t neuron_id) const {
 const NetworkGraph::Edges& NetworkGraph::get_out_edges(size_t neuron_id) const {
 	RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_out_edges, tried with a too large id");
 	return neuron_neighborhood[neuron_id].out_edges;
+}
+
+size_t NetworkGraph::get_num_in_edges_ex(size_t neuron_id) const {
+	RelearnException::check(neuron_id < neuron_neighborhood.size(), 
+		"In get_num_in_edges, tried with a too large id: " + std::to_string(neuron_id) + " " + std::to_string(my_num_neurons));
+
+	size_t total_num_ports = 0;
+
+	for (const auto& edge : neuron_neighborhood[neuron_id].in_edges) {
+		int connection_strength = edge.second;
+		if (connection_strength > 0) {
+			total_num_ports += connection_strength;
+		}
+	}
+
+	return total_num_ports;
+}
+
+size_t NetworkGraph::get_num_in_edges_in(size_t neuron_id) const {
+	RelearnException::check(neuron_id < neuron_neighborhood.size(),
+		"In get_num_in_edges, tried with a too large id: " + std::to_string(neuron_id) + " " + std::to_string(my_num_neurons));
+
+	size_t total_num_ports = 0;
+
+	for (const auto& edge : neuron_neighborhood[neuron_id].in_edges) {
+		int connection_strength = edge.second;
+		if (connection_strength < 0) {
+			total_num_ports += -connection_strength;
+		}
+	}
+
+	return total_num_ports;
+}
+
+size_t NetworkGraph::get_num_out_edges(size_t neuron_id) const {
+	RelearnException::check(neuron_id < neuron_neighborhood.size(), 
+		"In get_num_out_edges, tried with a too large id: " + std::to_string(neuron_id) + " " + std::to_string(my_num_neurons));
+
+	size_t total_num_ports = 0;
+
+	for (const auto& edge : neuron_neighborhood[neuron_id].out_edges) {
+		int connection_strength = edge.second;
+		total_num_ports += std::abs(connection_strength);
+	}
+
+	return total_num_ports;
 }
 
 void NetworkGraph::add_edge(Edges& edges, int rank, size_t neuron_id, int weight) {
@@ -70,11 +117,17 @@ void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, siz
 
 	// Target neuron is mine
 	if (target_rank == MPIWrapper::my_rank) {
+		RelearnException::check(target_neuron_id < my_num_neurons, 
+			"Want to add an in-edge with a too larget id: " + std::to_string(target_neuron_id) + " " + std::to_string(my_num_neurons));
+
 		Edges& in_edges = neuron_neighborhood[target_neuron_id].in_edges;
 		add_edge(in_edges, source_rank, source_neuron_id, weight);
 	}
 
 	if (source_rank == MPIWrapper::my_rank) {
+		RelearnException::check(source_neuron_id < my_num_neurons, 
+			"Want to add an out-edge with a too larget id: " + std::to_string(target_neuron_id) + " " + std::to_string(my_num_neurons));
+
 		Edges& out_edges = neuron_neighborhood[source_neuron_id].out_edges;
 		add_edge(out_edges, target_rank, target_neuron_id, weight);
 	}
@@ -122,8 +175,8 @@ void NetworkGraph::add_edge_weights(const std::string& filename, const NeuronIdM
 	}
 }
 
-void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, 
-	[[maybe_unused]] const NeuronIdMap& neuron_id_map, const Partition& partition) {
+void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons,
+	[[maybe_unused]] const NeuronIdMap& neuron_id_map, std::shared_ptr<Partition> part) {
 	std::vector<std::tuple<size_t, size_t, int>> local_synapses;
 	std::vector<std::tuple<size_t, size_t, int>> out_synapses;
 	std::vector<std::tuple<size_t, size_t, int>> in_synapses;
@@ -132,6 +185,8 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
 
 	std::map<size_t, int> id_to_rank;
 	std::map<size_t, Vec3d> id_to_pos;
+
+	const Partition& partition = *part;
 
 	load_synapses(path_synapses, partition, foreing_ids, local_synapses, out_synapses, in_synapses);
 	load_neuron_positions(path_neurons, foreing_ids, id_to_pos);
@@ -155,10 +210,13 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
 		const size_t target_neuron_id = std::get<1>(synapse);
 		const int weight = std::get<2>(synapse);
 
+		const size_t translated_source_neuron_id = partition.get_local_id(source_neuron_id);
+		const size_t translated_target_neuron_id = partition.get_local_id(target_neuron_id);
+
 		const int source_rank = MPIWrapper::my_rank;
 		const int target_rank = MPIWrapper::my_rank;
 
-		add_edge_weight(target_neuron_id, target_rank, source_neuron_id, source_rank, weight);
+		add_edge_weight(translated_target_neuron_id, target_rank, translated_source_neuron_id, source_rank, weight);
 	}
 
 	for (const auto& synapse : out_synapses) {
@@ -166,10 +224,12 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
 		const size_t target_neuron_id = std::get<1>(synapse);
 		const int weight = std::get<2>(synapse);
 
+		const size_t translated_source_neuron_id = partition.get_local_id(source_neuron_id);
+
 		const int source_rank = MPIWrapper::my_rank;
 		const int target_rank = id_to_rank[target_neuron_id];
 
-		add_edge_weight(target_neuron_id, target_rank, source_neuron_id, source_rank, weight);
+		add_edge_weight(target_neuron_id, target_rank, translated_source_neuron_id, source_rank, weight);
 	}
 
 	for (const auto& synapse : in_synapses) {
@@ -177,11 +237,20 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
 		const size_t target_neuron_id = std::get<1>(synapse);
 		const int weight = std::get<2>(synapse);
 
+		const size_t translated_target_neuron_id = partition.get_local_id(target_neuron_id);
+
 		const int source_rank = id_to_rank[source_neuron_id];
 		const int target_rank = MPIWrapper::my_rank;
 
-		add_edge_weight(target_neuron_id, target_rank, source_neuron_id, source_rank, weight);
+		add_edge_weight(translated_target_neuron_id, target_rank, source_neuron_id, source_rank, weight);
 	}
+
+	std::stringstream sstream;
+
+	sstream << "I'm rank: " << MPIWrapper::my_rank << " of " << MPIWrapper::num_ranks << ".\n";
+	sstream << "I've loaded: " << local_synapses.size() << " + " << out_synapses.size() << " + " << in_synapses.size() << " = " << (local_synapses.size() + out_synapses.size() + in_synapses.size()) << " many synapses." << std::endl;
+
+	std::cout << sstream.str();
 }
 
 void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids, const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id) {
@@ -306,11 +375,10 @@ void NetworkGraph::load_neuron_positions(const std::string& path_neurons, std::s
 			continue;
 		}
 
-		std::cout << line << std::endl;
-
-		size_t id;
-		Vec3d pos;
-		std::string area_name;
+		size_t id{};
+		Vec3d pos{};
+		std::string area_name{};
+		std::string type{};
 
 		std::stringstream sstream(line);
 		const bool success =
@@ -318,12 +386,16 @@ void NetworkGraph::load_neuron_positions(const std::string& path_neurons, std::s
 			(sstream >> pos.x) &&
 			(sstream >> pos.y) &&
 			(sstream >> pos.z) &&
-			(sstream >> area_name);
+			(sstream >> area_name) &&
+			(sstream >> type);
 
 		if (!success) {
 			std::cerr << "Skipping line: \"" << line << "\"\n";
 			continue;
 		}
+
+		// File starts at 1
+		id--;
 
 		if (foreing_ids.find(id) != foreing_ids.end()) {
 			id_to_pos[id] = pos;
@@ -338,7 +410,7 @@ void NetworkGraph::load_neuron_positions(const std::string& path_neurons, std::s
 	file_neurons.close();
 }
 
-void NetworkGraph::load_synapses(const std::string& path_synapses, const Partition& partition, std::set<size_t>& foreing_ids, std::vector<std::tuple<size_t, size_t, int>>& local_synapses, std::vector<std::tuple<size_t, size_t, int>>& out_synapses, std::vector<std::tuple<size_t, size_t, int>>& in_synapses) {
+void NetworkGraph::load_synapses(const std::string& path_synapses, const Partition& partition, std::set<size_t>& foreing_ids, std::vector<std::tuple<size_t, size_t, int>>& local_synapses, std::vector<std::tuple<size_t, size_t, int>>& out_synapses, std::vector<std::tuple<size_t, size_t, int>>& in_synapses) const {
 
 	enum class f_status : char {
 		not_known = 0,
@@ -348,7 +420,7 @@ void NetworkGraph::load_synapses(const std::string& path_synapses, const Partiti
 
 	std::string line;
 
-	std::vector<f_status> id_is_local(my_num_neurons);
+	std::vector<f_status> id_is_local(partition.get_total_num_neurons());
 
 	std::ifstream file_synapses(path_synapses, std::ios::binary | std::ios::in);
 
@@ -369,6 +441,10 @@ void NetworkGraph::load_synapses(const std::string& path_synapses, const Partiti
 			(sstream >> weight);
 
 		RelearnException::check(success);
+
+		// The neurons start with 1
+		source_id--;
+		target_id--;
 
 		const f_status source_f = id_is_local[source_id];
 		const f_status target_f = id_is_local[target_id];
@@ -448,7 +524,7 @@ void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) con
 		NeuronIdMap::RankNeuronId rank_neuron_id{ MPIWrapper::my_rank, target_neuron_id };
 		size_t glob_tgt = 0;
 
-		bool ret;
+		bool ret = true;
 		std::tie(ret, glob_tgt) = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id);
 		RelearnException::check(ret);
 
@@ -460,6 +536,9 @@ void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) con
 			std::tie(ret, glob_src) = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id);
 			RelearnException::check(ret);
 
+			glob_src++;
+			glob_tgt++;
+
 			// <target neuron id>  <source neuron id>  <weight>
 			os
 				<< glob_tgt << "\t"
@@ -469,7 +548,7 @@ void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) con
 	}
 }
 
-void NetworkGraph::write_synapses_to_file(const std::string& filename, [[maybe_unused]] const NeuronIdMap& neuron_id_map, [[maybe_unused]] const Partition& partition) {
+void NetworkGraph::write_synapses_to_file(const std::string& filename, [[maybe_unused]] const NeuronIdMap& neuron_id_map, [[maybe_unused]] const Partition& partition) const {
 	std::ofstream ofstream(filename, std::ios::binary | std::ios::out);
 
 	ofstream << "# <source neuron id> <target neuron id> <weight> \n";

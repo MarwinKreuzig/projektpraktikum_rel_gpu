@@ -11,8 +11,9 @@
 #pragma once
 
 namespace Util {
-	constexpr int num_digits(int val) noexcept {
-		int num_digits = 0;
+	template <typename T>
+	constexpr unsigned int num_digits(T val) noexcept {
+		unsigned int num_digits = 0;
 
 		do {
 			++num_digits;

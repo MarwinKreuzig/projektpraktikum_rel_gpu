@@ -21,8 +21,7 @@
 // in each of the three dimensions.
 class SubdomainFromNeuronDensity : public NeuronToSubdomainAssignment {
 public:
-	SubdomainFromNeuronDensity(size_t num_neurons, double desired_frac_neurons_exc,
-		double um_per_neuron = 26);
+	SubdomainFromNeuronDensity(size_t num_neurons, double desired_frac_neurons_exc, double um_per_neuron);
 
 	SubdomainFromNeuronDensity(const SubdomainFromNeuronDensity& other) = delete;
 	SubdomainFromNeuronDensity(SubdomainFromNeuronDensity&& other) = delete;
@@ -32,9 +31,9 @@ public:
 
 	~SubdomainFromNeuronDensity() override = default;
 
-	std::tuple<Position, Position> get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, size_t num_subdomains_per_axis) const noexcept override;
+	[[nodiscard]] std::tuple<Position, Position> get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, size_t num_subdomains_per_axis) const noexcept override;
 
-	std::tuple<Position, Position> get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, const Vec3<size_t>& num_subdomains_per_axis) const noexcept override;
+	[[nodiscard]] std::tuple<Position, Position> get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, const Vec3<size_t>& num_subdomains_per_axis) const noexcept override;
 
 	void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) override;
 

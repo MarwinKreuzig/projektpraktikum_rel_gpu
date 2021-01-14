@@ -11,25 +11,16 @@
 #pragma once
 
 #include "Cell.h"
+#include "Commons.h"
 
 #include <array>
 #include <cstddef>
 
-class OctreeNode {
-public:
-	OctreeNode() = default;
-	~OctreeNode() = default;
-
-	OctreeNode(const OctreeNode& other) = default;
-	OctreeNode(OctreeNode&& other) = default;
-
-	OctreeNode& operator=(const OctreeNode& other) = default;
-	OctreeNode& operator=(OctreeNode&& other) = default;
-
+struct OctreeNode {
 	void print() const;
 
 	Cell cell;
-	std::array<OctreeNode*, 8> children{ nullptr };
+	std::array<OctreeNode*, Constants::number_oct> children{ nullptr };
 	bool is_parent{ false };
 
 	size_t rank{ 0 };             // MPI rank who owns this octree node

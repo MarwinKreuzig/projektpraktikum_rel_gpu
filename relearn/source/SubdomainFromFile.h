@@ -11,9 +11,11 @@
 #pragma once
 
 #include "NeuronToSubdomainAssignment.h"
+#include "Partition.h"
 #include "Vec3.h"
 
 #include <fstream>
+#include <memory>
 #include <set>
 #include <string>
 
@@ -22,7 +24,7 @@
 // and the number of neurons in every individual subdomain.
 class SubdomainFromFile : public NeuronToSubdomainAssignment {
 public:
-	explicit SubdomainFromFile(const std::string &file_path);
+	SubdomainFromFile(const std::string &file_path, std::shared_ptr<Partition> partition);
 
 	SubdomainFromFile(const SubdomainFromFile& other) = delete;
 	SubdomainFromFile(SubdomainFromFile&& other) = delete;
@@ -38,7 +40,7 @@ public:
 		size_t local_id_start, size_t local_id_end, std::vector<size_t>& global_ids) const override;
 
 private:
-	void read_dimensions_from_file();
+	void read_dimensions_from_file(std::shared_ptr<Partition> partition);
 
 	void read_nodes_from_file(const Position& min, const Position& max, Nodes& nodes);
 

@@ -22,7 +22,7 @@ Partition::Partition(size_t num_ranks, size_t my_rank) : my_num_neurons(0), tota
 	*/
 	const double smallest_exponent = ceil(log(num_ranks) / log(8.0));
 	level_of_subdomain_trees = static_cast<size_t>(smallest_exponent);
-	total_num_subdomains = 1ull << (3 * level_of_subdomain_trees); // 8^level_of_subdomain_trees
+	total_num_subdomains = 1ULL << (3 * level_of_subdomain_trees); // 8^level_of_subdomain_trees
 
 																   // Every rank should get at least one subdomain
 	RelearnException::check(total_num_subdomains >= num_ranks);
@@ -54,7 +54,7 @@ Partition::Partition(size_t num_ranks, size_t my_rank) : my_num_neurons(0), tota
 	* total_num_subdomains = 8^level_of_subdomain_trees = (2^3)^level_of_subdomain_trees = 2^(3*level_of_subdomain_trees).
 	* Thus, number of subdomains per dimension (3d) is (2^(3*level_of_subdomain_trees))^(1/3) = 2^level_of_subdomain_trees.
 	*/
-	num_subdomains_per_dimension = 1ull << level_of_subdomain_trees;
+	num_subdomains_per_dimension = 1ULL << level_of_subdomain_trees;
 	space_curve.set_refinement_level(level_of_subdomain_trees);
 
 	std::stringstream sstream;
@@ -153,8 +153,10 @@ bool Partition::is_neuron_local(size_t neuron_id) const {
 
 size_t Partition::get_subdomain_id_from_pos(const Vec3d& pos) const {
 	RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
-	const Vec3d new_pos = pos / static_cast<double>(num_subdomains_per_dimension);
-	const Vec3<size_t> id_3d = new_pos.floor_componentwise();
+	const Vec3d subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
+
+	const Vec3d subdomain_3d{ pos.x / subdomain_length.x,pos.y / subdomain_length.y,pos.z / subdomain_length.z };
+	const Vec3<size_t> id_3d = subdomain_3d.floor_componentwise();
 	const size_t id_1d = space_curve.map_3d_to_1d(id_3d);
 
 	const size_t rank = id_1d / my_num_subdomains;
@@ -198,10 +200,18 @@ size_t Partition::get_local_id(size_t global_id) const {
 	return 0;
 }
 
-Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssignment& neurons_in_subdomain) {
+size_t Partition::get_total_num_neurons() const noexcept {
+	return total_num_neurons;
+}
+
+void Partition::set_total_num_neurons(size_t total_num) noexcept {
+	total_num_neurons = total_num;
+}
+
+std::shared_ptr<Neurons> Partition::load_neurons(std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain, std::unique_ptr<NeuronModels> neuron_models) {
 	RelearnException::check(!neurons_loaded, "Neurons are already loaded, cannot load anymore");
 
-	simulation_box_length = neurons_in_subdomain.get_simulation_box_length();
+	simulation_box_length = neurons_in_subdomain->get_simulation_box_length();
 
 	// Set subdomain length
 	Vec3d subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
@@ -227,18 +237,18 @@ Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssig
 		Subdomain& current_subdomain = subdomains[i];
 
 		// Set position of subdomain
-		std::tie(current_subdomain.xyz_min, current_subdomain.xyz_max) = neurons_in_subdomain.get_subdomain_boundaries(current_subdomain.index_3d,
+		std::tie(current_subdomain.xyz_min, current_subdomain.xyz_max) = neurons_in_subdomain->get_subdomain_boundaries(current_subdomain.index_3d,
 			num_subdomains_per_dimension);
 
 		// Set number of neurons in this subdomain
 		const auto& xyz_min = current_subdomain.xyz_min;
 		const auto& xyz_max = current_subdomain.xyz_max;
 
-		neurons_in_subdomain.fill_subdomain(current_subdomain.index_1d,
+		neurons_in_subdomain->fill_subdomain(current_subdomain.index_1d,
 			total_num_subdomains, xyz_min, xyz_max);
 
 		current_subdomain.num_neurons =
-			neurons_in_subdomain.num_neurons(current_subdomain.index_1d,
+			neurons_in_subdomain->num_neurons(current_subdomain.index_1d,
 				total_num_subdomains, xyz_min, xyz_max);
 
 		// Add subdomain's number of neurons to rank's number of neurons
@@ -249,7 +259,7 @@ Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssig
 		current_subdomain.neuron_local_id_start = (i == 0) ? 0 : (subdomains[i - 1].neuron_local_id_end + 1);
 		current_subdomain.neuron_local_id_end = current_subdomain.neuron_local_id_start + current_subdomain.num_neurons - 1;
 
-		neurons_in_subdomain.neuron_global_ids(current_subdomain.index_1d,
+		neurons_in_subdomain->neuron_global_ids(current_subdomain.index_1d,
 			total_num_subdomains,
 			current_subdomain.neuron_local_id_start,
 			current_subdomain.neuron_local_id_end,
@@ -275,11 +285,12 @@ Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssig
 		current_subdomain.octree.set_no_free_in_destructor();
 	}
 
-	Neurons neurons(my_num_neurons, params, *this);
+	auto neurons = std::make_shared<Neurons>(*this, std::move(neuron_models));
+	neurons->init(my_num_neurons);
 
-	Positions& neuron_positions = neurons.get_positions();
-	SynapticElements& axons = neurons.get_axons();
-	std::vector<std::string>& area_names = neurons.get_area_names();
+	Positions& neuron_positions = neurons->get_positions();
+	SynapticElements& axons = neurons->get_axons();
+	std::vector<std::string>& area_names = neurons->get_area_names();
 
 	for (size_t i = 0; i < my_num_subdomains; i++) {
 		const auto& subdomain_pos_min = subdomains[i].xyz_min;
@@ -288,24 +299,24 @@ Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssig
 		const auto subdomain_idx = i + my_subdomain_id_start;
 
 		const auto subdomain_num_neurons =
-			neurons_in_subdomain.num_neurons(subdomain_idx, my_num_subdomains, subdomain_pos_min, subdomain_pos_max);
+			neurons_in_subdomain->num_neurons(subdomain_idx, my_num_subdomains, subdomain_pos_min, subdomain_pos_max);
 
 		// Get neuron positions in subdomain i
 		std::vector<NeuronToSubdomainAssignment::Position> vec_pos;
 		vec_pos.reserve(subdomain_num_neurons);
-		neurons_in_subdomain.neuron_positions(subdomain_idx, total_num_subdomains,
+		neurons_in_subdomain->neuron_positions(subdomain_idx, total_num_subdomains,
 			subdomain_pos_min, subdomain_pos_max, vec_pos);
 
 		// Get neuron area names in subdomain i
 		std::vector<std::string> vec_area;
 		vec_area.reserve(subdomain_num_neurons);
-		neurons_in_subdomain.neuron_area_names(subdomain_idx, total_num_subdomains,
+		neurons_in_subdomain->neuron_area_names(subdomain_idx, total_num_subdomains,
 			subdomain_pos_min, subdomain_pos_max, vec_area);
 
 		// Get neuron types in subdomain i
 		std::vector<SynapticElements::SignalType> vec_type;
 		vec_type.reserve(subdomain_num_neurons);
-		neurons_in_subdomain.neuron_types(subdomain_idx, total_num_subdomains,
+		neurons_in_subdomain->neuron_types(subdomain_idx, total_num_subdomains,
 			subdomain_pos_min, subdomain_pos_max, vec_type);
 
 		size_t neuron_id = subdomains[i].neuron_local_id_start;
@@ -320,7 +331,8 @@ Neurons Partition::load_neurons(const Parameters& params, NeuronToSubdomainAssig
 			axons.set_signal_type(neuron_id, vec_type[j]);
 
 			// Insert neuron into tree
-			subdomains[i].octree.insert(vec_pos[j], neuron_id, MPIWrapper::my_rank);
+			auto* node = subdomains[i].octree.insert(vec_pos[j], neuron_id, MPIWrapper::my_rank);
+			RelearnException::check(node != nullptr);
 
 			neuron_id++;
 		}

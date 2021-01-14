@@ -30,14 +30,12 @@ Octree::Octree() :
 	random_number_generator.seed(randomNumberSeeds::octree);
 }
 
-Octree::Octree(const Partition& part, const Parameters& params) :
-	root(nullptr),
+Octree::Octree(std::shared_ptr<Partition> part, const Parameters& params) :
 	root_level(0),
-	no_free_in_destructor(false),
 	acceptance_criterion(params.accept_criterion),
 	sigma(params.sigma),
 	naive_method(params.naive_method),
-	level_of_branch_nodes(part.get_level_of_subdomain_trees()),
+	level_of_branch_nodes(part->get_level_of_subdomain_trees()),
 	max_num_pending_vacant_axons(params.max_num_pending_vacant_axons),
 	mpi_rma_node_allocator(MPIWrapper::mpi_rma_mem_allocator),
 	random_number_generator(RandomHolder<Octree>::get_random_generator()),
@@ -45,8 +43,9 @@ Octree::Octree(const Partition& part, const Parameters& params) :
 
 	random_number_generator.seed(randomNumberSeeds::octree);
 
-	Vec3d xyz_min, xyz_max;
-	std::tie(xyz_min, xyz_max) = part.get_simulation_box_size();
+	Vec3d xyz_min;
+	Vec3d xyz_max;
+	std::tie(xyz_min, xyz_max) = part->get_simulation_box_size();
 
 	set_size(xyz_min, xyz_max);
 }
@@ -77,7 +76,9 @@ void Octree::postorder_print() {
 
 		// Visit node now
 		if (elem.flag) {
-			Vec3d xyz_min, xyz_max, xyz_pos;
+			Vec3d xyz_min;
+			Vec3d xyz_max;
+			Vec3d xyz_pos;
 
 			// Print node's address
 			for (auto j = 0; j < depth; j++) {
@@ -192,7 +193,7 @@ bool Octree::acceptance_criterion_test(const Vec3d& axon_pos_xyz,
 
 		// Check distance between neuron with axon and neuron with dendrite
 		Vec3d target_xyz;
-		bool pos_valid;
+		bool pos_valid = false;
 		std::tie(target_xyz, pos_valid) = node_with_dendrite->cell.get_neuron_position_for(dendrite_type_needed);
 
 		// NOTE: This assertion fails when considering inner nodes that don't have dendrites.
@@ -226,7 +227,7 @@ void Octree::get_nodes_for_interval(
 	}
 
 	std::stack<OctreeNode*> stack;
-	std::array<OctreeNode*, 8> local_children = { nullptr };
+	std::array<OctreeNode*, Constants::number_oct> local_children = { nullptr };
 
 	const MPI_Aint* base_pointers = mpi_rma_node_allocator.get_base_pointers();
 
@@ -275,7 +276,7 @@ void Octree::get_nodes_for_interval(
 				// from the target rank
 				if (ret.second) {
 					ret.first->second = mpi_rma_node_allocator.newObject();
-					auto local_child_addr = ret.first->second;
+					auto* local_child_addr = ret.first->second;
 
 					// Calc displacement from absolute address
 					const auto target_child_displ = MPI_Aint(root->children[i]) - base_pointers[target_rank];
@@ -311,7 +312,7 @@ void Octree::get_nodes_for_interval(
 	bool has_vacant_dendrites = false;
 	while (!stack.empty()) {
 		// Get top-of-stack node and remove it from stack
-		auto stack_elem = stack.top();
+		auto* stack_elem = stack.top();
 		stack.pop();
 
 		/**
@@ -369,7 +370,7 @@ void Octree::get_nodes_for_interval(
 					// from the target rank
 					if (ret.second) {
 						ret.first->second = mpi_rma_node_allocator.newObject();
-						auto local_child_addr = ret.first->second;
+						auto* local_child_addr = ret.first->second;
 
 						// Calc displacement from absolute address
 						const auto target_child_displ = MPI_Aint(stack_elem->children[i]) - base_pointers[target_rank];
@@ -446,7 +447,7 @@ double Octree::calc_attractiveness_to_connect(
 	}
 
 	Vec3d target_xyz;
-	bool pos_valid;
+	bool pos_valid = false;
 	std::tie(target_xyz, pos_valid) = node_with_dendrite.cell.get_neuron_position_for(dendrite_type_needed);
 	RelearnException::check(pos_valid);
 
@@ -568,10 +569,10 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 
 		Cell::DendriteType dendrite_type_needed;
 
-		size_t source_neuron_id;
+		size_t source_neuron_id{ Constants::uninitialized };
 		Vec3d xyz_pos;
 
-		bool ret;
+		bool ret = false;
 
 		std::tie(ret, source_neuron_id, xyz_pos, dendrite_type_needed) = neurons.get_vacant_axon();
 		// Append one vacant axon to list of pending axons if too few are pending
@@ -633,7 +634,7 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 				/**
 				 * Select node with target neuron
 				 */
-				auto node_selected = select_subinterval(axon->nodes_accepted);
+				auto* node_selected = select_subinterval(axon->nodes_accepted);
 
 				// Clear nodes_accepted list for next interval creation
 				axon->nodes_accepted.clear();
@@ -743,7 +744,8 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 			* Init this new node properly
 			*/
 			// Cell size
-			Vec3d xyz_min, xyz_max;
+			Vec3d xyz_min;
+			Vec3d xyz_max;
 			std::tie(xyz_min, xyz_max) = prev->cell.get_size_for_octant(idx);
 
 			new_node->cell.set_size(xyz_min, xyz_max);
@@ -758,10 +760,10 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 			const auto prev_neuron_id = prev->cell.get_neuron_id();
 			new_node->cell.set_neuron_id(prev_neuron_id);
 			/**
-			* Set neuron ID of parent (inner node) to NEURON_ID_PARENT.
+			* Set neuron ID of parent (inner node) to uninitialized.
 			* It is not used for inner nodes.
 			*/
-			prev->cell.set_neuron_id(NEURON_ID_PARENT);
+			prev->cell.set_neuron_id(Constants::uninitialized);
 			prev->is_parent = true;  // Mark node as parent
 
 								  // MPI rank who owns this node
@@ -786,7 +788,8 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 	prev->children[my_idx] = new_node;
 	new_node->level = prev->level + 1;  // Now we know level of me
 
-	Vec3d xyz_min, xyz_max;
+	Vec3d xyz_min;
+	Vec3d xyz_max;
 	std::tie(xyz_min, xyz_max) = prev->cell.get_size_for_octant(my_idx);
 	prev->children[my_idx]->cell.set_size(xyz_min, xyz_max);
 
@@ -823,19 +826,20 @@ void Octree::insert(OctreeNode* node_to_insert) {
 							  // Init cell in octree node
 							  // cell size becomes tree's box size
 		root->cell.set_size(this->xyz_min, this->xyz_max);
-		root->cell.set_neuron_id(NEURON_ID_PARENT);
+		root->cell.set_neuron_id(Constants::uninitialized);
 
 		//LogMessages::print_debug("ROOT: new node as root inserted.");
 	}
 
-	auto curr = root;
+	auto* curr = root;
 	auto next_level = curr->level + 1; // next_level is the current level we consider for inserting the node
 								  // It's called next_level as it is the next level below the current node
 								  // "curr" in the tree
 
-	unsigned char my_idx;
+	unsigned char my_idx = 0;
 	// Calc midpoint of node's cell
-	Vec3d cell_xyz_min, cell_xyz_max;
+	Vec3d cell_xyz_min;
+	Vec3d cell_xyz_max;
 	std::tie(cell_xyz_min, cell_xyz_max) = node_to_insert->cell.get_size();
 	const double cell_length_half = node_to_insert->cell.get_length() / 2;
 	const auto cell_xyz_mid = cell_xyz_min + cell_length_half;
@@ -880,12 +884,12 @@ void Octree::insert(OctreeNode* node_to_insert) {
 		// I can then follow
 		else {
 			//LogMessages::print_debug("  New node must be created which I can then follow.");
-			OctreeNode* new_node;
-			Vec3d new_node_xyz_min, new_node_xyz_max;
+			Vec3d new_node_xyz_min; 
+			Vec3d new_node_xyz_max;
 
 			//LogMessages::print_debug("    Trying to allocate node.");
 			// Create node
-			new_node = mpi_rma_node_allocator.newObject();
+			auto* new_node = mpi_rma_node_allocator.newObject();
 			//LogMessages::print_debug("    Node allocated.");
 
 			// Init octree node
@@ -897,7 +901,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
 									  // cell size becomes size of new node's octant
 			std::tie(new_node_xyz_min, new_node_xyz_max) = curr->cell.get_size_for_octant(my_idx);
 			new_node->cell.set_size(new_node_xyz_min, new_node_xyz_max);
-			new_node->cell.set_neuron_id(NEURON_ID_PARENT);
+			new_node->cell.set_neuron_id(Constants::uninitialized);
 
 			curr->children[my_idx] = new_node;
 			curr = new_node;
@@ -963,7 +967,7 @@ void Octree::update_from_level(size_t max_level) {
 }
 
 bool Octree::find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed, size_t& target_neuron_id, int& target_rank) {
-	OctreeNode* node_selected;
+	OctreeNode* node_selected = nullptr;
 	OctreeNode* root_of_subtree = root;
 
 	while (true) {

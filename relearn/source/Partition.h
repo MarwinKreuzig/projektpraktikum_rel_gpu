@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "Commons.h"
 #include "LogMessages.h"
 #include "MPI_RMA_MemAllocator.h"
 #include "NeuronToSubdomainAssignment.h"
@@ -34,15 +35,15 @@ public:
 		Vec3d xyz_min;
 		Vec3d xyz_max;
 
-		size_t num_neurons{ 1111222233334444 };
+		size_t num_neurons{ Constants::uninitialized };
 
 		// Local start and end neuron id
-		size_t neuron_local_id_start{ 1111222233334444 };
-		size_t neuron_local_id_end{ 1111222233334444 };
+		size_t neuron_local_id_start{ Constants::uninitialized };
+		size_t neuron_local_id_end{ Constants::uninitialized };
 
 		std::vector<size_t> global_neuron_ids;
 
-		size_t index_1d{ 1111222233334444 };
+		size_t index_1d{ Constants::uninitialized };
 
 		Vec3<size_t> index_3d;
 
@@ -64,23 +65,20 @@ public:
 
 	void print_my_subdomains_info_rank(int rank);
 
-	bool is_neuron_local(size_t neuron_id) const;
+	[[nodiscard]] bool is_neuron_local(size_t neuron_id) const;
 
-	Neurons get_local_neurons(const Parameters& params, NeuronToSubdomainAssignment& neurons_in_subdomain) {
-		Neurons neurons = load_neurons(params, neurons_in_subdomain);
-		return neurons;
-	}
+	[[nodiscard]] std::shared_ptr<Neurons> load_neurons(std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain, std::unique_ptr<NeuronModels> neuron_models);
 
-	size_t get_my_num_neurons() const {
+	[[nodiscard]] size_t get_my_num_neurons() const {
 		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
 		return my_num_neurons;
 	}
 
-	size_t get_my_num_subdomains() const noexcept {
+	[[nodiscard]] size_t get_my_num_subdomains() const noexcept {
 		return my_num_subdomains;
 	}
 
-	std::tuple<Vec3d, Vec3d> get_simulation_box_size() const {
+	[[nodiscard]] std::tuple<Vec3d, Vec3d> get_simulation_box_size() const {
 		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
 		Vec3d min{ 0 };
 		Vec3d max{ simulation_box_length };
@@ -88,43 +86,44 @@ public:
 		return std::make_tuple(min, max);
 	}
 
-	Octree& get_subdomain_tree(size_t subdomain_id) {
+	[[nodiscard]] Octree& get_subdomain_tree(size_t subdomain_id) {
 		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
 		RelearnException::check(subdomain_id < my_num_subdomains);
 
 		return subdomains[subdomain_id].octree;
 	}
 
-	size_t get_my_subdomain_id_start() const noexcept {
+	[[nodiscard]] size_t get_my_subdomain_id_start() const noexcept {
 		return my_subdomain_id_start;
 	}
 
-	size_t get_my_subdomain_id_end() const noexcept {
+	[[nodiscard]] size_t get_my_subdomain_id_end() const noexcept {
 		return my_subdomain_id_end;
 	}
 
-	size_t get_level_of_subdomain_trees() const noexcept {
+	[[nodiscard]] size_t get_level_of_subdomain_trees() const noexcept {
 		return level_of_subdomain_trees;
 	}
 
-	size_t get_total_num_subdomains() const noexcept {
+	[[nodiscard]] size_t get_total_num_subdomains() const noexcept {
 		return total_num_subdomains;
 	}
 
-	size_t get_num_subdomains_per_dimension() const noexcept {
+	[[nodiscard]] size_t get_num_subdomains_per_dimension() const noexcept {
 		return num_subdomains_per_dimension;
 	}
 
-	size_t get_subdomain_id_from_pos(const Vec3d& pos) const;
+	[[nodiscard]] size_t get_subdomain_id_from_pos(const Vec3d& pos) const;
 
-	size_t get_global_id(size_t local_id) const;
+	[[nodiscard]] size_t get_global_id(size_t local_id) const;
 
-	size_t get_local_id(size_t global_id) const;
+	[[nodiscard]] size_t get_local_id(size_t global_id) const;
+
+	[[nodiscard]] size_t get_total_num_neurons() const noexcept;
+
+	void set_total_num_neurons(size_t total_num) noexcept;
 
 protected:
-	// We need the "axons" parameter to set for every neuron the type of axons it grows (exc./inh.)
-	Neurons load_neurons(const Parameters& params, NeuronToSubdomainAssignment& neurons_in_subdomain);
-
 	bool neurons_loaded;
 
 	size_t total_num_neurons;
