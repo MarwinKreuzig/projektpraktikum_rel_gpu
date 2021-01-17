@@ -22,6 +22,7 @@ template <typename T>
 class RandomHolder {
 public:
     static std::mt19937& get_random_generator() noexcept {
+        // NOLINTNEXTLINE
         static std::mt19937 random_generator;
         return random_generator;
     }

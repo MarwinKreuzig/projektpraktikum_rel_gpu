@@ -478,7 +478,7 @@ OctreeNode* Octree::select_subinterval(const ProbabilitySubintervalList& list) {
 }
 
 bool Octree::node_is_local(const OctreeNode& node) /*noexcept*/ {
-    return node.rank == MPIWrapper::my_rank;
+    return node.rank == MPIWrapper::get_my_rank();
 }
 
 void Octree::append_node(OctreeNode* node, ProbabilitySubintervalList& list) {
@@ -549,7 +549,7 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
     VacantAxonList vacant_axons;
     bool axon_added = false;
 
-    AccessEpochsStarted access_epochs_started(MPIWrapper::num_ranks, false);
+    AccessEpochsStarted access_epochs_started(MPIWrapper::get_num_ranks(), false);
 
     do {
         axon_added = false;
@@ -803,7 +803,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
         root = MPIWrapper::new_octree_node();
 
         // Init octree node
-        root->rank = MPIWrapper::my_rank;
+        root->rank = MPIWrapper::get_my_rank();
         root->level = root_level;
         root->is_parent = true; // node will become parent
 
@@ -877,7 +877,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
             //LogMessages::print_debug("    Node allocated.");
 
             // Init octree node
-            new_node->rank = MPIWrapper::my_rank;
+            new_node->rank = MPIWrapper::get_my_rank();
             new_node->level = next_level;
             new_node->is_parent = true; // node will become parent
 

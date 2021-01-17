@@ -20,8 +20,8 @@ void LogMessages::print_message(char const* string) {
 
 // Print tagged message only at MPI rank "rank"
 void LogMessages::print_message_rank(char const* string, int rank) {
-    if (rank == MPIWrapper::my_rank || rank == -1) {
-        std::cout << "[INFO:Rank " << MPIWrapper::my_rank << "]  " << string << "\n";
+    if (rank == MPIWrapper::get_my_rank() || rank == -1) {
+        std::cout << "[INFO:Rank " << MPIWrapper::get_my_rank() << "]  " << string << "\n";
     }
 }
 

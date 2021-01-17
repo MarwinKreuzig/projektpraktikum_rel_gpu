@@ -43,7 +43,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
                 auto target_rank = it_out_edge.first.first;
 
                 // Don't send firing neuron id to myself as I already have this info
-                if (target_rank != MPIWrapper::my_rank) {
+                if (target_rank != MPIWrapper::get_my_rank()) {
                     // Function expects to insert neuron ids in sorted order
                     // Append if it is not already in
                     map_firing_neuron_ids_outgoing[target_rank].append_if_not_found_sorted(neuron_id);
@@ -58,8 +58,8 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	* Send to every rank the number of firing neuron ids it should prepare for from me.
 	* Likewise, receive the number of firing neuron ids that I should prepare for from every rank.
 	*/
-    std::vector<size_t> num_firing_neuron_ids_for_ranks(MPIWrapper::num_ranks, 0);
-    std::vector<size_t> num_firing_neuron_ids_from_ranks(MPIWrapper::num_ranks, Constants::uninitialized);
+    std::vector<size_t> num_firing_neuron_ids_for_ranks(MPIWrapper::get_num_ranks(), 0);
+    std::vector<size_t> num_firing_neuron_ids_from_ranks(MPIWrapper::get_num_ranks(), Constants::uninitialized);
 
     // Fill vector with my number of firing neuron ids for every rank (excluding me)
     for (const auto& map_it : map_firing_neuron_ids_outgoing) {
@@ -79,7 +79,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
     // Now I know how many neuron ids I will get from every rank.
     // Allocate memory for all incoming neuron ids.
     MapFiringNeuronIds map_firing_neuron_ids_incoming;
-    for (auto rank = 0; rank < MPIWrapper::num_ranks; ++rank) {
+    for (auto rank = 0; rank < MPIWrapper::get_num_ranks(); ++rank) {
         auto num_neuron_ids = num_firing_neuron_ids_from_ranks[rank];
         if (0 != num_neuron_ids) { // Only create key-value pair in map for "rank" if necessary
             map_firing_neuron_ids_incoming[rank].resize(num_neuron_ids);
@@ -145,7 +145,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
             auto src_neuron_id = it_in_edge.first.second;
 
             bool spike{ false };
-            if (rank == MPIWrapper::my_rank) {
+            if (rank == MPIWrapper::get_my_rank()) {
                 spike = static_cast<bool>(fired[src_neuron_id]);
             } else {
                 const auto it = map_firing_neuron_ids_incoming.find(rank);

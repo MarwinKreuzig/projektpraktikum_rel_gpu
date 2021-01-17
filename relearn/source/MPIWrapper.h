@@ -20,11 +20,6 @@
 
 class Octree;
 
-struct RMABufferOctreeNodes {
-    OctreeNode* ptr;
-    size_t num_nodes;
-};
-
 enum class MPI_Locktype : int {
     exclusive = 234,
     shared = 235,
@@ -37,6 +32,11 @@ void min_sum_max(const int* invec, int* inoutvec, const int* len, MPI_Datatype* 
 } // namespace MPIUserDefinedOperation
 
 class MPIWrapper {
+    struct RMABufferOctreeNodes {
+        OctreeNode* ptr;
+        size_t num_nodes;
+    };
+
 public:
     enum class Scope : char {
         global = 0,
@@ -67,10 +67,9 @@ private:
 
     static const MPI_Aint* get_base_pointers() noexcept;
 
-public:
-    /**
-	 * Global variables
-	 */
+    static MPI_RMA_MemAllocator<OctreeNode> mpi_rma_mem_allocator;
+    static RMABufferOctreeNodes rma_buffer_branch_nodes;
+
     static size_t num_ranks; // Number of ranks in MPI_COMM_WORLD
     static size_t my_rank; // My rank in MPI_COMM_WORLD
 
@@ -87,20 +86,19 @@ public:
 
     static std::string my_rank_str;
 
-    static MPI_RMA_MemAllocator<OctreeNode> mpi_rma_mem_allocator;
-    static RMABufferOctreeNodes rma_buffer_branch_nodes;
-
-    /**
-	 * Functions
-	 */
+public:
     static void init(int argc, char** argv);
+
+    static void init_globals();
+
     static void init_neurons(size_t num_neurons);
-    static void init_mem_allocator(size_t mem_size);
+
     static void init_buffer_octree(size_t num_partitions);
 
     static void barrier(Scope scope);
 
     static double reduce(double value, ReduceFunction function, int root_rank, Scope scope);
+
     static double all_reduce(double value, ReduceFunction function, Scope scope);
 
     static void all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst, Scope scope);
@@ -164,6 +162,46 @@ public:
     static MPI_Aint get_ptr_displacement(int target_rank, const OctreeNode* ptr);
 
     static OctreeNode* new_octree_node();
+    
+    static size_t get_num_ranks() {
+        return num_ranks;
+    }
+
+    static size_t get_my_rank() {
+        return my_rank;
+    }
+
+    static size_t get_num_neurons() {
+        return num_neurons;
+    }
+
+    static size_t get_my_num_neurons() {
+        return my_num_neurons;
+    }
+
+    static size_t get_my_neuron_id_start() {
+        return my_neuron_id_start;
+    }
+
+    static size_t get_my_neuron_id_end() {
+        return my_neuron_id_end;
+    }
+
+    static size_t get_num_avail_objects() {
+        return mpi_rma_mem_allocator.get_min_num_avail_objects();
+    }
+
+    static OctreeNode* get_buffer_octree_nodes() {
+        return rma_buffer_branch_nodes.ptr;
+    }
+
+    static size_t get_num_buffer_octree_nodes() {
+        return rma_buffer_branch_nodes.num_nodes;
+    }
+
+    static std::string get_my_rank_str() {
+        return my_rank_str;
+    }
 
     static void delete_octree_node(OctreeNode* ptr);
 
@@ -177,9 +215,11 @@ public:
 
     static void wait_all_tokens(std::vector<AsyncToken>& tokens);
 
-    static void lock_window(int rank, MPI_Locktype lock_type);
-    static void unlock_window(int rank);
+    static void lock_window(size_t rank, MPI_Locktype lock_type);
+
+    static void unlock_window(size_t rank);
 
     static void finalize() /*noexcept*/;
-    static void print_infos_rank(int rank);
+
+    static void print_infos_rank(size_t rank);
 };

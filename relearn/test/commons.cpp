@@ -7,8 +7,7 @@ std::mt19937 mt;
 
 
 void setup() {
-	MPIWrapper::num_ranks = 1;
-	MPIWrapper::my_rank = 0;
+    MPIWrapper::init_globals();
 	
 	RelearnException::hide_messages = true;
 }

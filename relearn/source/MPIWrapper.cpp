@@ -55,7 +55,7 @@ std::string MPIWrapper::my_rank_str;
 
 MPI_RMA_MemAllocator<OctreeNode> MPIWrapper::mpi_rma_mem_allocator;
 
-RMABufferOctreeNodes MPIWrapper::rma_buffer_branch_nodes;
+MPIWrapper::RMABufferOctreeNodes MPIWrapper::rma_buffer_branch_nodes;
 
 /**
  * Functions
@@ -63,16 +63,7 @@ RMABufferOctreeNodes MPIWrapper::rma_buffer_branch_nodes;
 void MPIWrapper::init(int argc, char** argv) {
     MPI_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &thread_level_provided);
 
-    int num_ranks_mpi = 0;
-    // NOLINTNEXTLINE
-    MPI_Comm_size(MPI_COMM_WORLD, &num_ranks_mpi);
-
-    int my_rank_mpi = 0;
-    // NOLINTNEXTLINE
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank_mpi);
-
-    num_ranks = static_cast<size_t>(num_ranks_mpi);
-    my_rank = static_cast<size_t>(my_rank_mpi);
+    init_globals();
 
     // Number of ranks must be 2^n so that
     // the connectivity update works correctly
@@ -92,6 +83,19 @@ void MPIWrapper::init(int argc, char** argv) {
     sstring << std::setw(static_cast<std::streamsize>(num_digits)) << std::setfill('0') << my_rank;
 
     my_rank_str = sstring.str();
+}
+
+void MPIWrapper::init_globals() {
+    int num_ranks_mpi = 0;
+    // NOLINTNEXTLINE
+    MPI_Comm_size(MPI_COMM_WORLD, &num_ranks_mpi);
+
+    int my_rank_mpi = 0;
+    // NOLINTNEXTLINE
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank_mpi);
+
+    num_ranks = static_cast<size_t>(num_ranks_mpi);
+    my_rank = static_cast<size_t>(my_rank_mpi);
 }
 
 void MPIWrapper::init_neurons(size_t num_neurons) {
@@ -134,14 +138,11 @@ void MPIWrapper::init_neurons(size_t num_neurons) {
     my_neuron_id_end = my_neuron_id_start + (my_num_neurons - 1);
 }
 
-void MPIWrapper::init_mem_allocator(size_t mem_size) {
-    mpi_rma_mem_allocator.set_size_requested(mem_size);
+void MPIWrapper::init_buffer_octree(size_t num_partitions) {
+    mpi_rma_mem_allocator.set_size_requested(Constants::mpi_alloc_mem);
     mpi_rma_mem_allocator.allocate_rma_mem();
     mpi_rma_mem_allocator.create_rma_window(); // collective
     mpi_rma_mem_allocator.gather_rma_window_base_pointers();
-}
-
-void MPIWrapper::init_buffer_octree(size_t num_partitions) {
     rma_buffer_branch_nodes.num_nodes = num_partitions;
     rma_buffer_branch_nodes.ptr = mpi_rma_mem_allocator.get_block_of_objects_memory(num_partitions);
 
@@ -311,16 +312,18 @@ void MPIWrapper::free_custom_function() {
     MPI_Op_free(&minsummax);
 }
 
-void MPIWrapper::lock_window(int rank, MPI_Locktype lock_type) {
+void MPIWrapper::lock_window(size_t rank, MPI_Locktype lock_type) {
+    const int rank_int = static_cast<int>(rank);
     const auto lock_type_int = static_cast<int>(lock_type);
 
     // NOLINTNEXTLINE
-    const int errorcode = MPI_Win_lock(lock_type_int, rank, MPI_MODE_NOCHECK, mpi_rma_mem_allocator.mpi_window);
+    const int errorcode = MPI_Win_lock(lock_type_int, rank_int, MPI_MODE_NOCHECK, mpi_rma_mem_allocator.mpi_window);
     RelearnException::check(errorcode == 0, "Error in lock window");
 }
 
-void MPIWrapper::unlock_window(int rank) {
-    const int errorcode = MPI_Win_unlock(rank, mpi_rma_mem_allocator.mpi_window);
+void MPIWrapper::unlock_window(size_t rank) {
+    const int rank_int = static_cast<int>(rank);
+    const int errorcode = MPI_Win_unlock(rank_int, mpi_rma_mem_allocator.mpi_window);
     RelearnException::check(errorcode == 0, "Error in unlock window");
 }
 
@@ -336,7 +339,7 @@ void MPIWrapper::finalize() /*noexcept*/ {
 }
 
 // Print which neurons "rank" is responsible for
-void MPIWrapper::print_infos_rank(int rank) {
+void MPIWrapper::print_infos_rank(size_t rank) {
     if (rank == my_rank || rank == -1) {
         std::cout << "Number ranks: " << num_ranks << "\n";
         std::cout << "Partitioning based on number neurons would be: Rank " << my_rank << ": my_num_neurons: " << my_num_neurons

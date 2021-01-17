@@ -61,16 +61,16 @@ void printTimers() {
     for (int i = 0; i < 3 * TimerRegion::NUM_TIMER_REGIONS; i++) {
         sstring << timers_global[i] << " ";
     }
-    LogMessages::print_message_rank(sstring.str().c_str(), MPIWrapper::my_rank);
+    LogMessages::print_message_rank(sstring.str().c_str(), MPIWrapper::get_my_rank());
 #endif
 
     // Divide second entry of (min, sum, max), i.e., sum, by the number of ranks
     // so that sum becomes average
     for (int i = 0; i < TimerRegion::NUM_TIMER_REGIONS; i++) {
-        timers_global[3 * i + 1] /= MPIWrapper::num_ranks;
+        timers_global[3 * i + 1] /= MPIWrapper::get_num_ranks();
     }
 
-    if (0 == MPIWrapper::my_rank) {
+    if (0 == MPIWrapper::get_my_rank()) {
         // Set precision for aligned double output
         const auto old_precision = std::cout.precision();
         std::cout.precision(6);
@@ -160,7 +160,7 @@ void printTimers() {
         //cout << "\n======== MEMORY USAGE RANK 0 ========" << std::endl;
 
         std::cout << "\n======== RMA MEMORY ALLOCATOR RANK 0 ========" << std::endl;
-        std::cout << "Min num objects available: " << MPIWrapper::mpi_rma_mem_allocator.get_min_num_avail_objects() << std::endl;
+        std::cout << "Min num objects available: " << MPIWrapper::get_num_avail_objects() << std::endl;
     }
 }
 
@@ -186,6 +186,9 @@ int main(int argc, char** argv) {
 	 */
     MPIWrapper::init(argc, argv);
 
+    const size_t my_rank = MPIWrapper::get_my_rank();
+    const size_t num_ranks = MPIWrapper::get_num_ranks();
+
     double accept_criterion = 0.0;
     if (arguments[1] == "naive") {
         accept_criterion = 0.0;
@@ -201,12 +204,12 @@ int main(int argc, char** argv) {
     MPIWrapper::print_infos_rank(0);
 
     // Init random number seeds
-    randomNumberSeeds::partition = static_cast<int64_t>(MPIWrapper::my_rank);
+    randomNumberSeeds::partition = static_cast<int64_t>(my_rank);
     randomNumberSeeds::octree = static_cast<int64_t>(seed_octree);
 
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier(MPIWrapper::Scope::global);
-    if (0 == MPIWrapper::my_rank) {
+    if (0 == my_rank) {
         std::stringstream sstring; // For output generation
         sstring << "\nSTART: " << Timers::wall_clock_time() << "\n";
         LogMessages::print_message_rank(sstring.str().c_str(), 0);
@@ -222,7 +225,7 @@ int main(int argc, char** argv) {
     /**
 	 * Calculate what my partition of the domain consist of
 	 */
-    auto partition = std::make_shared<Partition>(MPIWrapper::num_ranks, MPIWrapper::my_rank);
+    auto partition = std::make_shared<Partition>(num_ranks, my_rank);
     const size_t my_num_subdomains = partition->get_my_num_subdomains();
     const size_t total_num_subdomains = partition->get_total_num_subdomains();
 
@@ -236,11 +239,10 @@ int main(int argc, char** argv) {
     /**
 	* Create MPI RMA memory allocator
 	*/
-    MPIWrapper::init_mem_allocator(300 * 1024 * 1024);
     MPIWrapper::init_buffer_octree(total_num_subdomains);
 
     // Lock local RMA memory for local stores
-    MPIWrapper::lock_window(MPIWrapper::my_rank, MPI_Locktype::exclusive);
+    MPIWrapper::lock_window(my_rank, MPI_Locktype::exclusive);
 
     Simulation sim(accept_criterion, partition);
     sim.set_neuron_models(std::make_unique<models::ModelA>());
@@ -260,7 +262,7 @@ int main(int argc, char** argv) {
     }
 
     // Unlock local RMA memory and make local stores visible in public window copy
-    MPIWrapper::unlock_window(MPIWrapper::my_rank);
+    MPIWrapper::unlock_window(my_rank);
 
     /**********************************************************************************/
 

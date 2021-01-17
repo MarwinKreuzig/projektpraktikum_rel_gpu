@@ -340,7 +340,7 @@ std::shared_ptr<Neurons> Partition::load_neurons(std::unique_ptr<NeuronToSubdoma
             axons.set_signal_type(neuron_id, vec_type[j]);
 
             // Insert neuron into tree
-            auto* node = subdomains[i].octree.insert(vec_pos[j], neuron_id, MPIWrapper::my_rank);
+            auto* node = subdomains[i].octree.insert(vec_pos[j], neuron_id, MPIWrapper::get_my_rank());
             RelearnException::check(node != nullptr);
 
             neuron_id++;

@@ -22,7 +22,7 @@ std::map<std::string, LogFiles> logfiles;
 void init() {
     Logs::output_dir = "../output/";
 
-    if (0 == MPIWrapper::my_rank) {
+    if (0 == MPIWrapper::get_my_rank()) {
         std::filesystem::path output_path(Logs::output_dir);
         if (!std::filesystem::exists(output_path)) {
             std::filesystem::create_directory(output_path);
@@ -46,10 +46,10 @@ void init() {
     Logs::addLogFile("sums", 0);
 
     // Create log file for network on all ranks
-    Logs::addLogFile("network_rank_" + MPIWrapper::my_rank_str, -1);
+    Logs::addLogFile("network_rank_" + MPIWrapper::get_my_rank_str(), -1);
 
     // Create log file for positions on all ranks
-    Logs::addLogFile("positions_rank_" + MPIWrapper::my_rank_str, -1);
+    Logs::addLogFile("positions_rank_" + MPIWrapper::get_my_rank_str(), -1);
 }
 
 void addLogFile(const std::string& name, int rank) {
@@ -61,7 +61,7 @@ void addLogFile(const std::string& name, int rank) {
 // One log file only at the MPI rank "on_rank"
 // on_rank == -1 means all ranks
 LogFiles::LogFiles(const std::string& file_name, int on_rank) {
-    if (-1 == on_rank || MPIWrapper::my_rank == on_rank) {
+    if (-1 == on_rank || MPIWrapper::get_my_rank() == on_rank) {
         num_files = 1;
         files.resize(num_files);
 

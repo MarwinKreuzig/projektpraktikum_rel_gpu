@@ -40,7 +40,7 @@ Simulation::Simulation(double accept_criterion, std::shared_ptr<Partition> parti
     parameters->accept_criterion = accept_criterion;
     parameters->naive_method = parameters->accept_criterion == 0.0;
 
-    if (0 == MPIWrapper::my_rank) {
+    if (0 == MPIWrapper::get_my_rank()) {
         std::cout << parameters.get() << std::endl;
     }
 }
@@ -107,7 +107,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
         neurons->update_number_synaptic_elements_delta();
         GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
 
-        //if (0 == MPIWrapper::my_rank && step % 50 == 0) {
+        //if (0 == MPIWrapper::get_my_rank() && step % 50 == 0) {
         //	std::cout << "** STATE AFTER: " << step << " of " << params.simulation_time
         //		<< " msec ** [" << Timers::wall_clock_time() << "]\n";
         //}
@@ -117,7 +117,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             size_t num_synapses_deleted = 0;
             size_t num_synapses_created = 0;
 
-            if (0 == MPIWrapper::my_rank) {
+            if (0 == MPIWrapper::get_my_rank()) {
                 std::cout << "** UPDATE CONNECTIVITY AFTER: " << step << " of " << number_steps
                           << " msec ** [" << Timers::wall_clock_time() << "]\n";
             }
@@ -134,7 +134,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 
             MPIWrapper::reduce(local_cnts, global_cnts, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
 
-            if (0 == MPIWrapper::my_rank) {
+            if (0 == MPIWrapper::get_my_rank()) {
                 total_synapse_deletions += global_cnts[0] / 2;
                 total_synapse_creations += global_cnts[1] / 2;
             }
@@ -167,15 +167,15 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 
     print_neuron_monitors();
 
-    neurons->print_positions_to_log_file(Logs::get("positions_rank_" + MPIWrapper::my_rank_str), *neuron_id_map);
-    neurons->print_network_graph_to_log_file(Logs::get("network_rank_" + MPIWrapper::my_rank_str), *network_graph, *neuron_id_map);
+    neurons->print_positions_to_log_file(Logs::get("positions_rank_" + MPIWrapper::get_my_rank_str()), *neuron_id_map);
+    neurons->print_network_graph_to_log_file(Logs::get("network_rank_" + MPIWrapper::get_my_rank_str()), *network_graph, *neuron_id_map);
 }
 
 void Simulation::finalize() const {
 
-    //neurons_in_subdomain->write_neurons_to_file("output_positions_" + MPIWrapper::my_rank_str + ".txt");
-    //network_graph.write_synapses_to_file("output_edges_" + MPIWrapper::my_rank_str + ".txt", neuron_id_map, partition);
-    if (0 == MPIWrapper::my_rank) {
+    //neurons_in_subdomain->write_neurons_to_file("output_positions_" + MPIWrapper::get_my_rank_str() + ".txt");
+    //network_graph.write_synapses_to_file("output_edges_" + MPIWrapper::get_my_rank_str() + ".txt", neuron_id_map, partition);
+    if (0 == MPIWrapper::get_my_rank()) {
         std::stringstream sstring; // For output generation
         sstring << "\n";
         sstring << "\n"
