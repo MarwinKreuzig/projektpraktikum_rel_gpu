@@ -65,6 +65,8 @@ private:
 
     static void free_custom_function();
 
+    static const MPI_Aint* get_base_pointers() noexcept;
+
 public:
     /**
 	 * Global variables
@@ -159,17 +161,11 @@ public:
         RelearnException::check(errorcode == 0, "Error in get");
     }
 
-    static const MPI_Aint* get_base_pointers() noexcept {
-        return mpi_rma_mem_allocator.get_base_pointers();
-    }
+    static MPI_Aint get_ptr_displacement(int target_rank, const OctreeNode* ptr);
 
-    static OctreeNode* newObject() {
-        return mpi_rma_mem_allocator.newObject();
-    }
+    static OctreeNode* new_octree_node();
 
-    static void deleteObject(OctreeNode* ptr) {
-        mpi_rma_mem_allocator.deleteObject(ptr);
-    }
+    static void delete_octree_node(OctreeNode* ptr);
 
     static void wait_request(AsyncToken& request);
 

@@ -41,7 +41,7 @@ public:
 
     void simulate(size_t number_steps = 6000000, size_t step_monitor = 100);
 
-    void finalize();
+    void finalize() const;
 
     static std::vector<std::unique_ptr<NeuronModels>> get_models();
 

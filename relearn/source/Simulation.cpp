@@ -14,10 +14,10 @@
 #include "LogFiles.h"
 #include "MPIWrapper.h"
 #include "NetworkGraph.h"
+#include "Neurons.h"
 #include "NeuronIdMap.h"
 #include "NeuronModels.h"
 #include "NeuronMonitor.h"
-#include "Neurons.h"
 #include "NeuronToSubdomainAssignment.h"
 #include "RelearnException.h"
 #include "SubdomainFromFile.h"
@@ -29,7 +29,7 @@
 
 Simulation::Simulation(double accept_criterion, std::shared_ptr<Partition> partition)
     : parameters(std::make_unique<Parameters>())
-    , partition(partition) {
+    , partition(std::move(partition)) {
     // Needed to avoid creating autapses
     if (accept_criterion > 0.5) {
         RelearnException::fail("Acceptance criterion must be smaller or equal to 0.5");
@@ -171,7 +171,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
     neurons->print_network_graph_to_log_file(Logs::get("network_rank_" + MPIWrapper::my_rank_str), *network_graph, *neuron_id_map);
 }
 
-void Simulation::finalize() {
+void Simulation::finalize() const {
 
     //neurons_in_subdomain->write_neurons_to_file("output_positions_" + MPIWrapper::my_rank_str + ".txt");
     //network_graph.write_synapses_to_file("output_edges_" + MPIWrapper::my_rank_str + ".txt", neuron_id_map, partition);

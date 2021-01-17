@@ -23,6 +23,7 @@ Neurons::Neurons(const Partition& partition, std::unique_ptr<NeuronModels> model
     , axons(SynapticElements::ElementType::AXON, SynapticElements::default_eta_Axons)
     , dendrites_exc(SynapticElements::ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc)
     , dendrites_inh(SynapticElements::ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh)
+    // NOLINTNEXTLINE
     , random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
 }
 

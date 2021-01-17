@@ -116,7 +116,7 @@ public:
     // (i)   Allocate object of type T
     // (ii)  Call its constructor
     // (iii) Return pointer to object
-    [[nodiscard]] T* newObject() {
+    [[nodiscard]] T* new_octree_node() {
         // No free objects available?
         if (avail.empty()) {
             RelearnException::fail("No free MPI-allocated memory available.");
@@ -142,7 +142,7 @@ public:
     }
 
     // Call object's destructor and mark memory as available again
-    void deleteObject(T* ptr) {
+    void delete_octree_node(T* ptr) {
         // Check if object was allocated here
         if (unavail.erase(ptr)) {
             // Call destructor

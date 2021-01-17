@@ -192,6 +192,24 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
     RelearnException::check(errorcode == 0, "Error in all to all, mpi");
 }
 
+const MPI_Aint* MPIWrapper::get_base_pointers() noexcept {
+    return mpi_rma_mem_allocator.get_base_pointers();
+}
+
+MPI_Aint MPIWrapper::get_ptr_displacement(int target_rank, const OctreeNode* ptr) {
+    const auto * const base_ptrs = get_base_pointers();
+    const auto displacement = MPI_Aint(ptr) - MPI_Aint(base_ptrs[target_rank]);
+    return displacement;
+}
+
+OctreeNode* MPIWrapper::new_octree_node() {
+    return mpi_rma_mem_allocator.new_octree_node();
+}
+
+void MPIWrapper::delete_octree_node(OctreeNode* ptr) {
+    mpi_rma_mem_allocator.delete_octree_node(ptr);
+}
+
 void MPIWrapper::wait_request(AsyncToken& request) {
     // NOLINTNEXTLINE
     if (MPI_REQUEST_NULL != request) {

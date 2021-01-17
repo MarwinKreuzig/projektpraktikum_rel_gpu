@@ -27,8 +27,13 @@ std::tuple<NeuronToSubdomainAssignment::Position, NeuronToSubdomainAssignment::P
     const auto y_subdomain_length = lengths.y / num_subdomains_per_axis.y;
     const auto z_subdomain_length = lengths.z / num_subdomains_per_axis.z;
 
-    auto min = Vec3d{ subdomain_3idx.x * x_subdomain_length, subdomain_3idx.y * y_subdomain_length, subdomain_3idx.z * z_subdomain_length };
-    auto max = Vec3d{ (subdomain_3idx.x + 1) * x_subdomain_length, (subdomain_3idx.y + 1) * y_subdomain_length, (subdomain_3idx.z + 1) * z_subdomain_length };
+    Vec3d min{ subdomain_3idx.x * x_subdomain_length, subdomain_3idx.y * y_subdomain_length, subdomain_3idx.z * z_subdomain_length };
+
+    const auto next_x = static_cast<double>(subdomain_3idx.x + 1) * x_subdomain_length;
+    const auto next_y = static_cast<double>(subdomain_3idx.y + 1) * y_subdomain_length;
+    const auto next_z = static_cast<double>(subdomain_3idx.z + 1) * z_subdomain_length;
+
+    Vec3d max{ next_x, next_y, next_z };
 
     return std::make_tuple(min, max);
 }

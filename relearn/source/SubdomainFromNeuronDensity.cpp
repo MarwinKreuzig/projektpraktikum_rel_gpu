@@ -41,7 +41,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
     const NeuronToSubdomainAssignment::Position& length_of_box,
     size_t num_neurons, size_t subdomain_idx) {
 
-    constexpr unsigned short max_short = std::numeric_limits<unsigned short>::max();
+    constexpr uint16_t max_short = std::numeric_limits<uint16_t>::max();
 
     const double simulation_box_length_ = get_simulation_box_length().get_maximum();
 
@@ -177,7 +177,12 @@ std::tuple<SubdomainFromNeuronDensity::Position, SubdomainFromNeuronDensity::Pos
     const auto z_subdomain_length = length / num_subdomains_per_axis.z;
 
     Vec3d min{ subdomain_3idx.x * x_subdomain_length, subdomain_3idx.y * y_subdomain_length, subdomain_3idx.z * z_subdomain_length };
-    Vec3d max{ (subdomain_3idx.x + 1) * x_subdomain_length, (subdomain_3idx.y + 1) * y_subdomain_length, (subdomain_3idx.z + 1) * z_subdomain_length };
+
+    const auto next_x = static_cast<double>(subdomain_3idx.x + 1) * x_subdomain_length;
+    const auto next_y = static_cast<double>(subdomain_3idx.y + 1) * y_subdomain_length;
+    const auto next_z = static_cast<double>(subdomain_3idx.z + 1) * z_subdomain_length;
+
+    Vec3d max{ next_x, next_y, next_z };
 
     min.round_to_larger_multiple(um_per_neuron_);
     max.round_to_larger_multiple(um_per_neuron_);

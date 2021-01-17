@@ -229,7 +229,7 @@ private:
     class FunctorFreeNode {
     public:
         FunctorFreeNode() noexcept = default;
-        void operator()(OctreeNode* node) { MPIWrapper::deleteObject(node); }
+        void operator()(OctreeNode* node) { MPIWrapper::delete_octree_node(node); }
     };
 
     Octree();

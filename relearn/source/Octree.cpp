@@ -226,8 +226,6 @@ void Octree::get_nodes_for_interval(
     std::stack<OctreeNode*> stack;
     std::array<OctreeNode*, Constants::number_oct> local_children = { nullptr };
 
-    const MPI_Aint* base_pointers = MPIWrapper::get_base_pointers();
-
     /**
 	* The root node is parent (i.e., contains a super neuron) and thus cannot be the target neuron.
 	* So, start considering its children.
@@ -252,7 +250,7 @@ void Octree::get_nodes_for_interval(
             MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
 
             // Fetch remote children if they exist
-            for (auto i = Constants::number_oct - 1; i >= 0; i--) {
+            for (auto i = 7; i >= 0; i--) {
                 if (nullptr == root->children[i]) {
                     local_children[i] = nullptr;
                     continue;
@@ -272,11 +270,11 @@ void Octree::get_nodes_for_interval(
                 // So, we still need to init the entry by fetching
                 // from the target rank
                 if (ret.second) {
-                    ret.first->second = MPIWrapper::newObject();
+                    ret.first->second = MPIWrapper::new_octree_node();
                     auto* local_child_addr = ret.first->second;
 
                     // Calc displacement from absolute address
-                    const auto target_child_displ = MPI_Aint(root->children[i]) - base_pointers[target_rank];
+                    const auto target_child_displ = MPIWrapper::get_ptr_displacement(target_rank, root->children[i]);
 
                     MPIWrapper::get(local_child_addr, target_rank, target_child_displ);
                 }
@@ -345,7 +343,7 @@ void Octree::get_nodes_for_interval(
                 MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
 
                 // Fetch remote children if they exist
-                for (auto i = Constants::number_oct - 1; i >= 0; i--) {
+                for (auto i = 7; i >= 0; i--) {
                     if (nullptr == stack_elem->children[i]) {
                         local_children[i] = nullptr;
                         continue;
@@ -365,11 +363,9 @@ void Octree::get_nodes_for_interval(
                     // So, we still need to init the entry by fetching
                     // from the target rank
                     if (ret.second) {
-                        ret.first->second = MPIWrapper::newObject();
+                        ret.first->second = MPIWrapper::new_octree_node();
                         auto* local_child_addr = ret.first->second;
-
-                        // Calc displacement from absolute address
-                        const auto target_child_displ = MPI_Aint(stack_elem->children[i]) - base_pointers[target_rank];
+                        const auto target_child_displ = MPIWrapper::get_ptr_displacement(target_rank, stack_elem->children[i]);
 
                         MPIWrapper::get(local_child_addr, target_rank, target_child_displ);
                     }
@@ -532,11 +528,8 @@ void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list,
             // from the target rank
             if (ret.second) {
                 // Create new object which contains the remote node's information
-                ret.first->second = prob_sub->ptr = MPIWrapper::newObject();
-
-                const MPI_Aint* base_pointers = MPIWrapper::get_base_pointers();
-                // Calc displacement from absolute address
-                const auto target_child_displ = MPI_Aint(child - base_pointers[target_rank]);
+                ret.first->second = prob_sub->ptr = MPIWrapper::new_octree_node();
+                const auto target_child_displ = MPIWrapper::get_ptr_displacement(target_rank, child);
 
                 MPIWrapper::get(prob_sub->ptr, target_rank, target_child_displ);
 
@@ -676,7 +669,7 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 // Insert neuron into the tree
 OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
     // Create new tree node for the neuron
-    OctreeNode* new_node = MPIWrapper::newObject();
+    OctreeNode* new_node = MPIWrapper::new_octree_node();
     RelearnException::check(new_node != nullptr);
 
     new_node->cell.set_neuron_position(position, true);
@@ -728,7 +721,7 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 
             // Determine octant for neuron
             idx = prev->cell.get_neuron_octant();
-            OctreeNode* new_node = MPIWrapper::newObject(); // new OctreeNode();
+            OctreeNode* new_node = MPIWrapper::new_octree_node(); // new OctreeNode();
             prev->children[idx] = new_node;
 
             /**
@@ -807,7 +800,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
         // Create tree's root
 
         // Create root node
-        root = MPIWrapper::newObject();
+        root = MPIWrapper::new_octree_node();
 
         // Init octree node
         root->rank = MPIWrapper::my_rank;
@@ -880,7 +873,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
 
             //LogMessages::print_debug("    Trying to allocate node.");
             // Create node
-            auto* new_node = MPIWrapper::newObject();
+            auto* new_node = MPIWrapper::new_octree_node();
             //LogMessages::print_debug("    Node allocated.");
 
             // Init octree node
@@ -1012,7 +1005,7 @@ bool Octree::find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz,
 
 void Octree::empty_remote_nodes_cache() {
     for (auto& remode_node_in_cache : remote_nodes_cache) {
-        MPIWrapper::deleteObject(remode_node_in_cache.second);
+        MPIWrapper::delete_octree_node(remode_node_in_cache.second);
     }
 
     remote_nodes_cache.clear();

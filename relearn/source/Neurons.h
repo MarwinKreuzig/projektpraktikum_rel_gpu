@@ -226,7 +226,7 @@ class Neurons {
 
             std::array<size_t, Constants::num_items_per_request> arr{};
 
-            for (auto i = 0; i < Constants::num_items_per_request; i++) {
+            for (size_t i = 0; i < Constants::num_items_per_request; i++) {
                 arr[i] = requests[base_index + i];
             }
 
