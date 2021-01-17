@@ -2,7 +2,7 @@
 
 BoxCoordinates Morton::map_1d_to_3d(uint64_t idx) {
     // clear coordinates
-    BoxCoordinates coords { 0 };
+    BoxCoordinates coords{ 0 };
 
     // run over each bit and copy it to respective coordinate
     uint8_t coords_bit = 0;

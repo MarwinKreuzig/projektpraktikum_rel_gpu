@@ -51,7 +51,7 @@ public:
 
     [[nodiscard]] Vec3d get_position(size_t idx) const {
         RelearnException::check(idx < size, "Idx must be smaller than size in Positions");
-        return Vec3d { x_dims[idx], y_dims[idx], z_dims[idx] };
+        return Vec3d{ x_dims[idx], y_dims[idx], z_dims[idx] };
     }
 
     void set_x(size_t neuron_id, double x) noexcept {

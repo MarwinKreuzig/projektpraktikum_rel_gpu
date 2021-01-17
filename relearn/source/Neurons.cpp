@@ -32,7 +32,7 @@ std::tuple<bool, size_t, Vec3d, Cell::DendriteType> Neurons::get_vacant_axon() c
     static size_t i = 0;
     static size_t j = 0;
 
-    size_t neuron_id { Constants::uninitialized };
+    size_t neuron_id{ Constants::uninitialized };
     Vec3d xyz_pos;
     Cell::DendriteType dendrite_type_needed;
 
@@ -463,7 +463,7 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 			* as other axons might already have connected to them.
 			* Right now, those collisions are handled in a first-come-first-served fashion.
 			*/
-            size_t target_neuron_id { Constants::uninitialized };
+            size_t target_neuron_id{ Constants::uninitialized };
             int target_rank = -1;
             bool target_neuron_found = false;
             target_neuron_found = global_tree.find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed, target_neuron_id, target_rank);
@@ -568,9 +568,9 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
 
             // All requests of a rank
             for (auto request_index = 0; request_index < num_requests; request_index++) {
-                size_t source_neuron_id { Constants::uninitialized };
-                size_t target_neuron_id { Constants::uninitialized };
-                size_t dendrite_type_needed { Constants::uninitialized };
+                size_t source_neuron_id{ Constants::uninitialized };
+                size_t target_neuron_id{ Constants::uninitialized };
+                size_t dendrite_type_needed{ Constants::uninitialized };
                 std::tie(source_neuron_id, target_neuron_id, dendrite_type_needed) = requests.get_request(request_index);
 
                 // Sanity check: if the request received is targeted for me
@@ -664,9 +664,9 @@ void Neurons::create_synapses(size_t& num_synapses_created, Octree& global_tree,
             // All responses from a rank
             for (auto request_index = 0; request_index < num_requests; request_index++) {
                 char connected = requests.get_response(request_index);
-                size_t source_neuron_id { Constants::uninitialized };
-                size_t target_neuron_id { Constants::uninitialized };
-                size_t dendrite_type_needed { Constants::uninitialized };
+                size_t source_neuron_id{ Constants::uninitialized };
+                size_t target_neuron_id{ Constants::uninitialized };
+                size_t dendrite_type_needed{ Constants::uninitialized };
                 std::tie(source_neuron_id, target_neuron_id, dendrite_type_needed) = requests.get_request(request_index);
 
                 //std::cout << "From: " << source_neuron_id << " to " << target_neuron_id << ": " << dendrite_type_needed << std::endl;
@@ -782,7 +782,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
         static_cast<unsigned int>(sum_synapses_deleted),
         static_cast<unsigned int>(sum_synapses_created) };
 
-    std::array<unsigned int, Constants::num_items_per_request> sums_global { 0, 0, 0, 0, 0, 0 }; // Init all to zero
+    std::array<unsigned int, Constants::num_items_per_request> sums_global{ 0, 0, 0, 0, 0, 0 }; // Init all to zero
 
     MPIWrapper::reduce(sums_local, sums_global, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
 
@@ -894,7 +894,7 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const NeuronIdMap&
     // Print global ids, positions, and areas of local neurons
     bool ret = false;
     size_t glob_id = 0;
-    NeuronIdMap::RankNeuronId rank_neuron_id { 0, 0 };
+    NeuronIdMap::RankNeuronId rank_neuron_id{ 0, 0 };
 
     rank_neuron_id.rank = MPIWrapper::my_rank;
     file << std::fixed << std::setprecision(6);
@@ -1031,7 +1031,7 @@ void Neurons::add_synapse_to_pending_deletions(const RankNeuronId& src_neuron_id
 
     // Synapse not pending yet, so add it to pending deletions
     if (!found) {
-        PendingSynapseDeletion pending_deletion {
+        PendingSynapseDeletion pending_deletion{
             src_neuron_id,
             tgt_neuron_id,
             affected_neuron_id,

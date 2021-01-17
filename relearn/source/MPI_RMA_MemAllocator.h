@@ -186,24 +186,24 @@ public:
     }
 
     //NOLINTNEXTLINE
-    MPI_Win mpi_window { 0 }; // RMA window object
+    MPI_Win mpi_window{ 0 }; // RMA window object
 private:
-    size_t size_requested { Constants::uninitialized }; // Bytes requested for the allocator
-    size_t max_size { Constants::uninitialized }; // Size in Bytes of MPI-allocated memory
-    size_t max_num_objects { Constants::uninitialized }; // Max number objects that are available
-    T* base_ptr { nullptr }; // Start address of MPI-allocated memory
-    size_t base_ptr_offset { Constants::uninitialized }; // base_ptr + base_ptr_offset marks where free object list begins
+    size_t size_requested{ Constants::uninitialized }; // Bytes requested for the allocator
+    size_t max_size{ Constants::uninitialized }; // Size in Bytes of MPI-allocated memory
+    size_t max_num_objects{ Constants::uninitialized }; // Max number objects that are available
+    T* base_ptr{ nullptr }; // Start address of MPI-allocated memory
+    size_t base_ptr_offset{ Constants::uninitialized }; // base_ptr + base_ptr_offset marks where free object list begins
 
-    bool avail_initialized { false }; // List with free objects has been initialzed
-    size_t min_num_avail_objects { Constants::uninitialized }; // Minimum number of objects available
+    bool avail_initialized{ false }; // List with free objects has been initialzed
+    size_t min_num_avail_objects{ Constants::uninitialized }; // Minimum number of objects available
 
     std::list<T*> avail; // List of pointers to free memory blocks (each block of size sizeof(T))
-    size_t avail_size { Constants::uninitialized }; // Size of avail. We don't use std::list.size() as some older stdlibc++ versions take O(n)
+    size_t avail_size{ Constants::uninitialized }; // Size of avail. We don't use std::list.size() as some older stdlibc++ versions take O(n)
         // and not O(1). This is a bug which we ran into on the Blue Gene/Q JUQUEEN
     std::set<T*> unavail; // Set of pointers to used memory blocks (each block of size sizeof(T))
         // A block can only be either in "avail" or "unavail". Blocks are moved between both.
 
-    size_t num_ranks { Constants::uninitialized }; // Number of ranks in MPI_COMM_WORLD
-    int displ_unit { -1 }; // RMA window displacement unit
+    size_t num_ranks{ Constants::uninitialized }; // Number of ranks in MPI_COMM_WORLD
+    int displ_unit{ -1 }; // RMA window displacement unit
     std::vector<MPI_Aint> base_pointers; // RMA window base pointers of all procs
 };

@@ -13,10 +13,10 @@
 using namespace models;
 
 FitzHughNagumoModel::FitzHughNagumoModel(double k, double tau_C, double beta, unsigned int h, const double a, const double b, const double phi)
-    : NeuronModels { k, tau_C, beta, h }
-    , a { a }
-    , b { b }
-    , phi { phi } {
+    : NeuronModels{ k, tau_C, beta, h }
+    , a{ a }
+    , b{ b }
+    , phi{ phi } {
 }
 
 std::unique_ptr<NeuronModels> FitzHughNagumoModel::clone() const {
@@ -28,11 +28,11 @@ double FitzHughNagumoModel::get_secondary_variable(const size_t i) const noexcep
 }
 
 std::vector<ModelParameter> FitzHughNagumoModel::get_parameter() {
-    auto res { NeuronModels::get_parameter() };
+    auto res{ NeuronModels::get_parameter() };
     res.reserve(res.size() + 3);
-    res.emplace_back(Parameter<double> { "a", a, 0., 5. });
-    res.emplace_back(Parameter<double> { "b", b, 0., 5. });
-    res.emplace_back(Parameter<double> { "phi", phi, 0., .3 });
+    res.emplace_back(Parameter<double>{ "a", a, 0., 5. });
+    res.emplace_back(Parameter<double>{ "b", b, 0., 5. });
+    res.emplace_back(Parameter<double>{ "phi", phi, 0., .3 });
     return res;
 }
 

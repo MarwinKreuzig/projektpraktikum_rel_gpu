@@ -45,16 +45,16 @@ void SubdomainFromFile::read_dimensions_from_file(std::shared_ptr<Partition> par
 
     size_t total_number_neurons = 0;
 
-    for (std::string line {}; std::getline(file, line);) {
+    for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
         if (!line.empty() && '#' == line[0]) {
             continue;
         }
 
-        size_t id {};
-        Vec3d tmp {};
-        std::string area_name {};
-        std::string signal_type {};
+        size_t id{};
+        Vec3d tmp{};
+        std::string area_name{};
+        std::string signal_type{};
 
         std::stringstream sstream(line);
         bool success = (sstream >> id) && (sstream >> tmp.x) && (sstream >> tmp.y) && (sstream >> tmp.z) && (sstream >> area_name) && (sstream >> signal_type);
@@ -97,15 +97,15 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
     double placed_ex_neurons = 0.0;
     double placed_in_neurons = 0.0;
 
-    for (std::string line {}; std::getline(file, line);) {
+    for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
         if (!line.empty() && '#' == line[0]) {
             continue;
         }
 
-        std::string signal_type {};
+        std::string signal_type{};
 
-        Node node {};
+        Node node{};
 
         std::stringstream sstream(line);
         bool success = (sstream >> node.id) && (sstream >> node.pos.x) && (sstream >> node.pos.y) && (sstream >> node.pos.z) && (sstream >> node.area_name) && (sstream >> signal_type);

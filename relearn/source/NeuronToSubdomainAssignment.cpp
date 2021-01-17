@@ -18,7 +18,7 @@
 #include <iomanip>
 
 std::tuple<NeuronToSubdomainAssignment::Position, NeuronToSubdomainAssignment::Position> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, size_t num_subdomains_per_axis) const noexcept {
-    return get_subdomain_boundaries(subdomain_3idx, Vec3<size_t> { num_subdomains_per_axis });
+    return get_subdomain_boundaries(subdomain_3idx, Vec3<size_t>{ num_subdomains_per_axis });
 }
 
 std::tuple<NeuronToSubdomainAssignment::Position, NeuronToSubdomainAssignment::Position> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3<size_t>& subdomain_3idx, const Vec3<size_t>& num_subdomains_per_axis) const noexcept {
@@ -27,8 +27,8 @@ std::tuple<NeuronToSubdomainAssignment::Position, NeuronToSubdomainAssignment::P
     const auto y_subdomain_length = lengths.y / num_subdomains_per_axis.y;
     const auto z_subdomain_length = lengths.z / num_subdomains_per_axis.z;
 
-    auto min = Vec3d { subdomain_3idx.x * x_subdomain_length, subdomain_3idx.y * y_subdomain_length, subdomain_3idx.z * z_subdomain_length };
-    auto max = Vec3d { (subdomain_3idx.x + 1) * x_subdomain_length, (subdomain_3idx.y + 1) * y_subdomain_length, (subdomain_3idx.z + 1) * z_subdomain_length };
+    auto min = Vec3d{ subdomain_3idx.x * x_subdomain_length, subdomain_3idx.y * y_subdomain_length, subdomain_3idx.z * z_subdomain_length };
+    auto max = Vec3d{ (subdomain_3idx.x + 1) * x_subdomain_length, (subdomain_3idx.y + 1) * y_subdomain_length, (subdomain_3idx.z + 1) * z_subdomain_length };
 
     return std::make_tuple(min, max);
 }

@@ -56,10 +56,10 @@ public:
             : ptr(node) {
         }
 
-        OctreeNode* ptr { nullptr };
-        double probability { 0.0 };
-        MPIWrapper::AsyncToken mpi_request { MPIWrapper::get_null_request() };
-        int request_rank { -1 };
+        OctreeNode* ptr{ nullptr };
+        double probability{ 0.0 };
+        MPIWrapper::AsyncToken mpi_request{ MPIWrapper::get_null_request() };
+        int request_rank{ -1 };
     };
     using ProbabilitySubintervalList = std::list<std::shared_ptr<ProbabilitySubinterval>>;
 
@@ -351,7 +351,7 @@ private:
 	 */
     template <typename Functor>
     void tree_walk_postorder(Functor visit, size_t max_level = std::numeric_limits<size_t>::max()) {
-        std::stack<StackElement> stack {};
+        std::stack<StackElement> stack{};
 
         // Tree is empty
         if (!root) {
@@ -444,25 +444,25 @@ private:
     void append_children(OctreeNode* node, ProbabilitySubintervalList& list, AccessEpochsStarted& epochs_started);
 
     // Root of the tree
-    OctreeNode* root { nullptr };
+    OctreeNode* root{ nullptr };
 
     std::vector<Octree*> local_trees;
 
     // Level which is assigned to the root of the tree (default = 0)
-    size_t root_level { Constants::uninitialized };
+    size_t root_level{ Constants::uninitialized };
 
     // 'True' if destructor should not free the tree nodes
-    bool no_free_in_destructor { false };
+    bool no_free_in_destructor{ false };
 
     // Two points describe simulation box size of the tree
     Vec3d xyz_min;
     Vec3d xyz_max;
 
-    double acceptance_criterion { Constants::theta }; // Acceptance criterion
-    double sigma { Constants::sigma }; // Probability parameter
-    bool naive_method { false }; // If true, expand every cell regardless of whether dendrites are available or not
-    size_t level_of_branch_nodes { Constants::uninitialized };
-    size_t max_num_pending_vacant_axons { Constants::num_pend_vacant }; // Maximum number of vacant axons which are considered at the same time for
+    double acceptance_criterion{ Constants::theta }; // Acceptance criterion
+    double sigma{ Constants::sigma }; // Probability parameter
+    bool naive_method{ false }; // If true, expand every cell regardless of whether dendrites are available or not
+    size_t level_of_branch_nodes{ Constants::uninitialized };
+    size_t max_num_pending_vacant_axons{ Constants::num_pend_vacant }; // Maximum number of vacant axons which are considered at the same time for
         // finding a target neuron
 
     // Allocator for MPI passive target sync. memory for tree nodes

@@ -25,8 +25,10 @@ class SynapticElements {
     friend class NeuronMonitor;
 
 public:
-    enum class ElementType { AXON, DENDRITE };
-    enum class SignalType { EXCITATORY, INHIBITORY };
+    enum class ElementType { AXON,
+        DENDRITE };
+    enum class SignalType { EXCITATORY,
+        INHIBITORY };
 
     SynapticElements(ElementType type, double min_C_level_to_grow,
         double C_target = SynapticElements::default_C_target,
@@ -57,10 +59,10 @@ public:
 
     std::vector<ModelParameter> get_parameter() {
         return {
-            Parameter<double> { "Minimum calcium to grow", min_C_level_to_grow, 0.0, 10.0 },
-            Parameter<double> { "Target calcium", C_target, 0.0, 100.0 },
-            Parameter<double> { "nu", nu, 0.0, 1.0 },
-            Parameter<double> { "Vacant synapse retract ratio", vacant_retract_ratio, 0.0, 1.0 },
+            Parameter<double>{ "Minimum calcium to grow", min_C_level_to_grow, 0.0, 10.0 },
+            Parameter<double>{ "Target calcium", C_target, 0.0, 100.0 },
+            Parameter<double>{ "nu", nu, 0.0, 1.0 },
+            Parameter<double>{ "Vacant synapse retract ratio", vacant_retract_ratio, 0.0, 1.0 },
         };
     }
 
@@ -155,12 +157,12 @@ private:
     }
 
 public:
-    static constexpr double default_C_target { 0.5 }; // gold 0.5;
-    static constexpr double default_eta_Axons { 0.0 }; //0.4; // gold 0.0;
-    static constexpr double default_eta_Dendrites_exc { 0.0 }; //0.1, // gold 0.0;
-    static constexpr double default_eta_Dendrites_inh { 0.0 };
-    static constexpr double default_nu { 1e-4 }; // gold 1e-5; // element growth rate
-    static constexpr double default_vacant_retract_ratio { 0 };
+    static constexpr double default_C_target{ 0.5 }; // gold 0.5;
+    static constexpr double default_eta_Axons{ 0.0 }; //0.4; // gold 0.0;
+    static constexpr double default_eta_Dendrites_exc{ 0.0 }; //0.1, // gold 0.0;
+    static constexpr double default_eta_Dendrites_inh{ 0.0 };
+    static constexpr double default_nu{ 1e-4 }; // gold 1e-5; // element growth rate
+    static constexpr double default_vacant_retract_ratio{ 0 };
 
 private:
     ElementType type; // Denotes the type of all synaptic elements, which is AXON or DENDRITE

@@ -155,10 +155,10 @@ protected:
 
     virtual void init_neurons() = 0;
 
-    static constexpr double default_k { 0.03 };
-    static constexpr double default_tau_C { 10000 }; //5000;   //very old 60.0;
-    static constexpr double default_beta { 0.001 }; //very old 0.05;
-    static constexpr unsigned int default_h { 10 };
+    static constexpr double default_k{ 0.03 };
+    static constexpr double default_tau_C{ 10000 }; //5000;   //very old 60.0;
+    static constexpr double default_beta{ 0.001 }; //very old 0.05;
+    static constexpr unsigned int default_h{ 10 };
 
     // My local number of neurons
     size_t my_num_neurons;
@@ -207,9 +207,9 @@ private:
 
     [[nodiscard]] bool theta(const double x);
 
-    static constexpr double default_x_0 { 0.05 };
-    static constexpr double default_tau_x { 5.0 };
-    static constexpr unsigned int default_refrac_time { 4 };
+    static constexpr double default_x_0{ 0.05 };
+    static constexpr double default_tau_x{ 5.0 };
+    static constexpr unsigned int default_refrac_time{ 4 };
 
     std::vector<unsigned int> refrac; // refractory time
 
@@ -218,10 +218,10 @@ private:
     unsigned int refrac_time; // Length of refractory period in msec. After an action potential a neuron cannot fire for this time
 
     // Random number generator for this class (C++11)
-    std::mt19937& random_number_generator { RandomHolder<ModelA>::get_random_generator() };
+    std::mt19937& random_number_generator{ RandomHolder<ModelA>::get_random_generator() };
     // Random number distribution used together with "random_number_generator" (C++11)
     // Uniform distribution for interval [0, 1]
-    std::uniform_real_distribution<double> random_number_distribution { 0.0, nextafter(1.0, 2.0) };
+    std::uniform_real_distribution<double> random_number_distribution{ 0.0, nextafter(1.0, 2.0) };
 };
 
 class IzhikevichModel : public NeuronModels {
@@ -262,14 +262,14 @@ private:
 
     [[nodiscard]] bool spiked(const double x) const noexcept;
 
-    static constexpr double default_a { 0.1 };
-    static constexpr double default_b { 0.2 };
-    static constexpr double default_c { -65.0 };
-    static constexpr double default_d { 2.0 };
-    static constexpr double default_V_spike { 30.0 };
-    static constexpr double default_k1 { 0.04 };
-    static constexpr double default_k2 { 5.0 };
-    static constexpr double default_k3 { 140.0 };
+    static constexpr double default_a{ 0.1 };
+    static constexpr double default_b{ 0.2 };
+    static constexpr double default_c{ -65.0 };
+    static constexpr double default_d{ 2.0 };
+    static constexpr double default_V_spike{ 30.0 };
+    static constexpr double default_k1{ 0.04 };
+    static constexpr double default_k2{ 5.0 };
+    static constexpr double default_k3{ 140.0 };
 
     std::vector<double> u; // membrane recovery
 
@@ -318,9 +318,9 @@ private:
 
     [[nodiscard]] static bool spiked(const double x, const double w) noexcept;
 
-    static constexpr double default_a { 0.7 };
-    static constexpr double default_b { 0.8 };
-    static constexpr double default_phi { 0.08 };
+    static constexpr double default_a{ 0.7 };
+    static constexpr double default_b{ 0.8 };
+    static constexpr double default_phi{ 0.08 };
 
     std::vector<double> w; // recovery variable
 
@@ -368,15 +368,15 @@ private:
 
     [[nodiscard]] double iter_refrac(const double w, const double x) const noexcept;
 
-    static constexpr double default_C { 281.0 };
-    static constexpr double default_g_L { 30.0 };
-    static constexpr double default_E_L { -70.6 };
-    static constexpr double default_V_T { -50.4 };
-    static constexpr double default_d_T { 2.0 };
-    static constexpr double default_tau_w { 144.0 };
-    static constexpr double default_a { 4.0 };
-    static constexpr double default_b { 0.0805 };
-    static constexpr double default_V_peak { 20.0 };
+    static constexpr double default_C{ 281.0 };
+    static constexpr double default_g_L{ 30.0 };
+    static constexpr double default_E_L{ -70.6 };
+    static constexpr double default_V_T{ -50.4 };
+    static constexpr double default_d_T{ 2.0 };
+    static constexpr double default_tau_w{ 144.0 };
+    static constexpr double default_a{ 4.0 };
+    static constexpr double default_b{ 0.0805 };
+    static constexpr double default_V_peak{ 20.0 };
 
     std::vector<double> w; // adaption variable
 

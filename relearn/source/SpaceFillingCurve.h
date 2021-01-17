@@ -60,7 +60,7 @@ private:
         return ((number & (static_cast<uint64_t>(1) << bit)) >> bit);
     }
 
-    size_t refinement_level { 0 };
+    size_t refinement_level{ 0 };
 };
 
 template <class T>

@@ -51,7 +51,7 @@ struct Vec3 {
 
     template <typename K>
     explicit operator Vec3<K>() const noexcept {
-        Vec3<K> res { static_cast<K>(x), static_cast<K>(y), static_cast<K>(z) };
+        Vec3<K> res{ static_cast<K>(x), static_cast<K>(y), static_cast<K>(z) };
         return res;
     }
 

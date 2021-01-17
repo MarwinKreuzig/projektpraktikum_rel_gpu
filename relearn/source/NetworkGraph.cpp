@@ -134,10 +134,10 @@ void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, siz
 void NetworkGraph::add_edge_weights(const std::string& filename, const NeuronIdMap& neuron_id_map) {
     std::ifstream file(filename);
 
-    Vec3d src_pos { 0.0 };
-    Vec3d tgt_pos { 0.0 };
-    NeuronIdMap::RankNeuronId src_id { 0 };
-    NeuronIdMap::RankNeuronId tgt_id { 0 };
+    Vec3d src_pos{ 0.0 };
+    Vec3d tgt_pos{ 0.0 };
+    NeuronIdMap::RankNeuronId src_id{ 0 };
+    NeuronIdMap::RankNeuronId tgt_id{ 0 };
     std::string line;
     bool ret = false;
     bool success = false;
@@ -368,10 +368,10 @@ void NetworkGraph::load_neuron_positions(const std::string& path_neurons, std::s
             continue;
         }
 
-        size_t id {};
-        Vec3d pos {};
-        std::string area_name {};
-        std::string type {};
+        size_t id{};
+        Vec3d pos{};
+        std::string area_name{};
+        std::string type{};
 
         std::stringstream sstream(line);
         const bool success = (sstream >> id) && (sstream >> pos.x) && (sstream >> pos.y) && (sstream >> pos.z) && (sstream >> area_name) && (sstream >> type);
@@ -498,7 +498,7 @@ void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) con
         const NetworkGraph::Edges& in_edges = get_in_edges(target_neuron_id);
         NetworkGraph::Edges::const_iterator it_in_edge;
 
-        NeuronIdMap::RankNeuronId rank_neuron_id { MPIWrapper::my_rank, target_neuron_id };
+        NeuronIdMap::RankNeuronId rank_neuron_id{ MPIWrapper::my_rank, target_neuron_id };
         size_t glob_tgt = 0;
 
         bool ret = true;

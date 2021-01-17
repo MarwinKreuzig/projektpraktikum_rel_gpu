@@ -92,10 +92,10 @@ public:
 
 protected:
     struct Node {
-        Position pos { 0 };
-        size_t id { Constants::uninitialized };
-        SynapticElements::SignalType signal_type { SynapticElements::SignalType::EXCITATORY };
-        std::string area_name { "NOT SET" };
+        Position pos{ 0 };
+        size_t id{ Constants::uninitialized };
+        SynapticElements::SignalType signal_type{ SynapticElements::SignalType::EXCITATORY };
+        std::string area_name{ "NOT SET" };
 
         struct less {
             bool operator()(const Node& lhs, const Node& rhs) const /*noexcept*/ {
@@ -115,13 +115,13 @@ protected:
     using Nodes = std::set<Node, Node::less>;
     std::map<size_t, Nodes> neurons_in_subdomain;
 
-    double desired_frac_neurons_exc_ { 0.0 };
-    size_t desired_num_neurons_ { 0 };
+    double desired_frac_neurons_exc_{ 0.0 };
+    size_t desired_num_neurons_{ 0 };
 
-    double currently_frac_neurons_exc_ { 0.0 };
-    size_t currently_num_neurons_ { 0 };
+    double currently_frac_neurons_exc_{ 0.0 };
+    size_t currently_num_neurons_{ 0 };
 
-    Vec3d simulation_box_length { 0 };
+    Vec3d simulation_box_length{ 0 };
 
     [[nodiscard]] static bool position_in_box(const Position& pos, const Position& box_min, const Position& box_max) noexcept;
 

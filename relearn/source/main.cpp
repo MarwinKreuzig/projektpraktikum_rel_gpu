@@ -41,7 +41,7 @@ void printTimers() {
 	 */
     RelearnException::check(3 * TimerRegion::NUM_TIMER_REGIONS == 69);
 
-    std::array<double, 69> timers_local {};
+    std::array<double, 69> timers_local{};
 
     for (int i = 0; i < TimerRegion::NUM_TIMER_REGIONS; ++i) {
         const double elapsed = GlobalTimers::timers.get_elapsed(i);
@@ -51,7 +51,7 @@ void printTimers() {
         }
     }
 
-    std::array<double, 69> timers_global {};
+    std::array<double, 69> timers_global{};
 
     MPIWrapper::reduce(timers_local, timers_global, MPIWrapper::ReduceFunction::minsummax, 0, MPIWrapper::Scope::global);
 
@@ -168,7 +168,7 @@ int main(int argc, char** argv) {
     /**
 	 * Read command line parameters
 	 */
-    std::vector<std::string> arguments { argv, argv + argc };
+    std::vector<std::string> arguments{ argv, argv + argc };
     if (arguments.size() < 5) {
         std::cout << "Usage: " << arguments[0]
                   << " <acceptance criterion (theta)>"

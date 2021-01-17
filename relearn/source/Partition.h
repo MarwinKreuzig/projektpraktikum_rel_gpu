@@ -35,15 +35,15 @@ public:
         Vec3d xyz_min;
         Vec3d xyz_max;
 
-        size_t num_neurons { Constants::uninitialized };
+        size_t num_neurons{ Constants::uninitialized };
 
         // Local start and end neuron id
-        size_t neuron_local_id_start { Constants::uninitialized };
-        size_t neuron_local_id_end { Constants::uninitialized };
+        size_t neuron_local_id_start{ Constants::uninitialized };
+        size_t neuron_local_id_end{ Constants::uninitialized };
 
         std::vector<size_t> global_neuron_ids;
 
-        size_t index_1d { Constants::uninitialized };
+        size_t index_1d{ Constants::uninitialized };
 
         Vec3<size_t> index_3d;
 
@@ -80,8 +80,8 @@ public:
 
     [[nodiscard]] std::tuple<Vec3d, Vec3d> get_simulation_box_size() const {
         RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
-        Vec3d min { 0 };
-        Vec3d max { simulation_box_length };
+        Vec3d min{ 0 };
+        Vec3d max{ simulation_box_length };
 
         return std::make_tuple(min, max);
     }

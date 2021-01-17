@@ -26,7 +26,7 @@ public:
 
     struct Dendrites {
         // All dendrites have the same position
-        Vec3d xyz_pos {};
+        Vec3d xyz_pos{};
         // Mark if xyz_pos[] values are valid and can be used
         bool xyz_pos_valid = false;
         unsigned int num_dendrites = 0;
@@ -286,5 +286,5 @@ private:
 	 * For those with a super neuron, it has no meaning.
 	 * This info is used to identify (return) the target neuron for a given axon
 	 */
-    size_t neuron_id { Constants::uninitialized };
+    size_t neuron_id{ Constants::uninitialized };
 };

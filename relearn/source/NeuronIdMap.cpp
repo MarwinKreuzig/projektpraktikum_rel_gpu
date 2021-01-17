@@ -56,7 +56,7 @@ std::tuple<bool, NeuronIdMap::RankNeuronId> NeuronIdMap::pos2rank_neuron_id(cons
 
     // Neuron position not found
     if (it == pos_to_rank_neuron_id.end()) {
-        return std::make_tuple(false, NeuronIdMap::RankNeuronId { Constants::uninitialized, Constants::uninitialized });
+        return std::make_tuple(false, NeuronIdMap::RankNeuronId{ Constants::uninitialized, Constants::uninitialized });
     }
 
     // Return rank and neuron id
@@ -115,7 +115,7 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
     // Map every neuron position to one (rank, neuron_id) pair
     size_t glob_neuron_id = 0;
     for (int rank = 0; rank < num_ranks; rank++) {
-        RankNeuronId val { 0, 0 };
+        RankNeuronId val{ 0, 0 };
         val.rank = rank;
         for (size_t neuron_id = 0; neuron_id < rank_to_num_neurons[rank]; neuron_id++) {
             RelearnException::check(glob_neuron_id < total_num_neurons, "global id is too large in neuronidmap");
@@ -123,7 +123,7 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
             const auto idx = glob_neuron_id * 3;
 
             RelearnException::check(idx < xyz_pos.size(), "idx is too large in neuronidmap");
-            Vec3d key { xyz_pos[idx], xyz_pos[idx + 1], xyz_pos[idx + 2] };
+            Vec3d key{ xyz_pos[idx], xyz_pos[idx + 1], xyz_pos[idx + 2] };
             val.neuron_id = neuron_id;
 
             auto ret = pos_to_rank_neuron_id.insert(std::make_pair(key, val));

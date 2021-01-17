@@ -30,7 +30,7 @@ void RelearnException::check(bool condition) {
 
 void RelearnException::fail() {
     if (hide_messages) {
-        throw RelearnException {};
+        throw RelearnException{};
     }
 
     int my_rank = MPIWrapper::my_rank;
@@ -48,7 +48,7 @@ void RelearnException::fail() {
 
     std::cerr << sstream.str() << std::flush;
 
-    throw RelearnException {};
+    throw RelearnException{};
 }
 
 void RelearnException::check(bool condition, std::string&& message) {
@@ -61,7 +61,7 @@ void RelearnException::check(bool condition, std::string&& message) {
 
 void RelearnException::fail(std::string&& message) {
     if (hide_messages) {
-        throw RelearnException {};
+        throw RelearnException{};
     }
 
     int my_rank = MPIWrapper::my_rank;
@@ -79,5 +79,5 @@ void RelearnException::fail(std::string&& message) {
 
     std::cerr << sstream.str() << std::flush;
 
-    throw RelearnException { std::move(message) };
+    throw RelearnException{ std::move(message) };
 }

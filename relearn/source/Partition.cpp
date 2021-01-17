@@ -160,7 +160,7 @@ size_t Partition::get_subdomain_id_from_pos(const Vec3d& pos) const {
     RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
     const Vec3d subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
 
-    const Vec3d subdomain_3d { pos.x / subdomain_length.x, pos.y / subdomain_length.y, pos.z / subdomain_length.z };
+    const Vec3d subdomain_3d{ pos.x / subdomain_length.x, pos.y / subdomain_length.y, pos.z / subdomain_length.z };
     const Vec3<size_t> id_3d = subdomain_3d.floor_componentwise();
     const size_t id_1d = space_curve.map_3d_to_1d(id_3d);
 

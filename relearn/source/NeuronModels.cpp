@@ -144,7 +144,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
             auto rank = it_in_edge.first.first;
             auto src_neuron_id = it_in_edge.first.second;
 
-            bool spike { false };
+            bool spike{ false };
             if (rank == MPIWrapper::my_rank) {
                 spike = static_cast<bool>(fired[src_neuron_id]);
             } else {
@@ -182,10 +182,10 @@ std::vector<std::unique_ptr<NeuronModels>> NeuronModels::get_models() {
 
 std::vector<ModelParameter> NeuronModels::get_parameter() {
     return {
-        Parameter<double> { "k", k, 0., 1. },
-        Parameter<double> { "tau_C", tau_C, 0., 10.e+6 },
-        Parameter<double> { "beta", beta, 0., 1. },
-        Parameter<unsigned int> { "Number integration steps", h, 0, 1000 },
+        Parameter<double>{ "k", k, 0., 1. },
+        Parameter<double>{ "tau_C", tau_C, 0., 10.e+6 },
+        Parameter<double>{ "beta", beta, 0., 1. },
+        Parameter<unsigned int>{ "Number integration steps", h, 0, 1000 },
     };
 }
 

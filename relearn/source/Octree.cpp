@@ -565,7 +565,7 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 
         Cell::DendriteType dendrite_type_needed;
 
-        size_t source_neuron_id { Constants::uninitialized };
+        size_t source_neuron_id{ Constants::uninitialized };
         Vec3d xyz_pos;
 
         bool ret = false;

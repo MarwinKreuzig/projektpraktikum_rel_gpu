@@ -13,16 +13,16 @@
 using namespace models;
 
 AEIFModel::AEIFModel(double k, double tau_C, double beta, unsigned int h, const double C, const double g_L, const double E_L, const double V_T, const double, const double tau_w, const double a, const double b, const double V_peak)
-    : NeuronModels { k, tau_C, beta, h }
-    , C { C }
-    , g_L { g_L }
-    , E_L { E_L }
-    , V_T { V_T }
-    , d_T { d_T }
-    , tau_w { tau_w }
-    , a { a }
-    , b { b }
-    , V_peak { V_peak } {
+    : NeuronModels{ k, tau_C, beta, h }
+    , C{ C }
+    , g_L{ g_L }
+    , E_L{ E_L }
+    , V_T{ V_T }
+    , d_T{ d_T }
+    , tau_w{ tau_w }
+    , a{ a }
+    , b{ b }
+    , V_peak{ V_peak } {
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModels> AEIFModel::clone() const {
@@ -34,17 +34,17 @@ AEIFModel::AEIFModel(double k, double tau_C, double beta, unsigned int h, const 
 }
 
 [[nodiscard]] std::vector<ModelParameter> AEIFModel::get_parameter() {
-    auto res { NeuronModels::get_parameter() };
+    auto res{ NeuronModels::get_parameter() };
     res.reserve(res.size() + 9);
-    res.emplace_back(Parameter<double> { "C", C, 100., 500. });
-    res.emplace_back(Parameter<double> { "g_L", g_L, 0., 100. });
-    res.emplace_back(Parameter<double> { "E_L", E_L, -150., -20. });
-    res.emplace_back(Parameter<double> { "V_T", V_T, -150., 0. });
-    res.emplace_back(Parameter<double> { "d_T", d_T, 0., 10. });
-    res.emplace_back(Parameter<double> { "tau_w", tau_w, 100., 200. });
-    res.emplace_back(Parameter<double> { "a", a, 0., 10. });
-    res.emplace_back(Parameter<double> { "b", b, 0., .3 });
-    res.emplace_back(Parameter<double> { "V_peak", V_peak, 0., 1. });
+    res.emplace_back(Parameter<double>{ "C", C, 100., 500. });
+    res.emplace_back(Parameter<double>{ "g_L", g_L, 0., 100. });
+    res.emplace_back(Parameter<double>{ "E_L", E_L, -150., -20. });
+    res.emplace_back(Parameter<double>{ "V_T", V_T, -150., 0. });
+    res.emplace_back(Parameter<double>{ "d_T", d_T, 0., 10. });
+    res.emplace_back(Parameter<double>{ "tau_w", tau_w, 100., 200. });
+    res.emplace_back(Parameter<double>{ "a", a, 0., 10. });
+    res.emplace_back(Parameter<double>{ "b", b, 0., .3 });
+    res.emplace_back(Parameter<double>{ "V_peak", V_peak, 0., 1. });
     return res;
 }
 

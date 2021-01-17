@@ -13,15 +13,15 @@
 using namespace models;
 
 IzhikevichModel::IzhikevichModel(double k, double tau_C, double beta, unsigned int h, const double a, const double b, const double c, const double d, const double V_spike, const double k1, const double k2, const double k3)
-    : NeuronModels { k, tau_C, beta, h }
-    , a { a }
-    , b { b }
-    , c { c }
-    , d { d }
-    , V_spike { V_spike }
-    , k1 { k1 }
-    , k2 { k2 }
-    , k3 { k3 } {
+    : NeuronModels{ k, tau_C, beta, h }
+    , a{ a }
+    , b{ b }
+    , c{ c }
+    , d{ d }
+    , V_spike{ V_spike }
+    , k1{ k1 }
+    , k2{ k2 }
+    , k3{ k3 } {
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModels> IzhikevichModel::clone() const {
@@ -33,16 +33,16 @@ IzhikevichModel::IzhikevichModel(double k, double tau_C, double beta, unsigned i
 }
 
 [[nodiscard]] std::vector<ModelParameter> IzhikevichModel::get_parameter() {
-    auto res { NeuronModels::get_parameter() };
+    auto res{ NeuronModels::get_parameter() };
     res.reserve(res.size() + 8);
-    res.emplace_back(Parameter<double> { "a", a, 0., 1. });
-    res.emplace_back(Parameter<double> { "b", b, 0., 1. });
-    res.emplace_back(Parameter<double> { "c", c, -150., -50. });
-    res.emplace_back(Parameter<double> { "d", d, 0., 10. });
-    res.emplace_back(Parameter<double> { "V_spike", V_spike, 0., 100. });
-    res.emplace_back(Parameter<double> { "k1", k1, 0., 1. });
-    res.emplace_back(Parameter<double> { "k2", k2, 0., 10. });
-    res.emplace_back(Parameter<double> { "k3", k3, 50., 200. });
+    res.emplace_back(Parameter<double>{ "a", a, 0., 1. });
+    res.emplace_back(Parameter<double>{ "b", b, 0., 1. });
+    res.emplace_back(Parameter<double>{ "c", c, -150., -50. });
+    res.emplace_back(Parameter<double>{ "d", d, 0., 10. });
+    res.emplace_back(Parameter<double>{ "V_spike", V_spike, 0., 100. });
+    res.emplace_back(Parameter<double>{ "k1", k1, 0., 1. });
+    res.emplace_back(Parameter<double>{ "k2", k2, 0., 10. });
+    res.emplace_back(Parameter<double>{ "k3", k3, 50., 200. });
     return res;
 }
 

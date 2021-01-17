@@ -127,7 +127,7 @@ public:
     }
 
 private:
-    size_t num_requests { 0 }; // Number of synapse creation requests
+    size_t num_requests{ 0 }; // Number of synapse creation requests
     std::vector<size_t> requests; // Each request to form a synapse is a 3-tuple: (source_neuron_id, target_neuron_id, dendrite_type_needed)
         // That is why requests.size() == 3*responses.size()
         // Note, a more memory-efficient implementation would use a smaller data type (not size_t) for dendrite_type_needed.
@@ -224,7 +224,7 @@ class Neurons {
         [[nodiscard]] std::array<size_t, Constants::num_items_per_request> get_request(size_t request_index) const noexcept {
             const size_t base_index = Constants::num_items_per_request * request_index;
 
-            std::array<size_t, Constants::num_items_per_request> arr {};
+            std::array<size_t, Constants::num_items_per_request> arr{};
 
             for (auto i = 0; i < Constants::num_items_per_request; i++) {
                 arr[i] = requests[base_index + i];
@@ -247,7 +247,7 @@ class Neurons {
         }
 
     private:
-        size_t num_requests { 0 }; // Number of synapse deletion requests
+        size_t num_requests{ 0 }; // Number of synapse deletion requests
         std::vector<size_t> requests; // Each request to delete a synapse is a 6-tuple:
             // (src_neuron_id, tgt_neuron_id, affected_neuron_id, affected_element_type, signal_type, synapse_id)
             // That is why requests.size() == 6*num_requests
@@ -287,7 +287,7 @@ public:
     using MapSynapseDeletionRequests = std::map<int, SynapseDeletionRequests>;
 
     Neurons(const Partition& partition)
-        : Neurons { partition, NeuronModels::create<models::ModelA>() } {
+        : Neurons{ partition, NeuronModels::create<models::ModelA>() } {
     }
 
     Neurons(const Partition& partition, std::unique_ptr<NeuronModels> model);

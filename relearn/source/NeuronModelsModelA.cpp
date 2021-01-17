@@ -13,10 +13,10 @@
 using namespace models;
 
 ModelA::ModelA(double k, double tau_C, double beta, unsigned int h, const double x_0, const double tau_x, unsigned int refrac_time)
-    : NeuronModels { k, tau_C, beta, h }
-    , x_0 { x_0 }
-    , tau_x { tau_x }
-    , refrac_time { refrac_time } {
+    : NeuronModels{ k, tau_C, beta, h }
+    , x_0{ x_0 }
+    , tau_x{ tau_x }
+    , refrac_time{ refrac_time } {
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModels> ModelA::clone() const {
@@ -28,11 +28,11 @@ ModelA::ModelA(double k, double tau_C, double beta, unsigned int h, const double
 }
 
 [[nodiscard]] std::vector<ModelParameter> ModelA::get_parameter() {
-    auto res { NeuronModels::get_parameter() };
+    auto res{ NeuronModels::get_parameter() };
     res.reserve(res.size() + 3);
-    res.emplace_back(Parameter<double> { "x_0", x_0, 0., 1. });
-    res.emplace_back(Parameter<double> { "tau_x", tau_x, 0., 1000. });
-    res.emplace_back(Parameter<unsigned int> { "refrac_time", refrac_time, 0, 1000 });
+    res.emplace_back(Parameter<double>{ "x_0", x_0, 0., 1. });
+    res.emplace_back(Parameter<double>{ "tau_x", tau_x, 0., 1000. });
+    res.emplace_back(Parameter<unsigned int>{ "refrac_time", refrac_time, 0, 1000 });
     return res;
 }
 

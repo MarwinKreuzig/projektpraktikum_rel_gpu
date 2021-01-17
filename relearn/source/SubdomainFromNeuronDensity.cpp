@@ -94,7 +94,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
         const double y_pos_rnd = random_number_distribution(random_number_generator) + y_it;
         const double z_pos_rnd = random_number_distribution(random_number_generator) + z_it;
 
-        Position pos_rnd { x_pos_rnd, y_pos_rnd, z_pos_rnd };
+        Position pos_rnd{ x_pos_rnd, y_pos_rnd, z_pos_rnd };
         pos_rnd *= um_per_neuron_;
 
         const Position pos = pos_rnd + offset;
@@ -102,11 +102,11 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
         const double type_indicator = random_number_distribution(random_number_generator);
 
         if (placed_ex_neurons < expected_number_ex && (type_indicator < desired_frac_neurons_exc_ || placed_in_neurons == expected_number_in)) {
-            Node node { pos, i, SynapticElements::SignalType::EXCITATORY, "random" };
+            Node node{ pos, i, SynapticElements::SignalType::EXCITATORY, "random" };
             placed_ex_neurons++;
             nodes.emplace(node);
         } else {
-            Node node { pos, i, SynapticElements::SignalType::INHIBITORY, "random" };
+            Node node{ pos, i, SynapticElements::SignalType::INHIBITORY, "random" };
             placed_in_neurons++;
             nodes.emplace(node);
         }
@@ -176,8 +176,8 @@ std::tuple<SubdomainFromNeuronDensity::Position, SubdomainFromNeuronDensity::Pos
     const auto y_subdomain_length = length / num_subdomains_per_axis.y;
     const auto z_subdomain_length = length / num_subdomains_per_axis.z;
 
-    Vec3d min { subdomain_3idx.x * x_subdomain_length, subdomain_3idx.y * y_subdomain_length, subdomain_3idx.z * z_subdomain_length };
-    Vec3d max { (subdomain_3idx.x + 1) * x_subdomain_length, (subdomain_3idx.y + 1) * y_subdomain_length, (subdomain_3idx.z + 1) * z_subdomain_length };
+    Vec3d min{ subdomain_3idx.x * x_subdomain_length, subdomain_3idx.y * y_subdomain_length, subdomain_3idx.z * z_subdomain_length };
+    Vec3d max{ (subdomain_3idx.x + 1) * x_subdomain_length, (subdomain_3idx.y + 1) * y_subdomain_length, (subdomain_3idx.z + 1) * z_subdomain_length };
 
     min.round_to_larger_multiple(um_per_neuron_);
     max.round_to_larger_multiple(um_per_neuron_);
