@@ -65,8 +65,6 @@ private:
 
     static void free_custom_function();
 
-    static const MPI_Aint* get_base_pointers() noexcept;
-
     static MPI_RMA_MemAllocator<OctreeNode> mpi_rma_mem_allocator;
     static RMABufferOctreeNodes rma_buffer_branch_nodes;
 

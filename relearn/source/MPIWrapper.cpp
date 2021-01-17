@@ -139,13 +139,10 @@ void MPIWrapper::init_neurons(size_t num_neurons) {
 }
 
 void MPIWrapper::init_buffer_octree(size_t num_partitions) {
-    mpi_rma_mem_allocator.set_size_requested(Constants::mpi_alloc_mem);
-    mpi_rma_mem_allocator.allocate_rma_mem();
-    mpi_rma_mem_allocator.create_rma_window(); // collective
-    mpi_rma_mem_allocator.gather_rma_window_base_pointers();
     rma_buffer_branch_nodes.num_nodes = num_partitions;
-    rma_buffer_branch_nodes.ptr = mpi_rma_mem_allocator.get_block_of_objects_memory(num_partitions);
 
+    mpi_rma_mem_allocator.init(Constants::mpi_alloc_mem);
+    rma_buffer_branch_nodes.ptr = mpi_rma_mem_allocator.get_block_of_objects_memory(num_partitions);
     mpi_rma_mem_allocator.init_free_object_list();
 }
 
@@ -193,12 +190,8 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
     RelearnException::check(errorcode == 0, "Error in all to all, mpi");
 }
 
-const MPI_Aint* MPIWrapper::get_base_pointers() noexcept {
-    return mpi_rma_mem_allocator.get_base_pointers();
-}
-
 MPI_Aint MPIWrapper::get_ptr_displacement(int target_rank, const OctreeNode* ptr) {
-    const auto * const base_ptrs = get_base_pointers();
+    const std::vector<MPI_Aint>& base_ptrs = mpi_rma_mem_allocator.get_base_pointers();
     const auto displacement = MPI_Aint(ptr) - MPI_Aint(base_ptrs[target_rank]);
     return displacement;
 }
@@ -331,8 +324,8 @@ void MPIWrapper::finalize() /*noexcept*/ {
     free_custom_function();
 
     // Free RMA window (MPI collective)
-    // mpi_rma_mem_allocator.free_rma_window();
-    // mpi_rma_mem_allocator.deallocate_rma_mem();
+     mpi_rma_mem_allocator.free_rma_window();
+     mpi_rma_mem_allocator.deallocate_rma_mem();
 
     const int errorcode = MPI_Finalize();
     RelearnException::check(errorcode == 0, "Error in finalize");

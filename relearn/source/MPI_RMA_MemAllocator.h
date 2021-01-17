@@ -37,7 +37,7 @@ public:
 
     ~MPI_RMA_MemAllocator() = default;
 
-    void set_size_requested(size_t size_requested) {
+    void init(size_t size_requested) {
         this->size_requested = size_requested;
         this->avail_size = 0;
 
@@ -53,20 +53,15 @@ public:
 
         base_ptr_offset = 0;
         avail_initialized = false;
-    }
 
-    /**
-	 * Memory allocation is not done in the constructor as
-	 * the destructor would need to free it with MPI_Free_mem() later.
-	 * Otherwise, it might happen that MPI_Finalize() is called before
-	 * the destructor which causes an MPI error.
-	 */
-    void allocate_rma_mem() {
         // Allocate block of memory which is managed later on
         // NOLINTNEXTLINE
         if (MPI_SUCCESS != MPI_Alloc_mem(max_size, MPI_INFO_NULL, &base_ptr)) {
             RelearnException::fail("MPI_Alloc_mem failed");
         }
+
+        create_rma_window();
+        gather_rma_window_base_pointers();
     }
 
     void init_free_object_list() {
@@ -88,29 +83,10 @@ public:
         MPI_Free_mem(base_ptr);
     }
 
-    // Create MPI RMA window with all the memory of the allocator
-    // This call is collective over MPI_COMM_WORLD
-    void create_rma_window() noexcept {
-        // Set window's displacement unit
-        displ_unit = 1;
-
-        // NOLINTNEXTLINE
-        MPI_Win_create(base_ptr, max_size, displ_unit, MPI_INFO_NULL, MPI_COMM_WORLD, &mpi_window);
-    }
-
     // Free the MPI RMA window
     // This call is collective over MPI_COMM_WORLD
     void free_rma_window() {
         MPI_Win_free(&mpi_window);
-    }
-
-    // Store RMA window base pointers of all ranks
-    void gather_rma_window_base_pointers() {
-        // Vector must have space for one pointer from each rank
-        base_pointers.resize(num_ranks);
-
-        // NOLINTNEXTLINE
-        MPI_Allgather(&base_ptr, 1, MPI_AINT, base_pointers.data(), 1, MPI_AINT, MPI_COMM_WORLD);
     }
 
     // (i)   Allocate object of type T
@@ -156,8 +132,8 @@ public:
         }
     }
 
-    [[nodiscard]] const MPI_Aint* get_base_pointers() const noexcept {
-        return base_pointers.data();
+    [[nodiscard]] const std::vector<MPI_Aint>& get_base_pointers() const noexcept {
+        return base_pointers;
     }
 
     // This can only be called before init_free_object_list()
@@ -167,15 +143,13 @@ public:
             return nullptr;
         }
 
-        if ((max_num_objects - num_objects) < 0) {
+        if (max_num_objects < num_objects) {
             RelearnException::fail("get_block_of_objects_memory not enough free MPI-allocated memory available.");
             return nullptr;
         }
 
-        T* ret = nullptr;
-
         max_num_objects -= num_objects;
-        ret = base_ptr + base_ptr_offset;
+        T* ret = base_ptr + base_ptr_offset;
         base_ptr_offset += num_objects;
 
         return ret;
@@ -189,9 +163,29 @@ public:
     MPI_Win mpi_window{ 0 }; // RMA window object
 
 private:
+    // Store RMA window base pointers of all ranks
+    void gather_rma_window_base_pointers() {
+        // Vector must have space for one pointer from each rank
+        base_pointers.resize(num_ranks);
+
+        // NOLINTNEXTLINE
+        MPI_Allgather(&base_ptr, 1, MPI_AINT, base_pointers.data(), 1, MPI_AINT, MPI_COMM_WORLD);
+    }
+
+    // Create MPI RMA window with all the memory of the allocator
+    // This call is collective over MPI_COMM_WORLD
+    void create_rma_window() noexcept {
+        // Set window's displacement unit
+        displ_unit = 1;
+
+        // NOLINTNEXTLINE
+        MPI_Win_create(base_ptr, max_size, displ_unit, MPI_INFO_NULL, MPI_COMM_WORLD, &mpi_window);
+    }
+
     size_t size_requested{ Constants::uninitialized }; // Bytes requested for the allocator
     size_t max_size{ Constants::uninitialized }; // Size in Bytes of MPI-allocated memory
     size_t max_num_objects{ Constants::uninitialized }; // Max number objects that are available
+
     T* base_ptr{ nullptr }; // Start address of MPI-allocated memory
     size_t base_ptr_offset{ Constants::uninitialized }; // base_ptr + base_ptr_offset marks where free object list begins
 
