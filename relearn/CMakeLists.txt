@@ -12,34 +12,39 @@ file(GLOB_RECURSE TOP_TST "test/*")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_BUILD_TYPE Release)
 
-if(noclangtidy)
-else()
-	set(CMAKE_CXX_CLANG_TIDY clang-tidy "-header-filter=^((?!mpi).)*$" "--checks=*,-fuchsia*,-modernize-use-trailing-return-type,-llvm-header-guard,-misc-non-private-member-variables-in-classes,-cppcoreguidelines-non-private-member-variables-in-classes")
+option(ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
+if(ENABLE_CLANG_TIDY)
+	set(CMAKE_CXX_CLANG_TIDY clang-tidy)
 endif()
 
 find_package (MPI REQUIRED)
 
-source_group("tests" FILES ${TOP_TST})
+# project options
+add_library(project_options INTERFACE)
 
+target_include_directories (project_options SYSTEM INTERFACE ${MPI_CXX_INCLUDE_PATH})
+
+target_compile_options (project_options INTERFACE ${MPI_CXX_COMPILE_FLAGS})
+
+target_link_libraries (project_options INTERFACE ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
+if (UNIX)
+	target_link_libraries (project_options INTERFACE stdc++fs)
+endif ()
+
+# relearn executable
 add_executable(relearn
 	${TOP_INCS}
 	${TOP_SRC}
 )
 
-set_property(TARGET relearn PROPERTY ENABLE_EXPORTS 1)
+set_target_properties(relearn PROPERTIES ENABLE_EXPORTS 1)
 
-
-target_include_directories (relearn PRIVATE ${MPI_CXX_INCLUDE_PATH} )
-target_compile_options (relearn PRIVATE ${MPI_CXX_COMPILE_FLAGS})
-
-target_link_libraries (relearn ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
-
-if (UNIX)
-	target_link_libraries (relearn stdc++fs)
-endif ()
+target_link_libraries(relearn PRIVATE project_options)
 
 #Download and unpack googletest at configure time
 configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
@@ -66,21 +71,15 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
 		${CMAKE_BINARY_DIR}/googletest-build
 		EXCLUDE_FROM_ALL)
 
+source_group("tests" FILES ${TOP_TST})
+
 add_executable(runTests 
 	${TOP_INCS}
 	${TOP_SRC_OM}
 	${TOP_TST}
 )
-#target_include_directories(runTests PRIVATE)
-target_link_libraries(runTests gtest_main)
+
+target_link_libraries(runTests PRIVATE project_options)
+target_link_libraries(runTests PRIVATE gtest_main)
+
 add_test(NAME SerialTests COMMAND runTests)
-
-target_include_directories (runTests PRIVATE ${MPI_CXX_INCLUDE_PATH} )
-
-target_compile_options (runTests PRIVATE ${MPI_CXX_COMPILE_FLAGS})
-
-target_link_libraries (runTests ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
-
-if (UNIX)
-	target_link_libraries (runTests stdc++fs)
-endif ()
