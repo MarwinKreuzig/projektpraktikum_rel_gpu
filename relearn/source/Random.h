@@ -14,15 +14,15 @@
 #include <random>
 
 namespace randomNumberSeeds {
-	extern int64_t partition;
-	extern int64_t octree;
+extern int64_t partition;
+extern int64_t octree;
 } // namespace randomNumberSeeds
 
-template<typename T>
+template <typename T>
 class RandomHolder {
 public:
-	static std::mt19937& get_random_generator() noexcept {
-		static std::mt19937 random_generator;
-		return random_generator;
-	}
+    static std::mt19937& get_random_generator() noexcept {
+        static std::mt19937 random_generator;
+        return random_generator;
+    }
 };

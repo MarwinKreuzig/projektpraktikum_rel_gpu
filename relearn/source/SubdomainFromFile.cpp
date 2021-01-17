@@ -20,161 +20,148 @@
 #include <iostream>
 #include <sstream>
 
-SubdomainFromFile::SubdomainFromFile(const std::string &file_path, std::shared_ptr<Partition> partition) : file(file_path) {
-	std::cout << "Loading: " << file_path << std::endl;
-	const bool file_is_good = file.good();
-	const bool file_is_not_good = file.fail() || file.eof();
+SubdomainFromFile::SubdomainFromFile(const std::string& file_path, std::shared_ptr<Partition> partition)
+    : file(file_path) {
+    std::cout << "Loading: " << file_path << std::endl;
+    const bool file_is_good = file.good();
+    const bool file_is_not_good = file.fail() || file.eof();
 
-	if (!file_is_good || file_is_not_good) {
-		std::cout << "Opening the file was not successful" << std::endl;
-		exit(EXIT_FAILURE);
-	}
+    if (!file_is_good || file_is_not_good) {
+        std::cout << "Opening the file was not successful" << std::endl;
+        exit(EXIT_FAILURE);
+    }
 
-	RelearnException::check(partition.get() != nullptr);
+    RelearnException::check(partition.get() != nullptr);
 
-	read_dimensions_from_file(partition);
+    read_dimensions_from_file(partition);
 }
 
 void SubdomainFromFile::read_dimensions_from_file(std::shared_ptr<Partition> partition) {
-	Vec3d minimum(std::numeric_limits<double>::max());
-	Vec3d maximum(std::numeric_limits<double>::min());
+    Vec3d minimum(std::numeric_limits<double>::max());
+    Vec3d maximum(std::numeric_limits<double>::min());
 
-	size_t found_ex_neurons = 0;
-	size_t found_in_neurons = 0;
+    size_t found_ex_neurons = 0;
+    size_t found_in_neurons = 0;
 
-	size_t total_number_neurons = 0;
+    size_t total_number_neurons = 0;
 
-	for (std::string line{}; std::getline(file, line);) {
-		// Skip line with comments
-		if (!line.empty() && '#' == line[0]) {
-			continue;
-		}
+    for (std::string line {}; std::getline(file, line);) {
+        // Skip line with comments
+        if (!line.empty() && '#' == line[0]) {
+            continue;
+        }
 
-		size_t id{};
-		Vec3d tmp{};
-		std::string area_name{};
-		std::string signal_type{};
+        size_t id {};
+        Vec3d tmp {};
+        std::string area_name {};
+        std::string signal_type {};
 
-		std::stringstream sstream(line);
-		bool success =
-			(sstream >> id) &&
-			(sstream >> tmp.x) &&
-			(sstream >> tmp.y) &&
-			(sstream >> tmp.z) &&
-			(sstream >> area_name) &&
-			(sstream >> signal_type);
+        std::stringstream sstream(line);
+        bool success = (sstream >> id) && (sstream >> tmp.x) && (sstream >> tmp.y) && (sstream >> tmp.z) && (sstream >> area_name) && (sstream >> signal_type);
 
-		if (!success) {
-			std::cerr << "Skipping line: \"" << line << "\"\n";
-			continue;
-		}
+        if (!success) {
+            std::cerr << "Skipping line: \"" << line << "\"\n";
+            continue;
+        }
 
-		total_number_neurons++;
+        total_number_neurons++;
 
-		minimum.calculate_componentwise_minimum(tmp);
-		maximum.calculate_componentwise_maximum(tmp);
+        minimum.calculate_componentwise_minimum(tmp);
+        maximum.calculate_componentwise_maximum(tmp);
 
-		if (signal_type == "in") {
-			found_in_neurons++;
-		}
-		else {
-			found_ex_neurons++;
-		}
-	}
+        if (signal_type == "in") {
+            found_in_neurons++;
+        } else {
+            found_ex_neurons++;
+        }
+    }
 
-	{
-		maximum.x = std::nextafter(maximum.x, maximum.x + Constants::eps);
-		maximum.y = std::nextafter(maximum.y, maximum.y + Constants::eps);
-		maximum.z = std::nextafter(maximum.z, maximum.z + Constants::eps);
-	}
+    {
+        maximum.x = std::nextafter(maximum.x, maximum.x + Constants::eps);
+        maximum.y = std::nextafter(maximum.y, maximum.y + Constants::eps);
+        maximum.z = std::nextafter(maximum.z, maximum.z + Constants::eps);
+    }
 
-	partition->set_total_num_neurons(total_number_neurons);
+    partition->set_total_num_neurons(total_number_neurons);
 
-	desired_num_neurons_ = found_ex_neurons + found_in_neurons;
-	desired_frac_neurons_exc_ = static_cast<double>(found_ex_neurons) / static_cast<double>(desired_num_neurons_);
+    desired_num_neurons_ = found_ex_neurons + found_in_neurons;
+    desired_frac_neurons_exc_ = static_cast<double>(found_ex_neurons) / static_cast<double>(desired_num_neurons_);
 
-	simulation_box_length = maximum;
+    simulation_box_length = maximum;
 }
 
 void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position& max, Nodes& nodes) {
-	file.clear();
-	file.seekg(0);
+    file.clear();
+    file.seekg(0);
 
-	double placed_ex_neurons = 0.0;
-	double placed_in_neurons = 0.0;
+    double placed_ex_neurons = 0.0;
+    double placed_in_neurons = 0.0;
 
-	for (std::string line{}; std::getline(file, line);) {
-		// Skip line with comments
-		if (!line.empty() && '#' == line[0]) {
-			continue;
-		}
+    for (std::string line {}; std::getline(file, line);) {
+        // Skip line with comments
+        if (!line.empty() && '#' == line[0]) {
+            continue;
+        }
 
-		std::string signal_type{};
+        std::string signal_type {};
 
-		Node node{};
+        Node node {};
 
-		std::stringstream sstream(line);
-		bool success =
-			(sstream >> node.id) &&
-			(sstream >> node.pos.x) &&
-			(sstream >> node.pos.y) &&
-			(sstream >> node.pos.z) &&
-			(sstream >> node.area_name) &&
-			(sstream >> signal_type);
+        std::stringstream sstream(line);
+        bool success = (sstream >> node.id) && (sstream >> node.pos.x) && (sstream >> node.pos.y) && (sstream >> node.pos.z) && (sstream >> node.area_name) && (sstream >> signal_type);
 
-		if (!success) {
-			std::cerr << "Skipping line: \"" << line << "\"\n";
-			continue;
-		}
+        if (!success) {
+            std::cerr << "Skipping line: \"" << line << "\"\n";
+            continue;
+        }
 
-		// Ids start with 1
-		node.id--;
+        // Ids start with 1
+        node.id--;
 
-		bool is_in_subdomain = position_in_box(node.pos, min, max);
+        bool is_in_subdomain = position_in_box(node.pos, min, max);
 
-		if (!is_in_subdomain) {
-			continue;
-		}
+        if (!is_in_subdomain) {
+            continue;
+        }
 
-		if (signal_type == "ex") {
-			node.signal_type = SynapticElements::SignalType::EXCITATORY;
-			++placed_ex_neurons;
-		}
-		else {
-			node.signal_type = SynapticElements::SignalType::INHIBITORY;
-			++placed_in_neurons;
-		}
+        if (signal_type == "ex") {
+            node.signal_type = SynapticElements::SignalType::EXCITATORY;
+            ++placed_ex_neurons;
+        } else {
+            node.signal_type = SynapticElements::SignalType::INHIBITORY;
+            ++placed_in_neurons;
+        }
 
-		++currently_num_neurons_;
-		nodes.insert(node);
-	}
+        ++currently_num_neurons_;
+        nodes.insert(node);
+    }
 
-	currently_frac_neurons_exc_ = placed_ex_neurons / static_cast<double>(currently_num_neurons_);
+    currently_frac_neurons_exc_ = placed_ex_neurons / static_cast<double>(currently_num_neurons_);
 }
 
 void SubdomainFromFile::neuron_global_ids(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
-	[[maybe_unused]] size_t local_id_start, [[maybe_unused]] size_t local_id_end, std::vector<size_t>& global_ids) const {
+    [[maybe_unused]] size_t local_id_start, [[maybe_unused]] size_t local_id_end, std::vector<size_t>& global_ids) const {
 
-	const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
-	if (!contains) {
-		RelearnException::fail("Wanted to have neuron_global_ids of subdomain_idx that is not present");
-		return;
-	}
+    const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
+    if (!contains) {
+        RelearnException::fail("Wanted to have neuron_global_ids of subdomain_idx that is not present");
+        return;
+    }
 
-	const Nodes& nodes = neurons_in_subdomain.at(subdomain_idx);
-	for (const Node& node : nodes) {
-		global_ids.push_back(node.id);
-	}
+    const Nodes& nodes = neurons_in_subdomain.at(subdomain_idx);
+    for (const Node& node : nodes) {
+        global_ids.push_back(node.id);
+    }
 }
 
 void SubdomainFromFile::fill_subdomain(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains, const Position& min, const Position& max) {
-	const bool subdomain_already_filled = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
-	if (subdomain_already_filled) {
-		RelearnException::fail("Tried to fill an already filled subdomain.");
-		return;
-	}
+    const bool subdomain_already_filled = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
+    if (subdomain_already_filled) {
+        RelearnException::fail("Tried to fill an already filled subdomain.");
+        return;
+    }
 
-	Nodes& nodes = neurons_in_subdomain[subdomain_idx];
+    Nodes& nodes = neurons_in_subdomain[subdomain_idx];
 
-	read_nodes_from_file(min, max, nodes);
+    read_nodes_from_file(min, max, nodes);
 }

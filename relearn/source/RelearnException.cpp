@@ -17,67 +17,67 @@
 bool RelearnException::hide_messages = false;
 
 [[nodiscard]] const char* RelearnException::what() const noexcept {
-	return message.c_str();
+    return message.c_str();
 }
 
 void RelearnException::check(bool condition) {
-	if (condition) {
-		return;
-	}
+    if (condition) {
+        return;
+    }
 
-	fail();
+    fail();
 }
 
 void RelearnException::fail() {
-	if (hide_messages) {
-		throw RelearnException{};
-	}
+    if (hide_messages) {
+        throw RelearnException {};
+    }
 
-	int my_rank = MPIWrapper::my_rank;
-	int num_ranks = MPIWrapper::num_ranks;
+    int my_rank = MPIWrapper::my_rank;
+    int num_ranks = MPIWrapper::num_ranks;
 
-	std::stringstream sstream;
+    std::stringstream sstream;
 
-	sstream
-		<< "There was an error at rank: "
-		<< my_rank
-		<< " of "
-		<< num_ranks
-		<< "!\n"
-		<< "But no error message\n";
+    sstream
+        << "There was an error at rank: "
+        << my_rank
+        << " of "
+        << num_ranks
+        << "!\n"
+        << "But no error message\n";
 
-	std::cerr << sstream.str() << std::flush;
+    std::cerr << sstream.str() << std::flush;
 
-	throw RelearnException{};
+    throw RelearnException {};
 }
 
 void RelearnException::check(bool condition, std::string&& message) {
-	if (condition) {
-		return;
-	}
+    if (condition) {
+        return;
+    }
 
-	fail(std::move(message));
+    fail(std::move(message));
 }
 
 void RelearnException::fail(std::string&& message) {
-	if (hide_messages) {
-		throw RelearnException{};
-	}
-	
-	int my_rank = MPIWrapper::my_rank;
-	int num_ranks = MPIWrapper::num_ranks;
+    if (hide_messages) {
+        throw RelearnException {};
+    }
 
-	std::stringstream sstream;
+    int my_rank = MPIWrapper::my_rank;
+    int num_ranks = MPIWrapper::num_ranks;
 
-	sstream
-		<< "There was an error at rank: "
-		<< my_rank
-		<< " of "
-		<< num_ranks
-		<< "!\n"
-		<< message;
+    std::stringstream sstream;
 
-	std::cerr << sstream.str() << std::flush;
+    sstream
+        << "There was an error at rank: "
+        << my_rank
+        << " of "
+        << num_ranks
+        << "!\n"
+        << message;
 
-	throw RelearnException{ std::move(message) };
+    std::cerr << sstream.str() << std::flush;
+
+    throw RelearnException { std::move(message) };
 }

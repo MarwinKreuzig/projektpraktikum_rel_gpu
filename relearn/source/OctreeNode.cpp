@@ -11,19 +11,19 @@
 #include "OctreeNode.h"
 
 void OctreeNode::print() const {
-	std::cout << "== OctreeNode (" << this << ") ==\n";
+    std::cout << "== OctreeNode (" << this << ") ==\n";
 
-	std::cout << "  children[8]: ";
-	for (const auto * const child : children) {
-		std::cout << child << " ";
-	}
-	std::cout << "\n";
+    std::cout << "  children[8]: ";
+    for (const auto* const child : children) {
+        std::cout << child << " ";
+    }
+    std::cout << "\n";
 
-	std::cout << "  is_parent  : " << is_parent << "\n\n";
-	std::cout << "  rank       : " << rank << "\n";
-	std::cout << "  level      : " << level << "\n\n";
+    std::cout << "  is_parent  : " << is_parent << "\n\n";
+    std::cout << "  rank       : " << rank << "\n";
+    std::cout << "  level      : " << level << "\n\n";
 
-	cell.print();
+    cell.print();
 
-	std::cout << std::endl;
+    std::cout << std::endl;
 }

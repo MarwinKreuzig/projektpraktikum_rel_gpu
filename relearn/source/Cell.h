@@ -19,10 +19,10 @@
 
 class Cell {
 public:
-    enum class DendriteType : char { 
-		EXCITATORY,
-        INHIBITORY 
-	};
+    enum class DendriteType : char {
+        EXCITATORY,
+        INHIBITORY
+    };
 
     struct Dendrites {
         // All dendrites have the same position

@@ -24,25 +24,25 @@
 // and the number of neurons in every individual subdomain.
 class SubdomainFromFile : public NeuronToSubdomainAssignment {
 public:
-	SubdomainFromFile(const std::string &file_path, std::shared_ptr<Partition> partition);
+    SubdomainFromFile(const std::string& file_path, std::shared_ptr<Partition> partition);
 
-	SubdomainFromFile(const SubdomainFromFile& other) = delete;
-	SubdomainFromFile(SubdomainFromFile&& other) = delete;
+    SubdomainFromFile(const SubdomainFromFile& other) = delete;
+    SubdomainFromFile(SubdomainFromFile&& other) = delete;
 
-	SubdomainFromFile& operator=(const SubdomainFromFile& other) = delete;
-	SubdomainFromFile& operator=(SubdomainFromFile&& other) = delete;
+    SubdomainFromFile& operator=(const SubdomainFromFile& other) = delete;
+    SubdomainFromFile& operator=(SubdomainFromFile&& other) = delete;
 
-	~SubdomainFromFile() override = default;
+    ~SubdomainFromFile() override = default;
 
-	void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) override;
+    void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) override;
 
-	void neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
-		size_t local_id_start, size_t local_id_end, std::vector<size_t>& global_ids) const override;
+    void neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
+        size_t local_id_start, size_t local_id_end, std::vector<size_t>& global_ids) const override;
 
 private:
-	void read_dimensions_from_file(std::shared_ptr<Partition> partition);
+    void read_dimensions_from_file(std::shared_ptr<Partition> partition);
 
-	void read_nodes_from_file(const Position& min, const Position& max, Nodes& nodes);
+    void read_nodes_from_file(const Position& min, const Position& max, Nodes& nodes);
 
-	std::ifstream file;
+    std::ifstream file;
 };

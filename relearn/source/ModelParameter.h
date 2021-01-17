@@ -20,35 +20,39 @@
 template <typename T>
 class Parameter {
 public:
-	using value_type = T;
+    using value_type = T;
 
-	Parameter(std::string name, T& value, const T& min, const T& max) : name_{ std::move(name) }, value_{ value }, min_{ min }, max_{ max } {}
+    Parameter(std::string name, T& value, const T& min, const T& max)
+        : name_ { std::move(name) }
+        , value_ { value }
+        , min_ { min }
+        , max_ { max } { }
 
-	[[nodiscard]] const std::string& name() const noexcept {
-		return name_;
-	}
+    [[nodiscard]] const std::string& name() const noexcept {
+        return name_;
+    }
 
-	[[nodiscard]] value_type& value() noexcept {
-		return value_;
-	}
+    [[nodiscard]] value_type& value() noexcept {
+        return value_;
+    }
 
-	[[nodiscard]] const value_type& value() const noexcept {
-		return value_;
-	}
+    [[nodiscard]] const value_type& value() const noexcept {
+        return value_;
+    }
 
-	[[nodiscard]] const value_type& min() const noexcept {
-		return min_;
-	}
+    [[nodiscard]] const value_type& min() const noexcept {
+        return min_;
+    }
 
-	[[nodiscard]] const value_type& max() const noexcept {
-		return max_;
-	}
+    [[nodiscard]] const value_type& max() const noexcept {
+        return max_;
+    }
 
 private:
-	const std::string name_{}; // name of the parameter
-	T& value_{};			   // value of the parameter
-	const T min_{};			   // minimum value of the parameter
-	const T max_{};			   // maximum value of the parameter
+    const std::string name_ {}; // name of the parameter
+    T& value_ {}; // value of the parameter
+    const T min_ {}; // minimum value of the parameter
+    const T max_ {}; // maximum value of the parameter
 };
 
 /**

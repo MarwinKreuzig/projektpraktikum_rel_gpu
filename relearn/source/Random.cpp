@@ -11,6 +11,6 @@
 #include "Random.h"
 
 namespace randomNumberSeeds {
-	int64_t partition;
-	int64_t octree;
+int64_t partition;
+int64_t octree;
 } // namespace randomNumberSeeds

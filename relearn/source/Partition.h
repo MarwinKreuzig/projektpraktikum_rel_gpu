@@ -31,114 +31,114 @@
 
 class Partition {
 public:
-	struct Subdomain {
-		Vec3d xyz_min;
-		Vec3d xyz_max;
+    struct Subdomain {
+        Vec3d xyz_min;
+        Vec3d xyz_max;
 
-		size_t num_neurons{ Constants::uninitialized };
+        size_t num_neurons { Constants::uninitialized };
 
-		// Local start and end neuron id
-		size_t neuron_local_id_start{ Constants::uninitialized };
-		size_t neuron_local_id_end{ Constants::uninitialized };
+        // Local start and end neuron id
+        size_t neuron_local_id_start { Constants::uninitialized };
+        size_t neuron_local_id_end { Constants::uninitialized };
 
-		std::vector<size_t> global_neuron_ids;
+        std::vector<size_t> global_neuron_ids;
 
-		size_t index_1d{ Constants::uninitialized };
+        size_t index_1d { Constants::uninitialized };
 
-		Vec3<size_t> index_3d;
+        Vec3<size_t> index_3d;
 
-		// The octree contains all neurons in
-		// this subdomain. It is only used as a container
-		// for the neurons
-		Octree octree;
-	};
+        // The octree contains all neurons in
+        // this subdomain. It is only used as a container
+        // for the neurons
+        Octree octree;
+    };
 
-	Partition(size_t num_ranks, size_t my_rank);
+    Partition(size_t num_ranks, size_t my_rank);
 
-	~Partition() = default;
+    ~Partition() = default;
 
-	Partition(const Partition& other) = delete;
-	Partition(Partition&& other) = default;
+    Partition(const Partition& other) = delete;
+    Partition(Partition&& other) = default;
 
-	Partition& operator=(const Partition& other) = delete;
-	Partition& operator=(Partition&& other) = default;
+    Partition& operator=(const Partition& other) = delete;
+    Partition& operator=(Partition&& other) = default;
 
-	void print_my_subdomains_info_rank(int rank);
+    void print_my_subdomains_info_rank(int rank);
 
-	[[nodiscard]] bool is_neuron_local(size_t neuron_id) const;
+    [[nodiscard]] bool is_neuron_local(size_t neuron_id) const;
 
-	[[nodiscard]] std::shared_ptr<Neurons> load_neurons(std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain, std::unique_ptr<NeuronModels> neuron_models);
+    [[nodiscard]] std::shared_ptr<Neurons> load_neurons(std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain, std::unique_ptr<NeuronModels> neuron_models);
 
-	[[nodiscard]] size_t get_my_num_neurons() const {
-		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
-		return my_num_neurons;
-	}
+    [[nodiscard]] size_t get_my_num_neurons() const {
+        RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
+        return my_num_neurons;
+    }
 
-	[[nodiscard]] size_t get_my_num_subdomains() const noexcept {
-		return my_num_subdomains;
-	}
+    [[nodiscard]] size_t get_my_num_subdomains() const noexcept {
+        return my_num_subdomains;
+    }
 
-	[[nodiscard]] std::tuple<Vec3d, Vec3d> get_simulation_box_size() const {
-		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
-		Vec3d min{ 0 };
-		Vec3d max{ simulation_box_length };
+    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_simulation_box_size() const {
+        RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
+        Vec3d min { 0 };
+        Vec3d max { simulation_box_length };
 
-		return std::make_tuple(min, max);
-	}
+        return std::make_tuple(min, max);
+    }
 
-	[[nodiscard]] Octree& get_subdomain_tree(size_t subdomain_id) {
-		RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
-		RelearnException::check(subdomain_id < my_num_subdomains);
+    [[nodiscard]] Octree& get_subdomain_tree(size_t subdomain_id) {
+        RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
+        RelearnException::check(subdomain_id < my_num_subdomains);
 
-		return subdomains[subdomain_id].octree;
-	}
+        return subdomains[subdomain_id].octree;
+    }
 
-	[[nodiscard]] size_t get_my_subdomain_id_start() const noexcept {
-		return my_subdomain_id_start;
-	}
+    [[nodiscard]] size_t get_my_subdomain_id_start() const noexcept {
+        return my_subdomain_id_start;
+    }
 
-	[[nodiscard]] size_t get_my_subdomain_id_end() const noexcept {
-		return my_subdomain_id_end;
-	}
+    [[nodiscard]] size_t get_my_subdomain_id_end() const noexcept {
+        return my_subdomain_id_end;
+    }
 
-	[[nodiscard]] size_t get_level_of_subdomain_trees() const noexcept {
-		return level_of_subdomain_trees;
-	}
+    [[nodiscard]] size_t get_level_of_subdomain_trees() const noexcept {
+        return level_of_subdomain_trees;
+    }
 
-	[[nodiscard]] size_t get_total_num_subdomains() const noexcept {
-		return total_num_subdomains;
-	}
+    [[nodiscard]] size_t get_total_num_subdomains() const noexcept {
+        return total_num_subdomains;
+    }
 
-	[[nodiscard]] size_t get_num_subdomains_per_dimension() const noexcept {
-		return num_subdomains_per_dimension;
-	}
+    [[nodiscard]] size_t get_num_subdomains_per_dimension() const noexcept {
+        return num_subdomains_per_dimension;
+    }
 
-	[[nodiscard]] size_t get_subdomain_id_from_pos(const Vec3d& pos) const;
+    [[nodiscard]] size_t get_subdomain_id_from_pos(const Vec3d& pos) const;
 
-	[[nodiscard]] size_t get_global_id(size_t local_id) const;
+    [[nodiscard]] size_t get_global_id(size_t local_id) const;
 
-	[[nodiscard]] size_t get_local_id(size_t global_id) const;
+    [[nodiscard]] size_t get_local_id(size_t global_id) const;
 
-	[[nodiscard]] size_t get_total_num_neurons() const noexcept;
+    [[nodiscard]] size_t get_total_num_neurons() const noexcept;
 
-	void set_total_num_neurons(size_t total_num) noexcept;
+    void set_total_num_neurons(size_t total_num) noexcept;
 
 protected:
-	bool neurons_loaded;
+    bool neurons_loaded;
 
-	size_t total_num_neurons;
-	size_t my_num_neurons;
+    size_t total_num_neurons;
+    size_t my_num_neurons;
 
-	size_t total_num_subdomains;
-	size_t num_subdomains_per_dimension;
-	size_t level_of_subdomain_trees;
+    size_t total_num_subdomains;
+    size_t num_subdomains_per_dimension;
+    size_t level_of_subdomain_trees;
 
-	size_t my_num_subdomains;
-	size_t my_subdomain_id_start;
-	size_t my_subdomain_id_end;
+    size_t my_num_subdomains;
+    size_t my_subdomain_id_start;
+    size_t my_subdomain_id_end;
 
-	Vec3d simulation_box_length;
+    Vec3d simulation_box_length;
 
-	std::vector<Subdomain> subdomains;
-	SpaceFillingCurve<Morton> space_curve;
+    std::vector<Subdomain> subdomains;
+    SpaceFillingCurve<Morton> space_curve;
 };
