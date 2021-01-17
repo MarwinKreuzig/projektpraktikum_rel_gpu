@@ -30,13 +30,13 @@ Octree::Octree()
     random_number_generator.seed(randomNumberSeeds::octree);
 }
 
-Octree::Octree(std::shared_ptr<Partition> part, const Parameters& params)
+Octree::Octree(std::shared_ptr<Partition> part, double acceptance_criterion, double sigma, size_t max_num_pending_vacant_axons)
     : root_level(0)
-    , acceptance_criterion(params.accept_criterion)
-    , sigma(params.sigma)
-    , naive_method(params.naive_method)
+    , acceptance_criterion(acceptance_criterion)
+    , sigma(sigma)
+    , naive_method(acceptance_criterion == 0.0)
     , level_of_branch_nodes(part->get_level_of_subdomain_trees())
-    , max_num_pending_vacant_axons(params.max_num_pending_vacant_axons)
+    , max_num_pending_vacant_axons(max_num_pending_vacant_axons)
     , mpi_rma_node_allocator(MPIWrapper::mpi_rma_mem_allocator)
     , random_number_generator(RandomHolder<Octree>::get_random_generator())
     , random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {

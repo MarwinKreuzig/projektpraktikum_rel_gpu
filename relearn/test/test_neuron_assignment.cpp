@@ -546,7 +546,7 @@ TEST(TestRandomNeuronPlacement, test_reloading) {
 
 		auto num_neurons = positions.size();
 
-		SubdomainFromFile sff{ "neurons.tmp", part };
+		SubdomainFromFile sff{ "neurons.tmp", *part };
 
 		std::vector<Vec3d> loaded_positions;
 		std::vector<std::string> loaded_area_names;
@@ -598,7 +598,7 @@ TEST(TestRandomNeuronPlacement, test_reloading_multiple) {
 
 		auto num_neurons = positions.size();
 
-		SubdomainFromFile sff{ "neurons.tmp", part };
+		SubdomainFromFile sff{ "neurons.tmp", *part };
 
 		std::array<std::vector<Vec3d>, 8> loaded_positions;
 		std::array<std::vector<std::string>, 8> loaded_area_names;
@@ -696,7 +696,7 @@ TEST(TestNeuronPlacementStoreLoad, test_neuron_placement_store_and_load) {
 
 	auto part = std::make_shared<Partition>(1, 0);
 	// load from file
-	SubdomainFromFile sdff{ file, part };
+        SubdomainFromFile sdff{ file, *part };
 	// fill_subdomain from file
 	sdff.fill_subdomain(subdomain_id, 1, Vec3d{ 0 }, Vec3d{ sdff.simulation_box_length.get_maximum() });
 

@@ -243,7 +243,7 @@ private:
     Octree();
 
 public:
-    Octree(std::shared_ptr<Partition> part, const Parameters& params);
+    Octree(std::shared_ptr<Partition> part, double acceptance_criterion, double sigma, size_t max_num_pending_vacant_axons);
     ~Octree() /*noexcept(false)*/;
 
     Octree(const Octree& other) = delete;

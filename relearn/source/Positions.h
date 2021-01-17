@@ -19,9 +19,7 @@
 class Positions {
 
 public:
-    explicit Positions() {
-    }
-
+    explicit Positions() = default;
     ~Positions() = default;
 
     Positions(const Positions& other) = delete;

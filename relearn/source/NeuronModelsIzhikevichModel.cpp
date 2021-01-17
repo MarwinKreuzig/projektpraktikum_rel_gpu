@@ -35,14 +35,14 @@ IzhikevichModel::IzhikevichModel(double k, double tau_C, double beta, unsigned i
 [[nodiscard]] std::vector<ModelParameter> IzhikevichModel::get_parameter() {
     auto res{ NeuronModels::get_parameter() };
     res.reserve(res.size() + 8);
-    res.emplace_back(Parameter<double>{ "a", a, 0., 1. });
-    res.emplace_back(Parameter<double>{ "b", b, 0., 1. });
-    res.emplace_back(Parameter<double>{ "c", c, -150., -50. });
-    res.emplace_back(Parameter<double>{ "d", d, 0., 10. });
-    res.emplace_back(Parameter<double>{ "V_spike", V_spike, 0., 100. });
-    res.emplace_back(Parameter<double>{ "k1", k1, 0., 1. });
-    res.emplace_back(Parameter<double>{ "k2", k2, 0., 10. });
-    res.emplace_back(Parameter<double>{ "k3", k3, 50., 200. });
+    res.emplace_back(Parameter<double>{ "a", a, IzhikevichModel::min_a, IzhikevichModel::max_a });
+    res.emplace_back(Parameter<double>{ "b", b, IzhikevichModel::min_b, IzhikevichModel::max_b });
+    res.emplace_back(Parameter<double>{ "c", c, IzhikevichModel::min_c, IzhikevichModel::max_c });
+    res.emplace_back(Parameter<double>{ "d", d, IzhikevichModel::min_d, IzhikevichModel::max_d });
+    res.emplace_back(Parameter<double>{ "V_spike", V_spike, IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike});
+    res.emplace_back(Parameter<double>{ "k1", k1, IzhikevichModel::min_k1, IzhikevichModel::max_k1 });
+    res.emplace_back(Parameter<double>{ "k2", k2, IzhikevichModel::min_k2, IzhikevichModel::max_k2 });
+    res.emplace_back(Parameter<double>{ "k3", k3, IzhikevichModel::min_k3, IzhikevichModel::max_k3 });
     return res;
 }
 

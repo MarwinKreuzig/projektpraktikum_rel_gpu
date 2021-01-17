@@ -30,9 +30,9 @@ ModelA::ModelA(double k, double tau_C, double beta, unsigned int h, const double
 [[nodiscard]] std::vector<ModelParameter> ModelA::get_parameter() {
     auto res{ NeuronModels::get_parameter() };
     res.reserve(res.size() + 3);
-    res.emplace_back(Parameter<double>{ "x_0", x_0, 0., 1. });
-    res.emplace_back(Parameter<double>{ "tau_x", tau_x, 0., 1000. });
-    res.emplace_back(Parameter<unsigned int>{ "refrac_time", refrac_time, 0, 1000 });
+    res.emplace_back(Parameter<double>{ "x_0", x_0, ModelA::min_x_0, ModelA::max_x_0 });
+    res.emplace_back(Parameter<double>{ "tau_x", tau_x, ModelA::min_tau_x, ModelA::max_tau_x });
+    res.emplace_back(Parameter<unsigned int>{ "refrac_time", refrac_time, ModelA::min_refrac_time, ModelA::max_refrac_time });
     return res;
 }
 

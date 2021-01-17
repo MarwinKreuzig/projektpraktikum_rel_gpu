@@ -13,8 +13,8 @@
 #include "Cell.h"
 #include "Commons.h"
 #include "LogFiles.h"
-#include "ModelParameter.h"
 #include "MPIWrapper.h"
+#include "ModelParameter.h"
 #include "NetworkGraph.h"
 #include "NeuronIdMap.h"
 #include "Octree.h"
@@ -286,7 +286,7 @@ public:
 	 */
     using MapSynapseDeletionRequests = std::map<int, SynapseDeletionRequests>;
 
-    Neurons(const Partition& partition)
+    explicit Neurons(const Partition& partition)
         : Neurons{ partition, NeuronModels::create<models::ModelA>() } {
     }
 

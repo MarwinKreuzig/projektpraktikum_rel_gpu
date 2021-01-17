@@ -30,9 +30,9 @@ double FitzHughNagumoModel::get_secondary_variable(const size_t i) const noexcep
 std::vector<ModelParameter> FitzHughNagumoModel::get_parameter() {
     auto res{ NeuronModels::get_parameter() };
     res.reserve(res.size() + 3);
-    res.emplace_back(Parameter<double>{ "a", a, 0., 5. });
-    res.emplace_back(Parameter<double>{ "b", b, 0., 5. });
-    res.emplace_back(Parameter<double>{ "phi", phi, 0., .3 });
+    res.emplace_back(Parameter<double>{ "a", a, FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a });
+    res.emplace_back(Parameter<double>{ "b", b, FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b });
+    res.emplace_back(Parameter<double>{ "phi", phi, FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi });
     return res;
 }
 

@@ -160,6 +160,16 @@ protected:
     static constexpr double default_beta{ 0.001 }; //very old 0.05;
     static constexpr unsigned int default_h{ 10 };
 
+    static constexpr double min_k{ 0.0 };
+    static constexpr double min_tau_C{ 0 };
+    static constexpr double min_beta{ 0.0 };
+    static constexpr unsigned int min_h{ 0 };
+
+    static constexpr double max_k{ 1.0 };
+    static constexpr double max_tau_C{ 10.0e+6 };
+    static constexpr double max_beta{ 1.0 };
+    static constexpr unsigned int max_h{ 1000 };
+
     // My local number of neurons
     size_t my_num_neurons;
 
@@ -210,6 +220,14 @@ private:
     static constexpr double default_x_0{ 0.05 };
     static constexpr double default_tau_x{ 5.0 };
     static constexpr unsigned int default_refrac_time{ 4 };
+
+    static constexpr double min_x_0{ 0.0 };
+    static constexpr double min_tau_x{ 0.0 };
+    static constexpr unsigned int min_refrac_time{ 0 };
+
+    static constexpr double max_x_0{ 1.0 };
+    static constexpr double max_tau_x{ 1000.0 };
+    static constexpr unsigned int max_refrac_time{ 1000 };
 
     std::vector<unsigned int> refrac; // refractory time
 
@@ -271,6 +289,24 @@ private:
     static constexpr double default_k2{ 5.0 };
     static constexpr double default_k3{ 140.0 };
 
+    static constexpr double min_a{ 0.0 };
+    static constexpr double min_b{ 0.0 };
+    static constexpr double min_c{ -150.0 };
+    static constexpr double min_d{ 0.0 };
+    static constexpr double min_V_spike{ 0.0 };
+    static constexpr double min_k1{ 0.0 };
+    static constexpr double min_k2{ 0.0 };
+    static constexpr double min_k3{ 50.0 };
+
+    static constexpr double max_a{ 1.0 };
+    static constexpr double max_b{ 1.0 };
+    static constexpr double max_c{ -50.0 };
+    static constexpr double max_d{ 10.0 };
+    static constexpr double max_V_spike{ 100.0 };
+    static constexpr double max_k1{ 1.0 };
+    static constexpr double max_k2{ 10.0 };
+    static constexpr double max_k3{ 200.0 };
+
     std::vector<double> u; // membrane recovery
 
     double a; // time-scale of membrane recovery u
@@ -321,6 +357,14 @@ private:
     static constexpr double default_a{ 0.7 };
     static constexpr double default_b{ 0.8 };
     static constexpr double default_phi{ 0.08 };
+
+    static constexpr double min_a{ 0.7 };
+    static constexpr double min_b{ 0.8 };
+    static constexpr double min_phi{ 0.08 };
+
+    static constexpr double max_a{ 0.7 };
+    static constexpr double max_b{ 0.8 };
+    static constexpr double max_phi{ 0.08 };
 
     std::vector<double> w; // recovery variable
 
@@ -377,6 +421,26 @@ private:
     static constexpr double default_a{ 4.0 };
     static constexpr double default_b{ 0.0805 };
     static constexpr double default_V_peak{ 20.0 };
+
+    static constexpr double min_C{ 100.0 };
+    static constexpr double min_g_L{ 0.0 };
+    static constexpr double min_E_L{ -150.0 };
+    static constexpr double min_V_T{ -150.0 };
+    static constexpr double min_d_T{ 0.0 };
+    static constexpr double min_tau_w{ 100.0 };
+    static constexpr double min_a{ 0.0 };
+    static constexpr double min_b{ 0.0 };
+    static constexpr double min_V_peak{ 0.0 };
+
+    static constexpr double max_C{ 500.0 };
+    static constexpr double max_g_L{ 100.0 };
+    static constexpr double max_E_L{ -20.0 };
+    static constexpr double max_V_T{ 0.0 };
+    static constexpr double max_d_T{ 10.0 };
+    static constexpr double max_tau_w{ 200.0 };
+    static constexpr double max_a{ 10.0 };
+    static constexpr double max_b{ 0.3 };
+    static constexpr double max_V_peak{ 70.0 };
 
     std::vector<double> w; // adaption variable
 

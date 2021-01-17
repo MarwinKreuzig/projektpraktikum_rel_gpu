@@ -10,8 +10,8 @@
 
 #pragma once
 
-#include "ModelParameter.h"
 #include "MPIWrapper.h"
+#include "ModelParameter.h"
 #include "RelearnException.h"
 
 #include <cmath>
@@ -59,10 +59,10 @@ public:
 
     std::vector<ModelParameter> get_parameter() {
         return {
-            Parameter<double>{ "Minimum calcium to grow", min_C_level_to_grow, 0.0, 10.0 },
-            Parameter<double>{ "Target calcium", C_target, 0.0, 100.0 },
-            Parameter<double>{ "nu", nu, 0.0, 1.0 },
-            Parameter<double>{ "Vacant synapse retract ratio", vacant_retract_ratio, 0.0, 1.0 },
+            Parameter<double>{ "Minimum calcium to grow", min_C_level_to_grow, SynapticElements::min_min_C_level_to_grow, SynapticElements::max_min_C_level_to_grow },
+            Parameter<double>{ "Target calcium", C_target, SynapticElements::min_C_target, SynapticElements::max_C_target },
+            Parameter<double>{ "nu", nu, SynapticElements::min_nu, SynapticElements::max_nu },
+            Parameter<double>{ "Vacant synapse retract ratio", vacant_retract_ratio, SynapticElements::min_vacant_retract_ratio, SynapticElements::max_vacant_retract_ratio },
         };
     }
 
@@ -163,6 +163,16 @@ public:
     static constexpr double default_eta_Dendrites_inh{ 0.0 };
     static constexpr double default_nu{ 1e-4 }; // gold 1e-5; // element growth rate
     static constexpr double default_vacant_retract_ratio{ 0 };
+
+    static constexpr double min_min_C_level_to_grow{ 0.0 };
+    static constexpr double min_C_target{ 0.0 };
+    static constexpr double min_nu{ 0.0 };
+    static constexpr double min_vacant_retract_ratio{ 0.0 };
+
+    static constexpr double max_min_C_level_to_grow{ 10.0 };
+    static constexpr double max_C_target{ 100.0 };
+    static constexpr double max_nu{ 1.0 };
+    static constexpr double max_vacant_retract_ratio{ 1.0 };
 
 private:
     ElementType type; // Denotes the type of all synaptic elements, which is AXON or DENDRITE

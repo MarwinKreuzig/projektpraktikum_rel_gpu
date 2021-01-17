@@ -60,7 +60,7 @@ void Simulation::place_random_neurons(size_t num_neurons, double frac_exc) {
 }
 
 void Simulation::load_neurons_from_file(const std::string& path_to_positions) {
-    neuron_to_subdomain_assignment = std::make_unique<SubdomainFromFile>(path_to_positions, partition);
+    neuron_to_subdomain_assignment = std::make_unique<SubdomainFromFile>(path_to_positions, *partition);
     initialize();
 }
 
@@ -205,7 +205,7 @@ void Simulation::initialize() {
         neurons->get_positions().get_y_dims(),
         neurons->get_positions().get_z_dims());
 
-    global_tree = std::make_unique<Octree>(partition, *parameters);
+    global_tree = std::make_unique<Octree>(partition, parameters->accept_criterion, parameters->sigma, parameters->max_num_pending_vacant_axons);
     global_tree->set_no_free_in_destructor(); // This needs to be changed later, as it's cleaner to free the nodes at destruction
 
     // Insert my local (subdomain) trees into my global tree

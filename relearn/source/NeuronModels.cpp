@@ -182,10 +182,10 @@ std::vector<std::unique_ptr<NeuronModels>> NeuronModels::get_models() {
 
 std::vector<ModelParameter> NeuronModels::get_parameter() {
     return {
-        Parameter<double>{ "k", k, 0., 1. },
-        Parameter<double>{ "tau_C", tau_C, 0., 10.e+6 },
-        Parameter<double>{ "beta", beta, 0., 1. },
-        Parameter<unsigned int>{ "Number integration steps", h, 0, 1000 },
+        Parameter<double>{ "k", k, NeuronModels::min_k, NeuronModels::max_k },
+        Parameter<double>{ "tau_C", tau_C, NeuronModels::min_tau_C, NeuronModels::max_tau_C },
+        Parameter<double>{ "beta", beta, NeuronModels::min_beta, NeuronModels::max_beta },
+        Parameter<unsigned int>{ "Number integration steps", h, NeuronModels::min_h, NeuronModels::max_h },
     };
 }
 
