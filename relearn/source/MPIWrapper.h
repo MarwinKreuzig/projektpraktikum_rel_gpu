@@ -65,7 +65,7 @@ private:
 
     static void free_custom_function();
 
-    static MPI_RMA_MemAllocator<OctreeNode> mpi_rma_mem_allocator;
+    static MPI_RMA_MemAllocator mpi_rma_mem_allocator;
     static RMABufferOctreeNodes rma_buffer_branch_nodes;
 
     static size_t num_ranks; // Number of ranks in MPI_COMM_WORLD
@@ -95,9 +95,9 @@ public:
 
     static void barrier(Scope scope);
 
-    static double reduce(double value, ReduceFunction function, int root_rank, Scope scope);
+    [[nodiscard]] static double reduce(double value, ReduceFunction function, int root_rank, Scope scope);
 
-    static double all_reduce(double value, ReduceFunction function, Scope scope);
+    [[nodiscard]] static double all_reduce(double value, ReduceFunction function, Scope scope);
 
     static void all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst, Scope scope);
 
@@ -157,57 +157,37 @@ public:
         RelearnException::check(errorcode == 0, "Error in get");
     }
 
-    static MPI_Aint get_ptr_displacement(int target_rank, const OctreeNode* ptr);
+    [[nodiscard]] static MPI_Aint get_ptr_displacement(int target_rank, const OctreeNode* ptr);
 
-    static OctreeNode* new_octree_node();
-    
-    static size_t get_num_ranks() {
-        return num_ranks;
-    }
+    [[nodiscard]] static OctreeNode* new_octree_node();
 
-    static size_t get_my_rank() {
-        return my_rank;
-    }
+    [[nodiscard]] static size_t get_num_ranks();
 
-    static size_t get_num_neurons() {
-        return num_neurons;
-    }
+    [[nodiscard]] static size_t get_my_rank();
 
-    static size_t get_my_num_neurons() {
-        return my_num_neurons;
-    }
+    [[nodiscard]] static size_t get_num_neurons();
 
-    static size_t get_my_neuron_id_start() {
-        return my_neuron_id_start;
-    }
+    [[nodiscard]] static size_t get_my_num_neurons();
 
-    static size_t get_my_neuron_id_end() {
-        return my_neuron_id_end;
-    }
+    [[nodiscard]] static size_t get_my_neuron_id_start();
 
-    static size_t get_num_avail_objects() {
-        return mpi_rma_mem_allocator.get_min_num_avail_objects();
-    }
+    [[nodiscard]] static size_t get_my_neuron_id_end();
 
-    static OctreeNode* get_buffer_octree_nodes() {
-        return rma_buffer_branch_nodes.ptr;
-    }
+    [[nodiscard]] static size_t get_num_avail_objects();
 
-    static size_t get_num_buffer_octree_nodes() {
-        return rma_buffer_branch_nodes.num_nodes;
-    }
+    [[nodiscard]] static OctreeNode* get_buffer_octree_nodes();
 
-    static std::string get_my_rank_str() {
-        return my_rank_str;
-    }
+    [[nodiscard]] static size_t get_num_buffer_octree_nodes();
+
+    [[nodiscard]] static std::string get_my_rank_str();
 
     static void delete_octree_node(OctreeNode* ptr);
 
     static void wait_request(AsyncToken& request);
 
-    static AsyncToken get_non_null_request();
+    [[nodiscard]] static AsyncToken get_non_null_request();
 
-    static AsyncToken get_null_request();
+    [[nodiscard]] static AsyncToken get_null_request();
 
     static void all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs);
 

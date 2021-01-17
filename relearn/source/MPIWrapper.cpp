@@ -53,7 +53,7 @@ int MPIWrapper::thread_level_provided; // Thread level provided by MPI
 
 std::string MPIWrapper::my_rank_str;
 
-MPI_RMA_MemAllocator<OctreeNode> MPIWrapper::mpi_rma_mem_allocator;
+MPI_RMA_MemAllocator MPIWrapper::mpi_rma_mem_allocator;
 
 MPIWrapper::RMABufferOctreeNodes MPIWrapper::rma_buffer_branch_nodes;
 
@@ -139,11 +139,10 @@ void MPIWrapper::init_neurons(size_t num_neurons) {
 }
 
 void MPIWrapper::init_buffer_octree(size_t num_partitions) {
-    rma_buffer_branch_nodes.num_nodes = num_partitions;
-
     mpi_rma_mem_allocator.init(Constants::mpi_alloc_mem);
-    rma_buffer_branch_nodes.ptr = mpi_rma_mem_allocator.get_block_of_objects_memory(num_partitions);
-    mpi_rma_mem_allocator.init_free_object_list();
+
+    rma_buffer_branch_nodes.num_nodes = num_partitions;
+    rma_buffer_branch_nodes.ptr = mpi_rma_mem_allocator.get_root_nodes_for_local_trees(num_partitions);
 }
 
 void MPIWrapper::barrier(Scope scope) {
@@ -153,7 +152,7 @@ void MPIWrapper::barrier(Scope scope) {
     RelearnException::check(errorcode == 0, "Error in barrier");
 }
 
-double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, Scope scope) {
+[[nodiscard]] double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, Scope scope) {
     MPI_Comm mpi_scope = translate_scope(scope);
     MPI_Op mpi_reduce_function = translate_reduce_function(function);
 
@@ -165,7 +164,7 @@ double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, 
     return result;
 }
 
-double MPIWrapper::all_reduce(double value, ReduceFunction function, Scope scope) {
+[[nodiscard]] double MPIWrapper::all_reduce(double value, ReduceFunction function, Scope scope) {
     MPI_Comm mpi_scope = translate_scope(scope);
     MPI_Op mpi_reduce_function = translate_reduce_function(function);
 
@@ -190,14 +189,54 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
     RelearnException::check(errorcode == 0, "Error in all to all, mpi");
 }
 
-MPI_Aint MPIWrapper::get_ptr_displacement(int target_rank, const OctreeNode* ptr) {
+[[nodiscard]] MPI_Aint MPIWrapper::get_ptr_displacement(int target_rank, const OctreeNode* ptr) {
     const std::vector<MPI_Aint>& base_ptrs = mpi_rma_mem_allocator.get_base_pointers();
     const auto displacement = MPI_Aint(ptr) - MPI_Aint(base_ptrs[target_rank]);
     return displacement;
 }
 
-OctreeNode* MPIWrapper::new_octree_node() {
+[[nodiscard]] OctreeNode* MPIWrapper::new_octree_node() {
     return mpi_rma_mem_allocator.new_octree_node();
+}
+
+[[nodiscard]] size_t MPIWrapper::get_num_ranks() {
+    return num_ranks;
+}
+
+[[nodiscard]] size_t MPIWrapper::get_my_rank() {
+    return my_rank;
+}
+
+[[nodiscard]] size_t MPIWrapper::get_num_neurons() {
+    return num_neurons;
+}
+
+[[nodiscard]] size_t MPIWrapper::get_my_num_neurons() {
+    return my_num_neurons;
+}
+
+[[nodiscard]] size_t MPIWrapper::get_my_neuron_id_start() {
+    return my_neuron_id_start;
+}
+
+[[nodiscard]] size_t MPIWrapper::get_my_neuron_id_end() {
+    return my_neuron_id_end;
+}
+
+[[nodiscard]] size_t MPIWrapper::get_num_avail_objects() {
+    return mpi_rma_mem_allocator.get_min_num_avail_objects();
+}
+
+[[nodiscard]] OctreeNode* MPIWrapper::get_buffer_octree_nodes() {
+    return rma_buffer_branch_nodes.ptr;
+}
+
+[[nodiscard]] size_t MPIWrapper::get_num_buffer_octree_nodes() {
+    return rma_buffer_branch_nodes.num_nodes;
+}
+
+[[nodiscard]] std::string MPIWrapper::get_my_rank_str() {
+    return my_rank_str;
 }
 
 void MPIWrapper::delete_octree_node(OctreeNode* ptr) {
@@ -212,12 +251,12 @@ void MPIWrapper::wait_request(AsyncToken& request) {
     }
 }
 
-MPIWrapper::AsyncToken MPIWrapper::get_non_null_request() {
+[[nodiscard]] MPIWrapper::AsyncToken MPIWrapper::get_non_null_request() {
     // NOLINTNEXTLINE
     return (AsyncToken)(!MPI_REQUEST_NULL);
 }
 
-MPIWrapper::AsyncToken MPIWrapper::get_null_request() {
+[[nodiscard]] MPIWrapper::AsyncToken MPIWrapper::get_null_request() {
     // NOLINTNEXTLINE
     return (AsyncToken)(MPI_REQUEST_NULL);
 }
@@ -251,7 +290,7 @@ void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
     MPI_Waitall(tokens.size(), tokens.data(), MPI_STATUSES_IGNORE);
 }
 
-MPI_Op MPIWrapper::translate_reduce_function(ReduceFunction rf) {
+[[nodiscard]] MPI_Op MPIWrapper::translate_reduce_function(ReduceFunction rf) {
     // NOLINTNEXTLINE
     auto mpi_reduce_function = MPI_Op(0);
 
@@ -279,7 +318,7 @@ MPI_Op MPIWrapper::translate_reduce_function(ReduceFunction rf) {
     return mpi_reduce_function;
 }
 
-MPI_Comm MPIWrapper::translate_scope(Scope scope) {
+[[nodiscard]] MPI_Comm MPIWrapper::translate_scope(Scope scope) {
     // NOLINTNEXTLINE
     auto mpi_scope = MPI_Comm(0);
 
@@ -324,8 +363,8 @@ void MPIWrapper::finalize() /*noexcept*/ {
     free_custom_function();
 
     // Free RMA window (MPI collective)
-     mpi_rma_mem_allocator.free_rma_window();
-     mpi_rma_mem_allocator.deallocate_rma_mem();
+    mpi_rma_mem_allocator.free_rma_window();
+    mpi_rma_mem_allocator.deallocate_rma_mem();
 
     const int errorcode = MPI_Finalize();
     RelearnException::check(errorcode == 0, "Error in finalize");
