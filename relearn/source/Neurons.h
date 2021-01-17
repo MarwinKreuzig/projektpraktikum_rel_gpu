@@ -399,16 +399,16 @@ private:
 
     void debug_check_counts();
 
-	template<typename T>
-	[[nodiscard]] StatisticalMeasures<T> global_statistics(const T* local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root, MPIWrapper::Scope scope) {
-		const double my_avg = std::accumulate(local_values, local_values + num_neurons, 0.0)
-							  / total_num_values;
+    template <typename T>
+    [[nodiscard]] StatisticalMeasures<T> global_statistics(const T* local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root, MPIWrapper::Scope scope) {
+        const double my_avg = std::accumulate(local_values, local_values + num_neurons, 0.0)
+            / total_num_values;
 
-		// Get global min and max at rank "root"
-		const auto [d_my_min, d_my_max] = [&]() -> std::tuple<double, double> {
-			const auto result = std::minmax_element(local_values, local_values + num_neurons);
-			return { static_cast<double>(*result.first), static_cast<double>(*result.second) };
-		}();
+        // Get global min and max at rank "root"
+        const auto [d_my_min, d_my_max] = [&]() -> std::tuple<double, double> {
+            const auto result = std::minmax_element(local_values, local_values + num_neurons);
+            return { static_cast<double>(*result.first), static_cast<double>(*result.second) };
+        }();
 
         const double d_min = MPIWrapper::reduce(d_my_min, MPIWrapper::ReduceFunction::min, root, scope);
         const double d_max = MPIWrapper::reduce(d_my_max, MPIWrapper::ReduceFunction::max, root, scope);
@@ -419,15 +419,15 @@ private:
         /**
 		* Calc variance
 		*/
-		const double my_var = std::transform_reduce(local_values,
-												  local_values + num_neurons,
-												  0.0,
-												  std::plus{},
-												  [&](auto& v) { const auto res = v - avg; return res * res; })
-							/ total_num_values;
+        const double my_var = std::transform_reduce(local_values,
+                                  local_values + num_neurons,
+                                  0.0,
+                                  std::plus{},
+                                  [&](auto& v) { const auto res = v - avg; return res * res; })
+            / total_num_values;
 
-		// Get global variance at rank "root"
-		const double var = MPIWrapper::reduce(my_var, MPIWrapper::ReduceFunction::sum, root, scope);
+        // Get global variance at rank "root"
+        const double var = MPIWrapper::reduce(my_var, MPIWrapper::ReduceFunction::sum, root, scope);
 
         // Calc standard deviation
         const double std = sqrt(var);

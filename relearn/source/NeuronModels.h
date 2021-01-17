@@ -151,7 +151,7 @@ public:
     [[nodiscard]] virtual std::string name() = 0;
 
 protected:
-	virtual void update_activity(size_t i) = 0;
+    virtual void update_activity(size_t i) = 0;
 
     virtual void init_neurons() = 0;
 
@@ -189,23 +189,23 @@ public:
 
     [[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
-		[[nodiscard]] double get_secondary_variable(size_t i) const noexcept final;
+    [[nodiscard]] double get_secondary_variable(size_t i) const noexcept final;
 
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
-		[[nodiscard]] std::string name() final;
+    [[nodiscard]] std::string name() final;
 
     void init(size_t num_neurons) final;
 
-	protected:
-		void update_activity(size_t i) final;
+protected:
+    void update_activity(size_t i) final;
 
     void init_neurons() final;
 
-	private:
-		[[nodiscard]] double iter_x(double x, double I_syn) const noexcept;
+private:
+    [[nodiscard]] double iter_x(double x, double I_syn) const noexcept;
 
-		[[nodiscard]] bool theta(double x);
+    [[nodiscard]] bool theta(double x);
 
     static constexpr double default_x_0{ 0.05 };
     static constexpr double default_tau_x{ 5.0 };
@@ -242,25 +242,25 @@ public:
 
     [[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
-		[[nodiscard]] double get_secondary_variable(size_t i) const noexcept final;
+    [[nodiscard]] double get_secondary_variable(size_t i) const noexcept final;
 
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
-		[[nodiscard]] std::string name() final;
+    [[nodiscard]] std::string name() final;
 
     void init(size_t num_neurons) final;
 
-	protected:
-		void update_activity(size_t i) final;
+protected:
+    void update_activity(size_t i) final;
 
     void init_neurons() final;
 
-	private:
-		[[nodiscard]] double iter_x(double x, double u, double I_syn) const noexcept;
+private:
+    [[nodiscard]] double iter_x(double x, double u, double I_syn) const noexcept;
 
-		[[nodiscard]] double iter_refrac(double u, double x) const noexcept;
+    [[nodiscard]] double iter_refrac(double u, double x) const noexcept;
 
-		[[nodiscard]] bool spiked(double x) const noexcept;
+    [[nodiscard]] bool spiked(double x) const noexcept;
 
     static constexpr double default_a{ 0.1 };
     static constexpr double default_b{ 0.2 };
@@ -285,38 +285,38 @@ public:
     double k3;
 };
 
-	class FitzHughNagumoModel : public NeuronModels {
-	public:
-		explicit FitzHughNagumoModel(
-			double k = NeuronModels::default_k, 
-			double tau_C = NeuronModels::default_tau_C, 
-			double beta = NeuronModels::default_beta,
-			unsigned int h = NeuronModels::default_h,
-			double a = FitzHughNagumoModel::default_a,
-			double b = FitzHughNagumoModel::default_b,
-			double phi = FitzHughNagumoModel::default_phi);
+class FitzHughNagumoModel : public NeuronModels {
+public:
+    explicit FitzHughNagumoModel(
+        double k = NeuronModels::default_k,
+        double tau_C = NeuronModels::default_tau_C,
+        double beta = NeuronModels::default_beta,
+        unsigned int h = NeuronModels::default_h,
+        double a = FitzHughNagumoModel::default_a,
+        double b = FitzHughNagumoModel::default_b,
+        double phi = FitzHughNagumoModel::default_phi);
 
     [[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
-		[[nodiscard]] double get_secondary_variable(size_t i) const noexcept final;
+    [[nodiscard]] double get_secondary_variable(size_t i) const noexcept final;
 
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
-		[[nodiscard]] std::string name() final;
+    [[nodiscard]] std::string name() final;
 
     void init(size_t num_neurons) final;
 
-	protected:
-		void update_activity(size_t i) final;
+protected:
+    void update_activity(size_t i) final;
 
     void init_neurons() final;
 
-	private:
-		[[nodiscard]] static double iter_x(double x, double w, double I_syn) noexcept;
+private:
+    [[nodiscard]] static double iter_x(double x, double w, double I_syn) noexcept;
 
-		[[nodiscard]] double iter_refrac(double w, double x) const noexcept;
+    [[nodiscard]] double iter_refrac(double w, double x) const noexcept;
 
-		[[nodiscard]] static bool spiked(double x, double w) noexcept;
+    [[nodiscard]] static bool spiked(double x, double w) noexcept;
 
     static constexpr double default_a{ 0.7 };
     static constexpr double default_b{ 0.8 };
@@ -329,44 +329,44 @@ public:
     double phi;
 };
 
-	class AEIFModel : public NeuronModels {
-	public:
-		explicit AEIFModel(
-			double k = NeuronModels::default_k, 
-			double tau_C = NeuronModels::default_tau_C, 
-			double beta = NeuronModels::default_beta, 
-			unsigned int h = NeuronModels::default_h, 
-			double C = AEIFModel::default_C,
-			double g_L = AEIFModel::default_g_L,
-			double E_L = AEIFModel::default_E_L,
-			double V_T = AEIFModel::default_V_T,
-			double d_T = AEIFModel::default_d_T,
-			double tau_w = AEIFModel::default_tau_w,
-			double a = AEIFModel::default_a,
-			double b = AEIFModel::default_b,
-			double V_peak = AEIFModel::default_V_peak);
+class AEIFModel : public NeuronModels {
+public:
+    explicit AEIFModel(
+        double k = NeuronModels::default_k,
+        double tau_C = NeuronModels::default_tau_C,
+        double beta = NeuronModels::default_beta,
+        unsigned int h = NeuronModels::default_h,
+        double C = AEIFModel::default_C,
+        double g_L = AEIFModel::default_g_L,
+        double E_L = AEIFModel::default_E_L,
+        double V_T = AEIFModel::default_V_T,
+        double d_T = AEIFModel::default_d_T,
+        double tau_w = AEIFModel::default_tau_w,
+        double a = AEIFModel::default_a,
+        double b = AEIFModel::default_b,
+        double V_peak = AEIFModel::default_V_peak);
 
     [[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
-		[[nodiscard]] double get_secondary_variable(size_t i) const noexcept final;
+    [[nodiscard]] double get_secondary_variable(size_t i) const noexcept final;
 
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
-		[[nodiscard]] std::string name() final;
+    [[nodiscard]] std::string name() final;
 
     void init(size_t num_neurons) final;
 
-	protected:
-		void update_activity(size_t i) final;
+protected:
+    void update_activity(size_t i) final;
 
     void init_neurons() final;
 
-	private:
-		[[nodiscard]] double f(double x) const noexcept;
+private:
+    [[nodiscard]] double f(double x) const noexcept;
 
-		[[nodiscard]] double iter_x(double x, double w, double I_syn) const noexcept;
+    [[nodiscard]] double iter_x(double x, double w, double I_syn) const noexcept;
 
-		[[nodiscard]] double iter_refrac(double w, double x) const noexcept;
+    [[nodiscard]] double iter_refrac(double w, double x) const noexcept;
 
     static constexpr double default_C{ 281.0 };
     static constexpr double default_g_L{ 30.0 };
