@@ -24,7 +24,6 @@
 
 Octree::Octree()
     : random_number_generator(RandomHolder<Octree>::get_random_generator())
-    , mpi_rma_node_allocator(MPIWrapper::mpi_rma_mem_allocator)
     , random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
 
     random_number_generator.seed(randomNumberSeeds::octree);
@@ -37,7 +36,6 @@ Octree::Octree(std::shared_ptr<Partition> part, double acceptance_criterion, dou
     , naive_method(acceptance_criterion == 0.0)
     , level_of_branch_nodes(part->get_level_of_subdomain_trees())
     , max_num_pending_vacant_axons(max_num_pending_vacant_axons)
-    , mpi_rma_node_allocator(MPIWrapper::mpi_rma_mem_allocator)
     , random_number_generator(RandomHolder<Octree>::get_random_generator())
     , random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
 
@@ -228,7 +226,7 @@ void Octree::get_nodes_for_interval(
     std::stack<OctreeNode*> stack;
     std::array<OctreeNode*, Constants::number_oct> local_children = { nullptr };
 
-    const MPI_Aint* base_pointers = mpi_rma_node_allocator.get_base_pointers();
+    const MPI_Aint* base_pointers = MPIWrapper::get_base_pointers();
 
     /**
 	* The root node is parent (i.e., contains a super neuron) and thus cannot be the target neuron.
@@ -274,13 +272,13 @@ void Octree::get_nodes_for_interval(
                 // So, we still need to init the entry by fetching
                 // from the target rank
                 if (ret.second) {
-                    ret.first->second = mpi_rma_node_allocator.newObject();
+                    ret.first->second = MPIWrapper::newObject();
                     auto* local_child_addr = ret.first->second;
 
                     // Calc displacement from absolute address
                     const auto target_child_displ = MPI_Aint(root->children[i]) - base_pointers[target_rank];
 
-                    MPIWrapper::get(local_child_addr, target_rank, target_child_displ, mpi_rma_node_allocator.mpi_window);
+                    MPIWrapper::get(local_child_addr, target_rank, target_child_displ);
                 }
 
                 // Remember address of node
@@ -367,13 +365,13 @@ void Octree::get_nodes_for_interval(
                     // So, we still need to init the entry by fetching
                     // from the target rank
                     if (ret.second) {
-                        ret.first->second = mpi_rma_node_allocator.newObject();
+                        ret.first->second = MPIWrapper::newObject();
                         auto* local_child_addr = ret.first->second;
 
                         // Calc displacement from absolute address
                         const auto target_child_displ = MPI_Aint(stack_elem->children[i]) - base_pointers[target_rank];
 
-                        MPIWrapper::get(local_child_addr, target_rank, target_child_displ, mpi_rma_node_allocator.mpi_window);
+                        MPIWrapper::get(local_child_addr, target_rank, target_child_displ);
                     }
 
                     // Remember local address of node
@@ -534,13 +532,13 @@ void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list,
             // from the target rank
             if (ret.second) {
                 // Create new object which contains the remote node's information
-                ret.first->second = prob_sub->ptr = mpi_rma_node_allocator.newObject();
+                ret.first->second = prob_sub->ptr = MPIWrapper::newObject();
 
-                const MPI_Aint* base_pointers = mpi_rma_node_allocator.get_base_pointers();
+                const MPI_Aint* base_pointers = MPIWrapper::get_base_pointers();
                 // Calc displacement from absolute address
                 const auto target_child_displ = MPI_Aint(child - base_pointers[target_rank]);
 
-                MPIWrapper::get(prob_sub->ptr, target_rank, target_child_displ, mpi_rma_node_allocator.mpi_window);
+                MPIWrapper::get(prob_sub->ptr, target_rank, target_child_displ);
 
                 prob_sub->mpi_request = MPIWrapper::get_non_null_request();
                 prob_sub->request_rank = target_rank;
@@ -678,7 +676,7 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 // Insert neuron into the tree
 OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
     // Create new tree node for the neuron
-    OctreeNode* new_node = mpi_rma_node_allocator.newObject();
+    OctreeNode* new_node = MPIWrapper::newObject();
     RelearnException::check(new_node != nullptr);
 
     new_node->cell.set_neuron_position(position, true);
@@ -730,7 +728,7 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 
             // Determine octant for neuron
             idx = prev->cell.get_neuron_octant();
-            OctreeNode* new_node = mpi_rma_node_allocator.newObject(); // new OctreeNode();
+            OctreeNode* new_node = MPIWrapper::newObject(); // new OctreeNode();
             prev->children[idx] = new_node;
 
             /**
@@ -809,7 +807,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
         // Create tree's root
 
         // Create root node
-        root = mpi_rma_node_allocator.newObject();
+        root = MPIWrapper::newObject();
 
         // Init octree node
         root->rank = MPIWrapper::my_rank;
@@ -882,7 +880,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
 
             //LogMessages::print_debug("    Trying to allocate node.");
             // Create node
-            auto* new_node = mpi_rma_node_allocator.newObject();
+            auto* new_node = MPIWrapper::newObject();
             //LogMessages::print_debug("    Node allocated.");
 
             // Init octree node
@@ -925,7 +923,7 @@ void Octree::print() {
 
 void Octree::free() {
     // Provide allocator so that it can be used to free memory again
-    const FunctorFreeNode free_node(mpi_rma_node_allocator);
+    const FunctorFreeNode free_node;
 
     // The functor containing the visit function is of type FunctorFreeNode
     tree_walk_postorder<FunctorFreeNode>(free_node);
@@ -1014,7 +1012,7 @@ bool Octree::find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz,
 
 void Octree::empty_remote_nodes_cache() {
     for (auto& remode_node_in_cache : remote_nodes_cache) {
-        mpi_rma_node_allocator.deleteObject(remode_node_in_cache.second);
+        MPIWrapper::deleteObject(remode_node_in_cache.second);
     }
 
     remote_nodes_cache.clear();

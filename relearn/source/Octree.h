@@ -13,7 +13,6 @@
 #include "Cell.h"
 #include "Commons.h"
 #include "LogMessages.h"
-#include "MPI_RMA_MemAllocator.h"
 #include "NeuronModels.h"
 #include "OctreeNode.h"
 #include "Parameters.h"
@@ -229,15 +228,8 @@ private:
 	 */
     class FunctorFreeNode {
     public:
-        // The functor needs to know the allocator before
-        // it can use it to free objects with it
-        explicit FunctorFreeNode(MPI_RMA_MemAllocator<OctreeNode>& allocator) noexcept
-            : allocator(allocator) { }
-
-        void operator()(OctreeNode* node) { allocator.deleteObject(node); }
-
-    private:
-        MPI_RMA_MemAllocator<OctreeNode>& allocator;
+        FunctorFreeNode() noexcept = default;
+        void operator()(OctreeNode* node) { MPIWrapper::deleteObject(node); }
     };
 
     Octree();
@@ -464,9 +456,6 @@ private:
     size_t level_of_branch_nodes{ Constants::uninitialized };
     size_t max_num_pending_vacant_axons{ Constants::num_pend_vacant }; // Maximum number of vacant axons which are considered at the same time for
         // finding a target neuron
-
-    // Allocator for MPI passive target sync. memory for tree nodes
-    MPI_RMA_MemAllocator<OctreeNode>& mpi_rma_node_allocator;
 
     // Cache with nodes owned by other ranks
     using NodesCacheKey = std::pair<int, OctreeNode*>;

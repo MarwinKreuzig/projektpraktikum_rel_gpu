@@ -152,11 +152,23 @@ public:
     }
 
     template <typename T>
-    static void get(T* ptr, int target_rank, MPI_Aint target_display, MPI_Win& win) {
+    static void get(T* ptr, int target_rank, MPI_Aint target_display) {
 
         // NOLINTNEXTLINE
-        const int errorcode = MPI_Get(ptr, sizeof(T), MPI_CHAR, target_rank, target_display, sizeof(T), MPI_CHAR, win);
+        const int errorcode = MPI_Get(ptr, sizeof(T), MPI_CHAR, target_rank, target_display, sizeof(T), MPI_CHAR, mpi_rma_mem_allocator.mpi_window);
         RelearnException::check(errorcode == 0, "Error in get");
+    }
+
+    static const MPI_Aint* get_base_pointers() noexcept {
+        return mpi_rma_mem_allocator.get_base_pointers();
+    }
+
+    static OctreeNode* newObject() {
+        return mpi_rma_mem_allocator.newObject();
+    }
+
+    static void deleteObject(OctreeNode* ptr) {
+        mpi_rma_mem_allocator.deleteObject(ptr);
     }
 
     static void wait_request(AsyncToken& request);
