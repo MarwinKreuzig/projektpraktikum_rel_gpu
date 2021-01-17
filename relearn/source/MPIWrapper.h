@@ -73,13 +73,13 @@ public:
     static size_t my_rank; // My rank in MPI_COMM_WORLD
 
     static size_t num_neurons; // Total number of neurons
-    static int my_num_neurons; // My number of neurons I'm responsible for
-    static int my_neuron_id_start; // ID of my first neuron
-    static int my_neuron_id_end; // ID of my last neuron
+    static size_t my_num_neurons; // My number of neurons I'm responsible for
+    static size_t my_neuron_id_start; // ID of my first neuron
+    static size_t my_neuron_id_end; // ID of my last neuron
 
     // Needed for Allgatherv
-    static std::vector<int> num_neurons_of_ranks; // Number of neurons that each rank is responsible for
-    static std::vector<int> num_neurons_of_ranks_displs; // Displacements based on "num_neurons_of_ranks" (exclusive prefix sums, i.e. Exscan)
+    static std::vector<size_t> num_neurons_of_ranks; // Number of neurons that each rank is responsible for
+    static std::vector<size_t> num_neurons_of_ranks_displs; // Displacements based on "num_neurons_of_ranks" (exclusive prefix sums, i.e. Exscan)
 
     static int thread_level_provided; // Thread level provided by MPI
 

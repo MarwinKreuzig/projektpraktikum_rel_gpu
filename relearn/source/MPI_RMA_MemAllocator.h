@@ -187,6 +187,7 @@ public:
 
     //NOLINTNEXTLINE
     MPI_Win mpi_window{ 0 }; // RMA window object
+
 private:
     size_t size_requested{ Constants::uninitialized }; // Bytes requested for the allocator
     size_t max_size{ Constants::uninitialized }; // Size in Bytes of MPI-allocated memory

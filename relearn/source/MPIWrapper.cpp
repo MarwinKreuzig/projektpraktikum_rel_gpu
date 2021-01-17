@@ -42,12 +42,12 @@ size_t MPIWrapper::num_ranks; // Number of ranks in MPI_COMM_WORLD
 size_t MPIWrapper::my_rank; // My rank in MPI_COMM_WORLD
 
 size_t MPIWrapper::num_neurons; // Total number of neurons
-int MPIWrapper::my_num_neurons; // My number of neurons I'm responsible for
-int MPIWrapper::my_neuron_id_start; // ID of my first neuron
-int MPIWrapper::my_neuron_id_end; // ID of my last neuron
+size_t MPIWrapper::my_num_neurons; // My number of neurons I'm responsible for
+size_t MPIWrapper::my_neuron_id_start; // ID of my first neuron
+size_t MPIWrapper::my_neuron_id_end; // ID of my last neuron
 
-std::vector<int> MPIWrapper::num_neurons_of_ranks; // Number of neurons that each rank is responsible for
-std::vector<int> MPIWrapper::num_neurons_of_ranks_displs; // Displacements based on "num_neurons_of_ranks" (exclusive prefix sums, i.e. Exscan)
+std::vector<size_t> MPIWrapper::num_neurons_of_ranks; // Number of neurons that each rank is responsible for
+std::vector<size_t> MPIWrapper::num_neurons_of_ranks_displs; // Displacements based on "num_neurons_of_ranks" (exclusive prefix sums, i.e. Exscan)
 
 int MPIWrapper::thread_level_provided; // Thread level provided by MPI
 
@@ -86,10 +86,10 @@ void MPIWrapper::init(int argc, char** argv) {
     num_neurons_of_ranks.resize(num_ranks);
     num_neurons_of_ranks_displs.resize(num_ranks);
 
-    const int num_digits = Util::num_digits(num_ranks - 1);
+    const unsigned int num_digits = Util::num_digits(num_ranks - 1);
 
     std::stringstream sstring;
-    sstring << std::setw(num_digits) << std::setfill('0') << my_rank;
+    sstring << std::setw(static_cast<std::streamsize>(num_digits)) << std::setfill('0') << my_rank;
 
     my_rank_str = sstring.str();
 }
@@ -113,9 +113,9 @@ void MPIWrapper::init_neurons(size_t num_neurons) {
 	 * Info about how much to receive (num_neurons) from every process and where to store it (displs)
 	 */
     int displ = 0;
-    const int rest = static_cast<int>(num_neurons) % num_ranks;
-    const int block_size = static_cast<int>(num_neurons) / num_ranks;
-    for (int i = 0; i < num_ranks; i++) {
+    const size_t rest = num_neurons % num_ranks;
+    const size_t block_size = num_neurons / num_ranks;
+    for (size_t i = 0; i < num_ranks; i++) {
         num_neurons_of_ranks[i] = block_size;
         num_neurons_of_ranks[i] += (i < rest) ? 1 : 0;
 
@@ -338,8 +338,13 @@ void MPIUserDefinedOperation::min_sum_max(const int* invec, int* inoutvec, const
     auto inout = reinterpret_cast<double*>(inoutvec);
 
     for (int i = 0; i < real_length; i++) {
+        // NOLINTNEXTLINE
         inout[3 * i] = std::min(in[3 * i], inout[3 * i]);
+
+        // NOLINTNEXTLINE
         inout[3 * i + 1] += in[3 * i + 1];
+
+        // NOLINTNEXTLINE
         inout[3 * i + 2] = std::max(in[3 * i + 2], inout[3 * i + 2]);
     }
 }

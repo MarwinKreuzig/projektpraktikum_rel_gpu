@@ -12,7 +12,6 @@
 
 #include "Commons.h"
 #include "LogMessages.h"
-#include "MPI_RMA_MemAllocator.h"
 #include "NeuronToSubdomainAssignment.h"
 #include "Neurons.h"
 #include "Octree.h"
@@ -45,7 +44,7 @@ public:
 
         size_t index_1d{ Constants::uninitialized };
 
-        Vec3<size_t> index_3d;
+        Vec3s index_3d;
 
         // The octree contains all neurons in
         // this subdomain. It is only used as a container

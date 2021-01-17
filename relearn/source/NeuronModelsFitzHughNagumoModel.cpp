@@ -10,7 +10,7 @@
 
 #include "NeuronModels.h"
 
-using namespace models;
+using models::FitzHughNagumoModel;
 
 FitzHughNagumoModel::FitzHughNagumoModel(double k, double tau_C, double beta, unsigned int h, const double a, const double b, const double phi)
     : NeuronModels{ k, tau_C, beta, h }
@@ -29,7 +29,6 @@ double FitzHughNagumoModel::get_secondary_variable(const size_t i) const noexcep
 
 std::vector<ModelParameter> FitzHughNagumoModel::get_parameter() {
     auto res{ NeuronModels::get_parameter() };
-    res.reserve(res.size() + 3);
     res.emplace_back(Parameter<double>{ "a", a, FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a });
     res.emplace_back(Parameter<double>{ "b", b, FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b });
     res.emplace_back(Parameter<double>{ "phi", phi, FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi });
@@ -60,8 +59,8 @@ void FitzHughNagumoModel::update_activity(const size_t i) {
 
 void FitzHughNagumoModel::init_neurons() {
     for (size_t i = 0; i < x.size(); ++i) {
-        x[i] = -1.2;
-        w[i] = iter_refrac(-.6, x[i]);
+        x[i] = FitzHughNagumoModel::init_x;
+        w[i] = iter_refrac(FitzHughNagumoModel::init_w, x[i]);
         fired[i] = spiked(x[i], w[i]);
     }
 }

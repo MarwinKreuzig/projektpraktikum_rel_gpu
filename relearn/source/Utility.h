@@ -17,6 +17,7 @@ constexpr unsigned int num_digits(T val) noexcept {
 
     do {
         ++num_digits;
+        // NOLINTNEXTLINE
         val /= 10;
     } while (val != 0);
 

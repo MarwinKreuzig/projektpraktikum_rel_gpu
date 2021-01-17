@@ -68,7 +68,7 @@ void Simulation::load_neurons_from_file(const std::string& path_to_positions, co
     load_neurons_from_file(path_to_positions);
 
     network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
-    network_graph->add_edges_from_file(path_to_connections, path_to_positions, *neuron_id_map, partition);
+    network_graph->add_edges_from_file(path_to_connections, path_to_positions, *neuron_id_map, *partition);
 
     LogMessages::print_message_rank("Network graph created", 0);
 

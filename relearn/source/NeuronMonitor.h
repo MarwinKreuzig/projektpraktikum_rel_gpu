@@ -56,10 +56,14 @@ public:
     static size_t max_steps;
     static size_t current_step;
 
-    NeuronMonitor(size_t neuron_id)
+    explicit NeuronMonitor(size_t neuron_id)
         : target_neuron_id(neuron_id)
         , informations(max_steps) {
     }
+    ~NeuronMonitor() = default;
+
+    NeuronMonitor(const NeuronMonitor& other) noexcept = delete;
+    NeuronMonitor& operator=(const NeuronMonitor& other) noexcept = delete;
 
     NeuronMonitor(NeuronMonitor&& other) noexcept = default;
     NeuronMonitor& operator=(NeuronMonitor&& other) noexcept = default;

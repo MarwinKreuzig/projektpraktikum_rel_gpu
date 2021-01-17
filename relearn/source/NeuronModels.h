@@ -11,8 +11,8 @@
 #pragma once
 
 #include "LogMessages.h"
-#include "ModelParameter.h"
 #include "MPIWrapper.h"
+#include "ModelParameter.h"
 #include "NetworkGraph.h"
 #include "Random.h"
 #include "Timers.h"
@@ -239,6 +239,7 @@ private:
     std::mt19937& random_number_generator{ RandomHolder<ModelA>::get_random_generator() };
     // Random number distribution used together with "random_number_generator" (C++11)
     // Uniform distribution for interval [0, 1]
+    // NOLINTNEXTLINE
     std::uniform_real_distribution<double> random_number_distribution{ 0.0, nextafter(1.0, 2.0) };
 };
 
@@ -365,6 +366,9 @@ private:
     static constexpr double max_a{ 0.7 };
     static constexpr double max_b{ 0.8 };
     static constexpr double max_phi{ 0.08 };
+
+    static constexpr double init_x{ -1.2 };
+    static constexpr double init_w{ -0.6 }; 
 
     std::vector<double> w; // recovery variable
 

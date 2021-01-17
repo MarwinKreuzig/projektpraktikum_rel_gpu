@@ -226,3 +226,4 @@ struct Vec3 {
 };
 
 using Vec3d = Vec3<double>;
+using Vec3s = Vec3<size_t>;

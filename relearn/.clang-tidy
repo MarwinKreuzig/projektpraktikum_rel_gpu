@@ -6,7 +6,8 @@ Checks: '
         -*non-private-member-variables*,
         -*uppercase-literal-suffix,
         -google-runtime-references,
-        -modernize-use-default-member-init
+        -modernize-use-default-member-init,
+		-cppcoreguidelines-pro-bounds-array-to-pointer-decay
         '
 WarningsAsErrors: ''
 HeaderFilterRegex: '.*'

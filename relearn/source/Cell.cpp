@@ -101,9 +101,9 @@
 }
 
 [[nodiscard]] std::tuple<Vec3d, Vec3d> Cell::get_size_for_octant(unsigned char idx) const /*noexcept*/ {
-    const bool x_over_halfway_point = (idx & 1) != 0;
-    const bool y_over_halfway_point = (idx & 2) != 0;
-    const bool z_over_halfway_point = (idx & 4) != 0;
+    const bool x_over_halfway_point = (idx & 1U) != 0;
+    const bool y_over_halfway_point = (idx & 2U) != 0;
+    const bool z_over_halfway_point = (idx & 4U) != 0;
 
     Vec3d octant_xyz_min = this->xyz_min;
     Vec3d octant_xyz_max = this->xyz_max;

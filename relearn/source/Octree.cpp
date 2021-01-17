@@ -254,7 +254,7 @@ void Octree::get_nodes_for_interval(
             MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
 
             // Fetch remote children if they exist
-            for (auto i = 7; i >= 0; i--) {
+            for (auto i = Constants::number_oct - 1; i >= 0; i--) {
                 if (nullptr == root->children[i]) {
                     local_children[i] = nullptr;
                     continue;
@@ -347,7 +347,7 @@ void Octree::get_nodes_for_interval(
                 MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
 
                 // Fetch remote children if they exist
-                for (auto i = 7; i >= 0; i--) {
+                for (auto i = Constants::number_oct - 1; i >= 0; i--) {
                     if (nullptr == stack_elem->children[i]) {
                         local_children[i] = nullptr;
                         continue;
@@ -678,7 +678,7 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 // Insert neuron into the tree
 OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
     // Create new tree node for the neuron
-    OctreeNode* new_node = mpi_rma_node_allocator.newObject(); // new OctreeNode();
+    OctreeNode* new_node = mpi_rma_node_allocator.newObject();
     RelearnException::check(new_node != nullptr);
 
     new_node->cell.set_neuron_position(position, true);

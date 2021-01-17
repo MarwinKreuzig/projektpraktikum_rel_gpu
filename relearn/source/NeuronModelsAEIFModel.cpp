@@ -10,7 +10,7 @@
 
 #include "NeuronModels.h"
 
-using namespace models;
+using models::AEIFModel;
 
 AEIFModel::AEIFModel(double k, double tau_C, double beta, unsigned int h, const double C, const double g_L, const double E_L, const double V_T, const double d_T, const double tau_w, const double a, const double b, const double V_peak)
     : NeuronModels{ k, tau_C, beta, h }
@@ -35,7 +35,6 @@ AEIFModel::AEIFModel(double k, double tau_C, double beta, unsigned int h, const 
 
 [[nodiscard]] std::vector<ModelParameter> AEIFModel::get_parameter() {
     auto res{ NeuronModels::get_parameter() };
-    res.reserve(res.size() + 9);
     res.emplace_back(Parameter<double>{ "C", C, AEIFModel::min_C, AEIFModel::max_C });
     res.emplace_back(Parameter<double>{ "g_L", g_L, AEIFModel::min_g_L, AEIFModel::max_g_L });
     res.emplace_back(Parameter<double>{ "E_L", E_L, AEIFModel::min_E_L, AEIFModel::max_E_L });

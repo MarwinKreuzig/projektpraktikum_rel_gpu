@@ -153,7 +153,7 @@ void SubdomainFromNeuronDensity::neuron_global_ids([[maybe_unused]] size_t subdo
 }
 
 std::tuple<SubdomainFromNeuronDensity::Position, SubdomainFromNeuronDensity::Position> SubdomainFromNeuronDensity::get_subdomain_boundaries(
-    const Vec3<size_t>& subdomain_3idx,
+    const Vec3s& subdomain_3idx,
     size_t num_subdomains_per_axis) const noexcept {
     const auto length = get_simulation_box_length().get_maximum();
     const auto one_subdomain_length = length / num_subdomains_per_axis;
@@ -168,8 +168,8 @@ std::tuple<SubdomainFromNeuronDensity::Position, SubdomainFromNeuronDensity::Pos
 }
 
 std::tuple<SubdomainFromNeuronDensity::Position, SubdomainFromNeuronDensity::Position> SubdomainFromNeuronDensity::get_subdomain_boundaries(
-    const Vec3<size_t>& subdomain_3idx,
-    const Vec3<size_t>& num_subdomains_per_axis) const noexcept {
+    const Vec3s& subdomain_3idx,
+    const Vec3s& num_subdomains_per_axis) const noexcept {
 
     const auto length = get_simulation_box_length().get_maximum();
     const auto x_subdomain_length = length / num_subdomains_per_axis.x;

@@ -10,7 +10,7 @@
 
 #include "NeuronModels.h"
 
-using namespace models;
+using models::IzhikevichModel;
 
 IzhikevichModel::IzhikevichModel(double k, double tau_C, double beta, unsigned int h, const double a, const double b, const double c, const double d, const double V_spike, const double k1, const double k2, const double k3)
     : NeuronModels{ k, tau_C, beta, h }
@@ -34,7 +34,6 @@ IzhikevichModel::IzhikevichModel(double k, double tau_C, double beta, unsigned i
 
 [[nodiscard]] std::vector<ModelParameter> IzhikevichModel::get_parameter() {
     auto res{ NeuronModels::get_parameter() };
-    res.reserve(res.size() + 8);
     res.emplace_back(Parameter<double>{ "a", a, IzhikevichModel::min_a, IzhikevichModel::max_a });
     res.emplace_back(Parameter<double>{ "b", b, IzhikevichModel::min_b, IzhikevichModel::max_b });
     res.emplace_back(Parameter<double>{ "c", c, IzhikevichModel::min_c, IzhikevichModel::max_c });
