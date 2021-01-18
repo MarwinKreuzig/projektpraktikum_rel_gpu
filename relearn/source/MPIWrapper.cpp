@@ -18,6 +18,7 @@
 #include <bitset>
 #include <cstdlib>
 #include <iomanip>
+#include <iostream>
 #include <limits>
 #include <sstream>
 #include <string>
@@ -347,6 +348,13 @@ void MPIWrapper::free_custom_function() {
 void MPIWrapper::lock_window(size_t rank, MPI_Locktype lock_type) {
     const int rank_int = static_cast<int>(rank);
     const auto lock_type_int = static_cast<int>(lock_type);
+
+    std::cout << "I want to lock with rank: " << rank_int << std::endl;
+    std::cout << "I want to lock with type: " << lock_type_int << std::endl;
+    std::cout << "I want to lock with window: " << mpi_rma_mem_allocator.mpi_window << std::endl;
+
+    std::cout << "Shared is: " << MPI_LOCK_SHARED << std::endl;
+    std::cout << "Exclusive is: " << MPI_LOCK_EXCLUSIVE << std::endl;
 
     // NOLINTNEXTLINE
     const int errorcode = MPI_Win_lock(lock_type_int, rank_int, MPI_MODE_NOCHECK, mpi_rma_mem_allocator.mpi_window);

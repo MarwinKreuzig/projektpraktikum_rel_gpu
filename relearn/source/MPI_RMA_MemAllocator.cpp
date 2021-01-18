@@ -97,7 +97,14 @@ void MPI_RMA_MemAllocator::create_rma_window() noexcept {
     displ_unit = 1;
 
     // NOLINTNEXTLINE
-    MPI_Win_create(base_ptr, max_size, displ_unit, MPI_INFO_NULL, MPI_COMM_WORLD, &mpi_window);
+    auto some_val = reinterpret_cast<size_t*>(mpi_window);
+
+    std::cout << "some_val_1: " << some_val << std::endl;    
+    int error_c = MPI_Win_create(base_ptr, max_size, displ_unit, MPI_INFO_NULL, MPI_COMM_WORLD, &mpi_window);
+
+    auto some_other_val = reinterpret_cast<size_t*>(mpi_window);
+    std::cout << "some_val_2: " << some_other_val << std::endl;
+    std::cout << "error_c: " << error_c << std::endl;
 }
 
 [[nodiscard]] size_t MPI_RMA_MemAllocator::HolderOctreeNode::calculate_distance(OctreeNode* ptr) const noexcept {
