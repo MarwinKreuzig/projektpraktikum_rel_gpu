@@ -26,8 +26,8 @@ struct RMABufferOctreeNodes {
 };
 
 enum class MPI_Locktype : int {
-	exclusive = 234,
-	shared = 235,
+    exclusive = MPI_LOCK_EXCLUSIVE,
+    shared = MPI_LOCK_SHARED,
 };
 
 namespace MPIUserDefinedOperation {
