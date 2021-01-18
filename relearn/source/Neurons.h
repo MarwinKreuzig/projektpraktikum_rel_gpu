@@ -419,12 +419,12 @@ private:
         /**
 		* Calc variance
 		*/
-        const double my_var = std::transform_reduce(local_values,
-                                  local_values + num_neurons,
-                                  0.0,
-                                  std::plus{},
-                                  [&](auto& v) { const auto res = v - avg; return res * res; })
-            / total_num_values;
+		double my_var = 0;
+		for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+			my_var += (local_values[neuron_id] - avg) * (local_values[neuron_id] - avg);
+		}
+		my_var /= total_num_values;
+
 
         // Get global variance at rank "root"
         const double var = MPIWrapper::reduce(my_var, MPIWrapper::ReduceFunction::sum, root, scope);
