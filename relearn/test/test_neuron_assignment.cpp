@@ -440,7 +440,7 @@ TEST(TestRandomNeuronPlacement, test_multiple_lazily_fill_positions_multiple_sub
 
 		check_types_fraction(types, frac_ex, total_subdomains, num_neurons);
 
-		free(flags);
+		delete[] flags;
 	}
 }
 
@@ -505,8 +505,8 @@ TEST(TestRandomNeuronPlacement, test_saving) {
 			EXPECT_TRUE(0 < id);
 			EXPECT_TRUE(id <= num_neurons);
 
-			EXPECT_FALSE(is_there[id]);
-			is_there[id] = true;
+			EXPECT_FALSE(is_there[id - 1]);
+			is_there[id - 1] = true;
 
 			EXPECT_NEAR(x, desired_position.x, eps);
 			EXPECT_NEAR(y, desired_position.y, eps);

@@ -3,14 +3,19 @@
 #include "../source/MPIWrapper.h"
 #include "../source/RelearnException.h"
 
-std::mt19937 mt;
+#include <mutex>
 
+std::mt19937 mt;
+std::once_flag some_flag;
 
 void setup() {
-    MPIWrapper::init_globals();
-	
-	RelearnException::hide_messages = true;
+
+    auto lambda = []() {
+        char* argument = "./runTests";
+        MPIWrapper::init(1, &argument);
+    };
+
+    std::call_once(some_flag, lambda);
+
+    RelearnException::hide_messages = true;
 }
-
-
-
