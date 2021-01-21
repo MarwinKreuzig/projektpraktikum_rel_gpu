@@ -102,9 +102,6 @@ void Neurons::init_synaptic_elements(const NetworkGraph& network_graph) {
     }
 
     // Give unbound synaptic elements as well
-
-    //            int num_axons = 1;
-    //            int num_dends = 1;
     const double num_axons_offset = 0;
     const double num_dends_offset = 0;
 

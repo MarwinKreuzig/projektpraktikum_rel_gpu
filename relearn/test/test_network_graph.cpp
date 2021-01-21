@@ -13,7 +13,7 @@
 constexpr const size_t upper_bound_num_neurons = 10000;
 constexpr const int bound_synapse_weight = 10;
 
-TEST(TestNetworkGraph, test_network_graph_constructor) {
+TEST(TestNetworkGraph, testNetworkGraphConstructor) {
 	std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
 
 	for (auto i = 0; i < iterations; i++) {
@@ -39,7 +39,7 @@ TEST(TestNetworkGraph, test_network_graph_constructor) {
 	}
 }
 
-TEST(TestNetworkGraph, test_network_graph_constructor_exceptions) {
+TEST(TestNetworkGraph, testNetworkGraphConstructorExceptions) {
 	setup();
 
 	std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
@@ -55,8 +55,8 @@ TEST(TestNetworkGraph, test_network_graph_constructor_exceptions) {
 			EXPECT_THROW(size_t inh_in_edges_count = ng.get_num_in_edges_in(neuron_id), RelearnException);
 			EXPECT_THROW(size_t out_edges_count = ng.get_num_out_edges(neuron_id), RelearnException);
 
-			EXPECT_THROW(const NetworkGraph::Edges & in_edges = ng.get_in_edges(neuron_id), RelearnException);
-			EXPECT_THROW(const NetworkGraph::Edges & out_edges = ng.get_out_edges(neuron_id), RelearnException);
+			EXPECT_THROW(const NetworkGraph::Edges& in_edges = ng.get_in_edges(neuron_id), RelearnException);
+			EXPECT_THROW(const NetworkGraph::Edges& out_edges = ng.get_out_edges(neuron_id), RelearnException);
 		}
 
 		for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
@@ -69,7 +69,7 @@ TEST(TestNetworkGraph, test_network_graph_constructor_exceptions) {
 	}
 }
 
-TEST(TestNetworkGraph, test_network_graph_constructor_edges) {
+TEST(TestNetworkGraph, testNetworkGraphEdges) {
 	std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
 	std::uniform_int_distribution<size_t> uid_num_edges(0, upper_bound_num_neurons * 2);
 
@@ -164,4 +164,3 @@ TEST(TestNetworkGraph, test_network_graph_constructor_edges) {
 		}
 	}
 }
-

@@ -83,37 +83,45 @@ public:
     }
 
     void update_cnt(size_t neuron_id, double delta) {
+        RelearnException::check(neuron_id < cnts.size(), "Synaptic elements, update_cnt out of bounds");
         cnts[neuron_id] += delta;
         RelearnException::check(cnts[neuron_id] >= 0.0);
     }
 
     void update_conn_cnt(size_t neuron_id, double delta, std::string&& mess) {
+        RelearnException::check(neuron_id < connected_cnts.size(), "Synaptic elements, update_conn_cnt out of bounds");
         connected_cnts[neuron_id] += delta;
         RelearnException::check(connected_cnts[neuron_id] >= 0.0, std::move(mess));
     }
 
     void update_delta_cnt(size_t neuron_id, double delta) {
+        RelearnException::check(neuron_id < delta_cnts.size(), "Synaptic elements, update_delta_cnt out of bounds");
         delta_cnts[neuron_id] += delta;
         RelearnException::check(delta_cnts[neuron_id] >= 0.0);
     }
 
-    void set_signal_type(size_t neuron_id, SignalType type) noexcept {
+    void set_signal_type(size_t neuron_id, SignalType type) {
+        RelearnException::check(neuron_id < signal_types.size(), "Synaptic elements, set_signal_type out of bounds");
         signal_types[neuron_id] = type;
     }
 
-    [[nodiscard]] double get_cnt(size_t neuron_id) const noexcept {
+    [[nodiscard]] double get_cnt(size_t neuron_id) const {
+        RelearnException::check(neuron_id < cnts.size(), "Synaptic elements, get_cnt out of bounds");
         return cnts[neuron_id];
     }
 
-    [[nodiscard]] double get_connected_cnt(size_t neuron_id) const noexcept {
+    [[nodiscard]] double get_connected_cnt(size_t neuron_id) const {
+        RelearnException::check(neuron_id < connected_cnts.size(), "Synaptic elements, get_connected_cnt out of bounds");
         return connected_cnts[neuron_id];
     }
 
-    [[nodiscard]] double get_delta_cnt(size_t neuron_id) const noexcept {
+    [[nodiscard]] double get_delta_cnt(size_t neuron_id) const {
+        RelearnException::check(neuron_id < delta_cnts.size(), "Synaptic elements, get_delta_cnt out of bounds");
         return delta_cnts[neuron_id];
     }
 
-    [[nodiscard]] SignalType get_signal_type(size_t neuron_id) const noexcept {
+    [[nodiscard]] SignalType get_signal_type(size_t neuron_id) const {
+        RelearnException::check(neuron_id < signal_types.size(), "Synaptic elements, get_signal_type out of bounds");
         return signal_types[neuron_id];
     }
 
