@@ -16,7 +16,8 @@
 #include <array>
 #include <cstddef>
 
-struct OctreeNode {
+class OctreeNode {
+public:
     void print() const;
 
     Cell cell{};

@@ -124,7 +124,9 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 
             GlobalTimers::timers.start(TimerRegion::UPDATE_CONNECTIVITY);
 
-            neurons->update_connectivity(*global_tree, *network_graph, num_synapses_deleted, num_synapses_created);
+            std::tuple<size_t, size_t> deleted_created = neurons->update_connectivity(*global_tree, *network_graph);
+            num_synapses_deleted = std::get<0>(deleted_created);
+            num_synapses_created = std::get<1>(deleted_created);
 
             GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_CONNECTIVITY);
 

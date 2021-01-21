@@ -151,13 +151,16 @@ class Neurons {
 	 * and its neuron id on the owner, i.e., the pair <rank, neuron_id>
 	 */
     struct RankNeuronId {
-        const int rank; // MPI rank of the owner
-        const size_t neuron_id; // Neuron id on the owner
+        int rank; // MPI rank of the owner
+        size_t neuron_id; // Neuron id on the owner
 
         RankNeuronId(int rank, size_t neuron_id) noexcept
             : rank(rank)
             , neuron_id(neuron_id) {
         }
+
+        RankNeuronId(const RankNeuronId& other) = default;
+        RankNeuronId& operator=(const RankNeuronId& other) = default;
 
         bool operator==(const RankNeuronId& other) const noexcept {
             return (this->rank == other.rank && this->neuron_id == other.neuron_id);
@@ -268,6 +271,45 @@ class Neurons {
         unsigned int synapse_id; // Synapse id of the synapse to be deleted
         bool affected_element_already_deleted; // "True" if the element to be set vacant was already deleted by the neuron owning it
             // "False" if the element must be set vacant
+
+        PendingSynapseDeletion() = default;
+
+        PendingSynapseDeletion(const RankNeuronId& src, const RankNeuronId& tgt, const RankNeuronId& aff,
+            SynapticElements::ElementType elem, SynapticElements::SignalType sign, unsigned int id, bool affec)
+            : src_neuron_id(src)
+            , tgt_neuron_id(tgt)
+            , affected_neuron_id(aff)
+            , affected_element_type(elem)
+            , signal_type(sign)
+            , synapse_id(id)
+            , affected_element_already_deleted(affec) {
+        }
+
+        PendingSynapseDeletion(const PendingSynapseDeletion& other) = default;
+        PendingSynapseDeletion(PendingSynapseDeletion&& other) = default;
+
+        PendingSynapseDeletion& operator=(const PendingSynapseDeletion& other) = default;
+        PendingSynapseDeletion& operator=(PendingSynapseDeletion&& other) = default;
+
+        ~PendingSynapseDeletion() = default;
+
+        bool check_light_equality(const PendingSynapseDeletion& other) {
+            const bool src_neuron_id_eq = other.src_neuron_id == src_neuron_id;
+            const bool tgt_neuron_id_eq = other.tgt_neuron_id == tgt_neuron_id;
+
+            const bool id_eq = other.synapse_id == synapse_id;
+
+            return src_neuron_id_eq && tgt_neuron_id_eq && id_eq;
+        }
+
+        bool check_light_equality(const RankNeuronId& src, const RankNeuronId& tgt, unsigned int id) {
+            const bool src_neuron_id_eq = src == src_neuron_id;
+            const bool tgt_neuron_id_eq = tgt == tgt_neuron_id;
+
+            const bool id_eq = id == synapse_id;
+
+            return src_neuron_id_eq && tgt_neuron_id_eq && id_eq;
+        }
     };
 
     template <typename T>
@@ -368,13 +410,13 @@ public:
         dendrites_inh.update_number_elements_delta(calcium);
     }
 
-    void update_connectivity(Octree& global_tree,
-        NetworkGraph& network_graph,
-        size_t& num_synapses_deleted,
-        size_t& num_synapses_created) {
+    std::tuple<size_t, size_t> update_connectivity(Octree& global_tree,
+        NetworkGraph& network_graph) {
 
-        delete_synapses(num_synapses_deleted, network_graph);
-        create_synapses(num_synapses_created, global_tree, network_graph);
+        size_t num_synapses_deleted = delete_synapses(network_graph);
+        size_t num_synapses_created = create_synapses(global_tree, network_graph);
+
+        return std::make_tuple(num_synapses_deleted, num_synapses_created);
     }
 
     void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, LogFiles& log_file, size_t sum_synapses_deleted, size_t sum_synapses_created);
@@ -393,9 +435,9 @@ public:
     void print_info_for_barnes_hut();
 
 private:
-    void delete_synapses(size_t& num_synapses_deleted, NetworkGraph& network_graph);
+    size_t delete_synapses(NetworkGraph& network_graph);
 
-    void create_synapses(size_t& num_synapses_created, Octree& global_tree, NetworkGraph& network_graph);
+    size_t create_synapses(Octree& global_tree, NetworkGraph& network_graph);
 
     void debug_check_counts();
 
@@ -419,12 +461,11 @@ private:
         /**
 		* Calc variance
 		*/
-		double my_var = 0;
-		for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
-			my_var += (local_values[neuron_id] - avg) * (local_values[neuron_id] - avg);
-		}
-		my_var /= total_num_values;
-
+        double my_var = 0;
+        for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+            my_var += (local_values[neuron_id] - avg) * (local_values[neuron_id] - avg);
+        }
+        my_var /= total_num_values;
 
         // Get global variance at rank "root"
         const double var = MPIWrapper::reduce(my_var, MPIWrapper::ReduceFunction::sum, root, scope);
@@ -438,15 +479,9 @@ private:
     /**
 	 * Returns iterator to randomly chosen synapse from list
 	 */
-    typename std::list<Synapse>::const_iterator select_synapse(const std::list<Synapse>& list);
+    typename std::list<Synapse>::const_iterator select_random_synapse(const std::list<Synapse>& list);
 
-    static void add_synapse_to_pending_deletions(const RankNeuronId& src_neuron_id,
-        const RankNeuronId& tgt_neuron_id,
-        const RankNeuronId& affected_neuron_id,
-        SynapticElements::ElementType affected_element_type,
-        SynapticElements::SignalType signal_type,
-        unsigned int synapse_id,
-        std::list<PendingSynapseDeletion>& list);
+    void find_synapses_for_deletion(SynapticElements& synaptic_elements, const NetworkGraph& network_graph, std::list<Neurons::PendingSynapseDeletion>& list_with_pending_deletions);
 
     /**
 	 * Determines which synapses should be deleted.
@@ -457,21 +492,17 @@ private:
 	 * due to synapse deletion until all neurons have decided *independently* which synapse
 	 * to delete. This should reflect how it's done for a distributed memory implementation.
 	 */
-    void find_synapses_for_deletion(size_t neuron_id,
+    std::list<Neurons::PendingSynapseDeletion> find_synapses_for_deletion(size_t neuron_id,
         SynapticElements::ElementType element_type,
         SynapticElements::SignalType signal_type,
         unsigned int num_synapses_to_delete,
-        const NetworkGraph& network_graph,
-        std::list<PendingSynapseDeletion>& list_pending_deletions);
+        const NetworkGraph& network_graph);
+
+    std::list<Neurons::Synapse> register_edges(const NetworkGraph::Edges& out_edges);
 
     static void print_pending_synapse_deletions(const std::list<PendingSynapseDeletion>& list);
 
-    void delete_synapses(std::list<PendingSynapseDeletion>& list,
-        SynapticElements& axons,
-        SynapticElements& dendrites_exc,
-        SynapticElements& dendrites_inh,
-        NetworkGraph& network_graph,
-        size_t& num_synapses_deleted);
+    size_t delete_synapses(const std::list<PendingSynapseDeletion>& list, NetworkGraph& network_graph);
 
     size_t num_neurons = 0; // Local number of neurons
     std::vector<size_t> local_ids;
