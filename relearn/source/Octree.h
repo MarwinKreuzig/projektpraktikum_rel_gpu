@@ -122,16 +122,9 @@ private:
             , num_neurons(num_neurons) {
         }
 
-        //FunctorUpdateNode() noexcept :
-        //	dendrites_exc_cnts(std::vector<double>{}),
-        //	dendrites_exc_connected_cnts(std::vector<double>{}),
-        //	dendrites_inh_cnts(std::vector<double>{}),
-        //	dendrites_inh_connected_cnts(std::vector<double>{})
-        //{}
-
         void operator()(OctreeNode* node) /*noexcept*/ {
             // I'm inner node, i.e., I have a super neuron
-            if (node->is_parent) {
+            if (node->is_parent()) {
                 Vec3d temp_xyz_pos_exc;
                 Vec3d temp_xyz_pos_inh;
                 Vec3d xyz_pos_exc = { 0., 0., 0. };

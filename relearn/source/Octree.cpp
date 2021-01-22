@@ -171,7 +171,7 @@ bool Octree::acceptance_criterion_test(const Vec3d& axon_pos_xyz,
     // Use naive method
     if (naive_method) {
         // Accept leaf only
-        const auto is_child = !node_with_dendrite->is_parent;
+        const auto is_child = !node_with_dendrite->is_parent();
         return is_child;
     }
 
@@ -184,7 +184,7 @@ bool Octree::acceptance_criterion_test(const Vec3d& axon_pos_xyz,
 		* Node is leaf node, i.e., not super neuron.
 		* Thus the node is precise. Accept it.
 		*/
-        if (!node_with_dendrite->is_parent) {
+        if (!node_with_dendrite->is_parent()) {
             return true;
         }
 
@@ -230,7 +230,7 @@ void Octree::get_nodes_for_interval(
 	* The root node is parent (i.e., contains a super neuron) and thus cannot be the target neuron.
 	* So, start considering its children.
 	*/
-    if (root->is_parent) {
+    if (root->is_parent()) {
         // Node is owned by this rank
         if (node_is_local(*root)) {
             // Push root's children onto stack
@@ -242,7 +242,7 @@ void Octree::get_nodes_for_interval(
         }
         // Node is owned by different rank
         else {
-            const auto target_rank = root->rank;
+            const auto target_rank = root->get_rank();
             NodesCacheKey rank_addr_pair;
             rank_addr_pair.first = target_rank;
 
@@ -335,7 +335,7 @@ void Octree::get_nodes_for_interval(
             }
             // Node is owned by different rank
             else {
-                const auto target_rank = stack_elem->rank;
+                const auto target_rank = stack_elem->get_rank();
                 NodesCacheKey rank_addr_pair;
                 rank_addr_pair.first = target_rank;
 
@@ -433,7 +433,7 @@ double Octree::calc_attractiveness_to_connect(
 	* That is, the dendrites of the axon's neuron are not included in any super neuron considered.
 	* However, this only works under the requirement that "acceptance_criterion" is <= 0.5.
 	*/
-    if ((!node_with_dendrite.is_parent) && (src_neuron_id == node_with_dendrite.cell.get_neuron_id())) {
+    if ((!node_with_dendrite.is_parent()) && (src_neuron_id == node_with_dendrite.cell.get_neuron_id())) {
         return 0.0;
     }
 
@@ -478,7 +478,7 @@ OctreeNode* Octree::select_subinterval(const ProbabilitySubintervalList& list) {
 }
 
 bool Octree::node_is_local(const OctreeNode& node) /*noexcept*/ {
-    return node.rank == MPIWrapper::get_my_rank();
+    return node.get_rank() == MPIWrapper::get_my_rank();
 }
 
 void Octree::append_node(OctreeNode* node, ProbabilitySubintervalList& list) {
@@ -499,7 +499,7 @@ void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list,
     }
     // Node is remote
 
-    const int target_rank = node->rank;
+    const int target_rank = node->get_rank();
     NodesCacheKey rank_addr_pair;
     rank_addr_pair.first = target_rank;
 
@@ -566,7 +566,7 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
         if ((vacant_axons.size() < max_num_pending_vacant_axons) && ret) {
             auto axon = std::make_shared<VacantAxon>(source_neuron_id, xyz_pos, dendrite_type_needed);
 
-            if (root->is_parent) {
+            if (root->is_parent()) {
                 append_children(root, axon->nodes_to_visit, access_epochs_started);
             } else {
                 append_node(root, axon->nodes_to_visit);
@@ -630,12 +630,12 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
                 if (nullptr != node_selected) {
                     // Selected node is parent. A parent cannot be a target neuron.
                     // So append its children to nodes_to_visit
-                    if (node_selected->is_parent) {
+                    if (node_selected->is_parent()) {
                         append_children(node_selected, axon->nodes_to_visit, access_epochs_started);
                     } else {
                         // Target neuron found
                         // Create synapse creation request for the target neuron
-                        map_synapse_creation_requests_outgoing[node_selected->rank].append(
+                        map_synapse_creation_requests_outgoing[node_selected->get_rank()].append(
                             axon->neuron_id,
                             node_selected->cell.get_neuron_id(),
                             axon->dendrite_type_needed);
@@ -712,7 +712,7 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 	* I'm the very first child of that node.
 	* I.e., the node is a leaf.
 	*/
-    if (!prev->is_parent) {
+    if (!prev->is_parent()) {
         do {
             /**
 			* Make node containing my octant a parent by
@@ -748,13 +748,13 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 			* It is not used for inner nodes.
 			*/
             prev->cell.set_neuron_id(Constants::uninitialized);
-            prev->is_parent = true; // Mark node as parent
+            prev->parent = true; // Mark node as parent
 
             // MPI rank who owns this node
-            new_node->rank = prev->rank;
+            new_node->rank = prev->get_rank();
 
             // New node is one level below
-            new_node->level = prev->level + 1;
+            new_node->level = prev->get_level() + 1;
 
             // Determine my octant
             my_idx = prev->cell.get_octant_for_position(position);
@@ -770,7 +770,7 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 	* add myself to the array now
 	*/
     prev->children[my_idx] = new_node;
-    new_node->level = prev->level + 1; // Now we know level of me
+    new_node->level = prev->get_level() + 1; // Now we know level of me
 
     Vec3d xyz_min;
     Vec3d xyz_max;
@@ -782,7 +782,7 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 
 // Insert an octree node with its subtree into the tree
 void Octree::insert(OctreeNode* node_to_insert) {
-    const auto target_level = node_to_insert->level;
+    const auto target_level = node_to_insert->get_level();
 
     // Tree is empty
     if (nullptr == root) {
@@ -805,7 +805,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
         // Init octree node
         root->rank = MPIWrapper::get_my_rank();
         root->level = root_level;
-        root->is_parent = true; // node will become parent
+        root->parent = true; // node will become parent
 
         // Init cell in octree node
         // cell size becomes tree's box size
@@ -816,7 +816,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
     }
 
     auto* curr = root;
-    auto next_level = curr->level + 1; // next_level is the current level we consider for inserting the node
+    auto next_level = curr->get_level() + 1; // next_level is the current level we consider for inserting the node
         // It's called next_level as it is the next level below the current node
         // "curr" in the tree
 
@@ -879,7 +879,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
             // Init octree node
             new_node->rank = MPIWrapper::get_my_rank();
             new_node->level = next_level;
-            new_node->is_parent = true; // node will become parent
+            new_node->parent = true; // node will become parent
 
             // Init cell in octree node
             // cell size becomes size of new node's octant
@@ -982,7 +982,7 @@ bool Octree::find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz,
 		* No node is selected when all nodes in the interval, created in
 		* get_nodes_for_interval(), have probability 0 to connect.
 		*/
-        const auto done = (nullptr == node_selected) || (!node_selected->is_parent);
+        const auto done = (nullptr == node_selected) || (!node_selected->is_parent());
 
         // Update root of subtree
         root_of_subtree = node_selected;
@@ -997,7 +997,7 @@ bool Octree::find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz,
     // Return neuron ID and rank of target neuron
     if (found) {
         target_neuron_id = node_selected->cell.get_neuron_id();
-        target_rank = node_selected->rank;
+        target_rank = node_selected->get_rank();
     }
 
     return found;

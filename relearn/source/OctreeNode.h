@@ -17,20 +17,35 @@
 #include <cstddef>
 
 class OctreeNode {
-public:
-    void print() const;
-
-    Cell cell{};
-    std::array<OctreeNode*, Constants::number_oct> children{ nullptr };
-    bool is_parent{ false };
+    friend class Octree;
+    
+    bool parent{ false };
 
     size_t rank{ 0 }; // MPI rank who owns this octree node
     size_t level{ 0 }; // Level in the tree [0 (= root) ... depth of tree]
 
+public:
+    Cell cell{};
+    std::array<OctreeNode*, Constants::number_oct> children{ nullptr };
+
+    size_t get_rank() const noexcept {
+        return rank;
+    }
+
+    size_t get_level() const noexcept {
+        return level;
+    }
+
+    bool is_parent() const noexcept {
+        return parent;
+    }
+
+    void print() const;
+
     void reset() {
         cell = Cell{};
         children = std::array<OctreeNode*, Constants::number_oct>{ nullptr };
-        is_parent = false;
+        parent = false;
         rank = 0;
         level = 0;
     }

@@ -122,7 +122,7 @@ public:
 
     void set_total_num_neurons(size_t total_num) noexcept;
 
-protected:
+private:
     bool neurons_loaded;
 
     size_t total_num_neurons;

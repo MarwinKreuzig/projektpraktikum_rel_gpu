@@ -19,7 +19,7 @@ void OctreeNode::print() const {
     }
     std::cout << "\n";
 
-    std::cout << "  is_parent  : " << is_parent << "\n\n";
+    std::cout << "  is_parent  : " << parent << "\n\n";
     std::cout << "  rank       : " << rank << "\n";
     std::cout << "  level      : " << level << "\n\n";
 
