@@ -433,7 +433,7 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
 			* Find target neuron for connecting and
 			* connect if target neuron has still dendrite available.
 			*
-			* The target neuron might not have any dendrites std::left
+			* The target neuron might not have any dendrites left
 			* as other axons might already have connected to them.
 			* Right now, those collisions are handled in a first-come-first-served fashion.
 			*/

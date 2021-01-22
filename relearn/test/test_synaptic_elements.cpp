@@ -196,3 +196,153 @@ TEST(TestSynapticElements, testSynapticElementsParameters) {
     }
 }
 
+TEST(TestSynapticElements, testSynapticElementsUpdate) {
+    setup();
+
+    std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
+    std::uniform_int_distribution<int> uid_bool(0, 1);
+
+    std::uniform_real_distribution<double> urd_cnt(0, 10);
+    std::uniform_int_distribution<size_t> uid_connected(0, 10);
+    std::uniform_real_distribution<double> urd_delta(0, 10);
+
+    for (auto i = 0; i < iterations; i++) {
+        size_t num_neurons = uid_num_neurons(mt);
+
+        SynapticElements::ElementType element_type = uid_bool(mt) == 0 ? SynapticElements::ElementType::AXON : SynapticElements::ElementType::DENDRITE;
+
+        SynapticElements synaptic_elements(element_type, 0.0);
+        synaptic_elements.init(num_neurons);
+
+        std::vector<double> golden_cnts(num_neurons);
+        std::vector<double> golden_conn_cnts(num_neurons);
+        std::vector<double> golden_delta_cnts(num_neurons);
+        std::vector<SynapticElements::SignalType> golden_signal_types(num_neurons);
+
+        for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+            const double cnt = urd_cnt(mt);
+            const double conn_cnt = uid_connected(mt);
+            const double delta_cnt = urd_delta(mt);
+            const SynapticElements::SignalType signal_type = uid_bool(mt) == 0 ? SynapticElements::SignalType::EXCITATORY : SynapticElements::SignalType::INHIBITORY;
+
+            golden_cnts[neuron_id] = cnt;
+            golden_conn_cnts[neuron_id] = conn_cnt;
+            golden_delta_cnts[neuron_id] = delta_cnt;
+            golden_signal_types[neuron_id] = signal_type;
+
+            synaptic_elements.update_cnt(neuron_id, cnt);
+            synaptic_elements.update_conn_cnt(neuron_id, conn_cnt, "");
+            synaptic_elements.update_delta_cnt(neuron_id, delta_cnt);
+            synaptic_elements.set_signal_type(neuron_id, signal_type);
+        }        
+
+        for (size_t neuron_id = num_neurons; neuron_id < num_neurons + 10; neuron_id++) {
+            const double cnt = urd_cnt(mt);
+            const double conn_cnt = uid_connected(mt);
+            const double delta_cnt = urd_delta(mt);
+            const SynapticElements::SignalType signal_type = uid_bool(mt) == 0 ? SynapticElements::SignalType::EXCITATORY : SynapticElements::SignalType::INHIBITORY;
+
+            EXPECT_THROW(synaptic_elements.update_cnt(neuron_id, cnt), RelearnException);
+            EXPECT_THROW(synaptic_elements.update_conn_cnt(neuron_id, conn_cnt, ""), RelearnException);
+            EXPECT_THROW(synaptic_elements.update_delta_cnt(neuron_id, delta_cnt), RelearnException);
+            EXPECT_THROW(synaptic_elements.set_signal_type(neuron_id, signal_type), RelearnException);
+        }
+
+        const std::vector<double>& cnts = synaptic_elements.get_cnts();
+        const std::vector<double>& conn_cnts = synaptic_elements.get_connected_cnts();
+        const std::vector<double>& delta_cnts = synaptic_elements.get_delta_cnts();
+        const std::vector<SynapticElements::SignalType>& types = synaptic_elements.get_signal_types();
+
+        EXPECT_EQ(cnts.size(), num_neurons);
+        EXPECT_EQ(conn_cnts.size(), num_neurons);
+        EXPECT_EQ(delta_cnts.size(), num_neurons);
+        EXPECT_EQ(types.size(), num_neurons);
+
+        for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+            EXPECT_EQ(golden_cnts[neuron_id], synaptic_elements.get_cnt(neuron_id));
+            EXPECT_EQ(golden_cnts[neuron_id], cnts[neuron_id]);
+
+            EXPECT_EQ(golden_conn_cnts[neuron_id], synaptic_elements.get_connected_cnt(neuron_id));
+            EXPECT_EQ(golden_conn_cnts[neuron_id], conn_cnts[neuron_id]);
+
+            EXPECT_EQ(golden_delta_cnts[neuron_id], synaptic_elements.get_delta_cnt(neuron_id));
+            EXPECT_EQ(golden_delta_cnts[neuron_id], delta_cnts[neuron_id]);
+
+            EXPECT_EQ(golden_signal_types[neuron_id], synaptic_elements.get_signal_type(neuron_id));
+            EXPECT_EQ(golden_signal_types[neuron_id], types[neuron_id]);
+        }
+
+        for (size_t neuron_id = num_neurons; neuron_id < num_neurons + 10; neuron_id++) {
+            EXPECT_THROW(synaptic_elements.get_cnt(neuron_id), RelearnException);
+            EXPECT_THROW(synaptic_elements.get_connected_cnt(neuron_id), RelearnException);
+            EXPECT_THROW(synaptic_elements.get_delta_cnt(neuron_id), RelearnException);
+            EXPECT_THROW(synaptic_elements.get_signal_type(neuron_id), RelearnException);
+        }
+    }
+}
+
+TEST(TestSynapticElements, testSynapticElementsMultipleUpdate) {
+    setup();
+
+    std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
+    std::uniform_int_distribution<int> uid_bool(0, 1);
+
+    std::uniform_real_distribution<double> urd_cnt(0, 10);
+    std::uniform_int_distribution<size_t> uid_connected(0, 10);
+    std::uniform_real_distribution<double> urd_delta(0, 10);
+
+    for (auto i = 0; i < iterations; i++) {
+        size_t num_neurons = uid_num_neurons(mt);
+
+        SynapticElements::ElementType element_type = uid_bool(mt) == 0 ? SynapticElements::ElementType::AXON : SynapticElements::ElementType::DENDRITE;
+
+        SynapticElements synaptic_elements(element_type, 0.0);
+        synaptic_elements.init(num_neurons);
+
+        std::vector<double> golden_cnts(num_neurons, 0.0);
+        std::vector<double> golden_conn_cnts(num_neurons, 0.0);
+        std::vector<double> golden_delta_cnts(num_neurons, 0.0);
+        std::vector<SynapticElements::SignalType> golden_signal_types(num_neurons);
+
+        for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+            const double cnt = urd_cnt(mt);
+            const double conn_cnt = uid_connected(mt);
+            const double delta_cnt = urd_delta(mt);
+            const SynapticElements::SignalType signal_type = uid_bool(mt) == 0 ? SynapticElements::SignalType::EXCITATORY : SynapticElements::SignalType::INHIBITORY;
+
+            golden_cnts[neuron_id] += cnt;
+            golden_conn_cnts[neuron_id] += conn_cnt;
+            golden_delta_cnts[neuron_id] += delta_cnt;
+            golden_signal_types[neuron_id] = signal_type;
+
+            synaptic_elements.update_cnt(neuron_id, cnt);
+            synaptic_elements.update_conn_cnt(neuron_id, conn_cnt, "");
+            synaptic_elements.update_delta_cnt(neuron_id, delta_cnt);
+            synaptic_elements.set_signal_type(neuron_id, signal_type);
+        }
+
+        const std::vector<double>& cnts = synaptic_elements.get_cnts();
+        const std::vector<double>& conn_cnts = synaptic_elements.get_connected_cnts();
+        const std::vector<double>& delta_cnts = synaptic_elements.get_delta_cnts();
+        const std::vector<SynapticElements::SignalType>& types = synaptic_elements.get_signal_types();
+
+        EXPECT_EQ(cnts.size(), num_neurons);
+        EXPECT_EQ(conn_cnts.size(), num_neurons);
+        EXPECT_EQ(delta_cnts.size(), num_neurons);
+        EXPECT_EQ(types.size(), num_neurons);
+
+        for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+            EXPECT_EQ(golden_cnts[neuron_id], synaptic_elements.get_cnt(neuron_id));
+            EXPECT_EQ(golden_cnts[neuron_id], cnts[neuron_id]);
+
+            EXPECT_EQ(golden_conn_cnts[neuron_id], synaptic_elements.get_connected_cnt(neuron_id));
+            EXPECT_EQ(golden_conn_cnts[neuron_id], conn_cnts[neuron_id]);
+
+            EXPECT_EQ(golden_delta_cnts[neuron_id], synaptic_elements.get_delta_cnt(neuron_id));
+            EXPECT_EQ(golden_delta_cnts[neuron_id], delta_cnts[neuron_id]);
+
+            EXPECT_EQ(golden_signal_types[neuron_id], synaptic_elements.get_signal_type(neuron_id));
+            EXPECT_EQ(golden_signal_types[neuron_id], types[neuron_id]);
+        }
+    }
+}
