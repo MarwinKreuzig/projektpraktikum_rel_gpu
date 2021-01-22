@@ -218,7 +218,7 @@ int main(int argc, char** argv) {
     /**
 	 * Initialize the simuliation log files
 	 */
-    Logs::init();
+    LogFiles::init();
 
     GlobalTimers::timers.start(TimerRegion::INITIALIZATION);
 

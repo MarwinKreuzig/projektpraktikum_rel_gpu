@@ -23,16 +23,6 @@ public:
         INHIBITORY
     };
 
-    struct Dendrites {
-        // All dendrites have the same position
-        Vec3d xyz_pos{};
-        // Mark if xyz_pos[] values are valid and can be used
-        bool xyz_pos_valid = false;
-        unsigned int num_dendrites = 0;
-        // TODO(future)
-        // List colliding_axons;
-    };
-
     Cell() = default;
     ~Cell() = default;
 
@@ -136,6 +126,16 @@ public:
     void print() const;
 
 private:
+    struct Dendrites {
+        // All dendrites have the same position
+        Vec3d xyz_pos{};
+        // Mark if xyz_pos[] values are valid and can be used
+        bool xyz_pos_valid = false;
+        unsigned int num_dendrites = 0;
+        // TODO(future)
+        // List colliding_axons;
+    };
+
     // Two points describe size of cell
     Vec3d xyz_min;
     Vec3d xyz_max;

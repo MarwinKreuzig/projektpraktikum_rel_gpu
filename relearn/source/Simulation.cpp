@@ -76,8 +76,8 @@ void Simulation::load_neurons_from_file(const std::string& path_to_positions, co
 
     LogMessages::print_message_rank("Synaptic elements initialized \n", 0);
 
-    neurons->print_neurons_overview_to_log_file_on_rank_0(0, Logs::get("neurons_overview"));
-    neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, Logs::get("sums"), 0, 0);
+    neurons->print_neurons_overview_to_log_file_on_rank_0(0, LogFiles::get("neurons_overview"));
+    neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, LogFiles::get("sums"), 0, 0);
 }
 
 void Simulation::simulate(size_t number_steps, size_t step_monitor) {
@@ -153,14 +153,14 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
                 LogMessages::print_message_rank(sstring.str().c_str(), 0);
             }
 
-            neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, Logs::get("sums"), num_synapses_deleted, num_synapses_created);
+            neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, LogFiles::get("sums"), num_synapses_deleted, num_synapses_created);
 
             std::cout << std::flush;
         }
 
         // Print details every 500 ms
         if (step % Constants::logfile_update_step == 0) {
-            neurons->print_neurons_overview_to_log_file_on_rank_0(step, Logs::get("neurons_overview"));
+            neurons->print_neurons_overview_to_log_file_on_rank_0(step, LogFiles::get("neurons_overview"));
         }
     }
 
@@ -169,8 +169,8 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 
     print_neuron_monitors();
 
-    neurons->print_positions_to_log_file(Logs::get("positions_rank_" + MPIWrapper::get_my_rank_str()), *neuron_id_map);
-    neurons->print_network_graph_to_log_file(Logs::get("network_rank_" + MPIWrapper::get_my_rank_str()), *network_graph, *neuron_id_map);
+    neurons->print_positions_to_log_file(LogFiles::get("positions_rank_" + MPIWrapper::get_my_rank_str()), *neuron_id_map);
+    neurons->print_network_graph_to_log_file(LogFiles::get("network_rank_" + MPIWrapper::get_my_rank_str()), *network_graph, *neuron_id_map);
 }
 
 void Simulation::finalize() const {

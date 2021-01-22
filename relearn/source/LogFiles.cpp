@@ -14,16 +14,15 @@
 
 #include <filesystem>
 
-namespace Logs {
-std::string output_dir;
+std::string LogFiles::output_dir;
 
-std::map<std::string, LogFiles> logfiles;
+std::map<std::string, LogFiles> LogFiles::logfiles;
 
-void init() {
-    Logs::output_dir = "../output/";
+void LogFiles::init() {
+    LogFiles::output_dir = "../output/";
 
     if (0 == MPIWrapper::get_my_rank()) {
-        std::filesystem::path output_path(Logs::output_dir);
+        std::filesystem::path output_path(LogFiles::output_dir);
         if (!std::filesystem::exists(output_path)) {
             std::filesystem::create_directory(output_path);
         }
@@ -37,26 +36,25 @@ void init() {
     //size_t neurons_to_log[num_neurons_to_log] = {0, 10, 19};
 
     // Create log files for neurons
-    //LogFiles log_files(num_neurons_to_log, Logs::output_dir + "neuron_", neurons_to_log);
+    //LogFiles log_files(num_neurons_to_log, LogFiles::output_dir + "neuron_", neurons_to_log);
 
     // Create log file for neurons overview on rank 0
-    Logs::addLogFile("neurons_overview", 0);
+    LogFiles::addLogFile("neurons_overview", 0);
 
     // Create log file for sums on rank 0
-    Logs::addLogFile("sums", 0);
+    LogFiles::addLogFile("sums", 0);
 
     // Create log file for network on all ranks
-    Logs::addLogFile("network_rank_" + MPIWrapper::get_my_rank_str(), -1);
+    LogFiles::addLogFile("network_rank_" + MPIWrapper::get_my_rank_str(), -1);
 
     // Create log file for positions on all ranks
-    Logs::addLogFile("positions_rank_" + MPIWrapper::get_my_rank_str(), -1);
+    LogFiles::addLogFile("positions_rank_" + MPIWrapper::get_my_rank_str(), -1);
 }
 
-void addLogFile(const std::string& name, int rank) {
+void LogFiles::addLogFile(const std::string& name, int rank) {
     LogFiles lf(output_dir + name + ".txt", rank);
     logfiles.insert(std::pair<const std::string, LogFiles>(name, std::move(lf)));
 }
-} //namespace Logs
 
 // One log file only at the MPI rank "on_rank"
 // on_rank == -1 means all ranks
