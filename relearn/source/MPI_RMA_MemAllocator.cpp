@@ -70,10 +70,11 @@ void MPI_RMA_MemAllocator::delete_octree_node(OctreeNode* ptr) {
 }
 
 [[nodiscard]] OctreeNode* MPI_RMA_MemAllocator::get_root_nodes_for_local_trees(size_t num_local_trees) {
-    int requested_size = num_local_trees * sizeof(OctreeNode);
+    const size_t requested_size = num_local_trees * sizeof(OctreeNode);
+    const auto requested_size_conv = static_cast<int>(requested_size);
 
     // NOLINTNEXTLINE
-    if (MPI_SUCCESS != MPI_Alloc_mem(requested_size, MPI_INFO_NULL, &root_nodes_for_local_trees)) {
+    if (MPI_SUCCESS != MPI_Alloc_mem(requested_size_conv, MPI_INFO_NULL, &root_nodes_for_local_trees)) {
         RelearnException::fail("MPI_Alloc_mem failed for local trees");
     }
 
@@ -95,16 +96,7 @@ void MPI_RMA_MemAllocator::gather_rma_window_base_pointers() {
 void MPI_RMA_MemAllocator::create_rma_window() noexcept {
     // Set window's displacement unit
     displ_unit = 1;
-
-    // NOLINTNEXTLINE
-    auto some_val = reinterpret_cast<size_t*>(mpi_window);
-
-    std::cout << "some_val_1: " << some_val << std::endl;    
-    int error_c = MPI_Win_create(base_ptr, max_size, displ_unit, MPI_INFO_NULL, MPI_COMM_WORLD, &mpi_window);
-
-    auto some_other_val = reinterpret_cast<size_t*>(mpi_window);
-    std::cout << "some_val_2: " << some_other_val << std::endl;
-    std::cout << "error_c: " << error_c << std::endl;
+    MPI_Win_create(base_ptr, max_size, displ_unit, MPI_INFO_NULL, MPI_COMM_WORLD, &mpi_window);
 }
 
 [[nodiscard]] size_t MPI_RMA_MemAllocator::HolderOctreeNode::calculate_distance(OctreeNode* ptr) const noexcept {

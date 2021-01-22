@@ -20,7 +20,9 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(size_t num_neurons, doubl
     , random_number_generator(RandomHolder<SubdomainFromNeuronDensity>::get_random_generator())
     , random_number_distribution(0.0, 1.0) {
 
-    random_number_generator.seed(MPIWrapper::get_my_rank());
+    unsigned int my_rank = static_cast<unsigned int>(MPIWrapper::get_my_rank());
+
+    random_number_generator.seed(my_rank);
 
     // Calculate size of simulation box based on neuron density
     // num_neurons^(1/3) == #neurons per dimension

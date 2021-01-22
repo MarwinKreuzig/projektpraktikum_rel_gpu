@@ -33,8 +33,8 @@ void RelearnException::fail() {
         throw RelearnException{};
     }
 
-    int my_rank = MPIWrapper::get_my_rank();
-    int num_ranks = MPIWrapper::get_num_ranks();
+    const auto my_rank = MPIWrapper::get_my_rank();
+    const auto num_ranks = MPIWrapper::get_num_ranks();
 
     std::stringstream sstream;
 
@@ -64,8 +64,8 @@ void RelearnException::fail(std::string&& message) {
         throw RelearnException{};
     }
 
-    int my_rank = MPIWrapper::get_my_rank();
-    int num_ranks = MPIWrapper::get_num_ranks();
+    const auto my_rank = MPIWrapper::get_my_rank();
+    const auto num_ranks = MPIWrapper::get_num_ranks();
 
     std::stringstream sstream;
 

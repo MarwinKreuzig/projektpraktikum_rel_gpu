@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "Commons.h"
+#include "config.h"
 #include "RelearnException.h"
 #include "Vec3.h"
 

@@ -14,8 +14,8 @@
 #include <random>
 
 namespace randomNumberSeeds {
-extern int64_t partition;
-extern int64_t octree;
+extern unsigned int partition;
+extern unsigned int octree;
 } // namespace randomNumberSeeds
 
 template <typename T>

@@ -39,8 +39,8 @@
    */
 MPI_Op MPIWrapper::minsummax;
 
-size_t MPIWrapper::num_ranks; // Number of ranks in MPI_COMM_WORLD
-size_t MPIWrapper::my_rank; // My rank in MPI_COMM_WORLD
+int MPIWrapper::num_ranks = -1; // Number of ranks in MPI_COMM_WORLD
+int MPIWrapper::my_rank = -1; // My rank in MPI_COMM_WORLD
 
 size_t MPIWrapper::num_neurons; // Total number of neurons
 size_t MPIWrapper::my_num_neurons; // My number of neurons I'm responsible for
@@ -87,16 +87,11 @@ void MPIWrapper::init(int argc, char** argv) {
 }
 
 void MPIWrapper::init_globals() {
-    int num_ranks_mpi = 0;
     // NOLINTNEXTLINE
-    MPI_Comm_size(MPI_COMM_WORLD, &num_ranks_mpi);
+    MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
 
-    int my_rank_mpi = 0;
     // NOLINTNEXTLINE
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank_mpi);
-
-    num_ranks = static_cast<size_t>(num_ranks_mpi);
-    my_rank = static_cast<size_t>(my_rank_mpi);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 }
 
 void MPIWrapper::init_neurons(size_t num_neurons) {
@@ -117,7 +112,7 @@ void MPIWrapper::init_neurons(size_t num_neurons) {
     /*
 	 * Info about how much to receive (num_neurons) from every process and where to store it (displs)
 	 */
-    int displ = 0;
+    size_t displ = 0;
     const size_t rest = num_neurons % num_ranks;
     const size_t block_size = num_neurons / num_ranks;
     for (size_t i = 0; i < num_ranks; i++) {
@@ -200,11 +195,13 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
     return mpi_rma_mem_allocator.new_octree_node();
 }
 
-[[nodiscard]] size_t MPIWrapper::get_num_ranks() {
+[[nodiscard]] int MPIWrapper::get_num_ranks() {
+    RelearnException::check(num_ranks >= 0);
     return num_ranks;
 }
 
-[[nodiscard]] size_t MPIWrapper::get_my_rank() {
+[[nodiscard]] int MPIWrapper::get_my_rank() {
+    RelearnException::check(my_rank >= 0);
     return my_rank;
 }
 
@@ -287,8 +284,9 @@ void MPIWrapper::all_gather_v(size_t total_num_neurons, std::vector<double>& xyz
 }
 
 void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
+    const int size = static_cast<int>(tokens.size());
     // NOLINTNEXTLINE
-    MPI_Waitall(tokens.size(), tokens.data(), MPI_STATUSES_IGNORE);
+    MPI_Waitall(size, tokens.data(), MPI_STATUSES_IGNORE);
 }
 
 [[nodiscard]] MPI_Op MPIWrapper::translate_reduce_function(ReduceFunction rf) {
@@ -345,18 +343,18 @@ void MPIWrapper::free_custom_function() {
     MPI_Op_free(&minsummax);
 }
 
-void MPIWrapper::lock_window(size_t rank, MPI_Locktype lock_type) {
-    const int rank_int = static_cast<int>(rank);
+void MPIWrapper::lock_window(int rank, MPI_Locktype lock_type) {
+    RelearnException::check(rank >= 0);
     const auto lock_type_int = static_cast<int>(lock_type);
 
     // NOLINTNEXTLINE
-    const int errorcode = MPI_Win_lock(lock_type_int, rank_int, MPI_MODE_NOCHECK, mpi_rma_mem_allocator.mpi_window);
+    const int errorcode = MPI_Win_lock(lock_type_int, rank, MPI_MODE_NOCHECK, mpi_rma_mem_allocator.mpi_window);
     RelearnException::check(errorcode == 0, "Error in lock window");
 }
 
-void MPIWrapper::unlock_window(size_t rank) {
-    const int rank_int = static_cast<int>(rank);
-    const int errorcode = MPI_Win_unlock(rank_int, mpi_rma_mem_allocator.mpi_window);
+void MPIWrapper::unlock_window(int rank) {
+    RelearnException::check(rank >= 0);
+    const int errorcode = MPI_Win_unlock(rank, mpi_rma_mem_allocator.mpi_window);
     RelearnException::check(errorcode == 0, "Error in unlock window");
 }
 
@@ -372,7 +370,7 @@ void MPIWrapper::finalize() /*noexcept*/ {
 }
 
 // Print which neurons "rank" is responsible for
-void MPIWrapper::print_infos_rank(size_t rank) {
+void MPIWrapper::print_infos_rank(int rank) {
     if (rank == my_rank || rank == -1) {
         std::cout << "Number ranks: " << num_ranks << "\n";
         std::cout << "Partitioning based on number neurons would be: Rank " << my_rank << ": my_num_neurons: " << my_num_neurons

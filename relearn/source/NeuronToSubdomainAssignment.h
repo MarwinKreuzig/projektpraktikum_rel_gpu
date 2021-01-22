@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "Commons.h"
+#include "config.h"
 #include "Random.h"
 #include "RelearnException.h"
 #include "SynapticElements.h"

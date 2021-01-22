@@ -10,7 +10,7 @@
 
 #include "NeuronModels.h"
 
-#include "Commons.h"
+#include "config.h"
 #include "MPIWrapper.h"
 #include "Random.h"
 

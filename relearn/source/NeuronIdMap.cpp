@@ -10,7 +10,7 @@
 
 #include "NeuronIdMap.h"
 
-#include "Commons.h"
+#include "config.h"
 #include "MPIWrapper.h"
 #include "RelearnException.h"
 
@@ -24,7 +24,7 @@
 
 NeuronIdMap::NeuronIdMap(size_t my_num_neurons,
     const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z) {
-    int num_ranks = MPIWrapper::get_num_ranks();
+    const size_t num_ranks = MPIWrapper::get_num_ranks();
 
     // Gather the number of neurons of every process
     std::vector<size_t> rank_to_num_neurons(num_ranks);
@@ -84,10 +84,10 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
     const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z,
     std::map<Vec3d, RankNeuronId>& pos_to_rank_neuron_id) {
 
-    int num_ranks = MPIWrapper::get_num_ranks();
-    int my_rank = MPIWrapper::get_my_rank();
+    const auto num_ranks = MPIWrapper::get_num_ranks();
+    const auto my_rank = MPIWrapper::get_my_rank();
 
-    const size_t total_num_neurons = rank_to_start_neuron_id[static_cast<int64_t>(num_ranks) - 1] + rank_to_num_neurons[static_cast<int64_t>(num_ranks) - 1];
+    const auto total_num_neurons = rank_to_start_neuron_id[num_ranks - 1] + rank_to_num_neurons[num_ranks - 1];
     std::vector<double> xyz_pos(total_num_neurons * 3);
 
     // Copy my neuron positions as xyz-triple into the send buffer
@@ -102,7 +102,7 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 
     std::vector<int> recvcounts(num_ranks);
     std::vector<int> displs(num_ranks);
-    for (int i = 0; i < num_ranks; i++) {
+    for (size_t i = 0; i < num_ranks; i++) {
         RelearnException::check(rank_to_num_neurons[i] <= std::numeric_limits<int>::max(), "rank to neuron is too large in neuronidmap");
         recvcounts[i] = static_cast<int>(rank_to_num_neurons[i]);
 

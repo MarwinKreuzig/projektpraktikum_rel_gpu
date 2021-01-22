@@ -11,7 +11,7 @@
 #pragma once
 
 #include "Cell.h"
-#include "Commons.h"
+#include "config.h"
 
 #include <array>
 #include <cstddef>

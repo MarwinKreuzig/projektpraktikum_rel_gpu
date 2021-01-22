@@ -11,7 +11,7 @@
 #pragma once
 
 #include "Cell.h"
-#include "Commons.h"
+#include "config.h"
 #include "LogFiles.h"
 #include "MPIWrapper.h"
 #include "ModelParameter.h"
@@ -150,17 +150,23 @@ class Neurons {
 	 * Identifies a neuron by the MPI rank of its owner
 	 * and its neuron id on the owner, i.e., the pair <rank, neuron_id>
 	 */
-    struct RankNeuronId {
+    class RankNeuronId {
         int rank; // MPI rank of the owner
         size_t neuron_id; // Neuron id on the owner
-
+    
+    public:
         RankNeuronId(int rank, size_t neuron_id) noexcept
             : rank(rank)
             , neuron_id(neuron_id) {
         }
 
-        RankNeuronId(const RankNeuronId& other) = default;
-        RankNeuronId& operator=(const RankNeuronId& other) = default;
+        int get_rank() const noexcept {
+            return rank;
+        }
+
+        size_t get_neuron_id() const noexcept {
+            return neuron_id;
+        }
 
         bool operator==(const RankNeuronId& other) const noexcept {
             return (this->rank == other.rank && this->neuron_id == other.neuron_id);
@@ -175,13 +181,21 @@ class Neurons {
     /**
 	 * Type for list element used to represent a synapse for synapse selection
 	 */
-    struct Synapse {
+    class Synapse {
         RankNeuronId rank_neuron_id;
         unsigned int synapse_id; // Id of the synapse. Used to distinguish multiple synapses between the same neuron pair
-
+    public:
         Synapse(RankNeuronId rank_neuron_id, unsigned int synapse_id) noexcept
             : rank_neuron_id(rank_neuron_id)
             , synapse_id(synapse_id) {
+        }
+
+        RankNeuronId get_rank_neuron_id() const noexcept {
+            return rank_neuron_id;
+        }
+
+        unsigned int get_synapse_id() const noexcept {
+            return synapse_id;
         }
     };
 

@@ -8,7 +8,7 @@
  *
  */
 
-#include "Commons.h"
+#include "config.h"
 #include "MPIWrapper.h"
 #include "NeuronModels.h"
 #include "NeuronMonitor.h"
@@ -186,8 +186,8 @@ int main(int argc, char** argv) {
 	 */
     MPIWrapper::init(argc, argv);
 
-    const size_t my_rank = MPIWrapper::get_my_rank();
-    const size_t num_ranks = MPIWrapper::get_num_ranks();
+    const int my_rank = MPIWrapper::get_my_rank();
+    const int num_ranks = MPIWrapper::get_num_ranks();
 
     double accept_criterion = 0.0;
     if (arguments[1] == "naive") {
@@ -204,8 +204,8 @@ int main(int argc, char** argv) {
     MPIWrapper::print_infos_rank(0);
 
     // Init random number seeds
-    randomNumberSeeds::partition = static_cast<int64_t>(my_rank);
-    randomNumberSeeds::octree = static_cast<int64_t>(seed_octree);
+    randomNumberSeeds::partition = static_cast<unsigned int>(my_rank);
+    randomNumberSeeds::octree = static_cast<unsigned int>(seed_octree);
 
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier(MPIWrapper::Scope::global);

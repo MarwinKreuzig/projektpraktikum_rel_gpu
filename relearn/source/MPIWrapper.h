@@ -68,8 +68,8 @@ private:
     static MPI_RMA_MemAllocator mpi_rma_mem_allocator;
     static RMABufferOctreeNodes rma_buffer_branch_nodes;
 
-    static size_t num_ranks; // Number of ranks in MPI_COMM_WORLD
-    static size_t my_rank; // My rank in MPI_COMM_WORLD
+    static int num_ranks; // Number of ranks in MPI_COMM_WORLD
+    static int my_rank; // My rank in MPI_COMM_WORLD
 
     static size_t num_neurons; // Total number of neurons
     static size_t my_num_neurons; // My number of neurons I'm responsible for
@@ -105,8 +105,9 @@ public:
     static void async_send(const T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
         MPI_Comm mpi_scope = translate_scope(scope);
 
+        const int size_in_bytes_conv = static_cast<int>(size_in_bytes);
         // NOLINTNEXTLINE
-        const int errorcode = MPI_Isend(buffer, size_in_bytes, MPI_CHAR, rank, 0, mpi_scope, &token);
+        const int errorcode = MPI_Isend(buffer, size_in_bytes_conv, MPI_CHAR, rank, 0, mpi_scope, &token);
         RelearnException::check(errorcode == 0, "Error in async send");
     }
 
@@ -114,8 +115,9 @@ public:
     static void async_receive(T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
         MPI_Comm mpi_scope = translate_scope(scope);
 
+        const int size_in_bytes_conv = static_cast<int>(size_in_bytes);
         // NOLINTNEXTLINE
-        const int errorcode = MPI_Irecv(buffer, size_in_bytes, MPI_CHAR, rank, 0, mpi_scope, &token);
+        const int errorcode = MPI_Irecv(buffer, size_in_bytes_conv, MPI_CHAR, rank, 0, mpi_scope, &token);
         RelearnException::check(errorcode == 0, "Error in async receive");
     }
 
@@ -126,8 +128,10 @@ public:
         MPI_Comm mpi_scope = translate_scope(scope);
         MPI_Op mpi_reduce_function = translate_reduce_function(function);
 
+        const int count_bytes = static_cast<int>(sizeof(T) * src.size());
+
         // NOLINTNEXTLINE
-        const int errorcode = MPI_Reduce(src.data(), dst.data(), sizeof(T) * src.size(), MPI_CHAR, mpi_reduce_function, root_rank, mpi_scope);
+        const int errorcode = MPI_Reduce(src.data(), dst.data(), count_bytes, MPI_CHAR, mpi_reduce_function, root_rank, mpi_scope);
         RelearnException::check(errorcode == 0, "Error in reduce: " + std::to_string(errorcode));
     }
 
@@ -161,9 +165,9 @@ public:
 
     [[nodiscard]] static OctreeNode* new_octree_node();
 
-    [[nodiscard]] static size_t get_num_ranks();
+    [[nodiscard]] static int get_num_ranks();
 
-    [[nodiscard]] static size_t get_my_rank();
+    [[nodiscard]] static int get_my_rank();
 
     [[nodiscard]] static size_t get_num_neurons();
 
@@ -193,11 +197,11 @@ public:
 
     static void wait_all_tokens(std::vector<AsyncToken>& tokens);
 
-    static void lock_window(size_t rank, MPI_Locktype lock_type);
+    static void lock_window(int rank, MPI_Locktype lock_type);
 
-    static void unlock_window(size_t rank);
+    static void unlock_window(int rank);
 
     static void finalize() /*noexcept*/;
 
-    static void print_infos_rank(size_t rank);
+    static void print_infos_rank(int rank);
 };

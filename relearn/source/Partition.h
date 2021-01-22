@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "Commons.h"
+#include "config.h"
 #include "LogMessages.h"
 #include "NeuronToSubdomainAssignment.h"
 #include "Neurons.h"
