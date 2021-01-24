@@ -71,6 +71,8 @@ public:
 
     void add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, const NeuronIdMap& neuron_id_map, const Partition& partition);
 
+    void debug_check() const;
+
 private:
     static void add_edge(Edges& edges, int rank, size_t neuron_id, int weight);
 

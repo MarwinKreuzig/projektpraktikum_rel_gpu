@@ -244,6 +244,63 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
     std::cout << sstream.str();
 }
 
+void NetworkGraph::debug_check() const {
+    const int my_rank = MPIWrapper::get_my_rank();
+
+    // Golden map that stores all local edges
+    std::map<std::pair<size_t, size_t>, int> edges;
+
+    for (size_t neuron_id = 0; neuron_id < my_num_neurons; neuron_id++) {
+        const Edges& out_edges = get_out_edges(neuron_id);
+
+        for (const auto& [out_edge_key, out_edge_val] : out_edges) {
+            const int out_edge_rank = out_edge_key.first;
+            const size_t out_edge_neuron_id = out_edge_key.second;
+            
+            RelearnException::check(out_edge_rank >= 0, "Rank is smaller than 0 (out)");
+            RelearnException::check(out_edge_val != 0, "Value is zero (out)");
+
+            if (out_edge_rank != my_rank) {
+                continue;
+            }
+
+            edges[std::make_pair(neuron_id, out_edge_neuron_id)] = out_edge_val;
+        }
+    }
+
+    for (size_t neuron_id = 0; neuron_id < my_num_neurons; neuron_id++) {
+        const Edges& in_edges = get_in_edges(neuron_id);
+
+        for (const auto& [in_edge_key, in_edge_val] : in_edges) {
+            const int in_edge_rank = in_edge_key.first;
+            const size_t in_edge_neuron_id = in_edge_key.second;
+
+            RelearnException::check(in_edge_rank >= 0, "Rank is smaller than 0 (in)");
+            RelearnException::check(in_edge_val != 0, "Value is zero (in)");
+
+            if (in_edge_rank != my_rank) {
+                continue;
+            }
+
+            const std::pair<size_t, size_t> id_pair(in_edge_neuron_id, neuron_id);
+            const auto it = edges.find(id_pair);
+
+            const bool found = it != edges.cend();
+
+            RelearnException::check(found, "Edge not found");
+
+            const int golden_weight = it->second;
+            const bool weight_matches = golden_weight == in_edge_val;
+
+            RelearnException::check(weight_matches, "Weight doesn't match");
+
+            edges.erase(id_pair);
+        }
+    }
+
+    RelearnException::check(edges.empty(), "Edges is not empty");
+}
+
 void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids, const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id) {
 
     const int num_ranks = MPIWrapper::get_num_ranks();

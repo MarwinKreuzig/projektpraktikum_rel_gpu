@@ -156,6 +156,8 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, LogFiles::get("sums"), num_synapses_deleted, num_synapses_created);
 
             std::cout << std::flush;
+
+            network_graph->debug_check();
         }
 
         // Print details every 500 ms
