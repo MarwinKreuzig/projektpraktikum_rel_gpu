@@ -44,30 +44,6 @@
     return dendrites_in.xyz_pos;
 }
 
-[[nodiscard]] unsigned char Cell::get_neuron_octant() const {
-    const bool ex_valid = dendrites_ex.xyz_pos.has_value();
-    const bool in_valid = dendrites_in.xyz_pos.has_value();
-
-    if (!ex_valid && !in_valid) {
-        return {};
-    }
-
-    if (ex_valid && in_valid) {
-        const auto& pos_ex = dendrites_ex.xyz_pos.value();
-        const auto& pos_in = dendrites_in.xyz_pos.value();
-
-        const auto diff = pos_ex - pos_in;
-        const bool exc_position_equals_inh_position = diff.x == 0.0 && diff.y == 0.0 && diff.z == 0.0;
-        RelearnException::check(exc_position_equals_inh_position);
-
-        return get_octant_for_position(pos_ex);
-    }
-
-    RelearnException::fail("In Cell, one pos was valid and one was not");
-
-    return {};
-}
-
 [[nodiscard]] unsigned char Cell::get_octant_for_position(const Vec3d& pos) const {
     unsigned char idx = 0;
 

@@ -53,7 +53,7 @@ public:
         return diff;
     }
 
-    void set_neuron_position(std::optional<Vec3d> opt_position) noexcept {
+    void set_neuron_position(const std::optional<Vec3d>& opt_position) noexcept {
         set_neuron_position_exc(opt_position);
         set_neuron_position_inh(opt_position);
     }
@@ -72,7 +72,7 @@ public:
         return dendrites_in.xyz_pos;
     }
 
-    void set_neuron_position_inh(std::optional<Vec3d> opt_position) noexcept {
+    void set_neuron_position_inh(const std::optional<Vec3d>& opt_position) noexcept {
         dendrites_in.xyz_pos = opt_position;
     }
 
@@ -110,7 +110,11 @@ public:
         this->neuron_id = neuron_id;
     }
 
-    [[nodiscard]] unsigned char get_neuron_octant() const;
+    [[nodiscard]] unsigned char get_neuron_octant() const {
+        const std::optional<Vec3d>& pos = get_neuron_position();
+        RelearnException::check(pos.has_value());
+        return get_octant_for_position(pos.value());
+    }
 
     [[nodiscard]] unsigned char get_octant_for_position(const Vec3d& pos) const;
 
