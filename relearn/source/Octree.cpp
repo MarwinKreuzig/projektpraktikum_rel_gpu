@@ -74,7 +74,7 @@ void Octree::postorder_print() {
         if (elem.flag) {
             Vec3d xyz_min;
             Vec3d xyz_max;
-            Vec3d xyz_pos;
+            std::optional<Vec3d> xyz_pos;
 
             // Print node's address
             for (auto j = 0; j < depth; j++) {
@@ -106,27 +106,28 @@ void Octree::postorder_print() {
                       << ", " << elem.ptr->cell.get_neuron_num_dendrites_inh() << ")\n";
 
             // Print position DendriteType::EXCITATORY
-            bool pos_valid = false;
-            std::tie(xyz_pos, pos_valid) = elem.ptr->cell.get_neuron_position_exc();
+            xyz_pos = elem.ptr->cell.get_neuron_position_exc();
+            // Note if position is invalid
+            if (!xyz_pos.has_value()) {
+                std::cout << "-- invalid!";
+            }
+
             for (auto j = 0; j < depth; j++) {
                 std::cout << " ";
             }
-            std::cout << "Position exc: (" << xyz_pos.x << ", " << xyz_pos.y << ", " << xyz_pos.z << ") ";
-            // Note if position is invalid
-            if (!pos_valid) {
-                std::cout << "-- invalid!";
-            }
+            std::cout << "Position exc: (" << xyz_pos.value().x << ", " << xyz_pos.value().y << ", " << xyz_pos.value().z << ") ";
+
             std::cout << "\n";
             // Print position DendriteType::INHIBITORY
-            std::tie(xyz_pos, pos_valid) = elem.ptr->cell.get_neuron_position_inh();
+            xyz_pos = elem.ptr->cell.get_neuron_position_inh();
+            // Note if position is invalid
+            if (!xyz_pos.has_value()) {
+                std::cout << "-- invalid!";
+            }
             for (auto j = 0; j < depth; j++) {
                 std::cout << " ";
             }
-            std::cout << "Position inh: (" << xyz_pos.x << ", " << xyz_pos.y << ", " << xyz_pos.z << ") ";
-            // Note if position is invalid
-            if (!pos_valid) {
-                std::cout << "-- invalid!";
-            }
+            std::cout << "Position inh: (" << xyz_pos.value().x << ", " << xyz_pos.value().y << ", " << xyz_pos.value().z << ") ";
             std::cout << "\n";
             std::cout << "\n";
 
@@ -189,15 +190,13 @@ bool Octree::acceptance_criterion_test(const Vec3d& axon_pos_xyz,
         }
 
         // Check distance between neuron with axon and neuron with dendrite
-        Vec3d target_xyz;
-        bool pos_valid = false;
-        std::tie(target_xyz, pos_valid) = node_with_dendrite->cell.get_neuron_position_for(dendrite_type_needed);
+        const auto& target_xyz = node_with_dendrite->cell.get_neuron_position_for(dendrite_type_needed);
 
         // NOTE: This assertion fails when considering inner nodes that don't have dendrites.
-        RelearnException::check(pos_valid);
+        RelearnException::check(target_xyz.has_value());
 
         // Calc Euclidean distance between source and target neuron
-        const auto distance_vector = target_xyz - axon_pos_xyz;
+        const auto distance_vector = target_xyz.value() - axon_pos_xyz;
         const auto distance = distance_vector.calculate_p_norm(2.0);
 
         const auto length = node_with_dendrite->cell.get_length();
@@ -437,14 +436,12 @@ double Octree::calc_attractiveness_to_connect(
         return 0.0;
     }
 
-    Vec3d target_xyz;
-    bool pos_valid = false;
-    std::tie(target_xyz, pos_valid) = node_with_dendrite.cell.get_neuron_position_for(dendrite_type_needed);
-    RelearnException::check(pos_valid);
+    const auto& target_xyz  = node_with_dendrite.cell.get_neuron_position_for(dendrite_type_needed);
+    RelearnException::check(target_xyz.has_value());
 
     const auto num_dendrites = node_with_dendrite.cell.get_neuron_num_dendrites_for(dendrite_type_needed);
 
-    const auto position_diff = target_xyz - axon_pos_xyz;
+    const auto position_diff = target_xyz.value() - axon_pos_xyz;
     const auto eucl_length = position_diff.calculate_p_norm(2.0);
     const auto numerator = pow(eucl_length, 2.0);
 
@@ -672,7 +669,7 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
     OctreeNode* new_node = MPIWrapper::new_octree_node();
     RelearnException::check(new_node != nullptr);
 
-    new_node->cell.set_neuron_position(position, true);
+    new_node->cell.set_neuron_position({ position });
     new_node->cell.set_neuron_id(neuron_id);
     new_node->rank = rank;
 
@@ -734,11 +731,8 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 
             new_node->cell.set_size(xyz_min, xyz_max);
 
-            // Neuron position
-            Vec3d inner_pos;
-            bool valid_pos = false;
-            std::tie(inner_pos, valid_pos) = prev->cell.get_neuron_position();
-            new_node->cell.set_neuron_position(inner_pos, valid_pos);
+            std::optional<Vec3d> opt_vec = prev->cell.get_neuron_position();
+            new_node->cell.set_neuron_position(opt_vec);
 
             // Neuron ID
             const auto prev_neuron_id = prev->cell.get_neuron_id();

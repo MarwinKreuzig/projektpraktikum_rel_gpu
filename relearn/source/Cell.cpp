@@ -12,43 +12,60 @@
 
 #include <iostream>
 
-[[nodiscard]] std::tuple<Vec3d, bool> Cell::get_neuron_position() const {
-    const auto diff = dendrites_in.xyz_pos - dendrites_ex.xyz_pos;
+[[nodiscard]] std::optional<Vec3d> Cell::get_neuron_position() const {
+    const bool ex_valid = dendrites_ex.xyz_pos.has_value();
+    const bool in_valid = dendrites_in.xyz_pos.has_value();
 
-    const bool exc_position_equals_inh_position = diff.x == 0.0 && diff.y == 0.0 && diff.z == 0.0;
-
-    RelearnException::check(exc_position_equals_inh_position);
-    RelearnException::check(dendrites_ex.xyz_pos_valid == dendrites_in.xyz_pos_valid);
-
-    const auto position = dendrites_ex.xyz_pos;
-    const auto valid = dendrites_ex.xyz_pos_valid;
-
-    return std::make_tuple(position, valid);
-}
-
-[[nodiscard]] std::tuple<Vec3d, bool> Cell::get_neuron_position_for(DendriteType dendrite_type) const {
-    if (dendrite_type == DendriteType::EXCITATORY) {
-        const auto position = dendrites_ex.xyz_pos;
-        const auto valid = dendrites_ex.xyz_pos_valid;
-
-        return std::make_tuple(position, valid);
+    if (!ex_valid && !in_valid) {
+        return {};
     }
 
-    RelearnException::check(dendrite_type == DendriteType::INHIBITORY);
+    if (ex_valid && in_valid) {
+        const auto& pos_ex = dendrites_ex.xyz_pos.value();
+        const auto& pos_in = dendrites_in.xyz_pos.value();
 
-    const auto position = dendrites_in.xyz_pos;
-    const auto valid = dendrites_in.xyz_pos_valid;
+        const auto diff = pos_ex - pos_in;
+        const bool exc_position_equals_inh_position = diff.x == 0.0 && diff.y == 0.0 && diff.z == 0.0;
+        RelearnException::check(exc_position_equals_inh_position);
 
-    return std::make_tuple(position, valid);
+        return pos_ex;
+    }
+
+    RelearnException::fail("In Cell, one pos was valid and one was not");
+
+    return {};
+}
+
+[[nodiscard]] std::optional<Vec3d> Cell::get_neuron_position_for(DendriteType dendrite_type) const {
+    if (dendrite_type == DendriteType::EXCITATORY) {
+        return dendrites_ex.xyz_pos;
+    }
+
+    return dendrites_in.xyz_pos;
 }
 
 [[nodiscard]] unsigned char Cell::get_neuron_octant() const {
-    const auto diff = dendrites_in.xyz_pos - dendrites_ex.xyz_pos;
+    const bool ex_valid = dendrites_ex.xyz_pos.has_value();
+    const bool in_valid = dendrites_in.xyz_pos.has_value();
 
-    const auto exc_position_equals_inh_position = diff.x == 0.0 && diff.y == 0.0 && diff.z == 0.0;
-    RelearnException::check(exc_position_equals_inh_position);
+    if (!ex_valid && !in_valid) {
+        return {};
+    }
 
-    return get_octant_for_position(dendrites_in.xyz_pos);
+    if (ex_valid && in_valid) {
+        const auto& pos_ex = dendrites_ex.xyz_pos.value();
+        const auto& pos_in = dendrites_in.xyz_pos.value();
+
+        const auto diff = pos_ex - pos_in;
+        const bool exc_position_equals_inh_position = diff.x == 0.0 && diff.y == 0.0 && diff.z == 0.0;
+        RelearnException::check(exc_position_equals_inh_position);
+
+        return get_octant_for_position(pos_ex);
+    }
+
+    RelearnException::fail("In Cell, one pos was valid and one was not");
+
+    return {};
 }
 
 [[nodiscard]] unsigned char Cell::get_octant_for_position(const Vec3d& pos) const {
@@ -149,14 +166,14 @@ void Cell::print() const {
     std::cout << "    dendrites_ex.num_dendrites: " << dendrites_ex.num_dendrites;
     std::cout << "    dendrites_ex.xyz_pos[3]   : ";
     for (int i = 0; i < 3; i++) {
-        std::cout << dendrites_ex.xyz_pos[i] << " ";
+        std::cout << dendrites_ex.xyz_pos.value()[i] << " ";
     }
     std::cout << "\n";
 
     std::cout << "    dendrites_in.num_dendrites: " << dendrites_in.num_dendrites;
     std::cout << "    dendrites_in.xyz_pos[3]   : ";
     for (int i = 0; i < 3; i++) {
-        std::cout << dendrites_in.xyz_pos[i] << " ";
+        std::cout << dendrites_in.xyz_pos.value()[i] << " ";
     }
     std::cout << "\n";
 }

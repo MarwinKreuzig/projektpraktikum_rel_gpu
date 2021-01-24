@@ -14,6 +14,7 @@
 #include "RelearnException.h"
 #include "Vec3.h"
 
+#include <optional>
 #include <tuple>
 
 class Cell {
@@ -52,38 +53,30 @@ public:
         return diff;
     }
 
-    void set_neuron_position(const Vec3d& pos, bool valid) noexcept {
-        set_neuron_position_exc(pos, valid);
-        set_neuron_position_inh(pos, valid);
+    void set_neuron_position(std::optional<Vec3d> opt_position) noexcept {
+        set_neuron_position_exc(opt_position);
+        set_neuron_position_inh(opt_position);
     }
 
-    [[nodiscard]] std::tuple<Vec3d, bool> get_neuron_position() const;
+    [[nodiscard]] std::optional<Vec3d> get_neuron_position() const;
 
-    [[nodiscard]] std::tuple<Vec3d, bool> get_neuron_position_exc() const noexcept {
-        const auto position = dendrites_ex.xyz_pos;
-        const auto valid = dendrites_ex.xyz_pos_valid;
-
-        return std::make_tuple(position, valid);
+    [[nodiscard]] std::optional<Vec3d> get_neuron_position_exc() const noexcept {
+        return dendrites_ex.xyz_pos;
     }
 
-    void set_neuron_position_exc(const Vec3d& position, bool valid) noexcept {
-        dendrites_ex.xyz_pos = position;
-        dendrites_ex.xyz_pos_valid = valid;
+    void set_neuron_position_exc(const std::optional<Vec3d>& opt_position) noexcept {
+        dendrites_ex.xyz_pos = opt_position;
     }
 
-    [[nodiscard]] std::tuple<Vec3d, bool> get_neuron_position_inh() const noexcept {
-        const auto position = dendrites_in.xyz_pos;
-        const auto valid = dendrites_in.xyz_pos_valid;
-
-        return std::make_tuple(position, valid);
+    [[nodiscard]] std::optional<Vec3d> get_neuron_position_inh() const noexcept {
+        return dendrites_in.xyz_pos;
     }
 
-    void set_neuron_position_inh(const Vec3d& position, bool valid) noexcept {
-        dendrites_in.xyz_pos = position;
-        dendrites_in.xyz_pos_valid = valid;
+    void set_neuron_position_inh(std::optional<Vec3d> opt_position) noexcept {
+        dendrites_in.xyz_pos = opt_position;
     }
 
-    [[nodiscard]] std::tuple<Vec3d, bool> get_neuron_position_for(DendriteType dendrite_type) const;
+    [[nodiscard]] std::optional<Vec3d> get_neuron_position_for(DendriteType dendrite_type) const;
 
     void set_neuron_num_dendrites_exc(unsigned int num_dendrites) noexcept {
         dendrites_ex.num_dendrites = num_dendrites;
@@ -128,9 +121,7 @@ public:
 private:
     struct Dendrites {
         // All dendrites have the same position
-        Vec3d xyz_pos{};
-        // Mark if xyz_pos[] values are valid and can be used
-        bool xyz_pos_valid = false;
+        std::optional<Vec3d> xyz_pos{};
         unsigned int num_dendrites = 0;
         // TODO(future)
         // List colliding_axons;

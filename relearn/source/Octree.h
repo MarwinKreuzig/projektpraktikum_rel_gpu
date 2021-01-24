@@ -29,6 +29,7 @@
 #include <map>
 #include <memory>
 #include <random>
+#include <optional>
 #include <sstream>
 #include <stack>
 
@@ -141,25 +142,23 @@ private:
                     num_dendrites_exc += temp_num_dendrites_exc;
                     num_dendrites_inh += temp_num_dendrites_inh;
 
-                    Vec3d temp_xyz_pos_exc;
-                    Vec3d temp_xyz_pos_inh;
-
-                    bool valid_pos_exc = false;
-                    bool valid_pos_inh = false;
-
                     // Average the position by using the number of dendrites as weights
-                    std::tie(temp_xyz_pos_exc, valid_pos_exc) = child->cell.get_neuron_position_exc();
-                    std::tie(temp_xyz_pos_inh, valid_pos_inh) = child->cell.get_neuron_position_inh();
-                    /**
-					 * We can use position if it's valid or if corresponding num of dendrites is 0 (due to multiplying position with 0)
-					 */
+                    std::optional<Vec3d> temp_xyz_pos_exc = child->cell.get_neuron_position_exc();
+                    std::optional<Vec3d> temp_xyz_pos_inh = child->cell.get_neuron_position_inh();
 
-                    RelearnException::check(valid_pos_exc || (0 == temp_num_dendrites_exc));
-                    RelearnException::check(valid_pos_inh || (0 == temp_num_dendrites_inh));
+                    /**
+					 * We can use position if it's valid or if corresponding num of dendrites is 0 
+					 */
+                    RelearnException::check(temp_xyz_pos_exc.has_value() || (0 == temp_num_dendrites_exc));
+                    RelearnException::check(temp_xyz_pos_inh.has_value() || (0 == temp_num_dendrites_inh));
 
                     for (auto j = 0; j < 3; j++) {
-                        xyz_pos_exc[j] += static_cast<double>(temp_num_dendrites_exc) * temp_xyz_pos_exc[j];
-                        xyz_pos_inh[j] += static_cast<double>(temp_num_dendrites_inh) * temp_xyz_pos_inh[j];
+                        if (temp_xyz_pos_exc.has_value()) {
+                            xyz_pos_exc[j] += static_cast<double>(temp_num_dendrites_exc) * temp_xyz_pos_exc.value()[j];
+                        }
+                        if (temp_xyz_pos_inh.has_value()) {
+                            xyz_pos_inh[j] += static_cast<double>(temp_num_dendrites_inh) * temp_xyz_pos_inh.value()[j];
+                        }
                     }
                 }
                 /**
@@ -189,8 +188,12 @@ private:
                 node->cell.set_neuron_num_dendrites_exc(num_dendrites_exc);
                 node->cell.set_neuron_num_dendrites_inh(num_dendrites_inh);
                 // Also mark if new position is valid using valid_pos_{exc,inh}
-                node->cell.set_neuron_position_exc(xyz_pos_exc, valid_pos_exc);
-                node->cell.set_neuron_position_inh(xyz_pos_inh, valid_pos_inh);
+
+                std::optional<Vec3d> ex_pos = valid_pos_exc ? std::optional<Vec3d>{ xyz_pos_exc } : std::optional<Vec3d>{};
+                std::optional<Vec3d> in_pos = valid_pos_inh ? std::optional<Vec3d>{ xyz_pos_inh } : std::optional<Vec3d>{};
+
+                node->cell.set_neuron_position_exc(ex_pos);
+                node->cell.set_neuron_position_inh(in_pos);
             }
             // I'm leaf node, i.e., I have a normal neuron
             else {
