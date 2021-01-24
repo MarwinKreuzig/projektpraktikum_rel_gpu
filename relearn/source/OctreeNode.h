@@ -21,14 +21,14 @@ class OctreeNode {
     
     bool parent{ false };
 
-    size_t rank{ 0 }; // MPI rank who owns this octree node
+    int rank{ -1 }; // MPI rank who owns this octree node
     size_t level{ 0 }; // Level in the tree [0 (= root) ... depth of tree]
 
 public:
     Cell cell{};
     std::array<OctreeNode*, Constants::number_oct> children{ nullptr };
 
-    size_t get_rank() const noexcept {
+    int get_rank() const noexcept {
         return rank;
     }
 
@@ -46,7 +46,7 @@ public:
         cell = Cell{};
         children = std::array<OctreeNode*, Constants::number_oct>{ nullptr };
         parent = false;
-        rank = 0;
+        rank = -1;
         level = 0;
     }
 };

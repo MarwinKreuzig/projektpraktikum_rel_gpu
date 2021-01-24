@@ -122,12 +122,8 @@ private:
         void operator()(OctreeNode* node) /*noexcept*/ {
             // I'm inner node, i.e., I have a super neuron
             if (node->is_parent()) {
-                Vec3d temp_xyz_pos_exc;
-                Vec3d temp_xyz_pos_inh;
                 Vec3d xyz_pos_exc = { 0., 0., 0. };
                 Vec3d xyz_pos_inh = { 0., 0., 0. };
-                bool valid_pos_exc = false;
-                bool valid_pos_inh = false;
 
                 // Sum of number of dendrites of all my children
                 auto num_dendrites_exc = 0;
@@ -144,6 +140,12 @@ private:
                     auto temp_num_dendrites_inh = child->cell.get_neuron_num_dendrites_inh();
                     num_dendrites_exc += temp_num_dendrites_exc;
                     num_dendrites_inh += temp_num_dendrites_inh;
+
+                    Vec3d temp_xyz_pos_exc;
+                    Vec3d temp_xyz_pos_inh;
+
+                    bool valid_pos_exc = false;
+                    bool valid_pos_inh = false;
 
                     // Average the position by using the number of dendrites as weights
                     std::tie(temp_xyz_pos_exc, valid_pos_exc) = child->cell.get_neuron_position_exc();
@@ -166,17 +168,19 @@ private:
 				 */
                 auto divisor_pos_exc = num_dendrites_exc;
                 auto divisor_pos_inh = num_dendrites_inh;
-                valid_pos_exc = true;
-                valid_pos_inh = true;
+                auto valid_pos_exc = true;
+                auto valid_pos_inh = true;
 
                 if (0 == num_dendrites_exc) {
                     valid_pos_exc = false; // Mark result as invald
                     divisor_pos_exc = 1;
                 }
+
                 if (0 == num_dendrites_inh) {
                     valid_pos_inh = false; // Mark result as invalid
                     divisor_pos_inh = 1;
                 }
+
                 // Calc the average by dividing by the total number of dendrites
                 for (auto j = 0; j < 3; j++) {
                     xyz_pos_exc[j] /= divisor_pos_exc;

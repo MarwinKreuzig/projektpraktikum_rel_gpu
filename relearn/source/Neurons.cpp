@@ -111,9 +111,14 @@ void Neurons::init_synaptic_elements(const NetworkGraph& network_graph) {
     const std::vector<double>& dendrites_exc_cnts = dendrites_exc.get_cnts();
 
     for (auto i = 0; i < num_neurons; i++) {
-        const double axon_connections = network_graph.get_num_out_edges(i);
-        const double dendrites_ex_connections = network_graph.get_num_in_edges_ex(i);
-        const double dendrites_in_connections = network_graph.get_num_in_edges_in(i);
+        const size_t axon_connections_size_t = network_graph.get_num_out_edges(i);
+        const double axon_connections = static_cast<size_t>(axon_connections_size_t);
+
+        const size_t dendrites_ex_connections_size_t = network_graph.get_num_in_edges_ex(i);
+        const double dendrites_ex_connections = static_cast<size_t>(dendrites_ex_connections_size_t);
+
+        const size_t dendrites_in_connections_size_t = network_graph.get_num_in_edges_in(i);
+        const double dendrites_in_connections = static_cast<size_t>(dendrites_in_connections_size_t);
 
         axons.update_cnt(i, axon_connections);
         dendrites_exc.update_cnt(i, dendrites_ex_connections);
