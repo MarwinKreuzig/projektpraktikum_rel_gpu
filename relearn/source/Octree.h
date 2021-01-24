@@ -17,6 +17,7 @@
 #include "OctreeNode.h"
 #include "Parameters.h"
 #include "RelearnException.h"
+#include "SynapseCreationRequests.h"
 #include "SynapticElements.h"
 #include "Vec3.h"
 
@@ -30,10 +31,6 @@
 #include <random>
 #include <sstream>
 #include <stack>
-
-// Forward declarations of Neurons.h
-class SynapseCreationRequests;
-using MapSynapseCreationRequests = std::map<int, SynapseCreationRequests>;
 
 class Neurons;
 

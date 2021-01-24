@@ -14,6 +14,7 @@
 #include "Partition.h"
 #include "Random.h"
 #include "RelearnException.h"
+#include "SynapseCreationRequests.h"
 
 #include <algorithm>
 #include <array>
