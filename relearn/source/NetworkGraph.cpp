@@ -136,8 +136,8 @@ void NetworkGraph::add_edge_weights(const std::string& filename, const NeuronIdM
 
     Vec3d src_pos{ 0.0 };
     Vec3d tgt_pos{ 0.0 };
-    NeuronIdMap::RankNeuronId src_id{ 0 };
-    NeuronIdMap::RankNeuronId tgt_id{ 0 };
+    RankNeuronId src_id{ -1, Constants::uninitialized };
+    RankNeuronId tgt_id{ -1, Constants::uninitialized };
     std::string line;
     bool ret = false;
     bool success = false;
@@ -158,8 +158,8 @@ void NetworkGraph::add_edge_weights(const std::string& filename, const NeuronIdM
         std::tie(ret, tgt_id) = neuron_id_map.pos2rank_neuron_id(tgt_pos);
         RelearnException::check(ret);
 
-        add_edge_weight(tgt_id.neuron_id, tgt_id.rank,
-            src_id.neuron_id, src_id.rank, 1);
+        add_edge_weight(tgt_id.get_neuron_id(), tgt_id.get_rank(),
+            src_id.get_neuron_id(), src_id.get_rank(), 1);
 
         if (!success) {
             std::cerr << "Skipping line: \"" << line << "\"\n";
@@ -495,7 +495,7 @@ void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) con
         const NetworkGraph::Edges& in_edges = get_in_edges(target_neuron_id);
         NetworkGraph::Edges::const_iterator it_in_edge;
 
-        NeuronIdMap::RankNeuronId rank_neuron_id{ MPIWrapper::get_my_rank(), target_neuron_id };
+        RankNeuronId rank_neuron_id{ MPIWrapper::get_my_rank(), target_neuron_id };
         size_t glob_tgt = 0;
 
         bool ret = true;
@@ -503,11 +503,10 @@ void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) con
         RelearnException::check(ret);
 
         for (it_in_edge = in_edges.begin(); it_in_edge != in_edges.end(); ++it_in_edge) {
-            rank_neuron_id.rank = it_in_edge->first.first; // src rank
-            rank_neuron_id.neuron_id = it_in_edge->first.second; // src neuron id
 
+            RankNeuronId tmp_rank_neuron_id{ it_in_edge->first.first, it_in_edge->first.second };
             size_t glob_src = 0;
-            std::tie(ret, glob_src) = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id);
+            std::tie(ret, glob_src) = neuron_id_map.rank_neuron_id2glob_id(tmp_rank_neuron_id);
             RelearnException::check(ret);
 
             glob_src++;

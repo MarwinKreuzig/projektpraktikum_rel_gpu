@@ -43,24 +43,24 @@ NeuronIdMap::NeuronIdMap(size_t my_num_neurons,
 
 std::tuple<bool, size_t> NeuronIdMap::rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id) const /*noexcept*/ {
     // Rank is not valid
-    if (rank_neuron_id.rank < 0 || rank_neuron_id.rank > (rank_to_start_neuron_id.size() - 1)) {
+    if (rank_neuron_id.get_rank() < 0 || rank_neuron_id.get_rank() > (rank_to_start_neuron_id.size() - 1)) {
         return std::make_tuple(false, Constants::uninitialized);
     }
 
-    size_t glob_id = rank_to_start_neuron_id[rank_neuron_id.rank] + rank_neuron_id.neuron_id;
+    size_t glob_id = rank_to_start_neuron_id[rank_neuron_id.get_rank()] + rank_neuron_id.get_neuron_id();
     return std::make_tuple(true, glob_id);
 }
 
-std::tuple<bool, NeuronIdMap::RankNeuronId> NeuronIdMap::pos2rank_neuron_id(const Vec3d& pos) const {
+std::tuple<bool, RankNeuronId> NeuronIdMap::pos2rank_neuron_id(const Vec3d& pos) const {
     auto it = pos_to_rank_neuron_id.find(pos);
 
     // Neuron position not found
     if (it == pos_to_rank_neuron_id.end()) {
-        return std::make_tuple(false, NeuronIdMap::RankNeuronId{ Constants::uninitialized, Constants::uninitialized });
+        return std::make_tuple(false, RankNeuronId{ -1, Constants::uninitialized });
     }
 
     // Return rank and neuron id
-    NeuronIdMap::RankNeuronId result = it->second;
+    RankNeuronId result = it->second;
     return std::make_tuple(true, result);
 }
 
@@ -115,8 +115,6 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
     // Map every neuron position to one (rank, neuron_id) pair
     size_t glob_neuron_id = 0;
     for (int rank = 0; rank < num_ranks; rank++) {
-        RankNeuronId val{ 0, 0 };
-        val.rank = rank;
         for (size_t neuron_id = 0; neuron_id < rank_to_num_neurons[rank]; neuron_id++) {
             RelearnException::check(glob_neuron_id < total_num_neurons, "global id is too large in neuronidmap");
 
@@ -124,8 +122,8 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 
             RelearnException::check(idx < xyz_pos.size(), "idx is too large in neuronidmap");
             Vec3d key{ xyz_pos[idx], xyz_pos[idx + 1], xyz_pos[idx + 2] };
-            val.neuron_id = neuron_id;
-
+            
+            RankNeuronId val{ rank, neuron_id };
             auto ret = pos_to_rank_neuron_id.insert(std::make_pair(key, val));
             RelearnException::check(ret.second, "there is a duplicate in neuronidmap"); // New element was inserted, otherwise duplicates exist
 

@@ -20,6 +20,7 @@
 #include "Octree.h"
 #include "Parameters.h"
 #include "Positions.h"
+#include "RankNeuronId.h"
 #include "SynapticElements.h"
 #include "Timers.h"
 
@@ -145,38 +146,6 @@ using MapSynapseCreationRequests = std::map<int, SynapseCreationRequests>;
 
 class Neurons {
     friend class NeuronMonitor;
-
-    /**
-	 * Identifies a neuron by the MPI rank of its owner
-	 * and its neuron id on the owner, i.e., the pair <rank, neuron_id>
-	 */
-    class RankNeuronId {
-        int rank; // MPI rank of the owner
-        size_t neuron_id; // Neuron id on the owner
-    
-    public:
-        RankNeuronId(int rank, size_t neuron_id) noexcept
-            : rank(rank)
-            , neuron_id(neuron_id) {
-        }
-
-        int get_rank() const noexcept {
-            return rank;
-        }
-
-        size_t get_neuron_id() const noexcept {
-            return neuron_id;
-        }
-
-        bool operator==(const RankNeuronId& other) const noexcept {
-            return (this->rank == other.rank && this->neuron_id == other.neuron_id);
-        }
-
-        friend std::ostream& operator<<(std::ostream& os, const RankNeuronId& rni) {
-            os << "Rank: " << rni.rank << "\t id: " << rni.neuron_id << "\n";
-            return os;
-        }
-    };
 
     /**
 	 * Type for list element used to represent a synapse for synapse selection

@@ -860,12 +860,12 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const NeuronIdMap&
     // Print global ids, positions, and areas of local neurons
     bool ret = false;
     size_t glob_id = 0;
-    NeuronIdMap::RankNeuronId rank_neuron_id{ 0, 0 };
 
-    rank_neuron_id.rank = MPIWrapper::get_my_rank();
+    const int my_rank = MPIWrapper::get_my_rank();
     file << std::fixed << std::setprecision(6);
+
     for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-        rank_neuron_id.neuron_id = neuron_id;
+        RankNeuronId rank_neuron_id{ my_rank, neuron_id };
         std::tie(ret, glob_id) = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id);
         RelearnException::check(ret);
 

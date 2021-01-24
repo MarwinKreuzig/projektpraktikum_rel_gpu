@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "RankNeuronId.h"
 #include "Vec3.h"
 
 #include <map>
@@ -18,12 +19,6 @@
 
 class NeuronIdMap {
 public:
-    // Rank and local neuron id
-    struct RankNeuronId {
-        size_t rank;
-        size_t neuron_id;
-    };
-
     NeuronIdMap(size_t my_num_neurons, const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z);
 
     [[nodiscard]] std::tuple<bool, size_t> rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id) const /*noexcept*/;
