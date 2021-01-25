@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "SignalType.h"
 #include "Vec3.h"
 
 #include <map>
@@ -49,6 +50,12 @@ public:
 
     // Return out edges of neuron "neuron_id"
     [[nodiscard]] const Edges& get_out_edges(size_t neuron_id) const /*noexcept*/;
+
+    // Return in edges of neuron "neuron_id"
+    [[nodiscard]] Edges get_in_edges(size_t neuron_id, SignalType signal_type) const /*noexcept*/;
+
+    // Return out edges of neuron "neuron_id"
+    [[nodiscard]] Edges get_out_edges(size_t neuron_id, SignalType signal_type) const /*noexcept*/;
 
     [[nodiscard]] size_t get_num_in_edges_ex(size_t neuron_id) const;
 

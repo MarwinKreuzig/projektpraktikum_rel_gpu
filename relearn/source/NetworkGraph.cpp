@@ -37,6 +37,44 @@ const NetworkGraph::Edges& NetworkGraph::get_out_edges(size_t neuron_id) const {
     return neuron_neighborhood[neuron_id].out_edges;
 }
 
+NetworkGraph::Edges NetworkGraph::get_in_edges(size_t neuron_id, SignalType signal_type) const {
+    RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_in_edges with type, tried with a too large id");
+    const Edges& all_edges = neuron_neighborhood[neuron_id].in_edges;
+
+    Edges filtered_edges;
+
+    for (const auto& [edge_key, edge_val] : all_edges) {
+        if (signal_type == SignalType::EXCITATORY && edge_val > 0) {
+            filtered_edges[edge_key] = edge_val;
+        }
+
+        if (signal_type == SignalType::INHIBITORY && edge_val < 0) {
+            filtered_edges[edge_key] = edge_val;
+        }
+    }
+
+    return filtered_edges;
+}
+
+NetworkGraph::Edges NetworkGraph::get_out_edges(size_t neuron_id, SignalType signal_type) const {
+    RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_out_edges with type, tried with a too large id");
+    const Edges& all_edges = neuron_neighborhood[neuron_id].out_edges;
+
+    Edges filtered_edges;
+
+    for (const auto& [edge_key, edge_val] : all_edges) {
+        if (signal_type == SignalType::EXCITATORY && edge_val > 0) {
+            filtered_edges[edge_key] = edge_val;
+        }
+
+        if (signal_type == SignalType::INHIBITORY && edge_val < 0) {
+            filtered_edges[edge_key] = edge_val;
+        }
+    }
+
+    return filtered_edges;
+}
+
 size_t NetworkGraph::get_num_in_edges_ex(size_t neuron_id) const {
     RelearnException::check(neuron_id < neuron_neighborhood.size(),
         "In get_num_in_edges, tried with a too large id: " + std::to_string(neuron_id) + " " + std::to_string(my_num_neurons));
@@ -256,7 +294,7 @@ void NetworkGraph::debug_check() const {
         for (const auto& [out_edge_key, out_edge_val] : out_edges) {
             const int out_edge_rank = out_edge_key.first;
             const size_t out_edge_neuron_id = out_edge_key.second;
-            
+
             RelearnException::check(out_edge_rank >= 0, "Rank is smaller than 0 (out)");
             RelearnException::check(out_edge_val != 0, "Value is zero (out)");
 

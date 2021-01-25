@@ -196,12 +196,12 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
 }
 
 [[nodiscard]] int MPIWrapper::get_num_ranks() {
-    RelearnException::check(num_ranks >= 0);
+    RelearnException::check(num_ranks >= 0, "MPIWrapper is not initialized");
     return num_ranks;
 }
 
 [[nodiscard]] int MPIWrapper::get_my_rank() {
-    RelearnException::check(my_rank >= 0);
+    RelearnException::check(my_rank >= 0, "MPIWrapper is not initialized");
     return my_rank;
 }
 
