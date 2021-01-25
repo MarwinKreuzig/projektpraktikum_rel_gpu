@@ -268,7 +268,7 @@ size_t Neurons::delete_synapses(NetworkGraph& network_graph) {
             size_t affected_neuron_id = arr[2];
             size_t affected_element_type_converted = arr[3];
             size_t signal_type_converted = arr[4];
-            unsigned int synapse_id = static_cast<unsigned int>(arr[5]);
+            auto synapse_id = static_cast<unsigned int>(arr[5]);
 
             ElementType affected_element_type = affected_element_type_converted == 0 ? ElementType::AXON : ElementType::DENDRITE;
             SignalType signal_type = signal_type_converted == 0 ? SignalType::EXCITATORY : SignalType::INHIBITORY;

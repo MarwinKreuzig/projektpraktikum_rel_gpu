@@ -47,16 +47,45 @@ public:
 	 * Type for list elements used to create probability subinterval
 	 */
     struct ProbabilitySubinterval {
-        ProbabilitySubinterval() = default;
-
-        explicit ProbabilitySubinterval(OctreeNode* node) noexcept
-            : ptr(node) {
-        }
-
+    private:
         OctreeNode* ptr{ nullptr };
         double probability{ 0.0 };
         MPIWrapper::AsyncToken mpi_request{ MPIWrapper::get_null_request() };
         int request_rank{ -1 };
+
+    public:
+        explicit ProbabilitySubinterval(OctreeNode* node) noexcept
+            : ptr(node) {
+        }
+
+        void set_probability(double prob) noexcept {
+            probability = prob;
+        }
+
+        void set_mpi_request(MPIWrapper::AsyncToken request) noexcept {
+            mpi_request = request;
+        }
+
+        void set_request_rank(int rank) {
+            RelearnException::check(rank >= 0, "ProbabilitySubinterval, rank is smaller zan zero");
+            request_rank = rank;
+        }
+
+        [[nodiscard]] OctreeNode* get_ptr() const noexcept {
+            return ptr;
+        }
+
+        [[nodiscard]] double get_probability() const noexcept {
+            return probability;
+        }
+
+        [[nodiscard]] MPIWrapper::AsyncToken get_mpi_request() const noexcept {
+            return mpi_request;
+        }
+
+        [[nodiscard]] int get_request_rank() const noexcept {
+            return request_rank;
+        }
     };
     using ProbabilitySubintervalList = std::list<std::shared_ptr<ProbabilitySubinterval>>;
 
