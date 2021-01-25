@@ -11,7 +11,7 @@
 #pragma once
 
 #include "Cell.h"
-#include "config.h"
+#include "Config.h"
 #include "LogFiles.h"
 #include "MPIWrapper.h"
 #include "ModelParameter.h"
@@ -58,11 +58,11 @@ class Neurons {
             , synapse_id(synapse_id) {
         }
 
-        RankNeuronId get_rank_neuron_id() const noexcept {
+        [[nodiscard]] RankNeuronId get_rank_neuron_id() const noexcept {
             return rank_neuron_id;
         }
 
-        unsigned int get_synapse_id() const noexcept {
+        [[nodiscard]] unsigned int get_synapse_id() const noexcept {
             return synapse_id;
         }
     };
@@ -154,8 +154,6 @@ class Neurons {
         bool affected_element_already_deleted; // "True" if the element to be set vacant was already deleted by the neuron owning it
             // "False" if the element must be set vacant
 
-        PendingSynapseDeletion() = default;
-
         PendingSynapseDeletion(const RankNeuronId& src, const RankNeuronId& tgt, const RankNeuronId& aff,
             ElementType elem, SignalType sign, unsigned int id, bool affec)
             : src_neuron_id(src)
@@ -175,7 +173,7 @@ class Neurons {
 
         ~PendingSynapseDeletion() = default;
 
-        bool check_light_equality(const PendingSynapseDeletion& other) {
+        [[nodiscard]] bool check_light_equality(const PendingSynapseDeletion& other) const {
             const bool src_neuron_id_eq = other.src_neuron_id == src_neuron_id;
             const bool tgt_neuron_id_eq = other.tgt_neuron_id == tgt_neuron_id;
 
@@ -184,7 +182,7 @@ class Neurons {
             return src_neuron_id_eq && tgt_neuron_id_eq && id_eq;
         }
 
-        bool check_light_equality(const RankNeuronId& src, const RankNeuronId& tgt, unsigned int id) {
+        [[nodiscard]] bool check_light_equality(const RankNeuronId& src, const RankNeuronId& tgt, unsigned int id) const {
             const bool src_neuron_id_eq = src == src_neuron_id;
             const bool tgt_neuron_id_eq = tgt == tgt_neuron_id;
 
@@ -324,13 +322,13 @@ private:
     void debug_check_counts();
 
     template <typename T>
-    [[nodiscard]] StatisticalMeasures<T> global_statistics(const T* local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root, MPIWrapper::Scope scope) {
-        const double my_avg = std::accumulate(local_values, local_values + num_neurons, 0.0)
+    [[nodiscard]] StatisticalMeasures<T> global_statistics(const std::vector<T>& local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root, MPIWrapper::Scope scope) {
+        const double my_avg = std::accumulate(local_values.begin(), local_values.end(), 0.0)
             / total_num_values;
 
         // Get global min and max at rank "root"
         const auto [d_my_min, d_my_max] = [&]() -> std::tuple<double, double> {
-            const auto result = std::minmax_element(local_values, local_values + num_neurons);
+            const auto result = std::minmax_element(local_values.begin(), local_values.end());
             return { static_cast<double>(*result.first), static_cast<double>(*result.second) };
         }();
 

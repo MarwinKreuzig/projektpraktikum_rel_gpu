@@ -789,9 +789,9 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 }
 
 void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles& log_file) {
-    const StatisticalMeasures<double> calcium_statistics = global_statistics(calcium.data(), num_neurons, partition->get_total_num_neurons(), 0, MPIWrapper::Scope::global);
+    const StatisticalMeasures<double> calcium_statistics = global_statistics(calcium, num_neurons, partition->get_total_num_neurons(), 0, MPIWrapper::Scope::global);
 
-    const StatisticalMeasures<double> activity_statistics = global_statistics(neuron_model->get_x().data(), num_neurons, partition->get_total_num_neurons(), 0, MPIWrapper::Scope::global);
+    const StatisticalMeasures<double> activity_statistics = global_statistics(neuron_model->get_x(), num_neurons, partition->get_total_num_neurons(), 0, MPIWrapper::Scope::global);
 
     // Output data
     if (0 == MPIWrapper::get_my_rank()) {

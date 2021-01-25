@@ -11,7 +11,7 @@ std::once_flag some_flag;
 void setup() {
 
     auto lambda = []() {
-        char* argument = "./runTests";
+        char* argument = (char*)"./runTests";
         MPIWrapper::init(1, &argument);
     };
 

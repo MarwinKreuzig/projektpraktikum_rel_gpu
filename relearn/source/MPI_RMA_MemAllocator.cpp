@@ -100,7 +100,7 @@ void MPI_RMA_MemAllocator::create_rma_window() noexcept {
 }
 
 [[nodiscard]] size_t MPI_RMA_MemAllocator::HolderOctreeNode::calculate_distance(OctreeNode* ptr) const noexcept {
-    const size_t dist = size_t(ptr - base_ptr);
+    const auto dist = size_t(ptr - base_ptr);
     return dist;
 }
 

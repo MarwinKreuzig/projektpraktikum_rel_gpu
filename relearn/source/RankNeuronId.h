@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "config.h"
+#include "Config.h"
 #include "RelearnException.h"
 
 #include <ostream>
@@ -28,12 +28,12 @@ public:
         : rank(rank)
         , neuron_id(neuron_id) { }
 
-    int get_rank() const {
+    [[nodiscard]] int get_rank() const {
         RelearnException::check(rank >= 0);
         return rank;
     }
 
-    size_t get_neuron_id() const {
+    [[nodiscard]] size_t get_neuron_id() const {
         RelearnException::check(neuron_id < Constants::uninitialized);
         return neuron_id;
     }

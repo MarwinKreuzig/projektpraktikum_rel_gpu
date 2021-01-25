@@ -11,7 +11,7 @@
 #pragma once
 
 #include "Cell.h"
-#include "config.h"
+#include "Config.h"
 
 #include <map>
 #include <vector>

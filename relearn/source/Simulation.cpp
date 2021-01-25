@@ -10,7 +10,7 @@
 
 #include "Simulation.h"
 
-#include "config.h"
+#include "Config.h"
 #include "LogFiles.h"
 #include "MPIWrapper.h"
 #include "NetworkGraph.h"

@@ -133,10 +133,10 @@ TEST(TestSynapticElements, testSynapticElementsConstructorException) {
         }
 
         for (size_t neuron_id = num_neurons; neuron_id < num_neurons + 10; neuron_id++) {
-            EXPECT_THROW(synaptic_elements.get_cnt(neuron_id), RelearnException);
-            EXPECT_THROW(synaptic_elements.get_connected_cnt(neuron_id), RelearnException);
-            EXPECT_THROW(synaptic_elements.get_delta_cnt(neuron_id), RelearnException);
-            EXPECT_THROW(synaptic_elements.get_signal_type(neuron_id), RelearnException);
+            EXPECT_THROW(auto val = synaptic_elements.get_cnt(neuron_id), RelearnException);
+            EXPECT_THROW(auto val = synaptic_elements.get_connected_cnt(neuron_id), RelearnException);
+            EXPECT_THROW(auto val = synaptic_elements.get_delta_cnt(neuron_id), RelearnException);
+            EXPECT_THROW(auto val = synaptic_elements.get_signal_type(neuron_id), RelearnException);
         }
     }
 }
@@ -273,10 +273,10 @@ TEST(TestSynapticElements, testSynapticElementsUpdate) {
         }
 
         for (size_t neuron_id = num_neurons; neuron_id < num_neurons + 10; neuron_id++) {
-            EXPECT_THROW(synaptic_elements.get_cnt(neuron_id), RelearnException);
-            EXPECT_THROW(synaptic_elements.get_connected_cnt(neuron_id), RelearnException);
-            EXPECT_THROW(synaptic_elements.get_delta_cnt(neuron_id), RelearnException);
-            EXPECT_THROW(synaptic_elements.get_signal_type(neuron_id), RelearnException);
+            EXPECT_THROW(auto val = synaptic_elements.get_cnt(neuron_id), RelearnException);
+            EXPECT_THROW(auto val = synaptic_elements.get_connected_cnt(neuron_id), RelearnException);
+            EXPECT_THROW(auto val = synaptic_elements.get_delta_cnt(neuron_id), RelearnException);
+            EXPECT_THROW(auto val = synaptic_elements.get_signal_type(neuron_id), RelearnException);
         }
     }
 }

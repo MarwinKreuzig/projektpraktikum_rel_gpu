@@ -10,7 +10,7 @@
 
 #include "SubdomainFromFile.h"
 
-#include "config.h"
+#include "Config.h"
 #include "LogMessages.h"
 #include "NeuronToSubdomainAssignment.h"
 #include "Partition.h"

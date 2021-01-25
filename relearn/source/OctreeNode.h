@@ -11,7 +11,7 @@
 #pragma once
 
 #include "Cell.h"
-#include "config.h"
+#include "Config.h"
 
 #include <array>
 #include <cstddef>
@@ -28,15 +28,15 @@ public:
     Cell cell{};
     std::array<OctreeNode*, Constants::number_oct> children{ nullptr };
 
-    int get_rank() const noexcept {
+    [[nodiscard]] int get_rank() const noexcept {
         return rank;
     }
 
-    size_t get_level() const noexcept {
+    [[nodiscard]] size_t get_level() const noexcept {
         return level;
     }
 
-    bool is_parent() const noexcept {
+    [[nodiscard]] bool is_parent() const noexcept {
         return parent;
     }
 

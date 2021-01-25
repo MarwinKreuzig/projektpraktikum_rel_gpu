@@ -8,7 +8,7 @@
  *
  */
 
-#include "config.h"
+#include "Config.h"
 #include "MPIWrapper.h"
 #include "NeuronModels.h"
 #include "NeuronMonitor.h"

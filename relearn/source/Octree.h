@@ -11,7 +11,7 @@
 #pragma once
 
 #include "Cell.h"
-#include "config.h"
+#include "Config.h"
 #include "LogMessages.h"
 #include "NeuronModels.h"
 #include "OctreeNode.h"
@@ -28,8 +28,8 @@
 #include <list>
 #include <map>
 #include <memory>
-#include <random>
 #include <optional>
+#include <random>
 #include <sstream>
 #include <stack>
 

@@ -10,7 +10,7 @@
 
 #include "NeuronIdMap.h"
 
-#include "config.h"
+#include "Config.h"
 #include "MPIWrapper.h"
 #include "RelearnException.h"
 

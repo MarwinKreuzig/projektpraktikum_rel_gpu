@@ -1,15 +1,9 @@
 Checks: '
         *,
-        -fuchsia*,
-        -modernize-use-trailing-return-type,
         -llvm-header-guard,
-        -*non-private-member-variables*,
-        -*uppercase-literal-suffix,
-        -google-runtime-references,
-        -modernize-use-default-member-init,
-		-cppcoreguidelines-pro-bounds-array-to-pointer-decay,
-		-cert-msc32-c,
-		-cert-msc51-cpp
+        -fuchsia*,
+		-google-runtime-references,
+        -modernize-use-trailing-return-type,
         '
 WarningsAsErrors: ''
 HeaderFilterRegex: '.*'
