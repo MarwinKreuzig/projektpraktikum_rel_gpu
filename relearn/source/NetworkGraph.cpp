@@ -185,7 +185,12 @@ void NetworkGraph::add_edge_weights(const std::string& filename, const NeuronIdM
         }
 
         std::stringstream sstream(line);
-        double src_x, src_y, src_z, tgt_x, tgt_y, tgt_z;
+        double src_x = 0.0;
+        double src_y = 0.0;
+        double src_z = 0.0;
+        double tgt_x = 0.0;
+        double tgt_y = 0.0;
+        double tgt_z = 0.0;
         success = (sstream >> src_x) && (sstream >> src_y) && (sstream >> src_z) && (sstream >> tgt_x) && (sstream >> tgt_y) && (sstream >> tgt_z);
 
         RelearnException::check(success);
@@ -461,7 +466,9 @@ void NetworkGraph::load_neuron_positions(const std::string& path_neurons, std::s
         }
 
         size_t id{};
-        double pos_x, pos_y, pos_z;
+        double pos_x = 0.0;
+        double pos_y = 0.0;
+        double pos_z = 0.0;
         std::string area_name{};
         std::string type{};
 

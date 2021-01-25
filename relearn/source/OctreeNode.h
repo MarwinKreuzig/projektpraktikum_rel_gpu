@@ -40,7 +40,7 @@ public:
         return parent;
     }
 
-    [[nodiscard]] const std::array<OctreeNode*, Constants::number_oct> get_children() const noexcept {
+    [[nodiscard]] const std::array<OctreeNode*, Constants::number_oct>& get_children() const noexcept {
         return children;
     }
 
