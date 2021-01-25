@@ -23,15 +23,15 @@ std::tuple<NeuronToSubdomainAssignment::Position, NeuronToSubdomainAssignment::P
 
 std::tuple<NeuronToSubdomainAssignment::Position, NeuronToSubdomainAssignment::Position> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3s& subdomain_3idx, const Vec3s& num_subdomains_per_axis) const noexcept {
     const auto lengths = get_simulation_box_length();
-    const auto x_subdomain_length = lengths.x / num_subdomains_per_axis.x;
-    const auto y_subdomain_length = lengths.y / num_subdomains_per_axis.y;
-    const auto z_subdomain_length = lengths.z / num_subdomains_per_axis.z;
+    const auto x_subdomain_length = lengths.get_x() / num_subdomains_per_axis.get_x();
+    const auto y_subdomain_length = lengths.get_y() / num_subdomains_per_axis.get_y();
+    const auto z_subdomain_length = lengths.get_z() / num_subdomains_per_axis.get_z();
 
-    Vec3d min{ subdomain_3idx.x * x_subdomain_length, subdomain_3idx.y * y_subdomain_length, subdomain_3idx.z * z_subdomain_length };
+    Vec3d min{ subdomain_3idx.get_x() * x_subdomain_length, subdomain_3idx.get_y() * y_subdomain_length, subdomain_3idx.get_z() * z_subdomain_length };
 
-    const auto next_x = static_cast<double>(subdomain_3idx.x + 1) * x_subdomain_length;
-    const auto next_y = static_cast<double>(subdomain_3idx.y + 1) * y_subdomain_length;
-    const auto next_z = static_cast<double>(subdomain_3idx.z + 1) * z_subdomain_length;
+    const auto next_x = static_cast<double>(subdomain_3idx.get_x() + 1) * x_subdomain_length;
+    const auto next_y = static_cast<double>(subdomain_3idx.get_y() + 1) * y_subdomain_length;
+    const auto next_z = static_cast<double>(subdomain_3idx.get_z() + 1) * z_subdomain_length;
 
     Vec3d max{ next_x, next_y, next_z };
 
@@ -101,7 +101,7 @@ void NeuronToSubdomainAssignment::neuron_area_names(size_t subdomain_idx, [[mayb
 }
 
 bool NeuronToSubdomainAssignment::position_in_box(const Position& pos, const Position& box_min, const Position& box_max) noexcept {
-    return ((pos.x >= box_min.x && pos.x <= box_max.x) && (pos.y >= box_min.y && pos.y <= box_max.y) && (pos.z >= box_min.z && pos.z <= box_max.z));
+    return ((pos.get_x() >= box_min.get_x() && pos.get_x() <= box_max.get_x()) && (pos.get_y() >= box_min.get_y() && pos.get_y() <= box_max.get_y()) && (pos.get_z() >= box_min.get_z() && pos.get_z() <= box_max.get_z()));
 }
 
 void NeuronToSubdomainAssignment::write_neurons_to_file(const std::string& filename) const {
@@ -118,9 +118,9 @@ void NeuronToSubdomainAssignment::write_neurons_to_file(const std::string& filen
 
             of
                 << id << "\t"
-                << node.pos.x << " "
-                << node.pos.y << " "
-                << node.pos.z << "\t"
+                << node.pos.get_x() << " "
+                << node.pos.get_y() << " "
+                << node.pos.get_z() << "\t"
                 << node.area_name << "\t";
 
             if (node.signal_type == SignalType::EXCITATORY) {

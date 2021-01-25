@@ -54,9 +54,9 @@ void check_positions(std::vector<NeuronToSubdomainAssignment::Position>& pos, do
 	}
 
 	for (auto& p : pos_fixed) {
-		auto x = p.x;
-		auto y = p.y;
-		auto z = p.z;
+		auto x = p.get_x();
+		auto y = p.get_y();
+		auto z = p.get_z();
 
 		EXPECT_LE(x, expected_neurons_per_dimension);
 		EXPECT_LE(y, expected_neurons_per_dimension);
@@ -120,7 +120,7 @@ TEST(TestRandomNeuronPlacement, test_constructor) {
 
 		EXPECT_NEAR(frac_ex, frac_ex_, 1.0 / num_neurons);
 
-		EXPECT_NEAR(sfnd.get_simulation_box_length().x,
+		EXPECT_NEAR(sfnd.get_simulation_box_length().get_x(),
 			ceil(pow(static_cast<double>(num_neurons), 1 / 3.)) * um_per_neuron,
 			1.0 / num_neurons);
 
@@ -246,9 +246,9 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions) {
 		}
 
 		for (auto& p : pos_fixed) {
-			auto x = p.x;
-			auto y = p.y;
-			auto z = p.z;
+			auto x = p.get_x();
+			auto y = p.get_y();
+			auto z = p.get_z();
 
 			EXPECT_LE(x, expected_neurons_per_dimension);
 			EXPECT_LE(y, expected_neurons_per_dimension);
@@ -342,9 +342,9 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions_multiple_subdomains) 
 		}
 
 		for (auto& p : pos_fixed) {
-			auto x = p.x;
-			auto y = p.y;
-			auto z = p.z;
+			auto x = p.get_x();
+			auto y = p.get_y();
+			auto z = p.get_z();
 
 			EXPECT_LE(x, expected_neurons_per_dimension);
 			EXPECT_LE(y, expected_neurons_per_dimension);
@@ -508,9 +508,9 @@ TEST(TestRandomNeuronPlacement, test_saving) {
 			EXPECT_FALSE(is_there[id - 1]);
 			is_there[id - 1] = true;
 
-			EXPECT_NEAR(x, desired_position.x, eps);
-			EXPECT_NEAR(y, desired_position.y, eps);
-			EXPECT_NEAR(z, desired_position.z, eps);
+			EXPECT_NEAR(x, desired_position.get_x(), eps);
+			EXPECT_NEAR(y, desired_position.get_y(), eps);
+			EXPECT_NEAR(z, desired_position.get_z(), eps);
 
 			SignalType type;
 			if (type_string == "ex") {
@@ -564,9 +564,9 @@ TEST(TestRandomNeuronPlacement, test_reloading) {
 			const auto& curr_pos = positions[j];
 			const auto& curr_loaded_pos = loaded_positions[j];
 
-			EXPECT_NEAR(curr_pos.x, curr_loaded_pos.x, eps);
-			EXPECT_NEAR(curr_pos.y, curr_loaded_pos.y, eps);
-			EXPECT_NEAR(curr_pos.z, curr_loaded_pos.z, eps);
+			EXPECT_NEAR(curr_pos.get_x(), curr_loaded_pos.get_x(), eps);
+			EXPECT_NEAR(curr_pos.get_y(), curr_loaded_pos.get_y(), eps);
+			EXPECT_NEAR(curr_pos.get_z(), curr_loaded_pos.get_z(), eps);
 
 			const auto& curr_name = area_names[j];
 			const auto& curr_loaded_name = loaded_area_names[j];
@@ -656,9 +656,9 @@ TEST(TestRandomNeuronPlacement, test_reloading_multiple) {
 			const auto& curr_pos = positions[random_idx];
 			const auto& curr_loaded_pos = total_loaded_positions[total_loaded_idx];
 
-			EXPECT_NEAR(curr_pos.x, curr_loaded_pos.x, eps);
-			EXPECT_NEAR(curr_pos.y, curr_loaded_pos.y, eps);
-			EXPECT_NEAR(curr_pos.z, curr_loaded_pos.z, eps);
+			EXPECT_NEAR(curr_pos.get_x(), curr_loaded_pos.get_x(), eps);
+			EXPECT_NEAR(curr_pos.get_y(), curr_loaded_pos.get_y(), eps);
+			EXPECT_NEAR(curr_pos.get_z(), curr_loaded_pos.get_z(), eps);
 
 			const auto& curr_name = area_names[random_idx];
 			const auto& curr_loaded_name = total_loaded_area_names[total_loaded_idx];
@@ -709,9 +709,9 @@ TEST(TestNeuronPlacementStoreLoad, test_neuron_placement_store_and_load) {
 	// check simulation_box_length
 	// sdnd sets a box size in which it places neurons via estimation
 	// sdff reads the file and uses a box size which fits the maximum position of any neuron, in which the neurons fit
-	EXPECT_LE(sdff.get_simulation_box_length().x, sdnd.get_simulation_box_length().x);
-	EXPECT_LE(sdff.get_simulation_box_length().y, sdnd.get_simulation_box_length().y);
-	EXPECT_LE(sdff.get_simulation_box_length().z, sdnd.get_simulation_box_length().z);
+	EXPECT_LE(sdff.get_simulation_box_length().get_x(), sdnd.get_simulation_box_length().get_x());
+	EXPECT_LE(sdff.get_simulation_box_length().get_y(), sdnd.get_simulation_box_length().get_y());
+	EXPECT_LE(sdff.get_simulation_box_length().get_z(), sdnd.get_simulation_box_length().get_z());
 
 	// check for same number of subdomains
 	EXPECT_EQ(sdff.neurons_in_subdomain.size(), sdnd.neurons_in_subdomain.size());

@@ -57,9 +57,9 @@ std::tuple<bool, size_t, Vec3d, Cell::DendriteType> Neurons::get_vacant_axon() c
             neuron_id = i;
 
             // set neuron's position
-            xyz_pos.x = axons_x_dims[i];
-            xyz_pos.y = axons_y_dims[i];
-            xyz_pos.z = axons_z_dims[i];
+            xyz_pos.set_x(axons_x_dims[i]);
+            xyz_pos.set_y(axons_y_dims[i]);
+            xyz_pos.set_z(axons_z_dims[i]);
 
             // set dendrite type matching this axon
             // DendriteType::INHIBITORY axon

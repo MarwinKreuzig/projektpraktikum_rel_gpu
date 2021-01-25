@@ -14,9 +14,9 @@ TEST(TestVector, test_vector_constructor_empty) {
 	for (auto i = 0; i < iterations; i++) {
 		Vec3<double> v{ };
 
-		EXPECT_EQ(0.0, v.x);
-		EXPECT_EQ(0.0, v.y);
-		EXPECT_EQ(0.0, v.z);
+		EXPECT_EQ(0.0, v.get_x());
+		EXPECT_EQ(0.0, v.get_y());
+		EXPECT_EQ(0.0, v.get_z());
 	}
 }
 
@@ -30,9 +30,9 @@ TEST(TestVector, test_vector_constructor_one) {
 
 		Vec3<double> v{ val };
 
-		EXPECT_EQ(val, v.x);
-		EXPECT_EQ(val, v.y);
-		EXPECT_EQ(val, v.z);
+		EXPECT_EQ(val, v.get_x());
+		EXPECT_EQ(val, v.get_y());
+		EXPECT_EQ(val, v.get_z());
 	}
 }
 
@@ -48,9 +48,9 @@ TEST(TestVector, test_vector_constructor_three) {
 
 		Vec3<double> v{ x, y, z };
 
-		EXPECT_EQ(x, v.x);
-		EXPECT_EQ(y, v.y);
-		EXPECT_EQ(z, v.z);
+		EXPECT_EQ(x, v.get_x());
+		EXPECT_EQ(y, v.get_y());
+		EXPECT_EQ(z, v.get_z());
 	}
 }
 
@@ -68,9 +68,9 @@ TEST(TestVector, test_vector_copy_construct) {
 
 		Vec3<double> w = v;
 
-		EXPECT_EQ(x, w.x);
-		EXPECT_EQ(y, w.y);
-		EXPECT_EQ(z, w.z);
+		EXPECT_EQ(x, w.get_x());
+		EXPECT_EQ(y, w.get_y());
+		EXPECT_EQ(z, w.get_z());
 	}
 }
 
@@ -89,9 +89,9 @@ TEST(TestVector, test_vector_copy_assign) {
 		Vec3<double> w{ x + 1.0, y + 1.0, z + 1.0 };
 		w = v;
 
-		EXPECT_EQ(x, w.x);
-		EXPECT_EQ(y, w.y);
-		EXPECT_EQ(z, w.z);
+		EXPECT_EQ(x, w.get_x());
+		EXPECT_EQ(y, w.get_y());
+		EXPECT_EQ(z, w.get_z());
 	}
 }
 
@@ -109,9 +109,9 @@ TEST(TestVector, test_vector_move_construct) {
 
 		Vec3<double> w = std::move(v);
 
-		EXPECT_EQ(x, w.x);
-		EXPECT_EQ(y, w.y);
-		EXPECT_EQ(z, w.z);
+		EXPECT_EQ(x, w.get_x());
+		EXPECT_EQ(y, w.get_y());
+		EXPECT_EQ(z, w.get_z());
 	}
 }
 
@@ -130,9 +130,9 @@ TEST(TestVector, test_vector_move_assign) {
 		Vec3<double> w{ x + 1.0, y + 1.0, z + 1.0 };
 		w = std::move(v);
 
-		EXPECT_EQ(x, w.x);
-		EXPECT_EQ(y, w.y);
-		EXPECT_EQ(z, w.z);
+		EXPECT_EQ(x, w.get_x());
+		EXPECT_EQ(y, w.get_y());
+		EXPECT_EQ(z, w.get_z());
 	}
 }
 
@@ -275,17 +275,17 @@ TEST(TestVector, test_vector_operator_plus_vec) {
 
 		auto sum = v + w;
 
-		EXPECT_EQ(x1, v.x);
-		EXPECT_EQ(y1, v.y);
-		EXPECT_EQ(z1, v.z);
+		EXPECT_EQ(x1, v.get_x());
+		EXPECT_EQ(y1, v.get_y());
+		EXPECT_EQ(z1, v.get_z());
 
-		EXPECT_EQ(x2, w.x);
-		EXPECT_EQ(y2, w.y);
-		EXPECT_EQ(z2, w.z);
+		EXPECT_EQ(x2, w.get_x());
+		EXPECT_EQ(y2, w.get_y());
+		EXPECT_EQ(z2, w.get_z());
 
-		EXPECT_EQ(x1 + x2, sum.x);
-		EXPECT_EQ(y1 + y2, sum.y);
-		EXPECT_EQ(z1 + z2, sum.z);
+		EXPECT_EQ(x1 + x2, sum.get_x());
+		EXPECT_EQ(y1 + y2, sum.get_y());
+		EXPECT_EQ(z1 + z2, sum.get_z());
 	}
 }
 
@@ -310,17 +310,17 @@ TEST(TestVector, test_vector_operator_minus_vec) {
 
 		auto diff = v - w;
 
-		EXPECT_EQ(x1, v.x);
-		EXPECT_EQ(y1, v.y);
-		EXPECT_EQ(z1, v.z);
+		EXPECT_EQ(x1, v.get_x());
+		EXPECT_EQ(y1, v.get_y());
+		EXPECT_EQ(z1, v.get_z());
 
-		EXPECT_EQ(x2, w.x);
-		EXPECT_EQ(y2, w.y);
-		EXPECT_EQ(z2, w.z);
+		EXPECT_EQ(x2, w.get_x());
+		EXPECT_EQ(y2, w.get_y());
+		EXPECT_EQ(z2, w.get_z());
 
-		EXPECT_EQ(x1 - x2, diff.x);
-		EXPECT_EQ(y1 - y2, diff.y);
-		EXPECT_EQ(z1 - z2, diff.z);
+		EXPECT_EQ(x1 - x2, diff.get_x());
+		EXPECT_EQ(y1 - y2, diff.get_y());
+		EXPECT_EQ(z1 - z2, diff.get_z());
 	}
 }
 
@@ -342,13 +342,13 @@ TEST(TestVector, test_vector_operator_plus_scalar) {
 
 		auto sum = v + scalar;
 
-		EXPECT_EQ(x1, v.x);
-		EXPECT_EQ(y1, v.y);
-		EXPECT_EQ(z1, v.z);
+		EXPECT_EQ(x1, v.get_x());
+		EXPECT_EQ(y1, v.get_y());
+		EXPECT_EQ(z1, v.get_z());
 
-		EXPECT_EQ(x1 + scalar, sum.x);
-		EXPECT_EQ(y1 + scalar, sum.y);
-		EXPECT_EQ(z1 + scalar, sum.z);
+		EXPECT_EQ(x1 + scalar, sum.get_x());
+		EXPECT_EQ(y1 + scalar, sum.get_y());
+		EXPECT_EQ(z1 + scalar, sum.get_z());
 
 		EXPECT_EQ(scalar, scalar_copy);
 	}
@@ -372,13 +372,13 @@ TEST(TestVector, test_vector_operator_minus_scalar) {
 
 		auto sum = v - scalar;
 
-		EXPECT_EQ(x1, v.x);
-		EXPECT_EQ(y1, v.y);
-		EXPECT_EQ(z1, v.z);
+		EXPECT_EQ(x1, v.get_x());
+		EXPECT_EQ(y1, v.get_y());
+		EXPECT_EQ(z1, v.get_z());
 
-		EXPECT_EQ(x1 - scalar, sum.x);
-		EXPECT_EQ(y1 - scalar, sum.y);
-		EXPECT_EQ(z1 - scalar, sum.z);
+		EXPECT_EQ(x1 - scalar, sum.get_x());
+		EXPECT_EQ(y1 - scalar, sum.get_y());
+		EXPECT_EQ(z1 - scalar, sum.get_z());
 
 		EXPECT_EQ(scalar, scalar_copy);
 	}
@@ -402,13 +402,13 @@ TEST(TestVector, test_vector_operator_mul_scalar) {
 
 		auto prod = v * scalar;
 
-		EXPECT_EQ(x1, v.x);
-		EXPECT_EQ(y1, v.y);
-		EXPECT_EQ(z1, v.z);
+		EXPECT_EQ(x1, v.get_x());
+		EXPECT_EQ(y1, v.get_y());
+		EXPECT_EQ(z1, v.get_z());
 
-		EXPECT_EQ(x1 * scalar, prod.x);
-		EXPECT_EQ(y1 * scalar, prod.y);
-		EXPECT_EQ(z1 * scalar, prod.z);
+		EXPECT_EQ(x1 * scalar, prod.get_x());
+		EXPECT_EQ(y1 * scalar, prod.get_y());
+		EXPECT_EQ(z1 * scalar, prod.get_z());
 
 		EXPECT_EQ(scalar, scalar_copy);
 	}
@@ -436,13 +436,13 @@ TEST(TestVector, test_vector_operator_div_scalar) {
 
 		auto prod = v / scalar;
 
-		EXPECT_EQ(x1, v.x);
-		EXPECT_EQ(y1, v.y);
-		EXPECT_EQ(z1, v.z);
+		EXPECT_EQ(x1, v.get_x());
+		EXPECT_EQ(y1, v.get_y());
+		EXPECT_EQ(z1, v.get_z());
 
-		EXPECT_EQ(x1 / scalar, prod.x);
-		EXPECT_EQ(y1 / scalar, prod.y);
-		EXPECT_EQ(z1 / scalar, prod.z);
+		EXPECT_EQ(x1 / scalar, prod.get_x());
+		EXPECT_EQ(y1 / scalar, prod.get_y());
+		EXPECT_EQ(z1 / scalar, prod.get_z());
 
 		EXPECT_EQ(scalar, scalar_copy);
 	}
@@ -466,9 +466,9 @@ TEST(TestVector, test_vector_operator_plus_assign_scalar) {
 
 		v += scalar;
 
-		EXPECT_EQ(x1 + scalar, v.x);
-		EXPECT_EQ(y1 + scalar, v.y);
-		EXPECT_EQ(z1 + scalar, v.z);
+		EXPECT_EQ(x1 + scalar, v.get_x());
+		EXPECT_EQ(y1 + scalar, v.get_y());
+		EXPECT_EQ(z1 + scalar, v.get_z());
 
 		EXPECT_EQ(scalar, scalar_copy);
 	}
@@ -492,9 +492,9 @@ TEST(TestVector, test_vector_operator_mul_assign_scalar) {
 
 		v *= scalar;
 
-		EXPECT_EQ(x1 * scalar, v.x);
-		EXPECT_EQ(y1 * scalar, v.y);
-		EXPECT_EQ(z1 * scalar, v.z);
+		EXPECT_EQ(x1 * scalar, v.get_x());
+		EXPECT_EQ(y1 * scalar, v.get_y());
+		EXPECT_EQ(z1 * scalar, v.get_z());
 
 		EXPECT_EQ(scalar, scalar_copy);
 	}
@@ -517,9 +517,9 @@ TEST(TestVector, test_vector_volume) {
 
 		EXPECT_EQ(volume, v.get_volume());
 
-		EXPECT_EQ(x, v.x);
-		EXPECT_EQ(y, v.y);
-		EXPECT_EQ(z, v.z);
+		EXPECT_EQ(x, v.get_x());
+		EXPECT_EQ(y, v.get_y());
+		EXPECT_EQ(z, v.get_z());
 	}
 }
 
@@ -785,9 +785,9 @@ TEST(TestVector, test_vector_rounding) {
 
 		v.round_to_larger_multiple(multiple);
 
-		auto x_rounded = v.x;
-		auto y_rounded = v.y;
-		auto z_rounded = v.z;
+		auto x_rounded = v.get_x();
+		auto y_rounded = v.get_y();
+		auto z_rounded = v.get_z();
 
 		auto x_rounded_div = x_rounded / multiple;
 		auto y_rounded_div = y_rounded / multiple;

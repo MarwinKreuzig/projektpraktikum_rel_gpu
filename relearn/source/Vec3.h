@@ -18,11 +18,12 @@
 #include <type_traits>
 
 template <typename T>
-struct Vec3 {
+class Vec3 {
     T x;
     T y;
     T z;
 
+public:
     Vec3() noexcept
         : x(0)
         , y(0)
@@ -48,6 +49,30 @@ struct Vec3 {
 
     Vec3(Vec3<T>&& other) noexcept = default;
     Vec3<T>& operator=(Vec3<T>&& other) noexcept = default;
+
+    [[nodiscard]] const T& get_x() const noexcept {
+        return x;
+    }
+
+    [[nodiscard]] const T& get_y() const noexcept {
+        return y;
+    }
+
+    [[nodiscard]] const T& get_z() const noexcept {
+        return z;
+    }
+
+    void set_x(const T& _x) noexcept {
+        x = _x;
+    }
+
+    void set_y(const T& _y) noexcept {
+        y = _y;
+    }
+
+    void set_z(const T& _z) noexcept {
+        z = _z;
+    }
 
     template <typename K>
     explicit operator Vec3<K>() const noexcept {

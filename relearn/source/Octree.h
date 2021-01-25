@@ -131,20 +131,20 @@ private:
                 auto num_dendrites_inh = 0;
 
                 // For all my children
-                for (const auto& child : node->children) {
+                for (const auto& child : node->get_children()) {
                     if (child == nullptr) {
                         continue;
                     }
 
                     // Sum up number of dendrites
-                    auto temp_num_dendrites_exc = child->cell.get_neuron_num_dendrites_exc();
-                    auto temp_num_dendrites_inh = child->cell.get_neuron_num_dendrites_inh();
+                    auto temp_num_dendrites_exc = child->get_cell().get_neuron_num_dendrites_exc();
+                    auto temp_num_dendrites_inh = child->get_cell().get_neuron_num_dendrites_inh();
                     num_dendrites_exc += temp_num_dendrites_exc;
                     num_dendrites_inh += temp_num_dendrites_inh;
 
                     // Average the position by using the number of dendrites as weights
-                    std::optional<Vec3d> temp_xyz_pos_exc = child->cell.get_neuron_position_exc();
-                    std::optional<Vec3d> temp_xyz_pos_inh = child->cell.get_neuron_position_inh();
+                    std::optional<Vec3d> temp_xyz_pos_exc = child->get_cell().get_neuron_position_exc();
+                    std::optional<Vec3d> temp_xyz_pos_inh = child->get_cell().get_neuron_position_inh();
 
                     /**
 					 * We can use position if it's valid or if corresponding num of dendrites is 0 
@@ -185,20 +185,19 @@ private:
                     xyz_pos_exc[j] /= divisor_pos_exc;
                     xyz_pos_inh[j] /= divisor_pos_inh;
                 }
-                node->cell.set_neuron_num_dendrites_exc(num_dendrites_exc);
-                node->cell.set_neuron_num_dendrites_inh(num_dendrites_inh);
+                node->set_cell_num_dendrites(num_dendrites_exc, num_dendrites_inh);
                 // Also mark if new position is valid using valid_pos_{exc,inh}
 
                 std::optional<Vec3d> ex_pos = valid_pos_exc ? std::optional<Vec3d>{ xyz_pos_exc } : std::optional<Vec3d>{};
                 std::optional<Vec3d> in_pos = valid_pos_inh ? std::optional<Vec3d>{ xyz_pos_inh } : std::optional<Vec3d>{};
 
-                node->cell.set_neuron_position_exc(ex_pos);
-                node->cell.set_neuron_position_inh(in_pos);
+                node->set_cell_neuron_pos_exc(ex_pos);
+                node->set_cell_neuron_pos_inh(in_pos);
             }
             // I'm leaf node, i.e., I have a normal neuron
             else {
                 // Get ID of the node's neuron
-                const size_t neuron_id = node->cell.get_neuron_id();
+                const size_t neuron_id = node->get_cell().get_neuron_id();
 
                 // Calculate number of vacant dendrites for my neuron
                 RelearnException::check(neuron_id < num_neurons);
@@ -206,8 +205,7 @@ private:
                 const auto num_vacant_dendrites_exc = static_cast<unsigned int>(dendrites_exc_cnts[neuron_id] - dendrites_exc_connected_cnts[neuron_id]);
                 const auto num_vacant_dendrites_inh = static_cast<unsigned int>(dendrites_inh_cnts[neuron_id] - dendrites_inh_connected_cnts[neuron_id]);
 
-                node->cell.set_neuron_num_dendrites_exc(num_vacant_dendrites_exc);
-                node->cell.set_neuron_num_dendrites_inh(num_vacant_dendrites_inh);
+                node->set_cell_num_dendrites(num_vacant_dendrites_exc, num_vacant_dendrites_inh);
             }
         }
 
@@ -373,7 +371,8 @@ private:
                 if (depth < max_level) {
                     // Push node's children onto stack
 
-                    for (auto it = elem.ptr->children.crbegin(); it != elem.ptr->children.crend(); ++it) {
+                    const auto& children = elem.ptr->get_children();
+                    for (auto it = children.crbegin(); it != children.crend(); ++it) {
                         if (*it != nullptr) {
                             stack.emplace(*it, false, depth + 1);
                         }

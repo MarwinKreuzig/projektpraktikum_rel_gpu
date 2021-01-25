@@ -15,19 +15,19 @@
 
 #include <array>
 #include <cstddef>
+#include <optional>
 
 class OctreeNode {
     friend class Octree;
-    
+    std::array<OctreeNode*, Constants::number_oct> children{ nullptr };
+    Cell cell{};
+
     bool parent{ false };
 
     int rank{ -1 }; // MPI rank who owns this octree node
     size_t level{ 0 }; // Level in the tree [0 (= root) ... depth of tree]
 
 public:
-    Cell cell{};
-    std::array<OctreeNode*, Constants::number_oct> children{ nullptr };
-
     [[nodiscard]] int get_rank() const noexcept {
         return rank;
     }
@@ -38,6 +38,44 @@ public:
 
     [[nodiscard]] bool is_parent() const noexcept {
         return parent;
+    }
+
+    [[nodiscard]] const std::array<OctreeNode*, Constants::number_oct> get_children() const noexcept {
+        return children;
+    }
+
+    [[nodiscard]] const Cell& get_cell() const noexcept {
+        return cell;
+    }
+
+    void set_cell_neuron_id(size_t neuron_id) noexcept {
+        cell.set_neuron_id(neuron_id);
+    }
+
+    void set_cell_size(const Vec3d& min, const Vec3d& max) noexcept {
+        cell.set_size(min, max);
+    }
+
+    void set_cell_neuron_position(const std::optional<Vec3d>& opt_position) noexcept {
+        cell.set_neuron_position(opt_position);
+    }
+
+    void set_cell_num_dendrites(unsigned int num_ex, unsigned int num_in) noexcept {
+        cell.set_neuron_num_dendrites_exc(num_ex);
+        cell.set_neuron_num_dendrites_inh(num_in);
+    }
+
+    void set_cell_neuron_pos_exc(const std::optional<Vec3d>& opt_position) noexcept {
+        cell.set_neuron_position_exc(opt_position);
+    }
+
+    void set_cell_neuron_pos_inh(const std::optional<Vec3d>& opt_position) noexcept {
+        cell.set_neuron_position_inh(opt_position);
+    }
+
+    void set_child(OctreeNode* node, size_t idx) {
+        RelearnException::check(idx < Constants::number_oct);
+        children[idx] = node;
     }
 
     void print() const;

@@ -47,14 +47,14 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
     const double simulation_box_length_ = get_simulation_box_length().get_maximum();
 
-    RelearnException::check(length_of_box.x <= simulation_box_length_ && length_of_box.y <= simulation_box_length_ && length_of_box.z <= simulation_box_length_,
+    RelearnException::check(length_of_box.get_x() <= simulation_box_length_ && length_of_box.get_y() <= simulation_box_length_ && length_of_box.get_z() <= simulation_box_length_,
         "Requesting to fill neurons where no simulationbox is");
 
     const auto box = length_of_box - offset;
 
-    const auto neurons_on_x = static_cast<size_t>(round(box.x / um_per_neuron_));
-    const auto neurons_on_y = static_cast<size_t>(round(box.y / um_per_neuron_));
-    const auto neurons_on_z = static_cast<size_t>(round(box.z / um_per_neuron_));
+    const auto neurons_on_x = static_cast<size_t>(round(box.get_x() / um_per_neuron_));
+    const auto neurons_on_y = static_cast<size_t>(round(box.get_y() / um_per_neuron_));
+    const auto neurons_on_z = static_cast<size_t>(round(box.get_z() / um_per_neuron_));
 
     const auto calculated_num_neurons = neurons_on_x * neurons_on_y * neurons_on_z;
     RelearnException::check(calculated_num_neurons >= num_neurons, "Should emplace more neurons than space in box");
@@ -174,15 +174,15 @@ std::tuple<SubdomainFromNeuronDensity::Position, SubdomainFromNeuronDensity::Pos
     const Vec3s& num_subdomains_per_axis) const noexcept {
 
     const auto length = get_simulation_box_length().get_maximum();
-    const auto x_subdomain_length = length / num_subdomains_per_axis.x;
-    const auto y_subdomain_length = length / num_subdomains_per_axis.y;
-    const auto z_subdomain_length = length / num_subdomains_per_axis.z;
+    const auto x_subdomain_length = length / num_subdomains_per_axis.get_x();
+    const auto y_subdomain_length = length / num_subdomains_per_axis.get_y();
+    const auto z_subdomain_length = length / num_subdomains_per_axis.get_z();
 
-    Vec3d min{ subdomain_3idx.x * x_subdomain_length, subdomain_3idx.y * y_subdomain_length, subdomain_3idx.z * z_subdomain_length };
+    Vec3d min{ subdomain_3idx.get_x() * x_subdomain_length, subdomain_3idx.get_y() * y_subdomain_length, subdomain_3idx.get_z() * z_subdomain_length };
 
-    const auto next_x = static_cast<double>(subdomain_3idx.x + 1) * x_subdomain_length;
-    const auto next_y = static_cast<double>(subdomain_3idx.y + 1) * y_subdomain_length;
-    const auto next_z = static_cast<double>(subdomain_3idx.z + 1) * z_subdomain_length;
+    const auto next_x = static_cast<double>(subdomain_3idx.get_x() + 1) * x_subdomain_length;
+    const auto next_y = static_cast<double>(subdomain_3idx.get_y() + 1) * y_subdomain_length;
+    const auto next_z = static_cast<double>(subdomain_3idx.get_z() + 1) * z_subdomain_length;
 
     Vec3d max{ next_x, next_y, next_z };
 

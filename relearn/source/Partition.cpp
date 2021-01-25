@@ -160,7 +160,7 @@ size_t Partition::get_subdomain_id_from_pos(const Vec3d& pos) const {
     RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
     const Vec3d subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
 
-    const Vec3d subdomain_3d{ pos.x / subdomain_length.x, pos.y / subdomain_length.y, pos.z / subdomain_length.z };
+    const Vec3d subdomain_3d{ pos.get_x() / subdomain_length.get_x(), pos.get_y() / subdomain_length.get_y(), pos.get_z() / subdomain_length.get_z() };
     const Vec3s id_3d = subdomain_3d.floor_componentwise();
     const size_t id_1d = space_curve.map_3d_to_1d(id_3d);
 
@@ -225,20 +225,20 @@ std::shared_ptr<Neurons> Partition::load_neurons(std::unique_ptr<NeuronToSubdoma
 	* Output all parameters calculated so far
 	*/
     std::stringstream sstream;
-    sstream << "Simulation box length          : " << simulation_box_length.x << " (height)"
+    sstream << "Simulation box length          : " << simulation_box_length.get_x() << " (height)"
             << "\n";
-    sstream << "Simulation box length          : " << simulation_box_length.y << " (width)"
+    sstream << "Simulation box length          : " << simulation_box_length.get_y() << " (width)"
             << "\n";
-    sstream << "Simulation box length          : " << simulation_box_length.z << " (depth)"
+    sstream << "Simulation box length          : " << simulation_box_length.get_z() << " (depth)"
             << "\n";
     LogMessages::print_message_rank(sstream.str().c_str(), 0);
     sstream.str("");
 
-    sstream << "Subdomain length          : " << subdomain_length.x << " (height)"
+    sstream << "Subdomain length          : " << subdomain_length.get_x() << " (height)"
             << "\n";
-    sstream << "Subdomain length          : " << subdomain_length.y << " (width)"
+    sstream << "Subdomain length          : " << subdomain_length.get_y() << " (width)"
             << "\n";
-    sstream << "Subdomain length          : " << subdomain_length.z << " (depth)"
+    sstream << "Subdomain length          : " << subdomain_length.get_z() << " (depth)"
             << "\n";
     LogMessages::print_message_rank(sstream.str().c_str(), 0);
     sstream.str("");
@@ -330,9 +330,9 @@ std::shared_ptr<Neurons> Partition::load_neurons(std::unique_ptr<NeuronToSubdoma
 
         size_t neuron_id = subdomains[i].neuron_local_id_start;
         for (size_t j = 0; j < subdomains[i].num_neurons; j++) {
-            neuron_positions.set_x(neuron_id, vec_pos[j].x);
-            neuron_positions.set_y(neuron_id, vec_pos[j].y);
-            neuron_positions.set_z(neuron_id, vec_pos[j].z);
+            neuron_positions.set_x(neuron_id, vec_pos[j].get_x());
+            neuron_positions.set_y(neuron_id, vec_pos[j].get_y());
+            neuron_positions.set_z(neuron_id, vec_pos[j].get_z());
 
             area_names[neuron_id] = vec_area[j];
 

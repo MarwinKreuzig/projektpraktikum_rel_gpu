@@ -50,12 +50,12 @@ void SubdomainFromFile::read_dimensions_from_file(Partition& partition) {
         }
 
         size_t id{};
-        Vec3d tmp{};
+        double pos_x, pos_y, pos_z;
         std::string area_name{};
         std::string signal_type{};
 
         std::stringstream sstream(line);
-        bool success = (sstream >> id) && (sstream >> tmp.x) && (sstream >> tmp.y) && (sstream >> tmp.z) && (sstream >> area_name) && (sstream >> signal_type);
+        bool success = (sstream >> id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> area_name) && (sstream >> signal_type);
 
         if (!success) {
             std::cerr << "Skipping line: \"" << line << "\"\n";
@@ -64,8 +64,8 @@ void SubdomainFromFile::read_dimensions_from_file(Partition& partition) {
 
         total_number_neurons++;
 
-        minimum.calculate_componentwise_minimum(tmp);
-        maximum.calculate_componentwise_maximum(tmp);
+        minimum.calculate_componentwise_minimum({ pos_x, pos_y, pos_z });
+        maximum.calculate_componentwise_maximum({ pos_x, pos_y, pos_z });
 
         if (signal_type == "in") {
             found_in_neurons++;
@@ -75,9 +75,11 @@ void SubdomainFromFile::read_dimensions_from_file(Partition& partition) {
     }
 
     {
-        maximum.x = std::nextafter(maximum.x, maximum.x + Constants::eps);
-        maximum.y = std::nextafter(maximum.y, maximum.y + Constants::eps);
-        maximum.z = std::nextafter(maximum.z, maximum.z + Constants::eps);
+        const auto new_max_x = std::nextafter(maximum.get_x(), maximum.get_x() + Constants::eps);
+        const auto new_max_y = std::nextafter(maximum.get_y(), maximum.get_y() + Constants::eps);
+        const auto new_max_z = std::nextafter(maximum.get_z(), maximum.get_z() + Constants::eps);
+
+        maximum = { new_max_x, new_max_y, new_max_z };
     }
 
     partition.set_total_num_neurons(total_number_neurons);
@@ -104,14 +106,16 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
         std::string signal_type{};
 
         Node node{};
-
+        double pos_x, pos_y, pos_z;
         std::stringstream sstream(line);
-        bool success = (sstream >> node.id) && (sstream >> node.pos.x) && (sstream >> node.pos.y) && (sstream >> node.pos.z) && (sstream >> node.area_name) && (sstream >> signal_type);
+        bool success = (sstream >> node.id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> node.area_name) && (sstream >> signal_type);
 
         if (!success) {
             std::cerr << "Skipping line: \"" << line << "\"\n";
             continue;
         }
+
+        node.pos = { pos_x, pos_y, pos_z };
 
         // Ids start with 1
         node.id--;

@@ -7,17 +7,23 @@ BoxCoordinates Morton::map_1d_to_3d(uint64_t idx) {
     // run over each bit and copy it to respective coordinate
     uint8_t coords_bit = 0;
     for (uint8_t idx_bit = 0; idx_bit < 60; idx_bit += 3) {
-        coords.x = copy_bit(idx, idx_bit, coords.x, coords_bit);
+        const auto& old = coords.get_x();
+        const auto& new_val = copy_bit(idx, idx_bit, old, coords_bit);
+        coords.set_x(new_val);
         ++coords_bit;
     }
     coords_bit = 0;
     for (uint8_t idx_bit = 1; idx_bit < 60; idx_bit += 3) {
-        coords.y = copy_bit(idx, idx_bit, coords.y, coords_bit);
+        const auto& old = coords.get_y();
+        const auto& new_val = copy_bit(idx, idx_bit, old, coords_bit);
+        coords.set_y(new_val);
         ++coords_bit;
     }
     coords_bit = 0;
     for (uint8_t idx_bit = 2; idx_bit < 60; idx_bit += 3) {
-        coords.z = copy_bit(idx, idx_bit, coords.z, coords_bit);
+        const auto& old = coords.get_z();
+        const auto& new_val = copy_bit(idx, idx_bit, old, coords_bit);
+        coords.set_z(new_val);
         ++coords_bit;
     }
 
@@ -29,9 +35,9 @@ uint64_t Morton::map_3d_to_1d(const BoxCoordinates& coords) const noexcept {
     for (size_t i = 0; i < refinement_level; ++i) {
         uint64_t block = 0;
         const auto short_i = static_cast<uint8_t>(i);
-        block = ((select_bit(coords.z, short_i) << 2U)
-            + (select_bit(coords.y, short_i) << 1U)
-            + (select_bit(coords.x, short_i)));
+        block = ((select_bit(coords.get_z(), short_i) << 2U)
+            + (select_bit(coords.get_y(), short_i) << 1U)
+            + (select_bit(coords.get_x(), short_i)));
 
         result |= block << (3 * i);
     }

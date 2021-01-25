@@ -172,8 +172,6 @@ void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, siz
 void NetworkGraph::add_edge_weights(const std::string& filename, const NeuronIdMap& neuron_id_map) {
     std::ifstream file(filename);
 
-    Vec3d src_pos{ 0.0 };
-    Vec3d tgt_pos{ 0.0 };
     RankNeuronId src_id{ -1, Constants::uninitialized };
     RankNeuronId tgt_id{ -1, Constants::uninitialized };
     std::string line;
@@ -187,13 +185,14 @@ void NetworkGraph::add_edge_weights(const std::string& filename, const NeuronIdM
         }
 
         std::stringstream sstream(line);
-        success = (sstream >> src_pos.x) && (sstream >> src_pos.y) && (sstream >> src_pos.z) && (sstream >> tgt_pos.x) && (sstream >> tgt_pos.y) && (sstream >> tgt_pos.z);
+        double src_x, src_y, src_z, tgt_x, tgt_y, tgt_z;
+        success = (sstream >> src_x) && (sstream >> src_y) && (sstream >> src_z) && (sstream >> tgt_x) && (sstream >> tgt_y) && (sstream >> tgt_z);
 
         RelearnException::check(success);
 
-        std::tie(ret, src_id) = neuron_id_map.pos2rank_neuron_id(src_pos);
+        std::tie(ret, src_id) = neuron_id_map.pos2rank_neuron_id({ src_x, src_y, src_z });
         RelearnException::check(ret);
-        std::tie(ret, tgt_id) = neuron_id_map.pos2rank_neuron_id(tgt_pos);
+        std::tie(ret, tgt_id) = neuron_id_map.pos2rank_neuron_id({ tgt_x, tgt_y, tgt_z });
         RelearnException::check(ret);
 
         add_edge_weight(tgt_id.get_neuron_id(), tgt_id.get_rank(),
@@ -462,12 +461,12 @@ void NetworkGraph::load_neuron_positions(const std::string& path_neurons, std::s
         }
 
         size_t id{};
-        Vec3d pos{};
+        double pos_x, pos_y, pos_z;
         std::string area_name{};
         std::string type{};
 
         std::stringstream sstream(line);
-        const bool success = (sstream >> id) && (sstream >> pos.x) && (sstream >> pos.y) && (sstream >> pos.z) && (sstream >> area_name) && (sstream >> type);
+        const bool success = (sstream >> id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> area_name) && (sstream >> type);
 
         if (!success) {
             std::cerr << "Skipping line: \"" << line << "\"\n";
@@ -478,7 +477,7 @@ void NetworkGraph::load_neuron_positions(const std::string& path_neurons, std::s
         id--;
 
         if (foreing_ids.find(id) != foreing_ids.end()) {
-            id_to_pos[id] = pos;
+            id_to_pos[id] = { pos_x, pos_y, pos_z };
             foreing_ids.erase(id);
 
             if (foreing_ids.empty()) {
