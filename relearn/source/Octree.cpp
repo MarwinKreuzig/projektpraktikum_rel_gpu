@@ -68,10 +68,10 @@ void Octree::postorder_print() {
     while (!stack.empty()) {
 
         auto& elem = stack.top();
-        const auto depth = static_cast<int>(elem.depth);
+        const auto depth = static_cast<int>(elem.get_depth());
 
         // Visit node now
-        if (elem.flag) {
+        if (elem.get_visited()) {
             Vec3d xyz_min;
             Vec3d xyz_max;
             std::optional<Vec3d> xyz_pos;
@@ -80,10 +80,10 @@ void Octree::postorder_print() {
             for (auto j = 0; j < depth; j++) {
                 std::cout << " ";
             }
-            std::cout << "Address: " << elem.ptr << "\n";
+            std::cout << "Address: " << elem.get_ptr() << "\n";
 
             // Print cell extent
-            std::tie(xyz_min, xyz_max) = elem.ptr->get_cell().get_size();
+            std::tie(xyz_min, xyz_max) = elem.get_ptr()->get_cell().get_size();
             for (auto j = 0; j < depth; j++) {
                 std::cout << " ";
             }
@@ -96,17 +96,17 @@ void Octree::postorder_print() {
             for (auto j = 0; j < depth; j++) {
                 std::cout << " ";
             }
-            std::cout << "Neuron ID: " << elem.ptr->get_cell().get_neuron_id() << "\n";
+            std::cout << "Neuron ID: " << elem.get_ptr()->get_cell().get_neuron_id() << "\n";
 
             // Print number of dendrites
             for (auto j = 0; j < depth; j++) {
                 std::cout << " ";
             }
-            std::cout << "Number dendrites (exc, inh): (" << elem.ptr->get_cell().get_neuron_num_dendrites_exc()
-                      << ", " << elem.ptr->get_cell().get_neuron_num_dendrites_inh() << ")\n";
+            std::cout << "Number dendrites (exc, inh): (" << elem.get_ptr()->get_cell().get_neuron_num_dendrites_exc()
+                      << ", " << elem.get_ptr()->get_cell().get_neuron_num_dendrites_inh() << ")\n";
 
             // Print position DendriteType::EXCITATORY
-            xyz_pos = elem.ptr->get_cell().get_neuron_position_exc();
+            xyz_pos = elem.get_ptr()->get_cell().get_neuron_position_exc();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
                 std::cout << "-- invalid!";
@@ -119,7 +119,7 @@ void Octree::postorder_print() {
 
             std::cout << "\n";
             // Print position DendriteType::INHIBITORY
-            xyz_pos = elem.ptr->get_cell().get_neuron_position_inh();
+            xyz_pos = elem.get_ptr()->get_cell().get_neuron_position_inh();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
                 std::cout << "-- invalid!";
@@ -135,7 +135,7 @@ void Octree::postorder_print() {
         }
         // Visit children first
         else {
-            elem.flag = true;
+            elem.set_visited();
 
             for (auto j = 0; j < depth; j++) {
                 std::cout << " ";
@@ -143,7 +143,7 @@ void Octree::postorder_print() {
 
             std::cout << "Child indices: ";
             int id = 0;
-            for (const auto& child : elem.ptr->get_children()) {
+            for (const auto& child : elem.get_ptr()->get_children()) {
                 if (child != nullptr) {
                     std::cout << id << " ";
                 }
@@ -153,7 +153,7 @@ void Octree::postorder_print() {
 			* Push in reverse order so that visiting happens in
 			* increasing order of child indices
 			*/
-            for (auto it = elem.ptr->get_children().crbegin(); it != elem.ptr->get_children().crend(); ++it) {
+            for (auto it = elem.get_ptr()->get_children().crbegin(); it != elem.get_ptr()->get_children().crend(); ++it) {
                 if (*it != nullptr) {
                     stack.emplace(*it, false, static_cast<size_t>(depth) + 1);
                 }

@@ -112,13 +112,7 @@ private:
 	 * Type for stack used in postorder tree walk
 	 */
     struct StackElement {
-
-        StackElement(OctreeNode* oct_ptr, bool flag, size_t depth) noexcept
-            : ptr(oct_ptr)
-            , flag(flag)
-            , depth(depth) {
-        }
-
+    private:
         OctreeNode* ptr;
 
         // True if node has been on stack already
@@ -127,6 +121,29 @@ private:
 
         // Node's depth in the tree
         size_t depth;
+
+    public:
+        StackElement(OctreeNode* oct_ptr, bool flag, size_t depth) noexcept
+            : ptr(oct_ptr)
+            , flag(flag)
+            , depth(depth) {
+        }
+
+        [[nodiscard]] OctreeNode* get_ptr() const noexcept {
+            return ptr;
+        }
+
+        void set_visited() noexcept {
+            flag = true;
+        }
+
+        [[nodiscard]] bool get_visited() const noexcept {
+            return flag;
+        }
+
+        [[nodiscard]] size_t get_depth() const noexcept {
+            return depth;
+        }
     };
 
     /**
@@ -380,27 +397,27 @@ private:
         while (!stack.empty()) {
             // Get top-of-stack node
             auto& elem = stack.top();
-            const auto depth = elem.depth;
+            const auto depth = elem.get_depth();
 
             // Node should be visited now?
-            if (elem.flag) {
-                RelearnException::check(elem.ptr->level <= max_level);
+            if (elem.get_visited()) {
+                RelearnException::check(elem.get_ptr()->level <= max_level);
 
                 // Apply action to node
-                visit(elem.ptr);
+                visit(elem.get_ptr());
 
                 // Pop node from stack
                 stack.pop();
             } else {
                 // Mark node to be visited next time
-                elem.flag = true;
+                elem.set_visited();
 
                 // Only push node's children onto stack if
                 // they don't exceed "max_level"
                 if (depth < max_level) {
                     // Push node's children onto stack
 
-                    const auto& children = elem.ptr->get_children();
+                    const auto& children = elem.get_ptr()->get_children();
                     for (auto it = children.crbegin(); it != children.crend(); ++it) {
                         if (*it != nullptr) {
                             stack.emplace(*it, false, depth + 1);
