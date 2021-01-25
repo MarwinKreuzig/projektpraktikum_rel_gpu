@@ -30,15 +30,15 @@ void sort_indices(const std::vector<Vec3d>& vectors, std::vector<int>& sequence)
 		[&vectors](int i1, int i2) {return vectors[i1] < vectors[i2]; });
 }
 
-void check_types_fraction(std::vector<SynapticElements::SignalType>& types, double& frac_ex, unsigned long long total_subdomains, const size_t& num_neurons) {
+void check_types_fraction(std::vector<SignalType>& types, double& frac_ex, unsigned long long total_subdomains, const size_t& num_neurons) {
 	size_t neurons_ex = 0;
 	size_t neurons_in = 0;
 
 	for (auto& type : types) {
-		if (type == SynapticElements::SignalType::EXCITATORY) {
+		if (type == SignalType::EXCITATORY) {
 			neurons_ex++;
 		}
-		else if (type == SynapticElements::SignalType::INHIBITORY) {
+		else if (type == SignalType::INHIBITORY) {
 			neurons_in++;
 		}
 	}
@@ -70,7 +70,7 @@ void check_positions(std::vector<NeuronToSubdomainAssignment::Position>& pos, do
 }
 
 void generate_neuron_positions(std::vector<Vec3d>& positions,
-	std::vector<std::string>& area_names, std::vector<SynapticElements::SignalType>& types) {
+	std::vector<std::string>& area_names, std::vector<SignalType>& types) {
 
 	std::uniform_int_distribution<size_t> uid(1, 1000);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
@@ -259,17 +259,17 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions) {
 			flags[idx] = true;
 		}
 
-		std::vector<SynapticElements::SignalType> types;
+		std::vector<SignalType> types;
 		sfnd.neuron_types(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, types);
 
 		size_t neurons_ex = 0;
 		size_t neurons_in = 0;
 
 		for (auto& type : types) {
-			if (type == SynapticElements::SignalType::EXCITATORY) {
+			if (type == SignalType::EXCITATORY) {
 				neurons_ex++;
 			}
-			else if (type == SynapticElements::SignalType::INHIBITORY) {
+			else if (type == SignalType::INHIBITORY) {
 				neurons_in++;
 			}
 		}
@@ -355,17 +355,17 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions_multiple_subdomains) 
 			flags[idx] = true;
 		}
 
-		std::vector<SynapticElements::SignalType> types;
+		std::vector<SignalType> types;
 		sfnd.neuron_types(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, types);
 
 		size_t neurons_ex = 0;
 		size_t neurons_in = 0;
 
 		for (auto& type : types) {
-			if (type == SynapticElements::SignalType::EXCITATORY) {
+			if (type == SignalType::EXCITATORY) {
 				neurons_ex++;
 			}
-			else if (type == SynapticElements::SignalType::INHIBITORY) {
+			else if (type == SignalType::INHIBITORY) {
 				neurons_in++;
 			}
 		}
@@ -435,7 +435,7 @@ TEST(TestRandomNeuronPlacement, test_multiple_lazily_fill_positions_multiple_sub
 
 		check_positions(pos, um_per_neuron, expected_neurons_per_dimension, flags);
 
-		std::vector<SynapticElements::SignalType> types;
+		std::vector<SignalType> types;
 		sfnd.neuron_types(0, 1, Vec3d{ 0 }, Vec3d{ box_length }, types);
 
 		check_types_fraction(types, frac_ex, total_subdomains, num_neurons);
@@ -453,7 +453,7 @@ TEST(TestRandomNeuronPlacement, test_saving) {
 	for (auto i = 0; i < iterations; i++) {
 		std::vector<Vec3d> positions;
 		std::vector<std::string> area_names;
-		std::vector<SynapticElements::SignalType> types;
+		std::vector<SignalType> types;
 
 		generate_neuron_positions(positions, area_names, types);
 
@@ -481,7 +481,7 @@ TEST(TestRandomNeuronPlacement, test_saving) {
 		for (auto j = 0; j < num_neurons; j++) {
 			const Vec3d& desired_position = positions[j];
 			const std::string& desired_area_name = area_names[j];
-			const SynapticElements::SignalType& desired_signal_type = types[j];
+			const SignalType& desired_signal_type = types[j];
 
 			const std::string& current_line = lines[j];
 
@@ -512,12 +512,12 @@ TEST(TestRandomNeuronPlacement, test_saving) {
 			EXPECT_NEAR(y, desired_position.y, eps);
 			EXPECT_NEAR(z, desired_position.z, eps);
 
-			SynapticElements::SignalType type;
+			SignalType type;
 			if (type_string == "ex") {
-				type = SynapticElements::SignalType::EXCITATORY;
+				type = SignalType::EXCITATORY;
 			}
 			else if (type_string == "in") {
-				type = SynapticElements::SignalType::INHIBITORY;
+				type = SignalType::INHIBITORY;
 			}
 			else {
 				EXPECT_TRUE(false);
@@ -540,7 +540,7 @@ TEST(TestRandomNeuronPlacement, test_reloading) {
 	for (auto i = 0; i < iterations; i++) {
 		std::vector<Vec3d> positions;
 		std::vector<std::string> area_names;
-		std::vector<SynapticElements::SignalType> types;
+		std::vector<SignalType> types;
 
 		generate_neuron_positions(positions, area_names, types);
 
@@ -550,7 +550,7 @@ TEST(TestRandomNeuronPlacement, test_reloading) {
 
 		std::vector<Vec3d> loaded_positions;
 		std::vector<std::string> loaded_area_names;
-		std::vector<SynapticElements::SignalType> loaded_types;
+		std::vector<SignalType> loaded_types;
 
 		const auto box_length = sff.get_simulation_box_length().get_maximum();
 
@@ -592,7 +592,7 @@ TEST(TestRandomNeuronPlacement, test_reloading_multiple) {
 	for (auto i = 0; i < iterations; i++) {
 		std::vector<Vec3d> positions;
 		std::vector<std::string> area_names;
-		std::vector<SynapticElements::SignalType> types;
+		std::vector<SignalType> types;
 
 		generate_neuron_positions(positions, area_names, types);
 
@@ -602,7 +602,7 @@ TEST(TestRandomNeuronPlacement, test_reloading_multiple) {
 
 		std::array<std::vector<Vec3d>, 8> loaded_positions;
 		std::array<std::vector<std::string>, 8> loaded_area_names;
-		std::array<std::vector<SynapticElements::SignalType>, 8> loaded_types;
+		std::array<std::vector<SignalType>, 8> loaded_types;
 
 		std::vector<Vec3<size_t>> indices;
 		indices.emplace_back(0, 0, 0);
@@ -618,7 +618,7 @@ TEST(TestRandomNeuronPlacement, test_reloading_multiple) {
 
 		std::vector<Vec3d> total_loaded_positions;
 		std::vector<std::string> total_loaded_area_names;
-		std::vector<SynapticElements::SignalType> total_loaded_types;
+		std::vector<SignalType> total_loaded_types;
 
 		for (auto j = 0; j < 8; j++) {
 			const auto& idx = indices[j];

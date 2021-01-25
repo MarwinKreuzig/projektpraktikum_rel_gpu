@@ -104,11 +104,11 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
         const double type_indicator = random_number_distribution(random_number_generator);
 
         if (placed_ex_neurons < expected_number_ex && (type_indicator < desired_frac_neurons_exc_ || placed_in_neurons == expected_number_in)) {
-            Node node{ pos, i, SynapticElements::SignalType::EXCITATORY, "random" };
+            Node node{ pos, i, SignalType::EXCITATORY, "random" };
             placed_ex_neurons++;
             nodes.emplace(node);
         } else {
-            Node node{ pos, i, SynapticElements::SignalType::INHIBITORY, "random" };
+            Node node{ pos, i, SignalType::INHIBITORY, "random" };
             placed_in_neurons++;
             nodes.emplace(node);
         }

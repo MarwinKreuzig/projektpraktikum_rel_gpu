@@ -71,7 +71,7 @@ void NeuronToSubdomainAssignment::neuron_positions(size_t subdomain_idx, [[maybe
 
 void NeuronToSubdomainAssignment::neuron_types(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
     [[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max,
-    std::vector<SynapticElements::SignalType>& types) const {
+    std::vector<SignalType>& types) const {
 
     const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
@@ -123,7 +123,7 @@ void NeuronToSubdomainAssignment::write_neurons_to_file(const std::string& filen
                 << node.pos.z << "\t"
                 << node.area_name << "\t";
 
-            if (node.signal_type == SynapticElements::SignalType::EXCITATORY) {
+            if (node.signal_type == SignalType::EXCITATORY) {
                 of << "ex\n";
             } else {
                 of << "in\n";

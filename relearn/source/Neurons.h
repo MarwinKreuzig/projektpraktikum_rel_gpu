@@ -92,11 +92,11 @@ class Neurons {
         }
 
         void append(size_t src_neuron_id, size_t tgt_neuron_id, size_t affected_neuron_id,
-            SynapticElements::ElementType affected_element_type, SynapticElements::SignalType signal_type, size_t synapse_id) {
+            ElementType affected_element_type, SignalType signal_type, size_t synapse_id) {
             num_requests++;
 
-            size_t affected_element_type_converted = affected_element_type == SynapticElements::ElementType::AXON ? 0 : 1;
-            size_t signal_type_converted = signal_type == SynapticElements::SignalType::EXCITATORY ? 0 : 1;
+            size_t affected_element_type_converted = affected_element_type == ElementType::AXON ? 0 : 1;
+            size_t signal_type_converted = signal_type == SignalType::EXCITATORY ? 0 : 1;
 
             requests.push_back(src_neuron_id);
             requests.push_back(tgt_neuron_id);
@@ -148,8 +148,8 @@ class Neurons {
         RankNeuronId src_neuron_id; // Synapse source neuron id
         RankNeuronId tgt_neuron_id; // Synapse target neuron id
         RankNeuronId affected_neuron_id; // Neuron whose synaptic element should be set vacant
-        SynapticElements::ElementType affected_element_type; // Type of the element (axon/dendrite) to be set vacant
-        SynapticElements::SignalType signal_type; // Signal type (exc/inh) of the synapse
+        ElementType affected_element_type; // Type of the element (axon/dendrite) to be set vacant
+        SignalType signal_type; // Signal type (exc/inh) of the synapse
         unsigned int synapse_id; // Synapse id of the synapse to be deleted
         bool affected_element_already_deleted; // "True" if the element to be set vacant was already deleted by the neuron owning it
             // "False" if the element must be set vacant
@@ -157,7 +157,7 @@ class Neurons {
         PendingSynapseDeletion() = default;
 
         PendingSynapseDeletion(const RankNeuronId& src, const RankNeuronId& tgt, const RankNeuronId& aff,
-            SynapticElements::ElementType elem, SynapticElements::SignalType sign, unsigned int id, bool affec)
+            ElementType elem, SignalType sign, unsigned int id, bool affec)
             : src_neuron_id(src)
             , tgt_neuron_id(tgt)
             , affected_neuron_id(aff)
@@ -244,7 +244,7 @@ public:
         }
     }
 
-    std::vector<ModelParameter> get_parameter(SynapticElements::ElementType element_type, SynapticElements::SignalType signal_type);
+    std::vector<ModelParameter> get_parameter(ElementType element_type, SignalType signal_type);
 
     void set_model(std::unique_ptr<NeuronModels>&& model) noexcept {
         neuron_model = std::move(model);
@@ -375,8 +375,8 @@ private:
 	 * to delete. This should reflect how it's done for a distributed memory implementation.
 	 */
     std::list<Neurons::PendingSynapseDeletion> find_synapses_for_deletion(size_t neuron_id,
-        SynapticElements::ElementType element_type,
-        SynapticElements::SignalType signal_type,
+        ElementType element_type,
+        SignalType signal_type,
         unsigned int num_synapses_to_delete,
         const NetworkGraph& network_graph);
 

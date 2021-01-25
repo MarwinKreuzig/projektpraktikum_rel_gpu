@@ -323,7 +323,7 @@ std::shared_ptr<Neurons> Partition::load_neurons(std::unique_ptr<NeuronToSubdoma
             subdomain_pos_min, subdomain_pos_max, vec_area);
 
         // Get neuron types in subdomain i
-        std::vector<SynapticElements::SignalType> vec_type;
+        std::vector<SignalType> vec_type;
         vec_type.reserve(subdomain_num_neurons);
         neurons_in_subdomain->neuron_types(subdomain_idx, total_num_subdomains,
             subdomain_pos_min, subdomain_pos_max, vec_type);

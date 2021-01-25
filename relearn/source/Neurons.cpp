@@ -22,9 +22,9 @@
 Neurons::Neurons(const Partition& partition, std::unique_ptr<NeuronModels> model)
     : partition(&partition)
     , neuron_model(std::move(model))
-    , axons(SynapticElements::ElementType::AXON, SynapticElements::default_eta_Axons)
-    , dendrites_exc(SynapticElements::ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc)
-    , dendrites_inh(SynapticElements::ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh)
+    , axons(ElementType::AXON, SynapticElements::default_eta_Axons)
+    , dendrites_exc(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc)
+    , dendrites_inh(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh)
     // NOLINTNEXTLINE
     , random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
 }
@@ -41,7 +41,7 @@ std::tuple<bool, size_t, Vec3d, Cell::DendriteType> Neurons::get_vacant_axon() c
 
     const std::vector<double>& axons_cnts = axons.get_cnts();
     const std::vector<double>& axons_connected_cnts = axons.get_connected_cnts();
-    const std::vector<SynapticElements::SignalType>& axons_signal_types = axons.get_signal_types();
+    const std::vector<SignalType>& axons_signal_types = axons.get_signal_types();
     const std::vector<double>& axons_x_dims = positions.get_x_dims();
     const std::vector<double>& axons_y_dims = positions.get_y_dims();
     const std::vector<double>& axons_z_dims = positions.get_z_dims();
@@ -63,7 +63,7 @@ std::tuple<bool, size_t, Vec3d, Cell::DendriteType> Neurons::get_vacant_axon() c
 
             // set dendrite type matching this axon
             // DendriteType::INHIBITORY axon
-            if (SynapticElements::SignalType::INHIBITORY == axons_signal_types[i]) {
+            if (SignalType::INHIBITORY == axons_signal_types[i]) {
                 dendrite_type_needed = Cell::DendriteType::INHIBITORY;
             }
             // DendriteType::EXCITATORY axon
@@ -81,12 +81,12 @@ std::tuple<bool, size_t, Vec3d, Cell::DendriteType> Neurons::get_vacant_axon() c
     return std::make_tuple(false, neuron_id, xyz_pos, dendrite_type_needed);
 }
 
-std::vector<ModelParameter> Neurons::get_parameter(SynapticElements::ElementType element_type, SynapticElements::SignalType signal_type) {
-    if (element_type == SynapticElements::ElementType::AXON) {
+std::vector<ModelParameter> Neurons::get_parameter(ElementType element_type, SignalType signal_type) {
+    if (element_type == ElementType::AXON) {
         return axons.get_parameter();
     }
 
-    if (signal_type == SynapticElements::SignalType::EXCITATORY) {
+    if (signal_type == SignalType::EXCITATORY) {
         return dendrites_exc.get_parameter();
     }
 
@@ -98,8 +98,8 @@ void Neurons::init_synaptic_elements(const NetworkGraph& network_graph) {
 	* Mark dendrites as exc./inh.
 	*/
     for (auto i = 0; i < num_neurons; i++) {
-        dendrites_exc.set_signal_type(i, SynapticElements::SignalType::EXCITATORY);
-        dendrites_inh.set_signal_type(i, SynapticElements::SignalType::INHIBITORY);
+        dendrites_exc.set_signal_type(i, SignalType::EXCITATORY);
+        dendrites_inh.set_signal_type(i, SignalType::INHIBITORY);
     }
 
     // Give unbound synaptic elements as well
@@ -270,13 +270,13 @@ size_t Neurons::delete_synapses(NetworkGraph& network_graph) {
             size_t signal_type_converted = arr[4];
             unsigned int synapse_id = static_cast<unsigned int>(arr[5]);
 
-            SynapticElements::ElementType affected_element_type = affected_element_type_converted == 0 ? SynapticElements::ElementType::AXON : SynapticElements::ElementType::DENDRITE;
-            SynapticElements::SignalType signal_type = signal_type_converted == 0 ? SynapticElements::SignalType::EXCITATORY : SynapticElements::SignalType::INHIBITORY;
+            ElementType affected_element_type = affected_element_type_converted == 0 ? ElementType::AXON : ElementType::DENDRITE;
+            SignalType signal_type = signal_type_converted == 0 ? SignalType::EXCITATORY : SignalType::INHIBITORY;
 
             RankNeuronId src_id(MPIWrapper::get_my_rank(), src_neuron_id);
             RankNeuronId tgt_id(other_rank, tgt_neuron_id);
 
-            if (SynapticElements::ElementType::DENDRITE == affected_element_type) {
+            if (ElementType::DENDRITE == affected_element_type) {
                 src_id = RankNeuronId(other_rank, src_neuron_id);
                 tgt_id = RankNeuronId(MPIWrapper::get_my_rank(), tgt_neuron_id);
             }
@@ -406,7 +406,7 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
 
     const std::vector<double>& axons_cnts = axons.get_cnts();
     const std::vector<double>& axons_connected_cnts = axons.get_connected_cnts();
-    const std::vector<SynapticElements::SignalType>& axons_signal_types = axons.get_signal_types();
+    const std::vector<SignalType>& axons_signal_types = axons.get_signal_types();
 
     // For my neurons
     for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
@@ -414,14 +414,11 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
         const auto num_vacant_axons = static_cast<unsigned int>(axons_cnts[neuron_id] - axons_connected_cnts[neuron_id]);
         RelearnException::check(num_vacant_axons >= 0);
 
-        Cell::DendriteType dendrite_type_needed = Cell::DendriteType::INHIBITORY;
-        // DendriteType::INHIBITORY axon
-        if (SynapticElements::SignalType::INHIBITORY == axons_signal_types[neuron_id]) {
-            dendrite_type_needed = Cell::DendriteType::INHIBITORY;
-        }
         // DendriteType::EXCITATORY axon
-        else {
-            dendrite_type_needed = Cell::DendriteType::EXCITATORY;
+        Cell::DendriteType dendrite_type_needed = Cell::DendriteType::EXCITATORY;
+        if (SignalType::INHIBITORY == axons_signal_types[neuron_id]) {
+            // DendriteType::INHIBITORY axon
+            dendrite_type_needed = Cell::DendriteType::INHIBITORY;
         }
 
         // Position of current neuron
@@ -439,8 +436,7 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
 			*/
             size_t target_neuron_id{ Constants::uninitialized };
             int target_rank = -1;
-            bool target_neuron_found = false;
-            target_neuron_found = global_tree.find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed, target_neuron_id, target_rank);
+            bool target_neuron_found = global_tree.find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed, target_neuron_id, target_rank);
 
             if (target_neuron_found) {
                 /*
@@ -713,10 +709,10 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 
     const std::vector<double>& cnts_ax = axons.get_cnts();
     const std::vector<double>& connected_cnts_ax = axons.get_connected_cnts();
-    const std::vector<SynapticElements::SignalType>& signal_types = axons.get_signal_types();
+    const std::vector<SignalType>& signal_types = axons.get_signal_types();
 
     for (size_t neuron_id = 0; neuron_id < this->num_neurons; ++neuron_id) {
-        if (SynapticElements::SignalType::EXCITATORY == signal_types[neuron_id]) {
+        if (SignalType::EXCITATORY == signal_types[neuron_id]) {
             sum_axons_exc_cnts += static_cast<unsigned int>(cnts_ax[neuron_id]);
             sum_axons_exc_connected_cnts += static_cast<unsigned int>(connected_cnts_ax[neuron_id]);
         } else {
@@ -861,7 +857,7 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const NeuronIdMap&
     const std::vector<double>& axons_y_dims = positions.get_y_dims();
     const std::vector<double>& axons_z_dims = positions.get_z_dims();
 
-    const std::vector<SynapticElements::SignalType>& signal_types = axons.get_signal_types();
+    const std::vector<SignalType>& signal_types = axons.get_signal_types();
 
     // Print global ids, positions, and areas of local neurons
     bool ret = false;
@@ -875,7 +871,7 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const NeuronIdMap&
         std::tie(ret, glob_id) = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id);
         RelearnException::check(ret);
 
-        const char* const signal_type_name = signal_types[neuron_id] == SynapticElements::SignalType::EXCITATORY ? "ex" : "in";
+        const char* const signal_type_name = signal_types[neuron_id] == SignalType::EXCITATORY ? "ex" : "in";
 
         glob_id++;
 
@@ -999,8 +995,8 @@ void Neurons::find_synapses_for_deletion(SynapticElements& synaptic_elements, co
 }
 
 std::list<Neurons::PendingSynapseDeletion> Neurons::find_synapses_for_deletion(size_t neuron_id,
-    SynapticElements::ElementType element_type,
-    SynapticElements::SignalType signal_type,
+    ElementType element_type,
+    SignalType signal_type,
     unsigned int num_synapses_to_delete,
     const NetworkGraph& network_graph) {
 
@@ -1009,11 +1005,11 @@ std::list<Neurons::PendingSynapseDeletion> Neurons::find_synapses_for_deletion(s
         return {};
     }
 
-    const bool is_axon = element_type == SynapticElements::ElementType::AXON;
-    const SynapticElements::ElementType other_element_type = is_axon ? SynapticElements::ElementType::DENDRITE : SynapticElements::ElementType::AXON;
+    const bool is_axon = element_type == ElementType::AXON;
+    const ElementType other_element_type = is_axon ? ElementType::DENDRITE : ElementType::AXON;
 
-    const bool is_exc = signal_type == SynapticElements::SignalType::EXCITATORY;
-    const SynapticElements::SignalType other_signal_type = is_exc ? SynapticElements::SignalType::INHIBITORY : SynapticElements::SignalType::EXCITATORY;
+    const bool is_exc = signal_type == SignalType::EXCITATORY;
+    const SignalType other_signal_type = is_exc ? SignalType::INHIBITORY : SignalType::EXCITATORY;
 
     std::list<Synapse> list_synapses;
 
@@ -1094,8 +1090,8 @@ std::list<Neurons::Synapse> Neurons::register_edges(const NetworkGraph::Edges& e
 
 void Neurons::print_pending_synapse_deletions(const std::list<PendingSynapseDeletion>& list) {
     for (const auto& it : list) {
-        size_t affected_element_type_converted = it.affected_element_type == SynapticElements::ElementType::AXON ? 0 : 1;
-        size_t signal_type_converted = it.signal_type == SynapticElements::SignalType::EXCITATORY ? 0 : 1;
+        size_t affected_element_type_converted = it.affected_element_type == ElementType::AXON ? 0 : 1;
+        size_t signal_type_converted = it.signal_type == SignalType::EXCITATORY ? 0 : 1;
 
         std::cout << "src_neuron_id: " << it.src_neuron_id << "\n";
         std::cout << "tgt_neuron_id: " << it.tgt_neuron_id << "\n";
@@ -1136,7 +1132,7 @@ size_t Neurons::delete_synapses(const std::list<PendingSynapseDeletion>& list, N
 		*  Update network graph
 		*/
         int weight_increment = 0;
-        if (SynapticElements::SignalType::EXCITATORY == it.signal_type) {
+        if (SignalType::EXCITATORY == it.signal_type) {
             // DendriteType::EXCITATORY synapses have positive count, so decrement
             weight_increment = -1;
         } else {
@@ -1159,12 +1155,12 @@ size_t Neurons::delete_synapses(const std::list<PendingSynapseDeletion>& list, N
         const auto affected_neuron_id = it.affected_neuron_id.get_neuron_id();
 
         if (it.affected_neuron_id.get_rank() == my_rank && !it.affected_element_already_deleted) {
-            if (SynapticElements::ElementType::AXON == it.affected_element_type) {
+            if (ElementType::AXON == it.affected_element_type) {
                 axons.update_conn_cnt(affected_neuron_id, -1.0, "ax");
                 continue;
             }
 
-            if (SynapticElements::SignalType::EXCITATORY == it.signal_type) {
+            if (SignalType::EXCITATORY == it.signal_type) {
                 dendrites_exc.update_conn_cnt(affected_neuron_id, -1.0, std::to_string(affected_neuron_id) + " updating exc - 1");
             } else {
                 dendrites_inh.update_conn_cnt(affected_neuron_id, -1.0, std::to_string(affected_neuron_id) + " updating inh - 1");

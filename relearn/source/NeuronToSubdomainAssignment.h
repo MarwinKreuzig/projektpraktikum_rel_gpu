@@ -79,7 +79,7 @@ public:
     // Return neurons which have positions in the range [min, max) in every dimension
     virtual void neuron_types(size_t subdomain_idx, size_t num_subdomains,
         const Position& min, const Position& max,
-        std::vector<SynapticElements::SignalType>& types) const;
+        std::vector<SignalType>& types) const;
 
     // Return neurons which have positions in the range [min, max) in every dimension
     virtual void neuron_area_names(size_t subdomain_idx, size_t num_subdomains,
@@ -94,7 +94,7 @@ protected:
     struct Node {
         Position pos{ 0 };
         size_t id{ Constants::uninitialized };
-        SynapticElements::SignalType signal_type{ SynapticElements::SignalType::EXCITATORY };
+        SignalType signal_type{ SignalType::EXCITATORY };
         std::string area_name{ "NOT SET" };
 
         struct less {

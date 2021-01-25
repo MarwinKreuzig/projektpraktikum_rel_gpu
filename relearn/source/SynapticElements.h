@@ -10,9 +10,11 @@
 
 #pragma once
 
+#include "ElementType.h"
 #include "MPIWrapper.h"
 #include "ModelParameter.h"
 #include "RelearnException.h"
+#include "SignalType.h"
 
 #include <cmath>
 #include <cstddef>
@@ -25,11 +27,6 @@ class SynapticElements {
     friend class NeuronMonitor;
 
 public:
-    enum class ElementType { AXON,
-        DENDRITE };
-    enum class SignalType { EXCITATORY,
-        INHIBITORY };
-
     SynapticElements(ElementType type, double min_C_level_to_grow,
         double C_target = SynapticElements::default_C_target,
         double nu = SynapticElements::default_nu,
