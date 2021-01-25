@@ -172,18 +172,18 @@ size_t Neurons::delete_synapses(NetworkGraph& network_graph) {
     MapSynapseDeletionRequests map_synapse_deletion_requests_outgoing;
     // All pending deletion requests
     for (const auto& list_it : list_with_pending_deletions) {
-        const auto target_rank = list_it.affected_neuron_id.get_rank();
+        const auto target_rank = list_it.get_affected_neuron_id().get_rank();
 
         // Affected neuron of deletion request resides on different rank.
         // Thus the request needs to be communicated.
         if (target_rank != MPIWrapper::get_my_rank()) {
             map_synapse_deletion_requests_outgoing[target_rank].append(
-                list_it.src_neuron_id.get_neuron_id(),
-                list_it.tgt_neuron_id.get_neuron_id(),
-                list_it.affected_neuron_id.get_neuron_id(),
-                list_it.affected_element_type,
-                list_it.signal_type,
-                list_it.synapse_id);
+                list_it.get_src_neuron_id().get_neuron_id(),
+                list_it.get_tgt_neuron_id().get_neuron_id(),
+                list_it.get_affected_neuron_id().get_neuron_id(),
+                list_it.get_affected_element_type(),
+                list_it.get_signal_type(),
+                list_it.get_synapse_id());
         }
     }
 
@@ -289,7 +289,7 @@ size_t Neurons::delete_synapses(NetworkGraph& network_graph) {
                 list_with_pending_deletions.emplace_back(src_id, tgt_id, RankNeuronId(MPIWrapper::get_my_rank(), affected_neuron_id),
                     affected_element_type, signal_type, synapse_id, false);
             } else {
-                pending_deletion->affected_element_already_deleted = true;
+                pending_deletion->set_affected_element_already_deleted(true);
             }
 
         } // All requests of a rank
@@ -1053,7 +1053,7 @@ std::list<Neurons::PendingSynapseDeletion> Neurons::find_synapses_for_deletion(s
             list_pending_deletions.emplace_back(src_neuron_id, tgt_neuron_id, synapse_selected->get_rank_neuron_id(),
                 other_element_type, signal_type, synapse_selected->get_synapse_id(), false);
         } else {
-            pending_deletion->affected_element_already_deleted = true;
+            pending_deletion->set_affected_element_already_deleted(true);
         }
 
         // Remove selected synapse from synapse list
@@ -1090,16 +1090,16 @@ std::list<Neurons::Synapse> Neurons::register_edges(const NetworkGraph::Edges& e
 
 void Neurons::print_pending_synapse_deletions(const std::list<PendingSynapseDeletion>& list) {
     for (const auto& it : list) {
-        size_t affected_element_type_converted = it.affected_element_type == ElementType::AXON ? 0 : 1;
-        size_t signal_type_converted = it.signal_type == SignalType::EXCITATORY ? 0 : 1;
+        size_t affected_element_type_converted = it.get_affected_element_type() == ElementType::AXON ? 0 : 1;
+        size_t signal_type_converted = it.get_signal_type() == SignalType::EXCITATORY ? 0 : 1;
 
-        std::cout << "src_neuron_id: " << it.src_neuron_id << "\n";
-        std::cout << "tgt_neuron_id: " << it.tgt_neuron_id << "\n";
-        std::cout << "affected_neuron_id: " << it.affected_neuron_id << "\n";
+        std::cout << "src_neuron_id: " << it.get_src_neuron_id() << "\n";
+        std::cout << "tgt_neuron_id: " << it.get_tgt_neuron_id() << "\n";
+        std::cout << "affected_neuron_id: " << it.get_affected_neuron_id() << "\n";
         std::cout << "affected_element_type: " << affected_element_type_converted << "\n";
         std::cout << "signal_type: " << signal_type_converted << "\n";
-        std::cout << "synapse_id: " << it.synapse_id << "\n";
-        std::cout << "affected_element_already_deleted: " << it.affected_element_already_deleted << "\n"
+        std::cout << "synapse_id: " << it.get_synapse_id() << "\n";
+        std::cout << "affected_element_already_deleted: " << it.get_affected_element_already_deleted() << "\n"
                   << std::endl;
     }
 }
@@ -1115,9 +1115,9 @@ size_t Neurons::delete_synapses(const std::list<PendingSynapseDeletion>& list, N
         // Pending synapse deletion is valid (not completely) if source or
         // target neuron belong to me. To be completely valid, things such as
         // the neuron id need to be validated as well.
-        RelearnException::check(it.src_neuron_id.get_rank() == my_rank || it.tgt_neuron_id.get_rank() == my_rank);
+        RelearnException::check(it.get_src_neuron_id().get_rank() == my_rank || it.get_tgt_neuron_id().get_rank() == my_rank);
 
-        if (it.src_neuron_id.get_rank() == my_rank && it.tgt_neuron_id.get_rank() == my_rank) {
+        if (it.get_src_neuron_id().get_rank() == my_rank && it.get_tgt_neuron_id().get_rank() == my_rank) {
             /**
 			* Count the deleted synapse once for each connected neuron.
 			* The reason is that synapses where neurons are on different ranks are also
@@ -1132,7 +1132,7 @@ size_t Neurons::delete_synapses(const std::list<PendingSynapseDeletion>& list, N
 		*  Update network graph
 		*/
         int weight_increment = 0;
-        if (SignalType::EXCITATORY == it.signal_type) {
+        if (SignalType::EXCITATORY == it.get_signal_type()) {
             // DendriteType::EXCITATORY synapses have positive count, so decrement
             weight_increment = -1;
         } else {
@@ -1140,8 +1140,8 @@ size_t Neurons::delete_synapses(const std::list<PendingSynapseDeletion>& list, N
             weight_increment = +1;
         }
 
-        network_graph.add_edge_weight(it.tgt_neuron_id.get_neuron_id(), it.tgt_neuron_id.get_rank(),
-            it.src_neuron_id.get_neuron_id(), it.src_neuron_id.get_rank(), weight_increment);
+        network_graph.add_edge_weight(it.get_tgt_neuron_id().get_neuron_id(), it.get_tgt_neuron_id().get_rank(),
+            it.get_src_neuron_id().get_neuron_id(), it.get_src_neuron_id().get_rank(), weight_increment);
 
         /**
 		* Set element of affected neuron vacant if necessary,
@@ -1152,15 +1152,15 @@ size_t Neurons::delete_synapses(const std::list<PendingSynapseDeletion>& list, N
 		* because the list of pending deletion requests also contains requests whose
 		* affected neuron belongs to a different rank.
 		*/
-        const auto affected_neuron_id = it.affected_neuron_id.get_neuron_id();
+        const auto affected_neuron_id = it.get_affected_neuron_id().get_neuron_id();
 
-        if (it.affected_neuron_id.get_rank() == my_rank && !it.affected_element_already_deleted) {
-            if (ElementType::AXON == it.affected_element_type) {
+        if (it.get_affected_neuron_id().get_rank() == my_rank && !it.get_affected_element_already_deleted()) {
+            if (ElementType::AXON == it.get_affected_element_type()) {
                 axons.update_conn_cnt(affected_neuron_id, -1.0, "ax");
                 continue;
             }
 
-            if (SignalType::EXCITATORY == it.signal_type) {
+            if (SignalType::EXCITATORY == it.get_signal_type()) {
                 dendrites_exc.update_conn_cnt(affected_neuron_id, -1.0, std::to_string(affected_neuron_id) + " updating exc - 1");
             } else {
                 dendrites_inh.update_conn_cnt(affected_neuron_id, -1.0, std::to_string(affected_neuron_id) + " updating inh - 1");

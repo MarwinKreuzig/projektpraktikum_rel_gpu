@@ -144,7 +144,7 @@ class Neurons {
     /**
 	* Type for list element used to store pending synapse deletion
 	*/
-    struct PendingSynapseDeletion {
+    class PendingSynapseDeletion {
         RankNeuronId src_neuron_id; // Synapse source neuron id
         RankNeuronId tgt_neuron_id; // Synapse target neuron id
         RankNeuronId affected_neuron_id; // Neuron whose synaptic element should be set vacant
@@ -154,6 +154,7 @@ class Neurons {
         bool affected_element_already_deleted; // "True" if the element to be set vacant was already deleted by the neuron owning it
             // "False" if the element must be set vacant
 
+    public:
         PendingSynapseDeletion(const RankNeuronId& src, const RankNeuronId& tgt, const RankNeuronId& aff,
             ElementType elem, SignalType sign, unsigned int id, bool affec)
             : src_neuron_id(src)
@@ -172,6 +173,38 @@ class Neurons {
         PendingSynapseDeletion& operator=(PendingSynapseDeletion&& other) = default;
 
         ~PendingSynapseDeletion() = default;
+
+        [[nodiscard]] const RankNeuronId& get_src_neuron_id() const noexcept {
+            return src_neuron_id;
+        }
+
+        [[nodiscard]] const RankNeuronId& get_tgt_neuron_id() const noexcept {
+            return tgt_neuron_id;
+        }
+
+        [[nodiscard]] const RankNeuronId& get_affected_neuron_id() const noexcept {
+            return affected_neuron_id;
+        }
+
+        [[nodiscard]] ElementType get_affected_element_type() const noexcept {
+            return affected_element_type;
+        }
+
+        [[nodiscard]] SignalType get_signal_type() const noexcept {
+            return signal_type;
+        }
+
+        [[nodiscard]] unsigned int get_synapse_id() const noexcept {
+            return synapse_id;
+        }
+
+        [[nodiscard]] bool get_affected_element_already_deleted() const noexcept {
+            return affected_element_already_deleted;
+        }
+
+        void set_affected_element_already_deleted(bool value) noexcept {
+            affected_element_already_deleted = value;
+        }
 
         [[nodiscard]] bool check_light_equality(const PendingSynapseDeletion& other) const {
             const bool src_neuron_id_eq = other.src_neuron_id == src_neuron_id;
