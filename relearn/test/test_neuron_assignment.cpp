@@ -101,6 +101,8 @@ void generate_neuron_positions(std::vector<Vec3d>& positions,
 }
 
 TEST(TestRandomNeuronPlacement, test_constructor) {
+    setup();
+
 	std::uniform_int_distribution<size_t> uid(1, 10000);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -130,6 +132,8 @@ TEST(TestRandomNeuronPlacement, test_constructor) {
 }
 
 TEST(TestRandomNeuronPlacement, test_lazily_fill) {
+    setup();
+
 	std::uniform_int_distribution<size_t> uid(1, 10000);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -214,6 +218,8 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_multiple) {
 }
 
 TEST(TestRandomNeuronPlacement, test_lazily_fill_positions) {
+    setup();
+
 	std::uniform_int_distribution<size_t> uid(1, 10000);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -376,6 +382,8 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions_multiple_subdomains) 
 }
 
 TEST(TestRandomNeuronPlacement, test_multiple_lazily_fill_positions_multiple_subdomains) {
+    setup();
+
 	std::uniform_int_distribution<size_t> uid(1, 10000);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -445,6 +453,8 @@ TEST(TestRandomNeuronPlacement, test_multiple_lazily_fill_positions_multiple_sub
 }
 
 TEST(TestRandomNeuronPlacement, test_saving) {
+    setup();
+
 	std::uniform_int_distribution<size_t> uid(1, 1000);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -530,6 +540,8 @@ TEST(TestRandomNeuronPlacement, test_saving) {
 }
 
 TEST(TestRandomNeuronPlacement, test_reloading) {
+    setup();
+
 	std::uniform_int_distribution<size_t> uid(1, 1000);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -582,6 +594,8 @@ TEST(TestRandomNeuronPlacement, test_reloading) {
 }
 
 TEST(TestRandomNeuronPlacement, test_reloading_multiple) {
+    setup();
+
 	std::uniform_int_distribution<size_t> uid(1, 1000);
 	std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -681,6 +695,8 @@ bool operator<(const NeuronToSubdomainAssignment::Node& a, const NeuronToSubdoma
 }
 
 TEST(TestNeuronPlacementStoreLoad, test_neuron_placement_store_and_load) {
+    setup();
+
 	const std::string file{ "./test_output_positions_id.txt" };
 
 	constexpr auto subdomain_id = 0;

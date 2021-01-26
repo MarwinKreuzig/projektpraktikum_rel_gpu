@@ -264,6 +264,14 @@ public:
         dendrites_exc.init(number_neurons);
         dendrites_inh.init(number_neurons);
 
+        /**
+	    * Mark dendrites as exc./inh.
+	    */
+        for (auto i = 0; i < num_neurons; i++) {
+            dendrites_exc.set_signal_type(i, SignalType::EXCITATORY);
+            dendrites_inh.set_signal_type(i, SignalType::INHIBITORY);
+        }
+
         calcium.resize(num_neurons);
         area_names.resize(num_neurons);
 
@@ -326,8 +334,11 @@ public:
     std::tuple<size_t, size_t> update_connectivity(Octree& global_tree,
         NetworkGraph& network_graph) {
 
+        debug_check_counts(network_graph);
         size_t num_synapses_deleted = delete_synapses(network_graph);
+        debug_check_counts(network_graph);
         size_t num_synapses_created = create_synapses(global_tree, network_graph);
+        debug_check_counts(network_graph);
 
         return std::make_tuple(num_synapses_deleted, num_synapses_created);
     }
@@ -352,7 +363,7 @@ private:
 
     size_t create_synapses(Octree& global_tree, NetworkGraph& network_graph);
 
-    void debug_check_counts();
+    void debug_check_counts(const NetworkGraph& network_graph);
 
     template <typename T>
     [[nodiscard]] StatisticalMeasures<T> global_statistics(const std::vector<T>& local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root, MPIWrapper::Scope scope) {
