@@ -11,6 +11,7 @@
 #pragma once
 
 #include "MPI_RMA_MemAllocator.h"
+#include "RelearnException.h"
 
 #include <mpi.h>
 

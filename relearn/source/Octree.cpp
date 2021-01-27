@@ -801,7 +801,7 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
     OctreeNode* node_selected = nullptr;
     OctreeNode* root_of_subtree = root;
 
-    const std::uniform_real_distribution<double> random_number_distribution(0.0, std::nextafter(1.0, 1.0 + Constants::eps));
+    std::uniform_real_distribution<double> random_number_distribution(0.0, std::nextafter(1.0, 1.0 + Constants::eps));
     std::mt19937& random_number_generator = RandomHolder::get_instance().get_random_generator(RandomHolder::OCTREE);
 
     while (true) {
