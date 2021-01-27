@@ -298,8 +298,6 @@ public:
 
     [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed);
 
-    void find_target_neurons(MapSynapseCreationRequests& map_synapse_creation_requests_outgoing, const Neurons& neurons);
-
     void empty_remote_nodes_cache();
 
 private:
@@ -326,7 +324,7 @@ private:
 
             // Node should be visited now?
             if (elem.get_visited()) {
-                RelearnException::check(elem.get_ptr()->level <= max_level);
+                RelearnException::check(elem.get_ptr()->get_level() <= max_level);
 
                 // Apply action to node
                 visit(elem.get_ptr());
@@ -363,11 +361,11 @@ private:
 	 * test if cell has dendrites available and is precise enough.
 	 * Returns true if accepted, false otherwise
 	 */
-    [[nodiscard]] bool acceptance_criterion_test(const Vec3d& axon_pos_xyz,
+    [[nodiscard]] std::tuple<bool, bool> acceptance_criterion_test(
+        const Vec3d& axon_pos_xyz,
         const OctreeNode* node_with_dendrite,
         Cell::DendriteType dendrite_type_needed,
-        bool naive_method,
-        bool& has_vacant_dendrites) const /*noexcept*/;
+        bool naive_method) const /*noexcept*/;
 
     /**
 	 * Returns vector with nodes for creating the probability interval

@@ -64,6 +64,7 @@ void Octree::postorder_print() {
 
         auto& elem = stack.top();
         const auto depth = static_cast<int>(elem.get_depth());
+        const auto* ptr = elem.get_ptr();
 
         // Visit node now
         if (elem.get_visited()) {
@@ -75,10 +76,10 @@ void Octree::postorder_print() {
             for (auto j = 0; j < depth; j++) {
                 std::cout << " ";
             }
-            std::cout << "Address: " << elem.get_ptr() << "\n";
+            std::cout << "Address: " << ptr << "\n";
 
             // Print cell extent
-            std::tie(xyz_min, xyz_max) = elem.get_ptr()->get_cell().get_size();
+            std::tie(xyz_min, xyz_max) = ptr->get_cell().get_size();
             for (auto j = 0; j < depth; j++) {
                 std::cout << " ";
             }
@@ -91,17 +92,17 @@ void Octree::postorder_print() {
             for (auto j = 0; j < depth; j++) {
                 std::cout << " ";
             }
-            std::cout << "Neuron ID: " << elem.get_ptr()->get_cell().get_neuron_id() << "\n";
+            std::cout << "Neuron ID: " << ptr->get_cell().get_neuron_id() << "\n";
 
             // Print number of dendrites
             for (auto j = 0; j < depth; j++) {
                 std::cout << " ";
             }
-            std::cout << "Number dendrites (exc, inh): (" << elem.get_ptr()->get_cell().get_neuron_num_dendrites_exc()
-                      << ", " << elem.get_ptr()->get_cell().get_neuron_num_dendrites_inh() << ")\n";
+            std::cout << "Number dendrites (exc, inh): (" << ptr->get_cell().get_neuron_num_dendrites_exc()
+                      << ", " << ptr->get_cell().get_neuron_num_dendrites_inh() << ")\n";
 
             // Print position DendriteType::EXCITATORY
-            xyz_pos = elem.get_ptr()->get_cell().get_neuron_position_exc();
+            xyz_pos = ptr->get_cell().get_neuron_position_exc();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
                 std::cout << "-- invalid!";
@@ -114,7 +115,7 @@ void Octree::postorder_print() {
 
             std::cout << "\n";
             // Print position DendriteType::INHIBITORY
-            xyz_pos = elem.get_ptr()->get_cell().get_neuron_position_inh();
+            xyz_pos = ptr->get_cell().get_neuron_position_inh();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
                 std::cout << "-- invalid!";
@@ -138,7 +139,7 @@ void Octree::postorder_print() {
 
             std::cout << "Child indices: ";
             int id = 0;
-            for (const auto& child : elem.get_ptr()->get_children()) {
+            for (const auto& child : ptr->get_children()) {
                 if (child != nullptr) {
                     std::cout << id << " ";
                 }
@@ -148,7 +149,7 @@ void Octree::postorder_print() {
 			* Push in reverse order so that visiting happens in
 			* increasing order of child indices
 			*/
-            for (auto it = elem.get_ptr()->get_children().crbegin(); it != elem.get_ptr()->get_children().crend(); ++it) {
+            for (auto it = ptr->get_children().crbegin(); it != ptr->get_children().crend(); ++it) {
                 if (*it != nullptr) {
                     stack.emplace(*it, false, static_cast<size_t>(depth) + 1);
                 }
@@ -158,50 +159,47 @@ void Octree::postorder_print() {
     }
 }
 
-bool Octree::acceptance_criterion_test(const Vec3d& axon_pos_xyz,
+std::tuple<bool, bool> Octree::acceptance_criterion_test(const Vec3d& axon_pos_xyz,
     const OctreeNode* const node_with_dendrite,
     Cell::DendriteType dendrite_type_needed,
-    bool naive_method,
-    bool& has_vacant_dendrites) const /*noexcept*/ {
+    bool naive_method) const /*noexcept*/ {
+
+    const auto has_vacant_dendrites = node_with_dendrite->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed) != 0;
 
     // Use naive method
     if (naive_method) {
         // Accept leaf only
         const auto is_child = !node_with_dendrite->is_parent();
-        return is_child;
+        return std::make_tuple(is_child, has_vacant_dendrites);
     }
 
-    has_vacant_dendrites = node_with_dendrite->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed) != 0;
-
-    // There are vacant dendrites available
-    if (has_vacant_dendrites) {
-
-        /**
-		* Node is leaf node, i.e., not super neuron.
-		* Thus the node is precise. Accept it.
-		*/
-        if (!node_with_dendrite->is_parent()) {
-            return true;
-        }
-
-        // Check distance between neuron with axon and neuron with dendrite
-        const auto& target_xyz = node_with_dendrite->get_cell().get_neuron_position_for(dendrite_type_needed);
-
-        // NOTE: This assertion fails when considering inner nodes that don't have dendrites.
-        RelearnException::check(target_xyz.has_value());
-
-        // Calc Euclidean distance between source and target neuron
-        const auto distance_vector = target_xyz.value() - axon_pos_xyz;
-        const auto distance = distance_vector.calculate_p_norm(2.0);
-
-        const auto length = node_with_dendrite->get_cell().get_length();
-
-        // Original Barnes-Hut acceptance criterion
-        const auto ret_val = (length / distance) < acceptance_criterion;
-        return ret_val;
+    if (!has_vacant_dendrites) {
+        return std::make_tuple(false, false);
     }
 
-    return false;
+    /**
+	* Node is leaf node, i.e., not super neuron.
+	* Thus the node is precise. Accept it.
+	*/
+    if (!node_with_dendrite->is_parent()) {
+        return std::make_tuple(true, true);
+    }
+
+    // Check distance between neuron with axon and neuron with dendrite
+    const auto& target_xyz = node_with_dendrite->get_cell().get_neuron_position_for(dendrite_type_needed);
+
+    // NOTE: This assertion fails when considering inner nodes that don't have dendrites.
+    RelearnException::check(target_xyz.has_value());
+
+    // Calc Euclidean distance between source and target neuron
+    const auto distance_vector = target_xyz.value() - axon_pos_xyz;
+    const auto distance = distance_vector.calculate_p_norm(2.0);
+
+    const auto length = node_with_dendrite->get_cell().get_length();
+
+    // Original Barnes-Hut acceptance criterion
+    const auto ret_val = (length / distance) < acceptance_criterion;
+    return std::make_tuple(ret_val, has_vacant_dendrites);
 }
 
 ProbabilitySubintervalVector Octree::get_nodes_for_interval(
@@ -245,12 +243,12 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
 
             // Fetch remote children if they exist
             for (auto i = 7; i >= 0; i--) {
-                if (nullptr == root->get_children()[i]) {
+                if (nullptr == root->get_child(i)) {
                     local_children[i] = nullptr;
                     continue;
                 }
 
-                rank_addr_pair.second = root->get_children()[i];
+                rank_addr_pair.second = root->get_child(i);
 
                 std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair;
                 cache_key_val_pair.first = rank_addr_pair;
@@ -268,7 +266,7 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
                     auto* local_child_addr = ret.first->second;
 
                     // Calc displacement from absolute address
-                    const auto target_child_displ = MPIWrapper::get_ptr_displacement(target_rank, root->get_children()[i]);
+                    const auto target_child_displ = MPIWrapper::get_ptr_displacement(target_rank, root->get_child(i));
 
                     MPIWrapper::get(local_child_addr, target_rank, target_child_displ);
                 }
@@ -312,8 +310,11 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
 		*
 		* Only take those that have dendrites available
 		*/
-        const auto accept = acceptance_criterion_test(axon_pos_xyz, stack_elem, dendrite_type_needed, naive_method,
-            has_vacant_dendrites);
+        auto acc_vac = acceptance_criterion_test(axon_pos_xyz, stack_elem, dendrite_type_needed, naive_method);
+        const auto accept = std::get<0>(acc_vac);
+        const auto has_vac = std::get<1>(acc_vac);
+        has_vacant_dendrites = has_vac;
+
         if (accept) {
             // Insert node into vector
             vector.emplace_back(std::make_shared<ProbabilitySubinterval>(stack_elem));
@@ -346,12 +347,12 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
 
         // Fetch remote children if they exist
         for (auto i = 7; i >= 0; i--) {
-            if (nullptr == stack_elem->get_children()[i]) {
+            if (nullptr == stack_elem->get_child(i)) {
                 local_children[i] = nullptr;
                 continue;
             }
 
-            rank_addr_pair.second = stack_elem->get_children()[i];
+            rank_addr_pair.second = stack_elem->get_child(i);
 
             std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair;
             cache_key_val_pair.first = rank_addr_pair;
@@ -367,7 +368,7 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
             if (ret.second) {
                 ret.first->second = MPIWrapper::new_octree_node();
                 auto* local_child_addr = ret.first->second;
-                const auto target_child_displ = MPIWrapper::get_ptr_displacement(target_rank, stack_elem->get_children()[i]);
+                const auto target_child_displ = MPIWrapper::get_ptr_displacement(target_rank, stack_elem->get_child(i));
 
                 MPIWrapper::get(local_child_addr, target_rank, target_child_displ);
             }
@@ -399,8 +400,7 @@ std::vector<double> Octree::create_interval(size_t src_neuron_id, const Vec3d& a
     double sum = 0.0;
 
     std::vector<double> probabilities;
-
-    std::for_each(vector.begin(), vector.end(), [&](const std::shared_ptr<ProbabilitySubinterval>& ptr) {
+    std::for_each(vector.cbegin(), vector.cend(), [&](const std::shared_ptr<ProbabilitySubinterval>& ptr) {
         const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *(ptr->get_ptr()), dendrite_type_needed);
         probabilities.push_back(prob);
         sum += prob;
@@ -410,13 +410,13 @@ std::vector<double> Octree::create_interval(size_t src_neuron_id, const Vec3d& a
 	* Make sure that we don't divide by 0 in case
 	* all probabilities from above are 0.
 	*/
-    sum = (sum == 0.0) ? 1.0 : sum;
+    if (sum == 0.0) {
+        return probabilities;
+    }
 
-    std::vector<double> scaled_probabilities(probabilities.size());
+    std::transform(probabilities.begin(), probabilities.end(), probabilities.begin(), [sum](double prob) { return prob / sum; });
 
-    std::transform(probabilities.begin(), probabilities.end(), scaled_probabilities.begin(), [sum](double prob) { return prob / sum; });
-
-    return scaled_probabilities;
+    return probabilities;
 }
 
 double Octree::calc_attractiveness_to_connect(
@@ -477,188 +477,39 @@ ProbabilitySubintervalVector Octree::append_children(OctreeNode* node, AccessEpo
     }
 
     for (const auto& child : node->get_children()) {
-        if (child != nullptr) {
-            rank_addr_pair.second = child;
+        if (child == nullptr) {
+            continue;
+        }
+        rank_addr_pair.second = child;
 
-            std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair;
-            cache_key_val_pair.first = rank_addr_pair;
-            cache_key_val_pair.second = nullptr;
+        std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair;
+        cache_key_val_pair.first = rank_addr_pair;
+        cache_key_val_pair.second = nullptr;
 
-            // Get cache entry for "cache_key_val_pair"
-            std::pair<NodesCache::iterator, bool> ret = remote_nodes_cache.insert(cache_key_val_pair);
+        // Get cache entry for "cache_key_val_pair"
+        std::pair<NodesCache::iterator, bool> ret = remote_nodes_cache.insert(cache_key_val_pair);
 
-            // Cache entry just inserted as it was not in cache
-            // So, we still need to init the entry by fetching
-            // from the target rank
-            if (ret.second) {
-                auto* new_node = MPIWrapper::new_octree_node();
-                // TODO(fabian): Kill pointer here
-                auto prob_sub = std::make_shared<ProbabilitySubinterval>(new_node);
-                // Create new object which contains the remote node's information
-                ret.first->second = new_node;
-                const auto target_child_displ = MPIWrapper::get_ptr_displacement(target_rank, child);
+        // Cache entry just inserted as it was not in cache
+        // So, we still need to init the entry by fetching
+        // from the target rank
+        if (ret.second) {
+            auto* new_node = MPIWrapper::new_octree_node();
+            // TODO(fabian): Kill pointer here
+            const auto prob_sub = std::make_shared<ProbabilitySubinterval>(new_node);
+            // Create new object which contains the remote node's information
+            ret.first->second = new_node;
+            const auto target_child_displ = MPIWrapper::get_ptr_displacement(target_rank, child);
 
-                MPIWrapper::get(prob_sub->get_ptr(), target_rank, target_child_displ);
+            MPIWrapper::get(prob_sub->get_ptr(), target_rank, target_child_displ);
 
-                prob_sub->set_mpi_request(MPIWrapper::get_non_null_request());
-                prob_sub->set_request_rank(target_rank);
-            } else {
-                vector.emplace_back(std::make_shared<ProbabilitySubinterval>(ret.first->second));
-            }
+            prob_sub->set_mpi_request(MPIWrapper::get_non_null_request());
+            prob_sub->set_request_rank(target_rank);
+        } else {
+            vector.emplace_back(std::make_shared<ProbabilitySubinterval>(ret.first->second));
         }
     } // for all children
 
     return vector;
-}
-
-void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creation_requests_outgoing,
-    const Neurons& neurons) {
-
-    std::uniform_real_distribution<double> random_number_distribution(0.0, std::nextafter(1.0, 1.0 + 1.0));
-    std::mt19937& random_number_generator = RandomHolder::get_instance().get_random_generator(RandomHolder::OCTREE);
-
-    VacantAxonList vacant_axons;
-    bool axon_added = false;
-
-    AccessEpochsStarted access_epochs_started(MPIWrapper::get_num_ranks(), false);
-
-    do {
-        axon_added = false;
-
-        Cell::DendriteType dendrite_type_needed;
-
-        size_t source_neuron_id{ Constants::uninitialized };
-        Vec3d xyz_pos;
-
-        bool ret = false;
-
-        std::tie(ret, source_neuron_id, xyz_pos, dendrite_type_needed) = neurons.get_vacant_axon();
-        // Append one vacant axon to vector of pending axons if too few are pending
-        if ((vacant_axons.size() < max_num_pending_vacant_axons) && ret) {
-            auto axon = std::make_shared<VacantAxon>(source_neuron_id, xyz_pos, dendrite_type_needed);
-
-            if (root->is_parent()) {
-                auto vector = append_children(root, access_epochs_started);
-                axon->add_to_visit(std::move(vector));
-            } else {
-                axon->add_to_visit(std::make_shared<ProbabilitySubinterval>(root));
-            }
-
-            vacant_axons.emplace_back(std::move(axon));
-
-            axon_added = true;
-        }
-
-        if (vacant_axons.empty()) {
-            continue;
-        }
-
-        // Vacant axons exist
-        std::shared_ptr<VacantAxon> axon = vacant_axons.front();
-        bool delete_axon = false;
-
-        // Go through all nodes to visit of this axon
-        for (size_t i = 0; i < axon->get_num_to_visit(); i++) {
-            auto node_to_visit = axon->get_first_to_visit();
-
-            // Node is from different rank and MPI request still open
-            // So complete getting the contents of the remote node
-            MPIWrapper::AsyncToken req = node_to_visit->get_mpi_request();
-            MPIWrapper::wait_request(req);
-
-            bool has_vacant_dendrites = false;
-            const auto accept = acceptance_criterion_test(axon->get_xyz_pos(), node_to_visit->get_ptr(), axon->get_dendrite_type_needed(), false, has_vacant_dendrites);
-            // Check if the node is accepted and if yes, append it to nodes_accepted
-            if (accept) {
-                axon->add_to_accepted(node_to_visit);
-            } else {
-                // Node was rejected only because it's too close
-                if (has_vacant_dendrites) {
-                    auto vector = append_children(node_to_visit->get_ptr(), access_epochs_started);
-                    axon->add_to_visit(std::move(vector));
-                }
-            }
-
-            // Node is visited now, so remove it
-            axon->remove_first_visit();
-        }
-
-        // No nodes to visit anymore
-        if (axon->get_num_to_visit() == 0) {
-            /**
-			* Assign a probability to each node in the nodes_accepted vector.
-			* The probability for connecting to the same neuron (i.e., the axon's neuron) is set 0.
-			* Nodes with 0 probability are removed.
-			* The probabilities of all vector elements sum up to 1.
-			*/
-
-            const auto& accepted = axon->get_nodes_accepted();
-
-            std::vector<double> prob = create_interval(axon->get_neuron_id(), axon->get_xyz_pos(), axon->get_dendrite_type_needed(), accepted);
-
-            OctreeNode* node_selected = nullptr;
-
-            /**
-			* Select node with target neuron
-			*/
-
-            // Draw random number from [0,1]
-            const double random_number = random_number_distribution(random_number_generator);
-
-            int counter = 0;
-            double sum_probabilities = 0;
-            while (counter < prob.size()) {
-                if (sum_probabilities >= random_number) {
-                    break;
-                }
-
-                sum_probabilities += prob[counter];
-                counter++;
-            }
-            node_selected = accepted[counter - 1]->get_ptr();
-
-            // Clear nodes_accepted vector for next interval creation
-            axon->empty_accepted();
-
-            // Node was selected
-            if (nullptr != node_selected) {
-                // Selected node is parent. A parent cannot be a target neuron.
-                // So append its children to nodes_to_visit
-                if (node_selected->is_parent()) {
-                    auto vector = append_children(node_selected, access_epochs_started);
-                    axon->add_to_visit(std::move(vector));
-                } else {
-                    // Target neuron found
-                    // Create synapse creation request for the target neuron
-                    map_synapse_creation_requests_outgoing[node_selected->get_rank()].append(
-                        axon->get_neuron_id(),
-                        node_selected->get_cell().get_neuron_id(),
-                        axon->get_dendrite_type_needed());
-                    delete_axon = true;
-                }
-            }
-            // No node selected
-            else {
-                // No target neuron found for axon
-                delete_axon = true;
-            }
-        }
-
-        // Remove current axon from front of vector
-        vacant_axons.pop_front();
-
-        if (!delete_axon) {
-            vacant_axons.emplace_back(std::move(axon));
-        }
-
-    } while (axon_added || !vacant_axons.empty());
-
-    // Complete all started access epochs
-    for (auto i = 0; i < access_epochs_started.size(); i++) {
-        if (access_epochs_started[i]) {
-            MPIWrapper::unlock_window(i);
-        }
-    }
 }
 
 // Insert neuron into the tree
@@ -669,7 +520,7 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 
     new_node->set_cell_neuron_position({ position });
     new_node->set_cell_neuron_id(neuron_id);
-    new_node->rank = rank;
+    new_node->set_rank(rank);
 
     // Tree is empty
     if (nullptr == root) {
@@ -677,7 +528,7 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
         new_node->set_cell_size(this->xyz_min, this->xyz_max);
 
         // Init root with tree's root level
-        new_node->level = root_level;
+        new_node->set_level(root_level);
         root = new_node;
 
         return new_node;
@@ -697,7 +548,7 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
         my_idx = curr->get_cell().get_octant_for_position(position);
 
         prev = curr;
-        curr = curr->get_children()[my_idx];
+        curr = curr->get_child(my_idx);
     }
 
     RelearnException::check(prev != nullptr);
@@ -740,13 +591,13 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 			* It is not used for inner nodes.
 			*/
             prev->set_cell_neuron_id(Constants::uninitialized);
-            prev->parent = true; // Mark node as parent
+            prev->set_parent(); // Mark node as parent
 
             // MPI rank who owns this node
-            new_node->rank = prev->get_rank();
+            new_node->set_rank(prev->get_rank());
 
             // New node is one level below
-            new_node->level = prev->get_level() + 1;
+            new_node->set_level(prev->get_level() + 1);
 
             // Determine my octant
             my_idx = prev->get_cell().get_octant_for_position(position);
@@ -762,12 +613,12 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 	* add myself to the array now
 	*/
     prev->set_child(new_node, my_idx);
-    new_node->level = prev->get_level() + 1; // Now we know level of me
+    new_node->set_level(prev->get_level() + 1); // Now we know level of me
 
     Vec3d xyz_min;
     Vec3d xyz_max;
     std::tie(xyz_min, xyz_max) = prev->get_cell().get_size_for_octant(my_idx);
-    prev->get_children()[my_idx]->set_cell_size(xyz_min, xyz_max);
+    prev->get_child(my_idx)->set_cell_size(xyz_min, xyz_max);
 
     return new_node;
 }
@@ -795,9 +646,9 @@ void Octree::insert(OctreeNode* node_to_insert) {
         root = MPIWrapper::new_octree_node();
 
         // Init octree node
-        root->rank = MPIWrapper::get_my_rank();
-        root->level = root_level;
-        root->parent = true; // node will become parent
+        root->set_rank(MPIWrapper::get_my_rank());
+        root->set_level(root_level);
+        root->set_parent(); // node will become parent
 
         // Init cell in octree node
         // cell size becomes tree's box size
@@ -852,8 +703,8 @@ void Octree::insert(OctreeNode* node_to_insert) {
 
         // A node exists on my index in the
         // children array, so follow this node.
-        if (curr->get_children()[my_idx] != nullptr) {
-            curr = curr->get_children()[my_idx];
+        if (curr->get_child(my_idx) != nullptr) {
+            curr = curr->get_child(my_idx);
             //LogMessages::print_debug("  I follow node on my index.");
         }
         // New node must be created which
@@ -869,9 +720,9 @@ void Octree::insert(OctreeNode* node_to_insert) {
             //LogMessages::print_debug("    Node allocated.");
 
             // Init octree node
-            new_node->rank = MPIWrapper::get_my_rank();
-            new_node->level = next_level;
-            new_node->parent = true; // node will become parent
+            new_node->set_rank(MPIWrapper::get_my_rank());
+            new_node->set_level(next_level);
+            new_node->set_parent(); // node will become parent
 
             // Init cell in octree node
             // cell size becomes size of new node's octant
@@ -950,7 +801,7 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
     OctreeNode* node_selected = nullptr;
     OctreeNode* root_of_subtree = root;
 
-    std::uniform_real_distribution<double> random_number_distribution(0.0, std::nextafter(1.0, 2.0));
+    const std::uniform_real_distribution<double> random_number_distribution(0.0, std::nextafter(1.0, 1.0 + Constants::eps));
     std::mt19937& random_number_generator = RandomHolder::get_instance().get_random_generator(RandomHolder::OCTREE);
 
     while (true) {
@@ -966,17 +817,17 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
 		* Nodes with 0 probability are removed.
 		* The probabilities of all vector elements sum up to 1.
 		*/
-        std::vector<double> prob = create_interval(src_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
+        const std::vector<double> prob = create_interval(src_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
 
         if (prob.empty()) {
             return {};
         }
 
         // Draw random number from [0,1]
-        const double random_number = random_number_distribution(random_number_generator);
+        const auto random_number = random_number_distribution(random_number_generator);
 
-        int counter = 0;
-        double sum_probabilities = 0;
+        auto counter = 0;
+        double sum_probabilities = 0.0;
         while (counter < prob.size()) {
             if (sum_probabilities >= random_number) {
                 break;

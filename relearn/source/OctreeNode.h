@@ -19,7 +19,6 @@
 #include <optional>
 
 class OctreeNode {
-    friend class Octree;
     std::array<OctreeNode*, Constants::number_oct> children{ nullptr };
     Cell cell{};
 
@@ -45,12 +44,38 @@ public:
         return children;
     }
 
+    [[nodiscard]] const OctreeNode* get_child(size_t idx) const noexcept {
+        RelearnException::check(idx < Constants::number_oct);
+        // NOLINTNEXTLINE
+        return children[idx];
+    }
+
+    [[nodiscard]] OctreeNode* get_child(size_t idx) noexcept {
+        RelearnException::check(idx < Constants::number_oct);
+        // NOLINTNEXTLINE
+        return children[idx];
+    }
+
     [[nodiscard]] const Cell& get_cell() const noexcept {
         return cell;
     }
 
     [[nodiscard]] bool is_local() const noexcept {
         return rank == MPIWrapper::get_my_rank();
+    }
+
+    void set_rank(int new_rank) {
+        RelearnException::check(new_rank >= 0);
+        rank = new_rank;
+    }
+
+    void set_level(size_t new_level) {
+        RelearnException::check(new_level < Constants::uninitialized);
+        level = new_level;
+    }
+
+    void set_parent() {
+        this->parent = true;
     }
 
     void set_cell_neuron_id(size_t neuron_id) noexcept {
