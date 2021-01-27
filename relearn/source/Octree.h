@@ -105,81 +105,7 @@ private:
         }
 
         void operator()(OctreeNode* node) /*noexcept*/ {
-            // I'm inner node, i.e., I have a super neuron
-            if (node->is_parent()) {
-                Vec3d xyz_pos_exc = { 0., 0., 0. };
-                Vec3d xyz_pos_inh = { 0., 0., 0. };
-
-                // Sum of number of dendrites of all my children
-                auto num_dendrites_exc = 0;
-                auto num_dendrites_inh = 0;
-
-                // For all my children
-                for (const auto& child : node->get_children()) {
-                    if (child == nullptr) {
-                        continue;
-                    }
-
-                    // Sum up number of dendrites
-                    auto temp_num_dendrites_exc = child->get_cell().get_neuron_num_dendrites_exc();
-                    auto temp_num_dendrites_inh = child->get_cell().get_neuron_num_dendrites_inh();
-                    num_dendrites_exc += temp_num_dendrites_exc;
-                    num_dendrites_inh += temp_num_dendrites_inh;
-
-                    // Average the position by using the number of dendrites as weights
-                    std::optional<Vec3d> temp_xyz_pos_exc = child->get_cell().get_neuron_position_exc();
-                    std::optional<Vec3d> temp_xyz_pos_inh = child->get_cell().get_neuron_position_inh();
-
-                    /**
-					 * We can use position if it's valid or if corresponding num of dendrites is 0 
-					 */
-                    RelearnException::check(temp_xyz_pos_exc.has_value() || (0 == temp_num_dendrites_exc));
-                    RelearnException::check(temp_xyz_pos_inh.has_value() || (0 == temp_num_dendrites_inh));
-
-                    for (auto j = 0; j < 3; j++) {
-                        if (temp_xyz_pos_exc.has_value()) {
-                            xyz_pos_exc[j] += static_cast<double>(temp_num_dendrites_exc) * temp_xyz_pos_exc.value()[j];
-                        }
-                        if (temp_xyz_pos_inh.has_value()) {
-                            xyz_pos_inh[j] += static_cast<double>(temp_num_dendrites_inh) * temp_xyz_pos_inh.value()[j];
-                        }
-                    }
-                }
-                /**
-				 * For calculating the new weighted position, make sure that we don't
-				 * divide by 0. This happens if the total number of dendrites is 0.
-				 */
-                auto divisor_pos_exc = num_dendrites_exc;
-                auto divisor_pos_inh = num_dendrites_inh;
-                auto valid_pos_exc = true;
-                auto valid_pos_inh = true;
-
-                if (0 == num_dendrites_exc) {
-                    valid_pos_exc = false; // Mark result as invald
-                    divisor_pos_exc = 1;
-                }
-
-                if (0 == num_dendrites_inh) {
-                    valid_pos_inh = false; // Mark result as invalid
-                    divisor_pos_inh = 1;
-                }
-
-                // Calc the average by dividing by the total number of dendrites
-                for (auto j = 0; j < 3; j++) {
-                    xyz_pos_exc[j] /= divisor_pos_exc;
-                    xyz_pos_inh[j] /= divisor_pos_inh;
-                }
-                node->set_cell_num_dendrites(num_dendrites_exc, num_dendrites_inh);
-                // Also mark if new position is valid using valid_pos_{exc,inh}
-
-                std::optional<Vec3d> ex_pos = valid_pos_exc ? std::optional<Vec3d>{ xyz_pos_exc } : std::optional<Vec3d>{};
-                std::optional<Vec3d> in_pos = valid_pos_inh ? std::optional<Vec3d>{ xyz_pos_inh } : std::optional<Vec3d>{};
-
-                node->set_cell_neuron_pos_exc(ex_pos);
-                node->set_cell_neuron_pos_inh(in_pos);
-            }
-            // I'm leaf node, i.e., I have a normal neuron
-            else {
+            if (!node->is_parent()) {
                 // Get ID of the node's neuron
                 const size_t neuron_id = node->get_cell().get_neuron_id();
 
@@ -190,7 +116,80 @@ private:
                 const auto num_vacant_dendrites_inh = static_cast<unsigned int>(dendrites_inh_cnts[neuron_id] - dendrites_inh_connected_cnts[neuron_id]);
 
                 node->set_cell_num_dendrites(num_vacant_dendrites_exc, num_vacant_dendrites_inh);
+                return;
             }
+
+            // I'm inner node, i.e., I have a super neuron
+            Vec3d xyz_pos_exc = { 0., 0., 0. };
+            Vec3d xyz_pos_inh = { 0., 0., 0. };
+
+            // Sum of number of dendrites of all my children
+            auto num_dendrites_exc = 0;
+            auto num_dendrites_inh = 0;
+
+            // For all my children
+            for (const auto& child : node->get_children()) {
+                if (child == nullptr) {
+                    continue;
+                }
+
+                // Sum up number of dendrites
+                auto temp_num_dendrites_exc = child->get_cell().get_neuron_num_dendrites_exc();
+                auto temp_num_dendrites_inh = child->get_cell().get_neuron_num_dendrites_inh();
+                num_dendrites_exc += temp_num_dendrites_exc;
+                num_dendrites_inh += temp_num_dendrites_inh;
+
+                // Average the position by using the number of dendrites as weights
+                std::optional<Vec3d> temp_xyz_pos_exc = child->get_cell().get_neuron_position_exc();
+                std::optional<Vec3d> temp_xyz_pos_inh = child->get_cell().get_neuron_position_inh();
+
+                /**
+					 * We can use position if it's valid or if corresponding num of dendrites is 0 
+					 */
+                RelearnException::check(temp_xyz_pos_exc.has_value() || (0 == temp_num_dendrites_exc));
+                RelearnException::check(temp_xyz_pos_inh.has_value() || (0 == temp_num_dendrites_inh));
+
+                for (auto j = 0; j < 3; j++) {
+                    if (temp_xyz_pos_exc.has_value()) {
+                        xyz_pos_exc[j] += static_cast<double>(temp_num_dendrites_exc) * temp_xyz_pos_exc.value()[j];
+                    }
+                    if (temp_xyz_pos_inh.has_value()) {
+                        xyz_pos_inh[j] += static_cast<double>(temp_num_dendrites_inh) * temp_xyz_pos_inh.value()[j];
+                    }
+                }
+            }
+            /**
+				 * For calculating the new weighted position, make sure that we don't
+				 * divide by 0. This happens if the total number of dendrites is 0.
+				 */
+            auto divisor_pos_exc = num_dendrites_exc;
+            auto divisor_pos_inh = num_dendrites_inh;
+            auto valid_pos_exc = true;
+            auto valid_pos_inh = true;
+
+            if (0 == num_dendrites_exc) {
+                valid_pos_exc = false; // Mark result as invald
+                divisor_pos_exc = 1;
+            }
+
+            if (0 == num_dendrites_inh) {
+                valid_pos_inh = false; // Mark result as invalid
+                divisor_pos_inh = 1;
+            }
+
+            // Calc the average by dividing by the total number of dendrites
+            for (auto j = 0; j < 3; j++) {
+                xyz_pos_exc[j] /= divisor_pos_exc;
+                xyz_pos_inh[j] /= divisor_pos_inh;
+            }
+            node->set_cell_num_dendrites(num_dendrites_exc, num_dendrites_inh);
+            // Also mark if new position is valid using valid_pos_{exc,inh}
+
+            std::optional<Vec3d> ex_pos = valid_pos_exc ? std::optional<Vec3d>{ xyz_pos_exc } : std::optional<Vec3d>{};
+            std::optional<Vec3d> in_pos = valid_pos_inh ? std::optional<Vec3d>{ xyz_pos_inh } : std::optional<Vec3d>{};
+
+            node->set_cell_neuron_pos_exc(ex_pos);
+            node->set_cell_neuron_pos_inh(in_pos);
         }
 
     private:
@@ -291,20 +290,21 @@ public:
 
     void insert_local_tree(Octree* node_to_insert);
 
-    void update(const std::vector<double>& dendrites_exc_cnts, const std::vector<double>& dendrites_exc_connected_cnts,
-        const std::vector<double>& dendrites_inh_cnts, const std::vector<double>& dendrites_inh_connected_cnts,
-        size_t num_neurons);
-
     // The caller must ensure that only inner nodes are visited.
     // "max_level" must be chosen correctly for this
     void update_from_level(size_t max_level);
 
     void update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, const size_t& num_neurons) {
-        for (auto& local_tree : local_trees) {
-            local_tree->update(
-                dendrites_exc.get_cnts(), dendrites_exc.get_connected_cnts(),
-                dendrites_inh.get_cnts(), dendrites_inh.get_connected_cnts(),
-                num_neurons);
+        const auto& de_ex_cnt = dendrites_exc.get_cnts();
+        const auto& de_ex_conn_cnt = dendrites_exc.get_connected_cnts();
+        const auto& de_in_cnt = dendrites_inh.get_cnts();
+        const auto& de_in_conn_cnt = dendrites_inh.get_connected_cnts();
+
+        for (auto* local_tree : local_trees) {
+            const FunctorUpdateNode update_node(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt, num_neurons);
+
+            // The functor containing the visit function is of type FunctorUpdateNode
+            tree_walk_postorder<FunctorUpdateNode>(local_tree, update_node);
         }
     }
 
@@ -321,16 +321,15 @@ private:
 	 * it is visited
 	 */
     template <typename Functor>
-    void tree_walk_postorder(Functor visit, size_t max_level = std::numeric_limits<size_t>::max()) {
-        std::stack<StackElement> stack{};
-
+    void tree_walk_postorder(Octree* octree, Functor visit, size_t max_level = std::numeric_limits<size_t>::max()) {
         // Tree is empty
-        if (!root) {
+        if (!octree->root) {
             return;
         }
 
+        std::stack<StackElement> stack{};
         // Push node onto stack
-        stack.emplace(root, false, 0);
+        stack.emplace(octree->root, false, 0);
 
         while (!stack.empty()) {
             // Get top-of-stack node

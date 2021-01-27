@@ -914,17 +914,7 @@ void Octree::free() {
     const FunctorFreeNode free_node;
 
     // The functor containing the visit function is of type FunctorFreeNode
-    tree_walk_postorder<FunctorFreeNode>(free_node);
-}
-
-void Octree::update(const std::vector<double>& dendrites_exc_cnts, const std::vector<double>& dendrites_exc_connected_cnts,
-    const std::vector<double>& dendrites_inh_cnts, const std::vector<double>& dendrites_inh_connected_cnts, size_t num_neurons) {
-    // Init parameters to be used in function object
-    const FunctorUpdateNode update_node(dendrites_exc_cnts, dendrites_exc_connected_cnts,
-        dendrites_inh_cnts, dendrites_inh_connected_cnts, num_neurons);
-
-    // The functor containing the visit function is of type FunctorUpdateNode
-    tree_walk_postorder<FunctorUpdateNode>(update_node);
+    tree_walk_postorder<FunctorFreeNode>(this, free_node);
 }
 
 // The caller must ensure that only inner nodes are visited. "max_level" must be chosen correctly for this
@@ -942,7 +932,7 @@ void Octree::update_from_level(size_t max_level) {
 	*/
 
     // The functor containing the visit function is of type FunctorUpdateNode
-    tree_walk_postorder<FunctorUpdateNode>(update_node, max_level);
+    tree_walk_postorder<FunctorUpdateNode>(this, update_node, max_level);
 }
 
 bool Octree::find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed, size_t& target_neuron_id, int& target_rank) {
