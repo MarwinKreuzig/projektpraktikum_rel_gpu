@@ -79,12 +79,18 @@ struct VacantAxon {
         nodes_to_visit.pop_front();
     }
 
-    ProbabilitySubintervalList nodes_accepted;
+    [[nodiscard]] const ProbabilitySubintervalList& get_nodes_accepted() const noexcept {
+        return nodes_accepted;
+    }
 
+private:
     size_t neuron_id;
     Vec3d xyz_pos;
     Cell::DendriteType dendrite_type_needed;
 
     ProbabilitySubintervalList nodes_to_visit;
+
+public:
+    ProbabilitySubintervalList nodes_accepted;
 };
 using VacantAxonList = std::list<std::shared_ptr<VacantAxon>>;

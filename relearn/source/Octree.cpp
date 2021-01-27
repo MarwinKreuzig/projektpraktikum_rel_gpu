@@ -450,30 +450,6 @@ double Octree::calc_attractiveness_to_connect(
     return ret_val;
 }
 
-OctreeNode* Octree::select_subinterval(const ProbabilitySubintervalList& list) {
-    // Does list contain nodes?
-    if (list.empty()) {
-        return nullptr;
-    }
-
-    // Draw random number from [0,1]
-    const double random_number = random_number_distribution(random_number_generator);
-
-    /**
-	* Also check for it != list.end() to account for that, due to numeric inaccuracies in summation,
-	* it might happen that random_number > sum_probabilities in the end
-	*/
-    auto it = list.cbegin();
-    double sum_probabilities = (*it)->get_probability();
-    it++; // Point to second element
-    while (random_number > sum_probabilities && it != list.cend()) {
-        sum_probabilities += (*it)->get_probability();
-        it++;
-    }
-    it--; // Undo it++ before or in loop to get correct subinterval
-    return (*it)->get_ptr();
-}
-
 bool Octree::node_is_local(const OctreeNode& node) /*noexcept*/ {
     return node.get_rank() == MPIWrapper::get_my_rank();
 }
@@ -565,9 +541,9 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 
             if (root->is_parent()) {
                 auto list = append_children(root, access_epochs_started);
-                axon->nodes_to_visit.splice(axon->nodes_to_visit.cend(), std::move(list));
+                axon->add_to_visit(std::move(list));
             } else {
-                axon->nodes_to_visit.emplace_back(std::make_shared<ProbabilitySubinterval>(root));
+                axon->add_to_visit(std::make_shared<ProbabilitySubinterval>(root));
             }
 
             vacant_axons.emplace_back(std::move(axon));
@@ -581,8 +557,8 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
             bool delete_axon = false;
 
             // Go through all nodes to visit of this axon
-            for (size_t i = 0; i < axon->nodes_to_visit.size(); i++) {
-                auto& node_to_visit = axon->nodes_to_visit.front();
+            for (size_t i = 0; i < axon->get_num_to_visit(); i++) {
+                auto& node_to_visit = axon->get_first_to_visit();
 
                 // Node is from different rank and MPI request still open
                 // So complete getting the contents of the remote node
@@ -590,39 +566,41 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
                 MPIWrapper::wait_request(req);
 
                 bool has_vacant_dendrites = false;
-                const auto accept = acceptance_criterion_test(axon->xyz_pos, node_to_visit->get_ptr(), axon->dendrite_type_needed, false, has_vacant_dendrites);
+                const auto accept = acceptance_criterion_test(axon->get_xyz_pos(), node_to_visit->get_ptr(), axon->get_dendrite_type_needed(), false, has_vacant_dendrites);
                 // Check if the node is accepted and if yes, append it to nodes_accepted
                 if (accept) {
-                    axon->nodes_accepted.emplace_back(node_to_visit);
+                    axon->add_to_accepted(node_to_visit);
                 } else {
                     // Node was rejected only because it's too close
                     if (has_vacant_dendrites) {
                         auto list = append_children(node_to_visit->get_ptr(), access_epochs_started);
-                        axon->nodes_to_visit.splice(axon->nodes_to_visit.cend(), std::move(list));
+                        axon->add_to_visit(std::move(list));
                     }
                 }
 
                 // Node is visited now, so remove it
-                axon->nodes_to_visit.pop_front();
+                axon->remove_first_visit();
             }
 
             // No nodes to visit anymore
-            if (axon->nodes_to_visit.empty()) {
+            if (axon->get_num_to_visit() == 0) {
                 /**
 				 * Assign a probability to each node in the nodes_accepted list.
 				 * The probability for connecting to the same neuron (i.e., the axon's neuron) is set 0.
 				 * Nodes with 0 probability are removed.
 				 * The probabilities of all list elements sum up to 1.
 				 */
-                create_interval(axon->neuron_id, axon->xyz_pos, axon->dendrite_type_needed, axon->nodes_accepted);
+
+                create_interval(axon->get_neuron_id(), axon->get_xyz_pos(), axon->get_dendrite_type_needed(), axon->nodes_accepted);
+                
 
                 /**
 				 * Select node with target neuron
 				 */
-                auto* node_selected = select_subinterval(axon->nodes_accepted);
+                auto* node_selected = ProbabilitySubinterval::select_subinterval(axon->get_nodes_accepted());
 
                 // Clear nodes_accepted list for next interval creation
-                axon->nodes_accepted.clear();
+                axon->empty_accepted();
 
                 // Now nodes_accepted and nodes_to_visit are empty
 
@@ -632,14 +610,14 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
                     // So append its children to nodes_to_visit
                     if (node_selected->is_parent()) {
                         auto list = append_children(node_selected, access_epochs_started);
-                        axon->nodes_to_visit.splice(axon->nodes_to_visit.cend(), std::move(list));
+                        axon->add_to_visit(std::move(list));
                     } else {
                         // Target neuron found
                         // Create synapse creation request for the target neuron
                         map_synapse_creation_requests_outgoing[node_selected->get_rank()].append(
-                            axon->neuron_id,
+                            axon->get_neuron_id(),
                             node_selected->get_cell().get_neuron_id(),
-                            axon->dendrite_type_needed);
+                            axon->get_dendrite_type_needed());
                         delete_axon = true;
                     }
                 }
@@ -975,7 +953,7 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
         /**
 		* Select node with target neuron
 		*/
-        node_selected = select_subinterval(list);
+        node_selected = ProbabilitySubinterval::select_subinterval(list);
 
         /**
 		* Leave loop if no node was selected OR

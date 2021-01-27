@@ -393,11 +393,6 @@ private:
 	 */
     [[nodiscard]] double calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, const OctreeNode& node_with_dendrite, Cell::DendriteType dendrite_type_needed) const /*noexcept*/;
 
-    /**
-	 * Randomly select node from probability interval
-	 */
-    [[nodiscard]] OctreeNode* select_subinterval(const ProbabilitySubintervalList& list);
-
     [[nodiscard]] static bool node_is_local(const OctreeNode& node) /*noexcept*/;
 
     ProbabilitySubintervalList append_children(OctreeNode* node, AccessEpochsStarted& epochs_started);
