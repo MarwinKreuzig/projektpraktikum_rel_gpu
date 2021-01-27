@@ -20,7 +20,8 @@
 /**
 * Type for vacant axon for which a target neuron needs to be found
 */
-struct VacantAxon {
+class VacantAxon {
+public:
     VacantAxon(size_t neuron_id, const Vec3d& pos, Cell::DendriteType dendrite_type_needed)
         : neuron_id(neuron_id)
         , xyz_pos(pos)

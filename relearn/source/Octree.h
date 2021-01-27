@@ -28,16 +28,15 @@
 #include <cstddef>
 #include <iostream>
 #include <limits>
-#include <vector>
 #include <map>
 #include <memory>
 #include <optional>
 #include <random>
 #include <sstream>
 #include <stack>
+#include <vector>
 
 class Neurons;
-
 class Partition;
 
 class Octree {
@@ -364,7 +363,7 @@ private:
 	 * test if cell has dendrites available and is precise enough.
 	 * Returns true if accepted, false otherwise
 	 */
-    bool acceptance_criterion_test(const Vec3d& axon_pos_xyz,
+    [[nodiscard]] bool acceptance_criterion_test(const Vec3d& axon_pos_xyz,
         const OctreeNode* node_with_dendrite,
         Cell::DendriteType dendrite_type_needed,
         bool naive_method,
@@ -373,7 +372,7 @@ private:
     /**
 	 * Returns vector with nodes for creating the probability interval
 	 */
-    ProbabilitySubintervalVector get_nodes_for_interval(
+    [[nodiscard]] ProbabilitySubintervalVector get_nodes_for_interval(
         const Vec3d& axon_pos_xyz,
         OctreeNode* root,
         Cell::DendriteType dendrite_type_needed,
@@ -384,7 +383,7 @@ private:
 	 * Nodes with probability 0 are removed from the vector.
 	 * The probabilities sum up to 1
 	 */
-    std::vector<double> create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed, const ProbabilitySubintervalVector& vector) const;
+    [[nodiscard]] std::vector<double> create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed, const ProbabilitySubintervalVector& vector) const;
 
     /**
 	 * Returns attractiveness for connecting two given nodes
@@ -392,9 +391,7 @@ private:
 	 */
     [[nodiscard]] double calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, const OctreeNode& node_with_dendrite, Cell::DendriteType dendrite_type_needed) const /*noexcept*/;
 
-    [[nodiscard]] static bool node_is_local(const OctreeNode& node) /*noexcept*/;
-
-    ProbabilitySubintervalVector append_children(OctreeNode* node, AccessEpochsStarted& epochs_started);
+    [[nodiscard]] ProbabilitySubintervalVector append_children(OctreeNode* node, AccessEpochsStarted& epochs_started);
 
     // Root of the tree
     OctreeNode* root{ nullptr };

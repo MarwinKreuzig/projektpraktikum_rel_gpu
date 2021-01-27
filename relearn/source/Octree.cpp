@@ -491,7 +491,7 @@ ProbabilitySubintervalVector Octree::append_children(OctreeNode* node, AccessEpo
             // So, we still need to init the entry by fetching
             // from the target rank
             if (ret.second) {
-                auto new_node = MPIWrapper::new_octree_node();
+                auto* new_node = MPIWrapper::new_octree_node();
                 // TODO(fabian): Kill pointer here
                 auto prob_sub = std::make_shared<ProbabilitySubinterval>(new_node);
                 // Create new object which contains the remote node's information
@@ -559,11 +559,11 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 
         // Go through all nodes to visit of this axon
         for (size_t i = 0; i < axon->get_num_to_visit(); i++) {
-            auto& node_to_visit = axon->get_first_to_visit();
+            auto node_to_visit = axon->get_first_to_visit();
 
             // Node is from different rank and MPI request still open
             // So complete getting the contents of the remote node
-            auto req = node_to_visit->get_mpi_request();
+            MPIWrapper::AsyncToken req = node_to_visit->get_mpi_request();
             MPIWrapper::wait_request(req);
 
             bool has_vacant_dendrites = false;
@@ -592,7 +592,9 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
 			* The probabilities of all vector elements sum up to 1.
 			*/
 
-            std::vector<double> prob = create_interval(axon->get_neuron_id(), axon->get_xyz_pos(), axon->get_dendrite_type_needed(), axon->get_nodes_accepted());
+            const auto& accepted = axon->get_nodes_accepted();
+
+            std::vector<double> prob = create_interval(axon->get_neuron_id(), axon->get_xyz_pos(), axon->get_dendrite_type_needed(), accepted);
 
             OctreeNode* node_selected = nullptr;
 
@@ -603,25 +605,17 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
             // Draw random number from [0,1]
             const double random_number = random_number_distribution(random_number_generator);
 
-            double summed = 0.0;
-
-            auto it = prob.cbegin();
-
-            for (auto i = 0; i < prob.size(); i++) {
-                summed += prob[i];
-                if (summed >= random_number) {
-                    auto lit = axon->get_nodes_accepted().cbegin();
-                    std::advance(lit, i);
-                    node_selected = lit->get()->get_ptr();
+            int counter = 0;
+            double sum_probabilities = 0;
+            while (counter < prob.size()) {
+                if (sum_probabilities >= random_number) {
                     break;
                 }
-            }
 
-            if (node_selected == nullptr) {
-                auto lit = axon->get_nodes_accepted().cend();
-                std::advance(lit, -1);
-                node_selected = lit->get()->get_ptr();
+                sum_probabilities += prob[counter];
+                counter++;
             }
+            node_selected = accepted[counter - 1]->get_ptr();
 
             // Clear nodes_accepted vector for next interval creation
             axon->empty_accepted();
@@ -981,10 +975,6 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
         // Draw random number from [0,1]
         const double random_number = random_number_distribution(random_number_generator);
 
-        /**
-	    * Also check for it != vector.end() to account for that, due to numeric inaccuracies in summation,
-	    * it might happen that random_number > sum_probabilities in the end
-	    */
         int counter = 0;
         double sum_probabilities = 0;
         while (counter < prob.size()) {
@@ -995,9 +985,7 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
             sum_probabilities += prob[counter];
             counter++;
         }
-        auto it = vector.cbegin();
-        std::advance(it, counter - 1);
-        node_selected = (*it)->get_ptr();
+        node_selected = vector[counter - 1]->get_ptr();
 
         /**
 		* Leave loop if no node was selected OR

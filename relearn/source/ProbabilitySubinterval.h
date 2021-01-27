@@ -14,7 +14,6 @@
 #include "Random.h"
 #include "RelearnException.h"
 
-#include <list>
 #include <memory>
 #include <random>
 #include <vector>
@@ -24,19 +23,10 @@ class OctreeNode;
 /**
 * Type for list elements used to create probability subinterval
 */
-struct ProbabilitySubinterval {
-    OctreeNode* ptr{ nullptr };
-    double probability{ 0.0 };
-    MPIWrapper::AsyncToken mpi_request{ MPIWrapper::get_null_request() };
-    int request_rank{ -1 };
-
+class ProbabilitySubinterval {
 public:
     explicit ProbabilitySubinterval(OctreeNode* node) noexcept
         : ptr(node) {
-    }
-
-    void set_probability(double prob) noexcept {
-        probability = prob;
     }
 
     void set_mpi_request(MPIWrapper::AsyncToken request) noexcept {
@@ -52,10 +42,6 @@ public:
         return ptr;
     }
 
-    [[nodiscard]] double get_probability() const noexcept {
-        return probability;
-    }
-
     [[nodiscard]] MPIWrapper::AsyncToken get_mpi_request() const noexcept {
         return mpi_request;
     }
@@ -63,5 +49,10 @@ public:
     [[nodiscard]] int get_request_rank() const noexcept {
         return request_rank;
     }
+
+private:
+    OctreeNode* ptr{ nullptr };
+    MPIWrapper::AsyncToken mpi_request{ MPIWrapper::get_null_request() };
+    int request_rank{ -1 };
 };
 using ProbabilitySubintervalVector = std::vector<std::shared_ptr<ProbabilitySubinterval>>;
