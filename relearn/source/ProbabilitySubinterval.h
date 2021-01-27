@@ -17,6 +17,7 @@
 #include <list>
 #include <memory>
 #include <random>
+#include <vector>
 
 class OctreeNode;
 

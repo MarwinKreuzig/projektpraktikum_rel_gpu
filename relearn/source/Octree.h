@@ -424,10 +424,4 @@ private:
     using NodesCacheValue = OctreeNode*;
     using NodesCache = std::map<NodesCacheKey, NodesCacheValue>;
     NodesCache remote_nodes_cache;
-
-    // Randpm number generator for this class (C++11)
-    std::mt19937& random_number_generator;
-    // Random number distribution used together with "random_number_generator" (C++11)
-    // Uniform distribution for interval [0, 1] (see constructor for initialization)
-    std::uniform_real_distribution<double> random_number_distribution;
 };
