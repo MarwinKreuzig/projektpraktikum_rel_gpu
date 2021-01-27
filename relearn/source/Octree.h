@@ -28,7 +28,7 @@
 #include <cstddef>
 #include <iostream>
 #include <limits>
-#include <list>
+#include <vector>
 #include <map>
 #include <memory>
 #include <optional>
@@ -371,21 +371,20 @@ private:
         bool& has_vacant_dendrites) const /*noexcept*/;
 
     /**
-	 * Returns list with nodes for creating the probability interval
+	 * Returns vector with nodes for creating the probability interval
 	 */
-    void get_nodes_for_interval(
+    ProbabilitySubintervalVector get_nodes_for_interval(
         const Vec3d& axon_pos_xyz,
         OctreeNode* root,
         Cell::DendriteType dendrite_type_needed,
-        ProbabilitySubintervalList& list,
         bool naive_method);
 
     /**
-	 * Returns probability interval, i.e., list with nodes where each node is assigned a probability.
-	 * Nodes with probability 0 are removed from the list.
+	 * Returns probability interval, i.e., vector with nodes where each node is assigned a probability.
+	 * Nodes with probability 0 are removed from the vector.
 	 * The probabilities sum up to 1
 	 */
-    void create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed, ProbabilitySubintervalList& list) const;
+    std::vector<double> create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed, const ProbabilitySubintervalVector& vector) const;
 
     /**
 	 * Returns attractiveness for connecting two given nodes
@@ -395,7 +394,7 @@ private:
 
     [[nodiscard]] static bool node_is_local(const OctreeNode& node) /*noexcept*/;
 
-    ProbabilitySubintervalList append_children(OctreeNode* node, AccessEpochsStarted& epochs_started);
+    ProbabilitySubintervalVector append_children(OctreeNode* node, AccessEpochsStarted& epochs_started);
 
     // Root of the tree
     OctreeNode* root{ nullptr };

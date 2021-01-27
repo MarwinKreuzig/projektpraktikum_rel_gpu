@@ -12,6 +12,7 @@
 
 #include "Cell.h"
 #include "Config.h"
+#include "MPIWrapper.h"
 
 #include <array>
 #include <cstddef>
@@ -46,6 +47,10 @@ public:
 
     [[nodiscard]] const Cell& get_cell() const noexcept {
         return cell;
+    }
+
+    [[nodiscard]] bool is_local() const noexcept {
+        return rank == MPIWrapper::get_my_rank();
     }
 
     void set_cell_neuron_id(size_t neuron_id) noexcept {

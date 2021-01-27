@@ -47,12 +47,12 @@ struct VacantAxon {
         nodes_to_visit.emplace_back(subinterval);
     }
 
-    void add_to_accepted(ProbabilitySubintervalList&& list) {
-        nodes_accepted.splice(nodes_accepted.end(), std::move(list));
+    void add_to_accepted(ProbabilitySubintervalVector&& list) {
+        nodes_accepted.insert(nodes_accepted.cend(), list.begin(), list.end());
     }
 
-    void add_to_visit(ProbabilitySubintervalList&& list) {
-        nodes_to_visit.splice(nodes_to_visit.end(), std::move(list));
+    void add_to_visit(ProbabilitySubintervalVector&& list) {
+        nodes_to_visit.insert(nodes_to_visit.cend(), list.begin(), list.end());
     }
 
     void empty_accepted() noexcept {
@@ -61,10 +61,6 @@ struct VacantAxon {
 
     void empty_visited() noexcept {
         nodes_to_visit.clear();
-    }
-
-    [[nodiscard]] OctreeNode* select_subinterval(double probabilty = 1.0) const {
-        return ProbabilitySubinterval::select_subinterval(nodes_accepted, probabilty);
     }
 
     [[nodiscard]] size_t get_num_to_visit() const noexcept {
@@ -76,10 +72,10 @@ struct VacantAxon {
     }
 
     void remove_first_visit() noexcept {
-        nodes_to_visit.pop_front();
+        nodes_to_visit.erase(nodes_to_visit.cbegin());
     }
 
-    [[nodiscard]] const ProbabilitySubintervalList& get_nodes_accepted() const noexcept {
+    [[nodiscard]] const ProbabilitySubintervalVector& get_nodes_accepted() const noexcept {
         return nodes_accepted;
     }
 
@@ -88,9 +84,7 @@ private:
     Vec3d xyz_pos;
     Cell::DendriteType dendrite_type_needed;
 
-    ProbabilitySubintervalList nodes_to_visit;
-
-public:
-    ProbabilitySubintervalList nodes_accepted;
+    ProbabilitySubintervalVector nodes_to_visit;
+    ProbabilitySubintervalVector nodes_accepted;
 };
 using VacantAxonList = std::list<std::shared_ptr<VacantAxon>>;
