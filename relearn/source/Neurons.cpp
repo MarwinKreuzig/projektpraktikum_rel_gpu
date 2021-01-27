@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <array>
+#include <optional>
 
 Neurons::Neurons(const Partition& partition, std::unique_ptr<NeuronModels> model)
     : partition(&partition)
@@ -424,16 +425,15 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
 			* as other axons might already have connected to them.
 			* Right now, those collisions are handled in a first-come-first-served fashion.
 			*/
-            size_t target_neuron_id{ Constants::uninitialized };
-            int target_rank = -1;
-            bool target_neuron_found = global_tree.find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed, target_neuron_id, target_rank);
+            std::optional<RankNeuronId> rank_neuron_id = global_tree.find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
 
-            if (target_neuron_found) {
+            if (rank_neuron_id.has_value()) {
+                RankNeuronId val = rank_neuron_id.value();
                 /*
 				* Append request for synapse creation to rank "target_rank"
 				* Note that "target_rank" could also be my own rank.
 				*/
-                map_synapse_creation_requests_outgoing[target_rank].append(neuron_id, target_neuron_id, dendrite_type_needed);
+                map_synapse_creation_requests_outgoing[val.get_rank()].append(neuron_id, val.get_neuron_id(), dendrite_type_needed);
             }
         } /* all vacant axons of a neuron */
     } /* my neurons */

@@ -17,6 +17,7 @@
 #include "OctreeNode.h"
 #include "Parameters.h"
 #include "ProbabilitySubinterval.h"
+#include "RankNeuronId.h"
 #include "RelearnException.h"
 #include "SynapseCreationRequests.h"
 #include "SynapticElements.h"
@@ -159,9 +160,9 @@ private:
                 }
             }
             /**
-				 * For calculating the new weighted position, make sure that we don't
-				 * divide by 0. This happens if the total number of dendrites is 0.
-				 */
+			* For calculating the new weighted position, make sure that we don't
+			* divide by 0. This happens if the total number of dendrites is 0.
+			*/
             auto divisor_pos_exc = num_dendrites_exc;
             auto divisor_pos_inh = num_dendrites_inh;
             auto valid_pos_exc = true;
@@ -294,21 +295,9 @@ public:
     // "max_level" must be chosen correctly for this
     void update_from_level(size_t max_level);
 
-    void update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, const size_t& num_neurons) {
-        const auto& de_ex_cnt = dendrites_exc.get_cnts();
-        const auto& de_ex_conn_cnt = dendrites_exc.get_connected_cnts();
-        const auto& de_in_cnt = dendrites_inh.get_cnts();
-        const auto& de_in_conn_cnt = dendrites_inh.get_connected_cnts();
+    void update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, size_t num_neurons);
 
-        for (auto* local_tree : local_trees) {
-            const FunctorUpdateNode update_node(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt, num_neurons);
-
-            // The functor containing the visit function is of type FunctorUpdateNode
-            tree_walk_postorder<FunctorUpdateNode>(local_tree, update_node);
-        }
-    }
-
-    [[nodiscard]] bool find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed, size_t& target_neuron_id, int& target_rank);
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed);
 
     void find_target_neurons(MapSynapseCreationRequests& map_synapse_creation_requests_outgoing, const Neurons& neurons);
 
@@ -411,8 +400,7 @@ private:
 
     [[nodiscard]] static bool node_is_local(const OctreeNode& node) /*noexcept*/;
 
-    static void append_node(OctreeNode* node, ProbabilitySubintervalList& list);
-    void append_children(OctreeNode* node, ProbabilitySubintervalList& list, AccessEpochsStarted& epochs_started);
+    ProbabilitySubintervalList append_children(OctreeNode* node, AccessEpochsStarted& epochs_started);
 
     // Root of the tree
     OctreeNode* root{ nullptr };

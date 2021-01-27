@@ -478,11 +478,9 @@ bool Octree::node_is_local(const OctreeNode& node) /*noexcept*/ {
     return node.get_rank() == MPIWrapper::get_my_rank();
 }
 
-void Octree::append_node(OctreeNode* node, ProbabilitySubintervalList& list) {
-    list.emplace_back(std::make_shared<ProbabilitySubinterval>(node));
-}
+ProbabilitySubintervalList Octree::append_children(OctreeNode* node, AccessEpochsStarted& epochs_started) {
+    ProbabilitySubintervalList list;
 
-void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list, AccessEpochsStarted& epochs_started) {
     // Node is local
     if (node_is_local(*node)) {
         // Append all children != nullptr
@@ -492,7 +490,7 @@ void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list,
             }
         }
 
-        return;
+        return list;
     }
     // Node is remote
 
@@ -538,6 +536,8 @@ void Octree::append_children(OctreeNode* node, ProbabilitySubintervalList& list,
             }
         }
     } // for all children
+
+    return list;
 }
 
 void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creation_requests_outgoing,
@@ -564,9 +564,10 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
             auto axon = std::make_shared<VacantAxon>(source_neuron_id, xyz_pos, dendrite_type_needed);
 
             if (root->is_parent()) {
-                append_children(root, axon->nodes_to_visit, access_epochs_started);
+                auto list = append_children(root, access_epochs_started);
+                axon->nodes_to_visit.splice(axon->nodes_to_visit.cend(), std::move(list));
             } else {
-                append_node(root, axon->nodes_to_visit);
+                axon->nodes_to_visit.emplace_back(std::make_shared<ProbabilitySubinterval>(root));
             }
 
             vacant_axons.emplace_back(std::move(axon));
@@ -596,7 +597,8 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
                 } else {
                     // Node was rejected only because it's too close
                     if (has_vacant_dendrites) {
-                        append_children(node_to_visit->get_ptr(), axon->nodes_to_visit, access_epochs_started);
+                        auto list = append_children(node_to_visit->get_ptr(), access_epochs_started);
+                        axon->nodes_to_visit.splice(axon->nodes_to_visit.cend(), std::move(list));
                     }
                 }
 
@@ -629,7 +631,8 @@ void Octree::find_target_neurons(MapSynapseCreationRequests& map_synapse_creatio
                     // Selected node is parent. A parent cannot be a target neuron.
                     // So append its children to nodes_to_visit
                     if (node_selected->is_parent()) {
-                        append_children(node_selected, axon->nodes_to_visit, access_epochs_started);
+                        auto list = append_children(node_selected, access_epochs_started);
+                        axon->nodes_to_visit.splice(axon->nodes_to_visit.cend(), std::move(list));
                     } else {
                         // Target neuron found
                         // Create synapse creation request for the target neuron
@@ -935,7 +938,21 @@ void Octree::update_from_level(size_t max_level) {
     tree_walk_postorder<FunctorUpdateNode>(this, update_node, max_level);
 }
 
-bool Octree::find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed, size_t& target_neuron_id, int& target_rank) {
+void Octree::update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, size_t num_neurons) {
+    const auto& de_ex_cnt = dendrites_exc.get_cnts();
+    const auto& de_ex_conn_cnt = dendrites_exc.get_connected_cnts();
+    const auto& de_in_cnt = dendrites_inh.get_cnts();
+    const auto& de_in_conn_cnt = dendrites_inh.get_connected_cnts();
+
+    for (auto* local_tree : local_trees) {
+        const FunctorUpdateNode update_node(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt, num_neurons);
+
+        // The functor containing the visit function is of type FunctorUpdateNode
+        tree_walk_postorder<FunctorUpdateNode>(local_tree, update_node);
+    }
+}
+
+std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed) {
     OctreeNode* node_selected = nullptr;
     OctreeNode* root_of_subtree = root;
 
@@ -981,11 +998,11 @@ bool Octree::find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz,
 
     // Return neuron ID and rank of target neuron
     if (found) {
-        target_neuron_id = node_selected->get_cell().get_neuron_id();
-        target_rank = node_selected->get_rank();
+        RankNeuronId rank_neuron_id{ node_selected->get_rank(), node_selected->get_cell().get_neuron_id() };
+        return rank_neuron_id;
     }
 
-    return found;
+    return {};
 }
 
 void Octree::empty_remote_nodes_cache() {
