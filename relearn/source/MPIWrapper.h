@@ -11,7 +11,6 @@
 #pragma once
 
 #include "MPI_RMA_MemAllocator.h"
-#include "OctreeNode.h"
 
 #include <mpi.h>
 
@@ -19,6 +18,7 @@
 #include <string>
 
 class Octree;
+class OctreeNode;
 
 enum class MPI_Locktype : int {
     exclusive = MPI_LOCK_EXCLUSIVE,
@@ -99,9 +99,11 @@ public:
 
     [[nodiscard]] static double all_reduce(double value, ReduceFunction function, Scope scope);
 
+    // NOLINTNEXTLINE
     static void all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst, Scope scope);
 
     template <typename T>
+    // NOLINTNEXTLINE
     static void async_send(const T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
         MPI_Comm mpi_scope = translate_scope(scope);
 
@@ -112,6 +114,7 @@ public:
     }
 
     template <typename T>
+    // NOLINTNEXTLINE
     static void async_receive(T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
         MPI_Comm mpi_scope = translate_scope(scope);
 
@@ -187,14 +190,17 @@ public:
 
     static void delete_octree_node(OctreeNode* ptr);
 
+    // NOLINTNEXTLINE
     static void wait_request(AsyncToken& request);
 
     [[nodiscard]] static AsyncToken get_non_null_request();
 
     [[nodiscard]] static AsyncToken get_null_request();
 
+    // NOLINTNEXTLINE
     static void all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs);
 
+    // NOLINTNEXTLINE
     static void wait_all_tokens(std::vector<AsyncToken>& tokens);
 
     static void lock_window(int rank, MPI_Locktype lock_type);

@@ -964,7 +964,7 @@ void Neurons::print_info_for_barnes_hut() {
 typename std::list<Neurons::Synapse>::const_iterator Neurons::select_random_synapse(const std::list<Synapse>& list) {
     // Point to first synapse
     auto it = list.cbegin();
-    std::mt19937& random_number_generator = RandomHolder<Neurons>::get_random_generator();
+    std::mt19937& random_number_generator = RandomHolder::get_instance().get_random_generator(RandomHolder::Neurons);
     // Draw random number from [0,1)
     const double random_number = random_number_distribution(random_number_generator);
 

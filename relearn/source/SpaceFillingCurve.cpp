@@ -4,23 +4,25 @@ BoxCoordinates Morton::map_1d_to_3d(uint64_t idx) {
     // clear coordinates
     BoxCoordinates coords{ 0 };
 
+    constexpr uint8_t loop_bound = 60;
+
     // run over each bit and copy it to respective coordinate
     uint8_t coords_bit = 0;
-    for (uint8_t idx_bit = 0; idx_bit < 60; idx_bit += 3) {
+    for (uint8_t idx_bit = 0; idx_bit < loop_bound; idx_bit += 3) {
         const auto& old = coords.get_x();
         const auto& new_val = copy_bit(idx, idx_bit, old, coords_bit);
         coords.set_x(new_val);
         ++coords_bit;
     }
     coords_bit = 0;
-    for (uint8_t idx_bit = 1; idx_bit < 60; idx_bit += 3) {
+    for (uint8_t idx_bit = 1; idx_bit < loop_bound; idx_bit += 3) {
         const auto& old = coords.get_y();
         const auto& new_val = copy_bit(idx, idx_bit, old, coords_bit);
         coords.set_y(new_val);
         ++coords_bit;
     }
     coords_bit = 0;
-    for (uint8_t idx_bit = 2; idx_bit < 60; idx_bit += 3) {
+    for (uint8_t idx_bit = 2; idx_bit < loop_bound; idx_bit += 3) {
         const auto& old = coords.get_z();
         const auto& new_val = copy_bit(idx, idx_bit, old, coords_bit);
         coords.set_z(new_val);

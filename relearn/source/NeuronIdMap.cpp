@@ -31,14 +31,12 @@ NeuronIdMap::NeuronIdMap(size_t my_num_neurons,
 
     MPIWrapper::all_gather(my_num_neurons, rank_to_num_neurons, MPIWrapper::Scope::global);
 
-    create_rank_to_start_neuron_id_mapping(rank_to_num_neurons, rank_to_start_neuron_id);
+    create_rank_to_start_neuron_id_mapping(rank_to_num_neurons);
 
     create_pos_to_rank_neuron_id_mapping(
         rank_to_num_neurons,
-        rank_to_start_neuron_id,
         my_num_neurons,
-        x, y, z,
-        pos_to_rank_neuron_id);
+        x, y, z);
 }
 
 std::tuple<bool, size_t> NeuronIdMap::rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id) const /*noexcept*/ {
@@ -64,9 +62,7 @@ std::tuple<bool, RankNeuronId> NeuronIdMap::pos2rank_neuron_id(const Vec3d& pos)
     return std::make_tuple(true, result);
 }
 
-void NeuronIdMap::create_rank_to_start_neuron_id_mapping(
-    const std::vector<size_t>& rank_to_num_neurons,
-    std::vector<size_t>& rank_to_start_neuron_id) {
+void NeuronIdMap::create_rank_to_start_neuron_id_mapping(const std::vector<size_t>& rank_to_num_neurons) {
     const size_t num_ranks = rank_to_num_neurons.size();
     rank_to_start_neuron_id.resize(num_ranks);
 
@@ -79,10 +75,8 @@ void NeuronIdMap::create_rank_to_start_neuron_id_mapping(
 
 void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
     const std::vector<size_t>& rank_to_num_neurons,
-    const std::vector<size_t>& rank_to_start_neuron_id,
     size_t my_num_neurons,
-    const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z,
-    std::map<Vec3d, RankNeuronId>& pos_to_rank_neuron_id) {
+    const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z) {
 
     const auto num_ranks = MPIWrapper::get_num_ranks();
     const auto my_rank = MPIWrapper::get_my_rank();

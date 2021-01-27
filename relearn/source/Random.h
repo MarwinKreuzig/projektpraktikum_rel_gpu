@@ -11,6 +11,7 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 #include <random>
 
 namespace randomNumberSeeds {
@@ -18,12 +19,29 @@ extern unsigned int partition;
 extern unsigned int octree;
 } // namespace randomNumberSeeds
 
-template <typename T>
 class RandomHolder {
+    RandomHolder() = default;
+
+    std::map<char, std::mt19937> random_number_generators;
+
 public:
-    static std::mt19937& get_random_generator() noexcept {
-        // NOLINTNEXTLINE
-        static std::mt19937 random_generator;
-        return random_generator;
+
+    static RandomHolder& get_instance() noexcept {
+        static RandomHolder instance;
+        return instance;
     }
+
+    std::mt19937& get_random_generator(char key) {
+        return random_number_generators[key];
+    }
+
+    void seed(char key, unsigned int seed) {
+        random_number_generators[key].seed(seed);
+    }
+
+    constexpr static char OCTREE = 0;
+    constexpr static char PARTITION = 1;
+    constexpr static char SubdomainFromNeuronDensity = 2;
+    constexpr static char ModelA = 3;
+    constexpr static char Neurons = 4;
 };

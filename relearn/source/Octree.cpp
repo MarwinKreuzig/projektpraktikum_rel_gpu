@@ -23,7 +23,7 @@
 #include <mpi.h>
 
 Octree::Octree()
-    : random_number_generator(RandomHolder<Octree>::get_random_generator())
+    : random_number_generator(RandomHolder::get_instance().get_random_generator(RandomHolder::OCTREE))
     , random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
 
     random_number_generator.seed(randomNumberSeeds::octree);
@@ -36,7 +36,7 @@ Octree::Octree(const Partition& part, double acceptance_criterion, double sigma,
     , naive_method(acceptance_criterion == 0.0)
     , level_of_branch_nodes(part.get_level_of_subdomain_trees())
     , max_num_pending_vacant_axons(max_num_pending_vacant_axons)
-    , random_number_generator(RandomHolder<Octree>::get_random_generator())
+    , random_number_generator(RandomHolder::get_instance().get_random_generator(RandomHolder::OCTREE))
     , random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
 
     random_number_generator.seed(randomNumberSeeds::octree);

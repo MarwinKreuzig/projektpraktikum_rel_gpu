@@ -81,12 +81,16 @@ public:
     void debug_check() const;
 
 private:
+    // NOLINTNEXTLINE
     static void add_edge(Edges& edges, int rank, size_t neuron_id, int weight);
 
+    // NOLINTNEXTLINE
     static void translate_global_to_local(const std::set<size_t>& global_ids, const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id);
 
+    // NOLINTNEXTLINE
     static void load_neuron_positions(const std::string& path_neurons, std::set<size_t>& foreing_ids, std::map<size_t, Vec3d>& id_to_pos);
 
+    // NOLINTNEXTLINE
     static void load_synapses(const std::string& path_synapses, const Partition& partition, std::set<size_t>& foreing_ids, std::vector<std::tuple<size_t, size_t, int>>& local_synapses, std::vector<std::tuple<size_t, size_t, int>>& out_synapses, std::vector<std::tuple<size_t, size_t, int>>& in_synapses);
 
     void add_edge_weights(const std::string& filename, const NeuronIdMap& neuron_id_map);

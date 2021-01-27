@@ -75,6 +75,7 @@ public:
 
     void set_child(OctreeNode* node, size_t idx) {
         RelearnException::check(idx < Constants::number_oct);
+        // NOLINTNEXTLINE
         children[idx] = node;
     }
 

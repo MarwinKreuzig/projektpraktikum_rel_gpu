@@ -16,9 +16,11 @@
 #include "NeuronModels.h"
 #include "OctreeNode.h"
 #include "Parameters.h"
+#include "ProbabilitySubinterval.h"
 #include "RelearnException.h"
 #include "SynapseCreationRequests.h"
 #include "SynapticElements.h"
+#include "VacantAxon.h"
 #include "Vec3.h"
 
 #include <cmath>
@@ -42,70 +44,6 @@ public:
     friend class Partition;
 
     using AccessEpochsStarted = std::vector<bool>;
-
-    /**
-	 * Type for list elements used to create probability subinterval
-	 */
-    struct ProbabilitySubinterval {
-    private:
-        OctreeNode* ptr{ nullptr };
-        double probability{ 0.0 };
-        MPIWrapper::AsyncToken mpi_request{ MPIWrapper::get_null_request() };
-        int request_rank{ -1 };
-
-    public:
-        explicit ProbabilitySubinterval(OctreeNode* node) noexcept
-            : ptr(node) {
-        }
-
-        void set_probability(double prob) noexcept {
-            probability = prob;
-        }
-
-        void set_mpi_request(MPIWrapper::AsyncToken request) noexcept {
-            mpi_request = request;
-        }
-
-        void set_request_rank(int rank) {
-            RelearnException::check(rank >= 0, "ProbabilitySubinterval, rank is smaller zan zero");
-            request_rank = rank;
-        }
-
-        [[nodiscard]] OctreeNode* get_ptr() const noexcept {
-            return ptr;
-        }
-
-        [[nodiscard]] double get_probability() const noexcept {
-            return probability;
-        }
-
-        [[nodiscard]] MPIWrapper::AsyncToken get_mpi_request() const noexcept {
-            return mpi_request;
-        }
-
-        [[nodiscard]] int get_request_rank() const noexcept {
-            return request_rank;
-        }
-    };
-    using ProbabilitySubintervalList = std::list<std::shared_ptr<ProbabilitySubinterval>>;
-
-    /**
-	 * Type for vacant axon for which a target neuron needs to be found
-	 */
-    struct VacantAxon {
-        VacantAxon(size_t neuron_id, const Vec3d& pos, Cell::DendriteType dendrite_type_needed)
-            : neuron_id(neuron_id)
-            , xyz_pos(pos)
-            , dendrite_type_needed(dendrite_type_needed) {
-        }
-
-        ProbabilitySubintervalList nodes_accepted;
-        ProbabilitySubintervalList nodes_to_visit;
-        size_t neuron_id;
-        Vec3d xyz_pos;
-        Cell::DendriteType dendrite_type_needed;
-    };
-    using VacantAxonList = std::list<std::shared_ptr<VacantAxon>>;
 
 private:
     /**
