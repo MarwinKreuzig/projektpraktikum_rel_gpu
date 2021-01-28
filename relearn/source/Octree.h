@@ -94,8 +94,8 @@ private:
 	 */
     class FunctorUpdateNode {
     public:
-        FunctorUpdateNode(const std::vector<double>& dendrites_exc_cnts, const std::vector<double>& dendrites_exc_connected_cnts,
-            const std::vector<double>& dendrites_inh_cnts, const std::vector<double>& dendrites_inh_connected_cnts,
+        FunctorUpdateNode(const std::vector<double>& dendrites_exc_cnts, const std::vector<unsigned int>& dendrites_exc_connected_cnts,
+            const std::vector<double>& dendrites_inh_cnts, const std::vector<unsigned int>& dendrites_inh_connected_cnts,
             size_t num_neurons) noexcept
             : dendrites_exc_cnts(dendrites_exc_cnts)
             , dendrites_exc_connected_cnts(dendrites_exc_connected_cnts)
@@ -194,9 +194,9 @@ private:
 
     private:
         const std::vector<double>& dendrites_exc_cnts;
-        const std::vector<double>& dendrites_exc_connected_cnts;
+        const std::vector<unsigned int>& dendrites_exc_connected_cnts;
         const std::vector<double>& dendrites_inh_cnts;
-        const std::vector<double>& dendrites_inh_connected_cnts;
+        const std::vector<unsigned int>& dendrites_inh_connected_cnts;
         size_t num_neurons = 0;
     };
 

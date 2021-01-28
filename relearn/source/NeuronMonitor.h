@@ -84,11 +84,11 @@ public:
         const double& I_sync = neurons_to_monitor->neuron_model->I_syn[target_neuron_id];
 
         const double& axons = neurons_to_monitor->axons.cnts[target_neuron_id];
-        const double& axons_connected = neurons_to_monitor->axons.connected_cnts[target_neuron_id];
+        const unsigned int& axons_connected = neurons_to_monitor->axons.connected_cnts[target_neuron_id];
         const double& dendrites_exc = neurons_to_monitor->dendrites_exc.cnts[target_neuron_id];
-        const double& dendrites_exc_connected = neurons_to_monitor->dendrites_exc.connected_cnts[target_neuron_id];
+        const unsigned int& dendrites_exc_connected = neurons_to_monitor->dendrites_exc.connected_cnts[target_neuron_id];
         const double& dendrites_inh = neurons_to_monitor->dendrites_inh.cnts[target_neuron_id];
-        const double& dendrites_inh_connected = neurons_to_monitor->dendrites_inh.connected_cnts[target_neuron_id];
+        const unsigned int& dendrites_inh_connected = neurons_to_monitor->dendrites_inh.connected_cnts[target_neuron_id];
 
         informations[current_step] = NeuronInformation(calcium, x, fired, secondary, I_sync, axons, axons_connected, dendrites_exc, dendrites_exc_connected, dendrites_inh, dendrites_inh_connected);
     }

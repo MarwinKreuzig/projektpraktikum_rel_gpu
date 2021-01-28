@@ -109,7 +109,7 @@ TEST(TestSynapticElements, testSynapticElementsConstructorException) {
         }
 
         const std::vector<double>& cnts = synaptic_elements.get_cnts();
-        const std::vector<double>& conn_cnts = synaptic_elements.get_connected_cnts();
+        const std::vector<unsigned int>& conn_cnts = synaptic_elements.get_connected_cnts();
         const std::vector<double>& delta_cnts = synaptic_elements.get_delta_cnts();
         const std::vector<SignalType>& types = synaptic_elements.get_signal_types();
 
@@ -249,7 +249,7 @@ TEST(TestSynapticElements, testSynapticElementsUpdate) {
         }
 
         const std::vector<double>& cnts = synaptic_elements.get_cnts();
-        const std::vector<double>& conn_cnts = synaptic_elements.get_connected_cnts();
+        const std::vector<unsigned int>& conn_cnts = synaptic_elements.get_connected_cnts();
         const std::vector<double>& delta_cnts = synaptic_elements.get_delta_cnts();
         const std::vector<SignalType>& types = synaptic_elements.get_signal_types();
 
@@ -322,7 +322,7 @@ TEST(TestSynapticElements, testSynapticElementsMultipleUpdate) {
         }
 
         const std::vector<double>& cnts = synaptic_elements.get_cnts();
-        const std::vector<double>& conn_cnts = synaptic_elements.get_connected_cnts();
+        const std::vector<unsigned int>& conn_cnts = synaptic_elements.get_connected_cnts();
         const std::vector<double>& delta_cnts = synaptic_elements.get_delta_cnts();
         const std::vector<SignalType>& types = synaptic_elements.get_signal_types();
 

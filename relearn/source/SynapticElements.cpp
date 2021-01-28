@@ -13,7 +13,8 @@ unsigned int SynapticElements::update_number_elements(size_t neuron_id) {
     RelearnException::check(neuron_id < size);
 
     const double current_count = cnts[neuron_id];
-    const double current_connected_count = connected_cnts[neuron_id];
+    const auto current_connected_count_integral = connected_cnts[neuron_id];
+    const double current_connected_count = static_cast<double>(current_connected_count_integral);
     const double current_vacant = current_count - current_connected_count;
     const double current_delta = delta_cnts[neuron_id];
 
@@ -39,7 +40,7 @@ unsigned int SynapticElements::update_number_elements(size_t neuron_id) {
 	* Now, neither vacant (see if branch above) nor bound elements are left.
 	*/
     if (current_count + current_delta < 0.0) {
-        connected_cnts[neuron_id] = 0.0;
+        connected_cnts[neuron_id] = 0;
         cnts[neuron_id] = 0.0;
         delta_cnts[neuron_id] = 0.0;
 
@@ -53,7 +54,7 @@ unsigned int SynapticElements::update_number_elements(size_t neuron_id) {
 
     RelearnException::check(num_vacant >= 0);
 
-    connected_cnts[neuron_id] = new_connected_cnt;
+    connected_cnts[neuron_id] = static_cast<unsigned int>(new_connected_cnt);
     cnts[neuron_id] = new_cnts;
     delta_cnts[neuron_id] = 0.0;
 

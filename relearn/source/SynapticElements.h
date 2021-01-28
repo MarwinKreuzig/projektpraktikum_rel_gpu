@@ -49,7 +49,7 @@ public:
     void init(size_t number_neurons) {
         size = number_neurons;
         cnts.resize(size, 0.0);
-        connected_cnts.resize(size, 0.0);
+        connected_cnts.resize(size, 0);
         delta_cnts.resize(size, 0.0);
         signal_types.resize(size);
     }
@@ -67,7 +67,7 @@ public:
         return cnts;
     }
 
-    [[nodiscard]] const std::vector<double>& get_connected_cnts() const noexcept {
+    [[nodiscard]] const std::vector<unsigned int>& get_connected_cnts() const noexcept {
         return connected_cnts;
     }
 
@@ -85,10 +85,14 @@ public:
         RelearnException::check(cnts[neuron_id] >= 0.0);
     }
 
-    void update_conn_cnt(size_t neuron_id, double delta, std::string&& mess) {
+    void update_conn_cnt(size_t neuron_id, int delta, std::string&& mess) {
         RelearnException::check(neuron_id < connected_cnts.size(), "Synaptic elements, update_conn_cnt out of bounds");
+        if (delta < 0) {
+            const unsigned int abs_delta = -delta;
+            RelearnException::check(connected_cnts[neuron_id] >= abs_delta, std::move(mess));
+        }
+
         connected_cnts[neuron_id] += delta;
-        RelearnException::check(connected_cnts[neuron_id] >= 0.0, std::move(mess));
     }
 
     void update_delta_cnt(size_t neuron_id, double delta) {
@@ -107,7 +111,7 @@ public:
         return cnts[neuron_id];
     }
 
-    [[nodiscard]] double get_connected_cnt(size_t neuron_id) const {
+    [[nodiscard]] unsigned int get_connected_cnt(size_t neuron_id) const {
         RelearnException::check(neuron_id < connected_cnts.size(), "Synaptic elements, get_connected_cnt out of bounds");
         return connected_cnts[neuron_id];
     }
@@ -184,7 +188,7 @@ private:
     size_t size = 0;
     std::vector<double> cnts;
     std::vector<double> delta_cnts; // Keeps track of changes in number of elements until those changes are applied in next connectivity update
-    std::vector<double> connected_cnts;
+    std::vector<unsigned int> connected_cnts;
     std::vector<SignalType> signal_types; // Signal type of synaptic elements, i.e., EXCITATORY or INHIBITORY.
         // Note: Given that currently exc. and inh. dendrites are in different objects, this would only be needed for axons.
         //       A more memory-efficient solution would be to use a different class for axons which has the signal_types array.

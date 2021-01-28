@@ -41,7 +41,7 @@ std::tuple<bool, size_t, Vec3d, Cell::DendriteType> Neurons::get_vacant_axon() c
     Cell::DendriteType dendrite_type_needed;
 
     const std::vector<double>& axons_cnts = axons.get_cnts();
-    const std::vector<double>& axons_connected_cnts = axons.get_connected_cnts();
+    const std::vector<unsigned int>& axons_connected_cnts = axons.get_connected_cnts();
     const std::vector<SignalType>& axons_signal_types = axons.get_signal_types();
     const std::vector<double>& axons_x_dims = positions.get_x_dims();
     const std::vector<double>& axons_y_dims = positions.get_y_dims();
@@ -49,7 +49,7 @@ std::tuple<bool, size_t, Vec3d, Cell::DendriteType> Neurons::get_vacant_axon() c
 
     while (i < num_neurons) {
         // neuron's vacant axons
-        const auto num_vacant_axons = static_cast<unsigned int>(axons_cnts[i] - axons_connected_cnts[i]);
+        const auto num_vacant_axons = static_cast<unsigned int>(axons_cnts[i]) - axons_connected_cnts[i];
 
         if (j < num_vacant_axons) {
             j++;
@@ -386,19 +386,19 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
     GlobalTimers::timers.start(TimerRegion::FIND_TARGET_NEURONS);
 
     const std::vector<double>* dendrites_cnts = nullptr; // TODO(fabian) find a nicer solution
-    const std::vector<double>* dendrites_connected_cnts = nullptr;
+    const std::vector<unsigned int>* dendrites_connected_cnts = nullptr;
 
     int num_axons_connected_increment = 0;
     MapSynapseCreationRequests map_synapse_creation_requests_outgoing;
 
     const std::vector<double>& axons_cnts = axons.get_cnts();
-    const std::vector<double>& axons_connected_cnts = axons.get_connected_cnts();
+    const std::vector<unsigned int>& axons_connected_cnts = axons.get_connected_cnts();
     const std::vector<SignalType>& axons_signal_types = axons.get_signal_types();
 
     // For my neurons
     for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
         // Number of vacant axons
-        const auto num_vacant_axons = static_cast<unsigned int>(axons_cnts[neuron_id] - axons_connected_cnts[neuron_id]);
+        const auto num_vacant_axons = static_cast<unsigned int>(axons_cnts[neuron_id]) - axons_connected_cnts[neuron_id];
         RelearnException::check(num_vacant_axons >= 0);
 
         if (num_vacant_axons == 0) {
@@ -660,11 +660,11 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
 
 void Neurons::debug_check_counts(const NetworkGraph& network_graph) {
     const std::vector<double>& axs_count = axons.get_cnts();
-    const std::vector<double>& axs_conn_count = axons.get_connected_cnts();
+    const std::vector<unsigned int>& axs_conn_count = axons.get_connected_cnts();
     const std::vector<double>& de_count = dendrites_exc.get_cnts();
-    const std::vector<double>& de_conn_count = dendrites_exc.get_connected_cnts();
+    const std::vector<unsigned int>& de_conn_count = dendrites_exc.get_connected_cnts();
     const std::vector<double>& di_count = dendrites_inh.get_cnts();
-    const std::vector<double>& di_conn_count = dendrites_inh.get_connected_cnts();
+    const std::vector<unsigned int>& di_conn_count = dendrites_inh.get_connected_cnts();
 
     for (size_t i = 0; i < num_neurons; i++) {
         const double diff_axs = axs_count[i] - axs_conn_count[i];
@@ -714,7 +714,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
     sum_axons_inh_cnts = sum_axons_inh_connected_cnts = 0;
 
     const std::vector<double>& cnts_ax = axons.get_cnts();
-    const std::vector<double>& connected_cnts_ax = axons.get_connected_cnts();
+    const std::vector<unsigned int>& connected_cnts_ax = axons.get_connected_cnts();
     const std::vector<SignalType>& signal_types = axons.get_signal_types();
 
     for (size_t neuron_id = 0; neuron_id < this->num_neurons; ++neuron_id) {
@@ -733,7 +733,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
     // Exc.
     sum_dends_exc_cnts = sum_dends_exc_connected_cnts = 0;
     const std::vector<double>& cnts_den_ex = dendrites_exc.get_cnts();
-    const std::vector<double>& connected_cnts_den_ex = dendrites_exc.get_connected_cnts();
+    const std::vector<unsigned int>& connected_cnts_den_ex = dendrites_exc.get_connected_cnts();
     for (size_t neuron_id = 0; neuron_id < this->num_neurons; ++neuron_id) {
         sum_dends_exc_cnts += static_cast<unsigned int>(cnts_den_ex[neuron_id]);
         sum_dends_exc_connected_cnts += static_cast<unsigned int>(connected_cnts_den_ex[neuron_id]);
@@ -743,7 +743,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
     // Inh.
     sum_dends_inh_cnts = sum_dends_inh_connected_cnts = 0;
     const std::vector<double>& cnts_den_in = dendrites_inh.get_cnts();
-    const std::vector<double>& connected_cnts_den_in = dendrites_inh.get_connected_cnts();
+    const std::vector<unsigned int>& connected_cnts_den_in = dendrites_inh.get_connected_cnts();
     for (size_t neuron_id = 0; neuron_id < this->num_neurons; ++neuron_id) {
         sum_dends_inh_cnts += static_cast<unsigned int>(cnts_den_in[neuron_id]);
         sum_dends_inh_connected_cnts += static_cast<unsigned int>(connected_cnts_den_in[neuron_id]);
@@ -920,9 +920,9 @@ void Neurons::print_info_for_barnes_hut() {
     const std::vector<double>& dendrites_exc_cnts = dendrites_exc.get_cnts();
     const std::vector<double>& dendrites_inh_cnts = dendrites_inh.get_cnts();
 
-    const std::vector<double>& axons_connected_cnts = axons.get_connected_cnts();
-    const std::vector<double>& dendrites_exc_connected_cnts = dendrites_exc.get_connected_cnts();
-    const std::vector<double>& dendrites_inh_connected_cnts = dendrites_inh.get_connected_cnts();
+    const std::vector<unsigned int>& axons_connected_cnts = axons.get_connected_cnts();
+    const std::vector<unsigned int>& dendrites_exc_connected_cnts = dendrites_exc.get_connected_cnts();
+    const std::vector<unsigned int>& dendrites_inh_connected_cnts = dendrites_inh.get_connected_cnts();
 
     // Column widths
     const int cwidth_small = 8;
