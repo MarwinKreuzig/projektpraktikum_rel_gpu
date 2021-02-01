@@ -87,7 +87,7 @@ public:
 
     [[nodiscard]] Octree& get_subdomain_tree(size_t subdomain_id) {
         RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
-        RelearnException::check(subdomain_id < my_num_subdomains);
+        RelearnException::check(subdomain_id < my_num_subdomains, "Subdomain ID was too large");
 
         return subdomains[subdomain_id].octree;
     }

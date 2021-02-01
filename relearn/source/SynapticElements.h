@@ -82,7 +82,7 @@ public:
     void update_cnt(size_t neuron_id, double delta) {
         RelearnException::check(neuron_id < cnts.size(), "Synaptic elements, update_cnt out of bounds");
         cnts[neuron_id] += delta;
-        RelearnException::check(cnts[neuron_id] >= 0.0);
+        RelearnException::check(cnts[neuron_id] >= 0.0, "Synaptic elements, update_cnt was negative");
     }
 
     void update_conn_cnt(size_t neuron_id, int delta, std::string&& mess) {
@@ -98,7 +98,7 @@ public:
     void update_delta_cnt(size_t neuron_id, double delta) {
         RelearnException::check(neuron_id < delta_cnts.size(), "Synaptic elements, update_delta_cnt out of bounds");
         delta_cnts[neuron_id] += delta;
-        RelearnException::check(delta_cnts[neuron_id] >= 0.0);
+        RelearnException::check(delta_cnts[neuron_id] >= 0.0, "Synaptic elements, delta cnts is negative");
     }
 
     void set_signal_type(size_t neuron_id, SignalType type) {

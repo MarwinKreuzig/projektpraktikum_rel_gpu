@@ -29,12 +29,12 @@ public:
         , neuron_id(neuron_id) { }
 
     [[nodiscard]] int get_rank() const {
-        RelearnException::check(rank >= 0);
+        RelearnException::check(rank >= 0, "RankNeuronId::get_rank, it was: " + std::to_string(rank));
         return rank;
     }
 
     [[nodiscard]] size_t get_neuron_id() const {
-        RelearnException::check(neuron_id < Constants::uninitialized);
+        RelearnException::check(neuron_id < Constants::uninitialized, "RankNeuronId::get_neuron_id, it was: " + std::to_string(Constants::uninitialized));
         return neuron_id;
     }
 

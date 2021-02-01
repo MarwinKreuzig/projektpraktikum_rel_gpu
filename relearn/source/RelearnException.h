@@ -29,9 +29,9 @@ public:
 
     [[nodiscard]] const char* what() const noexcept override;
 
-    static void check(bool condition);
+    //static void check(bool condition);
 
-    static void fail();
+    //static void fail();
 
     static void check(bool condition, std::string&& message);
 

@@ -112,7 +112,7 @@ public:
 
     [[nodiscard]] unsigned char get_neuron_octant() const {
         const std::optional<Vec3d>& pos = get_neuron_position();
-        RelearnException::check(pos.has_value());
+        RelearnException::check(pos.has_value(), "position didn_t have a value");
         return get_octant_for_position(pos.value());
     }
 

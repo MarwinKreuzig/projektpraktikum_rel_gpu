@@ -121,9 +121,9 @@ void Neurons::init_synaptic_elements(const NetworkGraph& network_graph) {
         dendrites_exc.update_conn_cnt(i, dendrites_ex_connections, std::to_string(i) + " initializing update_conn dend ex");
         dendrites_inh.update_conn_cnt(i, dendrites_in_connections, std::to_string(i) + " initializing update_conn dend in");
 
-        RelearnException::check(axons_cnts[i] >= axons.get_connected_cnts()[i]);
-        RelearnException::check(dendrites_inh_cnts[i] >= dendrites_inh.get_connected_cnts()[i]);
-        RelearnException::check(dendrites_exc_cnts[i] >= dendrites_exc.get_connected_cnts()[i]);
+        RelearnException::check(axons_cnts[i] >= axons.get_connected_cnts()[i], "Error is with: " + std::to_string(i));
+        RelearnException::check(dendrites_inh_cnts[i] >= dendrites_inh.get_connected_cnts()[i], "Error is with: " + std::to_string(i));
+        RelearnException::check(dendrites_exc_cnts[i] >= dendrites_exc.get_connected_cnts()[i], "Error is with: " + std::to_string(i));
     }
 }
 
@@ -399,7 +399,7 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
     for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
         // Number of vacant axons
         const auto num_vacant_axons = static_cast<unsigned int>(axons_cnts[neuron_id]) - axons_connected_cnts[neuron_id];
-        RelearnException::check(num_vacant_axons >= 0);
+        RelearnException::check(num_vacant_axons >= 0, "num vacant axons is negative");
 
         if (num_vacant_axons == 0) {
             continue;
@@ -554,7 +554,7 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
                 }
 
                 // Target neuron has still dendrite available, so connect
-                RelearnException::check((*dendrites_cnts)[target_neuron_id] - (*dendrites_connected_cnts)[target_neuron_id] >= 0);
+                RelearnException::check((*dendrites_cnts)[target_neuron_id] - (*dendrites_connected_cnts)[target_neuron_id] >= 0, "Connectivity went downside");
 
                 const auto diff = static_cast<unsigned int>((*dendrites_cnts)[target_neuron_id] - (*dendrites_connected_cnts)[target_neuron_id]);
                 if (diff != 0) {
@@ -875,7 +875,7 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const NeuronIdMap&
     for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
         RankNeuronId rank_neuron_id{ my_rank, neuron_id };
         std::tie(ret, glob_id) = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id);
-        RelearnException::check(ret);
+        RelearnException::check(ret, "ret is false");
 
         const char* const signal_type_name = signal_types[neuron_id] == SignalType::EXCITATORY ? "ex" : "in";
 
@@ -1037,7 +1037,7 @@ std::list<Neurons::PendingSynapseDeletion> Neurons::find_synapses_for_deletion(s
     for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
         // Randomly select synapse for deletion
         const auto synapse_selected = select_random_synapse(list_synapses);
-        RelearnException::check(synapse_selected != list_synapses.cend());
+        RelearnException::check(synapse_selected != list_synapses.cend(), "Didn't select a synapse to delete");
 
         RankNeuronId src_neuron_id = RankNeuronId(MPIWrapper::get_my_rank(), neuron_id);
         RankNeuronId tgt_neuron_id = synapse_selected->get_rank_neuron_id();
@@ -1117,7 +1117,7 @@ size_t Neurons::delete_synapses(const std::list<PendingSynapseDeletion>& list, N
         // Pending synapse deletion is valid (not completely) if source or
         // target neuron belong to me. To be completely valid, things such as
         // the neuron id need to be validated as well.
-        RelearnException::check(it.get_src_neuron_id().get_rank() == my_rank || it.get_tgt_neuron_id().get_rank() == my_rank);
+        RelearnException::check(it.get_src_neuron_id().get_rank() == my_rank || it.get_tgt_neuron_id().get_rank() == my_rank, "Should delete a non-local synapse");
 
         if (it.get_src_neuron_id().get_rank() == my_rank && it.get_tgt_neuron_id().get_rank() == my_rank) {
             /**

@@ -26,7 +26,7 @@
 
         const auto diff = pos_ex - pos_in;
         const bool exc_position_equals_inh_position = diff.get_x() == 0.0 && diff.get_y() == 0.0 && diff.get_z() == 0.0;
-        RelearnException::check(exc_position_equals_inh_position);
+        RelearnException::check(exc_position_equals_inh_position, "In get neuron position, positions are unequal");
 
         return pos_ex;
     }
@@ -56,9 +56,9 @@
 	* This check returns false if negative coordinates are used.
 	* Thus make sure to use positions >=0.
 	*/
-    RelearnException::check(x >= xyz_min.get_x() && x <= xyz_min.get_x() + xyz_max.get_x());
-    RelearnException::check(y >= xyz_min.get_y() && y <= xyz_min.get_y() + xyz_max.get_y());
-    RelearnException::check(z >= xyz_min.get_z() && z <= xyz_min.get_z() + xyz_max.get_z());
+    RelearnException::check(x >= xyz_min.get_x() && x <= xyz_min.get_x() + xyz_max.get_x(), "x is bad");
+    RelearnException::check(y >= xyz_min.get_y() && y <= xyz_min.get_y() + xyz_max.get_y(), "y is bad");
+    RelearnException::check(z >= xyz_min.get_z() && z <= xyz_min.get_z() + xyz_max.get_z(), "z is bad");
 
     /**
 	* Figure below shows the binary numbering of the octants (subcells) in a cell.

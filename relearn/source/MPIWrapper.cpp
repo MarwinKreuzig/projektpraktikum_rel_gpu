@@ -344,7 +344,7 @@ void MPIWrapper::free_custom_function() {
 }
 
 void MPIWrapper::lock_window(int rank, MPI_Locktype lock_type) {
-    RelearnException::check(rank >= 0);
+    RelearnException::check(rank >= 0, "rank was: " + std::to_string(rank));
     const auto lock_type_int = static_cast<int>(lock_type);
 
     // NOLINTNEXTLINE
@@ -353,7 +353,7 @@ void MPIWrapper::lock_window(int rank, MPI_Locktype lock_type) {
 }
 
 void MPIWrapper::unlock_window(int rank) {
-    RelearnException::check(rank >= 0);
+    RelearnException::check(rank >= 0, "rank was: " + std::to_string(rank));
     const int errorcode = MPI_Win_unlock(rank, mpi_rma_mem_allocator.mpi_window);
     RelearnException::check(errorcode == 0, "Error in unlock window");
 }

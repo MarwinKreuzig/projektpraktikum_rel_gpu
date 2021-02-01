@@ -1,0 +1,22 @@
+# num_vertices: 8
+# num_edges: 426124
+# min_x: 0.0
+# min_y: 0.0
+# min_z: 0.0
+# Offset added
+# min_x: 0
+# min_y: 0
+# min_z: 0
+# min vertex degree: 1
+# max vertex degree: 7
+# Vertices: 8
+# Add offset (x y z) to get original positions: (0.0 0.0 0.0)
+# ID, Position (x y z),	Area ,type 
+1	5.0 5.0 5.0 	lh.bankssts  ex
+2	15.0 5.0 5.0 	lh.bankssts  ex
+3	5.0 15.0 5.0 	lh.bankssts  ex
+4	15.0 15.0 5.0 	lh.bankssts ex
+5	5.0 5.0 15.0 	lh.bankssts  ex
+6	15.0 5.0 15.0 	lh.inferiorparietal ex
+7	5.0 15.0 15.0 	lh.inferiorparietalex ex 
+8	15.0 15.0 15.0 	lh.inferiorparietalex ex 

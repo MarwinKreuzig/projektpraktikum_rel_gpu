@@ -48,8 +48,6 @@ public:
 
         if (dendrite_type_needed == Cell::DendriteType::INHIBITORY) {
             dendrite_type_val = 1;
-        } else {
-            RelearnException::check(dendrite_type_needed == Cell::DendriteType::EXCITATORY);
         }
 
         append(source_neuron_id, target_neuron_id, dendrite_type_val);

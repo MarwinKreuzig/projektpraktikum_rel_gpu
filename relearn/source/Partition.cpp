@@ -28,7 +28,7 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
     total_num_subdomains = 1ULL << (3 * level_of_subdomain_trees); // 8^level_of_subdomain_trees
 
     // Every rank should get at least one subdomain
-    RelearnException::check(total_num_subdomains >= num_ranks);
+    RelearnException::check(total_num_subdomains >= num_ranks, "In partition, total num subdomains is smaller than number ranks");
 
     /**
 	* Calc my number of subdomains
@@ -341,7 +341,7 @@ std::shared_ptr<Neurons> Partition::load_neurons(std::unique_ptr<NeuronToSubdoma
 
             // Insert neuron into tree
             auto* node = subdomains[i].octree.insert(vec_pos[j], neuron_id, MPIWrapper::get_my_rank());
-            RelearnException::check(node != nullptr);
+            RelearnException::check(node != nullptr, "node is nullptr");
 
             neuron_id++;
         }

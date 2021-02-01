@@ -39,7 +39,7 @@ void printTimers() {
     /**
 	 * Print timers and memory usage
 	 */
-    RelearnException::check(3 * TimerRegion::NUM_TIMER_REGIONS == 69);
+    RelearnException::check(3 * TimerRegion::NUM_TIMER_REGIONS == 69, "Number of timers are unfitting");
 
     std::array<double, 69> timers_local{};
 

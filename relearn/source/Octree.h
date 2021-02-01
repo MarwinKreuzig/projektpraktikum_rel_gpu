@@ -110,7 +110,7 @@ private:
                 const size_t neuron_id = node->get_cell().get_neuron_id();
 
                 // Calculate number of vacant dendrites for my neuron
-                RelearnException::check(neuron_id < num_neurons);
+                RelearnException::check(neuron_id < num_neurons, "Neuron id was too large in the operator");
 
                 const auto num_vacant_dendrites_exc = static_cast<unsigned int>(dendrites_exc_cnts[neuron_id] - dendrites_exc_connected_cnts[neuron_id]);
                 const auto num_vacant_dendrites_inh = static_cast<unsigned int>(dendrites_inh_cnts[neuron_id] - dendrites_inh_connected_cnts[neuron_id]);
@@ -146,8 +146,8 @@ private:
                 /**
 					 * We can use position if it's valid or if corresponding num of dendrites is 0 
 					 */
-                RelearnException::check(temp_xyz_pos_exc.has_value() || (0 == temp_num_dendrites_exc));
-                RelearnException::check(temp_xyz_pos_inh.has_value() || (0 == temp_num_dendrites_inh));
+                RelearnException::check(temp_xyz_pos_exc.has_value() || (0 == temp_num_dendrites_exc), "temp position exc was bad");
+                RelearnException::check(temp_xyz_pos_inh.has_value() || (0 == temp_num_dendrites_inh), "temp position inh was bad");
 
                 for (auto j = 0; j < 3; j++) {
                     if (temp_xyz_pos_exc.has_value()) {
@@ -324,7 +324,7 @@ private:
 
             // Node should be visited now?
             if (elem.get_visited()) {
-                RelearnException::check(elem.get_ptr()->get_level() <= max_level);
+                RelearnException::check(elem.get_ptr()->get_level() <= max_level, "elem had bad level");
 
                 // Apply action to node
                 visit(elem.get_ptr());

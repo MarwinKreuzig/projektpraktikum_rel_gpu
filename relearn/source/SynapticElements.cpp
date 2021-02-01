@@ -10,7 +10,7 @@
 */
 
 unsigned int SynapticElements::update_number_elements(size_t neuron_id) {
-    RelearnException::check(neuron_id < size);
+    RelearnException::check(neuron_id < size, "In update number elements: " + std::to_string(neuron_id) + " is too large! " + std::to_string(size));
 
     const double current_count = cnts[neuron_id];
     const auto current_connected_count_integral = connected_cnts[neuron_id];
@@ -28,7 +28,7 @@ unsigned int SynapticElements::update_number_elements(size_t neuron_id) {
     // No deletion of bound synaptic elements required, connected_cnts stays the same
     if (new_vacant >= 0.0) {
         const double new_count = (1 - vacant_retract_ratio) * new_vacant + current_connected_count;
-        RelearnException::check(new_count >= current_connected_count);
+        RelearnException::check(new_count >= current_connected_count, "new count is smaller than connected count");
 
         cnts[neuron_id] = new_count;
         delta_cnts[neuron_id] = 0.0;
@@ -52,7 +52,7 @@ unsigned int SynapticElements::update_number_elements(size_t neuron_id) {
     const double new_connected_cnt = floor(new_cnts);
     const auto num_vacant = new_cnts - new_connected_cnt;
 
-    RelearnException::check(num_vacant >= 0);
+    RelearnException::check(num_vacant >= 0, "num vacant is neg");
 
     connected_cnts[neuron_id] = static_cast<unsigned int>(new_connected_cnt);
     cnts[neuron_id] = new_cnts;
@@ -60,7 +60,7 @@ unsigned int SynapticElements::update_number_elements(size_t neuron_id) {
 
     const double deleted_cnts = current_connected_count - new_connected_cnt;
 
-    RelearnException::check(deleted_cnts >= 0.0);
+    RelearnException::check(deleted_cnts >= 0.0, "In synaptic elements, deleted was negative");
     const auto num_delete_connected = static_cast<unsigned int>(deleted_cnts);
 
     return num_delete_connected;

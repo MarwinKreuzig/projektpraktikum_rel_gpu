@@ -189,7 +189,7 @@ std::tuple<bool, bool> Octree::acceptance_criterion_test(const Vec3d& axon_pos_x
     const auto& target_xyz = node_with_dendrite->get_cell().get_neuron_position_for(dendrite_type_needed);
 
     // NOTE: This assertion fails when considering inner nodes that don't have dendrites.
-    RelearnException::check(target_xyz.has_value());
+    RelearnException::check(target_xyz.has_value(), "target_xyz was bad");
 
     // Calc Euclidean distance between source and target neuron
     const auto distance_vector = target_xyz.value() - axon_pos_xyz;
@@ -436,7 +436,7 @@ double Octree::calc_attractiveness_to_connect(
     }
 
     const auto& target_xyz = node_with_dendrite.get_cell().get_neuron_position_for(dendrite_type_needed);
-    RelearnException::check(target_xyz.has_value());
+    RelearnException::check(target_xyz.has_value(), "target_xyz is bad");
 
     const auto num_dendrites = node_with_dendrite.get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
 
@@ -516,7 +516,7 @@ ProbabilitySubintervalVector Octree::append_children(OctreeNode* node, AccessEpo
 OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
     // Create new tree node for the neuron
     OctreeNode* new_node = MPIWrapper::new_octree_node();
-    RelearnException::check(new_node != nullptr);
+    RelearnException::check(new_node != nullptr, "new_node is nullptr");
 
     new_node->set_cell_neuron_position({ position });
     new_node->set_cell_neuron_id(neuron_id);
@@ -551,7 +551,7 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
         curr = curr->get_child(my_idx);
     }
 
-    RelearnException::check(prev != nullptr);
+    RelearnException::check(prev != nullptr, "prev is nullptr");
 
     /**
 	* Found my octant, but

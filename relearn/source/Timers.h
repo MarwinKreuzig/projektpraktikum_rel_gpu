@@ -74,12 +74,12 @@ public:
     [[nodiscard]] size_t get_num_timers() const noexcept { return num_timers; }
 
     void start(size_t timer_id) /*noexcept*/ {
-        RelearnException::check(timer_id < num_timers);
+        RelearnException::check(timer_id < num_timers, "In Timers::start, timer_id was: " + std::to_string(timer_id));
         time_start[timer_id] = std::chrono::high_resolution_clock::now();
     }
 
     void stop(size_t timer_id) /*noexcept*/ {
-        RelearnException::check(timer_id < num_timers);
+        RelearnException::check(timer_id < num_timers, "In Timers::stop, timer_id was: " + std::to_string(timer_id));
         time_stop[timer_id] = std::chrono::high_resolution_clock::now();
     }
 
@@ -89,18 +89,18 @@ public:
     }
 
     void add_start_stop_diff_to_elapsed(size_t timer_id) /*noexcept*/ {
-        RelearnException::check(timer_id < num_timers);
+        RelearnException::check(timer_id < num_timers, "In Timers::add_start_stop_diff_to_elapsed, timer_id was: " + std::to_string(timer_id));
         time_elapsed[timer_id] += std::chrono::duration_cast<std::chrono::duration<double>>(time_stop[timer_id] - time_start[timer_id]);
     }
 
     void reset_elapsed(size_t timer_id) /*noexcept*/ {
-        RelearnException::check(timer_id < num_timers);
+        RelearnException::check(timer_id < num_timers, "In Timers::reset_elapsed, timer_id was: " + std::to_string(timer_id));
         time_elapsed[timer_id] = std::chrono::duration<double>::zero();
     }
 
     // Return elapsed time in seconds
     [[nodiscard]] double get_elapsed(size_t timer_id) /*noexcept*/ {
-        RelearnException::check(timer_id < num_timers);
+        RelearnException::check(timer_id < num_timers, "In Timers::get_elapsed, timer_id was: " + std::to_string(timer_id));
         return time_elapsed[timer_id].count();
     }
 
