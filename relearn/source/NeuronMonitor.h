@@ -52,9 +52,9 @@ class NeuronMonitor {
     std::vector<NeuronInformation> informations;
 
 public:
-    static std::shared_ptr<Neurons> neurons_to_monitor;
-    static size_t max_steps;
-    static size_t current_step;
+    static inline std::shared_ptr<Neurons> neurons_to_monitor{};
+    static inline size_t max_steps = 0;
+    static inline size_t current_step = 0;
 
     explicit NeuronMonitor(size_t neuron_id)
         : target_neuron_id(neuron_id)

@@ -51,8 +51,7 @@ public:
         // That is they must be sorted. Otherwise, behavior is undefined.
         void append_if_not_found_sorted(size_t neuron_id) {
             // Neuron id not included yet
-            const bool found = find(neuron_id);
-            if (!found) {
+            if (const bool found = find(neuron_id); !found) {
                 neuron_ids.push_back(neuron_id);
             }
         }

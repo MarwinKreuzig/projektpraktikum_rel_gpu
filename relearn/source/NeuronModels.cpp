@@ -64,10 +64,8 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
     std::vector<size_t> num_firing_neuron_ids_from_ranks(MPIWrapper::get_num_ranks(), Constants::uninitialized);
 
     // Fill vector with my number of firing neuron ids for every rank (excluding me)
-    for (const auto& map_it : map_firing_neuron_ids_outgoing) {
-        auto rank = map_it.first;
-        auto num_neuron_ids = map_it.second.size();
-
+    for (const auto& [rank, neuron_ids] : map_firing_neuron_ids_outgoing) {
+        const auto num_neuron_ids = neuron_ids.size();
         num_firing_neuron_ids_for_ranks[rank] = num_neuron_ids;
     }
     GlobalTimers::timers.stop_and_add(TimerRegion::PREPARE_NUM_NEURON_IDS);
@@ -82,8 +80,8 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
     // Allocate memory for all incoming neuron ids.
     MapFiringNeuronIds map_firing_neuron_ids_incoming;
     for (auto rank = 0; rank < MPIWrapper::get_num_ranks(); ++rank) {
-        auto num_neuron_ids = num_firing_neuron_ids_from_ranks[rank];
-        if (0 != num_neuron_ids) { // Only create key-value pair in map for "rank" if necessary
+        // Only create key-value pair in map for "rank" if necessary
+        if (auto num_neuron_ids = num_firing_neuron_ids_from_ranks[rank]; 0 != num_neuron_ids) {
             map_firing_neuron_ids_incoming[rank].resize(num_neuron_ids);
         }
     }
@@ -154,9 +152,8 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
         // Walk through in-edges of my neuron
         const NetworkGraph::Edges& in_edges = network_graph.get_in_edges(neuron_id);
 
-        for (const auto& it_in_edge : in_edges) {
-            auto rank = it_in_edge.first.first;
-            auto src_neuron_id = it_in_edge.first.second;
+        for (const auto& [key,edge_val] : in_edges) {
+            const auto& [rank, src_neuron_id] = key;
 
             bool spike{ false };
             if (rank == MPIWrapper::get_my_rank()) {
@@ -165,7 +162,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
                 const auto it = map_firing_neuron_ids_incoming.find(rank);
                 spike = (it != map_firing_neuron_ids_incoming.end()) && (it->second.find(src_neuron_id));
             }
-            I_syn[neuron_id] += k * (it_in_edge.second) * static_cast<double>(spike);
+            I_syn[neuron_id] += k * edge_val * static_cast<double>(spike);
         }
     }
     GlobalTimers::timers.stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
