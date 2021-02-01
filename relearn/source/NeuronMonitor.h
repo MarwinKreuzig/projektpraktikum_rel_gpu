@@ -93,6 +93,10 @@ public:
         informations[current_step] = NeuronInformation(calcium, x, fired, secondary, I_sync, axons, axons_connected, dendrites_exc, dendrites_exc_connected, dendrites_inh, dendrites_inh_connected);
     }
 
+    void increase_monitoring_capacity(const size_t increase_by) {
+        informations.resize(informations.size() + increase_by);
+    }
+
     [[nodiscard]] const std::vector<NeuronInformation>& get_informations() const /*noexcept*/ {
         return informations;
     }
