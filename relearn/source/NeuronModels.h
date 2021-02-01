@@ -92,7 +92,7 @@ public:
 	 */
     using MapFiringNeuronIds = std::map<int, FiringNeuronIds>;
 
-    NeuronModels(double k, double tau_C, double beta, unsigned int h);
+    NeuronModels(double k, double tau_C, double beta, unsigned int h, double background_activity, double background_activity_mean, double background_activity_stddev);
 
     virtual ~NeuronModels() = default;
 
@@ -160,15 +160,27 @@ protected:
     static constexpr double default_beta{ 0.001 }; //very old 0.05;
     static constexpr unsigned int default_h{ 10 };
 
+    static constexpr double default_base_background_activity{ 0.0 };
+    static constexpr double default_background_activity_mean{ 0.0 };
+    static constexpr double default_background_activity_stddev{ 0.0 };
+
     static constexpr double min_k{ 0.0 };
     static constexpr double min_tau_C{ 0 };
     static constexpr double min_beta{ 0.0 };
     static constexpr unsigned int min_h{ 0 };
 
+    static constexpr double min_base_background_activity{ -10000.0 };
+    static constexpr double min_background_activity_mean{ -10000.0 };
+    static constexpr double min_background_activity_stddev{ 0.0 };
+
     static constexpr double max_k{ 1.0 };
     static constexpr double max_tau_C{ 10.0e+6 };
     static constexpr double max_beta{ 1.0 };
     static constexpr unsigned int max_h{ 1000 };
+
+    static constexpr double max_base_background_activity{ 10000.0 };
+    static constexpr double max_background_activity_mean{ 10000.0 };
+    static constexpr double max_background_activity_stddev{ 10000.0 };
 
     // My local number of neurons
     size_t my_num_neurons;
@@ -178,6 +190,10 @@ protected:
     double tau_C; // Decay time of calcium
     double beta; // Increase in calcium each time a neuron fires
     unsigned int h; // Precision for Euler integration
+
+    double base_background_activity;
+    double background_activity_mean;
+    double background_activity_stddev;
 
     // // Variables for each neuron where the array index denotes the neuron ID
     std::vector<double> x; // membrane potential v
@@ -193,6 +209,9 @@ public:
         double tau_C = NeuronModels::default_tau_C,
         double beta = NeuronModels::default_beta,
         unsigned int h = NeuronModels::default_h,
+        double background_activity = NeuronModels::default_base_background_activity,
+        double background_activity_mean = NeuronModels::default_background_activity_mean, 
+        double background_activity_stddev = NeuronModels::default_background_activity_stddev,
         double x_0 = ModelA::default_x_0,
         double tau_x = ModelA::default_tau_x,
         unsigned int refrac_time = ModelA::default_refrac_time);
@@ -250,6 +269,9 @@ public:
         double tau_C = NeuronModels::default_tau_C,
         double beta = NeuronModels::default_beta,
         unsigned int h = NeuronModels::default_h,
+        double background_activity = NeuronModels::default_base_background_activity,
+        double background_activity_mean = NeuronModels::default_background_activity_mean,
+        double background_activity_stddev = NeuronModels::default_background_activity_stddev,
         double a = IzhikevichModel::default_a,
         double b = IzhikevichModel::default_b,
         double c = IzhikevichModel::default_c,
@@ -329,6 +351,9 @@ public:
         double tau_C = NeuronModels::default_tau_C,
         double beta = NeuronModels::default_beta,
         unsigned int h = NeuronModels::default_h,
+        double background_activity = NeuronModels::default_base_background_activity,
+        double background_activity_mean = NeuronModels::default_background_activity_mean,
+        double background_activity_stddev = NeuronModels::default_background_activity_stddev,
         double a = FitzHughNagumoModel::default_a,
         double b = FitzHughNagumoModel::default_b,
         double phi = FitzHughNagumoModel::default_phi);
@@ -384,6 +409,9 @@ public:
         double tau_C = NeuronModels::default_tau_C,
         double beta = NeuronModels::default_beta,
         unsigned int h = NeuronModels::default_h,
+        double background_activity = NeuronModels::default_base_background_activity,
+        double background_activity_mean = NeuronModels::default_background_activity_mean,
+        double background_activity_stddev = NeuronModels::default_background_activity_stddev,
         double C = AEIFModel::default_C,
         double g_L = AEIFModel::default_g_L,
         double E_L = AEIFModel::default_E_L,

@@ -12,8 +12,8 @@
 
 using models::AEIFModel;
 
-AEIFModel::AEIFModel(double k, double tau_C, double beta, unsigned int h, const double C, const double g_L, const double E_L, const double V_T, const double d_T, const double tau_w, const double a, const double b, const double V_peak)
-    : NeuronModels{ k, tau_C, beta, h }
+AEIFModel::AEIFModel(double k, double tau_C, double beta, unsigned int h, double background_activity, double background_activity_mean, double background_activity_stddev, const double C, const double g_L, const double E_L, const double V_T, const double d_T, const double tau_w, const double a, const double b, const double V_peak)
+    : NeuronModels{ k, tau_C, beta, h, background_activity, background_activity_mean, background_activity_stddev }
     , C{ C }
     , g_L{ g_L }
     , E_L{ E_L }
@@ -26,7 +26,7 @@ AEIFModel::AEIFModel(double k, double tau_C, double beta, unsigned int h, const 
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModels> AEIFModel::clone() const {
-    return std::make_unique<AEIFModel>(k, tau_C, beta, h, C, g_L, E_L, V_T, d_T, tau_w, a, b, V_peak);
+    return std::make_unique<AEIFModel>(k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev, C, g_L, E_L, V_T, d_T, tau_w, a, b, V_peak);
 }
 
 [[nodiscard]] double AEIFModel::get_secondary_variable(const size_t i) const noexcept {

@@ -12,15 +12,15 @@
 
 using models::FitzHughNagumoModel;
 
-FitzHughNagumoModel::FitzHughNagumoModel(double k, double tau_C, double beta, unsigned int h, const double a, const double b, const double phi)
-    : NeuronModels{ k, tau_C, beta, h }
+FitzHughNagumoModel::FitzHughNagumoModel(double k, double tau_C, double beta, unsigned int h, double background_activity, double background_activity_mean, double background_activity_stddev, const double a, const double b, const double phi)
+    : NeuronModels{ k, tau_C, beta, h, background_activity, background_activity_mean, background_activity_stddev }
     , a{ a }
     , b{ b }
     , phi{ phi } {
 }
 
 std::unique_ptr<NeuronModels> FitzHughNagumoModel::clone() const {
-    return std::make_unique<FitzHughNagumoModel>(k, tau_C, beta, h, a, b, phi);
+    return std::make_unique<FitzHughNagumoModel>(k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev, a, b, phi);
 }
 
 double FitzHughNagumoModel::get_secondary_variable(const size_t i) const noexcept {

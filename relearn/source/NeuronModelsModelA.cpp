@@ -12,15 +12,15 @@
 
 using models::ModelA;
 
-ModelA::ModelA(double k, double tau_C, double beta, unsigned int h, const double x_0, const double tau_x, unsigned int refrac_time)
-    : NeuronModels{ k, tau_C, beta, h }
+ModelA::ModelA(double k, double tau_C, double beta, unsigned int h, double background_activity, double background_activity_mean, double background_activity_stddev, const double x_0, const double tau_x, unsigned int refrac_time)
+    : NeuronModels{ k, tau_C, beta, h, background_activity, background_activity_mean, background_activity_stddev }
     , x_0{ x_0 }
     , tau_x{ tau_x }
     , refrac_time{ refrac_time } {
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModels> ModelA::clone() const {
-    return std::make_unique<ModelA>(k, tau_C, beta, h, x_0, tau_x, refrac_time);
+    return std::make_unique<ModelA>(k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev, x_0, tau_x, refrac_time);
 }
 
 [[nodiscard]] double ModelA::get_secondary_variable(const size_t i) const noexcept {

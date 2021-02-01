@@ -12,14 +12,16 @@
 
 #include "Config.h"
 #include "MPIWrapper.h"
-#include "Random.h"
 
-NeuronModels::NeuronModels(double k, double tau_C, double beta, unsigned int h)
+NeuronModels::NeuronModels(double k, double tau_C, double beta, unsigned int h, double background_activity, double background_activity_mean, double background_activity_stddev)
     : my_num_neurons(0)
     , k(k)
     , tau_C(tau_C)
     , beta(beta)
-    , h(h) {
+    , h(h)
+    , base_background_activity(background_activity)
+    , background_activity_mean(background_activity_mean)
+    , background_activity_stddev(background_activity_stddev) {
 }
 
 /* Performs one iteration step of update in electrical activity */
@@ -130,10 +132,22 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	 * (spikes from neurons from other ranks)
 	 */
     GlobalTimers::timers.start(TimerRegion::CALC_SYNAPTIC_INPUT);
+
+    // There might be background activity
+    if (background_activity_stddev > 0.0) {
+        std::mt19937& mt = RandomHolder::get_instance().get_random_generator(RandomHolder::NeuronModel);
+        std::normal_distribution<double> nd(background_activity_mean, background_activity_stddev);
+
+        for (size_t neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
+            const double input = base_background_activity + nd(mt);
+            I_syn[neuron_id] = input;
+        }
+    } else {
+        std::fill(I_syn.begin(), I_syn.end(), 0.0);
+    }
+
     // For my neurons
     for (size_t neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
-        I_syn[neuron_id] = 0.0;
-
         /**
 		 * Determine synaptic input from neurons connected to me
 		 */
@@ -186,6 +200,9 @@ std::vector<ModelParameter> NeuronModels::get_parameter() {
         Parameter<double>{ "tau_C", tau_C, NeuronModels::min_tau_C, NeuronModels::max_tau_C },
         Parameter<double>{ "beta", beta, NeuronModels::min_beta, NeuronModels::max_beta },
         Parameter<unsigned int>{ "Number integration steps", h, NeuronModels::min_h, NeuronModels::max_h },
+        Parameter<double>{ "Base background activity", base_background_activity, NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity },
+        Parameter<double>{ "Background activity mean", background_activity_mean, NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean },
+        Parameter<double>{ "Background activity standard deviation", background_activity_stddev, NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev },
     };
 }
 

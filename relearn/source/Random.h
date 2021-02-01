@@ -44,4 +44,5 @@ public:
     constexpr static char SubdomainFromNeuronDensity = 2;
     constexpr static char ModelA = 3;
     constexpr static char Neurons = 4;
+    constexpr static char NeuronModel = 5;
 };
