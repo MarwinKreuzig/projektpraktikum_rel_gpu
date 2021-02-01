@@ -130,6 +130,9 @@ void NetworkGraph::add_edge(Edges& edges, int rank, size_t neuron_id, int weight
 
     if (edges_it == edges.end()) {
         edges[rank_neuron_id_pair] = weight;
+        if (weight < 0) {
+            RelearnException::fail();
+        }
         return;
     }
 

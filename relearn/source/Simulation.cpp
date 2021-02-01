@@ -41,7 +41,7 @@ Simulation::Simulation(double accept_criterion, std::shared_ptr<Partition> parti
     parameters->naive_method = parameters->accept_criterion == 0.0;
 
     if (0 == MPIWrapper::get_my_rank()) {
-        std::cout << parameters.get() << std::endl;
+        std::cout << (*(parameters.get())) << std::endl;
     }
 }
 
@@ -62,18 +62,18 @@ void Simulation::place_random_neurons(size_t num_neurons, double frac_exc) {
 void Simulation::load_neurons_from_file(const std::string& path_to_positions) {
     neuron_to_subdomain_assignment = std::make_unique<SubdomainFromFile>(path_to_positions, *partition);
     initialize();
+
+    network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
 }
 
 void Simulation::load_neurons_from_file(const std::string& path_to_positions, const std::string& path_to_connections) {
     load_neurons_from_file(path_to_positions);
 
-    network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
     network_graph->add_edges_from_file(path_to_connections, path_to_positions, *neuron_id_map, *partition);
-
     LogMessages::print_message_rank("Network graph created", 0);
 
     neurons->init_synaptic_elements(*network_graph);
-
+    neurons->debug_check_counts(*network_graph);
     LogMessages::print_message_rank("Synaptic elements initialized \n", 0);
 
     neurons->print_neurons_overview_to_log_file_on_rank_0(0, LogFiles::get("neurons_overview"));

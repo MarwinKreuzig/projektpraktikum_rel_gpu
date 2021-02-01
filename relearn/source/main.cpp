@@ -241,12 +241,8 @@ int main(int argc, char** argv) {
 	*/
     MPIWrapper::init_buffer_octree(total_num_subdomains);
 
-    std::cout << "Hello, I'm here" << std::endl;
-
     // Lock local RMA memory for local stores
     MPIWrapper::lock_window(my_rank, MPI_Locktype::exclusive);
-
-    std::cout << "Hello, I'm here as well" << std::endl;
 
     Simulation sim(accept_criterion, partition);
     sim.set_neuron_models(std::make_unique<models::ModelA>());

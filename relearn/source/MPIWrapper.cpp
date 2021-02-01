@@ -380,8 +380,6 @@ void MPIWrapper::print_infos_rank(int rank) {
 
 // This combination function assumes that it's called with the correct MPI datatype
 void MPIUserDefinedOperation::min_sum_max(const int* invec, int* inoutvec, const int* const len, [[maybe_unused]] MPI_Datatype* dtype) /*noexcept*/ {
-    std::cout << "Length is: " << *len << std::endl;
-
     const auto real_length = *len / sizeof(double) / 3;
 
     // NOLINTNEXTLINE

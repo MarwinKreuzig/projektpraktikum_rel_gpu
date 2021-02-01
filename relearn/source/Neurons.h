@@ -358,12 +358,12 @@ public:
 
     void print_info_for_barnes_hut();
 
+    void debug_check_counts(const NetworkGraph& network_graph);
+
 private:
     size_t delete_synapses(NetworkGraph& network_graph);
 
     size_t create_synapses(Octree& global_tree, NetworkGraph& network_graph);
-
-    void debug_check_counts(const NetworkGraph& network_graph);
 
     template <typename T>
     [[nodiscard]] StatisticalMeasures<T> global_statistics(const std::vector<T>& local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root, MPIWrapper::Scope scope) {
@@ -420,7 +420,8 @@ private:
         ElementType element_type,
         SignalType signal_type,
         unsigned int num_synapses_to_delete,
-        const NetworkGraph& network_graph);
+        const NetworkGraph& network_graph,
+        std::list<Neurons::PendingSynapseDeletion>& list_with_pending_deletions);
 
     std::list<Neurons::Synapse> register_edges(const NetworkGraph::Edges& out_edges);
 

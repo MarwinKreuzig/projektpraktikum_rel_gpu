@@ -995,8 +995,7 @@ void Neurons::find_synapses_for_deletion(SynapticElements& synaptic_elements, co
 		*/
 
         const auto signal_type = synaptic_elements.get_signal_type(neuron_id);
-        auto local = find_synapses_for_deletion(neuron_id, element_type, signal_type, num_synapses_to_delete, network_graph);
-        list_with_pending_deletions.splice(list_with_pending_deletions.end(), std::move(local));
+        auto local = find_synapses_for_deletion(neuron_id, element_type, signal_type, num_synapses_to_delete, network_graph, list_with_pending_deletions);
     }
 }
 
@@ -1004,7 +1003,8 @@ std::list<Neurons::PendingSynapseDeletion> Neurons::find_synapses_for_deletion(s
     ElementType element_type,
     SignalType signal_type,
     unsigned int num_synapses_to_delete,
-    const NetworkGraph& network_graph) {
+    const NetworkGraph& network_graph,
+    std::list<Neurons::PendingSynapseDeletion>& list_with_pending_deletions) {
 
     // Only do something if necessary
     if (0 == num_synapses_to_delete) {
@@ -1031,8 +1031,6 @@ std::list<Neurons::PendingSynapseDeletion> Neurons::find_synapses_for_deletion(s
 
     RelearnException::check(num_synapses_to_delete <= list_synapses.size(), "num_synapses_to_delete > last_synapses.size()");
 
-    std::list<PendingSynapseDeletion> list_pending_deletions;
-
     /**
 	* Select synapses for deletion
 	*/
@@ -1051,12 +1049,12 @@ std::list<Neurons::PendingSynapseDeletion> Neurons::find_synapses_for_deletion(s
         }
 
         // Check if synapse is already in pending deletions, if not, add it.
-        auto pending_deletion = std::find_if(list_pending_deletions.begin(), list_pending_deletions.end(), [&](auto param) {
+        auto pending_deletion = std::find_if(list_with_pending_deletions.begin(), list_with_pending_deletions.end(), [&](auto param) {
             return param.check_light_equality(src_neuron_id, tgt_neuron_id, synapse_id);
         });
 
-        if (pending_deletion == list_pending_deletions.end()) {
-            list_pending_deletions.emplace_back(src_neuron_id, tgt_neuron_id, synapse_selected->get_rank_neuron_id(),
+        if (pending_deletion == list_with_pending_deletions.end()) {
+            list_with_pending_deletions.emplace_back(src_neuron_id, tgt_neuron_id, synapse_selected->get_rank_neuron_id(),
                 other_element_type, signal_type, synapse_selected->get_synapse_id(), false);
         } else {
             pending_deletion->set_affected_element_already_deleted(true);
@@ -1066,7 +1064,7 @@ std::list<Neurons::PendingSynapseDeletion> Neurons::find_synapses_for_deletion(s
         list_synapses.erase(synapse_selected);
     }
 
-    return list_pending_deletions;
+    return list_with_pending_deletions;
 }
 
 std::list<Neurons::Synapse> Neurons::register_edges(const NetworkGraph::Edges& edges) {

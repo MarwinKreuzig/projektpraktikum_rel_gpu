@@ -39,8 +39,6 @@ public:
         os << std::left << std::setw(column_width) << "seed_octree"
            << " : " << randomNumberSeeds::octree << "\n";
         os << std::left << std::setw(column_width) << "seed_partition"
-           << " : " << randomNumberSeeds::partition << "\n";
-        os << std::left << std::setw(column_width) << "seed_partition"
            << " : "
            << "Local MPI rank"
            << "\n";
