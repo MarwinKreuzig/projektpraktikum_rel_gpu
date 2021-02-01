@@ -75,7 +75,7 @@ TEST(TestSynapticElements, testSynapticElementsConstructorException) {
         synaptic_elements.init(num_neurons);
 
         std::vector<double> golden_cnts(num_neurons);
-        std::vector<double> golden_conn_cnts(num_neurons);
+        std::vector<unsigned int> golden_conn_cnts(num_neurons);
         std::vector<double> golden_delta_cnts(num_neurons);
         std::vector<SignalType> golden_signal_types(num_neurons);
 
@@ -86,7 +86,7 @@ TEST(TestSynapticElements, testSynapticElementsConstructorException) {
             const SignalType signal_type = uid_bool(mt) == 0 ? SignalType::EXCITATORY : SignalType::INHIBITORY;
 
             golden_cnts[neuron_id] = cnt;
-            golden_conn_cnts[neuron_id] = conn_cnt;
+            golden_conn_cnts[neuron_id] = static_cast<unsigned int>(conn_cnt);
             golden_delta_cnts[neuron_id] = delta_cnt;
             golden_signal_types[neuron_id] = signal_type;
 
@@ -98,7 +98,7 @@ TEST(TestSynapticElements, testSynapticElementsConstructorException) {
 
         for (size_t neuron_id = num_neurons; neuron_id < num_neurons + 10; neuron_id++) {
             const double cnt = urd_C(mt);
-            const double conn_cnt = urd_C(mt);
+            const unsigned int conn_cnt = urd_C(mt);
             const double delta_cnt = urd_C(mt);
             const SignalType signal_type = uid_bool(mt) == 0 ? SignalType::EXCITATORY : SignalType::INHIBITORY;
 
@@ -119,17 +119,33 @@ TEST(TestSynapticElements, testSynapticElementsConstructorException) {
         EXPECT_EQ(types.size(), num_neurons);
 
         for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-            EXPECT_EQ(golden_cnts[neuron_id], synaptic_elements.get_cnt(neuron_id));
-            EXPECT_EQ(golden_cnts[neuron_id], cnts[neuron_id]);
+            const auto a1 = golden_cnts[neuron_id];
+            const auto a2 = synaptic_elements.get_cnt(neuron_id);
+            const auto a3 = cnts[neuron_id];
 
-            EXPECT_EQ(golden_conn_cnts[neuron_id], synaptic_elements.get_connected_cnt(neuron_id));
-            EXPECT_EQ(golden_conn_cnts[neuron_id], conn_cnts[neuron_id]);
+            const auto a_is_correct = a1 == a2 && a1 == a3;
+            EXPECT_TRUE(a_is_correct);
 
-            EXPECT_EQ(golden_delta_cnts[neuron_id], synaptic_elements.get_delta_cnt(neuron_id));
-            EXPECT_EQ(golden_delta_cnts[neuron_id], delta_cnts[neuron_id]);
+            const auto b1 = golden_conn_cnts[neuron_id];
+            const auto b2 = synaptic_elements.get_connected_cnt(neuron_id);
+            const auto b3 = conn_cnts[neuron_id];
 
-            EXPECT_EQ(golden_signal_types[neuron_id], synaptic_elements.get_signal_type(neuron_id));
-            EXPECT_EQ(golden_signal_types[neuron_id], types[neuron_id]);
+            const auto b_is_correct = b1 == b2 && b1 == b3;
+            EXPECT_TRUE(b_is_correct);
+
+            const auto c1 = golden_delta_cnts[neuron_id];
+            const auto c2 = synaptic_elements.get_delta_cnt(neuron_id);
+            const auto c3 = delta_cnts[neuron_id];
+
+            const auto c_is_correct = c1 == c2 && c1 == c3;
+            EXPECT_TRUE(c_is_correct);
+
+            const auto d1 = golden_signal_types[neuron_id];
+            const auto d2 = synaptic_elements.get_signal_type(neuron_id);
+            const auto d3 = types[neuron_id];
+
+            const auto d_is_correct = d1 == d2 && d1 == d3;
+            EXPECT_TRUE(d_is_correct);
         }
 
         for (size_t neuron_id = num_neurons; neuron_id < num_neurons + 10; neuron_id++) {
