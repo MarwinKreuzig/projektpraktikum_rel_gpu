@@ -67,7 +67,7 @@ public:
 
     void delete_octree_node(OctreeNode* ptr);
 
-    [[nodiscard]] const std::vector<MPI_Aint>& get_base_pointers() const noexcept;
+    [[nodiscard]] const std::vector<int64_t>& get_base_pointers() const noexcept;
 
     [[nodiscard]] OctreeNode* get_root_nodes_for_local_trees(size_t num_local_trees);
 
@@ -95,5 +95,5 @@ private:
 
     size_t num_ranks{ Constants::uninitialized }; // Number of ranks in MPI_COMM_WORLD
     int displ_unit{ -1 }; // RMA window displacement unit
-    std::vector<MPI_Aint> base_pointers; // RMA window base pointers of all procs
+    std::vector<int64_t> base_pointers; // RMA window base pointers of all procs
 };

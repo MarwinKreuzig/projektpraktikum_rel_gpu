@@ -65,7 +65,7 @@ void MPI_RMA_MemAllocator::delete_octree_node(OctreeNode* ptr) {
     holder_base_ptr.make_available(ptr);
 }
 
-[[nodiscard]] const std::vector<MPI_Aint>& MPI_RMA_MemAllocator::get_base_pointers() const noexcept {
+[[nodiscard]] const std::vector<int64_t>& MPI_RMA_MemAllocator::get_base_pointers() const noexcept {
     return base_pointers;
 }
 

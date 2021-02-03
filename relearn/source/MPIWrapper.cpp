@@ -185,9 +185,9 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
     RelearnException::check(errorcode == 0, "Error in all to all, mpi");
 }
 
-[[nodiscard]] MPI_Aint MPIWrapper::get_ptr_displacement(int target_rank, const OctreeNode* ptr) {
-    const std::vector<MPI_Aint>& base_ptrs = mpi_rma_mem_allocator.get_base_pointers();
-    const auto displacement = MPI_Aint(ptr) - MPI_Aint(base_ptrs[target_rank]);
+[[nodiscard]] int64_t MPIWrapper::get_ptr_displacement(int target_rank, const OctreeNode* ptr) {
+    const std::vector<int64_t>& base_ptrs = mpi_rma_mem_allocator.get_base_pointers();
+    const auto displacement = int64_t(ptr) - int64_t(base_ptrs[target_rank]);
     return displacement;
 }
 

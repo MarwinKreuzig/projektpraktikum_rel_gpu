@@ -158,14 +158,15 @@ public:
     }
 
     template <typename T>
-    static void get(T* ptr, int target_rank, MPI_Aint target_display) {
+    static void get(T* ptr, int target_rank, int64_t target_display) {
 
+        MPI_Aint target_display_mpi(target_display);
         // NOLINTNEXTLINE
-        const int errorcode = MPI_Get(ptr, sizeof(T), MPI_CHAR, target_rank, target_display, sizeof(T), MPI_CHAR, mpi_rma_mem_allocator.mpi_window);
+        const int errorcode = MPI_Get(ptr, sizeof(T), MPI_CHAR, target_rank, target_display_mpi, sizeof(T), MPI_CHAR, mpi_rma_mem_allocator.mpi_window);
         RelearnException::check(errorcode == 0, "Error in get");
     }
 
-    [[nodiscard]] static MPI_Aint get_ptr_displacement(int target_rank, const OctreeNode* ptr);
+    [[nodiscard]] static int64_t get_ptr_displacement(int target_rank, const OctreeNode* ptr);
 
     [[nodiscard]] static OctreeNode* new_octree_node();
 
