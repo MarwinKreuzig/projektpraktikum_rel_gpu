@@ -43,6 +43,8 @@ class MPI_RMA_MemAllocator {
         [[nodiscard]] size_t get_num_available() const noexcept;
     };
 
+    MPI_RMA_MemAllocator() = default;
+
 public:
     static void init(size_t size_requested);
 

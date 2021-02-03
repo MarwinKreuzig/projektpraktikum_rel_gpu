@@ -19,30 +19,26 @@ extern unsigned int partition;
 extern unsigned int octree;
 } // namespace randomNumberSeeds
 
+enum class RandomHolderKey : char {
+    Octree = 0,
+    Partition = 1,
+    SubdomainFromNeuronDensity = 2,
+    ModelA = 3,
+    Neurons = 4,
+    NeuronModels = 5,
+};
+
 class RandomHolder {
     RandomHolder() = default;
 
-    std::map<char, std::mt19937> random_number_generators;
+    static std::map<RandomHolderKey, std::mt19937> random_number_generators;
 
 public:
-
-    static RandomHolder& get_instance() noexcept {
-        static RandomHolder instance;
-        return instance;
-    }
-
-    std::mt19937& get_random_generator(char key) {
+    static std::mt19937& get_random_generator(RandomHolderKey key) {
         return random_number_generators[key];
     }
 
-    void seed(char key, unsigned int seed) {
+    static void seed(RandomHolderKey key, unsigned int seed) {
         random_number_generators[key].seed(seed);
     }
-
-    constexpr static char OCTREE = 0;
-    constexpr static char PARTITION = 1;
-    constexpr static char SubdomainFromNeuronDensity = 2;
-    constexpr static char ModelA = 3;
-    constexpr static char Neurons = 4;
-    constexpr static char NeuronModel = 5;
 };

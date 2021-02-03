@@ -17,7 +17,7 @@
 
 SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(size_t num_neurons, double desired_frac_neurons_exc, double um_per_neuron)
     : um_per_neuron_(um_per_neuron)
-    , random_number_generator(RandomHolder::get_instance().get_random_generator(RandomHolder::SubdomainFromNeuronDensity))
+    , random_number_generator(RandomHolder::get_random_generator(RandomHolderKey::SubdomainFromNeuronDensity))
     , random_number_distribution(0.0, 1.0) {
 
     unsigned int my_rank = static_cast<unsigned int>(MPIWrapper::get_my_rank());

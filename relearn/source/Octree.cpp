@@ -21,7 +21,7 @@
 #include "RelearnException.h"
 
 Octree::Octree() {
-    RandomHolder::get_instance().get_random_generator(RandomHolder::OCTREE).seed(randomNumberSeeds::octree);
+    RandomHolder::get_random_generator(RandomHolderKey::Octree).seed(randomNumberSeeds::octree);
 }
 
 Octree::Octree(const Partition& part, double acceptance_criterion, double sigma, size_t max_num_pending_vacant_axons)
@@ -32,7 +32,7 @@ Octree::Octree(const Partition& part, double acceptance_criterion, double sigma,
     , level_of_branch_nodes(part.get_level_of_subdomain_trees())
     , max_num_pending_vacant_axons(max_num_pending_vacant_axons) {
 
-    RandomHolder::get_instance().get_random_generator(RandomHolder::OCTREE).seed(randomNumberSeeds::octree);
+    RandomHolder::get_random_generator(RandomHolderKey::Octree).seed(randomNumberSeeds::octree);
 
     Vec3d xyz_min;
     Vec3d xyz_max;
@@ -800,7 +800,7 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
     OctreeNode* root_of_subtree = root;
 
     std::uniform_real_distribution<double> random_number_distribution(0.0, std::nextafter(1.0, 1.0 + Constants::eps));
-    std::mt19937& random_number_generator = RandomHolder::get_instance().get_random_generator(RandomHolder::OCTREE);
+    std::mt19937& random_number_generator = RandomHolder::get_random_generator(RandomHolderKey::Octree);
 
     while (true) {
         /**

@@ -255,7 +255,7 @@ private:
     unsigned int refrac_time; // Length of refractory period in msec. After an action potential a neuron cannot fire for this time
 
     // Random number generator for this class (C++11)
-    std::mt19937& random_number_generator{ RandomHolder::get_instance().get_random_generator(RandomHolder::ModelA) };
+    std::mt19937& random_number_generator{ RandomHolder::get_random_generator(RandomHolderKey::ModelA) };
     // Random number distribution used together with "random_number_generator" (C++11)
     // Uniform distribution for interval [0, 1]
     // NOLINTNEXTLINE

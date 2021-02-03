@@ -135,7 +135,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 
     // There might be background activity
     if (background_activity_stddev > 0.0) {
-        std::mt19937& mt = RandomHolder::get_instance().get_random_generator(RandomHolder::NeuronModel);
+        std::mt19937& mt = RandomHolder::get_random_generator(RandomHolderKey::NeuronModels);
         std::normal_distribution<double> nd(background_activity_mean, background_activity_stddev);
 
         for (size_t neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {

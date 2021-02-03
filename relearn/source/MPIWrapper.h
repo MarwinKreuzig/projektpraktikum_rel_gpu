@@ -56,6 +56,8 @@ public:
     using AsyncToken = MPI_Request;
 
 private:
+    MPIWrapper() = default;
+
     static MPI_Op minsummax;
 
     static MPI_Op translate_reduce_function(ReduceFunction rf);
