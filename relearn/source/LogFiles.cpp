@@ -66,7 +66,7 @@ void LogFiles::write_to_file(EventType type, const std::string& message, bool al
     iterator->second.write(message);
 
     if (also_to_cout) {
-        std::cout << message;
+        std::cout << message << std::flush;
     }
 }
 

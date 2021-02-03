@@ -839,8 +839,8 @@ void Neurons::print_network_graph_to_log_file(const NetworkGraph& network_graph,
     std::stringstream ss;
     
     // Write output format to file
-    ss << "# " << partition->get_total_num_neurons() << std::endl; // Total number of neurons
-    ss << "# <target neuron id> <source neuron id> <weight>" << std::endl;
+    ss << "# " << partition->get_total_num_neurons() << "\n"; // Total number of neurons
+    ss << "# <target neuron id> <source neuron id> <weight>" << "\n";
 
     // Write network graph to file
     network_graph.print(ss, neuron_id_map);
@@ -852,9 +852,9 @@ void Neurons::print_positions_to_log_file(const NeuronIdMap& neuron_id_map) {
     std::stringstream ss;
 
     // Write total number of neurons to log file
-    ss << "# " << partition->get_total_num_neurons() << std::endl;
+    ss << "# " << partition->get_total_num_neurons() << "\n";
     ss << "# "
-         << "<global id> <pos x> <pos y> <pos z> <area> <type>" << std::endl;
+         << "<global id> <pos x> <pos y> <pos z> <area> <type>" << "\n";
 
     const std::vector<double>& axons_x_dims = positions.get_x_dims();
     const std::vector<double>& axons_y_dims = positions.get_y_dims();
@@ -961,7 +961,7 @@ void Neurons::print_info_for_barnes_hut() {
         my_string = std::to_string(dendrites_inh_cnts[i]) + "|" + std::to_string(dendrites_inh_connected_cnts[i]);
         ss << std::setw(cwidth_big) << my_string;
 
-        ss << std::endl;
+        ss << "\n";
     }
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
@@ -1112,7 +1112,7 @@ void Neurons::print_pending_synapse_deletions(const std::list<PendingSynapseDele
         ss << "signal_type: " << signal_type_converted << "\n";
         ss << "synapse_id: " << it.get_synapse_id() << "\n";
         ss << "affected_element_already_deleted: " << it.get_affected_element_already_deleted() << "\n"
-                  << std::endl;
+                  << "\n";
     }
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);

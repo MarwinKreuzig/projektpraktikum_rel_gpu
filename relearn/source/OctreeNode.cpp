@@ -31,7 +31,7 @@ void OctreeNode::print() const {
 
     cell.print();
 
-    ss << std::endl;
+    ss << "\n";
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
 }

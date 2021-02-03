@@ -143,11 +143,11 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             }
 
             if (global_cnts[0] != 0.0) {
-                sstring << "Sum (all processes) number synapses deleted: " << global_cnts[0] / 2;
+                sstring << "Sum (all processes) number synapses deleted: " << global_cnts[0] / 2 << "\n";
             }
 
             if (global_cnts[1] != 0.0) {
-                sstring << "Sum (all processes) number synapses created: " << global_cnts[1] / 2;
+                sstring << "Sum (all processes) number synapses created: " << global_cnts[1] / 2 << "\n";
             }
 
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_synapses_deleted, num_synapses_created);

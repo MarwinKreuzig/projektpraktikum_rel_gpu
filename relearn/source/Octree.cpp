@@ -157,7 +157,7 @@ void Octree::postorder_print() {
                     stack.emplace(*it, false, static_cast<size_t>(depth) + 1);
                 }
             }
-           ss << std::endl;
+           ss << "\n";
         }
 
         LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
