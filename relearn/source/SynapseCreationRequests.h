@@ -43,10 +43,10 @@ public:
         responses.resize(responses.size() + 1);
     }
 
-    void append(size_t source_neuron_id, size_t target_neuron_id, Cell::DendriteType dendrite_type_needed) {
+    void append(size_t source_neuron_id, size_t target_neuron_id, SignalType dendrite_type_needed) {
         size_t dendrite_type_val = 0;
 
-        if (dendrite_type_needed == Cell::DendriteType::INHIBITORY) {
+        if (dendrite_type_needed == SignalType::INHIBITORY) {
             dendrite_type_val = 1;
         }
 

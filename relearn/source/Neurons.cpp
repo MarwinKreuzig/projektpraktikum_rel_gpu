@@ -32,13 +32,13 @@ Neurons::Neurons(const Partition& partition, std::unique_ptr<NeuronModels> model
 
 // NOTE: The static variables must be reset to 0 before this function can be used
 // for the synapse creation phase in the next connectivity update
-std::tuple<bool, size_t, Vec3d, Cell::DendriteType> Neurons::get_vacant_axon() const noexcept {
+std::tuple<bool, size_t, Vec3d, SignalType> Neurons::get_vacant_axon() const noexcept {
     static size_t i = 0;
     static size_t j = 0;
 
     size_t neuron_id{ Constants::uninitialized };
     Vec3d xyz_pos;
-    Cell::DendriteType dendrite_type_needed;
+    SignalType dendrite_type_needed;
 
     const std::vector<double>& axons_cnts = axons.get_cnts();
     const std::vector<unsigned int>& axons_connected_cnts = axons.get_connected_cnts();
@@ -65,11 +65,11 @@ std::tuple<bool, size_t, Vec3d, Cell::DendriteType> Neurons::get_vacant_axon() c
             // set dendrite type matching this axon
             // DendriteType::INHIBITORY axon
             if (SignalType::INHIBITORY == axons_signal_types[i]) {
-                dendrite_type_needed = Cell::DendriteType::INHIBITORY;
+                dendrite_type_needed = SignalType::INHIBITORY;
             }
             // DendriteType::EXCITATORY axon
             else {
-                dendrite_type_needed = Cell::DendriteType::EXCITATORY;
+                dendrite_type_needed = SignalType::EXCITATORY;
             }
 
             return std::make_tuple(true, neuron_id, xyz_pos, dendrite_type_needed);
@@ -401,10 +401,10 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
         }
 
         // DendriteType::EXCITATORY axon
-        Cell::DendriteType dendrite_type_needed = Cell::DendriteType::EXCITATORY;
+        SignalType dendrite_type_needed = SignalType::EXCITATORY;
         if (SignalType::INHIBITORY == axons_signal_types[neuron_id]) {
             // DendriteType::INHIBITORY axon
-            dendrite_type_needed = Cell::DendriteType::INHIBITORY;
+            dendrite_type_needed = SignalType::INHIBITORY;
         }
 
         // Position of current neuron

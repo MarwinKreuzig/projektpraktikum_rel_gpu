@@ -19,6 +19,7 @@
 #include "ProbabilitySubinterval.h"
 #include "RankNeuronId.h"
 #include "RelearnException.h"
+#include "SignalType.h"
 #include "SynapseCreationRequests.h"
 #include "SynapticElements.h"
 #include "VacantAxon.h"
@@ -296,7 +297,7 @@ public:
 
     void update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, size_t num_neurons);
 
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed);
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed);
 
     void empty_remote_nodes_cache();
 
@@ -364,7 +365,7 @@ private:
     [[nodiscard]] std::tuple<bool, bool> acceptance_criterion_test(
         const Vec3d& axon_pos_xyz,
         const OctreeNode* node_with_dendrite,
-        Cell::DendriteType dendrite_type_needed,
+        SignalType dendrite_type_needed,
         bool naive_method) const /*noexcept*/;
 
     /**
@@ -373,7 +374,7 @@ private:
     [[nodiscard]] ProbabilitySubintervalVector get_nodes_for_interval(
         const Vec3d& axon_pos_xyz,
         OctreeNode* root,
-        Cell::DendriteType dendrite_type_needed,
+        SignalType dendrite_type_needed,
         bool naive_method);
 
     /**
@@ -381,13 +382,13 @@ private:
 	 * Nodes with probability 0 are removed from the vector.
 	 * The probabilities sum up to 1
 	 */
-    [[nodiscard]] std::vector<double> create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed, const ProbabilitySubintervalVector& vector) const;
+    [[nodiscard]] std::vector<double> create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed, const ProbabilitySubintervalVector& vector) const;
 
     /**
 	 * Returns attractiveness for connecting two given nodes
 	 * NOTE: This is not a probability yet as it could be >1
 	 */
-    [[nodiscard]] double calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, const OctreeNode& node_with_dendrite, Cell::DendriteType dendrite_type_needed) const /*noexcept*/;
+    [[nodiscard]] double calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, const OctreeNode& node_with_dendrite, SignalType dendrite_type_needed) const /*noexcept*/;
 
     [[nodiscard]] ProbabilitySubintervalVector append_children(OctreeNode* node, AccessEpochsStarted& epochs_started);
 

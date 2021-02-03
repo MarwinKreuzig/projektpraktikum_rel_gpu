@@ -159,7 +159,7 @@ void Octree::postorder_print() {
 
 std::tuple<bool, bool> Octree::acceptance_criterion_test(const Vec3d& axon_pos_xyz,
     const OctreeNode* const node_with_dendrite,
-    Cell::DendriteType dendrite_type_needed,
+    SignalType dendrite_type_needed,
     bool naive_method) const /*noexcept*/ {
 
     const auto has_vacant_dendrites = node_with_dendrite->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed) != 0;
@@ -203,7 +203,7 @@ std::tuple<bool, bool> Octree::acceptance_criterion_test(const Vec3d& axon_pos_x
 ProbabilitySubintervalVector Octree::get_nodes_for_interval(
     const Vec3d& axon_pos_xyz,
     OctreeNode* root,
-    Cell::DendriteType dendrite_type_needed,
+    SignalType dendrite_type_needed,
     bool naive_method) {
 
     /* Subtree is not empty AND (Dendrites are available OR We use naive method) */
@@ -389,7 +389,7 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
     return vector;
 }
 
-std::vector<double> Octree::create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed, const ProbabilitySubintervalVector& vector) const {
+std::vector<double> Octree::create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed, const ProbabilitySubintervalVector& vector) const {
     // Does vector contain nodes?
     if (vector.empty()) {
         return {};
@@ -421,7 +421,7 @@ double Octree::calc_attractiveness_to_connect(
     size_t src_neuron_id,
     const Vec3d& axon_pos_xyz,
     const OctreeNode& node_with_dendrite,
-    Cell::DendriteType dendrite_type_needed) const /*noexcept*/ {
+    SignalType dendrite_type_needed) const /*noexcept*/ {
 
     /**
 	* If the axon's neuron itself is considered as target neuron, set attractiveness to 0 to avoid forming an autapse (connection to itself).
@@ -795,7 +795,7 @@ void Octree::update_local_trees(const SynapticElements& dendrites_exc, const Syn
     }
 }
 
-std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, Cell::DendriteType dendrite_type_needed) {
+std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed) {
     OctreeNode* node_selected = nullptr;
     OctreeNode* root_of_subtree = root;
 

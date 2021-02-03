@@ -12,6 +12,7 @@
 
 #include "Config.h"
 #include "RelearnException.h"
+#include "SignalType.h"
 #include "Vec3.h"
 
 #include <optional>
@@ -19,11 +20,6 @@
 
 class Cell {
 public:
-    enum class DendriteType : char {
-        EXCITATORY,
-        INHIBITORY
-    };
-
     Cell() = default;
     ~Cell() = default;
 
@@ -76,7 +72,7 @@ public:
         dendrites_in.xyz_pos = opt_position;
     }
 
-    [[nodiscard]] std::optional<Vec3d> get_neuron_position_for(DendriteType dendrite_type) const;
+    [[nodiscard]] std::optional<Vec3d> get_neuron_position_for(SignalType dendrite_type) const;
 
     void set_neuron_num_dendrites_exc(unsigned int num_dendrites) noexcept {
         dendrites_ex.num_dendrites = num_dendrites;
@@ -94,8 +90,8 @@ public:
         return dendrites_in.num_dendrites;
     }
 
-    [[nodiscard]] unsigned int get_neuron_num_dendrites_for(DendriteType dendrite_type) const noexcept {
-        if (dendrite_type == DendriteType::EXCITATORY) {
+    [[nodiscard]] unsigned int get_neuron_num_dendrites_for(SignalType dendrite_type) const noexcept {
+        if (dendrite_type == SignalType::EXCITATORY) {
             return dendrites_ex.num_dendrites;
         }
 

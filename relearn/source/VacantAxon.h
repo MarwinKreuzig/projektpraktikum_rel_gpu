@@ -12,6 +12,7 @@
 
 #include "Cell.h"
 #include "ProbabilitySubinterval.h"
+#include "SignalType.h"
 #include "Vec3.h"
 
 #include <list>
@@ -22,7 +23,7 @@
 */
 class VacantAxon {
 public:
-    VacantAxon(size_t neuron_id, const Vec3d& pos, Cell::DendriteType dendrite_type_needed)
+    VacantAxon(size_t neuron_id, const Vec3d& pos, SignalType dendrite_type_needed)
         : neuron_id(neuron_id)
         , xyz_pos(pos)
         , dendrite_type_needed(dendrite_type_needed) {
@@ -36,7 +37,7 @@ public:
         return xyz_pos;
     }
 
-    [[nodiscard]] Cell::DendriteType get_dendrite_type_needed() const noexcept {
+    [[nodiscard]] SignalType get_dendrite_type_needed() const noexcept {
         return dendrite_type_needed;
     }
 
@@ -83,7 +84,7 @@ public:
 private:
     size_t neuron_id;
     Vec3d xyz_pos;
-    Cell::DendriteType dendrite_type_needed;
+    SignalType dendrite_type_needed;
 
     ProbabilitySubintervalVector nodes_to_visit;
     ProbabilitySubintervalVector nodes_accepted;

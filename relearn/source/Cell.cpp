@@ -36,8 +36,8 @@
     return {};
 }
 
-[[nodiscard]] std::optional<Vec3d> Cell::get_neuron_position_for(DendriteType dendrite_type) const {
-    if (dendrite_type == DendriteType::EXCITATORY) {
+[[nodiscard]] std::optional<Vec3d> Cell::get_neuron_position_for(SignalType dendrite_type) const {
+    if (dendrite_type == SignalType::EXCITATORY) {
         return dendrites_ex.xyz_pos;
     }
 

@@ -21,6 +21,7 @@
 #include "Parameters.h"
 #include "Positions.h"
 #include "RankNeuronId.h"
+#include "SignalType.h"
 #include "SynapticElements.h"
 #include "Timers.h"
 
@@ -317,7 +318,7 @@ public:
         return *neuron_model;
     }
 
-    [[nodiscard]] std::tuple<bool, size_t, Vec3d, Cell::DendriteType> get_vacant_axon() const noexcept;
+    [[nodiscard]] std::tuple<bool, size_t, Vec3d, SignalType> get_vacant_axon() const noexcept;
 
     void init_synaptic_elements(const NetworkGraph& network_graph);
 
