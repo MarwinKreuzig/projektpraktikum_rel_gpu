@@ -41,7 +41,7 @@ Simulation::Simulation(double accept_criterion, std::shared_ptr<Partition> parti
     parameters->naive_method = parameters->accept_criterion == 0.0;
 
     if (0 == MPIWrapper::get_my_rank()) {
-        std::cout << (*(parameters.get())) << std::endl;
+        parameters->print();
     }
 }
 
@@ -87,6 +87,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 	* Simulation loop
 	*/
     for (size_t step = 1; step <= number_steps; step++) {
+        std::stringstream sstring; // For output generation
 
         if (step % step_monitor == 0) {
             for (auto& mn : monitors) {
@@ -108,7 +109,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
         GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
 
         //if (0 == MPIWrapper::get_my_rank() && step % 50 == 0) {
-        //	std::cout << "** STATE AFTER: " << step << " of " << params.simulation_time
+        //	sstring << "** STATE AFTER: " << step << " of " << params.simulation_time
         //		<< " msec ** [" << Timers::wall_clock_time() << "]\n";
         //}
 
@@ -118,8 +119,8 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             size_t num_synapses_created = 0;
 
             if (0 == MPIWrapper::get_my_rank()) {
-                std::cout << "** UPDATE CONNECTIVITY AFTER: " << step << " of " << number_steps
-                          << " msec ** [" << Timers::wall_clock_time() << "]\n";
+                sstring << "** UPDATE CONNECTIVITY AFTER: " << step << " of " << number_steps
+                        << " msec ** [" << Timers::wall_clock_time() << "]\n";
             }
 
             GlobalTimers::timers.start(TimerRegion::UPDATE_CONNECTIVITY);
@@ -142,20 +143,17 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             }
 
             if (global_cnts[0] != 0.0) {
-                std::stringstream sstring; // For output generation
                 sstring << "Sum (all processes) number synapses deleted: " << global_cnts[0] / 2;
-                LogFiles::print_message_rank(sstring.str().c_str(), 0);
             }
 
             if (global_cnts[1] != 0.0) {
-                std::stringstream sstring; // For output generation
                 sstring << "Sum (all processes) number synapses created: " << global_cnts[1] / 2;
-                LogFiles::print_message_rank(sstring.str().c_str(), 0);
             }
 
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_synapses_deleted, num_synapses_created);
 
-            std::cout << std::flush;
+            sstring << std::flush;
+            LogFiles::write_to_file(LogFiles::EventType::Cout, sstring.str().c_str(), true);
 
             network_graph->debug_check();
         }

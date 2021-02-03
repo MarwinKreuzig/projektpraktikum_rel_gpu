@@ -49,6 +49,8 @@ public:
         Sums,
         Network,
         Positions,
+        Cout,
+        Timers
     };
 
 private:
@@ -66,6 +68,7 @@ public:
     /**
      * Sets the folder path in which the log files will be generated. It should end with '/'.
      * Set before calling init()
+     * Default is: "../output/"
      */
     static void set_output_path(const std::string& path_to_containing_folder) {
         output_path = path_to_containing_folder;
@@ -74,6 +77,7 @@ public:
     /**
      * Sets the general prefix for every log file.
      * Set before calling init()
+     * Default is: "rank_"
      */
     static void set_general_prefix(const std::string& prefix) {
         general_prefix = prefix;
@@ -91,15 +95,6 @@ public:
      */
     static void write_to_file(EventType type, const std::string& message, bool also_to_cout);
 
-    /**
-	 * Static functions for printing a tagged log message to std::cout
-	 */
-    static void print_message(char const* string);
-
     // Print tagged message only at MPI rank "rank"
     static void print_message_rank(char const* string, int rank);
-
-    static void print_error(char const* string);
-
-    static void print_debug(char const* string);
 };

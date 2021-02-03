@@ -273,7 +273,7 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
     sstream << "I'm rank: " << MPIWrapper::get_my_rank() << " of " << MPIWrapper::get_num_ranks() << ".\n";
     sstream << "I've loaded: [local, out, int] " << local_synapses.size() << " + " << out_synapses.size() << " + " << in_synapses.size() << " = " << (local_synapses.size() + out_synapses.size() + in_synapses.size()) << " many synapses." << std::endl;
 
-    std::cout << sstream.str();
+    LogFiles::write_to_file(LogFiles::EventType::Cout, sstream.str(), true);
 }
 
 void NetworkGraph::debug_check() const {

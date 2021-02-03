@@ -9,8 +9,9 @@
  */
 
 #include "Cell.h"
+#include "LogFiles.h"
 
-#include <iostream>
+#include <sstream>
 
 [[nodiscard]] std::optional<Vec3d> Cell::get_neuron_position() const {
     const bool ex_valid = dendrites_ex.xyz_pos.has_value();
@@ -125,31 +126,35 @@
 }
 
 void Cell::print() const {
-    std::cout << "  == Cell (" << this << ") ==\n";
+    std::stringstream ss;
 
-    std::cout << "    xyz_min[3]: ";
-    for (int i = 0; i < 3; i++) {
-        std::cout << xyz_min[i] << " ";
-    }
-    std::cout << "\n";
+    ss << "  == Cell (" << this << ") ==\n";
 
-    std::cout << "    xyz_max[3]: ";
+    ss << "    xyz_min[3]: ";
     for (int i = 0; i < 3; i++) {
-        std::cout << xyz_max[i] << " ";
+        ss << xyz_min[i] << " ";
     }
-    std::cout << "\n";
+    ss << "\n";
 
-    std::cout << "    dendrites_ex.num_dendrites: " << dendrites_ex.num_dendrites;
-    std::cout << "    dendrites_ex.xyz_pos[3]   : ";
+    ss << "    xyz_max[3]: ";
     for (int i = 0; i < 3; i++) {
-        std::cout << dendrites_ex.xyz_pos.value()[i] << " ";
+        ss << xyz_max[i] << " ";
     }
-    std::cout << "\n";
+    ss << "\n";
 
-    std::cout << "    dendrites_in.num_dendrites: " << dendrites_in.num_dendrites;
-    std::cout << "    dendrites_in.xyz_pos[3]   : ";
+    ss << "    dendrites_ex.num_dendrites: " << dendrites_ex.num_dendrites;
+    ss << "    dendrites_ex.xyz_pos[3]   : ";
     for (int i = 0; i < 3; i++) {
-        std::cout << dendrites_in.xyz_pos.value()[i] << " ";
+        ss << dendrites_ex.xyz_pos.value()[i] << " ";
     }
-    std::cout << "\n";
+    ss << "\n";
+
+    ss << "    dendrites_in.num_dendrites: " << dendrites_in.num_dendrites;
+    ss << "    dendrites_in.xyz_pos[3]   : ";
+    for (int i = 0; i < 3; i++) {
+        ss << dendrites_in.xyz_pos.value()[i] << " ";
+    }
+    ss << "\n";
+
+    LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
 }

@@ -621,8 +621,6 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
                 size_t dendrite_type_needed{ Constants::uninitialized };
                 std::tie(source_neuron_id, target_neuron_id, dendrite_type_needed) = requests.get_request(request_index);
 
-                //std::cout << "From: " << source_neuron_id << " to " << target_neuron_id << ": " << dendrite_type_needed << std::endl;
-
                 // Request to form synapse succeeded
                 if (connected != 0) {
                     // Increment num of connected axons
@@ -642,7 +640,6 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
                     }
                 } else {
                     // Other axons were faster and came first
-                    //std::cout << " [NOT CONNECTED] (dendrites already occupied)\n";
                 }
             } // All responses from a rank
         } // All outgoing requests
@@ -900,17 +897,21 @@ void Neurons::print() {
     const int cwidth_left = 6;
     const int cwidth = 16;
 
+    std::stringstream ss;
+
     // Heading
-    std::cout << std::left << std::setw(cwidth_left) << "gid" << std::setw(cwidth) << "x" << std::setw(cwidth) << "AP";
-    std::cout << std::setw(cwidth) << "refrac" << std::setw(cwidth) << "C" << std::setw(cwidth) << "A" << std::setw(cwidth) << "D_ex" << std::setw(cwidth) << "D_in"
+    ss << std::left << std::setw(cwidth_left) << "gid" << std::setw(cwidth) << "x" << std::setw(cwidth) << "AP";
+    ss << std::setw(cwidth) << "refrac" << std::setw(cwidth) << "C" << std::setw(cwidth) << "A" << std::setw(cwidth) << "D_ex" << std::setw(cwidth) << "D_in"
               << "\n";
 
     // Values
     for (size_t i = 0; i < num_neurons; i++) {
-        std::cout << std::left << std::setw(cwidth_left) << i << std::setw(cwidth) << neuron_model->get_x(i) << std::setw(cwidth) << neuron_model->get_fired(i);
-        std::cout << std::setw(cwidth) << neuron_model->get_secondary_variable(i) << std::setw(cwidth) << calcium[i] << std::setw(cwidth) << axons.get_cnt(i);
-        std::cout << std::setw(cwidth) << dendrites_exc.get_cnt(i) << std::setw(cwidth) << dendrites_inh.get_cnt(i) << "\n";
+        ss << std::left << std::setw(cwidth_left) << i << std::setw(cwidth) << neuron_model->get_x(i) << std::setw(cwidth) << neuron_model->get_fired(i);
+        ss << std::setw(cwidth) << neuron_model->get_secondary_variable(i) << std::setw(cwidth) << calcium[i] << std::setw(cwidth) << axons.get_cnt(i);
+        ss << std::setw(cwidth) << dendrites_exc.get_cnt(i) << std::setw(cwidth) << dendrites_inh.get_cnt(i) << "\n";
     }
+
+    LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
 }
 
 void Neurons::print_info_for_barnes_hut() {
@@ -931,36 +932,39 @@ void Neurons::print_info_for_barnes_hut() {
     const int cwidth_medium = 16;
     const int cwidth_big = 27;
 
+    std::stringstream ss;
     std::string my_string;
 
     // Heading
-    std::cout << std::left << std::setw(cwidth_small) << "gid" << std::setw(cwidth_small) << "region" << std::setw(cwidth_medium) << "position";
-    std::cout << std::setw(cwidth_big) << "axon (exist|connected)" << std::setw(cwidth_big) << "exc_den (exist|connected)";
-    std::cout << std::setw(cwidth_big) << "inh_den (exist|connected)"
+    ss << std::left << std::setw(cwidth_small) << "gid" << std::setw(cwidth_small) << "region" << std::setw(cwidth_medium) << "position";
+    ss << std::setw(cwidth_big) << "axon (exist|connected)" << std::setw(cwidth_big) << "exc_den (exist|connected)";
+    ss << std::setw(cwidth_big) << "inh_den (exist|connected)"
               << "\n";
 
     // Values
     for (size_t i = 0; i < num_neurons; i++) {
-        std::cout << std::left << std::setw(cwidth_small) << i;
+        ss << std::left << std::setw(cwidth_small) << i;
 
         const auto x = static_cast<unsigned int>(x_dims[i]);
         const auto y = static_cast<unsigned int>(y_dims[i]);
         const auto z = static_cast<unsigned int>(z_dims[i]);
 
         my_string = "(" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")";
-        std::cout << std::setw(cwidth_medium) << my_string;
+        ss << std::setw(cwidth_medium) << my_string;
 
         my_string = std::to_string(axons_cnts[i]) + "|" + std::to_string(axons_connected_cnts[i]);
-        std::cout << std::setw(cwidth_big) << my_string;
+        ss << std::setw(cwidth_big) << my_string;
 
         my_string = std::to_string(dendrites_exc_cnts[i]) + "|" + std::to_string(dendrites_exc_connected_cnts[i]);
-        std::cout << std::setw(cwidth_big) << my_string;
+        ss << std::setw(cwidth_big) << my_string;
 
         my_string = std::to_string(dendrites_inh_cnts[i]) + "|" + std::to_string(dendrites_inh_connected_cnts[i]);
-        std::cout << std::setw(cwidth_big) << my_string;
+        ss << std::setw(cwidth_big) << my_string;
 
-        std::cout << std::endl;
+        ss << std::endl;
     }
+
+    LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
 }
 
 typename std::list<Neurons::Synapse>::const_iterator Neurons::select_random_synapse(const std::list<Synapse>& list) {
@@ -1095,19 +1099,23 @@ std::list<Neurons::Synapse> Neurons::register_edges(const NetworkGraph::Edges& e
 }
 
 void Neurons::print_pending_synapse_deletions(const std::list<PendingSynapseDeletion>& list) {
+    std::stringstream ss;
+
     for (const auto& it : list) {
         size_t affected_element_type_converted = it.get_affected_element_type() == ElementType::AXON ? 0 : 1;
         size_t signal_type_converted = it.get_signal_type() == SignalType::EXCITATORY ? 0 : 1;
 
-        std::cout << "src_neuron_id: " << it.get_src_neuron_id() << "\n";
-        std::cout << "tgt_neuron_id: " << it.get_tgt_neuron_id() << "\n";
-        std::cout << "affected_neuron_id: " << it.get_affected_neuron_id() << "\n";
-        std::cout << "affected_element_type: " << affected_element_type_converted << "\n";
-        std::cout << "signal_type: " << signal_type_converted << "\n";
-        std::cout << "synapse_id: " << it.get_synapse_id() << "\n";
-        std::cout << "affected_element_already_deleted: " << it.get_affected_element_already_deleted() << "\n"
+        ss << "src_neuron_id: " << it.get_src_neuron_id() << "\n";
+        ss << "tgt_neuron_id: " << it.get_tgt_neuron_id() << "\n";
+        ss << "affected_neuron_id: " << it.get_affected_neuron_id() << "\n";
+        ss << "affected_element_type: " << affected_element_type_converted << "\n";
+        ss << "signal_type: " << signal_type_converted << "\n";
+        ss << "synapse_id: " << it.get_synapse_id() << "\n";
+        ss << "affected_element_already_deleted: " << it.get_affected_element_already_deleted() << "\n"
                   << std::endl;
     }
+
+    LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
 }
 
 size_t Neurons::delete_synapses(const std::list<PendingSynapseDeletion>& list, NetworkGraph& network_graph) {

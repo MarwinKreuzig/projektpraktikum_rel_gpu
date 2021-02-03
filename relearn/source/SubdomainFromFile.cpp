@@ -21,14 +21,12 @@
 
 SubdomainFromFile::SubdomainFromFile(const std::string& file_path, Partition& partition)
     : file(file_path) {
-    std::cout << "Loading: " << file_path << std::endl;
+    LogFiles::write_to_file(LogFiles::EventType::Cout, "Loading: " + file_path + "\n", true);
+
     const bool file_is_good = file.good();
     const bool file_is_not_good = file.fail() || file.eof();
 
-    if (!file_is_good || file_is_not_good) {
-        std::cout << "Opening the file was not successful" << std::endl;
-        exit(EXIT_FAILURE);
-    }
+    RelearnException::check(file_is_good && !file_is_not_good, "Opening the file was not successful");
 
     read_dimensions_from_file(partition);
 }

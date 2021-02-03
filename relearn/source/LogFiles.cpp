@@ -16,7 +16,7 @@
 
 std::map<LogFiles::EventType, LogFiles::LogFile> LogFiles::log_files;
 std::string LogFiles::output_path{ "../output/" };
-std::string LogFiles::general_prefix;
+std::string LogFiles::general_prefix{ "rank_" };
 
 void LogFiles::init() {
     if (0 == MPIWrapper::get_my_rank()) {
@@ -46,10 +46,16 @@ void LogFiles::init() {
 
     // Create log file for positions on all ranks
     LogFiles::add_logfile(EventType::Positions, "positions");
+
+    // Create log file for std::cout
+    LogFiles::add_logfile(EventType::Cout, "stdcout");
+
+    // Create log file for the timers
+    LogFiles::add_logfile(EventType::Timers, "timers");
 }
 
 void LogFiles::add_logfile(EventType type, const std::string& file_name) {
-    auto complete_path = output_path + general_prefix + "_" + get_specific_file_prefix() + "_" + file_name + ".txt";
+    auto complete_path = output_path + general_prefix + get_specific_file_prefix() + "_" + file_name + ".txt";
     log_files.emplace(type, std::move(complete_path));
 }
 
@@ -64,20 +70,9 @@ void LogFiles::write_to_file(EventType type, const std::string& message, bool al
     }
 }
 
-void LogFiles::print_message(char const* string) {
-    std::cout << "[INFO]  " << string << "\n";
-}
-
 void LogFiles::print_message_rank(char const* string, int rank) {
     if (rank == MPIWrapper::get_my_rank() || rank == -1) {
-        std::cout << "[INFO:Rank " << MPIWrapper::get_my_rank() << "]  " << string << "\n";
+        std::string txt = std::string("[INFO:Rank ") + MPIWrapper::get_my_rank_str() + "]  " + string + "\n";
+        write_to_file(LogFiles::EventType::Cout, txt, true);
     }
-}
-
-void LogFiles::print_error(char const* string) {
-    std::cout << "[ERROR]  " << string << "\n";
-}
-
-void LogFiles::print_debug(char const* string) {
-    std::cout << "[DEBUG]  " << string << "\n";
 }

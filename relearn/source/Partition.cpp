@@ -48,8 +48,8 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
     if (rest != 0) {
         std::stringstream sstream;
         sstream << "My rank is: " << my_rank << "; There are " << num_ranks << " ranks in total; The rest is: " << rest << "\n";
-        std::cout << sstream.str().c_str() << std::flush;
-        sstream.str("");
+        sstream << std::flush;
+        LogFiles::print_message_rank(sstream.str().c_str(), -1);
         RelearnException::fail("Number of ranks must be of the form 2^n");
     }
 

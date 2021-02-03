@@ -21,6 +21,8 @@
 #include "Random.h"
 #include "RelearnException.h"
 
+#include <sstream>
+
 Octree::Octree() {
     RandomHolder::get_random_generator(RandomHolderKey::Octree).seed(randomNumberSeeds::octree);
 }
@@ -61,6 +63,8 @@ void Octree::postorder_print() {
 
     while (!stack.empty()) {
 
+        std::stringstream ss;
+
         auto& elem = stack.top();
         const auto depth = static_cast<int>(elem.get_depth());
         const auto* ptr = elem.get_ptr();
@@ -73,58 +77,58 @@ void Octree::postorder_print() {
 
             // Print node's address
             for (auto j = 0; j < depth; j++) {
-                std::cout << " ";
+               ss << " ";
             }
-            std::cout << "Address: " << ptr << "\n";
+           ss << "Address: " << ptr << "\n";
 
             // Print cell extent
             std::tie(xyz_min, xyz_max) = ptr->get_cell().get_size();
             for (auto j = 0; j < depth; j++) {
-                std::cout << " ";
+               ss << " ";
             }
 
-            std::cout << "Cell extent: (" << xyz_min.get_x() << " .. " << xyz_max.get_x() << ", "
+           ss << "Cell extent: (" << xyz_min.get_x() << " .. " << xyz_max.get_x() << ", "
                       << xyz_min.get_y() << " .. " << xyz_max.get_y() << ", "
                       << xyz_min.get_z() << " .. " << xyz_max.get_z() << ")\n";
 
             // Print neuron ID
             for (auto j = 0; j < depth; j++) {
-                std::cout << " ";
+               ss << " ";
             }
-            std::cout << "Neuron ID: " << ptr->get_cell().get_neuron_id() << "\n";
+           ss << "Neuron ID: " << ptr->get_cell().get_neuron_id() << "\n";
 
             // Print number of dendrites
             for (auto j = 0; j < depth; j++) {
-                std::cout << " ";
+               ss << " ";
             }
-            std::cout << "Number dendrites (exc, inh): (" << ptr->get_cell().get_neuron_num_dendrites_exc()
+           ss << "Number dendrites (exc, inh): (" << ptr->get_cell().get_neuron_num_dendrites_exc()
                       << ", " << ptr->get_cell().get_neuron_num_dendrites_inh() << ")\n";
 
             // Print position DendriteType::EXCITATORY
             xyz_pos = ptr->get_cell().get_neuron_position_exc();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
-                std::cout << "-- invalid!";
+               ss << "-- invalid!";
             }
 
             for (auto j = 0; j < depth; j++) {
-                std::cout << " ";
+               ss << " ";
             }
-            std::cout << "Position exc: (" << xyz_pos.value().get_x() << ", " << xyz_pos.value().get_y() << ", " << xyz_pos.value().get_z() << ") ";
+           ss << "Position exc: (" << xyz_pos.value().get_x() << ", " << xyz_pos.value().get_y() << ", " << xyz_pos.value().get_z() << ") ";
 
-            std::cout << "\n";
+           ss << "\n";
             // Print position DendriteType::INHIBITORY
             xyz_pos = ptr->get_cell().get_neuron_position_inh();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
-                std::cout << "-- invalid!";
+               ss << "-- invalid!";
             }
             for (auto j = 0; j < depth; j++) {
-                std::cout << " ";
+               ss << " ";
             }
-            std::cout << "Position inh: (" << xyz_pos.value().get_x() << ", " << xyz_pos.value().get_y() << ", " << xyz_pos.value().get_z() << ") ";
-            std::cout << "\n";
-            std::cout << "\n";
+           ss << "Position inh: (" << xyz_pos.value().get_x() << ", " << xyz_pos.value().get_y() << ", " << xyz_pos.value().get_z() << ") ";
+           ss << "\n";
+           ss << "\n";
 
             stack.pop();
         }
@@ -133,14 +137,14 @@ void Octree::postorder_print() {
             elem.set_visited();
 
             for (auto j = 0; j < depth; j++) {
-                std::cout << " ";
+               ss << " ";
             }
 
-            std::cout << "Child indices: ";
+           ss << "Child indices: ";
             int id = 0;
             for (const auto& child : ptr->get_children()) {
                 if (child != nullptr) {
-                    std::cout << id << " ";
+                   ss << id << " ";
                 }
                 id++;
             }
@@ -153,8 +157,10 @@ void Octree::postorder_print() {
                     stack.emplace(*it, false, static_cast<size_t>(depth) + 1);
                 }
             }
-            std::cout << std::endl;
+           ss << std::endl;
         }
+
+        LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
     }
 }
 
@@ -738,15 +744,8 @@ void Octree::insert(OctreeNode* node_to_insert) {
 }
 
 void Octree::insert_local_tree(Octree* node_to_insert) {
-
     OctreeNode* local_root = node_to_insert->get_root();
-    if (local_root == nullptr) {
-        std::stringstream s;
-        s << "Local tree is empty, probably because the corresponding subdomain contains no neuron. "
-          << "Currently, it is a requirement that every subdomain contains at least one neuron.\n";
-        LogFiles::print_error(s.str().c_str());
-        std::abort();
-    }
+    RelearnException::check(local_root != nullptr, "Local tree is empty, probably because the corresponding subdomain contains no neuron.");
 
     insert(local_root);
     local_trees.emplace_back(node_to_insert);

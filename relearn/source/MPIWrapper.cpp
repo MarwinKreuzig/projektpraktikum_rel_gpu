@@ -101,12 +101,7 @@ void MPIWrapper::init_neurons(size_t num_neurons) {
 	 *
 	 * Check if num_neurons fits in int value (see IMPORTANT notice above)
 	 */
-    if (num_neurons > std::numeric_limits<int>::max()) {
-        LogFiles::print_error("init_neurons: num_neurons does not fit in \"int\" data type");
-
-        // NOLINTNEXTLINE
-        exit(EXIT_FAILURE);
-    }
+    RelearnException::check(num_neurons < std::numeric_limits<int>::max(), "init_neurons: num_neurons does not fit in \"int\" data type");
 
     MPIWrapper::num_neurons = num_neurons;
 

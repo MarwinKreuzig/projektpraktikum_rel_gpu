@@ -10,20 +10,28 @@
 
 #include "OctreeNode.h"
 
+#include "LogFiles.h"
+
+#include <sstream>
+
 void OctreeNode::print() const {
-    std::cout << "== OctreeNode (" << this << ") ==\n";
+    std::stringstream ss;
 
-    std::cout << "  children[8]: ";
+    ss << "== OctreeNode (" << this << ") ==\n";
+
+    ss << "  children[8]: ";
     for (const auto* const child : children) {
-        std::cout << child << " ";
+        ss << child << " ";
     }
-    std::cout << "\n";
+    ss << "\n";
 
-    std::cout << "  is_parent  : " << parent << "\n\n";
-    std::cout << "  rank       : " << rank << "\n";
-    std::cout << "  level      : " << level << "\n\n";
+    ss << "  is_parent  : " << parent << "\n\n";
+    ss << "  rank       : " << rank << "\n";
+    ss << "  level      : " << level << "\n\n";
 
     cell.print();
 
-    std::cout << std::endl;
+    ss << std::endl;
+
+    LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
 }
