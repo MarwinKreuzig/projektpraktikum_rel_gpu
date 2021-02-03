@@ -20,8 +20,6 @@
 #include "Random.h"
 #include "RelearnException.h"
 
-#include <mpi.h>
-
 Octree::Octree() {
     RandomHolder::get_instance().get_random_generator(RandomHolder::OCTREE).seed(randomNumberSeeds::octree);
 }
