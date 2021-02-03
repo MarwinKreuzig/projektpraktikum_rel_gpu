@@ -12,45 +12,84 @@
 
 #include "MPIWrapper.h"
 
+#include <filesystem>
 #include <fstream>
 #include <map>
 #include <string>
 #include <vector>
 
 class LogFiles {
+    class LogFile {
+        std::ofstream ofstream;
+
+    public:
+        LogFile(const std::filesystem::path& path)
+            : ofstream(path) { }
+
+        LogFile(const LogFile& other) = delete;
+        LogFile& operator=(const LogFile& other) = delete;
+
+        LogFile(LogFile&& other) = default;
+        LogFile& operator=(LogFile&& other) = default;
+
+        ~LogFile() = default;
+
+        void write(const std::string& message) {
+            RelearnException::check(ofstream.is_open(), "The output stream is not open");
+            RelearnException::check(ofstream.good(), "The output stream isn't good");
+            ofstream << message;
+        }
+    };
+
 public:
-    // One log file only at the MPI rank "on_rank"
-    // on_rank == -1 means all ranks
-    LogFiles(const std::string& file_name, int on_rank);
+    enum class EventType : char {
+        SynapseCreation,
+        SynapseDeletion,
+        NeuronsOverview,
+        Sums,
+        Network,
+        Positions,
+    };
 
-    // Generate series of file name suffixes automatically
-    LogFiles(size_t num_files, const std::string& prefix);
+private:
+    static std::map<EventType, LogFile> log_files;
+    static std::string output_path;
+    static std::string general_prefix;
 
-    LogFiles(const LogFiles& other) = delete;
-    LogFiles& operator=(const LogFiles& other) = delete;
+    static std::string get_specific_file_prefix() {
+        return MPIWrapper::get_my_rank_str();
+    }
 
-    LogFiles(LogFiles&& other) noexcept;
+    static void add_logfile(EventType type, const std::string& file_name);
 
-    LogFiles& operator=(LogFiles&& other) noexcept;
+public:
+    /**
+     * Sets the folder path in which the log files will be generated. It should end with '/'.
+     * Set before calling init()
+     */
+    static void set_output_path(const std::string& path_to_containing_folder) {
+        output_path = path_to_containing_folder;
+    }
 
-    // Take array with file name suffixes
-    LogFiles(size_t num_files, const std::string& prefix, std::vector<size_t> suffixes);
+    /**
+     * Sets the general prefix for every log file.
+     * Set before calling init()
+     */
+    static void set_general_prefix(const std::string& prefix) {
+        general_prefix = prefix;
+    }
 
-    ~LogFiles() noexcept(false);
-
-    [[nodiscard]] size_t get_num_files() const noexcept { return num_files; }
-
-    // Get pointer to file stream
-    [[nodiscard]] std::ofstream& get_file(size_t file_id);
-
-    static std::string output_dir;
-    static std::map<std::string, LogFiles> logfiles;
-
-    static void addLogFile(const std::string& name, int rank);
-
+    /**
+     * Initializes all log files.
+     * Set after setting the output path and the general prefix when they should be user defined
+     */
     static void init();
 
-    static LogFiles& get(const std::string& name) { return LogFiles::logfiles.find(name)->second; }
+    /**
+     * Write the message into the file which is associated with the type.
+     * Optionally prints the message also to std::cout
+     */
+    static void write_to_file(EventType type, const std::string& message, bool also_to_cout);
 
     /**
 	 * Static functions for printing a tagged log message to std::cout
@@ -63,8 +102,4 @@ public:
     static void print_error(char const* string);
 
     static void print_debug(char const* string);
-
-private:
-    size_t num_files = 0; // Number of files
-    std::vector<std::ofstream> files; // All file streams
 };

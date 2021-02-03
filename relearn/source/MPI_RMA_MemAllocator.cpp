@@ -62,7 +62,6 @@ void MPI_RMA_MemAllocator::init(size_t size_requested) {
     std::stringstream sstring;
     sstring << "MPI RMA MemAllocator: max_num_objects: " << max_num_objects << "  sizeof(OctreeNode): " << sizeof(OctreeNode);
     LogFiles::print_message_rank(sstring.str().c_str(), 0);
-    sstring.str("");
 }
 
 void MPI_RMA_MemAllocator::deallocate_rma_mem() {

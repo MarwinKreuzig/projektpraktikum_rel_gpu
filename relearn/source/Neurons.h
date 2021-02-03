@@ -344,16 +344,14 @@ public:
         return std::make_tuple(num_synapses_deleted, num_synapses_created);
     }
 
-    void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, LogFiles& log_file, size_t sum_synapses_deleted, size_t sum_synapses_created);
+    void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, size_t sum_synapses_deleted, size_t sum_synapses_created);
 
     // Print global information about all neurons at rank 0
-    void print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles& log_file);
+    void print_neurons_overview_to_log_file_on_rank_0(size_t step);
 
-    void print_network_graph_to_log_file(LogFiles& log_file,
-        const NetworkGraph& network_graph,
-        const NeuronIdMap& neuron_id_map);
+    void print_network_graph_to_log_file(const NetworkGraph& network_graph, const NeuronIdMap& neuron_id_map);
 
-    void print_positions_to_log_file(LogFiles& log_file, const NeuronIdMap& neuron_id_map);
+    void print_positions_to_log_file(const NeuronIdMap& neuron_id_map);
 
     void print();
 

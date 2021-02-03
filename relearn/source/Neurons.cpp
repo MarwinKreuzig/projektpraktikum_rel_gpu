@@ -690,7 +690,7 @@ void Neurons::debug_check_counts(const NetworkGraph& network_graph) {
     }
 }
 
-void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, LogFiles& log_file, size_t sum_synapses_deleted, size_t sum_synapses_created) {
+void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, size_t sum_synapses_deleted, size_t sum_synapses_created) {
     unsigned int sum_axons_exc_cnts = 0;
     unsigned int sum_axons_exc_connected_cnts = 0;
     unsigned int sum_axons_inh_cnts = 0;
@@ -759,13 +759,13 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 
     // Output data
     if (0 == MPIWrapper::get_my_rank()) {
-        std::ofstream& file = log_file.get_file(0);
+        std::stringstream ss;
         const int cwidth = 20; // Column width
 
         // Write headers to file if not already done so
         if (0 == step) {
-            file << "# SUMS OVER ALL NEURONS\n";
-            file << std::left
+            ss << "# SUMS OVER ALL NEURONS\n";
+            ss << std::left
                  << std::setw(cwidth) << "# step"
                  << std::setw(cwidth) << "Axons exc. (vacant)"
                  << std::setw(cwidth) << "Axons inh. (vacant)"
@@ -777,7 +777,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
         }
 
         // Write data at step "step"
-        file << std::left
+        ss << std::left
              << std::setw(cwidth) << step
              << std::setw(cwidth) << sums_global[0]
              << std::setw(cwidth) << sums_global[1]
@@ -786,23 +786,25 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
              << std::setw(cwidth) << sums_global[4] / 2 // As counted on both of the neurons
              << std::setw(cwidth) << sums_global[5] / 2 // As counted on both of the neurons
              << "\n";
+
+        LogFiles::write_to_file(LogFiles::EventType::Sums, ss.str(), false);
     }
 }
 
-void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles& log_file) {
+void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
     const StatisticalMeasures<double> calcium_statistics = global_statistics(calcium, num_neurons, partition->get_total_num_neurons(), 0, MPIWrapper::Scope::global);
 
     const StatisticalMeasures<double> activity_statistics = global_statistics(neuron_model->get_x(), num_neurons, partition->get_total_num_neurons(), 0, MPIWrapper::Scope::global);
 
     // Output data
     if (0 == MPIWrapper::get_my_rank()) {
-        std::ofstream& file = log_file.get_file(0);
+        std::stringstream ss;
         const int cwidth = 16; // Column width
 
         // Write headers to file if not already done so
         if (0 == step) {
-            file << "# ALL NEURONS\n";
-            file << std::left
+            ss << "# ALL NEURONS\n";
+            ss << std::left
                  << std::setw(cwidth) << "# step"
                  << std::setw(cwidth) << "C (avg)"
                  << std::setw(cwidth) << "C (min)"
@@ -818,7 +820,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles
         }
 
         // Write data at step "step"
-        file << std::left
+        ss << std::left
              << std::setw(cwidth) << step
              << std::setw(cwidth) << calcium_statistics.avg
              << std::setw(cwidth) << calcium_statistics.min
@@ -831,27 +833,30 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step, LogFiles
              << std::setw(cwidth) << activity_statistics.var
              << std::setw(cwidth) << activity_statistics.std
              << "\n";
+
+        LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, ss.str(), false);
     }
 }
 
-void Neurons::print_network_graph_to_log_file(LogFiles& log_file, const NetworkGraph& network_graph, const NeuronIdMap& neuron_id_map) {
-    std::ofstream& file = log_file.get_file(0);
-
+void Neurons::print_network_graph_to_log_file(const NetworkGraph& network_graph, const NeuronIdMap& neuron_id_map) {
+    std::stringstream ss;
+    
     // Write output format to file
-    file << "# " << partition->get_total_num_neurons() << std::endl; // Total number of neurons
-    file << "# <target neuron id> <source neuron id> <weight>" << std::endl;
+    ss << "# " << partition->get_total_num_neurons() << std::endl; // Total number of neurons
+    ss << "# <target neuron id> <source neuron id> <weight>" << std::endl;
 
     // Write network graph to file
-    //*file << network_graph << std::endl;
-    network_graph.print(file, neuron_id_map);
+    network_graph.print(ss, neuron_id_map);
+
+    LogFiles::write_to_file(LogFiles::EventType::Network, ss.str(), false);
 }
 
-void Neurons::print_positions_to_log_file(LogFiles& log_file, const NeuronIdMap& neuron_id_map) {
-    std::ofstream& file = log_file.get_file(0);
+void Neurons::print_positions_to_log_file(const NeuronIdMap& neuron_id_map) {
+    std::stringstream ss;
 
     // Write total number of neurons to log file
-    file << "# " << partition->get_total_num_neurons() << std::endl;
-    file << "# "
+    ss << "# " << partition->get_total_num_neurons() << std::endl;
+    ss << "# "
          << "<global id> <pos x> <pos y> <pos z> <area> <type>" << std::endl;
 
     const std::vector<double>& axons_x_dims = positions.get_x_dims();
@@ -865,7 +870,7 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const NeuronIdMap&
     size_t glob_id = 0;
 
     const int my_rank = MPIWrapper::get_my_rank();
-    file << std::fixed << std::setprecision(6);
+    ss << std::fixed << std::setprecision(6);
 
     for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
         RankNeuronId rank_neuron_id{ my_rank, neuron_id };
@@ -876,7 +881,7 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const NeuronIdMap&
 
         glob_id++;
 
-        file << glob_id << " "
+        ss << glob_id << " "
              << axons_x_dims[neuron_id] << " "
              << axons_y_dims[neuron_id] << " "
              << axons_z_dims[neuron_id] << " "
@@ -884,8 +889,10 @@ void Neurons::print_positions_to_log_file(LogFiles& log_file, const NeuronIdMap&
              << signal_type_name << "\n";
     }
 
-    file << std::flush;
-    file << std::defaultfloat;
+    ss << std::flush;
+    ss << std::defaultfloat;
+
+    LogFiles::write_to_file(LogFiles::EventType::Positions, ss.str(), false);
 }
 
 void Neurons::print() {
