@@ -8,37 +8,50 @@
  *
  */
 
-#pragma once 
+#pragma once
+
+#include "LogFiles.h"
 
 #include <cstdint>
 #include <iomanip>
+#include <sstream>
 
 class Parameters {
 public:
-	size_t total_num_neurons;           // Number of neurons
+    size_t total_num_neurons; // Number of neurons
 
-	// Connectivity
-	double accept_criterion;      // Barnes-Hut acceptance criterion
-	double sigma;                 // Probability parameter in MSP (dispersion). The higher sigma the more likely to form synapses with remote neurons
-	bool naive_method;            // Consider all neurons as target neurons for synapse creation, regardless of whether dendrites are available or not
-	size_t max_num_pending_vacant_axons;  // Maximum number of vacant axons which are considered at the same time for finding a target neuron
+    // Connectivity
+    double accept_criterion; // Barnes-Hut acceptance criterion
+    double sigma; // Probability parameter in MSP (dispersion). The higher sigma the more likely to form synapses with remote neurons
+    bool naive_method; // Consider all neurons as target neurons for synapse creation, regardless of whether dendrites are available or not
+    size_t max_num_pending_vacant_axons; // Maximum number of vacant axons which are considered at the same time for finding a target neuron
 
-	// Overload << operator for proper output
-	friend std::ostream& operator<< (std::ostream& os, const Parameters& params) {
-		os << "** PARAMETERS **\n\n";
-		os << std::left << std::setw(column_width) << "num_neurons" << " : " << params.total_num_neurons << "\n";
-		os << std::left << std::setw(column_width) << "accept_criterion (BH)" << " : " << params.accept_criterion << "\n";
-		os << std::left << std::setw(column_width) << "sigma" << " : " << params.sigma << "\n";
-		os << std::left << std::setw(column_width) << "naive_method (BH)" << " : " << params.naive_method << "\n";
-		os << std::left << std::setw(column_width) << "max_num_pending_vacant_axons" << " : " << params.max_num_pending_vacant_axons << "\n";
-		os << std::left << std::setw(column_width) << "seed_octree" << " : " << randomNumberSeeds::octree << "\n";
-		os << std::left << std::setw(column_width) << "seed_partition" << " : " << randomNumberSeeds::partition << "\n";
-		os << std::left << std::setw(column_width) << "seed_partition" << " : " << "Local MPI rank" << "\n";
+    // Overload << operator for proper output
+    void print() {
+        std::stringstream ss;
 
-		return os;
-	}
+        ss << "** PARAMETERS **\n\n";
+        ss << std::left << std::setw(column_width) << "num_neurons"
+           << " : " << total_num_neurons << "\n";
+        ss << std::left << std::setw(column_width) << "accept_criterion (BH)"
+           << " : " << accept_criterion << "\n";
+        ss << std::left << std::setw(column_width) << "sigma"
+           << " : " << sigma << "\n";
+        ss << std::left << std::setw(column_width) << "naive_method (BH)"
+           << " : " << naive_method << "\n";
+        ss << std::left << std::setw(column_width) << "max_num_pending_vacant_axons"
+           << " : " << max_num_pending_vacant_axons << "\n";
+        ss << std::left << std::setw(column_width) << "seed_octree"
+           << " : " << randomNumberSeeds::octree << "\n";
+        ss << std::left << std::setw(column_width) << "seed_partition"
+           << " : "
+           << "Local MPI rank"
+           << "\n";
+
+        LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
+    }
 
 private:
-	// Width of column containing parameter names
-	static const int column_width = 28;
+    // Width of column containing parameter names
+    static const int column_width = 28;
 };

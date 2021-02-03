@@ -11,6 +11,8 @@
 #include "Random.h"
 
 namespace randomNumberSeeds {
-	int64_t partition;
-	int64_t octree;
+unsigned int partition;
+unsigned int octree;
 } // namespace randomNumberSeeds
+
+std::map<RandomHolderKey, std::mt19937> RandomHolder::random_number_generators;

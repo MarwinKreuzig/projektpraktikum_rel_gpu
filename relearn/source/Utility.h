@@ -11,15 +11,16 @@
 #pragma once
 
 namespace Util {
-	template <typename T>
-	constexpr unsigned int num_digits(T val) noexcept {
-		unsigned int num_digits = 0;
+template <typename T>
+constexpr unsigned int num_digits(T val) noexcept {
+    unsigned int num_digits = 0;
 
-		do {
-			++num_digits;
-			val /= 10;
-		} while (val != 0);
+    do {
+        ++num_digits;
+        // NOLINTNEXTLINE
+        val /= 10;
+    } while (val != 0);
 
-		return num_digits;
-	}
+    return num_digits;
+}
 } // namespace Util

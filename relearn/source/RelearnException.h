@@ -15,25 +15,25 @@
 #include <string>
 
 class RelearnException : std::exception {
-private:	
-	std::string message;
+private:
+    std::string message;
 
 public:
-	static bool hide_messages;
+    static bool hide_messages;
 
-	RelearnException() = default;
+    RelearnException() = default;
 
-	explicit RelearnException(std::string&& mes) : message(mes) {
+    explicit RelearnException(std::string&& mes)
+        : message(mes) {
+    }
 
-	}
+    [[nodiscard]] const char* what() const noexcept override;
 
-	[[nodiscard]] const char* what() const noexcept override;
+    //static void check(bool condition);
 
-	static void check(bool condition);
+    //static void fail();
 
-	static void fail();
+    static void check(bool condition, std::string&& message);
 
-	static void check(bool condition, std::string&& message);
-	
-	static void fail(std::string&& message);
+    static void fail(std::string&& message);
 };

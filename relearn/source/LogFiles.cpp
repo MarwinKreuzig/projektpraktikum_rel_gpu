@@ -14,123 +14,65 @@
 
 #include <filesystem>
 
-namespace Logs {
-	std::string output_dir;
+std::map<LogFiles::EventType, LogFiles::LogFile> LogFiles::log_files;
+std::string LogFiles::output_path{ "../output/" };
+std::string LogFiles::general_prefix{ "rank_" };
 
-	std::map<std::string, LogFiles> logfiles;
+void LogFiles::init() {
+    if (0 == MPIWrapper::get_my_rank()) {
+        if (!std::filesystem::exists(output_path)) {
+            std::filesystem::create_directory(output_path);
+        }
+    }
 
-	void init() {
-		Logs::output_dir = "../output/";
+    // Wait until directory is created before any rank proceeds
+    MPIWrapper::barrier(MPIWrapper::Scope::global);
 
-		if (0 == MPIWrapper::my_rank) {
-			std::filesystem::path output_path(Logs::output_dir);
-			if (!std::filesystem::exists(output_path)) {
-				std::filesystem::create_directory(output_path);
-			}
-		}
+    // Neurons to create log file for
+    //size_t num_neurons_to_log = 3;
+    //size_t neurons_to_log[num_neurons_to_log] = {0, 10, 19};
 
-		// Wait until directory is created before any rank proceeds
-		MPIWrapper::barrier(MPIWrapper::Scope::global);
+    // Create log files for neurons
+    //LogFiles log_files(num_neurons_to_log, LogFiles::output_dir + "neuron_", neurons_to_log);
 
-		// Neurons to create log file for
-		//size_t num_neurons_to_log = 3;
-		//size_t neurons_to_log[num_neurons_to_log] = {0, 10, 19};
+    // Create log file for neurons overview on rank 0
+    LogFiles::add_logfile(EventType::NeuronsOverview, "neurons_overview");
 
-		// Create log files for neurons
-		//LogFiles log_files(num_neurons_to_log, Logs::output_dir + "neuron_", neurons_to_log);
+    // Create log file for sums on rank 0
+    LogFiles::add_logfile(EventType::Sums, "sums");
 
-		// Create log file for neurons overview on rank 0
-		Logs::addLogFile("neurons_overview", 0);
+    // Create log file for network on all ranks
+    LogFiles::add_logfile(EventType::Network, "network");
 
-		// Create log file for sums on rank 0
-		Logs::addLogFile("sums", 0);
+    // Create log file for positions on all ranks
+    LogFiles::add_logfile(EventType::Positions, "positions");
 
-		// Create log file for network on all ranks
-		Logs::addLogFile("network_rank_" + MPIWrapper::my_rank_str, -1);
+    // Create log file for std::cout
+    LogFiles::add_logfile(EventType::Cout, "stdcout");
 
-		// Create log file for positions on all ranks
-		Logs::addLogFile("positions_rank_" + MPIWrapper::my_rank_str, -1);
-	}
-
-	void addLogFile(const std::string& name, int rank) {
-		LogFiles lf(output_dir + name + ".txt", rank);
-		logfiles.insert(std::pair<const std::string, LogFiles>(name, std::move(lf)));
-	}
-} //namespace Logs
-
-// One log file only at the MPI rank "on_rank"
-// on_rank == -1 means all ranks
-LogFiles::LogFiles(const std::string& file_name, int on_rank) {
-	if (-1 == on_rank || MPIWrapper::my_rank == on_rank) {
-		num_files = 1;
-		files.resize(num_files);
-
-		// Open file and overwrite if it already exists
-		files[0].open(file_name, std::ios::trunc);
-		if (files[0].fail()) {
-			RelearnException::fail("Opening file failed");
-		}
-	}
+    // Create log file for the timers
+    LogFiles::add_logfile(EventType::Timers, "timers");
 }
 
-// Generate series of file name suffixes automatically
-LogFiles::LogFiles(size_t num_files, const std::string& prefix) :
-	num_files(num_files) {
-	files.resize(num_files);
-
-	// Open "num_files" for writing
-	for (size_t i = 0; i < num_files; i++) {
-		// Open file and overwrite if it already exists
-		files[i].open(prefix + std::to_string(i), std::ios::trunc);
-		if (files[i].fail()) {
-			RelearnException::fail("Opening file failed");
-		}
-	}
+void LogFiles::add_logfile(EventType type, const std::string& file_name) {
+    auto complete_path = output_path + general_prefix + get_specific_file_prefix() + "_" + file_name + ".txt";
+    log_files.emplace(type, std::move(complete_path));
 }
 
-LogFiles::LogFiles(LogFiles&& other) noexcept {
-	std::swap(num_files, other.num_files);
-	std::swap(files, other.files);
+void LogFiles::write_to_file(EventType type, const std::string& message, bool also_to_cout) {
+    const auto iterator = log_files.find(type);
+    RelearnException::check(iterator != log_files.end(), "The LogFiles don't contain the requested type");
+
+    iterator->second.write(message);
+
+    if (also_to_cout) {
+        std::cout << message << std::flush;
+    }
 }
 
-LogFiles& LogFiles::operator=(LogFiles&& other) noexcept {
-	std::swap(num_files, other.num_files);
-	std::swap(files, other.files);
-
-	return *this;
-}
-
-// Take array with file name suffixes
-LogFiles::LogFiles(size_t num_files, const std::string& prefix, std::vector<size_t> suffixes) :
-	num_files(num_files) {
-	RelearnException::check(suffixes.size() == num_files, "Number of suffixes does not match number of files");
-
-	files.resize(num_files);
-
-	// Open "num_files" for writing
-	for (size_t i = 0; i < num_files; i++) {
-		// Open file and overwrite if it already exists
-		files[i].open(prefix + std::to_string(suffixes[i]), std::ios::trunc);
-		if (files[i].fail()) {
-			RelearnException::fail("Opening file failed");
-		}
-	}
-}
-
-LogFiles::~LogFiles() noexcept(false) {
-	// Close all files
-	for (size_t i = 0; i < num_files; i++) {
-		files[i].close();
-	}
-}
-
-// Get pointer to file stream
-
-std::ofstream& LogFiles::get_file(size_t file_id) {
-	if (file_id < num_files) {
-		return files[file_id];
-	}
-
-	RelearnException::fail("File id was too large");
-	std::terminate();
+void LogFiles::print_message_rank(char const* string, int rank) {
+    if (rank == MPIWrapper::get_my_rank() || rank == -1) {
+        std::string txt = std::string("[INFO:Rank ") + MPIWrapper::get_my_rank_str() + "]  " + string + "\n";
+        write_to_file(LogFiles::EventType::Cout, txt, true);
+    }
 }

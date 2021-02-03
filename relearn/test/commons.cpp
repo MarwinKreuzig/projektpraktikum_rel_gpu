@@ -1,17 +1,23 @@
 #include "commons.h"
 
+#include "../source/LogFiles.h"
 #include "../source/MPIWrapper.h"
 #include "../source/RelearnException.h"
 
-std::mt19937 mt;
+#include <mutex>
 
+std::mt19937 mt;
+std::once_flag some_flag;
 
 void setup() {
-	MPIWrapper::num_ranks = 1;
-	MPIWrapper::my_rank = 0;
-	
-	RelearnException::hide_messages = true;
+
+    auto lambda = []() {
+        char* argument = (char*)"./runTests";
+        MPIWrapper::init(1, &argument);
+        LogFiles::init();
+    };
+
+    std::call_once(some_flag, lambda);
+
+    RelearnException::hide_messages = true;
 }
-
-
-

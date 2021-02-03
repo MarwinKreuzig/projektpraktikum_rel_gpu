@@ -11,18 +11,34 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 #include <random>
 
 namespace randomNumberSeeds {
-	extern int64_t partition;
-	extern int64_t octree;
+extern unsigned int partition;
+extern unsigned int octree;
 } // namespace randomNumberSeeds
 
-template<typename T>
+enum class RandomHolderKey : char {
+    Octree = 0,
+    Partition = 1,
+    SubdomainFromNeuronDensity = 2,
+    ModelA = 3,
+    Neurons = 4,
+    NeuronModels = 5,
+};
+
 class RandomHolder {
+    RandomHolder() = default;
+
+    static std::map<RandomHolderKey, std::mt19937> random_number_generators;
+
 public:
-	static std::mt19937& get_random_generator() noexcept {
-		static std::mt19937 random_generator;
-		return random_generator;
-	}
+    static std::mt19937& get_random_generator(RandomHolderKey key) {
+        return random_number_generators[key];
+    }
+
+    static void seed(RandomHolderKey key, unsigned int seed) {
+        random_number_generators[key].seed(seed);
+    }
 };
