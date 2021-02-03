@@ -15,6 +15,7 @@
 
 #include "Octree.h"
 
+#include "LogFiles.h"
 #include "Neurons.h"
 #include "Partition.h"
 #include "Random.h"
@@ -634,7 +635,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
             // box size are the same. That's why we don't set the tree's
             // box size explicitly here.
 
-            //LogMessages::print_debug("ROOT: Me as root inserted.");
+            //LogFiles::print_debug("ROOT: Me as root inserted.");
 
             return;
         }
@@ -653,7 +654,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
         root->set_cell_size(this->xyz_min, this->xyz_max);
         root->set_cell_neuron_id(Constants::uninitialized);
 
-        //LogMessages::print_debug("ROOT: new node as root inserted.");
+        //LogFiles::print_debug("ROOT: new node as root inserted.");
     }
 
     auto* curr = root;
@@ -680,7 +681,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
 
         // Target level reached, so insert me
         if (next_level == target_level) {
-            //LogMessages::print_debug("Target level reached.");
+            //LogFiles::print_debug("Target level reached.");
 
             // Make sure that no other node is already
             // on my index in the children array
@@ -692,30 +693,30 @@ void Octree::insert(OctreeNode* node_to_insert) {
 
             curr->set_child(node_to_insert, my_idx);
 
-            //LogMessages::print_debug("  Target level reached... inserted me");
+            //LogFiles::print_debug("  Target level reached... inserted me");
             break;
         }
         // Target level not yet reached
 
-        //LogMessages::print_debug("Target level not yet reached.");
+        //LogFiles::print_debug("Target level not yet reached.");
 
         // A node exists on my index in the
         // children array, so follow this node.
         if (curr->get_child(my_idx) != nullptr) {
             curr = curr->get_child(my_idx);
-            //LogMessages::print_debug("  I follow node on my index.");
+            //LogFiles::print_debug("  I follow node on my index.");
         }
         // New node must be created which
         // I can then follow
         else {
-            //LogMessages::print_debug("  New node must be created which I can then follow.");
+            //LogFiles::print_debug("  New node must be created which I can then follow.");
             Vec3d new_node_xyz_min;
             Vec3d new_node_xyz_max;
 
-            //LogMessages::print_debug("    Trying to allocate node.");
+            //LogFiles::print_debug("    Trying to allocate node.");
             // Create node
             auto* new_node = MPIWrapper::new_octree_node();
-            //LogMessages::print_debug("    Node allocated.");
+            //LogFiles::print_debug("    Node allocated.");
 
             // Init octree node
             new_node->set_rank(MPIWrapper::get_my_rank());
@@ -743,7 +744,7 @@ void Octree::insert_local_tree(Octree* node_to_insert) {
         std::stringstream s;
         s << "Local tree is empty, probably because the corresponding subdomain contains no neuron. "
           << "Currently, it is a requirement that every subdomain contains at least one neuron.\n";
-        LogMessages::print_error(s.str().c_str());
+        LogFiles::print_error(s.str().c_str());
         std::abort();
     }
 

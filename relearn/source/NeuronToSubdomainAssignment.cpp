@@ -10,7 +10,6 @@
 
 #include "NeuronToSubdomainAssignment.h"
 
-#include "LogMessages.h"
 #include "RelearnException.h"
 #include "SynapticElements.h"
 

@@ -10,7 +10,7 @@
 
 #include "MPI_RMA_MemAllocator.h"
 
-#include "LogMessages.h"
+#include "LogFiles.h"
 #include "OctreeNode.h"
 #include "RelearnException.h"
 
@@ -61,7 +61,7 @@ void MPI_RMA_MemAllocator::init(size_t size_requested) {
 
     std::stringstream sstring;
     sstring << "MPI RMA MemAllocator: max_num_objects: " << max_num_objects << "  sizeof(OctreeNode): " << sizeof(OctreeNode);
-    LogMessages::print_message_rank(sstring.str().c_str(), 0);
+    LogFiles::print_message_rank(sstring.str().c_str(), 0);
     sstring.str("");
 }
 

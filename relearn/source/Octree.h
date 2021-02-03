@@ -12,7 +12,6 @@
 
 #include "Cell.h"
 #include "Config.h"
-#include "LogMessages.h"
 #include "NeuronModels.h"
 #include "OctreeNode.h"
 #include "Parameters.h"

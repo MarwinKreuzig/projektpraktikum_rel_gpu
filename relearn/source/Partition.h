@@ -11,7 +11,6 @@
 #pragma once
 
 #include "Config.h"
-#include "LogMessages.h"
 #include "NeuronToSubdomainAssignment.h"
 #include "Neurons.h"
 #include "Octree.h"

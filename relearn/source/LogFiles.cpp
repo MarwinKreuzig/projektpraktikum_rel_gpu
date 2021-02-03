@@ -132,3 +132,23 @@ std::ofstream& LogFiles::get_file(size_t file_id) {
     RelearnException::fail("File id was too large");
     std::terminate();
 }
+
+
+void LogFiles::print_message(char const* string) {
+    std::cout << "[INFO]  " << string << "\n";
+}
+
+// Print tagged message only at MPI rank "rank"
+void LogFiles::print_message_rank(char const* string, int rank) {
+    if (rank == MPIWrapper::get_my_rank() || rank == -1) {
+        std::cout << "[INFO:Rank " << MPIWrapper::get_my_rank() << "]  " << string << "\n";
+    }
+}
+
+void LogFiles::print_error(char const* string) {
+    std::cout << "[ERROR]  " << string << "\n";
+}
+
+void LogFiles::print_debug(char const* string) {
+    std::cout << "[DEBUG]  " << string << "\n";
+}

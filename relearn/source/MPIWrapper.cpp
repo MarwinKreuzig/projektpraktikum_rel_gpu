@@ -11,7 +11,7 @@
 #include "MPIWrapper.h"
 
 #include "Config.h"
-#include "LogMessages.h"
+#include "LogFiles.h"
 #include "MPI_RMA_MemAllocator.h"
 #include "RelearnException.h"
 #include "Utility.h"
@@ -102,7 +102,7 @@ void MPIWrapper::init_neurons(size_t num_neurons) {
 	 * Check if num_neurons fits in int value (see IMPORTANT notice above)
 	 */
     if (num_neurons > std::numeric_limits<int>::max()) {
-        LogMessages::print_error("init_neurons: num_neurons does not fit in \"int\" data type");
+        LogFiles::print_error("init_neurons: num_neurons does not fit in \"int\" data type");
 
         // NOLINTNEXTLINE
         exit(EXIT_FAILURE);

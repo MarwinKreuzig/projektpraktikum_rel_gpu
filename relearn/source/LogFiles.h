@@ -52,6 +52,18 @@ public:
 
     static LogFiles& get(const std::string& name) { return LogFiles::logfiles.find(name)->second; }
 
+    /**
+	 * Static functions for printing a tagged log message to std::cout
+	 */
+    static void print_message(char const* string);
+
+    // Print tagged message only at MPI rank "rank"
+    static void print_message_rank(char const* string, int rank);
+
+    static void print_error(char const* string);
+
+    static void print_debug(char const* string);
+
 private:
     size_t num_files = 0; // Number of files
     std::vector<std::ofstream> files; // All file streams

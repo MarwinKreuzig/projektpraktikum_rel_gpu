@@ -10,7 +10,6 @@
 
 #include "NetworkGraph.h"
 
-#include "LogMessages.h"
 #include "MPIWrapper.h"
 #include "NeuronIdMap.h"
 #include "Partition.h"

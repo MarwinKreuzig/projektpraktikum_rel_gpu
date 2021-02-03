@@ -70,11 +70,11 @@ void Simulation::load_neurons_from_file(const std::string& path_to_positions, co
     load_neurons_from_file(path_to_positions);
 
     network_graph->add_edges_from_file(path_to_connections, path_to_positions, *neuron_id_map, *partition);
-    LogMessages::print_message_rank("Network graph created", 0);
+    LogFiles::print_message_rank("Network graph created", 0);
 
     neurons->init_synaptic_elements(*network_graph);
     neurons->debug_check_counts(*network_graph);
-    LogMessages::print_message_rank("Synaptic elements initialized \n", 0);
+    LogFiles::print_message_rank("Synaptic elements initialized \n", 0);
 
     neurons->print_neurons_overview_to_log_file_on_rank_0(0, LogFiles::get("neurons_overview"));
     neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, LogFiles::get("sums"), 0, 0);
@@ -144,13 +144,13 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             if (global_cnts[0] != 0.0) {
                 std::stringstream sstring; // For output generation
                 sstring << "Sum (all processes) number synapses deleted: " << global_cnts[0] / 2;
-                LogMessages::print_message_rank(sstring.str().c_str(), 0);
+                LogFiles::print_message_rank(sstring.str().c_str(), 0);
             }
 
             if (global_cnts[1] != 0.0) {
                 std::stringstream sstring; // For output generation
                 sstring << "Sum (all processes) number synapses created: " << global_cnts[1] / 2;
-                LogMessages::print_message_rank(sstring.str().c_str(), 0);
+                LogFiles::print_message_rank(sstring.str().c_str(), 0);
             }
 
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, LogFiles::get("sums"), num_synapses_deleted, num_synapses_created);
@@ -186,7 +186,7 @@ void Simulation::finalize() const {
                 << "Total creations: " << total_synapse_creations << "\n";
         sstring << "Total deletions: " << total_synapse_deletions << "\n";
         sstring << "END: " << Timers::wall_clock_time() << "\n";
-        LogMessages::print_message_rank(sstring.str().c_str(), 0);
+        LogFiles::print_message_rank(sstring.str().c_str(), 0);
     }
 }
 
@@ -202,7 +202,7 @@ void Simulation::initialize() {
     partition->print_my_subdomains_info_rank(0);
     partition->print_my_subdomains_info_rank(1);
 
-    LogMessages::print_message_rank("Neurons created", 0);
+    LogFiles::print_message_rank("Neurons created", 0);
 
     neuron_id_map = std::make_unique<NeuronIdMap>(neurons->get_num_neurons(),
         neurons->get_positions().get_x_dims(),
@@ -218,8 +218,8 @@ void Simulation::initialize() {
         global_tree->insert_local_tree(local_tree);
     }
 
-    LogMessages::print_message_rank("Neurons inserted into subdomains", 0);
-    LogMessages::print_message_rank("Subdomains inserted into global tree", 0);
+    LogFiles::print_message_rank("Neurons inserted into subdomains", 0);
+    LogFiles::print_message_rank("Subdomains inserted into global tree", 0);
 }
 
 void Simulation::print_neuron_monitors() {

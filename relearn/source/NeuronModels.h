@@ -10,7 +10,6 @@
 
 #pragma once
 
-#include "LogMessages.h"
 #include "MPIWrapper.h"
 #include "ModelParameter.h"
 #include "NetworkGraph.h"

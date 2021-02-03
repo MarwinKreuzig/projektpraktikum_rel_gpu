@@ -9,6 +9,7 @@
  */
 
 #include "Config.h"
+#include "LogFiles.h"
 #include "MPIWrapper.h"
 #include "NeuronModels.h"
 #include "NeuronMonitor.h"
@@ -61,7 +62,7 @@ void printTimers() {
     for (int i = 0; i < 3 * TimerRegion::NUM_TIMER_REGIONS; i++) {
         sstring << timers_global[i] << " ";
     }
-    LogMessages::print_message_rank(sstring.str().c_str(), MPIWrapper::get_my_rank());
+    LogFiles::print_message_rank(sstring.str().c_str(), MPIWrapper::get_my_rank());
 #endif
 
     // Divide second entry of (min, sum, max), i.e., sum, by the number of ranks
@@ -212,7 +213,7 @@ int main(int argc, char** argv) {
     if (0 == my_rank) {
         std::stringstream sstring; // For output generation
         sstring << "\nSTART: " << Timers::wall_clock_time() << "\n";
-        LogMessages::print_message_rank(sstring.str().c_str(), 0);
+        LogFiles::print_message_rank(sstring.str().c_str(), 0);
     }
 
     /**
