@@ -104,14 +104,9 @@ void Neurons::init_synaptic_elements(const NetworkGraph& network_graph) {
     const std::vector<double>& dendrites_exc_cnts = dendrites_exc.get_cnts();
 
     for (auto i = 0; i < num_neurons; i++) {
-        const size_t axon_connections_size_t = network_graph.get_num_out_edges(i);
-        const double axon_connections = static_cast<size_t>(axon_connections_size_t);
-
-        const size_t dendrites_ex_connections_size_t = network_graph.get_num_in_edges_ex(i);
-        const double dendrites_ex_connections = static_cast<size_t>(dendrites_ex_connections_size_t);
-
-        const size_t dendrites_in_connections_size_t = network_graph.get_num_in_edges_in(i);
-        const double dendrites_in_connections = static_cast<size_t>(dendrites_in_connections_size_t);
+        const size_t axon_connections = network_graph.get_num_out_edges(i);
+        const size_t dendrites_ex_connections = network_graph.get_num_in_edges_ex(i);
+        const size_t dendrites_in_connections = network_graph.get_num_in_edges_in(i);
 
         axons.update_cnt(i, axon_connections);
         dendrites_exc.update_cnt(i, dendrites_ex_connections);
@@ -560,9 +555,9 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
                 if (diff != 0) {
                     // Increment num of connected dendrites
                     if (1 == dendrite_type_needed) {
-                        dendrites_inh.update_conn_cnt(target_neuron_id, 1.0, std::to_string(target_neuron_id) + " updating inh + 1");
+                        dendrites_inh.update_conn_cnt(target_neuron_id, 1, std::to_string(target_neuron_id) + " updating inh + 1");
                     } else {
-                        dendrites_exc.update_conn_cnt(target_neuron_id, 1.0, std::to_string(target_neuron_id) + " updating exc + 1");
+                        dendrites_exc.update_conn_cnt(target_neuron_id, 1, std::to_string(target_neuron_id) + " updating exc + 1");
                     }
 
                     // Update network
@@ -631,7 +626,7 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
                 // Request to form synapse succeeded
                 if (connected != 0) {
                     // Increment num of connected axons
-                    axons.update_conn_cnt(source_neuron_id, 1.0, "ax");
+                    axons.update_conn_cnt(source_neuron_id, 1, "ax");
                     //axons_connected_cnts[source_neuron_id]++;
                     num_synapses_created++;
 
@@ -1158,14 +1153,14 @@ size_t Neurons::delete_synapses(const std::list<PendingSynapseDeletion>& list, N
 
         if (it.get_affected_neuron_id().get_rank() == my_rank && !it.get_affected_element_already_deleted()) {
             if (ElementType::AXON == it.get_affected_element_type()) {
-                axons.update_conn_cnt(affected_neuron_id, -1.0, "ax");
+                axons.update_conn_cnt(affected_neuron_id, -1, "ax");
                 continue;
             }
 
             if (SignalType::EXCITATORY == it.get_signal_type()) {
-                dendrites_exc.update_conn_cnt(affected_neuron_id, -1.0, std::to_string(affected_neuron_id) + " updating exc - 1");
+                dendrites_exc.update_conn_cnt(affected_neuron_id, -1, std::to_string(affected_neuron_id) + " updating exc - 1");
             } else {
-                dendrites_inh.update_conn_cnt(affected_neuron_id, -1.0, std::to_string(affected_neuron_id) + " updating inh - 1");
+                dendrites_inh.update_conn_cnt(affected_neuron_id, -1, std::to_string(affected_neuron_id) + " updating inh - 1");
             }
         }
     }

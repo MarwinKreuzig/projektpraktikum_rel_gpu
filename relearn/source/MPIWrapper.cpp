@@ -10,6 +10,7 @@
 
 #include "MPIWrapper.h"
 
+#include "Config.h"
 #include "LogMessages.h"
 #include "MPI_RMA_MemAllocator.h"
 #include "RelearnException.h"
@@ -53,8 +54,6 @@ std::vector<size_t> MPIWrapper::num_neurons_of_ranks_displs; // Displacements ba
 int MPIWrapper::thread_level_provided; // Thread level provided by MPI
 
 std::string MPIWrapper::my_rank_str;
-
-MPI_RMA_MemAllocator MPIWrapper::mpi_rma_mem_allocator;
 
 MPIWrapper::RMABufferOctreeNodes MPIWrapper::rma_buffer_branch_nodes;
 
@@ -135,10 +134,10 @@ void MPIWrapper::init_neurons(size_t num_neurons) {
 }
 
 void MPIWrapper::init_buffer_octree(size_t num_partitions) {
-    mpi_rma_mem_allocator.init(Constants::mpi_alloc_mem);
+    MPI_RMA_MemAllocator::init(Constants::mpi_alloc_mem);
 
     rma_buffer_branch_nodes.num_nodes = num_partitions;
-    rma_buffer_branch_nodes.ptr = mpi_rma_mem_allocator.get_root_nodes_for_local_trees(num_partitions);
+    rma_buffer_branch_nodes.ptr = MPI_RMA_MemAllocator::get_root_nodes_for_local_trees(num_partitions);
 }
 
 void MPIWrapper::barrier(Scope scope) {
@@ -185,14 +184,62 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
     RelearnException::check(errorcode == 0, "Error in all to all, mpi");
 }
 
+void MPIWrapper::async_s(const void* buffer, int count, int rank, Scope scope, AsyncToken& token) {
+    MPI_Comm mpi_scope = translate_scope(scope);
+    // NOLINTNEXTLINE
+    const int errorcode = MPI_Isend(buffer, count, MPI_CHAR, rank, 0, mpi_scope, &token);
+    RelearnException::check(errorcode == 0, "Error in async send");
+}
+
+void MPIWrapper::async_recv(void* buffer, int count, int rank, Scope scope, AsyncToken& token) {
+    MPI_Comm mpi_scope = translate_scope(scope);
+    // NOLINTNEXTLINE
+    const int errorcode = MPI_Irecv(buffer, count, MPI_CHAR, rank, 0, mpi_scope, &token);
+    RelearnException::check(errorcode == 0, "Error in async receive");
+}
+
+void MPIWrapper::reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank, Scope scope) {
+    MPI_Comm mpi_scope = translate_scope(scope);
+    MPI_Op mpi_reduce_function = translate_reduce_function(function);
+
+    // NOLINTNEXTLINE
+    const int errorcode = MPI_Reduce(src, dst, size, MPI_CHAR, mpi_reduce_function, root_rank, mpi_scope);
+    RelearnException::check(errorcode == 0, "Error in reduce: " + std::to_string(errorcode));
+}
+
+void MPIWrapper::get(void* ptr, int size, int target_rank, int64_t target_display) {
+    RelearnException::check(size > 0, "Error in get, size must be larget than 0");
+    MPI_Aint target_display_mpi(target_display);
+    // NOLINTNEXTLINE
+    const int errorcode = MPI_Get(ptr, size, MPI_CHAR, target_rank, target_display_mpi, size, MPI_CHAR, MPI_RMA_MemAllocator::mpi_window);
+    RelearnException::check(errorcode == 0, "Error in get");
+}
+
+void MPIWrapper::all_gather(const void* own_data, void* buffer, int size, Scope scope) {
+    MPI_Comm mpi_scope = translate_scope(scope);
+
+    // NOLINTNEXTLINE
+    const int errorcode = MPI_Allgather(own_data, size, MPI_CHAR, buffer, size, MPI_CHAR, mpi_scope);
+    RelearnException::check(errorcode == 0, "Error in all gather");
+}
+
+void MPIWrapper::all_gather_inl(void* ptr, int count, Scope scope) {
+    RelearnException::check(count > 0, "Error in all gather , count is not greater than 0");
+    MPI_Comm mpi_scope = translate_scope(scope);
+
+    // NOLINTNEXTLINE
+    const int errorcode = MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, ptr, count, MPI_CHAR, MPI_COMM_WORLD);
+    RelearnException::check(errorcode == 0, "Error in all gather ");
+}
+
 [[nodiscard]] int64_t MPIWrapper::get_ptr_displacement(int target_rank, const OctreeNode* ptr) {
-    const std::vector<int64_t>& base_ptrs = mpi_rma_mem_allocator.get_base_pointers();
+    const std::vector<int64_t>& base_ptrs = MPI_RMA_MemAllocator::get_base_pointers();
     const auto displacement = int64_t(ptr) - int64_t(base_ptrs[target_rank]);
     return displacement;
 }
 
 [[nodiscard]] OctreeNode* MPIWrapper::new_octree_node() {
-    return mpi_rma_mem_allocator.new_octree_node();
+    return MPI_RMA_MemAllocator::new_octree_node();
 }
 
 [[nodiscard]] int MPIWrapper::get_num_ranks() {
@@ -222,7 +269,7 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
 }
 
 [[nodiscard]] size_t MPIWrapper::get_num_avail_objects() {
-    return mpi_rma_mem_allocator.get_min_num_avail_objects();
+    return MPI_RMA_MemAllocator::get_min_num_avail_objects();
 }
 
 [[nodiscard]] OctreeNode* MPIWrapper::get_buffer_octree_nodes() {
@@ -238,7 +285,7 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
 }
 
 void MPIWrapper::delete_octree_node(OctreeNode* ptr) {
-    mpi_rma_mem_allocator.delete_octree_node(ptr);
+    MPI_RMA_MemAllocator::delete_octree_node(ptr);
 }
 
 void MPIWrapper::wait_request(AsyncToken& request) {
@@ -348,13 +395,13 @@ void MPIWrapper::lock_window(int rank, MPI_Locktype lock_type) {
     const auto lock_type_int = static_cast<int>(lock_type);
 
     // NOLINTNEXTLINE
-    const int errorcode = MPI_Win_lock(lock_type_int, rank, MPI_MODE_NOCHECK, mpi_rma_mem_allocator.mpi_window);
+    const int errorcode = MPI_Win_lock(lock_type_int, rank, MPI_MODE_NOCHECK, MPI_RMA_MemAllocator::mpi_window);
     RelearnException::check(errorcode == 0, "Error in lock window");
 }
 
 void MPIWrapper::unlock_window(int rank) {
     RelearnException::check(rank >= 0, "rank was: " + std::to_string(rank));
-    const int errorcode = MPI_Win_unlock(rank, mpi_rma_mem_allocator.mpi_window);
+    const int errorcode = MPI_Win_unlock(rank, MPI_RMA_MemAllocator::mpi_window);
     RelearnException::check(errorcode == 0, "Error in unlock window");
 }
 
@@ -362,8 +409,8 @@ void MPIWrapper::finalize() /*noexcept*/ {
     free_custom_function();
 
     // Free RMA window (MPI collective)
-    mpi_rma_mem_allocator.free_rma_window();
-    mpi_rma_mem_allocator.deallocate_rma_mem();
+    MPI_RMA_MemAllocator::free_rma_window();
+    MPI_RMA_MemAllocator::deallocate_rma_mem();
 
     const int errorcode = MPI_Finalize();
     RelearnException::check(errorcode == 0, "Error in finalize");

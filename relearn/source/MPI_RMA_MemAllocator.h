@@ -45,55 +45,45 @@ class MPI_RMA_MemAllocator {
     };
 
 public:
-    MPI_RMA_MemAllocator() = default;
+    static void init(size_t size_requested);
 
-    MPI_RMA_MemAllocator(const MPI_RMA_MemAllocator& other) = delete;
-    MPI_RMA_MemAllocator(MPI_RMA_MemAllocator&& other) = delete;
-
-    MPI_RMA_MemAllocator& operator=(const MPI_RMA_MemAllocator& other) = delete;
-    MPI_RMA_MemAllocator& operator=(MPI_RMA_MemAllocator&& other) = delete;
-
-    ~MPI_RMA_MemAllocator() = default;
-
-    void init(size_t size_requested);
-
-    void deallocate_rma_mem();
+    static void deallocate_rma_mem();
 
     // Free the MPI RMA window
     // This call is collective over MPI_COMM_WORLD
-    void free_rma_window();
+    static void free_rma_window();
 
-    [[nodiscard]] OctreeNode* new_octree_node();
+    [[nodiscard]] static OctreeNode* new_octree_node();
 
-    void delete_octree_node(OctreeNode* ptr);
+    static void delete_octree_node(OctreeNode* ptr);
 
-    [[nodiscard]] const std::vector<int64_t>& get_base_pointers() const noexcept;
+    [[nodiscard]] static const std::vector<int64_t>& get_base_pointers() noexcept;
 
-    [[nodiscard]] OctreeNode* get_root_nodes_for_local_trees(size_t num_local_trees);
+    [[nodiscard]] static OctreeNode* get_root_nodes_for_local_trees(size_t num_local_trees);
 
-    [[nodiscard]] size_t get_min_num_avail_objects() const noexcept;
+    [[nodiscard]] static size_t get_min_num_avail_objects() noexcept;
 
     //NOLINTNEXTLINE
-    MPI_Win mpi_window{ 0 }; // RMA window object
+    static MPI_Win mpi_window; // RMA window object
 
 private:
     // Store RMA window base pointers of all ranks
-    void gather_rma_window_base_pointers();
+    static void gather_rma_window_base_pointers();
 
     // Create MPI RMA window with all the memory of the allocator
     // This call is collective over MPI_COMM_WORLD
-    void create_rma_window() noexcept;
+    static void create_rma_window() noexcept;
 
-    size_t size_requested{ Constants::uninitialized }; // Bytes requested for the allocator
-    size_t max_size{ Constants::uninitialized }; // Size in Bytes of MPI-allocated memory
-    size_t max_num_objects{ Constants::uninitialized }; // Max number objects that are available
+    static size_t size_requested; // Bytes requested for the allocator
+    static size_t max_size; // Size in Bytes of MPI-allocated memory
+    static size_t max_num_objects; // Max number objects that are available
 
-    OctreeNode* root_nodes_for_local_trees{ nullptr };
+    static OctreeNode* root_nodes_for_local_trees;
 
-    OctreeNode* base_ptr{ nullptr }; // Start address of MPI-allocated memory
-    HolderOctreeNode holder_base_ptr;
+    static OctreeNode* base_ptr; // Start address of MPI-allocated memory
+    static HolderOctreeNode holder_base_ptr;
 
-    size_t num_ranks{ Constants::uninitialized }; // Number of ranks in MPI_COMM_WORLD
-    int displ_unit{ -1 }; // RMA window displacement unit
-    std::vector<int64_t> base_pointers; // RMA window base pointers of all procs
+    static size_t num_ranks; // Number of ranks in MPI_COMM_WORLD
+    static int displ_unit; // RMA window displacement unit
+    static std::vector<int64_t> base_pointers; // RMA window base pointers of all procs
 };

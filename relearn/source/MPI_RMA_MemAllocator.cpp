@@ -18,8 +18,23 @@
 #include <iostream>
 #include <sstream>
 
+MPI_Win MPI_RMA_MemAllocator::mpi_window{ 0 };
+
+size_t MPI_RMA_MemAllocator::size_requested{ Constants::uninitialized }; // Bytes requested for the allocator
+size_t MPI_RMA_MemAllocator::max_size{ Constants::uninitialized }; // Size in Bytes of MPI-allocated memory
+size_t MPI_RMA_MemAllocator::max_num_objects{ Constants::uninitialized }; // Max number objects that are available
+
+OctreeNode* MPI_RMA_MemAllocator::root_nodes_for_local_trees{ nullptr };
+
+OctreeNode* MPI_RMA_MemAllocator::base_ptr{ nullptr }; // Start address of MPI-allocated memory
+MPI_RMA_MemAllocator::HolderOctreeNode MPI_RMA_MemAllocator::holder_base_ptr;
+
+size_t MPI_RMA_MemAllocator::num_ranks{ Constants::uninitialized }; // Number of ranks in MPI_COMM_WORLD
+int MPI_RMA_MemAllocator::displ_unit{ -1 }; // RMA window displacement unit
+std::vector<int64_t> MPI_RMA_MemAllocator::base_pointers; // RMA window base pointers of all procs
+
 void MPI_RMA_MemAllocator::init(size_t size_requested) {
-    this->size_requested = size_requested;
+    MPI_RMA_MemAllocator::size_requested = size_requested;
 
     // Number of objects "size_requested" Bytes correspond to
     max_num_objects = size_requested / sizeof(OctreeNode);
@@ -65,7 +80,7 @@ void MPI_RMA_MemAllocator::delete_octree_node(OctreeNode* ptr) {
     holder_base_ptr.make_available(ptr);
 }
 
-[[nodiscard]] const std::vector<int64_t>& MPI_RMA_MemAllocator::get_base_pointers() const noexcept {
+[[nodiscard]] const std::vector<int64_t>& MPI_RMA_MemAllocator::get_base_pointers() noexcept {
     return base_pointers;
 }
 
@@ -81,7 +96,7 @@ void MPI_RMA_MemAllocator::delete_octree_node(OctreeNode* ptr) {
     return root_nodes_for_local_trees;
 }
 
-[[nodiscard]] size_t MPI_RMA_MemAllocator::get_min_num_avail_objects() const noexcept {
+[[nodiscard]] size_t MPI_RMA_MemAllocator::get_min_num_avail_objects() noexcept {
     return holder_base_ptr.get_num_available();
 }
 

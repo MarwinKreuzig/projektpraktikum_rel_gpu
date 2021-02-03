@@ -10,13 +10,14 @@
 
 #pragma once
 
-#include "MPI_RMA_MemAllocator.h"
 #include "RelearnException.h"
 
 #include <mpi.h>
 
 #include <array>
+#include <memory>
 #include <string>
+#include <vector>
 
 class Octree;
 class OctreeNode;
@@ -66,7 +67,6 @@ private:
 
     static void free_custom_function();
 
-    static MPI_RMA_MemAllocator mpi_rma_mem_allocator;
     static RMABufferOctreeNodes rma_buffer_branch_nodes;
 
     static int num_ranks; // Number of ranks in MPI_COMM_WORLD
@@ -84,6 +84,18 @@ private:
     static int thread_level_provided; // Thread level provided by MPI
 
     static std::string my_rank_str;
+
+    static void get(void* ptr, int size, int target_rank, int64_t target_display);
+
+    static void all_gather(const void* own_data, void* buffer, int size, Scope scope);
+
+    static void all_gather_inl(void* ptr, int count, Scope scope);
+
+    static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank, Scope scope);
+
+    static void async_s(const void* buffer, int count, int rank, Scope scope, AsyncToken& token);
+
+    static void async_recv(void* buffer, int count, int rank, Scope scope, AsyncToken& token);
 
 public:
     static void init(int argc, char** argv);
@@ -106,64 +118,35 @@ public:
     template <typename T>
     // NOLINTNEXTLINE
     static void async_send(const T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
-        MPI_Comm mpi_scope = translate_scope(scope);
-
-        const int size_in_bytes_conv = static_cast<int>(size_in_bytes);
-        // NOLINTNEXTLINE
-        const int errorcode = MPI_Isend(buffer, size_in_bytes_conv, MPI_CHAR, rank, 0, mpi_scope, &token);
-        RelearnException::check(errorcode == 0, "Error in async send");
+        async_s(buffer, static_cast<int>(size_in_bytes), rank, scope, token);
     }
 
     template <typename T>
     // NOLINTNEXTLINE
     static void async_receive(T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
-        MPI_Comm mpi_scope = translate_scope(scope);
-
-        const int size_in_bytes_conv = static_cast<int>(size_in_bytes);
-        // NOLINTNEXTLINE
-        const int errorcode = MPI_Irecv(buffer, size_in_bytes_conv, MPI_CHAR, rank, 0, mpi_scope, &token);
-        RelearnException::check(errorcode == 0, "Error in async receive");
+        async_recv(buffer, static_cast<int>(size_in_bytes), rank, scope, token);
     }
 
     template <typename T, size_t size>
     static void reduce(const std::array<T, size>& src, std::array<T, size>& dst, ReduceFunction function, int root_rank, Scope scope) {
         RelearnException::check(src.size() == dst.size(), "Sizes of vectors don't match");
 
-        MPI_Comm mpi_scope = translate_scope(scope);
-        MPI_Op mpi_reduce_function = translate_reduce_function(function);
-
-        const int count_bytes = static_cast<int>(sizeof(T) * src.size());
-
-        // NOLINTNEXTLINE
-        const int errorcode = MPI_Reduce(src.data(), dst.data(), count_bytes, MPI_CHAR, mpi_reduce_function, root_rank, mpi_scope);
-        RelearnException::check(errorcode == 0, "Error in reduce: " + std::to_string(errorcode));
+        reduce(src.data(), dst.data(), src.size() * sizeof(T), function, root_rank, scope);
     }
 
     template <typename T>
     static void all_gather(T own_data, std::vector<T>& results, Scope scope) {
-        MPI_Comm mpi_scope = translate_scope(scope);
-
-        // NOLINTNEXTLINE
-        const int errorcode = MPI_Allgather(&own_data, sizeof(T), MPI_CHAR, results.data(), sizeof(T), MPI_CHAR, mpi_scope);
-        RelearnException::check(errorcode == 0, "Error in all gather");
-    }
-
-    template <typename T>
-    static void all_gather_inline(T* ptr, int count, Scope scope) {
-        MPI_Comm mpi_scope = translate_scope(scope);
-
-        // NOLINTNEXTLINE
-        const int errorcode = MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, ptr, count * sizeof(T), MPI_CHAR, MPI_COMM_WORLD);
-        RelearnException::check(errorcode == 0, "Error in all gather inline");
+        all_gather(&own_data, results.data(), sizeof(T), scope);
     }
 
     template <typename T>
     static void get(T* ptr, int target_rank, int64_t target_display) {
+       get(ptr, sizeof(T), target_rank, target_display);
+    }
 
-        MPI_Aint target_display_mpi(target_display);
-        // NOLINTNEXTLINE
-        const int errorcode = MPI_Get(ptr, sizeof(T), MPI_CHAR, target_rank, target_display_mpi, sizeof(T), MPI_CHAR, mpi_rma_mem_allocator.mpi_window);
-        RelearnException::check(errorcode == 0, "Error in get");
+    template <typename T>
+    static void all_gather_inline(T* ptr, int count, Scope scope) {
+        all_gather_inl(ptr, count * sizeof(T), scope);
     }
 
     [[nodiscard]] static int64_t get_ptr_displacement(int target_rank, const OctreeNode* ptr);
