@@ -10,9 +10,8 @@
 
 #pragma once
 
+#include "MPITypes.h"
 #include "RelearnException.h"
-
-#include <mpi.h>
 
 #include <array>
 #include <memory>

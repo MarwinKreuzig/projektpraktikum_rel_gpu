@@ -16,6 +16,8 @@
 #include "RelearnException.h"
 #include "Utility.h"
 
+#include <mpi.h>
+
 #include <bitset>
 #include <cstdlib>
 #include <iomanip>

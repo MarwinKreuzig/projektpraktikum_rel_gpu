@@ -14,6 +14,8 @@
 #include "OctreeNode.h"
 #include "RelearnException.h"
 
+#include <mpi.h>
+
 #include <algorithm>
 #include <iostream>
 #include <sstream>

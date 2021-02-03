@@ -11,8 +11,7 @@
 #pragma once
 
 #include "Config.h"
-
-#include <mpi.h>
+#include "MPITypes.h"
 
 #include <vector>
 
