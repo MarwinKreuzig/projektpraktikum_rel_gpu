@@ -14,8 +14,6 @@
 #include "MPIWrapper.h"
 #include "RelearnException.h"
 
-#include <mpi.h>
-
 #include <cstdint>
 #include <limits>
 #include <map>
@@ -24,7 +22,7 @@
 
 NeuronIdMap::NeuronIdMap(size_t my_num_neurons,
     const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z) {
-    const size_t num_ranks = MPIWrapper::get_num_ranks();
+    const int num_ranks = MPIWrapper::get_num_ranks();
 
     // Gather the number of neurons of every process
     std::vector<size_t> rank_to_num_neurons(num_ranks);
