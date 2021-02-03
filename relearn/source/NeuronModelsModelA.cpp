@@ -65,6 +65,8 @@ void ModelA::update_activity(const size_t i) {
 }
 
 void ModelA::init_neurons() {
+    std::mt19937& random_number_generator = RandomHolder::get_random_generator(RandomHolderKey::ModelA);
+
     for (size_t i = 0; i < x.size(); ++i) {
         x[i] = random_number_distribution(random_number_generator);
         const bool f = theta(x[i]);
@@ -78,6 +80,8 @@ void ModelA::init_neurons() {
 }
 
 [[nodiscard]] bool ModelA::theta(const double x) {
+    std::mt19937& random_number_generator = RandomHolder::get_random_generator(RandomHolderKey::ModelA);
+
     // 1: fire, 0: inactive
     const double threshold = random_number_distribution(random_number_generator);
     return x >= threshold;
