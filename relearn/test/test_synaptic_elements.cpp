@@ -91,7 +91,7 @@ TEST(TestSynapticElements, testSynapticElementsConstructorException) {
             golden_signal_types[neuron_id] = signal_type;
 
             synaptic_elements.update_cnt(neuron_id, cnt);
-            synaptic_elements.update_conn_cnt(neuron_id, conn_cnt, "");
+            synaptic_elements.update_conn_cnt(neuron_id, conn_cnt);
             synaptic_elements.update_delta_cnt(neuron_id, delta_cnt);
             synaptic_elements.set_signal_type(neuron_id, signal_type);
         }
@@ -103,7 +103,7 @@ TEST(TestSynapticElements, testSynapticElementsConstructorException) {
             const SignalType signal_type = uid_bool(mt) == 0 ? SignalType::EXCITATORY : SignalType::INHIBITORY;
 
             EXPECT_THROW(synaptic_elements.update_cnt(neuron_id, cnt), RelearnException);
-            EXPECT_THROW(synaptic_elements.update_conn_cnt(neuron_id, conn_cnt, ""), RelearnException);
+            EXPECT_THROW(synaptic_elements.update_conn_cnt(neuron_id, conn_cnt), RelearnException);
             EXPECT_THROW(synaptic_elements.update_delta_cnt(neuron_id, delta_cnt), RelearnException);
             EXPECT_THROW(synaptic_elements.set_signal_type(neuron_id, signal_type), RelearnException);
         }
@@ -247,7 +247,7 @@ TEST(TestSynapticElements, testSynapticElementsUpdate) {
             golden_signal_types[neuron_id] = signal_type;
 
             synaptic_elements.update_cnt(neuron_id, cnt);
-            synaptic_elements.update_conn_cnt(neuron_id, conn_cnt, "");
+            synaptic_elements.update_conn_cnt(neuron_id, conn_cnt);
             synaptic_elements.update_delta_cnt(neuron_id, delta_cnt);
             synaptic_elements.set_signal_type(neuron_id, signal_type);
         }
@@ -259,7 +259,7 @@ TEST(TestSynapticElements, testSynapticElementsUpdate) {
             const SignalType signal_type = uid_bool(mt) == 0 ? SignalType::EXCITATORY : SignalType::INHIBITORY;
 
             EXPECT_THROW(synaptic_elements.update_cnt(neuron_id, cnt), RelearnException);
-            EXPECT_THROW(synaptic_elements.update_conn_cnt(neuron_id, conn_cnt, ""), RelearnException);
+            EXPECT_THROW(synaptic_elements.update_conn_cnt(neuron_id, conn_cnt), RelearnException);
             EXPECT_THROW(synaptic_elements.update_delta_cnt(neuron_id, delta_cnt), RelearnException);
             EXPECT_THROW(synaptic_elements.set_signal_type(neuron_id, signal_type), RelearnException);
         }
@@ -332,7 +332,7 @@ TEST(TestSynapticElements, testSynapticElementsMultipleUpdate) {
             golden_signal_types[neuron_id] = signal_type;
 
             synaptic_elements.update_cnt(neuron_id, cnt);
-            synaptic_elements.update_conn_cnt(neuron_id, conn_cnt, "");
+            synaptic_elements.update_conn_cnt(neuron_id, conn_cnt);
             synaptic_elements.update_delta_cnt(neuron_id, delta_cnt);
             synaptic_elements.set_signal_type(neuron_id, signal_type);
         }

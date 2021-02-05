@@ -85,11 +85,11 @@ public:
         RelearnException::check(cnts[neuron_id] >= 0.0, "Synaptic elements, update_cnt was negative");
     }
 
-    void update_conn_cnt(size_t neuron_id, int delta, std::string&& mess) {
+    void update_conn_cnt(size_t neuron_id, int delta) {
         RelearnException::check(neuron_id < connected_cnts.size(), "Synaptic elements, update_conn_cnt out of bounds");
         if (delta < 0) {
             const unsigned int abs_delta = -delta;
-            RelearnException::check(connected_cnts[neuron_id] >= abs_delta, std::move(mess));
+            RelearnException::check(connected_cnts[neuron_id] >= abs_delta, "%u: %d", neuron_id, delta);
         }
 
         connected_cnts[neuron_id] += delta;

@@ -45,13 +45,13 @@ public:
     }
 
     [[nodiscard]] const OctreeNode* get_child(size_t idx) const {
-        RelearnException::check(idx < Constants::number_oct, "In OctreeNode::get_child const, idx was: " + std::to_string(idx));
+        RelearnException::check(idx < Constants::number_oct, "In OctreeNode::get_child const, idx was: %u", idx);
         // NOLINTNEXTLINE
         return children[idx];
     }
 
     [[nodiscard]] OctreeNode* get_child(size_t idx) {
-        RelearnException::check(idx < Constants::number_oct, "In OctreeNode::get_child, idx was: " + std::to_string(idx));
+        RelearnException::check(idx < Constants::number_oct, "In OctreeNode::get_child, idx was: %u", idx);
         // NOLINTNEXTLINE
         return children[idx];
     }
@@ -65,12 +65,12 @@ public:
     }
 
     void set_rank(int new_rank) {
-        RelearnException::check(new_rank >= 0, "In OctreeNode::set_rank, new_rank was: " + std::to_string(new_rank));
+        RelearnException::check(new_rank >= 0, "In OctreeNode::set_rank, new_rank was: %u", new_rank);
         rank = new_rank;
     }
 
     void set_level(size_t new_level) {
-        RelearnException::check(new_level < Constants::uninitialized, "In OctreeNode::set_level, new_level was: " + std::to_string(new_level));
+        RelearnException::check(new_level < Constants::uninitialized, "In OctreeNode::set_level, new_level was: %u", new_level);
         level = new_level;
     }
 
@@ -104,7 +104,7 @@ public:
     }
 
     void set_child(OctreeNode* node, size_t idx) {
-        RelearnException::check(idx < Constants::number_oct, "In OctreeNode::set_child, idx was: " + std::to_string(idx));
+        RelearnException::check(idx < Constants::number_oct, "In OctreeNode::set_child, idx was: %u", idx);
         // NOLINTNEXTLINE
         children[idx] = node;
     }

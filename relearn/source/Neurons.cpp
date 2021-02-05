@@ -112,13 +112,13 @@ void Neurons::init_synaptic_elements(const NetworkGraph& network_graph) {
         dendrites_exc.update_cnt(i, dendrites_ex_connections);
         dendrites_inh.update_cnt(i, dendrites_in_connections);
 
-        axons.update_conn_cnt(i, axon_connections, std::to_string(i) + " initializing update_conn axons");
-        dendrites_exc.update_conn_cnt(i, dendrites_ex_connections, std::to_string(i) + " initializing update_conn dend ex");
-        dendrites_inh.update_conn_cnt(i, dendrites_in_connections, std::to_string(i) + " initializing update_conn dend in");
+        axons.update_conn_cnt(i, axon_connections);
+        dendrites_exc.update_conn_cnt(i, dendrites_ex_connections);
+        dendrites_inh.update_conn_cnt(i, dendrites_in_connections);
 
-        RelearnException::check(axons_cnts[i] >= axons.get_connected_cnts()[i], "Error is with: " + std::to_string(i));
-        RelearnException::check(dendrites_inh_cnts[i] >= dendrites_inh.get_connected_cnts()[i], "Error is with: " + std::to_string(i));
-        RelearnException::check(dendrites_exc_cnts[i] >= dendrites_exc.get_connected_cnts()[i], "Error is with: " + std::to_string(i));
+        RelearnException::check(axons_cnts[i] >= axons.get_connected_cnts()[i], "Error is with: %d", i);
+        RelearnException::check(dendrites_inh_cnts[i] >= dendrites_inh.get_connected_cnts()[i], "Error is with: %d", i);
+        RelearnException::check(dendrites_exc_cnts[i] >= dendrites_exc.get_connected_cnts()[i], "Error is with: %d", i);
     }
 }
 
@@ -555,9 +555,9 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
                 if (diff != 0) {
                     // Increment num of connected dendrites
                     if (1 == dendrite_type_needed) {
-                        dendrites_inh.update_conn_cnt(target_neuron_id, 1, std::to_string(target_neuron_id) + " updating inh + 1");
+                        dendrites_inh.update_conn_cnt(target_neuron_id, 1);
                     } else {
-                        dendrites_exc.update_conn_cnt(target_neuron_id, 1, std::to_string(target_neuron_id) + " updating exc + 1");
+                        dendrites_exc.update_conn_cnt(target_neuron_id, 1);
                     }
 
                     // Update network
@@ -624,12 +624,12 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
                 // Request to form synapse succeeded
                 if (connected != 0) {
                     // Increment num of connected axons
-                    axons.update_conn_cnt(source_neuron_id, 1, "ax");
+                    axons.update_conn_cnt(source_neuron_id, 1);
                     //axons_connected_cnts[source_neuron_id]++;
                     num_synapses_created++;
 
                     const double delta = axons.get_cnt(source_neuron_id) - axons.get_connected_cnt(source_neuron_id);
-                    RelearnException::check(delta >= 0, std::to_string(delta));
+                    RelearnException::check(delta >= 0, "%f", delta);
 
                     // I have already created the synapse in the network
                     // if the response comes from myself
@@ -667,9 +667,9 @@ void Neurons::debug_check_counts(const NetworkGraph& network_graph) {
         const double diff_de = de_count[i] - de_conn_count[i];
         const double diff_di = di_count[i] - di_conn_count[i];
 
-        RelearnException::check(diff_axs >= 0.0, std::to_string(diff_axs));
-        RelearnException::check(diff_de >= 0.0, std::to_string(diff_de));
-        RelearnException::check(diff_di >= 0.0, std::to_string(diff_di));
+        RelearnException::check(diff_axs >= 0.0, "%f", diff_axs);
+        RelearnException::check(diff_de >= 0.0, "%f", diff_de);
+        RelearnException::check(diff_di >= 0.0, "%f", diff_di);
     }
 
     for (size_t i = 0; i < num_neurons; i++) {
@@ -685,9 +685,9 @@ void Neurons::debug_check_counts(const NetworkGraph& network_graph) {
         const size_t num_in_exc_ng = network_graph.get_num_in_edges_ex(i);
         const size_t num_in_inh_ng = network_graph.get_num_in_edges_in(i);
 
-        RelearnException::check(num_conn_axons == num_out_ng, "In Neurons conn axons, " + std::to_string(num_conn_axons) + " vs. " + std::to_string(num_out_ng));
-        RelearnException::check(num_conn_dend_ex == num_in_exc_ng, "In Neurons conn dend ex, " + std::to_string(num_conn_dend_ex) + " vs. " + std::to_string(num_in_exc_ng));
-        RelearnException::check(num_conn_dend_in == num_in_inh_ng, "In Neurons conn dend in, " + std::to_string(num_conn_dend_in) + " vs. " + std::to_string(num_in_inh_ng));
+        RelearnException::check(num_conn_axons == num_out_ng, "In Neurons conn axons, %u vs. %u", num_conn_axons, num_out_ng);
+        RelearnException::check(num_conn_dend_ex == num_in_exc_ng, "In Neurons conn dend ex, %u vs. %u", num_conn_dend_ex, num_in_exc_ng);
+        RelearnException::check(num_conn_dend_in == num_in_inh_ng, "In Neurons conn dend in, %u vs. %u", num_conn_dend_in, num_in_inh_ng);
     }
 }
 
@@ -767,26 +767,26 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
         if (0 == step) {
             ss << "# SUMS OVER ALL NEURONS\n";
             ss << std::left
-                 << std::setw(cwidth) << "# step"
-                 << std::setw(cwidth) << "Axons exc. (vacant)"
-                 << std::setw(cwidth) << "Axons inh. (vacant)"
-                 << std::setw(cwidth) << "Dends exc. (vacant)"
-                 << std::setw(cwidth) << "Dends inh. (vacant)"
-                 << std::setw(cwidth) << "Synapses deleted"
-                 << std::setw(cwidth) << "Synapses created"
-                 << "\n";
+               << std::setw(cwidth) << "# step"
+               << std::setw(cwidth) << "Axons exc. (vacant)"
+               << std::setw(cwidth) << "Axons inh. (vacant)"
+               << std::setw(cwidth) << "Dends exc. (vacant)"
+               << std::setw(cwidth) << "Dends inh. (vacant)"
+               << std::setw(cwidth) << "Synapses deleted"
+               << std::setw(cwidth) << "Synapses created"
+               << "\n";
         }
 
         // Write data at step "step"
         ss << std::left
-             << std::setw(cwidth) << step
-             << std::setw(cwidth) << sums_global[0]
-             << std::setw(cwidth) << sums_global[1]
-             << std::setw(cwidth) << sums_global[2]
-             << std::setw(cwidth) << sums_global[3]
-             << std::setw(cwidth) << sums_global[4] / 2 // As counted on both of the neurons
-             << std::setw(cwidth) << sums_global[5] / 2 // As counted on both of the neurons
-             << "\n";
+           << std::setw(cwidth) << step
+           << std::setw(cwidth) << sums_global[0]
+           << std::setw(cwidth) << sums_global[1]
+           << std::setw(cwidth) << sums_global[2]
+           << std::setw(cwidth) << sums_global[3]
+           << std::setw(cwidth) << sums_global[4] / 2 // As counted on both of the neurons
+           << std::setw(cwidth) << sums_global[5] / 2 // As counted on both of the neurons
+           << "\n";
 
         LogFiles::write_to_file(LogFiles::EventType::Sums, ss.str(), false);
     }
@@ -806,34 +806,34 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
         if (0 == step) {
             ss << "# ALL NEURONS\n";
             ss << std::left
-                 << std::setw(cwidth) << "# step"
-                 << std::setw(cwidth) << "C (avg)"
-                 << std::setw(cwidth) << "C (min)"
-                 << std::setw(cwidth) << "C (max)"
-                 << std::setw(cwidth) << "C (var)"
-                 << std::setw(cwidth) << "C (std_dev)"
-                 << std::setw(cwidth) << "activity (avg)"
-                 << std::setw(cwidth) << "activity (min)"
-                 << std::setw(cwidth) << "activity (max)"
-                 << std::setw(cwidth) << "activity (var)"
-                 << std::setw(cwidth) << "activity (std_dev)"
-                 << "\n";
+               << std::setw(cwidth) << "# step"
+               << std::setw(cwidth) << "C (avg)"
+               << std::setw(cwidth) << "C (min)"
+               << std::setw(cwidth) << "C (max)"
+               << std::setw(cwidth) << "C (var)"
+               << std::setw(cwidth) << "C (std_dev)"
+               << std::setw(cwidth) << "activity (avg)"
+               << std::setw(cwidth) << "activity (min)"
+               << std::setw(cwidth) << "activity (max)"
+               << std::setw(cwidth) << "activity (var)"
+               << std::setw(cwidth) << "activity (std_dev)"
+               << "\n";
         }
 
         // Write data at step "step"
         ss << std::left
-             << std::setw(cwidth) << step
-             << std::setw(cwidth) << calcium_statistics.avg
-             << std::setw(cwidth) << calcium_statistics.min
-             << std::setw(cwidth) << calcium_statistics.max
-             << std::setw(cwidth) << calcium_statistics.var
-             << std::setw(cwidth) << calcium_statistics.std
-             << std::setw(cwidth) << activity_statistics.avg
-             << std::setw(cwidth) << activity_statistics.min
-             << std::setw(cwidth) << activity_statistics.max
-             << std::setw(cwidth) << activity_statistics.var
-             << std::setw(cwidth) << activity_statistics.std
-             << "\n";
+           << std::setw(cwidth) << step
+           << std::setw(cwidth) << calcium_statistics.avg
+           << std::setw(cwidth) << calcium_statistics.min
+           << std::setw(cwidth) << calcium_statistics.max
+           << std::setw(cwidth) << calcium_statistics.var
+           << std::setw(cwidth) << calcium_statistics.std
+           << std::setw(cwidth) << activity_statistics.avg
+           << std::setw(cwidth) << activity_statistics.min
+           << std::setw(cwidth) << activity_statistics.max
+           << std::setw(cwidth) << activity_statistics.var
+           << std::setw(cwidth) << activity_statistics.std
+           << "\n";
 
         LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, ss.str(), false);
     }
@@ -841,10 +841,11 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
 
 void Neurons::print_network_graph_to_log_file(const NetworkGraph& network_graph, const NeuronIdMap& neuron_id_map) {
     std::stringstream ss;
-    
+
     // Write output format to file
     ss << "# " << partition->get_total_num_neurons() << "\n"; // Total number of neurons
-    ss << "# <target neuron id> <source neuron id> <weight>" << "\n";
+    ss << "# <target neuron id> <source neuron id> <weight>"
+       << "\n";
 
     // Write network graph to file
     network_graph.print(ss, neuron_id_map);
@@ -858,7 +859,8 @@ void Neurons::print_positions_to_log_file(const NeuronIdMap& neuron_id_map) {
     // Write total number of neurons to log file
     ss << "# " << partition->get_total_num_neurons() << "\n";
     ss << "# "
-         << "<global id> <pos x> <pos y> <pos z> <area> <type>" << "\n";
+       << "<global id> <pos x> <pos y> <pos z> <area> <type>"
+       << "\n";
 
     const std::vector<double>& axons_x_dims = positions.get_x_dims();
     const std::vector<double>& axons_y_dims = positions.get_y_dims();
@@ -883,11 +885,11 @@ void Neurons::print_positions_to_log_file(const NeuronIdMap& neuron_id_map) {
         glob_id++;
 
         ss << glob_id << " "
-             << axons_x_dims[neuron_id] << " "
-             << axons_y_dims[neuron_id] << " "
-             << axons_z_dims[neuron_id] << " "
-             << area_names[neuron_id] << " "
-             << signal_type_name << "\n";
+           << axons_x_dims[neuron_id] << " "
+           << axons_y_dims[neuron_id] << " "
+           << axons_z_dims[neuron_id] << " "
+           << area_names[neuron_id] << " "
+           << signal_type_name << "\n";
     }
 
     ss << std::flush;
@@ -906,7 +908,7 @@ void Neurons::print() {
     // Heading
     ss << std::left << std::setw(cwidth_left) << "gid" << std::setw(cwidth) << "x" << std::setw(cwidth) << "AP";
     ss << std::setw(cwidth) << "refrac" << std::setw(cwidth) << "C" << std::setw(cwidth) << "A" << std::setw(cwidth) << "D_ex" << std::setw(cwidth) << "D_in"
-              << "\n";
+       << "\n";
 
     // Values
     for (size_t i = 0; i < num_neurons; i++) {
@@ -943,7 +945,7 @@ void Neurons::print_info_for_barnes_hut() {
     ss << std::left << std::setw(cwidth_small) << "gid" << std::setw(cwidth_small) << "region" << std::setw(cwidth_medium) << "position";
     ss << std::setw(cwidth_big) << "axon (exist|connected)" << std::setw(cwidth_big) << "exc_den (exist|connected)";
     ss << std::setw(cwidth_big) << "inh_den (exist|connected)"
-              << "\n";
+       << "\n";
 
     // Values
     for (size_t i = 0; i < num_neurons; i++) {
@@ -1116,7 +1118,7 @@ void Neurons::print_pending_synapse_deletions(const std::list<PendingSynapseDele
         ss << "signal_type: " << signal_type_converted << "\n";
         ss << "synapse_id: " << it.get_synapse_id() << "\n";
         ss << "affected_element_already_deleted: " << it.get_affected_element_already_deleted() << "\n"
-                  << "\n";
+           << "\n";
     }
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
@@ -1172,14 +1174,14 @@ size_t Neurons::delete_synapses(const std::list<PendingSynapseDeletion>& list, N
 
         if (it.get_affected_neuron_id().get_rank() == my_rank && !it.get_affected_element_already_deleted()) {
             if (ElementType::AXON == it.get_affected_element_type()) {
-                axons.update_conn_cnt(affected_neuron_id, -1, "ax");
+                axons.update_conn_cnt(affected_neuron_id, -1);
                 continue;
             }
 
             if (SignalType::EXCITATORY == it.get_signal_type()) {
-                dendrites_exc.update_conn_cnt(affected_neuron_id, -1, std::to_string(affected_neuron_id) + " updating exc - 1");
+                dendrites_exc.update_conn_cnt(affected_neuron_id, -1);
             } else {
-                dendrites_inh.update_conn_cnt(affected_neuron_id, -1, std::to_string(affected_neuron_id) + " updating inh - 1");
+                dendrites_inh.update_conn_cnt(affected_neuron_id, -1);
             }
         }
     }

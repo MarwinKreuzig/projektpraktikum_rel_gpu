@@ -153,6 +153,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
         /**
 		 * Determine synaptic input from neurons connected to me
 		 */
+
         // Walk through in-edges of my neuron
         const NetworkGraph::Edges& in_edges = network_graph.get_in_edges(neuron_id);
 

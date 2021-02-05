@@ -201,7 +201,7 @@ void MPIWrapper::reduce(const void* src, void* dst, int size, ReduceFunction fun
 
     // NOLINTNEXTLINE
     const int errorcode = MPI_Reduce(src, dst, size, MPI_CHAR, mpi_reduce_function, root_rank, mpi_scope);
-    RelearnException::check(errorcode == 0, "Error in reduce: " + std::to_string(errorcode));
+    RelearnException::check(errorcode == 0, "Error in reduce: %d", errorcode);
 }
 
 void MPIWrapper::get(void* ptr, int size, int target_rank, int64_t target_display) {
@@ -388,7 +388,7 @@ void MPIWrapper::free_custom_function() {
 }
 
 void MPIWrapper::lock_window(int rank, MPI_Locktype lock_type) {
-    RelearnException::check(rank >= 0, "rank was: " + std::to_string(rank));
+    RelearnException::check(rank >= 0, "rank was: %d", rank);
     const auto lock_type_int = static_cast<int>(lock_type);
 
     // NOLINTNEXTLINE
@@ -397,7 +397,7 @@ void MPIWrapper::lock_window(int rank, MPI_Locktype lock_type) {
 }
 
 void MPIWrapper::unlock_window(int rank) {
-    RelearnException::check(rank >= 0, "rank was: " + std::to_string(rank));
+    RelearnException::check(rank >= 0, "rank was: %d", rank);
     const int errorcode = MPI_Win_unlock(rank, MPI_RMA_MemAllocator::mpi_window);
     RelearnException::check(errorcode == 0, "Error in unlock window");
 }
