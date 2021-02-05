@@ -651,6 +651,10 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
 }
 
 void Neurons::debug_check_counts(const NetworkGraph& network_graph) {
+    if (!Config::do_debug_checks) {
+        return;
+    }
+
     const std::vector<double>& axs_count = axons.get_cnts();
     const std::vector<unsigned int>& axs_conn_count = axons.get_connected_cnts();
     const std::vector<double>& de_count = dendrites_exc.get_cnts();

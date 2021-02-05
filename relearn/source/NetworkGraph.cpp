@@ -277,6 +277,10 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
 }
 
 void NetworkGraph::debug_check() const {
+    if (!Config::do_debug_checks) {
+        return;
+    }
+
     const int my_rank = MPIWrapper::get_my_rank();
 
     // Golden map that stores all local edges

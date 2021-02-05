@@ -108,11 +108,6 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
         neurons->update_number_synaptic_elements_delta();
         GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
 
-        //if (0 == MPIWrapper::get_my_rank() && step % 50 == 0) {
-        //	sstring << "** STATE AFTER: " << step << " of " << params.simulation_time
-        //		<< " msec ** [" << Timers::wall_clock_time() << "]\n";
-        //}
-
         // Update connectivity every 100 ms
         if (step % Constants::plasticity_update_step == 0) {
             size_t num_synapses_deleted = 0;
@@ -149,6 +144,12 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             if (global_cnts[1] != 0.0) {
                 sstring << "Sum (all processes) number synapses created: " << global_cnts[1] / 2 << "\n";
             }
+
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate,
+                std::to_string(step) + ": " + std::to_string(global_cnts[1]) + " " + std::to_string(global_cnts[0]) + "\n", false);
+
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal,
+                std::to_string(step) + ": " + std::to_string(local_cnts[1]) + " " + std::to_string(local_cnts[0]) + "\n", false);
 
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_synapses_deleted, num_synapses_created);
 

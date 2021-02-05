@@ -131,7 +131,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	 * The incoming spikes of neurons from other ranks are in map_firing_neuron_ids_incoming
 	 * (spikes from neurons from other ranks)
 	 */
-    GlobalTimers::timers.start(TimerRegion::CALC_SYNAPTIC_INPUT);
+    GlobalTimers::timers.start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
 
     // There might be background activity
     if (background_activity_stddev > 0.0) {
@@ -146,6 +146,8 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
         std::fill(I_syn.begin(), I_syn.end(), 0.0);
     }
 
+    GlobalTimers::timers.stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
+    GlobalTimers::timers.start(TimerRegion::CALC_SYNAPTIC_INPUT);
     // For my neurons
     for (size_t neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
         /**

@@ -28,6 +28,7 @@ enum TimerRegion : int {
     ALLOC_MEM_FOR_NEURON_IDS,
     BARRIER_3,
     EXCHANGE_NEURON_IDS,
+    CALC_SYNAPTIC_BACKGROUND,
     CALC_SYNAPTIC_INPUT,
     CALC_ACTIVITY,
     UPDATE_SYNAPTIC_ELEMENTS_DELTA,
@@ -103,6 +104,8 @@ public:
         RelearnException::check(timer_id < num_timers, "In Timers::get_elapsed, timer_id was: " + std::to_string(timer_id));
         return time_elapsed[timer_id].count();
     }
+
+    static void print();
 
     /**
 	 * Static function to get current time in string
