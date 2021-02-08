@@ -471,7 +471,7 @@ private:
 
     void create_synapses_exchange_responses(const MapSynapseCreationRequests& synapse_creation_requests_incoming, MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
-    size_t create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing, NetworkGraph network_graph);
+    size_t create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing, NetworkGraph& network_graph);
 
     static void print_pending_synapse_deletions(const std::list<PendingSynapseDeletion>& list);
 
