@@ -310,7 +310,17 @@ public:
         }
     }
 
-    std::vector<ModelParameter> get_parameter(ElementType element_type, SignalType signal_type);
+    std::vector<ModelParameter> get_parameter(ElementType element_type, SignalType signal_type) {
+        if (element_type == ElementType::AXON) {
+            return axons.get_parameter();
+        }
+
+        if (signal_type == SignalType::EXCITATORY) {
+            return dendrites_exc.get_parameter();
+        }
+
+        return dendrites_inh.get_parameter();
+    }
 
     void set_model(std::unique_ptr<NeuronModels>&& model) noexcept {
         neuron_model = std::move(model);
@@ -386,14 +396,6 @@ public:
     void debug_check_counts(const NetworkGraph& network_graph);
 
 private:
-    size_t delete_synapses(NetworkGraph& network_graph);
-
-    MapSynapseDeletionRequests delete_synapses_exchange_requests(const std::list<PendingSynapseDeletion>& pending_deletions);
-
-    void delete_synapses_process_requests(const MapSynapseDeletionRequests& synapse_deletion_requests_incoming, std::list<PendingSynapseDeletion>& pending_deletions);
-
-    size_t create_synapses(Octree& global_tree, NetworkGraph& network_graph);
-
     template <typename T>
     [[nodiscard]] StatisticalMeasures<T> global_statistics(const std::vector<T>& local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root, MPIWrapper::Scope scope) {
         const double my_avg = std::accumulate(local_values.begin(), local_values.end(), 0.0)
@@ -429,12 +431,9 @@ private:
         return { static_cast<T>(d_min), static_cast<T>(d_max), avg, var, std };
     }
 
-    /**
-	 * Returns iterator to randomly chosen synapse from list
-	 */
-    typename std::list<Synapse>::const_iterator select_random_synapse(const std::list<Synapse>& list);
+    size_t delete_synapses(NetworkGraph& network_graph);
 
-    void find_synapses_for_deletion(SynapticElements& synaptic_elements, const NetworkGraph& network_graph, std::list<Neurons::PendingSynapseDeletion>& pending_deletions);
+    void delete_synapses_find_synapses(SynapticElements& synaptic_elements, const NetworkGraph& network_graph, std::list<Neurons::PendingSynapseDeletion>& pending_deletions);
 
     /**
 	 * Determines which synapses should be deleted.
@@ -445,18 +444,24 @@ private:
 	 * due to synapse deletion until all neurons have decided *independently* which synapse
 	 * to delete. This should reflect how it's done for a distributed memory implementation.
 	 */
-    std::list<Neurons::PendingSynapseDeletion> find_synapses_for_deletion(size_t neuron_id,
+    std::list<Neurons::PendingSynapseDeletion> delete_synapses_find_synapses_on_neuron(size_t neuron_id,
         ElementType element_type,
         SignalType signal_type,
         unsigned int num_synapses_to_delete,
         const NetworkGraph& network_graph,
         std::list<Neurons::PendingSynapseDeletion>& pending_deletions);
 
-    std::list<Neurons::Synapse> register_edges(const NetworkGraph::Edges& out_edges);
+    std::list<Neurons::Synapse> delete_synapses_register_edges(const NetworkGraph::Edges& out_edges);
+
+    MapSynapseDeletionRequests delete_synapses_exchange_requests(const std::list<PendingSynapseDeletion>& pending_deletions);
+
+    void delete_synapses_process_requests(const MapSynapseDeletionRequests& synapse_deletion_requests_incoming, std::list<PendingSynapseDeletion>& pending_deletions);
+
+    size_t delete_synapses_commit_deletions(const std::list<PendingSynapseDeletion>& list, NetworkGraph& network_graph);
+
+    size_t create_synapses(Octree& global_tree, NetworkGraph& network_graph);
 
     static void print_pending_synapse_deletions(const std::list<PendingSynapseDeletion>& list);
-
-    size_t delete_synapses(const std::list<PendingSynapseDeletion>& list, NetworkGraph& network_graph);
 
     size_t num_neurons = 0; // Local number of neurons
     std::vector<size_t> local_ids;
