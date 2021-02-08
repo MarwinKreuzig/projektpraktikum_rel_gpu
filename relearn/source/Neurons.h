@@ -461,6 +461,18 @@ private:
 
     size_t create_synapses(Octree& global_tree, NetworkGraph& network_graph);
 
+    void create_synapses_update_octree(Octree& global_tree);
+
+    MapSynapseCreationRequests create_synapses_find_targets(Octree& global_tree);
+
+    MapSynapseCreationRequests create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
+
+    size_t create_synapses_process_requests(MapSynapseCreationRequests& synapse_creation_requests_incoming, NetworkGraph& network_graph);
+
+    void create_synapses_exchange_responses(const MapSynapseCreationRequests& synapse_creation_requests_incoming, MapSynapseCreationRequests& synapse_creation_requests_outgoing);
+
+    size_t create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing, NetworkGraph network_graph);
+
     static void print_pending_synapse_deletions(const std::list<PendingSynapseDeletion>& list);
 
     size_t num_neurons = 0; // Local number of neurons

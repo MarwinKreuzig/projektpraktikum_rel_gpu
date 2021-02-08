@@ -499,64 +499,7 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
 
     /**********************************************************************************/
 
-    // Lock local RMA memory for local stores
-    MPIWrapper::lock_window(MPIWrapper::get_my_rank(), MPI_Locktype::exclusive);
-
-    // Update my local trees bottom-up
-    GlobalTimers::timers.start(TimerRegion::UPDATE_LOCAL_TREES);
-    global_tree.update_local_trees(dendrites_exc, dendrites_inh, num_neurons);
-    GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
-
-    /**
-	* Exchange branch nodes
-	*/
-    GlobalTimers::timers.start(TimerRegion::EXCHANGE_BRANCH_NODES);
-    OctreeNode* rma_buffer_branch_nodes = MPIWrapper::get_buffer_octree_nodes();
-    // Copy local trees' root nodes to correct positions in receive buffer
-
-    const size_t num_local_trees = global_tree.get_num_local_trees();
-    for (size_t i = 0; i < num_local_trees; i++) {
-        const size_t global_subdomain_id = partition->get_my_subdomain_id_start() + i;
-        const OctreeNode* root_node = global_tree.get_local_root(i);
-
-        // This assignment copies memberwise
-        rma_buffer_branch_nodes[global_subdomain_id] = *root_node;
-    }
-
-    // Allgather in-place branch nodes from every rank
-    MPIWrapper::all_gather_inline(rma_buffer_branch_nodes, num_local_trees, MPIWrapper::Scope::global);
-
-    GlobalTimers::timers.stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
-
-    // Insert only received branch nodes into global tree
-    // The local ones are already in the global tree
-    GlobalTimers::timers.start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
-    const size_t num_rma_buffer_branch_nodes = MPIWrapper::get_num_buffer_octree_nodes();
-    for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
-        if (i < partition->get_my_subdomain_id_start() || i > partition->get_my_subdomain_id_end()) {
-            global_tree.insert(rma_buffer_branch_nodes + i);
-        }
-    }
-    GlobalTimers::timers.stop_and_add(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
-
-    // Update global tree
-    GlobalTimers::timers.start(TimerRegion::UPDATE_GLOBAL_TREE);
-    const auto level_branches = global_tree.get_level_of_branch_nodes();
-
-    // Only update whenever there are other branches to update
-    if (level_branches > 0) {
-        global_tree.update_from_level(level_branches - 1);
-    }
-    GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
-
-    // Unlock local RMA memory and make local stores visible in public window copy
-    MPIWrapper::unlock_window(MPIWrapper::get_my_rank());
-
-    /**********************************************************************************/
-
-    // Makes sure that all ranks finished their local access epoch
-    // before a remote origin opens an access epoch
-    MPIWrapper::barrier(MPIWrapper::Scope::global);
+    create_synapses_update_octree(global_tree);
 
     /**
 	* Find target neuron for every vacant axon
@@ -829,6 +772,338 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
     }
 
     GlobalTimers::timers.stop_and_add(TimerRegion::CREATE_SYNAPSES);
+
+    return num_synapses_created;
+}
+
+void Neurons::create_synapses_update_octree(Octree& global_tree) {
+    // Lock local RMA memory for local stores
+    MPIWrapper::lock_window(MPIWrapper::get_my_rank(), MPI_Locktype::exclusive);
+
+    // Update my local trees bottom-up
+    GlobalTimers::timers.start(TimerRegion::UPDATE_LOCAL_TREES);
+    global_tree.update_local_trees(dendrites_exc, dendrites_inh, num_neurons);
+    GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
+
+    /**
+        * Exchange branch nodes
+        */
+    GlobalTimers::timers.start(TimerRegion::EXCHANGE_BRANCH_NODES);
+    OctreeNode* rma_buffer_branch_nodes = MPIWrapper::get_buffer_octree_nodes();
+    // Copy local trees' root nodes to correct positions in receive buffer
+
+    const size_t num_local_trees = global_tree.get_num_local_trees();
+    for (size_t i = 0; i < num_local_trees; i++) {
+        const size_t global_subdomain_id = partition->get_my_subdomain_id_start() + i;
+        const OctreeNode* root_node = global_tree.get_local_root(i);
+
+        // This assignment copies memberwise
+        rma_buffer_branch_nodes[global_subdomain_id] = *root_node;
+    }
+
+    // Allgather in-place branch nodes from every rank
+    MPIWrapper::all_gather_inline(rma_buffer_branch_nodes, num_local_trees, MPIWrapper::Scope::global);
+
+    GlobalTimers::timers.stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
+
+    // Insert only received branch nodes into global tree
+    // The local ones are already in the global tree
+    GlobalTimers::timers.start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
+    const size_t num_rma_buffer_branch_nodes = MPIWrapper::get_num_buffer_octree_nodes();
+    for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
+        if (i < partition->get_my_subdomain_id_start() || i > partition->get_my_subdomain_id_end()) {
+            global_tree.insert(rma_buffer_branch_nodes + i);
+        }
+    }
+    GlobalTimers::timers.stop_and_add(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
+
+    // Update global tree
+    GlobalTimers::timers.start(TimerRegion::UPDATE_GLOBAL_TREE);
+    const auto level_branches = global_tree.get_level_of_branch_nodes();
+
+    // Only update whenever there are other branches to update
+    if (level_branches > 0) {
+        global_tree.update_from_level(level_branches - 1);
+    }
+    GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
+
+    // Unlock local RMA memory and make local stores visible in public window copy
+    MPIWrapper::unlock_window(MPIWrapper::get_my_rank());
+
+    /**********************************************************************************/
+
+    // Makes sure that all ranks finished their local access epoch
+    // before a remote origin opens an access epoch
+    MPIWrapper::barrier(MPIWrapper::Scope::global);
+}
+
+MapSynapseCreationRequests Neurons::create_synapses_find_targets(Octree& global_tree) {
+    MapSynapseCreationRequests synapse_creation_requests_outgoing;
+    GlobalTimers::timers.start(TimerRegion::FIND_TARGET_NEURONS);
+
+    const std::vector<double>& axons_cnts = axons.get_cnts();
+    const std::vector<unsigned int>& axons_connected_cnts = axons.get_connected_cnts();
+    const std::vector<SignalType>& axons_signal_types = axons.get_signal_types();
+
+    // For my neurons
+    for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+        // Number of vacant axons
+        const auto num_vacant_axons = static_cast<unsigned int>(axons_cnts[neuron_id]) - axons_connected_cnts[neuron_id];
+        RelearnException::check(num_vacant_axons >= 0, "num vacant axons is negative");
+
+        if (num_vacant_axons == 0) {
+            continue;
+        }
+
+        // DendriteType::EXCITATORY axon
+        SignalType dendrite_type_needed = SignalType::EXCITATORY;
+        if (SignalType::INHIBITORY == axons_signal_types[neuron_id]) {
+            // DendriteType::INHIBITORY axon
+            dendrite_type_needed = SignalType::INHIBITORY;
+        }
+
+        // Position of current neuron
+        const Vec3d axon_xyz_pos = positions.get_position(neuron_id);
+
+        // For all vacant axons of neuron "neuron_id"
+        for (size_t j = 0; j < num_vacant_axons; j++) {
+            /**
+			* Find target neuron for connecting and
+			* connect if target neuron has still dendrite available.
+			*
+			* The target neuron might not have any dendrites left
+			* as other axons might already have connected to them.
+			* Right now, those collisions are handled in a first-come-first-served fashion.
+			*/
+            std::optional<RankNeuronId> rank_neuron_id = global_tree.find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
+
+            if (rank_neuron_id.has_value()) {
+                RankNeuronId val = rank_neuron_id.value();
+                /*
+				* Append request for synapse creation to rank "target_rank"
+				* Note that "target_rank" could also be my own rank.
+				*/
+                synapse_creation_requests_outgoing[val.get_rank()].append(neuron_id, val.get_neuron_id(), dendrite_type_needed);
+            }
+        } /* all vacant axons of a neuron */
+    } /* my neurons */
+
+    GlobalTimers::timers.stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
+
+    // Make cache empty for next connectivity update
+    GlobalTimers::timers.start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
+    global_tree.empty_remote_nodes_cache();
+    GlobalTimers::timers.stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
+
+    return synapse_creation_requests_outgoing;
+}
+
+MapSynapseCreationRequests Neurons::create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing) {
+    MapSynapseCreationRequests synapse_creation_requests_incoming;
+
+    /**
+		* Send to every rank the number of requests it should prepare for from me.
+		* Likewise, receive the number of requests that I should prepare for from every rank.
+		*/
+    std::vector<size_t> num_synapse_requests_for_ranks(MPIWrapper::get_num_ranks(), 0);
+    // Fill vector with my number of synapse requests for every rank (including me)
+    for (const auto& it : synapse_creation_requests_outgoing) {
+        auto rank = it.first;
+        auto num_requests = (it.second).size();
+
+        num_synapse_requests_for_ranks[rank] = num_requests;
+    }
+
+    std::vector<size_t> num_synapse_requests_from_ranks(MPIWrapper::get_num_ranks(), Constants::uninitialized);
+    // Send and receive the number of synapse requests
+    MPIWrapper::all_to_all(num_synapse_requests_for_ranks, num_synapse_requests_from_ranks, MPIWrapper::Scope::global);
+    // Now I know how many requests I will get from every rank.
+    // Allocate memory for all incoming synapse requests.
+    for (auto rank = 0; rank < MPIWrapper::get_num_ranks(); rank++) {
+        auto num_requests = num_synapse_requests_from_ranks[rank];
+        if (0 != num_requests) {
+            synapse_creation_requests_incoming[rank].resize(num_requests);
+        }
+    }
+
+    std::vector<MPIWrapper::AsyncToken>
+        mpi_requests(synapse_creation_requests_outgoing.size() + synapse_creation_requests_incoming.size());
+
+    /**
+		* Send and receive actual synapse requests
+		*/
+    auto mpi_requests_index = 0;
+
+    // Receive actual synapse requests
+    for (auto& it : synapse_creation_requests_incoming) {
+        const auto rank = it.first;
+        auto* buffer = it.second.get_requests();
+        const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
+
+        MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+
+        mpi_requests_index++;
+    }
+    // Send actual synapse requests
+    for (const auto& it : synapse_creation_requests_outgoing) {
+        const auto rank = it.first;
+        const auto* const buffer = it.second.get_requests();
+        const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
+
+        MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+
+        mpi_requests_index++;
+    }
+
+    // Wait for all sends and receives to complete
+    MPIWrapper::wait_all_tokens(mpi_requests);
+
+    return synapse_creation_requests_incoming;
+}
+
+size_t Neurons::create_synapses_process_requests(MapSynapseCreationRequests& synapse_creation_requests_incoming, NetworkGraph& network_graph) {
+    size_t num_synapses_created = 0;
+
+    for (auto& it : synapse_creation_requests_incoming) {
+        const auto source_rank = it.first;
+        SynapseCreationRequests& requests = it.second;
+        const auto num_requests = requests.size();
+
+        // All requests of a rank
+        for (auto request_index = 0; request_index < num_requests; request_index++) {
+            size_t source_neuron_id{ Constants::uninitialized };
+            size_t target_neuron_id{ Constants::uninitialized };
+            size_t dendrite_type_needed{ Constants::uninitialized };
+            std::tie(source_neuron_id, target_neuron_id, dendrite_type_needed) = requests.get_request(request_index);
+
+            // Sanity check: if the request received is targeted for me
+            if (target_neuron_id >= num_neurons) {
+                RelearnException::fail("Target_neuron_id exceeds my neurons");
+                exit(EXIT_FAILURE);
+            }
+
+            int num_axons_connected_increment = 0;
+
+            const std::vector<double>* dendrites_cnts = nullptr; // TODO(fabian) find a nicer solution
+            const std::vector<unsigned int>* dendrites_connected_cnts = nullptr;
+
+            // DendriteType::INHIBITORY dendrite requested
+            if (1 == dendrite_type_needed) {
+                dendrites_cnts = &dendrites_inh.get_cnts();
+                dendrites_connected_cnts = &dendrites_inh.get_connected_cnts();
+                num_axons_connected_increment = -1;
+            }
+            // DendriteType::EXCITATORY dendrite requested
+            else {
+                dendrites_cnts = &dendrites_exc.get_cnts();
+                dendrites_connected_cnts = &dendrites_exc.get_connected_cnts();
+                num_axons_connected_increment = +1;
+            }
+
+            // Target neuron has still dendrite available, so connect
+            RelearnException::check((*dendrites_cnts)[target_neuron_id] - (*dendrites_connected_cnts)[target_neuron_id] >= 0, "Connectivity went downside");
+
+            const auto diff = static_cast<unsigned int>((*dendrites_cnts)[target_neuron_id] - (*dendrites_connected_cnts)[target_neuron_id]);
+            if (diff != 0) {
+                // Increment num of connected dendrites
+                if (1 == dendrite_type_needed) {
+                    dendrites_inh.update_conn_cnt(target_neuron_id, 1);
+                } else {
+                    dendrites_exc.update_conn_cnt(target_neuron_id, 1);
+                }
+
+                // Update network
+                network_graph.add_edge_weight(target_neuron_id, MPIWrapper::get_my_rank(), source_neuron_id, source_rank, num_axons_connected_increment);
+
+                // Set response to "connected" (success)
+                requests.set_response(request_index, 1);
+                num_synapses_created++;
+            } else {
+                // Other axons were faster and came first
+                // Set response to "not connected" (not success)
+                requests.set_response(request_index, 0);
+            }
+        } // All requests of a rank
+    } // Increasing order of ranks that sent requests
+
+    return num_synapses_created;
+}
+
+void Neurons::create_synapses_exchange_responses(const MapSynapseCreationRequests& synapse_creation_requests_incoming, MapSynapseCreationRequests& synapse_creation_requests_outgoing) {
+    /**
+        * Send and receive responses for synapse requests
+        */
+    int mpi_requests_index = 0;
+    std::vector<MPIWrapper::AsyncToken>
+        mpi_requests(synapse_creation_requests_outgoing.size() + synapse_creation_requests_incoming.size());
+
+    // Receive responses
+    for (auto& it : synapse_creation_requests_outgoing) {
+        const auto rank = it.first;
+        auto* buffer = it.second.get_responses();
+        const auto size_in_bytes = static_cast<int>(it.second.get_responses_size_in_bytes());
+
+        MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+
+        mpi_requests_index++;
+    }
+    // Send responses
+    for (const auto& it : synapse_creation_requests_incoming) {
+        const auto rank = it.first;
+        const auto* const buffer = it.second.get_responses();
+        const auto size_in_bytes = static_cast<int>(it.second.get_responses_size_in_bytes());
+
+        MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+
+        mpi_requests_index++;
+    }
+    // Wait for all sends and receives to complete
+    MPIWrapper::wait_all_tokens(mpi_requests);
+}
+
+size_t Neurons::create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing, NetworkGraph network_graph) {
+    size_t num_synapses_created = 0;
+    /**
+	    * Register which axons could be connected
+	    *
+	    * NOTE: Do not create synapses in the network for my own responses as the corresponding synapses, if possible,
+	    * would have been created before sending the response to myself (see above).
+	    */
+    for (const auto& it : synapse_creation_requests_outgoing) {
+        const auto target_rank = it.first;
+        const SynapseCreationRequests& requests = it.second;
+        const auto num_requests = requests.size();
+
+        // All responses from a rank
+        for (auto request_index = 0; request_index < num_requests; request_index++) {
+            char connected = requests.get_response(request_index);
+            size_t source_neuron_id{ Constants::uninitialized };
+            size_t target_neuron_id{ Constants::uninitialized };
+            size_t dendrite_type_needed{ Constants::uninitialized };
+            std::tie(source_neuron_id, target_neuron_id, dendrite_type_needed) = requests.get_request(request_index);
+
+            // Request to form synapse succeeded
+            if (connected != 0) {
+                // Increment num of connected axons
+                axons.update_conn_cnt(source_neuron_id, 1);
+                //axons_connected_cnts[source_neuron_id]++;
+                num_synapses_created++;
+
+                const double delta = axons.get_cnt(source_neuron_id) - axons.get_connected_cnt(source_neuron_id);
+                RelearnException::check(delta >= 0, "%f", delta);
+
+                // I have already created the synapse in the network
+                // if the response comes from myself
+                if (target_rank != MPIWrapper::get_my_rank()) {
+                    // Update network
+                    const auto num_axons_connected_increment_2 = (1 == dendrite_type_needed) ? -1 : +1;
+                    network_graph.add_edge_weight(target_neuron_id, target_rank, source_neuron_id, MPIWrapper::get_my_rank(), num_axons_connected_increment_2);
+                }
+            } else {
+                // Other axons were faster and came first
+            }
+        } // All responses from a rank
+    } // All outgoing requests
 
     return num_synapses_created;
 }
