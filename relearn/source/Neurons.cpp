@@ -82,7 +82,7 @@ std::tuple<bool, size_t, Vec3d, SignalType> Neurons::get_vacant_axon() const noe
     return std::make_tuple(false, neuron_id, xyz_pos, dendrite_type_needed);
 }
 
-void Neurons::init_synaptic_elements(const NetworkGraph& network_graph) {
+void Neurons::init_synaptic_elements() {
     // Give unbound synaptic elements as well
     const double num_axons_offset = 0;
     const double num_dends_offset = 0;
@@ -92,9 +92,9 @@ void Neurons::init_synaptic_elements(const NetworkGraph& network_graph) {
     const std::vector<double>& dendrites_exc_cnts = dendrites_exc.get_cnts();
 
     for (auto i = 0; i < num_neurons; i++) {
-        const size_t axon_connections = network_graph.get_num_out_edges(i);
-        const size_t dendrites_ex_connections = network_graph.get_num_in_edges_ex(i);
-        const size_t dendrites_in_connections = network_graph.get_num_in_edges_in(i);
+        const size_t axon_connections = network_graph->get_num_out_edges(i);
+        const size_t dendrites_ex_connections = network_graph->get_num_in_edges_ex(i);
+        const size_t dendrites_in_connections = network_graph->get_num_in_edges_in(i);
 
         axons.update_cnt(i, axon_connections);
         dendrites_exc.update_cnt(i, dendrites_ex_connections);
@@ -110,7 +110,7 @@ void Neurons::init_synaptic_elements(const NetworkGraph& network_graph) {
     }
 }
 
-size_t Neurons::delete_synapses(NetworkGraph& network_graph) {
+size_t Neurons::delete_synapses() {
     /**
 	* 1. Update number of synaptic elements and delete synapses if necessary
 	*/
@@ -123,9 +123,9 @@ size_t Neurons::delete_synapses(NetworkGraph& network_graph) {
     std::list<PendingSynapseDeletion> pending_deletions;
 
     // For all synaptic element types (axons, dends exc., dends inh.)
-    delete_synapses_find_synapses(axons, network_graph, pending_deletions);
-    delete_synapses_find_synapses(dendrites_exc, network_graph, pending_deletions);
-    delete_synapses_find_synapses(dendrites_inh, network_graph, pending_deletions);
+    delete_synapses_find_synapses(axons, pending_deletions);
+    delete_synapses_find_synapses(dendrites_exc, pending_deletions);
+    delete_synapses_find_synapses(dendrites_inh, pending_deletions);
 
     MapSynapseDeletionRequests synapse_deletion_requests_incoming = delete_synapses_exchange_requests(pending_deletions);
     delete_synapses_process_requests(synapse_deletion_requests_incoming, pending_deletions);
@@ -140,14 +140,14 @@ size_t Neurons::delete_synapses(NetworkGraph& network_graph) {
 	*/
 
     /* Delete all synapses pending for deletion */
-    size_t num_synapses_deleted = delete_synapses_commit_deletions(pending_deletions, network_graph);
+    size_t num_synapses_deleted = delete_synapses_commit_deletions(pending_deletions);
 
     GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
 
     return num_synapses_deleted;
 }
 
-void Neurons::delete_synapses_find_synapses(SynapticElements& synaptic_elements, const NetworkGraph& network_graph, std::list<Neurons::PendingSynapseDeletion>& pending_deletions) {
+void Neurons::delete_synapses_find_synapses(SynapticElements& synaptic_elements, std::list<Neurons::PendingSynapseDeletion>& pending_deletions) {
     const auto element_type = synaptic_elements.get_element_type();
 
     // For my neurons
@@ -168,7 +168,7 @@ void Neurons::delete_synapses_find_synapses(SynapticElements& synaptic_elements,
 		*/
 
         const auto signal_type = synaptic_elements.get_signal_type(neuron_id);
-        auto local = delete_synapses_find_synapses_on_neuron(neuron_id, element_type, signal_type, num_synapses_to_delete, network_graph, pending_deletions);
+        auto local = delete_synapses_find_synapses_on_neuron(neuron_id, element_type, signal_type, num_synapses_to_delete, pending_deletions);
     }
 }
 
@@ -176,7 +176,6 @@ std::list<Neurons::PendingSynapseDeletion> Neurons::delete_synapses_find_synapse
     ElementType element_type,
     SignalType signal_type,
     unsigned int num_synapses_to_delete,
-    const NetworkGraph& network_graph,
     std::list<Neurons::PendingSynapseDeletion>& pending_deletions) {
 
     // Only do something if necessary
@@ -194,11 +193,11 @@ std::list<Neurons::PendingSynapseDeletion> Neurons::delete_synapses_find_synapse
 
     if (is_axon) {
         // Walk through outgoing edges
-        const NetworkGraph::Edges& out_edges = network_graph.get_out_edges(neuron_id);
+        const NetworkGraph::Edges& out_edges = network_graph->get_out_edges(neuron_id);
         list_synapses = delete_synapses_register_edges(out_edges);
     } else {
         // Walk through ingoing edges
-        const NetworkGraph::Edges& in_edges = network_graph.get_in_edges(neuron_id, signal_type);
+        const NetworkGraph::Edges& in_edges = network_graph->get_in_edges(neuron_id, signal_type);
         list_synapses = delete_synapses_register_edges(in_edges);
     }
 
@@ -404,7 +403,7 @@ void Neurons::delete_synapses_process_requests(const MapSynapseDeletionRequests&
     } // All ranks that sent deletion requests
 }
 
-size_t Neurons::delete_synapses_commit_deletions(const std::list<PendingSynapseDeletion>& list, NetworkGraph& network_graph) {
+size_t Neurons::delete_synapses_commit_deletions(const std::list<PendingSynapseDeletion>& list) {
     const int my_rank = MPIWrapper::get_my_rank();
     size_t num_synapses_deleted = 0;
 
@@ -451,7 +450,7 @@ size_t Neurons::delete_synapses_commit_deletions(const std::list<PendingSynapseD
             weight_increment = +1;
         }
 
-        network_graph.add_edge_weight(tgt_neuron_id, tgt_neuron_rank, src_neuron_id, src_neuron_rank, weight_increment);
+        network_graph->add_edge_weight(tgt_neuron_id, tgt_neuron_rank, src_neuron_id, src_neuron_rank, weight_increment);
 
         /**
 		* Set element of affected neuron vacant if necessary,
@@ -481,7 +480,7 @@ size_t Neurons::delete_synapses_commit_deletions(const std::list<PendingSynapseD
     return num_synapses_deleted;
 }
 
-size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph) {
+size_t Neurons::create_synapses() {
     /**
 	* 2. Create Synapses
 	*
@@ -492,16 +491,16 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
 	* - Update network
 	*/
 
-    create_synapses_update_octree(global_tree);
-    MapSynapseCreationRequests synapse_creation_requests_outgoing = create_synapses_find_targets(global_tree);
+    create_synapses_update_octree();
+    MapSynapseCreationRequests synapse_creation_requests_outgoing = create_synapses_find_targets();
 
     GlobalTimers::timers.start(TimerRegion::CREATE_SYNAPSES);
 
     MapSynapseCreationRequests synapse_creation_requests_incoming = create_synapses_exchange_requests(synapse_creation_requests_outgoing);
-    const auto synapses_created_locally = create_synapses_process_requests(synapse_creation_requests_incoming, network_graph);
+    const auto synapses_created_locally = create_synapses_process_requests(synapse_creation_requests_incoming);
 
     create_synapses_exchange_responses(synapse_creation_requests_incoming, synapse_creation_requests_outgoing);
-    const auto synapses_created_remotely = create_synapses_process_responses(synapse_creation_requests_outgoing, network_graph);
+    const auto synapses_created_remotely = create_synapses_process_responses(synapse_creation_requests_outgoing);
     
     GlobalTimers::timers.stop_and_add(TimerRegion::CREATE_SYNAPSES);
 
@@ -510,13 +509,13 @@ size_t Neurons::create_synapses(Octree& global_tree, NetworkGraph& network_graph
     return num_synapses_created;
 }
 
-void Neurons::create_synapses_update_octree(Octree& global_tree) {
+void Neurons::create_synapses_update_octree() {
     // Lock local RMA memory for local stores
     MPIWrapper::lock_window(MPIWrapper::get_my_rank(), MPI_Locktype::exclusive);
 
     // Update my local trees bottom-up
     GlobalTimers::timers.start(TimerRegion::UPDATE_LOCAL_TREES);
-    global_tree.update_local_trees(dendrites_exc, dendrites_inh, num_neurons);
+    global_tree->update_local_trees(dendrites_exc, dendrites_inh, num_neurons);
     GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
 
     /**
@@ -526,10 +525,10 @@ void Neurons::create_synapses_update_octree(Octree& global_tree) {
     OctreeNode* rma_buffer_branch_nodes = MPIWrapper::get_buffer_octree_nodes();
     // Copy local trees' root nodes to correct positions in receive buffer
 
-    const size_t num_local_trees = global_tree.get_num_local_trees();
+    const size_t num_local_trees = global_tree->get_num_local_trees();
     for (size_t i = 0; i < num_local_trees; i++) {
         const size_t global_subdomain_id = partition->get_my_subdomain_id_start() + i;
-        const OctreeNode* root_node = global_tree.get_local_root(i);
+        const OctreeNode* root_node = global_tree->get_local_root(i);
 
         // This assignment copies memberwise
         rma_buffer_branch_nodes[global_subdomain_id] = *root_node;
@@ -546,18 +545,18 @@ void Neurons::create_synapses_update_octree(Octree& global_tree) {
     const size_t num_rma_buffer_branch_nodes = MPIWrapper::get_num_buffer_octree_nodes();
     for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
         if (i < partition->get_my_subdomain_id_start() || i > partition->get_my_subdomain_id_end()) {
-            global_tree.insert(rma_buffer_branch_nodes + i);
+            global_tree->insert(rma_buffer_branch_nodes + i);
         }
     }
     GlobalTimers::timers.stop_and_add(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
 
     // Update global tree
     GlobalTimers::timers.start(TimerRegion::UPDATE_GLOBAL_TREE);
-    const auto level_branches = global_tree.get_level_of_branch_nodes();
+    const auto level_branches = global_tree->get_level_of_branch_nodes();
 
     // Only update whenever there are other branches to update
     if (level_branches > 0) {
-        global_tree.update_from_level(level_branches - 1);
+        global_tree->update_from_level(level_branches - 1);
     }
     GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
 
@@ -569,7 +568,7 @@ void Neurons::create_synapses_update_octree(Octree& global_tree) {
     MPIWrapper::barrier(MPIWrapper::Scope::global);
 }
 
-MapSynapseCreationRequests Neurons::create_synapses_find_targets(Octree& global_tree) {
+MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
     MapSynapseCreationRequests synapse_creation_requests_outgoing;
     GlobalTimers::timers.start(TimerRegion::FIND_TARGET_NEURONS);
 
@@ -607,7 +606,7 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets(Octree& global_
 			* as other axons might already have connected to them.
 			* Right now, those collisions are handled in a first-come-first-served fashion.
 			*/
-            std::optional<RankNeuronId> rank_neuron_id = global_tree.find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
+            std::optional<RankNeuronId> rank_neuron_id = global_tree->find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
 
             if (rank_neuron_id.has_value()) {
                 RankNeuronId val = rank_neuron_id.value();
@@ -624,7 +623,7 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets(Octree& global_
 
     // Make cache empty for next connectivity update
     GlobalTimers::timers.start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
-    global_tree.empty_remote_nodes_cache();
+    global_tree->empty_remote_nodes_cache();
     GlobalTimers::timers.stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
     return synapse_creation_requests_outgoing;
@@ -693,7 +692,7 @@ MapSynapseCreationRequests Neurons::create_synapses_exchange_requests(const MapS
     return synapse_creation_requests_incoming;
 }
 
-size_t Neurons::create_synapses_process_requests(MapSynapseCreationRequests& synapse_creation_requests_incoming, NetworkGraph& network_graph) {
+size_t Neurons::create_synapses_process_requests(MapSynapseCreationRequests& synapse_creation_requests_incoming) {
     size_t num_synapses_created = 0;
 
     for (auto& it : synapse_creation_requests_incoming) {
@@ -745,7 +744,7 @@ size_t Neurons::create_synapses_process_requests(MapSynapseCreationRequests& syn
                 }
 
                 // Update network
-                network_graph.add_edge_weight(target_neuron_id, MPIWrapper::get_my_rank(), source_neuron_id, source_rank, num_axons_connected_increment);
+                network_graph->add_edge_weight(target_neuron_id, MPIWrapper::get_my_rank(), source_neuron_id, source_rank, num_axons_connected_increment);
 
                 // Set response to "connected" (success)
                 requests.set_response(request_index, 1);
@@ -793,7 +792,7 @@ void Neurons::create_synapses_exchange_responses(const MapSynapseCreationRequest
     MPIWrapper::wait_all_tokens(mpi_requests);
 }
 
-size_t Neurons::create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing, NetworkGraph& network_graph) {
+size_t Neurons::create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing) {
     size_t num_synapses_created = 0;
     /**
 	    * Register which axons could be connected
@@ -829,7 +828,7 @@ size_t Neurons::create_synapses_process_responses(const MapSynapseCreationReques
                 if (target_rank != MPIWrapper::get_my_rank()) {
                     // Update network
                     const auto num_axons_connected_increment_2 = (1 == dendrite_type_needed) ? -1 : +1;
-                    network_graph.add_edge_weight(target_neuron_id, target_rank, source_neuron_id, MPIWrapper::get_my_rank(), num_axons_connected_increment_2);
+                    network_graph->add_edge_weight(target_neuron_id, target_rank, source_neuron_id, MPIWrapper::get_my_rank(), num_axons_connected_increment_2);
                 }
             } else {
                 // Other axons were faster and came first
@@ -840,10 +839,12 @@ size_t Neurons::create_synapses_process_responses(const MapSynapseCreationReques
     return num_synapses_created;
 }
 
-void Neurons::debug_check_counts(const NetworkGraph& network_graph) {
+void Neurons::debug_check_counts() {
     if (!Config::do_debug_checks) {
         return;
     }
+
+    RelearnException::check(network_graph.get() != nullptr, "network_graph is nullptr");
 
     const std::vector<double>& axs_count = axons.get_cnts();
     const std::vector<unsigned int>& axs_conn_count = axons.get_connected_cnts();
@@ -871,9 +872,9 @@ void Neurons::debug_check_counts(const NetworkGraph& network_graph) {
         const size_t num_conn_dend_ex = static_cast<size_t>(connected_dend_exc);
         const size_t num_conn_dend_in = static_cast<size_t>(connected_dend_inh);
 
-        const size_t num_out_ng = network_graph.get_num_out_edges(i);
-        const size_t num_in_exc_ng = network_graph.get_num_in_edges_ex(i);
-        const size_t num_in_inh_ng = network_graph.get_num_in_edges_in(i);
+        const size_t num_out_ng = network_graph->get_num_out_edges(i);
+        const size_t num_in_exc_ng = network_graph->get_num_in_edges_ex(i);
+        const size_t num_in_inh_ng = network_graph->get_num_in_edges_in(i);
 
         RelearnException::check(num_conn_axons == num_out_ng, "In Neurons conn axons, %u vs. %u", num_conn_axons, num_out_ng);
         RelearnException::check(num_conn_dend_ex == num_in_exc_ng, "In Neurons conn dend ex, %u vs. %u", num_conn_dend_ex, num_in_exc_ng);
@@ -1029,7 +1030,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
     }
 }
 
-void Neurons::print_network_graph_to_log_file(const NetworkGraph& network_graph, const NeuronIdMap& neuron_id_map) {
+void Neurons::print_network_graph_to_log_file(const NeuronIdMap& neuron_id_map) {
     std::stringstream ss;
 
     // Write output format to file
@@ -1038,7 +1039,7 @@ void Neurons::print_network_graph_to_log_file(const NetworkGraph& network_graph,
        << "\n";
 
     // Write network graph to file
-    network_graph.print(ss, neuron_id_map);
+    network_graph->print(ss, neuron_id_map);
 
     LogFiles::write_to_file(LogFiles::EventType::Network, ss.str(), false);
 }

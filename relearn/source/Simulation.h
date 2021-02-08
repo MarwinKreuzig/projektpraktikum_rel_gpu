@@ -59,7 +59,7 @@ private:
     std::shared_ptr<Neurons> neurons;
     std::unique_ptr<NeuronIdMap> neuron_id_map;
 
-    std::unique_ptr<Octree> global_tree;
+    std::shared_ptr<Octree> global_tree;
 
     std::shared_ptr<NetworkGraph> network_graph;
 

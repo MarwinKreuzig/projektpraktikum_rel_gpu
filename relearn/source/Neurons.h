@@ -310,6 +310,14 @@ public:
         }
     }
 
+    void set_octree(std::shared_ptr<Octree> octree) {
+        global_tree = std::move(octree);
+    }
+
+    void set_network_graph(std::shared_ptr<NetworkGraph> network) {
+        network_graph = std::move(network);
+    }
+
     std::vector<ModelParameter> get_parameter(ElementType element_type, SignalType signal_type) {
         if (element_type == ElementType::AXON) {
             return axons.get_parameter();
@@ -356,10 +364,10 @@ public:
 
     [[nodiscard]] std::tuple<bool, size_t, Vec3d, SignalType> get_vacant_axon() const noexcept;
 
-    void init_synaptic_elements(const NetworkGraph& network_graph);
+    void init_synaptic_elements();
 
-    void update_electrical_activity(const NetworkGraph& network_graph) {
-        neuron_model->update_electrical_activity(network_graph, calcium);
+    void update_electrical_activity() {
+        neuron_model->update_electrical_activity(*network_graph, calcium);
     }
 
     void update_number_synaptic_elements_delta() noexcept {
@@ -368,14 +376,15 @@ public:
         dendrites_inh.update_number_elements_delta(calcium);
     }
 
-    std::tuple<size_t, size_t> update_connectivity(Octree& global_tree,
-        NetworkGraph& network_graph) {
+    std::tuple<size_t, size_t> update_connectivity() {
+        RelearnException::check(network_graph.get() != nullptr, "Network graph is nullptr");
+        RelearnException::check(global_tree.get() != nullptr, "Global octree is nullptr");
 
-        debug_check_counts(network_graph);
-        size_t num_synapses_deleted = delete_synapses(network_graph);
-        debug_check_counts(network_graph);
-        size_t num_synapses_created = create_synapses(global_tree, network_graph);
-        debug_check_counts(network_graph);
+        debug_check_counts();
+        size_t num_synapses_deleted = delete_synapses();
+        debug_check_counts();
+        size_t num_synapses_created = create_synapses();
+        debug_check_counts();
 
         return std::make_tuple(num_synapses_deleted, num_synapses_created);
     }
@@ -385,7 +394,7 @@ public:
     // Print global information about all neurons at rank 0
     void print_neurons_overview_to_log_file_on_rank_0(size_t step);
 
-    void print_network_graph_to_log_file(const NetworkGraph& network_graph, const NeuronIdMap& neuron_id_map);
+    void print_network_graph_to_log_file(const NeuronIdMap& neuron_id_map);
 
     void print_positions_to_log_file(const NeuronIdMap& neuron_id_map);
 
@@ -393,7 +402,7 @@ public:
 
     void print_info_for_barnes_hut();
 
-    void debug_check_counts(const NetworkGraph& network_graph);
+    void debug_check_counts();
 
 private:
     template <typename T>
@@ -431,9 +440,9 @@ private:
         return { static_cast<T>(d_min), static_cast<T>(d_max), avg, var, std };
     }
 
-    size_t delete_synapses(NetworkGraph& network_graph);
+    size_t delete_synapses();
 
-    void delete_synapses_find_synapses(SynapticElements& synaptic_elements, const NetworkGraph& network_graph, std::list<Neurons::PendingSynapseDeletion>& pending_deletions);
+    void delete_synapses_find_synapses(SynapticElements& synaptic_elements, std::list<Neurons::PendingSynapseDeletion>& pending_deletions);
 
     /**
 	 * Determines which synapses should be deleted.
@@ -448,30 +457,29 @@ private:
         ElementType element_type,
         SignalType signal_type,
         unsigned int num_synapses_to_delete,
-        const NetworkGraph& network_graph,
         std::list<Neurons::PendingSynapseDeletion>& pending_deletions);
 
-    std::list<Neurons::Synapse> delete_synapses_register_edges(const NetworkGraph::Edges& out_edges);
+    std::list<Neurons::Synapse> delete_synapses_register_edges(const NetworkGraph::Edges& edges);
 
     MapSynapseDeletionRequests delete_synapses_exchange_requests(const std::list<PendingSynapseDeletion>& pending_deletions);
 
     void delete_synapses_process_requests(const MapSynapseDeletionRequests& synapse_deletion_requests_incoming, std::list<PendingSynapseDeletion>& pending_deletions);
 
-    size_t delete_synapses_commit_deletions(const std::list<PendingSynapseDeletion>& list, NetworkGraph& network_graph);
+    size_t delete_synapses_commit_deletions(const std::list<PendingSynapseDeletion>& list);
 
-    size_t create_synapses(Octree& global_tree, NetworkGraph& network_graph);
+    size_t create_synapses();
 
-    void create_synapses_update_octree(Octree& global_tree);
+    void create_synapses_update_octree();
 
-    MapSynapseCreationRequests create_synapses_find_targets(Octree& global_tree);
+    MapSynapseCreationRequests create_synapses_find_targets();
 
     MapSynapseCreationRequests create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
-    size_t create_synapses_process_requests(MapSynapseCreationRequests& synapse_creation_requests_incoming, NetworkGraph& network_graph);
+    size_t create_synapses_process_requests(MapSynapseCreationRequests& synapse_creation_requests_incoming);
 
     void create_synapses_exchange_responses(const MapSynapseCreationRequests& synapse_creation_requests_incoming, MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
-    size_t create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing, NetworkGraph& network_graph);
+    size_t create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
     static void print_pending_synapse_deletions(const std::list<PendingSynapseDeletion>& list);
 
@@ -479,6 +487,9 @@ private:
     std::vector<size_t> local_ids;
 
     const Partition* partition;
+
+    std::shared_ptr<Octree> global_tree;
+    std::shared_ptr<NetworkGraph> network_graph;
 
     std::unique_ptr<NeuronModels> neuron_model;
 
