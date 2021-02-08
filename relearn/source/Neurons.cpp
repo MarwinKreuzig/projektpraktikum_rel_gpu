@@ -163,13 +163,7 @@ size_t Neurons::delete_synapses(NetworkGraph& network_graph) {
         // Affected neuron of deletion request resides on different rank.
         // Thus the request needs to be communicated.
         if (target_rank != MPIWrapper::get_my_rank()) {
-            map_synapse_deletion_requests_outgoing[target_rank].append(
-                list_it.get_src_neuron_id().get_neuron_id(),
-                list_it.get_tgt_neuron_id().get_neuron_id(),
-                list_it.get_affected_neuron_id().get_neuron_id(),
-                list_it.get_affected_element_type(),
-                list_it.get_signal_type(),
-                list_it.get_synapse_id());
+            map_synapse_deletion_requests_outgoing[target_rank].append(list_it);
         }
     }
 
@@ -247,17 +241,12 @@ size_t Neurons::delete_synapses(NetworkGraph& network_graph) {
 
         // All requests of a rank
         for (auto request_index = 0; request_index < num_requests; ++request_index) {
-            std::array<size_t, Constants::num_items_per_request> arr = requests.get_request(request_index);
-
-            size_t src_neuron_id = arr[0];
-            size_t tgt_neuron_id = arr[1];
-            size_t affected_neuron_id = arr[2];
-            size_t affected_element_type_converted = arr[3];
-            size_t signal_type_converted = arr[4];
-            auto synapse_id = static_cast<unsigned int>(arr[5]);
-
-            ElementType affected_element_type = affected_element_type_converted == 0 ? ElementType::AXON : ElementType::DENDRITE;
-            SignalType signal_type = signal_type_converted == 0 ? SignalType::EXCITATORY : SignalType::INHIBITORY;
+            const auto src_neuron_id = requests.get_source_neuron_id(request_index);
+            const auto tgt_neuron_id = requests.get_target_neuron_id(request_index);
+            const auto affected_neuron_id = requests.get_affected_neuron_id(request_index);
+            const auto affected_element_type = requests.get_affected_element_type(request_index);
+            const auto signal_type = requests.get_signal_type(request_index);
+            const auto synapse_id = requests.get_synapse_id(request_index);
 
             RankNeuronId src_id(MPIWrapper::get_my_rank(), src_neuron_id);
             RankNeuronId tgt_id(other_rank, tgt_neuron_id);
@@ -273,9 +262,9 @@ size_t Neurons::delete_synapses(NetworkGraph& network_graph) {
 
             if (pending_deletion == list_with_pending_deletions.end()) {
                 list_with_pending_deletions.emplace_back(src_id, tgt_id, RankNeuronId(MPIWrapper::get_my_rank(), affected_neuron_id),
-                    affected_element_type, signal_type, synapse_id, false);
+                    affected_element_type, signal_type, synapse_id);
             } else {
-                pending_deletion->set_affected_element_already_deleted(true);
+                pending_deletion->set_affected_element_already_deleted();
             }
 
         } // All requests of a rank
@@ -1067,9 +1056,9 @@ std::list<Neurons::PendingSynapseDeletion> Neurons::find_synapses_for_deletion(s
 
         if (pending_deletion == list_with_pending_deletions.end()) {
             list_with_pending_deletions.emplace_back(src_neuron_id, tgt_neuron_id, synapse_selected->get_rank_neuron_id(),
-                other_element_type, signal_type, synapse_selected->get_synapse_id(), false);
+                other_element_type, signal_type, synapse_selected->get_synapse_id());
         } else {
-            pending_deletion->set_affected_element_already_deleted(true);
+            pending_deletion->set_affected_element_already_deleted();
         }
 
         // Remove selected synapse from synapse list
