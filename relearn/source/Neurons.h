@@ -388,6 +388,10 @@ public:
 private:
     size_t delete_synapses(NetworkGraph& network_graph);
 
+    MapSynapseDeletionRequests delete_synapses_exchange_requests(const std::list<PendingSynapseDeletion>& pending_deletions);
+
+    void delete_synapses_process_requests(const MapSynapseDeletionRequests& synapse_deletion_requests_incoming, std::list<PendingSynapseDeletion>& pending_deletions);
+
     size_t create_synapses(Octree& global_tree, NetworkGraph& network_graph);
 
     template <typename T>
@@ -430,7 +434,7 @@ private:
 	 */
     typename std::list<Synapse>::const_iterator select_random_synapse(const std::list<Synapse>& list);
 
-    void find_synapses_for_deletion(SynapticElements& synaptic_elements, const NetworkGraph& network_graph, std::list<Neurons::PendingSynapseDeletion>& list_with_pending_deletions);
+    void find_synapses_for_deletion(SynapticElements& synaptic_elements, const NetworkGraph& network_graph, std::list<Neurons::PendingSynapseDeletion>& pending_deletions);
 
     /**
 	 * Determines which synapses should be deleted.
@@ -446,7 +450,7 @@ private:
         SignalType signal_type,
         unsigned int num_synapses_to_delete,
         const NetworkGraph& network_graph,
-        std::list<Neurons::PendingSynapseDeletion>& list_with_pending_deletions);
+        std::list<Neurons::PendingSynapseDeletion>& pending_deletions);
 
     std::list<Neurons::Synapse> register_edges(const NetworkGraph::Edges& out_edges);
 
