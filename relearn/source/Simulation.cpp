@@ -261,3 +261,9 @@ void Simulation::print_neuron_monitors() {
         outfile.close();
     }
 }
+
+void Simulation::increase_monitoring_capacity(size_t size) {
+	for (auto& mon : monitors) {
+		mon.increase_monitoring_capacity(size);
+	}
+}

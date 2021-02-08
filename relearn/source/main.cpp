@@ -37,64 +37,88 @@
 #include <memory>
 
 int main(int argc, char** argv) {
-    /**
-	 * Read command line parameters
-	 */
-    std::vector<std::string> arguments{ argv, argv + argc };
-    if (arguments.size() < 5) {
-        std::cout << "Usage: " << arguments[0]
-                  << " <acceptance criterion (theta)>"
-                  << " <number neurons>"
-                  << " <random number seed>"
-                  << " <simulation steps>"
-                  << " [<file with neuron positions>"
-                  << " [<file with connections>]]"
-                  << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    /**
+	/**
 	 * Init MPI and store some MPI infos
 	 */
-    MPIWrapper::init(argc, argv);
-
-    /**
-	 * Initialize the simuliation log files
-	 */
-    LogFiles::init();
+	MPIWrapper::init(argc, argv);
 
     const int my_rank = MPIWrapper::get_my_rank();
     const int num_ranks = MPIWrapper::get_num_ranks();
 
-    double accept_criterion = 0.0;
-    if (arguments[1] == "naive") {
-        accept_criterion = 0.0;
-    } else {
-        accept_criterion = std::stod(arguments[1], nullptr);
+	// Command line arguments
+	CLI::App app{ "" };
+
+	size_t num_neurons{};
+	auto* opt_num_neurons = app.add_option("-n,--num-neurons", num_neurons, "Number of neurons.");
+
+	std::string file_positions{};
+	auto* opt_file_positions = app.add_option("-f,--file", file_positions, "File with neuron positions.");
+
+	std::string file_network{};
+	auto* opt_file_network = app.add_option("-g,--graph", file_network, "File with neuron connections.");
+
+    std::string log_prefix{};
+    auto* opt_log_prefix= app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
+
+    std::string log_path{};
+    auto* opt_log_path = app.add_option("-l,--log-path", log_path, "Path for log files.");
+
+	size_t simulation_steps{};
+	app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms")->required();
+
+	size_t seed_octree{};
+	app.add_option("-r,--random-seed", seed_octree, "Random seed.")->required();
+
+	double accept_criterion{ 0.0 };
+	app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion. Default: 0.0");
+
+	auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
+
+	opt_num_neurons->excludes(opt_file_positions);
+	opt_num_neurons->excludes(opt_file_network);
+	opt_file_positions->excludes(opt_num_neurons);
+	opt_file_network->excludes(opt_num_neurons);
+
+	opt_file_network->needs(opt_file_positions);
+
+	opt_file_positions->check(CLI::ExistingFile);
+	opt_file_network->check(CLI::ExistingFile);
+
+	CLI11_PARSE(app, argc, argv);
+
+	RelearnException::check(static_cast<bool>(*opt_num_neurons) || static_cast<bool>(*opt_file_positions), "Missing command line option, need num_neurons (-n,--num-neurons) or file_positions (-f,--file).");
+
+	/**
+	 * Initialize the simuliation log files
+	 */
+    if (static_cast<bool>(*opt_log_path)) {
+        LogFiles::set_output_path(log_path);
     }
-
-    size_t num_neurons = stoull(arguments[2], nullptr, 10);
-    size_t seed_octree = stol(arguments[3], nullptr, 10);
-    size_t simulation_steps = stoull(arguments[4], nullptr, 10);
-
-    //MPIWrapper::init_neurons(params->num_neurons);
-    MPIWrapper::print_infos_rank(0);
-
-    // Init random number seeds
-    randomNumberSeeds::partition = static_cast<unsigned int>(my_rank);
-    randomNumberSeeds::octree = static_cast<unsigned int>(seed_octree);
-
-    // Rank 0 prints start time of simulation
-    MPIWrapper::barrier(MPIWrapper::Scope::global);
-    if (0 == my_rank) {
-        std::stringstream sstring; // For output generation
-        sstring << "\nSTART: " << Timers::wall_clock_time() << "\n";
-        LogFiles::print_message_rank(sstring.str().c_str(), 0);
+    if (static_cast<bool>(*opt_log_prefix)) {
+        LogFiles::set_general_prefix(log_prefix);
     }
+    LogFiles::init();
+
+	//MPIWrapper::init_neurons(params->num_neurons);
+	MPIWrapper::print_infos_rank(0);
+
+	// Init random number seeds
+	randomNumberSeeds::partition = static_cast<int64_t>(my_rank);
+	randomNumberSeeds::octree = static_cast<int64_t>(seed_octree);
+
+	// Rank 0 prints start time of simulation
+	MPIWrapper::barrier(MPIWrapper::Scope::global);
+	if (0 == my_rank) {
+		std::stringstream sstring; // For output generation
+		sstring << "\nSTART: " << Timers::wall_clock_time() << "\n";
+		LogFiles::print_message_rank(sstring.str().c_str(), 0);
+	}
 
     GlobalTimers::timers.start(TimerRegion::INITIALIZATION);
 
-    /**
+	GlobalTimers::timers.start(TimerRegion::INITIALIZATION);
+
+	/**
 	 * Calculate what my partition of the domain consist of
 	 */
     auto partition = std::make_shared<Partition>(num_ranks, my_rank);
@@ -119,19 +143,18 @@ int main(int argc, char** argv) {
     Simulation sim(accept_criterion, partition);
     sim.set_neuron_models(std::make_unique<models::ModelA>());
 
-    if (5 < argc) {
-        std::string file_positions(arguments[5]);
-
-        if (6 < argc) {
-            std::string file_network(arguments[6]);
-            sim.load_neurons_from_file(file_positions, file_network);
-        } else {
-            sim.load_neurons_from_file(file_positions);
-        }
-    } else {
-        double frac_exc = 0.8;
-        sim.place_random_neurons(num_neurons, frac_exc);
-    }
+	if (static_cast<bool>(*opt_num_neurons)) {
+		const double frac_exc = 0.8;
+		sim.place_random_neurons(num_neurons, frac_exc);
+	}
+	else {
+		if (static_cast<bool>(*opt_file_network)) {
+			sim.load_neurons_from_file(file_positions, file_network);
+		}
+		else {
+			sim.load_neurons_from_file(file_positions);
+		}
+	}
 
     // Unlock local RMA memory and make local stores visible in public window copy
     MPIWrapper::unlock_window(my_rank);
@@ -145,21 +168,47 @@ int main(int argc, char** argv) {
 
     GlobalTimers::timers.stop_and_add(TimerRegion::INITIALIZATION);
 
-    const auto step_monitor = 100;
+	const auto step_monitor = 100;
+	const auto steps_per_simulation = simulation_steps / step_monitor;
 
-    NeuronMonitor::max_steps = simulation_steps / step_monitor;
-    NeuronMonitor::current_step = 0;
+	NeuronMonitor::max_steps = steps_per_simulation;
+	NeuronMonitor::current_step = 0;
 
     for (size_t i = 0; i < 1; i++) {
         sim.register_neuron_monitor(i);
     }
 
-    sim.simulate(simulation_steps, step_monitor);
+	auto simulate = [&]() {
+		sim.simulate(simulation_steps, step_monitor);
 
     Timers::print();
 
-    MPIWrapper::barrier(MPIWrapper::Scope::global);
-    sim.finalize();
+		MPIWrapper::barrier(MPIWrapper::Scope::global);
+		sim.finalize();
+	};
+
+	simulate();
+
+	if (static_cast<bool>(*flag_interactive)) {
+		while (true) {
+			std::cout << "Interactive run. Run another " << simulation_steps << " simulation steps? [y/n]\n";
+			char yn{ 'n' };
+			std::cin >> yn;
+			RelearnException::check(!std::cin.fail(), "Error on input stream std::cin.");
+			if (yn == 'n' || yn == 'N') {
+				break;
+			}
+			else if (yn == 'y' || yn == 'Y') {
+				sim.increase_monitoring_capacity(steps_per_simulation);
+				simulate();
+			}
+			else {
+				std::stringstream ss{};
+				ss << "Input for question to run another " << simulation_steps << " simulation steps was not valid.";
+				RelearnException::fail(ss.str());
+			}
+		}
+	}
 
     MPIWrapper::finalize();
 

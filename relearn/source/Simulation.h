@@ -43,7 +43,9 @@ public:
 
     void finalize() const;
 
-    static std::vector<std::unique_ptr<NeuronModels>> get_models();
+	void increase_monitoring_capacity(size_t size);
+
+	static std::vector<std::unique_ptr<NeuronModels>> get_models();
 
 private:
     void initialize();

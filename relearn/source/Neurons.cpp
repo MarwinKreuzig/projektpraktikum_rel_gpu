@@ -322,8 +322,7 @@ Neurons::MapSynapseDeletionRequests Neurons::delete_synapses_exchange_requests(c
     // Now I know how many requests I will get from every rank.
     // Allocate memory for all incoming synapse deletion requests.
     for (auto rank = 0; rank < MPIWrapper::get_num_ranks(); ++rank) {
-        auto num_requests = num_synapse_deletion_requests_from_ranks[rank];
-        if (0 != num_requests) {
+        if (auto num_requests = num_synapse_deletion_requests_from_ranks[rank]; 0 != num_requests) {
             synapse_deletion_requests_incoming[rank].resize(num_requests);
         }
     }
@@ -651,8 +650,7 @@ MapSynapseCreationRequests Neurons::create_synapses_exchange_requests(const MapS
     // Now I know how many requests I will get from every rank.
     // Allocate memory for all incoming synapse requests.
     for (auto rank = 0; rank < MPIWrapper::get_num_ranks(); rank++) {
-        auto num_requests = num_synapse_requests_from_ranks[rank];
-        if (0 != num_requests) {
+        if (auto num_requests = num_synapse_requests_from_ranks[rank]; 0 != num_requests) {
             synapse_creation_requests_incoming[rank].resize(num_requests);
         }
     }
