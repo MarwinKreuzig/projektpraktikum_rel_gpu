@@ -40,7 +40,7 @@ NetworkGraph::Edges NetworkGraph::get_in_edges(size_t neuron_id, SignalType sign
     RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_in_edges with type, tried with a too large id");
     const Edges& all_edges = neuron_neighborhood[neuron_id].in_edges;
 
-    Edges filtered_edges;
+    Edges filtered_edges{};
 
     for (const auto& [edge_key, edge_val] : all_edges) {
         if (signal_type == SignalType::EXCITATORY && edge_val > 0) {
@@ -59,7 +59,7 @@ NetworkGraph::Edges NetworkGraph::get_out_edges(size_t neuron_id, SignalType sig
     RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_out_edges with type, tried with a too large id");
     const Edges& all_edges = neuron_neighborhood[neuron_id].out_edges;
 
-    Edges filtered_edges;
+    Edges filtered_edges{};
 
     for (const auto& [edge_key, edge_val] : all_edges) {
         if (signal_type == SignalType::EXCITATORY && edge_val > 0) {
@@ -74,14 +74,20 @@ NetworkGraph::Edges NetworkGraph::get_out_edges(size_t neuron_id, SignalType sig
     return filtered_edges;
 }
 
+size_t NetworkGraph::get_num_in_edges(size_t neuron_id) const {
+    RelearnException::check(neuron_id < neuron_neighborhood.size(),
+        "In get_num_in_edges, tried with a too large id: %u %u", neuron_id, my_num_neurons);
+
+    return neuron_neighborhood[neuron_id].in_edges.size();
+}
+
 size_t NetworkGraph::get_num_in_edges_ex(size_t neuron_id) const {
     RelearnException::check(neuron_id < neuron_neighborhood.size(),
-        "In get_num_in_edges, tried with a too large id: " + std::to_string(neuron_id) + " " + std::to_string(my_num_neurons));
+        "In get_num_in_edges, tried with a too large id: %u %u", neuron_id, my_num_neurons);
 
     size_t total_num_ports = 0;
 
-    for (const auto& edge : neuron_neighborhood[neuron_id].in_edges) {
-        int connection_strength = edge.second;
+    for (const auto& [_, connection_strength] : neuron_neighborhood[neuron_id].in_edges) {
         if (connection_strength > 0) {
             total_num_ports += connection_strength;
         }
@@ -92,12 +98,11 @@ size_t NetworkGraph::get_num_in_edges_ex(size_t neuron_id) const {
 
 size_t NetworkGraph::get_num_in_edges_in(size_t neuron_id) const {
     RelearnException::check(neuron_id < neuron_neighborhood.size(),
-        "In get_num_in_edges, tried with a too large id: " + std::to_string(neuron_id) + " " + std::to_string(my_num_neurons));
+        "In get_num_in_edges, tried with a too large id: %u %u", neuron_id, my_num_neurons);
 
     size_t total_num_ports = 0;
 
-    for (const auto& edge : neuron_neighborhood[neuron_id].in_edges) {
-        int connection_strength = edge.second;
+    for (const auto& [_, connection_strength] : neuron_neighborhood[neuron_id].in_edges) {
         if (connection_strength < 0) {
             total_num_ports += -connection_strength;
         }
@@ -108,7 +113,7 @@ size_t NetworkGraph::get_num_in_edges_in(size_t neuron_id) const {
 
 size_t NetworkGraph::get_num_out_edges(size_t neuron_id) const {
     RelearnException::check(neuron_id < neuron_neighborhood.size(),
-        "In get_num_out_edges, tried with a too large id: " + std::to_string(neuron_id) + " " + std::to_string(my_num_neurons));
+        "In get_num_out_edges, tried with a too large id: %u %u", neuron_id, my_num_neurons);
 
     size_t total_num_ports = 0;
 
@@ -121,9 +126,7 @@ size_t NetworkGraph::get_num_out_edges(size_t neuron_id) const {
 }
 
 void NetworkGraph::add_edge(Edges& edges, int rank, size_t neuron_id, int weight) {
-    EdgesKey rank_neuron_id_pair;
-    rank_neuron_id_pair.first = rank;
-    rank_neuron_id_pair.second = neuron_id;
+    EdgesKey rank_neuron_id_pair{ rank, neuron_id };
 
     const auto edges_it = edges.find(rank_neuron_id_pair);
 
@@ -153,7 +156,7 @@ void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, siz
     // Target neuron is mine
     if (target_rank == MPIWrapper::get_my_rank()) {
         RelearnException::check(target_neuron_id < my_num_neurons,
-            "Want to add an in-edge with a too large target id: " + std::to_string(target_neuron_id) + " " + std::to_string(my_num_neurons));
+            "Want to add an in-edge with a too large target id: %u %u", target_neuron_id, my_num_neurons);
 
         Edges& in_edges = neuron_neighborhood[target_neuron_id].in_edges;
         add_edge(in_edges, source_rank, source_neuron_id, weight);
@@ -161,7 +164,7 @@ void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, siz
 
     if (source_rank == MPIWrapper::get_my_rank()) {
         RelearnException::check(source_neuron_id < my_num_neurons,
-            "Want to add an out-edge with a too large source id: " + std::to_string(target_neuron_id) + " " + std::to_string(my_num_neurons));
+            "Want to add an out-edge with a too large source id: ", target_neuron_id, my_num_neurons);
 
         Edges& out_edges = neuron_neighborhood[source_neuron_id].out_edges;
         add_edge(out_edges, target_rank, target_neuron_id, weight);
@@ -170,12 +173,7 @@ void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, siz
 
 void NetworkGraph::add_edge_weights(const std::string& filename, const NeuronIdMap& neuron_id_map) {
     std::ifstream file(filename);
-
-    RankNeuronId src_id{ -1, Constants::uninitialized };
-    RankNeuronId tgt_id{ -1, Constants::uninitialized };
-    std::string line;
-    bool ret = false;
-    bool success = false;
+    std::string line{};
 
     while (std::getline(file, line)) {
         // Skip line with comments
@@ -190,10 +188,13 @@ void NetworkGraph::add_edge_weights(const std::string& filename, const NeuronIdM
         double tgt_x = 0.0;
         double tgt_y = 0.0;
         double tgt_z = 0.0;
-        success = (sstream >> src_x) && (sstream >> src_y) && (sstream >> src_z) && (sstream >> tgt_x) && (sstream >> tgt_y) && (sstream >> tgt_z);
+        const bool success = (sstream >> src_x) && (sstream >> src_y) && (sstream >> src_z) && (sstream >> tgt_x) && (sstream >> tgt_y) && (sstream >> tgt_z);
 
         RelearnException::check(success, "success was denied");
 
+        RankNeuronId src_id{ -1, Constants::uninitialized };
+        RankNeuronId tgt_id{ -1, Constants::uninitialized };
+        bool ret = false;
         std::tie(ret, src_id) = neuron_id_map.pos2rank_neuron_id({ src_x, src_y, src_z });
         RelearnException::check(ret, "ret was false");
         std::tie(ret, tgt_id) = neuron_id_map.pos2rank_neuron_id({ tgt_x, tgt_y, tgt_z });
@@ -211,28 +212,24 @@ void NetworkGraph::add_edge_weights(const std::string& filename, const NeuronIdM
 
 void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons,
     [[maybe_unused]] const NeuronIdMap& neuron_id_map, const Partition& partition) {
+    std::vector<std::tuple<size_t, size_t, int>> local_synapses{};
+    std::vector<std::tuple<size_t, size_t, int>> out_synapses{};
+    std::vector<std::tuple<size_t, size_t, int>> in_synapses{};
 
-    std::vector<std::tuple<size_t, size_t, int>> local_synapses;
-    std::vector<std::tuple<size_t, size_t, int>> out_synapses;
-    std::vector<std::tuple<size_t, size_t, int>> in_synapses;
+    std::set<size_t> foreing_ids{};
 
-    std::set<size_t> foreing_ids;
-
-    std::map<size_t, int> id_to_rank;
-    std::map<size_t, Vec3d> id_to_pos;
+    std::map<size_t, int> id_to_rank{};
+    std::map<size_t, Vec3d> id_to_pos{};
 
     load_synapses(path_synapses, partition, foreing_ids, local_synapses, out_synapses, in_synapses);
     load_neuron_positions(path_neurons, foreing_ids, id_to_pos);
 
-    for (const auto& it : id_to_pos) {
-        const auto& id = it.first;
-        const auto& pos = it.second;
-
+    for (const auto& [id, pos] : id_to_pos) {
         const auto rank = static_cast<int>(partition.get_subdomain_id_from_pos(pos));
         id_to_rank[id] = rank;
     }
 
-    std::map<size_t, size_t> global_id_to_local_id;
+    std::map<size_t, size_t> global_id_to_local_id{};
 
     if (!id_to_pos.empty()) {
         translate_global_to_local(foreing_ids, id_to_rank, partition, global_id_to_local_id);
@@ -268,19 +265,24 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
         add_edge_weight(translated_target_neuron_id, target_rank, translated_source_neuron_id, source_rank, weight);
     }
 
-    std::stringstream sstream;
+    std::stringstream sstream{};
 
     sstream << "I'm rank: " << MPIWrapper::get_my_rank() << " of " << MPIWrapper::get_num_ranks() << ".\n";
-    sstream << "I've loaded: [local, out, int] " << local_synapses.size() << " + " << out_synapses.size() << " + " << in_synapses.size() << " = " << (local_synapses.size() + out_synapses.size() + in_synapses.size()) << " many synapses." << "\n";
+    sstream << "I've loaded: [local, out, int] " << local_synapses.size() << " + " << out_synapses.size() << " + " << in_synapses.size() << " = " << (local_synapses.size() + out_synapses.size() + in_synapses.size()) << " many synapses."
+            << "\n";
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, sstream.str(), true);
 }
 
 void NetworkGraph::debug_check() const {
+    if (!Config::do_debug_checks) {
+        return;
+    }
+
     const int my_rank = MPIWrapper::get_my_rank();
 
     // Golden map that stores all local edges
-    std::map<std::pair<size_t, size_t>, int> edges;
+    std::map<std::pair<size_t, size_t>, int> edges{};
 
     for (size_t neuron_id = 0; neuron_id < my_num_neurons; neuron_id++) {
         const Edges& out_edges = get_out_edges(neuron_id);
@@ -304,8 +306,7 @@ void NetworkGraph::debug_check() const {
         const Edges& in_edges = get_in_edges(neuron_id);
 
         for (const auto& [in_edge_key, in_edge_val] : in_edges) {
-            const int in_edge_rank = in_edge_key.first;
-            const size_t in_edge_neuron_id = in_edge_key.second;
+            const auto [in_edge_rank, in_edge_neuron_id] = in_edge_key;
 
             RelearnException::check(in_edge_rank >= 0, "Rank is smaller than 0 (in)");
             RelearnException::check(in_edge_val != 0, "Value is zero (in)");

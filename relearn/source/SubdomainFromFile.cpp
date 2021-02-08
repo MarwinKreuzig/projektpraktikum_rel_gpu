@@ -47,7 +47,9 @@ void SubdomainFromFile::read_dimensions_from_file(Partition& partition) {
         }
 
         size_t id{};
-        double pos_x, pos_y, pos_z;
+        double pos_x{};
+        double pos_y{};
+        double pos_z{};
         std::string area_name{};
         std::string signal_type{};
 
@@ -103,7 +105,9 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
         std::string signal_type{};
 
         Node node{};
-        double pos_x, pos_y, pos_z;
+        double pos_x{};
+        double pos_y{};
+        double pos_z{};
         std::stringstream sstream(line);
         bool success = (sstream >> node.id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> node.area_name) && (sstream >> signal_type);
 
@@ -117,9 +121,7 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
         // Ids start with 1
         node.id--;
 
-        bool is_in_subdomain = position_in_box(node.pos, min, max);
-
-        if (!is_in_subdomain) {
+        if (bool is_in_subdomain = position_in_box(node.pos, min, max); !is_in_subdomain) {
             continue;
         }
 
@@ -140,7 +142,6 @@ void SubdomainFromFile::read_nodes_from_file(const Position& min, const Position
 
 void SubdomainFromFile::neuron_global_ids(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
     [[maybe_unused]] size_t local_id_start, [[maybe_unused]] size_t local_id_end, std::vector<size_t>& global_ids) const {
-
     const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
         RelearnException::fail("Wanted to have neuron_global_ids of subdomain_idx that is not present");

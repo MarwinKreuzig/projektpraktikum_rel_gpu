@@ -28,45 +28,47 @@ void LogFiles::init() {
     // Wait until directory is created before any rank proceeds
     MPIWrapper::barrier(MPIWrapper::Scope::global);
 
-    // Neurons to create log file for
-    //size_t num_neurons_to_log = 3;
-    //size_t neurons_to_log[num_neurons_to_log] = {0, 10, 19};
-
-    // Create log files for neurons
-    //LogFiles log_files(num_neurons_to_log, LogFiles::output_dir + "neuron_", neurons_to_log);
-
     // Create log file for neurons overview on rank 0
-    LogFiles::add_logfile(EventType::NeuronsOverview, "neurons_overview");
+    LogFiles::add_logfile(EventType::NeuronsOverview, "neurons_overview", 0);
 
     // Create log file for sums on rank 0
-    LogFiles::add_logfile(EventType::Sums, "sums");
+    LogFiles::add_logfile(EventType::Sums, "sums", 0);
 
     // Create log file for network on all ranks
-    LogFiles::add_logfile(EventType::Network, "network");
+    LogFiles::add_logfile(EventType::Network, "network", -1);
 
     // Create log file for positions on all ranks
-    LogFiles::add_logfile(EventType::Positions, "positions");
+    LogFiles::add_logfile(EventType::Positions, "positions", -1);
 
     // Create log file for std::cout
-    LogFiles::add_logfile(EventType::Cout, "stdcout");
+    LogFiles::add_logfile(EventType::Cout, "stdcout", -1);
 
     // Create log file for the timers
-    LogFiles::add_logfile(EventType::Timers, "timers");
+    LogFiles::add_logfile(EventType::Timers, "timers", 0);
+
+    // Create log file for the synapse creation and deletion
+    LogFiles::add_logfile(EventType::PlasticityUpdate, "plasticity_changes", 0);
+
+    // Create log file for the local synapse creation and deletion
+    LogFiles::add_logfile(EventType::PlasticityUpdateLocal, "plasticity_changes_local", -1);
 }
 
-void LogFiles::add_logfile(EventType type, const std::string& file_name) {
-    auto complete_path = output_path + general_prefix + get_specific_file_prefix() + "_" + file_name + ".txt";
-    log_files.emplace(type, std::move(complete_path));
+void LogFiles::add_logfile(EventType type, const std::string& file_name, int rank) {
+    if (rank == MPIWrapper::get_my_rank() || rank == -1) {
+        auto complete_path = output_path + general_prefix + get_specific_file_prefix() + "_" + file_name + ".txt";
+        log_files.emplace(type, std::move(complete_path));
+    }
 }
 
 void LogFiles::write_to_file(EventType type, const std::string& message, bool also_to_cout) {
-    const auto iterator = log_files.find(type);
-    RelearnException::check(iterator != log_files.end(), "The LogFiles don't contain the requested type");
-
-    iterator->second.write(message);
-
     if (also_to_cout) {
         std::cout << message << std::flush;
+    }
+
+    // Not all ranks have all log files
+    const auto iterator = log_files.find(type);
+    if (iterator != log_files.end()) {
+        iterator->second.write(message);
     }
 }
 

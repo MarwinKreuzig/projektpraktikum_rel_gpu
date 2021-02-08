@@ -19,6 +19,10 @@
 #include "Simulation.h"
 #include "Timers.h"
 
+#include <CLI/App.hpp>
+#include <CLI/Formatter.hpp>
+#include <CLI/Config.hpp>
+
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -36,183 +40,76 @@
 #include <locale>
 #include <memory>
 
-void printTimers() {
-    /**
-	 * Print timers and memory usage
-	 */
-    RelearnException::check(3 * TimerRegion::NUM_TIMER_REGIONS == 69, "Number of timers are unfitting");
-
-    std::array<double, 69> timers_local{};
-
-    for (int i = 0; i < TimerRegion::NUM_TIMER_REGIONS; ++i) {
-        const double elapsed = GlobalTimers::timers.get_elapsed(i);
-
-        for (int j = 0; j < 3; ++j) {
-            timers_local[3 * i + j] = elapsed;
-        }
-    }
-
-    std::array<double, 69> timers_global{};
-
-    MPIWrapper::reduce(timers_local, timers_global, MPIWrapper::ReduceFunction::minsummax, 0, MPIWrapper::Scope::global);
-    std::stringstream sstring;
-
-#ifndef NDEBUG
-    // Check result of MPI_Reduce
-    for (int i = 0; i < 3 * TimerRegion::NUM_TIMER_REGIONS; i++) {
-        sstring << timers_global[i] << " ";
-    }
-#endif
-
-    // Divide second entry of (min, sum, max), i.e., sum, by the number of ranks
-    // so that sum becomes average
-    for (int i = 0; i < TimerRegion::NUM_TIMER_REGIONS; i++) {
-        timers_global[3 * i + 1] /= MPIWrapper::get_num_ranks();
-    }
-
-    if (0 == MPIWrapper::get_my_rank()) {
-        // Set precision for aligned double output
-        const auto old_precision = sstring.precision();
-        sstring.precision(6);
-
-        sstring << "\n======== TIMERS GLOBAL OVER ALL RANKS ========" << "\n";
-        sstring << "                                                (" << std::setw(Constants::print_width) << "    min"
-                  << " | " << std::setw(Constants::print_width) << "    avg"
-                  << " | " << std::setw(Constants::print_width) << "    max"
-                  << ") sec." << "\n";
-        sstring << "TIMERS: main()" << "\n";
-        sstring << "  Initialization                               : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::INITIALIZATION] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::INITIALIZATION + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::INITIALIZATION + 2] << "\n";
-        sstring << "  Simulation loop                              : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::SIMULATION_LOOP] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::SIMULATION_LOOP + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::SIMULATION_LOOP + 2] << "\n";
-        sstring << "    Update electrical activity                 : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_ELECTRICAL_ACTIVITY] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_ELECTRICAL_ACTIVITY + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_ELECTRICAL_ACTIVITY + 2] << "\n";
-        sstring << "      Barrier 1                                : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_1 + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_1 + 2] << "\n";
-        sstring << "      Prepare sending spikes                   : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_SENDING_SPIKES] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_SENDING_SPIKES + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_SENDING_SPIKES + 2] << "\n";
-        sstring << "      Prepare num neuron ids                   : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_NUM_NEURON_IDS] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_NUM_NEURON_IDS + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_NUM_NEURON_IDS + 2] << "\n";
-        sstring << "      Barrier 2                                : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_2] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_2 + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_2 + 2] << "\n";
-        sstring << "      All to all                               : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALL_TO_ALL] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALL_TO_ALL + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALL_TO_ALL + 2] << "\n";
-        sstring << "      Alloc mem for neuron ids                 : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALLOC_MEM_FOR_NEURON_IDS] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALLOC_MEM_FOR_NEURON_IDS + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALLOC_MEM_FOR_NEURON_IDS + 2] << "\n";
-        sstring << "      Barrier 3                                : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_3] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_3 + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_3 + 2] << "\n";
-        sstring << "      Exchange neuron ids                      : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_NEURON_IDS] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_NEURON_IDS + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_NEURON_IDS + 2] << "\n";
-        sstring << "      Calculate synaptic input                 : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_SYNAPTIC_INPUT] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_SYNAPTIC_INPUT + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_SYNAPTIC_INPUT + 2] << "\n";
-        sstring << "      Calculate activity                       : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_ACTIVITY] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_ACTIVITY + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_ACTIVITY + 2] << "\n";
-        sstring << "    Update #synaptic elements delta            : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA + 2] << "\n";
-        sstring << "    Connectivity update                        : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_CONNECTIVITY] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_CONNECTIVITY + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_CONNECTIVITY + 2] << "\n";
-        sstring << "      Update #synaptic elements + del synapses : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES + 2] << "\n";
-        sstring << "      Update local trees                       : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_LOCAL_TREES] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_LOCAL_TREES + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_LOCAL_TREES + 2] << "\n";
-        sstring << "      Exchange branch nodes (w/ Allgather)     : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_BRANCH_NODES] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_BRANCH_NODES + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_BRANCH_NODES + 2] << "\n";
-        sstring << "      Insert branch nodes into global tree     : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE + 2] << "\n";
-        sstring << "      Update global tree                       : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_GLOBAL_TREE] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_GLOBAL_TREE + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_GLOBAL_TREE + 2] << "\n";
-        sstring << "      Find target neurons (w/ RMA)             : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::FIND_TARGET_NEURONS] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::FIND_TARGET_NEURONS + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::FIND_TARGET_NEURONS + 2] << "\n";
-        sstring << "      Empty remote nodes cache                 : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EMPTY_REMOTE_NODES_CACHE] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EMPTY_REMOTE_NODES_CACHE + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EMPTY_REMOTE_NODES_CACHE + 2] << "\n";
-        sstring << "      Create synapses (w/ Alltoall)            : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CREATE_SYNAPSES] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CREATE_SYNAPSES + 1] << " | "
-                  << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CREATE_SYNAPSES + 2] << "\n";
-
-        // Restore old precision
-        sstring.precision(old_precision);
-
-        //cout << "\n======== TIMERS RANK 0 ========" << "\n";
-        //neurons.print_timers();
-
-        //cout << "\n======== MEMORY USAGE RANK 0 ========" << "\n";
-
-        sstring << "\n======== RMA MEMORY ALLOCATOR RANK 0 ========" << "\n";
-        sstring << "Min num objects available: " << MPIWrapper::get_num_avail_objects() << "\n";
-    }
-
-    LogFiles::write_to_file(LogFiles::EventType::Timers, sstring.str(), true);
-}
-
 int main(int argc, char** argv) {
-    /**
-	 * Read command line parameters
-	 */
-    std::vector<std::string> arguments{ argv, argv + argc };
-    if (arguments.size() < 5) {
-        std::cout << "Usage: " << arguments[0]
-                  << " <acceptance criterion (theta)>"
-                  << " <number neurons>"
-                  << " <random number seed>"
-                  << " <simulation steps>"
-                  << " [<file with neuron positions>"
-                  << " [<file with connections>]]"
-                  << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
     /**
 	 * Init MPI and store some MPI infos
 	 */
     MPIWrapper::init(argc, argv);
 
-    /**
-	 * Initialize the simuliation log files
-	 */
-    LogFiles::init();
-
     const int my_rank = MPIWrapper::get_my_rank();
     const int num_ranks = MPIWrapper::get_num_ranks();
 
-    double accept_criterion = 0.0;
-    if (arguments[1] == "naive") {
-        accept_criterion = 0.0;
-    } else {
-        accept_criterion = std::stod(arguments[1], nullptr);
+    // Command line arguments
+    CLI::App app{ "" };
+
+    size_t num_neurons{};
+    auto* opt_num_neurons = app.add_option("-n,--num-neurons", num_neurons, "Number of neurons.");
+
+    std::string file_positions{};
+    auto* opt_file_positions = app.add_option("-f,--file", file_positions, "File with neuron positions.");
+
+    std::string file_network{};
+    auto* opt_file_network = app.add_option("-g,--graph", file_network, "File with neuron connections.");
+
+    std::string log_prefix{};
+    auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
+
+    std::string log_path{};
+    auto* opt_log_path = app.add_option("-l,--log-path", log_path, "Path for log files.");
+
+    size_t simulation_steps{};
+    app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms")->required();
+
+    size_t seed_octree{};
+    app.add_option("-r,--random-seed", seed_octree, "Random seed.")->required();
+
+    double accept_criterion{ 0.0 };
+    app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion. Default: 0.0")->required();
+
+    auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
+
+    opt_num_neurons->excludes(opt_file_positions);
+    opt_num_neurons->excludes(opt_file_network);
+    opt_file_positions->excludes(opt_num_neurons);
+    opt_file_network->excludes(opt_num_neurons);
+
+    opt_file_network->needs(opt_file_positions);
+
+    opt_file_positions->check(CLI::ExistingFile);
+    opt_file_network->check(CLI::ExistingFile);
+
+    CLI11_PARSE(app, argc, argv);
+
+    RelearnException::check(static_cast<bool>(*opt_num_neurons) || static_cast<bool>(*opt_file_positions), "Missing command line option, need num_neurons (-n,--num-neurons) or file_positions (-f,--file).");
+
+    /**
+	 * Initialize the simuliation log files
+	 */
+    if (static_cast<bool>(*opt_log_path)) {
+        LogFiles::set_output_path(log_path);
+    }
+    if (static_cast<bool>(*opt_log_prefix)) {
+        LogFiles::set_general_prefix(log_prefix);
     }
 
-    size_t num_neurons = stoull(arguments[2], nullptr, 10);
-    size_t seed_octree = stol(arguments[3], nullptr, 10);
-    size_t simulation_steps = stoull(arguments[4], nullptr, 10);
+    LogFiles::init();
 
     //MPIWrapper::init_neurons(params->num_neurons);
     MPIWrapper::print_infos_rank(0);
 
     // Init random number seeds
-    randomNumberSeeds::partition = static_cast<unsigned int>(my_rank);
-    randomNumberSeeds::octree = static_cast<unsigned int>(seed_octree);
+    randomNumberSeeds::partition = static_cast<int64_t>(my_rank);
+    randomNumberSeeds::octree = static_cast<int64_t>(seed_octree);
 
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier(MPIWrapper::Scope::global);
@@ -221,6 +118,8 @@ int main(int argc, char** argv) {
         sstring << "\nSTART: " << Timers::wall_clock_time() << "\n";
         LogFiles::print_message_rank(sstring.str().c_str(), 0);
     }
+
+    GlobalTimers::timers.start(TimerRegion::INITIALIZATION);
 
     GlobalTimers::timers.start(TimerRegion::INITIALIZATION);
 
@@ -249,18 +148,15 @@ int main(int argc, char** argv) {
     Simulation sim(accept_criterion, partition);
     sim.set_neuron_models(std::make_unique<models::ModelA>());
 
-    if (5 < argc) {
-        std::string file_positions(arguments[5]);
-
-        if (6 < argc) {
-            std::string file_network(arguments[6]);
+    if (static_cast<bool>(*opt_num_neurons)) {
+        const double frac_exc = 0.8;
+        sim.place_random_neurons(num_neurons, frac_exc);
+    } else {
+        if (static_cast<bool>(*opt_file_network)) {
             sim.load_neurons_from_file(file_positions, file_network);
         } else {
             sim.load_neurons_from_file(file_positions);
         }
-    } else {
-        double frac_exc = 0.8;
-        sim.place_random_neurons(num_neurons, frac_exc);
     }
 
     // Unlock local RMA memory and make local stores visible in public window copy
@@ -276,20 +172,44 @@ int main(int argc, char** argv) {
     GlobalTimers::timers.stop_and_add(TimerRegion::INITIALIZATION);
 
     const auto step_monitor = 100;
+    const auto steps_per_simulation = simulation_steps / step_monitor;
 
-    NeuronMonitor::max_steps = simulation_steps / step_monitor;
+    NeuronMonitor::max_steps = steps_per_simulation;
     NeuronMonitor::current_step = 0;
 
     for (size_t i = 0; i < 1; i++) {
         sim.register_neuron_monitor(i);
     }
 
-    sim.simulate(simulation_steps, step_monitor);
+    auto simulate = [&]() {
+        sim.simulate(simulation_steps, step_monitor);
 
-    printTimers();
+        Timers::print();
 
-    MPIWrapper::barrier(MPIWrapper::Scope::global);
-    sim.finalize();
+        MPIWrapper::barrier(MPIWrapper::Scope::global);
+        sim.finalize();
+    };
+
+    simulate();
+
+    if (static_cast<bool>(*flag_interactive)) {
+        while (true) {
+            std::cout << "Interactive run. Run another " << simulation_steps << " simulation steps? [y/n]\n";
+            char yn{ 'n' };
+            std::cin >> yn;
+            RelearnException::check(!std::cin.fail(), "Error on input stream std::cin.");
+            if (yn == 'n' || yn == 'N') {
+                break;
+            } else if (yn == 'y' || yn == 'Y') {
+                sim.increase_monitoring_capacity(steps_per_simulation);
+                simulate();
+            } else {
+                std::stringstream ss{};
+                ss << "Input for question to run another " << simulation_steps << " simulation steps was not valid.";
+                RelearnException::fail(ss.str());
+            }
+        }
+    }
 
     MPIWrapper::finalize();
 

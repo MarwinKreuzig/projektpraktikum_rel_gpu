@@ -12,11 +12,23 @@
 
 #include <exception>
 #include <iostream>
+#include <memory>
 #include <string>
 
 class RelearnException : std::exception {
 private:
     std::string message;
+
+    template <typename... Args>
+    static std::string string_format(const char* format, Args... args) {
+        int size = snprintf(nullptr, 0, format, args...) + 1; // Extra space for '\0'
+        if (size <= 0) {
+            return std::string("");
+        }
+        std::unique_ptr<char[]> buf(new char[size]);
+        snprintf(buf.get(), size, format, args...);
+        return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
+    }
 
 public:
     static bool hide_messages;
@@ -29,11 +41,18 @@ public:
 
     [[nodiscard]] const char* what() const noexcept override;
 
-    //static void check(bool condition);
+    /**
+    * If condition is true, nothing happens
+    * If condition is false, format will serve as the error message, with placeholders replaced by args
+    */
+    template <typename... Args>
+    static void check(bool condition, const char* format, Args... args) {
+        if (condition) {
+            return;
+        }
 
-    //static void fail();
-
-    static void check(bool condition, std::string&& message);
+        fail(std::move(string_format(format, args...)));
+    }
 
     static void fail(std::string&& message);
 };
