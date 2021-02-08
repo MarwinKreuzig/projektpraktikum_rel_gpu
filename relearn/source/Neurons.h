@@ -48,101 +48,6 @@ class Neurons {
     friend class NeuronMonitor;
 
     /**
-	 * Type for list element used to represent a synapse for synapse selection
-	 */
-    class Synapse {
-        RankNeuronId rank_neuron_id;
-        unsigned int synapse_id; // Id of the synapse. Used to distinguish multiple synapses between the same neuron pair
-    public:
-        Synapse(RankNeuronId rank_neuron_id, unsigned int synapse_id) noexcept
-            : rank_neuron_id(rank_neuron_id)
-            , synapse_id(synapse_id) {
-        }
-
-        [[nodiscard]] RankNeuronId get_rank_neuron_id() const noexcept {
-            return rank_neuron_id;
-        }
-
-        [[nodiscard]] unsigned int get_synapse_id() const noexcept {
-            return synapse_id;
-        }
-    };
-
-    /**
-	 * Type for synapse deletion requests which are used with MPI
-	 */
-    struct SynapseDeletionRequests {
-        SynapseDeletionRequests() = default;
-
-        [[nodiscard]] size_t size() const noexcept { return num_requests; }
-
-        void resize(size_t size) {
-            num_requests = size;
-            requests.resize(Constants::num_items_per_request * size);
-        }
-
-        void append(size_t src_neuron_id, size_t tgt_neuron_id, size_t affected_neuron_id, size_t affected_element_type, size_t signal_type, size_t synapse_id) {
-            num_requests++;
-
-            requests.push_back(src_neuron_id);
-            requests.push_back(tgt_neuron_id);
-            requests.push_back(affected_neuron_id);
-            requests.push_back(affected_element_type);
-            requests.push_back(signal_type);
-            requests.push_back(synapse_id);
-        }
-
-        void append(size_t src_neuron_id, size_t tgt_neuron_id, size_t affected_neuron_id,
-            ElementType affected_element_type, SignalType signal_type, size_t synapse_id) {
-            num_requests++;
-
-            size_t affected_element_type_converted = affected_element_type == ElementType::AXON ? 0 : 1;
-            size_t signal_type_converted = signal_type == SignalType::EXCITATORY ? 0 : 1;
-
-            requests.push_back(src_neuron_id);
-            requests.push_back(tgt_neuron_id);
-            requests.push_back(affected_neuron_id);
-            requests.push_back(affected_element_type_converted);
-            requests.push_back(signal_type_converted);
-            requests.push_back(synapse_id);
-        }
-
-        [[nodiscard]] std::array<size_t, Constants::num_items_per_request> get_request(size_t request_index) const noexcept {
-            const size_t base_index = Constants::num_items_per_request * request_index;
-
-            std::array<size_t, Constants::num_items_per_request> arr{};
-
-            for (size_t i = 0; i < Constants::num_items_per_request; i++) {
-                arr[i] = requests[base_index + i];
-            }
-
-            return arr;
-        }
-
-        // Get pointer to data
-        [[nodiscard]] size_t* get_requests() noexcept {
-            return requests.data();
-        }
-
-        [[nodiscard]] const size_t* get_requests() const noexcept {
-            return requests.data();
-        }
-
-        [[nodiscard]] size_t get_requests_size_in_bytes() const noexcept {
-            return requests.size() * sizeof(size_t);
-        }
-
-    private:
-        size_t num_requests{ 0 }; // Number of synapse deletion requests
-        std::vector<size_t> requests; // Each request to delete a synapse is a 6-tuple:
-            // (src_neuron_id, tgt_neuron_id, affected_neuron_id, affected_element_type, signal_type, synapse_id)
-            // That is why requests.size() == 6*num_requests
-            // Note, a more memory-efficient implementation would use a smaller data type (not size_t)
-            // for affected_element_type, signal_type.
-            // This vector is used as MPI communication buffer
-    };
-
-    /**
 	* Type for list element used to store pending synapse deletion
 	*/
     class PendingSynapseDeletion {
@@ -152,19 +57,18 @@ class Neurons {
         ElementType affected_element_type; // Type of the element (axon/dendrite) to be set vacant
         SignalType signal_type; // Signal type (exc/inh) of the synapse
         unsigned int synapse_id; // Synapse id of the synapse to be deleted
-        bool affected_element_already_deleted; // "True" if the element to be set vacant was already deleted by the neuron owning it
+        bool affected_element_already_deleted = false; // "True" if the element to be set vacant was already deleted by the neuron owning it
             // "False" if the element must be set vacant
 
     public:
         PendingSynapseDeletion(const RankNeuronId& src, const RankNeuronId& tgt, const RankNeuronId& aff,
-            ElementType elem, SignalType sign, unsigned int id, bool affec)
+            ElementType elem, SignalType sign, unsigned int id)
             : src_neuron_id(src)
             , tgt_neuron_id(tgt)
             , affected_neuron_id(aff)
             , affected_element_type(elem)
             , signal_type(sign)
-            , synapse_id(id)
-            , affected_element_already_deleted(affec) {
+            , synapse_id(id) {
         }
 
         PendingSynapseDeletion(const PendingSynapseDeletion& other) = default;
@@ -203,8 +107,8 @@ class Neurons {
             return affected_element_already_deleted;
         }
 
-        void set_affected_element_already_deleted(bool value) noexcept {
-            affected_element_already_deleted = value;
+        void set_affected_element_already_deleted() noexcept {
+            affected_element_already_deleted = true;
         }
 
         [[nodiscard]] bool check_light_equality(const PendingSynapseDeletion& other) const {
@@ -224,6 +128,128 @@ class Neurons {
 
             return src_neuron_id_eq && tgt_neuron_id_eq && id_eq;
         }
+    };
+
+    /**
+	 * Type for list element used to represent a synapse for synapse selection
+	 */
+    class Synapse {
+        RankNeuronId rank_neuron_id;
+        unsigned int synapse_id; // Id of the synapse. Used to distinguish multiple synapses between the same neuron pair
+    public:
+        Synapse(RankNeuronId rank_neuron_id, unsigned int synapse_id) noexcept
+            : rank_neuron_id(rank_neuron_id)
+            , synapse_id(synapse_id) {
+        }
+
+        [[nodiscard]] RankNeuronId get_rank_neuron_id() const noexcept {
+            return rank_neuron_id;
+        }
+
+        [[nodiscard]] unsigned int get_synapse_id() const noexcept {
+            return synapse_id;
+        }
+    };
+
+    /**
+	 * Type for synapse deletion requests which are used with MPI
+	 */
+    struct SynapseDeletionRequests {
+        SynapseDeletionRequests() = default;
+
+        [[nodiscard]] size_t size() const noexcept { return num_requests; }
+
+        void resize(size_t size) {
+            num_requests = size;
+            requests.resize(Constants::num_items_per_request * size);
+        }
+
+        void append(const PendingSynapseDeletion& pending_deletion) {
+            num_requests++;
+
+            size_t affected_element_type_converted = pending_deletion.get_affected_element_type() == ElementType::AXON ? 0 : 1;
+            size_t signal_type_converted = pending_deletion.get_signal_type() == SignalType::EXCITATORY ? 0 : 1;
+
+            requests.push_back(pending_deletion.get_src_neuron_id().get_neuron_id());
+            requests.push_back(pending_deletion.get_tgt_neuron_id().get_neuron_id());
+            requests.push_back(pending_deletion.get_affected_neuron_id().get_neuron_id());
+            requests.push_back(affected_element_type_converted);
+            requests.push_back(signal_type_converted);
+            requests.push_back(pending_deletion.get_synapse_id());
+        }
+
+        [[nodiscard]] std::array<size_t, Constants::num_items_per_request> get_request(size_t request_index) const noexcept {
+            const size_t base_index = Constants::num_items_per_request * request_index;
+
+            std::array<size_t, Constants::num_items_per_request> arr{};
+
+            for (size_t i = 0; i < Constants::num_items_per_request; i++) {
+                arr[i] = requests[base_index + i];
+            }
+
+            return arr;
+        }
+
+        [[nodiscard]] size_t get_source_neuron_id(size_t request_index) const {
+            const auto index = Constants::num_items_per_request * request_index;
+            RelearnException::check(index < requests.size(), "Index is out of bounds");
+            return requests[index];
+        }
+
+        [[nodiscard]] size_t get_target_neuron_id(size_t request_index) const {
+            const auto index = Constants::num_items_per_request * request_index + 1;
+            RelearnException::check(index < requests.size(), "Index is out of bounds");
+            return requests[index];
+        }
+
+        [[nodiscard]] size_t get_affected_neuron_id(size_t request_index) const {
+            const auto index = Constants::num_items_per_request * request_index + 2;
+            RelearnException::check(index < requests.size(), "Index is out of bounds");
+            return requests[index];
+        }
+
+        [[nodiscard]] ElementType get_affected_element_type(size_t request_index) const {
+            const auto index = Constants::num_items_per_request * request_index + 3;
+            RelearnException::check(index < requests.size(), "Index is out of bounds");
+            const auto affected_element_type_converted = requests[index] == 0 ? ElementType::AXON : ElementType::DENDRITE;
+            return affected_element_type_converted;
+        }
+
+        [[nodiscard]] SignalType get_signal_type(size_t request_index) const {
+            const auto index = Constants::num_items_per_request * request_index + 4;
+            RelearnException::check(index < requests.size(), "Index is out of bounds");
+            const auto affected_element_type_converted = requests[index] == 0 ? SignalType::EXCITATORY : SignalType::INHIBITORY;
+            return affected_element_type_converted;
+        }
+
+        [[nodiscard]] unsigned int get_synapse_id(size_t request_index) const {
+            const auto index = Constants::num_items_per_request * request_index + 5;
+            RelearnException::check(index < requests.size(), "Index is out of bounds");
+            const auto synapse_id = static_cast<unsigned int>(requests[index]);
+            return synapse_id;
+        }
+
+        // Get pointer to data
+        [[nodiscard]] size_t* get_requests() noexcept {
+            return requests.data();
+        }
+
+        [[nodiscard]] const size_t* get_requests() const noexcept {
+            return requests.data();
+        }
+
+        [[nodiscard]] size_t get_requests_size_in_bytes() const noexcept {
+            return requests.size() * sizeof(size_t);
+        }
+
+    private:
+        size_t num_requests{ 0 }; // Number of synapse deletion requests
+        std::vector<size_t> requests; // Each request to delete a synapse is a 6-tuple:
+            // (src_neuron_id, tgt_neuron_id, affected_neuron_id, affected_element_type, signal_type, synapse_id)
+            // That is why requests.size() == 6*num_requests
+            // Note, a more memory-efficient implementation would use a smaller data type (not size_t)
+            // for affected_element_type, signal_type.
+            // This vector is used as MPI communication buffer
     };
 
     template <typename T>
@@ -284,7 +310,25 @@ public:
         }
     }
 
-    std::vector<ModelParameter> get_parameter(ElementType element_type, SignalType signal_type);
+    void set_octree(std::shared_ptr<Octree> octree) {
+        global_tree = std::move(octree);
+    }
+
+    void set_network_graph(std::shared_ptr<NetworkGraph> network) {
+        network_graph = std::move(network);
+    }
+
+    std::vector<ModelParameter> get_parameter(ElementType element_type, SignalType signal_type) {
+        if (element_type == ElementType::AXON) {
+            return axons.get_parameter();
+        }
+
+        if (signal_type == SignalType::EXCITATORY) {
+            return dendrites_exc.get_parameter();
+        }
+
+        return dendrites_inh.get_parameter();
+    }
 
     void set_model(std::unique_ptr<NeuronModels>&& model) noexcept {
         neuron_model = std::move(model);
@@ -320,10 +364,10 @@ public:
 
     [[nodiscard]] std::tuple<bool, size_t, Vec3d, SignalType> get_vacant_axon() const noexcept;
 
-    void init_synaptic_elements(const NetworkGraph& network_graph);
+    void init_synaptic_elements();
 
-    void update_electrical_activity(const NetworkGraph& network_graph) {
-        neuron_model->update_electrical_activity(network_graph, calcium);
+    void update_electrical_activity() {
+        neuron_model->update_electrical_activity(*network_graph, calcium);
     }
 
     void update_number_synaptic_elements_delta() noexcept {
@@ -332,14 +376,15 @@ public:
         dendrites_inh.update_number_elements_delta(calcium);
     }
 
-    std::tuple<size_t, size_t> update_connectivity(Octree& global_tree,
-        NetworkGraph& network_graph) {
+    std::tuple<size_t, size_t> update_connectivity() {
+        RelearnException::check(network_graph.get() != nullptr, "Network graph is nullptr");
+        RelearnException::check(global_tree.get() != nullptr, "Global octree is nullptr");
 
-        debug_check_counts(network_graph);
-        size_t num_synapses_deleted = delete_synapses(network_graph);
-        debug_check_counts(network_graph);
-        size_t num_synapses_created = create_synapses(global_tree, network_graph);
-        debug_check_counts(network_graph);
+        debug_check_counts();
+        size_t num_synapses_deleted = delete_synapses();
+        debug_check_counts();
+        size_t num_synapses_created = create_synapses();
+        debug_check_counts();
 
         return std::make_tuple(num_synapses_deleted, num_synapses_created);
     }
@@ -349,7 +394,7 @@ public:
     // Print global information about all neurons at rank 0
     void print_neurons_overview_to_log_file_on_rank_0(size_t step);
 
-    void print_network_graph_to_log_file(const NetworkGraph& network_graph, const NeuronIdMap& neuron_id_map);
+    void print_network_graph_to_log_file(const NeuronIdMap& neuron_id_map);
 
     void print_positions_to_log_file(const NeuronIdMap& neuron_id_map);
 
@@ -357,13 +402,9 @@ public:
 
     void print_info_for_barnes_hut();
 
-    void debug_check_counts(const NetworkGraph& network_graph);
+    void debug_check_counts();
 
 private:
-    size_t delete_synapses(NetworkGraph& network_graph);
-
-    size_t create_synapses(Octree& global_tree, NetworkGraph& network_graph);
-
     template <typename T>
     [[nodiscard]] StatisticalMeasures<T> global_statistics(const std::vector<T>& local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root, MPIWrapper::Scope scope) {
         const double my_avg = std::accumulate(local_values.begin(), local_values.end(), 0.0)
@@ -399,12 +440,9 @@ private:
         return { static_cast<T>(d_min), static_cast<T>(d_max), avg, var, std };
     }
 
-    /**
-	 * Returns iterator to randomly chosen synapse from list
-	 */
-    typename std::list<Synapse>::const_iterator select_random_synapse(const std::list<Synapse>& list);
+    size_t delete_synapses();
 
-    void find_synapses_for_deletion(SynapticElements& synaptic_elements, const NetworkGraph& network_graph, std::list<Neurons::PendingSynapseDeletion>& list_with_pending_deletions);
+    void delete_synapses_find_synapses(SynapticElements& synaptic_elements, std::list<Neurons::PendingSynapseDeletion>& pending_deletions);
 
     /**
 	 * Determines which synapses should be deleted.
@@ -415,23 +453,43 @@ private:
 	 * due to synapse deletion until all neurons have decided *independently* which synapse
 	 * to delete. This should reflect how it's done for a distributed memory implementation.
 	 */
-    std::list<Neurons::PendingSynapseDeletion> find_synapses_for_deletion(size_t neuron_id,
+    std::list<Neurons::PendingSynapseDeletion> delete_synapses_find_synapses_on_neuron(size_t neuron_id,
         ElementType element_type,
         SignalType signal_type,
         unsigned int num_synapses_to_delete,
-        const NetworkGraph& network_graph,
-        std::list<Neurons::PendingSynapseDeletion>& list_with_pending_deletions);
+        std::list<Neurons::PendingSynapseDeletion>& pending_deletions);
 
-    std::list<Neurons::Synapse> register_edges(const NetworkGraph::Edges& out_edges);
+    std::list<Neurons::Synapse> delete_synapses_register_edges(const NetworkGraph::Edges& edges);
+
+    MapSynapseDeletionRequests delete_synapses_exchange_requests(const std::list<PendingSynapseDeletion>& pending_deletions);
+
+    void delete_synapses_process_requests(const MapSynapseDeletionRequests& synapse_deletion_requests_incoming, std::list<PendingSynapseDeletion>& pending_deletions);
+
+    size_t delete_synapses_commit_deletions(const std::list<PendingSynapseDeletion>& list);
+
+    size_t create_synapses();
+
+    void create_synapses_update_octree();
+
+    MapSynapseCreationRequests create_synapses_find_targets();
+
+    MapSynapseCreationRequests create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
+
+    size_t create_synapses_process_requests(MapSynapseCreationRequests& synapse_creation_requests_incoming);
+
+    void create_synapses_exchange_responses(const MapSynapseCreationRequests& synapse_creation_requests_incoming, MapSynapseCreationRequests& synapse_creation_requests_outgoing);
+
+    size_t create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
     static void print_pending_synapse_deletions(const std::list<PendingSynapseDeletion>& list);
-
-    size_t delete_synapses(const std::list<PendingSynapseDeletion>& list, NetworkGraph& network_graph);
 
     size_t num_neurons = 0; // Local number of neurons
     std::vector<size_t> local_ids;
 
     const Partition* partition;
+
+    std::shared_ptr<Octree> global_tree;
+    std::shared_ptr<NetworkGraph> network_graph;
 
     std::unique_ptr<NeuronModels> neuron_model;
 

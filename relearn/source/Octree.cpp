@@ -641,8 +641,6 @@ void Octree::insert(OctreeNode* node_to_insert) {
             // box size are the same. That's why we don't set the tree's
             // box size explicitly here.
 
-            //LogFiles::print_debug("ROOT: Me as root inserted.");
-
             return;
         }
         // Create tree's root
@@ -659,8 +657,6 @@ void Octree::insert(OctreeNode* node_to_insert) {
         // cell size becomes tree's box size
         root->set_cell_size(this->xyz_min, this->xyz_max);
         root->set_cell_neuron_id(Constants::uninitialized);
-
-        //LogFiles::print_debug("ROOT: new node as root inserted.");
     }
 
     auto* curr = root;
@@ -687,42 +683,27 @@ void Octree::insert(OctreeNode* node_to_insert) {
 
         // Target level reached, so insert me
         if (next_level == target_level) {
-            //LogFiles::print_debug("Target level reached.");
-
             // Make sure that no other node is already
             // on my index in the children array
-            //
-            // NOTE:
-            // This assertion is not valid anymore as the same branch nodes
-            // are inserted repeatedly at the same position
-            // RelearnException::check(curr->children[my_idx] == nullptr);
 
             curr->set_child(node_to_insert, my_idx);
-
-            //LogFiles::print_debug("  Target level reached... inserted me");
             break;
         }
         // Target level not yet reached
-
-        //LogFiles::print_debug("Target level not yet reached.");
 
         // A node exists on my index in the
         // children array, so follow this node.
         if (curr->get_child(my_idx) != nullptr) {
             curr = curr->get_child(my_idx);
-            //LogFiles::print_debug("  I follow node on my index.");
         }
         // New node must be created which
         // I can then follow
         else {
-            //LogFiles::print_debug("  New node must be created which I can then follow.");
             Vec3d new_node_xyz_min;
             Vec3d new_node_xyz_max;
 
-            //LogFiles::print_debug("    Trying to allocate node.");
             // Create node
             auto* new_node = MPIWrapper::new_octree_node();
-            //LogFiles::print_debug("    Node allocated.");
 
             // Init octree node
             new_node->set_rank(MPIWrapper::get_my_rank());

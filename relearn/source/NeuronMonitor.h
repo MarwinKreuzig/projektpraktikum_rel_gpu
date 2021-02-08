@@ -52,9 +52,9 @@ class NeuronMonitor {
     std::vector<NeuronInformation> informations;
 
 public:
-    static std::shared_ptr<Neurons> neurons_to_monitor;
-    static size_t max_steps;
-    static size_t current_step;
+    static inline std::shared_ptr<Neurons> neurons_to_monitor{};
+    static inline size_t max_steps = 0;
+    static inline size_t current_step = 0;
 
     explicit NeuronMonitor(size_t neuron_id)
         : target_neuron_id(neuron_id)
@@ -91,6 +91,10 @@ public:
         const unsigned int& dendrites_inh_connected = neurons_to_monitor->dendrites_inh.connected_cnts[target_neuron_id];
 
         informations[current_step] = NeuronInformation(calcium, x, fired, secondary, I_sync, axons, axons_connected, dendrites_exc, dendrites_exc_connected, dendrites_inh, dendrites_inh_connected);
+    }
+
+    void increase_monitoring_capacity(const size_t increase_by) {
+        informations.resize(informations.size() + increase_by);
     }
 
     [[nodiscard]] const std::vector<NeuronInformation>& get_informations() const /*noexcept*/ {

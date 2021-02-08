@@ -33,3 +33,7 @@ constexpr size_t logfile_update_step = 500;
 
 constexpr size_t mpi_alloc_mem = 1024 * 1024 * 300;
 } // namespace Constants
+
+namespace Config {
+constexpr bool do_debug_checks = false;
+} // namespace Config

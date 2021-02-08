@@ -22,6 +22,8 @@ if(ENABLE_CLANG_TIDY)
 	set(CMAKE_CXX_CLANG_TIDY clang-tidy)
 endif()
 
+include(FetchContent)
+
 find_package (MPI REQUIRED)
 
 # project options
@@ -45,6 +47,14 @@ add_executable(relearn
 set_target_properties(relearn PROPERTIES ENABLE_EXPORTS 1)
 
 target_link_libraries(relearn PRIVATE project_options)
+
+FetchContent_Declare(
+  CLI11
+  GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
+  GIT_TAG        master
+)
+FetchContent_MakeAvailable(CLI11)
+target_include_directories(relearn SYSTEM PRIVATE ${CLI11_SOURCE_DIR}/include)
 
 #Download and unpack googletest at configure time
 configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)

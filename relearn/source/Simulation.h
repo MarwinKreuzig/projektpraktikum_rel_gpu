@@ -43,7 +43,9 @@ public:
 
     void finalize() const;
 
-    static std::vector<std::unique_ptr<NeuronModels>> get_models();
+	void increase_monitoring_capacity(size_t size);
+
+	static std::vector<std::unique_ptr<NeuronModels>> get_models();
 
 private:
     void initialize();
@@ -59,7 +61,7 @@ private:
     std::shared_ptr<Neurons> neurons;
     std::unique_ptr<NeuronIdMap> neuron_id_map;
 
-    std::unique_ptr<Octree> global_tree;
+    std::shared_ptr<Octree> global_tree;
 
     std::shared_ptr<NetworkGraph> network_graph;
 

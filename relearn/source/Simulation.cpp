@@ -56,14 +56,11 @@ void Simulation::set_neuron_models(std::unique_ptr<NeuronModels> nm) {
 void Simulation::place_random_neurons(size_t num_neurons, double frac_exc) {
     neuron_to_subdomain_assignment = std::make_unique<SubdomainFromNeuronDensity>(num_neurons, frac_exc, 26);
     initialize();
-    network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
 }
 
 void Simulation::load_neurons_from_file(const std::string& path_to_positions) {
     neuron_to_subdomain_assignment = std::make_unique<SubdomainFromFile>(path_to_positions, *partition);
     initialize();
-
-    network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
 }
 
 void Simulation::load_neurons_from_file(const std::string& path_to_positions, const std::string& path_to_connections) {
@@ -72,8 +69,8 @@ void Simulation::load_neurons_from_file(const std::string& path_to_positions, co
     network_graph->add_edges_from_file(path_to_connections, path_to_positions, *neuron_id_map, *partition);
     LogFiles::print_message_rank("Network graph created", 0);
 
-    neurons->init_synaptic_elements(*network_graph);
-    neurons->debug_check_counts(*network_graph);
+    neurons->init_synaptic_elements();
+    neurons->debug_check_counts();
     LogFiles::print_message_rank("Synaptic elements initialized \n", 0);
 
     neurons->print_neurons_overview_to_log_file_on_rank_0(0);
@@ -99,7 +96,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 
         // Provide neuronal network to neuron models for one iteration step
         GlobalTimers::timers.start(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
-        neurons->update_electrical_activity(*network_graph);
+        neurons->update_electrical_activity();
         GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
 
         // Calc how many synaptic elements grow/retract
@@ -107,11 +104,6 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
         GlobalTimers::timers.start(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
         neurons->update_number_synaptic_elements_delta();
         GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
-
-        //if (0 == MPIWrapper::get_my_rank() && step % 50 == 0) {
-        //	sstring << "** STATE AFTER: " << step << " of " << params.simulation_time
-        //		<< " msec ** [" << Timers::wall_clock_time() << "]\n";
-        //}
 
         // Update connectivity every 100 ms
         if (step % Constants::plasticity_update_step == 0) {
@@ -125,7 +117,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 
             GlobalTimers::timers.start(TimerRegion::UPDATE_CONNECTIVITY);
 
-            std::tuple<size_t, size_t> deleted_created = neurons->update_connectivity(*global_tree, *network_graph);
+            std::tuple<size_t, size_t> deleted_created = neurons->update_connectivity();
             num_synapses_deleted = std::get<0>(deleted_created);
             num_synapses_created = std::get<1>(deleted_created);
 
@@ -150,6 +142,12 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
                 sstring << "Sum (all processes) number synapses created: " << global_cnts[1] / 2 << "\n";
             }
 
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate,
+                std::to_string(step) + ": " + std::to_string(global_cnts[1]) + " " + std::to_string(global_cnts[0]) + "\n", false);
+
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal,
+                std::to_string(step) + ": " + std::to_string(local_cnts[1]) + " " + std::to_string(local_cnts[0]) + "\n", false);
+
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_synapses_deleted, num_synapses_created);
 
             sstring << std::flush;
@@ -170,7 +168,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
     print_neuron_monitors();
 
     neurons->print_positions_to_log_file(*neuron_id_map);
-    neurons->print_network_graph_to_log_file(*network_graph, *neuron_id_map);
+    neurons->print_network_graph_to_log_file(*neuron_id_map);
 }
 
 void Simulation::finalize() const {
@@ -207,7 +205,7 @@ void Simulation::initialize() {
         neurons->get_positions().get_y_dims(),
         neurons->get_positions().get_z_dims());
 
-    global_tree = std::make_unique<Octree>(*partition, parameters->accept_criterion, parameters->sigma, parameters->max_num_pending_vacant_axons);
+    global_tree = std::make_shared<Octree>(*partition, parameters->accept_criterion, parameters->sigma, parameters->max_num_pending_vacant_axons);
     global_tree->set_no_free_in_destructor(); // This needs to be changed later, as it's cleaner to free the nodes at destruction
 
     // Insert my local (subdomain) trees into my global tree
@@ -218,6 +216,11 @@ void Simulation::initialize() {
 
     LogFiles::print_message_rank("Neurons inserted into subdomains", 0);
     LogFiles::print_message_rank("Subdomains inserted into global tree", 0);
+
+    network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
+
+    neurons->set_network_graph(network_graph);
+    neurons->set_octree(global_tree);
 }
 
 void Simulation::print_neuron_monitors() {
@@ -257,4 +260,10 @@ void Simulation::print_neuron_monitors() {
         outfile.flush();
         outfile.close();
     }
+}
+
+void Simulation::increase_monitoring_capacity(size_t size) {
+	for (auto& mon : monitors) {
+		mon.increase_monitoring_capacity(size);
+	}
 }

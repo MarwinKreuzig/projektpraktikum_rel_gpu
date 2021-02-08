@@ -43,8 +43,8 @@ class LogFiles {
 
 public:
     enum class EventType : char {
-        SynapseCreation,
-        SynapseDeletion,
+        PlasticityUpdate,
+        PlasticityUpdateLocal,
         NeuronsOverview,
         Sums,
         Network,
@@ -62,7 +62,7 @@ private:
         return MPIWrapper::get_my_rank_str();
     }
 
-    static void add_logfile(EventType type, const std::string& file_name);
+    static void add_logfile(EventType type, const std::string& file_name, int rank);
 
 public:
     /**
