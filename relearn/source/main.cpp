@@ -23,9 +23,6 @@
 #include <CLI/Formatter.hpp>
 #include <CLI/Config.hpp>
 
-#include <sys/stat.h>
-#include <sys/types.h>
-
 #include <array>
 #include <bitset>
 #include <cerrno>
