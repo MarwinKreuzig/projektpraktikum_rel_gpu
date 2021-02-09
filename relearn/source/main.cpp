@@ -196,8 +196,8 @@ int main(int argc, char** argv) {
         while (true) {
             std::cout << "Interactive run. Run another " << simulation_steps << " simulation steps? [y/n]\n";
             char yn{ 'n' };
-            std::cin >> yn;
-            RelearnException::check(!std::cin.fail(), "Error on input stream std::cin.");
+            auto n = scanf(" %c", &yn);
+            RelearnException::check(static_cast<bool>(n), "Error on while reading input with scanf.");
             if (yn == 'n' || yn == 'N') {
                 break;
             } else if (yn == 'y' || yn == 'Y') {
