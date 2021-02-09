@@ -80,6 +80,9 @@ void Simulation::load_neurons_from_file(const std::string& path_to_positions, co
 void Simulation::simulate(size_t number_steps, size_t step_monitor) {
     GlobalTimers::timers.start(TimerRegion::SIMULATION_LOOP);
 
+    const auto previous_synapse_creations = total_synapse_creations;
+    const auto previous_synapse_deletions = total_synapse_deletions;
+
     /**
 	* Simulation loop
 	*/
@@ -105,12 +108,11 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
         neurons->update_number_synaptic_elements_delta();
         GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
 
-        // Update connectivity every 100 ms
         if (step % Constants::plasticity_update_step == 0) {
             size_t num_synapses_deleted = 0;
             size_t num_synapses_created = 0;
 
-            if (0 == MPIWrapper::get_my_rank()) {
+            if (0 == MPIWrapper::get_my_rank() && false) {
                 sstring << "** UPDATE CONNECTIVITY AFTER: " << step << " of " << number_steps
                         << " msec ** [" << Timers::wall_clock_time() << "]\n";
             }
@@ -124,22 +126,14 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_CONNECTIVITY);
 
             // Get total number of synapses deleted and created
-            std::array<uint64_t, 2> local_cnts = { static_cast<uint64_t>(num_synapses_deleted), static_cast<uint64_t>(num_synapses_created) };
-            std::array<uint64_t, 2> global_cnts{};
+            std::array<int64_t, 2> local_cnts = { static_cast<int64_t>(num_synapses_deleted), static_cast<int64_t>(num_synapses_created) };
+            std::array<int64_t, 2> global_cnts{};
 
             MPIWrapper::reduce(local_cnts, global_cnts, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
 
             if (0 == MPIWrapper::get_my_rank()) {
                 total_synapse_deletions += global_cnts[0] / 2;
                 total_synapse_creations += global_cnts[1] / 2;
-            }
-
-            if (global_cnts[0] != 0.0) {
-                sstring << "Sum (all processes) number synapses deleted: " << global_cnts[0] / 2 << "\n";
-            }
-
-            if (global_cnts[1] != 0.0) {
-                sstring << "Sum (all processes) number synapses created: " << global_cnts[1] / 2 << "\n";
             }
 
             LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate,
@@ -151,16 +145,33 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_synapses_deleted, num_synapses_created);
 
             sstring << std::flush;
-            LogFiles::write_to_file(LogFiles::EventType::Cout, sstring.str().c_str(), true);
+            LogFiles::write_to_file(LogFiles::EventType::Cout, sstring.str(), true);
 
             network_graph->debug_check();
         }
 
-        // Print details every 500 ms
         if (step % Constants::logfile_update_step == 0) {
             neurons->print_neurons_overview_to_log_file_on_rank_0(step);
         }
+
+        if (step % Constants::console_update_step == 0) {
+            if (MPIWrapper::get_my_rank() != 0) {
+                continue;
+            }
+
+            const auto netto_creations = total_synapse_creations - total_synapse_deletions;
+
+            std::stringstream ss;
+            ss << "[Step: " << step << "\t] ";
+            ss << "Total up to now     (creations, deletions, netto):\t" << total_synapse_creations << "\t\t" << total_synapse_deletions << "\t\t" << netto_creations << "\n";
+            ss << std::flush;
+
+            LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
+        }
     }
+
+    delta_synapse_creations = total_synapse_creations - previous_synapse_creations;
+    delta_synapse_deletions = total_synapse_deletions - previous_synapse_deletions;
 
     // Stop timing simulation loop
     GlobalTimers::timers.stop_and_add(TimerRegion::SIMULATION_LOOP);
@@ -172,15 +183,14 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 }
 
 void Simulation::finalize() const {
-
-    //neurons_in_subdomain->write_neurons_to_file("output_positions_" + MPIWrapper::get_my_rank_str() + ".txt");
-    //network_graph.write_synapses_to_file("output_edges_" + MPIWrapper::get_my_rank_str() + ".txt", neuron_id_map, partition);
     if (0 == MPIWrapper::get_my_rank()) {
+        const auto netto_creations = total_synapse_creations - total_synapse_deletions;
+        const auto previous_netto_creations = delta_synapse_creations - delta_synapse_deletions;
+
         std::stringstream sstring; // For output generation
-        sstring << "\n";
-        sstring << "\n"
-                << "Total creations: " << total_synapse_creations << "\n";
-        sstring << "Total deletions: " << total_synapse_deletions << "\n";
+        sstring << "\n\n";
+        sstring << "Total up to now     (creations, deletions, netto): " << total_synapse_creations << "\t" << total_synapse_deletions << "\t" << netto_creations << "\n";
+        sstring << "Diff. from previous (creations, deletions, netto): " << delta_synapse_creations << "\t" << delta_synapse_deletions << "\t" << previous_netto_creations << "\n";
         sstring << "END: " << Timers::wall_clock_time() << "\n";
         LogFiles::print_message_rank(sstring.str().c_str(), 0);
     }

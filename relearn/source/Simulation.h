@@ -67,6 +67,9 @@ private:
 
     std::vector<NeuronMonitor> monitors;
 
-    size_t total_synapse_creations = 0;
-    size_t total_synapse_deletions = 0;
+    int64_t total_synapse_creations = 0;
+    int64_t total_synapse_deletions = 0;
+
+    int64_t delta_synapse_creations = 0;
+    int64_t delta_synapse_deletions = 0;
 };
