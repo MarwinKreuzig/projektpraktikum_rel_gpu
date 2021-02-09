@@ -77,58 +77,58 @@ void Octree::postorder_print() {
 
             // Print node's address
             for (auto j = 0; j < depth; j++) {
-               ss << " ";
+                ss << " ";
             }
-           ss << "Address: " << ptr << "\n";
+            ss << "Address: " << ptr << "\n";
 
             // Print cell extent
             std::tie(xyz_min, xyz_max) = ptr->get_cell().get_size();
             for (auto j = 0; j < depth; j++) {
-               ss << " ";
+                ss << " ";
             }
 
-           ss << "Cell extent: (" << xyz_min.get_x() << " .. " << xyz_max.get_x() << ", "
-                      << xyz_min.get_y() << " .. " << xyz_max.get_y() << ", "
-                      << xyz_min.get_z() << " .. " << xyz_max.get_z() << ")\n";
+            ss << "Cell extent: (" << xyz_min.get_x() << " .. " << xyz_max.get_x() << ", "
+               << xyz_min.get_y() << " .. " << xyz_max.get_y() << ", "
+               << xyz_min.get_z() << " .. " << xyz_max.get_z() << ")\n";
 
             // Print neuron ID
             for (auto j = 0; j < depth; j++) {
-               ss << " ";
+                ss << " ";
             }
-           ss << "Neuron ID: " << ptr->get_cell().get_neuron_id() << "\n";
+            ss << "Neuron ID: " << ptr->get_cell().get_neuron_id() << "\n";
 
             // Print number of dendrites
             for (auto j = 0; j < depth; j++) {
-               ss << " ";
+                ss << " ";
             }
-           ss << "Number dendrites (exc, inh): (" << ptr->get_cell().get_neuron_num_dendrites_exc()
-                      << ", " << ptr->get_cell().get_neuron_num_dendrites_inh() << ")\n";
+            ss << "Number dendrites (exc, inh): (" << ptr->get_cell().get_neuron_num_dendrites_exc()
+               << ", " << ptr->get_cell().get_neuron_num_dendrites_inh() << ")\n";
 
             // Print position DendriteType::EXCITATORY
             xyz_pos = ptr->get_cell().get_neuron_position_exc();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
-               ss << "-- invalid!";
+                ss << "-- invalid!";
             }
 
             for (auto j = 0; j < depth; j++) {
-               ss << " ";
+                ss << " ";
             }
-           ss << "Position exc: (" << xyz_pos.value().get_x() << ", " << xyz_pos.value().get_y() << ", " << xyz_pos.value().get_z() << ") ";
+            ss << "Position exc: (" << xyz_pos.value().get_x() << ", " << xyz_pos.value().get_y() << ", " << xyz_pos.value().get_z() << ") ";
 
-           ss << "\n";
+            ss << "\n";
             // Print position DendriteType::INHIBITORY
             xyz_pos = ptr->get_cell().get_neuron_position_inh();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
-               ss << "-- invalid!";
+                ss << "-- invalid!";
             }
             for (auto j = 0; j < depth; j++) {
-               ss << " ";
+                ss << " ";
             }
-           ss << "Position inh: (" << xyz_pos.value().get_x() << ", " << xyz_pos.value().get_y() << ", " << xyz_pos.value().get_z() << ") ";
-           ss << "\n";
-           ss << "\n";
+            ss << "Position inh: (" << xyz_pos.value().get_x() << ", " << xyz_pos.value().get_y() << ", " << xyz_pos.value().get_z() << ") ";
+            ss << "\n";
+            ss << "\n";
 
             stack.pop();
         }
@@ -137,14 +137,14 @@ void Octree::postorder_print() {
             elem.set_visited();
 
             for (auto j = 0; j < depth; j++) {
-               ss << " ";
+                ss << " ";
             }
 
-           ss << "Child indices: ";
+            ss << "Child indices: ";
             int id = 0;
             for (const auto& child : ptr->get_children()) {
                 if (child != nullptr) {
-                   ss << id << " ";
+                    ss << id << " ";
                 }
                 id++;
             }
@@ -157,7 +157,7 @@ void Octree::postorder_print() {
                     stack.emplace(*it, false, static_cast<size_t>(depth) + 1);
                 }
             }
-           ss << "\n";
+            ss << "\n";
         }
 
         LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);

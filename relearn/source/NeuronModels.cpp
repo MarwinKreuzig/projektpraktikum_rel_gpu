@@ -155,7 +155,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
         // Walk through in-edges of my neuron
         const NetworkGraph::Edges& in_edges = network_graph.get_in_edges(neuron_id);
 
-        for (const auto& [key,edge_val] : in_edges) {
+        for (const auto& [key, edge_val] : in_edges) {
             const auto& [rank, src_neuron_id] = key;
 
             bool spike{ false };

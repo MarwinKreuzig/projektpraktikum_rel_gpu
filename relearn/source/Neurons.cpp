@@ -500,7 +500,7 @@ size_t Neurons::create_synapses() {
 
     create_synapses_exchange_responses(synapse_creation_requests_incoming, synapse_creation_requests_outgoing);
     const auto synapses_created_remotely = create_synapses_process_responses(synapse_creation_requests_outgoing);
-    
+
     GlobalTimers::timers.stop_and_add(TimerRegion::CREATE_SYNAPSES);
 
     const auto num_synapses_created = synapses_created_locally + synapses_created_remotely;

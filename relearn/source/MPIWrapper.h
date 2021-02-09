@@ -142,7 +142,7 @@ public:
 
     template <typename T>
     static void get(T* ptr, int target_rank, int64_t target_display) {
-       get(ptr, sizeof(T), target_rank, target_display);
+        get(ptr, sizeof(T), target_rank, target_display);
     }
 
     template <typename T>

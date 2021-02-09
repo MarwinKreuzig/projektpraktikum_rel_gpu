@@ -208,7 +208,7 @@ public:
         double beta = NeuronModels::default_beta,
         unsigned int h = NeuronModels::default_h,
         double background_activity = NeuronModels::default_base_background_activity,
-        double background_activity_mean = NeuronModels::default_background_activity_mean, 
+        double background_activity_mean = NeuronModels::default_background_activity_mean,
         double background_activity_stddev = NeuronModels::default_background_activity_stddev,
         double x_0 = ModelA::default_x_0,
         double tau_x = ModelA::default_tau_x,
@@ -389,7 +389,7 @@ private:
     static constexpr double max_phi{ 0.08 };
 
     static constexpr double init_x{ -1.2 };
-    static constexpr double init_w{ -0.6 }; 
+    static constexpr double init_w{ -0.6 };
 
     std::vector<double> w; // recovery variable
 

@@ -114,7 +114,7 @@ void NeuronIdMap::create_pos_to_rank_neuron_id_mapping(
 
             RelearnException::check(idx < xyz_pos.size(), "idx is too large in neuronidmap");
             Vec3d key{ xyz_pos[idx], xyz_pos[idx + 1], xyz_pos[idx + 2] };
-            
+
             RankNeuronId val{ rank, neuron_id };
             auto ret = pos_to_rank_neuron_id.insert(std::make_pair(key, val));
             RelearnException::check(ret.second, "there is a duplicate in neuronidmap"); // New element was inserted, otherwise duplicates exist
