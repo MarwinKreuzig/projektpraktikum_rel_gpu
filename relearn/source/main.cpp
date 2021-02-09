@@ -104,9 +104,6 @@ int main(int argc, char** argv) {
 
     LogFiles::init();
 
-    //MPIWrapper::init_neurons(params->num_neurons);
-    MPIWrapper::print_infos_rank(0);
-
     // Init random number seeds
     randomNumberSeeds::partition = static_cast<int64_t>(my_rank);
     randomNumberSeeds::octree = static_cast<int64_t>(seed_octree);

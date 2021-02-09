@@ -45,14 +45,6 @@ MPI_Op MPIWrapper::minsummax;
 int MPIWrapper::num_ranks = -1; // Number of ranks in MPI_COMM_WORLD
 int MPIWrapper::my_rank = -1; // My rank in MPI_COMM_WORLD
 
-size_t MPIWrapper::num_neurons; // Total number of neurons
-size_t MPIWrapper::my_num_neurons; // My number of neurons I'm responsible for
-size_t MPIWrapper::my_neuron_id_start; // ID of my first neuron
-size_t MPIWrapper::my_neuron_id_end; // ID of my last neuron
-
-std::vector<size_t> MPIWrapper::num_neurons_of_ranks; // Number of neurons that each rank is responsible for
-std::vector<size_t> MPIWrapper::num_neurons_of_ranks_displs; // Displacements based on "num_neurons_of_ranks" (exclusive prefix sums, i.e. Exscan)
-
 int MPIWrapper::thread_level_provided; // Thread level provided by MPI
 
 std::string MPIWrapper::my_rank_str;
@@ -76,9 +68,6 @@ void MPIWrapper::init(int argc, char** argv) {
 
     register_custom_function();
 
-    num_neurons_of_ranks.resize(num_ranks);
-    num_neurons_of_ranks_displs.resize(num_ranks);
-
     const unsigned int num_digits = Util::num_digits(num_ranks - 1);
 
     std::stringstream sstring;
@@ -93,41 +82,6 @@ void MPIWrapper::init_globals() {
 
     // NOLINTNEXTLINE
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-}
-
-void MPIWrapper::init_neurons(size_t num_neurons) {
-    /**
-	 * Sanity check for use of MPI
-	 *
-	 * Check if num_neurons fits in int value (see IMPORTANT notice above)
-	 */
-    RelearnException::check(num_neurons < std::numeric_limits<int>::max(), "init_neurons: num_neurons does not fit in \"int\" data type");
-
-    MPIWrapper::num_neurons = num_neurons;
-
-    /*
-	 * Info about how much to receive (num_neurons) from every process and where to store it (displs)
-	 */
-    size_t displ = 0;
-    const size_t rest = num_neurons % num_ranks;
-    const size_t block_size = num_neurons / num_ranks;
-    for (size_t i = 0; i < num_ranks; i++) {
-        num_neurons_of_ranks[i] = block_size;
-        num_neurons_of_ranks[i] += (i < rest) ? 1 : 0;
-
-        num_neurons_of_ranks_displs[i] = displ;
-        displ += num_neurons_of_ranks[i];
-    }
-
-    /*
-	 * Calc which neurons this MPI process is responsible for
-	 */
-    my_num_neurons = num_neurons_of_ranks[my_rank];
-    my_neuron_id_start = 0;
-    for (int i = 0; i < my_rank; i++) {
-        my_neuron_id_start += num_neurons_of_ranks[i];
-    }
-    my_neuron_id_end = my_neuron_id_start + (my_num_neurons - 1);
 }
 
 void MPIWrapper::init_buffer_octree(size_t num_partitions) {
@@ -247,22 +201,6 @@ void MPIWrapper::all_gather_inl(void* ptr, int count, Scope scope) {
 [[nodiscard]] int MPIWrapper::get_my_rank() {
     RelearnException::check(my_rank >= 0, "MPIWrapper is not initialized");
     return my_rank;
-}
-
-[[nodiscard]] size_t MPIWrapper::get_num_neurons() {
-    return num_neurons;
-}
-
-[[nodiscard]] size_t MPIWrapper::get_my_num_neurons() {
-    return my_num_neurons;
-}
-
-[[nodiscard]] size_t MPIWrapper::get_my_neuron_id_start() {
-    return my_neuron_id_start;
-}
-
-[[nodiscard]] size_t MPIWrapper::get_my_neuron_id_end() {
-    return my_neuron_id_end;
 }
 
 [[nodiscard]] size_t MPIWrapper::get_num_avail_objects() {
@@ -411,15 +349,6 @@ void MPIWrapper::finalize() /*noexcept*/ {
 
     const int errorcode = MPI_Finalize();
     RelearnException::check(errorcode == 0, "Error in finalize");
-}
-
-// Print which neurons "rank" is responsible for
-void MPIWrapper::print_infos_rank(int rank) {
-    if (rank == my_rank || rank == -1) {
-        std::cout << "Number ranks: " << num_ranks << "\n";
-        std::cout << "Partitioning based on number neurons would be: Rank " << my_rank << ": my_num_neurons: " << my_num_neurons
-                  << " [start_id,end_id]: [" << my_neuron_id_start << "," << my_neuron_id_end << "]\n";
-    }
 }
 
 // This combination function assumes that it's called with the correct MPI datatype

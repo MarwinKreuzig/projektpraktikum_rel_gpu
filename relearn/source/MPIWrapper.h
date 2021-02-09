@@ -73,15 +73,6 @@ private:
     static int num_ranks; // Number of ranks in MPI_COMM_WORLD
     static int my_rank; // My rank in MPI_COMM_WORLD
 
-    static size_t num_neurons; // Total number of neurons
-    static size_t my_num_neurons; // My number of neurons I'm responsible for
-    static size_t my_neuron_id_start; // ID of my first neuron
-    static size_t my_neuron_id_end; // ID of my last neuron
-
-    // Needed for Allgatherv
-    static std::vector<size_t> num_neurons_of_ranks; // Number of neurons that each rank is responsible for
-    static std::vector<size_t> num_neurons_of_ranks_displs; // Displacements based on "num_neurons_of_ranks" (exclusive prefix sums, i.e. Exscan)
-
     static int thread_level_provided; // Thread level provided by MPI
 
     static std::string my_rank_str;
@@ -102,8 +93,6 @@ public:
     static void init(int argc, char** argv);
 
     static void init_globals();
-
-    static void init_neurons(size_t num_neurons);
 
     static void init_buffer_octree(size_t num_partitions);
 
@@ -158,14 +147,6 @@ public:
 
     [[nodiscard]] static int get_my_rank();
 
-    [[nodiscard]] static size_t get_num_neurons();
-
-    [[nodiscard]] static size_t get_my_num_neurons();
-
-    [[nodiscard]] static size_t get_my_neuron_id_start();
-
-    [[nodiscard]] static size_t get_my_neuron_id_end();
-
     [[nodiscard]] static size_t get_num_avail_objects();
 
     [[nodiscard]] static OctreeNode* get_buffer_octree_nodes();
@@ -194,6 +175,4 @@ public:
     static void unlock_window(int rank);
 
     static void finalize() /*noexcept*/;
-
-    static void print_infos_rank(int rank);
 };
