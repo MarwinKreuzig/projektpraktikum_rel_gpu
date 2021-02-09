@@ -55,6 +55,7 @@ void Simulation::set_neuron_models(std::unique_ptr<NeuronModels> nm) {
 
 void Simulation::place_random_neurons(size_t num_neurons, double frac_exc) {
     neuron_to_subdomain_assignment = std::make_unique<SubdomainFromNeuronDensity>(num_neurons, frac_exc, 26);
+    partition->set_total_num_neurons(num_neurons);
     initialize();
 }
 

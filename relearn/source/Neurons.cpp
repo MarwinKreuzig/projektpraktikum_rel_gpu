@@ -992,7 +992,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
         const int cwidth = 16; // Column width
 
         // Write headers to file if not already done so
-        if (0 == step) {
+        if (Constants::logfile_update_step == step) {
             ss << "# ALL NEURONS\n";
             ss << std::left
                << std::setw(cwidth) << "# step"
