@@ -88,8 +88,6 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 	* Simulation loop
 	*/
     for (size_t step = 1; step <= number_steps; step++) {
-        //std::cout << "[Step: " << step << "]\n";
-
         std::stringstream sstring; // For output generation
 
         if (step % step_monitor == 0) {
@@ -121,13 +119,10 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             }
 
             GlobalTimers::timers.start(TimerRegion::UPDATE_CONNECTIVITY);
-            //std::cout << "I'm down here 5" << std::endl;
 
             std::tuple<size_t, size_t> deleted_created = neurons->update_connectivity();
             num_synapses_deleted = std::get<0>(deleted_created);
             num_synapses_created = std::get<1>(deleted_created);
-
-            //std::cout << "I'm down here 6" << std::endl;
 
             GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_CONNECTIVITY);
 
@@ -135,11 +130,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             std::array<int64_t, 2> local_cnts = { static_cast<int64_t>(num_synapses_deleted), static_cast<int64_t>(num_synapses_created) };
             std::array<int64_t, 2> global_cnts{};
 
-            //std::cout << "I'm down here 7" << std::endl;
-
             MPIWrapper::reduce(local_cnts, global_cnts, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
-
-            //std::cout << "I'm down here 8" << std::endl;
 
             if (0 == MPIWrapper::get_my_rank()) {
                 total_synapse_deletions += global_cnts[0] / 2;

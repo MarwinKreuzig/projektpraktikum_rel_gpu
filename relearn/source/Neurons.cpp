@@ -120,12 +120,12 @@ size_t Neurons::delete_synapses() {
     /**
 	* Create list with synapses to delete (pending synapse deletions)
 	*/
-    // Dendrite exc cannot delete a synapse that is connected to a dendrite inh.
-    auto deletions_axons = delete_synapses_find_synapses(axons, {});
+    // Dendrite exc cannot delete a synapse that is connected to a dendrite inh. pending_deletions is used as an empty dummy
+    PendingDeletionsV pending_deletions;
+    auto deletions_axons = delete_synapses_find_synapses(axons, pending_deletions);
     const auto deletions_dend_ex = delete_synapses_find_synapses(dendrites_exc, deletions_axons);
     const auto deletions_dend_in = delete_synapses_find_synapses(dendrites_inh, deletions_axons);
 
-    PendingDeletionsV pending_deletions;
     pending_deletions.insert(pending_deletions.cend(), deletions_axons.begin(), deletions_axons.end());
     pending_deletions.insert(pending_deletions.cend(), deletions_dend_ex.begin(), deletions_dend_ex.end());
     pending_deletions.insert(pending_deletions.cend(), deletions_dend_in.begin(), deletions_dend_in.end());
