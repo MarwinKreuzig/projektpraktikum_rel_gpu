@@ -61,6 +61,8 @@ class Neurons {
             // "False" if the element must be set vacant
 
     public:
+        PendingSynapseDeletion() = default;
+
         PendingSynapseDeletion(const RankNeuronId& src, const RankNeuronId& tgt, const RankNeuronId& aff,
             ElementType elem, SignalType sign, unsigned int id)
             : src_neuron_id(src)
@@ -129,6 +131,7 @@ class Neurons {
             return src_neuron_id_eq && tgt_neuron_id_eq && id_eq;
         }
     };
+    using PendingDeletionsV = std::vector<PendingSynapseDeletion>;
 
     /**
 	 * Type for list element used to represent a synapse for synapse selection
@@ -442,7 +445,7 @@ private:
 
     size_t delete_synapses();
 
-    void delete_synapses_find_synapses(SynapticElements& synaptic_elements, std::list<Neurons::PendingSynapseDeletion>& pending_deletions);
+    PendingDeletionsV delete_synapses_find_synapses(SynapticElements& synaptic_elements, PendingDeletionsV& other_pending_deletions);
 
     /**
 	 * Determines which synapses should be deleted.
@@ -453,19 +456,20 @@ private:
 	 * due to synapse deletion until all neurons have decided *independently* which synapse
 	 * to delete. This should reflect how it's done for a distributed memory implementation.
 	 */
-    std::list<Neurons::PendingSynapseDeletion> delete_synapses_find_synapses_on_neuron(size_t neuron_id,
+    std::vector<size_t> delete_synapses_find_synapses_on_neuron(size_t neuron_id,
         ElementType element_type,
         SignalType signal_type,
         unsigned int num_synapses_to_delete,
-        std::list<Neurons::PendingSynapseDeletion>& pending_deletions);
+        PendingDeletionsV& pending_deletions, 
+        const PendingDeletionsV& other_pending_deletions);
 
-    std::list<Neurons::Synapse> delete_synapses_register_edges(const NetworkGraph::Edges& edges);
+    std::vector<Neurons::Synapse> delete_synapses_register_edges(const NetworkGraph::Edges& edges);
 
-    MapSynapseDeletionRequests delete_synapses_exchange_requests(const std::list<PendingSynapseDeletion>& pending_deletions);
+    MapSynapseDeletionRequests delete_synapses_exchange_requests(const PendingDeletionsV& pending_deletions);
 
-    void delete_synapses_process_requests(const MapSynapseDeletionRequests& synapse_deletion_requests_incoming, std::list<PendingSynapseDeletion>& pending_deletions);
+    void delete_synapses_process_requests(const MapSynapseDeletionRequests& synapse_deletion_requests_incoming, PendingDeletionsV& pending_deletions);
 
-    size_t delete_synapses_commit_deletions(const std::list<PendingSynapseDeletion>& list);
+    size_t delete_synapses_commit_deletions(const PendingDeletionsV& list);
 
     size_t create_synapses();
 
@@ -481,7 +485,7 @@ private:
 
     size_t create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
-    static void print_pending_synapse_deletions(const std::list<PendingSynapseDeletion>& list);
+    static void print_pending_synapse_deletions(const PendingDeletionsV& list);
 
     size_t num_neurons = 0; // Local number of neurons
     std::vector<size_t> local_ids;

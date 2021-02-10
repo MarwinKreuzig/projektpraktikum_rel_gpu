@@ -24,6 +24,8 @@ class RankNeuronId {
     size_t neuron_id{ Constants::uninitialized }; // Neuron id on the owner
 
 public:
+    RankNeuronId() = default;
+
     RankNeuronId(int rank, size_t neuron_id) noexcept
         : rank(rank)
         , neuron_id(neuron_id) { }

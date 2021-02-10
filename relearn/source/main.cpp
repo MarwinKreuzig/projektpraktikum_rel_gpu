@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
     // Unlock local RMA memory and make local stores visible in public window copy
     MPIWrapper::unlock_window(my_rank);
 
-	std::cout << "I'm down here 1" << std::endl;
+	//std::cout << "I'm down here 1" << std::endl;
 
     /**********************************************************************************/
 
@@ -165,7 +165,7 @@ int main(int argc, char** argv) {
     // rank which has not finished (or even begun) its local stores
     MPIWrapper::barrier(MPIWrapper::Scope::global); // TODO(future) Really needed?
 
-	std::cout << "I'm down here 2" << std::endl;
+	//std::cout << "I'm down here 2" << std::endl;
 
     GlobalTimers::timers.stop_and_add(TimerRegion::INITIALIZATION);
 
@@ -179,7 +179,7 @@ int main(int argc, char** argv) {
         sim.register_neuron_monitor(i);
     }
 
-	std::cout << "I'm down here 3" << std::endl;
+	//std::cout << "I'm down here 3" << std::endl;
 
     auto simulate = [&]() {
         sim.simulate(simulation_steps, step_monitor);
