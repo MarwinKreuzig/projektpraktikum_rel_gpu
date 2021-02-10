@@ -115,35 +115,23 @@ size_t Neurons::delete_synapses() {
 	* 1. Update number of synaptic elements and delete synapses if necessary
 	*/
 
-    std::cout << "I'm down here 10" << std::endl;
-
     GlobalTimers::timers.start(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
 
     /**
 	* Create list with synapses to delete (pending synapse deletions)
 	*/
+    // Dendrite exc cannot delete a synapse that is connected to a dendrite inh.
+    auto deletions_axons = delete_synapses_find_synapses(axons, {});
+    const auto deletions_dend_ex = delete_synapses_find_synapses(dendrites_exc, deletions_axons);
+    const auto deletions_dend_in = delete_synapses_find_synapses(dendrites_inh, deletions_axons);
+
     PendingDeletionsV pending_deletions;
-
-    // For all synaptic element types (axons, dends exc., dends inh.)
-    const auto deletions_axons = delete_synapses_find_synapses(axons, pending_deletions);
-    std::cout << "I'm down here 11" << std::endl;
-
     pending_deletions.insert(pending_deletions.cend(), deletions_axons.begin(), deletions_axons.end());
-
-    const auto deletions_dend_ex = delete_synapses_find_synapses(dendrites_exc, pending_deletions);
-    std::cout << "I'm down here 12" << std::endl;
-
     pending_deletions.insert(pending_deletions.cend(), deletions_dend_ex.begin(), deletions_dend_ex.end());
-
-    const auto deletions_dend_in = delete_synapses_find_synapses(dendrites_inh, pending_deletions);
-    std::cout << "I'm down here 13" << std::endl;
-
     pending_deletions.insert(pending_deletions.cend(), deletions_dend_in.begin(), deletions_dend_in.end());
 
     MapSynapseDeletionRequests synapse_deletion_requests_incoming = delete_synapses_exchange_requests(pending_deletions);
-    std::cout << "I'm down here 14" << std::endl;
     delete_synapses_process_requests(synapse_deletion_requests_incoming, pending_deletions);
-    std::cout << "I'm down here 15" << std::endl;
 
     /**
 	* Now the list with pending synapse deletions contains all deletion requests
@@ -155,11 +143,8 @@ size_t Neurons::delete_synapses() {
 	*/
 
     /* Delete all synapses pending for deletion */
-    size_t num_synapses_deleted = delete_synapses_commit_deletions(pending_deletions);
-    std::cout << "I'm down here 16" << std::endl;
-
+    const auto num_synapses_deleted = delete_synapses_commit_deletions(pending_deletions);
     GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
-    std::cout << "I'm down here 17" << std::endl;
 
     return num_synapses_deleted;
 }
@@ -167,23 +152,33 @@ size_t Neurons::delete_synapses() {
 Neurons::PendingDeletionsV Neurons::delete_synapses_find_synapses(SynapticElements& synaptic_elements, PendingDeletionsV& other_pending_deletions) {
     const auto element_type = synaptic_elements.get_element_type();
 
-    PendingDeletionsV pending_deletions;
-    // For my neurons
+    std::vector<unsigned int> number_deletions(num_neurons);
+
+    unsigned int sum_to_delete = 0;
+
     for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
         /**
 		* Create and delete synaptic elements as required.
 		* This function only deletes elements (bound and unbound), no synapses.
 		*/
         const auto num_synapses_to_delete = synaptic_elements.update_number_elements(neuron_id);
+
+        number_deletions[neuron_id] = num_synapses_to_delete;
+        sum_to_delete += num_synapses_to_delete;
+    }
+
+    PendingDeletionsV pending_deletions;
+    pending_deletions.reserve(sum_to_delete);
+
+    for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+        /**
+		* Create and delete synaptic elements as required.
+		* This function only deletes elements (bound and unbound), no synapses.
+		*/
+        const auto num_synapses_to_delete = number_deletions[neuron_id];
         if (num_synapses_to_delete == 0) {
             continue;
         }
-
-        /**
-		* Create a list with all pending synapse deletions.
-		* During creating this list, the possibility that neurons want to delete the same
-		* synapse is considered.
-		*/
 
         const auto signal_type = synaptic_elements.get_signal_type(neuron_id);
         const auto affected_indices = delete_synapses_find_synapses_on_neuron(neuron_id, element_type, signal_type, num_synapses_to_delete, pending_deletions, other_pending_deletions);
@@ -200,7 +195,8 @@ std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(size_t neur
     ElementType element_type,
     SignalType signal_type,
     unsigned int num_synapses_to_delete,
-    PendingDeletionsV& pending_deletions, const PendingDeletionsV& other_pending_deletions) {
+    PendingDeletionsV& pending_deletions,
+    const PendingDeletionsV& other_pending_deletions) {
 
     // Only do something if necessary
     if (0 == num_synapses_to_delete) {
@@ -213,19 +209,19 @@ std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(size_t neur
     const bool is_exc = signal_type == SignalType::EXCITATORY;
     const SignalType other_signal_type = is_exc ? SignalType::INHIBITORY : SignalType::EXCITATORY;
 
-    std::vector<Synapse> list_synapses;
+    std::vector<Synapse> current_synapses;
 
     if (is_axon) {
         // Walk through outgoing edges
         const NetworkGraph::Edges& out_edges = network_graph->get_out_edges(neuron_id);
-        list_synapses = delete_synapses_register_edges(out_edges);
+        current_synapses = delete_synapses_register_edges(out_edges);
     } else {
         // Walk through ingoing edges
         const NetworkGraph::Edges& in_edges = network_graph->get_in_edges(neuron_id, signal_type);
-        list_synapses = delete_synapses_register_edges(in_edges);
+        current_synapses = delete_synapses_register_edges(in_edges);
     }
 
-    RelearnException::check(num_synapses_to_delete <= list_synapses.size(), "num_synapses_to_delete > last_synapses.size()");
+    RelearnException::check(num_synapses_to_delete <= current_synapses.size(), "num_synapses_to_delete > last_synapses.size()");
 
     /**
 	* Select synapses for deletion
@@ -236,14 +232,14 @@ std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(size_t neur
 
     for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
         // Randomly select synapse for deletion
-        auto synapse_selected = list_synapses.cbegin();
+        auto synapse_selected = current_synapses.cbegin();
         // Draw random number from [0,1)
         const double random_number = random_number_distribution(random_number_generator);
 
         // Make iterator point to selected element
-        std::advance(synapse_selected, static_cast<int>(list_synapses.size() * random_number));
+        std::advance(synapse_selected, static_cast<int>(current_synapses.size() * random_number));
 
-        RelearnException::check(synapse_selected != list_synapses.cend(), "Didn't select a synapse to delete");
+        RelearnException::check(synapse_selected != current_synapses.cend(), "Didn't select a synapse to delete");
 
         RankNeuronId src_neuron_id = RankNeuronId(MPIWrapper::get_my_rank(), neuron_id);
         RankNeuronId tgt_neuron_id = synapse_selected->get_rank_neuron_id();
@@ -268,14 +264,14 @@ std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(size_t neur
         }
 
         // Remove selected synapse from synapse list
-        list_synapses.erase(synapse_selected);
+        current_synapses.erase(synapse_selected);
     }
 
     return already_removed_indices;
 }
 
 std::vector<Neurons::Synapse> Neurons::delete_synapses_register_edges(const NetworkGraph::Edges& edges) {
-    std::vector<Neurons::Synapse> list_synapses;
+    std::vector<Neurons::Synapse> current_synapses;
 
     for (const auto& it : edges) {
         /**
@@ -292,11 +288,11 @@ std::vector<Neurons::Synapse> Neurons::delete_synapses_register_edges(const Netw
 
         for (auto synapse_id = 0; synapse_id < abs_synapse_weight; ++synapse_id) {
             RankNeuronId rank_neuron_id(rank, id);
-            list_synapses.emplace_back(rank_neuron_id, synapse_id);
+            current_synapses.emplace_back(rank_neuron_id, synapse_id);
         }
     }
 
-    return list_synapses;
+    return current_synapses;
 }
 
 Neurons::MapSynapseDeletionRequests Neurons::delete_synapses_exchange_requests(const PendingDeletionsV& pending_deletions) {
@@ -517,23 +513,16 @@ size_t Neurons::create_synapses() {
 	* - Update network
 	*/
 
-    std::cout << "I'm down here 20" << std::endl;
     create_synapses_update_octree();
-    std::cout << "I'm down here 21" << std::endl;
     MapSynapseCreationRequests synapse_creation_requests_outgoing = create_synapses_find_targets();
-    std::cout << "I'm down here 22" << std::endl;
 
     GlobalTimers::timers.start(TimerRegion::CREATE_SYNAPSES);
 
     MapSynapseCreationRequests synapse_creation_requests_incoming = create_synapses_exchange_requests(synapse_creation_requests_outgoing);
-    std::cout << "I'm down here 23" << std::endl;
     const auto synapses_created_locally = create_synapses_process_requests(synapse_creation_requests_incoming);
-    std::cout << "I'm down here 24" << std::endl;
 
     create_synapses_exchange_responses(synapse_creation_requests_incoming, synapse_creation_requests_outgoing);
-    std::cout << "I'm down here 25" << std::endl;
     const auto synapses_created_remotely = create_synapses_process_responses(synapse_creation_requests_outgoing);
-    std::cout << "I'm down here 26" << std::endl;
 
     GlobalTimers::timers.stop_and_add(TimerRegion::CREATE_SYNAPSES);
 
