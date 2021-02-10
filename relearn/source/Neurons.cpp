@@ -114,6 +114,8 @@ size_t Neurons::delete_synapses() {
     /**
 	* 1. Update number of synaptic elements and delete synapses if necessary
 	*/
+			
+	std::cout << "I'm down here 10" << std::endl;
 
     GlobalTimers::timers.start(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
 
@@ -124,11 +126,16 @@ size_t Neurons::delete_synapses() {
 
     // For all synaptic element types (axons, dends exc., dends inh.)
     delete_synapses_find_synapses(axons, pending_deletions);
+	std::cout << "I'm down here 11" << std::endl;
     delete_synapses_find_synapses(dendrites_exc, pending_deletions);
+	std::cout << "I'm down here 12" << std::endl;
     delete_synapses_find_synapses(dendrites_inh, pending_deletions);
+	std::cout << "I'm down here 13" << std::endl;
 
     MapSynapseDeletionRequests synapse_deletion_requests_incoming = delete_synapses_exchange_requests(pending_deletions);
+	std::cout << "I'm down here 14" << std::endl;
     delete_synapses_process_requests(synapse_deletion_requests_incoming, pending_deletions);
+	std::cout << "I'm down here 15" << std::endl;
 
     /**
 	* Now the list with pending synapse deletions contains all deletion requests
@@ -141,8 +148,10 @@ size_t Neurons::delete_synapses() {
 
     /* Delete all synapses pending for deletion */
     size_t num_synapses_deleted = delete_synapses_commit_deletions(pending_deletions);
+	std::cout << "I'm down here 16" << std::endl;
 
     GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
+	std::cout << "I'm down here 17" << std::endl;
 
     return num_synapses_deleted;
 }
@@ -150,6 +159,7 @@ size_t Neurons::delete_synapses() {
 void Neurons::delete_synapses_find_synapses(SynapticElements& synaptic_elements, std::list<Neurons::PendingSynapseDeletion>& pending_deletions) {
     const auto element_type = synaptic_elements.get_element_type();
 
+	std::cout << "I'm down here 31" << std::endl;
     // For my neurons
     for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
         /**
@@ -170,6 +180,7 @@ void Neurons::delete_synapses_find_synapses(SynapticElements& synaptic_elements,
         const auto signal_type = synaptic_elements.get_signal_type(neuron_id);
         auto local = delete_synapses_find_synapses_on_neuron(neuron_id, element_type, signal_type, num_synapses_to_delete, pending_deletions);
     }
+	std::cout << "I'm down here 33" << std::endl;
 }
 
 std::list<Neurons::PendingSynapseDeletion> Neurons::delete_synapses_find_synapses_on_neuron(size_t neuron_id,
@@ -490,16 +501,23 @@ size_t Neurons::create_synapses() {
 	* - Update network
 	*/
 
+	std::cout << "I'm down here 20" << std::endl;
     create_synapses_update_octree();
+	std::cout << "I'm down here 21" << std::endl;
     MapSynapseCreationRequests synapse_creation_requests_outgoing = create_synapses_find_targets();
+	std::cout << "I'm down here 22" << std::endl;
 
     GlobalTimers::timers.start(TimerRegion::CREATE_SYNAPSES);
 
     MapSynapseCreationRequests synapse_creation_requests_incoming = create_synapses_exchange_requests(synapse_creation_requests_outgoing);
+	std::cout << "I'm down here 23" << std::endl;
     const auto synapses_created_locally = create_synapses_process_requests(synapse_creation_requests_incoming);
+	std::cout << "I'm down here 24" << std::endl;
 
     create_synapses_exchange_responses(synapse_creation_requests_incoming, synapse_creation_requests_outgoing);
+	std::cout << "I'm down here 25" << std::endl;
     const auto synapses_created_remotely = create_synapses_process_responses(synapse_creation_requests_outgoing);
+	std::cout << "I'm down here 26" << std::endl;
 
     GlobalTimers::timers.stop_and_add(TimerRegion::CREATE_SYNAPSES);
 

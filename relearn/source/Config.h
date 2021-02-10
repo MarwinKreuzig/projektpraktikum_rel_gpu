@@ -33,7 +33,7 @@ constexpr size_t plasticity_update_step = 100;
 // Print details every 500 ms
 constexpr size_t logfile_update_step = 500;
 // Print to cout every 10000 ms
-constexpr size_t console_update_step = 10000;
+constexpr size_t console_update_step = 100;
 
 constexpr size_t mpi_alloc_mem = 1024 * 1024 * 300;
 } // namespace Constants
