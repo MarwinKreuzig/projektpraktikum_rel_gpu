@@ -26,9 +26,9 @@ void Timers::print() {
     /**
 	 * Print timers and memory usage
 	 */
-    RelearnException::check(3 * TimerRegion::NUM_TIMER_REGIONS == 72, "Number of timers are unfitting");
+    RelearnException::check(3 * TimerRegion::NUM_TIMER_REGIONS == 63, "Number of timers are unfitting");
 
-    std::array<double, 72> timers_local{};
+    std::array<double, 63> timers_local{};
 
     for (int i = 0; i < TimerRegion::NUM_TIMER_REGIONS; ++i) {
         const double elapsed = GlobalTimers::timers.get_elapsed(i);
@@ -38,7 +38,7 @@ void Timers::print() {
         }
     }
 
-    std::array<double, 72> timers_global{};
+    std::array<double, 63> timers_global{};
 
     MPIWrapper::reduce(timers_local, timers_global, MPIWrapper::ReduceFunction::minsummax, 0, MPIWrapper::Scope::global);
     std::stringstream sstring;
@@ -76,10 +76,6 @@ void Timers::print() {
                 << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_ELECTRICAL_ACTIVITY + 1] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::UPDATE_ELECTRICAL_ACTIVITY + 2] << "\n";
 
-        sstring << "      Barrier 1                                : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_1] << " | "
-                << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_1 + 1] << " | "
-                << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_1 + 2] << "\n";
-
         sstring << "      Prepare sending spikes                   : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_SENDING_SPIKES] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_SENDING_SPIKES + 1] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_SENDING_SPIKES + 2] << "\n";
@@ -88,10 +84,6 @@ void Timers::print() {
                 << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_NUM_NEURON_IDS + 1] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::PREPARE_NUM_NEURON_IDS + 2] << "\n";
 
-        sstring << "      Barrier 2                                : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_2] << " | "
-                << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_2 + 1] << " | "
-                << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_2 + 2] << "\n";
-
         sstring << "      All to all                               : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALL_TO_ALL] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALL_TO_ALL + 1] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALL_TO_ALL + 2] << "\n";
@@ -99,10 +91,6 @@ void Timers::print() {
         sstring << "      Alloc mem for neuron ids                 : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALLOC_MEM_FOR_NEURON_IDS] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALLOC_MEM_FOR_NEURON_IDS + 1] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::ALLOC_MEM_FOR_NEURON_IDS + 2] << "\n";
-
-        sstring << "      Barrier 3                                : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_3] << " | "
-                << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_3 + 1] << " | "
-                << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::BARRIER_3 + 2] << "\n";
 
         sstring << "      Exchange neuron ids                      : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_NEURON_IDS] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_NEURON_IDS + 1] << " | "

@@ -197,6 +197,19 @@ protected:
     std::vector<double> x; // membrane potential v
     std::vector<bool> fired; // 1: neuron has fired, 0: neuron is inactive
     std::vector<double> I_syn; // Synaptic input
+
+private:
+    [[nodiscard]] MapFiringNeuronIds NeuronModels::update_electrical_activity_prepare_receiving_spikes(const MapFiringNeuronIds& firing_neuron_ids_outgoing);
+
+    void update_electrical_activity_exchange_neuron_ids(const MapFiringNeuronIds& firing_neuron_ids_outgoing, MapFiringNeuronIds& firing_neuron_ids_incoming);
+
+    [[nodiscard]] MapFiringNeuronIds update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph);
+
+    void update_electrical_activity_update_activity_and_calcium(std::vector<double>& C);
+
+    void update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const MapFiringNeuronIds& firing_neuron_ids_incoming);
+
+    void update_electrical_activity_calculate_background();
 };
 
 namespace models {

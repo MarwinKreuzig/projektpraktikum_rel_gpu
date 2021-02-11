@@ -380,8 +380,6 @@ public:
         return *neuron_model;
     }
 
-    [[nodiscard]] std::tuple<bool, size_t, Vec3d, SignalType> get_vacant_axon() const noexcept;
-
     void init_synaptic_elements();
 
     void update_electrical_activity() {
