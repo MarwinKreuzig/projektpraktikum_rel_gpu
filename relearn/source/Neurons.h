@@ -271,11 +271,26 @@ public:
 	 */
     using MapSynapseDeletionRequests = std::map<int, SynapseDeletionRequests>;
 
-    explicit Neurons(const Partition& partition)
-        : Neurons{ partition, NeuronModels::create<models::ModelA>() } {
+    Neurons(const Partition& partition, std::unique_ptr<NeuronModels> model)
+        : Neurons(partition, std::move(model), 
+            std::make_unique<Axons>(ElementType::AXON, SynapticElements::default_eta_Axons),
+            std::make_unique<DendritesExc>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc), 
+            std::make_unique<DendritesInh>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh)) { }
+
+    Neurons(const Partition& partition,
+        std::unique_ptr<NeuronModels> model,
+        std::unique_ptr<Axons> axons_ptr,
+        std::unique_ptr<DendritesExc> dend_ex_ptr,
+        std::unique_ptr<DendritesInh> dend_in_ptr)
+        : partition(&partition)
+        , neuron_model(std::move(model))
+        , axons(std::move(*axons_ptr))
+        , dendrites_exc(std::move(*dend_ex_ptr))
+        , dendrites_inh(std::move(*dend_in_ptr))
+        // NOLINTNEXTLINE
+        , random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
     }
 
-    Neurons(const Partition& partition, std::unique_ptr<NeuronModels> model);
     ~Neurons() = default;
 
     Neurons(const Neurons& other) = delete;
@@ -460,7 +475,7 @@ private:
         ElementType element_type,
         SignalType signal_type,
         unsigned int num_synapses_to_delete,
-        PendingDeletionsV& pending_deletions, 
+        PendingDeletionsV& pending_deletions,
         const PendingDeletionsV& other_pending_deletions);
 
     std::vector<Neurons::Synapse> delete_synapses_register_edges(const NetworkGraph::Edges& edges);

@@ -24,6 +24,7 @@ class NeuronToSubdomainAssignment;
 class Octree;
 class Parameters;
 class Partition;
+class SynapticElements;
 
 class Simulation {
 public:
@@ -32,6 +33,12 @@ public:
     void register_neuron_monitor(size_t neuron_id);
 
     void set_neuron_models(std::unique_ptr<NeuronModels> nm);
+
+    void set_axons(std::unique_ptr<SynapticElements> se);
+
+    void set_dendrites_ex(std::unique_ptr<SynapticElements> se);
+
+    void set_dendrites_in(std::unique_ptr<SynapticElements> se);
 
     void place_random_neurons(size_t num_neurons, double frac_exc);
 
@@ -56,6 +63,10 @@ private:
     std::shared_ptr<Partition> partition;
 
     std::unique_ptr<NeuronToSubdomainAssignment> neuron_to_subdomain_assignment;
+
+    std::unique_ptr<SynapticElements> axons;
+    std::unique_ptr<SynapticElements> dendrites_ex;
+    std::unique_ptr<SynapticElements> dendrites_in;
 
     std::unique_ptr<NeuronModels> neuron_models;
     std::shared_ptr<Neurons> neurons;

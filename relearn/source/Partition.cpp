@@ -12,6 +12,7 @@
 
 #include "LogFiles.h"
 #include "RelearnException.h"
+#include "SynapticElements.h"
 
 Partition::Partition(size_t num_ranks, size_t my_rank)
     : my_num_neurons(0)
@@ -214,7 +215,13 @@ void Partition::set_total_num_neurons(size_t total_num) noexcept {
     total_num_neurons = total_num;
 }
 
-std::shared_ptr<Neurons> Partition::load_neurons(std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain, std::unique_ptr<NeuronModels> neuron_models) {
+std::shared_ptr<Neurons> Partition::load_neurons(
+    std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain,
+    std::unique_ptr<NeuronModels> neuron_models,
+    std::unique_ptr<SynapticElements> axons_ptr,
+    std::unique_ptr<SynapticElements> dend_ex_ptr,
+    std::unique_ptr<SynapticElements> dend_in_ptr) {
+
     RelearnException::check(!neurons_loaded, "Neurons are already loaded, cannot load anymore");
 
     simulation_box_length = neurons_in_subdomain->get_simulation_box_length();
@@ -296,7 +303,16 @@ std::shared_ptr<Neurons> Partition::load_neurons(std::unique_ptr<NeuronToSubdoma
         current_subdomain.octree.set_no_free_in_destructor();
     }
 
-    auto neurons = std::make_shared<Neurons>(*this, std::move(neuron_models));
+    std::shared_ptr<Neurons> neurons;
+
+    const bool provided_three_elements = axons_ptr && dend_ex_ptr && dend_in_ptr;
+
+    if (provided_three_elements) {
+        neurons = std::make_shared<Neurons>(*this, std::move(neuron_models), std::move(axons_ptr), std::move(dend_ex_ptr), std::move(dend_in_ptr));
+    } else {
+        neurons = std::make_shared<Neurons>(*this, std::move(neuron_models));
+    }
+
     neurons->init(my_num_neurons);
 
     Positions& neuron_positions = neurons->get_positions();

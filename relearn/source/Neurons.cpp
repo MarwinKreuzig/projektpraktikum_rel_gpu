@@ -20,67 +20,6 @@
 #include <array>
 #include <optional>
 
-Neurons::Neurons(const Partition& partition, std::unique_ptr<NeuronModels> model)
-    : partition(&partition)
-    , neuron_model(std::move(model))
-    , axons(ElementType::AXON, SynapticElements::default_eta_Axons)
-    , dendrites_exc(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc)
-    , dendrites_inh(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh)
-    // NOLINTNEXTLINE
-    , random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
-}
-
-// NOTE: The static variables must be reset to 0 before this function can be used
-// for the synapse creation phase in the next connectivity update
-std::tuple<bool, size_t, Vec3d, SignalType> Neurons::get_vacant_axon() const noexcept {
-    static size_t i = 0;
-    static size_t j = 0;
-
-    size_t neuron_id{ Constants::uninitialized };
-    Vec3d xyz_pos;
-    SignalType dendrite_type_needed;
-
-    const std::vector<double>& axons_cnts = axons.get_cnts();
-    const std::vector<unsigned int>& axons_connected_cnts = axons.get_connected_cnts();
-    const std::vector<SignalType>& axons_signal_types = axons.get_signal_types();
-    const std::vector<double>& axons_x_dims = positions.get_x_dims();
-    const std::vector<double>& axons_y_dims = positions.get_y_dims();
-    const std::vector<double>& axons_z_dims = positions.get_z_dims();
-
-    while (i < num_neurons) {
-        // neuron's vacant axons
-        const auto num_vacant_axons = static_cast<unsigned int>(axons_cnts[i]) - axons_connected_cnts[i];
-
-        if (j < num_vacant_axons) {
-            j++;
-            // Vacant axon found
-            // set neuron id of vacant axon
-            neuron_id = i;
-
-            // set neuron's position
-            xyz_pos.set_x(axons_x_dims[i]);
-            xyz_pos.set_y(axons_y_dims[i]);
-            xyz_pos.set_z(axons_z_dims[i]);
-
-            // set dendrite type matching this axon
-            // DendriteType::INHIBITORY axon
-            if (SignalType::INHIBITORY == axons_signal_types[i]) {
-                dendrite_type_needed = SignalType::INHIBITORY;
-            }
-            // DendriteType::EXCITATORY axon
-            else {
-                dendrite_type_needed = SignalType::EXCITATORY;
-            }
-
-            return std::make_tuple(true, neuron_id, xyz_pos, dendrite_type_needed);
-        }
-
-        i++;
-        j = 0;
-    } // while
-
-    return std::make_tuple(false, neuron_id, xyz_pos, dendrite_type_needed);
-}
 
 void Neurons::init_synaptic_elements() {
     // Give unbound synaptic elements as well

@@ -25,6 +25,7 @@ endif()
 include(FetchContent)
 
 find_package (MPI REQUIRED)
+find_package(OpenMP)
 
 # project options
 add_library(project_options INTERFACE)
@@ -47,6 +48,10 @@ add_executable(relearn
 set_target_properties(relearn PROPERTIES ENABLE_EXPORTS 1)
 
 target_link_libraries(relearn PRIVATE project_options)
+
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(relearn PUBLIC OpenMP::OpenMP_CXX)
+endif()
 
 FetchContent_Declare(
   CLI11

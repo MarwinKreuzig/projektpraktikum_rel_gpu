@@ -115,8 +115,6 @@ int main(int argc, char** argv) {
 
     GlobalTimers::timers.start(TimerRegion::INITIALIZATION);
 
-    GlobalTimers::timers.start(TimerRegion::INITIALIZATION);
-
     /**
 	 * Calculate what my partition of the domain consist of
 	 */

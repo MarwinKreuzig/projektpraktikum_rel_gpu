@@ -19,6 +19,7 @@
 #include <cmath>
 #include <cstddef>
 #include <iostream>
+#include <memory>
 #include <vector>
 
 class NeuronMonitor;
@@ -54,7 +55,20 @@ public:
         signal_types.resize(size);
     }
 
-    std::vector<ModelParameter> get_parameter() {
+    [[nodiscard]] std::unique_ptr<SynapticElements> clone() const {
+        return std::make_unique<SynapticElements>(type, min_C_level_to_grow, C_target, nu, vacant_retract_ratio);
+    }
+
+     [[nodiscard]] std::vector<std::unique_ptr<SynapticElements>> get_elements() {
+        std::vector<std::unique_ptr<SynapticElements>> res;
+        res.emplace_back(std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons));
+        res.emplace_back(std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc));
+        res.emplace_back(std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh));
+        return res;
+    }
+
+
+    [[nodiscard]] std::vector<ModelParameter> get_parameter() {
         return {
             Parameter<double>{ "Minimum calcium to grow", min_C_level_to_grow, SynapticElements::min_min_C_level_to_grow, SynapticElements::max_min_C_level_to_grow },
             Parameter<double>{ "Target calcium", C_target, SynapticElements::min_C_target, SynapticElements::max_C_target },

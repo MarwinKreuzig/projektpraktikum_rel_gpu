@@ -53,6 +53,18 @@ void Simulation::set_neuron_models(std::unique_ptr<NeuronModels> nm) {
     neuron_models = std::move(nm);
 }
 
+void Simulation::set_axons(std::unique_ptr<SynapticElements> se) {
+    axons = std::move(se);
+}
+
+void Simulation::set_dendrites_ex(std::unique_ptr<SynapticElements> se) {
+    dendrites_ex = std::move(se);
+}
+
+void Simulation::set_dendrites_in(std::unique_ptr<SynapticElements> se) {
+    dendrites_in = std::move(se);
+}
+
 void Simulation::place_random_neurons(size_t num_neurons, double frac_exc) {
     neuron_to_subdomain_assignment = std::make_unique<SubdomainFromNeuronDensity>(num_neurons, frac_exc, 26);
     partition->set_total_num_neurons(num_neurons);
