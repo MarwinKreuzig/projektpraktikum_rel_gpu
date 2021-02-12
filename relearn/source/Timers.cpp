@@ -26,9 +26,9 @@ void Timers::print() {
     /**
 	 * Print timers and memory usage
 	 */
-    RelearnException::check(3 * TimerRegion::NUM_TIMER_REGIONS == 63, "Number of timers are unfitting");
+    RelearnException::check(3 * TimerRegion::NUM_TIMER_REGIONS == 66, "Number of timers are unfitting");
 
-    std::array<double, 63> timers_local{};
+    std::array<double, 66> timers_local{};
 
     for (int i = 0; i < TimerRegion::NUM_TIMER_REGIONS; ++i) {
         const double elapsed = GlobalTimers::timers.get_elapsed(i);
@@ -38,7 +38,7 @@ void Timers::print() {
         }
     }
 
-    std::array<double, 63> timers_global{};
+    std::array<double, 66> timers_global{};
 
     MPIWrapper::reduce(timers_local, timers_global, MPIWrapper::ReduceFunction::minsummax, 0, MPIWrapper::Scope::global);
     std::stringstream sstring;
@@ -95,6 +95,10 @@ void Timers::print() {
         sstring << "      Exchange neuron ids                      : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_NEURON_IDS] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_NEURON_IDS + 1] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::EXCHANGE_NEURON_IDS + 2] << "\n";
+
+        sstring << "      Calculate serial activity setup          : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_SERIAL_ACTIVITY] << " | "
+                << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_SERIAL_ACTIVITY + 1] << " | "
+                << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_SERIAL_ACTIVITY + 2] << "\n";
 
         sstring << "      Calculate synaptic background            : " << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_SYNAPTIC_BACKGROUND] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CALC_SYNAPTIC_BACKGROUND + 1] << " | "

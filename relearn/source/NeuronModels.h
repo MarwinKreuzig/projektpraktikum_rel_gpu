@@ -125,6 +125,7 @@ public:
 
     [[nodiscard]] virtual double get_secondary_variable(size_t i) const noexcept = 0;
 
+public:
     /* Performs one iteration step of update in electrical activity */
     void update_electrical_activity(const NetworkGraph& network_graph, std::vector<double>& C);
 
@@ -149,6 +150,10 @@ public:
     [[nodiscard]] virtual std::string name() = 0;
 
 protected:
+    virtual void update_electrical_activity_serial_initialize() {
+        
+    }
+
     virtual void update_activity(size_t i) = 0;
 
     virtual void init_neurons() = 0;
@@ -238,6 +243,8 @@ public:
     void init(size_t num_neurons) final;
 
 protected:
+    void update_electrical_activity_serial_initialize() final;
+
     void update_activity(size_t i) final;
 
     void init_neurons() final;
@@ -260,6 +267,8 @@ private:
     static constexpr unsigned int max_refrac_time{ 1000 };
 
     std::vector<unsigned int> refrac; // refractory time
+
+    std::vector<double> theta_values;
 
     double x_0; // Background or resting activity
     double tau_x; // Decay time of firing rate in msec

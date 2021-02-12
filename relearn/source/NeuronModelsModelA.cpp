@@ -41,7 +41,8 @@ ModelA::ModelA(double k, double tau_C, double beta, unsigned int h, double backg
 
 void ModelA::init(size_t num_neurons) {
     NeuronModels::init(num_neurons);
-    refrac.resize(my_num_neurons, 0);
+    refrac.resize(num_neurons, 0);
+    theta_values.resize(num_neurons, 0.0);
     init_neurons();
 }
 
@@ -53,7 +54,7 @@ void ModelA::update_activity(const size_t i) {
 
     // Neuron ready to fire again
     if (refrac[i] == 0) {
-        const bool f = theta(x[i]);
+        const bool f = x[i] >= theta_values[i];
         fired[i] = f; // Decide whether a neuron fires depending on its firing rate
         refrac[i] = f ? refrac_time : 0; // After having fired, a neuron is in a refractory state
     }
@@ -69,20 +70,26 @@ void ModelA::init_neurons() {
 
     for (size_t i = 0; i < x.size(); ++i) {
         x[i] = random_number_distribution(random_number_generator);
-        const bool f = theta(x[i]);
+        const double threshold = random_number_distribution(random_number_generator);
+        const bool f = x[i] >= threshold;
         fired[i] = f; // Decide whether a neuron fires depending on its firing rate
         refrac[i] = f ? refrac_time : 0; // After having fired, a neuron is in a refractory state
     }
 }
 
-[[nodiscard]] double ModelA::iter_x(const double x, const double I_syn) const noexcept {
-    return ((x_0 - x) / tau_x + I_syn);
-}
+void models::ModelA::update_electrical_activity_serial_initialize() {
+    GlobalTimers::timers.start(TimerRegion::CALC_SERIAL_ACTIVITY);
 
-[[nodiscard]] bool ModelA::theta(const double x) {
     std::mt19937& random_number_generator = RandomHolder::get_random_generator(RandomHolderKey::ModelA);
 
-    // 1: fire, 0: inactive
-    const double threshold = random_number_distribution(random_number_generator);
-    return x >= threshold;
+    for (size_t i = 0; i < theta_values.size(); i++) {
+        const double threshold = random_number_distribution(random_number_generator);
+        theta_values[i] = threshold;
+    }
+
+    GlobalTimers::timers.stop_and_add(TimerRegion::CALC_SERIAL_ACTIVITY);
+}
+
+[[nodiscard]] double ModelA::iter_x(const double x, const double I_syn) const noexcept {
+    return ((x_0 - x) / tau_x + I_syn);
 }

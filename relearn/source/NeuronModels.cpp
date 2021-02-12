@@ -39,6 +39,8 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 	 * (spikes from neurons from other ranks)
 	 */
 
+    update_electrical_activity_serial_initialize();
+
     update_electrical_activity_calculate_background();
     update_electrical_activity_calculate_input(network_graph, firing_neuron_ids_incoming);
     update_electrical_activity_update_activity_and_calcium(C);

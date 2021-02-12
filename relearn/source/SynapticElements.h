@@ -180,12 +180,12 @@ private:
     }
 
 public:
-    static constexpr double default_C_target{ 0.7 }; // gold 0.5;
-    static constexpr double default_eta_Axons{ 0.4 }; // gold 0.0;
-    static constexpr double default_eta_Dendrites_exc{ 0.1 }; // gold 0.0;
+    static constexpr double default_C_target{ 0.5 }; // gold 0.5;
+    static constexpr double default_eta_Axons{ 0.0 }; // gold 0.0;
+    static constexpr double default_eta_Dendrites_exc{ 0.0 }; // gold 0.0;
     static constexpr double default_eta_Dendrites_inh{ 0.0 }; // gold 0.0;
-    static constexpr double default_nu{ 1e-5 }; // gold 1e-5;
-    static constexpr double default_vacant_retract_ratio{ 0 };
+    static constexpr double default_nu{ 1e-4 }; // gold 1e-5;
+    static constexpr double default_vacant_retract_ratio{ 0.0 };
 
     static constexpr double min_min_C_level_to_grow{ 0.0 };
     static constexpr double min_C_target{ 0.0 };
