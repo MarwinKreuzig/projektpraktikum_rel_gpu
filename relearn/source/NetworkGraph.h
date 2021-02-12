@@ -36,12 +36,9 @@ public:
     using EdgesKey = std::pair<int, size_t>; // Pair of (rank, neuron id)
     using EdgesVal = int;
     using Edges = std::map<EdgesKey, EdgesVal>; // Map of neuron id to edge weight
-    struct Neighbors { // Neighbors of a neuron given by in and out edges
-        Edges in_edges;
-        Edges out_edges;
-    };
-    using NeuronNeighborhood = std::vector<Neighbors>; // Neighbors for each neuron
-        // The index into the vector is the neuron's local id
+
+    using NeuronInNeighborhood = std::vector<Edges>;
+    using NeuronOutNeighborhood = std::vector<Edges>;
 
     explicit NetworkGraph(size_t my_num_neurons);
 
@@ -99,12 +96,8 @@ private:
 
     void write_synapses_to_file(const std::string& filename, const NeuronIdMap& neuron_id_map, const Partition& partition) const;
 
-    NeuronNeighborhood neuron_neighborhood; // Neurons with their neighbors
+    NeuronInNeighborhood neuron_in_neighborhood;
+    NeuronOutNeighborhood neuron_out_neighborhood;
+
     size_t my_num_neurons; // My number of neurons
-    size_t my_neuron_id_start; // Start neuron id I am allowed to create a neuron for in the graph
-    size_t my_neuron_id_end; // End neuron id I am allowed to create a neuron for in the graph
-        // NOTE: This is necessary as only the MPI process which contains these neurons
-        // has full knowledge of their in and out edges. Other processes could only know
-        // some of their edges. That is why it does not make sense to store incomplete information
-        // on other processes
 };

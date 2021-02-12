@@ -20,25 +20,23 @@
 #include <sstream>
 
 NetworkGraph::NetworkGraph(size_t my_num_neurons)
-    : neuron_neighborhood(my_num_neurons)
-    , my_num_neurons(my_num_neurons)
-    , my_neuron_id_start(0)
-    , my_neuron_id_end(my_num_neurons - 1) {
+    : neuron_in_neighborhood(my_num_neurons)
+    , neuron_out_neighborhood(my_num_neurons)
+    , my_num_neurons(my_num_neurons) {
 }
 
 const NetworkGraph::Edges& NetworkGraph::get_in_edges(size_t neuron_id) const {
-    RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_in_edges, tried with a too large id");
-    return neuron_neighborhood[neuron_id].in_edges;
+    RelearnException::check(neuron_id < neuron_in_neighborhood.size(), "In get_in_edges, tried with a too large id");
+    return neuron_in_neighborhood[neuron_id];
 }
 
 const NetworkGraph::Edges& NetworkGraph::get_out_edges(size_t neuron_id) const {
-    RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_out_edges, tried with a too large id");
-    return neuron_neighborhood[neuron_id].out_edges;
+    RelearnException::check(neuron_id < neuron_out_neighborhood.size(), "In get_out_edges, tried with a too large id");
+    return neuron_out_neighborhood[neuron_id];
 }
 
 NetworkGraph::Edges NetworkGraph::get_in_edges(size_t neuron_id, SignalType signal_type) const {
-    RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_in_edges with type, tried with a too large id");
-    const Edges& all_edges = neuron_neighborhood[neuron_id].in_edges;
+    const Edges& all_edges = get_in_edges(neuron_id);
 
     Edges filtered_edges{};
 
@@ -56,8 +54,7 @@ NetworkGraph::Edges NetworkGraph::get_in_edges(size_t neuron_id, SignalType sign
 }
 
 NetworkGraph::Edges NetworkGraph::get_out_edges(size_t neuron_id, SignalType signal_type) const {
-    RelearnException::check(neuron_id < neuron_neighborhood.size(), "In get_out_edges with type, tried with a too large id");
-    const Edges& all_edges = neuron_neighborhood[neuron_id].out_edges;
+    const Edges& all_edges = get_out_edges(neuron_id);
 
     Edges filtered_edges{};
 
@@ -75,19 +72,19 @@ NetworkGraph::Edges NetworkGraph::get_out_edges(size_t neuron_id, SignalType sig
 }
 
 size_t NetworkGraph::get_num_in_edges(size_t neuron_id) const {
-    RelearnException::check(neuron_id < neuron_neighborhood.size(),
+    RelearnException::check(neuron_id < neuron_in_neighborhood.size(),
         "In get_num_in_edges, tried with a too large id: %u %u", neuron_id, my_num_neurons);
 
-    return neuron_neighborhood[neuron_id].in_edges.size();
+    return neuron_in_neighborhood[neuron_id].size();
 }
 
 size_t NetworkGraph::get_num_in_edges_ex(size_t neuron_id) const {
-    RelearnException::check(neuron_id < neuron_neighborhood.size(),
+    RelearnException::check(neuron_id < neuron_in_neighborhood.size(),
         "In get_num_in_edges, tried with a too large id: %u %u", neuron_id, my_num_neurons);
 
     size_t total_num_ports = 0;
 
-    for (const auto& [_, connection_strength] : neuron_neighborhood[neuron_id].in_edges) {
+    for (const auto& [_, connection_strength] : neuron_in_neighborhood[neuron_id]) {
         if (connection_strength > 0) {
             total_num_ports += connection_strength;
         }
@@ -97,12 +94,12 @@ size_t NetworkGraph::get_num_in_edges_ex(size_t neuron_id) const {
 }
 
 size_t NetworkGraph::get_num_in_edges_in(size_t neuron_id) const {
-    RelearnException::check(neuron_id < neuron_neighborhood.size(),
+    RelearnException::check(neuron_id < neuron_in_neighborhood.size(),
         "In get_num_in_edges, tried with a too large id: %u %u", neuron_id, my_num_neurons);
 
     size_t total_num_ports = 0;
 
-    for (const auto& [_, connection_strength] : neuron_neighborhood[neuron_id].in_edges) {
+    for (const auto& [_, connection_strength] : neuron_in_neighborhood[neuron_id]) {
         if (connection_strength < 0) {
             total_num_ports += -connection_strength;
         }
@@ -112,13 +109,12 @@ size_t NetworkGraph::get_num_in_edges_in(size_t neuron_id) const {
 }
 
 size_t NetworkGraph::get_num_out_edges(size_t neuron_id) const {
-    RelearnException::check(neuron_id < neuron_neighborhood.size(),
+    RelearnException::check(neuron_id < neuron_out_neighborhood.size(),
         "In get_num_out_edges, tried with a too large id: %u %u", neuron_id, my_num_neurons);
 
     size_t total_num_ports = 0;
 
-    for (const auto& edge : neuron_neighborhood[neuron_id].out_edges) {
-        int connection_strength = edge.second;
+    for (const auto& [_, connection_strength] : neuron_out_neighborhood[neuron_id]) {
         total_num_ports += std::abs(connection_strength);
     }
 
@@ -158,7 +154,7 @@ void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, siz
         RelearnException::check(target_neuron_id < my_num_neurons,
             "Want to add an in-edge with a too large target id: %u %u", target_neuron_id, my_num_neurons);
 
-        Edges& in_edges = neuron_neighborhood[target_neuron_id].in_edges;
+        Edges& in_edges = neuron_in_neighborhood[target_neuron_id];
         add_edge(in_edges, source_rank, source_neuron_id, weight);
     }
 
@@ -166,7 +162,7 @@ void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, siz
         RelearnException::check(source_neuron_id < my_num_neurons,
             "Want to add an out-edge with a too large source id: ", target_neuron_id, my_num_neurons);
 
-        Edges& out_edges = neuron_neighborhood[source_neuron_id].out_edges;
+        Edges& out_edges = neuron_out_neighborhood[source_neuron_id];
         add_edge(out_edges, target_rank, target_neuron_id, weight);
     }
 }
@@ -584,7 +580,7 @@ void NetworkGraph::load_synapses(
 
 void NetworkGraph::print(std::ostream& os, const NeuronIdMap& neuron_id_map) const {
     // For my neurons
-    for (size_t target_neuron_id = my_neuron_id_start; target_neuron_id <= my_neuron_id_end; target_neuron_id++) {
+    for (size_t target_neuron_id = 0; target_neuron_id < my_num_neurons; target_neuron_id++) {
         // Walk through in-edges of my neuron
         const NetworkGraph::Edges& in_edges = get_in_edges(target_neuron_id);
         NetworkGraph::Edges::const_iterator it_in_edge;
@@ -620,7 +616,7 @@ void NetworkGraph::write_synapses_to_file(const std::string& filename, [[maybe_u
 
     ofstream << "# <source neuron id> <target neuron id> <weight> \n";
 
-    for (size_t source_neuron_id = my_neuron_id_start; source_neuron_id <= my_neuron_id_end; source_neuron_id++) {
+    for (size_t source_neuron_id = 0; source_neuron_id < my_num_neurons; source_neuron_id++) {
         // Walk through in-edges of my neuron
         const NetworkGraph::Edges& out_edges = get_out_edges(source_neuron_id);
 
