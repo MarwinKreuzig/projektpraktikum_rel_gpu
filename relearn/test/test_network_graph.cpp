@@ -150,15 +150,15 @@ TEST(TestNetworkGraph, testNetworkGraphEdges) {
             for (const auto& it : in_edges[neuron_id]) {
                 int weight_meta = it.second;
                 std::pair<int, size_t> key = it.first;
-                auto it = std::find(in_edges_ng.begin(), in_edges_ng.end(), std::make_pair(key, weight_meta));
-                EXPECT_TRUE(it != in_edges_ng.end());
+                auto found_it = std::find(in_edges_ng.begin(), in_edges_ng.end(), std::make_pair(key, weight_meta));
+                EXPECT_TRUE(found_it != in_edges_ng.end());
             }
 
             for (const auto& it : out_edges[neuron_id]) {
                 int weight_meta = it.second;
                 std::pair<int, size_t> key = it.first;
-                auto it = std::find(out_edges_ng.begin(), out_edges_ng.end(), std::make_pair(key, weight_meta));
-                EXPECT_TRUE(it != out_edges_ng.end());
+                auto found_it = std::find(out_edges_ng.begin(), out_edges_ng.end(), std::make_pair(key, weight_meta));
+                EXPECT_TRUE(found_it != out_edges_ng.end());
             }
         }
     }
@@ -248,13 +248,13 @@ TEST(TestNetworkGraph, testNetworkGraphEdgesSplit) {
             EXPECT_EQ(out_edges_ng.size(), out_edges_ng_ex.size());
 
             for (const auto& [edge_key, edge_val] : in_edges_ng) {
-                auto it = std::find(in_edges_ng_ex.begin(), in_edges_ng_ex.end(), std::make_pair(edge_key, edge_val));
-                EXPECT_TRUE(it != in_edges_ng_ex.end());
+                auto found_it = std::find(in_edges_ng_ex.begin(), in_edges_ng_ex.end(), std::make_pair(edge_key, edge_val));
+                EXPECT_TRUE(found_it != in_edges_ng_ex.end());
             }
 
             for (const auto& [edge_key, edge_val] : out_edges_ng) {
-                auto it = std::find(out_edges_ng_ex.begin(), out_edges_ng_ex.end(), std::make_pair(edge_key, edge_val));
-                EXPECT_TRUE(it != out_edges_ng_ex.end());
+                auto found_it = std::find(out_edges_ng_ex.begin(), out_edges_ng_ex.end(), std::make_pair(edge_key, edge_val));
+                EXPECT_TRUE(found_it != out_edges_ng_ex.end());
             }
         }
     }
