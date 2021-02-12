@@ -14,15 +14,14 @@
 #include "Vec3.h"
 
 #include <map>
-#include <memory>
-#include <ostream>
 #include <set>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
-class Partition;
 class NeuronIdMap;
+class Partition;
 
 /**
   * Network graph stores in and out edges for the neuron id range
