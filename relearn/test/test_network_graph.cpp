@@ -124,8 +124,8 @@ TEST(TestNetworkGraph, testNetworkGraphEdges) {
             size_t inh_in_edges_count_ng = ng.get_num_in_edges_in(neuron_id);
             size_t out_edges_count_ng = ng.get_num_out_edges(neuron_id);
 
-            const std::map<std::pair<int, size_t>, int>& in_edges_ng = ng.get_in_edges(neuron_id);
-            const std::map<std::pair<int, size_t>, int>& out_edges_ng = ng.get_out_edges(neuron_id);
+            const std::vector<std::pair<std::pair<int, size_t>, int>>& in_edges_ng = ng.get_in_edges(neuron_id);
+            const std::vector<std::pair<std::pair<int, size_t>, int>>& out_edges_ng = ng.get_out_edges(neuron_id);
 
             size_t exc_in_edges_count_meta = 0;
             size_t inh_in_edges_count_meta = 0;
@@ -150,15 +150,15 @@ TEST(TestNetworkGraph, testNetworkGraphEdges) {
             for (const auto& it : in_edges[neuron_id]) {
                 int weight_meta = it.second;
                 std::pair<int, size_t> key = it.first;
-                int weight_ng = in_edges_ng.at(key);
-                EXPECT_EQ(weight_meta, weight_ng);
+                auto it = std::find(in_edges_ng.begin(), in_edges_ng.end(), std::make_pair(key, weight_meta));
+                EXPECT_TRUE(it != in_edges_ng.end());
             }
 
             for (const auto& it : out_edges[neuron_id]) {
                 int weight_meta = it.second;
                 std::pair<int, size_t> key = it.first;
-                int weight_ng = out_edges_ng.at(key);
-                EXPECT_EQ(weight_meta, weight_ng);
+                auto it = std::find(out_edges_ng.begin(), out_edges_ng.end(), std::make_pair(key, weight_meta));
+                EXPECT_TRUE(it != out_edges_ng.end());
             }
         }
     }
@@ -206,13 +206,13 @@ TEST(TestNetworkGraph, testNetworkGraphEdgesSplit) {
             size_t inh_in_edges_count_ng = ng.get_num_in_edges_in(neuron_id);
             size_t out_edges_count_ng = ng.get_num_out_edges(neuron_id);
 
-            const std::map<std::pair<int, size_t>, int>& in_edges_ng = ng.get_in_edges(neuron_id);
-            const std::map<std::pair<int, size_t>, int>& out_edges_ng = ng.get_out_edges(neuron_id);
+            const std::vector<std::pair<std::pair<int, size_t>, int>>& in_edges_ng = ng.get_in_edges(neuron_id);
+            const std::vector<std::pair<std::pair<int, size_t>, int>>& out_edges_ng = ng.get_out_edges(neuron_id);
 
-            std::map<std::pair<int, size_t>, int> in_edges_ng_ex = ng.get_in_edges(neuron_id, SignalType::EXCITATORY);
-            std::map<std::pair<int, size_t>, int> in_edges_ng_in = ng.get_in_edges(neuron_id, SignalType::INHIBITORY);
-            std::map<std::pair<int, size_t>, int> out_edges_ng_ex = ng.get_out_edges(neuron_id, SignalType::EXCITATORY);
-            std::map<std::pair<int, size_t>, int> out_edges_ng_in = ng.get_out_edges(neuron_id, SignalType::INHIBITORY);
+            std::vector<std::pair<std::pair<int, size_t>, int>> in_edges_ng_ex = ng.get_in_edges(neuron_id, SignalType::EXCITATORY);
+            std::vector<std::pair<std::pair<int, size_t>, int>> in_edges_ng_in = ng.get_in_edges(neuron_id, SignalType::INHIBITORY);
+            std::vector<std::pair<std::pair<int, size_t>, int>> out_edges_ng_ex = ng.get_out_edges(neuron_id, SignalType::EXCITATORY);
+            std::vector<std::pair<std::pair<int, size_t>, int>> out_edges_ng_in = ng.get_out_edges(neuron_id, SignalType::INHIBITORY);
 
             EXPECT_EQ(in_edges_ng.size(), in_edges_ng_ex.size() + in_edges_ng_in.size());
             EXPECT_EQ(out_edges_ng.size(), out_edges_ng_ex.size() + out_edges_ng_in.size());
@@ -233,20 +233,28 @@ TEST(TestNetworkGraph, testNetworkGraphEdgesSplit) {
                 EXPECT_TRUE(edge_val > 0);
             }
 
-            in_edges_ng_ex.merge(in_edges_ng_in);
-            out_edges_ng_ex.merge(out_edges_ng_in);
+            for (const auto& val : in_edges_ng_in) {
+                in_edges_ng_ex.emplace_back(val);
+            }
+
+            for (const auto& val : out_edges_ng_ex) {
+                out_edges_ng_in.emplace_back(val);
+            }
+
+            //in_edges_ng_ex.merge(in_edges_ng_in);
+            //out_edges_ng_ex.merge(out_edges_ng_in);
 
             EXPECT_EQ(in_edges_ng.size(), in_edges_ng_ex.size());
             EXPECT_EQ(out_edges_ng.size(), out_edges_ng_ex.size());
 
             for (const auto& [edge_key, edge_val] : in_edges_ng) {
-                const int other_val = in_edges_ng_ex[edge_key];
-                EXPECT_EQ(other_val, edge_val);
+                auto it = std::find(in_edges_ng_ex.begin(), in_edges_ng_ex.end(), std::make_pair(edge_key, edge_val));
+                EXPECT_TRUE(it != in_edges_ng_ex.end());
             }
 
             for (const auto& [edge_key, edge_val] : out_edges_ng) {
-                const int other_val = out_edges_ng_ex[edge_key];
-                EXPECT_EQ(other_val, edge_val);
+                auto it = std::find(out_edges_ng_ex.begin(), out_edges_ng_ex.end(), std::make_pair(edge_key, edge_val));
+                EXPECT_TRUE(it != out_edges_ng_ex.end());
             }
         }
     }

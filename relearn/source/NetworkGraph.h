@@ -34,7 +34,7 @@ public:
 	 */
     using EdgesKey = std::pair<int, size_t>; // Pair of (rank, neuron id)
     using EdgesVal = int;
-    using Edges = std::map<EdgesKey, EdgesVal>; // Map of neuron id to edge weight
+    using Edges = std::vector<std::pair<EdgesKey, EdgesVal>>; // Map of neuron id to edge weight
 
     using NeuronInNeighborhood = std::vector<Edges>;
     using NeuronOutNeighborhood = std::vector<Edges>;
