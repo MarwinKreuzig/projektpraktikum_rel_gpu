@@ -195,45 +195,6 @@ void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, siz
     }
 }
 
-void NetworkGraph::add_edge_weights(const std::string& filename) {
-    std::ifstream file(filename);
-    std::string line{};
-
-    while (std::getline(file, line)) {
-        // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
-            continue;
-        }
-
-        std::stringstream sstream(line);
-        double src_x = 0.0;
-        double src_y = 0.0;
-        double src_z = 0.0;
-        double tgt_x = 0.0;
-        double tgt_y = 0.0;
-        double tgt_z = 0.0;
-        const bool success = (sstream >> src_x) && (sstream >> src_y) && (sstream >> src_z) && (sstream >> tgt_x) && (sstream >> tgt_y) && (sstream >> tgt_z);
-
-        RelearnException::check(success, "success was denied");
-
-        RankNeuronId src_id{ -1, Constants::uninitialized };
-        RankNeuronId tgt_id{ -1, Constants::uninitialized };
-        bool ret = false;
-        std::tie(ret, src_id) = NeuronIdMap::pos2rank_neuron_id({ src_x, src_y, src_z });
-        RelearnException::check(ret, "ret was false");
-        std::tie(ret, tgt_id) = NeuronIdMap::pos2rank_neuron_id({ tgt_x, tgt_y, tgt_z });
-        RelearnException::check(ret, "ret was false");
-
-        add_edge_weight(tgt_id.get_neuron_id(), tgt_id.get_rank(),
-            src_id.get_neuron_id(), src_id.get_rank(), 1);
-
-        if (!success) {
-            std::cerr << "Skipping line: \"" << line << "\"\n";
-            continue;
-        }
-    }
-}
-
 void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, const Partition& partition) {
     std::vector<std::tuple<size_t, size_t, int>> local_synapses{};
     std::vector<std::tuple<size_t, size_t, int>> out_synapses{};
@@ -617,26 +578,25 @@ void NetworkGraph::print(std::ostream& os) const {
         NetworkGraph::Edges::const_iterator it_in_edge;
 
         RankNeuronId rank_neuron_id{ my_rank, target_neuron_id };
-        size_t glob_tgt = 0;
 
-        bool ret = true;
-        std::tie(ret, glob_tgt) = NeuronIdMap::rank_neuron_id2glob_id(rank_neuron_id);
-        RelearnException::check(ret, "ret is false");
+        const auto possible_global_target = NeuronIdMap::rank_neuron_id2glob_id(rank_neuron_id);
+        RelearnException::check(possible_global_target.has_value(), "ret is false");
+
+        const auto global_target = possible_global_target.value();
 
         for (it_in_edge = in_edges.begin(); it_in_edge != in_edges.end(); ++it_in_edge) {
 
             RankNeuronId tmp_rank_neuron_id{ it_in_edge->first.first, it_in_edge->first.second };
-            size_t glob_src = 0;
-            std::tie(ret, glob_src) = NeuronIdMap::rank_neuron_id2glob_id(tmp_rank_neuron_id);
-            RelearnException::check(ret, "ret is false");
 
-            glob_src++;
-            glob_tgt++;
+            const auto possible_global_source = NeuronIdMap::rank_neuron_id2glob_id(tmp_rank_neuron_id);
+            RelearnException::check(possible_global_source.has_value(), "ret is false");
+
+            const auto global_source = possible_global_source.value();
 
             // <target neuron id>  <source neuron id>  <weight>
             os
-                << glob_tgt << "\t"
-                << glob_src << "\t"
+                << (global_target + 1) << "\t"
+                << (global_source + 1) << "\t"
                 << it_in_edge->second << "\n";
         }
     }

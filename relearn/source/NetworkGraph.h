@@ -90,8 +90,6 @@ private:
     // NOLINTNEXTLINE
     static void load_synapses(const std::string& path_synapses, const Partition& partition, std::set<size_t>& foreing_ids, std::vector<std::tuple<size_t, size_t, int>>& local_synapses, std::vector<std::tuple<size_t, size_t, int>>& out_synapses, std::vector<std::tuple<size_t, size_t, int>>& in_synapses);
 
-    void add_edge_weights(const std::string& filename);
-
     void write_synapses_to_file(const std::string& filename, const Partition& partition) const;
 
     NeuronInNeighborhood neuron_in_neighborhood;

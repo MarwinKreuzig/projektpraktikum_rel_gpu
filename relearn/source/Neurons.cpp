@@ -1089,22 +1089,19 @@ void Neurons::print_positions_to_log_file() {
     const std::vector<SignalType>& signal_types = axons.get_signal_types();
 
     // Print global ids, positions, and areas of local neurons
-    bool ret = false;
-    size_t glob_id = 0;
-
     const int my_rank = MPIWrapper::get_my_rank();
     ss << std::fixed << std::setprecision(6);
 
     for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
         RankNeuronId rank_neuron_id{ my_rank, neuron_id };
-        std::tie(ret, glob_id) = NeuronIdMap::rank_neuron_id2glob_id(rank_neuron_id);
-        RelearnException::check(ret, "ret is false");
 
+        const auto possible_global_id = NeuronIdMap::rank_neuron_id2glob_id(rank_neuron_id);
+        RelearnException::check(possible_global_id.has_value(), "ret is false");
+
+        const auto global_id = possible_global_id.value();
         const char* const signal_type_name = signal_types[neuron_id] == SignalType::EXCITATORY ? "ex" : "in";
 
-        glob_id++;
-
-        ss << glob_id << " "
+        ss << (global_id + 1) << " "
            << axons_x_dims[neuron_id] << " "
            << axons_y_dims[neuron_id] << " "
            << axons_z_dims[neuron_id] << " "
