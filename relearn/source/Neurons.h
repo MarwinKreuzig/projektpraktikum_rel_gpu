@@ -10,34 +10,28 @@
 
 #pragma once
 
-#include "Cell.h"
 #include "Config.h"
-#include "LogFiles.h"
-#include "MPIWrapper.h"
+#include "ElementType.h"
 #include "ModelParameter.h"
 #include "NetworkGraph.h"
-#include "NeuronIdMap.h"
-#include "Octree.h"
-#include "Parameters.h"
 #include "Positions.h"
 #include "RankNeuronId.h"
+#include "RelearnException.h"
 #include "SignalType.h"
+#include "SynapseCreationRequests.h"
 #include "SynapticElements.h"
-#include "Timers.h"
 
-#include <algorithm>
 #include <array>
-#include <cmath>
-#include <cstdlib>
-#include <cstring>
-#include <iomanip>
-#include <numeric>
+#include <memory>
 #include <random>
+#include <string>
 #include <tuple>
 #include <vector>
 
-class Partition;
+class NeuronModels;
 class NeuronMonitor;
+class Octree;
+class Partition;
 
 // Types
 using Axons = SynapticElements;
@@ -160,7 +154,9 @@ class Neurons {
     struct SynapseDeletionRequests {
         SynapseDeletionRequests() = default;
 
-        [[nodiscard]] size_t size() const noexcept { return num_requests; }
+        [[nodiscard]] size_t size() const noexcept {
+            return num_requests;
+        }
 
         void resize(size_t size) {
             num_requests = size;
@@ -255,10 +251,9 @@ class Neurons {
             // This vector is used as MPI communication buffer
     };
 
-    template <typename T>
     struct StatisticalMeasures {
-        T min;
-        T max;
+        double min;
+        double max;
         double avg;
         double var;
         double std;
@@ -272,9 +267,9 @@ public:
     using MapSynapseDeletionRequests = std::map<int, SynapseDeletionRequests>;
 
     Neurons(const Partition& partition, std::unique_ptr<NeuronModels> model)
-        : Neurons(partition, std::move(model), 
+        : Neurons(partition, std::move(model),
             std::make_unique<Axons>(ElementType::AXON, SynapticElements::default_eta_Axons),
-            std::make_unique<DendritesExc>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc), 
+            std::make_unique<DendritesExc>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc),
             std::make_unique<DendritesInh>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh)) { }
 
     Neurons(const Partition& partition,
@@ -287,8 +282,7 @@ public:
         , axons(std::move(*axons_ptr))
         , dendrites_exc(std::move(*dend_ex_ptr))
         , dendrites_inh(std::move(*dend_in_ptr))
-        // NOLINTNEXTLINE
-        , random_number_distribution(0.0, std::nextafter(1.0, 2.0)) {
+        , random_number_distribution(0.0, std::nextafter(1.0, 1.0 + Constants::eps)) {
     }
 
     ~Neurons() = default;
@@ -299,34 +293,7 @@ public:
     Neurons& operator=(const Neurons& other) = delete;
     Neurons& operator=(Neurons&& other) = default;
 
-    void init(size_t number_neurons) {
-        num_neurons = number_neurons;
-
-        neuron_model->init(num_neurons);
-        positions.init(num_neurons);
-
-        axons.init(number_neurons);
-        dendrites_exc.init(number_neurons);
-        dendrites_inh.init(number_neurons);
-
-        /**
-	    * Mark dendrites as exc./inh.
-	    */
-        for (auto i = 0; i < num_neurons; i++) {
-            dendrites_exc.set_signal_type(i, SignalType::EXCITATORY);
-            dendrites_inh.set_signal_type(i, SignalType::INHIBITORY);
-        }
-
-        calcium.resize(num_neurons);
-        area_names.resize(num_neurons);
-
-        // Init member variables
-        for (size_t i = 0; i < num_neurons; i++) {
-            // Set calcium concentration
-            const auto fired = neuron_model->get_fired(i);
-            calcium[i] = fired ? neuron_model->get_beta() : 0.0;
-        }
-    }
+    void init(size_t number_neurons);
 
     void set_octree(std::shared_ptr<Octree> octree) {
         global_tree = std::move(octree);
@@ -336,7 +303,7 @@ public:
         network_graph = std::move(network);
     }
 
-    std::vector<ModelParameter> get_parameter(ElementType element_type, SignalType signal_type) {
+    [[nodiscard]] std::vector<ModelParameter> get_parameter(ElementType element_type, SignalType signal_type) {
         if (element_type == ElementType::AXON) {
             return axons.get_parameter();
         }
@@ -348,7 +315,7 @@ public:
         return dendrites_inh.get_parameter();
     }
 
-    void set_model(std::unique_ptr<NeuronModels>&& model) noexcept {
+    void set_model(std::unique_ptr<NeuronModels> model) noexcept {
         neuron_model = std::move(model);
     }
 
@@ -382,9 +349,7 @@ public:
 
     void init_synaptic_elements();
 
-    void update_electrical_activity() {
-        neuron_model->update_electrical_activity(*network_graph, calcium);
-    }
+    void update_electrical_activity();
 
     void update_number_synaptic_elements_delta() noexcept {
         axons.update_number_elements_delta(calcium);
@@ -392,7 +357,7 @@ public:
         dendrites_inh.update_number_elements_delta(calcium);
     }
 
-    std::tuple<size_t, size_t> update_connectivity() {
+    [[nodiscard]] std::tuple<size_t, size_t> update_connectivity() {
         RelearnException::check(network_graph.get() != nullptr, "Network graph is nullptr");
         RelearnException::check(global_tree.get() != nullptr, "Global octree is nullptr");
 
@@ -410,9 +375,9 @@ public:
     // Print global information about all neurons at rank 0
     void print_neurons_overview_to_log_file_on_rank_0(size_t step);
 
-    void print_network_graph_to_log_file(const NeuronIdMap& neuron_id_map);
+    void print_network_graph_to_log_file();
 
-    void print_positions_to_log_file(const NeuronIdMap& neuron_id_map);
+    void print_positions_to_log_file();
 
     void print();
 
@@ -421,44 +386,11 @@ public:
     void debug_check_counts();
 
 private:
-    template <typename T>
-    [[nodiscard]] StatisticalMeasures<T> global_statistics(const std::vector<T>& local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root, MPIWrapper::Scope scope) {
-        const double my_avg = std::accumulate(local_values.begin(), local_values.end(), 0.0)
-            / total_num_values;
+    [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root);
 
-        // Get global min and max at rank "root"
-        const auto [d_my_min, d_my_max] = [&]() -> std::tuple<double, double> {
-            const auto result = std::minmax_element(local_values.begin(), local_values.end());
-            return { static_cast<double>(*result.first), static_cast<double>(*result.second) };
-        }();
+    [[nodiscard]] size_t delete_synapses();
 
-        const double d_min = MPIWrapper::reduce(d_my_min, MPIWrapper::ReduceFunction::min, root, scope);
-        const double d_max = MPIWrapper::reduce(d_my_max, MPIWrapper::ReduceFunction::max, root, scope);
-
-        // Get global avg at all ranks (needed for variance)
-        const double avg = MPIWrapper::all_reduce(my_avg, MPIWrapper::ReduceFunction::sum, scope);
-
-        /**
-		* Calc variance
-		*/
-        double my_var = 0;
-        for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
-            my_var += (local_values[neuron_id] - avg) * (local_values[neuron_id] - avg);
-        }
-        my_var /= total_num_values;
-
-        // Get global variance at rank "root"
-        const double var = MPIWrapper::reduce(my_var, MPIWrapper::ReduceFunction::sum, root, scope);
-
-        // Calc standard deviation
-        const double std = sqrt(var);
-
-        return { static_cast<T>(d_min), static_cast<T>(d_max), avg, var, std };
-    }
-
-    size_t delete_synapses();
-
-    PendingDeletionsV delete_synapses_find_synapses(SynapticElements& synaptic_elements, PendingDeletionsV& other_pending_deletions);
+    [[nodiscard]] PendingDeletionsV delete_synapses_find_synapses(SynapticElements& synaptic_elements, PendingDeletionsV& other_pending_deletions);
 
     /**
 	 * Determines which synapses should be deleted.
@@ -469,34 +401,34 @@ private:
 	 * due to synapse deletion until all neurons have decided *independently* which synapse
 	 * to delete. This should reflect how it's done for a distributed memory implementation.
 	 */
-    std::vector<size_t> delete_synapses_find_synapses_on_neuron(size_t neuron_id,
+    [[nodiscard]] std::vector<size_t> delete_synapses_find_synapses_on_neuron(size_t neuron_id,
         ElementType element_type,
         SignalType signal_type,
         unsigned int num_synapses_to_delete,
         PendingDeletionsV& pending_deletions,
         const PendingDeletionsV& other_pending_deletions);
 
-    std::vector<Neurons::Synapse> delete_synapses_register_edges(const NetworkGraph::Edges& edges);
+    [[nodiscard]] std::vector<Neurons::Synapse> delete_synapses_register_edges(const NetworkGraph::Edges& edges);
 
-    MapSynapseDeletionRequests delete_synapses_exchange_requests(const PendingDeletionsV& pending_deletions);
+    [[nodiscard]] MapSynapseDeletionRequests delete_synapses_exchange_requests(const PendingDeletionsV& pending_deletions);
 
     void delete_synapses_process_requests(const MapSynapseDeletionRequests& synapse_deletion_requests_incoming, PendingDeletionsV& pending_deletions);
 
-    size_t delete_synapses_commit_deletions(const PendingDeletionsV& list);
+    [[nodiscard]] size_t delete_synapses_commit_deletions(const PendingDeletionsV& list);
 
-    size_t create_synapses();
+    [[nodiscard]] size_t create_synapses();
 
     void create_synapses_update_octree();
 
-    MapSynapseCreationRequests create_synapses_find_targets();
+    [[nodiscard]] MapSynapseCreationRequests create_synapses_find_targets();
 
-    MapSynapseCreationRequests create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
+    [[nodiscard]] MapSynapseCreationRequests create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
-    size_t create_synapses_process_requests(MapSynapseCreationRequests& synapse_creation_requests_incoming);
+    [[nodiscard]] size_t create_synapses_process_requests(MapSynapseCreationRequests& synapse_creation_requests_incoming);
 
     void create_synapses_exchange_responses(const MapSynapseCreationRequests& synapse_creation_requests_incoming, MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
-    size_t create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
+    [[nodiscard]] size_t create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
     static void print_pending_synapse_deletions(const PendingDeletionsV& list);
 

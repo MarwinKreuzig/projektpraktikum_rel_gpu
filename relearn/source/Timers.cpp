@@ -30,11 +30,12 @@ void Timers::print() {
 
     std::array<double, 66> timers_local{};
 
-    for (int i = 0; i < TimerRegion::NUM_TIMER_REGIONS; ++i) {
+    for (size_t i = 0; i < TimerRegion::NUM_TIMER_REGIONS; ++i) {
         const double elapsed = GlobalTimers::timers.get_elapsed(i);
 
         for (int j = 0; j < 3; ++j) {
-            timers_local[3 * i + j] = elapsed;
+            const size_t idx = 3 * i + j;
+            timers_local[idx] = elapsed;
         }
     }
 
@@ -45,8 +46,9 @@ void Timers::print() {
 
     // Divide second entry of (min, sum, max), i.e., sum, by the number of ranks
     // so that sum becomes average
-    for (int i = 0; i < TimerRegion::NUM_TIMER_REGIONS; i++) {
-        timers_global[3 * i + 1] /= MPIWrapper::get_num_ranks();
+    for (size_t i = 0; i < TimerRegion::NUM_TIMER_REGIONS; i++) {
+        const size_t idx = 3 * i + 1;
+        timers_global[idx] /= MPIWrapper::get_num_ranks();
     }
 
     if (0 == MPIWrapper::get_my_rank()) {

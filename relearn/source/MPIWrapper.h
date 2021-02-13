@@ -121,7 +121,8 @@ public:
     static void reduce(const std::array<T, size>& src, std::array<T, size>& dst, ReduceFunction function, int root_rank, Scope scope) {
         RelearnException::check(src.size() == dst.size(), "Sizes of vectors don't match");
 
-        reduce(src.data(), dst.data(), src.size() * sizeof(T), function, root_rank, scope);
+        const auto count = static_cast<int>(src.size() * sizeof(T));
+        reduce(src.data(), dst.data(), count, function, root_rank, scope);
     }
 
     template <typename T>

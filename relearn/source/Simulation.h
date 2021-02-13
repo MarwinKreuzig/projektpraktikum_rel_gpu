@@ -16,7 +16,6 @@
 #include <vector>
 
 class NetworkGraph;
-class NeuronIdMap;
 class NeuronModels;
 class NeuronMonitor;
 class Neurons;
@@ -70,7 +69,6 @@ private:
 
     std::unique_ptr<NeuronModels> neuron_models;
     std::shared_ptr<Neurons> neurons;
-    std::unique_ptr<NeuronIdMap> neuron_id_map;
 
     std::shared_ptr<Octree> global_tree;
 

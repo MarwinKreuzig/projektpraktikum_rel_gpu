@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
     size_t simulation_steps{};
     app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms")->required();
 
-    size_t seed_octree{};
+    unsigned int seed_octree{};
     app.add_option("-r,--random-seed", seed_octree, "Random seed.")->required();
 
     double accept_criterion{ 0.0 };
@@ -102,8 +102,8 @@ int main(int argc, char** argv) {
     LogFiles::init();
 
     // Init random number seeds
-    randomNumberSeeds::partition = static_cast<int64_t>(my_rank);
-    randomNumberSeeds::octree = static_cast<int64_t>(seed_octree);
+    randomNumberSeeds::partition = static_cast<unsigned int>(my_rank);
+    randomNumberSeeds::octree = seed_octree;
 
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier(MPIWrapper::Scope::global);

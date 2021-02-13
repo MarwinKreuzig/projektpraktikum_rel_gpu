@@ -11,15 +11,44 @@
 #include "Neurons.h"
 
 #include "MPIWrapper.h"
+#include "NeuronIdMap.h"
+#include "NeuronModels.h"
+#include "Octree.h"
 #include "Partition.h"
 #include "Random.h"
-#include "RelearnException.h"
-#include "SynapseCreationRequests.h"
 
 #include <algorithm>
-#include <array>
+#include <numeric>
 #include <optional>
 
+void Neurons::init(size_t number_neurons) {
+    num_neurons = number_neurons;
+
+    neuron_model->init(num_neurons);
+    positions.init(num_neurons);
+
+    axons.init(number_neurons);
+    dendrites_exc.init(number_neurons);
+    dendrites_inh.init(number_neurons);
+
+    /**
+	    * Mark dendrites as exc./inh.
+	    */
+    for (auto i = 0; i < num_neurons; i++) {
+        dendrites_exc.set_signal_type(i, SignalType::EXCITATORY);
+        dendrites_inh.set_signal_type(i, SignalType::INHIBITORY);
+    }
+
+    calcium.resize(num_neurons);
+    area_names.resize(num_neurons);
+
+    // Init member variables
+    for (size_t i = 0; i < num_neurons; i++) {
+        // Set calcium concentration
+        const auto fired = neuron_model->get_fired(i);
+        calcium[i] = fired ? neuron_model->get_beta() : 0.0;
+    }
+}
 
 void Neurons::init_synaptic_elements() {
     // Give unbound synaptic elements as well
@@ -35,18 +64,58 @@ void Neurons::init_synaptic_elements() {
         const size_t dendrites_ex_connections = network_graph->get_num_in_edges_ex(i);
         const size_t dendrites_in_connections = network_graph->get_num_in_edges_in(i);
 
-        axons.update_cnt(i, axon_connections);
-        dendrites_exc.update_cnt(i, dendrites_ex_connections);
-        dendrites_inh.update_cnt(i, dendrites_in_connections);
+        axons.update_cnt(i, static_cast<double>(axon_connections));
+        dendrites_exc.update_cnt(i, static_cast<double>(dendrites_ex_connections));
+        dendrites_inh.update_cnt(i, static_cast<double>(dendrites_in_connections));
 
-        axons.update_conn_cnt(i, axon_connections);
-        dendrites_exc.update_conn_cnt(i, dendrites_ex_connections);
-        dendrites_inh.update_conn_cnt(i, dendrites_in_connections);
+        axons.update_conn_cnt(i, static_cast<int>(axon_connections));
+        dendrites_exc.update_conn_cnt(i, static_cast<double>(dendrites_ex_connections));
+        dendrites_inh.update_conn_cnt(i, static_cast<double>(dendrites_in_connections));
 
         RelearnException::check(axons_cnts[i] >= axons.get_connected_cnts()[i], "Error is with: %d", i);
         RelearnException::check(dendrites_inh_cnts[i] >= dendrites_inh.get_connected_cnts()[i], "Error is with: %d", i);
         RelearnException::check(dendrites_exc_cnts[i] >= dendrites_exc.get_connected_cnts()[i], "Error is with: %d", i);
     }
+}
+
+void Neurons::update_electrical_activity() {
+    neuron_model->update_electrical_activity(*network_graph, calcium);
+}
+
+Neurons::StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, size_t num_local_values, size_t total_num_values, int root) {
+    const auto scope = MPIWrapper::Scope::global;
+
+    const double my_avg = std::accumulate(local_values.begin(), local_values.end(), 0.0)
+        / total_num_values;
+
+    // Get global min and max at rank "root"
+    const auto [d_my_min, d_my_max] = [&]() -> std::tuple<double, double> {
+        const auto result = std::minmax_element(local_values.begin(), local_values.end());
+        return { static_cast<double>(*result.first), static_cast<double>(*result.second) };
+    }();
+
+    const double d_min = MPIWrapper::reduce(d_my_min, MPIWrapper::ReduceFunction::min, root, scope);
+    const double d_max = MPIWrapper::reduce(d_my_max, MPIWrapper::ReduceFunction::max, root, scope);
+
+    // Get global avg at all ranks (needed for variance)
+    const double avg = MPIWrapper::all_reduce(my_avg, MPIWrapper::ReduceFunction::sum, scope);
+
+    /**
+		* Calc variance
+		*/
+    double my_var = 0;
+    for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+        my_var += (local_values[neuron_id] - avg) * (local_values[neuron_id] - avg);
+    }
+    my_var /= total_num_values;
+
+    // Get global variance at rank "root"
+    const double var = MPIWrapper::reduce(my_var, MPIWrapper::ReduceFunction::sum, root, scope);
+
+    // Calc standard deviation
+    const double std = sqrt(var);
+
+    return { d_min, d_max, avg, var, std };
 }
 
 size_t Neurons::delete_synapses() {
@@ -944,9 +1013,9 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 }
 
 void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
-    const StatisticalMeasures<double> calcium_statistics = global_statistics(calcium, num_neurons, partition->get_total_num_neurons(), 0, MPIWrapper::Scope::global);
+    const StatisticalMeasures calcium_statistics = global_statistics(calcium, num_neurons, partition->get_total_num_neurons(), 0);
 
-    const StatisticalMeasures<double> activity_statistics = global_statistics(neuron_model->get_x(), num_neurons, partition->get_total_num_neurons(), 0, MPIWrapper::Scope::global);
+    const StatisticalMeasures activity_statistics = global_statistics(neuron_model->get_x(), num_neurons, partition->get_total_num_neurons(), 0);
 
     // Output data
     if (0 == MPIWrapper::get_my_rank()) {
@@ -990,7 +1059,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
     }
 }
 
-void Neurons::print_network_graph_to_log_file(const NeuronIdMap& neuron_id_map) {
+void Neurons::print_network_graph_to_log_file() {
     std::stringstream ss;
 
     // Write output format to file
@@ -999,12 +1068,12 @@ void Neurons::print_network_graph_to_log_file(const NeuronIdMap& neuron_id_map) 
        << "\n";
 
     // Write network graph to file
-    network_graph->print(ss, neuron_id_map);
+    network_graph->print(ss);
 
     LogFiles::write_to_file(LogFiles::EventType::Network, ss.str(), false);
 }
 
-void Neurons::print_positions_to_log_file(const NeuronIdMap& neuron_id_map) {
+void Neurons::print_positions_to_log_file() {
     std::stringstream ss;
 
     // Write total number of neurons to log file
@@ -1028,7 +1097,7 @@ void Neurons::print_positions_to_log_file(const NeuronIdMap& neuron_id_map) {
 
     for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
         RankNeuronId rank_neuron_id{ my_rank, neuron_id };
-        std::tie(ret, glob_id) = neuron_id_map.rank_neuron_id2glob_id(rank_neuron_id);
+        std::tie(ret, glob_id) = NeuronIdMap::rank_neuron_id2glob_id(rank_neuron_id);
         RelearnException::check(ret, "ret is false");
 
         const char* const signal_type_name = signal_types[neuron_id] == SignalType::EXCITATORY ? "ex" : "in";

@@ -20,7 +20,6 @@
 #include <utility>
 #include <vector>
 
-class NeuronIdMap;
 class Partition;
 
 /**
@@ -72,9 +71,9 @@ public:
         int weight);
 
     // Print network using global neuron ids
-    void print(std::ostream& os, const NeuronIdMap& neuron_id_map) const;
+    void print(std::ostream& os) const;
 
-    void add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, const NeuronIdMap& neuron_id_map, const Partition& partition);
+    void add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, const Partition& partition);
 
     void debug_check() const;
 
@@ -91,9 +90,9 @@ private:
     // NOLINTNEXTLINE
     static void load_synapses(const std::string& path_synapses, const Partition& partition, std::set<size_t>& foreing_ids, std::vector<std::tuple<size_t, size_t, int>>& local_synapses, std::vector<std::tuple<size_t, size_t, int>>& out_synapses, std::vector<std::tuple<size_t, size_t, int>>& in_synapses);
 
-    void add_edge_weights(const std::string& filename, const NeuronIdMap& neuron_id_map);
+    void add_edge_weights(const std::string& filename);
 
-    void write_synapses_to_file(const std::string& filename, const NeuronIdMap& neuron_id_map, const Partition& partition) const;
+    void write_synapses_to_file(const std::string& filename, const Partition& partition) const;
 
     NeuronInNeighborhood neuron_in_neighborhood;
     NeuronOutNeighborhood neuron_out_neighborhood;

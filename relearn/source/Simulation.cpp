@@ -79,7 +79,7 @@ void Simulation::load_neurons_from_file(const std::string& path_to_positions) {
 void Simulation::load_neurons_from_file(const std::string& path_to_positions, const std::string& path_to_connections) {
     load_neurons_from_file(path_to_positions);
 
-    network_graph->add_edges_from_file(path_to_connections, path_to_positions, *neuron_id_map, *partition);
+    network_graph->add_edges_from_file(path_to_connections, path_to_positions, *partition);
     LogFiles::print_message_rank("Network graph created", 0);
 
     neurons->init_synaptic_elements();
@@ -191,8 +191,8 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 
     print_neuron_monitors();
 
-    neurons->print_positions_to_log_file(*neuron_id_map);
-    neurons->print_network_graph_to_log_file(*neuron_id_map);
+    neurons->print_positions_to_log_file();
+    neurons->print_network_graph_to_log_file();
 }
 
 void Simulation::finalize() const {
@@ -223,7 +223,7 @@ void Simulation::initialize() {
 
     LogFiles::print_message_rank("Neurons created", 0);
 
-    neuron_id_map = std::make_unique<NeuronIdMap>(neurons->get_num_neurons(),
+    NeuronIdMap::init(neurons->get_num_neurons(),
         neurons->get_positions().get_x_dims(),
         neurons->get_positions().get_y_dims(),
         neurons->get_positions().get_z_dims());

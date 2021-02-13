@@ -20,8 +20,7 @@
 #include <utility>
 #include <vector>
 
-NeuronIdMap::NeuronIdMap(size_t my_num_neurons,
-    const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z) {
+void NeuronIdMap::init(size_t my_num_neurons, const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z) {
     const int num_ranks = MPIWrapper::get_num_ranks();
 
     // Gather the number of neurons of every process
@@ -37,7 +36,7 @@ NeuronIdMap::NeuronIdMap(size_t my_num_neurons,
         x, y, z);
 }
 
-std::tuple<bool, size_t> NeuronIdMap::rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id) const /*noexcept*/ {
+std::tuple<bool, size_t> NeuronIdMap::rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id) /*noexcept*/ {
     // Rank is not valid
     if (rank_neuron_id.get_rank() < 0 || rank_neuron_id.get_rank() > (rank_to_start_neuron_id.size() - 1)) {
         return std::make_tuple(false, Constants::uninitialized);
@@ -47,7 +46,7 @@ std::tuple<bool, size_t> NeuronIdMap::rank_neuron_id2glob_id(const RankNeuronId&
     return std::make_tuple(true, glob_id);
 }
 
-std::tuple<bool, RankNeuronId> NeuronIdMap::pos2rank_neuron_id(const Vec3d& pos) const {
+std::tuple<bool, RankNeuronId> NeuronIdMap::pos2rank_neuron_id(const Vec3d& pos) {
     auto it = pos_to_rank_neuron_id.find(pos);
 
     // Neuron position not found
