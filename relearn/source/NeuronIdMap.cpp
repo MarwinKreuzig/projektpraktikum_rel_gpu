@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-void NeuronIdMap::init(size_t my_num_neurons, const std::vector<double>& x, const std::vector<double>& y, const std::vector<double>& z) {
+void NeuronIdMap::init(size_t my_num_neurons) {
     const int num_ranks = MPIWrapper::get_num_ranks();
 
     // Gather the number of neurons of every process

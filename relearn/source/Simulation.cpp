@@ -223,10 +223,7 @@ void Simulation::initialize() {
 
     LogFiles::print_message_rank("Neurons created", 0);
 
-    NeuronIdMap::init(neurons->get_num_neurons(),
-        neurons->get_positions().get_x_dims(),
-        neurons->get_positions().get_y_dims(),
-        neurons->get_positions().get_z_dims());
+    NeuronIdMap::init(neurons->get_num_neurons());
 
     global_tree = std::make_shared<Octree>(*partition, parameters->accept_criterion, parameters->sigma, parameters->max_num_pending_vacant_axons);
     global_tree->set_no_free_in_destructor(); // This needs to be changed later, as it's cleaner to free the nodes at destruction
