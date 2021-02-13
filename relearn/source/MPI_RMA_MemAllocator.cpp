@@ -10,6 +10,8 @@
 
 #include "MPI_RMA_MemAllocator.h"
 
+#if MPI_FOUND
+
 #include "LogFiles.h"
 #include "OctreeNode.h"
 #include "RelearnException.h"
@@ -44,7 +46,7 @@ void MPI_RMA_MemAllocator::init(size_t size_requested) {
 
     holder_base_ptr = HolderOctreeNode(base_ptr, max_num_objects);
 
-    std::stringstream sstring;
+    std::stringstream sstring{};
     sstring << "MPI RMA MemAllocator: max_num_objects: " << max_num_objects << "  sizeof(OctreeNode): " << sizeof(OctreeNode);
     LogFiles::print_message_rank(sstring.str().c_str(), 0);
 }
@@ -71,11 +73,10 @@ void MPI_RMA_MemAllocator::delete_octree_node(OctreeNode* ptr) {
 }
 
 [[nodiscard]] OctreeNode* MPI_RMA_MemAllocator::get_root_nodes_for_local_trees(size_t num_local_trees) {
-    const size_t requested_size = num_local_trees * sizeof(OctreeNode);
-    const auto requested_size_conv = static_cast<int>(requested_size);
+    const auto requested_size = num_local_trees * sizeof(OctreeNode);
 
     // NOLINTNEXTLINE
-    if (MPI_SUCCESS != MPI_Alloc_mem(requested_size_conv, MPI_INFO_NULL, &root_nodes_for_local_trees)) {
+    if (MPI_SUCCESS != MPI_Alloc_mem(static_cast<int>(requested_size), MPI_INFO_NULL, &root_nodes_for_local_trees)) {
         RelearnException::fail("MPI_Alloc_mem failed for local trees");
     }
 
@@ -100,40 +101,32 @@ void MPI_RMA_MemAllocator::create_rma_window() noexcept {
     MPI_Win_create(base_ptr, max_size, displ_unit, MPI_INFO_NULL, MPI_COMM_WORLD, &mpi_window);
 }
 
-[[nodiscard]] size_t MPI_RMA_MemAllocator::HolderOctreeNode::calculate_distance(OctreeNode* ptr) const noexcept {
-    const auto dist = size_t(ptr - base_ptr);
-    return dist;
-}
-
 MPI_RMA_MemAllocator::HolderOctreeNode::HolderOctreeNode(OctreeNode* ptr, size_t length)
-    : available(length)
-    , non_available(length, nullptr)
+    : non_available(length, nullptr)
     , base_ptr(ptr)
     , free(length)
     , total(length) {
-
     for (size_t counter = 0; counter < length; counter++) {
         // NOLINTNEXTLINE
-        available[counter] = ptr + counter;
+        available.push(ptr + counter);
     }
 }
 
 [[nodiscard]] OctreeNode* MPI_RMA_MemAllocator::HolderOctreeNode::get_available() {
     // Get last available element and save it
-    auto last = available.end() - 1;
-    OctreeNode* ptr = *last;
-    const size_t dist = calculate_distance(ptr);
+    OctreeNode* ptr = available.front();
+    available.pop();
+    const size_t dist = std::distance(base_ptr, ptr);
 
-    available.erase(last);
     non_available[dist] = ptr;
 
     return ptr;
 }
 
 void MPI_RMA_MemAllocator::HolderOctreeNode::make_available(OctreeNode* ptr) {
-    const size_t dist = calculate_distance(ptr);
+    const size_t dist = std::distance(base_ptr, ptr);
 
-    available.push_back(ptr);
+    available.push(ptr);
     non_available[dist] = nullptr;
 
     ptr->reset();
@@ -144,5 +137,7 @@ void MPI_RMA_MemAllocator::HolderOctreeNode::make_available(OctreeNode* ptr) {
 }
 
 [[nodiscard]] size_t MPI_RMA_MemAllocator::HolderOctreeNode::get_num_available() const noexcept {
-    return free;
+    return available.size();
 }
+
+#endif
