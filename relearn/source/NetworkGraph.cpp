@@ -142,10 +142,12 @@ void NetworkGraph::add_edge(Edges& edges, int rank, size_t neuron_id, int weight
 
             return;
         }
+
+        idx++;
     }
 
     edges.emplace_back(rank_neuron_id_pair, weight);
-    //
+    
     //const auto edges_it = edges.find(rank_neuron_id_pair);
 
     //if (edges_it == edges.end()) {
