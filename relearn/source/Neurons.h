@@ -362,10 +362,13 @@ public:
         RelearnException::check(global_tree.get() != nullptr, "Global octree is nullptr");
 
         debug_check_counts();
+        network_graph->debug_check();
         size_t num_synapses_deleted = delete_synapses();
         debug_check_counts();
+        network_graph->debug_check();
         size_t num_synapses_created = create_synapses();
         debug_check_counts();
+        network_graph->debug_check();
 
         return std::make_tuple(num_synapses_deleted, num_synapses_created);
     }

@@ -39,5 +39,5 @@ constexpr size_t mpi_alloc_mem = 1024 * 1024 * 300;
 } // namespace Constants
 
 namespace Config {
-constexpr bool do_debug_checks = false;
+constexpr bool do_debug_checks = true;
 } // namespace Config

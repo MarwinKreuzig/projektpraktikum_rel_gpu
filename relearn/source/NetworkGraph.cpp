@@ -125,7 +125,7 @@ size_t NetworkGraph::get_num_out_edges(size_t neuron_id) const {
 }
 
 void NetworkGraph::add_edge(Edges& edges, int rank, size_t neuron_id, int weight) {
-    EdgesKey rank_neuron_id_pair{ rank, neuron_id };
+    const EdgesKey rank_neuron_id_pair{ rank, neuron_id };
 
     size_t idx = 0;
 
@@ -135,20 +135,16 @@ void NetworkGraph::add_edge(Edges& edges, int rank, size_t neuron_id, int weight
             val = sum;
 
             if (sum == 0) {
-                break;
+                const auto idx_last = edges.size() - 1;
+                std::swap(edges[idx], edges[idx_last]);
+                edges.erase(edges.cend() - 1);
             }
+
+            return;
         }
-
-        idx++;
     }
 
-    if (idx == edges.size()) {
-        edges.emplace_back(rank_neuron_id_pair, weight);
-    } else {
-        const auto idx_last = edges.size() - 1;
-        std::swap(edges[idx], edges[idx_last]);
-        edges.erase(edges.cend() - 1);
-    }
+    edges.emplace_back(rank_neuron_id_pair, weight);
     //
     //const auto edges_it = edges.find(rank_neuron_id_pair);
 
