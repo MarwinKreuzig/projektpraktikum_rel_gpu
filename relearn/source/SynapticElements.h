@@ -204,7 +204,7 @@ private:
     std::vector<double> delta_cnts; // Keeps track of changes in number of elements until those changes are applied in next connectivity update
     std::vector<unsigned int> connected_cnts;
     std::vector<SignalType> signal_types; // Signal type of synaptic elements, i.e., EXCITATORY or INHIBITORY.
-        // Note: Given that currently exc. and inh. dendrites are in different objects, this would only be needed for axons.
+        // Note: Given that current exc. and inh. dendrites are in different objects, this would only be needed for axons.
         //       A more memory-efficient solution would be to use a different class for axons which has the signal_types array.
 
     // Parameters

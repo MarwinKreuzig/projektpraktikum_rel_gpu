@@ -19,6 +19,8 @@
 #include "NeuronModels.h"
 #include "NeuronMonitor.h"
 #include "NeuronToSubdomainAssignment.h"
+#include "Parameters.h"
+#include "Partition.h"
 #include "RelearnException.h"
 #include "SubdomainFromFile.h"
 #include "SubdomainFromNeuronDensity.h"

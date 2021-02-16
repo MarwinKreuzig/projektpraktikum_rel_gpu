@@ -82,7 +82,7 @@ void generate_neuron_positions(std::vector<Vec3d>& positions,
 
     EXPECT_EQ(num_neurons, num_neurons_);
 
-    auto box_length = sfnd.simulation_box_length.get_maximum();
+    auto box_length = sfnd.get_simulation_box_length().get_maximum();
 
     sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
 
@@ -146,7 +146,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill) {
 
         SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
 
-        auto box_length = sfnd.simulation_box_length.get_maximum();
+        auto box_length = sfnd.get_simulation_box_length().get_maximum();
 
         EXPECT_GE(box_length, 0);
 
@@ -185,7 +185,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_multiple) {
 
         SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
 
-        auto box_length = sfnd.simulation_box_length.get_maximum();
+        auto box_length = sfnd.get_simulation_box_length().get_maximum();
 
         EXPECT_GE(box_length, 0);
 
@@ -233,7 +233,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions) {
 
         SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
 
-        auto box_length = sfnd.simulation_box_length.get_maximum();
+        auto box_length = sfnd.get_simulation_box_length().get_maximum();
 
         sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
 
@@ -306,7 +306,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions_multiple_subdomains) 
 
         SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
 
-        auto box_length = sfnd.simulation_box_length.get_maximum();
+        auto box_length = sfnd.get_simulation_box_length().get_maximum();
 
         auto subdomain_length_x = box_length / subdomains_x;
         auto subdomain_length_y = box_length / subdomains_y;
@@ -405,7 +405,7 @@ TEST(TestRandomNeuronPlacement, test_multiple_lazily_fill_positions_multiple_sub
 
         SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
 
-        auto box_length = sfnd.simulation_box_length.get_maximum();
+        auto box_length = sfnd.get_simulation_box_length().get_maximum();
 
         auto subdomain_length_x = box_length / subdomains_x;
         auto subdomain_length_y = box_length / subdomains_y;
@@ -688,7 +688,7 @@ TEST(TestNeuronPlacementStoreLoad, test_neuron_placement_store_and_load) {
     // create from density
     SubdomainFromNeuronDensity sdnd{ num_neurons, frac_neurons_exc, 26 };
     // fill_subdomain
-    sdnd.fill_subdomain(subdomain_id, 1, Vec3d{ 0 }, Vec3d{ sdnd.simulation_box_length.get_maximum() });
+    sdnd.fill_subdomain(subdomain_id, 1, Vec3d{ 0 }, Vec3d{ sdnd.get_simulation_box_length().get_maximum() });
     // save to file
     sdnd.write_neurons_to_file(file);
 
@@ -696,7 +696,7 @@ TEST(TestNeuronPlacementStoreLoad, test_neuron_placement_store_and_load) {
     // load from file
     SubdomainFromFile sdff{ file, *part };
     // fill_subdomain from file
-    sdff.fill_subdomain(subdomain_id, 1, Vec3d{ 0 }, Vec3d{ sdff.simulation_box_length.get_maximum() });
+    sdff.fill_subdomain(subdomain_id, 1, Vec3d{ 0 }, Vec3d{ sdff.get_simulation_box_length().get_maximum() });
 
     // check neuron placement numbers
     EXPECT_EQ(sdff.desired_num_neurons(), sdnd.desired_num_neurons());
@@ -712,12 +712,12 @@ TEST(TestNeuronPlacementStoreLoad, test_neuron_placement_store_and_load) {
     EXPECT_LE(sdff.get_simulation_box_length().get_z(), sdnd.get_simulation_box_length().get_z());
 
     // check for same number of subdomains
-    EXPECT_EQ(sdff.neurons_in_subdomain.size(), sdnd.neurons_in_subdomain.size());
+    EXPECT_EQ(sdff.get_nodes(subdomain_id).size(), sdnd.get_nodes(subdomain_id).size());
 
     // compare both neurons_in_subdomain maps for differences
-    std::vector<decltype(sdff.neurons_in_subdomain)::value_type> diff{};
-    std::set_symmetric_difference(std::begin(sdff.neurons_in_subdomain), std::end(sdff.neurons_in_subdomain),
-        std::begin(sdnd.neurons_in_subdomain), std::end(sdnd.neurons_in_subdomain),
+    std::vector<NeuronToSubdomainAssignment::Node> diff{};
+    std::set_symmetric_difference(std::begin(sdff.get_nodes(subdomain_id)), std::end(sdff.get_nodes(subdomain_id)),
+        std::begin(sdnd.get_nodes(subdomain_id)), std::end(sdnd.get_nodes(subdomain_id)),
         std::back_inserter(diff));
     EXPECT_EQ(diff.size(), 0);
 

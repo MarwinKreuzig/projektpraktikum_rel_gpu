@@ -85,8 +85,10 @@ private:
 
     static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank, Scope scope);
 
+    // NOLINTNEXTLINE
     static void async_s(const void* buffer, int count, int rank, Scope scope, AsyncToken& token);
 
+    // NOLINTNEXTLINE
     static void async_recv(void* buffer, int count, int rank, Scope scope, AsyncToken& token);
 
 public:

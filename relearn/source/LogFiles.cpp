@@ -13,6 +13,7 @@
 #include "RelearnException.h"
 
 #include <filesystem>
+#include <iostream>
 
 std::map<LogFiles::EventType, LogFiles::LogFile> LogFiles::log_files;
 std::string LogFiles::output_path{ "../output/" };

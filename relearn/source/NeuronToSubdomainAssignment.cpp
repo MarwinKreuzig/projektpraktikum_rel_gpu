@@ -21,7 +21,7 @@ std::tuple<NeuronToSubdomainAssignment::Position, NeuronToSubdomainAssignment::P
 }
 
 std::tuple<NeuronToSubdomainAssignment::Position, NeuronToSubdomainAssignment::Position> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3s& subdomain_3idx, const Vec3s& num_subdomains_per_axis) const noexcept {
-    const auto lengths = get_simulation_box_length();
+    const auto& lengths = get_simulation_box_length();
     const auto x_subdomain_length = lengths.get_x() / num_subdomains_per_axis.get_x();
     const auto y_subdomain_length = lengths.get_y() / num_subdomains_per_axis.get_y();
     const auto z_subdomain_length = lengths.get_z() / num_subdomains_per_axis.get_z();

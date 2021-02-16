@@ -11,13 +11,13 @@
 #pragma once
 
 #include "NeuronToSubdomainAssignment.h"
-#include "Partition.h"
 #include "Vec3.h"
 
 #include <fstream>
-#include <memory>
-#include <set>
 #include <string>
+#include <vector>
+
+class Partition;
 
 // This class reads the neurons with their positions from a file
 // and, based on this, determines the size of the simulation box
@@ -36,13 +36,13 @@ public:
 
     void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) override;
 
-    std::vector<size_t> neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
+    [[nodiscard]] std::vector<size_t> neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
         size_t local_id_start, size_t local_id_end) const override;
 
 private:
     void read_dimensions_from_file(Partition& partition);
 
-    void read_nodes_from_file(const Position& min, const Position& max, Nodes& nodes);
+    [[nodiscard]] std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_from_file(const Position& min, const Position& max);
 
     std::ifstream file;
 };

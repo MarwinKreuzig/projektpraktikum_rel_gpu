@@ -29,13 +29,13 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(size_t num_neurons, doubl
     const double approx_number_of_neurons_per_dimension = ceil(pow(static_cast<double>(num_neurons), 1. / 3));
     const double simulation_box_length_ = approx_number_of_neurons_per_dimension * um_per_neuron;
 
-    this->simulation_box_length = Vec3d(simulation_box_length_);
+    set_simulation_box_length(Vec3d(simulation_box_length_));
 
-    this->desired_frac_neurons_exc_ = desired_frac_neurons_exc;
-    this->desired_num_neurons_ = num_neurons;
+    set_desired_frac_neurons_exc(desired_frac_neurons_exc);
+    set_desired_num_neurons(num_neurons);
 
-    this->currently_frac_neurons_exc_ = 0.0;
-    this->currently_num_neurons_ = 0;
+    set_current_frac_neurons_exc(0.0);
+    set_current_num_neurons(0);
 }
 
 void SubdomainFromNeuronDensity::place_neurons_in_area(
@@ -60,9 +60,11 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
     RelearnException::check(calculated_num_neurons >= num_neurons, "Should emplace more neurons than space in box");
     RelearnException::check(neurons_on_x <= max_short && neurons_on_y <= max_short && neurons_on_z <= max_short, "Should emplace more neurons in a dimension than possible");
 
-    Nodes& nodes = neurons_in_subdomain[subdomain_idx];
+    Nodes nodes{};
+    
+    const double desired_ex = get_desired_frac_neurons_exc();
 
-    const size_t expected_number_in = num_neurons - static_cast<size_t>(ceil(num_neurons * desired_frac_neurons_exc_));
+    const size_t expected_number_in = num_neurons - static_cast<size_t>(ceil(num_neurons * desired_ex));
     const size_t expected_number_ex = num_neurons - expected_number_in;
 
     size_t placed_neurons = 0;
@@ -103,7 +105,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
         const double type_indicator = random_number_distribution(random_number_generator);
 
-        if (placed_ex_neurons < expected_number_ex && (type_indicator < desired_frac_neurons_exc_ || placed_in_neurons == expected_number_in)) {
+        if (placed_ex_neurons < expected_number_ex && (type_indicator < desired_ex || placed_in_neurons == expected_number_in)) {
             Node node{ pos, i, SignalType::EXCITATORY, "random" };
             placed_ex_neurons++;
             nodes.emplace(node);
@@ -116,15 +118,20 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
         placed_neurons++;
 
         if (placed_neurons == num_neurons) {
-            const auto former_ex_neurons = this->currently_num_neurons_ * this->currently_frac_neurons_exc_;
-            //const auto former_in_neurons = this->currently_num_neurons_ - former_ex_neurons;
+            const auto current_num_neurons = get_current_num_neurons();
+            const auto former_ex_neurons = current_num_neurons * get_current_frac_neurons_exc();
 
-            this->currently_num_neurons_ += placed_neurons;
+            const auto new_num_neurons = current_num_neurons + placed_neurons;
+
+            set_current_num_neurons(new_num_neurons);
 
             const auto now_ex_neurons = former_ex_neurons + placed_ex_neurons;
             //const auto now_in_neurons = former_in_neurons + placed_in_neurons;
 
-            currently_frac_neurons_exc_ = static_cast<double>(now_ex_neurons) / static_cast<double>(this->currently_num_neurons_);
+            const auto current_frac_ex = static_cast<double>(now_ex_neurons) / static_cast<double>(new_num_neurons);
+
+            set_current_frac_neurons_exc(current_frac_ex);
+            set_nodes(subdomain_idx, std::move(nodes));
             return;
         }
     }
@@ -133,7 +140,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 }
 
 void SubdomainFromNeuronDensity::fill_subdomain(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains, const Position& min, const Position& max) {
-    const bool subdomain_already_filled = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
+    const bool subdomain_already_filled = is_loaded(subdomain_idx);
     if (subdomain_already_filled) {
         RelearnException::fail("Tried to fill an already filled subdomain.");
         return;
@@ -145,7 +152,7 @@ void SubdomainFromNeuronDensity::fill_subdomain(size_t subdomain_idx, [[maybe_un
     const auto total_volume = get_simulation_box_length().get_volume();
 
     const auto neuron_portion = total_volume / volume;
-    const auto neurons_in_subdomain_count = static_cast<size_t>(round(desired_num_neurons_ / neuron_portion));
+    const auto neurons_in_subdomain_count = static_cast<size_t>(round(get_desired_num_neurons() / neuron_portion));
 
     place_neurons_in_area(min, max, neurons_in_subdomain_count, subdomain_idx);
 }
