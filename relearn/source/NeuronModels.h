@@ -150,7 +150,6 @@ public:
 
 protected:
     virtual void update_electrical_activity_serial_initialize() {
-        
     }
 
     virtual void update_activity(size_t i) = 0;
@@ -184,6 +183,7 @@ protected:
     static constexpr double max_background_activity_mean{ 10000.0 };
     static constexpr double max_background_activity_stddev{ 10000.0 };
 
+private:
     // My local number of neurons
     size_t my_num_neurons;
 
@@ -197,15 +197,56 @@ protected:
     double background_activity_mean;
     double background_activity_stddev;
 
-    // // Variables for each neuron where the array index denotes the neuron ID
-    std::vector<double> x; // membrane potential v
-    std::vector<bool> fired; // 1: neuron has fired, 0: neuron is inactive
+    // Variables for each neuron where the array index denotes the neuron ID
     std::vector<double> I_syn; // Synaptic input
+    std::vector<double> x; // membrane potential v
+    std::vector<bool> fired; // true: neuron has fired, false: neuron is inactive
+
+protected:
+    [[nodiscard]] double get_k() const noexcept {
+        return k;
+    }
+
+    [[nodiscard]] double get_tau_C() const noexcept {
+        return tau_C;
+    }
+
+    [[nodiscard]] unsigned int get_h() const noexcept {
+        return h;
+    }
+
+    [[nodiscard]] double get_base_background_activity() const noexcept {
+        return base_background_activity;
+    }
+
+    [[nodiscard]] double get_background_activity_mean() const noexcept {
+        return background_activity_mean;
+    }
+
+    [[nodiscard]] double get_background_activity_stddev() const noexcept {
+        return background_activity_stddev;
+    }
+
+    [[nodiscard]] double get_I_syn(size_t i) const noexcept {
+        return I_syn[i];
+    }
+
+    [[nodiscard]] size_t get_num_neurons() const noexcept {
+        return my_num_neurons;
+    }
+
+    void set_x(size_t i, double new_value) noexcept {
+        x[i] = new_value;
+    }
+
+    void set_fired(size_t i, bool new_value) noexcept {
+        fired[i] = new_value;
+    }
 
 private:
-    [[nodiscard]] MapFiringNeuronIds update_electrical_activity_prepare_receiving_spikes(const MapFiringNeuronIds& firing_neuron_ids_outgoing);
+    [[nodiscard]] static MapFiringNeuronIds update_electrical_activity_prepare_receiving_spikes(const MapFiringNeuronIds& firing_neuron_ids_outgoing);
 
-    void update_electrical_activity_exchange_neuron_ids(const MapFiringNeuronIds& firing_neuron_ids_outgoing, MapFiringNeuronIds& firing_neuron_ids_incoming);
+    static void update_electrical_activity_exchange_neuron_ids(const MapFiringNeuronIds& firing_neuron_ids_outgoing, MapFiringNeuronIds& firing_neuron_ids_incoming);
 
     [[nodiscard]] MapFiringNeuronIds update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph);
 
@@ -250,8 +291,6 @@ protected:
 
 private:
     [[nodiscard]] double iter_x(double x, double I_syn) const noexcept;
-
-    [[nodiscard]] bool theta(double x);
 
     static constexpr double default_x_0{ 0.05 };
     static constexpr double default_tau_x{ 5.0 };

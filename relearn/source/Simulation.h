@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "NeuronToSubdomainAssignment.h"
+
 #include <memory>
 #include <string>
 #include <utility>

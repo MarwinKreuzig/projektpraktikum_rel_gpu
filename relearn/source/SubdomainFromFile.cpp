@@ -19,7 +19,7 @@
 #include <iostream>
 #include <sstream>
 
-SubdomainFromFile::SubdomainFromFile(const std::string& file_path, Partition& partition)
+SubdomainFromFile::SubdomainFromFile(const std::string& file_path)
     : file(file_path) {
     LogFiles::write_to_file(LogFiles::EventType::Cout, "Loading: " + file_path + "\n", true);
 
@@ -28,10 +28,10 @@ SubdomainFromFile::SubdomainFromFile(const std::string& file_path, Partition& pa
 
     RelearnException::check(file_is_good && !file_is_not_good, "Opening the file was not successful");
 
-    read_dimensions_from_file(partition);
+    read_dimensions_from_file();
 }
 
-void SubdomainFromFile::read_dimensions_from_file(Partition& partition) {
+void SubdomainFromFile::read_dimensions_from_file() {
     Vec3d minimum(std::numeric_limits<double>::max());
     Vec3d maximum(std::numeric_limits<double>::min());
 
@@ -81,7 +81,7 @@ void SubdomainFromFile::read_dimensions_from_file(Partition& partition) {
         maximum = { new_max_x, new_max_y, new_max_z };
     }
 
-    partition.set_total_num_neurons(total_number_neurons);
+    total_num_neurons_in_file = total_number_neurons;
 
     const auto desired_num_neurons_ = found_ex_neurons + found_in_neurons;
     const auto desired_frac_neurons_exc_ = static_cast<double>(found_ex_neurons) / static_cast<double>(desired_num_neurons_);

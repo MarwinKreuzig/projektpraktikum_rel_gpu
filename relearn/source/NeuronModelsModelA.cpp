@@ -20,7 +20,7 @@ ModelA::ModelA(double k, double tau_C, double beta, unsigned int h, double backg
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModels> ModelA::clone() const {
-    return std::make_unique<ModelA>(k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev, x_0, tau_x, refrac_time);
+    return std::make_unique<ModelA>(get_k(), get_tau_C(), get_beta(), get_h(), get_base_background_activity(), get_background_activity_mean(), get_background_activity_stddev(), x_0, tau_x, refrac_time);
 }
 
 [[nodiscard]] double ModelA::get_secondary_variable(const size_t i) const noexcept {
@@ -47,33 +47,43 @@ void ModelA::init(size_t num_neurons) {
 }
 
 void ModelA::update_activity(const size_t i) {
+    const auto h = get_h();
+    const auto I_syn = get_I_syn(i);
+    auto x = get_x(i);
+
     for (unsigned int integration_steps = 0; integration_steps < h; integration_steps++) {
         // Update the membrane potential
-        x[i] += iter_x(x[i], I_syn[i]) / h;
+        x += iter_x(x, I_syn) / h;
     }
 
     // Neuron ready to fire again
     if (refrac[i] == 0) {
-        const bool f = x[i] >= theta_values[i];
-        fired[i] = f; // Decide whether a neuron fires depending on its firing rate
+        const bool f = x >= theta_values[i];
+        set_fired(i, f);// Decide whether a neuron fires depending on its firing rate
         refrac[i] = f ? refrac_time : 0; // After having fired, a neuron is in a refractory state
     }
     // Neuron now/still in refractory state
     else {
-        fired[i] = false; // Set neuron inactive
+        set_fired(i, false); // Set neuron inactive
         --refrac[i]; // Decrease refractory time
     }
+
+    set_x(i, x);
 }
 
 void ModelA::init_neurons() {
     std::mt19937& random_number_generator = RandomHolder::get_random_generator(RandomHolderKey::ModelA);
 
-    for (size_t i = 0; i < x.size(); ++i) {
-        x[i] = random_number_distribution(random_number_generator);
+    const auto num_neurons = get_num_neurons();
+    for (size_t i = 0; i < num_neurons; ++i) {
+        const auto x = random_number_distribution(random_number_generator);
         const double threshold = random_number_distribution(random_number_generator);
-        const bool f = x[i] >= threshold;
-        fired[i] = f; // Decide whether a neuron fires depending on its firing rate
+        const bool f = x >= threshold;
+        set_fired(i, true);
+        set_fired(i, f); // Decide whether a neuron fires depending on its firing rate
         refrac[i] = f ? refrac_time : 0; // After having fired, a neuron is in a refractory state
+
+        set_x(i, x);
     }
 }
 
@@ -82,9 +92,9 @@ void models::ModelA::update_electrical_activity_serial_initialize() {
 
     std::mt19937& random_number_generator = RandomHolder::get_random_generator(RandomHolderKey::ModelA);
 
-    for (size_t i = 0; i < theta_values.size(); i++) {
+    for (auto& theta_value : theta_values) {
         const double threshold = random_number_distribution(random_number_generator);
-        theta_values[i] = threshold;
+        theta_value = threshold;
     }
 
     GlobalTimers::timers.stop_and_add(TimerRegion::CALC_SERIAL_ACTIVITY);

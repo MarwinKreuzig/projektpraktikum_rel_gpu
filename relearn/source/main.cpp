@@ -20,8 +20,8 @@
 #include "Timers.h"
 
 #include <CLI/App.hpp>
-#include <CLI/Formatter.hpp>
 #include <CLI/Config.hpp>
+#include <CLI/Formatter.hpp>
 
 #include <array>
 #include <bitset>

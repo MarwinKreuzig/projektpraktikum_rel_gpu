@@ -216,7 +216,7 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
     std::map<size_t, size_t> global_id_to_local_id{};
 
     if (!id_to_pos.empty()) {
-        translate_global_to_local(foreing_ids, id_to_rank, partition, global_id_to_local_id);
+        translate_global_to_local(id_to_rank, partition, global_id_to_local_id);
     }
 
     for (const auto& [source_neuron_id, target_neuron_id, weight] : local_synapses) {
@@ -318,7 +318,7 @@ void NetworkGraph::debug_check() const {
     RelearnException::check(edges.empty(), "Edges is not empty");
 }
 
-void NetworkGraph::translate_global_to_local(const std::set<size_t>& global_ids, const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id) {
+void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id) {
 
     const int num_ranks = MPIWrapper::get_num_ranks();
 

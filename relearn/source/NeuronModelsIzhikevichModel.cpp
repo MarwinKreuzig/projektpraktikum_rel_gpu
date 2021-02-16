@@ -25,7 +25,7 @@ IzhikevichModel::IzhikevichModel(double k, double tau_C, double beta, unsigned i
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModels> IzhikevichModel::clone() const {
-    return std::make_unique<IzhikevichModel>(k, tau_C, beta, base_background_activity, background_activity_mean, background_activity_stddev, h, a, b, c, d, V_spike, k1, k2, k3);
+    return std::make_unique<IzhikevichModel>(get_k(), get_tau_C(), get_beta(), get_h(), get_base_background_activity(), get_background_activity_mean(), get_background_activity_stddev(), a, b, c, d, V_spike, k1, k2, k3);
 }
 
 [[nodiscard]] double IzhikevichModel::get_secondary_variable(const size_t i) const noexcept {
@@ -56,23 +56,32 @@ void IzhikevichModel::init(size_t num_neurons) {
 }
 
 void IzhikevichModel::update_activity(const size_t i) {
-    for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-        x[i] += iter_x(x[i], u[i], I_syn[i]) / h;
-        u[i] += iter_refrac(u[i], x[i]) / h;
+    const auto h = get_h();
+    const auto I_syn = get_I_syn(i);
+    auto x = get_x(i);
 
-        if (spiked(x[i])) {
-            fired[i] = true;
-            x[i] = c;
+    for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
+        x += iter_x(x, u[i], I_syn) / h;
+        u[i] += iter_refrac(u[i], x) / h;
+
+        if (spiked(x)) {
+            set_fired(i, true);
+            x = c;
             u[i] += d;
         }
     }
+
+    set_x(i, x);
 }
 
 void IzhikevichModel::init_neurons() {
-    for (size_t i = 0; i < x.size(); ++i) {
-        x[i] = c;
-        u[i] = iter_refrac(b * c, x[i]);
-        fired[i] = x[i] >= V_spike;
+    const auto num_neurons = get_num_neurons();
+    for (size_t i = 0; i < num_neurons; ++i) {
+        const auto x = c;
+        u[i] = iter_refrac(b * c, x);
+
+        set_fired(i, x >= V_spike);
+        set_x(i, x);
     }
 }
 

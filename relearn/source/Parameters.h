@@ -28,7 +28,7 @@ public:
     size_t max_num_pending_vacant_axons; // Maximum number of vacant axons which are considered at the same time for finding a target neuron
 
     // Overload << operator for proper output
-    void print() {
+    void print() const {
         std::stringstream ss;
 
         ss << "** PARAMETERS **\n\n";

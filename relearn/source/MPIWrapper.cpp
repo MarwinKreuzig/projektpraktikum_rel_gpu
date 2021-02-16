@@ -176,7 +176,6 @@ void MPIWrapper::all_gather(const void* own_data, void* buffer, int size, Scope 
 
 void MPIWrapper::all_gather_inl(void* ptr, int count, Scope scope) {
     RelearnException::check(count > 0, "Error in all gather , count is not greater than 0");
-    MPI_Comm mpi_scope = translate_scope(scope);
 
     // NOLINTNEXTLINE
     const int errorcode = MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, ptr, count, MPI_CHAR, MPI_COMM_WORLD);

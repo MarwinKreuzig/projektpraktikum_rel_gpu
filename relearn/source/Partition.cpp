@@ -11,6 +11,8 @@
 #include "Partition.h"
 
 #include "LogFiles.h"
+#include "Neurons.h"
+#include "NeuronToSubdomainAssignment.h"
 #include "RelearnException.h"
 #include "SynapticElements.h"
 
@@ -323,8 +325,6 @@ std::shared_ptr<Neurons> Partition::load_neurons(
         const auto& subdomain_pos_max = subdomains[i].xyz_max;
 
         const auto subdomain_idx = i + my_subdomain_id_start;
-
-        const auto subdomain_num_neurons = neurons_in_subdomain->num_neurons(subdomain_idx, my_num_subdomains, subdomain_pos_min, subdomain_pos_max);
 
         // Get neuron positions in subdomain i
         std::vector<NeuronToSubdomainAssignment::Position> vec_pos = neurons_in_subdomain->neuron_positions(subdomain_idx, total_num_subdomains,

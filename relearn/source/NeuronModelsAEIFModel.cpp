@@ -26,7 +26,7 @@ AEIFModel::AEIFModel(double k, double tau_C, double beta, unsigned int h, double
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModels> AEIFModel::clone() const {
-    return std::make_unique<AEIFModel>(k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev, C, g_L, E_L, V_T, d_T, tau_w, a, b, V_peak);
+    return std::make_unique<AEIFModel>(get_k(), get_tau_C(), get_beta(), get_h(), get_base_background_activity(), get_background_activity_mean(), get_background_activity_stddev(), C, g_L, E_L, V_T, d_T, tau_w, a, b, V_peak);
 }
 
 [[nodiscard]] double AEIFModel::get_secondary_variable(const size_t i) const noexcept {
@@ -58,23 +58,32 @@ void AEIFModel::init(size_t num_neurons) {
 }
 
 void AEIFModel::update_activity(const size_t i) {
-    for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-        x[i] += iter_x(x[i], w[i], I_syn[i]) / h;
-        w[i] += iter_refrac(w[i], x[i]) / h;
+    const auto h = get_h();
+    const auto I_syn = get_I_syn(i);
+    auto x = get_x(i);
 
-        if (x[i] >= V_peak) {
-            fired[i] = true;
-            x[i] = E_L;
+    for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
+        x += iter_x(x, w[i], I_syn) / h;
+        w[i] += iter_refrac(w[i], x) / h;
+
+        if (x >= V_peak) {
+            set_fired(i, true);
+            x = E_L;
             w[i] += b;
         }
     }
+
+    set_x(i, x);
 }
 
 void AEIFModel::init_neurons() {
-    for (size_t i = 0; i < x.size(); ++i) {
-        x[i] = E_L;
-        w[i] = iter_refrac(0, x[i]);
-        fired[i] = x[i] >= V_peak;
+    const auto num_neurons = get_num_neurons();
+    for (size_t i = 0; i < num_neurons; ++i) {
+        const auto x = E_L;
+        w[i] = iter_refrac(0, x);
+
+        set_fired(i, x >= V_peak);
+        set_x(i, x);
     }
 }
 

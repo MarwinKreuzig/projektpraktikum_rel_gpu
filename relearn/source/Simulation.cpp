@@ -14,11 +14,11 @@
 #include "LogFiles.h"
 #include "MPIWrapper.h"
 #include "NetworkGraph.h"
-#include "Neurons.h"
 #include "NeuronIdMap.h"
 #include "NeuronModels.h"
 #include "NeuronMonitor.h"
 #include "NeuronToSubdomainAssignment.h"
+#include "Neurons.h"
 #include "Parameters.h"
 #include "Partition.h"
 #include "RelearnException.h"
@@ -74,7 +74,9 @@ void Simulation::place_random_neurons(size_t num_neurons, double frac_exc) {
 }
 
 void Simulation::load_neurons_from_file(const std::string& path_to_positions) {
-    neuron_to_subdomain_assignment = std::make_unique<SubdomainFromFile>(path_to_positions, *partition);
+    auto local_ptr = std::make_unique<SubdomainFromFile>(path_to_positions);
+    partition->set_total_num_neurons(local_ptr->get_total_num_neurons_in_file());
+    neuron_to_subdomain_assignment = std::move(local_ptr);
     initialize();
 }
 

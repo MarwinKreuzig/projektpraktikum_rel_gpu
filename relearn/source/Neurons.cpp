@@ -69,8 +69,8 @@ void Neurons::init_synaptic_elements() {
         dendrites_inh.update_cnt(i, static_cast<double>(dendrites_in_connections));
 
         axons.update_conn_cnt(i, static_cast<int>(axon_connections));
-        dendrites_exc.update_conn_cnt(i, static_cast<double>(dendrites_ex_connections));
-        dendrites_inh.update_conn_cnt(i, static_cast<double>(dendrites_in_connections));
+        dendrites_exc.update_conn_cnt(i, static_cast<int>(dendrites_ex_connections));
+        dendrites_inh.update_conn_cnt(i, static_cast<int>(dendrites_in_connections));
 
         RelearnException::check(axons_cnts[i] >= axons.get_connected_cnts()[i], "Error is with: %d", i);
         RelearnException::check(dendrites_inh_cnts[i] >= dendrites_inh.get_connected_cnts()[i], "Error is with: %d", i);
@@ -82,7 +82,7 @@ void Neurons::update_electrical_activity() {
     neuron_model->update_electrical_activity(*network_graph, calcium);
 }
 
-Neurons::StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, size_t num_local_values, size_t total_num_values, int root) {
+Neurons::StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root) const {
     const auto scope = MPIWrapper::Scope::global;
 
     const double my_avg = std::accumulate(local_values.begin(), local_values.end(), 0.0)
@@ -213,9 +213,6 @@ std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(size_t neur
 
     const bool is_axon = element_type == ElementType::AXON;
     const ElementType other_element_type = is_axon ? ElementType::DENDRITE : ElementType::AXON;
-
-    const bool is_exc = signal_type == SignalType::EXCITATORY;
-    const SignalType other_signal_type = is_exc ? SignalType::INHIBITORY : SignalType::EXCITATORY;
 
     std::vector<Synapse> current_synapses;
 
@@ -873,7 +870,7 @@ void Neurons::debug_check_counts() {
         return;
     }
 
-    RelearnException::check(network_graph.get() != nullptr, "network_graph is nullptr");
+    RelearnException::check(network_graph != nullptr, "network_graph is nullptr");
 
     const std::vector<double>& axs_count = axons.get_cnts();
     const std::vector<unsigned int>& axs_conn_count = axons.get_connected_cnts();
@@ -897,9 +894,9 @@ void Neurons::debug_check_counts() {
         const double connected_dend_exc = de_conn_count[i];
         const double connected_dend_inh = di_conn_count[i];
 
-        const size_t num_conn_axons = static_cast<size_t>(connected_axons);
-        const size_t num_conn_dend_ex = static_cast<size_t>(connected_dend_exc);
-        const size_t num_conn_dend_in = static_cast<size_t>(connected_dend_inh);
+        const auto num_conn_axons = static_cast<size_t>(connected_axons);
+        const auto num_conn_dend_ex = static_cast<size_t>(connected_dend_exc);
+        const auto num_conn_dend_in = static_cast<size_t>(connected_dend_inh);
 
         const size_t num_out_ng = network_graph->get_num_out_edges(i);
         const size_t num_in_exc_ng = network_graph->get_num_in_edges_ex(i);
@@ -1097,9 +1094,8 @@ void Neurons::print_positions_to_log_file() {
 
         const auto possible_global_id = NeuronIdMap::rank_neuron_id2glob_id(rank_neuron_id);
         RelearnException::check(possible_global_id.has_value(), "ret is false");
-
-        const auto global_id = possible_global_id.value();
-        const char* const signal_type_name = signal_types[neuron_id] == SignalType::EXCITATORY ? "ex" : "in";
+                const auto global_id = possible_global_id.value();
+        const std::string signal_type_name = signal_types[neuron_id] == SignalType::EXCITATORY ? "ex" : "in";
 
         ss << (global_id + 1) << " "
            << axons_x_dims[neuron_id] << " "

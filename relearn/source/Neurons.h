@@ -389,7 +389,7 @@ public:
     void debug_check_counts();
 
 private:
-    [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root);
+    [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root) const;
 
     [[nodiscard]] size_t delete_synapses();
 
@@ -411,11 +411,11 @@ private:
         PendingDeletionsV& pending_deletions,
         const PendingDeletionsV& other_pending_deletions);
 
-    [[nodiscard]] std::vector<Neurons::Synapse> delete_synapses_register_edges(const NetworkGraph::Edges& edges);
+    [[nodiscard]] static std::vector<Neurons::Synapse> delete_synapses_register_edges(const NetworkGraph::Edges& edges);
 
-    [[nodiscard]] MapSynapseDeletionRequests delete_synapses_exchange_requests(const PendingDeletionsV& pending_deletions);
+    [[nodiscard]] static MapSynapseDeletionRequests delete_synapses_exchange_requests(const PendingDeletionsV& pending_deletions);
 
-    void delete_synapses_process_requests(const MapSynapseDeletionRequests& synapse_deletion_requests_incoming, PendingDeletionsV& pending_deletions);
+    static void delete_synapses_process_requests(const MapSynapseDeletionRequests& synapse_deletion_requests_incoming, PendingDeletionsV& pending_deletions);
 
     [[nodiscard]] size_t delete_synapses_commit_deletions(const PendingDeletionsV& list);
 
@@ -425,11 +425,11 @@ private:
 
     [[nodiscard]] MapSynapseCreationRequests create_synapses_find_targets();
 
-    [[nodiscard]] MapSynapseCreationRequests create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
+    [[nodiscard]] static MapSynapseCreationRequests create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
     [[nodiscard]] size_t create_synapses_process_requests(MapSynapseCreationRequests& synapse_creation_requests_incoming);
 
-    void create_synapses_exchange_responses(const MapSynapseCreationRequests& synapse_creation_requests_incoming, MapSynapseCreationRequests& synapse_creation_requests_outgoing);
+    static void create_synapses_exchange_responses(const MapSynapseCreationRequests& synapse_creation_requests_incoming, MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
     [[nodiscard]] size_t create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 

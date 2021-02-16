@@ -20,7 +20,7 @@ FitzHughNagumoModel::FitzHughNagumoModel(double k, double tau_C, double beta, un
 }
 
 std::unique_ptr<NeuronModels> FitzHughNagumoModel::clone() const {
-    return std::make_unique<FitzHughNagumoModel>(k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev, a, b, phi);
+    return std::make_unique<FitzHughNagumoModel>(get_k(), get_tau_C(), get_beta(), get_h(), get_base_background_activity(), get_background_activity_mean(), get_background_activity_stddev(), a, b, phi);
 }
 
 double FitzHughNagumoModel::get_secondary_variable(const size_t i) const noexcept {
@@ -46,22 +46,31 @@ void FitzHughNagumoModel::init(size_t num_neurons) {
 }
 
 void FitzHughNagumoModel::update_activity(const size_t i) {
-    // Update the membrane potential
-    for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-        x[i] += iter_x(x[i], w[i], I_syn[i]) / h;
-        w[i] += iter_refrac(w[i], x[i]) / h;
+    const auto h = get_h();
+    const auto I_syn = get_I_syn(i);
+    auto x = get_x(i);
 
-        if (FitzHughNagumoModel::spiked(x[i], w[i])) {
-            fired[i] = true;
+    for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
+        x += iter_x(x, w[i], I_syn) / h;
+        w[i] += iter_refrac(w[i], x) / h;
+
+        if (FitzHughNagumoModel::spiked(x, w[i])) {
+            set_fired(i, true);
         }
     }
+
+    set_x(i, x);
 }
 
 void FitzHughNagumoModel::init_neurons() {
-    for (size_t i = 0; i < x.size(); ++i) {
-        x[i] = FitzHughNagumoModel::init_x;
-        w[i] = iter_refrac(FitzHughNagumoModel::init_w, x[i]);
-        fired[i] = spiked(x[i], w[i]);
+    const auto num_neurons = get_num_neurons();
+    for (size_t i = 0; i < num_neurons; ++i) {
+        const auto x = FitzHughNagumoModel::init_x;
+        w[i] = iter_refrac(FitzHughNagumoModel::init_w, x);
+        const auto f = spiked(x, w[i]);
+
+        set_fired(i, f);
+        set_x(i, x);
     }
 }
 

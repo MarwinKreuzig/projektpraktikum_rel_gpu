@@ -20,14 +20,14 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(size_t num_neurons, doubl
     , random_number_generator(RandomHolder::get_random_generator(RandomHolderKey::SubdomainFromNeuronDensity))
     , random_number_distribution(0.0, 1.0) {
 
-    unsigned int my_rank = static_cast<unsigned int>(MPIWrapper::get_my_rank());
+    const auto my_rank = static_cast<unsigned int>(MPIWrapper::get_my_rank());
 
     random_number_generator.seed(my_rank);
 
     // Calculate size of simulation box based on neuron density
     // num_neurons^(1/3) == #neurons per dimension
-    const double approx_number_of_neurons_per_dimension = ceil(pow(static_cast<double>(num_neurons), 1. / 3));
-    const double simulation_box_length_ = approx_number_of_neurons_per_dimension * um_per_neuron;
+    const auto approx_number_of_neurons_per_dimension = ceil(pow(static_cast<double>(num_neurons), 1. / 3));
+    const auto simulation_box_length_ = approx_number_of_neurons_per_dimension * um_per_neuron;
 
     set_simulation_box_length(Vec3d(simulation_box_length_));
 

@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "Config.h"
 #include "NeuronToSubdomainAssignment.h"
 #include "Vec3.h"
 
@@ -24,7 +25,7 @@ class Partition;
 // and the number of neurons in every individual subdomain.
 class SubdomainFromFile : public NeuronToSubdomainAssignment {
 public:
-    SubdomainFromFile(const std::string& file_path, Partition& partition);
+    explicit SubdomainFromFile(const std::string& file_path);
 
     SubdomainFromFile(const SubdomainFromFile& other) = delete;
     SubdomainFromFile(SubdomainFromFile&& other) = delete;
@@ -39,10 +40,15 @@ public:
     [[nodiscard]] std::vector<size_t> neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
         size_t local_id_start, size_t local_id_end) const override;
 
-private:
-    void read_dimensions_from_file(Partition& partition);
+    [[nodiscard]] size_t get_total_num_neurons_in_file() const noexcept {
+        return total_num_neurons_in_file;
+    }
 
-    [[nodiscard]] std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_from_file(const Position& min, const Position& max);
+private:
+    void read_dimensions_from_file();
+
+    [[nodiscard]] std::vector<NeuronToSubdomainAssignment::Node> read_nodes_from_file(const Position& min, const Position& max);
 
     std::ifstream file;
+    size_t total_num_neurons_in_file{ Constants::uninitialized };
 };

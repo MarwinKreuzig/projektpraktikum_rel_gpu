@@ -10,15 +10,9 @@
 
 #pragma once
 
-#include "Config.h"
-#include "NeuronToSubdomainAssignment.h"
-#include "Neurons.h"
 #include "Octree.h"
-#include "Positions.h"
-#include "Random.h"
 #include "RelearnException.h"
 #include "SpaceFillingCurve.h"
-#include "SynapticElements.h"
 #include "Vec3.h"
 
 #include <algorithm>
@@ -26,6 +20,11 @@
 #include <sstream>
 #include <tuple>
 #include <vector>
+
+class Neurons;
+class NeuronModels;
+class NeuronToSubdomainAssignment;
+class SynapticElements;
 
 class Partition {
 public:

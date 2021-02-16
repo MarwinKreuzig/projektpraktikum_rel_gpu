@@ -82,7 +82,7 @@ private:
     static void add_edge(Edges& edges, int rank, size_t neuron_id, int weight);
 
     // NOLINTNEXTLINE
-    static void translate_global_to_local(const std::set<size_t>& global_ids, const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id);
+    static void translate_global_to_local(const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id);
 
     // NOLINTNEXTLINE
     static void load_neuron_positions(const std::string& path_neurons, std::set<size_t>& foreing_ids, std::map<size_t, Vec3d>& id_to_pos);

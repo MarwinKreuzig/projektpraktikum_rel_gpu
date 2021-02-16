@@ -20,6 +20,7 @@
 #include <iostream>
 #include <sstream>
 
+// NOLINTNEXTLINE
 MPI_Win MPI_RMA_MemAllocator::mpi_window{ 0 };
 
 size_t MPI_RMA_MemAllocator::size_requested{ Constants::uninitialized }; // Bytes requested for the allocator
@@ -128,6 +129,7 @@ MPI_RMA_MemAllocator::HolderOctreeNode::HolderOctreeNode(OctreeNode* ptr, size_t
     , total(length) {
 
     for (size_t counter = 0; counter < length; counter++) {
+        // NOLINTNEXTLINE
         available[counter] = ptr + counter;
     }
 }
