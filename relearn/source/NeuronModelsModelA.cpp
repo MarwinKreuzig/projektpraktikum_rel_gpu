@@ -10,6 +10,9 @@
 
 #include "NeuronModels.h"
 
+#include "Random.h"
+#include "Timers.h"
+
 using models::ModelA;
 
 ModelA::ModelA(double k, double tau_C, double beta, unsigned int h, double background_activity, double background_activity_mean, double background_activity_stddev, const double x_0, const double tau_x, unsigned int refrac_time)

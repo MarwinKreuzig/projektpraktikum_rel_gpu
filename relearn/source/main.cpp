@@ -13,6 +13,8 @@
 #include "MPIWrapper.h"
 #include "NeuronModels.h"
 #include "NeuronMonitor.h"
+#include "NeuronToSubdomainAssignment.h"
+#include "Parameters.h"
 #include "Partition.h"
 #include "Random.h"
 #include "RelearnException.h"

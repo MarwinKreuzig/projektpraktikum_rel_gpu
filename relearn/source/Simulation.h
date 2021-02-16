@@ -10,18 +10,19 @@
 
 #pragma once
 
-#include "NeuronToSubdomainAssignment.h"
+//#include "NeuronToSubdomainAssignment.h"
+//#include "Parameters.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 class NetworkGraph;
 class NeuronModels;
 class NeuronMonitor;
-class Neurons;
 class NeuronToSubdomainAssignment;
+class Neurons;
 class Octree;
 class Parameters;
 class Partition;

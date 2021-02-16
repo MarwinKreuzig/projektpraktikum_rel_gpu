@@ -56,6 +56,10 @@ void LogFiles::init() {
     LogFiles::add_logfile(EventType::PlasticityUpdateLocal, "plasticity_changes_local", -1);
 }
 
+std::string LogFiles::get_specific_file_prefix() {
+    return MPIWrapper::get_my_rank_str();
+}
+
 void LogFiles::add_logfile(EventType type, const std::string& file_name, int rank) {
     if (rank == MPIWrapper::get_my_rank() || rank == -1) {
         auto complete_path = output_path + general_prefix + get_specific_file_prefix() + "_" + file_name + ".txt";

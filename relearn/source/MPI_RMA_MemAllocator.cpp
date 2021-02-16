@@ -10,6 +10,7 @@
 
 #include "MPI_RMA_MemAllocator.h"
 
+#include "Config.h"
 #include "LogFiles.h"
 #include "OctreeNode.h"
 #include "RelearnException.h"

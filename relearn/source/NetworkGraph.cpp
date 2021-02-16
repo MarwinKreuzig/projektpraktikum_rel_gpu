@@ -10,6 +10,8 @@
 
 #include "NetworkGraph.h"
 
+#include "RankNeuronId.h"
+#include "LogFiles.h"
 #include "MPIWrapper.h"
 #include "NeuronIdMap.h"
 #include "Partition.h"
@@ -17,7 +19,7 @@
 
 #include <cmath>
 #include <fstream>
-#include <ostream>
+#include <iostream>
 #include <sstream>
 
 NetworkGraph::NetworkGraph(size_t my_num_neurons)

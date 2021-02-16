@@ -10,15 +10,21 @@
 
 #include "Neurons.h"
 
+#include "LogFiles.h"
 #include "MPIWrapper.h"
+#include "NetworkGraph.h"
 #include "NeuronIdMap.h"
 #include "NeuronModels.h"
 #include "Octree.h"
 #include "Partition.h"
 #include "Random.h"
+#include "RankNeuronId.h"
+#include "Timers.h"
 
 #include <algorithm>
+#include <iomanip>
 #include <numeric>
+#include <sstream>
 #include <optional>
 
 void Neurons::init(size_t number_neurons) {
@@ -906,6 +912,22 @@ void Neurons::debug_check_counts() {
         RelearnException::check(num_conn_dend_ex == num_in_exc_ng, "In Neurons conn dend ex, %u vs. %u", num_conn_dend_ex, num_in_exc_ng);
         RelearnException::check(num_conn_dend_in == num_in_inh_ng, "In Neurons conn dend in, %u vs. %u", num_conn_dend_in, num_in_inh_ng);
     }
+}
+
+[[nodiscard]] std::tuple<size_t, size_t> Neurons::update_connectivity() {
+    RelearnException::check(network_graph != nullptr, "Network graph is nullptr");
+    RelearnException::check(global_tree != nullptr, "Global octree is nullptr");
+
+    debug_check_counts();
+    network_graph->debug_check();
+    size_t num_synapses_deleted = delete_synapses();
+    debug_check_counts();
+    network_graph->debug_check();
+    size_t num_synapses_created = create_synapses();
+    debug_check_counts();
+    network_graph->debug_check();
+
+    return std::make_tuple(num_synapses_deleted, num_synapses_created);
 }
 
 void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, size_t sum_synapses_deleted, size_t sum_synapses_created) {

@@ -12,6 +12,7 @@
 
 #include "Config.h"
 #include "MPIWrapper.h"
+#include "RankNeuronId.h"
 #include "RelearnException.h"
 
 #include <cstdint>

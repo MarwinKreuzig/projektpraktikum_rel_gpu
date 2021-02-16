@@ -11,14 +11,10 @@
 #pragma once
 
 #include "ElementType.h"
-#include "MPIWrapper.h"
 #include "ModelParameter.h"
 #include "RelearnException.h"
 #include "SignalType.h"
 
-#include <cmath>
-#include <cstddef>
-#include <iostream>
 #include <memory>
 #include <vector>
 

@@ -10,11 +10,10 @@
 
 #pragma once
 
-#include "RankNeuronId.h"
-
 #include <optional>
-#include <tuple>
 #include <vector>
+
+class RankNeuronId;
 
 class NeuronIdMap {
 public:

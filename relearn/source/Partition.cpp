@@ -15,6 +15,9 @@
 #include "Neurons.h"
 #include "RelearnException.h"
 #include "SynapticElements.h"
+#include "Vec3.h"
+
+#include <sstream>
 
 Partition::Partition(size_t num_ranks, size_t my_rank)
     : my_num_neurons(0)

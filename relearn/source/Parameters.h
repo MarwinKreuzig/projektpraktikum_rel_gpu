@@ -10,13 +10,6 @@
 
 #pragma once
 
-#include "LogFiles.h"
-#include "Random.h"
-
-#include <cstdint>
-#include <iomanip>
-#include <sstream>
-
 class Parameters {
 public:
     size_t total_num_neurons; // Number of neurons
@@ -28,29 +21,7 @@ public:
     size_t max_num_pending_vacant_axons; // Maximum number of vacant axons which are considered at the same time for finding a target neuron
 
     // Overload << operator for proper output
-    void print() const {
-        std::stringstream ss;
-
-        ss << "** PARAMETERS **\n\n";
-        ss << std::left << std::setw(column_width) << "num_neurons"
-           << " : " << total_num_neurons << "\n";
-        ss << std::left << std::setw(column_width) << "accept_criterion (BH)"
-           << " : " << accept_criterion << "\n";
-        ss << std::left << std::setw(column_width) << "sigma"
-           << " : " << sigma << "\n";
-        ss << std::left << std::setw(column_width) << "naive_method (BH)"
-           << " : " << naive_method << "\n";
-        ss << std::left << std::setw(column_width) << "max_num_pending_vacant_axons"
-           << " : " << max_num_pending_vacant_axons << "\n";
-        ss << std::left << std::setw(column_width) << "seed_octree"
-           << " : " << randomNumberSeeds::octree << "\n";
-        ss << std::left << std::setw(column_width) << "seed_partition"
-           << " : "
-           << "Local MPI rank"
-           << "\n";
-
-        LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
-    }
+    void print() const;
 
 private:
     // Width of column containing parameter names

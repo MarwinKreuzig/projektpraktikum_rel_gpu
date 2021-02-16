@@ -10,19 +10,15 @@
 
 #pragma once
 
+#include "NeuronModels.h"
 #include "Octree.h"
-#include "RelearnException.h"
 #include "SpaceFillingCurve.h"
-#include "Vec3.h"
 
-#include <algorithm>
-#include <cmath>
-#include <sstream>
+#include <memory>
 #include <tuple>
 #include <vector>
 
 class Neurons;
-class NeuronModels;
 class NeuronToSubdomainAssignment;
 class SynapticElements;
 

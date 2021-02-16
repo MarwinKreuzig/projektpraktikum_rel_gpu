@@ -10,34 +10,21 @@
 
 #pragma once
 
-#include "Cell.h"
-#include "Config.h"
-#include "NeuronModels.h"
 #include "OctreeNode.h"
-#include "Parameters.h"
 #include "ProbabilitySubinterval.h"
 #include "RankNeuronId.h"
-#include "RelearnException.h"
 #include "SignalType.h"
-#include "SynapseCreationRequests.h"
-#include "SynapticElements.h"
-#include "VacantAxon.h"
 #include "Vec3.h"
 
-#include <cmath>
-#include <cstddef>
-#include <iostream>
-#include <limits>
 #include <map>
-#include <memory>
 #include <optional>
-#include <random>
-#include <sstream>
 #include <stack>
+#include <utility>
 #include <vector>
 
 class Neurons;
 class Partition;
+class SynapticElements;
 
 class Octree {
 public:

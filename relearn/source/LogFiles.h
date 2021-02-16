@@ -10,13 +10,12 @@
 
 #pragma once
 
-#include "MPIWrapper.h"
+#include "RelearnException.h"
 
 #include <filesystem>
 #include <fstream>
 #include <map>
 #include <string>
-#include <vector>
 
 class LogFiles {
     class LogFile {
@@ -58,9 +57,7 @@ private:
     static std::string output_path;
     static std::string general_prefix;
 
-    static std::string get_specific_file_prefix() {
-        return MPIWrapper::get_my_rank_str();
-    }
+    static std::string get_specific_file_prefix();
 
     static void add_logfile(EventType type, const std::string& file_name, int rank);
 

@@ -11,6 +11,7 @@
 #include "SubdomainFromFile.h"
 
 #include "Config.h"
+#include "LogFiles.h"
 #include "NeuronToSubdomainAssignment.h"
 #include "Partition.h"
 #include "RelearnException.h"

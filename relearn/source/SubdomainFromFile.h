@@ -12,7 +12,6 @@
 
 #include "Config.h"
 #include "NeuronToSubdomainAssignment.h"
-#include "Vec3.h"
 
 #include <fstream>
 #include <string>

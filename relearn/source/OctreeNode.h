@@ -11,11 +11,8 @@
 #pragma once
 
 #include "Cell.h"
-#include "Config.h"
-#include "MPIWrapper.h"
 
 #include <array>
-#include <cstddef>
 #include <optional>
 
 class OctreeNode {
@@ -60,9 +57,7 @@ public:
         return cell;
     }
 
-    [[nodiscard]] bool is_local() const noexcept {
-        return rank == MPIWrapper::get_my_rank();
-    }
+    [[nodiscard]] bool is_local() const noexcept;
 
     void set_rank(int new_rank) {
         RelearnException::check(new_rank >= 0, "In OctreeNode::set_rank, new_rank was: %u", new_rank);

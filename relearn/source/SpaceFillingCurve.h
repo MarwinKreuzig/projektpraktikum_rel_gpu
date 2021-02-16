@@ -10,13 +10,10 @@
 
 #pragma once
 
-#include "Config.h"
 #include "RelearnException.h"
 #include "Vec3.h"
 
-#include <cmath>
 #include <cstdint>
-#include <utility>
 
 using BoxCoordinates = Vec3<uint64_t>;
 

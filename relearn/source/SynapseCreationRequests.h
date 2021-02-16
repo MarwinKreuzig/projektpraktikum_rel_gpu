@@ -10,8 +10,7 @@
 
 #pragma once
 
-#include "Cell.h"
-#include "Config.h"
+#include "SignalType.h"
 
 #include <map>
 #include <vector>

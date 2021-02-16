@@ -13,11 +13,9 @@
 #include "RelearnException.h"
 #include "Vec3.h"
 
-#include <utility>
 #include <vector>
 
 class Positions {
-
 public:
     explicit Positions() = default;
     ~Positions() = default;

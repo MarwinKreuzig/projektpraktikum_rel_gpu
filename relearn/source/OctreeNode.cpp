@@ -11,8 +11,13 @@
 #include "OctreeNode.h"
 
 #include "LogFiles.h"
+#include "MPIWrapper.h"
 
 #include <sstream>
+
+bool OctreeNode::is_local() const noexcept {
+    return rank == MPIWrapper::get_my_rank();
+}
 
 void OctreeNode::print() const {
     std::stringstream ss;

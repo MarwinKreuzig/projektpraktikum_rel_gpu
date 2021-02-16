@@ -12,9 +12,8 @@
 
 #include "Config.h"
 #include "ElementType.h"
-#include "ModelParameter.h"
-#include "NetworkGraph.h"
 #include "Positions.h"
+#include "NeuronModels.h"
 #include "RankNeuronId.h"
 #include "RelearnException.h"
 #include "SignalType.h"
@@ -28,7 +27,7 @@
 #include <tuple>
 #include <vector>
 
-class NeuronModels;
+class NetworkGraph;
 class NeuronMonitor;
 class Octree;
 class Partition;
@@ -357,21 +356,7 @@ public:
         dendrites_inh.update_number_elements_delta(calcium);
     }
 
-    [[nodiscard]] std::tuple<size_t, size_t> update_connectivity() {
-        RelearnException::check(network_graph != nullptr, "Network graph is nullptr");
-        RelearnException::check(global_tree != nullptr, "Global octree is nullptr");
-
-        debug_check_counts();
-        network_graph->debug_check();
-        size_t num_synapses_deleted = delete_synapses();
-        debug_check_counts();
-        network_graph->debug_check();
-        size_t num_synapses_created = create_synapses();
-        debug_check_counts();
-        network_graph->debug_check();
-
-        return std::make_tuple(num_synapses_deleted, num_synapses_created);
-    }
+    [[nodiscard]] std::tuple<size_t, size_t> update_connectivity();
 
     void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, size_t sum_synapses_deleted, size_t sum_synapses_created);
 
@@ -411,7 +396,7 @@ private:
         PendingDeletionsV& pending_deletions,
         const PendingDeletionsV& other_pending_deletions);
 
-    [[nodiscard]] static std::vector<Neurons::Synapse> delete_synapses_register_edges(const NetworkGraph::Edges& edges);
+    [[nodiscard]] static std::vector<Neurons::Synapse> delete_synapses_register_edges(const std::vector<std::pair<std::pair<int, size_t>, int>>& edges);
 
     [[nodiscard]] static MapSynapseDeletionRequests delete_synapses_exchange_requests(const PendingDeletionsV& pending_deletions);
 

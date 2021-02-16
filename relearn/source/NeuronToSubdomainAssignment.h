@@ -11,13 +11,13 @@
 #pragma once
 
 #include "Config.h"
-#include "Random.h"
 #include "RelearnException.h"
-#include "SynapticElements.h"
+#include "SignalType.h"
 #include "Vec3.h"
 
 #include <map>
 #include <set>
+#include <string>
 #include <tuple>
 #include <vector>
 

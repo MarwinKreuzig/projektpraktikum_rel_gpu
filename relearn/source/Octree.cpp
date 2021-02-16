@@ -20,6 +20,7 @@
 #include "Partition.h"
 #include "Random.h"
 #include "RelearnException.h"
+#include "SynapticElements.h"
 
 #include <sstream>
 
@@ -738,7 +739,7 @@ void Octree::print() {
 
 void Octree::free() {
     // Provide allocator so that it can be used to free memory again
-    const FunctorFreeNode free_node;
+    const FunctorFreeNode free_node{};
 
     // The functor containing the visit function is of type FunctorFreeNode
     tree_walk_postorder<FunctorFreeNode>(this, free_node);

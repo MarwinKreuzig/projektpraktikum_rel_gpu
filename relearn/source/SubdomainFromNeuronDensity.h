@@ -11,9 +11,10 @@
 #pragma once
 
 #include "NeuronToSubdomainAssignment.h"
-#include "Vec3.h"
 
 #include <random>
+#include <tuple>
+#include <vector>
 
 // This class fills every subdomain with neurons at
 // random positions. The size of the simulation box and the number of neurons per

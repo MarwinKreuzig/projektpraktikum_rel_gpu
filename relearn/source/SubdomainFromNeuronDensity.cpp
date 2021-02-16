@@ -11,6 +11,7 @@
 #include "SubdomainFromNeuronDensity.h"
 
 #include "MPIWrapper.h"
+#include "Random.h"
 #include "RelearnException.h"
 
 #include <limits>

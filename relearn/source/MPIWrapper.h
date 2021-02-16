@@ -11,10 +11,9 @@
 #pragma once
 
 #include "MPITypes.h"
-#include "RelearnException.h"
 
 #include <array>
-#include <memory>
+#include <cstdint>
 #include <string>
 #include <vector>
 

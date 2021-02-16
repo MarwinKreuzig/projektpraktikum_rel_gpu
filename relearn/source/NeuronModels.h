@@ -10,19 +10,14 @@
 
 #pragma once
 
-#include "MPIWrapper.h"
 #include "ModelParameter.h"
-#include "NetworkGraph.h"
-#include "Random.h"
-#include "Timers.h"
 
-#include <algorithm>
-#include <cstddef>
+#include <map>
 #include <memory>
 #include <random>
-#include <variant>
 #include <vector>
 
+class NetworkGraph;
 class NeuronMonitor;
 
 class NeuronModels {

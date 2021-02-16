@@ -11,11 +11,8 @@
 #pragma once
 
 #include "Config.h"
-#include "RelearnException.h"
 
-#include <algorithm>
 #include <cmath>
-#include <type_traits>
 
 template <typename T>
 class Vec3 {

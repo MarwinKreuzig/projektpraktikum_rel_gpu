@@ -13,6 +13,7 @@
 #include "Config.h"
 #include "MPITypes.h"
 
+#include <cstdint>
 #include <vector>
 
 class OctreeNode;
