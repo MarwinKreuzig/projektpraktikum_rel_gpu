@@ -11,8 +11,8 @@
 #include "Partition.h"
 
 #include "LogFiles.h"
-#include "Neurons.h"
 #include "NeuronToSubdomainAssignment.h"
+#include "Neurons.h"
 #include "RelearnException.h"
 #include "SynapticElements.h"
 
