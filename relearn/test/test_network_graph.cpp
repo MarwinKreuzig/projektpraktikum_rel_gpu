@@ -10,8 +10,10 @@
 #include "../source/NetworkGraph.h"
 #include "../source/RelearnException.h"
 
-constexpr const size_t upper_bound_num_neurons = 10000;
-constexpr const int bound_synapse_weight = 10;
+constexpr size_t upper_bound_num_neurons = 10000;
+constexpr int bound_synapse_weight = 10;
+constexpr int num_ranks = 17;
+constexpr int num_synapses_per_neuron = 2;
 
 TEST(TestNetworkGraph, testNetworkGraphConstructor) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
@@ -43,7 +45,7 @@ TEST(TestNetworkGraph, testNetworkGraphConstructorExceptions) {
     setup();
 
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
-    std::uniform_int_distribution<int> uid_num_ranks(1, 17);
+    std::uniform_int_distribution<int> uid_num_ranks(1, num_ranks);
 
     for (auto i = 0; i < iterations; i++) {
         size_t num_neurons = uid_num_neurons(mt);
@@ -73,14 +75,14 @@ TEST(TestNetworkGraph, testNetworkGraphEdges) {
     setup();
 
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
-    std::uniform_int_distribution<size_t> uid_num_edges(0, upper_bound_num_neurons * 2);
+    std::uniform_int_distribution<size_t> uid_num_edges(0, upper_bound_num_neurons * num_synapses_per_neuron);
 
-    std::uniform_int_distribution<int> uid_num_ranks(1, 17);
+    std::uniform_int_distribution<int> uid_num_ranks(1, num_ranks);
     std::uniform_int_distribution<int> uid_edge_weight(-bound_synapse_weight, bound_synapse_weight);
 
     for (auto i = 0; i < iterations; i++) {
         size_t num_neurons = uid_num_neurons(mt);
-        size_t num_edges = uid_num_edges(mt);
+        size_t num_edges = uid_num_edges(mt) + num_neurons;
 
         std::uniform_int_distribution<size_t> uid_actual_num_neurons(0, num_neurons - 1);
 
@@ -89,7 +91,7 @@ TEST(TestNetworkGraph, testNetworkGraphEdges) {
         std::map<size_t, std::map<std::pair<int, size_t>, int>> in_edges;
         std::map<size_t, std::map<std::pair<int, size_t>, int>> out_edges;
 
-        for (size_t edge_id = 0; edge_id < num_neurons; edge_id++) {
+        for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
             int other_rank = uid_num_ranks(mt);
             size_t my_neuron_id = uid_actual_num_neurons(mt);
             size_t other_neuron_id = uid_actual_num_neurons(mt);
@@ -168,20 +170,20 @@ TEST(TestNetworkGraph, testNetworkGraphEdgesSplit) {
     setup();
 
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
-    std::uniform_int_distribution<size_t> uid_num_edges(0, upper_bound_num_neurons * 2);
+    std::uniform_int_distribution<size_t> uid_num_edges(0, upper_bound_num_neurons * num_synapses_per_neuron);
 
-    std::uniform_int_distribution<int> uid_num_ranks(1, 17);
+    std::uniform_int_distribution<int> uid_num_ranks(1, num_ranks);
     std::uniform_int_distribution<int> uid_edge_weight(-bound_synapse_weight, bound_synapse_weight);
 
     for (auto i = 0; i < iterations; i++) {
         size_t num_neurons = uid_num_neurons(mt);
-        size_t num_edges = uid_num_edges(mt);
+        size_t num_edges = uid_num_edges(mt) + num_neurons;
 
         std::uniform_int_distribution<size_t> uid_actual_num_neurons(0, num_neurons - 1);
 
         NetworkGraph ng(num_neurons);
 
-        for (size_t edge_id = 0; edge_id < num_neurons; edge_id++) {
+        for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
             int other_rank = uid_num_ranks(mt);
             size_t my_neuron_id = uid_actual_num_neurons(mt);
             size_t other_neuron_id = uid_actual_num_neurons(mt);
@@ -241,9 +243,6 @@ TEST(TestNetworkGraph, testNetworkGraphEdgesSplit) {
                 out_edges_ng_in.emplace_back(val);
             }
 
-            //in_edges_ng_ex.merge(in_edges_ng_in);
-            //out_edges_ng_ex.merge(out_edges_ng_in);
-
             EXPECT_EQ(in_edges_ng.size(), in_edges_ng_ex.size());
             EXPECT_EQ(out_edges_ng.size(), out_edges_ng_ex.size());
 
@@ -259,3 +258,77 @@ TEST(TestNetworkGraph, testNetworkGraphEdgesSplit) {
         }
     }
 }
+
+TEST(TestNetworkGraph, testNetworkGraphEdgesRemoval) {
+    setup();
+
+    std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
+    std::uniform_int_distribution<size_t> uid_num_edges(0, upper_bound_num_neurons * num_synapses_per_neuron);
+
+    std::uniform_int_distribution<int> uid_num_ranks(1, num_ranks);
+    std::uniform_int_distribution<int> uid_edge_weight(-bound_synapse_weight, bound_synapse_weight);
+
+    for (auto i = 0; i < iterations; i++) {
+        size_t num_neurons = uid_num_neurons(mt);
+        size_t num_edges = uid_num_edges(mt) + num_neurons;
+
+        std::uniform_int_distribution<size_t> uid_actual_num_neurons(0, num_neurons - 1);
+
+        NetworkGraph ng(num_neurons);
+
+        std::vector<std::tuple<size_t, int, size_t, int, int>> synapses(num_edges);
+
+        for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
+            int other_rank = uid_num_ranks(mt);
+            size_t my_neuron_id = uid_actual_num_neurons(mt);
+            size_t other_neuron_id = uid_actual_num_neurons(mt);
+
+            int weight = uid_edge_weight(mt);
+
+            while (weight == 0) {
+                weight = uid_edge_weight(mt);
+            }
+
+            bool is_in_synapse = weight < 0;
+
+            if (is_in_synapse) {
+                ng.add_edge_weight(my_neuron_id, 0, other_neuron_id, other_rank, weight);
+                synapses[edge_id] = std::make_tuple(my_neuron_id, 0, other_neuron_id, other_rank, weight);
+            } else {
+                ng.add_edge_weight(other_neuron_id, other_rank, my_neuron_id, 0, weight);
+                synapses[edge_id] = std::make_tuple(other_neuron_id, other_rank, my_neuron_id, 0, weight);
+            }
+        }
+        
+        std::shuffle(synapses.begin(), synapses.end(), mt);
+
+        for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
+            const auto& current_synapse = synapses[edge_id];
+
+            const auto target_id = std::get<0>(current_synapse);
+            const auto target_rank = std::get<1>(current_synapse);
+            const auto source_id = std::get<2>(current_synapse);
+            const auto source_rank = std::get<3>(current_synapse);
+            const auto weight = std::get<4>(current_synapse);
+
+            ng.add_edge_weight(target_id, target_rank, source_id, source_rank, -weight);
+        }
+                
+        for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+            size_t exc_in_edges_count = ng.get_num_in_edges_ex(neuron_id);
+            size_t inh_in_edges_count = ng.get_num_in_edges_in(neuron_id);
+            size_t out_edges_count = ng.get_num_out_edges(neuron_id);
+
+            EXPECT_EQ(exc_in_edges_count, 0);
+            EXPECT_EQ(inh_in_edges_count, 0);
+            EXPECT_EQ(out_edges_count, 0);
+
+            const NetworkGraph::Edges& in_edges = ng.get_in_edges(neuron_id);
+            const NetworkGraph::Edges& out_edges = ng.get_out_edges(neuron_id);
+
+            EXPECT_EQ(in_edges.size(), 0);
+            EXPECT_EQ(out_edges.size(), 0);
+        }
+    }
+}
+
