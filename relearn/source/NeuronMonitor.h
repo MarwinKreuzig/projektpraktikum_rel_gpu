@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Neurons.h"
+#include "NeuronModels.h"
 
 #include <memory>
 #include <vector>

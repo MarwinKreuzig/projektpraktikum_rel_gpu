@@ -11,6 +11,7 @@
 #pragma once
 
 #include "LogFiles.h"
+#include "Random.h"
 
 #include <cstdint>
 #include <iomanip>

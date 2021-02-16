@@ -28,6 +28,7 @@ private:
 
         std::vector<char> vec(size);
 
+        // NOLINTNEXTLINE
         snprintf(vec.data(), size, format, args...);
         return std::string(vec.data(), size - 1); // We don't want the '\0' inside
     }
