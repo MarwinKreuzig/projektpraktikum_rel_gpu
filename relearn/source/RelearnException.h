@@ -10,11 +10,9 @@
 
 #pragma once
 
-#include <array>
 #include <exception>
-#include <iostream>
-#include <memory>
 #include <string>
+#include <vector>
 
 class RelearnException : std::exception {
 private:
@@ -22,6 +20,7 @@ private:
 
     template <typename... Args>
     static std::string string_format(const char* format, Args... args) {
+        // NOLINTNEXTLINE
         int size = snprintf(nullptr, 0, format, args...) + 1; // Extra space for '\0'
         if (size <= 0) {
             return std::string("");

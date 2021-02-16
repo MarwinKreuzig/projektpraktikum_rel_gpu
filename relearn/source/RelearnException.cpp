@@ -12,6 +12,7 @@
 
 #include "MPIWrapper.h"
 
+#include <iostream>
 #include <sstream>
 
 bool RelearnException::hide_messages = false;
