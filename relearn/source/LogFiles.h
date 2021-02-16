@@ -23,7 +23,7 @@ class LogFiles {
         std::ofstream ofstream;
 
     public:
-        LogFile(const std::filesystem::path& path)
+        explicit LogFile(const std::filesystem::path& path)
             : ofstream(path) { }
 
         LogFile(const LogFile& other) = delete;

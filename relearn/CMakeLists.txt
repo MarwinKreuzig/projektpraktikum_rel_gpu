@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(relearn)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 file(GLOB_RECURSE TOP_SRC "source/*.cpp" "source/*.c")
 file(GLOB_RECURSE TOP_INCS "source/*.hpp" "source/*.h")
 

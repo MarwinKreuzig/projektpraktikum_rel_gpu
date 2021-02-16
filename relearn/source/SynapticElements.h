@@ -59,7 +59,7 @@ public:
         return std::make_unique<SynapticElements>(type, min_C_level_to_grow, C_target, nu, vacant_retract_ratio);
     }
 
-     [[nodiscard]] std::vector<std::unique_ptr<SynapticElements>> get_elements() {
+     [[nodiscard]] static std::vector<std::unique_ptr<SynapticElements>> get_elements() {
         std::vector<std::unique_ptr<SynapticElements>> res;
         res.emplace_back(std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons));
         res.emplace_back(std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc));

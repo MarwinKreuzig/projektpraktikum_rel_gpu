@@ -45,13 +45,13 @@ class Neurons {
 	* Type for list element used to store pending synapse deletion
 	*/
     class PendingSynapseDeletion {
-        RankNeuronId src_neuron_id; // Synapse source neuron id
-        RankNeuronId tgt_neuron_id; // Synapse target neuron id
-        RankNeuronId affected_neuron_id; // Neuron whose synaptic element should be set vacant
-        ElementType affected_element_type; // Type of the element (axon/dendrite) to be set vacant
-        SignalType signal_type; // Signal type (exc/inh) of the synapse
-        unsigned int synapse_id; // Synapse id of the synapse to be deleted
-        bool affected_element_already_deleted = false; // "True" if the element to be set vacant was already deleted by the neuron owning it
+        RankNeuronId src_neuron_id{}; // Synapse source neuron id
+        RankNeuronId tgt_neuron_id{}; // Synapse target neuron id
+        RankNeuronId affected_neuron_id{}; // Neuron whose synaptic element should be set vacant
+        ElementType affected_element_type{ ElementType::AXON }; // Type of the element (axon/dendrite) to be set vacant
+        SignalType signal_type{ SignalType::EXCITATORY }; // Signal type (exc/inh) of the synapse
+        unsigned int synapse_id{ 0 }; // Synapse id of the synapse to be deleted
+        bool affected_element_already_deleted{ false }; // "True" if the element to be set vacant was already deleted by the neuron owning it
             // "False" if the element must be set vacant
 
     public:
@@ -358,8 +358,8 @@ public:
     }
 
     [[nodiscard]] std::tuple<size_t, size_t> update_connectivity() {
-        RelearnException::check(network_graph.get() != nullptr, "Network graph is nullptr");
-        RelearnException::check(global_tree.get() != nullptr, "Global octree is nullptr");
+        RelearnException::check(network_graph != nullptr, "Network graph is nullptr");
+        RelearnException::check(global_tree != nullptr, "Global octree is nullptr");
 
         debug_check_counts();
         network_graph->debug_check();

@@ -45,7 +45,7 @@ public:
 
     void load_neurons_from_file(const std::string& path_to_positions, const std::string& path_to_connections);
 
-    void simulate(size_t number_steps = 6000000, size_t step_monitor = 100);
+    void simulate(size_t number_steps, size_t step_monitor);
 
     void finalize() const;
 

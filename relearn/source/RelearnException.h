@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <array>
 #include <exception>
 #include <iostream>
 #include <memory>
@@ -25,9 +26,11 @@ private:
         if (size <= 0) {
             return std::string("");
         }
-        std::unique_ptr<char[]> buf(new char[size]);
-        snprintf(buf.get(), size, format, args...);
-        return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
+
+        std::vector<char> vec(size);
+
+        snprintf(vec.data(), size, format, args...);
+        return std::string(vec.data(), size - 1); // We don't want the '\0' inside
     }
 
 public:

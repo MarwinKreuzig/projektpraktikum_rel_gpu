@@ -125,7 +125,6 @@ public:
 
     [[nodiscard]] virtual double get_secondary_variable(size_t i) const noexcept = 0;
 
-public:
     /* Performs one iteration step of update in electrical activity */
     void update_electrical_activity(const NetworkGraph& network_graph, std::vector<double>& C);
 
