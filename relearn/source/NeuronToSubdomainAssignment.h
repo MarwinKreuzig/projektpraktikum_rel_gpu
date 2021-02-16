@@ -73,22 +73,21 @@ public:
         const Position& min, const Position& max) const;
 
     // Return neurons which have positions in the range [min, max) in every dimension
-    virtual void neuron_positions(size_t subdomain_idx, size_t num_subdomains,
-        const Position& min, const Position& max, std::vector<Position>& pos) const;
+    virtual std::vector<Position> neuron_positions(size_t subdomain_idx, size_t num_subdomains,
+        const Position& min, const Position& max) const;
 
     // Return neurons which have positions in the range [min, max) in every dimension
-    virtual void neuron_types(size_t subdomain_idx, size_t num_subdomains,
-        const Position& min, const Position& max,
-        std::vector<SignalType>& types) const;
+    virtual std::vector<SignalType> neuron_types(size_t subdomain_idx, size_t num_subdomains,
+        const Position& min, const Position& max) const;
 
     // Return neurons which have positions in the range [min, max) in every dimension
-    virtual void neuron_area_names(size_t subdomain_idx, size_t num_subdomains,
-        const Position& min, const Position& max, std::vector<std::string>& areas) const;
+    virtual std::vector<std::string> neuron_area_names(size_t subdomain_idx, size_t num_subdomains,
+        const Position& min, const Position& max) const;
 
     virtual void write_neurons_to_file(const std::string& filename) const;
 
-    virtual void neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
-        size_t local_id_start, size_t local_id_end, std::vector<size_t>& global_ids) const = 0;
+    virtual std::vector<size_t> neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
+        size_t local_id_start, size_t local_id_end) const = 0;
 
 protected:
     struct Node {

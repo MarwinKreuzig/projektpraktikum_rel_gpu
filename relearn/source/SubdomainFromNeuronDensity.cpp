@@ -150,8 +150,10 @@ void SubdomainFromNeuronDensity::fill_subdomain(size_t subdomain_idx, [[maybe_un
     place_neurons_in_area(min, max, neurons_in_subdomain_count, subdomain_idx);
 }
 
-void SubdomainFromNeuronDensity::neuron_global_ids([[maybe_unused]] size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
-    [[maybe_unused]] size_t local_id_start, [[maybe_unused]] size_t local_id_end, [[maybe_unused]] std::vector<size_t>& global_ids) const {
+std::vector<size_t> SubdomainFromNeuronDensity::neuron_global_ids([[maybe_unused]] size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
+    [[maybe_unused]] size_t local_id_start, [[maybe_unused]] size_t local_id_end) const {
+
+    return {};
 }
 
 std::tuple<SubdomainFromNeuronDensity::Position, SubdomainFromNeuronDensity::Position> SubdomainFromNeuronDensity::get_subdomain_boundaries(

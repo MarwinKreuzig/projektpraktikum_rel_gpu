@@ -37,8 +37,8 @@ public:
 
     void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) override;
 
-    void neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
-        size_t local_id_start, size_t local_id_end, std::vector<size_t>& global_ids) const override;
+    std::vector<size_t> neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
+        size_t local_id_start, size_t local_id_end) const override;
 
 private:
     const double um_per_neuron_; // Micrometer per neuron in one dimension

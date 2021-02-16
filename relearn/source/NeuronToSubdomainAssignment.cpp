@@ -51,52 +51,64 @@ size_t NeuronToSubdomainAssignment::num_neurons(size_t subdomain_idx, [[maybe_un
     return cnt;
 }
 
-void NeuronToSubdomainAssignment::neuron_positions(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
-    [[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max, std::vector<Position>& pos) const {
+std::vector<NeuronToSubdomainAssignment::Position> NeuronToSubdomainAssignment::neuron_positions(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
+    [[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max) const {
 
     const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
         RelearnException::fail("Wanted to have neuron_positions of subdomain_idx that is not present");
-        return;
+        return {};
     }
 
-    // TODO(later): This loads the positions, that are only used once, into another vector.
-
     const Nodes& nodes = neurons_in_subdomain.at(subdomain_idx);
+    std::vector<Position> pos;
+    pos.reserve(nodes.size());
+
     for (const Node& node : nodes) {
         pos.push_back(node.pos);
     }
+
+    return pos;
 }
 
-void NeuronToSubdomainAssignment::neuron_types(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
-    [[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max,
-    std::vector<SignalType>& types) const {
+std::vector<SignalType> NeuronToSubdomainAssignment::neuron_types(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
+    [[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max) const {
 
     const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
         RelearnException::fail("Wanted to have neuron_types of subdomain_idx that is not present");
-        return;
+        return {};
     }
 
     const Nodes& nodes = neurons_in_subdomain.at(subdomain_idx);
+    std::vector<SignalType> types;
+    types.reserve(nodes.size());
+
     for (const Node& node : nodes) {
         types.push_back(node.signal_type);
     }
+
+    return types;
 }
 
-void NeuronToSubdomainAssignment::neuron_area_names(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
-    [[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max, std::vector<std::string>& areas) const {
+std::vector<std::string> NeuronToSubdomainAssignment::neuron_area_names(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
+    [[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max) const {
 
     const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
         RelearnException::fail("Wanted to have neuron_area_names of subdomain_idx that is not present");
-        return;
+        return {};
     }
 
     const Nodes& nodes = neurons_in_subdomain.at(subdomain_idx);
+    std::vector<std::string> areas;
+    areas.reserve(nodes.size());
+
     for (const Node& node : nodes) {
         areas.push_back(node.area_name);
     }
+
+    return areas;
 }
 
 bool NeuronToSubdomainAssignment::position_in_box(const Position& pos, const Position& box_min, const Position& box_max) noexcept {

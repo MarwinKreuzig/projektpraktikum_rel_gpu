@@ -277,11 +277,10 @@ std::shared_ptr<Neurons> Partition::load_neurons(
         current_subdomain.neuron_local_id_start = (i == 0) ? 0 : (subdomains[i - 1].neuron_local_id_end + 1);
         current_subdomain.neuron_local_id_end = current_subdomain.neuron_local_id_start + current_subdomain.num_neurons - 1;
 
-        neurons_in_subdomain->neuron_global_ids(current_subdomain.index_1d,
+        current_subdomain.global_neuron_ids = neurons_in_subdomain->neuron_global_ids(current_subdomain.index_1d,
             total_num_subdomains,
             current_subdomain.neuron_local_id_start,
-            current_subdomain.neuron_local_id_end,
-            current_subdomain.global_neuron_ids);
+            current_subdomain.neuron_local_id_end);
 
         std::sort(current_subdomain.global_neuron_ids.begin(), current_subdomain.global_neuron_ids.end());
 
@@ -328,22 +327,16 @@ std::shared_ptr<Neurons> Partition::load_neurons(
         const auto subdomain_num_neurons = neurons_in_subdomain->num_neurons(subdomain_idx, my_num_subdomains, subdomain_pos_min, subdomain_pos_max);
 
         // Get neuron positions in subdomain i
-        std::vector<NeuronToSubdomainAssignment::Position> vec_pos;
-        vec_pos.reserve(subdomain_num_neurons);
-        neurons_in_subdomain->neuron_positions(subdomain_idx, total_num_subdomains,
-            subdomain_pos_min, subdomain_pos_max, vec_pos);
+        std::vector<NeuronToSubdomainAssignment::Position> vec_pos = neurons_in_subdomain->neuron_positions(subdomain_idx, total_num_subdomains,
+            subdomain_pos_min, subdomain_pos_max);
 
         // Get neuron area names in subdomain i
-        std::vector<std::string> vec_area;
-        vec_area.reserve(subdomain_num_neurons);
-        neurons_in_subdomain->neuron_area_names(subdomain_idx, total_num_subdomains,
-            subdomain_pos_min, subdomain_pos_max, vec_area);
+        std::vector<std::string> vec_area = neurons_in_subdomain->neuron_area_names(subdomain_idx, total_num_subdomains,
+            subdomain_pos_min, subdomain_pos_max);
 
         // Get neuron types in subdomain i
-        std::vector<SignalType> vec_type;
-        vec_type.reserve(subdomain_num_neurons);
-        neurons_in_subdomain->neuron_types(subdomain_idx, total_num_subdomains,
-            subdomain_pos_min, subdomain_pos_max, vec_type);
+        std::vector<SignalType> vec_type = neurons_in_subdomain->neuron_types(subdomain_idx, total_num_subdomains,
+            subdomain_pos_min, subdomain_pos_max);
 
         size_t neuron_id = subdomains[i].neuron_local_id_start;
         for (size_t j = 0; j < subdomains[i].num_neurons; j++) {
