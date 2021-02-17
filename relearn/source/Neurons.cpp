@@ -237,15 +237,13 @@ std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(size_t neur
     /**
 	* Select synapses for deletion
 	*/
-    std::mt19937& random_number_generator = RandomHolder::get_random_generator(RandomHolderKey::Neurons);
-
     std::vector<size_t> already_removed_indices;
 
     for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
         // Randomly select synapse for deletion
         auto synapse_selected = current_synapses.cbegin();
         // Draw random number from [0,1)
-        const double random_number = random_number_distribution(random_number_generator);
+        const double random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Neurons, 0.0, 1.0);
 
         // Make iterator point to selected element
         std::advance(synapse_selected, static_cast<int>(current_synapses.size() * random_number));

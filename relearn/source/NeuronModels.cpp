@@ -99,11 +99,9 @@ void NeuronModels::update_electrical_activity_calculate_background() {
 
     // There might be background activity
     if (background_activity_stddev > 0.0) {
-        std::mt19937& mt = RandomHolder::get_random_generator(RandomHolderKey::NeuronModels);
-        std::normal_distribution<double> nd(background_activity_mean, background_activity_stddev);
-
         for (size_t neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
-            const double input = base_background_activity + nd(mt);
+            const double rnd = RandomHolder::get_random_normal_double(RandomHolderKey::NeuronModels, background_activity_mean, background_activity_stddev);
+            const double input = base_background_activity + rnd;
             I_syn[neuron_id] = input;
         }
     } else {
@@ -193,7 +191,7 @@ NeuronModels::MapFiringNeuronIds NeuronModels::update_electrical_activity_prepar
     const auto my_rank = MPIWrapper::get_my_rank();
 
     NeuronModels::MapFiringNeuronIds firing_neuron_ids_outgoing;
-    
+
     /**
 	* Check which of my neurons fired and determine which ranks need to know about it.
 	* That is, they contain the neurons connecting the axons of my firing neurons.

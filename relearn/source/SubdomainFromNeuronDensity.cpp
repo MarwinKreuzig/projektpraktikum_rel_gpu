@@ -17,13 +17,11 @@
 #include <limits>
 
 SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(size_t num_neurons, double desired_frac_neurons_exc, double um_per_neuron)
-    : um_per_neuron_(um_per_neuron)
-    , random_number_generator(RandomHolder::get_random_generator(RandomHolderKey::SubdomainFromNeuronDensity))
-    , random_number_distribution(0.0, 1.0) {
+    : um_per_neuron_(um_per_neuron){
 
     const auto my_rank = static_cast<unsigned int>(MPIWrapper::get_my_rank());
 
-    random_number_generator.seed(my_rank);
+    RandomHolder::seed(RandomHolderKey::SubdomainFromNeuronDensity, my_rank);
 
     // Calculate size of simulation box based on neuron density
     // num_neurons^(1/3) == #neurons per dimension
@@ -87,6 +85,8 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
         }
     }
 
+    auto& random_number_generator = RandomHolder::get_random_generator(RandomHolderKey::SubdomainFromNeuronDensity);
+
     std::shuffle(positions.begin(), positions.end(), random_number_generator);
 
     for (size_t i = 0; i < num_neurons; i++) {
@@ -95,16 +95,16 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
         const size_t y_it = (pos_bitmask >> 16U) & max_short;
         const size_t z_it = pos_bitmask & max_short;
 
-        const double x_pos_rnd = random_number_distribution(random_number_generator) + x_it;
-        const double y_pos_rnd = random_number_distribution(random_number_generator) + y_it;
-        const double z_pos_rnd = random_number_distribution(random_number_generator) + z_it;
+        const double x_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0) + x_it;
+        const double y_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0) + y_it;
+        const double z_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0) + z_it;
 
         Position pos_rnd{ x_pos_rnd, y_pos_rnd, z_pos_rnd };
         pos_rnd *= um_per_neuron_;
 
         const Position pos = pos_rnd + offset;
 
-        const double type_indicator = random_number_distribution(random_number_generator);
+        const double type_indicator = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0);
 
         if (placed_ex_neurons < expected_number_ex && (type_indicator < desired_ex || placed_in_neurons == expected_number_in)) {
             Node node{ pos, i, SignalType::EXCITATORY, "random" };

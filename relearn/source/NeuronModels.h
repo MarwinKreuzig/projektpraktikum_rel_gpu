@@ -14,7 +14,6 @@
 
 #include <map>
 #include <memory>
-#include <random>
 #include <vector>
 
 class NetworkGraph;
@@ -306,11 +305,6 @@ private:
     double x_0; // Background or resting activity
     double tau_x; // Decay time of firing rate in msec
     unsigned int refrac_time; // Length of refractory period in msec. After an action potential a neuron cannot fire for this time
-
-    // Random number distribution used together with "random_number_generator" (C++11)
-    // Uniform distribution for interval [0, 1]
-    // NOLINTNEXTLINE
-    std::uniform_real_distribution<double> random_number_distribution{ 0.0, nextafter(1.0, 2.0) };
 };
 
 class IzhikevichModel : public NeuronModels {

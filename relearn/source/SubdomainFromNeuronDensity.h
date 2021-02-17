@@ -12,7 +12,6 @@
 
 #include "NeuronToSubdomainAssignment.h"
 
-#include <random>
 #include <tuple>
 #include <vector>
 
@@ -48,7 +47,4 @@ private:
         const NeuronToSubdomainAssignment::Position& offset,
         const NeuronToSubdomainAssignment::Position& length_of_box,
         size_t num_neurons, size_t subdomain_idx);
-
-    std::mt19937& random_number_generator;
-    std::uniform_real_distribution<double> random_number_distribution;
 };

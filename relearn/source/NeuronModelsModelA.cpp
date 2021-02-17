@@ -75,12 +75,10 @@ void ModelA::update_activity(const size_t i) {
 }
 
 void ModelA::init_neurons() {
-    std::mt19937& random_number_generator = RandomHolder::get_random_generator(RandomHolderKey::ModelA);
-
     const auto num_neurons = get_num_neurons();
     for (size_t i = 0; i < num_neurons; ++i) {
-        const auto x = random_number_distribution(random_number_generator);
-        const double threshold = random_number_distribution(random_number_generator);
+        const auto x = RandomHolder::get_random_uniform_double(RandomHolderKey::ModelA, 0.0, 1.0);
+        const double threshold = RandomHolder::get_random_uniform_double(RandomHolderKey::ModelA, 0.0, 1.0);
         const bool f = x >= threshold;
         set_fired(i, true);
         set_fired(i, f); // Decide whether a neuron fires depending on its firing rate
@@ -93,10 +91,8 @@ void ModelA::init_neurons() {
 void models::ModelA::update_electrical_activity_serial_initialize() {
     GlobalTimers::timers.start(TimerRegion::CALC_SERIAL_ACTIVITY);
 
-    std::mt19937& random_number_generator = RandomHolder::get_random_generator(RandomHolderKey::ModelA);
-
     for (auto& theta_value : theta_values) {
-        const double threshold = random_number_distribution(random_number_generator);
+        const double threshold = RandomHolder::get_random_uniform_double(RandomHolderKey::ModelA, 0.0, 1.0);
         theta_value = threshold;
     }
 

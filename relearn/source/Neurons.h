@@ -22,7 +22,6 @@
 
 #include <array>
 #include <memory>
-#include <random>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -280,8 +279,7 @@ public:
         , neuron_model(std::move(model))
         , axons(std::move(*axons_ptr))
         , dendrites_exc(std::move(*dend_ex_ptr))
-        , dendrites_inh(std::move(*dend_in_ptr))
-        , random_number_distribution(0.0, std::nextafter(1.0, 1.0 + Constants::eps)) {
+        , dendrites_inh(std::move(*dend_in_ptr)) {
     }
 
     ~Neurons() = default;
@@ -437,7 +435,4 @@ private:
     Positions positions; // Position of every neuron
     std::vector<double> calcium; // Intracellular calcium concentration of every neuron
     std::vector<std::string> area_names; // Area name of every neuron
-
-    // Uniform distribution for interval [0, 1)
-    std::uniform_real_distribution<double> random_number_distribution;
 };

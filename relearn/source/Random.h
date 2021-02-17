@@ -10,6 +10,9 @@
 
 #pragma once
 
+#include "Config.h"
+#include "RelearnException.h"
+
 #include <map>
 #include <random>
 
@@ -35,6 +38,20 @@ class RandomHolder {
 public:
     static std::mt19937& get_random_generator(RandomHolderKey key) {
         return random_number_generators[key];
+    }
+
+    static double get_random_uniform_double(RandomHolderKey key, double lower_inclusive, double upper_exclusive) {
+        RelearnException::check(lower_inclusive < upper_exclusive, "Random number from invalid interval");
+        std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
+
+        return urd(random_number_generators[key]);
+    }
+
+    static double get_random_normal_double(RandomHolderKey key, double mean, double sigma) {
+        RelearnException::check(0.0 < sigma, "Random number from invalid deviation");
+        std::normal_distribution<double> nd(mean, sigma);
+
+        return nd(random_number_generators[key]);
     }
 
     static void seed(RandomHolderKey key, unsigned int seed) {
