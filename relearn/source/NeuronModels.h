@@ -110,6 +110,10 @@ public:
         return fired[i];
     }
 
+    [[nodiscard]] const std::vector<bool>& get_fired() const noexcept {
+        return fired;
+    }
+
     [[nodiscard]] double get_x(const size_t i) const noexcept {
         return x[i];
     }
@@ -118,10 +122,22 @@ public:
         return x;
     }
 
+    [[nodiscard]] double get_k() const noexcept {
+        return k;
+    }
+
+    [[nodiscard]] double get_tau_C() const noexcept {
+        return tau_C;
+    }
+
+    [[nodiscard]] unsigned int get_h() const noexcept {
+        return h;
+    }
+
     [[nodiscard]] virtual double get_secondary_variable(size_t i) const noexcept = 0;
 
     /* Performs one iteration step of update in electrical activity */
-    void update_electrical_activity(const NetworkGraph& network_graph, std::vector<double>& C);
+    void update_electrical_activity(const NetworkGraph& network_graph);
 
     /**
 	 * Returns a vector of all possible models
@@ -198,17 +214,6 @@ private:
     std::vector<bool> fired; // true: neuron has fired, false: neuron is inactive
 
 protected:
-    [[nodiscard]] double get_k() const noexcept {
-        return k;
-    }
-
-    [[nodiscard]] double get_tau_C() const noexcept {
-        return tau_C;
-    }
-
-    [[nodiscard]] unsigned int get_h() const noexcept {
-        return h;
-    }
 
     [[nodiscard]] double get_base_background_activity() const noexcept {
         return base_background_activity;
@@ -245,7 +250,7 @@ private:
 
     [[nodiscard]] MapFiringNeuronIds update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph);
 
-    void update_electrical_activity_update_activity_and_calcium(std::vector<double>& C);
+    void update_electrical_activity_update_activity();
 
     void update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const MapFiringNeuronIds& firing_neuron_ids_incoming);
 

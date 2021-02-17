@@ -372,6 +372,8 @@ public:
     void debug_check_counts();
 
 private:
+    void update_calcium();
+
     [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root) const;
 
     [[nodiscard]] size_t delete_synapses();

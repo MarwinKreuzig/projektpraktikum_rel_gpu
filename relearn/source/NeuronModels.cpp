@@ -27,8 +27,7 @@ NeuronModels::NeuronModels(double k, double tau_C, double beta, unsigned int h, 
     , background_activity_stddev(background_activity_stddev) {
 }
 
-/* Performs one iteration step of update in electrical activity */
-void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph, std::vector<double>& C) {
+void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph) {
 
     MapFiringNeuronIds firing_neuron_ids_outgoing = update_electrical_activity_prepare_sending_spikes(network_graph);
     MapFiringNeuronIds firing_neuron_ids_incoming = update_electrical_activity_prepare_receiving_spikes(firing_neuron_ids_outgoing);
@@ -46,20 +45,15 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
 
     update_electrical_activity_calculate_background();
     update_electrical_activity_calculate_input(network_graph, firing_neuron_ids_incoming);
-    update_electrical_activity_update_activity_and_calcium(C);
+    update_electrical_activity_update_activity();
 }
 
-void NeuronModels::update_electrical_activity_update_activity_and_calcium(std::vector<double>& C) {
+void NeuronModels::update_electrical_activity_update_activity() {
     GlobalTimers::timers.start(TimerRegion::CALC_ACTIVITY);
 
     // For my neurons
     for (size_t i = 0; i < my_num_neurons; ++i) {
         update_activity(i);
-
-        for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-            // Update calcium depending on the firing
-            C[i] += (1 / static_cast<double>(h)) * (-C[i] / tau_C + beta * static_cast<double>(fired[i]));
-        }
     }
 
     GlobalTimers::timers.stop_and_add(TimerRegion::CALC_ACTIVITY);

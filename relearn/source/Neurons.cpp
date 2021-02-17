@@ -85,7 +85,27 @@ void Neurons::init_synaptic_elements() {
 }
 
 void Neurons::update_electrical_activity() {
-    neuron_model->update_electrical_activity(*network_graph, calcium);
+    neuron_model->update_electrical_activity(*network_graph);
+    update_calcium();
+}
+
+void Neurons::update_calcium() {
+    GlobalTimers::timers.start(TimerRegion::CALC_ACTIVITY);
+
+    const auto h = neuron_model->get_h();
+    const auto tau_C = neuron_model->get_tau_C();
+    const auto beta = neuron_model->get_beta();
+    const auto fired = neuron_model->get_fired();
+
+    // For my neurons
+    for (size_t i = 0; i < calcium.size(); ++i) {
+        for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
+            // Update calcium depending on the firing
+            calcium[i] += (1 / static_cast<double>(h)) * (-calcium[i] / tau_C + beta * static_cast<double>(fired[i]));
+        }
+    }
+
+    GlobalTimers::timers.stop_and_add(TimerRegion::CALC_ACTIVITY);
 }
 
 Neurons::StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root) const {
