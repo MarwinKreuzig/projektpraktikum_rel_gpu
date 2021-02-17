@@ -10,6 +10,8 @@
 
 #include "NeuronModels.h"
 
+#include <cmath>
+
 using models::AEIFModel;
 
 AEIFModel::AEIFModel(double k, double tau_C, double beta, unsigned int h, double background_activity, double background_activity_mean, double background_activity_stddev, const double C, const double g_L, const double E_L, const double V_T, const double d_T, const double tau_w, const double a, const double b, const double V_peak)

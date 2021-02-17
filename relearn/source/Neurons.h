@@ -12,8 +12,8 @@
 
 #include "Config.h"
 #include "ElementType.h"
-#include "Positions.h"
 #include "NeuronModels.h"
+#include "Positions.h"
 #include "RankNeuronId.h"
 #include "RelearnException.h"
 #include "SignalType.h"

@@ -19,6 +19,7 @@
 #include "NeuronMonitor.h"
 #include "NeuronToSubdomainAssignment.h"
 #include "Neurons.h"
+#include "Octree.h"
 #include "Parameters.h"
 #include "Partition.h"
 #include "RelearnException.h"

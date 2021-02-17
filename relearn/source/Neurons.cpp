@@ -24,8 +24,8 @@
 #include <algorithm>
 #include <iomanip>
 #include <numeric>
-#include <sstream>
 #include <optional>
+#include <sstream>
 
 void Neurons::init(size_t number_neurons) {
     num_neurons = number_neurons;

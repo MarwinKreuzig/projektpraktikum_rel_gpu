@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 namespace Constants {
 constexpr size_t number_oct = 8;
 constexpr size_t uninitialized = 1111222233334444;

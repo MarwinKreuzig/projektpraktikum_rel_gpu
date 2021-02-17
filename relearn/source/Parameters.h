@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 class Parameters {
 public:
     size_t total_num_neurons; // Number of neurons

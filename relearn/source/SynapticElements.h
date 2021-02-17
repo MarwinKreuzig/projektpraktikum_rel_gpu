@@ -15,6 +15,7 @@
 #include "RelearnException.h"
 #include "SignalType.h"
 
+#include <cmath>
 #include <memory>
 #include <vector>
 

@@ -10,11 +10,11 @@
 
 #include "NetworkGraph.h"
 
-#include "RankNeuronId.h"
 #include "LogFiles.h"
 #include "MPIWrapper.h"
 #include "NeuronIdMap.h"
 #include "Partition.h"
+#include "RankNeuronId.h"
 #include "RelearnException.h"
 
 #include <cmath>

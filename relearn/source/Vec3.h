@@ -11,7 +11,9 @@
 #pragma once
 
 #include "Config.h"
+#include "RelearnException.h"
 
+#include <algorithm>
 #include <cmath>
 
 template <typename T>
