@@ -30,9 +30,9 @@ NeuronModels::NeuronModels(double k, double tau_C, double beta, unsigned int h, 
 void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph) {
 
     MapFiringNeuronIds firing_neuron_ids_outgoing = update_electrical_activity_prepare_sending_spikes(network_graph);
-    MapFiringNeuronIds firing_neuron_ids_incoming = update_electrical_activity_prepare_receiving_spikes(firing_neuron_ids_outgoing);
+    std::vector<size_t> num_incoming_ids = update_electrical_activity_prepare_receiving_spikes(firing_neuron_ids_outgoing);
 
-    update_electrical_activity_exchange_neuron_ids(firing_neuron_ids_outgoing, firing_neuron_ids_incoming);
+    MapFiringNeuronIds firing_neuron_ids_incoming = update_electrical_activity_exchange_neuron_ids(firing_neuron_ids_outgoing, num_incoming_ids);
     /**
 	 * Now fired contains spikes only from my own neurons
 	 * (spikes from local neurons)
@@ -105,16 +105,18 @@ void NeuronModels::update_electrical_activity_calculate_background() {
     GlobalTimers::timers.stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
 }
 
-NeuronModels::MapFiringNeuronIds NeuronModels::update_electrical_activity_prepare_receiving_spikes(const MapFiringNeuronIds& firing_neuron_ids_outgoing) {
-    NeuronModels::MapFiringNeuronIds firing_neuron_ids_incoming;
-
+std::vector<size_t> NeuronModels::update_electrical_activity_prepare_receiving_spikes(const MapFiringNeuronIds& firing_neuron_ids_outgoing) {
     GlobalTimers::timers.start(TimerRegion::PREPARE_NUM_NEURON_IDS);
+
+    const auto num_ranks = MPIWrapper::get_num_ranks();
+    std::vector<size_t> num_firing_neuron_ids_incoming(num_ranks, 0);
+
     /**
 	* Send to every rank the number of firing neuron ids it should prepare for from me.
 	* Likewise, receive the number of firing neuron ids that I should prepare for from every rank.
 	*/
-    std::vector<size_t> num_firing_neuron_ids_for_ranks(MPIWrapper::get_num_ranks(), 0);
-    std::vector<size_t> num_firing_neuron_ids_from_ranks(MPIWrapper::get_num_ranks(), Constants::uninitialized);
+    std::vector<size_t> num_firing_neuron_ids_for_ranks(num_ranks, 0);
+    std::vector<size_t> num_firing_neuron_ids_from_ranks(num_ranks, Constants::uninitialized);
 
     // Fill vector with my number of firing neuron ids for every rank (excluding me)
     for (const auto& [rank, neuron_ids] : firing_neuron_ids_outgoing) {
@@ -131,26 +133,35 @@ NeuronModels::MapFiringNeuronIds NeuronModels::update_electrical_activity_prepar
     GlobalTimers::timers.start(TimerRegion::ALLOC_MEM_FOR_NEURON_IDS);
     // Now I know how many neuron ids I will get from every rank.
     // Allocate memory for all incoming neuron ids.
-    for (auto rank = 0; rank < MPIWrapper::get_num_ranks(); ++rank) {
+    for (auto rank = 0; rank < num_ranks; ++rank) {
         // Only create key-value pair in map for "rank" if necessary
         if (auto num_neuron_ids = num_firing_neuron_ids_from_ranks[rank]; 0 != num_neuron_ids) {
-            firing_neuron_ids_incoming[rank].resize(num_neuron_ids);
+            num_firing_neuron_ids_incoming[rank] = num_neuron_ids;
         }
     }
     GlobalTimers::timers.stop_and_add(TimerRegion::ALLOC_MEM_FOR_NEURON_IDS);
 
-    return firing_neuron_ids_incoming;
+    return num_firing_neuron_ids_incoming;
 }
 
-void NeuronModels::update_electrical_activity_exchange_neuron_ids(const MapFiringNeuronIds& firing_neuron_ids_outgoing, MapFiringNeuronIds& firing_neuron_ids_incoming) {
+NeuronModels::MapFiringNeuronIds NeuronModels::update_electrical_activity_exchange_neuron_ids(const MapFiringNeuronIds& firing_neuron_ids_outgoing, const std::vector<size_t>& num_incoming_ids) {
     GlobalTimers::timers.start(TimerRegion::EXCHANGE_NEURON_IDS);
-
-    std::vector<MPIWrapper::AsyncToken>
-        mpi_requests(firing_neuron_ids_outgoing.size() + firing_neuron_ids_incoming.size());
 
     /**
 	* Send and receive actual neuron ids
 	*/
+
+    MapFiringNeuronIds firing_neuron_ids_incoming;
+    for (auto rank = 0; rank < MPIWrapper::get_num_ranks(); rank++) {
+        const auto num_incoming_ids_from_frank = num_incoming_ids[rank];
+        if (num_incoming_ids_from_frank > 0) {
+            firing_neuron_ids_incoming[rank].resize(num_incoming_ids_from_frank);
+        }
+    }
+
+    std::vector<MPIWrapper::AsyncToken>
+        mpi_requests(firing_neuron_ids_outgoing.size() + firing_neuron_ids_incoming.size());
+
     auto mpi_requests_index = 0;
 
     // Receive actual neuron ids
@@ -179,6 +190,8 @@ void NeuronModels::update_electrical_activity_exchange_neuron_ids(const MapFirin
     MPIWrapper::wait_all_tokens(mpi_requests);
 
     GlobalTimers::timers.stop_and_add(TimerRegion::EXCHANGE_NEURON_IDS);
+
+    return firing_neuron_ids_incoming;
 }
 
 NeuronModels::MapFiringNeuronIds NeuronModels::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph) {

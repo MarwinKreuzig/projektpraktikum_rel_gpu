@@ -244,9 +244,9 @@ protected:
     }
 
 private:
-    [[nodiscard]] static MapFiringNeuronIds update_electrical_activity_prepare_receiving_spikes(const MapFiringNeuronIds& firing_neuron_ids_outgoing);
+    [[nodiscard]] static std::vector<size_t> update_electrical_activity_prepare_receiving_spikes(const MapFiringNeuronIds& firing_neuron_ids_outgoing);
 
-    static void update_electrical_activity_exchange_neuron_ids(const MapFiringNeuronIds& firing_neuron_ids_outgoing, MapFiringNeuronIds& firing_neuron_ids_incoming);
+    [[nodiscard]] static MapFiringNeuronIds update_electrical_activity_exchange_neuron_ids(const MapFiringNeuronIds& firing_neuron_ids_outgoing, const std::vector<size_t>& num_incoming_ids);
 
     [[nodiscard]] MapFiringNeuronIds update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph);
 
