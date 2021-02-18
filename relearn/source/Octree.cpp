@@ -25,7 +25,6 @@
 #include <sstream>
 
 Octree::Octree() {
-    RandomHolder::seed(RandomHolderKey::Octree, randomNumberSeeds::octree);
 }
 
 Octree::Octree(const Partition& part, double acceptance_criterion, double sigma, size_t max_num_pending_vacant_axons)
@@ -35,8 +34,6 @@ Octree::Octree(const Partition& part, double acceptance_criterion, double sigma,
     , naive_method(acceptance_criterion == 0.0)
     , level_of_branch_nodes(part.get_level_of_subdomain_trees())
     , max_num_pending_vacant_axons(max_num_pending_vacant_axons) {
-
-    RandomHolder::seed(RandomHolderKey::Octree, randomNumberSeeds::octree);
 
     Vec3d xyz_min;
     Vec3d xyz_max;

@@ -16,11 +16,6 @@
 #include <map>
 #include <random>
 
-namespace randomNumberSeeds {
-extern unsigned int partition;
-extern unsigned int octree;
-} // namespace randomNumberSeeds
-
 enum class RandomHolderKey : char {
     Octree = 0,
     Partition = 1,
@@ -33,7 +28,7 @@ enum class RandomHolderKey : char {
 class RandomHolder {
     RandomHolder() = default;
 
-    static std::map<RandomHolderKey, std::mt19937> random_number_generators;
+    static inline std::map<RandomHolderKey, std::mt19937> random_number_generators{};
 
 public:
     static double get_random_uniform_double(RandomHolderKey key, double lower_inclusive, double upper_exclusive) {

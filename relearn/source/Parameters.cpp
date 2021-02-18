@@ -30,12 +30,6 @@ void Parameters::print() const {
        << " : " << naive_method << "\n";
     ss << std::left << std::setw(column_width) << "max_num_pending_vacant_axons"
        << " : " << max_num_pending_vacant_axons << "\n";
-    ss << std::left << std::setw(column_width) << "seed_octree"
-       << " : " << randomNumberSeeds::octree << "\n";
-    ss << std::left << std::setw(column_width) << "seed_partition"
-       << " : "
-       << "Local MPI rank"
-       << "\n";
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
 }

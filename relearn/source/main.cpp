@@ -104,8 +104,9 @@ int main(int argc, char** argv) {
     LogFiles::init();
 
     // Init random number seeds
-    randomNumberSeeds::partition = static_cast<unsigned int>(my_rank);
-    randomNumberSeeds::octree = seed_octree;
+
+    RandomHolder::seed(RandomHolderKey::Partition, static_cast<unsigned int>(my_rank));
+    RandomHolder::seed(RandomHolderKey::Octree, seed_octree);
 
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier(MPIWrapper::Scope::global);
