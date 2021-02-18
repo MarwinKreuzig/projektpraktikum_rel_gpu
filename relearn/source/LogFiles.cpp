@@ -15,12 +15,6 @@
 #include <filesystem>
 #include <iostream>
 
-std::map<LogFiles::EventType, LogFiles::LogFile> LogFiles::log_files;
-// NOLINTNEXTLINE
-std::string LogFiles::output_path{ "../output/" };
-// NOLINTNEXTLINE
-std::string LogFiles::general_prefix{ "rank_" };
-
 void LogFiles::init() {
     if (0 == MPIWrapper::get_my_rank()) {
         if (!std::filesystem::exists(output_path)) {

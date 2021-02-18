@@ -15,8 +15,6 @@
 #include <iostream>
 #include <sstream>
 
-bool RelearnException::hide_messages = false;
-
 [[nodiscard]] const char* RelearnException::what() const noexcept {
     return message.c_str();
 }

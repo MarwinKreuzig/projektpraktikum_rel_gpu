@@ -53,9 +53,11 @@ public:
     };
 
 private:
-    static std::map<EventType, LogFile> log_files;
-    static std::string output_path;
-    static std::string general_prefix;
+    static inline std::map<EventType, LogFile> log_files{};
+    // NOLINTNEXTLINE
+    static inline std::string output_path{ "../output/" };
+    // NOLINTNEXTLINE
+    static inline std::string general_prefix{ "rank_" };
 
     static std::string get_specific_file_prefix();
 

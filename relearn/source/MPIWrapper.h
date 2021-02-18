@@ -58,7 +58,7 @@ public:
 private:
     MPIWrapper() = default;
 
-    static MPI_Op minsummax;
+    static inline MPI_Op minsummax{};
 
     static MPI_Op translate_reduce_function(ReduceFunction rf);
 
@@ -68,14 +68,14 @@ private:
 
     static void free_custom_function();
 
-    static RMABufferOctreeNodes rma_buffer_branch_nodes;
+    static inline RMABufferOctreeNodes rma_buffer_branch_nodes{};
 
-    static int num_ranks; // Number of ranks in MPI_COMM_WORLD
-    static int my_rank; // My rank in MPI_COMM_WORLD
+    static inline int num_ranks{ -1 }; // Number of ranks in MPI_COMM_WORLD
+    static inline int my_rank{ -1 }; // My rank in MPI_COMM_WORLD
 
-    static int thread_level_provided; // Thread level provided by MPI
+    static inline int thread_level_provided{ -1 }; // Thread level provided by MPI
 
-    static std::string my_rank_str;
+    static inline std::string my_rank_str{ "-1" };
 
     static void get(void* ptr, int size, int target_rank, int64_t target_display);
 

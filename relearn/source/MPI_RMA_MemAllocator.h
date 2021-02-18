@@ -66,7 +66,7 @@ public:
     [[nodiscard]] static size_t get_min_num_avail_objects() noexcept;
 
     //NOLINTNEXTLINE
-    static MPI_Win mpi_window; // RMA window object
+    static inline MPI_Win mpi_window{ 0 }; // RMA window object
 
 private:
     // Store RMA window base pointers of all ranks
@@ -76,16 +76,16 @@ private:
     // This call is collective over MPI_COMM_WORLD
     static void create_rma_window() noexcept;
 
-    static size_t size_requested; // Bytes requested for the allocator
-    static size_t max_size; // Size in Bytes of MPI-allocated memory
-    static size_t max_num_objects; // Max number objects that are available
+    static inline size_t size_requested{ Constants::uninitialized }; // Bytes requested for the allocator
+    static inline size_t max_size{ Constants::uninitialized }; // Size in Bytes of MPI-allocated memory
+    static inline size_t max_num_objects{ Constants::uninitialized }; // Max number objects that are available
 
-    static OctreeNode* root_nodes_for_local_trees;
+    static inline OctreeNode* root_nodes_for_local_trees{ nullptr };
 
-    static OctreeNode* base_ptr; // Start address of MPI-allocated memory
-    static HolderOctreeNode holder_base_ptr;
+    static inline OctreeNode* base_ptr{ nullptr }; // Start address of MPI-allocated memory
+    static inline HolderOctreeNode holder_base_ptr{};
 
-    static size_t num_ranks; // Number of ranks in MPI_COMM_WORLD
-    static int displ_unit; // RMA window displacement unit
-    static std::vector<int64_t> base_pointers; // RMA window base pointers of all procs
+    static inline size_t num_ranks{ Constants::uninitialized }; // Number of ranks in MPI_COMM_WORLD
+    static inline int displ_unit{ -1 }; // RMA window displacement unit
+    static inline std::vector<int64_t> base_pointers{}; // RMA window base pointers of all procs
 };

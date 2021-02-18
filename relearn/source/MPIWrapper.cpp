@@ -38,20 +38,6 @@
   */
 
 /**
-   * Global variables
-   */
-MPI_Op MPIWrapper::minsummax;
-
-int MPIWrapper::num_ranks = -1; // Number of ranks in MPI_COMM_WORLD
-int MPIWrapper::my_rank = -1; // My rank in MPI_COMM_WORLD
-
-int MPIWrapper::thread_level_provided; // Thread level provided by MPI
-
-std::string MPIWrapper::my_rank_str;
-
-MPIWrapper::RMABufferOctreeNodes MPIWrapper::rma_buffer_branch_nodes;
-
-/**
  * Functions
  */
 void MPIWrapper::init(int argc, char** argv) {

@@ -34,7 +34,7 @@ private:
     }
 
 public:
-    static bool hide_messages;
+    static inline bool hide_messages{ false };
 
     RelearnException() = default;
 

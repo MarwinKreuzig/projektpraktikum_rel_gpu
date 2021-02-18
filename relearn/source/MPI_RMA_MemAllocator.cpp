@@ -10,7 +10,6 @@
 
 #include "MPI_RMA_MemAllocator.h"
 
-#include "Config.h"
 #include "LogFiles.h"
 #include "OctreeNode.h"
 #include "RelearnException.h"
@@ -20,22 +19,6 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
-
-// NOLINTNEXTLINE
-MPI_Win MPI_RMA_MemAllocator::mpi_window{ 0 };
-
-size_t MPI_RMA_MemAllocator::size_requested{ Constants::uninitialized }; // Bytes requested for the allocator
-size_t MPI_RMA_MemAllocator::max_size{ Constants::uninitialized }; // Size in Bytes of MPI-allocated memory
-size_t MPI_RMA_MemAllocator::max_num_objects{ Constants::uninitialized }; // Max number objects that are available
-
-OctreeNode* MPI_RMA_MemAllocator::root_nodes_for_local_trees{ nullptr };
-
-OctreeNode* MPI_RMA_MemAllocator::base_ptr{ nullptr }; // Start address of MPI-allocated memory
-MPI_RMA_MemAllocator::HolderOctreeNode MPI_RMA_MemAllocator::holder_base_ptr;
-
-size_t MPI_RMA_MemAllocator::num_ranks{ Constants::uninitialized }; // Number of ranks in MPI_COMM_WORLD
-int MPI_RMA_MemAllocator::displ_unit{ -1 }; // RMA window displacement unit
-std::vector<int64_t> MPI_RMA_MemAllocator::base_pointers; // RMA window base pointers of all procs
 
 void MPI_RMA_MemAllocator::init(size_t size_requested) {
     MPI_RMA_MemAllocator::size_requested = size_requested;
