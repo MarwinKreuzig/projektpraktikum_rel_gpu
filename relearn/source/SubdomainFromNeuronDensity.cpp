@@ -85,9 +85,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
         }
     }
 
-    auto& random_number_generator = RandomHolder::get_random_generator(RandomHolderKey::SubdomainFromNeuronDensity);
-
-    std::shuffle(positions.begin(), positions.end(), random_number_generator);
+    RandomHolder::shuffle(RandomHolderKey::SubdomainFromNeuronDensity, positions.begin(), positions.end());
 
     for (size_t i = 0; i < num_neurons; i++) {
         const size_t pos_bitmask = positions[i];

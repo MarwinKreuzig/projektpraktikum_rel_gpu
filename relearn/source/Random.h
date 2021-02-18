@@ -36,10 +36,6 @@ class RandomHolder {
     static std::map<RandomHolderKey, std::mt19937> random_number_generators;
 
 public:
-    static std::mt19937& get_random_generator(RandomHolderKey key) {
-        return random_number_generators[key];
-    }
-
     static double get_random_uniform_double(RandomHolderKey key, double lower_inclusive, double upper_exclusive) {
         RelearnException::check(lower_inclusive < upper_exclusive, "Random number from invalid interval");
         std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
@@ -52,6 +48,11 @@ public:
         std::normal_distribution<double> nd(mean, sigma);
 
         return nd(random_number_generators[key]);
+    }
+
+    template <typename IteratorType>
+    static void shuffle(RandomHolderKey key, IteratorType begin, IteratorType end) {
+        std::shuffle(begin, end, random_number_generators[key]);
     }
 
     static void seed(RandomHolderKey key, unsigned int seed) {
