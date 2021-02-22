@@ -14,6 +14,7 @@
 
 #include "commons.h"
 
+#define protected public
 #include "../source/NeuronToSubdomainAssignment.h"
 #include "../source/Partition.h"
 #include "../source/SubdomainFromNeuronDensity.h"
