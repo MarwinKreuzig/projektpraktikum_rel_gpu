@@ -31,7 +31,7 @@ class MPI_RMA_MemAllocator {
         [[nodiscard]] size_t calculate_distance(OctreeNode* ptr) const noexcept;
 
     public:
-        HolderOctreeNode() = default;
+        HolderOctreeNode() { }
 
         HolderOctreeNode(OctreeNode* ptr, size_t length);
 
