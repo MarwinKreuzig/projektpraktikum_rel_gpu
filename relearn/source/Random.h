@@ -13,6 +13,7 @@
 #include "Config.h"
 #include "RelearnException.h"
 
+#include <algorithm>
 #include <map>
 #include <random>
 
