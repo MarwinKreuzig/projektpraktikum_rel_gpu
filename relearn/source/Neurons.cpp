@@ -31,7 +31,7 @@ void Neurons::init(size_t number_neurons) {
     num_neurons = number_neurons;
 
     neuron_model->init(num_neurons);
-    positions.init(num_neurons);
+    extra_info->init(num_neurons);
 
     axons.init(number_neurons);
     dendrites_exc.init(number_neurons);
@@ -46,7 +46,6 @@ void Neurons::init(size_t number_neurons) {
     }
 
     calcium.resize(num_neurons);
-    area_names.resize(num_neurons);
 
     // Init member variables
     for (size_t i = 0; i < num_neurons; i++) {
@@ -299,7 +298,7 @@ std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(size_t neur
     return already_removed_indices;
 }
 
-std::vector<Neurons::Synapse> Neurons::delete_synapses_register_edges(const NetworkGraph::Edges& edges) {
+std::vector<Neurons::Synapse> Neurons::delete_synapses_register_edges(const std::vector<std::pair<std::pair<int, size_t>, int>>& edges) {
     std::vector<Neurons::Synapse> current_synapses;
 
     for (const auto& it : edges) {
@@ -645,7 +644,7 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
         }
 
         // Position of current neuron
-        const Vec3d axon_xyz_pos = positions.get_position(neuron_id);
+        const Vec3d axon_xyz_pos = extra_info->get_position(neuron_id);
 
         // For all vacant axons of neuron "neuron_id"
         for (size_t j = 0; j < num_vacant_axons; j++) {
@@ -1119,9 +1118,10 @@ void Neurons::print_positions_to_log_file() {
        << "<global id> <pos x> <pos y> <pos z> <area> <type>"
        << "\n";
 
-    const std::vector<double>& axons_x_dims = positions.get_x_dims();
-    const std::vector<double>& axons_y_dims = positions.get_y_dims();
-    const std::vector<double>& axons_z_dims = positions.get_z_dims();
+    const std::vector<double>& axons_x_dims = extra_info->get_x_dims();
+    const std::vector<double>& axons_y_dims = extra_info->get_y_dims();
+    const std::vector<double>& axons_z_dims = extra_info->get_z_dims();
+    const std::vector<std::string>& area_names = extra_info->get_area_names();
 
     const std::vector<SignalType>& signal_types = axons.get_signal_types();
 
@@ -1174,9 +1174,9 @@ void Neurons::print() {
 }
 
 void Neurons::print_info_for_barnes_hut() {
-    const std::vector<double>& x_dims = positions.get_x_dims();
-    const std::vector<double>& y_dims = positions.get_y_dims();
-    const std::vector<double>& z_dims = positions.get_z_dims();
+    const std::vector<double>& x_dims = extra_info->get_x_dims();
+    const std::vector<double>& y_dims = extra_info->get_y_dims();
+    const std::vector<double>& z_dims = extra_info->get_z_dims();
 
     const std::vector<double>& axons_cnts = axons.get_cnts();
     const std::vector<double>& dendrites_exc_cnts = dendrites_exc.get_cnts();

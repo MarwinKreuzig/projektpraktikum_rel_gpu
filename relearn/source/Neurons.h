@@ -13,12 +13,12 @@
 #include "Config.h"
 #include "ElementType.h"
 #include "NeuronModels.h"
-#include "Positions.h"
 #include "RankNeuronId.h"
 #include "RelearnException.h"
 #include "SignalType.h"
 #include "SynapseCreationRequests.h"
 #include "SynapticElements.h"
+#include "Vec3.h"
 
 #include <array>
 #include <memory>
@@ -35,6 +35,86 @@ class Partition;
 using Axons = SynapticElements;
 using DendritesExc = SynapticElements;
 using DendritesInh = SynapticElements;
+
+class NeuronsExtraInfo {
+    size_t size{ 0 };
+
+    std::vector<std::string> area_names;
+    std::vector<double> x_dims;
+    std::vector<double> y_dims;
+    std::vector<double> z_dims;
+
+public:
+    void init(size_t number_neurons) noexcept {
+        RelearnException::check(size == 0, "NeuronsExtraInfo initialized two times");
+        size = number_neurons;
+    }
+
+    void set_area_names(std::vector<std::string> names) {
+        RelearnException::check(area_names.empty(), "Area names are not empty");
+        RelearnException::check(size == names.size(), "Size does not match area names count");
+        area_names = std::move(names);
+    }
+
+    void set_x_dims(std::vector<double> dims) {
+        RelearnException::check(x_dims.empty(), "X dimensions are not empty");
+        RelearnException::check(size == dims.size(), "Size does not match area names count");
+        x_dims = std::move(dims);
+    }
+
+    void set_y_dims(std::vector<double> dims) {
+        RelearnException::check(y_dims.empty(), "Y dimensions are not empty");
+        RelearnException::check(size == dims.size(), "Size does not match area names count");
+        y_dims = std::move(dims);
+    }
+
+    void set_z_dims(std::vector<double> dims) {
+        RelearnException::check(z_dims.empty(), "Z dimensions are not empty");
+        RelearnException::check(size == dims.size(), "Size does not match area names count");
+        z_dims = std::move(dims);
+    }
+
+    [[nodiscard]] const std::vector<double>& get_x_dims() const noexcept {
+        return x_dims;
+    }
+
+    [[nodiscard]] const std::vector<double>& get_y_dims() const noexcept {
+        return y_dims;
+    }
+
+    [[nodiscard]] const std::vector<double>& get_z_dims() const noexcept {
+        return z_dims;
+    }
+
+    [[nodiscard]] Vec3d get_position(size_t idx) const {
+        RelearnException::check(idx < size, "Idx must be smaller than size in Positions");
+        return Vec3d{ x_dims[idx], y_dims[idx], z_dims[idx] };
+    }
+
+    [[nodiscard]] const std::vector<std::string>& get_area_names() const noexcept {
+        return area_names;
+    }
+
+    [[nodiscard]] double get_x(size_t neuron_id) const {
+        RelearnException::check(neuron_id < x_dims.size(), "neuron_id must be smaller than size in NeuronsExtraInfo");
+        return x_dims[neuron_id];
+    }
+
+    [[nodiscard]] double get_y(size_t neuron_id) const {
+        RelearnException::check(neuron_id < y_dims.size(), "neuron_id must be smaller than size in NeuronsExtraInfo");
+        return y_dims[neuron_id];
+    }
+
+    [[nodiscard]] double get_z(size_t neuron_id) const {
+        RelearnException::check(neuron_id < z_dims.size(), "neuron_id must be smaller than size in NeuronsExtraInfo");
+        return z_dims[neuron_id];
+    }
+
+    [[nodiscard]] const std::string& get_area_name(size_t neuron_id) const {
+        RelearnException::check(neuron_id < area_names.size(), "neuron_id must be smaller than size in NeuronsExtraInfo");
+        return area_names[neuron_id];
+    }
+};
 
 class Neurons {
     friend class NeuronMonitor;
@@ -320,15 +400,27 @@ public:
         return num_neurons;
     }
 
-    [[nodiscard]] Positions& get_positions() noexcept {
-        return positions;
+    void set_area_names(std::vector<std::string> names) {
+        extra_info->set_area_names(std::move(names));
     }
 
-    [[nodiscard]] std::vector<std::string>& get_area_names() noexcept {
-        return area_names;
+    void set_x_dims(std::vector<double> x_dims) {
+        extra_info->set_x_dims(std::move(x_dims));
     }
 
-    [[nodiscard]] Axons& get_axons() noexcept {
+    void set_y_dims(std::vector<double> y_dims) {
+        extra_info->set_y_dims(std::move(y_dims));
+    }
+
+    void set_z_dims(std::vector<double> z_dims) {
+        extra_info->set_z_dims(std::move(z_dims));
+    }
+
+    void set_signal_types(std::vector<SignalType> signal_types) {
+        axons.set_signal_types(std::move(signal_types));
+    }
+
+    [[nodiscard]] const Axons& get_axons() const noexcept {
         return axons;
     }
 
@@ -338,10 +430,6 @@ public:
 
     [[nodiscard]] const DendritesInh& get_dendrites_inh() const noexcept {
         return dendrites_inh;
-    }
-
-    [[nodiscard]] NeuronModels& get_neuron_model() noexcept {
-        return *neuron_model;
     }
 
     void init_synaptic_elements();
@@ -421,7 +509,6 @@ private:
     static void print_pending_synapse_deletions(const PendingDeletionsV& list);
 
     size_t num_neurons = 0; // Local number of neurons
-    std::vector<size_t> local_ids;
 
     const Partition* partition;
 
@@ -434,7 +521,7 @@ private:
     DendritesExc dendrites_exc;
     DendritesInh dendrites_inh;
 
-    Positions positions; // Position of every neuron
     std::vector<double> calcium; // Intracellular calcium concentration of every neuron
-    std::vector<std::string> area_names; // Area name of every neuron
+
+    std::unique_ptr<NeuronsExtraInfo> extra_info{ std::make_unique<NeuronsExtraInfo>() };
 };

@@ -117,6 +117,11 @@ public:
         signal_types[neuron_id] = type;
     }
 
+    void set_signal_types(std::vector<SignalType> types) {
+        RelearnException::check(types.size() == size, "Synaptic elements, set_signal_types mismatching size of type vectors");
+        signal_types = std::move(types);
+    }
+
     [[nodiscard]] double get_cnt(size_t neuron_id) const {
         RelearnException::check(neuron_id < cnts.size(), "Synaptic elements, get_cnt out of bounds");
         return cnts[neuron_id];

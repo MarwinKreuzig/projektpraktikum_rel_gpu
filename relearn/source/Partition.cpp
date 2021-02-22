@@ -319,9 +319,12 @@ std::shared_ptr<Neurons> Partition::load_neurons(
 
     neurons->init(my_num_neurons);
 
-    Positions& neuron_positions = neurons->get_positions();
-    SynapticElements& axons = neurons->get_axons();
-    std::vector<std::string>& area_names = neurons->get_area_names();
+    std::vector<double> x_dims(my_num_neurons);
+    std::vector<double> y_dims(my_num_neurons);
+    std::vector<double> z_dims(my_num_neurons);
+
+    std::vector<std::string> area_names(my_num_neurons);
+    std::vector<SignalType> signal_types(my_num_neurons);
 
     for (size_t i = 0; i < my_num_subdomains; i++) {
         const auto& subdomain_pos_min = subdomains[i].xyz_min;
@@ -343,14 +346,14 @@ std::shared_ptr<Neurons> Partition::load_neurons(
 
         size_t neuron_id = subdomains[i].neuron_local_id_start;
         for (size_t j = 0; j < subdomains[i].num_neurons; j++) {
-            neuron_positions.set_x(neuron_id, vec_pos[j].get_x());
-            neuron_positions.set_y(neuron_id, vec_pos[j].get_y());
-            neuron_positions.set_z(neuron_id, vec_pos[j].get_z());
+            x_dims[neuron_id] = vec_pos[j].get_x();
+            y_dims[neuron_id] = vec_pos[j].get_y();
+            z_dims[neuron_id] = vec_pos[j].get_z();
 
             area_names[neuron_id] = vec_area[j];
 
             // Mark neuron as DendriteType::EXCITATORY or DendriteType::INHIBITORY
-            axons.set_signal_type(neuron_id, vec_type[j]);
+            signal_types[neuron_id] = vec_type[j];
 
             // Insert neuron into tree
             auto* node = subdomains[i].octree.insert(vec_pos[j], neuron_id, MPIWrapper::get_my_rank());
@@ -359,6 +362,12 @@ std::shared_ptr<Neurons> Partition::load_neurons(
             neuron_id++;
         }
     }
+
+    neurons->set_area_names(std::move(area_names));
+    neurons->set_x_dims(std::move(x_dims));
+    neurons->set_y_dims(std::move(y_dims));
+    neurons->set_z_dims(std::move(z_dims));
+    neurons->set_signal_types(std::move(signal_types));
 
     neurons_loaded = true;
 

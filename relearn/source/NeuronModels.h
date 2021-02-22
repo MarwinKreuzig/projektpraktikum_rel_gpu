@@ -167,54 +167,6 @@ protected:
 
     virtual void init_neurons() = 0;
 
-    static constexpr double default_k{ 0.03 };
-    static constexpr double default_tau_C{ 10000 }; //5000;   //very old 60.0;
-    static constexpr double default_beta{ 0.001 }; //very old 0.05;
-    static constexpr unsigned int default_h{ 10 };
-
-    static constexpr double default_base_background_activity{ 0.0 };
-    static constexpr double default_background_activity_mean{ 0.0 };
-    static constexpr double default_background_activity_stddev{ 0.0 };
-
-    static constexpr double min_k{ 0.0 };
-    static constexpr double min_tau_C{ 0 };
-    static constexpr double min_beta{ 0.0 };
-    static constexpr unsigned int min_h{ 0 };
-
-    static constexpr double min_base_background_activity{ -10000.0 };
-    static constexpr double min_background_activity_mean{ -10000.0 };
-    static constexpr double min_background_activity_stddev{ 0.0 };
-
-    static constexpr double max_k{ 1.0 };
-    static constexpr double max_tau_C{ 10.0e+6 };
-    static constexpr double max_beta{ 1.0 };
-    static constexpr unsigned int max_h{ 1000 };
-
-    static constexpr double max_base_background_activity{ 10000.0 };
-    static constexpr double max_background_activity_mean{ 10000.0 };
-    static constexpr double max_background_activity_stddev{ 10000.0 };
-
-private:
-    // My local number of neurons
-    size_t my_num_neurons;
-
-    // // Model parameters for all neurons
-    double k; // Proportionality factor for synapses in Hz
-    double tau_C; // Decay time of calcium
-    double beta; // Increase in calcium each time a neuron fires
-    unsigned int h; // Precision for Euler integration
-
-    double base_background_activity;
-    double background_activity_mean;
-    double background_activity_stddev;
-
-    // Variables for each neuron where the array index denotes the neuron ID
-    std::vector<double> I_syn; // Synaptic input
-    std::vector<double> x; // membrane potential v
-    std::vector<bool> fired; // true: neuron has fired, false: neuron is inactive
-
-protected:
-
     [[nodiscard]] double get_base_background_activity() const noexcept {
         return base_background_activity;
     }
@@ -243,6 +195,33 @@ protected:
         fired[i] = new_value;
     }
 
+    static constexpr double default_k{ 0.03 };
+    static constexpr double default_tau_C{ 10000 }; //5000;   //very old 60.0;
+    static constexpr double default_beta{ 0.001 }; //very old 0.05;
+    static constexpr unsigned int default_h{ 10 };
+
+    static constexpr double default_base_background_activity{ 0.0 };
+    static constexpr double default_background_activity_mean{ 0.0 };
+    static constexpr double default_background_activity_stddev{ 0.0 };
+
+    static constexpr double min_k{ 0.0 };
+    static constexpr double min_tau_C{ 0 };
+    static constexpr double min_beta{ 0.0 };
+    static constexpr unsigned int min_h{ 0 };
+
+    static constexpr double min_base_background_activity{ -10000.0 };
+    static constexpr double min_background_activity_mean{ -10000.0 };
+    static constexpr double min_background_activity_stddev{ 0.0 };
+
+    static constexpr double max_k{ 1.0 };
+    static constexpr double max_tau_C{ 10.0e+6 };
+    static constexpr double max_beta{ 1.0 };
+    static constexpr unsigned int max_h{ 1000 };
+
+    static constexpr double max_base_background_activity{ 10000.0 };
+    static constexpr double max_background_activity_mean{ 10000.0 };
+    static constexpr double max_background_activity_stddev{ 10000.0 };
+
 private:
     [[nodiscard]] static std::vector<size_t> update_electrical_activity_prepare_receiving_spikes(const MapFiringNeuronIds& firing_neuron_ids_outgoing);
 
@@ -255,6 +234,24 @@ private:
     void update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const MapFiringNeuronIds& firing_neuron_ids_incoming);
 
     void update_electrical_activity_calculate_background();
+
+    // My local number of neurons
+    size_t my_num_neurons;
+
+    // // Model parameters for all neurons
+    double k; // Proportionality factor for synapses in Hz
+    double tau_C; // Decay time of calcium
+    double beta; // Increase in calcium each time a neuron fires
+    unsigned int h; // Precision for Euler integration
+
+    double base_background_activity;
+    double background_activity_mean;
+    double background_activity_stddev;
+
+    // Variables for each neuron where the array index denotes the neuron ID
+    std::vector<double> I_syn; // Synaptic input
+    std::vector<double> x; // membrane potential v
+    std::vector<bool> fired; // true: neuron has fired, false: neuron is inactive
 };
 
 namespace models {
