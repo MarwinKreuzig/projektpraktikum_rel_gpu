@@ -338,3 +338,7 @@ ASALocalRun/
 */output
 */bw2
 **/.vscode
+
+**/apply_format.sh
+**/apply_tidy.sh
+**/clang-tidy-output.txt
