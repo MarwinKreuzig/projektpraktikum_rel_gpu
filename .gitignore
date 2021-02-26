@@ -342,3 +342,4 @@ ASALocalRun/
 **/apply_format.sh
 **/apply_tidy.sh
 **/clang-tidy-output.txt
+**/tidy
