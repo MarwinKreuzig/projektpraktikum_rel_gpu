@@ -16,6 +16,13 @@
 #include <algorithm>
 #include <map>
 #include <random>
+#include <thread>
+
+#ifdef _OPENMP
+#include <omp.h>
+#else
+inline int omp_get_thread_num(void) { return 0; }
+#endif
 
 enum class RandomHolderKey : char {
     Octree = 0,
@@ -29,7 +36,7 @@ enum class RandomHolderKey : char {
 class RandomHolder {
     RandomHolder() = default;
 
-    static inline std::map<RandomHolderKey, std::mt19937> random_number_generators{};
+    thread_local static inline std::map<RandomHolderKey, std::mt19937> random_number_generators{};
 
 public:
     static double get_random_uniform_double(RandomHolderKey key, double lower_inclusive, double upper_exclusive) {
@@ -52,6 +59,10 @@ public:
     }
 
     static void seed(RandomHolderKey key, unsigned int seed) {
-        random_number_generators[key].seed(seed);
+#pragma omp parallel 
+        {
+            const auto thread_id = omp_get_thread_num();
+            random_number_generators[key].seed(seed + thread_id);
+        }
     }
 };

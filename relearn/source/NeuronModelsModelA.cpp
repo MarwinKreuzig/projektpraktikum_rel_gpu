@@ -62,7 +62,7 @@ void ModelA::update_activity(const size_t i) {
     // Neuron ready to fire again
     if (refrac[i] == 0) {
         const bool f = x >= theta_values[i];
-        set_fired(i, f);// Decide whether a neuron fires depending on its firing rate
+        set_fired(i, f); // Decide whether a neuron fires depending on its firing rate
         refrac[i] = f ? refrac_time : 0; // After having fired, a neuron is in a refractory state
     }
     // Neuron now/still in refractory state
@@ -91,9 +91,10 @@ void ModelA::init_neurons() {
 void models::ModelA::update_electrical_activity_serial_initialize() {
     GlobalTimers::timers.start(TimerRegion::CALC_SERIAL_ACTIVITY);
 
-    for (auto& theta_value : theta_values) {
+#pragma omp parallel for
+    for (int neuron_id = 0; neuron_id < theta_values.size(); neuron_id++) {
         const double threshold = RandomHolder::get_random_uniform_double(RandomHolderKey::ModelA, 0.0, 1.0);
-        theta_value = threshold;
+        theta_values[neuron_id] = threshold;
     }
 
     GlobalTimers::timers.stop_and_add(TimerRegion::CALC_SERIAL_ACTIVITY);

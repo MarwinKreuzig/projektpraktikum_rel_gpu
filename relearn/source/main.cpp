@@ -25,6 +25,13 @@
 #include <CLI/Config.hpp>
 #include <CLI/Formatter.hpp>
 
+#ifdef _OPENMP
+#include <omp.h>
+#else
+void omp_set_num_threads(int num) { }
+#endif
+
+
 #include <array>
 #include <bitset>
 #include <cerrno>
@@ -72,6 +79,9 @@ int main(int argc, char** argv) {
     unsigned int seed_octree{};
     app.add_option("-r,--random-seed", seed_octree, "Random seed.")->required();
 
+    unsigned int openmp_threads{ 1 };
+    app.add_option("--openmp", openmp_threads, "Number of OpenMP Threads.");
+
     double accept_criterion{ 0.0 };
     app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion. Default: 0.0")->required();
 
@@ -90,6 +100,9 @@ int main(int argc, char** argv) {
     CLI11_PARSE(app, argc, argv);
 
     RelearnException::check(static_cast<bool>(*opt_num_neurons) || static_cast<bool>(*opt_file_positions), "Missing command line option, need num_neurons (-n,--num-neurons) or file_positions (-f,--file).");
+    RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
+
+    omp_set_num_threads(openmp_threads);
 
     /**
 	 * Initialize the simuliation log files

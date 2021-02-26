@@ -52,7 +52,8 @@ void NeuronModels::update_electrical_activity_update_activity() {
     GlobalTimers::timers.start(TimerRegion::CALC_ACTIVITY);
 
     // For my neurons
-    for (size_t i = 0; i < my_num_neurons; ++i) {
+#pragma omp parallel for
+    for (auto i = 0; i < my_num_neurons; ++i) {
         update_activity(i);
     }
 
@@ -64,7 +65,9 @@ void NeuronModels::update_electrical_activity_calculate_input(const NetworkGraph
 
     GlobalTimers::timers.start(TimerRegion::CALC_SYNAPTIC_INPUT);
     // For my neurons
-    for (size_t neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
+
+#pragma omp parallel for
+    for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
         /**
 		 * Determine synaptic input from neurons connected to me
 		 */

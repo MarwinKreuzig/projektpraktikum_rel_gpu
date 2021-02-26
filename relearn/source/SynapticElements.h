@@ -160,7 +160,8 @@ public:
         std::vector<unsigned int> number_deletions(size);
         unsigned int sum_to_delete = 0;
 
-        for (size_t neuron_id = 0; neuron_id < size; ++neuron_id) {
+#pragma omp parallel for
+        for (auto neuron_id = 0; neuron_id < size; ++neuron_id) {
             /**
 		    * Create and delete synaptic elements as required.
 		    * This function only deletes elements (bound and unbound), no synapses.
@@ -176,7 +177,9 @@ public:
 
     void update_number_elements_delta(const std::vector<double>& calcium) noexcept {
         // For my neurons
-        for (size_t i = 0; i < this->size; ++i) {
+
+#pragma omp parallel for
+        for (auto i = 0; i < this->size; ++i) {
             const auto inc = gaussian_growth_curve(calcium[i], min_C_level_to_grow, C_target, nu);
             delta_cnts[i] += inc;
         }

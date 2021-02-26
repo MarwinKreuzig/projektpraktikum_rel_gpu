@@ -12,6 +12,12 @@
 
 #include <cstddef>
 
+#ifdef _OPENMP
+constexpr bool OPENMPAVAILABLE = true;
+#else
+constexpr bool OPENMPAVAILABLE = false;
+#endif
+
 namespace Constants {
 constexpr size_t number_oct = 8;
 constexpr size_t uninitialized = 1111222233334444;
@@ -40,5 +46,5 @@ constexpr size_t mpi_alloc_mem = 1024 * 1024 * 300;
 } // namespace Constants
 
 namespace Config {
-constexpr bool do_debug_checks = true;
+constexpr bool do_debug_checks = false;
 } // namespace Config

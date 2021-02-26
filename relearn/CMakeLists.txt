@@ -27,7 +27,7 @@ endif()
 include(FetchContent)
 
 find_package (MPI REQUIRED)
-find_package(OpenMP)
+find_package (OpenMP)
 
 # project options
 add_library(project_options INTERFACE)
