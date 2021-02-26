@@ -14,6 +14,7 @@
 #include "NeuronToSubdomainAssignment.h"
 
 #include <fstream>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -35,6 +36,8 @@ public:
     ~SubdomainFromFile() override = default;
 
     void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) override;
+
+    [[nodiscard]] static std::optional<std::vector<size_t>> read_neuron_ids_from_file(const std::string& file_path);
 
     [[nodiscard]] std::vector<size_t> neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
         size_t local_id_start, size_t local_id_end) const override;

@@ -17,6 +17,7 @@
 #include "RankNeuronId.h"
 #include "RelearnException.h"
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -149,24 +150,6 @@ void NetworkGraph::add_edge(Edges& edges, int rank, size_t neuron_id, int weight
     }
 
     edges.emplace_back(rank_neuron_id_pair, weight);
-    
-    //const auto edges_it = edges.find(rank_neuron_id_pair);
-
-    //if (edges_it == edges.end()) {
-    //    edges[rank_neuron_id_pair] = weight;
-    //    return;
-    //}
-
-    //// Current edge weight + additional weight
-    //const int sum = edges_it->second + weight;
-
-    //// Edge weight becomes 0, so delete edge
-    //if (0 == sum) {
-    //    edges.erase(edges_it);
-    //    // Update edge weight
-    //} else {
-    //    edges_it->second = sum;
-    //}
 }
 
 void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, size_t source_neuron_id, int source_rank, int weight) {
@@ -258,6 +241,48 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
             << "\n";
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, sstream.str(), true);
+}
+
+bool NetworkGraph::check_edges_from_file(const std::string& path_synapses, const std::vector<size_t>& neuron_ids) {
+    std::ifstream file_synapses(path_synapses, std::ios::binary | std::ios::in);
+
+    std::set<size_t> ids_in_file{};
+
+    for (std::string line{}; std::getline(file_synapses, line);) {
+        // Skip line with comments
+        if (!line.empty() && '#' == line[0]) {
+            continue;
+        }
+
+        size_t source_id = 0;
+        size_t target_id = 0;
+        int weight = 0;
+
+        std::stringstream sstream(line);
+        const bool success = (sstream >> source_id) && (sstream >> target_id) && (sstream >> weight);
+
+        if (!success) {
+            return false;
+        }
+
+        // The neurons start with 1
+        source_id--;
+        target_id--;
+
+        ids_in_file.insert(source_id);
+        ids_in_file.insert(target_id);
+    }
+
+    bool found_everything = true;
+
+    std::for_each(ids_in_file.begin(), ids_in_file.end(), [&neuron_ids, &found_everything](size_t val) {
+        const auto found = std::binary_search(neuron_ids.begin(), neuron_ids.end(), val);
+        if (!found) {
+            found_everything = false;
+        }
+    });
+
+    return found_everything;
 }
 
 void NetworkGraph::debug_check() const {

@@ -75,6 +75,13 @@ public:
 
     void add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, const Partition& partition);
 
+    /*
+    * Checks if the specified file contains only synapses between neurons with ids in neuron_ids.
+    * Requires neuron_ids to be sorted ascending.
+    * Returns true iff the file has the correct format and only ids in neuron_ids are present
+    */
+    [[nodiscard]] static bool check_edges_from_file(const std::string& path_synapses, const std::vector<size_t>& neuron_ids);
+
     void debug_check() const;
 
 private:

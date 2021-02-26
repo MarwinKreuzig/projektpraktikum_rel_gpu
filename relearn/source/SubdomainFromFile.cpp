@@ -189,3 +189,49 @@ void SubdomainFromFile::fill_subdomain(size_t subdomain_idx, [[maybe_unused]] si
 
     set_nodes(subdomain_idx, std::move(nodes));
 }
+
+std::optional<std::vector<size_t>> SubdomainFromFile::read_neuron_ids_from_file(const std::string& file_path) {
+    std::ifstream local_file(file_path);
+
+    const bool file_is_good = local_file.good();
+    const bool file_is_not_good = local_file.fail() || local_file.eof();
+
+    if (!file_is_good || file_is_not_good) {
+        return {};
+    }
+
+    std::vector<size_t> ids;
+
+    for (std::string line{}; std::getline(local_file, line);) {
+        // Skip line with comments
+        if (!line.empty() && '#' == line[0]) {
+            continue;
+        }
+
+        size_t id{};
+        double pos_x{};
+        double pos_y{};
+        double pos_z{};
+        std::string area_name{};
+        std::string signal_type{};
+
+        std::stringstream sstream(line);
+        bool success = (sstream >> id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> area_name) && (sstream >> signal_type);
+
+        if (!success) {
+            return {};
+        }
+
+        if (!ids.empty()) {
+            const auto last_id = ids[ids.size() - 1];
+
+            if (last_id >= id) {
+                return {};
+            }
+        }
+
+        ids.push_back(id);
+    }
+
+    return ids;
+}
