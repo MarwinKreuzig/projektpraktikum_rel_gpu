@@ -197,7 +197,7 @@ private:
         void operator()(OctreeNode* node) { MPIWrapper::delete_octree_node(node); }
     };
 
-    Octree();
+    Octree() = default;
 
 public:
     Octree(const Partition& part, double acceptance_criterion, double sigma, size_t max_num_pending_vacant_axons);
@@ -381,7 +381,7 @@ private:
     // Root of the tree
     OctreeNode* root{ nullptr };
 
-    std::vector<Octree*> local_trees;
+    std::vector<Octree*> local_trees{};
 
     // Level which is assigned to the root of the tree (default = 0)
     size_t root_level{ Constants::uninitialized };
@@ -390,8 +390,8 @@ private:
     bool no_free_in_destructor{ false };
 
     // Two points describe simulation box size of the tree
-    Vec3d xyz_min;
-    Vec3d xyz_max;
+    Vec3d xyz_min{ 0 };
+    Vec3d xyz_max{ 0 };
 
     double acceptance_criterion{ Constants::theta }; // Acceptance criterion
     double sigma{ Constants::sigma }; // Probability parameter
@@ -404,5 +404,5 @@ private:
     using NodesCacheKey = std::pair<int, OctreeNode*>;
     using NodesCacheValue = OctreeNode*;
     using NodesCache = std::map<NodesCacheKey, NodesCacheValue>;
-    NodesCache remote_nodes_cache;
+    NodesCache remote_nodes_cache{};
 };

@@ -26,9 +26,9 @@ void Timers::print() {
     /**
 	 * Print timers and memory usage
 	 */
-    RelearnException::check(3 * TimerRegion::NUM_TIMER_REGIONS == 66, "Number of timers are unfitting");
+    constexpr size_t expected_num_timers = size_t(3) * TimerRegion::NUM_TIMER_REGIONS;
 
-    std::array<double, 66> timers_local{};
+    std::array<double, expected_num_timers> timers_local{};
 
     for (size_t i = 0; i < TimerRegion::NUM_TIMER_REGIONS; ++i) {
         const double elapsed = GlobalTimers::timers.get_elapsed(i);
@@ -39,7 +39,7 @@ void Timers::print() {
         }
     }
 
-    std::array<double, 66> timers_global{};
+    std::array<double, expected_num_timers> timers_global{};
 
     MPIWrapper::reduce(timers_local, timers_global, MPIWrapper::ReduceFunction::minsummax, 0, MPIWrapper::Scope::global);
     std::stringstream sstring;
@@ -54,7 +54,7 @@ void Timers::print() {
     if (0 == MPIWrapper::get_my_rank()) {
         // Set precision for aligned double output
         const auto old_precision = sstring.precision();
-        sstring.precision(6);
+        sstring.precision(Constants::print_precision);
 
         sstring << "\n======== TIMERS GLOBAL OVER ALL RANKS ========"
                 << "\n";

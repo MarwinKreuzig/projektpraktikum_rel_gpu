@@ -76,8 +76,11 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
         for (size_t y_it = 0; y_it < neurons_on_y; y_it++) {
             for (size_t z_it = 0; z_it < neurons_on_z; z_it++) {
                 size_t random_position = 0;
+                // NOLINTNEXTLINE
                 random_position |= (z_it);
+                // NOLINTNEXTLINE
                 random_position |= (y_it << 16U);
+                // NOLINTNEXTLINE
                 random_position |= (x_it << 32U);
                 positions[random_counter] = random_position;
                 random_counter++;

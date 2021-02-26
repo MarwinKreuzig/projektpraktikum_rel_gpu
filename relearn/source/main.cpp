@@ -193,9 +193,12 @@ int main(int argc, char** argv) {
             char yn{ 'n' };
             auto n = scanf(" %c", &yn);
             RelearnException::check(static_cast<bool>(n), "Error on while reading input with scanf.");
+            
             if (yn == 'n' || yn == 'N') {
                 break;
-            } else if (yn == 'y' || yn == 'Y') {
+            } 
+            
+            if (yn == 'y' || yn == 'Y') {
                 sim.increase_monitoring_capacity(steps_per_simulation);
                 simulate();
             } else {

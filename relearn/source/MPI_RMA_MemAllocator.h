@@ -21,8 +21,8 @@ class OctreeNode;
 class MPI_RMA_MemAllocator {
 
     class HolderOctreeNode {
-        std::vector<OctreeNode*> available;
-        std::vector<OctreeNode*> non_available;
+        std::vector<OctreeNode*> available{};
+        std::vector<OctreeNode*> non_available{};
         OctreeNode* base_ptr{ nullptr };
 
         size_t free{ Constants::uninitialized };
@@ -31,7 +31,9 @@ class MPI_RMA_MemAllocator {
         [[nodiscard]] size_t calculate_distance(OctreeNode* ptr) const noexcept;
 
     public:
-        HolderOctreeNode() { }
+        // NOLINTNEXTLINE
+        HolderOctreeNode() { /* This is not defaulted because of compiler errors */
+        }
 
         HolderOctreeNode(OctreeNode* ptr, size_t length);
 

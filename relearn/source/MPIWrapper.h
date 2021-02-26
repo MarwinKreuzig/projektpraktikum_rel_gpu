@@ -75,6 +75,7 @@ private:
 
     static inline int thread_level_provided{ -1 }; // Thread level provided by MPI
 
+    // NOLINTNEXTLINE
     static inline std::string my_rank_str{ "-1" };
 
     static void get(void* ptr, int size, int target_rank, int64_t target_display);

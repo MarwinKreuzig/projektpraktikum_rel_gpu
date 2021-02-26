@@ -467,7 +467,7 @@ private:
     [[nodiscard]] size_t delete_synapses();
 
     [[nodiscard]] std::pair<PendingDeletionsV, std::vector<size_t>> delete_synapses_find_synapses(
-        const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>> to_delete, const PendingDeletionsV& other_pending_deletions);
+        const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete, const PendingDeletionsV& other_pending_deletions);
 
     /**
 	 * Determines which synapses should be deleted.

@@ -24,9 +24,6 @@
 
 #include <sstream>
 
-Octree::Octree() {
-}
-
 Octree::Octree(const Partition& part, double acceptance_criterion, double sigma, size_t max_num_pending_vacant_axons)
     : root_level(0)
     , acceptance_criterion(acceptance_criterion)

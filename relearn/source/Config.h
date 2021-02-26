@@ -27,6 +27,7 @@ constexpr size_t num_items_per_request = 6;
 constexpr double eps = 0.00001;
 
 constexpr size_t print_width = 12;
+constexpr size_t print_precision = 6;
 
 // Update connectivity every 100 ms
 constexpr size_t plasticity_update_step = 100;

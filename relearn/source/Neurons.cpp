@@ -194,10 +194,10 @@ size_t Neurons::delete_synapses() {
     return num_synapses_deleted;
 }
 
-std::pair<Neurons::PendingDeletionsV, std::vector<size_t>> Neurons::delete_synapses_find_synapses(const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>> to_delete,
+std::pair<Neurons::PendingDeletionsV, std::vector<size_t>> Neurons::delete_synapses_find_synapses(const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete,
     const PendingDeletionsV& other_pending_deletions) {
 
-    const auto sum_to_delete = to_delete.first;
+    const auto& sum_to_delete = to_delete.first;
     const auto& number_deletions = to_delete.second;
 
     PendingDeletionsV pending_deletions;
@@ -810,12 +810,12 @@ std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_pro
                 network_graph->add_edge_weight(target_neuron_id, MPIWrapper::get_my_rank(), source_neuron_id, source_rank, num_axons_connected_increment);
 
                 // Set response to "connected" (success)
-                responses[source_rank][request_index] = true;
+                responses[source_rank][request_index] = 1;
                 num_synapses_created++;
             } else {
                 // Other axons were faster and came first
                 // Set response to "not connected" (not success)
-                responses[source_rank][request_index] = false;
+                responses[source_rank][request_index] = 0;
             }
         } // All requests of a rank
     } // Increasing order of ranks that sent requests
