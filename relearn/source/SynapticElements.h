@@ -17,6 +17,7 @@
 
 #include <cmath>
 #include <memory>
+#include <utility>
 #include <vector>
 
 class NeuronMonitor;
@@ -56,14 +57,13 @@ public:
         return std::make_unique<SynapticElements>(type, min_C_level_to_grow, C_target, nu, vacant_retract_ratio);
     }
 
-     [[nodiscard]] static std::vector<std::unique_ptr<SynapticElements>> get_elements() {
+    [[nodiscard]] static std::vector<std::unique_ptr<SynapticElements>> get_elements() {
         std::vector<std::unique_ptr<SynapticElements>> res;
         res.emplace_back(std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons));
         res.emplace_back(std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc));
         res.emplace_back(std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh));
         return res;
     }
-
 
     [[nodiscard]] std::vector<ModelParameter> get_parameter() {
         return {
@@ -155,6 +155,24 @@ public:
 	 * 2. Delete bound elements
 	 */
     [[nodiscard]] unsigned int update_number_elements(size_t neuron_id);
+
+    [[nodiscard]] std::pair<unsigned int, std::vector<unsigned int>> commit_updates() {
+        std::vector<unsigned int> number_deletions(size);
+        unsigned int sum_to_delete = 0;
+
+        for (size_t neuron_id = 0; neuron_id < size; ++neuron_id) {
+            /**
+		    * Create and delete synaptic elements as required.
+		    * This function only deletes elements (bound and unbound), no synapses.
+		    */
+            const auto num_synapses_to_delete = update_number_elements(neuron_id);
+
+            number_deletions[neuron_id] = num_synapses_to_delete;
+            sum_to_delete += num_synapses_to_delete;
+        }
+
+        return std::make_pair(sum_to_delete, number_deletions);
+    }
 
     void update_number_elements_delta(const std::vector<double>& calcium) noexcept {
         // For my neurons

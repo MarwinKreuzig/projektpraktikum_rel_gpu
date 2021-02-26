@@ -466,7 +466,8 @@ private:
 
     [[nodiscard]] size_t delete_synapses();
 
-    [[nodiscard]] PendingDeletionsV delete_synapses_find_synapses(SynapticElements& synaptic_elements, PendingDeletionsV& other_pending_deletions);
+    [[nodiscard]] std::pair<PendingDeletionsV, std::vector<size_t>> delete_synapses_find_synapses(
+        const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>> to_delete, const PendingDeletionsV& other_pending_deletions);
 
     /**
 	 * Determines which synapses should be deleted.
@@ -500,11 +501,11 @@ private:
 
     [[nodiscard]] static MapSynapseCreationRequests create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
-    [[nodiscard]] size_t create_synapses_process_requests(MapSynapseCreationRequests& synapse_creation_requests_incoming);
+    [[nodiscard]] std::pair<size_t, std::map<int, std::vector<char>>> create_synapses_process_requests(const MapSynapseCreationRequests& synapse_creation_requests_incoming);
 
-    static void create_synapses_exchange_responses(const MapSynapseCreationRequests& synapse_creation_requests_incoming, MapSynapseCreationRequests& synapse_creation_requests_outgoing);
+    [[nodiscard]] static std::map<int, std::vector<char>> create_synapses_exchange_responses(const std::map<int, std::vector<char>>& synapse_creation_responses, const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
-    [[nodiscard]] size_t create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
+    [[nodiscard]] size_t create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing, const std::map<int, std::vector<char>>& received_responses);
 
     static void print_pending_synapse_deletions(const PendingDeletionsV& list);
 
