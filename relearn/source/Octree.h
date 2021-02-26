@@ -376,8 +376,6 @@ private:
 	 */
     [[nodiscard]] double calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, const OctreeNode& node_with_dendrite, SignalType dendrite_type_needed) const /*noexcept*/;
 
-    [[nodiscard]] ProbabilitySubintervalVector append_children(OctreeNode* node, AccessEpochsStarted& epochs_started);
-
     // Root of the tree
     OctreeNode* root{ nullptr };
 

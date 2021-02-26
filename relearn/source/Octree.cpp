@@ -449,69 +449,6 @@ double Octree::calc_attractiveness_to_connect(
     return ret_val;
 }
 
-ProbabilitySubintervalVector Octree::append_children(OctreeNode* node, AccessEpochsStarted& epochs_started) {
-    ProbabilitySubintervalVector vector;
-
-    // Node is local
-    if (node->is_local()) {
-        // Append all children != nullptr
-        for (const auto& child : node->get_children()) {
-            if (child != nullptr) {
-                vector.emplace_back(std::make_shared<ProbabilitySubinterval>(child));
-            }
-        }
-
-        return vector;
-    }
-    // Node is remote
-
-    const int target_rank = node->get_rank();
-    NodesCacheKey rank_addr_pair;
-    rank_addr_pair.first = target_rank;
-
-    // Start access epoch if necessary
-    if (!epochs_started[target_rank]) {
-        // Start access epoch to remote rank
-        MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
-        epochs_started[target_rank] = true;
-    }
-
-    for (const auto& child : node->get_children()) {
-        if (child == nullptr) {
-            continue;
-        }
-        rank_addr_pair.second = child;
-
-        std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair;
-        cache_key_val_pair.first = rank_addr_pair;
-        cache_key_val_pair.second = nullptr;
-
-        // Get cache entry for "cache_key_val_pair"
-        std::pair<NodesCache::iterator, bool> ret = remote_nodes_cache.insert(cache_key_val_pair);
-
-        // Cache entry just inserted as it was not in cache
-        // So, we still need to init the entry by fetching
-        // from the target rank
-        if (ret.second) {
-            auto* new_node = MPIWrapper::new_octree_node();
-            // TODO(fabian): Kill pointer here
-            const auto prob_sub = std::make_shared<ProbabilitySubinterval>(new_node);
-            // Create new object which contains the remote node's information
-            ret.first->second = new_node;
-            const auto target_child_displ = MPIWrapper::get_ptr_displacement(target_rank, child);
-
-            MPIWrapper::get(prob_sub->get_ptr(), target_rank, target_child_displ);
-
-            prob_sub->set_mpi_request(MPIWrapper::get_non_null_request());
-            prob_sub->set_request_rank(target_rank);
-        } else {
-            vector.emplace_back(std::make_shared<ProbabilitySubinterval>(ret.first->second));
-        }
-    } // for all children
-
-    return vector;
-}
-
 // Insert neuron into the tree
 OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
     // Create new tree node for the neuron
