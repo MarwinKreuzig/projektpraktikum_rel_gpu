@@ -75,7 +75,7 @@ void LogFiles::write_to_file(EventType type, const std::string& message, bool al
 
 void LogFiles::print_message_rank(char const* string, int rank) {
     if (rank == MPIWrapper::get_my_rank() || rank == -1) {
-        std::string txt = std::string("[INFO:Rank ") + MPIWrapper::get_my_rank_str() + "]  " + string + "\n";
+        std::string txt = std::string("[INFO:Rank ") + MPIWrapper::get_my_rank_str() + "]\n" + string + "\n\n";
         write_to_file(LogFiles::EventType::Cout, txt, true);
     }
 }

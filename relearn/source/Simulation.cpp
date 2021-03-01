@@ -68,8 +68,10 @@ void Simulation::set_dendrites_in(std::unique_ptr<SynapticElements> se) {
 }
 
 void Simulation::construct_neurons() {
-    const bool all_models_present = neuron_models && axons && dendrites_ex && dendrites_in;
-    RelearnException::check(all_models_present, "Tried to construct the neurons without all models present");
+    RelearnException::check(neuron_models != nullptr, "In simulation, neuron_models is nullptr");
+    RelearnException::check(axons != nullptr, "In simulation, axons is nullptr");
+    RelearnException::check(dendrites_ex != nullptr, "In simulation, dendrites_ex is nullptr");
+    RelearnException::check(dendrites_in != nullptr, "In simulation, dendrites_in is nullptr");
 
     neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons->clone(), dendrites_ex->clone(), dendrites_in->clone());
 }
@@ -239,8 +241,7 @@ void Simulation::finalize() const {
         const auto netto_creations = total_synapse_creations - total_synapse_deletions;
         const auto previous_netto_creations = delta_synapse_creations - delta_synapse_deletions;
 
-        std::stringstream sstring; // For output generation
-        sstring << "\n\n";
+        std::stringstream sstring; 
         sstring << "Total up to now     (creations, deletions, netto): " << total_synapse_creations << "\t" << total_synapse_deletions << "\t" << netto_creations << "\n";
         sstring << "Diff. from previous (creations, deletions, netto): " << delta_synapse_creations << "\t" << delta_synapse_deletions << "\t" << previous_netto_creations << "\n";
         sstring << "END: " << Timers::wall_clock_time() << "\n";

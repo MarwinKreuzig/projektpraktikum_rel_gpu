@@ -283,7 +283,7 @@ public:
         , dendrites_exc(std::move(dend_ex_ptr))
         , dendrites_inh(std::move(dend_in_ptr)) {
 
-        const bool all_filled = partition && neuron_model && axons && dendrites_exc && dendrites_inh;
+        const bool all_filled = this->partition && neuron_model && axons && dendrites_exc && dendrites_inh;
         RelearnException::check(all_filled, "Neurons was constructed with some null arguments");
     }
 

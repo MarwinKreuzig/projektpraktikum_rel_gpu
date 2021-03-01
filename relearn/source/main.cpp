@@ -126,7 +126,6 @@ int main(int argc, char** argv) {
     LogFiles::init();
 
     // Init random number seeds
-
     RandomHolder::seed(RandomHolderKey::Partition, static_cast<unsigned int>(my_rank));
     RandomHolder::seed(RandomHolderKey::Octree, seed_octree);
 
@@ -134,7 +133,13 @@ int main(int argc, char** argv) {
     MPIWrapper::barrier(MPIWrapper::Scope::global);
     if (0 == my_rank) {
         std::stringstream sstring; // For output generation
-        sstring << "\nSTART: " << Timers::wall_clock_time() << "\n";
+
+        sstring << "START: " << Timers::wall_clock_time() << "\n";
+
+        sstring << "Chosen lower bound for vacant synaptic elements: " << synaptic_elements_init_lb << "\n";
+        sstring << "Chosen upper bound for vacant synaptic elements: " << synaptic_elements_init_ub << "\n";
+        sstring << "Chosen target calcium value: " << target_calcium;
+
         LogFiles::print_message_rank(sstring.str().c_str(), 0);
     }
 

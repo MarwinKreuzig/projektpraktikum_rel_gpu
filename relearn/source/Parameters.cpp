@@ -29,7 +29,7 @@ void Parameters::print() const {
     ss << std::left << std::setw(column_width) << "naive_method (BH)"
        << " : " << naive_method << "\n";
     ss << std::left << std::setw(column_width) << "max_num_pending_vacant_axons"
-       << " : " << max_num_pending_vacant_axons << "\n";
+       << " : " << max_num_pending_vacant_axons << "\n\n";
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
 }

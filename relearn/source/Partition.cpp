@@ -84,7 +84,7 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
     }
 
     std::stringstream sstream;
-    sstream << "Total number subdomains        : " << total_num_subdomains;
+    sstream << "Total number subdomains        : " << total_num_subdomains << "\n";
     sstream << "Number subdomains per dimension: " << num_subdomains_per_dimension;
     LogFiles::print_message_rank(sstream.str().c_str(), 0);
 }
@@ -92,29 +92,32 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
 void Partition::print_my_subdomains_info_rank(int rank) {
     std::stringstream sstream;
 
-    sstream << "My number of neurons   : " << my_num_neurons;
-    sstream << "My number of subdomains: " << my_num_subdomains;
+    sstream << "My number of neurons   : " << my_num_neurons << "\n";
+    sstream << "My number of subdomains: " << my_num_subdomains << "\n";
     sstream << "My subdomain ids       : [ " << my_subdomain_id_start
             << " , "
             << my_subdomain_id_end
-            << " ]";
+            << " ]"
+            << "\n";
 
     for (size_t i = 0; i < my_num_subdomains; i++) {
-        sstream << "Subdomain: " << i;
-        sstream << "    num_neurons: " << subdomains[i].num_neurons;
-        sstream << "    index_1d   : " << subdomains[i].index_1d;
+        sstream << "Subdomain: " << i << "\n";
+        sstream << "    num_neurons: " << subdomains[i].num_neurons << "\n";
+        sstream << "    index_1d   : " << subdomains[i].index_1d << "\n";
 
         sstream << "    index_3d   : "
                 << "( " << subdomains[i].index_3d[0]
                 << " , " << subdomains[i].index_3d[1]
                 << " , " << subdomains[i].index_3d[2]
-                << " )";
+                << " )"
+                << "\n";
 
         sstream << "    xyz_min    : "
                 << "( " << subdomains[i].xyz_min[0]
                 << " , " << subdomains[i].xyz_min[1]
                 << " , " << subdomains[i].xyz_min[2]
-                << " )";
+                << " )"
+                << "\n";
 
         sstream << "    xyz_max    : "
                 << "( " << subdomains[i].xyz_max[0]
@@ -217,8 +220,7 @@ void Partition::load_data_from_subdomain_assignment(std::shared_ptr<Neurons> neu
             << "\n";
     sstream << "Subdomain length          : " << subdomain_length.get_y() << " (width)"
             << "\n";
-    sstream << "Subdomain length          : " << subdomain_length.get_z() << " (depth)"
-            << "\n";
+    sstream << "Subdomain length          : " << subdomain_length.get_z() << " (depth)";
     LogFiles::print_message_rank(sstream.str().c_str(), 0);
 
     my_num_neurons = 0;
