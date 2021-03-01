@@ -54,6 +54,8 @@ public:
     static std::vector<std::unique_ptr<NeuronModels>> get_models();
 
 private:
+    void construct_neurons();
+
     void initialize();
 
     void print_neuron_monitors();

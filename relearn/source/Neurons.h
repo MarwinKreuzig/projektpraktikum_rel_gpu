@@ -344,22 +344,25 @@ public:
 	 */
     using MapSynapseDeletionRequests = std::map<int, SynapseDeletionRequests>;
 
-    Neurons(const Partition& partition, std::unique_ptr<NeuronModels> model)
-        : Neurons(partition, std::move(model),
+    Neurons(std::shared_ptr<Partition> partition, std::unique_ptr<NeuronModels> model)
+        : Neurons(std::move(partition), std::move(model),
             std::make_unique<Axons>(ElementType::AXON, SynapticElements::default_eta_Axons),
             std::make_unique<DendritesExc>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc),
             std::make_unique<DendritesInh>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh)) { }
 
-    Neurons(const Partition& partition,
+    Neurons(std::shared_ptr<Partition> partition,
         std::unique_ptr<NeuronModels> model,
         std::unique_ptr<Axons> axons_ptr,
         std::unique_ptr<DendritesExc> dend_ex_ptr,
         std::unique_ptr<DendritesInh> dend_in_ptr)
-        : partition(&partition)
+        : partition(std::move(partition))
         , neuron_model(std::move(model))
-        , axons(std::move(*axons_ptr))
-        , dendrites_exc(std::move(*dend_ex_ptr))
-        , dendrites_inh(std::move(*dend_in_ptr)) {
+        , axons(std::move(axons_ptr))
+        , dendrites_exc(std::move(dend_ex_ptr))
+        , dendrites_inh(std::move(dend_in_ptr)) {
+
+        const bool all_filled = partition && neuron_model && axons && dendrites_exc && dendrites_inh;
+        RelearnException::check(all_filled, "Neurons was constructed with some null arguments");
     }
 
     ~Neurons() = default;
@@ -382,18 +385,14 @@ public:
 
     [[nodiscard]] std::vector<ModelParameter> get_parameter(ElementType element_type, SignalType signal_type) {
         if (element_type == ElementType::AXON) {
-            return axons.get_parameter();
+            return axons->get_parameter();
         }
 
         if (signal_type == SignalType::EXCITATORY) {
-            return dendrites_exc.get_parameter();
+            return dendrites_exc->get_parameter();
         }
 
-        return dendrites_inh.get_parameter();
-    }
-
-    void set_model(std::unique_ptr<NeuronModels> model) noexcept {
-        neuron_model = std::move(model);
+        return dendrites_inh->get_parameter();
     }
 
     [[nodiscard]] size_t get_num_neurons() const noexcept {
@@ -417,19 +416,19 @@ public:
     }
 
     void set_signal_types(std::vector<SignalType> signal_types) {
-        axons.set_signal_types(std::move(signal_types));
+        axons->set_signal_types(std::move(signal_types));
     }
 
     [[nodiscard]] const Axons& get_axons() const noexcept {
-        return axons;
+        return *axons;
     }
 
     [[nodiscard]] const DendritesExc& get_dendrites_exc() const noexcept {
-        return dendrites_exc;
+        return *dendrites_exc;
     }
 
     [[nodiscard]] const DendritesInh& get_dendrites_inh() const noexcept {
-        return dendrites_inh;
+        return *dendrites_inh;
     }
 
     void init_synaptic_elements();
@@ -437,9 +436,9 @@ public:
     void update_electrical_activity();
 
     void update_number_synaptic_elements_delta() noexcept {
-        axons.update_number_elements_delta(calcium);
-        dendrites_exc.update_number_elements_delta(calcium);
-        dendrites_inh.update_number_elements_delta(calcium);
+        axons->update_number_elements_delta(calcium);
+        dendrites_exc->update_number_elements_delta(calcium);
+        dendrites_inh->update_number_elements_delta(calcium);
     }
 
     [[nodiscard]] std::tuple<size_t, size_t> update_connectivity();
@@ -511,16 +510,16 @@ private:
 
     size_t num_neurons = 0; // Local number of neurons
 
-    const Partition* partition;
+    std::shared_ptr<Partition> partition;
 
     std::shared_ptr<Octree> global_tree;
     std::shared_ptr<NetworkGraph> network_graph;
 
     std::unique_ptr<NeuronModels> neuron_model;
 
-    Axons axons;
-    DendritesExc dendrites_exc;
-    DendritesInh dendrites_inh;
+    std::unique_ptr<Axons> axons;
+    std::unique_ptr<DendritesExc> dendrites_exc;
+    std::unique_ptr<DendritesInh> dendrites_inh;
 
     std::vector<double> calcium; // Intracellular calcium concentration of every neuron
 

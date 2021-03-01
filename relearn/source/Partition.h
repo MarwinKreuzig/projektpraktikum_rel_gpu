@@ -60,12 +60,7 @@ public:
 
     [[nodiscard]] bool is_neuron_local(size_t neuron_id) const;
 
-    [[nodiscard]] std::shared_ptr<Neurons> load_neurons(
-        std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain,
-        std::unique_ptr<NeuronModels> neuron_models, 
-        std::unique_ptr<SynapticElements> axons_ptr = nullptr, 
-        std::unique_ptr<SynapticElements> dend_ex_ptr = nullptr,
-        std::unique_ptr<SynapticElements> dend_in_ptr = nullptr);
+    void load_data_from_subdomain_assignment(std::shared_ptr<Neurons> neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain);
 
     [[nodiscard]] size_t get_my_num_neurons() const {
         RelearnException::check(neurons_loaded, "Neurons are not loaded yet");

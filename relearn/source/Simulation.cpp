@@ -68,6 +68,13 @@ void Simulation::set_dendrites_in(std::unique_ptr<SynapticElements> se) {
     dendrites_in = std::move(se);
 }
 
+void Simulation::construct_neurons() {
+    const bool all_models_present = neuron_models && axons && dendrites_ex && dendrites_in;
+    RelearnException::check(all_models_present, "Tried to construct the neurons without all models present");
+
+    neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons->clone(), dendrites_ex->clone(), dendrites_in->clone());
+}
+
 void Simulation::place_random_neurons(size_t num_neurons, double frac_exc) {
     neuron_to_subdomain_assignment = std::make_unique<SubdomainFromNeuronDensity>(num_neurons, frac_exc, 26);
     partition->set_total_num_neurons(num_neurons);
@@ -95,6 +102,38 @@ void Simulation::load_neurons_from_file(const std::string& path_to_positions, co
     neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0);
 }
 
+void Simulation::initialize() {
+    construct_neurons();
+
+    partition->load_data_from_subdomain_assignment(neurons, std::move(neuron_to_subdomain_assignment));
+
+    NeuronMonitor::neurons_to_monitor = neurons;
+
+    partition->print_my_subdomains_info_rank(0);
+    partition->print_my_subdomains_info_rank(1);
+
+    LogFiles::print_message_rank("Neurons created", 0);
+
+    NeuronIdMap::init(neurons->get_num_neurons());
+
+    global_tree = std::make_shared<Octree>(*partition, parameters->accept_criterion, parameters->sigma, parameters->max_num_pending_vacant_axons);
+    global_tree->set_no_free_in_destructor(); // This needs to be changed later, as it's cleaner to free the nodes at destruction
+
+    // Insert my local (subdomain) trees into my global tree
+    for (size_t i = 0; i < partition->get_my_num_subdomains(); i++) {
+        Octree* local_tree = &(partition->get_subdomain_tree(i));
+        global_tree->insert_local_tree(local_tree);
+    }
+
+    LogFiles::print_message_rank("Neurons inserted into subdomains", 0);
+    LogFiles::print_message_rank("Subdomains inserted into global tree", 0);
+
+    network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
+
+    neurons->set_network_graph(network_graph);
+    neurons->set_octree(global_tree);
+}
+
 void Simulation::simulate(size_t number_steps, size_t step_monitor) {
     GlobalTimers::timers.start(TimerRegion::SIMULATION_LOOP);
 
@@ -105,8 +144,6 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 	* Simulation loop
 	*/
     for (size_t step = 1; step <= number_steps; step++) {
-        std::stringstream sstring; // For output generation
-
         if (step % step_monitor == 0) {
             for (auto& mn : monitors) {
                 mn.record_data();
@@ -131,8 +168,11 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             size_t num_synapses_created = 0;
 
             if (0 == MPIWrapper::get_my_rank() && false) {
+                std::stringstream sstring; // For output generation
                 sstring << "** UPDATE CONNECTIVITY AFTER: " << step << " of " << number_steps
                         << " msec ** [" << Timers::wall_clock_time() << "]\n";
+                sstring << std::flush;
+                LogFiles::write_to_file(LogFiles::EventType::Cout, sstring.str(), true);
             }
 
             GlobalTimers::timers.start(TimerRegion::UPDATE_CONNECTIVITY);
@@ -161,9 +201,6 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
                 std::to_string(step) + ": " + std::to_string(local_cnts[1]) + " " + std::to_string(local_cnts[0]) + "\n", false);
 
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_synapses_deleted, num_synapses_created);
-
-            sstring << std::flush;
-            LogFiles::write_to_file(LogFiles::EventType::Cout, sstring.str(), true);
 
             network_graph->debug_check();
         }
@@ -216,36 +253,6 @@ void Simulation::finalize() const {
 
 std::vector<std::unique_ptr<NeuronModels>> Simulation::get_models() {
     return NeuronModels::get_models();
-}
-
-void Simulation::initialize() {
-    neurons = partition->load_neurons(std::move(neuron_to_subdomain_assignment), neuron_models->clone(), axons->clone(), dendrites_ex->clone(), dendrites_in->clone());
-
-    NeuronMonitor::neurons_to_monitor = neurons;
-
-    partition->print_my_subdomains_info_rank(0);
-    partition->print_my_subdomains_info_rank(1);
-
-    LogFiles::print_message_rank("Neurons created", 0);
-
-    NeuronIdMap::init(neurons->get_num_neurons());
-
-    global_tree = std::make_shared<Octree>(*partition, parameters->accept_criterion, parameters->sigma, parameters->max_num_pending_vacant_axons);
-    global_tree->set_no_free_in_destructor(); // This needs to be changed later, as it's cleaner to free the nodes at destruction
-
-    // Insert my local (subdomain) trees into my global tree
-    for (size_t i = 0; i < partition->get_my_num_subdomains(); i++) {
-        Octree* local_tree = &(partition->get_subdomain_tree(i));
-        global_tree->insert_local_tree(local_tree);
-    }
-
-    LogFiles::print_message_rank("Neurons inserted into subdomains", 0);
-    LogFiles::print_message_rank("Subdomains inserted into global tree", 0);
-
-    network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
-
-    neurons->set_network_graph(network_graph);
-    neurons->set_octree(global_tree);
 }
 
 void Simulation::print_neuron_monitors() {
