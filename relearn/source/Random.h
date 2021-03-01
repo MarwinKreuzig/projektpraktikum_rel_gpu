@@ -31,6 +31,7 @@ enum class RandomHolderKey : char {
     ModelA = 3,
     Neurons = 4,
     NeuronModels = 5,
+    SynapticElements = 6,
 };
 
 class RandomHolder {
@@ -56,6 +57,17 @@ public:
     template <typename IteratorType>
     static void shuffle(RandomHolderKey key, IteratorType begin, IteratorType end) {
         std::shuffle(begin, end, random_number_generators[key]);
+    }
+
+    template <typename IteratorType>
+    static void fill(RandomHolderKey key, IteratorType begin, IteratorType end, double lower_inclusive, double upper_exclusive) {
+        RelearnException::check(lower_inclusive < upper_exclusive, "Random number from invalid interval");
+        std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
+        auto& gen = random_number_generators[key];
+
+        for (; begin != end; begin++) {
+            *begin = urd(gen);
+        }
     }
 
     static void seed(RandomHolderKey key, unsigned int seed) {

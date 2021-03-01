@@ -12,6 +12,7 @@
 
 #include "ElementType.h"
 #include "ModelParameter.h"
+#include "Random.h"
 #include "RelearnException.h"
 #include "SignalType.h"
 
@@ -29,12 +30,16 @@ public:
     SynapticElements(ElementType type, double min_C_level_to_grow,
         double C_target = SynapticElements::default_C_target,
         double nu = SynapticElements::default_nu,
-        double vacant_retract_ratio = SynapticElements::default_vacant_retract_ratio)
+        double vacant_retract_ratio = SynapticElements::default_vacant_retract_ratio,
+        double initial_vacant_elements_lb = SynapticElements::default_vacant_elements_initially_lower_bound,
+        double initial_vacant_elements_ub = SynapticElements::default_vacant_elements_initially_upper_bound)
         : type(type)
         , min_C_level_to_grow(min_C_level_to_grow)
         , C_target(C_target)
         , nu(nu)
-        , vacant_retract_ratio(vacant_retract_ratio) {
+        , vacant_retract_ratio(vacant_retract_ratio)
+        , initial_vacant_elements_lower_bound(initial_vacant_elements_lb)
+        , initial_vacant_elements_upper_bound(initial_vacant_elements_ub) {
     }
 
     SynapticElements(const SynapticElements& other) = delete;
@@ -47,14 +52,24 @@ public:
 
     void init(size_t number_neurons) {
         size = number_neurons;
-        cnts.resize(size, 0.0);
+
+        cnts.resize(size);
+
+        if (initial_vacant_elements_lower_bound < initial_vacant_elements_upper_bound) {
+            RandomHolder::fill(RandomHolderKey::SynapticElements, cnts.begin(), cnts.end(), initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
+        } else if (initial_vacant_elements_lower_bound == initial_vacant_elements_upper_bound) {
+            std::fill(cnts.begin(), cnts.end(), initial_vacant_elements_lower_bound);
+        } else {
+            RelearnException::fail("Should initialize synaptic elements with values between in the wrong order (lower is larger than upper)");
+        }
+
         connected_cnts.resize(size, 0);
         delta_cnts.resize(size, 0.0);
         signal_types.resize(size);
     }
 
     [[nodiscard]] std::unique_ptr<SynapticElements> clone() const {
-        return std::make_unique<SynapticElements>(type, min_C_level_to_grow, C_target, nu, vacant_retract_ratio);
+        return std::make_unique<SynapticElements>(type, min_C_level_to_grow, C_target, nu, vacant_retract_ratio, initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
     }
 
     [[nodiscard]] static std::vector<std::unique_ptr<SynapticElements>> get_elements() {
@@ -71,6 +86,8 @@ public:
             Parameter<double>{ "Target calcium", C_target, SynapticElements::min_C_target, SynapticElements::max_C_target },
             Parameter<double>{ "nu", nu, SynapticElements::min_nu, SynapticElements::max_nu },
             Parameter<double>{ "Vacant synapse retract ratio", vacant_retract_ratio, SynapticElements::min_vacant_retract_ratio, SynapticElements::max_vacant_retract_ratio },
+            Parameter<double>{ "Initial vacant elements lower bound", initial_vacant_elements_lower_bound, SynapticElements::min_vacant_elements_initially, SynapticElements::max_vacant_elements_initially },
+            Parameter<double>{ "Initial vacant elements upper bound", initial_vacant_elements_upper_bound, SynapticElements::min_vacant_elements_initially, SynapticElements::max_vacant_elements_initially },
         };
     }
 
@@ -209,16 +226,20 @@ public:
     static constexpr double default_eta_Dendrites_inh{ 0.0 }; // gold 0.0;
     static constexpr double default_nu{ 1e-5 }; // gold 1e-5;
     static constexpr double default_vacant_retract_ratio{ 0.0 };
+    static constexpr double default_vacant_elements_initially_lower_bound{ 0.0 };
+    static constexpr double default_vacant_elements_initially_upper_bound{ 0.0 };
 
     static constexpr double min_min_C_level_to_grow{ 0.0 };
     static constexpr double min_C_target{ 0.0 };
     static constexpr double min_nu{ 0.0 };
     static constexpr double min_vacant_retract_ratio{ 0.0 };
+    static constexpr double min_vacant_elements_initially{ 0.0 };
 
     static constexpr double max_min_C_level_to_grow{ 10.0 };
     static constexpr double max_C_target{ 100.0 };
     static constexpr double max_nu{ 1.0 };
     static constexpr double max_vacant_retract_ratio{ 1.0 };
+    static constexpr double max_vacant_elements_initially{ 1000.0 };
 
 private:
     ElementType type; // Denotes the type of all synaptic elements, which is AXON or DENDRITE
@@ -235,4 +256,7 @@ private:
     double C_target; // Desired calcium level (possible extension of the model: Give all neurons individual C_target values!)
     double nu; // Growth rate for synaptic elements in ms^-1. Needs to be much smaller than 1 to separate activity and structural dynamics.
     double vacant_retract_ratio; // Percentage of how many vacant synaptic elements should be deleted during each connectivity update
+
+    double initial_vacant_elements_lower_bound; // Minimum number of vacant elements that are available at the start of the simulation
+    double initial_vacant_elements_upper_bound; // Maximum number of vacant elements that are available at the start of the simulation
 };

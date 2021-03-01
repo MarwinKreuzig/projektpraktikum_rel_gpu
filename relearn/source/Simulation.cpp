@@ -219,7 +219,7 @@ std::vector<std::unique_ptr<NeuronModels>> Simulation::get_models() {
 }
 
 void Simulation::initialize() {
-    neurons = partition->load_neurons(std::move(neuron_to_subdomain_assignment), neuron_models->clone());
+    neurons = partition->load_neurons(std::move(neuron_to_subdomain_assignment), neuron_models->clone(), axons->clone(), dendrites_ex->clone(), dendrites_in->clone());
 
     NeuronMonitor::neurons_to_monitor = neurons;
 

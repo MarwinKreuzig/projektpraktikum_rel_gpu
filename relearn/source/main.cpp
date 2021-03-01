@@ -31,7 +31,6 @@
 void omp_set_num_threads(int num) { }
 #endif
 
-
 #include <array>
 #include <bitset>
 #include <cerrno>
@@ -74,7 +73,7 @@ int main(int argc, char** argv) {
     auto* opt_log_path = app.add_option("-l,--log-path", log_path, "Path for log files.");
 
     size_t simulation_steps{};
-    app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms")->required();
+    app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();
 
     unsigned int seed_octree{};
     app.add_option("-r,--random-seed", seed_octree, "Random seed.")->required();
@@ -83,7 +82,7 @@ int main(int argc, char** argv) {
     app.add_option("--openmp", openmp_threads, "Number of OpenMP Threads.");
 
     double accept_criterion{ 0.0 };
-    app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion. Default: 0.0")->required();
+    app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion. Default: 0.0.")->required();
 
     auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
 
@@ -97,8 +96,15 @@ int main(int argc, char** argv) {
     opt_file_positions->check(CLI::ExistingFile);
     opt_file_network->check(CLI::ExistingFile);
 
+    double synaptic_elements_init_lb{ 0.0 };
+    double synaptic_elements_init_ub{ 0.0 };
+    app.add_option("--synaptic-elements-lower-bound", synaptic_elements_init_lb, "The minimum number of vacant synaptic elements per neuron. Must be smaller of equal to synaptic-elements-upper-bound.");
+    app.add_option("--synaptic-elements-upper-bound", synaptic_elements_init_ub, "The maximum number of vacant synaptic elements per neuron. Must be larger or equal to synaptic-elements-lower-bound.");
+
     CLI11_PARSE(app, argc, argv);
 
+    RelearnException::check(synaptic_elements_init_lb >= 0.0, "The minimum number of vacant synaptic elements must not be negative");
+    RelearnException::check(synaptic_elements_init_ub >= synaptic_elements_init_lb, "The minimum number of vacant synaptic elements must not be larger than the maximum number");
     RelearnException::check(static_cast<bool>(*opt_num_neurons) || static_cast<bool>(*opt_file_positions), "Missing command line option, need num_neurons (-n,--num-neurons) or file_positions (-f,--file).");
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
 
@@ -150,11 +156,25 @@ int main(int argc, char** argv) {
 	*/
     MPIWrapper::init_buffer_octree(total_num_subdomains);
 
+    auto neuron_models = std::make_unique<models::ModelA>();
+
+    auto axon_models = std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons,
+        SynapticElements::default_nu, SynapticElements::default_vacant_retract_ratio, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
+
+    auto dend_ex_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc,
+        SynapticElements::default_nu, SynapticElements::default_vacant_retract_ratio, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
+
+    auto dend_in_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh,
+        SynapticElements::default_nu, SynapticElements::default_vacant_retract_ratio, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
+
     // Lock local RMA memory for local stores
     MPIWrapper::lock_window(my_rank, MPI_Locktype::exclusive);
 
     Simulation sim(accept_criterion, partition);
-    sim.set_neuron_models(std::make_unique<models::ModelA>());
+    sim.set_neuron_models(std::move(neuron_models));
+    sim.set_axons(std::move(axon_models));
+    sim.set_dendrites_ex(std::move(dend_ex_models));
+    sim.set_dendrites_in(std::move(dend_in_models));
 
     if (static_cast<bool>(*opt_num_neurons)) {
         const double frac_exc = 0.8;
@@ -206,11 +226,11 @@ int main(int argc, char** argv) {
             char yn{ 'n' };
             auto n = scanf(" %c", &yn);
             RelearnException::check(static_cast<bool>(n), "Error on while reading input with scanf.");
-            
+
             if (yn == 'n' || yn == 'N') {
                 break;
-            } 
-            
+            }
+
             if (yn == 'y' || yn == 'Y') {
                 sim.increase_monitoring_capacity(steps_per_simulation);
                 simulate();
