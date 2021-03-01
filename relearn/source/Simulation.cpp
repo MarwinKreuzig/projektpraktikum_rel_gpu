@@ -14,7 +14,6 @@
 #include "LogFiles.h"
 #include "MPIWrapper.h"
 #include "NetworkGraph.h"
-#include "NeuronIdMap.h"
 #include "NeuronModels.h"
 #include "NeuronMonitor.h"
 #include "NeuronToSubdomainAssignment.h"
@@ -113,8 +112,6 @@ void Simulation::initialize() {
     partition->print_my_subdomains_info_rank(1);
 
     LogFiles::print_message_rank("Neurons created", 0);
-
-    NeuronIdMap::init(neurons->get_num_neurons());
 
     global_tree = std::make_shared<Octree>(*partition, parameters->accept_criterion, parameters->sigma, parameters->max_num_pending_vacant_axons);
     global_tree->set_no_free_in_destructor(); // This needs to be changed later, as it's cleaner to free the nodes at destruction

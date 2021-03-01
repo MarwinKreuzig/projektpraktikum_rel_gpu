@@ -14,12 +14,14 @@
 #include "Vec3.h"
 
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
 
+class NeuronsExtraInfo;
 class Partition;
 
 /**
@@ -34,7 +36,7 @@ public:
     using EdgesKey = std::pair<int, size_t>; // Pair of (rank, neuron id)
     using EdgesVal = int;
     using Edges = std::vector<std::pair<EdgesKey, EdgesVal>>; // Map of neuron id to edge weight
-   
+
     using NeuronInNeighborhood = std::vector<Edges>;
     using NeuronOutNeighborhood = std::vector<Edges>;
 
@@ -71,7 +73,7 @@ public:
         int weight);
 
     // Print network using global neuron ids
-    void print(std::ostream& os) const;
+    void print(std::ostream& os, const std::unique_ptr<NeuronsExtraInfo>& informations) const;
 
     void add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, const Partition& partition);
 
