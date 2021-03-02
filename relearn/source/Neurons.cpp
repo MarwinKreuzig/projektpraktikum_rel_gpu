@@ -587,6 +587,7 @@ void Neurons::create_synapses_update_octree() {
         const OctreeNode* root_node = global_tree->get_local_root(i);
 
         // This assignment copies memberwise
+        // NOLINTNEXTLINE
         rma_buffer_branch_nodes[global_subdomain_id] = *root_node;
     }
 
@@ -601,6 +602,7 @@ void Neurons::create_synapses_update_octree() {
     const size_t num_rma_buffer_branch_nodes = MPIWrapper::get_num_buffer_octree_nodes();
     for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
         if (i < partition->get_my_subdomain_id_start() || i > partition->get_my_subdomain_id_end()) {
+            // NOLINTNEXTLINE
             global_tree->insert(rma_buffer_branch_nodes + i);
         }
     }
@@ -1034,6 +1036,8 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
         static_cast<unsigned int>(sum_synapses_deleted),
         static_cast<unsigned int>(sum_synapses_created) };
 
+    // NOLINTNEXTLINE
+    RelearnException::check(Constants::num_items_per_request > 5, "In Neurons, number of items per request is smaller than 6");
     std::array<unsigned int, Constants::num_items_per_request> sums_global{ 0, 0, 0, 0, 0, 0 }; // Init all to zero
 
     MPIWrapper::reduce(sums_local, sums_global, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
@@ -1057,6 +1061,8 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
                << "\n";
         }
 
+        const auto last_idx = 5;
+
         // Write data at step "step"
         ss << std::left
            << std::setw(cwidth) << step
@@ -1065,7 +1071,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
            << std::setw(cwidth) << sums_global[2]
            << std::setw(cwidth) << sums_global[3]
            << std::setw(cwidth) << sums_global[4] / 2 // As counted on both of the neurons
-           << std::setw(cwidth) << sums_global[5] / 2 // As counted on both of the neurons
+           << std::setw(cwidth) << sums_global[last_idx] / 2 // As counted on both of the neurons
            << "\n";
 
         LogFiles::write_to_file(LogFiles::EventType::Sums, ss.str(), false);
@@ -1151,7 +1157,7 @@ void Neurons::print_positions_to_log_file() {
 
     // Print global ids, positions, and areas of local neurons
     const int my_rank = MPIWrapper::get_my_rank();
-    ss << std::fixed << std::setprecision(6);
+    ss << std::fixed << std::setprecision(Constants::print_precision);
 
     for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
         RankNeuronId rank_neuron_id{ my_rank, neuron_id };

@@ -35,6 +35,7 @@ void Timers::print() {
 
         for (int j = 0; j < 3; ++j) {
             const size_t idx = 3 * i + j;
+            // NOLINTNEXTLINE
             timers_local[idx] = elapsed;
         }
     }
@@ -48,6 +49,7 @@ void Timers::print() {
     // so that sum becomes average
     for (size_t i = 0; i < TimerRegion::NUM_TIMER_REGIONS; i++) {
         const size_t idx = 3 * i + 1;
+        // NOLINTNEXTLINE
         timers_global[idx] /= MPIWrapper::get_num_ranks();
     }
 

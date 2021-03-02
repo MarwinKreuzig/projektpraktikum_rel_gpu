@@ -14,8 +14,8 @@
 #include "RelearnException.h"
 #include "Vec3.h"
 
-#include <string>
 #include <optional>
+#include <string>
 #include <vector>
 
 class NeuronsExtraInfo {

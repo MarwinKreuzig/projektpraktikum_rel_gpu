@@ -14,7 +14,6 @@
 #include "NeuronModels.h"
 #include "NeuronMonitor.h"
 #include "NeuronToSubdomainAssignment.h"
-#include "Parameters.h"
 #include "Partition.h"
 #include "Random.h"
 #include "RelearnException.h"
@@ -78,11 +77,11 @@ int main(int argc, char** argv) {
     unsigned int seed_octree{};
     app.add_option("-r,--random-seed", seed_octree, "Random seed.")->required();
 
-    unsigned int openmp_threads{ 1 };
+    int openmp_threads{ 1 };
     app.add_option("--openmp", openmp_threads, "Number of OpenMP Threads.");
 
-    double accept_criterion{ 0.0 };
-    app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion. Default: 0.0.")->required();
+    double accept_criterion{ Octree::default_theta };
+    app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion. Default: 0.3.");
 
     auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
 
@@ -101,7 +100,7 @@ int main(int argc, char** argv) {
     app.add_option("--synaptic-elements-lower-bound", synaptic_elements_init_lb, "The minimum number of vacant synaptic elements per neuron. Must be smaller of equal to synaptic-elements-upper-bound.");
     app.add_option("--synaptic-elements-upper-bound", synaptic_elements_init_ub, "The maximum number of vacant synaptic elements per neuron. Must be larger or equal to synaptic-elements-lower-bound.");
 
-    double target_calcium{ 0.5 };
+    double target_calcium{ SynapticElements::default_C_target };
     app.add_option("--target-ca", target_calcium, "The target Ca2+ ions in each neuron. Standard is 0.7.");
 
     CLI11_PARSE(app, argc, argv);
@@ -178,7 +177,8 @@ int main(int argc, char** argv) {
     // Lock local RMA memory for local stores
     MPIWrapper::lock_window(my_rank, MPI_Locktype::exclusive);
 
-    Simulation sim(accept_criterion, partition);
+    Simulation sim(partition);
+    sim.set_acceptance_criterion_for_octree(accept_criterion);
     sim.set_neuron_models(std::move(neuron_models));
     sim.set_axons(std::move(axon_models));
     sim.set_dendrites_ex(std::move(dend_ex_models));

@@ -46,6 +46,7 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
 	*
 	* For #procs = 2^n and 8^level_of_subdomain_trees subdomains, every proc's #subdomains is the same power of two of {1, 2, 4}.
 	*/
+    // NOLINTNEXTLINE
     my_num_subdomains = total_num_subdomains / num_ranks;
     const size_t rest = total_num_subdomains % num_ranks;
     my_num_subdomains += (my_rank < rest) ? 1 : 0;
@@ -198,7 +199,7 @@ void Partition::set_total_num_neurons(size_t total_num) noexcept {
     total_num_neurons = total_num;
 }
 
-void Partition::load_data_from_subdomain_assignment(std::shared_ptr<Neurons> neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain) {
+void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain) {
     RelearnException::check(!neurons_loaded, "Neurons are already loaded, cannot load anymore");
 
     simulation_box_length = neurons_in_subdomain->get_simulation_box_length();

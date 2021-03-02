@@ -200,7 +200,8 @@ private:
     Octree() = default;
 
 public:
-    Octree(const Partition& part, double acceptance_criterion, double sigma, size_t max_num_pending_vacant_axons);
+    Octree(const Partition& part);
+    Octree(const Partition& part, double acceptance_criterion, double sigma);
     ~Octree() /*noexcept(false)*/;
 
     Octree(const Octree& other) = delete;
@@ -242,10 +243,6 @@ public:
 
     void set_level_of_branch_nodes(size_t level) noexcept {
         level_of_branch_nodes = level;
-    }
-
-    void set_max_num_pending_vacant_axons(size_t max) noexcept {
-        max_num_pending_vacant_axons = max;
     }
 
     [[nodiscard]] OctreeNode* get_root() const noexcept {
@@ -391,16 +388,18 @@ private:
     Vec3d xyz_min{ 0 };
     Vec3d xyz_max{ 0 };
 
-    double acceptance_criterion{ Constants::theta }; // Acceptance criterion
-    double sigma{ Constants::sigma }; // Probability parameter
+    double acceptance_criterion{ default_theta }; // Acceptance criterion
+    double sigma{ default_sigma }; // Probability parameter
     bool naive_method{ false }; // If true, expand every cell regardless of whether dendrites are available or not
     size_t level_of_branch_nodes{ Constants::uninitialized };
-    size_t max_num_pending_vacant_axons{ Constants::num_pend_vacant }; // Maximum number of vacant axons which are considered at the same time for
-        // finding a target neuron
 
     // Cache with nodes owned by other ranks
     using NodesCacheKey = std::pair<int, OctreeNode*>;
     using NodesCacheValue = OctreeNode*;
     using NodesCache = std::map<NodesCacheKey, NodesCacheValue>;
     NodesCache remote_nodes_cache{};
+
+public:
+    constexpr static double default_theta{ 0.3 };
+    constexpr static double default_sigma{ 750.0 };
 };

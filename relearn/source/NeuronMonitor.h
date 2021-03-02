@@ -16,7 +16,7 @@
 #include <memory>
 #include <vector>
 
-struct NeuronInformation {
+class NeuronInformation {
     double calcium;
     double x;
     bool fired;
@@ -30,6 +30,7 @@ struct NeuronInformation {
     double dendrites_inh;
     double dendrites_inh_connected;
 
+public:
     explicit NeuronInformation(
         double c = 0.0, double x = 0.0, bool f = false, double s = 0.0, double i = 0.0,
         double ax = 0.0, double ax_c = 0.0, double de = 0.0, double de_c = 0.0, double di = 0.0, double di_c = 0.0)
@@ -44,6 +45,50 @@ struct NeuronInformation {
         , dendrites_exc_connected(de_c)
         , dendrites_inh(di)
         , dendrites_inh_connected(di_c) {
+    }
+
+    [[nodiscard]] double get_calcium() const noexcept {
+        return calcium;
+    }
+
+    [[nodiscard]] double get_x() const noexcept {
+        return x;
+    }
+
+    [[nodiscard]] bool get_fired() const noexcept {
+        return fired;
+    }
+
+    [[nodiscard]] double get_secondary() const noexcept {
+        return secondary;
+    }
+
+    [[nodiscard]] double get_I_sync() const noexcept {
+        return I_sync;
+    }
+
+    [[nodiscard]] double get_axons() const noexcept {
+        return axons;
+    }
+
+    [[nodiscard]] double get_axons_connected() const noexcept {
+        return axons_connected;
+    }
+
+    [[nodiscard]] double get_dendrites_exc() const noexcept {
+        return dendrites_exc;
+    }
+
+    [[nodiscard]] double get_dendrites_exc_connected() const noexcept {
+        return dendrites_exc_connected;
+    }
+
+    [[nodiscard]] double get_dendrites_inh() const noexcept {
+        return dendrites_inh;
+    }
+
+    [[nodiscard]] double get_dendrites_inh_connected() const noexcept {
+        return dendrites_inh_connected;
     }
 };
 
@@ -98,7 +143,7 @@ public:
         informations.resize(informations.size() + increase_by);
     }
 
-    [[nodiscard]] const std::vector<NeuronInformation>& get_informations() const /*noexcept*/ {
+    [[nodiscard]] const std::vector<NeuronInformation>& get_informations() const noexcept {
         return informations;
     }
 };

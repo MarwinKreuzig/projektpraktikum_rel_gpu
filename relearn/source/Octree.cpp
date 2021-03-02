@@ -24,13 +24,24 @@
 
 #include <sstream>
 
-Octree::Octree(const Partition& part, double acceptance_criterion, double sigma, size_t max_num_pending_vacant_axons)
+Octree::Octree(const Partition& part)
+    : root_level(0)
+    , naive_method(acceptance_criterion == 0.0)
+    , level_of_branch_nodes(part.get_level_of_subdomain_trees()) {
+
+    Vec3d xyz_min;
+    Vec3d xyz_max;
+    std::tie(xyz_min, xyz_max) = part.get_simulation_box_size();
+
+    set_size(xyz_min, xyz_max);
+}
+
+Octree::Octree(const Partition& part, double acceptance_criterion, double sigma)
     : root_level(0)
     , acceptance_criterion(acceptance_criterion)
     , sigma(sigma)
     , naive_method(acceptance_criterion == 0.0)
-    , level_of_branch_nodes(part.get_level_of_subdomain_trees())
-    , max_num_pending_vacant_axons(max_num_pending_vacant_axons) {
+    , level_of_branch_nodes(part.get_level_of_subdomain_trees()) {
 
     Vec3d xyz_min;
     Vec3d xyz_max;
@@ -242,8 +253,10 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
             MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
 
             // Fetch remote children if they exist
+            // NOLINTNEXTLINE          
             for (auto i = 7; i >= 0; i--) {
                 if (nullptr == root->get_child(i)) {
+                    // NOLINTNEXTLINE
                     local_children[i] = nullptr;
                     continue;
                 }
@@ -272,6 +285,7 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
                 }
 
                 // Remember address of node
+                // NOLINTNEXTLINE
                 local_children[i] = ret.first->second;
             }
 
@@ -346,8 +360,10 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
         MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
 
         // Fetch remote children if they exist
+        // NOLINTNEXTLINE
         for (auto i = 7; i >= 0; i--) {
             if (nullptr == stack_elem->get_child(i)) {
+                // NOLINTNEXTLINE
                 local_children[i] = nullptr;
                 continue;
             }
@@ -374,6 +390,8 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
             }
 
             // Remember local address of node
+
+            // NOLINTNEXTLINE
             local_children[i] = ret.first->second;
         }
 
@@ -562,6 +580,8 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 
 // Insert an octree node with its subtree into the tree
 void Octree::insert(OctreeNode* node_to_insert) {
+    RelearnException::check(node_to_insert != nullptr, "In Octree::insert, node_to_insert was nullptr");
+    // NOLINTNEXTLINE
     const auto target_level = node_to_insert->get_level();
 
     // Tree is empty

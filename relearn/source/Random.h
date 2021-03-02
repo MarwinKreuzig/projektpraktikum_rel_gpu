@@ -21,7 +21,7 @@
 #ifdef _OPENMP
 #include <omp.h>
 #else
-inline int omp_get_thread_num(void) { return 0; }
+inline int omp_get_thread_num() { return 0; }
 #endif
 
 enum class RandomHolderKey : char {
@@ -71,7 +71,8 @@ public:
     }
 
     static void seed(RandomHolderKey key, unsigned int seed) {
-#pragma omp parallel 
+        // NOLINTNEXTLINE
+#pragma omp parallel shared(key, seed)
         {
             const auto thread_id = omp_get_thread_num();
             random_number_generators[key].seed(seed + thread_id);

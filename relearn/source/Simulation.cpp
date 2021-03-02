@@ -19,7 +19,6 @@
 #include "NeuronToSubdomainAssignment.h"
 #include "Neurons.h"
 #include "Octree.h"
-#include "Parameters.h"
 #include "Partition.h"
 #include "RelearnException.h"
 #include "SubdomainFromFile.h"
@@ -29,26 +28,21 @@
 #include <fstream>
 #include <sstream>
 
-Simulation::Simulation(double accept_criterion, std::shared_ptr<Partition> partition)
-    : parameters(std::make_unique<Parameters>())
-    , partition(std::move(partition)) {
-    // Needed to avoid creating autapses
-    if (accept_criterion > 0.5) {
-        RelearnException::fail("Acceptance criterion must be smaller or equal to 0.5");
-    }
-
-    parameters->sigma = 750.0;
-    parameters->max_num_pending_vacant_axons = 1000;
-    parameters->accept_criterion = accept_criterion;
-    parameters->naive_method = parameters->accept_criterion == 0.0;
-
-    if (0 == MPIWrapper::get_my_rank()) {
-        parameters->print();
-    }
+Simulation::Simulation(std::shared_ptr<Partition> partition)
+    : partition(std::move(partition)) {
 }
 
 void Simulation::register_neuron_monitor(size_t neuron_id) {
     monitors.emplace_back(neuron_id);
+}
+
+void Simulation::set_acceptance_criterion_for_octree(double value) {
+    // Needed to avoid creating autapses
+    if (value > 0.5) {
+        RelearnException::fail("Acceptance criterion must be smaller or equal to 0.5");
+    }
+
+    accept_criterion = value;
 }
 
 void Simulation::set_neuron_models(std::unique_ptr<NeuronModels> nm) {
@@ -77,7 +71,7 @@ void Simulation::construct_neurons() {
 }
 
 void Simulation::place_random_neurons(size_t num_neurons, double frac_exc) {
-    neuron_to_subdomain_assignment = std::make_unique<SubdomainFromNeuronDensity>(num_neurons, frac_exc, 26);
+    neuron_to_subdomain_assignment = std::make_unique<SubdomainFromNeuronDensity>(num_neurons, frac_exc, SubdomainFromNeuronDensity::default_um_per_neuron);
     partition->set_total_num_neurons(num_neurons);
     initialize();
 }
@@ -115,7 +109,7 @@ void Simulation::initialize() {
 
     LogFiles::print_message_rank("Neurons created", 0);
 
-    global_tree = std::make_shared<Octree>(*partition, parameters->accept_criterion, parameters->sigma, parameters->max_num_pending_vacant_axons);
+    global_tree = std::make_shared<Octree>(*partition, accept_criterion, Octree::default_sigma);
     global_tree->set_no_free_in_destructor(); // This needs to be changed later, as it's cleaner to free the nodes at destruction
 
     // Insert my local (subdomain) trees into my global tree
@@ -241,7 +235,7 @@ void Simulation::finalize() const {
         const auto netto_creations = total_synapse_creations - total_synapse_deletions;
         const auto previous_netto_creations = delta_synapse_creations - delta_synapse_deletions;
 
-        std::stringstream sstring; 
+        std::stringstream sstring;
         sstring << "Total up to now     (creations, deletions, netto): " << total_synapse_creations << "\t" << total_synapse_deletions << "\t" << netto_creations << "\n";
         sstring << "Diff. from previous (creations, deletions, netto): " << delta_synapse_creations << "\t" << delta_synapse_deletions << "\t" << previous_netto_creations << "\n";
         sstring << "END: " << Timers::wall_clock_time() << "\n";
@@ -256,7 +250,7 @@ std::vector<std::unique_ptr<NeuronModels>> Simulation::get_models() {
 void Simulation::print_neuron_monitors() {
     for (auto& monitor : monitors) {
         std::ofstream outfile(std::to_string(monitor.get_target_id()) + ".csv", std::ios::trunc);
-        outfile << std::setprecision(5);
+        outfile << std::setprecision(Constants::print_precision);
 
         outfile.imbue(std::locale());
 
@@ -272,17 +266,17 @@ void Simulation::print_neuron_monitors() {
 
         for (const auto& info : infos) {
             outfile << ctr << filler;
-            outfile << info.fired << filler;
-            outfile << info.secondary << filler;
-            outfile << info.x << filler;
-            outfile << info.calcium << filler;
-            outfile << info.I_sync << filler;
-            outfile << info.axons << filler;
-            outfile << info.axons_connected << filler;
-            outfile << info.dendrites_exc << filler;
-            outfile << info.dendrites_exc_connected << filler;
-            outfile << info.dendrites_inh << filler;
-            outfile << info.dendrites_inh_connected << "\n";
+            outfile << info.get_fired() << filler;
+            outfile << info.get_secondary() << filler;
+            outfile << info.get_x() << filler;
+            outfile << info.get_calcium() << filler;
+            outfile << info.get_I_sync() << filler;
+            outfile << info.get_axons() << filler;
+            outfile << info.get_axons_connected() << filler;
+            outfile << info.get_dendrites_exc() << filler;
+            outfile << info.get_dendrites_exc_connected() << filler;
+            outfile << info.get_dendrites_inh() << filler;
+            outfile << info.get_dendrites_inh_connected() << "\n";
 
             ctr++;
         }

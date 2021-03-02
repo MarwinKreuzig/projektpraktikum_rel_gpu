@@ -91,7 +91,7 @@ void ModelA::init_neurons() {
 void models::ModelA::update_electrical_activity_serial_initialize() {
     GlobalTimers::timers.start(TimerRegion::CALC_SERIAL_ACTIVITY);
 
-#pragma omp parallel for
+#pragma omp parallel for default(none) // NOLINTNEXTLINE
     for (int neuron_id = 0; neuron_id < theta_values.size(); neuron_id++) {
         const double threshold = RandomHolder::get_random_uniform_double(RandomHolderKey::ModelA, 0.0, 1.0);
         theta_values[neuron_id] = threshold;
