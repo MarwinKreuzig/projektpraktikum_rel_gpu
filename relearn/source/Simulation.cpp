@@ -38,7 +38,7 @@ void Simulation::register_neuron_monitor(size_t neuron_id) {
 
 void Simulation::set_acceptance_criterion_for_octree(double value) {
     // Needed to avoid creating autapses
-    if (value > 0.5) {
+    if (value > Octree::max_theta) {
         RelearnException::fail("Acceptance criterion must be smaller or equal to 0.5");
     }
 
@@ -160,13 +160,13 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             size_t num_synapses_deleted = 0;
             size_t num_synapses_created = 0;
 
-            if (0 == MPIWrapper::get_my_rank() && false) {
-                std::stringstream sstring; // For output generation
-                sstring << "** UPDATE CONNECTIVITY AFTER: " << step << " of " << number_steps
-                        << " msec ** [" << Timers::wall_clock_time() << "]\n";
-                sstring << std::flush;
-                LogFiles::write_to_file(LogFiles::EventType::Cout, sstring.str(), true);
-            }
+            //if (0 == MPIWrapper::get_my_rank()) {
+            //    std::stringstream sstring; // For output generation
+            //    sstring << "** UPDATE CONNECTIVITY AFTER: " << step << " of " << number_steps
+            //            << " msec ** [" << Timers::wall_clock_time() << "]\n";
+            //    sstring << std::flush;
+            //    LogFiles::write_to_file(LogFiles::EventType::Cout, sstring.str(), true);
+            //}
 
             GlobalTimers::timers.start(TimerRegion::UPDATE_CONNECTIVITY);
 

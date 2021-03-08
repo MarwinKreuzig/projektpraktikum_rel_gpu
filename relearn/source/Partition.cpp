@@ -107,23 +107,23 @@ void Partition::print_my_subdomains_info_rank(int rank) {
         sstream << "    index_1d   : " << subdomains[i].index_1d << "\n";
 
         sstream << "    index_3d   : "
-                << "( " << subdomains[i].index_3d[0]
-                << " , " << subdomains[i].index_3d[1]
-                << " , " << subdomains[i].index_3d[2]
+                << "( " << subdomains[i].index_3d.get_x()
+                << " , " << subdomains[i].index_3d.get_y()
+                << " , " << subdomains[i].index_3d.get_z()
                 << " )"
                 << "\n";
 
         sstream << "    xyz_min    : "
-                << "( " << subdomains[i].xyz_min[0]
-                << " , " << subdomains[i].xyz_min[1]
-                << " , " << subdomains[i].xyz_min[2]
+                << "( " << subdomains[i].xyz_min.get_x()
+                << " , " << subdomains[i].xyz_min.get_y()
+                << " , " << subdomains[i].xyz_min.get_z()
                 << " )"
                 << "\n";
 
         sstream << "    xyz_max    : "
-                << "( " << subdomains[i].xyz_max[0]
-                << " , " << subdomains[i].xyz_max[1]
-                << " , " << subdomains[i].xyz_max[2]
+                << "( " << subdomains[i].xyz_max.get_x()
+                << " , " << subdomains[i].xyz_max.get_y()
+                << " , " << subdomains[i].xyz_max.get_z()
                 << " )\n";
     }
 

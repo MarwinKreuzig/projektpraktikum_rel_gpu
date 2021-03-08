@@ -26,7 +26,7 @@ class SynapticElements;
 
 class Simulation {
 public:
-    Simulation(std::shared_ptr<Partition> partition);
+    explicit Simulation(std::shared_ptr<Partition> partition);
 
     void register_neuron_monitor(size_t neuron_id);
 

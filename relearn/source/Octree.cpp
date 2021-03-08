@@ -65,15 +65,15 @@ void Octree::postorder_print() {
         return;
     }
 
-    stack.emplace(root, false, 0);
+    stack.emplace(root, 0);
 
     while (!stack.empty()) {
 
         std::stringstream ss;
 
         auto& elem = stack.top();
-        const auto depth = static_cast<int>(elem.get_depth());
-        const auto* ptr = elem.get_ptr();
+        const auto depth = static_cast<int>(elem.get_depth_in_tree());
+        const auto* ptr = elem.get_octree_node();
 
         // Visit node now
         if (elem.get_visited()) {
@@ -160,7 +160,7 @@ void Octree::postorder_print() {
 			*/
             for (auto it = ptr->get_children().crbegin(); it != ptr->get_children().crend(); ++it) {
                 if (*it != nullptr) {
-                    stack.emplace(*it, false, static_cast<size_t>(depth) + 1);
+                    stack.emplace(*it, static_cast<size_t>(depth) + 1);
                 }
             }
             ss << "\n";
@@ -419,7 +419,7 @@ std::vector<double> Octree::create_interval(size_t src_neuron_id, const Vec3d& a
 
     std::vector<double> probabilities;
     std::for_each(vector.cbegin(), vector.cend(), [&](const std::shared_ptr<ProbabilitySubinterval>& ptr) {
-        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *(ptr->get_ptr()), dendrite_type_needed);
+        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *(ptr->get_octree_node()), dendrite_type_needed);
         probabilities.push_back(prob);
         sum += prob;
     });
@@ -764,7 +764,7 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
             sum_probabilities += prob[counter];
             counter++;
         }
-        node_selected = vector[counter - 1]->get_ptr();
+        node_selected = vector[counter - 1]->get_octree_node();
 
         /**
 		* Leave loop if no node was selected OR

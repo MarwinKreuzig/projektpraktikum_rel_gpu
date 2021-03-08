@@ -131,29 +131,29 @@ void Cell::print() const {
     ss << "  == Cell (" << this << ") ==\n";
 
     ss << "    xyz_min[3]: ";
-    for (int i = 0; i < 3; i++) {
-        ss << xyz_min[i] << " ";
-    }
+    ss << xyz_min.get_x() << " ";
+    ss << xyz_min.get_y() << " ";
+    ss << xyz_min.get_z() << " ";
     ss << "\n";
 
     ss << "    xyz_max[3]: ";
-    for (int i = 0; i < 3; i++) {
-        ss << xyz_max[i] << " ";
-    }
+    ss << xyz_max.get_x() << " ";
+    ss << xyz_max.get_y() << " ";
+    ss << xyz_max.get_z() << " ";
     ss << "\n";
 
     ss << "    dendrites_ex.num_dendrites: " << dendrites_ex.num_dendrites;
     ss << "    dendrites_ex.xyz_pos[3]   : ";
-    for (int i = 0; i < 3; i++) {
-        ss << dendrites_ex.xyz_pos.value()[i] << " ";
-    }
+    ss << dendrites_ex.xyz_pos.value().get_x() << " ";
+    ss << dendrites_ex.xyz_pos.value().get_y() << " ";
+    ss << dendrites_ex.xyz_pos.value().get_z() << " ";
     ss << "\n";
 
     ss << "    dendrites_in.num_dendrites: " << dendrites_in.num_dendrites;
     ss << "    dendrites_in.xyz_pos[3]   : ";
-    for (int i = 0; i < 3; i++) {
-        ss << dendrites_in.xyz_pos.value()[i] << " ";
-    }
+    ss << dendrites_in.xyz_pos.value().get_x() << " ";
+    ss << dendrites_in.xyz_pos.value().get_y() << " ";
+    ss << dendrites_in.xyz_pos.value().get_z() << " ";
     ss << "\n";
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
