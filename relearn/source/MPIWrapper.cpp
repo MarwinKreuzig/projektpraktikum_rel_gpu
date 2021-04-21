@@ -260,39 +260,34 @@ void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
 }
 
 MPI_Op MPIWrapper::translate_reduce_function(ReduceFunction rf) {
-    // NOLINTNEXTLINE
-    return [&]() -> MPI_Op {
-        switch (rf) {
-        case ReduceFunction::min:
-            return MPI_MIN;
+    switch (rf) {
+    case ReduceFunction::min:
+        return MPI_MIN;
 
-        case ReduceFunction::max:
-            return MPI_MAX;
+    case ReduceFunction::max:
+        return MPI_MAX;
 
-        case ReduceFunction::sum:
-            return MPI_SUM;
+    case ReduceFunction::sum:
+        return MPI_SUM;
 
-        case ReduceFunction::minsummax:
-            return minsummax;
+    case ReduceFunction::minsummax:
+        return minsummax;
 
-        default:
-            RelearnException::fail("In reduce, got wrong function");
-            return 0;
-        }
-    }();
+    default:
+        RelearnException::fail("In reduce, got wrong function");
+        return 0;
+    }
 }
 
 MPI_Comm MPIWrapper::translate_scope(Scope scope) {
-    return [&]() -> MPI_Comm {
-        switch (scope) {
-        case Scope::global:
-            // NOLINTNEXTLINE
-            return MPI_COMM_WORLD;
-        default:
-            RelearnException::fail("In barrier, got wrong scope");
-            return 0;
-        }
-    }();
+    switch (scope) {
+    case Scope::global:
+        // NOLINTNEXTLINE
+        return MPI_COMM_WORLD;
+    default:
+        RelearnException::fail("In barrier, got wrong scope");
+        return 0;
+    }
 }
 
 void MPIWrapper::register_custom_function() {
