@@ -10,27 +10,11 @@
 
 #pragma once
 
-#ifdef __has_include
-
-#if __has_include(<mpi.h>)
+#if MPI_FOUND
 #include <mpi.h>
 #else
-using MPI_Comm = int;
-using MPI_Datatype = int;
-using MPI_Op = int;
 using MPI_Request = int;
-using MPI_Win = int;
 
-#define MPI_LOCK_EXCLUSIVE 0
-#define MPI_LOCK_SHARED 1
-#endif
-
-#else
-
-#if __has_include(<mpi.h>)
-#include <mpi.h>
-#else
-#error "The compiler is missing __has_include!"
-#endif
-
+constexpr inline auto MPI_LOCK_EXCLUSIVE = 0;
+constexpr inline auto MPI_LOCK_SHARED = 1;
 #endif

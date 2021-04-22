@@ -1,28 +1,16 @@
-/*
- * This file is part of the RELeARN software developed at Technical University Darmstadt
- *
- * Copyright (c) 2020, Technical University of Darmstadt, Germany
- *
- * This software may be modified and distributed under the terms of a BSD-style license.
- * See the LICENSE file in the base directory for details.
- *
- */
-
 #pragma once
+
+#if !MPI_FOUND
 
 #include "MPITypes.h"
 #include "RelearnException.h"
 
 #include <array>
-#include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
-
-#if !MPI_FOUND
-#include "MPINoWrapper.h"
-
-using MPIWrapper = MPINoWrapper;
-#else // #if MPI_FOUND
+#include <map>
+#include <future>
 
 class Octree;
 class OctreeNode;
@@ -32,13 +20,7 @@ enum class MPI_Locktype : int {
     shared = MPI_LOCK_SHARED,
 };
 
-namespace MPIUserDefinedOperation {
-// This combination function assumes that it's called with the
-// correct MPI datatype
-void min_sum_max(const int* invec, int* inoutvec, const int* len, MPI_Datatype* dtype);
-} // namespace MPIUserDefinedOperation
-
-class MPIWrapper {
+class MPINoWrapper {
     struct RMABufferOctreeNodes {
         OctreeNode* ptr;
         size_t num_nodes;
@@ -62,46 +44,33 @@ public:
     using AsyncToken = MPI_Request;
 
 private:
-    MPIWrapper() = default;
-
-    static inline MPI_Op minsummax{};
-
-    static MPI_Op translate_reduce_function(ReduceFunction rf);
-
-    static MPI_Comm translate_scope(Scope scope);
-
-    static void register_custom_function();
-
-    static void free_custom_function();
+    MPINoWrapper() = default;
 
     static inline RMABufferOctreeNodes rma_buffer_branch_nodes{};
 
-    static inline int num_ranks{ -1 }; // Number of ranks in MPI_COMM_WORLD
-    static inline int my_rank{ -1 }; // My rank in MPI_COMM_WORLD
+    static inline const int num_ranks{ 1 }; // Number of ranks in MPI_COMM_WORLD
+    static inline const int my_rank{ 0 }; // My rank in MPI_COMM_WORLD
 
-    static inline int thread_level_provided{ -1 }; // Thread level provided by MPI
+    static inline size_t num_neurons{}; // Total number of neurons
 
-    // NOLINTNEXTLINE
-    static inline std::string my_rank_str{ "-1" };
+    using async_type = std::tuple<const void*, void*, int>;
 
-    static void get(void* ptr, int size, int target_rank, int64_t target_display);
+    static inline std::map<AsyncToken, async_type> tuple_map{};
+
+    static inline std::string my_rank_str{ '0' };
 
     static void all_gather(const void* own_data, void* buffer, int size, Scope scope);
 
-    static void all_gather_inl(void* ptr, int count, Scope scope);
-
     static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank, Scope scope);
 
-    // NOLINTNEXTLINE
     static void async_s(const void* buffer, int count, int rank, Scope scope, AsyncToken& token);
 
-    // NOLINTNEXTLINE
     static void async_recv(void* buffer, int count, int rank, Scope scope, AsyncToken& token);
 
 public:
     static void init(int argc, char** argv);
 
-    static void init_globals();
+    static void init_neurons(size_t num_neurons);
 
     static void init_buffer_octree(size_t num_partitions);
 
@@ -130,8 +99,7 @@ public:
     static void reduce(const std::array<T, size>& src, std::array<T, size>& dst, ReduceFunction function, int root_rank, Scope scope) {
         RelearnException::check(src.size() == dst.size(), "Sizes of vectors don't match");
 
-        const auto count = static_cast<int>(src.size() * sizeof(T));
-        reduce(src.data(), dst.data(), count, function, root_rank, scope);
+        reduce(src.data(), dst.data(), src.size() * sizeof(T), function, root_rank, scope);
     }
 
     template <typename T>
@@ -141,12 +109,10 @@ public:
 
     template <typename T>
     static void get(T* ptr, int target_rank, int64_t target_display) {
-        get(ptr, sizeof(T), target_rank, target_display);
     }
 
     template <typename T>
     static void all_gather_inline(T* ptr, int count, Scope scope) {
-        all_gather_inl(ptr, count * sizeof(T), scope);
     }
 
     [[nodiscard]] static int64_t get_ptr_displacement(int target_rank, const OctreeNode* ptr);
@@ -156,6 +122,14 @@ public:
     [[nodiscard]] static int get_num_ranks();
 
     [[nodiscard]] static int get_my_rank();
+
+    [[nodiscard]] static size_t get_num_neurons();
+
+    [[nodiscard]] static size_t get_my_num_neurons();
+
+    [[nodiscard]] static size_t get_my_neuron_id_start();
+
+    [[nodiscard]] static size_t get_my_neuron_id_end();
 
     [[nodiscard]] static size_t get_num_avail_objects();
 
@@ -185,6 +159,8 @@ public:
     static void unlock_window(int rank);
 
     static void finalize() /*noexcept*/;
+
+    static void print_infos_rank(int rank);
 };
 
 #endif

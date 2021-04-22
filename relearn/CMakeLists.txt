@@ -26,8 +26,8 @@ endif()
 
 include(FetchContent)
 
-find_package (MPI REQUIRED)
-find_package (OpenMP)
+find_package(MPI)
+find_package(OpenMP)
 
 # project options
 add_library(project_options INTERFACE)
@@ -35,6 +35,8 @@ add_library(project_options INTERFACE)
 target_include_directories (project_options SYSTEM INTERFACE ${MPI_CXX_INCLUDE_PATH})
 
 target_compile_options (project_options INTERFACE ${MPI_CXX_COMPILE_FLAGS})
+
+target_compile_definitions(project_options INTERFACE -DMPI_FOUND=$<BOOL:${MPI_FOUND}>)
 
 target_link_libraries (project_options INTERFACE ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
 if (UNIX)
@@ -90,7 +92,7 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
 
 source_group("tests" FILES ${TOP_TST})
 
-add_executable(runTests 
+add_executable(runTests
 	${TOP_INCS}
 	${TOP_SRC_OM}
 	${TOP_TST}

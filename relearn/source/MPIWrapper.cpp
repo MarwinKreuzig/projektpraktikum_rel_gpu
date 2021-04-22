@@ -10,6 +10,8 @@
 
 #include "MPIWrapper.h"
 
+#if MPI_FOUND
+
 #include "Config.h"
 #include "LogFiles.h"
 #include "MPI_RMA_MemAllocator.h"
@@ -56,7 +58,7 @@ void MPIWrapper::init(int argc, char** argv) {
 
     const unsigned int num_digits = Util::num_digits(num_ranks - 1);
 
-    std::stringstream sstring;
+    std::stringstream sstring{};
     sstring << std::setw(static_cast<std::streamsize>(num_digits)) << std::setfill('0') << my_rank;
 
     my_rank_str = sstring.str();
@@ -78,15 +80,15 @@ void MPIWrapper::init_buffer_octree(size_t num_partitions) {
 }
 
 void MPIWrapper::barrier(Scope scope) {
-    MPI_Comm mpi_scope = translate_scope(scope);
+    const MPI_Comm mpi_scope = translate_scope(scope);
 
     const int errorcode = MPI_Barrier(mpi_scope);
     RelearnException::check(errorcode == 0, "Error in barrier");
 }
 
-[[nodiscard]] double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, Scope scope) {
-    MPI_Comm mpi_scope = translate_scope(scope);
-    MPI_Op mpi_reduce_function = translate_reduce_function(function);
+double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, Scope scope) {
+    const MPI_Comm mpi_scope = translate_scope(scope);
+    const MPI_Op mpi_reduce_function = translate_reduce_function(function);
 
     double result = 0.0;
     // NOLINTNEXTLINE
@@ -96,9 +98,9 @@ void MPIWrapper::barrier(Scope scope) {
     return result;
 }
 
-[[nodiscard]] double MPIWrapper::all_reduce(double value, ReduceFunction function, Scope scope) {
-    MPI_Comm mpi_scope = translate_scope(scope);
-    MPI_Op mpi_reduce_function = translate_reduce_function(function);
+double MPIWrapper::all_reduce(double value, ReduceFunction function, Scope scope) {
+    const MPI_Comm mpi_scope = translate_scope(scope);
+    const MPI_Op mpi_reduce_function = translate_reduce_function(function);
 
     double result = 0.0;
     // NOLINTNEXTLINE
@@ -109,12 +111,12 @@ void MPIWrapper::barrier(Scope scope) {
 }
 
 void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst, Scope scope) {
-    size_t count_src = src.size();
-    size_t count_dst = dst.size();
+    const size_t count_src = src.size();
+    const size_t count_dst = dst.size();
 
     RelearnException::check(count_src == count_dst, "Error in all to all: size");
 
-    MPI_Comm mpi_scope = translate_scope(scope);
+    const MPI_Comm mpi_scope = translate_scope(scope);
 
     // NOLINTNEXTLINE
     const int errorcode = MPI_Alltoall(src.data(), sizeof(size_t), MPI_CHAR, dst.data(), sizeof(size_t), MPI_CHAR, mpi_scope);
@@ -122,22 +124,22 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
 }
 
 void MPIWrapper::async_s(const void* buffer, int count, int rank, Scope scope, AsyncToken& token) {
-    MPI_Comm mpi_scope = translate_scope(scope);
+    const MPI_Comm mpi_scope = translate_scope(scope);
     // NOLINTNEXTLINE
     const int errorcode = MPI_Isend(buffer, count, MPI_CHAR, rank, 0, mpi_scope, &token);
     RelearnException::check(errorcode == 0, "Error in async send");
 }
 
 void MPIWrapper::async_recv(void* buffer, int count, int rank, Scope scope, AsyncToken& token) {
-    MPI_Comm mpi_scope = translate_scope(scope);
+    const MPI_Comm mpi_scope = translate_scope(scope);
     // NOLINTNEXTLINE
     const int errorcode = MPI_Irecv(buffer, count, MPI_CHAR, rank, 0, mpi_scope, &token);
     RelearnException::check(errorcode == 0, "Error in async receive");
 }
 
 void MPIWrapper::reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank, Scope scope) {
-    MPI_Comm mpi_scope = translate_scope(scope);
-    MPI_Op mpi_reduce_function = translate_reduce_function(function);
+    const MPI_Comm mpi_scope = translate_scope(scope);
+    const MPI_Op mpi_reduce_function = translate_reduce_function(function);
 
     // NOLINTNEXTLINE
     const int errorcode = MPI_Reduce(src, dst, size, MPI_CHAR, mpi_reduce_function, root_rank, mpi_scope);
@@ -146,14 +148,14 @@ void MPIWrapper::reduce(const void* src, void* dst, int size, ReduceFunction fun
 
 void MPIWrapper::get(void* ptr, int size, int target_rank, int64_t target_display) {
     RelearnException::check(size > 0, "Error in get, size must be larget than 0");
-    MPI_Aint target_display_mpi(target_display);
+    const MPI_Aint target_display_mpi(target_display);
     // NOLINTNEXTLINE
     const int errorcode = MPI_Get(ptr, size, MPI_CHAR, target_rank, target_display_mpi, size, MPI_CHAR, MPI_RMA_MemAllocator::mpi_window);
     RelearnException::check(errorcode == 0, "Error in get");
 }
 
 void MPIWrapper::all_gather(const void* own_data, void* buffer, int size, Scope scope) {
-    MPI_Comm mpi_scope = translate_scope(scope);
+    const MPI_Comm mpi_scope = translate_scope(scope);
 
     // NOLINTNEXTLINE
     const int errorcode = MPI_Allgather(own_data, size, MPI_CHAR, buffer, size, MPI_CHAR, mpi_scope);
@@ -162,46 +164,46 @@ void MPIWrapper::all_gather(const void* own_data, void* buffer, int size, Scope 
 
 void MPIWrapper::all_gather_inl(void* ptr, int count, Scope scope) {
     RelearnException::check(count > 0, "Error in all gather , count is not greater than 0");
-    MPI_Comm mpi_scope = translate_scope(scope);
+    const MPI_Comm mpi_scope = translate_scope(scope);
 
     // NOLINTNEXTLINE
     const int errorcode = MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, ptr, count, MPI_CHAR, mpi_scope);
     RelearnException::check(errorcode == 0, "Error in all gather ");
 }
 
-[[nodiscard]] int64_t MPIWrapper::get_ptr_displacement(int target_rank, const OctreeNode* ptr) {
-    const std::vector<int64_t>& base_ptrs = MPI_RMA_MemAllocator::get_base_pointers();
-    const auto displacement = int64_t(ptr) - int64_t(base_ptrs[target_rank]);
+int64_t MPIWrapper::get_ptr_displacement(int target_rank, const OctreeNode* ptr) {
+    const auto& base_ptrs = MPI_RMA_MemAllocator::get_base_pointers();
+    const auto displacement = int64_t(ptr) - base_ptrs[target_rank];
     return displacement;
 }
 
-[[nodiscard]] OctreeNode* MPIWrapper::new_octree_node() {
+OctreeNode* MPIWrapper::new_octree_node() {
     return MPI_RMA_MemAllocator::new_octree_node();
 }
 
-[[nodiscard]] int MPIWrapper::get_num_ranks() {
+int MPIWrapper::get_num_ranks() {
     RelearnException::check(num_ranks >= 0, "MPIWrapper is not initialized");
     return num_ranks;
 }
 
-[[nodiscard]] int MPIWrapper::get_my_rank() {
+int MPIWrapper::get_my_rank() {
     RelearnException::check(my_rank >= 0, "MPIWrapper is not initialized");
     return my_rank;
 }
 
-[[nodiscard]] size_t MPIWrapper::get_num_avail_objects() {
+size_t MPIWrapper::get_num_avail_objects() {
     return MPI_RMA_MemAllocator::get_min_num_avail_objects();
 }
 
-[[nodiscard]] OctreeNode* MPIWrapper::get_buffer_octree_nodes() {
+OctreeNode* MPIWrapper::get_buffer_octree_nodes() {
     return rma_buffer_branch_nodes.ptr;
 }
 
-[[nodiscard]] size_t MPIWrapper::get_num_buffer_octree_nodes() {
+size_t MPIWrapper::get_num_buffer_octree_nodes() {
     return rma_buffer_branch_nodes.num_nodes;
 }
 
-[[nodiscard]] std::string MPIWrapper::get_my_rank_str() {
+std::string MPIWrapper::get_my_rank_str() {
     return my_rank_str;
 }
 
@@ -217,12 +219,12 @@ void MPIWrapper::wait_request(AsyncToken& request) {
     }
 }
 
-[[nodiscard]] MPIWrapper::AsyncToken MPIWrapper::get_non_null_request() {
+MPIWrapper::AsyncToken MPIWrapper::get_non_null_request() {
     // NOLINTNEXTLINE
     return (AsyncToken)(!MPI_REQUEST_NULL);
 }
 
-[[nodiscard]] MPIWrapper::AsyncToken MPIWrapper::get_null_request() {
+MPIWrapper::AsyncToken MPIWrapper::get_null_request() {
     // NOLINTNEXTLINE
     return (AsyncToken)(MPI_REQUEST_NULL);
 }
@@ -230,7 +232,7 @@ void MPIWrapper::wait_request(AsyncToken& request) {
 void MPIWrapper::all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs) {
     // Create MPI data type for three doubles
     // NOLINTNEXTLINE
-    MPI_Datatype type;
+    MPI_Datatype type{};
 
     // NOLINTNEXTLINE
     const int errorcode_1 = MPI_Type_contiguous(3, MPI_DOUBLE, &type);
@@ -257,49 +259,35 @@ void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
     MPI_Waitall(size, tokens.data(), MPI_STATUSES_IGNORE);
 }
 
-[[nodiscard]] MPI_Op MPIWrapper::translate_reduce_function(ReduceFunction rf) {
-    // NOLINTNEXTLINE
-    auto mpi_reduce_function = MPI_Op(0);
-
+MPI_Op MPIWrapper::translate_reduce_function(ReduceFunction rf) {
     switch (rf) {
     case ReduceFunction::min:
-        // NOLINTNEXTLINE
-        mpi_reduce_function = MPI_MIN;
-        break;
+        return MPI_MIN;
+
     case ReduceFunction::max:
-        // NOLINTNEXTLINE
-        mpi_reduce_function = MPI_MAX;
-        break;
+        return MPI_MAX;
+
     case ReduceFunction::sum:
-        // NOLINTNEXTLINE
-        mpi_reduce_function = MPI_SUM;
-        break;
+        return MPI_SUM;
+
     case ReduceFunction::minsummax:
-        mpi_reduce_function = minsummax;
-        break;
+        return minsummax;
+
     default:
         RelearnException::fail("In reduce, got wrong function");
-        break;
+        return 0;
     }
-
-    return mpi_reduce_function;
 }
 
-[[nodiscard]] MPI_Comm MPIWrapper::translate_scope(Scope scope) {
-    // NOLINTNEXTLINE
-    auto mpi_scope = MPI_Comm(0);
-
+MPI_Comm MPIWrapper::translate_scope(Scope scope) {
     switch (scope) {
     case Scope::global:
         // NOLINTNEXTLINE
-        mpi_scope = MPI_COMM_WORLD;
-        break;
+        return MPI_COMM_WORLD;
     default:
         RelearnException::fail("In barrier, got wrong scope");
-        break;
+        return 0;
     }
-
-    return mpi_scope;
 }
 
 void MPIWrapper::register_custom_function() {
@@ -357,3 +345,5 @@ void MPIUserDefinedOperation::min_sum_max(const int* invec, int* inoutvec, const
         inout[3 * i + 2] = std::max(in[3 * i + 2], inout[3 * i + 2]);
     }
 }
+
+#endif
