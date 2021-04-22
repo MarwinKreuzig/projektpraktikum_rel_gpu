@@ -21,15 +21,16 @@ class NeuronMonitor;
 class NeuronToSubdomainAssignment;
 class Neurons;
 class Octree;
-class Parameters;
 class Partition;
 class SynapticElements;
 
 class Simulation {
 public:
-    Simulation(double accept_criterion, std::shared_ptr<Partition> partition);
+    explicit Simulation(std::shared_ptr<Partition> partition);
 
     void register_neuron_monitor(size_t neuron_id);
+
+    void set_acceptance_criterion_for_octree(double value);
 
     void set_neuron_models(std::unique_ptr<NeuronModels> nm);
 
@@ -54,11 +55,12 @@ public:
     static std::vector<std::unique_ptr<NeuronModels>> get_models();
 
 private:
+    void construct_neurons();
+
     void initialize();
 
     void print_neuron_monitors();
 
-    std::unique_ptr<Parameters> parameters;
     std::shared_ptr<Partition> partition;
 
     std::unique_ptr<NeuronToSubdomainAssignment> neuron_to_subdomain_assignment;
@@ -75,6 +77,8 @@ private:
     std::shared_ptr<NetworkGraph> network_graph;
 
     std::vector<NeuronMonitor> monitors;
+
+    double accept_criterion{ 0.0 };
 
     int64_t total_synapse_creations = 0;
     int64_t total_synapse_deletions = 0;

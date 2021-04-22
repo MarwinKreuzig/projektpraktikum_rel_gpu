@@ -35,7 +35,7 @@ public:
         request_rank = rank;
     }
 
-    [[nodiscard]] OctreeNode* get_ptr() const noexcept {
+    [[nodiscard]] OctreeNode* get_octree_node() const noexcept {
         return ptr;
     }
 

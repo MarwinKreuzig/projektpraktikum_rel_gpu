@@ -136,124 +136,6 @@ TEST(TestVector, test_vector_move_assign) {
     }
 }
 
-TEST(TestVector, test_vector_operator_index_read) {
-    std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
-
-    mt.seed(rand());
-
-    for (auto i = 0; i < iterations; i++) {
-        auto x = urd(mt);
-        auto y = urd(mt);
-        auto z = urd(mt);
-
-        Vec3<double> v{ x, y, z };
-
-        EXPECT_EQ(x, v[0]);
-        EXPECT_EQ(y, v[1]);
-        EXPECT_EQ(z, v[2]);
-    }
-}
-
-TEST(TestVector, test_vector_operator_index_read_assert) {
-    setup();
-
-    std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
-
-    mt.seed(rand());
-
-    for (auto i = 0; i < iterations; i++) {
-        auto x = urd(mt);
-        auto y = urd(mt);
-        auto z = urd(mt);
-
-        Vec3<double> v{ x, y, z };
-
-        auto idx = urd(mt);
-        while (idx == 0.0 || idx == 1.0 || idx == 2.0) {
-            idx = urd(mt);
-        }
-
-        EXPECT_THROW(v[idx], RelearnException);
-    }
-
-    for (auto i = 0; i < iterations; i++) {
-        auto x = urd(mt);
-        auto y = urd(mt);
-        auto z = urd(mt);
-
-        Vec3<double> v{ x, y, z };
-
-        auto idx = round(urd(mt));
-        while (idx == 0.0 || idx == 1.0 || idx == 2.0) {
-            idx = urd(mt);
-        }
-
-        auto idx_int = static_cast<int>(idx);
-        EXPECT_THROW(v[idx_int], RelearnException);
-    }
-}
-
-TEST(TestVector, test_vector_operator_index_write) {
-    std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
-
-    mt.seed(rand());
-
-    for (auto i = 0; i < iterations; i++) {
-        auto x = urd(mt);
-        auto y = urd(mt);
-        auto z = urd(mt);
-
-        Vec3<double> v{};
-
-        v[0] = x;
-        v[1] = y;
-        v[2] = z;
-
-        EXPECT_EQ(x, v[0]);
-        EXPECT_EQ(y, v[1]);
-        EXPECT_EQ(z, v[2]);
-    }
-}
-
-TEST(TestVector, test_vector_operator_index_write_assert) {
-    setup();
-
-    std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
-
-    mt.seed(rand());
-
-    for (auto i = 0; i < iterations; i++) {
-        auto x = urd(mt);
-        auto y = urd(mt);
-        auto z = urd(mt);
-
-        Vec3<double> v{ x, y, z };
-
-        auto idx = urd(mt);
-        while (idx == 0.0 || idx == 1.0 || idx == 2.0) {
-            idx = urd(mt);
-        }
-
-        EXPECT_THROW(v[idx] = 0.0, RelearnException);
-    }
-
-    for (auto i = 0; i < iterations; i++) {
-        auto x = urd(mt);
-        auto y = urd(mt);
-        auto z = urd(mt);
-
-        Vec3<double> v{ x, y, z };
-
-        auto idx = round(urd(mt));
-        while (idx == 0.0 || idx == 1.0 || idx == 2.0) {
-            idx = urd(mt);
-        }
-
-        auto idx_int = static_cast<int>(idx);
-        EXPECT_THROW(v[idx_int] = 0.0, RelearnException);
-    }
-}
-
 TEST(TestVector, test_vector_operator_plus_vec) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
@@ -471,6 +353,60 @@ TEST(TestVector, test_vector_operator_plus_assign_scalar) {
         EXPECT_EQ(z1 + scalar, v.get_z());
 
         EXPECT_EQ(scalar, scalar_copy);
+    }
+}
+
+TEST(TestVector, test_vector_operator_plus_assign_vector) {
+
+    std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
+
+    mt.seed(rand());
+
+    for (auto i = 0; i < iterations; i++) {
+        const auto x1 = urd(mt);
+        const auto y1 = urd(mt);
+        const auto z1 = urd(mt);
+
+        Vec3<double> v{ x1, y1, z1 };
+
+        const auto x2 = urd(mt);
+        const auto y2 = urd(mt);
+        const auto z2 = urd(mt);
+
+        Vec3<double> w{ x2, y2, z2 };
+
+        v += w;
+
+        EXPECT_EQ(x1 + x2, v.get_x());
+        EXPECT_EQ(y1 + y2, v.get_y());
+        EXPECT_EQ(z1 + z2, v.get_z());
+    }
+}
+
+TEST(TestVector, test_vector_operator_minus_assign_vector) {
+
+    std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
+
+    mt.seed(rand());
+
+    for (auto i = 0; i < iterations; i++) {
+        const auto x1 = urd(mt);
+        const auto y1 = urd(mt);
+        const auto z1 = urd(mt);
+
+        Vec3<double> v{ x1, y1, z1 };
+
+        const auto x2 = urd(mt);
+        const auto y2 = urd(mt);
+        const auto z2 = urd(mt);
+
+        Vec3<double> w{ x2, y2, z2 };
+
+        v -= w;
+
+        EXPECT_EQ(x1 - x2, v.get_x());
+        EXPECT_EQ(y1 - y2, v.get_y());
+        EXPECT_EQ(z1 - z2, v.get_z());
     }
 }
 

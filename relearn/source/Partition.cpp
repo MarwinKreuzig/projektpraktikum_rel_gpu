@@ -14,7 +14,6 @@
 #include "NeuronToSubdomainAssignment.h"
 #include "Neurons.h"
 #include "RelearnException.h"
-#include "SynapticElements.h"
 #include "Vec3.h"
 
 #include <sstream>
@@ -47,6 +46,7 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
 	*
 	* For #procs = 2^n and 8^level_of_subdomain_trees subdomains, every proc's #subdomains is the same power of two of {1, 2, 4}.
 	*/
+    // NOLINTNEXTLINE
     my_num_subdomains = total_num_subdomains / num_ranks;
     const size_t rest = total_num_subdomains % num_ranks;
     my_num_subdomains += (my_rank < rest) ? 1 : 0;
@@ -67,15 +67,6 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
     num_subdomains_per_dimension = 1ULL << level_of_subdomain_trees;
     space_curve.set_refinement_level(level_of_subdomain_trees);
 
-    std::stringstream sstream;
-    sstream << "Total number subdomains        : " << total_num_subdomains;
-    LogFiles::print_message_rank(sstream.str().c_str(), 0);
-    sstream.str("");
-
-    sstream << "Number subdomains per dimension: " << num_subdomains_per_dimension;
-    LogFiles::print_message_rank(sstream.str().c_str(), 0);
-    sstream.str("");
-
     // Calc start and end index of subdomain
     my_subdomain_id_start = (total_num_subdomains / num_ranks) * my_rank;
     my_subdomain_id_end = my_subdomain_id_start + my_num_subdomains - 1;
@@ -92,63 +83,51 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
         box_coords = space_curve.map_1d_to_3d(static_cast<uint64_t>(current_subdomain.index_1d));
         current_subdomain.index_3d = box_coords;
     }
+
+    std::stringstream sstream;
+    sstream << "Total number subdomains        : " << total_num_subdomains << "\n";
+    sstream << "Number subdomains per dimension: " << num_subdomains_per_dimension;
+    LogFiles::print_message_rank(sstream.str().c_str(), 0);
 }
 
 void Partition::print_my_subdomains_info_rank(int rank) {
     std::stringstream sstream;
 
-    sstream << "My number of neurons   : " << my_num_neurons;
-    LogFiles::print_message_rank(sstream.str().c_str(), rank);
-    sstream.str("");
-
-    sstream << "My number of subdomains: " << my_num_subdomains;
-    LogFiles::print_message_rank(sstream.str().c_str(), rank);
-    sstream.str("");
-
+    sstream << "My number of neurons   : " << my_num_neurons << "\n";
+    sstream << "My number of subdomains: " << my_num_subdomains << "\n";
     sstream << "My subdomain ids       : [ " << my_subdomain_id_start
             << " , "
             << my_subdomain_id_end
-            << " ]";
-    LogFiles::print_message_rank(sstream.str().c_str(), rank);
-    sstream.str("");
+            << " ]"
+            << "\n";
 
     for (size_t i = 0; i < my_num_subdomains; i++) {
-        sstream << "Subdomain: " << i;
-        LogFiles::print_message_rank(sstream.str().c_str(), rank);
-        sstream.str("");
-
-        sstream << "    num_neurons: " << subdomains[i].num_neurons;
-        LogFiles::print_message_rank(sstream.str().c_str(), rank);
-        sstream.str("");
-
-        sstream << "    index_1d   : " << subdomains[i].index_1d;
-        LogFiles::print_message_rank(sstream.str().c_str(), rank);
-        sstream.str("");
+        sstream << "Subdomain: " << i << "\n";
+        sstream << "    num_neurons: " << subdomains[i].num_neurons << "\n";
+        sstream << "    index_1d   : " << subdomains[i].index_1d << "\n";
 
         sstream << "    index_3d   : "
-                << "( " << subdomains[i].index_3d[0]
-                << " , " << subdomains[i].index_3d[1]
-                << " , " << subdomains[i].index_3d[2]
-                << " )";
-        LogFiles::print_message_rank(sstream.str().c_str(), rank);
-        sstream.str("");
+                << "( " << subdomains[i].index_3d.get_x()
+                << " , " << subdomains[i].index_3d.get_y()
+                << " , " << subdomains[i].index_3d.get_z()
+                << " )"
+                << "\n";
 
         sstream << "    xyz_min    : "
-                << "( " << subdomains[i].xyz_min[0]
-                << " , " << subdomains[i].xyz_min[1]
-                << " , " << subdomains[i].xyz_min[2]
-                << " )";
-        LogFiles::print_message_rank(sstream.str().c_str(), rank);
-        sstream.str("");
+                << "( " << subdomains[i].xyz_min.get_x()
+                << " , " << subdomains[i].xyz_min.get_y()
+                << " , " << subdomains[i].xyz_min.get_z()
+                << " )"
+                << "\n";
 
         sstream << "    xyz_max    : "
-                << "( " << subdomains[i].xyz_max[0]
-                << " , " << subdomains[i].xyz_max[1]
-                << " , " << subdomains[i].xyz_max[2]
+                << "( " << subdomains[i].xyz_max.get_x()
+                << " , " << subdomains[i].xyz_max.get_y()
+                << " , " << subdomains[i].xyz_max.get_z()
                 << " )\n";
-        LogFiles::print_message_rank(sstream.str().c_str(), rank);
-        sstream.str("");
     }
+
+    LogFiles::print_message_rank(sstream.str().c_str(), rank);
 }
 
 bool Partition::is_neuron_local(size_t neuron_id) const {
@@ -220,19 +199,13 @@ void Partition::set_total_num_neurons(size_t total_num) noexcept {
     total_num_neurons = total_num;
 }
 
-std::shared_ptr<Neurons> Partition::load_neurons(
-    std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain,
-    std::unique_ptr<NeuronModels> neuron_models,
-    std::unique_ptr<SynapticElements> axons_ptr,
-    std::unique_ptr<SynapticElements> dend_ex_ptr,
-    std::unique_ptr<SynapticElements> dend_in_ptr) {
-
+void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain) {
     RelearnException::check(!neurons_loaded, "Neurons are already loaded, cannot load anymore");
 
     simulation_box_length = neurons_in_subdomain->get_simulation_box_length();
 
     // Set subdomain length
-    Vec3d subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
+    const Vec3d subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
 
     /**
 	* Output all parameters calculated so far
@@ -244,17 +217,12 @@ std::shared_ptr<Neurons> Partition::load_neurons(
             << "\n";
     sstream << "Simulation box length          : " << simulation_box_length.get_z() << " (depth)"
             << "\n";
-    LogFiles::print_message_rank(sstream.str().c_str(), 0);
-    sstream.str("");
-
     sstream << "Subdomain length          : " << subdomain_length.get_x() << " (height)"
             << "\n";
     sstream << "Subdomain length          : " << subdomain_length.get_y() << " (width)"
             << "\n";
-    sstream << "Subdomain length          : " << subdomain_length.get_z() << " (depth)"
-            << "\n";
+    sstream << "Subdomain length          : " << subdomain_length.get_z() << " (depth)";
     LogFiles::print_message_rank(sstream.str().c_str(), 0);
-    sstream.str("");
 
     my_num_neurons = 0;
     for (size_t i = 0; i < my_num_subdomains; i++) {
@@ -305,16 +273,6 @@ std::shared_ptr<Neurons> Partition::load_neurons(
         // The freeing is done by the global tree destructor later
         // as the nodes in this tree will be attached to the global tree
         current_subdomain.octree.set_no_free_in_destructor();
-    }
-
-    std::shared_ptr<Neurons> neurons;
-
-    const bool provided_three_elements = axons_ptr && dend_ex_ptr && dend_in_ptr;
-
-    if (provided_three_elements) {
-        neurons = std::make_shared<Neurons>(*this, std::move(neuron_models), std::move(axons_ptr), std::move(dend_ex_ptr), std::move(dend_in_ptr));
-    } else {
-        neurons = std::make_shared<Neurons>(*this, std::move(neuron_models));
     }
 
     neurons->init(my_num_neurons);
@@ -370,6 +328,4 @@ std::shared_ptr<Neurons> Partition::load_neurons(
     neurons->set_signal_types(std::move(signal_types));
 
     neurons_loaded = true;
-
-    return neurons;
 }

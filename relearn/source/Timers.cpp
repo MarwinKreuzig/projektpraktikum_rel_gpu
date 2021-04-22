@@ -35,6 +35,7 @@ void Timers::print() {
 
         for (int j = 0; j < 3; ++j) {
             const size_t idx = 3 * i + j;
+            // NOLINTNEXTLINE
             timers_local[idx] = elapsed;
         }
     }
@@ -48,6 +49,7 @@ void Timers::print() {
     // so that sum becomes average
     for (size_t i = 0; i < TimerRegion::NUM_TIMER_REGIONS; i++) {
         const size_t idx = 3 * i + 1;
+        // NOLINTNEXTLINE
         timers_global[idx] /= MPIWrapper::get_num_ranks();
     }
 
@@ -154,6 +156,8 @@ void Timers::print() {
                 << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CREATE_SYNAPSES + 1] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * TimerRegion::CREATE_SYNAPSES + 2] << "\n";
 
+        sstring << "\n\n";
+
         // Restore old precision
         sstring.precision(old_precision);
 
@@ -162,9 +166,9 @@ void Timers::print() {
 
         //cout << "\n======== MEMORY USAGE RANK 0 ========" << "\n";
 
-        sstring << "\n======== RMA MEMORY ALLOCATOR RANK 0 ========"
-                << "\n";
-        sstring << "Min num objects available: " << MPIWrapper::get_num_avail_objects() << "\n";
+        //sstring << "\n======== RMA MEMORY ALLOCATOR RANK 0 ========"
+        //        << "\n";
+        //sstring << "Min num objects available: " << MPIWrapper::get_num_avail_objects() << "\n\n";
     }
 
     LogFiles::write_to_file(LogFiles::EventType::Timers, sstring.str(), true);

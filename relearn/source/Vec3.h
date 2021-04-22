@@ -83,31 +83,31 @@ public:
         return (x == other.x) && (y == other.y) && (z == other.z);
     }
 
-    template <typename K>
-    T& operator[](const K& index) /*noexcept*/ {
-        if (index == 0) {
-            return x;
-        }
-        if (index == 1) {
-            return y;
-        }
+    //template <typename K>
+    //T& operator[](const K& index) /*noexcept*/ {
+    //    if (index == 0) {
+    //        return x;
+    //    }
+    //    if (index == 1) {
+    //        return y;
+    //    }
 
-        RelearnException::check(index == 2, "indexing with number unequal to 0, 1, 2");
-        return z;
-    }
+    //    RelearnException::check(index == 2, "indexing with number unequal to 0, 1, 2");
+    //    return z;
+    //}
 
-    template <typename K>
-    const T& operator[](const K& index) const /*noexcept*/ {
-        if (index == 0) {
-            return x;
-        }
-        if (index == 1) {
-            return y;
-        }
+    //template <typename K>
+    //const T& operator[](const K& index) const /*noexcept*/ {
+    //    if (index == 0) {
+    //        return x;
+    //    }
+    //    if (index == 1) {
+    //        return y;
+    //    }
 
-        RelearnException::check(index == 2, "indexing with number unequal to 0, 1, 2");
-        return z;
-    }
+    //    RelearnException::check(index == 2, "indexing with number unequal to 0, 1, 2");
+    //    return z;
+    //}
 
     friend Vec3<T> operator-(const Vec3<T>& lhs, const Vec3<T>& rhs) noexcept {
         return { lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z };
@@ -184,10 +184,24 @@ public:
         return *this;
     }
 
+    Vec3<T>& operator+=(const Vec3<T>& other) noexcept {
+        x += other.x;
+        y += other.y;
+        z += other.z;
+        return *this;
+    }
+
     Vec3<T>& operator-=(const T& scalar) noexcept {
         x -= scalar;
         y -= scalar;
         z -= scalar;
+        return *this;
+    }
+
+    Vec3<T>& operator-=(const Vec3<T>& other) noexcept {
+        x -= other.x;
+        y -= other.y;
+        z -= other.z;
         return *this;
     }
 

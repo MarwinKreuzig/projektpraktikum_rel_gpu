@@ -40,6 +40,8 @@ public:
     [[nodiscard]] std::vector<size_t> neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
         size_t local_id_start, size_t local_id_end) const override;
 
+    constexpr static double default_um_per_neuron = 26;
+
 private:
     const double um_per_neuron_; // Micrometer per neuron in one dimension
 

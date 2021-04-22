@@ -12,7 +12,7 @@
 
 #include "LogFiles.h"
 #include "MPIWrapper.h"
-#include "NeuronIdMap.h"
+#include "Neurons.h"
 #include "Partition.h"
 #include "RankNeuronId.h"
 #include "RelearnException.h"
@@ -593,7 +593,7 @@ void NetworkGraph::load_synapses(
     file_synapses.close();
 }
 
-void NetworkGraph::print(std::ostream& os) const {
+void NetworkGraph::print(std::ostream& os, const std::unique_ptr<NeuronsExtraInfo>& informations) const {
     const int my_rank = MPIWrapper::get_my_rank();
 
     // For my neurons
@@ -604,7 +604,7 @@ void NetworkGraph::print(std::ostream& os) const {
 
         RankNeuronId rank_neuron_id{ my_rank, target_neuron_id };
 
-        const auto possible_global_target = NeuronIdMap::rank_neuron_id2glob_id(rank_neuron_id);
+        const auto possible_global_target = informations->rank_neuron_id2glob_id(rank_neuron_id);
         RelearnException::check(possible_global_target.has_value(), "ret is false");
 
         const auto global_target = possible_global_target.value();
@@ -613,7 +613,7 @@ void NetworkGraph::print(std::ostream& os) const {
 
             RankNeuronId tmp_rank_neuron_id{ it_in_edge->first.first, it_in_edge->first.second };
 
-            const auto possible_global_source = NeuronIdMap::rank_neuron_id2glob_id(tmp_rank_neuron_id);
+            const auto possible_global_source = informations->rank_neuron_id2glob_id(tmp_rank_neuron_id);
             RelearnException::check(possible_global_source.has_value(), "ret is false");
 
             const auto global_source = possible_global_source.value();

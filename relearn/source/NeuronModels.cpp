@@ -17,8 +17,7 @@
 #include "Timers.h"
 
 NeuronModels::NeuronModels(double k, double tau_C, double beta, unsigned int h, double background_activity, double background_activity_mean, double background_activity_stddev)
-    : my_num_neurons(0)
-    , k(k)
+    : k(k)
     , tau_C(tau_C)
     , beta(beta)
     , h(h)
@@ -52,7 +51,7 @@ void NeuronModels::update_electrical_activity_update_activity() {
     GlobalTimers::timers.start(TimerRegion::CALC_ACTIVITY);
 
     // For my neurons
-#pragma omp parallel for
+#pragma omp parallel for default(none)
     for (auto i = 0; i < my_num_neurons; ++i) {
         update_activity(i);
     }
@@ -66,7 +65,7 @@ void NeuronModels::update_electrical_activity_calculate_input(const NetworkGraph
     GlobalTimers::timers.start(TimerRegion::CALC_SYNAPTIC_INPUT);
     // For my neurons
 
-#pragma omp parallel for
+#pragma omp parallel for shared(my_rank, firing_neuron_ids_incoming, network_graph) default(none)
     for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
         /**
 		 * Determine synaptic input from neurons connected to me
@@ -235,10 +234,10 @@ NeuronModels::MapFiringNeuronIds NeuronModels::update_electrical_activity_prepar
 
 std::vector<std::unique_ptr<NeuronModels>> NeuronModels::get_models() {
     std::vector<std::unique_ptr<NeuronModels>> res;
-    res.push_back(NeuronModels::create<models::ModelA>(0));
-    res.push_back(NeuronModels::create<models::IzhikevichModel>(0));
-    res.push_back(NeuronModels::create<models::FitzHughNagumoModel>(0));
-    res.push_back(NeuronModels::create<models::AEIFModel>(0));
+    res.push_back(NeuronModels::create<models::ModelA>());
+    res.push_back(NeuronModels::create<models::IzhikevichModel>());
+    res.push_back(NeuronModels::create<models::FitzHughNagumoModel>());
+    res.push_back(NeuronModels::create<models::AEIFModel>());
     return res;
 }
 

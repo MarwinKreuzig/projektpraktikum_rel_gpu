@@ -21,7 +21,7 @@
 #ifdef _OPENMP
 #include <omp.h>
 #else
-inline int omp_get_thread_num(void) { return 0; }
+inline int omp_get_thread_num() { return 0; }
 #endif
 
 enum class RandomHolderKey : char {
@@ -31,6 +31,7 @@ enum class RandomHolderKey : char {
     ModelA = 3,
     Neurons = 4,
     NeuronModels = 5,
+    SynapticElements = 6,
 };
 
 class RandomHolder {
@@ -58,8 +59,20 @@ public:
         std::shuffle(begin, end, random_number_generators[key]);
     }
 
+    template <typename IteratorType>
+    static void fill(RandomHolderKey key, IteratorType begin, IteratorType end, double lower_inclusive, double upper_exclusive) {
+        RelearnException::check(lower_inclusive < upper_exclusive, "Random number from invalid interval");
+        std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
+        auto& gen = random_number_generators[key];
+
+        for (; begin != end; begin++) {
+            *begin = urd(gen);
+        }
+    }
+
     static void seed(RandomHolderKey key, unsigned int seed) {
-#pragma omp parallel 
+        // NOLINTNEXTLINE
+#pragma omp parallel shared(key, seed)
         {
             const auto thread_id = omp_get_thread_num();
             random_number_generators[key].seed(seed + thread_id);

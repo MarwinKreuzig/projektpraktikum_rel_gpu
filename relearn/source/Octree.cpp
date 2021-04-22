@@ -24,13 +24,24 @@
 
 #include <sstream>
 
-Octree::Octree(const Partition& part, double acceptance_criterion, double sigma, size_t max_num_pending_vacant_axons)
+Octree::Octree(const Partition& part)
+    : root_level(0)
+    , naive_method(acceptance_criterion == 0.0)
+    , level_of_branch_nodes(part.get_level_of_subdomain_trees()) {
+
+    Vec3d xyz_min;
+    Vec3d xyz_max;
+    std::tie(xyz_min, xyz_max) = part.get_simulation_box_size();
+
+    set_size(xyz_min, xyz_max);
+}
+
+Octree::Octree(const Partition& part, double acceptance_criterion, double sigma)
     : root_level(0)
     , acceptance_criterion(acceptance_criterion)
     , sigma(sigma)
     , naive_method(acceptance_criterion == 0.0)
-    , level_of_branch_nodes(part.get_level_of_subdomain_trees())
-    , max_num_pending_vacant_axons(max_num_pending_vacant_axons) {
+    , level_of_branch_nodes(part.get_level_of_subdomain_trees()) {
 
     Vec3d xyz_min;
     Vec3d xyz_max;
@@ -54,15 +65,15 @@ void Octree::postorder_print() {
         return;
     }
 
-    stack.emplace(root, false, 0);
+    stack.emplace(root, 0);
 
     while (!stack.empty()) {
 
         std::stringstream ss;
 
         auto& elem = stack.top();
-        const auto depth = static_cast<int>(elem.get_depth());
-        const auto* ptr = elem.get_ptr();
+        const auto depth = static_cast<int>(elem.get_depth_in_tree());
+        const auto* ptr = elem.get_octree_node();
 
         // Visit node now
         if (elem.get_visited()) {
@@ -149,7 +160,7 @@ void Octree::postorder_print() {
 			*/
             for (auto it = ptr->get_children().crbegin(); it != ptr->get_children().crend(); ++it) {
                 if (*it != nullptr) {
-                    stack.emplace(*it, false, static_cast<size_t>(depth) + 1);
+                    stack.emplace(*it, static_cast<size_t>(depth) + 1);
                 }
             }
             ss << "\n";
@@ -242,8 +253,10 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
             MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
 
             // Fetch remote children if they exist
+            // NOLINTNEXTLINE          
             for (auto i = 7; i >= 0; i--) {
                 if (nullptr == root->get_child(i)) {
+                    // NOLINTNEXTLINE
                     local_children[i] = nullptr;
                     continue;
                 }
@@ -272,6 +285,7 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
                 }
 
                 // Remember address of node
+                // NOLINTNEXTLINE
                 local_children[i] = ret.first->second;
             }
 
@@ -346,8 +360,10 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
         MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
 
         // Fetch remote children if they exist
+        // NOLINTNEXTLINE
         for (auto i = 7; i >= 0; i--) {
             if (nullptr == stack_elem->get_child(i)) {
+                // NOLINTNEXTLINE
                 local_children[i] = nullptr;
                 continue;
             }
@@ -374,6 +390,8 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
             }
 
             // Remember local address of node
+
+            // NOLINTNEXTLINE
             local_children[i] = ret.first->second;
         }
 
@@ -401,7 +419,7 @@ std::vector<double> Octree::create_interval(size_t src_neuron_id, const Vec3d& a
 
     std::vector<double> probabilities;
     std::for_each(vector.cbegin(), vector.cend(), [&](const std::shared_ptr<ProbabilitySubinterval>& ptr) {
-        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *(ptr->get_ptr()), dendrite_type_needed);
+        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *(ptr->get_octree_node()), dendrite_type_needed);
         probabilities.push_back(prob);
         sum += prob;
     });
@@ -562,6 +580,8 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 
 // Insert an octree node with its subtree into the tree
 void Octree::insert(OctreeNode* node_to_insert) {
+    RelearnException::check(node_to_insert != nullptr, "In Octree::insert, node_to_insert was nullptr");
+    // NOLINTNEXTLINE
     const auto target_level = node_to_insert->get_level();
 
     // Tree is empty
@@ -744,7 +764,7 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
             sum_probabilities += prob[counter];
             counter++;
         }
-        node_selected = vector[counter - 1]->get_ptr();
+        node_selected = vector[counter - 1]->get_octree_node();
 
         /**
 		* Leave loop if no node was selected OR

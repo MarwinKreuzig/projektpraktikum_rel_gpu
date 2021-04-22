@@ -85,6 +85,7 @@ public:
 	 */
     using MapFiringNeuronIds = std::map<int, FiringNeuronIds>;
 
+    NeuronModels() = default;
     NeuronModels(double k, double tau_C, double beta, unsigned int h, double background_activity, double background_activity_mean, double background_activity_stddev);
 
     virtual ~NeuronModels() = default;
@@ -236,38 +237,39 @@ private:
     void update_electrical_activity_calculate_background();
 
     // My local number of neurons
-    size_t my_num_neurons;
+    size_t my_num_neurons{ 0 };
 
     // // Model parameters for all neurons
-    double k; // Proportionality factor for synapses in Hz
-    double tau_C; // Decay time of calcium
-    double beta; // Increase in calcium each time a neuron fires
-    unsigned int h; // Precision for Euler integration
+    double k{ default_k }; // Proportionality factor for synapses in Hz
+    double tau_C{ default_tau_C }; // Decay time of calcium
+    double beta{ default_beta }; // Increase in calcium each time a neuron fires
+    unsigned int h{ default_h }; // Precision for Euler integration
 
-    double base_background_activity;
-    double background_activity_mean;
-    double background_activity_stddev;
+    double base_background_activity{ default_base_background_activity };
+    double background_activity_mean{ default_background_activity_mean };
+    double background_activity_stddev{ default_background_activity_stddev };
 
     // Variables for each neuron where the array index denotes the neuron ID
-    std::vector<double> I_syn; // Synaptic input
-    std::vector<double> x; // membrane potential v
-    std::vector<bool> fired; // true: neuron has fired, false: neuron is inactive
+    std::vector<double> I_syn{}; // Synaptic input
+    std::vector<double> x{}; // membrane potential v
+    std::vector<bool> fired{}; // true: neuron has fired, false: neuron is inactive
 };
 
 namespace models {
 class ModelA : public NeuronModels {
 public:
+    ModelA() = default;
     explicit ModelA(
-        double k = NeuronModels::default_k,
-        double tau_C = NeuronModels::default_tau_C,
-        double beta = NeuronModels::default_beta,
-        unsigned int h = NeuronModels::default_h,
-        double background_activity = NeuronModels::default_base_background_activity,
-        double background_activity_mean = NeuronModels::default_background_activity_mean,
-        double background_activity_stddev = NeuronModels::default_background_activity_stddev,
-        double x_0 = ModelA::default_x_0,
-        double tau_x = ModelA::default_tau_x,
-        unsigned int refrac_time = ModelA::default_refrac_time);
+        double k,
+        double tau_C,
+        double beta,
+        unsigned int h,
+        double background_activity,
+        double background_activity_mean,
+        double background_activity_stddev,
+        double x_0,
+        double tau_x,
+        unsigned int refrac_time);
 
     [[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
@@ -301,33 +303,34 @@ private:
     static constexpr double max_tau_x{ 1000.0 };
     static constexpr unsigned int max_refrac_time{ 1000 };
 
-    std::vector<unsigned int> refrac; // refractory time
+    std::vector<unsigned int> refrac{}; // refractory time
 
-    std::vector<double> theta_values;
+    std::vector<double> theta_values{};
 
-    double x_0; // Background or resting activity
-    double tau_x; // Decay time of firing rate in msec
-    unsigned int refrac_time; // Length of refractory period in msec. After an action potential a neuron cannot fire for this time
+    double x_0{ default_x_0 }; // Background or resting activity
+    double tau_x{ default_tau_x }; // Decay time of firing rate in msec
+    unsigned int refrac_time{ default_refrac_time }; // Length of refractory period in msec. After an action potential a neuron cannot fire for this time
 };
 
 class IzhikevichModel : public NeuronModels {
 public:
-    explicit IzhikevichModel(
-        double k = NeuronModels::default_k,
-        double tau_C = NeuronModels::default_tau_C,
-        double beta = NeuronModels::default_beta,
-        unsigned int h = NeuronModels::default_h,
-        double background_activity = NeuronModels::default_base_background_activity,
-        double background_activity_mean = NeuronModels::default_background_activity_mean,
-        double background_activity_stddev = NeuronModels::default_background_activity_stddev,
-        double a = IzhikevichModel::default_a,
-        double b = IzhikevichModel::default_b,
-        double c = IzhikevichModel::default_c,
-        double d = IzhikevichModel::default_d,
-        double V_spike = IzhikevichModel::default_V_spike,
-        double k1 = IzhikevichModel::default_k1,
-        double k2 = IzhikevichModel::default_k2,
-        double k3 = IzhikevichModel::default_k3);
+    IzhikevichModel() = default;
+    IzhikevichModel(
+        double k,
+        double tau_C,
+        double beta,
+        unsigned int h,
+        double background_activity,
+        double background_activity_mean,
+        double background_activity_stddev,
+        double a,
+        double b,
+        double c,
+        double d,
+        double V_spike,
+        double k1,
+        double k2,
+        double k3);
 
     [[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
@@ -378,33 +381,34 @@ private:
     static constexpr double max_k2{ 10.0 };
     static constexpr double max_k3{ 200.0 };
 
-    std::vector<double> u; // membrane recovery
+    std::vector<double> u{}; // membrane recovery
 
-    double a; // time-scale of membrane recovery u
-    double b; // sensitivity of membrane recovery to membrane potential v (x)
-    double c; // after-spike reset value for membrane potential v (x)
-    double d; // after-spike reset of membrane recovery u
+    double a{ default_a }; // time-scale of membrane recovery u
+    double b{ default_b }; // sensitivity of membrane recovery to membrane potential v (x)
+    double c{ default_c }; // after-spike reset value for membrane potential v (x)
+    double d{ default_d }; // after-spike reset of membrane recovery u
 
-    double V_spike;
+    double V_spike{ default_V_spike };
 
-    double k1;
-    double k2;
-    double k3;
+    double k1{ default_k1 };
+    double k2{ default_k2 };
+    double k3{ default_k3 };
 };
 
 class FitzHughNagumoModel : public NeuronModels {
 public:
-    explicit FitzHughNagumoModel(
-        double k = NeuronModels::default_k,
-        double tau_C = NeuronModels::default_tau_C,
-        double beta = NeuronModels::default_beta,
-        unsigned int h = NeuronModels::default_h,
-        double background_activity = NeuronModels::default_base_background_activity,
-        double background_activity_mean = NeuronModels::default_background_activity_mean,
-        double background_activity_stddev = NeuronModels::default_background_activity_stddev,
-        double a = FitzHughNagumoModel::default_a,
-        double b = FitzHughNagumoModel::default_b,
-        double phi = FitzHughNagumoModel::default_phi);
+    FitzHughNagumoModel() = default;
+    FitzHughNagumoModel(
+        double k,
+        double tau_C,
+        double beta,
+        unsigned int h,
+        double background_activity,
+        double background_activity_mean,
+        double background_activity_stddev,
+        double a,
+        double b,
+        double phi);
 
     [[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
@@ -443,32 +447,33 @@ private:
     static constexpr double init_x{ -1.2 };
     static constexpr double init_w{ -0.6 };
 
-    std::vector<double> w; // recovery variable
+    std::vector<double> w{}; // recovery variable
 
-    double a;
-    double b;
-    double phi;
+    double a{ default_a };
+    double b{ default_b };
+    double phi{ default_phi };
 };
 
 class AEIFModel : public NeuronModels {
 public:
-    explicit AEIFModel(
-        double k = NeuronModels::default_k,
-        double tau_C = NeuronModels::default_tau_C,
-        double beta = NeuronModels::default_beta,
-        unsigned int h = NeuronModels::default_h,
-        double background_activity = NeuronModels::default_base_background_activity,
-        double background_activity_mean = NeuronModels::default_background_activity_mean,
-        double background_activity_stddev = NeuronModels::default_background_activity_stddev,
-        double C = AEIFModel::default_C,
-        double g_L = AEIFModel::default_g_L,
-        double E_L = AEIFModel::default_E_L,
-        double V_T = AEIFModel::default_V_T,
-        double d_T = AEIFModel::default_d_T,
-        double tau_w = AEIFModel::default_tau_w,
-        double a = AEIFModel::default_a,
-        double b = AEIFModel::default_b,
-        double V_peak = AEIFModel::default_V_peak);
+    AEIFModel() = default;
+    AEIFModel(
+        double k,
+        double tau_C,
+        double beta,
+        unsigned int h,
+        double background_activity,
+        double background_activity_mean,
+        double background_activity_stddev,
+        double C,
+        double g_L,
+        double E_L,
+        double V_T,
+        double d_T,
+        double tau_w,
+        double a,
+        double b,
+        double V_peak);
 
     [[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
@@ -522,18 +527,18 @@ private:
     static constexpr double max_b{ 0.3 };
     static constexpr double max_V_peak{ 70.0 };
 
-    std::vector<double> w; // adaption variable
+    std::vector<double> w{}; // adaption variable
 
-    double C; // membrance capacitance
-    double g_L; // leak conductance
-    double E_L; // leak reversal potential
-    double V_T; // spike threshold
-    double d_T; // slope factor
-    double tau_w; // adaptation time constant
-    double a; // subthreshold
-    double b; // spike-triggered adaptation
+    double C{ default_C }; // membrance capacitance
+    double g_L{ default_g_L }; // leak conductance
+    double E_L{ default_E_L }; // leak reversal potential
+    double V_T{ default_V_T }; // spike threshold
+    double d_T{ default_d_T }; // slope factor
+    double tau_w{ default_tau_w }; // adaptation time constant
+    double a{ default_a }; // subthreshold
+    double b{ default_b }; // spike-triggered adaptation
 
-    double V_peak; // spike trigger
+    double V_peak{ default_V_peak }; // spike trigger
 };
 
 } // namespace models
