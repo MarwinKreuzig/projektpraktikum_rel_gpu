@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "../mpi/MPIWrapper.h"
+#include "../../mpi/MPIWrapper.h"
 
 #include <memory>
 #include <vector>
