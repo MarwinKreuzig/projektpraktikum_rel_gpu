@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "../Config.h"
+#include "../../Config.h"
 #include "../util/RelearnException.h"
 
 #include <ostream>
