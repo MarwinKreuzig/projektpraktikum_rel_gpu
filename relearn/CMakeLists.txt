@@ -3,18 +3,8 @@ project(relearn)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-file(GLOB_RECURSE TOP_SRC "source/*.cpp" "source/*.c")
-file(GLOB_RECURSE TOP_INCS "source/*.hpp" "source/*.h")
-
-set(TOP_SRC_OM ${TOP_SRC})
-list(REMOVE_ITEM TOP_SRC_OM "${PROJECT_SOURCE_DIR}/source/main.cpp")
-
-file(GLOB_RECURSE TOP_TST "test/*")
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_BUILD_TYPE Release)
@@ -28,6 +18,24 @@ include(FetchContent)
 
 find_package(MPI)
 find_package(OpenMP)
+
+file(GLOB_RECURSE SRC_IO "source/io/*")
+file(GLOB_RECURSE SRC_MPI "source/mpi/*")
+file(GLOB_RECURSE SRC_SIM "source/sim/*")
+file(GLOB_RECURSE SRC_STR "source/structure/*")
+file(GLOB_RECURSE SRC_UTIL "source/util/*")
+file(GLOB_RECURSE SRC_NEU "source/neurons/*.h" "source/neurons/*.cpp")
+file(GLOB_RECURSE SRC_NEU_MOD "source/neurons/models/*")
+file(GLOB_RECURSE SRC_NEU_HEL "source/neurons/helper/*")
+
+file(GLOB_RECURSE SRC_MAIN "source/main.cpp")
+file(GLOB_RECURSE SRC_CONF "source/Config.h")
+
+file(GLOB_RECURSE SRC_TST "test/*")
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRC_IO} ${SRC_MPI} ${SRC_SIM} ${SRC_STR} ${SRC_UTIL} ${SRC_NEU} ${SRC_NEU_MOD} ${SRC_NEU_HEL} ${SRC_MAIN} ${SRC_CONF})
+
+source_group("tests\\" FILES ${SRC_TST})
 
 # project options
 add_library(project_options INTERFACE)
@@ -45,8 +53,16 @@ endif ()
 
 # relearn executable
 add_executable(relearn
-	${TOP_INCS}
-	${TOP_SRC}
+	${SRC_IO}
+	${SRC_MPI}
+	${SRC_SIM}
+	${SRC_STR}
+	${SRC_UTIL}
+	${SRC_NEU}
+	${SRC_NEU_MOD}
+	${SRC_NEU_HEL}
+	${SRC_MAIN}
+	${SRC_CONF}
 )
 
 set_target_properties(relearn PROPERTIES ENABLE_EXPORTS 1)
@@ -90,12 +106,17 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
 		${CMAKE_BINARY_DIR}/googletest-build
 		EXCLUDE_FROM_ALL)
 
-source_group("tests" FILES ${TOP_TST})
-
 add_executable(runTests
-	${TOP_INCS}
-	${TOP_SRC_OM}
-	${TOP_TST}
+	${SRC_IO}
+	${SRC_MPI}
+	${SRC_SIM}
+	${SRC_STR}
+	${SRC_UTIL}
+	${SRC_NEU}
+	${SRC_NEU_MOD}
+	${SRC_NEU_HEL}
+	${SRC_CONF}
+	${SRC_TST}
 )
 
 target_link_libraries(runTests PRIVATE project_options)

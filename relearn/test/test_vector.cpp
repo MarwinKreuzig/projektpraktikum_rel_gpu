@@ -4,8 +4,8 @@
 
 #include "commons.h"
 
-#include "../source/Vec3.h"
-#include "../source/RelearnException.h"
+#include "../source/util/Vec3.h"
+#include "../source/util/RelearnException.h"
 
 constexpr const double lower_bound = -100.0;
 constexpr const double upper_bound = 100.0;

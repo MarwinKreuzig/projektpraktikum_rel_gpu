@@ -5,8 +5,8 @@
 
 #include "commons.h"
 
-#include "../source/Partition.h"
-#include "../source/RelearnException.h"
+#include "../source/structure/Partition.h"
+#include "../source/util/RelearnException.h"
 
 constexpr const int upper_bound_my_rank = 32;
 constexpr const int upper_bound_num_ranks = 32;

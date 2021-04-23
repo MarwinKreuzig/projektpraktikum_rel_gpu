@@ -15,11 +15,11 @@
 #include "commons.h"
 
 #define protected public
-#include "../source/NeuronToSubdomainAssignment.h"
-#include "../source/Partition.h"
-#include "../source/SubdomainFromNeuronDensity.h"
-#include "../source/SubdomainFromFile.h"
-#include "../source/RelearnException.h"
+#include "../source/sim/NeuronToSubdomainAssignment.h"
+#include "../source/structure/Partition.h"
+#include "../source/sim/SubdomainFromNeuronDensity.h"
+#include "../source/sim/SubdomainFromFile.h"
+#include "../source/util/RelearnException.h"
 
 void sort_indices(const std::vector<Vec3d>& vectors, std::vector<int>& sequence) {
     sequence = std::vector<int>(vectors.size());

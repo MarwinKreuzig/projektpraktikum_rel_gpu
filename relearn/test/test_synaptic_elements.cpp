@@ -7,8 +7,9 @@
 
 #include "commons.h"
 
-#include "../source/RelearnException.h"
-#include "../source/SynapticElements.h"
+#include "../source/util/RelearnException.h"
+#include "../source/neurons/models/SynapticElements.h"
+#include "../source/neurons/ElementType.h"
 
 constexpr const size_t upper_bound_num_neurons = 10000;
 

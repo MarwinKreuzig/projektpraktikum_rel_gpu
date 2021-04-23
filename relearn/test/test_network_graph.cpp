@@ -7,8 +7,8 @@
 
 #include "commons.h"
 
-#include "../source/NetworkGraph.h"
-#include "../source/RelearnException.h"
+#include "../source/neurons/NetworkGraph.h"
+#include "../source/util/RelearnException.h"
 
 constexpr size_t upper_bound_num_neurons = 10000;
 constexpr int bound_synapse_weight = 10;
