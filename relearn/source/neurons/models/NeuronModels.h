@@ -11,6 +11,7 @@
 #pragma once
 
 #include "ModelParameter.h"
+#include "../../util/RelearnException.h"
 
 #include <algorithm>
 #include <map>
@@ -138,7 +139,7 @@ public:
     [[nodiscard]] virtual double get_secondary_variable(size_t i) const noexcept = 0;
 
     /* Performs one iteration step of update in electrical activity */
-    void update_electrical_activity(const NetworkGraph& network_graph);
+    void update_electrical_activity(const NetworkGraph& network_graph, const std::vector<char>& disable_flags);
 
     /**
 	 * Returns a vector of all possible models
@@ -160,8 +161,18 @@ public:
 	 */
     [[nodiscard]] virtual std::string name() = 0;
 
+    /**
+     * Disables all neurons with specified ids
+     */
+    void disable_neurons(const std::vector<size_t> neuron_ids) {
+        for (const auto neuron_id : neuron_ids) {
+            RelearnException::check(neuron_id < my_num_neurons, "In NeuronMOdels::disable_neurons, there was a too large id: %ull vs %ull", neuron_id, my_num_neurons);
+            fired[neuron_id] = false;
+        }
+    }
+
 protected:
-    virtual void update_electrical_activity_serial_initialize() {
+    virtual void update_electrical_activity_serial_initialize(const std::vector<char>& disable_flags) {
     }
 
     virtual void update_activity(size_t i) = 0;
@@ -228,13 +239,13 @@ private:
 
     [[nodiscard]] static MapFiringNeuronIds update_electrical_activity_exchange_neuron_ids(const MapFiringNeuronIds& firing_neuron_ids_outgoing, const std::vector<size_t>& num_incoming_ids);
 
-    [[nodiscard]] MapFiringNeuronIds update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph);
+    [[nodiscard]] MapFiringNeuronIds update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<char>& disable_flags);
 
-    void update_electrical_activity_update_activity();
+    void update_electrical_activity_update_activity(const std::vector<char>& disable_flags);
 
-    void update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const MapFiringNeuronIds& firing_neuron_ids_incoming);
+    void update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const MapFiringNeuronIds& firing_neuron_ids_incoming, const std::vector<char>& disable_flags);
 
-    void update_electrical_activity_calculate_background();
+    void update_electrical_activity_calculate_background(const std::vector<char>& disable_flags);
 
     // My local number of neurons
     size_t my_num_neurons{ 0 };
@@ -282,7 +293,7 @@ public:
     void init(size_t num_neurons) final;
 
 protected:
-    void update_electrical_activity_serial_initialize() final;
+    void update_electrical_activity_serial_initialize(const std::vector<char>& disable_flags) final;
 
     void update_activity(size_t i) final;
 

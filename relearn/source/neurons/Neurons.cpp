@@ -44,6 +44,7 @@ void Neurons::init(size_t number_neurons) {
         dendrites_inh->set_signal_type(i, SignalType::INHIBITORY);
     }
 
+    disable_flags.resize(num_neurons, 1);
     calcium.resize(num_neurons);
 
     // Init member variables
@@ -82,8 +83,56 @@ void Neurons::init_synaptic_elements() {
     }
 }
 
+
+/**
+     * Disables all neurons with specified ids
+     */
+
+void Neurons::disable_neurons(const std::vector<size_t> neuron_ids) {
+    neuron_model->disable_neurons(neuron_ids);
+
+    const auto my_rank = MPIWrapper::get_my_rank();
+
+    std::vector<int> deleted_axon_connections(num_neurons, 0);
+    std::vector<int> deleted_dend_ex_connections(num_neurons, 0);
+    std::vector<int> deleted_dend_in_connections(num_neurons, 0);
+
+    for (const auto neuron_id : neuron_ids) {
+        RelearnException::check(neuron_id < num_neurons, "In NeuronMOdels::disable_neurons, there was a too large id: %ull vs %ull", neuron_id, num_neurons);
+        disable_flags[neuron_id] = 0;
+
+        const auto in_edges = network_graph->get_in_edges(neuron_id); // Intended copy
+
+        for (const auto& [edge_key, weight] : in_edges) {
+            const auto& [rank, source_id] = edge_key;
+            RelearnException::check(rank == my_rank, "Currently, disabling neurons is only supported without mpi");
+            network_graph->add_edge_weight(neuron_id, my_rank, source_id, rank, weight);
+
+            deleted_axon_connections[source_id] += weight;
+        }
+
+        const auto out_edges = network_graph->get_out_edges(neuron_id); // Intended copy
+
+        for (const auto& [edge_key, weight] : out_edges) {
+            const auto& [rank, target_id] = edge_key;
+            RelearnException::check(rank == my_rank, "Currently, disabling neurons is only supported without mpi");
+            network_graph->add_edge_weight(target_id, rank, neuron_id, my_rank, weight);
+
+            if (weight > 0) {
+                deleted_dend_ex_connections[target_id] += weight;
+            } else {
+                deleted_dend_in_connections[target_id] -= weight;
+            }
+        }
+    }
+
+    axons->update_after_deletion(deleted_axon_connections, neuron_ids);
+    dendrites_exc->update_after_deletion(deleted_dend_ex_connections, neuron_ids);
+    dendrites_inh->update_after_deletion(deleted_dend_in_connections, neuron_ids);
+}
+
 void Neurons::update_electrical_activity() {
-    neuron_model->update_electrical_activity(*network_graph);
+    neuron_model->update_electrical_activity(*network_graph, disable_flags);
     update_calcium();
 }
 
@@ -93,13 +142,18 @@ void Neurons::update_calcium() {
     const auto h = neuron_model->get_h();
     const auto tau_C = neuron_model->get_tau_C();
     const auto beta = neuron_model->get_beta();
-    const auto fired = neuron_model->get_fired();
+    const auto& fired = neuron_model->get_fired();
 
     // For my neurons
-    for (size_t i = 0; i < calcium.size(); ++i) {
+#pragma omp parallel for shared(h, tau_C, beta, fired) default(none)
+    for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
+        if (disable_flags[neuron_id] == 0) {
+            continue;
+        }
+
         for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
             // Update calcium depending on the firing
-            calcium[i] += (1 / static_cast<double>(h)) * (-calcium[i] / tau_C + beta * static_cast<double>(fired[i]));
+            calcium[neuron_id] += (1 / static_cast<double>(h)) * (-calcium[neuron_id] / tau_C + beta * static_cast<double>(fired[neuron_id]));
         }
     }
 
@@ -153,9 +207,9 @@ size_t Neurons::delete_synapses() {
 	* Create list with synapses to delete (pending synapse deletions)
 	*/
     // Dendrite exc cannot delete a synapse that is connected to a dendrite inh. pending_deletions is used as an empty dummy
-    const auto to_delete_axons = axons->commit_updates();
-    const auto to_delete_dendrites_excitatory = dendrites_exc->commit_updates();
-    const auto to_delete_dendrites_inhibitory = dendrites_inh->commit_updates();
+    const auto to_delete_axons = axons->commit_updates(disable_flags);
+    const auto to_delete_dendrites_excitatory = dendrites_exc->commit_updates(disable_flags);
+    const auto to_delete_dendrites_inhibitory = dendrites_inh->commit_updates(disable_flags);
 
     auto deletions_axons = delete_synapses_find_synapses(*axons, to_delete_axons, {});
     const auto deletions_dendrites_excitatory = delete_synapses_find_synapses(*dendrites_exc, to_delete_dendrites_excitatory, deletions_axons.first);
@@ -211,6 +265,10 @@ std::pair<Neurons::PendingDeletionsV, std::vector<size_t>> Neurons::delete_synap
     std::vector<size_t> total_vector_affected_indices;
 
     for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+        if (disable_flags[neuron_id] == 0) {
+            continue;
+        }
+
         /**
 		* Create and delete synaptic elements as required.
 		* This function only deletes elements (bound and unbound), no synapses.
@@ -636,6 +694,10 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
 
     // For my neurons
     for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+        if (disable_flags[neuron_id] == 0) {
+            continue;
+        }
+        
         // Number of vacant axons
         const auto num_vacant_axons = static_cast<unsigned int>(axons_cnts[neuron_id]) - axons_connected_cnts[neuron_id];
         RelearnException::check(num_vacant_axons >= 0, "num vacant axons is negative");

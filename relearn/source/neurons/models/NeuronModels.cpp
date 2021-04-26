@@ -13,6 +13,7 @@
 #include "../../Config.h"
 #include "../../mpi/MPIWrapper.h"
 #include "../NetworkGraph.h"
+#include "../Neurons.h"
 #include "../../util/Random.h"
 #include "../../util/Timers.h"
 
@@ -26,9 +27,9 @@ NeuronModels::NeuronModels(double k, double tau_C, double beta, unsigned int h, 
     , background_activity_stddev(background_activity_stddev) {
 }
 
-void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph) {
+void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph, const std::vector<char>& disable_flags) {
 
-    MapFiringNeuronIds firing_neuron_ids_outgoing = update_electrical_activity_prepare_sending_spikes(network_graph);
+    MapFiringNeuronIds firing_neuron_ids_outgoing = update_electrical_activity_prepare_sending_spikes(network_graph, disable_flags);
     std::vector<size_t> num_incoming_ids = update_electrical_activity_prepare_receiving_spikes(firing_neuron_ids_outgoing);
 
     MapFiringNeuronIds firing_neuron_ids_incoming = update_electrical_activity_exchange_neuron_ids(firing_neuron_ids_outgoing, num_incoming_ids);
@@ -40,33 +41,40 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph)
 	 * (spikes from neurons from other ranks)
 	 */
 
-    update_electrical_activity_serial_initialize();
+    update_electrical_activity_serial_initialize(disable_flags);
 
-    update_electrical_activity_calculate_background();
-    update_electrical_activity_calculate_input(network_graph, firing_neuron_ids_incoming);
-    update_electrical_activity_update_activity();
+    update_electrical_activity_calculate_background(disable_flags);
+    update_electrical_activity_calculate_input(network_graph, firing_neuron_ids_incoming, disable_flags);
+    update_electrical_activity_update_activity(disable_flags);
 }
 
-void NeuronModels::update_electrical_activity_update_activity() {
+void NeuronModels::update_electrical_activity_update_activity(const std::vector<char>& disable_flags) {
     GlobalTimers::timers.start(TimerRegion::CALC_ACTIVITY);
 
     // For my neurons
-#pragma omp parallel for default(none)
-    for (auto i = 0; i < my_num_neurons; ++i) {
-        update_activity(i);
+#pragma omp parallel for shared(disable_flags) default(none)
+    for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
+        if (disable_flags[neuron_id] == 0) {
+            continue;
+        }
+
+        update_activity(neuron_id);
     }
 
     GlobalTimers::timers.stop_and_add(TimerRegion::CALC_ACTIVITY);
 }
 
-void NeuronModels::update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const MapFiringNeuronIds& firing_neuron_ids_incoming) {
+void NeuronModels::update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const MapFiringNeuronIds& firing_neuron_ids_incoming, const std::vector<char>& disable_flags) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     GlobalTimers::timers.start(TimerRegion::CALC_SYNAPTIC_INPUT);
     // For my neurons
 
-#pragma omp parallel for shared(my_rank, firing_neuron_ids_incoming, network_graph) default(none)
+#pragma omp parallel for shared(my_rank, firing_neuron_ids_incoming, network_graph, disable_flags) default(none)
     for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
+        if (disable_flags[neuron_id] == 0) {
+            continue;
+        }
         /**
 		 * Determine synaptic input from neurons connected to me
 		 */
@@ -90,12 +98,16 @@ void NeuronModels::update_electrical_activity_calculate_input(const NetworkGraph
     GlobalTimers::timers.stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
 }
 
-void NeuronModels::update_electrical_activity_calculate_background() {
+void NeuronModels::update_electrical_activity_calculate_background(const std::vector<char>& disable_flags) {
     GlobalTimers::timers.start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
 
     // There might be background activity
     if (background_activity_stddev > 0.0) {
         for (size_t neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
+            if (disable_flags[neuron_id] == 0) {
+                continue;
+            }
+
             const double rnd = RandomHolder::get_random_normal_double(RandomHolderKey::NeuronModels, background_activity_mean, background_activity_stddev);
             const double input = base_background_activity + rnd;
             I_syn[neuron_id] = input;
@@ -196,7 +208,7 @@ NeuronModels::MapFiringNeuronIds NeuronModels::update_electrical_activity_exchan
     return firing_neuron_ids_incoming;
 }
 
-NeuronModels::MapFiringNeuronIds NeuronModels::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph) {
+NeuronModels::MapFiringNeuronIds NeuronModels::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<char>& disable_flags) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     NeuronModels::MapFiringNeuronIds firing_neuron_ids_outgoing;
@@ -208,6 +220,10 @@ NeuronModels::MapFiringNeuronIds NeuronModels::update_electrical_activity_prepar
     GlobalTimers::timers.start(TimerRegion::PREPARE_SENDING_SPIKES);
     // For my neurons
     for (size_t neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
+        if (disable_flags[neuron_id] == 0) {
+            continue;
+        }
+
         // My neuron fired
         if (static_cast<bool>(fired[neuron_id])) {
             const NetworkGraph::Edges& out_edges = network_graph.get_out_edges(neuron_id);

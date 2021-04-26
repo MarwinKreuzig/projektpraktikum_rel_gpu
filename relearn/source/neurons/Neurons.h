@@ -38,6 +38,8 @@ using Axons = SynapticElements;
 using DendritesExc = SynapticElements;
 using DendritesInh = SynapticElements;
 
+using DisableFlags = std::vector<char>;
+
 class Neurons {
     friend class NeuronMonitor;
 
@@ -356,12 +358,17 @@ public:
 
     void init_synaptic_elements();
 
+    /**
+     * Disables all neurons with specified ids
+     */
+    void disable_neurons(const std::vector<size_t> neuron_ids);
+
     void update_electrical_activity();
 
     void update_number_synaptic_elements_delta() noexcept {
-        axons->update_number_elements_delta(calcium);
-        dendrites_exc->update_number_elements_delta(calcium);
-        dendrites_inh->update_number_elements_delta(calcium);
+        axons->update_number_elements_delta(calcium, disable_flags);
+        dendrites_exc->update_number_elements_delta(calcium, disable_flags);
+        dendrites_inh->update_number_elements_delta(calcium, disable_flags);
     }
 
     [[nodiscard]] std::tuple<size_t, size_t> update_connectivity();
@@ -445,6 +452,8 @@ private:
     std::unique_ptr<DendritesInh> dendrites_inh;
 
     std::vector<double> calcium; // Intracellular calcium concentration of every neuron
+
+    DisableFlags disable_flags;
 
     std::unique_ptr<NeuronsExtraInfo> extra_info{ std::make_unique<NeuronsExtraInfo>() };
 };

@@ -139,6 +139,23 @@ public:
         signal_types = std::move(types);
     }
 
+    void update_after_deletion(std::vector<int> changes, std::vector<size_t> neuron_ids) {
+        RelearnException::check(changes.size() < size, "In SynapticElements::update_after_deletion, the number of changes does not match the number of elements");
+
+        for (auto neuron_id = 0; neuron_id < size; neuron_id++) {
+            const auto change = changes[neuron_id];
+            RelearnException::check(change >= 0, "The number of deleted elements must not be negative");
+            
+            connected_cnts[neuron_id] -= change;
+        }
+
+        for (const auto neuron_id : neuron_ids) {
+            connected_cnts[neuron_id] = 0;
+            cnts[neuron_id] = 0.0;
+            delta_cnts[neuron_id] = 0.0;
+        }
+    }
+
     [[nodiscard]] double get_cnt(size_t neuron_id) const {
         RelearnException::check(neuron_id < cnts.size(), "Synaptic elements, get_cnt out of bounds");
         return cnts[neuron_id];
@@ -173,13 +190,17 @@ public:
 	 */
     [[nodiscard]] unsigned int update_number_elements(size_t neuron_id);
 
-    [[nodiscard]] std::pair<unsigned int, std::vector<unsigned int>> commit_updates() {
+    [[nodiscard]] std::pair<unsigned int, std::vector<unsigned int>> commit_updates(const std::vector<char>& disable_flags) {
         std::vector<unsigned int> number_deletions(size);
         unsigned int sum_to_delete = 0;
 
 #pragma omp parallel for reduction(+ \
-                                   : sum_to_delete) shared(number_deletions) default(none)
+                                   : sum_to_delete) shared(number_deletions, disable_flags) default(none)
         for (auto neuron_id = 0; neuron_id < size; ++neuron_id) {
+            if (disable_flags[neuron_id] == 0) {
+                continue;
+            }
+
             /**
 		    * Create and delete synaptic elements as required.
 		    * This function only deletes elements (bound and unbound), no synapses.
@@ -193,13 +214,17 @@ public:
         return std::make_pair(sum_to_delete, number_deletions);
     }
 
-    void update_number_elements_delta(const std::vector<double>& calcium) noexcept {
+    void update_number_elements_delta(const std::vector<double>& calcium, const std::vector<char>& disable_flags) noexcept {
         // For my neurons
 
-#pragma omp parallel for shared(calcium) default(none)
-        for (auto i = 0; i < size; ++i) {
-            const auto inc = gaussian_growth_curve(calcium[i], min_C_level_to_grow, C_target, nu);
-            delta_cnts[i] += inc;
+#pragma omp parallel for shared(calcium, disable_flags) default(none)
+        for (auto neuron_id = 0; neuron_id < size; ++neuron_id) {
+            if (disable_flags[neuron_id] == 0) {
+                continue;
+            }
+
+            const auto inc = gaussian_growth_curve(calcium[neuron_id], min_C_level_to_grow, C_target, nu);
+            delta_cnts[neuron_id] += inc;
         }
     }
 
