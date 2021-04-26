@@ -166,7 +166,7 @@ public:
      */
     void disable_neurons(const std::vector<size_t> neuron_ids) {
         for (const auto neuron_id : neuron_ids) {
-            RelearnException::check(neuron_id < my_num_neurons, "In NeuronMOdels::disable_neurons, there was a too large id: %ull vs %ull", neuron_id, my_num_neurons);
+            RelearnException::check(neuron_id < my_num_neurons, "In NeuronModels::disable_neurons, there was a too large id: %ull vs %ull", neuron_id, my_num_neurons);
             fired[neuron_id] = false;
         }
     }

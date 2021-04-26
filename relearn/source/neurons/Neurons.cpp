@@ -85,9 +85,8 @@ void Neurons::init_synaptic_elements() {
 
 
 /**
-     * Disables all neurons with specified ids
-     */
-
+ * Disables all neurons with specified ids
+ */
 void Neurons::disable_neurons(const std::vector<size_t> neuron_ids) {
     neuron_model->disable_neurons(neuron_ids);
 
@@ -98,7 +97,7 @@ void Neurons::disable_neurons(const std::vector<size_t> neuron_ids) {
     std::vector<int> deleted_dend_in_connections(num_neurons, 0);
 
     for (const auto neuron_id : neuron_ids) {
-        RelearnException::check(neuron_id < num_neurons, "In NeuronMOdels::disable_neurons, there was a too large id: %ull vs %ull", neuron_id, num_neurons);
+        RelearnException::check(neuron_id < num_neurons, "In Neurons::disable_neurons, there was a too large id: %ull vs %ull", neuron_id, num_neurons);
         disable_flags[neuron_id] = 0;
 
         const auto in_edges = network_graph->get_in_edges(neuron_id); // Intended copy
@@ -129,6 +128,13 @@ void Neurons::disable_neurons(const std::vector<size_t> neuron_ids) {
     axons->update_after_deletion(deleted_axon_connections, neuron_ids);
     dendrites_exc->update_after_deletion(deleted_dend_ex_connections, neuron_ids);
     dendrites_inh->update_after_deletion(deleted_dend_in_connections, neuron_ids);
+}
+
+void Neurons::enable_neurons(const std::vector<size_t> neuron_ids) {
+    for (const auto neuron_id : neuron_ids) {
+        RelearnException::check(neuron_id < num_neurons, "In Neurons::enable_neurons, there was a too large id: %ull vs %ull", neuron_id, num_neurons);
+        disable_flags[neuron_id] = 1;
+    }
 }
 
 void Neurons::update_electrical_activity() {

@@ -38,8 +38,6 @@ using Axons = SynapticElements;
 using DendritesExc = SynapticElements;
 using DendritesInh = SynapticElements;
 
-using DisableFlags = std::vector<char>;
-
 class Neurons {
     friend class NeuronMonitor;
 
@@ -360,8 +358,15 @@ public:
 
     /**
      * Disables all neurons with specified ids
+     * If a neuron is already disabled, nothing happens for that one
      */
     void disable_neurons(const std::vector<size_t> neuron_ids);
+
+    /**
+     * Enables all neurons with specified ids
+     * If a neuron is already enabled, nothing happens for that one
+     */
+    void enable_neurons(const std::vector<size_t> neuron_ids);
 
     void update_electrical_activity();
 
@@ -453,7 +458,7 @@ private:
 
     std::vector<double> calcium; // Intracellular calcium concentration of every neuron
 
-    DisableFlags disable_flags;
+    std::vector<char> disable_flags;
 
     std::unique_ptr<NeuronsExtraInfo> extra_info{ std::make_unique<NeuronsExtraInfo>() };
 };
