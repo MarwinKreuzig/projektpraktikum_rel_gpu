@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 class NetworkGraph;
@@ -39,6 +40,10 @@ public:
     void set_dendrites_ex(std::unique_ptr<SynapticElements> se);
 
     void set_dendrites_in(std::unique_ptr<SynapticElements> se);
+
+    void set_enable_interrupts(std::vector<std::pair<size_t, std::vector<size_t>>> interrupts);
+
+    void set_disable_interrupts(std::vector<std::pair<size_t, std::vector<size_t>>> interrupts);
 
     void place_random_neurons(size_t num_neurons, double frac_exc);
 
@@ -77,6 +82,9 @@ private:
     std::shared_ptr<NetworkGraph> network_graph;
 
     std::vector<NeuronMonitor> monitors;
+
+    std::vector<std::pair<size_t, std::vector<size_t>>> enable_interrupts;
+    std::vector<std::pair<size_t, std::vector<size_t>>> disable_interrupts;
 
     double accept_criterion{ 0.0 };
 

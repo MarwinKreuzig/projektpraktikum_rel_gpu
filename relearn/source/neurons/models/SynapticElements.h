@@ -139,8 +139,8 @@ public:
         signal_types = std::move(types);
     }
 
-    void update_after_deletion(std::vector<int> changes, std::vector<size_t> neuron_ids) {
-        RelearnException::check(changes.size() < size, "In SynapticElements::update_after_deletion, the number of changes does not match the number of elements");
+    void update_after_deletion(const std::vector<int>& changes, const std::vector<size_t>& neuron_ids) {
+        RelearnException::check(changes.size() <= size, "In SynapticElements::update_after_deletion, the number of changes does not match the number of elements");
 
         for (auto neuron_id = 0; neuron_id < size; neuron_id++) {
             const auto change = changes[neuron_id];

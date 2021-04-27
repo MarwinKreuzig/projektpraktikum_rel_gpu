@@ -62,6 +62,14 @@ void Simulation::set_dendrites_in(std::unique_ptr<SynapticElements> se) {
     dendrites_in = std::move(se);
 }
 
+void Simulation::set_enable_interrupts(std::vector<std::pair<size_t, std::vector<size_t>>> interrupts) {
+    enable_interrupts = std::move(interrupts);
+}
+
+void Simulation::set_disable_interrupts(std::vector<std::pair<size_t, std::vector<size_t>>> interrupts) {
+    disable_interrupts = std::move(interrupts);
+}
+
 void Simulation::construct_neurons() {
     RelearnException::check(neuron_models != nullptr, "In simulation, neuron_models is nullptr");
     RelearnException::check(axons != nullptr, "In simulation, axons is nullptr");
@@ -144,6 +152,20 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             }
 
             NeuronMonitor::current_step++;
+        }
+
+        for (const auto& [disable_step, disable_ids] : disable_interrupts) {
+            if (disable_step == step) {
+                neurons->disable_neurons(disable_ids);
+                LogFiles::write_to_file(LogFiles::EventType::Cout, std::string("Disabling ") + std::to_string(disable_ids.size()) + " neurons in step " + std::to_string(disable_step) + "\n", true);
+            }
+        }
+
+        for (const auto& [enable_step, enable_ids] : enable_interrupts) {
+            if (enable_step == step) {
+                neurons->enable_neurons(enable_ids);
+                LogFiles::write_to_file(LogFiles::EventType::Cout, std::string("Enabling ") + std::to_string(enable_ids.size()) + " neurons in step " + std::to_string(enable_step) + "\n", true);
+            }
         }
 
         // Provide neuronal network to neuron models for one iteration step

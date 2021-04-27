@@ -360,13 +360,13 @@ public:
      * Disables all neurons with specified ids
      * If a neuron is already disabled, nothing happens for that one
      */
-    void disable_neurons(const std::vector<size_t> neuron_ids);
+    void disable_neurons(const std::vector<size_t>& neuron_ids);
 
     /**
      * Enables all neurons with specified ids
      * If a neuron is already enabled, nothing happens for that one
      */
-    void enable_neurons(const std::vector<size_t> neuron_ids);
+    void enable_neurons(const std::vector<size_t>& neuron_ids);
 
     void update_electrical_activity();
 

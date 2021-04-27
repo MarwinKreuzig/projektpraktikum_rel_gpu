@@ -87,7 +87,7 @@ void Neurons::init_synaptic_elements() {
 /**
  * Disables all neurons with specified ids
  */
-void Neurons::disable_neurons(const std::vector<size_t> neuron_ids) {
+void Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
     neuron_model->disable_neurons(neuron_ids);
 
     const auto my_rank = MPIWrapper::get_my_rank();
@@ -130,7 +130,7 @@ void Neurons::disable_neurons(const std::vector<size_t> neuron_ids) {
     dendrites_inh->update_after_deletion(deleted_dend_in_connections, neuron_ids);
 }
 
-void Neurons::enable_neurons(const std::vector<size_t> neuron_ids) {
+void Neurons::enable_neurons(const std::vector<size_t>& neuron_ids) {
     for (const auto neuron_id : neuron_ids) {
         RelearnException::check(neuron_id < num_neurons, "In Neurons::enable_neurons, there was a too large id: %ull vs %ull", neuron_id, num_neurons);
         disable_flags[neuron_id] = 1;
