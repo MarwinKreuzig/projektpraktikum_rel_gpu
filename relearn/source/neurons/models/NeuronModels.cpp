@@ -70,7 +70,7 @@ void NeuronModels::update_electrical_activity_calculate_input(const NetworkGraph
     GlobalTimers::timers.start(TimerRegion::CALC_SYNAPTIC_INPUT);
     // For my neurons
 
-#pragma omp parallel for shared(my_rank, firing_neuron_ids_incoming, network_graph, disable_flags) default(none)
+#pragma omp parallel for shared(firing_neuron_ids_incoming, network_graph, disable_flags) default(none)
     for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {
             continue;
