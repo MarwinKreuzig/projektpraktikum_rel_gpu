@@ -151,7 +151,7 @@ void Neurons::update_calcium() {
     const auto& fired = neuron_model->get_fired();
 
     // For my neurons
-#pragma omp parallel for default(none)
+#pragma omp parallel for shared(fired) default(none)
     for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {
             continue;
