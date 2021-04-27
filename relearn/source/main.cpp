@@ -165,7 +165,7 @@ int main(int argc, char** argv) {
 	*/
     MPIWrapper::init_buffer_octree(total_num_subdomains);
 
-    auto neuron_models = std::make_unique<models::ModelA>();
+    auto neuron_models = std::make_unique<models::PoissonModel>();
 
     auto axon_models = std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons, target_calcium,
         SynapticElements::default_nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);

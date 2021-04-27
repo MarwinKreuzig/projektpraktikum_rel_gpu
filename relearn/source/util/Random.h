@@ -28,7 +28,7 @@ enum class RandomHolderKey : char {
     Octree = 0,
     Partition = 1,
     SubdomainFromNeuronDensity = 2,
-    ModelA = 3,
+    PoissonModel = 3,
     Neurons = 4,
     NeuronModels = 5,
     SynapticElements = 6,

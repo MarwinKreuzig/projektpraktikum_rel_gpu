@@ -267,10 +267,10 @@ private:
 };
 
 namespace models {
-class ModelA : public NeuronModels {
+class PoissonModel : public NeuronModels {
 public:
-    ModelA() = default;
-    explicit ModelA(
+    PoissonModel() = default;
+    explicit PoissonModel(
         double k,
         double tau_C,
         double beta,

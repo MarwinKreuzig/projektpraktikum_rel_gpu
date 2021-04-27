@@ -250,7 +250,7 @@ NeuronModels::MapFiringNeuronIds NeuronModels::update_electrical_activity_prepar
 
 std::vector<std::unique_ptr<NeuronModels>> NeuronModels::get_models() {
     std::vector<std::unique_ptr<NeuronModels>> res;
-    res.push_back(NeuronModels::create<models::ModelA>());
+    res.push_back(NeuronModels::create<models::PoissonModel>());
     res.push_back(NeuronModels::create<models::IzhikevichModel>());
     res.push_back(NeuronModels::create<models::FitzHughNagumoModel>());
     res.push_back(NeuronModels::create<models::AEIFModel>());
