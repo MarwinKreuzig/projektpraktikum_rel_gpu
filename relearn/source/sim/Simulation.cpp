@@ -26,6 +26,7 @@
 #include "../util/Timers.h"
 
 #include <fstream>
+#include <iomanip>
 #include <sstream>
 
 Simulation::Simulation(std::shared_ptr<Partition> partition)
