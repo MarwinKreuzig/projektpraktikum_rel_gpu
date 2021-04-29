@@ -70,7 +70,7 @@ void Simulation::set_disable_interrupts(std::vector<std::pair<size_t, std::vecto
     disable_interrupts = std::move(interrupts);
 }
 
-void Simulation::set_creation_interrups(std::vector<std::pair<size_t, size_t>> interrupts) {
+void Simulation::set_creation_interrupts(std::vector<std::pair<size_t, size_t>> interrupts) {
     creation_interrupts = std::move(interrupts);
 }
 

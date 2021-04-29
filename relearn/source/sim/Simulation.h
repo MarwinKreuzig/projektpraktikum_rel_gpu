@@ -45,7 +45,7 @@ public:
 
     void set_disable_interrupts(std::vector<std::pair<size_t, std::vector<size_t>>> interrupts);
 
-    void set_creation_interrups(std::vector<std::pair<size_t, size_t>> interrupts);
+    void set_creation_interrupts(std::vector<std::pair<size_t, size_t>> interrupts);
 
     void place_random_neurons(size_t num_neurons, double frac_exc);
 
