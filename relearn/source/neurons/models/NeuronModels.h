@@ -156,6 +156,8 @@ public:
 	 */
     virtual void init(size_t num_neurons);
 
+    virtual void create_neurons(size_t creation_count);
+
     /**
 	 * Returns the name of the model
 	 */
@@ -177,7 +179,7 @@ protected:
 
     virtual void update_activity(size_t i) = 0;
 
-    virtual void init_neurons() = 0;
+    virtual void init_neurons(size_t start_id, size_t end_id) = 0;
 
     [[nodiscard]] double get_base_background_activity() const noexcept {
         return base_background_activity;
@@ -292,12 +294,14 @@ public:
 
     void init(size_t num_neurons) final;
 
+    void create_neurons(size_t creation_count) final;
+
 protected:
     void update_electrical_activity_serial_initialize(const std::vector<char>& disable_flags) final;
 
     void update_activity(size_t i) final;
 
-    void init_neurons() final;
+    void init_neurons(size_t start_id, size_t end_id) final;
 
 private:
     [[nodiscard]] double iter_x(double x, double I_syn) const noexcept;
@@ -353,10 +357,12 @@ public:
 
     void init(size_t num_neurons) final;
 
+    void create_neurons(size_t creation_count) final;
+
 protected:
     void update_activity(size_t i) final;
 
-    void init_neurons() final;
+    void init_neurons(size_t start_id, size_t end_id) final;
 
 private:
     [[nodiscard]] double iter_x(double x, double u, double I_syn) const noexcept;
@@ -431,10 +437,12 @@ public:
 
     void init(size_t num_neurons) final;
 
+    void create_neurons(size_t creation_count) final;
+
 protected:
     void update_activity(size_t i) final;
 
-    void init_neurons() final;
+    void init_neurons(size_t start_id, size_t end_id) final;
 
 private:
     [[nodiscard]] static double iter_x(double x, double w, double I_syn) noexcept;
@@ -496,10 +504,12 @@ public:
 
     void init(size_t num_neurons) final;
 
+    void create_neurons(size_t creation_count) final;
+
 protected:
     void update_activity(size_t i) final;
 
-    void init_neurons() final;
+    void init_neurons(size_t start_id, size_t end_id) final;
 
 private:
     [[nodiscard]] double f(double x) const noexcept;

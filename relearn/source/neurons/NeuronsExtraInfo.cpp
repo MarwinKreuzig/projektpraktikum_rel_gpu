@@ -11,6 +11,7 @@
 #include "NeuronsExtraInfo.h"
 
 #include "../mpi/MPIWrapper.h"
+#include "../util/Random.h"
 
 void NeuronsExtraInfo::init(size_t number_neurons) noexcept {
     RelearnException::check(size == 0, "NeuronsExtraInfo initialized two times");
@@ -28,5 +29,30 @@ void NeuronsExtraInfo::init(size_t number_neurons) noexcept {
     mpi_rank_to_local_start_id[0] = 0;
     for (size_t i = 1; i < num_ranks; i++) {
         mpi_rank_to_local_start_id[i] = mpi_rank_to_local_start_id[i - 1] + rank_to_num_neurons[i - 1];
+    }
+}
+
+void NeuronsExtraInfo::create_neurons(size_t creation_count) {
+    const auto current_size = size;
+    const auto new_size = current_size + creation_count;
+
+    area_names.resize(new_size, "UNKNOWN (inserted by creation");
+
+    x_dims.resize(new_size);
+    y_dims.resize(new_size);
+    z_dims.resize(new_size);
+
+    for (size_t i = current_size; i < new_size; i++) {
+        const auto x_it = RandomHolder::get_random_uniform_double(RandomHolderKey::NeuronsExtraInformation, 0.0, 1.0);
+        const auto y_it = RandomHolder::get_random_uniform_double(RandomHolderKey::NeuronsExtraInformation, 0.0, 1.0);
+        const auto z_it = RandomHolder::get_random_uniform_double(RandomHolderKey::NeuronsExtraInformation, 0.0, 1.0);
+
+        const auto x_pos = x_dims[x_it * current_size];
+        const auto y_pos = y_dims[y_it * current_size];
+        const auto z_pos = z_dims[z_it * current_size];
+
+        x_dims[i] = x_pos;
+        y_dims[i] = y_pos;
+        z_dims[i] = z_pos;
     }
 }

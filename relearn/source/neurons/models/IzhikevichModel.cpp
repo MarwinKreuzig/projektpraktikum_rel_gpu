@@ -52,7 +52,14 @@ IzhikevichModel::IzhikevichModel(double k, double tau_C, double beta, unsigned i
 void IzhikevichModel::init(size_t num_neurons) {
     NeuronModels::init(num_neurons);
     u.resize(num_neurons);
-    init_neurons();
+    init_neurons(0, num_neurons);
+}
+
+void models::IzhikevichModel::create_neurons(size_t creation_count) {
+    const auto old_size = NeuronModels::get_num_neurons();
+    NeuronModels::create_neurons(creation_count);
+    u.resize(old_size + creation_count);
+    init_neurons(old_size, creation_count);
 }
 
 void IzhikevichModel::update_activity(const size_t i) {
@@ -74,9 +81,8 @@ void IzhikevichModel::update_activity(const size_t i) {
     set_x(i, x);
 }
 
-void IzhikevichModel::init_neurons() {
-    const auto num_neurons = get_num_neurons();
-    for (size_t i = 0; i < num_neurons; ++i) {
+void IzhikevichModel::init_neurons(size_t start_id, size_t end_id) {
+    for (size_t i = start_id; i < end_id; ++i) {
         const auto x = c;
         u[i] = iter_refrac(b * c, x);
 

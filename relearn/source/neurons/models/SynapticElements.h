@@ -68,6 +68,26 @@ public:
         signal_types.resize(size);
     }
 
+    void create_neurons(size_t creation_count) {
+        const auto current_size = size;
+        const auto new_size = current_size + creation_count;
+
+        cnts.resize(new_size);
+
+        if (initial_vacant_elements_lower_bound < initial_vacant_elements_upper_bound) {
+            RandomHolder::fill(RandomHolderKey::SynapticElements, cnts.begin() + current_size, cnts.end(), initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
+        } else if (initial_vacant_elements_lower_bound == initial_vacant_elements_upper_bound) {
+            std::fill(cnts.begin() + current_size, cnts.end(), initial_vacant_elements_lower_bound);
+        } else {
+            RelearnException::fail("Should initialize synaptic elements with values between in the wrong order (lower is larger than upper)");
+        }
+
+
+        connected_cnts.resize(new_size, 0);
+        delta_cnts.resize(new_size, 0.0);
+        signal_types.resize(new_size);
+    }
+
     [[nodiscard]] std::unique_ptr<SynapticElements> clone() const {
         return std::make_unique<SynapticElements>(type, min_C_level_to_grow, C_target, nu, vacant_retract_ratio, initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
     }
