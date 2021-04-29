@@ -131,8 +131,8 @@ void NetworkGraph::create_neurons(size_t creation_count) {
     const auto old_size = my_num_neurons;
     const auto new_size = old_size + creation_count;
 
-    neuron_in_neighborhood.resize(old_size);
-    neuron_out_neighborhood.resize(old_size);
+    neuron_in_neighborhood.resize(new_size);
+    neuron_out_neighborhood.resize(new_size);
 
     my_num_neurons = new_size;
 }
