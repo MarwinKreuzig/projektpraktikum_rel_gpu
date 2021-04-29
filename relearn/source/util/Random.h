@@ -32,6 +32,7 @@ enum class RandomHolderKey : char {
     Neurons = 4,
     NeuronModels = 5,
     SynapticElements = 6,
+    NeuronsExtraInformation = 7,
 };
 
 class RandomHolder {

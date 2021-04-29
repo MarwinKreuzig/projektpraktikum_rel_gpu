@@ -21,4 +21,6 @@ public:
     static std::vector<std::pair<size_t, std::vector<size_t>>> load_enable_interrups(const std::string& path_to_file);
 
     static std::vector<std::pair<size_t, std::vector<size_t>>> load_disable_interrups(const std::string& path_to_file);
+
+    static std::vector<std::pair<size_t, size_t>> load_creation_interrups(const std::string& path_to_file);
 };

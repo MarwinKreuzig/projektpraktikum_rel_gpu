@@ -45,6 +45,8 @@ public:
 
     void set_disable_interrupts(std::vector<std::pair<size_t, std::vector<size_t>>> interrupts);
 
+    void set_creation_interrups(std::vector<std::pair<size_t, size_t>> interrupts);
+
     void place_random_neurons(size_t num_neurons, double frac_exc);
 
     void load_neurons_from_file(const std::string& path_to_positions);
@@ -85,6 +87,7 @@ private:
 
     std::vector<std::pair<size_t, std::vector<size_t>>> enable_interrupts;
     std::vector<std::pair<size_t, std::vector<size_t>>> disable_interrupts;
+    std::vector<std::pair<size_t, size_t>> creation_interrupts;
 
     double accept_criterion{ 0.0 };
 

@@ -70,6 +70,10 @@ void Simulation::set_disable_interrupts(std::vector<std::pair<size_t, std::vecto
     disable_interrupts = std::move(interrupts);
 }
 
+void Simulation::set_creation_interrups(std::vector<std::pair<size_t, size_t>> interrupts) {
+    creation_interrupts = std::move(interrupts);
+}
+
 void Simulation::construct_neurons() {
     RelearnException::check(neuron_models != nullptr, "In simulation, neuron_models is nullptr");
     RelearnException::check(axons != nullptr, "In simulation, axons is nullptr");
@@ -165,6 +169,13 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             if (enable_step == step) {
                 neurons->enable_neurons(enable_ids);
                 LogFiles::write_to_file(LogFiles::EventType::Cout, std::string("Enabling ") + std::to_string(enable_ids.size()) + " neurons in step " + std::to_string(enable_step) + "\n", true);
+            }
+        }
+
+        for (const auto& [creation_step, creation_count] : creation_interrupts) {
+            if (creation_step == step) {
+                neurons->create_neurons(creation_count);
+                LogFiles::write_to_file(LogFiles::EventType::Cout, std::string("Creating ") + std::to_string(creation_count) + " neurons in step " + std::to_string(creation_step) + "\n", true);
             }
         }
 

@@ -46,7 +46,15 @@ void PoissonModel::init(size_t num_neurons) {
     NeuronModels::init(num_neurons);
     refrac.resize(num_neurons, 0);
     theta_values.resize(num_neurons, 0.0);
-    init_neurons();
+    init_neurons(0, num_neurons);
+}
+
+void models::PoissonModel::create_neurons(size_t creation_count) {
+    const auto old_size = NeuronModels::get_num_neurons();
+    NeuronModels::create_neurons(creation_count);
+    refrac.resize(old_size + creation_count, 0);
+    theta_values.resize(old_size + creation_count, 0.0);
+    init_neurons(old_size, creation_count);
 }
 
 void PoissonModel::update_activity(const size_t i) {
@@ -74,9 +82,8 @@ void PoissonModel::update_activity(const size_t i) {
     set_x(i, x);
 }
 
-void PoissonModel::init_neurons() {
-    const auto num_neurons = get_num_neurons();
-    for (size_t i = 0; i < num_neurons; ++i) {
+void PoissonModel::init_neurons(size_t start_id, size_t end_id) {
+    for (size_t i = start_id; i < end_id; ++i) {
         const auto x = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
         const double threshold = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
         const bool f = x >= threshold;

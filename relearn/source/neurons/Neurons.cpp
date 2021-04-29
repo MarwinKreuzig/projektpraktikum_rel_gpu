@@ -29,8 +29,8 @@
 void Neurons::init(size_t number_neurons) {
     num_neurons = number_neurons;
 
-    neuron_model->init(num_neurons);
-    extra_info->init(num_neurons);
+    neuron_model->init(number_neurons);
+    extra_info->init(number_neurons);
 
     axons->init(number_neurons);
     dendrites_exc->init(number_neurons);
@@ -39,16 +39,16 @@ void Neurons::init(size_t number_neurons) {
     /**
 	* Mark dendrites as exc./inh.
 	*/
-    for (auto i = 0; i < num_neurons; i++) {
+    for (size_t i = 0; i < number_neurons; i++) {
         dendrites_exc->set_signal_type(i, SignalType::EXCITATORY);
         dendrites_inh->set_signal_type(i, SignalType::INHIBITORY);
     }
 
-    disable_flags.resize(num_neurons, 1);
-    calcium.resize(num_neurons);
+    disable_flags.resize(number_neurons, 1);
+    calcium.resize(number_neurons);
 
     // Init member variables
-    for (size_t i = 0; i < num_neurons; i++) {
+    for (size_t i = 0; i < number_neurons; i++) {
         // Set calcium concentration
         const auto fired = neuron_model->get_fired(i);
         calcium[i] = fired ? neuron_model->get_beta() : 0.0;
@@ -135,6 +135,34 @@ void Neurons::enable_neurons(const std::vector<size_t>& neuron_ids) {
         RelearnException::check(neuron_id < num_neurons, "In Neurons::enable_neurons, there was a too large id: %ull vs %ull", neuron_id, num_neurons);
         disable_flags[neuron_id] = 1;
     }
+}
+
+void Neurons::create_neurons(size_t creation_count) {
+    const auto current_size = num_neurons;
+    const auto new_size = current_size + creation_count;
+
+    neuron_model->create_neurons(creation_count);
+    extra_info->create_neurons(creation_count);
+
+    axons->create_neurons(creation_count);
+    dendrites_exc->create_neurons(creation_count);
+    dendrites_inh->create_neurons(creation_count);
+
+    for (size_t i = current_size; i < new_size; i++) {
+        dendrites_exc->set_signal_type(i, SignalType::EXCITATORY);
+        dendrites_inh->set_signal_type(i, SignalType::INHIBITORY);
+    }
+
+    disable_flags.resize(new_size, 1);
+    calcium.resize(new_size);
+
+    for (size_t i = current_size; i < new_size; i++) {
+        // Set calcium concentration
+        const auto fired = neuron_model->get_fired(i);
+        calcium[i] = fired ? neuron_model->get_beta() : 0.0;
+    }
+
+    num_neurons = new_size;
 }
 
 void Neurons::update_electrical_activity() {

@@ -275,3 +275,12 @@ void NeuronModels::init(size_t num_neurons) {
     fired.resize(num_neurons, false);
     I_syn.resize(num_neurons, 0.0);
 }
+
+void NeuronModels::create_neurons(size_t creation_count) {
+    const auto current_size = my_num_neurons;
+    const auto new_size = current_size + creation_count;
+    
+    x.resize(new_size, 0.0);
+    fired.resize(new_size, false);
+    I_syn.resize(new_size, 0.0);
+}

@@ -31,6 +31,8 @@ class NeuronsExtraInfo {
 public:
     void init(size_t number_neurons) noexcept;
 
+    void create_neurons(size_t creation_count);
+
     void set_area_names(std::vector<std::string> names) {
         RelearnException::check(area_names.empty(), "Area names are not empty");
         RelearnException::check(size == names.size(), "Size does not match area names count");

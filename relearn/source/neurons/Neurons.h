@@ -368,6 +368,11 @@ public:
      */
     void enable_neurons(const std::vector<size_t>& neuron_ids);
 
+    /**
+     * Creates creation_count many new neurons with default values
+     */
+    void create_neurons(size_t creation_count);
+
     void update_electrical_activity();
 
     void update_number_synaptic_elements_delta() noexcept {
