@@ -65,12 +65,10 @@ void NeuronModels::update_electrical_activity_update_activity(const std::vector<
 }
 
 void NeuronModels::update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const MapFiringNeuronIds& firing_neuron_ids_incoming, const std::vector<char>& disable_flags) {
-    const auto my_rank = MPIWrapper::get_my_rank();
-
     GlobalTimers::timers.start(TimerRegion::CALC_SYNAPTIC_INPUT);
     // For my neurons
 
-#pragma omp parallel for shared(firing_neuron_ids_incoming, network_graph, disable_flags, my_rank) default(none)
+#pragma omp parallel for shared(firing_neuron_ids_incoming, network_graph, disable_flags) default(none)
     for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {
             continue;
@@ -78,6 +76,8 @@ void NeuronModels::update_electrical_activity_calculate_input(const NetworkGraph
         /**
 		 * Determine synaptic input from neurons connected to me
 		 */
+
+        const auto my_rank = MPIWrapper::get_my_rank();
 
         // Walk through in-edges of my neuron
         const NetworkGraph::Edges& in_edges = network_graph.get_in_edges(neuron_id);
@@ -279,7 +279,7 @@ void NeuronModels::init(size_t num_neurons) {
 void NeuronModels::create_neurons(size_t creation_count) {
     const auto current_size = my_num_neurons;
     const auto new_size = current_size + creation_count;
-    
+
     x.resize(new_size, 0.0);
     fired.resize(new_size, false);
     I_syn.resize(new_size, 0.0);
