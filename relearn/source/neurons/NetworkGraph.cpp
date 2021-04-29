@@ -127,6 +127,16 @@ size_t NetworkGraph::get_num_out_edges(size_t neuron_id) const {
     return total_num_ports;
 }
 
+void NetworkGraph::create_neurons(size_t creation_count) {
+    const auto old_size = my_num_neurons;
+    const auto new_size = old_size + creation_count;
+
+    neuron_in_neighborhood.resize(old_size);
+    neuron_out_neighborhood.resize(old_size);
+
+    my_num_neurons = new_size;
+}
+
 void NetworkGraph::add_edge(Edges& edges, int rank, size_t neuron_id, int weight) {
     const EdgesKey rank_neuron_id_pair{ rank, neuron_id };
 

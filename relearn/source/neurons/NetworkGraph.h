@@ -62,6 +62,8 @@ public:
 
     [[nodiscard]] size_t get_num_out_edges(size_t neuron_id) const;
 
+    void create_neurons(size_t creation_count);
+
     /**
 	 * Add weight to an edge.
 	 * The edge is created if it does not exist yet and parameter weight != 0.

@@ -144,6 +144,8 @@ void Neurons::create_neurons(size_t creation_count) {
     neuron_model->create_neurons(creation_count);
     extra_info->create_neurons(creation_count);
 
+    network_graph->create_neurons(creation_count);
+
     axons->create_neurons(creation_count);
     dendrites_exc->create_neurons(creation_count);
     dendrites_inh->create_neurons(creation_count);
@@ -160,6 +162,16 @@ void Neurons::create_neurons(size_t creation_count) {
         // Set calcium concentration
         const auto fired = neuron_model->get_fired(i);
         calcium[i] = fired ? neuron_model->get_beta() : 0.0;
+    }
+
+    const auto my_rank = MPIWrapper::get_my_rank();
+
+    const auto& x_dims = extra_info->get_x_dims();
+    const auto& y_dims = extra_info->get_y_dims();
+    const auto& z_dims = extra_info->get_z_dims();
+
+    for (size_t i = current_size; i < new_size; i++) {
+        global_tree->insert({ x_dims[i], y_dims[i], z_dims[i] }, i, my_rank);
     }
 
     num_neurons = new_size;
