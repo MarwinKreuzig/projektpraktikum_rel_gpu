@@ -82,10 +82,11 @@ public:
             RelearnException::fail("Should initialize synaptic elements with values between in the wrong order (lower is larger than upper)");
         }
 
-
         connected_cnts.resize(new_size, 0);
         delta_cnts.resize(new_size, 0.0);
         signal_types.resize(new_size);
+
+        size = new_size;
     }
 
     [[nodiscard]] std::unique_ptr<SynapticElements> clone() const {
@@ -165,7 +166,7 @@ public:
         for (auto neuron_id = 0; neuron_id < size; neuron_id++) {
             const auto change = changes[neuron_id];
             RelearnException::check(change >= 0, "The number of deleted elements must not be negative");
-            
+
             connected_cnts[neuron_id] -= change;
         }
 
