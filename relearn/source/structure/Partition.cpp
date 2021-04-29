@@ -314,7 +314,7 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
             signal_types[neuron_id] = vec_type[j];
 
             // Insert neuron into tree
-            auto* node = subdomains[i].octree.insert(vec_pos[j], neuron_id, MPIWrapper::get_my_rank());
+            const auto* const node = subdomains[i].octree.insert(vec_pos[j], neuron_id, MPIWrapper::get_my_rank());
             RelearnException::check(node != nullptr, "node is nullptr");
 
             neuron_id++;

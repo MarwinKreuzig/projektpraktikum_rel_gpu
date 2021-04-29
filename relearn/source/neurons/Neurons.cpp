@@ -83,7 +83,6 @@ void Neurons::init_synaptic_elements() {
     }
 }
 
-
 /**
  * Disables all neurons with specified ids
  */
@@ -171,7 +170,8 @@ void Neurons::create_neurons(size_t creation_count) {
     const auto& z_dims = extra_info->get_z_dims();
 
     for (size_t i = current_size; i < new_size; i++) {
-        global_tree->insert({ x_dims[i], y_dims[i], z_dims[i] }, i, my_rank);
+        const auto* const node = global_tree->insert({ x_dims[i], y_dims[i], z_dims[i] }, i, my_rank);
+        RelearnException::check(node != nullptr, "node is nullptr");
     }
 
     num_neurons = new_size;
@@ -190,8 +190,9 @@ void Neurons::update_calcium() {
     const auto beta = neuron_model->get_beta();
     const auto& fired = neuron_model->get_fired();
 
-    // For my neurons
-#pragma omp parallel for shared(fired, h, tau_C, beta) default(none)
+    // The following line is commented as compilers cannot make up their mind whether they want to have the constants shared or not
+    //#pragma omp parallel for shared(fired, h, tau_C, beta) default(none)
+#pragma omp parallel for
     for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {
             continue;
@@ -743,7 +744,7 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
         if (disable_flags[neuron_id] == 0) {
             continue;
         }
-        
+
         // Number of vacant axons
         const auto num_vacant_axons = static_cast<unsigned int>(axons_cnts[neuron_id]) - axons_connected_cnts[neuron_id];
         RelearnException::check(num_vacant_axons >= 0, "num vacant axons is negative");
