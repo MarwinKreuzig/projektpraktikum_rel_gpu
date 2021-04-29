@@ -106,6 +106,42 @@ public:
         this->neuron_id = neuron_id;
     }
 
+// reserves memory space and initializes the array of coefficients to 0
+    void init_coefficients(){
+        coefficients= (double*)malloc(Constants::coefficient_num* sizeof(double));
+
+        for (size_t i = 0; i < Constants::coefficient_num; i++)
+        {
+            coefficients[i]=0;
+        }
+        
+    }
+
+//adds the coefficients that are in p to the existing ones
+    void add_to_coefficients(double *p){
+        for (size_t i = 0; i < Constants::coefficient_num; i++)
+        {
+            coefficients[i]+= p[i];
+        }
+    }
+
+//adds the coefficients that are in p to the existing ones
+    void add_to_coefficients(double p, int x){
+            coefficients[x]+= p;
+    }
+
+// returns the coefficient at the point x (0<=x<=Constants::coefficient_num)
+    double get_coefficient(int x){
+        if (x>=0 && x<= Constants::coefficient_num)
+        {
+            return coefficients[x];
+        }
+        else throw "Wrong argument in get_coefficient!";
+        
+    }
+
+
+
     [[nodiscard]] unsigned char get_neuron_octant() const {
         const std::optional<Vec3d>& pos = get_neuron_position();
         RelearnException::check(pos.has_value(), "position didn_t have a value");
@@ -147,4 +183,7 @@ private:
 	 * This info is used to identify (return) the target neuron for a given axon
 	 */
     size_t neuron_id{ Constants::uninitialized };
+
+    //array wich contains the coefficents to calculate Fast Gauss
+    double *coefficients;
 };

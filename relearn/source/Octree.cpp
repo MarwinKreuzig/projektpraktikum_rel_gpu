@@ -20,6 +20,7 @@
 #include "Partition.h"
 #include "Random.h"
 #include "RelearnException.h"
+#include "Deriatives.h"
 
 #include <sstream>
 
@@ -454,6 +455,83 @@ double Octree::calc_attractiveness_to_connect(
     return ret_val;
 }
 
+ double* Octree::calc_attractiveness_to_connect_FMM(
+     OctreeNode *source, 
+     const Vec3d& axon_pos_xyz, 
+     OctreeNode *target_list,
+     int target_list_length,
+     SignalType dendrite_type_needed){
+
+//Initialize return value
+double result[target_list_length];
+for (size_t i = 0; i < target_list_length; i++)
+{
+    result[i]=0;
+}
+
+// calculate vacant number of neurons in souce box
+unsigned int source_num = (*source).get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
+unsigned int target_num;
+
+if (source_num <= Constants::max_neurons_in_source)//when there are not enough neurons in the source
+{
+    for (size_t i = 0; i < target_list_length; i++) {
+        // calculate vacant number of neurons in target box
+        target_num = target_list[i].get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
+
+        Vec3d source_neu [source_num]; //TODO: fill target and source list
+        if (target_num <= Constants::max_neurons_in_target) //and there are not enough neurons in the target
+        {
+            //make direct Gauss
+            Vec3d target_neu [target_num];//TODO: fill target list
+
+            for (size_t t = 0; i < target_num; t++)
+            {
+                for (size_t s = 0; i < source_num; s++)
+                {
+                    result[i]+= kernel(target_neu[t],source_neu[s]);
+                }
+            }            
+        } else {//only a few neurons in source, but many neurons in target
+            //source to Taylor-Series about center of box C and add to Taylor
+
+            Vec3d center_of_target_box = target_list[i].get_cell().get_neuron_position_for(dendrite_type_needed); //TODO:solve problem
+            for (size_t b = 1; b <= Constants::coefficient_num; b++) {
+                double temp = 0;
+                for (size_t j = 0; j < source_num; j++) {
+                    temp += h(b, (euclidean_distance_3d(source_neu[j], center_of_target_box) / Constants::sigma));
+                }
+                double C = (pow(-1, fabs(b)) / fac(b)) * temp;
+                target_list[i].set_cell_add_coefficients(C, b - 1);
+            }
+            //Evaluate Taylor series at all sources
+            for (unsigned int j = 0; j < source_num; j++) {
+                for (size_t b = 1; b <= Constants::coefficient_num; b++) {
+                    result[i] += target_list[i].set_cell_get_coefficients(b - 1) * pow(euclidean_distance_3d(source_neu[j], center_of_target_box) / Constants::sigma, b);
+                }
+            }
+        }
+    }
+
+} else //when there are enough neurons in the source box
+{
+    //Hermite Expansion about center of source box
+
+    for (size_t i = 0; i < target_list_length; i++) {
+
+        // calculate number of neurons in target box
+        target_num = target_list[i].get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
+        if (target_num <= Constants::max_neurons_in_target) //and there are not enough neurons in the target
+        {
+            //evaluate Hermite expansion at each target
+        } else {
+            //Convert Hermite expansion into Taylor about center of target box and add to taylor for box C
+        }
+    }
+}
+return result;
+}
+
 ProbabilitySubintervalVector Octree::append_children(OctreeNode* node, AccessEpochsStarted& epochs_started) {
     ProbabilitySubintervalVector vector;
 
@@ -657,6 +735,8 @@ void Octree::insert(OctreeNode* node_to_insert) {
         // cell size becomes tree's box size
         root->set_cell_size(this->xyz_min, this->xyz_max);
         root->set_cell_neuron_id(Constants::uninitialized);
+        //TODO if (rootlevel...)
+        root->set_cell_init_coefficients();
     }
 
     auto* curr = root;

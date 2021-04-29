@@ -32,6 +32,12 @@ constexpr size_t plasticity_update_step = 100;
 constexpr size_t logfile_update_step = 500;
 
 constexpr size_t mpi_alloc_mem = 1024 * 1024 * 300;
+
+//Constants for Fast Gauss
+constexpr int coefficient_num = 8; //Determines the accuracy. Warning! If this parameter is increased, more derivatives must be entered 
+constexpr int max_neurons_in_target=5; //cutoff for target box
+constexpr int max_neurons_in_source=5; //cutoff for source box
+
 } // namespace Constants
 
 namespace Config {

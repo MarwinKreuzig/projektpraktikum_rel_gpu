@@ -337,3 +337,7 @@ ASALocalRun/
 */build-linux
 */output
 */bw2
+build/*
+relearn/googletest/*
+.vscode/*
+output/*

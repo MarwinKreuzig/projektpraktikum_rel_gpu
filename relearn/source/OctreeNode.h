@@ -103,6 +103,18 @@ public:
         cell.set_neuron_position_inh(opt_position);
     }
 
+    void set_cell_init_coefficients()noexcept{
+        cell.init_coefficients();
+    }
+
+    void set_cell_add_coefficients(double c, int x)noexcept{
+        cell.add_to_coefficients(c,x);
+    }
+
+     double set_cell_get_coefficients(int x)noexcept{
+        return cell.get_coefficient(x);
+    }
+
     void set_child(OctreeNode* node, size_t idx) {
         RelearnException::check(idx < Constants::number_oct, "In OctreeNode::set_child, idx was: %u", idx);
         // NOLINTNEXTLINE
