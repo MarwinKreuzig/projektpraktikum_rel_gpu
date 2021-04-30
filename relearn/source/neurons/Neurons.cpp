@@ -104,7 +104,7 @@ void Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
         for (const auto& [edge_key, weight] : in_edges) {
             const auto& [rank, source_id] = edge_key;
             RelearnException::check(rank == my_rank, "Currently, disabling neurons is only supported without mpi");
-            network_graph->add_edge_weight(neuron_id, my_rank, source_id, rank, weight);
+            network_graph->add_edge_weight(neuron_id, my_rank, source_id, rank, -weight);
 
             deleted_axon_connections[source_id] += weight;
         }
@@ -114,7 +114,7 @@ void Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
         for (const auto& [edge_key, weight] : out_edges) {
             const auto& [rank, target_id] = edge_key;
             RelearnException::check(rank == my_rank, "Currently, disabling neurons is only supported without mpi");
-            network_graph->add_edge_weight(target_id, rank, neuron_id, my_rank, weight);
+            network_graph->add_edge_weight(target_id, rank, neuron_id, my_rank, -weight);
 
             if (weight > 0) {
                 deleted_dend_ex_connections[target_id] += weight;
