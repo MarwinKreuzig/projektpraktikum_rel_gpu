@@ -12,10 +12,10 @@
 
 #include "../../Config.h"
 #include "../../mpi/MPIWrapper.h"
-#include "../NetworkGraph.h"
-#include "../Neurons.h"
 #include "../../util/Random.h"
 #include "../../util/Timers.h"
+#include "../NetworkGraph.h"
+#include "../Neurons.h"
 
 NeuronModels::NeuronModels(double k, double tau_C, double beta, unsigned int h, double background_activity, double background_activity_mean, double background_activity_stddev)
     : k(k)

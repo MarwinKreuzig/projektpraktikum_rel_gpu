@@ -10,19 +10,20 @@
 
 #pragma once
 
-#include "MPITypes.h"
 #include "../util/RelearnException.h"
-
-#include <array>
-#include <cstdint>
-#include <string>
-#include <vector>
 
 #if !MPI_FOUND
 #include "MPINoWrapper.h"
 
 using MPIWrapper = MPINoWrapper;
 #else // #if MPI_FOUND
+
+#include "MPITypes.h"
+
+#include <array>
+#include <cstdint>
+#include <string>
+#include <vector>
 
 class Octree;
 class OctreeNode;

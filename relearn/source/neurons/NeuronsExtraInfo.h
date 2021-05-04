@@ -10,9 +10,9 @@
 
 #pragma once
 
-#include "helper/RankNeuronId.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
+#include "helper/RankNeuronId.h"
 
 #include <optional>
 #include <string>

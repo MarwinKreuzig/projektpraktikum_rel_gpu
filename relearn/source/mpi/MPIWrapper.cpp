@@ -14,9 +14,9 @@
 
 #include "../Config.h"
 #include "../io/LogFiles.h"
-#include "MPI_RMA_MemAllocator.h"
 #include "../util/RelearnException.h"
 #include "../util/Utility.h"
+#include "MPI_RMA_MemAllocator.h"
 
 #include <mpi.h>
 
@@ -262,12 +262,15 @@ void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
 MPI_Op MPIWrapper::translate_reduce_function(ReduceFunction rf) {
     switch (rf) {
     case ReduceFunction::min:
+        // NOLINTNEXTLINE
         return MPI_MIN;
 
     case ReduceFunction::max:
+        // NOLINTNEXTLINE
         return MPI_MAX;
 
     case ReduceFunction::sum:
+        // NOLINTNEXTLINE
         return MPI_SUM;
 
     case ReduceFunction::minsummax:
@@ -275,6 +278,7 @@ MPI_Op MPIWrapper::translate_reduce_function(ReduceFunction rf) {
 
     default:
         RelearnException::fail("In reduce, got wrong function");
+        // NOLINTNEXTLINE
         return 0;
     }
 }
@@ -286,6 +290,7 @@ MPI_Comm MPIWrapper::translate_scope(Scope scope) {
         return MPI_COMM_WORLD;
     default:
         RelearnException::fail("In barrier, got wrong scope");
+        // NOLINTNEXTLINE
         return 0;
     }
 }

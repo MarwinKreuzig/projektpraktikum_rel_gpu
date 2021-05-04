@@ -11,10 +11,10 @@
 #pragma once
 
 #include "../mpi/MPIWrapper.h"
-#include "../structure/OctreeNode.h"
+#include "../neurons/SignalType.h"
 #include "../neurons/helper/ProbabilitySubinterval.h"
 #include "../neurons/helper/RankNeuronId.h"
-#include "../neurons/SignalType.h"
+#include "../structure/OctreeNode.h"
 #include "../util/Vec3.h"
 
 #include <map>
@@ -94,6 +94,7 @@ private:
         void operator()(OctreeNode* node) /*noexcept*/ {
             RelearnException::check(node != nullptr, "In FunctorUpdateNode, node is nullptr");
 
+            // NOLINTNEXTLINE
             if (!node->is_parent()) {
                 // Get ID of the node's neuron
                 const size_t neuron_id = node->get_cell().get_neuron_id();

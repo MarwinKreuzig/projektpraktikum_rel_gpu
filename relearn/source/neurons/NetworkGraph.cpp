@@ -12,10 +12,10 @@
 
 #include "../io/LogFiles.h"
 #include "../mpi/MPIWrapper.h"
-#include "Neurons.h"
 #include "../structure/Partition.h"
-#include "helper/RankNeuronId.h"
 #include "../util/RelearnException.h"
+#include "Neurons.h"
+#include "helper/RankNeuronId.h"
 
 #include <algorithm>
 #include <cmath>

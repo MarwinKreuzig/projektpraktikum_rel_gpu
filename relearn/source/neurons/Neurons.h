@@ -11,15 +11,15 @@
 #pragma once
 
 #include "../Config.h"
-#include "ElementType.h"
-#include "models/NeuronModels.h"
-#include "NeuronsExtraInfo.h"
-#include "helper/RankNeuronId.h"
 #include "../util/RelearnException.h"
-#include "SignalType.h"
-#include "helper/SynapseCreationRequests.h"
-#include "models/SynapticElements.h"
 #include "../util/Vec3.h"
+#include "ElementType.h"
+#include "NeuronsExtraInfo.h"
+#include "SignalType.h"
+#include "helper/RankNeuronId.h"
+#include "helper/SynapseCreationRequests.h"
+#include "models/NeuronModels.h"
+#include "models/SynapticElements.h"
 
 #include <array>
 #include <memory>

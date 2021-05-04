@@ -9,18 +9,18 @@
  */
 
 #include "Config.h"
-#include "neurons/ElementType.h"
-#include "io/LogFiles.h"
 #include "io/InteractiveNeuronIO.h"
+#include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
-#include "neurons/models/NeuronModels.h"
+#include "neurons/ElementType.h"
 #include "neurons/helper/NeuronMonitor.h"
+#include "neurons/models/NeuronModels.h"
+#include "neurons/models/SynapticElements.h"
 #include "sim/NeuronToSubdomainAssignment.h"
+#include "sim/Simulation.h"
 #include "structure/Partition.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
-#include "sim/Simulation.h"
-#include "neurons/models/SynapticElements.h"
 #include "util/Timers.h"
 
 #include <CLI/App.hpp>

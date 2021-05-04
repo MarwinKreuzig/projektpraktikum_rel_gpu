@@ -10,9 +10,9 @@
 
 #pragma once
 
-#include "ProbabilitySubinterval.h"
-#include "../SignalType.h"
 #include "../../util/Vec3.h"
+#include "../SignalType.h"
+#include "ProbabilitySubinterval.h"
 
 #include <list>
 #include <memory>

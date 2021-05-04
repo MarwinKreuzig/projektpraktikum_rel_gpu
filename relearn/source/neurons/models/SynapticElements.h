@@ -10,11 +10,11 @@
 
 #pragma once
 
-#include "../ElementType.h"
-#include "ModelParameter.h"
 #include "../../util/Random.h"
 #include "../../util/RelearnException.h"
+#include "../ElementType.h"
 #include "../SignalType.h"
+#include "ModelParameter.h"
 
 #include <cmath>
 #include <memory>

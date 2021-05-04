@@ -14,16 +14,16 @@
 #include "../io/LogFiles.h"
 #include "../mpi/MPIWrapper.h"
 #include "../neurons/NetworkGraph.h"
-#include "../neurons/models/NeuronModels.h"
-#include "../neurons/helper/NeuronMonitor.h"
-#include "NeuronToSubdomainAssignment.h"
 #include "../neurons/Neurons.h"
+#include "../neurons/helper/NeuronMonitor.h"
+#include "../neurons/models/NeuronModels.h"
 #include "../structure/Octree.h"
 #include "../structure/Partition.h"
 #include "../util/RelearnException.h"
+#include "../util/Timers.h"
+#include "NeuronToSubdomainAssignment.h"
 #include "SubdomainFromFile.h"
 #include "SubdomainFromNeuronDensity.h"
-#include "../util/Timers.h"
 
 #include <fstream>
 #include <iomanip>

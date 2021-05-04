@@ -17,10 +17,10 @@
 
 #include "../io/LogFiles.h"
 #include "../neurons/Neurons.h"
+#include "../neurons/models/SynapticElements.h"
 #include "../structure/Partition.h"
 #include "../util/Random.h"
 #include "../util/RelearnException.h"
-#include "../neurons/models/SynapticElements.h"
 
 #include <sstream>
 

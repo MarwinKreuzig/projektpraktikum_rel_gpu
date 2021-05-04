@@ -11,8 +11,8 @@
 #pragma once
 
 #include "../Config.h"
-#include "../util/RelearnException.h"
 #include "../neurons/SignalType.h"
+#include "../util/RelearnException.h"
 #include "../util/Vec3.h"
 
 #include <optional>

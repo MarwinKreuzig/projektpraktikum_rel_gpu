@@ -10,8 +10,8 @@
 
 #pragma once
 
-#include "ModelParameter.h"
 #include "../../util/RelearnException.h"
+#include "ModelParameter.h"
 
 #include <algorithm>
 #include <map>

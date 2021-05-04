@@ -10,8 +10,8 @@
 
 #pragma once
 
-#include "../models/NeuronModels.h"
 #include "../Neurons.h"
+#include "../models/NeuronModels.h"
 
 #include <memory>
 #include <vector>

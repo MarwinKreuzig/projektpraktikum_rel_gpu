@@ -10,8 +10,8 @@
 
 #pragma once
 
-#include "SignalType.h"
 #include "../util/Vec3.h"
+#include "SignalType.h"
 
 #include <map>
 #include <memory>

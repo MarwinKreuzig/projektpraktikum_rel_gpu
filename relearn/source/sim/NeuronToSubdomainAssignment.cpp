@@ -10,8 +10,8 @@
 
 #include "NeuronToSubdomainAssignment.h"
 
-#include "../util/RelearnException.h"
 #include "../neurons/models/SynapticElements.h"
+#include "../util/RelearnException.h"
 
 #include <fstream>
 #include <iomanip>

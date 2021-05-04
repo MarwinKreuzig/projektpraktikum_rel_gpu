@@ -12,13 +12,13 @@
 
 #include "../io/LogFiles.h"
 #include "../mpi/MPIWrapper.h"
-#include "NetworkGraph.h"
-#include "models/NeuronModels.h"
 #include "../structure/Octree.h"
 #include "../structure/Partition.h"
 #include "../util/Random.h"
-#include "helper/RankNeuronId.h"
 #include "../util/Timers.h"
+#include "NetworkGraph.h"
+#include "helper/RankNeuronId.h"
+#include "models/NeuronModels.h"
 
 #include <algorithm>
 #include <iomanip>
@@ -192,6 +192,7 @@ void Neurons::update_calcium() {
 
     // The following line is commented as compilers cannot make up their mind whether they want to have the constants shared or not
     //#pragma omp parallel for shared(fired, h, tau_C, beta) default(none)
+    // NOLINTNEXTLINE
 #pragma omp parallel for
     for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {

@@ -98,6 +98,7 @@ void MPI_RMA_MemAllocator::gather_rma_window_base_pointers() {
 void MPI_RMA_MemAllocator::create_rma_window() noexcept {
     // Set window's displacement unit
     displ_unit = 1;
+    // NOLINTNEXTLINE
     MPI_Win_create(base_ptr, max_size, displ_unit, MPI_INFO_NULL, MPI_COMM_WORLD, &mpi_window);
 }
 
