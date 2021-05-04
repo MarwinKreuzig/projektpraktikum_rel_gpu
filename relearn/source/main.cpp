@@ -74,8 +74,8 @@ int main(int argc, char** argv) {
     std::string file_disable_interrupts{};
     auto* opt_file_disable_interrupts = app.add_option("--disable-interrupts", file_disable_interrupts, "File with the disable interrupts.");
 
-    std::string file_creation_interrups{};
-    auto* opt_file_creation_interrups = app.add_option("--creation-interrups", file_creation_interrups, "File with the creation interrupts.");
+    std::string file_creation_interrupts{};
+    auto* opt_file_creation_interrups = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
 
     std::string log_prefix{};
     auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
@@ -222,7 +222,7 @@ int main(int argc, char** argv) {
     }
 
     if (*opt_file_creation_interrups) {
-        auto creation_interrups = InteractiveNeuronIO::load_creation_interrups(file_creation_interrups);
+        auto creation_interrups = InteractiveNeuronIO::load_creation_interrups(file_creation_interrupts);
         sim.set_creation_interrupts(std::move(creation_interrups));
     }
 
