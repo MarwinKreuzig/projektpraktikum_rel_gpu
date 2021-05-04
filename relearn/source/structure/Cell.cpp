@@ -57,9 +57,13 @@
 	* This check returns false if negative coordinates are used.
 	* Thus make sure to use positions >=0.
 	*/
-    RelearnException::check(x >= xyz_min.get_x() && x <= xyz_min.get_x() + xyz_max.get_x(), "x is bad");
-    RelearnException::check(y >= xyz_min.get_y() && y <= xyz_min.get_y() + xyz_max.get_y(), "y is bad");
-    RelearnException::check(z >= xyz_min.get_z() && z <= xyz_min.get_z() + xyz_max.get_z(), "z is bad");
+    RelearnException::check(x >= xyz_min.get_x() && x <= xyz_max.get_x(), "x is bad");
+    RelearnException::check(y >= xyz_min.get_y() && y <= xyz_max.get_y(), "y is bad");
+    RelearnException::check(z >= xyz_min.get_z() && z <= xyz_max.get_z(), "z is bad");
+
+    //RelearnException::check(x >= xyz_min.get_x() && x <= xyz_min.get_x() + xyz_max.get_x(), "x is bad");
+    //RelearnException::check(y >= xyz_min.get_y() && y <= xyz_min.get_y() + xyz_max.get_y(), "y is bad");
+    //RelearnException::check(z >= xyz_min.get_z() && z <= xyz_min.get_z() + xyz_max.get_z(), "z is bad");
 
     /**
 	* Figure below shows the binary numbering of the octants (subcells) in a cell.

@@ -122,7 +122,9 @@ void Simulation::initialize() {
 
     LogFiles::print_message_rank("Neurons created", 0);
 
-    global_tree = std::make_shared<Octree>(*partition, accept_criterion, Octree::default_sigma);
+    auto sim_box_min_max = partition->get_simulation_box_size();
+
+    global_tree = std::make_shared<Octree>(std::move(std::get<0>(sim_box_min_max)), std::move(std::get<1>(sim_box_min_max)), partition->get_level_of_subdomain_trees(), accept_criterion, Octree::default_sigma);
     global_tree->set_no_free_in_destructor(); // This needs to be changed later, as it's cleaner to free the nodes at destruction
 
     // Insert my local (subdomain) trees into my global tree

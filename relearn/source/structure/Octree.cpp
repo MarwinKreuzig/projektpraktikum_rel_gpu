@@ -18,35 +18,26 @@
 #include "../io/LogFiles.h"
 #include "../neurons/Neurons.h"
 #include "../neurons/models/SynapticElements.h"
-#include "../structure/Partition.h"
 #include "../util/Random.h"
 #include "../util/RelearnException.h"
 
 #include <sstream>
 
-Octree::Octree(const Partition& part)
+Octree::Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes)
     : root_level(0)
     , naive_method(acceptance_criterion == 0.0)
-    , level_of_branch_nodes(part.get_level_of_subdomain_trees()) {
-
-    Vec3d xyz_min;
-    Vec3d xyz_max;
-    std::tie(xyz_min, xyz_max) = part.get_simulation_box_size();
+    , level_of_branch_nodes(level_of_branch_nodes) {
 
     set_size(xyz_min, xyz_max);
 }
 
-Octree::Octree(const Partition& part, double acceptance_criterion, double sigma)
+Octree::Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes, double acceptance_criterion, double sigma)
     : root_level(0)
-    , acceptance_criterion(acceptance_criterion)
-    , sigma(sigma)
     , naive_method(acceptance_criterion == 0.0)
-    , level_of_branch_nodes(part.get_level_of_subdomain_trees()) {
+    , level_of_branch_nodes(level_of_branch_nodes) {
 
-    Vec3d xyz_min;
-    Vec3d xyz_max;
-    std::tie(xyz_min, xyz_max) = part.get_simulation_box_size();
-
+    set_acceptance_criterion(acceptance_criterion);
+    set_probability_parameter(sigma);
     set_size(xyz_min, xyz_max);
 }
 

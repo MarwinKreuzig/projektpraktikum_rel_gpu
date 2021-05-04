@@ -114,6 +114,8 @@ MPI_RMA_MemAllocator::HolderOctreeNode::HolderOctreeNode(OctreeNode* ptr, size_t
 }
 
 [[nodiscard]] OctreeNode* MPI_RMA_MemAllocator::HolderOctreeNode::get_available() {
+    RelearnException::check(!available.empty(), "In MPI_RMA_MemAllocator::HolderOctreeNode::get_available, there are no free nodes.");
+
     // Get last available element and save it
     OctreeNode* ptr = available.front();
     available.pop();

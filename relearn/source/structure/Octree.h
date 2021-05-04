@@ -15,6 +15,7 @@
 #include "../neurons/helper/ProbabilitySubinterval.h"
 #include "../neurons/helper/RankNeuronId.h"
 #include "../structure/OctreeNode.h"
+#include "../util/RelearnException.h"
 #include "../util/Vec3.h"
 
 #include <map>
@@ -190,15 +191,15 @@ private:
 
         void operator()(OctreeNode* node) {
             RelearnException::check(node != nullptr, "In FunctorFreeNode, node was nullptr");
-            MPIWrapper::delete_octree_node(node); 
+            MPIWrapper::delete_octree_node(node);
         }
     };
 
     Octree() = default;
 
 public:
-    explicit Octree(const Partition& part);
-    Octree(const Partition& part, double acceptance_criterion, double sigma);
+    Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes);
+    Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes, double acceptance_criterion, double sigma);
     ~Octree() /*noexcept(false)*/;
 
     Octree(const Octree& other) = delete;
@@ -208,26 +209,30 @@ public:
     Octree& operator=(Octree&& other) = delete;
 
     // Set simulation box size of the tree
-    void set_size(const Vec3d& min, const Vec3d& max) noexcept {
+    void set_size(const Vec3d& min, const Vec3d& max) {
+        RelearnException::check(min.get_x() < max.get_x() && min.get_y() < max.get_y() && min.get_z() < max.get_z(), "In Octree::set_size, the minimum was not smaller than the maximum");
+
         xyz_min = min;
         xyz_max = max;
     }
 
     // Set acceptance criterion for cells in the tree
-    void set_acceptance_criterion(double acceptance_criterion) noexcept {
+    void set_acceptance_criterion(double acceptance_criterion) {
+        RelearnException::check(acceptance_criterion >= 0.0, "In Octree::set_acceptance_criterion, acceptance_criterion was less than 0");
         this->acceptance_criterion = acceptance_criterion;
+
+        if (acceptance_criterion == 0.0) {
+            naive_method = true;
+        } else {
+            naive_method = false;
+        }
     }
 
     // Set probability parameter used to determine the probability
     // for a cell of being selected
-    void set_probability_parameter(double sigma) noexcept {
+    void set_probability_parameter(double sigma) {
+        RelearnException::check(sigma > 0.0, "In Octree::set_probability_parameter, sigma was not greater than 0");
         this->sigma = sigma;
-    }
-
-    // Set naive method parameter used to determine if all cells
-    // should be expanded regardless of whether dendrites are available
-    void set_naive_method_parameter(bool naive_method) noexcept {
-        this->naive_method = naive_method;
     }
 
     void set_root_level(size_t root_level) noexcept {
@@ -240,6 +245,26 @@ public:
 
     void set_level_of_branch_nodes(size_t level) noexcept {
         level_of_branch_nodes = level;
+    }
+
+    [[nodiscard]] bool is_naive_method_used() const noexcept {
+        return naive_method;
+    }
+
+    [[nodiscard]] double get_probabilty_parameter() const noexcept {
+        return sigma;
+    }
+
+    [[nodiscard]] double get_acceptance_criterion() const noexcept {
+        return acceptance_criterion;
+    }
+
+    [[nodiscard]] const Vec3d& get_xyz_min() const noexcept {
+        return xyz_min;
+    }
+
+    [[nodiscard]] const Vec3d& get_xyz_max() const noexcept {
+        return xyz_max;
     }
 
     [[nodiscard]] OctreeNode* get_root() const noexcept {
@@ -328,7 +353,7 @@ private:
                     if (*it != nullptr) {
                         stack.emplace(*it, current_depth + 1);
                     }
-                }                
+                }
             }
         } /* while */
     }
