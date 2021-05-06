@@ -528,6 +528,7 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
             new_node->set_cell_size(xyz_min, xyz_max);
 
             std::optional<Vec3d> opt_vec = prev->get_cell().get_neuron_position();
+            RelearnException::check(opt_vec.has_value(), "In Octree::insert, the previous cell does not have a position");
             new_node->set_cell_neuron_position(opt_vec);
 
             // Neuron ID
