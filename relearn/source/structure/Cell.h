@@ -40,9 +40,9 @@ public:
 
     /**
 	 * Returns edge length of the cell
-	 * Assumes that the cell is cubic
+	 * Assumes that the cell is cubic, otherwise returns the maximum
 	 */
-    [[nodiscard]] double get_length() const noexcept {
+    [[nodiscard]] double get_maximal_dimension_difference() const noexcept {
         const auto diff_vector = xyz_max - xyz_min;
         const auto diff = diff_vector.get_maximum();
 
@@ -60,7 +60,15 @@ public:
         return dendrites_ex.xyz_pos;
     }
 
-    void set_neuron_position_exc(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_neuron_position_exc(const std::optional<Vec3d>& opt_position) {
+        if (opt_position.has_value()) {
+            const auto& position = opt_position.value();
+
+            RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "In Cell::set_neuron_position_exc, x was not in the box");
+            RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Cell::set_neuron_position_exc, y was not in the box");
+            RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "In Cell::set_neuron_position_exc, z was not in the box");
+        }
+
         dendrites_ex.xyz_pos = opt_position;
     }
 
@@ -68,7 +76,15 @@ public:
         return dendrites_in.xyz_pos;
     }
 
-    void set_neuron_position_inh(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_neuron_position_inh(const std::optional<Vec3d>& opt_position) {
+        if (opt_position.has_value()) {
+            const auto& position = opt_position.value();
+
+            RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "In Cell::set_neuron_position_exc, x was not in the box");
+            RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Cell::set_neuron_position_exc, y was not in the box");
+            RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "In Cell::set_neuron_position_exc, z was not in the box");
+        }
+
         dendrites_in.xyz_pos = opt_position;
     }
 
@@ -98,18 +114,12 @@ public:
         return dendrites_in.num_dendrites;
     }
 
-    [[nodiscard]] size_t get_neuron_id() const noexcept {
-        return neuron_id;
-    }
-
     void set_neuron_id(size_t neuron_id) noexcept {
         this->neuron_id = neuron_id;
     }
 
-    [[nodiscard]] unsigned char get_neuron_octant() const {
-        const std::optional<Vec3d>& pos = get_neuron_position();
-        RelearnException::check(pos.has_value(), "position didn_t have a value");
-        return get_octant_for_position(pos.value());
+    [[nodiscard]] size_t get_neuron_id() const noexcept {
+        return neuron_id;
     }
 
     [[nodiscard]] unsigned char get_octant_for_position(const Vec3d& pos) const;

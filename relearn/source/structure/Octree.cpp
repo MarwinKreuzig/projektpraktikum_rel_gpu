@@ -197,7 +197,7 @@ std::tuple<bool, bool> Octree::acceptance_criterion_test(const Vec3d& axon_pos_x
     const auto distance_vector = target_xyz.value() - axon_pos_xyz;
     const auto distance = distance_vector.calculate_p_norm(2.0);
 
-    const auto length = node_with_dendrite->get_cell().get_length();
+    const auto length = node_with_dendrite->get_cell().get_maximal_dimension_difference();
 
     // Original Barnes-Hut acceptance criterion
     const auto ret_val = (length / distance) < acceptance_criterion;
@@ -244,7 +244,7 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
             MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
 
             // Fetch remote children if they exist
-            // NOLINTNEXTLINE          
+            // NOLINTNEXTLINE
             for (auto i = 7; i >= 0; i--) {
                 if (nullptr == root->get_child(i)) {
                     // NOLINTNEXTLINE
@@ -461,23 +461,22 @@ double Octree::calc_attractiveness_to_connect(
 // Insert neuron into the tree
 OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
     // Create new tree node for the neuron
-    OctreeNode* new_node = MPIWrapper::new_octree_node();
-    RelearnException::check(new_node != nullptr, "new_node is nullptr");
-
-    new_node->set_cell_neuron_position({ position });
-    new_node->set_cell_neuron_id(neuron_id);
-    new_node->set_rank(rank);
+    OctreeNode* new_node_to_insert = MPIWrapper::new_octree_node();
+    RelearnException::check(new_node_to_insert != nullptr, "new_node_to_insert is nullptr");
 
     // Tree is empty
     if (nullptr == root) {
         // Init cell size with simulation box size
-        new_node->set_cell_size(this->xyz_min, this->xyz_max);
+        new_node_to_insert->set_cell_size(this->xyz_min, this->xyz_max);
+        new_node_to_insert->set_cell_neuron_position({ position });
+        new_node_to_insert->set_cell_neuron_id(neuron_id);
+        new_node_to_insert->set_rank(rank);
 
         // Init root with tree's root level
-        new_node->set_level(root_level);
-        root = new_node;
+        new_node_to_insert->set_level(root_level);
+        root = new_node_to_insert;
 
-        return new_node;
+        return new_node_to_insert;
     }
 
     unsigned char my_idx = 0;
@@ -512,7 +511,9 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 			*/
 
             // Determine octant for neuron
-            idx = prev->get_cell().get_neuron_octant();
+            const auto& cell_own_position = prev->get_cell().get_neuron_position();
+            RelearnException::check(cell_own_position.has_value(), "While building the octree, the cell doesn't have a position");
+            idx = prev->get_cell().get_octant_for_position(cell_own_position.value());
             OctreeNode* new_node = MPIWrapper::new_octree_node(); // new OctreeNode();
             prev->set_child(new_node, idx);
 
@@ -558,15 +559,19 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 	* Found my position in children array,
 	* add myself to the array now
 	*/
-    prev->set_child(new_node, my_idx);
-    new_node->set_level(prev->get_level() + 1); // Now we know level of me
+    prev->set_child(new_node_to_insert, my_idx);
+    new_node_to_insert->set_level(prev->get_level() + 1); // Now we know level of me
 
     Vec3d xyz_min;
     Vec3d xyz_max;
     std::tie(xyz_min, xyz_max) = prev->get_cell().get_size_for_octant(my_idx);
-    prev->get_child(my_idx)->set_cell_size(xyz_min, xyz_max);
 
-    return new_node;
+    new_node_to_insert->set_cell_size(xyz_min, xyz_max);
+    new_node_to_insert->set_cell_neuron_position({ position });
+    new_node_to_insert->set_cell_neuron_id(neuron_id);
+    new_node_to_insert->set_rank(rank);
+
+    return new_node_to_insert;
 }
 
 // Insert an octree node with its subtree into the tree
@@ -612,8 +617,7 @@ void Octree::insert(OctreeNode* node_to_insert) {
     Vec3d cell_xyz_min;
     Vec3d cell_xyz_max;
     std::tie(cell_xyz_min, cell_xyz_max) = node_to_insert->get_cell().get_size();
-    const double cell_length_half = node_to_insert->get_cell().get_length() / 2;
-    const auto cell_xyz_mid = cell_xyz_min + cell_length_half;
+    const auto cell_xyz_mid = (cell_xyz_min + cell_xyz_max) / 2;
 
     while (true) {
         /**
