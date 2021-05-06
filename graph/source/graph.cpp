@@ -82,6 +82,7 @@ void Graph::add_edges_from_file(const std::filesystem::path& file_path) {
 
 		if (!success) {
 			boost::add_edge(src_vtx, dst_vtx, full_graph);
+			std::tie(edge, success) = boost::edge(src_vtx, dst_vtx, full_graph);
 			full_graph[edge].weight = weight_in_boost;
 		}
 		else {

@@ -102,5 +102,7 @@ int main(int argc, char** argv) {
 	file_network << std::defaultfloat;
 	std::cout << "Created " << output_path_net << "\n";
 
+	full_graph.calculate_metrics(std::cout);
+
 	return 0;
 }
