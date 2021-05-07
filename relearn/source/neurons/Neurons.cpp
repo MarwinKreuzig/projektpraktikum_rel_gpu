@@ -680,7 +680,7 @@ void Neurons::create_synapses_update_octree() {
     global_tree->update_local_trees(*dendrites_exc, *dendrites_inh, num_neurons);
     GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
 
-   global_tree->synchronize_local_trees();
+    global_tree->synchronize_local_trees();
 
     // Unlock local RMA memory and make local stores visible in public window copy
     MPIWrapper::unlock_window(MPIWrapper::get_my_rank());

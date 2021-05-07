@@ -130,8 +130,9 @@ void Simulation::initialize() {
     // Insert my local (subdomain) trees into my global tree
     for (size_t i = 0; i < partition->get_my_num_subdomains(); i++) {
         size_t index_1d = partition->get_1d_index_for_local_subdomain(i);
-        OctreeNode* local_tree = partition->get_subdomain_tree(index_1d);
+        OctreeNode* local_tree = partition->get_subdomain_tree(i);
         global_tree->insert_local_tree(local_tree, index_1d);
+        partition->delete_subdomain_tree(i);
     }
 
     LogFiles::print_message_rank("Neurons inserted into subdomains", 0);

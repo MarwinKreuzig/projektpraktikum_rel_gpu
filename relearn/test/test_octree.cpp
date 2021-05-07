@@ -88,7 +88,9 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons(const Octree& octree) {
 
             const auto position = opt_position.value();
 
-            return_value.emplace_back(position, neuron_id);
+            if (neuron_id < Constants::uninitialized) {
+                return_value.emplace_back(position, neuron_id);
+            }
         }
     }
 
@@ -736,7 +738,7 @@ TEST(TestOctreeNode, testOctreeNodeSetterCell) {
 TEST(TestOctree, testOctreeConstructor) {
     setup();
 
-    std::uniform_int_distribution<size_t> uid(0, 10);
+    std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -792,7 +794,7 @@ TEST(TestOctree, testOctreeConstructor) {
 TEST(TestOctree, testOctreeConstructorExceptions) {
     setup();
 
-    std::uniform_int_distribution<size_t> uid(0, 10);
+    std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -850,7 +852,7 @@ TEST(TestOctree, testOctreeConstructorExceptions) {
 TEST(TestOctree, testOctreeSetterGetter) {
     setup();
 
-    std::uniform_int_distribution<size_t> uid(0, 10);
+    std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -898,7 +900,7 @@ TEST(TestOctree, testOctreeSetterGetter) {
 TEST(TestOctree, testOctreeSetterGetterExceptions) {
     setup();
 
-    std::uniform_int_distribution<size_t> uid(0, 10);
+    std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -963,6 +965,7 @@ TEST(TestOctree, testOctreeInsertNeurons) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
+    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
     std::uniform_int_distribution<size_t> uid(0, 10000);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
@@ -973,7 +976,7 @@ TEST(TestOctree, testOctreeInsertNeurons) {
 
         std::tie(min, max) = get_random_simulation_box_size();
 
-        size_t level_of_branch_nodes = uid(mt);
+        size_t level_of_branch_nodes = uid_lvl(mt);
         double theta = urd_theta(mt);
         double sigma = urd_sigma(mt);
 
@@ -1007,6 +1010,7 @@ TEST(TestOctree, testOctreeInsertNeurons) {
 TEST(TestOctree, testOctreeInsertNeuronsExceptions) {
     setup();
 
+    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
     std::uniform_int_distribution<int> uid_rank(0, 1000);
     std::uniform_int_distribution<size_t> uid(0, 10000);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
@@ -1018,7 +1022,7 @@ TEST(TestOctree, testOctreeInsertNeuronsExceptions) {
 
         std::tie(min, max) = get_random_simulation_box_size();
 
-        size_t level_of_branch_nodes = uid(mt);
+        size_t level_of_branch_nodes = uid_lvl(mt);
         double theta = urd_theta(mt);
         double sigma = urd_sigma(mt);
 
@@ -1059,6 +1063,7 @@ TEST(TestOctree, testOctreeStructure) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
+    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
     std::uniform_int_distribution<size_t> uid(0, 10000);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
@@ -1069,7 +1074,7 @@ TEST(TestOctree, testOctreeStructure) {
 
         std::tie(min, max) = get_random_simulation_box_size();
 
-        size_t level_of_branch_nodes = uid(mt);
+        size_t level_of_branch_nodes = uid_lvl(mt);
         double theta = urd_theta(mt);
         double sigma = urd_sigma(mt);
 

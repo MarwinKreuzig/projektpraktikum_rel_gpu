@@ -497,7 +497,7 @@ void Octree::construct_global_tree_part() {
         nodes_to_process.pop();
 
         const auto current_level = current_node->get_level();
-        if (current_level >= level_of_branch_nodes) {
+        if (current_level == level_of_branch_nodes) {
             const auto index1d = space_curve.map_3d_to_1d(index3d);
             local_trees[index1d] = current_node;
             continue;

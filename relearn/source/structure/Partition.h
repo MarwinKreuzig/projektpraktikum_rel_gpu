@@ -121,6 +121,11 @@ public:
 
     void set_total_num_neurons(size_t total_num) noexcept;
 
+    void delete_subdomain_tree(size_t subdomain_id) const {
+        RelearnException::check(subdomain_id < my_num_subdomains, "Subdomain ID was too large");
+        delete subdomains[subdomain_id].local_octree_view;
+    }
+
 private:
     bool neurons_loaded;
 

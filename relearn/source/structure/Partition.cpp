@@ -264,6 +264,7 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
 		* Only those that are necessary for
 		* inserting neurons into the tree
 		*/
+        current_subdomain.local_octree_view = new OctreeNode;
         current_subdomain.local_octree_view->set_cell_size(current_subdomain.xyz_min, current_subdomain.xyz_max);
         current_subdomain.local_octree_view->set_level(level_of_subdomain_trees);
     }
