@@ -587,6 +587,67 @@ TEST(TestCell, testCellPositionException) {
     }
 }
 
+TEST(TestCell, testCellPositionCombined) {
+    setup();
+
+    for (auto i = 0; i < iterations; i++) {
+        Cell cell{};
+
+        const auto& box_sizes = get_random_simulation_box_size();
+        const auto& min = std::get<0>(box_sizes);
+        const auto& max = std::get<1>(box_sizes);
+
+        cell.set_size(min, max);
+
+        std::uniform_real_distribution urd_x(min.get_x(), max.get_x());
+        std::uniform_real_distribution urd_y(min.get_y(), max.get_y());
+        std::uniform_real_distribution urd_z(min.get_z(), max.get_z());
+
+        const Vec3d pos_1{ urd_x(mt), urd_y(mt), urd_z(mt) };
+        const Vec3d pos_2{ urd_x(mt), urd_y(mt), urd_z(mt) };
+        const Vec3d pos_3{ urd_x(mt), urd_y(mt), urd_z(mt) };
+        const Vec3d pos_4{ urd_x(mt), urd_y(mt), urd_z(mt) };
+
+        cell.set_neuron_position({});
+
+        EXPECT_FALSE(cell.get_neuron_position().has_value());
+
+        cell.set_neuron_position_exc(pos_1);
+        cell.set_neuron_position_inh(pos_1);
+
+        EXPECT_TRUE(cell.get_neuron_position().has_value());
+        EXPECT_EQ(cell.get_neuron_position().value(), pos_1);
+
+        cell.set_neuron_position_exc({});
+        cell.set_neuron_position_inh({});
+
+        EXPECT_FALSE(cell.get_neuron_position().has_value());
+
+        cell.set_neuron_position_exc(pos_2);
+
+        EXPECT_THROW(cell.get_neuron_position(), RelearnException);
+
+        cell.set_neuron_position_inh(pos_3);
+
+        if (pos_2 == pos_3) {
+            EXPECT_TRUE(cell.get_neuron_position().has_value());
+            EXPECT_EQ(cell.get_neuron_position().value(), pos_2);
+        } else {
+            EXPECT_THROW(cell.get_neuron_position(), RelearnException);
+        }
+
+        cell.set_neuron_position({});
+
+        EXPECT_FALSE(cell.get_neuron_position().has_value());
+
+        cell.set_neuron_position_exc(pos_4);
+        cell.set_neuron_position_inh(pos_4);
+
+        EXPECT_TRUE(cell.get_neuron_position().has_value());
+        EXPECT_EQ(cell.get_neuron_position().value(), pos_4);
+    }
+}
+
 TEST(TestCell, testCellSetNumDendrites) {
     setup();
 
@@ -749,5 +810,198 @@ TEST(TestCell, testCellOctantsSize) {
             EXPECT_NEAR(diff_subcell_min.calculate_p_norm(2), 0.0, eps);
             EXPECT_NEAR(diff_subcell_max.calculate_p_norm(2), 0.0, eps);
         }
+    }
+}
+
+TEST(TestOctreeNode, testOctreeNodeReset) {
+    setup();
+
+    OctreeNode node{};
+
+    EXPECT_FALSE(node.is_parent());
+    EXPECT_TRUE(node.get_level() == Constants::uninitialized);
+    EXPECT_TRUE(node.get_rank() == -1);
+    EXPECT_TRUE(node.get_children().size() == Constants::number_oct);
+
+    const auto& children = node.get_children();
+
+    for (auto i = 0; i < Constants::number_oct; i++) {
+        EXPECT_TRUE(node.get_child(i) == nullptr);
+        EXPECT_TRUE(children[i] == nullptr);
+    }
+
+    for (auto it = 0; it < iterations; it++) {
+        node.set_parent();
+
+        std::uniform_int_distribution<size_t> uid_level(0, 1000);
+        std::uniform_int_distribution<int> uid_rank(0, 1000);
+
+        node.set_level(uid_level(mt));
+        node.set_rank(uid_rank(mt));
+
+        std::vector<OctreeNode> other_nodes(Constants::number_oct);
+        for (auto i = 0; i < Constants::number_oct; i++) {
+            node.set_child(&(other_nodes[i]), i);
+        }
+
+        node.reset();
+
+        EXPECT_FALSE(node.is_parent());
+        EXPECT_TRUE(node.get_level() == Constants::uninitialized);
+        EXPECT_TRUE(node.get_rank() == -1);
+        EXPECT_TRUE(node.get_children().size() == Constants::number_oct);
+
+        const auto& children = node.get_children();
+
+        for (auto i = 0; i < Constants::number_oct; i++) {
+            EXPECT_TRUE(node.get_child(i) == nullptr);
+            EXPECT_TRUE(children[i] == nullptr);
+        }
+    }
+}
+
+TEST(TestOctreeNode, testOctreeNodeSetterGetter) {
+    setup();
+
+    OctreeNode node{};
+
+    for (auto it = 0; it < iterations; it++) {
+        node.set_parent();
+
+        std::uniform_int_distribution<size_t> uid_level(0, 1000);
+        std::uniform_int_distribution<int> uid_rank(0, 1000);
+
+        const auto lvl = uid_level(mt);
+        const auto rank = uid_rank(mt);
+
+        node.set_level(lvl);
+        node.set_rank(rank);
+
+        std::vector<OctreeNode> other_nodes(Constants::number_oct);
+        for (auto i = 0; i < Constants::number_oct; i++) {
+            node.set_child(&(other_nodes[i]), i);
+        }
+
+        EXPECT_THROW(node.set_rank(-rank), RelearnException);
+        EXPECT_THROW(node.set_level(lvl + Constants::uninitialized), RelearnException);
+
+        EXPECT_TRUE(node.is_parent());
+        EXPECT_TRUE(node.get_level() == lvl);
+        EXPECT_TRUE(node.get_rank() == rank);
+        EXPECT_TRUE(node.get_children().size() == Constants::number_oct);
+
+        const auto& children = node.get_children();
+
+        for (auto i = 0; i < Constants::number_oct; i++) {
+            EXPECT_TRUE(node.get_child(i) == &(other_nodes[i]));
+            EXPECT_TRUE(children[i] == &(other_nodes[i]));
+        }
+
+        const auto lb = -uid_rank(mt);
+        const auto ub = uid_rank(mt);
+
+        for (auto i = lb; i < ub; i++) {
+            if (i >= 0 && i < Constants::number_oct) {
+                continue;
+            }
+
+            EXPECT_THROW(node.set_child(nullptr, i), RelearnException);
+            EXPECT_THROW(node.set_child(&node, i), RelearnException);
+            EXPECT_THROW(node.get_child(i), RelearnException);
+        }
+    }
+}
+
+TEST(TestOctreeNode, testOctreeNodeLocal) {
+    setup();
+
+    OctreeNode node{};
+
+    for (auto it = 0; it < iterations; it++) {
+
+        const auto my_rank = MPIWrapper::get_my_rank();
+
+        std::uniform_int_distribution<int> uid_rank(0, 1000);
+
+        for (auto i = 0; i < 1000; i++) {
+            const auto rank = uid_rank(mt);
+
+            node.set_rank(rank);
+
+            if (rank == my_rank) {
+                EXPECT_TRUE(node.is_local());
+            } else {
+                EXPECT_FALSE(node.is_local());
+            }
+        }
+    }
+}
+
+TEST(TestOctreeNode, testOctreeNodeSetterCell) {
+    setup();
+
+    OctreeNode node{};
+
+    const Cell& cell = node.get_cell();
+
+    std::uniform_int_distribution<size_t> uid_id(0, 1000);
+    std::uniform_int_distribution<unsigned int> uid_dends(0, 1000);
+
+    for (auto it = 0; it < iterations; it++) {
+        const auto& box_sizes = get_random_simulation_box_size();
+
+        const auto id = uid_id(mt);
+        const auto dends_ex = uid_dends(mt);
+        const auto dends_in = uid_dends(mt);
+
+        const auto& min = std::get<0>(box_sizes);
+        const auto& max = std::get<1>(box_sizes);
+
+        std::uniform_real_distribution urd_x(min.get_x(), max.get_x());
+        std::uniform_real_distribution urd_y(min.get_y(), max.get_y());
+        std::uniform_real_distribution urd_z(min.get_z(), max.get_z());
+
+        const Vec3d pos_ex{ urd_x(mt), urd_y(mt), urd_z(mt) };
+        const Vec3d pos_in{ urd_x(mt), urd_y(mt), urd_z(mt) };
+
+        node.set_cell_neuron_id(id);
+        node.set_cell_num_dendrites(dends_ex, dends_in);
+        node.set_cell_size(min, max);
+        node.set_cell_neuron_pos_exc(pos_ex);
+        node.set_cell_neuron_pos_inh(pos_in);
+
+        EXPECT_TRUE(node.get_cell().get_neuron_id() == id);
+        EXPECT_TRUE(cell.get_neuron_id() == id);
+
+        EXPECT_TRUE(node.get_cell().get_neuron_num_dendrites_exc() == dends_ex);
+        EXPECT_TRUE(cell.get_neuron_num_dendrites_exc() == dends_ex);
+
+        EXPECT_TRUE(node.get_cell().get_neuron_num_dendrites_inh() == dends_in);
+        EXPECT_TRUE(cell.get_neuron_num_dendrites_inh() == dends_in);
+
+        EXPECT_TRUE(node.get_cell().get_size() == box_sizes);
+        EXPECT_TRUE(cell.get_size() == box_sizes);
+
+        EXPECT_TRUE(node.get_cell().get_neuron_position_exc().has_value());
+        EXPECT_TRUE(cell.get_neuron_position_exc().has_value());
+
+        EXPECT_TRUE(node.get_cell().get_neuron_position_exc().value() == pos_ex);
+        EXPECT_TRUE(cell.get_neuron_position_exc().value() == pos_ex);
+
+        EXPECT_TRUE(node.get_cell().get_neuron_position_inh().has_value());
+        EXPECT_TRUE(cell.get_neuron_position_inh().has_value());
+
+        EXPECT_TRUE(node.get_cell().get_neuron_position_inh().value() == pos_in);
+        EXPECT_TRUE(cell.get_neuron_position_inh().value() == pos_in);
+
+        node.set_cell_neuron_pos_exc({});
+        node.set_cell_neuron_pos_inh({});
+
+        EXPECT_FALSE(node.get_cell().get_neuron_position_exc().has_value());
+        EXPECT_FALSE(cell.get_neuron_position_exc().has_value());
+
+        EXPECT_FALSE(node.get_cell().get_neuron_position_inh().has_value());
+        EXPECT_FALSE(cell.get_neuron_position_inh().has_value());
+
     }
 }
