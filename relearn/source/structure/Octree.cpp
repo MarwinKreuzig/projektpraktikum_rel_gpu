@@ -460,6 +460,13 @@ double Octree::calc_attractiveness_to_connect(
 
 // Insert neuron into the tree
 OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
+    RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "In Octree::insert, x was not in range");
+    RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Octree::insert, x was not in range");
+    RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "In Octree::insert, x was not in range");
+
+    RelearnException::check(rank >= 0, "In Octree::insert, rank was smaller than 0");
+    RelearnException::check(neuron_id < Constants::uninitialized , "In Octree::insert, neuron_id was too large");
+
     // Create new tree node for the neuron
     OctreeNode* new_node_to_insert = MPIWrapper::new_octree_node();
     RelearnException::check(new_node_to_insert != nullptr, "new_node_to_insert is nullptr");

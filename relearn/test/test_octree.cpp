@@ -79,7 +79,6 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons(const Octree& octree) {
                     octree_nodes.push(child);
                 }
             }
-
         } else {
             const auto& cell = current_node->get_cell();
             const auto neuron_id = cell.get_neuron_id();
@@ -94,277 +93,6 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons(const Octree& octree) {
     }
 
     return return_value;
-}
-
-TEST(TestOctree, testOctreeConstructor) {
-    setup();
-
-    std::uniform_int_distribution<size_t> uid(0, 10);
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    for (auto i = 0; i < iterations; i++) {
-        Vec3d min{};
-        Vec3d max{};
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        size_t level_of_branch_nodes = uid(mt);
-
-        Octree octree(min, max, level_of_branch_nodes);
-
-        EXPECT_EQ(octree.get_acceptance_criterion(), Octree::default_theta);
-        EXPECT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
-        EXPECT_EQ(octree.get_probabilty_parameter(), Octree::default_sigma);
-        EXPECT_EQ(octree.get_xyz_max(), max);
-        EXPECT_EQ(octree.get_xyz_min(), min);
-
-        if (Octree::default_theta == 0.0) {
-            EXPECT_TRUE(octree.is_naive_method_used());
-        } else {
-            EXPECT_FALSE(octree.is_naive_method_used());
-        }
-    }
-
-    for (auto i = 0; i < iterations; i++) {
-        Vec3d min{};
-        Vec3d max{};
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        size_t level_of_branch_nodes = uid(mt);
-        double theta = urd_theta(mt);
-        double sigma = urd_sigma(mt);
-
-        Octree octree(min, max, level_of_branch_nodes, theta, sigma);
-
-        EXPECT_EQ(octree.get_acceptance_criterion(), theta);
-        EXPECT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
-        EXPECT_EQ(octree.get_probabilty_parameter(), sigma);
-        EXPECT_EQ(octree.get_xyz_max(), max);
-        EXPECT_EQ(octree.get_xyz_min(), min);
-
-        if (theta == 0.0) {
-            EXPECT_TRUE(octree.is_naive_method_used());
-        } else {
-            EXPECT_FALSE(octree.is_naive_method_used());
-        }
-    }
-}
-
-TEST(TestOctree, testOctreeConstructorExceptions) {
-    setup();
-
-    std::uniform_int_distribution<size_t> uid(0, 10);
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    for (auto i = 0; i < iterations; i++) {
-        Vec3d min_xyz{};
-        Vec3d max_xyz{};
-
-        std::tie(min_xyz, max_xyz) = get_random_simulation_box_size();
-
-        size_t level_of_branch_nodes = uid(mt);
-
-        EXPECT_THROW(Octree octree(max_xyz, min_xyz, level_of_branch_nodes), RelearnException);
-    }
-
-    for (auto i = 0; i < iterations; i++) {
-        Vec3d min{};
-        Vec3d max{};
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        size_t level_of_branch_nodes = uid(mt);
-        double theta = urd_theta(mt);
-        double sigma = urd_sigma(mt);
-
-        EXPECT_THROW(Octree octree(max, min, level_of_branch_nodes, theta, sigma), RelearnException);
-    }
-
-    for (auto i = 0; i < iterations; i++) {
-        Vec3d min{};
-        Vec3d max{};
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        size_t level_of_branch_nodes = uid(mt);
-        double theta = urd_theta(mt);
-        double sigma = urd_sigma(mt) * -1;
-
-        EXPECT_THROW(Octree octree(min, max, level_of_branch_nodes, theta, sigma), RelearnException);
-    }
-
-    for (auto i = 0; i < iterations; i++) {
-        Vec3d min{};
-        Vec3d max{};
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        size_t level_of_branch_nodes = uid(mt);
-        double theta = urd_theta(mt) - 1;
-        double sigma = urd_sigma(mt);
-
-        EXPECT_THROW(Octree octree(min, max, level_of_branch_nodes, theta, sigma), RelearnException);
-    }
-}
-
-TEST(TestOctree, testOctreeSetterGetter) {
-    setup();
-
-    std::uniform_int_distribution<size_t> uid(0, 10);
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    for (auto i = 0; i < iterations; i++) {
-        Vec3d min{};
-        Vec3d max{};
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        size_t level_of_branch_nodes = uid(mt);
-        double theta = urd_theta(mt);
-        double sigma = urd_sigma(mt);
-
-        Octree octree(min, max, level_of_branch_nodes, theta, sigma);
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        level_of_branch_nodes = uid(mt);
-        theta = urd_theta(mt);
-        sigma = urd_sigma(mt);
-
-        octree.set_size(min, max);
-        octree.set_acceptance_criterion(theta);
-        octree.set_probability_parameter(sigma);
-        octree.set_level_of_branch_nodes(level_of_branch_nodes);
-
-        EXPECT_EQ(octree.get_acceptance_criterion(), theta);
-        EXPECT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
-        EXPECT_EQ(octree.get_probabilty_parameter(), sigma);
-        EXPECT_EQ(octree.get_xyz_max(), max);
-        EXPECT_EQ(octree.get_xyz_min(), min);
-
-        if (theta == 0.0) {
-            EXPECT_TRUE(octree.is_naive_method_used());
-        } else {
-            EXPECT_FALSE(octree.is_naive_method_used());
-        }
-
-        octree.set_acceptance_criterion(0.0);
-        EXPECT_EQ(octree.get_acceptance_criterion(), 0.0);
-        EXPECT_TRUE(octree.is_naive_method_used());
-    }
-}
-
-TEST(TestOctree, testOctreeSetterGetterExceptions) {
-    setup();
-
-    std::uniform_int_distribution<size_t> uid(0, 10);
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    for (auto i = 0; i < iterations; i++) {
-        Vec3d min{};
-        Vec3d max{};
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        size_t level_of_branch_nodes = uid(mt);
-        double theta = urd_theta(mt);
-        double sigma = urd_sigma(mt);
-
-        Octree octree(min, max, level_of_branch_nodes, theta, sigma);
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        EXPECT_THROW(octree.set_size(max, min), RelearnException);
-    }
-
-    for (auto i = 0; i < iterations; i++) {
-        Vec3d min{};
-        Vec3d max{};
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        size_t level_of_branch_nodes = uid(mt);
-        double theta = urd_theta(mt);
-        double sigma = urd_sigma(mt);
-
-        Octree octree(min, max, level_of_branch_nodes, theta, sigma);
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        theta = urd_theta(mt) - 1;
-
-        EXPECT_THROW(octree.set_acceptance_criterion(theta), RelearnException);
-    }
-
-    for (auto i = 0; i < iterations; i++) {
-        Vec3d min{};
-        Vec3d max{};
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        size_t level_of_branch_nodes = uid(mt);
-        double theta = urd_theta(mt);
-        double sigma = urd_sigma(mt);
-
-        Octree octree(min, max, level_of_branch_nodes, theta, sigma);
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        sigma = urd_sigma(mt) * -1;
-
-        EXPECT_THROW(octree.set_probability_parameter(sigma), RelearnException);
-    }
-}
-
-TEST(TestOctree, testOctreeInsertNeurons) {
-    setup();
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
-    std::uniform_int_distribution<size_t> uid(0, 10000);
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    for (auto i = 0; i < iterations; i++) {
-        Vec3d min{};
-        Vec3d max{};
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        size_t level_of_branch_nodes = uid(mt);
-        double theta = urd_theta(mt);
-        double sigma = urd_sigma(mt);
-
-        Octree octree(min, max, level_of_branch_nodes, theta, sigma);
-
-        size_t num_neurons = uid(mt);
-        size_t num_additional_ids = uid(mt);
-
-        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids);
-
-        for (const auto& [position, id] : neurons_to_place) {
-            octree.insert(position, id, my_rank);
-        }
-
-        std::vector<std::tuple<Vec3d, size_t>> placed_neurons = extract_neurons(octree);
-
-        std::sort(neurons_to_place.begin(), neurons_to_place.end(), [](std::tuple<Vec3d, size_t> a, std::tuple<Vec3d, size_t> b) { return std::get<1>(a) > std::get<1>(b); });
-        std::sort(placed_neurons.begin(), placed_neurons.end(), [](std::tuple<Vec3d, size_t> a, std::tuple<Vec3d, size_t> b) { return std::get<1>(a) > std::get<1>(b); });
-
-        EXPECT_EQ(neurons_to_place.size(), placed_neurons.size());
-
-        for (auto i = 0; i < neurons_to_place.size(); i++) {
-            const auto& expected_neuron = neurons_to_place[i];
-            const auto& found_neuron = placed_neurons[i];
-
-            EXPECT_EQ(expected_neuron, found_neuron);
-        }
-    }
 }
 
 TEST(TestCell, testCellSize) {
@@ -1002,6 +730,412 @@ TEST(TestOctreeNode, testOctreeNodeSetterCell) {
 
         EXPECT_FALSE(node.get_cell().get_neuron_position_inh().has_value());
         EXPECT_FALSE(cell.get_neuron_position_inh().has_value());
+    }
+}
 
+TEST(TestOctree, testOctreeConstructor) {
+    setup();
+
+    std::uniform_int_distribution<size_t> uid(0, 10);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        size_t level_of_branch_nodes = uid(mt);
+
+        Octree octree(min, max, level_of_branch_nodes);
+
+        EXPECT_EQ(octree.get_acceptance_criterion(), Octree::default_theta);
+        EXPECT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
+        EXPECT_EQ(octree.get_probabilty_parameter(), Octree::default_sigma);
+        EXPECT_EQ(octree.get_xyz_max(), max);
+        EXPECT_EQ(octree.get_xyz_min(), min);
+
+        if (Octree::default_theta == 0.0) {
+            EXPECT_TRUE(octree.is_naive_method_used());
+        } else {
+            EXPECT_FALSE(octree.is_naive_method_used());
+        }
+    }
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        size_t level_of_branch_nodes = uid(mt);
+        double theta = urd_theta(mt);
+        double sigma = urd_sigma(mt);
+
+        Octree octree(min, max, level_of_branch_nodes, theta, sigma);
+
+        EXPECT_EQ(octree.get_acceptance_criterion(), theta);
+        EXPECT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
+        EXPECT_EQ(octree.get_probabilty_parameter(), sigma);
+        EXPECT_EQ(octree.get_xyz_max(), max);
+        EXPECT_EQ(octree.get_xyz_min(), min);
+
+        if (theta == 0.0) {
+            EXPECT_TRUE(octree.is_naive_method_used());
+        } else {
+            EXPECT_FALSE(octree.is_naive_method_used());
+        }
+    }
+}
+
+TEST(TestOctree, testOctreeConstructorExceptions) {
+    setup();
+
+    std::uniform_int_distribution<size_t> uid(0, 10);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min_xyz{};
+        Vec3d max_xyz{};
+
+        std::tie(min_xyz, max_xyz) = get_random_simulation_box_size();
+
+        size_t level_of_branch_nodes = uid(mt);
+
+        EXPECT_THROW(Octree octree(max_xyz, min_xyz, level_of_branch_nodes), RelearnException);
+    }
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        size_t level_of_branch_nodes = uid(mt);
+        double theta = urd_theta(mt);
+        double sigma = urd_sigma(mt);
+
+        EXPECT_THROW(Octree octree(max, min, level_of_branch_nodes, theta, sigma), RelearnException);
+    }
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        size_t level_of_branch_nodes = uid(mt);
+        double theta = urd_theta(mt);
+        double sigma = urd_sigma(mt) * -1;
+
+        EXPECT_THROW(Octree octree(min, max, level_of_branch_nodes, theta, sigma), RelearnException);
+    }
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        size_t level_of_branch_nodes = uid(mt);
+        double theta = urd_theta(mt) - 1;
+        double sigma = urd_sigma(mt);
+
+        EXPECT_THROW(Octree octree(min, max, level_of_branch_nodes, theta, sigma), RelearnException);
+    }
+}
+
+TEST(TestOctree, testOctreeSetterGetter) {
+    setup();
+
+    std::uniform_int_distribution<size_t> uid(0, 10);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        size_t level_of_branch_nodes = uid(mt);
+        double theta = urd_theta(mt);
+        double sigma = urd_sigma(mt);
+
+        Octree octree(min, max, level_of_branch_nodes, theta, sigma);
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        level_of_branch_nodes = uid(mt);
+        theta = urd_theta(mt);
+        sigma = urd_sigma(mt);
+
+        octree.set_size(min, max);
+        octree.set_acceptance_criterion(theta);
+        octree.set_probability_parameter(sigma);
+        octree.set_level_of_branch_nodes(level_of_branch_nodes);
+
+        EXPECT_EQ(octree.get_acceptance_criterion(), theta);
+        EXPECT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
+        EXPECT_EQ(octree.get_probabilty_parameter(), sigma);
+        EXPECT_EQ(octree.get_xyz_max(), max);
+        EXPECT_EQ(octree.get_xyz_min(), min);
+
+        if (theta == 0.0) {
+            EXPECT_TRUE(octree.is_naive_method_used());
+        } else {
+            EXPECT_FALSE(octree.is_naive_method_used());
+        }
+
+        octree.set_acceptance_criterion(0.0);
+        EXPECT_EQ(octree.get_acceptance_criterion(), 0.0);
+        EXPECT_TRUE(octree.is_naive_method_used());
+    }
+}
+
+TEST(TestOctree, testOctreeSetterGetterExceptions) {
+    setup();
+
+    std::uniform_int_distribution<size_t> uid(0, 10);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        size_t level_of_branch_nodes = uid(mt);
+        double theta = urd_theta(mt);
+        double sigma = urd_sigma(mt);
+
+        Octree octree(min, max, level_of_branch_nodes, theta, sigma);
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        EXPECT_THROW(octree.set_size(max, min), RelearnException);
+    }
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        size_t level_of_branch_nodes = uid(mt);
+        double theta = urd_theta(mt);
+        double sigma = urd_sigma(mt);
+
+        Octree octree(min, max, level_of_branch_nodes, theta, sigma);
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        theta = urd_theta(mt) - 1;
+
+        EXPECT_THROW(octree.set_acceptance_criterion(theta), RelearnException);
+    }
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        size_t level_of_branch_nodes = uid(mt);
+        double theta = urd_theta(mt);
+        double sigma = urd_sigma(mt);
+
+        Octree octree(min, max, level_of_branch_nodes, theta, sigma);
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        sigma = urd_sigma(mt) * -1;
+
+        EXPECT_THROW(octree.set_probability_parameter(sigma), RelearnException);
+    }
+}
+
+TEST(TestOctree, testOctreeInsertNeurons) {
+    setup();
+
+    const auto my_rank = MPIWrapper::get_my_rank();
+
+    std::uniform_int_distribution<size_t> uid(0, 10000);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        size_t level_of_branch_nodes = uid(mt);
+        double theta = urd_theta(mt);
+        double sigma = urd_sigma(mt);
+
+        Octree octree(min, max, level_of_branch_nodes, theta, sigma);
+
+        size_t num_neurons = uid(mt);
+        size_t num_additional_ids = uid(mt);
+
+        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids);
+
+        for (const auto& [position, id] : neurons_to_place) {
+            octree.insert(position, id, my_rank);
+        }
+
+        std::vector<std::tuple<Vec3d, size_t>> placed_neurons = extract_neurons(octree);
+
+        std::sort(neurons_to_place.begin(), neurons_to_place.end(), [](std::tuple<Vec3d, size_t> a, std::tuple<Vec3d, size_t> b) { return std::get<1>(a) > std::get<1>(b); });
+        std::sort(placed_neurons.begin(), placed_neurons.end(), [](std::tuple<Vec3d, size_t> a, std::tuple<Vec3d, size_t> b) { return std::get<1>(a) > std::get<1>(b); });
+
+        EXPECT_EQ(neurons_to_place.size(), placed_neurons.size());
+
+        for (auto i = 0; i < neurons_to_place.size(); i++) {
+            const auto& expected_neuron = neurons_to_place[i];
+            const auto& found_neuron = placed_neurons[i];
+
+            EXPECT_EQ(expected_neuron, found_neuron);
+        }
+    }
+}
+
+TEST(TestOctree, testOctreeInsertNeuronsExceptions) {
+    setup();
+
+    std::uniform_int_distribution<int> uid_rank(0, 1000);
+    std::uniform_int_distribution<size_t> uid(0, 10000);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        size_t level_of_branch_nodes = uid(mt);
+        double theta = urd_theta(mt);
+        double sigma = urd_sigma(mt);
+
+        Octree octree(min, max, level_of_branch_nodes, theta, sigma);
+
+        size_t num_neurons = uid(mt);
+        size_t num_additional_ids = uid(mt);
+
+        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids);
+
+        for (const auto& [position, id] : neurons_to_place) {
+            const auto rank = uid_rank(mt);
+
+            const Vec3d pos_invalid_x_max = max + Vec3d{ 1, 0, 0 };
+            const Vec3d pos_invalid_y_max = max + Vec3d{ 0, 1, 0 };
+            const Vec3d pos_invalid_z_max = max + Vec3d{ 0, 0, 1 };
+
+            const Vec3d pos_invalid_x_min = min - Vec3d{ 1, 0, 0 };
+            const Vec3d pos_invalid_y_min = min - Vec3d{ 0, 1, 0 };
+            const Vec3d pos_invalid_z_min = min - Vec3d{ 0, 0, 1 };
+
+            EXPECT_THROW(octree.insert(position, id, -rank - 1), RelearnException);
+            EXPECT_THROW(octree.insert(position, id + Constants::uninitialized, rank), RelearnException);
+
+            EXPECT_THROW(octree.insert(pos_invalid_x_max, id, rank), RelearnException);
+            EXPECT_THROW(octree.insert(pos_invalid_y_max, id, rank), RelearnException);
+            EXPECT_THROW(octree.insert(pos_invalid_z_max, id, rank), RelearnException);
+
+            EXPECT_THROW(octree.insert(pos_invalid_x_min, id, rank), RelearnException);
+            EXPECT_THROW(octree.insert(pos_invalid_y_min, id, rank), RelearnException);
+            EXPECT_THROW(octree.insert(pos_invalid_z_min, id, rank), RelearnException);
+        }
+    }
+}
+
+TEST(TestOctree, testOctreeStructure) {
+    setup();
+
+    const auto my_rank = MPIWrapper::get_my_rank();
+
+    std::uniform_int_distribution<size_t> uid(0, 10000);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        size_t level_of_branch_nodes = uid(mt);
+        double theta = urd_theta(mt);
+        double sigma = urd_sigma(mt);
+
+        Octree octree(min, max, level_of_branch_nodes, theta, sigma);
+
+        size_t num_neurons = uid(mt);
+        size_t num_additional_ids = uid(mt);
+
+        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids);
+
+        for (const auto& [position, id] : neurons_to_place) {
+            octree.insert(position, id, my_rank);
+        }
+
+        const auto root = octree.get_root();
+
+        std::stack<std::pair<OctreeNode*, size_t>> octree_nodes{};
+        octree_nodes.emplace(root, root->get_level());
+
+        while (!octree_nodes.empty()) {
+            const auto& elem = octree_nodes.top();
+
+            OctreeNode* current_node = elem.first;
+            auto level = elem.second;
+
+            octree_nodes.pop();
+
+            EXPECT_EQ(current_node->get_rank(), my_rank);
+
+            if (current_node->is_parent()) {
+                const auto childs = current_node->get_children();
+                for (auto i = 0; i < 8; i++) {
+                    const auto child = childs[i];
+                    if (child != nullptr) {
+                        EXPECT_TRUE(level + 1 == child->get_level());
+                        octree_nodes.emplace(child, child->get_level());
+
+                        const auto& subcell_size = child->get_cell().get_size();
+                        const auto& expected_subcell_size = current_node->get_cell().get_size_for_octant(i);
+
+                        EXPECT_EQ(expected_subcell_size, subcell_size);
+                    }
+                }
+
+                EXPECT_EQ(current_node->get_cell().get_neuron_id(), Constants::uninitialized);
+
+            } else {
+                const auto& cell = current_node->get_cell();
+                const auto& opt_position = cell.get_neuron_position();
+
+                EXPECT_TRUE(opt_position.has_value());
+
+                const auto& position = opt_position.value();
+
+                const auto& cell_size = cell.get_size();
+                const auto& cell_min = std::get<0>(cell_size);
+                const auto& cell_max = std::get<1>(cell_size);
+
+                EXPECT_LE(cell_min.get_x(), position.get_x());
+                EXPECT_LE(cell_min.get_y(), position.get_y());
+                EXPECT_LE(cell_min.get_z(), position.get_z());
+
+                EXPECT_LE(position.get_x(), cell_max.get_x());
+                EXPECT_LE(position.get_y(), cell_max.get_y());
+                EXPECT_LE(position.get_z(), cell_max.get_z());
+            }
+        }
     }
 }
