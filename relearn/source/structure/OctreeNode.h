@@ -59,6 +59,8 @@ public:
 
     [[nodiscard]] bool is_local() const noexcept;
 
+    OctreeNode* insert(const Vec3d& position, const size_t neuron_id, int rank);
+
     void set_rank(int new_rank) {
         RelearnException::check(new_rank >= 0, "In OctreeNode::set_rank, new_rank was: %u", new_rank);
         rank = new_rank;

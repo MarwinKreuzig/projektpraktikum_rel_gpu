@@ -18,6 +18,7 @@
 #include "neurons/models/SynapticElements.h"
 #include "sim/NeuronToSubdomainAssignment.h"
 #include "sim/Simulation.h"
+#include "structure/Octree.h"
 #include "structure/Partition.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"

@@ -11,7 +11,6 @@
 #pragma once
 
 #include "../neurons/models/NeuronModels.h"
-#include "../structure/Octree.h"
 #include "../structure/SpaceFillingCurve.h"
 
 #include <memory>
@@ -20,6 +19,7 @@
 
 class Neurons;
 class NeuronToSubdomainAssignment;
+class OctreeNode;
 class SynapticElements;
 
 class Partition {
@@ -43,7 +43,7 @@ public:
         // The octree contains all neurons in
         // this subdomain. It is only used as a container
         // for the neurons
-        Octree octree;
+        OctreeNode* local_octree_view;
     };
 
     Partition(size_t num_ranks, size_t my_rank);
@@ -79,11 +79,11 @@ public:
         return std::make_tuple(min, max);
     }
 
-    [[nodiscard]] Octree& get_subdomain_tree(size_t subdomain_id) {
+    [[nodiscard]] OctreeNode* get_subdomain_tree(size_t subdomain_id) {
         RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
         RelearnException::check(subdomain_id < my_num_subdomains, "Subdomain ID was too large");
 
-        return subdomains[subdomain_id].octree;
+        return subdomains[subdomain_id].local_octree_view;
     }
 
     [[nodiscard]] size_t get_my_subdomain_id_start() const noexcept {
@@ -113,6 +113,11 @@ public:
     [[nodiscard]] size_t get_local_id(size_t global_id) const;
 
     [[nodiscard]] size_t get_total_num_neurons() const noexcept;
+
+    [[nodiscard]] size_t get_1d_index_for_local_subdomain(size_t subdomain_id) const {
+        RelearnException::check(subdomain_id < my_num_subdomains, "Subdomain ID was too large");
+        return subdomains[subdomain_id].index_1d;
+    }
 
     void set_total_num_neurons(size_t total_num) noexcept;
 

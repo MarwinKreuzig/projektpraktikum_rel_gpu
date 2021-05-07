@@ -280,8 +280,8 @@ public:
     }
 
     [[nodiscard]] OctreeNode* get_local_root(size_t local_id) noexcept {
-        const Octree* local_tree = local_trees[local_id];
-        return local_tree->get_root();
+        OctreeNode* local_tree = local_trees[local_id];
+        return local_tree;
     }
 
     void print();
@@ -292,9 +292,9 @@ public:
     [[nodiscard]] OctreeNode* insert(const Vec3d& position, size_t neuron_id, int rank);
 
     // Insert an octree node with its subtree into the tree
-    void insert(OctreeNode* node_to_insert);
-
-    void insert_local_tree(Octree* node_to_insert);
+    void insert_local_tree(OctreeNode* node_to_insert, size_t index_1d) {
+        *local_trees[index_1d] = *node_to_insert;
+    }
 
     // The caller must ensure that only inner nodes are visited.
     // "max_level" must be chosen correctly for this
@@ -306,23 +306,20 @@ public:
 
     void empty_remote_nodes_cache();
 
+    void synchronize_local_trees();
+
 private:
     /**
 	 * Do a postorder tree walk startring at "octree" and run the function "visit" for every node when it is visited
      * Does ignore every node which's level in the octree is greater than "max_level"
 	 */
     template <typename Functor>
-    void tree_walk_postorder(Octree* octree, Functor visit, size_t max_level = std::numeric_limits<size_t>::max()) {
-        RelearnException::check(octree != nullptr, "In tree_walk_postorder, octree was nullptr");
-
-        // Tree is empty
-        if (octree->root == nullptr) {
-            return;
-        }
+    void tree_walk_postorder(OctreeNode* root, Functor visit, size_t max_level = std::numeric_limits<size_t>::max()) {
+        RelearnException::check(root != nullptr, "In tree_walk_postorder, octree was nullptr");
 
         std::stack<StackElement> stack{};
         // Push node onto stack
-        stack.emplace(octree->root, 0);
+        stack.emplace(root, 0);
 
         while (!stack.empty()) {
             // Get top-of-stack node
@@ -396,10 +393,12 @@ private:
 	 */
     [[nodiscard]] double calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, const OctreeNode& node_with_dendrite, SignalType dendrite_type_needed) const /*noexcept*/;
 
+    void construct_global_tree_part();
+
     // Root of the tree
     OctreeNode* root{ nullptr };
 
-    std::vector<Octree*> local_trees{};
+    std::vector<OctreeNode*> local_trees{};
 
     // Level which is assigned to the root of the tree (default = 0)
     size_t root_level{ Constants::uninitialized };

@@ -680,49 +680,7 @@ void Neurons::create_synapses_update_octree() {
     global_tree->update_local_trees(*dendrites_exc, *dendrites_inh, num_neurons);
     GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
 
-    /**
-    * Exchange branch nodes
-    */
-    GlobalTimers::timers.start(TimerRegion::EXCHANGE_BRANCH_NODES);
-    OctreeNode* rma_buffer_branch_nodes = MPIWrapper::get_buffer_octree_nodes();
-    // Copy local trees' root nodes to correct positions in receive buffer
-
-    const size_t num_local_trees = global_tree->get_num_local_trees();
-    for (size_t i = 0; i < num_local_trees; i++) {
-        const size_t global_subdomain_id = partition->get_my_subdomain_id_start() + i;
-        const OctreeNode* root_node = global_tree->get_local_root(i);
-
-        // This assignment copies memberwise
-        // NOLINTNEXTLINE
-        rma_buffer_branch_nodes[global_subdomain_id] = *root_node;
-    }
-
-    // Allgather in-place branch nodes from every rank
-    MPIWrapper::all_gather_inline(rma_buffer_branch_nodes, num_local_trees, MPIWrapper::Scope::global);
-
-    GlobalTimers::timers.stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
-
-    // Insert only received branch nodes into global tree
-    // The local ones are already in the global tree
-    GlobalTimers::timers.start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
-    const size_t num_rma_buffer_branch_nodes = MPIWrapper::get_num_buffer_octree_nodes();
-    for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
-        if (i < partition->get_my_subdomain_id_start() || i > partition->get_my_subdomain_id_end()) {
-            // NOLINTNEXTLINE
-            global_tree->insert(rma_buffer_branch_nodes + i);
-        }
-    }
-    GlobalTimers::timers.stop_and_add(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
-
-    // Update global tree
-    GlobalTimers::timers.start(TimerRegion::UPDATE_GLOBAL_TREE);
-    const auto level_branches = global_tree->get_level_of_branch_nodes();
-
-    // Only update whenever there are other branches to update
-    if (level_branches > 0) {
-        global_tree->update_from_level(level_branches - 1);
-    }
-    GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
+   global_tree->synchronize_local_trees();
 
     // Unlock local RMA memory and make local stores visible in public window copy
     MPIWrapper::unlock_window(MPIWrapper::get_my_rank());

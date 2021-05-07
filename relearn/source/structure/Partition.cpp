@@ -11,10 +11,12 @@
 #include "Partition.h"
 
 #include "../io/LogFiles.h"
+#include "../mpi/MPIWrapper.h"
 #include "../neurons/Neurons.h"
 #include "../sim/NeuronToSubdomainAssignment.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
+#include "OctreeNode.h"
 
 #include <sstream>
 
@@ -262,17 +264,8 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
 		* Only those that are necessary for
 		* inserting neurons into the tree
 		*/
-        // Init domain size
-        current_subdomain.octree.set_size(current_subdomain.xyz_min, current_subdomain.xyz_max);
-        // Set tree's root level
-        // It determines later at which level this
-        // local tree will be inserted into the global tree
-        current_subdomain.octree.set_root_level(level_of_subdomain_trees);
-
-        // Tree's destructor should not free the tree nodes
-        // The freeing is done by the global tree destructor later
-        // as the nodes in this tree will be attached to the global tree
-        current_subdomain.octree.set_no_free_in_destructor();
+        current_subdomain.local_octree_view->set_cell_size(current_subdomain.xyz_min, current_subdomain.xyz_max);
+        current_subdomain.local_octree_view->set_level(level_of_subdomain_trees);
     }
 
     neurons->init(my_num_neurons);
@@ -314,7 +307,7 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
             signal_types[neuron_id] = vec_type[j];
 
             // Insert neuron into tree
-            const auto* const node = subdomains[i].octree.insert(vec_pos[j], neuron_id, MPIWrapper::get_my_rank());
+            const auto* const node = subdomains[i].local_octree_view->insert(vec_pos[j], neuron_id, MPIWrapper::get_my_rank());
             RelearnException::check(node != nullptr, "node is nullptr");
 
             neuron_id++;
