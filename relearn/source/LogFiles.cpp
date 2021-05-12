@@ -11,6 +11,7 @@
 #include "LogFiles.h"
 #include "MPIWrapper.h"
 #include "RelearnException.h"
+#include "spdlog/sinks/basic_file_sink.h"
 
 #include <filesystem>
 #include <iostream>
@@ -57,25 +58,13 @@ std::string LogFiles::get_specific_file_prefix() {
 void LogFiles::add_logfile(EventType type, const std::string& file_name, int rank) {
     if (rank == MPIWrapper::get_my_rank() || rank == -1) {
         auto complete_path = output_path + general_prefix + get_specific_file_prefix() + "_" + file_name + ".txt";
-        log_files.emplace(type, std::move(complete_path));
-    }
-}
-
-void LogFiles::write_to_file(EventType type, const std::string& message, bool also_to_cout) {
-    if (also_to_cout) {
-        std::cout << message << std::flush;
-    }
-
-    // Not all ranks have all log files
-    const auto iterator = log_files.find(type);
-    if (iterator != log_files.end()) {
-        iterator->second.write(message);
+        log_files.emplace(type, spdlog::basic_logger_mt(file_name, complete_path));
     }
 }
 
 void LogFiles::print_message_rank(char const* string, int rank) {
     if (rank == MPIWrapper::get_my_rank() || rank == -1) {
         std::string txt = std::string("[INFO:Rank ") + MPIWrapper::get_my_rank_str() + "]\n" + string + "\n\n";
-        write_to_file(LogFiles::EventType::Cout, txt, true);
+        write_to_file(LogFiles::EventType::Cout, true, txt);
     }
 }

@@ -11,34 +11,38 @@
 #pragma once
 
 #include "RelearnException.h"
+#include "spdlog/fmt/bundled/core.h"
+#include "spdlog/spdlog.h"
 
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <memory>
 #include <string>
+#include <utility>
 
 class LogFiles {
-    class LogFile {
-        std::ofstream ofstream;
+    // class LogFile {
+    //     std::ofstream ofstream;
 
-    public:
-        explicit LogFile(const std::filesystem::path& path)
-            : ofstream(path) { }
+    // public:
+    //     explicit LogFile(const std::filesystem::path& path)
+    //         : ofstream(path) { }
 
-        LogFile(const LogFile& other) = delete;
-        LogFile& operator=(const LogFile& other) = delete;
+    //     LogFile(const LogFile& other) = delete;
+    //     LogFile& operator=(const LogFile& other) = delete;
 
-        LogFile(LogFile&& other) = default;
-        LogFile& operator=(LogFile&& other) = default;
+    //     LogFile(LogFile&& other) = default;
+    //     LogFile& operator=(LogFile&& other) = default;
 
-        ~LogFile() = default;
+    //     ~LogFile() = default;
 
-        void write(const std::string& message) {
-            RelearnException::check(ofstream.is_open(), "The output stream is not open");
-            RelearnException::check(ofstream.good(), "The output stream isn't good");
-            ofstream << message;
-        }
-    };
+    //     void write(const std::string& message) {
+    //         RelearnException::check(ofstream.is_open(), "The output stream is not open");
+    //         RelearnException::check(ofstream.good(), "The output stream isn't good");
+    //         ofstream << message;
+    //     }
+    // };
 
 public:
     enum class EventType : char {
@@ -53,7 +57,8 @@ public:
     };
 
 private:
-    static inline std::map<EventType, LogFile> log_files{};
+    using Logger = std::shared_ptr<spdlog::logger>;
+    static inline std::map<EventType, Logger> log_files{};
     // NOLINTNEXTLINE
     static inline std::string output_path{ "../output/" };
     // NOLINTNEXTLINE
@@ -92,7 +97,19 @@ public:
      * Write the message into the file which is associated with the type.
      * Optionally prints the message also to std::cout
      */
-    static void write_to_file(EventType type, const std::string& message, bool also_to_cout);
+    template <typename FormatString, typename... Args>
+    static void write_to_file(EventType type, bool also_to_cout, FormatString&& format, Args&&... args) {
+        auto message = fmt::format(format, std::forward<Args>(args)...);
+
+        if (also_to_cout) {
+            spdlog::info(message);
+        }
+
+        // Not all ranks have all log files
+        if (auto iterator = log_files.find(type); iterator != log_files.end()) {
+            iterator->second->info(message);
+        }
+    }
 
     // Print tagged message only at MPI rank "rank"
     static void print_message_rank(char const* string, int rank);

@@ -240,7 +240,7 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
     sstream << "I've loaded: [local, out, int] " << local_synapses.size() << " + " << out_synapses.size() << " + " << in_synapses.size() << " = " << (local_synapses.size() + out_synapses.size() + in_synapses.size()) << " many synapses."
             << "\n";
 
-    LogFiles::write_to_file(LogFiles::EventType::Cout, sstream.str(), true);
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, sstream.str());
 }
 
 bool NetworkGraph::check_edges_from_file(const std::string& path_synapses, const std::vector<size_t>& neuron_ids) {

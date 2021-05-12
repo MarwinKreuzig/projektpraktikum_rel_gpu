@@ -187,11 +187,11 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
                 total_synapse_creations += global_cnts[1] / 2;
             }
 
-            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate,
-                std::to_string(step) + ": " + std::to_string(global_cnts[1]) + " " + std::to_string(global_cnts[0]) + "\n", false);
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false,
+                std::to_string(step) + ": " + std::to_string(global_cnts[1]) + " " + std::to_string(global_cnts[0]) + "\n");
 
-            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal,
-                std::to_string(step) + ": " + std::to_string(local_cnts[1]) + " " + std::to_string(local_cnts[0]) + "\n", false);
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false,
+                std::to_string(step) + ": " + std::to_string(local_cnts[1]) + " " + std::to_string(local_cnts[0]) + "\n");
 
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_synapses_deleted, num_synapses_created);
 
@@ -214,7 +214,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             ss << "Total up to now     (creations, deletions, netto):\t" << total_synapse_creations << "\t\t" << total_synapse_deletions << "\t\t" << netto_creations << "\n";
             ss << std::flush;
 
-            LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
+            LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
         }
     }
 

@@ -156,5 +156,5 @@ void Cell::print() const {
     ss << dendrites_in.xyz_pos.value().get_z() << " ";
     ss << "\n";
 
-    LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
 }

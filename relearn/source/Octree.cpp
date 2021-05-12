@@ -166,7 +166,7 @@ void Octree::postorder_print() {
             ss << "\n";
         }
 
-        LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
+        LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
     }
 }
 
@@ -253,7 +253,7 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
             MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
 
             // Fetch remote children if they exist
-            // NOLINTNEXTLINE          
+            // NOLINTNEXTLINE
             for (auto i = 7; i >= 0; i--) {
                 if (nullptr == root->get_child(i)) {
                     // NOLINTNEXTLINE

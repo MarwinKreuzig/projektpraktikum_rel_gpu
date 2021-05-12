@@ -1074,7 +1074,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
            << std::setw(cwidth) << sums_global[last_idx] / 2 // As counted on both of the neurons
            << "\n";
 
-        LogFiles::write_to_file(LogFiles::EventType::Sums, ss.str(), false);
+        LogFiles::write_to_file(LogFiles::EventType::Sums, false, ss.str());
     }
 }
 
@@ -1121,7 +1121,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
            << std::setw(cwidth) << activity_statistics.std
            << "\n";
 
-        LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, ss.str(), false);
+        LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, false, ss.str());
     }
 }
 
@@ -1136,7 +1136,7 @@ void Neurons::print_network_graph_to_log_file() {
     // Write network graph to file
     network_graph->print(ss, extra_info);
 
-    LogFiles::write_to_file(LogFiles::EventType::Network, ss.str(), false);
+    LogFiles::write_to_file(LogFiles::EventType::Network, false, ss.str());
 }
 
 void Neurons::print_positions_to_log_file() {
@@ -1178,7 +1178,7 @@ void Neurons::print_positions_to_log_file() {
     ss << std::flush;
     ss << std::defaultfloat;
 
-    LogFiles::write_to_file(LogFiles::EventType::Positions, ss.str(), false);
+    LogFiles::write_to_file(LogFiles::EventType::Positions, false, ss.str());
 }
 
 void Neurons::print() {
@@ -1200,7 +1200,7 @@ void Neurons::print() {
         ss << std::setw(cwidth) << dendrites_exc->get_cnt(i) << std::setw(cwidth) << dendrites_inh->get_cnt(i) << "\n";
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
 }
 
 void Neurons::print_info_for_barnes_hut() {
@@ -1253,7 +1253,7 @@ void Neurons::print_info_for_barnes_hut() {
         ss << "\n";
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
 }
 
 void Neurons::print_pending_synapse_deletions(const PendingDeletionsV& list) {
@@ -1273,5 +1273,5 @@ void Neurons::print_pending_synapse_deletions(const PendingDeletionsV& list) {
            << "\n";
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
 }
