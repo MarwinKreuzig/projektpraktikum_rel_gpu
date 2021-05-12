@@ -43,6 +43,14 @@ if (UNIX)
 	target_link_libraries (project_options INTERFACE stdc++fs)
 endif ()
 
+FetchContent_Declare(
+  spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG        v1.x
+)
+FetchContent_MakeAvailable(spdlog)
+target_link_libraries(project_options INTERFACE spdlog)
+
 # relearn executable
 add_executable(relearn
 	${TOP_INCS}

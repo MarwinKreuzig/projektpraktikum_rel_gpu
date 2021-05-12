@@ -12,26 +12,15 @@
 
 #include <exception>
 #include <string>
-#include <vector>
+#include <utility>
+
+#include "spdlog/fmt/bundled/core.h"
 
 class RelearnException : std::exception {
 private:
     std::string message;
 
-    template <typename... Args>
-    static std::string string_format(const char* format, Args... args) {
-        // NOLINTNEXTLINE
-        int size = snprintf(nullptr, 0, format, args...) + 1; // Extra space for '\0'
-        if (size <= 0) {
-            return std::string("");
-        }
-
-        std::vector<char> vec(size);
-
-        // NOLINTNEXTLINE
-        snprintf(vec.data(), size, format, args...);
-        return std::string(vec.data(), size - 1); // We don't want the '\0' inside
-    }
+    static void log_message(const std::string& message);
 
 public:
     static inline bool hide_messages{ false };
@@ -45,17 +34,26 @@ public:
     [[nodiscard]] const char* what() const noexcept override;
 
     /**
-    * If condition is true, nothing happens
-    * If condition is false, format will serve as the error message, with placeholders replaced by args
-    */
-    template <typename... Args>
-    static void check(bool condition, const char* format, Args... args) {
+     * If condition is true, nothing happens
+     * If condition is false, format will serve as the error message, with placeholders replaced by args
+     */
+    template <typename FormatString, typename... Args>
+    static void check(bool condition, FormatString&& format, Args&&... args) {
         if (condition) {
             return;
         }
 
-        fail(std::move(string_format(format, args...)));
+        fail(std::forward<FormatString>(format), std::forward<Args>(args)...);
     }
 
-    static void fail(std::string&& message);
+    template <typename FormatString, typename... Args>
+    static void fail(FormatString&& format, Args&&... args) {
+        if (hide_messages) {
+            throw RelearnException{};
+        }
+
+        auto message = fmt::format(std::forward<FormatString>(format), std::forward<Args>(args)...);
+        log_message(message);
+        throw RelearnException{ std::move(message) };
+    }
 };
