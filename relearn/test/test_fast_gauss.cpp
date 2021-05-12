@@ -35,23 +35,15 @@ for(int i = 0; i < 16; i++){
 
 TEST(TestFastGauss, test_coefficients) {
     Cell c;
-    c.init_coefficients();
-    for (size_t i = 0; i < Constants::coefficient_num; i++)
+    for (size_t i = 1; i <= Constants::coefficient_num; i++)
     {
         EXPECT_EQ(c.get_coefficient(i),0);
     }
-
-    //generate Input
-    double p[Constants::coefficient_num];
-    for (size_t i = 0; i < Constants::coefficient_num; i++)
+    
+    for (size_t i = 1; i <= Constants::coefficient_num; i++)
     {
-        p[i]=1;
-    }
-
-    c.add_to_coefficients(p);
-    for (size_t i = 0; i < Constants::coefficient_num; i++)
-    {
-        EXPECT_EQ(c.get_coefficient(i),1);
+        c.set_coefficient(5.5,i);
+        EXPECT_EQ(c.get_coefficient(i),5.5);
     }
 }
 

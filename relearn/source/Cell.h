@@ -50,27 +50,47 @@ public:
     }
 
     void set_neuron_position(const std::optional<Vec3d>& opt_position) noexcept {
-        set_neuron_position_exc(opt_position);
-        set_neuron_position_inh(opt_position);
+        set_neuron_position_dendrites_exc(opt_position);
+        set_neuron_position_dendrites_inh(opt_position);
+        set_neuron_position_axons_exc(opt_position);
+        set_neuron_position_axons_inh(opt_position);
     }
 
     [[nodiscard]] std::optional<Vec3d> get_neuron_position() const;
 
-    [[nodiscard]] std::optional<Vec3d> get_neuron_position_exc() const noexcept {
+    [[nodiscard]] std::optional<Vec3d> get_neuron_position_dendrites_exc() const noexcept {
         return dendrites_ex.xyz_pos;
     }
 
-    void set_neuron_position_exc(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_neuron_position_dendrites_exc(const std::optional<Vec3d>& opt_position) noexcept {
         dendrites_ex.xyz_pos = opt_position;
     }
 
-    [[nodiscard]] std::optional<Vec3d> get_neuron_position_inh() const noexcept {
+    [[nodiscard]] std::optional<Vec3d> get_neuron_position_dendrites_inh() const noexcept {
         return dendrites_in.xyz_pos;
     }
 
-    void set_neuron_position_inh(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_neuron_position_dendrites_inh(const std::optional<Vec3d>& opt_position) noexcept {
         dendrites_in.xyz_pos = opt_position;
     }
+
+    [[nodiscard]] std::optional<Vec3d> get_neuron_position_axons_exc() const noexcept {
+        return axons_ex.xyz_pos;
+    }
+
+    void set_neuron_position_axons_exc(const std::optional<Vec3d>& opt_position) noexcept {
+        axons_ex.xyz_pos = opt_position;
+    }
+
+    void set_neuron_position_axons_inh(const std::optional<Vec3d>& opt_position) noexcept {
+        axons_in.xyz_pos = opt_position;
+    }
+
+    [[nodiscard]] std::optional<Vec3d> get_neuron_position_axons_inh() const noexcept {
+        return axons_in.xyz_pos;
+    }
+
+    
 
     [[nodiscard]] std::optional<Vec3d> get_neuron_position_for(SignalType dendrite_type) const;
 
@@ -90,12 +110,36 @@ public:
         return dendrites_in.num_dendrites;
     }
 
+    void set_neuron_num_axons_exc(unsigned int num_axons) noexcept {
+        axons_ex.num_axons = num_axons;
+    }
+
+    [[nodiscard]] unsigned int get_neuron_num_axons_exc() const noexcept {
+        return axons_ex.num_axons;
+    }
+
+    void set_neuron_num_axons_inh(unsigned int num_axons) noexcept {
+        axons_in.num_axons = num_axons;
+    }
+
+    [[nodiscard]] unsigned int get_neuron_num_axons_inh() const noexcept {
+        return axons_in.num_axons;
+    }
+
     [[nodiscard]] unsigned int get_neuron_num_dendrites_for(SignalType dendrite_type) const noexcept {
         if (dendrite_type == SignalType::EXCITATORY) {
             return dendrites_ex.num_dendrites;
         }
 
         return dendrites_in.num_dendrites;
+    }
+
+    [[nodiscard]] unsigned int get_neuron_num_axons_for(SignalType dendrite_type) const noexcept {
+        if (dendrite_type == SignalType::EXCITATORY) {
+            return axons_ex.num_axons;
+        }
+
+        return axons_in.num_axons;
     }
 
     [[nodiscard]] size_t get_neuron_id() const noexcept {
@@ -106,38 +150,20 @@ public:
         this->neuron_id = neuron_id;
     }
 
-// reserves memory space and initializes the array of coefficients to 0
-    void init_coefficients(){
-        coefficients= (double*)malloc(Constants::coefficient_num* sizeof(double));
-
-        for (size_t i = 0; i < Constants::coefficient_num; i++)
+//sets the coefficient at position x-1 to p
+    void set_coefficient(double p, int x){
+        if (1<=x && x<=Constants::coefficient_num)
         {
-            coefficients[i]=0;
-        }
-        
-    }
-
-//adds the coefficients that are in p to the existing ones
-    void add_to_coefficients(double *p){
-        for (size_t i = 0; i < Constants::coefficient_num; i++)
-        {
-            coefficients[i]+= p[i];
-        }
-    }
-
-//adds the coefficients that are in p to the existing ones
-    void add_to_coefficients(double p, int x){
-            coefficients[x]+= p;
+            taylor_coefficients[x-1]=p;
+        }            
     }
 
 // returns the coefficient at the point x (0<=x<=Constants::coefficient_num)
     double get_coefficient(int x){
-        if (x>=0 && x<= Constants::coefficient_num)
+        if (x>=1 && x<= Constants::coefficient_num)
         {
-            return coefficients[x];
+            return taylor_coefficients[x-1];
         }
-        else throw "Wrong argument in get_coefficient!";
-        
     }
 
 
@@ -163,6 +189,13 @@ private:
         // List colliding_axons;
     };
 
+    struct Axons {    
+        // All axons have the same position
+        std::optional<Vec3d> xyz_pos{};
+        unsigned int num_axons = 0;
+    };
+    
+
     // Two points describe size of cell
     Vec3d xyz_min;
     Vec3d xyz_max;
@@ -177,6 +210,15 @@ private:
     Dendrites dendrites_in;
 
     /**
+	 * Cell contains info for one neuron, which could be a "super" neuron
+	 *
+	 * Info about EXCITATORY axons: axons_ex
+	 * Info about INHIBITORY axons: axons_in
+	 */
+    Axons axons_ex;
+    Axons axons_in;
+
+    /**
 	 * ID of the neuron in the cell.
 	 * This is only valid for cells that contain a normal neuron.
 	 * For those with a super neuron, it has no meaning.
@@ -185,5 +227,5 @@ private:
     size_t neuron_id{ Constants::uninitialized };
 
     //array wich contains the coefficents to calculate Fast Gauss
-    double *coefficients;
+    std::array<double, Constants::coefficient_num> taylor_coefficients{};
 };

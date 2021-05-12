@@ -105,7 +105,7 @@ void Octree::postorder_print() {
                << ", " << ptr->get_cell().get_neuron_num_dendrites_inh() << ")\n";
 
             // Print position DendriteType::EXCITATORY
-            xyz_pos = ptr->get_cell().get_neuron_position_exc();
+            xyz_pos = ptr->get_cell().get_neuron_position_dendrites_exc();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
                 ss << "-- invalid!";
@@ -118,7 +118,7 @@ void Octree::postorder_print() {
 
             ss << "\n";
             // Print position DendriteType::INHIBITORY
-            xyz_pos = ptr->get_cell().get_neuron_position_inh();
+            xyz_pos = ptr->get_cell().get_neuron_position_dendrites_inh();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
                 ss << "-- invalid!";
@@ -453,7 +453,7 @@ double Octree::calc_attractiveness_to_connect(
     const auto ret_val = (num_dendrites * exp(-numerator / (sigma * sigma)));
     return ret_val;
 }
-
+/*
 double* Octree::calc_attractiveness_to_connect_FMM(
     OctreeNode* source,
     const Vec3d& axon_pos_xyz,
@@ -527,7 +527,7 @@ double* Octree::calc_attractiveness_to_connect_FMM(
     }
     return result;
 }
-
+*/
 ProbabilitySubintervalVector Octree::append_children(OctreeNode* node, AccessEpochsStarted& epochs_started) {
     ProbabilitySubintervalVector vector;
 
@@ -732,7 +732,6 @@ void Octree::insert(OctreeNode* node_to_insert) {
         root->set_cell_size(this->xyz_min, this->xyz_max);
         root->set_cell_neuron_id(Constants::uninitialized);
         //TODO if (rootlevel...)
-        root->set_cell_init_coefficients();
     }
 
     auto* curr = root;
@@ -827,7 +826,13 @@ void Octree::update_from_level(size_t max_level) {
     std::vector<double> dendrites_inh_cnts;
     std::vector<unsigned int> dendrites_inh_connected_cnts;
 
-    const FunctorUpdateNode update_node(dendrites_exc_cnts, dendrites_exc_connected_cnts, dendrites_inh_cnts, dendrites_inh_connected_cnts, 0);
+    std::vector<double> axons_exc_cnts;
+    std::vector<unsigned int> axons_exc_connected_cnts;
+    std::vector<double> axons_inh_cnts;
+    std::vector<unsigned int> axons_inh_connected_cnts;
+
+    const FunctorUpdateNode update_node(dendrites_exc_cnts, dendrites_exc_connected_cnts, dendrites_inh_cnts, dendrites_inh_connected_cnts,
+    axons_exc_cnts, axons_exc_connected_cnts,axons_inh_cnts,axons_inh_connected_cnts, 0);
 
     /**
 	* NOTE: It *must* be ensured that in tree_walk_postorder() only inner nodes
@@ -838,14 +843,19 @@ void Octree::update_from_level(size_t max_level) {
     tree_walk_postorder<FunctorUpdateNode>(this, update_node, max_level);
 }
 
-void Octree::update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, size_t num_neurons) {
+void Octree::update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, const SynapticElements& axons_exc, const SynapticElements& axons_inh, size_t num_neurons) {
     const auto& de_ex_cnt = dendrites_exc.get_cnts();
     const auto& de_ex_conn_cnt = dendrites_exc.get_connected_cnts();
     const auto& de_in_cnt = dendrites_inh.get_cnts();
     const auto& de_in_conn_cnt = dendrites_inh.get_connected_cnts();
 
+    const auto& ax_ex_cnt = axons_exc.get_cnts();
+    const auto& ax_ex_conn_cnt = axons_exc.get_connected_cnts();
+    const auto& ax_in_cnt = axons_inh.get_cnts();
+    const auto& ax_in_conn_cnt = axons_inh.get_connected_cnts();
+
     for (auto* local_tree : local_trees) {
-        const FunctorUpdateNode update_node(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt, num_neurons);
+        const FunctorUpdateNode update_node(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt,ax_ex_cnt,ax_ex_conn_cnt,ax_in_cnt,ax_in_conn_cnt, num_neurons);
 
         // The functor containing the visit function is of type FunctorUpdateNode
         tree_walk_postorder<FunctorUpdateNode>(local_tree, update_node);

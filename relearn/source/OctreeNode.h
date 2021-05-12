@@ -95,23 +95,32 @@ public:
         cell.set_neuron_num_dendrites_inh(num_in);
     }
 
-    void set_cell_neuron_pos_exc(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_neuron_position_exc(opt_position);
+    void set_cell_num_axons(unsigned int num_ex, unsigned int num_in) noexcept {
+        cell.set_neuron_num_axons_exc(num_ex);
+        cell.set_neuron_num_axons_inh(num_in);
     }
 
-    void set_cell_neuron_pos_inh(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_neuron_position_inh(opt_position);
+    void set_cell_neuron_pos_dend_exc(const std::optional<Vec3d>& opt_position) noexcept {
+        cell.set_neuron_position_dendrites_exc(opt_position);
     }
 
-    void set_cell_init_coefficients()noexcept{
-        cell.init_coefficients();
+    void set_cell_neuron_pos_dend_inh(const std::optional<Vec3d>& opt_position) noexcept {
+        cell.set_neuron_position_dendrites_inh(opt_position);
     }
 
-    void set_cell_add_coefficients(double c, int x)noexcept{
-        cell.add_to_coefficients(c,x);
+    void set_cell_neuron_pos_ax_exc(const std::optional<Vec3d>& opt_position) noexcept {
+        cell.set_neuron_position_axons_exc(opt_position);
     }
 
-     double set_cell_get_coefficients(int x)noexcept{
+    void set_cell_neuron_pos_ax_inh(const std::optional<Vec3d>& opt_position) noexcept {
+        cell.set_neuron_position_axons_inh(opt_position);
+    }
+
+    void set_cell_set_coefficient(double c, int x)noexcept{
+        cell.set_coefficient(c,x);
+    }
+
+     double set_cell_get_coefficient(int x)noexcept{
         return cell.get_coefficient(x);
     }
 
