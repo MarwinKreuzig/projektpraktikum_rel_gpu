@@ -16,6 +16,14 @@
 #include <filesystem>
 #include <iostream>
 
+bool LogFiles::do_i_print(int rank) {
+    return rank == MPIWrapper::get_my_rank() || rank == -1;
+}
+
+std::string LogFiles::get_my_rank_str() {
+    return MPIWrapper::get_my_rank_str();
+}
+
 void LogFiles::init() {
     if (0 == MPIWrapper::get_my_rank()) {
         if (!std::filesystem::exists(output_path)) {
@@ -56,15 +64,10 @@ std::string LogFiles::get_specific_file_prefix() {
 }
 
 void LogFiles::add_logfile(EventType type, const std::string& file_name, int rank) {
-    if (rank == MPIWrapper::get_my_rank() || rank == -1) {
+    if (do_i_print(rank)) {
         auto complete_path = output_path + general_prefix + get_specific_file_prefix() + "_" + file_name + ".txt";
-        log_files.emplace(type, spdlog::basic_logger_mt(file_name, complete_path));
-    }
-}
-
-void LogFiles::print_message_rank(char const* string, int rank) {
-    if (rank == MPIWrapper::get_my_rank() || rank == -1) {
-        std::string txt = std::string("[INFO:Rank ") + MPIWrapper::get_my_rank_str() + "]\n" + string + "\n\n";
-        write_to_file(LogFiles::EventType::Cout, true, txt);
+        auto logger = spdlog::basic_logger_mt(file_name, complete_path);
+        logger->set_pattern("%v");
+        log_files.emplace(type, std::move(logger));
     }
 }

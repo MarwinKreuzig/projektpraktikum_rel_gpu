@@ -15,6 +15,7 @@
 #include "NeuronToSubdomainAssignment.h"
 #include "Partition.h"
 #include "RelearnException.h"
+#include "spdlog/spdlog.h"
 
 #include <cmath>
 #include <iostream>
@@ -58,7 +59,7 @@ void SubdomainFromFile::read_dimensions_from_file() {
         bool success = (sstream >> id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> area_name) && (sstream >> signal_type);
 
         if (!success) {
-            std::cerr << "Skipping line: \"" << line << "\"\n";
+            spdlog::info("Skipping line: {}", line);
             continue;
         }
 
@@ -121,7 +122,7 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
         bool success = (sstream >> node.id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> node.area_name) && (sstream >> signal_type);
 
         if (!success) {
-            std::cerr << "Skipping line: \"" << line << "\"\n";
+            spdlog::info("Skipping line: {}", line);
             continue;
         }
 

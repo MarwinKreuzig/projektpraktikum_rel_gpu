@@ -171,13 +171,4 @@ void MPINoWrapper::finalize() /*noexcept*/ {
     MPINo_RMA_MemAllocator::deallocate_rma_mem();
 }
 
-// Print which neurons "rank" is responsible for
-void MPINoWrapper::print_infos_rank(int rank) {
-    if (rank == get_my_rank() || rank == -1) {
-        std::cout << "Number ranks: " << get_num_ranks() << "\n";
-        std::cout << "Partitioning based on number neurons would be: Rank " << get_my_rank() << ": my_num_neurons: " << get_my_num_neurons()
-                  << " [start_id,end_id]: [" << get_my_neuron_id_start() << "," << get_my_neuron_id_end() << "]\n";
-    }
-}
-
 #endif

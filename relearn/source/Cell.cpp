@@ -126,35 +126,7 @@
 }
 
 void Cell::print() const {
-    std::stringstream ss;
-
-    ss << "  == Cell (" << this << ") ==\n";
-
-    ss << "    xyz_min[3]: ";
-    ss << xyz_min.get_x() << " ";
-    ss << xyz_min.get_y() << " ";
-    ss << xyz_min.get_z() << " ";
-    ss << "\n";
-
-    ss << "    xyz_max[3]: ";
-    ss << xyz_max.get_x() << " ";
-    ss << xyz_max.get_y() << " ";
-    ss << xyz_max.get_z() << " ";
-    ss << "\n";
-
-    ss << "    dendrites_ex.num_dendrites: " << dendrites_ex.num_dendrites;
-    ss << "    dendrites_ex.xyz_pos[3]   : ";
-    ss << dendrites_ex.xyz_pos.value().get_x() << " ";
-    ss << dendrites_ex.xyz_pos.value().get_y() << " ";
-    ss << dendrites_ex.xyz_pos.value().get_z() << " ";
-    ss << "\n";
-
-    ss << "    dendrites_in.num_dendrites: " << dendrites_in.num_dendrites;
-    ss << "    dendrites_in.xyz_pos[3]   : ";
-    ss << dendrites_in.xyz_pos.value().get_x() << " ";
-    ss << dendrites_in.xyz_pos.value().get_y() << " ";
-    ss << dendrites_in.xyz_pos.value().get_z() << " ";
-    ss << "\n";
-
-    LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true,
+        "  == Cell ({}) ==\n\txyz_min[3]: {}\n\txyz_max[3]: {}\n\tdendrites_ex.num_dendrites: {}\tdendrites_ex.xyz_pos[3]   : {}\n\tdendrites_in.num_dendrites: {}\tdendrites_in.xyz_pos[3]   : {}",
+        reinterpret_cast<size_t>(this), xyz_min, xyz_max, dendrites_ex.num_dendrites, dendrites_ex.xyz_pos.value(), dendrites_in.num_dendrites, dendrites_in.xyz_pos.value());
 }

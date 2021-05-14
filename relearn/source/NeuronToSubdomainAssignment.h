@@ -134,7 +134,7 @@ protected:
     }
 
     [[nodiscard]] double get_desired_frac_neurons_exc() const noexcept {
-       return desired_frac_neurons_exc_ ;
+        return desired_frac_neurons_exc_;
     }
 
     [[nodiscard]] size_t get_desired_num_neurons() const noexcept {

@@ -9,6 +9,7 @@
  */
 
 #include "MPIWrapper.h"
+#include "spdlog/fmt/bundled/core.h"
 
 #if MPI_FOUND
 
@@ -57,11 +58,7 @@ void MPIWrapper::init(int argc, char** argv) {
     register_custom_function();
 
     const unsigned int num_digits = Util::num_digits(num_ranks - 1);
-
-    std::stringstream sstring{};
-    sstring << std::setw(static_cast<std::streamsize>(num_digits)) << std::setfill('0') << my_rank;
-
-    my_rank_str = sstring.str();
+    my_rank_str = fmt::format("{1:0>{0}}", num_digits, my_rank);
 }
 
 void MPIWrapper::init_globals() {

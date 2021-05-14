@@ -87,11 +87,11 @@ void Simulation::load_neurons_from_file(const std::string& path_to_positions, co
     load_neurons_from_file(path_to_positions);
 
     network_graph->add_edges_from_file(path_to_connections, path_to_positions, *partition);
-    LogFiles::print_message_rank("Network graph created", 0);
+    LogFiles::print_message_rank(0, "Network graph created");
 
     neurons->init_synaptic_elements();
     neurons->debug_check_counts();
-    LogFiles::print_message_rank("Synaptic elements initialized \n", 0);
+    LogFiles::print_message_rank(0, "Synaptic elements initialized \n");
 
     neurons->print_neurons_overview_to_log_file_on_rank_0(0);
     neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0);
@@ -107,7 +107,7 @@ void Simulation::initialize() {
     partition->print_my_subdomains_info_rank(0);
     partition->print_my_subdomains_info_rank(1);
 
-    LogFiles::print_message_rank("Neurons created", 0);
+    LogFiles::print_message_rank(0, "Neurons created");
 
     global_tree = std::make_shared<Octree>(*partition, accept_criterion, Octree::default_sigma);
     global_tree->set_no_free_in_destructor(); // This needs to be changed later, as it's cleaner to free the nodes at destruction
@@ -118,8 +118,8 @@ void Simulation::initialize() {
         global_tree->insert_local_tree(local_tree);
     }
 
-    LogFiles::print_message_rank("Neurons inserted into subdomains", 0);
-    LogFiles::print_message_rank("Subdomains inserted into global tree", 0);
+    LogFiles::print_message_rank(0, "Neurons inserted into subdomains");
+    LogFiles::print_message_rank(0, "Subdomains inserted into global tree");
 
     network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
 
@@ -187,11 +187,8 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
                 total_synapse_creations += global_cnts[1] / 2;
             }
 
-            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false,
-                std::to_string(step) + ": " + std::to_string(global_cnts[1]) + " " + std::to_string(global_cnts[0]) + "\n");
-
-            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false,
-                std::to_string(step) + ": " + std::to_string(local_cnts[1]) + " " + std::to_string(local_cnts[0]) + "\n");
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "{}: {} {}", step, global_cnts[1], global_cnts[0]);
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false, "{}: {} {}", step, local_cnts[1], local_cnts[0]);
 
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_synapses_deleted, num_synapses_created);
 
@@ -209,12 +206,9 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 
             const auto netto_creations = total_synapse_creations - total_synapse_deletions;
 
-            std::stringstream ss;
-            ss << "[Step: " << step << "\t] ";
-            ss << "Total up to now     (creations, deletions, netto):\t" << total_synapse_creations << "\t\t" << total_synapse_deletions << "\t\t" << netto_creations << "\n";
-            ss << std::flush;
-
-            LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
+            LogFiles::write_to_file(LogFiles::EventType::Cout, true,
+                "[Step: {}\t] Total up to now     (creations, deletions, netto):\t{}\t\t{}\t\t{}",
+                step, total_synapse_creations, total_synapse_deletions, netto_creations);
         }
     }
 
@@ -235,11 +229,11 @@ void Simulation::finalize() const {
         const auto netto_creations = total_synapse_creations - total_synapse_deletions;
         const auto previous_netto_creations = delta_synapse_creations - delta_synapse_deletions;
 
-        std::stringstream sstring;
-        sstring << "Total up to now     (creations, deletions, netto): " << total_synapse_creations << "\t" << total_synapse_deletions << "\t" << netto_creations << "\n";
-        sstring << "Diff. from previous (creations, deletions, netto): " << delta_synapse_creations << "\t" << delta_synapse_deletions << "\t" << previous_netto_creations << "\n";
-        sstring << "END: " << Timers::wall_clock_time() << "\n";
-        LogFiles::print_message_rank(sstring.str().c_str(), 0);
+        LogFiles::print_message_rank(0,
+            "Total up to now     (creations, deletions, netto): {}\t{}\t{}\nDiff. from previous (creations, deletions, netto): {}\t{}\t{}\nEND: {}",
+            total_synapse_creations, total_synapse_deletions, netto_creations,
+            delta_synapse_creations, delta_synapse_deletions, previous_netto_creations,
+            Timers::wall_clock_time());
     }
 }
 

@@ -189,7 +189,7 @@ private:
 
         void operator()(OctreeNode* node) {
             RelearnException::check(node != nullptr, "In FunctorFreeNode, node was nullptr");
-            MPIWrapper::delete_octree_node(node); 
+            MPIWrapper::delete_octree_node(node);
         }
     };
 
@@ -327,7 +327,7 @@ private:
                     if (*it != nullptr) {
                         stack.emplace(*it, current_depth + 1);
                     }
-                }                
+                }
             }
         } /* while */
     }

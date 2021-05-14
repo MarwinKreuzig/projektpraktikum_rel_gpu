@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 class LogFiles {
@@ -68,6 +69,10 @@ private:
 
     static void add_logfile(EventType type, const std::string& file_name, int rank);
 
+    [[nodiscard]] static bool do_i_print(int rank);
+
+    [[nodiscard]] static std::string get_my_rank_str();
+
 public:
     /**
      * Sets the folder path in which the log files will be generated. It should end with '/'.
@@ -112,5 +117,10 @@ public:
     }
 
     // Print tagged message only at MPI rank "rank"
-    static void print_message_rank(char const* string, int rank);
+    template <typename FormatString, typename... Args>
+    static void print_message_rank(int rank, FormatString&& format, Args&&... args) {
+        if (do_i_print(rank)) {
+            write_to_file(LogFiles::EventType::Cout, true, "[INFO:Rank {}] {}", get_my_rank_str(), fmt::format(std::forward<FormatString>(format), std::forward<Args>(args)...));
+        }
+    }
 };

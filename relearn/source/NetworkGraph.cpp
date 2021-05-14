@@ -16,6 +16,7 @@
 #include "Partition.h"
 #include "RankNeuronId.h"
 #include "RelearnException.h"
+#include "spdlog/spdlog.h"
 
 #include <algorithm>
 #include <cmath>
@@ -234,13 +235,7 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
         add_edge_weight(translated_target_neuron_id, target_rank, translated_source_neuron_id, source_rank, weight);
     }
 
-    std::stringstream sstream{};
-
-    sstream << "I'm rank: " << my_rank << " of " << MPIWrapper::get_num_ranks() << ".\n";
-    sstream << "I've loaded: [local, out, int] " << local_synapses.size() << " + " << out_synapses.size() << " + " << in_synapses.size() << " = " << (local_synapses.size() + out_synapses.size() + in_synapses.size()) << " many synapses."
-            << "\n";
-
-    LogFiles::write_to_file(LogFiles::EventType::Cout, true, sstream.str());
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "I'm rank: {} of {}.\n", my_rank, MPIWrapper::get_num_ranks());
 }
 
 bool NetworkGraph::check_edges_from_file(const std::string& path_synapses, const std::vector<size_t>& neuron_ids) {
@@ -476,7 +471,7 @@ void NetworkGraph::load_neuron_positions(const std::string& path_neurons, std::s
         const bool success = (sstream >> id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> area_name) && (sstream >> type);
 
         if (!success) {
-            std::cerr << "Skipping line: \"" << line << "\"\n";
+            spdlog::info("Skipping line: \"{}\"", line);
             continue;
         }
 
