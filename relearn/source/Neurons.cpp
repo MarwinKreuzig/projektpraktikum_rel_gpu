@@ -514,7 +514,7 @@ void Neurons::create_synapses_update_octree() {
 
     // Update my local trees bottom-up
     GlobalTimers::timers.start(TimerRegion::UPDATE_LOCAL_TREES);
-    global_tree->update_local_trees(dendrites_exc, dendrites_inh, num_neurons);
+    global_tree->update_local_trees(dendrites_exc, dendrites_inh, axons,num_neurons);
     GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
 
     /**
@@ -617,6 +617,114 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
             }
         } /* all vacant axons of a neuron */
     } /* my neurons */
+
+    GlobalTimers::timers.stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
+
+    // Make cache empty for next connectivity update
+    GlobalTimers::timers.start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
+    global_tree->empty_remote_nodes_cache();
+    GlobalTimers::timers.stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
+
+    return synapse_creation_requests_outgoing;
+}
+
+MapSynapseCreationRequests Neurons::create_synapses_find_targets_FMM() {
+    MapSynapseCreationRequests synapse_creation_requests_outgoing;
+    GlobalTimers::timers.start(TimerRegion::FIND_TARGET_NEURONS);
+
+    OctreeNode* root = global_tree->get_root();
+    OctreeNode* temp_node;
+
+    //init stack until all level 3 nodes with vacant axons are pushed on the corresponding stack
+    std::stack<OctreeNode*> nodes_with_ax_in;
+    std::stack<OctreeNode*> nodes_with_ax_ex;
+    std::stack<OctreeNode*> init_stack;
+    init_stack.push(root);
+
+    std::vector<OctreeNode*> nodes_with_dend_in;
+    std::vector<OctreeNode*> nodes_with_dend_ex;
+
+    OctreeNode* current_node;
+    OctreeNode* child_node;
+    while (!init_stack.empty())
+    {
+        current_node = init_stack.top();
+        init_stack.pop();
+        if (current_node->get_level() < 2) {
+            for (size_t j = 0; j < 8; j++) {
+                child_node = temp_node->get_child(j);
+                if (child_node != nullptr && (child_node->get_cell().get_neuron_num_axons_exc() > 0 || child_node->get_cell().get_neuron_num_axons_inh() > 0)) {
+                    init_stack.push(child_node);
+                }
+            }
+        }
+        //sort nodes in their corresponding list
+        else{
+            if (current_node->get_cell().get_neuron_num_axons_exc()>0) nodes_with_ax_ex.push(current_node);
+            if (current_node->get_cell().get_neuron_num_axons_inh()>0) nodes_with_ax_in.push(current_node);
+            //prepare interaction lists
+            if (current_node->get_cell().get_neuron_num_dendrites_inh()>0) nodes_with_dend_in.push_back(current_node);
+            if (current_node->get_cell().get_neuron_num_dendrites_exc()>0) nodes_with_dend_ex.push_back(current_node);
+        }
+    }
+    
+    // calculate vor axons exitatory
+    OctreeNode* target_node;
+    while (!nodes_with_ax_ex.empty())
+    {
+        current_node = nodes_with_ax_ex.top();
+        nodes_with_ax_ex.pop();
+
+        /*
+        - check if node is single neuron
+        - set interaction list of current node when level 3
+        - calculate atractiveness
+        - do random experiment
+        - set interaction list
+        - push children to stack
+        */
+        if (!current_node->is_parent()) {
+            size_t source_id; //TODO get source ID
+            size_t target_id = 0;
+            if (current_node->set_cell_get_interationlist_length() == 1) {
+                target_id; //TODO get target ID
+            } else {
+                target_node = global_tree->find_target_neuron_FMM(current_node,
+                                             global_tree->calc_attractiveness_to_connect_FMM(current_node, SignalType::EXCITATORY))
+                                  .value();
+                target_id; //TODO get target ID
+            }
+            //TODO add to creation request
+            continue;
+        }
+        if (current_node->get_level()==2)
+        {
+            for (size_t i = 0; i < nodes_with_dend_ex.size(); i++)
+            {
+                if (nodes_with_dend_ex[i] != current_node) 
+                current_node->set_cell_add_to_interactionlist(nodes_with_dend_ex[i]);
+            }
+            
+        }
+
+        target_node = global_tree->find_target_neuron_FMM(current_node,
+                                             global_tree->calc_attractiveness_to_connect_FMM(current_node, SignalType::EXCITATORY))
+                                  .value();
+
+        for (size_t i = 0; i < 8; i++) {
+            child_node = current_node->get_child(i);
+            if (child_node != nullptr && child_node->get_cell().get_neuron_num_axons_exc() > 0) {
+                for (int j = 0; j < 8; j++) {
+                    OctreeNode* child_target_node = target_node->get_child(j);
+                    if (child_target_node != nullptr && child_target_node->get_cell().get_neuron_num_dendrites_exc() > 0)
+                        child_node->set_cell_add_to_interactionlist(child_target_node);
+                }
+                nodes_with_ax_ex.push(child_node);   
+            }
+        }
+    }
+    
+
 
     GlobalTimers::timers.stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
 

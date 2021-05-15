@@ -14,6 +14,7 @@
 #include "RelearnException.h"
 #include "SignalType.h"
 #include "Vec3.h"
+#include "OctreeNode.h"
 
 #include <optional>
 #include <tuple>
@@ -148,25 +149,19 @@ public:
 
     void set_neuron_id(size_t neuron_id) noexcept {
         this->neuron_id = neuron_id;
+    } 
+
+    void add_to_interactionlist (OctreeNode* x){
+        interaction_list.push_back(x);
     }
 
-//sets the coefficient at position x-1 to p
-    void set_coefficient(double p, int x){
-        if (1<=x && x<=Constants::coefficient_num)
-        {
-            taylor_coefficients[x-1]=p;
-        }            
+    OctreeNode* get_from_interactionlist(unsigned int x){
+        return interaction_list.at(x);
     }
 
-// returns the coefficient at the point x (0<=x<=Constants::coefficient_num)
-    double get_coefficient(int x){
-        if (x>=1 && x<= Constants::coefficient_num)
-        {
-            return taylor_coefficients[x-1];
-        }
+    size_t get_interactionlist_lenghth(){
+        return interaction_list.size();
     }
-
-
 
     [[nodiscard]] unsigned char get_neuron_octant() const {
         const std::optional<Vec3d>& pos = get_neuron_position();
@@ -226,6 +221,8 @@ private:
 	 */
     size_t neuron_id{ Constants::uninitialized };
 
-    //array wich contains the coefficents to calculate Fast Gauss
-    std::array<double, Constants::coefficient_num> taylor_coefficients{};
+    //Contains nodes for which an attraction force is to be calculated and space to record results
+
+std::vector<OctreeNode*> interaction_list;
+
 };

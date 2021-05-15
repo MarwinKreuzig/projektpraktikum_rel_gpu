@@ -33,20 +33,6 @@ for(int i = 0; i < 16; i++){
     }   
 }
 
-TEST(TestFastGauss, test_coefficients) {
-    Cell c;
-    for (size_t i = 1; i <= Constants::coefficient_num; i++)
-    {
-        EXPECT_EQ(c.get_coefficient(i),0);
-    }
-    
-    for (size_t i = 1; i <= Constants::coefficient_num; i++)
-    {
-        c.set_coefficient(5.5,i);
-        EXPECT_EQ(c.get_coefficient(i),5.5);
-    }
-}
-
 TEST(TestFastGauss, test_functions) {
 
     int result[] = { 1, 2, 6, 24, 120, 720, 5040, 40320 };

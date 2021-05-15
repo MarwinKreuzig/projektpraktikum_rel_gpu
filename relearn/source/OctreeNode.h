@@ -116,12 +116,16 @@ public:
         cell.set_neuron_position_axons_inh(opt_position);
     }
 
-    void set_cell_set_coefficient(double c, int x)noexcept{
-        cell.set_coefficient(c,x);
+    void set_cell_add_to_interactionlist (OctreeNode* x)noexcept{
+        cell.add_to_interactionlist(x);
     }
 
-     double set_cell_get_coefficient(int x)noexcept{
-        return cell.get_coefficient(x);
+    OctreeNode* set_cell_get_from_interactionlist (int x)noexcept{
+        return cell.get_from_interactionlist(x);
+    }
+
+    size_t set_cell_get_interationlist_length() noexcept{
+        return cell.get_interactionlist_lenghth();
     }
 
     void set_child(OctreeNode* node, size_t idx) {

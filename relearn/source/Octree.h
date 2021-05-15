@@ -135,6 +135,8 @@ private:
                 return;
             }
 
+   
+
             // I'm inner node, i.e., I have a super neuron
             Vec3d xyz_pos_dend_exc = { 0., 0., 0. };
             Vec3d xyz_pos_dend_inh = { 0., 0., 0. };
@@ -234,6 +236,7 @@ private:
                 xyz_pos_ax_inh[j] /= divisor_pos_ax_inh;
             }
             node->set_cell_num_dendrites(num_dendrites_exc, num_dendrites_inh);
+            node->set_cell_num_axons(num_axons_exc,num_axons_inh);
             // Also mark if new position is valid using valid_pos_{exc,inh}
 
             std::optional<Vec3d> dend_ex_pos = valid_pos_dend_exc ? std::optional<Vec3d>{ xyz_pos_dend_exc } : std::optional<Vec3d>{};
@@ -246,6 +249,7 @@ private:
             node->set_cell_neuron_pos_dend_inh(dend_in_pos);
             node->set_cell_neuron_pos_ax_exc(ax_ex_pos);
             node->set_cell_neuron_pos_ax_inh(ax_in_pos);
+            
         }
 
     private:
@@ -354,10 +358,12 @@ public:
     // "max_level" must be chosen correctly for this
     void update_from_level(size_t max_level);
 
-    void update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, const SynapticElements& axons_exc, const SynapticElements& axons_inh, size_t num_neurons);
+    void update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, const SynapticElements& axons, size_t num_neurons);
 
     [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed);
 
+    [[nodiscard]] std::optional<OctreeNode*> Octree::find_target_neuron_FMM(OctreeNode* source, std::vector<double> atractiveness);
+    
     void empty_remote_nodes_cache();
 
 private:
@@ -449,15 +455,12 @@ private:
 	 */
     [[nodiscard]] double calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, const OctreeNode& node_with_dendrite, SignalType dendrite_type_needed) const /*noexcept*/;
 
-     double* calc_attractiveness_to_connect_FMM(
-     OctreeNode *source, 
-     const Vec3d& axon_pos_xyz, 
-     OctreeNode *target_list,
-     int target_list_length,
-     SignalType dendrite_type_needed);
+    
 
     [[nodiscard]] ProbabilitySubintervalVector append_children(OctreeNode* node, AccessEpochsStarted& epochs_started);
 
+   public: std::vector<double> calc_attractiveness_to_connect_FMM(OctreeNode *source, SignalType dendrite_type_needed);
+    
     // Root of the tree
     OctreeNode* root{ nullptr };
 

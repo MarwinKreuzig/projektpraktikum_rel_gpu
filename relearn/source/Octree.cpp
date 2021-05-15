@@ -453,81 +453,139 @@ double Octree::calc_attractiveness_to_connect(
     const auto ret_val = (num_dendrites * exp(-numerator / (sigma * sigma)));
     return ret_val;
 }
-/*
-double* Octree::calc_attractiveness_to_connect_FMM(
-    OctreeNode* source,
-    const Vec3d& axon_pos_xyz,
-    OctreeNode* target_list,
-    int target_list_length,
-    SignalType dendrite_type_needed) {
 
-    //Initialize return value
-    double result[target_list_length];
-    for (size_t i = 0; i < target_list_length; i++) {
-        result[i] = 0;
+//calculates direct gauss of two vectors with 3D positions
+double calc_direct_gauss(std::vector<Vec3d>* sources, std::vector<Vec3d>* targets) {
+    double result=0;
+    for (int t = 0; t < targets->size(); t++) {
+        for (size_t s = 0; s < sources->size(); s++) {
+            result += Functions::kernel(targets->at(t), sources->at(s));
+        }
+    }
+    return result;
+}
+
+
+double calc_taylor_expansion(std::vector<Vec3d>* sources, Vec3d* center_target) {
+    std::array<double,10> taylor_coef;
+    double result = 0;
+    for (size_t b = 1; b <= Constants::coefficient_num; b++) {
+        double temp = 0;
+        for (size_t j = 0; j < sources->size(); j++) {
+            temp += Functions::h(b, (Functions::euclidean_distance_3d(sources->at(j), (*center_target)) / Constants::sigma));
+        }
+        double C = (pow(-1, fabs(b)) / Functions::fac(b)) * temp;
+        taylor_coef[b-1]=C;
+    }
+    //Evaluate Taylor series at all sources
+    for (unsigned int j = 0; j < sources->size(); j++) {
+        for (size_t b = 1; b <= Constants::coefficient_num; b++) {
+            result += taylor_coef[b-1] * pow(Functions::euclidean_distance_3d(sources->at(j), (*center_target)) / Constants::sigma, b);
+        }
+    }
+    return result;
+}
+double calc_hermite_coeff (Vec3d* center_source, std::vector<Vec3d>* targets) {
+
+}
+
+
+
+std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode* source, SignalType dendrite_type_needed) {
+
+    //TODO taylor reset
+    //TODO if source is a single neuron
+    //TODO if target is a single neuron
+    
+    // calculate vacant number of neurons in souce box
+    unsigned int source_num = (*source).get_cell().get_neuron_num_axons_for(dendrite_type_needed);
+    //center of source box
+    Vec3d center_of_source_box;
+    if (dendrite_type_needed == SignalType::EXCITATORY) {
+        RelearnException::check(source->get_cell().get_neuron_position_axons_exc().has_value(), "Source Box has no center!");
+        center_of_source_box = source->get_cell().get_neuron_position_axons_exc().value();
+    } else {
+        RelearnException::check(source->get_cell().get_neuron_position_axons_inh().has_value(), "Source Box has no center!");
+        center_of_source_box = source->get_cell().get_neuron_position_axons_inh().value();
     }
 
-    // calculate vacant number of neurons in souce box
-    unsigned int source_num = (*source).get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
-    unsigned int target_num;
+    //find out the length of the interactionlist
+    size_t target_list_length = source->set_cell_get_interationlist_length();
 
-    if (source_num <= Constants::max_neurons_in_source) //when there are not enough neurons in the source
-    {
+    //Initialize return value to 0
+    std::vector<double> result(target_list_length, 0);
+
+    //TODO: fill source list
+    std::vector<Vec3d> source_neurons_pos;
+    source_neurons_pos.reserve(source_num);
+
+    bool hermite_set = false;
+    std::array<double, Constants::coefficient_num> hermite_coefficients;
+
+    //when there are not enough neurons in the source box ...
+    if (source_num <= Constants::max_neurons_in_source) {
         for (size_t i = 0; i < target_list_length; i++) {
+
             // calculate vacant number of neurons in target box
-            target_num = target_list[i].get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
+            int target_num = (source->set_cell_get_from_interactionlist(i))->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
+            //TODO: fill target list
+            std::vector<Vec3d> target_neurons_pos;
+            target_neurons_pos.reserve(target_num);
 
-            Vec3d source_neu[source_num]; //TODO: fill target and source list
-            if (target_num <= Constants::max_neurons_in_target) //and there are not enough neurons in the target
-            {
-                //make direct Gauss
-                Vec3d target_neu[target_num]; //TODO: fill target list
-
-                for (size_t t = 0; i < target_num; t++) {
-                    for (size_t s = 0; i < source_num; s++) {
-                        result[i] += Functions::kernel(target_neu[t], source_neu[s]);
-                    }
-                }
-            } else { //only a few neurons in source, but many neurons in target
-                //source to Taylor-Series about center of box C and add to Taylor
-
-                Vec3d center_of_target_box = target_list[i].get_cell().get_neuron_position_for(dendrite_type_needed).value(); //TODO:solve problem
-                for (size_t b = 1; b <= Constants::coefficient_num; b++) {
-                    double temp = 0;
-                    for (size_t j = 0; j < source_num; j++) {
-                        temp += Functions::h(b, (Functions::euclidean_distance_3d(source_neu[j], center_of_target_box) / Constants::sigma));
-                    }
-                    double C = (pow(-1, fabs(b)) / Functions::fac(b)) * temp;
-                    target_list[i].set_cell_add_coefficients(C, b - 1);
-                }
-                //Evaluate Taylor series at all sources
-                for (unsigned int j = 0; j < source_num; j++) {
-                    for (size_t b = 1; b <= Constants::coefficient_num; b++) {
-                        result[i] += target_list[i].set_cell_get_coefficients(b - 1) * pow(Functions::euclidean_distance_3d(source_neu[j], center_of_target_box) / Constants::sigma, b);
-                    }
-                }
+            //... and there are not enough neurons in the target
+            if (target_num <= Constants::max_neurons_in_target) {
+                //calculate via direct Gauss
+                result[i] = calc_direct_gauss(&source_neurons_pos,&target_neurons_pos);
+            } else {
+                //... and there are enough neurons in target
+                //source to Taylor-Series about center of box C and direkt evaluation
+                RelearnException::check(source->set_cell_get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).has_value(), "Target Box has no center!");
+                Vec3d center_of_target_box = source->set_cell_get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).value();
+                
+                result[i] = calc_taylor_expansion(&source_neurons_pos,&center_of_target_box);
             }
         }
 
-    } else //when there are enough neurons in the source box
-    {
-        //Hermite Expansion about center of source box
-
+    } else //when there are enough neurons in the source box...
+    { //Hermite Expansion about center of source box
+        if (hermite_set == false) {
+            //calculate Hermite coefficients
+            for (size_t a = 1; a <= Constants::coefficient_num; a++) {
+                double temp = 0;
+                for (size_t i = 0; i < source_num; i++) {
+                    temp += pow(Functions::euclidean_distance_3d(source_neurons_pos[i], center_of_source_box) / Constants::sigma, a);
+                }
+                hermite_coefficients[a - 1] = (1 / Functions::fac(a)) * temp;
+            }
+        }
         for (size_t i = 0; i < target_list_length; i++) {
 
-            // calculate number of neurons in target box
-            target_num = target_list[i].get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
-            if (target_num <= Constants::max_neurons_in_target) //and there are not enough neurons in the target
-            {
+            // get vacant number of neurons in target box
+            int target_num = (source->set_cell_get_from_interactionlist(i))->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
+            //TODO: fill target list
+            Vec3d target_neurons_pos[target_num];
+
+            //... and there are not enough neurons in the target
+            if (target_num <= Constants::max_neurons_in_target) {
                 //evaluate Hermite expansion at each target
+                for (size_t j = 0; j < target_num; j++) {
+                    double temp = 0;
+                    for (size_t a = a; a <= Constants::coefficient_num; a++) {
+                        temp += hermite_coefficients[a - 1] * Functions::h(a, Functions::euclidean_distance_3d(target_neurons_pos[j], center_of_source_box) / Constants::sigma);
+                    }
+                    result[i] += temp;
+                }
             } else {
-                //Convert Hermite expansion into Taylor about center of target box and add to taylor for box C
+                //TODO: find good solution
+                RelearnException::check(source->set_cell_get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).has_value(), "Target Box has no center!");
+                Vec3d center_of_target_box = source->set_cell_get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).value();
+                result[i] = source_num * Functions::kernel(center_of_source_box, center_of_target_box);
             }
         }
     }
     return result;
 }
-*/
+
 ProbabilitySubintervalVector Octree::append_children(OctreeNode* node, AccessEpochsStarted& epochs_started) {
     ProbabilitySubintervalVector vector;
 
@@ -832,7 +890,7 @@ void Octree::update_from_level(size_t max_level) {
     std::vector<unsigned int> axons_inh_connected_cnts;
 
     const FunctorUpdateNode update_node(dendrites_exc_cnts, dendrites_exc_connected_cnts, dendrites_inh_cnts, dendrites_inh_connected_cnts,
-    axons_exc_cnts, axons_exc_connected_cnts,axons_inh_cnts,axons_inh_connected_cnts, 0);
+        axons_exc_cnts, axons_exc_connected_cnts, axons_inh_cnts, axons_inh_connected_cnts, 0);
 
     /**
 	* NOTE: It *must* be ensured that in tree_walk_postorder() only inner nodes
@@ -843,19 +901,20 @@ void Octree::update_from_level(size_t max_level) {
     tree_walk_postorder<FunctorUpdateNode>(this, update_node, max_level);
 }
 
-void Octree::update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, const SynapticElements& axons_exc, const SynapticElements& axons_inh, size_t num_neurons) {
+void Octree::update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, const SynapticElements& axons, size_t num_neurons) {
     const auto& de_ex_cnt = dendrites_exc.get_cnts();
     const auto& de_ex_conn_cnt = dendrites_exc.get_connected_cnts();
     const auto& de_in_cnt = dendrites_inh.get_cnts();
     const auto& de_in_conn_cnt = dendrites_inh.get_connected_cnts();
 
-    const auto& ax_ex_cnt = axons_exc.get_cnts();
-    const auto& ax_ex_conn_cnt = axons_exc.get_connected_cnts();
-    const auto& ax_in_cnt = axons_inh.get_cnts();
-    const auto& ax_in_conn_cnt = axons_inh.get_connected_cnts();
+    //TODO
+    const auto& ax_ex_cnt = axons.get_cnts();
+    const auto& ax_ex_conn_cnt = axons.get_connected_cnts();
+    const auto& ax_in_cnt = axons.get_cnts();
+    const auto& ax_in_conn_cnt = axons.get_connected_cnts();
 
     for (auto* local_tree : local_trees) {
-        const FunctorUpdateNode update_node(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt,ax_ex_cnt,ax_ex_conn_cnt,ax_in_cnt,ax_in_conn_cnt, num_neurons);
+        const FunctorUpdateNode update_node(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt, ax_ex_cnt, ax_ex_conn_cnt, ax_in_cnt, ax_in_conn_cnt, num_neurons);
 
         // The functor containing the visit function is of type FunctorUpdateNode
         tree_walk_postorder<FunctorUpdateNode>(local_tree, update_node);
@@ -923,6 +982,12 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
     RankNeuronId rank_neuron_id{ node_selected->get_rank(), node_selected->get_cell().get_neuron_id() };
     return rank_neuron_id;
 }
+
+std::optional<OctreeNode*> Octree::find_target_neuron_FMM(OctreeNode* source, std::vector<double> atractiveness) {
+
+}
+
+
 
 void Octree::empty_remote_nodes_cache() {
     for (auto& remode_node_in_cache : remote_nodes_cache) {
