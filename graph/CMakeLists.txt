@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_BUILD_TYPE Release)
 
-set(CMAKE_CXX_CLANG_TIDY clang-tidy "-header-filter=^((?!(mpi|gtest)).)*$" "-checks=*,-fuchsia*")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package (Threads)
 
@@ -24,8 +24,8 @@ add_executable(relearn-full_graph
 	${TOP_SRC}
 )
 
-target_link_libraries (relearn-full_graph ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (relearn-full_graph PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 
 if (UNIX)
-	target_link_libraries (relearn-full_graph stdc++fs)
+	target_link_libraries (relearn-full_graph PRIVATE stdc++fs)
 endif ()

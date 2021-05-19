@@ -216,9 +216,8 @@ double Graph::calculate_average_euclidean_distance() {
 	double avg_eucl_dist = 0.0;
 	double sum_weights = 0.0;
 
-	FullEdgeIterator current, end;
-	for (std::tie(current, end) = boost::edges(full_graph); current != end; ++current) {
-		auto& current_prop = *current;
+	for (auto [current, end] = boost::edges(full_graph); current != end; ++current) {
+		auto current_prop = *current;
 		auto& current_edge = full_graph[current_prop];
 		auto weight = current_edge.weight;
 

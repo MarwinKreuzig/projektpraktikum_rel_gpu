@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <math.h>
 
 // Position of vertex
 struct Position {
