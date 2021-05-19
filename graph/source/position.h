@@ -1,16 +1,15 @@
 #pragma once
 
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 
 // Position of vertex
 struct Position {
-    double x, y, z;
+    double x{};
+    double y{};
+    double z{};
 
-    Position()
-        : x(0.0)
-        , y(0.0)
-        , z(0.0) { }
+    Position() = default;
 
     Position(double x, double y, double z)
         : x(x)
@@ -19,7 +18,7 @@ struct Position {
     }
 
     struct less {
-        bool operator()(const Position& lhs, const Position& rhs) const {
+        [[nodiscard]] bool operator()(const Position& lhs, const Position& rhs) const {
             return lhs.x < rhs.x || (lhs.x == rhs.x && lhs.y < rhs.y) || (lhs.x == rhs.x && lhs.y == rhs.y && lhs.z < rhs.z);
         }
     };
@@ -36,10 +35,10 @@ struct Position {
         z += pos.z;
     }
 
-    double CalcEuclDist(const Position& other) {
-        auto diff_x = (x - other.x) * (x - other.x);
-        auto diff_y = (y - other.y) * (y - other.y);
-        auto diff_z = (z - other.z) * (z - other.z);
+    [[nodiscard]] double CalcEuclDist(const Position& other) const {
+        const auto diff_x = (x - other.x) * (x - other.x);
+        const auto diff_y = (y - other.y) * (y - other.y);
+        const auto diff_z = (z - other.z) * (z - other.z);
 
         return sqrt(diff_x + diff_y + diff_z);
     }

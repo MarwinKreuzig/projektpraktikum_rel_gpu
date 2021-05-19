@@ -6,6 +6,7 @@
 
 #include <filesystem>
 #include <tuple>
+#include <utility>
 
 class Graph {
 public:
@@ -87,57 +88,43 @@ private:
 
     void print_edge(FullEdge e, std::ostream& os);
 
-    FullGraph full_graph;
-    ConnectivityGraph conn_graph;
+    FullGraph full_graph{};
+    ConnectivityGraph conn_graph{};
 
-    std::map<Position, FullVertex, Position::less> pos_to_vtx;
-    std::map<FullVertex, Position> vtx_to_pos;
-    std::map<size_t, FullVertex> id_to_vtx_full;
-    std::map<size_t, FullVertex> id_to_vtx_conn;
+    std::map<Position, FullVertex, Position::less> pos_to_vtx{};
+    std::map<FullVertex, Position> vtx_to_pos{};
+    std::map<size_t, FullVertex> id_to_vtx_full{};
+    std::map<size_t, FullVertex> id_to_vtx_conn{};
 
-    Position offset;
+    Position offset{};
 };
 
 template <typename Graph, typename Weight>
 void average_clustering_coefficient(Graph& graph, const Weight& weight) {
-    using namespace boost;
-
-    typename graph_traits<Graph>::vertex_descriptor vertex_i, vertex_j, vertex_k;
-    size_t total_degree_vertex_i, num_bilateral_edges_vertex_i;
-    size_t num_denominator_zero, num_denominator_less_than_zero, num_denominator_greater_than_zero;
+    size_t num_denominator_zero = 0;
+    size_t num_denominator_less_than_zero = 0;
+    size_t num_denominator_greater_than_zero = 0;
     size_t num_bilateral_edges = 0;
     size_t num_vals = 0;
-    double delta, avg = 0;
-
-    num_denominator_zero = 0;
-    num_denominator_less_than_zero = 0;
-    num_denominator_greater_than_zero = 0;
+    double avg = 0;
 
     // For all vertices i
-    typename graph_traits<Graph>::vertex_iterator vertex_iter, vertex_iter_end;
-    for (boost::tie(vertex_iter, vertex_iter_end) = vertices(graph); vertex_iter != vertex_iter_end; ++vertex_iter) {
-        typename graph_traits<Graph>::adjacency_iterator adj_curr, adj_end;
-        typename Graph::inv_adjacency_iterator inv_adj_curr, inv_adj_end;
-        typename graph_traits<Graph>::edge_descriptor edge;
-        typename std::set<typename graph_traits<Graph>::vertex_descriptor> neighbors_of_vertex_i, neighbors_of_vertex_j;
-        typename std::set<typename graph_traits<Graph>::vertex_descriptor>::iterator neighbors_of_vertex_i_iter;
-        double clustering_coefficient_vertex_i, numerator_clustering_coefficient_vertex_i = 0;
+    for (auto [vertex_iter, vertex_iter_end] = vertices(graph); vertex_iter != vertex_iter_end; ++vertex_iter) {
+        std::set<typename boost::graph_traits<Graph>::vertex_descriptor> neighbors_of_vertex_i{};
+        typename std::set<typename boost::graph_traits<Graph>::vertex_descriptor>::iterator neighbors_of_vertex_i_iter;
+        double numerator_clustering_coefficient_vertex_i = 0;
         size_t num_bilateral_edges_vertex_i = 0;
-        bool found;
 
-        vertex_i = *vertex_iter;
+        const auto vertex_i = *vertex_iter;
 
         // Total degree (in + out) of vertex i
-        total_degree_vertex_i = out_degree(vertex_i, graph) + in_degree(vertex_i, graph);
+        const auto total_degree_vertex_i = out_degree(vertex_i, graph) + in_degree(vertex_i, graph);
         //std::cout << "total degree: " << total_degree_vertex_i << std::endl;
 
         // Number of bilateral edges between i and its neighbors j
-        for (boost::tie(adj_curr, adj_end) = adjacent_vertices(vertex_i, graph); adj_curr != adj_end; ++adj_curr) {
-            vertex_j = *adj_curr;
-
-            boost::tie(edge, found) = boost::edge(vertex_j, vertex_i, graph);
-
-            if (found) {
+        for (auto [adj_curr, adj_end] = adjacent_vertices(vertex_i, graph); adj_curr != adj_end; ++adj_curr) {
+            const auto vertex_j = *adj_curr;
+            if (auto found = boost::edge(vertex_j, vertex_i, graph).second; found) {
                 num_bilateral_edges_vertex_i++;
                 num_bilateral_edges++;
             }
@@ -145,71 +132,65 @@ void average_clustering_coefficient(Graph& graph, const Weight& weight) {
         //std::cout << "num bilateral edges: " << num_bilateral_edges_vertex_i << std::endl;
 
         // Gather all neighbors of vertex i (in and out neighbors)
-        for (boost::tie(adj_curr, adj_end) = adjacent_vertices(vertex_i, graph); adj_curr != adj_end; ++adj_curr)
+        for (auto [adj_curr, adj_end] = adjacent_vertices(vertex_i, graph); adj_curr != adj_end; ++adj_curr) {
             neighbors_of_vertex_i.insert(*adj_curr);
-        for (boost::tie(inv_adj_curr, inv_adj_end) = inv_adjacent_vertices(vertex_i, graph); inv_adj_curr != inv_adj_end; ++inv_adj_curr)
+        }
+        for (auto [inv_adj_curr, inv_adj_end] = inv_adjacent_vertices(vertex_i, graph); inv_adj_curr != inv_adj_end; ++inv_adj_curr) {
             neighbors_of_vertex_i.insert(*inv_adj_curr);
+        }
 
-        for (neighbors_of_vertex_i_iter = neighbors_of_vertex_i.begin();
-             neighbors_of_vertex_i_iter != neighbors_of_vertex_i.end();
-             ++neighbors_of_vertex_i_iter) {
-            typename std::set<typename graph_traits<Graph>::vertex_descriptor> neighbors_of_vertex_j;
-            typename std::set<typename graph_traits<Graph>::vertex_descriptor>::iterator neighbors_of_vertex_j_iter;
-
-            vertex_j = *neighbors_of_vertex_i_iter;
+        for (const auto& vertex_j : neighbors_of_vertex_i) {
+            std::set<typename boost::graph_traits<Graph>::vertex_descriptor> neighbors_of_vertex_j{};
 
             // Gather all neighbors of vertex j
-            for (boost::tie(adj_curr, adj_end) = adjacent_vertices(vertex_j, graph); adj_curr != adj_end; ++adj_curr)
+            for (auto [adj_curr, adj_end] = adjacent_vertices(vertex_j, graph); adj_curr != adj_end; ++adj_curr) {
                 neighbors_of_vertex_j.insert(*adj_curr);
-            for (boost::tie(inv_adj_curr, inv_adj_end) = inv_adjacent_vertices(vertex_j, graph); inv_adj_curr != inv_adj_end; ++inv_adj_curr)
+            }
+            for (auto [inv_adj_curr, inv_adj_end] = inv_adjacent_vertices(vertex_j, graph); inv_adj_curr != inv_adj_end; ++inv_adj_curr) {
                 neighbors_of_vertex_j.insert(*inv_adj_curr);
+            }
 
-            for (neighbors_of_vertex_j_iter = neighbors_of_vertex_j.begin();
-                 neighbors_of_vertex_j_iter != neighbors_of_vertex_j.end();
-                 ++neighbors_of_vertex_j_iter) {
-                vertex_k = *neighbors_of_vertex_j_iter;
-
+            for (const auto vertex_k : neighbors_of_vertex_j) {
                 if ((vertex_i != vertex_j) && (vertex_j != vertex_k) && (vertex_i != vertex_k)) {
-                    double weight_ij, weight_ji, weight_jk, weight_kj, weight_ik, weight_ki;
+                    auto [edge, found] = boost::edge(vertex_i, vertex_j, graph);
+                    const double weight_ij = found ? weight(edge) : 0;
 
-                    boost::tie(edge, found) = boost::edge(vertex_i, vertex_j, graph);
-                    weight_ij = found ? weight(edge) : 0;
+                    std::tie(edge, found) = boost::edge(vertex_j, vertex_i, graph);
+                    const double weight_ji = found ? weight(edge) : 0;
 
-                    boost::tie(edge, found) = boost::edge(vertex_j, vertex_i, graph);
-                    weight_ji = found ? weight(edge) : 0;
+                    std::tie(edge, found) = boost::edge(vertex_j, vertex_k, graph);
+                    const double weight_jk = found ? weight(edge) : 0;
 
-                    boost::tie(edge, found) = boost::edge(vertex_j, vertex_k, graph);
-                    weight_jk = found ? weight(edge) : 0;
+                    std::tie(edge, found) = boost::edge(vertex_k, vertex_j, graph);
+                    const double weight_kj = found ? weight(edge) : 0;
 
-                    boost::tie(edge, found) = boost::edge(vertex_k, vertex_j, graph);
-                    weight_kj = found ? weight(edge) : 0;
+                    std::tie(edge, found) = boost::edge(vertex_i, vertex_k, graph);
+                    const double weight_ik = found ? weight(edge) : 0;
 
-                    boost::tie(edge, found) = boost::edge(vertex_i, vertex_k, graph);
-                    weight_ik = found ? weight(edge) : 0;
+                    std::tie(edge, found) = boost::edge(vertex_k, vertex_i, graph);
+                    const double weight_ki = found ? weight(edge) : 0;
 
-                    boost::tie(edge, found) = boost::edge(vertex_k, vertex_i, graph);
-                    weight_ki = found ? weight(edge) : 0;
-
-                    double exponent = ((double)1) / 3;
+                    const double exponent = static_cast<double>(1) / 3;
                     numerator_clustering_coefficient_vertex_i += (pow(weight_ij, exponent) + pow(weight_ji, exponent)) * (pow(weight_jk, exponent) + pow(weight_kj, exponent)) * (pow(weight_ik, exponent) + pow(weight_ki, exponent));
                 }
             } // for all k
         } // for all j
-        size_t denominator_clustering_coefficient_vertex_i = 2 * (total_degree_vertex_i * (total_degree_vertex_i - 1) - 2 * num_bilateral_edges_vertex_i);
+        const size_t denominator_clustering_coefficient_vertex_i = 2 * (total_degree_vertex_i * (total_degree_vertex_i - 1) - 2 * num_bilateral_edges_vertex_i);
 
-        if (0 > denominator_clustering_coefficient_vertex_i)
+        if (0 > denominator_clustering_coefficient_vertex_i) {
             num_denominator_less_than_zero++;
-        else if (0 == denominator_clustering_coefficient_vertex_i)
+        } else if (0 == denominator_clustering_coefficient_vertex_i) {
             num_denominator_zero++;
-        else if (0 < denominator_clustering_coefficient_vertex_i)
+        } else if (0 < denominator_clustering_coefficient_vertex_i) {
             num_denominator_greater_than_zero++;
+        }
 
-        clustering_coefficient_vertex_i = numerator_clustering_coefficient_vertex_i / denominator_clustering_coefficient_vertex_i;
+        const auto clustering_coefficient_vertex_i = numerator_clustering_coefficient_vertex_i / denominator_clustering_coefficient_vertex_i;
 
         // Include in average clustering coefficient
         num_vals++;
-        delta = clustering_coefficient_vertex_i - avg;
-        avg += delta / num_vals;
+        const auto delta = clustering_coefficient_vertex_i - avg;
+        avg += delta / static_cast<double>(num_vals);
 
     } // for all i
 
@@ -222,48 +203,34 @@ void average_clustering_coefficient(Graph& graph, const Weight& weight) {
 
 template <typename Graph>
 void average_clustering_coefficient_unweighted_undirected(Graph& graph) {
-    using namespace boost;
-
-    typename graph_traits<Graph>::vertex_descriptor vertex_i, vertex_j, vertex_k;
-    typename graph_traits<Graph>::vertex_iterator vertex_iter, vertex_iter_end;
-    size_t num_denominator_zero, num_denominator_less_than_zero, num_denominator_greater_than_zero;
+    size_t num_denominator_zero = 0;
+    size_t num_denominator_less_than_zero = 0;
+    size_t num_denominator_greater_than_zero = 0;
     size_t num_vals = 0;
-    double delta, avg = 0;
-
-    num_denominator_zero = 0;
-    num_denominator_less_than_zero = 0;
-    num_denominator_greater_than_zero = 0;
+    double avg = 0.0;
 
     // For all vertices i
-    for (boost::tie(vertex_iter, vertex_iter_end) = vertices(graph); vertex_iter != vertex_iter_end; ++vertex_iter) {
-        typename graph_traits<Graph>::adjacency_iterator adj_curr, adj_end;
-        typename Graph::inv_adjacency_iterator inv_adj_curr, inv_adj_end;
-        typename std::set<typename graph_traits<Graph>::vertex_descriptor>::iterator iter_j, iter_k;
-        typename std::set<typename graph_traits<Graph>::vertex_descriptor> neighbors_of_vertex_i;
-        size_t max_num_triangles_of_vertex_i, num_triangles_of_vertex_i, num_neighbors_of_vertex_i;
-        double clustering_coefficient_vertex_i;
-        bool found_jk, found_kj;
+    for (auto [vertex_iter, vertex_iter_end] = vertices(graph); vertex_iter != vertex_iter_end; ++vertex_iter) {
+        std::set<typename boost::graph_traits<Graph>::vertex_descriptor> neighbors_of_vertex_i{};
 
-        num_triangles_of_vertex_i = 0;
-        num_neighbors_of_vertex_i = 0;
-
-        vertex_i = *vertex_iter;
+        const auto vertex_i = *vertex_iter;
 
         // Gather all neighbors of vertex i (in and out neighbors)
-        for (boost::tie(adj_curr, adj_end) = adjacent_vertices(vertex_i, graph); adj_curr != adj_end; ++adj_curr)
+        for (auto [adj_curr, adj_end] = adjacent_vertices(vertex_i, graph); adj_curr != adj_end; ++adj_curr) {
             neighbors_of_vertex_i.insert(*adj_curr);
-        for (boost::tie(inv_adj_curr, inv_adj_end) = inv_adjacent_vertices(vertex_i, graph); inv_adj_curr != inv_adj_end; ++inv_adj_curr)
+        }
+        for (auto [inv_adj_curr, inv_adj_end] = inv_adjacent_vertices(vertex_i, graph); inv_adj_curr != inv_adj_end; ++inv_adj_curr) {
             neighbors_of_vertex_i.insert(*inv_adj_curr);
+        }
 
-        num_neighbors_of_vertex_i = neighbors_of_vertex_i.size();
+        size_t num_triangles_of_vertex_i = 0;
+        for (auto iter_j = neighbors_of_vertex_i.begin(); iter_j != neighbors_of_vertex_i.end(); ++iter_j) {
+            for (auto iter_k = std::next(iter_j); iter_k != neighbors_of_vertex_i.end(); ++iter_k) {
+                const auto vertex_j = *iter_j;
+                const auto vertex_k = *iter_k;
 
-        for (iter_j = neighbors_of_vertex_i.begin(); iter_j != neighbors_of_vertex_i.end(); ++iter_j) {
-            for (iter_k = std::next(iter_j); iter_k != neighbors_of_vertex_i.end(); ++iter_k) {
-                vertex_j = *iter_j;
-                vertex_k = *iter_k;
-
-                std::tie(std::ignore, found_jk) = boost::edge(vertex_j, vertex_k, graph);
-                std::tie(std::ignore, found_kj) = boost::edge(vertex_k, vertex_j, graph);
+                const auto found_jk = boost::edge(vertex_j, vertex_k, graph).second;
+                const auto found_kj = boost::edge(vertex_k, vertex_j, graph).second;
 
                 if (found_jk || found_kj) {
                     num_triangles_of_vertex_i++;
@@ -271,21 +238,23 @@ void average_clustering_coefficient_unweighted_undirected(Graph& graph) {
             }
         }
 
-        max_num_triangles_of_vertex_i = (num_neighbors_of_vertex_i * (num_neighbors_of_vertex_i - 1)) / 2;
+        const size_t num_neighbors_of_vertex_i = neighbors_of_vertex_i.size();
+        const size_t max_num_triangles_of_vertex_i = (num_neighbors_of_vertex_i * (num_neighbors_of_vertex_i - 1)) / 2;
 
-        if (0 > max_num_triangles_of_vertex_i)
+        if (0 > max_num_triangles_of_vertex_i) {
             num_denominator_less_than_zero++;
-        else if (0 == max_num_triangles_of_vertex_i)
+        } else if (0 == max_num_triangles_of_vertex_i) {
             num_denominator_zero++;
-        else if (0 < max_num_triangles_of_vertex_i)
+        } else {
             num_denominator_greater_than_zero++;
+        }
 
-        clustering_coefficient_vertex_i = num_triangles_of_vertex_i / (double)max_num_triangles_of_vertex_i;
+        const double clustering_coefficient_vertex_i = static_cast<double>(num_triangles_of_vertex_i) / static_cast<double>(max_num_triangles_of_vertex_i);
 
         // Include in average clustering coefficient
         num_vals++;
-        delta = clustering_coefficient_vertex_i - avg;
-        avg += delta / num_vals;
+        const auto delta = clustering_coefficient_vertex_i - avg;
+        avg += delta / static_cast<double>(num_vals);
     } // for all i
 
     //std::cout << "[" << wall_clock_time() << "] " << "Average clustering coefficient (unweighted, undirected): " << avg << std::endl;
@@ -297,9 +266,9 @@ void average_clustering_coefficient_unweighted_undirected(Graph& graph) {
 // Base class template
 template <typename Graph>
 struct Weight {
-    Weight(Graph& graph, const std::string& version)
+    Weight(Graph& graph, std::string version)
         : graph(graph)
-        , functor_version(version){};
+        , functor_version(std::move(version)){};
     Graph& graph;
     const std::string functor_version;
 };
@@ -307,7 +276,7 @@ struct Weight {
 // Edge weight is 1/weight
 template <typename Graph>
 struct WeightInverse : public Weight<Graph> {
-    WeightInverse(Graph& graph)
+    explicit WeightInverse(Graph& graph)
         : Weight<Graph>(graph, "1/weight"){};
 
     double operator()(typename boost::graph_traits<Graph>::edge_descriptor edge) const {
@@ -318,7 +287,7 @@ struct WeightInverse : public Weight<Graph> {
 // Edge weight is weight/max{weights}
 template <typename Graph>
 struct WeightDivMaxWeight : public Weight<Graph> {
-    WeightDivMaxWeight(Graph& graph)
+    explicit WeightDivMaxWeight(Graph& graph)
         : Weight<Graph>(graph, "weight/max{weights}"){};
 
     double operator()(typename boost::graph_traits<Graph>::edge_descriptor edge) const {
@@ -329,7 +298,7 @@ struct WeightDivMaxWeight : public Weight<Graph> {
 // Edge weight is 1
 template <typename Graph>
 struct WeightOne : public Weight<Graph> {
-    WeightOne(Graph& graph)
+    explicit WeightOne(Graph& graph)
         : Weight<Graph>(graph, "weight = 1"){};
 
     double operator()(typename boost::graph_traits<Graph>::edge_descriptor edge) const {

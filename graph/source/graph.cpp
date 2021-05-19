@@ -1,17 +1,18 @@
 #include "graph.h"
 
-#include <boost/property_map/property_map.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/betweenness_centrality.hpp>
 #include <boost/graph/clustering_coefficient.hpp>
 #include <boost/graph/exterior_property.hpp>
 #include <boost/graph/johnson_all_pairs_shortest.hpp>
+#include <boost/property_map/property_map.hpp>
 #include <boost/variant/get.hpp>
 
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <numeric>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -20,7 +21,7 @@
 void Graph::add_vertices_from_file(const std::filesystem::path& file_path) {
     std::ifstream file(file_path);
 
-    std::string line;
+    std::string line{};
 
     while (std::getline(file, line)) {
         if (line[0] == '#') {
@@ -30,7 +31,7 @@ void Graph::add_vertices_from_file(const std::filesystem::path& file_path) {
         std::stringstream sstream(line);
 
         size_t id{};
-        Position pos;
+        Position pos{};
         std::string area{};
         std::string type{};
 
@@ -40,14 +41,14 @@ void Graph::add_vertices_from_file(const std::filesystem::path& file_path) {
             continue;
         }
 
-        add_vertex(pos, area + " " + type, id);
+        add_vertex(pos, area.append(" ").append(type), id);
     }
 }
 
 void Graph::add_edges_from_file(const std::filesystem::path& file_path) {
     std::ifstream file(file_path);
 
-    std::string line;
+    std::string line{};
 
     while (std::getline(file, line)) {
         if (line[0] == '#') {
@@ -56,9 +57,9 @@ void Graph::add_edges_from_file(const std::filesystem::path& file_path) {
 
         std::stringstream sstream(line);
 
-        size_t src_id;
-        size_t dst_id;
-        int weight;
+        size_t src_id{};
+        size_t dst_id{};
+        int weight{};
 
         bool success = (sstream >> dst_id) && (sstream >> src_id) && (sstream >> weight);
 
@@ -66,12 +67,12 @@ void Graph::add_edges_from_file(const std::filesystem::path& file_path) {
             continue;
         }
 
-        int weight_in_boost = weight > 0 ? weight : -weight;
+        const int weight_in_boost = std::abs(weight);
 
-        FullVertex dst_vtx = id_to_vtx_full[dst_id];
-        FullVertex src_vtx = id_to_vtx_full[src_id];
+        const FullVertex dst_vtx = id_to_vtx_full[dst_id];
+        const FullVertex src_vtx = id_to_vtx_full[src_id];
 
-        FullEdge edge;
+        FullEdge edge{};
         std::tie(edge, success) = boost::edge(src_vtx, dst_vtx, full_graph);
 
         if (!success) {
@@ -92,9 +93,7 @@ void Graph::print_vertices(std::ostream& os) {
     os << "# Position (x y z)\tArea"
        << "\n";
 
-    FullVertexIterator it, it_end;
-    std::tie(it, it_end) = boost::vertices(full_graph);
-    for (; it != it_end; ++it) {
+    for (auto [it, it_end] = boost::vertices(full_graph); it != it_end; ++it) {
         print_vertex(*it, os);
     }
 }
@@ -104,9 +103,7 @@ void Graph::print_edges(std::ostream& os) {
        << "<tgt pos x> <tgt pos y> <tgt pos z>"
        << "\n";
 
-    FullEdgeIterator it, it_end;
-    std::tie(it, it_end) = boost::edges(full_graph);
-    for (; it != it_end; ++it) {
+    for (auto [it, it_end] = boost::edges(full_graph); it != it_end; ++it) {
         print_edge(*it, os);
     }
 }
@@ -123,8 +120,7 @@ void Graph::calculate_metrics(std::ostream& os) {
     os << "It was: " << avg_eucl_dist << "\n";
 
     os << "Calculating all pairs shortest paths...\n";
-    double avg, glob_eff;
-    std::tie(avg, glob_eff) = calculate_all_pairs_shortest_paths();
+    const auto [avg, glob_eff] = calculate_all_pairs_shortest_paths();
     os << "Average shortest path was: " << avg << "\n";
     os << "Global efficiency was: " << glob_eff << "\n";
 
@@ -141,10 +137,7 @@ std::tuple<double, double, double> Graph::smallest_coordinate_per_dimension() {
     constexpr const double max_double = std::numeric_limits<double>::max();
     Position min_coords(max_double, max_double, max_double);
 
-    FullVertexIterator it_vtx, it_vtx_end;
-
-    std::tie(it_vtx, it_vtx_end) = boost::vertices(full_graph);
-    for (; it_vtx != it_vtx_end; ++it_vtx) {
+    for (auto [it_vtx, it_vtx_end] = boost::vertices(full_graph); it_vtx != it_vtx_end; ++it_vtx) {
         min_coords.MinForEachCoordinate(full_graph[*it_vtx].pos);
     }
 
@@ -154,20 +147,16 @@ std::tuple<double, double, double> Graph::smallest_coordinate_per_dimension() {
 void Graph::add_offset_to_positions(const Position& offset) {
     this->offset.Add(offset); // Update offset
 
-    FullVertexIterator it_vtx, it_vtx_end;
-    std::tie(it_vtx, it_vtx_end) = boost::vertices(full_graph);
-    for (; it_vtx != it_vtx_end; ++it_vtx) {
+    for (auto [it_vtx, it_vtx_end] = boost::vertices(full_graph); it_vtx != it_vtx_end; ++it_vtx) {
         full_graph[*it_vtx].pos.Add(offset);
     }
 }
 
 std::pair<int, int> Graph::min_max_degree() {
-    FullVertexIterator it_vtx, it_vtx_end;
     int max_deg = 0;
     int min_deg = std::numeric_limits<int>::max();
 
-    std::tie(it_vtx, it_vtx_end) = boost::vertices(full_graph);
-    for (; it_vtx != it_vtx_end; ++it_vtx) {
+    for (auto [it_vtx, it_vtx_end] = boost::vertices(full_graph); it_vtx != it_vtx_end; ++it_vtx) {
         max_deg = std::max(max_deg, static_cast<int>(boost::out_degree(*it_vtx, full_graph) + boost::in_degree(*it_vtx, full_graph)));
         min_deg = std::min(min_deg, static_cast<int>(boost::out_degree(*it_vtx, full_graph) + boost::in_degree(*it_vtx, full_graph)));
     }
@@ -187,10 +176,9 @@ void Graph::init_edge_weight() {
     double max_weight = std::numeric_limits<double>::min();
     double min_weight = std::numeric_limits<double>::max();
 
-    FullEdgeIterator current, end;
-    for (std::tie(current, end) = boost::edges(full_graph); current != end; ++current) {
+    for (auto [current, end] = boost::edges(full_graph); current != end; ++current) {
         auto& current_edge = full_graph[*current];
-        auto weight = current_edge.weight;
+        const auto weight = current_edge.weight;
 
         min_weight = std::min(weight, min_weight);
         max_weight = std::max(weight, max_weight);
@@ -206,15 +194,15 @@ double Graph::calculate_average_euclidean_distance() {
     double sum_weights = 0.0;
 
     for (auto [current, end] = boost::edges(full_graph); current != end; ++current) {
-        auto current_prop = *current;
+        const auto current_prop = *current;
         auto& current_edge = full_graph[current_prop];
-        auto weight = current_edge.weight;
+        const auto weight = current_edge.weight;
 
-        auto src = boost::source(current_prop, full_graph);
-        auto dst = boost::target(current_prop, full_graph);
+        const auto src = boost::source(current_prop, full_graph);
+        const auto dst = boost::target(current_prop, full_graph);
 
-        auto src_vtx = full_graph[src];
-        auto dst_vtx = full_graph[dst];
+        const auto src_vtx = full_graph[src];
+        const auto dst_vtx = full_graph[dst];
 
         avg_eucl_dist += src_vtx.pos.CalcEuclDist(dst_vtx.pos);
         sum_weights += weight;
@@ -226,10 +214,7 @@ double Graph::calculate_average_euclidean_distance() {
 std::tuple<double, double> Graph::calculate_all_pairs_shortest_paths() {
     auto num_neurons = get_num_vertices();
 
-    std::vector<std::vector<double>> distances(num_neurons);
-    for (size_t i = 0; i < num_neurons; i++) {
-        distances[i].resize(num_neurons);
-    }
+    std::vector<std::vector<double>> distances(num_neurons, std::vector<double>(num_neurons));
 
     boost::johnson_all_pairs_shortest_paths(full_graph, distances, boost::weight_map(boost::get(&EdgeProperties::weight_inverse, full_graph)));
 
@@ -242,12 +227,12 @@ std::tuple<double, double> Graph::calculate_all_pairs_shortest_paths() {
         for (size_t j = 0; j < num_neurons; j++) {
             // Consider pairs of different neurons only
             if (i != j) {
-                double val = distances[i][j];
+                const double val = distances[i][j];
 
                 // Average
                 number_values++;
-                double delta = val - avg;
-                avg += delta / number_values;
+                const double delta = val - avg;
+                avg += delta / static_cast<double>(number_values);
 
                 // Sum
                 sum += 1 / val;
@@ -255,13 +240,13 @@ std::tuple<double, double> Graph::calculate_all_pairs_shortest_paths() {
         }
     }
 
-    double global_efficiency = sum / (num_neurons * (num_neurons - 1));
+    const double global_efficiency = sum / static_cast<double>(num_neurons * (num_neurons - 1));
 
-    return std::make_tuple(avg, global_efficiency);
+    return { avg, global_efficiency };
 }
 
 double Graph::calculate_average_betweenness_centrality() {
-    auto num_neurons = get_num_vertices();
+    const auto num_neurons = get_num_vertices();
     std::vector<double> v_centrality_vec(num_neurons, 0.0);
 
     boost::iterator_property_map<std::vector<double>::iterator, boost::identity_property_map>
@@ -270,12 +255,8 @@ double Graph::calculate_average_betweenness_centrality() {
     boost::brandes_betweenness_centrality(full_graph,
         centrality_map(v_centrality_map).weight_map(boost::get(&EdgeProperties::weight_inverse, full_graph)));
 
-    double average_bc = 0;
-    for (size_t i = 0; i < v_centrality_vec.size(); i++) {
-        average_bc += v_centrality_vec[i];
-    }
-
-    return average_bc / num_neurons;
+    const auto average_bc = std::reduce(v_centrality_vec.begin(), v_centrality_vec.end());
+    return average_bc / static_cast<double>(num_neurons);
 }
 
 double Graph::calculate_clustering_coefficient() {
@@ -285,22 +266,18 @@ double Graph::calculate_clustering_coefficient() {
 
     average_clustering_coefficient_unweighted_undirected(full_graph);
 
-    typedef boost::exterior_vertex_property<ConnectivityGraph, double> ClusteringProperty;
-    typedef ClusteringProperty::container_type ClusteringContainer;
-    typedef ClusteringProperty::map_type ClusteringMap;
+    using ClusteringProperty = boost::exterior_vertex_property<ConnectivityGraph, double>;
+    using ClusteringContainer = ClusteringProperty::container_type;
+    using ClusteringMap = ClusteringProperty::map_type;
 
     ClusteringContainer coefs(num_vertices(conn_graph));
     ClusteringMap cm(coefs, conn_graph);
-    double cc = all_clustering_coefficients(conn_graph, cm);
-
-    return cc;
+    return all_clustering_coefficients(conn_graph, cm);
 }
 
 void Graph::add_vertex(const Position& pos, const std::string& name, size_t id) {
     // Add vertex to full_graph, if not there
-    auto it = pos_to_vtx.find(pos);
-
-    if (it == pos_to_vtx.end()) {
+    if (const auto it = pos_to_vtx.find(pos); it == pos_to_vtx.end()) {
         FullVertex full_vtx = boost::add_vertex(full_graph);
 
         // Set vertex properties
@@ -311,7 +288,7 @@ void Graph::add_vertex(const Position& pos, const std::string& name, size_t id) 
         vtx_to_pos[full_vtx] = pos;
         id_to_vtx_full[id] = full_vtx;
 
-        FullVertex conn_vtx = boost::add_vertex(conn_graph);
+        const FullVertex conn_vtx = boost::add_vertex(conn_graph);
         id_to_vtx_conn[id] = conn_vtx;
     }
 }
@@ -321,14 +298,12 @@ void Graph::add_edge(size_t src_id, size_t dst_id, int weight) {
         return;
     }
 
-    int weight_in_boost = std::abs(weight);
+    const int weight_in_boost = std::abs(weight);
 
-    FullVertex dst_vtx_full = id_to_vtx_full[dst_id];
-    FullVertex src_vtx_full = id_to_vtx_full[src_id];
+    const FullVertex dst_vtx_full = id_to_vtx_full[dst_id];
+    const FullVertex src_vtx_full = id_to_vtx_full[src_id];
 
-    bool success;
-    FullEdge edgefull;
-    std::tie(edgefull, success) = boost::edge(src_vtx_full, dst_vtx_full, full_graph);
+    auto [edgefull, success] = boost::edge(src_vtx_full, dst_vtx_full, full_graph);
 
     if (!success) {
         boost::add_edge(src_vtx_full, dst_vtx_full, full_graph);
@@ -338,8 +313,8 @@ void Graph::add_edge(size_t src_id, size_t dst_id, int weight) {
         full_graph[edgefull].weight += weight_in_boost;
     }
 
-    ConnectivityVertex dst_vtx_conn = id_to_vtx_full[dst_id];
-    ConnectivityVertex src_vtx_conn = id_to_vtx_full[src_id];
+    const ConnectivityVertex dst_vtx_conn = id_to_vtx_full[dst_id];
+    const ConnectivityVertex src_vtx_conn = id_to_vtx_full[src_id];
 
     ConnectivityEdge edge_conn;
     std::tie(edge_conn, success) = boost::edge(src_vtx_conn, dst_vtx_conn, conn_graph);
@@ -355,10 +330,8 @@ void Graph::print_vertex(FullVertex v, std::ostream& os) {
 }
 
 void Graph::print_edge(FullEdge e, std::ostream& os) {
-    FullVertex u, v;
-
-    u = source(e, full_graph);
-    v = target(e, full_graph);
+    const FullVertex u = source(e, full_graph);
+    const FullVertex v = target(e, full_graph);
 
     os << full_graph[u].pos.x << " " << full_graph[u].pos.y << " " << full_graph[u].pos.z << "  "
        << full_graph[v].pos.x << " " << full_graph[v].pos.y << " " << full_graph[v].pos.z
