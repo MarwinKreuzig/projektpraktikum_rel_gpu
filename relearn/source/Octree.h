@@ -361,9 +361,9 @@ public:
     void update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, const SynapticElements& axons, size_t num_neurons);
 
     [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed);
+   
+    std::optional<OctreeNode*> do_random_experiment(OctreeNode* source, std::vector<double>* atractiveness);
 
-    [[nodiscard]] std::optional<OctreeNode*> Octree::find_target_neuron_FMM(OctreeNode* source, std::vector<double> atractiveness);
-    
     void empty_remote_nodes_cache();
 
 private:

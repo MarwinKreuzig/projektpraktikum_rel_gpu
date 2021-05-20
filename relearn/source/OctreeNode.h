@@ -27,6 +27,8 @@ class OctreeNode {
     int rank{ -1 }; // MPI rank who owns this octree node
     size_t level{ 0 }; // Level in the tree [0 (= root) ... depth of tree]
 
+    std::vector<OctreeNode*> interaction_list;
+
 public:
     [[nodiscard]] int get_rank() const noexcept {
         return rank;
@@ -116,18 +118,6 @@ public:
         cell.set_neuron_position_axons_inh(opt_position);
     }
 
-    void set_cell_add_to_interactionlist (OctreeNode* x)noexcept{
-        cell.add_to_interactionlist(x);
-    }
-
-    OctreeNode* set_cell_get_from_interactionlist (int x)noexcept{
-        return cell.get_from_interactionlist(x);
-    }
-
-    size_t set_cell_get_interationlist_length() noexcept{
-        return cell.get_interactionlist_lenghth();
-    }
-
     void set_child(OctreeNode* node, size_t idx) {
         RelearnException::check(idx < Constants::number_oct, "In OctreeNode::set_child, idx was: %u", idx);
         // NOLINTNEXTLINE
@@ -142,5 +132,20 @@ public:
         parent = false;
         rank = -1;
         level = 0;
+    }
+
+    void add_to_interactionlist(OctreeNode* x) {
+        interaction_list.push_back(x);
+    }
+
+    OctreeNode* get_from_interactionlist(unsigned int x) {
+        if (x >= interaction_list.size()){
+            return nullptr;
+        }
+        return interaction_list.at(x);
+    }
+
+    size_t get_interactionlist_length() {
+        return interaction_list.size();
     }
 };

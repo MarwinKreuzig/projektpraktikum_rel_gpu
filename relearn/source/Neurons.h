@@ -472,7 +472,7 @@ private:
     void create_synapses_update_octree();
 
     MapSynapseCreationRequests create_synapses_find_targets();
-    MapSynapseCreationRequests Neurons::create_synapses_find_targets_FMM();
+    MapSynapseCreationRequests create_synapses_find_targets_FMM();
 
     MapSynapseCreationRequests create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 

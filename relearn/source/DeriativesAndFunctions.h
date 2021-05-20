@@ -10,8 +10,13 @@
 
 #include <math.h>
 #include "Vec3.h"
+#include "Multiindex.h"
 
 namespace Deriatives {
+
+inline double original_func(double t){
+    return exp(-pow(t, 2));
+}   
 //this file contains all x derivatives of e that are required for the Fast Gauss algorithm
 inline double deriative1(double t) {
     return -2 * t * exp(-pow(t, 2));
@@ -78,7 +83,8 @@ inline double deriative16(double t) {
 }
 
 // pointer to deriative functions
-inline double (*der_ptr[16])(double x) = {
+inline double (*der_ptr[17])(double x) = {
+    original_func,
     deriative1,
     deriative2,
     deriative3,
@@ -101,24 +107,35 @@ inline double (*der_ptr[16])(double x) = {
 namespace Functions {
 // Hermite functions, returns -1 when n is smaller than 1
 inline double h(unsigned int n, double t) {
-    if (n >= 1)
-        return exp(-pow(t, 2)) * pow(-1, n) * exp(pow(t, 2)) * (*Deriatives::der_ptr[n - 1])(t);
+    if (n >= 0)
+        return exp(-pow(t, 2)) * pow(-1, n) * exp(pow(t, 2)) * (*Deriatives::der_ptr[n])(t);
     else
         return -1;
 }
 
-// Calculates the factorial of x when it is greater than 1, otherwise returns -1
-inline int fac(unsigned int x) {
-    if (x == 0)
-        return 1;
-    if (x > 0) {
-        int res = 1;
-        for (size_t i = 1; i <= x; i++) {
-            res = res * i;
+inline double h_multiindex(std::array<int, 3>* n, Vec3d* t) {
+    return h(n->at(0), t->get_x()) * h(n->at(1), t->get_y()) * h(n->at(2), t->get_z());
+}
+
+// Calculates the factorial of a multiindex x
+inline int fac_multiindex(std::array<int, 3>* x) {
+    int temp;
+    int result = 1;
+    for (int i = 0; i < 3; i++) {
+        temp = 1;
+        for (int j = 1; j < x->at(i); j++) {
+            temp = temp * j;
         }
-        return res;
-    } else
-        return -1;
+        result = result * temp;
+    }
+    return result;
+}
+
+inline double pow_multiindex(Vec3d* base_vector, std::array<int, 3>* exponent) {
+    return pow(base_vector->get_x(), exponent->at(0)) * pow(base_vector->get_y(), exponent->at(1)) * pow(base_vector->get_z(), exponent->at(2));
+}
+inline double abs_multiindex(std::array<int, 3>* x) {
+    return x->at(0) + x->at(1) + x->at(2);
 }
 
 // Calculates the Euclidean distance between two three-dimensional vectors
@@ -130,5 +147,93 @@ inline double euclidean_distance_3d(Vec3d a, Vec3d b) {
 // Calculates the attraction between two neurons, where a and b represent the position in three-dimensional space
 inline double kernel(Vec3d a, Vec3d b) {
     return exp(-(pow(euclidean_distance_3d(a, b), 2) / pow(Constants::sigma, 2)));
+}
+
+inline double calc_taylor_expansion(std::vector<Vec3d>* sources, std::vector<Vec3d>* targets, Vec3d* center_target) {
+    Multiindex m = Multiindex();
+    int num_coef = m.get_number_of_indices();
+    std::vector<double> taylor_coef;
+    taylor_coef.reserve(64);
+    double result = 0;
+    double temp;
+    Vec3d temp_vec = Vec3d();
+    std::array<int,3>* current_index;
+
+    for (size_t b = 0; b < num_coef; b++) {
+        temp = 0;
+        current_index = m.get_indice_at(b);
+        for (size_t j = 0; j < sources->size(); j++) {
+            temp_vec.set_x((sources->at(j).get_x()-center_target->get_x())/Constants::sigma);
+            temp_vec.set_y((sources->at(j).get_y()-center_target->get_y())/Constants::sigma);
+            temp_vec.set_z((sources->at(j).get_z()-center_target->get_z())/Constants::sigma);
+            temp += h_multiindex(current_index, &temp_vec);
+        }
+        double C = (pow(-1, abs_multiindex(current_index)) / Functions::fac_multiindex(current_index)) * temp;
+        //printf("taylor coef at %i = %f \n",b,C);
+        taylor_coef.push_back(C);
+    }
+    //Evaluate Taylor series at all sources
+    for (unsigned int j = 0; j < sources->size(); j++) {
+        temp = 0;
+        temp_vec.set_x((targets->at(j).get_x() - center_target->get_x()) / Constants::sigma);
+        temp_vec.set_y((targets->at(j).get_y() - center_target->get_y()) / Constants::sigma);
+        temp_vec.set_z((targets->at(j).get_z() - center_target->get_z()) / Constants::sigma);
+        for (size_t b = 0; b < num_coef; b++) {
+            temp += taylor_coef.at(b) * pow_multiindex(&temp_vec, m.get_indice_at(b));
+        }
+        result += temp;
+    }
+    return result;
+}
+
+//calculates direct gauss of two vectors with 3D positions
+inline double calc_direct_gauss(std::vector<Vec3d>* sources, std::vector<Vec3d>* targets) {
+    double result = 0;
+    for (int t = 0; t < targets->size(); t++) {
+        for (size_t s = 0; s < sources->size(); s++) {
+            result += Functions::kernel(targets->at(t), sources->at(s));
+        }
+    }
+    return result;
+}
+
+inline void calc_hermite_coefficients(Vec3d* center_of_source, std::vector<Vec3d>* sources, std::vector<double>* coef) {
+    Multiindex m = Multiindex();
+    int num_coef = m.get_number_of_indices();
+    double temp;
+    Vec3d temp_vec = Vec3d();
+    for (size_t a = 0; a < num_coef; a++) {
+        temp = 0;
+        for (size_t i = 0; i < sources->size(); i++) {
+            temp_vec.set_x((sources->at(i).get_x() - center_of_source->get_x()) / Constants::sigma);
+            temp_vec.set_y((sources->at(i).get_y() - center_of_source->get_y()) / Constants::sigma);
+            temp_vec.set_z((sources->at(i).get_z() - center_of_source->get_z()) / Constants::sigma);
+            temp += pow_multiindex(&temp_vec, m.get_indice_at(a));
+        }
+        //printf("temp  = %f \n", temp);
+        coef->push_back((1 / fac_multiindex(m.get_indice_at(a))) * temp);
+        //printf("hermite coef an Stelle %i = %f \n", a, coef->at(a-1));
+    }
+}
+
+inline double calc_hermite(std::vector<Vec3d>* targets, std::vector<double>* coef, Vec3d* center_of_sources) {
+    double result = 0;
+    Multiindex m = Multiindex();
+    int coef_num = m.get_number_of_indices();
+    double temp;
+    Vec3d temp_vec = Vec3d();
+
+    for (size_t j = 0; j < targets->size(); j++) {
+        temp = 0;
+        temp_vec.set_x((targets->at(j).get_x() - center_of_sources->get_x()) / Constants::sigma);
+        temp_vec.set_y((targets->at(j).get_y() - center_of_sources->get_y()) / Constants::sigma);
+        temp_vec.set_z((targets->at(j).get_z() - center_of_sources->get_z()) / Constants::sigma); 
+        for (size_t a = 0; a < coef_num; a++) {
+            //printf("hermite coef an Stelle %i = %f \n", a, coef->at(a-1));
+            temp += coef->at(a)* h_multiindex(m.get_indice_at(a),&temp_vec);
+        }
+        result += temp;
+    }
+    return result;
 }
 }

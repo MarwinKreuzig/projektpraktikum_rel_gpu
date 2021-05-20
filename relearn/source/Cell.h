@@ -14,7 +14,6 @@
 #include "RelearnException.h"
 #include "SignalType.h"
 #include "Vec3.h"
-#include "OctreeNode.h"
 
 #include <optional>
 #include <tuple>
@@ -151,18 +150,6 @@ public:
         this->neuron_id = neuron_id;
     } 
 
-    void add_to_interactionlist (OctreeNode* x){
-        interaction_list.push_back(x);
-    }
-
-    OctreeNode* get_from_interactionlist(unsigned int x){
-        return interaction_list.at(x);
-    }
-
-    size_t get_interactionlist_lenghth(){
-        return interaction_list.size();
-    }
-
     [[nodiscard]] unsigned char get_neuron_octant() const {
         const std::optional<Vec3d>& pos = get_neuron_position();
         RelearnException::check(pos.has_value(), "position didn_t have a value");
@@ -222,7 +209,5 @@ private:
     size_t neuron_id{ Constants::uninitialized };
 
     //Contains nodes for which an attraction force is to be calculated and space to record results
-
-std::vector<OctreeNode*> interaction_list;
 
 };
