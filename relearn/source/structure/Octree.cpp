@@ -476,7 +476,6 @@ void Octree::construct_global_tree_part() {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    // for (auto level = 1; level < level_of_branch_nodes; level++) {
     const auto num_cells_per_dimension = 1 << level_of_branch_nodes; // (2^level_of_branch_nodes)
 
     const auto& cell_length = (xyz_max - xyz_min) / num_cells_per_dimension;
@@ -494,11 +493,14 @@ void Octree::construct_global_tree_part() {
     local_root->set_rank(my_rank);
     local_root->set_cell_neuron_position(xyz_min + (cell_length / 2));
 
+    const auto root_index1d = space_curve.map_3d_to_1d(Vec3s{ 0, 0, 0 });
+    local_trees[root_index1d] = local_root;
+
     root = local_root;
 
-    for (auto id_x = 0; id_x < num_cells_per_dimension; id_x++) {
-        for (auto id_y = 0; id_y < num_cells_per_dimension; id_y++) {
-            for (auto id_z = 0; id_z < num_cells_per_dimension; id_z++) {
+    for (size_t id_x = 0; id_x < num_cells_per_dimension; id_x++) {
+        for (size_t id_y = 0; id_y < num_cells_per_dimension; id_y++) {
+            for (size_t id_z = 0; id_z < num_cells_per_dimension; id_z++) {
                 if (id_x == 0 && id_y == 0 && id_z == 0) {
                     continue;
                 }
@@ -507,46 +509,39 @@ void Octree::construct_global_tree_part() {
                 const auto& cell_min = xyz_min + cell_offset;
                 const auto& cell_position = cell_min + (cell_length / 2);
 
-                root->insert(cell_position, Constants::uninitialized, my_rank);
+                auto* current_node = root->insert(cell_position, Constants::uninitialized, my_rank);
+               
+                //const auto index1d = space_curve.map_3d_to_1d(Vec3s{ id_x, id_y, id_z });
+                //local_trees[index1d] = current_node;
             }
         }
     }
-    //}
 
-    //std::stack<std::pair<OctreeNode*, Vec3s>> nodes_to_process;
-    //nodes_to_process.emplace(new_node_to_insert, Vec3s{ 0, 0, 0 });
+    std::stack<std::pair<OctreeNode*, Vec3s>> stack{};
+    stack.emplace(root, Vec3s{ 0, 0, 0 });
 
-    //while (!nodes_to_process.empty()) {
-    //    std::pair<OctreeNode*, Vec3s> elem = nodes_to_process.top();
-    //    OctreeNode* current_node = elem.first;
-    //    const Vec3s index3d = elem.second;
+    while (!stack.empty()) {
+        const auto [ptr, index3d] = stack.top();
+        stack.pop();
 
-    //    nodes_to_process.pop();
+        if (!ptr->is_parent()) {
+            const auto index1d = space_curve.map_3d_to_1d(index3d);
+            local_trees[index1d] = ptr;
+            continue;
+        }
 
-    //    const auto current_level = current_node->get_level();
-    //    if (current_level == level_of_branch_nodes) {
-    //        const auto index1d = space_curve.map_3d_to_1d(index3d);
-    //        local_trees[index1d] = current_node;
-    //        continue;
-    //    }
+        for (auto id = 0; id < 8; id++) {
+            auto child_node = ptr->get_child(id);
+            
+            const size_t larger_x = ((id & 1) == 0) ? 0 : 1;
+            const size_t larger_y = ((id & 2) == 0) ? 0 : 1;
+            const size_t larger_z = ((id & 4) == 0) ? 0 : 1;
 
-    //    const auto& cell = current_node->get_cell();
-
-    //    for (auto i = 0; i < 8; i++) {
-    //        const auto& subcell_sizes = cell.get_size_for_octant(i);
-    //        const auto& subcell_min = std::get<0>(subcell_sizes);
-    //        const auto& subcell_max = std::get<1>(subcell_sizes);
-
-    //        const auto subcell_position = (subcell_min + subcell_max) / 2;
-    //        auto* subcell_node = current_node->insert(subcell_position, Constants::uninitialized, my_rank);
-
-    //        const size_t larger_x = ((i & 1) == 0) ? 0 : 1;
-    //        const size_t larger_y = ((i & 2) == 0) ? 0 : 1;
-    //        const size_t larger_z = ((i & 4) == 0) ? 0 : 1;
-
-    //        nodes_to_process.emplace(subcell_node, (index3d * 2) + Vec3s{ larger_x, larger_y, larger_z });
-    //    }
-    //}
+            const Vec3s offset{ larger_x, larger_y, larger_z };
+            const Vec3s pos = (index3d * 2) + offset;
+            stack.emplace(child_node, pos);
+        }
+    }
 }
 
 // Insert neuron into the tree

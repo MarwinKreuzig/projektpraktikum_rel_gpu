@@ -132,6 +132,33 @@ std::vector<std::tuple<Vec3d, size_t>> extract_unused_neurons(OctreeNode* root) 
     return return_value;
 }
 
+std::vector<OctreeNode*> extract_branch_nodes(OctreeNode* root) {
+    std::vector<OctreeNode*> return_value;
+
+    std::stack<OctreeNode*> octree_nodes{};
+    octree_nodes.push(root);
+
+    while (!octree_nodes.empty()) {
+        OctreeNode* current_node = octree_nodes.top();
+        octree_nodes.pop();
+
+        if (current_node->is_parent()) {
+            const auto childs = current_node->get_children();
+            for (auto i = 0; i < 8; i++) {
+                const auto child = childs[i];
+                if (child != nullptr) {
+                    octree_nodes.push(child);
+                }
+            }
+        } else {
+            return_value.emplace_back(current_node);
+        }
+    }   
+
+    return return_value;
+}
+
+
 TEST(TestCell, testCellSize) {
     setup();
 
@@ -898,6 +925,26 @@ TEST(TestOctree, testOctreeConstructor) {
         } else {
             EXPECT_FALSE(octree.is_naive_method_used());
         }
+
+        const auto& virtual_neurons = extract_unused_neurons(octree.get_root());
+
+        std::map<size_t, size_t> level_to_count{};
+
+        for (const auto& [pos, id] : virtual_neurons) {
+            level_to_count[id]++;
+        }
+
+        EXPECT_EQ(level_to_count.size(), level_of_branch_nodes + 1);
+
+        for (auto level = 0; level <= level_of_branch_nodes; level++) {
+            auto expected_elements = 1;
+
+            for (auto it = 0; it < level; it++) {
+                expected_elements *= 8;
+            }
+
+            EXPECT_EQ(level_to_count[level], expected_elements);
+        }
     }
 }
 
@@ -1252,5 +1299,60 @@ TEST(TestOctree, testOctreeStructure) {
                 EXPECT_LE(position.get_z(), cell_max.get_z());
             }
         }
+    }
+}
+
+TEST(TestOctree, testOctreeLocalTrees) {
+    setup();
+
+    std::uniform_int_distribution<size_t> uid(0, 6);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        size_t level_of_branch_nodes = uid(mt);
+        double theta = urd_theta(mt);
+        double sigma = urd_sigma(mt);
+
+        Octree octree(min, max, level_of_branch_nodes, theta, sigma);
+
+        EXPECT_EQ(octree.get_acceptance_criterion(), theta);
+        EXPECT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
+        EXPECT_EQ(octree.get_probabilty_parameter(), sigma);
+        EXPECT_EQ(octree.get_xyz_max(), max);
+        EXPECT_EQ(octree.get_xyz_min(), min);
+
+        if (theta == 0.0) {
+            EXPECT_TRUE(octree.is_naive_method_used());
+        } else {
+            EXPECT_FALSE(octree.is_naive_method_used());
+        }
+
+        SpaceFillingCurve<Morton> sfc(level_of_branch_nodes);
+        const auto num_cells_per_dimension = 1 << level_of_branch_nodes;
+
+        const auto& cell_length = (max - min) / num_cells_per_dimension;
+
+        const auto& branch_nodes_extracted = extract_branch_nodes(octree.get_root());
+        
+        for (auto* branch_node : branch_nodes_extracted) {
+            const auto branch_node_position = branch_node->get_cell().get_neuron_position().value();
+            const auto branch_node_offset = branch_node_position - min;
+
+            const auto x_pos = branch_node_offset.get_x() / cell_length.get_x();
+            const auto y_pos = branch_node_offset.get_y() / cell_length.get_y();
+            const auto z_pos = branch_node_offset.get_z() / cell_length.get_z();
+
+            Vec3s pos3d { static_cast<size_t>(std::floor(x_pos)), static_cast<size_t>(std::floor(y_pos)), static_cast<size_t>(std::floor(z_pos)) };
+            const auto pos1d = sfc.map_3d_to_1d(pos3d);
+
+            const auto local_tree = octree.get_local_root(pos1d);
+            EXPECT_EQ(local_tree, branch_node);
+        }        
     }
 }
