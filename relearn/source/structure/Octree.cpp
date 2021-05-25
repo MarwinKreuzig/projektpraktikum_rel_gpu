@@ -471,55 +471,80 @@ double Octree::calc_attractiveness_to_connect(
 void Octree::construct_global_tree_part() {
     RelearnException::check(root == nullptr, "root was not null in the construction of the global state!");
 
-    OctreeNode* new_node_to_insert = MPIWrapper::new_octree_node();
-    RelearnException::check(new_node_to_insert != nullptr, "new_node_to_insert is nullptr");
-
     SpaceFillingCurve<Morton> space_curve;
     space_curve.set_refinement_level(level_of_branch_nodes);
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    root = new_node_to_insert;
+    OctreeNode* local_root = MPIWrapper::new_octree_node();
+    RelearnException::check(local_root != nullptr, "local_root is nullptr");
 
-    new_node_to_insert->set_cell_size(xyz_min, xyz_max);
-    new_node_to_insert->set_level(0);
-    new_node_to_insert->set_rank(my_rank);
-    new_node_to_insert->set_cell_neuron_position((xyz_min + xyz_max) / 2);
+    local_root->set_cell_neuron_id(Constants::uninitialized);
+    local_root->set_cell_size(xyz_min, xyz_max);
+    local_root->set_level(0);
+    local_root->set_rank(my_rank);
+    local_root->set_cell_neuron_position((xyz_min + xyz_max) / 2);
 
-    std::stack<std::pair<OctreeNode*, Vec3s>> nodes_to_process;
-    nodes_to_process.emplace(new_node_to_insert, Vec3s{ 0, 0, 0 });
+    root = local_root;
 
-    while (!nodes_to_process.empty()) {
-        std::pair<OctreeNode*, Vec3s> elem = nodes_to_process.top();
-        OctreeNode* current_node = elem.first;
-        const Vec3s index3d = elem.second;
+    for (auto level = 1; level < level_of_branch_nodes; level++) {
+        const auto num_cells_per_dimension = 1 << level; // (2^level_of_branch_nodes)
 
-        nodes_to_process.pop();
+        const auto& cell_length = (xyz_max - xyz_min) / num_cells_per_dimension;
 
-        const auto current_level = current_node->get_level();
-        if (current_level == level_of_branch_nodes) {
-            const auto index1d = space_curve.map_3d_to_1d(index3d);
-            local_trees[index1d] = current_node;
-            continue;
-        }
+        const auto cell_length_x = cell_length.get_x();
+        const auto cell_length_y = cell_length.get_y();
+        const auto cell_length_z = cell_length.get_z();
 
-        const auto& cell = current_node->get_cell();
+        for (auto id_x = 0; id_x < num_cells_per_dimension; id_x++) {
+            for (auto id_y = 0; id_y < num_cells_per_dimension; id_y++) {
+                for (auto id_z = 0; id_z < num_cells_per_dimension; id_z++) {
+                    const Vec3d cell_offset{ id_x * cell_length_x, id_y * cell_length_y, id_z * cell_length_z };
+                    const auto& cell_min = xyz_min + cell_offset;
+                    const auto& cell_max = cell_min + cell_length;
 
-        for (auto i = 0; i < 8; i++) {
-            const auto& subcell_sizes = cell.get_size_for_octant(i);
-            const auto& subcell_min = std::get<0>(subcell_sizes);
-            const auto& subcell_max = std::get<1>(subcell_sizes);
+                    const auto& cell_position = cell_min + (cell_length / 2);
 
-            const auto subcell_position = (subcell_min + subcell_max) / 2;
-            auto* subcell_node = current_node->insert(subcell_position, Constants::uninitialized, my_rank);
-
-            const size_t larger_x = ((i & 1) == 0) ? 0 : 1;
-            const size_t larger_y = ((i & 2) == 0) ? 0 : 1;
-            const size_t larger_z = ((i & 4) == 0) ? 0 : 1;
-
-            nodes_to_process.emplace(subcell_node, (index3d * 2) + Vec3s{ larger_x, larger_y, larger_z });
+                    root->insert(cell_position, Constants::uninitialized, my_rank);
+                }
+            }
         }
     }
+
+    //std::stack<std::pair<OctreeNode*, Vec3s>> nodes_to_process;
+    //nodes_to_process.emplace(new_node_to_insert, Vec3s{ 0, 0, 0 });
+
+    //while (!nodes_to_process.empty()) {
+    //    std::pair<OctreeNode*, Vec3s> elem = nodes_to_process.top();
+    //    OctreeNode* current_node = elem.first;
+    //    const Vec3s index3d = elem.second;
+
+    //    nodes_to_process.pop();
+
+    //    const auto current_level = current_node->get_level();
+    //    if (current_level == level_of_branch_nodes) {
+    //        const auto index1d = space_curve.map_3d_to_1d(index3d);
+    //        local_trees[index1d] = current_node;
+    //        continue;
+    //    }
+
+    //    const auto& cell = current_node->get_cell();
+
+    //    for (auto i = 0; i < 8; i++) {
+    //        const auto& subcell_sizes = cell.get_size_for_octant(i);
+    //        const auto& subcell_min = std::get<0>(subcell_sizes);
+    //        const auto& subcell_max = std::get<1>(subcell_sizes);
+
+    //        const auto subcell_position = (subcell_min + subcell_max) / 2;
+    //        auto* subcell_node = current_node->insert(subcell_position, Constants::uninitialized, my_rank);
+
+    //        const size_t larger_x = ((i & 1) == 0) ? 0 : 1;
+    //        const size_t larger_y = ((i & 2) == 0) ? 0 : 1;
+    //        const size_t larger_z = ((i & 4) == 0) ? 0 : 1;
+
+    //        nodes_to_process.emplace(subcell_node, (index3d * 2) + Vec3s{ larger_x, larger_y, larger_z });
+    //    }
+    //}
 }
 
 // Insert neuron into the tree

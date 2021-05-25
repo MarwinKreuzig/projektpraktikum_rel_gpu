@@ -56,13 +56,8 @@ std::vector<std::tuple<Vec3d, size_t>> generate_random_neurons(const Vec3d& min,
     return return_value;
 }
 
-std::vector<std::tuple<Vec3d, size_t>> extract_neurons(const Octree& octree) {
+std::vector<std::tuple<Vec3d, size_t>> extract_neurons(OctreeNode* root) {
     std::vector<std::tuple<Vec3d, size_t>> return_value;
-
-    const auto root = octree.get_root();
-    if (root == nullptr) {
-        return return_value;
-    }
 
     std::stack<OctreeNode*> octree_nodes{};
     octree_nodes.push(root);
@@ -95,6 +90,17 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons(const Octree& octree) {
     }
 
     return return_value;
+}
+
+std::vector<std::tuple<Vec3d, size_t>> extract_neurons(const Octree& octree) {
+    std::vector<std::tuple<Vec3d, size_t>> return_value;
+
+    const auto root = octree.get_root();
+    if (root == nullptr) {
+        return return_value;
+    }
+
+    return extract_neurons(root);
 }
 
 TEST(TestCell, testCellSize) {
@@ -732,6 +738,61 @@ TEST(TestOctreeNode, testOctreeNodeSetterCell) {
 
         EXPECT_FALSE(node.get_cell().get_neuron_position_inh().has_value());
         EXPECT_FALSE(cell.get_neuron_position_inh().has_value());
+    }
+}
+
+TEST(TestOctreeNode, testOctreeNodeInsert) {
+    setup();
+
+    const auto my_rank = MPIWrapper::get_my_rank();
+
+    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
+    std::uniform_int_distribution<size_t> uid(0, 10000);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+
+    for (auto it = 0; it < iterations; it++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size();
+        size_t level = uid_lvl(mt);
+
+        std::uniform_real_distribution<double> urd_x(min.get_x(), max.get_x());
+        std::uniform_real_distribution<double> urd_y(min.get_y(), max.get_y());
+        std::uniform_real_distribution<double> urd_z(min.get_z(), max.get_z());
+
+        Vec3d own_position{ urd_x(mt), urd_y(mt), urd_z(mt) };
+
+        OctreeNode node{};
+        node.set_level(level);
+        node.set_rank(my_rank);
+        node.set_cell_size(min, max);
+
+        node.set_cell_neuron_position(own_position);
+
+        size_t num_neurons = uid(mt);
+        size_t num_additional_ids = uid(mt);
+
+        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids);
+
+        for (const auto& [pos, id] : neurons_to_place) {
+            node.insert(pos, id, my_rank);
+        }
+
+        std::vector<std::tuple<Vec3d, size_t>> placed_neurons = extract_neurons(&node);
+
+        std::sort(neurons_to_place.begin(), neurons_to_place.end(), [](std::tuple<Vec3d, size_t> a, std::tuple<Vec3d, size_t> b) { return std::get<1>(a) > std::get<1>(b); });
+        std::sort(placed_neurons.begin(), placed_neurons.end(), [](std::tuple<Vec3d, size_t> a, std::tuple<Vec3d, size_t> b) { return std::get<1>(a) > std::get<1>(b); });
+
+        EXPECT_EQ(neurons_to_place.size(), placed_neurons.size());
+
+        for (auto i = 0; i < neurons_to_place.size(); i++) {
+            const auto& expected_neuron = neurons_to_place[i];
+            const auto& found_neuron = placed_neurons[i];
+
+            EXPECT_EQ(expected_neuron, found_neuron);
+        }
     }
 }
 
