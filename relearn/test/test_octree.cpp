@@ -10,6 +10,7 @@
 #include "../source/util/Vec3.h"
 
 #include <algorithm>
+#include <map>
 #include <numeric>
 #include <random>
 #include <stack>
@@ -101,6 +102,34 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons(const Octree& octree) {
     }
 
     return extract_neurons(root);
+}
+
+std::vector<std::tuple<Vec3d, size_t>> extract_unused_neurons(OctreeNode* root) {
+    std::vector<std::tuple<Vec3d, size_t>> return_value;
+
+    std::stack<OctreeNode*> octree_nodes{};
+    octree_nodes.push(root);
+
+    while (!octree_nodes.empty()) {
+        OctreeNode* current_node = octree_nodes.top();
+        octree_nodes.pop();
+
+        if (current_node->get_cell().get_neuron_id() == Constants::uninitialized) {
+            return_value.emplace_back(current_node->get_cell().get_neuron_position().value(), current_node->get_level());
+        }
+
+        if (current_node->is_parent()) {
+            const auto childs = current_node->get_children();
+            for (auto i = 0; i < 8; i++) {
+                const auto child = childs[i];
+                if (child != nullptr) {
+                    octree_nodes.push(child);
+                }
+            }
+        }
+    }
+
+    return return_value;
 }
 
 TEST(TestCell, testCellSize) {
@@ -823,6 +852,26 @@ TEST(TestOctree, testOctreeConstructor) {
             EXPECT_TRUE(octree.is_naive_method_used());
         } else {
             EXPECT_FALSE(octree.is_naive_method_used());
+        }
+
+        const auto& virtual_neurons = extract_unused_neurons(octree.get_root());
+        
+        std::map<size_t, size_t> level_to_count{};
+
+        for (const auto& [pos, id] : virtual_neurons) {
+            level_to_count[id]++;
+        }
+
+        EXPECT_EQ(level_to_count.size(), level_of_branch_nodes + 1);
+
+        for (auto level = 0; level <= level_of_branch_nodes; level++) {
+            auto expected_elements = 1;
+
+            for (auto it = 0; it < level; it++) {
+                expected_elements *= 8;
+            }
+
+            EXPECT_EQ(level_to_count[level], expected_elements);
         }
     }
 

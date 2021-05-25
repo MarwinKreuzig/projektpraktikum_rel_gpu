@@ -476,6 +476,15 @@ void Octree::construct_global_tree_part() {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
+    // for (auto level = 1; level < level_of_branch_nodes; level++) {
+    const auto num_cells_per_dimension = 1 << level_of_branch_nodes; // (2^level_of_branch_nodes)
+
+    const auto& cell_length = (xyz_max - xyz_min) / num_cells_per_dimension;
+
+    const auto cell_length_x = cell_length.get_x();
+    const auto cell_length_y = cell_length.get_y();
+    const auto cell_length_z = cell_length.get_z();
+
     OctreeNode* local_root = MPIWrapper::new_octree_node();
     RelearnException::check(local_root != nullptr, "local_root is nullptr");
 
@@ -483,33 +492,26 @@ void Octree::construct_global_tree_part() {
     local_root->set_cell_size(xyz_min, xyz_max);
     local_root->set_level(0);
     local_root->set_rank(my_rank);
-    local_root->set_cell_neuron_position((xyz_min + xyz_max) / 2);
+    local_root->set_cell_neuron_position(xyz_min + (cell_length / 2));
 
     root = local_root;
 
-    for (auto level = 1; level < level_of_branch_nodes; level++) {
-        const auto num_cells_per_dimension = 1 << level; // (2^level_of_branch_nodes)
-
-        const auto& cell_length = (xyz_max - xyz_min) / num_cells_per_dimension;
-
-        const auto cell_length_x = cell_length.get_x();
-        const auto cell_length_y = cell_length.get_y();
-        const auto cell_length_z = cell_length.get_z();
-
-        for (auto id_x = 0; id_x < num_cells_per_dimension; id_x++) {
-            for (auto id_y = 0; id_y < num_cells_per_dimension; id_y++) {
-                for (auto id_z = 0; id_z < num_cells_per_dimension; id_z++) {
-                    const Vec3d cell_offset{ id_x * cell_length_x, id_y * cell_length_y, id_z * cell_length_z };
-                    const auto& cell_min = xyz_min + cell_offset;
-                    const auto& cell_max = cell_min + cell_length;
-
-                    const auto& cell_position = cell_min + (cell_length / 2);
-
-                    root->insert(cell_position, Constants::uninitialized, my_rank);
+    for (auto id_x = 0; id_x < num_cells_per_dimension; id_x++) {
+        for (auto id_y = 0; id_y < num_cells_per_dimension; id_y++) {
+            for (auto id_z = 0; id_z < num_cells_per_dimension; id_z++) {
+                if (id_x == 0 && id_y == 0 && id_z == 0) {
+                    continue;
                 }
+
+                const Vec3d cell_offset{ id_x * cell_length_x, id_y * cell_length_y, id_z * cell_length_z };
+                const auto& cell_min = xyz_min + cell_offset;
+                const auto& cell_position = cell_min + (cell_length / 2);
+
+                root->insert(cell_position, Constants::uninitialized, my_rank);
             }
         }
     }
+    //}
 
     //std::stack<std::pair<OctreeNode*, Vec3s>> nodes_to_process;
     //nodes_to_process.emplace(new_node_to_insert, Vec3s{ 0, 0, 0 });

@@ -195,8 +195,6 @@ private:
         }
     };
 
-    Octree() = default;
-
 public:
     Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes);
     Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes, double acceptance_criterion, double sigma);
