@@ -153,11 +153,10 @@ std::vector<OctreeNode*> extract_branch_nodes(OctreeNode* root) {
         } else {
             return_value.emplace_back(current_node);
         }
-    }   
+    }
 
     return return_value;
 }
-
 
 TEST(TestCell, testCellSize) {
     setup();
@@ -882,7 +881,7 @@ TEST(TestOctree, testOctreeConstructor) {
         }
 
         const auto& virtual_neurons = extract_unused_neurons(octree.get_root());
-        
+
         std::map<size_t, size_t> level_to_count{};
 
         for (const auto& [pos, id] : virtual_neurons) {
@@ -937,10 +936,14 @@ TEST(TestOctree, testOctreeConstructor) {
         EXPECT_EQ(level_to_count.size(), level_of_branch_nodes + 1);
 
         for (auto level = 0; level <= level_of_branch_nodes; level++) {
-            auto expected_elements = 1;
+            size_t expected_elements = 1;
 
             for (auto it = 0; it < level; it++) {
                 expected_elements *= 8;
+            }
+
+            if (level == level_of_branch_nodes) {
+                EXPECT_EQ(octree.get_num_local_trees(), expected_elements);
             }
 
             EXPECT_EQ(level_to_count[level], expected_elements);
@@ -1339,7 +1342,7 @@ TEST(TestOctree, testOctreeLocalTrees) {
         const auto& cell_length = (max - min) / num_cells_per_dimension;
 
         const auto& branch_nodes_extracted = extract_branch_nodes(octree.get_root());
-        
+
         for (auto* branch_node : branch_nodes_extracted) {
             const auto branch_node_position = branch_node->get_cell().get_neuron_position().value();
             const auto branch_node_offset = branch_node_position - min;
@@ -1348,11 +1351,136 @@ TEST(TestOctree, testOctreeLocalTrees) {
             const auto y_pos = branch_node_offset.get_y() / cell_length.get_y();
             const auto z_pos = branch_node_offset.get_z() / cell_length.get_z();
 
-            Vec3s pos3d { static_cast<size_t>(std::floor(x_pos)), static_cast<size_t>(std::floor(y_pos)), static_cast<size_t>(std::floor(z_pos)) };
+            Vec3s pos3d{ static_cast<size_t>(std::floor(x_pos)), static_cast<size_t>(std::floor(y_pos)), static_cast<size_t>(std::floor(z_pos)) };
             const auto pos1d = sfc.map_3d_to_1d(pos3d);
 
             const auto local_tree = octree.get_local_root(pos1d);
             EXPECT_EQ(local_tree, branch_node);
-        }        
+        }
+    }
+}
+
+TEST(TestOctree, testOctreeInsertLocalTree) {
+    setup();
+
+    const auto my_rank = MPIWrapper::get_my_rank();
+
+    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
+    std::uniform_int_distribution<size_t> uid(0, 10000);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size();
+
+        size_t level_of_branch_nodes = uid_lvl(mt);
+        double theta = urd_theta(mt);
+        double sigma = urd_sigma(mt);
+
+        Octree octree(min, max, level_of_branch_nodes, theta, sigma);
+
+        size_t num_neurons = uid(mt);
+        size_t num_additional_ids = uid(mt);
+
+        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids);
+
+        for (const auto& [position, id] : neurons_to_place) {
+            octree.insert(position, id, my_rank);
+        }
+
+        const auto num_local_trees = octree.get_num_local_trees();
+
+        std::vector<OctreeNode*> nodes_to_refer_to(1000);
+        for (auto i = 0; i < 1000; i++) {
+            nodes_to_refer_to[i] = new OctreeNode;
+        }
+
+        std::vector<OctreeNode*> nodes_to_save_local_trees(num_local_trees);
+        std::vector<OctreeNode*> nodes_to_save_new_local_trees(num_local_trees);
+        for (auto i = 0; i < num_local_trees; i++) {
+            nodes_to_save_local_trees[i] = new OctreeNode;
+            nodes_to_save_new_local_trees[i] = new OctreeNode;
+        }
+
+        std::uniform_int_distribution uid_nodes(0, 2000);
+
+        for (auto i = 0; i < num_local_trees; i++) {
+            auto* local_tree = octree.get_local_root(i);
+
+            Vec3d cell_min, cell_max;
+            std::tie(cell_min, cell_max) = local_tree->get_cell().get_size();
+
+            std::uniform_real_distribution urd_x(cell_min.get_x(), cell_max.get_x());
+            std::uniform_real_distribution urd_y(cell_min.get_y(), cell_max.get_y());
+            std::uniform_real_distribution urd_z(cell_min.get_z(), cell_max.get_z());
+
+            Vec3d position{ urd_x(mt), urd_y(mt), urd_z(mt) };
+
+            OctreeNode node{};
+            node.set_cell_size(cell_min, cell_max);
+            node.set_cell_neuron_position(position);
+            node.set_rank(my_rank);
+            node.set_level(level_of_branch_nodes);
+
+            nodes_to_save_new_local_trees[i]->set_cell_size(cell_min, cell_max);
+            nodes_to_save_new_local_trees[i]->set_cell_neuron_position(position);
+            nodes_to_save_new_local_trees[i]->set_rank(my_rank);
+            nodes_to_save_new_local_trees[i]->set_level(level_of_branch_nodes);
+
+            for (auto j = 0; j < 8; j++) {
+                const auto id_nodes = uid_nodes(mt);
+                if (id_nodes < 1000) {
+                    node.set_child(nodes_to_refer_to[id_nodes], j);
+                    nodes_to_save_new_local_trees[i]->set_child(nodes_to_refer_to[id_nodes], j);
+                } else {
+                    node.set_child(nullptr, j);
+                    nodes_to_save_new_local_trees[i]->set_child(nullptr, j);
+                }
+            }
+
+            *nodes_to_save_local_trees[i] = *(octree.get_local_root(i));
+            octree.insert_local_tree(&node, i);
+        }
+
+        for (auto i = 0; i < num_local_trees; i++) {
+            auto* local_tree = octree.get_local_root(i);
+            auto* local_tree_saved = nodes_to_save_new_local_trees[i];
+
+            EXPECT_EQ(local_tree->get_children(), local_tree_saved->get_children());
+            EXPECT_EQ(local_tree->get_level(), local_tree_saved->get_level());
+            EXPECT_EQ(local_tree->get_rank(), local_tree_saved->get_rank());
+
+            EXPECT_EQ(local_tree->get_cell().get_neuron_id(), local_tree_saved->get_cell().get_neuron_id());
+            EXPECT_EQ(local_tree->get_cell().get_size(), local_tree_saved->get_cell().get_size());
+            EXPECT_EQ(local_tree->get_cell().get_neuron_position(), local_tree_saved->get_cell().get_neuron_position());
+        }
+
+        for (auto i = 0; i < num_local_trees; i++) {
+            auto* local_node = nodes_to_save_local_trees[i];
+
+            octree.insert_local_tree(local_node, i);
+
+            auto* local_tree = octree.get_local_root(i);
+
+            EXPECT_EQ(local_tree->get_children(), local_node->get_children());
+            EXPECT_EQ(local_tree->get_level(), local_node->get_level());
+            EXPECT_EQ(local_tree->get_rank(), local_node->get_rank());
+
+            EXPECT_EQ(local_tree->get_cell().get_neuron_id(), local_node->get_cell().get_neuron_id());
+            EXPECT_EQ(local_tree->get_cell().get_size(), local_node->get_cell().get_size());
+            EXPECT_EQ(local_tree->get_cell().get_neuron_position(), local_node->get_cell().get_neuron_position());
+        }
+
+        for (auto i = 0; i < 1000; i++) {
+            delete nodes_to_refer_to[i];
+        }
+
+        for (auto i = 0; i < num_local_trees; i++) {
+            delete nodes_to_save_local_trees[i];
+            delete nodes_to_save_new_local_trees[i];
+        }
     }
 }
