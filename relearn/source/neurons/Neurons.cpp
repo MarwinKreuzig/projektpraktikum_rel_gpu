@@ -227,8 +227,8 @@ Neurons::StatisticalMeasures Neurons::global_statistics(const std::vector<double
     const double avg = MPIWrapper::all_reduce(my_avg, MPIWrapper::ReduceFunction::sum, scope);
 
     /**
-		* Calc variance
-		*/
+	* Calc variance
+	*/
     double my_var = 0;
     for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
         my_var += (local_values[neuron_id] - avg) * (local_values[neuron_id] - avg);
@@ -1147,50 +1147,50 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 }
 
 void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
-    const StatisticalMeasures calcium_statistics = global_statistics(calcium, num_neurons, partition->get_total_num_neurons(), 0);
+    const auto total_num_neurons = partition->get_total_num_neurons();
 
-    const StatisticalMeasures activity_statistics = global_statistics(neuron_model->get_x(), num_neurons, partition->get_total_num_neurons(), 0);
+    const StatisticalMeasures& calcium_statistics = global_statistics(calcium, num_neurons, total_num_neurons, 0);
+    const StatisticalMeasures& activity_statistics = global_statistics(neuron_model->get_x(), num_neurons, total_num_neurons, 0);
+    const StatisticalMeasures& axons_statistics = global_statistics(axons->get_cnts(), num_neurons, total_num_neurons, 0);
 
-    // Output data
-    if (0 == MPIWrapper::get_my_rank()) {
-        std::stringstream ss;
-        const int cwidth = 16; // Column width
-
-        // Write headers to file if not already done so
-        if (Constants::logfile_update_step == step) {
-            ss << "# ALL NEURONS\n";
-            ss << std::left
-               << std::setw(cwidth) << "# step"
-               << std::setw(cwidth) << "C (avg)"
-               << std::setw(cwidth) << "C (min)"
-               << std::setw(cwidth) << "C (max)"
-               << std::setw(cwidth) << "C (var)"
-               << std::setw(cwidth) << "C (std_dev)"
-               << std::setw(cwidth) << "activity (avg)"
-               << std::setw(cwidth) << "activity (min)"
-               << std::setw(cwidth) << "activity (max)"
-               << std::setw(cwidth) << "activity (var)"
-               << std::setw(cwidth) << "activity (std_dev)"
-               << "\n";
-        }
-
-        // Write data at step "step"
-        ss << std::left
-           << std::setw(cwidth) << step
-           << std::setw(cwidth) << calcium_statistics.avg
-           << std::setw(cwidth) << calcium_statistics.min
-           << std::setw(cwidth) << calcium_statistics.max
-           << std::setw(cwidth) << calcium_statistics.var
-           << std::setw(cwidth) << calcium_statistics.std
-           << std::setw(cwidth) << activity_statistics.avg
-           << std::setw(cwidth) << activity_statistics.min
-           << std::setw(cwidth) << activity_statistics.max
-           << std::setw(cwidth) << activity_statistics.var
-           << std::setw(cwidth) << activity_statistics.std
-           << "\n";
-
-        LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, ss.str(), false);
+    if (0 != MPIWrapper::get_my_rank()) {
+        // All ranks must compute the statistics, but only one should print them
+        return;
     }
+
+    std::stringstream ss;
+    ss.precision(Constants::print_precision);
+
+    auto print_statistics = [&ss](const StatisticalMeasures& statistics) {
+        ss << "(" << std::fixed << statistics.avg
+           << ", " << std::fixed << statistics.min
+           << ", " << std::fixed << statistics.max
+           << ", " << std::fixed << statistics.var
+           << ", " << std::fixed << statistics.std
+           << ")";
+    };
+
+    // Write headers to file if not already done so
+    if (0 == step) {
+        ss << "# ALL NEURONS\n";
+        ss << std::left
+           << std::setw(12) << "# step"
+           << "(C (avg), C (min), C (max), C (var), C (std_dev))" << '\t'
+           << "(activity (avg), activity (min), activity (max), activity (var), activity (std_dev))" << '\t'
+           << "(axons (avg), axons (min), axons (max), axons (var), axons (std_dev))"
+           << "\n";
+    }
+
+    // Write data at step "step"
+    ss << std::left << std::setw(12) << step;
+    print_statistics(calcium_statistics);
+    ss << '\t';
+    print_statistics(activity_statistics);
+    ss << '\t';
+    print_statistics(axons_statistics);
+    ss << "\n";
+
+    LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, ss.str(), false);
 }
 
 void Neurons::print_network_graph_to_log_file() {

@@ -208,7 +208,7 @@ int main(int argc, char** argv) {
         if (static_cast<bool>(*opt_file_network)) {
             sim.load_neurons_from_file(file_positions, file_network);
         } else {
-            sim.load_neurons_from_file(file_positions);
+            sim.load_neurons_from_file(file_positions, {});
         }
     }
 

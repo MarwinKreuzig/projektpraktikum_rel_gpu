@@ -89,22 +89,22 @@ void Simulation::place_random_neurons(size_t num_neurons, double frac_exc) {
     initialize();
 }
 
-void Simulation::load_neurons_from_file(const std::string& path_to_positions) {
+void Simulation::load_neurons_from_file(const std::string& path_to_positions, const std::optional<std::string>& optional_path_to_connections) {
     auto local_ptr = std::make_unique<SubdomainFromFile>(path_to_positions);
     partition->set_total_num_neurons(local_ptr->get_total_num_neurons_in_file());
     neuron_to_subdomain_assignment = std::move(local_ptr);
     initialize();
-}
 
-void Simulation::load_neurons_from_file(const std::string& path_to_positions, const std::string& path_to_connections) {
-    load_neurons_from_file(path_to_positions);
+    if (optional_path_to_connections.has_value()) {
+        const auto& path_to_connections = optional_path_to_connections.value();
 
-    network_graph->add_edges_from_file(path_to_connections, path_to_positions, *partition);
-    LogFiles::print_message_rank("Network graph created", 0);
+        network_graph->add_edges_from_file(path_to_connections, path_to_positions, *partition);
+        LogFiles::print_message_rank("Network graph created", 0);
 
-    neurons->init_synaptic_elements();
-    neurons->debug_check_counts();
-    LogFiles::print_message_rank("Synaptic elements initialized \n", 0);
+        neurons->init_synaptic_elements();
+        neurons->debug_check_counts();
+        LogFiles::print_message_rank("Synaptic elements initialized \n", 0);
+    }
 
     neurons->print_neurons_overview_to_log_file_on_rank_0(0);
     neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0);

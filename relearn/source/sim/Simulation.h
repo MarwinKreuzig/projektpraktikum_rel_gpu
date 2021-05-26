@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -49,9 +50,7 @@ public:
 
     void place_random_neurons(size_t num_neurons, double frac_exc);
 
-    void load_neurons_from_file(const std::string& path_to_positions);
-
-    void load_neurons_from_file(const std::string& path_to_positions, const std::string& path_to_connections);
+    void load_neurons_from_file(const std::string& path_to_positions, const std::optional<std::string>& optional_path_to_connections);
 
     void simulate(size_t number_steps, size_t step_monitor);
 
