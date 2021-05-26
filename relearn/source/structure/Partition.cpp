@@ -201,6 +201,11 @@ void Partition::set_total_num_neurons(size_t total_num) noexcept {
     total_num_neurons = total_num;
 }
 
+void Partition::delete_subdomain_tree(size_t subdomain_id) const {
+    RelearnException::check(subdomain_id < my_num_subdomains, "Subdomain ID was too large");
+    MPIWrapper::delete_octree_node(subdomains[subdomain_id].local_octree_view);
+}
+
 void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain) {
     RelearnException::check(!neurons_loaded, "Neurons are already loaded, cannot load anymore");
 
@@ -258,16 +263,9 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
             current_subdomain.neuron_local_id_end);
 
         std::sort(current_subdomain.global_neuron_ids.begin(), current_subdomain.global_neuron_ids.end());
-
-        /**
-		* Set octree parameters.
-		* Only those that are necessary for
-		* inserting neurons into the tree
-		*/
-        current_subdomain.local_octree_view = new OctreeNode;
-        current_subdomain.local_octree_view->set_cell_size(current_subdomain.xyz_min, current_subdomain.xyz_max);
-        current_subdomain.local_octree_view->set_level(level_of_subdomain_trees);
     }
+
+    const auto my_rank = MPIWrapper::get_my_rank();
 
     neurons->init(my_num_neurons);
 
@@ -279,8 +277,9 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
     std::vector<SignalType> signal_types(my_num_neurons);
 
     for (size_t i = 0; i < my_num_subdomains; i++) {
-        const auto& subdomain_pos_min = subdomains[i].xyz_min;
-        const auto& subdomain_pos_max = subdomains[i].xyz_max;
+        auto& current_subdomain = subdomains[i];
+        const auto& subdomain_pos_min = current_subdomain.xyz_min;
+        const auto& subdomain_pos_max = current_subdomain.xyz_max;
 
         const auto subdomain_idx = i + my_subdomain_id_start;
 
@@ -296,8 +295,9 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
         std::vector<SignalType> vec_type = neurons_in_subdomain->neuron_types(subdomain_idx, total_num_subdomains,
             subdomain_pos_min, subdomain_pos_max);
 
-        size_t neuron_id = subdomains[i].neuron_local_id_start;
-        for (size_t j = 0; j < subdomains[i].num_neurons; j++) {
+        size_t neuron_id = current_subdomain.neuron_local_id_start;
+
+        for (size_t j = 0; j < current_subdomain.num_neurons; j++) {
             x_dims[neuron_id] = vec_pos[j].get_x();
             y_dims[neuron_id] = vec_pos[j].get_y();
             z_dims[neuron_id] = vec_pos[j].get_z();
@@ -307,9 +307,26 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
             // Mark neuron as DendriteType::EXCITATORY or DendriteType::INHIBITORY
             signal_types[neuron_id] = vec_type[j];
 
-            // Insert neuron into tree
-            const auto* const node = subdomains[i].local_octree_view->insert(vec_pos[j], neuron_id, MPIWrapper::get_my_rank());
-            RelearnException::check(node != nullptr, "node is nullptr");
+            if (j == 0) {
+                /**
+		        * Set octree parameters.
+		        * Only those that are necessary for
+		        * inserting neurons into the tree
+		        */
+                auto *local_root = MPIWrapper::new_octree_node();
+
+                local_root->set_cell_size(current_subdomain.xyz_min, current_subdomain.xyz_max);
+                local_root->set_level(level_of_subdomain_trees);
+                local_root->set_cell_neuron_id(neuron_id);
+                local_root->set_cell_neuron_position(vec_pos[j]);
+                local_root->set_rank(my_rank);
+
+                current_subdomain.local_octree_view = local_root;
+            } else {
+                // Insert neuron into tree
+                const auto* const node = current_subdomain.local_octree_view->insert(vec_pos[j], neuron_id, my_rank);
+                RelearnException::check(node != nullptr, "node is nullptr");
+            }
 
             neuron_id++;
         }
