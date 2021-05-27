@@ -343,7 +343,6 @@ void Graph::print_edge(FullEdge e, std::ostream& os) {
 
 static void average_clustering_coefficient(typename Graph::FullGraph& graph, const Weight<Graph::FullGraph>& weight) {
     size_t num_denominator_zero = 0;
-    size_t num_denominator_less_than_zero = 0;
     size_t num_denominator_greater_than_zero = 0;
     size_t num_bilateral_edges = 0;
     size_t num_vals = 0;
@@ -418,9 +417,7 @@ static void average_clustering_coefficient(typename Graph::FullGraph& graph, con
         } // for all j
         const size_t denominator_clustering_coefficient_vertex_i = 2 * (total_degree_vertex_i * (total_degree_vertex_i - 1) - 2 * num_bilateral_edges_vertex_i);
 
-        if (0 > denominator_clustering_coefficient_vertex_i) {
-            num_denominator_less_than_zero++;
-        } else if (0 == denominator_clustering_coefficient_vertex_i) {
+        if (0 == denominator_clustering_coefficient_vertex_i) {
             num_denominator_zero++;
         } else if (0 < denominator_clustering_coefficient_vertex_i) {
             num_denominator_greater_than_zero++;
@@ -444,7 +441,6 @@ static void average_clustering_coefficient(typename Graph::FullGraph& graph, con
 
 static void average_clustering_coefficient_unweighted_undirected(typename Graph::FullGraph& graph) {
     size_t num_denominator_zero = 0;
-    size_t num_denominator_less_than_zero = 0;
     size_t num_denominator_greater_than_zero = 0;
     size_t num_vals = 0;
     double avg = 0.0;
@@ -481,9 +477,7 @@ static void average_clustering_coefficient_unweighted_undirected(typename Graph:
         const size_t num_neighbors_of_vertex_i = neighbors_of_vertex_i.size();
         const size_t max_num_triangles_of_vertex_i = (num_neighbors_of_vertex_i * (num_neighbors_of_vertex_i - 1)) / 2;
 
-        if (0 > max_num_triangles_of_vertex_i) {
-            num_denominator_less_than_zero++;
-        } else if (0 == max_num_triangles_of_vertex_i) {
+        if (0 == max_num_triangles_of_vertex_i) {
             num_denominator_zero++;
         } else {
             num_denominator_greater_than_zero++;
