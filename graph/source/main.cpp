@@ -32,9 +32,9 @@ int main(int argc, char** argv) {
         const std::filesystem::path filename = p.filename();
         const std::string filename_str = filename.string();
 
-        if (filename_str.rfind("positions", 0) == std::string::npos) {
+        if (filename_str.rfind("positions") != std::string::npos) {
             position_paths.emplace_back(p);
-        } else if (filename_str.rfind("network", 0) == std::string::npos) {
+        } else if (filename_str.rfind("network") != std::string::npos) {
             edges_paths.emplace_back(p);
         }
     }
