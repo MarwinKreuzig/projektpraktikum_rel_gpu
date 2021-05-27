@@ -403,6 +403,18 @@ private:
 
     [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root) const;
 
+    template <typename T>
+    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::vector<T>& local_values, size_t num_local_values, size_t total_num_values, int root) const {
+        std::vector<double> converted_values;
+        converted_values.reserve(local_values.size());
+
+        for (const auto& value : local_values) {
+            converted_values.emplace_back(static_cast<double>(value));
+        }
+
+        return global_statistics(converted_values, num_local_values, total_num_values, root);
+    }
+
     [[nodiscard]] size_t delete_synapses();
 
     [[nodiscard]] std::pair<PendingDeletionsV, std::vector<size_t>> delete_synapses_find_synapses(
