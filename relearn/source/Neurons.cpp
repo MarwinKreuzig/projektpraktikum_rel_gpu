@@ -629,10 +629,81 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
     return synapse_creation_requests_outgoing;
 }
 
+ void Neurons::make_creation_request_for(
+     SignalType needed, 
+     MapSynapseCreationRequests* request,  
+    std::stack<OctreeNode*>* nodes_with_ax,
+    std::vector<OctreeNode*>* nodes_with_dend) {
+    
+    OctreeNode* current_node;
+
+    OctreeNode* target_node;
+    while (!nodes_with_ax->empty())
+    {
+        current_node = nodes_with_ax->top();
+        nodes_with_ax->pop();
+
+        /*
+        - check if node is single neuron
+        - set interaction list of current node when level 3
+        - calculate atractiveness
+        - do random experiment
+        - set interaction list
+        - push children to stack
+        */
+        if (!current_node->is_parent()) {
+            size_t source_id = current_node->get_cell().get_neuron_id();
+            size_t target_id = 0;
+            if (current_node->get_interactionlist_length() == 1) {
+                target_id = current_node->get_from_interactionlist(0)->get_cell().get_neuron_id();
+            } else {
+                std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(current_node,needed);
+                target_node = global_tree->do_random_experiment(current_node,&temp).value();
+                target_id = target_node->get_cell().get_neuron_id();
+            }
+            // add to creation request
+            (*request)[-1].append(source_id, target_id, needed);
+            current_node->reset_interactionlist();
+            continue;
+        }
+        // for nodes at level 2
+        if (current_node->get_level()==2)
+        {
+            for (size_t i = 0; i < nodes_with_dend->size(); i++)
+            {
+                if (nodes_with_dend->at(i) != current_node) 
+                current_node->add_to_interactionlist(nodes_with_dend->at(i));
+            }
+            
+        }
+
+        std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(current_node,needed);
+        RelearnException::check(global_tree->do_random_experiment(current_node, &temp).has_value(),"Random experiment gave no value back.");
+        target_node = global_tree->do_random_experiment(current_node, &temp).value();
+
+        for (size_t i = 0; i < 8; i++) {
+            OctreeNode* child_node = current_node->get_child(i);
+            if (child_node != nullptr && child_node->get_cell().get_neuron_num_axons_for(needed) > 0) {
+                for (int j = 0; j < 8; j++) {
+                    OctreeNode* child_target_node = target_node->get_child(j);
+                    if (child_target_node != nullptr && child_target_node->get_cell().get_neuron_num_dendrites_for(needed) > 0)
+                        child_node->add_to_interactionlist(child_target_node);
+                }
+                nodes_with_ax->push(child_node);   
+            }
+        }
+        current_node->reset_interactionlist();
+    }
+}
 MapSynapseCreationRequests Neurons::create_synapses_find_targets_FMM() {
-    MapSynapseCreationRequests synapse_creation_requests_outgoing;
+MapSynapseCreationRequests synapse_creation_requests_outgoing;
     GlobalTimers::timers.start(TimerRegion::FIND_TARGET_NEURONS);
 
+    const std::vector<double>& axons_cnts = axons.get_cnts();
+    const std::vector<unsigned int>& axons_connected_cnts = axons.get_connected_cnts();
+    const std::vector<SignalType>& axons_signal_types = axons.get_signal_types();
+
+    //init
     OctreeNode* root = global_tree->get_root();
     OctreeNode* temp_node;
 
@@ -668,61 +739,11 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets_FMM() {
             if (current_node->get_cell().get_neuron_num_dendrites_exc()>0) nodes_with_dend_ex.push_back(current_node);
         }
     }
-    
-    // calculate vor axons exitatory
-    OctreeNode* target_node;
-    while (!nodes_with_ax_ex.empty())
-    {
-        current_node = nodes_with_ax_ex.top();
-        nodes_with_ax_ex.pop();
 
-        /*
-        - check if node is single neuron
-        - set interaction list of current node when level 3
-        - calculate atractiveness
-        - do random experiment
-        - set interaction list
-        - push children to stack
-        */
-        if (!current_node->is_parent()) {
-            size_t source_id; //TODO get source ID
-            size_t target_id = 0;
-            if (current_node->get_interactionlist_length() == 1) {
-                target_id; //TODO get target ID
-            } else {
-                std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(current_node,SignalType::EXCITATORY);
-                target_node = global_tree->do_random_experiment(current_node,&temp).value();
-                target_id; //TODO get target ID
-            }
-            //TODO add to creation request
-            continue;
-        }
-        if (current_node->get_level()==2)
-        {
-            for (size_t i = 0; i < nodes_with_dend_ex.size(); i++)
-            {
-                if (nodes_with_dend_ex[i] != current_node) 
-                current_node->add_to_interactionlist(nodes_with_dend_ex[i]);
-            }
-            
-        }
-        std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(current_node,SignalType::EXCITATORY);
-        target_node = global_tree->do_random_experiment(current_node, &temp).value();
 
-        for (size_t i = 0; i < 8; i++) {
-            child_node = current_node->get_child(i);
-            if (child_node != nullptr && child_node->get_cell().get_neuron_num_axons_exc() > 0) {
-                for (int j = 0; j < 8; j++) {
-                    OctreeNode* child_target_node = target_node->get_child(j);
-                    if (child_target_node != nullptr && child_target_node->get_cell().get_neuron_num_dendrites_exc() > 0)
-                        child_node->add_to_interactionlist(child_target_node);
-                }
-                nodes_with_ax_ex.push(child_node);   
-            }
-        }
-    }
-    
 
+    make_creation_request_for(SignalType::EXCITATORY, &synapse_creation_requests_outgoing, &nodes_with_ax_ex, &nodes_with_dend_ex);
+    make_creation_request_for(SignalType::INHIBITORY, &synapse_creation_requests_outgoing, &nodes_with_ax_in, &nodes_with_dend_in);
 
     GlobalTimers::timers.stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
 
@@ -732,6 +753,7 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets_FMM() {
     GlobalTimers::timers.stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
     return synapse_creation_requests_outgoing;
+
 }
 
 MapSynapseCreationRequests Neurons::create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing) {

@@ -455,22 +455,12 @@ double Octree::calc_attractiveness_to_connect(
 }
 
 std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode* source, SignalType dendrite_type_needed) {
-
-    //TODO taylor reset
-    //TODO if source is a single neuron
-    //TODO if target is a single neuron
     
     // calculate vacant number of neurons in souce box
     unsigned int source_num = (*source).get_cell().get_neuron_num_axons_for(dendrite_type_needed);
     //center of source box
-    Vec3d center_of_source_box;
-    if (dendrite_type_needed == SignalType::EXCITATORY) {
-        RelearnException::check(source->get_cell().get_neuron_position_axons_exc().has_value(), "Source Box has no center!");
-        center_of_source_box = source->get_cell().get_neuron_position_axons_exc().value();
-    } else {
-        RelearnException::check(source->get_cell().get_neuron_position_axons_inh().has_value(), "Source Box has no center!");
-        center_of_source_box = source->get_cell().get_neuron_position_axons_inh().value();
-    }
+    RelearnException::check(source->get_cell().get_neuron_axon_position_for(dendrite_type_needed).has_value(), "Source Box has no center!");
+    Vec3d center_of_source_box = source->get_cell().get_neuron_axon_position_for(dendrite_type_needed).value();
 
     //find out the length of the interactionlist
     size_t target_list_length = source->get_interactionlist_length();
@@ -478,13 +468,12 @@ std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode* sourc
     //Initialize return value to 0
     std::vector<double> result(target_list_length, 0);
 
-    //TODO: fill source list
-    std::vector<Vec3d> source_neurons_pos;
-    source_neurons_pos.reserve(source_num);
+    //fill source list
+    std::vector<Vec3d>* source_neurons_pos = source->get_axon_pos_from_node_for(dendrite_type_needed);
 
     bool hermite_set = false;
     std::vector<double> hermite_coefficients;
-    hermite_coefficients.reserve(64);
+    hermite_coefficients.reserve(pow(Constants::p,3));
 
     //when there are not enough neurons in the source box ...
     if (source_num <= Constants::max_neurons_in_source) {
@@ -492,21 +481,20 @@ std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode* sourc
 
             // calculate vacant number of neurons in target box
             int target_num = (source->get_from_interactionlist(i))->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
-            //TODO: fill target list
-            std::vector<Vec3d> target_neurons_pos;
-            target_neurons_pos.reserve(target_num);
+            //fill target list
+            std::vector<Vec3d>* target_neurons_pos = source->get_from_interactionlist(i)->get_dendrite_pos_from_node_for(dendrite_type_needed);
 
             //... and there are not enough neurons in the target
             if (target_num <= Constants::max_neurons_in_target) {
                 //calculate via direct Gauss
-                result[i] = Functions::calc_direct_gauss(&source_neurons_pos,&target_neurons_pos);
+                result[i] = Functions::calc_direct_gauss(source_neurons_pos,target_neurons_pos);
             } else {
                 //... and there are enough neurons in target
                 //source to Taylor-Series about center of box C and direkt evaluation
-                RelearnException::check(source->get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).has_value(), "Target Box has no center!");
+                RelearnException::check(source->get_from_interactionlist(i)->get_cell().get_neuron_dendrite_position_for(dendrite_type_needed).has_value(), "Target Box has no center!");
                 Vec3d center_of_target_box = source->get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).value();
                 
-                result[i] = Functions::calc_taylor_expansion(&source_neurons_pos, & target_neurons_pos, &center_of_target_box);
+                result[i] = Functions::calc_taylor_expansion(source_neurons_pos, target_neurons_pos, &center_of_target_box);
             }
         }
 
@@ -514,19 +502,19 @@ std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode* sourc
     { //Hermite Expansion about center of source box
         if (hermite_set == false) {
             //calculate Hermite coefficients
-            Functions::calc_hermite_coefficients(&center_of_source_box, &source_neurons_pos, &hermite_coefficients);
+            Functions::calc_hermite_coefficients(&center_of_source_box, source_neurons_pos, &hermite_coefficients);
         }
         for (size_t i = 0; i < target_list_length; i++) {
 
             // get vacant number of neurons in target box
             int target_num = (source->get_from_interactionlist(i))->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
-            //TODO: fill target list
-            std::vector<Vec3d> target_neurons_pos;
+            //fill target list
+            std::vector<Vec3d>* target_neurons_pos = source->get_from_interactionlist(i)->get_dendrite_pos_from_node_for(dendrite_type_needed);
 
             //... and there are not enough neurons in the target
             if (target_num <= Constants::max_neurons_in_target) {
                 //evaluate Hermite expansion at each target
-                //result[i] = Functions::calc_hermite(&target_neurons_pos, hermite_coefficients, &center_of_source_box);
+                result[i] = Functions::calc_hermite(target_neurons_pos, &hermite_coefficients, &center_of_source_box);
                 
             } else {
                 //TODO: find good solution
@@ -860,11 +848,25 @@ void Octree::update_local_trees(const SynapticElements& dendrites_exc, const Syn
     const auto& de_in_cnt = dendrites_inh.get_cnts();
     const auto& de_in_conn_cnt = dendrites_inh.get_connected_cnts();
 
-    //TODO
-    const auto& ax_ex_cnt = axons.get_cnts();
-    const auto& ax_ex_conn_cnt = axons.get_connected_cnts();
-    const auto& ax_in_cnt = axons.get_cnts();
-    const auto& ax_in_conn_cnt = axons.get_connected_cnts();
+    const auto& axons_cnt = axons.get_cnts();
+    const auto& axons_conn_cnt = axons.get_connected_cnts();
+
+    std::vector<double> ax_ex_cnt;
+    std::vector<std::seed_seq::result_type> ax_ex_conn_cnt;
+    std::vector<double> ax_in_cnt;
+    std::vector<std::seed_seq::result_type> ax_in_conn_cnt;
+
+    for(int i = 0; i < axons_cnt.size(); i++){
+        if (axons.get_signal_type(i) == SignalType::EXCITATORY)
+        {
+            ax_ex_cnt.push_back(axons_cnt.at(i));
+            ax_ex_conn_cnt.push_back(axons_conn_cnt.at(i));
+        }else{
+            ax_in_cnt.push_back(axons_cnt.at(i));
+            ax_in_conn_cnt.push_back(axons_conn_cnt.at(i));
+        }
+    }
+    
 
     for (auto* local_tree : local_trees) {
         const FunctorUpdateNode update_node(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt, ax_ex_cnt, ax_ex_conn_cnt, ax_in_cnt, ax_in_conn_cnt, num_neurons);

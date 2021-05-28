@@ -148,4 +148,13 @@ public:
     size_t get_interactionlist_length() {
         return interaction_list.size();
     }
+
+    void reset_interactionlist() {
+        interaction_list.clear();
+    }
+
+
+    std::vector<Vec3d>* get_dendrite_pos_from_node_for(SignalType needed);
+
+    std::vector<Vec3d>* get_axon_pos_from_node_for(SignalType needed);
 };

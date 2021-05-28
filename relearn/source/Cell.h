@@ -94,6 +94,10 @@ public:
 
     [[nodiscard]] std::optional<Vec3d> get_neuron_position_for(SignalType dendrite_type) const;
 
+    [[nodiscard]] std::optional<Vec3d> get_neuron_dendrite_position_for(SignalType dendrite_type) const;
+
+    [[nodiscard]] std::optional<Vec3d> get_neuron_axon_position_for(SignalType dendrite_type) const;
+
     void set_neuron_num_dendrites_exc(unsigned int num_dendrites) noexcept {
         dendrites_ex.num_dendrites = num_dendrites;
     }

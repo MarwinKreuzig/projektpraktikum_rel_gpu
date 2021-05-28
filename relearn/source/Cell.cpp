@@ -14,22 +14,36 @@
 #include <sstream>
 
 [[nodiscard]] std::optional<Vec3d> Cell::get_neuron_position() const {
-    const bool ex_valid = dendrites_ex.xyz_pos.has_value();
-    const bool in_valid = dendrites_in.xyz_pos.has_value();
+    const bool dend_ex_valid = dendrites_ex.xyz_pos.has_value();
+    const bool dend_in_valid = dendrites_in.xyz_pos.has_value();
+    const bool ax_in_valid = axons_in.xyz_pos.has_value();
+    const bool ax_ex_valid = axons_ex.xyz_pos.has_value();
+    
+    
 
-    if (!ex_valid && !in_valid) {
+    if (!dend_ex_valid && !dend_in_valid && !ax_ex_valid && ax_in_valid) {
         return {};
     }
 
-    if (ex_valid && in_valid) {
-        const auto& pos_ex = dendrites_ex.xyz_pos.value();
-        const auto& pos_in = dendrites_in.xyz_pos.value();
+    if (dend_ex_valid && dend_in_valid && ax_in_valid && ax_ex_valid) {
+        const auto& dend_pos_ex = dendrites_ex.xyz_pos.value();
+        const auto& dend_pos_in = dendrites_in.xyz_pos.value();
+        const auto& ax_pos_ex = axons_ex.xyz_pos.value();
+        const auto& ax_pos_in = axons_in.xyz_pos.value();
 
-        const auto diff = pos_ex - pos_in;
-        const bool exc_position_equals_inh_position = diff.get_x() == 0.0 && diff.get_y() == 0.0 && diff.get_z() == 0.0;
-        RelearnException::check(exc_position_equals_inh_position, "In get neuron position, positions are unequal");
+        const auto dend_diff = dend_pos_ex - dend_pos_in;
+        const bool dend_exc_position_equals_dend_inh_position = dend_diff.get_x() == 0.0 && dend_diff.get_y() == 0.0 && dend_diff.get_z() == 0.0;
+        RelearnException::check(dend_exc_position_equals_dend_inh_position, "In get neuron position, dendrite positions are unequal");
+        
+        const auto ax_diff = ax_pos_ex - ax_pos_in;
+        const bool ax_exc_position_equals_ax_inh_position = ax_diff.get_x() == 0.0 && ax_diff.get_y() == 0.0 && ax_diff.get_z() == 0.0;
+        RelearnException::check(ax_exc_position_equals_ax_inh_position, "In get neuron position, axon positions are unequal");
 
-        return pos_ex;
+        const auto diff = ax_pos_ex - dend_pos_ex;
+        const bool ax_position_equals_dend_position = diff.get_x() == 0.0 && diff.get_y() == 0.0 && diff.get_z() == 0.0;
+        RelearnException::check(ax_position_equals_dend_position, "In get neuron position, axon positions are unequal to dendrite positions");
+
+        return dend_pos_ex;
     }
 
     RelearnException::fail("In Cell, one pos was valid and one was not");
@@ -43,6 +57,22 @@
     }
 
     return dendrites_in.xyz_pos;
+}
+
+[[nodiscard]] std::optional<Vec3d> Cell::get_neuron_dendrite_position_for(SignalType dendrite_type) const {
+    if (dendrite_type == SignalType::EXCITATORY) {
+        return dendrites_ex.xyz_pos;
+    }
+
+    return dendrites_in.xyz_pos;
+}
+
+[[nodiscard]] std::optional<Vec3d> Cell::get_neuron_axon_position_for(SignalType dendrite_type) const {
+    if (dendrite_type == SignalType::EXCITATORY) {
+        return axons_ex.xyz_pos;
+    }
+
+    return axons_in.xyz_pos;
 }
 
 [[nodiscard]] unsigned char Cell::get_octant_for_position(const Vec3d& pos) const {

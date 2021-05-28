@@ -473,6 +473,10 @@ private:
 
     MapSynapseCreationRequests create_synapses_find_targets();
     MapSynapseCreationRequests create_synapses_find_targets_FMM();
+    void make_creation_request_for(SignalType needed, 
+     MapSynapseCreationRequests* request,  
+    std::stack<OctreeNode*>* nodes_with_ax,
+    std::vector<OctreeNode*>* nodes_with_dend) ;
 
     MapSynapseCreationRequests create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 

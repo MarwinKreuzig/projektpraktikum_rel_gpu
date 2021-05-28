@@ -14,6 +14,8 @@
 
 #include <sstream>
 
+#include <stack>
+
 void OctreeNode::print() const {
     std::stringstream ss;
 
@@ -35,3 +37,72 @@ void OctreeNode::print() const {
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
 }
+std::vector<Vec3d>* OctreeNode::get_dendrite_pos_from_node_for(SignalType needed) {
+    int num_of_ports = 0;
+    std::vector<Vec3d> result;
+    std::stack<OctreeNode*> stack;
+    stack.push(this);
+    OctreeNode* current_node;
+    OctreeNode* children_node;
+
+    while (!stack.empty()) {
+        current_node = stack.top();
+        stack.pop();
+        if (!current_node->is_parent()) {
+            num_of_ports = current_node->get_cell().get_neuron_num_dendrites_for(needed);
+            if (num_of_ports > 0) {
+                for(int i = 0; i<num_of_ports; i++){
+                    RelearnException::check(current_node->get_cell().get_neuron_position().has_value(), "get_dendrite_pos_from_node_for: neuron had no dend position");
+                    result.push_back(current_node->get_cell().get_neuron_dendrite_position_for(needed).value());
+                }
+
+            }
+        }
+        else{
+            for(int i = 0; i<8;i++){
+                children_node = current_node->get_child(i);
+                if (children_node->get_cell().get_neuron_num_dendrites_for(needed)>0)
+                {
+                    stack.push(children_node);
+                }
+            }
+        }
+    }
+    return &result;
+}
+
+std::vector<Vec3d>* OctreeNode::get_axon_pos_from_node_for(SignalType needed) {
+    int num_of_ports = 0;
+    std::vector<Vec3d> result;
+    std::stack<OctreeNode*> stack;
+    stack.push(this);
+    OctreeNode* current_node;
+    OctreeNode* children_node;
+
+    while (!stack.empty()) {
+        current_node = stack.top();
+        stack.pop();
+        if (!current_node->is_parent()) {
+            num_of_ports = current_node->get_cell().get_neuron_num_axons_for(needed);
+            if (num_of_ports > 0) {
+                for(int i = 0; i<num_of_ports; i++){
+                    RelearnException::check(current_node->get_cell().get_neuron_position().has_value(), "neuron had no dend_ex position");
+                    result.push_back(current_node->get_cell().get_neuron_axon_position_for(needed).value());
+                }
+
+            }
+        }
+        else{
+            for(int i = 0; i<8;i++){
+                children_node = current_node->get_child(i);
+                if (children_node->get_cell().get_neuron_num_axons_for(needed)>0)
+                {
+                    stack.push(children_node);
+                }
+            }
+        }
+    }
+    return &result;
+}
+
+
