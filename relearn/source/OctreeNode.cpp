@@ -37,16 +37,15 @@ void OctreeNode::print() const {
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
 }
-std::vector<Vec3d>* OctreeNode::get_dendrite_pos_from_node_for(SignalType needed) {
+
+const std::vector<Vec3d> OctreeNode::get_dendrite_pos_from_node_for(SignalType needed) const{
     int num_of_ports = 0;
     std::vector<Vec3d> result;
-    std::stack<OctreeNode*> stack;
+    std::stack<const OctreeNode*> stack;
     stack.push(this);
-    OctreeNode* current_node;
-    OctreeNode* children_node;
 
     while (!stack.empty()) {
-        current_node = stack.top();
+        const OctreeNode* current_node = stack.top();
         stack.pop();
         if (!current_node->is_parent()) {
             num_of_ports = current_node->get_cell().get_neuron_num_dendrites_for(needed);
@@ -60,7 +59,7 @@ std::vector<Vec3d>* OctreeNode::get_dendrite_pos_from_node_for(SignalType needed
         }
         else{
             for(int i = 0; i<8;i++){
-                children_node = current_node->get_child(i);
+                const OctreeNode* children_node = current_node->get_child(i);
                 if (children_node->get_cell().get_neuron_num_dendrites_for(needed)>0)
                 {
                     stack.push(children_node);
@@ -68,19 +67,17 @@ std::vector<Vec3d>* OctreeNode::get_dendrite_pos_from_node_for(SignalType needed
             }
         }
     }
-    return &result;
+    return result;
 }
 
-std::vector<Vec3d>* OctreeNode::get_axon_pos_from_node_for(SignalType needed) {
+const std::vector<Vec3d> OctreeNode::get_axon_pos_from_node_for(SignalType needed) const {
     int num_of_ports = 0;
     std::vector<Vec3d> result;
-    std::stack<OctreeNode*> stack;
+    std::stack<const OctreeNode*> stack;
     stack.push(this);
-    OctreeNode* current_node;
-    OctreeNode* children_node;
 
     while (!stack.empty()) {
-        current_node = stack.top();
+        const OctreeNode* current_node = stack.top();
         stack.pop();
         if (!current_node->is_parent()) {
             num_of_ports = current_node->get_cell().get_neuron_num_axons_for(needed);
@@ -94,7 +91,7 @@ std::vector<Vec3d>* OctreeNode::get_axon_pos_from_node_for(SignalType needed) {
         }
         else{
             for(int i = 0; i<8;i++){
-                children_node = current_node->get_child(i);
+                const OctreeNode* children_node = current_node->get_child(i);
                 if (children_node->get_cell().get_neuron_num_axons_for(needed)>0)
                 {
                     stack.push(children_node);
@@ -102,7 +99,5 @@ std::vector<Vec3d>* OctreeNode::get_axon_pos_from_node_for(SignalType needed) {
             }
         }
     }
-    return &result;
+    return result;
 }
-
-

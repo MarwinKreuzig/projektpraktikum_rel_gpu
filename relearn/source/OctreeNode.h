@@ -138,14 +138,14 @@ public:
         interaction_list.push_back(x);
     }
 
-    OctreeNode* get_from_interactionlist(unsigned int x) {
+    OctreeNode* get_from_interactionlist(unsigned int x) const{
         if (x >= interaction_list.size()){
             return nullptr;
         }
         return interaction_list.at(x);
     }
 
-    size_t get_interactionlist_length() {
+    size_t get_interactionlist_length() const{
         return interaction_list.size();
     }
 
@@ -154,7 +154,7 @@ public:
     }
 
 
-    std::vector<Vec3d>* get_dendrite_pos_from_node_for(SignalType needed);
+   const std::vector<Vec3d> get_dendrite_pos_from_node_for(SignalType needed) const;
 
-    std::vector<Vec3d>* get_axon_pos_from_node_for(SignalType needed);
+   const std::vector<Vec3d> get_axon_pos_from_node_for(SignalType needed) const;
 };

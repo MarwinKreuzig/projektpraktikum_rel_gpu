@@ -72,14 +72,14 @@ TEST(TestFastGauss, test_calc_attractiveness) {
     Vec3d target_center = { 204.6, 206.4, 202.8 };
 
 
-    double gauss_res = Functions::calc_direct_gauss(&test_source, &test_target);
-    double taylor_res = Functions::calc_taylor_expansion(&test_source,&test_target, &target_center);
+    double gauss_res = Functions::calc_direct_gauss(test_source, test_target);
+    double taylor_res = Functions::calc_taylor_expansion(test_source,test_target, target_center);
     printf("Gauss result = %f \n", gauss_res);
     printf("Taylor result = %f \n", taylor_res);
     std::vector<double> hermite_coef;
-    hermite_coef.reserve(64);
-    Functions::calc_hermite_coefficients(&source_center, &test_source, &hermite_coef);
-    double hermite_res = Functions::calc_hermite(&test_target, &hermite_coef, &source_center);
+    hermite_coef.reserve(pow(Constants::p,3));
+    Functions::calc_hermite_coefficients(source_center, test_source, hermite_coef);
+    double hermite_res = Functions::calc_hermite(test_target, hermite_coef, source_center);
     printf("Hermite result = %f \n", hermite_res);
 
     EXPECT_NEAR(gauss_res, taylor_res, 0.01);
@@ -105,14 +105,14 @@ TEST(TestFastGauss, test_multiIndex) {
 Multiindex m = Multiindex();
 EXPECT_EQ(m.get_number_of_indices(), 64);
 
-std::array<int,3>* temp = m.get_indice_at(1);
-EXPECT_EQ(temp->at(0),0);
-EXPECT_EQ(temp->at(1),0);
-EXPECT_EQ(temp->at(2),1);
+const std::array<unsigned int,3> temp = m.get_index(1);
+EXPECT_EQ(temp.at(0),0);
+EXPECT_EQ(temp.at(1),0);
+EXPECT_EQ(temp.at(2),1);
 
-temp = m.get_indice_at(63);
-EXPECT_EQ(temp->at(0),3);
-EXPECT_EQ(temp->at(1),3);
-EXPECT_EQ(temp->at(2),3);
+const std::array<unsigned int,3> temp1 = m.get_index(63);
+EXPECT_EQ(temp1.at(0),3);
+EXPECT_EQ(temp1.at(1),3);
+EXPECT_EQ(temp1.at(2),3);
 
 }
