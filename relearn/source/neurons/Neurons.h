@@ -354,6 +354,10 @@ public:
         return *dendrites_inh;
     }
 
+    [[nodiscard]] const std::vector<char>& get_disable_flags() const noexcept {
+        return disable_flags;
+    }
+
     void init_synaptic_elements();
 
     /**

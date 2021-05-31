@@ -26,10 +26,6 @@ PoissonModel::PoissonModel(double k, double tau_C, double beta, unsigned int h, 
     return std::make_unique<PoissonModel>(get_k(), get_tau_C(), get_beta(), get_h(), get_base_background_activity(), get_background_activity_mean(), get_background_activity_stddev(), x_0, tau_x, refrac_time);
 }
 
-[[nodiscard]] double PoissonModel::get_secondary_variable(const size_t i) const noexcept {
-    return refrac[i];
-}
-
 [[nodiscard]] std::vector<ModelParameter> PoissonModel::get_parameter() {
     auto res{ NeuronModels::get_parameter() };
     res.emplace_back(Parameter<double>{ "x_0", x_0, PoissonModel::min_x_0, PoissonModel::max_x_0 });

@@ -28,10 +28,6 @@ IzhikevichModel::IzhikevichModel(double k, double tau_C, double beta, unsigned i
     return std::make_unique<IzhikevichModel>(get_k(), get_tau_C(), get_beta(), get_h(), get_base_background_activity(), get_background_activity_mean(), get_background_activity_stddev(), a, b, c, d, V_spike, k1, k2, k3);
 }
 
-[[nodiscard]] double IzhikevichModel::get_secondary_variable(const size_t i) const noexcept {
-    return u[i];
-}
-
 [[nodiscard]] std::vector<ModelParameter> IzhikevichModel::get_parameter() {
     auto res{ NeuronModels::get_parameter() };
     res.emplace_back(Parameter<double>{ "a", a, IzhikevichModel::min_a, IzhikevichModel::max_a });

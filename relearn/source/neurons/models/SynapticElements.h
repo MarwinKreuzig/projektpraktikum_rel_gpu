@@ -124,6 +124,15 @@ public:
         return delta_cnts;
     }
 
+    [[nodiscard]] std::vector<double> get_vacant_cnts() const {
+        std::vector<double> vacant_cnts = cnts;
+        for (auto i = 0; i < cnts.size(); i++) {
+            vacant_cnts[i] -= connected_cnts[i];
+        }
+
+        return vacant_cnts;
+    }
+
     [[nodiscard]] const std::vector<SignalType>& get_signal_types() const noexcept {
         return signal_types;
     }
@@ -185,6 +194,11 @@ public:
     [[nodiscard]] unsigned int get_connected_cnt(size_t neuron_id) const {
         RelearnException::check(neuron_id < connected_cnts.size(), "Synaptic elements, get_connected_cnt out of bounds");
         return connected_cnts[neuron_id];
+    }
+
+    [[nodiscard]] unsigned int get_vacant_cnt(size_t neuron_id) const {
+        RelearnException::check(neuron_id < connected_cnts.size() && neuron_id < cnts.size(), "Synaptic elements, get_vacant_cnt out of bounds");
+        return cnts[neuron_id] - connected_cnts[neuron_id];
     }
 
     [[nodiscard]] double get_delta_cnt(size_t neuron_id) const {

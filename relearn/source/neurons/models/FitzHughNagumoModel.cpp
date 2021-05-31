@@ -23,10 +23,6 @@ std::unique_ptr<NeuronModels> FitzHughNagumoModel::clone() const {
     return std::make_unique<FitzHughNagumoModel>(get_k(), get_tau_C(), get_beta(), get_h(), get_base_background_activity(), get_background_activity_mean(), get_background_activity_stddev(), a, b, phi);
 }
 
-double FitzHughNagumoModel::get_secondary_variable(const size_t i) const noexcept {
-    return w[i];
-}
-
 std::vector<ModelParameter> FitzHughNagumoModel::get_parameter() {
     auto res{ NeuronModels::get_parameter() };
     res.emplace_back(Parameter<double>{ "a", a, FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a });

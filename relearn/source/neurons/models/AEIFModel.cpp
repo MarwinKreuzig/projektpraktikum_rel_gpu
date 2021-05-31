@@ -31,10 +31,6 @@ AEIFModel::AEIFModel(double k, double tau_C, double beta, unsigned int h, double
     return std::make_unique<AEIFModel>(get_k(), get_tau_C(), get_beta(), get_h(), get_base_background_activity(), get_background_activity_mean(), get_background_activity_stddev(), C, g_L, E_L, V_T, d_T, tau_w, a, b, V_peak);
 }
 
-[[nodiscard]] double AEIFModel::get_secondary_variable(const size_t i) const noexcept {
-    return w[i];
-}
-
 [[nodiscard]] std::vector<ModelParameter> AEIFModel::get_parameter() {
     auto res{ NeuronModels::get_parameter() };
     res.emplace_back(Parameter<double>{ "C", C, AEIFModel::min_C, AEIFModel::max_C });

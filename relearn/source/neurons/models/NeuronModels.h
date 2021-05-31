@@ -108,7 +108,8 @@ public:
         return beta;
     }
 
-    [[nodiscard]] bool get_fired(const size_t i) const noexcept {
+    [[nodiscard]] bool get_fired(const size_t i) const {
+        RelearnException::check(i < my_num_neurons, "In NeuronModels::get_fired, id is too large");
         return fired[i];
     }
 
@@ -116,7 +117,8 @@ public:
         return fired;
     }
 
-    [[nodiscard]] double get_x(const size_t i) const noexcept {
+    [[nodiscard]] double get_x(const size_t i) const {
+        RelearnException::check(i < my_num_neurons, "In NeuronModels::get_x, id is too large");
         return x[i];
     }
 
@@ -136,7 +138,28 @@ public:
         return h;
     }
 
-    [[nodiscard]] virtual double get_secondary_variable(size_t i) const noexcept = 0;
+    [[nodiscard]] double get_base_background_activity() const noexcept {
+        return base_background_activity;
+    }
+
+    [[nodiscard]] double get_background_activity_mean() const noexcept {
+        return background_activity_mean;
+    }
+
+    [[nodiscard]] double get_background_activity_stddev() const noexcept {
+        return background_activity_stddev;
+    }
+
+    [[nodiscard]] double get_I_syn(size_t i) const {
+        RelearnException::check(i < my_num_neurons, "In NeuronModels::get_I_syn, id is too large");
+        return I_syn[i];
+    }
+
+    [[nodiscard]] size_t get_num_neurons() const noexcept {
+        return my_num_neurons;
+    }
+
+    [[nodiscard]] virtual double get_secondary_variable(size_t i) const = 0;
 
     /* Performs one iteration step of update in electrical activity */
     void update_electrical_activity(const NetworkGraph& network_graph, const std::vector<char>& disable_flags);
@@ -173,42 +196,6 @@ public:
         }
     }
 
-protected:
-    virtual void update_electrical_activity_serial_initialize(const std::vector<char>& disable_flags) {
-    }
-
-    virtual void update_activity(size_t i) = 0;
-
-    virtual void init_neurons(size_t start_id, size_t end_id) = 0;
-
-    [[nodiscard]] double get_base_background_activity() const noexcept {
-        return base_background_activity;
-    }
-
-    [[nodiscard]] double get_background_activity_mean() const noexcept {
-        return background_activity_mean;
-    }
-
-    [[nodiscard]] double get_background_activity_stddev() const noexcept {
-        return background_activity_stddev;
-    }
-
-    [[nodiscard]] double get_I_syn(size_t i) const noexcept {
-        return I_syn[i];
-    }
-
-    [[nodiscard]] size_t get_num_neurons() const noexcept {
-        return my_num_neurons;
-    }
-
-    void set_x(size_t i, double new_value) noexcept {
-        x[i] = new_value;
-    }
-
-    void set_fired(size_t i, bool new_value) noexcept {
-        fired[i] = new_value;
-    }
-
     static constexpr double default_k{ 0.03 };
     static constexpr double default_tau_C{ 10000 }; //5000;   //very old 60.0;
     static constexpr double default_beta{ 0.001 }; //very old 0.05;
@@ -235,6 +222,22 @@ protected:
     static constexpr double max_base_background_activity{ 10000.0 };
     static constexpr double max_background_activity_mean{ 10000.0 };
     static constexpr double max_background_activity_stddev{ 10000.0 };
+
+protected:
+    virtual void update_electrical_activity_serial_initialize(const std::vector<char>& disable_flags) {
+    }
+
+    virtual void update_activity(size_t i) = 0;
+
+    virtual void init_neurons(size_t start_id, size_t end_id) = 0;
+
+    void set_x(size_t i, double new_value) noexcept {
+        x[i] = new_value;
+    }
+
+    void set_fired(size_t i, bool new_value) noexcept {
+        fired[i] = new_value;
+    }
 
 private:
     [[nodiscard]] static std::vector<size_t> update_electrical_activity_prepare_receiving_spikes(const MapFiringNeuronIds& firing_neuron_ids_outgoing);
@@ -286,25 +289,30 @@ public:
 
     [[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
-    [[nodiscard]] double get_secondary_variable(size_t i) const noexcept final;
+    [[nodiscard]] double get_secondary_variable(size_t i) const final {
+        RelearnException::check(i < get_num_neurons(), "In PoissonModel::get_secondary_variable, id is too large");
+        return refrac[i];
+    }
 
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
     [[nodiscard]] std::string name() final;
 
+    [[nodiscard]] double get_x_0() const noexcept {
+        return x_0;
+    }
+
+    [[nodiscard]] double get_tau_x() const noexcept {
+        return tau_x;
+    }
+
+    [[nodiscard]] unsigned int get_refrac_time() const noexcept {
+        return refrac_time;
+    }
+
     void init(size_t num_neurons) final;
 
     void create_neurons(size_t creation_count) final;
-
-protected:
-    void update_electrical_activity_serial_initialize(const std::vector<char>& disable_flags) final;
-
-    void update_activity(size_t i) final;
-
-    void init_neurons(size_t start_id, size_t end_id) final;
-
-private:
-    [[nodiscard]] double iter_x(double x, double I_syn) const noexcept;
 
     static constexpr double default_x_0{ 0.05 };
     static constexpr double default_tau_x{ 5.0 };
@@ -317,6 +325,16 @@ private:
     static constexpr double max_x_0{ 1.0 };
     static constexpr double max_tau_x{ 1000.0 };
     static constexpr unsigned int max_refrac_time{ 1000 };
+
+protected:
+    void update_electrical_activity_serial_initialize(const std::vector<char>& disable_flags) final;
+
+    void update_activity(size_t i) final;
+
+    void init_neurons(size_t start_id, size_t end_id) final;
+
+private:
+    [[nodiscard]] double iter_x(double x, double I_syn) const noexcept;
 
     std::vector<unsigned int> refrac{}; // refractory time
 
@@ -349,27 +367,50 @@ public:
 
     [[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
-    [[nodiscard]] double get_secondary_variable(size_t i) const noexcept final;
+    [[nodiscard]] double get_secondary_variable(size_t i) const final {
+        RelearnException::check(i < get_num_neurons(), "In IzhikevichModel::get_secondary_variable, id is too large");
+        return u[i];
+    }
 
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
     [[nodiscard]] std::string name() final;
 
+    [[nodiscard]] double get_a() const noexcept {
+        return a;
+    }
+
+    [[nodiscard]] double get_b() const noexcept {
+        return b;
+    }
+
+    [[nodiscard]] double get_c() const noexcept {
+        return c;
+    }
+
+    [[nodiscard]] double get_d() const noexcept {
+        return d;
+    }
+
+    [[nodiscard]] double get_V_spike() const noexcept {
+        return V_spike;
+    }
+
+    [[nodiscard]] double get_k1() const noexcept {
+        return k1;
+    }
+
+    [[nodiscard]] double get_k2() const noexcept {
+        return k2;
+    }
+
+    [[nodiscard]] double get_k3() const noexcept {
+        return k3;
+    }
+
     void init(size_t num_neurons) final;
 
     void create_neurons(size_t creation_count) final;
-
-protected:
-    void update_activity(size_t i) final;
-
-    void init_neurons(size_t start_id, size_t end_id) final;
-
-private:
-    [[nodiscard]] double iter_x(double x, double u, double I_syn) const noexcept;
-
-    [[nodiscard]] double iter_refrac(double u, double x) const noexcept;
-
-    [[nodiscard]] bool spiked(double x) const noexcept;
 
     static constexpr double default_a{ 0.1 };
     static constexpr double default_b{ 0.2 };
@@ -397,6 +438,18 @@ private:
     static constexpr double max_k1{ 1.0 };
     static constexpr double max_k2{ 10.0 };
     static constexpr double max_k3{ 200.0 };
+
+protected:
+    void update_activity(size_t i) final;
+
+    void init_neurons(size_t start_id, size_t end_id) final;
+
+private:
+    [[nodiscard]] double iter_x(double x, double u, double I_syn) const noexcept;
+
+    [[nodiscard]] double iter_refrac(double u, double x) const noexcept;
+
+    [[nodiscard]] bool spiked(double x) const noexcept;
 
     std::vector<double> u{}; // membrane recovery
 
@@ -429,27 +482,30 @@ public:
 
     [[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
-    [[nodiscard]] double get_secondary_variable(size_t i) const noexcept final;
+    [[nodiscard]] double get_secondary_variable(size_t i) const final {
+        RelearnException::check(i < get_num_neurons(), "In FitzHughNagumoModel::get_secondary_variable, id is too large");
+        return w[i];
+    }
 
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
     [[nodiscard]] std::string name() final;
 
+    [[nodiscard]] double get_a() const noexcept {
+        return a;
+    }
+
+    [[nodiscard]] double get_b() const noexcept {
+        return b;
+    }
+
+    [[nodiscard]] double get_phi() const noexcept {
+        return phi;
+    }
+
     void init(size_t num_neurons) final;
 
     void create_neurons(size_t creation_count) final;
-
-protected:
-    void update_activity(size_t i) final;
-
-    void init_neurons(size_t start_id, size_t end_id) final;
-
-private:
-    [[nodiscard]] static double iter_x(double x, double w, double I_syn) noexcept;
-
-    [[nodiscard]] double iter_refrac(double w, double x) const noexcept;
-
-    [[nodiscard]] static bool spiked(double x, double w) noexcept;
 
     static constexpr double default_a{ 0.7 };
     static constexpr double default_b{ 0.8 };
@@ -465,6 +521,18 @@ private:
 
     static constexpr double init_x{ -1.2 };
     static constexpr double init_w{ -0.6 };
+
+protected:
+    void update_activity(size_t i) final;
+
+    void init_neurons(size_t start_id, size_t end_id) final;
+
+private:
+    [[nodiscard]] static double iter_x(double x, double w, double I_syn) noexcept;
+
+    [[nodiscard]] double iter_refrac(double w, double x) const noexcept;
+
+    [[nodiscard]] static bool spiked(double x, double w) noexcept;
 
     std::vector<double> w{}; // recovery variable
 
@@ -496,27 +564,54 @@ public:
 
     [[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
 
-    [[nodiscard]] double get_secondary_variable(size_t i) const noexcept final;
+    [[nodiscard]] double get_secondary_variable(size_t i) const final {
+        RelearnException::check(i < get_num_neurons(), "In AEIFModel::get_secondary_variable, id is too large");
+        return w[i];
+    }
 
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
     [[nodiscard]] std::string name() final;
 
+    [[nodiscard]] double get_C() const noexcept {
+        return C;
+    }
+
+    [[nodiscard]] double get_g_L() const noexcept {
+        return g_L;
+    }
+
+    [[nodiscard]] double get_E_L() const noexcept {
+        return E_L;
+    }
+
+    [[nodiscard]] double get_V_T() const noexcept {
+        return V_T;
+    }
+
+    [[nodiscard]] double get_d_T() const noexcept {
+        return d_T;
+    }
+
+    [[nodiscard]] double get_tau_w() const noexcept {
+        return tau_w;
+    }
+
+    [[nodiscard]] double get_a() const noexcept {
+        return a;
+    }
+
+    [[nodiscard]] double get_b() const noexcept {
+        return b;
+    }
+
+    [[nodiscard]] double get_V_Peak() const noexcept {
+        return V_peak;
+    }
+
     void init(size_t num_neurons) final;
 
     void create_neurons(size_t creation_count) final;
-
-protected:
-    void update_activity(size_t i) final;
-
-    void init_neurons(size_t start_id, size_t end_id) final;
-
-private:
-    [[nodiscard]] double f(double x) const noexcept;
-
-    [[nodiscard]] double iter_x(double x, double w, double I_syn) const noexcept;
-
-    [[nodiscard]] double iter_refrac(double w, double x) const noexcept;
 
     static constexpr double default_C{ 281.0 };
     static constexpr double default_g_L{ 30.0 };
@@ -547,6 +642,18 @@ private:
     static constexpr double max_a{ 10.0 };
     static constexpr double max_b{ 0.3 };
     static constexpr double max_V_peak{ 70.0 };
+
+protected:
+    void update_activity(size_t i) final;
+
+    void init_neurons(size_t start_id, size_t end_id) final;
+
+private:
+    [[nodiscard]] double f(double x) const noexcept;
+
+    [[nodiscard]] double iter_x(double x, double w, double I_syn) const noexcept;
+
+    [[nodiscard]] double iter_refrac(double w, double x) const noexcept;
 
     std::vector<double> w{}; // adaption variable
 
