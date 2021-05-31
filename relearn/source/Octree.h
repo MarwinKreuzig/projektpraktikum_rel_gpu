@@ -362,7 +362,7 @@ public:
 
     [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed);
    
-   const std::optional<OctreeNode*> do_random_experiment(const OctreeNode& source, const std::vector<double>& atractiveness);
+   const std::optional<OctreeNode*> do_random_experiment(OctreeNode *source, const std::vector<double>& atractiveness);
 
     void empty_remote_nodes_cache();
 
@@ -454,12 +454,11 @@ private:
 	 * NOTE: This is not a probability yet as it could be >1
 	 */
     [[nodiscard]] double calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, const OctreeNode& node_with_dendrite, SignalType dendrite_type_needed) const /*noexcept*/;
-
     
 
     [[nodiscard]] ProbabilitySubintervalVector append_children(OctreeNode* node, AccessEpochsStarted& epochs_started);
 
-   public: const std::vector<double> calc_attractiveness_to_connect_FMM(const OctreeNode &source, const SignalType dendrite_type_needed);
+   public: const std::vector<double> calc_attractiveness_to_connect_FMM(OctreeNode *source, const SignalType dendrite_type_needed);
     
     // Root of the tree
     OctreeNode* root{ nullptr };

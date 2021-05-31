@@ -454,36 +454,34 @@ double Octree::calc_attractiveness_to_connect(
     return ret_val;
 }
 
-const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(const OctreeNode &source, const SignalType dendrite_type_needed) {
+const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode *source, const SignalType dendrite_type_needed) {
     
     // calculate vacant number of neurons in souce box
-    unsigned int source_num = source.get_cell().get_neuron_num_axons_for(dendrite_type_needed);
+    const unsigned int source_num = source->get_cell().get_neuron_num_axons_for(dendrite_type_needed);
     //center of source box
-    RelearnException::check(source.get_cell().get_neuron_axon_position_for(dendrite_type_needed).has_value(), "Source Box has no center!");
-    Vec3d center_of_source_box = source.get_cell().get_neuron_axon_position_for(dendrite_type_needed).value();
+    RelearnException::check(source->get_cell().get_neuron_axon_position_for(dendrite_type_needed).has_value(), "Source Box has no center!");
+    Vec3d center_of_source_box = source->get_cell().get_neuron_axon_position_for(dendrite_type_needed).value();
 
     //find out the length of the interactionlist
-    size_t target_list_length = source.get_interactionlist_length();
+    size_t target_list_length = source->get_interactionlist_length();
 
     //Initialize return value to 0
     std::vector<double> result(target_list_length, 0);
 
     //fill source list
-    const std::vector<Vec3d> source_neurons_pos = source.get_axon_pos_from_node_for(dendrite_type_needed);
-
+    const std::vector<Vec3d> source_neurons_pos = source->get_axon_pos_from_node_for(dendrite_type_needed);
+ 
     bool hermite_set = false;
     std::vector<double> hermite_coefficients;
     hermite_coefficients.reserve(pow(Constants::p,3));
-
     //when there are not enough neurons in the source box ...
     if (source_num <= Constants::max_neurons_in_source) {
+        
         for (size_t i = 0; i < target_list_length; i++) {
-
             // calculate vacant number of neurons in target box
-            int target_num = (source.get_from_interactionlist(i))->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
+            int target_num = (source->get_from_interactionlist(i))->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
             //fill target list
-            const std::vector<Vec3d> target_neurons_pos = source.get_from_interactionlist(i)->get_dendrite_pos_from_node_for(dendrite_type_needed);
-
+            const std::vector<Vec3d> target_neurons_pos = source->get_from_interactionlist(i)->get_dendrite_pos_from_node_for(dendrite_type_needed);
             //... and there are not enough neurons in the target
             if (target_num <= Constants::max_neurons_in_target) {
                 //calculate via direct Gauss
@@ -491,15 +489,16 @@ const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(const Octre
             } else {
                 //... and there are enough neurons in target
                 //source to Taylor-Series about center of box C and direkt evaluation
-                RelearnException::check(source.get_from_interactionlist(i)->get_cell().get_neuron_dendrite_position_for(dendrite_type_needed).has_value(), "Target Box has no center!");
-                Vec3d center_of_target_box = source.get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).value();
-                
+                RelearnException::check(source->get_from_interactionlist(i)->get_cell().get_neuron_dendrite_position_for(dendrite_type_needed).has_value(), "Target Box has no center!");
+                Vec3d center_of_target_box = source->get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).value();
+                 printf("taylor\n");
                 result[i] = Functions::calc_taylor_expansion(source_neurons_pos, target_neurons_pos, center_of_target_box);
             }
         }
 
     } else //when there are enough neurons in the source box...
     { //Hermite Expansion about center of source box
+        printf("mache Hermit");
         if (hermite_set == false) {
             //calculate Hermite coefficients
             Functions::calc_hermite_coefficients(center_of_source_box, source_neurons_pos, hermite_coefficients);
@@ -507,10 +506,10 @@ const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(const Octre
         for (size_t i = 0; i < target_list_length; i++) {
 
             // get vacant number of neurons in target box
-            int target_num = (source.get_from_interactionlist(i))->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
+            int target_num = (source->get_from_interactionlist(i))->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
             //fill target list
-            const std::vector<Vec3d> target_neurons_pos = source.get_from_interactionlist(i)->get_dendrite_pos_from_node_for(dendrite_type_needed);
-
+            const std::vector<Vec3d> target_neurons_pos = source->get_from_interactionlist(i)->get_dendrite_pos_from_node_for(dendrite_type_needed);
+            
             //... and there are not enough neurons in the target
             if (target_num <= Constants::max_neurons_in_target) {
                 //evaluate Hermite expansion at each target
@@ -518,8 +517,8 @@ const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(const Octre
                 
             } else {
                 //TODO: find good solution
-                RelearnException::check(source.get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).has_value(), "Target Box has no center!");
-                Vec3d center_of_target_box = source.get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).value();
+                RelearnException::check(source->get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).has_value(), "Target Box has no center!");
+                Vec3d center_of_target_box = source->get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).value();
                 result[i] = source_num * target_num * Functions::kernel(center_of_source_box, center_of_target_box);
             }
         }
@@ -861,10 +860,16 @@ void Octree::update_local_trees(const SynapticElements& dendrites_exc, const Syn
         {
             ax_ex_cnt.push_back(axons_cnt.at(i));
             ax_ex_conn_cnt.push_back(axons_conn_cnt.at(i));
+
+            ax_in_cnt.push_back(0);
+            ax_in_conn_cnt.push_back(0);
         }
         if (axons.get_signal_type(i) == SignalType::INHIBITORY){
             ax_in_cnt.push_back(axons_cnt.at(i));
             ax_in_conn_cnt.push_back(axons_conn_cnt.at(i));
+            
+            ax_ex_cnt.push_back(0);
+            ax_ex_conn_cnt.push_back(0);
         }
     }
     
@@ -939,7 +944,7 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
     return rank_neuron_id;
 }
 
-const std::optional<OctreeNode*> Octree::do_random_experiment(const OctreeNode &source, const std::vector<double> &atractiveness) {
+const std::optional<OctreeNode*> Octree::do_random_experiment(OctreeNode *source, const std::vector<double> &atractiveness) {
     std::uniform_real_distribution<double> random_number_distribution(0.0, std::nextafter(1.0, 1.0 + Constants::eps));
     std::mt19937& random_number_generator = RandomHolder::get_random_generator(RandomHolderKey::Octree);
     
@@ -948,37 +953,31 @@ const std::optional<OctreeNode*> Octree::do_random_experiment(const OctreeNode &
     intervals.reserve(vec_len+1);
     intervals[0]=0;
     double sum = 0;
-
     for (int i = 0; i < vec_len; i++)
     {
-        sum += atractiveness.at(i);
+        sum = sum + atractiveness.at(i);
     }
 
-    RelearnException::check(sum==0,"The sum of all attractions was 0.");
-    
+   // RelearnException::check(temp,"The sum of all attractions was 0.");
     for (int i = 1; i < vec_len+1; i++)
     {
-        intervals[i]= (intervals[i-1]+atractiveness.at(i-1))/sum;
+        intervals[i]= intervals[i-1]+ (atractiveness.at(i-1)/sum);
     }
-
+   
     const auto random_number = random_number_distribution(random_number_generator);
     int i = 0;
 
-    while (random_number > intervals[i] || i>=vec_len+1)
+
+    while (random_number > intervals[i+1] && i<=vec_len)
     {
         i++;
     }
-
     if (i>=vec_len+1)
     {
         return nullptr;
     }
-    
-
-    return source.get_from_interactionlist(i);
+    return source->get_from_interactionlist(i);
 }
-
-
 
 void Octree::empty_remote_nodes_cache() {
     for (auto& remode_node_in_cache : remote_nodes_cache) {

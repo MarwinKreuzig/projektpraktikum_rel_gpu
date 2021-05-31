@@ -116,3 +116,19 @@ EXPECT_EQ(temp1.at(1),3);
 EXPECT_EQ(temp1.at(2),3);
 
 }
+
+TEST(TestFastGauss, test_getPosFromNode) {
+    OctreeNode root = OctreeNode();
+    OctreeNode child = OctreeNode();
+    printf("bis hier\n");
+    child.set_cell_neuron_position(Vec3d(1,2,3));
+    child.set_cell_num_axons(2,0);
+
+    for(int i =0; i<8;i++){
+        root.set_child(&child,i);
+    }
+    root.set_parent();
+    
+    const auto& result = root.get_axon_pos_from_node_for(SignalType::EXCITATORY);
+    EXPECT_EQ(16,result.size());
+}
