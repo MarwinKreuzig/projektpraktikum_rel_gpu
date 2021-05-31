@@ -5,6 +5,8 @@
 #include "../source/neurons/Neurons.h"
 #include "../source/neurons/models/NeuronModels.h"
 
+#include "../source/neurons/NetworkGraph.h"
+
 #include "../source/structure/Partition.h"
 
 #include <algorithm>
@@ -14,6 +16,41 @@
 #include <stack>
 #include <tuple>
 #include <vector>
+
+NetworkGraph generate_random_network_graph(size_t num_neurons, size_t num_synapses, double threshold_exc) {
+    std::uniform_int_distribution<size_t> uid(0, num_neurons - 1);
+    std::uniform_real_distribution<double> urd(0, 1.0);
+
+    NetworkGraph ng(num_neurons);
+
+    for (size_t synapse_id = 0; synapse_id < num_synapses; synapse_id++) {
+        const auto neuron_id_1 = uid(mt);
+        auto neuron_id_2 = uid(mt);
+
+        if (neuron_id_2 == neuron_id_1) {
+            neuron_id_2 = (neuron_id_1 + 1) % num_neurons;
+        }
+
+        const auto uniform_double = urd(mt);
+        const auto weight = (uniform_double < threshold_exc) ? 1 : -1;
+
+        ng.add_edge_weight(neuron_id_1, 0, neuron_id_2, 0, weight);
+    }
+
+    return ng;
+}
+
+std::vector<size_t> generate_random_ids(size_t id_low, size_t id_high, size_t num_disables) {
+    std::vector<size_t> disable_ids(num_disables);
+
+    std::uniform_int_distribution<size_t> uid(id_low, id_high);
+
+    for (size_t i = 0; i < num_disables; i++) {
+        disable_ids[i] = uid(mt);
+    }
+
+    return disable_ids;
+}
 
 TEST(TestNeuronModels, testNeuronModelsDefaultConstructor) {
     using namespace models;
@@ -1393,6 +1430,1027 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeurons) {
                 EXPECT_THROW(model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
                 EXPECT_THROW(model->get_I_syn(neuron_id + current_num_neurons), RelearnException);
             }
+        }
+    }
+}
+
+TEST(TestNeuronModels, testNeuronModelsDisableFired) {
+    using namespace models;
+    using urd = std::uniform_real_distribution<double>;
+    using uid = std::uniform_int_distribution<unsigned int>;
+
+    setup();
+
+    for (auto i = 0; i < iterations; i++) {
+        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+
+        const urd urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
+        const uid urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
+        const urd urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
+
+        const auto expected_k = urd_desired_k(mt);
+        const auto expected_tau_C = urd_desired_tau_C(mt);
+        const auto expected_beta = urd_desired_beta(mt);
+        const auto expected_h = uid_desired_h(mt);
+        const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
+        const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
+        const auto expected_background_activity_stddev = urd_desired_background_activity_stddev(mt);
+
+        const auto expected_x0 = urd_desired_x0(mt);
+        const auto expected_refrac = urd_desired_refrac(mt);
+        const auto expected_tau_x = urd_desired_tau_x(mt);
+
+        auto model = std::make_unique<PoissonModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+            expected_x0, expected_tau_x, expected_refrac);
+
+        const uid uid_num_neurons(1, num_neurons_test);
+        const auto num_neurons = uid_num_neurons(mt);
+
+        const uid uid_num_neurons_disables(1, num_neurons);
+        const auto num_disables = uid_num_neurons_disables(mt);
+
+        const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables);
+
+        model->init(num_neurons);
+        model->disable_neurons(disable_ids);
+
+        for (auto id = 0; id < num_neurons; id++) {
+            if (std::find(disable_ids.cbegin(), disable_ids.cend(), id) != disable_ids.cend()) {
+                EXPECT_FALSE(model->get_fired(id));
+            }
+        }
+
+        const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables);
+
+        EXPECT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
+    }
+
+    for (auto i = 0; i < iterations; i++) {
+        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+
+        const urd urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
+        const urd urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
+        const urd urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
+        const urd urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
+        const urd urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
+        const urd urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
+        const urd urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
+        const urd urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
+
+        const auto expected_k = urd_desired_k(mt);
+        const auto expected_tau_C = urd_desired_tau_C(mt);
+        const auto expected_beta = urd_desired_beta(mt);
+        const auto expected_h = uid_desired_h(mt);
+        const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
+        const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
+        const auto expected_background_activity_stddev = urd_desired_background_activity_stddev(mt);
+
+        const auto expected_a = urd_desired_a(mt);
+        const auto expected_b = urd_desired_b(mt);
+        const auto expected_c = urd_desired_c(mt);
+        const auto expected_d = urd_desired_d(mt);
+        const auto expected_V_spike = urd_desired_V_spike(mt);
+        const auto expected_k1 = urd_desired_k1(mt);
+        const auto expected_k2 = urd_desired_k2(mt);
+        const auto expected_k3 = urd_desired_k3(mt);
+
+        auto model = std::make_unique<IzhikevichModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+            expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
+
+        const uid uid_num_neurons(1, num_neurons_test);
+        const auto num_neurons = uid_num_neurons(mt);
+
+        const uid uid_num_neurons_disables(1, num_neurons);
+        const auto num_disables = uid_num_neurons_disables(mt);
+
+        const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables);
+
+        model->init(num_neurons);
+        model->disable_neurons(disable_ids);
+
+        for (auto id = 0; id < num_neurons; id++) {
+            if (std::find(disable_ids.cbegin(), disable_ids.cend(), id) != disable_ids.cend()) {
+                EXPECT_FALSE(model->get_fired(id));
+            }
+        }
+
+        const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables);
+
+        EXPECT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
+    }
+
+    for (auto i = 0; i < iterations; i++) {
+        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+
+        const urd urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
+        const urd urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
+        const urd urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
+
+        const auto expected_k = urd_desired_k(mt);
+        const auto expected_tau_C = urd_desired_tau_C(mt);
+        const auto expected_beta = urd_desired_beta(mt);
+        const auto expected_h = uid_desired_h(mt);
+        const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
+        const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
+        const auto expected_background_activity_stddev = urd_desired_background_activity_stddev(mt);
+
+        const auto expected_a = urd_desired_a(mt);
+        const auto expected_b = urd_desired_b(mt);
+        const auto expected_phi = urd_desired_phi(mt);
+
+        auto model = std::make_unique<FitzHughNagumoModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+            expected_a, expected_b, expected_phi);
+
+        const uid uid_num_neurons(1, num_neurons_test);
+        const auto num_neurons = uid_num_neurons(mt);
+
+        const uid uid_num_neurons_disables(1, num_neurons);
+        const auto num_disables = uid_num_neurons_disables(mt);
+
+        const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables);
+
+        model->init(num_neurons);
+        model->disable_neurons(disable_ids);
+
+        for (auto id = 0; id < num_neurons; id++) {
+            if (std::find(disable_ids.cbegin(), disable_ids.cend(), id) != disable_ids.cend()) {
+                EXPECT_FALSE(model->get_fired(id));
+            }
+        }
+
+        const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables);
+
+        EXPECT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
+    }
+
+    for (auto i = 0; i < iterations; i++) {
+        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+
+        const urd urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
+        const urd urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
+        const urd urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
+        const urd urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
+        const urd urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
+        const urd urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
+        const urd urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
+        const urd urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
+        const urd urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
+
+        const auto expected_k = urd_desired_k(mt);
+        const auto expected_tau_C = urd_desired_tau_C(mt);
+        const auto expected_beta = urd_desired_beta(mt);
+        const auto expected_h = uid_desired_h(mt);
+        const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
+        const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
+        const auto expected_background_activity_stddev = urd_desired_background_activity_stddev(mt);
+
+        const auto expected_C = urd_desired_C(mt);
+        const auto expected_g_L = urd_desired_g_L(mt);
+        const auto expected_E_L = urd_desired_E_L(mt);
+        const auto expected_V_T = urd_desired_V_T(mt);
+        const auto expected_d_T = urd_desired_d_T(mt);
+        const auto expected_tau_w = urd_desired_tau_w(mt);
+        const auto expected_a = urd_desired_a(mt);
+        const auto expected_b = urd_desired_b(mt);
+        const auto expected_V_peak = urd_desired_V_peak(mt);
+
+        auto model = std::make_unique<AEIFModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+            expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_peak);
+
+        const uid uid_num_neurons(1, num_neurons_test);
+        const auto num_neurons = uid_num_neurons(mt);
+
+        const uid uid_num_neurons_disables(1, num_neurons);
+        const auto num_disables = uid_num_neurons_disables(mt);
+
+        const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables);
+
+        model->init(num_neurons);
+        model->disable_neurons(disable_ids);
+
+        for (auto id = 0; id < num_neurons; id++) {
+            if (std::find(disable_ids.cbegin(), disable_ids.cend(), id) != disable_ids.cend()) {
+                EXPECT_FALSE(model->get_fired(id));
+            }
+        }
+
+        const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables);
+
+        EXPECT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
+    }
+}
+
+TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
+    using namespace models;
+    using urd = std::uniform_real_distribution<double>;
+    using uid = std::uniform_int_distribution<unsigned int>;
+
+    setup();
+
+    for (auto i = 0; i < iterations; i++) {
+        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+
+        const urd urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
+        const uid urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
+        const urd urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
+
+        const auto expected_k = urd_desired_k(mt);
+        const auto expected_tau_C = urd_desired_tau_C(mt);
+        const auto expected_beta = urd_desired_beta(mt);
+        const auto expected_h = uid_desired_h(mt);
+        const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
+        const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
+        const auto expected_background_activity_stddev = urd_desired_background_activity_stddev(mt);
+
+        const auto expected_x0 = urd_desired_x0(mt);
+        const auto expected_refrac = urd_desired_refrac(mt);
+        const auto expected_tau_x = urd_desired_tau_x(mt);
+
+        auto model = std::make_unique<PoissonModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+            expected_x0, expected_tau_x, expected_refrac);
+
+        const uid uid_num_neurons(1, num_neurons_test);
+        const auto desired_num_neurons = uid_num_neurons(mt);
+
+        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
+
+        model->init(desired_num_neurons);
+
+        std::vector<char> disable_flags(desired_num_neurons);
+        std::vector<double> model_x = model->get_x();
+        std::vector<double> model_secondary(desired_num_neurons);
+        std::vector<bool> model_fired = model->get_fired();
+        std::vector<double> model_I_sync(desired_num_neurons);
+
+        for (auto id = 0; id < desired_num_neurons; id++) {
+            model_secondary[id] = model->get_secondary_variable(id);
+            model_I_sync[id] = model->get_I_syn(id);
+        }
+
+        for (auto j = 0; j < 3; j++) {
+            model->update_electrical_activity(empty_graph, disable_flags);
+
+            const auto& current_x = model->get_x();
+            const auto& current_fired = model->get_fired();
+
+            for (auto id = 0; id < desired_num_neurons; id++) {
+                EXPECT_EQ(current_x[id], model_x[id]);
+                EXPECT_EQ(current_fired[id], model_fired[id]);
+
+                EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+
+                model_I_sync[id] = model->get_I_syn(id);
+                model_secondary[id] = model->get_secondary_variable(id);
+            }
+
+            model_x = current_x;
+            model_fired = current_fired;
+        }
+
+        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0);
+
+        for (auto j = 0; j < 3; j++) {
+            model->update_electrical_activity(random_graph, disable_flags);
+
+            const auto& current_x = model->get_x();
+            const auto& current_fired = model->get_fired();
+
+            for (auto id = 0; id < desired_num_neurons; id++) {
+                EXPECT_EQ(current_x[id], model_x[id]);
+                EXPECT_EQ(current_fired[id], model_fired[id]);
+
+                EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+
+                model_I_sync[id] = model->get_I_syn(id);
+                model_secondary[id] = model->get_secondary_variable(id);
+            }
+
+            model_x = current_x;
+            model_fired = current_fired;
+        }
+    }
+
+    for (auto i = 0; i < iterations; i++) {
+        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+
+        const urd urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
+        const urd urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
+        const urd urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
+        const urd urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
+        const urd urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
+        const urd urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
+        const urd urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
+        const urd urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
+
+        const auto expected_k = urd_desired_k(mt);
+        const auto expected_tau_C = urd_desired_tau_C(mt);
+        const auto expected_beta = urd_desired_beta(mt);
+        const auto expected_h = uid_desired_h(mt);
+        const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
+        const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
+        const auto expected_background_activity_stddev = urd_desired_background_activity_stddev(mt);
+
+        const auto expected_a = urd_desired_a(mt);
+        const auto expected_b = urd_desired_b(mt);
+        const auto expected_c = urd_desired_c(mt);
+        const auto expected_d = urd_desired_d(mt);
+        const auto expected_V_spike = urd_desired_V_spike(mt);
+        const auto expected_k1 = urd_desired_k1(mt);
+        const auto expected_k2 = urd_desired_k2(mt);
+        const auto expected_k3 = urd_desired_k3(mt);
+
+        auto model = std::make_unique<IzhikevichModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+            expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
+
+        const uid uid_num_neurons(1, num_neurons_test);
+        const auto desired_num_neurons = uid_num_neurons(mt);
+
+        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
+
+        model->init(desired_num_neurons);
+
+        std::vector<char> disable_flags(desired_num_neurons);
+        std::vector<double> model_x = model->get_x();
+        std::vector<double> model_secondary(desired_num_neurons);
+        std::vector<bool> model_fired = model->get_fired();
+        std::vector<double> model_I_sync(desired_num_neurons);
+
+        for (auto id = 0; id < desired_num_neurons; id++) {
+            model_secondary[id] = model->get_secondary_variable(id);
+            model_I_sync[id] = model->get_I_syn(id);
+        }
+
+        for (auto j = 0; j < 3; j++) {
+            model->update_electrical_activity(empty_graph, disable_flags);
+
+            const auto& current_x = model->get_x();
+            const auto& current_fired = model->get_fired();
+
+            for (auto id = 0; id < desired_num_neurons; id++) {
+                EXPECT_EQ(current_x[id], model_x[id]);
+                EXPECT_EQ(current_fired[id], model_fired[id]);
+
+                EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+
+                model_I_sync[id] = model->get_I_syn(id);
+                model_secondary[id] = model->get_secondary_variable(id);
+            }
+
+            model_x = current_x;
+            model_fired = current_fired;
+        }
+
+        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0);
+
+        for (auto j = 0; j < 3; j++) {
+            model->update_electrical_activity(random_graph, disable_flags);
+
+            const auto& current_x = model->get_x();
+            const auto& current_fired = model->get_fired();
+
+            for (auto id = 0; id < desired_num_neurons; id++) {
+                EXPECT_EQ(current_x[id], model_x[id]);
+                EXPECT_EQ(current_fired[id], model_fired[id]);
+
+                EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+
+                model_I_sync[id] = model->get_I_syn(id);
+                model_secondary[id] = model->get_secondary_variable(id);
+            }
+
+            model_x = current_x;
+            model_fired = current_fired;
+        }
+    }
+
+    for (auto i = 0; i < iterations; i++) {
+        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+
+        const urd urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
+        const urd urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
+        const urd urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
+
+        const auto expected_k = urd_desired_k(mt);
+        const auto expected_tau_C = urd_desired_tau_C(mt);
+        const auto expected_beta = urd_desired_beta(mt);
+        const auto expected_h = uid_desired_h(mt);
+        const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
+        const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
+        const auto expected_background_activity_stddev = urd_desired_background_activity_stddev(mt);
+
+        const auto expected_a = urd_desired_a(mt);
+        const auto expected_b = urd_desired_b(mt);
+        const auto expected_phi = urd_desired_phi(mt);
+
+        auto model = std::make_unique<FitzHughNagumoModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+            expected_a, expected_b, expected_phi);
+
+        const uid uid_num_neurons(1, num_neurons_test);
+        const auto desired_num_neurons = uid_num_neurons(mt);
+
+        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
+
+        model->init(desired_num_neurons);
+
+        std::vector<char> disable_flags(desired_num_neurons);
+        std::vector<double> model_x = model->get_x();
+        std::vector<double> model_secondary(desired_num_neurons);
+        std::vector<bool> model_fired = model->get_fired();
+        std::vector<double> model_I_sync(desired_num_neurons);
+
+        for (auto id = 0; id < desired_num_neurons; id++) {
+            model_secondary[id] = model->get_secondary_variable(id);
+            model_I_sync[id] = model->get_I_syn(id);
+        }
+
+        for (auto j = 0; j < 3; j++) {
+            model->update_electrical_activity(empty_graph, disable_flags);
+
+            const auto& current_x = model->get_x();
+            const auto& current_fired = model->get_fired();
+
+            for (auto id = 0; id < desired_num_neurons; id++) {
+                EXPECT_EQ(current_x[id], model_x[id]);
+                EXPECT_EQ(current_fired[id], model_fired[id]);
+
+                EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+
+                model_I_sync[id] = model->get_I_syn(id);
+                model_secondary[id] = model->get_secondary_variable(id);
+            }
+
+            model_x = current_x;
+            model_fired = current_fired;
+        }
+
+        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0);
+
+        for (auto j = 0; j < 3; j++) {
+            model->update_electrical_activity(random_graph, disable_flags);
+
+            const auto& current_x = model->get_x();
+            const auto& current_fired = model->get_fired();
+
+            for (auto id = 0; id < desired_num_neurons; id++) {
+                EXPECT_EQ(current_x[id], model_x[id]);
+                EXPECT_EQ(current_fired[id], model_fired[id]);
+
+                EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+
+                model_I_sync[id] = model->get_I_syn(id);
+                model_secondary[id] = model->get_secondary_variable(id);
+            }
+
+            model_x = current_x;
+            model_fired = current_fired;
+        }
+    }
+
+    for (auto i = 0; i < iterations; i++) {
+        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+
+        const urd urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
+        const urd urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
+        const urd urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
+        const urd urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
+        const urd urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
+        const urd urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
+        const urd urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
+        const urd urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
+        const urd urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
+
+        const auto expected_k = urd_desired_k(mt);
+        const auto expected_tau_C = urd_desired_tau_C(mt);
+        const auto expected_beta = urd_desired_beta(mt);
+        const auto expected_h = uid_desired_h(mt);
+        const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
+        const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
+        const auto expected_background_activity_stddev = urd_desired_background_activity_stddev(mt);
+
+        const auto expected_C = urd_desired_C(mt);
+        const auto expected_g_L = urd_desired_g_L(mt);
+        const auto expected_E_L = urd_desired_E_L(mt);
+        const auto expected_V_T = urd_desired_V_T(mt);
+        const auto expected_d_T = urd_desired_d_T(mt);
+        const auto expected_tau_w = urd_desired_tau_w(mt);
+        const auto expected_a = urd_desired_a(mt);
+        const auto expected_b = urd_desired_b(mt);
+        const auto expected_V_peak = urd_desired_V_peak(mt);
+
+        auto model = std::make_unique<AEIFModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+            expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_peak);
+
+        const uid uid_num_neurons(1, num_neurons_test);
+        const auto desired_num_neurons = uid_num_neurons(mt);
+
+        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
+
+        model->init(desired_num_neurons);
+
+        std::vector<char> disable_flags(desired_num_neurons);
+        std::vector<double> model_x = model->get_x();
+        std::vector<double> model_secondary(desired_num_neurons);
+        std::vector<bool> model_fired = model->get_fired();
+        std::vector<double> model_I_sync(desired_num_neurons);
+
+        for (auto id = 0; id < desired_num_neurons; id++) {
+            model_secondary[id] = model->get_secondary_variable(id);
+            model_I_sync[id] = model->get_I_syn(id);
+        }
+
+        for (auto j = 0; j < 3; j++) {
+            model->update_electrical_activity(empty_graph, disable_flags);
+
+            const auto& current_x = model->get_x();
+            const auto& current_fired = model->get_fired();
+
+            for (auto id = 0; id < desired_num_neurons; id++) {
+                EXPECT_EQ(current_x[id], model_x[id]);
+                EXPECT_EQ(current_fired[id], model_fired[id]);
+
+                EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+
+                model_I_sync[id] = model->get_I_syn(id);
+                model_secondary[id] = model->get_secondary_variable(id);
+            }
+
+            model_x = current_x;
+            model_fired = current_fired;
+        }
+
+        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0);
+
+        for (auto j = 0; j < 3; j++) {
+            model->update_electrical_activity(random_graph, disable_flags);
+
+            const auto& current_x = model->get_x();
+            const auto& current_fired = model->get_fired();
+
+            for (auto id = 0; id < desired_num_neurons; id++) {
+                EXPECT_EQ(current_x[id], model_x[id]);
+                EXPECT_EQ(current_fired[id], model_fired[id]);
+
+                EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+
+                model_I_sync[id] = model->get_I_syn(id);
+                model_secondary[id] = model->get_secondary_variable(id);
+            }
+
+            model_x = current_x;
+            model_fired = current_fired;
+        }
+    }
+}
+
+
+TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
+    using namespace models;
+    using urd = std::uniform_real_distribution<double>;
+    using uid = std::uniform_int_distribution<unsigned int>;
+
+    setup();
+
+    for (auto i = 0; i < 1; i++) {
+        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+
+        const urd urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
+        const uid urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
+        const urd urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
+
+        const auto expected_k = urd_desired_k(mt);
+        const auto expected_tau_C = urd_desired_tau_C(mt);
+        const auto expected_beta = urd_desired_beta(mt);
+        const auto expected_h = uid_desired_h(mt);
+        const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
+        const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
+        const auto expected_background_activity_stddev = urd_desired_background_activity_stddev(mt);
+
+        const auto expected_x0 = urd_desired_x0(mt);
+        const auto expected_refrac = urd_desired_refrac(mt);
+        const auto expected_tau_x = urd_desired_tau_x(mt);
+
+        auto model = std::make_unique<PoissonModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+            expected_x0, expected_tau_x, expected_refrac);
+
+        const uid uid_num_neurons(1, num_neurons_test);
+        const auto desired_num_neurons = uid_num_neurons(mt);
+
+        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
+
+        model->init(desired_num_neurons);
+
+        std::vector<char> disable_flags(desired_num_neurons, 1);
+        std::vector<double> model_x = model->get_x();
+        std::vector<double> model_secondary(desired_num_neurons);
+        std::vector<bool> model_fired = model->get_fired();
+        std::vector<double> model_I_sync(desired_num_neurons);
+
+        for (auto id = 0; id < desired_num_neurons; id++) {
+            model_secondary[id] = model->get_secondary_variable(id);
+            model_I_sync[id] = model->get_I_syn(id);
+        }
+
+        for (auto j = 0; j < 3; j++) {
+            model->update_electrical_activity(empty_graph, disable_flags);
+
+            const auto& current_x = model->get_x();
+            const auto& current_fired = model->get_fired();
+
+            for (auto id = 0; id < desired_num_neurons; id++) {
+                EXPECT_NE(current_x[id], model_x[id]);
+                //EXPECT_EQ(current_fired[id], model_fired[id]);
+
+                //EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+
+                model_I_sync[id] = model->get_I_syn(id);
+                model_secondary[id] = model->get_secondary_variable(id);
+            }
+
+            model_x = current_x;
+            model_fired = current_fired;
+        }
+
+        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0);
+
+        for (auto j = 0; j < 3; j++) {
+            model->update_electrical_activity(random_graph, disable_flags);
+
+            const auto& current_x = model->get_x();
+            const auto& current_fired = model->get_fired();
+
+            for (auto id = 0; id < desired_num_neurons; id++) {
+                EXPECT_NE(current_x[id], model_x[id]);
+                //EXPECT_EQ(current_fired[id], model_fired[id]);
+
+                //EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+
+                model_I_sync[id] = model->get_I_syn(id);
+                model_secondary[id] = model->get_secondary_variable(id);
+            }
+
+            model_x = current_x;
+            model_fired = current_fired;
+        }
+    }
+
+    return;
+
+    for (auto i = 0; i < iterations; i++) {
+        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+
+        const urd urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
+        const urd urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
+        const urd urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
+        const urd urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
+        const urd urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
+        const urd urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
+        const urd urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
+        const urd urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
+
+        const auto expected_k = urd_desired_k(mt);
+        const auto expected_tau_C = urd_desired_tau_C(mt);
+        const auto expected_beta = urd_desired_beta(mt);
+        const auto expected_h = uid_desired_h(mt);
+        const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
+        const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
+        const auto expected_background_activity_stddev = urd_desired_background_activity_stddev(mt);
+
+        const auto expected_a = urd_desired_a(mt);
+        const auto expected_b = urd_desired_b(mt);
+        const auto expected_c = urd_desired_c(mt);
+        const auto expected_d = urd_desired_d(mt);
+        const auto expected_V_spike = urd_desired_V_spike(mt);
+        const auto expected_k1 = urd_desired_k1(mt);
+        const auto expected_k2 = urd_desired_k2(mt);
+        const auto expected_k3 = urd_desired_k3(mt);
+
+        auto model = std::make_unique<IzhikevichModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+            expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
+
+        const uid uid_num_neurons(1, num_neurons_test);
+        const auto desired_num_neurons = uid_num_neurons(mt);
+
+        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
+
+        model->init(desired_num_neurons);
+
+        std::vector<char> disable_flags(desired_num_neurons, 1);
+        std::vector<double> model_x = model->get_x();
+        std::vector<double> model_secondary(desired_num_neurons);
+        std::vector<bool> model_fired = model->get_fired();
+        std::vector<double> model_I_sync(desired_num_neurons);
+
+        for (auto id = 0; id < desired_num_neurons; id++) {
+            model_secondary[id] = model->get_secondary_variable(id);
+            model_I_sync[id] = model->get_I_syn(id);
+        }
+
+        for (auto j = 0; j < 3; j++) {
+            model->update_electrical_activity(empty_graph, disable_flags);
+
+            const auto& current_x = model->get_x();
+            const auto& current_fired = model->get_fired();
+
+            for (auto id = 0; id < desired_num_neurons; id++) {
+                EXPECT_NE(current_x[id], model_x[id]);
+                //EXPECT_EQ(current_fired[id], model_fired[id]);
+
+                //EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                EXPECT_NE(model->get_secondary_variable(id), model_secondary[id]);
+
+                model_I_sync[id] = model->get_I_syn(id);
+                model_secondary[id] = model->get_secondary_variable(id);
+            }
+
+            model_x = current_x;
+            model_fired = current_fired;
+        }
+
+        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0);
+
+        for (auto j = 0; j < 3; j++) {
+            model->update_electrical_activity(random_graph, disable_flags);
+
+            const auto& current_x = model->get_x();
+            const auto& current_fired = model->get_fired();
+
+            for (auto id = 0; id < desired_num_neurons; id++) {
+                EXPECT_NE(current_x[id], model_x[id]);
+                //EXPECT_EQ(current_fired[id], model_fired[id]);
+
+                //EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                EXPECT_NE(model->get_secondary_variable(id), model_secondary[id]);
+
+                model_I_sync[id] = model->get_I_syn(id);
+                model_secondary[id] = model->get_secondary_variable(id);
+            }
+
+            model_x = current_x;
+            model_fired = current_fired;
+        }
+    }
+
+    for (auto i = 0; i < iterations; i++) {
+        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+
+        const urd urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
+        const urd urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
+        const urd urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
+
+        const auto expected_k = urd_desired_k(mt);
+        const auto expected_tau_C = urd_desired_tau_C(mt);
+        const auto expected_beta = urd_desired_beta(mt);
+        const auto expected_h = uid_desired_h(mt);
+        const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
+        const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
+        const auto expected_background_activity_stddev = urd_desired_background_activity_stddev(mt);
+
+        const auto expected_a = urd_desired_a(mt);
+        const auto expected_b = urd_desired_b(mt);
+        const auto expected_phi = urd_desired_phi(mt);
+
+        auto model = std::make_unique<FitzHughNagumoModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+            expected_a, expected_b, expected_phi);
+
+        const uid uid_num_neurons(1, num_neurons_test);
+        const auto desired_num_neurons = uid_num_neurons(mt);
+
+        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
+
+        model->init(desired_num_neurons);
+
+        std::vector<char> disable_flags(desired_num_neurons, 1);
+        std::vector<double> model_x = model->get_x();
+        std::vector<double> model_secondary(desired_num_neurons);
+        std::vector<bool> model_fired = model->get_fired();
+        std::vector<double> model_I_sync(desired_num_neurons);
+
+        for (auto id = 0; id < desired_num_neurons; id++) {
+            model_secondary[id] = model->get_secondary_variable(id);
+            model_I_sync[id] = model->get_I_syn(id);
+        }
+
+        for (auto j = 0; j < 3; j++) {
+            model->update_electrical_activity(empty_graph, disable_flags);
+
+            const auto& current_x = model->get_x();
+            const auto& current_fired = model->get_fired();
+
+            for (auto id = 0; id < desired_num_neurons; id++) {
+                EXPECT_NE(current_x[id], model_x[id]);
+                //EXPECT_EQ(current_fired[id], model_fired[id]);
+
+                //EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                EXPECT_NE(model->get_secondary_variable(id), model_secondary[id]);
+
+                model_I_sync[id] = model->get_I_syn(id);
+                model_secondary[id] = model->get_secondary_variable(id);
+            }
+
+            model_x = current_x;
+            model_fired = current_fired;
+        }
+
+        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0);
+
+        for (auto j = 0; j < 3; j++) {
+            model->update_electrical_activity(random_graph, disable_flags);
+
+            const auto& current_x = model->get_x();
+            const auto& current_fired = model->get_fired();
+
+            for (auto id = 0; id < desired_num_neurons; id++) {
+                EXPECT_NE(current_x[id], model_x[id]);
+                //EXPECT_EQ(current_fired[id], model_fired[id]);
+
+                //EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                EXPECT_NE(model->get_secondary_variable(id), model_secondary[id]);
+
+                model_I_sync[id] = model->get_I_syn(id);
+                model_secondary[id] = model->get_secondary_variable(id);
+            }
+
+            model_x = current_x;
+            model_fired = current_fired;
+        }
+    }
+
+    for (auto i = 0; i < iterations; i++) {
+        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+
+        const urd urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
+        const urd urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
+        const urd urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
+        const urd urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
+        const urd urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
+        const urd urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
+        const urd urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
+        const urd urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
+        const urd urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
+
+        const auto expected_k = urd_desired_k(mt);
+        const auto expected_tau_C = urd_desired_tau_C(mt);
+        const auto expected_beta = urd_desired_beta(mt);
+        const auto expected_h = uid_desired_h(mt);
+        const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
+        const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
+        const auto expected_background_activity_stddev = urd_desired_background_activity_stddev(mt);
+
+        const auto expected_C = urd_desired_C(mt);
+        const auto expected_g_L = urd_desired_g_L(mt);
+        const auto expected_E_L = urd_desired_E_L(mt);
+        const auto expected_V_T = urd_desired_V_T(mt);
+        const auto expected_d_T = urd_desired_d_T(mt);
+        const auto expected_tau_w = urd_desired_tau_w(mt);
+        const auto expected_a = urd_desired_a(mt);
+        const auto expected_b = urd_desired_b(mt);
+        const auto expected_V_peak = urd_desired_V_peak(mt);
+
+        auto model = std::make_unique<AEIFModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+            expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_peak);
+
+        const uid uid_num_neurons(1, num_neurons_test);
+        const auto desired_num_neurons = uid_num_neurons(mt);
+
+        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
+
+        model->init(desired_num_neurons);
+
+        std::vector<char> disable_flags(desired_num_neurons, 1);
+        std::vector<double> model_x = model->get_x();
+        std::vector<double> model_secondary(desired_num_neurons);
+        std::vector<bool> model_fired = model->get_fired();
+        std::vector<double> model_I_sync(desired_num_neurons);
+
+        for (auto id = 0; id < desired_num_neurons; id++) {
+            model_secondary[id] = model->get_secondary_variable(id);
+            model_I_sync[id] = model->get_I_syn(id);
+        }
+
+        for (auto j = 0; j < 3; j++) {
+            model->update_electrical_activity(empty_graph, disable_flags);
+
+            const auto& current_x = model->get_x();
+            const auto& current_fired = model->get_fired();
+
+            for (auto id = 0; id < desired_num_neurons; id++) {
+                EXPECT_NE(current_x[id], model_x[id]);
+                //EXPECT_EQ(current_fired[id], model_fired[id]);
+
+                //EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                EXPECT_NE(model->get_secondary_variable(id), model_secondary[id]);
+
+                model_I_sync[id] = model->get_I_syn(id);
+                model_secondary[id] = model->get_secondary_variable(id);
+            }
+
+            model_x = current_x;
+            model_fired = current_fired;
+        }
+
+        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0);
+
+        for (auto j = 0; j < 3; j++) {
+            model->update_electrical_activity(random_graph, disable_flags);
+
+            const auto& current_x = model->get_x();
+            const auto& current_fired = model->get_fired();
+
+            for (auto id = 0; id < desired_num_neurons; id++) {
+                EXPECT_NE(current_x[id], model_x[id]);
+                //EXPECT_EQ(current_fired[id], model_fired[id]);
+
+                //EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                EXPECT_NE(model->get_secondary_variable(id), model_secondary[id]);
+
+                model_I_sync[id] = model->get_I_syn(id);
+                model_secondary[id] = model->get_secondary_variable(id);
+            }
+
+            model_x = current_x;
+            model_fired = current_fired;
         }
     }
 }
