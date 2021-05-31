@@ -14,9 +14,9 @@ TEST(TestVector, test_vector_constructor_empty) {
     for (auto i = 0; i < iterations; i++) {
         Vec3<double> v{};
 
-        EXPECT_EQ(0.0, v.get_x());
-        EXPECT_EQ(0.0, v.get_y());
-        EXPECT_EQ(0.0, v.get_z());
+        ASSERT_EQ(0.0, v.get_x());
+        ASSERT_EQ(0.0, v.get_y());
+        ASSERT_EQ(0.0, v.get_z());
     }
 }
 
@@ -30,9 +30,9 @@ TEST(TestVector, test_vector_constructor_one) {
 
         Vec3<double> v{ val };
 
-        EXPECT_EQ(val, v.get_x());
-        EXPECT_EQ(val, v.get_y());
-        EXPECT_EQ(val, v.get_z());
+        ASSERT_EQ(val, v.get_x());
+        ASSERT_EQ(val, v.get_y());
+        ASSERT_EQ(val, v.get_z());
     }
 }
 
@@ -48,9 +48,9 @@ TEST(TestVector, test_vector_constructor_three) {
 
         Vec3<double> v{ x, y, z };
 
-        EXPECT_EQ(x, v.get_x());
-        EXPECT_EQ(y, v.get_y());
-        EXPECT_EQ(z, v.get_z());
+        ASSERT_EQ(x, v.get_x());
+        ASSERT_EQ(y, v.get_y());
+        ASSERT_EQ(z, v.get_z());
     }
 }
 
@@ -68,9 +68,9 @@ TEST(TestVector, test_vector_copy_construct) {
 
         Vec3<double> w = v;
 
-        EXPECT_EQ(x, w.get_x());
-        EXPECT_EQ(y, w.get_y());
-        EXPECT_EQ(z, w.get_z());
+        ASSERT_EQ(x, w.get_x());
+        ASSERT_EQ(y, w.get_y());
+        ASSERT_EQ(z, w.get_z());
     }
 }
 
@@ -89,9 +89,9 @@ TEST(TestVector, test_vector_copy_assign) {
         Vec3<double> w{ x + 1.0, y + 1.0, z + 1.0 };
         w = v;
 
-        EXPECT_EQ(x, w.get_x());
-        EXPECT_EQ(y, w.get_y());
-        EXPECT_EQ(z, w.get_z());
+        ASSERT_EQ(x, w.get_x());
+        ASSERT_EQ(y, w.get_y());
+        ASSERT_EQ(z, w.get_z());
     }
 }
 
@@ -109,9 +109,9 @@ TEST(TestVector, test_vector_move_construct) {
 
         Vec3<double> w = std::move(v);
 
-        EXPECT_EQ(x, w.get_x());
-        EXPECT_EQ(y, w.get_y());
-        EXPECT_EQ(z, w.get_z());
+        ASSERT_EQ(x, w.get_x());
+        ASSERT_EQ(y, w.get_y());
+        ASSERT_EQ(z, w.get_z());
     }
 }
 
@@ -130,9 +130,9 @@ TEST(TestVector, test_vector_move_assign) {
         Vec3<double> w{ x + 1.0, y + 1.0, z + 1.0 };
         w = std::move(v);
 
-        EXPECT_EQ(x, w.get_x());
-        EXPECT_EQ(y, w.get_y());
-        EXPECT_EQ(z, w.get_z());
+        ASSERT_EQ(x, w.get_x());
+        ASSERT_EQ(y, w.get_y());
+        ASSERT_EQ(z, w.get_z());
     }
 }
 
@@ -157,17 +157,17 @@ TEST(TestVector, test_vector_operator_plus_vec) {
 
         auto sum = v + w;
 
-        EXPECT_EQ(x1, v.get_x());
-        EXPECT_EQ(y1, v.get_y());
-        EXPECT_EQ(z1, v.get_z());
+        ASSERT_EQ(x1, v.get_x());
+        ASSERT_EQ(y1, v.get_y());
+        ASSERT_EQ(z1, v.get_z());
 
-        EXPECT_EQ(x2, w.get_x());
-        EXPECT_EQ(y2, w.get_y());
-        EXPECT_EQ(z2, w.get_z());
+        ASSERT_EQ(x2, w.get_x());
+        ASSERT_EQ(y2, w.get_y());
+        ASSERT_EQ(z2, w.get_z());
 
-        EXPECT_EQ(x1 + x2, sum.get_x());
-        EXPECT_EQ(y1 + y2, sum.get_y());
-        EXPECT_EQ(z1 + z2, sum.get_z());
+        ASSERT_EQ(x1 + x2, sum.get_x());
+        ASSERT_EQ(y1 + y2, sum.get_y());
+        ASSERT_EQ(z1 + z2, sum.get_z());
     }
 }
 
@@ -192,17 +192,17 @@ TEST(TestVector, test_vector_operator_minus_vec) {
 
         auto diff = v - w;
 
-        EXPECT_EQ(x1, v.get_x());
-        EXPECT_EQ(y1, v.get_y());
-        EXPECT_EQ(z1, v.get_z());
+        ASSERT_EQ(x1, v.get_x());
+        ASSERT_EQ(y1, v.get_y());
+        ASSERT_EQ(z1, v.get_z());
 
-        EXPECT_EQ(x2, w.get_x());
-        EXPECT_EQ(y2, w.get_y());
-        EXPECT_EQ(z2, w.get_z());
+        ASSERT_EQ(x2, w.get_x());
+        ASSERT_EQ(y2, w.get_y());
+        ASSERT_EQ(z2, w.get_z());
 
-        EXPECT_EQ(x1 - x2, diff.get_x());
-        EXPECT_EQ(y1 - y2, diff.get_y());
-        EXPECT_EQ(z1 - z2, diff.get_z());
+        ASSERT_EQ(x1 - x2, diff.get_x());
+        ASSERT_EQ(y1 - y2, diff.get_y());
+        ASSERT_EQ(z1 - z2, diff.get_z());
     }
 }
 
@@ -224,15 +224,15 @@ TEST(TestVector, test_vector_operator_plus_scalar) {
 
         auto sum = v + scalar;
 
-        EXPECT_EQ(x1, v.get_x());
-        EXPECT_EQ(y1, v.get_y());
-        EXPECT_EQ(z1, v.get_z());
+        ASSERT_EQ(x1, v.get_x());
+        ASSERT_EQ(y1, v.get_y());
+        ASSERT_EQ(z1, v.get_z());
 
-        EXPECT_EQ(x1 + scalar, sum.get_x());
-        EXPECT_EQ(y1 + scalar, sum.get_y());
-        EXPECT_EQ(z1 + scalar, sum.get_z());
+        ASSERT_EQ(x1 + scalar, sum.get_x());
+        ASSERT_EQ(y1 + scalar, sum.get_y());
+        ASSERT_EQ(z1 + scalar, sum.get_z());
 
-        EXPECT_EQ(scalar, scalar_copy);
+        ASSERT_EQ(scalar, scalar_copy);
     }
 }
 
@@ -254,15 +254,15 @@ TEST(TestVector, test_vector_operator_minus_scalar) {
 
         auto sum = v - scalar;
 
-        EXPECT_EQ(x1, v.get_x());
-        EXPECT_EQ(y1, v.get_y());
-        EXPECT_EQ(z1, v.get_z());
+        ASSERT_EQ(x1, v.get_x());
+        ASSERT_EQ(y1, v.get_y());
+        ASSERT_EQ(z1, v.get_z());
 
-        EXPECT_EQ(x1 - scalar, sum.get_x());
-        EXPECT_EQ(y1 - scalar, sum.get_y());
-        EXPECT_EQ(z1 - scalar, sum.get_z());
+        ASSERT_EQ(x1 - scalar, sum.get_x());
+        ASSERT_EQ(y1 - scalar, sum.get_y());
+        ASSERT_EQ(z1 - scalar, sum.get_z());
 
-        EXPECT_EQ(scalar, scalar_copy);
+        ASSERT_EQ(scalar, scalar_copy);
     }
 }
 
@@ -284,15 +284,15 @@ TEST(TestVector, test_vector_operator_mul_scalar) {
 
         auto prod = v * scalar;
 
-        EXPECT_EQ(x1, v.get_x());
-        EXPECT_EQ(y1, v.get_y());
-        EXPECT_EQ(z1, v.get_z());
+        ASSERT_EQ(x1, v.get_x());
+        ASSERT_EQ(y1, v.get_y());
+        ASSERT_EQ(z1, v.get_z());
 
-        EXPECT_EQ(x1 * scalar, prod.get_x());
-        EXPECT_EQ(y1 * scalar, prod.get_y());
-        EXPECT_EQ(z1 * scalar, prod.get_z());
+        ASSERT_EQ(x1 * scalar, prod.get_x());
+        ASSERT_EQ(y1 * scalar, prod.get_y());
+        ASSERT_EQ(z1 * scalar, prod.get_z());
 
-        EXPECT_EQ(scalar, scalar_copy);
+        ASSERT_EQ(scalar, scalar_copy);
     }
 }
 
@@ -318,15 +318,15 @@ TEST(TestVector, test_vector_operator_div_scalar) {
 
         auto prod = v / scalar;
 
-        EXPECT_EQ(x1, v.get_x());
-        EXPECT_EQ(y1, v.get_y());
-        EXPECT_EQ(z1, v.get_z());
+        ASSERT_EQ(x1, v.get_x());
+        ASSERT_EQ(y1, v.get_y());
+        ASSERT_EQ(z1, v.get_z());
 
-        EXPECT_EQ(x1 / scalar, prod.get_x());
-        EXPECT_EQ(y1 / scalar, prod.get_y());
-        EXPECT_EQ(z1 / scalar, prod.get_z());
+        ASSERT_EQ(x1 / scalar, prod.get_x());
+        ASSERT_EQ(y1 / scalar, prod.get_y());
+        ASSERT_EQ(z1 / scalar, prod.get_z());
 
-        EXPECT_EQ(scalar, scalar_copy);
+        ASSERT_EQ(scalar, scalar_copy);
     }
 }
 
@@ -348,11 +348,11 @@ TEST(TestVector, test_vector_operator_plus_assign_scalar) {
 
         v += scalar;
 
-        EXPECT_EQ(x1 + scalar, v.get_x());
-        EXPECT_EQ(y1 + scalar, v.get_y());
-        EXPECT_EQ(z1 + scalar, v.get_z());
+        ASSERT_EQ(x1 + scalar, v.get_x());
+        ASSERT_EQ(y1 + scalar, v.get_y());
+        ASSERT_EQ(z1 + scalar, v.get_z());
 
-        EXPECT_EQ(scalar, scalar_copy);
+        ASSERT_EQ(scalar, scalar_copy);
     }
 }
 
@@ -377,9 +377,9 @@ TEST(TestVector, test_vector_operator_plus_assign_vector) {
 
         v += w;
 
-        EXPECT_EQ(x1 + x2, v.get_x());
-        EXPECT_EQ(y1 + y2, v.get_y());
-        EXPECT_EQ(z1 + z2, v.get_z());
+        ASSERT_EQ(x1 + x2, v.get_x());
+        ASSERT_EQ(y1 + y2, v.get_y());
+        ASSERT_EQ(z1 + z2, v.get_z());
     }
 }
 
@@ -404,9 +404,9 @@ TEST(TestVector, test_vector_operator_minus_assign_vector) {
 
         v -= w;
 
-        EXPECT_EQ(x1 - x2, v.get_x());
-        EXPECT_EQ(y1 - y2, v.get_y());
-        EXPECT_EQ(z1 - z2, v.get_z());
+        ASSERT_EQ(x1 - x2, v.get_x());
+        ASSERT_EQ(y1 - y2, v.get_y());
+        ASSERT_EQ(z1 - z2, v.get_z());
     }
 }
 
@@ -428,11 +428,11 @@ TEST(TestVector, test_vector_operator_mul_assign_scalar) {
 
         v *= scalar;
 
-        EXPECT_EQ(x1 * scalar, v.get_x());
-        EXPECT_EQ(y1 * scalar, v.get_y());
-        EXPECT_EQ(z1 * scalar, v.get_z());
+        ASSERT_EQ(x1 * scalar, v.get_x());
+        ASSERT_EQ(y1 * scalar, v.get_y());
+        ASSERT_EQ(z1 * scalar, v.get_z());
 
-        EXPECT_EQ(scalar, scalar_copy);
+        ASSERT_EQ(scalar, scalar_copy);
     }
 }
 
@@ -451,11 +451,11 @@ TEST(TestVector, test_vector_volume) {
 
         auto volume = x * y * z;
 
-        EXPECT_EQ(volume, v.get_volume());
+        ASSERT_EQ(volume, v.get_volume());
 
-        EXPECT_EQ(x, v.get_x());
-        EXPECT_EQ(y, v.get_y());
-        EXPECT_EQ(z, v.get_z());
+        ASSERT_EQ(x, v.get_x());
+        ASSERT_EQ(y, v.get_y());
+        ASSERT_EQ(z, v.get_z());
     }
 }
 
@@ -475,7 +475,7 @@ TEST(TestVector, test_vector_equal) {
 
         auto is_equal = v_1 == v_2;
 
-        EXPECT_TRUE(is_equal);
+        ASSERT_TRUE(is_equal);
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -496,11 +496,11 @@ TEST(TestVector, test_vector_equal) {
         auto is_equal_5 = v_1 == v_5;
         auto is_equal_6 = v_1 == v_6;
 
-        EXPECT_FALSE(is_equal_2);
-        EXPECT_FALSE(is_equal_3);
-        EXPECT_FALSE(is_equal_4);
-        EXPECT_FALSE(is_equal_5);
-        EXPECT_FALSE(is_equal_6);
+        ASSERT_FALSE(is_equal_2);
+        ASSERT_FALSE(is_equal_3);
+        ASSERT_FALSE(is_equal_4);
+        ASSERT_FALSE(is_equal_5);
+        ASSERT_FALSE(is_equal_6);
     }
 }
 
@@ -534,13 +534,13 @@ TEST(TestVector, test_vector_componentwise_min_max) {
 
         v_1.calculate_componentwise_maximum(v_2);
         auto is_equal = v_1 == v_max;
-        EXPECT_TRUE(is_equal);
+        ASSERT_TRUE(is_equal);
 
         v_1 = Vec3<double>(x_1, y_1, z_1);
 
         v_1.calculate_componentwise_minimum(v_2);
         is_equal = v_1 == v_min;
-        EXPECT_TRUE(is_equal);
+        ASSERT_TRUE(is_equal);
     }
 }
 
@@ -565,14 +565,14 @@ TEST(TestVector, test_vector_min_max) {
 
         auto is_equal = is_there && is_bound;
 
-        EXPECT_TRUE(is_equal);
+        ASSERT_TRUE(is_equal);
 
         is_there = (x == min) || (y == min) || (z == min);
         is_bound = (x >= min) || (y >= min) || (z >= min);
 
         is_equal = is_there && is_bound;
 
-        EXPECT_TRUE(is_equal);
+        ASSERT_TRUE(is_equal);
     }
 }
 
@@ -602,7 +602,7 @@ TEST(TestVector, test_vector_componentwise_floor) {
 
         auto is_equal = v_size_t == v_floored;
 
-        EXPECT_TRUE(is_equal);
+        ASSERT_TRUE(is_equal);
     }
 }
 
@@ -621,7 +621,7 @@ TEST(TestVector, test_vector_componentwise_floor_assert) {
         x *= -1.0;
 
         Vec3<double> v{ x, y, z };
-        EXPECT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException);
+        ASSERT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException);
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -632,7 +632,7 @@ TEST(TestVector, test_vector_componentwise_floor_assert) {
         y *= -1.0;
 
         Vec3<double> v{ x, y, z };
-        EXPECT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException);
+        ASSERT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException);
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -643,7 +643,7 @@ TEST(TestVector, test_vector_componentwise_floor_assert) {
         z *= -1.0;
 
         Vec3<double> v{ x, y, z };
-        EXPECT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException);
+        ASSERT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException);
     }
 }
 
@@ -672,7 +672,7 @@ TEST(TestVector, test_vector_norm) {
         auto sum = x_p + y_p + z_p;
         auto p_norm = pow(sum, 1.0 / p);
 
-        EXPECT_NEAR(v_normed, p_norm, eps);
+        ASSERT_NEAR(v_normed, p_norm, eps);
     }
 }
 
@@ -693,7 +693,7 @@ TEST(TestVector, test_vector_norm_assert) {
 
         Vec3<double> v{ x, y, z };
 
-        EXPECT_THROW(auto v_normed = v.calculate_p_norm(p), RelearnException);
+        ASSERT_THROW(auto v_normed = v.calculate_p_norm(p), RelearnException);
     }
 }
 
@@ -735,13 +735,13 @@ TEST(TestVector, test_vector_rounding) {
         auto y_rounded_div_rounded = round(y_rounded_div);
         auto z_rounded_div_rounded = round(z_rounded_div);
 
-        EXPECT_TRUE(x_in_expected);
-        EXPECT_TRUE(y_in_expected);
-        EXPECT_TRUE(z_in_expected);
+        ASSERT_TRUE(x_in_expected);
+        ASSERT_TRUE(y_in_expected);
+        ASSERT_TRUE(z_in_expected);
 
-        EXPECT_NEAR(x_rounded_div, x_rounded_div_rounded, eps);
-        EXPECT_NEAR(y_rounded_div, y_rounded_div_rounded, eps);
-        EXPECT_NEAR(z_rounded_div, z_rounded_div_rounded, eps);
+        ASSERT_NEAR(x_rounded_div, x_rounded_div_rounded, eps);
+        ASSERT_NEAR(y_rounded_div, y_rounded_div_rounded, eps);
+        ASSERT_NEAR(z_rounded_div, z_rounded_div_rounded, eps);
     }
 }
 
@@ -761,7 +761,7 @@ TEST(TestVector, test_vector_order) {
         Vec3<double> v_2{ x, y, z };
 
         auto is_smaller = v_1 < v_2;
-        EXPECT_FALSE(is_smaller);
+        ASSERT_FALSE(is_smaller);
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -775,10 +775,10 @@ TEST(TestVector, test_vector_order) {
         Vec3<double> v_2{ x + offset, y, z };
 
         auto is_smaller = v_1 < v_2;
-        EXPECT_TRUE(is_smaller);
+        ASSERT_TRUE(is_smaller);
 
         is_smaller = v_2 < v_1;
-        EXPECT_FALSE(is_smaller);
+        ASSERT_FALSE(is_smaller);
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -792,10 +792,10 @@ TEST(TestVector, test_vector_order) {
         Vec3<double> v_2{ x, y + offset, z };
 
         auto is_smaller = v_1 < v_2;
-        EXPECT_TRUE(is_smaller);
+        ASSERT_TRUE(is_smaller);
 
         is_smaller = v_2 < v_1;
-        EXPECT_FALSE(is_smaller);
+        ASSERT_FALSE(is_smaller);
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -809,10 +809,10 @@ TEST(TestVector, test_vector_order) {
         Vec3<double> v_2{ x, y, z + offset };
 
         auto is_smaller = v_1 < v_2;
-        EXPECT_TRUE(is_smaller);
+        ASSERT_TRUE(is_smaller);
 
         is_smaller = v_2 < v_1;
-        EXPECT_FALSE(is_smaller);
+        ASSERT_FALSE(is_smaller);
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -833,10 +833,10 @@ TEST(TestVector, test_vector_order) {
         auto connected = is_smaller_1_2 || is_smaller_2_1;
 
         if (connected) {
-            EXPECT_FALSE(is_smaller_1_2 && is_smaller_2_1);
+            ASSERT_FALSE(is_smaller_1_2 && is_smaller_2_1);
         } else {
             auto is_equal = v_1 == v_2;
-            EXPECT_TRUE(is_equal);
+            ASSERT_TRUE(is_equal);
         }
     }
 }
@@ -861,6 +861,6 @@ TEST(TestVector, test_vector_cast) {
         Vec3<size_t> v_size_t{ x_size_t, y_size_t, z_size_t };
 
         auto is_equal = v_casted == v_size_t;
-        EXPECT_TRUE(is_equal);
+        ASSERT_TRUE(is_equal);
     }
 }

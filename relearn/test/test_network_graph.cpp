@@ -28,15 +28,15 @@ TEST(TestNetworkGraph, testNetworkGraphConstructor) {
             size_t inh_in_edges_count = ng.get_num_in_edges_in(neuron_id);
             size_t out_edges_count = ng.get_num_out_edges(neuron_id);
 
-            EXPECT_EQ(exc_in_edges_count, 0);
-            EXPECT_EQ(inh_in_edges_count, 0);
-            EXPECT_EQ(out_edges_count, 0);
+            ASSERT_EQ(exc_in_edges_count, 0);
+            ASSERT_EQ(inh_in_edges_count, 0);
+            ASSERT_EQ(out_edges_count, 0);
 
             const NetworkGraph::Edges& in_edges = ng.get_in_edges(neuron_id);
             const NetworkGraph::Edges& out_edges = ng.get_out_edges(neuron_id);
 
-            EXPECT_EQ(in_edges.size(), 0);
-            EXPECT_EQ(out_edges.size(), 0);
+            ASSERT_EQ(in_edges.size(), 0);
+            ASSERT_EQ(out_edges.size(), 0);
         }
     }
 }
@@ -53,20 +53,20 @@ TEST(TestNetworkGraph, testNetworkGraphConstructorExceptions) {
         NetworkGraph ng(num_neurons);
 
         for (size_t neuron_id = num_neurons; neuron_id < num_neurons + num_neurons; neuron_id++) {
-            EXPECT_THROW(size_t exc_in_edges_count = ng.get_num_in_edges_ex(neuron_id), RelearnException);
-            EXPECT_THROW(size_t inh_in_edges_count = ng.get_num_in_edges_in(neuron_id), RelearnException);
-            EXPECT_THROW(size_t out_edges_count = ng.get_num_out_edges(neuron_id), RelearnException);
+            ASSERT_THROW(size_t exc_in_edges_count = ng.get_num_in_edges_ex(neuron_id), RelearnException);
+            ASSERT_THROW(size_t inh_in_edges_count = ng.get_num_in_edges_in(neuron_id), RelearnException);
+            ASSERT_THROW(size_t out_edges_count = ng.get_num_out_edges(neuron_id), RelearnException);
 
-            EXPECT_THROW(const NetworkGraph::Edges& in_edges = ng.get_in_edges(neuron_id), RelearnException);
-            EXPECT_THROW(const NetworkGraph::Edges& out_edges = ng.get_out_edges(neuron_id), RelearnException);
+            ASSERT_THROW(const NetworkGraph::Edges& in_edges = ng.get_in_edges(neuron_id), RelearnException);
+            ASSERT_THROW(const NetworkGraph::Edges& out_edges = ng.get_out_edges(neuron_id), RelearnException);
         }
 
         for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
             size_t other_neuron = uid_num_neurons(mt);
             int other_rank = uid_num_ranks(mt);
 
-            EXPECT_THROW(ng.add_edge_weight(neuron_id, 0, other_neuron, other_rank, 0), RelearnException);
-            EXPECT_THROW(ng.add_edge_weight(other_neuron, other_rank, neuron_id, 0, 0), RelearnException);
+            ASSERT_THROW(ng.add_edge_weight(neuron_id, 0, other_neuron, other_rank, 0), RelearnException);
+            ASSERT_THROW(ng.add_edge_weight(other_neuron, other_rank, neuron_id, 0, 0), RelearnException);
         }
     }
 }
@@ -145,22 +145,22 @@ TEST(TestNetworkGraph, testNetworkGraphEdges) {
                 out_edges_count_meta += std::abs(it.second);
             }
 
-            EXPECT_EQ(exc_in_edges_count_ng, exc_in_edges_count_meta);
-            EXPECT_EQ(inh_in_edges_count_ng, inh_in_edges_count_meta);
-            EXPECT_EQ(out_edges_count_ng, out_edges_count_meta);
+            ASSERT_EQ(exc_in_edges_count_ng, exc_in_edges_count_meta);
+            ASSERT_EQ(inh_in_edges_count_ng, inh_in_edges_count_meta);
+            ASSERT_EQ(out_edges_count_ng, out_edges_count_meta);
 
             for (const auto& it : in_edges[neuron_id]) {
                 int weight_meta = it.second;
                 std::pair<int, size_t> key = it.first;
                 auto found_it = std::find(in_edges_ng.begin(), in_edges_ng.end(), std::make_pair(key, weight_meta));
-                EXPECT_TRUE(found_it != in_edges_ng.end());
+                ASSERT_TRUE(found_it != in_edges_ng.end());
             }
 
             for (const auto& it : out_edges[neuron_id]) {
                 int weight_meta = it.second;
                 std::pair<int, size_t> key = it.first;
                 auto found_it = std::find(out_edges_ng.begin(), out_edges_ng.end(), std::make_pair(key, weight_meta));
-                EXPECT_TRUE(found_it != out_edges_ng.end());
+                ASSERT_TRUE(found_it != out_edges_ng.end());
             }
         }
     }
@@ -216,23 +216,23 @@ TEST(TestNetworkGraph, testNetworkGraphEdgesSplit) {
             std::vector<std::pair<std::pair<int, size_t>, int>> out_edges_ng_ex = ng.get_out_edges(neuron_id, SignalType::EXCITATORY);
             std::vector<std::pair<std::pair<int, size_t>, int>> out_edges_ng_in = ng.get_out_edges(neuron_id, SignalType::INHIBITORY);
 
-            EXPECT_EQ(in_edges_ng.size(), in_edges_ng_ex.size() + in_edges_ng_in.size());
-            EXPECT_EQ(out_edges_ng.size(), out_edges_ng_ex.size() + out_edges_ng_in.size());
+            ASSERT_EQ(in_edges_ng.size(), in_edges_ng_ex.size() + in_edges_ng_in.size());
+            ASSERT_EQ(out_edges_ng.size(), out_edges_ng_ex.size() + out_edges_ng_in.size());
 
             for (const auto& [edge_key, edge_val] : in_edges_ng) {
-                EXPECT_TRUE(edge_val < 0);
+                ASSERT_TRUE(edge_val < 0);
             }
 
             for (const auto& [edge_key, edge_val] : out_edges_ng_in) {
-                EXPECT_TRUE(edge_val < 0);
+                ASSERT_TRUE(edge_val < 0);
             }
 
             for (const auto& [edge_key, edge_val] : in_edges_ng_ex) {
-                EXPECT_TRUE(edge_val > 0);
+                ASSERT_TRUE(edge_val > 0);
             }
 
             for (const auto& [edge_key, edge_val] : out_edges_ng_ex) {
-                EXPECT_TRUE(edge_val > 0);
+                ASSERT_TRUE(edge_val > 0);
             }
 
             for (const auto& val : in_edges_ng_in) {
@@ -243,17 +243,17 @@ TEST(TestNetworkGraph, testNetworkGraphEdgesSplit) {
                 out_edges_ng_in.emplace_back(val);
             }
 
-            EXPECT_EQ(in_edges_ng.size(), in_edges_ng_ex.size());
-            EXPECT_EQ(out_edges_ng.size(), out_edges_ng_ex.size());
+            ASSERT_EQ(in_edges_ng.size(), in_edges_ng_ex.size());
+            ASSERT_EQ(out_edges_ng.size(), out_edges_ng_ex.size());
 
             for (const auto& [edge_key, edge_val] : in_edges_ng) {
                 auto found_it = std::find(in_edges_ng_ex.begin(), in_edges_ng_ex.end(), std::make_pair(edge_key, edge_val));
-                EXPECT_TRUE(found_it != in_edges_ng_ex.end());
+                ASSERT_TRUE(found_it != in_edges_ng_ex.end());
             }
 
             for (const auto& [edge_key, edge_val] : out_edges_ng) {
                 auto found_it = std::find(out_edges_ng_ex.begin(), out_edges_ng_ex.end(), std::make_pair(edge_key, edge_val));
-                EXPECT_TRUE(found_it != out_edges_ng_ex.end());
+                ASSERT_TRUE(found_it != out_edges_ng_ex.end());
             }
         }
     }
@@ -319,15 +319,15 @@ TEST(TestNetworkGraph, testNetworkGraphEdgesRemoval) {
             size_t inh_in_edges_count = ng.get_num_in_edges_in(neuron_id);
             size_t out_edges_count = ng.get_num_out_edges(neuron_id);
 
-            EXPECT_EQ(exc_in_edges_count, 0);
-            EXPECT_EQ(inh_in_edges_count, 0);
-            EXPECT_EQ(out_edges_count, 0);
+            ASSERT_EQ(exc_in_edges_count, 0);
+            ASSERT_EQ(inh_in_edges_count, 0);
+            ASSERT_EQ(out_edges_count, 0);
 
             const NetworkGraph::Edges& in_edges = ng.get_in_edges(neuron_id);
             const NetworkGraph::Edges& out_edges = ng.get_out_edges(neuron_id);
 
-            EXPECT_EQ(in_edges.size(), 0);
-            EXPECT_EQ(out_edges.size(), 0);
+            ASSERT_EQ(in_edges.size(), 0);
+            ASSERT_EQ(out_edges.size(), 0);
         }
     }
 }

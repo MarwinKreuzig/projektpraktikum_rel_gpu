@@ -68,21 +68,21 @@ TEST(TestNeuronModels, testNeuronModelsDefaultConstructor) {
 
         auto model = std::make_unique<PoissonModel>();
 
-        EXPECT_EQ(expected_k, model->get_k());
-        EXPECT_EQ(expected_tau_C, model->get_tau_C());
-        EXPECT_EQ(expected_beta, model->get_beta());
-        EXPECT_EQ(expected_h, model->get_h());
-        EXPECT_EQ(expected_base_background_activity, model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, model->get_k());
+        ASSERT_EQ(expected_tau_C, model->get_tau_C());
+        ASSERT_EQ(expected_beta, model->get_beta());
+        ASSERT_EQ(expected_h, model->get_h());
+        ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 
         const auto expected_x0 = PoissonModel::default_x_0;
         const auto expected_refrac = PoissonModel::default_refrac_time;
         const auto expected_tau_x = PoissonModel::default_tau_x;
 
-        EXPECT_EQ(expected_x0, model->get_x_0());
-        EXPECT_EQ(expected_refrac, model->get_refrac_time());
-        EXPECT_EQ(expected_tau_x, model->get_tau_x());
+        ASSERT_EQ(expected_x0, model->get_x_0());
+        ASSERT_EQ(expected_refrac, model->get_refrac_time());
+        ASSERT_EQ(expected_tau_x, model->get_tau_x());
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -96,13 +96,13 @@ TEST(TestNeuronModels, testNeuronModelsDefaultConstructor) {
 
         auto model = std::make_unique<IzhikevichModel>();
 
-        EXPECT_EQ(expected_k, model->get_k());
-        EXPECT_EQ(expected_tau_C, model->get_tau_C());
-        EXPECT_EQ(expected_beta, model->get_beta());
-        EXPECT_EQ(expected_h, model->get_h());
-        EXPECT_EQ(expected_base_background_activity, model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, model->get_k());
+        ASSERT_EQ(expected_tau_C, model->get_tau_C());
+        ASSERT_EQ(expected_beta, model->get_beta());
+        ASSERT_EQ(expected_h, model->get_h());
+        ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 
         const auto expected_a = IzhikevichModel::default_a;
         const auto expected_b = IzhikevichModel::default_b;
@@ -113,14 +113,14 @@ TEST(TestNeuronModels, testNeuronModelsDefaultConstructor) {
         const auto expected_k2 = IzhikevichModel::default_k2;
         const auto expected_k3 = IzhikevichModel::default_k3;
 
-        EXPECT_EQ(expected_a, model->get_a());
-        EXPECT_EQ(expected_b, model->get_b());
-        EXPECT_EQ(expected_c, model->get_c());
-        EXPECT_EQ(expected_d, model->get_d());
-        EXPECT_EQ(expected_V_spike, model->get_V_spike());
-        EXPECT_EQ(expected_k1, model->get_k1());
-        EXPECT_EQ(expected_k2, model->get_k2());
-        EXPECT_EQ(expected_k3, model->get_k3());
+        ASSERT_EQ(expected_a, model->get_a());
+        ASSERT_EQ(expected_b, model->get_b());
+        ASSERT_EQ(expected_c, model->get_c());
+        ASSERT_EQ(expected_d, model->get_d());
+        ASSERT_EQ(expected_V_spike, model->get_V_spike());
+        ASSERT_EQ(expected_k1, model->get_k1());
+        ASSERT_EQ(expected_k2, model->get_k2());
+        ASSERT_EQ(expected_k3, model->get_k3());
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -134,21 +134,21 @@ TEST(TestNeuronModels, testNeuronModelsDefaultConstructor) {
 
         auto model = std::make_unique<FitzHughNagumoModel>();
 
-        EXPECT_EQ(expected_k, model->get_k());
-        EXPECT_EQ(expected_tau_C, model->get_tau_C());
-        EXPECT_EQ(expected_beta, model->get_beta());
-        EXPECT_EQ(expected_h, model->get_h());
-        EXPECT_EQ(expected_base_background_activity, model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, model->get_k());
+        ASSERT_EQ(expected_tau_C, model->get_tau_C());
+        ASSERT_EQ(expected_beta, model->get_beta());
+        ASSERT_EQ(expected_h, model->get_h());
+        ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 
         const auto expected_a = FitzHughNagumoModel::default_a;
         const auto expected_b = FitzHughNagumoModel::default_b;
         const auto expected_phi = FitzHughNagumoModel::default_phi;
 
-        EXPECT_EQ(expected_a, model->get_a());
-        EXPECT_EQ(expected_b, model->get_b());
-        EXPECT_EQ(expected_phi, model->get_phi());
+        ASSERT_EQ(expected_a, model->get_a());
+        ASSERT_EQ(expected_b, model->get_b());
+        ASSERT_EQ(expected_phi, model->get_phi());
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -162,13 +162,13 @@ TEST(TestNeuronModels, testNeuronModelsDefaultConstructor) {
 
         auto model = std::make_unique<AEIFModel>();
 
-        EXPECT_EQ(expected_k, model->get_k());
-        EXPECT_EQ(expected_tau_C, model->get_tau_C());
-        EXPECT_EQ(expected_beta, model->get_beta());
-        EXPECT_EQ(expected_h, model->get_h());
-        EXPECT_EQ(expected_base_background_activity, model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, model->get_k());
+        ASSERT_EQ(expected_tau_C, model->get_tau_C());
+        ASSERT_EQ(expected_beta, model->get_beta());
+        ASSERT_EQ(expected_h, model->get_h());
+        ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 
         const auto expected_C = AEIFModel::default_C;
         const auto expected_g_L = AEIFModel::default_g_L;
@@ -180,15 +180,15 @@ TEST(TestNeuronModels, testNeuronModelsDefaultConstructor) {
         const auto expected_b = AEIFModel::default_b;
         const auto expected_V_peak = AEIFModel::default_V_peak;
 
-        EXPECT_EQ(expected_C, model->get_C());
-        EXPECT_EQ(expected_g_L, model->get_g_L());
-        EXPECT_EQ(expected_E_L, model->get_E_L());
-        EXPECT_EQ(expected_V_T, model->get_V_T());
-        EXPECT_EQ(expected_d_T, model->get_d_T());
-        EXPECT_EQ(expected_tau_w, model->get_tau_w());
-        EXPECT_EQ(expected_a, model->get_a());
-        EXPECT_EQ(expected_b, model->get_b());
-        EXPECT_EQ(expected_V_peak, model->get_V_Peak());
+        ASSERT_EQ(expected_C, model->get_C());
+        ASSERT_EQ(expected_g_L, model->get_g_L());
+        ASSERT_EQ(expected_E_L, model->get_E_L());
+        ASSERT_EQ(expected_V_T, model->get_V_T());
+        ASSERT_EQ(expected_d_T, model->get_d_T());
+        ASSERT_EQ(expected_tau_w, model->get_tau_w());
+        ASSERT_EQ(expected_a, model->get_a());
+        ASSERT_EQ(expected_b, model->get_b());
+        ASSERT_EQ(expected_V_peak, model->get_V_Peak());
     }
 }
 
@@ -227,17 +227,17 @@ TEST(TestNeuronModels, testNeuronModelsRandomConstructor) {
         auto model = std::make_unique<PoissonModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_x0, expected_tau_x, expected_refrac);
 
-        EXPECT_EQ(expected_k, model->get_k());
-        EXPECT_EQ(expected_tau_C, model->get_tau_C());
-        EXPECT_EQ(expected_beta, model->get_beta());
-        EXPECT_EQ(expected_h, model->get_h());
-        EXPECT_EQ(expected_base_background_activity, model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, model->get_k());
+        ASSERT_EQ(expected_tau_C, model->get_tau_C());
+        ASSERT_EQ(expected_beta, model->get_beta());
+        ASSERT_EQ(expected_h, model->get_h());
+        ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 
-        EXPECT_EQ(expected_x0, model->get_x_0());
-        EXPECT_EQ(expected_refrac, model->get_refrac_time());
-        EXPECT_EQ(expected_tau_x, model->get_tau_x());
+        ASSERT_EQ(expected_x0, model->get_x_0());
+        ASSERT_EQ(expected_refrac, model->get_refrac_time());
+        ASSERT_EQ(expected_tau_x, model->get_tau_x());
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -278,22 +278,22 @@ TEST(TestNeuronModels, testNeuronModelsRandomConstructor) {
         auto model = std::make_unique<IzhikevichModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
 
-        EXPECT_EQ(expected_k, model->get_k());
-        EXPECT_EQ(expected_tau_C, model->get_tau_C());
-        EXPECT_EQ(expected_beta, model->get_beta());
-        EXPECT_EQ(expected_h, model->get_h());
-        EXPECT_EQ(expected_base_background_activity, model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, model->get_k());
+        ASSERT_EQ(expected_tau_C, model->get_tau_C());
+        ASSERT_EQ(expected_beta, model->get_beta());
+        ASSERT_EQ(expected_h, model->get_h());
+        ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 
-        EXPECT_EQ(expected_a, model->get_a());
-        EXPECT_EQ(expected_b, model->get_b());
-        EXPECT_EQ(expected_c, model->get_c());
-        EXPECT_EQ(expected_d, model->get_d());
-        EXPECT_EQ(expected_V_spike, model->get_V_spike());
-        EXPECT_EQ(expected_k1, model->get_k1());
-        EXPECT_EQ(expected_k2, model->get_k2());
-        EXPECT_EQ(expected_k3, model->get_k3());
+        ASSERT_EQ(expected_a, model->get_a());
+        ASSERT_EQ(expected_b, model->get_b());
+        ASSERT_EQ(expected_c, model->get_c());
+        ASSERT_EQ(expected_d, model->get_d());
+        ASSERT_EQ(expected_V_spike, model->get_V_spike());
+        ASSERT_EQ(expected_k1, model->get_k1());
+        ASSERT_EQ(expected_k2, model->get_k2());
+        ASSERT_EQ(expected_k3, model->get_k3());
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -324,17 +324,17 @@ TEST(TestNeuronModels, testNeuronModelsRandomConstructor) {
         auto model = std::make_unique<FitzHughNagumoModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_phi);
 
-        EXPECT_EQ(expected_k, model->get_k());
-        EXPECT_EQ(expected_tau_C, model->get_tau_C());
-        EXPECT_EQ(expected_beta, model->get_beta());
-        EXPECT_EQ(expected_h, model->get_h());
-        EXPECT_EQ(expected_base_background_activity, model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, model->get_k());
+        ASSERT_EQ(expected_tau_C, model->get_tau_C());
+        ASSERT_EQ(expected_beta, model->get_beta());
+        ASSERT_EQ(expected_h, model->get_h());
+        ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 
-        EXPECT_EQ(expected_a, model->get_a());
-        EXPECT_EQ(expected_b, model->get_b());
-        EXPECT_EQ(expected_phi, model->get_phi());
+        ASSERT_EQ(expected_a, model->get_a());
+        ASSERT_EQ(expected_b, model->get_b());
+        ASSERT_EQ(expected_phi, model->get_phi());
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -377,23 +377,23 @@ TEST(TestNeuronModels, testNeuronModelsRandomConstructor) {
         auto model = std::make_unique<AEIFModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_peak);
 
-        EXPECT_EQ(expected_k, model->get_k());
-        EXPECT_EQ(expected_tau_C, model->get_tau_C());
-        EXPECT_EQ(expected_beta, model->get_beta());
-        EXPECT_EQ(expected_h, model->get_h());
-        EXPECT_EQ(expected_base_background_activity, model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, model->get_k());
+        ASSERT_EQ(expected_tau_C, model->get_tau_C());
+        ASSERT_EQ(expected_beta, model->get_beta());
+        ASSERT_EQ(expected_h, model->get_h());
+        ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 
-        EXPECT_EQ(expected_C, model->get_C());
-        EXPECT_EQ(expected_g_L, model->get_g_L());
-        EXPECT_EQ(expected_E_L, model->get_E_L());
-        EXPECT_EQ(expected_V_T, model->get_V_T());
-        EXPECT_EQ(expected_d_T, model->get_d_T());
-        EXPECT_EQ(expected_tau_w, model->get_tau_w());
-        EXPECT_EQ(expected_a, model->get_a());
-        EXPECT_EQ(expected_b, model->get_b());
-        EXPECT_EQ(expected_V_peak, model->get_V_Peak());
+        ASSERT_EQ(expected_C, model->get_C());
+        ASSERT_EQ(expected_g_L, model->get_g_L());
+        ASSERT_EQ(expected_E_L, model->get_E_L());
+        ASSERT_EQ(expected_V_T, model->get_V_T());
+        ASSERT_EQ(expected_d_T, model->get_d_T());
+        ASSERT_EQ(expected_tau_w, model->get_tau_w());
+        ASSERT_EQ(expected_a, model->get_a());
+        ASSERT_EQ(expected_b, model->get_b());
+        ASSERT_EQ(expected_V_peak, model->get_V_Peak());
     }
 }
 
@@ -436,29 +436,29 @@ TEST(TestNeuronModels, testNeuronModelsClone) {
         std::shared_ptr<NeuronModels> shared_version = std::move(cloned_model);
         auto cast_cloned_model = std::dynamic_pointer_cast<PoissonModel>(shared_version);
 
-        EXPECT_EQ(expected_k, model->get_k());
-        EXPECT_EQ(expected_tau_C, model->get_tau_C());
-        EXPECT_EQ(expected_beta, model->get_beta());
-        EXPECT_EQ(expected_h, model->get_h());
-        EXPECT_EQ(expected_base_background_activity, model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, model->get_k());
+        ASSERT_EQ(expected_tau_C, model->get_tau_C());
+        ASSERT_EQ(expected_beta, model->get_beta());
+        ASSERT_EQ(expected_h, model->get_h());
+        ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 
-        EXPECT_EQ(expected_x0, model->get_x_0());
-        EXPECT_EQ(expected_refrac, model->get_refrac_time());
-        EXPECT_EQ(expected_tau_x, model->get_tau_x());
+        ASSERT_EQ(expected_x0, model->get_x_0());
+        ASSERT_EQ(expected_refrac, model->get_refrac_time());
+        ASSERT_EQ(expected_tau_x, model->get_tau_x());
 
-        EXPECT_EQ(expected_k, cast_cloned_model->get_k());
-        EXPECT_EQ(expected_tau_C, cast_cloned_model->get_tau_C());
-        EXPECT_EQ(expected_beta, cast_cloned_model->get_beta());
-        EXPECT_EQ(expected_h, cast_cloned_model->get_h());
-        EXPECT_EQ(expected_base_background_activity, cast_cloned_model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, cast_cloned_model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, cast_cloned_model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, cast_cloned_model->get_k());
+        ASSERT_EQ(expected_tau_C, cast_cloned_model->get_tau_C());
+        ASSERT_EQ(expected_beta, cast_cloned_model->get_beta());
+        ASSERT_EQ(expected_h, cast_cloned_model->get_h());
+        ASSERT_EQ(expected_base_background_activity, cast_cloned_model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, cast_cloned_model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, cast_cloned_model->get_background_activity_stddev());
 
-        EXPECT_EQ(expected_x0, cast_cloned_model->get_x_0());
-        EXPECT_EQ(expected_refrac, cast_cloned_model->get_refrac_time());
-        EXPECT_EQ(expected_tau_x, cast_cloned_model->get_tau_x());
+        ASSERT_EQ(expected_x0, cast_cloned_model->get_x_0());
+        ASSERT_EQ(expected_refrac, cast_cloned_model->get_refrac_time());
+        ASSERT_EQ(expected_tau_x, cast_cloned_model->get_tau_x());
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -503,39 +503,39 @@ TEST(TestNeuronModels, testNeuronModelsClone) {
         std::shared_ptr<NeuronModels> shared_version = std::move(cloned_model);
         auto cast_cloned_model = std::dynamic_pointer_cast<IzhikevichModel>(shared_version);
 
-        EXPECT_EQ(expected_k, model->get_k());
-        EXPECT_EQ(expected_tau_C, model->get_tau_C());
-        EXPECT_EQ(expected_beta, model->get_beta());
-        EXPECT_EQ(expected_h, model->get_h());
-        EXPECT_EQ(expected_base_background_activity, model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, model->get_k());
+        ASSERT_EQ(expected_tau_C, model->get_tau_C());
+        ASSERT_EQ(expected_beta, model->get_beta());
+        ASSERT_EQ(expected_h, model->get_h());
+        ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 
-        EXPECT_EQ(expected_a, model->get_a());
-        EXPECT_EQ(expected_b, model->get_b());
-        EXPECT_EQ(expected_c, model->get_c());
-        EXPECT_EQ(expected_d, model->get_d());
-        EXPECT_EQ(expected_V_spike, model->get_V_spike());
-        EXPECT_EQ(expected_k1, model->get_k1());
-        EXPECT_EQ(expected_k2, model->get_k2());
-        EXPECT_EQ(expected_k3, model->get_k3());
+        ASSERT_EQ(expected_a, model->get_a());
+        ASSERT_EQ(expected_b, model->get_b());
+        ASSERT_EQ(expected_c, model->get_c());
+        ASSERT_EQ(expected_d, model->get_d());
+        ASSERT_EQ(expected_V_spike, model->get_V_spike());
+        ASSERT_EQ(expected_k1, model->get_k1());
+        ASSERT_EQ(expected_k2, model->get_k2());
+        ASSERT_EQ(expected_k3, model->get_k3());
 
-        EXPECT_EQ(expected_k, cast_cloned_model->get_k());
-        EXPECT_EQ(expected_tau_C, cast_cloned_model->get_tau_C());
-        EXPECT_EQ(expected_beta, cast_cloned_model->get_beta());
-        EXPECT_EQ(expected_h, cast_cloned_model->get_h());
-        EXPECT_EQ(expected_base_background_activity, cast_cloned_model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, cast_cloned_model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, cast_cloned_model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, cast_cloned_model->get_k());
+        ASSERT_EQ(expected_tau_C, cast_cloned_model->get_tau_C());
+        ASSERT_EQ(expected_beta, cast_cloned_model->get_beta());
+        ASSERT_EQ(expected_h, cast_cloned_model->get_h());
+        ASSERT_EQ(expected_base_background_activity, cast_cloned_model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, cast_cloned_model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, cast_cloned_model->get_background_activity_stddev());
 
-        EXPECT_EQ(expected_a, cast_cloned_model->get_a());
-        EXPECT_EQ(expected_b, cast_cloned_model->get_b());
-        EXPECT_EQ(expected_c, cast_cloned_model->get_c());
-        EXPECT_EQ(expected_d, cast_cloned_model->get_d());
-        EXPECT_EQ(expected_V_spike, cast_cloned_model->get_V_spike());
-        EXPECT_EQ(expected_k1, cast_cloned_model->get_k1());
-        EXPECT_EQ(expected_k2, cast_cloned_model->get_k2());
-        EXPECT_EQ(expected_k3, cast_cloned_model->get_k3());
+        ASSERT_EQ(expected_a, cast_cloned_model->get_a());
+        ASSERT_EQ(expected_b, cast_cloned_model->get_b());
+        ASSERT_EQ(expected_c, cast_cloned_model->get_c());
+        ASSERT_EQ(expected_d, cast_cloned_model->get_d());
+        ASSERT_EQ(expected_V_spike, cast_cloned_model->get_V_spike());
+        ASSERT_EQ(expected_k1, cast_cloned_model->get_k1());
+        ASSERT_EQ(expected_k2, cast_cloned_model->get_k2());
+        ASSERT_EQ(expected_k3, cast_cloned_model->get_k3());
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -570,29 +570,29 @@ TEST(TestNeuronModels, testNeuronModelsClone) {
         std::shared_ptr<NeuronModels> shared_version = std::move(cloned_model);
         auto cast_cloned_model = std::dynamic_pointer_cast<FitzHughNagumoModel>(shared_version);
 
-        EXPECT_EQ(expected_k, model->get_k());
-        EXPECT_EQ(expected_tau_C, model->get_tau_C());
-        EXPECT_EQ(expected_beta, model->get_beta());
-        EXPECT_EQ(expected_h, model->get_h());
-        EXPECT_EQ(expected_base_background_activity, model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, model->get_k());
+        ASSERT_EQ(expected_tau_C, model->get_tau_C());
+        ASSERT_EQ(expected_beta, model->get_beta());
+        ASSERT_EQ(expected_h, model->get_h());
+        ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 
-        EXPECT_EQ(expected_a, model->get_a());
-        EXPECT_EQ(expected_b, model->get_b());
-        EXPECT_EQ(expected_phi, model->get_phi());
+        ASSERT_EQ(expected_a, model->get_a());
+        ASSERT_EQ(expected_b, model->get_b());
+        ASSERT_EQ(expected_phi, model->get_phi());
 
-        EXPECT_EQ(expected_k, cast_cloned_model->get_k());
-        EXPECT_EQ(expected_tau_C, cast_cloned_model->get_tau_C());
-        EXPECT_EQ(expected_beta, cast_cloned_model->get_beta());
-        EXPECT_EQ(expected_h, cast_cloned_model->get_h());
-        EXPECT_EQ(expected_base_background_activity, cast_cloned_model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, cast_cloned_model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, cast_cloned_model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, cast_cloned_model->get_k());
+        ASSERT_EQ(expected_tau_C, cast_cloned_model->get_tau_C());
+        ASSERT_EQ(expected_beta, cast_cloned_model->get_beta());
+        ASSERT_EQ(expected_h, cast_cloned_model->get_h());
+        ASSERT_EQ(expected_base_background_activity, cast_cloned_model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, cast_cloned_model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, cast_cloned_model->get_background_activity_stddev());
 
-        EXPECT_EQ(expected_a, cast_cloned_model->get_a());
-        EXPECT_EQ(expected_b, cast_cloned_model->get_b());
-        EXPECT_EQ(expected_phi, cast_cloned_model->get_phi());
+        ASSERT_EQ(expected_a, cast_cloned_model->get_a());
+        ASSERT_EQ(expected_b, cast_cloned_model->get_b());
+        ASSERT_EQ(expected_phi, cast_cloned_model->get_phi());
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -639,41 +639,41 @@ TEST(TestNeuronModels, testNeuronModelsClone) {
         std::shared_ptr<NeuronModels> shared_version = std::move(cloned_model);
         auto cast_cloned_model = std::dynamic_pointer_cast<AEIFModel>(shared_version);
 
-        EXPECT_EQ(expected_k, model->get_k());
-        EXPECT_EQ(expected_tau_C, model->get_tau_C());
-        EXPECT_EQ(expected_beta, model->get_beta());
-        EXPECT_EQ(expected_h, model->get_h());
-        EXPECT_EQ(expected_base_background_activity, model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, model->get_k());
+        ASSERT_EQ(expected_tau_C, model->get_tau_C());
+        ASSERT_EQ(expected_beta, model->get_beta());
+        ASSERT_EQ(expected_h, model->get_h());
+        ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 
-        EXPECT_EQ(expected_C, model->get_C());
-        EXPECT_EQ(expected_g_L, model->get_g_L());
-        EXPECT_EQ(expected_E_L, model->get_E_L());
-        EXPECT_EQ(expected_V_T, model->get_V_T());
-        EXPECT_EQ(expected_d_T, model->get_d_T());
-        EXPECT_EQ(expected_tau_w, model->get_tau_w());
-        EXPECT_EQ(expected_a, model->get_a());
-        EXPECT_EQ(expected_b, model->get_b());
-        EXPECT_EQ(expected_V_peak, model->get_V_Peak());
+        ASSERT_EQ(expected_C, model->get_C());
+        ASSERT_EQ(expected_g_L, model->get_g_L());
+        ASSERT_EQ(expected_E_L, model->get_E_L());
+        ASSERT_EQ(expected_V_T, model->get_V_T());
+        ASSERT_EQ(expected_d_T, model->get_d_T());
+        ASSERT_EQ(expected_tau_w, model->get_tau_w());
+        ASSERT_EQ(expected_a, model->get_a());
+        ASSERT_EQ(expected_b, model->get_b());
+        ASSERT_EQ(expected_V_peak, model->get_V_Peak());
 
-        EXPECT_EQ(expected_k, cast_cloned_model->get_k());
-        EXPECT_EQ(expected_tau_C, cast_cloned_model->get_tau_C());
-        EXPECT_EQ(expected_beta, cast_cloned_model->get_beta());
-        EXPECT_EQ(expected_h, cast_cloned_model->get_h());
-        EXPECT_EQ(expected_base_background_activity, cast_cloned_model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, cast_cloned_model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, cast_cloned_model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, cast_cloned_model->get_k());
+        ASSERT_EQ(expected_tau_C, cast_cloned_model->get_tau_C());
+        ASSERT_EQ(expected_beta, cast_cloned_model->get_beta());
+        ASSERT_EQ(expected_h, cast_cloned_model->get_h());
+        ASSERT_EQ(expected_base_background_activity, cast_cloned_model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, cast_cloned_model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, cast_cloned_model->get_background_activity_stddev());
 
-        EXPECT_EQ(expected_C, cast_cloned_model->get_C());
-        EXPECT_EQ(expected_g_L, cast_cloned_model->get_g_L());
-        EXPECT_EQ(expected_E_L, cast_cloned_model->get_E_L());
-        EXPECT_EQ(expected_V_T, cast_cloned_model->get_V_T());
-        EXPECT_EQ(expected_d_T, cast_cloned_model->get_d_T());
-        EXPECT_EQ(expected_tau_w, cast_cloned_model->get_tau_w());
-        EXPECT_EQ(expected_a, cast_cloned_model->get_a());
-        EXPECT_EQ(expected_b, cast_cloned_model->get_b());
-        EXPECT_EQ(expected_V_peak, cast_cloned_model->get_V_Peak());
+        ASSERT_EQ(expected_C, cast_cloned_model->get_C());
+        ASSERT_EQ(expected_g_L, cast_cloned_model->get_g_L());
+        ASSERT_EQ(expected_E_L, cast_cloned_model->get_E_L());
+        ASSERT_EQ(expected_V_T, cast_cloned_model->get_V_T());
+        ASSERT_EQ(expected_d_T, cast_cloned_model->get_d_T());
+        ASSERT_EQ(expected_tau_w, cast_cloned_model->get_tau_w());
+        ASSERT_EQ(expected_a, cast_cloned_model->get_a());
+        ASSERT_EQ(expected_b, cast_cloned_model->get_b());
+        ASSERT_EQ(expected_V_peak, cast_cloned_model->get_V_Peak());
     }
 }
 
@@ -712,17 +712,17 @@ TEST(TestNeuronModels, testNeuronModelsCreate) {
         auto model = NeuronModels::create<PoissonModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_x0, expected_tau_x, expected_refrac);
 
-        EXPECT_EQ(expected_k, model->get_k());
-        EXPECT_EQ(expected_tau_C, model->get_tau_C());
-        EXPECT_EQ(expected_beta, model->get_beta());
-        EXPECT_EQ(expected_h, model->get_h());
-        EXPECT_EQ(expected_base_background_activity, model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, model->get_k());
+        ASSERT_EQ(expected_tau_C, model->get_tau_C());
+        ASSERT_EQ(expected_beta, model->get_beta());
+        ASSERT_EQ(expected_h, model->get_h());
+        ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 
-        EXPECT_EQ(expected_x0, model->get_x_0());
-        EXPECT_EQ(expected_refrac, model->get_refrac_time());
-        EXPECT_EQ(expected_tau_x, model->get_tau_x());
+        ASSERT_EQ(expected_x0, model->get_x_0());
+        ASSERT_EQ(expected_refrac, model->get_refrac_time());
+        ASSERT_EQ(expected_tau_x, model->get_tau_x());
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -763,22 +763,22 @@ TEST(TestNeuronModels, testNeuronModelsCreate) {
         auto model = NeuronModels::create<IzhikevichModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
 
-        EXPECT_EQ(expected_k, model->get_k());
-        EXPECT_EQ(expected_tau_C, model->get_tau_C());
-        EXPECT_EQ(expected_beta, model->get_beta());
-        EXPECT_EQ(expected_h, model->get_h());
-        EXPECT_EQ(expected_base_background_activity, model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, model->get_k());
+        ASSERT_EQ(expected_tau_C, model->get_tau_C());
+        ASSERT_EQ(expected_beta, model->get_beta());
+        ASSERT_EQ(expected_h, model->get_h());
+        ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 
-        EXPECT_EQ(expected_a, model->get_a());
-        EXPECT_EQ(expected_b, model->get_b());
-        EXPECT_EQ(expected_c, model->get_c());
-        EXPECT_EQ(expected_d, model->get_d());
-        EXPECT_EQ(expected_V_spike, model->get_V_spike());
-        EXPECT_EQ(expected_k1, model->get_k1());
-        EXPECT_EQ(expected_k2, model->get_k2());
-        EXPECT_EQ(expected_k3, model->get_k3());
+        ASSERT_EQ(expected_a, model->get_a());
+        ASSERT_EQ(expected_b, model->get_b());
+        ASSERT_EQ(expected_c, model->get_c());
+        ASSERT_EQ(expected_d, model->get_d());
+        ASSERT_EQ(expected_V_spike, model->get_V_spike());
+        ASSERT_EQ(expected_k1, model->get_k1());
+        ASSERT_EQ(expected_k2, model->get_k2());
+        ASSERT_EQ(expected_k3, model->get_k3());
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -809,17 +809,17 @@ TEST(TestNeuronModels, testNeuronModelsCreate) {
         auto model = NeuronModels::create<FitzHughNagumoModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_phi);
 
-        EXPECT_EQ(expected_k, model->get_k());
-        EXPECT_EQ(expected_tau_C, model->get_tau_C());
-        EXPECT_EQ(expected_beta, model->get_beta());
-        EXPECT_EQ(expected_h, model->get_h());
-        EXPECT_EQ(expected_base_background_activity, model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, model->get_k());
+        ASSERT_EQ(expected_tau_C, model->get_tau_C());
+        ASSERT_EQ(expected_beta, model->get_beta());
+        ASSERT_EQ(expected_h, model->get_h());
+        ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 
-        EXPECT_EQ(expected_a, model->get_a());
-        EXPECT_EQ(expected_b, model->get_b());
-        EXPECT_EQ(expected_phi, model->get_phi());
+        ASSERT_EQ(expected_a, model->get_a());
+        ASSERT_EQ(expected_b, model->get_b());
+        ASSERT_EQ(expected_phi, model->get_phi());
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -862,23 +862,23 @@ TEST(TestNeuronModels, testNeuronModelsCreate) {
         auto model = NeuronModels::create<AEIFModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_peak);
 
-        EXPECT_EQ(expected_k, model->get_k());
-        EXPECT_EQ(expected_tau_C, model->get_tau_C());
-        EXPECT_EQ(expected_beta, model->get_beta());
-        EXPECT_EQ(expected_h, model->get_h());
-        EXPECT_EQ(expected_base_background_activity, model->get_base_background_activity());
-        EXPECT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
-        EXPECT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
+        ASSERT_EQ(expected_k, model->get_k());
+        ASSERT_EQ(expected_tau_C, model->get_tau_C());
+        ASSERT_EQ(expected_beta, model->get_beta());
+        ASSERT_EQ(expected_h, model->get_h());
+        ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
+        ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
+        ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 
-        EXPECT_EQ(expected_C, model->get_C());
-        EXPECT_EQ(expected_g_L, model->get_g_L());
-        EXPECT_EQ(expected_E_L, model->get_E_L());
-        EXPECT_EQ(expected_V_T, model->get_V_T());
-        EXPECT_EQ(expected_d_T, model->get_d_T());
-        EXPECT_EQ(expected_tau_w, model->get_tau_w());
-        EXPECT_EQ(expected_a, model->get_a());
-        EXPECT_EQ(expected_b, model->get_b());
-        EXPECT_EQ(expected_V_peak, model->get_V_Peak());
+        ASSERT_EQ(expected_C, model->get_C());
+        ASSERT_EQ(expected_g_L, model->get_g_L());
+        ASSERT_EQ(expected_E_L, model->get_E_L());
+        ASSERT_EQ(expected_V_T, model->get_V_T());
+        ASSERT_EQ(expected_d_T, model->get_d_T());
+        ASSERT_EQ(expected_tau_w, model->get_tau_w());
+        ASSERT_EQ(expected_a, model->get_a());
+        ASSERT_EQ(expected_b, model->get_b());
+        ASSERT_EQ(expected_V_peak, model->get_V_Peak());
     }
 }
 
@@ -929,22 +929,22 @@ TEST(TestNeuronModels, testNeuronModelsInit) {
             const auto& x = model->get_x();
             const auto& fired = model->get_fired();
 
-            EXPECT_EQ(desired_num_neurons, num_neurons);
-            EXPECT_EQ(desired_num_neurons, x.size());
-            EXPECT_EQ(desired_num_neurons, fired.size());
+            ASSERT_EQ(desired_num_neurons, num_neurons);
+            ASSERT_EQ(desired_num_neurons, x.size());
+            ASSERT_EQ(desired_num_neurons, fired.size());
 
             for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-                EXPECT_NO_THROW(model->get_x(neuron_id));
-                EXPECT_NO_THROW(model->get_fired(neuron_id));
-                EXPECT_NO_THROW(model->get_secondary_variable(neuron_id));
-                EXPECT_NO_THROW(model->get_I_syn(neuron_id));
+                ASSERT_NO_THROW(model->get_x(neuron_id));
+                ASSERT_NO_THROW(model->get_fired(neuron_id));
+                ASSERT_NO_THROW(model->get_secondary_variable(neuron_id));
+                ASSERT_NO_THROW(model->get_I_syn(neuron_id));
             }
 
             for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-                EXPECT_THROW(model->get_x(neuron_id + num_neurons), RelearnException);
-                EXPECT_THROW(model->get_fired(neuron_id + num_neurons), RelearnException);
-                EXPECT_THROW(model->get_secondary_variable(neuron_id + num_neurons), RelearnException);
-                EXPECT_THROW(model->get_I_syn(neuron_id + num_neurons), RelearnException);
+                ASSERT_THROW(model->get_x(neuron_id + num_neurons), RelearnException);
+                ASSERT_THROW(model->get_fired(neuron_id + num_neurons), RelearnException);
+                ASSERT_THROW(model->get_secondary_variable(neuron_id + num_neurons), RelearnException);
+                ASSERT_THROW(model->get_I_syn(neuron_id + num_neurons), RelearnException);
             }
         }
     }
@@ -999,22 +999,22 @@ TEST(TestNeuronModels, testNeuronModelsInit) {
             const auto& x = model->get_x();
             const auto& fired = model->get_fired();
 
-            EXPECT_EQ(desired_num_neurons, num_neurons);
-            EXPECT_EQ(desired_num_neurons, x.size());
-            EXPECT_EQ(desired_num_neurons, fired.size());
+            ASSERT_EQ(desired_num_neurons, num_neurons);
+            ASSERT_EQ(desired_num_neurons, x.size());
+            ASSERT_EQ(desired_num_neurons, fired.size());
 
             for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-                EXPECT_NO_THROW(model->get_x(neuron_id));
-                EXPECT_NO_THROW(model->get_fired(neuron_id));
-                EXPECT_NO_THROW(model->get_secondary_variable(neuron_id));
-                EXPECT_NO_THROW(model->get_I_syn(neuron_id));
+                ASSERT_NO_THROW(model->get_x(neuron_id));
+                ASSERT_NO_THROW(model->get_fired(neuron_id));
+                ASSERT_NO_THROW(model->get_secondary_variable(neuron_id));
+                ASSERT_NO_THROW(model->get_I_syn(neuron_id));
             }
 
             for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-                EXPECT_THROW(model->get_x(neuron_id + num_neurons), RelearnException);
-                EXPECT_THROW(model->get_fired(neuron_id + num_neurons), RelearnException);
-                EXPECT_THROW(model->get_secondary_variable(neuron_id + num_neurons), RelearnException);
-                EXPECT_THROW(model->get_I_syn(neuron_id + num_neurons), RelearnException);
+                ASSERT_THROW(model->get_x(neuron_id + num_neurons), RelearnException);
+                ASSERT_THROW(model->get_fired(neuron_id + num_neurons), RelearnException);
+                ASSERT_THROW(model->get_secondary_variable(neuron_id + num_neurons), RelearnException);
+                ASSERT_THROW(model->get_I_syn(neuron_id + num_neurons), RelearnException);
             }
         }
     }
@@ -1059,22 +1059,22 @@ TEST(TestNeuronModels, testNeuronModelsInit) {
             const auto& x = model->get_x();
             const auto& fired = model->get_fired();
 
-            EXPECT_EQ(desired_num_neurons, num_neurons);
-            EXPECT_EQ(desired_num_neurons, x.size());
-            EXPECT_EQ(desired_num_neurons, fired.size());
+            ASSERT_EQ(desired_num_neurons, num_neurons);
+            ASSERT_EQ(desired_num_neurons, x.size());
+            ASSERT_EQ(desired_num_neurons, fired.size());
 
             for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-                EXPECT_NO_THROW(model->get_x(neuron_id));
-                EXPECT_NO_THROW(model->get_fired(neuron_id));
-                EXPECT_NO_THROW(model->get_secondary_variable(neuron_id));
-                EXPECT_NO_THROW(model->get_I_syn(neuron_id));
+                ASSERT_NO_THROW(model->get_x(neuron_id));
+                ASSERT_NO_THROW(model->get_fired(neuron_id));
+                ASSERT_NO_THROW(model->get_secondary_variable(neuron_id));
+                ASSERT_NO_THROW(model->get_I_syn(neuron_id));
             }
 
             for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-                EXPECT_THROW(model->get_x(neuron_id + num_neurons), RelearnException);
-                EXPECT_THROW(model->get_fired(neuron_id + num_neurons), RelearnException);
-                EXPECT_THROW(model->get_secondary_variable(neuron_id + num_neurons), RelearnException);
-                EXPECT_THROW(model->get_I_syn(neuron_id + num_neurons), RelearnException);
+                ASSERT_THROW(model->get_x(neuron_id + num_neurons), RelearnException);
+                ASSERT_THROW(model->get_fired(neuron_id + num_neurons), RelearnException);
+                ASSERT_THROW(model->get_secondary_variable(neuron_id + num_neurons), RelearnException);
+                ASSERT_THROW(model->get_I_syn(neuron_id + num_neurons), RelearnException);
             }
         }
     }
@@ -1131,22 +1131,22 @@ TEST(TestNeuronModels, testNeuronModelsInit) {
             const auto& x = model->get_x();
             const auto& fired = model->get_fired();
 
-            EXPECT_EQ(desired_num_neurons, num_neurons);
-            EXPECT_EQ(desired_num_neurons, x.size());
-            EXPECT_EQ(desired_num_neurons, fired.size());
+            ASSERT_EQ(desired_num_neurons, num_neurons);
+            ASSERT_EQ(desired_num_neurons, x.size());
+            ASSERT_EQ(desired_num_neurons, fired.size());
 
             for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-                EXPECT_NO_THROW(model->get_x(neuron_id));
-                EXPECT_NO_THROW(model->get_fired(neuron_id));
-                EXPECT_NO_THROW(model->get_secondary_variable(neuron_id));
-                EXPECT_NO_THROW(model->get_I_syn(neuron_id));
+                ASSERT_NO_THROW(model->get_x(neuron_id));
+                ASSERT_NO_THROW(model->get_fired(neuron_id));
+                ASSERT_NO_THROW(model->get_secondary_variable(neuron_id));
+                ASSERT_NO_THROW(model->get_I_syn(neuron_id));
             }
 
             for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-                EXPECT_THROW(model->get_x(neuron_id + num_neurons), RelearnException);
-                EXPECT_THROW(model->get_fired(neuron_id + num_neurons), RelearnException);
-                EXPECT_THROW(model->get_secondary_variable(neuron_id + num_neurons), RelearnException);
-                EXPECT_THROW(model->get_I_syn(neuron_id + num_neurons), RelearnException);
+                ASSERT_THROW(model->get_x(neuron_id + num_neurons), RelearnException);
+                ASSERT_THROW(model->get_fired(neuron_id + num_neurons), RelearnException);
+                ASSERT_THROW(model->get_secondary_variable(neuron_id + num_neurons), RelearnException);
+                ASSERT_THROW(model->get_I_syn(neuron_id + num_neurons), RelearnException);
             }
         }
     }
@@ -1202,22 +1202,22 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeurons) {
             const auto& x = model->get_x();
             const auto& fired = model->get_fired();
 
-            EXPECT_EQ(current_num_neurons, num_neurons);
-            EXPECT_EQ(current_num_neurons, x.size());
-            EXPECT_EQ(current_num_neurons, fired.size());
+            ASSERT_EQ(current_num_neurons, num_neurons);
+            ASSERT_EQ(current_num_neurons, x.size());
+            ASSERT_EQ(current_num_neurons, fired.size());
 
             for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
-                EXPECT_NO_THROW(model->get_x(neuron_id));
-                EXPECT_NO_THROW(model->get_fired(neuron_id));
-                EXPECT_NO_THROW(model->get_secondary_variable(neuron_id));
-                EXPECT_NO_THROW(model->get_I_syn(neuron_id));
+                ASSERT_NO_THROW(model->get_x(neuron_id));
+                ASSERT_NO_THROW(model->get_fired(neuron_id));
+                ASSERT_NO_THROW(model->get_secondary_variable(neuron_id));
+                ASSERT_NO_THROW(model->get_I_syn(neuron_id));
             }
 
             for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
-                EXPECT_THROW(model->get_x(neuron_id + current_num_neurons), RelearnException);
-                EXPECT_THROW(model->get_fired(neuron_id + current_num_neurons), RelearnException);
-                EXPECT_THROW(model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
-                EXPECT_THROW(model->get_I_syn(neuron_id + current_num_neurons), RelearnException);
+                ASSERT_THROW(model->get_x(neuron_id + current_num_neurons), RelearnException);
+                ASSERT_THROW(model->get_fired(neuron_id + current_num_neurons), RelearnException);
+                ASSERT_THROW(model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
+                ASSERT_THROW(model->get_I_syn(neuron_id + current_num_neurons), RelearnException);
             }
         }
     }
@@ -1275,22 +1275,22 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeurons) {
             const auto& x = model->get_x();
             const auto& fired = model->get_fired();
 
-            EXPECT_EQ(current_num_neurons, num_neurons);
-            EXPECT_EQ(current_num_neurons, x.size());
-            EXPECT_EQ(current_num_neurons, fired.size());
+            ASSERT_EQ(current_num_neurons, num_neurons);
+            ASSERT_EQ(current_num_neurons, x.size());
+            ASSERT_EQ(current_num_neurons, fired.size());
 
             for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
-                EXPECT_NO_THROW(model->get_x(neuron_id));
-                EXPECT_NO_THROW(model->get_fired(neuron_id));
-                EXPECT_NO_THROW(model->get_secondary_variable(neuron_id));
-                EXPECT_NO_THROW(model->get_I_syn(neuron_id));
+                ASSERT_NO_THROW(model->get_x(neuron_id));
+                ASSERT_NO_THROW(model->get_fired(neuron_id));
+                ASSERT_NO_THROW(model->get_secondary_variable(neuron_id));
+                ASSERT_NO_THROW(model->get_I_syn(neuron_id));
             }
 
             for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
-                EXPECT_THROW(model->get_x(neuron_id + current_num_neurons), RelearnException);
-                EXPECT_THROW(model->get_fired(neuron_id + current_num_neurons), RelearnException);
-                EXPECT_THROW(model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
-                EXPECT_THROW(model->get_I_syn(neuron_id + current_num_neurons), RelearnException);
+                ASSERT_THROW(model->get_x(neuron_id + current_num_neurons), RelearnException);
+                ASSERT_THROW(model->get_fired(neuron_id + current_num_neurons), RelearnException);
+                ASSERT_THROW(model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
+                ASSERT_THROW(model->get_I_syn(neuron_id + current_num_neurons), RelearnException);
             }
         }
     }
@@ -1338,22 +1338,22 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeurons) {
             const auto& x = model->get_x();
             const auto& fired = model->get_fired();
 
-            EXPECT_EQ(current_num_neurons, num_neurons);
-            EXPECT_EQ(current_num_neurons, x.size());
-            EXPECT_EQ(current_num_neurons, fired.size());
+            ASSERT_EQ(current_num_neurons, num_neurons);
+            ASSERT_EQ(current_num_neurons, x.size());
+            ASSERT_EQ(current_num_neurons, fired.size());
 
             for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
-                EXPECT_NO_THROW(model->get_x(neuron_id));
-                EXPECT_NO_THROW(model->get_fired(neuron_id));
-                EXPECT_NO_THROW(model->get_secondary_variable(neuron_id));
-                EXPECT_NO_THROW(model->get_I_syn(neuron_id));
+                ASSERT_NO_THROW(model->get_x(neuron_id));
+                ASSERT_NO_THROW(model->get_fired(neuron_id));
+                ASSERT_NO_THROW(model->get_secondary_variable(neuron_id));
+                ASSERT_NO_THROW(model->get_I_syn(neuron_id));
             }
 
             for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
-                EXPECT_THROW(model->get_x(neuron_id + current_num_neurons), RelearnException);
-                EXPECT_THROW(model->get_fired(neuron_id + current_num_neurons), RelearnException);
-                EXPECT_THROW(model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
-                EXPECT_THROW(model->get_I_syn(neuron_id + current_num_neurons), RelearnException);
+                ASSERT_THROW(model->get_x(neuron_id + current_num_neurons), RelearnException);
+                ASSERT_THROW(model->get_fired(neuron_id + current_num_neurons), RelearnException);
+                ASSERT_THROW(model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
+                ASSERT_THROW(model->get_I_syn(neuron_id + current_num_neurons), RelearnException);
             }
         }
     }
@@ -1413,22 +1413,22 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeurons) {
             const auto& x = model->get_x();
             const auto& fired = model->get_fired();
 
-            EXPECT_EQ(current_num_neurons, num_neurons);
-            EXPECT_EQ(current_num_neurons, x.size());
-            EXPECT_EQ(current_num_neurons, fired.size());
+            ASSERT_EQ(current_num_neurons, num_neurons);
+            ASSERT_EQ(current_num_neurons, x.size());
+            ASSERT_EQ(current_num_neurons, fired.size());
 
             for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
-                EXPECT_NO_THROW(model->get_x(neuron_id));
-                EXPECT_NO_THROW(model->get_fired(neuron_id));
-                EXPECT_NO_THROW(model->get_secondary_variable(neuron_id));
-                EXPECT_NO_THROW(model->get_I_syn(neuron_id));
+                ASSERT_NO_THROW(model->get_x(neuron_id));
+                ASSERT_NO_THROW(model->get_fired(neuron_id));
+                ASSERT_NO_THROW(model->get_secondary_variable(neuron_id));
+                ASSERT_NO_THROW(model->get_I_syn(neuron_id));
             }
 
             for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
-                EXPECT_THROW(model->get_x(neuron_id + current_num_neurons), RelearnException);
-                EXPECT_THROW(model->get_fired(neuron_id + current_num_neurons), RelearnException);
-                EXPECT_THROW(model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
-                EXPECT_THROW(model->get_I_syn(neuron_id + current_num_neurons), RelearnException);
+                ASSERT_THROW(model->get_x(neuron_id + current_num_neurons), RelearnException);
+                ASSERT_THROW(model->get_fired(neuron_id + current_num_neurons), RelearnException);
+                ASSERT_THROW(model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
+                ASSERT_THROW(model->get_I_syn(neuron_id + current_num_neurons), RelearnException);
             }
         }
     }
@@ -1482,13 +1482,13 @@ TEST(TestNeuronModels, testNeuronModelsDisableFired) {
 
         for (auto id = 0; id < num_neurons; id++) {
             if (std::find(disable_ids.cbegin(), disable_ids.cend(), id) != disable_ids.cend()) {
-                EXPECT_FALSE(model->get_fired(id));
+                ASSERT_FALSE(model->get_fired(id));
             }
         }
 
         const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables);
 
-        EXPECT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
+        ASSERT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -1542,13 +1542,13 @@ TEST(TestNeuronModels, testNeuronModelsDisableFired) {
 
         for (auto id = 0; id < num_neurons; id++) {
             if (std::find(disable_ids.cbegin(), disable_ids.cend(), id) != disable_ids.cend()) {
-                EXPECT_FALSE(model->get_fired(id));
+                ASSERT_FALSE(model->get_fired(id));
             }
         }
 
         const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables);
 
-        EXPECT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
+        ASSERT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -1592,13 +1592,13 @@ TEST(TestNeuronModels, testNeuronModelsDisableFired) {
 
         for (auto id = 0; id < num_neurons; id++) {
             if (std::find(disable_ids.cbegin(), disable_ids.cend(), id) != disable_ids.cend()) {
-                EXPECT_FALSE(model->get_fired(id));
+                ASSERT_FALSE(model->get_fired(id));
             }
         }
 
         const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables);
 
-        EXPECT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
+        ASSERT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -1654,13 +1654,13 @@ TEST(TestNeuronModels, testNeuronModelsDisableFired) {
 
         for (auto id = 0; id < num_neurons; id++) {
             if (std::find(disable_ids.cbegin(), disable_ids.cend(), id) != disable_ids.cend()) {
-                EXPECT_FALSE(model->get_fired(id));
+                ASSERT_FALSE(model->get_fired(id));
             }
         }
 
         const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables);
 
-        EXPECT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
+        ASSERT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
     }
 }
 
@@ -1724,11 +1724,11 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
             const auto& current_fired = model->get_fired();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                EXPECT_EQ(current_x[id], model_x[id]);
-                EXPECT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_EQ(current_x[id], model_x[id]);
+                ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+                ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -1747,11 +1747,11 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
             const auto& current_fired = model->get_fired();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                EXPECT_EQ(current_x[id], model_x[id]);
-                EXPECT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_EQ(current_x[id], model_x[id]);
+                ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+                ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -1825,11 +1825,11 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
             const auto& current_fired = model->get_fired();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                EXPECT_EQ(current_x[id], model_x[id]);
-                EXPECT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_EQ(current_x[id], model_x[id]);
+                ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+                ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -1848,11 +1848,11 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
             const auto& current_fired = model->get_fired();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                EXPECT_EQ(current_x[id], model_x[id]);
-                EXPECT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_EQ(current_x[id], model_x[id]);
+                ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+                ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -1916,11 +1916,11 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
             const auto& current_fired = model->get_fired();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                EXPECT_EQ(current_x[id], model_x[id]);
-                EXPECT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_EQ(current_x[id], model_x[id]);
+                ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+                ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -1939,11 +1939,11 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
             const auto& current_fired = model->get_fired();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                EXPECT_EQ(current_x[id], model_x[id]);
-                EXPECT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_EQ(current_x[id], model_x[id]);
+                ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+                ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -2019,11 +2019,11 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
             const auto& current_fired = model->get_fired();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                EXPECT_EQ(current_x[id], model_x[id]);
-                EXPECT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_EQ(current_x[id], model_x[id]);
+                ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+                ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -2042,11 +2042,11 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
             const auto& current_fired = model->get_fired();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                EXPECT_EQ(current_x[id], model_x[id]);
-                EXPECT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_EQ(current_x[id], model_x[id]);
+                ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+                ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -2119,11 +2119,11 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
             const auto& current_fired = model->get_fired();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                EXPECT_NE(current_x[id], model_x[id]);
-                //EXPECT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_NE(current_x[id], model_x[id]);
+                //ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                //EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+                //ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -2142,11 +2142,11 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
             const auto& current_fired = model->get_fired();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                EXPECT_NE(current_x[id], model_x[id]);
-                //EXPECT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_NE(current_x[id], model_x[id]);
+                //ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                //EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                EXPECT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+                //ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -2222,11 +2222,11 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
             const auto& current_fired = model->get_fired();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                EXPECT_NE(current_x[id], model_x[id]);
-                //EXPECT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_NE(current_x[id], model_x[id]);
+                //ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                //EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                EXPECT_NE(model->get_secondary_variable(id), model_secondary[id]);
+                //ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -2245,11 +2245,11 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
             const auto& current_fired = model->get_fired();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                EXPECT_NE(current_x[id], model_x[id]);
-                //EXPECT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_NE(current_x[id], model_x[id]);
+                //ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                //EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                EXPECT_NE(model->get_secondary_variable(id), model_secondary[id]);
+                //ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -2313,11 +2313,11 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
             const auto& current_fired = model->get_fired();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                EXPECT_NE(current_x[id], model_x[id]);
-                //EXPECT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_NE(current_x[id], model_x[id]);
+                //ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                //EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                EXPECT_NE(model->get_secondary_variable(id), model_secondary[id]);
+                //ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -2336,11 +2336,11 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
             const auto& current_fired = model->get_fired();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                EXPECT_NE(current_x[id], model_x[id]);
-                //EXPECT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_NE(current_x[id], model_x[id]);
+                //ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                //EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                EXPECT_NE(model->get_secondary_variable(id), model_secondary[id]);
+                //ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -2416,11 +2416,11 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
             const auto& current_fired = model->get_fired();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                EXPECT_NE(current_x[id], model_x[id]);
-                //EXPECT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_NE(current_x[id], model_x[id]);
+                //ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                //EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                EXPECT_NE(model->get_secondary_variable(id), model_secondary[id]);
+                //ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -2439,11 +2439,11 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
             const auto& current_fired = model->get_fired();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                EXPECT_NE(current_x[id], model_x[id]);
-                //EXPECT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_NE(current_x[id], model_x[id]);
+                //ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                //EXPECT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                EXPECT_NE(model->get_secondary_variable(id), model_secondary[id]);
+                //ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
+                ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);

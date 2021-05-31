@@ -80,7 +80,7 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons(OctreeNode* root) {
             const auto neuron_id = cell.get_neuron_id();
             const auto& opt_position = cell.get_neuron_position();
 
-            EXPECT_TRUE(opt_position.has_value());
+            ASSERT_TRUE(opt_position.has_value());
 
             const auto position = opt_position.value();
 
@@ -172,8 +172,8 @@ TEST(TestCell, testCellSize) {
 
         const auto& res_1 = cell.get_size();
 
-        EXPECT_EQ(min_1, std::get<0>(res_1));
-        EXPECT_EQ(max_1, std::get<1>(res_1));
+        ASSERT_EQ(min_1, std::get<0>(res_1));
+        ASSERT_EQ(max_1, std::get<1>(res_1));
 
         const auto& box_sizes_2 = get_random_simulation_box_size();
         const auto& min_2 = std::get<0>(box_sizes_2);
@@ -183,10 +183,10 @@ TEST(TestCell, testCellSize) {
 
         const auto& res_2 = cell.get_size();
 
-        EXPECT_EQ(min_2, std::get<0>(res_2));
-        EXPECT_EQ(max_2, std::get<1>(res_2));
+        ASSERT_EQ(min_2, std::get<0>(res_2));
+        ASSERT_EQ(max_2, std::get<1>(res_2));
 
-        EXPECT_EQ(cell.get_maximal_dimension_difference(), (max_2 - min_2).get_maximum());
+        ASSERT_EQ(cell.get_maximal_dimension_difference(), (max_2 - min_2).get_maximum());
     }
 }
 
@@ -209,54 +209,54 @@ TEST(TestCell, testCellPosition) {
         const Vec3d pos_ex_1{ urd_x(mt), urd_y(mt), urd_z(mt) };
         cell.set_neuron_position_exc(pos_ex_1);
 
-        EXPECT_TRUE(cell.get_neuron_position_exc().has_value());
-        EXPECT_EQ(pos_ex_1, cell.get_neuron_position_exc().value());
+        ASSERT_TRUE(cell.get_neuron_position_exc().has_value());
+        ASSERT_EQ(pos_ex_1, cell.get_neuron_position_exc().value());
 
-        EXPECT_TRUE(cell.get_neuron_position_for(SignalType::EXCITATORY).has_value());
-        EXPECT_EQ(pos_ex_1, cell.get_neuron_position_for(SignalType::EXCITATORY).value());
+        ASSERT_TRUE(cell.get_neuron_position_for(SignalType::EXCITATORY).has_value());
+        ASSERT_EQ(pos_ex_1, cell.get_neuron_position_for(SignalType::EXCITATORY).value());
 
         cell.set_neuron_position_exc({});
-        EXPECT_FALSE(cell.get_neuron_position_exc().has_value());
-        EXPECT_FALSE(cell.get_neuron_position_for(SignalType::EXCITATORY).has_value());
+        ASSERT_FALSE(cell.get_neuron_position_exc().has_value());
+        ASSERT_FALSE(cell.get_neuron_position_for(SignalType::EXCITATORY).has_value());
 
         const Vec3d pos_ex_2{ urd_x(mt), urd_y(mt), urd_z(mt) };
         cell.set_neuron_position_exc(pos_ex_2);
 
-        EXPECT_TRUE(cell.get_neuron_position_exc().has_value());
-        EXPECT_EQ(pos_ex_2, cell.get_neuron_position_exc().value());
+        ASSERT_TRUE(cell.get_neuron_position_exc().has_value());
+        ASSERT_EQ(pos_ex_2, cell.get_neuron_position_exc().value());
 
-        EXPECT_TRUE(cell.get_neuron_position_for(SignalType::EXCITATORY).has_value());
-        EXPECT_EQ(pos_ex_2, cell.get_neuron_position_for(SignalType::EXCITATORY).value());
+        ASSERT_TRUE(cell.get_neuron_position_for(SignalType::EXCITATORY).has_value());
+        ASSERT_EQ(pos_ex_2, cell.get_neuron_position_for(SignalType::EXCITATORY).value());
 
         cell.set_neuron_position_exc({});
-        EXPECT_FALSE(cell.get_neuron_position_exc().has_value());
-        EXPECT_FALSE(cell.get_neuron_position_for(SignalType::EXCITATORY).has_value());
+        ASSERT_FALSE(cell.get_neuron_position_exc().has_value());
+        ASSERT_FALSE(cell.get_neuron_position_for(SignalType::EXCITATORY).has_value());
 
         const Vec3d pos_in_1{ urd_x(mt), urd_y(mt), urd_z(mt) };
         cell.set_neuron_position_inh(pos_in_1);
 
-        EXPECT_TRUE(cell.get_neuron_position_inh().has_value());
-        EXPECT_EQ(pos_in_1, cell.get_neuron_position_inh().value());
+        ASSERT_TRUE(cell.get_neuron_position_inh().has_value());
+        ASSERT_EQ(pos_in_1, cell.get_neuron_position_inh().value());
 
-        EXPECT_TRUE(cell.get_neuron_position_for(SignalType::INHIBITORY).has_value());
-        EXPECT_EQ(pos_in_1, cell.get_neuron_position_for(SignalType::INHIBITORY).value());
+        ASSERT_TRUE(cell.get_neuron_position_for(SignalType::INHIBITORY).has_value());
+        ASSERT_EQ(pos_in_1, cell.get_neuron_position_for(SignalType::INHIBITORY).value());
 
         cell.set_neuron_position_inh({});
-        EXPECT_FALSE(cell.get_neuron_position_exc().has_value());
-        EXPECT_FALSE(cell.get_neuron_position_for(SignalType::EXCITATORY).has_value());
+        ASSERT_FALSE(cell.get_neuron_position_exc().has_value());
+        ASSERT_FALSE(cell.get_neuron_position_for(SignalType::EXCITATORY).has_value());
 
         const Vec3d pos_in_2{ urd_x(mt), urd_y(mt), urd_z(mt) };
         cell.set_neuron_position_inh(pos_in_2);
 
-        EXPECT_TRUE(cell.get_neuron_position_inh().has_value());
-        EXPECT_EQ(pos_in_2, cell.get_neuron_position_inh().value());
+        ASSERT_TRUE(cell.get_neuron_position_inh().has_value());
+        ASSERT_EQ(pos_in_2, cell.get_neuron_position_inh().value());
 
-        EXPECT_TRUE(cell.get_neuron_position_for(SignalType::INHIBITORY).has_value());
-        EXPECT_EQ(pos_in_2, cell.get_neuron_position_for(SignalType::INHIBITORY).value());
+        ASSERT_TRUE(cell.get_neuron_position_for(SignalType::INHIBITORY).has_value());
+        ASSERT_EQ(pos_in_2, cell.get_neuron_position_for(SignalType::INHIBITORY).value());
 
         cell.set_neuron_position_inh({});
-        EXPECT_FALSE(cell.get_neuron_position_exc().has_value());
-        EXPECT_FALSE(cell.get_neuron_position_for(SignalType::EXCITATORY).has_value());
+        ASSERT_FALSE(cell.get_neuron_position_exc().has_value());
+        ASSERT_FALSE(cell.get_neuron_position_for(SignalType::EXCITATORY).has_value());
     }
 }
 
@@ -283,23 +283,23 @@ TEST(TestCell, testCellPositionException) {
         const Vec3d pos_ex_1_invalid_y_max = max + Vec3d{ 0, 1, 0 };
         const Vec3d pos_ex_1_invalid_z_max = max + Vec3d{ 0, 0, 1 };
 
-        EXPECT_THROW(cell.set_neuron_position_exc(pos_ex_1_invalid_x_max), RelearnException);
-        EXPECT_THROW(cell.set_neuron_position_exc(pos_ex_1_invalid_y_max), RelearnException);
-        EXPECT_THROW(cell.set_neuron_position_exc(pos_ex_1_invalid_z_max), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_exc(pos_ex_1_invalid_x_max), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_exc(pos_ex_1_invalid_y_max), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_exc(pos_ex_1_invalid_z_max), RelearnException);
 
         const Vec3d pos_ex_1_invalid_x_min = min - Vec3d{ 1, 0, 0 };
         const Vec3d pos_ex_1_invalid_y_min = min - Vec3d{ 0, 1, 0 };
         const Vec3d pos_ex_1_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
-        EXPECT_THROW(cell.set_neuron_position_exc(pos_ex_1_invalid_x_min), RelearnException);
-        EXPECT_THROW(cell.set_neuron_position_exc(pos_ex_1_invalid_y_min), RelearnException);
-        EXPECT_THROW(cell.set_neuron_position_exc(pos_ex_1_invalid_z_min), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_exc(pos_ex_1_invalid_x_min), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_exc(pos_ex_1_invalid_y_min), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_exc(pos_ex_1_invalid_z_min), RelearnException);
 
-        EXPECT_TRUE(cell.get_neuron_position_exc().has_value());
-        EXPECT_EQ(pos_ex_1, cell.get_neuron_position_exc().value());
+        ASSERT_TRUE(cell.get_neuron_position_exc().has_value());
+        ASSERT_EQ(pos_ex_1, cell.get_neuron_position_exc().value());
 
-        EXPECT_TRUE(cell.get_neuron_position_for(SignalType::EXCITATORY).has_value());
-        EXPECT_EQ(pos_ex_1, cell.get_neuron_position_for(SignalType::EXCITATORY).value());
+        ASSERT_TRUE(cell.get_neuron_position_for(SignalType::EXCITATORY).has_value());
+        ASSERT_EQ(pos_ex_1, cell.get_neuron_position_for(SignalType::EXCITATORY).value());
 
         const Vec3d pos_ex_2{ urd_x(mt), urd_y(mt), urd_z(mt) };
         cell.set_neuron_position_exc(pos_ex_2);
@@ -308,23 +308,23 @@ TEST(TestCell, testCellPositionException) {
         const Vec3d pos_ex_2_invalid_y_max = max + Vec3d{ 0, 1, 0 };
         const Vec3d pos_ex_2_invalid_z_max = max + Vec3d{ 0, 0, 1 };
 
-        EXPECT_THROW(cell.set_neuron_position_exc(pos_ex_2_invalid_x_max), RelearnException);
-        EXPECT_THROW(cell.set_neuron_position_exc(pos_ex_2_invalid_y_max), RelearnException);
-        EXPECT_THROW(cell.set_neuron_position_exc(pos_ex_2_invalid_z_max), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_exc(pos_ex_2_invalid_x_max), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_exc(pos_ex_2_invalid_y_max), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_exc(pos_ex_2_invalid_z_max), RelearnException);
 
         const Vec3d pos_ex_2_invalid_x_min = min - Vec3d{ 1, 0, 0 };
         const Vec3d pos_ex_2_invalid_y_min = min - Vec3d{ 0, 1, 0 };
         const Vec3d pos_ex_2_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
-        EXPECT_THROW(cell.set_neuron_position_exc(pos_ex_2_invalid_x_min), RelearnException);
-        EXPECT_THROW(cell.set_neuron_position_exc(pos_ex_2_invalid_y_min), RelearnException);
-        EXPECT_THROW(cell.set_neuron_position_exc(pos_ex_2_invalid_z_min), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_exc(pos_ex_2_invalid_x_min), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_exc(pos_ex_2_invalid_y_min), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_exc(pos_ex_2_invalid_z_min), RelearnException);
 
-        EXPECT_TRUE(cell.get_neuron_position_exc().has_value());
-        EXPECT_EQ(pos_ex_2, cell.get_neuron_position_exc().value());
+        ASSERT_TRUE(cell.get_neuron_position_exc().has_value());
+        ASSERT_EQ(pos_ex_2, cell.get_neuron_position_exc().value());
 
-        EXPECT_TRUE(cell.get_neuron_position_for(SignalType::EXCITATORY).has_value());
-        EXPECT_EQ(pos_ex_2, cell.get_neuron_position_for(SignalType::EXCITATORY).value());
+        ASSERT_TRUE(cell.get_neuron_position_for(SignalType::EXCITATORY).has_value());
+        ASSERT_EQ(pos_ex_2, cell.get_neuron_position_for(SignalType::EXCITATORY).value());
 
         const Vec3d pos_in_1{ urd_x(mt), urd_y(mt), urd_z(mt) };
         cell.set_neuron_position_inh(pos_in_1);
@@ -333,23 +333,23 @@ TEST(TestCell, testCellPositionException) {
         const Vec3d pos_in_1_invalid_y_max = max + Vec3d{ 0, 1, 0 };
         const Vec3d pos_in_1_invalid_z_max = max + Vec3d{ 0, 0, 1 };
 
-        EXPECT_THROW(cell.set_neuron_position_inh(pos_in_1_invalid_x_max), RelearnException);
-        EXPECT_THROW(cell.set_neuron_position_inh(pos_in_1_invalid_y_max), RelearnException);
-        EXPECT_THROW(cell.set_neuron_position_inh(pos_in_1_invalid_z_max), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_inh(pos_in_1_invalid_x_max), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_inh(pos_in_1_invalid_y_max), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_inh(pos_in_1_invalid_z_max), RelearnException);
 
         const Vec3d pos_in_1_invalid_x_min = min - Vec3d{ 1, 0, 0 };
         const Vec3d pos_in_1_invalid_y_min = min - Vec3d{ 0, 1, 0 };
         const Vec3d pos_in_1_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
-        EXPECT_THROW(cell.set_neuron_position_inh(pos_in_1_invalid_x_min), RelearnException);
-        EXPECT_THROW(cell.set_neuron_position_inh(pos_in_1_invalid_y_min), RelearnException);
-        EXPECT_THROW(cell.set_neuron_position_inh(pos_in_1_invalid_z_min), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_inh(pos_in_1_invalid_x_min), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_inh(pos_in_1_invalid_y_min), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_inh(pos_in_1_invalid_z_min), RelearnException);
 
-        EXPECT_TRUE(cell.get_neuron_position_inh().has_value());
-        EXPECT_EQ(pos_in_1, cell.get_neuron_position_inh().value());
+        ASSERT_TRUE(cell.get_neuron_position_inh().has_value());
+        ASSERT_EQ(pos_in_1, cell.get_neuron_position_inh().value());
 
-        EXPECT_TRUE(cell.get_neuron_position_for(SignalType::INHIBITORY).has_value());
-        EXPECT_EQ(pos_in_1, cell.get_neuron_position_for(SignalType::INHIBITORY).value());
+        ASSERT_TRUE(cell.get_neuron_position_for(SignalType::INHIBITORY).has_value());
+        ASSERT_EQ(pos_in_1, cell.get_neuron_position_for(SignalType::INHIBITORY).value());
 
         const Vec3d pos_in_2{ urd_x(mt), urd_y(mt), urd_z(mt) };
         cell.set_neuron_position_inh(pos_in_2);
@@ -358,23 +358,23 @@ TEST(TestCell, testCellPositionException) {
         const Vec3d pos_in_2_invalid_y_max = max + Vec3d{ 0, 1, 0 };
         const Vec3d pos_in_2_invalid_z_max = max + Vec3d{ 0, 0, 1 };
 
-        EXPECT_THROW(cell.set_neuron_position_inh(pos_in_2_invalid_x_max), RelearnException);
-        EXPECT_THROW(cell.set_neuron_position_inh(pos_in_2_invalid_y_max), RelearnException);
-        EXPECT_THROW(cell.set_neuron_position_inh(pos_in_2_invalid_z_max), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_inh(pos_in_2_invalid_x_max), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_inh(pos_in_2_invalid_y_max), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_inh(pos_in_2_invalid_z_max), RelearnException);
 
         const Vec3d pos_in_2_invalid_x_min = min - Vec3d{ 1, 0, 0 };
         const Vec3d pos_in_2_invalid_y_min = min - Vec3d{ 0, 1, 0 };
         const Vec3d pos_in_2_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
-        EXPECT_THROW(cell.set_neuron_position_inh(pos_in_2_invalid_x_min), RelearnException);
-        EXPECT_THROW(cell.set_neuron_position_inh(pos_in_2_invalid_y_min), RelearnException);
-        EXPECT_THROW(cell.set_neuron_position_inh(pos_in_2_invalid_z_min), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_inh(pos_in_2_invalid_x_min), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_inh(pos_in_2_invalid_y_min), RelearnException);
+        ASSERT_THROW(cell.set_neuron_position_inh(pos_in_2_invalid_z_min), RelearnException);
 
-        EXPECT_TRUE(cell.get_neuron_position_inh().has_value());
-        EXPECT_EQ(pos_in_2, cell.get_neuron_position_inh().value());
+        ASSERT_TRUE(cell.get_neuron_position_inh().has_value());
+        ASSERT_EQ(pos_in_2, cell.get_neuron_position_inh().value());
 
-        EXPECT_TRUE(cell.get_neuron_position_for(SignalType::INHIBITORY).has_value());
-        EXPECT_EQ(pos_in_2, cell.get_neuron_position_for(SignalType::INHIBITORY).value());
+        ASSERT_TRUE(cell.get_neuron_position_for(SignalType::INHIBITORY).has_value());
+        ASSERT_EQ(pos_in_2, cell.get_neuron_position_for(SignalType::INHIBITORY).value());
     }
 }
 
@@ -401,41 +401,41 @@ TEST(TestCell, testCellPositionCombined) {
 
         cell.set_neuron_position({});
 
-        EXPECT_FALSE(cell.get_neuron_position().has_value());
+        ASSERT_FALSE(cell.get_neuron_position().has_value());
 
         cell.set_neuron_position_exc(pos_1);
         cell.set_neuron_position_inh(pos_1);
 
-        EXPECT_TRUE(cell.get_neuron_position().has_value());
-        EXPECT_EQ(cell.get_neuron_position().value(), pos_1);
+        ASSERT_TRUE(cell.get_neuron_position().has_value());
+        ASSERT_EQ(cell.get_neuron_position().value(), pos_1);
 
         cell.set_neuron_position_exc({});
         cell.set_neuron_position_inh({});
 
-        EXPECT_FALSE(cell.get_neuron_position().has_value());
+        ASSERT_FALSE(cell.get_neuron_position().has_value());
 
         cell.set_neuron_position_exc(pos_2);
 
-        EXPECT_THROW(cell.get_neuron_position(), RelearnException);
+        ASSERT_THROW(cell.get_neuron_position(), RelearnException);
 
         cell.set_neuron_position_inh(pos_3);
 
         if (pos_2 == pos_3) {
-            EXPECT_TRUE(cell.get_neuron_position().has_value());
-            EXPECT_EQ(cell.get_neuron_position().value(), pos_2);
+            ASSERT_TRUE(cell.get_neuron_position().has_value());
+            ASSERT_EQ(cell.get_neuron_position().value(), pos_2);
         } else {
-            EXPECT_THROW(cell.get_neuron_position(), RelearnException);
+            ASSERT_THROW(cell.get_neuron_position(), RelearnException);
         }
 
         cell.set_neuron_position({});
 
-        EXPECT_FALSE(cell.get_neuron_position().has_value());
+        ASSERT_FALSE(cell.get_neuron_position().has_value());
 
         cell.set_neuron_position_exc(pos_4);
         cell.set_neuron_position_inh(pos_4);
 
-        EXPECT_TRUE(cell.get_neuron_position().has_value());
-        EXPECT_EQ(cell.get_neuron_position().value(), pos_4);
+        ASSERT_TRUE(cell.get_neuron_position().has_value());
+        ASSERT_EQ(cell.get_neuron_position().value(), pos_4);
     }
 }
 
@@ -453,10 +453,10 @@ TEST(TestCell, testCellSetNumDendrites) {
         cell.set_neuron_num_dendrites_exc(num_dends_ex_1);
         cell.set_neuron_num_dendrites_inh(num_dends_in_1);
 
-        EXPECT_EQ(num_dends_ex_1, cell.get_neuron_num_dendrites_exc());
-        EXPECT_EQ(num_dends_ex_1, cell.get_neuron_num_dendrites_for(SignalType::EXCITATORY));
-        EXPECT_EQ(num_dends_in_1, cell.get_neuron_num_dendrites_inh());
-        EXPECT_EQ(num_dends_in_1, cell.get_neuron_num_dendrites_for(SignalType::INHIBITORY));
+        ASSERT_EQ(num_dends_ex_1, cell.get_neuron_num_dendrites_exc());
+        ASSERT_EQ(num_dends_ex_1, cell.get_neuron_num_dendrites_for(SignalType::EXCITATORY));
+        ASSERT_EQ(num_dends_in_1, cell.get_neuron_num_dendrites_inh());
+        ASSERT_EQ(num_dends_in_1, cell.get_neuron_num_dendrites_for(SignalType::INHIBITORY));
 
         const auto num_dends_ex_2 = uid(mt);
         const auto num_dends_in_2 = uid(mt);
@@ -464,10 +464,10 @@ TEST(TestCell, testCellSetNumDendrites) {
         cell.set_neuron_num_dendrites_exc(num_dends_ex_2);
         cell.set_neuron_num_dendrites_inh(num_dends_in_2);
 
-        EXPECT_EQ(num_dends_ex_2, cell.get_neuron_num_dendrites_exc());
-        EXPECT_EQ(num_dends_ex_2, cell.get_neuron_num_dendrites_for(SignalType::EXCITATORY));
-        EXPECT_EQ(num_dends_in_2, cell.get_neuron_num_dendrites_inh());
-        EXPECT_EQ(num_dends_in_2, cell.get_neuron_num_dendrites_for(SignalType::INHIBITORY));
+        ASSERT_EQ(num_dends_ex_2, cell.get_neuron_num_dendrites_exc());
+        ASSERT_EQ(num_dends_ex_2, cell.get_neuron_num_dendrites_for(SignalType::EXCITATORY));
+        ASSERT_EQ(num_dends_in_2, cell.get_neuron_num_dendrites_inh());
+        ASSERT_EQ(num_dends_in_2, cell.get_neuron_num_dendrites_for(SignalType::INHIBITORY));
     }
 }
 
@@ -481,11 +481,11 @@ TEST(TestCell, testCellSetNeuronId) {
 
         const auto neuron_id_1 = uid(mt);
         cell.set_neuron_id(neuron_id_1);
-        EXPECT_EQ(neuron_id_1, cell.get_neuron_id());
+        ASSERT_EQ(neuron_id_1, cell.get_neuron_id());
 
         const auto neuron_id_2 = uid(mt);
         cell.set_neuron_id(neuron_id_2);
-        EXPECT_EQ(neuron_id_2, cell.get_neuron_id());
+        ASSERT_EQ(neuron_id_2, cell.get_neuron_id());
     }
 }
 
@@ -520,7 +520,7 @@ TEST(TestCell, testCellOctants) {
 
             const auto received_idx = cell.get_octant_for_position(position);
 
-            EXPECT_EQ(expected_octant_idx, received_idx);
+            ASSERT_EQ(expected_octant_idx, received_idx);
         }
     }
 }
@@ -545,12 +545,12 @@ TEST(TestCell, testCellOctantsException) {
         const Vec3d pos_invalid_y_min = min - Vec3d{ 0, 1, 0 };
         const Vec3d pos_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
-        EXPECT_THROW(cell.get_octant_for_position(pos_invalid_x_max), RelearnException);
-        EXPECT_THROW(cell.get_octant_for_position(pos_invalid_y_max), RelearnException);
-        EXPECT_THROW(cell.get_octant_for_position(pos_invalid_z_max), RelearnException);
-        EXPECT_THROW(cell.get_octant_for_position(pos_invalid_x_min), RelearnException);
-        EXPECT_THROW(cell.get_octant_for_position(pos_invalid_y_min), RelearnException);
-        EXPECT_THROW(cell.get_octant_for_position(pos_invalid_z_min), RelearnException);
+        ASSERT_THROW(cell.get_octant_for_position(pos_invalid_x_max), RelearnException);
+        ASSERT_THROW(cell.get_octant_for_position(pos_invalid_y_max), RelearnException);
+        ASSERT_THROW(cell.get_octant_for_position(pos_invalid_z_max), RelearnException);
+        ASSERT_THROW(cell.get_octant_for_position(pos_invalid_x_min), RelearnException);
+        ASSERT_THROW(cell.get_octant_for_position(pos_invalid_y_min), RelearnException);
+        ASSERT_THROW(cell.get_octant_for_position(pos_invalid_z_min), RelearnException);
     }
 }
 
@@ -598,8 +598,8 @@ TEST(TestCell, testCellOctantsSize) {
             const auto diff_subcell_min = subcell_min - subcell_received_min;
             const auto diff_subcell_max = subcell_max - subcell_received_max;
 
-            EXPECT_NEAR(diff_subcell_min.calculate_p_norm(2), 0.0, eps);
-            EXPECT_NEAR(diff_subcell_max.calculate_p_norm(2), 0.0, eps);
+            ASSERT_NEAR(diff_subcell_min.calculate_p_norm(2), 0.0, eps);
+            ASSERT_NEAR(diff_subcell_max.calculate_p_norm(2), 0.0, eps);
         }
     }
 }
@@ -609,16 +609,16 @@ TEST(TestOctreeNode, testOctreeNodeReset) {
 
     OctreeNode node{};
 
-    EXPECT_FALSE(node.is_parent());
-    EXPECT_TRUE(node.get_level() == Constants::uninitialized);
-    EXPECT_TRUE(node.get_rank() == -1);
-    EXPECT_TRUE(node.get_children().size() == Constants::number_oct);
+    ASSERT_FALSE(node.is_parent());
+    ASSERT_TRUE(node.get_level() == Constants::uninitialized);
+    ASSERT_TRUE(node.get_rank() == -1);
+    ASSERT_TRUE(node.get_children().size() == Constants::number_oct);
 
     const auto& children = node.get_children();
 
     for (auto i = 0; i < Constants::number_oct; i++) {
-        EXPECT_TRUE(node.get_child(i) == nullptr);
-        EXPECT_TRUE(children[i] == nullptr);
+        ASSERT_TRUE(node.get_child(i) == nullptr);
+        ASSERT_TRUE(children[i] == nullptr);
     }
 
     for (auto it = 0; it < iterations; it++) {
@@ -637,16 +637,16 @@ TEST(TestOctreeNode, testOctreeNodeReset) {
 
         node.reset();
 
-        EXPECT_FALSE(node.is_parent());
-        EXPECT_TRUE(node.get_level() == Constants::uninitialized);
-        EXPECT_TRUE(node.get_rank() == -1);
-        EXPECT_TRUE(node.get_children().size() == Constants::number_oct);
+        ASSERT_FALSE(node.is_parent());
+        ASSERT_TRUE(node.get_level() == Constants::uninitialized);
+        ASSERT_TRUE(node.get_rank() == -1);
+        ASSERT_TRUE(node.get_children().size() == Constants::number_oct);
 
         const auto& children = node.get_children();
 
         for (auto i = 0; i < Constants::number_oct; i++) {
-            EXPECT_TRUE(node.get_child(i) == nullptr);
-            EXPECT_TRUE(children[i] == nullptr);
+            ASSERT_TRUE(node.get_child(i) == nullptr);
+            ASSERT_TRUE(children[i] == nullptr);
         }
     }
 }
@@ -673,19 +673,19 @@ TEST(TestOctreeNode, testOctreeNodeSetterGetter) {
             node.set_child(&(other_nodes[i]), i);
         }
 
-        EXPECT_THROW(node.set_rank(-rank), RelearnException);
-        EXPECT_THROW(node.set_level(lvl + Constants::uninitialized), RelearnException);
+        ASSERT_THROW(node.set_rank(-rank), RelearnException);
+        ASSERT_THROW(node.set_level(lvl + Constants::uninitialized), RelearnException);
 
-        EXPECT_TRUE(node.is_parent());
-        EXPECT_TRUE(node.get_level() == lvl);
-        EXPECT_TRUE(node.get_rank() == rank);
-        EXPECT_TRUE(node.get_children().size() == Constants::number_oct);
+        ASSERT_TRUE(node.is_parent());
+        ASSERT_TRUE(node.get_level() == lvl);
+        ASSERT_TRUE(node.get_rank() == rank);
+        ASSERT_TRUE(node.get_children().size() == Constants::number_oct);
 
         const auto& children = node.get_children();
 
         for (auto i = 0; i < Constants::number_oct; i++) {
-            EXPECT_TRUE(node.get_child(i) == &(other_nodes[i]));
-            EXPECT_TRUE(children[i] == &(other_nodes[i]));
+            ASSERT_TRUE(node.get_child(i) == &(other_nodes[i]));
+            ASSERT_TRUE(children[i] == &(other_nodes[i]));
         }
 
         const auto lb = -uid_rank(mt);
@@ -696,9 +696,9 @@ TEST(TestOctreeNode, testOctreeNodeSetterGetter) {
                 continue;
             }
 
-            EXPECT_THROW(node.set_child(nullptr, i), RelearnException);
-            EXPECT_THROW(node.set_child(&node, i), RelearnException);
-            EXPECT_THROW(node.get_child(i), RelearnException);
+            ASSERT_THROW(node.set_child(nullptr, i), RelearnException);
+            ASSERT_THROW(node.set_child(&node, i), RelearnException);
+            ASSERT_THROW(node.get_child(i), RelearnException);
         }
     }
 }
@@ -720,9 +720,9 @@ TEST(TestOctreeNode, testOctreeNodeLocal) {
             node.set_rank(rank);
 
             if (rank == my_rank) {
-                EXPECT_TRUE(node.is_local());
+                ASSERT_TRUE(node.is_local());
             } else {
-                EXPECT_FALSE(node.is_local());
+                ASSERT_FALSE(node.is_local());
             }
         }
     }
@@ -761,38 +761,38 @@ TEST(TestOctreeNode, testOctreeNodeSetterCell) {
         node.set_cell_neuron_pos_exc(pos_ex);
         node.set_cell_neuron_pos_inh(pos_in);
 
-        EXPECT_TRUE(node.get_cell().get_neuron_id() == id);
-        EXPECT_TRUE(cell.get_neuron_id() == id);
+        ASSERT_TRUE(node.get_cell().get_neuron_id() == id);
+        ASSERT_TRUE(cell.get_neuron_id() == id);
 
-        EXPECT_TRUE(node.get_cell().get_neuron_num_dendrites_exc() == dends_ex);
-        EXPECT_TRUE(cell.get_neuron_num_dendrites_exc() == dends_ex);
+        ASSERT_TRUE(node.get_cell().get_neuron_num_dendrites_exc() == dends_ex);
+        ASSERT_TRUE(cell.get_neuron_num_dendrites_exc() == dends_ex);
 
-        EXPECT_TRUE(node.get_cell().get_neuron_num_dendrites_inh() == dends_in);
-        EXPECT_TRUE(cell.get_neuron_num_dendrites_inh() == dends_in);
+        ASSERT_TRUE(node.get_cell().get_neuron_num_dendrites_inh() == dends_in);
+        ASSERT_TRUE(cell.get_neuron_num_dendrites_inh() == dends_in);
 
-        EXPECT_TRUE(node.get_cell().get_size() == box_sizes);
-        EXPECT_TRUE(cell.get_size() == box_sizes);
+        ASSERT_TRUE(node.get_cell().get_size() == box_sizes);
+        ASSERT_TRUE(cell.get_size() == box_sizes);
 
-        EXPECT_TRUE(node.get_cell().get_neuron_position_exc().has_value());
-        EXPECT_TRUE(cell.get_neuron_position_exc().has_value());
+        ASSERT_TRUE(node.get_cell().get_neuron_position_exc().has_value());
+        ASSERT_TRUE(cell.get_neuron_position_exc().has_value());
 
-        EXPECT_TRUE(node.get_cell().get_neuron_position_exc().value() == pos_ex);
-        EXPECT_TRUE(cell.get_neuron_position_exc().value() == pos_ex);
+        ASSERT_TRUE(node.get_cell().get_neuron_position_exc().value() == pos_ex);
+        ASSERT_TRUE(cell.get_neuron_position_exc().value() == pos_ex);
 
-        EXPECT_TRUE(node.get_cell().get_neuron_position_inh().has_value());
-        EXPECT_TRUE(cell.get_neuron_position_inh().has_value());
+        ASSERT_TRUE(node.get_cell().get_neuron_position_inh().has_value());
+        ASSERT_TRUE(cell.get_neuron_position_inh().has_value());
 
-        EXPECT_TRUE(node.get_cell().get_neuron_position_inh().value() == pos_in);
-        EXPECT_TRUE(cell.get_neuron_position_inh().value() == pos_in);
+        ASSERT_TRUE(node.get_cell().get_neuron_position_inh().value() == pos_in);
+        ASSERT_TRUE(cell.get_neuron_position_inh().value() == pos_in);
 
         node.set_cell_neuron_pos_exc({});
         node.set_cell_neuron_pos_inh({});
 
-        EXPECT_FALSE(node.get_cell().get_neuron_position_exc().has_value());
-        EXPECT_FALSE(cell.get_neuron_position_exc().has_value());
+        ASSERT_FALSE(node.get_cell().get_neuron_position_exc().has_value());
+        ASSERT_FALSE(cell.get_neuron_position_exc().has_value());
 
-        EXPECT_FALSE(node.get_cell().get_neuron_position_inh().has_value());
-        EXPECT_FALSE(cell.get_neuron_position_inh().has_value());
+        ASSERT_FALSE(node.get_cell().get_neuron_position_inh().has_value());
+        ASSERT_FALSE(cell.get_neuron_position_inh().has_value());
     }
 }
 
@@ -840,13 +840,13 @@ TEST(TestOctreeNode, testOctreeNodeInsert) {
         std::sort(neurons_to_place.begin(), neurons_to_place.end(), [](std::tuple<Vec3d, size_t> a, std::tuple<Vec3d, size_t> b) { return std::get<1>(a) > std::get<1>(b); });
         std::sort(placed_neurons.begin(), placed_neurons.end(), [](std::tuple<Vec3d, size_t> a, std::tuple<Vec3d, size_t> b) { return std::get<1>(a) > std::get<1>(b); });
 
-        EXPECT_EQ(neurons_to_place.size(), placed_neurons.size());
+        ASSERT_EQ(neurons_to_place.size(), placed_neurons.size());
 
         for (auto i = 0; i < neurons_to_place.size(); i++) {
             const auto& expected_neuron = neurons_to_place[i];
             const auto& found_neuron = placed_neurons[i];
 
-            EXPECT_EQ(expected_neuron, found_neuron);
+            ASSERT_EQ(expected_neuron, found_neuron);
         }
     }
 }
@@ -868,16 +868,16 @@ TEST(TestOctree, testOctreeConstructor) {
 
         Octree octree(min, max, level_of_branch_nodes);
 
-        EXPECT_EQ(octree.get_acceptance_criterion(), Octree::default_theta);
-        EXPECT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
-        EXPECT_EQ(octree.get_probabilty_parameter(), Octree::default_sigma);
-        EXPECT_EQ(octree.get_xyz_max(), max);
-        EXPECT_EQ(octree.get_xyz_min(), min);
+        ASSERT_EQ(octree.get_acceptance_criterion(), Octree::default_theta);
+        ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
+        ASSERT_EQ(octree.get_probabilty_parameter(), Octree::default_sigma);
+        ASSERT_EQ(octree.get_xyz_max(), max);
+        ASSERT_EQ(octree.get_xyz_min(), min);
 
         if (Octree::default_theta == 0.0) {
-            EXPECT_TRUE(octree.is_naive_method_used());
+            ASSERT_TRUE(octree.is_naive_method_used());
         } else {
-            EXPECT_FALSE(octree.is_naive_method_used());
+            ASSERT_FALSE(octree.is_naive_method_used());
         }
 
         const auto& virtual_neurons = extract_unused_neurons(octree.get_root());
@@ -888,7 +888,7 @@ TEST(TestOctree, testOctreeConstructor) {
             level_to_count[id]++;
         }
 
-        EXPECT_EQ(level_to_count.size(), level_of_branch_nodes + 1);
+        ASSERT_EQ(level_to_count.size(), level_of_branch_nodes + 1);
 
         for (auto level = 0; level <= level_of_branch_nodes; level++) {
             auto expected_elements = 1;
@@ -897,7 +897,7 @@ TEST(TestOctree, testOctreeConstructor) {
                 expected_elements *= 8;
             }
 
-            EXPECT_EQ(level_to_count[level], expected_elements);
+            ASSERT_EQ(level_to_count[level], expected_elements);
         }
     }
 
@@ -913,16 +913,16 @@ TEST(TestOctree, testOctreeConstructor) {
 
         Octree octree(min, max, level_of_branch_nodes, theta, sigma);
 
-        EXPECT_EQ(octree.get_acceptance_criterion(), theta);
-        EXPECT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
-        EXPECT_EQ(octree.get_probabilty_parameter(), sigma);
-        EXPECT_EQ(octree.get_xyz_max(), max);
-        EXPECT_EQ(octree.get_xyz_min(), min);
+        ASSERT_EQ(octree.get_acceptance_criterion(), theta);
+        ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
+        ASSERT_EQ(octree.get_probabilty_parameter(), sigma);
+        ASSERT_EQ(octree.get_xyz_max(), max);
+        ASSERT_EQ(octree.get_xyz_min(), min);
 
         if (theta == 0.0) {
-            EXPECT_TRUE(octree.is_naive_method_used());
+            ASSERT_TRUE(octree.is_naive_method_used());
         } else {
-            EXPECT_FALSE(octree.is_naive_method_used());
+            ASSERT_FALSE(octree.is_naive_method_used());
         }
 
         const auto& virtual_neurons = extract_unused_neurons(octree.get_root());
@@ -933,7 +933,7 @@ TEST(TestOctree, testOctreeConstructor) {
             level_to_count[id]++;
         }
 
-        EXPECT_EQ(level_to_count.size(), level_of_branch_nodes + 1);
+        ASSERT_EQ(level_to_count.size(), level_of_branch_nodes + 1);
 
         for (auto level = 0; level <= level_of_branch_nodes; level++) {
             size_t expected_elements = 1;
@@ -943,10 +943,10 @@ TEST(TestOctree, testOctreeConstructor) {
             }
 
             if (level == level_of_branch_nodes) {
-                EXPECT_EQ(octree.get_num_local_trees(), expected_elements);
+                ASSERT_EQ(octree.get_num_local_trees(), expected_elements);
             }
 
-            EXPECT_EQ(level_to_count[level], expected_elements);
+            ASSERT_EQ(level_to_count[level], expected_elements);
         }
     }
 }
@@ -966,7 +966,7 @@ TEST(TestOctree, testOctreeConstructorExceptions) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        EXPECT_THROW(Octree octree(max_xyz, min_xyz, level_of_branch_nodes), RelearnException);
+        ASSERT_THROW(Octree octree(max_xyz, min_xyz, level_of_branch_nodes), RelearnException);
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -979,7 +979,7 @@ TEST(TestOctree, testOctreeConstructorExceptions) {
         double theta = urd_theta(mt);
         double sigma = urd_sigma(mt);
 
-        EXPECT_THROW(Octree octree(max, min, level_of_branch_nodes, theta, sigma), RelearnException);
+        ASSERT_THROW(Octree octree(max, min, level_of_branch_nodes, theta, sigma), RelearnException);
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -992,7 +992,7 @@ TEST(TestOctree, testOctreeConstructorExceptions) {
         double theta = urd_theta(mt);
         double sigma = urd_sigma(mt) * -1;
 
-        EXPECT_THROW(Octree octree(min, max, level_of_branch_nodes, theta, sigma), RelearnException);
+        ASSERT_THROW(Octree octree(min, max, level_of_branch_nodes, theta, sigma), RelearnException);
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -1005,7 +1005,7 @@ TEST(TestOctree, testOctreeConstructorExceptions) {
         double theta = urd_theta(mt) - 1;
         double sigma = urd_sigma(mt);
 
-        EXPECT_THROW(Octree octree(min, max, level_of_branch_nodes, theta, sigma), RelearnException);
+        ASSERT_THROW(Octree octree(min, max, level_of_branch_nodes, theta, sigma), RelearnException);
     }
 }
 
@@ -1039,21 +1039,21 @@ TEST(TestOctree, testOctreeSetterGetter) {
         octree.set_probability_parameter(sigma);
         octree.set_level_of_branch_nodes(level_of_branch_nodes);
 
-        EXPECT_EQ(octree.get_acceptance_criterion(), theta);
-        EXPECT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
-        EXPECT_EQ(octree.get_probabilty_parameter(), sigma);
-        EXPECT_EQ(octree.get_xyz_max(), max);
-        EXPECT_EQ(octree.get_xyz_min(), min);
+        ASSERT_EQ(octree.get_acceptance_criterion(), theta);
+        ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
+        ASSERT_EQ(octree.get_probabilty_parameter(), sigma);
+        ASSERT_EQ(octree.get_xyz_max(), max);
+        ASSERT_EQ(octree.get_xyz_min(), min);
 
         if (theta == 0.0) {
-            EXPECT_TRUE(octree.is_naive_method_used());
+            ASSERT_TRUE(octree.is_naive_method_used());
         } else {
-            EXPECT_FALSE(octree.is_naive_method_used());
+            ASSERT_FALSE(octree.is_naive_method_used());
         }
 
         octree.set_acceptance_criterion(0.0);
-        EXPECT_EQ(octree.get_acceptance_criterion(), 0.0);
-        EXPECT_TRUE(octree.is_naive_method_used());
+        ASSERT_EQ(octree.get_acceptance_criterion(), 0.0);
+        ASSERT_TRUE(octree.is_naive_method_used());
     }
 }
 
@@ -1078,7 +1078,7 @@ TEST(TestOctree, testOctreeSetterGetterExceptions) {
 
         std::tie(min, max) = get_random_simulation_box_size();
 
-        EXPECT_THROW(octree.set_size(max, min), RelearnException);
+        ASSERT_THROW(octree.set_size(max, min), RelearnException);
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -1097,7 +1097,7 @@ TEST(TestOctree, testOctreeSetterGetterExceptions) {
 
         theta = urd_theta(mt) - 1;
 
-        EXPECT_THROW(octree.set_acceptance_criterion(theta), RelearnException);
+        ASSERT_THROW(octree.set_acceptance_criterion(theta), RelearnException);
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -1116,7 +1116,7 @@ TEST(TestOctree, testOctreeSetterGetterExceptions) {
 
         sigma = urd_sigma(mt) * -1;
 
-        EXPECT_THROW(octree.set_probability_parameter(sigma), RelearnException);
+        ASSERT_THROW(octree.set_probability_parameter(sigma), RelearnException);
     }
 }
 
@@ -1156,13 +1156,13 @@ TEST(TestOctree, testOctreeInsertNeurons) {
         std::sort(neurons_to_place.begin(), neurons_to_place.end(), [](std::tuple<Vec3d, size_t> a, std::tuple<Vec3d, size_t> b) { return std::get<1>(a) > std::get<1>(b); });
         std::sort(placed_neurons.begin(), placed_neurons.end(), [](std::tuple<Vec3d, size_t> a, std::tuple<Vec3d, size_t> b) { return std::get<1>(a) > std::get<1>(b); });
 
-        EXPECT_EQ(neurons_to_place.size(), placed_neurons.size());
+        ASSERT_EQ(neurons_to_place.size(), placed_neurons.size());
 
         for (auto i = 0; i < neurons_to_place.size(); i++) {
             const auto& expected_neuron = neurons_to_place[i];
             const auto& found_neuron = placed_neurons[i];
 
-            EXPECT_EQ(expected_neuron, found_neuron);
+            ASSERT_EQ(expected_neuron, found_neuron);
         }
     }
 }
@@ -1204,16 +1204,16 @@ TEST(TestOctree, testOctreeInsertNeuronsExceptions) {
             const Vec3d pos_invalid_y_min = min - Vec3d{ 0, 1, 0 };
             const Vec3d pos_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
-            EXPECT_THROW(octree.insert(position, id, -rank - 1), RelearnException);
-            EXPECT_THROW(octree.insert(position, id + Constants::uninitialized, rank), RelearnException);
+            ASSERT_THROW(octree.insert(position, id, -rank - 1), RelearnException);
+            ASSERT_THROW(octree.insert(position, id + Constants::uninitialized, rank), RelearnException);
 
-            EXPECT_THROW(octree.insert(pos_invalid_x_max, id, rank), RelearnException);
-            EXPECT_THROW(octree.insert(pos_invalid_y_max, id, rank), RelearnException);
-            EXPECT_THROW(octree.insert(pos_invalid_z_max, id, rank), RelearnException);
+            ASSERT_THROW(octree.insert(pos_invalid_x_max, id, rank), RelearnException);
+            ASSERT_THROW(octree.insert(pos_invalid_y_max, id, rank), RelearnException);
+            ASSERT_THROW(octree.insert(pos_invalid_z_max, id, rank), RelearnException);
 
-            EXPECT_THROW(octree.insert(pos_invalid_x_min, id, rank), RelearnException);
-            EXPECT_THROW(octree.insert(pos_invalid_y_min, id, rank), RelearnException);
-            EXPECT_THROW(octree.insert(pos_invalid_z_min, id, rank), RelearnException);
+            ASSERT_THROW(octree.insert(pos_invalid_x_min, id, rank), RelearnException);
+            ASSERT_THROW(octree.insert(pos_invalid_y_min, id, rank), RelearnException);
+            ASSERT_THROW(octree.insert(pos_invalid_z_min, id, rank), RelearnException);
         }
     }
 }
@@ -1262,30 +1262,30 @@ TEST(TestOctree, testOctreeStructure) {
 
             octree_nodes.pop();
 
-            EXPECT_EQ(current_node->get_rank(), my_rank);
+            ASSERT_EQ(current_node->get_rank(), my_rank);
 
             if (current_node->is_parent()) {
                 const auto childs = current_node->get_children();
                 for (auto i = 0; i < 8; i++) {
                     const auto child = childs[i];
                     if (child != nullptr) {
-                        EXPECT_TRUE(level + 1 == child->get_level());
+                        ASSERT_TRUE(level + 1 == child->get_level());
                         octree_nodes.emplace(child, child->get_level());
 
                         const auto& subcell_size = child->get_cell().get_size();
                         const auto& expected_subcell_size = current_node->get_cell().get_size_for_octant(i);
 
-                        EXPECT_EQ(expected_subcell_size, subcell_size);
+                        ASSERT_EQ(expected_subcell_size, subcell_size);
                     }
                 }
 
-                EXPECT_EQ(current_node->get_cell().get_neuron_id(), Constants::uninitialized);
+                ASSERT_EQ(current_node->get_cell().get_neuron_id(), Constants::uninitialized);
 
             } else {
                 const auto& cell = current_node->get_cell();
                 const auto& opt_position = cell.get_neuron_position();
 
-                EXPECT_TRUE(opt_position.has_value());
+                ASSERT_TRUE(opt_position.has_value());
 
                 const auto& position = opt_position.value();
 
@@ -1293,13 +1293,13 @@ TEST(TestOctree, testOctreeStructure) {
                 const auto& cell_min = std::get<0>(cell_size);
                 const auto& cell_max = std::get<1>(cell_size);
 
-                EXPECT_LE(cell_min.get_x(), position.get_x());
-                EXPECT_LE(cell_min.get_y(), position.get_y());
-                EXPECT_LE(cell_min.get_z(), position.get_z());
+                ASSERT_LE(cell_min.get_x(), position.get_x());
+                ASSERT_LE(cell_min.get_y(), position.get_y());
+                ASSERT_LE(cell_min.get_z(), position.get_z());
 
-                EXPECT_LE(position.get_x(), cell_max.get_x());
-                EXPECT_LE(position.get_y(), cell_max.get_y());
-                EXPECT_LE(position.get_z(), cell_max.get_z());
+                ASSERT_LE(position.get_x(), cell_max.get_x());
+                ASSERT_LE(position.get_y(), cell_max.get_y());
+                ASSERT_LE(position.get_z(), cell_max.get_z());
             }
         }
     }
@@ -1324,16 +1324,16 @@ TEST(TestOctree, testOctreeLocalTrees) {
 
         Octree octree(min, max, level_of_branch_nodes, theta, sigma);
 
-        EXPECT_EQ(octree.get_acceptance_criterion(), theta);
-        EXPECT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
-        EXPECT_EQ(octree.get_probabilty_parameter(), sigma);
-        EXPECT_EQ(octree.get_xyz_max(), max);
-        EXPECT_EQ(octree.get_xyz_min(), min);
+        ASSERT_EQ(octree.get_acceptance_criterion(), theta);
+        ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
+        ASSERT_EQ(octree.get_probabilty_parameter(), sigma);
+        ASSERT_EQ(octree.get_xyz_max(), max);
+        ASSERT_EQ(octree.get_xyz_min(), min);
 
         if (theta == 0.0) {
-            EXPECT_TRUE(octree.is_naive_method_used());
+            ASSERT_TRUE(octree.is_naive_method_used());
         } else {
-            EXPECT_FALSE(octree.is_naive_method_used());
+            ASSERT_FALSE(octree.is_naive_method_used());
         }
 
         SpaceFillingCurve<Morton> sfc(level_of_branch_nodes);
@@ -1355,7 +1355,7 @@ TEST(TestOctree, testOctreeLocalTrees) {
             const auto pos1d = sfc.map_3d_to_1d(pos3d);
 
             const auto local_tree = octree.get_local_root(pos1d);
-            EXPECT_EQ(local_tree, branch_node);
+            ASSERT_EQ(local_tree, branch_node);
         }
     }
 }
@@ -1449,13 +1449,13 @@ TEST(TestOctree, testOctreeInsertLocalTree) {
             auto* local_tree = octree.get_local_root(i);
             auto* local_tree_saved = nodes_to_save_new_local_trees[i];
 
-            EXPECT_EQ(local_tree->get_children(), local_tree_saved->get_children());
-            EXPECT_EQ(local_tree->get_level(), local_tree_saved->get_level());
-            EXPECT_EQ(local_tree->get_rank(), local_tree_saved->get_rank());
+            ASSERT_EQ(local_tree->get_children(), local_tree_saved->get_children());
+            ASSERT_EQ(local_tree->get_level(), local_tree_saved->get_level());
+            ASSERT_EQ(local_tree->get_rank(), local_tree_saved->get_rank());
 
-            EXPECT_EQ(local_tree->get_cell().get_neuron_id(), local_tree_saved->get_cell().get_neuron_id());
-            EXPECT_EQ(local_tree->get_cell().get_size(), local_tree_saved->get_cell().get_size());
-            EXPECT_EQ(local_tree->get_cell().get_neuron_position(), local_tree_saved->get_cell().get_neuron_position());
+            ASSERT_EQ(local_tree->get_cell().get_neuron_id(), local_tree_saved->get_cell().get_neuron_id());
+            ASSERT_EQ(local_tree->get_cell().get_size(), local_tree_saved->get_cell().get_size());
+            ASSERT_EQ(local_tree->get_cell().get_neuron_position(), local_tree_saved->get_cell().get_neuron_position());
         }
 
         for (auto i = 0; i < num_local_trees; i++) {
@@ -1465,13 +1465,13 @@ TEST(TestOctree, testOctreeInsertLocalTree) {
 
             auto* local_tree = octree.get_local_root(i);
 
-            EXPECT_EQ(local_tree->get_children(), local_node->get_children());
-            EXPECT_EQ(local_tree->get_level(), local_node->get_level());
-            EXPECT_EQ(local_tree->get_rank(), local_node->get_rank());
+            ASSERT_EQ(local_tree->get_children(), local_node->get_children());
+            ASSERT_EQ(local_tree->get_level(), local_node->get_level());
+            ASSERT_EQ(local_tree->get_rank(), local_node->get_rank());
 
-            EXPECT_EQ(local_tree->get_cell().get_neuron_id(), local_node->get_cell().get_neuron_id());
-            EXPECT_EQ(local_tree->get_cell().get_size(), local_node->get_cell().get_size());
-            EXPECT_EQ(local_tree->get_cell().get_neuron_position(), local_node->get_cell().get_neuron_position());
+            ASSERT_EQ(local_tree->get_cell().get_neuron_id(), local_node->get_cell().get_neuron_id());
+            ASSERT_EQ(local_tree->get_cell().get_size(), local_node->get_cell().get_size());
+            ASSERT_EQ(local_tree->get_cell().get_neuron_position(), local_node->get_cell().get_neuron_position());
         }
 
         for (auto i = 0; i < 1000; i++) {

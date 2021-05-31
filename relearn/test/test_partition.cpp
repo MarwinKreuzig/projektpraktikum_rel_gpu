@@ -33,9 +33,9 @@ TEST(TestPartition, test_partition_constructor_arguments) {
         auto exp_diff = exponent - floored_exponent;
 
         if (my_rank >= num_ranks || exp_diff > eps) {
-            EXPECT_THROW(Partition part(num_ranks, my_rank), RelearnException);
+            ASSERT_THROW(Partition part(num_ranks, my_rank), RelearnException);
         } else {
-            EXPECT_NO_THROW(Partition part(num_ranks, my_rank));
+            ASSERT_NO_THROW(Partition part(num_ranks, my_rank));
         }
     }
 }
@@ -60,22 +60,22 @@ TEST(TestPartition, test_partition_constructor) {
         for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
             Partition partition(num_ranks, my_rank);
 
-            EXPECT_EQ(partition.get_total_num_subdomains(), num_subdomains);
-            EXPECT_EQ(partition.get_my_num_subdomains(), my_subdomains);
+            ASSERT_EQ(partition.get_total_num_subdomains(), num_subdomains);
+            ASSERT_EQ(partition.get_my_num_subdomains(), my_subdomains);
 
-            EXPECT_EQ(partition.get_my_subdomain_id_start(), my_subdomains * my_rank);
-            EXPECT_EQ(partition.get_my_subdomain_id_end(), my_subdomains * (my_rank + 1) - 1);
+            ASSERT_EQ(partition.get_my_subdomain_id_start(), my_subdomains * my_rank);
+            ASSERT_EQ(partition.get_my_subdomain_id_end(), my_subdomains * (my_rank + 1) - 1);
 
-            EXPECT_EQ(partition.get_level_of_subdomain_trees(), oct_exponent);
-            EXPECT_EQ(partition.get_num_subdomains_per_dimension(), num_subdomains_per_dim);
+            ASSERT_EQ(partition.get_level_of_subdomain_trees(), oct_exponent);
+            ASSERT_EQ(partition.get_num_subdomains_per_dimension(), num_subdomains_per_dim);
 
-            EXPECT_THROW(auto err = partition.is_neuron_local(0), RelearnException);
-            EXPECT_THROW(auto err = partition.get_my_num_neurons(), RelearnException);
-            EXPECT_THROW(auto err = partition.get_simulation_box_size(), RelearnException);
-            EXPECT_THROW(const auto& err = partition.get_subdomain_tree(0), RelearnException);
-            EXPECT_THROW(auto err = partition.get_subdomain_id_from_pos(min), RelearnException);
-            EXPECT_THROW(auto err = partition.get_global_id(0), RelearnException);
-            EXPECT_THROW(auto err = partition.get_local_id(0), RelearnException);
+            ASSERT_THROW(auto err = partition.is_neuron_local(0), RelearnException);
+            ASSERT_THROW(auto err = partition.get_my_num_neurons(), RelearnException);
+            ASSERT_THROW(auto err = partition.get_simulation_box_size(), RelearnException);
+            ASSERT_THROW(const auto& err = partition.get_subdomain_tree(0), RelearnException);
+            ASSERT_THROW(auto err = partition.get_subdomain_id_from_pos(min), RelearnException);
+            ASSERT_THROW(auto err = partition.get_global_id(0), RelearnException);
+            ASSERT_THROW(auto err = partition.get_local_id(0), RelearnException);
         }
     }
 }
