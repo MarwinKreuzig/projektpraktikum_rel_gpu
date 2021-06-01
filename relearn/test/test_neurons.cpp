@@ -200,17 +200,17 @@ TEST(TestNeuronModels, testNeuronModelsRandomConstructor) {
     setup();
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
-        const uid urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
-        const urd urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
+        std::uniform_real_distribution<double> urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
+        std::uniform_int_distribution<unsigned int> urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
+        std::uniform_real_distribution<double> urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -241,22 +241,22 @@ TEST(TestNeuronModels, testNeuronModelsRandomConstructor) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
-        const urd urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
-        const urd urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
-        const urd urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
-        const urd urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
-        const urd urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
-        const urd urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
-        const urd urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
+        std::uniform_real_distribution<double> urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
+        std::uniform_real_distribution<double> urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
+        std::uniform_real_distribution<double> urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
+        std::uniform_real_distribution<double> urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
+        std::uniform_real_distribution<double> urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
+        std::uniform_real_distribution<double> urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -297,17 +297,17 @@ TEST(TestNeuronModels, testNeuronModelsRandomConstructor) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
-        const urd urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
-        const urd urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
+        std::uniform_real_distribution<double> urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -338,23 +338,23 @@ TEST(TestNeuronModels, testNeuronModelsRandomConstructor) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
-        const urd urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
-        const urd urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
-        const urd urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
-        const urd urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
-        const urd urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
-        const urd urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
-        const urd urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
-        const urd urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
+        std::uniform_real_distribution<double> urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
+        std::uniform_real_distribution<double> urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
+        std::uniform_real_distribution<double> urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
+        std::uniform_real_distribution<double> urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
+        std::uniform_real_distribution<double> urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
+        std::uniform_real_distribution<double> urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
+        std::uniform_real_distribution<double> urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -405,17 +405,17 @@ TEST(TestNeuronModels, testNeuronModelsClone) {
     setup();
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
-        const uid urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
-        const urd urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
+        std::uniform_real_distribution<double> urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
+        std::uniform_int_distribution<unsigned int> urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
+        std::uniform_real_distribution<double> urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -462,22 +462,22 @@ TEST(TestNeuronModels, testNeuronModelsClone) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
-        const urd urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
-        const urd urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
-        const urd urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
-        const urd urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
-        const urd urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
-        const urd urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
-        const urd urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
+        std::uniform_real_distribution<double> urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
+        std::uniform_real_distribution<double> urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
+        std::uniform_real_distribution<double> urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
+        std::uniform_real_distribution<double> urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
+        std::uniform_real_distribution<double> urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
+        std::uniform_real_distribution<double> urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -539,17 +539,17 @@ TEST(TestNeuronModels, testNeuronModelsClone) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
-        const urd urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
-        const urd urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
+        std::uniform_real_distribution<double> urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -596,23 +596,23 @@ TEST(TestNeuronModels, testNeuronModelsClone) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
-        const urd urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
-        const urd urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
-        const urd urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
-        const urd urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
-        const urd urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
-        const urd urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
-        const urd urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
-        const urd urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
+        std::uniform_real_distribution<double> urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
+        std::uniform_real_distribution<double> urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
+        std::uniform_real_distribution<double> urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
+        std::uniform_real_distribution<double> urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
+        std::uniform_real_distribution<double> urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
+        std::uniform_real_distribution<double> urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
+        std::uniform_real_distribution<double> urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -685,17 +685,17 @@ TEST(TestNeuronModels, testNeuronModelsCreate) {
     setup();
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
-        const uid urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
-        const urd urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
+        std::uniform_real_distribution<double> urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
+        std::uniform_int_distribution<unsigned int> urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
+        std::uniform_real_distribution<double> urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -726,22 +726,22 @@ TEST(TestNeuronModels, testNeuronModelsCreate) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
-        const urd urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
-        const urd urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
-        const urd urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
-        const urd urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
-        const urd urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
-        const urd urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
-        const urd urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
+        std::uniform_real_distribution<double> urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
+        std::uniform_real_distribution<double> urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
+        std::uniform_real_distribution<double> urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
+        std::uniform_real_distribution<double> urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
+        std::uniform_real_distribution<double> urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
+        std::uniform_real_distribution<double> urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -782,17 +782,17 @@ TEST(TestNeuronModels, testNeuronModelsCreate) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
-        const urd urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
-        const urd urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
+        std::uniform_real_distribution<double> urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -823,23 +823,23 @@ TEST(TestNeuronModels, testNeuronModelsCreate) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
-        const urd urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
-        const urd urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
-        const urd urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
-        const urd urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
-        const urd urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
-        const urd urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
-        const urd urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
-        const urd urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
+        std::uniform_real_distribution<double> urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
+        std::uniform_real_distribution<double> urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
+        std::uniform_real_distribution<double> urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
+        std::uniform_real_distribution<double> urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
+        std::uniform_real_distribution<double> urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
+        std::uniform_real_distribution<double> urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
+        std::uniform_real_distribution<double> urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -890,17 +890,17 @@ TEST(TestNeuronModels, testNeuronModelsInit) {
     setup();
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
-        const uid urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
-        const urd urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
+        std::uniform_real_distribution<double> urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
+        std::uniform_int_distribution<unsigned int> urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
+        std::uniform_real_distribution<double> urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -917,7 +917,7 @@ TEST(TestNeuronModels, testNeuronModelsInit) {
         auto model = std::make_unique<PoissonModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_x0, expected_tau_x, expected_refrac);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
 
         for (auto j = 0; j < iterations; j++) {
             const auto desired_num_neurons = uid_num_neurons(mt);
@@ -950,22 +950,22 @@ TEST(TestNeuronModels, testNeuronModelsInit) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
-        const urd urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
-        const urd urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
-        const urd urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
-        const urd urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
-        const urd urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
-        const urd urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
-        const urd urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
+        std::uniform_real_distribution<double> urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
+        std::uniform_real_distribution<double> urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
+        std::uniform_real_distribution<double> urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
+        std::uniform_real_distribution<double> urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
+        std::uniform_real_distribution<double> urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
+        std::uniform_real_distribution<double> urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -987,7 +987,7 @@ TEST(TestNeuronModels, testNeuronModelsInit) {
         auto model = std::make_unique<IzhikevichModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
 
         for (auto j = 0; j < iterations; j++) {
             const auto desired_num_neurons = uid_num_neurons(mt);
@@ -1020,17 +1020,17 @@ TEST(TestNeuronModels, testNeuronModelsInit) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
-        const urd urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
-        const urd urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
+        std::uniform_real_distribution<double> urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -1047,7 +1047,7 @@ TEST(TestNeuronModels, testNeuronModelsInit) {
         auto model = std::make_unique<FitzHughNagumoModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_phi);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
 
         for (auto j = 0; j < iterations; j++) {
             const auto desired_num_neurons = uid_num_neurons(mt);
@@ -1080,23 +1080,23 @@ TEST(TestNeuronModels, testNeuronModelsInit) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
-        const urd urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
-        const urd urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
-        const urd urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
-        const urd urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
-        const urd urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
-        const urd urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
-        const urd urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
-        const urd urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
+        std::uniform_real_distribution<double> urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
+        std::uniform_real_distribution<double> urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
+        std::uniform_real_distribution<double> urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
+        std::uniform_real_distribution<double> urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
+        std::uniform_real_distribution<double> urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
+        std::uniform_real_distribution<double> urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
+        std::uniform_real_distribution<double> urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -1119,7 +1119,7 @@ TEST(TestNeuronModels, testNeuronModelsInit) {
         auto model = std::make_unique<AEIFModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_peak);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
 
         for (auto j = 0; j < iterations; j++) {
             const auto desired_num_neurons = uid_num_neurons(mt);
@@ -1154,23 +1154,21 @@ TEST(TestNeuronModels, testNeuronModelsInit) {
 
 TEST(TestNeuronModels, testNeuronModelsCreateNeurons) {
     using namespace models;
-    using urd = std::uniform_real_distribution<double>;
-    using uid = std::uniform_int_distribution<unsigned int>;
 
     setup();
 
     {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
-        const uid urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
-        const urd urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
+        std::uniform_real_distribution<double> urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
+        std::uniform_int_distribution<unsigned int> urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
+        std::uniform_real_distribution<double> urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -1187,7 +1185,7 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeurons) {
         auto model = std::make_unique<PoissonModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_x0, expected_tau_x, expected_refrac);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
 
         size_t current_num_neurons = 0;
 
@@ -1223,22 +1221,22 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeurons) {
     }
 
     {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
-        const urd urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
-        const urd urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
-        const urd urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
-        const urd urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
-        const urd urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
-        const urd urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
-        const urd urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
+        std::uniform_real_distribution<double> urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
+        std::uniform_real_distribution<double> urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
+        std::uniform_real_distribution<double> urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
+        std::uniform_real_distribution<double> urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
+        std::uniform_real_distribution<double> urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
+        std::uniform_real_distribution<double> urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -1260,7 +1258,7 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeurons) {
         auto model = std::make_unique<IzhikevichModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
 
         size_t current_num_neurons = 0;
 
@@ -1296,17 +1294,17 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeurons) {
     }
 
     {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
-        const urd urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
-        const urd urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
+        std::uniform_real_distribution<double> urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -1323,7 +1321,7 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeurons) {
         auto model = std::make_unique<FitzHughNagumoModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_phi);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
 
         size_t current_num_neurons = 0;
 
@@ -1359,23 +1357,23 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeurons) {
     }
 
     {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
-        const urd urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
-        const urd urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
-        const urd urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
-        const urd urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
-        const urd urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
-        const urd urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
-        const urd urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
-        const urd urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
+        std::uniform_real_distribution<double> urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
+        std::uniform_real_distribution<double> urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
+        std::uniform_real_distribution<double> urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
+        std::uniform_real_distribution<double> urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
+        std::uniform_real_distribution<double> urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
+        std::uniform_real_distribution<double> urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
+        std::uniform_real_distribution<double> urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -1398,7 +1396,7 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeurons) {
         auto model = std::make_unique<AEIFModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_peak);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
 
         size_t current_num_neurons = 0;
 
@@ -1436,23 +1434,21 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeurons) {
 
 TEST(TestNeuronModels, testNeuronModelsDisableFired) {
     using namespace models;
-    using urd = std::uniform_real_distribution<double>;
-    using uid = std::uniform_int_distribution<unsigned int>;
 
     setup();
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
-        const uid urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
-        const urd urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
+        std::uniform_real_distribution<double> urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
+        std::uniform_int_distribution<unsigned int> urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
+        std::uniform_real_distribution<double> urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -1469,10 +1465,10 @@ TEST(TestNeuronModels, testNeuronModelsDisableFired) {
         auto model = std::make_unique<PoissonModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_x0, expected_tau_x, expected_refrac);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto num_neurons = uid_num_neurons(mt);
 
-        const uid uid_num_neurons_disables(1, num_neurons);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, num_neurons);
         const auto num_disables = uid_num_neurons_disables(mt);
 
         const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables);
@@ -1492,22 +1488,22 @@ TEST(TestNeuronModels, testNeuronModelsDisableFired) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
-        const urd urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
-        const urd urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
-        const urd urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
-        const urd urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
-        const urd urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
-        const urd urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
-        const urd urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
+        std::uniform_real_distribution<double> urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
+        std::uniform_real_distribution<double> urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
+        std::uniform_real_distribution<double> urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
+        std::uniform_real_distribution<double> urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
+        std::uniform_real_distribution<double> urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
+        std::uniform_real_distribution<double> urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -1529,10 +1525,10 @@ TEST(TestNeuronModels, testNeuronModelsDisableFired) {
         auto model = std::make_unique<IzhikevichModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto num_neurons = uid_num_neurons(mt);
 
-        const uid uid_num_neurons_disables(1, num_neurons);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, num_neurons);
         const auto num_disables = uid_num_neurons_disables(mt);
 
         const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables);
@@ -1552,17 +1548,17 @@ TEST(TestNeuronModels, testNeuronModelsDisableFired) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
-        const urd urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
-        const urd urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
+        std::uniform_real_distribution<double> urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -1579,10 +1575,10 @@ TEST(TestNeuronModels, testNeuronModelsDisableFired) {
         auto model = std::make_unique<FitzHughNagumoModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_phi);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto num_neurons = uid_num_neurons(mt);
 
-        const uid uid_num_neurons_disables(1, num_neurons);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, num_neurons);
         const auto num_disables = uid_num_neurons_disables(mt);
 
         const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables);
@@ -1602,23 +1598,23 @@ TEST(TestNeuronModels, testNeuronModelsDisableFired) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
-        const urd urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
-        const urd urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
-        const urd urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
-        const urd urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
-        const urd urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
-        const urd urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
-        const urd urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
-        const urd urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
+        std::uniform_real_distribution<double> urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
+        std::uniform_real_distribution<double> urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
+        std::uniform_real_distribution<double> urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
+        std::uniform_real_distribution<double> urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
+        std::uniform_real_distribution<double> urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
+        std::uniform_real_distribution<double> urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
+        std::uniform_real_distribution<double> urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -1641,10 +1637,10 @@ TEST(TestNeuronModels, testNeuronModelsDisableFired) {
         auto model = std::make_unique<AEIFModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_peak);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto num_neurons = uid_num_neurons(mt);
 
-        const uid uid_num_neurons_disables(1, num_neurons);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, num_neurons);
         const auto num_disables = uid_num_neurons_disables(mt);
 
         const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables);
@@ -1666,23 +1662,21 @@ TEST(TestNeuronModels, testNeuronModelsDisableFired) {
 
 TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
     using namespace models;
-    using urd = std::uniform_real_distribution<double>;
-    using uid = std::uniform_int_distribution<unsigned int>;
 
     setup();
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
-        const uid urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
-        const urd urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
+        std::uniform_real_distribution<double> urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
+        std::uniform_int_distribution<unsigned int> urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
+        std::uniform_real_distribution<double> urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -1699,7 +1693,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
         auto model = std::make_unique<PoissonModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_x0, expected_tau_x, expected_refrac);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto desired_num_neurons = uid_num_neurons(mt);
 
         const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
@@ -1763,22 +1757,22 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
-        const urd urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
-        const urd urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
-        const urd urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
-        const urd urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
-        const urd urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
-        const urd urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
-        const urd urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
+        std::uniform_real_distribution<double> urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
+        std::uniform_real_distribution<double> urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
+        std::uniform_real_distribution<double> urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
+        std::uniform_real_distribution<double> urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
+        std::uniform_real_distribution<double> urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
+        std::uniform_real_distribution<double> urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -1800,7 +1794,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
         auto model = std::make_unique<IzhikevichModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto desired_num_neurons = uid_num_neurons(mt);
 
         const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
@@ -1864,17 +1858,17 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
-        const urd urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
-        const urd urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
+        std::uniform_real_distribution<double> urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -1891,7 +1885,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
         auto model = std::make_unique<FitzHughNagumoModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_phi);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto desired_num_neurons = uid_num_neurons(mt);
 
         const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
@@ -1955,23 +1949,23 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
-        const urd urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
-        const urd urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
-        const urd urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
-        const urd urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
-        const urd urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
-        const urd urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
-        const urd urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
-        const urd urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
+        std::uniform_real_distribution<double> urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
+        std::uniform_real_distribution<double> urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
+        std::uniform_real_distribution<double> urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
+        std::uniform_real_distribution<double> urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
+        std::uniform_real_distribution<double> urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
+        std::uniform_real_distribution<double> urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
+        std::uniform_real_distribution<double> urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -1994,7 +1988,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
         auto model = std::make_unique<AEIFModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_peak);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto desired_num_neurons = uid_num_neurons(mt);
 
         const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
@@ -2060,23 +2054,21 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
 
 TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
     using namespace models;
-    using urd = std::uniform_real_distribution<double>;
-    using uid = std::uniform_int_distribution<unsigned int>;
 
     setup();
 
     for (auto i = 0; i < 1; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
-        const uid urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
-        const urd urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
+        std::uniform_real_distribution<double> urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
+        std::uniform_int_distribution<unsigned int> urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
+        std::uniform_real_distribution<double> urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -2093,7 +2085,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
         auto model = std::make_unique<PoissonModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_x0, expected_tau_x, expected_refrac);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto desired_num_neurons = uid_num_neurons(mt);
 
         const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
@@ -2173,22 +2165,22 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
     return;
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
-        const urd urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
-        const urd urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
-        const urd urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
-        const urd urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
-        const urd urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
-        const urd urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
-        const urd urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
+        std::uniform_real_distribution<double> urd_desired_a(IzhikevichModel::min_a, IzhikevichModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(IzhikevichModel::min_b, IzhikevichModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_c(IzhikevichModel::min_c, IzhikevichModel::max_c);
+        std::uniform_real_distribution<double> urd_desired_d(IzhikevichModel::min_d, IzhikevichModel::max_d);
+        std::uniform_real_distribution<double> urd_desired_V_spike(IzhikevichModel::min_V_spike, IzhikevichModel::max_V_spike);
+        std::uniform_real_distribution<double> urd_desired_k1(IzhikevichModel::min_k1, IzhikevichModel::max_k1);
+        std::uniform_real_distribution<double> urd_desired_k2(IzhikevichModel::min_k2, IzhikevichModel::max_k2);
+        std::uniform_real_distribution<double> urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -2210,7 +2202,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
         auto model = std::make_unique<IzhikevichModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto desired_num_neurons = uid_num_neurons(mt);
 
         const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
@@ -2274,17 +2266,17 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
-        const urd urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
-        const urd urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
+        std::uniform_real_distribution<double> urd_desired_a(FitzHughNagumoModel::min_a, FitzHughNagumoModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(FitzHughNagumoModel::min_b, FitzHughNagumoModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -2301,7 +2293,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
         auto model = std::make_unique<FitzHughNagumoModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_phi);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto desired_num_neurons = uid_num_neurons(mt);
 
         const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
@@ -2365,23 +2357,23 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
     }
 
     for (auto i = 0; i < iterations; i++) {
-        const urd urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
-        const urd urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
-        const urd urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
-        const uid uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
-        const urd urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
-        const urd urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
-        const urd urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
+        std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
+        std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
+        std::uniform_real_distribution<double> urd_desired_beta(NeuronModels::min_beta, NeuronModels::max_beta);
+        std::uniform_int_distribution<unsigned int> uid_desired_h(NeuronModels::min_h, NeuronModels::max_h);
+        std::uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity);
+        std::uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean);
+        std::uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev);
 
-        const urd urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
-        const urd urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
-        const urd urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
-        const urd urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
-        const urd urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
-        const urd urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
-        const urd urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
-        const urd urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
-        const urd urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
+        std::uniform_real_distribution<double> urd_desired_C(AEIFModel::min_C, AEIFModel::max_C);
+        std::uniform_real_distribution<double> urd_desired_g_L(AEIFModel::min_g_L, AEIFModel::max_g_L);
+        std::uniform_real_distribution<double> urd_desired_E_L(AEIFModel::min_E_L, AEIFModel::max_E_L);
+        std::uniform_real_distribution<double> urd_desired_V_T(AEIFModel::min_V_T, AEIFModel::max_V_T);
+        std::uniform_real_distribution<double> urd_desired_d_T(AEIFModel::min_d_T, AEIFModel::max_d_T);
+        std::uniform_real_distribution<double> urd_desired_tau_w(AEIFModel::min_tau_w, AEIFModel::max_tau_w);
+        std::uniform_real_distribution<double> urd_desired_a(AEIFModel::min_a, AEIFModel::max_a);
+        std::uniform_real_distribution<double> urd_desired_b(AEIFModel::min_b, AEIFModel::max_b);
+        std::uniform_real_distribution<double> urd_desired_V_peak(AEIFModel::min_V_peak, AEIFModel::max_V_peak);
 
         const auto expected_k = urd_desired_k(mt);
         const auto expected_tau_C = urd_desired_tau_C(mt);
@@ -2404,7 +2396,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
         auto model = std::make_unique<AEIFModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_peak);
 
-        const uid uid_num_neurons(1, num_neurons_test);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto desired_num_neurons = uid_num_neurons(mt);
 
         const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
