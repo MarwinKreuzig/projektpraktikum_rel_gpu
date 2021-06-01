@@ -80,7 +80,7 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons(OctreeNode* root) {
             const auto neuron_id = cell.get_neuron_id();
             const auto& opt_position = cell.get_neuron_position();
 
-            ASSERT_TRUE(opt_position.has_value());
+            EXPECT_TRUE(opt_position.has_value());
 
             const auto position = opt_position.value();
 

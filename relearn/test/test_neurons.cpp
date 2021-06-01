@@ -2058,7 +2058,6 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabled) {
     }
 }
 
-
 TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
@@ -2123,7 +2122,14 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
                 //ASSERT_EQ(current_fired[id], model_fired[id]);
 
                 //ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+                const auto current_refrac = model->get_secondary_variable(id);
+                if (model->get_fired(id)) {
+                    ASSERT_EQ(current_refrac, expected_refrac);
+                } else if (model_secondary[id] == 0) {
+                    ASSERT_EQ(current_refrac, 0);
+                } else {
+                    ASSERT_EQ(current_refrac, model_secondary[id] - 1);
+                }
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -2146,7 +2152,14 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabled) {
                 //ASSERT_EQ(current_fired[id], model_fired[id]);
 
                 //ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
-                ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+                const auto current_refrac = model->get_secondary_variable(id);
+                if (model->get_fired(id)) {
+                    ASSERT_EQ(current_refrac, expected_refrac);
+                } else if (model_secondary[id] == 0) {
+                    ASSERT_EQ(current_refrac, 0);
+                } else {
+                    ASSERT_EQ(current_refrac, model_secondary[id] - 1);
+                }
 
                 model_I_sync[id] = model->get_I_syn(id);
                 model_secondary[id] = model->get_secondary_variable(id);
