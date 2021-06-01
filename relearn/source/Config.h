@@ -35,8 +35,8 @@ constexpr size_t mpi_alloc_mem = 1024 * 1024 * 300;
 
 //Constants for Fast Gauss
 constexpr int p = 4; //Determines the accuracy. Warning! If this parameter is increased, more derivatives must be entered 
-constexpr int max_neurons_in_target=100; //cutoff for target box
-constexpr int max_neurons_in_source=100; //cutoff for source box
+constexpr int max_neurons_in_target=10; //cutoff for target box
+constexpr int max_neurons_in_source=10; //cutoff for source box
 
 } // namespace Constants
 

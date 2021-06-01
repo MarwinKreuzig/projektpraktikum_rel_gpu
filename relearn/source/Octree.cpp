@@ -491,17 +491,16 @@ const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode 
                 //source to Taylor-Series about center of box C and direkt evaluation
                 RelearnException::check(source->get_from_interactionlist(i)->get_cell().get_neuron_dendrite_position_for(dendrite_type_needed).has_value(), "Target Box has no center!");
                 Vec3d center_of_target_box = source->get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).value();
-                 printf("taylor\n");
                 result[i] = Functions::calc_taylor_expansion(source_neurons_pos, target_neurons_pos, center_of_target_box);
             }
         }
 
     } else //when there are enough neurons in the source box...
     { //Hermite Expansion about center of source box
-        printf("mache Hermit");
         if (hermite_set == false) {
             //calculate Hermite coefficients
             Functions::calc_hermite_coefficients(center_of_source_box, source_neurons_pos, hermite_coefficients);
+            hermite_set == true;
         }
         for (size_t i = 0; i < target_list_length; i++) {
 
@@ -511,16 +510,8 @@ const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode 
             const std::vector<Vec3d> target_neurons_pos = source->get_from_interactionlist(i)->get_dendrite_pos_from_node_for(dendrite_type_needed);
             
             //... and there are not enough neurons in the target
-            if (target_num <= Constants::max_neurons_in_target) {
                 //evaluate Hermite expansion at each target
                 result[i] = Functions::calc_hermite(target_neurons_pos, hermite_coefficients, center_of_source_box);
-                
-            } else {
-                //TODO: find good solution
-                RelearnException::check(source->get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).has_value(), "Target Box has no center!");
-                Vec3d center_of_target_box = source->get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).value();
-                result[i] = source_num * target_num * Functions::kernel(center_of_source_box, center_of_target_box);
-            }
         }
     }
     return result;

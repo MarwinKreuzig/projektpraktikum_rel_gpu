@@ -169,7 +169,7 @@ inline double calc_taylor_expansion(const std::vector<Vec3d>& sources, const std
         taylor_coef.push_back(C);
     }
     //Evaluate Taylor series at all sources
-    for (unsigned int j = 0; j < sources.size(); j++) {
+    for (unsigned int j = 0; j < targets.size(); j++) {
         double temp = 0;
         const Vec3d temp_vec = Vec3d(
             (targets.at(j).get_x() - center_target.get_x()) / Constants::sigma,
