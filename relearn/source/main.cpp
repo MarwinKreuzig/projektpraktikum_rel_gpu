@@ -9,16 +9,20 @@
  */
 
 #include "Config.h"
-#include "LogFiles.h"
-#include "MPIWrapper.h"
-#include "NeuronModels.h"
-#include "NeuronMonitor.h"
-#include "NeuronToSubdomainAssignment.h"
-#include "Partition.h"
-#include "Random.h"
-#include "RelearnException.h"
-#include "Simulation.h"
-#include "Timers.h"
+#include "io/InteractiveNeuronIO.h"
+#include "io/LogFiles.h"
+#include "mpi/MPIWrapper.h"
+#include "neurons/ElementType.h"
+#include "neurons/helper/NeuronMonitor.h"
+#include "neurons/models/NeuronModels.h"
+#include "neurons/models/SynapticElements.h"
+#include "sim/NeuronToSubdomainAssignment.h"
+#include "sim/Simulation.h"
+#include "structure/Octree.h"
+#include "structure/Partition.h"
+#include "util/Random.h"
+#include "util/RelearnException.h"
+#include "util/Timers.h"
 
 #include <CLI/App.hpp>
 #include <CLI/Config.hpp>
@@ -65,6 +69,15 @@ int main(int argc, char** argv) {
     std::string file_network{};
     auto* opt_file_network = app.add_option("-g,--graph", file_network, "File with neuron connections.");
 
+    std::string file_enable_interrupts{};
+    auto* opt_file_enable_interrupts = app.add_option("--enable-interrupts", file_enable_interrupts, "File with the enable interrupts.");
+
+    std::string file_disable_interrupts{};
+    auto* opt_file_disable_interrupts = app.add_option("--disable-interrupts", file_disable_interrupts, "File with the disable interrupts.");
+
+    std::string file_creation_interrupts{};
+    auto* opt_file_creation_interrups = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
+
     std::string log_prefix{};
     auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
 
@@ -94,6 +107,10 @@ int main(int argc, char** argv) {
 
     opt_file_positions->check(CLI::ExistingFile);
     opt_file_network->check(CLI::ExistingFile);
+
+    opt_file_enable_interrupts->check(CLI::ExistingFile);
+    opt_file_disable_interrupts->check(CLI::ExistingFile);
+    opt_file_creation_interrups->check(CLI::ExistingFile);
 
     double synaptic_elements_init_lb{ 0.0 };
     double synaptic_elements_init_ub{ 0.0 };
@@ -163,7 +180,7 @@ int main(int argc, char** argv) {
 	*/
     MPIWrapper::init_buffer_octree(total_num_subdomains);
 
-    auto neuron_models = std::make_unique<models::ModelA>();
+    auto neuron_models = std::make_unique<models::PoissonModel>();
 
     auto axon_models = std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons, target_calcium,
         SynapticElements::default_nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
@@ -191,8 +208,23 @@ int main(int argc, char** argv) {
         if (static_cast<bool>(*opt_file_network)) {
             sim.load_neurons_from_file(file_positions, file_network);
         } else {
-            sim.load_neurons_from_file(file_positions);
+            sim.load_neurons_from_file(file_positions, {});
         }
+    }
+
+    if (*opt_file_enable_interrupts) {
+        auto enable_interrupts = InteractiveNeuronIO::load_enable_interrups(file_enable_interrupts);
+        sim.set_enable_interrupts(std::move(enable_interrupts));
+    }
+
+    if (*opt_file_disable_interrupts) {
+        auto disable_interrupts = InteractiveNeuronIO::load_disable_interrups(file_disable_interrupts);
+        sim.set_disable_interrupts(std::move(disable_interrupts));
+    }
+
+    if (*opt_file_creation_interrups) {
+        auto creation_interrups = InteractiveNeuronIO::load_creation_interrups(file_creation_interrupts);
+        sim.set_creation_interrupts(std::move(creation_interrups));
     }
 
     // Unlock local RMA memory and make local stores visible in public window copy
