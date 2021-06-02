@@ -723,11 +723,4 @@ void Octree::synchronize_local_trees() {
         update_from_level(level_branches - 1);
     }
     GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
-
-    // Unlock local RMA memory and make local stores visible in public window copy
-    MPIWrapper::unlock_window(MPIWrapper::get_my_rank());
-
-    // Makes sure that all ranks finished their local access epoch
-    // before a remote origin opens an access epoch
-    MPIWrapper::barrier(MPIWrapper::Scope::global);
 }
