@@ -49,20 +49,13 @@ public:
         return diff;
     }
 
-    void set_neuron_position(const std::optional<Vec3d>& opt_position) noexcept {
-        set_neuron_position_dendrites_exc(opt_position);
-        set_neuron_position_dendrites_inh(opt_position);
-        set_neuron_position_axons_exc(opt_position);
-        set_neuron_position_axons_inh(opt_position);
-    }
-
     [[nodiscard]] std::optional<Vec3d> get_neuron_position() const;
 
     [[nodiscard]] std::optional<Vec3d> get_neuron_position_dendrites_exc() const noexcept {
         return dendrites_ex.xyz_pos;
     }
 
-    void set_neuron_position_exc(const std::optional<Vec3d>& opt_position) {
+    void set_neuron_position_dendrites_exc(const std::optional<Vec3d>& opt_position) {
         if (opt_position.has_value()) {
             const auto& position = opt_position.value();
 
@@ -89,14 +82,13 @@ public:
 
         dendrites_in.xyz_pos = opt_position;
     }
-[[nodiscard]] std::optional<Vec3d> get_neuron_position_axons_exc() const noexcept {
+    [[nodiscard]] std::optional<Vec3d> get_neuron_position_axons_exc() const noexcept {
         return axons_ex.xyz_pos;
- }
-
- void set_neuron_position_axons_exc(const std::optional<Vec3d>& opt_position) noexcept {
-        axons_ex.xyz_pos = opt_position;
     }
 
+    void set_neuron_position_axons_exc(const std::optional<Vec3d>& opt_position) noexcept {
+        axons_ex.xyz_pos = opt_position;
+    }
 
     void set_neuron_position_axons_inh(const std::optional<Vec3d>& opt_position) noexcept {
         axons_in.xyz_pos = opt_position;
@@ -106,7 +98,12 @@ public:
         return axons_in.xyz_pos;
     }
 
-    
+    void set_neuron_position(const std::optional<Vec3d>& opt_position) noexcept {
+        set_neuron_position_dendrites_exc(opt_position);
+        set_neuron_position_dendrites_inh(opt_position);
+        set_neuron_position_axons_exc(opt_position);
+        set_neuron_position_axons_inh(opt_position);
+    }
 
     [[nodiscard]] std::optional<Vec3d> get_neuron_position_for(SignalType dendrite_type) const;
 
@@ -168,7 +165,7 @@ public:
 
     void set_neuron_id(size_t neuron_id) noexcept {
         this->neuron_id = neuron_id;
-    } 
+    }
 
     [[nodiscard]] unsigned char get_neuron_octant() const {
         const std::optional<Vec3d>& pos = get_neuron_position();
@@ -191,12 +188,11 @@ private:
         // List colliding_axons;
     };
 
-    struct Axons {    
+    struct Axons {
         // All axons have the same position
         std::optional<Vec3d> xyz_pos{};
-        unsigned int num_axons = 0;
+        unsigned int num_axons = { 0 };
     };
-    
 
     // Two points describe size of cell
     Vec3d xyz_min{ Constants::uninitialized };
@@ -211,15 +207,14 @@ private:
     Dendrites dendrites_ex{};
     Dendrites dendrites_in{};
 
-
     /**
 	 * Cell contains info for one neuron, which could be a "super" neuron
 	 *
 	 * Info about EXCITATORY axons: axons_ex
 	 * Info about INHIBITORY axons: axons_in
 	 */
-    Axons axons_ex;
-    Axons axons_in;
+    Axons axons_ex{};
+    Axons axons_in{};
 
     /**
 	 * ID of the neuron in the cell.
@@ -229,4 +224,3 @@ private:
 	 */
     size_t neuron_id{ Constants::uninitialized };
 };
-

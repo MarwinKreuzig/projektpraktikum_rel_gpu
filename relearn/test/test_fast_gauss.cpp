@@ -1,10 +1,9 @@
 #include "../googletest/include/gtest/gtest.h"
-
 #include "../source/Config.h"
-#include "../source/DeriativesAndFunctions.h"
-#include "../source/Cell.h"
-#include "../source/OctreeNode.h"
-#include "../source/Multiindex.h"
+#include "../source/util/DeriativesAndFunctions.h"
+#include "../source/structure/Cell.h"
+#include "../source/structure/OctreeNode.h"
+#include "../source/util/Multiindex.h"
 #include <stdio.h>
 
 TEST(TestFastGauss, test_deriatives) {

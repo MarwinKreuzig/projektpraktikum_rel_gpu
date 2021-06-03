@@ -14,6 +14,7 @@
 #include "../mpi/MPIWrapper.h"
 
 #include <sstream>
+#include <stack>
 
 bool OctreeNode::is_local() const noexcept {
     return rank == MPIWrapper::get_my_rank();

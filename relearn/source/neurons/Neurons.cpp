@@ -677,7 +677,7 @@ void Neurons::create_synapses_update_octree() {
 
     // Update my local trees bottom-up
     GlobalTimers::timers.start(TimerRegion::UPDATE_LOCAL_TREES);
-    global_tree->update_local_trees(*dendrites_exc, *dendrites_inh, num_neurons);
+    global_tree->update_local_trees(*dendrites_exc, *dendrites_inh, *axons, num_neurons);
     GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
 
     global_tree->synchronize_local_trees();

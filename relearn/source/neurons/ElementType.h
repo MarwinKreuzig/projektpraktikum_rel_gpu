@@ -10,14 +10,5 @@
 
 #pragma once
 
-<<<<<<< HEAD:relearn/source/Random.cpp
-namespace randomNumberSeeds {
-unsigned int partition;
-unsigned int octree;
-} // namespace randomNumberSeeds
-
-std::map<RandomHolderKey, std::mt19937> RandomHolder::random_number_generators;
-=======
 enum class ElementType { AXON,
     DENDRITE };
->>>>>>> merged2:relearn/source/neurons/ElementType.h

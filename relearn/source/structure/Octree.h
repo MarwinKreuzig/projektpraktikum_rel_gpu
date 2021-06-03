@@ -83,13 +83,13 @@ private:
     class FunctorUpdateNode {
     public:
         FunctorUpdateNode(
-            const std::vector<double>& dendrites_exc_cnts, 
+            const std::vector<double>& dendrites_exc_cnts,
             const std::vector<unsigned int>& dendrites_exc_connected_cnts,
-            const std::vector<double>& dendrites_inh_cnts, 
+            const std::vector<double>& dendrites_inh_cnts,
             const std::vector<unsigned int>& dendrites_inh_connected_cnts,
-            const std::vector<double>& axons_exc_cnts, 
+            const std::vector<double>& axons_exc_cnts,
             const std::vector<unsigned int>& axons_exc_connected_cnts,
-            const std::vector<double>& axons_inh_cnts, 
+            const std::vector<double>& axons_inh_cnts,
             const std::vector<unsigned int>& axons_inh_connected_cnts,
             size_t num_neurons) noexcept
             : dendrites_exc_cnts(dendrites_exc_cnts)
@@ -121,8 +121,8 @@ private:
                 // Calculate number of vacant axons for my neuron
                 const auto num_vacant_axons_exc = static_cast<unsigned int>(axons_exc_cnts[neuron_id] - axons_exc_connected_cnts[neuron_id]);
                 const auto num_vacant_axons_inh = static_cast<unsigned int>(axons_inh_cnts[neuron_id] - axons_inh_connected_cnts[neuron_id]);
-                node->set_cell_num_axons(num_vacant_axons_exc,num_vacant_axons_inh);
-                
+                node->set_cell_num_axons(num_vacant_axons_exc, num_vacant_axons_inh);
+
                 return;
             }
 
@@ -145,10 +145,10 @@ private:
                 }
 
                 // Sum up number of dendrites
-                auto temp_num_dendrites_exc = child->get_cell().get_neuron_num_dendrites_exc();
-                auto temp_num_dendrites_inh = child->get_cell().get_neuron_num_dendrites_inh();
-                auto temp_num_axons_exc = child->get_cell().get_neuron_num_axons_exc();
-                auto temp_num_axons_inh = child->get_cell().get_neuron_num_axons_inh();
+                const auto temp_num_dendrites_exc = child->get_cell().get_neuron_num_dendrites_exc();
+                const auto temp_num_dendrites_inh = child->get_cell().get_neuron_num_dendrites_inh();
+                const auto temp_num_axons_exc = child->get_cell().get_neuron_num_axons_exc();
+                const auto temp_num_axons_inh = child->get_cell().get_neuron_num_axons_inh();
                 num_dendrites_exc += temp_num_dendrites_exc;
                 num_dendrites_inh += temp_num_dendrites_inh;
                 num_axons_exc += temp_num_axons_exc;
@@ -160,7 +160,6 @@ private:
                 std::optional<Vec3d> temp_xyz_pos_ax_exc = child->get_cell().get_neuron_position_axons_exc();
                 std::optional<Vec3d> temp_xyz_pos_ax_inh = child->get_cell().get_neuron_position_axons_inh();
 
-
                 /**
 					 * We can use position if it's valid or if corresponding num of dendrites is 0 
 					 */
@@ -169,79 +168,58 @@ private:
                 RelearnException::check(temp_xyz_pos_ax_exc.has_value() || (0 == temp_num_axons_exc), "temp position ax_exc was bad");
                 RelearnException::check(temp_xyz_pos_ax_inh.has_value() || (0 == temp_num_axons_inh), "temp position ax_inh was bad");
 
-                for (auto j = 0; j < 3; j++) {
-                    if (temp_xyz_pos_dend_exc.has_value()) {
-                        xyz_pos_dend_exc[j] += static_cast<double>(temp_num_dendrites_exc) * temp_xyz_pos_dend_exc.value()[j];
-                    }
-                    if (temp_xyz_pos_dend_inh.has_value()) {
-                        xyz_pos_dend_inh[j] += static_cast<double>(temp_num_dendrites_inh) * temp_xyz_pos_dend_inh.value()[j];
-                    }
-                     if (temp_xyz_pos_ax_exc.has_value()) {
-                        xyz_pos_ax_exc[j] += static_cast<double>(temp_num_axons_exc) * temp_xyz_pos_ax_exc.value()[j];
-                    }
-                    if (temp_xyz_pos_ax_inh.has_value()) {
-                        xyz_pos_ax_inh[j] += static_cast<double>(temp_num_axons_inh) * temp_xyz_pos_ax_inh.value()[j];
-                    }
+                if (temp_xyz_pos_dend_exc.has_value()) {
+                    const auto scaled_position = temp_xyz_pos_dend_exc.value() * static_cast<double>(temp_num_dendrites_exc);
+                    xyz_pos_dend_exc += scaled_position;
+                }
+                if (temp_xyz_pos_dend_inh.has_value()) {
+                    const auto scaled_position = temp_xyz_pos_dend_inh.value() * static_cast<double>(temp_num_dendrites_inh);
+                    xyz_pos_dend_inh += scaled_position;
+                }
+                if (temp_xyz_pos_ax_exc.has_value()) {
+                    const auto scaled_position = temp_xyz_pos_ax_exc.value() * static_cast<double>(temp_num_axons_exc);
+                    xyz_pos_ax_exc += scaled_position;
+                }
+                if (temp_xyz_pos_ax_inh.has_value()) {
+                    const auto scaled_position = temp_xyz_pos_ax_inh.value() * static_cast<double>(temp_num_axons_inh);
+                    xyz_pos_ax_inh += scaled_position;
                 }
             }
 
-            node->set_cell_num_dendrites(my_number_dendrites_excitatory, my_number_dendrites_inhibitory);
+            node->set_cell_num_dendrites(num_dendrites_exc, num_dendrites_inh);
+            node->set_cell_num_axons(num_axons_exc,num_axons_inh);
 
             /**
 			* For calculating the new weighted position, make sure that we don't
 			* divide by 0. This happens if the total number of dendrites is 0.
 			*/
-            auto divisor_pos_dend_exc = num_dendrites_exc;
-            auto divisor_pos_dend_inh = num_dendrites_inh;
-            auto divisor_pos_ax_exc = num_axons_exc;
-            auto divisor_pos_ax_inh = num_axons_inh;
-            auto valid_pos_dend_exc = true;
-            auto valid_pos_dend_inh = true;
-            auto valid_pos_ax_exc = true;
-            auto valid_pos_ax_inh = true;
-
             if (0 == num_dendrites_exc) {
-                valid_pos_dend_exc = false; // Mark result as invald
-                divisor_pos_dend_exc = 1;
+                node->set_cell_neuron_pos_dend_exc({});
+            } else {
+                const auto scaled_position = xyz_pos_dend_exc / num_dendrites_exc;
+                node->set_cell_neuron_pos_dend_exc(std::optional<Vec3d>{ scaled_position });
             }
 
             if (0 == num_dendrites_inh) {
-                valid_pos_dend_inh = false; // Mark result as invalid
-                divisor_pos_dend_inh = 1;
+                node->set_cell_neuron_pos_dend_inh({});
+            } else {
+                const auto scaled_position = xyz_pos_dend_inh / num_dendrites_inh;
+                node->set_cell_neuron_pos_dend_inh(std::optional<Vec3d>{ scaled_position });
             }
 
             if (0 == num_axons_exc) {
-                valid_pos_ax_exc = false; // Mark result as invald
-                divisor_pos_ax_exc = 1;
+                node->set_cell_neuron_pos_ax_exc({});
+            } else {
+                const auto scaled_position = xyz_pos_ax_exc / num_axons_exc;
+                node->set_cell_neuron_pos_ax_exc(std::optional<Vec3d>{ scaled_position });
             }
 
             if (0 == num_axons_inh) {
-                valid_pos_ax_inh = false; // Mark result as invalid
-                divisor_pos_ax_inh = 1;
+                node->set_cell_neuron_pos_ax_inh({});
+            } else {
+                const auto scaled_position = xyz_pos_ax_inh / num_axons_inh;
+                node->set_cell_neuron_pos_ax_inh(std::optional<Vec3d>{ scaled_position });
             }
-
-            // Calc the average by dividing by the total number of dendrites
-            for (auto j = 0; j < 3; j++) {
-                xyz_pos_dend_exc[j] /= divisor_pos_dend_exc;
-                xyz_pos_dend_inh[j] /= divisor_pos_dend_inh;
-                xyz_pos_ax_exc[j] /= divisor_pos_ax_exc;
-                xyz_pos_ax_inh[j] /= divisor_pos_ax_inh;
-            }
-            node->set_cell_num_dendrites(num_dendrites_exc, num_dendrites_inh);
-            node->set_cell_num_axons(num_axons_exc,num_axons_inh);
-            // Also mark if new position is valid using valid_pos_{exc,inh}
-
-            std::optional<Vec3d> dend_ex_pos = valid_pos_dend_exc ? std::optional<Vec3d>{ xyz_pos_dend_exc } : std::optional<Vec3d>{};
-            std::optional<Vec3d> dend_in_pos = valid_pos_dend_inh ? std::optional<Vec3d>{ xyz_pos_dend_inh } : std::optional<Vec3d>{};
-            std::optional<Vec3d> ax_ex_pos = valid_pos_ax_exc ? std::optional<Vec3d>{ xyz_pos_ax_exc } : std::optional<Vec3d>{};
-            std::optional<Vec3d> ax_in_pos = valid_pos_ax_inh ? std::optional<Vec3d>{ xyz_pos_ax_inh } : std::optional<Vec3d>{};
-
-
-            node->set_cell_neuron_pos_dend_exc(dend_ex_pos);
-            node->set_cell_neuron_pos_dend_inh(dend_in_pos);
-            node->set_cell_neuron_pos_ax_exc(ax_ex_pos);
-            node->set_cell_neuron_pos_ax_inh(ax_in_pos);
-            
         }
 
     private:
@@ -373,11 +351,11 @@ public:
     // "max_level" must be chosen correctly for this
     void update_from_level(size_t max_level);
 
-    void update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, size_t num_neurons);
+    void update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, const SynapticElements& axons, size_t num_neurons);
 
     [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed);
-   
-   const std::optional<OctreeNode*> do_random_experiment(OctreeNode *source, const std::vector<double>& atractiveness);
+
+    const std::optional<OctreeNode*> do_random_experiment(OctreeNode* source, const std::vector<double>& atractiveness);
 
     void empty_remote_nodes_cache();
 
@@ -470,8 +448,9 @@ private:
 
     void construct_global_tree_part();
 
-   public: const std::vector<double> calc_attractiveness_to_connect_FMM(OctreeNode *source, const SignalType dendrite_type_needed);
-    
+public:
+    const std::vector<double> calc_attractiveness_to_connect_FMM(OctreeNode* source, const SignalType dendrite_type_needed);
+
     // Root of the tree
     OctreeNode* root{ nullptr };
 

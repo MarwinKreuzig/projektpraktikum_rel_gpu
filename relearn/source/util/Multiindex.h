@@ -1,5 +1,5 @@
 #include <array>
-#include "Config.h"
+#include "../Config.h"
 
 #pragma once
 

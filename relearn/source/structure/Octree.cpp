@@ -22,6 +22,7 @@
 #include "../util/Random.h"
 #include "../util/RelearnException.h"
 #include "../util/Timers.h"
+#include "../util/DeriativesAndFunctions.h"
 
 #include <sstream>
 
@@ -112,7 +113,7 @@ void Octree::postorder_print() {
                << ", " << ptr->get_cell().get_neuron_num_dendrites_inh() << ")\n";
 
             // Print position DendriteType::EXCITATORY
-            xyz_pos = ptr->get_cell().get_neuron_position_exc();
+            xyz_pos = ptr->get_cell().get_neuron_position_dendrites_exc();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
                 ss << "-- invalid!";
@@ -125,7 +126,7 @@ void Octree::postorder_print() {
 
             ss << "\n";
             // Print position DendriteType::INHIBITORY
-            xyz_pos = ptr->get_cell().get_neuron_position_inh();
+            xyz_pos = ptr->get_cell().get_neuron_position_dendrites_inh();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
                 ss << "-- invalid!";
@@ -657,7 +658,21 @@ void Octree::update_from_level(size_t max_level) {
     std::vector<double> dendrites_inh_cnts;
     std::vector<unsigned int> dendrites_inh_connected_cnts;
 
-    const FunctorUpdateNode update_functor(dendrites_exc_cnts, dendrites_exc_connected_cnts, dendrites_inh_cnts, dendrites_inh_connected_cnts, 0);
+    std::vector<double> axons_exc_cnts;
+    std::vector<unsigned int> axons_exc_connected_cnts;
+    std::vector<double> axons_inh_cnts;
+    std::vector<unsigned int> axons_inh_connected_cnts;
+
+    const FunctorUpdateNode update_functor(
+        dendrites_exc_cnts, 
+        dendrites_exc_connected_cnts, 
+        dendrites_inh_cnts, 
+        dendrites_inh_connected_cnts,
+        axons_exc_cnts,
+        axons_exc_connected_cnts,
+        axons_inh_cnts,
+        axons_inh_connected_cnts,
+        0);
 
     /**
 	* NOTE: It *must* be ensured that in tree_walk_postorder() only inner nodes
@@ -702,7 +717,7 @@ void Octree::update_local_trees(const SynapticElements& dendrites_exc, const Syn
     
 
     for (auto* local_tree : local_trees) {
-        const FunctorUpdateNode update_functor(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt, num_neurons);
+        const FunctorUpdateNode update_functor(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt, ax_ex_cnt,ax_ex_conn_cnt,ax_in_cnt,ax_in_conn_cnt, num_neurons);
 
         // The functor containing the visit function is of type FunctorUpdateNode
         tree_walk_postorder<FunctorUpdateNode>(local_tree, update_functor);
@@ -770,7 +785,7 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
 
 const std::optional<OctreeNode*> Octree::do_random_experiment(OctreeNode *source, const std::vector<double> &atractiveness) {
     std::uniform_real_distribution<double> random_number_distribution(0.0, std::nextafter(1.0, 1.0 + Constants::eps));
-    std::mt19937& random_number_generator = RandomHolder::get_random_generator(RandomHolderKey::Octree);
+    std::mt19937& random_number_generator = RandomHolder::RandomHolder::get_random_uniform_double(RandomHolderKey::Octree, 0.0, std::nextafter(1.0, Constants::eps));
     
     int vec_len = atractiveness.size();
     std::vector<double> intervals;

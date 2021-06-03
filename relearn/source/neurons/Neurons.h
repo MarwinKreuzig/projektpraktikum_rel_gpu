@@ -25,6 +25,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <stack>
 #include <tuple>
 #include <vector>
 
@@ -32,6 +33,7 @@ class NetworkGraph;
 class NeuronMonitor;
 class Octree;
 class Partition;
+class OctreeNode;
 
 // Types
 using Axons = SynapticElements;
