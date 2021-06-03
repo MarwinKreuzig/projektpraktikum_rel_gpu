@@ -1,0 +1,147 @@
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
+
+#pragma once
+
+#include "../util/RelearnException.h"
+
+#include <chrono>
+#include <string>
+#include <vector>
+
+enum TimerRegion : int {
+    INITIALIZATION,
+    SIMULATION_LOOP,
+    UPDATE_ELECTRICAL_ACTIVITY,
+    PREPARE_SENDING_SPIKES,
+    PREPARE_NUM_NEURON_IDS,
+    ALL_TO_ALL,
+    ALLOC_MEM_FOR_NEURON_IDS,
+    EXCHANGE_NEURON_IDS,
+    CALC_SYNAPTIC_BACKGROUND,
+    CALC_SERIAL_ACTIVITY,
+    CALC_SYNAPTIC_INPUT,
+    CALC_ACTIVITY,
+    UPDATE_SYNAPTIC_ELEMENTS_DELTA,
+    UPDATE_CONNECTIVITY,
+    UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES,
+    UPDATE_LOCAL_TREES,
+    EXCHANGE_BRANCH_NODES,
+    INSERT_BRANCH_NODES_INTO_GLOBAL_TREE,
+    UPDATE_GLOBAL_TREE,
+    FIND_TARGET_NEURONS,
+    EMPTY_REMOTE_NODES_CACHE,
+    CREATE_SYNAPSES,
+    NUM_TIMER_REGIONS
+};
+
+class Timers;
+
+namespace GlobalTimers {
+extern Timers timers;
+} // namespace GlobalTimers
+
+class Timers {
+
+public:
+    explicit Timers(size_t num_timers) noexcept
+        : num_timers(num_timers)
+        , time_start(num_timers)
+        , time_stop(num_timers)
+        , time_elapsed(num_timers) {
+        // Reset elapsed to zero
+        for (size_t i = 0; i < num_timers; i++) {
+            time_elapsed[i] = std::chrono::duration<double>::zero();
+        }
+    }
+
+    Timers(const Timers& other) = delete;
+    Timers(Timers&& other) = delete;
+
+    Timers& operator=(const Timers& other) = delete;
+    Timers& operator=(Timers&& other) = delete;
+
+    ~Timers() = default;
+
+    [[nodiscard]] size_t get_num_timers() const noexcept { return num_timers; }
+
+    void start(size_t timer_id) /*noexcept*/ {
+        RelearnException::check(timer_id < num_timers, "In Timers::start, timer_id was: %u", timer_id);
+        time_start[timer_id] = std::chrono::high_resolution_clock::now();
+    }
+
+    void stop(size_t timer_id) /*noexcept*/ {
+        RelearnException::check(timer_id < num_timers, "In Timers::stop, timer_id was: %u", timer_id);
+        time_stop[timer_id] = std::chrono::high_resolution_clock::now();
+    }
+
+    void stop_and_add(size_t timer_id) /*noexcept*/ {
+        stop(timer_id);
+        add_start_stop_diff_to_elapsed(timer_id);
+    }
+
+    void add_start_stop_diff_to_elapsed(size_t timer_id) /*noexcept*/ {
+        RelearnException::check(timer_id < num_timers, "In Timers::add_start_stop_diff_to_elapsed, timer_id was: %u", timer_id);
+        time_elapsed[timer_id] += std::chrono::duration_cast<std::chrono::duration<double>>(time_stop[timer_id] - time_start[timer_id]);
+    }
+
+    void reset_elapsed(size_t timer_id) /*noexcept*/ {
+        RelearnException::check(timer_id < num_timers, "In Timers::reset_elapsed, timer_id was: %u", timer_id);
+        time_elapsed[timer_id] = std::chrono::duration<double>::zero();
+    }
+
+    // Return elapsed time in seconds
+    [[nodiscard]] double get_elapsed(size_t timer_id) /*noexcept*/ {
+        RelearnException::check(timer_id < num_timers, "In Timers::get_elapsed, timer_id was: %u", timer_id);
+        return time_elapsed[timer_id].count();
+    }
+
+    static void print();
+
+    /**
+	 * Static function to get current time in string
+	 */
+    [[nodiscard]] static std::string wall_clock_time() {
+#ifdef __linux__
+        time_t rawtime = 0;
+        time(&rawtime);
+        struct tm* timeinfo = localtime(&rawtime);
+        char* string = asctime(timeinfo);
+
+        // Remove linebreak in string
+        // NOLINTNEXTLINE
+        string[24] = '\0';
+
+        return std::string(string);
+#else
+        time_t rawtime = 0;
+        struct tm timeinfo;
+        char char_buff[30];
+
+        time(&rawtime);
+        localtime_s(&timeinfo, &rawtime);
+        asctime_s(char_buff, &timeinfo);
+
+        // Remove linebreak in string
+        // NOLINTNEXTLINE
+        char_buff[24] = '\0';
+
+        return std::string(char_buff);
+#endif
+    }
+
+private:
+    size_t num_timers; // Number of timers
+
+    std::vector<std::chrono::high_resolution_clock::time_point> time_start;
+    std::vector<std::chrono::high_resolution_clock::time_point> time_stop;
+
+    std::vector<std::chrono::duration<double>> time_elapsed;
+};

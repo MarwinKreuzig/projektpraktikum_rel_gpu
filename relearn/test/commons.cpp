@@ -1,8 +1,8 @@
 #include "commons.h"
 
-#include "../source/LogFiles.h"
-#include "../source/MPIWrapper.h"
-#include "../source/RelearnException.h"
+#include "../source/io/LogFiles.h"
+#include "../source/mpi/MPIWrapper.h"
+#include "../source/util/RelearnException.h"
 
 #include <mutex>
 
@@ -14,6 +14,7 @@ void setup() {
     auto lambda = []() {
         char* argument = (char*)"./runTests";
         MPIWrapper::init(1, &argument);
+        MPIWrapper::init_buffer_octree(1);
         LogFiles::init();
     };
 

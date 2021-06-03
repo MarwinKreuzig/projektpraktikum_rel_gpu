@@ -1,18 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 project(relearn)
 
-file(GLOB_RECURSE TOP_SRC "source/*.cpp" "source/*.c")
-file(GLOB_RECURSE TOP_INCS "source/*.hpp" "source/*.h")
-
-set(TOP_SRC_OM ${TOP_SRC})
-list(REMOVE_ITEM TOP_SRC_OM "${PROJECT_SOURCE_DIR}/source/main.cpp")
-
-file(GLOB_RECURSE TOP_TST "test/*")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_BUILD_TYPE Release)
@@ -24,7 +16,26 @@ endif()
 
 include(FetchContent)
 
-find_package (MPI REQUIRED)
+find_package(MPI)
+find_package(OpenMP)
+
+file(GLOB_RECURSE SRC_IO "source/io/*")
+file(GLOB_RECURSE SRC_MPI "source/mpi/*")
+file(GLOB_RECURSE SRC_SIM "source/sim/*")
+file(GLOB_RECURSE SRC_STR "source/structure/*")
+file(GLOB_RECURSE SRC_UTIL "source/util/*")
+file(GLOB_RECURSE SRC_NEU "source/neurons/*.h" "source/neurons/*.cpp")
+file(GLOB_RECURSE SRC_NEU_MOD "source/neurons/models/*")
+file(GLOB_RECURSE SRC_NEU_HEL "source/neurons/helper/*")
+
+file(GLOB_RECURSE SRC_MAIN "source/main.cpp")
+file(GLOB_RECURSE SRC_CONF "source/Config.h")
+
+file(GLOB_RECURSE SRC_TST "test/*")
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRC_IO} ${SRC_MPI} ${SRC_SIM} ${SRC_STR} ${SRC_UTIL} ${SRC_NEU} ${SRC_NEU_MOD} ${SRC_NEU_HEL} ${SRC_MAIN} ${SRC_CONF})
+
+source_group("tests\\" FILES ${SRC_TST})
 
 # project options
 add_library(project_options INTERFACE)
@@ -33,6 +44,8 @@ target_include_directories (project_options SYSTEM INTERFACE ${MPI_CXX_INCLUDE_P
 
 target_compile_options (project_options INTERFACE ${MPI_CXX_COMPILE_FLAGS})
 
+target_compile_definitions(project_options INTERFACE -DMPI_FOUND=$<BOOL:${MPI_FOUND}>)
+
 target_link_libraries (project_options INTERFACE ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
 if (UNIX)
 	target_link_libraries (project_options INTERFACE stdc++fs)
@@ -40,13 +53,25 @@ endif ()
 
 # relearn executable
 add_executable(relearn
-	${TOP_INCS}
-	${TOP_SRC}
+	${SRC_IO}
+	${SRC_MPI}
+	${SRC_SIM}
+	${SRC_STR}
+	${SRC_UTIL}
+	${SRC_NEU}
+	${SRC_NEU_MOD}
+	${SRC_NEU_HEL}
+	${SRC_MAIN}
+	${SRC_CONF}
 )
 
 set_target_properties(relearn PROPERTIES ENABLE_EXPORTS 1)
 
 target_link_libraries(relearn PRIVATE project_options)
+
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(relearn PUBLIC OpenMP::OpenMP_CXX)
+endif()
 
 FetchContent_Declare(
   CLI11
@@ -81,15 +106,21 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
 		${CMAKE_BINARY_DIR}/googletest-build
 		EXCLUDE_FROM_ALL)
 
-source_group("tests" FILES ${TOP_TST})
-
-add_executable(runTests 
-	${TOP_INCS}
-	${TOP_SRC_OM}
-	${TOP_TST}
+add_executable(runTests
+	${SRC_IO}
+	${SRC_MPI}
+	${SRC_SIM}
+	${SRC_STR}
+	${SRC_UTIL}
+	${SRC_NEU}
+	${SRC_NEU_MOD}
+	${SRC_NEU_HEL}
+	${SRC_CONF}
+	${SRC_TST}
 )
 
 target_link_libraries(runTests PRIVATE project_options)
 target_link_libraries(runTests PRIVATE gtest_main)
 
 add_test(NAME SerialTests COMMAND runTests)
+
