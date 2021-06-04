@@ -142,11 +142,11 @@ inline double euclidean_distance_3d(const Vec3d &a, const Vec3d &b) {
 
 // Kernel from Butz&Ooyen "A Simple Rule for Dendritic Spine and Axonal Bouton Formation Can Account for Cortical Reorganization afterFocal Retinal Lesions"
 // Calculates the attraction between two neurons, where a and b represent the position in three-dimensional space
-inline double kernel(const Vec3d &a, const Vec3d &b) {
-    return exp(-(pow(euclidean_distance_3d(a, b), 2) / pow(Constants::sigma, 2)));
+inline double kernel(const Vec3d &a, const Vec3d &b, const double sigma) {
+    return exp(-(pow(euclidean_distance_3d(a, b), 2) / pow(sigma, 2)));
 }
 
-inline double calc_taylor_expansion(const std::vector<Vec3d>& sources, const std::vector<Vec3d>& targets, const Vec3d& center_target) {
+inline double calc_taylor_expansion(const std::vector<Vec3d>& sources, const std::vector<Vec3d>& targets, const Vec3d& center_target, const double sigma) {
     Multiindex m = Multiindex();
     int num_coef = m.get_number_of_indices();
     std::vector<double> taylor_coef;
@@ -158,9 +158,9 @@ inline double calc_taylor_expansion(const std::vector<Vec3d>& sources, const std
         const auto& current_index = m.get_index(b);
         for (unsigned int j = 0; j < sources.size(); j++) {
             const Vec3d temp_vec = Vec3d(
-                (sources.at(j).get_x()-center_target.get_x())/Constants::sigma,
-                (sources.at(j).get_y()-center_target.get_y())/Constants::sigma,
-                (sources.at(j).get_z()-center_target.get_z())/Constants::sigma
+                (sources.at(j).get_x()-center_target.get_x())/sigma,
+                (sources.at(j).get_y()-center_target.get_y())/sigma,
+                (sources.at(j).get_z()-center_target.get_z())/sigma
                 );
             temp += h_multiindex(current_index, temp_vec);
         }
@@ -172,9 +172,9 @@ inline double calc_taylor_expansion(const std::vector<Vec3d>& sources, const std
     for (unsigned int j = 0; j < targets.size(); j++) {
         double temp = 0;
         const Vec3d temp_vec = Vec3d(
-            (targets.at(j).get_x() - center_target.get_x()) / Constants::sigma,
-            (targets.at(j).get_y() - center_target.get_y()) / Constants::sigma,
-            (targets.at(j).get_z() - center_target.get_z()) / Constants::sigma
+            (targets.at(j).get_x() - center_target.get_x()) / sigma,
+            (targets.at(j).get_y() - center_target.get_y()) / sigma,
+            (targets.at(j).get_z() - center_target.get_z()) / sigma
         );
         for (unsigned int b = 0; b < num_coef; b++) {
             temp += taylor_coef.at(b) * pow_multiindex(temp_vec, m.get_index(b));
@@ -185,26 +185,26 @@ inline double calc_taylor_expansion(const std::vector<Vec3d>& sources, const std
 }
 
 //calculates direct gauss of two vectors with 3D positions
-inline double calc_direct_gauss(const std::vector<Vec3d> &sources, const std::vector<Vec3d> &targets) {
+inline double calc_direct_gauss(const std::vector<Vec3d> &sources, const std::vector<Vec3d> &targets, const double sigma) {
     double result = 0;
     for (unsigned int t = 0; t < targets.size(); t++) {
         for (size_t s = 0; s < sources.size(); s++) {
-            result += Functions::kernel(targets.at(t), sources.at(s));
+            result += Functions::kernel(targets.at(t), sources.at(s), sigma);
         }
     }
     return result;
 }
 
-inline void calc_hermite_coefficients(const Vec3d &center_of_source, const std::vector<Vec3d> &sources, std::vector<double> &coef) {
+inline void calc_hermite_coefficients(const Vec3d &center_of_source, const std::vector<Vec3d> &sources, std::vector<double> &coef,const double sigma) {
     Multiindex m = Multiindex();
     int num_coef = m.get_number_of_indices();
     for (unsigned int a = 0; a < num_coef; a++) {
        double temp = 0;
         for (unsigned int i = 0; i < sources.size(); i++) {
             const Vec3d temp_vec = Vec3d(
-                (sources.at(i).get_x() - center_of_source.get_x()) / Constants::sigma,
-                (sources.at(i).get_y() - center_of_source.get_y()) / Constants::sigma,
-                (sources.at(i).get_z() - center_of_source.get_z()) / Constants::sigma
+                (sources.at(i).get_x() - center_of_source.get_x()) / sigma,
+                (sources.at(i).get_y() - center_of_source.get_y()) / sigma,
+                (sources.at(i).get_z() - center_of_source.get_z()) / sigma
             );
             temp += pow_multiindex(temp_vec, m.get_index(a));
         }
@@ -214,7 +214,7 @@ inline void calc_hermite_coefficients(const Vec3d &center_of_source, const std::
     }
 }
 
-inline double calc_hermite(const std::vector<Vec3d> &targets, const std::vector<double> &coef, const Vec3d &center_of_sources) {
+inline double calc_hermite(const std::vector<Vec3d> &targets, const std::vector<double> &coef, const Vec3d &center_of_sources, const double sigma) {
     double result = 0;
     Multiindex m = Multiindex();
     int coef_num = m.get_number_of_indices();
@@ -222,9 +222,9 @@ inline double calc_hermite(const std::vector<Vec3d> &targets, const std::vector<
     for (unsigned int j = 0; j < targets.size(); j++) {
         double temp = 0;
         const Vec3d temp_vec = Vec3d(
-            (targets.at(j).get_x() - center_of_sources.get_x()) / Constants::sigma,
-            (targets.at(j).get_y() - center_of_sources.get_y()) / Constants::sigma,
-            (targets.at(j).get_z() - center_of_sources.get_z()) / Constants::sigma 
+            (targets.at(j).get_x() - center_of_sources.get_x()) / sigma,
+            (targets.at(j).get_y() - center_of_sources.get_y()) / sigma,
+            (targets.at(j).get_z() - center_of_sources.get_z()) / sigma 
 
         );
         

@@ -5,6 +5,7 @@
 #include "../source/structure/OctreeNode.h"
 #include "../source/util/Multiindex.h"
 #include <stdio.h>
+const static double sigma = 750;
 
 TEST(TestFastGauss, test_deriatives) {
     double result[] = {
@@ -38,15 +39,15 @@ TEST(TestFastGauss, test_functions) {
     Vec3d a = { 0, 0, 0 };
     Vec3d b = { 0, 1, 0 };
     EXPECT_EQ(Functions::euclidean_distance_3d(a, b), 1);
-    EXPECT_NEAR(Functions::kernel(a, b), 0.999956, 0.0001);
+    EXPECT_NEAR(Functions::kernel(a, b, sigma), 0.999956, 0.0001);
     Vec3d c = { 0, 0, -1 };
     EXPECT_EQ(Functions::euclidean_distance_3d(a, c), 1);
     EXPECT_EQ(Functions::euclidean_distance_3d(a, a), 0);
-    EXPECT_EQ(Functions::kernel(a, a), 1);
+    EXPECT_EQ(Functions::kernel(a, a, sigma), 1);
     Vec3d e = { 6, 4.5, -3.4 };
     Vec3d f = { 0, -8.3, 2 };
     EXPECT_NEAR(Functions::euclidean_distance_3d(e, f), 15.132745950421556, 0.01);
-    EXPECT_NEAR(Functions::kernel(e, f), 0.9898, 0.01);
+    EXPECT_NEAR(Functions::kernel(e, f, sigma), 0.9898, 0.01);
 }
 
 TEST(TestFastGauss, test_calc_attractiveness) {
@@ -71,18 +72,18 @@ TEST(TestFastGauss, test_calc_attractiveness) {
     Vec3d target_center = { 204.6, 206.4, 202.8 };
 
 
-    double gauss_res = Functions::calc_direct_gauss(test_source, test_target);
-    double taylor_res = Functions::calc_taylor_expansion(test_source,test_target, target_center);
+    double gauss_res = Functions::calc_direct_gauss(test_source, test_target, sigma);
+    double taylor_res = Functions::calc_taylor_expansion(test_source,test_target, target_center, sigma);
     printf("Gauss result = %f \n", gauss_res);
     printf("Taylor result = %f \n", taylor_res);
     std::vector<double> hermite_coef;
     hermite_coef.reserve(pow(Constants::p,3));
-    Functions::calc_hermite_coefficients(source_center, test_source, hermite_coef);
-    double hermite_res = Functions::calc_hermite(test_target, hermite_coef, source_center);
+    Functions::calc_hermite_coefficients(source_center, test_source, hermite_coef, sigma);
+    double hermite_res = Functions::calc_hermite(test_target, hermite_coef, source_center, sigma);
     printf("Hermite result = %f \n", hermite_res);
 
     EXPECT_NEAR(gauss_res, taylor_res, 0.01);
-    EXPECT_NEAR(gauss_res, pow(test_source.size(),2) * Functions::kernel(source_center, target_center), 0.01);
+    EXPECT_NEAR(gauss_res, pow(test_source.size(),2) * Functions::kernel(source_center, target_center, sigma), 0.01);
     EXPECT_NEAR(gauss_res, hermite_res, 0.01);
 }
 

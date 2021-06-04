@@ -82,6 +82,7 @@ public:
 
         dendrites_in.xyz_pos = opt_position;
     }
+
     [[nodiscard]] std::optional<Vec3d> get_neuron_position_axons_exc() const noexcept {
         return axons_ex.xyz_pos;
     }

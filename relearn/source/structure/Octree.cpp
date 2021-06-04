@@ -500,13 +500,13 @@ const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode 
             //... and there are not enough neurons in the target
             if (target_num <= Constants::max_neurons_in_target) {
                 //calculate via direct Gauss
-                result[i] = Functions::calc_direct_gauss(source_neurons_pos,target_neurons_pos);
+                result[i] = Functions::calc_direct_gauss(source_neurons_pos,target_neurons_pos, default_sigma);
             } else {
                 //... and there are enough neurons in target
                 //source to Taylor-Series about center of box C and direkt evaluation
                 RelearnException::check(source->get_from_interactionlist(i)->get_cell().get_neuron_dendrite_position_for(dendrite_type_needed).has_value(), "Target Box has no center!");
                 Vec3d center_of_target_box = source->get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).value();
-                result[i] = Functions::calc_taylor_expansion(source_neurons_pos, target_neurons_pos, center_of_target_box);
+                result[i] = Functions::calc_taylor_expansion(source_neurons_pos, target_neurons_pos, center_of_target_box, default_sigma);
             }
         }
 
@@ -514,7 +514,7 @@ const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode 
     { //Hermite Expansion about center of source box
         if (hermite_set == false) {
             //calculate Hermite coefficients
-            Functions::calc_hermite_coefficients(center_of_source_box, source_neurons_pos, hermite_coefficients);
+            Functions::calc_hermite_coefficients(center_of_source_box, source_neurons_pos, hermite_coefficients, default_sigma);
             hermite_set == true;
         }
         for (size_t i = 0; i < target_list_length; i++) {
@@ -526,7 +526,7 @@ const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode 
             
             //... and there are not enough neurons in the target
                 //evaluate Hermite expansion at each target
-                result[i] = Functions::calc_hermite(target_neurons_pos, hermite_coefficients, center_of_source_box);
+                result[i] = Functions::calc_hermite(target_neurons_pos, hermite_coefficients, center_of_source_box, default_sigma);
         }
     }
     return result;
@@ -784,8 +784,7 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
 }
 
 const std::optional<OctreeNode*> Octree::do_random_experiment(OctreeNode *source, const std::vector<double> &atractiveness) {
-    std::uniform_real_distribution<double> random_number_distribution(0.0, std::nextafter(1.0, 1.0 + Constants::eps));
-    std::mt19937& random_number_generator = RandomHolder::RandomHolder::get_random_uniform_double(RandomHolderKey::Octree, 0.0, std::nextafter(1.0, Constants::eps));
+    const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Octree, 0.0, std::nextafter(1.0, Constants::eps));
     
     int vec_len = atractiveness.size();
     std::vector<double> intervals;
@@ -803,7 +802,7 @@ const std::optional<OctreeNode*> Octree::do_random_experiment(OctreeNode *source
         intervals[i]= intervals[i-1]+ (atractiveness.at(i-1)/sum);
     }
    
-    const auto random_number = random_number_distribution(random_number_generator);
+    
     int i = 0;
 
 
