@@ -150,6 +150,10 @@ public:
         return background_activity_stddev;
     }
 
+    [[nodiscard]] const std::vector<double>& get_I_syn() const noexcept {
+        return I_syn;
+    }
+
     [[nodiscard]] double get_I_syn(size_t i) const {
         RelearnException::check(i < my_num_neurons, "In NeuronModels::get_I_syn, id is too large");
         return I_syn[i];
