@@ -18,6 +18,8 @@
 #include <string>
 
 class LogFiles {
+    friend class RelearnTest;
+
     class LogFile {
         std::ofstream ofstream;
 
@@ -62,6 +64,8 @@ private:
     static std::string get_specific_file_prefix();
 
     static void add_logfile(EventType type, const std::string& file_name, int rank);
+
+    static bool disable;
 
 public:
     /**

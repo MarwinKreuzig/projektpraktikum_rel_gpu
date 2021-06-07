@@ -15,7 +15,13 @@
 #include <filesystem>
 #include <iostream>
 
+bool LogFiles::disable = false;
+
 void LogFiles::init() {
+    if (disable) {
+        return;
+    }
+
     if (0 == MPIWrapper::get_my_rank()) {
         if (!std::filesystem::exists(output_path)) {
             std::filesystem::create_directory(output_path);
@@ -55,6 +61,10 @@ std::string LogFiles::get_specific_file_prefix() {
 }
 
 void LogFiles::add_logfile(EventType type, const std::string& file_name, int rank) {
+    if (disable) {
+        return;
+    }
+
     if (rank == MPIWrapper::get_my_rank() || rank == -1) {
         auto complete_path = output_path + general_prefix + get_specific_file_prefix() + "_" + file_name + ".txt";
         log_files.emplace(type, std::move(complete_path));
@@ -62,6 +72,10 @@ void LogFiles::add_logfile(EventType type, const std::string& file_name, int ran
 }
 
 void LogFiles::write_to_file(EventType type, const std::string& message, bool also_to_cout) {
+    if (disable) {
+        return;
+    }
+
     if (also_to_cout) {
         std::cout << message << std::flush;
     }
@@ -74,6 +88,10 @@ void LogFiles::write_to_file(EventType type, const std::string& message, bool al
 }
 
 void LogFiles::print_message_rank(char const* string, int rank) {
+    if (disable) {
+        return;
+    }
+
     if (rank == MPIWrapper::get_my_rank() || rank == -1) {
         std::string txt = std::string("[INFO:Rank ") + MPIWrapper::get_my_rank_str() + "]\n" + string + "\n\n";
         write_to_file(LogFiles::EventType::Cout, txt, true);
