@@ -2472,3 +2472,86 @@ TEST(TestNeurons, testNeuronsConstructor) {
 
     Neurons neurons{ partition, std::move(model) };
 }
+
+TEST(TestNeuronRankId, testNeuronRankIdValid) {
+    setup();
+
+    for (auto it = 0; it < iterations; it++) {
+        std::uniform_int_distribution<int> urd_rank(0, 100);
+        std::uniform_int_distribution<size_t> urd_id(0, Constants::uninitialized - 1);
+
+        for (auto i = 0; i < 1000; i++) {
+            const auto rank = urd_rank(mt);
+            const auto id = urd_id(mt);
+
+            const RankNeuronId rni{ rank, id };
+
+            ASSERT_EQ(rni.get_neuron_id(), id);
+            ASSERT_EQ(rni.get_rank(), rank);
+        }
+    }
+}
+
+TEST(TestNeuronRankId, testNeuronRankIdInvalidRank) {
+    setup();
+
+    for (auto it = 0; it < iterations; it++) {
+        std::uniform_int_distribution<int> urd_rank(-1000000, -1);
+        std::uniform_int_distribution<size_t> urd_id(0, Constants::uninitialized - 1);
+
+        for (auto i = 0; i < 1000; i++) {
+            const auto rank = urd_rank(mt);
+            const auto id = urd_id(mt);
+
+            RankNeuronId rni(rank, id);
+
+            ASSERT_NO_THROW(rni.get_neuron_id());
+            ASSERT_THROW(rni.get_rank(), RelearnException);
+        }
+    }
+}
+
+TEST(TestNeuronRankId, testNeuronRankIdInvalidId) {
+    setup();
+
+    for (auto it = 0; it < iterations; it++) {
+        std::uniform_int_distribution<int> urd_rank(0, 100);
+        std::uniform_int_distribution<size_t> urd_id(0, Constants::uninitialized - 1);
+
+        for (auto i = 0; i < 1000; i++) {
+            const auto rank = urd_rank(mt);
+            const auto id = urd_id(mt);
+
+            RankNeuronId rni(rank, id + Constants::uninitialized);
+
+            ASSERT_NO_THROW(rni.get_rank());
+            ASSERT_THROW(rni.get_neuron_id(), RelearnException);
+        }
+    }
+}
+
+TEST(TestNeuronRankId, testNeuronRankIdEquality) {
+    setup();
+
+    for (auto it = 0; it < iterations; it++) {
+        std::uniform_int_distribution<int> urd_rank(0, 10);
+        std::uniform_int_distribution<size_t> urd_id(0, 500);
+
+        for (auto i = 0; i < 1000; i++) {
+            const auto rank_1 = urd_rank(mt);
+            const auto id_1 = urd_id(mt);
+
+            const auto rank_2 = urd_rank(mt);
+            const auto id_2 = urd_id(mt);
+
+            const RankNeuronId rni_1(rank_1, id_1);
+            const RankNeuronId rni_2(rank_2, id_2);
+
+            if (rank_1 == rank_2 && id_1 == id_2) {
+                ASSERT_EQ(rni_1, rni_2);
+            } else {
+                ASSERT_NE(rni_1, rni_2);
+            }
+        }
+    }
+}
