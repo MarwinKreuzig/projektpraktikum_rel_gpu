@@ -11,6 +11,7 @@
 #pragma once
 
 #include "../../Config.h"
+#include "../../mpi/MPIWrapper.h"
 #include "../../util/RelearnException.h"
 
 #include <ostream>
@@ -30,8 +31,11 @@ public:
         : rank(rank)
         , neuron_id(neuron_id) { }
 
+
     [[nodiscard]] int get_rank() const {
         RelearnException::check(rank >= 0, "RankNeuronId::get_rank, it was: %d", rank);
+        //const auto num_ranks = MPIWrapper::get_num_ranks();
+        //RelearnException::check(rank < num_ranks, "RankNeuronId::get_rank, it was %d but the number of ranks was only %d%", rank, num_ranks);
         return rank;
     }
 

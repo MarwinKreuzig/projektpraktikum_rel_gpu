@@ -23,10 +23,10 @@
 #include <iostream>
 #include <sstream>
 
-NetworkGraph::NetworkGraph(size_t my_num_neurons)
-    : neuron_in_neighborhood(my_num_neurons)
-    , neuron_out_neighborhood(my_num_neurons)
-    , my_num_neurons(my_num_neurons) {
+NetworkGraph::NetworkGraph(size_t num_neurons)
+    : neuron_in_neighborhood(num_neurons)
+    , neuron_out_neighborhood(num_neurons)
+    , my_num_neurons(num_neurons) {
 }
 
 const NetworkGraph::Edges& NetworkGraph::get_in_edges(size_t neuron_id) const {
@@ -75,13 +75,6 @@ NetworkGraph::Edges NetworkGraph::get_out_edges(size_t neuron_id, SignalType sig
     }
 
     return filtered_edges;
-}
-
-size_t NetworkGraph::get_num_in_edges(size_t neuron_id) const {
-    RelearnException::check(neuron_id < neuron_in_neighborhood.size(),
-        "In get_num_in_edges, tried with a too large id: %u %u", neuron_id, my_num_neurons);
-
-    return neuron_in_neighborhood[neuron_id].size();
 }
 
 size_t NetworkGraph::get_num_in_edges_ex(size_t neuron_id) const {
@@ -162,11 +155,17 @@ void NetworkGraph::add_edge(Edges& edges, int rank, size_t neuron_id, int weight
     edges.emplace_back(rank_neuron_id_pair, weight);
 }
 
-void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, size_t source_neuron_id, int source_rank, int weight) {
+void NetworkGraph::add_edge_weight(const RankNeuronId& target, const RankNeuronId& source, int weight) {
     if (weight == 0) {
         RelearnException::fail("weight of edge to add is zero");
         return;
     }
+
+    const auto target_rank = target.get_rank();
+    const auto target_neuron_id = target.get_neuron_id();
+
+    const auto source_rank = source.get_rank();
+    const auto source_neuron_id = source.get_neuron_id();
 
     const int my_rank = MPIWrapper::get_my_rank();
 
@@ -185,6 +184,10 @@ void NetworkGraph::add_edge_weight(size_t target_neuron_id, int target_rank, siz
 
         Edges& out_edges = neuron_out_neighborhood[source_neuron_id];
         add_edge(out_edges, target_rank, target_neuron_id, weight);
+    }
+
+    if (target_rank != my_rank && source_rank != my_rank) {
+        RelearnException::fail("In NetworkGraph::add_edge_weight, neither the target nor the source rank were for me.");
     }
 }
 
@@ -221,7 +224,10 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
         const int source_rank = my_rank;
         const int target_rank = my_rank;
 
-        add_edge_weight(translated_target_neuron_id, target_rank, translated_source_neuron_id, source_rank, weight);
+        const RankNeuronId target_id{ target_rank, translated_target_neuron_id };
+        const RankNeuronId source_id{ source_rank, translated_source_neuron_id };
+
+        add_edge_weight(target_id, source_id, weight);
     }
 
     for (const auto& [source_neuron_id, target_neuron_id, weight] : out_synapses) {
@@ -231,7 +237,10 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
         const int target_rank = id_to_rank[target_neuron_id];
         const size_t translated_target_neuron_id = global_id_to_local_id[target_neuron_id];
 
-        add_edge_weight(translated_target_neuron_id, target_rank, translated_source_neuron_id, source_rank, weight);
+        const RankNeuronId target_id{ target_rank, translated_target_neuron_id };
+        const RankNeuronId source_id{ source_rank, translated_source_neuron_id };
+
+        add_edge_weight(target_id, source_id, weight);
     }
 
     for (const auto& [source_neuron_id, target_neuron_id, weight] : in_synapses) {
@@ -241,7 +250,10 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
         const int target_rank = my_rank;
         const size_t translated_source_neuron_id = global_id_to_local_id[source_neuron_id];
 
-        add_edge_weight(translated_target_neuron_id, target_rank, translated_source_neuron_id, source_rank, weight);
+        const RankNeuronId target_id{ target_rank, translated_target_neuron_id };
+        const RankNeuronId source_id{ source_rank, translated_source_neuron_id };
+
+        add_edge_weight(target_id, source_id, weight);
     }
 
     std::stringstream sstream{};
@@ -610,7 +622,6 @@ void NetworkGraph::print(std::ostream& os, const std::unique_ptr<NeuronsExtraInf
     for (size_t target_neuron_id = 0; target_neuron_id < my_num_neurons; target_neuron_id++) {
         // Walk through in-edges of my neuron
         const NetworkGraph::Edges& in_edges = get_in_edges(target_neuron_id);
-        NetworkGraph::Edges::const_iterator it_in_edge;
 
         RankNeuronId rank_neuron_id{ my_rank, target_neuron_id };
 
@@ -619,8 +630,7 @@ void NetworkGraph::print(std::ostream& os, const std::unique_ptr<NeuronsExtraInf
 
         const auto global_target = possible_global_target.value();
 
-        for (it_in_edge = in_edges.begin(); it_in_edge != in_edges.end(); ++it_in_edge) {
-
+        for (auto it_in_edge = in_edges.cbegin(); it_in_edge != in_edges.cend(); ++it_in_edge) {
             RankNeuronId tmp_rank_neuron_id{ it_in_edge->first.first, it_in_edge->first.second };
 
             const auto possible_global_source = informations->rank_neuron_id2glob_id(tmp_rank_neuron_id);

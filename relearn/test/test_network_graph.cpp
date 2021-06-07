@@ -62,11 +62,14 @@ TEST(TestNetworkGraph, testNetworkGraphConstructorExceptions) {
         }
 
         for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-            size_t other_neuron = uid_num_neurons(mt);
-            int other_rank = uid_num_ranks(mt);
+            size_t other_neuron_id = uid_num_neurons(mt);
 
-            ASSERT_THROW(ng.add_edge_weight(neuron_id, 0, other_neuron, other_rank, 0), RelearnException);
-            ASSERT_THROW(ng.add_edge_weight(other_neuron, other_rank, neuron_id, 0, 0), RelearnException);
+            int other_rank = uid_num_ranks(mt);
+            RankNeuronId my_id{ 0, neuron_id };
+            RankNeuronId other_id{ other_rank, other_neuron_id };
+
+            ASSERT_THROW(ng.add_edge_weight(my_id, other_id, 0), RelearnException);
+            ASSERT_THROW(ng.add_edge_weight(other_id, my_id, 0), RelearnException);
         }
     }
 }
@@ -104,15 +107,18 @@ TEST(TestNetworkGraph, testNetworkGraphEdges) {
 
             bool is_in_synapse = weight < 0;
 
+            RankNeuronId my_id{ 0, my_neuron_id };
+            RankNeuronId other_id{ other_rank, other_neuron_id };
+
             if (is_in_synapse) {
-                ng.add_edge_weight(my_neuron_id, 0, other_neuron_id, other_rank, weight);
+                ng.add_edge_weight(my_id, other_id, weight);
                 in_edges[my_neuron_id][{ other_rank, other_neuron_id }] += weight;
 
                 if (in_edges[my_neuron_id][{ other_rank, other_neuron_id }] == 0) {
                     in_edges[my_neuron_id].erase({ other_rank, other_neuron_id });
                 }
             } else {
-                ng.add_edge_weight(other_neuron_id, other_rank, my_neuron_id, 0, weight);
+                ng.add_edge_weight(other_id, my_id, weight);
                 out_edges[my_neuron_id][{ other_rank, other_neuron_id }] += weight;
 
                 if (out_edges[my_neuron_id][{ other_rank, other_neuron_id }] == 0) {
@@ -185,7 +191,7 @@ TEST(TestNetworkGraph, testNetworkGraphEdgesSplit) {
 
         for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
             int other_rank = uid_num_ranks(mt);
-            size_t my_neuron_id = uid_actual_num_neurons(mt);
+            size_t neuron_id = uid_actual_num_neurons(mt);
             size_t other_neuron_id = uid_actual_num_neurons(mt);
 
             int weight = uid_edge_weight(mt);
@@ -196,10 +202,13 @@ TEST(TestNetworkGraph, testNetworkGraphEdgesSplit) {
 
             bool is_in_synapse = weight < 0;
 
+            RankNeuronId my_id{ 0, neuron_id };
+            RankNeuronId other_id{ other_rank, other_neuron_id };
+
             if (is_in_synapse) {
-                ng.add_edge_weight(my_neuron_id, 0, other_neuron_id, other_rank, weight);
+                ng.add_edge_weight(my_id, other_id, weight);
             } else {
-                ng.add_edge_weight(other_neuron_id, other_rank, my_neuron_id, 0, weight);
+                ng.add_edge_weight(other_id, my_id, weight);
             }
         }
 
@@ -280,7 +289,7 @@ TEST(TestNetworkGraph, testNetworkGraphEdgesRemoval) {
 
         for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
             int other_rank = uid_num_ranks(mt);
-            size_t my_neuron_id = uid_actual_num_neurons(mt);
+            size_t neuron_id = uid_actual_num_neurons(mt);
             size_t other_neuron_id = uid_actual_num_neurons(mt);
 
             int weight = uid_edge_weight(mt);
@@ -291,29 +300,35 @@ TEST(TestNetworkGraph, testNetworkGraphEdgesRemoval) {
 
             bool is_in_synapse = weight < 0;
 
+            RankNeuronId my_id{ 0, neuron_id };
+            RankNeuronId other_id{ other_rank, other_neuron_id };
+
             if (is_in_synapse) {
-                ng.add_edge_weight(my_neuron_id, 0, other_neuron_id, other_rank, weight);
-                synapses[edge_id] = std::make_tuple(my_neuron_id, 0, other_neuron_id, other_rank, weight);
+                ng.add_edge_weight(my_id, other_id, weight);
+                synapses[edge_id] = std::make_tuple(neuron_id, 0, other_neuron_id, other_rank, weight);
             } else {
-                ng.add_edge_weight(other_neuron_id, other_rank, my_neuron_id, 0, weight);
-                synapses[edge_id] = std::make_tuple(other_neuron_id, other_rank, my_neuron_id, 0, weight);
+                ng.add_edge_weight(other_id, my_id, weight);
+                synapses[edge_id] = std::make_tuple(other_neuron_id, other_rank, neuron_id, 0, weight);
             }
         }
-        
+
         std::shuffle(synapses.begin(), synapses.end(), mt);
 
         for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
             const auto& current_synapse = synapses[edge_id];
 
-            const auto target_id = std::get<0>(current_synapse);
+            const auto target_neuron_id = std::get<0>(current_synapse);
             const auto target_rank = std::get<1>(current_synapse);
-            const auto source_id = std::get<2>(current_synapse);
+            const auto source_neuron_id = std::get<2>(current_synapse);
             const auto source_rank = std::get<3>(current_synapse);
             const auto weight = std::get<4>(current_synapse);
 
-            ng.add_edge_weight(target_id, target_rank, source_id, source_rank, -weight);
+            RankNeuronId target_id{ target_rank, target_neuron_id };
+            RankNeuronId source_id{ source_rank, source_neuron_id };
+
+            ng.add_edge_weight(target_id, source_id, -weight);
         }
-                
+
         for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
             size_t exc_in_edges_count = ng.get_num_in_edges_ex(neuron_id);
             size_t inh_in_edges_count = ng.get_num_in_edges_in(neuron_id);
@@ -331,4 +346,3 @@ TEST(TestNetworkGraph, testNetworkGraphEdgesRemoval) {
         }
     }
 }
-

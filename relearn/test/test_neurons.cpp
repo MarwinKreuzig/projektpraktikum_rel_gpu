@@ -34,7 +34,10 @@ NetworkGraph generate_random_network_graph(size_t num_neurons, size_t num_synaps
         const auto uniform_double = urd(mt);
         const auto weight = (uniform_double < threshold_exc) ? 1 : -1;
 
-        ng.add_edge_weight(neuron_id_1, 0, neuron_id_2, 0, weight);
+        RankNeuronId target_id{ 0, neuron_id_1 };
+        RankNeuronId source_id{ 0, neuron_id_2 };
+
+        ng.add_edge_weight(target_id, source_id, weight);
     }
 
     return ng;

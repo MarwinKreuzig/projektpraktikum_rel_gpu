@@ -102,24 +102,32 @@ void Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
         const auto in_edges = network_graph->get_in_edges(neuron_id); // Intended copy
 
         for (const auto& [edge_key, weight] : in_edges) {
-            const auto& [rank, source_id] = edge_key;
-            RelearnException::check(rank == my_rank, "Currently, disabling neurons is only supported without mpi");
-            network_graph->add_edge_weight(neuron_id, my_rank, source_id, rank, -weight);
+            const auto& [source_rank, source_neuron_id] = edge_key;
+            RelearnException::check(source_rank == my_rank, "Currently, disabling neurons is only supported without mpi");
 
-            deleted_axon_connections[source_id] += weight;
+            const RankNeuronId target_id{ my_rank, neuron_id };
+            const RankNeuronId source_id{ source_rank, source_neuron_id };
+
+            network_graph->add_edge_weight(target_id, source_id, -weight);
+
+            deleted_axon_connections[source_neuron_id] += weight;
         }
 
         const auto out_edges = network_graph->get_out_edges(neuron_id); // Intended copy
 
         for (const auto& [edge_key, weight] : out_edges) {
-            const auto& [rank, target_id] = edge_key;
-            RelearnException::check(rank == my_rank, "Currently, disabling neurons is only supported without mpi");
-            network_graph->add_edge_weight(target_id, rank, neuron_id, my_rank, -weight);
+            const auto& [target_rank, target_neuron_id] = edge_key;
+            RelearnException::check(target_rank == my_rank, "Currently, disabling neurons is only supported without mpi");
+
+            const RankNeuronId target_id{ target_rank, target_neuron_id };
+            const RankNeuronId source_id{ my_rank, neuron_id };
+
+            network_graph->add_edge_weight(target_id, source_id, -weight);
 
             if (weight > 0) {
-                deleted_dend_ex_connections[target_id] += weight;
+                deleted_dend_ex_connections[target_neuron_id] += weight;
             } else {
-                deleted_dend_in_connections[target_id] -= weight;
+                deleted_dend_in_connections[target_neuron_id] -= weight;
             }
         }
     }
@@ -526,6 +534,8 @@ Neurons::MapSynapseDeletionRequests Neurons::delete_synapses_exchange_requests(c
 }
 
 void Neurons::delete_synapses_process_requests(const MapSynapseDeletionRequests& synapse_deletion_requests_incoming, PendingDeletionsV& pending_deletions) {
+    const auto my_rank = MPIWrapper::get_my_rank();
+
     // From smallest to largest rank that sent deletion request
     for (const auto& it : synapse_deletion_requests_incoming) {
         const SynapseDeletionRequests& requests = it.second;
@@ -541,12 +551,12 @@ void Neurons::delete_synapses_process_requests(const MapSynapseDeletionRequests&
             const auto signal_type = requests.get_signal_type(request_index);
             const auto synapse_id = requests.get_synapse_id(request_index);
 
-            RankNeuronId src_id(MPIWrapper::get_my_rank(), src_neuron_id);
+            RankNeuronId src_id(my_rank, src_neuron_id);
             RankNeuronId tgt_id(other_rank, tgt_neuron_id);
 
             if (ElementType::DENDRITE == affected_element_type) {
                 src_id = RankNeuronId(other_rank, src_neuron_id);
-                tgt_id = RankNeuronId(MPIWrapper::get_my_rank(), tgt_neuron_id);
+                tgt_id = RankNeuronId(my_rank, tgt_neuron_id);
             }
 
             auto pending_deletion = std::find_if(pending_deletions.begin(), pending_deletions.end(), [&src_id, &tgt_id, synapse_id](auto param) {
@@ -554,7 +564,7 @@ void Neurons::delete_synapses_process_requests(const MapSynapseDeletionRequests&
             });
 
             if (pending_deletion == pending_deletions.end()) {
-                pending_deletions.emplace_back(src_id, tgt_id, RankNeuronId(MPIWrapper::get_my_rank(), affected_neuron_id),
+                pending_deletions.emplace_back(src_id, tgt_id, RankNeuronId(my_rank, affected_neuron_id),
                     affected_element_type, signal_type, synapse_id);
             } else {
                 pending_deletion->set_affected_element_already_deleted();
@@ -611,7 +621,7 @@ size_t Neurons::delete_synapses_commit_deletions(const PendingDeletionsV& list) 
             weight_increment = +1;
         }
 
-        network_graph->add_edge_weight(tgt_neuron_id, tgt_neuron_rank, src_neuron_id, src_neuron_rank, weight_increment);
+        network_graph->add_edge_weight(tgt_neuron, src_neuron, weight_increment);
 
         /**
 		* Set element of affected neuron vacant if necessary,
@@ -825,6 +835,8 @@ std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_pro
     size_t num_synapses_created = 0;
     std::map<int, std::vector<char>> responses;
 
+    const auto my_rank = MPIWrapper::get_my_rank();
+
     for (const auto& it : synapse_creation_requests_incoming) {
         const auto source_rank = it.first;
         const SynapseCreationRequests& requests = it.second;
@@ -875,8 +887,11 @@ std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_pro
                     dendrites_exc->update_conn_cnt(target_neuron_id, 1);
                 }
 
+                const RankNeuronId target_id{ my_rank, target_neuron_id };
+                const RankNeuronId source_id{ source_rank, source_neuron_id };
+
                 // Update network
-                network_graph->add_edge_weight(target_neuron_id, MPIWrapper::get_my_rank(), source_neuron_id, source_rank, num_axons_connected_increment);
+                network_graph->add_edge_weight(target_id, source_id, num_axons_connected_increment);
 
                 // Set response to "connected" (success)
                 responses[source_rank][request_index] = 1;
@@ -937,12 +952,14 @@ std::map<int, std::vector<char>> Neurons::create_synapses_exchange_responses(con
 
 size_t Neurons::create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing, const std::map<int, std::vector<char>>& received_responses) {
     size_t num_synapses_created = 0;
+
+    const auto my_rank = MPIWrapper::get_my_rank();
     /**
-	    * Register which axons could be connected
-	    *
-	    * NOTE: Do not create synapses in the network for my own responses as the corresponding synapses, if possible,
-	    * would have been created before sending the response to myself (see above).
-	    */
+	 * Register which axons could be connected
+	 *
+	 * NOTE: Do not create synapses in the network for my own responses as the corresponding synapses, if possible,
+	 * would have been created before sending the response to myself (see above).
+	 */
     for (const auto& it : synapse_creation_requests_outgoing) {
         const auto target_rank = it.first;
         const SynapseCreationRequests& requests = it.second;
@@ -968,10 +985,14 @@ size_t Neurons::create_synapses_process_responses(const MapSynapseCreationReques
 
                 // I have already created the synapse in the network
                 // if the response comes from myself
-                if (target_rank != MPIWrapper::get_my_rank()) {
+                if (target_rank != my_rank) {
                     // Update network
                     const auto num_axons_connected_increment_2 = (1 == dendrite_type_needed) ? -1 : +1;
-                    network_graph->add_edge_weight(target_neuron_id, target_rank, source_neuron_id, MPIWrapper::get_my_rank(), num_axons_connected_increment_2);
+
+                    const RankNeuronId target_id{ target_rank, target_neuron_id };
+                    const RankNeuronId source_id{ my_rank, source_neuron_id };
+
+                    network_graph->add_edge_weight(target_id, source_id, num_axons_connected_increment_2);
                 }
             } else {
                 // Other axons were faster and came first
