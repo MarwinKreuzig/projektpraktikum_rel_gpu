@@ -11,12 +11,15 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <limits>
 #include <numeric>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
+
+#include "apsp/johnson.hpp"
 
 static void average_clustering_coefficient(Graph::FullGraph& graph, const Weight<Graph::FullGraph>& weight);
 static void average_clustering_coefficient_unweighted_undirected(typename Graph::FullGraph& graph);
@@ -215,11 +218,39 @@ double Graph::calculate_average_euclidean_distance() {
 }
 
 std::tuple<double, double> Graph::calculate_all_pairs_shortest_paths() {
-    auto num_neurons = get_num_vertices();
+    const auto num_neurons = get_num_vertices();
 
-    std::vector<std::vector<double>> distances(num_neurons, std::vector<double>(num_neurons));
+    const auto [edge_begin_it, edge_end_it] = boost::edges(full_graph);
 
-    boost::johnson_all_pairs_shortest_paths(full_graph, distances, boost::weight_map(boost::get(&EdgeProperties::weight_inverse, full_graph)));
+    const auto E = boost::num_edges(full_graph);
+
+    std::vector<apsp::edge_t> cuda_edges(E);
+    std::transform(edge_begin_it, edge_end_it, cuda_edges.begin(), [](const auto& edge) {
+        return apsp::edge_t{ static_cast<int>(edge.m_source), static_cast<int>(edge.m_target) };
+    });
+
+    const auto weight_map = boost::get(&EdgeProperties::weight, full_graph);
+
+    std::vector<int> weights{};
+    std::transform(edge_begin_it, edge_end_it, std::back_inserter(weights), [&](const auto& edge) {
+        return weight_map(edge);
+    });
+
+    auto edge_array = std::vector<apsp::edge_t>(E);
+    auto starts = std::vector<int>(num_neurons + 1); // Starting point for each edge
+    std::iota(starts.begin(), starts.end(), 0);
+
+    apsp::graph_cuda_t<std::vector<int>, std::vector<apsp::edge_t>> graph{
+        static_cast<int>(num_neurons),
+        static_cast<int>(E),
+        std::move(starts),
+        std::move(weights),
+        std::move(cuda_edges)
+    };
+
+    std::vector<int> distances(num_neurons * num_neurons);
+
+    apsp::johnson_cuda(graph, distances);
 
     size_t number_values = 0;
 
@@ -230,7 +261,7 @@ std::tuple<double, double> Graph::calculate_all_pairs_shortest_paths() {
         for (size_t j = 0; j < num_neurons; j++) {
             // Consider pairs of different neurons only
             if (i != j) {
-                const double val = distances[i][j];
+                const double val = distances[i * num_neurons + j];
 
                 // Average
                 number_values++;

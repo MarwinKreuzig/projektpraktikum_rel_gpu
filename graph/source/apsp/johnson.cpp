@@ -1,0 +1,119 @@
+#include <boost/config.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/johnson_all_pairs_shortest.hpp>
+#include <iostream> // cerr
+#include <memory>
+#include <random> // mt19937_64, uniform_x_distribution
+#include <vector>
+
+#include "johnson.hpp"
+
+namespace apsp {
+
+#ifdef CUDA
+
+void set_edge(edge_t* edge, int u, int v) {
+    edge->u = u;
+    edge->v = v;
+}
+
+#endif
+
+static bool bellman_ford(const graph_t& gr, std::vector<int>& dist, int src) {
+    const int& V = gr.V;
+    const int& E = gr.E;
+    const auto& edges = gr.edge_array;
+    const auto& weights = gr.weights;
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < V; i++) {
+        dist[i] = INT_MAX;
+    }
+    dist[src] = 0;
+
+    for (int i = 1; i <= V - 1; i++) {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+        for (int j = 0; j < E; j++) {
+            int u = std::get<0>(edges[j]);
+            int v = std::get<1>(edges[j]);
+            int new_dist = weights[j] + dist[u];
+            if (dist[u] != INT_MAX && new_dist < dist[v]) {
+                dist[v] = new_dist;
+            }
+        }
+    }
+
+    bool no_neg_cycle = true;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int i = 0; i < E; i++) {
+        int u = std::get<0>(edges[i]);
+        int v = std::get<1>(edges[i]);
+        int weight = weights[i];
+        if (dist[u] != INT_MAX && dist[u] + weight < dist[v]) {
+            no_neg_cycle = false;
+        }
+    }
+    return no_neg_cycle;
+}
+
+void johnson_parallel(graph_t& gr, std::vector<int>& output) {
+
+    const int V = gr.V;
+
+    // Make new graph for Bellman-Ford
+    // First, a new node q is added to the graph, connected by zero-weight edges
+    // to each of the other nodes.
+    graph_t bf_graph{ V + 1, gr.E + V };
+    std::copy(gr.edge_array.begin(), gr.edge_array.end(), bf_graph.edge_array.begin());
+    std::copy(gr.weights.begin(), gr.weights.end(), bf_graph.weights.begin());
+    std::fill(bf_graph.weights.begin() + gr.E, bf_graph.weights.begin() + gr.E + V, 0);
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int e = 0; e < V; e++) {
+        bf_graph.edge_array[e + gr.E] = Edge(V, e);
+    }
+
+    // Second, the Bellman–Ford algorithm is used, starting from the new vertex q,
+    // to find for each vertex v the minimum weight h(v) of a path from q to v. If
+    // this step detects a negative cycle, the algorithm is terminated.
+    // TODO Can run parallel version?
+    std::vector<int> h(bf_graph.V);
+    if (const bool r = bellman_ford(bf_graph, h, V); !r) {
+        std::cerr << "\nNegative Cycles Detected! Terminating Early\n";
+        exit(1);
+    }
+    // Next the edges of the original graph are reweighted using the values computed
+    // by the Bellman–Ford algorithm: an edge from u to v, having length
+    // w(u,v), is given the new length w(u,v) + h(u) − h(v).
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for (int e = 0; e < gr.E; e++) {
+        int u = std::get<0>(gr.edge_array[e]);
+        int v = std::get<1>(gr.edge_array[e]);
+        gr.weights[e] = gr.weights[e] + h[u] - h[v];
+    }
+
+    Graph G(gr.edge_array.begin(), gr.edge_array.end(), gr.weights.begin(), V);
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
+    for (int s = 0; s < V; s++) {
+        std::vector<int> d(num_vertices(G));
+        dijkstra_shortest_paths(G, s, boost::distance_map(&d[0]));
+        for (int v = 0; v < V; v++) {
+            output[s * V + v] = d[v] + h[v] - h[s];
+        }
+    }
+}
+
+} // namespace apsp

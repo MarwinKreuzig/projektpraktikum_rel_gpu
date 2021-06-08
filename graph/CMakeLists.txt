@@ -9,8 +9,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_CUDA_ARCHITECTURES 61)
 
-# set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
+# set(CMAKE_BUILD_TYPE Release)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -40,3 +40,6 @@ endif()
 if (UNIX)
 	target_link_libraries (relearn-full_graph PRIVATE stdc++fs)
 endif ()
+
+target_include_directories(relearn-full_graph SYSTEM PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}>)
+target_compile_definitions(relearn-full_graph PRIVATE CUDA)
