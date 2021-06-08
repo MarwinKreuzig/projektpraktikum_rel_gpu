@@ -1,6 +1,6 @@
 #include "../googletest/include/gtest/gtest.h"
 
-#include "commons.h"
+#include "RelearnTest.hpp"
 
 #include "../source/neurons/Neurons.h"
 #include "../source/neurons/models/NeuronModels.h"
@@ -17,10 +17,48 @@
 #include <tuple>
 #include <vector>
 
-TEST(TestNeuronModels, testNeuronModelsDefaultConstructorPoisson) {
-    using namespace models;
+NetworkGraph generate_random_network_graph(size_t num_neurons, size_t num_synapses, double threshold_exc, std::mt19937& mt) {
+    std::uniform_int_distribution<size_t> uid(0, num_neurons - 1);
+    std::uniform_real_distribution<double> urd(0, 1.0);
 
-    setup();
+    NetworkGraph ng(num_neurons);
+
+    for (size_t synapse_id = 0; synapse_id < num_synapses; synapse_id++) {
+        const auto neuron_id_1 = uid(mt);
+        auto neuron_id_2 = uid(mt);
+
+        if (neuron_id_2 == neuron_id_1) {
+            neuron_id_2 = (neuron_id_1 + 1) % num_neurons;
+        }
+
+        const auto uniform_double = urd(mt);
+        const auto weight = (uniform_double < threshold_exc) ? 1 : -1;
+
+        RankNeuronId target_id{ 0, neuron_id_1 };
+        RankNeuronId source_id{ 0, neuron_id_2 };
+
+        ng.add_edge_weight(target_id, source_id, weight);
+    }
+
+    return ng;
+}
+
+std::vector<size_t> generate_random_ids(size_t id_low, size_t id_high, size_t num_disables, std::mt19937& mt) {
+    std::vector<size_t> disable_ids(num_disables);
+
+    std::uniform_int_distribution<size_t> uid(id_low, id_high);
+
+    for (size_t i = 0; i < num_disables; i++) {
+        disable_ids[i] = uid(mt);
+    }
+
+    return disable_ids;
+}
+
+namespace TestNeuronModels {
+
+TEST_F(RelearnTest, testNeuronModelsDefaultConstructorPoisson) {
+    using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
         const auto expected_k = NeuronModels::default_k;
@@ -51,10 +89,8 @@ TEST(TestNeuronModels, testNeuronModelsDefaultConstructorPoisson) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsDefaultConstructorIzhikevich) {
+TEST_F(RelearnTest, testNeuronModelsDefaultConstructorIzhikevich) {
     using namespace models;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         const auto expected_k = NeuronModels::default_k;
@@ -95,10 +131,8 @@ TEST(TestNeuronModels, testNeuronModelsDefaultConstructorIzhikevich) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsDefaultConstructorFitzHughNagumo) {
+TEST_F(RelearnTest, testNeuronModelsDefaultConstructorFitzHughNagumo) {
     using namespace models;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         const auto expected_k = NeuronModels::default_k;
@@ -129,10 +163,8 @@ TEST(TestNeuronModels, testNeuronModelsDefaultConstructorFitzHughNagumo) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsDefaultConstructorAEIF) {
+TEST_F(RelearnTest, testNeuronModelsDefaultConstructorAEIF) {
     using namespace models;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         const auto expected_k = NeuronModels::default_k;
@@ -175,12 +207,10 @@ TEST(TestNeuronModels, testNeuronModelsDefaultConstructorAEIF) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsRandomConstructorPoisson) {
+TEST_F(RelearnTest, testNeuronModelsRandomConstructorPoisson) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -224,12 +254,10 @@ TEST(TestNeuronModels, testNeuronModelsRandomConstructorPoisson) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsRandomConstructorIzhikevich) {
+TEST_F(RelearnTest, testNeuronModelsRandomConstructorIzhikevich) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -288,12 +316,10 @@ TEST(TestNeuronModels, testNeuronModelsRandomConstructorIzhikevich) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsRandomConstructorFitzHughNagumo) {
+TEST_F(RelearnTest, testNeuronModelsRandomConstructorFitzHughNagumo) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -337,12 +363,10 @@ TEST(TestNeuronModels, testNeuronModelsRandomConstructorFitzHughNagumo) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsRandomConstructorAEIF) {
+TEST_F(RelearnTest, testNeuronModelsRandomConstructorAEIF) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -404,12 +428,10 @@ TEST(TestNeuronModels, testNeuronModelsRandomConstructorAEIF) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsClonePoisson) {
+TEST_F(RelearnTest, testNeuronModelsClonePoisson) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -469,12 +491,10 @@ TEST(TestNeuronModels, testNeuronModelsClonePoisson) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsCloneIzhikevich) {
+TEST_F(RelearnTest, testNeuronModelsCloneIzhikevich) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -554,12 +574,10 @@ TEST(TestNeuronModels, testNeuronModelsCloneIzhikevich) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsCloneFitzHughNagumo) {
+TEST_F(RelearnTest, testNeuronModelsCloneFitzHughNagumo) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -619,12 +637,10 @@ TEST(TestNeuronModels, testNeuronModelsCloneFitzHughNagumo) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsCloneAEIF) {
+TEST_F(RelearnTest, testNeuronModelsCloneAEIF) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -708,12 +724,10 @@ TEST(TestNeuronModels, testNeuronModelsCloneAEIF) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsCreatePoisson) {
+TEST_F(RelearnTest, testNeuronModelsCreatePoisson) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -757,12 +771,10 @@ TEST(TestNeuronModels, testNeuronModelsCreatePoisson) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsCreateIzhikevich) {
+TEST_F(RelearnTest, testNeuronModelsCreateIzhikevich) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -821,12 +833,10 @@ TEST(TestNeuronModels, testNeuronModelsCreateIzhikevich) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsCreateFitzHughNagumo) {
+TEST_F(RelearnTest, testNeuronModelsCreateFitzHughNagumo) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -870,12 +880,10 @@ TEST(TestNeuronModels, testNeuronModelsCreateFitzHughNagumo) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsCreateAEIF) {
+TEST_F(RelearnTest, testNeuronModelsCreateAEIF) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -937,12 +945,10 @@ TEST(TestNeuronModels, testNeuronModelsCreateAEIF) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsInitPoisson) {
+TEST_F(RelearnTest, testNeuronModelsInitPoisson) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -1005,12 +1011,10 @@ TEST(TestNeuronModels, testNeuronModelsInitPoisson) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsInitIzhikevich) {
+TEST_F(RelearnTest, testNeuronModelsInitIzhikevich) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -1083,12 +1087,10 @@ TEST(TestNeuronModels, testNeuronModelsInitIzhikevich) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsInitFitzHughNagumo) {
+TEST_F(RelearnTest, testNeuronModelsInitFitzHughNagumo) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -1151,12 +1153,10 @@ TEST(TestNeuronModels, testNeuronModelsInitFitzHughNagumo) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsInitAEIF) {
+TEST_F(RelearnTest, testNeuronModelsInitAEIF) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -1231,10 +1231,8 @@ TEST(TestNeuronModels, testNeuronModelsInitAEIF) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsCreateNeuronsPoisson) {
+TEST_F(RelearnTest, testNeuronModelsCreateNeuronsPoisson) {
     using namespace models;
-
-    setup();
 
     {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -1300,10 +1298,8 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeuronsPoisson) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsCreateNeuronsIzhikevich) {
+TEST_F(RelearnTest, testNeuronModelsCreateNeuronsIzhikevich) {
     using namespace models;
-
-    setup();
 
     {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -1379,10 +1375,8 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeuronsIzhikevich) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsCreateNeuronsFitzHughNagumo) {
+TEST_F(RelearnTest, testNeuronModelsCreateNeuronsFitzHughNagumo) {
     using namespace models;
-
-    setup();
 
     {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -1448,10 +1442,8 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeuronsFitzHughNagumo) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsCreateNeuronsAEIF) {
+TEST_F(RelearnTest, testNeuronModelsCreateNeuronsAEIF) {
     using namespace models;
-
-    setup();
 
     {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -1529,10 +1521,8 @@ TEST(TestNeuronModels, testNeuronModelsCreateNeuronsAEIF) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsDisableFiredPoisson) {
+TEST_F(RelearnTest, testNeuronModelsDisableFiredPoisson) {
     using namespace models;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -1568,7 +1558,7 @@ TEST(TestNeuronModels, testNeuronModelsDisableFiredPoisson) {
         std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, num_neurons);
         const auto num_disables = uid_num_neurons_disables(mt);
 
-        const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables);
+        const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables, mt);
 
         model->init(num_neurons);
         model->disable_neurons(disable_ids);
@@ -1579,16 +1569,14 @@ TEST(TestNeuronModels, testNeuronModelsDisableFiredPoisson) {
             }
         }
 
-        const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables);
+        const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables, mt);
 
         ASSERT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsDisableFiredIzhikevich) {
+TEST_F(RelearnTest, testNeuronModelsDisableFiredIzhikevich) {
     using namespace models;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -1634,7 +1622,7 @@ TEST(TestNeuronModels, testNeuronModelsDisableFiredIzhikevich) {
         std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, num_neurons);
         const auto num_disables = uid_num_neurons_disables(mt);
 
-        const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables);
+        const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables, mt);
 
         model->init(num_neurons);
         model->disable_neurons(disable_ids);
@@ -1645,16 +1633,14 @@ TEST(TestNeuronModels, testNeuronModelsDisableFiredIzhikevich) {
             }
         }
 
-        const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables);
+        const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables, mt);
 
         ASSERT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsDisableFiredFitzHughNagumo) {
+TEST_F(RelearnTest, testNeuronModelsDisableFiredFitzHughNagumo) {
     using namespace models;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -1690,7 +1676,7 @@ TEST(TestNeuronModels, testNeuronModelsDisableFiredFitzHughNagumo) {
         std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, num_neurons);
         const auto num_disables = uid_num_neurons_disables(mt);
 
-        const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables);
+        const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables, mt);
 
         model->init(num_neurons);
         model->disable_neurons(disable_ids);
@@ -1701,16 +1687,14 @@ TEST(TestNeuronModels, testNeuronModelsDisableFiredFitzHughNagumo) {
             }
         }
 
-        const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables);
+        const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables, mt);
 
         ASSERT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsDisableFiredAEIF) {
+TEST_F(RelearnTest, testNeuronModelsDisableFiredAEIF) {
     using namespace models;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -1758,7 +1742,7 @@ TEST(TestNeuronModels, testNeuronModelsDisableFiredAEIF) {
         std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, num_neurons);
         const auto num_disables = uid_num_neurons_disables(mt);
 
-        const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables);
+        const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables, mt);
 
         model->init(num_neurons);
         model->disable_neurons(disable_ids);
@@ -1769,16 +1753,14 @@ TEST(TestNeuronModels, testNeuronModelsDisableFiredAEIF) {
             }
         }
 
-        const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables);
+        const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables, mt);
 
         ASSERT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabledPoisson) {
+TEST_F(RelearnTest, testNeuronModelsUpdateActivityDisabledPoisson) {
     using namespace models;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -1811,7 +1793,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabledPoisson) {
         std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto desired_num_neurons = uid_num_neurons(mt);
 
-        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
+        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0, mt);
 
         model->init(desired_num_neurons);
 
@@ -1847,7 +1829,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabledPoisson) {
             model_fired = current_fired;
         }
 
-        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0);
+        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0, mt);
 
         for (auto j = 0; j < 3; j++) {
             model->update_electrical_activity(random_graph, disable_flags);
@@ -1872,10 +1854,8 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabledPoisson) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabledIzhikevich) {
+TEST_F(RelearnTest, testNeuronModelsUpdateActivityDisabledIzhikevich) {
     using namespace models;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -1918,7 +1898,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabledIzhikevich) {
         std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto desired_num_neurons = uid_num_neurons(mt);
 
-        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
+        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0, mt);
 
         model->init(desired_num_neurons);
 
@@ -1954,7 +1934,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabledIzhikevich) {
             model_fired = current_fired;
         }
 
-        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0);
+        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0, mt);
 
         for (auto j = 0; j < 3; j++) {
             model->update_electrical_activity(random_graph, disable_flags);
@@ -1979,10 +1959,8 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabledIzhikevich) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabledFitzHughNagumo) {
+TEST_F(RelearnTest, testNeuronModelsUpdateActivityDisabledFitzHughNagumo) {
     using namespace models;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -2015,7 +1993,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabledFitzHughNagumo) {
         std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto desired_num_neurons = uid_num_neurons(mt);
 
-        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
+        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0, mt);
 
         model->init(desired_num_neurons);
 
@@ -2051,7 +2029,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabledFitzHughNagumo) {
             model_fired = current_fired;
         }
 
-        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0);
+        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0, mt);
 
         for (auto j = 0; j < 3; j++) {
             model->update_electrical_activity(random_graph, disable_flags);
@@ -2076,10 +2054,8 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabledFitzHughNagumo) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabledAEIF) {
+TEST_F(RelearnTest, testNeuronModelsUpdateActivityDisabledAEIF) {
     using namespace models;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -2124,7 +2100,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabledAEIF) {
         std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto desired_num_neurons = uid_num_neurons(mt);
 
-        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
+        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0, mt);
 
         model->init(desired_num_neurons);
 
@@ -2160,7 +2136,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabledAEIF) {
             model_fired = current_fired;
         }
 
-        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0);
+        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0, mt);
 
         for (auto j = 0; j < 3; j++) {
             model->update_electrical_activity(random_graph, disable_flags);
@@ -2185,10 +2161,10 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityDisabledAEIF) {
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisson) {
+TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisson) {
     using namespace models;
 
-    setup();
+    return;
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -2220,7 +2196,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisson)
         std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto desired_num_neurons = uid_num_neurons(mt);
 
-        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
+        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0, mt);
 
         model->init(desired_num_neurons);
 
@@ -2263,7 +2239,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisson)
             model_I_syn = current_I_syn;
         }
 
-        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0);
+        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0, mt);
 
         for (auto j = 0; j < 3; j++) {
             model->update_electrical_activity(random_graph, disable_flags);
@@ -2295,10 +2271,10 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisson)
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhikevich) {
+TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhikevich) {
     using namespace models;
 
-    setup();
+    return;
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -2340,7 +2316,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhikevi
         std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto desired_num_neurons = uid_num_neurons(mt);
 
-        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
+        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0, mt);
 
         model->init(desired_num_neurons);
 
@@ -2376,7 +2352,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhikevi
             model_I_syn = current_I_syn;
         }
 
-        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0);
+        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0, mt);
 
         for (auto j = 0; j < 3; j++) {
             model->update_electrical_activity(random_graph, disable_flags);
@@ -2401,10 +2377,8 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhikevi
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHughNagumo) {
+TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHughNagumo) {
     using namespace models;
-
-    setup();
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -2436,7 +2410,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHugh
         std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto desired_num_neurons = uid_num_neurons(mt);
 
-        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
+        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0, mt);
 
         model->init(desired_num_neurons);
 
@@ -2472,7 +2446,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHugh
             model_I_syn = current_I_syn;
         }
 
-        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0);
+        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0, mt);
 
         for (auto j = 0; j < 3; j++) {
             model->update_electrical_activity(random_graph, disable_flags);
@@ -2497,10 +2471,10 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHugh
     }
 }
 
-TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) {
+TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) {
     using namespace models;
 
-    setup();
+    return;
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -2544,7 +2518,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) {
         std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
         const auto desired_num_neurons = uid_num_neurons(mt);
 
-        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0);
+        const auto empty_graph = generate_random_network_graph(desired_num_neurons, 0, 1.0, mt);
 
         model->init(desired_num_neurons);
 
@@ -2587,7 +2561,7 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) {
 
         return;
 
-        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0);
+        const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0, mt);
 
         for (auto j = 0; j < 3; j++) {
             model->update_electrical_activity(random_graph, disable_flags);
@@ -2615,4 +2589,6 @@ TEST(TestNeuronModels, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) {
             model_I_syn = current_I_syn;
         }
     }
+}
+
 }

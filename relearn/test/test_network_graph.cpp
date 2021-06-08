@@ -5,7 +5,7 @@
 #include <tuple>
 #include <vector>
 
-#include "commons.h"
+#include "RelearnTest.hpp"
 
 #include "../source/neurons/NetworkGraph.h"
 #include "../source/util/RelearnException.h"
@@ -15,7 +15,9 @@ constexpr int bound_synapse_weight = 10;
 constexpr int num_ranks = 17;
 constexpr int num_synapses_per_neuron = 2;
 
-TEST(TestNetworkGraph, testNetworkGraphConstructor) {
+namespace TestNetworkGraph {
+
+TEST_F(RelearnTest, testNetworkGraphConstructor) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
 
     for (auto i = 0; i < iterations; i++) {
@@ -41,9 +43,7 @@ TEST(TestNetworkGraph, testNetworkGraphConstructor) {
     }
 }
 
-TEST(TestNetworkGraph, testNetworkGraphConstructorExceptions) {
-    setup();
-
+TEST_F(RelearnTest, testNetworkGraphConstructorExceptions) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<int> uid_num_ranks(1, num_ranks);
 
@@ -74,9 +74,7 @@ TEST(TestNetworkGraph, testNetworkGraphConstructorExceptions) {
     }
 }
 
-TEST(TestNetworkGraph, testNetworkGraphEdges) {
-    setup();
-
+TEST_F(RelearnTest, testNetworkGraphEdges) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<size_t> uid_num_edges(0, upper_bound_num_neurons * num_synapses_per_neuron);
 
@@ -172,9 +170,7 @@ TEST(TestNetworkGraph, testNetworkGraphEdges) {
     }
 }
 
-TEST(TestNetworkGraph, testNetworkGraphEdgesSplit) {
-    setup();
-
+TEST_F(RelearnTest, testNetworkGraphEdgesSplit) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<size_t> uid_num_edges(0, upper_bound_num_neurons * num_synapses_per_neuron);
 
@@ -268,9 +264,7 @@ TEST(TestNetworkGraph, testNetworkGraphEdgesSplit) {
     }
 }
 
-TEST(TestNetworkGraph, testNetworkGraphEdgesRemoval) {
-    setup();
-
+TEST_F(RelearnTest, testNetworkGraphEdgesRemoval) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<size_t> uid_num_edges(0, upper_bound_num_neurons * num_synapses_per_neuron);
 
@@ -346,3 +340,5 @@ TEST(TestNetworkGraph, testNetworkGraphEdgesRemoval) {
         }
     }
 }
+
+} //namespace TestNetworkGraph

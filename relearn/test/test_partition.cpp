@@ -3,13 +3,15 @@
 #include <cmath>
 #include <random>
 
-#include "commons.h"
+#include "RelearnTest.hpp"
 
 #include "../source/structure/Partition.h"
 #include "../source/util/RelearnException.h"
 
 constexpr const int upper_bound_my_rank = 32;
 constexpr const int upper_bound_num_ranks = 32;
+
+namespace TestPartition {
 
 size_t round_to_next_exponent(size_t numToRound, size_t exponent) {
     auto log = std::log(static_cast<double>(numToRound)) / std::log(static_cast<double>(exponent));
@@ -18,9 +20,7 @@ size_t round_to_next_exponent(size_t numToRound, size_t exponent) {
     return static_cast<size_t>(new_val);
 }
 
-TEST(TestPartition, test_partition_constructor_arguments) {
-    setup();
-
+TEST_F(RelearnTest, test_partition_constructor_arguments) {
     std::uniform_int_distribution<size_t> uid_my_rank(0, upper_bound_my_rank);
     std::uniform_int_distribution<size_t> uid_num_ranks(0, upper_bound_num_ranks);
 
@@ -39,10 +39,7 @@ TEST(TestPartition, test_partition_constructor_arguments) {
         }
     }
 }
-
-TEST(TestPartition, test_partition_constructor) {
-    setup();
-
+TEST_F(RelearnTest, test_partition_constructor) {
     std::uniform_int_distribution<size_t> uid_num_ranks(1, upper_bound_num_ranks);
 
     for (auto i = 0; i < iterations; i++) {
@@ -79,3 +76,5 @@ TEST(TestPartition, test_partition_constructor) {
         }
     }
 }
+
+} //namespace TestPartition

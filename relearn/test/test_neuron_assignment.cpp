@@ -12,7 +12,7 @@
 #include <tuple>
 #include <vector>
 
-#include "commons.h"
+#include "RelearnTest.hpp"
 
 #define protected public
 #include "../source/sim/NeuronToSubdomainAssignment.h"
@@ -68,7 +68,7 @@ void check_positions(std::vector<NeuronToSubdomainAssignment::Position>& pos, do
 }
 
 void generate_neuron_positions(std::vector<Vec3d>& positions,
-    std::vector<std::string>& area_names, std::vector<SignalType>& types) {
+    std::vector<std::string>& area_names, std::vector<SignalType>& types, std::mt19937& mt) {
 
     std::uniform_int_distribution<size_t> uid(1, 1000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
@@ -98,9 +98,12 @@ void generate_neuron_positions(std::vector<Vec3d>& positions,
     sfnd.write_neurons_to_file("neurons.tmp");
 }
 
-TEST(TestRandomNeuronPlacement, test_constructor) {
-    setup();
+bool operator<(const NeuronToSubdomainAssignment::Node& a, const NeuronToSubdomainAssignment::Node& b) {
+    return NeuronToSubdomainAssignment::Node::less()(a, b);
+}
 
+namespace TestRandomNeuronPlacement {
+TEST_F(RelearnTest, test_constructor) {
     std::uniform_int_distribution<size_t> uid(1, 10000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -129,9 +132,7 @@ TEST(TestRandomNeuronPlacement, test_constructor) {
     }
 }
 
-TEST(TestRandomNeuronPlacement, test_lazily_fill) {
-    setup();
-
+TEST_F(RelearnTest, test_lazily_fill) {
     std::uniform_int_distribution<size_t> uid(1, 10000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -167,9 +168,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill) {
     }
 }
 
-TEST(TestRandomNeuronPlacement, test_lazily_fill_multiple) {
-    setup();
-
+TEST_F(RelearnTest, test_lazily_fill_multiple) {
     std::uniform_int_distribution<size_t> uid(1, 10000);
     std::uniform_int_distribution<size_t> uid_fills(1, 10);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
@@ -214,9 +213,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_multiple) {
     }
 }
 
-TEST(TestRandomNeuronPlacement, test_lazily_fill_positions) {
-    setup();
-
+TEST_F(RelearnTest, test_lazily_fill_positions) {
     std::uniform_int_distribution<size_t> uid(1, 10000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -279,9 +276,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions) {
     }
 }
 
-TEST(TestRandomNeuronPlacement, test_lazily_fill_positions_multiple_subdomains) {
-    setup();
-
+TEST_F(RelearnTest, test_lazily_fill_positions_multiple_subdomains) {
     std::uniform_int_distribution<size_t> uid(1, 10000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -373,9 +368,7 @@ TEST(TestRandomNeuronPlacement, test_lazily_fill_positions_multiple_subdomains) 
     }
 }
 
-TEST(TestRandomNeuronPlacement, test_multiple_lazily_fill_positions_multiple_subdomains) {
-    setup();
-
+TEST_F(RelearnTest, test_multiple_lazily_fill_positions_multiple_subdomains) {
     std::uniform_int_distribution<size_t> uid(1, 10000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -444,9 +437,7 @@ TEST(TestRandomNeuronPlacement, test_multiple_lazily_fill_positions_multiple_sub
     }
 }
 
-TEST(TestRandomNeuronPlacement, test_saving) {
-    setup();
-
+TEST_F(RelearnTest, test_saving) {
     std::uniform_int_distribution<size_t> uid(1, 1000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -457,7 +448,7 @@ TEST(TestRandomNeuronPlacement, test_saving) {
         std::vector<std::string> area_names;
         std::vector<SignalType> types;
 
-        generate_neuron_positions(positions, area_names, types);
+        generate_neuron_positions(positions, area_names, types, mt);
 
         auto num_neurons = positions.size();
 
@@ -529,9 +520,7 @@ TEST(TestRandomNeuronPlacement, test_saving) {
     }
 }
 
-TEST(TestRandomNeuronPlacement, test_reloading) {
-    setup();
-
+TEST_F(RelearnTest, test_reloading) {
     std::uniform_int_distribution<size_t> uid(1, 1000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -544,7 +533,7 @@ TEST(TestRandomNeuronPlacement, test_reloading) {
         std::vector<std::string> area_names;
         std::vector<SignalType> types;
 
-        generate_neuron_positions(positions, area_names, types);
+        generate_neuron_positions(positions, area_names, types, mt);
 
         auto num_neurons = positions.size();
 
@@ -580,9 +569,7 @@ TEST(TestRandomNeuronPlacement, test_reloading) {
     }
 }
 
-TEST(TestRandomNeuronPlacement, test_reloading_multiple) {
-    setup();
-
+TEST_F(RelearnTest, test_reloading_multiple) {
     std::uniform_int_distribution<size_t> uid(1, 1000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -595,7 +582,7 @@ TEST(TestRandomNeuronPlacement, test_reloading_multiple) {
         std::vector<std::string> area_names;
         std::vector<SignalType> types;
 
-        generate_neuron_positions(positions, area_names, types);
+        generate_neuron_positions(positions, area_names, types, mt);
 
         auto num_neurons = positions.size();
 
@@ -676,13 +663,7 @@ TEST(TestRandomNeuronPlacement, test_reloading_multiple) {
     }
 }
 
-bool operator<(const NeuronToSubdomainAssignment::Node& a, const NeuronToSubdomainAssignment::Node& b) {
-    return NeuronToSubdomainAssignment::Node::less()(a, b);
-}
-
-TEST(TestNeuronPlacementStoreLoad, test_neuron_placement_store_and_load) {
-    setup();
-
+TEST_F(RelearnTest, test_neuron_placement_store_and_load) {
     const std::string file{ "./test_output_positions_id.txt" };
 
     constexpr auto subdomain_id = 0;
@@ -735,3 +716,4 @@ TEST(TestNeuronPlacementStoreLoad, test_neuron_placement_store_and_load) {
         ASSERT_EQ(line1, line2);
     }
 }
+} //namespace TestRandomNeuronPlacement

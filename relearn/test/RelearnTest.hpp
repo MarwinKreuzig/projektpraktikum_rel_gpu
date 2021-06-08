@@ -21,7 +21,7 @@ class RelearnTest : public ::testing::Test {
 protected:
     std::mt19937 mt;
 
-    RelearnTest() {
+    static void SetUpTestCase() {
         RelearnException::hide_messages = true;
         LogFiles::disable = true;
 
@@ -30,7 +30,7 @@ protected:
         MPIWrapper::init_buffer_octree(1);
     }
 
-    ~RelearnTest() {
+    static void TearDownTestCase() {
         RelearnException::hide_messages = false;
         LogFiles::disable = false;
 
@@ -39,22 +39,22 @@ protected:
 
     void SetUp() override {
         if constexpr (use_predetermined_seed) {
+            std::cerr << "Using predetermined seed: " << predetermined_seed << '\n';
+            mt.seed(predetermined_seed);
+        } else {
             const auto now = std::chrono::high_resolution_clock::now();
             const auto time_since_epoch = now.time_since_epoch();
             const auto time_since_epoch_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(time_since_epoch).count();
 
             const auto seed = static_cast<unsigned int>(time_since_epoch_ns);
 
-            std::cout << "Test seed: " << seed << '\n';
+            std::cerr << "Test seed: " << seed << '\n';
             mt.seed(seed);
-        } else {
-            std::cout << "Using predetermined seed: " << predetermined_seed << '\n';
-            mt.seed(predetermined_seed);
         }
     }
 
     void TearDown() override {
-        std::cout << "Test finished\n";
+        std::cerr << "Test finished\n";
     }
 
     constexpr static int iterations = 10;
@@ -64,5 +64,3 @@ protected:
     constexpr static bool use_predetermined_seed = false;
     constexpr static unsigned int predetermined_seed = 0;
 };
-
-

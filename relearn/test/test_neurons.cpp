@@ -1,6 +1,6 @@
 #include "../googletest/include/gtest/gtest.h"
 
-#include "commons.h"
+#include "RelearnTest.hpp"
 
 #include "../source/neurons/Neurons.h"
 #include "../source/neurons/models/NeuronModels.h"
@@ -17,9 +17,9 @@
 #include <tuple>
 #include <vector>
 
-TEST(TestNeurons, testNeuronsConstructor) {
-    setup();
+namespace TestNeurons {
 
+TEST_F(RelearnTest, testNeuronsConstructor) {
     auto partition = std::make_shared<Partition>(1, 0);
 
     auto model = std::make_unique<models::PoissonModel>();
@@ -27,9 +27,11 @@ TEST(TestNeurons, testNeuronsConstructor) {
     Neurons neurons{ partition, std::move(model) };
 }
 
-TEST(TestNeuronRankId, testNeuronRankIdValid) {
-    setup();
+}
 
+namespace TestNeuronRankId {
+
+TEST_F(RelearnTest, testNeuronRankIdValid) {
     for (auto it = 0; it < iterations; it++) {
         std::uniform_int_distribution<int> urd_rank(0, 100);
         std::uniform_int_distribution<size_t> urd_id(0, Constants::uninitialized - 1);
@@ -46,9 +48,7 @@ TEST(TestNeuronRankId, testNeuronRankIdValid) {
     }
 }
 
-TEST(TestNeuronRankId, testNeuronRankIdInvalidRank) {
-    setup();
-
+TEST_F(RelearnTest, testNeuronRankIdInvalidRank) {
     for (auto it = 0; it < iterations; it++) {
         std::uniform_int_distribution<int> urd_rank(-1000000, -1);
         std::uniform_int_distribution<size_t> urd_id(0, Constants::uninitialized - 1);
@@ -65,9 +65,7 @@ TEST(TestNeuronRankId, testNeuronRankIdInvalidRank) {
     }
 }
 
-TEST(TestNeuronRankId, testNeuronRankIdInvalidId) {
-    setup();
-
+TEST_F(RelearnTest, testNeuronRankIdInvalidId) {
     for (auto it = 0; it < iterations; it++) {
         std::uniform_int_distribution<int> urd_rank(0, 100);
         std::uniform_int_distribution<size_t> urd_id(0, Constants::uninitialized - 1);
@@ -84,9 +82,7 @@ TEST(TestNeuronRankId, testNeuronRankIdInvalidId) {
     }
 }
 
-TEST(TestNeuronRankId, testNeuronRankIdEquality) {
-    setup();
-
+TEST_F(RelearnTest, testNeuronRankIdEquality) {
     for (auto it = 0; it < iterations; it++) {
         std::uniform_int_distribution<int> urd_rank(0, 10);
         std::uniform_int_distribution<size_t> urd_id(0, 500);
@@ -108,4 +104,6 @@ TEST(TestNeuronRankId, testNeuronRankIdEquality) {
             }
         }
     }
+}
+
 }

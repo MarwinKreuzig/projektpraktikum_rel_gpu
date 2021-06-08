@@ -5,7 +5,7 @@
 #include <tuple>
 #include <vector>
 
-#include "commons.h"
+#include "RelearnTest.hpp"
 
 #include "../source/util/RelearnException.h"
 #include "../source/neurons/models/SynapticElements.h"
@@ -13,7 +13,9 @@
 
 constexpr const size_t upper_bound_num_neurons = 10000;
 
-TEST(TestSynapticElements, testSynapticElementsConstructor) {
+namespace TestSynapticElements {
+
+TEST_F(RelearnTest, testSynapticElementsConstructor) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
@@ -59,9 +61,7 @@ TEST(TestSynapticElements, testSynapticElementsConstructor) {
     }
 }
 
-TEST(TestSynapticElements, testSynapticElementsConstructorException) {
-    setup();
-
+TEST_F(RelearnTest, testSynapticElementsConstructorException) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
@@ -158,7 +158,7 @@ TEST(TestSynapticElements, testSynapticElementsConstructorException) {
     }
 }
 
-TEST(TestSynapticElements, testSynapticElementsParameters) {
+TEST_F(RelearnTest, testSynapticElementsParameters) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
@@ -213,9 +213,7 @@ TEST(TestSynapticElements, testSynapticElementsParameters) {
     }
 }
 
-TEST(TestSynapticElements, testSynapticElementsUpdate) {
-    setup();
-
+TEST_F(RelearnTest, testSynapticElementsUpdate) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
@@ -298,9 +296,7 @@ TEST(TestSynapticElements, testSynapticElementsUpdate) {
     }
 }
 
-TEST(TestSynapticElements, testSynapticElementsMultipleUpdate) {
-    setup();
-
+TEST_F(RelearnTest, testSynapticElementsMultipleUpdate) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
@@ -362,4 +358,6 @@ TEST(TestSynapticElements, testSynapticElementsMultipleUpdate) {
             ASSERT_EQ(golden_signal_types[neuron_id], types[neuron_id]);
         }
     }
+}
+
 }

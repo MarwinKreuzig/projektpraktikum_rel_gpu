@@ -1,6 +1,6 @@
 #include "../googletest/include/gtest/gtest.h"
 
-#include "commons.h"
+#include "RelearnTest.hpp"
 
 #include "../source/structure/Cell.h"
 #include "../source/structure/Partition.h"
@@ -17,7 +17,7 @@
 #include <tuple>
 #include <vector>
 
-std::tuple<Vec3d, Vec3d> get_random_simulation_box_size() {
+std::tuple<Vec3d, Vec3d> get_random_simulation_box_size(std::mt19937& mt) {
     std::uniform_real_distribution<double> urd(-10000.0, +10000.0);
 
     const auto rand_x_1 = urd(mt);
@@ -35,7 +35,7 @@ std::tuple<Vec3d, Vec3d> get_random_simulation_box_size() {
     };
 }
 
-std::vector<std::tuple<Vec3d, size_t>> generate_random_neurons(const Vec3d& min, const Vec3d& max, size_t count, size_t max_id) {
+std::vector<std::tuple<Vec3d, size_t>> generate_random_neurons(const Vec3d& min, const Vec3d& max, size_t count, size_t max_id, std::mt19937& mt) {
     std::uniform_real_distribution<double> urd_x(min.get_x(), max.get_x());
     std::uniform_real_distribution<double> urd_y(min.get_y(), max.get_y());
     std::uniform_real_distribution<double> urd_z(min.get_z(), max.get_z());
@@ -158,13 +158,14 @@ std::vector<OctreeNode*> extract_branch_nodes(OctreeNode* root) {
     return return_value;
 }
 
-TEST(TestCell, testCellSize) {
-    setup();
+namespace TestCell {
+
+TEST_F(RelearnTest, testCellSize) {
 
     for (auto i = 0; i < iterations; i++) {
         Cell cell{};
 
-        const auto& box_sizes_1 = get_random_simulation_box_size();
+        const auto& box_sizes_1 = get_random_simulation_box_size(mt);
         const auto& min_1 = std::get<0>(box_sizes_1);
         const auto& max_1 = std::get<1>(box_sizes_1);
 
@@ -175,7 +176,7 @@ TEST(TestCell, testCellSize) {
         ASSERT_EQ(min_1, std::get<0>(res_1));
         ASSERT_EQ(max_1, std::get<1>(res_1));
 
-        const auto& box_sizes_2 = get_random_simulation_box_size();
+        const auto& box_sizes_2 = get_random_simulation_box_size(mt);
         const auto& min_2 = std::get<0>(box_sizes_2);
         const auto& max_2 = std::get<1>(box_sizes_2);
 
@@ -190,13 +191,12 @@ TEST(TestCell, testCellSize) {
     }
 }
 
-TEST(TestCell, testCellPosition) {
-    setup();
+TEST_F(RelearnTest, testCellPosition) {
 
     for (auto i = 0; i < iterations; i++) {
         Cell cell{};
 
-        const auto& box_sizes = get_random_simulation_box_size();
+        const auto& box_sizes = get_random_simulation_box_size(mt);
         const auto& min = std::get<0>(box_sizes);
         const auto& max = std::get<1>(box_sizes);
 
@@ -260,13 +260,12 @@ TEST(TestCell, testCellPosition) {
     }
 }
 
-TEST(TestCell, testCellPositionException) {
-    setup();
+TEST_F(RelearnTest, testCellPositionException) {
 
     for (auto i = 0; i < iterations; i++) {
         Cell cell{};
 
-        const auto& box_sizes = get_random_simulation_box_size();
+        const auto& box_sizes = get_random_simulation_box_size(mt);
         const auto& min = std::get<0>(box_sizes);
         const auto& max = std::get<1>(box_sizes);
 
@@ -378,13 +377,12 @@ TEST(TestCell, testCellPositionException) {
     }
 }
 
-TEST(TestCell, testCellPositionCombined) {
-    setup();
+TEST_F(RelearnTest, testCellPositionCombined) {
 
     for (auto i = 0; i < iterations; i++) {
         Cell cell{};
 
-        const auto& box_sizes = get_random_simulation_box_size();
+        const auto& box_sizes = get_random_simulation_box_size(mt);
         const auto& min = std::get<0>(box_sizes);
         const auto& max = std::get<1>(box_sizes);
 
@@ -439,8 +437,7 @@ TEST(TestCell, testCellPositionCombined) {
     }
 }
 
-TEST(TestCell, testCellSetNumDendrites) {
-    setup();
+TEST_F(RelearnTest, testCellSetNumDendrites) {
 
     std::uniform_int_distribution<unsigned int> uid(0, 1000);
 
@@ -471,8 +468,7 @@ TEST(TestCell, testCellSetNumDendrites) {
     }
 }
 
-TEST(TestCell, testCellSetNeuronId) {
-    setup();
+TEST_F(RelearnTest, testCellSetNeuronId) {
 
     std::uniform_int_distribution<size_t> uid(0, 1000);
 
@@ -489,13 +485,12 @@ TEST(TestCell, testCellSetNeuronId) {
     }
 }
 
-TEST(TestCell, testCellOctants) {
-    setup();
+TEST_F(RelearnTest, testCellOctants) {
 
     for (auto i = 0; i < iterations; i++) {
         Cell cell{};
 
-        const auto& box_sizes = get_random_simulation_box_size();
+        const auto& box_sizes = get_random_simulation_box_size(mt);
         const auto& min = std::get<0>(box_sizes);
         const auto& max = std::get<1>(box_sizes);
 
@@ -525,13 +520,12 @@ TEST(TestCell, testCellOctants) {
     }
 }
 
-TEST(TestCell, testCellOctantsException) {
-    setup();
+TEST_F(RelearnTest, testCellOctantsException) {
 
     for (auto i = 0; i < iterations; i++) {
         Cell cell{};
 
-        const auto& box_sizes = get_random_simulation_box_size();
+        const auto& box_sizes = get_random_simulation_box_size(mt);
         const auto& min = std::get<0>(box_sizes);
         const auto& max = std::get<1>(box_sizes);
 
@@ -554,13 +548,12 @@ TEST(TestCell, testCellOctantsException) {
     }
 }
 
-TEST(TestCell, testCellOctantsSize) {
-    setup();
+TEST_F(RelearnTest, testCellOctantsSize) {
 
     for (auto i = 0; i < iterations; i++) {
         Cell cell{};
 
-        const auto& box_sizes = get_random_simulation_box_size();
+        const auto& box_sizes = get_random_simulation_box_size(mt);
         const auto& min = std::get<0>(box_sizes);
         const auto& max = std::get<1>(box_sizes);
 
@@ -604,8 +597,11 @@ TEST(TestCell, testCellOctantsSize) {
     }
 }
 
-TEST(TestOctreeNode, testOctreeNodeReset) {
-    setup();
+}
+
+namespace TestOctreeNode {
+
+TEST_F(RelearnTest, testOctreeNodeReset) {
 
     OctreeNode node{};
 
@@ -651,8 +647,7 @@ TEST(TestOctreeNode, testOctreeNodeReset) {
     }
 }
 
-TEST(TestOctreeNode, testOctreeNodeSetterGetter) {
-    setup();
+TEST_F(RelearnTest, testOctreeNodeSetterGetter) {
 
     OctreeNode node{};
 
@@ -703,8 +698,7 @@ TEST(TestOctreeNode, testOctreeNodeSetterGetter) {
     }
 }
 
-TEST(TestOctreeNode, testOctreeNodeLocal) {
-    setup();
+TEST_F(RelearnTest, testOctreeNodeLocal) {
 
     OctreeNode node{};
 
@@ -728,8 +722,7 @@ TEST(TestOctreeNode, testOctreeNodeLocal) {
     }
 }
 
-TEST(TestOctreeNode, testOctreeNodeSetterCell) {
-    setup();
+TEST_F(RelearnTest, testOctreeNodeSetterCell) {
 
     OctreeNode node{};
 
@@ -739,7 +732,7 @@ TEST(TestOctreeNode, testOctreeNodeSetterCell) {
     std::uniform_int_distribution<unsigned int> uid_dends(0, 1000);
 
     for (auto it = 0; it < iterations; it++) {
-        const auto& box_sizes = get_random_simulation_box_size();
+        const auto& box_sizes = get_random_simulation_box_size(mt);
 
         const auto id = uid_id(mt);
         const auto dends_ex = uid_dends(mt);
@@ -796,8 +789,7 @@ TEST(TestOctreeNode, testOctreeNodeSetterCell) {
     }
 }
 
-TEST(TestOctreeNode, testOctreeNodeInsert) {
-    setup();
+TEST_F(RelearnTest, testOctreeNodeInsert) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -810,7 +802,7 @@ TEST(TestOctreeNode, testOctreeNodeInsert) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
         size_t level = uid_lvl(mt);
 
         std::uniform_real_distribution<double> urd_x(min.get_x(), max.get_x());
@@ -829,7 +821,7 @@ TEST(TestOctreeNode, testOctreeNodeInsert) {
         size_t num_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
 
-        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids);
+        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids, mt);
 
         for (const auto& [pos, id] : neurons_to_place) {
             node.insert(pos, id, my_rank);
@@ -851,8 +843,11 @@ TEST(TestOctreeNode, testOctreeNodeInsert) {
     }
 }
 
-TEST(TestOctree, testOctreeConstructor) {
-    setup();
+}
+
+namespace TestOctree {
+
+TEST_F(RelearnTest, testOctreeConstructor) {
 
     std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
@@ -862,7 +857,7 @@ TEST(TestOctree, testOctreeConstructor) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         size_t level_of_branch_nodes = uid(mt);
 
@@ -905,7 +900,7 @@ TEST(TestOctree, testOctreeConstructor) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         size_t level_of_branch_nodes = uid(mt);
         double theta = urd_theta(mt);
@@ -951,8 +946,7 @@ TEST(TestOctree, testOctreeConstructor) {
     }
 }
 
-TEST(TestOctree, testOctreeConstructorExceptions) {
-    setup();
+TEST_F(RelearnTest, testOctreeConstructorExceptions) {
 
     std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
@@ -962,7 +956,7 @@ TEST(TestOctree, testOctreeConstructorExceptions) {
         Vec3d min_xyz{};
         Vec3d max_xyz{};
 
-        std::tie(min_xyz, max_xyz) = get_random_simulation_box_size();
+        std::tie(min_xyz, max_xyz) = get_random_simulation_box_size(mt);
 
         size_t level_of_branch_nodes = uid(mt);
 
@@ -973,7 +967,7 @@ TEST(TestOctree, testOctreeConstructorExceptions) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         size_t level_of_branch_nodes = uid(mt);
         double theta = urd_theta(mt);
@@ -986,7 +980,7 @@ TEST(TestOctree, testOctreeConstructorExceptions) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         size_t level_of_branch_nodes = uid(mt);
         double theta = urd_theta(mt);
@@ -999,7 +993,7 @@ TEST(TestOctree, testOctreeConstructorExceptions) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         size_t level_of_branch_nodes = uid(mt);
         double theta = urd_theta(mt) - 1;
@@ -1009,8 +1003,7 @@ TEST(TestOctree, testOctreeConstructorExceptions) {
     }
 }
 
-TEST(TestOctree, testOctreeSetterGetter) {
-    setup();
+TEST_F(RelearnTest, testOctreeSetterGetter) {
 
     std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
@@ -1020,7 +1013,7 @@ TEST(TestOctree, testOctreeSetterGetter) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         size_t level_of_branch_nodes = uid(mt);
         double theta = urd_theta(mt);
@@ -1028,7 +1021,7 @@ TEST(TestOctree, testOctreeSetterGetter) {
 
         Octree octree(min, max, level_of_branch_nodes, theta, sigma);
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         level_of_branch_nodes = uid(mt);
         theta = urd_theta(mt);
@@ -1057,8 +1050,7 @@ TEST(TestOctree, testOctreeSetterGetter) {
     }
 }
 
-TEST(TestOctree, testOctreeSetterGetterExceptions) {
-    setup();
+TEST_F(RelearnTest, testOctreeSetterGetterExceptions) {
 
     std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
@@ -1068,7 +1060,7 @@ TEST(TestOctree, testOctreeSetterGetterExceptions) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         size_t level_of_branch_nodes = uid(mt);
         double theta = urd_theta(mt);
@@ -1076,7 +1068,7 @@ TEST(TestOctree, testOctreeSetterGetterExceptions) {
 
         Octree octree(min, max, level_of_branch_nodes, theta, sigma);
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         ASSERT_THROW(octree.set_size(max, min), RelearnException);
     }
@@ -1085,7 +1077,7 @@ TEST(TestOctree, testOctreeSetterGetterExceptions) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         size_t level_of_branch_nodes = uid(mt);
         double theta = urd_theta(mt);
@@ -1093,7 +1085,7 @@ TEST(TestOctree, testOctreeSetterGetterExceptions) {
 
         Octree octree(min, max, level_of_branch_nodes, theta, sigma);
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         theta = urd_theta(mt) - 1;
 
@@ -1104,7 +1096,7 @@ TEST(TestOctree, testOctreeSetterGetterExceptions) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         size_t level_of_branch_nodes = uid(mt);
         double theta = urd_theta(mt);
@@ -1112,7 +1104,7 @@ TEST(TestOctree, testOctreeSetterGetterExceptions) {
 
         Octree octree(min, max, level_of_branch_nodes, theta, sigma);
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         sigma = urd_sigma(mt) * -1;
 
@@ -1120,8 +1112,7 @@ TEST(TestOctree, testOctreeSetterGetterExceptions) {
     }
 }
 
-TEST(TestOctree, testOctreeInsertNeurons) {
-    setup();
+TEST_F(RelearnTest, testOctreeInsertNeurons) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -1134,7 +1125,7 @@ TEST(TestOctree, testOctreeInsertNeurons) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         size_t level_of_branch_nodes = uid_lvl(mt);
         double theta = urd_theta(mt);
@@ -1145,7 +1136,7 @@ TEST(TestOctree, testOctreeInsertNeurons) {
         size_t num_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
 
-        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids);
+        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids, mt);
 
         for (const auto& [position, id] : neurons_to_place) {
             octree.insert(position, id, my_rank);
@@ -1167,8 +1158,7 @@ TEST(TestOctree, testOctreeInsertNeurons) {
     }
 }
 
-TEST(TestOctree, testOctreeInsertNeuronsExceptions) {
-    setup();
+TEST_F(RelearnTest, testOctreeInsertNeuronsExceptions) {
 
     std::uniform_int_distribution<size_t> uid_lvl(0, 6);
     std::uniform_int_distribution<int> uid_rank(0, 1000);
@@ -1180,7 +1170,7 @@ TEST(TestOctree, testOctreeInsertNeuronsExceptions) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         size_t level_of_branch_nodes = uid_lvl(mt);
         double theta = urd_theta(mt);
@@ -1191,7 +1181,7 @@ TEST(TestOctree, testOctreeInsertNeuronsExceptions) {
         size_t num_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
 
-        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids);
+        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids, mt);
 
         for (const auto& [position, id] : neurons_to_place) {
             const auto rank = uid_rank(mt);
@@ -1218,8 +1208,7 @@ TEST(TestOctree, testOctreeInsertNeuronsExceptions) {
     }
 }
 
-TEST(TestOctree, testOctreeStructure) {
-    setup();
+TEST_F(RelearnTest, testOctreeStructure) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -1232,7 +1221,7 @@ TEST(TestOctree, testOctreeStructure) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         size_t level_of_branch_nodes = uid_lvl(mt);
         double theta = urd_theta(mt);
@@ -1243,7 +1232,7 @@ TEST(TestOctree, testOctreeStructure) {
         size_t num_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
 
-        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids);
+        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids, mt);
 
         for (const auto& [position, id] : neurons_to_place) {
             octree.insert(position, id, my_rank);
@@ -1305,8 +1294,7 @@ TEST(TestOctree, testOctreeStructure) {
     }
 }
 
-TEST(TestOctree, testOctreeLocalTrees) {
-    setup();
+TEST_F(RelearnTest, testOctreeLocalTrees) {
 
     std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
@@ -1316,7 +1304,7 @@ TEST(TestOctree, testOctreeLocalTrees) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         size_t level_of_branch_nodes = uid(mt);
         double theta = urd_theta(mt);
@@ -1360,9 +1348,7 @@ TEST(TestOctree, testOctreeLocalTrees) {
     }
 }
 
-TEST(TestOctree, testOctreeInsertLocalTree) {
-    setup();
-
+TEST_F(RelearnTest, testOctreeInsertLocalTree) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     std::uniform_int_distribution<size_t> uid_lvl(0, 6);
@@ -1374,7 +1360,7 @@ TEST(TestOctree, testOctreeInsertLocalTree) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size();
+        std::tie(min, max) = get_random_simulation_box_size(mt);
 
         size_t level_of_branch_nodes = uid_lvl(mt);
         double theta = urd_theta(mt);
@@ -1385,7 +1371,7 @@ TEST(TestOctree, testOctreeInsertLocalTree) {
         size_t num_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
 
-        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids);
+        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids, mt);
 
         for (const auto& [position, id] : neurons_to_place) {
             octree.insert(position, id, my_rank);
@@ -1483,4 +1469,6 @@ TEST(TestOctree, testOctreeInsertLocalTree) {
             delete nodes_to_save_new_local_trees[i];
         }
     }
+}
+
 }
