@@ -2164,8 +2164,6 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityDisabledAEIF) {
 TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisson) {
     using namespace models;
 
-    return;
-
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
@@ -2218,17 +2216,16 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisson) {
             const auto& current_I_syn = model->get_I_syn();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                ASSERT_NE(current_x[id], model_x[id]);
-                ASSERT_EQ(current_fired[id], model_fired[id]);
+                ASSERT_NE(current_x[id], model_x[id]) << j << id;
 
-                ASSERT_EQ(0.0, model_I_syn[id]);
+                ASSERT_EQ(0.0, model_I_syn[id]) << j << id;
                 const auto current_refrac = model->get_secondary_variable(id);
                 if (model->get_fired(id)) {
-                    ASSERT_EQ(current_refrac, expected_refrac);
+                    ASSERT_EQ(current_refrac, expected_refrac) << j << id;
                 } else if (model_secondary[id] == 0) {
-                    ASSERT_EQ(current_refrac, 0);
+                    ASSERT_EQ(current_refrac, 0) << j << id;
                 } else {
-                    ASSERT_EQ(current_refrac, model_secondary[id] - 1);
+                    ASSERT_EQ(current_refrac, model_secondary[id] - 1) << j << id;
                 }
 
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -2250,7 +2247,6 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisson) {
 
             for (auto id = 0; id < desired_num_neurons; id++) {
                 ASSERT_NE(current_x[id], model_x[id]);
-                ASSERT_EQ(current_fired[id], model_fired[id]);
 
                 const auto current_refrac = model->get_secondary_variable(id);
                 if (model->get_fired(id)) {
@@ -2273,8 +2269,6 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisson) {
 
 TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhikevich) {
     using namespace models;
-
-    return;
 
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
@@ -2338,11 +2332,12 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhikevich)
             const auto& current_I_syn = model->get_I_syn();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                ASSERT_NE(current_x[id], model_x[id]);
-                ASSERT_EQ(current_fired[id], model_fired[id]);
+                if (current_fired[id]) {
+                    ASSERT_EQ(current_x[id], expected_c) << i << ' ' << j << ' ' << id;
+                }
 
-                ASSERT_EQ(0.0, model_I_syn[id]);
-                ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
+                ASSERT_EQ(0.0, model_I_syn[id]) << i << ' ' << j << ' ' << id;
+                ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]) << i << ' ' << j << ' ' << id;
 
                 model_secondary[id] = model->get_secondary_variable(id);
             }
@@ -2362,8 +2357,9 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhikevich)
             const auto& current_I_syn = model->get_I_syn();
 
             for (auto id = 0; id < desired_num_neurons; id++) {
-                ASSERT_NE(current_x[id], model_x[id]);
-                ASSERT_EQ(current_fired[id], model_fired[id]);
+                if (current_fired[id]) {
+                    ASSERT_EQ(current_x[id], expected_c) << i << ' ' << j << ' ' << id;
+                }
 
                 ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
 
@@ -2474,8 +2470,6 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHughNag
 TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) {
     using namespace models;
 
-    return;
-
     for (auto i = 0; i < iterations; i++) {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModels::min_k, NeuronModels::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModels::min_tau_C, NeuronModels::max_tau_C);
@@ -2541,15 +2535,11 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) {
 
             for (auto id = 0; id < desired_num_neurons; id++) {
                 if (current_fired[id]) {
-                    EXPECT_EQ(current_x[id], expected_E_L) << id;
-                } else {
-                    EXPECT_NE(current_x[id], model_x[id]) << id;
+                    EXPECT_EQ(current_x[id], expected_E_L) << id << ' ' << j << ' ' << i;
                 }
 
-                ASSERT_EQ(current_fired[id], model_fired[id]);
-
-                ASSERT_EQ(0.0, model_I_syn[id]);
-                ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
+                ASSERT_EQ(0.0, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]) << id << ' ' << j << ' ' << i;
 
                 model_secondary[id] = model->get_secondary_variable(id);
             }
@@ -2558,8 +2548,6 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) {
             model_fired = current_fired;
             model_I_syn = current_I_syn;
         }
-
-        return;
 
         const auto random_graph = generate_random_network_graph(desired_num_neurons, desired_num_neurons, 1.0, mt);
 
@@ -2573,11 +2561,7 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) {
             for (auto id = 0; id < desired_num_neurons; id++) {
                 if (current_fired[id]) {
                     EXPECT_EQ(current_x[id], expected_E_L) << id;
-                } else {
-                    EXPECT_NE(current_x[id], model_x[id]) << id;
                 }
-
-                ASSERT_EQ(current_fired[id], model_fired[id]);
 
                 ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
 

@@ -47,9 +47,9 @@ void NeuronsExtraInfo::create_neurons(size_t creation_count) {
         const auto y_it = RandomHolder::get_random_uniform_double(RandomHolderKey::NeuronsExtraInformation, 0.0, 1.0);
         const auto z_it = RandomHolder::get_random_uniform_double(RandomHolderKey::NeuronsExtraInformation, 0.0, 1.0);
 
-        const auto x_pos = x_dims[x_it * current_size];
-        const auto y_pos = y_dims[y_it * current_size];
-        const auto z_pos = z_dims[z_it * current_size];
+        const auto x_pos = x_dims[static_cast<size_t>(x_it * current_size)];
+        const auto y_pos = y_dims[static_cast<size_t>(y_it * current_size)];
+        const auto z_pos = z_dims[static_cast<size_t>(z_it * current_size)];
 
         x_dims[i] = x_pos;
         y_dims[i] = y_pos;

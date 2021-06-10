@@ -62,5 +62,5 @@ protected:
     constexpr static double eps = 0.00001;
 
     constexpr static bool use_predetermined_seed = false;
-    constexpr static unsigned int predetermined_seed = 0;
+    constexpr static unsigned int predetermined_seed = 3622374920;
 };

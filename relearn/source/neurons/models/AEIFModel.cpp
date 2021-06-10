@@ -67,17 +67,21 @@ void AEIFModel::update_activity(const size_t i) {
     const auto I_syn = get_I_syn(i);
     auto x = get_x(i);
 
+    auto has_spiked = false;
+
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
         x += iter_x(x, w[i], I_syn) / h;
         w[i] += iter_refrac(w[i], x) / h;
 
         if (x >= V_peak) {
-            set_fired(i, true);
             x = E_L;
             w[i] += b;
+            has_spiked = true;
+            break;
         }
     }
 
+    set_fired(i, has_spiked);
     set_x(i, x);
 }
 

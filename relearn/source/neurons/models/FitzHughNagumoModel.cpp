@@ -56,10 +56,12 @@ void FitzHughNagumoModel::update_activity(const size_t i) {
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
         x += iter_x(x, w[i], I_syn) / h;
         w[i] += iter_refrac(w[i], x) / h;
+    }
 
-        if (FitzHughNagumoModel::spiked(x, w[i])) {
-            set_fired(i, true);
-        }
+    if (FitzHughNagumoModel::spiked(x, w[i])) {
+        set_fired(i, true);
+    } else {
+        set_fired(i, false);
     }
 
     set_x(i, x);

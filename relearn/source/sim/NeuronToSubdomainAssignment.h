@@ -117,7 +117,7 @@ protected:
         desired_frac_neurons_exc_ = desired_frac_neurons_exc;
     }
 
-    void set_desired_num_neurons(double desired_num_neurons) noexcept {
+    void set_desired_num_neurons(size_t desired_num_neurons) noexcept {
         desired_num_neurons_ = desired_num_neurons;
     }
 
@@ -125,7 +125,7 @@ protected:
         current_frac_neurons_exc_ = current_frac_neurons_exc;
     }
 
-    void set_current_num_neurons(double current_num_neurons) noexcept {
+    void set_current_num_neurons(size_t current_num_neurons) noexcept {
         current_num_neurons_ = current_num_neurons;
     }
 

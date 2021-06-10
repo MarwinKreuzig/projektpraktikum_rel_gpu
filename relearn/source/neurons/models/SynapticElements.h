@@ -198,7 +198,8 @@ public:
 
     [[nodiscard]] unsigned int get_vacant_cnt(size_t neuron_id) const {
         RelearnException::check(neuron_id < connected_cnts.size() && neuron_id < cnts.size(), "Synaptic elements, get_vacant_cnt out of bounds");
-        return cnts[neuron_id] - connected_cnts[neuron_id];
+        const auto ret_val = cnts[neuron_id] - connected_cnts[neuron_id];
+        return static_cast<unsigned int>(ret_val);
     }
 
     [[nodiscard]] double get_delta_cnt(size_t neuron_id) const {

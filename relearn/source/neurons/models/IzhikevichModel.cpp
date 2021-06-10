@@ -63,17 +63,21 @@ void IzhikevichModel::update_activity(const size_t i) {
     const auto I_syn = get_I_syn(i);
     auto x = get_x(i);
 
+    auto has_spiked = false;
+
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
         x += iter_x(x, u[i], I_syn) / h;
         u[i] += iter_refrac(u[i], x) / h;
 
         if (spiked(x)) {
-            set_fired(i, true);
             x = c;
             u[i] += d;
+            has_spiked = true;
+            break;
         }
     }
 
+    set_fired(i, has_spiked);
     set_x(i, x);
 }
 
