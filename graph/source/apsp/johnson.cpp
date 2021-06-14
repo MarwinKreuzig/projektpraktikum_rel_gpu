@@ -1,12 +1,15 @@
-#include <boost/config.hpp>
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/johnson_all_pairs_shortest.hpp>
+#include "johnson.hpp"
+
+#include <algorithm>
 #include <iostream> // cerr
+#include <limits>
 #include <memory>
 #include <random> // mt19937_64, uniform_x_distribution
 #include <vector>
 
-#include "johnson.hpp"
+#include <boost/config.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/johnson_all_pairs_shortest.hpp>
 
 namespace apsp {
 
@@ -19,7 +22,7 @@ void set_edge(edge_t* edge, int u, int v) {
 
 #endif
 
-static bool bellman_ford(const graph_t& gr, std::vector<int>& dist, int src) {
+static bool bellman_ford(const graph_t& gr, std::vector<double>& dist, int src) {
     const int& V = gr.V;
     const int& E = gr.E;
     const auto& edges = gr.edge_array;
@@ -29,7 +32,7 @@ static bool bellman_ford(const graph_t& gr, std::vector<int>& dist, int src) {
 #pragma omp parallel for
 #endif
     for (int i = 0; i < V; i++) {
-        dist[i] = INT_MAX;
+        dist[i] = std::numeric_limits<double>::max();
     }
     dist[src] = 0;
 
@@ -38,10 +41,10 @@ static bool bellman_ford(const graph_t& gr, std::vector<int>& dist, int src) {
 #pragma omp parallel for
 #endif
         for (int j = 0; j < E; j++) {
-            int u = std::get<0>(edges[j]);
-            int v = std::get<1>(edges[j]);
-            int new_dist = weights[j] + dist[u];
-            if (dist[u] != INT_MAX && new_dist < dist[v]) {
+            const auto u = std::get<0>(edges[j]);
+            const auto v = std::get<1>(edges[j]);
+            const auto new_dist = weights[j] + dist[u];
+            if (dist[u] != std::numeric_limits<double>::max() && new_dist < dist[v]) {
                 dist[v] = new_dist;
             }
         }
@@ -52,17 +55,17 @@ static bool bellman_ford(const graph_t& gr, std::vector<int>& dist, int src) {
 #pragma omp parallel for
 #endif
     for (int i = 0; i < E; i++) {
-        int u = std::get<0>(edges[i]);
-        int v = std::get<1>(edges[i]);
-        int weight = weights[i];
-        if (dist[u] != INT_MAX && dist[u] + weight < dist[v]) {
+        const auto u = std::get<0>(edges[i]);
+        const auto v = std::get<1>(edges[i]);
+        const auto weight = weights[i];
+        if (dist[u] != std::numeric_limits<double>::max() && dist[u] + weight < dist[v]) {
             no_neg_cycle = false;
         }
     }
     return no_neg_cycle;
 }
 
-void johnson_parallel(graph_t& gr, std::vector<int>& output) {
+void johnson_parallel(graph_t& gr, std::vector<double>& output) {
 
     const int V = gr.V;
 
@@ -85,7 +88,7 @@ void johnson_parallel(graph_t& gr, std::vector<int>& output) {
     // to find for each vertex v the minimum weight h(v) of a path from q to v. If
     // this step detects a negative cycle, the algorithm is terminated.
     // TODO Can run parallel version?
-    std::vector<int> h(bf_graph.V);
+    std::vector<double> h(bf_graph.V);
     if (const bool r = bellman_ford(bf_graph, h, V); !r) {
         std::cerr << "\nNegative Cycles Detected! Terminating Early\n";
         exit(1);
@@ -97,8 +100,8 @@ void johnson_parallel(graph_t& gr, std::vector<int>& output) {
 #pragma omp parallel for
 #endif
     for (int e = 0; e < gr.E; e++) {
-        int u = std::get<0>(gr.edge_array[e]);
-        int v = std::get<1>(gr.edge_array[e]);
+        const auto u = std::get<0>(gr.edge_array[e]);
+        const auto v = std::get<1>(gr.edge_array[e]);
         gr.weights[e] = gr.weights[e] + h[u] - h[v];
     }
 

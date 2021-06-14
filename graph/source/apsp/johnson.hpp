@@ -43,7 +43,7 @@ struct graph_cuda_t {
     U edge_array;
 };
 
-void johnson_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<int>& output);
+void johnson_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<double>& output);
 
 void johnson_parallel(graph_t& gr, std::vector<int>& output);
 

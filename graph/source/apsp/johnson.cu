@@ -4,6 +4,7 @@
 #include <climits>
 #include <ios>
 #include <iostream>
+#include <limits>
 #include <vector>
 
 #include "util.hpp"
@@ -11,13 +12,14 @@
 #define THREADS_PER_BLOCK 32
 
 namespace apsp {
+const double double_max = std::numeric_limits<double>::max();
 
 __constant__ graph_cuda_t<View<int>, View<edge_t>> graph_const;
 
 __forceinline__
     __device__ int
-    min_distance(const int* dist, const char* visited, int n) {
-    int min = INT_MAX;
+    min_distance(const double* dist, const char* visited, int n) {
+    double min = double_max;
     int min_index = 0;
     for (int v = 0; v < n; v++) {
         if ((visited[v] == 0) && dist[v] <= min) {
@@ -28,7 +30,7 @@ __forceinline__
     return min_index;
 }
 
-__global__ void dijkstra_kernel(View<int> output, View<char> visited_global) {
+__global__ void dijkstra_kernel(View<double> output, View<char> visited_global) {
     const auto s = blockIdx.x * blockDim.x + threadIdx.x; // NOLINT(readability-static-accessed-through-instance)
     const int V = graph_const.V;
 
@@ -40,22 +42,22 @@ __global__ void dijkstra_kernel(View<int> output, View<char> visited_global) {
     const auto weights = graph_const.weights;
     const auto edge_array = graph_const.edge_array;
 
-    int* dist = &output[s * V];
+    double* dist = &output[s * V];
     char* visited = &visited_global[s * V];
     for (int i = 0; i < V; i++) {
-        dist[i] = INT_MAX;
+        dist[i] = double_max;
         visited[i] = 0;
     }
-    dist[s] = 0;
+    dist[s] = 0.0;
     for (int count = 0; count < V - 1; count++) {
-        const int u = min_distance(dist, visited, V);
-        const int u_start = starts[u];
-        const int u_end = starts[u + 1];
-        const int dist_u = dist[u];
+        const auto u = min_distance(dist, visited, V);
+        const auto u_start = starts[u];
+        const auto u_end = starts[u + 1];
+        const auto dist_u = dist[u];
         visited[u] = 1;
         for (int v_i = u_start; v_i < u_end; v_i++) {
-            const int v = edge_array[v_i].v;
-            if ((visited[v] == 0) && dist_u != INT_MAX && dist_u + weights[v_i] < dist[v]) {
+            const auto v = edge_array[v_i].v;
+            if ((visited[v] == 0) && dist_u != double_max && dist_u + weights[v_i] < dist[v]) {
                 dist[v] = dist_u + weights[v_i];
             }
         }
@@ -119,7 +121,7 @@ __host__ bool bellman_ford_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_
                         Johnson's Algorithm CUDA
 **************************************************************************/
 
-__host__ void johnson_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<int>& output) {
+__host__ void johnson_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<double>& output) {
 
     //cudaThreadSetCacheConfig(cudaFuncCachePreferL1);
 
@@ -129,7 +131,7 @@ __host__ void johnson_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& 
     // Structure of the graph
     auto device_edge_array = RAIIDeviceMemory<edge_t>(gr.edge_array);
     auto device_weights = RAIIDeviceMemory<int>(gr.weights);
-    auto device_output = RAIIDeviceMemory<int>(V * V);
+    auto device_output = RAIIDeviceMemory<double>(V * V);
     auto device_starts = RAIIDeviceMemory<int>(gr.starts);
     // Needed to run dijkstra
     auto device_visited = RAIIDeviceMemory<char>(V * V);

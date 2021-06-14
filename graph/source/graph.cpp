@@ -248,7 +248,7 @@ std::tuple<double, double> Graph::calculate_all_pairs_shortest_paths() {
         std::move(cuda_edges)
     };
 
-    std::vector<int> distances(num_neurons * num_neurons);
+    std::vector<double> distances(num_neurons * num_neurons);
 
     apsp::johnson_cuda(graph, distances);
 
