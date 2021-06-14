@@ -263,6 +263,10 @@ std::tuple<double, double> Graph::calculate_all_pairs_shortest_paths() {
             if (i != j) {
                 const double val = distances[i * num_neurons + j];
 
+                if (val == std::numeric_limits<double>::max()) {
+                    continue;
+                }
+
                 // Average
                 number_values++;
                 const double delta = val - avg;
