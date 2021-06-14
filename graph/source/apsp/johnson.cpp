@@ -102,8 +102,8 @@ void johnson_parallel(graph_t& gr, std::vector<double>& output) {
 #pragma omp parallel for schedule(dynamic)
 #endif
     for (int s = 0; s < V; s++) {
-        std::vector<int> d(num_vertices(G));
-        dijkstra_shortest_paths(G, s, boost::distance_map(&d[0]));
+        std::vector<double> d(boost::num_vertices(G));
+        boost::dijkstra_shortest_paths(G, s, boost::distance_map(d.data()));
         for (int v = 0; v < V; v++) {
             output[s * V + v] = d[v] + h[v] - h[s];
         }

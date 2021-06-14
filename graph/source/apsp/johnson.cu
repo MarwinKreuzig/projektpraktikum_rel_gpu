@@ -64,7 +64,7 @@ __global__ void dijkstra_kernel(View<double> output, View<char> visited_global) 
     }
 }
 
-__global__ void bellman_ford_kernel(int* dist) {
+__global__ void bellman_ford_kernel(float* dist) {
     const int E = graph_const.E;
     const auto e = threadIdx.x + blockDim.x * blockIdx.x; // NOLINT(readability-static-accessed-through-instance)
 
@@ -73,22 +73,22 @@ __global__ void bellman_ford_kernel(int* dist) {
     }
     const auto weights = graph_const.weights;
     const auto edges = graph_const.edge_array;
-    const int u = edges[e].u;
-    const int v = edges[e].v;
-    const int new_dist = weights[e] + dist[u];
+    const auto u = edges[e].u;
+    const auto v = edges[e].v;
+    const auto new_dist = weights[e] + dist[u];
     // Make ATOMIC
     if (dist[u] != INT_MAX && new_dist < dist[v]) {
         atomicExch(&dist[v], new_dist); // Needs to have conditional be atomic too
     }
 }
 
-__host__ bool bellman_ford_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<int>& dist, int s) {
+__host__ bool bellman_ford_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<float>& dist, int s) {
     const int E = gr.E;
 
     std::fill(dist.begin(), dist.end(), INT_MAX);
     dist[s] = 0;
 
-    RAIIDeviceMemory<int> device_dist{ dist };
+    RAIIDeviceMemory<float> device_dist{ dist };
 
     const int blocks = (E + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     bellman_ford_kernel<<<blocks, THREADS_PER_BLOCK>>>(device_dist.data());
@@ -106,7 +106,8 @@ __host__ bool bellman_ford_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_
     for (int i = 0; i < E; i++) {
         const auto [u, v] = edges[i];
         const int weight = weights[i];
-        if (dist[u] != INT_MAX && dist[u] + weight < dist[v]) {
+        if (dist[u] != std::numeric_limits<typename std::remove_reference_t<decltype(dist)>::value_type>::max()
+            && dist[u] + weight < dist[v]) {
             no_neg_cycle = false;
         }
     }
@@ -155,7 +156,7 @@ __host__ void johnson_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& 
     std::memcpy(bf_graph.edge_array.data(), gr.edge_array.data(), gr.E * sizeof(edge_t));
     std::memcpy(bf_graph.weights.data(), gr.weights.data(), gr.E * sizeof(int));
 
-    std::vector<int> h(bf_graph.V);
+    std::vector<float> h(bf_graph.V);
 
     if (bool r = bellman_ford_cuda(bf_graph, h, V); !r) {
         std::cerr << "\nNegative Cycles Detected! Terminating Early\n";
