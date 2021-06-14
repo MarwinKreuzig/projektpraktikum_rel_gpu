@@ -36,24 +36,25 @@ inline void gpuAssert(cudaError_t code, const char* file, int line) {
 namespace apsp {
 
 template <typename T>
+struct View {
+    using value_type = T;
+
+    [[nodiscard]] __modifier__ T* data() { return data_; }
+    [[nodiscard]] __modifier__ const T* data() const { return data_; }
+    [[nodiscard]] __modifier__ size_t size() const { return size_; }
+    [[nodiscard]] __modifier__ size_t size_bytes() const { return size_ * sizeof(T); }
+
+    [[nodiscard]] __modifier__ T& operator[](size_t i) { return data()[i]; }
+    [[nodiscard]] __modifier__ const T& operator[](size_t i) const { return data()[i]; }
+
+    T* data_;
+    size_t size_;
+};
+
+template <typename T>
 class RAIIDeviceMemory {
 public:
     using value_type = T;
-
-    struct View {
-        using value_type = T;
-
-        [[nodiscard]] __modifier__ T* data() { return data_; }
-        [[nodiscard]] __modifier__ const T* data() const { return data_; }
-        [[nodiscard]] __modifier__ size_t size() const { return size_; }
-        [[nodiscard]] __modifier__ size_t size_bytes() const { return size_ * sizeof(T); }
-
-        [[nodiscard]] __modifier__ T& operator[](size_t i) { return data()[i]; }
-        [[nodiscard]] __modifier__ const T& operator[](size_t i) const { return data()[i]; }
-
-        T* data_;
-        size_t size_;
-    };
 
     RAIIDeviceMemory() = default;
 
@@ -90,7 +91,7 @@ public:
     [[nodiscard]] T& operator[](size_t i) { return data()[i]; }
     [[nodiscard]] const T& operator[](size_t i) const { return data()[i]; }
 
-    [[nodiscard]] operator View() { return { data(), size() }; }
+    [[nodiscard]] operator View<T>() { return { data(), size() }; }
 
     void reallocate(size_t num) {
         gpuErrchk(cudaFree(data_));
@@ -110,7 +111,6 @@ private:
     T* data_{};
     size_t size_{};
 };
-
 template <typename T, typename U>
 void copy(T& dst, const U& src, cudaMemcpyKind kind) {
     using dst_type = typename T::value_type;

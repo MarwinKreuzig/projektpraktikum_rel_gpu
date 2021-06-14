@@ -12,7 +12,7 @@
 
 namespace apsp {
 
-__constant__ graph_cuda_t<RAIIDeviceMemory<int>::View, RAIIDeviceMemory<edge_t>::View> graph_const;
+__constant__ graph_cuda_t<View<int>, View<edge_t>> graph_const;
 
 __forceinline__
     __device__ int
@@ -28,7 +28,7 @@ __forceinline__
     return min_index;
 }
 
-__global__ void dijkstra_kernel(RAIIDeviceMemory<int>::View output, RAIIDeviceMemory<char>::View visited_global) {
+__global__ void dijkstra_kernel(View<int> output, View<char> visited_global) {
     const auto s = blockIdx.x * blockDim.x + threadIdx.x; // NOLINT(readability-static-accessed-through-instance)
     const int V = graph_const.V;
 
@@ -134,7 +134,7 @@ __host__ void johnson_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& 
     // Needed to run dijkstra
     auto device_visited = RAIIDeviceMemory<char>(V * V);
 
-    auto graph_params = graph_cuda_t<RAIIDeviceMemory<int>::View, RAIIDeviceMemory<edge_t>::View>{
+    auto graph_params = graph_cuda_t<View<int>, View<edge_t>>{
         V,
         E,
         device_starts,
