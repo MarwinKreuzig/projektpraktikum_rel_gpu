@@ -118,8 +118,8 @@ void Graph::calculate_metrics(std::ostream& os) {
     os << "Calculating different metrics\n";
 
     os << "There are " << get_num_vertices() << " many vertices and " << get_num_edges() << " many edges in the graph\n";
-    std::pair<int, int> min_max = min_max_degree();
-    os << "The minimum number of edges is: " << min_max.first << " and the maximum is: " << min_max.second << "\n";
+    const auto [min, max] = min_max_degree();
+    os << "The minimum number of edges is: " << min << " and the maximum is: " << max << "\n";
 
     os << "Calculating average euclidean distance...\n";
     const double avg_eucl_dist = calculate_average_euclidean_distance();

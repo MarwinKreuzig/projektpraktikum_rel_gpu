@@ -83,7 +83,6 @@ __global__ void bellman_ford_kernel(int* dist) {
 }
 
 __host__ bool bellman_ford_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<int>& dist, int s) {
-    const int V = gr.V;
     const int E = gr.E;
 
     std::fill(dist.begin(), dist.end(), INT_MAX);
@@ -92,9 +91,7 @@ __host__ bool bellman_ford_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_
     RAIIDeviceMemory<int> device_dist{ dist };
 
     const int blocks = (E + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-    for (int i = 1; i <= V - 1; i++) {
-        bellman_ford_kernel<<<blocks, THREADS_PER_BLOCK>>>(device_dist.data());
-    }
+    bellman_ford_kernel<<<blocks, THREADS_PER_BLOCK>>>(device_dist.data());
 
     copy(dist, device_dist, cudaMemcpyDeviceToHost);
 
@@ -147,7 +144,6 @@ __host__ void johnson_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& 
     cudaMemcpyToSymbol(graph_const, &graph_params, sizeof(decltype(graph_params)));
     // End initialization
 
-    // errors on destruction
     auto bf_graph = graph_cuda_t<std::vector<int>, std::vector<edge_t>>{
         V + 1,
         E,
