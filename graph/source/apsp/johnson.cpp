@@ -72,7 +72,7 @@ void johnson_parallel(graph_t& gr, std::vector<double>& output) {
 #pragma omp parallel for
 #endif
     for (int e = 0; e < V; e++) {
-        bf_graph.edge_array[e + gr.E] = Edge(V, e);
+        bf_graph.edge_array[e + gr.E] = APSP_Edge(V, e);
     }
 
     // Second, the Bellman–Ford algorithm is used, starting from the new vertex q,
@@ -96,7 +96,7 @@ void johnson_parallel(graph_t& gr, std::vector<double>& output) {
         gr.weights[e] = gr.weights[e] + h[u] - h[v];
     }
 
-    Graph G(gr.edge_array.begin(), gr.edge_array.end(), gr.weights.begin(), V);
+    APSP_Graph G(gr.edge_array.begin(), gr.edge_array.end(), gr.weights.begin(), V);
 
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
