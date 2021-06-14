@@ -13,15 +13,6 @@
 
 namespace apsp {
 
-#ifdef CUDA
-
-void set_edge(edge_t* edge, int u, int v) {
-    edge->u = u;
-    edge->v = v;
-}
-
-#endif
-
 static bool bellman_ford(const graph_t& gr, std::vector<double>& dist, int src) {
     const int& V = gr.V;
     const int& E = gr.E;
