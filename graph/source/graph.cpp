@@ -220,37 +220,7 @@ double Graph::calculate_average_euclidean_distance() {
 std::tuple<double, double> Graph::calculate_all_pairs_shortest_paths() {
     const auto num_neurons = get_num_vertices();
 
-    const auto [edge_begin_it, edge_end_it] = boost::edges(full_graph);
-
-    const auto E = boost::num_edges(full_graph);
-
-    std::vector<apsp::edge_t> cuda_edges(E);
-    std::transform(edge_begin_it, edge_end_it, cuda_edges.begin(), [](const auto& edge) {
-        return apsp::edge_t{ static_cast<int>(edge.m_source), static_cast<int>(edge.m_target) };
-    });
-
-    const auto weight_map = boost::get(&EdgeProperties::weight, full_graph);
-
-    std::vector<int> weights{};
-    std::transform(edge_begin_it, edge_end_it, std::back_inserter(weights), [&](const auto& edge) {
-        return weight_map(edge);
-    });
-
-    auto edge_array = std::vector<apsp::edge_t>(E);
-    auto starts = std::vector<int>(num_neurons + 1); // Starting point for each edge
-    std::iota(starts.begin(), starts.end(), 0);
-
-    apsp::graph_cuda_t<std::vector<int>, std::vector<apsp::edge_t>> graph{
-        static_cast<int>(num_neurons),
-        static_cast<int>(E),
-        std::move(starts),
-        std::move(weights),
-        std::move(cuda_edges)
-    };
-
-    std::vector<double> distances(num_neurons * num_neurons);
-
-    apsp::johnson_cuda(graph, distances);
+    const auto distances = apsp::johnson(full_graph, num_neurons);
 
     size_t number_values = 0;
 

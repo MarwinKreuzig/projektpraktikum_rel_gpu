@@ -46,8 +46,68 @@ struct graph_cuda_t {
     U edge_array;
 };
 
+#if USE_CUDA
 void johnson_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<double>& output);
+#else
+inline void johnson_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& /* gr */, std::vector<double>& /* output */) { }
+#endif
 
-void johnson_parallel(graph_t& gr, std::vector<int>& output);
+void johnson_parallel(graph_t& gr, std::vector<double>& output);
+
+inline std::vector<double> johnson(typename Graph::FullGraph full_graph, const size_t num_neurons) {
+    const auto [edge_begin_it, edge_end_it] = boost::edges(full_graph);
+
+    const auto E = boost::num_edges(full_graph);
+
+    const auto weight_map = boost::get(&Graph::EdgeProperties::weight, full_graph);
+
+    std::vector<int> weights{};
+    std::transform(edge_begin_it, edge_end_it, std::back_inserter(weights), [&](const auto& edge) {
+        return weight_map(edge);
+    });
+
+    if constexpr (USE_CUDA) {
+        std::vector<edge_t> cuda_edges(E);
+        std::transform(edge_begin_it, edge_end_it, cuda_edges.begin(), [](const auto& edge) {
+            return edge_t{ static_cast<int>(edge.m_source), static_cast<int>(edge.m_target) };
+        });
+
+        auto edge_array = std::vector<edge_t>(E);
+        auto starts = std::vector<int>(num_neurons + 1); // Starting point for each edge
+        std::iota(starts.begin(), starts.end(), 0);
+
+        graph_cuda_t<std::vector<int>, std::vector<edge_t>> graph{
+            static_cast<int>(num_neurons),
+            static_cast<int>(E),
+            std::move(starts),
+            std::move(weights),
+            std::move(cuda_edges)
+        };
+
+        std::vector<double> distances(num_neurons * num_neurons);
+
+        johnson_cuda(graph, distances);
+        return distances;
+    } else {
+        std::vector<APSP_Edge> edges(E);
+        std::transform(edge_begin_it, edge_end_it, edges.begin(), [](const auto& edge) {
+            return APSP_Edge{ static_cast<int>(edge.m_source), static_cast<int>(edge.m_target) };
+        });
+
+        auto edge_array = std::vector<edge_t>(E);
+
+        graph_t graph{
+            static_cast<int>(num_neurons),
+            static_cast<int>(E),
+            std::move(weights),
+            std::move(edges)
+        };
+
+        std::vector<double> distances(num_neurons * num_neurons);
+
+        johnson_parallel(graph, distances);
+        return distances;
+    }
+}
 
 } // namespace apsp
