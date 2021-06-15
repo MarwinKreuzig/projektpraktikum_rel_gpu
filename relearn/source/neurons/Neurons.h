@@ -408,7 +408,7 @@ private:
     [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, int root, const std::vector<char>& disable_flags) const;
 
     template <typename T>
-    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::vector<T>& local_values, size_t num_local_values, size_t total_num_values, int root) const {
+    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::vector<T>& local_values, int root, const std::vector<char>& disable_flags) const {
         std::vector<double> converted_values;
         converted_values.reserve(local_values.size());
 
@@ -416,7 +416,7 @@ private:
             converted_values.emplace_back(static_cast<double>(value));
         }
 
-        return global_statistics(converted_values, num_local_values, total_num_values, root);
+        return global_statistics(converted_values, root, disable_flags);
     }
 
     [[nodiscard]] size_t delete_synapses();
