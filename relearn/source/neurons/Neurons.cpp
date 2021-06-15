@@ -16,6 +16,7 @@
 #include "../structure/Partition.h"
 #include "../util/Random.h"
 #include "../util/Timers.h"
+#include "../util/Utility.h"
 #include "NetworkGraph.h"
 #include "helper/RankNeuronId.h"
 #include "models/NeuronModels.h"
@@ -216,20 +217,16 @@ void Neurons::update_calcium() {
     GlobalTimers::timers.stop_and_add(TimerRegion::CALC_ACTIVITY);
 }
 
-Neurons::StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root) const {
+Neurons::StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, int root, const std::vector<char>& disable_flags) const {
     const auto scope = MPIWrapper::Scope::global;
 
-    const double my_avg = std::accumulate(local_values.begin(), local_values.end(), 0.0)
-        / total_num_values;
-
-    // Get global min and max at rank "root"
-    const auto [d_my_min, d_my_max] = [&]() -> std::tuple<double, double> {
-        const auto result = std::minmax_element(local_values.begin(), local_values.end());
-        return { static_cast<double>(*result.first), static_cast<double>(*result.second) };
-    }();
+    const auto [d_my_min, d_my_max, d_my_acc, d_num_values] = Util::min_max_acc(local_values, disable_flags);
+    const double my_avg = d_my_acc / d_num_values;
 
     const double d_min = MPIWrapper::reduce(d_my_min, MPIWrapper::ReduceFunction::min, root, scope);
     const double d_max = MPIWrapper::reduce(d_my_max, MPIWrapper::ReduceFunction::max, root, scope);
+
+    const double num_values = MPIWrapper::all_reduce(d_num_values, MPIWrapper::ReduceFunction::sum, scope);
 
     // Get global avg at all ranks (needed for variance)
     const double avg = MPIWrapper::all_reduce(my_avg, MPIWrapper::ReduceFunction::sum, scope);
@@ -239,9 +236,13 @@ Neurons::StatisticalMeasures Neurons::global_statistics(const std::vector<double
 	*/
     double my_var = 0;
     for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+        if (disable_flags[neuron_id] == 0) {
+            continue;
+        }
+
         my_var += (local_values[neuron_id] - avg) * (local_values[neuron_id] - avg);
     }
-    my_var /= total_num_values;
+    my_var /= num_values;
 
     // Get global variance at rank "root"
     const double var = MPIWrapper::reduce(my_var, MPIWrapper::ReduceFunction::sum, root, scope);
@@ -1170,11 +1171,11 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
     const auto total_num_neurons = partition->get_total_num_neurons();
 
-    const StatisticalMeasures& calcium_statistics = global_statistics(calcium, num_neurons, total_num_neurons, 0);
-    const StatisticalMeasures& activity_statistics = global_statistics(neuron_model->get_x(), num_neurons, total_num_neurons, 0);
-    const StatisticalMeasures& axons_statistics = global_statistics(axons->get_cnts(), num_neurons, total_num_neurons, 0);
-    //const StatisticalMeasures& axons_conn_statistics = global_statistics_integral(axons->get_connected_cnts(), num_neurons, total_num_neurons, 0);
-    const StatisticalMeasures& axons_free_statistics = global_statistics(axons->get_vacant_cnts(), num_neurons, total_num_neurons, 0);
+    const StatisticalMeasures& calcium_statistics = global_statistics(calcium, 0, disable_flags);
+    const StatisticalMeasures& activity_statistics = global_statistics(neuron_model->get_x(), 0, disable_flags);
+    const StatisticalMeasures& axons_statistics = global_statistics(axons->get_cnts(), 0, disable_flags);
+    //const StatisticalMeasures& axons_conn_statistics = global_statistics_integral(axons->get_connected_cnts(), 0, disable_flags0);
+    const StatisticalMeasures& axons_free_statistics = global_statistics(axons->get_vacant_cnts(), 0, disable_flags);
 
     if (0 != MPIWrapper::get_my_rank()) {
         // All ranks must compute the statistics, but only one should print them

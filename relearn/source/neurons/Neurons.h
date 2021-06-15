@@ -405,7 +405,7 @@ public:
 private:
     void update_calcium();
 
-    [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, [[maybe_unused]] size_t num_local_values, size_t total_num_values, int root) const;
+    [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, int root, const std::vector<char>& disable_flags) const;
 
     template <typename T>
     [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::vector<T>& local_values, size_t num_local_values, size_t total_num_values, int root) const {
