@@ -1279,6 +1279,10 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
     const StatisticalMeasures& axons_statistics = global_statistics(axons->get_cnts(), num_neurons, total_num_neurons, 0);
     //const StatisticalMeasures& axons_conn_statistics = global_statistics_integral(axons->get_connected_cnts(), num_neurons, total_num_neurons, 0);
     const StatisticalMeasures& axons_free_statistics = global_statistics(axons->get_vacant_cnts(), num_neurons, total_num_neurons, 0);
+    const StatisticalMeasures& dendrites_ex_statistics = global_statistics(dendrites_exc->get_cnts(), num_neurons, total_num_neurons, 0);
+    const StatisticalMeasures& dendrites_ex_free_statistics = global_statistics(dendrites_exc->get_vacant_cnts(), num_neurons, total_num_neurons, 0);
+    const StatisticalMeasures& dendrites_in_statistics = global_statistics(dendrites_inh->get_cnts(), num_neurons, total_num_neurons, 0);
+    const StatisticalMeasures& dendrites_in_free_statistics = global_statistics(dendrites_inh->get_vacant_cnts(), num_neurons, total_num_neurons, 0);
 
     if (0 != MPIWrapper::get_my_rank()) {
         // All ranks must compute the statistics, but only one should print them
@@ -1308,6 +1312,10 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
            << std::setw(cwidth) << "\t Activity"
            << std::setw(cwidth) << "\t Axons"
            << std::setw(cwidth) << "\t Axons free"
+           << std::setw(cwidth) << "\t Dendrites_ex"
+           << std::setw(cwidth) << "\t Dendrites_ex free"
+           << std::setw(cwidth) << "\t Dendrites_in"
+           << std::setw(cwidth) << "\t Dendrites_in free"
            << "\n";
         ss << std::left
            << std::setw(12) << "# step"
@@ -1331,6 +1339,26 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
            << std::setw(6 + Constants::print_precision) << std::right << "f-Ax-max,"
            << std::setw(6 + Constants::print_precision) << std::right << "f-Ax-var,"
            << std::setw(5 + Constants::print_precision) << std::right << "f-Ax-std_dev" << '\t'
+           << std::setw(5 + Constants::print_precision) << std::right << "DendEx-avg,"
+           << std::setw(6 + Constants::print_precision) << std::right << "DendEx-min,"
+           << std::setw(6 + Constants::print_precision) << std::right << "DendEx-max,"
+           << std::setw(6 + Constants::print_precision) << std::right << "DendEx-var,"
+           << std::setw(5 + Constants::print_precision) << std::right << "DendEx-std_dev" << '\t'
+           << std::setw(5 + Constants::print_precision) << std::right << "f-DendEx-avg,"
+           << std::setw(6 + Constants::print_precision) << std::right << "f-DendEx-min,"
+           << std::setw(6 + Constants::print_precision) << std::right << "f-DendEx-max,"
+           << std::setw(6 + Constants::print_precision) << std::right << "f-DendEx-var,"
+           << std::setw(5 + Constants::print_precision) << std::right << "f-DendEx-std_dev" << '\t'
+           << std::setw(5 + Constants::print_precision) << std::right << "DendIn-avg,"
+           << std::setw(6 + Constants::print_precision) << std::right << "DendIn-min,"
+           << std::setw(6 + Constants::print_precision) << std::right << "DendIn-max,"
+           << std::setw(6 + Constants::print_precision) << std::right << "DendIn-var,"
+           << std::setw(5 + Constants::print_precision) << std::right << "DendIn-std_dev" << '\t'
+           << std::setw(5 + Constants::print_precision) << std::right << "f-DendIn-avg,"
+           << std::setw(6 + Constants::print_precision) << std::right << "f-DendIn-min,"
+           << std::setw(6 + Constants::print_precision) << std::right << "f-DendIn-max,"
+           << std::setw(6 + Constants::print_precision) << std::right << "f-DendIn-var,"
+           << std::setw(5 + Constants::print_precision) << std::right << "f-DendIn-std_dev" << '\t'
            << "\n";
     }
 
@@ -1343,6 +1371,14 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
     print_statistics(axons_statistics);
     ss << '\t';
     print_statistics(axons_free_statistics);
+    ss << '\t';
+    print_statistics(dendrites_ex_statistics);
+    ss << '\t';
+    print_statistics(dendrites_ex_free_statistics);
+    ss << '\t';
+    print_statistics(dendrites_in_statistics);
+    ss << '\t';
+    print_statistics(dendrites_in_free_statistics);
     ss << "\n";
 
     LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, ss.str(), false);
