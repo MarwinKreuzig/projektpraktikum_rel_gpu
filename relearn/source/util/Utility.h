@@ -35,7 +35,7 @@ std::tuple<T, T, T, size_t> min_max_acc(const std::vector<T>& values, const std:
     size_t num_values = 1;
 
     for (auto i = first_index + 1; i < values.size(); i++) {
-        if (disable_flags[neuron_id] == 0) {
+        if (disable_flags[i] == 0) {
             continue;
         }
 

@@ -158,9 +158,8 @@ std::vector<OctreeNode*> extract_branch_nodes(OctreeNode* root) {
     return return_value;
 }
 
-namespace TestCell {
 
-TEST_F(RelearnTest, testCellSize) {
+TEST_F(OctreeTest, testCellSize) {
 
     for (auto i = 0; i < iterations; i++) {
         Cell cell{};
@@ -191,7 +190,7 @@ TEST_F(RelearnTest, testCellSize) {
     }
 }
 
-TEST_F(RelearnTest, testCellPosition) {
+TEST_F(OctreeTest, testCellPosition) {
 
     for (auto i = 0; i < iterations; i++) {
         Cell cell{};
@@ -260,7 +259,7 @@ TEST_F(RelearnTest, testCellPosition) {
     }
 }
 
-TEST_F(RelearnTest, testCellPositionException) {
+TEST_F(OctreeTest, testCellPositionException) {
 
     for (auto i = 0; i < iterations; i++) {
         Cell cell{};
@@ -377,7 +376,7 @@ TEST_F(RelearnTest, testCellPositionException) {
     }
 }
 
-TEST_F(RelearnTest, testCellPositionCombined) {
+TEST_F(OctreeTest, testCellPositionCombined) {
 
     for (auto i = 0; i < iterations; i++) {
         Cell cell{};
@@ -437,7 +436,7 @@ TEST_F(RelearnTest, testCellPositionCombined) {
     }
 }
 
-TEST_F(RelearnTest, testCellSetNumDendrites) {
+TEST_F(OctreeTest, testCellSetNumDendrites) {
 
     std::uniform_int_distribution<unsigned int> uid(0, 1000);
 
@@ -468,7 +467,7 @@ TEST_F(RelearnTest, testCellSetNumDendrites) {
     }
 }
 
-TEST_F(RelearnTest, testCellSetNeuronId) {
+TEST_F(OctreeTest, testCellSetNeuronId) {
 
     std::uniform_int_distribution<size_t> uid(0, 1000);
 
@@ -485,7 +484,7 @@ TEST_F(RelearnTest, testCellSetNeuronId) {
     }
 }
 
-TEST_F(RelearnTest, testCellOctants) {
+TEST_F(OctreeTest, testCellOctants) {
 
     for (auto i = 0; i < iterations; i++) {
         Cell cell{};
@@ -520,7 +519,7 @@ TEST_F(RelearnTest, testCellOctants) {
     }
 }
 
-TEST_F(RelearnTest, testCellOctantsException) {
+TEST_F(OctreeTest, testCellOctantsException) {
 
     for (auto i = 0; i < iterations; i++) {
         Cell cell{};
@@ -548,7 +547,7 @@ TEST_F(RelearnTest, testCellOctantsException) {
     }
 }
 
-TEST_F(RelearnTest, testCellOctantsSize) {
+TEST_F(OctreeTest, testCellOctantsSize) {
 
     for (auto i = 0; i < iterations; i++) {
         Cell cell{};
@@ -597,11 +596,8 @@ TEST_F(RelearnTest, testCellOctantsSize) {
     }
 }
 
-}
 
-namespace TestOctreeNode {
-
-TEST_F(RelearnTest, testOctreeNodeReset) {
+TEST_F(OctreeTest, testOctreeNodeReset) {
 
     OctreeNode node{};
 
@@ -647,7 +643,7 @@ TEST_F(RelearnTest, testOctreeNodeReset) {
     }
 }
 
-TEST_F(RelearnTest, testOctreeNodeSetterGetter) {
+TEST_F(OctreeTest, testOctreeNodeSetterGetter) {
 
     OctreeNode node{};
 
@@ -698,7 +694,7 @@ TEST_F(RelearnTest, testOctreeNodeSetterGetter) {
     }
 }
 
-TEST_F(RelearnTest, testOctreeNodeLocal) {
+TEST_F(OctreeTest, testOctreeNodeLocal) {
 
     OctreeNode node{};
 
@@ -722,7 +718,7 @@ TEST_F(RelearnTest, testOctreeNodeLocal) {
     }
 }
 
-TEST_F(RelearnTest, testOctreeNodeSetterCell) {
+TEST_F(OctreeTest, testOctreeNodeSetterCell) {
 
     OctreeNode node{};
 
@@ -789,7 +785,7 @@ TEST_F(RelearnTest, testOctreeNodeSetterCell) {
     }
 }
 
-TEST_F(RelearnTest, testOctreeNodeInsert) {
+TEST_F(OctreeTest, testOctreeNodeInsert) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -843,11 +839,8 @@ TEST_F(RelearnTest, testOctreeNodeInsert) {
     }
 }
 
-}
 
-namespace TestOctree {
-
-TEST_F(RelearnTest, testOctreeConstructor) {
+TEST_F(OctreeTest, testOctreeConstructor) {
 
     std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
@@ -946,7 +939,7 @@ TEST_F(RelearnTest, testOctreeConstructor) {
     }
 }
 
-TEST_F(RelearnTest, testOctreeConstructorExceptions) {
+TEST_F(OctreeTest, testOctreeConstructorExceptions) {
 
     std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
@@ -1003,7 +996,7 @@ TEST_F(RelearnTest, testOctreeConstructorExceptions) {
     }
 }
 
-TEST_F(RelearnTest, testOctreeSetterGetter) {
+TEST_F(OctreeTest, testOctreeSetterGetter) {
 
     std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
@@ -1050,7 +1043,7 @@ TEST_F(RelearnTest, testOctreeSetterGetter) {
     }
 }
 
-TEST_F(RelearnTest, testOctreeSetterGetterExceptions) {
+TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
 
     std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
@@ -1112,7 +1105,7 @@ TEST_F(RelearnTest, testOctreeSetterGetterExceptions) {
     }
 }
 
-TEST_F(RelearnTest, testOctreeInsertNeurons) {
+TEST_F(OctreeTest, testOctreeInsertNeurons) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -1158,7 +1151,7 @@ TEST_F(RelearnTest, testOctreeInsertNeurons) {
     }
 }
 
-TEST_F(RelearnTest, testOctreeInsertNeuronsExceptions) {
+TEST_F(OctreeTest, testOctreeInsertNeuronsExceptions) {
 
     std::uniform_int_distribution<size_t> uid_lvl(0, 6);
     std::uniform_int_distribution<int> uid_rank(0, 1000);
@@ -1208,7 +1201,7 @@ TEST_F(RelearnTest, testOctreeInsertNeuronsExceptions) {
     }
 }
 
-TEST_F(RelearnTest, testOctreeStructure) {
+TEST_F(OctreeTest, testOctreeStructure) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -1294,7 +1287,7 @@ TEST_F(RelearnTest, testOctreeStructure) {
     }
 }
 
-TEST_F(RelearnTest, testOctreeLocalTrees) {
+TEST_F(OctreeTest, testOctreeLocalTrees) {
 
     std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
@@ -1348,7 +1341,7 @@ TEST_F(RelearnTest, testOctreeLocalTrees) {
     }
 }
 
-TEST_F(RelearnTest, testOctreeInsertLocalTree) {
+TEST_F(OctreeTest, testOctreeInsertLocalTree) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     std::uniform_int_distribution<size_t> uid_lvl(0, 6);
@@ -1469,6 +1462,4 @@ TEST_F(RelearnTest, testOctreeInsertLocalTree) {
             delete nodes_to_save_new_local_trees[i];
         }
     }
-}
-
 }

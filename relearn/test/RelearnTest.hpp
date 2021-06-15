@@ -18,6 +18,21 @@
 #include <random>
 
 class RelearnTest : public ::testing::Test {
+private:
+    static void init() {
+        static bool initialized = false;
+
+        if (initialized) {
+            return;
+        }
+
+        initialized = true;
+
+        char* argument = (char*)"./runTests";
+        MPIWrapper::init(1, &argument);
+        MPIWrapper::init_buffer_octree(1);
+    }
+
 protected:
     std::mt19937 mt;
 
@@ -25,16 +40,12 @@ protected:
         RelearnException::hide_messages = true;
         LogFiles::disable = true;
 
-        char* argument = (char*)"./runTests";
-        MPIWrapper::init(1, &argument);
-        MPIWrapper::init_buffer_octree(1);
+        init();
     }
 
     static void TearDownTestCase() {
         RelearnException::hide_messages = false;
         LogFiles::disable = false;
-
-        MPIWrapper::finalize();
     }
 
     void SetUp() override {
@@ -63,4 +74,31 @@ protected:
 
     constexpr static bool use_predetermined_seed = false;
     constexpr static unsigned int predetermined_seed = 3622374920;
+};
+
+class NetworkGraphTest : public RelearnTest {
+};
+
+class NeuronAssignmentTest : public RelearnTest {
+};
+
+class NeuronModelsTest : public RelearnTest {
+};
+
+class NeuronsTest : public RelearnTest {
+};
+
+class OctreeTest : public RelearnTest {
+};
+
+class PartitionTest : public RelearnTest {
+
+};
+
+class SynapticElementsTest : public RelearnTest {
+
+};
+
+class VectorTest : public RelearnTest {
+
 };

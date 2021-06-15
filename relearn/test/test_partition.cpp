@@ -11,8 +11,6 @@
 constexpr const int upper_bound_my_rank = 32;
 constexpr const int upper_bound_num_ranks = 32;
 
-namespace TestPartition {
-
 size_t round_to_next_exponent(size_t numToRound, size_t exponent) {
     auto log = std::log(static_cast<double>(numToRound)) / std::log(static_cast<double>(exponent));
     auto rounded_exp = std::ceil(log);
@@ -20,7 +18,7 @@ size_t round_to_next_exponent(size_t numToRound, size_t exponent) {
     return static_cast<size_t>(new_val);
 }
 
-TEST_F(RelearnTest, test_partition_constructor_arguments) {
+TEST_F(PartitionTest, test_partition_constructor_arguments) {
     std::uniform_int_distribution<size_t> uid_my_rank(0, upper_bound_my_rank);
     std::uniform_int_distribution<size_t> uid_num_ranks(0, upper_bound_num_ranks);
 
@@ -39,7 +37,7 @@ TEST_F(RelearnTest, test_partition_constructor_arguments) {
         }
     }
 }
-TEST_F(RelearnTest, test_partition_constructor) {
+TEST_F(PartitionTest, test_partition_constructor) {
     std::uniform_int_distribution<size_t> uid_num_ranks(1, upper_bound_num_ranks);
 
     for (auto i = 0; i < iterations; i++) {
@@ -77,4 +75,3 @@ TEST_F(RelearnTest, test_partition_constructor) {
     }
 }
 
-} //namespace TestPartition

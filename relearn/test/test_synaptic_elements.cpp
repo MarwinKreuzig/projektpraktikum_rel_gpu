@@ -13,9 +13,7 @@
 
 constexpr const size_t upper_bound_num_neurons = 10000;
 
-namespace TestSynapticElements {
-
-TEST_F(RelearnTest, testSynapticElementsConstructor) {
+TEST_F(SynapticElementsTest, testSynapticElementsConstructor) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
@@ -61,7 +59,7 @@ TEST_F(RelearnTest, testSynapticElementsConstructor) {
     }
 }
 
-TEST_F(RelearnTest, testSynapticElementsConstructorException) {
+TEST_F(SynapticElementsTest, testSynapticElementsConstructorException) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
@@ -158,7 +156,7 @@ TEST_F(RelearnTest, testSynapticElementsConstructorException) {
     }
 }
 
-TEST_F(RelearnTest, testSynapticElementsParameters) {
+TEST_F(SynapticElementsTest, testSynapticElementsParameters) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
@@ -213,7 +211,7 @@ TEST_F(RelearnTest, testSynapticElementsParameters) {
     }
 }
 
-TEST_F(RelearnTest, testSynapticElementsUpdate) {
+TEST_F(SynapticElementsTest, testSynapticElementsUpdate) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
@@ -296,7 +294,7 @@ TEST_F(RelearnTest, testSynapticElementsUpdate) {
     }
 }
 
-TEST_F(RelearnTest, testSynapticElementsMultipleUpdate) {
+TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
@@ -358,6 +356,4 @@ TEST_F(RelearnTest, testSynapticElementsMultipleUpdate) {
             ASSERT_EQ(golden_signal_types[neuron_id], types[neuron_id]);
         }
     }
-}
-
 }

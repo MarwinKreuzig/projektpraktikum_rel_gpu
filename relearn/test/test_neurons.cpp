@@ -17,9 +17,7 @@
 #include <tuple>
 #include <vector>
 
-namespace TestNeurons {
-
-TEST_F(RelearnTest, testNeuronsConstructor) {
+TEST_F(NeuronsTest, testNeuronsConstructor) {
     auto partition = std::make_shared<Partition>(1, 0);
 
     auto model = std::make_unique<models::PoissonModel>();
@@ -27,11 +25,7 @@ TEST_F(RelearnTest, testNeuronsConstructor) {
     Neurons neurons{ partition, std::move(model) };
 }
 
-}
-
-namespace TestNeuronRankId {
-
-TEST_F(RelearnTest, testNeuronRankIdValid) {
+TEST_F(NeuronsTest, testNeuronRankIdValid) {
     for (auto it = 0; it < iterations; it++) {
         std::uniform_int_distribution<int> urd_rank(0, 100);
         std::uniform_int_distribution<size_t> urd_id(0, Constants::uninitialized - 1);
@@ -48,7 +42,7 @@ TEST_F(RelearnTest, testNeuronRankIdValid) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronRankIdInvalidRank) {
+TEST_F(NeuronsTest, testNeuronRankIdInvalidRank) {
     for (auto it = 0; it < iterations; it++) {
         std::uniform_int_distribution<int> urd_rank(-1000000, -1);
         std::uniform_int_distribution<size_t> urd_id(0, Constants::uninitialized - 1);
@@ -65,7 +59,7 @@ TEST_F(RelearnTest, testNeuronRankIdInvalidRank) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronRankIdInvalidId) {
+TEST_F(NeuronsTest, testNeuronRankIdInvalidId) {
     for (auto it = 0; it < iterations; it++) {
         std::uniform_int_distribution<int> urd_rank(0, 100);
         std::uniform_int_distribution<size_t> urd_id(0, Constants::uninitialized - 1);
@@ -82,7 +76,7 @@ TEST_F(RelearnTest, testNeuronRankIdInvalidId) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronRankIdEquality) {
+TEST_F(NeuronsTest, testNeuronRankIdEquality) {
     for (auto it = 0; it < iterations; it++) {
         std::uniform_int_distribution<int> urd_rank(0, 10);
         std::uniform_int_distribution<size_t> urd_id(0, 500);
@@ -104,6 +98,4 @@ TEST_F(RelearnTest, testNeuronRankIdEquality) {
             }
         }
     }
-}
-
 }

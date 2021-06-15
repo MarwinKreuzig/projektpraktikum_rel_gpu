@@ -55,9 +55,7 @@ std::vector<size_t> generate_random_ids(size_t id_low, size_t id_high, size_t nu
     return disable_ids;
 }
 
-namespace TestNeuronModels {
-
-TEST_F(RelearnTest, testNeuronModelsDefaultConstructorPoisson) {
+TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorPoisson) {
     using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
@@ -89,7 +87,7 @@ TEST_F(RelearnTest, testNeuronModelsDefaultConstructorPoisson) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsDefaultConstructorIzhikevich) {
+TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorIzhikevich) {
     using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
@@ -131,7 +129,7 @@ TEST_F(RelearnTest, testNeuronModelsDefaultConstructorIzhikevich) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsDefaultConstructorFitzHughNagumo) {
+TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorFitzHughNagumo) {
     using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
@@ -163,7 +161,7 @@ TEST_F(RelearnTest, testNeuronModelsDefaultConstructorFitzHughNagumo) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsDefaultConstructorAEIF) {
+TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorAEIF) {
     using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
@@ -207,7 +205,7 @@ TEST_F(RelearnTest, testNeuronModelsDefaultConstructorAEIF) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsRandomConstructorPoisson) {
+TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorPoisson) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
@@ -254,7 +252,7 @@ TEST_F(RelearnTest, testNeuronModelsRandomConstructorPoisson) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsRandomConstructorIzhikevich) {
+TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorIzhikevich) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
@@ -316,7 +314,7 @@ TEST_F(RelearnTest, testNeuronModelsRandomConstructorIzhikevich) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsRandomConstructorFitzHughNagumo) {
+TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorFitzHughNagumo) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
@@ -363,7 +361,7 @@ TEST_F(RelearnTest, testNeuronModelsRandomConstructorFitzHughNagumo) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsRandomConstructorAEIF) {
+TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorAEIF) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
@@ -428,7 +426,7 @@ TEST_F(RelearnTest, testNeuronModelsRandomConstructorAEIF) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsClonePoisson) {
+TEST_F(NeuronModelsTest, testNeuronModelsClonePoisson) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
@@ -491,7 +489,7 @@ TEST_F(RelearnTest, testNeuronModelsClonePoisson) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsCloneIzhikevich) {
+TEST_F(NeuronModelsTest, testNeuronModelsCloneIzhikevich) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
@@ -574,7 +572,7 @@ TEST_F(RelearnTest, testNeuronModelsCloneIzhikevich) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsCloneFitzHughNagumo) {
+TEST_F(NeuronModelsTest, testNeuronModelsCloneFitzHughNagumo) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
@@ -637,7 +635,7 @@ TEST_F(RelearnTest, testNeuronModelsCloneFitzHughNagumo) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsCloneAEIF) {
+TEST_F(NeuronModelsTest, testNeuronModelsCloneAEIF) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
@@ -724,7 +722,7 @@ TEST_F(RelearnTest, testNeuronModelsCloneAEIF) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsCreatePoisson) {
+TEST_F(NeuronModelsTest, testNeuronModelsCreatePoisson) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
@@ -771,7 +769,7 @@ TEST_F(RelearnTest, testNeuronModelsCreatePoisson) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsCreateIzhikevich) {
+TEST_F(NeuronModelsTest, testNeuronModelsCreateIzhikevich) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
@@ -833,7 +831,7 @@ TEST_F(RelearnTest, testNeuronModelsCreateIzhikevich) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsCreateFitzHughNagumo) {
+TEST_F(NeuronModelsTest, testNeuronModelsCreateFitzHughNagumo) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
@@ -880,7 +878,7 @@ TEST_F(RelearnTest, testNeuronModelsCreateFitzHughNagumo) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsCreateAEIF) {
+TEST_F(NeuronModelsTest, testNeuronModelsCreateAEIF) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
@@ -945,7 +943,7 @@ TEST_F(RelearnTest, testNeuronModelsCreateAEIF) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsInitPoisson) {
+TEST_F(NeuronModelsTest, testNeuronModelsInitPoisson) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
@@ -1011,7 +1009,7 @@ TEST_F(RelearnTest, testNeuronModelsInitPoisson) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsInitIzhikevich) {
+TEST_F(NeuronModelsTest, testNeuronModelsInitIzhikevich) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
@@ -1087,7 +1085,7 @@ TEST_F(RelearnTest, testNeuronModelsInitIzhikevich) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsInitFitzHughNagumo) {
+TEST_F(NeuronModelsTest, testNeuronModelsInitFitzHughNagumo) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
@@ -1153,7 +1151,7 @@ TEST_F(RelearnTest, testNeuronModelsInitFitzHughNagumo) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsInitAEIF) {
+TEST_F(NeuronModelsTest, testNeuronModelsInitAEIF) {
     using namespace models;
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
@@ -1231,7 +1229,7 @@ TEST_F(RelearnTest, testNeuronModelsInitAEIF) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsCreateNeuronsPoisson) {
+TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsPoisson) {
     using namespace models;
 
     {
@@ -1298,7 +1296,7 @@ TEST_F(RelearnTest, testNeuronModelsCreateNeuronsPoisson) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsCreateNeuronsIzhikevich) {
+TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsIzhikevich) {
     using namespace models;
 
     {
@@ -1375,7 +1373,7 @@ TEST_F(RelearnTest, testNeuronModelsCreateNeuronsIzhikevich) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsCreateNeuronsFitzHughNagumo) {
+TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsFitzHughNagumo) {
     using namespace models;
 
     {
@@ -1442,7 +1440,7 @@ TEST_F(RelearnTest, testNeuronModelsCreateNeuronsFitzHughNagumo) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsCreateNeuronsAEIF) {
+TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsAEIF) {
     using namespace models;
 
     {
@@ -1521,7 +1519,7 @@ TEST_F(RelearnTest, testNeuronModelsCreateNeuronsAEIF) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsDisableFiredPoisson) {
+TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredPoisson) {
     using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
@@ -1575,7 +1573,7 @@ TEST_F(RelearnTest, testNeuronModelsDisableFiredPoisson) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsDisableFiredIzhikevich) {
+TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredIzhikevich) {
     using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
@@ -1639,7 +1637,7 @@ TEST_F(RelearnTest, testNeuronModelsDisableFiredIzhikevich) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsDisableFiredFitzHughNagumo) {
+TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredFitzHughNagumo) {
     using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
@@ -1693,7 +1691,7 @@ TEST_F(RelearnTest, testNeuronModelsDisableFiredFitzHughNagumo) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsDisableFiredAEIF) {
+TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredAEIF) {
     using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
@@ -1759,7 +1757,7 @@ TEST_F(RelearnTest, testNeuronModelsDisableFiredAEIF) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsUpdateActivityDisabledPoisson) {
+TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledPoisson) {
     using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
@@ -1854,7 +1852,7 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityDisabledPoisson) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsUpdateActivityDisabledIzhikevich) {
+TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledIzhikevich) {
     using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
@@ -1959,7 +1957,7 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityDisabledIzhikevich) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsUpdateActivityDisabledFitzHughNagumo) {
+TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledFitzHughNagumo) {
     using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
@@ -2054,7 +2052,7 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityDisabledFitzHughNagumo) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsUpdateActivityDisabledAEIF) {
+TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledAEIF) {
     using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
@@ -2161,7 +2159,7 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityDisabledAEIF) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisson) {
+TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisson) {
     using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
@@ -2267,7 +2265,7 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisson) {
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhikevich) {
+TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhikevich) {
     using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
@@ -2373,7 +2371,7 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhikevich)
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHughNagumo) {
+TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHughNagumo) {
     using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
@@ -2467,7 +2465,7 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHughNag
     }
 }
 
-TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) {
+TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) {
     using namespace models;
 
     for (auto i = 0; i < iterations; i++) {
@@ -2575,4 +2573,4 @@ TEST_F(RelearnTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) {
     }
 }
 
-}
+

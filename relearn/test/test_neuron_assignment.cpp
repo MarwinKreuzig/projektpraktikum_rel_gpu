@@ -102,8 +102,7 @@ bool operator<(const NeuronToSubdomainAssignment::Node& a, const NeuronToSubdoma
     return NeuronToSubdomainAssignment::Node::less()(a, b);
 }
 
-namespace TestRandomNeuronPlacement {
-TEST_F(RelearnTest, test_constructor) {
+TEST_F(NeuronAssignmentTest, test_constructor) {
     std::uniform_int_distribution<size_t> uid(1, 10000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -132,7 +131,7 @@ TEST_F(RelearnTest, test_constructor) {
     }
 }
 
-TEST_F(RelearnTest, test_lazily_fill) {
+TEST_F(NeuronAssignmentTest, test_lazily_fill) {
     std::uniform_int_distribution<size_t> uid(1, 10000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -168,7 +167,7 @@ TEST_F(RelearnTest, test_lazily_fill) {
     }
 }
 
-TEST_F(RelearnTest, test_lazily_fill_multiple) {
+TEST_F(NeuronAssignmentTest, test_lazily_fill_multiple) {
     std::uniform_int_distribution<size_t> uid(1, 10000);
     std::uniform_int_distribution<size_t> uid_fills(1, 10);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
@@ -213,7 +212,7 @@ TEST_F(RelearnTest, test_lazily_fill_multiple) {
     }
 }
 
-TEST_F(RelearnTest, test_lazily_fill_positions) {
+TEST_F(NeuronAssignmentTest, test_lazily_fill_positions) {
     std::uniform_int_distribution<size_t> uid(1, 10000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -276,7 +275,7 @@ TEST_F(RelearnTest, test_lazily_fill_positions) {
     }
 }
 
-TEST_F(RelearnTest, test_lazily_fill_positions_multiple_subdomains) {
+TEST_F(NeuronAssignmentTest, test_lazily_fill_positions_multiple_subdomains) {
     std::uniform_int_distribution<size_t> uid(1, 10000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -368,7 +367,7 @@ TEST_F(RelearnTest, test_lazily_fill_positions_multiple_subdomains) {
     }
 }
 
-TEST_F(RelearnTest, test_multiple_lazily_fill_positions_multiple_subdomains) {
+TEST_F(NeuronAssignmentTest, test_multiple_lazily_fill_positions_multiple_subdomains) {
     std::uniform_int_distribution<size_t> uid(1, 10000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -437,7 +436,7 @@ TEST_F(RelearnTest, test_multiple_lazily_fill_positions_multiple_subdomains) {
     }
 }
 
-TEST_F(RelearnTest, test_saving) {
+TEST_F(NeuronAssignmentTest, test_saving) {
     std::uniform_int_distribution<size_t> uid(1, 1000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -520,7 +519,7 @@ TEST_F(RelearnTest, test_saving) {
     }
 }
 
-TEST_F(RelearnTest, test_reloading) {
+TEST_F(NeuronAssignmentTest, test_reloading) {
     std::uniform_int_distribution<size_t> uid(1, 1000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -569,7 +568,7 @@ TEST_F(RelearnTest, test_reloading) {
     }
 }
 
-TEST_F(RelearnTest, test_reloading_multiple) {
+TEST_F(NeuronAssignmentTest, test_reloading_multiple) {
     std::uniform_int_distribution<size_t> uid(1, 1000);
     std::uniform_real_distribution<double> urd(0.0, 1.0);
 
@@ -663,7 +662,7 @@ TEST_F(RelearnTest, test_reloading_multiple) {
     }
 }
 
-TEST_F(RelearnTest, test_neuron_placement_store_and_load) {
+TEST_F(NeuronAssignmentTest, test_neuron_placement_store_and_load) {
     const std::string file{ "./test_output_positions_id.txt" };
 
     constexpr auto subdomain_id = 0;
@@ -716,4 +715,3 @@ TEST_F(RelearnTest, test_neuron_placement_store_and_load) {
         ASSERT_EQ(line1, line2);
     }
 }
-} //namespace TestRandomNeuronPlacement
