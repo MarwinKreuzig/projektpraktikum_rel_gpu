@@ -1365,19 +1365,19 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
     // Write data at step "step"
     ss << std::left << std::setw(12) << step << ",";
     print_statistics(calcium_statistics);
-    ss << ', \t';
+    ss << "," << '\t';
     print_statistics(activity_statistics);
-    ss << ', \t';
+    ss << "," << '\t';
     print_statistics(axons_statistics);
-    ss << ', \t';
+    ss << "," << '\t';
     print_statistics(axons_free_statistics);
-    ss << ', \t';
+    ss << "," << ',\t';
     print_statistics(dendrites_ex_statistics);
-    ss << ', \t';
+    ss << "," << '\t';
     print_statistics(dendrites_ex_free_statistics);
-    ss << ', \t';
+    ss << "," << '\t';
     print_statistics(dendrites_in_statistics);
-    ss << ', \t';
+    ss << "," << '\t';
     print_statistics(dendrites_in_free_statistics);
     ss << "\n";
 
