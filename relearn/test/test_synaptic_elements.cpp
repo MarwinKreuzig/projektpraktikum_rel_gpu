@@ -199,10 +199,10 @@ TEST_F(SynapticElementsTest, testSynapticElementsParameters) {
         const double d3 = urd_C(mt);
         const double d4 = urd_C(mt);
 
-        param_min_C.value() = d1;
-        param_target_C.value() = d2;
-        param_nu.value() = d3;
-        param_vacant.value() = d4;
+        param_min_C.set_value(d1);
+        param_target_C.set_value(d2);
+        param_nu.set_value(d3);
+        param_vacant.set_value(d4);
 
         ASSERT_EQ(param_min_C.value(), d1);
         ASSERT_EQ(param_target_C.value(), d2);

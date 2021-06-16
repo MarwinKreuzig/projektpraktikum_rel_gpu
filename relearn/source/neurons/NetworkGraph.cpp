@@ -625,18 +625,12 @@ void NetworkGraph::print(std::ostream& os, const std::unique_ptr<NeuronsExtraInf
 
         RankNeuronId rank_neuron_id{ my_rank, target_neuron_id };
 
-        const auto possible_global_target = informations->rank_neuron_id2glob_id(rank_neuron_id);
-        RelearnException::check(possible_global_target.has_value(), "ret is false");
-
-        const auto global_target = possible_global_target.value();
+        const auto global_target = informations->rank_neuron_id2glob_id(rank_neuron_id);
 
         for (auto it_in_edge = in_edges.cbegin(); it_in_edge != in_edges.cend(); ++it_in_edge) {
             RankNeuronId tmp_rank_neuron_id{ it_in_edge->first.first, it_in_edge->first.second };
 
-            const auto possible_global_source = informations->rank_neuron_id2glob_id(tmp_rank_neuron_id);
-            RelearnException::check(possible_global_source.has_value(), "ret is false");
-
-            const auto global_source = possible_global_source.value();
+            const auto global_source = informations->rank_neuron_id2glob_id(tmp_rank_neuron_id);
 
             // <target neuron id>  <source neuron id>  <weight>
             os

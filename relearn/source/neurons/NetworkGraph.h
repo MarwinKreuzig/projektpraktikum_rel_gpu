@@ -42,10 +42,8 @@ public:
     using NeuronInNeighborhood = std::vector<Edges>;
     using NeuronOutNeighborhood = std::vector<Edges>;
 
-    /**
-     * @brief Constructs a NetworkGraph that holds at most the given number of neurons
-     * @param num_neurons The number of neurons
-     */
+
+
     explicit NetworkGraph(size_t num_neurons);
 
     /**

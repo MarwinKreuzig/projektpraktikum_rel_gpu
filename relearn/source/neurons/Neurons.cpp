@@ -1282,9 +1282,7 @@ void Neurons::print_positions_to_log_file() {
     for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
         RankNeuronId rank_neuron_id{ my_rank, neuron_id };
 
-        const auto possible_global_id = extra_info->rank_neuron_id2glob_id(rank_neuron_id);
-        RelearnException::check(possible_global_id.has_value(), "ret is false");
-        const auto global_id = possible_global_id.value();
+        const auto global_id = extra_info->rank_neuron_id2glob_id(rank_neuron_id);
         const auto& signal_type_name = (signal_types[neuron_id] == SignalType::EXCITATORY) ? std::string("ex") : std::string("int");
 
         ss << (global_id + 1) << " "
