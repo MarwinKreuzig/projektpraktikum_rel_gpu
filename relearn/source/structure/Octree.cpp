@@ -214,7 +214,7 @@ std::tuple<bool, bool> Octree::acceptance_criterion_test(const Vec3d& axon_pos_x
     return std::make_tuple(ret_val, has_vacant_dendrites);
 }
 
-ProbabilitySubintervalVector Octree::get_nodes_for_interval(
+std::vector<OctreeNode*> Octree::get_nodes_for_interval(
     const Vec3d& axon_pos_xyz,
     OctreeNode* root,
     SignalType dendrite_type_needed,
@@ -311,7 +311,7 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
         stack.push(root);
     }
 
-    ProbabilitySubintervalVector vector;
+    std::vector<OctreeNode*> vector;
     vector.reserve(stack.size());
 
     bool has_vacant_dendrites = false;
@@ -410,7 +410,7 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
     return vector;
 }
 
-std::vector<double> Octree::create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed, const ProbabilitySubintervalVector& vector) const {
+std::vector<double> Octree::create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed, const std::vector<OctreeNode*>& vector) const {
     // Does vector contain nodes?
     if (vector.empty()) {
         return {};
@@ -419,8 +419,8 @@ std::vector<double> Octree::create_interval(size_t src_neuron_id, const Vec3d& a
     double sum = 0.0;
 
     std::vector<double> probabilities;
-    std::for_each(vector.cbegin(), vector.cend(), [&](const ProbabilitySubinterval& prob_sub_int) {
-        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *prob_sub_int.get_octree_node(), dendrite_type_needed);
+    std::for_each(vector.cbegin(), vector.cend(), [&](OctreeNode* prob_sub_int) {
+        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *prob_sub_int, dendrite_type_needed);
         probabilities.push_back(prob);
         sum += prob;
     });
@@ -633,7 +633,7 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
 		* Create vector with nodes that have at least one dendrite and are
 		* precise enough given the position of an axon
 		*/
-        ProbabilitySubintervalVector vector = get_nodes_for_interval(axon_pos_xyz, root_of_subtree, dendrite_type_needed, naive_method);
+        std::vector<OctreeNode*> vector = get_nodes_for_interval(axon_pos_xyz, root_of_subtree, dendrite_type_needed, naive_method);
 
         /**
 		* Assign a probability to each node in the vector.
@@ -660,7 +660,7 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
             sum_probabilities += prob[counter];
             counter++;
         }
-        node_selected = vector[counter - 1].get_octree_node();
+        node_selected = vector[counter - 1];
 
         /**
 		* Leave loop if no node was selected OR

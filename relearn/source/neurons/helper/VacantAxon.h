@@ -12,10 +12,11 @@
 
 #include "../../util/Vec3.h"
 #include "../SignalType.h"
-#include "ProbabilitySubinterval.h"
 
 #include <list>
 #include <memory>
+
+class OctreeNode;
 
 /**
 * Type for vacant axon for which a target neuron needs to be found
@@ -40,19 +41,19 @@ public:
         return dendrite_type_needed;
     }
 
-    void add_to_accepted(const ProbabilitySubinterval& subinterval) {
+    void add_to_accepted(const OctreeNode* subinterval) {
         nodes_accepted.emplace_back(subinterval);
     }
 
-    void add_to_visit(const ProbabilitySubinterval& subinterval) {
+    void add_to_visit(const OctreeNode* subinterval) {
         nodes_to_visit.emplace_back(subinterval);
     }
 
-    void add_to_accepted(ProbabilitySubintervalVector&& list) {
+    void add_to_accepted(std::vector<OctreeNode*>&& list) {
         nodes_accepted.insert(nodes_accepted.cend(), list.begin(), list.end());
     }
 
-    void add_to_visit(ProbabilitySubintervalVector&& list) {
+    void add_to_visit(std::vector<OctreeNode*>&& list) {
         nodes_to_visit.insert(nodes_to_visit.cend(), list.begin(), list.end());
     }
 
@@ -68,7 +69,7 @@ public:
         return nodes_to_visit.size();
     }
 
-    [[nodiscard]] const ProbabilitySubinterval& get_first_to_visit() const noexcept {
+    [[nodiscard]] const OctreeNode* get_first_to_visit() const noexcept {
         return nodes_to_visit.front();
     }
 
@@ -76,7 +77,7 @@ public:
         nodes_to_visit.erase(nodes_to_visit.cbegin());
     }
 
-    [[nodiscard]] const ProbabilitySubintervalVector& get_nodes_accepted() const noexcept {
+    [[nodiscard]] const std::vector<OctreeNode*>& get_nodes_accepted() const noexcept {
         return nodes_accepted;
     }
 
@@ -85,7 +86,7 @@ private:
     Vec3d xyz_pos;
     SignalType dendrite_type_needed;
 
-    ProbabilitySubintervalVector nodes_to_visit;
-    ProbabilitySubintervalVector nodes_accepted;
+    std::vector<OctreeNode*> nodes_to_visit;
+    std::vector<OctreeNode*> nodes_accepted;
 };
 using VacantAxonList = std::list<std::shared_ptr<VacantAxon>>;

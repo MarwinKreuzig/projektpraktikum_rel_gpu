@@ -12,7 +12,6 @@
 
 #include "../mpi/MPIWrapper.h"
 #include "../neurons/SignalType.h"
-#include "../neurons/helper/ProbabilitySubinterval.h"
 #include "../neurons/helper/RankNeuronId.h"
 #include "../structure/OctreeNode.h"
 #include "../util/RelearnException.h"
@@ -378,7 +377,7 @@ private:
     /**
 	 * Returns vector with nodes for creating the probability interval
 	 */
-    [[nodiscard]] ProbabilitySubintervalVector get_nodes_for_interval(
+    [[nodiscard]] std::vector<OctreeNode*> get_nodes_for_interval(
         const Vec3d& axon_pos_xyz,
         OctreeNode* root,
         SignalType dendrite_type_needed,
@@ -389,7 +388,7 @@ private:
 	 * Nodes with probability 0 are removed from the vector.
 	 * The probabilities sum up to 1
 	 */
-    [[nodiscard]] std::vector<double> create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed, const ProbabilitySubintervalVector& vector) const;
+    [[nodiscard]] std::vector<double> create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed, const std::vector<OctreeNode*>& vector) const;
 
     /**
 	 * Returns attractiveness for connecting two given nodes
