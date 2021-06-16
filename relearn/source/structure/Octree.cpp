@@ -332,7 +332,7 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
 
         if (accept) {
             // Insert node into vector
-            vector.emplace_back(std::make_shared<ProbabilitySubinterval>(stack_elem));
+            vector.emplace_back(stack_elem);
             continue;
         }
 
@@ -419,8 +419,8 @@ std::vector<double> Octree::create_interval(size_t src_neuron_id, const Vec3d& a
     double sum = 0.0;
 
     std::vector<double> probabilities;
-    std::for_each(vector.cbegin(), vector.cend(), [&](const std::shared_ptr<ProbabilitySubinterval>& ptr) {
-        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *(ptr->get_octree_node()), dendrite_type_needed);
+    std::for_each(vector.cbegin(), vector.cend(), [&](const ProbabilitySubinterval& prob_sub_int) {
+        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *prob_sub_int.get_octree_node(), dendrite_type_needed);
         probabilities.push_back(prob);
         sum += prob;
     });
@@ -655,7 +655,7 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
             sum_probabilities += prob[counter];
             counter++;
         }
-        node_selected = vector[counter - 1]->get_octree_node();
+        node_selected = vector[counter - 1].get_octree_node();
 
         /**
 		* Leave loop if no node was selected OR

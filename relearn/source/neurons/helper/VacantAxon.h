@@ -40,11 +40,11 @@ public:
         return dendrite_type_needed;
     }
 
-    void add_to_accepted(const std::shared_ptr<ProbabilitySubinterval>& subinterval) {
+    void add_to_accepted(const ProbabilitySubinterval& subinterval) {
         nodes_accepted.emplace_back(subinterval);
     }
 
-    void add_to_visit(const std::shared_ptr<ProbabilitySubinterval>& subinterval) {
+    void add_to_visit(const ProbabilitySubinterval& subinterval) {
         nodes_to_visit.emplace_back(subinterval);
     }
 
@@ -68,7 +68,7 @@ public:
         return nodes_to_visit.size();
     }
 
-    [[nodiscard]] std::shared_ptr<ProbabilitySubinterval> get_first_to_visit() const noexcept {
+    [[nodiscard]] const ProbabilitySubinterval& get_first_to_visit() const noexcept {
         return nodes_to_visit.front();
     }
 

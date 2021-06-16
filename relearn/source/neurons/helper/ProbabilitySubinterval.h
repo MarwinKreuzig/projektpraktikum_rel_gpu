@@ -52,4 +52,4 @@ private:
     MPIWrapper::AsyncToken mpi_request{ MPIWrapper::get_null_request() };
     int request_rank{ -1 };
 };
-using ProbabilitySubintervalVector = std::vector<std::shared_ptr<ProbabilitySubinterval>>;
+using ProbabilitySubintervalVector = std::vector<ProbabilitySubinterval>;

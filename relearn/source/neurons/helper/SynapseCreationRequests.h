@@ -96,11 +96,11 @@ public:
 
 private:
     size_t num_requests{ 0 }; // Number of synapse creation requests
-    std::vector<size_t> requests; // Each request to form a synapse is a 3-tuple: (source_neuron_id, target_neuron_id, dendrite_type_needed)
+    std::vector<size_t> requests{}; // Each request to form a synapse is a 3-tuple: (source_neuron_id, target_neuron_id, dendrite_type_needed)
         // That is why requests.size() == 3*responses.size()
         // Note, a more memory-efficient implementation would use a smaller data type (not size_t) for dendrite_type_needed.
         // This vector is used as MPI communication buffer
-    std::vector<char> responses; // Response if the corresponding request was accepted and thus the synapse was formed
+    std::vector<char> responses{}; // Response if the corresponding request was accepted and thus the synapse was formed
         // responses[i] refers to requests[3*i,...,3*i+2]
         // This vector is used as MPI communication buffer
 };
