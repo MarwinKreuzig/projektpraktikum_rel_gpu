@@ -11,28 +11,49 @@
 #pragma once
 
 #include "../SignalType.h"
+#include "../../util/RelearnException.h"
 
 #include <map>
 #include <vector>
 
 /**
-* Type for synapse creation requests which are used with MPI
-*/
+ * An object of type SynapseCreationRequests stores the requests from the current MPI rank to a dedicated other MPI rank.
+ * It stores all requests flattened and can manage the responses. 
+ * The class does not perform any communication or synchronization with other MPI ranks.
+ */
 class SynapseCreationRequests {
 public:
+    /**
+     * @brief Creates an object with zero requests and responses.
+     */
     SynapseCreationRequests() = default;
 
+    /**
+     * @brief Returns the number of stored requests and responses
+     * @return The number of requests and responses
+     */
     [[nodiscard]] size_t size() const noexcept {
         return num_requests;
     }
 
-    void resize(size_t size) {
+    /**
+     * @brief Resizes the object so that it can hold the specified number of requests, allocates the necessary amount of memory
+     * @parameter size The number of requests and responses to the stored
+     */
+    void resize(const size_t size) {
         num_requests = size;
         requests.resize(3 * size);
         responses.resize(size);
     }
 
-    void append(size_t source_neuron_id, size_t target_neuron_id, size_t dendrite_type_needed) {
+    /**
+     * @brief Appends a pending request, comprising of the source and target neuron ids and a flag that denotes the 
+     *      required dendrite type; 0 for excitatory and 1 for inhibitory
+     * @parameter source_neuron_id The local neuron id of the requesting neuron
+     * @parameter target_neuron_id The local (to the other rank) neuron id of the requested neuron
+     * @parameter dendrite_type_needed The required type, coded with 0 for excitatory and 1 for inhibitory
+     */
+    void append(const size_t source_neuron_id, const size_t target_neuron_id, const size_t dendrite_type_needed) {
         num_requests++;
 
         requests.push_back(source_neuron_id);
@@ -42,7 +63,14 @@ public:
         responses.resize(responses.size() + 1);
     }
 
-    void append(size_t source_neuron_id, size_t target_neuron_id, SignalType dendrite_type_needed) {
+    /**
+     * @brief Appends a pending request, comprising of the source and target neuron ids and an enum that denotes the 
+     *      required dendrite type
+     * @parameter source_neuron_id The local neuron id of the requesting neuron
+     * @parameter target_neuron_id The local (to the other rank) neuron id of the requested neuron
+     * @parameter dendrite_type_needed The required type as enum
+     */
+    void append(const size_t source_neuron_id, const size_t target_neuron_id, const SignalType dendrite_type_needed) {
         size_t dendrite_type_val = 0;
 
         if (dendrite_type_needed == SignalType::INHIBITORY) {
@@ -52,7 +80,17 @@ public:
         append(source_neuron_id, target_neuron_id, dendrite_type_val);
     }
 
-    [[nodiscard]] std::tuple<size_t, size_t, size_t> get_request(size_t request_index) const noexcept {
+    /**
+     * @brief Returns the requested index as a three-tuple of the source' local neuron id, the targets local neuron id,
+     *      and a flag that indicates whether it is an excitatory (0) or inhibitory (1) request
+     * @parameter request_index The required request-index 
+     * @exception Throws a RelearnException if the request_index exceeds the stored number of requests
+     * @return A tuple consisting of the local neuron id of source and target, and a flag that
+     *       indicates whether it is an excitatory (0) or inhibitory (1) request
+     */
+    [[nodiscard]] std::tuple<size_t, size_t, size_t> get_request(const size_t request_index) const {
+        RelearnException::check(request_index < num_requests, "Requests an index that is not in this SynapseCreationRequests");
+
         const size_t base_index = 3 * request_index;
 
         const size_t source_neuron_id = requests[base_index];
@@ -62,34 +100,66 @@ public:
         return std::make_tuple(source_neuron_id, target_neuron_id, dendrite_type_needed);
     }
 
-    void set_response(size_t request_index, char connected) noexcept {
+    /**
+     * @brief Sets the responce for the index-specified request
+     * @parameter request_index The request index 
+     * @parameter connected A flag that specifies if the request is accepted (1) or denied (0)
+     * @exception Throws a RelearnException if the request_index exceeds the stored number of responses
+     */
+    void set_response(const size_t request_index, const char connected) {
+        RelearnException::check(request_index < num_requests, "Sets an responce that is not in this SynapseCreationRequests");
+
         responses[request_index] = connected;
     }
 
-    [[nodiscard]] char get_response(size_t request_index) const noexcept {
+    /**
+     * @brief Gets the responce for the index-specified request
+     * @parameter request_index The request index 
+     * @exception Throws a RelearnException if the request_index exceeds the stored number of responses
+     * @return A flag that specifies if the request is accepted (1) or denied (0)
+     */
+    [[nodiscard]] char get_response(const size_t request_index) const {
+        RelearnException::check(request_index < num_requests, "Gets an responce that is not in this SynapseCreationRequests");
+
         return responses[request_index];
     }
 
+    /**
+     * @brief Gets a raw non-owning pointer for the encoded requests. The pointer is invalidated by append()
+     * @return The pointer to the encoded requests
+     */
     [[nodiscard]] size_t* get_requests() noexcept {
         return requests.data();
     }
 
+    /**
+     * @brief Gets a raw non-owning and non-mutable pointer for the encoded requests. The pointer is invalidated by append()
+     * @return The pointer to the encoded requests
+     */
     [[nodiscard]] const size_t* get_requests() const noexcept {
         return requests.data();
     }
 
-    [[nodiscard]] char* get_responses() noexcept {
-        return responses.data();
-    }
-
+    /**
+     * @brief Gets a raw non-owning and non-mutable pointer for the stored responses. The pointer is invalidated by append()
+     * @return The pointer to the encoded answers: (1) for true, (0) for false
+     */
     [[nodiscard]] const char* get_responses() const noexcept {
         return responses.data();
     }
 
+    /**
+     * @brief Gets the number of bytes that all stored requests take. The size is invalidated by append()
+     * @return The number of bytes all stored requests take
+     */
     [[nodiscard]] size_t get_requests_size_in_bytes() const noexcept {
         return requests.size() * sizeof(size_t);
     }
 
+    /**
+     * @brief Gets the number of bytes all stored responses take. The size is invalidated by append()
+     * @return The number of bytes all stored responses take
+     */
     [[nodiscard]] size_t get_responses_size_in_bytes() const noexcept {
         return responses.size() * sizeof(char);
     }

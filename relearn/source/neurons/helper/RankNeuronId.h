@@ -35,7 +35,7 @@ public:
      * @param rank The MPI rank
      * @param neuron_id The neuron id
      */
-    RankNeuronId(int rank, size_t neuron_id) noexcept
+    RankNeuronId(const int rank, const size_t neuron_id) noexcept
         : rank(rank)
         , neuron_id(neuron_id) {
     }

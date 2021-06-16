@@ -49,8 +49,8 @@ public:
      * @param di The current number of inhibitory dendritic elements
      * @param di_c The current number of connected inhibitory dendritic elements
      */
-    NeuronInformation(double c, double x, bool f, double s, double i,
-        double ax, double ax_c, double de, double de_c, double di, double di_c) noexcept
+    NeuronInformation(const double c, const double x, const bool f, const double s, const double i,
+        const double ax, const double ax_c, const double de, const double de_c, const double di, const double di_c) noexcept
         : calcium(c)
         , x(x)
         , fired(f)

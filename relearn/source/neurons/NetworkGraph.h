@@ -42,8 +42,10 @@ public:
     using NeuronInNeighborhood = std::vector<Edges>;
     using NeuronOutNeighborhood = std::vector<Edges>;
 
-
-
+    /**
+     * @brief Constructs an object that has enough space to store the given number of neurons
+     * @param num_neurons The number of neurons that the object shall handle
+     */
     explicit NetworkGraph(size_t num_neurons);
 
     /**
