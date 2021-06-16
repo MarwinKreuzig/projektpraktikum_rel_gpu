@@ -610,10 +610,15 @@ void Octree::update_local_trees(const SynapticElements& dendrites_exc, const Syn
     const auto& de_ex_conn_cnt = dendrites_exc.get_connected_cnts();
     const auto& de_in_cnt = dendrites_inh.get_cnts();
     const auto& de_in_conn_cnt = dendrites_inh.get_connected_cnts();
+    
+    const auto my_rank = MPIWrapper::get_my_rank();
 
     for (auto* local_tree : local_trees) {
-        const FunctorUpdateNode update_functor(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt, num_neurons);
+        if (local_tree->get_rank() != my_rank) {
+            continue;
+        }
 
+        const FunctorUpdateNode update_functor(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt, num_neurons);
         // The functor containing the visit function is of type FunctorUpdateNode
         tree_walk_postorder<FunctorUpdateNode>(local_tree, update_functor);
     }

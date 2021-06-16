@@ -100,8 +100,13 @@ private:
                 // Get ID of the node's neuron
                 const size_t neuron_id = node->get_cell().get_neuron_id();
 
+                if (neuron_id == Constants::uninitialized) {
+                    node->set_cell_num_dendrites(0, 0);
+                    return;
+                }
+
                 // Calculate number of vacant dendrites for my neuron
-                RelearnException::check(neuron_id < number_neurons, "Neuron id was too large in the operator");
+                RelearnException::check(neuron_id < number_neurons, "Neuron id was too large in the operator: %llu", neuron_id);
 
                 const auto number_vacant_dendrites_excitatory = static_cast<unsigned int>(dendrites_excitatory_counts[neuron_id] - dendrites_excitatory_connected_counts[neuron_id]);
                 const auto number_vacant_dendrites_inhibitory = static_cast<unsigned int>(dendrites_inhibitory_counts[neuron_id] - dendrites_inhibitory_connected_counts[neuron_id]);
@@ -316,6 +321,7 @@ private:
         RelearnException::check(root != nullptr, "In tree_walk_postorder, octree was nullptr");
 
         std::stack<StackElement> stack{};
+
         // Push node onto stack
         stack.emplace(root, 0);
 
