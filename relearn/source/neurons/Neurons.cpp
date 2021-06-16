@@ -1307,53 +1307,53 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
     if (0 == step) {
         ss << "# ALL NEURONS\n";
         ss << std::left
-           << std::setw(12) << "#"
-           << std::setw(cwidth) << " Calcium"
-           << std::setw(cwidth) << "\t Activity"
-           << std::setw(cwidth) << "\t Axons"
-           << std::setw(cwidth) << "\t Axons free"
-           << std::setw(cwidth) << "\t Dendrites_ex"
-           << std::setw(cwidth) << "\t Dendrites_ex free"
-           << std::setw(cwidth) << "\t Dendrites_in"
-           << std::setw(cwidth) << "\t Dendrites_in free"
+           << std::setw(12) << "#,"
+           << std::setw(cwidth) << " Calcium,"
+           << std::setw(cwidth) << "\t Activity,"
+           << std::setw(cwidth) << "\t Axons,"
+           << std::setw(cwidth) << "\t Axons free,"
+           << std::setw(cwidth) << "\t Dendrites_ex,"
+           << std::setw(cwidth) << "\t Dendrites_ex free,"
+           << std::setw(cwidth) << "\t Dendrites_in,"
+           << std::setw(cwidth) << "\t Dendrites_in free,"
            << "\n";
         ss << std::left
-           << std::setw(12) << "# step"
+           << std::setw(12) << "# step,"
            << std::setw(5 + Constants::print_precision) << std::right << "C-avg,"
            << std::setw(6 + Constants::print_precision) << std::right << "C-min,"
            << std::setw(6 + Constants::print_precision) << std::right << "C-max,"
            << std::setw(6 + Constants::print_precision) << std::right << "C-var,"
-           << std::setw(5 + Constants::print_precision) << std::right << "C-std_dev" << '\t'
+           << std::setw(5 + Constants::print_precision) << std::right << "C-std_dev," << '\t'
            << std::setw(5 + Constants::print_precision) << std::right << "Act-avg,"
            << std::setw(6 + Constants::print_precision) << std::right << "Act-min,"
            << std::setw(6 + Constants::print_precision) << std::right << "Act-max,"
            << std::setw(6 + Constants::print_precision) << std::right << "Act-var,"
-           << std::setw(5 + Constants::print_precision) << std::right << "Act-std_dev" << '\t'
+           << std::setw(5 + Constants::print_precision) << std::right << "Act-std_dev," << '\t'
            << std::setw(5 + Constants::print_precision) << std::right << "Ax-avg,"
            << std::setw(6 + Constants::print_precision) << std::right << "Ax-min,"
            << std::setw(6 + Constants::print_precision) << std::right << "Ax-max,"
            << std::setw(6 + Constants::print_precision) << std::right << "Ax-var,"
-           << std::setw(5 + Constants::print_precision) << std::right << "Ax-std_dev" << '\t'
+           << std::setw(5 + Constants::print_precision) << std::right << "Ax-std_dev," << '\t'
            << std::setw(5 + Constants::print_precision) << std::right << "f-Ax-avg,"
            << std::setw(6 + Constants::print_precision) << std::right << "f-Ax-min,"
            << std::setw(6 + Constants::print_precision) << std::right << "f-Ax-max,"
            << std::setw(6 + Constants::print_precision) << std::right << "f-Ax-var,"
-           << std::setw(5 + Constants::print_precision) << std::right << "f-Ax-std_dev" << '\t'
+           << std::setw(5 + Constants::print_precision) << std::right << "f-Ax-std_dev," << '\t'
            << std::setw(5 + Constants::print_precision) << std::right << "DendEx-avg,"
            << std::setw(6 + Constants::print_precision) << std::right << "DendEx-min,"
            << std::setw(6 + Constants::print_precision) << std::right << "DendEx-max,"
            << std::setw(6 + Constants::print_precision) << std::right << "DendEx-var,"
-           << std::setw(5 + Constants::print_precision) << std::right << "DendEx-std_dev" << '\t'
+           << std::setw(5 + Constants::print_precision) << std::right << "DendEx-std_dev," << '\t'
            << std::setw(5 + Constants::print_precision) << std::right << "f-DendEx-avg,"
            << std::setw(6 + Constants::print_precision) << std::right << "f-DendEx-min,"
            << std::setw(6 + Constants::print_precision) << std::right << "f-DendEx-max,"
            << std::setw(6 + Constants::print_precision) << std::right << "f-DendEx-var,"
-           << std::setw(5 + Constants::print_precision) << std::right << "f-DendEx-std_dev" << '\t'
+           << std::setw(5 + Constants::print_precision) << std::right << "f-DendEx-std_dev," << '\t'
            << std::setw(5 + Constants::print_precision) << std::right << "DendIn-avg,"
            << std::setw(6 + Constants::print_precision) << std::right << "DendIn-min,"
            << std::setw(6 + Constants::print_precision) << std::right << "DendIn-max,"
            << std::setw(6 + Constants::print_precision) << std::right << "DendIn-var,"
-           << std::setw(5 + Constants::print_precision) << std::right << "DendIn-std_dev" << '\t'
+           << std::setw(5 + Constants::print_precision) << std::right << "DendIn-std_dev," << '\t'
            << std::setw(5 + Constants::print_precision) << std::right << "f-DendIn-avg,"
            << std::setw(6 + Constants::print_precision) << std::right << "f-DendIn-min,"
            << std::setw(6 + Constants::print_precision) << std::right << "f-DendIn-max,"
@@ -1363,21 +1363,21 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
     }
 
     // Write data at step "step"
-    ss << std::left << std::setw(12) << step;
+    ss << std::left << std::setw(12) << step << ",";
     print_statistics(calcium_statistics);
-    ss << '\t';
+    ss << ', \t';
     print_statistics(activity_statistics);
-    ss << '\t';
+    ss << ', \t';
     print_statistics(axons_statistics);
-    ss << '\t';
+    ss << ', \t';
     print_statistics(axons_free_statistics);
-    ss << '\t';
+    ss << ', \t';
     print_statistics(dendrites_ex_statistics);
-    ss << '\t';
+    ss << ', \t';
     print_statistics(dendrites_ex_free_statistics);
-    ss << '\t';
+    ss << ', \t';
     print_statistics(dendrites_in_statistics);
-    ss << '\t';
+    ss << ', \t';
     print_statistics(dendrites_in_free_statistics);
     ss << "\n";
 
