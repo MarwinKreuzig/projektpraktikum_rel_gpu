@@ -10,5 +10,10 @@
 
 #pragma once
 
+/**
+  * An instance of this enum classifies the synaptic elements of a neuron.
+  * In this simulation, there exists exaclty two different ones: axonal elements and dendritic elements.
+  * The distinction excitatory / inhibitory is made by the type SignalType.
+  */
 enum class ElementType { AXON,
     DENDRITE };

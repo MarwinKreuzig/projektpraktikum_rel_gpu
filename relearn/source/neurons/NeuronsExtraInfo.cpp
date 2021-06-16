@@ -13,7 +13,7 @@
 #include "../mpi/MPIWrapper.h"
 #include "../util/Random.h"
 
-void NeuronsExtraInfo::init(size_t number_neurons) noexcept {
+void NeuronsExtraInfo::init(size_t number_neurons) {
     RelearnException::check(size == 0, "NeuronsExtraInfo initialized two times");
     size = number_neurons;
 
@@ -33,6 +33,12 @@ void NeuronsExtraInfo::init(size_t number_neurons) noexcept {
 }
 
 void NeuronsExtraInfo::create_neurons(size_t creation_count) {
+    RelearnException::check(creation_count != 0, "Cannot add 0 neurons");
+
+    const auto num_ranks = MPIWrapper::get_num_ranks();
+
+    RelearnException::check(num_ranks == 1, "Cannot create neurons if more than 1 MPI rank is computing");
+
     const auto current_size = size;
     const auto new_size = current_size + creation_count;
 
