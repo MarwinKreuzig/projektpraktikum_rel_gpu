@@ -2537,7 +2537,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) 
                 }
 
                 ASSERT_EQ(0.0, model_I_syn[id]) << id << ' ' << j << ' ' << i;
-                ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]) << id << ' ' << j << ' ' << i;
 
                 model_secondary[id] = model->get_secondary_variable(id);
             }
@@ -2560,8 +2559,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) 
                 if (current_fired[id]) {
                     EXPECT_EQ(current_x[id], expected_E_L) << id;
                 }
-
-                ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_secondary[id] = model->get_secondary_variable(id);
             }
