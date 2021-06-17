@@ -27,15 +27,16 @@ class SynapticElements {
     friend class NeuronMonitor;
 
 public:
-    SynapticElements(ElementType type, double min_C_level_to_grow, double nu,
+    SynapticElements(ElementType type, double min_C_level_to_grow, 
         double C_target = SynapticElements::default_C_target,
+        double nu = SynapticElements::default_nu,
         double vacant_retract_ratio = SynapticElements::default_vacant_retract_ratio,
         double initial_vacant_elements_lb = SynapticElements::default_vacant_elements_initially_lower_bound,
         double initial_vacant_elements_ub = SynapticElements::default_vacant_elements_initially_upper_bound)
         : type(type)
         , min_C_level_to_grow(min_C_level_to_grow)
-        , nu(nu)
         , C_target(C_target)
+        , nu(nu)
         , vacant_retract_ratio(vacant_retract_ratio)
         , initial_vacant_elements_lower_bound(initial_vacant_elements_lb)
         , initial_vacant_elements_upper_bound(initial_vacant_elements_ub) {
@@ -94,7 +95,7 @@ public:
 
     [[nodiscard]] static std::vector<std::unique_ptr<SynapticElements>> get_elements() {
         std::vector<std::unique_ptr<SynapticElements>> res;
-        res.emplace_back(std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons, nu));
+        res.emplace_back(std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons));
         res.emplace_back(std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc));
         res.emplace_back(std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh));
         return res;
