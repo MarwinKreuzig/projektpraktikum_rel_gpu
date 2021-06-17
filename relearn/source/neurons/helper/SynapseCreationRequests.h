@@ -82,13 +82,13 @@ public:
 
     /**
      * @brief Returns the requested index as a three-tuple of the source' local neuron id, the targets local neuron id,
-     *      and a flag that indicates whether it is an excitatory (0) or inhibitory (1) request
+     *      and a enum that indicates whether it is an excitatory or inhibitory request
      * @parameter request_index The required request-index 
      * @exception Throws a RelearnException if the request_index exceeds the stored number of requests
-     * @return A tuple consisting of the local neuron id of source and target, and a flag that
-     *       indicates whether it is an excitatory (0) or inhibitory (1) request
+     * @return A tuple consisting of the local neuron id of source and target, and a enum that
+     *       indicates whether it is an excitatory or inhibitory request
      */
-    [[nodiscard]] std::tuple<size_t, size_t, size_t> get_request(const size_t request_index) const {
+    [[nodiscard]] std::tuple<size_t, size_t, SignalType> get_request(const size_t request_index) const {
         RelearnException::check(request_index < num_requests, "Requests an index that is not in this SynapseCreationRequests");
 
         const size_t base_index = 3 * request_index;
@@ -97,7 +97,9 @@ public:
         const size_t target_neuron_id = requests[base_index + 1];
         const size_t dendrite_type_needed = requests[base_index + 2];
 
-        return std::make_tuple(source_neuron_id, target_neuron_id, dendrite_type_needed);
+        const SignalType dendrite_type_needed_converted = (dendrite_type_needed == 0) ? SignalType::EXCITATORY : SignalType::INHIBITORY;
+
+        return std::make_tuple(source_neuron_id, target_neuron_id, dendrite_type_needed_converted);
     }
 
     /**
