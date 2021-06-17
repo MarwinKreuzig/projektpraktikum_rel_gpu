@@ -849,7 +849,7 @@ std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_pro
         for (auto request_index = 0; request_index < num_requests; request_index++) {
             size_t source_neuron_id{ Constants::uninitialized };
             size_t target_neuron_id{ Constants::uninitialized };
-            SignalType dendrite_type_needed{ Constants::uninitialized };
+            SignalType dendrite_type_needed = SignalType::EXCITATORY;
             std::tie(source_neuron_id, target_neuron_id, dendrite_type_needed) = requests.get_request(request_index);
 
             // Sanity check: if the request received is targeted for me
@@ -882,7 +882,7 @@ std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_pro
             const auto diff = static_cast<unsigned int>((*dendrites_cnts)[target_neuron_id] - (*dendrites_connected_cnts)[target_neuron_id]);
             if (diff != 0) {
                 // Increment num of connected dendrites
-                if (1 == dendrite_type_needed) {
+                if (SignalType::INHIBITORY == dendrite_type_needed) {
                     dendrites_inh->update_conn_cnt(target_neuron_id, 1);
                 } else {
                     dendrites_exc->update_conn_cnt(target_neuron_id, 1);
@@ -971,7 +971,7 @@ size_t Neurons::create_synapses_process_responses(const MapSynapseCreationReques
             char connected = received_responses.at(target_rank)[request_index];
             size_t source_neuron_id{ Constants::uninitialized };
             size_t target_neuron_id{ Constants::uninitialized };
-            SignalType dendrite_type_needed{ Constants::uninitialized };
+            SignalType dendrite_type_needed = SignalType::EXCITATORY;
             std::tie(source_neuron_id, target_neuron_id, dendrite_type_needed) = requests.get_request(request_index);
 
             // Request to form synapse succeeded
