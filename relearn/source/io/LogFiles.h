@@ -17,6 +17,11 @@
 #include <map>
 #include <string>
 
+/**
+ * This class provides a static interface that allows for writing log messages to predefined files.
+ * The path can be set and the filename's prefix can be chosen freely.
+ * Some files are only created for the MPI rank 0, some for all.
+ */
 class LogFiles {
     friend class RelearnTest;
 
@@ -43,6 +48,10 @@ class LogFiles {
     };
 
 public:
+    /**
+     * This enum classifies the different type of files that can be written to.
+     * It also includes Cout, however, using this value does not automatically print to std::cout
+     */
     enum class EventType : char {
         PlasticityUpdate,
         PlasticityUpdateLocal,
@@ -69,35 +78,42 @@ private:
 
 public:
     /**
-     * Sets the folder path in which the log files will be generated. It should end with '/'.
-     * Set before calling init()
-     * Default is: "../output/"
+     * @brief Sets the folder path in which the log files will be generated. It should end with '/'.
+     *      Set before calling init()
+     *      Default is: "../output/"
+     * @parameter path_to_containing_folder The path to the folder in which the files should be generated
      */
     static void set_output_path(const std::string& path_to_containing_folder) {
         output_path = path_to_containing_folder;
     }
 
     /**
-     * Sets the general prefix for every log file.
-     * Set before calling init()
-     * Default is: "rank_"
+     * @brief Sets the general prefix for every log file.
+     *      Set before calling init()
+     *      Default is: "rank_"
+     * @parameter prefix The prefix for every file
      */
     static void set_general_prefix(const std::string& prefix) {
         general_prefix = prefix;
     }
 
     /**
-     * Initializes all log files.
-     * Set after setting the output path and the general prefix when they should be user defined
+     * @brief Initializes all log files.
+     *      Call this method after setting the output path and the general prefix when they should be user defined
+     * @exception Throws a RelearnException if creating the files fails
      */
     static void init();
 
     /**
-     * Write the message into the file which is associated with the type.
-     * Optionally prints the message also to std::cout
+     * @brief Write the message into the file which is associated with the type.
+     *      Optionally prints the message also to std::cout
      */
     static void write_to_file(EventType type, const std::string& message, bool also_to_cout);
 
-    // Print tagged message only at MPI rank "rank"
+    /**
+     * @brief Print the message only at a certain MPI rank, and does nothing an all other ranks
+     * @parameter string The message to print. Does not take ownership of the pointer
+     * @parameter rank The rank that should print the message. If set to -1, all ranks print the message
+     */
     static void print_message_rank(char const* string, int rank);
 };
