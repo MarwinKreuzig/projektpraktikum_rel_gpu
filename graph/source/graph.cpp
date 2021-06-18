@@ -315,6 +315,7 @@ void Graph::add_edge(size_t src_id, size_t dst_id, int weight) {
 
     if (!success) {
         boost::add_edge(src_vtx_full, dst_vtx_full, full_graph);
+        std::tie(edgefull, success) = boost::edge(src_vtx_full, dst_vtx_full, full_graph);
         full_graph[edgefull].weight = weight_in_boost;
     } else {
         std::cerr << "FullEdge already in full_graph\n";

@@ -12,14 +12,15 @@
 #define THREADS_PER_BLOCK 32
 
 namespace apsp {
-const double double_max = std::numeric_limits<double>::max();
+const double double_inf = std::numeric_limits<double>::infinity();
+const float float_inf = std::numeric_limits<float>::infinity();
 
 __constant__ graph_cuda_t<View<int>, View<edge_t>> graph_const;
 
 __forceinline__
     __device__ int
     min_distance(const double* dist, const char* visited, int n) {
-    double min = double_max;
+    double min = double_inf;
     int min_index = 0;
     for (int v = 0; v < n; v++) {
         if ((visited[v] == 0) && dist[v] <= min) {
@@ -45,7 +46,7 @@ __global__ void dijkstra_kernel(View<double> output, View<char> visited_global) 
     double* dist = &output[s * V];
     char* visited = &visited_global[s * V];
     for (int i = 0; i < V; i++) {
-        dist[i] = double_max;
+        dist[i] = double_inf;
         visited[i] = 0;
     }
     dist[s] = 0.0;
@@ -57,7 +58,7 @@ __global__ void dijkstra_kernel(View<double> output, View<char> visited_global) 
         visited[u] = 1;
         for (int v_i = u_start; v_i < u_end; v_i++) {
             const auto v = edge_array[v_i].v;
-            if ((visited[v] == 0) && dist_u != double_max && dist_u + weights[v_i] < dist[v]) {
+            if ((visited[v] == 0) && dist_u != double_inf && dist_u + weights[v_i] < dist[v]) {
                 dist[v] = dist_u + weights[v_i];
             }
         }
@@ -77,7 +78,8 @@ __global__ void bellman_ford_kernel(float* dist) {
     const auto v = edges[e].v;
     const auto new_dist = weights[e] + dist[u];
     // Make ATOMIC
-    if (dist[u] != INT_MAX && new_dist < dist[v]) {
+    // race condition?
+    if (dist[u] != float_inf && new_dist < dist[v]) {
         atomicExch(&dist[v], new_dist); // Needs to have conditional be atomic too
     }
 }
@@ -106,7 +108,7 @@ __host__ bool bellman_ford_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_
     for (int i = 0; i < E; i++) {
         const auto [u, v] = edges[i];
         const int weight = weights[i];
-        if (dist[u] != std::numeric_limits<typename std::remove_reference_t<decltype(dist)>::value_type>::max()
+        if (dist[u] != std::numeric_limits<float>::max()
             && dist[u] + weight < dist[v]) {
             no_neg_cycle = false;
         }
