@@ -1,4 +1,4 @@
-#include "johnson.hpp"
+#include "johnson.h"
 
 #include <algorithm>
 #include <iostream> // cerr

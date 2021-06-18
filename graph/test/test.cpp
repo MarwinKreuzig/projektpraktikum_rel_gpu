@@ -7,7 +7,7 @@
 #define private public
 
 #include "../source/graph.h"
-#include "../source/apsp/johnson.hpp"
+#include "../source/apsp/johnson.h"
 
 struct TestExample {
     Graph graph;

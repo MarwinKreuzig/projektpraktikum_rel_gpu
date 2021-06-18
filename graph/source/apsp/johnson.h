@@ -1,3 +1,6 @@
+#ifndef graph_johnson_h
+#define graph_johnson_h
+
 #include <algorithm>
 #include <iostream>
 #include <numeric>
@@ -7,6 +10,7 @@
 
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/iterator/zip_iterator.hpp>
 
 #include "../graph.h"
 
@@ -122,3 +126,5 @@ inline std::vector<double> johnson(typename Graph::FullGraph full_graph, const s
 }
 
 } // namespace apsp
+
+#endif
