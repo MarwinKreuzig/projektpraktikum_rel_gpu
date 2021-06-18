@@ -118,7 +118,13 @@ int main(int argc, char** argv) {
     app.add_option("--synaptic-elements-upper-bound", synaptic_elements_init_ub, "The maximum number of vacant synaptic elements per neuron. Must be larger or equal to synaptic-elements-lower-bound.");
 
     double target_calcium{ SynapticElements::default_C_target };
-    app.add_option("--target-ca", target_calcium, "The target Ca2+ ions in each neuron. Standard is 0.7.");
+    app.add_option("--target-ca", target_calcium, "The target Ca2+ ions in each neuron. Default is 0.7.");
+
+    double nu{ SynapticElements::default_nu };
+    app.add_option("--growth-rate", nu, "The growth rate for the synaptic elements. Default is 1e-5");
+
+    double beta{ NeuronModels::default_beta };
+    app.add_option("--beta", beta, "The amount of calcium ions gathered when a neuron fires. Default is 0.001");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -180,16 +186,18 @@ int main(int argc, char** argv) {
 	*/
     MPIWrapper::init_buffer_octree(total_num_subdomains);
 
-    auto neuron_models = std::make_unique<models::PoissonModel>();
+    auto neuron_models = std::make_unique<models::PoissonModel>(NeuronModels::default_k, NeuronModels::default_tau_C, beta, NeuronModels::default_h,
+        NeuronModels::default_base_background_activity, NeuronModels::default_background_activity_mean, NeuronModels::default_background_activity_stddev,
+        models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
 
     auto axon_models = std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons, target_calcium,
-        SynapticElements::default_nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
+        nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     auto dend_ex_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc, target_calcium,
-        SynapticElements::default_nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
+        nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     auto dend_in_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh, target_calcium,
-        SynapticElements::default_nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
+        nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     // Lock local RMA memory for local stores
     MPIWrapper::lock_window(my_rank, MPI_Locktype::exclusive);
