@@ -15,29 +15,17 @@
 #include <iostream>
 #include <sstream>
 
+#include <spdlog/spdlog.h>
+
+#include "MPIWrapper.h"
+
 [[nodiscard]] const char* RelearnException::what() const noexcept {
     return message.c_str();
 }
 
-void RelearnException::fail(std::string&& message) {
-    if (hide_messages) {
-        throw RelearnException{};
-    }
+void RelearnException::log_message(const std::string& message) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
     const auto num_ranks = MPIWrapper::get_num_ranks();
-
-    std::stringstream sstream;
-
-    sstream
-        << "There was an error at rank: "
-        << my_rank
-        << " of "
-        << num_ranks
-        << "!\n"
-        << message;
-
-    std::cerr << sstream.str() << std::flush;
-
-    throw RelearnException{ std::move(message) };
+    spdlog::error("There was an error at rank: {} of {}!\n{}", my_rank, num_ranks, message);
 }

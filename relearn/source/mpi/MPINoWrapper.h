@@ -159,8 +159,6 @@ public:
     static void unlock_window(int rank);
 
     static void finalize() /*noexcept*/;
-
-    static void print_infos_rank(int rank);
 };
 
 #endif

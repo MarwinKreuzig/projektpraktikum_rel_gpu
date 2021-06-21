@@ -11,11 +11,16 @@
 #pragma once
 
 #include "../util/RelearnException.h"
+#include "spdlog/fmt/bundled/core.h"
+#include "spdlog/spdlog.h"
 
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <memory>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 /**
  * This class provides a static interface that allows for writing log messages to predefined files.
@@ -23,29 +28,27 @@
  * Some files are only created for the MPI rank 0, some for all.
  */
 class LogFiles {
-    friend class RelearnTest;
+    // class LogFile {
+    //     std::ofstream ofstream;
 
-    class LogFile {
-        std::ofstream ofstream;
+    // public:
+    //     explicit LogFile(const std::filesystem::path& path)
+    //         : ofstream(path) { }
 
-    public:
-        explicit LogFile(const std::filesystem::path& path)
-            : ofstream(path) { }
+    //     LogFile(const LogFile& other) = delete;
+    //     LogFile& operator=(const LogFile& other) = delete;
 
-        LogFile(const LogFile& other) = delete;
-        LogFile& operator=(const LogFile& other) = delete;
+    //     LogFile(LogFile&& other) = default;
+    //     LogFile& operator=(LogFile&& other) = default;
 
-        LogFile(LogFile&& other) = default;
-        LogFile& operator=(LogFile&& other) = default;
+    //     ~LogFile() = default;
 
-        ~LogFile() = default;
-
-        void write(const std::string& message) {
-            RelearnException::check(ofstream.is_open(), "The output stream is not open");
-            RelearnException::check(ofstream.good(), "The output stream isn't good");
-            ofstream << message;
-        }
-    };
+    //     void write(const std::string& message) {
+    //         RelearnException::check(ofstream.is_open(), "The output stream is not open");
+    //         RelearnException::check(ofstream.good(), "The output stream isn't good");
+    //         ofstream << message;
+    //     }
+    // };
 
 public:
     /**
@@ -64,7 +67,8 @@ public:
     };
 
 private:
-    static inline std::map<EventType, LogFile> log_files{};
+    using Logger = std::shared_ptr<spdlog::logger>;
+    static inline std::map<EventType, Logger> log_files{};
     // NOLINTNEXTLINE
     static inline std::string output_path{ "../output/" };
     // NOLINTNEXTLINE
@@ -75,6 +79,10 @@ private:
     static void add_logfile(EventType type, const std::string& file_name, int rank);
 
     static bool disable;
+
+    [[nodiscard]] static bool do_i_print(int rank);
+
+    [[nodiscard]] static std::string get_my_rank_str();
 
 public:
     /**
@@ -108,12 +116,25 @@ public:
      * @brief Write the message into the file which is associated with the type.
      *      Optionally prints the message also to std::cout
      */
-    static void write_to_file(EventType type, const std::string& message, bool also_to_cout);
+    template <typename FormatString, typename... Args>
+    static void write_to_file(EventType type, bool also_to_cout, FormatString&& format, Args&&... args) {
+        auto message = fmt::format(format, std::forward<Args>(args)...);
 
-    /**
-     * @brief Print the message only at a certain MPI rank, and does nothing an all other ranks
-     * @parameter string The message to print. Does not take ownership of the pointer
-     * @parameter rank The rank that should print the message. If set to -1, all ranks print the message
-     */
-    static void print_message_rank(char const* string, int rank);
+        if (also_to_cout) {
+            spdlog::info(message);
+        }
+
+        // Not all ranks have all log files
+        if (auto iterator = log_files.find(type); iterator != log_files.end()) {
+            iterator->second->info(message);
+        }
+    }
+
+    // Print tagged message only at MPI rank "rank"
+    template <typename FormatString, typename... Args>
+    static void print_message_rank(int rank, FormatString&& format, Args&&... args) {
+        if (do_i_print(rank)) {
+            write_to_file(LogFiles::EventType::Cout, true, "[INFO:Rank {}] {}", get_my_rank_str(), fmt::format(std::forward<FormatString>(format), std::forward<Args>(args)...));
+        }
+    }
 };

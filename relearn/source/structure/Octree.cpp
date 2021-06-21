@@ -167,7 +167,7 @@ void Octree::postorder_print() {
             ss << "\n";
         }
 
-        LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
+        LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
     }
 }
 

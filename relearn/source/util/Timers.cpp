@@ -171,5 +171,5 @@ void Timers::print() {
         //sstring << "Min num objects available: " << MPIWrapper::get_num_avail_objects() << "\n\n";
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Timers, sstring.str(), true);
+    LogFiles::write_to_file(LogFiles::EventType::Timers, true, sstring.str());
 }

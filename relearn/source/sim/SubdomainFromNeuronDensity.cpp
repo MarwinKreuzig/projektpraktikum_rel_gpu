@@ -17,7 +17,7 @@
 #include <limits>
 
 SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(size_t num_neurons, double desired_frac_neurons_exc, double um_per_neuron)
-    : um_per_neuron_(um_per_neuron){
+    : um_per_neuron_(um_per_neuron) {
 
     const auto my_rank = static_cast<unsigned int>(MPIWrapper::get_my_rank());
 
@@ -60,7 +60,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
     RelearnException::check(neurons_on_x <= max_short && neurons_on_y <= max_short && neurons_on_z <= max_short, "Should emplace more neurons in a dimension than possible");
 
     Nodes nodes{};
-    
+
     const double desired_ex = get_desired_frac_neurons_exc();
 
     const size_t expected_number_in = num_neurons - static_cast<size_t>(ceil(num_neurons * desired_ex));

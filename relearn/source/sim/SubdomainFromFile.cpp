@@ -15,6 +15,7 @@
 #include "../sim/NeuronToSubdomainAssignment.h"
 #include "../structure/Partition.h"
 #include "../util/RelearnException.h"
+#include "spdlog/spdlog.h"
 
 #include <cmath>
 #include <iostream>
@@ -22,7 +23,7 @@
 
 SubdomainFromFile::SubdomainFromFile(const std::string& file_path)
     : file(file_path) {
-    LogFiles::write_to_file(LogFiles::EventType::Cout, "Loading: " + file_path + "\n", true);
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Loading: " + file_path + "\n");
 
     const bool file_is_good = file.good();
     const bool file_is_not_good = file.fail() || file.eof();
@@ -58,7 +59,7 @@ void SubdomainFromFile::read_dimensions_from_file() {
         bool success = (sstream >> id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> area_name) && (sstream >> signal_type);
 
         if (!success) {
-            std::cerr << "Skipping line: \"" << line << "\"\n";
+            spdlog::info("Skipping line: {}", line);
             continue;
         }
 
@@ -121,7 +122,7 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
         bool success = (sstream >> node.id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> node.area_name) && (sstream >> signal_type);
 
         if (!success) {
-            std::cerr << "Skipping line: \"" << line << "\"\n";
+            spdlog::info("Skipping line: {}", line);
             continue;
         }
 

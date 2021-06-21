@@ -13,9 +13,6 @@
 #include "../Config.h"
 #include "../util/RelearnException.h"
 
-#include <algorithm>
-#include <cmath>
-
 template <typename T>
 class Vec3 {
     T x;
@@ -261,6 +258,10 @@ public:
             return lhs < rhs;
         }
     };
+
+    friend std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
+        return os << "(" << vec.get_x() << ", " << vec.get_y() << ", " << vec.get_z() << ")";
+    }
 };
 
 using Vec3d = Vec3<double>;

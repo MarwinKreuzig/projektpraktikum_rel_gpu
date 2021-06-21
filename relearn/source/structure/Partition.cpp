@@ -54,10 +54,7 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
     my_num_subdomains += (my_rank < rest) ? 1 : 0;
 
     if (rest != 0) {
-        std::stringstream sstream;
-        sstream << "My rank is: " << my_rank << "; There are " << num_ranks << " ranks in total; The rest is: " << rest << "\n";
-        sstream << std::flush;
-        LogFiles::print_message_rank(sstream.str().c_str(), -1);
+        LogFiles::print_message_rank(-1, "My rank is: {}; There are {} ranks in total; The rest is: {}", my_rank, num_ranks, rest);
         RelearnException::fail("Number of ranks must be of the form 2^n");
     }
 
@@ -86,10 +83,9 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
         current_subdomain.index_3d = box_coords;
     }
 
-    std::stringstream sstream;
-    sstream << "Total number subdomains        : " << total_num_subdomains << "\n";
-    sstream << "Number subdomains per dimension: " << num_subdomains_per_dimension;
-    LogFiles::print_message_rank(sstream.str().c_str(), 0);
+    LogFiles::print_message_rank(0,
+        "Total number subdomains        : {}\nNumber subdomains per dimension: {}",
+        total_num_subdomains, num_subdomains_per_dimension);
 }
 
 void Partition::print_my_subdomains_info_rank(int rank) {
@@ -129,7 +125,7 @@ void Partition::print_my_subdomains_info_rank(int rank) {
                 << " )\n";
     }
 
-    LogFiles::print_message_rank(sstream.str().c_str(), rank);
+    LogFiles::print_message_rank(rank, sstream.str().c_str());
 }
 
 bool Partition::is_neuron_local(size_t neuron_id) const {
@@ -217,19 +213,10 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
     /**
 	* Output all parameters calculated so far
 	*/
-    std::stringstream sstream;
-    sstream << "Simulation box length          : " << simulation_box_length.get_x() << " (height)"
-            << "\n";
-    sstream << "Simulation box length          : " << simulation_box_length.get_y() << " (width)"
-            << "\n";
-    sstream << "Simulation box length          : " << simulation_box_length.get_z() << " (depth)"
-            << "\n";
-    sstream << "Subdomain length          : " << subdomain_length.get_x() << " (height)"
-            << "\n";
-    sstream << "Subdomain length          : " << subdomain_length.get_y() << " (width)"
-            << "\n";
-    sstream << "Subdomain length          : " << subdomain_length.get_z() << " (depth)";
-    LogFiles::print_message_rank(sstream.str().c_str(), 0);
+    LogFiles::print_message_rank(0, "Simulation box length (height, width, depth)\t: ({}, {}, {})",
+        simulation_box_length.get_x(), simulation_box_length.get_y(), simulation_box_length.get_z());
+    LogFiles::print_message_rank(0, "Subdomain length (height, width, depth)\t: ({}, {}, {})",
+        subdomain_length.get_x(), subdomain_length.get_y(), subdomain_length.get_z());
 
     my_num_neurons = 0;
     for (size_t i = 0; i < my_num_subdomains; i++) {

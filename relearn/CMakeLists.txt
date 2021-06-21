@@ -6,8 +6,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+set(CMAKE_BUILD_TYPE Debug)
+# set(CMAKE_BUILD_TYPE Release)
 
 option(ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
 if(ENABLE_CLANG_TIDY)
@@ -50,6 +52,14 @@ target_link_libraries (project_options INTERFACE ${MPI_CXX_LIBRARIES} ${MPI_CXX_
 if (UNIX)
 	target_link_libraries (project_options INTERFACE stdc++fs)
 endif ()
+
+FetchContent_Declare(
+  spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG        v1.x
+)
+FetchContent_MakeAvailable(spdlog)
+target_link_libraries(project_options INTERFACE spdlog)
 
 # relearn executable
 add_executable(relearn

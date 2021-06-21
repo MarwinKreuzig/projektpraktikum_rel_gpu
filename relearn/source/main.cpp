@@ -23,6 +23,7 @@
 #include "util/Random.h"
 #include "util/RelearnException.h"
 #include "util/Timers.h"
+#include "spdlog/spdlog.h"
 
 #include <CLI/App.hpp>
 #include <CLI/Config.hpp>
@@ -154,17 +155,8 @@ int main(int argc, char** argv) {
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier(MPIWrapper::Scope::global);
     if (0 == my_rank) {
-        std::stringstream sstring; // For output generation
-
-        sstring << "START: " << Timers::wall_clock_time() << '\n';
-
-        sstring << "Chosen lower bound for vacant synaptic elements: " << synaptic_elements_init_lb << '\n';
-        sstring << "Chosen upper bound for vacant synaptic elements: " << synaptic_elements_init_ub << '\n';
-        sstring << "Chosen target calcium value: " << target_calcium << '\n';
-        sstring << "Chosen beta value: " << beta << '\n';
-        sstring << "Chosen nu valua: " << nu;
-
-        LogFiles::print_message_rank(sstring.str().c_str(), 0);
+        LogFiles::print_message_rank(0, "START: {}\nChosen lower bound for vacant synaptic elements: {}\nChosen upper bound for vacant synaptic elements: {}\nChosen target calcium value: {}",
+            Timers::wall_clock_time(), synaptic_elements_init_lb, synaptic_elements_init_ub, target_calcium);
     }
 
     GlobalTimers::timers.start(TimerRegion::INITIALIZATION);
@@ -272,7 +264,7 @@ int main(int argc, char** argv) {
 
     if (static_cast<bool>(*flag_interactive)) {
         while (true) {
-            std::cout << "Interactive run. Run another " << simulation_steps << " simulation steps? [y/n]\n";
+            spdlog::info("Interactive run. Run another {} simulation steps? [y/n]\n", simulation_steps);
             char yn{ 'n' };
             auto n = scanf(" %c", &yn);
             RelearnException::check(static_cast<bool>(n), "Error on while reading input with scanf.");
@@ -285,12 +277,12 @@ int main(int argc, char** argv) {
                 sim.increase_monitoring_capacity(steps_per_simulation);
                 simulate();
             } else {
-                std::stringstream ss{};
-                ss << "Input for question to run another " << simulation_steps << " simulation steps was not valid.";
-                RelearnException::fail(ss.str());
+                RelearnException::fail("Input for question to run another {} simulation steps was not valid.", simulation_steps);
             }
         }
     }
+
+    NeuronMonitor::neurons_to_monitor->print();
 
     MPIWrapper::finalize();
 

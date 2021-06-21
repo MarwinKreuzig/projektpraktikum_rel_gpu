@@ -1134,37 +1134,35 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 
     // Output data
     if (0 == MPIWrapper::get_my_rank()) {
-        std::stringstream ss;
         const int cwidth = 20; // Column width
 
         // Write headers to file if not already done so
         if (0 == step) {
-            ss << "# SUMS OVER ALL NEURONS\n";
-            ss << std::left
-               << std::setw(cwidth) << "# step"
-               << std::setw(cwidth) << "Axons exc. (vacant)"
-               << std::setw(cwidth) << "Axons inh. (vacant)"
-               << std::setw(cwidth) << "Dends exc. (vacant)"
-               << std::setw(cwidth) << "Dends inh. (vacant)"
-               << std::setw(cwidth) << "Synapses deleted"
-               << std::setw(cwidth) << "Synapses created"
-               << "\n";
+            LogFiles::write_to_file(LogFiles::EventType::Sums, false,
+                "# SUMS OVER ALL NEURONS\n{1:{0}}{2:{0}}{3:{0}}{4:{0}}{5:{0}}{6:{0}}{7:{0}}",
+                cwidth,
+                "# step",
+                "Axons exc. (vacant)",
+                "Axons inh. (vacant)",
+                "Dends exc. (vacant)",
+                "Dends inh. (vacant)",
+                "Synapses deleted",
+                "Synapses created");
         }
 
         const auto last_idx = 5;
 
-        // Write data at step "step"
-        ss << std::left
-           << std::setw(cwidth) << step
-           << std::setw(cwidth) << sums_global[0]
-           << std::setw(cwidth) << sums_global[1]
-           << std::setw(cwidth) << sums_global[2]
-           << std::setw(cwidth) << sums_global[3]
-           << std::setw(cwidth) << sums_global[4] / 2 // As counted on both of the neurons
-           << std::setw(cwidth) << sums_global[last_idx] / 2 // As counted on both of the neurons
-           << "\n";
-
-        LogFiles::write_to_file(LogFiles::EventType::Sums, ss.str(), false);
+        LogFiles::write_to_file(LogFiles::EventType::Sums, false,
+            "{2:<{0}}{3:<{0}}{4:<{0}}{5:<{0}}{6:<{0}}{7:<{0}}{8:<{0}}",
+            cwidth,
+            Constants::print_precision,
+            step,
+            sums_global[0],
+            sums_global[1],
+            sums_global[2],
+            sums_global[3],
+            sums_global[4] / 2,
+            sums_global[last_idx] / 2);
     }
 }
 
@@ -1182,67 +1180,45 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
         return;
     }
 
-    std::stringstream ss;
-    ss.precision(Constants::print_precision);
+    // Output data
+    if (0 == MPIWrapper::get_my_rank()) {
+        const int cwidth = 16; // Column width
 
-    constexpr int cwidth = 31 + 5 * Constants::print_precision;
+        // Write headers to file if not already done so
+        if (Constants::logfile_update_step == step) {
+            LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, false,
+                "# ALL NEURONS\n{1:{0}}{2:{0}}{3:{0}}{4:{0}}{5:{0}}{6:{0}}{7:{0}}{8:{0}}{9:{0}}{10:{0}}{11:{0}}",
+                cwidth,
+                "# step",
+                "C (avg)",
+                "C (min)",
+                "C (max)",
+                "C (var)",
+                "C (std_dev)",
+                "activity (avg)",
+                "activity (min)",
+                "activity (max)",
+                "activity (var)",
+                "activity (std_dev)");
+        }
 
-    auto print_statistics = [&ss](const StatisticalMeasures& statistics) {
-        ss << std::setw(4 + Constants::print_precision) << std::right << std::fixed << statistics.avg
-           << ", " << std::setw(4 + Constants::print_precision) << std::right << std::fixed << statistics.min
-           << ", " << std::setw(4 + Constants::print_precision) << std::right << std::fixed << statistics.max
-           << ", " << std::setw(4 + Constants::print_precision) << std::right << std::fixed << statistics.var
-           << ", " << std::setw(4 + Constants::print_precision) << std::right << std::fixed << statistics.std;
-        ;
-    };
-
-    // Write headers to file if not already done so
-    if (0 == step) {
-        ss << "# ALL NEURONS\n";
-        ss << std::left
-           << std::setw(12) << "#"
-           << std::setw(cwidth) << " Calcium"
-           << std::setw(cwidth) << "\t Activity"
-           << std::setw(cwidth) << "\t Axons"
-           << std::setw(cwidth) << "\t Axons free"
-           << "\n";
-        ss << std::left
-           << std::setw(12) << "# step"
-           << std::setw(5 + Constants::print_precision) << std::right << "C-avg,"
-           << std::setw(6 + Constants::print_precision) << std::right << "C-min,"
-           << std::setw(6 + Constants::print_precision) << std::right << "C-max,"
-           << std::setw(6 + Constants::print_precision) << std::right << "C-var,"
-           << std::setw(5 + Constants::print_precision) << std::right << "C-std_dev" << '\t'
-           << std::setw(5 + Constants::print_precision) << std::right << "Act-avg,"
-           << std::setw(6 + Constants::print_precision) << std::right << "Act-min,"
-           << std::setw(6 + Constants::print_precision) << std::right << "Act-max,"
-           << std::setw(6 + Constants::print_precision) << std::right << "Act-var,"
-           << std::setw(5 + Constants::print_precision) << std::right << "Act-std_dev" << '\t'
-           << std::setw(5 + Constants::print_precision) << std::right << "Ax-avg,"
-           << std::setw(6 + Constants::print_precision) << std::right << "Ax-min,"
-           << std::setw(6 + Constants::print_precision) << std::right << "Ax-max,"
-           << std::setw(6 + Constants::print_precision) << std::right << "Ax-var,"
-           << std::setw(5 + Constants::print_precision) << std::right << "Ax-std_dev" << '\t'
-           << std::setw(5 + Constants::print_precision) << std::right << "f-Ax-avg,"
-           << std::setw(6 + Constants::print_precision) << std::right << "f-Ax-min,"
-           << std::setw(6 + Constants::print_precision) << std::right << "f-Ax-max,"
-           << std::setw(6 + Constants::print_precision) << std::right << "f-Ax-var,"
-           << std::setw(5 + Constants::print_precision) << std::right << "f-Ax-std_dev" << '\t'
-           << "\n";
+        // Write data at step "step"
+        LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, false,
+            "{2:<{0}}{3:<{0}.{1}f}{4:<{0}.{1}f}{5:<{0}.{1}f}{6:<{0}.{1}f}{7:<{0}.{1}f}{8:<{0}.{1}f}{9:<{0}.{1}f}{10:<{0}.{1}f}{11:<{0}.{1}f}{12:<{0}.{1}f}",
+            cwidth,
+            Constants::print_precision,
+            step,
+            calcium_statistics.avg,
+            calcium_statistics.min,
+            calcium_statistics.max,
+            calcium_statistics.var,
+            calcium_statistics.std,
+            activity_statistics.avg,
+            activity_statistics.min,
+            activity_statistics.max,
+            activity_statistics.var,
+            activity_statistics.std);
     }
-
-    // Write data at step "step"
-    ss << std::left << std::setw(12) << step;
-    print_statistics(calcium_statistics);
-    ss << '\t';
-    print_statistics(activity_statistics);
-    ss << '\t';
-    print_statistics(axons_statistics);
-    ss << '\t';
-    print_statistics(axons_free_statistics);
-    ss << "\n";
-
-    LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, ss.str(), false);
 }
 
 void Neurons::print_network_graph_to_log_file() {
@@ -1256,17 +1232,13 @@ void Neurons::print_network_graph_to_log_file() {
     // Write network graph to file
     network_graph->print(ss, extra_info);
 
-    LogFiles::write_to_file(LogFiles::EventType::Network, ss.str(), false);
+    LogFiles::write_to_file(LogFiles::EventType::Network, false, ss.str());
 }
 
 void Neurons::print_positions_to_log_file() {
     std::stringstream ss;
-
     // Write total number of neurons to log file
-    ss << "# " << partition->get_total_num_neurons() << "\n";
-    ss << "# "
-       << "<global id> <pos x> <pos y> <pos z> <area> <type>"
-       << "\n";
+    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# {}\n#\n<global id> <pos x> <pos y> <pos z> <area> <type>", partition->get_total_num_neurons());
 
     const std::vector<double>& axons_x_dims = extra_info->get_x_dims();
     const std::vector<double>& axons_y_dims = extra_info->get_y_dims();
@@ -1285,18 +1257,16 @@ void Neurons::print_positions_to_log_file() {
         const auto global_id = extra_info->rank_neuron_id2glob_id(rank_neuron_id);
         const auto& signal_type_name = (signal_types[neuron_id] == SignalType::EXCITATORY) ? std::string("ex") : std::string("int");
 
-        ss << (global_id + 1) << " "
-           << axons_x_dims[neuron_id] << " "
-           << axons_y_dims[neuron_id] << " "
-           << axons_z_dims[neuron_id] << " "
-           << area_names[neuron_id] << " "
-           << signal_type_name << "\n";
+        LogFiles::write_to_file(LogFiles::EventType::Positions, false,
+            "{1:<} {2:<.{0}} {3:<.{0}} {4:<.{0}} {5:<} {6:<}",
+            Constants::print_precision, (global_id + 1), axons_x_dims[neuron_id], axons_y_dims[neuron_id],
+            axons_z_dims[neuron_id], area_names[neuron_id], signal_type_name);
     }
 
     ss << std::flush;
     ss << std::defaultfloat;
 
-    LogFiles::write_to_file(LogFiles::EventType::Positions, ss.str(), false);
+    LogFiles::write_to_file(LogFiles::EventType::Positions, false, ss.str());
 }
 
 void Neurons::print() {
@@ -1307,18 +1277,15 @@ void Neurons::print() {
     std::stringstream ss;
 
     // Heading
-    ss << std::left << std::setw(cwidth_left) << "gid" << std::setw(cwidth) << "x" << std::setw(cwidth) << "AP";
-    ss << std::setw(cwidth) << "refrac" << std::setw(cwidth) << "C" << std::setw(cwidth) << "A" << std::setw(cwidth) << "D_ex" << std::setw(cwidth) << "D_in"
-       << "\n";
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "{2:<{1}}{3:<{0}}{4:<{0}}{5:<{0}}{6:<{0}}{7:<{0}}{8:<{0}}{9:<{0}}", cwidth, cwidth_left, "gid", "x", "AP", "refrac", "C", "A", "D_ex", "D_in");
 
     // Values
     for (size_t i = 0; i < num_neurons; i++) {
-        ss << std::left << std::setw(cwidth_left) << i << std::setw(cwidth) << neuron_model->get_x(i) << std::setw(cwidth) << neuron_model->get_fired(i);
-        ss << std::setw(cwidth) << neuron_model->get_secondary_variable(i) << std::setw(cwidth) << calcium[i] << std::setw(cwidth) << axons->get_cnt(i);
-        ss << std::setw(cwidth) << dendrites_exc->get_cnt(i) << std::setw(cwidth) << dendrites_inh->get_cnt(i) << "\n";
+        LogFiles::write_to_file(LogFiles::EventType::Cout, true, "{3:<{1}}{4:<{0}.{2}f}{5:<{0}}{6:<{0}.{2}f}{7:<{0}.{2}f}{8:<{0}.{2}f}{9:<{0}.{2}f}{10:<{0}.{2}f}", cwidth, cwidth_left, Constants::print_precision, i, neuron_model->get_x(i), neuron_model->get_fired(i),
+            neuron_model->get_secondary_variable(i), calcium[i], axons->get_cnt(i), dendrites_exc->get_cnt(i), dendrites_inh->get_cnt(i));
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
 }
 
 void Neurons::print_info_for_barnes_hut() {
@@ -1371,25 +1338,22 @@ void Neurons::print_info_for_barnes_hut() {
         ss << "\n";
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
 }
 
 void Neurons::print_pending_synapse_deletions(const PendingDeletionsV& list) {
-    std::stringstream ss;
-
     for (const auto& it : list) {
         size_t affected_element_type_converted = it.get_affected_element_type() == ElementType::AXON ? 0 : 1;
         size_t signal_type_converted = it.get_signal_type() == SignalType::EXCITATORY ? 0 : 1;
 
-        ss << "src_neuron_id: " << it.get_src_neuron_id() << "\n";
-        ss << "tgt_neuron_id: " << it.get_tgt_neuron_id() << "\n";
-        ss << "affected_neuron_id: " << it.get_affected_neuron_id() << "\n";
-        ss << "affected_element_type: " << affected_element_type_converted << "\n";
-        ss << "signal_type: " << signal_type_converted << "\n";
-        ss << "synapse_id: " << it.get_synapse_id() << "\n";
-        ss << "affected_element_already_deleted: " << it.get_affected_element_already_deleted() << "\n"
-           << "\n";
+        LogFiles::write_to_file(LogFiles::EventType::Cout, true,
+            "src_neuron_id: {}\ntgt_neuron_id: {}\naffected_neuron_id: {}\naffected_element_type: {}\nsignal_type: {}\nsynapse_id: {}\naffected_element_already_deleted: {}\n",
+            it.get_src_neuron_id(),
+            it.get_tgt_neuron_id(),
+            it.get_affected_neuron_id(),
+            affected_element_type_converted,
+            signal_type_converted,
+            it.get_synapse_id(),
+            it.get_affected_element_already_deleted());
     }
-
-    LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
 }
