@@ -156,11 +156,13 @@ int main(int argc, char** argv) {
     if (0 == my_rank) {
         std::stringstream sstring; // For output generation
 
-        sstring << "START: " << Timers::wall_clock_time() << "\n";
+        sstring << "START: " << Timers::wall_clock_time() << '\n';
 
-        sstring << "Chosen lower bound for vacant synaptic elements: " << synaptic_elements_init_lb << "\n";
-        sstring << "Chosen upper bound for vacant synaptic elements: " << synaptic_elements_init_ub << "\n";
-        sstring << "Chosen target calcium value: " << target_calcium;
+        sstring << "Chosen lower bound for vacant synaptic elements: " << synaptic_elements_init_lb << '\n';
+        sstring << "Chosen upper bound for vacant synaptic elements: " << synaptic_elements_init_ub << '\n';
+        sstring << "Chosen target calcium value: " << target_calcium << '\n';
+        sstring << "Chosen beta value: " << beta << '\n';
+        sstring << "Chosen nu valua: " << nu;
 
         LogFiles::print_message_rank(sstring.str().c_str(), 0);
     }
