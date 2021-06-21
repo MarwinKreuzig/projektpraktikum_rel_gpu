@@ -98,12 +98,13 @@ void Simulation::load_neurons_from_file(const std::string& path_to_positions, co
     if (optional_path_to_connections.has_value()) {
         const auto& path_to_connections = optional_path_to_connections.value();
 
-    network_graph->add_edges_from_file(path_to_connections, path_to_positions, *partition);
-    LogFiles::print_message_rank(0, "Network graph created");
+        network_graph->add_edges_from_file(path_to_connections, path_to_positions, *partition);
+        LogFiles::print_message_rank(0, "Network graph created");
 
-    neurons->init_synaptic_elements();
-    neurons->debug_check_counts();
-    LogFiles::print_message_rank(0, "Synaptic elements initialized \n");
+        neurons->init_synaptic_elements();
+        neurons->debug_check_counts();
+        LogFiles::print_message_rank(0, "Synaptic elements initialized \n");
+    }
 
     neurons->print_neurons_overview_to_log_file_on_rank_0(0);
     neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0);
@@ -161,26 +162,26 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             NeuronMonitor::current_step++;
         }
 
-        for (const auto& [disable_step, disable_ids] : disable_interrupts) {
-            if (disable_step == step) {
-                neurons->disable_neurons(disable_ids);
-                LogFiles::write_to_file(LogFiles::EventType::Cout, std::string("Disabling ") + std::to_string(disable_ids.size()) + " neurons in step " + std::to_string(disable_step) + "\n", true);
-            }
-        }
+        //for (const auto& [disable_step, disable_ids] : disable_interrupts) {
+        //    if (disable_step == step) {
+        //        neurons->disable_neurons(disable_ids);
+        //        LogFiles::write_to_file(LogFiles::EventType::Cout, false, std::string("Disabling ") + std::to_string(disable_ids.size()) + " neurons in step " + std::to_string(disable_step) + "\n");
+        //    }
+        //}
 
-        for (const auto& [enable_step, enable_ids] : enable_interrupts) {
-            if (enable_step == step) {
-                neurons->enable_neurons(enable_ids);
-                LogFiles::write_to_file(LogFiles::EventType::Cout, std::string("Enabling ") + std::to_string(enable_ids.size()) + " neurons in step " + std::to_string(enable_step) + "\n", true);
-            }
-        }
+        //for (const auto& [enable_step, enable_ids] : enable_interrupts) {
+        //    if (enable_step == step) {
+        //        neurons->enable_neurons(enable_ids);
+        //        LogFiles::write_to_file(LogFiles::EventType::Cout, std::string("Enabling ") + std::to_string(enable_ids.size()) + " neurons in step " + std::to_string(enable_step) + "\n", true);
+        //    }
+        //}
 
-        for (const auto& [creation_step, creation_count] : creation_interrupts) {
-            if (creation_step == step) {
-                neurons->create_neurons(creation_count);
-                LogFiles::write_to_file(LogFiles::EventType::Cout, std::string("Creating ") + std::to_string(creation_count) + " neurons in step " + std::to_string(creation_step) + "\n", true);
-            }
-        }
+        //for (const auto& [creation_step, creation_count] : creation_interrupts) {
+        //    if (creation_step == step) {
+        //        neurons->create_neurons(creation_count);
+        //        LogFiles::write_to_file(LogFiles::EventType::Cout, std::string("Creating ") + std::to_string(creation_count) + " neurons in step " + std::to_string(creation_step) + "\n", true);
+        //    }
+        //}
 
         // Provide neuronal network to neuron models for one iteration step
         GlobalTimers::timers.start(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);

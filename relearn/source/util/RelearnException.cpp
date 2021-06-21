@@ -17,8 +17,6 @@
 
 #include <spdlog/spdlog.h>
 
-#include "MPIWrapper.h"
-
 [[nodiscard]] const char* RelearnException::what() const noexcept {
     return message.c_str();
 }

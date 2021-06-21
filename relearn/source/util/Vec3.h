@@ -13,6 +13,8 @@
 #include "../Config.h"
 #include "../util/RelearnException.h"
 
+#include <spdlog/fmt/bundled/ostream.h>
+
 template <typename T>
 class Vec3 {
     T x;

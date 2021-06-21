@@ -50,6 +50,8 @@ class LogFiles {
     //     }
     // };
 
+    friend class RelearnTest;
+
 public:
     /**
      * This enum classifies the different type of files that can be written to.
