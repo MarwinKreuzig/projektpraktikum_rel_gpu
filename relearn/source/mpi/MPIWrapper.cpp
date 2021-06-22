@@ -84,6 +84,7 @@ void MPIWrapper::barrier(Scope scope) {
 }
 
 double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, Scope scope) {
+    RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
     const MPI_Comm mpi_scope = translate_scope(scope);
     const MPI_Op mpi_reduce_function = translate_reduce_function(function);
 
@@ -121,6 +122,7 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
 }
 
 void MPIWrapper::async_s(const void* buffer, int count, int rank, Scope scope, AsyncToken& token) {
+    RelearnException::check(rank >= 0, "Error in async s, rank is <= 0");
     const MPI_Comm mpi_scope = translate_scope(scope);
     // NOLINTNEXTLINE
     const int errorcode = MPI_Isend(buffer, count, MPI_CHAR, rank, 0, mpi_scope, &token);
@@ -128,6 +130,7 @@ void MPIWrapper::async_s(const void* buffer, int count, int rank, Scope scope, A
 }
 
 void MPIWrapper::async_recv(void* buffer, int count, int rank, Scope scope, AsyncToken& token) {
+    RelearnException::check(rank >= 0, "Error in async recv, rank is <= 0");
     const MPI_Comm mpi_scope = translate_scope(scope);
     // NOLINTNEXTLINE
     const int errorcode = MPI_Irecv(buffer, count, MPI_CHAR, rank, 0, mpi_scope, &token);
@@ -144,6 +147,7 @@ void MPIWrapper::reduce(const void* src, void* dst, int size, ReduceFunction fun
 }
 
 void MPIWrapper::get(void* ptr, int size, int target_rank, int64_t target_display) {
+    RelearnException::check(target_rank >= 0, "Error in get, target_rank was negative");
     RelearnException::check(size > 0, "Error in get, size must be larget than 0");
     const MPI_Aint target_display_mpi(target_display);
     // NOLINTNEXTLINE
@@ -169,7 +173,9 @@ void MPIWrapper::all_gather_inl(void* ptr, int count, Scope scope) {
 }
 
 int64_t MPIWrapper::get_ptr_displacement(int target_rank, const OctreeNode* ptr) {
+    RelearnException::check(target_rank >= 0, "target rank is negative in get ptr displacement");
     const auto& base_ptrs = MPI_RMA_MemAllocator::get_base_pointers();
+    RelearnException::check(target_rank < base_ptrs.size(), "target rank is greater than the base pointers");
     const auto displacement = int64_t(ptr) - base_ptrs[target_rank];
     return displacement;
 }
@@ -212,7 +218,8 @@ void MPIWrapper::wait_request(AsyncToken& request) {
     // NOLINTNEXTLINE
     if (MPI_REQUEST_NULL != request) {
         // NOLINTNEXTLINE
-        MPI_Wait(&request, MPI_STATUS_IGNORE);
+        const int errorcode = MPI_Wait(&request, MPI_STATUS_IGNORE);
+        RelearnException::check(errorcode == 0, "Error in wait_request ");
     }
 }
 
@@ -253,7 +260,8 @@ void MPIWrapper::all_gather_v(size_t total_num_neurons, std::vector<double>& xyz
 void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
     const int size = static_cast<int>(tokens.size());
     // NOLINTNEXTLINE
-    MPI_Waitall(size, tokens.data(), MPI_STATUSES_IGNORE);
+    const int errorcode = MPI_Waitall(size, tokens.data(), MPI_STATUSES_IGNORE);
+    RelearnException::check(errorcode == 0, "Error in wait_all_tokens");
 }
 
 MPI_Op MPIWrapper::translate_reduce_function(ReduceFunction rf) {

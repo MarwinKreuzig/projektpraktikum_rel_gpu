@@ -39,6 +39,11 @@ namespace MPIUserDefinedOperation {
 void min_sum_max(const int* invec, int* inoutvec, const int* len, MPI_Datatype* dtype);
 } // namespace MPIUserDefinedOperation
 
+/** 
+ * This class provides a static interface to every kind of MPI functionality that should be called from other classes.
+ * It wraps functionality in a C++ type safe manner.
+ * The first call must be MPIWrapper::init(...) and the last one MPIWrapper::finalize(), not calling any of those inbetween.
+ */
 class MPIWrapper {
     struct RMABufferOctreeNodes {
         OctreeNode* ptr;
@@ -46,11 +51,20 @@ class MPIWrapper {
     };
 
 public:
+    /**
+     * This enum serves as a marker for the scope of the MPI functions. 
+     * It only serves the purpose of providing an interface for future work.
+     * Scope::none is not supported and always triggers a RelearnException.
+     */
     enum class Scope : char {
         global = 0,
         none = 1
     };
 
+    /**
+     * This enum serves as a marker for the function that should be used in reductions.
+     * ReduceFunction::none is not supported and always triggers a RelearnException.
+     */
     enum class ReduceFunction : char {
         min = 0,
         max = 1,
@@ -64,6 +78,8 @@ public:
 
 private:
     MPIWrapper() = default;
+
+    static void init_globals();
 
     static inline MPI_Op minsummax{};
 
@@ -100,91 +116,260 @@ private:
     static void async_recv(void* buffer, int count, int rank, Scope scope, AsyncToken& token);
 
 public:
+    /**
+     * @brief Initializes the local MPI implementation via MPI_Init_Thread;
+     *      initializes the global variables and the custom functions. Must be called before every other call to a member function.
+     * @parameter argc Is passed to MPI_Init_Thread
+     * @parameter argv Is passed to MPI_Init_Thread
+     */
     static void init(int argc, char** argv);
 
-    static void init_globals();
-
+    /**
+     * @brief Initializes the shared RMA memory. Must be called before any call involving OctreeNode*.
+     * @parameter num_partitions The number of partitions across all MPI ranks (of the form 8^k)
+     */
     static void init_buffer_octree(size_t num_partitions);
 
+    /**
+     * @brief The calling MPI rank halts until all MPI ranks within the scope reach the method.
+     * @parameter scope The scope in which the MPI ranks are synchronized
+     * @exception Throws a RelearnException if an MPI error occurs or scope is Scope::none
+     */
     static void barrier(Scope scope);
 
+    /**
+     * @brief
+     * @parameter
+     * @parameter
+     * @parameter
+     * @parameter
+     * @exception Throws a RelearnException if an MPI error occurs or if root_rank is < 0
+     * @return
+     */
     [[nodiscard]] static double reduce(double value, ReduceFunction function, int root_rank, Scope scope);
 
+    /**
+     * @brief
+     * @parameter
+     * @parameter
+     * @parameter
+     * @exception Throws a RelearnException if an MPI error occurs
+     * @return
+     */
     [[nodiscard]] static double all_reduce(double value, ReduceFunction function, Scope scope);
 
+    /**
+     * @brief
+     * @parameter
+     * @parameter
+     * @parameter
+     * @exception Throws a RelearnException if an MPI error occurs or if src.size() != dst.size()
+     */
     // NOLINTNEXTLINE
     static void all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst, Scope scope);
 
+    /**
+     * @brief
+     * @parameter
+     * @parameter
+     * @parameter
+     * @parameter
+     * @parameter
+     * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
+     */
     template <typename T>
     // NOLINTNEXTLINE
     static void async_send(const T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
         async_s(buffer, static_cast<int>(size_in_bytes), rank, scope, token);
     }
 
+    /**
+     * @brief
+     * @parameter
+     * @parameter
+     * @parameter
+     * @parameter
+     * @parameter
+     * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
+     */
     template <typename T>
     // NOLINTNEXTLINE
     static void async_receive(T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
         async_recv(buffer, static_cast<int>(size_in_bytes), rank, scope, token);
     }
 
+    /**
+     * @brief
+     * @parameter
+     * @parameter
+     * @parameter
+     * @parameter
+     * @parameter
+     * @exception Throws a RelearnException if an MPI error occurs, if root_rank is < 0 or if src.size() != dst.size()
+     */
     template <typename T, size_t size>
     static void reduce(const std::array<T, size>& src, std::array<T, size>& dst, ReduceFunction function, int root_rank, Scope scope) {
+        RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
         RelearnException::check(src.size() == dst.size(), "Sizes of vectors don't match");
 
         const auto count = static_cast<int>(src.size() * sizeof(T));
         reduce(src.data(), dst.data(), count, function, root_rank, scope);
     }
 
+    /**
+     * @brief
+     * @parameter
+     * @parameter
+     * @parameter
+     * @exception Throws a RelearnException if an MPI error occurs
+     */
     template <typename T>
     static void all_gather(T own_data, std::vector<T>& results, Scope scope) {
         all_gather(&own_data, results.data(), sizeof(T), scope);
     }
 
+    /**
+     * @brief
+     * @parameter
+     * @parameter
+     * @parameter
+     * @exception Throws a RelearnException if an MPI error occurs or if target_rank is < 0
+     */
     template <typename T>
     static void get(T* ptr, int target_rank, int64_t target_display) {
         get(ptr, sizeof(T), target_rank, target_display);
     }
 
+    /**
+     * @brief
+     * @parameter
+     * @parameter
+     * @parameter
+     * @exception Throws a RelearnException if an MPI error occurs or if count <= 0
+     */
     template <typename T>
     static void all_gather_inline(T* ptr, int count, Scope scope) {
         all_gather_inl(ptr, count * sizeof(T), scope);
     }
 
+    /**
+     * @brief
+     * @parameter
+     * @parameter
+     * @exception Throws a RelearnException if target_rank is < 0 or larger than the number of base pointers
+     * @return
+     */
     [[nodiscard]] static int64_t get_ptr_displacement(int target_rank, const OctreeNode* ptr);
 
+    /**
+     * @brief
+     * @exception Throws a RelearnException if no shared memory is available
+     * @return
+     */
     [[nodiscard]] static OctreeNode* new_octree_node();
 
+    /**
+     * @brief
+     * @exception Throws a RelearnException if the MPIWrapper is not initialized
+     * @return
+     */
     [[nodiscard]] static int get_num_ranks();
 
+    /**
+     * @brief
+     * @exception Throws a RelearnException if the MPIWrapper is not initialized
+     * @return
+     */
     [[nodiscard]] static int get_my_rank();
 
+    /**
+     * @brief
+     * @return
+     */
     [[nodiscard]] static size_t get_num_avail_objects();
 
+    /**
+     * @brief
+     * @return
+     */
     [[nodiscard]] static OctreeNode* get_buffer_octree_nodes();
 
+    /**
+     * @brief
+     * @return
+     */
     [[nodiscard]] static size_t get_num_buffer_octree_nodes();
 
+    /**
+     * @brief
+     * @return
+     */
     [[nodiscard]] static std::string get_my_rank_str();
 
+    /**
+     * @brief
+     * @parameter
+     */
     static void delete_octree_node(OctreeNode* ptr);
 
+    /**
+     * @brief
+     * @parameter
+     * @exception Throws a RelearnException if an MPI error occurs
+     */
     // NOLINTNEXTLINE
     static void wait_request(AsyncToken& request);
 
+    /**
+     * @brief
+     * @return
+     */
     [[nodiscard]] static AsyncToken get_non_null_request();
 
+    /**
+     * @brief
+     * @return
+     */
     [[nodiscard]] static AsyncToken get_null_request();
 
+    /**
+     * @brief
+     * @parameter
+     * @parameter
+     * @parameter
+     * @parameter
+     * @exception Throws a RelearnException if an MPI error occurs
+     */
     // NOLINTNEXTLINE
     static void all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs);
 
+    /**
+     * @brief
+     * @parameter
+     * @exception Throws a RelearnException if an MPI error occurs
+     */
     // NOLINTNEXTLINE
     static void wait_all_tokens(std::vector<AsyncToken>& tokens);
 
+    /**
+     * @brief
+     * @parameter
+     * @parameter
+     * @exception Throws a RelearnException if an MPI error occurs or if rank <= 0
+     */
     static void lock_window(int rank, MPI_Locktype lock_type);
 
+    /**
+     * @brief
+     * @parameter
+     * @exception Throws a RelearnException if an MPI error occurs or if rank <= 0
+     */
     static void unlock_window(int rank);
 
+    /**
+     * @brief
+     * @exception Throws a RelearnException if an MPI error occurs
+     */
     static void finalize() /*noexcept*/;
 };
 
