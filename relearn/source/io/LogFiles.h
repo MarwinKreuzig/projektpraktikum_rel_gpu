@@ -116,7 +116,11 @@ public:
 
     /**
      * @brief Write the message into the file which is associated with the type.
-     *      Optionally prints the message also to std::cout
+     *      Optionally prints the message also to std::cout. The message can have place-holders of the form "{}", which are filled with additional arguments in the order of occurrence.
+     * @parameter type The event type to which the message belongs
+     * @parameter also_to_cout A flag that indicates if the formatted string should also be print to std::cout
+     * @parameter format Some type of string, optionally with place-holders of the form {}
+     * @parameter args Variably many additional arguments that are inserted for the place-holders
      */
     template <typename FormatString, typename... Args>
     static void write_to_file(EventType type, bool also_to_cout, FormatString&& format, Args&&... args) {
@@ -133,6 +137,13 @@ public:
     }
 
     // Print tagged message only at MPI rank "rank"
+    /**
+     * @brief Prints a message to std::cout (and the associated file), if rank matches the current MPI rank.
+     *      The message can have place-holders of the form "{}", which are filled with additional arguments in the order of occurrence.
+     * @parameter rank The MPI rank that should print the message. -1 for all MPI ranks
+     * @parameter format Some type of string, optionally with place-holders of the form {}
+     * @parameter args Variably many additional arguments that are inserted for the place-holders
+     */
     template <typename FormatString, typename... Args>
     static void print_message_rank(int rank, FormatString&& format, Args&&... args) {
         if (do_i_print(rank)) {
