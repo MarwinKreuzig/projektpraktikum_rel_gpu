@@ -40,9 +40,7 @@ void Timers::print() {
         }
     }
 
-    std::array<double, expected_num_timers> timers_global{};
-
-    MPIWrapper::reduce(timers_local, timers_global, MPIWrapper::ReduceFunction::minsummax, 0, MPIWrapper::Scope::global);
+    std::array<double, expected_num_timers> timers_global = MPIWrapper::reduce(timers_local, MPIWrapper::ReduceFunction::minsummax, 0, MPIWrapper::Scope::global);
     std::stringstream sstring;
 
     // Divide second entry of (min, sum, max), i.e., sum, by the number of ranks

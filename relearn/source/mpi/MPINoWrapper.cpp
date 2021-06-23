@@ -143,17 +143,6 @@ void MPINoWrapper::delete_octree_node(OctreeNode* ptr) {
 void MPINoWrapper::wait_request(AsyncToken& /*request*/) {
 }
 
-[[nodiscard]] MPINoWrapper::AsyncToken MPINoWrapper::get_non_null_request() {
-    return 1;
-}
-
-[[nodiscard]] MPINoWrapper::AsyncToken MPINoWrapper::get_null_request() {
-    return 0;
-}
-
-void MPINoWrapper::all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs) {
-}
-
 void MPINoWrapper::wait_all_tokens(std::vector<AsyncToken>& /*tokens*/) {
 }
 

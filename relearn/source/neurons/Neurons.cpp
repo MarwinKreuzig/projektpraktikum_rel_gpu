@@ -1128,9 +1128,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 
     // NOLINTNEXTLINE
     RelearnException::check(Constants::num_items_per_request > 5, "In Neurons, number of items per request is smaller than 6");
-    std::array<unsigned int, Constants::num_items_per_request> sums_global{ 0, 0, 0, 0, 0, 0 }; // Init all to zero
-
-    MPIWrapper::reduce(sums_local, sums_global, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
+    std::array<unsigned int, Constants::num_items_per_request> sums_global = MPIWrapper::reduce(sums_local, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
 
     // Output data
     if (0 == MPIWrapper::get_my_rank()) {

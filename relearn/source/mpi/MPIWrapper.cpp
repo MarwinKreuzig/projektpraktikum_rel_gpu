@@ -146,12 +146,12 @@ void MPIWrapper::reduce(const void* src, void* dst, int size, ReduceFunction fun
     RelearnException::check(errorcode == 0, "Error in reduce: %d", errorcode);
 }
 
-void MPIWrapper::get(void* ptr, int size, int target_rank, int64_t target_display) {
+void MPIWrapper::get(void* ptr, int size, int target_rank, int64_t target_displacement) {
     RelearnException::check(target_rank >= 0, "Error in get, target_rank was negative");
     RelearnException::check(size > 0, "Error in get, size must be larget than 0");
-    const MPI_Aint target_display_mpi(target_display);
+    const MPI_Aint target_displacement_mpi(target_displacement);
     // NOLINTNEXTLINE
-    const int errorcode = MPI_Get(ptr, size, MPI_CHAR, target_rank, target_display_mpi, size, MPI_CHAR, MPI_RMA_MemAllocator::mpi_window);
+    const int errorcode = MPI_Get(ptr, size, MPI_CHAR, target_rank, target_displacement_mpi, size, MPI_CHAR, MPI_RMA_MemAllocator::mpi_window);
     RelearnException::check(errorcode == 0, "Error in get");
 }
 
@@ -207,6 +207,7 @@ size_t MPIWrapper::get_num_buffer_octree_nodes() {
 }
 
 std::string MPIWrapper::get_my_rank_str() {
+    RelearnException::check(my_rank >= 0, "MPIWrapper is not initialized");
     return my_rank_str;
 }
 
@@ -221,40 +222,6 @@ void MPIWrapper::wait_request(AsyncToken& request) {
         const int errorcode = MPI_Wait(&request, MPI_STATUS_IGNORE);
         RelearnException::check(errorcode == 0, "Error in wait_request ");
     }
-}
-
-MPIWrapper::AsyncToken MPIWrapper::get_non_null_request() {
-    // NOLINTNEXTLINE
-    return (AsyncToken)(!MPI_REQUEST_NULL);
-}
-
-MPIWrapper::AsyncToken MPIWrapper::get_null_request() {
-    // NOLINTNEXTLINE
-    return (AsyncToken)(MPI_REQUEST_NULL);
-}
-
-void MPIWrapper::all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs) {
-    // Create MPI data type for three doubles
-    // NOLINTNEXTLINE
-    MPI_Datatype type{};
-
-    // NOLINTNEXTLINE
-    const int errorcode_1 = MPI_Type_contiguous(3, MPI_DOUBLE, &type);
-    RelearnException::check(errorcode_1 == 0, "Error in all to all, mpi");
-
-    const int errorcode_2 = MPI_Type_commit(&type);
-    RelearnException::check(errorcode_2 == 0, "Error in all to all, mpi");
-
-    barrier(Scope::global);
-
-    // Receive all neuron positions as xyz-triples
-
-    // NOLINTNEXTLINE
-    const int errorcode_3 = MPI_Allgatherv(MPI_IN_PLACE, static_cast<int>(total_num_neurons), type, xyz_pos.data(), recvcounts.data(), displs.data(), type, MPI_COMM_WORLD);
-    RelearnException::check(errorcode_3 == 0, "Error in all to all, mpi");
-
-    const int errorcode_4 = MPI_Type_free(&type);
-    RelearnException::check(errorcode_4 == 0, "Error in all to all, mpi");
 }
 
 void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {

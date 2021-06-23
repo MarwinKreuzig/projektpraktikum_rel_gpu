@@ -101,7 +101,7 @@ private:
     // NOLINTNEXTLINE
     static inline std::string my_rank_str{ "-1" };
 
-    static void get(void* ptr, int size, int target_rank, int64_t target_display);
+    static void get(void* ptr, int size, int target_rank, int64_t target_displacement);
 
     static void all_gather(const void* own_data, void* buffer, int size, Scope scope);
 
@@ -118,7 +118,7 @@ private:
 public:
     /**
      * @brief Initializes the local MPI implementation via MPI_Init_Thread;
-     *      initializes the global variables and the custom functions. Must be called before every other call to a member function.
+     *      initializes the global variables and the custom functions. Must be called before any other call to a member function.
      * @parameter argc Is passed to MPI_Init_Thread
      * @parameter argv Is passed to MPI_Init_Thread
      */
@@ -138,43 +138,88 @@ public:
     static void barrier(Scope scope);
 
     /**
-     * @brief
-     * @parameter
-     * @parameter
-     * @parameter
-     * @parameter
+     * @brief Reduces a value for every MPI rank in the given scope with a reduction function such that the root_rank has the final result
+     * @parameter value The local value that should be reduced
+     * @parameter function The reduction function, should be associative and commutative
+     * @parameter root_rank The MPI rank that shall hold the final result
+     * @parameter scope The scope in which the reduction has to take place
      * @exception Throws a RelearnException if an MPI error occurs or if root_rank is < 0
-     * @return
+     * @return On the MPI rank root_rank: The result of the reduction; A dummy value on every other MPI rank
      */
     [[nodiscard]] static double reduce(double value, ReduceFunction function, int root_rank, Scope scope);
 
     /**
-     * @brief
-     * @parameter
-     * @parameter
-     * @parameter
+     * @brief Reduces a value for every MPI rank in the given scope with a reduction function such that every rank has the final result
+     * @parameter value The local value that should be reduced
+     * @parameter function The reduction function, should be associative and commutative
+     * @parameter scope The scope in which the reduction has to take place
      * @exception Throws a RelearnException if an MPI error occurs
-     * @return
+     * @return The final result of the reduction
      */
     [[nodiscard]] static double all_reduce(double value, ReduceFunction function, Scope scope);
 
     /**
-     * @brief
-     * @parameter
-     * @parameter
-     * @parameter
+     * @brief Reduces multiple values for every MPI rank in the given scope with a reduction function such that the root_rank has the final result. The reduction is performed componentwise
+     * @parameter src The local array of values that shall be reduced
+     * @parameter function The reduction function, should be associative and commutative
+     * @parameter root_rank The MPI rank that shall hold the final result
+     * @parameter scope The scope in which the reduction has to take place
+     * @exception Throws a RelearnException if an MPI error occurs or if root_rank is < 0
+     * @return On the MPI rank root_rank: The results of the componentwise reduction; A dummy value on every other MPI rank
+     */
+    template <typename T, size_t size>
+    static std::array<T, size> reduce(const std::array<T, size>& src, ReduceFunction function, int root_rank, Scope scope) {
+        RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
+
+        std::array<T, size> dst{};
+
+        const auto count = static_cast<int>(src.size() * sizeof(T));
+        reduce(src.data(), dst.data(), count, function, root_rank, scope);
+
+        return dst;
+    }
+
+    /**
+     * @brief Exchanges one size_t between every pair for MPI ranks in the given scope
+     * @parameter src The values that shall be sent to the other MPI ranks. MPI rank i receives src[i]
+     * @parameter dst The values that were transmitted by the other MPI ranks. MPI rank i sent dst[i]
+     * @parameter scope The scope in which the all to all communication has to take place
      * @exception Throws a RelearnException if an MPI error occurs or if src.size() != dst.size()
      */
     // NOLINTNEXTLINE
     static void all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst, Scope scope);
 
     /**
-     * @brief
-     * @parameter
-     * @parameter
-     * @parameter
-     * @parameter
-     * @parameter
+     * @brief Gathers one value for each MPI rank into a vector on all MPI ranks
+     * @parameter own_data The local value that shall be sent to all MPI ranks
+     * @parameter results The data from all MPI ranks. The value of MPI rank i is in results[i]
+     * @parameter scope The scope in which the all to all communication has to take place
+     * @exception Throws a RelearnException if an MPI error occurs
+     */
+    template <typename T>
+    static void all_gather(T own_data, std::vector<T>& results, Scope scope) {
+        all_gather(&own_data, results.data(), sizeof(T), scope);
+    }
+
+    /**
+     * @brief Gathers multiple values for each MPI rank into the provided buffer on all MPI ranks
+     * @parameter ptr The buffer to which the data will be written. The values of MPI rank i are in ptr[count * i + {0, 1, ..., count - 1}]
+     * @parameter count The number of local values that shall be gathered
+     * @parameter scope The scope in which the all to all communication has to take place
+     * @exception Throws a RelearnException if an MPI error occurs or if count <= 0
+     */
+    template <typename T>
+    static void all_gather_inline(T* ptr, int count, Scope scope) {
+        all_gather_inl(ptr, count * sizeof(T), scope);
+    }
+
+    /**
+     * @brief Sends data to another MPI rank asynchronously
+     * @parameter buffer The data that shall be sent to the other MPI rank
+     * @parameter size_in_bytes The number of bytes that shall be sent
+     * @parameter rank The other MPI rank that shall receive the data
+     * @parameter scope The scope in which the communication has to take place
+     * @parameter token A token that can be used to query if the asynchronous communication completed
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
     template <typename T>
@@ -184,12 +229,12 @@ public:
     }
 
     /**
-     * @brief
-     * @parameter
-     * @parameter
-     * @parameter
-     * @parameter
-     * @parameter
+     * @brief Receives data from another MPI rank asynchronously
+     * @parameter buffer The address where the data shall be written to
+     * @parameter size_in_bytes The number of bytes that shall be received
+     * @parameter rank The other MPI rank that shall send the data
+     * @parameter scope The scope in which the communication has to take place
+     * @parameter token A token that can be used to query if the asynchronous communication completed
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
     template <typename T>
@@ -199,175 +244,113 @@ public:
     }
 
     /**
-     * @brief
-     * @parameter
-     * @parameter
-     * @parameter
-     * @parameter
-     * @parameter
-     * @exception Throws a RelearnException if an MPI error occurs, if root_rank is < 0 or if src.size() != dst.size()
-     */
-    template <typename T, size_t size>
-    static void reduce(const std::array<T, size>& src, std::array<T, size>& dst, ReduceFunction function, int root_rank, Scope scope) {
-        RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
-        RelearnException::check(src.size() == dst.size(), "Sizes of vectors don't match");
-
-        const auto count = static_cast<int>(src.size() * sizeof(T));
-        reduce(src.data(), dst.data(), count, function, root_rank, scope);
-    }
-
-    /**
-     * @brief
-     * @parameter
-     * @parameter
-     * @parameter
-     * @exception Throws a RelearnException if an MPI error occurs
-     */
-    template <typename T>
-    static void all_gather(T own_data, std::vector<T>& results, Scope scope) {
-        all_gather(&own_data, results.data(), sizeof(T), scope);
-    }
-
-    /**
-     * @brief
-     * @parameter
-     * @parameter
-     * @parameter
-     * @exception Throws a RelearnException if an MPI error occurs or if target_rank is < 0
-     */
-    template <typename T>
-    static void get(T* ptr, int target_rank, int64_t target_display) {
-        get(ptr, sizeof(T), target_rank, target_display);
-    }
-
-    /**
-     * @brief
-     * @parameter
-     * @parameter
-     * @parameter
-     * @exception Throws a RelearnException if an MPI error occurs or if count <= 0
-     */
-    template <typename T>
-    static void all_gather_inline(T* ptr, int count, Scope scope) {
-        all_gather_inl(ptr, count * sizeof(T), scope);
-    }
-
-    /**
-     * @brief
-     * @parameter
-     * @parameter
-     * @exception Throws a RelearnException if target_rank is < 0 or larger than the number of base pointers
-     * @return
-     */
-    [[nodiscard]] static int64_t get_ptr_displacement(int target_rank, const OctreeNode* ptr);
-
-    /**
-     * @brief
-     * @exception Throws a RelearnException if no shared memory is available
-     * @return
-     */
-    [[nodiscard]] static OctreeNode* new_octree_node();
-
-    /**
-     * @brief
-     * @exception Throws a RelearnException if the MPIWrapper is not initialized
-     * @return
-     */
-    [[nodiscard]] static int get_num_ranks();
-
-    /**
-     * @brief
-     * @exception Throws a RelearnException if the MPIWrapper is not initialized
-     * @return
-     */
-    [[nodiscard]] static int get_my_rank();
-
-    /**
-     * @brief
-     * @return
-     */
-    [[nodiscard]] static size_t get_num_avail_objects();
-
-    /**
-     * @brief
-     * @return
-     */
-    [[nodiscard]] static OctreeNode* get_buffer_octree_nodes();
-
-    /**
-     * @brief
-     * @return
-     */
-    [[nodiscard]] static size_t get_num_buffer_octree_nodes();
-
-    /**
-     * @brief
-     * @return
-     */
-    [[nodiscard]] static std::string get_my_rank_str();
-
-    /**
-     * @brief
-     * @parameter
-     */
-    static void delete_octree_node(OctreeNode* ptr);
-
-    /**
-     * @brief
-     * @parameter
+     * @brief Waits for the token if it is not a dummy token
+     * @parameter request The token to be waited on
      * @exception Throws a RelearnException if an MPI error occurs
      */
     // NOLINTNEXTLINE
     static void wait_request(AsyncToken& request);
 
     /**
-     * @brief
-     * @return
-     */
-    [[nodiscard]] static AsyncToken get_non_null_request();
-
-    /**
-     * @brief
-     * @return
-     */
-    [[nodiscard]] static AsyncToken get_null_request();
-
-    /**
-     * @brief
-     * @parameter
-     * @parameter
-     * @parameter
-     * @parameter
-     * @exception Throws a RelearnException if an MPI error occurs
-     */
-    // NOLINTNEXTLINE
-    static void all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs);
-
-    /**
-     * @brief
-     * @parameter
+     * @brief Waits for all supplied tokens
+     * @parameter The tokens to be waited on
      * @exception Throws a RelearnException if an MPI error occurs
      */
     // NOLINTNEXTLINE
     static void wait_all_tokens(std::vector<AsyncToken>& tokens);
 
     /**
-     * @brief
-     * @parameter
-     * @parameter
-     * @exception Throws a RelearnException if an MPI error occurs or if rank <= 0
+     * @brief Gets the content of a memory window on another MPI rank
+     * @parameter ptr Where to write the retrieved data
+     * @parameter target_rank The other MPI rank
+     * @parameter target_displacement The displacement of the data in the memory window
+     * @exception Throws a RelearnException if an MPI error occurs or if target_rank is < 0
+     */
+    template <typename T>
+    static void get(T* ptr, int target_rank, int64_t target_displacement) {
+        get(ptr, sizeof(T), target_rank, target_displacement);
+    }
+
+    /**
+     * @brief Translates a pointer in a memory window on another MPI rank to the displacement on that rank
+     * @parameter target_rank The other MPI rank
+     * @parameter ptr The remove pointer in the memory window
+     * @exception Throws a RelearnException if target_rank is < 0 or larger than the number of base pointers
+     * @return The displacement
+     */
+    [[nodiscard]] static int64_t get_ptr_displacement(int target_rank, const OctreeNode* ptr);
+
+    /**
+     * @brief Creates a new OctreeNode in the local memory window
+     * @exception Throws a RelearnException if no shared memory is available
+     * @return A valid pointer to an OctreeNode
+     */
+    [[nodiscard]] static OctreeNode* new_octree_node();
+
+    /**
+     * @brief Deletes an OctreeNode in the memory window that was previously created via new_octree_node()
+     * @parameter ptr A pointer to the object that shall be deleted
+     */
+    static void delete_octree_node(OctreeNode* ptr);
+
+    /**
+     * @brief Returns the number of MPI ranks
+     * @exception Throws a RelearnException if the MPIWrapper is not initialized
+     * @return The number of MPI ranks
+     */
+    [[nodiscard]] static int get_num_ranks();
+
+    /**
+     * @brief Returns the current MPI rank's id
+     * @exception Throws a RelearnException if the MPIWrapper is not initialized
+     * @return The current MPI rank's id
+     */
+    [[nodiscard]] static int get_my_rank();
+
+    /**
+     * @brief Returns the current MPI rank's id as string
+     * @exception Throws a RelearnException if the MPIWrapper is not initialized
+     * @return The current MPI rank's id as string
+     */
+    [[nodiscard]] static std::string get_my_rank_str();
+
+    /**
+     * @brief Returns the number of still available OctreeNodes
+     * @return The number of still available OctreeNodes
+     */
+    [[nodiscard]] static size_t get_num_avail_objects();
+
+    /**
+     * @brief Returns the OctreeNodes that are used to synchronize the local trees.
+     *      MPI rank i owns the objects return[i * num_local_trees + {0, 1, ..., num_local_trees - 1}]
+     *      The number of objects can be requested via get_num_buffer_octree_nodes()
+     * @return A pointer to the local trees on each rank
+     */
+    [[nodiscard]] static OctreeNode* get_buffer_octree_nodes();
+
+    /**
+     * @brief Returns the number of local trees across all MPI ranks
+     * @return The number of local trees across all MPI ranks
+     */
+    [[nodiscard]] static size_t get_num_buffer_octree_nodes();
+
+    /**
+     * @brief Locks the memory window on another MPI rank with the desired read/write protections
+     * @parameter rank The other MPI rank
+     * @parameter lock_type The type of locking
+     * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
     static void lock_window(int rank, MPI_Locktype lock_type);
 
     /**
-     * @brief
-     * @parameter
-     * @exception Throws a RelearnException if an MPI error occurs or if rank <= 0
+     * @brief Unlocks the memory window on another MPI rank
+     * @parameter The other MPI rank
+     * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
     static void unlock_window(int rank);
 
     /**
-     * @brief
+     * @brief Finalizes the local MPI implementation.
      * @exception Throws a RelearnException if an MPI error occurs
      */
     static void finalize() /*noexcept*/;

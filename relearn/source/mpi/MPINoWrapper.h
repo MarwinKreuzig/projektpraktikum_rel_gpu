@@ -144,13 +144,6 @@ public:
     // NOLINTNEXTLINE
     static void wait_request(AsyncToken& request);
 
-    [[nodiscard]] static AsyncToken get_non_null_request();
-
-    [[nodiscard]] static AsyncToken get_null_request();
-
-    // NOLINTNEXTLINE
-    static void all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs);
-
     // NOLINTNEXTLINE
     static void wait_all_tokens(std::vector<AsyncToken>& tokens);
 
