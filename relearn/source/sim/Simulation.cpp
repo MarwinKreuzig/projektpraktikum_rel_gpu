@@ -235,6 +235,9 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 
             network_graph->debug_check();
         }
+        if (step % 10 == 0) {
+            neurons->force_growing();
+        }
 
         if (step % Constants::logfile_update_step == 0) {
             neurons->print_neurons_overview_to_log_file_on_rank_0(step);

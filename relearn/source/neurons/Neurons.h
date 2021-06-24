@@ -404,6 +404,14 @@ public:
 
     void debug_check_counts();
 
+    void force_growing(){
+        for(int i =0; i<num_neurons; i++){
+            axons.get()->update_cnt(i,1.1);
+            dendrites_exc.get()->update_cnt(i,1.1);
+            dendrites_inh.get()->update_cnt(i,1.1);
+        }
+    }
+
 private:
     void update_calcium();
 
