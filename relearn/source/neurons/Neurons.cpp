@@ -755,7 +755,7 @@ void Neurons::make_creation_request_for(
             }
             // add to creation request
             if (target_id != source_id && current_node->get_interactionlist_length() > 0) {
-                printf("source id = %i | target_id = %i \n", source_id, target_id);
+                //printf("source id = %i | target_id = %i \n", source_id, target_id);
 
                 request[0].append(source_id, target_id, needed);
             }
