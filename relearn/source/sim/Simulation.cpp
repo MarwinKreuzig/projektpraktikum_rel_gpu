@@ -235,7 +235,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 
             network_graph->debug_check();
         }
-        if (step % 10 == 0) {
+        if (step % (Constants::plasticity_update_step*10) == 0) {
             neurons->force_growing();
         }
 
