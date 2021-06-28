@@ -153,9 +153,7 @@ void MPINoWrapper::unlock_window(int rank) {
 }
 
 void MPINoWrapper::finalize() /*noexcept*/ {
-    // Free RMA window (MPI collective)
-    MPINo_RMA_MemAllocator::free_rma_window();
-    MPINo_RMA_MemAllocator::deallocate_rma_mem();
+    MPINo_RMA_MemAllocator::finalize();
 }
 
 #endif
