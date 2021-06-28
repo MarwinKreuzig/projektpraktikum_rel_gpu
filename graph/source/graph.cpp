@@ -179,7 +179,7 @@ size_t Graph::get_num_edges() {
 }
 
 void Graph::init_edge_weight() {
-    double max_weight = std::numeric_limits<double>::min();
+    double max_weight = std::numeric_limits<double>::lowest();
     double min_weight = std::numeric_limits<double>::max();
 
     for (auto [current, end] = boost::edges(full_graph); current != end; ++current) {
