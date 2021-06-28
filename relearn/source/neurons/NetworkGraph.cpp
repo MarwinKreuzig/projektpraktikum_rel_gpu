@@ -256,8 +256,12 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
         add_edge_weight(target_id, source_id, weight);
     }
 
+    const auto total_num_synapses = (local_synapses.size() + out_synapses.size() + in_synapses.size());
+
     LogFiles::write_to_file(LogFiles::EventType::Cout, true, "I'm rank: {} of {}.\n", my_rank, MPIWrapper::get_num_ranks());
-    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "I'v loaded: [local, out, in] {} + {} + {} = {} synapses.\n", local_synapses.size(), out_synapses.size(), in_synapses.size(), (local_synapses.size() + out_synapses.size() + in_synapses.size()));
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "I'v loaded: [local, out, in] {} + {} + {} = {} synapses.\n", local_synapses.size(), out_synapses.size(), in_synapses.size(), total_num_synapses);
+
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded synapses: {}", total_num_synapses);
 }
 
 bool NetworkGraph::check_edges_from_file(const std::string& path_synapses, const std::vector<size_t>& neuron_ids) {

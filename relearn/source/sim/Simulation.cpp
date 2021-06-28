@@ -270,6 +270,14 @@ void Simulation::finalize() const {
             total_synapse_creations, total_synapse_deletions, netto_creations,
             delta_synapse_creations, delta_synapse_deletions, previous_netto_creations,
             Timers::wall_clock_time());
+
+        LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
+            "Created synapses: {}\n"
+            "Deleted synapses: {}\n"
+            "Netto synapses: {}",
+            total_synapse_creations,
+            total_synapse_deletions,
+            netto_creations);
     }
 }
 

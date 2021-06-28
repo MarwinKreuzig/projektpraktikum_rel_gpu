@@ -28,28 +28,6 @@
  * Some files are only created for the MPI rank 0, some for all.
  */
 class LogFiles {
-    // class LogFile {
-    //     std::ofstream ofstream;
-
-    // public:
-    //     explicit LogFile(const std::filesystem::path& path)
-    //         : ofstream(path) { }
-
-    //     LogFile(const LogFile& other) = delete;
-    //     LogFile& operator=(const LogFile& other) = delete;
-
-    //     LogFile(LogFile&& other) = default;
-    //     LogFile& operator=(LogFile&& other) = default;
-
-    //     ~LogFile() = default;
-
-    //     void write(const std::string& message) {
-    //         RelearnException::check(ofstream.is_open(), "The output stream is not open");
-    //         RelearnException::check(ofstream.good(), "The output stream isn't good");
-    //         ofstream << message;
-    //     }
-    // };
-
     friend class RelearnTest;
 
 public:
@@ -65,7 +43,8 @@ public:
         Network,
         Positions,
         Cout,
-        Timers
+        Timers,
+        Essentials
     };
 
 private:
@@ -88,13 +67,17 @@ private:
 
 public:
     /**
-     * @brief Sets the folder path in which the log files will be generated. It should end with '/'.
+     * @brief Sets the folder path in which the log files will be generated. Automatically appends '/' if necessary.
      *      Set before calling init()
      *      Default is: "../output/"
      * @parameter path_to_containing_folder The path to the folder in which the files should be generated
      */
     static void set_output_path(const std::string& path_to_containing_folder) {
-        output_path = path_to_containing_folder;
+        if (path_to_containing_folder.back() != '/') {
+            output_path = path_to_containing_folder + '/';
+        } else {
+            output_path = path_to_containing_folder;
+        }
     }
 
     /**
