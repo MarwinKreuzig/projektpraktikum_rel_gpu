@@ -243,7 +243,9 @@ std::tuple<double, double> Graph::calculate_all_pairs_shortest_paths() {
                 avg += delta / static_cast<double>(number_values);
 
                 // Sum
-                sum += 1 / val;
+                if (val != 0.0) {
+                    sum += 1 / val;
+                }
             }
         }
     }
