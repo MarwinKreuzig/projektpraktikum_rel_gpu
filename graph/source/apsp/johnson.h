@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <iterator>
 #include <numeric>
 #include <type_traits>
 #include <utility>
@@ -10,7 +11,6 @@
 
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
-#include <boost/iterator/zip_iterator.hpp>
 
 #include "../graph.h"
 
@@ -78,6 +78,32 @@ inline std::vector<double> johnson(typename Graph::FullGraph full_graph, const s
             std::transform(edge_begin_it, edge_end_it, cuda_edges.begin(), [](const auto& edge) {
                 return edge_t{ static_cast<int>(edge.m_source), static_cast<int>(edge.m_target) };
             });
+
+            std::vector<std::pair<int, edge_t>> zipped{};
+            std::transform(
+                weights.begin(),
+                weights.end(),
+                cuda_edges.begin(),
+                std::back_inserter(zipped),
+                [](int& weight, edge_t& edge) -> std::pair<int, edge_t> {
+                    return { weight, edge };
+                });
+
+            std::sort(
+                zipped.begin(),
+                zipped.end(),
+                [](const auto& a, const auto& b) -> bool {
+                    if (!(std::get<1>(a).u < std::get<1>(b).u)) {
+                        if (std::get<1>(a).u == std::get<1>(b).u) {
+                            return std::get<1>(a).v < std::get<1>(b).v;
+                        }
+                        return false;
+                    }
+                    return true;
+                });
+
+            std::transform(zipped.begin(), zipped.end(), weights.begin(), [](const auto& a) { return std::get<0>(a); });
+            std::transform(zipped.begin(), zipped.end(), cuda_edges.begin(), [](const auto& a) { return std::get<1>(a); });
 
             auto starts = std::vector<int>(num_neurons + 1); // Starting point for each edge
 
