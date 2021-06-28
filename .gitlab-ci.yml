@@ -16,7 +16,7 @@ test-mpi:
   script:
     - relearn/build-docker/runTests
   dependencies: 
-    - build
+    - build-mpi
   artifacts:
     paths:
       - relearn/build-docker
@@ -39,7 +39,7 @@ test-nompi:
   script:
     - relearn/build-docker-nompi/runTests
   dependencies: 
-    - build
+    - build-nompi
   artifacts:
     paths:
       - relearn/build-docker-nompi
