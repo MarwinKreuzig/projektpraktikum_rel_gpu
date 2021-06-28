@@ -1,10 +1,6 @@
-build:
+build-mpi:
   image: relearn-ci
   stage: build
-  # instead of calling g++ directly you can also use some build toolkit like make
-  # install the necessary build tools when needed
-  # before_script:
-  #   - apt update && apt -y install make autoconf
   before_script:
     - cd relearn && mkdir build-docker && cd build-docker  
   script:
@@ -12,14 +8,9 @@ build:
   artifacts:
     paths:
       - relearn/build-docker
-      #- mybinary
-      # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
-      # cache:
-      #   paths:
-      #     - "*.o"
 
 # run tests using the binary built before
-test:
+test-mpi:
   image: relearn-ci
   stage: test
   script:
@@ -29,3 +20,26 @@ test:
   artifacts:
     paths:
       - relearn/build-docker
+
+build-nompi:
+  image: relearn-ci-nompi
+  stage: build
+  before_script:
+    - cd relearn && mkdir build-docker-nompi && cd build-docker-nompi  
+  script:
+    - cmake -Dnoclangtidy=1 .. && make -j 16
+  artifacts:
+    paths:
+      - relearn/build-docker-nompi
+
+# run tests using the binary built before
+test-nompi:
+  image: relearn-ci-nompi
+  stage: test
+  script:
+    - relearn/build-docker-nompi/runTests
+  dependencies: 
+    - build
+  artifacts:
+    paths:
+      - relearn/build-docker-nompi
