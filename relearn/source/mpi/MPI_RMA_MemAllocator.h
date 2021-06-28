@@ -21,6 +21,11 @@
 
 class OctreeNode;
 
+/**
+ * This class provides a static interface for allocating and deallocating objects of type OctreeNode
+ * that are placed within an MPI memory window, i.e., they can be accessed by other MPI processes.
+ * The first call must be to MPI_RMA_MemAllocator::init(...) and the last two call must be to MPI_RMA_MemAllocator::finalize().
+ */
 class MPI_RMA_MemAllocator {
 
     class HolderOctreeNode {
@@ -50,35 +55,58 @@ class MPI_RMA_MemAllocator {
     MPI_RMA_MemAllocator() = default;
 
 public:
+    /**
+     * @brief Initializes the memory window to the requested size and exchanges the pointers across all MPi ranks.
+     * @parameter size_requested The size of the memory window in bytes.
+     * @exception Throws a RelearnException if an MPI operation fails
+     */
     static void init(size_t size_requested);
 
-    static void deallocate_rma_mem();
+    /**
+     * @brief Frees the memory window and deallocates all shared memory.
+     * @exception Throws a RelearnException if an MPI operation fails
+     */
+    static void finalize();
 
-    // Free the MPI RMA window
-    // This call is collective over MPI_COMM_WORLD
-    static void free_rma_window();
-
+    /**
+     * @brief Returns a pointer to a fresh OctreeNode in the memory window.
+     * @expection Throws a RelearnException if not enough memory is available.
+     * @return A valid pointer to an OctreeNode
+     */
     [[nodiscard]] static OctreeNode* new_octree_node();
 
+    /**
+     * @brief Deletes the object pointed to. Internally calls OctreeNode::reset().
+     *      The pointer is invalidated.
+     * @parameter ptr The pointer to object that shall be deleted
+     */
     static void delete_octree_node(OctreeNode* ptr);
 
+    /**
+     * @brief Returns the base addresses of the memory windows of all memory windows.
+     * @return The base addresses of the memory windows. The base address for MPI rank i
+     *      is found at <return>[i]
+     */
     [[nodiscard]] static const std::vector<int64_t>& get_base_pointers() noexcept;
 
+    /**
+     * @brief Allocates enough memory for the requested size of branch-nodes for local trees.
+     *      Memory is allocated outside of the memory window.
+     * @parameter num_local_trees The number of local trees across all MPI processes
+     * @return A pointer to the requested number of OctreeNodes
+     */
     [[nodiscard]] static OctreeNode* get_root_nodes_for_local_trees(size_t num_local_trees);
-
-    [[nodiscard]] static size_t get_min_num_avail_objects() noexcept;
+    
+    /**
+     * @brief Returns the number of available objects in the memory window.
+     * @return The number of available objects in the memory window
+     */
+    [[nodiscard]] static size_t get_num_avail_objects() noexcept;
 
     //NOLINTNEXTLINE
     static inline MPI_Win mpi_window{ 0 }; // RMA window object
 
 private:
-    // Store RMA window base pointers of all ranks
-    static void gather_rma_window_base_pointers();
-
-    // Create MPI RMA window with all the memory of the allocator
-    // This call is collective over MPI_COMM_WORLD
-    static void create_rma_window() noexcept;
-
     static inline size_t size_requested{ Constants::uninitialized }; // Bytes requested for the allocator
     static inline size_t max_size{ Constants::uninitialized }; // Size in Bytes of MPI-allocated memory
     static inline size_t max_num_objects{ Constants::uninitialized }; // Max number objects that are available

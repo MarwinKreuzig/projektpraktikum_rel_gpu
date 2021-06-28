@@ -25,17 +25,27 @@ using MPIWrapper = MPINoWrapper;
 #include <string>
 #include <vector>
 
-class Octree;
 class OctreeNode;
 
+/**
+ * This enum allows a type safe choice of locking types for memory windows
+ */
 enum class MPI_Locktype : int {
     exclusive = MPI_LOCK_EXCLUSIVE,
     shared = MPI_LOCK_SHARED,
 };
 
 namespace MPIUserDefinedOperation {
-// This combination function assumes that it's called with the
-// correct MPI datatype
+/**
+ * @brief Provides a custom reduction function for MPI that simultaneously computes the min, sum, and max of multiple values.
+ * @parameter invec A double* (cast to int* because of MPI) with a tuple of data to reduce. 
+ *      Size must be at least *len / sizeof(double) / 3
+ * @parameter inoutvec A double* (cast to int* because of MPI) with a tuple of data to reduce. 
+ *      Size must be at least *len / sizeof(double) / 3. 
+ *      Is also used as return value.
+ * @parameter len The length of a tuple of data. Is only accessed hat *len.
+ * @parameter dtype Unused
+ */
 void min_sum_max(const int* invec, int* inoutvec, const int* len, MPI_Datatype* dtype);
 } // namespace MPIUserDefinedOperation
 
@@ -45,6 +55,9 @@ void min_sum_max(const int* invec, int* inoutvec, const int* len, MPI_Datatype* 
  * The first call must be MPIWrapper::init(...) and the last one MPIWrapper::finalize(), not calling any of those inbetween.
  */
 class MPIWrapper {
+    /**
+     * This structure combines the number of branch nodes that will be exchanged and a pointer to those nodes. 
+     */
     struct RMABufferOctreeNodes {
         OctreeNode* ptr;
         size_t num_nodes;
@@ -100,8 +113,6 @@ private:
 
     // NOLINTNEXTLINE
     static inline std::string my_rank_str{ "-1" };
-
-    static void get(void* ptr, int size, int target_rank, int64_t target_displacement);
 
     static void all_gather(const void* own_data, void* buffer, int size, Scope scope);
 

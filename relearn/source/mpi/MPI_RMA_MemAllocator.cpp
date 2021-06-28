@@ -32,7 +32,9 @@ void MPI_RMA_MemAllocator::init(size_t size_requested) {
     // Store size of MPI_COMM_WORLD
     int my_num_ranks = -1;
     // NOLINTNEXTLINE
-    MPI_Comm_size(MPI_COMM_WORLD, &my_num_ranks);
+    const int error_code_1 = MPI_Comm_size(MPI_COMM_WORLD, &my_num_ranks);
+    RelearnException::check(error_code_1 == 0, "Error in MPI_RMA_MemAllocator::init()");
+    
     num_ranks = static_cast<size_t>(my_num_ranks);
 
     // Allocate block of memory which is managed later on
@@ -41,21 +43,31 @@ void MPI_RMA_MemAllocator::init(size_t size_requested) {
         RelearnException::fail("MPI_Alloc_mem failed");
     }
 
-    create_rma_window();
-    gather_rma_window_base_pointers();
+    // Set window's displacement unit
+    displ_unit = 1;
+    // NOLINTNEXTLINE
+    const int error_code_2 = MPI_Win_create(base_ptr, max_size, displ_unit, MPI_INFO_NULL, MPI_COMM_WORLD, &mpi_window);
+    RelearnException::check(error_code_2 == 0, "Error in MPI_RMA_MemAllocator::init()");
+
+    // Vector must have space for one pointer from each rank
+    base_pointers.resize(num_ranks);
+
+    // NOLINTNEXTLINE
+    const int error_code_3 = MPI_Allgather(&base_ptr, 1, MPI_AINT, base_pointers.data(), 1, MPI_AINT, MPI_COMM_WORLD);
+    RelearnException::check(error_code_3 == 0, "Error in MPI_RMA_MemAllocator::init()");
 
     holder_base_ptr = HolderOctreeNode(base_ptr, max_num_objects);
 
     LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode));
 }
 
-void MPI_RMA_MemAllocator::deallocate_rma_mem() {
-    MPI_Free_mem(base_ptr);
-    MPI_Free_mem(root_nodes_for_local_trees);
-}
-
-void MPI_RMA_MemAllocator::free_rma_window() {
-    MPI_Win_free(&mpi_window);
+void MPI_RMA_MemAllocator::finalize() {
+    const int error_code_1 = MPI_Win_free(&mpi_window);
+    RelearnException::check(error_code_1 == 0, "Error in MPI_RMA_MemAllocator::finalize()");
+    const int error_code_2 = MPI_Free_mem(base_ptr);
+    RelearnException::check(error_code_2 == 0, "Error in MPI_RMA_MemAllocator::finalize()");
+    const int error_code_3 = MPI_Free_mem(root_nodes_for_local_trees);
+    RelearnException::check(error_code_3 == 0, "Error in MPI_RMA_MemAllocator::finalize()");
 }
 
 [[nodiscard]] OctreeNode* MPI_RMA_MemAllocator::new_octree_node() {
@@ -81,23 +93,8 @@ void MPI_RMA_MemAllocator::delete_octree_node(OctreeNode* ptr) {
     return root_nodes_for_local_trees;
 }
 
-[[nodiscard]] size_t MPI_RMA_MemAllocator::get_min_num_avail_objects() noexcept {
+[[nodiscard]] size_t MPI_RMA_MemAllocator::get_num_avail_objects() noexcept {
     return holder_base_ptr.get_num_available();
-}
-
-void MPI_RMA_MemAllocator::gather_rma_window_base_pointers() {
-    // Vector must have space for one pointer from each rank
-    base_pointers.resize(num_ranks);
-
-    // NOLINTNEXTLINE
-    MPI_Allgather(&base_ptr, 1, MPI_AINT, base_pointers.data(), 1, MPI_AINT, MPI_COMM_WORLD);
-}
-
-void MPI_RMA_MemAllocator::create_rma_window() noexcept {
-    // Set window's displacement unit
-    displ_unit = 1;
-    // NOLINTNEXTLINE
-    MPI_Win_create(base_ptr, max_size, displ_unit, MPI_INFO_NULL, MPI_COMM_WORLD, &mpi_window);
 }
 
 MPI_RMA_MemAllocator::HolderOctreeNode::HolderOctreeNode(OctreeNode* ptr, size_t length)

@@ -119,7 +119,7 @@ void MPINoWrapper::download_octree_node(OctreeNode* dst, int /*target_rank*/, co
 }
 
 [[nodiscard]] size_t MPINoWrapper::get_num_avail_objects() {
-    return MPINo_RMA_MemAllocator::get_min_num_avail_objects();
+    return MPINo_RMA_MemAllocator::get_num_avail_objects();
 }
 
 [[nodiscard]] OctreeNode* MPINoWrapper::get_buffer_octree_nodes() {

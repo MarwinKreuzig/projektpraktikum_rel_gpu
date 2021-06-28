@@ -191,7 +191,7 @@ int MPIWrapper::get_my_rank() {
 }
 
 size_t MPIWrapper::get_num_avail_objects() {
-    return MPI_RMA_MemAllocator::get_min_num_avail_objects();
+    return MPI_RMA_MemAllocator::get_num_avail_objects();
 }
 
 OctreeNode* MPIWrapper::get_buffer_octree_nodes() {
@@ -290,9 +290,7 @@ void MPIWrapper::unlock_window(int rank) {
 void MPIWrapper::finalize() /*noexcept*/ {
     free_custom_function();
 
-    // Free RMA window (MPI collective)
-    MPI_RMA_MemAllocator::free_rma_window();
-    MPI_RMA_MemAllocator::deallocate_rma_mem();
+    MPI_RMA_MemAllocator::finalize();
 
     const int errorcode = MPI_Finalize();
     RelearnException::check(errorcode == 0, "Error in finalize");
