@@ -108,14 +108,10 @@ public:
     }
 
     template <typename T>
-    static void get(T* ptr, int target_rank, int64_t target_display) {
-    }
-
-    template <typename T>
     static void all_gather_inline(T* ptr, int count, Scope scope) {
     }
 
-    [[nodiscard]] static int64_t get_ptr_displacement(int target_rank, const OctreeNode* ptr);
+    static void download_octree_node(OctreeNode* dst, int target_rank, const OctreeNode* src);
 
     [[nodiscard]] static OctreeNode* new_octree_node();
 

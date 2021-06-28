@@ -1185,7 +1185,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
         // Write headers to file if not already done so
         if (Constants::logfile_update_step == step) {
             LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, false,
-                "# ALL NEURONS\n{1:{0}}{2:{0}}{3:{0}}{4:{0}}{5:{0}}{6:{0}}{7:{0}}{8:{0}}{9:{0}}{10:{0}}{11:{0}}",
+                "# ALL NEURONS\n{1:{0}}{2:{0}}{3:{0}}{4:{0}}{5:{0}}{6:{0}}{7:{0}}{8:{0}}{9:{0}}{10:{0}}{11:{0}}{12:{0}}{13:{0}}{14:{0}}{15:{0}}{16:{0}}{17:{0}}{18:{0}}{19:{0}}{20:{0}}{21:{0}}",
                 cwidth,
                 "# step",
                 "C (avg)",
@@ -1197,12 +1197,22 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
                 "activity (min)",
                 "activity (max)",
                 "activity (var)",
-                "activity (std_dev)");
+                "activity (std_dev)",
+                "axons (avg)",
+                "axons (min)",
+                "axons (max)",
+                "axons (var)",
+                "axons (std_dev)",
+                "axons free (avg)",
+                "axons free (min)",
+                "axons free (max)",
+                "axons free (var)",
+                "axons free (std_dev)");
         }
 
         // Write data at step "step"
         LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, false,
-            "{2:<{0}}{3:<{0}.{1}f}{4:<{0}.{1}f}{5:<{0}.{1}f}{6:<{0}.{1}f}{7:<{0}.{1}f}{8:<{0}.{1}f}{9:<{0}.{1}f}{10:<{0}.{1}f}{11:<{0}.{1}f}{12:<{0}.{1}f}",
+            "{2:<{0}}{3:<{0}.{1}f}{4:<{0}.{1}f}{5:<{0}.{1}f}{6:<{0}.{1}f}{7:<{0}.{1}f}{8:<{0}.{1}f}{9:<{0}.{1}f}{10:<{0}.{1}f}{11:<{0}.{1}f}{12:<{0}.{1}f}{13:<{0}.{1}f}{14:<{0}.{1}f}{15:<{0}.{1}f}{16:<{0}.{1}f}{17:<{0}.{1}f}{18:<{0}.{1}f}{19:<{0}.{1}f}{20:<{0}.{1}f}{21:<{0}.{1}f}{22:<{0}.{1}f}",
             cwidth,
             Constants::print_precision,
             step,
@@ -1215,7 +1225,17 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
             activity_statistics.min,
             activity_statistics.max,
             activity_statistics.var,
-            activity_statistics.std);
+            activity_statistics.std,
+            axons_statistics.avg,
+            axons_statistics.min,
+            axons_statistics.max,
+            axons_statistics.var,
+            axons_statistics.std,
+            axons_free_statistics.avg,
+            axons_free_statistics.min,
+            axons_free_statistics.max,
+            axons_free_statistics.var,
+            axons_free_statistics.std);
     }
 }
 

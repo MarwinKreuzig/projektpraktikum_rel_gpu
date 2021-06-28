@@ -86,10 +86,8 @@ void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size, Scop
     std::memcpy(buffer, own_data, size);
 }
 
-[[nodiscard]] int64_t MPINoWrapper::get_ptr_displacement(int /*target_rank*/, const OctreeNode* ptr) {
-    const auto base_ptrs = MPINo_RMA_MemAllocator::get_base_pointers();
-    const auto displacement = int64_t(ptr) - base_ptrs;
-    return displacement;
+void MPINoWrapper::download_octree_node(OctreeNode* dst, int /*target_rank*/, const OctreeNode* src) {
+    *dst = *src;
 }
 
 [[nodiscard]] OctreeNode* MPINoWrapper::new_octree_node() {

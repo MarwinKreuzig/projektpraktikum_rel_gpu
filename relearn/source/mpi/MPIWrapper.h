@@ -259,26 +259,14 @@ public:
     // NOLINTNEXTLINE
     static void wait_all_tokens(std::vector<AsyncToken>& tokens);
 
-    /**
-     * @brief Gets the content of a memory window on another MPI rank
-     * @parameter ptr Where to write the retrieved data
+    /** 
+     * @brief Downloads an OctreeNode on another MPI rank
+     * @parameter dst The local node which shall be the copy of the remote node
      * @parameter target_rank The other MPI rank
-     * @parameter target_displacement The displacement of the data in the memory window
-     * @exception Throws a RelearnException if an MPI error occurs or if target_rank is < 0
+     * @parameter src The pointer to the remote node, must be inside the remote's memory window
+     * @exception Throws a RelearnException if an MPI error occurs or if target_rank < 0
      */
-    template <typename T>
-    static void get(T* ptr, int target_rank, int64_t target_displacement) {
-        get(ptr, sizeof(T), target_rank, target_displacement);
-    }
-
-    /**
-     * @brief Translates a pointer in a memory window on another MPI rank to the displacement on that rank
-     * @parameter target_rank The other MPI rank
-     * @parameter ptr The remove pointer in the memory window
-     * @exception Throws a RelearnException if target_rank is < 0 or larger than the number of base pointers
-     * @return The displacement
-     */
-    [[nodiscard]] static int64_t get_ptr_displacement(int target_rank, const OctreeNode* ptr);
+    static void download_octree_node(OctreeNode* dst, int target_rank, const OctreeNode* src);
 
     /**
      * @brief Creates a new OctreeNode in the local memory window

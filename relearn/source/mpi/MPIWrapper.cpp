@@ -15,6 +15,7 @@
 
 #include "../Config.h"
 #include "../io/LogFiles.h"
+#include "../structure/OctreeNode.h"
 #include "../util/RelearnException.h"
 #include "../util/Utility.h"
 #include "MPI_RMA_MemAllocator.h"
@@ -146,15 +147,6 @@ void MPIWrapper::reduce(const void* src, void* dst, int size, ReduceFunction fun
     RelearnException::check(errorcode == 0, "Error in reduce: %d", errorcode);
 }
 
-void MPIWrapper::get(void* ptr, int size, int target_rank, int64_t target_displacement) {
-    RelearnException::check(target_rank >= 0, "Error in get, target_rank was negative");
-    RelearnException::check(size > 0, "Error in get, size must be larget than 0");
-    const MPI_Aint target_displacement_mpi(target_displacement);
-    // NOLINTNEXTLINE
-    const int errorcode = MPI_Get(ptr, size, MPI_CHAR, target_rank, target_displacement_mpi, size, MPI_CHAR, MPI_RMA_MemAllocator::mpi_window);
-    RelearnException::check(errorcode == 0, "Error in get");
-}
-
 void MPIWrapper::all_gather(const void* own_data, void* buffer, int size, Scope scope) {
     const MPI_Comm mpi_scope = translate_scope(scope);
 
@@ -172,12 +164,16 @@ void MPIWrapper::all_gather_inl(void* ptr, int count, Scope scope) {
     RelearnException::check(errorcode == 0, "Error in all gather ");
 }
 
-int64_t MPIWrapper::get_ptr_displacement(int target_rank, const OctreeNode* ptr) {
-    RelearnException::check(target_rank >= 0, "target rank is negative in get ptr displacement");
+void MPIWrapper::download_octree_node(OctreeNode* dst, int target_rank, const OctreeNode* src) {
+    RelearnException::check(target_rank >= 0, "target rank is negative in download_octree_nodet");
     const auto& base_ptrs = MPI_RMA_MemAllocator::get_base_pointers();
     RelearnException::check(target_rank < base_ptrs.size(), "target rank is greater than the base pointers");
-    const auto displacement = int64_t(ptr) - base_ptrs[target_rank];
-    return displacement;
+    const auto displacement = int64_t(src) - base_ptrs[target_rank];
+
+    const MPI_Aint displacement_mpi(displacement);
+    // NOLINTNEXTLINE
+    const int errorcode = MPI_Get(dst, sizeof(OctreeNode), MPI_CHAR, target_rank, displacement_mpi, sizeof(OctreeNode), MPI_CHAR, MPI_RMA_MemAllocator::mpi_window);
+    RelearnException::check(errorcode == 0, "Error in get");
 }
 
 OctreeNode* MPIWrapper::new_octree_node() {
