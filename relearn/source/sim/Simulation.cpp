@@ -278,6 +278,8 @@ void Simulation::finalize() const {
             total_synapse_creations,
             total_synapse_deletions,
             netto_creations);
+
+        neurons->print_statistics_to_essentials();
     }
 }
 

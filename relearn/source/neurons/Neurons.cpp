@@ -1178,65 +1178,81 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
         return;
     }
 
-    // Output data
-    if (0 == MPIWrapper::get_my_rank()) {
-        const int cwidth = 16; // Column width
+    const int cwidth = 16; // Column width
 
-        // Write headers to file if not already done so
-        if (Constants::logfile_update_step == step) {
-            LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, false,
-                "# ALL NEURONS\n{1:{0}}{2:{0}}{3:{0}}{4:{0}}{5:{0}}{6:{0}}{7:{0}}{8:{0}}{9:{0}}{10:{0}}{11:{0}}{12:{0}}{13:{0}}{14:{0}}{15:{0}}{16:{0}}{17:{0}}{18:{0}}{19:{0}}{20:{0}}{21:{0}}",
-                cwidth,
-                "# step",
-                "C (avg)",
-                "C (min)",
-                "C (max)",
-                "C (var)",
-                "C (std_dev)",
-                "activity (avg)",
-                "activity (min)",
-                "activity (max)",
-                "activity (var)",
-                "activity (std_dev)",
-                "axons (avg)",
-                "axons (min)",
-                "axons (max)",
-                "axons (var)",
-                "axons (std_dev)",
-                "axons free (avg)",
-                "axons free (min)",
-                "axons free (max)",
-                "axons free (var)",
-                "axons free (std_dev)");
-        }
-
-        // Write data at step "step"
+    // Write headers to file if not already done so
+    if (Constants::logfile_update_step == step) {
         LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, false,
-            "{2:<{0}}{3:<{0}.{1}f}{4:<{0}.{1}f}{5:<{0}.{1}f}{6:<{0}.{1}f}{7:<{0}.{1}f}{8:<{0}.{1}f}{9:<{0}.{1}f}{10:<{0}.{1}f}{11:<{0}.{1}f}{12:<{0}.{1}f}{13:<{0}.{1}f}{14:<{0}.{1}f}{15:<{0}.{1}f}{16:<{0}.{1}f}{17:<{0}.{1}f}{18:<{0}.{1}f}{19:<{0}.{1}f}{20:<{0}.{1}f}{21:<{0}.{1}f}{22:<{0}.{1}f}",
+            "# ALL NEURONS\n{1:{0}}{2:{0}}{3:{0}}{4:{0}}{5:{0}}{6:{0}}{7:{0}}{8:{0}}{9:{0}}{10:{0}}{11:{0}}{12:{0}}{13:{0}}{14:{0}}{15:{0}}{16:{0}}{17:{0}}{18:{0}}{19:{0}}{20:{0}}{21:{0}}",
             cwidth,
-            Constants::print_precision,
-            step,
-            calcium_statistics.avg,
-            calcium_statistics.min,
-            calcium_statistics.max,
-            calcium_statistics.var,
-            calcium_statistics.std,
-            activity_statistics.avg,
-            activity_statistics.min,
-            activity_statistics.max,
-            activity_statistics.var,
-            activity_statistics.std,
-            axons_statistics.avg,
-            axons_statistics.min,
-            axons_statistics.max,
-            axons_statistics.var,
-            axons_statistics.std,
-            axons_free_statistics.avg,
-            axons_free_statistics.min,
-            axons_free_statistics.max,
-            axons_free_statistics.var,
-            axons_free_statistics.std);
+            "# step",
+            "C (avg)",
+            "C (min)",
+            "C (max)",
+            "C (var)",
+            "C (std_dev)",
+            "activity (avg)",
+            "activity (min)",
+            "activity (max)",
+            "activity (var)",
+            "activity (std_dev)",
+            "axons (avg)",
+            "axons (min)",
+            "axons (max)",
+            "axons (var)",
+            "axons (std_dev)",
+            "axons free (avg)",
+            "axons free (min)",
+            "axons free (max)",
+            "axons free (var)",
+            "axons free (std_dev)");
     }
+
+    // Write data at step "step"
+    LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, false,
+        "{2:<{0}}{3:<{0}.{1}f}{4:<{0}.{1}f}{5:<{0}.{1}f}{6:<{0}.{1}f}{7:<{0}.{1}f}{8:<{0}.{1}f}{9:<{0}.{1}f}{10:<{0}.{1}f}{11:<{0}.{1}f}{12:<{0}.{1}f}{13:<{0}.{1}f}{14:<{0}.{1}f}{15:<{0}.{1}f}{16:<{0}.{1}f}{17:<{0}.{1}f}{18:<{0}.{1}f}{19:<{0}.{1}f}{20:<{0}.{1}f}{21:<{0}.{1}f}{22:<{0}.{1}f}",
+        cwidth,
+        Constants::print_precision,
+        step,
+        calcium_statistics.avg,
+        calcium_statistics.min,
+        calcium_statistics.max,
+        calcium_statistics.var,
+        calcium_statistics.std,
+        activity_statistics.avg,
+        activity_statistics.min,
+        activity_statistics.max,
+        activity_statistics.var,
+        activity_statistics.std,
+        axons_statistics.avg,
+        axons_statistics.min,
+        axons_statistics.max,
+        axons_statistics.var,
+        axons_statistics.std,
+        axons_free_statistics.avg,
+        axons_free_statistics.min,
+        axons_free_statistics.max,
+        axons_free_statistics.var,
+        axons_free_statistics.std);
+}
+
+void Neurons::print_statistics_to_essentials() {
+    const auto total_num_neurons = partition->get_total_num_neurons();
+
+    const StatisticalMeasures& calcium_statistics = global_statistics(calcium, 0, disable_flags);
+
+    if (0 != MPIWrapper::get_my_rank()) {
+        // All ranks must compute the statistics, but only one should print them
+        return;
+    }
+
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
+        "Average calcium: {}\n"
+        "Minimum calcium: {}\n"
+        "Maximum calcium: {}",
+        calcium_statistics.avg,
+        calcium_statistics.min,
+        calcium_statistics.max);
 }
 
 void Neurons::print_network_graph_to_log_file() {
