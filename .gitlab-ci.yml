@@ -1,6 +1,5 @@
-image: relearn-ci
-
 build:
+  image: relearn-ci
   stage: build
   # instead of calling g++ directly you can also use some build toolkit like make
   # install the necessary build tools when needed
@@ -21,6 +20,7 @@ build:
 
 # run tests using the binary built before
 test:
+  image: relearn-ci
   stage: test
   script:
     - relearn/build-docker/runTests
