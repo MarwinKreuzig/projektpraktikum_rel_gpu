@@ -96,10 +96,13 @@ public:
     }
 
     template <typename T, size_t size>
-    static void reduce(const std::array<T, size>& src, std::array<T, size>& dst, ReduceFunction function, int root_rank, Scope scope) {
-        RelearnException::check(src.size() == dst.size(), "Sizes of vectors don't match");
+    [[nodiscard]] static std::array<T, size> reduce(const std::array<T, size>& src, ReduceFunction function, int root_rank, Scope scope) {
+        RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
 
+        std::array<T, size> dst{};
         reduce(src.data(), dst.data(), src.size() * sizeof(T), function, root_rank, scope);
+
+        return dst;
     }
 
     template <typename T>
