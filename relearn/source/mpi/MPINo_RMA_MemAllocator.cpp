@@ -23,7 +23,7 @@
 
 MPINo_RMA_MemAllocator::HolderOctreeNode MPINo_RMA_MemAllocator::holder_base_ptr{};
 
-void MPINo_RMA_MemAllocator::init(size_t size_requested) {
+void MPINo_RMA_MemAllocator::init(size_t size_requested, size_t num_local_trees) {
     MPINo_RMA_MemAllocator::size_requested = size_requested;
     max_num_objects = size_requested / sizeof(OctreeNode);
     max_size = size_requested;
