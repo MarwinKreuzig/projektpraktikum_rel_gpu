@@ -168,7 +168,7 @@ public:
      * @return On the MPI rank root_rank: The results of the componentwise reduction; A dummy value on every other MPI rank
      */
     template <typename T, size_t size>
-    static std::array<T, size> reduce(const std::array<T, size>& src, ReduceFunction function, int root_rank, Scope scope) {
+    [[nodiscard]] static std::array<T, size> reduce(const std::array<T, size>& src, ReduceFunction function, int root_rank, Scope scope) {
         RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
 
         std::array<T, size> dst{};
