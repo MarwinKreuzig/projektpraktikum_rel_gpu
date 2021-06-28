@@ -86,7 +86,7 @@ TEST(TestAPSP, testExampleGraph1) {
 
     // If CUDA is available do CPU test,
     // otherwise test already done on CPU
-    if constexpr (!CUDA_FOUND) {
+    if constexpr (CUDA_FOUND) {
         doTest(example, false);
     }
 }
