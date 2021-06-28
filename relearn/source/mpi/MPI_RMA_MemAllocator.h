@@ -56,11 +56,12 @@ class MPI_RMA_MemAllocator {
 
 public:
     /**
-     * @brief Initializes the memory window to the requested size and exchanges the pointers across all MPi ranks.
-     * @parameter size_requested The size of the memory window in bytes.
+     * @brief Initializes the memory window to the requested size and exchanges the pointers across all MPi processes
+     * @parameter size_requested The size of the memory window in bytes
+     * @parameter num_local_trees The number of branch nodes across all MPI processes
      * @exception Throws a RelearnException if an MPI operation fails
      */
-    static void init(size_t size_requested);
+    static void init(size_t size_requested, size_t num_branch_nodes);
 
     /**
      * @brief Frees the memory window and deallocates all shared memory.
@@ -90,12 +91,10 @@ public:
     [[nodiscard]] static const std::vector<int64_t>& get_base_pointers() noexcept;
 
     /**
-     * @brief Allocates enough memory for the requested size of branch-nodes for local trees.
-     *      Memory is allocated outside of the memory window.
-     * @parameter num_local_trees The number of local trees across all MPI processes
-     * @return A pointer to the requested number of OctreeNodes
+     * @brief Returns the roots for all branch nodes
+     * @return The roots for all branch nodes
      */
-    [[nodiscard]] static OctreeNode* get_root_nodes_for_local_trees(size_t num_local_trees);
+    [[nodiscard]] static OctreeNode* get_branch_nodes();
     
     /**
      * @brief Returns the number of available objects in the memory window.

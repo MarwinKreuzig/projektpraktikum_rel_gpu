@@ -33,10 +33,10 @@ void MPINoWrapper::init_neurons(size_t num_neurons) {
 }
 
 void MPINoWrapper::init_buffer_octree(size_t num_partitions) {
-    MPINo_RMA_MemAllocator::init(Constants::mpi_alloc_mem);
+    MPINo_RMA_MemAllocator::init(Constants::mpi_alloc_mem, num_partitions);
 
     rma_buffer_branch_nodes.num_nodes = num_partitions;
-    rma_buffer_branch_nodes.ptr = MPINo_RMA_MemAllocator::get_root_nodes_for_local_trees(num_partitions);
+    rma_buffer_branch_nodes.ptr = MPINo_RMA_MemAllocator::get_branch_nodes();
 }
 
 void MPINoWrapper::barrier(Scope scope) {

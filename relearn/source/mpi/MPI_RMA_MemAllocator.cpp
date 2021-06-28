@@ -22,7 +22,7 @@
 #include <iostream>
 #include <sstream>
 
-void MPI_RMA_MemAllocator::init(size_t size_requested) {
+void MPI_RMA_MemAllocator::init(size_t size_requested, size_t num_branch_nodes) {
     MPI_RMA_MemAllocator::size_requested = size_requested;
 
     // Number of objects "size_requested" Bytes correspond to
@@ -34,7 +34,7 @@ void MPI_RMA_MemAllocator::init(size_t size_requested) {
     // NOLINTNEXTLINE
     const int error_code_1 = MPI_Comm_size(MPI_COMM_WORLD, &my_num_ranks);
     RelearnException::check(error_code_1 == 0, "Error in MPI_RMA_MemAllocator::init()");
-    
+
     num_ranks = static_cast<size_t>(my_num_ranks);
 
     // Allocate block of memory which is managed later on
@@ -57,6 +57,13 @@ void MPI_RMA_MemAllocator::init(size_t size_requested) {
     RelearnException::check(error_code_3 == 0, "Error in MPI_RMA_MemAllocator::init()");
 
     holder_base_ptr = HolderOctreeNode(base_ptr, max_num_objects);
+
+    const auto requested_size = num_branch_nodes * sizeof(OctreeNode);
+
+    // NOLINTNEXTLINE
+    if (MPI_SUCCESS != MPI_Alloc_mem(static_cast<int>(requested_size), MPI_INFO_NULL, &root_nodes_for_local_trees)) {
+        RelearnException::fail("MPI_Alloc_mem failed for local trees");
+    }
 
     LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode));
 }
@@ -82,14 +89,7 @@ void MPI_RMA_MemAllocator::delete_octree_node(OctreeNode* ptr) {
     return base_pointers;
 }
 
-[[nodiscard]] OctreeNode* MPI_RMA_MemAllocator::get_root_nodes_for_local_trees(size_t num_local_trees) {
-    const auto requested_size = num_local_trees * sizeof(OctreeNode);
-
-    // NOLINTNEXTLINE
-    if (MPI_SUCCESS != MPI_Alloc_mem(static_cast<int>(requested_size), MPI_INFO_NULL, &root_nodes_for_local_trees)) {
-        RelearnException::fail("MPI_Alloc_mem failed for local trees");
-    }
-
+[[nodiscard]] OctreeNode* MPI_RMA_MemAllocator::get_branch_nodes() {
     return root_nodes_for_local_trees;
 }
 

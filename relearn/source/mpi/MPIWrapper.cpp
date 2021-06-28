@@ -71,10 +71,10 @@ void MPIWrapper::init_globals() {
 }
 
 void MPIWrapper::init_buffer_octree(size_t num_partitions) {
-    MPI_RMA_MemAllocator::init(Constants::mpi_alloc_mem);
+    MPI_RMA_MemAllocator::init(Constants::mpi_alloc_mem, num_partitions);
 
     rma_buffer_branch_nodes.num_nodes = num_partitions;
-    rma_buffer_branch_nodes.ptr = MPI_RMA_MemAllocator::get_root_nodes_for_local_trees(num_partitions);
+    rma_buffer_branch_nodes.ptr = MPI_RMA_MemAllocator::get_branch_nodes();
 }
 
 void MPIWrapper::barrier(Scope scope) {

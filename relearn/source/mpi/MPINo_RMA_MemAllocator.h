@@ -46,7 +46,7 @@ class MPINo_RMA_MemAllocator {
     MPINo_RMA_MemAllocator() = default;
 
 public:
-    static void init(size_t size_requested);
+    static void init(size_t size_requested, size_t num_local_trees);
 
     static void finalize();
 
@@ -56,7 +56,7 @@ public:
 
     [[nodiscard]] static int64_t get_base_pointers() noexcept;
 
-    [[nodiscard]] static OctreeNode* get_root_nodes_for_local_trees(size_t num_local_trees);
+    [[nodiscard]] static OctreeNode* get_branch_nodes();
 
     [[nodiscard]] static size_t get_num_avail_objects() noexcept;
 
