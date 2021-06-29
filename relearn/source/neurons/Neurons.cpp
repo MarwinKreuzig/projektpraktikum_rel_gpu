@@ -864,10 +864,11 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
 
     if (!nodes_with_ax_ex.empty() && nodes_with_dend_ex.size() > 0) {
         make_creation_request_for(SignalType::EXCITATORY, synapse_creation_requests_outgoing, nodes_with_ax_ex, nodes_with_dend_ex);
-        printf("make request for ex geschafft \n");
+        //printf("make request for ex geschafft \n");
     }
     if (!nodes_with_ax_in.empty() && nodes_with_dend_in.size() > 0) {
         make_creation_request_for(SignalType::INHIBITORY, synapse_creation_requests_outgoing, nodes_with_ax_in, nodes_with_dend_in);
+        //printf("make request for in geschafft \n");
     }
 
     GlobalTimers::timers.stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
@@ -1235,6 +1236,23 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 
     MPIWrapper::reduce(sums_local, sums_global, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
 
+    //get total and connected sum of axons and dendrites
+    unsigned int sum_axons = 0;
+    unsigned int sum_dendrites = 0;
+    unsigned int sum_con_axons = 0;
+    unsigned int sum_con_dendrites = 0;
+
+    for(unsigned int i =0; i<num_neurons;i++){
+        sum_axons += axons->get_cnt(i);
+        sum_dendrites += dendrites_exc->get_cnt(i);
+        sum_dendrites += dendrites_inh->get_cnt(i);
+
+        sum_con_axons += axons->get_connected_cnt(i);
+        sum_con_dendrites += dendrites_exc->get_connected_cnt(i);
+        sum_con_dendrites += dendrites_inh->get_connected_cnt(i);
+    }
+
+
     // Output data
     if (0 == MPIWrapper::get_my_rank()) {
         std::stringstream ss;
@@ -1244,12 +1262,16 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
         if (0 == step) {
             ss << "# SUMS OVER ALL NEURONS\n";
             ss << std::left
-               << std::setw(cwidth) << "# step"
-               << std::setw(cwidth) << "Axons exc. (vacant)"
-               << std::setw(cwidth) << "Axons inh. (vacant)"
-               << std::setw(cwidth) << "Dends exc. (vacant)"
-               << std::setw(cwidth) << "Dends inh. (vacant)"
-               << std::setw(cwidth) << "Synapses deleted"
+               << std::setw(cwidth) << "# step,"
+               << std::setw(cwidth) << "Axons exc. (vacant),"
+               << std::setw(cwidth) << "Axons inh. (vacant),"
+               << std::setw(cwidth) << "Dends exc. (vacant),"
+               << std::setw(cwidth) << "Dends inh. (vacant),"
+               << std::setw(cwidth) << "Axons total,"
+               << std::setw(cwidth) << "Dends total,"
+               << std::setw(cwidth) << "Axons conn,"
+               << std::setw(cwidth) << "Dends conn,"
+               << std::setw(cwidth) << "Synapses deleted,"
                << std::setw(cwidth) << "Synapses created"
                << "\n";
         }
@@ -1258,13 +1280,17 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 
         // Write data at step "step"
         ss << std::left
-           << std::setw(cwidth) << step
-           << std::setw(cwidth) << sums_global[0]
-           << std::setw(cwidth) << sums_global[1]
-           << std::setw(cwidth) << sums_global[2]
-           << std::setw(cwidth) << sums_global[3]
-           << std::setw(cwidth) << sums_global[4] / 2 // As counted on both of the neurons
-           << std::setw(cwidth) << sums_global[last_idx] / 2 // As counted on both of the neurons
+           << std::setw(cwidth) << step <<","
+           << std::setw(cwidth) << sums_global[0] <<","
+           << std::setw(cwidth) << sums_global[1] <<","
+           << std::setw(cwidth) << sums_global[2] <<","
+           << std::setw(cwidth) << sums_global[3] <<","
+           << std::setw(cwidth) << sum_axons <<","
+           << std::setw(cwidth) << sum_dendrites <<","
+           << std::setw(cwidth) << sum_con_axons <<","
+           << std::setw(cwidth) << sum_con_dendrites <<","
+           << std::setw(cwidth) << sums_global[4] / 2 <<","// As counted on both of the neurons
+           << std::setw(cwidth) << sums_global[last_idx] / 2 <<","// As counted on both of the neurons
            << "\n";
 
         LogFiles::write_to_file(LogFiles::EventType::Sums, ss.str(), false);

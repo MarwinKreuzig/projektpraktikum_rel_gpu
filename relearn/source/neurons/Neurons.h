@@ -407,8 +407,13 @@ public:
     void force_growing(){
         for(int i =0; i<num_neurons; i++){
             axons.get()->update_cnt(i,1.1);
-            dendrites_exc.get()->update_cnt(i,1.1);
-            dendrites_inh.get()->update_cnt(i,1.1);
+            SignalType s_temp = axons.get()->get_signal_type(i);
+            if (s_temp == SignalType::EXCITATORY)
+            {
+                dendrites_exc.get()->update_cnt(i,1.1);
+            }else{
+                dendrites_inh.get()->update_cnt(i,1.1);
+            }          
         }
     }
 
