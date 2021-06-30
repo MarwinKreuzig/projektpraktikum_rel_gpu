@@ -814,62 +814,59 @@ void Neurons::make_creation_request_for(
 }
 
 MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
-     MapSynapseCreationRequests synapse_creation_requests_outgoing;
+    MapSynapseCreationRequests synapse_creation_requests_outgoing;
     GlobalTimers::timers.start(TimerRegion::FIND_TARGET_NEURONS);
 
-    //init
-    OctreeNode* root = global_tree->get_local_root(0);
+    const std::vector<double>& axons_cnts = axons->get_cnts();
+    const std::vector<unsigned int>& axons_connected_cnts = axons->get_connected_cnts();
+    const std::vector<SignalType>& axons_signal_types = axons->get_signal_types();
 
-    std::stack<OctreeNode*> nodes_with_ax_in;
-    std::stack<OctreeNode*> nodes_with_ax_ex;
-    std::stack<OctreeNode*> init_stack;
-    init_stack.push(root);
-
-    std::vector<OctreeNode*> nodes_with_dend_in;
-    std::vector<OctreeNode*> nodes_with_dend_ex;
-
-    OctreeNode* current_node;
-    OctreeNode* child_node;
-    while (!init_stack.empty()) {
-
-        current_node = init_stack.top();
-        init_stack.pop();
-        if (current_node->get_level() < 2) {
-            for (size_t j = 0; j < 8; j++) {
-                child_node = current_node->get_child(j);
-                if (child_node != nullptr) {
-                    init_stack.push(child_node);
-                }
-            }
+    // For my neurons
+    for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+        if (disable_flags[neuron_id] == 0) {
+            continue;
         }
-        //sort nodes in their corresponding list
-        else {
-            if (current_node->get_cell().get_neuron_num_axons_exc() > 0) {
-                nodes_with_ax_ex.push(current_node);
-                // printf("axon anzahl von Knoten = %i\n", current_node->get_cell().get_neuron_num_axons_exc());
-            }
-            if (current_node->get_cell().get_neuron_num_axons_inh() > 0)
-                nodes_with_ax_in.push(current_node);
-            //prepare interaction lists
-            if (current_node->get_cell().get_neuron_num_dendrites_inh() > 0) {
-                nodes_with_dend_in.push_back(current_node);
-                //printf("dendrit anzahl von Knoten = %i\n", current_node->get_cell().get_neuron_num_dendrites_exc());
-            }
-            if (current_node->get_cell().get_neuron_num_dendrites_exc() > 0)
-                nodes_with_dend_ex.push_back(current_node);
-        }
-    }
-    //printf("ax_ex = %i, dend_ex = %i \n", nodes_with_ax_ex.size(), nodes_with_dend_ex.size());
-    //printf("ax_in = %i, dend_in = %i \n", nodes_with_ax_in.size(), nodes_with_dend_in.size());
 
-    if (!nodes_with_ax_ex.empty() && nodes_with_dend_ex.size() > 0) {
-        make_creation_request_for(SignalType::EXCITATORY, synapse_creation_requests_outgoing, nodes_with_ax_ex, nodes_with_dend_ex);
-        //printf("make request for ex geschafft \n");
-    }
-    if (!nodes_with_ax_in.empty() && nodes_with_dend_in.size() > 0) {
-        make_creation_request_for(SignalType::INHIBITORY, synapse_creation_requests_outgoing, nodes_with_ax_in, nodes_with_dend_in);
-        //printf("make request for in geschafft \n");
-    }
+        // Number of vacant axons
+        const auto num_vacant_axons = static_cast<unsigned int>(axons_cnts[neuron_id]) - axons_connected_cnts[neuron_id];
+        RelearnException::check(num_vacant_axons >= 0, "num vacant axons is negative");
+
+        if (num_vacant_axons == 0) {
+            continue;
+        }
+
+        // DendriteType::EXCITATORY axon
+        SignalType dendrite_type_needed = SignalType::EXCITATORY;
+        if (SignalType::INHIBITORY == axons_signal_types[neuron_id]) {
+            // DendriteType::INHIBITORY axon
+            dendrite_type_needed = SignalType::INHIBITORY;
+        }
+
+        // Position of current neuron
+        const Vec3d axon_xyz_pos = extra_info->get_position(neuron_id);
+
+        // For all vacant axons of neuron "neuron_id"
+        for (size_t j = 0; j < num_vacant_axons; j++) {
+            /**
+			* Find target neuron for connecting and
+			* connect if target neuron has still dendrite available.
+			*
+			* The target neuron might not have any dendrites left
+			* as other axons might already have connected to them.
+			* Right now, those collisions are handled in a first-come-first-served fashion.
+			*/
+            std::optional<RankNeuronId> rank_neuron_id = global_tree->find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
+
+            if (rank_neuron_id.has_value()) {
+                RankNeuronId val = rank_neuron_id.value();
+                /*
+				* Append request for synapse creation to rank "target_rank"
+				* Note that "target_rank" could also be my own rank.
+				*/
+                synapse_creation_requests_outgoing[val.get_rank()].append(neuron_id, val.get_neuron_id(), dendrite_type_needed);
+            }
+        } /* all vacant axons of a neuron */
+    } /* my neurons */
 
     GlobalTimers::timers.stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
 
@@ -880,6 +877,7 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
 
     return synapse_creation_requests_outgoing;
 }
+
 
 MapSynapseCreationRequests Neurons::create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing) {
     MapSynapseCreationRequests synapse_creation_requests_incoming;
