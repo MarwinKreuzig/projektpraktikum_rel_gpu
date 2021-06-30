@@ -105,16 +105,21 @@ inline std::vector<double> johnson(typename Graph::FullGraph full_graph, const s
             std::transform(zipped.begin(), zipped.end(), weights.begin(), [](const auto& a) { return std::get<0>(a); });
             std::transform(zipped.begin(), zipped.end(), cuda_edges.begin(), [](const auto& a) { return std::get<1>(a); });
 
-            auto starts = std::vector<int>(num_neurons + 1); // Starting point for each edge
+            auto starts = std::vector<int>(num_neurons + 1, -1); // Starting point for each edge
 
             auto edge_it = cuda_edges.cbegin();
             int c = 0;
             starts.front() = 0;
-            for (auto i = 1u; i < starts.size(); ++i) {
-                const auto& my_edge = *edge_it;
-                for (; my_edge.u == edge_it->u; ++edge_it, ++c) { }
-                starts[i] = c;
+            for (size_t i = 1u; i < starts.size(); ++i) {
+                while ((*edge_it).u < static_cast<int>(i)) {
+                    ++edge_it;
+                    ++c;
+                }
+                if ((*edge_it).u == static_cast<int>(i)) {
+                    starts[i] = c;
+                }
             }
+            starts.back() = cuda_edges.size();
 
             graph_cuda_t<std::vector<int>, std::vector<edge_t>> graph{
                 static_cast<int>(num_neurons),

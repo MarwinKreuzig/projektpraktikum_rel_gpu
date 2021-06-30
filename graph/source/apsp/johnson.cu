@@ -7,6 +7,10 @@
 #include <limits>
 #include <vector>
 
+#include <boost/config.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/johnson_all_pairs_shortest.hpp>
+
 #include "util.hpp"
 
 #define THREADS_PER_BLOCK 32
@@ -50,14 +54,27 @@ __global__ void dijkstra_kernel(View<double> output, View<char> visited_global) 
         visited[i] = 0;
     }
     dist[s] = 0.0;
+
     for (int count = 0; count < V - 1; count++) {
         const auto u = min_distance(dist, visited, V);
         const auto u_start = starts[u];
-        const auto u_end = starts[u + 1];
+
+        if (u_start == -1) {
+            continue;
+        }
+
+        // find next non -1 index (the end of this vertecies edge list)
+        auto u_end = starts[u + 1];
+        for (int offset = 1; u_end == -1 && u + 1 + offset < V; ++offset) {
+            u_end = starts[u + 1 + offset];
+        }
+
         const auto dist_u = dist[u];
         visited[u] = 1;
+
         for (int v_i = u_start; v_i < u_end; v_i++) {
             const auto v = edge_array[v_i].v;
+
             if ((visited[v] == 0) && dist_u != double_max && dist_u + weights[v_i] < dist[v]) {
                 dist[v] = dist_u + weights[v_i];
             }
@@ -86,14 +103,18 @@ __global__ void bellman_ford_kernel(float* dist) {
 
 __host__ bool bellman_ford_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<float>& dist, int s) {
     const int E = gr.E;
+    const int V = gr.V;
 
-    std::fill(dist.begin(), dist.end(), INT_MAX);
+    std::fill(dist.begin(), dist.end(), std::numeric_limits<float>::max());
     dist[s] = 0;
 
     RAIIDeviceMemory<float> device_dist{ dist };
 
     const int blocks = (E + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-    bellman_ford_kernel<<<blocks, THREADS_PER_BLOCK>>>(device_dist.data());
+
+    for (int i = 1; i <= V - 1; i++) {
+        bellman_ford_kernel<<<blocks, THREADS_PER_BLOCK>>>(device_dist.data());
+    }
 
     copy(dist, device_dist, cudaMemcpyDeviceToHost);
 
@@ -122,7 +143,6 @@ __host__ bool bellman_ford_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_
 **************************************************************************/
 
 __host__ void johnson_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<double>& output) {
-
     //cudaThreadSetCacheConfig(cudaFuncCachePreferL1);
 
     // Const Graph Initialization
