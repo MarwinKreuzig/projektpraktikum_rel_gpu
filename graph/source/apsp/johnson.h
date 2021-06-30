@@ -141,32 +141,6 @@ inline std::vector<double> johnson(typename Graph::FullGraph full_graph, const s
         return APSP_Edge{ static_cast<int>(edge.m_source), static_cast<int>(edge.m_target) };
     });
 
-    std::vector<std::pair<int, APSP_Edge>> zipped{};
-    std::transform(
-        weights.begin(),
-        weights.end(),
-        edges.begin(),
-        std::back_inserter(zipped),
-        [](int& weight, APSP_Edge& edge) -> std::pair<int, APSP_Edge> {
-            return { weight, edge };
-        });
-
-    std::sort(
-        zipped.begin(),
-        zipped.end(),
-        [](const auto& a, const auto& b) -> bool {
-            if (!(std::get<1>(a).first < std::get<1>(b).first)) {
-                if (std::get<1>(a).first == std::get<1>(b).first) {
-                    return std::get<1>(a).second < std::get<1>(b).second;
-                }
-                return false;
-            }
-            return true;
-        });
-
-    std::transform(zipped.begin(), zipped.end(), weights.begin(), [](const auto& a) { return std::get<0>(a); });
-    std::transform(zipped.begin(), zipped.end(), edges.begin(), [](const auto& a) { return std::get<1>(a); });
-
     graph_t graph{
         static_cast<int>(num_neurons),
         static_cast<int>(E),
