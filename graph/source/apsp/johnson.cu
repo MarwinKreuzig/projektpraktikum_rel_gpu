@@ -65,7 +65,8 @@ __global__ void dijkstra_kernel(View<double> output, View<char> visited_global) 
 
         // find next non -1 index (the end of this vertecies edge list)
         auto u_end = starts[u + 1];
-        for (int offset = 1; u_end == -1 && u + 1 + offset < V; ++offset) {
+
+        for (int offset = 1; u_end == -1 && u + 1 + offset < V + 1; ++offset) {
             u_end = starts[u + 1 + offset];
         }
 

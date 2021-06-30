@@ -11,6 +11,8 @@
 #include "../source/graph.h"
 #include "../source/apsp/johnson.h"
 
+const auto max = std::numeric_limits<double>::max();
+
 struct TestExample {
     Graph graph;
     double expected_sum;
@@ -136,7 +138,6 @@ static TestExample createExample2() {
     graph.add_edge(7, 6, 1);
 
     // clang-format off
-    const auto max = std::numeric_limits<double>::max();
     return { graph, 15, 1.6667,
         {
         0,      1,      1,      2,      3,      3,    2,        2,
@@ -154,6 +155,95 @@ static TestExample createExample2() {
 
 TEST(TestAPSP, testExampleGraph2) {
     auto example = createExample2();
+    doTest(example, true);
+
+    // If CUDA is available do CPU test,
+    // otherwise test already done on CPU
+    if constexpr (CUDA_FOUND) {
+        doTest(example, false);
+    }
+}
+
+static TestExample createExample3() {
+    Graph graph{};
+
+    Position posX{ 1, 0, 0 };
+    graph.add_vertex(posX, "X", 0);
+
+    Position posY{ 0, 1, 0 };
+    graph.add_vertex(posY, "Y", 1);
+
+    Position posZ{ 0, 0, 1 };
+    graph.add_vertex(posZ, "Z", 2);
+
+    graph.add_edge(0, 1, 1);
+    graph.add_edge(1, 2, 1);
+    graph.add_edge(2, 0, 1);
+
+    return { graph, 4.5, 1.5, { 0, 1, 2, 2, 0, 1, 1, 2, 0 } };
+}
+
+TEST(TestAPSP, testExampleGraph3) {
+    auto example = createExample3();
+    doTest(example, true);
+
+    // If CUDA is available do CPU test,
+    // otherwise test already done on CPU
+    if constexpr (CUDA_FOUND) {
+        doTest(example, false);
+    }
+}
+
+static TestExample createExample4() {
+    Graph graph{};
+
+    Position posX{ 1, 0, 0 };
+    graph.add_vertex(posX, "X", 0);
+
+    Position posY{ 0, 1, 0 };
+    graph.add_vertex(posY, "Y", 1);
+
+    Position posZ{ 0, 0, 1 };
+    graph.add_vertex(posZ, "Z", 2);
+
+    graph.add_edge(0, 1, 1);
+    graph.add_edge(1, 2, -1);
+    graph.add_edge(2, 0, 1);
+
+    return { graph, 4.5, 1.5, { 0, 1, 2, 2, 0, 1, 1, 2, 0 } };
+}
+
+TEST(TestAPSP, testExampleGraph4) {
+    auto example = createExample4();
+    doTest(example, true);
+
+    // If CUDA is available do CPU test,
+    // otherwise test already done on CPU
+    if constexpr (CUDA_FOUND) {
+        doTest(example, false);
+    }
+}
+
+static TestExample createExample5() {
+    Graph graph{};
+
+    Position posX{ 1, 0, 0 };
+    graph.add_vertex(posX, "X", 0);
+
+    Position posY{ 0, 1, 0 };
+    graph.add_vertex(posY, "Y", 1);
+
+    Position posZ{ 0, 0, 1 };
+    graph.add_vertex(posZ, "Z", 2);
+
+    graph.add_edge(0, 1, 1);
+    graph.add_edge(1, 2, 1);
+
+    return { graph, 2.5, 1.3333, { 0, 1, 2, max, 0, 1, max, max, 0 } };
+}
+
+TEST(TestAPSP, testExampleGraph5) {
+    auto example = createExample5();
     doTest(example, true);
 
     // If CUDA is available do CPU test,
