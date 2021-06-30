@@ -11,7 +11,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/johnson_all_pairs_shortest.hpp>
 
-#include "util.hpp"
+#include "util.h"
 
 #define THREADS_PER_BLOCK 32
 
