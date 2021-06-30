@@ -58,6 +58,7 @@ __global__ void dijkstra_kernel(View<double> output, View<char> visited_global) 
     for (int count = 0; count < V - 1; count++) {
         const auto u = min_distance(dist, visited, V);
         const auto u_start = starts[u];
+        visited[u] = 1;
 
         if (u_start == -1) {
             continue;
@@ -65,17 +66,14 @@ __global__ void dijkstra_kernel(View<double> output, View<char> visited_global) 
 
         // find next non -1 index (the end of this vertecies edge list)
         auto u_end = starts[u + 1];
-
         for (int offset = 1; u_end == -1 && u + 1 + offset < V + 1; ++offset) {
             u_end = starts[u + 1 + offset];
         }
 
         const auto dist_u = dist[u];
-        visited[u] = 1;
 
         for (int v_i = u_start; v_i < u_end; v_i++) {
             const auto v = edge_array[v_i].v;
-
             if ((visited[v] == 0) && dist_u != double_max && dist_u + weights[v_i] < dist[v]) {
                 dist[v] = dist_u + weights[v_i];
             }

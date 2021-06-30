@@ -220,7 +220,7 @@ double Graph::calculate_average_euclidean_distance() {
 std::tuple<double, double> Graph::calculate_all_pairs_shortest_paths() {
     const auto num_neurons = get_num_vertices();
 
-    const auto distances = apsp::johnson(full_graph, num_neurons);
+    const auto distances = apsp::johnson(full_graph, num_neurons, use_cuda_);
 
     size_t number_values = 0;
 
@@ -503,4 +503,8 @@ static void average_clustering_coefficient_unweighted_undirected(typename Graph:
     //std::cout << "[" << wall_clock_time() << "] " << "    Number denominators == 0: " << num_denominator_zero << std::endl;
     //std::cout << "[" << wall_clock_time() << "] " << "    Number denominators <  0: " << num_denominator_less_than_zero << std::endl;
     //std::cout << "[" << wall_clock_time() << "] " << "    Number denominators >  0: " << num_denominator_greater_than_zero << std::endl;
+}
+
+void Graph::set_use_cuda(bool use_cuda) {
+    use_cuda_ = use_cuda;
 }

@@ -69,6 +69,8 @@ public:
 
     size_t get_num_edges();
 
+    void set_use_cuda(bool use_cuda);
+
 private:
     void init_edge_weight();
 
@@ -97,6 +99,8 @@ private:
     std::map<size_t, FullVertex> id_to_vtx_conn{};
 
     Position offset{};
+
+    bool use_cuda_{ true };
 };
 
 // Base class template

@@ -1,8 +1,4 @@
-#include "graph.h"
-#include "position.h"
-
 #include <sys/stat.h>
-
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
@@ -14,6 +10,10 @@
 #include <set>
 #include <string>
 #include <vector>
+
+#include "apsp/johnson.h"
+#include "graph.h"
+#include "position.h"
 
 int main(int argc, char** argv) {
     // Check number of parameters
