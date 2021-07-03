@@ -46,13 +46,9 @@ class MPINo_RMA_MemAllocator {
     MPINo_RMA_MemAllocator() = default;
 
 public:
-    static void init(size_t size_requested);
+    static void init(size_t size_requested, size_t num_local_trees);
 
-    static void deallocate_rma_mem();
-
-    // Free the MPI RMA window
-    // This call is collective over MPI_COMM_WORLD
-    static void free_rma_window();
+    static void finalize();
 
     [[nodiscard]] static OctreeNode* new_octree_node();
 
@@ -60,17 +56,14 @@ public:
 
     [[nodiscard]] static int64_t get_base_pointers() noexcept;
 
-    [[nodiscard]] static OctreeNode* get_root_nodes_for_local_trees(size_t num_local_trees);
+    [[nodiscard]] static OctreeNode* get_branch_nodes();
 
-    [[nodiscard]] static size_t get_min_num_avail_objects() noexcept;
+    [[nodiscard]] static size_t get_num_avail_objects() noexcept;
 
     //NOLINTNEXTLINE
     // static inline MPI_Win mpi_window{ 0 }; // RMA window object
 
 private:
-    // Store RMA window base pointers of all ranks
-    static void gather_rma_window_base_pointers();
-
     static inline size_t size_requested{ Constants::uninitialized }; // Bytes requested for the allocator
     static inline size_t max_size{ Constants::uninitialized }; // Size in Bytes of MPI-allocated memory
     static inline size_t max_num_objects{ Constants::uninitialized }; // Max number objects that are available

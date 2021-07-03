@@ -63,6 +63,9 @@ void LogFiles::init() {
 
     // Create log file for the local synapse creation and deletion
     LogFiles::add_logfile(EventType::PlasticityUpdateLocal, "plasticity_changes_local", -1);
+
+    // Create log file for the essentials of the simulation
+    LogFiles::add_logfile(EventType::Essentials, "essentials", 0);
 }
 
 std::string LogFiles::get_specific_file_prefix() {

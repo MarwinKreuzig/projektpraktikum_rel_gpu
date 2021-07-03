@@ -392,6 +392,8 @@ public:
     // Print global information about all neurons at rank 0
     void print_neurons_overview_to_log_file_on_rank_0(size_t step);
 
+    void print_statistics_to_essentials();
+
     void print_network_graph_to_log_file();
 
     void print_positions_to_log_file();

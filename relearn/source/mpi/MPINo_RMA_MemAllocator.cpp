@@ -23,7 +23,7 @@
 
 MPINo_RMA_MemAllocator::HolderOctreeNode MPINo_RMA_MemAllocator::holder_base_ptr{};
 
-void MPINo_RMA_MemAllocator::init(size_t size_requested) {
+void MPINo_RMA_MemAllocator::init(size_t size_requested, size_t num_local_trees) {
     MPINo_RMA_MemAllocator::size_requested = size_requested;
     max_num_objects = size_requested / sizeof(OctreeNode);
     max_size = size_requested;
@@ -32,17 +32,16 @@ void MPINo_RMA_MemAllocator::init(size_t size_requested) {
     base_ptr = data.data();
 
     // create_rma_window();
-    gather_rma_window_base_pointers();
+    base_pointers = reinterpret_cast<int64_t>(base_ptr);
 
     holder_base_ptr = HolderOctreeNode(base_ptr, max_num_objects);
+
+    root_nodes_for_local_trees.resize(num_local_trees);
 
     LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode));
 }
 
-void MPINo_RMA_MemAllocator::deallocate_rma_mem() {
-}
-
-void MPINo_RMA_MemAllocator::free_rma_window() {
+void MPINo_RMA_MemAllocator::finalize() {
 }
 
 OctreeNode* MPINo_RMA_MemAllocator::new_octree_node() {
@@ -57,17 +56,12 @@ int64_t MPINo_RMA_MemAllocator::get_base_pointers() noexcept {
     return base_pointers;
 }
 
-OctreeNode* MPINo_RMA_MemAllocator::get_root_nodes_for_local_trees(size_t num_local_trees) {
-    root_nodes_for_local_trees.resize(num_local_trees);
+OctreeNode* MPINo_RMA_MemAllocator::get_branch_nodes() {
     return root_nodes_for_local_trees.data();
 }
 
-size_t MPINo_RMA_MemAllocator::get_min_num_avail_objects() noexcept {
+size_t MPINo_RMA_MemAllocator::get_num_avail_objects() noexcept {
     return holder_base_ptr.get_num_available();
-}
-
-void MPINo_RMA_MemAllocator::gather_rma_window_base_pointers() {
-    base_pointers = reinterpret_cast<int64_t>(base_ptr);
 }
 
 MPINo_RMA_MemAllocator::HolderOctreeNode::HolderOctreeNode(OctreeNode* ptr, size_t length)

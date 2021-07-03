@@ -15,6 +15,8 @@
 
 #include <spdlog/fmt/bundled/ostream.h>
 
+#include <algorithm>
+
 template <typename T>
 class Vec3 {
     T x;
