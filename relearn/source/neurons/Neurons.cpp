@@ -1181,7 +1181,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
     const int cwidth = 16; // Column width
 
     // Write headers to file if not already done so
-    if (Constants::logfile_update_step == step) {
+    if (0 == step) {
         LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, false,
             "# ALL NEURONS\n{1:{0}}{2:{0}}{3:{0}}{4:{0}}{5:{0}}{6:{0}}{7:{0}}{8:{0}}{9:{0}}{10:{0}}{11:{0}}{12:{0}}{13:{0}}{14:{0}}{15:{0}}{16:{0}}{17:{0}}{18:{0}}{19:{0}}{20:{0}}{21:{0}}",
             cwidth,
