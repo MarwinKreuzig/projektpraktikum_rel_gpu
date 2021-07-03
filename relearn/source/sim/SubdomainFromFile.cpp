@@ -84,6 +84,8 @@ void SubdomainFromFile::read_dimensions_from_file() {
     }
 
     total_num_neurons_in_file = total_number_neurons;
+        
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded neurons: {}", total_number_neurons);
 
     const auto desired_num_neurons_ = found_ex_neurons + found_in_neurons;
     const auto desired_frac_neurons_exc_ = static_cast<double>(found_ex_neurons) / static_cast<double>(desired_num_neurons_);

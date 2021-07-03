@@ -96,10 +96,13 @@ public:
     }
 
     template <typename T, size_t size>
-    static void reduce(const std::array<T, size>& src, std::array<T, size>& dst, ReduceFunction function, int root_rank, Scope scope) {
-        RelearnException::check(src.size() == dst.size(), "Sizes of vectors don't match");
+    [[nodiscard]] static std::array<T, size> reduce(const std::array<T, size>& src, ReduceFunction function, int root_rank, Scope scope) {
+        RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
 
+        std::array<T, size> dst{};
         reduce(src.data(), dst.data(), src.size() * sizeof(T), function, root_rank, scope);
+
+        return dst;
     }
 
     template <typename T>
@@ -108,14 +111,10 @@ public:
     }
 
     template <typename T>
-    static void get(T* ptr, int target_rank, int64_t target_display) {
-    }
-
-    template <typename T>
     static void all_gather_inline(T* ptr, int count, Scope scope) {
     }
 
-    [[nodiscard]] static int64_t get_ptr_displacement(int target_rank, const OctreeNode* ptr);
+    static void download_octree_node(OctreeNode* dst, int target_rank, const OctreeNode* src);
 
     [[nodiscard]] static OctreeNode* new_octree_node();
 
@@ -143,13 +142,6 @@ public:
 
     // NOLINTNEXTLINE
     static void wait_request(AsyncToken& request);
-
-    [[nodiscard]] static AsyncToken get_non_null_request();
-
-    [[nodiscard]] static AsyncToken get_null_request();
-
-    // NOLINTNEXTLINE
-    static void all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs);
 
     // NOLINTNEXTLINE
     static void wait_all_tokens(std::vector<AsyncToken>& tokens);

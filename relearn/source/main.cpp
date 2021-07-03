@@ -113,6 +113,8 @@ int main(int argc, char** argv) {
     opt_file_disable_interrupts->check(CLI::ExistingFile);
     opt_file_creation_interrups->check(CLI::ExistingFile);
 
+    opt_log_path->check(CLI::ExistingDirectory);
+
     double synaptic_elements_init_lb{ 0.0 };
     double synaptic_elements_init_ub{ 0.0 };
     app.add_option("--synaptic-elements-lower-bound", synaptic_elements_init_lb, "The minimum number of vacant synaptic elements per neuron. Must be smaller of equal to synaptic-elements-upper-bound.");
@@ -155,8 +157,22 @@ int main(int argc, char** argv) {
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier(MPIWrapper::Scope::global);
     if (0 == my_rank) {
-        LogFiles::print_message_rank(0, "START: {}\nChosen lower bound for vacant synaptic elements: {}\nChosen upper bound for vacant synaptic elements: {}\nChosen target calcium value: {}",
-            Timers::wall_clock_time(), synaptic_elements_init_lb, synaptic_elements_init_ub, target_calcium);
+        LogFiles::print_message_rank(0, "START: {}\nChosen lower bound for vacant synaptic elements: {}\nChosen upper bound for vacant synaptic elements: {}\nChosen target calcium value: {}\nChosen beta value: {}\nChosen nu value: {}",
+            Timers::wall_clock_time(), synaptic_elements_init_lb, synaptic_elements_init_ub, target_calcium, beta, nu);
+
+        LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
+            "Number of steps: {}\n"
+            "Chosen lower bound for vacant synaptic elements: {}\n"
+            "Chosen upper bound for vacant synaptic elements: {}\n"
+            "Chosen target calcium value: {}\n"
+            "Chosen beta value: {}\n"
+            "Chosen nu value: {}",
+            simulation_steps,
+            synaptic_elements_init_lb,
+            synaptic_elements_init_ub,
+            target_calcium,
+            beta,
+            nu);
     }
 
     GlobalTimers::timers.start(TimerRegion::INITIALIZATION);
@@ -247,9 +263,9 @@ int main(int argc, char** argv) {
     NeuronMonitor::max_steps = steps_per_simulation;
     NeuronMonitor::current_step = 0;
 
-    for (size_t i = 0; i < 1; i++) {
-        sim.register_neuron_monitor(i);
-    }
+    //for (size_t i = 0; i < 1; i++) {
+    //    sim.register_neuron_monitor(i);
+    //}
 
     auto simulate = [&]() {
         sim.simulate(simulation_steps, step_monitor);
@@ -281,8 +297,6 @@ int main(int argc, char** argv) {
             }
         }
     }
-
-    NeuronMonitor::neurons_to_monitor->print();
 
     MPIWrapper::finalize();
 

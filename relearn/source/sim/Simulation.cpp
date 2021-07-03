@@ -162,26 +162,26 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             NeuronMonitor::current_step++;
         }
 
-        //for (const auto& [disable_step, disable_ids] : disable_interrupts) {
-        //    if (disable_step == step) {
-        //        neurons->disable_neurons(disable_ids);
-        //        LogFiles::write_to_file(LogFiles::EventType::Cout, false, std::string("Disabling ") + std::to_string(disable_ids.size()) + " neurons in step " + std::to_string(disable_step) + "\n");
-        //    }
-        //}
+        for (const auto& [disable_step, disable_ids] : disable_interrupts) {
+            if (disable_step == step) {
+                neurons->disable_neurons(disable_ids);
+                LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Disabling {} neurons in step {}", disable_ids.size(), disable_step);
+            }
+        }
 
-        //for (const auto& [enable_step, enable_ids] : enable_interrupts) {
-        //    if (enable_step == step) {
-        //        neurons->enable_neurons(enable_ids);
-        //        LogFiles::write_to_file(LogFiles::EventType::Cout, std::string("Enabling ") + std::to_string(enable_ids.size()) + " neurons in step " + std::to_string(enable_step) + "\n", true);
-        //    }
-        //}
+        for (const auto& [enable_step, enable_ids] : enable_interrupts) {
+            if (enable_step == step) {
+                neurons->enable_neurons(enable_ids);
+                LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Enabling {} neurons in step {}", enable_ids.size(), enable_step);
+            }
+        }
 
-        //for (const auto& [creation_step, creation_count] : creation_interrupts) {
-        //    if (creation_step == step) {
-        //        neurons->create_neurons(creation_count);
-        //        LogFiles::write_to_file(LogFiles::EventType::Cout, std::string("Creating ") + std::to_string(creation_count) + " neurons in step " + std::to_string(creation_step) + "\n", true);
-        //    }
-        //}
+        for (const auto& [creation_step, creation_count] : creation_interrupts) {
+            if (creation_step == step) {
+                neurons->create_neurons(creation_count);
+                LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Creating {} neurons in step {}", creation_count, creation_step);
+            }
+        }
 
         // Provide neuronal network to neuron models for one iteration step
         GlobalTimers::timers.start(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
@@ -216,9 +216,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 
             // Get total number of synapses deleted and created
             std::array<int64_t, 2> local_cnts = { static_cast<int64_t>(num_synapses_deleted), static_cast<int64_t>(num_synapses_created) };
-            std::array<int64_t, 2> global_cnts{};
-
-            MPIWrapper::reduce(local_cnts, global_cnts, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
+            std::array<int64_t, 2> global_cnts = MPIWrapper::reduce(local_cnts, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
 
             if (0 == MPIWrapper::get_my_rank()) {
                 total_synapse_deletions += global_cnts[0] / 2;
@@ -272,6 +270,16 @@ void Simulation::finalize() const {
             total_synapse_creations, total_synapse_deletions, netto_creations,
             delta_synapse_creations, delta_synapse_deletions, previous_netto_creations,
             Timers::wall_clock_time());
+
+        LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
+            "Created synapses: {}\n"
+            "Deleted synapses: {}\n"
+            "Netto synapses: {}",
+            total_synapse_creations,
+            total_synapse_deletions,
+            netto_creations);
+
+        neurons->print_statistics_to_essentials();
     }
 }
 

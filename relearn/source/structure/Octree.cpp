@@ -279,10 +279,7 @@ std::vector<OctreeNode*> Octree::get_nodes_for_interval(
                     ret.first->second = MPIWrapper::new_octree_node();
                     auto* local_child_addr = ret.first->second;
 
-                    // Calc displacement from absolute address
-                    const auto target_child_displ = MPIWrapper::get_ptr_displacement(target_rank, root->get_child(i));
-
-                    MPIWrapper::get(local_child_addr, target_rank, target_child_displ);
+                    MPIWrapper::download_octree_node(local_child_addr, target_rank, root->get_child(i));
                 }
 
                 // Remember address of node
@@ -385,9 +382,7 @@ std::vector<OctreeNode*> Octree::get_nodes_for_interval(
             if (ret.second) {
                 ret.first->second = MPIWrapper::new_octree_node();
                 auto* local_child_addr = ret.first->second;
-                const auto target_child_displ = MPIWrapper::get_ptr_displacement(target_rank, stack_elem->get_child(i));
-
-                MPIWrapper::get(local_child_addr, target_rank, target_child_displ);
+                MPIWrapper::download_octree_node(local_child_addr, target_rank, stack_elem->get_child(i));
             }
 
             // Remember local address of node

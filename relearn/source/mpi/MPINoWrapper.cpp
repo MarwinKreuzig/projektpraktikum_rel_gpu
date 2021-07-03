@@ -33,10 +33,10 @@ void MPINoWrapper::init_neurons(size_t num_neurons) {
 }
 
 void MPINoWrapper::init_buffer_octree(size_t num_partitions) {
-    MPINo_RMA_MemAllocator::init(Constants::mpi_alloc_mem);
+    MPINo_RMA_MemAllocator::init(Constants::mpi_alloc_mem, num_partitions);
 
     rma_buffer_branch_nodes.num_nodes = num_partitions;
-    rma_buffer_branch_nodes.ptr = MPINo_RMA_MemAllocator::get_root_nodes_for_local_trees(num_partitions);
+    rma_buffer_branch_nodes.ptr = MPINo_RMA_MemAllocator::get_branch_nodes();
 }
 
 void MPINoWrapper::barrier(Scope scope) {
@@ -86,10 +86,8 @@ void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size, Scop
     std::memcpy(buffer, own_data, size);
 }
 
-[[nodiscard]] int64_t MPINoWrapper::get_ptr_displacement(int /*target_rank*/, const OctreeNode* ptr) {
-    const auto base_ptrs = MPINo_RMA_MemAllocator::get_base_pointers();
-    const auto displacement = int64_t(ptr) - base_ptrs;
-    return displacement;
+void MPINoWrapper::download_octree_node(OctreeNode* dst, int /*target_rank*/, const OctreeNode* src) {
+    *dst = *src;
 }
 
 [[nodiscard]] OctreeNode* MPINoWrapper::new_octree_node() {
@@ -121,7 +119,7 @@ void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size, Scop
 }
 
 [[nodiscard]] size_t MPINoWrapper::get_num_avail_objects() {
-    return MPINo_RMA_MemAllocator::get_min_num_avail_objects();
+    return MPINo_RMA_MemAllocator::get_num_avail_objects();
 }
 
 [[nodiscard]] OctreeNode* MPINoWrapper::get_buffer_octree_nodes() {
@@ -143,17 +141,6 @@ void MPINoWrapper::delete_octree_node(OctreeNode* ptr) {
 void MPINoWrapper::wait_request(AsyncToken& /*request*/) {
 }
 
-[[nodiscard]] MPINoWrapper::AsyncToken MPINoWrapper::get_non_null_request() {
-    return 1;
-}
-
-[[nodiscard]] MPINoWrapper::AsyncToken MPINoWrapper::get_null_request() {
-    return 0;
-}
-
-void MPINoWrapper::all_gather_v(size_t total_num_neurons, std::vector<double>& xyz_pos, std::vector<int>& recvcounts, std::vector<int>& displs) {
-}
-
 void MPINoWrapper::wait_all_tokens(std::vector<AsyncToken>& /*tokens*/) {
 }
 
@@ -166,9 +153,7 @@ void MPINoWrapper::unlock_window(int rank) {
 }
 
 void MPINoWrapper::finalize() /*noexcept*/ {
-    // Free RMA window (MPI collective)
-    MPINo_RMA_MemAllocator::free_rma_window();
-    MPINo_RMA_MemAllocator::deallocate_rma_mem();
+    MPINo_RMA_MemAllocator::finalize();
 }
 
 #endif
