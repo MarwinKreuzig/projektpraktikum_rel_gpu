@@ -81,6 +81,15 @@ public:
     }
 
     /**
+     * @brief Compares two objects first by rank and then by id
+     * @param other The other RankNeuronId
+     * @return True iff this' rank is smaller than the other's or if the ranks are equal and this' neuron_id is smaller
+     */
+    bool operator<(const RankNeuronId& other) const noexcept {
+        return (this->rank < other.rank) || (this->rank == other.rank && this->neuron_id < other.neuron_id);
+    }
+
+    /**
      * @brief Prints the object's rank and id; inserts \n
      * @param os The out-stream in which the object is printed
      * @return The argument os to allow chaining

@@ -338,3 +338,126 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
         }
     }
 }
+
+TEST_F(NetworkGraphTest, testNetowrkGraphCreate) {
+    std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
+    std::uniform_int_distribution<size_t> uid_num_edges(0, upper_bound_num_neurons * num_synapses_per_neuron);
+
+    std::uniform_int_distribution<int> uid_num_ranks(1, num_ranks);
+    std::uniform_int_distribution<int> uid_edge_weight(-bound_synapse_weight, bound_synapse_weight);
+
+    for (auto i = 0; i < iterations; i++) {
+        size_t num_neurons = uid_num_neurons(mt);
+        size_t num_edges = uid_num_edges(mt) + num_neurons;
+
+        std::uniform_int_distribution<size_t> uid_actual_num_neurons(0, num_neurons - 1);
+
+        NetworkGraph ng(num_neurons);
+
+        std::map<RankNeuronId, std::map<RankNeuronId, int>> in_edges;
+        std::map<RankNeuronId, std::map<RankNeuronId, int>> out_edges;
+
+        for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
+            int other_rank = uid_num_ranks(mt);
+            size_t neuron_id = uid_actual_num_neurons(mt);
+            size_t other_neuron_id = uid_actual_num_neurons(mt);
+
+            int weight = uid_edge_weight(mt);
+
+            while (weight == 0) {
+                weight = uid_edge_weight(mt);
+            }
+
+            bool is_in_synapse = weight < 0;
+
+            RankNeuronId my_id{ 0, neuron_id };
+            RankNeuronId other_id{ other_rank, other_neuron_id };
+
+            if (is_in_synapse) {
+                ng.add_edge_weight(my_id, other_id, weight);
+                in_edges[my_id][other_id] += weight;
+            } else {
+                ng.add_edge_weight(other_id, my_id, weight);
+                out_edges[my_id][other_id] += weight;
+            }
+        }
+
+        const auto num_new_neurons = uid_num_neurons(mt);
+        const auto num_new_edges = uid_num_edges(mt);
+
+        const auto total_num_neurons = num_neurons + num_new_neurons;
+        const auto total_num_edges = num_edges + num_new_edges;
+
+        std::uniform_int_distribution<size_t> uid_actual_num_neurons_2(0, total_num_neurons - 1);
+
+        ng.create_neurons(num_new_neurons);
+
+        for (size_t edge_id = num_edges; edge_id < total_num_edges; edge_id++) {
+            int other_rank = uid_num_ranks(mt);
+            size_t neuron_id = uid_actual_num_neurons(mt);
+            size_t other_neuron_id = uid_actual_num_neurons(mt);
+
+            int weight = uid_edge_weight(mt);
+
+            while (weight == 0) {
+                weight = uid_edge_weight(mt);
+            }
+
+            bool is_in_synapse = weight < 0;
+
+            RankNeuronId my_id{ 0, neuron_id };
+            RankNeuronId other_id{ other_rank, other_neuron_id };
+
+            if (is_in_synapse) {
+                ng.add_edge_weight(my_id, other_id, weight);
+                in_edges[my_id][other_id] += weight;
+            } else {
+                ng.add_edge_weight(other_id, my_id, weight);
+                out_edges[my_id][other_id] += weight;
+            }
+        }
+
+        for (size_t neuron_id = 0; neuron_id < total_num_neurons; neuron_id++) {
+            size_t exc_in_edges_count_ng = ng.get_num_in_edges_ex(neuron_id);
+            size_t inh_in_edges_count_ng = ng.get_num_in_edges_in(neuron_id);
+            size_t out_edges_count_ng = ng.get_num_out_edges(neuron_id);
+
+            const std::vector<std::pair<std::pair<int, size_t>, int>>& in_edges_ng = ng.get_in_edges(neuron_id);
+            const std::vector<std::pair<std::pair<int, size_t>, int>>& out_edges_ng = ng.get_out_edges(neuron_id);
+
+            size_t exc_in_edges_count_meta = 0;
+            size_t inh_in_edges_count_meta = 0;
+            size_t out_edges_count_meta = 0;
+
+            for (const auto& it : in_edges[{ 0, neuron_id }]) {
+                if (it.second > 0) {
+                    exc_in_edges_count_meta += it.second;
+                } else {
+                    inh_in_edges_count_meta += -it.second;
+                }
+            }
+
+            for (const auto& it : out_edges[{ 0, neuron_id }]) {
+                out_edges_count_meta += std::abs(it.second);
+            }
+
+            ASSERT_EQ(exc_in_edges_count_ng, exc_in_edges_count_meta);
+            ASSERT_EQ(inh_in_edges_count_ng, inh_in_edges_count_meta);
+            ASSERT_EQ(out_edges_count_ng, out_edges_count_meta);
+
+            for (const auto& it : in_edges[{ 0, neuron_id }]) {
+                int weight_meta = it.second;
+                RankNeuronId key = it.first;
+                auto found_it = std::find(in_edges_ng.begin(), in_edges_ng.end(), std::make_pair(std::make_pair(key.get_rank(), key.get_neuron_id()), weight_meta));
+                ASSERT_TRUE(found_it != in_edges_ng.end());
+            }
+
+            for (const auto& it : out_edges[{ 0, neuron_id }]) {
+                int weight_meta = it.second;
+                RankNeuronId key = it.first;
+                auto found_it = std::find(out_edges_ng.begin(), out_edges_ng.end(), std::make_pair(std::make_pair(key.get_rank(), key.get_neuron_id()), weight_meta));
+                ASSERT_TRUE(found_it != out_edges_ng.end());
+            }
+        }
+    }
+}
