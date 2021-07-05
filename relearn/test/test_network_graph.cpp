@@ -339,7 +339,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
     }
 }
 
-TEST_F(NetworkGraphTest, testNetowrkGraphCreate) {
+TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<size_t> uid_num_edges(0, upper_bound_num_neurons * num_synapses_per_neuron);
 

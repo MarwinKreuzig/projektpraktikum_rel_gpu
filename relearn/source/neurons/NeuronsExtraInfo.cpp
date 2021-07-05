@@ -61,4 +61,6 @@ void NeuronsExtraInfo::create_neurons(size_t creation_count) {
         y_dims[i] = y_pos;
         z_dims[i] = z_pos;
     }
+
+    size = new_size;
 }
