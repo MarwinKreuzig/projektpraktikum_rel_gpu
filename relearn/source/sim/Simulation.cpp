@@ -164,22 +164,22 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 
         for (const auto& [disable_step, disable_ids] : disable_interrupts) {
             if (disable_step == step) {
-                neurons->disable_neurons(disable_ids);
                 LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Disabling {} neurons in step {}", disable_ids.size(), disable_step);
+                neurons->disable_neurons(disable_ids);
             }
         }
 
         for (const auto& [enable_step, enable_ids] : enable_interrupts) {
             if (enable_step == step) {
-                neurons->enable_neurons(enable_ids);
                 LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Enabling {} neurons in step {}", enable_ids.size(), enable_step);
+                neurons->enable_neurons(enable_ids);
             }
         }
 
         for (const auto& [creation_step, creation_count] : creation_interrupts) {
             if (creation_step == step) {
-                neurons->create_neurons(creation_count);
                 LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Creating {} neurons in step {}", creation_count, creation_step);
+                neurons->create_neurons(creation_count);
             }
         }
 

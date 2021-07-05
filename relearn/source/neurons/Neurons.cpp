@@ -96,11 +96,21 @@ void Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
     std::vector<int> deleted_dend_ex_connections(num_neurons, 0);
     std::vector<int> deleted_dend_in_connections(num_neurons, 0);
 
+    size_t number_deleted_in_edges = 0;
+    size_t number_deleted_out_inh_edges = 0;
+    size_t number_deleted_out_exc_edges = 0;
+
+    size_t weight_deleted_in_edges = 0;
+    size_t weight_deleted_out_exc_edges = 0;
+    size_t weight_deleted_out_inh_edges = 0;
+
     for (const auto neuron_id : neuron_ids) {
-        RelearnException::check(neuron_id < num_neurons, "In Neurons::disable_neurons, there was a too large id: %ull vs %ull", neuron_id, num_neurons);
+        RelearnException::check(neuron_id < num_neurons, "In Neurons::disable_neurons, there was a too large id: {} vs {}", neuron_id, num_neurons);
         disable_flags[neuron_id] = 0;
 
         const auto in_edges = network_graph->get_in_edges(neuron_id); // Intended copy
+
+        number_deleted_in_edges += in_edges.size();
 
         for (const auto& [edge_key, weight] : in_edges) {
             const auto& [source_rank, source_neuron_id] = edge_key;
@@ -112,6 +122,8 @@ void Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
             network_graph->add_edge_weight(target_id, source_id, -weight);
 
             deleted_axon_connections[source_neuron_id] += weight;
+
+            weight_deleted_in_edges += std::abs(weight);
         }
 
         const auto out_edges = network_graph->get_out_edges(neuron_id); // Intended copy
@@ -127,8 +139,12 @@ void Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
 
             if (weight > 0) {
                 deleted_dend_ex_connections[target_neuron_id] += weight;
+                number_deleted_out_exc_edges++;
+                weight_deleted_out_exc_edges += std::abs(weight);
             } else {
                 deleted_dend_in_connections[target_neuron_id] -= weight;
+                number_deleted_out_inh_edges++;
+                weight_deleted_out_inh_edges += std::abs(weight);
             }
         }
     }
@@ -136,6 +152,9 @@ void Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
     axons->update_after_deletion(deleted_axon_connections, neuron_ids);
     dendrites_exc->update_after_deletion(deleted_dend_ex_connections, neuron_ids);
     dendrites_inh->update_after_deletion(deleted_dend_in_connections, neuron_ids);
+
+    LogFiles::print_message_rank(0, "Deleted {} in-edges with weight {} and ({}, {}) out-edges with weight ({}, {}) (exc., inh.)",
+        number_deleted_in_edges, weight_deleted_in_edges, number_deleted_out_exc_edges, number_deleted_out_inh_edges, weight_deleted_out_exc_edges, weight_deleted_out_inh_edges);
 }
 
 void Neurons::enable_neurons(const std::vector<size_t>& neuron_ids) {
