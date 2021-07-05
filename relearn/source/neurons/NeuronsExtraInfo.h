@@ -27,16 +27,17 @@
 class NeuronsExtraInfo {
     size_t size{ 0 };
 
-    std::vector<std::string> area_names;
-    std::vector<double> x_dims;
-    std::vector<double> y_dims;
-    std::vector<double> z_dims;
+    std::vector<std::string> area_names{};
+    std::vector<double> x_dims{};
+    std::vector<double> y_dims{};
+    std::vector<double> z_dims{};
 
-    std::vector<size_t> mpi_rank_to_local_start_id;
+    std::vector<size_t> mpi_rank_to_local_start_id{};
 
 public:
     /**
-     * @brief Initializes a NeuronsExtraInfo that holds at most the given number of neurons. Performs communication across all MPI ranks. Must only be called once.
+     * @brief Initializes a NeuronsExtraInfo that holds at most the given number of neurons. Performs communication across all MPI ranks. 
+     *      Must only be called once. Does not initialize dimensions or area names.
      * @param num_neurons The number of neurons, greater than 0
      * @exception Throws an RelearnAxception if number_neurons is 0 or if called multiple times.
      */
@@ -45,7 +46,7 @@ public:
     /**
      * @brief Inserts additional neurons with UNKNOWN area name and x-, y-, z- positions randomly picked from already existing ones. Requires only one MPI rank.
      * @param creation_count The number of new neuorns, greater than 0
-     * @exception Throws an RelearnAxception if number_neurons is 0 or if more than one MPI rank computes
+     * @exception Throws an RelearnAxception if creation_count is 0, if x_dims, y_dims, or z_dims are empty, or if more than one MPI rank computes
      */
     void create_neurons(size_t creation_count);
 
@@ -55,7 +56,7 @@ public:
      * @exception Throws an RelearnAxception if names.empty() or if the number of supplied elements does not match the number of stored neurons 
      */
     void set_area_names(std::vector<std::string> names) {
-        RelearnException::check(area_names.empty(), "Area names are empty");
+        RelearnException::check(!names.empty(), "New area names are empty");
         RelearnException::check(size == names.size(), "Size does not match area names count");
         area_names = std::move(names);
     }
@@ -66,7 +67,7 @@ public:
      * @exception Throws an RelearnAxception if dims.empty() or if the number of supplied elements does not match the number of stored neurons 
      */
     void set_x_dims(std::vector<double> dims) {
-        RelearnException::check(x_dims.empty(), "X dimensions are empty");
+        RelearnException::check(!dims.empty(), "New x dimensions are empty");
         RelearnException::check(size == dims.size(), "Size does not match area names count");
         x_dims = std::move(dims);
     }
@@ -77,7 +78,7 @@ public:
      * @exception Throws an RelearnAxception if dims.empty() or if the number of supplied elements does not match the number of stored neurons 
      */
     void set_y_dims(std::vector<double> dims) {
-        RelearnException::check(y_dims.empty(), "Y dimensions are empty");
+        RelearnException::check(!dims.empty(), "New y dimensions are empty");
         RelearnException::check(size == dims.size(), "Size does not match area names count");
         y_dims = std::move(dims);
     }
@@ -88,7 +89,7 @@ public:
      * @exception Throws an RelearnAxception if dims.empty() or if the number of supplied elements does not match the number of stored neurons 
      */
     void set_z_dims(std::vector<double> dims) {
-        RelearnException::check(z_dims.empty(), "Z dimensions are empty");
+        RelearnException::check(!dims.empty(), "New z dimensions are empty");
         RelearnException::check(size == dims.size(), "Size does not match area names count");
         z_dims = std::move(dims);
     }
@@ -128,6 +129,9 @@ public:
      */
     [[nodiscard]] Vec3d get_position(size_t neuron_id) const {
         RelearnException::check(neuron_id < size, "neuron_id must be smaller than size in NeuronsExtraInfo::get_position");
+        RelearnException::check(neuron_id < x_dims.size(), "neuron_id must be smaller than x_dims.size() in NeuronsExtraInfo::get_position");
+        RelearnException::check(neuron_id < y_dims.size(), "neuron_id must be smaller than y_dims.size() in NeuronsExtraInfo::get_position");
+        RelearnException::check(neuron_id < z_dims.size(), "neuron_id must be smaller than z_dims.size() in NeuronsExtraInfo::get_position");
         return Vec3d{ x_dims[neuron_id], y_dims[neuron_id], z_dims[neuron_id] };
     }
 

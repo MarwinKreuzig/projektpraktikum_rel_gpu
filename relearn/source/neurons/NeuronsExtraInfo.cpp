@@ -35,6 +35,10 @@ void NeuronsExtraInfo::init(size_t number_neurons) {
 void NeuronsExtraInfo::create_neurons(size_t creation_count) {
     RelearnException::check(creation_count != 0, "Cannot add 0 neurons");
 
+    RelearnException::check(!x_dims.empty(), "x_dims must not be empty");
+    RelearnException::check(!y_dims.empty(), "x_dims must not be empty");
+    RelearnException::check(!z_dims.empty(), "x_dims must not be empty");
+
     const auto num_ranks = MPIWrapper::get_num_ranks();
 
     RelearnException::check(num_ranks == 1, "Cannot create neurons if more than 1 MPI rank is computing");
