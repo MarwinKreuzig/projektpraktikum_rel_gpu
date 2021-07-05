@@ -57,8 +57,8 @@ class MPI_RMA_MemAllocator {
 public:
     /**
      * @brief Initializes the memory window to the requested size and exchanges the pointers across all MPi processes
-     * @parameter size_requested The size of the memory window in bytes
-     * @parameter num_local_trees The number of branch nodes across all MPI processes
+     * @param size_requested The size of the memory window in bytes
+     * @param num_local_trees The number of branch nodes across all MPI processes
      * @exception Throws a RelearnException if an MPI operation fails
      */
     static void init(size_t size_requested, size_t num_branch_nodes);
@@ -79,7 +79,7 @@ public:
     /**
      * @brief Deletes the object pointed to. Internally calls OctreeNode::reset().
      *      The pointer is invalidated.
-     * @parameter ptr The pointer to object that shall be deleted
+     * @param ptr The pointer to object that shall be deleted
      */
     static void delete_octree_node(OctreeNode* ptr);
 

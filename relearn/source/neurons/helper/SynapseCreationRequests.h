@@ -38,7 +38,7 @@ public:
 
     /**
      * @brief Resizes the object so that it can hold the specified number of requests, allocates the necessary amount of memory
-     * @parameter size The number of requests and responses to the stored
+     * @param size The number of requests and responses to the stored
      */
     void resize(const size_t size) {
         num_requests = size;
@@ -49,9 +49,9 @@ public:
     /**
      * @brief Appends a pending request, comprising of the source and target neuron ids and a flag that denotes the 
      *      required dendrite type; 0 for excitatory and 1 for inhibitory
-     * @parameter source_neuron_id The local neuron id of the requesting neuron
-     * @parameter target_neuron_id The local (to the other rank) neuron id of the requested neuron
-     * @parameter dendrite_type_needed The required type, coded with 0 for excitatory and 1 for inhibitory
+     * @param source_neuron_id The local neuron id of the requesting neuron
+     * @param target_neuron_id The local (to the other rank) neuron id of the requested neuron
+     * @param dendrite_type_needed The required type, coded with 0 for excitatory and 1 for inhibitory
      */
     void append(const size_t source_neuron_id, const size_t target_neuron_id, const size_t dendrite_type_needed) {
         num_requests++;
@@ -66,9 +66,9 @@ public:
     /**
      * @brief Appends a pending request, comprising of the source and target neuron ids and an enum that denotes the 
      *      required dendrite type
-     * @parameter source_neuron_id The local neuron id of the requesting neuron
-     * @parameter target_neuron_id The local (to the other rank) neuron id of the requested neuron
-     * @parameter dendrite_type_needed The required type as enum
+     * @param source_neuron_id The local neuron id of the requesting neuron
+     * @param target_neuron_id The local (to the other rank) neuron id of the requested neuron
+     * @param dendrite_type_needed The required type as enum
      */
     void append(const size_t source_neuron_id, const size_t target_neuron_id, const SignalType dendrite_type_needed) {
         size_t dendrite_type_val = 0;
@@ -83,7 +83,7 @@ public:
     /**
      * @brief Returns the requested index as a three-tuple of the source' local neuron id, the targets local neuron id,
      *      and a enum that indicates whether it is an excitatory or inhibitory request
-     * @parameter request_index The required request-index 
+     * @param request_index The required request-index 
      * @exception Throws a RelearnException if the request_index exceeds the stored number of requests
      * @return A tuple consisting of the local neuron id of source and target, and a enum that
      *       indicates whether it is an excitatory or inhibitory request
@@ -104,8 +104,8 @@ public:
 
     /**
      * @brief Sets the responce for the index-specified request
-     * @parameter request_index The request index 
-     * @parameter connected A flag that specifies if the request is accepted (1) or denied (0)
+     * @param request_index The request index 
+     * @param connected A flag that specifies if the request is accepted (1) or denied (0)
      * @exception Throws a RelearnException if the request_index exceeds the stored number of responses
      */
     void set_response(const size_t request_index, const char connected) {
@@ -116,7 +116,7 @@ public:
 
     /**
      * @brief Gets the responce for the index-specified request
-     * @parameter request_index The request index 
+     * @param request_index The request index 
      * @exception Throws a RelearnException if the request_index exceeds the stored number of responses
      * @return A flag that specifies if the request is accepted (1) or denied (0)
      */

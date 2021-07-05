@@ -54,7 +54,7 @@ public:
 
     /**
      * @brief Sets the associated parameter to the value
-     * @parameter val The value to which the parameter should be set
+     * @param val The value to which the parameter should be set
      * @exception Throws a RelearnException if min() <= val <= max() is violated
      */
     void set_value(const value_type& val) {

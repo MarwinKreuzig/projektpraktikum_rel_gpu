@@ -38,13 +38,13 @@ enum class MPI_Locktype : int {
 namespace MPIUserDefinedOperation {
 /**
  * @brief Provides a custom reduction function for MPI that simultaneously computes the min, sum, and max of multiple values.
- * @parameter invec A double* (cast to int* because of MPI) with a tuple of data to reduce. 
+ * @param invec A double* (cast to int* because of MPI) with a tuple of data to reduce. 
  *      Size must be at least *len / sizeof(double) / 3
- * @parameter inoutvec A double* (cast to int* because of MPI) with a tuple of data to reduce. 
+ * @param inoutvec A double* (cast to int* because of MPI) with a tuple of data to reduce. 
  *      Size must be at least *len / sizeof(double) / 3. 
  *      Is also used as return value.
- * @parameter len The length of a tuple of data. Is only accessed hat *len.
- * @parameter dtype Unused
+ * @param len The length of a tuple of data. Is only accessed hat *len.
+ * @param dtype Unused
  */
 void min_sum_max(const int* invec, int* inoutvec, const int* len, MPI_Datatype* dtype);
 } // namespace MPIUserDefinedOperation
@@ -130,30 +130,30 @@ public:
     /**
      * @brief Initializes the local MPI implementation via MPI_Init_Thread;
      *      initializes the global variables and the custom functions. Must be called before any other call to a member function.
-     * @parameter argc Is passed to MPI_Init_Thread
-     * @parameter argv Is passed to MPI_Init_Thread
+     * @param argc Is passed to MPI_Init_Thread
+     * @param argv Is passed to MPI_Init_Thread
      */
     static void init(int argc, char** argv);
 
     /**
      * @brief Initializes the shared RMA memory. Must be called before any call involving OctreeNode*.
-     * @parameter num_partitions The number of partitions across all MPI ranks (of the form 8^k)
+     * @param num_partitions The number of partitions across all MPI ranks (of the form 8^k)
      */
     static void init_buffer_octree(size_t num_partitions);
 
     /**
      * @brief The calling MPI rank halts until all MPI ranks within the scope reach the method.
-     * @parameter scope The scope in which the MPI ranks are synchronized
+     * @param scope The scope in which the MPI ranks are synchronized
      * @exception Throws a RelearnException if an MPI error occurs or scope is Scope::none
      */
     static void barrier(Scope scope);
 
     /**
      * @brief Reduces a value for every MPI rank in the given scope with a reduction function such that the root_rank has the final result
-     * @parameter value The local value that should be reduced
-     * @parameter function The reduction function, should be associative and commutative
-     * @parameter root_rank The MPI rank that shall hold the final result
-     * @parameter scope The scope in which the reduction has to take place
+     * @param value The local value that should be reduced
+     * @param function The reduction function, should be associative and commutative
+     * @param root_rank The MPI rank that shall hold the final result
+     * @param scope The scope in which the reduction has to take place
      * @exception Throws a RelearnException if an MPI error occurs or if root_rank is < 0
      * @return On the MPI rank root_rank: The result of the reduction; A dummy value on every other MPI rank
      */
@@ -161,9 +161,9 @@ public:
 
     /**
      * @brief Reduces a value for every MPI rank in the given scope with a reduction function such that every rank has the final result
-     * @parameter value The local value that should be reduced
-     * @parameter function The reduction function, should be associative and commutative
-     * @parameter scope The scope in which the reduction has to take place
+     * @param value The local value that should be reduced
+     * @param function The reduction function, should be associative and commutative
+     * @param scope The scope in which the reduction has to take place
      * @exception Throws a RelearnException if an MPI error occurs
      * @return The final result of the reduction
      */
@@ -171,10 +171,10 @@ public:
 
     /**
      * @brief Reduces multiple values for every MPI rank in the given scope with a reduction function such that the root_rank has the final result. The reduction is performed componentwise
-     * @parameter src The local array of values that shall be reduced
-     * @parameter function The reduction function, should be associative and commutative
-     * @parameter root_rank The MPI rank that shall hold the final result
-     * @parameter scope The scope in which the reduction has to take place
+     * @param src The local array of values that shall be reduced
+     * @param function The reduction function, should be associative and commutative
+     * @param root_rank The MPI rank that shall hold the final result
+     * @param scope The scope in which the reduction has to take place
      * @exception Throws a RelearnException if an MPI error occurs or if root_rank is < 0
      * @return On the MPI rank root_rank: The results of the componentwise reduction; A dummy value on every other MPI rank
      */
@@ -192,9 +192,9 @@ public:
 
     /**
      * @brief Exchanges one size_t between every pair for MPI ranks in the given scope
-     * @parameter src The values that shall be sent to the other MPI ranks. MPI rank i receives src[i]
-     * @parameter dst The values that were transmitted by the other MPI ranks. MPI rank i sent dst[i]
-     * @parameter scope The scope in which the all to all communication has to take place
+     * @param src The values that shall be sent to the other MPI ranks. MPI rank i receives src[i]
+     * @param dst The values that were transmitted by the other MPI ranks. MPI rank i sent dst[i]
+     * @param scope The scope in which the all to all communication has to take place
      * @exception Throws a RelearnException if an MPI error occurs or if src.size() != dst.size()
      */
     // NOLINTNEXTLINE
@@ -202,9 +202,9 @@ public:
 
     /**
      * @brief Gathers one value for each MPI rank into a vector on all MPI ranks
-     * @parameter own_data The local value that shall be sent to all MPI ranks
-     * @parameter results The data from all MPI ranks. The value of MPI rank i is in results[i]
-     * @parameter scope The scope in which the all to all communication has to take place
+     * @param own_data The local value that shall be sent to all MPI ranks
+     * @param results The data from all MPI ranks. The value of MPI rank i is in results[i]
+     * @param scope The scope in which the all to all communication has to take place
      * @exception Throws a RelearnException if an MPI error occurs
      */
     template <typename T>
@@ -214,9 +214,9 @@ public:
 
     /**
      * @brief Gathers multiple values for each MPI rank into the provided buffer on all MPI ranks
-     * @parameter ptr The buffer to which the data will be written. The values of MPI rank i are in ptr[count * i + {0, 1, ..., count - 1}]
-     * @parameter count The number of local values that shall be gathered
-     * @parameter scope The scope in which the all to all communication has to take place
+     * @param ptr The buffer to which the data will be written. The values of MPI rank i are in ptr[count * i + {0, 1, ..., count - 1}]
+     * @param count The number of local values that shall be gathered
+     * @param scope The scope in which the all to all communication has to take place
      * @exception Throws a RelearnException if an MPI error occurs or if count <= 0
      */
     template <typename T>
@@ -226,11 +226,11 @@ public:
 
     /**
      * @brief Sends data to another MPI rank asynchronously
-     * @parameter buffer The data that shall be sent to the other MPI rank
-     * @parameter size_in_bytes The number of bytes that shall be sent
-     * @parameter rank The other MPI rank that shall receive the data
-     * @parameter scope The scope in which the communication has to take place
-     * @parameter token A token that can be used to query if the asynchronous communication completed
+     * @param buffer The data that shall be sent to the other MPI rank
+     * @param size_in_bytes The number of bytes that shall be sent
+     * @param rank The other MPI rank that shall receive the data
+     * @param scope The scope in which the communication has to take place
+     * @param token A token that can be used to query if the asynchronous communication completed
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
     template <typename T>
@@ -241,11 +241,11 @@ public:
 
     /**
      * @brief Receives data from another MPI rank asynchronously
-     * @parameter buffer The address where the data shall be written to
-     * @parameter size_in_bytes The number of bytes that shall be received
-     * @parameter rank The other MPI rank that shall send the data
-     * @parameter scope The scope in which the communication has to take place
-     * @parameter token A token that can be used to query if the asynchronous communication completed
+     * @param buffer The address where the data shall be written to
+     * @param size_in_bytes The number of bytes that shall be received
+     * @param rank The other MPI rank that shall send the data
+     * @param scope The scope in which the communication has to take place
+     * @param token A token that can be used to query if the asynchronous communication completed
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
     template <typename T>
@@ -256,7 +256,7 @@ public:
 
     /**
      * @brief Waits for the token if it is not a dummy token
-     * @parameter request The token to be waited on
+     * @param request The token to be waited on
      * @exception Throws a RelearnException if an MPI error occurs
      */
     // NOLINTNEXTLINE
@@ -264,7 +264,7 @@ public:
 
     /**
      * @brief Waits for all supplied tokens
-     * @parameter The tokens to be waited on
+     * @param The tokens to be waited on
      * @exception Throws a RelearnException if an MPI error occurs
      */
     // NOLINTNEXTLINE
@@ -272,9 +272,9 @@ public:
 
     /** 
      * @brief Downloads an OctreeNode on another MPI rank
-     * @parameter dst The local node which shall be the copy of the remote node
-     * @parameter target_rank The other MPI rank
-     * @parameter src The pointer to the remote node, must be inside the remote's memory window
+     * @param dst The local node which shall be the copy of the remote node
+     * @param target_rank The other MPI rank
+     * @param src The pointer to the remote node, must be inside the remote's memory window
      * @exception Throws a RelearnException if an MPI error occurs or if target_rank < 0
      */
     static void download_octree_node(OctreeNode* dst, int target_rank, const OctreeNode* src);
@@ -288,7 +288,7 @@ public:
 
     /**
      * @brief Deletes an OctreeNode in the memory window that was previously created via new_octree_node()
-     * @parameter ptr A pointer to the object that shall be deleted
+     * @param ptr A pointer to the object that shall be deleted
      */
     static void delete_octree_node(OctreeNode* ptr);
 
@@ -335,15 +335,15 @@ public:
 
     /**
      * @brief Locks the memory window on another MPI rank with the desired read/write protections
-     * @parameter rank The other MPI rank
-     * @parameter lock_type The type of locking
+     * @param rank The other MPI rank
+     * @param lock_type The type of locking
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
     static void lock_window(int rank, MPI_Locktype lock_type);
 
     /**
      * @brief Unlocks the memory window on another MPI rank
-     * @parameter The other MPI rank
+     * @param The other MPI rank
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
     static void unlock_window(int rank);

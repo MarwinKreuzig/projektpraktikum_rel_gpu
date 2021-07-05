@@ -29,7 +29,7 @@ public:
      *      or
      *      {e, d, c} local_neuron_id*
      *      Only lines starting with e are processed
-     * @parameter path_to_file The path to the interrupts file
+     * @param path_to_file The path to the interrupts file
      * @exception Throws a RelearnException if opening the file fails
      * @return A collection of pairs: (<simulation step>, <all neurons that should be enabled in the simulation step>)
      */
@@ -43,7 +43,7 @@ public:
      *      or
      *      {e, d, c} local_neuron_id*
      *      Only lines starting with d are processed
-     * @parameter path_to_file The path to the interrupts file
+     * @param path_to_file The path to the interrupts file
      * @exception Throws a RelearnException if opening the file fails
      * @return A collection of pairs: (<simulation step>, <all neurons that should be disabled in the simulation step>)
      */
@@ -57,7 +57,7 @@ public:
      *      or
      *      {e, d, c} creation_count
      *      Only lines starting with d are processed
-     * @parameter path_to_file The path to the interrupts file
+     * @param path_to_file The path to the interrupts file
      * @exception Throws a RelearnException if opening the file fails
      * @return A collection of pairs: (<simulation step>, <number of neurons to be created>)
      */
