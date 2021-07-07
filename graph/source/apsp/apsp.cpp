@@ -1,5 +1,7 @@
 #include "apsp.h"
 
+#include <cassert>
+
 #include "johnson.h"
 
 namespace apsp {
@@ -15,6 +17,11 @@ std::vector<double> johnson(typename Graph::FullGraph& full_graph, const size_t 
 }
 
 std::vector<double> johnson_cuda(typename Graph::FullGraph& full_graph, size_t num_neurons) {
+    if constexpr (!CUDA_FOUND) {
+        assert(false && "Tried calling CUDA function johnson_cuda, but CUDA was not found.");
+        return {};
+    }
+
     const auto [edge_begin_it, edge_end_it] = boost::edges(full_graph);
 
     const auto E = boost::num_edges(full_graph);

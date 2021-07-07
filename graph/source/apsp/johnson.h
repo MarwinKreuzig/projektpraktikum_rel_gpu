@@ -52,11 +52,9 @@ struct graph_cuda_t {
     U edge_array;
 };
 
-#if CUDA_FOUND
+// If CUDA_FOUND is false the function won't be defined. When using this function make sure it is not
+// used when CUDA_FOUND is false or linker errors will occur. Use constexpr if or conditional preprocessor branches.
 void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<double>& output);
-#else
-inline void johnson_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& /* gr */, std::vector<double>& /* output */) { }
-#endif
 
 void johnson_parallel_impl(graph_t& gr, std::vector<double>& output);
 } // namespace apsp
