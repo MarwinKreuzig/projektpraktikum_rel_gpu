@@ -100,12 +100,12 @@ __global__ void bellman_ford_kernel(float* dist) {
     }
 }
 
-__host__ bool bellman_ford_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<float>& dist, int s) {
+__host__ bool bellman_ford_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<float>& dist) {
     const int E = gr.E;
     const int V = gr.V;
 
     std::fill(dist.begin(), dist.end(), std::numeric_limits<float>::max());
-    dist[s] = 0;
+    dist.back() = 0;
 
     RAIIDeviceMemory<float> device_dist{ dist };
 
@@ -179,7 +179,7 @@ __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_
 
     std::vector<float> h(bf_graph.V);
 
-    if (bool r = bellman_ford_cuda(bf_graph, h, V); !r) {
+    if (bool r = bellman_ford_cuda(bf_graph, h); !r) {
         std::cerr << "\nNegative Cycles Detected! Terminating Early\n";
         exit(1);
     }
