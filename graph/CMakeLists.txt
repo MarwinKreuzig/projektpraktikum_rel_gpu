@@ -60,7 +60,17 @@ endif ()
 target_compile_definitions(relearn-full_graph_static PUBLIC -DCUDA_FOUND=${CUDA_FOUND})
 target_include_directories(relearn-full_graph_static SYSTEM PRIVATE $<${CUDA_FOUND}:${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}>)
 
+include(FetchContent)
+FetchContent_Declare(
+  CLI11
+  GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
+  GIT_TAG        master
+)
+FetchContent_MakeAvailable(CLI11)
+target_include_directories(relearn-full_graph_static SYSTEM PUBLIC ${CLI11_SOURCE_DIR}/include)
+
 add_executable(relearn-full_graph "source/main.cpp")
+
 
 target_link_libraries(relearn-full_graph PRIVATE relearn-full_graph_static)
 
