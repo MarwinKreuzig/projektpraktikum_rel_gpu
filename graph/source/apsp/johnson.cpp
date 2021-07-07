@@ -56,7 +56,7 @@ static bool bellman_ford(const graph_t& gr, std::vector<double>& dist, int src) 
     return no_neg_cycle;
 }
 
-void johnson_parallel(graph_t& gr, std::vector<double>& output) {
+void johnson_parallel_impl(graph_t& gr, std::vector<double>& output) {
 
     const int V = gr.V;
 

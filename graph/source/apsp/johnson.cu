@@ -141,7 +141,7 @@ __host__ bool bellman_ford_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_
                         Johnson's Algorithm CUDA
 **************************************************************************/
 
-__host__ void johnson_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<double>& output) {
+__host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<double>& output) {
     //cudaThreadSetCacheConfig(cudaFuncCachePreferL1);
 
     // Const Graph Initialization

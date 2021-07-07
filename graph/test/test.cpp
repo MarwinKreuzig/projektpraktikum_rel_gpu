@@ -10,7 +10,7 @@
 #define private public
 
 #include "../source/graph.h"
-#include "../source/apsp/johnson.h"
+#include "../source/apsp/apsp.h"
 
 const auto max = std::numeric_limits<double>::max();
 

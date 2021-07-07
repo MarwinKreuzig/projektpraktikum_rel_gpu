@@ -17,7 +17,6 @@
 #include <CLI/Formatter.hpp>
 #include <CLI/Option.hpp>
 
-#include "apsp/johnson.h"
 #include "graph.h"
 #include "position.h"
 

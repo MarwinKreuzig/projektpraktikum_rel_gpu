@@ -121,29 +121,6 @@ void copy(T& dst, const U& src, cudaMemcpyKind kind) {
     gpuErrchk(cudaMemcpy(dst.data(), src.data(), dst.size() * sizeof(dst_type), kind));
 }
 
-class Timer {
-public:
-    Timer() = default;
-    explicit Timer(std::string msg)
-        : msg_{ std::move(msg) } { }
-
-    Timer(const Timer&) = default;
-    Timer& operator=(const Timer&) = default;
-
-    Timer(Timer&&) = default;
-    Timer& operator=(Timer&&) = default;
-
-    ~Timer() {
-        std::chrono::time_point<std::chrono::high_resolution_clock> end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> start_to_end = end - start;
-        std::cout << msg_ << start_to_end.count() << "\n\n";
-    };
-
-private:
-    std::string msg_{ "Timer runtime: " };
-    std::chrono::time_point<std::chrono::high_resolution_clock> start{ std::chrono::high_resolution_clock::now() };
-};
-
 } // namespace apsp
 
 #endif

@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-#include "apsp/johnson.h"
+#include "apsp/apsp.h"
 
 static void average_clustering_coefficient(Graph::FullGraph& graph, const Weight<Graph::FullGraph>& weight);
 static void average_clustering_coefficient_unweighted_undirected(typename Graph::FullGraph& graph);
