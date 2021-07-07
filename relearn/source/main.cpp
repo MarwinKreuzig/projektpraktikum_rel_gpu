@@ -175,6 +175,9 @@ int main(int argc, char** argv) {
             nu);
     }
 
+    LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "#step: creations deletions netto");
+    LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false, "#step: creations deletions netto");
+
     GlobalTimers::timers.start(TimerRegion::INITIALIZATION);
 
     /**

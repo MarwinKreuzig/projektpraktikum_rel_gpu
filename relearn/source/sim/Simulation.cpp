@@ -64,10 +64,19 @@ void Simulation::set_dendrites_in(std::unique_ptr<SynapticElements> se) {
 
 void Simulation::set_enable_interrupts(std::vector<std::pair<size_t, std::vector<size_t>>> interrupts) {
     enable_interrupts = std::move(interrupts);
+
+    for (auto& [step, ids] : enable_interrupts) {
+        std::sort(ids.begin(), ids.end());
+    }
 }
 
 void Simulation::set_disable_interrupts(std::vector<std::pair<size_t, std::vector<size_t>>> interrupts) {
     disable_interrupts = std::move(interrupts);
+
+    for (auto& [step, ids] : disable_interrupts) {
+        std::sort(ids.begin(), ids.end());
+    }
+
 }
 
 void Simulation::set_creation_interrupts(std::vector<std::pair<size_t, size_t>> interrupts) {
@@ -165,7 +174,8 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
         for (const auto& [disable_step, disable_ids] : disable_interrupts) {
             if (disable_step == step) {
                 LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Disabling {} neurons in step {}", disable_ids.size(), disable_step);
-                neurons->disable_neurons(disable_ids);
+                const auto num_deleted_synapses = neurons->disable_neurons(disable_ids);
+                total_synapse_deletions += num_deleted_synapses;
             }
         }
 
@@ -223,8 +233,8 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
                 total_synapse_creations += global_cnts[1] / 2;
             }
 
-            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "{}: {} {}", step, global_cnts[1], global_cnts[0]);
-            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false, "{}: {} {}", step, local_cnts[1], local_cnts[0]);
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "{}: {} {} {}", step, global_cnts[1], global_cnts[0], global_cnts[1] + global_cnts[0]);
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false, "{}: {} {} {}", step, local_cnts[1], local_cnts[0], local_cnts[1] + local_cnts[0]);
 
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_synapses_deleted, num_synapses_created);
 

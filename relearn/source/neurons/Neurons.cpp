@@ -87,7 +87,7 @@ void Neurons::init_synaptic_elements() {
 /**
  * Disables all neurons with specified ids
  */
-void Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
+size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
     neuron_model->disable_neurons(neuron_ids);
 
     const auto my_rank = MPIWrapper::get_my_rank();
@@ -96,21 +96,65 @@ void Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
     std::vector<int> deleted_dend_ex_connections(num_neurons, 0);
     std::vector<int> deleted_dend_in_connections(num_neurons, 0);
 
-    size_t number_deleted_in_edges = 0;
-    size_t number_deleted_out_inh_edges = 0;
-    size_t number_deleted_out_exc_edges = 0;
+    size_t number_deleted_out_inh_edges_within = 0;
+    size_t number_deleted_out_exc_edges_within = 0;
 
-    size_t weight_deleted_in_edges = 0;
-    size_t weight_deleted_out_exc_edges = 0;
-    size_t weight_deleted_out_inh_edges = 0;
+    size_t weight_deleted_out_exc_edges_within = 0;
+    size_t weight_deleted_out_inh_edges_within = 0;
+
+    size_t number_deleted_out_inh_edges_to_outside = 0;
+    size_t number_deleted_out_exc_edges_to_outside = 0;
+
+    size_t weight_deleted_out_exc_edges_to_outside = 0;
+    size_t weight_deleted_out_inh_edges_to_outside = 0;
+
+    for (const auto neuron_id : neuron_ids) {
+        const auto out_edges = network_graph->get_out_edges(neuron_id); // Intended copy
+
+        for (const auto& [edge_key, weight] : out_edges) {
+            const auto& [target_rank, target_neuron_id] = edge_key;
+            RelearnException::check(target_rank == my_rank, "Currently, disabling neurons is only supported without mpi");
+
+            const RankNeuronId target_id{ target_rank, target_neuron_id };
+            const RankNeuronId source_id{ my_rank, neuron_id };
+
+            network_graph->add_edge_weight(target_id, source_id, -weight);
+
+            bool is_within = std::binary_search(neuron_ids.begin(), neuron_ids.end(), target_neuron_id);
+
+            if (is_within) {
+                if (weight > 0) {
+                    deleted_dend_ex_connections[target_neuron_id] += weight;
+                    number_deleted_out_exc_edges_within++;
+                    weight_deleted_out_exc_edges_within += std::abs(weight);
+                } else {
+                    deleted_dend_in_connections[target_neuron_id] -= weight;
+                    number_deleted_out_inh_edges_within++;
+                    weight_deleted_out_inh_edges_within += std::abs(weight);
+                }
+            } else {
+                if (weight > 0) {
+                    deleted_dend_ex_connections[target_neuron_id] += weight;
+                    number_deleted_out_exc_edges_to_outside++;
+                    weight_deleted_out_exc_edges_to_outside += std::abs(weight);
+                } else {
+                    deleted_dend_in_connections[target_neuron_id] -= weight;
+                    number_deleted_out_inh_edges_to_outside++;
+                    weight_deleted_out_inh_edges_to_outside += std::abs(weight);
+                }
+            }
+        }
+    }
+
+    
+    size_t number_deleted_in_edges_from_outside = 0;
+    size_t weight_deleted_in_edges_from_outside = 0;
 
     for (const auto neuron_id : neuron_ids) {
         RelearnException::check(neuron_id < num_neurons, "In Neurons::disable_neurons, there was a too large id: {} vs {}", neuron_id, num_neurons);
         disable_flags[neuron_id] = 0;
 
         const auto in_edges = network_graph->get_in_edges(neuron_id); // Intended copy
-
-        number_deleted_in_edges += in_edges.size();
 
         for (const auto& [edge_key, weight] : in_edges) {
             const auto& [source_rank, source_neuron_id] = edge_key;
@@ -123,38 +167,43 @@ void Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
 
             deleted_axon_connections[source_neuron_id] += weight;
 
-            weight_deleted_in_edges += std::abs(weight);
-        }
+            bool is_within = std::binary_search(neuron_ids.begin(), neuron_ids.end(), source_neuron_id);
 
-        const auto out_edges = network_graph->get_out_edges(neuron_id); // Intended copy
-
-        for (const auto& [edge_key, weight] : out_edges) {
-            const auto& [target_rank, target_neuron_id] = edge_key;
-            RelearnException::check(target_rank == my_rank, "Currently, disabling neurons is only supported without mpi");
-
-            const RankNeuronId target_id{ target_rank, target_neuron_id };
-            const RankNeuronId source_id{ my_rank, neuron_id };
-
-            network_graph->add_edge_weight(target_id, source_id, -weight);
-
-            if (weight > 0) {
-                deleted_dend_ex_connections[target_neuron_id] += weight;
-                number_deleted_out_exc_edges++;
-                weight_deleted_out_exc_edges += std::abs(weight);
+            if (is_within) {
+                RelearnException::fail("While disabling neurons, found a within-in-edge that has not been deleted");
             } else {
-                deleted_dend_in_connections[target_neuron_id] -= weight;
-                number_deleted_out_inh_edges++;
-                weight_deleted_out_inh_edges += std::abs(weight);
+                weight_deleted_in_edges_from_outside += std::abs(weight);
+                number_deleted_in_edges_from_outside++;
             }
         }
     }
+
+    const auto number_deleted_edges_within = number_deleted_out_inh_edges_within + number_deleted_out_exc_edges_within;
+    const auto weight_deleted_edges_within = weight_deleted_out_inh_edges_within + weight_deleted_out_exc_edges_within;
 
     axons->update_after_deletion(deleted_axon_connections, neuron_ids);
     dendrites_exc->update_after_deletion(deleted_dend_ex_connections, neuron_ids);
     dendrites_inh->update_after_deletion(deleted_dend_in_connections, neuron_ids);
 
-    LogFiles::print_message_rank(0, "Deleted {} in-edges with weight {} and ({}, {}) out-edges with weight ({}, {}) (exc., inh.)",
-        number_deleted_in_edges, weight_deleted_in_edges, number_deleted_out_exc_edges, number_deleted_out_inh_edges, weight_deleted_out_exc_edges, weight_deleted_out_inh_edges);
+    LogFiles::print_message_rank(0, "Deleted {} in-edges with weight {} and ({}, {}) out-edges with weight ({}, {}) (exc., inh.) within the deleted portion",
+        number_deleted_edges_within, weight_deleted_edges_within, number_deleted_out_exc_edges_within,
+        number_deleted_out_inh_edges_within, weight_deleted_out_exc_edges_within, weight_deleted_out_inh_edges_within);
+
+    LogFiles::print_message_rank(0, "Deleted {} in-edges with weight {} and ({}, {}) out-edges with weight ({}, {}) (exc., inh.) connecting to the outside",
+        number_deleted_in_edges_from_outside, weight_deleted_in_edges_from_outside, number_deleted_out_exc_edges_to_outside,
+        number_deleted_out_inh_edges_to_outside, weight_deleted_out_exc_edges_to_outside, weight_deleted_out_inh_edges_to_outside);
+
+    LogFiles::print_message_rank(0, "Deleted {} in-edges with weight {} and ({}, {}) out-edges with weight ({}, {}) (exc., inh.) altogether",
+        number_deleted_edges_within + number_deleted_in_edges_from_outside,
+        weight_deleted_edges_within + weight_deleted_in_edges_from_outside,
+        number_deleted_out_exc_edges_within + number_deleted_out_exc_edges_to_outside,
+        number_deleted_out_inh_edges_within + number_deleted_out_inh_edges_to_outside,
+        weight_deleted_out_exc_edges_within + weight_deleted_out_exc_edges_to_outside,
+        weight_deleted_out_inh_edges_within + weight_deleted_out_inh_edges_to_outside);
+
+    const auto deleted_connections_to_outer_world = weight_deleted_in_edges_from_outside + weight_deleted_out_exc_edges_to_outside + weight_deleted_out_inh_edges_to_outside;
+
+    return deleted_connections_to_outer_world + weight_deleted_edges_within;
 }
 
 void Neurons::enable_neurons(const std::vector<size_t>& neuron_ids) {

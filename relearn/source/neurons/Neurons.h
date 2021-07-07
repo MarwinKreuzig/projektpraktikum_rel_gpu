@@ -364,7 +364,7 @@ public:
      * Disables all neurons with specified ids
      * If a neuron is already disabled, nothing happens for that one
      */
-    void disable_neurons(const std::vector<size_t>& neuron_ids);
+    size_t disable_neurons(const std::vector<size_t>& neuron_ids);
 
     /**
      * Enables all neurons with specified ids
