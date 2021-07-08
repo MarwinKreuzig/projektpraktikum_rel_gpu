@@ -90,8 +90,7 @@ __global__ void bellman_ford_kernel(float* dist) {
     }
     const auto weights = graph_const.weights;
     const auto edges = graph_const.edge_array;
-    const auto u = edges[e].u;
-    const auto v = edges[e].v;
+    const auto [u, v] = edges[e];
     const auto new_dist = weights[e] + dist[u];
     // Make ATOMIC
     // race condition?

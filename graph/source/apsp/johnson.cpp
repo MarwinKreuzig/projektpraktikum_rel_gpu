@@ -13,7 +13,7 @@
 
 namespace apsp {
 
-static bool bellman_ford(const graph_t& gr, std::vector<double>& dist, int src) {
+static bool bellman_ford(const graph_t& gr, std::vector<double>& dist) {
     const int& V = gr.V;
     const int& E = gr.E;
     const auto& edges = gr.edge_array;
@@ -25,15 +25,14 @@ static bool bellman_ford(const graph_t& gr, std::vector<double>& dist, int src) 
     for (int i = 0; i < V; i++) {
         dist[i] = std::numeric_limits<double>::max();
     }
-    dist[src] = 0;
+    dist.back() = 0;
 
     for (int i = 1; i <= V - 1; i++) {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
         for (int j = 0; j < E; j++) {
-            const auto u = std::get<0>(edges[j]);
-            const auto v = std::get<1>(edges[j]);
+            const auto [u, v] = edges[j];
             const auto new_dist = weights[j] + dist[u];
             if (dist[u] != std::numeric_limits<double>::max() && new_dist < dist[v]) {
                 dist[v] = new_dist;
@@ -46,8 +45,7 @@ static bool bellman_ford(const graph_t& gr, std::vector<double>& dist, int src) 
 #pragma omp parallel for
 #endif
     for (int i = 0; i < E; i++) {
-        const auto u = std::get<0>(edges[i]);
-        const auto v = std::get<1>(edges[i]);
+        const auto [u, v] = edges[i];
         const auto weight = weights[i];
         if (dist[u] != std::numeric_limits<double>::max() && dist[u] + weight < dist[v]) {
             no_neg_cycle = false;
@@ -80,7 +78,7 @@ void johnson_parallel_impl(graph_t& gr, std::vector<double>& output) {
     // this step detects a negative cycle, the algorithm is terminated.
     // TODO Can run parallel version?
     std::vector<double> h(bf_graph.V);
-    if (const bool r = bellman_ford(bf_graph, h, V); !r) {
+    if (const bool r = bellman_ford(bf_graph, h); !r) {
         std::cerr << "\nNegative Cycles Detected! Terminating Early\n";
         exit(1);
     }
@@ -91,8 +89,7 @@ void johnson_parallel_impl(graph_t& gr, std::vector<double>& output) {
 #pragma omp parallel for
 #endif
     for (int e = 0; e < gr.E; e++) {
-        const auto u = std::get<0>(gr.edge_array[e]);
-        const auto v = std::get<1>(gr.edge_array[e]);
+        const auto [u, v] = gr.edge_array[e];
         gr.weights[e] = gr.weights[e] + h[u] - h[v];
     }
 
