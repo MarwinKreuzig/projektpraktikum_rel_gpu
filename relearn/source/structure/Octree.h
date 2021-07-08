@@ -17,6 +17,8 @@
 #include "../structure/OctreeNode.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
+#include "../util/Multiindex.h"
+#include "../util/DeriativesAndFunctions.h"
 
 #include <map>
 #include <optional>
@@ -183,7 +185,7 @@ private:
                 if (temp_xyz_pos_ax_inh.has_value()) {
                     const auto scaled_position = temp_xyz_pos_ax_inh.value() * static_cast<double>(temp_num_axons_inh);
                     xyz_pos_ax_inh += scaled_position;
-                }
+                }        
             }
 
             node->set_cell_num_dendrites(num_dendrites_exc, num_dendrites_inh);
@@ -219,6 +221,40 @@ private:
             } else {
                 const auto scaled_position = xyz_pos_ax_inh / num_axons_inh;
                 node->set_cell_neuron_pos_ax_inh(std::optional<Vec3d>{ scaled_position });
+            }
+
+            //calculating herimte coef
+            Multiindex m = Multiindex();
+            int num_coef = m.get_number_of_indices();
+            if(num_axons_exc > Constants::max_neurons_in_source){
+                for (unsigned int a = 0; a < num_coef; a++) {
+                    double temp = 0;
+                    for (unsigned int i = 0; i < Constants::number_oct; i++) {
+                        auto child = node->get_child(i);
+                        if (child != nullptr){
+                            const auto child_pos = child->get_cell().get_neuron_position_axons_exc();
+                            RelearnException::check(child_pos.has_value(),"Child has no axon ex position");
+                            const Vec3d temp_vec = (child_pos.value()-(xyz_pos_ax_exc / num_axons_exc)) / Octree::default_sigma;
+                            temp += num_axons_exc * Functions::pow_multiindex(temp_vec, m.get_index(a));
+                        }
+                    }
+                    node->set_hermite_coef_ex(a, (1 / Functions::fac_multiindex(m.get_index(a))) * temp );
+                }
+            }
+            if (num_axons_inh > Constants::max_neurons_in_source){
+                for (unsigned int a = 0; a < num_coef; a++) {
+                    double temp = 0;
+                    for (unsigned int i = 0; i < Constants::number_oct; i++) {
+                        auto child = node->get_child(i);
+                        if (child != nullptr){
+                            const auto child_pos = child->get_cell().get_neuron_position_axons_inh();
+                            RelearnException::check(child_pos.has_value(),"Child has no axon in position");
+                            const Vec3d temp_vec = (child_pos.value()-(xyz_pos_ax_inh / num_axons_inh)) / Octree::default_sigma;
+                            temp += num_axons_inh * Functions::pow_multiindex(temp_vec, m.get_index(a));
+                        }
+                    }
+                    node->set_hermite_coef_in(a, (1 / Functions::fac_multiindex(m.get_index(a))) * temp );
+                }
             }
         }
 

@@ -7,10 +7,12 @@
  * See the LICENSE file in the base directory for details.
  *
  */
+#pragma once
 
 #include <math.h>
 #include "Vec3.h"
 #include "Multiindex.h"
+#include "../structure/OctreeNode.h"
 
 namespace Deriatives {
 
@@ -146,45 +148,48 @@ inline double kernel(const Vec3d &a, const Vec3d &b, const double sigma) {
     return exp(-(pow(euclidean_distance_3d(a, b), 2) / pow(sigma, 2)));
 }
 
-inline double calc_taylor_expansion(const std::vector<Vec3d>& sources, const std::vector<Vec3d>& targets, const Vec3d& center_target, const double sigma) {
+inline double calc_taylor_expansion(OctreeNode* source, OctreeNode* target, const double sigma, SignalType needed) {
     Multiindex m = Multiindex();
     int num_coef = m.get_number_of_indices();
-    std::vector<double> taylor_coef;
-    taylor_coef.reserve(pow(Constants::p, 3));
+    std::array<double, Constants::p3> taylor_coef;
+    const auto target_center = target-> get_cell().get_neuron_dendrite_position_for(needed);
+    RelearnException::check(target_center.has_value(), "Target node has no position for Taylor calculation");
     double result = 0;
 
     for (unsigned int b = 0; b < num_coef; b++) {
         double temp = 0;
         const auto& current_index = m.get_index(b);
-        for (unsigned int j = 0; j < sources.size(); j++) {
-            const Vec3d temp_vec = Vec3d(
-                (sources.at(j).get_x()-center_target.get_x())/sigma,
-                (sources.at(j).get_y()-center_target.get_y())/sigma,
-                (sources.at(j).get_z()-center_target.get_z())/sigma
-                );
-            temp += h_multiindex(current_index, temp_vec);
+        for (unsigned int j = 0; j < Constants::number_oct; j++) {
+            OctreeNode* source_child = source->get_child(j);
+            if ( source_child != nullptr){
+                const auto child_pos =  source_child->get_cell().get_neuron_axon_position_for(needed);
+                RelearnException::check(child_pos.has_value(), "Child node has no position for Taylor calculation");
+
+                const Vec3d temp_vec = (child_pos.value()-target_center.value())/sigma;
+                temp += source_child->get_cell().get_neuron_num_axons_for(needed) * h_multiindex(current_index, temp_vec);
+            }
         }
         double C = (pow(-1, abs_multiindex(current_index)) / Functions::fac_multiindex(current_index)) * temp;
-        //printf("taylor coef at %i = %f \n",b,C);
-        taylor_coef.push_back(C);
+        taylor_coef[b] = C;
     }
     //Evaluate Taylor series at all sources
-    for (unsigned int j = 0; j < targets.size(); j++) {
-        double temp = 0;
-        const Vec3d temp_vec = Vec3d(
-            (targets.at(j).get_x() - center_target.get_x()) / sigma,
-            (targets.at(j).get_y() - center_target.get_y()) / sigma,
-            (targets.at(j).get_z() - center_target.get_z()) / sigma
-        );
-        for (unsigned int b = 0; b < num_coef; b++) {
-            temp += taylor_coef.at(b) * pow_multiindex(temp_vec, m.get_index(b));
-        }
-        result += temp;
+    for (unsigned int j = 0; j < Constants::number_oct; j++) {
+        OctreeNode* target_child = target->get_child(j);
+            double temp = 0;
+            if ( target_child != nullptr){
+                const auto child_pos =  target_child->get_cell().get_neuron_dendrite_position_for(needed);
+                RelearnException::check(child_pos.has_value(), "Child node has no position for Taylor calculation");
+                const Vec3d temp_vec = (child_pos.value()-target_center.value()) / sigma;
+
+                for (unsigned int b = 0; b < num_coef; b++) {
+                    temp += taylor_coef[b] * pow_multiindex(temp_vec, m.get_index(b));
+                }
+            result += temp;
+            }
     }
     return result;
 }
 
-//calculates direct gauss of two vectors with 3D positions
 inline double calc_direct_gauss(const std::vector<Vec3d> &sources, const std::vector<Vec3d> &targets, const double sigma) {
     double result = 0;
     for (unsigned int t = 0; t < targets.size(); t++) {
@@ -195,44 +200,26 @@ inline double calc_direct_gauss(const std::vector<Vec3d> &sources, const std::ve
     return result;
 }
 
-inline void calc_hermite_coefficients(const Vec3d &center_of_source, const std::vector<Vec3d> &sources, std::vector<double> &coef,const double sigma) {
-    Multiindex m = Multiindex();
-    int num_coef = m.get_number_of_indices();
-    for (unsigned int a = 0; a < num_coef; a++) {
-       double temp = 0;
-        for (unsigned int i = 0; i < sources.size(); i++) {
-            const Vec3d temp_vec = Vec3d(
-                (sources.at(i).get_x() - center_of_source.get_x()) / sigma,
-                (sources.at(i).get_y() - center_of_source.get_y()) / sigma,
-                (sources.at(i).get_z() - center_of_source.get_z()) / sigma
-            );
-            temp += pow_multiindex(temp_vec, m.get_index(a));
-        }
-        //printf("temp  = %f \n", temp);
-        coef.push_back((1 / fac_multiindex(m.get_index(a))) * temp);
-        //printf("hermite coef an Stelle %i = %f \n", a, coef->at(a-1));
-    }
-}
-
-inline double calc_hermite(const std::vector<Vec3d> &targets, const std::vector<double> &coef, const Vec3d &center_of_sources, const double sigma) {
+inline double calc_hermite(OctreeNode* source, OctreeNode* target, const double sigma, SignalType needed) {
     double result = 0;
     Multiindex m = Multiindex();
     int coef_num = m.get_number_of_indices();
+    const auto source_center = source-> get_cell().get_neuron_axon_position_for(needed);
+    RelearnException::check(source_center.has_value(), "Target node has no position for Taylor calculation");
 
-    for (unsigned int j = 0; j < targets.size(); j++) {
+    for (unsigned int j = 0; j < Constants::number_oct; j++) {
         double temp = 0;
-        const Vec3d temp_vec = Vec3d(
-            (targets.at(j).get_x() - center_of_sources.get_x()) / sigma,
-            (targets.at(j).get_y() - center_of_sources.get_y()) / sigma,
-            (targets.at(j).get_z() - center_of_sources.get_z()) / sigma 
+        auto child_target = target->get_child(j);
+        if (child_target != nullptr){
+            const auto child_pos =  child_target->get_cell().get_neuron_dendrite_position_for(needed);
+            RelearnException::check(child_pos.has_value(), "Child node has no position for Hermite calculation");
 
-        );
-        
-        for (unsigned int a = 0; a < coef_num; a++) {
-            //printf("hermite coef an Stelle %i = %f \n", a, coef->at(a-1));
-            temp += coef.at(a)* h_multiindex(m.get_index(a), temp_vec);
-        }
-        result += temp;
+            const Vec3d temp_vec = (child_pos.value() - source_center.value()) / sigma;
+            for (unsigned int a = 0; a < coef_num; a++) {
+                temp += source->get_hermite_coef_for(a, needed) * h_multiindex(m.get_index(a), temp_vec);
+            }
+            result += temp;
+        }        
     }
     return result;
 }

@@ -469,64 +469,39 @@ double Octree::calc_attractiveness_to_connect(
     return ret_val;
 }
 
-const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode *source, const SignalType dendrite_type_needed) {
-    
+const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode *source, const SignalType dendrite_type_needed) {  
     // calculate vacant number of neurons in souce box
     const unsigned int source_num = source->get_cell().get_neuron_num_axons_for(dendrite_type_needed);
-    //center of source box
-    RelearnException::check(source->get_cell().get_neuron_axon_position_for(dendrite_type_needed).has_value(), "Source Box has no center!");
-    Vec3d center_of_source_box = source->get_cell().get_neuron_axon_position_for(dendrite_type_needed).value();
-
     //find out the length of the interactionlist
     size_t target_list_length = source->get_interactionlist_length();
-
     //Initialize return value to 0
     std::vector<double> result(target_list_length, 0);
-
-    //fill source list
-    const std::vector<Vec3d> source_neurons_pos = source->get_axon_pos_from_node_for(dendrite_type_needed);
- 
-    bool hermite_set = false;
-    std::vector<double> hermite_coefficients;
-    hermite_coefficients.reserve(pow(Constants::p,3));
+   
     //when there are not enough neurons in the source box ...
     if (source_num <= Constants::max_neurons_in_source) {
-        
         for (size_t i = 0; i < target_list_length; i++) {
             // calculate vacant number of neurons in target box
             int target_num = (source->get_from_interactionlist(i))->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
-            //fill target list
-            const std::vector<Vec3d> target_neurons_pos = source->get_from_interactionlist(i)->get_dendrite_pos_from_node_for(dendrite_type_needed);
-            //... and there are not enough neurons in the target
+             //... and there are not enough neurons in the target
             if (target_num <= Constants::max_neurons_in_target) {
+                //fill target list
+                const std::vector<Vec3d> target_neurons_pos = source->get_from_interactionlist(i)->get_dendrite_pos_from_node_for(dendrite_type_needed);
+                //fill source list
+                const std::vector<Vec3d> source_neurons_pos = source->get_axon_pos_from_node_for(dendrite_type_needed);
                 //calculate via direct Gauss
                 result[i] = Functions::calc_direct_gauss(source_neurons_pos,target_neurons_pos, default_sigma);
             } else {
                 //... and there are enough neurons in target
                 //source to Taylor-Series about center of box C and direkt evaluation
-                RelearnException::check(source->get_from_interactionlist(i)->get_cell().get_neuron_dendrite_position_for(dendrite_type_needed).has_value(), "Target Box has no center!");
-                Vec3d center_of_target_box = source->get_from_interactionlist(i)->get_cell().get_neuron_position_for(dendrite_type_needed).value();
-                result[i] = Functions::calc_taylor_expansion(source_neurons_pos, target_neurons_pos, center_of_target_box, default_sigma);
+                result[i] = Functions::calc_taylor_expansion(source, source->get_from_interactionlist(i), default_sigma, dendrite_type_needed);
             }
         }
-
     } else //when there are enough neurons in the source box...
     { //Hermite Expansion about center of source box
-        if (hermite_set == false) {
-            //calculate Hermite coefficients
-            Functions::calc_hermite_coefficients(center_of_source_box, source_neurons_pos, hermite_coefficients, default_sigma);
-            hermite_set == true;
-        }
         for (size_t i = 0; i < target_list_length; i++) {
-
-            // get vacant number of neurons in target box
-            int target_num = (source->get_from_interactionlist(i))->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
-            //fill target list
-            const std::vector<Vec3d> target_neurons_pos = source->get_from_interactionlist(i)->get_dendrite_pos_from_node_for(dendrite_type_needed);
-            
             //... and there are not enough neurons in the target
                 //evaluate Hermite expansion at each target
-                result[i] = Functions::calc_hermite(target_neurons_pos, hermite_coefficients, center_of_source_box, default_sigma);
+                result[i] = Functions::calc_hermite(source, source->get_from_interactionlist(i), default_sigma, dendrite_type_needed);
         }
     }
     return result;

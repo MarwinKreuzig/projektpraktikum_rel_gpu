@@ -169,14 +169,12 @@ const std::vector<Vec3d> OctreeNode::get_dendrite_pos_from_node_for(SignalType n
         if (!current_node->is_parent()) {
             num_of_ports = current_node->get_cell().get_neuron_num_dendrites_for(needed);
             if (num_of_ports > 0) {
+                auto node_pos = current_node->get_cell().get_neuron_position().value();
                 for(int i = 0; i<num_of_ports; i++){
-                    RelearnException::check(current_node->get_cell().get_neuron_position().has_value(), "neuron had no dend_ex position");
-                    result.push_back(current_node->get_cell().get_neuron_dendrite_position_for(needed).value());
+                   result.push_back(node_pos);
                 }
-
             }
         }
-
         else{
             for(int i = 0; i<8;i++){
                 
@@ -206,17 +204,14 @@ const std::vector<Vec3d> OctreeNode::get_axon_pos_from_node_for(SignalType neede
         if (!current_node->is_parent()) {
             num_of_ports = current_node->get_cell().get_neuron_num_axons_for(needed);
             if (num_of_ports > 0) {
+                auto node_pos = current_node->get_cell().get_neuron_position().value();
                 for(int i = 0; i<num_of_ports; i++){
-                    RelearnException::check(current_node->get_cell().get_neuron_position().has_value(), "neuron had no dend_ex position");
-                    result.push_back(current_node->get_cell().get_neuron_axon_position_for(needed).value());
+                    result.push_back(node_pos);
                 }
-
             }
         }
-
         else{
-            for(int i = 0; i<8;i++){
-                
+            for(int i = 0; i<8;i++){       
                 const  OctreeNode* children_node = current_node->get_child(i);
                 if (children_node != nullptr && children_node->get_cell().get_neuron_num_axons_for(needed)>0)
                 {

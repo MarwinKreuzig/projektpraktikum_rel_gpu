@@ -24,6 +24,8 @@ class OctreeNode {
     int rank{ -1 }; // MPI rank who owns this octree node
     size_t level{ Constants::uninitialized }; // Level in the tree [0 (= root) ... depth of tree]
     std::vector<OctreeNode*> interaction_list;
+    std::array<double,Constants::p3> hermite_coefficients_ex{-1};
+    std::array<double,Constants::p3> hermite_coefficients_in{-1};
 
 public:
     [[nodiscard]] int get_rank() const noexcept {
@@ -147,6 +149,34 @@ public:
 
     void reset_interactionlist() {
         interaction_list.clear();
+    }
+
+    void set_hermite_coef_ex(int x, double d){
+        hermite_coefficients_ex[x] = 0;
+    }
+    void set_hermite_coef_in(int x, double d){
+        hermite_coefficients_in[x] = 0;
+    }
+    void set_hermite_coef_for(int x, double d, SignalType needed){
+        if (needed == SignalType::EXCITATORY){
+            set_hermite_coef_ex(x,d);
+        }else{
+            set_hermite_coef_in(x,d);
+        } 
+    }
+
+    double get_hermite_coef_ex(int x){
+        return hermite_coefficients_ex[x];
+    }
+    double get_hermite_coef_in(int x){
+        return hermite_coefficients_in[x];
+    }
+    double get_hermite_coef_for(int x, SignalType needed){
+        if (needed == SignalType::EXCITATORY){
+            get_hermite_coef_ex(x);
+        }else{
+            get_hermite_coef_in(x);
+        } 
     }
 
 

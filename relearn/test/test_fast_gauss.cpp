@@ -50,43 +50,6 @@ TEST(TestFastGauss, test_functions) {
     EXPECT_NEAR(Functions::kernel(e, f, sigma), 0.9898, 0.01);
 }
 
-TEST(TestFastGauss, test_calc_attractiveness) {
-    std::vector<Vec3d> test_source;
-    test_source.reserve(5);
-    std::vector<Vec3d> test_target;
-    test_target.reserve(5);
-
-    test_source.push_back({  1,  1,  1 });
-    test_source.push_back({  1, 10,  1 });
-    test_source.push_back({ 10, 10,  1 });
-    test_source.push_back({  1,  1, 10 });
-    test_source.push_back({ 10, 10,  1 });
-
-    test_target.push_back({ 201, 201, 201 });
-    test_target.push_back({ 201, 210, 201 });
-    test_target.push_back({ 210, 201, 201 });
-    test_target.push_back({ 201, 201, 210 });
-    test_target.push_back({ 210, 210, 201 });
-
-    Vec3d source_center = { 4.6, 6.4, 2.8 };
-    Vec3d target_center = { 204.6, 206.4, 202.8 };
-
-
-    double gauss_res = Functions::calc_direct_gauss(test_source, test_target, sigma);
-    double taylor_res = Functions::calc_taylor_expansion(test_source,test_target, target_center, sigma);
-    printf("Gauss result = %f \n", gauss_res);
-    printf("Taylor result = %f \n", taylor_res);
-    std::vector<double> hermite_coef;
-    hermite_coef.reserve(pow(Constants::p,3));
-    Functions::calc_hermite_coefficients(source_center, test_source, hermite_coef, sigma);
-    double hermite_res = Functions::calc_hermite(test_target, hermite_coef, source_center, sigma);
-    printf("Hermite result = %f \n", hermite_res);
-
-    EXPECT_NEAR(gauss_res, taylor_res, 0.01);
-    EXPECT_NEAR(gauss_res, pow(test_source.size(),2) * Functions::kernel(source_center, target_center, sigma), 0.01);
-    EXPECT_NEAR(gauss_res, hermite_res, 0.01);
-}
-
 TEST(TestFastGauss, test_interaction_list) {
     OctreeNode test_node;
     OctreeNode list_node;
