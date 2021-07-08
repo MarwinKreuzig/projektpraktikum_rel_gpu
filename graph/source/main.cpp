@@ -29,9 +29,9 @@ int main(int argc, char** argv) {
     std::filesystem::path output_path{ "./output/" };
     app.add_option("-o,--output-path", output_path, "Path to output folder")->capture_default_str();
 
-    auto flag_cuda = [&]() -> std::optional<CLI::Option*> {
+    auto flag_omp_instead_of_cuda = [&]() -> std::optional<CLI::Option*> {
         if constexpr (CUDA_FOUND) {
-            return { app.add_flag("--use-cuda", "Use CUDA algorithms") };
+            return { app.add_flag("--use-openmp", "Use OpenMP instead of CUDA algorithms") };
         }
         return std::nullopt;
     }();
@@ -69,7 +69,9 @@ int main(int argc, char** argv) {
         full_graph.add_edges_from_file(path);
     }
 
-    full_graph.set_use_cuda(static_cast<bool>(*flag_cuda.value()));
+    if (flag_omp_instead_of_cuda) {
+        full_graph.set_use_cuda(!static_cast<bool>(*flag_omp_instead_of_cuda.value()));
+    }
 
     std::ofstream file_positions(output_path_pos, std::ios::trunc);
     std::ofstream file_network(output_path_net, std::ios::trunc);
