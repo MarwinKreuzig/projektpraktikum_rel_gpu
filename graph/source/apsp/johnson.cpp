@@ -6,6 +6,8 @@
 #include <memory>
 #include <random> // mt19937_64, uniform_x_distribution
 #include <vector>
+#include <mutex>
+#include <shared_mutex>
 
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -27,12 +29,18 @@ static bool bellman_ford(const graph_t& gr, std::vector<double>& dist) {
     }
     dist.back() = 0;
 
+    std::vector<std::shared_mutex> mv(dist.size());
     for (int i = 1; i <= V - 1; i++) {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
         for (int j = 0; j < E; j++) {
             const auto [u, v] = edges[j];
+
+            std::shared_lock l{ mv[u], std::defer_lock };
+            std::unique_lock l2{ mv[v], std::defer_lock };
+            std::lock(l, l2);
+
             const auto new_dist = weights[j] + dist[u];
             if (dist[u] != std::numeric_limits<double>::max() && new_dist < dist[v]) {
                 dist[v] = new_dist;
@@ -42,7 +50,8 @@ static bool bellman_ford(const graph_t& gr, std::vector<double>& dist) {
 
     bool no_neg_cycle = true;
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel for reduction(&& \
+                                   : no_neg_cycle)
 #endif
     for (int i = 0; i < E; i++) {
         const auto [u, v] = edges[i];
