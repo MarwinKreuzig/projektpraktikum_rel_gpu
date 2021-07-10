@@ -231,12 +231,15 @@ private:
                     double temp = 0;
                     for (unsigned int i = 0; i < Constants::number_oct; i++) {
                         auto child = node->get_child(i);
-                        int ax_num = child->get_cell().get_neuron_num_axons_exc();
-                        if (child != nullptr && ax_num>0){
-                            const auto child_pos = child->get_cell().get_neuron_position_axons_exc();
-                            const Vec3d temp_vec = (child_pos.value()-(xyz_pos_ax_exc / num_axons_exc)) / Octree::default_sigma;
-                            temp += num_axons_exc * Functions::pow_multiindex(temp_vec, m.get_index(a));
-                        }
+                        if(child != nullptr){
+                            int ax_num_ex = child->get_cell().get_neuron_num_axons_exc();
+                            if (ax_num_ex>0){
+                                const auto child_pos = child->get_cell().get_neuron_position_axons_exc();
+                                RelearnException::check(child_pos.has_value(),"Fehler ax_ex");
+                                const Vec3d temp_vec = (child_pos.value()-(xyz_pos_ax_exc / num_axons_exc)) / Octree::default_sigma;
+                                temp += ax_num_ex * Functions::pow_multiindex(temp_vec, m.get_index(a));
+                            }
+                        }  
                     }
                     node->set_hermite_coef_ex(a, (1 / Functions::fac_multiindex(m.get_index(a))) * temp );
                 }
@@ -246,11 +249,14 @@ private:
                     double temp = 0;
                     for (unsigned int i = 0; i < Constants::number_oct; i++) {
                         auto child = node->get_child(i);
-                        int ax_num = child->get_cell().get_neuron_num_axons_exc();
-                        if (child != nullptr && ax_num>0){
-                            const auto child_pos = child->get_cell().get_neuron_position_axons_inh();
-                            const Vec3d temp_vec = (child_pos.value()-(xyz_pos_ax_inh / num_axons_inh)) / Octree::default_sigma;
-                            temp += num_axons_inh * Functions::pow_multiindex(temp_vec, m.get_index(a));
+                        if (child != nullptr){
+                            int ax_num_in = child->get_cell().get_neuron_num_axons_inh();
+                            if (ax_num_in>0){
+                                const auto child_pos = child->get_cell().get_neuron_position_axons_inh();
+                                RelearnException::check(child_pos.has_value(),"Fehler ax_in");
+                                const Vec3d temp_vec = (child_pos.value()-(xyz_pos_ax_inh / num_axons_inh)) / Octree::default_sigma;
+                                temp += ax_num_in * Functions::pow_multiindex(temp_vec, m.get_index(a));
+                            }
                         }
                     }
                     node->set_hermite_coef_in(a, (1 / Functions::fac_multiindex(m.get_index(a))) * temp );
