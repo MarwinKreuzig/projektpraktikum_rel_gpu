@@ -864,11 +864,9 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
 
     if (!nodes_with_ax_ex.empty() && nodes_with_dend_ex.size() > 0) {
         make_creation_request_for(SignalType::EXCITATORY, synapse_creation_requests_outgoing, nodes_with_ax_ex, nodes_with_dend_ex);
-        //printf("make request for ex geschafft \n");
     }
     if (!nodes_with_ax_in.empty() && nodes_with_dend_in.size() > 0) {
         make_creation_request_for(SignalType::INHIBITORY, synapse_creation_requests_outgoing, nodes_with_ax_in, nodes_with_dend_in);
-        //printf("make request for in geschafft \n");
     }
 
     GlobalTimers::timers.stop_and_add(TimerRegion::FIND_TARGET_NEURONS);

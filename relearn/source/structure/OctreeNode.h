@@ -24,8 +24,8 @@ class OctreeNode {
     int rank{ -1 }; // MPI rank who owns this octree node
     size_t level{ Constants::uninitialized }; // Level in the tree [0 (= root) ... depth of tree]
     std::vector<OctreeNode*> interaction_list;
-    std::array<double,Constants::p3> hermite_coefficients_ex{-1};
-    std::array<double,Constants::p3> hermite_coefficients_in{-1};
+    std::array<double,Constants::p3> hermite_coefficients_ex{-1.0};
+    std::array<double,Constants::p3> hermite_coefficients_in{-1.0};
 
 public:
     [[nodiscard]] int get_rank() const noexcept {
@@ -108,12 +108,40 @@ public:
         cell.set_neuron_position_dendrites_inh(opt_position);
     }
 
-    void set_cell_neuron_pos_ax_exc(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_cell_neuron_pos_ax_exc(const std::optional<Vec3d>& opt_position) noexcept{
         cell.set_neuron_position_axons_exc(opt_position);
     }
 
     void set_cell_neuron_pos_ax_inh(const std::optional<Vec3d>& opt_position) noexcept {
         cell.set_neuron_position_axons_inh(opt_position);
+    }
+
+   void set_hermite_coef_ex(unsigned int x, double d){
+        hermite_coefficients_ex[x] = d;
+    }
+    void set_hermite_coef_in(unsigned int x, double d){
+        hermite_coefficients_in[x] = d;
+    }
+    void set_hermite_coef_for(unsigned int x, double d, SignalType needed){
+        if (needed == SignalType::EXCITATORY){
+            set_hermite_coef_ex(x,d);
+        }else{
+            set_hermite_coef_in(x,d);
+        } 
+    }
+
+    double get_hermite_coef_ex(unsigned int x){
+        return hermite_coefficients_ex[x];
+    }
+    double get_hermite_coef_in(unsigned int x){
+        return hermite_coefficients_in[x];
+    }
+    double get_hermite_coef_for(unsigned int x, SignalType needed){
+        if (needed == SignalType::EXCITATORY){
+            return get_hermite_coef_ex(x);
+        }else{
+            return get_hermite_coef_in(x);
+        } 
     }
 
     void set_child(OctreeNode* node, size_t idx) {
@@ -150,35 +178,6 @@ public:
     void reset_interactionlist() {
         interaction_list.clear();
     }
-
-    void set_hermite_coef_ex(int x, double d){
-        hermite_coefficients_ex[x] = 0;
-    }
-    void set_hermite_coef_in(int x, double d){
-        hermite_coefficients_in[x] = 0;
-    }
-    void set_hermite_coef_for(int x, double d, SignalType needed){
-        if (needed == SignalType::EXCITATORY){
-            set_hermite_coef_ex(x,d);
-        }else{
-            set_hermite_coef_in(x,d);
-        } 
-    }
-
-    double get_hermite_coef_ex(int x){
-        return hermite_coefficients_ex[x];
-    }
-    double get_hermite_coef_in(int x){
-        return hermite_coefficients_in[x];
-    }
-    double get_hermite_coef_for(int x, SignalType needed){
-        if (needed == SignalType::EXCITATORY){
-            get_hermite_coef_ex(x);
-        }else{
-            get_hermite_coef_in(x);
-        } 
-    }
-
 
    const std::vector<Vec3d> get_dendrite_pos_from_node_for(SignalType needed) const;
 

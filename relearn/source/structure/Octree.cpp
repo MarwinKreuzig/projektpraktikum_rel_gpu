@@ -476,6 +476,7 @@ const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode 
     size_t target_list_length = source->get_interactionlist_length();
     //Initialize return value to 0
     std::vector<double> result(target_list_length, 0);
+    //printf("source num = %i \n", source_num);
    
     //when there are not enough neurons in the source box ...
     if (source_num <= Constants::max_neurons_in_source) {

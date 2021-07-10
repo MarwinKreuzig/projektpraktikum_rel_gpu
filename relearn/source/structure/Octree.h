@@ -222,18 +222,18 @@ private:
                 const auto scaled_position = xyz_pos_ax_inh / num_axons_inh;
                 node->set_cell_neuron_pos_ax_inh(std::optional<Vec3d>{ scaled_position });
             }
-
+            //printf("num_ax_ex= %i    num_ax_in= %i \n", num_axons_exc, num_axons_inh);
             //calculating herimte coef
             Multiindex m = Multiindex();
             int num_coef = m.get_number_of_indices();
             if(num_axons_exc > Constants::max_neurons_in_source){
-                for (unsigned int a = 0; a < num_coef; a++) {
+                for (unsigned int a = 0; a < Constants::p3; a++) {
                     double temp = 0;
                     for (unsigned int i = 0; i < Constants::number_oct; i++) {
                         auto child = node->get_child(i);
-                        if (child != nullptr){
+                        int ax_num = child->get_cell().get_neuron_num_axons_exc();
+                        if (child != nullptr && ax_num>0){
                             const auto child_pos = child->get_cell().get_neuron_position_axons_exc();
-                            RelearnException::check(child_pos.has_value(),"Child has no axon ex position");
                             const Vec3d temp_vec = (child_pos.value()-(xyz_pos_ax_exc / num_axons_exc)) / Octree::default_sigma;
                             temp += num_axons_exc * Functions::pow_multiindex(temp_vec, m.get_index(a));
                         }
@@ -246,9 +246,9 @@ private:
                     double temp = 0;
                     for (unsigned int i = 0; i < Constants::number_oct; i++) {
                         auto child = node->get_child(i);
-                        if (child != nullptr){
+                        int ax_num = child->get_cell().get_neuron_num_axons_exc();
+                        if (child != nullptr && ax_num>0){
                             const auto child_pos = child->get_cell().get_neuron_position_axons_inh();
-                            RelearnException::check(child_pos.has_value(),"Child has no axon in position");
                             const Vec3d temp_vec = (child_pos.value()-(xyz_pos_ax_inh / num_axons_inh)) / Octree::default_sigma;
                             temp += num_axons_inh * Functions::pow_multiindex(temp_vec, m.get_index(a));
                         }

@@ -9,7 +9,7 @@ class Multiindex {
 
 public:
     Multiindex() {
-        number_of_indecis = pow(Constants::p, 3);
+        number_of_indecis = Constants::p3;
 
         int x= 0;
         for (unsigned int i = 0; i <= 3; i++) {

@@ -161,10 +161,9 @@ inline double calc_taylor_expansion(OctreeNode* source, OctreeNode* target, cons
         const auto& current_index = m.get_index(b);
         for (unsigned int j = 0; j < Constants::number_oct; j++) {
             OctreeNode* source_child = source->get_child(j);
-            if ( source_child != nullptr){
+            int axon_num = source_child->get_cell().get_neuron_num_axons_for(needed);
+            if ( source_child != nullptr && axon_num>0){
                 const auto child_pos =  source_child->get_cell().get_neuron_axon_position_for(needed);
-                RelearnException::check(child_pos.has_value(), "Child node has no position for Taylor calculation");
-
                 const Vec3d temp_vec = (child_pos.value()-target_center.value())/sigma;
                 temp += source_child->get_cell().get_neuron_num_axons_for(needed) * h_multiindex(current_index, temp_vec);
             }
@@ -176,11 +175,10 @@ inline double calc_taylor_expansion(OctreeNode* source, OctreeNode* target, cons
     for (unsigned int j = 0; j < Constants::number_oct; j++) {
         OctreeNode* target_child = target->get_child(j);
             double temp = 0;
-            if ( target_child != nullptr){
+            int dend_num = target_child->get_cell().get_neuron_num_dendrites_for(needed);
+            if ( target_child != nullptr && dend_num>0){
                 const auto child_pos =  target_child->get_cell().get_neuron_dendrite_position_for(needed);
-                RelearnException::check(child_pos.has_value(), "Child node has no position for Taylor calculation");
                 const Vec3d temp_vec = (child_pos.value()-target_center.value()) / sigma;
-
                 for (unsigned int b = 0; b < num_coef; b++) {
                     temp += taylor_coef[b] * pow_multiindex(temp_vec, m.get_index(b));
                 }
@@ -205,15 +203,14 @@ inline double calc_hermite(OctreeNode* source, OctreeNode* target, const double 
     Multiindex m = Multiindex();
     int coef_num = m.get_number_of_indices();
     const auto source_center = source-> get_cell().get_neuron_axon_position_for(needed);
-    RelearnException::check(source_center.has_value(), "Target node has no position for Taylor calculation");
+    RelearnException::check(source_center.has_value(), "Source node has no axon position for Hermite calculation \n");
 
     for (unsigned int j = 0; j < Constants::number_oct; j++) {
         double temp = 0;
         auto child_target = target->get_child(j);
-        if (child_target != nullptr){
+        int dend_num = child_target->get_cell().get_neuron_num_dendrites_for(needed);
+        if (child_target != nullptr && dend_num>0){
             const auto child_pos =  child_target->get_cell().get_neuron_dendrite_position_for(needed);
-            RelearnException::check(child_pos.has_value(), "Child node has no position for Hermite calculation");
-
             const Vec3d temp_vec = (child_pos.value() - source_center.value()) / sigma;
             for (unsigned int a = 0; a < coef_num; a++) {
                 temp += source->get_hermite_coef_for(a, needed) * h_multiindex(m.get_index(a), temp_vec);
