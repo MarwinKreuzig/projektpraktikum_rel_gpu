@@ -15,7 +15,7 @@
 
 #include <sstream>
 
-bool OctreeNode::is_local() const noexcept {
+bool OctreeNode::is_local() const {
     return rank == MPIWrapper::get_my_rank();
 }
 
@@ -26,8 +26,8 @@ OctreeNode* OctreeNode::insert(const Vec3d& position, const size_t neuron_id, in
     std::tie(cell_xyz_min, cell_xyz_max) = cell.get_size();
 
     RelearnException::check(cell_xyz_min.get_x() <= position.get_x() && position.get_x() <= cell_xyz_max.get_x(), "In OctreeNode::insert, x was not in range");
-    RelearnException::check(cell_xyz_min.get_y() <= position.get_y() && position.get_y() <= cell_xyz_max.get_y(), "In OctreeNode::insert, x was not in range");
-    RelearnException::check(cell_xyz_min.get_z() <= position.get_z() && position.get_z() <= cell_xyz_max.get_z(), "In OctreeNode::insert, x was not in range");
+    RelearnException::check(cell_xyz_min.get_y() <= position.get_y() && position.get_y() <= cell_xyz_max.get_y(), "In OctreeNode::insert, y was not in range");
+    RelearnException::check(cell_xyz_min.get_z() <= position.get_z() && position.get_z() <= cell_xyz_max.get_z(), "In OctreeNode::insert, z was not in range");
 
     RelearnException::check(rank >= 0, "In OctreeNode::insert, rank was smaller than 0");
     RelearnException::check(neuron_id <= Constants::uninitialized, "In OctreeNode::insert, neuron_id was too large");
@@ -40,12 +40,13 @@ OctreeNode* OctreeNode::insert(const Vec3d& position, const size_t neuron_id, in
 
     OctreeNode* prev = nullptr;
     OctreeNode* curr = this;
+
     // Correct position for new node not found yet
     while (nullptr != curr) {
         /**
-		    * My parent already exists.
-		    * Calc which child to follow, i.e., determine octant
-		    */
+		 * My parent already exists.
+		 * Calc which child to follow, i.e., determine octant
+		 */
         my_idx = curr->get_cell().get_octant_for_position(position);
 
         prev = curr;
@@ -62,9 +63,9 @@ OctreeNode* OctreeNode::insert(const Vec3d& position, const size_t neuron_id, in
     if (!prev->is_parent()) {
         do {
             /**
-			    * Make node containing my octant a parent by
-			    * adding neuron in this node as child node
-			    */
+		     * Make node containing my octant a parent by
+		     * adding neuron in this node as child node
+		     */
 
             // Determine octant for neuron
             const auto& cell_own_position = prev->get_cell().get_neuron_position();
@@ -74,8 +75,8 @@ OctreeNode* OctreeNode::insert(const Vec3d& position, const size_t neuron_id, in
             prev->set_child(new_node, idx);
 
             /**
-			    * Init this new node properly
-			    */
+			 * Init this new node properly
+			 */
             // Cell size
             Vec3d xyz_min;
             Vec3d xyz_max;
@@ -91,9 +92,9 @@ OctreeNode* OctreeNode::insert(const Vec3d& position, const size_t neuron_id, in
             const auto prev_neuron_id = prev->get_cell().get_neuron_id();
             new_node->set_cell_neuron_id(prev_neuron_id);
             /**
-			    * Set neuron ID of parent (inner node) to uninitialized.
-			    * It is not used for inner nodes.
-			    */
+			 * Set neuron ID of parent (inner node) to uninitialized.
+			 * It is not used for inner nodes.
+			 */
             prev->set_cell_neuron_id(Constants::uninitialized);
             prev->set_parent(); // Mark node as parent
 
@@ -113,9 +114,9 @@ OctreeNode* OctreeNode::insert(const Vec3d& position, const size_t neuron_id, in
     }
 
     /**
-	    * Found my position in children array,
-	    * add myself to the array now
-	    */
+	 * Found my position in children array,
+	 * add myself to the array now
+	 */
     prev->set_child(new_node_to_insert, my_idx);
     new_node_to_insert->set_level(prev->get_level() + 1); // Now we know level of me
 

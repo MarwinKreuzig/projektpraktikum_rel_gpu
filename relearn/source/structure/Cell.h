@@ -29,7 +29,11 @@ public:
     Cell& operator=(const Cell& other) = default;
     Cell& operator=(Cell&& other) = default;
 
-    void set_size(const Vec3d& min, const Vec3d& max) noexcept {
+    void set_size(const Vec3d& min, const Vec3d& max) {
+        RelearnException::check(min.get_x() <= max.get_x(), "In Cell::set_size, x was not ok");
+        RelearnException::check(min.get_y() <= max.get_y(), "In Cell::set_size, y was not ok");
+        RelearnException::check(min.get_z() <= max.get_z(), "In Cell::set_size, z was not ok");
+
         xyz_min = min;
         xyz_max = max;
     }
