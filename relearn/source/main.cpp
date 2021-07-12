@@ -153,7 +153,7 @@ int main(int argc, char** argv) {
 
     // Init random number seeds
     RandomHolder::seed(RandomHolderKey::Partition, static_cast<unsigned int>(my_rank));
-    RandomHolder::seed(RandomHolderKey::Octree, seed_octree);
+    RandomHolder::seed(RandomHolderKey::BarnesHut, seed_octree);
 
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier(MPIWrapper::Scope::global);

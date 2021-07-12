@@ -29,7 +29,7 @@ inline int omp_get_thread_num() { return 0; }
  * Can be extended without requiring an extension at a different place.
  */
 enum class RandomHolderKey : char {
-    Octree = 0,
+    BarnesHut = 0,
     Partition = 1,
     SubdomainFromNeuronDensity = 2,
     PoissonModel = 3,

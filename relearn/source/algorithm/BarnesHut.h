@@ -111,14 +111,12 @@ private:
 
     [[nodiscard]] std::tuple<bool, bool> acceptance_criterion_test(const Vec3d& axon_pos_xyz,
         const OctreeNode* const node_with_dendrite,
-        SignalType dendrite_type_needed,
-        bool naive_method) const;
+        SignalType dendrite_type_needed) const;
 
     [[nodiscard]] std::vector<OctreeNode*> get_nodes_for_interval(
         const Vec3d& axon_pos_xyz,
         OctreeNode* root,
-        SignalType dendrite_type_needed,
-        bool naive_method);
+        SignalType dendrite_type_needed);
 
     double acceptance_criterion{ default_theta }; // Acceptance criterion
     double sigma{ default_sigma }; // Probability parameter

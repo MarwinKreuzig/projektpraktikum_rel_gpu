@@ -28,7 +28,7 @@
 	     * Create vector with nodes that have at least one dendrite and are
 	     * precise enough given the position of an axon
 	     */
-        std::vector<OctreeNode*> vector = get_nodes_for_interval(axon_pos_xyz, root_of_subtree, dendrite_type_needed, naive_method);
+        const auto& vector = get_nodes_for_interval(axon_pos_xyz, root_of_subtree, dendrite_type_needed);
 
         /**
 		 * Assign a probability to each node in the vector.
@@ -36,17 +36,19 @@
 		 * Nodes with 0 probability are removed.
 		 * The probabilities of all vector elements sum up to 1.
 		 */
-        const std::vector<double> prob = create_interval(src_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
+        const auto& prob = create_interval(src_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
 
         if (prob.empty()) {
             return {};
         }
 
-        // Draw random number from [0,1]
-        const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Octree, 0.0, std::nextafter(1.0, Constants::eps));
+        const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::BarnesHut, 0.0, std::nextafter(1.0, Constants::eps));
 
+        /**
+         * This is done in case of rounding errors. 
+         */
         auto counter = 0;
-        double sum_probabilities = 0.0;
+        auto sum_probabilities = 0.0;
         while (counter < prob.size()) {
             if (sum_probabilities >= random_number) {
                 break;
@@ -66,19 +68,20 @@
 	     */
         const auto done = !node_selected->is_parent();
 
-        // Update root of subtree
-        root_of_subtree = node_selected;
-
         if (done) {
             break;
         }
+
+        // Update root of subtree
+        root_of_subtree = node_selected;
     }
 
     RankNeuronId rank_neuron_id{ node_selected->get_rank(), node_selected->get_cell().get_neuron_id() };
     return rank_neuron_id;
 }
 
-[[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, const OctreeNode& node_with_dendrite, SignalType dendrite_type_needed) const /*noexcept*/ {
+[[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, 
+    const OctreeNode& node_with_dendrite, SignalType dendrite_type_needed) const /*noexcept*/ {
 
     /**
      * If the axon's neuron itself is considered as target neuron, set attractiveness to 0 to avoid forming an autapse (connection to itself).
@@ -104,8 +107,9 @@
     return ret_val;
 }
 
-[[nodiscard]] std::vector<double> BarnesHut::create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed, const std::vector<OctreeNode*>& vector) const {
-    // Does vector contain nodes?
+[[nodiscard]] std::vector<double> BarnesHut::create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz,
+    SignalType dendrite_type_needed, const std::vector<OctreeNode*>& vector) const {
+
     if (vector.empty()) {
         return {};
     }
@@ -113,18 +117,18 @@
     double sum = 0.0;
 
     std::vector<double> probabilities;
-    std::for_each(vector.cbegin(), vector.cend(), [&](OctreeNode* prob_sub_int) {
-        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *prob_sub_int, dendrite_type_needed);
+    std::for_each(vector.cbegin(), vector.cend(), [&](OctreeNode* target_node) {
+        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *target_node, dendrite_type_needed);
         probabilities.push_back(prob);
         sum += prob;
     });
 
     /**
-	 * Make sure that we don't divide by 0 in case
-	 * all probabilities from above are 0.
+	 * Make sure that we don't divide by 0 in case all probabilities from above are 0.
+     * There is no neuron to connect to in that case.
 	 */
     if (sum == 0.0) {
-        return probabilities;
+        return {};
     }
 
     std::transform(probabilities.begin(), probabilities.end(), probabilities.begin(), [sum](double prob) { return prob / sum; });
@@ -132,15 +136,16 @@
     return probabilities;
 }
 
-[[nodiscard]] std::tuple<bool, bool> BarnesHut::acceptance_criterion_test(const Vec3d& axon_pos_xyz, const OctreeNode* const node_with_dendrite, SignalType dendrite_type_needed, bool naive_method) const /*noexcept*/ {
+[[nodiscard]] std::tuple<bool, bool> BarnesHut::acceptance_criterion_test(const Vec3d& axon_pos_xyz, const OctreeNode* const node_with_dendrite, 
+    SignalType dendrite_type_needed) const /*noexcept*/ {
 
-    const auto has_vacant_dendrites = node_with_dendrite->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed) != 0;
+    const auto& cell = node_with_dendrite->get_cell();
+    const auto has_vacant_dendrites = cell.get_neuron_num_dendrites_for(dendrite_type_needed) != 0;
+    const auto is_parent = node_with_dendrite->is_parent();
 
-    // Use naive method
     if (naive_method) {
         // Accept leaf only
-        const auto is_child = !node_with_dendrite->is_parent();
-        return std::make_tuple(is_child, has_vacant_dendrites);
+        return std::make_tuple(!is_parent, has_vacant_dendrites);
     }
 
     if (!has_vacant_dendrites) {
@@ -149,14 +154,14 @@
 
     /**
 	 * Node is leaf node, i.e., not super neuron.
-	 * Thus the node is precise. Accept it.
+	 * Thus the node is precise. Accept it no matter what.
 	 */
-    if (!node_with_dendrite->is_parent()) {
+    if (!is_parent) {
         return std::make_tuple(true, true);
     }
 
     // Check distance between neuron with axon and neuron with dendrite
-    const auto& target_xyz = node_with_dendrite->get_cell().get_neuron_position_for(dendrite_type_needed);
+    const auto& target_xyz = cell.get_neuron_position_for(dendrite_type_needed);
 
     // NOTE: This assertion fails when considering inner nodes that don't have dendrites.
     RelearnException::check(target_xyz.has_value(), "target_xyz was bad");
@@ -165,14 +170,17 @@
     const auto distance_vector = target_xyz.value() - axon_pos_xyz;
     const auto distance = distance_vector.calculate_p_norm(2.0);
 
-    const auto length = node_with_dendrite->get_cell().get_maximal_dimension_difference();
+    RelearnException::check(distance > 0.0, "Distance was 0.0");
+
+    const auto length = cell.get_maximal_dimension_difference();
 
     // Original Barnes-Hut acceptance criterion
     const auto ret_val = (length / distance) < acceptance_criterion;
     return std::make_tuple(ret_val, has_vacant_dendrites);
 }
 
-[[nodiscard]] std::vector<OctreeNode*> BarnesHut::get_nodes_for_interval(const Vec3d& axon_pos_xyz, OctreeNode* root, SignalType dendrite_type_needed, bool naive_method) {
+[[nodiscard]] std::vector<OctreeNode*> BarnesHut::get_nodes_for_interval(const Vec3d& axon_pos_xyz, OctreeNode* root, 
+    SignalType dendrite_type_needed) {
     if (root == nullptr) {
         return {};
     }
@@ -189,7 +197,7 @@
 		 * Without pushing root onto the stack, it would not make it into the "vector" of nodes.
 		 */
 
-        const auto acc_vac = acceptance_criterion_test(axon_pos_xyz, root, dendrite_type_needed, naive_method);
+        const auto acc_vac = acceptance_criterion_test(axon_pos_xyz, root, dendrite_type_needed);
         const auto accept = std::get<0>(acc_vac);
 
         if (accept) {
@@ -224,7 +232,7 @@
     add_children_to_stack(root, global_tree);
 
     std::vector<OctreeNode*> nodes_to_consider{};
-    nodes_to_consider.reserve(64);
+    nodes_to_consider.reserve(Constants::number_oct);
 
     while (!stack.empty()) {
         // Get top-of-stack node and remove it from stack
@@ -236,7 +244,7 @@
 		 *
 		 * Only take those that have dendrites available
 		 */
-        const auto acc_vac = acceptance_criterion_test(axon_pos_xyz, stack_elem, dendrite_type_needed, naive_method);
+        const auto acc_vac = acceptance_criterion_test(axon_pos_xyz, stack_elem, dendrite_type_needed);
         const auto accept = std::get<0>(acc_vac);
         const auto has_vacant_dendrites = std::get<1>(acc_vac);
 
