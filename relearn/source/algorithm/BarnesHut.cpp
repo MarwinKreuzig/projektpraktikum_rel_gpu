@@ -170,7 +170,9 @@
     const auto distance_vector = target_xyz.value() - axon_pos_xyz;
     const auto distance = distance_vector.calculate_p_norm(2.0);
 
-    RelearnException::check(distance > 0.0, "Distance was 0.0");
+    if (distance == 0.0) {
+        return std::make_tuple(false, false);
+    }
 
     const auto length = cell.get_maximal_dimension_difference();
 
