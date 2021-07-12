@@ -222,7 +222,7 @@ private:
                 const auto scaled_position = xyz_pos_ax_inh / num_axons_inh;
                 node->set_cell_neuron_pos_ax_inh(std::optional<Vec3d>{ scaled_position });
             }
-            //printf("num_ax_ex= %i    num_ax_in= %i \n", num_axons_exc, num_axons_inh);
+            
             //calculating herimte coef
             Multiindex m = Multiindex();
             int num_coef = m.get_number_of_indices();
@@ -235,7 +235,6 @@ private:
                             int ax_num_ex = child->get_cell().get_neuron_num_axons_exc();
                             if (ax_num_ex>0){
                                 const auto child_pos = child->get_cell().get_neuron_position_axons_exc();
-                                RelearnException::check(child_pos.has_value(),"Fehler ax_ex");
                                 const Vec3d temp_vec = (child_pos.value()-(xyz_pos_ax_exc / num_axons_exc)) / Octree::default_sigma;
                                 temp += ax_num_ex * Functions::pow_multiindex(temp_vec, m.get_index(a));
                             }
@@ -253,7 +252,6 @@ private:
                             int ax_num_in = child->get_cell().get_neuron_num_axons_inh();
                             if (ax_num_in>0){
                                 const auto child_pos = child->get_cell().get_neuron_position_axons_inh();
-                                RelearnException::check(child_pos.has_value(),"Fehler ax_in");
                                 const Vec3d temp_vec = (child_pos.value()-(xyz_pos_ax_inh / num_axons_inh)) / Octree::default_sigma;
                                 temp += ax_num_in * Functions::pow_multiindex(temp_vec, m.get_index(a));
                             }

@@ -786,7 +786,7 @@ void Neurons::make_creation_request_for(
                         }
                     }
                 }
-            }
+            } 
         }
 
         if (current_node->get_interactionlist_length() > 0) {
@@ -846,22 +846,17 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
         else {
             if (current_node->get_cell().get_neuron_num_axons_exc() > 0) {
                 nodes_with_ax_ex.push(current_node);
-                // printf("axon anzahl von Knoten = %i\n", current_node->get_cell().get_neuron_num_axons_exc());
             }
             if (current_node->get_cell().get_neuron_num_axons_inh() > 0)
                 nodes_with_ax_in.push(current_node);
             //prepare interaction lists
             if (current_node->get_cell().get_neuron_num_dendrites_inh() > 0) {
                 nodes_with_dend_in.push_back(current_node);
-                //printf("dendrit anzahl von Knoten = %i\n", current_node->get_cell().get_neuron_num_dendrites_exc());
             }
             if (current_node->get_cell().get_neuron_num_dendrites_exc() > 0)
                 nodes_with_dend_ex.push_back(current_node);
         }
     }
-    //printf("ax_ex = %i, dend_ex = %i \n", nodes_with_ax_ex.size(), nodes_with_dend_ex.size());
-    //printf("ax_in = %i, dend_in = %i \n", nodes_with_ax_in.size(), nodes_with_dend_in.size());
-
     if (!nodes_with_ax_ex.empty() && nodes_with_dend_ex.size() > 0) {
         make_creation_request_for(SignalType::EXCITATORY, synapse_creation_requests_outgoing, nodes_with_ax_ex, nodes_with_dend_ex);
     }

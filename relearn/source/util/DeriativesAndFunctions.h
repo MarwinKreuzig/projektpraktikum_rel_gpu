@@ -185,7 +185,7 @@ inline double calc_taylor_expansion(OctreeNode* source, OctreeNode* target, cons
                     for (unsigned int b = 0; b < num_coef; b++) {
                         temp += taylor_coef[b] * pow_multiindex(temp_vec, m.get_index(b));
                     }
-                    result += temp;
+                    result += dend_num * temp;
                 }
             }   
     }
@@ -220,7 +220,7 @@ inline double calc_hermite(OctreeNode* source, OctreeNode* target, const double 
                 for (unsigned int a = 0; a < coef_num; a++) {
                     temp += source->get_hermite_coef_for(a, needed) * h_multiindex(m.get_index(a), temp_vec);
                 }
-                result += temp;
+                result += dend_num * temp;
             } 
         }        
     }
