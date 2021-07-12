@@ -10,6 +10,7 @@
 
 #include "Simulation.h"
 
+#include "../algorithm/BarnesHut.h"
 #include "../Config.h"
 #include "../io/LogFiles.h"
 #include "../mpi/MPIWrapper.h"
@@ -39,7 +40,7 @@ void Simulation::register_neuron_monitor(size_t neuron_id) {
 
 void Simulation::set_acceptance_criterion_for_octree(double value) {
     // Needed to avoid creating autapses
-    if (value > Octree::max_theta) {
+    if (value > BarnesHut::max_theta) {
         RelearnException::fail("Acceptance criterion must be smaller or equal to 0.5");
     }
 
@@ -76,7 +77,6 @@ void Simulation::set_disable_interrupts(std::vector<std::pair<size_t, std::vecto
     for (auto& [step, ids] : disable_interrupts) {
         std::sort(ids.begin(), ids.end());
     }
-
 }
 
 void Simulation::set_creation_interrupts(std::vector<std::pair<size_t, size_t>> interrupts) {
@@ -133,7 +133,7 @@ void Simulation::initialize() {
 
     auto sim_box_min_max = partition->get_simulation_box_size();
 
-    global_tree = std::make_shared<Octree>(std::move(std::get<0>(sim_box_min_max)), std::move(std::get<1>(sim_box_min_max)), partition->get_level_of_subdomain_trees(), accept_criterion, Octree::default_sigma);
+    global_tree = std::make_shared<Octree>(std::move(std::get<0>(sim_box_min_max)), std::move(std::get<1>(sim_box_min_max)), partition->get_level_of_subdomain_trees());
     global_tree->set_no_free_in_destructor(); // This needs to be changed later, as it's cleaner to free the nodes at destruction
 
     // Insert my local (subdomain) trees into my global tree
@@ -149,8 +149,12 @@ void Simulation::initialize() {
 
     network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
 
+    barnes_hut_algorithm = std::make_shared<BarnesHut>(global_tree);
+    barnes_hut_algorithm->set_acceptance_criterion(accept_criterion);
+
     neurons->set_network_graph(network_graph);
     neurons->set_octree(global_tree);
+    neurons->set_barnes_hut(barnes_hut_algorithm);
 }
 
 void Simulation::simulate(size_t number_steps, size_t step_monitor) {

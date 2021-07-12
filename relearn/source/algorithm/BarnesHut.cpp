@@ -1,0 +1,273 @@
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
+
+#include "BarnesHut.h"
+
+#include "../structure/Octree.h"
+#include "../structure/OctreeNode.h"
+
+#include "../util/Random.h"
+
+#include <algorithm>
+#include <array>
+#include <stack>
+
+[[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed) {
+    OctreeNode* node_selected = nullptr;
+    OctreeNode* root_of_subtree = global_tree->get_root();
+
+    while (true) {
+        /**
+	     * Create vector with nodes that have at least one dendrite and are
+	     * precise enough given the position of an axon
+	     */
+        std::vector<OctreeNode*> vector = get_nodes_for_interval(axon_pos_xyz, root_of_subtree, dendrite_type_needed, naive_method);
+
+        /**
+		 * Assign a probability to each node in the vector.
+		 * The probability for connecting to the same neuron (i.e., the axon's neuron) is set 0.
+		 * Nodes with 0 probability are removed.
+		 * The probabilities of all vector elements sum up to 1.
+		 */
+        const std::vector<double> prob = create_interval(src_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
+
+        if (prob.empty()) {
+            return {};
+        }
+
+        // Draw random number from [0,1]
+        const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Octree, 0.0, std::nextafter(1.0, Constants::eps));
+
+        auto counter = 0;
+        double sum_probabilities = 0.0;
+        while (counter < prob.size()) {
+            if (sum_probabilities >= random_number) {
+                break;
+            }
+
+            sum_probabilities += prob[counter];
+            counter++;
+        }
+        node_selected = vector[counter - 1];
+
+        /**
+	     * Leave loop if no node was selected OR
+	     * the selected node is leaf node, i.e., contains normal neuron.
+	     *
+	     * No node is selected when all nodes in the interval, created in
+	     * get_nodes_for_interval(), have probability 0 to connect.
+	     */
+        const auto done = !node_selected->is_parent();
+
+        // Update root of subtree
+        root_of_subtree = node_selected;
+
+        if (done) {
+            break;
+        }
+    }
+
+    RankNeuronId rank_neuron_id{ node_selected->get_rank(), node_selected->get_cell().get_neuron_id() };
+    return rank_neuron_id;
+}
+[[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, const OctreeNode& node_with_dendrite, SignalType dendrite_type_needed) const /*noexcept*/ {
+
+    /**
+     * If the axon's neuron itself is considered as target neuron, set attractiveness to 0 to avoid forming an autapse (connection to itself).
+     * This can be done as the axon's neuron cells are always resolved until the normal (vs. super) axon's neuron is reached.
+     * That is, the dendrites of the axon's neuron are not included in any super neuron considered.
+     * However, this only works under the requirement that "acceptance_criterion" is <= 0.5.
+     */
+    if ((!node_with_dendrite.is_parent()) && (src_neuron_id == node_with_dendrite.get_cell().get_neuron_id())) {
+        return 0.0;
+    }
+
+    const auto& target_xyz = node_with_dendrite.get_cell().get_neuron_position_for(dendrite_type_needed);
+    RelearnException::check(target_xyz.has_value(), "target_xyz is bad");
+
+    const auto num_dendrites = node_with_dendrite.get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
+
+    const auto position_diff = target_xyz.value() - axon_pos_xyz;
+    const auto eucl_length = position_diff.calculate_p_norm(2.0);
+    const auto numerator = pow(eucl_length, 2.0);
+
+    // Criterion from Markus' paper with doi: 10.3389/fnsyn.2014.00007
+    const auto ret_val = (num_dendrites * exp(-numerator / (sigma * sigma)));
+    return ret_val;
+}
+
+[[nodiscard]] std::vector<double> BarnesHut::create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed, const std::vector<OctreeNode*>& vector) const {
+    // Does vector contain nodes?
+    if (vector.empty()) {
+        return {};
+    }
+
+    double sum = 0.0;
+
+    std::vector<double> probabilities;
+    std::for_each(vector.cbegin(), vector.cend(), [&](OctreeNode* prob_sub_int) {
+        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *prob_sub_int, dendrite_type_needed);
+        probabilities.push_back(prob);
+        sum += prob;
+    });
+
+    /**
+	 * Make sure that we don't divide by 0 in case
+	 * all probabilities from above are 0.
+	 */
+    if (sum == 0.0) {
+        return probabilities;
+    }
+
+    std::transform(probabilities.begin(), probabilities.end(), probabilities.begin(), [sum](double prob) { return prob / sum; });
+
+    return probabilities;
+}
+
+[[nodiscard]] std::tuple<bool, bool> BarnesHut::acceptance_criterion_test(const Vec3d& axon_pos_xyz, const OctreeNode* const node_with_dendrite, SignalType dendrite_type_needed, bool naive_method) const /*noexcept*/ {
+
+    const auto has_vacant_dendrites = node_with_dendrite->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed) != 0;
+
+    // Use naive method
+    if (naive_method) {
+        // Accept leaf only
+        const auto is_child = !node_with_dendrite->is_parent();
+        return std::make_tuple(is_child, has_vacant_dendrites);
+    }
+
+    if (!has_vacant_dendrites) {
+        return std::make_tuple(false, false);
+    }
+
+    /**
+	 * Node is leaf node, i.e., not super neuron.
+	 * Thus the node is precise. Accept it.
+	 */
+    if (!node_with_dendrite->is_parent()) {
+        return std::make_tuple(true, true);
+    }
+
+    // Check distance between neuron with axon and neuron with dendrite
+    const auto& target_xyz = node_with_dendrite->get_cell().get_neuron_position_for(dendrite_type_needed);
+
+    // NOTE: This assertion fails when considering inner nodes that don't have dendrites.
+    RelearnException::check(target_xyz.has_value(), "target_xyz was bad");
+
+    // Calc Euclidean distance between source and target neuron
+    const auto distance_vector = target_xyz.value() - axon_pos_xyz;
+    const auto distance = distance_vector.calculate_p_norm(2.0);
+
+    const auto length = node_with_dendrite->get_cell().get_maximal_dimension_difference();
+
+    // Original Barnes-Hut acceptance criterion
+    const auto ret_val = (length / distance) < acceptance_criterion;
+    return std::make_tuple(ret_val, has_vacant_dendrites);
+}
+
+[[nodiscard]] std::vector<OctreeNode*> BarnesHut::get_nodes_for_interval(const Vec3d& axon_pos_xyz, OctreeNode* root, SignalType dendrite_type_needed, bool naive_method) {
+
+    /* Subtree is not empty AND (Dendrites are available OR We use naive method) */
+    const auto flag = (root != nullptr) && (root->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed) != 0 || naive_method);
+    if (!flag) {
+        return {};
+    }
+
+    std::stack<OctreeNode*> stack;
+
+    /**
+	 * The root node is parent (i.e., contains a super neuron) and thus cannot be the target neuron.
+	 * So, start considering its children.
+	 */
+    if (root->is_parent()) {
+        // Node is owned by this rank
+        if (root->is_local()) {
+            // Push root's children onto stack
+            const auto& children = root->get_children();
+            for (auto it = children.crbegin(); it != children.crend(); ++it) {
+                if (*it != nullptr) {
+                    stack.push(*it);
+                }
+            }
+        }
+        // Node is owned by different rank
+        else {
+            const auto& local_children = global_tree->downloadChildren(root);
+
+            // Push root's children onto stack
+            for (auto it = local_children.crbegin(); it != local_children.crend(); ++it) {
+                if (*it != nullptr) {
+                    stack.push(*it);
+                }
+            }
+        } // Node owned by different rank
+    } // Root of subtree is parent
+    else {
+        /**
+		 * The root node is a leaf and thus contains the target neuron.
+		 *
+		 * NOTE: Root is not intended to be a leaf but we handle this as well.
+		 * Without pushing root onto the stack, it would not make it into the "vector" of nodes.
+		 */
+        stack.push(root);
+    }
+
+    std::vector<OctreeNode*> vector;
+    vector.reserve(stack.size());
+
+    bool has_vacant_dendrites = false;
+    while (!stack.empty()) {
+        // Get top-of-stack node and remove it from stack
+        auto* stack_elem = stack.top();
+        stack.pop();
+
+        /**
+		 * Should node be used for probability interval?
+		 *
+		 * Only take those that have dendrites available
+		 */
+        auto acc_vac = acceptance_criterion_test(axon_pos_xyz, stack_elem, dendrite_type_needed, naive_method);
+        const auto accept = std::get<0>(acc_vac);
+        const auto has_vac = std::get<1>(acc_vac);
+        has_vacant_dendrites = has_vac;
+
+        if (accept) {
+            // Insert node into vector
+            vector.emplace_back(stack_elem);
+            continue;
+        }
+
+        if (!(has_vacant_dendrites || naive_method)) {
+            continue;
+        }
+
+        // Node is owned by this rank
+        if (stack_elem->is_local()) {
+            // Push node's children onto stack
+            const auto& children = stack_elem->get_children();
+            for (auto it = children.crbegin(); it != children.crend(); ++it) {
+                if (*it != nullptr) {
+                    stack.push(*it);
+                }
+            }
+            continue;
+        }
+
+        const auto& local_children = global_tree->downloadChildren(stack_elem);
+
+        // Push node's children onto stack
+        for (auto it = local_children.crbegin(); it != local_children.crend(); ++it) {
+            if (*it != nullptr) {
+                stack.push(*it);
+            }
+        }
+    } // while
+
+    return vector;
+}

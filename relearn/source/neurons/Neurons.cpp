@@ -811,7 +811,7 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
 			* as other axons might already have connected to them.
 			* Right now, those collisions are handled in a first-come-first-served fashion.
 			*/
-            std::optional<RankNeuronId> rank_neuron_id = global_tree->find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
+            std::optional<RankNeuronId> rank_neuron_id = barnes_hut_algorithm->find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
 
             if (rank_neuron_id.has_value()) {
                 RankNeuronId val = rank_neuron_id.value();

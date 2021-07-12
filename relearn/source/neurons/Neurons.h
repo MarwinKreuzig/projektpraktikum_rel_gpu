@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "../algorithm/BarnesHut.h"
 #include "../Config.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
@@ -302,6 +303,10 @@ public:
         global_tree = std::move(octree);
     }
 
+    void set_barnes_hut(std::shared_ptr<BarnesHut> barnes_hut) {
+        barnes_hut_algorithm = std::move(barnes_hut);
+    }
+
     void set_network_graph(std::shared_ptr<NetworkGraph> network) {
         network_graph = std::move(network);
     }
@@ -471,6 +476,8 @@ private:
     std::shared_ptr<Partition> partition;
 
     std::shared_ptr<Octree> global_tree;
+    std::shared_ptr<BarnesHut> barnes_hut_algorithm;
+
     std::shared_ptr<NetworkGraph> network_graph;
 
     std::unique_ptr<NeuronModels> neuron_model;

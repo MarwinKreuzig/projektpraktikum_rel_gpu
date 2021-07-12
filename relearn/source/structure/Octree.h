@@ -201,7 +201,6 @@ private:
 
 public:
     Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes);
-    Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes, double acceptance_criterion, double sigma);
     ~Octree() /*noexcept(false)*/;
 
     Octree(const Octree& other) = delete;
@@ -218,25 +217,6 @@ public:
         xyz_max = max;
     }
 
-    // Set acceptance criterion for cells in the tree
-    void set_acceptance_criterion(double acceptance_criterion) {
-        RelearnException::check(acceptance_criterion >= 0.0, "In Octree::set_acceptance_criterion, acceptance_criterion was less than 0");
-        this->acceptance_criterion = acceptance_criterion;
-
-        if (acceptance_criterion == 0.0) {
-            naive_method = true;
-        } else {
-            naive_method = false;
-        }
-    }
-
-    // Set probability parameter used to determine the probability
-    // for a cell of being selected
-    void set_probability_parameter(double sigma) {
-        RelearnException::check(sigma > 0.0, "In Octree::set_probability_parameter, sigma was not greater than 0");
-        this->sigma = sigma;
-    }
-
     void set_root_level(size_t root_level) noexcept {
         this->root_level = root_level;
     }
@@ -247,18 +227,6 @@ public:
 
     void set_level_of_branch_nodes(size_t level) noexcept {
         level_of_branch_nodes = level;
-    }
-
-    [[nodiscard]] bool is_naive_method_used() const noexcept {
-        return naive_method;
-    }
-
-    [[nodiscard]] double get_probabilty_parameter() const noexcept {
-        return sigma;
-    }
-
-    [[nodiscard]] double get_acceptance_criterion() const noexcept {
-        return acceptance_criterion;
     }
 
     [[nodiscard]] const Vec3d& get_xyz_min() const noexcept {
@@ -298,13 +266,59 @@ public:
         *local_trees[index_1d] = *node_to_insert;
     }
 
+    std::array<OctreeNode*, Constants::number_oct> downloadChildren(OctreeNode* root) {
+        std::array<OctreeNode*, Constants::number_oct> local_children{ nullptr };
+
+        const auto target_rank = root->get_rank();
+        NodesCacheKey rank_addr_pair{};
+        rank_addr_pair.first = target_rank;
+
+        // Start access epoch to remote rank
+        MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
+
+        // Fetch remote children if they exist
+        // NOLINTNEXTLINE
+        for (auto i = 7; i >= 0; i--) {
+            if (nullptr == root->get_child(i)) {
+                // NOLINTNEXTLINE
+                local_children[i] = nullptr;
+                continue;
+            }
+
+            rank_addr_pair.second = root->get_child(i);
+
+            std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair{ rank_addr_pair, nullptr };
+
+            // Get cache entry for "cache_key_val_pair"
+            // It is created if it does not exist yet
+            std::pair<NodesCache::iterator, bool> ret = remote_nodes_cache.insert(cache_key_val_pair);
+
+            // Cache entry just inserted as it was not in cache
+            // So, we still need to init the entry by fetching
+            // from the target rank
+            if (ret.second) {
+                ret.first->second = MPIWrapper::new_octree_node();
+                auto* local_child_addr = ret.first->second;
+
+                MPIWrapper::download_octree_node(local_child_addr, target_rank, root->get_child(i));
+            }
+
+            // Remember address of node
+            // NOLINTNEXTLINE
+            local_children[i] = ret.first->second;
+        }
+
+        // Complete access epoch
+        MPIWrapper::unlock_window(target_rank);
+
+        return local_children;
+    }
+
     // The caller must ensure that only inner nodes are visited.
     // "max_level" must be chosen correctly for this
     void update_from_level(size_t max_level);
 
     void update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, size_t num_neurons);
-
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed);
 
     void empty_remote_nodes_cache();
 
@@ -363,39 +377,6 @@ private:
 	 */
     void postorder_print();
 
-    /**
-	 * If we use the naive method accept leaf cells only, otherwise
-	 * test if cell has dendrites available and is precise enough.
-	 * Returns true if accepted, false otherwise
-	 */
-    [[nodiscard]] std::tuple<bool, bool> acceptance_criterion_test(
-        const Vec3d& axon_pos_xyz,
-        const OctreeNode* node_with_dendrite,
-        SignalType dendrite_type_needed,
-        bool naive_method) const /*noexcept*/;
-
-    /**
-	 * Returns vector with nodes for creating the probability interval
-	 */
-    [[nodiscard]] std::vector<OctreeNode*> get_nodes_for_interval(
-        const Vec3d& axon_pos_xyz,
-        OctreeNode* root,
-        SignalType dendrite_type_needed,
-        bool naive_method);
-
-    /**
-	 * Returns probability interval, i.e., vector with nodes where each node is assigned a probability.
-	 * Nodes with probability 0 are removed from the vector.
-	 * The probabilities sum up to 1
-	 */
-    [[nodiscard]] std::vector<double> create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed, const std::vector<OctreeNode*>& vector) const;
-
-    /**
-	 * Returns attractiveness for connecting two given nodes
-	 * NOTE: This is not a probability yet as it could be >1
-	 */
-    [[nodiscard]] double calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, const OctreeNode& node_with_dendrite, SignalType dendrite_type_needed) const /*noexcept*/;
-
     void construct_global_tree_part();
 
     // Root of the tree
@@ -413,9 +394,6 @@ private:
     Vec3d xyz_min{ 0 };
     Vec3d xyz_max{ 0 };
 
-    double acceptance_criterion{ default_theta }; // Acceptance criterion
-    double sigma{ default_sigma }; // Probability parameter
-    bool naive_method{ false }; // If true, expand every cell regardless of whether dendrites are available or not
     size_t level_of_branch_nodes{ Constants::uninitialized };
 
     // Cache with nodes owned by other ranks
@@ -423,10 +401,4 @@ private:
     using NodesCacheValue = OctreeNode*;
     using NodesCache = std::map<NodesCacheKey, NodesCacheValue>;
     NodesCache remote_nodes_cache{};
-
-public:
-    constexpr static double default_theta{ 0.3 };
-    constexpr static double default_sigma{ 750.0 };
-
-    constexpr static double max_theta{ 0.5 };
 };

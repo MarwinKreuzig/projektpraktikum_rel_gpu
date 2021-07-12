@@ -21,6 +21,7 @@ include(FetchContent)
 find_package(MPI)
 find_package(OpenMP)
 
+file(GLOB_RECURSE SRC_ALG "source/algorithm/*")
 file(GLOB_RECURSE SRC_IO "source/io/*")
 file(GLOB_RECURSE SRC_MPI "source/mpi/*")
 file(GLOB_RECURSE SRC_SIM "source/sim/*")
@@ -35,7 +36,7 @@ file(GLOB_RECURSE SRC_CONF "source/Config.h")
 
 file(GLOB_RECURSE SRC_TST "test/*")
 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRC_IO} ${SRC_MPI} ${SRC_SIM} ${SRC_STR} ${SRC_UTIL} ${SRC_NEU} ${SRC_NEU_MOD} ${SRC_NEU_HEL} ${SRC_MAIN} ${SRC_CONF})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRC_ALG} ${SRC_IO} ${SRC_MPI} ${SRC_SIM} ${SRC_STR} ${SRC_UTIL} ${SRC_NEU} ${SRC_NEU_MOD} ${SRC_NEU_HEL} ${SRC_MAIN} ${SRC_CONF})
 
 source_group("tests\\" FILES ${SRC_TST})
 
@@ -63,6 +64,7 @@ target_link_libraries(project_options INTERFACE spdlog)
 
 # relearn executable
 add_executable(relearn
+	${SRC_ALG}
 	${SRC_IO}
 	${SRC_MPI}
 	${SRC_SIM}
@@ -117,6 +119,7 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
 		EXCLUDE_FROM_ALL)
 
 add_executable(runTests
+	${SRC_ALG}
 	${SRC_IO}
 	${SRC_MPI}
 	${SRC_SIM}

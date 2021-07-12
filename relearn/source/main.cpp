@@ -9,6 +9,7 @@
  */
 
 #include "Config.h"
+#include "algorithm/BarnesHut.h"
 #include "io/InteractiveNeuronIO.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
@@ -94,7 +95,7 @@ int main(int argc, char** argv) {
     int openmp_threads{ 1 };
     app.add_option("--openmp", openmp_threads, "Number of OpenMP Threads.");
 
-    double accept_criterion{ Octree::default_theta };
+    double accept_criterion{ BarnesHut::default_theta };
     app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion. Default: 0.3.");
 
     auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");

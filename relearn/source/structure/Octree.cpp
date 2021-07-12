@@ -27,26 +27,11 @@
 
 Octree::Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes)
     : root_level(0)
-    , naive_method(acceptance_criterion == 0.0)
     , level_of_branch_nodes(level_of_branch_nodes) {
 
     const auto num_local_trees = 1ULL << (3 * level_of_branch_nodes);
     local_trees.resize(num_local_trees, nullptr);
 
-    set_size(xyz_min, xyz_max);
-    construct_global_tree_part();
-}
-
-Octree::Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes, double acceptance_criterion, double sigma)
-    : root_level(0)
-    , naive_method(acceptance_criterion == 0.0)
-    , level_of_branch_nodes(level_of_branch_nodes) {
-
-    const auto num_local_trees = 1ULL << (3 * level_of_branch_nodes);
-    local_trees.resize(num_local_trees, nullptr);
-
-    set_acceptance_criterion(acceptance_criterion);
-    set_probability_parameter(sigma);
     set_size(xyz_min, xyz_max);
     construct_global_tree_part();
 }
@@ -171,298 +156,6 @@ void Octree::postorder_print() {
     }
 }
 
-std::tuple<bool, bool> Octree::acceptance_criterion_test(const Vec3d& axon_pos_xyz,
-    const OctreeNode* const node_with_dendrite,
-    SignalType dendrite_type_needed,
-    bool naive_method) const /*noexcept*/ {
-
-    const auto has_vacant_dendrites = node_with_dendrite->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed) != 0;
-
-    // Use naive method
-    if (naive_method) {
-        // Accept leaf only
-        const auto is_child = !node_with_dendrite->is_parent();
-        return std::make_tuple(is_child, has_vacant_dendrites);
-    }
-
-    if (!has_vacant_dendrites) {
-        return std::make_tuple(false, false);
-    }
-
-    /**
-	* Node is leaf node, i.e., not super neuron.
-	* Thus the node is precise. Accept it.
-	*/
-    if (!node_with_dendrite->is_parent()) {
-        return std::make_tuple(true, true);
-    }
-
-    // Check distance between neuron with axon and neuron with dendrite
-    const auto& target_xyz = node_with_dendrite->get_cell().get_neuron_position_for(dendrite_type_needed);
-
-    // NOTE: This assertion fails when considering inner nodes that don't have dendrites.
-    RelearnException::check(target_xyz.has_value(), "target_xyz was bad");
-
-    // Calc Euclidean distance between source and target neuron
-    const auto distance_vector = target_xyz.value() - axon_pos_xyz;
-    const auto distance = distance_vector.calculate_p_norm(2.0);
-
-    const auto length = node_with_dendrite->get_cell().get_maximal_dimension_difference();
-
-    // Original Barnes-Hut acceptance criterion
-    const auto ret_val = (length / distance) < acceptance_criterion;
-    return std::make_tuple(ret_val, has_vacant_dendrites);
-}
-
-std::vector<OctreeNode*> Octree::get_nodes_for_interval(
-    const Vec3d& axon_pos_xyz,
-    OctreeNode* root,
-    SignalType dendrite_type_needed,
-    bool naive_method) {
-
-    /* Subtree is not empty AND (Dendrites are available OR We use naive method) */
-    const auto flag = (root != nullptr) && (root->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed) != 0 || naive_method);
-    if (!flag) {
-        return {};
-    }
-
-    std::stack<OctreeNode*> stack;
-    std::array<OctreeNode*, Constants::number_oct> local_children = { nullptr };
-
-    /**
-	* The root node is parent (i.e., contains a super neuron) and thus cannot be the target neuron.
-	* So, start considering its children.
-	*/
-    if (root->is_parent()) {
-        // Node is owned by this rank
-        if (root->is_local()) {
-            // Push root's children onto stack
-            const auto& children = root->get_children();
-            for (auto it = children.crbegin(); it != children.crend(); ++it) {
-                if (*it != nullptr) {
-                    stack.push(*it);
-                }
-            }
-        }
-        // Node is owned by different rank
-        else {
-            const auto target_rank = root->get_rank();
-            NodesCacheKey rank_addr_pair;
-            rank_addr_pair.first = target_rank;
-
-            // Start access epoch to remote rank
-            MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
-
-            // Fetch remote children if they exist
-            // NOLINTNEXTLINE
-            for (auto i = 7; i >= 0; i--) {
-                if (nullptr == root->get_child(i)) {
-                    // NOLINTNEXTLINE
-                    local_children[i] = nullptr;
-                    continue;
-                }
-
-                rank_addr_pair.second = root->get_child(i);
-
-                std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair;
-                cache_key_val_pair.first = rank_addr_pair;
-                cache_key_val_pair.second = nullptr;
-
-                // Get cache entry for "cache_key_val_pair"
-                // It is created if it does not exist yet
-                std::pair<NodesCache::iterator, bool> ret = remote_nodes_cache.insert(cache_key_val_pair);
-
-                // Cache entry just inserted as it was not in cache
-                // So, we still need to init the entry by fetching
-                // from the target rank
-                if (ret.second) {
-                    ret.first->second = MPIWrapper::new_octree_node();
-                    auto* local_child_addr = ret.first->second;
-
-                    MPIWrapper::download_octree_node(local_child_addr, target_rank, root->get_child(i));
-                }
-
-                // Remember address of node
-                // NOLINTNEXTLINE
-                local_children[i] = ret.first->second;
-            }
-
-            // Complete access epoch
-            MPIWrapper::unlock_window(target_rank);
-
-            // Push root's children onto stack
-            for (auto it = local_children.crbegin(); it != local_children.crend(); ++it) {
-                if (*it != nullptr) {
-                    stack.push(*it);
-                }
-            }
-        } // Node owned by different rank
-    } // Root of subtree is parent
-    else {
-        /**
-		* The root node is a leaf and thus contains the target neuron.
-		*
-		* NOTE: Root is not intended to be a leaf but we handle this as well.
-		* Without pushing root onto the stack, it would not make it into the "vector" of nodes.
-		*/
-        stack.push(root);
-    }
-
-    std::vector<OctreeNode*> vector;
-    vector.reserve(stack.size());
-
-    bool has_vacant_dendrites = false;
-    while (!stack.empty()) {
-        // Get top-of-stack node and remove it from stack
-        auto* stack_elem = stack.top();
-        stack.pop();
-
-        /**
-		* Should node be used for probability interval?
-		*
-		* Only take those that have dendrites available
-		*/
-        auto acc_vac = acceptance_criterion_test(axon_pos_xyz, stack_elem, dendrite_type_needed, naive_method);
-        const auto accept = std::get<0>(acc_vac);
-        const auto has_vac = std::get<1>(acc_vac);
-        has_vacant_dendrites = has_vac;
-
-        if (accept) {
-            // Insert node into vector
-            vector.emplace_back(stack_elem);
-            continue;
-        }
-
-        if (!(has_vacant_dendrites || naive_method)) {
-            continue;
-        }
-
-        // Node is owned by this rank
-        if (stack_elem->is_local()) {
-            // Push node's children onto stack
-            const auto& children = stack_elem->get_children();
-            for (auto it = children.crbegin(); it != children.crend(); ++it) {
-                if (*it != nullptr) {
-                    stack.push(*it);
-                }
-            }
-            continue;
-        }
-
-        // Node is owned by different rank
-        const auto target_rank = stack_elem->get_rank();
-        NodesCacheKey rank_addr_pair;
-        rank_addr_pair.first = target_rank;
-
-        // Start access epoch to remote rank
-        MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
-
-        // Fetch remote children if they exist
-        // NOLINTNEXTLINE
-        for (auto i = 7; i >= 0; i--) {
-            if (nullptr == stack_elem->get_child(i)) {
-                // NOLINTNEXTLINE
-                local_children[i] = nullptr;
-                continue;
-            }
-
-            rank_addr_pair.second = stack_elem->get_child(i);
-
-            std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair;
-            cache_key_val_pair.first = rank_addr_pair;
-            cache_key_val_pair.second = nullptr;
-
-            // Get cache entry for "rank_addr_pair"
-            // It is created if it does not exist yet
-            std::pair<NodesCache::iterator, bool> ret = remote_nodes_cache.insert(cache_key_val_pair);
-
-            // Cache entry just inserted as it was not in cache
-            // So, we still need to init the entry by fetching
-            // from the target rank
-            if (ret.second) {
-                ret.first->second = MPIWrapper::new_octree_node();
-                auto* local_child_addr = ret.first->second;
-                MPIWrapper::download_octree_node(local_child_addr, target_rank, stack_elem->get_child(i));
-            }
-
-            // Remember local address of node
-
-            // NOLINTNEXTLINE
-            local_children[i] = ret.first->second;
-        }
-
-        // Complete access epoch
-        MPIWrapper::unlock_window(target_rank);
-
-        // Push node's children onto stack
-        for (auto it = local_children.crbegin(); it != local_children.crend(); ++it) {
-            if (*it != nullptr) {
-                stack.push(*it);
-            }
-        }
-    } // while
-
-    return vector;
-}
-
-std::vector<double> Octree::create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed, const std::vector<OctreeNode*>& vector) const {
-    // Does vector contain nodes?
-    if (vector.empty()) {
-        return {};
-    }
-
-    double sum = 0.0;
-
-    std::vector<double> probabilities;
-    std::for_each(vector.cbegin(), vector.cend(), [&](OctreeNode* prob_sub_int) {
-        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *prob_sub_int, dendrite_type_needed);
-        probabilities.push_back(prob);
-        sum += prob;
-    });
-
-    /**
-	* Make sure that we don't divide by 0 in case
-	* all probabilities from above are 0.
-	*/
-    if (sum == 0.0) {
-        return probabilities;
-    }
-
-    std::transform(probabilities.begin(), probabilities.end(), probabilities.begin(), [sum](double prob) { return prob / sum; });
-
-    return probabilities;
-}
-
-double Octree::calc_attractiveness_to_connect(
-    size_t src_neuron_id,
-    const Vec3d& axon_pos_xyz,
-    const OctreeNode& node_with_dendrite,
-    SignalType dendrite_type_needed) const /*noexcept*/ {
-
-    /**
-	* If the axon's neuron itself is considered as target neuron, set attractiveness to 0 to avoid forming an autapse (connection to itself).
-	* This can be done as the axon's neuron cells are always resolved until the normal (vs. super) axon's neuron is reached.
-	* That is, the dendrites of the axon's neuron are not included in any super neuron considered.
-	* However, this only works under the requirement that "acceptance_criterion" is <= 0.5.
-	*/
-    if ((!node_with_dendrite.is_parent()) && (src_neuron_id == node_with_dendrite.get_cell().get_neuron_id())) {
-        return 0.0;
-    }
-
-    const auto& target_xyz = node_with_dendrite.get_cell().get_neuron_position_for(dendrite_type_needed);
-    RelearnException::check(target_xyz.has_value(), "target_xyz is bad");
-
-    const auto num_dendrites = node_with_dendrite.get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
-
-    const auto position_diff = target_xyz.value() - axon_pos_xyz;
-    const auto eucl_length = position_diff.calculate_p_norm(2.0);
-    const auto numerator = pow(eucl_length, 2.0);
-
-    // Criterion from Markus' paper with doi: 10.3389/fnsyn.2014.00007
-    const auto ret_val = (num_dendrites * exp(-numerator / (sigma * sigma)));
-    return ret_val;
-}
-
 void Octree::construct_global_tree_part() {
     RelearnException::check(root == nullptr, "root was not null in the construction of the global state!");
 
@@ -505,7 +198,7 @@ void Octree::construct_global_tree_part() {
                 const auto& cell_position = cell_min + (cell_length / 2);
 
                 auto* current_node = root->insert(cell_position, Constants::uninitialized, my_rank);
-               
+
                 //const auto index1d = space_curve.map_3d_to_1d(Vec3s{ id_x, id_y, id_z });
                 //local_trees[index1d] = current_node;
             }
@@ -527,7 +220,7 @@ void Octree::construct_global_tree_part() {
 
         for (auto id = 0; id < 8; id++) {
             auto child_node = ptr->get_child(id);
-            
+
             const size_t larger_x = ((id & 1) == 0) ? 0 : 1;
             const size_t larger_y = ((id & 2) == 0) ? 0 : 1;
             const size_t larger_z = ((id & 4) == 0) ? 0 : 1;
@@ -605,7 +298,7 @@ void Octree::update_local_trees(const SynapticElements& dendrites_exc, const Syn
     const auto& de_ex_conn_cnt = dendrites_exc.get_connected_cnts();
     const auto& de_in_cnt = dendrites_inh.get_cnts();
     const auto& de_in_conn_cnt = dendrites_inh.get_connected_cnts();
-    
+
     const auto my_rank = MPIWrapper::get_my_rank();
 
     for (auto* local_tree : local_trees) {
@@ -617,65 +310,6 @@ void Octree::update_local_trees(const SynapticElements& dendrites_exc, const Syn
         // The functor containing the visit function is of type FunctorUpdateNode
         tree_walk_postorder<FunctorUpdateNode>(local_tree, update_functor);
     }
-}
-
-std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed) {
-    OctreeNode* node_selected = nullptr;
-    OctreeNode* root_of_subtree = root;
-
-    while (true) {
-        /**
-		* Create vector with nodes that have at least one dendrite and are
-		* precise enough given the position of an axon
-		*/
-        std::vector<OctreeNode*> vector = get_nodes_for_interval(axon_pos_xyz, root_of_subtree, dendrite_type_needed, naive_method);
-
-        /**
-		* Assign a probability to each node in the vector.
-		* The probability for connecting to the same neuron (i.e., the axon's neuron) is set 0.
-		* Nodes with 0 probability are removed.
-		* The probabilities of all vector elements sum up to 1.
-		*/
-        const std::vector<double> prob = create_interval(src_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
-
-        if (prob.empty()) {
-            return {};
-        }
-
-        // Draw random number from [0,1]
-        const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Octree, 0.0, std::nextafter(1.0, Constants::eps));
-
-        auto counter = 0;
-        double sum_probabilities = 0.0;
-        while (counter < prob.size()) {
-            if (sum_probabilities >= random_number) {
-                break;
-            }
-
-            sum_probabilities += prob[counter];
-            counter++;
-        }
-        node_selected = vector[counter - 1];
-
-        /**
-		* Leave loop if no node was selected OR
-		* the selected node is leaf node, i.e., contains normal neuron.
-		*
-		* No node is selected when all nodes in the interval, created in
-		* get_nodes_for_interval(), have probability 0 to connect.
-		*/
-        const auto done = !node_selected->is_parent();
-
-        // Update root of subtree
-        root_of_subtree = node_selected;
-
-        if (done) {
-            break;
-        }
-    }
-
-    RankNeuronId rank_neuron_id{ node_selected->get_rank(), node_selected->get_cell().get_neuron_id() };
-    return rank_neuron_id;
 }
 
 void Octree::empty_remote_nodes_cache() {
