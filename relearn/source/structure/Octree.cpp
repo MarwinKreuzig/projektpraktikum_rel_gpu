@@ -275,6 +275,54 @@ void Octree::free() {
     tree_walk_postorder<FunctorFreeNode>(root, free_node);
 }
 
+[[nodiscard]] std::array<OctreeNode*, Constants::number_oct> Octree::downloadChildren(OctreeNode* root) {
+    std::array<OctreeNode*, Constants::number_oct> local_children{ nullptr };
+
+    const auto target_rank = root->get_rank();
+    NodesCacheKey rank_addr_pair{};
+    rank_addr_pair.first = target_rank;
+
+    // Start access epoch to remote rank
+    MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
+
+    // Fetch remote children if they exist
+    // NOLINTNEXTLINE
+    for (auto i = 7; i >= 0; i--) {
+        if (nullptr == root->get_child(i)) {
+            // NOLINTNEXTLINE
+            local_children[i] = nullptr;
+            continue;
+        }
+
+        rank_addr_pair.second = root->get_child(i);
+
+        std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair{ rank_addr_pair, nullptr };
+
+        // Get cache entry for "cache_key_val_pair"
+        // It is created if it does not exist yet
+        std::pair<NodesCache::iterator, bool> ret = remote_nodes_cache.insert(cache_key_val_pair);
+
+        // Cache entry just inserted as it was not in cache
+        // So, we still need to init the entry by fetching
+        // from the target rank
+        if (ret.second) {
+            ret.first->second = MPIWrapper::new_octree_node();
+            auto* local_child_addr = ret.first->second;
+
+            MPIWrapper::download_octree_node(local_child_addr, target_rank, root->get_child(i));
+        }
+
+        // Remember address of node
+        // NOLINTNEXTLINE
+        local_children[i] = ret.first->second;
+    }
+
+    // Complete access epoch
+    MPIWrapper::unlock_window(target_rank);
+
+    return local_children;
+}
+
 // The caller must ensure that only inner nodes are visited. "max_level" must be chosen correctly for this
 void Octree::update_from_level(size_t max_level) {
     std::vector<double> dendrites_exc_cnts;

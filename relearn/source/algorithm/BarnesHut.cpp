@@ -77,6 +77,7 @@
     RankNeuronId rank_neuron_id{ node_selected->get_rank(), node_selected->get_cell().get_neuron_id() };
     return rank_neuron_id;
 }
+
 [[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, const OctreeNode& node_with_dendrite, SignalType dendrite_type_needed) const /*noexcept*/ {
 
     /**
@@ -172,56 +173,59 @@
 }
 
 [[nodiscard]] std::vector<OctreeNode*> BarnesHut::get_nodes_for_interval(const Vec3d& axon_pos_xyz, OctreeNode* root, SignalType dendrite_type_needed, bool naive_method) {
-
-    /* Subtree is not empty AND (Dendrites are available OR We use naive method) */
-    const auto flag = (root != nullptr) && (root->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed) != 0 || naive_method);
-    if (!flag) {
+    if (root == nullptr) {
         return {};
     }
 
-    std::stack<OctreeNode*> stack;
+    if (root->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed) == 0) {
+        return {};
+    }
 
-    /**
-	 * The root node is parent (i.e., contains a super neuron) and thus cannot be the target neuron.
-	 * So, start considering its children.
-	 */
-    if (root->is_parent()) {
-        // Node is owned by this rank
-        if (root->is_local()) {
-            // Push root's children onto stack
-            const auto& children = root->get_children();
-            for (auto it = children.crbegin(); it != children.crend(); ++it) {
-                if (*it != nullptr) {
-                    stack.push(*it);
-                }
-            }
-        }
-        // Node is owned by different rank
-        else {
-            const auto& local_children = global_tree->downloadChildren(root);
-
-            // Push root's children onto stack
-            for (auto it = local_children.crbegin(); it != local_children.crend(); ++it) {
-                if (*it != nullptr) {
-                    stack.push(*it);
-                }
-            }
-        } // Node owned by different rank
-    } // Root of subtree is parent
-    else {
+    if (!root->is_parent()) {
         /**
 		 * The root node is a leaf and thus contains the target neuron.
 		 *
 		 * NOTE: Root is not intended to be a leaf but we handle this as well.
 		 * Without pushing root onto the stack, it would not make it into the "vector" of nodes.
 		 */
-        stack.push(root);
+
+        const auto acc_vac = acceptance_criterion_test(axon_pos_xyz, root, dendrite_type_needed, naive_method);
+        const auto accept = std::get<0>(acc_vac);
+
+        if (accept) {
+            return { root };
+        }
+
+        return {};
     }
 
-    std::vector<OctreeNode*> vector;
-    vector.reserve(stack.size());
+    std::stack<OctreeNode*> stack{};
 
-    bool has_vacant_dendrites = false;
+    const auto add_children_to_stack = [&stack](OctreeNode* node, const std::shared_ptr<Octree>& octree) {
+        std::array<OctreeNode*, Constants::number_oct> children{ nullptr };
+
+        // Node is owned by this rank
+        if (node->is_local()) {
+            // Node is owned by this rank, so the pointers are good
+            children = node->get_children();
+        } else {
+            // Node owned by different rank, so we have do download the data to local nodes
+            children = octree->downloadChildren(node);
+        }
+
+        for (auto it = children.crbegin(); it != children.crend(); ++it) {
+            if (*it != nullptr) {
+                stack.push(*it);
+            }
+        }
+    };
+
+    // The algorithm expects that root is not considered directly, rather its children
+    add_children_to_stack(root, global_tree);
+
+    std::vector<OctreeNode*> nodes_to_consider{};
+    nodes_to_consider.reserve(64);
+
     while (!stack.empty()) {
         // Get top-of-stack node and remove it from stack
         auto* stack_elem = stack.top();
@@ -232,42 +236,22 @@
 		 *
 		 * Only take those that have dendrites available
 		 */
-        auto acc_vac = acceptance_criterion_test(axon_pos_xyz, stack_elem, dendrite_type_needed, naive_method);
+        const auto acc_vac = acceptance_criterion_test(axon_pos_xyz, stack_elem, dendrite_type_needed, naive_method);
         const auto accept = std::get<0>(acc_vac);
-        const auto has_vac = std::get<1>(acc_vac);
-        has_vacant_dendrites = has_vac;
+        const auto has_vacant_dendrites = std::get<1>(acc_vac);
 
         if (accept) {
             // Insert node into vector
-            vector.emplace_back(stack_elem);
+            nodes_to_consider.emplace_back(stack_elem);
             continue;
         }
 
-        if (!(has_vacant_dendrites || naive_method)) {
+        if (!has_vacant_dendrites) {
             continue;
         }
 
-        // Node is owned by this rank
-        if (stack_elem->is_local()) {
-            // Push node's children onto stack
-            const auto& children = stack_elem->get_children();
-            for (auto it = children.crbegin(); it != children.crend(); ++it) {
-                if (*it != nullptr) {
-                    stack.push(*it);
-                }
-            }
-            continue;
-        }
-
-        const auto& local_children = global_tree->downloadChildren(stack_elem);
-
-        // Push node's children onto stack
-        for (auto it = local_children.crbegin(); it != local_children.crend(); ++it) {
-            if (*it != nullptr) {
-                stack.push(*it);
-            }
-        }
+        add_children_to_stack(stack_elem, global_tree);
     } // while
 
-    return vector;
+    return nodes_to_consider;
 }
