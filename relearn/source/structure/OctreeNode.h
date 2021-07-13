@@ -64,7 +64,7 @@ public:
     }
 
     /**
-     * @brief Returns the child node with the requested id (id only for inner look up with no meaning outside)
+     * @brief Returns the child node with the requested id (id calculation base on Cell::get_octant_for_position)
      * @exception Throws a RelearnException if idx >= Constants::number_oct
      * @return The associated child
      */
@@ -75,7 +75,7 @@ public:
     }
 
     /**
-     * @brief Returns the child node with the requested id (id only for inner look up with no meaning outside)
+     * @brief Returns the child node with the requested id (id calculation base on Cell::get_octant_for_position)
      * @exception Throws a RelearnException if idx >= Constants::number_oct
      * @return The associated child
      */
@@ -166,7 +166,7 @@ public:
      * @param opt_position The optional position, can be empty
      */
     void set_cell_neuron_position(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_neuron_position(opt_position);
+        cell.set_dendrite_position(opt_position);
     }
 
     /**
@@ -175,8 +175,8 @@ public:
      * @param num_in The number of free inhibitory dendrites
      */
     void set_cell_num_dendrites(unsigned int num_ex, unsigned int num_in) noexcept {
-        cell.set_neuron_num_dendrites_exc(num_ex);
-        cell.set_neuron_num_dendrites_inh(num_in);
+        cell.set_number_excitatory_dendrites(num_ex);
+        cell.set_number_inhibitory_dendrites(num_in);
     }
 
     /**
@@ -184,7 +184,7 @@ public:
      * @param opt_position The optional position, can be empty
      */
     void set_cell_neuron_pos_exc(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_neuron_position_exc(opt_position);
+        cell.set_excitatory_dendrite_position(opt_position);
     }
 
     /**
@@ -192,7 +192,7 @@ public:
      * @param opt_position The optional position, can be empty
      */
     void set_cell_neuron_pos_inh(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_neuron_position_inh(opt_position);
+        cell.set_inhibitory_dendrite_position(opt_position);
     }
 
     /**

@@ -129,15 +129,15 @@ private:
                 }
 
                 // Sum up number of dendrites
-                const auto child_number_dendrites_excitatory = child->get_cell().get_neuron_num_dendrites_exc();
-                const auto child_number_dendrites_inhibitory = child->get_cell().get_neuron_num_dendrites_inh();
+                const auto child_number_dendrites_excitatory = child->get_cell().get_number_excitatory_dendrites();
+                const auto child_number_dendrites_inhibitory = child->get_cell().get_number_inhibitory_dendrites();
 
                 my_number_dendrites_excitatory += child_number_dendrites_excitatory;
                 my_number_dendrites_inhibitory += child_number_dendrites_inhibitory;
 
                 // Average the position by using the number of dendrites as weights
-                std::optional<Vec3d> child_position_dendrites_excitatory = child->get_cell().get_neuron_position_exc();
-                std::optional<Vec3d> child_position_dendrites_inhibitory = child->get_cell().get_neuron_position_inh();
+                std::optional<Vec3d> child_position_dendrites_excitatory = child->get_cell().get_excitatory_dendrite_position();
+                std::optional<Vec3d> child_position_dendrites_inhibitory = child->get_cell().get_inhibitory_dendrite_position();
 
                 /**
 				* We can use position if it's valid or if corresponding num of dendrites is 0 

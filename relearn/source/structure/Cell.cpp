@@ -13,7 +13,7 @@
 
 #include <sstream>
 
-[[nodiscard]] std::optional<Vec3d> Cell::get_neuron_position() const {
+[[nodiscard]] std::optional<Vec3d> Cell::get_dendrite_position() const {
     const bool ex_valid = dendrites_ex.xyz_pos.has_value();
     const bool in_valid = dendrites_in.xyz_pos.has_value();
 
@@ -37,14 +37,6 @@
     return {};
 }
 
-[[nodiscard]] std::optional<Vec3d> Cell::get_neuron_position_for(SignalType dendrite_type) const {
-    if (dendrite_type == SignalType::EXCITATORY) {
-        return dendrites_ex.xyz_pos;
-    }
-
-    return dendrites_in.xyz_pos;
-}
-
 [[nodiscard]] unsigned char Cell::get_octant_for_position(const Vec3d& pos) const {
     unsigned char idx = 0;
 
@@ -53,36 +45,13 @@
     const auto& z = pos.get_z();
 
     /**
-	* Sanity check: Make sure that the position is within this cell
-	* This check returns false if negative coordinates are used.
-	* Thus make sure to use positions >=0.
-	*/
+	 * Sanity check: Make sure that the position is within this cell
+	 * This check returns false if negative coordinates are used.
+	 * Thus make sure to use positions >=0.
+	 */
     RelearnException::check(x >= xyz_min.get_x() && x <= xyz_max.get_x(), "x is bad");
     RelearnException::check(y >= xyz_min.get_y() && y <= xyz_max.get_y(), "y is bad");
     RelearnException::check(z >= xyz_min.get_z() && z <= xyz_max.get_z(), "z is bad");
-
-    //RelearnException::check(x >= xyz_min.get_x() && x <= xyz_min.get_x() + xyz_max.get_x(), "x is bad");
-    //RelearnException::check(y >= xyz_min.get_y() && y <= xyz_min.get_y() + xyz_max.get_y(), "y is bad");
-    //RelearnException::check(z >= xyz_min.get_z() && z <= xyz_min.get_z() + xyz_max.get_z(), "z is bad");
-
-    /**
-	* Figure below shows the binary numbering of the octants (subcells) in a cell.
-	* The binary number of an octant (subcell) corresponds to its index [0..7] in the
-	* children array of the cell.
-	*
-
-			   110 ----- 111
-			   /|        /|
-			  / |       / |
-			 /  |      /  |
-		   010 ----- 011  |    y
-			|  100 ---|- 101   ^   z
-			|  /      |  /     |
-			| /       | /      | /
-			|/        |/       |/
-		   000 ----- 001       +-----> x
-
-		 */
 
     //NOLINTNEXTLINE
     idx = idx | ((x < (xyz_min.get_x() + xyz_max.get_x()) / 2.0) ? 0 : 1); // idx | (pos_x < midpoint_dim_x) ? 0 : 1
@@ -98,10 +67,12 @@
     return idx;
 }
 
-[[nodiscard]] std::tuple<Vec3d, Vec3d> Cell::get_size_for_octant(unsigned char idx) const /*noexcept*/ {
-    const bool x_over_halfway_point = (idx & 1U) != 0;
-    const bool y_over_halfway_point = (idx & 2U) != 0;
-    const bool z_over_halfway_point = (idx & 4U) != 0;
+[[nodiscard]] std::tuple<Vec3d, Vec3d> Cell::get_size_for_octant(unsigned char octant) const /*noexcept*/ {
+    RelearnException::check(octant <= Constants::number_oct, "Octant was too large");
+    
+    const bool x_over_halfway_point = (octant & 1U) != 0;
+    const bool y_over_halfway_point = (octant & 2U) != 0;
+    const bool z_over_halfway_point = (octant & 4U) != 0;
 
     Vec3d octant_xyz_min = this->xyz_min;
     Vec3d octant_xyz_max = this->xyz_max;

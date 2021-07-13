@@ -93,10 +93,10 @@
         return 0.0;
     }
 
-    const auto& target_xyz = node_with_dendrite.get_cell().get_neuron_position_for(dendrite_type_needed);
+    const auto& target_xyz = node_with_dendrite.get_cell().get_dendrite_position_for(dendrite_type_needed);
     RelearnException::check(target_xyz.has_value(), "target_xyz is bad");
 
-    const auto num_dendrites = node_with_dendrite.get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
+    const auto num_dendrites = node_with_dendrite.get_cell().get_number_dendrites_for(dendrite_type_needed);
 
     const auto position_diff = target_xyz.value() - axon_pos_xyz;
     const auto eucl_length = position_diff.calculate_p_norm(2.0);
@@ -140,7 +140,7 @@
     SignalType dendrite_type_needed) const /*noexcept*/ {
 
     const auto& cell = node_with_dendrite->get_cell();
-    const auto has_vacant_dendrites = cell.get_neuron_num_dendrites_for(dendrite_type_needed) != 0;
+    const auto has_vacant_dendrites = cell.get_number_dendrites_for(dendrite_type_needed) != 0;
     const auto is_parent = node_with_dendrite->is_parent();
 
     if (naive_method) {
@@ -161,7 +161,7 @@
     }
 
     // Check distance between neuron with axon and neuron with dendrite
-    const auto& target_xyz = cell.get_neuron_position_for(dendrite_type_needed);
+    const auto& target_xyz = cell.get_dendrite_position_for(dendrite_type_needed);
 
     // NOTE: This assertion fails when considering inner nodes that don't have dendrites.
     RelearnException::check(target_xyz.has_value(), "target_xyz was bad");
@@ -187,7 +187,7 @@
         return {};
     }
 
-    if (root->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed) == 0) {
+    if (root->get_cell().get_number_dendrites_for(dendrite_type_needed) == 0) {
         return {};
     }
 

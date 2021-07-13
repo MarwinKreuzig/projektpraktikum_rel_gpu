@@ -68,7 +68,7 @@ OctreeNode* OctreeNode::insert(const Vec3d& position, const size_t neuron_id, in
 		     */
 
             // Determine octant for neuron
-            const auto& cell_own_position = prev->get_cell().get_neuron_position();
+            const auto& cell_own_position = prev->get_cell().get_dendrite_position();
             RelearnException::check(cell_own_position.has_value(), "While building the octree, the cell doesn't have a position");
             idx = prev->get_cell().get_octant_for_position(cell_own_position.value());
             OctreeNode* new_node = MPIWrapper::new_octree_node(); // new OctreeNode();
@@ -84,7 +84,7 @@ OctreeNode* OctreeNode::insert(const Vec3d& position, const size_t neuron_id, in
 
             new_node->set_cell_size(xyz_min, xyz_max);
 
-            std::optional<Vec3d> opt_vec = prev->get_cell().get_neuron_position();
+            std::optional<Vec3d> opt_vec = prev->get_cell().get_dendrite_position();
             RelearnException::check(opt_vec.has_value(), "In Octree::insert, the previous cell does not have a position");
             new_node->set_cell_neuron_position(opt_vec);
 

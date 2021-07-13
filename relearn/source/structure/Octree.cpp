@@ -93,11 +93,11 @@ void Octree::postorder_print() {
             for (auto j = 0; j < depth; j++) {
                 ss << " ";
             }
-            ss << "Number dendrites (exc, inh): (" << ptr->get_cell().get_neuron_num_dendrites_exc()
-               << ", " << ptr->get_cell().get_neuron_num_dendrites_inh() << ")\n";
+            ss << "Number dendrites (exc, inh): (" << ptr->get_cell().get_number_excitatory_dendrites()
+               << ", " << ptr->get_cell().get_number_inhibitory_dendrites() << ")\n";
 
             // Print position DendriteType::EXCITATORY
-            xyz_pos = ptr->get_cell().get_neuron_position_exc();
+            xyz_pos = ptr->get_cell().get_excitatory_dendrite_position();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
                 ss << "-- invalid!";
@@ -110,7 +110,7 @@ void Octree::postorder_print() {
 
             ss << "\n";
             // Print position DendriteType::INHIBITORY
-            xyz_pos = ptr->get_cell().get_neuron_position_inh();
+            xyz_pos = ptr->get_cell().get_inhibitory_dendrite_position();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
                 ss << "-- invalid!";
