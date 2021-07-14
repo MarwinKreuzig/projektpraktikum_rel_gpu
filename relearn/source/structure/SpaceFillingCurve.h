@@ -10,32 +10,46 @@
 
 #pragma once
 
+#include "../Config.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
 
 #include <cstdint>
+#include <type_traits>
 
-using BoxCoordinates = Vec3<uint64_t>;
-
+/**
+ * This class represents a MortonCurve in 3D
+ */
 class Morton {
 public:
-    Morton() = default;
-    ~Morton() = default;
+    using BoxCoordinates = Vec3s;
 
-    Morton(const Morton& other) = default;
-    Morton(Morton&& other) = default;
-
-    Morton& operator=(const Morton& other) = default;
-    Morton& operator=(Morton&& other) = default;
-
+    /**
+     * @brief Maps a one dimensional index into the three dimensional domain.
+     * @param idx The one dimensional index
+     * @return The three dimensional index
+     */
     [[nodiscard]] static BoxCoordinates map_1d_to_3d(uint64_t idx);
-
+   
+    /**
+     * @brief Maps a three dimensional index into the one dimensional domain.
+     * @param idx The three dimensional index
+     * @return The one dimensional index
+     */
     [[nodiscard]] uint64_t map_3d_to_1d(const BoxCoordinates& coords) const noexcept;
 
+    /**
+     * @brief Returns the current refinement level
+     * @return The current refinement level
+     */
     [[nodiscard]] size_t get_refinement_level() const noexcept {
         return this->refinement_level;
     }
 
+    /**
+     * @brief Sets the new refinement level
+     * @param refinement_level The new refinement level
+     */
     void set_refinement_level(size_t refinement_level) noexcept {
         this->refinement_level = refinement_level;
     }
@@ -60,41 +74,67 @@ private:
     size_t refinement_level{ 0 };
 };
 
+/**
+ * This class represents a space filling curve in 3D.
+ * It is parameterized by an actual implementation T, which must be nothrow {constructible, copy constructible, move constructible}.
+ */
 template <class T>
 class SpaceFillingCurve {
+    static_assert(std::is_nothrow_constructible_v<T>);
+    static_assert(std::is_nothrow_copy_constructible_v<T>);
+    static_assert(std::is_nothrow_move_constructible_v<T>);
+
 public:
+    using BoxCoordinates = Vec3s;
+
+    /**
+     * @brief Constructs a new instance of a space filling curve with the desired refinement level
+     * @param refinement_level The desired refinement level
+     * @exception Throws a RelearnException if refinement_level > Constants::max_lvl_subdomains
+     */
     explicit SpaceFillingCurve(uint8_t refinement_level = 0) {
         set_refinement_level(refinement_level);
     }
 
-    SpaceFillingCurve(const SpaceFillingCurve& other) = default;
-    SpaceFillingCurve(SpaceFillingCurve&& other) noexcept(std::is_nothrow_move_constructible<T>::value) = default;
-
-    SpaceFillingCurve& operator=(const SpaceFillingCurve& other) = default;
-    SpaceFillingCurve& operator=(SpaceFillingCurve&& other) noexcept(std::is_nothrow_move_assignable<T>::value) = default;
-
-    ~SpaceFillingCurve() = default;
-
+    /**
+     * @brief Returns the current refinement level
+     * @return The current refinement level
+     */
     [[nodiscard]] size_t get_refinement_level() const noexcept {
         return curve.get_refinement_level();
     }
 
-    void set_refinement_level(size_t num_subdivisions) {
+    /**
+     * @brief Sets the new refinement level
+     * @param refinement_level The new refinement level
+     * @exception Throws a RelearnException if refinement_level > Constants::max_lvl_subdomains
+     */
+    void set_refinement_level(size_t refinement_level) {
         // With 64-bit keys we can only support 20 subdivisions per
         // dimension (i.e, 2^20 boxes per dimension)
-        RelearnException::check(num_subdivisions <= Constants::max_lvl_subdomains, "Number of subdivisions is too large");
+        RelearnException::check(refinement_level <= Constants::max_lvl_subdomains, "Number of subdivisions is too large");
 
-        curve.set_refinement_level(num_subdivisions);
+        curve.set_refinement_level(refinement_level);
     }
 
+    /**
+     * @brief Maps a one dimensional index into the three dimensional domain.
+     * @param idx The one dimensional index
+     * @return The three dimensional index
+     */
     [[nodiscard]] BoxCoordinates map_1d_to_3d(uint64_t idx) const noexcept {
         return curve.map_1d_to_3d(idx);
     }
 
+    /**
+     * @brief Maps a three dimensional index into the one dimensional domain.
+     * @param idx The three dimensional index
+     * @return The one dimensional index
+     */
     [[nodiscard]] uint64_t map_3d_to_1d(const BoxCoordinates& coords) const noexcept {
         return curve.map_3d_to_1d(coords);
     }
 
 private:
-    T curve;
+    T curve{};
 };

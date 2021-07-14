@@ -159,8 +159,7 @@ void Octree::postorder_print() {
 void Octree::construct_global_tree_part() {
     RelearnException::check(root == nullptr, "root was not null in the construction of the global state!");
 
-    SpaceFillingCurve<Morton> space_curve;
-    space_curve.set_refinement_level(level_of_branch_nodes);
+    SpaceFillingCurve<Morton> space_curve{ level_of_branch_nodes };
 
     const auto my_rank = MPIWrapper::get_my_rank();
 

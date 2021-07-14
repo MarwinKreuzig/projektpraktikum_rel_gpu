@@ -124,21 +124,21 @@ public:
     void delete_subdomain_tree(size_t subdomain_id) const;
 
 private:
-    bool neurons_loaded;
+    bool neurons_loaded{};
 
-    size_t total_num_neurons;
-    size_t my_num_neurons;
+    size_t total_num_neurons{};
+    size_t my_num_neurons{};
 
-    size_t total_num_subdomains;
-    size_t num_subdomains_per_dimension;
-    size_t level_of_subdomain_trees;
+    size_t total_num_subdomains{};
+    size_t num_subdomains_per_dimension{};
+    size_t level_of_subdomain_trees{};
 
-    size_t my_num_subdomains;
-    size_t my_subdomain_id_start;
-    size_t my_subdomain_id_end;
+    size_t my_num_subdomains{};
+    size_t my_subdomain_id_start{};
+    size_t my_subdomain_id_end{};
 
-    Vec3d simulation_box_length;
+    Vec3d simulation_box_length{};
 
-    std::vector<Subdomain> subdomains;
-    SpaceFillingCurve<Morton> space_curve;
+    std::vector<Subdomain> subdomains{};
+    SpaceFillingCurve<Morton> space_curve{};
 };
