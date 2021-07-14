@@ -29,13 +29,18 @@ class OctreeNode;
  */
 class Partition {
 public:
+    /**
+     * Subdomain is a type that represents one part of the octree at the level of the branching nodes.
+     * It's composed of the min and max positions of the subdomain, the number of neurons in this subdomain,
+     * the start and end local neuron ids, all global neuron ids for the local neurons, 
+     * it's 1d and 3d index for all Subdomains and a local octree view in which the part of that subdomain is constructed
+     */
     struct Subdomain {
         Vec3d xyz_min{ Constants::uninitialized };
         Vec3d xyz_max{ Constants::uninitialized };
 
         size_t num_neurons{ Constants::uninitialized };
 
-        // Local start and end neuron id
         size_t neuron_local_id_start{ Constants::uninitialized };
         size_t neuron_local_id_end{ Constants::uninitialized };
 
@@ -45,9 +50,6 @@ public:
 
         Vec3s index_3d{ Constants::uninitialized };
 
-        // The octree contains all neurons in
-        // this subdomain. It is only used as a container
-        // for the neurons
         OctreeNode* local_octree_view{ nullptr };
     };
 
