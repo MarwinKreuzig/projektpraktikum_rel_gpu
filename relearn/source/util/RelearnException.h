@@ -16,26 +16,52 @@
 
 #include "spdlog/fmt/bundled/core.h"
 
+/**
+ * This class serves as a collective exception class that can check for conditions,
+ * and in case of the condition evaluating to false, it logs the message and then fails.
+ * Log messages can be disabled via RelearnException::hide_messages.
+ * In case a condition evaluated to false and it logs the message, it calls MPIWrapper::get_num_ranks and MPIWrapper::get_my_rank.
+ */
 class RelearnException : std::exception {
 private:
-    std::string message;
+    std::string message{};
+
+    /**
+     * @brief Default constructs an instance with empty message
+     */
+    RelearnException() = default;
+
+    /**
+     * @brief Construcs an instance with the associated message
+     * @param mes The message of the exception
+    */
+    explicit RelearnException(std::string&& mes)
+        : message(std::move(mes)) {
+    }
 
     static void log_message(const std::string& message);
 
 public:
+    /**
+     * @brief Allows to hide the messages, i.e., not print the messages to std:
+    */
     static inline bool hide_messages{ false };
 
-    RelearnException() = default;
-
-    explicit RelearnException(std::string&& mes)
-        : message(mes) {
-    }
-
+    /**
+     * @brief Returns the cause of the exception, i.e., the stored message
+     * @return A constant char pointer to the content of the message
+     */
     [[nodiscard]] const char* what() const noexcept override;
 
     /**
-     * If condition is true, nothing happens
-     * If condition is false, format will serve as the error message, with placeholders replaced by args
+     * @brief Checks the condition and in case of false, logs the message and throws an RelearnException
+     * @tparam FormatString A string-like type
+     * @tparam ...Args Different types that can be substituted into the placeholders
+     * @param condition The condition to evaluate
+     * @param format The format string. Placeholders can used: "{}"
+     * @param ...args The values that shall be substituted for the placeholders
+     * @exception Throws an exception if the number of args does not match the number of placeholders in format
+     *      Throws a RelearnException if the condition evaluates to false
      */
     template <typename FormatString, typename... Args>
     static void check(bool condition, FormatString&& format, Args&&... args) {
@@ -46,6 +72,15 @@ public:
         fail(std::forward<FormatString>(format), std::forward<Args>(args)...);
     }
 
+    /**
+     * @brief Prints the log message and throws a RelearnException afterwards
+     * @tparam FormatString A string-like type
+     * @tparam ...Args Different types that can be substituted into the placeholders
+     * @param format The format string. Placeholders can used: "{}"
+     * @param ...args The values that shall be substituted for the placeholders
+     * @exception Throws an exception if the number of args does not match the number of placeholders in format
+     *      Throws a RelearnException 
+     */
     template <typename FormatString, typename... Args>
     static void fail(FormatString&& format, Args&&... args) {
         if (hide_messages) {

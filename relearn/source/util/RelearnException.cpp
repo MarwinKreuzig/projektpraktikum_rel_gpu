@@ -12,9 +12,6 @@
 
 #include "../mpi/MPIWrapper.h"
 
-#include <iostream>
-#include <sstream>
-
 #include <spdlog/spdlog.h>
 
 [[nodiscard]] const char* RelearnException::what() const noexcept {
@@ -22,7 +19,6 @@
 }
 
 void RelearnException::log_message(const std::string& message) {
-
     const auto my_rank = MPIWrapper::get_my_rank();
     const auto num_ranks = MPIWrapper::get_num_ranks();
     spdlog::error("There was an error at rank: {} of {}!\n{}", my_rank, num_ranks, message);
