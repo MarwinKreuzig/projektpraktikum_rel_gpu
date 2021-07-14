@@ -207,7 +207,7 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
     load_neuron_positions(path_neurons, foreing_ids, id_to_pos);
 
     for (const auto& [id, pos] : id_to_pos) {
-        const auto rank = static_cast<int>(partition.get_subdomain_id_from_pos(pos));
+        const auto rank = static_cast<int>(partition.get_mpi_rank_from_pos(pos));
         id_to_rank[id] = rank;
     }
 

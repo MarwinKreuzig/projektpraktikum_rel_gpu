@@ -28,9 +28,9 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
     RelearnException::check(num_ranks > my_rank, "My rank must be smaller than number of ranks");
 
     /**
-	* Total number of subdomains is smallest power of 8 that is >= num_ranks.
-	* We choose power of 8 as every domain subdivision creates 8 subdomains (in 3d).
-	*/
+	 * Total number of subdomains is smallest power of 8 that is >= num_ranks.
+	 * We choose power of 8 as every domain subdivision creates 8 subdomains (in 3d).
+	 */
     const double smallest_exponent = ceil(log(num_ranks) / log(8.0));
     level_of_subdomain_trees = static_cast<size_t>(smallest_exponent);
     total_num_subdomains = 1ULL << (3 * level_of_subdomain_trees); // 8^level_of_subdomain_trees
@@ -39,15 +39,15 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
     RelearnException::check(total_num_subdomains >= num_ranks, "In partition, total num subdomains is smaller than number ranks");
 
     /**
-	* Calc my number of subdomains
-	*
-	* NOTE:
-	* Every rank gets the same number of subdomains first.
-	* The remaining m subdomains are then assigned to the first m ranks,
-	* one subdomain more per rank.
-	*
-	* For #procs = 2^n and 8^level_of_subdomain_trees subdomains, every proc's #subdomains is the same power of two of {1, 2, 4}.
-	*/
+	 * Calc my number of subdomains
+	 *
+	 * NOTE:
+	 * Every rank gets the same number of subdomains first.
+	 * The remaining m subdomains are then assigned to the first m ranks,
+	 * one subdomain more per rank.
+	 *
+	 * For #procs = 2^n and 8^level_of_subdomain_trees subdomains, every proc's #subdomains is the same power of two of {1, 2, 4}.
+	 */
     // NOLINTNEXTLINE
     my_num_subdomains = total_num_subdomains / num_ranks;
     const size_t rest = total_num_subdomains % num_ranks;
@@ -59,10 +59,10 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
     }
 
     /**
-	* Set parameter of space filling curve before it can be used.
-	* total_num_subdomains = 8^level_of_subdomain_trees = (2^3)^level_of_subdomain_trees = 2^(3*level_of_subdomain_trees).
-	* Thus, number of subdomains per dimension (3d) is (2^(3*level_of_subdomain_trees))^(1/3) = 2^level_of_subdomain_trees.
-	*/
+	 * Set parameter of space filling curve before it can be used.
+	 * total_num_subdomains = 8^level_of_subdomain_trees = (2^3)^level_of_subdomain_trees = 2^(3*level_of_subdomain_trees).
+	 * Thus, number of subdomains per dimension (3d) is (2^(3*level_of_subdomain_trees))^(1/3) = 2^level_of_subdomain_trees.
+	 */
     num_subdomains_per_dimension = 1ULL << level_of_subdomain_trees;
     space_curve.set_refinement_level(level_of_subdomain_trees);
 
@@ -78,9 +78,7 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
 
         // Set space filling curve indices in 1d and 3d
         current_subdomain.index_1d = my_subdomain_id_start + i;
-        BoxCoordinates box_coords;
-        box_coords = space_curve.map_1d_to_3d(static_cast<uint64_t>(current_subdomain.index_1d));
-        current_subdomain.index_3d = box_coords;
+        current_subdomain.index_3d = space_curve.map_1d_to_3d(static_cast<uint64_t>(current_subdomain.index_1d));
     }
 
     LogFiles::print_message_rank(0,
@@ -140,7 +138,7 @@ bool Partition::is_neuron_local(size_t neuron_id) const {
     return false;
 }
 
-size_t Partition::get_subdomain_id_from_pos(const Vec3d& pos) const {
+size_t Partition::get_mpi_rank_from_pos(const Vec3d& pos) const {
     RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
     const Vec3d subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
 
@@ -197,9 +195,11 @@ void Partition::set_total_num_neurons(size_t total_num) noexcept {
     total_num_neurons = total_num;
 }
 
-void Partition::delete_subdomain_tree(size_t subdomain_id) const {
+void Partition::delete_subdomain_tree(size_t subdomain_id) {
     RelearnException::check(subdomain_id < my_num_subdomains, "Subdomain ID was too large");
+    RelearnException::check(subdomains[subdomain_id].local_octree_view != nullptr, "Subdomain ID was too large");
     MPIWrapper::delete_octree_node(subdomains[subdomain_id].local_octree_view);
+    subdomains[subdomain_id].local_octree_view = nullptr;
 }
 
 void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain) {
@@ -211,8 +211,8 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
     const Vec3d subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
 
     /**
-	* Output all parameters calculated so far
-	*/
+	 * Output all parameters calculated so far
+	 */
     LogFiles::print_message_rank(0, "Simulation box length (height, width, depth)\t: ({}, {}, {})",
         simulation_box_length.get_x(), simulation_box_length.get_y(), simulation_box_length.get_z());
     LogFiles::print_message_rank(0, "Subdomain length (height, width, depth)\t: ({}, {}, {})",
@@ -296,10 +296,10 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
 
             if (j == 0) {
                 /**
-		        * Set octree parameters.
-		        * Only those that are necessary for
-		        * inserting neurons into the tree
-		        */
+		         * Set octree parameters.
+		         * Only those that are necessary for
+		         * inserting neurons into the tree
+		         */
                 auto *local_root = MPIWrapper::new_octree_node();
 
                 local_root->set_cell_size(current_subdomain.xyz_min, current_subdomain.xyz_max);
