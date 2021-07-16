@@ -97,9 +97,6 @@ void MPI_RMA_MemAllocator::delete_octree_node(OctreeNode* ptr) {
     return holder_base_ptr.get_num_available();
 }
 
-void MPI_RMA_MemAllocator::HolderOctreeNode::free_all() {
-}
-
 MPI_RMA_MemAllocator::HolderOctreeNode::HolderOctreeNode(OctreeNode* ptr, size_t length)
     : non_available(length, nullptr)
     , base_ptr(ptr)
