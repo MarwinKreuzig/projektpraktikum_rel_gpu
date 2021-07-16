@@ -17,7 +17,7 @@
 #include <vector>
 
 /**
- * @brief This type allows type-safe specification of a specific timer
+ * This type allows type-safe specification of a specific timer
  */
 enum class TimerRegion : int {
     INITIALIZATION = 0,
@@ -47,7 +47,7 @@ enum class TimerRegion : int {
 constexpr size_t NUM_TIMERS = 22;
 
 /**
- * @brief This class is used to collect all sorts of different timers (see TimerRegion).
+ * This class is used to collect all sorts of different timers (see TimerRegion).
  * It provides an interface to start, stop, and print the timers
  */
 class Timers {
