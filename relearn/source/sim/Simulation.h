@@ -68,33 +68,33 @@ private:
 
     void print_neuron_monitors();
 
-    std::shared_ptr<Partition> partition;
+    std::shared_ptr<Partition> partition{};
 
-    std::unique_ptr<NeuronToSubdomainAssignment> neuron_to_subdomain_assignment;
+    std::unique_ptr<NeuronToSubdomainAssignment> neuron_to_subdomain_assignment{};
 
-    std::unique_ptr<SynapticElements> axons;
-    std::unique_ptr<SynapticElements> dendrites_ex;
-    std::unique_ptr<SynapticElements> dendrites_in;
+    std::unique_ptr<SynapticElements> axons{};
+    std::unique_ptr<SynapticElements> dendrites_ex{};
+    std::unique_ptr<SynapticElements> dendrites_in{};
 
-    std::unique_ptr<NeuronModels> neuron_models;
-    std::shared_ptr<Neurons> neurons;
+    std::unique_ptr<NeuronModels> neuron_models{};
+    std::shared_ptr<Neurons> neurons{};
 
-    std::shared_ptr<BarnesHut> barnes_hut_algorithm;
-    std::shared_ptr<Octree> global_tree;
+    std::shared_ptr<BarnesHut> barnes_hut_algorithm{};
+    std::shared_ptr<Octree> global_tree{};
 
-    std::shared_ptr<NetworkGraph> network_graph;
+    std::shared_ptr<NetworkGraph> network_graph{};
 
-    std::vector<NeuronMonitor> monitors;
+    std::vector<NeuronMonitor> monitors{};
 
-    std::vector<std::pair<size_t, std::vector<size_t>>> enable_interrupts;
-    std::vector<std::pair<size_t, std::vector<size_t>>> disable_interrupts;
-    std::vector<std::pair<size_t, size_t>> creation_interrupts;
+    std::vector<std::pair<size_t, std::vector<size_t>>> enable_interrupts{};
+    std::vector<std::pair<size_t, std::vector<size_t>>> disable_interrupts{};
+    std::vector<std::pair<size_t, size_t>> creation_interrupts{};
 
     double accept_criterion{ 0.0 };
 
-    int64_t total_synapse_creations = 0;
-    int64_t total_synapse_deletions = 0;
+    int64_t total_synapse_creations{ 0 };
+    int64_t total_synapse_deletions{ 0 };
 
-    int64_t delta_synapse_creations = 0;
-    int64_t delta_synapse_deletions = 0;
+    int64_t delta_synapse_creations{ 0 };
+    int64_t delta_synapse_deletions{ 0 };
 };

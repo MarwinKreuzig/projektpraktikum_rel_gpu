@@ -254,7 +254,7 @@ private:
     double sigma{ default_sigma }; // Probability parameter
     bool naive_method{ default_theta == 0.0 }; // If true, expand every cell regardless of whether dendrites are available or not
 
-    std::shared_ptr<Octree> global_tree;
+    std::shared_ptr<Octree> global_tree{};
 
 public:
     constexpr static double default_theta{ 0.3 };

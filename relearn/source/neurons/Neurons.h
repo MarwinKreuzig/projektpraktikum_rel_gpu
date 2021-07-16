@@ -473,22 +473,22 @@ private:
 
     size_t num_neurons = 0; // Local number of neurons
 
-    std::shared_ptr<Partition> partition;
+    std::shared_ptr<Partition> partition{};
 
-    std::shared_ptr<Octree> global_tree;
-    std::shared_ptr<BarnesHut> barnes_hut_algorithm;
+    std::shared_ptr<Octree> global_tree{};
+    std::shared_ptr<BarnesHut> barnes_hut_algorithm{};
 
-    std::shared_ptr<NetworkGraph> network_graph;
+    std::shared_ptr<NetworkGraph> network_graph{};
 
-    std::unique_ptr<NeuronModels> neuron_model;
+    std::unique_ptr<NeuronModels> neuron_model{};
 
-    std::unique_ptr<Axons> axons;
-    std::unique_ptr<DendritesExc> dendrites_exc;
-    std::unique_ptr<DendritesInh> dendrites_inh;
+    std::unique_ptr<Axons> axons{};
+    std::unique_ptr<DendritesExc> dendrites_exc{};
+    std::unique_ptr<DendritesInh> dendrites_inh{};
 
-    std::vector<double> calcium; // Intracellular calcium concentration of every neuron
+    std::vector<double> calcium{}; // Intracellular calcium concentration of every neuron
 
-    std::vector<char> disable_flags;
+    std::vector<char> disable_flags{};
 
     std::unique_ptr<NeuronsExtraInfo> extra_info{ std::make_unique<NeuronsExtraInfo>() };
 };
