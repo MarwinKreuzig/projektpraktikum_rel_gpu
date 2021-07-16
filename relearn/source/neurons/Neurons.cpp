@@ -777,7 +777,7 @@ void Neurons::make_creation_request_for(
                         if (child_node != nullptr && child_node->get_cell().get_neuron_num_axons_for(needed) > 0) {
                             for (size_t j = 0; j < 8; j++) {
                                 OctreeNode* other_child_node = current_node->get_child(j);
-                                if (i != j && other_child_node != nullptr && other_child_node->get_cell().get_neuron_num_dendrites_for(needed) > 0) {
+                                if (other_child_node != nullptr && other_child_node->get_cell().get_neuron_num_dendrites_for(needed) > 0) {
                                     child_node->add_to_interactionlist(other_child_node);
                                 }
                             }
@@ -1231,19 +1231,28 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
     MPIWrapper::reduce(sums_local, sums_global, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
 
     //get total and connected sum of axons and dendrites
-    unsigned int sum_axons = 0;
-    unsigned int sum_dendrites = 0;
-    unsigned int sum_con_axons = 0;
-    unsigned int sum_con_dendrites = 0;
+    unsigned int sum_axons_ex = 0;
+    unsigned int sum_axons_in = 0;
+    unsigned int sum_dendrites_ex = 0;
+    unsigned int sum_dendrites_in = 0;
+    unsigned int sum_con_axons_ex = 0;
+    unsigned int sum_con_axons_in = 0;
+    unsigned int sum_con_dendrites_ex = 0;
+    unsigned int sum_con_dendrites_in = 0;
 
     for(unsigned int i =0; i<num_neurons;i++){
-        sum_axons += axons->get_cnt(i);
-        sum_dendrites += dendrites_exc->get_cnt(i);
-        sum_dendrites += dendrites_inh->get_cnt(i);
-
-        sum_con_axons += axons->get_connected_cnt(i);
-        sum_con_dendrites += dendrites_exc->get_connected_cnt(i);
-        sum_con_dendrites += dendrites_inh->get_connected_cnt(i);
+        if (axons->get_signal_type(i)==SignalType::EXCITATORY){
+            sum_axons_ex += axons->get_cnt(i);
+            sum_dendrites_ex += dendrites_exc->get_cnt(i);
+            sum_con_axons_ex += axons->get_connected_cnt(i);
+            sum_con_dendrites_ex +=  dendrites_exc->get_connected_cnt(i);
+        }
+        if (axons->get_signal_type(i)==SignalType::INHIBITORY){
+            sum_axons_in += axons->get_cnt(i);
+            sum_dendrites_in += dendrites_inh->get_cnt(i);
+            sum_con_axons_in += axons->get_connected_cnt(i);
+            sum_con_dendrites_in +=  dendrites_inh->get_connected_cnt(i);
+        }
     }
 
 
@@ -1261,10 +1270,14 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
                << std::setw(cwidth) << "Axons inh. (vacant),"
                << std::setw(cwidth) << "Dends exc. (vacant),"
                << std::setw(cwidth) << "Dends inh. (vacant),"
-               << std::setw(cwidth) << "Axons total,"
-               << std::setw(cwidth) << "Dends total,"
-               << std::setw(cwidth) << "Axons conn,"
-               << std::setw(cwidth) << "Dends conn,"
+               << std::setw(cwidth) << "Axons total exc.,"
+               << std::setw(cwidth) << "Axons total inh.,"
+               << std::setw(cwidth) << "Dends total exc.,"
+               << std::setw(cwidth) << "Dends total inh.,"
+               << std::setw(cwidth) << "Axons con. exc.,"
+               << std::setw(cwidth) << "Axons con. inh.,"
+               << std::setw(cwidth) << "Dends con. exc.,"
+               << std::setw(cwidth) << "Dends con. inh.,"
                << std::setw(cwidth) << "Synapses deleted,"
                << std::setw(cwidth) << "Synapses created"
                << "\n";
@@ -1279,10 +1292,14 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
            << std::setw(cwidth) << sums_global[1] <<","
            << std::setw(cwidth) << sums_global[2] <<","
            << std::setw(cwidth) << sums_global[3] <<","
-           << std::setw(cwidth) << sum_axons <<","
-           << std::setw(cwidth) << sum_dendrites <<","
-           << std::setw(cwidth) << sum_con_axons <<","
-           << std::setw(cwidth) << sum_con_dendrites <<","
+           << std::setw(cwidth) << sum_axons_ex <<","
+           << std::setw(cwidth) << sum_axons_in <<","
+           << std::setw(cwidth) << sum_dendrites_ex <<","
+           << std::setw(cwidth) << sum_dendrites_in <<","
+           << std::setw(cwidth) << sum_con_axons_ex <<","
+           << std::setw(cwidth) << sum_con_axons_in <<","
+           << std::setw(cwidth) << sum_con_dendrites_ex <<","
+           << std::setw(cwidth) << sum_con_dendrites_in <<","
            << std::setw(cwidth) << sums_global[4] / 2 <<","// As counted on both of the neurons
            << std::setw(cwidth) << sums_global[last_idx] / 2 <<","// As counted on both of the neurons
            << "\n";
