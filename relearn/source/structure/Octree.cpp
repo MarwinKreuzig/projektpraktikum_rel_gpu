@@ -37,10 +37,11 @@ Octree::Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branc
 }
 
 Octree::~Octree() /*noexcept(false)*/ {
-    if (!no_free_in_destructor) {
-        // Free all nodes
-        free();
-    }
+    // Provide allocator so that it can be used to free memory again
+    const FunctorFreeNode free_node{};
+
+    // The functor containing the visit function is of type FunctorFreeNode
+    tree_walk_postorder<FunctorFreeNode>(root, free_node);
 }
 
 void Octree::postorder_print() {
@@ -159,7 +160,7 @@ void Octree::postorder_print() {
 void Octree::construct_global_tree_part() {
     RelearnException::check(root == nullptr, "root was not null in the construction of the global state!");
 
-    SpaceFillingCurve<Morton> space_curve{};
+    SpaceFillingCurve<Morton> space_curve{static_cast<uint8_t>(level_of_branch_nodes)};
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -264,14 +265,6 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
 
 void Octree::print() {
     postorder_print();
-}
-
-void Octree::free() {
-    // Provide allocator so that it can be used to free memory again
-    const FunctorFreeNode free_node{};
-
-    // The functor containing the visit function is of type FunctorFreeNode
-    tree_walk_postorder<FunctorFreeNode>(root, free_node);
 }
 
 [[nodiscard]] std::array<OctreeNode*, Constants::number_oct> Octree::downloadChildren(OctreeNode* root) {

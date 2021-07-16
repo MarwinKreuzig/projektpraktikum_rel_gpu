@@ -134,7 +134,6 @@ void Simulation::initialize() {
     auto sim_box_min_max = partition->get_simulation_box_size();
 
     global_tree = std::make_shared<Octree>(std::move(std::get<0>(sim_box_min_max)), std::move(std::get<1>(sim_box_min_max)), partition->get_level_of_subdomain_trees());
-    global_tree->set_no_free_in_destructor(); // This needs to be changed later, as it's cleaner to free the nodes at destruction
 
     // Insert my local (subdomain) trees into my global tree
     for (size_t i = 0; i < partition->get_my_num_subdomains(); i++) {

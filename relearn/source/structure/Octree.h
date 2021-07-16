@@ -107,10 +107,6 @@ public:
         this->root_level = root_level;
     }
 
-    void set_no_free_in_destructor() noexcept {
-        no_free_in_destructor = true;
-    }
-
     void set_level_of_branch_nodes(size_t level) noexcept {
         level_of_branch_nodes = level;
     }
@@ -141,8 +137,6 @@ public:
     }
 
     void print();
-
-    void free();
 
     // Insert neuron into the tree
     [[nodiscard]] OctreeNode* insert(const Vec3d& position, size_t neuron_id, int rank);
@@ -226,9 +220,6 @@ private:
 
     // Level which is assigned to the root of the tree (default = 0)
     size_t root_level{ Constants::uninitialized };
-
-    // 'True' if destructor should not free the tree nodes
-    bool no_free_in_destructor{ false };
 
     // Two points describe simulation box size of the tree
     Vec3d xyz_min{ 0 };
