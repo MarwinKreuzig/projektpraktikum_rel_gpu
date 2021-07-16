@@ -260,7 +260,7 @@ void Neurons::update_electrical_activity() {
 }
 
 void Neurons::update_calcium() {
-    GlobalTimers::timers.start(TimerRegion::CALC_ACTIVITY);
+    Timers::start(TimerRegion::CALC_ACTIVITY);
 
     const auto h = neuron_model->get_h();
     const auto tau_C = neuron_model->get_tau_C();
@@ -282,7 +282,7 @@ void Neurons::update_calcium() {
         }
     }
 
-    GlobalTimers::timers.stop_and_add(TimerRegion::CALC_ACTIVITY);
+    Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
 }
 
 Neurons::StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, int root, const std::vector<char>& disable_flags) const {
@@ -326,7 +326,7 @@ size_t Neurons::delete_synapses() {
 	* 1. Update number of synaptic elements and delete synapses if necessary
 	*/
 
-    GlobalTimers::timers.start(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
+    Timers::start(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
 
     /**
 	* Create list with synapses to delete (pending synapse deletions)
@@ -367,7 +367,7 @@ size_t Neurons::delete_synapses() {
 
     /* Delete all synapses pending for deletion */
     const auto num_synapses_deleted = delete_synapses_commit_deletions(pending_deletions);
-    GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
+    Timers::stop_and_add(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
 
     return num_synapses_deleted;
 }
@@ -734,7 +734,7 @@ size_t Neurons::create_synapses() {
     create_synapses_update_octree();
     MapSynapseCreationRequests synapse_creation_requests_outgoing = create_synapses_find_targets();
 
-    GlobalTimers::timers.start(TimerRegion::CREATE_SYNAPSES);
+    Timers::start(TimerRegion::CREATE_SYNAPSES);
 
     MapSynapseCreationRequests synapse_creation_requests_incoming = create_synapses_exchange_requests(synapse_creation_requests_outgoing);
     const auto& local_results = create_synapses_process_requests(synapse_creation_requests_incoming);
@@ -743,7 +743,7 @@ size_t Neurons::create_synapses() {
     const auto& received_responses = create_synapses_exchange_responses(local_results.second, synapse_creation_requests_outgoing);
     const auto synapses_created_remotely = create_synapses_process_responses(synapse_creation_requests_outgoing, received_responses);
 
-    GlobalTimers::timers.stop_and_add(TimerRegion::CREATE_SYNAPSES);
+    Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES);
 
     const auto num_synapses_created = synapses_created_locally + synapses_created_remotely;
 
@@ -755,9 +755,9 @@ void Neurons::create_synapses_update_octree() {
     MPIWrapper::lock_window(MPIWrapper::get_my_rank(), MPI_Locktype::exclusive);
 
     // Update my local trees bottom-up
-    GlobalTimers::timers.start(TimerRegion::UPDATE_LOCAL_TREES);
+    Timers::start(TimerRegion::UPDATE_LOCAL_TREES);
     global_tree->update_local_trees(*dendrites_exc, *dendrites_inh, num_neurons);
-    GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
+    Timers::stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
 
     global_tree->synchronize_local_trees();
 
@@ -771,7 +771,7 @@ void Neurons::create_synapses_update_octree() {
 
 MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
     MapSynapseCreationRequests synapse_creation_requests_outgoing;
-    GlobalTimers::timers.start(TimerRegion::FIND_TARGET_NEURONS);
+    Timers::start(TimerRegion::FIND_TARGET_NEURONS);
 
     const std::vector<double>& axons_cnts = axons->get_cnts();
     const std::vector<unsigned int>& axons_connected_cnts = axons->get_connected_cnts();
@@ -824,12 +824,12 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
         } /* all vacant axons of a neuron */
     } /* my neurons */
 
-    GlobalTimers::timers.stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
+    Timers::stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
 
     // Make cache empty for next connectivity update
-    GlobalTimers::timers.start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
+    Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
     global_tree->empty_remote_nodes_cache();
-    GlobalTimers::timers.stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
+    Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
     return synapse_creation_requests_outgoing;
 }

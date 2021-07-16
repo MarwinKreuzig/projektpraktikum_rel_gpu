@@ -179,7 +179,7 @@ int main(int argc, char** argv) {
     LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "#step: creations deletions netto");
     LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false, "#step: creations deletions netto");
 
-    GlobalTimers::timers.start(TimerRegion::INITIALIZATION);
+    Timers::start(TimerRegion::INITIALIZATION);
 
     /**
 	 * Calculate what my partition of the domain consist of
@@ -259,7 +259,7 @@ int main(int argc, char** argv) {
     // rank which has not finished (or even begun) its local stores
     MPIWrapper::barrier(MPIWrapper::Scope::global); // TODO(future) Really needed?
 
-    GlobalTimers::timers.stop_and_add(TimerRegion::INITIALIZATION);
+    Timers::stop_and_add(TimerRegion::INITIALIZATION);
 
     const auto step_monitor = 100;
     const auto steps_per_simulation = simulation_steps / step_monitor;

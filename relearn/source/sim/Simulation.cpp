@@ -157,7 +157,7 @@ void Simulation::initialize() {
 }
 
 void Simulation::simulate(size_t number_steps, size_t step_monitor) {
-    GlobalTimers::timers.start(TimerRegion::SIMULATION_LOOP);
+    Timers::start(TimerRegion::SIMULATION_LOOP);
 
     const auto previous_synapse_creations = total_synapse_creations;
     const auto previous_synapse_deletions = total_synapse_deletions;
@@ -197,15 +197,15 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
         }
 
         // Provide neuronal network to neuron models for one iteration step
-        GlobalTimers::timers.start(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
+        Timers::start(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
         neurons->update_electrical_activity();
-        GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
+        Timers::stop_and_add(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
 
         // Calc how many synaptic elements grow/retract
         // Apply the change in number of elements during connectivity update
-        GlobalTimers::timers.start(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
+        Timers::start(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
         neurons->update_number_synaptic_elements_delta();
-        GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
+        Timers::stop_and_add(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
 
         if (step % Constants::plasticity_update_step == 0) {
             size_t num_synapses_deleted = 0;
@@ -219,13 +219,13 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             //    LogFiles::write_to_file(LogFiles::EventType::Cout, sstring.str(), true);
             //}
 
-            GlobalTimers::timers.start(TimerRegion::UPDATE_CONNECTIVITY);
+            Timers::start(TimerRegion::UPDATE_CONNECTIVITY);
 
             std::tuple<size_t, size_t> deleted_created = neurons->update_connectivity();
             num_synapses_deleted = std::get<0>(deleted_created);
             num_synapses_created = std::get<1>(deleted_created);
 
-            GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_CONNECTIVITY);
+            Timers::stop_and_add(TimerRegion::UPDATE_CONNECTIVITY);
 
             // Get total number of synapses deleted and created
             std::array<int64_t, 2> local_cnts = { static_cast<int64_t>(num_synapses_deleted), static_cast<int64_t>(num_synapses_created) };
@@ -265,7 +265,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
     delta_synapse_deletions = total_synapse_deletions - previous_synapse_deletions;
 
     // Stop timing simulation loop
-    GlobalTimers::timers.stop_and_add(TimerRegion::SIMULATION_LOOP);
+    Timers::stop_and_add(TimerRegion::SIMULATION_LOOP);
 
     print_neuron_monitors();
 

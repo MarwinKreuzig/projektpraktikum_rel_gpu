@@ -36,14 +36,6 @@ Octree::Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branc
     construct_global_tree_part();
 }
 
-Octree::~Octree() /*noexcept(false)*/ {
-    // Provide allocator so that it can be used to free memory again
-    const FunctorFreeNode free_node{};
-
-    // The functor containing the visit function is of type FunctorFreeNode
-    tree_walk_postorder<FunctorFreeNode>(root, free_node);
-}
-
 void Octree::postorder_print() {
     std::stack<StackElement> stack;
 
@@ -365,7 +357,7 @@ void Octree::synchronize_local_trees() {
     /**
     * Exchange branch nodes
     */
-    GlobalTimers::timers.start(TimerRegion::EXCHANGE_BRANCH_NODES);
+    Timers::start(TimerRegion::EXCHANGE_BRANCH_NODES);
     OctreeNode* rma_buffer_branch_nodes = MPIWrapper::get_buffer_octree_nodes();
     // Copy local trees' root nodes to correct positions in receive buffer
 
@@ -377,24 +369,24 @@ void Octree::synchronize_local_trees() {
     // Allgather in-place branch nodes from every rank
     MPIWrapper::all_gather_inline(rma_buffer_branch_nodes, num_local_trees, MPIWrapper::Scope::global);
 
-    GlobalTimers::timers.stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
+    Timers::stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
 
     // Insert only received branch nodes into global tree
     // The local ones are already in the global tree
-    GlobalTimers::timers.start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
+    Timers::start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
     const size_t num_rma_buffer_branch_nodes = MPIWrapper::get_num_buffer_octree_nodes();
     for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
         *local_trees[i] = rma_buffer_branch_nodes[i];
     }
-    GlobalTimers::timers.stop_and_add(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
+    Timers::stop_and_add(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
 
     // Update global tree
-    GlobalTimers::timers.start(TimerRegion::UPDATE_GLOBAL_TREE);
+    Timers::start(TimerRegion::UPDATE_GLOBAL_TREE);
     const auto level_branches = get_level_of_branch_nodes();
 
     // Only update whenever there are other branches to update
     if (level_branches > 0) {
         update_from_level(level_branches - 1);
     }
-    GlobalTimers::timers.stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
+    Timers::stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
 }

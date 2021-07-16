@@ -92,7 +92,7 @@ void PoissonModel::init_neurons(size_t start_id, size_t end_id) {
 }
 
 void models::PoissonModel::update_electrical_activity_serial_initialize(const std::vector<char>& disable_flags) {
-    GlobalTimers::timers.start(TimerRegion::CALC_SERIAL_ACTIVITY);
+    Timers::start(TimerRegion::CALC_SERIAL_ACTIVITY);
 
 #pragma omp parallel for shared(disable_flags) default(none) // NOLINTNEXTLINE
     for (int neuron_id = 0; neuron_id < theta_values.size(); neuron_id++) {
@@ -104,7 +104,7 @@ void models::PoissonModel::update_electrical_activity_serial_initialize(const st
         theta_values[neuron_id] = threshold;
     }
 
-    GlobalTimers::timers.stop_and_add(TimerRegion::CALC_SERIAL_ACTIVITY);
+    Timers::stop_and_add(TimerRegion::CALC_SERIAL_ACTIVITY);
 }
 
 [[nodiscard]] double PoissonModel::iter_x(const double x, const double I_syn) const noexcept {

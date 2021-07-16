@@ -71,23 +71,9 @@ private:
         }
     };
 
-    /**
-	 * Visit function used with postorder tree walk
-	 * Frees the respective node
-	 */
-    class FunctorFreeNode {
-    public:
-        FunctorFreeNode() noexcept = default;
-
-        void operator()(OctreeNode* node) {
-            RelearnException::check(node != nullptr, "In FunctorFreeNode, node was nullptr");
-            MPIWrapper::delete_octree_node(node);
-        }
-    };
-
 public:
     Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes);
-    ~Octree() /*noexcept(false)*/;
+    ~Octree() = default;
 
     Octree(const Octree& other) = delete;
     Octree(Octree&& other) = delete;
