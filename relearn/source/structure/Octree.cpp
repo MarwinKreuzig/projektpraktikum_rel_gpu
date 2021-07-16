@@ -159,7 +159,7 @@ void Octree::postorder_print() {
 void Octree::construct_global_tree_part() {
     RelearnException::check(root == nullptr, "root was not null in the construction of the global state!");
 
-    SpaceFillingCurve<Morton> space_curve{ level_of_branch_nodes };
+    SpaceFillingCurve<Morton> space_curve{};
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -329,7 +329,7 @@ void Octree::update_from_level(size_t max_level) {
     std::vector<double> dendrites_inh_cnts;
     std::vector<unsigned int> dendrites_inh_connected_cnts;
 
-    const FunctorUpdateNode update_functor(dendrites_exc_cnts, dendrites_exc_connected_cnts, dendrites_inh_cnts, dendrites_inh_connected_cnts, 0);
+    const BarnesHut::FunctorUpdateNode update_functor(dendrites_exc_cnts, dendrites_exc_connected_cnts, dendrites_inh_cnts, dendrites_inh_connected_cnts, 0);
 
     /**
 	* NOTE: It *must* be ensured that in tree_walk_postorder() only inner nodes
@@ -337,7 +337,7 @@ void Octree::update_from_level(size_t max_level) {
 	*/
 
     // The functor containing the visit function is of type FunctorUpdateNode
-    tree_walk_postorder<FunctorUpdateNode>(root, update_functor, max_level);
+    tree_walk_postorder<BarnesHut::FunctorUpdateNode>(root, update_functor, max_level);
 }
 
 void Octree::update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, size_t num_neurons) {
@@ -353,9 +353,9 @@ void Octree::update_local_trees(const SynapticElements& dendrites_exc, const Syn
             continue;
         }
 
-        const FunctorUpdateNode update_functor(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt, num_neurons);
+        const BarnesHut::FunctorUpdateNode update_functor(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt, num_neurons);
         // The functor containing the visit function is of type FunctorUpdateNode
-        tree_walk_postorder<FunctorUpdateNode>(local_tree, update_functor);
+        tree_walk_postorder<BarnesHut::FunctorUpdateNode>(local_tree, update_functor);
     }
 }
 
