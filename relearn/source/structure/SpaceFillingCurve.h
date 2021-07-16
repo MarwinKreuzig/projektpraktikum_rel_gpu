@@ -18,7 +18,8 @@
 #include <type_traits>
 
 /**
- * This class represents a MortonCurve in 3D
+ * This class represents a MortonCurve in 3D.
+ * This class does not perform argument checking. SpaceFillingCurve<Morton> should be used for that.
  */
 class Morton {
 public:
@@ -29,7 +30,7 @@ public:
      * @param idx The one dimensional index
      * @return The three dimensional index
      */
-    [[nodiscard]] static BoxCoordinates map_1d_to_3d(uint64_t idx);
+    [[nodiscard]] static BoxCoordinates map_1d_to_3d(uint64_t idx) noexcept;
    
     /**
      * @brief Maps a three dimensional index into the one dimensional domain.

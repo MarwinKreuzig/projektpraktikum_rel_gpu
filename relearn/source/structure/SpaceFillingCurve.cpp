@@ -10,7 +10,7 @@
 
 #include "SpaceFillingCurve.h"
 
-Morton::BoxCoordinates Morton::map_1d_to_3d(uint64_t idx) {
+Morton::BoxCoordinates Morton::map_1d_to_3d(uint64_t idx) noexcept {
     // clear coordinates
     BoxCoordinates coords{ 0 };
 
