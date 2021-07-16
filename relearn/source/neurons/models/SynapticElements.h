@@ -304,21 +304,21 @@ public:
     static constexpr double max_vacant_elements_initially{ 1000.0 };
 
 private:
-    ElementType type; // Denotes the type of all synaptic elements, which is AXON or DENDRITE
-    size_t size = 0;
-    std::vector<double> cnts;
-    std::vector<double> delta_cnts; // Keeps track of changes in number of elements until those changes are applied in next connectivity update
-    std::vector<unsigned int> connected_cnts;
-    std::vector<SignalType> signal_types; // Signal type of synaptic elements, i.e., EXCITATORY or INHIBITORY.
+    ElementType type{}; // Denotes the type of all synaptic elements, which is AXON or DENDRITE
+    size_t size{ 0 };
+    std::vector<double> cnts{};
+    std::vector<double> delta_cnts{}; // Keeps track of changes in number of elements until those changes are applied in next connectivity update
+    std::vector<unsigned int> connected_cnts{};
+    std::vector<SignalType> signal_types{}; // Signal type of synaptic elements, i.e., EXCITATORY or INHIBITORY.
         // Note: Given that current exc. and inh. dendrites are in different objects, this would only be needed for axons.
         //       A more memory-efficient solution would be to use a different class for axons which has the signal_types array.
 
     // Parameters
-    double min_C_level_to_grow; // Minimum level of calcium needed for elements to grow
-    double C_target; // Desired calcium level (possible extension of the model: Give all neurons individual C_target values!)
-    double nu; // Growth rate for synaptic elements in ms^-1. Needs to be much smaller than 1 to separate activity and structural dynamics.
-    double vacant_retract_ratio; // Percentage of how many vacant synaptic elements should be deleted during each connectivity update
+    double min_C_level_to_grow{ 0.0 }; // Minimum level of calcium needed for elements to grow
+    double C_target{ 0.0 }; // Desired calcium level (possible extension of the model: Give all neurons individual C_target values!)
+    double nu{ 0.0 }; // Growth rate for synaptic elements in ms^-1. Needs to be much smaller than 1 to separate activity and structural dynamics.
+    double vacant_retract_ratio{ 0.0 }; // Percentage of how many vacant synaptic elements should be deleted during each connectivity update
 
-    double initial_vacant_elements_lower_bound; // Minimum number of vacant elements that are available at the start of the simulation
-    double initial_vacant_elements_upper_bound; // Maximum number of vacant elements that are available at the start of the simulation
+    double initial_vacant_elements_lower_bound{ 0.0 }; // Minimum number of vacant elements that are available at the start of the simulation
+    double initial_vacant_elements_upper_bound{ 0.0 }; // Maximum number of vacant elements that are available at the start of the simulation
 };

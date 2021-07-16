@@ -24,9 +24,9 @@
 */
 template <typename T>
 class Vec3 {
-    T x;
-    T y;
-    T z;
+    T x{ 0 };
+    T y{ 0 };
+    T z{ 0 };
 
     static_assert(std::is_arithmetic_v<T>);
 
@@ -34,12 +34,7 @@ public:
     /**
      * @brief Constructs a new instance and initializes all values with 0
      */
-    Vec3() noexcept
-        : x(0)
-        , y(0)
-        , z(0) {
-    }
-
+    Vec3() = default;
     ~Vec3() = default;
 
     /**
@@ -251,7 +246,7 @@ public:
         return *this;
     }
 
-     /**
+    /**
      * @brief Componentwise divides by the scalar value and changes the current object
      * @param scalar The value that should be divided by for each component
      * @return A reference to the current object

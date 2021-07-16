@@ -132,8 +132,8 @@ class Neurons {
 	 * Type for list element used to represent a synapse for synapse selection
 	 */
     class Synapse {
-        RankNeuronId rank_neuron_id;
-        unsigned int synapse_id; // Id of the synapse. Used to distinguish multiple synapses between the same neuron pair
+        RankNeuronId rank_neuron_id{};
+        unsigned int synapse_id{}; // Id of the synapse. Used to distinguish multiple synapses between the same neuron pair
     public:
         Synapse(RankNeuronId rank_neuron_id, unsigned int synapse_id) noexcept
             : rank_neuron_id(rank_neuron_id)
@@ -245,7 +245,7 @@ class Neurons {
 
     private:
         size_t num_requests{ 0 }; // Number of synapse deletion requests
-        std::vector<size_t> requests; // Each request to delete a synapse is a 6-tuple:
+        std::vector<size_t> requests{}; // Each request to delete a synapse is a 6-tuple:
             // (src_neuron_id, tgt_neuron_id, affected_neuron_id, affected_element_type, signal_type, synapse_id)
             // That is why requests.size() == 6*num_requests
             // Note, a more memory-efficient implementation would use a smaller data type (not size_t)
@@ -254,11 +254,11 @@ class Neurons {
     };
 
     struct StatisticalMeasures {
-        double min;
-        double max;
-        double avg;
-        double var;
-        double std;
+        double min{ 0.0 };
+        double max{ 0.0 };
+        double avg{ 0.0 };
+        double var{ 0.0 };
+        double std{ 0.0 };
     };
 
 public:

@@ -24,7 +24,7 @@ class OctreeNode;
 /**
  * This class provides a static interface for allocating and deallocating objects of type OctreeNode
  * that are placed within an MPI memory window, i.e., they can be accessed by other MPI processes.
- * The first call must be to MPI_RMA_MemAllocator::init(...) and the last two call must be to MPI_RMA_MemAllocator::finalize().
+ * The first call must be to MPI_RMA_MemAllocator::init(...) and the last call must be to MPI_RMA_MemAllocator::finalize().
  */
 class MPI_RMA_MemAllocator {
 

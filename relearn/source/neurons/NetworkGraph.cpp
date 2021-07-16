@@ -17,7 +17,9 @@
 #include "Neurons.h"
 #include "helper/RankNeuronId.h"
 #include "spdlog/spdlog.h"
+
 #include <algorithm>
+
 #include <cmath>
 #include <fstream>
 #include <iostream>

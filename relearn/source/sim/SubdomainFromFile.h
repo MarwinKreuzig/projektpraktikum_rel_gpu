@@ -51,6 +51,6 @@ private:
 
     [[nodiscard]] std::vector<NeuronToSubdomainAssignment::Node> read_nodes_from_file(const Position& min, const Position& max);
 
-    std::ifstream file;
+    std::ifstream file{};
     size_t total_num_neurons_in_file{ Constants::uninitialized };
 };

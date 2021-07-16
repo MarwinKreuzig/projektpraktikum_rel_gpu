@@ -119,7 +119,6 @@ public:
         }
     }
 
-    // Print tagged message only at MPI rank "rank"
     /**
      * @brief Prints a message to std::cout (and the associated file), if rank matches the current MPI rank.
      *      The message can have place-holders of the form "{}", which are filled with additional arguments in the order of occurrence.

@@ -43,7 +43,7 @@ public:
     constexpr static double default_um_per_neuron = 26;
 
 private:
-    const double um_per_neuron_; // Micrometer per neuron in one dimension
+    const double um_per_neuron_{ 0.0 }; // Micrometer per neuron in one dimension
 
     void place_neurons_in_area(
         const NeuronToSubdomainAssignment::Position& offset,

@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "../Config.h"
 #include "../util/Vec3.h"
 #include "helper/RankNeuronId.h"
 #include "SignalType.h"
@@ -172,8 +173,8 @@ private:
 
     void write_synapses_to_file(const std::string& filename, const Partition& partition) const;
 
-    NeuronInNeighborhood neuron_in_neighborhood;
-    NeuronOutNeighborhood neuron_out_neighborhood;
+    NeuronInNeighborhood neuron_in_neighborhood{};
+    NeuronOutNeighborhood neuron_out_neighborhood{};
 
-    size_t my_num_neurons; // My number of neurons
+    size_t my_num_neurons{ Constants::uninitialized }; // My number of neurons
 };

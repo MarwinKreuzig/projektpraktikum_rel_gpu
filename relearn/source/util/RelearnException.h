@@ -34,7 +34,7 @@ private:
     /**
      * @brief Construcs an instance with the associated message
      * @param mes The message of the exception
-    */
+     */
     explicit RelearnException(std::string&& mes)
         : message(std::move(mes)) {
     }
@@ -44,7 +44,7 @@ private:
 public:
     /**
      * @brief Allows to hide the messages, i.e., not print the messages to std:
-    */
+     */
     static inline bool hide_messages{ false };
 
     /**
