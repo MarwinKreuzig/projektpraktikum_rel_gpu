@@ -26,6 +26,7 @@ using MPIWrapper = MPINoWrapper;
 #include <vector>
 
 class OctreeNode;
+class RelearnTest;
 
 /**
  * This enum allows a type safe choice of locking types for memory windows
@@ -62,6 +63,8 @@ class MPIWrapper {
         OctreeNode* ptr;
         size_t num_nodes;
     };
+
+    friend class RelearnTest;
 
 public:
     /**
@@ -105,6 +108,8 @@ private:
     static void free_custom_function();
 
     static inline RMABufferOctreeNodes rma_buffer_branch_nodes{};
+
+    static void make_all_mem_available();
 
     static inline int num_ranks{ -1 }; // Number of ranks in MPI_COMM_WORLD
     static inline int my_rank{ -1 }; // My rank in MPI_COMM_WORLD

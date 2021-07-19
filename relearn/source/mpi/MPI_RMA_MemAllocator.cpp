@@ -130,6 +130,23 @@ void MPI_RMA_MemAllocator::HolderOctreeNode::make_available(OctreeNode* ptr) {
     ptr->reset();
 }
 
+void MPI_RMA_MemAllocator::make_all_available() noexcept {
+    return holder_base_ptr.make_all_available();
+}
+
+void MPI_RMA_MemAllocator::HolderOctreeNode::make_all_available() noexcept {
+    for (auto& ptr : non_available) {
+        if (ptr == nullptr) {
+            continue;
+        }
+
+        available.push(ptr);
+
+        ptr->reset();
+        ptr = nullptr;
+    }
+}
+
 [[nodiscard]] size_t MPI_RMA_MemAllocator::HolderOctreeNode::get_size() const noexcept {
     return total;
 }

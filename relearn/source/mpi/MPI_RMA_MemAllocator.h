@@ -47,6 +47,8 @@ class MPI_RMA_MemAllocator {
 
         void make_available(OctreeNode* ptr);
 
+        void make_all_available() noexcept;
+
         [[nodiscard]] size_t get_size() const noexcept;
 
         [[nodiscard]] size_t get_num_available() const noexcept;
@@ -95,12 +97,18 @@ public:
      * @return The roots for all branch nodes
      */
     [[nodiscard]] static OctreeNode* get_branch_nodes();
-    
+
     /**
      * @brief Returns the number of available objects in the memory window.
      * @return The number of available objects in the memory window
      */
     [[nodiscard]] static size_t get_num_avail_objects() noexcept;
+
+    /**
+     * @brief Deletes all created nodes. Internally calls OctreeNode::reset().
+     *      Invalidates all pointers
+     */
+    static void make_all_available() noexcept;
 
     //NOLINTNEXTLINE
     static inline MPI_Win mpi_window{ 0 }; // RMA window object

@@ -879,6 +879,8 @@ TEST_F(OctreeTest, testOctreeConstructor) {
 
             ASSERT_EQ(level_to_count[level], expected_elements);
         }
+
+        make_mpi_mem_available();
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -918,6 +920,8 @@ TEST_F(OctreeTest, testOctreeConstructor) {
 
             ASSERT_EQ(level_to_count[level], expected_elements);
         }
+
+        make_mpi_mem_available();
     }
 }
 
@@ -936,6 +940,8 @@ TEST_F(OctreeTest, testOctreeConstructorExceptions) {
         size_t level_of_branch_nodes = uid(mt);
 
         ASSERT_THROW(Octree octree(max_xyz, min_xyz, level_of_branch_nodes), RelearnException);
+
+        make_mpi_mem_available();
     }
 }
 
@@ -965,6 +971,8 @@ TEST_F(OctreeTest, testOctreeSetterGetter) {
         ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
         ASSERT_EQ(octree.get_xyz_max(), max);
         ASSERT_EQ(octree.get_xyz_min(), min);
+
+        make_mpi_mem_available();
     }
 }
 
@@ -987,6 +995,8 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
         std::tie(min, max) = get_random_simulation_box_size(mt);
 
         ASSERT_THROW(octree.set_size(max, min), RelearnException);
+
+        make_mpi_mem_available();
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -1000,6 +1010,8 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
         Octree octree(min, max, level_of_branch_nodes);
 
         std::tie(min, max) = get_random_simulation_box_size(mt);
+
+        make_mpi_mem_available();
     }
 
     for (auto i = 0; i < iterations; i++) {
@@ -1013,6 +1025,8 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
         Octree octree(min, max, level_of_branch_nodes);
 
         std::tie(min, max) = get_random_simulation_box_size(mt);
+
+        make_mpi_mem_available();
     }
 }
 
@@ -1057,6 +1071,8 @@ TEST_F(OctreeTest, testOctreeInsertNeurons) {
 
             ASSERT_EQ(expected_neuron, found_neuron);
         }
+
+        make_mpi_mem_available();
     }
 }
 
@@ -1105,6 +1121,8 @@ TEST_F(OctreeTest, testOctreeInsertNeuronsExceptions) {
             ASSERT_THROW(octree.insert(pos_invalid_y_min, id, rank), RelearnException);
             ASSERT_THROW(octree.insert(pos_invalid_z_min, id, rank), RelearnException);
         }
+
+        make_mpi_mem_available();
     }
 }
 
@@ -1189,6 +1207,8 @@ TEST_F(OctreeTest, testOctreeStructure) {
                 ASSERT_LE(position.get_z(), cell_max.get_z());
             }
         }
+
+        make_mpi_mem_available();
     }
 }
 
@@ -1233,6 +1253,8 @@ TEST_F(OctreeTest, testOctreeLocalTrees) {
             const auto local_tree = octree.get_local_root(pos1d);
             ASSERT_EQ(local_tree, branch_node);
         }
+
+        make_mpi_mem_available();
     }
 }
 
@@ -1354,5 +1376,7 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
             delete nodes_to_save_local_trees[i];
             delete nodes_to_save_new_local_trees[i];
         }
+
+        make_mpi_mem_available();
     }
 }

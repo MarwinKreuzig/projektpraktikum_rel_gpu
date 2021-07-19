@@ -272,6 +272,10 @@ void MPIWrapper::free_custom_function() {
     MPI_Op_free(&minsummax);
 }
 
+void MPIWrapper::make_all_mem_available() {
+    MPI_RMA_MemAllocator::make_all_available();
+}
+
 void MPIWrapper::lock_window(int rank, MPI_Locktype lock_type) {
     RelearnException::check(rank >= 0, "rank was: %d", rank);
     const auto lock_type_int = static_cast<int>(lock_type);

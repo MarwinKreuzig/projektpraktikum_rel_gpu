@@ -68,12 +68,16 @@ protected:
         std::cerr << "Test finished\n";
     }
 
+    void make_mpi_mem_available() {
+        MPIWrapper::make_all_mem_available();
+    }
+
     constexpr static int iterations = 10;
     constexpr static size_t num_neurons_test = 1000;
     constexpr static double eps = 0.00001;
 
-    constexpr static bool use_predetermined_seed = false;
-    constexpr static unsigned int predetermined_seed = 354573112705;
+    constexpr static bool use_predetermined_seed = true;
+    constexpr static unsigned int predetermined_seed = 1749668066;
 };
 
 class NetworkGraphTest : public RelearnTest {

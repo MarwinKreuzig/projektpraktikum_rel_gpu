@@ -38,6 +38,8 @@ class MPINo_RMA_MemAllocator {
 
         void make_available(OctreeNode* ptr);
 
+        void make_all_available() noexcept;
+
         [[nodiscard]] size_t get_size() const noexcept;
 
         [[nodiscard]] size_t get_num_available() const noexcept;
@@ -59,6 +61,8 @@ public:
     [[nodiscard]] static OctreeNode* get_branch_nodes();
 
     [[nodiscard]] static size_t get_num_avail_objects() noexcept;
+
+    static void make_all_available() noexcept;
 
     //NOLINTNEXTLINE
     // static inline MPI_Win mpi_window{ 0 }; // RMA window object

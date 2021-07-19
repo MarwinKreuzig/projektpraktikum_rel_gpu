@@ -122,6 +122,10 @@ void MPINoWrapper::download_octree_node(OctreeNode* dst, int /*target_rank*/, co
     return MPINo_RMA_MemAllocator::get_num_avail_objects();
 }
 
+void MPIWrapper::make_all_mem_available() {
+    MPINo_RMA_MemAllocator::make_all_available();
+}
+
 [[nodiscard]] OctreeNode* MPINoWrapper::get_buffer_octree_nodes() {
     return rma_buffer_branch_nodes.ptr;
 }

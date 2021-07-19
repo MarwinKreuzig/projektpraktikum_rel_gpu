@@ -12,8 +12,8 @@
 #include <map>
 #include <future>
 
-class Octree;
 class OctreeNode;
+class RelearnTest;
 
 enum class MPI_Locktype : int {
     exclusive = MPI_LOCK_EXCLUSIVE,
@@ -25,6 +25,8 @@ class MPINoWrapper {
         OctreeNode* ptr;
         size_t num_nodes;
     };
+
+    friend class RelearnTest;
 
 public:
     enum class Scope : char {
@@ -58,6 +60,8 @@ private:
     static inline std::map<AsyncToken, async_type> tuple_map{};
 
     static inline std::string my_rank_str{ '0' };
+
+    static void make_all_mem_available();
 
     static void all_gather(const void* own_data, void* buffer, int size, Scope scope);
 
