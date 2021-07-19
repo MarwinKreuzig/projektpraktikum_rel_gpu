@@ -5,16 +5,16 @@
 
 class Multiindex {
     int number_of_indecis;
-    std::array<std::array<unsigned int, 3>, Constants::p*Constants::p*Constants::p> elements;
+    std::array<std::array<unsigned int, 3>, Constants::p3> elements;
 
 public:
     Multiindex() {
         number_of_indecis = Constants::p3;
 
         int x= 0;
-        for (unsigned int i = 0; i <= 3; i++) {
-            for (unsigned int j = 0; j <= 3; j++) {
-                for (unsigned int k = 0; k <= 3; k++) {
+        for (unsigned int i = 0; i < Constants::p; i++) {
+            for (unsigned int j = 0; j < Constants::p; j++) {
+                for (unsigned int k = 0; k < Constants::p; k++) {
                     elements[x]={i,j,k};
                     x++;
                 }
