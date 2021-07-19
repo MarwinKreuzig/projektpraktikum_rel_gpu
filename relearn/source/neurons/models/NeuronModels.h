@@ -21,30 +21,43 @@
 class NetworkGraph;
 class NeuronMonitor;
 
-class NeuronModels {
+/**
+ * This class provides the basic interface for every neuron model, that is, the rules by which a neuron spikes.
+ * The calculations should focus solely on the spiking behavior, and should not account for any plasticity changes.
+ * The object itself stores only the local portion of the neuron population.
+ * This class performs communication with MPI.
+ */
+class NeuronModel {
     friend class NeuronMonitor;
 
 public:
     /**
-	 * Type for firing neuron ids which are used with MPI
+	 * This type collects all local neuron ids for neurons that fired in the current simulation step.
+     * It is used as communication buffer for MPI collectives.
 	 */
     class FiringNeuronIds {
     public:
-        // Return size
+        /**
+         * @brief Returns the number of stored ids
+         * @return The number of stored ids
+         */
         [[nodiscard]] size_t size() const noexcept {
             return neuron_ids.size();
         }
 
-        // Resize the number of neuron ids
+        /**
+         * @brief Resizes the internal buffer to the requested size
+         * @param size The desired size 
+         */
         void resize(size_t size) {
             neuron_ids.resize(size);
         }
 
-        // Append neuron id
-        //
-        // NOTE: This function asks the user to guarantee
-        // that elements are appended in increasing/decreasing order.
-        // That is they must be sorted. Otherwise, behavior is undefined.
+        /**
+         * @brief Pushes the passed neuron id onto the vector, if it is not contained within the vector.
+         *      It is required that neuron_id - if not already present in the vector - is larger than every other already stored id
+         * @param neuron_id The local neuron id to be saved
+         */
         void append_if_not_found_sorted(size_t neuron_id) {
             // Neuron id not included yet
             if (const bool found = find(neuron_id); !found) {
@@ -52,32 +65,52 @@ public:
             }
         }
 
-        // Test if "neuron_id" exists
+        /**
+         * @brief Searches the neuron id in the internal buffer via a binary search
+         * @param neuron_id The neuron id to be searched
+         * @return True iff the internal buffer contains neuron_id
+         */
         [[nodiscard]] bool find(size_t neuron_id) const {
             return std::binary_search(neuron_ids.begin(), neuron_ids.end(), neuron_id);
         }
 
-        // Get neuron id at index "neuron_id_index"
-        [[nodiscard]] size_t get_neuron_id(size_t neuron_id_index) const noexcept {
+        /**
+         * @brief Returns the stored neuron id at the requested index
+         * @param neuron_id_index The index of the neuron id that shall be returned
+         * @exception Throws a RelearnException if neuron_id_index is too large for the internal buffer
+         * @return The neuron id at the index
+         */
+        [[nodiscard]] size_t get_neuron_id(size_t neuron_id_index) const {
+            RelearnException ::check(neuron_id_index < neuron_ids.size(), "In FiringNeuronIds::get_neuron_id, index was too large");
             return neuron_ids[neuron_id_index];
         }
 
-        // Get pointer to data
+        /**
+         * @brief Returns a modifiable pointer to the internal buffer. Ownership is not transfered.
+         * @return A modifiable pointer to the internal buffer
+         */
         [[nodiscard]] size_t* get_neuron_ids() noexcept {
             return neuron_ids.data();
         }
 
+        /**
+         * @brief Returns a non-modifiable pointer to the internal buffer. Ownership is not transfered.
+         * @return A modifiable non-pointer to the internal buffer
+         */
         [[nodiscard]] const size_t* get_neuron_ids() const noexcept {
             return neuron_ids.data();
         }
 
+        /**
+         * @brief Returns the size in bytes of the internal buffer
+         * @return The size in bytes of the internal buffer
+         */
         [[nodiscard]] size_t get_neuron_ids_size_in_bytes() const noexcept {
             return neuron_ids.size() * sizeof(size_t);
         }
 
     private:
-        std::vector<size_t> neuron_ids; // Firing neuron ids
-            // This vector is used as MPI communication buffer
+        std::vector<size_t> neuron_ids{}; // This vector is used as MPI communication buffer and contains all firing neuron ids in ascending order.
     };
 
     /**
@@ -86,116 +119,233 @@ public:
 	 */
     using MapFiringNeuronIds = std::map<int, FiringNeuronIds>;
 
-    NeuronModels() = default;
-    NeuronModels(double k, double tau_C, double beta, unsigned int h, double background_activity, double background_activity_mean, double background_activity_stddev);
+    /**
+     * @brief Construcs a new instance of type NeuronModel with 0 neurons and default values for all parameters
+     */
+    NeuronModel() = default;
 
-    virtual ~NeuronModels() = default;
+    /**
+     * @brief Construcs a new instance of type NeuronModel with 0 neurons and the passed values for all parameters.
+     *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
+     * @param k The factor by which the input of a neighboring spiking neuron is weighted
+     * @param tau_C The dampening factor by which the Calcium decreases in Neurons. @Todo(Fabian): Move that parameter into Neurons
+     * @param beta The factor by which the Calcium is increased whenever a neuron spikes in Neurons. @Todo(Fabian): Move that parameter into Neurons
+     * @param h The step size for the numerical integration
+     * @param base_background_activity The base background activity that all neurons are exited with. Is only used if background_activity_stddev > 0.0
+     * @param background_activity_mean The mean of background activity taht all neurons are exited with. Is only used if background_activity_stddev > 0.0
+     * @param background_activity_stddev The standard deviation of background activity taht all neurons are exited with. Is only used if background_activity_stddev > 0.0
+     * 
+     * If background_activity_stddev > 0.0, all neurons are exited with
+     *      base_background_activity + N(background_activity_mean, background_activity_stddev)
+     */
+    NeuronModel(double k, double tau_C, double beta, unsigned int h, double base_background_activity, double background_activity_mean, double background_activity_stddev);
 
-    NeuronModels(const NeuronModels& other) = delete;
-    NeuronModels& operator=(const NeuronModels& other) = delete;
+    virtual ~NeuronModel() = default;
 
-    NeuronModels(NeuronModels&& other) = default;
-    NeuronModels& operator=(NeuronModels&& other) = default;
+    NeuronModel(const NeuronModel& other) = delete;
+    NeuronModel& operator=(const NeuronModel& other) = delete;
 
-    template <typename T, typename... Ts, std::enable_if_t<std::is_base_of<NeuronModels, T>::value, int> = 0>
+    NeuronModel(NeuronModel&& other) = default;
+    NeuronModel& operator=(NeuronModel&& other) = default;
+
+    /**
+     * @brief Creates an object of type T wrapped inside an std::unique_ptr
+     * @param ...args The arguments that shall be passed to the constructor of T
+     * @tparam T The type of NeuronModel that shall be constructed, must inherit from NeuronModel
+     * @tparam ...Ts The types of parameters for the constructor of T
+     * @return A new instance of type T wrapped inside an std::unique_ptr
+     */
+    template <typename T, typename... Ts, std::enable_if_t<std::is_base_of<NeuronModel, T>::value, int> = 0>
     [[nodiscard]] static std::unique_ptr<T> create(Ts... args) {
         return std::make_unique<T>(args...);
     }
 
-    [[nodiscard]] virtual std::unique_ptr<NeuronModels> clone() const = 0;
+    /**
+     * @brief Provides a way to clone the current NeuronModel, i.e., all parameters.
+     *      The returned object shares all parameters, but has 0 neurons.
+     *      Because of inheritance-shenanigans, the return value might need to be casted
+     * @return A new instance of the class with the same parameters wrapped inside an std::unique_ptr
+     */
+    [[nodiscard]] virtual std::unique_ptr<NeuronModel> clone() const = 0;
 
+    /**
+     * @brief Returns beta (The factor by which the Calcium is increased whenever a neuron spikes in Neurons)
+     * @return Beta (The factor by which the Calcium is increased whenever a neuron spikes in Neurons)
+     */
     [[nodiscard]] double get_beta() const noexcept {
         return beta;
     }
 
-    [[nodiscard]] bool get_fired(const size_t i) const {
-        RelearnException::check(i < my_num_neurons, "In NeuronModels::get_fired, id is too large");
-        return fired[i];
+    /**
+     * @brief Returns a bool that indicates if the neuron with the passed local id spiked in the current simulation step
+     * @param neuron_id The local neuron id that should be queried
+     * @exception Throws a RelearnException if neuron_id is too large
+     * @return True iff the neuron spiked
+     */
+    [[nodiscard]] bool get_fired(const size_t neuron_id) const {
+        RelearnException::check(neuron_id < my_num_neurons, "In NeuronModels::get_fired, id is too large");
+        return fired[neuron_id];
     }
 
+    /**
+     * @brief Returns a vector of flags that indicate if the neuron with the local id spiked in the current simulation step
+     * @return A constant reference to the vector of flags. It is not invalidated by calls to other methods
+     */
     [[nodiscard]] const std::vector<bool>& get_fired() const noexcept {
         return fired;
     }
 
-    [[nodiscard]] double get_x(const size_t i) const {
-        RelearnException::check(i < my_num_neurons, "In NeuronModels::get_x, id is too large");
-        return x[i];
+    /**
+     * @brief Returns a double that indicates the neuron's membrane potential in the current simulation step
+     * @param neuron_id The local neuron id that should be queried
+     * @exception Throws a RelearnException if neuron_id is too large
+     * @return The neuron's membrane potential
+     */
+    [[nodiscard]] double get_x(const size_t neuron_id) const {
+        RelearnException::check(neuron_id < my_num_neurons, "In NeuronModels::get_x, id is too large");
+        return x[neuron_id];
     }
 
+    /**
+     * @brief Returns a vector of doubles that indicate the neurons' respective membrane potential in the current simulation step
+     * @return A constant reference to the vector of doubles. It is not invalidated by calls to other methods
+     */
     [[nodiscard]] const std::vector<double>& get_x() const noexcept {
         return x;
     }
 
+    /**
+     * @brief Returns k (The factor by which the input of a neighboring spiking neuron is weighted)
+     * @return k (The factor by which the input of a neighboring spiking neuron is weighted)
+     */
     [[nodiscard]] double get_k() const noexcept {
         return k;
     }
 
+    /**
+     * @brief Returns tau_C (The dampening factor by which the Calcium decreases in Neurons)
+     * @return tau_C (The dampening factor by which the Calcium decreases in Neurons)
+     */
     [[nodiscard]] double get_tau_C() const noexcept {
         return tau_C;
     }
 
+    /**
+     * @brief Returns the numerical integration's step size
+     * @return The step size
+     */
     [[nodiscard]] unsigned int get_h() const noexcept {
         return h;
     }
 
+    /**
+     * @brief Returns the base background activity
+     * @return The base background activity
+     */
     [[nodiscard]] double get_base_background_activity() const noexcept {
         return base_background_activity;
     }
 
+    /**
+     * @brief Returns the mean background activity
+     * @return The mean background activity
+     */
     [[nodiscard]] double get_background_activity_mean() const noexcept {
         return background_activity_mean;
     }
 
+    /**
+     * @brief Returns the standard deviation of the background activity
+     * @return The standard deviation of the background activity
+     */
     [[nodiscard]] double get_background_activity_stddev() const noexcept {
         return background_activity_stddev;
     }
 
+    /**
+     * @brief Returns the synaptic input the specified neuron receives in the current simulation step
+     * @param neuron_id The local neuron id for the neuron that should be queried
+     * @exception Throws a RelearnException if neuron_id is too large
+     * @return A double that indicates the synaptic input for the specified neuron
+     */
+    [[nodiscard]] double get_I_syn(size_t neuron_id) const {
+        RelearnException::check(neuron_id < my_num_neurons, "In NeuronModels::get_I_syn, id is too large");
+        return I_syn[neuron_id];
+    }
+
+    /**
+     * @brief Returns a vector of doubles that indicate the neurons' respective synaptic input in the current simulation step
+     * @return A constant reference to the vector of doubles. It is not invalidated by calls to other methods
+     */
     [[nodiscard]] const std::vector<double>& get_I_syn() const noexcept {
         return I_syn;
     }
 
-    [[nodiscard]] double get_I_syn(size_t i) const {
-        RelearnException::check(i < my_num_neurons, "In NeuronModels::get_I_syn, id is too large");
-        return I_syn[i];
-    }
-
+    /**
+     * @brief Returns the number of neurons that are stored in the object
+     * @return The number of neurons that are stored in the object
+     */
     [[nodiscard]] size_t get_num_neurons() const noexcept {
         return my_num_neurons;
     }
 
-    [[nodiscard]] virtual double get_secondary_variable(size_t i) const = 0;
+    /**
+     * @brief Returns the secondary variables used for computation of the electrical activity.
+     *      The meaning of the variable can vary between classes that inherit from NeuronModels
+     * @param neuron_id The local neuron id for the neuron that should be queried
+     * @exception Throws a RelearnException if neuron_id is too large
+     * @return A double that indicates the secondary variable for the specified neuron
+     */
+    [[nodiscard]] virtual double get_secondary_variable(size_t neuron_id) const = 0;
 
-    /* Performs one iteration step of update in electrical activity */
+    /**
+     * @brief Performs one step of simulating the electrical activity for all neurons.
+     *      This method performs communication via MPI.
+     * @param network_graph The network graph that specifies which neurons are connected. Is used to determine which spikes effect the local portion.
+     * @param disable_flags A vector of flags that specify which neurons should be left alone during the update
+     */
     void update_electrical_activity(const NetworkGraph& network_graph, const std::vector<char>& disable_flags);
 
     /**
-	 * Returns a vector of all possible models
+	 * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned
+     * @return A vector with all inherited classes
 	 */
-    [[nodiscard]] static std::vector<std::unique_ptr<NeuronModels>> get_models();
+    [[nodiscard]] static std::vector<std::unique_ptr<NeuronModel>> get_models();
 
     /**
-	 * Returns a vector of ModelParameter of the model
+	 * @brief Returns a vector with all adjustable ModelParameter
+     * @return A vector with all adjustable ModelParameter
 	 */
     [[nodiscard]] virtual std::vector<ModelParameter> get_parameter();
 
     /**
-	 * Resizes the vectors and initializes their values
+	 * @brief Initializes the model to include num_neurons many local neurons.
+     *      Sets the initial membrane potential and initial synaptic inputs to 0.0 and fired to false
+     * @param num_neurons The number of local neurons to store in this class
 	 */
     virtual void init(size_t num_neurons);
 
+    /**
+     * @brief Creates new neurons and adds those to the local portion.
+     * @param creation_count The number of local neurons that should be added
+     */
     virtual void create_neurons(size_t creation_count);
 
     /**
-	 * Returns the name of the model
+	 * @brief Returns the name of the current model
+     * @return The name of the current model
 	 */
     [[nodiscard]] virtual std::string name() = 0;
 
     /**
-     * Disables all neurons with specified ids
+     * @brief Performs all required steps to disable all neurons that are specified.
+     *      Disables incrementally, i.e., previously disabled neurons are not enabled.
+     * @param neuron_ids The local neuron ids that should be disabled
+     * @exception Throws a RelearnException if a specified id is too large
      */
-    void disable_neurons(const std::vector<size_t>& neuron_ids) {
+    virtual void disable_neurons(const std::vector<size_t>& neuron_ids) {
         for (const auto neuron_id : neuron_ids) {
-            RelearnException::check(neuron_id < my_num_neurons, "In NeuronModels::disable_neurons, there was a too large id: %ull vs %ull", neuron_id, my_num_neurons);
+            RelearnException::check(neuron_id < my_num_neurons, "In NeuronModels::disable_neurons, there was a too large id: {} vs {}", neuron_id, my_num_neurons);
             fired[neuron_id] = false;
         }
     }
@@ -228,19 +378,45 @@ public:
     static constexpr double max_background_activity_stddev{ 10000.0 };
 
 protected:
+    /**
+     * @brief This method is called as part of the update of the electrical activity.
+     *      It provides a hook to initialize variables serially
+     * @param disable_flags The local neuron ids that should be skipped
+     */
     virtual void update_electrical_activity_serial_initialize(const std::vector<char>& disable_flags) {
     }
 
-    virtual void update_activity(size_t i) = 0;
+    /**
+     * @brief Provides a hook to update the activity of the neuron with the passed id
+     *      If OpenMP is activated, this is called in parallel for multiple ids
+     * @param neuron_id The local neuron id that should be updated
+     */
+    virtual void update_activity(size_t neuron_id) = 0;
 
+    /**
+     * @brief Provides a hook to initialize all neurons with local id in [start_id, end_id)
+     *      This method exists because of the order of operations when creating neurons
+     * @param start_id The first local neuron id to initialize
+     * @param end_id The next to last local neuron id to initialize
+     */
     virtual void init_neurons(size_t start_id, size_t end_id) = 0;
 
-    void set_x(size_t i, double new_value) noexcept {
-        x[i] = new_value;
+    /**
+     * @brief Sets the membrane potential for the specified neuron. Does not perform bound-checking
+     * @param neuron_id The local neuron id
+     * @param new_value The new membrane potential
+     */
+    void set_x(size_t neuron_id, double new_value) noexcept {
+        x[neuron_id] = new_value;
     }
 
-    void set_fired(size_t i, bool new_value) noexcept {
-        fired[i] = new_value;
+    /**
+     * @brief Sets if a neuron fired for the specified neuron. Does not perform bound-checking
+     * @param neuron_id The local neuron id
+     * @param new_value True iff the neuron fired in the current simulation step
+     */
+    void set_fired(size_t neuron_id, bool new_value) noexcept {
+        fired[neuron_id] = new_value;
     }
 
 private:
@@ -259,7 +435,7 @@ private:
     // My local number of neurons
     size_t my_num_neurons{ 0 };
 
-    // // Model parameters for all neurons
+    // Model parameters for all neurons
     double k{ default_k }; // Proportionality factor for synapses in Hz
     double tau_C{ default_tau_C }; // Decay time of calcium
     double beta{ default_beta }; // Increase in calcium each time a neuron fires
@@ -269,53 +445,111 @@ private:
     double background_activity_mean{ default_background_activity_mean };
     double background_activity_stddev{ default_background_activity_stddev };
 
-    // Variables for each neuron where the array index denotes the neuron ID
+    // Variables for each neuron where the array index denotes the local neuron ID
     std::vector<double> I_syn{}; // Synaptic input
     std::vector<double> x{}; // membrane potential v
     std::vector<bool> fired{}; // true: neuron has fired, false: neuron is inactive
 };
 
 namespace models {
-class PoissonModel : public NeuronModels {
+/**
+ * This class inherits from NeuronModel and implements a poisson spiking model
+ */
+class PoissonModel : public NeuronModel {
 public:
+    /**
+     * @brief Construcs a new instance of type PoissonModel with 0 neurons and default values for all parameters
+     */
     PoissonModel() = default;
-    explicit PoissonModel(
+
+    /**
+     * @brief Construcs a new instance of type PoissonModel with 0 neurons and the passed values for all parameters.
+     *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
+     * @param k See NeuronModel(...)
+     * @param tau_C See NeuronModel(...)
+     * @param beta See NeuronModel(...)
+     * @param h See NeuronModel(...)
+     * @param base_background_activity See NeuronModel(...)
+     * @param background_activity_mean See NeuronModel(...)
+     * @param background_activity_stddev See NeuronModel(...)
+     * @param x_0 The resting membrane potential
+     * @param tau_x The dampening factor by which the membrane potential decreases 
+     * @param refrac_time The number of steps a neuron doesn't spike after spiking
+     */
+    PoissonModel(
         double k,
         double tau_C,
         double beta,
         unsigned int h,
-        double background_activity,
+        double base_background_activity,
         double background_activity_mean,
         double background_activity_stddev,
         double x_0,
         double tau_x,
         unsigned int refrac_time);
 
-    [[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
+    /**
+     * @brief Clones this instance and creates a new PoissonModel with the same parameters and 0 local neurons
+     */
+    [[nodiscard]] std::unique_ptr<NeuronModel> clone() const final;
 
-    [[nodiscard]] double get_secondary_variable(size_t i) const final {
-        RelearnException::check(i < get_num_neurons(), "In PoissonModel::get_secondary_variable, id is too large");
-        return refrac[i];
+    /**
+     * @brief Returns the refrac time (The number of steps a neuron doesn't spike after spiking)
+     * @exception Throws a RelearnException if neuron_id is too large
+     * @return The refrac time (The number of steps a neuron doesn't spike after spiking)
+     */
+    [[nodiscard]] double get_secondary_variable(size_t neuron_id) const final {
+        RelearnException::check(neuron_id < get_num_neurons(), "In PoissonModel::get_secondary_variable, id is too large");
+        return refrac[neuron_id];
     }
 
+    /**
+	 * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
+     * @return A vector with all adjustable ModelParameter
+	 */
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
+    /**
+     * @brief Returns the name of this model
+     * @return The name of this model
+     */
     [[nodiscard]] std::string name() final;
 
+    /**
+     * @brief Returns x_0 (The resting membrane potential)
+     * @return x_0 (The resting membrane potential)
+     */
     [[nodiscard]] double get_x_0() const noexcept {
         return x_0;
     }
 
+    /**
+     * @brief Returns tau_x (The dampening factor by which the membrane potential decreases)
+     * @return tau_x (The dampening factor by which the membrane potential decreases)
+     */
     [[nodiscard]] double get_tau_x() const noexcept {
         return tau_x;
     }
 
+    /**
+     * @brief Returns refrac_time (The number of steps a neuron doesn't spike after spiking)
+     * @return refrac_time (The number of steps a neuron doesn't spike after spiking)
+     */
     [[nodiscard]] unsigned int get_refrac_time() const noexcept {
         return refrac_time;
     }
 
+    /**
+	 * @brief Initializes the model to include num_neurons many local neurons.
+     *      Sets the initial refrac counter to 0
+     * @param num_neurons The number of local neurons to store in this class
+	 */
     void init(size_t num_neurons) final;
 
+    /**
+     * @brief Creates new neurons and adds those to the local portion.
+     * @param creation_count The number of local neurons that should be added
+     */
     void create_neurons(size_t creation_count) final;
 
     static constexpr double default_x_0{ 0.05 };
@@ -333,7 +567,7 @@ public:
 protected:
     void update_electrical_activity_serial_initialize(const std::vector<char>& disable_flags) final;
 
-    void update_activity(size_t i) final;
+    void update_activity(size_t neuron_id) final;
 
     void init_neurons(size_t start_id, size_t end_id) final;
 
@@ -349,15 +583,47 @@ private:
     unsigned int refrac_time{ default_refrac_time }; // Length of refractory period in msec. After an action potential a neuron cannot fire for this time
 };
 
-class IzhikevichModel : public NeuronModels {
+/**
+ * This class inherits from NeuronModel and implements the spiking model from Izhikevich.
+ * The differential equations are:
+ *      d/dt v(t) = k1 * v(t)^2 + k2 * v(t) + k3 - u(t) + I_syn
+ *      d/dt u(t) = a * (b * x - u(t))
+ * If v(t) >= V_spike:
+ *      v(t) = c
+ *      u(t) += d
+ */
+class IzhikevichModel : public NeuronModel {
 public:
+    /**
+     * @brief Construcs a new instance of type IzhikevichModel with 0 neurons and default values for all parameters
+     */
     IzhikevichModel() = default;
+
+    /**
+     * @brief Construcs a new instance of type IzhikevichModel with 0 neurons and the passed values for all parameters.
+     *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
+     * @param k See NeuronModel(...)
+     * @param tau_C See NeuronModel(...)
+     * @param beta See NeuronModel(...)
+     * @param h See NeuronModel(...)
+     * @param base_background_activity See NeuronModel(...)
+     * @param background_activity_mean See NeuronModel(...)
+     * @param background_activity_stddev See NeuronModel(...)
+     * @param a The dampening factor for u(t)
+     * @param b The dampening factor for v(t) inside the equation for d/dt u(t)
+     * @param c The reset activity
+     * @param d The additional dampening for u(t) in case of spiking
+     * @param V_spike The spiking threshold
+     * @param k1 The factor for v(t)^2 inside the equation for d/dt v(t)
+     * @param k2 The factor for v(t) inside the equation for d/dt v(t)
+     * @param k3 The constant inside the equation for d/dt v(t)
+     */
     IzhikevichModel(
         double k,
         double tau_C,
         double beta,
         unsigned int h,
-        double background_activity,
+        double base_background_activity,
         double background_activity_mean,
         double background_activity_stddev,
         double a,
@@ -369,51 +635,107 @@ public:
         double k2,
         double k3);
 
-    [[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
+    /**
+     * @brief Clones this instance and creates a new IzhikevichModel with the same parameters and 0 local neurons
+     */
+    [[nodiscard]] std::unique_ptr<NeuronModel> clone() const final;
 
-    [[nodiscard]] double get_secondary_variable(size_t i) const final {
-        RelearnException::check(i < get_num_neurons(), "In IzhikevichModel::get_secondary_variable, id is too large");
-        return u[i];
+    /**
+     * @brief Returns the dampending variable u
+     * @exception Throws a RelearnException if neuron_id is too large
+     * @return The dampending variable u
+     */
+    [[nodiscard]] double get_secondary_variable(size_t neuron_id) const final {
+        RelearnException::check(neuron_id < get_num_neurons(), "In IzhikevichModel::get_secondary_variable, id is too large");
+        return u[neuron_id];
     }
 
+    /**
+	 * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
+     * @return A vector with all adjustable ModelParameter
+	 */
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
+    /**
+     * @brief Returns the name of this model
+     * @return The name of this model
+     */
     [[nodiscard]] std::string name() final;
 
+    /**
+     * @brief Returns a (The dampening factor for u(t))
+     * @return a (The dampening factor for u(t))
+     */
     [[nodiscard]] double get_a() const noexcept {
         return a;
     }
 
+    /**
+     * @brief Returns b (The dampening factor for v(t) inside the equation for d/dt u(t))
+     * @return b (The dampening factor for v(t) inside the equation for d/dt u(t))
+     */
     [[nodiscard]] double get_b() const noexcept {
         return b;
     }
 
+    /**
+     * @brief Returns c (The reset activity)
+     * @return c (The reset activity)
+     */
     [[nodiscard]] double get_c() const noexcept {
         return c;
     }
 
+    /**
+     * @brief Returns d (The additional dampening for u(t))
+     * @return d (The additional dampening for u(t))
+     */
     [[nodiscard]] double get_d() const noexcept {
         return d;
     }
 
+    /**
+     * @brief Returns V_spike (The spiking threshold)
+     * @return V_spike (The spiking threshold)
+     */
     [[nodiscard]] double get_V_spike() const noexcept {
         return V_spike;
     }
 
+    /**
+     * @brief Returns k1 (The factor for v(t)^2 inside the equation for d/dt v(t))
+     * @return k1 (The factor for v(t)^2 inside the equation for d/dt v(t))
+     */
     [[nodiscard]] double get_k1() const noexcept {
         return k1;
     }
 
+    /**
+     * @brief Returns k2 (The factor for v(t) inside the equation for d/dt v(t))
+     * @return k2 (The factor for v(t) inside the equation for d/dt v(t))
+     */
     [[nodiscard]] double get_k2() const noexcept {
         return k2;
     }
 
+    /**
+     * @brief Returns k3 (The constant inside the equation for d/dt v(t))
+     * @return k3 (The constant inside the equation for d/dt v(t))
+     */
     [[nodiscard]] double get_k3() const noexcept {
         return k3;
     }
 
+    /**
+	 * @brief Initializes the model to include num_neurons many local neurons.
+     * @param num_neurons The number of local neurons to store in this class
+	 */
     void init(size_t num_neurons) final;
 
+    /**
+     * @brief Creates new neurons and adds those to the local portion.
+     * @param creation_count The number of local neurons that should be added
+     */
     void create_neurons(size_t creation_count) final;
 
     static constexpr double default_a{ 0.1 };
@@ -444,7 +766,7 @@ public:
     static constexpr double max_k3{ 200.0 };
 
 protected:
-    void update_activity(size_t i) final;
+    void update_activity(size_t neuron_id) final;
 
     void init_neurons(size_t start_id, size_t end_id) final;
 
@@ -469,46 +791,106 @@ private:
     double k3{ default_k3 };
 };
 
-class FitzHughNagumoModel : public NeuronModels {
+/**
+ * This class inherits from NeuronModel and implements the spiking model from Fitz, Hugh, Nagumo.
+ * The differential equations are:
+ *      d/dt v(t) = v(t) - (v(t)^3)/3 - w(t) + I_syn
+ *      d/dt w(t) = phi * (v(t) + a - b * w(t))
+ */
+class FitzHughNagumoModel : public NeuronModel {
 public:
+    /**
+     * @brief Construcs a new instance of type FitzHughNagumoModel with 0 neurons and default values for all parameters
+     */
     FitzHughNagumoModel() = default;
+
+    /**
+     * @brief Construcs a new instance of type IzhikevichModel with 0 neurons and the passed values for all parameters.
+     *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
+     * @param k See NeuronModel(...)
+     * @param tau_C See NeuronModel(...)
+     * @param beta See NeuronModel(...)
+     * @param h See NeuronModel(...)
+     * @param base_background_activity See NeuronModel(...)
+     * @param background_activity_mean See NeuronModel(...)
+     * @param background_activity_stddev See NeuronModel(...)
+     * @param a The constant inside the equation for d/dt w(t)
+     * @param b The dampening factor for w(t) inside the equation for d/dt w(t)
+     * @param phi The dampening factor for w(t) 
+     */
     FitzHughNagumoModel(
         double k,
         double tau_C,
         double beta,
         unsigned int h,
-        double background_activity,
+        double base_background_activity,
         double background_activity_mean,
         double background_activity_stddev,
         double a,
         double b,
         double phi);
 
-    [[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
+    /**
+     * @brief Clones this instance and creates a new FitzHughNagumoModel with the same parameters and 0 local neurons
+     */
+    [[nodiscard]] std::unique_ptr<NeuronModel> clone() const final;
 
-    [[nodiscard]] double get_secondary_variable(size_t i) const final {
-        RelearnException::check(i < get_num_neurons(), "In FitzHughNagumoModel::get_secondary_variable, id is too large");
-        return w[i];
+    /**
+     * @brief Returns the dampending variable w
+     * @exception Throws a RelearnException if neuron_id is too large
+     * @return The dampending variable w
+     */
+    [[nodiscard]] double get_secondary_variable(size_t neuron_id) const final {
+        RelearnException::check(neuron_id < get_num_neurons(), "In FitzHughNagumoModel::get_secondary_variable, id is too large");
+        return w[neuron_id];
     }
 
+    /**
+	 * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
+     * @return A vector with all adjustable ModelParameter
+	 */
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
+    /**
+     * @brief Returns the name of this model
+     * @return The name of this model
+     */
     [[nodiscard]] std::string name() final;
 
+    /**
+     * @brief Returns k3 ()
+     * @return k3 ()
+     */
     [[nodiscard]] double get_a() const noexcept {
         return a;
     }
 
+    /**
+     * @brief Returns k3 ()
+     * @return k3 ()
+     */
     [[nodiscard]] double get_b() const noexcept {
         return b;
     }
 
+    /**
+     * @brief Returns k3 ()
+     * @return k3 ()
+     */
     [[nodiscard]] double get_phi() const noexcept {
         return phi;
     }
 
+    /**
+	 * @brief Initializes the model to include num_neurons many local neurons.
+     * @param num_neurons The number of local neurons to store in this class
+	 */
     void init(size_t num_neurons) final;
 
+    /**
+     * @brief Creates new neurons and adds those to the local portion.
+     * @param creation_count The number of local neurons that should be added
+     */
     void create_neurons(size_t creation_count) final;
 
     static constexpr double default_a{ 0.7 };
@@ -527,7 +909,7 @@ public:
     static constexpr double init_w{ -0.6 };
 
 protected:
-    void update_activity(size_t i) final;
+    void update_activity(size_t neuron_id) final;
 
     void init_neurons(size_t start_id, size_t end_id) final;
 
@@ -545,15 +927,48 @@ private:
     double phi{ default_phi };
 };
 
-class AEIFModel : public NeuronModels {
+/**
+ * This class inherits from NeuronModel and implements an exponential spiking model from Brette and Gerstner.
+ * The differential equations are:
+ *      d/dt v(t) = (-g_L * (v(t) - E_L) + g_L * d_T * exp((v(t) - V_T) / d_T) - w(t) + I_syn) / C
+ *      d/dt w(t) = (a * (v(t) - E_L) - w(t)) / tau_W
+ * If v(t) >= V_spike:
+ *      v(t) = E_L
+ *      w(t) += b
+ */
+class AEIFModel : public NeuronModel {
 public:
+    /**
+     * @brief Construcs a new instance of type AEIFModel with 0 neurons and default values for all parameters
+     */
     AEIFModel() = default;
+
+    /**
+     * @brief Construcs a new instance of type IzhikevichModel with 0 neurons and the passed values for all parameters.
+     *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
+     * @param k See NeuronModel(...)
+     * @param tau_C See NeuronModel(...)
+     * @param beta See NeuronModel(...)
+     * @param h See NeuronModel(...)
+     * @param base_background_activity See NeuronModel(...)
+     * @param background_activity_mean See NeuronModel(...)
+     * @param background_activity_stddev See NeuronModel(...)
+     * @param C The dampening factor for v(t) (membrane capacitance)
+     * @param g_T The leak conductance
+     * @param E_L The reset membrane potential (leak reversal potential)
+     * @param V_T The spiking threshold in the equation
+     * @param d_T The slope factor
+     * @param tau_w The dampening factor for w(t)
+     * @param a The subthreshold adaptation
+     * @param b The additional dampening for w(t) in case of spiking
+     * @param V_spike The spiking threshold in the spiking check
+     */
     AEIFModel(
         double k,
         double tau_C,
         double beta,
         unsigned int h,
-        double background_activity,
+        double base_background_activity,
         double background_activity_mean,
         double background_activity_stddev,
         double C,
@@ -564,57 +979,117 @@ public:
         double tau_w,
         double a,
         double b,
-        double V_peak);
+        double V_spike);
 
-    [[nodiscard]] std::unique_ptr<NeuronModels> clone() const final;
+    /**
+     * @brief Clones this instance and creates a new AEIFModel with the same parameters and 0 local neurons
+     */
+    [[nodiscard]] std::unique_ptr<NeuronModel> clone() const final;
 
-    [[nodiscard]] double get_secondary_variable(size_t i) const final {
-        RelearnException::check(i < get_num_neurons(), "In AEIFModel::get_secondary_variable, id is too large");
-        return w[i];
+    /**
+     * @brief Returns the dampending variable w
+     * @exception Throws a RelearnException if neuron_id is too large
+     * @return The dampending variable w
+     */
+    [[nodiscard]] double get_secondary_variable(size_t neuron_id) const final {
+        RelearnException::check(neuron_id < get_num_neurons(), "In AEIFModel::get_secondary_variable, id is too large");
+        return w[neuron_id];
     }
 
+    /**
+	 * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
+     * @return A vector with all adjustable ModelParameter
+	 */
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
+    /**
+     * @brief Returns the name of this model
+     * @return The name of this model
+     */
     [[nodiscard]] std::string name() final;
 
+    /**
+     * @brief Returns C (The dampening factor for v(t) (membrane capacitance))
+     * @return C (The dampening factor for v(t) (membrane capacitance))
+     */
     [[nodiscard]] double get_C() const noexcept {
         return C;
     }
 
+    /**
+     * @brief Returns g_L (The leak conductance)
+     * @return g_L (The leak conductance)
+     */
     [[nodiscard]] double get_g_L() const noexcept {
         return g_L;
     }
 
+    /**
+     * @brief Returns E_L (The reset membrane potential (leak reversal potential))
+     * @return E_L (The reset membrane potential (leak reversal potential))
+     */
     [[nodiscard]] double get_E_L() const noexcept {
         return E_L;
     }
 
+    /**
+     * @brief Returns V_T (The spiking threshold in the equation)
+     * @return V_T (The spiking threshold in the equation)
+     */
     [[nodiscard]] double get_V_T() const noexcept {
         return V_T;
     }
 
+    /**
+     * @brief Returns d_T (The slope factor)
+     * @return d_T (The slope factor)
+     */
     [[nodiscard]] double get_d_T() const noexcept {
         return d_T;
     }
 
+    /**
+     * @brief Returns tau_w (The dampening factor for w(t))
+     * @return tau_w (The dampening factor for w(t))
+     */
     [[nodiscard]] double get_tau_w() const noexcept {
         return tau_w;
     }
 
+    /**
+     * @brief Returns a (The subthreshold adaptation)
+     * @return a (The subthreshold adaptation)
+     */
     [[nodiscard]] double get_a() const noexcept {
         return a;
     }
 
+    /**
+     * @brief Returns b (The additional dampening for w(t) in case of spiking)
+     * @return b (The additional dampening for w(t) in case of spiking)
+     */
     [[nodiscard]] double get_b() const noexcept {
         return b;
     }
 
-    [[nodiscard]] double get_V_Peak() const noexcept {
-        return V_peak;
+    /**
+     * @brief Returns V_spike (The spiking threshold in the spiking check)
+     * @return V_spike (The spiking threshold in the spiking check)
+     */
+    [[nodiscard]] double get_V_spike() const noexcept {
+        return V_spike;
     }
 
+    /**
+	 * @brief Initializes the model to include num_neurons many local neurons.
+     * @param num_neurons The number of local neurons to store in this class
+	 */
     void init(size_t num_neurons) final;
 
+    /**
+     * @brief Creates new neurons and adds those to the local portion.
+     * @param creation_count The number of local neurons that should be added
+     */
     void create_neurons(size_t creation_count) final;
 
     static constexpr double default_C{ 281.0 };
@@ -625,7 +1100,7 @@ public:
     static constexpr double default_tau_w{ 144.0 };
     static constexpr double default_a{ 4.0 };
     static constexpr double default_b{ 0.0805 };
-    static constexpr double default_V_peak{ 20.0 };
+    static constexpr double default_V_spike{ 20.0 };
 
     static constexpr double min_C{ 100.0 };
     static constexpr double min_g_L{ 0.0 };
@@ -635,7 +1110,7 @@ public:
     static constexpr double min_tau_w{ 100.0 };
     static constexpr double min_a{ 0.0 };
     static constexpr double min_b{ 0.0 };
-    static constexpr double min_V_peak{ 0.0 };
+    static constexpr double min_V_spike{ 0.0 };
 
     static constexpr double max_C{ 500.0 };
     static constexpr double max_g_L{ 100.0 };
@@ -645,10 +1120,10 @@ public:
     static constexpr double max_tau_w{ 200.0 };
     static constexpr double max_a{ 10.0 };
     static constexpr double max_b{ 0.3 };
-    static constexpr double max_V_peak{ 70.0 };
+    static constexpr double max_V_spike{ 70.0 };
 
 protected:
-    void update_activity(size_t i) final;
+    void update_activity(size_t neuron_id) final;
 
     void init_neurons(size_t start_id, size_t end_id) final;
 
@@ -670,7 +1145,7 @@ private:
     double a{ default_a }; // subthreshold
     double b{ default_b }; // spike-triggered adaptation
 
-    double V_peak{ default_V_peak }; // spike trigger
+    double V_spike{ default_V_spike }; // spike trigger
 };
 
 } // namespace models

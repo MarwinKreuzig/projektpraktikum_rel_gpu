@@ -34,7 +34,7 @@ enum class RandomHolderKey : char {
     SubdomainFromNeuronDensity = 2,
     PoissonModel = 3,
     Neurons = 4,
-    NeuronModels = 5,
+    NeuronModel = 5,
     SynapticElements = 6,
     NeuronsExtraInformation = 7,
 };

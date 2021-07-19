@@ -17,9 +17,9 @@
 #include <ostream>
 
 /**
-* Identifies a neuron by the MPI rank of its owner
-* and its neuron id on the owner, i.e., the pair <rank, neuron_id>
-*/
+ * Identifies a neuron by the MPI rank of its owner
+ * and its neuron id on the owner, i.e., the pair <rank, neuron_id>
+ */
 class RankNeuronId {
     int rank{ -1 }; // MPI rank of the owner
     size_t neuron_id{ Constants::uninitialized }; // Neuron id on the owner

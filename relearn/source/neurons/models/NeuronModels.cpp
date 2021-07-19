@@ -17,17 +17,17 @@
 #include "../NetworkGraph.h"
 #include "../Neurons.h"
 
-NeuronModels::NeuronModels(double k, double tau_C, double beta, unsigned int h, double background_activity, double background_activity_mean, double background_activity_stddev)
+NeuronModel::NeuronModel(double k, double tau_C, double beta, unsigned int h, double base_background_activity, double background_activity_mean, double background_activity_stddev)
     : k(k)
     , tau_C(tau_C)
     , beta(beta)
     , h(h)
-    , base_background_activity(background_activity)
+    , base_background_activity(base_background_activity)
     , background_activity_mean(background_activity_mean)
     , background_activity_stddev(background_activity_stddev) {
 }
 
-void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph, const std::vector<char>& disable_flags) {
+void NeuronModel::update_electrical_activity(const NetworkGraph& network_graph, const std::vector<char>& disable_flags) {
 
     MapFiringNeuronIds firing_neuron_ids_outgoing = update_electrical_activity_prepare_sending_spikes(network_graph, disable_flags);
     std::vector<size_t> num_incoming_ids = update_electrical_activity_prepare_receiving_spikes(firing_neuron_ids_outgoing);
@@ -48,7 +48,7 @@ void NeuronModels::update_electrical_activity(const NetworkGraph& network_graph,
     update_electrical_activity_update_activity(disable_flags);
 }
 
-void NeuronModels::update_electrical_activity_update_activity(const std::vector<char>& disable_flags) {
+void NeuronModel::update_electrical_activity_update_activity(const std::vector<char>& disable_flags) {
     Timers::start(TimerRegion::CALC_ACTIVITY);
 
     // For my neurons
@@ -64,7 +64,7 @@ void NeuronModels::update_electrical_activity_update_activity(const std::vector<
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
 }
 
-void NeuronModels::update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const MapFiringNeuronIds& firing_neuron_ids_incoming, const std::vector<char>& disable_flags) {
+void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const MapFiringNeuronIds& firing_neuron_ids_incoming, const std::vector<char>& disable_flags) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
     // For my neurons
 
@@ -98,7 +98,7 @@ void NeuronModels::update_electrical_activity_calculate_input(const NetworkGraph
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
 }
 
-void NeuronModels::update_electrical_activity_calculate_background(const std::vector<char>& disable_flags) {
+void NeuronModel::update_electrical_activity_calculate_background(const std::vector<char>& disable_flags) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
 
     // There might be background activity
@@ -108,7 +108,7 @@ void NeuronModels::update_electrical_activity_calculate_background(const std::ve
                 continue;
             }
 
-            const double rnd = RandomHolder::get_random_normal_double(RandomHolderKey::NeuronModels, background_activity_mean, background_activity_stddev);
+            const double rnd = RandomHolder::get_random_normal_double(RandomHolderKey::NeuronModel, background_activity_mean, background_activity_stddev);
             const double input = base_background_activity + rnd;
             I_syn[neuron_id] = input;
         }
@@ -119,7 +119,7 @@ void NeuronModels::update_electrical_activity_calculate_background(const std::ve
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
 }
 
-std::vector<size_t> NeuronModels::update_electrical_activity_prepare_receiving_spikes(const MapFiringNeuronIds& firing_neuron_ids_outgoing) {
+std::vector<size_t> NeuronModel::update_electrical_activity_prepare_receiving_spikes(const MapFiringNeuronIds& firing_neuron_ids_outgoing) {
     Timers::start(TimerRegion::PREPARE_NUM_NEURON_IDS);
 
     const auto num_ranks = MPIWrapper::get_num_ranks();
@@ -158,7 +158,7 @@ std::vector<size_t> NeuronModels::update_electrical_activity_prepare_receiving_s
     return num_firing_neuron_ids_incoming;
 }
 
-NeuronModels::MapFiringNeuronIds NeuronModels::update_electrical_activity_exchange_neuron_ids(const MapFiringNeuronIds& firing_neuron_ids_outgoing, const std::vector<size_t>& num_incoming_ids) {
+NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_exchange_neuron_ids(const MapFiringNeuronIds& firing_neuron_ids_outgoing, const std::vector<size_t>& num_incoming_ids) {
     Timers::start(TimerRegion::EXCHANGE_NEURON_IDS);
 
     /**
@@ -208,10 +208,10 @@ NeuronModels::MapFiringNeuronIds NeuronModels::update_electrical_activity_exchan
     return firing_neuron_ids_incoming;
 }
 
-NeuronModels::MapFiringNeuronIds NeuronModels::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<char>& disable_flags) {
+NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<char>& disable_flags) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    NeuronModels::MapFiringNeuronIds firing_neuron_ids_outgoing;
+    NeuronModel::MapFiringNeuronIds firing_neuron_ids_outgoing;
 
     /**
 	* Check which of my neurons fired and determine which ranks need to know about it.
@@ -248,35 +248,35 @@ NeuronModels::MapFiringNeuronIds NeuronModels::update_electrical_activity_prepar
     return firing_neuron_ids_outgoing;
 }
 
-std::vector<std::unique_ptr<NeuronModels>> NeuronModels::get_models() {
-    std::vector<std::unique_ptr<NeuronModels>> res;
-    res.push_back(NeuronModels::create<models::PoissonModel>());
-    res.push_back(NeuronModels::create<models::IzhikevichModel>());
-    res.push_back(NeuronModels::create<models::FitzHughNagumoModel>());
-    res.push_back(NeuronModels::create<models::AEIFModel>());
+std::vector<std::unique_ptr<NeuronModel>> NeuronModel::get_models() {
+    std::vector<std::unique_ptr<NeuronModel>> res;
+    res.push_back(NeuronModel::create<models::PoissonModel>());
+    res.push_back(NeuronModel::create<models::IzhikevichModel>());
+    res.push_back(NeuronModel::create<models::FitzHughNagumoModel>());
+    res.push_back(NeuronModel::create<models::AEIFModel>());
     return res;
 }
 
-std::vector<ModelParameter> NeuronModels::get_parameter() {
+std::vector<ModelParameter> NeuronModel::get_parameter() {
     return {
-        Parameter<double>{ "k", k, NeuronModels::min_k, NeuronModels::max_k },
-        Parameter<double>{ "tau_C", tau_C, NeuronModels::min_tau_C, NeuronModels::max_tau_C },
-        Parameter<double>{ "beta", beta, NeuronModels::min_beta, NeuronModels::max_beta },
-        Parameter<unsigned int>{ "Number integration steps", h, NeuronModels::min_h, NeuronModels::max_h },
-        Parameter<double>{ "Base background activity", base_background_activity, NeuronModels::min_base_background_activity, NeuronModels::max_base_background_activity },
-        Parameter<double>{ "Background activity mean", background_activity_mean, NeuronModels::min_background_activity_mean, NeuronModels::max_background_activity_mean },
-        Parameter<double>{ "Background activity standard deviation", background_activity_stddev, NeuronModels::min_background_activity_stddev, NeuronModels::max_background_activity_stddev },
+        Parameter<double>{ "k", k, NeuronModel::min_k, NeuronModel::max_k },
+        Parameter<double>{ "tau_C", tau_C, NeuronModel::min_tau_C, NeuronModel::max_tau_C },
+        Parameter<double>{ "beta", beta, NeuronModel::min_beta, NeuronModel::max_beta },
+        Parameter<unsigned int>{ "Number integration steps", h, NeuronModel::min_h, NeuronModel::max_h },
+        Parameter<double>{ "Base background activity", base_background_activity, NeuronModel::min_base_background_activity, NeuronModel::max_base_background_activity },
+        Parameter<double>{ "Background activity mean", background_activity_mean, NeuronModel::min_background_activity_mean, NeuronModel::max_background_activity_mean },
+        Parameter<double>{ "Background activity standard deviation", background_activity_stddev, NeuronModel::min_background_activity_stddev, NeuronModel::max_background_activity_stddev },
     };
 }
 
-void NeuronModels::init(size_t num_neurons) {
+void NeuronModel::init(size_t num_neurons) {
     my_num_neurons = num_neurons;
     x.resize(num_neurons, 0.0);
     fired.resize(num_neurons, false);
     I_syn.resize(num_neurons, 0.0);
 }
 
-void NeuronModels::create_neurons(size_t creation_count) {
+void NeuronModel::create_neurons(size_t creation_count) {
     const auto current_size = my_num_neurons;
     const auto new_size = current_size + creation_count;
     my_num_neurons = new_size;

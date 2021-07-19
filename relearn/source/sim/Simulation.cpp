@@ -47,7 +47,7 @@ void Simulation::set_acceptance_criterion_for_octree(double value) {
     accept_criterion = value;
 }
 
-void Simulation::set_neuron_models(std::unique_ptr<NeuronModels> nm) {
+void Simulation::set_neuron_models(std::unique_ptr<NeuronModel> nm) {
     neuron_models = std::move(nm);
 }
 
@@ -296,8 +296,8 @@ void Simulation::finalize() const {
     }
 }
 
-std::vector<std::unique_ptr<NeuronModels>> Simulation::get_models() {
-    return NeuronModels::get_models();
+std::vector<std::unique_ptr<NeuronModel>> Simulation::get_models() {
+    return NeuronModel::get_models();
 }
 
 void Simulation::print_neuron_monitors() {

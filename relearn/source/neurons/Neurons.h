@@ -268,14 +268,14 @@ public:
 	 */
     using MapSynapseDeletionRequests = std::map<int, SynapseDeletionRequests>;
 
-    Neurons(std::shared_ptr<Partition> partition, std::unique_ptr<NeuronModels> model)
+    Neurons(std::shared_ptr<Partition> partition, std::unique_ptr<NeuronModel> model)
         : Neurons(std::move(partition), std::move(model),
             std::make_unique<Axons>(ElementType::AXON, SynapticElements::default_eta_Axons),
             std::make_unique<DendritesExc>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc),
             std::make_unique<DendritesInh>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh)) { }
 
     Neurons(std::shared_ptr<Partition> partition,
-        std::unique_ptr<NeuronModels> model,
+        std::unique_ptr<NeuronModel> model,
         std::unique_ptr<Axons> axons_ptr,
         std::unique_ptr<DendritesExc> dend_ex_ptr,
         std::unique_ptr<DendritesInh> dend_in_ptr)
@@ -480,7 +480,7 @@ private:
 
     std::shared_ptr<NetworkGraph> network_graph{};
 
-    std::unique_ptr<NeuronModels> neuron_model{};
+    std::unique_ptr<NeuronModel> neuron_model{};
 
     std::unique_ptr<Axons> axons{};
     std::unique_ptr<DendritesExc> dendrites_exc{};

@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
     double nu{ SynapticElements::default_nu };
     app.add_option("--growth-rate", nu, "The growth rate for the synaptic elements. Default is 1e-5");
 
-    double beta{ NeuronModels::default_beta };
+    double beta{ NeuronModel::default_beta };
     app.add_option("--beta", beta, "The amount of calcium ions gathered when a neuron fires. Default is 0.001");
 
     CLI11_PARSE(app, argc, argv);
@@ -200,8 +200,8 @@ int main(int argc, char** argv) {
 	*/
     MPIWrapper::init_buffer_octree(total_num_subdomains);
 
-    auto neuron_models = std::make_unique<models::PoissonModel>(NeuronModels::default_k, NeuronModels::default_tau_C, beta, NeuronModels::default_h,
-        NeuronModels::default_base_background_activity, NeuronModels::default_background_activity_mean, NeuronModels::default_background_activity_stddev,
+    auto neuron_models = std::make_unique<models::PoissonModel>(NeuronModel::default_k, NeuronModel::default_tau_C, beta, NeuronModel::default_h,
+        NeuronModel::default_base_background_activity, NeuronModel::default_background_activity_mean, NeuronModel::default_background_activity_stddev,
         models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
 
     auto axon_models = std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons, target_calcium,

@@ -19,7 +19,7 @@
 
 class BarnesHut;
 class NetworkGraph;
-class NeuronModels;
+class NeuronModel;
 class NeuronMonitor;
 class NeuronToSubdomainAssignment;
 class Neurons;
@@ -35,7 +35,7 @@ public:
 
     void set_acceptance_criterion_for_octree(double value);
 
-    void set_neuron_models(std::unique_ptr<NeuronModels> nm);
+    void set_neuron_models(std::unique_ptr<NeuronModel> nm);
 
     void set_axons(std::unique_ptr<SynapticElements> se);
 
@@ -59,7 +59,7 @@ public:
 
     void increase_monitoring_capacity(size_t size);
 
-    static std::vector<std::unique_ptr<NeuronModels>> get_models();
+    static std::vector<std::unique_ptr<NeuronModel>> get_models();
 
 private:
     void construct_neurons();
@@ -76,7 +76,7 @@ private:
     std::unique_ptr<SynapticElements> dendrites_ex{};
     std::unique_ptr<SynapticElements> dendrites_in{};
 
-    std::unique_ptr<NeuronModels> neuron_models{};
+    std::unique_ptr<NeuronModel> neuron_models{};
     std::shared_ptr<Neurons> neurons{};
 
     std::shared_ptr<BarnesHut> barnes_hut_algorithm{};

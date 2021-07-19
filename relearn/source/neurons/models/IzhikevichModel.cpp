@@ -12,8 +12,8 @@
 
 using models::IzhikevichModel;
 
-IzhikevichModel::IzhikevichModel(double k, double tau_C, double beta, unsigned int h, double background_activity, double background_activity_mean, double background_activity_stddev, const double a, const double b, const double c, const double d, const double V_spike, const double k1, const double k2, const double k3)
-    : NeuronModels{ k, tau_C, beta, h, background_activity, background_activity_mean, background_activity_stddev }
+IzhikevichModel::IzhikevichModel(double k, double tau_C, double beta, unsigned int h, double base_background_activity, double background_activity_mean, double background_activity_stddev, const double a, const double b, const double c, const double d, const double V_spike, const double k1, const double k2, const double k3)
+    : NeuronModel{ k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev }
     , a{ a }
     , b{ b }
     , c{ c }
@@ -24,12 +24,12 @@ IzhikevichModel::IzhikevichModel(double k, double tau_C, double beta, unsigned i
     , k3{ k3 } {
 }
 
-[[nodiscard]] std::unique_ptr<NeuronModels> IzhikevichModel::clone() const {
+[[nodiscard]] std::unique_ptr<NeuronModel> IzhikevichModel::clone() const {
     return std::make_unique<IzhikevichModel>(get_k(), get_tau_C(), get_beta(), get_h(), get_base_background_activity(), get_background_activity_mean(), get_background_activity_stddev(), a, b, c, d, V_spike, k1, k2, k3);
 }
 
 [[nodiscard]] std::vector<ModelParameter> IzhikevichModel::get_parameter() {
-    auto res{ NeuronModels::get_parameter() };
+    auto res{ NeuronModel::get_parameter() };
     res.emplace_back(Parameter<double>{ "a", a, IzhikevichModel::min_a, IzhikevichModel::max_a });
     res.emplace_back(Parameter<double>{ "b", b, IzhikevichModel::min_b, IzhikevichModel::max_b });
     res.emplace_back(Parameter<double>{ "c", c, IzhikevichModel::min_c, IzhikevichModel::max_c });
@@ -46,48 +46,48 @@ IzhikevichModel::IzhikevichModel(double k, double tau_C, double beta, unsigned i
 }
 
 void IzhikevichModel::init(size_t num_neurons) {
-    NeuronModels::init(num_neurons);
+    NeuronModel::init(num_neurons);
     u.resize(num_neurons);
     init_neurons(0, num_neurons);
 }
 
 void models::IzhikevichModel::create_neurons(size_t creation_count) {
-    const auto old_size = NeuronModels::get_num_neurons();
-    NeuronModels::create_neurons(creation_count);
+    const auto old_size = NeuronModel::get_num_neurons();
+    NeuronModel::create_neurons(creation_count);
     u.resize(old_size + creation_count);
     init_neurons(old_size, creation_count);
 }
 
-void IzhikevichModel::update_activity(const size_t i) {
+void IzhikevichModel::update_activity(const size_t neuron_id) {
     const auto h = get_h();
-    const auto I_syn = get_I_syn(i);
-    auto x = get_x(i);
+    const auto I_syn = get_I_syn(neuron_id);
+    auto x = get_x(neuron_id);
 
     auto has_spiked = false;
 
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-        x += iter_x(x, u[i], I_syn) / h;
-        u[i] += iter_refrac(u[i], x) / h;
+        x += iter_x(x, u[neuron_id], I_syn) / h;
+        u[neuron_id] += iter_refrac(u[neuron_id], x) / h;
 
         if (spiked(x)) {
             x = c;
-            u[i] += d;
+            u[neuron_id] += d;
             has_spiked = true;
             break;
         }
     }
 
-    set_fired(i, has_spiked);
-    set_x(i, x);
+    set_fired(neuron_id, has_spiked);
+    set_x(neuron_id, x);
 }
 
 void IzhikevichModel::init_neurons(size_t start_id, size_t end_id) {
-    for (size_t i = start_id; i < end_id; ++i) {
+    for (size_t neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
         const auto x = c;
-        u[i] = iter_refrac(b * c, x);
+        u[neuron_id] = iter_refrac(b * c, x);
 
-        set_fired(i, x >= V_spike);
-        set_x(i, x);
+        set_fired(neuron_id, x >= V_spike);
+        set_x(neuron_id, x);
     }
 }
 
