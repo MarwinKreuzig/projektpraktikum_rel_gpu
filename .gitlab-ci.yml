@@ -45,12 +45,12 @@ test-nompi:
       - relearn/build-docker-nompi
 
 build-graph:
-    image: relearn-ci
-    stage: build
-    before_script:
-      - cd graph && mkdir build-docker && cd build-docker  
-    script:
-      - cmake -Dnoclangtidy=1 .. && make -j 16
+  image: relearn-ci
+  stage: build
+  before_script:
+    - cd graph && mkdir build-docker && cd build-docker  
+  script:
+    - cmake -Dnoclangtidy=1 .. && make -j 16
   artifacts:
     paths:
       - graph/build-docker
