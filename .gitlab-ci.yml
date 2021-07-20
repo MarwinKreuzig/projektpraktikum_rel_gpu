@@ -51,6 +51,9 @@ build-graph:
       - cd graph && mkdir build-docker && cd build-docker  
     script:
       - cmake -Dnoclangtidy=1 .. && make -j 16
+  artifacts:
+    paths:
+      - graph/build-docker
       
 test-graph:
   image: relearn-ci
