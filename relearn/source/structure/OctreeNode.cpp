@@ -233,7 +233,7 @@ const void OctreeNode::print_calculations(SignalType needed, double sigma){
         double hermite = Functions::calc_hermite(this, this->get_from_interactionlist(i),sigma, needed);
         if(hermite != 0){
             std::stringstream ss;
-            ss << std::fixed << std::setprecision(2);
+            ss << std::fixed;
             ss << direct << ",\t";
             ss << taylor << ",\t";
             ss << hermite << "\n";
