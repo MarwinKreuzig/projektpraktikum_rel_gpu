@@ -157,9 +157,9 @@ __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_
     auto graph_params = graph_cuda_t<View<int>, View<edge_t>>{
         V,
         E,
-        device_starts,
-        device_weights,
-        device_edge_array
+        View{ device_starts },
+        View{ device_weights },
+        View{ device_edge_array }
     };
     // Constant memory parameters
     cudaMemcpyToSymbol(graph_const, &graph_params, sizeof(decltype(graph_params)));
@@ -195,7 +195,7 @@ __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_
 
     copy(device_weights, gr.weights, cudaMemcpyHostToDevice);
 
-    dijkstra_kernel<<<blocks, THREADS_PER_BLOCK>>>(device_output, device_visited);
+    dijkstra_kernel<<<blocks, THREADS_PER_BLOCK>>>(View{ device_output }, View{ device_visited });
 
     copy(output, device_output, cudaMemcpyDeviceToHost);
 
