@@ -71,6 +71,10 @@ public:
 
     void set_use_cuda(bool use_cuda);
 
+    void add_vertex(const Position& pos, const std::string& name, size_t id);
+
+    void add_edge(size_t src_id, size_t dst_id, int weight);
+
 private:
     void init_edge_weight();
 
@@ -81,10 +85,6 @@ private:
     double calculate_average_betweenness_centrality();
 
     double calculate_clustering_coefficient();
-
-    void add_vertex(const Position& pos, const std::string& name, size_t id);
-
-    void add_edge(size_t src_id, size_t dst_id, int weight);
 
     void print_vertex(FullVertex v, std::ostream& os);
 

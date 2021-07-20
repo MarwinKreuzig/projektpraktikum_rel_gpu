@@ -43,3 +43,25 @@ test-nompi:
   artifacts:
     paths:
       - relearn/build-docker-nompi
+
+build-graph:
+    image: relearn-ci
+    stage: build
+    before_script:
+      - cd graph && mkdir build-docker && cd build-docker  
+    script:
+      - cmake -Dnoclangtidy=1 .. && make -j 16
+      
+test-graph:
+  image: relearn-ci
+  stage: test
+  script:
+    - graph/build-docker/runTests
+  dependencies: 
+    - build-graph
+  artifacts:
+    paths:
+      - graph/build-docker
+      
+      
+      

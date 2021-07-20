@@ -46,7 +46,11 @@ add_library(relearn-full_graph_static
 	$<${CUDA_FOUND}:${TOP_CUD}>
 )
 
-target_compile_options(relearn-full_graph_static PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wpedantic -Wextra>)
+if (UNIX)
+	target_compile_options(relearn-full_graph_static PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall -Wpedantic -Wextra>)
+else()
+	target_compile_options(relearn-full_graph_static PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall>)
+endif ()
 
 target_link_libraries (relearn-full_graph_static PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 

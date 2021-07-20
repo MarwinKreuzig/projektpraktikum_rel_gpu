@@ -16,8 +16,8 @@
 #define THREADS_PER_BLOCK 32
 
 namespace apsp {
-const double double_max = std::numeric_limits<double>::max();
-const float float_max = std::numeric_limits<float>::max();
+__device__ const double double_max = std::numeric_limits<double>::max();
+__device__ const float float_max = std::numeric_limits<float>::max();
 
 __constant__ graph_cuda_t<View<int>, View<edge_t>> graph_const;
 
