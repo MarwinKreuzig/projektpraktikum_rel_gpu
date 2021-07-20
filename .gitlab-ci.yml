@@ -59,7 +59,7 @@ test-graph:
   image: relearn-ci
   stage: test
   script:
-    - graph/build-docker/runTests
+    - graph/build-docker/test/runTests
   dependencies: 
     - build-graph
   artifacts:
