@@ -1,8 +1,5 @@
-#include "graph.h"
-#include "position.h"
-
+#include <optional>
 #include <sys/stat.h>
-
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
@@ -15,94 +12,109 @@
 #include <string>
 #include <vector>
 
+#include <CLI/App.hpp>
+#include <CLI/Config.hpp>
+#include <CLI/Formatter.hpp>
+#include <CLI/Option.hpp>
+
+#include "graph.h"
+#include "position.h"
+
 int main(int argc, char** argv) {
-	// Check number of parameters
-	if (argc != 2) {
-		std::cout << "Usage: " << argv[0] << " <folder that contains positions and edges>" << std::endl;
-		exit(EXIT_FAILURE);
-	}
+    CLI::App app{ "relearn-full_graph" };
 
-	std::vector<std::filesystem::path> position_paths;
-	std::vector<std::filesystem::path> edges_paths;
+    std::filesystem::path path{};
+    app.add_option("-p,--path", path, "Path to folder that contains positions and edges")->required();
 
-	std::filesystem::path input_path(argv[1]);
+    std::filesystem::path output_path{ "./output/" };
+    app.add_option("-o,--output-path", output_path, "Path to output folder")->capture_default_str();
 
-	for (const auto& entry : std::filesystem::directory_iterator(input_path)) {
-		const std::filesystem::path& p = entry.path();
-		const std::filesystem::path filename = p.filename();
-		const std::string filename_str = filename.string();
+    auto flag_omp_instead_of_cuda = [&]() -> std::optional<CLI::Option*> {
+        if constexpr (CUDA_FOUND) {
+            return { app.add_flag("--use-openmp", "Use OpenMP instead of CUDA algorithms") };
+        }
+        return std::nullopt;
+    }();
 
-		if (filename_str.rfind("positions", 0) == 0) {
-			position_paths.emplace_back(p);
-		}
-		else if (filename_str.rfind("network", 0) == 0) {
-			edges_paths.emplace_back(p);
-		}
-	}
+    CLI11_PARSE(app, argc, argv);
 
-	// Create output directory
-	std::filesystem::path output_path("./output/");
-	std::filesystem::create_directory(output_path);
+    std::vector<std::filesystem::path> position_paths{};
+    std::vector<std::filesystem::path> edges_paths{};
 
-	std::filesystem::path output_path_pos = output_path.concat("positions.txt");
-	std::filesystem::path output_path_net = output_path.replace_filename("network.txt");
+    for (const auto& entry : std::filesystem::directory_iterator(path)) {
+        const std::filesystem::path& p = entry.path();
+        const std::filesystem::path filename = p.filename();
+        const std::string filename_str = filename.string();
 
-	Graph full_graph;
+        if (filename_str.rfind("positions") != std::string::npos) {
+            position_paths.emplace_back(p);
+        } else if (filename_str.rfind("network") != std::string::npos) {
+            edges_paths.emplace_back(p);
+        }
+    }
 
-	for (const auto& path : position_paths) {
-		full_graph.add_vertices_from_file(path);
-	}
+    // Create output directory
+    std::filesystem::create_directory(output_path);
 
-	for (const auto& path : edges_paths) {
-		full_graph.add_edges_from_file(path);
-	}
+    const std::filesystem::path output_path_pos = output_path.concat("positions.txt");
+    const std::filesystem::path output_path_net = output_path.replace_filename("network.txt");
 
-	std::ofstream file_positions(output_path_pos, std::ios::trunc);
-	std::ofstream file_network(output_path_net, std::ios::trunc);
+    Graph full_graph{};
 
-	// Print vertices
-	file_positions << "# num_vertices: " << full_graph.get_num_vertices() << "\n";
-	file_positions << "# num_edges: " << full_graph.get_num_edges() << "\n";
+    for (const auto& path : position_paths) {
+        full_graph.add_vertices_from_file(path);
+    }
 
-	double min_x, min_y, min_z;
-	std::tie(min_x, min_y, min_z) = full_graph.smallest_coordinate_per_dimension();
+    for (const auto& path : edges_paths) {
+        full_graph.add_edges_from_file(path);
+    }
 
-	file_positions << "# min_x: " << min_x << "\n";
-	file_positions << "# min_y: " << min_y << "\n";
-	file_positions << "# min_z: " << min_z << "\n";
+    if (flag_omp_instead_of_cuda) {
+        full_graph.set_use_cuda(!static_cast<bool>(*flag_omp_instead_of_cuda.value()));
+    }
 
-	Position offset;
-	offset.x = min_x < 0 ? -min_x : 0;
-	offset.y = min_y < 0 ? -min_y : 0;
-	offset.z = min_z < 0 ? -min_z : 0;
+    std::ofstream file_positions(output_path_pos, std::ios::trunc);
+    std::ofstream file_network(output_path_net, std::ios::trunc);
 
-	full_graph.add_offset_to_positions(offset);
+    // Print vertices
+    file_positions << "# num_vertices: " << full_graph.get_num_vertices() << "\n";
+    file_positions << "# num_edges: " << full_graph.get_num_edges() << "\n";
 
-	std::tie(min_x, min_y, min_z) = full_graph.smallest_coordinate_per_dimension();
+    auto [min_x, min_y, min_z] = full_graph.smallest_coordinate_per_dimension();
+    file_positions << "# min_x: " << min_x << "\n";
+    file_positions << "# min_y: " << min_y << "\n";
+    file_positions << "# min_z: " << min_z << "\n";
 
-	file_positions << "# Offset added\n";
-	file_positions << "# min_x: " << min_x << "\n";
-	file_positions << "# min_y: " << min_y << "\n";
-	file_positions << "# min_z: " << min_z << "\n";
+    Position offset{};
+    offset.x = min_x < 0 ? -min_x : 0;
+    offset.y = min_y < 0 ? -min_y : 0;
+    offset.z = min_z < 0 ? -min_z : 0;
 
-	int min_degree, max_degree;
-	std::tie(min_degree, max_degree) = full_graph.min_max_degree();
+    full_graph.add_offset_to_positions(offset);
 
-	file_positions << "# min vertex degree: " << min_degree << "\n";
-	file_positions << "# max vertex degree: " << max_degree << "\n";
+    std::tie(min_x, min_y, min_z) = full_graph.smallest_coordinate_per_dimension();
 
-	file_positions << std::fixed << std::setprecision(6);
-	full_graph.print_vertices(file_positions);
-	file_positions << std::defaultfloat;
-	std::cout << "Created " << output_path_pos << "\n";
+    file_positions << "# Offset added\n";
+    file_positions << "# min_x: " << min_x << "\n";
+    file_positions << "# min_y: " << min_y << "\n";
+    file_positions << "# min_z: " << min_z << "\n";
 
-	// Print edges
-	file_network << std::fixed << std::setprecision(6);
-	full_graph.print_edges(file_network);
-	file_network << std::defaultfloat;
-	std::cout << "Created " << output_path_net << "\n";
+    auto [min_degree, max_degree] = full_graph.min_max_degree();
+    file_positions << "# min vertex degree: " << min_degree << "\n";
+    file_positions << "# max vertex degree: " << max_degree << "\n";
 
-	full_graph.calculate_metrics(std::cout);
+    file_positions << std::fixed << std::setprecision(6);
+    full_graph.print_vertices(file_positions);
+    file_positions << std::defaultfloat;
+    std::cout << "Created " << output_path_pos << "\n";
 
-	return 0;
+    // Print edges
+    file_network << std::fixed << std::setprecision(6);
+    full_graph.print_edges(file_network);
+    file_network << std::defaultfloat;
+    std::cout << "Created " << output_path_net << "\n";
+
+    full_graph.calculate_metrics(std::cout);
+
+    return 0;
 }
