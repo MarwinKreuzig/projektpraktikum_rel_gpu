@@ -182,4 +182,6 @@ public:
    const std::vector<Vec3d> get_dendrite_pos_from_node_for(SignalType needed) const;
 
    const std::vector<Vec3d> get_axon_pos_from_node_for(SignalType needed) const;
+
+   const void print_calculations(SignalType needed, double sigma);
 };

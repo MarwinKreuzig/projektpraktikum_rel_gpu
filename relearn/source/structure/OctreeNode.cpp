@@ -12,6 +12,7 @@
 
 #include "../io/LogFiles.h"
 #include "../mpi/MPIWrapper.h"
+#include "../util/DeriativesAndFunctions.h"
 
 #include <sstream>
 #include <stack>
@@ -221,5 +222,24 @@ const std::vector<Vec3d> OctreeNode::get_axon_pos_from_node_for(SignalType neede
         }
     }
     return result;
+}
+
+const void OctreeNode::print_calculations(SignalType needed, double sigma){
+    for (int i=0; i < this->get_interactionlist_length(); i++){
+        auto sources = this->get_axon_pos_from_node_for(needed);
+        auto targets = this->get_from_interactionlist(i)->get_dendrite_pos_from_node_for(needed);
+        double direct = Functions::calc_direct_gauss(sources, targets, sigma);
+        double taylor = Functions::calc_taylor_expansion(this, this->get_from_interactionlist(i),sigma, needed);
+        double hermite = Functions::calc_hermite(this, this->get_from_interactionlist(i),sigma, needed);
+        if(hermite != 0){
+            std::stringstream ss;
+            ss << std::fixed << std::setprecision(2);
+            ss << direct << ",\t";
+            ss << taylor << ",\t";
+            ss << hermite << "\n";
+
+            LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
+        }
+    }
 }
 
