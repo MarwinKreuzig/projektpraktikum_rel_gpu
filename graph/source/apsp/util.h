@@ -36,6 +36,11 @@ inline void gpuAssert(cudaError_t code, const char* file, int line) {
 
 namespace apsp {
 
+/**
+ * @brief Wrapper for pointer and size pairs denoting a range
+ *
+ * @tparam T value type of the data
+ */
 template <typename T>
 struct View {
     using value_type = T;
@@ -52,6 +57,11 @@ struct View {
     size_t size_;
 };
 
+/**
+ * @brief RAII type for dynamic memory allocation with CUDA
+ *
+ * @tparam T value type of the data
+ */
 template <typename T>
 class RAIIDeviceMemory {
 public:
@@ -112,6 +122,16 @@ private:
     T* data_{};
     size_t size_{};
 };
+
+/**
+ * @brief Copy the elements from dst to src. Wrapper for cudaMemcpy
+ *
+ * @tparam T destination container type
+ * @tparam U soruce container type
+ * @param dst destination
+ * @param src source
+ * @param kind direction to copy
+ */
 template <typename T, typename U>
 void copy(T& dst, const U& src, cudaMemcpyKind kind) {
     using dst_type = typename T::value_type;

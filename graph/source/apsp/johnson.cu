@@ -141,7 +141,7 @@ __host__ bool bellman_ford_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_
 **************************************************************************/
 
 __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<double>& output) {
-    //cudaThreadSetCacheConfig(cudaFuncCachePreferL1);
+    // cudaThreadSetCacheConfig(cudaFuncCachePreferL1);
 
     // Const Graph Initialization
     const int V = gr.V;
