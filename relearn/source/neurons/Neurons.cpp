@@ -61,26 +61,26 @@ void Neurons::init_synaptic_elements() {
     const double num_axons_offset = 0;
     const double num_dends_offset = 0;
 
-    const std::vector<double>& axons_cnts = axons->get_cnts();
-    const std::vector<double>& dendrites_inh_cnts = dendrites_inh->get_cnts();
-    const std::vector<double>& dendrites_exc_cnts = dendrites_exc->get_cnts();
+    const std::vector<double>& axons_cnts = axons->get_total_counts();
+    const std::vector<double>& dendrites_inh_cnts = dendrites_inh->get_total_counts();
+    const std::vector<double>& dendrites_exc_cnts = dendrites_exc->get_total_counts();
 
     for (auto i = 0; i < num_neurons; i++) {
         const size_t axon_connections = network_graph->get_num_out_edges(i);
         const size_t dendrites_ex_connections = network_graph->get_num_in_edges_ex(i);
         const size_t dendrites_in_connections = network_graph->get_num_in_edges_in(i);
 
-        axons->update_cnt(i, static_cast<double>(axon_connections));
-        dendrites_exc->update_cnt(i, static_cast<double>(dendrites_ex_connections));
-        dendrites_inh->update_cnt(i, static_cast<double>(dendrites_in_connections));
+        axons->update_count(i, static_cast<double>(axon_connections));
+        dendrites_exc->update_count(i, static_cast<double>(dendrites_ex_connections));
+        dendrites_inh->update_count(i, static_cast<double>(dendrites_in_connections));
 
-        axons->update_conn_cnt(i, static_cast<int>(axon_connections));
-        dendrites_exc->update_conn_cnt(i, static_cast<int>(dendrites_ex_connections));
-        dendrites_inh->update_conn_cnt(i, static_cast<int>(dendrites_in_connections));
+        axons->update_connected_counts(i, static_cast<int>(axon_connections));
+        dendrites_exc->update_connected_counts(i, static_cast<int>(dendrites_ex_connections));
+        dendrites_inh->update_connected_counts(i, static_cast<int>(dendrites_in_connections));
 
-        RelearnException::check(axons_cnts[i] >= axons->get_connected_cnts()[i], "Error is with: %d", i);
-        RelearnException::check(dendrites_inh_cnts[i] >= dendrites_inh->get_connected_cnts()[i], "Error is with: %d", i);
-        RelearnException::check(dendrites_exc_cnts[i] >= dendrites_exc->get_connected_cnts()[i], "Error is with: %d", i);
+        RelearnException::check(axons_cnts[i] >= axons->get_connected_count()[i], "Error is with: %d", i);
+        RelearnException::check(dendrites_inh_cnts[i] >= dendrites_inh->get_connected_count()[i], "Error is with: %d", i);
+        RelearnException::check(dendrites_exc_cnts[i] >= dendrites_exc->get_connected_count()[i], "Error is with: %d", i);
     }
 }
 
@@ -705,14 +705,14 @@ size_t Neurons::delete_synapses_commit_deletions(const PendingDeletionsV& list) 
 
         if (affected_neuron.get_rank() == my_rank && !it.get_affected_element_already_deleted()) {
             if (ElementType::AXON == element_type) {
-                axons->update_conn_cnt(affected_neuron_id, -1);
+                axons->update_connected_counts(affected_neuron_id, -1);
                 continue;
             }
 
             if (SignalType::EXCITATORY == signal_type) {
-                dendrites_exc->update_conn_cnt(affected_neuron_id, -1);
+                dendrites_exc->update_connected_counts(affected_neuron_id, -1);
             } else {
-                dendrites_inh->update_conn_cnt(affected_neuron_id, -1);
+                dendrites_inh->update_connected_counts(affected_neuron_id, -1);
             }
         }
     }
@@ -773,8 +773,8 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
     MapSynapseCreationRequests synapse_creation_requests_outgoing;
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);
 
-    const std::vector<double>& axons_cnts = axons->get_cnts();
-    const std::vector<unsigned int>& axons_connected_cnts = axons->get_connected_cnts();
+    const std::vector<double>& axons_cnts = axons->get_total_counts();
+    const std::vector<unsigned int>& axons_connected_cnts = axons->get_connected_count();
     const std::vector<SignalType>& axons_signal_types = axons->get_signal_types();
 
     // For my neurons
@@ -933,14 +933,14 @@ std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_pro
 
             // DendriteType::INHIBITORY dendrite requested
             if (SignalType::INHIBITORY == dendrite_type_needed) {
-                dendrites_cnts = &dendrites_inh->get_cnts();
-                dendrites_connected_cnts = &dendrites_inh->get_connected_cnts();
+                dendrites_cnts = &dendrites_inh->get_total_counts();
+                dendrites_connected_cnts = &dendrites_inh->get_connected_count();
                 num_axons_connected_increment = -1;
             }
             // DendriteType::EXCITATORY dendrite requested
             else {
-                dendrites_cnts = &dendrites_exc->get_cnts();
-                dendrites_connected_cnts = &dendrites_exc->get_connected_cnts();
+                dendrites_cnts = &dendrites_exc->get_total_counts();
+                dendrites_connected_cnts = &dendrites_exc->get_connected_count();
                 num_axons_connected_increment = +1;
             }
 
@@ -951,9 +951,9 @@ std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_pro
             if (diff != 0) {
                 // Increment num of connected dendrites
                 if (SignalType::INHIBITORY == dendrite_type_needed) {
-                    dendrites_inh->update_conn_cnt(target_neuron_id, 1);
+                    dendrites_inh->update_connected_counts(target_neuron_id, 1);
                 } else {
-                    dendrites_exc->update_conn_cnt(target_neuron_id, 1);
+                    dendrites_exc->update_connected_counts(target_neuron_id, 1);
                 }
 
                 const RankNeuronId target_id{ my_rank, target_neuron_id };
@@ -1045,11 +1045,11 @@ size_t Neurons::create_synapses_process_responses(const MapSynapseCreationReques
             // Request to form synapse succeeded
             if (connected != 0) {
                 // Increment num of connected axons
-                axons->update_conn_cnt(source_neuron_id, 1);
+                axons->update_connected_counts(source_neuron_id, 1);
                 //axons_connected_cnts[source_neuron_id]++;
                 num_synapses_created++;
 
-                const double delta = axons->get_cnt(source_neuron_id) - axons->get_connected_cnt(source_neuron_id);
+                const double delta = axons->get_count(source_neuron_id) - axons->get_connected_count(source_neuron_id);
                 RelearnException::check(delta >= 0, "%f", delta);
 
                 // I have already created the synapse in the network
@@ -1079,12 +1079,12 @@ void Neurons::debug_check_counts() {
 
     RelearnException::check(network_graph != nullptr, "network_graph is nullptr");
 
-    const std::vector<double>& axs_count = axons->get_cnts();
-    const std::vector<unsigned int>& axs_conn_count = axons->get_connected_cnts();
-    const std::vector<double>& de_count = dendrites_exc->get_cnts();
-    const std::vector<unsigned int>& de_conn_count = dendrites_exc->get_connected_cnts();
-    const std::vector<double>& di_count = dendrites_inh->get_cnts();
-    const std::vector<unsigned int>& di_conn_count = dendrites_inh->get_connected_cnts();
+    const std::vector<double>& axs_count = axons->get_total_counts();
+    const std::vector<unsigned int>& axs_conn_count = axons->get_connected_count();
+    const std::vector<double>& de_count = dendrites_exc->get_total_counts();
+    const std::vector<unsigned int>& de_conn_count = dendrites_exc->get_connected_count();
+    const std::vector<double>& di_count = dendrites_inh->get_total_counts();
+    const std::vector<unsigned int>& di_conn_count = dendrites_inh->get_connected_count();
 
     for (size_t i = 0; i < num_neurons; i++) {
         const double diff_axs = axs_count[i] - axs_conn_count[i];
@@ -1149,8 +1149,8 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
     sum_axons_exc_cnts = sum_axons_exc_connected_cnts = 0;
     sum_axons_inh_cnts = sum_axons_inh_connected_cnts = 0;
 
-    const std::vector<double>& cnts_ax = axons->get_cnts();
-    const std::vector<unsigned int>& connected_cnts_ax = axons->get_connected_cnts();
+    const std::vector<double>& cnts_ax = axons->get_total_counts();
+    const std::vector<unsigned int>& connected_cnts_ax = axons->get_connected_count();
     const std::vector<SignalType>& signal_types = axons->get_signal_types();
 
     for (size_t neuron_id = 0; neuron_id < this->num_neurons; ++neuron_id) {
@@ -1168,8 +1168,8 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
     // My vacant dendrites
     // Exc.
     sum_dends_exc_cnts = sum_dends_exc_connected_cnts = 0;
-    const std::vector<double>& cnts_den_ex = dendrites_exc->get_cnts();
-    const std::vector<unsigned int>& connected_cnts_den_ex = dendrites_exc->get_connected_cnts();
+    const std::vector<double>& cnts_den_ex = dendrites_exc->get_total_counts();
+    const std::vector<unsigned int>& connected_cnts_den_ex = dendrites_exc->get_connected_count();
     for (size_t neuron_id = 0; neuron_id < this->num_neurons; ++neuron_id) {
         sum_dends_exc_cnts += static_cast<unsigned int>(cnts_den_ex[neuron_id]);
         sum_dends_exc_connected_cnts += static_cast<unsigned int>(connected_cnts_den_ex[neuron_id]);
@@ -1178,8 +1178,8 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 
     // Inh.
     sum_dends_inh_cnts = sum_dends_inh_connected_cnts = 0;
-    const std::vector<double>& cnts_den_in = dendrites_inh->get_cnts();
-    const std::vector<unsigned int>& connected_cnts_den_in = dendrites_inh->get_connected_cnts();
+    const std::vector<double>& cnts_den_in = dendrites_inh->get_total_counts();
+    const std::vector<unsigned int>& connected_cnts_den_in = dendrites_inh->get_connected_count();
     for (size_t neuron_id = 0; neuron_id < this->num_neurons; ++neuron_id) {
         sum_dends_inh_cnts += static_cast<unsigned int>(cnts_den_in[neuron_id]);
         sum_dends_inh_connected_cnts += static_cast<unsigned int>(connected_cnts_den_in[neuron_id]);
@@ -1237,7 +1237,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
 
     const StatisticalMeasures& calcium_statistics = global_statistics(calcium, 0, disable_flags);
     const StatisticalMeasures& activity_statistics = global_statistics(neuron_model->get_x(), 0, disable_flags);
-    const StatisticalMeasures& axons_statistics = global_statistics(axons->get_cnts(), 0, disable_flags);
+    const StatisticalMeasures& axons_statistics = global_statistics(axons->get_total_counts(), 0, disable_flags);
     //const StatisticalMeasures& axons_conn_statistics = global_statistics_integral(axons->get_connected_cnts(), 0, disable_flags0);
     const StatisticalMeasures& axons_free_statistics = global_statistics(axons->get_vacant_cnts(), 0, disable_flags);
 
@@ -1384,7 +1384,7 @@ void Neurons::print() {
     // Values
     for (size_t i = 0; i < num_neurons; i++) {
         LogFiles::write_to_file(LogFiles::EventType::Cout, true, "{3:<{1}}{4:<{0}.{2}f}{5:<{0}}{6:<{0}.{2}f}{7:<{0}.{2}f}{8:<{0}.{2}f}{9:<{0}.{2}f}{10:<{0}.{2}f}", cwidth, cwidth_left, Constants::print_precision, i, neuron_model->get_x(i), neuron_model->get_fired(i),
-            neuron_model->get_secondary_variable(i), calcium[i], axons->get_cnt(i), dendrites_exc->get_cnt(i), dendrites_inh->get_cnt(i));
+            neuron_model->get_secondary_variable(i), calcium[i], axons->get_count(i), dendrites_exc->get_count(i), dendrites_inh->get_count(i));
     }
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
@@ -1395,13 +1395,13 @@ void Neurons::print_info_for_barnes_hut() {
     const std::vector<double>& y_dims = extra_info->get_y_dims();
     const std::vector<double>& z_dims = extra_info->get_z_dims();
 
-    const std::vector<double>& axons_cnts = axons->get_cnts();
-    const std::vector<double>& dendrites_exc_cnts = dendrites_exc->get_cnts();
-    const std::vector<double>& dendrites_inh_cnts = dendrites_inh->get_cnts();
+    const std::vector<double>& axons_cnts = axons->get_total_counts();
+    const std::vector<double>& dendrites_exc_cnts = dendrites_exc->get_total_counts();
+    const std::vector<double>& dendrites_inh_cnts = dendrites_inh->get_total_counts();
 
-    const std::vector<unsigned int>& axons_connected_cnts = axons->get_connected_cnts();
-    const std::vector<unsigned int>& dendrites_exc_connected_cnts = dendrites_exc->get_connected_cnts();
-    const std::vector<unsigned int>& dendrites_inh_connected_cnts = dendrites_inh->get_connected_cnts();
+    const std::vector<unsigned int>& axons_connected_cnts = axons->get_connected_count();
+    const std::vector<unsigned int>& dendrites_exc_connected_cnts = dendrites_exc->get_connected_count();
+    const std::vector<unsigned int>& dendrites_inh_connected_cnts = dendrites_inh->get_connected_count();
 
     // Column widths
     const int cwidth_small = 8;

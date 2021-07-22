@@ -325,10 +325,10 @@ void Octree::update_from_level(size_t max_level) {
 }
 
 void Octree::update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, size_t num_neurons) {
-    const auto& de_ex_cnt = dendrites_exc.get_cnts();
-    const auto& de_ex_conn_cnt = dendrites_exc.get_connected_cnts();
-    const auto& de_in_cnt = dendrites_inh.get_cnts();
-    const auto& de_in_conn_cnt = dendrites_inh.get_connected_cnts();
+    const auto& de_ex_cnt = dendrites_exc.get_total_counts();
+    const auto& de_ex_conn_cnt = dendrites_exc.get_connected_count();
+    const auto& de_in_cnt = dendrites_inh.get_total_counts();
+    const auto& de_in_conn_cnt = dendrites_inh.get_connected_count();
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
