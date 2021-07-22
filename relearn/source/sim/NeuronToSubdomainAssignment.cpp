@@ -16,11 +16,16 @@
 #include <fstream>
 #include <iomanip>
 
-std::tuple<NeuronToSubdomainAssignment::Position, NeuronToSubdomainAssignment::Position> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3s& subdomain_3idx, size_t num_subdomains_per_axis) const noexcept {
+std::tuple<Vec3d, Vec3d> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3s& subdomain_3idx, size_t num_subdomains_per_axis) const {
+    RelearnException::check(num_subdomains_per_axis > 0, "The number of subdomains per axis must be greater than 0");
     return get_subdomain_boundaries(subdomain_3idx, Vec3s{ num_subdomains_per_axis });
 }
 
-std::tuple<NeuronToSubdomainAssignment::Position, NeuronToSubdomainAssignment::Position> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3s& subdomain_3idx, const Vec3s& num_subdomains_per_axis) const noexcept {
+std::tuple<Vec3d, Vec3d> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3s& subdomain_3idx, const Vec3s& num_subdomains_per_axis) const {
+    RelearnException::check(num_subdomains_per_axis.get_x() > 0, "The number of x subdomains must be greater than 0");
+    RelearnException::check(num_subdomains_per_axis.get_y() > 0, "The number of y subdomains must be greater than 0");
+    RelearnException::check(num_subdomains_per_axis.get_z() > 0, "The number of z subdomains must be greater than 0");
+
     const auto& lengths = get_simulation_box_length();
     const auto x_subdomain_length = lengths.get_x() / num_subdomains_per_axis.get_x();
     const auto y_subdomain_length = lengths.get_y() / num_subdomains_per_axis.get_y();

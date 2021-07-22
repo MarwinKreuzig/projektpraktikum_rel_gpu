@@ -40,10 +40,10 @@ public:
     [[nodiscard]] std::vector<size_t> neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
         size_t local_id_start, size_t local_id_end) const override;
 
-    constexpr static double default_um_per_neuron = 26;
+    constexpr static double default_um_per_neuron = 26.0;
 
 private:
-    const double um_per_neuron_{ 0.0 }; // Micrometer per neuron in one dimension
+    const double um_per_neuron_{ default_um_per_neuron }; // Micrometer per neuron in one dimension
 
     void place_neurons_in_area(
         const NeuronToSubdomainAssignment::Position& offset,
