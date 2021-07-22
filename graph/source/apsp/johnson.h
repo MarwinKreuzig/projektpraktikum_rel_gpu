@@ -20,6 +20,10 @@ using APSP_Graph = boost::adjacency_list<boost::listS, boost::vecS, boost::direc
 using APSP_Vertex = boost::graph_traits<APSP_Graph>::vertex_descriptor;
 using APSP_Edge = std::pair<int, int>;
 
+/**
+ * @brief Graph type for the Serial/OpenMP implementation
+ *
+ */
 struct graph_t {
     graph_t(int V_, int E_, std::vector<int> weights_, std::vector<APSP_Edge> edge_array_)
         : V{ V_ }
@@ -36,11 +40,21 @@ struct graph_t {
     std::vector<APSP_Edge> edge_array; // NOLINT(misc-non-private-member-variables-in-classes)
 };
 
+/**
+ * @brief Edge type for CUDA
+ *
+ */
 struct edge_t {
     int u;
     int v;
 };
 
+/**
+ * @brief Graph type for the CUDA implementation
+ *
+ * @tparam T container type for starts and weights
+ * @tparam U container type for edge_array
+ */
 template <typename T, typename U>
 struct graph_cuda_t {
     static_assert(std::is_same_v<int, typename T::value_type>, "value_type of T should be int");

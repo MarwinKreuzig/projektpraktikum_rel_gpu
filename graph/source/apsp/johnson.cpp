@@ -29,7 +29,9 @@ static bool bellman_ford(const graph_t& gr, std::vector<double>& dist) {
     }
     dist.back() = 0;
 
+#ifdef _OPENMP
     std::vector<std::shared_mutex> mv(dist.size());
+#endif
     for (int i = 1; i <= V - 1; i++) {
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -37,9 +39,11 @@ static bool bellman_ford(const graph_t& gr, std::vector<double>& dist) {
         for (int j = 0; j < E; j++) {
             const auto [u, v] = edges[j];
 
+#ifdef _OPENMP
             std::shared_lock l{ mv[u], std::defer_lock };
             std::unique_lock l2{ mv[v], std::defer_lock };
             std::lock(l, l2);
+#endif
 
             const auto new_dist = weights[j] + dist[u];
             if (dist[u] != std::numeric_limits<double>::max() && new_dist < dist[v]) {

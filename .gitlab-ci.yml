@@ -65,6 +65,3 @@ test-graph:
   artifacts:
     paths:
       - graph/build-docker
-      
-      
-      
