@@ -714,10 +714,9 @@ void Neurons::make_creation_request_for(
             for (size_t i = 0; i < nodes_with_dend.size(); i++) {
                 //if the target and source nodes are different, the target node can simply be added to the interaction list 
                 current_node->add_to_interactionlist(nodes_with_dend.at(i));
-            } 
-            //current_node->print_calculations(needed, Octree::default_sigma);
+            }    
         }
-
+        current_node->print_calculations(needed, Octree::default_sigma);
        
         //node is a leaf
         if (!current_node->is_parent()){

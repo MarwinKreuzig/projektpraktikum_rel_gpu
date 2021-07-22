@@ -243,7 +243,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             neurons->print_neurons_overview_to_log_file_on_rank_0(step);
         }
 
-        if (step % Constants::console_update_step == 0) {
+        /*if (step % Constants::console_update_step == 0) {
             if (MPIWrapper::get_my_rank() != 0) {
                 continue;
             }
@@ -256,7 +256,7 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
             ss << std::flush;
 
             LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
-        }
+        }*/
     }
 
     delta_synapse_creations = total_synapse_creations - previous_synapse_creations;
