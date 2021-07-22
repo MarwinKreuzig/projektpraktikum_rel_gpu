@@ -961,10 +961,6 @@ TEST_F(OctreeTest, testOctreeSetterGetter) {
 
         Octree octree(min, max, level_of_branch_nodes);
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
-
-        level_of_branch_nodes = uid(mt);
-
         ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
         ASSERT_EQ(octree.get_xyz_max(), max);
         ASSERT_EQ(octree.get_xyz_min(), min);
