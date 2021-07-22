@@ -23,7 +23,7 @@
 
 SubdomainFromFile::SubdomainFromFile(const std::string& file_path)
     : file(file_path) {
-    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Loading: " + file_path + "\n");
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Loading: {} \n", file_path);
 
     const bool file_is_good = file.good();
     const bool file_is_not_good = file.fail() || file.eof();

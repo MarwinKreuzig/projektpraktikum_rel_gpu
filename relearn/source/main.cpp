@@ -217,8 +217,8 @@ int main(int argc, char** argv) {
     MPIWrapper::lock_window(my_rank, MPI_Locktype::exclusive);
 
     Simulation sim(partition);
-    sim.set_acceptance_criterion_for_octree(accept_criterion);
-    sim.set_neuron_models(std::move(neuron_models));
+    sim.set_acceptance_criterion_for_barnes_hut(accept_criterion);
+    sim.set_neuron_model(std::move(neuron_models));
     sim.set_axons(std::move(axon_models));
     sim.set_dendrites_ex(std::move(dend_ex_models));
     sim.set_dendrites_in(std::move(dend_in_models));

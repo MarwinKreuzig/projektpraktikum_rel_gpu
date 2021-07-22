@@ -38,28 +38,27 @@ void Simulation::register_neuron_monitor(size_t neuron_id) {
     monitors.emplace_back(neuron_id);
 }
 
-void Simulation::set_acceptance_criterion_for_octree(double value) {
+void Simulation::set_acceptance_criterion_for_barnes_hut(double value) {
     // Needed to avoid creating autapses
-    if (value > BarnesHut::max_theta) {
-        RelearnException::fail("Acceptance criterion must be smaller or equal to 0.5");
-    }
+    RelearnException::check(value <= BarnesHut::max_theta, "Acceptance criterion must be smaller or equal to {}", BarnesHut::max_theta);
+    RelearnException::check(value >= 0.0, "Acceptance criterion must not be smaller than 0.0");
 
     accept_criterion = value;
 }
 
-void Simulation::set_neuron_models(std::unique_ptr<NeuronModel> nm) {
+void Simulation::set_neuron_model(std::unique_ptr<NeuronModel> nm) noexcept {
     neuron_models = std::move(nm);
 }
 
-void Simulation::set_axons(std::unique_ptr<SynapticElements> se) {
+void Simulation::set_axons(std::unique_ptr<SynapticElements> se) noexcept {
     axons = std::move(se);
 }
 
-void Simulation::set_dendrites_ex(std::unique_ptr<SynapticElements> se) {
+void Simulation::set_dendrites_ex(std::unique_ptr<SynapticElements> se) noexcept {
     dendrites_ex = std::move(se);
 }
 
-void Simulation::set_dendrites_in(std::unique_ptr<SynapticElements> se) {
+void Simulation::set_dendrites_in(std::unique_ptr<SynapticElements> se) noexcept {
     dendrites_in = std::move(se);
 }
 
@@ -79,7 +78,7 @@ void Simulation::set_disable_interrupts(std::vector<std::pair<size_t, std::vecto
     }
 }
 
-void Simulation::set_creation_interrupts(std::vector<std::pair<size_t, size_t>> interrupts) {
+void Simulation::set_creation_interrupts(std::vector<std::pair<size_t, size_t>> interrupts) noexcept {
     creation_interrupts = std::move(interrupts);
 }
 
@@ -157,6 +156,8 @@ void Simulation::initialize() {
 }
 
 void Simulation::simulate(size_t number_steps, size_t step_monitor) {
+    RelearnException::check(step_monitor > 0, "step_monitor must be greater than 0");
+
     Timers::start(TimerRegion::SIMULATION_LOOP);
 
     const auto previous_synapse_creations = total_synapse_creations;

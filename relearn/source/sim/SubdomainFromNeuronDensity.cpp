@@ -19,6 +19,9 @@
 SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(size_t num_neurons, double desired_frac_neurons_exc, double um_per_neuron)
     : um_per_neuron_(um_per_neuron) {
 
+    RelearnException::check(desired_frac_neurons_exc >= 0.0 && desired_frac_neurons_exc <= 1.0, "The requested fraction of excitatory neurons is not in [0.0, 1.0]");
+    RelearnException::check(um_per_neuron > 0.0, "The requested um per neuron is <= 0.0");
+
     const auto my_rank = static_cast<unsigned int>(MPIWrapper::get_my_rank());
 
     RandomHolder::seed(RandomHolderKey::SubdomainFromNeuronDensity, my_rank);
