@@ -36,7 +36,113 @@ Octree::Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branc
     construct_global_tree_part();
 }
 
-void Octree::postorder_print() {
+void Octree::construct_global_tree_part() {
+    RelearnException::check(root == nullptr, "root was not null in the construction of the global state!");
+
+    SpaceFillingCurve<Morton> space_curve{static_cast<uint8_t>(level_of_branch_nodes)};
+
+    const auto my_rank = MPIWrapper::get_my_rank();
+
+    const auto num_cells_per_dimension = 1 << level_of_branch_nodes; // (2^level_of_branch_nodes)
+
+    const auto& cell_length = (xyz_max - xyz_min) / num_cells_per_dimension;
+
+    const auto cell_length_x = cell_length.get_x();
+    const auto cell_length_y = cell_length.get_y();
+    const auto cell_length_z = cell_length.get_z();
+
+    OctreeNode* local_root = MPIWrapper::new_octree_node();
+    RelearnException::check(local_root != nullptr, "local_root is nullptr");
+
+    local_root->set_cell_neuron_id(Constants::uninitialized);
+    local_root->set_cell_size(xyz_min, xyz_max);
+    local_root->set_level(0);
+    local_root->set_rank(my_rank);
+    local_root->set_cell_neuron_position(xyz_min + (cell_length / 2));
+
+    const auto root_index1d = space_curve.map_3d_to_1d(Vec3s{ 0, 0, 0 });
+    local_trees[root_index1d] = local_root;
+
+    root = local_root;
+
+    for (size_t id_x = 0; id_x < num_cells_per_dimension; id_x++) {
+        for (size_t id_y = 0; id_y < num_cells_per_dimension; id_y++) {
+            for (size_t id_z = 0; id_z < num_cells_per_dimension; id_z++) {
+                if (id_x == 0 && id_y == 0 && id_z == 0) {
+                    continue;
+                }
+
+                const Vec3d cell_offset{ id_x * cell_length_x, id_y * cell_length_y, id_z * cell_length_z };
+                const auto& cell_min = xyz_min + cell_offset;
+                const auto& cell_position = cell_min + (cell_length / 2);
+
+                auto* current_node = root->insert(cell_position, Constants::uninitialized, my_rank);
+
+                //const auto index1d = space_curve.map_3d_to_1d(Vec3s{ id_x, id_y, id_z });
+                //local_trees[index1d] = current_node;
+            }
+        }
+    }
+
+    std::stack<std::pair<OctreeNode*, Vec3s>> stack{};
+    stack.emplace(root, Vec3s{ 0, 0, 0 });
+
+    while (!stack.empty()) {
+        const auto [ptr, index3d] = stack.top();
+        stack.pop();
+
+        if (!ptr->is_parent()) {
+            const auto index1d = space_curve.map_3d_to_1d(index3d);
+            local_trees[index1d] = ptr;
+            continue;
+        }
+
+        for (auto id = 0; id < 8; id++) {
+            auto child_node = ptr->get_child(id);
+
+            const size_t larger_x = ((id & 1) == 0) ? 0 : 1;
+            const size_t larger_y = ((id & 2) == 0) ? 0 : 1;
+            const size_t larger_z = ((id & 4) == 0) ? 0 : 1;
+
+            const Vec3s offset{ larger_x, larger_y, larger_z };
+            const Vec3s pos = (index3d * 2) + offset;
+            stack.emplace(child_node, pos);
+        }
+    }
+}
+
+// Insert neuron into the tree
+OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
+    RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "In Octree::insert, x was not in range");
+    RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Octree::insert, x was not in range");
+    RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "In Octree::insert, x was not in range");
+
+    RelearnException::check(rank >= 0, "In Octree::insert, rank was smaller than 0");
+    RelearnException::check(neuron_id < Constants::uninitialized, "In Octree::insert, neuron_id was too large");
+
+    // Tree is empty
+    if (nullptr == root) {
+        // Create new tree node for the neuron
+        OctreeNode* new_node_to_insert = MPIWrapper::new_octree_node();
+        RelearnException::check(new_node_to_insert != nullptr, "new_node_to_insert is nullptr");
+
+        // Init cell size with simulation box size
+        new_node_to_insert->set_cell_size(this->xyz_min, this->xyz_max);
+        new_node_to_insert->set_cell_neuron_position({ position });
+        new_node_to_insert->set_cell_neuron_id(neuron_id);
+        new_node_to_insert->set_rank(rank);
+
+        // Init root with tree's root level
+        new_node_to_insert->set_level(root_level);
+        root = new_node_to_insert;
+
+        return new_node_to_insert;
+    }
+
+    return root->insert(position, neuron_id, rank);
+}
+
+void Octree::print() {
     std::stack<StackElement> stack;
 
     // Tree is empty
@@ -149,120 +255,13 @@ void Octree::postorder_print() {
     }
 }
 
-void Octree::construct_global_tree_part() {
-    RelearnException::check(root == nullptr, "root was not null in the construction of the global state!");
-
-    SpaceFillingCurve<Morton> space_curve{static_cast<uint8_t>(level_of_branch_nodes)};
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
-    const auto num_cells_per_dimension = 1 << level_of_branch_nodes; // (2^level_of_branch_nodes)
-
-    const auto& cell_length = (xyz_max - xyz_min) / num_cells_per_dimension;
-
-    const auto cell_length_x = cell_length.get_x();
-    const auto cell_length_y = cell_length.get_y();
-    const auto cell_length_z = cell_length.get_z();
-
-    OctreeNode* local_root = MPIWrapper::new_octree_node();
-    RelearnException::check(local_root != nullptr, "local_root is nullptr");
-
-    local_root->set_cell_neuron_id(Constants::uninitialized);
-    local_root->set_cell_size(xyz_min, xyz_max);
-    local_root->set_level(0);
-    local_root->set_rank(my_rank);
-    local_root->set_cell_neuron_position(xyz_min + (cell_length / 2));
-
-    const auto root_index1d = space_curve.map_3d_to_1d(Vec3s{ 0, 0, 0 });
-    local_trees[root_index1d] = local_root;
-
-    root = local_root;
-
-    for (size_t id_x = 0; id_x < num_cells_per_dimension; id_x++) {
-        for (size_t id_y = 0; id_y < num_cells_per_dimension; id_y++) {
-            for (size_t id_z = 0; id_z < num_cells_per_dimension; id_z++) {
-                if (id_x == 0 && id_y == 0 && id_z == 0) {
-                    continue;
-                }
-
-                const Vec3d cell_offset{ id_x * cell_length_x, id_y * cell_length_y, id_z * cell_length_z };
-                const auto& cell_min = xyz_min + cell_offset;
-                const auto& cell_position = cell_min + (cell_length / 2);
-
-                auto* current_node = root->insert(cell_position, Constants::uninitialized, my_rank);
-
-                //const auto index1d = space_curve.map_3d_to_1d(Vec3s{ id_x, id_y, id_z });
-                //local_trees[index1d] = current_node;
-            }
-        }
-    }
-
-    std::stack<std::pair<OctreeNode*, Vec3s>> stack{};
-    stack.emplace(root, Vec3s{ 0, 0, 0 });
-
-    while (!stack.empty()) {
-        const auto [ptr, index3d] = stack.top();
-        stack.pop();
-
-        if (!ptr->is_parent()) {
-            const auto index1d = space_curve.map_3d_to_1d(index3d);
-            local_trees[index1d] = ptr;
-            continue;
-        }
-
-        for (auto id = 0; id < 8; id++) {
-            auto child_node = ptr->get_child(id);
-
-            const size_t larger_x = ((id & 1) == 0) ? 0 : 1;
-            const size_t larger_y = ((id & 2) == 0) ? 0 : 1;
-            const size_t larger_z = ((id & 4) == 0) ? 0 : 1;
-
-            const Vec3s offset{ larger_x, larger_y, larger_z };
-            const Vec3s pos = (index3d * 2) + offset;
-            stack.emplace(child_node, pos);
-        }
-    }
-}
-
-// Insert neuron into the tree
-OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
-    RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "In Octree::insert, x was not in range");
-    RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Octree::insert, x was not in range");
-    RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "In Octree::insert, x was not in range");
-
-    RelearnException::check(rank >= 0, "In Octree::insert, rank was smaller than 0");
-    RelearnException::check(neuron_id < Constants::uninitialized, "In Octree::insert, neuron_id was too large");
-
-    // Tree is empty
-    if (nullptr == root) {
-        // Create new tree node for the neuron
-        OctreeNode* new_node_to_insert = MPIWrapper::new_octree_node();
-        RelearnException::check(new_node_to_insert != nullptr, "new_node_to_insert is nullptr");
-
-        // Init cell size with simulation box size
-        new_node_to_insert->set_cell_size(this->xyz_min, this->xyz_max);
-        new_node_to_insert->set_cell_neuron_position({ position });
-        new_node_to_insert->set_cell_neuron_id(neuron_id);
-        new_node_to_insert->set_rank(rank);
-
-        // Init root with tree's root level
-        new_node_to_insert->set_level(root_level);
-        root = new_node_to_insert;
-
-        return new_node_to_insert;
-    }
-
-    return root->insert(position, neuron_id, rank);
-}
-
-void Octree::print() {
-    postorder_print();
-}
-
-[[nodiscard]] std::array<OctreeNode*, Constants::number_oct> Octree::downloadChildren(OctreeNode* root) {
+[[nodiscard]] std::array<OctreeNode*, Constants::number_oct> Octree::downloadChildren(OctreeNode* node) {
     std::array<OctreeNode*, Constants::number_oct> local_children{ nullptr };
 
-    const auto target_rank = root->get_rank();
+    const auto target_rank = node->get_rank();
+
+    RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "Tried to download a local node");
+
     NodesCacheKey rank_addr_pair{};
     rank_addr_pair.first = target_rank;
 
@@ -272,13 +271,13 @@ void Octree::print() {
     // Fetch remote children if they exist
     // NOLINTNEXTLINE
     for (auto i = 7; i >= 0; i--) {
-        if (nullptr == root->get_child(i)) {
+        if (nullptr == node->get_child(i)) {
             // NOLINTNEXTLINE
             local_children[i] = nullptr;
             continue;
         }
 
-        rank_addr_pair.second = root->get_child(i);
+        rank_addr_pair.second = node->get_child(i);
 
         std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair{ rank_addr_pair, nullptr };
 
@@ -293,7 +292,7 @@ void Octree::print() {
             ret.first->second = MPIWrapper::new_octree_node();
             auto* local_child_addr = ret.first->second;
 
-            MPIWrapper::download_octree_node(local_child_addr, target_rank, root->get_child(i));
+            MPIWrapper::download_octree_node(local_child_addr, target_rank, node->get_child(i));
         }
 
         // Remember address of node
@@ -382,11 +381,11 @@ void Octree::synchronize_local_trees() {
 
     // Update global tree
     Timers::start(TimerRegion::UPDATE_GLOBAL_TREE);
-    const auto level_branches = get_level_of_branch_nodes();
-
+    
     // Only update whenever there are other branches to update
-    if (level_branches > 0) {
-        update_from_level(level_branches - 1);
+    if (level_of_branch_nodes > 0) {
+        update_from_level(level_of_branch_nodes - 1);
     }
+    
     Timers::stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
 }

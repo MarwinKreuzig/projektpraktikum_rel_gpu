@@ -12,21 +12,34 @@
 
 #include <vector>
 #include <tuple>
+#include <type_traits>
 
 #include "RelearnException.h"
 
 namespace Util {
 
+/**
+ * @brief Calculates the minimum, maximum, and sum over all values in the vector, for which the disable flags are not set
+ * @tparam T Must be a arithmetic (floating point or integral)
+ * @param values The values that should be reduced
+ * @param disable_flags The flags that indicate which values to skip (skips values[i] if disable_flags[i] == 0)
+ * @exception Throws a RelearnException if (a) values.empty(), (b) values.size() != disable_flags.size(), (c) all values are disabled
+ * @return Returns a tuple with (1) minimum and (2) maximum value from values, (3) the sum of all enabled values and (4) the number of enabled values
+ */
 template <typename T>
 std::tuple<T, T, T, size_t> min_max_acc(const std::vector<T>& values, const std::vector<char>& disable_flags) {
+    static_assert(std::is_arithmetic<T>::value);
+
     RelearnException::check(values.size() > 0, "In min_max_acc, values had size 0");
     RelearnException::check(values.size() == disable_flags.size(), "In min_max_acc, values and disable_flags hat different sizes");
-    
+
     size_t first_index = 0;
 
     while (disable_flags[first_index] == 0) {
         first_index++;
     }
+
+    RelearnException::check(first_index < values.size(), "In min_max_acc, all were disabled");
 
     T min = values[first_index];
     T max = values[first_index];
@@ -54,15 +67,23 @@ std::tuple<T, T, T, size_t> min_max_acc(const std::vector<T>& values, const std:
     return std::make_tuple(min, max, acc, num_values);
 }
 
+/**
+ * @brief Counts the number of digits necessary to print the value
+ * @tparam T Must be integral
+ * @param val The value to print
+ * @return The number of digits of val
+ */
 template <typename T>
 constexpr unsigned int num_digits(T val) noexcept {
-    unsigned int num_digits = 0;
+    static_assert(std::is_integral<T>::value);
 
-    do {
+    unsigned int num_digits = 1;
+
+    while (val >= T(10)) {
         ++num_digits;
         // NOLINTNEXTLINE
         val /= 10;
-    } while (val != 0);
+    } 
 
     return num_digits;
 }

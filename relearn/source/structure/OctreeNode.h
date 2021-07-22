@@ -113,14 +113,14 @@ public:
      *      (d) Allocating a new object in the shared memory window fails
      *      (e) Something went wrong within the insertion
      * @return A pointer to the newly created and inserted node
-    */
+     */
     [[nodiscard]] OctreeNode* insert(const Vec3d& position, const size_t neuron_id, int rank);
 
     /**
      * @brief Sets the associated MPI rank
      * @param new_rank The associated MPI rank, >= 0
      * @exception Throws a RelearnException if new_rank < 0
-    */
+     */
     void set_rank(int new_rank) {
         RelearnException::check(new_rank >= 0, "In OctreeNode::set_rank, new_rank was: %u", new_rank);
         rank = new_rank;
@@ -130,7 +130,7 @@ public:
      * @brief Sets the level in the octree
      * @param new_level The level in the octree, < Constants::uninitialized
      * @expection Throws a RelearnException if new_level is too large
-    */
+     */
     void set_level(size_t new_level) {
         RelearnException::check(new_level < Constants::uninitialized, "In OctreeNode::set_level, new_level was: %u", new_level);
         level = new_level;
@@ -146,7 +146,7 @@ public:
     /**
      * @brief Sets the neuron id in the associated cell
      * @param neuron_id The new neuron id
-    */
+     */
     void set_cell_neuron_id(size_t neuron_id) noexcept {
         cell.set_neuron_id(neuron_id);
     }
@@ -156,7 +156,7 @@ public:
      * @param min The minimum boundary of the cell
      * @param max The maximum boundary of the cell
      * @exception Throws a RelearnException if one ordinate of min is larger than the associated of max
-    */
+     */
     void set_cell_size(const Vec3d& min, const Vec3d& max) {
         cell.set_size(min, max);
     }

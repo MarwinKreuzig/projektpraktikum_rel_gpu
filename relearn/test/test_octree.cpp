@@ -965,9 +965,6 @@ TEST_F(OctreeTest, testOctreeSetterGetter) {
 
         level_of_branch_nodes = uid(mt);
 
-        octree.set_size(min, max);
-        octree.set_level_of_branch_nodes(level_of_branch_nodes);
-
         ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
         ASSERT_EQ(octree.get_xyz_max(), max);
         ASSERT_EQ(octree.get_xyz_min(), min);
@@ -993,8 +990,6 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
         Octree octree(min, max, level_of_branch_nodes);
 
         std::tie(min, max) = get_random_simulation_box_size(mt);
-
-        ASSERT_THROW(octree.set_size(max, min), RelearnException);
 
         make_mpi_mem_available();
     }

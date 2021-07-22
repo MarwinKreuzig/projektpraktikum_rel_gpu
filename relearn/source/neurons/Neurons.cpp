@@ -300,8 +300,8 @@ Neurons::StatisticalMeasures Neurons::global_statistics(const std::vector<double
     const double avg = MPIWrapper::all_reduce(my_avg, MPIWrapper::ReduceFunction::sum, scope);
 
     /**
-	* Calc variance
-	*/
+	 * Calc variance
+	 */
     double my_var = 0;
     for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {

@@ -38,6 +38,7 @@ public:
     public:
         /**
          * @brief Initializes the object with the number of dendrites (connected and total, excitatory and inhibitory) for later look-up in operator() on the basis of the neuron id
+         *      In case it is only used to update inner nodes (that don't have a neuron id), the vectors can be empty and number_neurons 0
          * @param dendrites_excitatory_counts The number of total excitatory dendrites, accessed via operator[] with the neuron ids
          * @param dendrites_excitatory_connected_counts The number of connected excitatory dendrites, accessed via operator[] with the neuron ids
          * @param dendrites_inhibitory_counts The number of total inhibitory dendrites, accessed via operator[] with the neuron ids

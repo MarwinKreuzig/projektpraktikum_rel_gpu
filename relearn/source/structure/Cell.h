@@ -30,7 +30,7 @@ public:
      * @param min The minimum x, y, and z of the sell
      * @param max The maximum x, y, and z of the sell
      * @exception Throws a RelearnException if one component of min is larger than the respective component of max
-    */
+     */
     void set_size(const Vec3d& min, const Vec3d& max) {
         RelearnException::check(min.get_x() <= max.get_x(), "In Cell::set_size, x was not ok");
         RelearnException::check(min.get_y() <= max.get_y(), "In Cell::set_size, y was not ok");
@@ -62,7 +62,7 @@ public:
     /**
      * @brief Sets the dendrite position for both inhibitory and excitatory
      * @param opt_position The dendrite position, can be empty
-    */
+     */
     void set_dendrite_position(const std::optional<Vec3d>& opt_position) noexcept {
         set_excitatory_dendrite_position(opt_position);
         set_inhibitory_dendrite_position(opt_position);
