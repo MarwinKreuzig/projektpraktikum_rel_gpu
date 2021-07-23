@@ -39,7 +39,7 @@ Octree::Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branc
 void Octree::construct_global_tree_part() {
     RelearnException::check(root == nullptr, "root was not null in the construction of the global state!");
 
-    SpaceFillingCurve<Morton> space_curve{static_cast<uint8_t>(level_of_branch_nodes)};
+    SpaceFillingCurve<Morton> space_curve{ static_cast<uint8_t>(level_of_branch_nodes) };
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -381,11 +381,11 @@ void Octree::synchronize_local_trees() {
 
     // Update global tree
     Timers::start(TimerRegion::UPDATE_GLOBAL_TREE);
-    
+
     // Only update whenever there are other branches to update
     if (level_of_branch_nodes > 0) {
         update_from_level(level_of_branch_nodes - 1);
     }
-    
+
     Timers::stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
 }

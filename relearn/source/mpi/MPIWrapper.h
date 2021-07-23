@@ -183,14 +183,43 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs or if root_rank is < 0
      * @return On the MPI rank root_rank: The results of the componentwise reduction; A dummy value on every other MPI rank
      */
-    template <typename T, size_t size>
-    [[nodiscard]] static std::array<T, size> reduce(const std::array<T, size>& src, ReduceFunction function, int root_rank, Scope scope) {
+    template <size_t size>
+    [[nodiscard]] static std::array<double, size> reduce(const std::array<double, size>& src, ReduceFunction function, int root_rank, Scope scope) {
         RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
 
-        std::array<T, size> dst{};
+        std::array<double, size> dst{ 0.0 };
 
-        const auto count = static_cast<int>(src.size() * sizeof(T));
-        reduce(src.data(), dst.data(), count, function, root_rank, scope);
+        const MPI_Comm mpi_scope = translate_scope(scope);
+        const MPI_Op mpi_reduce_function = translate_reduce_function(function);
+
+        // NOLINTNEXTLINE
+        const int errorcode = MPI_Reduce(src.data(), dst.data(), size, MPI_DOUBLE, mpi_reduce_function, root_rank, mpi_scope);
+        RelearnException::check(errorcode == 0, "Error in reduce: %d", errorcode);
+
+        return dst;
+    }
+
+    /**
+     * @brief Reduces multiple values for every MPI rank in the given scope with a reduction function such that the root_rank has the final result. The reduction is performed componentwise
+     * @param src The local array of values that shall be reduced
+     * @param function The reduction function, should be associative and commutative
+     * @param root_rank The MPI rank that shall hold the final result
+     * @param scope The scope in which the reduction has to take place
+     * @exception Throws a RelearnException if an MPI error occurs or if root_rank is < 0
+     * @return On the MPI rank root_rank: The results of the componentwise reduction; A dummy value on every other MPI rank
+     */
+    template <size_t size>
+    [[nodiscard]] static std::array<int64_t, size> reduce(const std::array<int64_t, size>& src, ReduceFunction function, int root_rank, Scope scope) {
+        RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
+
+        std::array<int64_t, size> dst{ 0.0 };
+
+        const MPI_Comm mpi_scope = translate_scope(scope);
+        const MPI_Op mpi_reduce_function = translate_reduce_function(function);
+
+        // NOLINTNEXTLINE
+        const int errorcode = MPI_Reduce(src.data(), dst.data(), size, MPI_INT64_T, mpi_reduce_function, root_rank, mpi_scope);
+        RelearnException::check(errorcode == 0, "Error in reduce: %d", errorcode);
 
         return dst;
     }

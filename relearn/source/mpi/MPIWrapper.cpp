@@ -142,6 +142,8 @@ void MPIWrapper::reduce(const void* src, void* dst, int size, ReduceFunction fun
     const MPI_Comm mpi_scope = translate_scope(scope);
     const MPI_Op mpi_reduce_function = translate_reduce_function(function);
 
+    const auto* s_ptr = reinterpret_cast<const int64_t*>(src);
+
     // NOLINTNEXTLINE
     const int errorcode = MPI_Reduce(src, dst, size, MPI_CHAR, mpi_reduce_function, root_rank, mpi_scope);
     RelearnException::check(errorcode == 0, "Error in reduce: %d", errorcode);

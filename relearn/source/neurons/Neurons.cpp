@@ -1187,16 +1187,16 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
     sum_dends_inh_vacant = sum_dends_inh_cnts - sum_dends_inh_connected_cnts;
 
     // Get global sums at rank 0
-    std::array<unsigned int, Constants::num_items_per_request> sums_local = { sum_axons_exc_vacant,
+    std::array<int64_t, Constants::num_items_per_request> sums_local = { sum_axons_exc_vacant,
         sum_axons_inh_vacant,
         sum_dends_exc_vacant,
         sum_dends_inh_vacant,
-        static_cast<unsigned int>(sum_synapses_deleted),
-        static_cast<unsigned int>(sum_synapses_created) };
+        static_cast<int64_t>(sum_synapses_deleted),
+        static_cast<int64_t>(sum_synapses_created) };
 
     // NOLINTNEXTLINE
     RelearnException::check(Constants::num_items_per_request > 5, "In Neurons, number of items per request is smaller than 6");
-    std::array<unsigned int, Constants::num_items_per_request> sums_global = MPIWrapper::reduce(sums_local, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
+    std::array<int64_t, Constants::num_items_per_request> sums_global = MPIWrapper::reduce(sums_local, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
 
     // Output data
     if (0 == MPIWrapper::get_my_rank()) {

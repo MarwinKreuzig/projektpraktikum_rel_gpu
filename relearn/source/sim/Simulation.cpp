@@ -125,8 +125,7 @@ void Simulation::initialize() {
 
     NeuronMonitor::neurons_to_monitor = neurons;
 
-    partition->print_my_subdomains_info_rank(0);
-    partition->print_my_subdomains_info_rank(1);
+    partition->print_my_subdomains_info_rank(-1);
 
     LogFiles::print_message_rank(0, "Neurons created");
 
@@ -211,14 +210,6 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
         if (step % Constants::plasticity_update_step == 0) {
             size_t num_synapses_deleted = 0;
             size_t num_synapses_created = 0;
-
-            //if (0 == MPIWrapper::get_my_rank()) {
-            //    std::stringstream sstring; // For output generation
-            //    sstring << "** UPDATE CONNECTIVITY AFTER: " << step << " of " << number_steps
-            //            << " msec ** [" << Timers::wall_clock_time() << "]\n";
-            //    sstring << std::flush;
-            //    LogFiles::write_to_file(LogFiles::EventType::Cout, sstring.str(), true);
-            //}
 
             Timers::start(TimerRegion::UPDATE_CONNECTIVITY);
 

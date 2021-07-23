@@ -153,9 +153,6 @@ void Timers::print() {
 
         sstring << "\n\n";
 
-        // Restore old precision
-        sstring.precision(old_precision);
+        LogFiles::write_to_file(LogFiles::EventType::Timers, true, sstring.str());
     }
-
-    LogFiles::write_to_file(LogFiles::EventType::Timers, true, sstring.str());
 }

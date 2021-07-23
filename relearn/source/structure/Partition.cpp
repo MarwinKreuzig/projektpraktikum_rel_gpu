@@ -123,7 +123,7 @@ void Partition::print_my_subdomains_info_rank(int rank) {
                 << " )\n";
     }
 
-    LogFiles::print_message_rank(rank, sstream.str().c_str());
+    LogFiles::write_to_file(LogFiles::EventType::Cout, false, sstream.str());
 }
 
 bool Partition::is_neuron_local(size_t neuron_id) const {

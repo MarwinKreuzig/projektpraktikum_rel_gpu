@@ -31,7 +31,7 @@ public:
      *      Does not load any neurons.
      * @param file_path The path to the file to load
      * @exception Throws a RelearnException if there occurred some erros while processing the file 
-    */
+     */
     explicit SubdomainFromFile(const std::string& file_path);
 
     SubdomainFromFile(const SubdomainFromFile& other) = delete;
