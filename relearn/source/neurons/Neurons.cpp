@@ -716,7 +716,10 @@ void Neurons::make_creation_request_for(
                 current_node->add_to_interactionlist(nodes_with_dend.at(i));
             }    
         }
-        current_node->print_calculations(needed, Octree::default_sigma);
+        
+        /*if (current_node->get_cell().get_neuron_num_axons_for(needed) > Constants::max_neurons_in_source) {
+            current_node->print_calculations(needed, Octree::default_sigma);
+        }*/
        
         //node is a leaf
         if (!current_node->is_parent()){
