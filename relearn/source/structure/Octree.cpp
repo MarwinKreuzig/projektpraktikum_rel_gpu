@@ -26,8 +26,7 @@
 #include <sstream>
 
 Octree::Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes)
-    : root_level(0)
-    , level_of_branch_nodes(level_of_branch_nodes) {
+    : level_of_branch_nodes(level_of_branch_nodes) {
 
     const auto num_local_trees = 1ULL << (3 * level_of_branch_nodes);
     local_trees.resize(num_local_trees, nullptr);
@@ -133,7 +132,7 @@ OctreeNode* Octree::insert(const Vec3d& position, size_t neuron_id, int rank) {
         new_node_to_insert->set_rank(rank);
 
         // Init root with tree's root level
-        new_node_to_insert->set_level(root_level);
+        new_node_to_insert->set_level(0);
         root = new_node_to_insert;
 
         return new_node_to_insert;

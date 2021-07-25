@@ -302,9 +302,6 @@ private:
 
     std::vector<OctreeNode*> local_trees{};
 
-    // Level which is assigned to the root of the tree (default = 0)
-    size_t root_level{ Constants::uninitialized };
-
     // Two points describe simulation box size of the tree
     Vec3d xyz_min{ 0 };
     Vec3d xyz_max{ 0 };
