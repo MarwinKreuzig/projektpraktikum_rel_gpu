@@ -212,7 +212,7 @@ public:
     [[nodiscard]] static std::array<int64_t, size> reduce(const std::array<int64_t, size>& src, ReduceFunction function, int root_rank, Scope scope) {
         RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
 
-        std::array<int64_t, size> dst{ 0.0 };
+        std::array<int64_t, size> dst{ 0 };
 
         const MPI_Comm mpi_scope = translate_scope(scope);
         const MPI_Op mpi_reduce_function = translate_reduce_function(function);
