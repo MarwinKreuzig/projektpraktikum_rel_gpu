@@ -74,42 +74,9 @@ namespace apsp {
 
 		const int64_t  V = gr.V;
 
-		// Make new graph for Bellman-Ford
-		// First, a new node q is added to the graph, connected by zero-weight edges
-	//    // to each of the other nodes.
-	//    graph_t bf_graph{ V + 1, gr.E + V };
-	//    std::copy(gr.edge_array.begin(), gr.edge_array.end(), bf_graph.edge_array.begin());
-	//    std::copy(gr.weights.begin(), gr.weights.end(), bf_graph.weights.begin());
-	//    std::fill(bf_graph.weights.begin() + gr.E, bf_graph.weights.begin() + gr.E + V, 0);
-	//
-	//#ifdef _OPENMP
-	//#pragma omp parallel for
-	//#endif
-	//    for (int e = 0; e < V; e++) {
-	//        bf_graph.edge_array[e + gr.E] = APSP_Edge(V, e);
-	//    }
-
-		// Second, the Bellman–Ford algorithm is used, starting from the new vertex q,
-		// to find for each vertex v the minimum weight h(v) of a path from q to v. If
-		// this step detects a negative cycle, the algorithm is terminated.
-		// TODO Can run parallel version?
-		//std::vector<float> h(bf_graph.V);
-		//if (const bool r = bellman_ford(bf_graph, h); !r) {
-		//    std::cerr << "\nNegative Cycles Detected! Terminating Early\n";
-		//    exit(1);
-		//}
-		// Next the edges of the original graph are reweighted using the values computed
-		// by the Bellman–Ford algorithm: an edge from u to v, having length
-		// w(u,v), is given the new length w(u,v) + h(u) − h(v).
-	//#ifdef _OPENMP
-	//#pragma omp parallel for
-	//#endif
-	//    for (int e = 0; e < gr.E; e++) {
-	//        const auto [u, v] = gr.edge_array[e];
-	//        gr.weights[e] = gr.weights[e] /*+ h[u] - h[v]*/;
-	//    }
-
 		APSP_Graph G(gr.edge_array.begin(), gr.edge_array.end(), gr.weights.begin(), V);
+
+		std::cout << "Performing Dijkstra on nodes\n";
 
 		std::atomic<int> counter(0);
 
@@ -136,6 +103,8 @@ namespace apsp {
 				}
 			}
 		}
+
+		std::cout << std::endl;
 	}
 
 } // namespace apsp

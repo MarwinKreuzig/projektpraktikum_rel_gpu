@@ -19,6 +19,8 @@
 #include <utility>
 #include <vector>
 
+#include <omp.h>
+
 #include "apsp/apsp.h"
 
 static void average_clustering_coefficient(Graph::FullGraph& graph, const Weight<Graph::FullGraph>& weight);
@@ -224,33 +226,63 @@ std::tuple<float, float> Graph::calculate_all_pairs_shortest_paths() {
 
     size_t number_values = 0;
 
-    float avg = 0.0;
-    float sum = 0.0;
+    long double sum = 0.0;
+    long double inverse_sum = 0.0;
 
+    std::cout << "Performing global efficiency calculation\n";
+
+    int counter = 0;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)
+#endif
     for (size_t i = 0; i < num_neurons; i++) {
+
+        long double local_sum = 0.0;
+        long double local_inverse_sum = 0.0;
+        size_t local_number_values = 0;
+
         for (size_t j = 0; j < num_neurons; j++) {
             // Consider pairs of different neurons only
             if (i != j) {
-                const float val = distances[i * num_neurons + j];
+                const auto val = distances[i * num_neurons + j];
 
                 if (val == std::numeric_limits<float>::max()) {
                     continue;
                 }
 
                 // Average
-                number_values++;
-                const float delta = val - avg;
-                avg += delta / static_cast<float>(number_values);
+                local_number_values++;
+                local_sum += val;
 
                 // Sum
                 if (val != 0.0) {
-                    sum += 1 / val;
+                    local_inverse_sum += 1 / val;
                 }
+            }
+        }
+
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+        {
+            sum += local_sum;
+            inverse_sum += local_inverse_sum;
+            number_values += local_number_values;
+
+            counter++;
+
+            if (omp_get_thread_num() == 0) {
+                std::cout << counter << '\n';
             }
         }
     }
 
-    const float global_efficiency = sum / static_cast<float>(num_neurons * (num_neurons - 1));
+    std::cout << std::endl;
+
+    const float avg = sum / static_cast<float>(number_values);
+
+    const float global_efficiency = inverse_sum / static_cast<float>(num_neurons * (num_neurons - 1));
 
     return { avg, global_efficiency };
 }
