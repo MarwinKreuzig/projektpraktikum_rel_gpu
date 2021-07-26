@@ -173,13 +173,14 @@ public:
 
     /**
      * @brief Sets the branch node with the specified local id
-     * @param node_to_insert The node to insert as local tree, not nullptr, ownership is not taken
+     * @param node_to_insert The node to insert as local tree, not nullptr, ownership is not taken, must be a parent node
      * @param index_1d The id for which to insert the local tree
      * @exception Throws a RelearnException if index_1d is too large or node_to_insert is nullptr
      */
     void insert_local_tree(OctreeNode* node_to_insert, size_t index_1d) {
         RelearnException::check(index_1d < local_trees.size(), "Octree::get_local_root, local_id was too large");
         RelearnException::check(node_to_insert != nullptr, "Octree::get_local_root, node_to_insert is nullptr");
+        RelearnException::check(node_to_insert->is_parent(), "Cannot insert an empty node");
         *local_trees[index_1d] = *node_to_insert;
     }
 

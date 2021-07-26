@@ -1353,6 +1353,7 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
             }
 
             *nodes_to_save_local_trees[i] = *(octree.get_local_root(i));
+            node.set_parent();
             octree.insert_local_tree(&node, i);
         }
 
@@ -1371,7 +1372,7 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
 
         for (auto i = 0; i < num_local_trees; i++) {
             auto* local_node = nodes_to_save_local_trees[i];
-
+            local_node->set_parent();
             octree.insert_local_tree(local_node, i);
 
             auto* local_tree = octree.get_local_root(i);
