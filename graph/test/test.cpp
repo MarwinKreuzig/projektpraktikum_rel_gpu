@@ -12,13 +12,13 @@
 #include "../source/graph.h"
 #include "../source/apsp/apsp.h"
 
-const auto max = std::numeric_limits<double>::max();
+const auto max = std::numeric_limits<float>::max();
 
 struct TestExample {
     Graph graph;
-    double expected_sum;
-    double expected_avg;
-    std::vector<double> expected_distances;
+    float expected_sum;
+    float expected_avg;
+    std::vector<float> expected_distances;
 };
 
 static void doTest(TestExample& example, bool use_cuda_if_available) {
@@ -30,22 +30,22 @@ static void doTest(TestExample& example, bool use_cuda_if_available) {
     const auto num_neurons = graph.get_num_vertices();
 
     size_t number_values = 0;
-    double avg = 0.0;
-    double sum = 0.0;
+    float avg = 0.0;
+    float sum = 0.0;
     for (size_t i = 0; i < num_neurons; i++) {
         for (size_t j = 0; j < num_neurons; j++) {
             // Consider pairs of different neurons only
             if (i != j) {
-                const double val = distances[i * num_neurons + j];
+                const float val = distances[i * num_neurons + j];
 
-                if (val == std::numeric_limits<double>::max()) {
+                if (val == std::numeric_limits<float>::max()) {
                     continue;
                 }
 
                 // Average
                 number_values++;
-                const double delta = val - avg;
-                avg += delta / static_cast<double>(number_values);
+                const float delta = val - avg;
+                avg += delta / static_cast<float>(number_values);
 
                 // Sum
                 if (val != 0.0) {
