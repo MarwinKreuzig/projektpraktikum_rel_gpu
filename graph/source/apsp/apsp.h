@@ -12,9 +12,9 @@ namespace apsp {
  * @param full_graph the input graph
  * @param num_neurons number of neurons
  * @param use_cuda_if_available select the cuda implementation if the cuda implementation is available (compiled)
- * @return std::vector<double> distances
+ * @return std::vector<float> distances
  */
-std::vector<double> johnson(typename Graph::FullGraph& full_graph, size_t num_neurons, bool use_cuda_if_available = true);
+std::vector<float> johnson(typename Graph::FullGraph& full_graph, size_t num_neurons, bool use_cuda_if_available = true);
 
 /**
  * @brief Johnson algorithm to get the avarage pair shortest paths; CUDA implementation
@@ -23,18 +23,18 @@ std::vector<double> johnson(typename Graph::FullGraph& full_graph, size_t num_ne
  *
  * @param full_graph the input graph
  * @param num_neurons number of neurons
- * @return std::vector<double> distances
+ * @return std::vector<float> distances
  */
-std::vector<double> johnson_cuda(typename Graph::FullGraph& full_graph, size_t num_neurons);
+//std::vector<float> johnson_cuda(typename Graph::FullGraph& full_graph, size_t num_neurons);
 
 /**
  * @brief Johnson algorithm to get the avarage pair shortest paths; OpenMP implementation (serial if no OpenMP available)
  *
  * @param full_graph the input graph
  * @param num_neurons number of neurons
- * @return std::vector<double> distances
+ * @return std::vector<float> distances
  */
-std::vector<double> johnson_parallel(typename Graph::FullGraph& full_graph, size_t num_neurons);
+std::vector<float> johnson_parallel(typename Graph::FullGraph& full_graph, size_t num_neurons);
 }
 
 #endif

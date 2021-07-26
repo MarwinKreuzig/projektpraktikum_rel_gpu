@@ -17,10 +17,10 @@ public:
     };
 
     struct EdgeProperties {
-        double weight;
-        double weight_inverse;
-        double weight_div_max_weight;
-        double weight_one;
+        float weight;
+        float weight_inverse;
+        float weight_div_max_weight;
+        float weight_one;
     };
 
     using FullGraph = boost::adjacency_list<
@@ -59,7 +59,7 @@ public:
 
     void calculate_metrics(std::ostream& os);
 
-    std::tuple<double, double, double> smallest_coordinate_per_dimension();
+    std::tuple<float, float, float> smallest_coordinate_per_dimension();
 
     void add_offset_to_positions(const Position& offset);
 
@@ -78,13 +78,13 @@ public:
 private:
     void init_edge_weight();
 
-    double calculate_average_euclidean_distance();
+    float calculate_average_euclidean_distance();
 
-    std::tuple<double, double> calculate_all_pairs_shortest_paths();
+    std::tuple<float, float> calculate_all_pairs_shortest_paths();
 
-    double calculate_average_betweenness_centrality();
+    float calculate_average_betweenness_centrality();
 
-    double calculate_clustering_coefficient();
+    float calculate_clustering_coefficient();
 
     void print_vertex(FullVertex v, std::ostream& os);
 
@@ -111,7 +111,7 @@ struct Weight {
         , functor_version(std::move(version)){};
     Graph& graph;
     const std::string functor_version;
-    virtual double operator()(typename boost::graph_traits<Graph>::edge_descriptor edge) const = 0;
+    virtual float operator()(typename boost::graph_traits<Graph>::edge_descriptor edge) const = 0;
 };
 
 // Edge weight is 1/weight
@@ -120,7 +120,7 @@ struct WeightInverse : public Weight<Graph> {
     explicit WeightInverse(Graph& graph)
         : Weight<Graph>(graph, "1/weight"){};
 
-    double operator()(typename boost::graph_traits<Graph>::edge_descriptor edge) const final {
+    float operator()(typename boost::graph_traits<Graph>::edge_descriptor edge) const final {
         return this->graph[edge].weight_inverse;
     }
 };
@@ -131,7 +131,7 @@ struct WeightDivMaxWeight : public Weight<Graph> {
     explicit WeightDivMaxWeight(Graph& graph)
         : Weight<Graph>(graph, "weight/max{weights}"){};
 
-    double operator()(typename boost::graph_traits<Graph>::edge_descriptor edge) const final {
+    float operator()(typename boost::graph_traits<Graph>::edge_descriptor edge) const final {
         return this->graph[edge].weight_div_max_weight;
     }
 };
@@ -142,7 +142,7 @@ struct WeightOne : public Weight<Graph> {
     explicit WeightOne(Graph& graph)
         : Weight<Graph>(graph, "weight = 1"){};
 
-    double operator()(typename boost::graph_traits<Graph>::edge_descriptor edge) const final {
+    float operator()(typename boost::graph_traits<Graph>::edge_descriptor edge) const final {
         return this->graph[edge].weight_one;
     }
 };

@@ -122,7 +122,7 @@ void Graph::calculate_metrics(std::ostream& os) {
     os << "The minimum number of edges is: " << min << " and the maximum is: " << max << "\n";
 
     os << "Calculating average euclidean distance...\n";
-    const double avg_eucl_dist = calculate_average_euclidean_distance();
+    const float avg_eucl_dist = calculate_average_euclidean_distance();
     os << "It was: " << avg_eucl_dist << "\n";
 
     os << "Calculating all pairs shortest paths...\n";
@@ -131,16 +131,16 @@ void Graph::calculate_metrics(std::ostream& os) {
     os << "Global efficiency was: " << glob_eff << "\n";
 
     os << "Calculating average betweenness centrality...\n";
-    const double avg_betw_cent = calculate_average_betweenness_centrality();
+    const float avg_betw_cent = calculate_average_betweenness_centrality();
     os << "It was: " << avg_betw_cent << "\n";
 
     os << "Calculating clustering coefficient...\n";
-    const double clust_coeff = calculate_clustering_coefficient();
+    const float clust_coeff = calculate_clustering_coefficient();
     os << "It was: " << clust_coeff << "\n";
 }
 
-std::tuple<double, double, double> Graph::smallest_coordinate_per_dimension() {
-    constexpr const double max_double = std::numeric_limits<double>::max();
+std::tuple<float, float, float> Graph::smallest_coordinate_per_dimension() {
+    constexpr const float max_double = std::numeric_limits<float>::max();
     Position min_coords(max_double, max_double, max_double);
 
     for (auto [it_vtx, it_vtx_end] = boost::vertices(full_graph); it_vtx != it_vtx_end; ++it_vtx) {
@@ -179,8 +179,8 @@ size_t Graph::get_num_edges() {
 }
 
 void Graph::init_edge_weight() {
-    double max_weight = std::numeric_limits<double>::lowest();
-    double min_weight = std::numeric_limits<double>::max();
+    float max_weight = std::numeric_limits<float>::lowest();
+    float min_weight = std::numeric_limits<float>::max();
 
     for (auto [current, end] = boost::edges(full_graph); current != end; ++current) {
         auto& current_edge = full_graph[*current];
@@ -195,9 +195,9 @@ void Graph::init_edge_weight() {
     }
 }
 
-double Graph::calculate_average_euclidean_distance() {
-    double avg_eucl_dist = 0.0;
-    double sum_weights = 0.0;
+float Graph::calculate_average_euclidean_distance() {
+    float avg_eucl_dist = 0.0;
+    float sum_weights = 0.0;
 
     for (auto [current, end] = boost::edges(full_graph); current != end; ++current) {
         const auto current_prop = *current;
@@ -217,30 +217,30 @@ double Graph::calculate_average_euclidean_distance() {
     return avg_eucl_dist / sum_weights;
 }
 
-std::tuple<double, double> Graph::calculate_all_pairs_shortest_paths() {
+std::tuple<float, float> Graph::calculate_all_pairs_shortest_paths() {
     const auto num_neurons = get_num_vertices();
 
     const auto distances = apsp::johnson(full_graph, num_neurons, use_cuda_);
 
     size_t number_values = 0;
 
-    double avg = 0.0;
-    double sum = 0.0;
+    float avg = 0.0;
+    float sum = 0.0;
 
     for (size_t i = 0; i < num_neurons; i++) {
         for (size_t j = 0; j < num_neurons; j++) {
             // Consider pairs of different neurons only
             if (i != j) {
-                const double val = distances[i * num_neurons + j];
+                const float val = distances[i * num_neurons + j];
 
-                if (val == std::numeric_limits<double>::max()) {
+                if (val == std::numeric_limits<float>::max()) {
                     continue;
                 }
 
                 // Average
                 number_values++;
-                const double delta = val - avg;
-                avg += delta / static_cast<double>(number_values);
+                const float delta = val - avg;
+                avg += delta / static_cast<float>(number_values);
 
                 // Sum
                 if (val != 0.0) {
@@ -250,33 +250,33 @@ std::tuple<double, double> Graph::calculate_all_pairs_shortest_paths() {
         }
     }
 
-    const double global_efficiency = sum / static_cast<double>(num_neurons * (num_neurons - 1));
+    const float global_efficiency = sum / static_cast<float>(num_neurons * (num_neurons - 1));
 
     return { avg, global_efficiency };
 }
 
-double Graph::calculate_average_betweenness_centrality() {
+float Graph::calculate_average_betweenness_centrality() {
     const auto num_neurons = get_num_vertices();
-    std::vector<double> v_centrality_vec(num_neurons, 0.0);
+    std::vector<float> v_centrality_vec(num_neurons, 0.0);
 
-    boost::iterator_property_map<std::vector<double>::iterator, boost::identity_property_map>
+    boost::iterator_property_map<std::vector<float>::iterator, boost::identity_property_map>
         v_centrality_map(v_centrality_vec.begin());
 
     boost::brandes_betweenness_centrality(full_graph,
         centrality_map(v_centrality_map).weight_map(boost::get(&EdgeProperties::weight_inverse, full_graph)));
 
     const auto average_bc = std::reduce(v_centrality_vec.begin(), v_centrality_vec.end());
-    return average_bc / static_cast<double>(num_neurons);
+    return average_bc / static_cast<float>(num_neurons);
 }
 
-double Graph::calculate_clustering_coefficient() {
+float Graph::calculate_clustering_coefficient() {
     average_clustering_coefficient(full_graph, WeightInverse<FullGraph>(full_graph));
     average_clustering_coefficient(full_graph, WeightOne<FullGraph>(full_graph));
     average_clustering_coefficient(full_graph, WeightDivMaxWeight<FullGraph>(full_graph));
 
     average_clustering_coefficient_unweighted_undirected(full_graph);
 
-    using ClusteringProperty = boost::exterior_vertex_property<ConnectivityGraph, double>;
+    using ClusteringProperty = boost::exterior_vertex_property<ConnectivityGraph, float>;
     using ClusteringContainer = ClusteringProperty::container_type;
     using ClusteringMap = ClusteringProperty::map_type;
 
@@ -354,13 +354,13 @@ static void average_clustering_coefficient(typename Graph::FullGraph& graph, con
     size_t num_denominator_greater_than_zero = 0;
     size_t num_bilateral_edges = 0;
     size_t num_vals = 0;
-    double avg = 0;
+    float avg = 0;
 
     // For all vertices i
     for (auto [vertex_iter, vertex_iter_end] = boost::vertices(graph); vertex_iter != vertex_iter_end; ++vertex_iter) {
         std::set<typename boost::graph_traits<Graph::FullGraph>::vertex_descriptor> neighbors_of_vertex_i{};
         typename std::set<typename boost::graph_traits<Graph::FullGraph>::vertex_descriptor>::iterator neighbors_of_vertex_i_iter;
-        double numerator_clustering_coefficient_vertex_i = 0;
+        float numerator_clustering_coefficient_vertex_i = 0;
         size_t num_bilateral_edges_vertex_i = 0;
 
         const auto vertex_i = *vertex_iter;
@@ -401,24 +401,24 @@ static void average_clustering_coefficient(typename Graph::FullGraph& graph, con
             for (const auto vertex_k : neighbors_of_vertex_j) {
                 if ((vertex_i != vertex_j) && (vertex_j != vertex_k) && (vertex_i != vertex_k)) {
                     auto [edge, found] = boost::edge(vertex_i, vertex_j, graph);
-                    const double weight_ij = found ? weight(edge) : 0;
+                    const float weight_ij = found ? weight(edge) : 0;
 
                     std::tie(edge, found) = boost::edge(vertex_j, vertex_i, graph);
-                    const double weight_ji = found ? weight(edge) : 0;
+                    const float weight_ji = found ? weight(edge) : 0;
 
                     std::tie(edge, found) = boost::edge(vertex_j, vertex_k, graph);
-                    const double weight_jk = found ? weight(edge) : 0;
+                    const float weight_jk = found ? weight(edge) : 0;
 
                     std::tie(edge, found) = boost::edge(vertex_k, vertex_j, graph);
-                    const double weight_kj = found ? weight(edge) : 0;
+                    const float weight_kj = found ? weight(edge) : 0;
 
                     std::tie(edge, found) = boost::edge(vertex_i, vertex_k, graph);
-                    const double weight_ik = found ? weight(edge) : 0;
+                    const float weight_ik = found ? weight(edge) : 0;
 
                     std::tie(edge, found) = boost::edge(vertex_k, vertex_i, graph);
-                    const double weight_ki = found ? weight(edge) : 0;
+                    const float weight_ki = found ? weight(edge) : 0;
 
-                    const double exponent = static_cast<double>(1) / 3;
+                    const float exponent = static_cast<float>(1) / 3;
                     numerator_clustering_coefficient_vertex_i += (pow(weight_ij, exponent) + pow(weight_ji, exponent)) * (pow(weight_jk, exponent) + pow(weight_kj, exponent)) * (pow(weight_ik, exponent) + pow(weight_ki, exponent));
                 }
             } // for all k
@@ -436,7 +436,7 @@ static void average_clustering_coefficient(typename Graph::FullGraph& graph, con
         // Include in average clustering coefficient
         num_vals++;
         const auto delta = clustering_coefficient_vertex_i - avg;
-        avg += delta / static_cast<double>(num_vals);
+        avg += delta / static_cast<float>(num_vals);
 
     } // for all i
 
@@ -451,7 +451,7 @@ static void average_clustering_coefficient_unweighted_undirected(typename Graph:
     size_t num_denominator_zero = 0;
     size_t num_denominator_greater_than_zero = 0;
     size_t num_vals = 0;
-    double avg = 0.0;
+    float avg = 0.0;
 
     // For all vertices i
     for (auto [vertex_iter, vertex_iter_end] = vertices(graph); vertex_iter != vertex_iter_end; ++vertex_iter) {
@@ -491,12 +491,12 @@ static void average_clustering_coefficient_unweighted_undirected(typename Graph:
             num_denominator_greater_than_zero++;
         }
 
-        const double clustering_coefficient_vertex_i = static_cast<double>(num_triangles_of_vertex_i) / static_cast<double>(max_num_triangles_of_vertex_i);
+        const float clustering_coefficient_vertex_i = static_cast<float>(num_triangles_of_vertex_i) / static_cast<float>(max_num_triangles_of_vertex_i);
 
         // Include in average clustering coefficient
         num_vals++;
         const auto delta = clustering_coefficient_vertex_i - avg;
-        avg += delta / static_cast<double>(num_vals);
+        avg += delta / static_cast<float>(num_vals);
     } // for all i
 
     //std::cout << "[" << wall_clock_time() << "] " << "Average clustering coefficient (unweighted, undirected): " << avg << std::endl;

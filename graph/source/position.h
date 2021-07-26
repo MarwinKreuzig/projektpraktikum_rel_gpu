@@ -5,13 +5,13 @@
 
 // Position of vertex
 struct Position {
-    double x{};
-    double y{};
-    double z{};
+    float x{};
+    float y{};
+    float z{};
 
     Position() = default;
 
-    Position(double x, double y, double z)
+    Position(float x, float y, float z)
         : x(x)
         , y(y)
         , z(z) {
@@ -35,7 +35,7 @@ struct Position {
         z += pos.z;
     }
 
-    [[nodiscard]] double CalcEuclDist(const Position& other) const {
+    [[nodiscard]] float CalcEuclDist(const Position& other) const {
         const auto diff_x = (x - other.x) * (x - other.x);
         const auto diff_y = (y - other.y) * (y - other.y);
         const auto diff_z = (z - other.z) * (z - other.z);
