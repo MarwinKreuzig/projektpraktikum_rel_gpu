@@ -77,7 +77,7 @@ protected:
     constexpr static double eps = 0.00001;
 
     constexpr static bool use_predetermined_seed = false;
-    constexpr static unsigned int predetermined_seed = 1749668066;
+    constexpr static unsigned int predetermined_seed = 4112570692;
 };
 
 class NetworkGraphTest : public RelearnTest {

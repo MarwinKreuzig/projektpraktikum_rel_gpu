@@ -196,7 +196,7 @@ public:
     }
 
     /**
-     * @brief Sets the node as the child with the given index
+     * @brief Sets the node as the child with the given index and updates the parent flag accordingly
      * @param node The new child node (can be nullptr)
      * @param idx The index of the child which shall be set, < Constants::number_oct
      * @exception Throws a RelearnException if idx >= Constants::number_oct
@@ -205,6 +205,16 @@ public:
         RelearnException::check(idx < Constants::number_oct, "In OctreeNode::set_child, idx was: %u", idx);
         // NOLINTNEXTLINE
         children[idx] = node;
+
+        bool has_children = false;
+
+        for (auto* child : children) {
+            if (child != nullptr) {
+                has_children = true;
+            }
+        }
+
+        parent = has_children;
     }
 
     /**

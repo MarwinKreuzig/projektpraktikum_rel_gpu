@@ -2,6 +2,7 @@
 
 #include "RelearnTest.hpp"
 
+#include "../source/neurons/models/SynapticElements.h"
 #include "../source/structure/Cell.h"
 #include "../source/structure/Partition.h"
 #include "../source/structure/Octree.h"
@@ -158,6 +159,20 @@ std::vector<OctreeNode*> extract_branch_nodes(OctreeNode* root) {
     return return_value;
 }
 
+SynapticElements create_synaptic_elements(size_t size, std::mt19937& mt, size_t max_free, SignalType st) {
+    SynapticElements se(ElementType::DENDRITE, 0.0);
+
+    se.init(size);
+
+    std::uniform_int_distribution<size_t> uid(0, max_free);
+
+    for (auto i = 0; i < size; i++) {
+        se.set_signal_type(i, st);
+        se.update_count(i, uid(mt));
+    }
+
+    return se;
+}
 
 TEST_F(OctreeTest, testCellSize) {
 
@@ -1162,6 +1177,8 @@ TEST_F(OctreeTest, testOctreeStructure) {
 
             if (current_node->is_parent()) {
                 const auto childs = current_node->get_children();
+                auto one_child_exists = false;
+
                 for (auto i = 0; i < 8; i++) {
                     const auto child = childs[i];
                     if (child != nullptr) {
@@ -1172,9 +1189,12 @@ TEST_F(OctreeTest, testOctreeStructure) {
                         const auto& expected_subcell_size = current_node->get_cell().get_size_for_octant(i);
 
                         ASSERT_EQ(expected_subcell_size, subcell_size);
+                    
+                        one_child_exists = true; 
                     }
                 }
-
+                
+                ASSERT_TRUE(one_child_exists);
                 ASSERT_EQ(current_node->get_cell().get_neuron_id(), Constants::uninitialized);
 
             } else {
@@ -1196,6 +1216,12 @@ TEST_F(OctreeTest, testOctreeStructure) {
                 ASSERT_LE(position.get_x(), cell_max.get_x());
                 ASSERT_LE(position.get_y(), cell_max.get_y());
                 ASSERT_LE(position.get_z(), cell_max.get_z());
+
+                const auto neuron_id = cell.get_neuron_id();
+
+                if (neuron_id < Constants::uninitialized) {
+                    ASSERT_LE(neuron_id, num_neurons + num_additional_ids);
+                }
             }
         }
 
@@ -1366,6 +1392,74 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
         for (auto i = 0; i < num_local_trees; i++) {
             delete nodes_to_save_local_trees[i];
             delete nodes_to_save_new_local_trees[i];
+        }
+
+        make_mpi_mem_available();
+    }
+}
+
+TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
+    const auto my_rank = MPIWrapper::get_my_rank();
+
+    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
+    std::uniform_int_distribution<size_t> uid(0, 10000);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+
+    std::uniform_int_distribution<size_t> uid_max_vacant(1, 100);
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size(mt);
+
+        Octree octree(min, max, 0);
+
+        size_t num_neurons = uid(mt);
+
+        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons, mt);
+
+        for (const auto& [position, id] : neurons_to_place) {
+            octree.insert(position, id, my_rank);
+        }
+
+        auto max_vacant_exc = uid_max_vacant(mt);
+        auto dends_exc = create_synaptic_elements(num_neurons, mt, max_vacant_exc, SignalType::EXCITATORY);
+
+        auto max_vacant_inh = uid_max_vacant(mt);
+        auto dends_inh = create_synaptic_elements(num_neurons, mt, max_vacant_inh, SignalType::EXCITATORY);
+
+        octree.update_local_trees(dends_exc, dends_inh, num_neurons);
+
+        std::stack<OctreeNode*> stack{};
+        stack.emplace(octree.get_root());
+
+        while (!stack.empty()) {
+            auto* current = stack.top();
+            stack.pop();
+
+            size_t sum_dends_exc = 0;
+            size_t sum_dends_inh = 0;
+
+            if (current->is_parent()) {
+                for (auto* child : current->get_children()) {
+                    if (child == nullptr) {
+                        continue;
+                    }
+
+                    sum_dends_exc += child->get_cell().get_number_excitatory_dendrites();
+                    sum_dends_inh += child->get_cell().get_number_inhibitory_dendrites();
+
+                    stack.emplace(child);
+                }
+            } else {
+                sum_dends_exc = dends_exc.get_count(current->get_cell().get_neuron_id());
+                sum_dends_inh = dends_inh.get_count(current->get_cell().get_neuron_id());
+            }
+
+            ASSERT_EQ(current->get_cell().get_number_excitatory_dendrites(), sum_dends_exc);
+            ASSERT_EQ(current->get_cell().get_number_inhibitory_dendrites(), sum_dends_inh);
         }
 
         make_mpi_mem_available();
