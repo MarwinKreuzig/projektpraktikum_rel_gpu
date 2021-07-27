@@ -86,7 +86,11 @@ TEST_F(NeuronsTest, testNeuronsConstructor) {
 
     auto model = std::make_unique<models::PoissonModel>();
 
-    Neurons neurons{ partition, std::move(model) };
+    auto dends_ex = std::make_unique<SynapticElements>(ElementType::DENDRITE, 0.2);
+    auto dends_in = std::make_unique<SynapticElements>(ElementType::DENDRITE, 0.2);
+    auto axs = std::make_unique<SynapticElements>(ElementType::AXON, 0.2);
+
+    Neurons neurons{ partition, std::move(model), std::move(axs), std::move(dends_ex), std::move(dends_in) };
 }
 
 TEST_F(NeuronsTest, testNeuronRankIdValid) {
