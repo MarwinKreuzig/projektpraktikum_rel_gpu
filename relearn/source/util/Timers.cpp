@@ -123,6 +123,10 @@ void Timers::print() {
                 << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES) + 1] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES) + 2] << "\n";
 
+        sstring << "      Update leaf nodes                        : " << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::UPDATE_LEAF_NODES)] << " | "
+                << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::UPDATE_LEAF_NODES) + 1] << " | "
+                << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::UPDATE_LEAF_NODES) + 2] << "\n";
+
         sstring << "      Update local trees                       : " << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::UPDATE_LOCAL_TREES)] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::UPDATE_LOCAL_TREES) + 1] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::UPDATE_LOCAL_TREES) + 2] << "\n";

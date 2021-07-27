@@ -141,6 +141,8 @@ void Simulation::initialize() {
         partition->delete_subdomain_tree(i);
     }
 
+    global_tree->initializes_leaf_nodes(partition->get_my_num_neurons());
+
     LogFiles::print_message_rank(0, "Neurons inserted into subdomains");
     LogFiles::print_message_rank(0, "Subdomains inserted into global tree");
 

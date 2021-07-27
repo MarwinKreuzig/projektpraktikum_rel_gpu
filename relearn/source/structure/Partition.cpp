@@ -202,7 +202,7 @@ void Partition::delete_subdomain_tree(size_t subdomain_id) {
     subdomains[subdomain_id].local_octree_view = nullptr;
 }
 
-void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain) {
+std::vector<OctreeNode*> Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain) {
     RelearnException::check(!neurons_loaded, "Neurons are already loaded, cannot load anymore");
 
     simulation_box_length = neurons_in_subdomain->get_simulation_box_length();
@@ -263,6 +263,8 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
     std::vector<std::string> area_names(my_num_neurons);
     std::vector<SignalType> signal_types(my_num_neurons);
 
+    std::vector<OctreeNode*> octree_nodes(my_num_neurons);
+
     for (size_t i = 0; i < my_num_subdomains; i++) {
         auto& current_subdomain = subdomains[i];
         const auto& subdomain_pos_min = current_subdomain.xyz_min;
@@ -311,8 +313,10 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
                 current_subdomain.local_octree_view = local_root;
             } else {
                 // Insert neuron into tree
-                const auto* const node = current_subdomain.local_octree_view->insert(vec_pos[j], neuron_id, my_rank);
+                auto* const node = current_subdomain.local_octree_view->insert(vec_pos[j], neuron_id, my_rank);
                 RelearnException::check(node != nullptr, "node is nullptr");
+
+                octree_nodes[neuron_id] = node;
             }
 
             neuron_id++;
@@ -326,4 +330,6 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
     neurons->set_signal_types(std::move(signal_types));
 
     neurons_loaded = true;
+
+    return octree_nodes;
 }

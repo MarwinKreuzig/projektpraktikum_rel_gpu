@@ -254,6 +254,30 @@ void Octree::print() {
     }
 }
 
+void Octree::initializes_leaf_nodes(size_t num_neurons) noexcept {
+    std::vector<OctreeNode*> leaf_nodes(num_neurons);
+
+    std::stack<OctreeNode*> stack;
+    stack.emplace(root);
+
+    while (!stack.empty()) {
+        OctreeNode* node = stack.top();
+        stack.pop();
+
+        if (node->is_parent()) {
+            for (auto* child : node->get_children()) {
+                if (child != nullptr) {
+                    stack.emplace(child);
+                }
+            }
+        } else {
+            leaf_nodes[node->get_cell_neuron_id()] = node;
+        }
+    }
+
+    all_leaf_nodes = std::move(leaf_nodes);
+}
+
 [[nodiscard]] std::array<OctreeNode*, Constants::number_oct> Octree::downloadChildren(OctreeNode* node) {
     std::array<OctreeNode*, Constants::number_oct> local_children{ nullptr };
 
@@ -303,43 +327,6 @@ void Octree::print() {
     MPIWrapper::unlock_window(target_rank);
 
     return local_children;
-}
-
-// The caller must ensure that only inner nodes are visited. "max_level" must be chosen correctly for this
-void Octree::update_from_level(size_t max_level) {
-    std::vector<double> dendrites_exc_cnts;
-    std::vector<unsigned int> dendrites_exc_connected_cnts;
-    std::vector<double> dendrites_inh_cnts;
-    std::vector<unsigned int> dendrites_inh_connected_cnts;
-
-    const BarnesHut::FunctorUpdateNode update_functor(dendrites_exc_cnts, dendrites_exc_connected_cnts, dendrites_inh_cnts, dendrites_inh_connected_cnts, 0);
-
-    /**
-	* NOTE: It *must* be ensured that in tree_walk_postorder() only inner nodes
-	* are visited as update_node cannot update leaf nodes here
-	*/
-
-    // The functor containing the visit function is of type FunctorUpdateNode
-    tree_walk_postorder<BarnesHut::FunctorUpdateNode>(root, update_functor, max_level);
-}
-
-void Octree::update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, size_t num_neurons) {
-    const auto& de_ex_cnt = dendrites_exc.get_total_counts();
-    const auto& de_ex_conn_cnt = dendrites_exc.get_connected_count();
-    const auto& de_in_cnt = dendrites_inh.get_total_counts();
-    const auto& de_in_conn_cnt = dendrites_inh.get_connected_count();
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
-    for (auto* local_tree : local_trees) {
-        if (local_tree->get_rank() != my_rank) {
-            continue;
-        }
-
-        const BarnesHut::FunctorUpdateNode update_functor(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt, num_neurons);
-        // The functor containing the visit function is of type FunctorUpdateNode
-        tree_walk_postorder<BarnesHut::FunctorUpdateNode>(local_tree, update_functor);
-    }
 }
 
 void Octree::empty_remote_nodes_cache() {

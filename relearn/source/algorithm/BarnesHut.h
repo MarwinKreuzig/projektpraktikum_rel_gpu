@@ -36,35 +36,10 @@ public:
 	 */
     class FunctorUpdateNode {
     public:
-        /**
-         * @brief Initializes the object with the number of dendrites (connected and total, excitatory and inhibitory) for later look-up in operator() on the basis of the neuron id
-         *      In case it is only used to update inner nodes (that don't have a neuron id), the vectors can be empty and number_neurons 0
-         * @param dendrites_excitatory_counts The number of total excitatory dendrites, accessed via operator[] with the neuron ids
-         * @param dendrites_excitatory_connected_counts The number of connected excitatory dendrites, accessed via operator[] with the neuron ids
-         * @param dendrites_inhibitory_counts The number of total inhibitory dendrites, accessed via operator[] with the neuron ids
-         * @param dendrites_inhibitory_connected_counts The number of connected inhibitory dendrites, accessed via operator[] with the neuron ids
-         * @param number_neurons The number of neurons that will be updates, must be larger than every neuron id reached in operator()
-         * @exception Throws a RelearnException if any of the vectors has a size smaller than number_neurons
-         */
-        FunctorUpdateNode(const std::vector<double>& dendrites_excitatory_counts, const std::vector<unsigned int>& dendrites_excitatory_connected_counts,
-            const std::vector<double>& dendrites_inhibitory_counts, const std::vector<unsigned int>& dendrites_inhibitory_connected_counts,
-            size_t number_neurons)
-            : dendrites_excitatory_counts(dendrites_excitatory_counts)
-            , dendrites_excitatory_connected_counts(dendrites_excitatory_connected_counts)
-            , dendrites_inhibitory_counts(dendrites_inhibitory_counts)
-            , dendrites_inhibitory_connected_counts(dendrites_inhibitory_connected_counts)
-            , number_neurons(number_neurons) {
-
-            RelearnException::check(dendrites_excitatory_counts.size() >= number_neurons, "In BarnesHut::FunctorUpdateNode, dendrites_excitatory_counts was too small");
-            RelearnException::check(dendrites_excitatory_connected_counts.size() >= number_neurons, "In BarnesHut::FunctorUpdateNode, dendrites_excitatory_connected_counts was too small");
-            RelearnException::check(dendrites_inhibitory_counts.size() >= number_neurons, "In BarnesHut::FunctorUpdateNode, dendrites_inhibitory_counts was too small");
-            RelearnException::check(dendrites_inhibitory_connected_counts.size() >= number_neurons, "In BarnesHut::FunctorUpdateNode, dendrites_inhibitory_connected_counts was too small");
-        }
+        FunctorUpdateNode() = default;
 
         /**
-         * @brief Updates the induced octree starting at node by
-         *      (a) Summing the number of dendrites (excitatory and inhibitory) of the children and calculating the weighted position for inner nodes
-         *      (b) Setting the number of dendrites to the counts given in the constructor for leaf nodes
+         * @brief Updates the induced octree starting at node by summing the number of dendrites (excitatory and inhibitory) of the children and calculating the weighted position for inner nodes
          * @param node The root of the octree
          * @exception Throws a RelearnException if node is nullptr
          */
@@ -73,21 +48,6 @@ public:
 
             // NOLINTNEXTLINE
             if (!node->is_parent()) {
-                // Get ID of the node's neuron
-                const size_t neuron_id = node->get_cell().get_neuron_id();
-
-                if (neuron_id == Constants::uninitialized) {
-                    node->set_cell_num_dendrites(0, 0);
-                    return;
-                }
-
-                // Calculate number of vacant dendrites for my neuron
-                RelearnException::check(neuron_id < number_neurons, "Neuron id was too large in the operator: %llu", neuron_id);
-
-                const auto number_vacant_dendrites_excitatory = static_cast<unsigned int>(dendrites_excitatory_counts[neuron_id] - dendrites_excitatory_connected_counts[neuron_id]);
-                const auto number_vacant_dendrites_inhibitory = static_cast<unsigned int>(dendrites_inhibitory_counts[neuron_id] - dendrites_inhibitory_connected_counts[neuron_id]);
-
-                node->set_cell_num_dendrites(number_vacant_dendrites_excitatory, number_vacant_dendrites_inhibitory);
                 return;
             }
 
@@ -153,13 +113,6 @@ public:
                 node->set_cell_neuron_pos_inh(std::optional<Vec3d>{ scaled_position });
             }
         }
-
-    private:
-        const std::vector<double>& dendrites_excitatory_counts;
-        const std::vector<unsigned int>& dendrites_excitatory_connected_counts;
-        const std::vector<double>& dendrites_inhibitory_counts;
-        const std::vector<unsigned int>& dendrites_inhibitory_connected_counts;
-        size_t number_neurons = 0;
     };
 
     /**
@@ -187,7 +140,7 @@ public:
             naive_method = false;
         }
     }
-    
+
     /**
      * @brief Sets probability parameter used to determine the probability for a cell of being selected
      * @param sigma The probability parameter, >= 0.0
@@ -232,6 +185,52 @@ public:
      *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
      */
     [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed);
+
+    /**
+     * @brief Updates all leaf nodes in the octree by the algorithm
+     * @param leaf_nodes The leaf nodes, element at index i must have neuron_id i
+     * @param disable_flags Flags that indicate if a neuron id disabled (0) or enabled (otherwise)
+     * @param dendrites_excitatory_counts The number of total excitatory dendrites, accessed via operator[] with the neuron ids
+     * @param dendrites_excitatory_connected_counts The number of connected excitatory dendrites, accessed via operator[] with the neuron ids
+     * @param dendrites_inhibitory_counts The number of total inhibitory dendrites, accessed via operator[] with the neuron ids
+     * @param dendrites_inhibitory_connected_counts The number of connected inhibitory dendrites, accessed via operator[] with the neuron ids
+     * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
+     */
+    void update_leaf_nodes(const std::vector<OctreeNode*>& leaf_nodes, const std::vector<char>& disable_flags,
+        const std::vector<double>& dendrites_excitatory_counts, const std::vector<unsigned int>& dendrites_excitatory_connected_counts,
+        const std::vector<double>& dendrites_inhibitory_counts, const std::vector<unsigned int>& dendrites_inhibitory_connected_counts) {
+
+        const auto num_leaf_nodes = leaf_nodes.size();
+        const auto num_disable_flags = disable_flags.size();
+        const auto num_dendrites_excitatory_counts = dendrites_excitatory_counts.size();
+        const auto num_dendrites_excitatory_connected_counts = dendrites_excitatory_connected_counts.size();
+        const auto num_dendrites_inhibitory_counts = dendrites_inhibitory_counts.size();
+        const auto num_dendrites_inhibitory_connected_counts = dendrites_inhibitory_connected_counts.size();
+
+        const auto all_same_size = num_leaf_nodes == num_disable_flags
+            && num_leaf_nodes == num_dendrites_excitatory_counts
+            && num_leaf_nodes == num_dendrites_excitatory_connected_counts
+            && num_leaf_nodes == num_dendrites_inhibitory_counts
+            && num_leaf_nodes == num_dendrites_inhibitory_connected_counts;
+
+        RelearnException::check(all_same_size, "In BarnesHut::update_leaf_nodes, the vectors were of different sizes");
+
+        for (size_t neuron_id = 0; neuron_id < leaf_nodes.size(); neuron_id++) {
+            auto* node = leaf_nodes[neuron_id];
+            const size_t other_neuron_id = node->get_cell().get_neuron_id();
+
+            RelearnException::check(neuron_id == other_neuron_id, "In BarnesHut::update_leaf_nodes, the nodes are not in order");
+
+            if (disable_flags[neuron_id] == 0) {
+                continue;
+            }
+
+            const auto number_vacant_dendrites_excitatory = static_cast<unsigned int>(dendrites_excitatory_counts[neuron_id] - dendrites_excitatory_connected_counts[neuron_id]);
+            const auto number_vacant_dendrites_inhibitory = static_cast<unsigned int>(dendrites_inhibitory_counts[neuron_id] - dendrites_inhibitory_connected_counts[neuron_id]);
+
+            node->set_cell_num_dendrites(number_vacant_dendrites_excitatory, number_vacant_dendrites_inhibitory);
+        }
+    }
 
 private:
     [[nodiscard]] double calc_attractiveness_to_connect(

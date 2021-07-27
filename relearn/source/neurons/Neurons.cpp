@@ -243,6 +243,8 @@ void Neurons::create_neurons(size_t creation_count) {
         RelearnException::check(node != nullptr, "node is nullptr");
     }
 
+    global_tree->initializes_leaf_nodes(new_size);
+
     num_neurons = new_size;
 }
 
@@ -747,8 +749,14 @@ void Neurons::create_synapses_update_octree() {
     MPIWrapper::lock_window(MPIWrapper::get_my_rank(), MPI_Locktype::exclusive);
 
     // Update my local trees bottom-up
+    Timers::start(TimerRegion::UPDATE_LEAF_NODES);
+    algorithm->update_leaf_nodes(global_tree->get_leaf_nodes(), disable_flags, dendrites_exc->get_total_counts(),
+        dendrites_exc->get_connected_count(), dendrites_inh->get_total_counts(), dendrites_inh->get_connected_count());
+    Timers::stop_and_add(TimerRegion::UPDATE_LEAF_NODES);
+
+    // Update my local trees bottom-up
     Timers::start(TimerRegion::UPDATE_LOCAL_TREES);
-    global_tree->update_local_trees(*dendrites_exc, *dendrites_inh, num_neurons);
+    global_tree->update_local_trees();
     Timers::stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
 
     global_tree->synchronize_local_trees();

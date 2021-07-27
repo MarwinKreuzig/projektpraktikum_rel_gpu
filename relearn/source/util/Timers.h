@@ -42,9 +42,10 @@ enum class TimerRegion : int {
     FIND_TARGET_NEURONS = 19,
     EMPTY_REMOTE_NODES_CACHE = 20,
     CREATE_SYNAPSES = 21,
+    UPDATE_LEAF_NODES = 22,
 };
 
-constexpr size_t NUM_TIMERS = 22;
+constexpr size_t NUM_TIMERS = 23;
 
 /**
  * This class is used to collect all sorts of different timers (see TimerRegion).

@@ -11,6 +11,7 @@
 #pragma once
 
 #include "../Config.h"
+#include "../algorithm/BarnesHut.h"
 #include "../mpi/MPIWrapper.h"
 #include "../neurons/SignalType.h"
 #include "../neurons/helper/RankNeuronId.h"
@@ -213,7 +214,10 @@ public:
      * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes
      * @param max_level The maximum level (inclusive) on which the nodes should be updated
      */
-    void update_from_level(size_t max_level);
+    void update_from_level(size_t max_level) {
+        const BarnesHut::FunctorUpdateNode update_functor{};
+        tree_walk_postorder<BarnesHut::FunctorUpdateNode>(root, update_functor, max_level);
+    }
 
     /**
      * @brief Updates all local (!) branch nodes and their induced subtrees.
@@ -223,7 +227,16 @@ public:
      * @param num_neurons The number of local neuron ids
      * @exception Throws a RelearnException if a leaf node has a too large neuron id (wrt. the passed arguments)
      */
-    void update_local_trees(const SynapticElements& dendrites_exc, const SynapticElements& dendrites_inh, size_t num_neurons);
+    void update_local_trees() {
+        for (auto* local_tree : local_trees) {
+            if (!local_tree->is_local()) {
+                continue;
+            }
+
+            const BarnesHut::FunctorUpdateNode update_functor{};
+            tree_walk_postorder<BarnesHut::FunctorUpdateNode>(local_tree, update_functor);
+        }
+    }
 
     /**
      * @brief Empty the cache that was built during the connection phase and frees all local copies
@@ -239,6 +252,21 @@ public:
      * @brief Prints the Octree to LogFiles::EventType::Cout
      */
     void print();
+
+    /**
+     * @brief Returns a constant reference to all leaf nodes
+     *      The reference is never invalidated
+     * @return All leaf nodes
+     */
+    const std::vector<OctreeNode*>& get_leaf_nodes() const noexcept {
+        return all_leaf_nodes;
+    }
+
+    /**
+     * @brief Gathers all leaf nodes and makes them available via get_leaf_nodes
+     * @param num_neurons The number of neurons
+     */
+    void initializes_leaf_nodes(size_t num_neurons) noexcept;
 
 private:
     // Set simulation box size of the tree
@@ -302,6 +330,8 @@ private:
     OctreeNode* root{ nullptr };
 
     std::vector<OctreeNode*> local_trees{};
+
+    std::vector<OctreeNode*> all_leaf_nodes{};
 
     // Two points describe simulation box size of the tree
     Vec3d xyz_min{ 0 };
