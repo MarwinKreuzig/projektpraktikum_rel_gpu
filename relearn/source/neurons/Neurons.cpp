@@ -458,11 +458,11 @@ std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(size_t neur
         RelearnException::check(synapse_selected != current_synapses.cend(), "Didn't select a synapse to delete");
 
         RankNeuronId src_neuron_id = RankNeuronId(MPIWrapper::get_my_rank(), neuron_id);
-        RankNeuronId tgt_neuron_id = synapse_selected->get_rank_neuron_id();
+        RankNeuronId tgt_neuron_id = synapse_selected->get_neuron_id();
         auto synapse_id = synapse_selected->get_synapse_id();
 
         if (!is_axon) {
-            src_neuron_id = synapse_selected->get_rank_neuron_id();
+            src_neuron_id = synapse_selected->get_neuron_id();
             tgt_neuron_id = RankNeuronId(MPIWrapper::get_my_rank(), neuron_id);
         }
 
@@ -472,7 +472,7 @@ std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(size_t neur
         });
 
         if (pending_deletion == other_pending_deletions.end()) {
-            pending_deletions.emplace_back(src_neuron_id, tgt_neuron_id, synapse_selected->get_rank_neuron_id(),
+            pending_deletions.emplace_back(src_neuron_id, tgt_neuron_id, synapse_selected->get_neuron_id(),
                 other_element_type, signal_type, synapse_selected->get_synapse_id());
         } else {
             const auto distance = std::distance(other_pending_deletions.begin(), pending_deletion);
@@ -652,11 +652,11 @@ size_t Neurons::delete_synapses_commit_deletions(const PendingDeletionsV& list) 
         // Pending synapse deletion is valid (not completely) if source or
         // target neuron belong to me. To be completely valid, things such as
         // the neuron id need to be validated as well.
-        const auto& src_neuron = it.get_src_neuron_id();
+        const auto& src_neuron = it.get_source_neuron_id();
         const auto src_neuron_rank = src_neuron.get_rank();
         const auto src_neuron_id = src_neuron.get_neuron_id();
 
-        const auto& tgt_neuron = it.get_tgt_neuron_id();
+        const auto& tgt_neuron = it.get_target_neuron_id();
         const auto tgt_neuron_rank = tgt_neuron.get_rank();
         const auto tgt_neuron_id = tgt_neuron.get_neuron_id();
 
@@ -1450,8 +1450,8 @@ void Neurons::print_pending_synapse_deletions(const PendingDeletionsV& list) {
 
         LogFiles::write_to_file(LogFiles::EventType::Cout, true,
             "src_neuron_id: {}\ntgt_neuron_id: {}\naffected_neuron_id: {}\naffected_element_type: {}\nsignal_type: {}\nsynapse_id: {}\naffected_element_already_deleted: {}\n",
-            it.get_src_neuron_id(),
-            it.get_tgt_neuron_id(),
+            it.get_source_neuron_id(),
+            it.get_target_neuron_id(),
             it.get_affected_neuron_id(),
             affected_element_type_converted,
             signal_type_converted,

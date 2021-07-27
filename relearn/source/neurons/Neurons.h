@@ -43,8 +43,11 @@ class Neurons {
     friend class NeuronMonitor;
 
     /**
-	* Type for list element used to store pending synapse deletion
-	*/
+	 * This type represents a synapse deletion request.
+     * It is exchanged via MPI ranks but does not perform MPI communication on its own.
+     * A synapse is (src_neuron_id, axon, signal_type) ---synapse_id---> (tgt_neuron_id, dendrite, signal_type), the deletion if initiated from one side,
+     * and the other side is saved as (affected_neuron_id, affected_element_type, signal_type)
+	 */
     class PendingSynapseDeletion {
         RankNeuronId src_neuron_id{}; // Synapse source neuron id
         RankNeuronId tgt_neuron_id{}; // Synapse target neuron id
@@ -56,8 +59,21 @@ class Neurons {
             // "False" if the element must be set vacant
 
     public:
+        /**
+         * Creates a new object 
+         */
         PendingSynapseDeletion() = default;
 
+        /**
+         * @brief Creates a new deletion request with the passed arguments
+         * @param src The source neuron, i.e., the neuron which's axon is involved in the synapse
+         * @param tgt The target neuron, i.e., the neuron which's dendrite is involved in the synapse
+         * @param aff The affected neuron, i.e., the neuron that must be notified
+         * @param elem The element type that is affected, i.e., from the neuron that must be notified
+         * @param sign The signal type of the synapse
+         * @param id The id of the synapse (in case the two neurons have multiple synapses)
+         * @exception Throws a RelearnException if any RankNeuronId is invalid (negative MPI rank or too large neuron id)
+         */
         PendingSynapseDeletion(const RankNeuronId& src, const RankNeuronId& tgt, const RankNeuronId& aff,
             ElementType elem, SignalType sign, unsigned int id)
             : src_neuron_id(src)
@@ -66,6 +82,12 @@ class Neurons {
             , affected_element_type(elem)
             , signal_type(sign)
             , synapse_id(id) {
+            RelearnException::check(src.get_neuron_id() < Constants::uninitialized, "PendingSynapseDeletion::PendingSynapseDeletion(), src neuron id was too large");
+            RelearnException::check(tgt.get_neuron_id() < Constants::uninitialized, "PendingSynapseDeletion::PendingSynapseDeletion(), tgt neuron id was too large");
+            RelearnException::check(aff.get_neuron_id() < Constants::uninitialized, "PendingSynapseDeletion::PendingSynapseDeletion(), aff neuron id was too large");
+            RelearnException::check(src.get_rank() >= 0, "PendingSynapseDeletion::PendingSynapseDeletion(), src MPI rank was negative");
+            RelearnException::check(tgt.get_rank() >= 0, "PendingSynapseDeletion::PendingSynapseDeletion(), tgt MPI rank was negative");
+            RelearnException::check(aff.get_rank() >= 0, "PendingSynapseDeletion::PendingSynapseDeletion(), aff MPI rank was negative");
         }
 
         PendingSynapseDeletion(const PendingSynapseDeletion& other) = default;
@@ -76,48 +98,86 @@ class Neurons {
 
         ~PendingSynapseDeletion() = default;
 
-        [[nodiscard]] const RankNeuronId& get_src_neuron_id() const noexcept {
+        /**
+         * @brief Returns the source neuron id, i.e., the neuron which's axon is involved in the deletion
+         * @return The source neuron id
+         */
+        [[nodiscard]] const RankNeuronId& get_source_neuron_id() const noexcept {
             return src_neuron_id;
         }
 
-        [[nodiscard]] const RankNeuronId& get_tgt_neuron_id() const noexcept {
+        /**
+         * @brief Returns the target neuron id, i.e., the neuron which's dendrite is involved in the deletion
+         * @return The target neuron id
+         */
+        [[nodiscard]] const RankNeuronId& get_target_neuron_id() const noexcept {
             return tgt_neuron_id;
         }
 
+        /**
+         * @brief Returns the affected neuron id, i.e., the neuron that has to be notified of the deletion
+         * @return The affected neuron id
+         */
         [[nodiscard]] const RankNeuronId& get_affected_neuron_id() const noexcept {
             return affected_neuron_id;
         }
 
+        /**
+         * @brief Returns the affected element type, i.e., the affected neuron's type (axon or dendrite)
+         * @return The affected element type
+         */
         [[nodiscard]] ElementType get_affected_element_type() const noexcept {
             return affected_element_type;
         }
 
+        /**
+         * @brief Returns the synapse' signal type
+         * @return The signal type
+         */
         [[nodiscard]] SignalType get_signal_type() const noexcept {
             return signal_type;
         }
 
+        /**
+         * @brief Returns the synapse' id
+         * @return The synapse' id
+         */
         [[nodiscard]] unsigned int get_synapse_id() const noexcept {
             return synapse_id;
         }
 
+        /**
+         * @brief Returns the flag if the synapse is already deleted locally (in case both wanted to delete the same synapse)
+         * @return True iff the synapse is already deleted
+         */
         [[nodiscard]] bool get_affected_element_already_deleted() const noexcept {
             return affected_element_already_deleted;
         }
 
+        /**
+         * @brief Sets the flag that indicated if the synapse is already deleted locally (in case both wanted to delete the same synapse)
+         */
         void set_affected_element_already_deleted() noexcept {
             affected_element_already_deleted = true;
         }
 
-        [[nodiscard]] bool check_light_equality(const PendingSynapseDeletion& other) const {
-            const bool src_neuron_id_eq = other.src_neuron_id == src_neuron_id;
-            const bool tgt_neuron_id_eq = other.tgt_neuron_id == tgt_neuron_id;
-
-            const bool id_eq = other.synapse_id == synapse_id;
-
-            return src_neuron_id_eq && tgt_neuron_id_eq && id_eq;
+        /**
+         * @brief Compares this and other by comparing the source neuron id, the target neuron id, and the synapse id
+         * @param other The other deletion request
+         * @return True iff both objects refer to the same synapse
+         */
+        [[nodiscard]] bool check_light_equality(const PendingSynapseDeletion& other) const noexcept {
+            return check_light_equality(other.src_neuron_id, other.tgt_neuron_id, other.synapse_id);
         }
 
-        [[nodiscard]] bool check_light_equality(const RankNeuronId& src, const RankNeuronId& tgt, unsigned int id) const {
+        /**
+         * @brief Compares this and the passed components and checks if they refer to the same synapse
+         * @param src The other source neuron id
+         * @param tgt The other target neuron id
+         * @param id The other synapse' id
+         * @return True iff (src, tgt, id) refer to the same synapse as this
+         */
+        [[nodiscard]] bool check_light_equality(const RankNeuronId& src, const RankNeuronId& tgt, unsigned int id) const noexcept {
             const bool src_neuron_id_eq = src == src_neuron_id;
             const bool tgt_neuron_id_eq = tgt == tgt_neuron_id;
 
@@ -129,86 +189,126 @@ class Neurons {
     using PendingDeletionsV = std::vector<PendingSynapseDeletion>;
 
     /**
-	 * Type for list element used to represent a synapse for synapse selection
+	 * This type is used as aggregate when it comes to selecting a synapse for deletion
 	 */
     class Synapse {
-        RankNeuronId rank_neuron_id{};
+        RankNeuronId neuron_id{};
         unsigned int synapse_id{}; // Id of the synapse. Used to distinguish multiple synapses between the same neuron pair
     public:
-        Synapse(RankNeuronId rank_neuron_id, unsigned int synapse_id) noexcept
-            : rank_neuron_id(rank_neuron_id)
+        /**
+         * @brief Creates a new object with the passed neuron id and synapse id
+         * @param neuron_id The "other" neuron id
+         * @param synapse_id The synapse' id, in case there are multiple synapses connecting two neurons
+         * @exception Throws a RelearnException if the MPI rank is negative or neuron id is too large
+         */
+        Synapse(RankNeuronId neuron_id, unsigned int synapse_id)
+            : neuron_id(neuron_id)
             , synapse_id(synapse_id) {
+            RelearnException::check(neuron_id.get_neuron_id() < Constants::uninitialized, "Synapse::Synapse(), neuron id was too large");
+            RelearnException::check(neuron_id.get_rank() >= 0, "Synapse::Synapse(), neuron_id MPI rank was negative");
         }
 
-        [[nodiscard]] RankNeuronId get_rank_neuron_id() const noexcept {
-            return rank_neuron_id;
+        /**
+         * @brief Returns the neuron id
+         * @return The neuron id
+         */
+        [[nodiscard]] RankNeuronId get_neuron_id() const noexcept {
+            return neuron_id;
         }
 
+        /**
+         * @brief Returns the synapse' id
+         * @return The synapse' id
+         */
         [[nodiscard]] unsigned int get_synapse_id() const noexcept {
             return synapse_id;
         }
     };
 
     /**
-	 * Type for synapse deletion requests which are used with MPI
+	 * This type aggregates multiple PendingSynapseDeletion into one and facilitates MPI communication.
+     * It does not perform MPI communication.
 	 */
     struct SynapseDeletionRequests {
         SynapseDeletionRequests() = default;
 
+        /**
+         * @brief Returns the number of stored requests
+         * @return The number of stored requests
+         */
         [[nodiscard]] size_t size() const noexcept {
             return num_requests;
         }
 
+        /**
+         * @brief Resizes the internal buffer to accomodate size-many requests
+         * @param size The number of requests to be stored
+         */
         void resize(size_t size) {
             num_requests = size;
             requests.resize(Constants::num_items_per_request * size);
         }
 
+        /**
+         * @brief Appends the PendingSynapseDeletion to the end of the buffer
+         * @param pending_deletion The new PendingSynapseDeletion that should be appended
+         */
         void append(const PendingSynapseDeletion& pending_deletion) {
             num_requests++;
 
             size_t affected_element_type_converted = pending_deletion.get_affected_element_type() == ElementType::AXON ? 0 : 1;
             size_t signal_type_converted = pending_deletion.get_signal_type() == SignalType::EXCITATORY ? 0 : 1;
 
-            requests.push_back(pending_deletion.get_src_neuron_id().get_neuron_id());
-            requests.push_back(pending_deletion.get_tgt_neuron_id().get_neuron_id());
+            requests.push_back(pending_deletion.get_source_neuron_id().get_neuron_id());
+            requests.push_back(pending_deletion.get_target_neuron_id().get_neuron_id());
             requests.push_back(pending_deletion.get_affected_neuron_id().get_neuron_id());
             requests.push_back(affected_element_type_converted);
             requests.push_back(signal_type_converted);
             requests.push_back(pending_deletion.get_synapse_id());
         }
 
-        [[nodiscard]] std::array<size_t, Constants::num_items_per_request> get_request(size_t request_index) const noexcept {
-            const size_t base_index = Constants::num_items_per_request * request_index;
-
-            std::array<size_t, Constants::num_items_per_request> arr{};
-
-            for (size_t i = 0; i < Constants::num_items_per_request; i++) {
-                // NOLINTNEXTLINE
-                arr[i] = requests[base_index + i];
-            }
-
-            return arr;
-        }
-
+        /**
+         * @brief Returns the source neuron id of the PendingSynapseDeletion with the requested index
+         * @param request_index The index of the PendingSynapseDeletion
+         * @exception Throws a RelearnException if request_index is larger than the number of stored PendingSynapseDeletion
+         * @return The source neuron id
+         */
         [[nodiscard]] size_t get_source_neuron_id(size_t request_index) const {
             const auto index = Constants::num_items_per_request * request_index;
             RelearnException::check(index < requests.size(), "Index is out of bounds");
             return requests[index];
         }
 
+        /**
+         * @brief Returns the target neuron id of the PendingSynapseDeletion with the requested index
+         * @param request_index The index of the PendingSynapseDeletion
+         * @exception Throws a RelearnException if request_index is larger than the number of stored PendingSynapseDeletion
+         * @return The target neuron id
+         */
         [[nodiscard]] size_t get_target_neuron_id(size_t request_index) const {
             const auto index = Constants::num_items_per_request * request_index + 1;
             RelearnException::check(index < requests.size(), "Index is out of bounds");
             return requests[index];
         }
 
+        /**
+         * @brief Returns the affected neuron id of the PendingSynapseDeletion with the requested index
+         * @param request_index The index of the PendingSynapseDeletion
+         * @exception Throws a RelearnException if request_index is larger than the number of stored PendingSynapseDeletion
+         * @return The affected neuron id
+         */
         [[nodiscard]] size_t get_affected_neuron_id(size_t request_index) const {
             const auto index = Constants::num_items_per_request * request_index + 2;
             RelearnException::check(index < requests.size(), "Index is out of bounds");
             return requests[index];
         }
 
+        /**
+         * @brief Returns the affected element type of the PendingSynapseDeletion with the requested index
+         * @param request_index The index of the PendingSynapseDeletion
+         * @exception Throws a RelearnException if request_index is larger than the number of stored PendingSynapseDeletion
+         * @return The element type
+         */
         [[nodiscard]] ElementType get_affected_element_type(size_t request_index) const {
             const auto index = Constants::num_items_per_request * request_index + 3;
             RelearnException::check(index < requests.size(), "Index is out of bounds");
@@ -216,6 +316,12 @@ class Neurons {
             return affected_element_type_converted;
         }
 
+        /**
+         * @brief Returns the synapse' signal type of the PendingSynapseDeletion with the requested index
+         * @param request_index The index of the PendingSynapseDeletion
+         * @exception Throws a RelearnException if request_index is larger than the number of stored PendingSynapseDeletion
+         * @return The synapse' signal type
+         */
         [[nodiscard]] SignalType get_signal_type(size_t request_index) const {
             const auto index = Constants::num_items_per_request * request_index + 4;
             RelearnException::check(index < requests.size(), "Index is out of bounds");
@@ -223,6 +329,12 @@ class Neurons {
             return affected_element_type_converted;
         }
 
+        /**
+         * @brief Returns the synapse' 9d of the PendingSynapseDeletion with the requested index
+         * @param request_index The index of the PendingSynapseDeletion
+         * @exception Throws a RelearnException if request_index is larger than the number of stored PendingSynapseDeletion
+         * @return The synapse' id
+         */
         [[nodiscard]] unsigned int get_synapse_id(size_t request_index) const {
             const auto index = Constants::num_items_per_request * request_index + 5;
             RelearnException::check(index < requests.size(), "Index is out of bounds");
@@ -230,15 +342,28 @@ class Neurons {
             return synapse_id;
         }
 
-        // Get pointer to data
+        /**
+         * @brief Returns the raw pointer to the requests.
+         *      Does not transfer ownership
+         * @return A raw pointer to the requests
+         */
         [[nodiscard]] size_t* get_requests() noexcept {
             return requests.data();
         }
 
+        /**
+         * @brief Returns the raw pointer to the requests.
+         *      Does not transfer ownership
+         * @return A raw pointer to the requests
+         */
         [[nodiscard]] const size_t* get_requests() const noexcept {
             return requests.data();
         }
 
+        /**
+         * @brief Returns the size of the internal buffer in bytes
+         * @return The size of the internal buffer in bytes
+         */
         [[nodiscard]] size_t get_requests_size_in_bytes() const noexcept {
             return requests.size() * sizeof(size_t);
         }
@@ -253,6 +378,9 @@ class Neurons {
             // This vector is used as MPI communication buffer
     };
 
+    /**
+     * @brief This struct is used to aggregate different statistical parameters
+     */
     struct StatisticalMeasures {
         double min{ 0.0 };
         double max{ 0.0 };

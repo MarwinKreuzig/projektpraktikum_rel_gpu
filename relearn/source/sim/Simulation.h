@@ -124,7 +124,8 @@ public:
 
     /**
      * @brief Finalizes the simulation in the sense that it prints the final statistics.
-     *      Does not perform any "irreversible" steps and does not finalize MPI
+     *      Does not perform any "irreversible" steps and does not finalize MPI.
+     *      All MPI processes must call finalize
      */
     void finalize() const;
 
