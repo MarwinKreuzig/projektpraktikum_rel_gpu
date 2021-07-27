@@ -277,6 +277,7 @@ int main(int argc, char** argv) {
         Timers::print();
 
         MPIWrapper::barrier(MPIWrapper::Scope::global);
+
         sim.finalize();
     };
 

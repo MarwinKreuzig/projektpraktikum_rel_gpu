@@ -266,26 +266,24 @@ void Simulation::simulate(size_t number_steps, size_t step_monitor) {
 }
 
 void Simulation::finalize() const {
-    if (0 == MPIWrapper::get_my_rank()) {
-        const auto netto_creations = total_synapse_creations - total_synapse_deletions;
-        const auto previous_netto_creations = delta_synapse_creations - delta_synapse_deletions;
+    const auto netto_creations = total_synapse_creations - total_synapse_deletions;
+    const auto previous_netto_creations = delta_synapse_creations - delta_synapse_deletions;
 
-        LogFiles::print_message_rank(0,
-            "Total up to now     (creations, deletions, netto): {}\t{}\t{}\nDiff. from previous (creations, deletions, netto): {}\t{}\t{}\nEND: {}",
-            total_synapse_creations, total_synapse_deletions, netto_creations,
-            delta_synapse_creations, delta_synapse_deletions, previous_netto_creations,
-            Timers::wall_clock_time());
+    LogFiles::print_message_rank(0,
+        "Total up to now     (creations, deletions, netto): {}\t{}\t{}\nDiff. from previous (creations, deletions, netto): {}\t{}\t{}\nEND: {}",
+        total_synapse_creations, total_synapse_deletions, netto_creations,
+        delta_synapse_creations, delta_synapse_deletions, previous_netto_creations,
+        Timers::wall_clock_time());
 
-        LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
-            "Created synapses: {}\n"
-            "Deleted synapses: {}\n"
-            "Netto synapses: {}",
-            total_synapse_creations,
-            total_synapse_deletions,
-            netto_creations);
+    neurons->print_statistics_to_essentials();
 
-        neurons->print_statistics_to_essentials();
-    }
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
+        "Created synapses: {}\n"
+        "Deleted synapses: {}\n"
+        "Netto synapses: {}",
+        total_synapse_creations,
+        total_synapse_deletions,
+        netto_creations);
 }
 
 std::vector<std::unique_ptr<NeuronModel>> Simulation::get_models() {
