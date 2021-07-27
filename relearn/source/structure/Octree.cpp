@@ -35,6 +35,54 @@ Octree::Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branc
     construct_global_tree_part();
 }
 
+
+/**
+	 * Do a postorder tree walk startring at "octree" and run the function "function" for every node when it is visited
+     * Does ignore every node which's level in the octree is greater than "max_level"
+	 */
+
+void Octree::tree_walk_postorder(std::function<void(OctreeNode*)> function, OctreeNode* root, size_t max_level) {
+    RelearnException::check(root != nullptr, "In tree_walk_postorder, octree was nullptr");
+
+    std::stack<StackElement> stack{};
+
+    // Push node onto stack
+    stack.emplace(root, 0);
+
+    while (!stack.empty()) {
+        // Get top-of-stack node
+        auto& current_element = stack.top();
+        const auto current_depth = current_element.get_depth_in_tree();
+        auto* current_octree_node = current_element.get_octree_node();
+
+        // Node should be visited now?
+        if (current_element.get_visited()) {
+            RelearnException::check(current_octree_node->get_level() <= max_level, "current_element had bad level");
+
+            // Apply action to node
+            function(current_octree_node);
+
+            // Pop node from stack
+            stack.pop();
+        } else {
+            // Mark node to be visited next time
+            current_element.set_visited();
+
+            // We're at the border of where we want to update, so don't push children
+            if (current_depth >= max_level) {
+                continue;
+            }
+
+            const auto& children = current_octree_node->get_children();
+            for (auto it = children.crbegin(); it != children.crend(); ++it) {
+                if (*it != nullptr) {
+                    stack.emplace(*it, current_depth + 1);
+                }
+            }
+        }
+    } /* while */
+}
+
 void Octree::construct_global_tree_part() {
     RelearnException::check(root == nullptr, "root was not null in the construction of the global state!");
 

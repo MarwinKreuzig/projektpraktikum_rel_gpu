@@ -19,6 +19,7 @@
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
 
+#include <functional>
 #include <map>
 #include <optional>
 #include <stack>
@@ -213,19 +214,15 @@ public:
     /**
      * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes
      * @param max_level The maximum level (inclusive) on which the nodes should be updated
+     * @exception Throws a RelearnException if the functor throws
      */
     void update_from_level(size_t max_level) {
-        const BarnesHut::FunctorUpdateNode update_functor{};
-        tree_walk_postorder<BarnesHut::FunctorUpdateNode>(root, update_functor, max_level);
+        tree_walk_postorder(BarnesHut::update_functor, root, max_level);
     }
 
     /**
      * @brief Updates all local (!) branch nodes and their induced subtrees.
-     *      Uses the passed elements to look up the number of dendritic elements for leaf nodes
-     * @param dendrites_exc The number of free excitatory dendrites for a local neuron id
-     * @param dendrites_inh The number of free inhibitory dendrites for a local neuron id
-     * @param num_neurons The number of local neuron ids
-     * @exception Throws a RelearnException if a leaf node has a too large neuron id (wrt. the passed arguments)
+     * @exception Throws a RelearnException if the functor throws
      */
     void update_local_trees() {
         for (auto* local_tree : local_trees) {
@@ -233,8 +230,7 @@ public:
                 continue;
             }
 
-            const BarnesHut::FunctorUpdateNode update_functor{};
-            tree_walk_postorder<BarnesHut::FunctorUpdateNode>(local_tree, update_functor);
+            tree_walk_postorder(BarnesHut::update_functor, local_tree);
         }
     }
 
@@ -278,51 +274,10 @@ private:
     }
 
     /**
-	 * Do a postorder tree walk startring at "octree" and run the function "visit" for every node when it is visited
+	 * Do a postorder tree walk startring at "octree" and run the function "function" for every node when it is visited
      * Does ignore every node which's level in the octree is greater than "max_level"
 	 */
-    template <typename Functor>
-    void tree_walk_postorder(OctreeNode* root, Functor visit, size_t max_level = std::numeric_limits<size_t>::max()) {
-        RelearnException::check(root != nullptr, "In tree_walk_postorder, octree was nullptr");
-
-        std::stack<StackElement> stack{};
-
-        // Push node onto stack
-        stack.emplace(root, 0);
-
-        while (!stack.empty()) {
-            // Get top-of-stack node
-            auto& current_element = stack.top();
-            const auto current_depth = current_element.get_depth_in_tree();
-            auto* current_octree_node = current_element.get_octree_node();
-
-            // Node should be visited now?
-            if (current_element.get_visited()) {
-                RelearnException::check(current_octree_node->get_level() <= max_level, "current_element had bad level");
-
-                // Apply action to node
-                visit(current_octree_node);
-
-                // Pop node from stack
-                stack.pop();
-            } else {
-                // Mark node to be visited next time
-                current_element.set_visited();
-
-                // We're at the border of where we want to update, so don't push children
-                if (current_depth >= max_level) {
-                    continue;
-                }
-
-                const auto& children = current_octree_node->get_children();
-                for (auto it = children.crbegin(); it != children.crend(); ++it) {
-                    if (*it != nullptr) {
-                        stack.emplace(*it, current_depth + 1);
-                    }
-                }
-            }
-        } /* while */
-    }
+    void tree_walk_postorder(std::function<void(OctreeNode*)> function, OctreeNode* root, size_t max_level = std::numeric_limits<size_t>::max());
 
     void construct_global_tree_part();
 

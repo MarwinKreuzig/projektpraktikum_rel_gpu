@@ -31,91 +31,6 @@ class Octree;
 class BarnesHut {
 public:
     /**
-	 * This class provides the update mechanism for OctreeNode that is tailored to the Barnes Hut algorithm.
-     * It is wrapped inside a type with operator() to easen the interface
-	 */
-    class FunctorUpdateNode {
-    public:
-        FunctorUpdateNode() = default;
-
-        /**
-         * @brief Updates the induced octree starting at node by summing the number of dendrites (excitatory and inhibitory) of the children and calculating the weighted position for inner nodes
-         * @param node The root of the octree
-         * @exception Throws a RelearnException if node is nullptr
-         */
-        void operator()(OctreeNode* node) /*noexcept*/ {
-            RelearnException::check(node != nullptr, "In FunctorUpdateNode, node is nullptr");
-
-            // NOLINTNEXTLINE
-            if (!node->is_parent()) {
-                return;
-            }
-
-            // I'm inner node, i.e., I have a super neuron
-            Vec3d my_position_dendrites_excitatory = { 0., 0., 0. };
-            Vec3d my_position_dendrites_inhibitory = { 0., 0., 0. };
-
-            // Sum of number of dendrites of all my children
-            auto my_number_dendrites_excitatory = 0;
-            auto my_number_dendrites_inhibitory = 0;
-
-            // For all my children
-            for (const auto& child : node->get_children()) {
-                if (child == nullptr) {
-                    continue;
-                }
-
-                // Sum up number of dendrites
-                const auto child_number_dendrites_excitatory = child->get_cell().get_number_excitatory_dendrites();
-                const auto child_number_dendrites_inhibitory = child->get_cell().get_number_inhibitory_dendrites();
-
-                my_number_dendrites_excitatory += child_number_dendrites_excitatory;
-                my_number_dendrites_inhibitory += child_number_dendrites_inhibitory;
-
-                // Average the position by using the number of dendrites as weights
-                std::optional<Vec3d> child_position_dendrites_excitatory = child->get_cell().get_excitatory_dendrite_position();
-                std::optional<Vec3d> child_position_dendrites_inhibitory = child->get_cell().get_inhibitory_dendrite_position();
-
-                /**
-				 * We can use position if it's valid or if corresponding num of dendrites is 0 
-				 */
-                RelearnException::check(child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "temp position exc was bad");
-                RelearnException::check(child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "temp position inh was bad");
-
-                if (child_position_dendrites_excitatory.has_value()) {
-                    const auto scaled_position = child_position_dendrites_excitatory.value() * static_cast<double>(child_number_dendrites_excitatory);
-                    my_position_dendrites_excitatory += scaled_position;
-                }
-
-                if (child_position_dendrites_inhibitory.has_value()) {
-                    const auto scaled_position = child_position_dendrites_inhibitory.value() * static_cast<double>(child_number_dendrites_inhibitory);
-                    my_position_dendrites_inhibitory += scaled_position;
-                }
-            }
-
-            node->set_cell_num_dendrites(my_number_dendrites_excitatory, my_number_dendrites_inhibitory);
-
-            /**
-			 * For calculating the new weighted position, make sure that we don't
-			 * divide by 0. This happens if the my number of dendrites is 0.
-			 */
-            if (0 == my_number_dendrites_excitatory) {
-                node->set_cell_neuron_pos_exc({});
-            } else {
-                const auto scaled_position = my_position_dendrites_excitatory / my_number_dendrites_excitatory;
-                node->set_cell_neuron_pos_exc(std::optional<Vec3d>{ scaled_position });
-            }
-
-            if (0 == my_number_dendrites_inhibitory) {
-                node->set_cell_neuron_pos_inh({});
-            } else {
-                const auto scaled_position = my_position_dendrites_inhibitory / my_number_dendrites_inhibitory;
-                node->set_cell_neuron_pos_inh(std::optional<Vec3d>{ scaled_position });
-            }
-        }
-    };
-
-    /**
      * @brief Constructs a new instance with the given octree
      * @param octree The octree on which the algorithm is to be performed, not null
      * @exception Throws a RelearnException if octree is nullptr
@@ -232,8 +147,80 @@ public:
         }
     }
 
+    static void update_functor(OctreeNode* node) {
+        RelearnException::check(node != nullptr, "In FunctorUpdateNode, node is nullptr");
+
+        // NOLINTNEXTLINE
+        if (!node->is_parent()) {
+            return;
+        }
+
+        // I'm inner node, i.e., I have a super neuron
+        Vec3d my_position_dendrites_excitatory = { 0., 0., 0. };
+        Vec3d my_position_dendrites_inhibitory = { 0., 0., 0. };
+
+        // Sum of number of dendrites of all my children
+        auto my_number_dendrites_excitatory = 0;
+        auto my_number_dendrites_inhibitory = 0;
+
+        // For all my children
+        for (const auto& child : node->get_children()) {
+            if (child == nullptr) {
+                continue;
+            }
+
+            // Sum up number of dendrites
+            const auto child_number_dendrites_excitatory = child->get_cell().get_number_excitatory_dendrites();
+            const auto child_number_dendrites_inhibitory = child->get_cell().get_number_inhibitory_dendrites();
+
+            my_number_dendrites_excitatory += child_number_dendrites_excitatory;
+            my_number_dendrites_inhibitory += child_number_dendrites_inhibitory;
+
+            // Average the position by using the number of dendrites as weights
+            std::optional<Vec3d> child_position_dendrites_excitatory = child->get_cell().get_excitatory_dendrite_position();
+            std::optional<Vec3d> child_position_dendrites_inhibitory = child->get_cell().get_inhibitory_dendrite_position();
+
+            /**
+			 * We can use position if it's valid or if corresponding num of dendrites is 0 
+			 */
+            RelearnException::check(child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "temp position exc was bad");
+            RelearnException::check(child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "temp position inh was bad");
+
+            if (child_position_dendrites_excitatory.has_value()) {
+                const auto scaled_position = child_position_dendrites_excitatory.value() * static_cast<double>(child_number_dendrites_excitatory);
+                my_position_dendrites_excitatory += scaled_position;
+            }
+
+            if (child_position_dendrites_inhibitory.has_value()) {
+                const auto scaled_position = child_position_dendrites_inhibitory.value() * static_cast<double>(child_number_dendrites_inhibitory);
+                my_position_dendrites_inhibitory += scaled_position;
+            }
+        }
+
+        node->set_cell_num_dendrites(my_number_dendrites_excitatory, my_number_dendrites_inhibitory);
+
+        /**
+		 * For calculating the new weighted position, make sure that we don't
+		 * divide by 0. This happens if the my number of dendrites is 0.
+		 */
+        if (0 == my_number_dendrites_excitatory) {
+            node->set_cell_neuron_pos_exc({});
+        } else {
+            const auto scaled_position = my_position_dendrites_excitatory / my_number_dendrites_excitatory;
+            node->set_cell_neuron_pos_exc(std::optional<Vec3d>{ scaled_position });
+        }
+
+        if (0 == my_number_dendrites_inhibitory) {
+            node->set_cell_neuron_pos_inh({});
+        } else {
+            const auto scaled_position = my_position_dendrites_inhibitory / my_number_dendrites_inhibitory;
+            node->set_cell_neuron_pos_inh(std::optional<Vec3d>{ scaled_position });
+        }
+    }
+
 private:
-    [[nodiscard]] double calc_attractiveness_to_connect(
+    [[nodiscard]] double
+    calc_attractiveness_to_connect(
         size_t src_neuron_id,
         const Vec3d& axon_pos_xyz,
         const OctreeNode& node_with_dendrite,
