@@ -60,7 +60,7 @@ OctreeNode* OctreeNode::insert(const Vec3d& position, const size_t neuron_id, in
          * The found parent node is virtual and can just be substituted,
          * i.e., it was constructed while constructing the upper part to the branch nodes.
          */
-        if (parent_node->get_cell().get_neuron_id() == Constants::uninitialized && neuron_id != parent_node->get_cell().get_neuron_id()) {
+        if (parent_node->get_cell_neuron_id() == Constants::uninitialized && neuron_id != parent_node->get_cell_neuron_id()) {
             parent_node->set_cell_neuron_id(neuron_id);
             parent_node->set_cell_neuron_position({ position });
             parent_node->set_rank(rank);
@@ -92,7 +92,7 @@ OctreeNode* OctreeNode::insert(const Vec3d& position, const size_t neuron_id, in
             new_node->set_cell_neuron_position(cell_own_position);
 
             // Neuron ID
-            const auto prev_neuron_id = parent_node->get_cell().get_neuron_id();
+            const auto prev_neuron_id = parent_node->get_cell_neuron_id();
             new_node->set_cell_neuron_id(prev_neuron_id);
 
             /**

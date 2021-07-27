@@ -152,6 +152,14 @@ public:
     }
 
     /**
+     * @brief Returns the neuron id for the associated cell. Is Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
+     * @return The neuron id
+     */
+    [[nodiscard]] size_t get_cell_neuron_id() const noexcept {
+        return cell.get_neuron_id();
+    }
+
+    /**
      * @brief Sets the min and max of the associated cell
      * @param min The minimum boundary of the cell
      * @param max The maximum boundary of the cell
@@ -159,6 +167,14 @@ public:
      */
     void set_cell_size(const Vec3d& min, const Vec3d& max) {
         cell.set_size(min, max);
+    }
+
+    /**
+     * @brief Returns the size of the associated cell
+     * @return The size of the cell
+     */
+    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size() const noexcept {
+        return cell.get_size();
     }
 
     /**

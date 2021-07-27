@@ -611,7 +611,6 @@ TEST_F(OctreeTest, testCellOctantsSize) {
     }
 }
 
-
 TEST_F(OctreeTest, testOctreeNodeReset) {
 
     OctreeNode node{};
@@ -854,7 +853,6 @@ TEST_F(OctreeTest, testOctreeNodeInsert) {
     }
 }
 
-
 TEST_F(OctreeTest, testOctreeConstructor) {
 
     std::uniform_int_distribution<size_t> uid(0, 6);
@@ -997,7 +995,7 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
         std::tie(min, max) = get_random_simulation_box_size(mt);
 
         size_t level_of_branch_nodes = uid(mt);
-        
+
         Octree octree(min, max, level_of_branch_nodes);
 
         std::tie(min, max) = get_random_simulation_box_size(mt);
@@ -1189,11 +1187,11 @@ TEST_F(OctreeTest, testOctreeStructure) {
                         const auto& expected_subcell_size = current_node->get_cell().get_size_for_octant(i);
 
                         ASSERT_EQ(expected_subcell_size, subcell_size);
-                    
-                        one_child_exists = true; 
+
+                        one_child_exists = true;
                     }
                 }
-                
+
                 ASSERT_TRUE(one_child_exists);
                 ASSERT_EQ(current_node->get_cell().get_neuron_id(), Constants::uninitialized);
 
@@ -1417,19 +1415,19 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
 
         Octree octree(min, max, 0);
 
-        size_t num_neurons = uid(mt);
+        const size_t num_neurons = uid(mt);
 
-        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons, mt);
+        const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons, mt);
 
         for (const auto& [position, id] : neurons_to_place) {
             octree.insert(position, id, my_rank);
         }
 
-        auto max_vacant_exc = uid_max_vacant(mt);
-        auto dends_exc = create_synaptic_elements(num_neurons, mt, max_vacant_exc, SignalType::EXCITATORY);
+        const auto max_vacant_exc = uid_max_vacant(mt);
+        const auto dends_exc = create_synaptic_elements(num_neurons, mt, max_vacant_exc, SignalType::EXCITATORY);
 
-        auto max_vacant_inh = uid_max_vacant(mt);
-        auto dends_inh = create_synaptic_elements(num_neurons, mt, max_vacant_inh, SignalType::EXCITATORY);
+        const auto max_vacant_inh = uid_max_vacant(mt);
+        const auto dends_inh = create_synaptic_elements(num_neurons, mt, max_vacant_inh, SignalType::INHIBITORY);
 
         octree.update_local_trees(dends_exc, dends_inh, num_neurons);
 
@@ -1437,7 +1435,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
         stack.emplace(octree.get_root());
 
         while (!stack.empty()) {
-            auto* current = stack.top();
+            const auto* current = stack.top();
             stack.pop();
 
             size_t sum_dends_exc = 0;
@@ -1455,12 +1453,147 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
                     stack.emplace(child);
                 }
             } else {
-                sum_dends_exc = dends_exc.get_count(current->get_cell().get_neuron_id());
-                sum_dends_inh = dends_inh.get_count(current->get_cell().get_neuron_id());
+                sum_dends_exc = dends_exc.get_count(current->get_cell_neuron_id());
+                sum_dends_inh = dends_inh.get_count(current->get_cell_neuron_id());
             }
 
             ASSERT_EQ(current->get_cell().get_number_excitatory_dendrites(), sum_dends_exc);
             ASSERT_EQ(current->get_cell().get_number_inhibitory_dendrites(), sum_dends_inh);
+        }
+
+        make_mpi_mem_available();
+    }
+}
+
+TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
+    const auto my_rank = MPIWrapper::get_my_rank();
+
+    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
+    std::uniform_int_distribution<size_t> uid(0, 10000);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+
+    for (auto i = 0; i < iterations; i++) {
+        Vec3d min{};
+        Vec3d max{};
+
+        std::tie(min, max) = get_random_simulation_box_size(mt);
+
+        Octree octree(min, max, 0);
+
+        const size_t num_neurons = uid(mt);
+
+        const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons, mt);
+
+        for (const auto& [position, id] : neurons_to_place) {
+            octree.insert(position, id, my_rank);
+        }
+
+        const auto dends_exc = create_synaptic_elements(num_neurons, mt, 1, SignalType::EXCITATORY);
+        const auto dends_inh = create_synaptic_elements(num_neurons, mt, 1, SignalType::INHIBITORY);
+
+        octree.update_local_trees(dends_exc, dends_inh, num_neurons);
+
+        std::stack<std::tuple<OctreeNode*, bool, bool>> stack{};
+        const auto flag_exc = octree.get_root()->get_cell().get_number_excitatory_dendrites() != 0;
+        const auto flag_inh = octree.get_root()->get_cell().get_number_inhibitory_dendrites() != 0;
+        stack.emplace(octree.get_root(), flag_exc, flag_inh);
+
+        while (!stack.empty()) {
+            std::tuple<OctreeNode*, bool, bool> tup = stack.top();
+            stack.pop();
+
+            auto* current = std::get<0>(tup);
+            auto has_exc = std::get<1>(tup);
+            auto has_inh = std::get<2>(tup);
+
+            Vec3d pos_dends_exc{ 0.0 };
+            Vec3d pos_dends_inh{ 0.0 };
+
+            bool changed_exc = false;
+            bool changed_inh = false;
+
+            if (current->is_parent()) {
+                double num_dends_exc = 0.0;
+                double num_dends_inh = 0.0;
+
+                for (auto* child : current->get_children()) {
+                    if (child == nullptr) {
+                        continue;
+                    }
+
+                    const auto& cell = child->get_cell();
+
+                    const auto& opt_exc = cell.get_excitatory_dendrite_position();
+                    const auto& opt_inh = cell.get_inhibitory_dendrite_position();
+
+                    if (!has_exc) {
+                        ASSERT_EQ(cell.get_number_excitatory_dendrites(), 0);
+                    }
+
+                    if (!has_inh) {
+                        ASSERT_EQ(cell.get_number_inhibitory_dendrites(), 0);
+                    }
+
+                    if (opt_exc.has_value() && cell.get_number_excitatory_dendrites() != 0) {
+                        changed_exc = true;
+                        pos_dends_exc += (opt_exc.value() * cell.get_number_excitatory_dendrites());
+                        num_dends_exc += cell.get_number_excitatory_dendrites();
+                    }
+
+                    if (opt_inh.has_value() && cell.get_number_inhibitory_dendrites() != 0) {
+                        changed_inh = true;
+                        pos_dends_inh += (opt_inh.value() * cell.get_number_inhibitory_dendrites());
+                        num_dends_inh += cell.get_number_inhibitory_dendrites();
+                    }
+
+                    stack.emplace(child, cell.get_number_excitatory_dendrites() != 0, cell.get_number_inhibitory_dendrites() != 0);
+                }
+
+                pos_dends_exc /= num_dends_exc;
+                pos_dends_inh /= num_dends_inh;
+
+            } else {
+                const auto& cell = current->get_cell();
+
+                const auto& opt_exc = cell.get_excitatory_dendrite_position();
+                const auto& opt_inh = cell.get_inhibitory_dendrite_position();
+
+                if (!has_exc) {
+                    ASSERT_EQ(cell.get_number_excitatory_dendrites(), 0);
+                }
+
+                if (!has_inh) {
+                    ASSERT_EQ(cell.get_number_inhibitory_dendrites(), 0);
+                }
+
+                if (opt_exc.has_value() && cell.get_number_excitatory_dendrites() != 0) {
+                    changed_exc = true;
+                    pos_dends_exc += (opt_exc.value() * cell.get_number_excitatory_dendrites());
+                }
+
+                if (opt_inh.has_value() && cell.get_number_inhibitory_dendrites() != 0) {
+                    changed_inh = true;
+                    pos_dends_inh += (opt_inh.value() * cell.get_number_inhibitory_dendrites());
+                }
+            }
+
+            ASSERT_EQ(has_exc, changed_exc);
+            ASSERT_EQ(has_inh, changed_inh);
+
+            if (has_exc) {
+                const auto& diff = current->get_cell().get_excitatory_dendrite_position().value() - pos_dends_exc;
+                ASSERT_NEAR(diff.get_x(), 0.0, eps);
+                ASSERT_NEAR(diff.get_y(), 0.0, eps);
+                ASSERT_NEAR(diff.get_z(), 0.0, eps);
+            }
+
+            if (has_inh) {
+                const auto& diff = current->get_cell().get_inhibitory_dendrite_position().value() - pos_dends_inh;
+                ASSERT_NEAR(diff.get_x(), 0.0, eps);
+                ASSERT_NEAR(diff.get_y(), 0.0, eps);
+                ASSERT_NEAR(diff.get_z(), 0.0, eps);
+            }
         }
 
         make_mpi_mem_available();

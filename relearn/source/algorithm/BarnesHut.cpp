@@ -76,7 +76,7 @@
         root_of_subtree = node_selected;
     }
 
-    RankNeuronId rank_neuron_id{ node_selected->get_rank(), node_selected->get_cell().get_neuron_id() };
+    RankNeuronId rank_neuron_id{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
     return rank_neuron_id;
 }
 
@@ -89,7 +89,7 @@
      * That is, the dendrites of the axon's neuron are not included in any super neuron considered.
      * However, this only works under the requirement that "acceptance_criterion" is <= 0.5.
      */
-    if ((!node_with_dendrite.is_parent()) && (src_neuron_id == node_with_dendrite.get_cell().get_neuron_id())) {
+    if ((!node_with_dendrite.is_parent()) && (src_neuron_id == node_with_dendrite.get_cell_neuron_id())) {
         return 0.0;
     }
 
