@@ -67,7 +67,7 @@ test-graph:
     paths:
       - graph/build-docker
       
-      
+   
 deploy-single:
   image: relearn-ci
   stage: deploy
@@ -77,6 +77,81 @@ deploy-single:
     - test-mpi
   artifacts:
     paths:
-      - relearn/build-docker     
-      
+      - relearn/build-docker  
 
+deploy-create:
+  image: relearn-ci
+  stage: deploy
+  script:
+    - relearn/build-docker/relearn --steps 2000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 12 --creation-interrupts relearn/input/tests/create-100-interrupt.txt
+  dependencies:
+    - test-mpi
+  artifacts:
+    paths:
+      - relearn/build-docker     
+
+deploy-disable:
+  image: relearn-ci
+  stage: deploy
+  script:
+    - relearn/build-docker/relearn --steps 2000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 12 --disable-interrupts relearn/input/tests/disable-100-interrupt.txt
+  dependencies:
+    - test-mpi
+  artifacts:
+    paths:
+      - relearn/build-docker    
+
+deploy-enable:
+  image: relearn-ci
+  stage: deploy
+  script:
+    - relearn/build-docker/relearn --steps 2000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 12 --enable-interrupts relearn/input/tests/enable-100-interrupt.txt
+  dependencies:
+    - test-mpi
+  artifacts:
+    paths:
+      - relearn/build-docker     
+  
+deploy-single-nompi:
+  image: relearn-ci-nompi
+  stage: deploy
+  script:
+    - relearn/build-docker-nompi/relearn --steps 2000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 12
+  dependencies:
+    - test-nompi
+  artifacts:
+    paths:
+      - relearn/build-docker-nompi 
+      
+deploy-create-nompi:
+  image: relearn-ci-nompi
+  stage: deploy
+  script:
+    - relearn/build-docker-nompi/relearn --steps 2000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 12 --creation-interrupts relearn/input/tests/create-100-interrupt.txt
+  dependencies:
+    - test-nompi
+  artifacts:
+    paths:
+      - relearn/build-docker-nompi     
+
+deploy-disable-nompi:
+  image: relearn-ci-nompi
+  stage: deploy
+  script:
+    - relearn/build-docker-nompi/relearn --steps 2000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 12 --disable-interrupts relearn/input/tests/disable-100-interrupt.txt
+  dependencies:
+    - test-nompi
+  artifacts:
+    paths:
+      - relearn/build-docker-nompi    
+
+deploy-enable-nompi:
+  image: relearn-ci-nompi
+  stage: deploy
+  script:
+    - relearn/build-docker-nompi/relearn --steps 2000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 12 --enable-interrupts relearn/input/tests/enable-100-interrupt.txt
+  dependencies:
+    - test-nompi
+  artifacts:
+    paths:
+      - relearn/build-docker-nompi    
