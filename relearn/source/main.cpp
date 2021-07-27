@@ -89,8 +89,8 @@ int main(int argc, char** argv) {
     size_t simulation_steps{};
     app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();
 
-    unsigned int seed_octree{};
-    app.add_option("-r,--random-seed", seed_octree, "Random seed.")->required();
+    unsigned int random_seed{ 0 };
+    app.add_option("-r,--random-seed", random_seed, "Random seed.");
 
     int openmp_threads{ 1 };
     app.add_option("--openmp", openmp_threads, "Number of OpenMP Threads.");
@@ -136,6 +136,14 @@ int main(int argc, char** argv) {
     RelearnException::check(synaptic_elements_init_ub >= synaptic_elements_init_lb, "The minimum number of vacant synaptic elements must not be larger than the maximum number");
     RelearnException::check(static_cast<bool>(*opt_num_neurons) || static_cast<bool>(*opt_file_positions), "Missing command line option, need num_neurons (-n,--num-neurons) or file_positions (-f,--file).");
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
+    RelearnException::check(accept_criterion <= BarnesHut::max_theta, "Acceptance criterion must be smaller or equal to {}", BarnesHut::max_theta);
+    RelearnException::check(accept_criterion >= 0.0, "Acceptance criterion must not be smaller than 0.0");
+
+    RelearnException::check(target_calcium >= SynapticElements::min_C_target, "Target calcium is smaller than {}", SynapticElements::min_C_target);
+    RelearnException::check(target_calcium <= SynapticElements::max_C_target, "Target calcium is larger than {}", SynapticElements::max_C_target);
+
+    RelearnException::check(nu >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
+    RelearnException::check(nu <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
 
     omp_set_num_threads(openmp_threads);
 
@@ -153,7 +161,7 @@ int main(int argc, char** argv) {
 
     // Init random number seeds
     RandomHolder::seed(RandomHolderKey::Partition, static_cast<unsigned int>(my_rank));
-    RandomHolder::seed(RandomHolderKey::BarnesHut, seed_octree);
+    RandomHolder::seed(RandomHolderKey::BarnesHut, random_seed);
 
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier(MPIWrapper::Scope::global);
