@@ -146,12 +146,12 @@ void Simulation::initialize() {
 
     network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
 
-    barnes_hut_algorithm = std::make_shared<BarnesHut>(global_tree);
-    barnes_hut_algorithm->set_acceptance_criterion(accept_criterion);
+    algorithm = std::make_shared<BarnesHut>(global_tree);
+    algorithm->set_acceptance_criterion(accept_criterion);
 
     neurons->set_network_graph(network_graph);
     neurons->set_octree(global_tree);
-    neurons->set_barnes_hut(barnes_hut_algorithm);
+    neurons->set_algorithm(algorithm);
 }
 
 void Simulation::simulate(size_t number_steps, size_t step_monitor) {
@@ -275,7 +275,7 @@ void Simulation::finalize() const {
         delta_synapse_creations, delta_synapse_deletions, previous_netto_creations,
         Timers::wall_clock_time());
 
-    neurons->print_statistics_to_essentials();
+    neurons->print_calcium_statistics_to_essentials();
 
     LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
         "Created synapses: {}\n"

@@ -34,11 +34,9 @@ class NeuronMonitor;
 class Octree;
 class Partition;
 
-// Types
-using Axons = SynapticElements;
-using DendritesExc = SynapticElements;
-using DendritesInh = SynapticElements;
-
+/**
+ * @brief This class gathers all information for the neurons and provides the primary interface for the simulation
+ */
 class Neurons {
     friend class NeuronMonitor;
 
@@ -390,19 +388,33 @@ class Neurons {
     };
 
 public:
+    // Types
+    using Axons = SynapticElements;
+    using DendritesExcitatory = SynapticElements;
+    using DendritesInhibitory = SynapticElements;
+
     /**
 	 * Map of (MPI rank; SynapseDeletionRequests)
 	 * The MPI rank specifies the corresponding process
 	 */
     using MapSynapseDeletionRequests = std::map<int, SynapseDeletionRequests>;
 
+    /** 
+     * @brief Creates a new object with the passed Partition, NeuronModel, Axons, DendritesExc, and DendritesInh
+     * @param partition The partition, is only used for printing, must not be empty
+     * @param model_ptr The electrical model for the neurons, must not be empty
+     * @param axons_ptr The model for the axons, must not be empty
+     * @param dend_ex_ptr The model for the excitatory dendrites, must not be empty
+     * @param dend_in_ptr The model for the inhibitory dendrites, must not be empty
+     * @exception Throws a RelearnException if any of the pointers is empty
+     */
     Neurons(std::shared_ptr<Partition> partition,
-        std::unique_ptr<NeuronModel> model,
+        std::unique_ptr<NeuronModel> model_ptr,
         std::unique_ptr<Axons> axons_ptr,
-        std::unique_ptr<DendritesExc> dend_ex_ptr,
-        std::unique_ptr<DendritesInh> dend_in_ptr)
+        std::unique_ptr<DendritesExcitatory> dend_ex_ptr,
+        std::unique_ptr<DendritesInhibitory> dend_in_ptr)
         : partition(std::move(partition))
-        , neuron_model(std::move(model))
+        , neuron_model(std::move(model_ptr))
         , axons(std::move(axons_ptr))
         , dendrites_exc(std::move(dend_ex_ptr))
         , dendrites_inh(std::move(dend_in_ptr)) {
@@ -419,20 +431,47 @@ public:
     Neurons& operator=(const Neurons& other) = delete;
     Neurons& operator=(Neurons&& other) = default;
 
+    /**
+     * @brief Initializes this class and all models with number_neurons, i.e.,
+     *      (a) Initializes the electrical model
+     *      (b) Initializes the extra infos
+     *      (c) Initializes the synaptic models
+     *      (d) Enables all neurons
+     *      (e) Calculates if the neurons fired once to initialize the calcium values to beta or 0.0
+     * @param number_neurons 
+     */
     void init(size_t number_neurons);
 
-    void set_octree(std::shared_ptr<Octree> octree) {
+    /**
+     * @brief Sets the octree in which the neurons are stored
+     * @param octree The octree
+     */
+    void set_octree(std::shared_ptr<Octree> octree) noexcept {
         global_tree = std::move(octree);
     }
 
-    void set_barnes_hut(std::shared_ptr<BarnesHut> barnes_hut) {
-        barnes_hut_algorithm = std::move(barnes_hut);
+    /**
+     * @brief Sets the algorithm that calculates to which neuron a neuron connects during the plasticity update
+     * @param algorithm_ptr The pointer to the algorithm 
+     */
+    void set_algorithm(std::shared_ptr<BarnesHut> algorithm_ptr) noexcept {
+        algorithm = std::move(algorithm_ptr);
     }
 
-    void set_network_graph(std::shared_ptr<NetworkGraph> network) {
+    /**
+     * @brief Sets the network graph in which the synapses for the neurons are stored
+     * @param octree The network graph
+     */
+    void set_network_graph(std::shared_ptr<NetworkGraph> network) noexcept {
         network_graph = std::move(network);
     }
 
+    /**
+     * @brief Returns the model parameters for the specified synaptic elements 
+     * @param element_type The element type
+     * @param signal_type The signal type, only relevant if element_type == dendrites
+     * @return The model parameters for the specified synaptic elements
+     */
     [[nodiscard]] std::vector<ModelParameter> get_parameter(ElementType element_type, SignalType signal_type) {
         if (element_type == ElementType::AXON) {
             return axons->get_parameter();
@@ -445,90 +484,201 @@ public:
         return dendrites_inh->get_parameter();
     }
 
+    /**
+     * @brief Returns the number of neurons in this object
+     * @return The number of neurons in this object
+     */
     [[nodiscard]] size_t get_num_neurons() const noexcept {
         return num_neurons;
     }
 
+    /**
+     * @brief Sets the area names in the extra infos
+     * @param names The area names
+     * @exception Throws the same RelearnException as NeuronsExtraInfo::set_area_names
+     */
     void set_area_names(std::vector<std::string> names) {
         extra_info->set_area_names(std::move(names));
     }
 
+    /**
+     * @brief Sets the x dimensions in the extra infos
+     * @param names The x dimensions
+     * @exception Throws the same RelearnException as NeuronsExtraInfo::set_x_dims
+     */
     void set_x_dims(std::vector<double> x_dims) {
         extra_info->set_x_dims(std::move(x_dims));
     }
 
+    /**
+     * @brief Sets the y dimensions in the extra infos
+     * @param names The y dimensions
+     * @exception Throws the same RelearnException as NeuronsExtraInfo::set_y_dims
+     */
     void set_y_dims(std::vector<double> y_dims) {
         extra_info->set_y_dims(std::move(y_dims));
     }
 
+    /**
+     * @brief Sets the z dimensions in the extra infos
+     * @param names The z dimensions
+     * @exception Throws the same RelearnException as NeuronsExtraInfo::set_z_dims
+     */
     void set_z_dims(std::vector<double> z_dims) {
         extra_info->set_z_dims(std::move(z_dims));
     }
 
+    /**
+     * @brief Sets the signal types in the extra infos
+     * @param names The signal types
+     * @exception Throws the same RelearnException as NeuronsExtraInfo::set_signal_types
+     */
     void set_signal_types(std::vector<SignalType> signal_types) {
         axons->set_signal_types(std::move(signal_types));
     }
 
+    /**
+     * @brief Returns a constant reference to the axon model
+     *      The reference is never invalidated
+     * @return A constant reference to the axon model
+     */
     [[nodiscard]] const Axons& get_axons() const noexcept {
         return *axons;
     }
 
-    [[nodiscard]] const DendritesExc& get_dendrites_exc() const noexcept {
+    /**
+     * @brief Returns a constant reference to the excitatory dendrites model
+     *      The reference is never invalidated
+     * @return A constant reference to the excitatory dendrites model
+     */
+    [[nodiscard]] const DendritesExcitatory& get_dendrites_exc() const noexcept {
         return *dendrites_exc;
     }
 
-    [[nodiscard]] const DendritesInh& get_dendrites_inh() const noexcept {
+    /**
+     * @brief Returns a constant reference to the inhibitory dendrites model
+     *      The reference is never invalidated
+     * @return A constant reference to the inhibitory dendrites model
+     */
+    [[nodiscard]] const DendritesInhibitory& get_dendrites_inh() const noexcept {
         return *dendrites_inh;
     }
 
+    /**
+     * @brief Returns a constant reference to the disable flags for the neurons
+     *      The reference is never invalidated
+     * @return A constant reference to the disable flags
+     */
     [[nodiscard]] const std::vector<char>& get_disable_flags() const noexcept {
         return disable_flags;
     }
 
+    /**
+     * @brief Initializes the synaptic elements with respect to the network graph, i.e.,
+     *      adds the synapses from the network graph as connected counts to the synaptic elements models
+     */
     void init_synaptic_elements();
 
     /**
-     * Disables all neurons with specified ids
-     * If a neuron is already disabled, nothing happens for that one
+     * @brief Disables all neurons with specified ids
+     *      If a neuron is already disabled, nothing happens for that one
+     *      Otherwise, also deletes all synapses from the disabled neurons
+     * @exception Throws RelearnExceptions if something unexpected happens
      */
     size_t disable_neurons(const std::vector<size_t>& neuron_ids);
 
     /**
-     * Enables all neurons with specified ids
-     * If a neuron is already enabled, nothing happens for that one
+     * @brief Enables all neurons with specified ids
+     *      If a neuron is already enabled, nothing happens for that one
+     * @exception Throws RelearnExceptions if something unexpected happens
      */
     void enable_neurons(const std::vector<size_t>& neuron_ids);
 
     /**
-     * Creates creation_count many new neurons with default values
+     * @brief Creates creation_count many new neurons with default values
+     *      (a) Creates neurons in the electrical model
+     *      (b) Creates neurons in the extra infos
+     *      (c) Creates neurons in the synaptic models
+     *      (d) Enables all created neurons
+     *      (e) Calculates if the neurons fired once to initialize the calcium values to beta or 0.0
+     *      (f) Inserts the newly created neurons into the octree
+     * @exception Throws a RelearnException if something unexpected happens
      */
     void create_neurons(size_t creation_count);
 
+    /**
+     * @brief Calls update_electrical_activity from the electrical model with the stored network graph,
+     *      and updates the calcium values afterwards
+     * @exception Throws a RelearnException if something unexpected happens
+     */
     void update_electrical_activity();
 
-    void update_number_synaptic_elements_delta() noexcept {
+    /**
+     * @brief Updates the delta of the synaptic elements for (1) axons, (2) excitatory dendrites, (3) inhibitory dendrites
+     * @exception Throws a RelearnException if something unexpected happens
+     */
+    void update_number_synaptic_elements_delta() {
         axons->update_number_elements_delta(calcium, disable_flags);
         dendrites_exc->update_number_elements_delta(calcium, disable_flags);
         dendrites_inh->update_number_elements_delta(calcium, disable_flags);
     }
 
+    /**
+     * @brief Updates the plasticity by
+     *      (1) Deleting superfluous synapses
+     *      (2) Creating new synapses with the stored algorithm
+     * @exception Throws a RelearnException if the network graph, the octree, or the algorithm is empty,
+     *      or something unexpected happens
+     * @return Returns a tuple with (1) the number of deleted synapses, and (2) the number of created synapses
+     */
     [[nodiscard]] std::tuple<size_t, size_t> update_connectivity();
 
+    /**
+     * @brief Calculates the number vacant axons and dendrites (excitatory, inhibitory) and prints them to LogFiles::EventType::Sums
+     *      Performs communication with MPI
+     * @param step The current simulation step
+     * @param sum_synapses_deleted The number of deleted synapses (locally)
+     * @param sum_synapses_created The number of created synapses (locally)
+     */
     void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, size_t sum_synapses_deleted, size_t sum_synapses_created);
 
-    // Print global information about all neurons at rank 0
+    /**
+     * @brief Prints the overview of the neurons to LogFiles::EventType::NeuronsOverview
+     *      Performs communication with MPI
+     * @param step The current simulation step
+     */
     void print_neurons_overview_to_log_file_on_rank_0(size_t step);
 
-    void print_statistics_to_essentials();
+    /**
+     * @brief Prints the calcium statistics to LogFiles::EventType::Essentials
+     *      Performs communication with MPI
+     */
+    void print_calcium_statistics_to_essentials();
 
+    /**
+     * @brief Prints the network graph to LogFiles::EventType::Network
+     */
     void print_network_graph_to_log_file();
 
+    /**
+     * @brief Prints the neuron positions to LogFiles::EventType::Positions
+     */
     void print_positions_to_log_file();
 
+    /**
+     * @brief Prints some overview to LogFiles::EventType::Cout
+     */
     void print();
 
-    void print_info_for_barnes_hut();
+    /**
+     * @brief Prints some algorithm overview to LogFiles::EventType::Cout
+     */
+    void print_info_for_algorithm();
 
+    /**
+     * @brief Performs debug checks on the synaptic element models if Config::do_debug_checks
+     * @exception Throws a RelearnException if a check fails
+     */
     void debug_check_counts();
 
 private:
@@ -598,15 +748,15 @@ private:
     std::shared_ptr<Partition> partition{};
 
     std::shared_ptr<Octree> global_tree{};
-    std::shared_ptr<BarnesHut> barnes_hut_algorithm{};
+    std::shared_ptr<BarnesHut> algorithm{};
 
     std::shared_ptr<NetworkGraph> network_graph{};
 
     std::unique_ptr<NeuronModel> neuron_model{};
 
     std::unique_ptr<Axons> axons{};
-    std::unique_ptr<DendritesExc> dendrites_exc{};
-    std::unique_ptr<DendritesInh> dendrites_inh{};
+    std::unique_ptr<DendritesExcitatory> dendrites_exc{};
+    std::unique_ptr<DendritesInhibitory> dendrites_inh{};
 
     std::vector<double> calcium{}; // Intracellular calcium concentration of every neuron
 
