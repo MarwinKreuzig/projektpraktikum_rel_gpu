@@ -60,16 +60,6 @@ class MPIWrapper {
 
 public:
     /**
-     * This enum serves as a marker for the scope of the MPI functions. 
-     * It only serves the purpose of providing an interface for future work.
-     * Scope::none is not supported and always triggers a RelearnException.
-     */
-    enum class Scope : char {
-        global = 0,
-        none = 1
-    };
-
-    /**
      * This enum serves as a marker for the function that should be used in reductions.
      * ReduceFunction::none is not supported and always triggers a RelearnException.
      */
@@ -107,17 +97,17 @@ private:
     // NOLINTNEXTLINE
     static inline std::string my_rank_str{ "-1" };
 
-    static void all_gather(const void* own_data, void* buffer, int size, Scope scope);
+    static void all_gather(const void* own_data, void* buffer, int size);
 
-    static void all_gather_inl(void* ptr, int count, Scope scope);
+    static void all_gather_inl(void* ptr, int count);
 
-    static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank, Scope scope);
-
-    // NOLINTNEXTLINE
-    static void async_s(const void* buffer, int count, int rank, Scope scope, AsyncToken& token);
+    static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank);
 
     // NOLINTNEXTLINE
-    static void async_recv(void* buffer, int count, int rank, Scope scope, AsyncToken& token);
+    static void async_s(const void* buffer, int count, int rank, AsyncToken& token);
+
+    // NOLINTNEXTLINE
+    static void async_recv(void* buffer, int count, int rank, AsyncToken& token);
 
     static int translate_lock_type(MPI_Locktype lock_type);
 
@@ -142,44 +132,40 @@ public:
     static void init_buffer_octree();
 
     /**
-     * @brief The calling MPI rank halts until all MPI ranks within the scope reach the method.
-     * @param scope The scope in which the MPI ranks are synchronized
-     * @exception Throws a RelearnException if an MPI error occurs or scope is Scope::none
+     * @brief The calling MPI rank halts until all MPI ranks reach the method.
+     * @exception Throws a RelearnException if an MPI error occurs
      */
-    static void barrier(Scope scope);
+    static void barrier();
 
     /**
-     * @brief Reduces a value for every MPI rank in the given scope with a reduction function such that the root_rank has the final result
+     * @brief Reduces a value for every MPI rank with a reduction function such that the root_rank has the final result
      * @param value The local value that should be reduced
      * @param function The reduction function, should be associative and commutative
      * @param root_rank The MPI rank that shall hold the final result
-     * @param scope The scope in which the reduction has to take place
      * @exception Throws a RelearnException if an MPI error occurs or if root_rank is < 0
      * @return On the MPI rank root_rank: The result of the reduction; A dummy value on every other MPI rank
      */
-    [[nodiscard]] static double reduce(double value, ReduceFunction function, int root_rank, Scope scope);
+    [[nodiscard]] static double reduce(double value, ReduceFunction function, int root_rank);
 
     /**
-     * @brief Reduces a value for every MPI rank in the given scope with a reduction function such that every rank has the final result
+     * @brief Reduces a value for every MPI rank with a reduction function such that every rank has the final result
      * @param value The local value that should be reduced
      * @param function The reduction function, should be associative and commutative
-     * @param scope The scope in which the reduction has to take place
      * @exception Throws a RelearnException if an MPI error occurs
      * @return The final result of the reduction
      */
-    [[nodiscard]] static double all_reduce(double value, ReduceFunction function, Scope scope);
+    [[nodiscard]] static double all_reduce(double value, ReduceFunction function);
 
     /**
-     * @brief Reduces multiple values for every MPI rank in the given scope with a reduction function such that the root_rank has the final result. The reduction is performed componentwise
+     * @brief Reduces multiple values for every MPI rank with a reduction function such that the root_rank has the final result. The reduction is performed componentwise
      * @param src The local array of values that shall be reduced
      * @param function The reduction function, should be associative and commutative
      * @param root_rank The MPI rank that shall hold the final result
-     * @param scope The scope in which the reduction has to take place
      * @exception Throws a RelearnException if an MPI error occurs or if root_rank is < 0
      * @return On the MPI rank root_rank: The results of the componentwise reduction; A dummy value on every other MPI rank
      */
     template <size_t size>
-    [[nodiscard]] static std::array<double, size> reduce(const std::array<double, size>& src, ReduceFunction function, int root_rank, Scope scope) {
+    [[nodiscard]] static std::array<double, size> reduce(const std::array<double, size>& src, ReduceFunction function, int root_rank) {
         RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
 
         std::array<double, size> dst{ 0.0 };
@@ -189,16 +175,15 @@ public:
     }
 
     /**
-     * @brief Reduces multiple values for every MPI rank in the given scope with a reduction function such that the root_rank has the final result. The reduction is performed componentwise
+     * @brief Reduces multiple values for every MPI rank with a reduction function such that the root_rank has the final result. The reduction is performed componentwise
      * @param src The local array of values that shall be reduced
      * @param function The reduction function, should be associative and commutative
      * @param root_rank The MPI rank that shall hold the final result
-     * @param scope The scope in which the reduction has to take place
      * @exception Throws a RelearnException if an MPI error occurs or if root_rank is < 0
      * @return On the MPI rank root_rank: The results of the componentwise reduction; A dummy value on every other MPI rank
      */
     template <size_t size>
-    [[nodiscard]] static std::array<int64_t, size> reduce(const std::array<int64_t, size>& src, ReduceFunction function, int root_rank, Scope scope) {
+    [[nodiscard]] static std::array<int64_t, size> reduce(const std::array<int64_t, size>& src, ReduceFunction function, int root_rank) {
         RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
 
         std::array<int64_t, size> dst{ 0 };
@@ -208,37 +193,34 @@ public:
     }
 
     /**
-     * @brief Exchanges one size_t between every pair for MPI ranks in the given scope
+     * @brief Exchanges one size_t between every pair for MPI ranks
      * @param src The values that shall be sent to the other MPI ranks. MPI rank i receives src[i]
      * @param dst The values that were transmitted by the other MPI ranks. MPI rank i sent dst[i]
-     * @param scope The scope in which the all to all communication has to take place
      * @exception Throws a RelearnException if an MPI error occurs or if src.size() != dst.size()
      */
     // NOLINTNEXTLINE
-    static void all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst, Scope scope);
+    static void all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst);
 
     /**
      * @brief Gathers one value for each MPI rank into a vector on all MPI ranks
      * @param own_data The local value that shall be sent to all MPI ranks
      * @param results The data from all MPI ranks. The value of MPI rank i is in results[i]
-     * @param scope The scope in which the all to all communication has to take place
      * @exception Throws a RelearnException if an MPI error occurs
      */
     template <typename T>
-    static void all_gather(T own_data, std::vector<T>& results, Scope scope) {
-        all_gather(&own_data, results.data(), sizeof(T), scope);
+    static void all_gather(T own_data, std::vector<T>& results) {
+        all_gather(&own_data, results.data(), sizeof(T));
     }
 
     /**
      * @brief Gathers multiple values for each MPI rank into the provided buffer on all MPI ranks
      * @param ptr The buffer to which the data will be written. The values of MPI rank i are in ptr[count * i + {0, 1, ..., count - 1}]
      * @param count The number of local values that shall be gathered
-     * @param scope The scope in which the all to all communication has to take place
      * @exception Throws a RelearnException if an MPI error occurs or if count <= 0
      */
     template <typename T>
-    static void all_gather_inline(T* ptr, int count, Scope scope) {
-        all_gather_inl(ptr, count * sizeof(T), scope);
+    static void all_gather_inline(T* ptr, int count) {
+        all_gather_inl(ptr, count * sizeof(T));
     }
 
     /**
@@ -246,14 +228,13 @@ public:
      * @param buffer The data that shall be sent to the other MPI rank
      * @param size_in_bytes The number of bytes that shall be sent
      * @param rank The other MPI rank that shall receive the data
-     * @param scope The scope in which the communication has to take place
      * @param token A token that can be used to query if the asynchronous communication completed
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
     template <typename T>
     // NOLINTNEXTLINE
-    static void async_send(const T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
-        async_s(buffer, static_cast<int>(size_in_bytes), rank, scope, token);
+    static void async_send(const T* buffer, size_t size_in_bytes, int rank, AsyncToken& token) {
+        async_s(buffer, static_cast<int>(size_in_bytes), rank, token);
     }
 
     /**
@@ -261,14 +242,13 @@ public:
      * @param buffer The address where the data shall be written to
      * @param size_in_bytes The number of bytes that shall be received
      * @param rank The other MPI rank that shall send the data
-     * @param scope The scope in which the communication has to take place
      * @param token A token that can be used to query if the asynchronous communication completed
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
     template <typename T>
     // NOLINTNEXTLINE
-    static void async_receive(T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
-        async_recv(buffer, static_cast<int>(size_in_bytes), rank, scope, token);
+    static void async_receive(T* buffer, size_t size_in_bytes, int rank, AsyncToken& token) {
+        async_recv(buffer, static_cast<int>(size_in_bytes), rank, token);
     }
 
     /**

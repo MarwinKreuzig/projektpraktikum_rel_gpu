@@ -396,7 +396,7 @@ void Octree::synchronize_local_trees() {
     }
 
     // Allgather in-place branch nodes from every rank
-    MPIWrapper::all_gather_inline(exchange_branch_nodes.data(), num_local_trees, MPIWrapper::Scope::global);
+    MPIWrapper::all_gather_inline(exchange_branch_nodes.data(), num_local_trees);
 
     Timers::stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
 

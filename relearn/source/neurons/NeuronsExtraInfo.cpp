@@ -22,7 +22,7 @@ void NeuronsExtraInfo::init(size_t number_neurons) {
     // Gather the number of neurons of every process
     std::vector<size_t> rank_to_num_neurons(num_ranks);
 
-    MPIWrapper::all_gather(number_neurons, rank_to_num_neurons, MPIWrapper::Scope::global);
+    MPIWrapper::all_gather(number_neurons, rank_to_num_neurons);
     mpi_rank_to_local_start_id.resize(num_ranks);
 
     // Store global start neuron id of every rank

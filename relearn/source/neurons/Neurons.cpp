@@ -280,18 +280,16 @@ void Neurons::update_calcium() {
 }
 
 Neurons::StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, int root, const std::vector<char>& disable_flags) const {
-    const auto scope = MPIWrapper::Scope::global;
-
     const auto [d_my_min, d_my_max, d_my_acc, d_num_values] = Util::min_max_acc(local_values, disable_flags);
     const double my_avg = d_my_acc / d_num_values;
 
-    const double d_min = MPIWrapper::reduce(d_my_min, MPIWrapper::ReduceFunction::min, root, scope);
-    const double d_max = MPIWrapper::reduce(d_my_max, MPIWrapper::ReduceFunction::max, root, scope);
+    const double d_min = MPIWrapper::reduce(d_my_min, MPIWrapper::ReduceFunction::min, root);
+    const double d_max = MPIWrapper::reduce(d_my_max, MPIWrapper::ReduceFunction::max, root);
 
-    const double num_values = MPIWrapper::all_reduce(d_num_values, MPIWrapper::ReduceFunction::sum, scope);
+    const double num_values = MPIWrapper::all_reduce(d_num_values, MPIWrapper::ReduceFunction::sum);
 
     // Get global avg at all ranks (needed for variance)
-    const double avg = MPIWrapper::all_reduce(my_avg, MPIWrapper::ReduceFunction::sum, scope);
+    const double avg = MPIWrapper::all_reduce(my_avg, MPIWrapper::ReduceFunction::sum);
 
     /**
 	 * Calc variance
@@ -307,7 +305,7 @@ Neurons::StatisticalMeasures Neurons::global_statistics(const std::vector<double
     my_var /= num_values;
 
     // Get global variance at rank "root"
-    const double var = MPIWrapper::reduce(my_var, MPIWrapper::ReduceFunction::sum, root, scope);
+    const double var = MPIWrapper::reduce(my_var, MPIWrapper::ReduceFunction::sum, root);
 
     // Calc standard deviation
     const double std = sqrt(var);
@@ -551,7 +549,7 @@ Neurons::MapSynapseDeletionRequests Neurons::delete_synapses_exchange_requests(c
 
     std::vector<size_t> num_synapse_deletion_requests_from_ranks(MPIWrapper::get_num_ranks(), Constants::uninitialized);
     // Send and receive the number of synapse deletion requests
-    MPIWrapper::all_to_all(num_synapse_deletion_requests_for_ranks, num_synapse_deletion_requests_from_ranks, MPIWrapper::Scope::global);
+    MPIWrapper::all_to_all(num_synapse_deletion_requests_for_ranks, num_synapse_deletion_requests_from_ranks);
     // Now I know how many requests I will get from every rank.
     // Allocate memory for all incoming synapse deletion requests.
     for (auto rank = 0; rank < MPIWrapper::get_num_ranks(); ++rank) {
@@ -574,7 +572,7 @@ Neurons::MapSynapseDeletionRequests Neurons::delete_synapses_exchange_requests(c
         auto* buffer = it.second.get_requests();
         const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
 
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
 
         ++mpi_requests_index;
     }
@@ -585,7 +583,7 @@ Neurons::MapSynapseDeletionRequests Neurons::delete_synapses_exchange_requests(c
         const auto* const buffer = it.second.get_requests();
         const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
 
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
 
         ++mpi_requests_index;
     }
@@ -767,7 +765,7 @@ void Neurons::create_synapses_update_octree() {
 
     // Makes sure that all ranks finished their local access epoch
     // before a remote origin opens an access epoch
-    MPIWrapper::barrier(MPIWrapper::Scope::global);
+    MPIWrapper::barrier();
 }
 
 MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
@@ -853,7 +851,7 @@ MapSynapseCreationRequests Neurons::create_synapses_exchange_requests(const MapS
 
     std::vector<size_t> num_synapse_requests_from_ranks(MPIWrapper::get_num_ranks(), Constants::uninitialized);
     // Send and receive the number of synapse requests
-    MPIWrapper::all_to_all(num_synapse_requests_for_ranks, num_synapse_requests_from_ranks, MPIWrapper::Scope::global);
+    MPIWrapper::all_to_all(num_synapse_requests_for_ranks, num_synapse_requests_from_ranks);
     // Now I know how many requests I will get from every rank.
     // Allocate memory for all incoming synapse requests.
     for (auto rank = 0; rank < MPIWrapper::get_num_ranks(); rank++) {
@@ -876,7 +874,7 @@ MapSynapseCreationRequests Neurons::create_synapses_exchange_requests(const MapS
         auto* buffer = it.second.get_requests();
         const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
 
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
 
         mpi_requests_index++;
     }
@@ -886,7 +884,7 @@ MapSynapseCreationRequests Neurons::create_synapses_exchange_requests(const MapS
         const auto* const buffer = it.second.get_requests();
         const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
 
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
 
         mpi_requests_index++;
     }
@@ -1000,7 +998,7 @@ std::map<int, std::vector<char>> Neurons::create_synapses_exchange_responses(con
         auto* buffer = it.second.data();
         const auto size_in_bytes = static_cast<int>(it.second.size());
 
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
 
         mpi_requests_index++;
     }
@@ -1010,7 +1008,7 @@ std::map<int, std::vector<char>> Neurons::create_synapses_exchange_responses(con
         const auto* const buffer = it.second.data();
         const auto size_in_bytes = static_cast<int>(it.second.size());
 
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
 
         mpi_requests_index++;
     }
@@ -1185,7 +1183,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
         static_cast<int64_t>(sum_synapses_deleted),
         static_cast<int64_t>(sum_synapses_created) };
 
-    std::array<int64_t, 6> sums_global = MPIWrapper::reduce(sums_local, MPIWrapper::ReduceFunction::sum, 0, MPIWrapper::Scope::global);
+    std::array<int64_t, 6> sums_global = MPIWrapper::reduce(sums_local, MPIWrapper::ReduceFunction::sum, 0);
 
     // Output data
     if (0 == MPIWrapper::get_my_rank()) {

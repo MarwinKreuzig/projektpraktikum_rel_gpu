@@ -30,7 +30,7 @@ private:
 
         char* argument = (char*)"./runTests";
         MPIWrapper::init(1, &argument);
-        MPIWrapper::init_buffer_octree(1);
+        MPIWrapper::init_buffer_octree();
     }
 
 protected:

@@ -38,7 +38,7 @@ void LogFiles::init() {
     }
 
     // Wait until directory is created before any rank proceeds
-    MPIWrapper::barrier(MPIWrapper::Scope::global);
+    MPIWrapper::barrier();
 
     // Create log file for neurons overview on rank 0
     LogFiles::add_logfile(EventType::NeuronsOverview, "neurons_overview", 0);

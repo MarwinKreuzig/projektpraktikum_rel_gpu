@@ -35,11 +35,6 @@ class MPINoWrapper {
     friend class RelearnTest;
 
 public:
-    enum class Scope : char {
-        global = 0,
-        none = 1
-    };
-
     enum class ReduceFunction : char {
         min = 0,
         max = 1,
@@ -69,13 +64,13 @@ private:
 
     static void make_all_mem_available();
 
-    static void all_gather(const void* own_data, void* buffer, int size, Scope scope);
+    static void all_gather(const void* own_data, void* buffer, int size);
 
-    static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank, Scope scope);
+    static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank);
 
-    static void async_s(const void* buffer, int count, int rank, Scope scope, AsyncToken& token);
+    static void async_s(const void* buffer, int count, int rank, AsyncToken& token);
 
-    static void async_recv(void* buffer, int count, int rank, Scope scope, AsyncToken& token);
+    static void async_recv(void* buffer, int count, int rank, AsyncToken& token);
 
 public:
     static void init(int argc, char** argv);
@@ -84,44 +79,44 @@ public:
 
     static void init_buffer_octree(size_t num_partitions);
 
-    static void barrier(Scope scope);
+    static void barrier();
 
-    [[nodiscard]] static double reduce(double value, ReduceFunction function, int root_rank, Scope scope);
+    [[nodiscard]] static double reduce(double value, ReduceFunction function, int root_rank);
 
-    [[nodiscard]] static double all_reduce(double value, ReduceFunction function, Scope scope);
+    [[nodiscard]] static double all_reduce(double value, ReduceFunction function);
 
     // NOLINTNEXTLINE
-    static void all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst, Scope scope);
+    static void all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst);
 
     template <typename T>
     // NOLINTNEXTLINE
-    static void async_send(const T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
-        async_s(buffer, static_cast<int>(size_in_bytes), rank, scope, token);
+    static void async_send(const T* buffer, size_t size_in_bytes, int rank, AsyncToken& token) {
+        async_s(buffer, static_cast<int>(size_in_bytes), rank, token);
     }
 
     template <typename T>
     // NOLINTNEXTLINE
-    static void async_receive(T* buffer, size_t size_in_bytes, int rank, Scope scope, AsyncToken& token) {
-        async_recv(buffer, static_cast<int>(size_in_bytes), rank, scope, token);
+    static void async_receive(T* buffer, size_t size_in_bytes, int rank, AsyncToken& token) {
+        async_recv(buffer, static_cast<int>(size_in_bytes), rank, token);
     }
 
     template <typename T, size_t size>
-    [[nodiscard]] static std::array<T, size> reduce(const std::array<T, size>& src, ReduceFunction function, int root_rank, Scope scope) {
+    [[nodiscard]] static std::array<T, size> reduce(const std::array<T, size>& src, ReduceFunction function, int root_rank) {
         RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
 
         std::array<T, size> dst{};
-        reduce(src.data(), dst.data(), src.size() * sizeof(T), function, root_rank, scope);
+        reduce(src.data(), dst.data(), src.size() * sizeof(T), function, root_rank);
 
         return dst;
     }
 
     template <typename T>
-    static void all_gather(T own_data, std::vector<T>& results, Scope scope) {
-        all_gather(&own_data, results.data(), sizeof(T), scope);
+    static void all_gather(T own_data, std::vector<T>& results) {
+        all_gather(&own_data, results.data(), sizeof(T));
     }
 
     template <typename T>
-    static void all_gather_inline(T* ptr, int count, Scope scope) {
+    static void all_gather_inline(T* ptr, int count) {
     }
 
     static void download_octree_node(OctreeNode<BarnesHutCell>* dst, int target_rank, const OctreeNode<BarnesHutCell>* src);

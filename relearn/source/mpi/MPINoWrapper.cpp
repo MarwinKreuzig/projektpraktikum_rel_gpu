@@ -39,22 +39,22 @@ void MPINoWrapper::init_buffer_octree(size_t num_partitions) {
     rma_buffer_branch_nodes.ptr = MPINo_RMA_MemAllocator::get_branch_nodes();
 }
 
-void MPINoWrapper::barrier(Scope scope) {
+void MPINoWrapper::barrier() {
 }
 
-[[nodiscard]] double MPINoWrapper::reduce(double value, ReduceFunction /*function*/, int /*root_rank*/, Scope /*scope*/) {
+[[nodiscard]] double MPINoWrapper::reduce(double value, ReduceFunction /*function*/, int /*root_rank*/) {
     return value;
 }
 
-[[nodiscard]] double MPINoWrapper::all_reduce(double value, ReduceFunction /*function*/, Scope /*scope*/) {
+[[nodiscard]] double MPINoWrapper::all_reduce(double value, ReduceFunction /*function*/) {
     return value;
 }
 
-void MPINoWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst, Scope /*scope*/) {
+void MPINoWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst) {
     dst = src;
 }
 
-void MPINoWrapper::async_s(const void* buffer, int count, int /*rank*/, Scope /*scope*/, AsyncToken& token) {
+void MPINoWrapper::async_s(const void* buffer, int count, int /*rank*/, AsyncToken& token) {
     if (const auto it = tuple_map.find(token); it != tuple_map.end()) {
         auto [_, dest, async_count] = it->second;
         RelearnException::check(async_count == count, "MPINoWrapper::async_s count mismatch");
@@ -66,7 +66,7 @@ void MPINoWrapper::async_s(const void* buffer, int count, int /*rank*/, Scope /*
     }
 }
 
-void MPINoWrapper::async_recv(void* buffer, int count, int /*rank*/, Scope /*scope*/, AsyncToken& token) {
+void MPINoWrapper::async_recv(void* buffer, int count, int /*rank*/, AsyncToken& token) {
     if (const auto it = tuple_map.find(token); it != tuple_map.end()) {
         auto [src, _, async_count] = it->second;
         RelearnException::check(async_count == count, "MPINoWrapper::async_s count mismatch");
@@ -78,11 +78,11 @@ void MPINoWrapper::async_recv(void* buffer, int count, int /*rank*/, Scope /*sco
     }
 }
 
-void MPINoWrapper::reduce(const void* src, void* dst, int size, ReduceFunction /*function*/, int /*root_rank*/, Scope /*scope*/) {
+void MPINoWrapper::reduce(const void* src, void* dst, int size, ReduceFunction /*function*/, int /*root_rank*/) {
     std::memcpy(dst, src, size);
 }
 
-void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size, Scope /*scope*/) {
+void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size) {
     std::memcpy(buffer, own_data, size);
 }
 

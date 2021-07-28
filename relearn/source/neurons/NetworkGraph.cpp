@@ -384,7 +384,7 @@ void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_
         global_ids_to_send[rank].emplace_back(id);
     }
 
-    MPIWrapper::all_to_all(num_foreign_ids_from_ranks_send, num_foreign_ids_from_ranks, MPIWrapper::Scope::global);
+    MPIWrapper::all_to_all(num_foreign_ids_from_ranks_send, num_foreign_ids_from_ranks);
 
     for (auto rank = 0; rank < num_ranks; rank++) {
         if (MPIWrapper::get_my_rank() == rank) {
@@ -406,7 +406,7 @@ void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_
         size_t* buffer = global_ids_to_receive[rank].data();
         const auto size_in_bytes = static_cast<int>(global_ids_to_receive[rank].size() * sizeof(size_t));
 
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[request_counter]);
+        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[request_counter]);
         request_counter++;
     }
 
@@ -421,7 +421,7 @@ void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_
         // Reserve enough space for the answer - it will be as long as the request
         global_ids_local_value[rank].resize(global_ids_to_send[rank].size());
 
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[request_counter]);
+        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[request_counter]);
         request_counter++;
     }
 
@@ -444,7 +444,7 @@ void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_
         size_t* buffer = global_ids_local_value[rank].data();
         const auto size_in_bytes = static_cast<int>(global_ids_local_value[rank].size() * sizeof(size_t));
 
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[request_counter]);
+        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[request_counter]);
         request_counter++;
     }
 
@@ -456,7 +456,7 @@ void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_
         const size_t* buffer = global_ids_to_receive[rank].data();
         const auto size_in_bytes = static_cast<int>(global_ids_to_receive[rank].size() * sizeof(size_t));
 
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[request_counter]);
+        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[request_counter]);
         request_counter++;
     }
 

@@ -76,12 +76,12 @@ void MPIWrapper::init_buffer_octree() {
     MPI_RMA_MemAllocator<BarnesHutCell>::init(Constants::mpi_alloc_mem);
 }
 
-void MPIWrapper::barrier(Scope scope) {
+void MPIWrapper::barrier() {
     const int errorcode = MPI_Barrier(MPI_COMM_WORLD);
     RelearnException::check(errorcode == 0, "Error in barrier");
 }
 
-double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, Scope scope) {
+double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank) {
     RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
     const MPI_Op* mpi_reduce_function = (MPI_Op*)translate_reduce_function(function);
 
@@ -95,7 +95,7 @@ double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank, 
     return result;
 }
 
-double MPIWrapper::all_reduce(double value, ReduceFunction function, Scope scope) {
+double MPIWrapper::all_reduce(double value, ReduceFunction function) {
     const MPI_Op* mpi_reduce_function = (MPI_Op*)translate_reduce_function(function);
 
     double result = 0.0;
@@ -128,7 +128,7 @@ void MPIWrapper::reduce_int64(const int64_t* src, int64_t* dst, size_t size, Red
     delete mpi_reduce_function;
 }
 
-void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst, Scope scope) {
+void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst) {
     const size_t count_src = src.size();
     const size_t count_dst = dst.size();
 
@@ -139,7 +139,7 @@ void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>&
     RelearnException::check(errorcode == 0, "Error in all to all, mpi");
 }
 
-void MPIWrapper::async_s(const void* buffer, int count, int rank, Scope scope, AsyncToken& token) {
+void MPIWrapper::async_s(const void* buffer, int count, int rank, AsyncToken& token) {
     RelearnException::check(rank >= 0, "Error in async s, rank is <= 0");
 
     token = current_token++;
@@ -150,7 +150,7 @@ void MPIWrapper::async_s(const void* buffer, int count, int rank, Scope scope, A
     RelearnException::check(errorcode == 0, "Error in async send");
 }
 
-void MPIWrapper::async_recv(void* buffer, int count, int rank, Scope scope, AsyncToken& token) {
+void MPIWrapper::async_recv(void* buffer, int count, int rank, AsyncToken& token) {
     RelearnException::check(rank >= 0, "Error in async recv, rank is <= 0");
 
     token = current_token++;
@@ -172,7 +172,7 @@ int MPIWrapper::translate_lock_type(MPI_Locktype lock_type) {
     return 0;
 }
 
-void MPIWrapper::reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank, Scope scope) {
+void MPIWrapper::reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank) {
     const MPI_Op* mpi_reduce_function = (MPI_Op*)translate_reduce_function(function);
 
     const auto* s_ptr = reinterpret_cast<const int64_t*>(src);
@@ -184,13 +184,13 @@ void MPIWrapper::reduce(const void* src, void* dst, int size, ReduceFunction fun
     delete mpi_reduce_function;
 }
 
-void MPIWrapper::all_gather(const void* own_data, void* buffer, int size, Scope scope) {
+void MPIWrapper::all_gather(const void* own_data, void* buffer, int size) {
     // NOLINTNEXTLINE
     const int errorcode = MPI_Allgather(own_data, size, MPI_CHAR, buffer, size, MPI_CHAR, MPI_COMM_WORLD);
     RelearnException::check(errorcode == 0, "Error in all gather");
 }
 
-void MPIWrapper::all_gather_inl(void* ptr, int count, Scope scope) {
+void MPIWrapper::all_gather_inl(void* ptr, int count) {
     RelearnException::check(count > 0, "Error in all gather , count is not greater than 0");
 
     // NOLINTNEXTLINE

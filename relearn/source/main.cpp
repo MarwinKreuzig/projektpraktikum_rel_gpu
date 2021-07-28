@@ -164,7 +164,7 @@ int main(int argc, char** argv) {
     RandomHolder::seed(RandomHolderKey::BarnesHut, random_seed);
 
     // Rank 0 prints start time of simulation
-    MPIWrapper::barrier(MPIWrapper::Scope::global);
+    MPIWrapper::barrier();
     if (0 == my_rank) {
         LogFiles::print_message_rank(0, "START: {}\nChosen lower bound for vacant synaptic elements: {}\nChosen upper bound for vacant synaptic elements: {}\nChosen target calcium value: {}\nChosen beta value: {}\nChosen nu value: {}",
             Timers::wall_clock_time(), synaptic_elements_init_lb, synaptic_elements_init_ub, target_calcium, beta, nu);
@@ -265,7 +265,7 @@ int main(int argc, char** argv) {
     // The barrier ensures that every rank finished its local stores.
     // Otherwise, a "fast" rank might try to read from the RMA window of another
     // rank which has not finished (or even begun) its local stores
-    MPIWrapper::barrier(MPIWrapper::Scope::global); // TODO(future) Really needed?
+    MPIWrapper::barrier(); // TODO(future) Really needed?
 
     Timers::stop_and_add(TimerRegion::INITIALIZATION);
 
@@ -284,7 +284,7 @@ int main(int argc, char** argv) {
 
         Timers::print();
 
-        MPIWrapper::barrier(MPIWrapper::Scope::global);
+        MPIWrapper::barrier();
 
         sim.finalize();
     };

@@ -141,7 +141,7 @@ std::vector<size_t> NeuronModel::update_electrical_activity_prepare_receiving_sp
 
     Timers::start(TimerRegion::ALL_TO_ALL);
     // Send and receive the number of firing neuron ids
-    MPIWrapper::all_to_all(num_firing_neuron_ids_for_ranks, num_firing_neuron_ids_from_ranks, MPIWrapper::Scope::global);
+    MPIWrapper::all_to_all(num_firing_neuron_ids_for_ranks, num_firing_neuron_ids_from_ranks);
     Timers::stop_and_add(TimerRegion::ALL_TO_ALL);
 
     Timers::start(TimerRegion::ALLOC_MEM_FOR_NEURON_IDS);
@@ -184,7 +184,7 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_exchange
         auto* buffer = it.second.get_neuron_ids();
         const auto size_in_bytes = static_cast<int>(it.second.get_neuron_ids_size_in_bytes());
 
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
 
         ++mpi_requests_index;
     }
@@ -195,7 +195,7 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_exchange
         const auto* buffer = it.second.get_neuron_ids();
         const auto size_in_bytes = static_cast<int>(it.second.get_neuron_ids_size_in_bytes());
 
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, MPIWrapper::Scope::global, mpi_requests[mpi_requests_index]);
+        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
 
         ++mpi_requests_index;
     }
