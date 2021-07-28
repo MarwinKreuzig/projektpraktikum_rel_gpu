@@ -126,7 +126,7 @@ private:
     static void reduce_int64(const int64_t* src, int64_t* dst, size_t size, ReduceFunction function, int root_rank);
 
     static void reduce_double(const double* src, double* dst, size_t size, ReduceFunction function, int root_rank);
-    
+
 public:
     /**
      * @brief Initializes the local MPI implementation via MPI_Init_Thread;
@@ -295,7 +295,7 @@ public:
      * @param src The pointer to the remote node, must be inside the remote's memory window
      * @exception Throws a RelearnException if an MPI error occurs or if target_rank < 0
      */
-    template<typename AdditionalCellAttributes>
+    template <typename AdditionalCellAttributes>
     static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, int target_rank, const OctreeNode<AdditionalCellAttributes>* src) {
         RelearnException::check(target_rank >= 0, "target rank is negative in download_octree_nodet");
         const auto& base_ptrs = MPI_RMA_MemAllocator<AdditionalCellAttributes>::get_base_pointers();

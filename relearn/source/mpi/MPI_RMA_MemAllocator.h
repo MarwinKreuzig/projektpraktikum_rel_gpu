@@ -19,7 +19,7 @@
 #include <queue>
 #include <vector>
 
-template<typename T>
+template <typename T>
 class OctreeNode;
 
 /**
@@ -30,7 +30,6 @@ class OctreeNode;
 template <typename AdditionalCellAttributes>
 class MPI_RMA_MemAllocator {
 
-    template<typename AdditionalCellAttributes>
     class HolderOctreeNode {
         std::queue<OctreeNode<AdditionalCellAttributes>*> available{};
         std::vector<OctreeNode<AdditionalCellAttributes>*> non_available{};
