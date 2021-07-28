@@ -16,6 +16,7 @@
 #include "../util/Vec3.h"
 
 #include <optional>
+#include <ostream>
 #include <tuple>
 
 /**
@@ -23,8 +24,25 @@
  * It contains a size in the octree (min and max), a neuron id (value Constants::uninitialized for virtual neurons, aka. inner nodes in the octree), 
  * and a position for the inhibitory and excitatory dendrites
  */
+template <typename AdditionalCellAttributes>
 class Cell {
 public:
+    /**
+     * @brief Sets the neuron id for the associated cell. Can be set to Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
+     * @param neuron_id The neuron id, can be Constants::uninitialized
+     */
+    void set_neuron_id(size_t neuron_id) noexcept {
+        this->neuron_id = neuron_id;
+    }
+
+    /**
+     * @brief Returns the neuron id for the associated cell. Is Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
+     * @return The neuron id
+     */
+    [[nodiscard]] size_t get_neuron_id() const noexcept {
+        return neuron_id;
+    }
+
     /**
      * @brief Sets the size of this cell
      * @param min The minimum x, y, and z of the sell
@@ -41,8 +59,8 @@ public:
     }
 
     /**
-     * @brief Returns the size of the cell
-     * @return The size of the cell
+     * @brief Returns the size of the cell as tuple of (1) min and (2) max
+     * @return The size of the cell as tuple of (1) min and (2) max
      */
     [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size() const noexcept {
         return std::make_tuple(xyz_min, xyz_max);
@@ -57,145 +75,6 @@ public:
         const auto diff = diff_vector.get_maximum();
 
         return diff;
-    }
-
-    /**
-     * @brief Sets the dendrite position for both inhibitory and excitatory
-     * @param opt_position The dendrite position, can be empty
-     */
-    void set_dendrite_position(const std::optional<Vec3d>& opt_position) noexcept {
-        set_excitatory_dendrite_position(opt_position);
-        set_inhibitory_dendrite_position(opt_position);
-    }
-
-    /**
-     * @brief Returns the dendrite position, for which either both positions must be empty or equal
-     * @exception Throws a RelearnException if one position is valid and the other one invalid or if both are valid with different values
-     * @return The position of the dendrite, can be empty
-     */
-    [[nodiscard]] std::optional<Vec3d> get_dendrite_position() const;
-
-    /**
-     * @brief Returns the position of the excitatory dendrite
-     * @return The position of the excitatory dendrite
-     */
-    [[nodiscard]] std::optional<Vec3d> get_excitatory_dendrite_position() const noexcept {
-        return dendrites_ex.xyz_pos;
-    }
-
-    /**
-     * @brief Sets the position of the excitatory position, which can be empty
-     * @param opt_position The new position of the excitatory dendrite
-     * @exception Throws a RelearnException if the position is valid but not within the box
-     */
-    void set_excitatory_dendrite_position(const std::optional<Vec3d>& opt_position) {
-        if (opt_position.has_value()) {
-            const auto& position = opt_position.value();
-
-            RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "In Cell::set_neuron_position_exc, x was not in the box");
-            RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Cell::set_neuron_position_exc, y was not in the box");
-            RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "In Cell::set_neuron_position_exc, z was not in the box");
-        }
-
-        dendrites_ex.xyz_pos = opt_position;
-    }
-
-    /**
-     * @brief Returns the position of the inhibitory dendrite
-     * @return The position of the inhibitory dendrite
-     */
-    [[nodiscard]] std::optional<Vec3d> get_inhibitory_dendrite_position() const noexcept {
-        return dendrites_in.xyz_pos;
-    }
-
-    /**
-     * @brief Sets the position of the inhibitory position, which can be empty
-     * @param opt_position The new position of the inhibitory dendrite
-     * @exception Throws a RelearnException if the position is valid but not within the box
-     */
-    void set_inhibitory_dendrite_position(const std::optional<Vec3d>& opt_position) {
-        if (opt_position.has_value()) {
-            const auto& position = opt_position.value();
-
-            RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "In Cell::set_neuron_position_exc, x was not in the box");
-            RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Cell::set_neuron_position_exc, y was not in the box");
-            RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "In Cell::set_neuron_position_exc, z was not in the box");
-        }
-
-        dendrites_in.xyz_pos = opt_position;
-    }
-
-    /**
-     * @brief Returns the position of the dendrite with the given signal type
-     * @param dendrite_type The type of dendrite which's position should be returned
-     * @return The position of the associated dendrite, can be empty
-     */
-    [[nodiscard]] std::optional<Vec3d> get_dendrite_position_for(SignalType dendrite_type) const noexcept {
-        if (dendrite_type == SignalType::EXCITATORY) {
-            return dendrites_ex.xyz_pos;
-        }
-
-        return dendrites_in.xyz_pos;
-    }
-
-    /**
-     * @brief Sets the number of free excitatory dendrites in this cell
-     * @param num_dendrites The number of free excitatory dendrites
-     */
-    void set_number_excitatory_dendrites(unsigned int num_dendrites) noexcept {
-        dendrites_ex.num_dendrites = num_dendrites;
-    }
-
-    /**
-     * @brief Returns the number of free excitatory dendrites in this cell
-     * @return The number of free excitatory dendrites
-     */
-    [[nodiscard]] unsigned int get_number_excitatory_dendrites() const noexcept {
-        return dendrites_ex.num_dendrites;
-    }
-
-    /**
-     * @brief Sets the number of free inhibitory dendrites in this cell
-     * @param num_dendrites The number of free inhibitory dendrites
-     */
-    void set_number_inhibitory_dendrites(unsigned int num_dendrites) noexcept {
-        dendrites_in.num_dendrites = num_dendrites;
-    }
-
-    /**
-     * @brief Returns the number of free inhibitory dendrites in this cell
-     * @return The number of free inhibitory dendrites
-     */
-    [[nodiscard]] unsigned int get_number_inhibitory_dendrites() const noexcept {
-        return dendrites_in.num_dendrites;
-    }
-
-    /**
-     * @brief Returns the number of free dendrites for the associated type in this cell
-     * @return The number of free dendrites for the associated type
-     */
-    [[nodiscard]] unsigned int get_number_dendrites_for(SignalType dendrite_type) const noexcept {
-        if (dendrite_type == SignalType::EXCITATORY) {
-            return dendrites_ex.num_dendrites;
-        }
-
-        return dendrites_in.num_dendrites;
-    }
-
-    /**
-     * @brief Sets the neuron id for the associated cell. Can be set to Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
-     * @param neuron_id The neuron id, can be Constants::uninitialized
-     */
-    void set_neuron_id(size_t neuron_id) noexcept {
-        this->neuron_id = neuron_id;
-    }
-
-    /**
-     * @brief Returns the neuron id for the associated cell. Is Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
-     * @return The neuron id
-     */
-    [[nodiscard]] size_t get_neuron_id() const noexcept {
-        return neuron_id;
     }
 
     /**
@@ -217,7 +96,35 @@ public:
 	 *		|/        |/       |/
 	 *	   000 ----- 001       +-----> x
      */
-    [[nodiscard]] unsigned char get_octant_for_position(const Vec3d& pos) const;
+    [[nodiscard]] unsigned char get_octant_for_position(const Vec3d& pos) const {
+        unsigned char idx = 0;
+
+        const auto& x = pos.get_x();
+        const auto& y = pos.get_y();
+        const auto& z = pos.get_z();
+
+        /**
+	     * Sanity check: Make sure that the position is within this cell
+	     * This check returns false if negative coordinates are used.
+	     * Thus make sure to use positions >=0.
+	     */
+        RelearnException::check(x >= xyz_min.get_x() && x <= xyz_max.get_x(), "x is bad");
+        RelearnException::check(y >= xyz_min.get_y() && y <= xyz_max.get_y(), "y is bad");
+        RelearnException::check(z >= xyz_min.get_z() && z <= xyz_max.get_z(), "z is bad");
+
+        //NOLINTNEXTLINE
+        idx = idx | ((x < (xyz_min.get_x() + xyz_max.get_x()) / 2.0) ? 0 : 1); // idx | (pos_x < midpoint_dim_x) ? 0 : 1
+
+        //NOLINTNEXTLINE
+        idx = idx | ((y < (xyz_min.get_y() + xyz_max.get_y()) / 2.0) ? 0 : 2); // idx | (pos_y < midpoint_dim_y) ? 0 : 2
+
+        //NOLINTNEXTLINE
+        idx = idx | ((z < (xyz_min.get_z() + xyz_max.get_z()) / 2.0) ? 0 : 4); // idx | (pos_z < midpoint_dim_z) ? 0 : 4
+
+        RelearnException::check(idx < Constants::number_oct, "Octree octant must be smaller than 8");
+
+        return idx;
+    }
 
     /**
      * @brief Returns the size of the cell in the in the given octant
@@ -225,35 +132,121 @@ public:
      * @exception Throws a RelearnException if octant > 7
      * @return A tuple with (min, max) for the cell in the given octant
      */
-    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size_for_octant(unsigned char octant) const;
+    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size_for_octant(unsigned char octant) const /*noexcept*/ {
+        RelearnException::check(octant <= Constants::number_oct, "Octant was too large");
+
+        const bool x_over_halfway_point = (octant & 1U) != 0;
+        const bool y_over_halfway_point = (octant & 2U) != 0;
+        const bool z_over_halfway_point = (octant & 4U) != 0;
+
+        Vec3d octant_xyz_min = this->xyz_min;
+        Vec3d octant_xyz_max = this->xyz_max;
+        // NOLINTNEXTLINE
+        Vec3d octant_xyz_middle = (octant_xyz_min + octant_xyz_max) / 2.0;
+
+        if (x_over_halfway_point) {
+            octant_xyz_min.set_x(octant_xyz_middle.get_x());
+        } else {
+            octant_xyz_max.set_x(octant_xyz_middle.get_x());
+        }
+
+        if (y_over_halfway_point) {
+            octant_xyz_min.set_y(octant_xyz_middle.get_y());
+        } else {
+            octant_xyz_max.set_y(octant_xyz_middle.get_y());
+        }
+
+        if (z_over_halfway_point) {
+            octant_xyz_min.set_z(octant_xyz_middle.get_z());
+        } else {
+            octant_xyz_max.set_z(octant_xyz_middle.get_z());
+        }
+
+        return std::make_tuple(octant_xyz_min, octant_xyz_max);
+    }
 
     /**
-     * @brief Prints the cell to LogFiles::EventType::Cout
+     * @brief Sets the dendrite position for both inhibitory and excitatory
+     * @param opt_position The dendrite position, can be empty
      */
-    void print() const;
+    void set_dendrite_position(const std::optional<Vec3d>& opt_position) noexcept {
+        set_excitatory_dendrite_position(opt_position);
+        set_inhibitory_dendrite_position(opt_position);
+    }
+
+    /**
+     * @brief Returns the dendrite position, for which either both positions must be empty or equal
+     * @exception Throws a RelearnException if one position is valid and the other one invalid or if both are valid with different values
+     * @return The position of the dendrite, can be empty
+     */
+    [[nodiscard]] std::optional<Vec3d> get_dendrite_position() const {
+        const auto& excitatory_dendrite_position_opt = get_excitatory_dendrite_position();
+        const auto& inhibitory_dendrite_position_opt = get_inhibitory_dendrite_position();
+
+        const bool ex_valid = excitatory_dendrite_position_opt.has_value();
+        const bool in_valid = inhibitory_dendrite_position_opt.has_value();
+
+        if (!ex_valid && !in_valid) {
+            return {};
+        }
+
+        if (ex_valid && in_valid) {
+            const auto& pos_ex = excitatory_dendrite_position_opt.value();
+            const auto& pos_in = inhibitory_dendrite_position_opt.value();
+
+            const auto diff = pos_ex - pos_in;
+            const bool exc_position_equals_inh_position = diff.get_x() == 0.0 && diff.get_y() == 0.0 && diff.get_z() == 0.0;
+            RelearnException::check(exc_position_equals_inh_position, "In get neuron position, positions are unequal");
+
+            return pos_ex;
+        }
+
+        RelearnException::fail("In Cell, one pos was valid and one was not");
+
+        return {};
+    }
+
+    /**
+     * @brief Returns the number of free dendrites for the associated type in this cell
+     * @return The number of free dendrites for the associated type
+     */
+    [[nodiscard]] unsigned int get_number_dendrites_for(SignalType dendrite_type) const noexcept {
+        if (dendrite_type == SignalType::EXCITATORY) {
+            return get_number_excitatory_dendrites();
+        }
+
+        return get_number_inhibitory_dendrites();
+    }
+
+    /**
+     * @brief Prints the cell to the output stream
+     * @param output_stream The output stream
+     * @param cell The cell to print
+     * @tparam AdditionalCellAttributes The additional cell attributes
+     * @return The output stream after printing the cell
+     */
+    template <typename AdditionalCellAttributes>
+    friend std::ostream& operator<<(std::ostream& output_stream, const Cell<AdditionalCellAttributes>& cell) {
+        const auto number_excitatory_dendrites = cell.get_number_excitatory_dendrites();
+        const auto number_inhibitory_dendrites = cell.get_number_inhibitory_dendrites();
+
+        const auto& position_excitatory_dendrites = cell.get_excitatory_dendrite_position().value();
+        const auto& position_inhibitory_dendrites = cell.get_inhibitory_dendrite_position().value();
+
+        Vec3d xyz_min{};
+        Vec3d xyz_max{};
+
+        std::tie(xyz_min, xyz_max) = cell.get_size();
+
+        output_stream << "  == Cell (" << reinterpret_cast<size_t>(&cell) << " ==\n";
+        output_stream << "\tMin: " << xyz_min << "\n\tMax: " << xyz_max << '\n';
+        output_stream << "\tnumber_excitatory_dendrites: " << number_excitatory_dendrites << "\tPosition: " << position_excitatory_dendrites << '\n';
+        output_stream << "\tnumber_inhibitory_dendrites: " << number_inhibitory_dendrites << "\tPosition: " << position_inhibitory_dendrites << '\n';
+
+        return output_stream;
+    }
 
 private:
-    struct Dendrites {
-        // All dendrites have the same position
-        std::optional<Vec3d> xyz_pos{};
-        unsigned int num_dendrites{ 0 };
-        // TODO(future)
-        // List colliding_axons;
-    };
-
-    // Two points describe size of cell
-    Vec3d xyz_min{ Constants::uninitialized };
-    Vec3d xyz_max{ Constants::uninitialized };
-
-    /**
-	 * Cell contains info for one neuron, which could be a "super" neuron
-	 *
-	 * Info about EXCITATORY dendrites: dendrites_ex
-	 * Info about INHIBITORY dendrites: dendrites_in
-	 */
-    Dendrites dendrites_ex{};
-    Dendrites dendrites_in{};
-
     /**
 	 * ID of the neuron in the cell.
 	 * This is only valid for cells that contain a normal neuron.
@@ -261,4 +254,106 @@ private:
 	 * This info is used to identify (return) the target neuron for a given axon
 	 */
     size_t neuron_id{ Constants::uninitialized };
+
+    // Two points describe size of cell
+    Vec3d xyz_min{ Constants::uninitialized };
+    Vec3d xyz_max{ Constants::uninitialized };
+
+    AdditionalCellAttributes additional_cell_attributes{};
+
+public:
+    /**
+     * @brief Returns the position of the excitatory dendrite
+     * @return The position of the excitatory dendrite
+     */
+    [[nodiscard]] std::optional<Vec3d> get_excitatory_dendrite_position() const noexcept {
+        return additional_cell_attributes.get_excitatory_dendrites_position();
+    }
+
+    /**
+     * @brief Sets the position of the excitatory position, which can be empty
+     * @param opt_position The new position of the excitatory dendrite
+     * @exception Throws a RelearnException if the position is valid but not within the box
+     */
+    void set_excitatory_dendrite_position(const std::optional<Vec3d>& opt_position) {
+        if (opt_position.has_value()) {
+            const auto& position = opt_position.value();
+
+            RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "In Cell::set_neuron_position_exc, x was not in the box");
+            RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Cell::set_neuron_position_exc, y was not in the box");
+            RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "In Cell::set_neuron_position_exc, z was not in the box");
+        }
+
+        additional_cell_attributes.set_excitatory_dendrite_position(opt_position);
+    }
+
+    /**
+     * @brief Returns the position of the inhibitory dendrite
+     * @return The position of the inhibitory dendrite
+     */
+    [[nodiscard]] std::optional<Vec3d> get_inhibitory_dendrite_position() const noexcept {
+        return additional_cell_attributes.get_inhibitory_dendrite_position();
+    }
+
+    /**
+     * @brief Sets the position of the inhibitory position, which can be empty
+     * @param opt_position The new position of the inhibitory dendrite
+     * @exception Throws a RelearnException if the position is valid but not within the box
+     */
+    void set_inhibitory_dendrite_position(const std::optional<Vec3d>& opt_position) {
+        if (opt_position.has_value()) {
+            const auto& position = opt_position.value();
+
+            RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "In Cell::set_neuron_position_exc, x was not in the box");
+            RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Cell::set_neuron_position_exc, y was not in the box");
+            RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "In Cell::set_neuron_position_exc, z was not in the box");
+        }
+
+        additional_cell_attributes.set_inhibitory_dendrites_position(opt_position);
+    }
+
+    /**
+     * @brief Returns the position of the dendrite with the given signal type
+     * @param dendrite_type The type of dendrite which's position should be returned
+     * @return The position of the associated dendrite, can be empty
+     */
+    [[nodiscard]] std::optional<Vec3d> get_dendrite_position_for(SignalType dendrite_type) const noexcept {
+        if (dendrite_type == SignalType::EXCITATORY) {
+            return additional_cell_attributes.get_excitatory_dendrites_position();
+        }
+
+        return additional_cell_attributes.get_inhibitory_dendrite_position();
+    }
+
+    /**
+     * @brief Sets the number of free excitatory dendrites in this cell
+     * @param num_dendrites The number of free excitatory dendrites
+     */
+    void set_number_excitatory_dendrites(unsigned int num_dendrites) noexcept {
+        additional_cell_attributes.set_number_excitatory_dendrites(num_dendrites);
+    }
+
+    /**
+     * @brief Returns the number of free excitatory dendrites in this cell
+     * @return The number of free excitatory dendrites
+     */
+    [[nodiscard]] unsigned int get_number_excitatory_dendrites() const noexcept {
+        return additional_cell_attributes.get_number_excitatory_dendrites();
+    }
+
+    /**
+     * @brief Sets the number of free inhibitory dendrites in this cell
+     * @param num_dendrites The number of free inhibitory dendrites
+     */
+    void set_number_inhibitory_dendrites(unsigned int num_dendrites) noexcept {
+        additional_cell_attributes.set_number_inhibitory_dendrites(num_dendrites);
+    }
+
+    /**
+     * @brief Returns the number of free inhibitory dendrites in this cell
+     * @return The number of free inhibitory dendrites
+     */
+    [[nodiscard]] unsigned int get_number_inhibitory_dendrites() const noexcept {
+        return additional_cell_attributes.get_number_inhibitory_dendrites();
+    }
 };

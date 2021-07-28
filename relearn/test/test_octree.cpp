@@ -18,6 +18,8 @@
 #include <tuple>
 #include <vector>
 
+using AdditionalCellAttributes = BarnesHutCell;
+
 std::tuple<Vec3d, Vec3d> get_random_simulation_box_size(std::mt19937& mt) {
     std::uniform_real_distribution<double> urd(-10000.0, +10000.0);
 
@@ -177,7 +179,7 @@ SynapticElements create_synaptic_elements(size_t size, std::mt19937& mt, size_t 
 TEST_F(OctreeTest, testCellSize) {
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<AdditionalCellAttributes> cell{};
 
         const auto& box_sizes_1 = get_random_simulation_box_size(mt);
         const auto& min_1 = std::get<0>(box_sizes_1);
@@ -208,7 +210,7 @@ TEST_F(OctreeTest, testCellSize) {
 TEST_F(OctreeTest, testCellPosition) {
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<AdditionalCellAttributes> cell{};
 
         const auto& box_sizes = get_random_simulation_box_size(mt);
         const auto& min = std::get<0>(box_sizes);
@@ -277,7 +279,7 @@ TEST_F(OctreeTest, testCellPosition) {
 TEST_F(OctreeTest, testCellPositionException) {
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<AdditionalCellAttributes> cell{};
 
         const auto& box_sizes = get_random_simulation_box_size(mt);
         const auto& min = std::get<0>(box_sizes);
@@ -394,7 +396,7 @@ TEST_F(OctreeTest, testCellPositionException) {
 TEST_F(OctreeTest, testCellPositionCombined) {
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<AdditionalCellAttributes> cell{};
 
         const auto& box_sizes = get_random_simulation_box_size(mt);
         const auto& min = std::get<0>(box_sizes);
@@ -456,7 +458,7 @@ TEST_F(OctreeTest, testCellSetNumDendrites) {
     std::uniform_int_distribution<unsigned int> uid(0, 1000);
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<AdditionalCellAttributes> cell{};
 
         const auto num_dends_ex_1 = uid(mt);
         const auto num_dends_in_1 = uid(mt);
@@ -487,7 +489,7 @@ TEST_F(OctreeTest, testCellSetNeuronId) {
     std::uniform_int_distribution<size_t> uid(0, 1000);
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<AdditionalCellAttributes> cell{};
 
         const auto neuron_id_1 = uid(mt);
         cell.set_neuron_id(neuron_id_1);
@@ -502,7 +504,7 @@ TEST_F(OctreeTest, testCellSetNeuronId) {
 TEST_F(OctreeTest, testCellOctants) {
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<AdditionalCellAttributes> cell{};
 
         const auto& box_sizes = get_random_simulation_box_size(mt);
         const auto& min = std::get<0>(box_sizes);
@@ -537,7 +539,7 @@ TEST_F(OctreeTest, testCellOctants) {
 TEST_F(OctreeTest, testCellOctantsException) {
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<AdditionalCellAttributes> cell{};
 
         const auto& box_sizes = get_random_simulation_box_size(mt);
         const auto& min = std::get<0>(box_sizes);
@@ -565,7 +567,7 @@ TEST_F(OctreeTest, testCellOctantsException) {
 TEST_F(OctreeTest, testCellOctantsSize) {
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<AdditionalCellAttributes> cell{};
 
         const auto& box_sizes = get_random_simulation_box_size(mt);
         const auto& min = std::get<0>(box_sizes);
@@ -736,7 +738,7 @@ TEST_F(OctreeTest, testOctreeNodeSetterCell) {
 
     OctreeNode node{};
 
-    const Cell& cell = node.get_cell();
+    const Cell<AdditionalCellAttributes>& cell = node.get_cell();
 
     std::uniform_int_distribution<size_t> uid_id(0, 1000);
     std::uniform_int_distribution<unsigned int> uid_dends(0, 1000);

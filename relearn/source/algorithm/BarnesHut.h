@@ -147,6 +147,11 @@ public:
         }
     }
 
+    /**
+     * @brief Updates the passed node with the values of its children according to the algorithm
+     * @param node The node to update, must not be nullptr
+     * @exception Throws a RelearnException if node is nullptr
+     */
     static void update_functor(OctreeNode* node) {
         RelearnException::check(node != nullptr, "In FunctorUpdateNode, node is nullptr");
 

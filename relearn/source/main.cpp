@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
     app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();
 
     unsigned int random_seed{ 0 };
-    app.add_option("-r,--random-seed", random_seed, "Random seed.");
+    app.add_option("-r,--random-seed", random_seed, "Random seed. Default: 0.");
 
     int openmp_threads{ 1 };
     app.add_option("--openmp", openmp_threads, "Number of OpenMP Threads.");

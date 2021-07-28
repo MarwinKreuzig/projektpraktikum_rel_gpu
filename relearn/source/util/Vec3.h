@@ -16,6 +16,7 @@
 #include <spdlog/fmt/bundled/ostream.h>
 
 #include <algorithm>
+#include <ostream>
 #include <type_traits>
 
 /**
@@ -403,8 +404,14 @@ public:
      * @return A reference to os that allows chaining.
      *      Is not marked as [[nodiscard]] as that typically does happen when chaining <<
      */
-    friend std::ostream& operator<<(std::ostream& os, const Vec3<T>& vec) {
-        return os << "(" << vec.get_x() << ", " << vec.get_y() << ", " << vec.get_z() << ")";
+    friend std::ostream& operator<<(std::ostream& output_stream, const Vec3<T>& vec) {
+        const auto& x = vec.get_x();
+        const auto& y = vec.get_y();
+        const auto& z = vec.get_z();
+
+        output_stream << '(' << x << ", " << y << ", " << z << ')';
+
+        return output_stream;
     }
 };
 
