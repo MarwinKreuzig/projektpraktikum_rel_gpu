@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "../algorithm/BarnesHutCell.h"
 #include "../util/RelearnException.h"
 
 #if !MPI_FOUND
@@ -18,22 +19,21 @@
 using MPIWrapper = MPINoWrapper;
 #else // #if MPI_FOUND
 
-#include "MPITypes.h"
-
 #include <array>
 #include <cstdint>
 #include <string>
 #include <vector>
 
+template <typename T>
 class OctreeNode;
 class RelearnTest;
 
 /**
  * This enum allows a type safe choice of locking types for memory windows
  */
-enum class MPI_Locktype : int {
-    exclusive = MPI_LOCK_EXCLUSIVE,
-    shared = MPI_LOCK_SHARED,
+enum class MPI_Locktype {
+    exclusive,
+    shared,
 };
 
 namespace MPIUserDefinedOperation {
@@ -47,7 +47,7 @@ namespace MPIUserDefinedOperation {
  * @param len The length of a tuple of data. Is only accessed hat *len.
  * @param dtype Unused
  */
-void min_sum_max(const int* invec, int* inoutvec, const int* len, MPI_Datatype* dtype);
+void min_sum_max(const int* invec, int* inoutvec, const int* len, void* dtype);
 } // namespace MPIUserDefinedOperation
 
 /** 
@@ -60,7 +60,7 @@ class MPIWrapper {
      * This structure combines the number of branch nodes that will be exchanged and a pointer to those nodes. 
      */
     struct RMABufferOctreeNodes {
-        OctreeNode* ptr;
+        OctreeNode<BarnesHutCell>* ptr;
         size_t num_nodes;
     };
 
@@ -90,18 +90,16 @@ public:
         minsummax = 100
     };
 
-    using AsyncToken = MPI_Request;
+    using AsyncToken = size_t;
 
 private:
     MPIWrapper() = default;
 
     static void init_globals();
 
-    static inline MPI_Op minsummax{};
+    static inline void* minsummax{};
 
-    static MPI_Op translate_reduce_function(ReduceFunction rf);
-
-    static MPI_Comm translate_scope(Scope scope);
+    static void* translate_reduce_function(ReduceFunction rf);
 
     static void register_custom_function();
 
@@ -131,6 +129,8 @@ private:
     // NOLINTNEXTLINE
     static void async_recv(void* buffer, int count, int rank, Scope scope, AsyncToken& token);
 
+    static int translate_lock_type(MPI_Locktype lock_type);
+
 public:
     /**
      * @brief Initializes the local MPI implementation via MPI_Init_Thread;
@@ -141,7 +141,7 @@ public:
     static void init(int argc, char** argv);
 
     /**
-     * @brief Initializes the shared RMA memory. Must be called before any call involving OctreeNode*.
+     * @brief Initializes the shared RMA memory. Must be called before any call involving OctreeNode<BarnesHutCell>*.
      * @param num_partitions The number of partitions across all MPI ranks (of the form 8^k)
      */
     static void init_buffer_octree(size_t num_partitions);
@@ -174,6 +174,8 @@ public:
      */
     [[nodiscard]] static double all_reduce(double value, ReduceFunction function, Scope scope);
 
+    static void reduce_double(const double* src, double* dst, size_t size, ReduceFunction function, int root_rank);
+
     /**
      * @brief Reduces multiple values for every MPI rank in the given scope with a reduction function such that the root_rank has the final result. The reduction is performed componentwise
      * @param src The local array of values that shall be reduced
@@ -188,16 +190,12 @@ public:
         RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
 
         std::array<double, size> dst{ 0.0 };
-
-        const MPI_Comm mpi_scope = translate_scope(scope);
-        const MPI_Op mpi_reduce_function = translate_reduce_function(function);
-
-        // NOLINTNEXTLINE
-        const int errorcode = MPI_Reduce(src.data(), dst.data(), size, MPI_DOUBLE, mpi_reduce_function, root_rank, mpi_scope);
-        RelearnException::check(errorcode == 0, "Error in reduce: %d", errorcode);
+        reduce_double(src.data(), dst.data(), size, function, root_rank);
 
         return dst;
     }
+
+    static void reduce_int64(const int64_t* src, int64_t* dst, size_t size, ReduceFunction function, int root_rank);
 
     /**
      * @brief Reduces multiple values for every MPI rank in the given scope with a reduction function such that the root_rank has the final result. The reduction is performed componentwise
@@ -213,13 +211,7 @@ public:
         RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
 
         std::array<int64_t, size> dst{ 0 };
-
-        const MPI_Comm mpi_scope = translate_scope(scope);
-        const MPI_Op mpi_reduce_function = translate_reduce_function(function);
-
-        // NOLINTNEXTLINE
-        const int errorcode = MPI_Reduce(src.data(), dst.data(), size, MPI_INT64_T, mpi_reduce_function, root_rank, mpi_scope);
-        RelearnException::check(errorcode == 0, "Error in reduce: %d", errorcode);
+        reduce_int64(src.data(), dst.data(), size, function, root_rank);
 
         return dst;
     }
@@ -311,20 +303,20 @@ public:
      * @param src The pointer to the remote node, must be inside the remote's memory window
      * @exception Throws a RelearnException if an MPI error occurs or if target_rank < 0
      */
-    static void download_octree_node(OctreeNode* dst, int target_rank, const OctreeNode* src);
+    static void download_octree_node(OctreeNode<BarnesHutCell>* dst, int target_rank, const OctreeNode<BarnesHutCell>* src);
 
     /**
-     * @brief Creates a new OctreeNode in the local memory window
+     * @brief Creates a new OctreeNode<BarnesHutCell> in the local memory window
      * @exception Throws a RelearnException if no shared memory is available
-     * @return A valid pointer to an OctreeNode
+     * @return A valid pointer to an OctreeNode<BarnesHutCell>
      */
-    [[nodiscard]] static OctreeNode* new_octree_node();
+    [[nodiscard]] static OctreeNode<BarnesHutCell>* new_octree_node();
 
     /**
-     * @brief Deletes an OctreeNode in the memory window that was previously created via new_octree_node()
+     * @brief Deletes an OctreeNode<BarnesHutCell> in the memory window that was previously created via new_octree_node()
      * @param ptr A pointer to the object that shall be deleted
      */
-    static void delete_octree_node(OctreeNode* ptr);
+    static void delete_octree_node(OctreeNode<BarnesHutCell>* ptr);
 
     /**
      * @brief Returns the number of MPI ranks
@@ -359,7 +351,7 @@ public:
      *      The number of objects can be requested via get_num_buffer_octree_nodes()
      * @return A pointer to the local trees on each rank
      */
-    [[nodiscard]] static OctreeNode* get_buffer_octree_nodes();
+    [[nodiscard]] static OctreeNode<BarnesHutCell>* get_buffer_octree_nodes();
 
     /**
      * @brief Returns the number of local trees across all MPI ranks

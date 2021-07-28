@@ -25,7 +25,7 @@ MPINo_RMA_MemAllocator::HolderOctreeNode MPINo_RMA_MemAllocator::holder_base_ptr
 
 void MPINo_RMA_MemAllocator::init(size_t size_requested, size_t num_local_trees) {
     MPINo_RMA_MemAllocator::size_requested = size_requested;
-    max_num_objects = size_requested / sizeof(OctreeNode);
+    max_num_objects = size_requested / sizeof(OctreeNode<BarnesHutCell>);
     max_size = size_requested;
 
     data.resize(max_num_objects);
@@ -38,17 +38,17 @@ void MPINo_RMA_MemAllocator::init(size_t size_requested, size_t num_local_trees)
 
     root_nodes_for_local_trees.resize(num_local_trees);
 
-    LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode));
+    LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode<BarnesHutCell>): {}", max_num_objects, sizeof(OctreeNode<BarnesHutCell>));
 }
 
 void MPINo_RMA_MemAllocator::finalize() {
 }
 
-OctreeNode* MPINo_RMA_MemAllocator::new_octree_node() {
+OctreeNode<BarnesHutCell>* MPINo_RMA_MemAllocator::new_octree_node() {
     return holder_base_ptr.get_available();
 }
 
-void MPINo_RMA_MemAllocator::delete_octree_node(OctreeNode* ptr) {
+void MPINo_RMA_MemAllocator::delete_octree_node(OctreeNode<BarnesHutCell>* ptr) {
     holder_base_ptr.make_available(ptr);
 }
 
@@ -56,7 +56,7 @@ int64_t MPINo_RMA_MemAllocator::get_base_pointers() noexcept {
     return base_pointers;
 }
 
-OctreeNode* MPINo_RMA_MemAllocator::get_branch_nodes() {
+OctreeNode<BarnesHutCell>* MPINo_RMA_MemAllocator::get_branch_nodes() {
     return root_nodes_for_local_trees.data();
 }
 
@@ -64,7 +64,7 @@ size_t MPINo_RMA_MemAllocator::get_num_avail_objects() noexcept {
     return holder_base_ptr.get_num_available();
 }
 
-MPINo_RMA_MemAllocator::HolderOctreeNode::HolderOctreeNode(OctreeNode* ptr, size_t length)
+MPINo_RMA_MemAllocator::HolderOctreeNode::HolderOctreeNode(OctreeNode<BarnesHutCell>* ptr, size_t length)
     : non_available(length, nullptr)
     , base_ptr(ptr)
     , total(length) {
@@ -73,9 +73,9 @@ MPINo_RMA_MemAllocator::HolderOctreeNode::HolderOctreeNode(OctreeNode* ptr, size
     }
 }
 
-OctreeNode* MPINo_RMA_MemAllocator::HolderOctreeNode::get_available() {
+OctreeNode<BarnesHutCell>* MPINo_RMA_MemAllocator::HolderOctreeNode::get_available() {
     // Get last available element and save it
-    OctreeNode* ptr = available.front();
+    OctreeNode<BarnesHutCell>* ptr = available.front();
     available.pop();
 
     const size_t dist = std::distance(base_ptr, ptr);
@@ -84,7 +84,7 @@ OctreeNode* MPINo_RMA_MemAllocator::HolderOctreeNode::get_available() {
     return ptr;
 }
 
-void MPINo_RMA_MemAllocator::HolderOctreeNode::make_available(OctreeNode* ptr) {
+void MPINo_RMA_MemAllocator::HolderOctreeNode::make_available(OctreeNode<BarnesHutCell>* ptr) {
     const size_t dist = std::distance(base_ptr, ptr);
 
     available.push(ptr);

@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "../algorithm/BarnesHutCell.h"
 #include "../neurons/helper/RankNeuronId.h"
 #include "../neurons/SignalType.h"
 
@@ -111,48 +112,16 @@ public:
      * @param dendrites_inhibitory_connected_counts The number of connected inhibitory dendrites, accessed via operator[] with the neuron ids
      * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
      */
-    void update_leaf_nodes(const std::vector<OctreeNode*>& leaf_nodes, const std::vector<char>& disable_flags,
+    void update_leaf_nodes(const std::vector<OctreeNode<BarnesHutCell>*>& leaf_nodes, const std::vector<char>& disable_flags,
         const std::vector<double>& dendrites_excitatory_counts, const std::vector<unsigned int>& dendrites_excitatory_connected_counts,
-        const std::vector<double>& dendrites_inhibitory_counts, const std::vector<unsigned int>& dendrites_inhibitory_connected_counts) {
-
-        const auto num_leaf_nodes = leaf_nodes.size();
-        const auto num_disable_flags = disable_flags.size();
-        const auto num_dendrites_excitatory_counts = dendrites_excitatory_counts.size();
-        const auto num_dendrites_excitatory_connected_counts = dendrites_excitatory_connected_counts.size();
-        const auto num_dendrites_inhibitory_counts = dendrites_inhibitory_counts.size();
-        const auto num_dendrites_inhibitory_connected_counts = dendrites_inhibitory_connected_counts.size();
-
-        const auto all_same_size = num_leaf_nodes == num_disable_flags
-            && num_leaf_nodes == num_dendrites_excitatory_counts
-            && num_leaf_nodes == num_dendrites_excitatory_connected_counts
-            && num_leaf_nodes == num_dendrites_inhibitory_counts
-            && num_leaf_nodes == num_dendrites_inhibitory_connected_counts;
-
-        RelearnException::check(all_same_size, "In BarnesHut::update_leaf_nodes, the vectors were of different sizes");
-
-        for (size_t neuron_id = 0; neuron_id < leaf_nodes.size(); neuron_id++) {
-            auto* node = leaf_nodes[neuron_id];
-            const size_t other_neuron_id = node->get_cell().get_neuron_id();
-
-            RelearnException::check(neuron_id == other_neuron_id, "In BarnesHut::update_leaf_nodes, the nodes are not in order");
-
-            if (disable_flags[neuron_id] == 0) {
-                continue;
-            }
-
-            const auto number_vacant_dendrites_excitatory = static_cast<unsigned int>(dendrites_excitatory_counts[neuron_id] - dendrites_excitatory_connected_counts[neuron_id]);
-            const auto number_vacant_dendrites_inhibitory = static_cast<unsigned int>(dendrites_inhibitory_counts[neuron_id] - dendrites_inhibitory_connected_counts[neuron_id]);
-
-            node->set_cell_num_dendrites(number_vacant_dendrites_excitatory, number_vacant_dendrites_inhibitory);
-        }
-    }
+        const std::vector<double>& dendrites_inhibitory_counts, const std::vector<unsigned int>& dendrites_inhibitory_connected_counts);
 
     /**
      * @brief Updates the passed node with the values of its children according to the algorithm
      * @param node The node to update, must not be nullptr
      * @exception Throws a RelearnException if node is nullptr
      */
-    static void update_functor(OctreeNode* node) {
+    static void update_functor(OctreeNode<BarnesHutCell>* node) {
         RelearnException::check(node != nullptr, "In FunctorUpdateNode, node is nullptr");
 
         // NOLINTNEXTLINE
@@ -228,18 +197,18 @@ private:
     calc_attractiveness_to_connect(
         size_t src_neuron_id,
         const Vec3d& axon_pos_xyz,
-        const OctreeNode& node_with_dendrite,
+        const OctreeNode<BarnesHutCell>& node_with_dendrite,
         SignalType dendrite_type_needed) const;
 
-    [[nodiscard]] std::vector<double> create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed, const std::vector<OctreeNode*>& vector) const;
+    [[nodiscard]] std::vector<double> create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed, const std::vector<OctreeNode<BarnesHutCell>*>& vector) const;
 
     [[nodiscard]] std::tuple<bool, bool> acceptance_criterion_test(const Vec3d& axon_pos_xyz,
-        const OctreeNode* const node_with_dendrite,
+        const OctreeNode<BarnesHutCell>* const node_with_dendrite,
         SignalType dendrite_type_needed) const;
 
-    [[nodiscard]] std::vector<OctreeNode*> get_nodes_for_interval(
+    [[nodiscard]] std::vector<OctreeNode<BarnesHutCell>*> get_nodes_for_interval(
         const Vec3d& axon_pos_xyz,
-        OctreeNode* root,
+        OctreeNode<BarnesHutCell>* root,
         SignalType dendrite_type_needed);
 
     double acceptance_criterion{ default_theta }; // Acceptance criterion

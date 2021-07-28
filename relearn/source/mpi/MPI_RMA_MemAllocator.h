@@ -13,12 +13,13 @@
 #if MPI_FOUND
 
 #include "../Config.h"
-#include "MPITypes.h"
+#include "../util/RelearnException.h"
 
 #include <cstdint>
 #include <queue>
 #include <vector>
 
+template<typename T>
 class OctreeNode;
 
 /**
@@ -26,12 +27,14 @@ class OctreeNode;
  * that are placed within an MPI memory window, i.e., they can be accessed by other MPI processes.
  * The first call must be to MPI_RMA_MemAllocator::init(...) and the last call must be to MPI_RMA_MemAllocator::finalize().
  */
+template <typename AdditionalCellAttributes>
 class MPI_RMA_MemAllocator {
 
+    template<typename AdditionalCellAttributes>
     class HolderOctreeNode {
-        std::queue<OctreeNode*> available{};
-        std::vector<OctreeNode*> non_available{};
-        OctreeNode* base_ptr{ nullptr };
+        std::queue<OctreeNode<AdditionalCellAttributes>*> available{};
+        std::vector<OctreeNode<AdditionalCellAttributes>*> non_available{};
+        OctreeNode<AdditionalCellAttributes>* base_ptr{ nullptr };
 
         size_t free{ Constants::uninitialized };
         size_t total{ Constants::uninitialized };
@@ -41,17 +44,59 @@ class MPI_RMA_MemAllocator {
         HolderOctreeNode() { /* This is not defaulted because of compiler errors */
         }
 
-        HolderOctreeNode(OctreeNode* ptr, size_t length);
+        HolderOctreeNode(OctreeNode<AdditionalCellAttributes>* ptr, size_t length)
+            : non_available(length, nullptr)
+            , base_ptr(ptr)
+            , free(length)
+            , total(length) {
+            for (size_t counter = 0; counter < length; counter++) {
+                // NOLINTNEXTLINE
+                available.push(ptr + counter);
+            }
+        }
 
-        [[nodiscard]] OctreeNode* get_available();
+        [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_available() {
+            RelearnException::check(!available.empty(), "In MPI_RMA_MemAllocator::HolderOctreeNode::get_available, there are no free nodes.");
 
-        void make_available(OctreeNode* ptr);
+            // Get last available element and save it
+            OctreeNode<AdditionalCellAttributes>* ptr = available.front();
+            available.pop();
+            const size_t dist = std::distance(base_ptr, ptr);
 
-        void make_all_available() noexcept;
+            non_available[dist] = ptr;
 
-        [[nodiscard]] size_t get_size() const noexcept;
+            return ptr;
+        }
 
-        [[nodiscard]] size_t get_num_available() const noexcept;
+        void make_available(OctreeNode<AdditionalCellAttributes>* ptr) {
+            const size_t dist = std::distance(base_ptr, ptr);
+
+            available.push(ptr);
+            non_available[dist] = nullptr;
+
+            ptr->reset();
+        }
+
+        void make_all_available() noexcept {
+            for (auto& ptr : non_available) {
+                if (ptr == nullptr) {
+                    continue;
+                }
+
+                available.push(ptr);
+
+                ptr->reset();
+                ptr = nullptr;
+            }
+        }
+
+        [[nodiscard]] size_t get_size() const noexcept {
+            return total;
+        }
+
+        [[nodiscard]] size_t get_num_available() const noexcept {
+            return available.size();
+        }
     };
 
     MPI_RMA_MemAllocator() = default;
@@ -76,53 +121,65 @@ public:
      * @expection Throws a RelearnException if not enough memory is available.
      * @return A valid pointer to an OctreeNode
      */
-    [[nodiscard]] static OctreeNode* new_octree_node();
+    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* new_octree_node() {
+        return holder_base_ptr.get_available();
+    }
 
     /**
      * @brief Deletes the object pointed to. Internally calls OctreeNode::reset().
      *      The pointer is invalidated.
      * @param ptr The pointer to object that shall be deleted
      */
-    static void delete_octree_node(OctreeNode* ptr);
+    static void delete_octree_node(OctreeNode<AdditionalCellAttributes>* ptr) {
+        holder_base_ptr.make_available(ptr);
+    }
 
     /**
      * @brief Returns the base addresses of the memory windows of all memory windows.
      * @return The base addresses of the memory windows. The base address for MPI rank i
      *      is found at <return>[i]
      */
-    [[nodiscard]] static const std::vector<int64_t>& get_base_pointers() noexcept;
+    [[nodiscard]] static const std::vector<int64_t>& get_base_pointers() noexcept {
+        return base_pointers;
+    }
 
     /**
      * @brief Returns the roots for all branch nodes
      * @return The roots for all branch nodes
      */
-    [[nodiscard]] static OctreeNode* get_branch_nodes();
+    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_branch_nodes() {
+        return root_nodes_for_local_trees;
+    }
 
     /**
      * @brief Returns the number of available objects in the memory window.
      * @return The number of available objects in the memory window
      */
-    [[nodiscard]] static size_t get_num_avail_objects() noexcept;
+    [[nodiscard]] static size_t get_num_avail_objects() noexcept {
+        return holder_base_ptr.get_num_available();
+    }
 
     /**
      * @brief Deletes all created nodes. Internally calls OctreeNode::reset().
      *      Invalidates all pointers
      */
-    static void make_all_available() noexcept;
+    static void make_all_available() noexcept {
+        return holder_base_ptr.make_all_available();
+    }
 
     //NOLINTNEXTLINE
-    static inline MPI_Win mpi_window{ 0 }; // RMA window object
+    static inline void* mpi_window{ nullptr }; // RMA window object
 
 private:
     static inline size_t size_requested{ Constants::uninitialized }; // Bytes requested for the allocator
     static inline size_t max_size{ Constants::uninitialized }; // Size in Bytes of MPI-allocated memory
     static inline size_t max_num_objects{ Constants::uninitialized }; // Max number objects that are available
 
-    static inline OctreeNode* root_nodes_for_local_trees{ nullptr };
+    static inline OctreeNode<AdditionalCellAttributes>* root_nodes_for_local_trees{ nullptr };
 
-    static inline OctreeNode* base_ptr{ nullptr }; // Start address of MPI-allocated memory
+    static inline OctreeNode<AdditionalCellAttributes>* base_ptr{ nullptr }; // Start address of MPI-allocated memory
     //NOLINTNEXTLINE
-    static inline HolderOctreeNode holder_base_ptr{};
+    static inline HolderOctreeNode<AdditionalCellAttributes> holder_base_ptr{};
 
     static inline size_t num_ranks{ Constants::uninitialized }; // Number of ranks in MPI_COMM_WORLD
     static inline int displ_unit{ -1 }; // RMA window displacement unit

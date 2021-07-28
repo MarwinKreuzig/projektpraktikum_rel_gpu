@@ -86,11 +86,11 @@ void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size, Scop
     std::memcpy(buffer, own_data, size);
 }
 
-void MPINoWrapper::download_octree_node(OctreeNode* dst, int /*target_rank*/, const OctreeNode* src) {
+void MPINoWrapper::download_octree_node(OctreeNode<BarnesHutCell>* dst, int /*target_rank*/, const OctreeNode<BarnesHutCell>* src) {
     *dst = *src;
 }
 
-[[nodiscard]] OctreeNode* MPINoWrapper::new_octree_node() {
+[[nodiscard]] OctreeNode<BarnesHutCell>* MPINoWrapper::new_octree_node() {
     return MPINo_RMA_MemAllocator::new_octree_node();
 }
 
@@ -126,7 +126,7 @@ void MPIWrapper::make_all_mem_available() {
     MPINo_RMA_MemAllocator::make_all_available();
 }
 
-[[nodiscard]] OctreeNode* MPINoWrapper::get_buffer_octree_nodes() {
+[[nodiscard]] OctreeNode<BarnesHutCell>* MPINoWrapper::get_buffer_octree_nodes() {
     return rma_buffer_branch_nodes.ptr;
 }
 
@@ -138,7 +138,7 @@ void MPIWrapper::make_all_mem_available() {
     return my_rank_str;
 }
 
-void MPINoWrapper::delete_octree_node(OctreeNode* ptr) {
+void MPINoWrapper::delete_octree_node(OctreeNode<BarnesHutCell>* ptr) {
     MPINo_RMA_MemAllocator::delete_octree_node(ptr);
 }
 

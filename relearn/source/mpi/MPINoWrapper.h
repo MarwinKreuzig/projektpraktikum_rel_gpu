@@ -2,7 +2,6 @@
 
 #if !MPI_FOUND
 
-#include "MPITypes.h"
 #include "../util/RelearnException.h"
 
 #include <array>
@@ -12,6 +11,13 @@
 #include <map>
 #include <future>
 
+
+using MPI_Request = int;
+
+constexpr inline auto MPI_LOCK_EXCLUSIVE = 0;
+constexpr inline auto MPI_LOCK_SHARED = 1;
+
+template<typename T>
 class OctreeNode;
 class RelearnTest;
 
@@ -22,7 +28,7 @@ enum class MPI_Locktype : int {
 
 class MPINoWrapper {
     struct RMABufferOctreeNodes {
-        OctreeNode* ptr;
+        OctreeNode<BarnesHutCell>* ptr;
         size_t num_nodes;
     };
 
@@ -118,9 +124,9 @@ public:
     static void all_gather_inline(T* ptr, int count, Scope scope) {
     }
 
-    static void download_octree_node(OctreeNode* dst, int target_rank, const OctreeNode* src);
+    static void download_octree_node(OctreeNode<BarnesHutCell>* dst, int target_rank, const OctreeNode<BarnesHutCell>* src);
 
-    [[nodiscard]] static OctreeNode* new_octree_node();
+    [[nodiscard]] static OctreeNode<BarnesHutCell>* new_octree_node();
 
     [[nodiscard]] static int get_num_ranks();
 
@@ -136,13 +142,13 @@ public:
 
     [[nodiscard]] static size_t get_num_avail_objects();
 
-    [[nodiscard]] static OctreeNode* get_buffer_octree_nodes();
+    [[nodiscard]] static OctreeNode<BarnesHutCell>* get_buffer_octree_nodes();
 
     [[nodiscard]] static size_t get_num_buffer_octree_nodes();
 
     [[nodiscard]] static std::string get_my_rank_str();
 
-    static void delete_octree_node(OctreeNode* ptr);
+    static void delete_octree_node(OctreeNode<BarnesHutCell>* ptr);
 
     // NOLINTNEXTLINE
     static void wait_request(AsyncToken& request);

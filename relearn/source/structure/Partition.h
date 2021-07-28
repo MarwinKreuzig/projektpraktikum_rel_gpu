@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "../algorithm/BarnesHutCell.h"
 #include "../Config.h"
 #include "../neurons/models/NeuronModels.h"
 #include "../structure/SpaceFillingCurve.h"
@@ -20,6 +21,7 @@
 
 class Neurons;
 class NeuronToSubdomainAssignment;
+template<typename T>
 class OctreeNode;
 
 /**
@@ -50,7 +52,7 @@ public:
 
         Vec3s index_3d{ Constants::uninitialized };
 
-        OctreeNode* local_octree_view{ nullptr };
+        OctreeNode<BarnesHutCell>* local_octree_view{ nullptr };
     };
 
     /**
@@ -89,7 +91,7 @@ public:
      * @exception Throws a RelearnException of the neurons have already been loaded
      * @return Returns all created octree nodes in a vector (with local neuron id as index), does not transfer ownership of the nodes
      */
-    [[nodiscard]] std::vector<OctreeNode*> load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain);
+    [[nodiscard]] std::vector<OctreeNode<BarnesHutCell>*> load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain);
 
     /**
      * @brief Returns the number of local neurons
@@ -129,7 +131,7 @@ public:
      * @exception Throws a RelearnException if the load_data_from_subdomain_assignment has not been called or if subdomain_id exceeds the number of subdomains
      * @return The pointer to the specified subdomain's octree portion
      */
-    [[nodiscard]] OctreeNode* get_subdomain_tree(size_t subdomain_id) {
+    [[nodiscard]] OctreeNode<BarnesHutCell>* get_subdomain_tree(size_t subdomain_id) {
         RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
         RelearnException::check(subdomain_id < my_num_subdomains, "Subdomain ID was too large");
 

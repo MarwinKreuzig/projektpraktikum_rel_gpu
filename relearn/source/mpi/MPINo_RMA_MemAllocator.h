@@ -23,20 +23,20 @@
 class MPINo_RMA_MemAllocator {
 
     class HolderOctreeNode {
-        std::queue<OctreeNode*> available{};
-        std::vector<OctreeNode*> non_available{};
-        OctreeNode* base_ptr{ nullptr };
+        std::queue<OctreeNode<BarnesHutCell>*> available{};
+        std::vector<OctreeNode<BarnesHutCell>*> non_available{};
+        OctreeNode<BarnesHutCell>* base_ptr{ nullptr };
 
         size_t total{ Constants::uninitialized };
 
     public:
         HolderOctreeNode() = default;
 
-        HolderOctreeNode(OctreeNode* ptr, size_t length);
+        HolderOctreeNode(OctreeNode<BarnesHutCell>* ptr, size_t length);
 
-        [[nodiscard]] OctreeNode* get_available();
+        [[nodiscard]] OctreeNode<BarnesHutCell>* get_available();
 
-        void make_available(OctreeNode* ptr);
+        void make_available(OctreeNode<BarnesHutCell>* ptr);
 
         void make_all_available() noexcept;
 
@@ -52,13 +52,13 @@ public:
 
     static void finalize();
 
-    [[nodiscard]] static OctreeNode* new_octree_node();
+    [[nodiscard]] static OctreeNode<BarnesHutCell>* new_octree_node();
 
-    static void delete_octree_node(OctreeNode* ptr);
+    static void delete_octree_node(OctreeNode<BarnesHutCell>* ptr);
 
     [[nodiscard]] static int64_t get_base_pointers() noexcept;
 
-    [[nodiscard]] static OctreeNode* get_branch_nodes();
+    [[nodiscard]] static OctreeNode<BarnesHutCell>* get_branch_nodes();
 
     [[nodiscard]] static size_t get_num_avail_objects() noexcept;
 
@@ -72,10 +72,10 @@ private:
     static inline size_t max_size{ Constants::uninitialized }; // Size in Bytes of MPI-allocated memory
     static inline size_t max_num_objects{ Constants::uninitialized }; // Max number objects that are available
 
-    static inline std::vector<OctreeNode> root_nodes_for_local_trees{};
+    static inline std::vector<OctreeNode<BarnesHutCell>> root_nodes_for_local_trees{};
 
-    static inline OctreeNode* base_ptr{ nullptr }; // Start address of MPI-allocated memory
-    static inline std::vector<OctreeNode> data{};
+    static inline OctreeNode<BarnesHutCell>* base_ptr{ nullptr }; // Start address of MPI-allocated memory
+    static inline std::vector<OctreeNode<BarnesHutCell>> data{};
     static HolderOctreeNode holder_base_ptr;
 
     static inline size_t num_ranks{ 1 }; // Number of ranks in MPI_COMM_WORLD

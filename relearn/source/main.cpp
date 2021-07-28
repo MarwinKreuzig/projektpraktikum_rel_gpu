@@ -198,7 +198,7 @@ int main(int argc, char** argv) {
 
     // Check if int type can contain total size of branch nodes to receive in bytes
     // Every rank sends the same number of branch nodes, which is Partition::get_my_num_subdomains()
-    if (std::numeric_limits<int>::max() < (my_num_subdomains * sizeof(OctreeNode))) {
+    if (std::numeric_limits<int>::max() < (my_num_subdomains * sizeof(OctreeNode<BarnesHutCell>))) {
         RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
         exit(EXIT_FAILURE);
     }

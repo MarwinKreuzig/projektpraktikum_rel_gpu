@@ -12,6 +12,7 @@
 
 #include "../Config.h"
 #include "../algorithm/BarnesHut.h"
+#include "../algorithm/BarnesHutCell.h"
 #include "../mpi/MPIWrapper.h"
 #include "../neurons/SignalType.h"
 #include "../neurons/helper/RankNeuronId.h"
@@ -47,7 +48,7 @@ private:
 	 */
     struct StackElement {
     private:
-        OctreeNode* ptr{ nullptr };
+        OctreeNode<BarnesHutCell>* ptr{ nullptr };
 
         // True if node has been on stack already
         // twice and can be visited now
@@ -63,7 +64,7 @@ private:
          * @param depth_in_tree The depth of the current node
          * @exception Throws a RelearnException if octree_node is nullptr or depth_in_tree is larger than Cosntants::unitialized
         */
-        StackElement(OctreeNode* octree_node, size_t depth_in_tree)
+        StackElement(OctreeNode<BarnesHutCell>* octree_node, size_t depth_in_tree)
             : ptr(octree_node)
             , depth(depth_in_tree) {
             RelearnException::check(octree_node != nullptr, "StackElement::StackElement, octree_node was nullptr");
@@ -74,7 +75,7 @@ private:
          * @brief Returns the node
          * @return The node
          */
-        [[nodiscard]] OctreeNode* get_octree_node() const noexcept {
+        [[nodiscard]] OctreeNode<BarnesHutCell>* get_octree_node() const noexcept {
             return ptr;
         }
 
@@ -112,7 +113,15 @@ public:
      * @param level_of_branch_nodes The level at which the branch nodes (that are exchanged via MPI) are
      * @exception Throws a RelearnException if xyz_min is not componentwise smaller than xyz_max
      */
-    Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes);
+    Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes)
+        : level_of_branch_nodes(level_of_branch_nodes) {
+
+        const auto num_local_trees = 1ULL << (3 * level_of_branch_nodes);
+        local_trees.resize(num_local_trees, nullptr);
+
+        set_size(xyz_min, xyz_max);
+        construct_global_tree_part();
+    }
     ~Octree() = default;
 
     Octree(const Octree& other) = delete;
@@ -141,7 +150,7 @@ public:
      * @brief Returns the root of the Octree
      * @return The root of the Octree. Ownership is not transfered
      */
-    [[nodiscard]] OctreeNode* get_root() const noexcept {
+    [[nodiscard]] OctreeNode<BarnesHutCell>* get_root() const noexcept {
         return root;
     }
 
@@ -167,9 +176,9 @@ public:
      * @exception Throws a RelearnException if local_id is too large
      * @return The branch node with the specified local id. Ownership is not transfered
      */
-    [[nodiscard]] OctreeNode* get_local_root(size_t local_id) {
+    [[nodiscard]] OctreeNode<BarnesHutCell>* get_local_root(size_t local_id) {
         RelearnException::check(local_id < local_trees.size(), "Octree::get_local_root, local_id was too large");
-        OctreeNode* local_tree = local_trees[local_id];
+        OctreeNode<BarnesHutCell>* local_tree = local_trees[local_id];
         return local_tree;
     }
 
@@ -179,7 +188,7 @@ public:
      * @param index_1d The id for which to insert the local tree
      * @exception Throws a RelearnException if index_1d is too large or node_to_insert is nullptr
      */
-    void insert_local_tree(OctreeNode* node_to_insert, size_t index_1d) {
+    void insert_local_tree(OctreeNode<BarnesHutCell>* node_to_insert, size_t index_1d) {
         RelearnException::check(index_1d < local_trees.size(), "Octree::get_local_root, local_id was too large");
         RelearnException::check(node_to_insert != nullptr, "Octree::get_local_root, node_to_insert is nullptr");
         RelearnException::check(node_to_insert->is_parent(), "Cannot insert an empty node");
@@ -200,7 +209,7 @@ public:
      *      (e) Something went wrong within the insertion
      * @return A pointer to the newly created and inserted node
      */
-    [[nodiscard]] OctreeNode* insert(const Vec3d& position, size_t neuron_id, int rank);
+    [[nodiscard]] OctreeNode<BarnesHutCell>* insert(const Vec3d& position, size_t neuron_id, int rank);
 
     /**
      * @brief Downloads the children of the node (must be on another MPI rank) and returns the children.
@@ -209,7 +218,7 @@ public:
      * @exception Throws a RelearnException if node is on the current MPI process
      * @return The downloaded children (perfect copies of the actual children), does not transfer ownership
      */
-    [[nodiscard]] std::array<OctreeNode*, Constants::number_oct> downloadChildren(OctreeNode* node);
+    [[nodiscard]] std::array<OctreeNode<BarnesHutCell>*, Constants::number_oct> downloadChildren(OctreeNode<BarnesHutCell>* node);
 
     /**
      * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes
@@ -254,7 +263,7 @@ public:
      *      The reference is never invalidated
      * @return All leaf nodes
      */
-    const std::vector<OctreeNode*>& get_leaf_nodes() const noexcept {
+    const std::vector<OctreeNode<BarnesHutCell>*>& get_leaf_nodes() const noexcept {
         return all_leaf_nodes;
     }
 
@@ -277,16 +286,16 @@ private:
 	 * Do a postorder tree walk startring at "octree" and run the function "function" for every node when it is visited
      * Does ignore every node which's level in the octree is greater than "max_level"
 	 */
-    void tree_walk_postorder(std::function<void(OctreeNode*)> function, OctreeNode* root, size_t max_level = std::numeric_limits<size_t>::max());
+    void tree_walk_postorder(std::function<void(OctreeNode<BarnesHutCell>*)> function, OctreeNode<BarnesHutCell>* root, size_t max_level = std::numeric_limits<size_t>::max());
 
     void construct_global_tree_part();
 
     // Root of the tree
-    OctreeNode* root{ nullptr };
+    OctreeNode<BarnesHutCell>* root{ nullptr };
 
-    std::vector<OctreeNode*> local_trees{};
+    std::vector<OctreeNode<BarnesHutCell>*> local_trees{};
 
-    std::vector<OctreeNode*> all_leaf_nodes{};
+    std::vector<OctreeNode<BarnesHutCell>*> all_leaf_nodes{};
 
     // Two points describe simulation box size of the tree
     Vec3d xyz_min{ 0 };
@@ -295,8 +304,8 @@ private:
     size_t level_of_branch_nodes{ Constants::uninitialized };
 
     // Cache with nodes owned by other ranks
-    using NodesCacheKey = std::pair<int, OctreeNode*>;
-    using NodesCacheValue = OctreeNode*;
+    using NodesCacheKey = std::pair<int, OctreeNode<BarnesHutCell>*>;
+    using NodesCacheValue = OctreeNode<BarnesHutCell>*;
     using NodesCache = std::map<NodesCacheKey, NodesCacheValue>;
     NodesCache remote_nodes_cache{};
 };

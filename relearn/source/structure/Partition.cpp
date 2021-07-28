@@ -202,7 +202,7 @@ void Partition::delete_subdomain_tree(size_t subdomain_id) {
     subdomains[subdomain_id].local_octree_view = nullptr;
 }
 
-std::vector<OctreeNode*> Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain) {
+std::vector<OctreeNode<BarnesHutCell>*> Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain) {
     RelearnException::check(!neurons_loaded, "Neurons are already loaded, cannot load anymore");
 
     simulation_box_length = neurons_in_subdomain->get_simulation_box_length();
@@ -263,7 +263,7 @@ std::vector<OctreeNode*> Partition::load_data_from_subdomain_assignment(const st
     std::vector<std::string> area_names(my_num_neurons);
     std::vector<SignalType> signal_types(my_num_neurons);
 
-    std::vector<OctreeNode*> octree_nodes(my_num_neurons);
+    std::vector<OctreeNode<BarnesHutCell>*> octree_nodes(my_num_neurons);
 
     for (size_t i = 0; i < my_num_subdomains; i++) {
         auto& current_subdomain = subdomains[i];

@@ -10,6 +10,7 @@
 
 #include "BarnesHut.h"
 
+#include "../io/LogFiles.h"
 #include "../structure/Octree.h"
 #include "../structure/OctreeNode.h"
 
@@ -20,8 +21,8 @@
 #include <stack>
 
 [[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed) {
-    OctreeNode* node_selected = nullptr;
-    OctreeNode* root_of_subtree = global_tree->get_root();
+    OctreeNode<BarnesHutCell>* node_selected = nullptr;
+    OctreeNode<BarnesHutCell>* root_of_subtree = global_tree->get_root();
 
     while (true) {
         /**
@@ -80,8 +81,47 @@
     return rank_neuron_id;
 }
 
+ void BarnesHut::update_leaf_nodes(const std::vector<OctreeNode<BarnesHutCell>*>& leaf_nodes, const std::vector<char>& disable_flags,
+     const std::vector<double>& dendrites_excitatory_counts, const std::vector<unsigned int>& dendrites_excitatory_connected_counts, 
+     const std::vector<double>& dendrites_inhibitory_counts, const std::vector<unsigned int>& dendrites_inhibitory_connected_counts) {
+
+    const auto num_leaf_nodes = leaf_nodes.size();
+    const auto num_disable_flags = disable_flags.size();
+    const auto num_dendrites_excitatory_counts = dendrites_excitatory_counts.size();
+    const auto num_dendrites_excitatory_connected_counts = dendrites_excitatory_connected_counts.size();
+    const auto num_dendrites_inhibitory_counts = dendrites_inhibitory_counts.size();
+    const auto num_dendrites_inhibitory_connected_counts = dendrites_inhibitory_connected_counts.size();
+
+    const auto all_same_size = num_leaf_nodes == num_disable_flags
+        && num_leaf_nodes == num_dendrites_excitatory_counts
+        && num_leaf_nodes == num_dendrites_excitatory_connected_counts
+        && num_leaf_nodes == num_dendrites_inhibitory_counts
+        && num_leaf_nodes == num_dendrites_inhibitory_connected_counts;
+
+    RelearnException::check(all_same_size, "In BarnesHut::update_leaf_nodes, the vectors were of different sizes");
+
+    for (size_t neuron_id = 0; neuron_id < leaf_nodes.size(); neuron_id++) {
+        auto* node = leaf_nodes[neuron_id];
+
+        RelearnException::check(node != nullptr, "Node was nullptr: ", neuron_id);
+
+        const size_t other_neuron_id = node->get_cell().get_neuron_id();
+
+        RelearnException::check(neuron_id == other_neuron_id, "In BarnesHut::update_leaf_nodes, the nodes are not in order");
+
+        if (disable_flags[neuron_id] == 0) {
+            continue;
+        }
+
+        const auto number_vacant_dendrites_excitatory = static_cast<unsigned int>(dendrites_excitatory_counts[neuron_id] - dendrites_excitatory_connected_counts[neuron_id]);
+        const auto number_vacant_dendrites_inhibitory = static_cast<unsigned int>(dendrites_inhibitory_counts[neuron_id] - dendrites_inhibitory_connected_counts[neuron_id]);
+
+        node->set_cell_num_dendrites(number_vacant_dendrites_excitatory, number_vacant_dendrites_inhibitory);
+    }
+}
+
 [[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz, 
-    const OctreeNode& node_with_dendrite, SignalType dendrite_type_needed) const /*noexcept*/ {
+    const OctreeNode<BarnesHutCell>& node_with_dendrite, SignalType dendrite_type_needed) const /*noexcept*/ {
 
     /**
      * If the axon's neuron itself is considered as target neuron, set attractiveness to 0 to avoid forming an autapse (connection to itself).
@@ -108,7 +148,7 @@
 }
 
 [[nodiscard]] std::vector<double> BarnesHut::create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz,
-    SignalType dendrite_type_needed, const std::vector<OctreeNode*>& vector) const {
+    SignalType dendrite_type_needed, const std::vector<OctreeNode<BarnesHutCell>*>& vector) const {
 
     if (vector.empty()) {
         return {};
@@ -117,7 +157,7 @@
     double sum = 0.0;
 
     std::vector<double> probabilities;
-    std::for_each(vector.cbegin(), vector.cend(), [&](OctreeNode* target_node) {
+    std::for_each(vector.cbegin(), vector.cend(), [&](OctreeNode<BarnesHutCell>* target_node) {
         const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *target_node, dendrite_type_needed);
         probabilities.push_back(prob);
         sum += prob;
@@ -136,7 +176,7 @@
     return probabilities;
 }
 
-[[nodiscard]] std::tuple<bool, bool> BarnesHut::acceptance_criterion_test(const Vec3d& axon_pos_xyz, const OctreeNode* const node_with_dendrite, 
+[[nodiscard]] std::tuple<bool, bool> BarnesHut::acceptance_criterion_test(const Vec3d& axon_pos_xyz, const OctreeNode<BarnesHutCell>* const node_with_dendrite, 
     SignalType dendrite_type_needed) const /*noexcept*/ {
 
     const auto& cell = node_with_dendrite->get_cell();
@@ -181,7 +221,7 @@
     return std::make_tuple(ret_val, has_vacant_dendrites);
 }
 
-[[nodiscard]] std::vector<OctreeNode*> BarnesHut::get_nodes_for_interval(const Vec3d& axon_pos_xyz, OctreeNode* root, 
+[[nodiscard]] std::vector<OctreeNode<BarnesHutCell>*> BarnesHut::get_nodes_for_interval(const Vec3d& axon_pos_xyz, OctreeNode<BarnesHutCell>* root, 
     SignalType dendrite_type_needed) {
     if (root == nullptr) {
         return {};
@@ -209,10 +249,10 @@
         return {};
     }
 
-    std::stack<OctreeNode*> stack{};
+    std::stack<OctreeNode<BarnesHutCell>*> stack{};
 
-    const auto add_children_to_stack = [&stack](OctreeNode* node, const std::shared_ptr<Octree>& octree) {
-        std::array<OctreeNode*, Constants::number_oct> children{ nullptr };
+    const auto add_children_to_stack = [&stack](OctreeNode<BarnesHutCell>* node, const std::shared_ptr<Octree>& octree) {
+        std::array<OctreeNode<BarnesHutCell>*, Constants::number_oct> children{ nullptr };
 
         // Node is owned by this rank
         if (node->is_local()) {
@@ -233,7 +273,7 @@
     // The algorithm expects that root is not considered directly, rather its children
     add_children_to_stack(root, global_tree);
 
-    std::vector<OctreeNode*> nodes_to_consider{};
+    std::vector<OctreeNode<BarnesHutCell>*> nodes_to_consider{};
     nodes_to_consider.reserve(Constants::number_oct);
 
     while (!stack.empty()) {

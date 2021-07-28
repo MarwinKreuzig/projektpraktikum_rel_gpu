@@ -9,12 +9,3 @@
  */
 
 #pragma once
-
-#if MPI_FOUND
-#include <mpi.h>
-#else
-using MPI_Request = int;
-
-constexpr inline auto MPI_LOCK_EXCLUSIVE = 0;
-constexpr inline auto MPI_LOCK_SHARED = 1;
-#endif

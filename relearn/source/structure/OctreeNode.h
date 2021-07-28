@@ -12,7 +12,6 @@
 
 #include "Cell.h"
 #include "../Config.h"
-#include "../algorithm/BarnesHutCell.h"
 #include "../mpi/MPIWrapper.h"
 
 #include <array>
@@ -24,18 +23,11 @@
  * Each object has up to 8 children (can be nullptr) and a Cell which summarizes the relevant biological aspects.
  * Additionally, an object stores its level within the tree (0 being root), its MPI rank and whether or not it is an inner node.
  */
+template <typename AdditionalCellAttributes>
 class OctreeNode {
-    using AdditionalCellAttributes = BarnesHutCell;
-
-    std::array<OctreeNode*, Constants::number_oct> children{ nullptr };
-    Cell<AdditionalCellAttributes> cell{};
-
-    bool parent{ false };
-
-    int rank{ -1 }; // MPI rank who owns this octree node
-    size_t level{ Constants::uninitialized }; // Level in the tree [0 (= root) ... depth of tree]
-
 public:
+    using OctreeNodePtr = OctreeNode<AdditionalCellAttributes>*;
+
     /**
      * @brief Returns the MPI rank to which this object belongs
      * @return The MPI rank to which this object belongs
@@ -64,7 +56,7 @@ public:
      * @brief Returns a constant view on the associated child nodes. This reference is not invalidated by calls to other methods
      * @return A constant view on the associated child nodes
      */
-    [[nodiscard]] const std::array<OctreeNode*, Constants::number_oct>& get_children() const noexcept {
+    [[nodiscard]] const std::array<OctreeNodePtr, Constants::number_oct>& get_children() const noexcept {
         return children;
     }
 
@@ -73,7 +65,7 @@ public:
      * @exception Throws a RelearnException if idx >= Constants::number_oct
      * @return The associated child
      */
-    [[nodiscard]] const OctreeNode* get_child(size_t idx) const {
+    [[nodiscard]] const OctreeNodePtr get_child(size_t idx) const {
         RelearnException::check(idx < Constants::number_oct, "In OctreeNode::get_child const, idx was: %u", idx);
         // NOLINTNEXTLINE
         return children[idx];
@@ -84,7 +76,7 @@ public:
      * @exception Throws a RelearnException if idx >= Constants::number_oct
      * @return The associated child
      */
-    [[nodiscard]] OctreeNode* get_child(size_t idx) {
+    [[nodiscard]] OctreeNodePtr get_child(size_t idx) {
         RelearnException::check(idx < Constants::number_oct, "In OctreeNode::get_child, idx was: %u", idx);
         // NOLINTNEXTLINE
         return children[idx];
@@ -121,7 +113,7 @@ public:
      *      (e) Something went wrong within the insertion
      * @return A pointer to the newly created and inserted node
      */
-    [[nodiscard]] OctreeNode* insert(const Vec3d& position, const size_t neuron_id, int rank) {
+    [[nodiscard]] OctreeNodePtr insert(const Vec3d& position, const size_t neuron_id, int rank) {
         Vec3d cell_xyz_min;
         Vec3d cell_xyz_max;
 
@@ -136,10 +128,10 @@ public:
 
         unsigned char new_position_octant = 0;
 
-        OctreeNode* parent_node = nullptr;
+        OctreeNodePtr parent_node = nullptr;
 
         // Correct position for new node not found yet
-        for (OctreeNode* current_node = this; nullptr != current_node;) {
+        for (OctreeNodePtr current_node = this; nullptr != current_node;) {
             /**
 		 * My parent already exists.
 		 * Calc which child to follow, i.e., determine octant
@@ -153,15 +145,15 @@ public:
         RelearnException::check(parent_node != nullptr, "parent_node is nullptr");
 
         /**
-	 * Found my octant, but
-	 * I'm the very first child of that node.
-	 * I.e., the node is a leaf.
-	 */
+	     * Found my octant, but
+	     * I'm the very first child of that node.
+	     * I.e., the node is a leaf.
+	     */
         if (!parent_node->is_parent()) {
             /**
-         * The found parent node is virtual and can just be substituted,
-         * i.e., it was constructed while constructing the upper part to the branch nodes.
-         */
+             * The found parent node is virtual and can just be substituted,
+             * i.e., it was constructed while constructing the upper part to the branch nodes.
+             */
             if (parent_node->get_cell_neuron_id() == Constants::uninitialized && neuron_id != parent_node->get_cell_neuron_id()) {
                 parent_node->set_cell_neuron_id(neuron_id);
                 parent_node->set_cell_neuron_position({ position });
@@ -171,21 +163,21 @@ public:
 
             for (unsigned char idx = new_position_octant; idx == new_position_octant;) {
                 /**
-		     * Make node containing my octant a parent by
-		     * adding neuron in this node as child node
-		     */
+		         * Make node containing my octant a parent by
+		         * adding neuron in this node as child node
+		         */
 
                 // Determine octant for neuron
                 const auto& cell_own_position = parent_node->get_cell().get_dendrite_position();
                 RelearnException::check(cell_own_position.has_value(), "While building the octree, the cell doesn't have a position");
 
                 idx = parent_node->get_cell().get_octant_for_position(cell_own_position.value());
-                OctreeNode* new_node = MPIWrapper::new_octree_node();
+                auto* new_node = MPIWrapper::new_octree_node();
                 parent_node->set_child(new_node, idx);
 
                 /**
-			 * Init this new node properly
-			 */
+			     * Init this new node properly
+			     */
                 Vec3d xyz_min;
                 Vec3d xyz_max;
                 std::tie(xyz_min, xyz_max) = parent_node->get_cell().get_size_for_octant(idx);
@@ -198,9 +190,9 @@ public:
                 new_node->set_cell_neuron_id(prev_neuron_id);
 
                 /**
-			 * Set neuron ID of parent (inner node) to uninitialized.
-			 * It is not used for inner nodes.
-			 */
+			     * Set neuron ID of parent (inner node) to uninitialized.
+			     * It is not used for inner nodes.
+			     */
                 parent_node->set_cell_neuron_id(Constants::uninitialized);
                 parent_node->set_parent(); // Mark node as parent
 
@@ -223,9 +215,9 @@ public:
         RelearnException::check(new_node_to_insert != nullptr, "new_node_to_insert is nullptr");
 
         /**
-	 * Found my position in children array,
-	 * add myself to the array now
-	 */
+	     * Found my position in children array,
+	     * add myself to the array now
+	     */
         parent_node->set_child(new_node_to_insert, new_position_octant);
         new_node_to_insert->set_level(parent_node->get_level() + 1); // Now we know level of me
 
@@ -279,39 +271,77 @@ public:
     }
 
     /**
-     * @brief Sets the neuron id in the associated cell
-     * @param neuron_id The new neuron id
+     * @brief Sets the node as the child with the given index and updates the parent flag accordingly
+     * @param node The new child node (can be nullptr)
+     * @param idx The index of the child which shall be set, < Constants::number_oct
+     * @exception Throws a RelearnException if idx >= Constants::number_oct
      */
-    void set_cell_neuron_id(size_t neuron_id) noexcept {
-        cell.set_neuron_id(neuron_id);
+    void set_child(OctreeNodePtr node, size_t idx) {
+        RelearnException::check(idx < Constants::number_oct, "In OctreeNode::set_child, idx was: %u", idx);
+        // NOLINTNEXTLINE
+        children[idx] = node;
+
+        bool has_children = false;
+
+        for (auto* child : children) {
+            if (child != nullptr) {
+                has_children = true;
+            }
+        }
+
+        parent = has_children;
     }
 
     /**
-     * @brief Returns the neuron id for the associated cell. Is Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
-     * @return The neuron id
+     * @brief Resets the current object:
+     *      (a) The cell is newly constructed
+     *      (b) The children are newly constructed
+     *      (c) parent is false
+     *      (d) rank is -1
+     *      (e) level is Constants::uninitialized
      */
-    [[nodiscard]] size_t get_cell_neuron_id() const noexcept {
-        return cell.get_neuron_id();
+    void reset() noexcept {
+        cell = Cell<AdditionalCellAttributes>{};
+        children = std::array<OctreeNodePtr, Constants::number_oct>{ nullptr };
+        parent = false;
+        rank = -1;
+        level = Constants::uninitialized;
     }
 
     /**
-     * @brief Sets the min and max of the associated cell
-     * @param min The minimum boundary of the cell
-     * @param max The maximum boundary of the cell
-     * @exception Throws a RelearnException if one ordinate of min is larger than the associated of max
+     * @brief Prints the octree node to the output stream
+     * @param output_stream The output stream
+     * @param octree_node The octree node to print
+     * @return The output stream after printing the octree node
      */
-    void set_cell_size(const Vec3d& min, const Vec3d& max) {
-        cell.set_size(min, max);
+    friend std::ostream& operator<<(std::ostream& output_stream, const OctreeNode<AdditionalCellAttributes>& octree_node) {
+        output_stream << "== OctreeNode (" << &octree_node << ") ==\n";
+
+        output_stream << "  children[8]: ";
+        for (const auto* const child : octree_node.get_children()) {
+            output_stream << child << " ";
+        }
+        output_stream << "\n";
+
+        output_stream << "  is_parent  : " << octree_node.is_parent() << "\n\n";
+        output_stream << "  rank       : " << octree_node.get_rank() << "\n";
+        output_stream << "  level      : " << octree_node.get_level() << "\n\n";
+        output_stream << octree_node.get_cell();
+        output_stream << "\n";
+
+        return output_stream;
     }
 
-    /**
-     * @brief Returns the size of the associated cell
-     * @return The size of the cell
-     */
-    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size() const noexcept {
-        return cell.get_size();
-    }
+private:
+    std::array<OctreeNodePtr, Constants::number_oct> children{ nullptr };
+    Cell<AdditionalCellAttributes> cell{};
 
+    bool parent{ false };
+
+    int rank{ -1 }; // MPI rank who owns this octree node
+    size_t level{ Constants::uninitialized }; // Level in the tree [0 (= root) ... depth of tree]
+
+public:
     /**
      * @brief Sets the optional position for both the excitatory and inhibitory positions in the associated cell
      * @param opt_position The optional position, can be empty
@@ -347,64 +377,36 @@ public:
     }
 
     /**
-     * @brief Sets the node as the child with the given index and updates the parent flag accordingly
-     * @param node The new child node (can be nullptr)
-     * @param idx The index of the child which shall be set, < Constants::number_oct
-     * @exception Throws a RelearnException if idx >= Constants::number_oct
+     * @brief Sets the neuron id in the associated cell
+     * @param neuron_id The new neuron id
      */
-    void set_child(OctreeNode* node, size_t idx) {
-        RelearnException::check(idx < Constants::number_oct, "In OctreeNode::set_child, idx was: %u", idx);
-        // NOLINTNEXTLINE
-        children[idx] = node;
-
-        bool has_children = false;
-
-        for (auto* child : children) {
-            if (child != nullptr) {
-                has_children = true;
-            }
-        }
-
-        parent = has_children;
+    void set_cell_neuron_id(size_t neuron_id) noexcept {
+        cell.set_neuron_id(neuron_id);
     }
 
     /**
-     * @brief Resets the current object:
-     *      (a) The cell is newly constructed
-     *      (b) The children are newly constructed
-     *      (c) parent is false
-     *      (d) rank is -1
-     *      (e) level is Constants::uninitialized
+     * @brief Returns the neuron id for the associated cell. Is Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
+     * @return The neuron id
      */
-    void reset() noexcept {
-        cell = Cell<AdditionalCellAttributes>{};
-        children = std::array<OctreeNode*, Constants::number_oct>{ nullptr };
-        parent = false;
-        rank = -1;
-        level = Constants::uninitialized;
+    [[nodiscard]] size_t get_cell_neuron_id() const noexcept {
+        return cell.get_neuron_id();
     }
 
     /**
-     * @brief Prints the octree node to the output stream
-     * @param output_stream The output stream
-     * @param octree_node The octree node to print
-     * @return The output stream after printing the octree node
+     * @brief Sets the min and max of the associated cell
+     * @param min The minimum boundary of the cell
+     * @param max The maximum boundary of the cell
+     * @exception Throws a RelearnException if one ordinate of min is larger than the associated of max
      */
-    friend std::ostream& operator<<(std::ostream& output_stream, const OctreeNode& octree_node) {
-        output_stream << "== OctreeNode (" << &octree_node << ") ==\n";
+    void set_cell_size(const Vec3d& min, const Vec3d& max) {
+        cell.set_size(min, max);
+    }
 
-        output_stream << "  children[8]: ";
-        for (const auto* const child : octree_node.get_children()) {
-            output_stream << child << " ";
-        }
-        output_stream << "\n";
-
-        output_stream << "  is_parent  : " << octree_node.is_parent() << "\n\n";
-        output_stream << "  rank       : " << octree_node.get_rank() << "\n";
-        output_stream << "  level      : " << octree_node.get_level() << "\n\n";
-        output_stream << octree_node.get_cell();
-        output_stream << "\n";
-
-        return output_stream;
+    /**
+     * @brief Returns the size of the associated cell
+     * @return The size of the cell
+     */
+    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size() const noexcept {
+        return cell.get_size();
     }
 };
