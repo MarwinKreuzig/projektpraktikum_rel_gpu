@@ -357,7 +357,7 @@ void Octree::initializes_leaf_nodes(size_t num_neurons) noexcept {
             ret.first->second = MPI_RMA_MemAllocator<BarnesHutCell>::new_octree_node();
             auto* local_child_addr = ret.first->second;
 
-            MPIWrapper::download_octree_node(local_child_addr, target_rank, node->get_child(i));
+            MPIWrapper::download_octree_node<BarnesHutCell>(local_child_addr, target_rank, node->get_child(i));
         }
 
         // Remember address of node

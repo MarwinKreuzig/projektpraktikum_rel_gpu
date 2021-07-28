@@ -121,6 +121,12 @@ private:
 
     static int translate_lock_type(MPI_Locktype lock_type);
 
+    static void MPIWrapper::get(void* origin, size_t size, int target_rank, int64_t displacement);
+
+    static void reduce_int64(const int64_t* src, int64_t* dst, size_t size, ReduceFunction function, int root_rank);
+
+    static void reduce_double(const double* src, double* dst, size_t size, ReduceFunction function, int root_rank);
+    
 public:
     /**
      * @brief Initializes the local MPI implementation via MPI_Init_Thread;
@@ -164,8 +170,6 @@ public:
      */
     [[nodiscard]] static double all_reduce(double value, ReduceFunction function, Scope scope);
 
-    static void reduce_double(const double* src, double* dst, size_t size, ReduceFunction function, int root_rank);
-
     /**
      * @brief Reduces multiple values for every MPI rank in the given scope with a reduction function such that the root_rank has the final result. The reduction is performed componentwise
      * @param src The local array of values that shall be reduced
@@ -184,8 +188,6 @@ public:
 
         return dst;
     }
-
-    static void reduce_int64(const int64_t* src, int64_t* dst, size_t size, ReduceFunction function, int root_rank);
 
     /**
      * @brief Reduces multiple values for every MPI rank in the given scope with a reduction function such that the root_rank has the final result. The reduction is performed componentwise
@@ -293,7 +295,15 @@ public:
      * @param src The pointer to the remote node, must be inside the remote's memory window
      * @exception Throws a RelearnException if an MPI error occurs or if target_rank < 0
      */
-    static void download_octree_node(OctreeNode<BarnesHutCell>* dst, int target_rank, const OctreeNode<BarnesHutCell>* src);
+    template<typename AdditionalCellAttributes>
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, int target_rank, const OctreeNode<AdditionalCellAttributes>* src) {
+        RelearnException::check(target_rank >= 0, "target rank is negative in download_octree_nodet");
+        const auto& base_ptrs = MPI_RMA_MemAllocator<AdditionalCellAttributes>::get_base_pointers();
+        RelearnException::check(target_rank < base_ptrs.size(), "target rank is greater than the base pointers");
+        const auto displacement = int64_t(src) - base_ptrs[target_rank];
+
+        get(dst, sizeof(OctreeNode<AdditionalCellAttributes>), target_rank, displacement);
+    }
 
     /**
      * @brief Returns the number of MPI ranks

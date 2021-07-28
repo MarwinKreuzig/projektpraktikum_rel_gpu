@@ -198,16 +198,12 @@ void MPIWrapper::all_gather_inl(void* ptr, int count, Scope scope) {
     RelearnException::check(errorcode == 0, "Error in all gather ");
 }
 
-void MPIWrapper::download_octree_node(OctreeNode<BarnesHutCell>* dst, int target_rank, const OctreeNode<BarnesHutCell>* src) {
-    RelearnException::check(target_rank >= 0, "target rank is negative in download_octree_nodet");
-    const auto& base_ptrs = MPI_RMA_MemAllocator<BarnesHutCell>::get_base_pointers();
-    RelearnException::check(target_rank < base_ptrs.size(), "target rank is greater than the base pointers");
-    const auto displacement = int64_t(src) - base_ptrs[target_rank];
-
+void MPIWrapper::get(void* origin, size_t size, int target_rank, int64_t displacement) {
+    
     const MPI_Aint displacement_mpi(displacement);
     const auto mpi_window = *(MPI_Win*)(MPI_RMA_MemAllocator<BarnesHutCell>::mpi_window);
-    // NOLINTNEXTLINE
-    const int errorcode = MPI_Get(dst, sizeof(OctreeNode<BarnesHutCell>), MPI_CHAR, target_rank, displacement_mpi, sizeof(OctreeNode<BarnesHutCell>), MPI_CHAR, mpi_window);
+
+    const int errorcode = MPI_Get(origin, size, MPI_CHAR, target_rank, displacement_mpi, size, MPI_CHAR, mpi_window);
     RelearnException::check(errorcode == 0, "Error in get");
 }
 
