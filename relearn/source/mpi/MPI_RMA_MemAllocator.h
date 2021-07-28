@@ -168,7 +168,7 @@ private:
 
     static inline OctreeNode<AdditionalCellAttributes>* base_ptr{ nullptr }; // Start address of MPI-allocated memory
     //NOLINTNEXTLINE
-    static inline HolderOctreeNode<AdditionalCellAttributes> holder_base_ptr{};
+    static inline HolderOctreeNode holder_base_ptr{};
 
     static inline size_t num_ranks{ Constants::uninitialized }; // Number of ranks in MPI_COMM_WORLD
     static inline int displ_unit{ -1 }; // RMA window displacement unit

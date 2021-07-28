@@ -60,14 +60,14 @@ std::vector<std::tuple<Vec3d, size_t>> generate_random_neurons(const Vec3d& min,
     return return_value;
 }
 
-std::vector<std::tuple<Vec3d, size_t>> extract_neurons(OctreeNode* root) {
+std::vector<std::tuple<Vec3d, size_t>> extract_neurons(OctreeNode<AdditionalCellAttributes>* root) {
     std::vector<std::tuple<Vec3d, size_t>> return_value;
 
-    std::stack<OctreeNode*> octree_nodes{};
+    std::stack<OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
     octree_nodes.push(root);
 
     while (!octree_nodes.empty()) {
-        OctreeNode* current_node = octree_nodes.top();
+        OctreeNode<AdditionalCellAttributes>* current_node = octree_nodes.top();
         octree_nodes.pop();
 
         if (current_node->is_parent()) {
@@ -107,14 +107,14 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons(const Octree& octree) {
     return extract_neurons(root);
 }
 
-std::vector<std::tuple<Vec3d, size_t>> extract_unused_neurons(OctreeNode* root) {
+std::vector<std::tuple<Vec3d, size_t>> extract_unused_neurons(OctreeNode<AdditionalCellAttributes>* root) {
     std::vector<std::tuple<Vec3d, size_t>> return_value;
 
-    std::stack<OctreeNode*> octree_nodes{};
+    std::stack<OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
     octree_nodes.push(root);
 
     while (!octree_nodes.empty()) {
-        OctreeNode* current_node = octree_nodes.top();
+        OctreeNode<AdditionalCellAttributes>* current_node = octree_nodes.top();
         octree_nodes.pop();
 
         if (current_node->get_cell().get_neuron_id() == Constants::uninitialized) {
@@ -135,14 +135,14 @@ std::vector<std::tuple<Vec3d, size_t>> extract_unused_neurons(OctreeNode* root) 
     return return_value;
 }
 
-std::vector<OctreeNode*> extract_branch_nodes(OctreeNode* root) {
-    std::vector<OctreeNode*> return_value;
+std::vector<OctreeNode<AdditionalCellAttributes>*> extract_branch_nodes(OctreeNode<AdditionalCellAttributes>* root) {
+    std::vector<OctreeNode<AdditionalCellAttributes>*> return_value;
 
-    std::stack<OctreeNode*> octree_nodes{};
+    std::stack<OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
     octree_nodes.push(root);
 
     while (!octree_nodes.empty()) {
-        OctreeNode* current_node = octree_nodes.top();
+        OctreeNode<AdditionalCellAttributes>* current_node = octree_nodes.top();
         octree_nodes.pop();
 
         if (current_node->is_parent()) {
@@ -615,7 +615,7 @@ TEST_F(OctreeTest, testCellOctantsSize) {
 
 TEST_F(OctreeTest, testOctreeNodeReset) {
 
-    OctreeNode node{};
+    OctreeNode<AdditionalCellAttributes> node{};
 
     ASSERT_FALSE(node.is_parent());
     ASSERT_TRUE(node.get_level() == Constants::uninitialized);
@@ -638,7 +638,7 @@ TEST_F(OctreeTest, testOctreeNodeReset) {
         node.set_level(uid_level(mt));
         node.set_rank(uid_rank(mt));
 
-        std::vector<OctreeNode> other_nodes(Constants::number_oct);
+        std::vector<OctreeNode<AdditionalCellAttributes>> other_nodes(Constants::number_oct);
         for (auto i = 0; i < Constants::number_oct; i++) {
             node.set_child(&(other_nodes[i]), i);
         }
@@ -661,7 +661,7 @@ TEST_F(OctreeTest, testOctreeNodeReset) {
 
 TEST_F(OctreeTest, testOctreeNodeSetterGetter) {
 
-    OctreeNode node{};
+    OctreeNode<AdditionalCellAttributes> node{};
 
     for (auto it = 0; it < iterations; it++) {
         node.set_parent();
@@ -675,7 +675,7 @@ TEST_F(OctreeTest, testOctreeNodeSetterGetter) {
         node.set_level(lvl);
         node.set_rank(rank);
 
-        std::vector<OctreeNode> other_nodes(Constants::number_oct);
+        std::vector<OctreeNode<AdditionalCellAttributes>> other_nodes(Constants::number_oct);
         for (auto i = 0; i < Constants::number_oct; i++) {
             node.set_child(&(other_nodes[i]), i);
         }
@@ -712,7 +712,7 @@ TEST_F(OctreeTest, testOctreeNodeSetterGetter) {
 
 TEST_F(OctreeTest, testOctreeNodeLocal) {
 
-    OctreeNode node{};
+    OctreeNode<AdditionalCellAttributes> node{};
 
     for (auto it = 0; it < iterations; it++) {
 
@@ -736,7 +736,7 @@ TEST_F(OctreeTest, testOctreeNodeLocal) {
 
 TEST_F(OctreeTest, testOctreeNodeSetterCell) {
 
-    OctreeNode node{};
+    OctreeNode<AdditionalCellAttributes> node{};
 
     const Cell<AdditionalCellAttributes>& cell = node.get_cell();
 
@@ -823,7 +823,7 @@ TEST_F(OctreeTest, testOctreeNodeInsert) {
 
         Vec3d own_position{ urd_x(mt), urd_y(mt), urd_z(mt) };
 
-        OctreeNode node{};
+        OctreeNode<AdditionalCellAttributes> node{};
         node.set_level(level);
         node.set_rank(my_rank);
         node.set_cell_size(min, max);
@@ -1162,13 +1162,13 @@ TEST_F(OctreeTest, testOctreeStructure) {
 
         const auto root = octree.get_root();
 
-        std::stack<std::pair<OctreeNode*, size_t>> octree_nodes{};
+        std::stack<std::pair<OctreeNode<AdditionalCellAttributes>*, size_t>> octree_nodes{};
         octree_nodes.emplace(root, root->get_level());
 
         while (!octree_nodes.empty()) {
             const auto& elem = octree_nodes.top();
 
-            OctreeNode* current_node = elem.first;
+            OctreeNode<AdditionalCellAttributes>* current_node = elem.first;
             auto level = elem.second;
 
             octree_nodes.pop();
@@ -1304,16 +1304,16 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
 
         const auto num_local_trees = octree.get_num_local_trees();
 
-        std::vector<OctreeNode*> nodes_to_refer_to(1000);
+        std::vector<OctreeNode<AdditionalCellAttributes>*> nodes_to_refer_to(1000);
         for (auto i = 0; i < 1000; i++) {
-            nodes_to_refer_to[i] = new OctreeNode;
+            nodes_to_refer_to[i] = new OctreeNode<AdditionalCellAttributes>;
         }
 
-        std::vector<OctreeNode*> nodes_to_save_local_trees(num_local_trees);
-        std::vector<OctreeNode*> nodes_to_save_new_local_trees(num_local_trees);
+        std::vector<OctreeNode<AdditionalCellAttributes>*> nodes_to_save_local_trees(num_local_trees);
+        std::vector<OctreeNode<AdditionalCellAttributes>*> nodes_to_save_new_local_trees(num_local_trees);
         for (auto i = 0; i < num_local_trees; i++) {
-            nodes_to_save_local_trees[i] = new OctreeNode;
-            nodes_to_save_new_local_trees[i] = new OctreeNode;
+            nodes_to_save_local_trees[i] = new OctreeNode<AdditionalCellAttributes>;
+            nodes_to_save_new_local_trees[i] = new OctreeNode<AdditionalCellAttributes>;
         }
 
         std::uniform_int_distribution uid_nodes(0, 2000);
@@ -1330,7 +1330,7 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
 
             Vec3d position{ urd_x(mt), urd_y(mt), urd_z(mt) };
 
-            OctreeNode node{};
+            OctreeNode<AdditionalCellAttributes> node{};
             node.set_cell_size(cell_min, cell_max);
             node.set_cell_neuron_position(position);
             node.set_rank(my_rank);
@@ -1441,7 +1441,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
         bh.update_leaf_nodes(octree.get_leaf_nodes(), disable_flags, dends_exc.get_total_counts(), dends_exc.get_connected_count(), dends_inh.get_total_counts(), dends_inh.get_connected_count());
         octree.update_local_trees();
 
-        std::stack<OctreeNode*> stack{};
+        std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
         stack.emplace(octree.get_root());
 
         while (!stack.empty()) {
@@ -1512,13 +1512,13 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
         bh.update_leaf_nodes(octree.get_leaf_nodes(), disable_flags, dends_exc.get_total_counts(), dends_exc.get_connected_count(), dends_inh.get_total_counts(), dends_inh.get_connected_count());
         octree.update_local_trees();
 
-        std::stack<std::tuple<OctreeNode*, bool, bool>> stack{};
+        std::stack<std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool>> stack{};
         const auto flag_exc = octree.get_root()->get_cell().get_number_excitatory_dendrites() != 0;
         const auto flag_inh = octree.get_root()->get_cell().get_number_inhibitory_dendrites() != 0;
         stack.emplace(octree.get_root(), flag_exc, flag_inh);
 
         while (!stack.empty()) {
-            std::tuple<OctreeNode*, bool, bool> tup = stack.top();
+            std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool> tup = stack.top();
             stack.pop();
 
             auto* current = std::get<0>(tup);
