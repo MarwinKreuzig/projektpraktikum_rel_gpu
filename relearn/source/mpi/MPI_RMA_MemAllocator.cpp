@@ -62,13 +62,6 @@ void MPI_RMA_MemAllocator<AdditionalCellAttributes>::init(size_t size_requested,
 
     holder_base_ptr = HolderOctreeNode<AdditionalCellAttributes>(base_ptr, max_num_objects);
 
-    const auto requested_size = num_branch_nodes * sizeof(OctreeNode<AdditionalCellAttributes>);
-
-    // NOLINTNEXTLINE
-    if (MPI_SUCCESS != MPI_Alloc_mem(static_cast<int>(requested_size), MPI_INFO_NULL, &root_nodes_for_local_trees)) {
-        RelearnException::fail("MPI_Alloc_mem failed for local trees");
-    }
-
     LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
 }
 
@@ -79,8 +72,6 @@ void MPI_RMA_MemAllocator<AdditionalCellAttributes>::finalize() {
     delete mpi_window;
     const int error_code_2 = MPI_Free_mem(base_ptr);
     RelearnException::check(error_code_2 == 0, "Error in MPI_RMA_MemAllocator::finalize()");
-    const int error_code_3 = MPI_Free_mem(root_nodes_for_local_trees);
-    RelearnException::check(error_code_3 == 0, "Error in MPI_RMA_MemAllocator::finalize()");
 }
 
 #endif

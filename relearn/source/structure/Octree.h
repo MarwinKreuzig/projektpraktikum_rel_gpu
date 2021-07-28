@@ -117,7 +117,7 @@ public:
         : level_of_branch_nodes(level_of_branch_nodes) {
 
         const auto num_local_trees = 1ULL << (3 * level_of_branch_nodes);
-        local_trees.resize(num_local_trees, nullptr);
+        branch_nodes.resize(num_local_trees, nullptr);
 
         set_size(xyz_min, xyz_max);
         construct_global_tree_part();
@@ -167,7 +167,7 @@ public:
      * @return The number of branch nodes (that are exchanged via MPI)
      */
     [[nodiscard]] size_t get_num_local_trees() const noexcept {
-        return local_trees.size();
+        return branch_nodes.size();
     }
 
     /**
@@ -177,8 +177,8 @@ public:
      * @return The branch node with the specified local id. Ownership is not transfered
      */
     [[nodiscard]] OctreeNode<BarnesHutCell>* get_local_root(size_t local_id) {
-        RelearnException::check(local_id < local_trees.size(), "Octree::get_local_root, local_id was too large");
-        OctreeNode<BarnesHutCell>* local_tree = local_trees[local_id];
+        RelearnException::check(local_id < branch_nodes.size(), "Octree::get_local_root, local_id was too large");
+        OctreeNode<BarnesHutCell>* local_tree = branch_nodes[local_id];
         return local_tree;
     }
 
@@ -189,10 +189,10 @@ public:
      * @exception Throws a RelearnException if index_1d is too large or node_to_insert is nullptr
      */
     void insert_local_tree(OctreeNode<BarnesHutCell>* node_to_insert, size_t index_1d) {
-        RelearnException::check(index_1d < local_trees.size(), "Octree::get_local_root, local_id was too large");
+        RelearnException::check(index_1d < branch_nodes.size(), "Octree::get_local_root, local_id was too large");
         RelearnException::check(node_to_insert != nullptr, "Octree::get_local_root, node_to_insert is nullptr");
         RelearnException::check(node_to_insert->is_parent(), "Cannot insert an empty node");
-        *local_trees[index_1d] = *node_to_insert;
+        *branch_nodes[index_1d] = *node_to_insert;
     }
 
     /**
@@ -234,7 +234,7 @@ public:
      * @exception Throws a RelearnException if the functor throws
      */
     void update_local_trees() {
-        for (auto* local_tree : local_trees) {
+        for (auto* local_tree : branch_nodes) {
             if (!local_tree->is_local()) {
                 continue;
             }
@@ -293,7 +293,7 @@ private:
     // Root of the tree
     OctreeNode<BarnesHutCell>* root{ nullptr };
 
-    std::vector<OctreeNode<BarnesHutCell>*> local_trees{};
+    std::vector<OctreeNode<BarnesHutCell>*> branch_nodes{};
 
     std::vector<OctreeNode<BarnesHutCell>*> all_leaf_nodes{};
 

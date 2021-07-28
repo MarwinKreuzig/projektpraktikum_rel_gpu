@@ -56,14 +56,6 @@ void min_sum_max(const int* invec, int* inoutvec, const int* len, void* dtype);
  * The first call must be MPIWrapper::init(...) and the last one MPIWrapper::finalize(), not calling any of those inbetween.
  */
 class MPIWrapper {
-    /**
-     * This structure combines the number of branch nodes that will be exchanged and a pointer to those nodes. 
-     */
-    struct RMABufferOctreeNodes {
-        OctreeNode<BarnesHutCell>* ptr;
-        size_t num_nodes;
-    };
-
     friend class RelearnTest;
 
 public:
@@ -104,8 +96,6 @@ private:
     static void register_custom_function();
 
     static void free_custom_function();
-
-    static inline RMABufferOctreeNodes rma_buffer_branch_nodes{};
 
     static void make_all_mem_available();
 
@@ -344,20 +334,6 @@ public:
      * @return The number of still available OctreeNodes
      */
     [[nodiscard]] static size_t get_num_avail_objects();
-
-    /**
-     * @brief Returns the OctreeNodes that are used to synchronize the local trees.
-     *      MPI rank i owns the objects return[i * num_local_trees + {0, 1, ..., num_local_trees - 1}]
-     *      The number of objects can be requested via get_num_buffer_octree_nodes()
-     * @return A pointer to the local trees on each rank
-     */
-    [[nodiscard]] static OctreeNode<BarnesHutCell>* get_buffer_octree_nodes();
-
-    /**
-     * @brief Returns the number of local trees across all MPI ranks
-     * @return The number of local trees across all MPI ranks
-     */
-    [[nodiscard]] static size_t get_num_buffer_octree_nodes();
 
     /**
      * @brief Locks the memory window on another MPI rank with the desired read/write protections

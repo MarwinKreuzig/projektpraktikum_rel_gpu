@@ -144,14 +144,6 @@ public:
     }
 
     /**
-     * @brief Returns the roots for all branch nodes
-     * @return The roots for all branch nodes
-     */
-    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_branch_nodes() {
-        return root_nodes_for_local_trees;
-    }
-
-    /**
      * @brief Returns the number of available objects in the memory window.
      * @return The number of available objects in the memory window
      */
@@ -174,8 +166,6 @@ private:
     static inline size_t size_requested{ Constants::uninitialized }; // Bytes requested for the allocator
     static inline size_t max_size{ Constants::uninitialized }; // Size in Bytes of MPI-allocated memory
     static inline size_t max_num_objects{ Constants::uninitialized }; // Max number objects that are available
-
-    static inline OctreeNode<AdditionalCellAttributes>* root_nodes_for_local_trees{ nullptr };
 
     static inline OctreeNode<AdditionalCellAttributes>* base_ptr{ nullptr }; // Start address of MPI-allocated memory
     //NOLINTNEXTLINE

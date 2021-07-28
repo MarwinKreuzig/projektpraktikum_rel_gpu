@@ -96,7 +96,7 @@ void Octree::construct_global_tree_part() {
     local_root->set_cell_neuron_position(xyz_min + (cell_length / 2));
 
     const auto root_index1d = space_curve.map_3d_to_1d(Vec3s{ 0, 0, 0 });
-    local_trees[root_index1d] = local_root;
+    branch_nodes[root_index1d] = local_root;
 
     root = local_root;
 
@@ -114,7 +114,7 @@ void Octree::construct_global_tree_part() {
                 auto* current_node = root->insert(cell_position, Constants::uninitialized, my_rank);
 
                 //const auto index1d = space_curve.map_3d_to_1d(Vec3s{ id_x, id_y, id_z });
-                //local_trees[index1d] = current_node;
+                //branch_nodes[index1d] = current_node;
             }
         }
     }
@@ -128,7 +128,7 @@ void Octree::construct_global_tree_part() {
 
         if (!ptr->is_parent()) {
             const auto index1d = space_curve.map_3d_to_1d(index3d);
-            local_trees[index1d] = ptr;
+            branch_nodes[index1d] = ptr;
             continue;
         }
 
@@ -384,25 +384,26 @@ void Octree::synchronize_local_trees() {
     * Exchange branch nodes
     */
     Timers::start(TimerRegion::EXCHANGE_BRANCH_NODES);
-    OctreeNode<BarnesHutCell>* rma_buffer_branch_nodes = MPIWrapper::get_buffer_octree_nodes();
+    const size_t num_rma_buffer_branch_nodes = branch_nodes.size();
     // Copy local trees' root nodes to correct positions in receive buffer
 
-    const size_t num_local_trees = local_trees.size() / MPIWrapper::get_num_ranks();
-    for (size_t i = 0; i < local_trees.size(); i++) {
-        rma_buffer_branch_nodes[i] = *local_trees[i];
+    std::vector<OctreeNode<BarnesHutCell>> exchange_branch_nodes(num_rma_buffer_branch_nodes);
+
+    const size_t num_local_trees = num_rma_buffer_branch_nodes / MPIWrapper::get_num_ranks();
+    for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
+        exchange_branch_nodes[i] = *branch_nodes[i];
     }
 
     // Allgather in-place branch nodes from every rank
-    MPIWrapper::all_gather_inline(rma_buffer_branch_nodes, num_local_trees, MPIWrapper::Scope::global);
+    MPIWrapper::all_gather_inline(exchange_branch_nodes.data(), num_local_trees, MPIWrapper::Scope::global);
 
     Timers::stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
 
     // Insert only received branch nodes into global tree
     // The local ones are already in the global tree
     Timers::start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
-    const size_t num_rma_buffer_branch_nodes = MPIWrapper::get_num_buffer_octree_nodes();
     for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
-        *local_trees[i] = rma_buffer_branch_nodes[i];
+        *branch_nodes[i] = exchange_branch_nodes[i];
     }
     Timers::stop_and_add(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
 

@@ -74,9 +74,6 @@ void MPIWrapper::init_globals() {
 
 void MPIWrapper::init_buffer_octree(size_t num_partitions) {
     MPI_RMA_MemAllocator<BarnesHutCell>::init(Constants::mpi_alloc_mem, num_partitions);
-
-    rma_buffer_branch_nodes.num_nodes = num_partitions;
-    rma_buffer_branch_nodes.ptr = MPI_RMA_MemAllocator<BarnesHutCell>::get_branch_nodes();
 }
 
 void MPIWrapper::barrier(Scope scope) {
@@ -230,14 +227,6 @@ int MPIWrapper::get_my_rank() {
 
 size_t MPIWrapper::get_num_avail_objects() {
     return MPI_RMA_MemAllocator<BarnesHutCell>::get_num_avail_objects();
-}
-
-OctreeNode<BarnesHutCell>* MPIWrapper::get_buffer_octree_nodes() {
-    return rma_buffer_branch_nodes.ptr;
-}
-
-size_t MPIWrapper::get_num_buffer_octree_nodes() {
-    return rma_buffer_branch_nodes.num_nodes;
 }
 
 std::string MPIWrapper::get_my_rank_str() {
