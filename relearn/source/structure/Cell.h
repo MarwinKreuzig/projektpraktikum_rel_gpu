@@ -230,8 +230,11 @@ public:
         const auto number_excitatory_dendrites = cell.get_number_excitatory_dendrites();
         const auto number_inhibitory_dendrites = cell.get_number_inhibitory_dendrites();
 
-        const auto& position_excitatory_dendrites = cell.get_excitatory_dendrite_position().value();
-        const auto& position_inhibitory_dendrites = cell.get_inhibitory_dendrite_position().value();
+        const auto& position_excitatory_dendrites_opt = cell.get_excitatory_dendrite_position();
+        const auto& position_inhibitory_dendrites_opt = cell.get_inhibitory_dendrite_position();
+
+        const auto& position_excitatory_dendrites = position_excitatory_dendrites_opt.value();
+        const auto& position_inhibitory_dendrites = position_inhibitory_dendrites_opt.value();
 
         Vec3d xyz_min{};
         Vec3d xyz_max{};
