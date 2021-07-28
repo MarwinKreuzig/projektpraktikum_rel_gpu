@@ -34,7 +34,7 @@ public:
             empty_barnes_hut();
         }
 
-        if constexpr (std::is_same_v<FastMultipoleMethodsCell, BarnesHutCell>) {
+        if constexpr (std::is_same_v<AdditionalCellAttributes, FastMultipoleMethodsCell>) {
             empty_fmm();
         }
     }
@@ -53,7 +53,7 @@ public:
             return download_children_barnes_hut(node);
         }
 
-        if constexpr (std::is_same_v<FastMultipoleMethodsCell, BarnesHutCell>) {
+        if constexpr (std::is_same_v<AdditionalCellAttributes, FastMultipoleMethodsCell>) {
             return download_children_fmm(node);
         }
     }

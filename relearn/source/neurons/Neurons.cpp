@@ -240,8 +240,7 @@ void Neurons::create_neurons(size_t creation_count) {
     const auto& z_dims = extra_info->get_z_dims();
 
     for (size_t i = current_size; i < new_size; i++) {
-        const auto* const node = global_tree->insert({ x_dims[i], y_dims[i], z_dims[i] }, i, my_rank);
-        RelearnException::check(node != nullptr, "node is nullptr");
+        global_tree->insert({ x_dims[i], y_dims[i], z_dims[i] }, i, my_rank);
     }
 
     global_tree->initializes_leaf_nodes(new_size);
@@ -750,7 +749,7 @@ void Neurons::create_synapses_update_octree() {
 
     // Update my local trees bottom-up
     Timers::start(TimerRegion::UPDATE_LEAF_NODES);
-    algorithm->update_leaf_nodes(global_tree->get_leaf_nodes(), disable_flags, dendrites_exc->get_total_counts(),
+    algorithm->update_leaf_nodes(disable_flags, dendrites_exc->get_total_counts(),
         dendrites_exc->get_connected_count(), dendrites_inh->get_total_counts(), dendrites_inh->get_connected_count());
     Timers::stop_and_add(TimerRegion::UPDATE_LEAF_NODES);
 

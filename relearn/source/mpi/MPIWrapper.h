@@ -10,7 +10,6 @@
 
 #pragma once
 
-#include "../algorithm/BarnesHutCell.h"
 #include "../util/RelearnException.h"
 
 #if !MPI_FOUND
@@ -304,12 +303,6 @@ public:
      * @return The current MPI rank's id as string
      */
     [[nodiscard]] static std::string get_my_rank_str();
-
-    /**
-     * @brief Returns the number of still available OctreeNodes
-     * @return The number of still available OctreeNodes
-     */
-    [[nodiscard]] static size_t get_num_avail_objects();
 
     /**
      * @brief Locks the memory window on another MPI rank with the desired read/write protections

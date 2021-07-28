@@ -82,10 +82,11 @@
     return rank_neuron_id;
 }
 
- void BarnesHut::update_leaf_nodes(const std::vector<OctreeNode<BarnesHutCell>*>& leaf_nodes, const std::vector<char>& disable_flags,
+ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags,
      const std::vector<double>& dendrites_excitatory_counts, const std::vector<unsigned int>& dendrites_excitatory_connected_counts, 
      const std::vector<double>& dendrites_inhibitory_counts, const std::vector<unsigned int>& dendrites_inhibitory_connected_counts) {
 
+     const auto& leaf_nodes = global_tree->get_leaf_nodes();
     const auto num_leaf_nodes = leaf_nodes.size();
     const auto num_disable_flags = disable_flags.size();
     const auto num_dendrites_excitatory_counts = dendrites_excitatory_counts.size();
@@ -252,7 +253,7 @@
 
     std::stack<OctreeNode<BarnesHutCell>*> stack{};
 
-    const auto add_children_to_stack = [&stack](OctreeNode<BarnesHutCell>* node, const std::shared_ptr<Octree>& octree) {
+    const auto add_children_to_stack = [&stack](OctreeNode<BarnesHutCell>* node, const std::shared_ptr<OctreeImplementation<BarnesHutCell>>& octree) {
         std::array<OctreeNode<BarnesHutCell>*, Constants::number_oct> children{ nullptr };
 
         // Node is owned by this rank

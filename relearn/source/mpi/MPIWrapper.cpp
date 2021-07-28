@@ -217,10 +217,6 @@ int MPIWrapper::get_my_rank() {
     return my_rank;
 }
 
-size_t MPIWrapper::get_num_avail_objects() {
-    return MPI_RMA_MemAllocator<BarnesHutCell>::get_num_avail_objects();
-}
-
 std::string MPIWrapper::get_my_rank_str() {
     RelearnException::check(my_rank >= 0, "MPIWrapper is not initialized");
     return my_rank_str;

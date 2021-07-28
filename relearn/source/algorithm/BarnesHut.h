@@ -23,7 +23,8 @@
 #include <tuple>
 #include <vector>
 
-class Octree;
+template <typename T>
+class OctreeImplementation;
 
 /**
  * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
@@ -36,7 +37,7 @@ public:
      * @param octree The octree on which the algorithm is to be performed, not null
      * @exception Throws a RelearnException if octree is nullptr
      */
-    BarnesHut(const std::shared_ptr<Octree>& octree)
+    BarnesHut(const std::shared_ptr<OctreeImplementation<BarnesHutCell>>& octree)
         : global_tree(octree) {
         RelearnException::check(octree != nullptr, "In BarnesHut::BarnesHut, the octree was null");
     }
@@ -104,7 +105,6 @@ public:
 
     /**
      * @brief Updates all leaf nodes in the octree by the algorithm
-     * @param leaf_nodes The leaf nodes, element at index i must have neuron_id i
      * @param disable_flags Flags that indicate if a neuron id disabled (0) or enabled (otherwise)
      * @param dendrites_excitatory_counts The number of total excitatory dendrites, accessed via operator[] with the neuron ids
      * @param dendrites_excitatory_connected_counts The number of connected excitatory dendrites, accessed via operator[] with the neuron ids
@@ -112,7 +112,7 @@ public:
      * @param dendrites_inhibitory_connected_counts The number of connected inhibitory dendrites, accessed via operator[] with the neuron ids
      * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
      */
-    void update_leaf_nodes(const std::vector<OctreeNode<BarnesHutCell>*>& leaf_nodes, const std::vector<char>& disable_flags,
+    void update_leaf_nodes(const std::vector<char>& disable_flags,
         const std::vector<double>& dendrites_excitatory_counts, const std::vector<unsigned int>& dendrites_excitatory_connected_counts,
         const std::vector<double>& dendrites_inhibitory_counts, const std::vector<unsigned int>& dendrites_inhibitory_connected_counts);
 
@@ -215,7 +215,7 @@ private:
     double sigma{ default_sigma }; // Probability parameter
     bool naive_method{ default_theta == 0.0 }; // If true, expand every cell regardless of whether dendrites are available or not
 
-    std::shared_ptr<Octree> global_tree{};
+    std::shared_ptr<OctreeImplementation<BarnesHutCell>> global_tree{};
 
 public:
     constexpr static double default_theta{ 0.3 };
