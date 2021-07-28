@@ -12,6 +12,7 @@
 
 #include "../io/LogFiles.h"
 #include "../mpi/MPIWrapper.h"
+#include "../mpi/MPI_RMA_MemAllocator.h"
 #include "../neurons/Neurons.h"
 #include "../sim/NeuronToSubdomainAssignment.h"
 #include "../util/RelearnException.h"
@@ -198,7 +199,7 @@ void Partition::set_total_num_neurons(size_t total_num) noexcept {
 void Partition::delete_subdomain_tree(size_t subdomain_id) {
     RelearnException::check(subdomain_id < my_num_subdomains, "Subdomain ID was too large");
     RelearnException::check(subdomains[subdomain_id].local_octree_view != nullptr, "Subdomain ID was too large");
-    MPIWrapper::delete_octree_node(subdomains[subdomain_id].local_octree_view);
+    MPI_RMA_MemAllocator<BarnesHutCell>::delete_octree_node(subdomains[subdomain_id].local_octree_view);
     subdomains[subdomain_id].local_octree_view = nullptr;
 }
 
@@ -302,7 +303,7 @@ std::vector<OctreeNode<BarnesHutCell>*> Partition::load_data_from_subdomain_assi
 		         * Only those that are necessary for
 		         * inserting neurons into the tree
 		         */
-                auto *local_root = MPIWrapper::new_octree_node();
+                auto* local_root = MPI_RMA_MemAllocator<BarnesHutCell>::new_octree_node();
 
                 local_root->set_cell_size(current_subdomain.xyz_min, current_subdomain.xyz_max);
                 local_root->set_level(level_of_subdomain_trees);

@@ -131,7 +131,7 @@ public:
     static void init(int argc, char** argv);
 
     /**
-     * @brief Initializes the shared RMA memory. Must be called before any call involving OctreeNode<BarnesHutCell>*.
+     * @brief Initializes the shared RMA memory. Must be called before any call involving OctreeNode*.
      * @param num_partitions The number of partitions across all MPI ranks (of the form 8^k)
      */
     static void init_buffer_octree(size_t num_partitions);
@@ -294,19 +294,6 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs or if target_rank < 0
      */
     static void download_octree_node(OctreeNode<BarnesHutCell>* dst, int target_rank, const OctreeNode<BarnesHutCell>* src);
-
-    /**
-     * @brief Creates a new OctreeNode<BarnesHutCell> in the local memory window
-     * @exception Throws a RelearnException if no shared memory is available
-     * @return A valid pointer to an OctreeNode<BarnesHutCell>
-     */
-    [[nodiscard]] static OctreeNode<BarnesHutCell>* new_octree_node();
-
-    /**
-     * @brief Deletes an OctreeNode<BarnesHutCell> in the memory window that was previously created via new_octree_node()
-     * @param ptr A pointer to the object that shall be deleted
-     */
-    static void delete_octree_node(OctreeNode<BarnesHutCell>* ptr);
 
     /**
      * @brief Returns the number of MPI ranks

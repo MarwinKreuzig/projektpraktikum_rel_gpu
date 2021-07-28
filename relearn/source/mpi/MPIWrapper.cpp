@@ -211,10 +211,6 @@ void MPIWrapper::download_octree_node(OctreeNode<BarnesHutCell>* dst, int target
     RelearnException::check(errorcode == 0, "Error in get");
 }
 
-OctreeNode<BarnesHutCell>* MPIWrapper::new_octree_node() {
-    return MPI_RMA_MemAllocator<BarnesHutCell>::new_octree_node();
-}
-
 int MPIWrapper::get_num_ranks() {
     RelearnException::check(num_ranks >= 0, "MPIWrapper is not initialized");
     return num_ranks;
@@ -232,10 +228,6 @@ size_t MPIWrapper::get_num_avail_objects() {
 std::string MPIWrapper::get_my_rank_str() {
     RelearnException::check(my_rank >= 0, "MPIWrapper is not initialized");
     return my_rank_str;
-}
-
-void MPIWrapper::delete_octree_node(OctreeNode<BarnesHutCell>* ptr) {
-    MPI_RMA_MemAllocator<BarnesHutCell>::delete_octree_node(ptr);
 }
 
 void MPIWrapper::wait_request(AsyncToken& request) {

@@ -13,6 +13,7 @@
 #include "Cell.h"
 #include "../Config.h"
 #include "../mpi/MPIWrapper.h"
+#include "../mpi/MPI_RMA_MemAllocator.h"
 
 #include <array>
 #include <optional>
@@ -172,7 +173,7 @@ public:
                 RelearnException::check(cell_own_position.has_value(), "While building the octree, the cell doesn't have a position");
 
                 idx = parent_node->get_cell().get_octant_for_position(cell_own_position.value());
-                auto* new_node = MPIWrapper::new_octree_node();
+                auto* new_node = MPI_RMA_MemAllocator<BarnesHutCell>::new_octree_node();
                 parent_node->set_child(new_node, idx);
 
                 /**
@@ -211,7 +212,7 @@ public:
             }
         }
 
-        OctreeNode* new_node_to_insert = MPIWrapper::new_octree_node();
+        OctreeNode* new_node_to_insert = MPI_RMA_MemAllocator<BarnesHutCell>::new_octree_node();
         RelearnException::check(new_node_to_insert != nullptr, "new_node_to_insert is nullptr");
 
         /**
