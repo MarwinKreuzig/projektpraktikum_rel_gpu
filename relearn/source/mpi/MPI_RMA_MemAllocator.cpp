@@ -25,7 +25,7 @@
 template class MPI_RMA_MemAllocator<BarnesHutCell>;
 
 template <typename AdditionalCellAttributes>
-void MPI_RMA_MemAllocator<AdditionalCellAttributes>::init(size_t size_requested, size_t num_branch_nodes) {
+void MPI_RMA_MemAllocator<AdditionalCellAttributes>::init(size_t size_requested) {
     MPI_RMA_MemAllocator::size_requested = size_requested;
 
     // Number of objects "size_requested" Bytes correspond to

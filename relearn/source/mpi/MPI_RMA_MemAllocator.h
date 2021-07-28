@@ -123,10 +123,9 @@ public:
     /**
      * @brief Initializes the memory window to the requested size and exchanges the pointers across all MPi processes
      * @param size_requested The size of the memory window in bytes
-     * @param num_local_trees The number of branch nodes across all MPI processes
      * @exception Throws a RelearnException if an MPI operation fails
      */
-    static void init(size_t size_requested, size_t num_branch_nodes);
+    static void init(size_t size_requested);
 
     /**
      * @brief Frees the memory window and deallocates all shared memory.
@@ -156,7 +155,7 @@ public:
      *      Invalidates all pointers
      */
     static void make_all_available() noexcept {
-        return holder_base_ptr.make_all_available();
+        holder_base_ptr.make_all_available();
     }
 
     //NOLINTNEXTLINE

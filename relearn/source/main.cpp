@@ -206,7 +206,7 @@ int main(int argc, char** argv) {
     /**
 	* Create MPI RMA memory allocator
 	*/
-    MPIWrapper::init_buffer_octree(total_num_subdomains);
+    MPIWrapper::init_buffer_octree();
 
     auto neuron_models = std::make_unique<models::PoissonModel>(NeuronModel::default_k, NeuronModel::default_tau_C, beta, NeuronModel::default_h,
         NeuronModel::default_base_background_activity, NeuronModel::default_background_activity_mean, NeuronModel::default_background_activity_stddev,

@@ -138,9 +138,8 @@ public:
 
     /**
      * @brief Initializes the shared RMA memory. Must be called before any call involving OctreeNode*.
-     * @param num_partitions The number of partitions across all MPI ranks (of the form 8^k)
      */
-    static void init_buffer_octree(size_t num_partitions);
+    static void init_buffer_octree();
 
     /**
      * @brief The calling MPI rank halts until all MPI ranks within the scope reach the method.

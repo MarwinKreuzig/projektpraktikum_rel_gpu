@@ -72,8 +72,8 @@ void MPIWrapper::init_globals() {
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 }
 
-void MPIWrapper::init_buffer_octree(size_t num_partitions) {
-    MPI_RMA_MemAllocator<BarnesHutCell>::init(Constants::mpi_alloc_mem, num_partitions);
+void MPIWrapper::init_buffer_octree() {
+    MPI_RMA_MemAllocator<BarnesHutCell>::init(Constants::mpi_alloc_mem);
 }
 
 void MPIWrapper::barrier(Scope scope) {
