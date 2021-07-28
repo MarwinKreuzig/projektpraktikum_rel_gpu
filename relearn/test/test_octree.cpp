@@ -96,7 +96,8 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons(OctreeNode<AdditionalCell
     return return_value;
 }
 
-std::vector<std::tuple<Vec3d, size_t>> extract_neurons(const Octree& octree) {
+template<typename T>
+std::vector<std::tuple<Vec3d, size_t>> extract_neurons(const OctreeImplementation<T>& octree) {
     std::vector<std::tuple<Vec3d, size_t>> return_value;
 
     const auto root = octree.get_root();
@@ -869,7 +870,7 @@ TEST_F(OctreeTest, testOctreeConstructor) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        Octree octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
 
         ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
         ASSERT_EQ(octree.get_xyz_max(), max);
@@ -906,7 +907,7 @@ TEST_F(OctreeTest, testOctreeConstructor) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        Octree octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
 
         ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
         ASSERT_EQ(octree.get_xyz_max(), max);
@@ -954,7 +955,7 @@ TEST_F(OctreeTest, testOctreeConstructorExceptions) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        ASSERT_THROW(Octree octree(max_xyz, min_xyz, level_of_branch_nodes), RelearnException);
+        ASSERT_THROW(OctreeImplementation<BarnesHutCell> octree(max_xyz, min_xyz, level_of_branch_nodes), RelearnException);
 
         make_mpi_mem_available();
     }
@@ -974,7 +975,7 @@ TEST_F(OctreeTest, testOctreeSetterGetter) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        Octree octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
 
         ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
         ASSERT_EQ(octree.get_xyz_max(), max);
@@ -998,7 +999,7 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        Octree octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
 
         std::tie(min, max) = get_random_simulation_box_size(mt);
 
@@ -1013,7 +1014,7 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        Octree octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
 
         std::tie(min, max) = get_random_simulation_box_size(mt);
 
@@ -1028,7 +1029,7 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        Octree octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
 
         std::tie(min, max) = get_random_simulation_box_size(mt);
 
@@ -1053,7 +1054,7 @@ TEST_F(OctreeTest, testOctreeInsertNeurons) {
 
         size_t level_of_branch_nodes = uid_lvl(mt);
 
-        Octree octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
 
         size_t num_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
@@ -1098,7 +1099,7 @@ TEST_F(OctreeTest, testOctreeInsertNeuronsExceptions) {
 
         size_t level_of_branch_nodes = uid_lvl(mt);
 
-        Octree octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
 
         size_t num_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
@@ -1149,7 +1150,7 @@ TEST_F(OctreeTest, testOctreeStructure) {
 
         size_t level_of_branch_nodes = uid_lvl(mt);
 
-        Octree octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
 
         size_t num_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
@@ -1243,7 +1244,7 @@ TEST_F(OctreeTest, testOctreeLocalTrees) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        Octree octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
 
         ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
         ASSERT_EQ(octree.get_xyz_max(), max);
@@ -1291,7 +1292,7 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
 
         size_t level_of_branch_nodes = uid_lvl(mt);
 
-        Octree octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
 
         size_t num_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
@@ -1415,7 +1416,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
 
         std::tie(min, max) = get_random_simulation_box_size(mt);
 
-        auto octree_ptr = std::make_shared<Octree>(min, max, 0);
+        auto octree_ptr = std::make_shared<OctreeImplementation<BarnesHutCell>>(min, max, 0);
         auto& octree = *octree_ptr;
 
         const size_t num_neurons = uid(mt);
@@ -1438,7 +1439,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
 
         std::vector<char> disable_flags(num_neurons, 1);
 
-        bh.update_leaf_nodes(octree.get_leaf_nodes(), disable_flags, dends_exc.get_total_counts(), dends_exc.get_connected_count(), dends_inh.get_total_counts(), dends_inh.get_connected_count());
+        bh.update_leaf_nodes(disable_flags, dends_exc.get_total_counts(), dends_exc.get_connected_count(), dends_inh.get_total_counts(), dends_inh.get_connected_count());
         octree.update_local_trees();
 
         std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
@@ -1489,7 +1490,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
 
         std::tie(min, max) = get_random_simulation_box_size(mt);
 
-        auto octree_ptr = std::make_shared<Octree>(min, max, 0);
+        auto octree_ptr = std::make_shared<OctreeImplementation<BarnesHutCell>>(min, max, 0);
         auto& octree = *octree_ptr;
 
         const size_t num_neurons = uid(mt);
@@ -1509,7 +1510,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
 
         std::vector<char> disable_flags(num_neurons, 1);
 
-        bh.update_leaf_nodes(octree.get_leaf_nodes(), disable_flags, dends_exc.get_total_counts(), dends_exc.get_connected_count(), dends_inh.get_total_counts(), dends_inh.get_connected_count());
+        bh.update_leaf_nodes(disable_flags, dends_exc.get_total_counts(), dends_exc.get_connected_count(), dends_inh.get_total_counts(), dends_inh.get_connected_count());
         octree.update_local_trees();
 
         std::stack<std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool>> stack{};

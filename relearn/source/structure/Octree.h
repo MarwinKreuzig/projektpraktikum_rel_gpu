@@ -242,6 +242,19 @@ public:
     }
 
     /**
+     * @brief Returns the branch node with the specified local id
+     * @param local_id The (1d-) id of the branch node that should be set
+     * @exception Throws a RelearnException if local_id is too large
+     * @return The branch node with the specified local id. Ownership is not transfered
+     */
+    [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_local_root(size_t local_id) {
+        RelearnException::check(local_id < branch_nodes.size(), "Octree::get_local_root, local_id was too large");
+        OctreeNode<AdditionalCellAttributes>* local_tree = branch_nodes[local_id];
+        return local_tree;
+    }
+
+
+    /**
      * @brief Returns the number of branch nodes (that are exchanged via MPI)
      * @return The number of branch nodes (that are exchanged via MPI)
      */
