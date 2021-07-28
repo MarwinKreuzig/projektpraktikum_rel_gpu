@@ -29,6 +29,7 @@ class OctreeNode;
  */
 template <typename AdditionalCellAttributes>
 class MPI_RMA_MemAllocator {
+    friend class OctreeNode<AdditionalCellAttributes>;
 
     class HolderOctreeNode {
         std::queue<OctreeNode<AdditionalCellAttributes>*> available{};
@@ -100,21 +101,6 @@ class MPI_RMA_MemAllocator {
 
     MPI_RMA_MemAllocator() = default;
 
-public:
-    /**
-     * @brief Initializes the memory window to the requested size and exchanges the pointers across all MPi processes
-     * @param size_requested The size of the memory window in bytes
-     * @param num_local_trees The number of branch nodes across all MPI processes
-     * @exception Throws a RelearnException if an MPI operation fails
-     */
-    static void init(size_t size_requested, size_t num_branch_nodes);
-
-    /**
-     * @brief Frees the memory window and deallocates all shared memory.
-     * @exception Throws a RelearnException if an MPI operation fails
-     */
-    static void finalize();
-
     /**
      * @brief Returns a pointer to a fresh OctreeNode in the memory window.
      * @expection Throws a RelearnException if not enough memory is available.
@@ -132,6 +118,21 @@ public:
     static void delete_octree_node(OctreeNode<AdditionalCellAttributes>* ptr) {
         holder_base_ptr.make_available(ptr);
     }
+
+public:
+    /**
+     * @brief Initializes the memory window to the requested size and exchanges the pointers across all MPi processes
+     * @param size_requested The size of the memory window in bytes
+     * @param num_local_trees The number of branch nodes across all MPI processes
+     * @exception Throws a RelearnException if an MPI operation fails
+     */
+    static void init(size_t size_requested, size_t num_branch_nodes);
+
+    /**
+     * @brief Frees the memory window and deallocates all shared memory.
+     * @exception Throws a RelearnException if an MPI operation fails
+     */
+    static void finalize();
 
     /**
      * @brief Returns the base addresses of the memory windows of all memory windows.

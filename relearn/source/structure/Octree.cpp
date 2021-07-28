@@ -87,7 +87,7 @@ void Octree::construct_global_tree_part() {
     const auto cell_length_y = cell_length.get_y();
     const auto cell_length_z = cell_length.get_z();
 
-    OctreeNode<BarnesHutCell>* local_root = MPI_RMA_MemAllocator<BarnesHutCell>::new_octree_node();
+    OctreeNode<BarnesHutCell>* local_root = OctreeNode<BarnesHutCell>::create();
     RelearnException::check(local_root != nullptr, "local_root is nullptr");
 
     local_root->set_cell_neuron_id(Constants::uninitialized);
@@ -159,7 +159,7 @@ OctreeNode<BarnesHutCell>* Octree::insert(const Vec3d& position, size_t neuron_i
     // Tree is empty
     if (nullptr == root) {
         // Create new tree node for the neuron
-        OctreeNode<BarnesHutCell>* new_node_to_insert = MPI_RMA_MemAllocator<BarnesHutCell>::new_octree_node();
+        OctreeNode<BarnesHutCell>* new_node_to_insert = OctreeNode<BarnesHutCell>::create();
         RelearnException::check(new_node_to_insert != nullptr, "new_node_to_insert is nullptr");
 
         // Init cell size with simulation box size
@@ -354,7 +354,7 @@ void Octree::initializes_leaf_nodes(size_t num_neurons) noexcept {
         // So, we still need to init the entry by fetching
         // from the target rank
         if (ret.second) {
-            ret.first->second = MPI_RMA_MemAllocator<BarnesHutCell>::new_octree_node();
+            ret.first->second = OctreeNode<BarnesHutCell>::create();
             auto* local_child_addr = ret.first->second;
 
             MPIWrapper::download_octree_node<BarnesHutCell>(local_child_addr, target_rank, node->get_child(i));
@@ -373,7 +373,7 @@ void Octree::initializes_leaf_nodes(size_t num_neurons) noexcept {
 
 void Octree::empty_remote_nodes_cache() {
     for (auto& remode_node_in_cache : remote_nodes_cache) {
-        MPI_RMA_MemAllocator<BarnesHutCell>::delete_octree_node(remode_node_in_cache.second);
+        OctreeNode<BarnesHutCell>::free(remode_node_in_cache.second);
     }
 
     remote_nodes_cache.clear();

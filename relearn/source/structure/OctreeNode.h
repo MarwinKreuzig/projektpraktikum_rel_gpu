@@ -30,6 +30,25 @@ public:
     using OctreeNodePtr = OctreeNode<AdditionalCellAttributes>*;
 
     /**
+     * @brief Returns a pointer to a fresh OctreeNode in the MPI memory window.
+     *      Does not transfer ownership.
+     * @expection Throws a RelearnException if not enough memory is available.
+     * @return A valid pointer to an OctreeNode
+     */
+    [[nodiscard]] static OctreeNodePtr create() {
+        return MPI_RMA_MemAllocator<AdditionalCellAttributes>::new_octree_node();
+    }
+
+    /**
+     * @brief Deletes the object pointed to. Internally calls OctreeNode::reset().
+     *      The pointer is invalidated.
+     * @param ptr The pointer to object that shall be deleted
+     */
+    static void free(OctreeNodePtr node) {
+        MPI_RMA_MemAllocator<AdditionalCellAttributes>::delete_octree_node(node);
+    }
+
+    /**
      * @brief Returns the MPI rank to which this object belongs
      * @return The MPI rank to which this object belongs
      */
@@ -173,7 +192,7 @@ public:
                 RelearnException::check(cell_own_position.has_value(), "While building the octree, the cell doesn't have a position");
 
                 idx = parent_node->get_cell().get_octant_for_position(cell_own_position.value());
-                auto* new_node = MPI_RMA_MemAllocator<BarnesHutCell>::new_octree_node();
+                auto* new_node = OctreeNode<AdditionalCellAttributes>::create();
                 parent_node->set_child(new_node, idx);
 
                 /**
@@ -212,7 +231,7 @@ public:
             }
         }
 
-        OctreeNode* new_node_to_insert = MPI_RMA_MemAllocator<BarnesHutCell>::new_octree_node();
+        OctreeNode* new_node_to_insert = OctreeNode<AdditionalCellAttributes>::create();
         RelearnException::check(new_node_to_insert != nullptr, "new_node_to_insert is nullptr");
 
         /**
