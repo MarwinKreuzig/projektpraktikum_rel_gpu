@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "MPI_RMA_MemAllocator.h"
 #include "../util/RelearnException.h"
 
 #if !MPI_FOUND
@@ -110,7 +111,7 @@ private:
 
     static int translate_lock_type(MPI_Locktype lock_type);
 
-    static void MPIWrapper::get(void* origin, size_t size, int target_rank, int64_t displacement);
+    static void get(void* origin, size_t size, int target_rank, int64_t displacement);
 
     static void reduce_int64(const int64_t* src, int64_t* dst, size_t size, ReduceFunction function, int root_rank);
 
