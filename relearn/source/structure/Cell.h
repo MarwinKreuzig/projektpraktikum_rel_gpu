@@ -222,10 +222,8 @@ public:
      * @brief Prints the cell to the output stream
      * @param output_stream The output stream
      * @param cell The cell to print
-     * @tparam AdditionalCellAttributes The additional cell attributes
      * @return The output stream after printing the cell
      */
-    template <typename AdditionalCellAttributes>
     friend std::ostream& operator<<(std::ostream& output_stream, const Cell<AdditionalCellAttributes>& cell) {
         const auto number_excitatory_dendrites = cell.get_number_excitatory_dendrites();
         const auto number_inhibitory_dendrites = cell.get_number_inhibitory_dendrites();

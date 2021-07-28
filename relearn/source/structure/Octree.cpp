@@ -15,6 +15,7 @@
 
 #include "Octree.h"
 
+#include "NodeCache.h"
 #include "../mpi/MPI_RMA_MemAllocator.h"
 #include "../io/LogFiles.h"
 #include "../neurons/Neurons.h"
@@ -318,65 +319,6 @@ void Octree::initializes_leaf_nodes(size_t num_neurons) noexcept {
     }
 
     all_leaf_nodes = std::move(leaf_nodes);
-}
-
-[[nodiscard]] std::array<OctreeNode<BarnesHutCell>*, Constants::number_oct> Octree::downloadChildren(OctreeNode<BarnesHutCell>* node) {
-    std::array<OctreeNode<BarnesHutCell>*, Constants::number_oct> local_children{ nullptr };
-
-    const auto target_rank = node->get_rank();
-
-    RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "Tried to download a local node");
-
-    NodesCacheKey rank_addr_pair{};
-    rank_addr_pair.first = target_rank;
-
-    // Start access epoch to remote rank
-    MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
-
-    // Fetch remote children if they exist
-    // NOLINTNEXTLINE
-    for (auto i = 7; i >= 0; i--) {
-        if (nullptr == node->get_child(i)) {
-            // NOLINTNEXTLINE
-            local_children[i] = nullptr;
-            continue;
-        }
-
-        rank_addr_pair.second = node->get_child(i);
-
-        std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair{ rank_addr_pair, nullptr };
-
-        // Get cache entry for "cache_key_val_pair"
-        // It is created if it does not exist yet
-        std::pair<NodesCache::iterator, bool> ret = remote_nodes_cache.insert(cache_key_val_pair);
-
-        // Cache entry just inserted as it was not in cache
-        // So, we still need to init the entry by fetching
-        // from the target rank
-        if (ret.second) {
-            ret.first->second = OctreeNode<BarnesHutCell>::create();
-            auto* local_child_addr = ret.first->second;
-
-            MPIWrapper::download_octree_node<BarnesHutCell>(local_child_addr, target_rank, node->get_child(i));
-        }
-
-        // Remember address of node
-        // NOLINTNEXTLINE
-        local_children[i] = ret.first->second;
-    }
-
-    // Complete access epoch
-    MPIWrapper::unlock_window(target_rank);
-
-    return local_children;
-}
-
-void Octree::empty_remote_nodes_cache() {
-    for (auto& remode_node_in_cache : remote_nodes_cache) {
-        OctreeNode<BarnesHutCell>::free(remode_node_in_cache.second);
-    }
-
-    remote_nodes_cache.clear();
 }
 
 void Octree::synchronize_local_trees() {

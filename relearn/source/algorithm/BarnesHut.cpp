@@ -11,6 +11,7 @@
 #include "BarnesHut.h"
 
 #include "../io/LogFiles.h"
+#include "../structure/NodeCache.h"
 #include "../structure/Octree.h"
 #include "../structure/OctreeNode.h"
 
@@ -260,7 +261,7 @@
             children = node->get_children();
         } else {
             // Node owned by different rank, so we have do download the data to local nodes
-            children = octree->downloadChildren(node);
+            children = NodeCache::download_children<BarnesHutCell>(node);
         }
 
         for (auto it = children.crbegin(); it != children.crend(); ++it) {

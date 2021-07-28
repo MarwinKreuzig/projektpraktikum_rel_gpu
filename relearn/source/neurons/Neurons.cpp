@@ -12,6 +12,7 @@
 
 #include "../io/LogFiles.h"
 #include "../mpi/MPIWrapper.h"
+#include "../structure/NodeCache.h"
 #include "../structure/Octree.h"
 #include "../structure/Partition.h"
 #include "../util/Random.h"
@@ -827,7 +828,7 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
 
     // Make cache empty for next connectivity update
     Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
-    global_tree->empty_remote_nodes_cache();
+    NodeCache::empty<BarnesHutCell>();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
     return synapse_creation_requests_outgoing;

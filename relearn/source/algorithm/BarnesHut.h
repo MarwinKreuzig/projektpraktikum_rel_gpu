@@ -27,7 +27,7 @@ class Octree;
 
 /**
  * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
- * It is strongly tied to Octree, which might perform MPI communication via Octree::downloadChildren()
+ * It is strongly tied to Octree, which might perform MPI communication via NodeCache::download_children()
  */
 class BarnesHut {
 public:
@@ -93,7 +93,7 @@ public:
 
     /**
      * @brief Returns an optional RankNeuronId that the algorithm determined for the given source neuron. No actual request is made.
-     *      Might perform MPI communication via Octree::downloadChildren()
+     *      Might perform MPI communication via NodeCache::download_children()
      * @param src_neuron_id The neuron's id that wants to connect. Is used to disallow autapses (connections to itself)
      * @param axon_pos_xyz The neuorn's position that wants to connect. Is used in probability computations
      * @param dendrite_type_needed The signal type that is searched.

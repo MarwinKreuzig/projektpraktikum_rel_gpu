@@ -212,15 +212,6 @@ public:
     [[nodiscard]] OctreeNode<BarnesHutCell>* insert(const Vec3d& position, size_t neuron_id, int rank);
 
     /**
-     * @brief Downloads the children of the node (must be on another MPI rank) and returns the children.
-     *      Also saves to nodes locally in order to save bandwidth
-     * @param node The node for which the children should be downloaded
-     * @exception Throws a RelearnException if node is on the current MPI process
-     * @return The downloaded children (perfect copies of the actual children), does not transfer ownership
-     */
-    [[nodiscard]] std::array<OctreeNode<BarnesHutCell>*, Constants::number_oct> downloadChildren(OctreeNode<BarnesHutCell>* node);
-
-    /**
      * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes
      * @param max_level The maximum level (inclusive) on which the nodes should be updated
      * @exception Throws a RelearnException if the functor throws
@@ -242,11 +233,6 @@ public:
             tree_walk_postorder(BarnesHut::update_functor, local_tree);
         }
     }
-
-    /**
-     * @brief Empty the cache that was built during the connection phase and frees all local copies
-     */
-    void empty_remote_nodes_cache();
 
     /**
      * @brief Synchronizes all (locally) updated branch nodes with all other MPI ranks
@@ -302,10 +288,4 @@ private:
     Vec3d xyz_max{ 0 };
 
     size_t level_of_branch_nodes{ Constants::uninitialized };
-
-    // Cache with nodes owned by other ranks
-    using NodesCacheKey = std::pair<int, OctreeNode<BarnesHutCell>*>;
-    using NodesCacheValue = OctreeNode<BarnesHutCell>*;
-    using NodesCache = std::map<NodesCacheKey, NodesCacheValue>;
-    NodesCache remote_nodes_cache{};
 };

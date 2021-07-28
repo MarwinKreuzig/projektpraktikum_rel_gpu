@@ -120,31 +120,31 @@ public:
 
     /**
      * @brief Sets the position of the inhibitory position, which can be empty
-     * @param opt_position The new position of the inhibitory dendrite
+     * @param opt_position The new position of the inhibitory axons
      */
     void set_inhibitory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
         inhibitory_axons.position = opt_position;
     }
 
     /**
-     * @brief Returns the position of the inhibitory dendrite
-     * @return The position of the inhibitory dendrite
+     * @brief Returns the position of the inhibitory axons
+     * @return The position of the inhibitory axons
      */
-    [[nodiscard]] std::optional<Vec3d> get_inhibitory_dendrite_position() const noexcept {
+    [[nodiscard]] std::optional<Vec3d> get_inhibitory_axons_position() const noexcept {
         return inhibitory_axons.position;
     }
 
     /**
      * @brief Sets the position of the excitatory position, which can be empty
-     * @param opt_position The new position of the excitatory dendrite
+     * @param opt_position The new position of the excitatory axons
      */
-    void set_excitatory_dendrite_position(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_excitatory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
         excitatory_axons.position = opt_position;
     }
 
     /**
-     * @brief Returns the position of the excitatory dendrite
-     * @return The position of the excitatory dendrite
+     * @brief Returns the position of the excitatory axons
+     * @return The position of the excitatory axons
      */
     [[nodiscard]] std::optional<Vec3d> get_excitatory_axons_position() const noexcept {
         return excitatory_axons.position;
