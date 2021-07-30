@@ -12,6 +12,8 @@
 
 #if !MPI_FOUND
 
+#pragma message("Using MPINo_RMA_MemAllocator")
+
 #include "../Config.h"
 #include "MPITypes.h"
 #include "../structure/Octree.h"

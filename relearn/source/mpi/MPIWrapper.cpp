@@ -95,7 +95,7 @@ double MPIWrapper::reduce(double value, ReduceFunction function, int root_rank) 
     return result;
 }
 
-double MPIWrapper::all_reduce(double value, ReduceFunction function) {
+double MPIWrapper::all_reduce_double(double value, ReduceFunction function) {
     const MPI_Op* mpi_reduce_function = (MPI_Op*)translate_reduce_function(function);
 
     double result = 0.0;
@@ -108,11 +108,26 @@ double MPIWrapper::all_reduce(double value, ReduceFunction function) {
     return result;
 }
 
+uint64_t MPIWrapper::all_reduce_uint64(uint64_t value, ReduceFunction function) {
+    const MPI_Op* mpi_reduce_function = (MPI_Op*)translate_reduce_function(function);
+
+    uint64_t result = 0;
+    // NOLINTNEXTLINE
+    const int errorcode = MPI_Allreduce(&value, &result, 1, MPI_UINT64_T, *mpi_reduce_function, MPI_COMM_WORLD);
+    RelearnException::check(errorcode == 0, "Error in all reduce");
+
+    delete mpi_reduce_function;
+
+    return result;
+}
+
 void MPIWrapper::reduce_double(const double* src, double* dst, size_t size, ReduceFunction function, int root_rank) {
     const MPI_Op* mpi_reduce_function = (MPI_Op*)translate_reduce_function(function);
 
+    RelearnException::check(size < static_cast<size_t>(std::numeric_limits<int>::max()), "Too much to reduce");
+
     // NOLINTNEXTLINE
-    const int errorcode = MPI_Reduce(src, dst, size, MPI_DOUBLE, *mpi_reduce_function, root_rank, MPI_COMM_WORLD);
+    const int errorcode = MPI_Reduce(src, dst, static_cast<int>(size), MPI_DOUBLE, *mpi_reduce_function, root_rank, MPI_COMM_WORLD);
     RelearnException::check(errorcode == 0, "Error in reduce: %d", errorcode);
 
     delete mpi_reduce_function;
@@ -121,8 +136,10 @@ void MPIWrapper::reduce_double(const double* src, double* dst, size_t size, Redu
 void MPIWrapper::reduce_int64(const int64_t* src, int64_t* dst, size_t size, ReduceFunction function, int root_rank) {
     const MPI_Op* mpi_reduce_function = (MPI_Op*)translate_reduce_function(function);
 
+    RelearnException::check(size < static_cast<size_t>(std::numeric_limits<int>::max()), "Too much to reduce");
+
     // NOLINTNEXTLINE
-    const int errorcode = MPI_Reduce(src, dst, size, MPI_INT64_T, *mpi_reduce_function, root_rank, MPI_COMM_WORLD);
+    const int errorcode = MPI_Reduce(src, dst, static_cast<int>(size), MPI_INT64_T, *mpi_reduce_function, root_rank, MPI_COMM_WORLD);
     RelearnException::check(errorcode == 0, "Error in reduce: %d", errorcode);
 
     delete mpi_reduce_function;
@@ -203,7 +220,9 @@ void MPIWrapper::get(void* origin, size_t size, int target_rank, int64_t displac
     const MPI_Aint displacement_mpi(displacement);
     const auto mpi_window = *(MPI_Win*)(MPI_RMA_MemAllocator<BarnesHutCell>::mpi_window);
 
-    const int errorcode = MPI_Get(origin, size, MPI_CHAR, target_rank, displacement_mpi, size, MPI_CHAR, mpi_window);
+    RelearnException::check(size < static_cast<size_t>(std::numeric_limits<int>::max()), "Too much to reduce");
+
+    const int errorcode = MPI_Get(origin, static_cast<int>(size), MPI_CHAR, target_rank, displacement_mpi, static_cast<int>(size), MPI_CHAR, mpi_window);
     RelearnException::check(errorcode == 0, "Error in get");
 }
 

@@ -11,6 +11,7 @@
 #pragma once
 
 #if MPI_FOUND
+#pragma message("Using MPI_RMA_MemAllocator")
 
 #include "../Config.h"
 #include "../util/RelearnException.h"

@@ -89,9 +89,8 @@ public:
      * @param neurons The neurons that will be filled
      * @param neurons_in_subdomain The class that provides the neuron placements
      * @exception Throws a RelearnException of the neurons have already been loaded
-     * @return Returns all created octree nodes in a vector (with local neuron id as index), does not transfer ownership of the nodes
      */
-    [[nodiscard]] std::vector<OctreeNode<BarnesHutCell>*> load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain);
+    void load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain);
 
     /**
      * @brief Returns the number of local neurons

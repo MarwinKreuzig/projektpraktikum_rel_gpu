@@ -16,8 +16,12 @@
 #if !MPI_FOUND
 #include "MPINoWrapper.h"
 
+#pragma message("Using MPINoWrapper")
+
 using MPIWrapper = MPINoWrapper;
 #else // #if MPI_FOUND
+
+#pragma message("Using MPIWrapper")
 
 #include <array>
 #include <cstdint>
@@ -154,7 +158,16 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs
      * @return The final result of the reduction
      */
-    [[nodiscard]] static double all_reduce(double value, ReduceFunction function);
+    [[nodiscard]] static double all_reduce_double(double value, ReduceFunction function);
+
+    /**
+     * @brief Reduces a value for every MPI rank with a reduction function such that every rank has the final result
+     * @param value The local value that should be reduced
+     * @param function The reduction function, should be associative and commutative
+     * @exception Throws a RelearnException if an MPI error occurs
+     * @return The final result of the reduction
+     */
+    [[nodiscard]] static uint64_t all_reduce_uint64(uint64_t value, ReduceFunction function);
 
     /**
      * @brief Reduces multiple values for every MPI rank with a reduction function such that the root_rank has the final result. The reduction is performed componentwise

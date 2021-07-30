@@ -264,7 +264,7 @@ public:
         for (auto neuron_id = 0; neuron_id < size; neuron_id++) {
             const auto change = changes[neuron_id];
             RelearnException::check(change >= 0, "The number of deleted elements must not be negative");
-            RelearnException::check(connected_cnts[neuron_id] >= change, "Cannot delete more connections than present");
+            RelearnException::check(connected_cnts[neuron_id] >= static_cast<unsigned int>(change), "Cannot delete more connections than present");
 
             connected_cnts[neuron_id] -= change;
         }

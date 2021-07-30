@@ -181,7 +181,7 @@ public:
      * @param scalar The value that should be multiplied to each component
      * @return The product as a new object
      */
-    [[nodiscard]] Vec3<T> operator*(const double scalar) const noexcept {
+    [[nodiscard]] Vec3<T> operator*(const T& scalar) const noexcept {
         Vec3<T> res = *this;
         res *= scalar;
         return res;
@@ -192,7 +192,7 @@ public:
      * @param scalar The value that should be divided by, is not checked for 0
      * @return The quotient as a new object
      */
-    [[nodiscard]] Vec3<T> operator/(const double scalar) const noexcept {
+    [[nodiscard]] Vec3<T> operator/(const T& scalar) const noexcept {
         Vec3<T> res = *this;
         res /= scalar;
         return res;

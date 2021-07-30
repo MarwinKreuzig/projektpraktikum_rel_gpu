@@ -337,7 +337,8 @@ public:
         }
 
         // Allgather in-place branch nodes from every rank
-        MPIWrapper::all_gather_inline(exchange_branch_nodes.data(), num_local_trees);
+        RelearnException::check(num_local_trees < static_cast<size_t>(std::numeric_limits<int>::max()), "Too many branch nodes");
+        MPIWrapper::all_gather_inline(exchange_branch_nodes.data(), static_cast<int>(num_local_trees));
 
         Timers::stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
 
