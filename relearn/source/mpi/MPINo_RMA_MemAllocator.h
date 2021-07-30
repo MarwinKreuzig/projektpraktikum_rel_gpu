@@ -15,56 +15,106 @@
 #pragma message("Using MPINo_RMA_MemAllocator")
 
 #include "../Config.h"
-#include "MPITypes.h"
 #include "../structure/Octree.h"
 
-#include <vector>
-#include <queue>
 #include <cstdint>
+#include <queue>
+#include <vector>
 
+template <typename T>
+class OctreeNode;
+
+template <typename AdditionalCellAttributes>
 class MPINo_RMA_MemAllocator {
+    friend class OctreeNode<AdditionalCellAttributes>;
 
     class HolderOctreeNode {
-        std::queue<OctreeNode<BarnesHutCell>*> available{};
-        std::vector<OctreeNode<BarnesHutCell>*> non_available{};
-        OctreeNode<BarnesHutCell>* base_ptr{ nullptr };
+        std::queue<OctreeNode<AdditionalCellAttributes>*> available{};
+        std::vector<OctreeNode<AdditionalCellAttributes>*> non_available{};
+        OctreeNode<AdditionalCellAttributes>* base_ptr{ nullptr };
 
         size_t total{ Constants::uninitialized };
 
     public:
         HolderOctreeNode() = default;
 
-        HolderOctreeNode(OctreeNode<BarnesHutCell>* ptr, size_t length);
+        HolderOctreeNode(OctreeNode<AdditionalCellAttributes>* ptr, size_t length)
+            : non_available(length, nullptr)
+            , base_ptr(ptr)
+            , total(length) {
+            for (size_t counter = 0; counter < length; counter++) {
+                available.push(ptr + counter);
+            }
+        }
 
-        [[nodiscard]] OctreeNode<BarnesHutCell>* get_available();
+        [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_available() {
+            // Get last available element and save it
+            OctreeNode<BarnesHutCell>* ptr = available.front();
+            available.pop();
 
-        void make_available(OctreeNode<BarnesHutCell>* ptr);
+            const size_t dist = std::distance(base_ptr, ptr);
+            non_available[dist] = ptr;
 
-        void make_all_available() noexcept;
+            return ptr;
+        }
 
-        [[nodiscard]] size_t get_size() const noexcept;
+        void make_available(OctreeNode<AdditionalCellAttributes>* ptr) {
+            const size_t dist = std::distance(base_ptr, ptr);
 
-        [[nodiscard]] size_t get_num_available() const noexcept;
+            available.push(ptr);
+            non_available[dist] = nullptr;
+
+            ptr->reset();
+        }
+
+        void make_all_available() noexcept {
+            for (auto& ptr : non_available) {
+                if (ptr == nullptr) {
+                    continue;
+                }
+
+                available.push(ptr);
+
+                ptr->reset();
+                ptr = nullptr;
+            }
+        }
+
+        [[nodiscard]] size_t get_size() const noexcept {
+            return total;
+        }
+
+        [[nodiscard]] size_t get_num_available() const noexcept {
+            return available.size();
+        }
     };
 
     MPINo_RMA_MemAllocator() = default;
 
+    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* new_octree_node() {
+        return holder_base_ptr.get_available();
+    }   
+
+    static void delete_octree_node(OctreeNode<AdditionalCellAttributes>* ptr) {
+        holder_base_ptr.make_available(ptr);
+    }
+    
 public:
     static void init(size_t size_requested, size_t num_local_trees);
 
-    static void finalize();
+    static void finalize() { }
 
-    [[nodiscard]] static OctreeNode<BarnesHutCell>* new_octree_node();
+    [[nodiscard]] static int64_t get_base_pointers() noexcept {
+        return base_pointers;
+    }
 
-    static void delete_octree_node(OctreeNode<BarnesHutCell>* ptr);
+    [[nodiscard]] static size_t get_num_avail_objects() noexcept {
+        return holder_base_ptr.get_num_available();
+    }
 
-    [[nodiscard]] static int64_t get_base_pointers() noexcept;
-
-    [[nodiscard]] static OctreeNode<BarnesHutCell>* get_branch_nodes();
-
-    [[nodiscard]] static size_t get_num_avail_objects() noexcept;
-
-    static void make_all_available() noexcept;
+    static void make_all_available() noexcept {
+        return holder_base_ptr.make_all_available();
+    }
 
     //NOLINTNEXTLINE
     // static inline MPI_Win mpi_window{ 0 }; // RMA window object
@@ -74,10 +124,10 @@ private:
     static inline size_t max_size{ Constants::uninitialized }; // Size in Bytes of MPI-allocated memory
     static inline size_t max_num_objects{ Constants::uninitialized }; // Max number objects that are available
 
-    static inline std::vector<OctreeNode<BarnesHutCell>> root_nodes_for_local_trees{};
+    static inline std::vector<OctreeNode<AdditionalCellAttributes>> root_nodes_for_local_trees{};
 
-    static inline OctreeNode<BarnesHutCell>* base_ptr{ nullptr }; // Start address of MPI-allocated memory
-    static inline std::vector<OctreeNode<BarnesHutCell>> data{};
+    static inline OctreeNode<AdditionalCellAttributes>* base_ptr{ nullptr }; // Start address of MPI-allocated memory
+    static inline std::vector<OctreeNode<AdditionalCellAttributes>> data{};
     static HolderOctreeNode holder_base_ptr;
 
     static inline size_t num_ranks{ 1 }; // Number of ranks in MPI_COMM_WORLD

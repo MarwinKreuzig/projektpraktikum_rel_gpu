@@ -21,22 +21,8 @@
 void MPINoWrapper::init(int argc, char** argv) {
 }
 
-void MPINoWrapper::init_neurons(size_t num_neurons) {
-    /**
-	 * Sanity check for use of MPI
-	 *
-	 * Check if num_neurons fits in int value (see IMPORTANT notice above)
-	 */
-    RelearnException::check(num_neurons < std::numeric_limits<int>::max(), "init_neurons: num_neurons does not fit in \"int\" data type");
-
-    MPINoWrapper::num_neurons = num_neurons;
-}
-
-void MPINoWrapper::init_buffer_octree(size_t num_partitions) {
-    MPINo_RMA_MemAllocator::init(Constants::mpi_alloc_mem, num_partitions);
-
-    rma_buffer_branch_nodes.num_nodes = num_partitions;
-    rma_buffer_branch_nodes.ptr = MPINo_RMA_MemAllocator::get_branch_nodes();
+void MPINoWrapper::init_buffer_octree() {
+    MPINo_RMA_MemAllocator::init(Constants::mpi_alloc_mem);
 }
 
 void MPINoWrapper::barrier() {
@@ -46,7 +32,11 @@ void MPINoWrapper::barrier() {
     return value;
 }
 
-[[nodiscard]] double MPINoWrapper::all_reduce(double value, ReduceFunction /*function*/) {
+[[nodiscard]] double MPINoWrapper::all_reduce_double(double value, ReduceFunction /*function*/) {
+    return value;
+}
+
+[[nodiscard]] uint64_t MPINoWrapper::all_reduce_uint64(uint64_t value, ReduceFunction /*function*/) {
     return value;
 }
 

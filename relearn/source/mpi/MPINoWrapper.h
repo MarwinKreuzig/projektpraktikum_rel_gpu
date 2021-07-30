@@ -27,11 +27,6 @@ enum class MPI_Locktype : int {
 };
 
 class MPINoWrapper {
-    struct RMABufferOctreeNodes {
-        OctreeNode<BarnesHutCell>* ptr;
-        size_t num_nodes;
-    };
-
     friend class RelearnTest;
 
 public:
@@ -48,8 +43,6 @@ public:
 
 private:
     MPINoWrapper() = default;
-
-    static inline RMABufferOctreeNodes rma_buffer_branch_nodes{};
 
     static inline const int num_ranks{ 1 }; // Number of ranks in MPI_COMM_WORLD
     static inline const int my_rank{ 0 }; // My rank in MPI_COMM_WORLD
@@ -75,15 +68,15 @@ private:
 public:
     static void init(int argc, char** argv);
 
-    static void init_neurons(size_t num_neurons);
-
-    static void init_buffer_octree(size_t num_partitions);
+    static void init_buffer_octree();
 
     static void barrier();
 
     [[nodiscard]] static double reduce(double value, ReduceFunction function, int root_rank);
 
-    [[nodiscard]] static double all_reduce(double value, ReduceFunction function);
+    [[nodiscard]] static double all_reduce_double(double value, ReduceFunction function);
+
+    [[nodiscard]] static uint64_t all_reduce_uint64(uint64_t value, ReduceFunction function);
 
     // NOLINTNEXTLINE
     static void all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst);
@@ -142,8 +135,6 @@ public:
     [[nodiscard]] static size_t get_num_buffer_octree_nodes();
 
     [[nodiscard]] static std::string get_my_rank_str();
-
-    static void delete_octree_node(OctreeNode<BarnesHutCell>* ptr);
 
     // NOLINTNEXTLINE
     static void wait_request(AsyncToken& request);
