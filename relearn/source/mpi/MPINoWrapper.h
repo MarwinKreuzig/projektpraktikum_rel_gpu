@@ -4,7 +4,6 @@
 
 #pragma message("Using MPINoWrapper")
 
-#include "MPINo_RMA_MemAllocator.h"
 #include "../util/RelearnException.h"
 
 #include <array>
