@@ -13,7 +13,8 @@
 #if !MPI_FOUND
 #include "MPINo_RMA_MemAllocator.h"
 
-using MPI_RMA_MemAllocator = MPINo_RMA_MemAllocator;
+template<typename T>
+using MPI_RMA_MemAllocator = MPINo_RMA_MemAllocator<T>;
 #else // #if MPI_FOUND
 #pragma message("Using MPI_RMA_MemAllocator")
 
