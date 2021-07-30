@@ -118,8 +118,6 @@ public:
         *dst = *src;
     }
 
-    [[nodiscard]] static OctreeNode<BarnesHutCell>* new_octree_node();
-
     [[nodiscard]] static int get_num_ranks();
 
     [[nodiscard]] static int get_my_rank();
@@ -133,10 +131,6 @@ public:
     [[nodiscard]] static size_t get_my_neuron_id_end();
 
     [[nodiscard]] static size_t get_num_avail_objects();
-
-    [[nodiscard]] static OctreeNode<BarnesHutCell>* get_buffer_octree_nodes();
-
-    [[nodiscard]] static size_t get_num_buffer_octree_nodes();
 
     [[nodiscard]] static std::string get_my_rank_str();
 
