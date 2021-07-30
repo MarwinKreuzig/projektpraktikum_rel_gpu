@@ -162,16 +162,16 @@ std::vector<OctreeNode<AdditionalCellAttributes>*> extract_branch_nodes(OctreeNo
     return return_value;
 }
 
-SynapticElements create_synaptic_elements(size_t size, std::mt19937& mt, size_t max_free, SignalType st) {
+SynapticElements create_synaptic_elements(size_t size, std::mt19937& mt, double max_free, SignalType st) {
     SynapticElements se(ElementType::DENDRITE, 0.0);
 
     se.init(size);
 
-    std::uniform_int_distribution<size_t> uid(0, max_free);
+    std::uniform_real_distribution<double> urd(0, max_free);
 
     for (auto i = 0; i < size; i++) {
         se.set_signal_type(i, st);
-        se.update_count(i, uid(mt));
+        se.update_count(i, urd(mt));
     }
 
     return se;
@@ -431,7 +431,7 @@ TEST_F(OctreeTest, testCellPositionCombined) {
 
         cell.set_excitatory_dendrite_position(pos_2);
 
-        ASSERT_THROW(cell.get_dendrite_position(), RelearnException);
+        ASSERT_THROW(auto tmp = cell.get_dendrite_position(), RelearnException);
 
         cell.set_inhibitory_dendrite_position(pos_3);
 
@@ -439,7 +439,7 @@ TEST_F(OctreeTest, testCellPositionCombined) {
             ASSERT_TRUE(cell.get_dendrite_position().has_value());
             ASSERT_EQ(cell.get_dendrite_position().value(), pos_2);
         } else {
-            ASSERT_THROW(cell.get_dendrite_position(), RelearnException);
+            ASSERT_THROW(auto tmp = cell.get_dendrite_position(), RelearnException);
         }
 
         cell.set_dendrite_position({});
@@ -556,12 +556,12 @@ TEST_F(OctreeTest, testCellOctantsException) {
         const Vec3d pos_invalid_y_min = min - Vec3d{ 0, 1, 0 };
         const Vec3d pos_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
-        ASSERT_THROW(cell.get_octant_for_position(pos_invalid_x_max), RelearnException);
-        ASSERT_THROW(cell.get_octant_for_position(pos_invalid_y_max), RelearnException);
-        ASSERT_THROW(cell.get_octant_for_position(pos_invalid_z_max), RelearnException);
-        ASSERT_THROW(cell.get_octant_for_position(pos_invalid_x_min), RelearnException);
-        ASSERT_THROW(cell.get_octant_for_position(pos_invalid_y_min), RelearnException);
-        ASSERT_THROW(cell.get_octant_for_position(pos_invalid_z_min), RelearnException);
+        ASSERT_THROW(auto tmp = cell.get_octant_for_position(pos_invalid_x_max), RelearnException);
+        ASSERT_THROW(auto tmp = cell.get_octant_for_position(pos_invalid_y_max), RelearnException);
+        ASSERT_THROW(auto tmp = cell.get_octant_for_position(pos_invalid_z_max), RelearnException);
+        ASSERT_THROW(auto tmp = cell.get_octant_for_position(pos_invalid_x_min), RelearnException);
+        ASSERT_THROW(auto tmp = cell.get_octant_for_position(pos_invalid_y_min), RelearnException);
+        ASSERT_THROW(auto tmp = cell.get_octant_for_position(pos_invalid_z_min), RelearnException);
     }
 }
 
@@ -706,7 +706,7 @@ TEST_F(OctreeTest, testOctreeNodeSetterGetter) {
 
             ASSERT_THROW(node.set_child(nullptr, i), RelearnException);
             ASSERT_THROW(node.set_child(&node, i), RelearnException);
-            ASSERT_THROW(node.get_child(i), RelearnException);
+            ASSERT_THROW(auto tmp = node.get_child(i), RelearnException);
         }
     }
 }
@@ -837,7 +837,7 @@ TEST_F(OctreeTest, testOctreeNodeInsert) {
         std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids, mt);
 
         for (const auto& [pos, id] : neurons_to_place) {
-            node.insert(pos, id, my_rank);
+            auto tmp = node.insert(pos, id, my_rank);
         }
 
         std::vector<std::tuple<Vec3d, size_t>> placed_neurons = extract_neurons(&node);
@@ -1250,7 +1250,7 @@ TEST_F(OctreeTest, testOctreeLocalTrees) {
         ASSERT_EQ(octree.get_xyz_max(), max);
         ASSERT_EQ(octree.get_xyz_min(), min);
 
-        SpaceFillingCurve<Morton> sfc(level_of_branch_nodes);
+        SpaceFillingCurve<Morton> sfc(static_cast<uint8_t>(level_of_branch_nodes));
         const auto num_cells_per_dimension = 1 << level_of_branch_nodes;
 
         const auto& cell_length = (max - min) / num_cells_per_dimension;
@@ -1408,7 +1408,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
-    std::uniform_int_distribution<size_t> uid_max_vacant(1, 100);
+    std::uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
 
     for (auto i = 0; i < iterations; i++) {
         Vec3d min{};
@@ -1464,8 +1464,8 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
                     stack.emplace(child);
                 }
             } else {
-                sum_dends_exc = dends_exc.get_count(current->get_cell_neuron_id());
-                sum_dends_inh = dends_inh.get_count(current->get_cell_neuron_id());
+                sum_dends_exc = static_cast<size_t>(dends_exc.get_count(current->get_cell_neuron_id()));
+                sum_dends_inh = static_cast<size_t>(dends_inh.get_count(current->get_cell_neuron_id()));
             }
 
             ASSERT_EQ(current->get_cell().get_number_excitatory_dendrites(), sum_dends_exc);

@@ -89,13 +89,13 @@ TEST_F(SynapticElementsTest, testSynapticElementsConstructorException) {
             golden_signal_types[neuron_id] = signal_type;
 
             synaptic_elements.update_count(neuron_id, cnt);
-            synaptic_elements.update_connected_counts(neuron_id, conn_cnt);
+            synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(conn_cnt));
             synaptic_elements.set_signal_type(neuron_id, signal_type);
         }
 
         for (size_t neuron_id = num_neurons; neuron_id < num_neurons + 10; neuron_id++) {
             const double cnt = urd_C(mt);
-            const unsigned int conn_cnt = urd_C(mt);
+            const unsigned int conn_cnt = static_cast<unsigned int>(urd_C(mt));
             const SignalType signal_type = uid_bool(mt) == 0 ? SignalType::EXCITATORY : SignalType::INHIBITORY;
 
             ASSERT_THROW(synaptic_elements.update_count(neuron_id, cnt), RelearnException);
@@ -212,7 +212,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdate) {
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
     std::uniform_real_distribution<double> urd_cnt(0, 10);
-    std::uniform_int_distribution<size_t> uid_connected(0, 10);
+    std::uniform_int_distribution<unsigned int> uid_connected(0, 10);
     std::uniform_real_distribution<double> urd_delta(0, 10);
 
     for (auto i = 0; i < iterations; i++) {
@@ -224,13 +224,13 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdate) {
         synaptic_elements.init(num_neurons);
 
         std::vector<double> golden_cnts(num_neurons);
-        std::vector<double> golden_conn_cnts(num_neurons);
+        std::vector<unsigned int> golden_conn_cnts(num_neurons);
         std::vector<double> golden_delta_cnts(num_neurons);
         std::vector<SignalType> golden_signal_types(num_neurons);
 
         for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
             const double cnt = urd_cnt(mt);
-            const double conn_cnt = uid_connected(mt);
+            const unsigned int conn_cnt = uid_connected(mt);
             const double delta_cnt = urd_delta(mt);
             const SignalType signal_type = uid_bool(mt) == 0 ? SignalType::EXCITATORY : SignalType::INHIBITORY;
 
@@ -240,17 +240,17 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdate) {
             golden_signal_types[neuron_id] = signal_type;
 
             synaptic_elements.update_count(neuron_id, cnt);
-            synaptic_elements.update_connected_counts(neuron_id, conn_cnt);
+            synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(conn_cnt));
             synaptic_elements.set_signal_type(neuron_id, signal_type);
         }
 
         for (size_t neuron_id = num_neurons; neuron_id < num_neurons + 10; neuron_id++) {
             const double cnt = urd_cnt(mt);
-            const double conn_cnt = uid_connected(mt);
+            const auto conn_cnt = uid_connected(mt);
             const SignalType signal_type = uid_bool(mt) == 0 ? SignalType::EXCITATORY : SignalType::INHIBITORY;
 
             ASSERT_THROW(synaptic_elements.update_count(neuron_id, cnt), RelearnException);
-            ASSERT_THROW(synaptic_elements.update_connected_counts(neuron_id, conn_cnt), RelearnException);
+            ASSERT_THROW(synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(conn_cnt)), RelearnException);
             ASSERT_THROW(synaptic_elements.set_signal_type(neuron_id, signal_type), RelearnException);
         }
 
@@ -289,7 +289,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
     std::uniform_real_distribution<double> urd_cnt(0, 10);
-    std::uniform_int_distribution<size_t> uid_connected(0, 10);
+    std::uniform_int_distribution<unsigned int> uid_connected(0, 10);
     std::uniform_real_distribution<double> urd_delta(0, 10);
 
     for (auto i = 0; i < iterations; i++) {
@@ -301,14 +301,14 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
         synaptic_elements.init(num_neurons);
 
         std::vector<double> golden_cnts(num_neurons, 0.0);
-        std::vector<double> golden_conn_cnts(num_neurons, 0.0);
+        std::vector<unsigned int> golden_conn_cnts(num_neurons, 0);
         std::vector<double> golden_delta_cnts(num_neurons, 0.0);
         std::vector<SignalType> golden_signal_types(num_neurons);
 
         for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-            const double cnt = urd_cnt(mt);
-            const double conn_cnt = uid_connected(mt);
-            const double delta_cnt = urd_delta(mt);
+            const auto cnt = urd_cnt(mt);
+            const auto conn_cnt = uid_connected(mt);
+            const auto delta_cnt = urd_delta(mt);
             const SignalType signal_type = uid_bool(mt) == 0 ? SignalType::EXCITATORY : SignalType::INHIBITORY;
 
             golden_cnts[neuron_id] += cnt;

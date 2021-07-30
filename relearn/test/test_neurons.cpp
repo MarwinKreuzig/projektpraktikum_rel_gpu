@@ -29,11 +29,11 @@ void assert_empty(const NeuronsExtraInfo& nei, size_t num_neurons) {
     ASSERT_EQ(0, area_names.size());
 
     for (auto neuron_id = 0; neuron_id < num_neurons * 2; neuron_id++) {
-        ASSERT_THROW(nei.get_position(neuron_id), RelearnException);
-        ASSERT_THROW(nei.get_x(neuron_id), RelearnException);
-        ASSERT_THROW(nei.get_y(neuron_id), RelearnException);
-        ASSERT_THROW(nei.get_z(neuron_id), RelearnException);
-        ASSERT_THROW(nei.get_area_name(neuron_id), RelearnException);
+        ASSERT_THROW(auto tmp = nei.get_position(neuron_id), RelearnException);
+        ASSERT_THROW(auto tmp = nei.get_x(neuron_id), RelearnException);
+        ASSERT_THROW(auto tmp = nei.get_y(neuron_id), RelearnException);
+        ASSERT_THROW(auto tmp = nei.get_z(neuron_id), RelearnException);
+        ASSERT_THROW(auto tmp = nei.get_area_name(neuron_id), RelearnException);
     }
 }
 
@@ -73,11 +73,11 @@ void assert_contains(const NeuronsExtraInfo& nei, size_t num_neurons, size_t num
     }
 
     for (auto neuron_id = num_neurons; neuron_id < num_neurons * 2; neuron_id++) {
-        ASSERT_THROW(nei.get_position(neuron_id), RelearnException);
-        ASSERT_THROW(nei.get_x(neuron_id), RelearnException);
-        ASSERT_THROW(nei.get_y(neuron_id), RelearnException);
-        ASSERT_THROW(nei.get_z(neuron_id), RelearnException);
-        ASSERT_THROW(nei.get_area_name(neuron_id), RelearnException);
+        ASSERT_THROW(auto tmp = nei.get_position(neuron_id), RelearnException);
+        ASSERT_THROW(auto tmp = nei.get_x(neuron_id), RelearnException);
+        ASSERT_THROW(auto tmp = nei.get_y(neuron_id), RelearnException);
+        ASSERT_THROW(auto tmp = nei.get_z(neuron_id), RelearnException);
+        ASSERT_THROW(auto tmp = nei.get_area_name(neuron_id), RelearnException);
     }
 }
 
@@ -121,8 +121,8 @@ TEST_F(NeuronsTest, testNeuronRankIdInvalidRank) {
 
             RankNeuronId rni(rank, id);
 
-            ASSERT_NO_THROW(rni.get_neuron_id());
-            ASSERT_THROW(rni.get_rank(), RelearnException);
+            ASSERT_NO_THROW(auto tmp = rni.get_neuron_id());
+            ASSERT_THROW(auto tmp = rni.get_rank(), RelearnException);
         }
     }
 }
@@ -138,8 +138,8 @@ TEST_F(NeuronsTest, testNeuronRankIdInvalidId) {
 
             RankNeuronId rni(rank, id + Constants::uninitialized);
 
-            ASSERT_NO_THROW(rni.get_rank());
-            ASSERT_THROW(rni.get_neuron_id(), RelearnException);
+            ASSERT_NO_THROW(auto tmp = rni.get_rank());
+            ASSERT_THROW(auto tmp = rni.get_neuron_id(), RelearnException);
         }
     }
 }
