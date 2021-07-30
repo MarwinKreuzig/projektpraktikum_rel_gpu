@@ -2,6 +2,8 @@
 
 #if !MPI_FOUND
 
+#pragma message("Using MPINoWrapper")
+
 #include "MPINo_RMA_MemAllocator.h"
 #include "../util/RelearnException.h"
 
@@ -11,7 +13,6 @@
 #include <vector>
 #include <map>
 #include <future>
-
 
 using MPI_Request = int;
 

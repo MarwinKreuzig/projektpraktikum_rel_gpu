@@ -13,8 +13,6 @@
 #if !MPI_FOUND
 #include "MPINoWrapper.h"
 
-#pragma message("Using MPINoWrapper")
-
 using MPIWrapper = MPINoWrapper;
 #else // #if MPI_FOUND
 
