@@ -2,6 +2,7 @@
 
 #if !MPI_FOUND
 
+#include "MPINo_RMA_MemAllocator.h"
 #include "../util/RelearnException.h"
 
 #include <array>
@@ -112,7 +113,10 @@ public:
     static void all_gather_inline(T* ptr, int count) {
     }
 
-    static void download_octree_node(OctreeNode<BarnesHutCell>* dst, int target_rank, const OctreeNode<BarnesHutCell>* src);
+    template <typename AdditionalCellAttributes>
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, int target_rank, const OctreeNode<AdditionalCellAttributes>* src) {
+        *dst = *src;
+    }
 
     [[nodiscard]] static OctreeNode<BarnesHutCell>* new_octree_node();
 

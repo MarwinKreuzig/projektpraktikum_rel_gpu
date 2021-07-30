@@ -4,7 +4,6 @@
 
 #include "../Config.h"
 #include "../io/LogFiles.h"
-#include "MPINo_RMA_MemAllocator.h"
 #include "../util/RelearnException.h"
 #include "../util/Utility.h"
 
@@ -74,10 +73,6 @@ void MPINoWrapper::reduce(const void* src, void* dst, int size, ReduceFunction /
 
 void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size) {
     std::memcpy(buffer, own_data, size);
-}
-
-void MPINoWrapper::download_octree_node(OctreeNode<BarnesHutCell>* dst, int /*target_rank*/, const OctreeNode<BarnesHutCell>* src) {
-    *dst = *src;
 }
 
 [[nodiscard]] OctreeNode<BarnesHutCell>* MPINoWrapper::new_octree_node() {
