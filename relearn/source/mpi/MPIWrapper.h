@@ -10,9 +10,6 @@
 
 #pragma once
 
-#include "MPI_RMA_MemAllocator.h"
-#include "../util/RelearnException.h"
-
 #if !MPI_FOUND
 #include "MPINoWrapper.h"
 
@@ -22,6 +19,9 @@ using MPIWrapper = MPINoWrapper;
 #else // #if MPI_FOUND
 
 #pragma message("Using MPIWrapper")
+
+#include "MPI_RMA_MemAllocator.h"
+#include "../util/RelearnException.h"
 
 #include <array>
 #include <cstdint>
