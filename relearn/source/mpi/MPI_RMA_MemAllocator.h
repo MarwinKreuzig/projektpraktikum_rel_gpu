@@ -11,7 +11,7 @@
 #pragma once
 
 #if !MPI_FOUND
-#include "MPINo_RMA_MemAllocator.h
+#include "MPINo_RMA_MemAllocator.h"
 
 using MPI_RMA_MemAllocator = MPINo_RMA_MemAllocator;
 #else // #if MPI_FOUND
