@@ -10,7 +10,9 @@
 
 #pragma once
 
-#if !MPI_FOUND
+#include "../Config.h"
+
+#if !RELEARN_MPI_FOUND
 #include "MPINo_RMA_MemAllocator.h"
 
 template<typename T>
@@ -18,7 +20,6 @@ using MPI_RMA_MemAllocator = MPINo_RMA_MemAllocator<T>;
 #else // #if MPI_FOUND
 #pragma message("Using MPI_RMA_MemAllocator")
 
-#include "../Config.h"
 #include "../util/RelearnException.h"
 
 #include <cstdint>

@@ -1,8 +1,9 @@
 #include "MPINoWrapper.h"
 
-#if !MPI_FOUND
+#if !RELEARN_MPI_FOUND
 
-#include "../Config.h"
+#include "MPINo_RMA_MemAllocator.h"
+#include "../algorithm/BarnesHutCell.h"
 #include "../io/LogFiles.h"
 #include "../util/RelearnException.h"
 #include "../util/Utility.h"
@@ -21,7 +22,7 @@ void MPINoWrapper::init(int argc, char** argv) {
 }
 
 void MPINoWrapper::init_buffer_octree() {
-    MPINo_RMA_MemAllocator::init(Constants::mpi_alloc_mem);
+    MPINo_RMA_MemAllocator<BarnesHutCell>::init(Constants::mpi_alloc_mem);
 }
 
 void MPINoWrapper::barrier() {
@@ -75,10 +76,6 @@ void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size) {
     std::memcpy(buffer, own_data, size);
 }
 
-[[nodiscard]] OctreeNode<BarnesHutCell>* MPINoWrapper::new_octree_node() {
-    return MPINo_RMA_MemAllocator::new_octree_node();
-}
-
 [[nodiscard]] int MPINoWrapper::get_num_ranks() {
     return num_ranks;
 }
@@ -103,28 +100,12 @@ void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size) {
     return num_neurons;
 }
 
-[[nodiscard]] size_t MPINoWrapper::get_num_avail_objects() {
-    return MPINo_RMA_MemAllocator::get_num_avail_objects();
-}
-
-void MPIWrapper::make_all_mem_available() {
-    MPINo_RMA_MemAllocator::make_all_available();
-}
-
-[[nodiscard]] OctreeNode<BarnesHutCell>* MPINoWrapper::get_buffer_octree_nodes() {
-    return rma_buffer_branch_nodes.ptr;
-}
-
-[[nodiscard]] size_t MPINoWrapper::get_num_buffer_octree_nodes() {
-    return rma_buffer_branch_nodes.num_nodes;
+void MPINoWrapper::make_all_mem_available() {
+    MPINo_RMA_MemAllocator<BarnesHutCell>::make_all_available();
 }
 
 [[nodiscard]] std::string MPINoWrapper::get_my_rank_str() {
     return my_rank_str;
-}
-
-void MPINoWrapper::delete_octree_node(OctreeNode<BarnesHutCell>* ptr) {
-    MPINo_RMA_MemAllocator::delete_octree_node(ptr);
 }
 
 void MPINoWrapper::wait_request(AsyncToken& /*request*/) {
@@ -142,7 +123,7 @@ void MPINoWrapper::unlock_window(int rank) {
 }
 
 void MPINoWrapper::finalize() /*noexcept*/ {
-    MPINo_RMA_MemAllocator::finalize();
+    MPINo_RMA_MemAllocator<BarnesHutCell>::finalize();
 }
 
 #endif

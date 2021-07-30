@@ -10,7 +10,7 @@
 
 #include "MPI_RMA_MemAllocator.h"
 
-#if MPI_FOUND
+#if RELEARN_MPI_FOUND
 
 #include "../algorithm/BarnesHutCell.h"
 #include "../io/LogFiles.h"

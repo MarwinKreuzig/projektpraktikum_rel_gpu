@@ -8,18 +8,17 @@
  *
  */
 
+#include "MPIWrapper.h"
+
+#if RELEARN_MPI_FOUND
+
+#include "MPI_RMA_MemAllocator.h"
 #include "../algorithm/BarnesHutCell.h"
-#include "../mpi/MPIWrapper.h"
 #include "spdlog/fmt/bundled/core.h"
-
-#if MPI_FOUND
-
-#include "../Config.h"
 #include "../io/LogFiles.h"
 #include "../structure/OctreeNode.h"
 #include "../util/RelearnException.h"
 #include "../util/Utility.h"
-#include "MPI_RMA_MemAllocator.h"
 
 #include <mpi.h>
 

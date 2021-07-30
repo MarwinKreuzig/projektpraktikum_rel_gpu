@@ -204,8 +204,8 @@ int main(int argc, char** argv) {
     }
 
     /**
-	* Create MPI RMA memory allocator
-	*/
+	 * Create MPI RMA memory allocator
+	 */
     MPIWrapper::init_buffer_octree();
 
     auto neuron_models = std::make_unique<models::PoissonModel>(NeuronModel::default_k, NeuronModel::default_tau_C, beta, NeuronModel::default_h,

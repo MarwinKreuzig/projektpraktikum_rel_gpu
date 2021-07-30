@@ -1,6 +1,8 @@
 #pragma once
 
-#if !MPI_FOUND
+#include "../Config.h"
+
+#if !RELEARN_MPI_FOUND
 
 #pragma message("Using MPINoWrapper")
 
@@ -129,8 +131,6 @@ public:
     [[nodiscard]] static size_t get_my_neuron_id_start();
 
     [[nodiscard]] static size_t get_my_neuron_id_end();
-
-    [[nodiscard]] static size_t get_num_avail_objects();
 
     [[nodiscard]] static std::string get_my_rank_str();
 

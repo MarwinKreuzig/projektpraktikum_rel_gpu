@@ -10,9 +10,10 @@
 
 #include "MPINo_RMA_MemAllocator.h"
 
-#if !MPI_FOUND
+#if !RELEARN_MPI_FOUND
 
 #include "../algorithm/BarnesHutCell.h"
+#include "../algorithm/FastMultipoleMethodsCell.h"
 #include "../io/LogFiles.h"
 #include "../structure/OctreeNode.h"
 #include "../util/RelearnException.h"
@@ -22,27 +23,55 @@
 #include <iterator>
 #include <sstream>
 
-
 template class MPINo_RMA_MemAllocator<BarnesHutCell>;
+template class HolderOctreeNode<BarnesHutCell>;
 
-MPINo_RMA_MemAllocator::HolderOctreeNode MPINo_RMA_MemAllocator::holder_base_ptr{};
+template class MPINo_RMA_MemAllocator<FastMultipoleMethodsCell>;
+template class HolderOctreeNode<FastMultipoleMethodsCell>;
 
-void MPINo_RMA_MemAllocator::init(size_t size_requested, size_t num_local_trees) {
+template <typename AdditionalCellAttributes>
+inline void HolderOctreeNode<AdditionalCellAttributes>::make_available(OctreeNode<AdditionalCellAttributes>* ptr) {
+    const size_t dist = std::distance(base_ptr, ptr);
+
+    available.push(ptr);
+    non_available[dist] = nullptr;
+
+    ptr->reset();
+}
+
+template <typename AdditionalCellAttributes>
+inline void HolderOctreeNode<AdditionalCellAttributes>::make_all_available() noexcept {
+    for (auto& ptr : non_available) {
+        if (ptr == nullptr) {
+            continue;
+        }
+
+        available.push(ptr);
+
+        ptr->reset();
+        ptr = nullptr;
+    }
+}
+
+template <typename AdditionalCellAttributes>
+void MPINo_RMA_MemAllocator<AdditionalCellAttributes>::init(size_t size_requested) {
     MPINo_RMA_MemAllocator::size_requested = size_requested;
-    max_num_objects = size_requested / sizeof(OctreeNode<BarnesHutCell>);
+    max_num_objects = size_requested / sizeof(OctreeNode<AdditionalCellAttributes>);
     max_size = size_requested;
 
-    data.resize(max_num_objects);
-    base_ptr = data.data();
+    base_ptr = new OctreeNode<AdditionalCellAttributes>[max_num_objects];
 
     // create_rma_window();
     base_pointers = reinterpret_cast<int64_t>(base_ptr);
 
-    holder_base_ptr = HolderOctreeNode(base_ptr, max_num_objects);
+    holder_base_ptr = HolderOctreeNode<AdditionalCellAttributes>(base_ptr, max_num_objects);
 
-    root_nodes_for_local_trees.resize(num_local_trees);
+    LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
+}
 
-    LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode<BarnesHutCell>): {}", max_num_objects, sizeof(OctreeNode<BarnesHutCell>));
+template <typename AdditionalCellAttributes>
+void MPINo_RMA_MemAllocator<AdditionalCellAttributes>::finalize() {
+    delete base_ptr;
 }
 
 #endif

@@ -10,7 +10,9 @@
 
 #pragma once
 
-#if !MPI_FOUND
+#include "../Config.h"
+
+#if !RELEARN_MPI_FOUND
 #include "MPINoWrapper.h"
 
 using MPIWrapper = MPINoWrapper;
