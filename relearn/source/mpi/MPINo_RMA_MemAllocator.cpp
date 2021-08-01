@@ -24,34 +24,7 @@
 #include <sstream>
 
 template class MPINo_RMA_MemAllocator<BarnesHutCell>;
-template class HolderOctreeNode<BarnesHutCell>;
-
 template class MPINo_RMA_MemAllocator<FastMultipoleMethodsCell>;
-template class HolderOctreeNode<FastMultipoleMethodsCell>;
-
-template <typename AdditionalCellAttributes>
-inline void HolderOctreeNode<AdditionalCellAttributes>::make_available(OctreeNode<AdditionalCellAttributes>* ptr) {
-    const size_t dist = std::distance(base_ptr, ptr);
-
-    available.push(ptr);
-    non_available[dist] = nullptr;
-
-    ptr->reset();
-}
-
-template <typename AdditionalCellAttributes>
-inline void HolderOctreeNode<AdditionalCellAttributes>::make_all_available() noexcept {
-    for (auto& ptr : non_available) {
-        if (ptr == nullptr) {
-            continue;
-        }
-
-        available.push(ptr);
-
-        ptr->reset();
-        ptr = nullptr;
-    }
-}
 
 template <typename AdditionalCellAttributes>
 void MPINo_RMA_MemAllocator<AdditionalCellAttributes>::init(size_t size_requested) {
@@ -64,7 +37,7 @@ void MPINo_RMA_MemAllocator<AdditionalCellAttributes>::init(size_t size_requeste
     // create_rma_window();
     base_pointers = reinterpret_cast<int64_t>(base_ptr);
 
-    holder_base_ptr = HolderOctreeNode<AdditionalCellAttributes>(base_ptr, max_num_objects);
+    MemoryHolder<OctreeNode, AdditionalCellAttributes>::init(base_ptr, max_num_objects);
 
     LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
 }

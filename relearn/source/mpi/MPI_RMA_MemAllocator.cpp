@@ -15,6 +15,7 @@
 #include "../algorithm/BarnesHutCell.h"
 #include "../io/LogFiles.h"
 #include "../structure/OctreeNode.h"
+#include "../util/MemoryHolder.h"
 
 #include <mpi.h>
 
@@ -60,7 +61,7 @@ void MPI_RMA_MemAllocator<AdditionalCellAttributes>::init(size_t size_requested)
     const int error_code_3 = MPI_Allgather(&base_ptr, 1, MPI_AINT, base_pointers.data(), 1, MPI_AINT, MPI_COMM_WORLD);
     RelearnException::check(error_code_3 == 0, "Error in MPI_RMA_MemAllocator::init()");
 
-    holder_base_ptr = HolderOctreeNode(base_ptr, max_num_objects);
+    MemoryHolder<OctreeNode, AdditionalCellAttributes>::init(base_ptr, max_num_objects);
 
     LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
 }

@@ -5,6 +5,8 @@
 #include "MPINo_RMA_MemAllocator.h"
 #include "../algorithm/BarnesHutCell.h"
 #include "../io/LogFiles.h"
+#include "../structure/OctreeNode.h"
+#include "../util/MemoryHolder.h"
 #include "../util/RelearnException.h"
 #include "../util/Utility.h"
 
@@ -101,7 +103,7 @@ void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size) {
 }
 
 void MPINoWrapper::make_all_mem_available() {
-    MPINo_RMA_MemAllocator<BarnesHutCell>::make_all_available();
+    MemoryHolder<OctreeNode, BarnesHutCell>::make_all_available();
 }
 
 [[nodiscard]] std::string MPINoWrapper::get_my_rank_str() {

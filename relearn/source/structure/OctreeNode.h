@@ -13,7 +13,7 @@
 #include "Cell.h"
 #include "../Config.h"
 #include "../mpi/MPIWrapper.h"
-#include "../mpi/MPI_RMA_MemAllocator.h"
+#include "../util/MemoryHolder.h"
 
 #include <array>
 #include <optional>
@@ -36,16 +36,16 @@ public:
      * @return A valid pointer to an OctreeNode
      */
     [[nodiscard]] static OctreeNodePtr create() {
-        return MPI_RMA_MemAllocator<AdditionalCellAttributes>::new_octree_node();
+        return MemoryHolder<OctreeNode, AdditionalCellAttributes>::get_available();
     }
 
     /**
      * @brief Deletes the object pointed to. Internally calls OctreeNode::reset().
      *      The pointer is invalidated.
-     * @param ptr The pointer to object that shall be deleted
+     * @param node The pointer to object that shall be deleted
      */
     static void free(OctreeNodePtr node) {
-        MPI_RMA_MemAllocator<AdditionalCellAttributes>::delete_octree_node(node);
+        MemoryHolder<OctreeNode, AdditionalCellAttributes>::make_available(node);
     }
 
     /**

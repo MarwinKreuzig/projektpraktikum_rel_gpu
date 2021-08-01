@@ -17,6 +17,7 @@
 #include "spdlog/fmt/bundled/core.h"
 #include "../io/LogFiles.h"
 #include "../structure/OctreeNode.h"
+#include "../util/MemoryHolder.h"
 #include "../util/RelearnException.h"
 #include "../util/Utility.h"
 
@@ -310,7 +311,7 @@ void MPIWrapper::free_custom_function() {
 }
 
 void MPIWrapper::make_all_mem_available() {
-    MPI_RMA_MemAllocator<BarnesHutCell>::make_all_available();
+    MemoryHolder<OctreeNode, BarnesHutCell>::make_all_available();
 }
 
 void MPIWrapper::lock_window(int rank, MPI_Locktype lock_type) {
