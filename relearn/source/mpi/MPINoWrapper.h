@@ -6,6 +6,7 @@
 
 #pragma message("Using MPINoWrapper")
 
+#include "../io/LogFiles.h"
 #include "../util/RelearnException.h"
 
 #include <array>
@@ -20,7 +21,7 @@ using MPI_Request = int;
 constexpr inline auto MPI_LOCK_EXCLUSIVE = 0;
 constexpr inline auto MPI_LOCK_SHARED = 1;
 
-template<typename T>
+template <typename T>
 class OctreeNode;
 class RelearnTest;
 
@@ -52,6 +53,10 @@ private:
 
     static inline size_t num_neurons{}; // Total number of neurons
 
+    static inline void* base_ptr{ nullptr }; // Start address of MPI-allocated memory
+
+    static inline int64_t base_pointers{}; // RMA window base pointers of all procs
+
     using async_type = std::tuple<const void*, void*, int>;
 
     static inline std::map<AsyncToken, async_type> tuple_map{};
@@ -71,7 +76,21 @@ private:
 public:
     static void init(int argc, char** argv);
 
-    static void init_buffer_octree();
+    template <template <typename> typename OctreeNode, typename AdditionalCellAttributes>
+    static void init_buffer_octree() {
+        const auto max_num_objects = Constants::mpi_alloc_mem / sizeof(OctreeNode<AdditionalCellAttributes>);
+
+        base_ptr = new OctreeNode<AdditionalCellAttributes>[max_num_objects];
+
+        // create_rma_window();
+        base_pointers = reinterpret_cast<int64_t>(base_ptr);
+
+        auto cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr);
+
+        MemoryHolder<OctreeNode, AdditionalCellAttributes>::init(cast, max_num_objects);
+
+        LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
+    }
 
     static void barrier();
 
@@ -118,6 +137,10 @@ public:
     template <typename AdditionalCellAttributes>
     static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, int target_rank, const OctreeNode<AdditionalCellAttributes>* src) {
         *dst = *src;
+    }
+
+    [[nodiscard]] static int64_t get_base_pointers() noexcept {
+        return base_pointers;
     }
 
     [[nodiscard]] static int get_num_ranks();

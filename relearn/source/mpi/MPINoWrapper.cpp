@@ -23,10 +23,6 @@
 void MPINoWrapper::init(int argc, char** argv) {
 }
 
-void MPINoWrapper::init_buffer_octree() {
-    MPINo_RMA_MemAllocator<BarnesHutCell>::init(Constants::mpi_alloc_mem);
-}
-
 void MPINoWrapper::barrier() {
 }
 
@@ -125,7 +121,7 @@ void MPINoWrapper::unlock_window(int rank) {
 }
 
 void MPINoWrapper::finalize() /*noexcept*/ {
-    MPINo_RMA_MemAllocator<BarnesHutCell>::finalize();
+    delete[] base_ptr;
 }
 
 #endif
