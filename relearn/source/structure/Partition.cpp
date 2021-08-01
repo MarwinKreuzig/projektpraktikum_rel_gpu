@@ -12,7 +12,6 @@
 
 #include "../io/LogFiles.h"
 #include "../mpi/MPIWrapper.h"
-#include "../mpi/MPI_RMA_MemAllocator.h"
 #include "../neurons/Neurons.h"
 #include "../sim/NeuronToSubdomainAssignment.h"
 #include "../util/RelearnException.h"
@@ -82,9 +81,8 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
         current_subdomain.index_3d = space_curve.map_1d_to_3d(static_cast<uint64_t>(current_subdomain.index_1d));
     }
 
-    LogFiles::print_message_rank(0,
-        "Total number subdomains        : {}\nNumber subdomains per dimension: {}",
-        total_num_subdomains, num_subdomains_per_dimension);
+    LogFiles::print_message_rank(0, "Total number subdomains        : {}", total_num_subdomains);
+    LogFiles::print_message_rank(0, "Number subdomains per dimension: {}", num_subdomains_per_dimension);
 }
 
 void Partition::print_my_subdomains_info_rank(int rank) {

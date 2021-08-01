@@ -37,7 +37,7 @@ public:
     }
 
     static [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_available() {
-        RelearnException::check(!available.empty(), "In MPI_RMA_MemAllocator::MemoryHolder::get_available, there are no free nodes.");
+        RelearnException::check(!available.empty(), "In MemoryHolder::get_available, there are no free nodes.");
 
         // Get last available element and save it
         OctreeNode<AdditionalCellAttributes>* ptr = available.front();

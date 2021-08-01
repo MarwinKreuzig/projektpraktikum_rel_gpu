@@ -12,7 +12,6 @@
 
 #if RELEARN_MPI_FOUND
 
-#include "MPI_RMA_MemAllocator.h"
 #include "../algorithm/BarnesHutCell.h"
 #include "spdlog/fmt/bundled/core.h"
 #include "../io/LogFiles.h"
@@ -72,8 +71,40 @@ void MPIWrapper::init_globals() {
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 }
 
-void MPIWrapper::init_buffer_octree() {
-    MPI_RMA_MemAllocator<BarnesHutCell>::init(Constants::mpi_alloc_mem);
+size_t MPIWrapper::init_window(size_t size_requested, size_t octree_node_size) {
+
+    // Number of objects "size_requested" Bytes correspond to
+    const auto max_num_objects = size_requested / octree_node_size;
+    const auto max_size = max_num_objects * octree_node_size;
+
+    // Store size of MPI_COMM_WORLD
+    int my_num_ranks = -1;
+    // NOLINTNEXTLINE
+    const int error_code_1 = MPI_Comm_size(MPI_COMM_WORLD, &my_num_ranks);
+    RelearnException::check(error_code_1 == 0, "Error in MPI_RMA_MemAllocator::init()");
+
+    const auto num_ranks = static_cast<size_t>(my_num_ranks);
+
+    // Allocate block of memory which is managed later on
+    // NOLINTNEXTLINE
+    if (MPI_SUCCESS != MPI_Alloc_mem(max_size, MPI_INFO_NULL, &base_ptr)) {
+        RelearnException::fail("MPI_Alloc_mem failed");
+    }
+
+    // Set window's displacement unit
+    mpi_window = new MPI_Win;
+    // NOLINTNEXTLINE
+    const int error_code_2 = MPI_Win_create(base_ptr, max_size, 1, MPI_INFO_NULL, MPI_COMM_WORLD, (MPI_Win*)mpi_window);
+    RelearnException::check(error_code_2 == 0, "Error in MPI_RMA_MemAllocator::init()");
+
+    // Vector must have space for one pointer from each rank
+    base_pointers.resize(num_ranks);
+
+    // NOLINTNEXTLINE
+    const int error_code_3 = MPI_Allgather(&base_ptr, 1, MPI_AINT, base_pointers.data(), 1, MPI_AINT, MPI_COMM_WORLD);
+    RelearnException::check(error_code_3 == 0, "Error in MPI_RMA_MemAllocator::init()");
+
+    return max_num_objects;
 }
 
 void MPIWrapper::barrier() {
@@ -216,13 +247,13 @@ void MPIWrapper::all_gather_inl(void* ptr, int count) {
 }
 
 void MPIWrapper::get(void* origin, size_t size, int target_rank, int64_t displacement) {
-    
+
     const MPI_Aint displacement_mpi(displacement);
-    const auto mpi_window = *(MPI_Win*)(MPI_RMA_MemAllocator<BarnesHutCell>::mpi_window);
+    const auto window = *(MPI_Win*)(mpi_window);
 
     RelearnException::check(size < static_cast<size_t>(std::numeric_limits<int>::max()), "Too much to reduce");
 
-    const int errorcode = MPI_Get(origin, static_cast<int>(size), MPI_CHAR, target_rank, displacement_mpi, static_cast<int>(size), MPI_CHAR, mpi_window);
+    const int errorcode = MPI_Get(origin, static_cast<int>(size), MPI_CHAR, target_rank, displacement_mpi, static_cast<int>(size), MPI_CHAR, window);
     RelearnException::check(errorcode == 0, "Error in get");
 }
 
@@ -319,22 +350,26 @@ void MPIWrapper::lock_window(int rank, MPI_Locktype lock_type) {
     const auto lock_type_int = translate_lock_type(lock_type);
 
     // NOLINTNEXTLINE
-    const auto mpi_window = *(MPI_Win*)(MPI_RMA_MemAllocator<BarnesHutCell>::mpi_window);
-    const int errorcode = MPI_Win_lock(lock_type_int, rank, MPI_MODE_NOCHECK, mpi_window);
+    const auto window = *(MPI_Win*)(mpi_window);
+    const int errorcode = MPI_Win_lock(lock_type_int, rank, MPI_MODE_NOCHECK, window);
     RelearnException::check(errorcode == 0, "Error in lock window");
 }
 
 void MPIWrapper::unlock_window(int rank) {
     RelearnException::check(rank >= 0, "rank was: %d", rank);
-    const auto mpi_window = *(MPI_Win*)(MPI_RMA_MemAllocator<BarnesHutCell>::mpi_window);
-    const int errorcode = MPI_Win_unlock(rank, mpi_window);
+    const auto window = *(MPI_Win*)(mpi_window);
+    const int errorcode = MPI_Win_unlock(rank, window);
     RelearnException::check(errorcode == 0, "Error in unlock window");
 }
 
 void MPIWrapper::finalize() /*noexcept*/ {
     free_custom_function();
 
-    MPI_RMA_MemAllocator<BarnesHutCell>::finalize();
+    const int error_code_1 = MPI_Win_free((MPI_Win*)mpi_window);
+    RelearnException::check(error_code_1 == 0, "Error in MPI_RMA_MemAllocator::finalize()");
+    delete mpi_window;
+    const int error_code_2 = MPI_Free_mem(base_ptr);
+    RelearnException::check(error_code_2 == 0, "Error in MPI_RMA_MemAllocator::finalize()");
 
     const int errorcode = MPI_Finalize();
     RelearnException::check(errorcode == 0, "Error in finalize");

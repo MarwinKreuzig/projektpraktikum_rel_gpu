@@ -20,7 +20,6 @@ using MPIWrapper = MPINoWrapper;
 
 #pragma message("Using MPIWrapper")
 
-#include "MPI_RMA_MemAllocator.h"
 #include "../util/RelearnException.h"
 
 #include <array>
@@ -81,6 +80,8 @@ public:
 private:
     MPIWrapper() = default;
 
+    [[nodiscard]] static size_t init_window(size_t size_requested, size_t octree_node_size);
+
     static void init_globals();
 
     static inline void* minsummax{};
@@ -97,6 +98,12 @@ private:
     static inline int my_rank{ -1 }; // My rank in MPI_COMM_WORLD
 
     static inline int thread_level_provided{ -1 }; // Thread level provided by MPI
+
+    //NOLINTNEXTLINE
+    static inline void* mpi_window{ nullptr }; // RMA window object
+
+    static inline void* base_ptr{ nullptr }; // Start address of MPI-allocated memory
+    static inline std::vector<int64_t> base_pointers{}; // RMA window base pointers of all procs
 
     // NOLINTNEXTLINE
     static inline std::string my_rank_str{ "-1" };
@@ -121,6 +128,15 @@ private:
 
     static void reduce_double(const double* src, double* dst, size_t size, ReduceFunction function, int root_rank);
 
+    /**
+     * @brief Returns the base addresses of the memory windows of all memory windows.
+     * @return The base addresses of the memory windows. The base address for MPI rank i
+     *      is found at <return>[i]
+     */
+    [[nodiscard]] static const std::vector<int64_t>& get_base_pointers() noexcept {
+        return base_pointers;
+    }
+
 public:
     /**
      * @brief Initializes the local MPI implementation via MPI_Init_Thread;
@@ -133,7 +149,17 @@ public:
     /**
      * @brief Initializes the shared RMA memory. Must be called before any call involving OctreeNode*.
      */
-    static void init_buffer_octree();
+    template <template <typename> typename OctreeNode, typename AdditionalCellAttributes>
+    static void init_buffer_octree() {
+        const auto octree_node_size = sizeof(OctreeNode<AdditionalCellAttributes>);
+        size_t max_num_objects = init_window(Constants::mpi_alloc_mem, octree_node_size);
+
+        auto* cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr);
+
+        MemoryHolder<OctreeNode, AdditionalCellAttributes>::init(cast, max_num_objects);
+
+        LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
+    }
 
     /**
      * @brief The calling MPI rank halts until all MPI ranks reach the method.
@@ -290,7 +316,7 @@ public:
     template <typename AdditionalCellAttributes>
     static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, int target_rank, const OctreeNode<AdditionalCellAttributes>* src) {
         RelearnException::check(target_rank >= 0, "target rank is negative in download_octree_nodet");
-        const auto& base_ptrs = MPI_RMA_MemAllocator<AdditionalCellAttributes>::get_base_pointers();
+        const auto& base_ptrs = get_base_pointers();
         RelearnException::check(target_rank < base_ptrs.size(), "target rank is greater than the base pointers");
         const auto displacement = int64_t(src) - base_ptrs[target_rank];
 

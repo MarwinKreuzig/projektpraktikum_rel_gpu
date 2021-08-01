@@ -10,6 +10,8 @@
 
 #include "gtest/gtest.h"
 
+#include "../../../source/algorithm/BarnesHutCell.h"
+#include "../../../source/structure/OctreeNode.h"
 #include "../../../source/mpi/MPIWrapper.h"
 #include "../../../source/io/LogFiles.h"
 #include "../../../source/util/RelearnException.h"
@@ -30,7 +32,7 @@ private:
 
         char* argument = (char*)"./runTests";
         MPIWrapper::init(1, &argument);
-        MPIWrapper::init_buffer_octree();
+        MPIWrapper::init_buffer_octree<OctreeNode, BarnesHutCell>();
     }
 
 protected:

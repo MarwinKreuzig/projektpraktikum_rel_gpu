@@ -19,7 +19,6 @@
 #include "../structure/OctreeNode.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
-#include "../mpi/MPI_RMA_MemAllocator.h"
 #include "../io/LogFiles.h"
 #include "../neurons/Neurons.h"
 #include "../neurons/models/SynapticElements.h"
