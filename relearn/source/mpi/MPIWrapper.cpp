@@ -341,10 +341,6 @@ void MPIWrapper::free_custom_function() {
     delete minsummax;
 }
 
-void MPIWrapper::make_all_mem_available() {
-    MemoryHolder<OctreeNode, BarnesHutCell>::make_all_available();
-}
-
 void MPIWrapper::lock_window(int rank, MPI_Locktype lock_type) {
     RelearnException::check(rank >= 0, "rank was: %d", rank);
     const auto lock_type_int = translate_lock_type(lock_type);

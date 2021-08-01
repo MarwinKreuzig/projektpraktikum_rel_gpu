@@ -92,8 +92,6 @@ private:
 
     static void free_custom_function();
 
-    static void make_all_mem_available();
-
     static inline int num_ranks{ -1 }; // Number of ranks in MPI_COMM_WORLD
     static inline int my_rank{ -1 }; // My rank in MPI_COMM_WORLD
 

@@ -14,6 +14,7 @@
 #include "../../../source/structure/OctreeNode.h"
 #include "../../../source/mpi/MPIWrapper.h"
 #include "../../../source/io/LogFiles.h"
+#include "../../../source/util/MemoryHolder.h"
 #include "../../../source/util/RelearnException.h"
 
 #include <chrono>
@@ -71,7 +72,7 @@ protected:
     }
 
     void make_mpi_mem_available() {
-        MPIWrapper::make_all_mem_available();
+        MemoryHolder<OctreeNode, BarnesHutCell>::make_all_available();
     }
 
     constexpr static int iterations = 10;

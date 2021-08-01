@@ -63,8 +63,6 @@ private:
 
     static inline std::string my_rank_str{ '0' };
 
-    static void make_all_mem_available();
-
     static void all_gather(const void* own_data, void* buffer, int size);
 
     static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank);
@@ -87,7 +85,7 @@ public:
 
         auto cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr);
 
-        MemoryHolder<OctreeNode, AdditionalCellAttributes>::init(cast, max_num_objects);
+        MemoryHolder<AdditionalCellAttributes>::init(cast, max_num_objects);
 
         LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
     }

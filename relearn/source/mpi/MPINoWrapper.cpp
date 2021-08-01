@@ -98,10 +98,6 @@ void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size) {
     return num_neurons;
 }
 
-void MPINoWrapper::make_all_mem_available() {
-    MemoryHolder<OctreeNode, BarnesHutCell>::make_all_available();
-}
-
 [[nodiscard]] std::string MPINoWrapper::get_my_rank_str() {
     return my_rank_str;
 }
