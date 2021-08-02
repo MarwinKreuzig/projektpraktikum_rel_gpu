@@ -137,7 +137,7 @@ public:
         Vec3d cell_xyz_min;
         Vec3d cell_xyz_max;
 
-        std::tie(cell_xyz_min, cell_xyz_max) = cell.get_size();
+        std::tie(cell_xyz_min, cell_xyz_max) = cell.get_total_number_objects();
 
         RelearnException::check(cell_xyz_min.get_x() <= position.get_x() && position.get_x() <= cell_xyz_max.get_x(), "In OctreeNode::insert, x was not in range");
         RelearnException::check(cell_xyz_min.get_y() <= position.get_y() && position.get_y() <= cell_xyz_max.get_y(), "In OctreeNode::insert, y was not in range");
@@ -426,7 +426,7 @@ public:
      * @brief Returns the size of the associated cell
      * @return The size of the cell
      */
-    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size() const noexcept {
-        return cell.get_size();
+    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_total_number_objects() const noexcept {
+        return cell.get_total_number_objects();
     }
 };

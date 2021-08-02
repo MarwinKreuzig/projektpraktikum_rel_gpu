@@ -12,10 +12,19 @@
 
 #include "RelearnException.h"
 
-#include <functional>
 #include <queue>
 #include <vector>
 
+/**
+ * This class manages a portion of memory of a specified size and can hand out new objects
+ * of the specified type as long as there is space available in the memory portion.
+ * Hands out pointers via get_available(), which have to be reclaimed with make_available() or make_all_available() later on.
+ * 
+ * In effect calls OctreeNode<AdditionalCellAttributes>::reset()
+ * 
+ * @tparam OctreeNode The templated type of objects that are (de-)allocated in the memory portion
+ * @tparam AdditionalCellAttributes The template parameter of the objects
+ */
 template <template <typename> typename OctreeNode, typename AdditionalCellAttributes>
 class MemoryHolder {
     static inline std::queue<OctreeNode<AdditionalCellAttributes>*> available{};
@@ -25,6 +34,12 @@ class MemoryHolder {
     static inline size_t total{ Constants::uninitialized };
 
 public:
+    /**
+     * @brief Initializes the class to hold the specified pointer.
+     *      Does not transfer ownership
+     * @param ptr The pointer to the memory location in which objects should be created and deleted
+     * @param length The number of objects that fit into the memory
+     */
     static void init(OctreeNode<AdditionalCellAttributes>* ptr, size_t length) {
         non_available.resize(length, nullptr);
         base_ptr = ptr;
@@ -36,7 +51,13 @@ public:
         }
     }
 
-    static [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_available() {
+    /**
+     * @brief Returns a non-null pointer to a new object, which has to be reclaimed later.
+     *      Does not transfer ownership
+     * @exception Throws a RelearnException if all objects are in use
+     * @return A non-null pointer to a new object
+     */
+    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_available() {
         RelearnException::check(!available.empty(), "In MemoryHolder::get_available, there are no free nodes.");
 
         // Get last available element and save it
@@ -44,20 +65,32 @@ public:
         available.pop();
         const size_t dist = std::distance(base_ptr, ptr);
 
+        RelearnException::check(dist < non_available.size(), "In MemoryHolder::get_available, the distance was too large.");
         non_available[dist] = ptr;
 
         return ptr;
     }
 
+    /**
+     * @brief Returns the pointer to the available ones and destroys the object pointed to.
+     * @param ptr The pointer that should be freed, not null, must have been retrieved via get_available()
+     * @exception Throws a RelearnException if ptr is nullptr or ptr did not come from get_available()
+     */
     static void make_available(OctreeNode<AdditionalCellAttributes>* ptr) {
+        RelearnException::check(ptr != nullptr, "In MemoryHolder::make_available, ptr was nullptr");
+
         const size_t dist = std::distance(base_ptr, ptr);
 
+        RelearnException::check(dist < non_available.size(), "In MemoryHolder::get_available, the distance was too large.");
         available.push(ptr);
         non_available[dist] = nullptr;
 
         ptr->reset();
     }
 
+    /**
+     * @brief Destroys all objects that were handed out via get_available. All pointers are invalidated.
+     */
     static void make_all_available() noexcept {
         for (OctreeNode<AdditionalCellAttributes>*& ptr : non_available) {
             if (ptr == nullptr) {
@@ -71,11 +104,19 @@ public:
         }
     }
 
-    [[nodiscard]] static size_t get_size() noexcept {
+    /**
+     * @brief Returns the number of objects that fit into the memory portion
+     * @return The number of objects that fit into the memory portion
+     */
+    [[nodiscard]] static size_t get_total_number_objects() noexcept {
         return total;
     }
 
-    [[nodiscard]] static size_t get_num_available() noexcept {
+    /**
+     * @brief Returns the number of currently available objects 
+     * @return The number of currently available objects 
+     */
+    [[nodiscard]] static size_t get_number_available_objects() noexcept {
         return available.size();
     }
 };

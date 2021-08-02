@@ -62,7 +62,7 @@ public:
      * @brief Returns the size of the cell as tuple of (1) min and (2) max
      * @return The size of the cell as tuple of (1) min and (2) max
      */
-    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size() const noexcept {
+    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_total_number_objects() const noexcept {
         return std::make_tuple(xyz_min, xyz_max);
     }
 
@@ -237,7 +237,7 @@ public:
         Vec3d xyz_min{};
         Vec3d xyz_max{};
 
-        std::tie(xyz_min, xyz_max) = cell.get_size();
+        std::tie(xyz_min, xyz_max) = cell.get_total_number_objects();
 
         output_stream << "  == Cell (" << reinterpret_cast<size_t>(&cell) << " ==\n";
         output_stream << "\tMin: " << xyz_min << "\n\tMax: " << xyz_max << '\n';
