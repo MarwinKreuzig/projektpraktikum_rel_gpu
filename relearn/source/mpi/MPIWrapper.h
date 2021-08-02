@@ -21,6 +21,7 @@ using MPIWrapper = MPINoWrapper;
 #pragma message("Using MPIWrapper")
 
 #include "../io/LogFiles.h"
+#include "../util/MemoryHolder.h"
 #include "../util/RelearnException.h"
 
 #include <array>

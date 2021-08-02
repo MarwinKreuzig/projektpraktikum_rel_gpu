@@ -2,7 +2,6 @@
 
 #if !RELEARN_MPI_FOUND
 
-#include "MPINo_RMA_MemAllocator.h"
 #include "../algorithm/BarnesHutCell.h"
 #include "../io/LogFiles.h"
 #include "../structure/OctreeNode.h"

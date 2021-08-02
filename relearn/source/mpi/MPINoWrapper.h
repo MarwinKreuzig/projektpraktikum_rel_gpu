@@ -7,14 +7,14 @@
 #pragma message("Using MPINoWrapper")
 
 #include "../io/LogFiles.h"
+#include "../util/MemoryHolder.h"
 #include "../util/RelearnException.h"
 
 #include <array>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
-#include <map>
-#include <future>
 
 using MPI_Request = int;
 
@@ -85,7 +85,7 @@ public:
 
         auto cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr);
 
-        MemoryHolder<AdditionalCellAttributes>::init(cast, max_num_objects);
+        MemoryHolder<OctreeNode, AdditionalCellAttributes>::init(cast, max_num_objects);
 
         LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
     }
