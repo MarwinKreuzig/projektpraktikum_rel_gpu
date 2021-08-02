@@ -14,7 +14,6 @@
 #include "../structure/NodeCache.h"
 #include "../structure/Octree.h"
 #include "../structure/OctreeNode.h"
-
 #include "../util/Random.h"
 
 #include <algorithm>

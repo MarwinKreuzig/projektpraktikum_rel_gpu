@@ -13,9 +13,7 @@
 #include "../algorithm/BarnesHutCell.h"
 #include "../neurons/helper/RankNeuronId.h"
 #include "../neurons/SignalType.h"
-
 #include "../structure/OctreeNode.h"
-
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
 

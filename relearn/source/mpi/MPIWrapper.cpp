@@ -12,12 +12,7 @@
 
 #if RELEARN_MPI_FOUND
 
-#include "../algorithm/BarnesHutCell.h"
 #include "spdlog/fmt/bundled/core.h"
-#include "../io/LogFiles.h"
-#include "../structure/OctreeNode.h"
-#include "../util/MemoryHolder.h"
-#include "../util/RelearnException.h"
 #include "../util/Utility.h"
 
 #include <mpi.h>
