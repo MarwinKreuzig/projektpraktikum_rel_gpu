@@ -27,11 +27,10 @@
 #include "../util/RelearnException.h"
 #include "../util/Timers.h"
 
-#include <sstream>
-
 #include <functional>
 #include <map>
 #include <optional>
+#include <sstream>
 #include <stack>
 #include <utility>
 #include <variant>
@@ -42,9 +41,7 @@ class Partition;
 class SynapticElements;
 
 /**
- * This type represents the (spatial) Octree in which the neurons are organised.
- * It offers general informations about the structure, the functionality to insert new neurons,
- * update from the bottom up, and synchronize parts with MPI.
+ * This type represents the interface of the (spatial) Octree.
  */
 class Octree {
 public:
@@ -63,7 +60,8 @@ public:
         : level_of_branch_nodes(level_of_branch_nodes) {
         set_size(xyz_min, xyz_max);
     }
-    ~Octree() = default;
+
+    virtual ~Octree() = default;
 
     Octree(const Octree& other) = delete;
     Octree(Octree&& other) = delete;
@@ -157,6 +155,11 @@ protected:
     size_t level_of_branch_nodes{ Constants::uninitialized };
 };
 
+/**
+ * This type represents the (spatial) Octree in which the neurons are organised.
+ * It offers general informations about the structure, the functionality to insert new neurons,
+ * update from the bottom up, and synchronize parts with MPI.
+ */
 template <typename AdditionalCellAttributes>
 class OctreeImplementation : public Octree {
 protected:
@@ -223,6 +226,13 @@ protected:
     };
 
 public:
+    /**
+     * @brief Constructs a new OctreeImplementation with the the given size and constructs the "internal" part up to and including the level_of_branch_nodes
+     * @param xyz_min The minimum positions of this octree
+     * @param xyz_max The maximum positions of this octree
+     * @param level_of_branch_nodes The level at which the branch nodes (that are exchanged via MPI) are
+     * @exception Throws a RelearnException if xyz_min is not componentwise smaller than xyz_max
+     */
     OctreeImplementation(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes)
         : Octree(xyz_min, xyz_max, level_of_branch_nodes) {
 
@@ -251,7 +261,6 @@ public:
         OctreeNode<AdditionalCellAttributes>* local_tree = branch_nodes[local_id];
         return local_tree;
     }
-
 
     /**
      * @brief Returns the number of branch nodes (that are exchanged via MPI)
@@ -284,6 +293,10 @@ public:
         }
     }
 
+    /**
+     * @brief Gathers all leaf nodes and makes them available via get_leaf_nodes
+     * @param num_neurons The number of neurons
+     */
     void initializes_leaf_nodes(size_t num_neurons) override {
         std::vector<OctreeNode<AdditionalCellAttributes>*> leaf_nodes(num_neurons);
 
@@ -382,6 +395,12 @@ public:
         return all_leaf_nodes;
     }
 
+    /**
+     * @brief Inserts a neuron at the specified position with the neuron id and the rank
+     * @param position The position of the neuron
+     * @param neuron_id The local neuron id
+     * @param rank The MPI rank that the neuron belongs to
+     */
     void insert(const Vec3d& position, size_t neuron_id, int rank) {
         RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "In Octree::insert, x was not in range");
         RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Octree::insert, x was not in range");
@@ -413,6 +432,7 @@ public:
         RelearnException::check(res != nullptr, "Octree::insert had nullptr");
     }
 
+protected:
     void tree_walk_postorder(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function, OctreeNode<AdditionalCellAttributes>* root, size_t max_level = std::numeric_limits<size_t>::max()) {
         RelearnException::check(root != nullptr, "In tree_walk_postorder, octree was nullptr");
 
@@ -455,7 +475,6 @@ public:
         } /* while */
     }
 
-protected:
     void construct_global_tree_part() {
         RelearnException::check(root == nullptr, "root was not null in the construction of the global state!");
 
