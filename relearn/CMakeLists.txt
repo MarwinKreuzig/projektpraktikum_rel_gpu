@@ -18,7 +18,11 @@ endif()
 
 include(FetchContent)
 
-find_package(MPI)
+option(ENABLE_MPI "Enable mpi" ON)
+if(ENABLE_MPI)
+	find_package(MPI)
+endif()
+
 find_package(OpenMP)
 
 file(GLOB_RECURSE SRC_ALG "source/algorithm/*")

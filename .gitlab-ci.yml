@@ -22,12 +22,12 @@ test-mpi:
       - relearn/build-docker
 
 build-nompi:
-  image: relearn-ci-nompi
+  image: relearn-ci
   stage: build
   before_script:
     - cd relearn && mkdir build-docker-nompi && cd build-docker-nompi  
   script:
-    - cmake -Dnoclangtidy=1 .. && make -j 16
+    - cmake -DENABLE_CLANG_TIDY=0 -DENABLE_MPI=0  .. && make -j 16
   artifacts:
     paths:
       - relearn/build-docker-nompi
