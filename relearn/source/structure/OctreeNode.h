@@ -153,9 +153,9 @@ public:
         // Correct position for new node not found yet
         for (OctreeNodePtr current_node = this; nullptr != current_node;) {
             /**
-		 * My parent already exists.
-		 * Calc which child to follow, i.e., determine octant
-		 */
+		     * My parent already exists.
+		     * Calc which child to follow, i.e., determine octant
+		     */
             new_position_octant = current_node->get_cell().get_octant_for_position(position);
 
             parent_node = current_node;

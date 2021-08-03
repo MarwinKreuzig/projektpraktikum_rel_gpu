@@ -77,17 +77,15 @@ public:
 
     template <typename AdditionalCellAttributes>
     static void init_buffer_octree() {
-        using type = OctreeNode<AdditionalCellAttributes>;
+        const auto max_num_objects = Constants::mpi_alloc_mem / sizeof(OctreeNode<AdditionalCellAttributes>);
 
-        const auto max_num_objects = Constants::mpi_alloc_mem / sizeof(type);
-
-        base_ptr<type>.resize(max_num_objects);
+        base_ptr<AdditionalCellAttributes>.resize(max_num_objects, OctreeNode<AdditionalCellAttributes>());
 
         // create_rma_window();
         base_pointers
-            = reinterpret_cast<int64_t>(base_ptr<OctreeNode<AdditionalCellAttributes>>.data());
+            = reinterpret_cast<int64_t>(base_ptr<AdditionalCellAttributes>.data());
 
-        auto cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr<OctreeNode<AdditionalCellAttributes>>.data());
+        auto cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr<AdditionalCellAttributes>.data());
 
         MemoryHolder<AdditionalCellAttributes>::init(cast, max_num_objects);
 
