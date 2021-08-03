@@ -417,10 +417,17 @@ private:
 		 * See Butz and van Ooyen, 2013 PloS Comp Biol, Equation 4.
 		 */
 
-        const auto xi = (eta + epsilon) / 2;
-        const auto zeta = (eta - epsilon) / (2 * sqrt(-log(0.5)));
+        const auto factor = 1.6651092223153955127063292897904020952611777045288814583336582344;
+        //1.6651092223153955127063292897904020952611777045288814583336582344... = (2 * sqrt(-log(0.5)));
 
-        const auto dz = growth_rate * (2 * exp(-pow((Ca - xi) / zeta, 2)) - 1);
+        const auto xi = (eta + epsilon) / 2;
+        const auto zeta = (eta - epsilon) / factor;
+
+        const auto difference = Ca - xi;
+        const auto quotient = difference / zeta;
+        const auto product = quotient * quotient;
+
+        const auto dz = growth_rate * (2 * exp(-product) - 1);
         return dz;
     }
 

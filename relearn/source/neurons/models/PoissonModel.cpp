@@ -107,6 +107,3 @@ void models::PoissonModel::update_electrical_activity_serial_initialize(const st
     Timers::stop_and_add(TimerRegion::CALC_SERIAL_ACTIVITY);
 }
 
-[[nodiscard]] double PoissonModel::iter_x(const double x, const double I_syn) const noexcept {
-    return ((x_0 - x) / tau_x + I_syn);
-}

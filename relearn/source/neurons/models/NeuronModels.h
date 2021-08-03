@@ -572,7 +572,9 @@ protected:
     void init_neurons(size_t start_id, size_t end_id) final;
 
 private:
-    [[nodiscard]] double iter_x(double x, double I_syn) const noexcept;
+    [[nodiscard]] double iter_x(double x, double I_syn) const noexcept {
+        return ((x_0 - x) / tau_x + I_syn);
+    }
 
     std::vector<unsigned int> refrac{}; // refractory time
 
