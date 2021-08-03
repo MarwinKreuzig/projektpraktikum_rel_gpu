@@ -14,6 +14,11 @@
 
 #include <optional>
 
+enum class Algorithm {
+    BarnesHut,
+    FastMultipoleMethod
+};
+
 /**
  * This type is used to represent a virtual plasticity element,
  * i.e., axons and dendrites, when it comes to combining multiple of them

@@ -4,6 +4,7 @@ The program offers multiple command line arguments. `--steps` and either `--num-
 
 Command | Shortcut | Effect | Notes
 --- | --- | --- | ---
+`--algorithm <enum>` | `-a <enum>` | Chooses the algorithm that is used to find the target neurons, can be *barnes-hut* or *fast-multipole-method*
 `--num-neurons <size_t>` | `-n <size_t>` | Starts a simulation with the given number of neurons | Excludes `--file`
 `--file <file-path>`| `-f <file-path>` | Starts a simulation with the neurons from the specified file | Excludes `--num-neurons`
 `--graph <file-path>` | `-g <file-path>` | Starts a simulation with an initial connectivity from the specified file | Requires `--file`
@@ -15,7 +16,7 @@ Command | Shortcut | Effect | Notes
 `--steps <size_t>` | `-s <size_t>` | Specifies the number of steps in the simulation |
 `--random-seed <uint32>` | `-r <uint32>` | The seed for the random number  generator |
 `--openmp <int32>` | | Sets the number of OpenMP Threads | Must be greater than 0
-`--theta <double>` | `-t <double>` | Sets the acceptance criterion for the Barnes-Hut-Algorithm | Must be from [0, 0.5]
+`--theta <double>` | `-t <double>` | Sets the acceptance criterion for the Barnes-Hut-Algorithm | Must be from [0, 0.5], requires --algorithm barnes-hut
 `--interactive` | `-i` | Allows an interactive run (does not stop after the number of steps is completed) |
 `--synaptic-elements-lower-bound <double>` | | Sets the lower bound of initial synaptic elements | Must be from [0, $\infty$)
 `--synaptic-elements-upper-bound <double>` | | Sets the upper bound of initial synaptic elements | Must be from [0, $\infty$) and not less than the lower bound

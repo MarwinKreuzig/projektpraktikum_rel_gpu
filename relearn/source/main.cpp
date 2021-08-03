@@ -10,6 +10,7 @@
 
 #include "Config.h"
 #include "algorithm/BarnesHut.h"
+#include "algorithm/Types.h"
 #include "io/InteractiveNeuronIO.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
@@ -62,6 +63,11 @@ int main(int argc, char** argv) {
     // Command line arguments
     CLI::App app{ "" };
 
+    Algorithm algorithm = Algorithm::BarnesHut;
+    std::map<std::string, Algorithm> cli_parse_map{ { "barnes-hut", Algorithm::BarnesHut }, { "fast-multipole-method", Algorithm::FastMultipoleMethod } };
+    auto* opt_algorithm = app.add_option("-a,--algorithm", algorithm, "The algorithm that is used for finding the targets");
+    opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_map, CLI::ignore_case));
+
     size_t num_neurons{};
     auto* opt_num_neurons = app.add_option("-n,--num-neurons", num_neurons, "Number of neurons.");
 
@@ -96,7 +102,7 @@ int main(int argc, char** argv) {
     app.add_option("--openmp", openmp_threads, "Number of OpenMP Threads.");
 
     double accept_criterion{ BarnesHut::default_theta };
-    app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion. Default: 0.3.");
+    auto* opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Required Barnes-Hut.");
 
     auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
 
@@ -136,8 +142,16 @@ int main(int argc, char** argv) {
     RelearnException::check(synaptic_elements_init_ub >= synaptic_elements_init_lb, "The minimum number of vacant synaptic elements must not be larger than the maximum number");
     RelearnException::check(static_cast<bool>(*opt_num_neurons) || static_cast<bool>(*opt_file_positions), "Missing command line option, need num_neurons (-n,--num-neurons) or file_positions (-f,--file).");
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
-    RelearnException::check(accept_criterion <= BarnesHut::max_theta, "Acceptance criterion must be smaller or equal to {}", BarnesHut::max_theta);
-    RelearnException::check(accept_criterion >= 0.0, "Acceptance criterion must not be smaller than 0.0");
+    
+    if (algorithm == Algorithm::BarnesHut) {
+        RelearnException::check(accept_criterion <= BarnesHut::max_theta, "Acceptance criterion must be smaller or equal to {}", BarnesHut::max_theta);
+        RelearnException::check(accept_criterion >= 0.0, "Acceptance criterion must not be smaller than 0.0");
+    } else {
+        const auto accept_criterion_set = opt_accept_criterion->count() > 0;
+        RelearnException::check(!accept_criterion_set, "Acceptance criterion can only be set if Barnes-Hut is used");
+    }
+
+    RelearnException::check(algorithm == Algorithm::BarnesHut, "Currently, only the Barnes-Hut algorithm is supported.");
 
     RelearnException::check(target_calcium >= SynapticElements::min_C_target, "Target calcium is smaller than {}", SynapticElements::min_C_target);
     RelearnException::check(target_calcium <= SynapticElements::max_C_target, "Target calcium is larger than {}", SynapticElements::max_C_target);
@@ -161,7 +175,7 @@ int main(int argc, char** argv) {
 
     // Init random number seeds
     RandomHolder::seed(RandomHolderKey::Partition, static_cast<unsigned int>(my_rank));
-    RandomHolder::seed(RandomHolderKey::BarnesHut, random_seed);
+    RandomHolder::seed(RandomHolderKey::Algorithm, random_seed);
 
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier();

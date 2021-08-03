@@ -45,7 +45,7 @@
             return {};
         }
 
-        const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::BarnesHut, 0.0, std::nextafter(1.0, Constants::eps));
+        const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(1.0, Constants::eps));
 
         /**
          * This is done in case of rounding errors. 
