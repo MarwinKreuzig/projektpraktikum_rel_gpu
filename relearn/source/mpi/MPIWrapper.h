@@ -149,14 +149,14 @@ public:
     /**
      * @brief Initializes the shared RMA memory. Must be called before any call involving OctreeNode*.
      */
-    template <template <typename> typename OctreeNode, typename AdditionalCellAttributes>
+    template <typename AdditionalCellAttributes>
     static void init_buffer_octree() {
         const auto octree_node_size = sizeof(OctreeNode<AdditionalCellAttributes>);
         size_t max_num_objects = init_window(Constants::mpi_alloc_mem, octree_node_size);
 
         auto* cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr);
 
-        MemoryHolder<OctreeNode, AdditionalCellAttributes>::init(cast, max_num_objects);
+        MemoryHolder<AdditionalCellAttributes>::init(cast, max_num_objects);
 
         LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
     }

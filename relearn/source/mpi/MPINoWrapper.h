@@ -53,7 +53,8 @@ private:
 
     static inline size_t num_neurons{}; // Total number of neurons
 
-    static inline void* base_ptr{ nullptr }; // Start address of MPI-allocated memory
+    template <typename AdditionalCellAttributes>
+    static inline std::vector<OctreeNode<AdditionalCellAttributes>> base_ptr{ 0 }; // Start address of MPI-allocated memory
 
     static inline int64_t base_pointers{}; // RMA window base pointers of all procs
 
@@ -74,18 +75,21 @@ private:
 public:
     static void init(int argc, char** argv);
 
-    template <template <typename> typename OctreeNode, typename AdditionalCellAttributes>
+    template <typename AdditionalCellAttributes>
     static void init_buffer_octree() {
-        const auto max_num_objects = Constants::mpi_alloc_mem / sizeof(OctreeNode<AdditionalCellAttributes>);
+        using type = OctreeNode<AdditionalCellAttributes>;
 
-        base_ptr = new OctreeNode<AdditionalCellAttributes>[max_num_objects];
+        const auto max_num_objects = Constants::mpi_alloc_mem / sizeof(type);
+
+        base_ptr<type>.resize(max_num_objects);
 
         // create_rma_window();
-        base_pointers = reinterpret_cast<int64_t>(base_ptr);
+        base_pointers
+            = reinterpret_cast<int64_t>(base_ptr<OctreeNode<AdditionalCellAttributes>>.data());
 
-        auto cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr);
+        auto cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr<OctreeNode<AdditionalCellAttributes>>.data());
 
-        MemoryHolder<OctreeNode, AdditionalCellAttributes>::init(cast, max_num_objects);
+        MemoryHolder<AdditionalCellAttributes>::init(cast, max_num_objects);
 
         LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
     }

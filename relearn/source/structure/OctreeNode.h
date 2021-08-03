@@ -36,7 +36,7 @@ public:
      * @return A valid pointer to an OctreeNode
      */
     [[nodiscard]] static OctreeNodePtr create() {
-        return MemoryHolder<OctreeNode, AdditionalCellAttributes>::get_available();
+        return MemoryHolder<AdditionalCellAttributes>::get_available();
     }
 
     /**
@@ -45,7 +45,7 @@ public:
      * @param node The pointer to object that shall be deleted
      */
     static void free(OctreeNodePtr node) {
-        MemoryHolder<OctreeNode, AdditionalCellAttributes>::make_available(node);
+        MemoryHolder<AdditionalCellAttributes>::make_available(node);
     }
 
     /**

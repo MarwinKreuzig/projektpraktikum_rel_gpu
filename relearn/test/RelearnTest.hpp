@@ -33,7 +33,7 @@ private:
 
         char* argument = (char*)"./runTests";
         MPIWrapper::init(1, &argument);
-        MPIWrapper::init_buffer_octree<OctreeNode, BarnesHutCell>();
+        MPIWrapper::init_buffer_octree<BarnesHutCell>();
     }
 
 protected:
@@ -72,7 +72,7 @@ protected:
     }
 
     void make_mpi_mem_available() {
-        MemoryHolder<OctreeNode, BarnesHutCell>::make_all_available();
+        MemoryHolder<BarnesHutCell>::make_all_available();
     }
 
     constexpr static int iterations = 10;

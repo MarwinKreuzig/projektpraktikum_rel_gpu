@@ -15,6 +15,9 @@
 #include <queue>
 #include <vector>
 
+template <typename T>
+class OctreeNode;
+
 /**
  * This class manages a portion of memory of a specified size and can hand out new objects
  * of the specified type as long as there is space available in the memory portion.
@@ -25,7 +28,7 @@
  * @tparam OctreeNode The templated type of objects that are (de-)allocated in the memory portion
  * @tparam AdditionalCellAttributes The template parameter of the objects
  */
-template <template <typename> typename OctreeNode, typename AdditionalCellAttributes>
+template <typename AdditionalCellAttributes>
 class MemoryHolder {
     static inline std::queue<OctreeNode<AdditionalCellAttributes>*> available{};
     static inline std::vector<OctreeNode<AdditionalCellAttributes>*> non_available{};

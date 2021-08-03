@@ -117,8 +117,6 @@ void MPINoWrapper::unlock_window(int rank) {
 }
 
 void MPINoWrapper::finalize() /*noexcept*/ {
-    auto* cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr);
-    delete[] cast;
 }
 
 #endif
