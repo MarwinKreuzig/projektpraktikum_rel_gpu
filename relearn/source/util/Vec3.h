@@ -326,6 +326,33 @@ public:
     }
 
     /**
+     * @brief Calculates the 2-norm of the vector
+     * @return The calculated 2-norm
+     */
+    [[nodiscard]] double calculate_2_norm() const noexcept {
+        const auto xx = x * x;
+        const auto yy = y * y;
+        const auto zz = z * z;
+
+        const auto sum = xx + yy + zz;
+        const auto norm = sqrt(sum);
+        return norm;
+    }
+
+    /**
+     * @brief Calculates the squared 2-norm of the vector, i.e., ||this||^2_2
+     * @return The squared calculated 2-norm
+     */
+    [[nodiscard]] double calculate_squared_2_norm() const noexcept {
+        const auto xx = x * x;
+        const auto yy = y * y;
+        const auto zz = z * z;
+
+        const auto sum = xx + yy + zz;
+        return sum;
+    }
+
+    /**
      * @brief Calculates the maximum of both vectors componentwise and changes the current object
      * @param other The other vector
      */

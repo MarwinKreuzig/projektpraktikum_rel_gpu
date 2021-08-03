@@ -146,8 +146,10 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags,
     const auto num_dendrites = node_with_dendrite.get_cell().get_number_dendrites_for(dendrite_type_needed);
 
     const auto position_diff = target_xyz.value() - axon_pos_xyz;
-    const auto eucl_length = position_diff.calculate_p_norm(2.0);
-    const auto numerator = pow(eucl_length, 2.0);
+
+    //const auto eucl_length = position_diff.calculate_p_norm(2.0);
+    //const auto numerator = pow(eucl_length, 2.0);
+    const auto numerator = position_diff.calculate_squared_2_norm();
 
     // Criterion from Markus' paper with doi: 10.3389/fnsyn.2014.00007
     const auto ret_val = (num_dendrites * exp(-numerator / (sigma * sigma)));
@@ -218,7 +220,9 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags,
 
     // Calc Euclidean distance between source and target neuron
     const auto distance_vector = target_xyz.value() - axon_pos_xyz;
-    const auto distance = distance_vector.calculate_p_norm(2.0);
+    
+    //const auto distance = distance_vector.calculate_p_norm(2.0);
+    const auto distance = distance_vector.calculate_2_norm();
 
     if (distance == 0.0) {
         return std::make_tuple(false, false);
