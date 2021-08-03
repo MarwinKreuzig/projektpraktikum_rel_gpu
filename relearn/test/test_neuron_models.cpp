@@ -2214,16 +2214,16 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisso
             const auto& current_I_syn = model->get_I_syn();
 
             for (unsigned int id = 0; id < desired_num_neurons; id++) {
-                ASSERT_NE(current_x[id], model_x[id]) << j << id;
+                ASSERT_NE(current_x[id], model_x[id]) << i << ' ' << j << ' ' << id;
 
-                ASSERT_EQ(0.0, model_I_syn[id]) << j << id;
+                ASSERT_EQ(0.0, model_I_syn[id])  << i << ' ' << j << ' ' << id;
                 const auto current_refrac = model->get_secondary_variable(id);
                 if (model->get_fired(id)) {
-                    ASSERT_EQ(current_refrac, expected_refrac) << j << id;
+                    ASSERT_EQ(current_refrac, expected_refrac)  << i << ' ' << j << ' ' << id;
                 } else if (model_secondary[id] == 0) {
-                    ASSERT_EQ(current_refrac, 0) << j << id;
+                    ASSERT_EQ(current_refrac, 0)  << i << ' ' << j << ' ' << id;
                 } else {
-                    ASSERT_EQ(current_refrac, model_secondary[id] - 1) << j << id;
+                    ASSERT_EQ(current_refrac, model_secondary[id] - 1)  << i << ' ' << j << ' ' << id;
                 }
 
                 model_secondary[id] = model->get_secondary_variable(id);

@@ -362,7 +362,7 @@ public:
     static constexpr double min_k{ 0.0 };
     static constexpr double min_tau_C{ 0 };
     static constexpr double min_beta{ 0.0 };
-    static constexpr unsigned int min_h{ 0 };
+    static constexpr unsigned int min_h{ 1 };
 
     static constexpr double min_base_background_activity{ -10000.0 };
     static constexpr double min_background_activity_mean{ -10000.0 };
