@@ -334,8 +334,9 @@ void MPIWrapper::register_custom_function() {
 }
 
 void MPIWrapper::free_custom_function() {
-    MPI_Op_free((MPI_Op*)minsummax);
-    delete minsummax;
+    auto* cast = reinterpret_cast<MPI_Op*>(minsummax);
+    MPI_Op_free(cast);
+    delete cast;
 }
 
 void MPIWrapper::lock_window(int rank, MPI_Locktype lock_type) {
@@ -358,9 +359,11 @@ void MPIWrapper::unlock_window(int rank) {
 void MPIWrapper::finalize() /*noexcept*/ {
     free_custom_function();
 
-    const int error_code_1 = MPI_Win_free((MPI_Win*)mpi_window);
+    auto* cast = reinterpret_cast<MPI_Win*>(mpi_window);
+
+    const int error_code_1 = MPI_Win_free(cast);
     RelearnException::check(error_code_1 == 0, "Error in MPI_RMA_MemAllocator::finalize()");
-    delete mpi_window;
+    delete cast;
     const int error_code_2 = MPI_Free_mem(base_ptr);
     RelearnException::check(error_code_2 == 0, "Error in MPI_RMA_MemAllocator::finalize()");
 
