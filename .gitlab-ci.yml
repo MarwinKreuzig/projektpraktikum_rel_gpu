@@ -161,7 +161,7 @@ deploy-mpi-1:
   image: relearn-ci
   stage: deploy
   script:
-    - mpiexec --allow-run-as-root -n 1 relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 12
+    - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec --allow-run-as-root -n 1 relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 12
   dependencies:
     - test-mpi
   artifacts:
@@ -173,7 +173,7 @@ deploy-mpi-2:
   image: relearn-ci
   stage: deploy
   script:
-    - mpiexec --allow-run-as-root -n 2 relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 12
+    - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec --allow-run-as-root -n 2 relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 12
   dependencies:
     - test-mpi
   artifacts:
@@ -185,7 +185,7 @@ deploy-mpi-4:
   image: relearn-ci
   stage: deploy
   script:
-    - mpiexec --allow-run-as-root -n 4 relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 12
+    - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec --allow-run-as-root -n 4 relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 12
   dependencies:
     - test-mpi
   artifacts:
@@ -197,7 +197,7 @@ deploy-mpi-8:
   image: relearn-ci
   stage: deploy
   script:
-    - mpiexec --allow-run-as-root -n 8 relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 12
+    - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec --allow-run-as-root -n 8 relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 12
   dependencies:
     - test-mpi
   artifacts:
