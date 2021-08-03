@@ -13,6 +13,7 @@
 #include "Vec3.h"
 #include "Multiindex.h"
 #include "../structure/OctreeNode.h"
+#include "../util/Random.h"
 
 namespace Deriatives {
 
@@ -196,7 +197,7 @@ inline double calc_direct_gauss(const std::vector<Vec3d> &sources, const std::ve
     double result = 0;
     for (unsigned int t = 0; t < targets.size(); t++) {
         for (size_t s = 0; s < sources.size(); s++) {
-            result += Functions::kernel(targets.at(t), sources.at(s), sigma);
+            result = result + Functions::kernel(targets.at(t), sources.at(s), sigma);
         }
     }
     return result;
@@ -225,5 +226,38 @@ inline double calc_hermite(OctreeNode* source, OctreeNode* target, const double 
         }        
     }
     return result;
+}
+
+inline int choose_interval(std::vector<double> atractiveness) {
+    const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Octree, 0.0, std::nextafter(1.0, Constants::eps));
+    int vec_len = atractiveness.size();
+    std::vector<double> intervals;
+    intervals.reserve(vec_len+1);
+    intervals[0]=0;
+    double sum = 0;
+    for (int i = 0; i < vec_len; i++)
+    {
+        sum = sum + atractiveness.at(i);
+    }
+
+   // RelearnException::check(temp,"The sum of all attractions was 0.");
+    for (int i = 1; i < vec_len+1; i++)
+    {
+        intervals[i]= intervals[i-1]+ (atractiveness.at(i-1)/sum);
+    }
+   
+    
+    int i = 0;
+
+
+    while (random_number > intervals[i+1] && i<=vec_len)
+    {
+        i++;
+    }
+    if (i>=vec_len+1)
+    {
+        return 0;
+    }
+    return i;
 }
 }

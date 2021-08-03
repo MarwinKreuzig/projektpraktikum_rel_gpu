@@ -762,20 +762,8 @@ void Neurons::make_creation_request_for(
             const std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(current_node, needed);
             RelearnException::check(global_tree->do_random_experiment(current_node, temp).has_value(), "Random experiment gave no value back.");
             OctreeNode* target_node = global_tree->do_random_experiment(current_node, temp).value();
-            if (!target_node->is_parent()){
-                int i = -1;
-                OctreeNode* child_node;
-                do
-                {
-                    i++;
-                    child_node = current_node->get_child(i);
-                } while (child_node == nullptr || child_node->get_cell().get_neuron_num_axons_for(needed) <= 0 && i<8);
-                if (i == 8){
-                    continue;
-                }
-                child_node->add_to_interactionlist(target_node);
-                nodes_with_ax.push(child_node);
-            } else{
+
+            if (target_node->is_parent()){
                 for (size_t i = 0; i < 8; i++) {
                     OctreeNode* child_node = current_node->get_child(i);
                     if (child_node != nullptr && child_node->get_cell().get_neuron_num_axons_for(needed) > 0) {
@@ -788,7 +776,22 @@ void Neurons::make_creation_request_for(
                         nodes_with_ax.push(child_node);
                     }
                 }
-            }           
+            }
+            else{
+                std::vector<double> attractiveness;
+                std::vector<double> index;
+                for(unsigned int i = 0; i < Constants::number_oct; i++){
+                    OctreeNode* child_node = current_node->get_child(i);
+                    if(child_node != nullptr && child_node->get_cell().get_neuron_num_axons_for(needed) > 0){
+                        child_node->add_to_interactionlist(target_node);
+                        const std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(child_node, needed);
+                        attractiveness.push_back(temp[0]);
+                        index.push_back(i);
+                    }
+                }
+                int x = Functions::choose_interval(attractiveness);
+                nodes_with_ax.push(current_node->get_child(index[x]));
+            }
         }
         // the interaction list must be reset for each node 
         current_node->reset_interactionlist();
