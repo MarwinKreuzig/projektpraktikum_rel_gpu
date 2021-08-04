@@ -79,4 +79,5 @@ add_executable(relearn-full_graph "source/main.cpp")
 
 target_link_libraries(relearn-full_graph PRIVATE relearn-full_graph_static)
 
+enable_testing()
 add_subdirectory(test)
