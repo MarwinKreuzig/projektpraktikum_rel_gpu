@@ -12,6 +12,7 @@
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/johnson_all_pairs_shortest.hpp>
+#include <boost/atomic/atomic_ref.hpp>
 
 namespace apsp {
 
@@ -29,25 +30,19 @@ static bool bellman_ford(const graph_t& gr, std::vector<double>& dist) {
     }
     dist.back() = 0;
 
-#ifdef _OPENMP
-    std::vector<std::shared_mutex> mv(dist.size());
-#endif
-    for (int i = 1; i <= V - 1; i++) {
+    for (int i = 1; i < V; i++) {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
         for (int j = 0; j < E; j++) {
             const auto [u, v] = edges[j];
 
-#ifdef _OPENMP
-            std::shared_lock l{ mv[u], std::defer_lock };
-            std::unique_lock l2{ mv[v], std::defer_lock };
-            std::lock(l, l2);
-#endif
+            boost::atomic_ref<double> dist_u{ dist[u] };
+            const auto new_dist = weights[j] + dist_u.load(boost::memory_order_relaxed);
 
-            const auto new_dist = weights[j] + dist[u];
-            if (dist[u] != std::numeric_limits<double>::max() && new_dist < dist[v]) {
-                dist[v] = new_dist;
+            boost::atomic_ref<double> dist_a{ dist[v] };
+            auto current_dist = dist_a.load(boost::memory_order_relaxed);
+            while (new_dist < current_dist && !dist_a.compare_exchange_weak(current_dist, new_dist, boost::memory_order_relaxed)) {
             }
         }
     }
