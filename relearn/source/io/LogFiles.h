@@ -37,8 +37,10 @@ public:
      */
     enum class EventType : char {
         PlasticityUpdate,
+        PlasticityUpdateCSV,
         PlasticityUpdateLocal,
         NeuronsOverview,
+        NeuronsOverviewCSV,
         Sums,
         Network,
         Positions,
@@ -57,7 +59,7 @@ private:
 
     static std::string get_specific_file_prefix();
 
-    static void add_logfile(EventType type, const std::string& file_name, int rank);
+    static void add_logfile(EventType type, const std::string& file_name, int rank, const std::string& file_ending = ".txt");
 
     static bool disable;
 

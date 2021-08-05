@@ -42,6 +42,7 @@ void LogFiles::init() {
 
     // Create log file for neurons overview on rank 0
     LogFiles::add_logfile(EventType::NeuronsOverview, "neurons_overview", 0);
+    LogFiles::add_logfile(EventType::NeuronsOverviewCSV, "neurons_overview_csv", 0, ".csv");
 
     // Create log file for sums on rank 0
     LogFiles::add_logfile(EventType::Sums, "sums", 0);
@@ -60,6 +61,7 @@ void LogFiles::init() {
 
     // Create log file for the synapse creation and deletion
     LogFiles::add_logfile(EventType::PlasticityUpdate, "plasticity_changes", 0);
+    LogFiles::add_logfile(EventType::PlasticityUpdateCSV, "plasticity_changes_csv", 0, ".csv");
 
     // Create log file for the local synapse creation and deletion
     LogFiles::add_logfile(EventType::PlasticityUpdateLocal, "plasticity_changes_local", -1);
@@ -72,13 +74,13 @@ std::string LogFiles::get_specific_file_prefix() {
     return MPIWrapper::get_my_rank_str();
 }
 
-void LogFiles::add_logfile(EventType type, const std::string& file_name, int rank) {
+void LogFiles::add_logfile(EventType type, const std::string& file_name, int rank, const std::string& file_ending) {
     if (disable) {
         return;
     }
 
     if (do_i_print(rank)) {
-        auto complete_path = output_path + general_prefix + get_specific_file_prefix() + "_" + file_name + ".txt";
+        auto complete_path = output_path + general_prefix + get_specific_file_prefix() + "_" + file_name + file_ending;
         auto logger = spdlog::basic_logger_mt(file_name, complete_path);
         logger->set_pattern("%v");
         log_files.emplace(type, std::move(logger));

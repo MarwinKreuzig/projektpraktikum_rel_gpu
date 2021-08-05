@@ -746,7 +746,6 @@ void Neurons::create_synapses_update_octree() {
     // Lock local RMA memory for local stores
     MPIWrapper::lock_window(MPIWrapper::get_my_rank(), MPI_Locktype::exclusive);
 
-
     // Update my local trees bottom-up
     Timers::start(TimerRegion::UPDATE_LEAF_NODES);
     algorithm->update_leaf_nodes(disable_flags, dendrites_exc->get_total_counts(),
@@ -759,7 +758,7 @@ void Neurons::create_synapses_update_octree() {
     Timers::stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
 
     global_tree->synchronize_local_trees();
-    
+
     // Unlock local RMA memory and make local stores visible in public window copy
     MPIWrapper::unlock_window(MPIWrapper::get_my_rank());
 
@@ -1259,6 +1258,29 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
             "axons free (max)",
             "axons free (var)",
             "axons free (std_dev)");
+
+        LogFiles::write_to_file(LogFiles::EventType::NeuronsOverviewCSV, false,
+            "# step;"
+            "C (avg);"
+            "C (min);"
+            "C (max);"
+            "C (var);"
+            "C (std_dev);"
+            "activity (avg);"
+            "activity (min);"
+            "activity (max);"
+            "activity (var);"
+            "activity (std_dev);"
+            "axons (avg);"
+            "axons (min);"
+            "axons (max);"
+            "axons (var);"
+            "axons (std_dev);"
+            "axons free (avg);"
+            "axons free (min);"
+            "axons free (max);"
+            "axons free (var);"
+            "axons free (std_dev)");
     }
 
     // Write data at step "step"
@@ -1266,6 +1288,30 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
         "{2:<{0}}{3:<{0}.{1}f}{4:<{0}.{1}f}{5:<{0}.{1}f}{6:<{0}.{1}f}{7:<{0}.{1}f}{8:<{0}.{1}f}{9:<{0}.{1}f}{10:<{0}.{1}f}{11:<{0}.{1}f}{12:<{0}.{1}f}{13:<{0}.{1}f}{14:<{0}.{1}f}{15:<{0}.{1}f}{16:<{0}.{1}f}{17:<{0}.{1}f}{18:<{0}.{1}f}{19:<{0}.{1}f}{20:<{0}.{1}f}{21:<{0}.{1}f}{22:<{0}.{1}f}",
         cwidth,
         Constants::print_precision,
+        step,
+        calcium_statistics.avg,
+        calcium_statistics.min,
+        calcium_statistics.max,
+        calcium_statistics.var,
+        calcium_statistics.std,
+        activity_statistics.avg,
+        activity_statistics.min,
+        activity_statistics.max,
+        activity_statistics.var,
+        activity_statistics.std,
+        axons_statistics.avg,
+        axons_statistics.min,
+        axons_statistics.max,
+        axons_statistics.var,
+        axons_statistics.std,
+        axons_free_statistics.avg,
+        axons_free_statistics.min,
+        axons_free_statistics.max,
+        axons_free_statistics.var,
+        axons_free_statistics.std);
+
+    LogFiles::write_to_file(LogFiles::EventType::NeuronsOverviewCSV, false,
+        "{};{};{};{};{};{};{};{};{};{};{};{};{};{};{};{};{};{};{};{};{}",
         step,
         calcium_statistics.avg,
         calcium_statistics.min,

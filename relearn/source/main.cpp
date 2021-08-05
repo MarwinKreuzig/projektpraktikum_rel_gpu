@@ -191,7 +191,7 @@ int main(int argc, char** argv) {
             "Chosen target calcium value: {}\n"
             "Chosen beta value: {}\n"
             "Chosen nu value: {}\n"
-            "Chosen background activity{}",
+            "Chosen background activity: {}",
             Timers::wall_clock_time(), synaptic_elements_init_lb, synaptic_elements_init_ub, target_calcium, beta, nu, base_background_activity);
 
         LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
@@ -200,16 +200,19 @@ int main(int argc, char** argv) {
             "Chosen upper bound for vacant synaptic elements: {}\n"
             "Chosen target calcium value: {}\n"
             "Chosen beta value: {}\n"
-            "Chosen nu value: {}",
+            "Chosen nu value: {}\n"
+            "Chosen background activity: {}",
             simulation_steps,
             synaptic_elements_init_lb,
             synaptic_elements_init_ub,
             target_calcium,
             beta,
-            nu);
+            nu,
+            base_background_activity);
     }
 
     LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "#step: creations deletions netto");
+    LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateCSV, false, "#step:,creations,deletions,netto");
     LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false, "#step: creations deletions netto");
 
     Timers::start(TimerRegion::INITIALIZATION);
