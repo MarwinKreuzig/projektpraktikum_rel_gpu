@@ -23,6 +23,8 @@ Command | Shortcut | Effect | Notes
 `--target-ca <double>` | | Sets the target calcium for all neurons | Must be from [0, 100]
 `--growth-rate <double>` | | Specifies the growth rate of the synaptic elements | Must be from [0, 1]
 `--beta` | | Specifies the amount of calcium ions that are gathered whenever a neuron spikes |
+`--base-background-activity` | | Specifies the background activity by which all neurons are excited | Must be non-negative
 
 
 ### In case you have compiled the program with MPI, you can also prefix the command with: `mpiexec -n 4 ...`
+However, if you do so, the number of MPI processes must be a multiple of 2.

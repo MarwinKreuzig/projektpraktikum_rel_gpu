@@ -68,6 +68,9 @@ int main(int argc, char** argv) {
     auto* opt_algorithm = app.add_option("-a,--algorithm", algorithm, "The algorithm that is used for finding the targets");
     opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_map, CLI::ignore_case));
 
+    double accept_criterion{ BarnesHut::default_theta };
+    auto* opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Required Barnes-Hut.");
+
     size_t num_neurons{};
     auto* opt_num_neurons = app.add_option("-n,--num-neurons", num_neurons, "Number of neurons.");
 
@@ -86,6 +89,9 @@ int main(int argc, char** argv) {
     std::string file_creation_interrupts{};
     auto* opt_file_creation_interrups = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
 
+    double base_background_activity{ NeuronModel::default_base_background_activity };
+    auto* opt_base_background_activvity = app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are exited");
+
     std::string log_prefix{};
     auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
 
@@ -100,9 +106,6 @@ int main(int argc, char** argv) {
 
     int openmp_threads{ 1 };
     app.add_option("--openmp", openmp_threads, "Number of OpenMP Threads.");
-
-    double accept_criterion{ BarnesHut::default_theta };
-    auto* opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Required Barnes-Hut.");
 
     auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
 
@@ -142,7 +145,8 @@ int main(int argc, char** argv) {
     RelearnException::check(synaptic_elements_init_ub >= synaptic_elements_init_lb, "The minimum number of vacant synaptic elements must not be larger than the maximum number");
     RelearnException::check(static_cast<bool>(*opt_num_neurons) || static_cast<bool>(*opt_file_positions), "Missing command line option, need num_neurons (-n,--num-neurons) or file_positions (-f,--file).");
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
-    
+    RelearnException::check(base_background_activity >= 0.0, "The base background activity must be non-negative.");
+
     if (algorithm == Algorithm::BarnesHut) {
         RelearnException::check(accept_criterion <= BarnesHut::max_theta, "Acceptance criterion must be smaller or equal to {}", BarnesHut::max_theta);
         RelearnException::check(accept_criterion >= 0.0, "Acceptance criterion must not be smaller than 0.0");
@@ -180,8 +184,15 @@ int main(int argc, char** argv) {
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier();
     if (0 == my_rank) {
-        LogFiles::print_message_rank(0, "START: {}\nChosen lower bound for vacant synaptic elements: {}\nChosen upper bound for vacant synaptic elements: {}\nChosen target calcium value: {}\nChosen beta value: {}\nChosen nu value: {}",
-            Timers::wall_clock_time(), synaptic_elements_init_lb, synaptic_elements_init_ub, target_calcium, beta, nu);
+        LogFiles::print_message_rank(0, 
+            "START: {}\n"
+            "Chosen lower bound for vacant synaptic elements: {}\n"
+            "Chosen upper bound for vacant synaptic elements: {}\n"
+            "Chosen target calcium value: {}\n"
+            "Chosen beta value: {}\n"
+            "Chosen nu value: {}\n"
+            "Chosen background activity{}",
+            Timers::wall_clock_time(), synaptic_elements_init_lb, synaptic_elements_init_ub, target_calcium, beta, nu, base_background_activity);
 
         LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
             "Number of steps: {}\n"
@@ -223,7 +234,7 @@ int main(int argc, char** argv) {
     MPIWrapper::init_buffer_octree<BarnesHutCell>();
 
     auto neuron_models = std::make_unique<models::PoissonModel>(NeuronModel::default_k, NeuronModel::default_tau_C, beta, NeuronModel::default_h,
-        NeuronModel::default_base_background_activity, NeuronModel::default_background_activity_mean, NeuronModel::default_background_activity_stddev,
+        base_background_activity, NeuronModel::default_background_activity_mean, NeuronModel::default_background_activity_stddev,
         models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
 
     auto axon_models = std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons, target_calcium,
