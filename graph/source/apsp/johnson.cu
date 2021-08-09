@@ -215,8 +215,8 @@ __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_
     std::vector<float> h(bf_graph.V);
 
     if (bool r = bellman_ford_cuda(bf_graph, h); !r) {
-        std::cerr << "\nNegative Cycles Detected! Terminating Early\n";
-        exit(1);
+        spdlog::error("Johnson CUDA: Negative cycles deteced! Terminating program");
+        std::terminate();
     }
 
 #ifdef _OPENMP
@@ -236,7 +236,7 @@ __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_
     copy(output, device_output, cudaMemcpyDeviceToHost);
 
     if (const cudaError_t errCode = cudaPeekAtLastError(); errCode != cudaSuccess) {
-        std::cerr << "WARNING: A CUDA error occured: code=" << errCode << "," << cudaGetErrorString(errCode) << "\n";
+        spdlog::error("CUDA error: coda={}, {}", errCode, cudaGetErrorString(errCode));
     }
 
     // Remember to reweight edges back -- for every s reweight every v

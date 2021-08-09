@@ -1,7 +1,6 @@
 #include "johnson.h"
 
 #include <algorithm>
-#include <iostream> // cerr
 #include <limits>
 #include <memory>
 #include <random> // mt19937_64, uniform_x_distribution
@@ -10,6 +9,7 @@
 #include <shared_mutex>
 #include <atomic>
 
+#include <spdlog/spdlog.h>
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/johnson_all_pairs_shortest.hpp>
@@ -87,8 +87,8 @@ void johnson_parallel_impl(graph_t& gr, std::vector<double>& output) {
     // TODO Can run parallel version?
     std::vector<double> h(bf_graph.V);
     if (const bool r = bellman_ford(bf_graph, h); !r) {
-        std::cerr << "\nNegative Cycles Detected! Terminating Early\n";
-        exit(1);
+        spdlog::error("Johnson: Negative cycles deteced! Terminating program");
+        std::terminate();
     }
     // Next the edges of the original graph are reweighted using the values computed
     // by the Bellman–Ford algorithm: an edge from u to v, having length
