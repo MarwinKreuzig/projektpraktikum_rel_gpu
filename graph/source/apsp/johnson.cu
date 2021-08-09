@@ -140,12 +140,40 @@ __host__ bool bellman_ford_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_
                         Johnson's Algorithm CUDA
 **************************************************************************/
 
+size_t required_memory_gpu(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr) {
+    const auto V = gr.V;
+    size_t res{};
+
+    res += sizeof(edge_t) * gr.edge_array.size();
+    res += sizeof(int) * gr.weights.size();
+    res += sizeof(double) * V * V;
+    res += sizeof(int) * gr.starts.size();
+    res += sizeof(char) * V * V;
+
+    return res;
+}
+
+bool gpu_enough_memory(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr) {
+    const auto required = required_memory_gpu(gr);
+
+    size_t free{};
+    size_t total{};
+    cudaMemGetInfo(&free, &total);
+
+    return free >= required;
+}
+
 __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<double>& output) {
     // cudaThreadSetCacheConfig(cudaFuncCachePreferL1);
 
     // Const Graph Initialization
     const int V = gr.V;
     const int E = gr.E;
+
+    if (!gpu_enough_memory(gr)) {
+        return;
+    }
+
     // Structure of the graph
     auto device_edge_array = RAIIDeviceMemory<edge_t>(gr.edge_array);
     auto device_weights = RAIIDeviceMemory<int>(gr.weights);
