@@ -8,11 +8,11 @@
 #include <vector>
 #include <mutex>
 #include <shared_mutex>
+#include <atomic>
 
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/johnson_all_pairs_shortest.hpp>
-#include <boost/atomic/atomic_ref.hpp>
 
 namespace apsp {
 
@@ -37,12 +37,12 @@ static bool bellman_ford(const graph_t& gr, std::vector<double>& dist) {
         for (int j = 0; j < E; j++) {
             const auto [u, v] = edges[j];
 
-            boost::atomic_ref<double> dist_u{ dist[u] };
-            const auto new_dist = weights[j] + dist_u.load(boost::memory_order_relaxed);
+            std::atomic_ref<double> dist_u{ dist[u] };
+            const auto new_dist = weights[j] + dist_u.load(std::memory_order_relaxed);
 
-            boost::atomic_ref<double> dist_a{ dist[v] };
-            auto current_dist = dist_a.load(boost::memory_order_relaxed);
-            while (new_dist < current_dist && !dist_a.compare_exchange_weak(current_dist, new_dist, boost::memory_order_relaxed)) {
+            std::atomic_ref<double> dist_a{ dist[v] };
+            auto current_dist = dist_a.load(std::memory_order_relaxed);
+            while (new_dist < current_dist && !dist_a.compare_exchange_weak(current_dist, new_dist, std::memory_order_relaxed)) {
             }
         }
     }
