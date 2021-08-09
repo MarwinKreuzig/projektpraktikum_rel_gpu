@@ -74,6 +74,14 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(CLI11)
 target_include_directories(relearn-full_graph_static SYSTEM PUBLIC ${CLI11_SOURCE_DIR}/include)
 
+FetchContent_Declare(
+  spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG        v1.x
+)
+FetchContent_MakeAvailable(spdlog)
+target_link_libraries(relearn-full_graph_static PUBLIC spdlog)
+
 add_executable(relearn-full_graph "source/main.cpp")
 
 

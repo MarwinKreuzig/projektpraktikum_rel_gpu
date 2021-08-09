@@ -10,6 +10,7 @@
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/johnson_all_pairs_shortest.hpp>
+#include <spdlog/spdlog.h>
 
 #include "util.h"
 
@@ -160,6 +161,10 @@ bool gpu_enough_memory(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr) 
     size_t total{};
     cudaMemGetInfo(&free, &total);
 
+    spdlog::info("Johnson CUDA requesting {} B ({} MB), {} B ({} MB) is available",
+        required, required / 1000000,
+        free, free / 1000000);
+
     return free >= required;
 }
 
@@ -171,6 +176,9 @@ __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_
     const int E = gr.E;
 
     if (!gpu_enough_memory(gr)) {
+        int device{};
+        cudaGetDevice(&device);
+        spdlog::error("Johnson CUDA requested to much memory for this device ({})", device);
         return;
     }
 
