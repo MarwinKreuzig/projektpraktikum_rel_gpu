@@ -1,17 +1,16 @@
-#include "johnson.h"
+﻿#include "johnson.h"
 
 #include <atomic>
 #include <algorithm>
-#include <iostream> // cerr
 #include <limits>
 #include <memory>
 #include <random> // mt19937_64, uniform_x_distribution
 #include <vector>
 #include <mutex>
 #include <shared_mutex>
+#include <atomic>
 
-#include <omp.h>
-
+#include <spdlog/spdlog.h>
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/johnson_all_pairs_shortest.hpp>
@@ -32,28 +31,22 @@ namespace apsp {
 		}
 		dist.back() = 0;
 
-#ifdef _OPENMP
-		std::vector<std::shared_mutex> mv(dist.size());
-#endif
-		for (int i = 1; i <= V - 1; i++) {
+    for (int i = 1; i < V; i++) {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
 			for (int j = 0; j < E; j++) {
 				const auto [u, v] = edges[j];
 
-#ifdef _OPENMP
-				std::shared_lock l{ mv[u], std::defer_lock };
-				std::unique_lock l2{ mv[v], std::defer_lock };
-				std::lock(l, l2);
-#endif
+            std::atomic_ref<double> dist_u{ dist[u] };
+            const auto new_dist = weights[j] + dist_u.load(std::memory_order_relaxed);
 
-				const auto new_dist = weights[j] + dist[u];
-				if (dist[u] != std::numeric_limits<float>::max() && new_dist < dist[v]) {
-					dist[v] = new_dist;
-				}
-			}
-		}
+            std::atomic_ref<double> dist_a{ dist[v] };
+            auto current_dist = dist_a.load(std::memory_order_relaxed);
+            while (new_dist < current_dist && !dist_a.compare_exchange_weak(current_dist, new_dist, std::memory_order_relaxed)) {
+            }
+        }
+    }
 
 		bool no_neg_cycle = true;
 #ifdef _OPENMP
@@ -86,6 +79,18 @@ namespace apsp {
 		{
 			std::vector<float> d(boost::num_vertices(G));
 
+    // Second, the Bellman–Ford algorithm is used, starting from the new vertex q,
+    // to find for each vertex v the minimum weight h(v) of a path from q to v. If
+    // this step detects a negative cycle, the algorithm is terminated.
+    // TODO Can run parallel version?
+    std::vector<double> h(bf_graph.V);
+    if (const bool r = bellman_ford(bf_graph, h); !r) {
+        spdlog::error("Johnson: Negative cycles deteced! Terminating program");
+        std::terminate();
+    }
+    // Next the edges of the original graph are reweighted using the values computed
+    // by the Bellman–Ford algorithm: an edge from u to v, having length
+    // w(u,v), is given the new length w(u,v) + h(u) − h(v).
 #ifdef _OPENMP
 #pragma omp for schedule(dynamic)
 #endif
@@ -98,13 +103,16 @@ namespace apsp {
 
 				counter++;
 
-				if (omp_get_thread_num() == 0) {
-					std::cout << counter << '\n';
-				}
-			}
-		}
-
-		std::cout << std::endl;
-	}
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
+    for (int s = 0; s < V; s++) {
+        std::vector<double> d(V);
+        boost::dijkstra_shortest_paths(G, s, boost::distance_map(d.data()));
+        for (int v = 0; v < V; v++) {
+            output[static_cast<size_t>(s) * static_cast<size_t>(V) + static_cast<size_t>(v)] = d[v] + h[v] - h[s];
+        }
+    }
+}
 
 } // namespace apsp

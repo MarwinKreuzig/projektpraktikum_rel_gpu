@@ -10,6 +10,7 @@
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/johnson_all_pairs_shortest.hpp>
+#include <spdlog/spdlog.h>
 
 #include "util.h"
 
@@ -140,12 +141,47 @@ __host__ bool bellman_ford_cuda(graph_cuda_t<std::vector<int>, std::vector<edge_
                         Johnson's Algorithm CUDA
 **************************************************************************/
 
+size_t required_memory_gpu(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr) {
+    const auto V = gr.V;
+    size_t res{};
+
+    res += sizeof(edge_t) * gr.edge_array.size();
+    res += sizeof(int) * gr.weights.size();
+    res += sizeof(double) * V * V;
+    res += sizeof(int) * gr.starts.size();
+    res += sizeof(char) * V * V;
+
+    return res;
+}
+
+bool gpu_enough_memory(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr) {
+    const auto required = required_memory_gpu(gr);
+
+    size_t free{};
+    size_t total{};
+    cudaMemGetInfo(&free, &total);
+
+    spdlog::info("Johnson CUDA requesting {} B ({} MB), {} B ({} MB) is available",
+        required, required / 1000000,
+        free, free / 1000000);
+
+    return free >= required;
+}
+
 __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<double>& output) {
     // cudaThreadSetCacheConfig(cudaFuncCachePreferL1);
 
     // Const Graph Initialization
     const int V = gr.V;
     const int E = gr.E;
+
+    if (!gpu_enough_memory(gr)) {
+        int device{};
+        cudaGetDevice(&device);
+        spdlog::error("Johnson CUDA requested to much memory for this device ({})", device);
+        return;
+    }
+
     // Structure of the graph
     auto device_edge_array = RAIIDeviceMemory<edge_t>(gr.edge_array);
     auto device_weights = RAIIDeviceMemory<int>(gr.weights);
@@ -179,8 +215,8 @@ __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_
     std::vector<float> h(bf_graph.V);
 
     if (bool r = bellman_ford_cuda(bf_graph, h); !r) {
-        std::cerr << "\nNegative Cycles Detected! Terminating Early\n";
-        exit(1);
+        spdlog::error("Johnson CUDA: Negative cycles deteced! Terminating program");
+        std::terminate();
     }
 
 #ifdef _OPENMP
@@ -200,7 +236,7 @@ __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_
     copy(output, device_output, cudaMemcpyDeviceToHost);
 
     if (const cudaError_t errCode = cudaPeekAtLastError(); errCode != cudaSuccess) {
-        std::cerr << "WARNING: A CUDA error occured: code=" << errCode << "," << cudaGetErrorString(errCode) << "\n";
+        spdlog::error("CUDA error: coda={}, {}", errCode, cudaGetErrorString(errCode));
     }
 
     // Remember to reweight edges back -- for every s reweight every v

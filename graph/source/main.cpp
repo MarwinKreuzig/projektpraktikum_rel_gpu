@@ -31,7 +31,9 @@ int main(int argc, char** argv) {
 
     auto flag_omp_instead_of_cuda = [&]() -> std::optional<CLI::Option*> {
         if constexpr (CUDA_FOUND) {
-            return { app.add_flag("--use-openmp", "Use OpenMP instead of CUDA algorithms") };
+            // variable needed to resolve ambiguous function call
+            const std::string desc{ "Use OpenMP instead of CUDA algorithms" };
+            return { app.add_flag("--use-openmp", desc) };
         }
         return std::nullopt;
     }();

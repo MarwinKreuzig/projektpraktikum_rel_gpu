@@ -11,7 +11,7 @@ set(CMAKE_BUILD_TYPE Debug)
 # set(CMAKE_BUILD_TYPE Release)
 
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(CheckLanguage)
@@ -74,9 +74,18 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(CLI11)
 target_include_directories(relearn-full_graph_static SYSTEM PUBLIC ${CLI11_SOURCE_DIR}/include)
 
+FetchContent_Declare(
+  spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG        v1.x
+)
+FetchContent_MakeAvailable(spdlog)
+target_link_libraries(relearn-full_graph_static PUBLIC spdlog)
+
 add_executable(relearn-full_graph "source/main.cpp")
 
 
 target_link_libraries(relearn-full_graph PRIVATE relearn-full_graph_static)
 
+enable_testing()
 add_subdirectory(test)
