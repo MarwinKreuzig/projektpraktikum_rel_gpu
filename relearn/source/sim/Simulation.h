@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-class BarnesHut;
+class Algorithm;
 class NetworkGraph;
 class NeuronModel;
 class NeuronMonitor;
@@ -159,7 +159,7 @@ private:
     std::unique_ptr<NeuronModel> neuron_models{};
     std::shared_ptr<Neurons> neurons{};
 
-    std::shared_ptr<BarnesHut> algorithm{};
+    std::shared_ptr<Algorithm> algorithm{};
     std::shared_ptr<Octree> global_tree{};
 
     std::shared_ptr<NetworkGraph> network_graph{};

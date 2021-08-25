@@ -2,6 +2,7 @@
 
 #include "RelearnTest.hpp"
 
+#include "../source/algorithm/BarnesHut.h"
 #include "../source/neurons/models/SynapticElements.h"
 #include "../source/structure/Cell.h"
 #include "../source/structure/Partition.h"
@@ -870,7 +871,7 @@ TEST_F(OctreeTest, testOctreeConstructor) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
         ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
         ASSERT_EQ(octree.get_xyz_max(), max);
@@ -907,7 +908,7 @@ TEST_F(OctreeTest, testOctreeConstructor) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
         ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
         ASSERT_EQ(octree.get_xyz_max(), max);
@@ -955,7 +956,7 @@ TEST_F(OctreeTest, testOctreeConstructorExceptions) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        ASSERT_THROW(OctreeImplementation<BarnesHutCell> octree(max_xyz, min_xyz, level_of_branch_nodes), RelearnException);
+        ASSERT_THROW(OctreeImplementation<BarnesHut> octree(max_xyz, min_xyz, level_of_branch_nodes), RelearnException);
 
         make_mpi_mem_available();
     }
@@ -975,7 +976,7 @@ TEST_F(OctreeTest, testOctreeSetterGetter) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
         ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
         ASSERT_EQ(octree.get_xyz_max(), max);
@@ -999,7 +1000,7 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
         std::tie(min, max) = get_random_simulation_box_size(mt);
 
@@ -1014,7 +1015,7 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
         std::tie(min, max) = get_random_simulation_box_size(mt);
 
@@ -1029,7 +1030,7 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
         std::tie(min, max) = get_random_simulation_box_size(mt);
 
@@ -1054,7 +1055,7 @@ TEST_F(OctreeTest, testOctreeInsertNeurons) {
 
         size_t level_of_branch_nodes = uid_lvl(mt);
 
-        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
         size_t num_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
@@ -1099,7 +1100,7 @@ TEST_F(OctreeTest, testOctreeInsertNeuronsExceptions) {
 
         size_t level_of_branch_nodes = uid_lvl(mt);
 
-        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
         size_t num_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
@@ -1150,7 +1151,7 @@ TEST_F(OctreeTest, testOctreeStructure) {
 
         size_t level_of_branch_nodes = uid_lvl(mt);
 
-        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
         size_t num_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
@@ -1244,7 +1245,7 @@ TEST_F(OctreeTest, testOctreeLocalTrees) {
 
         size_t level_of_branch_nodes = uid(mt);
 
-        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
         ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
         ASSERT_EQ(octree.get_xyz_max(), max);
@@ -1292,7 +1293,7 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
 
         size_t level_of_branch_nodes = uid_lvl(mt);
 
-        OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
+        OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
         size_t num_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
@@ -1416,7 +1417,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
 
         std::tie(min, max) = get_random_simulation_box_size(mt);
 
-        auto octree_ptr = std::make_shared<OctreeImplementation<BarnesHutCell>>(min, max, 0);
+        auto octree_ptr = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
         auto& octree = *octree_ptr;
 
         const size_t num_neurons = uid(mt);
@@ -1490,7 +1491,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
 
         std::tie(min, max) = get_random_simulation_box_size(mt);
 
-        auto octree_ptr = std::make_shared<OctreeImplementation<BarnesHutCell>>(min, max, 0);
+        auto octree_ptr = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
         auto& octree = *octree_ptr;
 
         const size_t num_neurons = uid(mt);

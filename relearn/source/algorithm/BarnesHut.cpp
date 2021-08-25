@@ -265,7 +265,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags,
 
     std::stack<OctreeNode<BarnesHutCell>*> stack{};
 
-    const auto add_children_to_stack = [&stack](OctreeNode<BarnesHutCell>* node, const std::shared_ptr<OctreeImplementation<BarnesHutCell>>& octree) {
+    const auto add_children_to_stack = [&stack](OctreeNode<BarnesHutCell>* node, const std::shared_ptr<OctreeImplementation<BarnesHut>>& octree) {
         std::array<OctreeNode<BarnesHutCell>*, Constants::number_oct> children{ nullptr };
 
         // Node is owned by this rank

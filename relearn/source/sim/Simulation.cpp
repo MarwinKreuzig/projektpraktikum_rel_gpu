@@ -10,6 +10,7 @@
 
 #include "Simulation.h"
 
+#include "../algorithm/Algorithm.h"
 #include "../algorithm/BarnesHut.h"
 #include "../Config.h"
 #include "../io/LogFiles.h"
@@ -131,7 +132,7 @@ void Simulation::initialize() {
 
     auto sim_box_min_max = partition->get_simulation_box_size();
 
-    auto octree = std::make_shared<OctreeImplementation<BarnesHutCell>>(std::move(std::get<0>(sim_box_min_max)), std::move(std::get<1>(sim_box_min_max)), partition->get_level_of_subdomain_trees());
+    auto octree = std::make_shared<OctreeImplementation<BarnesHut>>(std::move(std::get<0>(sim_box_min_max)), std::move(std::get<1>(sim_box_min_max)), partition->get_level_of_subdomain_trees());
     global_tree = std::static_pointer_cast<Octree>(octree);
 
     // Insert my local (subdomain) trees into my global tree
@@ -149,8 +150,9 @@ void Simulation::initialize() {
 
     network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
 
-    algorithm = std::make_shared<BarnesHut>(octree);
-    algorithm->set_acceptance_criterion(accept_criterion);
+    auto algorithm_barnes_hut = std::make_shared<BarnesHut>(octree);
+    algorithm_barnes_hut->set_acceptance_criterion(accept_criterion);
+    algorithm = std::move(algorithm_barnes_hut);
 
     neurons->set_network_graph(network_graph);
     neurons->set_octree(global_tree);

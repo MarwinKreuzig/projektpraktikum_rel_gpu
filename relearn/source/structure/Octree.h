@@ -11,8 +11,6 @@
 #pragma once
 
 #include "../Config.h"
-#include "../algorithm/BarnesHut.h"
-#include "../algorithm/BarnesHutCell.h"
 #include "../mpi/MPIWrapper.h"
 #include "../neurons/SignalType.h"
 #include "../neurons/helper/RankNeuronId.h"
@@ -160,8 +158,11 @@ protected:
  * It offers general informations about the structure, the functionality to insert new neurons,
  * update from the bottom up, and synchronize parts with MPI.
  */
-template <typename AdditionalCellAttributes>
+template <typename Algorithm>
 class OctreeImplementation : public Octree {
+public:
+    using AdditionalCellAttributes = typename Algorithm::AdditionalCellAttributes;
+
 protected:
     /**
 	 * Type for stack used in postorder tree walk
@@ -276,7 +277,7 @@ public:
      * @exception Throws a RelearnException if the functor throws
      */
     void update_from_level(size_t max_level) override {
-        tree_walk_postorder(BarnesHut::update_functor, root, max_level);
+        tree_walk_postorder(Algorithm::update_functor, root, max_level);
     }
 
     /**
@@ -289,7 +290,7 @@ public:
                 continue;
             }
 
-            tree_walk_postorder(BarnesHut::update_functor, local_tree);
+            tree_walk_postorder(Algorithm::update_functor, local_tree);
         }
     }
 

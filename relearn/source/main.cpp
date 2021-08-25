@@ -63,8 +63,8 @@ int main(int argc, char** argv) {
     // Command line arguments
     CLI::App app{ "" };
 
-    Algorithm algorithm = Algorithm::BarnesHut;
-    std::map<std::string, Algorithm> cli_parse_map{ { "barnes-hut", Algorithm::BarnesHut }, { "fast-multipole-method", Algorithm::FastMultipoleMethod } };
+    AlgorithmEnum algorithm = AlgorithmEnum::BarnesHut;
+    std::map<std::string, AlgorithmEnum> cli_parse_map{ { "barnes-hut", AlgorithmEnum::BarnesHut }, { "fast-multipole-method", AlgorithmEnum::FastMultipoleMethod } };
     auto* opt_algorithm = app.add_option("-a,--algorithm", algorithm, "The algorithm that is used for finding the targets");
     opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_map, CLI::ignore_case));
 
@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
     RelearnException::check(base_background_activity >= 0.0, "The base background activity must be non-negative.");
 
-    if (algorithm == Algorithm::BarnesHut) {
+    if (algorithm == AlgorithmEnum::BarnesHut) {
         RelearnException::check(accept_criterion <= BarnesHut::max_theta, "Acceptance criterion must be smaller or equal to {}", BarnesHut::max_theta);
         RelearnException::check(accept_criterion >= 0.0, "Acceptance criterion must not be smaller than 0.0");
     } else {
@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
         RelearnException::check(!accept_criterion_set, "Acceptance criterion can only be set if Barnes-Hut is used");
     }
 
-    RelearnException::check(algorithm == Algorithm::BarnesHut, "Currently, only the Barnes-Hut algorithm is supported.");
+    RelearnException::check(algorithm == AlgorithmEnum::BarnesHut, "Currently, only the Barnes-Hut algorithm is supported.");
 
     RelearnException::check(target_calcium >= SynapticElements::min_C_target, "Target calcium is smaller than {}", SynapticElements::min_C_target);
     RelearnException::check(target_calcium <= SynapticElements::max_C_target, "Target calcium is larger than {}", SynapticElements::max_C_target);

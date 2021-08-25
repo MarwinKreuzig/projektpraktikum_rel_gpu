@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "../algorithm/BarnesHut.h"
+#include "../algorithm/Algorithm.h"
 #include "../Config.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
@@ -454,7 +454,7 @@ public:
      * @brief Sets the algorithm that calculates to which neuron a neuron connects during the plasticity update
      * @param algorithm_ptr The pointer to the algorithm 
      */
-    void set_algorithm(std::shared_ptr<BarnesHut> algorithm_ptr) noexcept {
+    void set_algorithm(std::shared_ptr<Algorithm> algorithm_ptr) noexcept {
         algorithm = std::move(algorithm_ptr);
     }
 
@@ -748,7 +748,7 @@ private:
     std::shared_ptr<Partition> partition{};
 
     std::shared_ptr<Octree> global_tree{};
-    std::shared_ptr<BarnesHut> algorithm{};
+    std::shared_ptr<Algorithm> algorithm{};
 
     std::shared_ptr<NetworkGraph> network_graph{};
 
