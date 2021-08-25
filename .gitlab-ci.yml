@@ -93,7 +93,10 @@ deploy-create:
     paths:
       - relearn/build-docker
 
-deploy-disable:
+deploy-disable:    
+  rules:
+  - if: '$TEST_DEPLOY == "FALSE"'
+    when: never
   image: relearn-ci
   stage: deploy
   script:
@@ -104,7 +107,10 @@ deploy-disable:
     paths:
       - relearn/build-docker    
 
-deploy-enable:
+deploy-enable:    
+  rules:
+  - if: '$TEST_DEPLOY == "FALSE"'
+    when: never
   image: relearn-ci
   stage: deploy
   script:
@@ -115,7 +121,10 @@ deploy-enable:
     paths:
       - relearn/build-docker     
   
-deploy-single-nompi:
+deploy-single-nompi:    
+  rules:
+  - if: '$TEST_DEPLOY == "FALSE"'
+    when: never
   image: relearn-ci
   stage: deploy
   script:
@@ -126,7 +135,10 @@ deploy-single-nompi:
     paths:
       - relearn/build-docker-nompi 
       
-deploy-create-nompi:
+deploy-create-nompi:    
+  rules:
+  - if: '$TEST_DEPLOY == "FALSE"'
+    when: never
   image: relearn-ci
   stage: deploy
   script:
@@ -137,7 +149,10 @@ deploy-create-nompi:
     paths:
       - relearn/build-docker-nompi     
 
-deploy-disable-nompi:
+deploy-disable-nompi:    
+  rules:
+  - if: '$TEST_DEPLOY == "FALSE"'
+    when: never
   image: relearn-ci
   stage: deploy
   script:
@@ -148,7 +163,10 @@ deploy-disable-nompi:
     paths:
       - relearn/build-docker-nompi    
 
-deploy-enable-nompi:
+deploy-enable-nompi:    
+  rules:
+  - if: '$TEST_DEPLOY == "FALSE"'
+    when: never
   image: relearn-ci
   stage: deploy
   script:
@@ -160,7 +178,10 @@ deploy-enable-nompi:
       - relearn/build-docker-nompi    
       
    
-deploy-mpi-1:
+deploy-mpi-1:    
+  rules:
+  - if: '$TEST_DEPLOY == "FALSE"'
+    when: never
   image: relearn-ci
   stage: deploy
   script:
@@ -172,7 +193,10 @@ deploy-mpi-1:
       - relearn/build-docker 
       
    
-deploy-mpi-2:
+deploy-mpi-2:    
+  rules:
+  - if: '$TEST_DEPLOY == "FALSE"'
+    when: never
   image: relearn-ci
   stage: deploy
   script:
@@ -184,7 +208,10 @@ deploy-mpi-2:
       - relearn/build-docker 
       
    
-deploy-mpi-4:
+deploy-mpi-4:    
+  rules:
+  - if: '$TEST_DEPLOY == "FALSE"'
+    when: never
   image: relearn-ci
   stage: deploy
   script:
@@ -196,7 +223,7 @@ deploy-mpi-4:
       - relearn/build-docker 
       
    
-deploy-mpi-8:
+deploy-mpi-8:  
   image: relearn-ci
   stage: deploy
   script:
