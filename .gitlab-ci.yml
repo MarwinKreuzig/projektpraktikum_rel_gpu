@@ -80,6 +80,9 @@ deploy-single:
       - relearn/build-docker  
 
 deploy-create:
+  rules: 
+    - if: $TEST_DEPLOY == FALSE
+      when: never
   image: relearn-ci
   stage: deploy
   script:
