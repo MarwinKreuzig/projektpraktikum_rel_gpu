@@ -79,10 +79,10 @@ deploy-single:
     paths:
       - relearn/build-docker  
 
-deploy-create:
-  rules: 
-    - if: $TEST_DEPLOY == FALSE
-      when: never
+deploy-create:    
+  rules:
+  - if: '$TEST_DEPLOY == "FALSE"'
+    when: never
   image: relearn-ci
   stage: deploy
   script:
@@ -91,7 +91,7 @@ deploy-create:
     - test-mpi
   artifacts:
     paths:
-      - relearn/build-docker     
+      - relearn/build-docker
 
 deploy-disable:
   image: relearn-ci
