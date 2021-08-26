@@ -24,7 +24,7 @@
 static void average_clustering_coefficient(Graph::FullGraph& graph, const Weight<Graph::FullGraph>& weight);
 static void average_clustering_coefficient_unweighted_undirected(typename Graph::FullGraph& graph);
 
-void Graph::add_vertices_from_file(const std::filesystem::path& file_path) {
+void Graph::add_vertices_from_file(const std::string& file_path) {
 	std::ifstream file(file_path);
 
 	std::string line{};
@@ -51,7 +51,7 @@ void Graph::add_vertices_from_file(const std::filesystem::path& file_path) {
 	}
 }
 
-void Graph::add_edges_from_file(const std::filesystem::path& file_path) {
+void Graph::add_edges_from_file(const std::string& file_path) {
 	std::ifstream file(file_path);
 
 	std::string line{};

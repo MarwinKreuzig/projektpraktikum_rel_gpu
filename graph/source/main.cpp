@@ -65,11 +65,11 @@ int main(int argc, char** argv) {
 	Graph full_graph{};
 
 	for (const auto& path : position_paths) {
-		full_graph.add_vertices_from_file(path);
+		full_graph.add_vertices_from_file(path.string());
 	}
 
 	for (const auto& path : edges_paths) {
-		full_graph.add_edges_from_file(path);
+		full_graph.add_edges_from_file(path.string());
 	}
 
 	if (flag_omp_instead_of_cuda) {

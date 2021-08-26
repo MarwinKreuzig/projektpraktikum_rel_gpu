@@ -4,7 +4,7 @@
 
 #include <boost/graph/adjacency_list.hpp>
 
-#include <filesystem>
+#include <string>
 #include <tuple>
 #include <utility>
 
@@ -49,9 +49,9 @@ public:
 	using ConnectivityEdge = boost::graph_traits<ConnectivityGraph>::edge_descriptor;
 	using ConnectivityEdgeIterator = boost::graph_traits<ConnectivityGraph>::edge_iterator;
 
-	void add_vertices_from_file(const std::filesystem::path& file_path);
+	void add_vertices_from_file(const std::string& file_path);
 
-	void add_edges_from_file(const std::filesystem::path& file_path);
+	void add_edges_from_file(const std::string& file_path);
 
 	void print_vertices(std::ostream& os);
 
