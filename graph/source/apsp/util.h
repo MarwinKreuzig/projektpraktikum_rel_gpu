@@ -1,7 +1,6 @@
 #ifndef graph_util_h
 #define graph_util_h
 
-#include <chrono> // see Timer class
 #include <iostream> // cout
 #include <sstream> // stringstream
 #include <string> // string
