@@ -14,7 +14,7 @@ test-mpi:
   image: relearn-ci-2
   stage: test
   script:
-    - relearn/build-docker/runTests
+    - mpiexec -n 1 relearn/build-docker/runTests
   dependencies: 
     - build-mpi
   artifacts:
