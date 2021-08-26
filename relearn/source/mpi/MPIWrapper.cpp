@@ -74,14 +74,12 @@ size_t MPIWrapper::init_window(size_t size_requested, size_t octree_node_size) {
     const auto max_num_objects = size_requested / octree_node_size;
     const auto max_size = max_num_objects * octree_node_size;
 
-    std::cout << "I'm here" << std::endl;
 
     // Store size of MPI_COMM_WORLD
     int my_num_ranks = -1;
     // NOLINTNEXTLINE
     const int error_code_1 = MPI_Comm_size(MPI_COMM_WORLD, &my_num_ranks);
     RelearnException::check(error_code_1 == 0, "Error in MPI_RMA_MemAllocator::init()");
-    std::cout << "I'm here" << std::endl;
 
     const auto num_ranks = static_cast<size_t>(my_num_ranks);
 
@@ -90,24 +88,26 @@ size_t MPIWrapper::init_window(size_t size_requested, size_t octree_node_size) {
     if (MPI_SUCCESS != MPI_Alloc_mem(max_size, MPI_INFO_NULL, &base_ptr)) {
         RelearnException::fail("MPI_Alloc_mem failed");
     }
-    std::cout << "I'm here" << std::endl;
 
     // Set window's displacement unit
     mpi_window = new MPI_Win;
     std::cout << "I'm here" << std::endl;
+    std::cout << "base_ptr is: " << base_ptr << std::endl;
+    std::cout << "max_size is: " << max_size << std::endl;
+    std::cout << "MPI_INFO_NULL is: " << MPI_INFO_NULL << std::endl;
+    std::cout << "MPI_COMM_WORLD is: " << MPI_COMM_WORLD << std::endl;
+    std::cout << "mpi_window is: " << ((MPI_Win*)mpi_window) << std::endl;
+
     // NOLINTNEXTLINE
     const int error_code_2 = MPI_Win_create(base_ptr, max_size, 1, MPI_INFO_NULL, MPI_COMM_WORLD, (MPI_Win*)mpi_window);
     RelearnException::check(error_code_2 == 0, "Error in MPI_RMA_MemAllocator::init()");
-    std::cout << "I'm here" << std::endl;
 
     // Vector must have space for one pointer from each rank
     base_pointers.resize(num_ranks);
-    std::cout << "I'm here" << std::endl;
 
     // NOLINTNEXTLINE
     const int error_code_3 = MPI_Allgather(&base_ptr, 1, MPI_AINT, base_pointers.data(), 1, MPI_AINT, MPI_COMM_WORLD);
     RelearnException::check(error_code_3 == 0, "Error in MPI_RMA_MemAllocator::init()");
-    std::cout << "I'm here" << std::endl;
 
     return max_num_objects;
 }
