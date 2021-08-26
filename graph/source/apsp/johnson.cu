@@ -10,7 +10,7 @@
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/johnson_all_pairs_shortest.hpp>
-#include <spdlog/spdlog.h>
+//#include <spdlog/spdlog.h>
 
 #include "util.h"
 
@@ -161,9 +161,9 @@ namespace apsp {
         size_t total{};
         cudaMemGetInfo(&free, &total);
 
-        spdlog::info("Johnson CUDA requesting {} B ({} MB), {} B ({} MB) is available",
-            required, required / 1000000,
-            free, free / 1000000);
+        // spdlog::info("Johnson CUDA requesting {} B ({} MB), {} B ({} MB) is available",
+      //      required, required / 1000000,
+     //       free, free / 1000000);
 
         return free >= required;
     }
@@ -178,7 +178,7 @@ namespace apsp {
         if (!gpu_enough_memory(gr)) {
             int device{};
             cudaGetDevice(&device);
-            spdlog::error("Johnson CUDA requested to much memory for this device ({})", device);
+            //spdlog::error("Johnson CUDA requested to much memory for this device ({})", device);
             return;
         }
 
@@ -215,7 +215,7 @@ namespace apsp {
         std::vector<float> h(bf_graph.V);
 
         if (bool r = bellman_ford_cuda(bf_graph, h); !r) {
-            spdlog::error("Johnson CUDA: Negative cycles deteced! Terminating program");
+            //spdlog::error("Johnson CUDA: Negative cycles deteced! Terminating program");
             std::terminate();
         }
 
@@ -236,7 +236,7 @@ namespace apsp {
         copy(output, device_output, cudaMemcpyDeviceToHost);
 
         if (const cudaError_t errCode = cudaPeekAtLastError(); errCode != cudaSuccess) {
-            spdlog::error("CUDA error: coda={}, {}", errCode, cudaGetErrorString(errCode));
+            //spdlog::error("CUDA error: coda={}, {}", errCode, cudaGetErrorString(errCode));
         }
 
         // Remember to reweight edges back -- for every s reweight every v
