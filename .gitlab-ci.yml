@@ -83,6 +83,8 @@ deploy-create:
   rules:
   - if: '$TEST_DEPLOY == "FALSE"'
     when: never
+  - if: '$TEST_DEPLOY == "TRUE"'
+    when: always
   image: relearn-ci-2
   stage: deploy
   script:
@@ -97,6 +99,8 @@ deploy-disable:
   rules:
   - if: '$TEST_DEPLOY == "FALSE"'
     when: never
+  - if: '$TEST_DEPLOY == "TRUE"'
+    when: always
   image: relearn-ci-2
   stage: deploy
   script:
@@ -111,6 +115,8 @@ deploy-enable:
   rules:
   - if: '$TEST_DEPLOY == "FALSE"'
     when: never
+  - if: '$TEST_DEPLOY == "TRUE"'
+    when: always
   image: relearn-ci-2
   stage: deploy
   script:
@@ -125,6 +131,8 @@ deploy-single-nompi:
   rules:
   - if: '$TEST_DEPLOY == "FALSE"'
     when: never
+  - if: '$TEST_DEPLOY == "TRUE"'
+    when: always
   image: relearn-ci-2
   stage: deploy
   script:
@@ -139,6 +147,8 @@ deploy-create-nompi:
   rules:
   - if: '$TEST_DEPLOY == "FALSE"'
     when: never
+  - if: '$TEST_DEPLOY == "TRUE"'
+    when: always
   image: relearn-ci-2
   stage: deploy
   script:
@@ -153,6 +163,8 @@ deploy-disable-nompi:
   rules:
   - if: '$TEST_DEPLOY == "FALSE"'
     when: never
+  - if: '$TEST_DEPLOY == "TRUE"'
+    when: always
   image: relearn-ci-2
   stage: deploy
   script:
@@ -167,6 +179,8 @@ deploy-enable-nompi:
   rules:
   - if: '$TEST_DEPLOY == "FALSE"'
     when: never
+  - if: '$TEST_DEPLOY == "TRUE"'
+    when: always
   image: relearn-ci-2
   stage: deploy
   script:
@@ -182,6 +196,8 @@ deploy-mpi-1:
   rules:
   - if: '$TEST_DEPLOY == "FALSE"'
     when: never
+  - if: '$TEST_DEPLOY == "TRUE"'
+    when: always
   image: relearn-ci-2
   stage: deploy
   script:
@@ -197,6 +213,8 @@ deploy-mpi-2:
   rules:
   - if: '$TEST_DEPLOY == "FALSE"'
     when: never
+  - if: '$TEST_DEPLOY == "TRUE"'
+    when: always
   image: relearn-ci-2
   stage: deploy
   script:
@@ -212,6 +230,8 @@ deploy-mpi-4:
   rules:
   - if: '$TEST_DEPLOY == "FALSE"'
     when: never
+  - if: '$TEST_DEPLOY == "TRUE"'
+    when: always
   image: relearn-ci-2
   stage: deploy
   script:
