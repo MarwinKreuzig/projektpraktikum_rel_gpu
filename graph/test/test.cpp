@@ -91,12 +91,12 @@ static TestExample createExample1() {
 
 TEST(TestAPSP, testExampleGraph1) {
     auto example = createExample1();
-    doTest(example, true);
+    doTest(example, false);
 
     // If CUDA is available do CPU test,
     // otherwise test already done on CPU
-    if constexpr (CUDA_FOUND) {
-        doTest(example, false);
+    if constexpr (false) {
+        doTest(example, true);
     }
 }
 
@@ -156,12 +156,12 @@ static TestExample createExample2() {
 
 TEST(TestAPSP, testExampleGraph2) {
     auto example = createExample2();
-    doTest(example, true);
+    doTest(example, false);
 
     // If CUDA is available do CPU test,
     // otherwise test already done on CPU
-    if constexpr (CUDA_FOUND) {
-        doTest(example, false);
+    if constexpr (false) {
+        doTest(example, true);
     }
 }
 
@@ -187,12 +187,12 @@ static TestExample createExample3() {
 
 TEST(TestAPSP, testExampleGraph3) {
     auto example = createExample3();
-    doTest(example, true);
+    doTest(example, false);
 
     // If CUDA is available do CPU test,
     // otherwise test already done on CPU
-    if constexpr (CUDA_FOUND) {
-        doTest(example, false);
+    if constexpr (false) {
+        doTest(example, true);
     }
 }
 
@@ -218,12 +218,12 @@ static TestExample createExample4() {
 
 TEST(TestAPSP, testExampleGraph4) {
     auto example = createExample4();
-    doTest(example, true);
+    doTest(example, false);
 
     // If CUDA is available do CPU test,
     // otherwise test already done on CPU
-    if constexpr (CUDA_FOUND) {
-        doTest(example, false);
+    if constexpr (false) {
+        doTest(example, true);
     }
 }
 
@@ -248,12 +248,12 @@ static TestExample createExample5() {
 
 TEST(TestAPSP, testExampleGraph5) {
     auto example = createExample5();
-    doTest(example, true);
+    doTest(example, false);
 
     // If CUDA is available do CPU test,
     // otherwise test already done on CPU
-    if constexpr (CUDA_FOUND) {
-        doTest(example, false);
+    if constexpr (false) {
+        doTest(example, true);
     }
 }
 
@@ -279,12 +279,12 @@ static TestExample createExample6() {
 
 TEST(TestAPSP, testExampleGraph6) {
     auto example = createExample6();
-    doTest(example, true);
+    doTest(example, false);
 
     // If CUDA is available do CPU test,
     // otherwise test already done on CPU
-    if constexpr (CUDA_FOUND) {
-        doTest(example, false);
+    if constexpr (false) {
+        doTest(example, true);
     }
 }
 
@@ -330,11 +330,11 @@ static TestExample createExample7() {
 
 TEST(TestAPSP, testExampleGraph7) {
     auto example = createExample7();
-    doTest(example, true);
+    doTest(example, false);
 
     // If CUDA is available do CPU test,
     // otherwise test already done on CPU
-    if constexpr (CUDA_FOUND) {
-        doTest(example, false);
+    if constexpr (false) {
+        doTest(example, true);
     }
 }
