@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Types.h"
+#include "../neurons/SignalType.h"
 #include "../util/Vec3.h"
 
 #include <optional>
@@ -86,7 +87,23 @@ public:
         return excitatory_dendrites.position;
     }
 
+    [[nodiscard]] unsigned int get_number_dendrites_for(SignalType axon_type) const noexcept {
+        if (axon_type == SignalType::EXCITATORY) {
+            return excitatory_dendrites.num_free_elements;
+        }
+
+        return inhibitory_dendrites.num_free_elements;
+    }
+
+    [[nodiscard]] std::optional<Vec3d> get_dendrites_position_for(SignalType dendrite_type) const {
+        if (dendrite_type == SignalType::EXCITATORY) {
+            return excitatory_dendrites.position;
+        }
+
+        return inhibitory_dendrites.position;
+    }
+
 private:
-    Dendrites excitatory_dendrites{};
-    Dendrites inhibitory_dendrites{};
+    VirtualPlasticityElement excitatory_dendrites{};
+    VirtualPlasticityElement inhibitory_dendrites{};
 };

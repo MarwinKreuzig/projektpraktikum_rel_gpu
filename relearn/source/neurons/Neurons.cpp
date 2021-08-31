@@ -832,7 +832,7 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
             if (current_node->get_cell().get_number_excitatory_axons() > 0) {
                 nodes_with_ax_ex.push(current_node);
             }
-            if (current_node->get_cell().set_number_inhibitory_axons() > 0)
+            if (current_node->get_cell().get_number_inhibitory_axons() > 0)
                 nodes_with_ax_in.push(current_node);
             //prepare interaction lists
             if (current_node->get_cell().get_number_inhibitory_dendrites() > 0) {

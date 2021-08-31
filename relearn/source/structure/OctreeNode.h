@@ -17,7 +17,7 @@
 
 class OctreeNode {
     std::array<OctreeNode*, Constants::number_oct> children{ nullptr };
-    Cell cell{};
+    Cell<FastMultipoleMethodsCell> cell{};
 
     bool parent{ false };
 
@@ -56,7 +56,7 @@ public:
         return children[idx];
     }
 
-    [[nodiscard]] const Cell& get_cell() const noexcept {
+    [[nodiscard]] const Cell<FastMultipoleMethodsCell>& get_cell() const noexcept {
         return cell;
     }
 
@@ -125,7 +125,7 @@ public:
     void print() const;
 
     void reset() {
-        cell = Cell{};
+        cell = Cell<FastMultipoleMethodsCell>{};
         children = std::array<OctreeNode*, Constants::number_oct>{ nullptr };
         parent = false;
         rank = -1;

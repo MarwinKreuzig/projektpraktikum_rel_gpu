@@ -30,5 +30,5 @@ struct VirtualPlasticityElement {
     unsigned int num_free_elements{ 0 };
 };
 
-using Axons = VirtualPlasticityElement;
-using Dendrites = VirtualPlasticityElement;
+//using Axons = VirtualPlasticityElement;
+//using Dendrites = VirtualPlasticityElement;

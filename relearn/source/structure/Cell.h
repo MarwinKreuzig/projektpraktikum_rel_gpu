@@ -11,6 +11,7 @@
 #pragma once
 
 #include "../Config.h"
+#include "../algorithm/FastMultipoleMethodsCell.h"
 #include "../neurons/ElementType.h"
 #include "../neurons/SignalType.h"
 #include "../util/RelearnException.h"
@@ -19,6 +20,7 @@
 #include <optional>
 #include <tuple>
 
+template <typename AdditionalCellAttributes = FastMultipoleMethodsCell>
 class Cell {
 public:
     [[nodiscard]] size_t get_neuron_id() const noexcept {
@@ -133,21 +135,32 @@ public:
         return std::make_tuple(octant_xyz_min, octant_xyz_max);
     }
 
+    [[nodiscard]] unsigned char get_neuron_octant() const {
+        const std::optional<Vec3d>& pos = get_neuron_position();
+        RelearnException::check(pos.has_value(), "position didn_t have a value");
+        return get_octant_for_position(pos.value());
+    }
+
     [[nodiscard]] std::optional<Vec3d> get_neuron_position() const {
-        const bool dend_ex_valid = dendrites_ex.xyz_pos.has_value();
-        const bool dend_in_valid = dendrites_in.xyz_pos.has_value();
-        const bool ax_in_valid = axons_in.xyz_pos.has_value();
-        const bool ax_ex_valid = axons_ex.xyz_pos.has_value();
+        const auto& dend_ex_pos = get_excitatory_dendrites_position();
+        const auto& dend_in_pos = get_inhibitory_dendrites_position();
+        const auto& ax_ex_pos = get_excitatory_axons_position();
+        const auto& ax_in_pos = get_inhibitory_axons_position();
+
+        const bool dend_ex_valid = dend_ex_pos.has_value();
+        const bool dend_in_valid = dend_in_pos.has_value();
+        const bool ax_in_valid = ax_ex_pos.has_value();
+        const bool ax_ex_valid = ax_in_pos.has_value();
 
         if (!dend_ex_valid && !dend_in_valid && !ax_ex_valid && ax_in_valid) {
             return {};
         }
 
         if (dend_ex_valid && dend_in_valid && ax_in_valid && ax_ex_valid) {
-            const auto& dend_pos_ex = dendrites_ex.xyz_pos.value();
-            const auto& dend_pos_in = dendrites_in.xyz_pos.value();
-            const auto& ax_pos_ex = axons_ex.xyz_pos.value();
-            const auto& ax_pos_in = axons_in.xyz_pos.value();
+            const auto& dend_pos_ex = dend_ex_pos.value();
+            const auto& dend_pos_in = dend_in_pos.value();
+            const auto& ax_pos_ex = ax_ex_pos.value();
+            const auto& ax_pos_in = ax_in_pos.value();
 
             const auto dend_diff = dend_pos_ex - dend_pos_in;
             const bool dend_exc_position_equals_dend_inh_position = dend_diff.get_x() == 0.0 && dend_diff.get_y() == 0.0 && dend_diff.get_z() == 0.0;
@@ -171,18 +184,10 @@ public:
 
     [[nodiscard]] std::optional<Vec3d> get_neuron_position_for(SignalType signal_type, ElementType element_type) const {
         if (element_type == ElementType::AXON) {
-            if (signal_type == SignalType::EXCITATORY) {
-                return axons_ex.xyz_pos;
-            }
-
-            return axons_in.xyz_pos;
+            return additional_attributes.get_axons_position_for(signal_type);
         }
 
-        if (signal_type == SignalType::EXCITATORY) {
-            return dendrites_ex.xyz_pos;
-        }
-
-        return dendrites_in.xyz_pos;
+        return additional_attributes.get_dendrites_position_for(signal_type);
     }
 
     void set_neuron_position(const std::optional<Vec3d>& opt_position) noexcept {
@@ -193,121 +198,83 @@ public:
     }
 
     [[nodiscard]] std::optional<Vec3d> get_excitatory_dendrites_position() const noexcept {
-        return dendrites_ex.xyz_pos;
+        return additional_attributes.get_excitatory_dendrites_position();
     }
 
     void set_excitatory_dendrites_position(const std::optional<Vec3d>& opt_position) {
-        if (opt_position.has_value()) {
-            const auto& position = opt_position.value();
-
-            RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "In Cell::set_neuron_position_exc, x was not in the box");
-            RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Cell::set_neuron_position_exc, y was not in the box");
-            RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "In Cell::set_neuron_position_exc, z was not in the box");
-        }
-
-        dendrites_ex.xyz_pos = opt_position;
+        additional_attributes.set_inhibitory_dendrites_position(opt_position);
     }
 
     [[nodiscard]] std::optional<Vec3d> get_inhibitory_dendrites_position() const noexcept {
-        return dendrites_in.xyz_pos;
+        return additional_attributes.get_inhibitory_dendrites_position();
     }
 
     void set_inhibitory_dendrites_position(const std::optional<Vec3d>& opt_position) {
-        if (opt_position.has_value()) {
-            const auto& position = opt_position.value();
-
-            RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "In Cell::set_neuron_position_exc, x was not in the box");
-            RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Cell::set_neuron_position_exc, y was not in the box");
-            RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "In Cell::set_neuron_position_exc, z was not in the box");
-        }
-
-        dendrites_in.xyz_pos = opt_position;
+        additional_attributes.set_inhibitory_dendrites_position(opt_position);
     }
 
     [[nodiscard]] std::optional<Vec3d> get_axons_position_for(SignalType axon_type) const {
-        if (axon_type == SignalType::EXCITATORY) {
-            return axons_ex.xyz_pos;
-        }
-
-        return axons_in.xyz_pos;
+        return additional_attributes.get_axons_position_for(axon_type);
     }
 
     [[nodiscard]] std::optional<Vec3d> get_excitatory_axons_position() const noexcept {
-        return axons_ex.xyz_pos;
+        return additional_attributes.get_excitatory_axons_position();
     }
 
     void set_excitatory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
-        axons_ex.xyz_pos = opt_position;
+        additional_attributes.set_excitatory_axons_position(opt_position);
     }
 
     [[nodiscard]] std::optional<Vec3d> get_inhibitory_axons_position() const noexcept {
-        return axons_in.xyz_pos;
+        return additional_attributes.get_inhibitory_axons_position();
     }
 
     void set_inhibitory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
-        axons_in.xyz_pos = opt_position;
+        additional_attributes.set_inhibitory_axons_position(opt_position);
     }
 
     [[nodiscard]] std::optional<Vec3d> get_dendrites_position_for(SignalType dendrite_type) const {
-        if (dendrite_type == SignalType::EXCITATORY) {
-            return dendrites_ex.xyz_pos;
-        }
-
-        return dendrites_in.xyz_pos;
+        return additional_attributes.get_dendrites_position_for(dendrite_type);
     }
 
     void set_number_excitatory_dendrites(unsigned int num_dendrites) noexcept {
-        dendrites_ex.num_dendrites = num_dendrites;
+        additional_attributes.set_number_excitatory_dendrites(num_dendrites);
     }
 
     [[nodiscard]] unsigned int get_number_excitatory_dendrites() const noexcept {
-        return dendrites_ex.num_dendrites;
+        return additional_attributes.get_number_excitatory_dendrites();
     }
 
     void set_number_inhibitory_dendrites(unsigned int num_dendrites) noexcept {
-        dendrites_in.num_dendrites = num_dendrites;
+        additional_attributes.set_number_inhibitory_dendrites(num_dendrites);
     }
 
     [[nodiscard]] unsigned int get_number_inhibitory_dendrites() const noexcept {
-        return dendrites_in.num_dendrites;
+        return additional_attributes.get_number_inhibitory_dendrites();
     }
 
     [[nodiscard]] unsigned int get_number_dendrites_for(SignalType dendrite_type) const noexcept {
-        if (dendrite_type == SignalType::EXCITATORY) {
-            return dendrites_ex.num_dendrites;
-        }
-
-        return dendrites_in.num_dendrites;
+        return additional_attributes.get_number_dendrites_for(dendrite_type);
     }
 
     void set_number_excitatory_axons(unsigned int num_axons) noexcept {
-        axons_ex.num_axons = num_axons;
+        additional_attributes.set_number_excitatory_axons(num_axons);
     }
 
     [[nodiscard]] unsigned int get_number_excitatory_axons() const noexcept {
-        return axons_ex.num_axons;
+        return additional_attributes.get_number_excitatory_axons();
     }
 
     void set_number_inhibitory_axons(unsigned int num_axons) noexcept {
-        axons_in.num_axons = num_axons;
+        additional_attributes.set_number_inhibitory_axons(num_axons);
     }
 
-    [[nodiscard]] unsigned int set_number_inhibitory_axons() const noexcept {
-        return axons_in.num_axons;
+    [[nodiscard]] unsigned int get_number_inhibitory_axons() const noexcept {
+        return additional_attributes.get_number_inhibitory_axons();
     }
 
-    [[nodiscard]] unsigned int get_number_axons_for(SignalType dendrite_type) const noexcept {
-        if (dendrite_type == SignalType::EXCITATORY) {
-            return axons_ex.num_axons;
-        }
-
-        return axons_in.num_axons;
-    }
-
-    [[nodiscard]] unsigned char get_neuron_octant() const {
-        const std::optional<Vec3d>& pos = get_neuron_position();
-        RelearnException::check(pos.has_value(), "position didn_t have a value");
-        return get_octant_for_position(pos.value());
+    [[nodiscard]] unsigned int get_number_axons_for(SignalType axon_type) const noexcept {
+        return additional_attributes.get_number_axons_for(axon_type);
     }
 
 private:
@@ -328,6 +295,8 @@ private:
     // Two points describe size of cell
     Vec3d xyz_min{ Constants::uninitialized };
     Vec3d xyz_max{ Constants::uninitialized };
+
+    AdditionalCellAttributes additional_attributes{};
 
     /**
 	 * Cell contains info for one neuron, which could be a "super" neuron

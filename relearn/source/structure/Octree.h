@@ -150,7 +150,7 @@ private:
                 const auto temp_num_dendrites_exc = child->get_cell().get_number_excitatory_dendrites();
                 const auto temp_num_dendrites_inh = child->get_cell().get_number_inhibitory_dendrites();
                 const auto temp_num_axons_exc = child->get_cell().get_number_excitatory_axons();
-                const auto temp_num_axons_inh = child->get_cell().set_number_inhibitory_axons();
+                const auto temp_num_axons_inh = child->get_cell().get_number_inhibitory_axons();
                 num_dendrites_exc += temp_num_dendrites_exc;
                 num_dendrites_inh += temp_num_dendrites_inh;
                 num_axons_exc += temp_num_axons_exc;
@@ -249,7 +249,7 @@ private:
                     for (unsigned int i = 0; i < Constants::number_oct; i++) {
                         auto child = node->get_child(i);
                         if (child != nullptr) {
-                            int ax_num_in = child->get_cell().set_number_inhibitory_axons();
+                            int ax_num_in = child->get_cell().get_number_inhibitory_axons();
                             if (ax_num_in > 0) {
                                 const auto child_pos = child->get_cell().get_inhibitory_axons_position();
                                 const Vec3d temp_vec = (child_pos.value() - (xyz_pos_ax_inh / num_axons_inh)) / Octree::default_sigma;

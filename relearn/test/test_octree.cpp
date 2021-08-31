@@ -162,7 +162,7 @@ TEST(TestCell, testCellSize) {
     setup();
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<FastMultipoleMethodsCell> cell{};
 
         const auto& box_sizes_1 = get_random_simulation_box_size();
         const auto& min_1 = std::get<0>(box_sizes_1);
@@ -194,7 +194,7 @@ TEST(TestCell, testCellPosition) {
     setup();
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<FastMultipoleMethodsCell> cell{};
 
         const auto& box_sizes = get_random_simulation_box_size();
         const auto& min = std::get<0>(box_sizes);
@@ -264,7 +264,7 @@ TEST(TestCell, testCellPositionException) {
     setup();
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<FastMultipoleMethodsCell> cell{};
 
         const auto& box_sizes = get_random_simulation_box_size();
         const auto& min = std::get<0>(box_sizes);
@@ -382,7 +382,7 @@ TEST(TestCell, testCellPositionCombined) {
     setup();
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<FastMultipoleMethodsCell> cell{};
 
         const auto& box_sizes = get_random_simulation_box_size();
         const auto& min = std::get<0>(box_sizes);
@@ -445,7 +445,7 @@ TEST(TestCell, testCellSetNumDendrites) {
     std::uniform_int_distribution<unsigned int> uid(0, 1000);
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<FastMultipoleMethodsCell> cell{};
 
         const auto num_dends_ex_1 = uid(mt);
         const auto num_dends_in_1 = uid(mt);
@@ -477,7 +477,7 @@ TEST(TestCell, testCellSetNeuronId) {
     std::uniform_int_distribution<size_t> uid(0, 1000);
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<FastMultipoleMethodsCell> cell{};
 
         const auto neuron_id_1 = uid(mt);
         cell.set_neuron_id(neuron_id_1);
@@ -493,7 +493,7 @@ TEST(TestCell, testCellOctants) {
     setup();
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<FastMultipoleMethodsCell> cell{};
 
         const auto& box_sizes = get_random_simulation_box_size();
         const auto& min = std::get<0>(box_sizes);
@@ -529,7 +529,7 @@ TEST(TestCell, testCellOctantsException) {
     setup();
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<FastMultipoleMethodsCell> cell{};
 
         const auto& box_sizes = get_random_simulation_box_size();
         const auto& min = std::get<0>(box_sizes);
@@ -558,7 +558,7 @@ TEST(TestCell, testCellOctantsSize) {
     setup();
 
     for (auto i = 0; i < iterations; i++) {
-        Cell cell{};
+        Cell<FastMultipoleMethodsCell> cell{};
 
         const auto& box_sizes = get_random_simulation_box_size();
         const auto& min = std::get<0>(box_sizes);
@@ -733,7 +733,7 @@ TEST(TestOctreeNode, testOctreeNodeSetterCell) {
 
     OctreeNode node{};
 
-    const Cell& cell = node.get_cell();
+    const Cell<FastMultipoleMethodsCell>& cell = node.get_cell();
 
     std::uniform_int_distribution<size_t> uid_id(0, 1000);
     std::uniform_int_distribution<unsigned int> uid_dends(0, 1000);
