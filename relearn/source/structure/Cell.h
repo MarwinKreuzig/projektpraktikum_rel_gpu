@@ -186,17 +186,17 @@ public:
     }
 
     void set_neuron_position(const std::optional<Vec3d>& opt_position) noexcept {
-        set_excitatory_dendrite_position(opt_position);
-        set_inhibitory_dendrite_position(opt_position);
-        set_excitatory_axon_position(opt_position);
-        set_inhibitory_axon_position(opt_position);
+        set_excitatory_dendrites_position(opt_position);
+        set_inhibitory_dendrites_position(opt_position);
+        set_excitatory_axons_position(opt_position);
+        set_inhibitory_axons_position(opt_position);
     }
 
-    [[nodiscard]] std::optional<Vec3d> get_excitatory_dendrite_position() const noexcept {
+    [[nodiscard]] std::optional<Vec3d> get_excitatory_dendrites_position() const noexcept {
         return dendrites_ex.xyz_pos;
     }
 
-    void set_excitatory_dendrite_position(const std::optional<Vec3d>& opt_position) {
+    void set_excitatory_dendrites_position(const std::optional<Vec3d>& opt_position) {
         if (opt_position.has_value()) {
             const auto& position = opt_position.value();
 
@@ -208,11 +208,11 @@ public:
         dendrites_ex.xyz_pos = opt_position;
     }
 
-    [[nodiscard]] std::optional<Vec3d> get_inhibitory_dendrite_position() const noexcept {
+    [[nodiscard]] std::optional<Vec3d> get_inhibitory_dendrites_position() const noexcept {
         return dendrites_in.xyz_pos;
     }
 
-    void set_inhibitory_dendrite_position(const std::optional<Vec3d>& opt_position) {
+    void set_inhibitory_dendrites_position(const std::optional<Vec3d>& opt_position) {
         if (opt_position.has_value()) {
             const auto& position = opt_position.value();
 
@@ -224,7 +224,7 @@ public:
         dendrites_in.xyz_pos = opt_position;
     }
 
-    [[nodiscard]] std::optional<Vec3d> get_axon_position_for(SignalType axon_type) const {
+    [[nodiscard]] std::optional<Vec3d> get_axons_position_for(SignalType axon_type) const {
         if (axon_type == SignalType::EXCITATORY) {
             return axons_ex.xyz_pos;
         }
@@ -232,23 +232,23 @@ public:
         return axons_in.xyz_pos;
     }
 
-    [[nodiscard]] std::optional<Vec3d> get_excitatory_axon_position() const noexcept {
+    [[nodiscard]] std::optional<Vec3d> get_excitatory_axons_position() const noexcept {
         return axons_ex.xyz_pos;
     }
 
-    void set_excitatory_axon_position(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_excitatory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
         axons_ex.xyz_pos = opt_position;
     }
 
-    [[nodiscard]] std::optional<Vec3d> get_inhibitory_axon_position() const noexcept {
+    [[nodiscard]] std::optional<Vec3d> get_inhibitory_axons_position() const noexcept {
         return axons_in.xyz_pos;
     }
 
-    void set_inhibitory_axon_position(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_inhibitory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
         axons_in.xyz_pos = opt_position;
     }
 
-    [[nodiscard]] std::optional<Vec3d> get_dendrite_position_for(SignalType dendrite_type) const {
+    [[nodiscard]] std::optional<Vec3d> get_dendrites_position_for(SignalType dendrite_type) const {
         if (dendrite_type == SignalType::EXCITATORY) {
             return dendrites_ex.xyz_pos;
         }

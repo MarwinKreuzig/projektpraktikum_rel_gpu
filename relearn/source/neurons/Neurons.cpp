@@ -91,7 +91,7 @@ void Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    std::vector<int> deleted_axon_connections(num_neurons, 0);
+    std::vector<int> deleted_axons_connections(num_neurons, 0);
     std::vector<int> deleted_dend_ex_connections(num_neurons, 0);
     std::vector<int> deleted_dend_in_connections(num_neurons, 0);
 
@@ -106,7 +106,7 @@ void Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
             RelearnException::check(rank == my_rank, "Currently, disabling neurons is only supported without mpi");
             network_graph->add_edge_weight(neuron_id, my_rank, source_id, rank, -weight);
 
-            deleted_axon_connections[source_id] += weight;
+            deleted_axons_connections[source_id] += weight;
         }
 
         const auto out_edges = network_graph->get_out_edges(neuron_id); // Intended copy
@@ -124,7 +124,7 @@ void Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
         }
     }
 
-    axons->update_after_deletion(deleted_axon_connections, neuron_ids);
+    axons->update_after_deletion(deleted_axons_connections, neuron_ids);
     dendrites_exc->update_after_deletion(deleted_dend_ex_connections, neuron_ids);
     dendrites_inh->update_after_deletion(deleted_dend_in_connections, neuron_ids);
 }

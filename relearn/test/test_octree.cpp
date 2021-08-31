@@ -207,55 +207,55 @@ TEST(TestCell, testCellPosition) {
         std::uniform_real_distribution urd_z(min.get_z(), max.get_z());
 
         const Vec3d pos_ex_1{ urd_x(mt), urd_y(mt), urd_z(mt) };
-        cell.set_excitatory_dendrite_position(pos_ex_1);
+        cell.set_excitatory_dendrites_position(pos_ex_1);
 
-        ASSERT_TRUE(cell.get_excitatory_dendrite_position().has_value());
-        ASSERT_EQ(pos_ex_1, cell.get_excitatory_dendrite_position().value());
+        ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
+        ASSERT_EQ(pos_ex_1, cell.get_excitatory_dendrites_position().value());
 
         ASSERT_TRUE(cell.get_neuron_position_for(SignalType::EXCITATORY, ElementType::DENDRITE).has_value());
         ASSERT_EQ(pos_ex_1, cell.get_neuron_position_for(SignalType::EXCITATORY, ElementType::DENDRITE).value());
 
-        cell.set_excitatory_dendrite_position({});
-        ASSERT_FALSE(cell.get_excitatory_dendrite_position().has_value());
+        cell.set_excitatory_dendrites_position({});
+        ASSERT_FALSE(cell.get_excitatory_dendrites_position().has_value());
         ASSERT_FALSE(cell.get_neuron_position_for(SignalType::EXCITATORY, ElementType::DENDRITE).has_value());
 
         const Vec3d pos_ex_2{ urd_x(mt), urd_y(mt), urd_z(mt) };
-        cell.set_excitatory_dendrite_position(pos_ex_2);
+        cell.set_excitatory_dendrites_position(pos_ex_2);
 
-        ASSERT_TRUE(cell.get_excitatory_dendrite_position().has_value());
-        ASSERT_EQ(pos_ex_2, cell.get_excitatory_dendrite_position().value());
+        ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
+        ASSERT_EQ(pos_ex_2, cell.get_excitatory_dendrites_position().value());
 
         ASSERT_TRUE(cell.get_neuron_position_for(SignalType::EXCITATORY, ElementType::DENDRITE).has_value());
         ASSERT_EQ(pos_ex_2, cell.get_neuron_position_for(SignalType::EXCITATORY, ElementType::DENDRITE).value());
 
-        cell.set_excitatory_dendrite_position({});
-        ASSERT_FALSE(cell.get_excitatory_dendrite_position().has_value());
+        cell.set_excitatory_dendrites_position({});
+        ASSERT_FALSE(cell.get_excitatory_dendrites_position().has_value());
         ASSERT_FALSE(cell.get_neuron_position_for(SignalType::EXCITATORY, ElementType::DENDRITE).has_value());
 
         const Vec3d pos_in_1{ urd_x(mt), urd_y(mt), urd_z(mt) };
-        cell.set_inhibitory_dendrite_position(pos_in_1);
+        cell.set_inhibitory_dendrites_position(pos_in_1);
 
-        ASSERT_TRUE(cell.get_inhibitory_dendrite_position().has_value());
-        ASSERT_EQ(pos_in_1, cell.get_inhibitory_dendrite_position().value());
+        ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
+        ASSERT_EQ(pos_in_1, cell.get_inhibitory_dendrites_position().value());
 
         ASSERT_TRUE(cell.get_neuron_position_for(SignalType::INHIBITORY, ElementType::DENDRITE).has_value());
         ASSERT_EQ(pos_in_1, cell.get_neuron_position_for(SignalType::INHIBITORY, ElementType::DENDRITE).value());
 
-        cell.set_inhibitory_dendrite_position({});
-        ASSERT_FALSE(cell.get_excitatory_dendrite_position().has_value());
+        cell.set_inhibitory_dendrites_position({});
+        ASSERT_FALSE(cell.get_excitatory_dendrites_position().has_value());
         ASSERT_FALSE(cell.get_neuron_position_for(SignalType::EXCITATORY, ElementType::DENDRITE).has_value());
 
         const Vec3d pos_in_2{ urd_x(mt), urd_y(mt), urd_z(mt) };
-        cell.set_inhibitory_dendrite_position(pos_in_2);
+        cell.set_inhibitory_dendrites_position(pos_in_2);
 
-        ASSERT_TRUE(cell.get_inhibitory_dendrite_position().has_value());
-        ASSERT_EQ(pos_in_2, cell.get_inhibitory_dendrite_position().value());
+        ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
+        ASSERT_EQ(pos_in_2, cell.get_inhibitory_dendrites_position().value());
 
         ASSERT_TRUE(cell.get_neuron_position_for(SignalType::INHIBITORY, ElementType::DENDRITE).has_value());
         ASSERT_EQ(pos_in_2, cell.get_neuron_position_for(SignalType::INHIBITORY, ElementType::DENDRITE).value());
 
-        cell.set_inhibitory_dendrite_position({});
-        ASSERT_FALSE(cell.get_excitatory_dendrite_position().has_value());
+        cell.set_inhibitory_dendrites_position({});
+        ASSERT_FALSE(cell.get_excitatory_dendrites_position().has_value());
         ASSERT_FALSE(cell.get_neuron_position_for(SignalType::EXCITATORY, ElementType::DENDRITE).has_value());
     }
 }
@@ -277,101 +277,101 @@ TEST(TestCell, testCellPositionException) {
         std::uniform_real_distribution urd_z(min.get_z(), max.get_z());
 
         const Vec3d pos_ex_1{ urd_x(mt), urd_y(mt), urd_z(mt) };
-        cell.set_excitatory_dendrite_position(pos_ex_1);
+        cell.set_excitatory_dendrites_position(pos_ex_1);
 
         const Vec3d pos_ex_1_invalid_x_max = max + Vec3d{ 1, 0, 0 };
         const Vec3d pos_ex_1_invalid_y_max = max + Vec3d{ 0, 1, 0 };
         const Vec3d pos_ex_1_invalid_z_max = max + Vec3d{ 0, 0, 1 };
 
-        ASSERT_THROW(cell.set_excitatory_dendrite_position(pos_ex_1_invalid_x_max), RelearnException);
-        ASSERT_THROW(cell.set_excitatory_dendrite_position(pos_ex_1_invalid_y_max), RelearnException);
-        ASSERT_THROW(cell.set_excitatory_dendrite_position(pos_ex_1_invalid_z_max), RelearnException);
+        ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_1_invalid_x_max), RelearnException);
+        ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_1_invalid_y_max), RelearnException);
+        ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_1_invalid_z_max), RelearnException);
 
         const Vec3d pos_ex_1_invalid_x_min = min - Vec3d{ 1, 0, 0 };
         const Vec3d pos_ex_1_invalid_y_min = min - Vec3d{ 0, 1, 0 };
         const Vec3d pos_ex_1_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
-        ASSERT_THROW(cell.set_excitatory_dendrite_position(pos_ex_1_invalid_x_min), RelearnException);
-        ASSERT_THROW(cell.set_excitatory_dendrite_position(pos_ex_1_invalid_y_min), RelearnException);
-        ASSERT_THROW(cell.set_excitatory_dendrite_position(pos_ex_1_invalid_z_min), RelearnException);
+        ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_1_invalid_x_min), RelearnException);
+        ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_1_invalid_y_min), RelearnException);
+        ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_1_invalid_z_min), RelearnException);
 
-        ASSERT_TRUE(cell.get_excitatory_dendrite_position().has_value());
-        ASSERT_EQ(pos_ex_1, cell.get_excitatory_dendrite_position().value());
+        ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
+        ASSERT_EQ(pos_ex_1, cell.get_excitatory_dendrites_position().value());
 
         ASSERT_TRUE(cell.get_neuron_position_for(SignalType::EXCITATORY, ElementType::DENDRITE).has_value());
         ASSERT_EQ(pos_ex_1, cell.get_neuron_position_for(SignalType::EXCITATORY, ElementType::DENDRITE).value());
 
         const Vec3d pos_ex_2{ urd_x(mt), urd_y(mt), urd_z(mt) };
-        cell.set_excitatory_dendrite_position(pos_ex_2);
+        cell.set_excitatory_dendrites_position(pos_ex_2);
 
         const Vec3d pos_ex_2_invalid_x_max = max + Vec3d{ 1, 0, 0 };
         const Vec3d pos_ex_2_invalid_y_max = max + Vec3d{ 0, 1, 0 };
         const Vec3d pos_ex_2_invalid_z_max = max + Vec3d{ 0, 0, 1 };
 
-        ASSERT_THROW(cell.set_excitatory_dendrite_position(pos_ex_2_invalid_x_max), RelearnException);
-        ASSERT_THROW(cell.set_excitatory_dendrite_position(pos_ex_2_invalid_y_max), RelearnException);
-        ASSERT_THROW(cell.set_excitatory_dendrite_position(pos_ex_2_invalid_z_max), RelearnException);
+        ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_2_invalid_x_max), RelearnException);
+        ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_2_invalid_y_max), RelearnException);
+        ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_2_invalid_z_max), RelearnException);
 
         const Vec3d pos_ex_2_invalid_x_min = min - Vec3d{ 1, 0, 0 };
         const Vec3d pos_ex_2_invalid_y_min = min - Vec3d{ 0, 1, 0 };
         const Vec3d pos_ex_2_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
-        ASSERT_THROW(cell.set_excitatory_dendrite_position(pos_ex_2_invalid_x_min), RelearnException);
-        ASSERT_THROW(cell.set_excitatory_dendrite_position(pos_ex_2_invalid_y_min), RelearnException);
-        ASSERT_THROW(cell.set_excitatory_dendrite_position(pos_ex_2_invalid_z_min), RelearnException);
+        ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_2_invalid_x_min), RelearnException);
+        ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_2_invalid_y_min), RelearnException);
+        ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_2_invalid_z_min), RelearnException);
 
-        ASSERT_TRUE(cell.get_excitatory_dendrite_position().has_value());
-        ASSERT_EQ(pos_ex_2, cell.get_excitatory_dendrite_position().value());
+        ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
+        ASSERT_EQ(pos_ex_2, cell.get_excitatory_dendrites_position().value());
 
         ASSERT_TRUE(cell.get_neuron_position_for(SignalType::EXCITATORY, ElementType::DENDRITE).has_value());
         ASSERT_EQ(pos_ex_2, cell.get_neuron_position_for(SignalType::EXCITATORY, ElementType::DENDRITE).value());
 
         const Vec3d pos_in_1{ urd_x(mt), urd_y(mt), urd_z(mt) };
-        cell.set_inhibitory_dendrite_position(pos_in_1);
+        cell.set_inhibitory_dendrites_position(pos_in_1);
 
         const Vec3d pos_in_1_invalid_x_max = max + Vec3d{ 1, 0, 0 };
         const Vec3d pos_in_1_invalid_y_max = max + Vec3d{ 0, 1, 0 };
         const Vec3d pos_in_1_invalid_z_max = max + Vec3d{ 0, 0, 1 };
 
-        ASSERT_THROW(cell.set_inhibitory_dendrite_position(pos_in_1_invalid_x_max), RelearnException);
-        ASSERT_THROW(cell.set_inhibitory_dendrite_position(pos_in_1_invalid_y_max), RelearnException);
-        ASSERT_THROW(cell.set_inhibitory_dendrite_position(pos_in_1_invalid_z_max), RelearnException);
+        ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_1_invalid_x_max), RelearnException);
+        ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_1_invalid_y_max), RelearnException);
+        ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_1_invalid_z_max), RelearnException);
 
         const Vec3d pos_in_1_invalid_x_min = min - Vec3d{ 1, 0, 0 };
         const Vec3d pos_in_1_invalid_y_min = min - Vec3d{ 0, 1, 0 };
         const Vec3d pos_in_1_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
-        ASSERT_THROW(cell.set_inhibitory_dendrite_position(pos_in_1_invalid_x_min), RelearnException);
-        ASSERT_THROW(cell.set_inhibitory_dendrite_position(pos_in_1_invalid_y_min), RelearnException);
-        ASSERT_THROW(cell.set_inhibitory_dendrite_position(pos_in_1_invalid_z_min), RelearnException);
+        ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_1_invalid_x_min), RelearnException);
+        ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_1_invalid_y_min), RelearnException);
+        ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_1_invalid_z_min), RelearnException);
 
-        ASSERT_TRUE(cell.get_inhibitory_dendrite_position().has_value());
-        ASSERT_EQ(pos_in_1, cell.get_inhibitory_dendrite_position().value());
+        ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
+        ASSERT_EQ(pos_in_1, cell.get_inhibitory_dendrites_position().value());
 
         ASSERT_TRUE(cell.get_neuron_position_for(SignalType::INHIBITORY, ElementType::DENDRITE).has_value());
         ASSERT_EQ(pos_in_1, cell.get_neuron_position_for(SignalType::INHIBITORY, ElementType::DENDRITE).value());
 
         const Vec3d pos_in_2{ urd_x(mt), urd_y(mt), urd_z(mt) };
-        cell.set_inhibitory_dendrite_position(pos_in_2);
+        cell.set_inhibitory_dendrites_position(pos_in_2);
 
         const Vec3d pos_in_2_invalid_x_max = max + Vec3d{ 1, 0, 0 };
         const Vec3d pos_in_2_invalid_y_max = max + Vec3d{ 0, 1, 0 };
         const Vec3d pos_in_2_invalid_z_max = max + Vec3d{ 0, 0, 1 };
 
-        ASSERT_THROW(cell.set_inhibitory_dendrite_position(pos_in_2_invalid_x_max), RelearnException);
-        ASSERT_THROW(cell.set_inhibitory_dendrite_position(pos_in_2_invalid_y_max), RelearnException);
-        ASSERT_THROW(cell.set_inhibitory_dendrite_position(pos_in_2_invalid_z_max), RelearnException);
+        ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_2_invalid_x_max), RelearnException);
+        ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_2_invalid_y_max), RelearnException);
+        ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_2_invalid_z_max), RelearnException);
 
         const Vec3d pos_in_2_invalid_x_min = min - Vec3d{ 1, 0, 0 };
         const Vec3d pos_in_2_invalid_y_min = min - Vec3d{ 0, 1, 0 };
         const Vec3d pos_in_2_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
-        ASSERT_THROW(cell.set_inhibitory_dendrite_position(pos_in_2_invalid_x_min), RelearnException);
-        ASSERT_THROW(cell.set_inhibitory_dendrite_position(pos_in_2_invalid_y_min), RelearnException);
-        ASSERT_THROW(cell.set_inhibitory_dendrite_position(pos_in_2_invalid_z_min), RelearnException);
+        ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_2_invalid_x_min), RelearnException);
+        ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_2_invalid_y_min), RelearnException);
+        ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_2_invalid_z_min), RelearnException);
 
-        ASSERT_TRUE(cell.get_inhibitory_dendrite_position().has_value());
-        ASSERT_EQ(pos_in_2, cell.get_inhibitory_dendrite_position().value());
+        ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
+        ASSERT_EQ(pos_in_2, cell.get_inhibitory_dendrites_position().value());
 
         ASSERT_TRUE(cell.get_neuron_position_for(SignalType::INHIBITORY, ElementType::DENDRITE).has_value());
         ASSERT_EQ(pos_in_2, cell.get_neuron_position_for(SignalType::INHIBITORY, ElementType::DENDRITE).value());
@@ -403,22 +403,22 @@ TEST(TestCell, testCellPositionCombined) {
 
         ASSERT_FALSE(cell.get_neuron_position().has_value());
 
-        cell.set_excitatory_dendrite_position(pos_1);
-        cell.set_inhibitory_dendrite_position(pos_1);
+        cell.set_excitatory_dendrites_position(pos_1);
+        cell.set_inhibitory_dendrites_position(pos_1);
 
         ASSERT_TRUE(cell.get_neuron_position().has_value());
         ASSERT_EQ(cell.get_neuron_position().value(), pos_1);
 
-        cell.set_excitatory_dendrite_position({});
-        cell.set_inhibitory_dendrite_position({});
+        cell.set_excitatory_dendrites_position({});
+        cell.set_inhibitory_dendrites_position({});
 
         ASSERT_FALSE(cell.get_neuron_position().has_value());
 
-        cell.set_excitatory_dendrite_position(pos_2);
+        cell.set_excitatory_dendrites_position(pos_2);
 
         ASSERT_THROW(cell.get_neuron_position(), RelearnException);
 
-        cell.set_inhibitory_dendrite_position(pos_3);
+        cell.set_inhibitory_dendrites_position(pos_3);
 
         if (pos_2 == pos_3) {
             ASSERT_TRUE(cell.get_neuron_position().has_value());
@@ -431,8 +431,8 @@ TEST(TestCell, testCellPositionCombined) {
 
         ASSERT_FALSE(cell.get_neuron_position().has_value());
 
-        cell.set_excitatory_dendrite_position(pos_4);
-        cell.set_inhibitory_dendrite_position(pos_4);
+        cell.set_excitatory_dendrites_position(pos_4);
+        cell.set_inhibitory_dendrites_position(pos_4);
 
         ASSERT_TRUE(cell.get_neuron_position().has_value());
         ASSERT_EQ(cell.get_neuron_position().value(), pos_4);
@@ -758,8 +758,8 @@ TEST(TestOctreeNode, testOctreeNodeSetterCell) {
         node.set_cell_neuron_id(id);
         node.set_cell_number_dendrites(dends_ex, dends_in);
         node.set_cell_size(min, max);
-        node.set_cell_excitatory_dendrite_position(pos_ex);
-        node.set_cell_inhibitory_dendrite_position(pos_in);
+        node.set_cell_excitatory_dendrites_position(pos_ex);
+        node.set_cell_inhibitory_dendrites_position(pos_in);
 
         ASSERT_TRUE(node.get_cell().get_neuron_id() == id);
         ASSERT_TRUE(cell.get_neuron_id() == id);
@@ -773,26 +773,26 @@ TEST(TestOctreeNode, testOctreeNodeSetterCell) {
         ASSERT_TRUE(node.get_cell().get_size() == box_sizes);
         ASSERT_TRUE(cell.get_size() == box_sizes);
 
-        ASSERT_TRUE(node.get_cell().get_excitatory_dendrite_position().has_value());
-        ASSERT_TRUE(cell.get_excitatory_dendrite_position().has_value());
+        ASSERT_TRUE(node.get_cell().get_excitatory_dendrites_position().has_value());
+        ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
 
-        ASSERT_TRUE(node.get_cell().get_excitatory_dendrite_position().value() == pos_ex);
-        ASSERT_TRUE(cell.get_excitatory_dendrite_position().value() == pos_ex);
+        ASSERT_TRUE(node.get_cell().get_excitatory_dendrites_position().value() == pos_ex);
+        ASSERT_TRUE(cell.get_excitatory_dendrites_position().value() == pos_ex);
 
-        ASSERT_TRUE(node.get_cell().get_inhibitory_dendrite_position().has_value());
-        ASSERT_TRUE(cell.get_inhibitory_dendrite_position().has_value());
+        ASSERT_TRUE(node.get_cell().get_inhibitory_dendrites_position().has_value());
+        ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
 
-        ASSERT_TRUE(node.get_cell().get_inhibitory_dendrite_position().value() == pos_in);
-        ASSERT_TRUE(cell.get_inhibitory_dendrite_position().value() == pos_in);
+        ASSERT_TRUE(node.get_cell().get_inhibitory_dendrites_position().value() == pos_in);
+        ASSERT_TRUE(cell.get_inhibitory_dendrites_position().value() == pos_in);
 
-        node.set_cell_excitatory_dendrite_position({});
-        node.set_cell_inhibitory_dendrite_position({});
+        node.set_cell_excitatory_dendrites_position({});
+        node.set_cell_inhibitory_dendrites_position({});
 
-        ASSERT_FALSE(node.get_cell().get_excitatory_dendrite_position().has_value());
-        ASSERT_FALSE(cell.get_excitatory_dendrite_position().has_value());
+        ASSERT_FALSE(node.get_cell().get_excitatory_dendrites_position().has_value());
+        ASSERT_FALSE(cell.get_excitatory_dendrites_position().has_value());
 
-        ASSERT_FALSE(node.get_cell().get_inhibitory_dendrite_position().has_value());
-        ASSERT_FALSE(cell.get_inhibitory_dendrite_position().has_value());
+        ASSERT_FALSE(node.get_cell().get_inhibitory_dendrites_position().has_value());
+        ASSERT_FALSE(cell.get_inhibitory_dendrites_position().has_value());
     }
 }
 

@@ -36,7 +36,7 @@ public:
         return xyz_pos;
     }
 
-    [[nodiscard]] SignalType get_dendrite_type_needed() const noexcept {
+    [[nodiscard]] SignalType get_dendrites_type_needed() const noexcept {
         return dendrite_type_needed;
     }
 

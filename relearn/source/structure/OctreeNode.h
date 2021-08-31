@@ -100,20 +100,20 @@ public:
         cell.set_number_inhibitory_axons(num_in);
     }
 
-    void set_cell_excitatory_dendrite_position(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_excitatory_dendrite_position(opt_position);
+    void set_cell_excitatory_dendrites_position(const std::optional<Vec3d>& opt_position) noexcept {
+        cell.set_excitatory_dendrites_position(opt_position);
     }
 
-    void set_cell_inhibitory_dendrite_position(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_inhibitory_dendrite_position(opt_position);
+    void set_cell_inhibitory_dendrites_position(const std::optional<Vec3d>& opt_position) noexcept {
+        cell.set_inhibitory_dendrites_position(opt_position);
     }
 
-    void set_cell_excitatory_axon_position(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_excitatory_axon_position(opt_position);
+    void set_cell_excitatory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
+        cell.set_excitatory_axons_position(opt_position);
     }
 
-    void set_cell_inhibitory_axon_position(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_inhibitory_axon_position(opt_position);
+    void set_cell_inhibitory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
+        cell.set_inhibitory_axons_position(opt_position);
     }
 
     void set_child(OctreeNode* node, size_t idx) {
@@ -183,9 +183,9 @@ public:
         interaction_list.clear();
     }
 
-    std::vector<Vec3d> get_dendrite_pos_from_node_for(SignalType needed) const;
+    std::vector<Vec3d> get_dendrites_pos_from_node_for(SignalType needed) const;
 
-    std::vector<Vec3d> get_axon_pos_from_node_for(SignalType needed) const;
+    std::vector<Vec3d> get_axons_pos_from_node_for(SignalType needed) const;
 
     void print_calculations(SignalType needed, double sigma);
 };

@@ -153,7 +153,7 @@ inline double calc_taylor_expansion(OctreeNode* source, OctreeNode* target, cons
     Multiindex m = Multiindex();
     int num_coef = m.get_number_of_indices();
     std::array<double, Constants::p3> taylor_coef;
-    const auto target_center = target-> get_cell().get_dendrite_position_for(needed);
+    const auto target_center = target-> get_cell().get_dendrites_position_for(needed);
     RelearnException::check(target_center.has_value(), "Target node has no position for Taylor calculation");
     double result = 0;
     for (unsigned int b = 0; b < num_coef; b++) {
@@ -164,7 +164,7 @@ inline double calc_taylor_expansion(OctreeNode* source, OctreeNode* target, cons
             if (source_child != nullptr){
                 int axon_num = source_child->get_cell().get_number_axons_for(needed);
                 if (axon_num>0){
-                    const auto child_pos =  source_child->get_cell().get_axon_position_for(needed);
+                    const auto child_pos =  source_child->get_cell().get_axons_position_for(needed);
                     const Vec3d temp_vec = (child_pos.value()-target_center.value())/sigma;
                     temp += source_child->get_cell().get_number_axons_for(needed) * h_multiindex(current_index, temp_vec);
                 }
@@ -181,7 +181,7 @@ inline double calc_taylor_expansion(OctreeNode* source, OctreeNode* target, cons
             if (target_child != nullptr){
                 int dend_num = target_child->get_cell().get_number_dendrites_for(needed);
                 if (dend_num>0){
-                    const auto child_pos =  target_child->get_cell().get_dendrite_position_for(needed);
+                    const auto child_pos =  target_child->get_cell().get_dendrites_position_for(needed);
                     const Vec3d temp_vec = (child_pos.value()-target_center.value()) / sigma;
                     for (unsigned int b = 0; b < num_coef; b++) {
                         temp += taylor_coef[b] * pow_multiindex(temp_vec, m.get_index(b));
@@ -207,7 +207,7 @@ inline double calc_hermite(OctreeNode* source, OctreeNode* target, const double 
     double result = 0;
     Multiindex m = Multiindex();
     int coef_num = m.get_number_of_indices();
-    const auto source_center = source-> get_cell().get_axon_position_for(needed);
+    const auto source_center = source-> get_cell().get_axons_position_for(needed);
     RelearnException::check(source_center.has_value(), "Source node has no axon position for Hermite calculation \n");
 
     for (unsigned int j = 0; j < Constants::number_oct; j++) {
@@ -216,7 +216,7 @@ inline double calc_hermite(OctreeNode* source, OctreeNode* target, const double 
         if(child_target != nullptr){
             int dend_num = child_target->get_cell().get_number_dendrites_for(needed);
             if (dend_num>0){
-                const auto child_pos =  child_target->get_cell().get_dendrite_position_for(needed);
+                const auto child_pos =  child_target->get_cell().get_dendrites_position_for(needed);
                 const Vec3d temp_vec = (child_pos.value() - source_center.value()) / sigma;
                 for (unsigned int a = 0; a < coef_num; a++) {
                     temp += source->get_hermite_coef_for(a, needed) * h_multiindex(m.get_index(a), temp_vec);

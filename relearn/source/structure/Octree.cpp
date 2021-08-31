@@ -113,7 +113,7 @@ void Octree::postorder_print() {
                << ", " << ptr->get_cell().get_number_inhibitory_dendrites() << ")\n";
 
             // Print position DendriteType::EXCITATORY
-            xyz_pos = ptr->get_cell().get_excitatory_dendrite_position();
+            xyz_pos = ptr->get_cell().get_excitatory_dendrites_position();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
                 ss << "-- invalid!";
@@ -126,7 +126,7 @@ void Octree::postorder_print() {
 
             ss << "\n";
             // Print position DendriteType::INHIBITORY
-            xyz_pos = ptr->get_cell().get_inhibitory_dendrite_position();
+            xyz_pos = ptr->get_cell().get_inhibitory_dendrites_position();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
                 ss << "-- invalid!";
@@ -199,7 +199,7 @@ std::tuple<bool, bool> Octree::acceptance_criterion_test(const Vec3d& axon_pos_x
     }
 
     // Check distance between neuron with axon and neuron with dendrite
-    const auto& target_xyz = node_with_dendrite->get_cell().get_dendrite_position_for(dendrite_type_needed);
+    const auto& target_xyz = node_with_dendrite->get_cell().get_dendrites_position_for(dendrite_type_needed);
 
     // NOTE: This assertion fails when considering inner nodes that don't have dendrites.
     RelearnException::check(target_xyz.has_value(), "target_xyz was bad");
@@ -455,7 +455,7 @@ double Octree::calc_attractiveness_to_connect(
         return 0.0;
     }
 
-    const auto& target_xyz = node_with_dendrite.get_cell().get_dendrite_position_for(dendrite_type_needed);
+    const auto& target_xyz = node_with_dendrite.get_cell().get_dendrites_position_for(dendrite_type_needed);
     RelearnException::check(target_xyz.has_value(), "target_xyz is bad");
 
     const auto num_dendrites = node_with_dendrite.get_cell().get_number_dendrites_for(dendrite_type_needed);
@@ -486,9 +486,9 @@ const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode 
              //... and there are not enough neurons in the target
             if (target_num <= Constants::max_neurons_in_target) {
                 //fill target list
-                const std::vector<Vec3d> target_neurons_pos = source->get_from_interactionlist(i)->get_dendrite_pos_from_node_for(dendrite_type_needed);
+                const std::vector<Vec3d> target_neurons_pos = source->get_from_interactionlist(i)->get_dendrites_pos_from_node_for(dendrite_type_needed);
                 //fill source list
-                const std::vector<Vec3d> source_neurons_pos = source->get_axon_pos_from_node_for(dendrite_type_needed);
+                const std::vector<Vec3d> source_neurons_pos = source->get_axons_pos_from_node_for(dendrite_type_needed);
                 //calculate via direct Gauss
                 result[i] = Functions::calc_direct_gauss(source_neurons_pos,target_neurons_pos, default_sigma);
             } else {

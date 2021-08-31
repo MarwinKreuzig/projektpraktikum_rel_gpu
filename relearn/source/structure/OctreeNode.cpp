@@ -155,7 +155,7 @@ void OctreeNode::print() const {
     LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
 }
 
-std::vector<Vec3d> OctreeNode::get_dendrite_pos_from_node_for(SignalType needed) const {
+std::vector<Vec3d> OctreeNode::get_dendrites_pos_from_node_for(SignalType needed) const {
     int num_of_ports = 0;
     std::vector<Vec3d> result;
     std::stack<const OctreeNode*> stack;
@@ -188,7 +188,7 @@ std::vector<Vec3d> OctreeNode::get_dendrite_pos_from_node_for(SignalType needed)
     return result;
 }
 
-std::vector<Vec3d> OctreeNode::get_axon_pos_from_node_for(SignalType needed) const {
+std::vector<Vec3d> OctreeNode::get_axons_pos_from_node_for(SignalType needed) const {
     int num_of_ports = 0;
     std::vector<Vec3d> result;
     std::stack<const OctreeNode*> stack;
@@ -222,8 +222,8 @@ std::vector<Vec3d> OctreeNode::get_axon_pos_from_node_for(SignalType needed) con
 
 void OctreeNode::print_calculations(SignalType needed, double sigma) {
     for (int i = 0; i < this->get_interactionlist_length(); i++) {
-        auto sources = this->get_axon_pos_from_node_for(needed);
-        auto targets = this->get_from_interactionlist(i)->get_dendrite_pos_from_node_for(needed);
+        auto sources = this->get_axons_pos_from_node_for(needed);
+        auto targets = this->get_from_interactionlist(i)->get_dendrites_pos_from_node_for(needed);
         double direct = Functions::calc_direct_gauss(sources, targets, sigma);
         double taylor = Functions::calc_taylor_expansion(this, this->get_from_interactionlist(i), sigma, needed);
         double hermite = Functions::calc_hermite(this, this->get_from_interactionlist(i), sigma, needed);
