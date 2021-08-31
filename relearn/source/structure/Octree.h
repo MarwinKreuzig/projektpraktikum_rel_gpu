@@ -147,20 +147,20 @@ private:
                 }
 
                 // Sum up number of dendrites
-                const auto temp_num_dendrites_exc = child->get_cell().get_neuron_num_dendrites_exc();
-                const auto temp_num_dendrites_inh = child->get_cell().get_neuron_num_dendrites_inh();
-                const auto temp_num_axons_exc = child->get_cell().get_neuron_num_axons_exc();
-                const auto temp_num_axons_inh = child->get_cell().get_neuron_num_axons_inh();
+                const auto temp_num_dendrites_exc = child->get_cell().get_number_excitatory_dendrites();
+                const auto temp_num_dendrites_inh = child->get_cell().get_number_inhibitory_dendrites();
+                const auto temp_num_axons_exc = child->get_cell().get_number_excitatory_axons();
+                const auto temp_num_axons_inh = child->get_cell().set_number_inhibitory_axons();
                 num_dendrites_exc += temp_num_dendrites_exc;
                 num_dendrites_inh += temp_num_dendrites_inh;
                 num_axons_exc += temp_num_axons_exc;
                 num_axons_inh += temp_num_axons_inh;
 
                 // Average the position by using the number of dendrites as weights
-                std::optional<Vec3d> temp_xyz_pos_dend_exc = child->get_cell().get_neuron_position_dendrites_exc();
-                std::optional<Vec3d> temp_xyz_pos_dend_inh = child->get_cell().get_neuron_position_dendrites_inh();
-                std::optional<Vec3d> temp_xyz_pos_ax_exc = child->get_cell().get_neuron_position_axons_exc();
-                std::optional<Vec3d> temp_xyz_pos_ax_inh = child->get_cell().get_neuron_position_axons_inh();
+                std::optional<Vec3d> temp_xyz_pos_dend_exc = child->get_cell().get_excitatory_dendrite_position();
+                std::optional<Vec3d> temp_xyz_pos_dend_inh = child->get_cell().get_inhibitory_dendrite_position();
+                std::optional<Vec3d> temp_xyz_pos_ax_exc = child->get_cell().get_excitatory_axon_position();
+                std::optional<Vec3d> temp_xyz_pos_ax_inh = child->get_cell().get_inhibitory_axon_position();
 
                 /**
 					 * We can use position if it's valid or if corresponding num of dendrites is 0 
@@ -232,9 +232,9 @@ private:
                     for (unsigned int i = 0; i < Constants::number_oct; i++) {
                         auto child = node->get_child(i);
                         if(child != nullptr){
-                            int ax_num_ex = child->get_cell().get_neuron_num_axons_exc();
+                            int ax_num_ex = child->get_cell().get_number_excitatory_axons();
                             if (ax_num_ex>0){
-                                const auto child_pos = child->get_cell().get_neuron_position_axons_exc();
+                                const auto child_pos = child->get_cell().get_excitatory_axon_position();
                                 const Vec3d temp_vec = (child_pos.value()-(xyz_pos_ax_exc / num_axons_exc)) / Octree::default_sigma;
                                 temp += ax_num_ex * Functions::pow_multiindex(temp_vec, m.get_index(a));
                             }
@@ -249,9 +249,9 @@ private:
                     for (unsigned int i = 0; i < Constants::number_oct; i++) {
                         auto child = node->get_child(i);
                         if (child != nullptr){
-                            int ax_num_in = child->get_cell().get_neuron_num_axons_inh();
+                            int ax_num_in = child->get_cell().set_number_inhibitory_axons();
                             if (ax_num_in>0){
-                                const auto child_pos = child->get_cell().get_neuron_position_axons_inh();
+                                const auto child_pos = child->get_cell().get_inhibitory_axon_position();
                                 const Vec3d temp_vec = (child_pos.value()-(xyz_pos_ax_inh / num_axons_inh)) / Octree::default_sigma;
                                 temp += ax_num_in * Functions::pow_multiindex(temp_vec, m.get_index(a));
                             }

@@ -91,29 +91,29 @@ public:
     }
 
     void set_cell_num_dendrites(unsigned int num_ex, unsigned int num_in) noexcept {
-        cell.set_neuron_num_dendrites_exc(num_ex);
-        cell.set_neuron_num_dendrites_inh(num_in);
+        cell.set_number_excitatory_dendrites(num_ex);
+        cell.set_number_inhibitory_dendrites(num_in);
     }
 
     void set_cell_num_axons(unsigned int num_ex, unsigned int num_in) noexcept {
-        cell.set_neuron_num_axons_exc(num_ex);
-        cell.set_neuron_num_axons_inh(num_in);
+        cell.set_number_excitatory_axons(num_ex);
+        cell.set_number_inhibitory_axons(num_in);
     }
 
     void set_cell_neuron_pos_dend_exc(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_neuron_position_dendrites_exc(opt_position);
+        cell.set_excitatory_dendrite_position(opt_position);
     }
 
     void set_cell_neuron_pos_dend_inh(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_neuron_position_dendrites_inh(opt_position);
+        cell.set_inhibitory_dendrite_position(opt_position);
     }
 
     void set_cell_neuron_pos_ax_exc(const std::optional<Vec3d>& opt_position) noexcept{
-        cell.set_neuron_position_axons_exc(opt_position);
+        cell.set_excitatory_axon_position(opt_position);
     }
 
     void set_cell_neuron_pos_ax_inh(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_neuron_position_axons_inh(opt_position);
+        cell.set_inhibitory_axon_position(opt_position);
     }
 
    void set_hermite_coef_ex(unsigned int x, double d){

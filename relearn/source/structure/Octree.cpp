@@ -109,11 +109,11 @@ void Octree::postorder_print() {
             for (auto j = 0; j < depth; j++) {
                 ss << " ";
             }
-            ss << "Number dendrites (exc, inh): (" << ptr->get_cell().get_neuron_num_dendrites_exc()
-               << ", " << ptr->get_cell().get_neuron_num_dendrites_inh() << ")\n";
+            ss << "Number dendrites (exc, inh): (" << ptr->get_cell().get_number_excitatory_dendrites()
+               << ", " << ptr->get_cell().get_number_inhibitory_dendrites() << ")\n";
 
             // Print position DendriteType::EXCITATORY
-            xyz_pos = ptr->get_cell().get_neuron_position_dendrites_exc();
+            xyz_pos = ptr->get_cell().get_excitatory_dendrite_position();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
                 ss << "-- invalid!";
@@ -126,7 +126,7 @@ void Octree::postorder_print() {
 
             ss << "\n";
             // Print position DendriteType::INHIBITORY
-            xyz_pos = ptr->get_cell().get_neuron_position_dendrites_inh();
+            xyz_pos = ptr->get_cell().get_inhibitory_dendrite_position();
             // Note if position is invalid
             if (!xyz_pos.has_value()) {
                 ss << "-- invalid!";
@@ -177,7 +177,7 @@ std::tuple<bool, bool> Octree::acceptance_criterion_test(const Vec3d& axon_pos_x
     SignalType dendrite_type_needed,
     bool naive_method) const /*noexcept*/ {
 
-    const auto has_vacant_dendrites = node_with_dendrite->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed) != 0;
+    const auto has_vacant_dendrites = node_with_dendrite->get_cell().get_number_dendrites_for(dendrite_type_needed) != 0;
 
     // Use naive method
     if (naive_method) {
@@ -199,7 +199,7 @@ std::tuple<bool, bool> Octree::acceptance_criterion_test(const Vec3d& axon_pos_x
     }
 
     // Check distance between neuron with axon and neuron with dendrite
-    const auto& target_xyz = node_with_dendrite->get_cell().get_neuron_position_for(dendrite_type_needed);
+    const auto& target_xyz = node_with_dendrite->get_cell().get_dendrite_position_for(dendrite_type_needed);
 
     // NOTE: This assertion fails when considering inner nodes that don't have dendrites.
     RelearnException::check(target_xyz.has_value(), "target_xyz was bad");
@@ -222,7 +222,7 @@ ProbabilitySubintervalVector Octree::get_nodes_for_interval(
     bool naive_method) {
 
     /* Subtree is not empty AND (Dendrites are available OR We use naive method) */
-    const auto flag = (root != nullptr) && (root->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed) != 0 || naive_method);
+    const auto flag = (root != nullptr) && (root->get_cell().get_number_dendrites_for(dendrite_type_needed) != 0 || naive_method);
     if (!flag) {
         return {};
     }
@@ -455,10 +455,10 @@ double Octree::calc_attractiveness_to_connect(
         return 0.0;
     }
 
-    const auto& target_xyz = node_with_dendrite.get_cell().get_neuron_position_for(dendrite_type_needed);
+    const auto& target_xyz = node_with_dendrite.get_cell().get_dendrite_position_for(dendrite_type_needed);
     RelearnException::check(target_xyz.has_value(), "target_xyz is bad");
 
-    const auto num_dendrites = node_with_dendrite.get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
+    const auto num_dendrites = node_with_dendrite.get_cell().get_number_dendrites_for(dendrite_type_needed);
 
     const auto position_diff = target_xyz.value() - axon_pos_xyz;
     const auto eucl_length = position_diff.calculate_p_norm(2.0);
@@ -471,7 +471,7 @@ double Octree::calc_attractiveness_to_connect(
 
 const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode *source, const SignalType dendrite_type_needed) {  
     // calculate vacant number of neurons in souce box
-    const unsigned int source_num = source->get_cell().get_neuron_num_axons_for(dendrite_type_needed);
+    const unsigned int source_num = source->get_cell().get_number_axons_for(dendrite_type_needed);
     //find out the length of the interactionlist
     size_t target_list_length = source->get_interactionlist_length();
     //Initialize return value to 0
@@ -482,7 +482,7 @@ const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode 
     if (source_num <= Constants::max_neurons_in_source) {
         for (size_t i = 0; i < target_list_length; i++) {
             // calculate vacant number of neurons in target box
-            int target_num = (source->get_from_interactionlist(i))->get_cell().get_neuron_num_dendrites_for(dendrite_type_needed);
+            int target_num = (source->get_from_interactionlist(i))->get_cell().get_number_dendrites_for(dendrite_type_needed);
              //... and there are not enough neurons in the target
             if (target_num <= Constants::max_neurons_in_target) {
                 //fill target list

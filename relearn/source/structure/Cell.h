@@ -11,6 +11,7 @@
 #pragma once
 
 #include "../Config.h"
+#include "../neurons/ElementType.h"
 #include "../neurons/SignalType.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
@@ -20,28 +21,27 @@
 
 class Cell {
 public:
-    Cell() = default;
-    ~Cell() = default;
+    [[nodiscard]] size_t get_neuron_id() const noexcept {
+        return neuron_id;
+    }
 
-    Cell(const Cell& other) = default;
-    Cell(Cell&& other) = default;
-
-    Cell& operator=(const Cell& other) = default;
-    Cell& operator=(Cell&& other) = default;
-
-    void set_size(const Vec3d& min, const Vec3d& max) noexcept {
-        xyz_min = min;
-        xyz_max = max;
+    void set_neuron_id(size_t neuron_id) noexcept {
+        this->neuron_id = neuron_id;
     }
 
     [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size() const noexcept {
         return std::make_tuple(xyz_min, xyz_max);
     }
 
-    /**
-	 * Returns edge length of the cell
-	 * Assumes that the cell is cubic, otherwise returns the maximum
-	 */
+    void set_size(const Vec3d& min, const Vec3d& max) {
+        RelearnException::check(min.get_x() <= max.get_x(), "In Cell::set_size, x was not ok");
+        RelearnException::check(min.get_y() <= max.get_y(), "In Cell::set_size, y was not ok");
+        RelearnException::check(min.get_z() <= max.get_z(), "In Cell::set_size, z was not ok");
+
+        xyz_min = min;
+        xyz_max = max;
+    }
+
     [[nodiscard]] double get_maximal_dimension_difference() const noexcept {
         const auto diff_vector = xyz_max - xyz_min;
         const auto diff = diff_vector.get_maximum();
@@ -49,13 +49,154 @@ public:
         return diff;
     }
 
-    [[nodiscard]] std::optional<Vec3d> get_neuron_position() const;
+    [[nodiscard]] unsigned char get_octant_for_position(const Vec3d& pos) const {
+        unsigned char idx = 0;
 
-    [[nodiscard]] std::optional<Vec3d> get_neuron_position_dendrites_exc() const noexcept {
+        const auto& x = pos.get_x();
+        const auto& y = pos.get_y();
+        const auto& z = pos.get_z();
+
+        /**
+	     * Sanity check: Make sure that the position is within this cell
+	     * This check returns false if negative coordinates are used.
+	     * Thus make sure to use positions >=0.
+	     */
+        RelearnException::check(x >= xyz_min.get_x() && x <= xyz_max.get_x(), "x is bad");
+        RelearnException::check(y >= xyz_min.get_y() && y <= xyz_max.get_y(), "y is bad");
+        RelearnException::check(z >= xyz_min.get_z() && z <= xyz_max.get_z(), "z is bad");
+
+        //RelearnException::check(x >= xyz_min.get_x() && x <= xyz_min.get_x() + xyz_max.get_x(), "x is bad");
+        //RelearnException::check(y >= xyz_min.get_y() && y <= xyz_min.get_y() + xyz_max.get_y(), "y is bad");
+        //RelearnException::check(z >= xyz_min.get_z() && z <= xyz_min.get_z() + xyz_max.get_z(), "z is bad");
+
+        /**
+	     * Figure below shows the binary numbering of the octants (subcells) in a cell.
+	     * The binary number of an octant (subcell) corresponds to its index [0..7] in the
+	     * children array of the cell.
+	     *
+
+			   110 ----- 111
+			   /|        /|
+			  / |       / |
+			 /  |      /  |
+		   010 ----- 011  |    y
+			|  100 ---|- 101   ^   z
+			|  /      |  /     |
+			| /       | /      | /
+			|/        |/       |/
+		   000 ----- 001       +-----> x
+
+		 */
+
+        //NOLINTNEXTLINE
+        idx = idx | ((x < (xyz_min.get_x() + xyz_max.get_x()) / 2.0) ? 0 : 1); // idx | (pos_x < midpoint_dim_x) ? 0 : 1
+
+        //NOLINTNEXTLINE
+        idx = idx | ((y < (xyz_min.get_y() + xyz_max.get_y()) / 2.0) ? 0 : 2); // idx | (pos_y < midpoint_dim_y) ? 0 : 2
+
+        //NOLINTNEXTLINE
+        idx = idx | ((z < (xyz_min.get_z() + xyz_max.get_z()) / 2.0) ? 0 : 4); // idx | (pos_z < midpoint_dim_z) ? 0 : 4
+
+        RelearnException::check(idx < Constants::number_oct, "Octree octant must be smaller than 8");
+
+        return idx;
+    }
+
+    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size_for_octant(unsigned char idx) const /*noexcept*/ {
+        const bool x_over_halfway_point = (idx & 1U) != 0;
+        const bool y_over_halfway_point = (idx & 2U) != 0;
+        const bool z_over_halfway_point = (idx & 4U) != 0;
+
+        Vec3d octant_xyz_min = this->xyz_min;
+        Vec3d octant_xyz_max = this->xyz_max;
+        // NOLINTNEXTLINE
+        Vec3d octant_xyz_middle = (octant_xyz_min + octant_xyz_max) / 2.0;
+
+        if (x_over_halfway_point) {
+            octant_xyz_min.set_x(octant_xyz_middle.get_x());
+        } else {
+            octant_xyz_max.set_x(octant_xyz_middle.get_x());
+        }
+
+        if (y_over_halfway_point) {
+            octant_xyz_min.set_y(octant_xyz_middle.get_y());
+        } else {
+            octant_xyz_max.set_y(octant_xyz_middle.get_y());
+        }
+
+        if (z_over_halfway_point) {
+            octant_xyz_min.set_z(octant_xyz_middle.get_z());
+        } else {
+            octant_xyz_max.set_z(octant_xyz_middle.get_z());
+        }
+
+        return std::make_tuple(octant_xyz_min, octant_xyz_max);
+    }
+
+    [[nodiscard]] std::optional<Vec3d> get_neuron_position() const {
+        const bool dend_ex_valid = dendrites_ex.xyz_pos.has_value();
+        const bool dend_in_valid = dendrites_in.xyz_pos.has_value();
+        const bool ax_in_valid = axons_in.xyz_pos.has_value();
+        const bool ax_ex_valid = axons_ex.xyz_pos.has_value();
+
+        if (!dend_ex_valid && !dend_in_valid && !ax_ex_valid && ax_in_valid) {
+            return {};
+        }
+
+        if (dend_ex_valid && dend_in_valid && ax_in_valid && ax_ex_valid) {
+            const auto& dend_pos_ex = dendrites_ex.xyz_pos.value();
+            const auto& dend_pos_in = dendrites_in.xyz_pos.value();
+            const auto& ax_pos_ex = axons_ex.xyz_pos.value();
+            const auto& ax_pos_in = axons_in.xyz_pos.value();
+
+            const auto dend_diff = dend_pos_ex - dend_pos_in;
+            const bool dend_exc_position_equals_dend_inh_position = dend_diff.get_x() == 0.0 && dend_diff.get_y() == 0.0 && dend_diff.get_z() == 0.0;
+            RelearnException::check(dend_exc_position_equals_dend_inh_position, "In get neuron position, dendrite positions are unequal");
+
+            const auto ax_diff = ax_pos_ex - ax_pos_in;
+            const bool ax_exc_position_equals_ax_inh_position = ax_diff.get_x() == 0.0 && ax_diff.get_y() == 0.0 && ax_diff.get_z() == 0.0;
+            RelearnException::check(ax_exc_position_equals_ax_inh_position, "In get neuron position, axon positions are unequal");
+
+            const auto diff = ax_pos_ex - dend_pos_ex;
+            const bool ax_position_equals_dend_position = diff.get_x() == 0.0 && diff.get_y() == 0.0 && diff.get_z() == 0.0;
+            RelearnException::check(ax_position_equals_dend_position, "In get neuron position, axon positions are unequal to dendrite positions");
+
+            return dend_pos_ex;
+        }
+
+        RelearnException::fail("In Cell, one pos was valid and one was not");
+
+        return {};
+    }
+
+    [[nodiscard]] std::optional<Vec3d> get_neuron_position_for(SignalType signal_type, ElementType element_type) const {
+        if (element_type == ElementType::AXON) {
+            if (signal_type == SignalType::EXCITATORY) {
+                return axons_ex.xyz_pos;
+            }
+
+            return axons_in.xyz_pos;
+        }
+
+        if (signal_type == SignalType::EXCITATORY) {
+            return dendrites_ex.xyz_pos;
+        }
+
+        return dendrites_in.xyz_pos;
+    }
+
+    void set_neuron_position(const std::optional<Vec3d>& opt_position) noexcept {
+        set_excitatory_dendrite_position(opt_position);
+        set_inhibitory_dendrite_position(opt_position);
+        set_excitatory_axon_position(opt_position);
+        set_inhibitory_axon_position(opt_position);
+    }
+
+    [[nodiscard]] std::optional<Vec3d> get_excitatory_dendrite_position() const noexcept {
         return dendrites_ex.xyz_pos;
     }
 
-    void set_neuron_position_dendrites_exc(const std::optional<Vec3d>& opt_position) {
+    void set_excitatory_dendrite_position(const std::optional<Vec3d>& opt_position) {
         if (opt_position.has_value()) {
             const auto& position = opt_position.value();
 
@@ -67,11 +208,11 @@ public:
         dendrites_ex.xyz_pos = opt_position;
     }
 
-    [[nodiscard]] std::optional<Vec3d> get_neuron_position_dendrites_inh() const noexcept {
+    [[nodiscard]] std::optional<Vec3d> get_inhibitory_dendrite_position() const noexcept {
         return dendrites_in.xyz_pos;
     }
 
-    void set_neuron_position_dendrites_inh(const std::optional<Vec3d>& opt_position) {
+    void set_inhibitory_dendrite_position(const std::optional<Vec3d>& opt_position) {
         if (opt_position.has_value()) {
             const auto& position = opt_position.value();
 
@@ -83,68 +224,55 @@ public:
         dendrites_in.xyz_pos = opt_position;
     }
 
-    [[nodiscard]] std::optional<Vec3d> get_neuron_position_axons_exc() const noexcept {
-        return axons_ex.xyz_pos;
-    }
+    [[nodiscard]] std::optional<Vec3d> get_axon_position_for(SignalType axon_type) const {
+        if (axon_type == SignalType::EXCITATORY) {
+            return axons_ex.xyz_pos;
+        }
 
-    void set_neuron_position_axons_exc(const std::optional<Vec3d>& opt_position) noexcept {
-        axons_ex.xyz_pos = opt_position;
-    }
-
-    void set_neuron_position_axons_inh(const std::optional<Vec3d>& opt_position) noexcept {
-        axons_in.xyz_pos = opt_position;
-    }
-
-    [[nodiscard]] std::optional<Vec3d> get_neuron_position_axons_inh() const noexcept {
         return axons_in.xyz_pos;
     }
 
-    void set_neuron_position(const std::optional<Vec3d>& opt_position) noexcept {
-        set_neuron_position_dendrites_exc(opt_position);
-        set_neuron_position_dendrites_inh(opt_position);
-        set_neuron_position_axons_exc(opt_position);
-        set_neuron_position_axons_inh(opt_position);
+    [[nodiscard]] std::optional<Vec3d> get_excitatory_axon_position() const noexcept {
+        return axons_ex.xyz_pos;
     }
 
-    [[nodiscard]] std::optional<Vec3d> get_neuron_position_for(SignalType dendrite_type) const;
+    void set_excitatory_axon_position(const std::optional<Vec3d>& opt_position) noexcept {
+        axons_ex.xyz_pos = opt_position;
+    }
 
-    [[nodiscard]] std::optional<Vec3d> get_neuron_dendrite_position_for(SignalType dendrite_type) const;
+    [[nodiscard]] std::optional<Vec3d> get_inhibitory_axon_position() const noexcept {
+        return axons_in.xyz_pos;
+    }
 
-    [[nodiscard]] std::optional<Vec3d> get_neuron_axon_position_for(SignalType dendrite_type) const;
+    void set_inhibitory_axon_position(const std::optional<Vec3d>& opt_position) noexcept {
+        axons_in.xyz_pos = opt_position;
+    }
 
-    void set_neuron_num_dendrites_exc(unsigned int num_dendrites) noexcept {
+    [[nodiscard]] std::optional<Vec3d> get_dendrite_position_for(SignalType dendrite_type) const {
+        if (dendrite_type == SignalType::EXCITATORY) {
+            return dendrites_ex.xyz_pos;
+        }
+
+        return dendrites_in.xyz_pos;
+    }
+
+    void set_number_excitatory_dendrites(unsigned int num_dendrites) noexcept {
         dendrites_ex.num_dendrites = num_dendrites;
     }
 
-    [[nodiscard]] unsigned int get_neuron_num_dendrites_exc() const noexcept {
+    [[nodiscard]] unsigned int get_number_excitatory_dendrites() const noexcept {
         return dendrites_ex.num_dendrites;
     }
 
-    void set_neuron_num_dendrites_inh(unsigned int num_dendrites) noexcept {
+    void set_number_inhibitory_dendrites(unsigned int num_dendrites) noexcept {
         dendrites_in.num_dendrites = num_dendrites;
     }
 
-    [[nodiscard]] unsigned int get_neuron_num_dendrites_inh() const noexcept {
+    [[nodiscard]] unsigned int get_number_inhibitory_dendrites() const noexcept {
         return dendrites_in.num_dendrites;
     }
 
-    void set_neuron_num_axons_exc(unsigned int num_axons) noexcept {
-        axons_ex.num_axons = num_axons;
-    }
-
-    [[nodiscard]] unsigned int get_neuron_num_axons_exc() const noexcept {
-        return axons_ex.num_axons;
-    }
-
-    void set_neuron_num_axons_inh(unsigned int num_axons) noexcept {
-        axons_in.num_axons = num_axons;
-    }
-
-    [[nodiscard]] unsigned int get_neuron_num_axons_inh() const noexcept {
-        return axons_in.num_axons;
-    }
-
-    [[nodiscard]] unsigned int get_neuron_num_dendrites_for(SignalType dendrite_type) const noexcept {
+    [[nodiscard]] unsigned int get_number_dendrites_for(SignalType dendrite_type) const noexcept {
         if (dendrite_type == SignalType::EXCITATORY) {
             return dendrites_ex.num_dendrites;
         }
@@ -152,7 +280,23 @@ public:
         return dendrites_in.num_dendrites;
     }
 
-    [[nodiscard]] unsigned int get_neuron_num_axons_for(SignalType dendrite_type) const noexcept {
+    void set_number_excitatory_axons(unsigned int num_axons) noexcept {
+        axons_ex.num_axons = num_axons;
+    }
+
+    [[nodiscard]] unsigned int get_number_excitatory_axons() const noexcept {
+        return axons_ex.num_axons;
+    }
+
+    void set_number_inhibitory_axons(unsigned int num_axons) noexcept {
+        axons_in.num_axons = num_axons;
+    }
+
+    [[nodiscard]] unsigned int set_number_inhibitory_axons() const noexcept {
+        return axons_in.num_axons;
+    }
+
+    [[nodiscard]] unsigned int get_number_axons_for(SignalType dendrite_type) const noexcept {
         if (dendrite_type == SignalType::EXCITATORY) {
             return axons_ex.num_axons;
         }
@@ -160,25 +304,11 @@ public:
         return axons_in.num_axons;
     }
 
-    [[nodiscard]] size_t get_neuron_id() const noexcept {
-        return neuron_id;
-    }
-
-    void set_neuron_id(size_t neuron_id) noexcept {
-        this->neuron_id = neuron_id;
-    }
-
     [[nodiscard]] unsigned char get_neuron_octant() const {
         const std::optional<Vec3d>& pos = get_neuron_position();
         RelearnException::check(pos.has_value(), "position didn_t have a value");
         return get_octant_for_position(pos.value());
     }
-
-    [[nodiscard]] unsigned char get_octant_for_position(const Vec3d& pos) const;
-
-    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size_for_octant(unsigned char idx) const;
-
-    void print() const;
 
 private:
     struct Dendrites {
