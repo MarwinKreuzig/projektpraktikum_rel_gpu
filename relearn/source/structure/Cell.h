@@ -202,7 +202,7 @@ public:
     }
 
     void set_excitatory_dendrites_position(const std::optional<Vec3d>& opt_position) {
-        additional_attributes.set_inhibitory_dendrites_position(opt_position);
+        additional_attributes.set_excitatory_dendrites_position(opt_position);
     }
 
     [[nodiscard]] std::optional<Vec3d> get_inhibitory_dendrites_position() const noexcept {
