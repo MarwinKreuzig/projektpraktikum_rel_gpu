@@ -45,9 +45,9 @@ OctreeNode* OctreeNode::insert(const Vec3d& position, const size_t neuron_id, in
     // Correct position for new node not found yet
     while (nullptr != curr) {
         /**
-		    * My parent already exists.
-		    * Calc which child to follow, i.e., determine octant
-		    */
+		 * My parent already exists.
+		 * Calc which child to follow, i.e., determine octant
+		 */
         my_idx = curr->get_cell().get_octant_for_position(position);
 
         prev = curr;
@@ -57,10 +57,10 @@ OctreeNode* OctreeNode::insert(const Vec3d& position, const size_t neuron_id, in
     RelearnException::check(prev != nullptr, "prev is nullptr");
 
     /**
-	    * Found my octant, but
-	    * I'm the very first child of that node.
-	    * I.e., the node is a leaf.
-	    */
+	 * Found my octant, but
+	 * I'm the very first child of that node.
+	 * I.e., the node is a leaf.
+	 */
     if (!prev->is_parent()) {
         do {
             /**
@@ -76,8 +76,8 @@ OctreeNode* OctreeNode::insert(const Vec3d& position, const size_t neuron_id, in
             prev->set_child(new_node, idx);
 
             /**
-			    * Init this new node properly
-			    */
+			 * Init this new node properly
+			 */
             // Cell size
             Vec3d xyz_min;
             Vec3d xyz_max;
@@ -93,9 +93,9 @@ OctreeNode* OctreeNode::insert(const Vec3d& position, const size_t neuron_id, in
             const auto prev_neuron_id = prev->get_cell().get_neuron_id();
             new_node->set_cell_neuron_id(prev_neuron_id);
             /**
-			    * Set neuron ID of parent (inner node) to uninitialized.
-			    * It is not used for inner nodes.
-			    */
+			 * Set neuron ID of parent (inner node) to uninitialized.
+			 * It is not used for inner nodes.
+			 */
             prev->set_cell_neuron_id(Constants::uninitialized);
             prev->set_parent(); // Mark node as parent
 
@@ -115,9 +115,9 @@ OctreeNode* OctreeNode::insert(const Vec3d& position, const size_t neuron_id, in
     }
 
     /**
-	    * Found my position in children array,
-	    * add myself to the array now
-	    */
+	 * Found my position in children array,
+	 * add myself to the array now
+	 */
     prev->set_child(new_node_to_insert, my_idx);
     new_node_to_insert->set_level(prev->get_level() + 1); // Now we know level of me
 
@@ -155,83 +155,79 @@ void OctreeNode::print() const {
     LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
 }
 
-const std::vector<Vec3d> OctreeNode::get_dendrite_pos_from_node_for(SignalType needed) const{
-   int num_of_ports = 0;
+std::vector<Vec3d> OctreeNode::get_dendrite_pos_from_node_for(SignalType needed) const {
+    int num_of_ports = 0;
     std::vector<Vec3d> result;
     std::stack<const OctreeNode*> stack;
-    
+
     stack.push(this);
 
     while (!stack.empty()) {
-        
         const OctreeNode* current_node = stack.top();
-        
+
         stack.pop();
         if (!current_node->is_parent()) {
             num_of_ports = current_node->get_cell().get_number_dendrites_for(needed);
             if (num_of_ports > 0) {
                 auto node_pos = current_node->get_cell().get_neuron_position().value();
-                for(int i = 0; i<num_of_ports; i++){
-                   result.push_back(node_pos);
+                for (int i = 0; i < num_of_ports; i++) {
+                    result.push_back(node_pos);
                 }
             }
-        }
-        else{
-            for(int i = 0; i<8;i++){
-                
-                const  OctreeNode* children_node = current_node->get_child(i);
-                if (children_node != nullptr && children_node->get_cell().get_number_dendrites_for(needed)>0)
-                {
+        } else {
+            for (int i = 0; i < 8; i++) {
+
+                const OctreeNode* children_node = current_node->get_child(i);
+                if (children_node != nullptr && children_node->get_cell().get_number_dendrites_for(needed) > 0) {
                     stack.push(children_node);
                 }
             }
         }
     }
+
     return result;
 }
 
-const std::vector<Vec3d> OctreeNode::get_axon_pos_from_node_for(SignalType needed) const {
+std::vector<Vec3d> OctreeNode::get_axon_pos_from_node_for(SignalType needed) const {
     int num_of_ports = 0;
     std::vector<Vec3d> result;
     std::stack<const OctreeNode*> stack;
-    
+
     stack.push(this);
 
     while (!stack.empty()) {
-        
         const OctreeNode* current_node = stack.top();
-        
+
         stack.pop();
         if (!current_node->is_parent()) {
             num_of_ports = current_node->get_cell().get_number_axons_for(needed);
             if (num_of_ports > 0) {
                 auto node_pos = current_node->get_cell().get_neuron_position().value();
-                for(int i = 0; i<num_of_ports; i++){
+                for (int i = 0; i < num_of_ports; i++) {
                     result.push_back(node_pos);
                 }
             }
-        }
-        else{
-            for(int i = 0; i<8;i++){       
-                const  OctreeNode* children_node = current_node->get_child(i);
-                if (children_node != nullptr && children_node->get_cell().get_number_axons_for(needed)>0)
-                {
+        } else {
+            for (int i = 0; i < 8; i++) {
+                const OctreeNode* children_node = current_node->get_child(i);
+                if (children_node != nullptr && children_node->get_cell().get_number_axons_for(needed) > 0) {
                     stack.push(children_node);
                 }
             }
         }
     }
+
     return result;
 }
 
-const void OctreeNode::print_calculations(SignalType needed, double sigma){
-    for (int i=0; i < this->get_interactionlist_length(); i++){
+void OctreeNode::print_calculations(SignalType needed, double sigma) {
+    for (int i = 0; i < this->get_interactionlist_length(); i++) {
         auto sources = this->get_axon_pos_from_node_for(needed);
         auto targets = this->get_from_interactionlist(i)->get_dendrite_pos_from_node_for(needed);
         double direct = Functions::calc_direct_gauss(sources, targets, sigma);
-        double taylor = Functions::calc_taylor_expansion(this, this->get_from_interactionlist(i),sigma, needed);
-        double hermite = Functions::calc_hermite(this, this->get_from_interactionlist(i),sigma, needed);
-        if(hermite != 0){
+        double taylor = Functions::calc_taylor_expansion(this, this->get_from_interactionlist(i), sigma, needed);
+        double hermite = Functions::calc_hermite(this, this->get_from_interactionlist(i), sigma, needed);
+        if (hermite != 0) {
             std::stringstream ss;
             ss << std::fixed;
             ss << direct << ",\t";
@@ -242,4 +238,3 @@ const void OctreeNode::print_calculations(SignalType needed, double sigma){
         }
     }
 }
-

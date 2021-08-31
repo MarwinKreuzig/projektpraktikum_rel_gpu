@@ -24,8 +24,8 @@ class OctreeNode {
     int rank{ -1 }; // MPI rank who owns this octree node
     size_t level{ Constants::uninitialized }; // Level in the tree [0 (= root) ... depth of tree]
     std::vector<OctreeNode*> interaction_list;
-    std::array<double,Constants::p3> hermite_coefficients_ex{-1.0};
-    std::array<double,Constants::p3> hermite_coefficients_in{-1.0};
+    std::array<double, Constants::p3> hermite_coefficients_ex{ -1.0 };
+    std::array<double, Constants::p3> hermite_coefficients_in{ -1.0 };
 
 public:
     [[nodiscard]] int get_rank() const noexcept {
@@ -90,58 +90,30 @@ public:
         cell.set_neuron_position(opt_position);
     }
 
-    void set_cell_num_dendrites(unsigned int num_ex, unsigned int num_in) noexcept {
+    void set_cell_number_dendrites(unsigned int num_ex, unsigned int num_in) noexcept {
         cell.set_number_excitatory_dendrites(num_ex);
         cell.set_number_inhibitory_dendrites(num_in);
     }
 
-    void set_cell_num_axons(unsigned int num_ex, unsigned int num_in) noexcept {
+    void set_cell_number_axons(unsigned int num_ex, unsigned int num_in) noexcept {
         cell.set_number_excitatory_axons(num_ex);
         cell.set_number_inhibitory_axons(num_in);
     }
 
-    void set_cell_neuron_pos_dend_exc(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_cell_excitatory_dendrite_position(const std::optional<Vec3d>& opt_position) noexcept {
         cell.set_excitatory_dendrite_position(opt_position);
     }
 
-    void set_cell_neuron_pos_dend_inh(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_cell_inhibitory_dendrite_position(const std::optional<Vec3d>& opt_position) noexcept {
         cell.set_inhibitory_dendrite_position(opt_position);
     }
 
-    void set_cell_neuron_pos_ax_exc(const std::optional<Vec3d>& opt_position) noexcept{
+    void set_cell_excitatory_axon_position(const std::optional<Vec3d>& opt_position) noexcept {
         cell.set_excitatory_axon_position(opt_position);
     }
 
-    void set_cell_neuron_pos_ax_inh(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_cell_inhibitory_axon_position(const std::optional<Vec3d>& opt_position) noexcept {
         cell.set_inhibitory_axon_position(opt_position);
-    }
-
-   void set_hermite_coef_ex(unsigned int x, double d){
-        hermite_coefficients_ex[x] = d;
-    }
-    void set_hermite_coef_in(unsigned int x, double d){
-        hermite_coefficients_in[x] = d;
-    }
-    void set_hermite_coef_for(unsigned int x, double d, SignalType needed){
-        if (needed == SignalType::EXCITATORY){
-            set_hermite_coef_ex(x,d);
-        }else{
-            set_hermite_coef_in(x,d);
-        } 
-    }
-
-    double get_hermite_coef_ex(unsigned int x){
-        return hermite_coefficients_ex[x];
-    }
-    double get_hermite_coef_in(unsigned int x){
-        return hermite_coefficients_in[x];
-    }
-    double get_hermite_coef_for(unsigned int x, SignalType needed){
-        if (needed == SignalType::EXCITATORY){
-            return get_hermite_coef_ex(x);
-        }else{
-            return get_hermite_coef_in(x);
-        } 
     }
 
     void set_child(OctreeNode* node, size_t idx) {
@@ -160,18 +132,50 @@ public:
         level = Constants::uninitialized;
     }
 
+    void set_hermite_coef_ex(unsigned int x, double d) {
+        hermite_coefficients_ex[x] = d;
+    }
+
+    void set_hermite_coef_in(unsigned int x, double d) {
+        hermite_coefficients_in[x] = d;
+    }
+
+    void set_hermite_coef_for(unsigned int x, double d, SignalType needed) {
+        if (needed == SignalType::EXCITATORY) {
+            set_hermite_coef_ex(x, d);
+        } else {
+            set_hermite_coef_in(x, d);
+        }
+    }
+
+    double get_hermite_coef_ex(unsigned int x) {
+        return hermite_coefficients_ex[x];
+    }
+
+    double get_hermite_coef_in(unsigned int x) {
+        return hermite_coefficients_in[x];
+    }
+
+    double get_hermite_coef_for(unsigned int x, SignalType needed) {
+        if (needed == SignalType::EXCITATORY) {
+            return get_hermite_coef_ex(x);
+        } else {
+            return get_hermite_coef_in(x);
+        }
+    }
+
     void add_to_interactionlist(OctreeNode* x) {
         interaction_list.push_back(x);
     }
 
-    OctreeNode* get_from_interactionlist(unsigned int x) const{
-        if (x >= interaction_list.size()){
+    OctreeNode* get_from_interactionlist(unsigned int x) const {
+        if (x >= interaction_list.size()) {
             return nullptr;
         }
         return interaction_list.at(x);
     }
 
-    size_t get_interactionlist_length() const{
+    size_t get_interactionlist_length() const {
         return interaction_list.size();
     }
 
@@ -179,9 +183,9 @@ public:
         interaction_list.clear();
     }
 
-   const std::vector<Vec3d> get_dendrite_pos_from_node_for(SignalType needed) const;
+    std::vector<Vec3d> get_dendrite_pos_from_node_for(SignalType needed) const;
 
-   const std::vector<Vec3d> get_axon_pos_from_node_for(SignalType needed) const;
+    std::vector<Vec3d> get_axon_pos_from_node_for(SignalType needed) const;
 
-   const void print_calculations(SignalType needed, double sigma);
+    void print_calculations(SignalType needed, double sigma);
 };
