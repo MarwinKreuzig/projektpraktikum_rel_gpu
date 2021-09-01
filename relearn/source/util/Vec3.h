@@ -220,6 +220,21 @@ public:
         return norm;
     }
 
+    
+    /**
+     * @brief Calculates the squared 2-norm of the vector, i.e., ||this||^2_2
+     * @return The squared calculated 2-norm
+     */
+    [[nodiscard]] double calculate_squared_2_norm() const noexcept {
+        const auto xx = x * x;
+        const auto yy = y * y;
+        const auto zz = z * z;
+
+        const auto sum = xx + yy + zz;
+        return sum;
+    }
+
+
     void calculate_componentwise_maximum(const Vec3<T>& other) noexcept {
         if (other.x > x) {
             x = other.x;

@@ -20,6 +20,7 @@
 #include "../util/Multiindex.h"
 #include "../util/DeriativesAndFunctions.h"
 
+#include <iostream>
 #include <map>
 #include <optional>
 #include <stack>
@@ -224,8 +225,9 @@ private:
             }
 
             //calculating herimte coef
-            Multiindex m = Multiindex();
-            int num_coef = m.get_number_of_indices();
+            const auto& indices = Multiindex::get_indices();
+            const auto num_coef = Multiindex::get_number_of_indices();
+
             if (num_axons_exc > Constants::max_neurons_in_source) {
                 for (unsigned int a = 0; a < Constants::p3; a++) {
                     double temp = 0;
@@ -236,11 +238,13 @@ private:
                             if (ax_num_ex > 0) {
                                 const auto child_pos = child->get_cell().get_excitatory_axons_position();
                                 const Vec3d temp_vec = (child_pos.value() - (xyz_pos_ax_exc / num_axons_exc)) / Octree::default_sigma;
-                                temp += ax_num_ex * Functions::pow_multiindex(temp_vec, m.get_index(a));
+                                temp += ax_num_ex * Functions::pow_multiindex(temp_vec, indices[a]);
                             }
                         }
                     }
-                    node->set_hermite_coef_ex(a, (1 / Functions::fac_multiindex(m.get_index(a))) * temp);
+
+                    const auto hermite_coefficient = 1.0 * temp / Functions::fac_multiindex(indices[a]);
+                    node->set_hermite_coef_ex(a, hermite_coefficient);
                 }
             }
             if (num_axons_inh > Constants::max_neurons_in_source) {
@@ -253,11 +257,13 @@ private:
                             if (ax_num_in > 0) {
                                 const auto child_pos = child->get_cell().get_inhibitory_axons_position();
                                 const Vec3d temp_vec = (child_pos.value() - (xyz_pos_ax_inh / num_axons_inh)) / Octree::default_sigma;
-                                temp += ax_num_in * Functions::pow_multiindex(temp_vec, m.get_index(a));
+                                temp += ax_num_in * Functions::pow_multiindex(temp_vec, indices[a]);
                             }
                         }
                     }
-                    node->set_hermite_coef_in(a, (1 / Functions::fac_multiindex(m.get_index(a))) * temp);
+
+                    const auto hermite_coefficient = 1.0 * temp / Functions::fac_multiindex(indices[a]);
+                    node->set_hermite_coef_in(a, hermite_coefficient);
                 }
             }
         }

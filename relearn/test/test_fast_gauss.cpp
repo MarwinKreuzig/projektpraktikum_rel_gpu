@@ -28,25 +28,28 @@ TEST(TestFastGauss, test_deriatives) {
     };
 
     for (int i = 0; i < 16; i++) {
-        EXPECT_NEAR((*Deriatives::der_ptr[i+1])(-1), result[(i * 3) + 0], 0.01);
-        EXPECT_NEAR((*Deriatives::der_ptr[i+1])(0), result[(i * 3) + 1], 0.01);
-        EXPECT_NEAR((*Deriatives::der_ptr[i+1])(1), result[(i * 3) + 2], 0.01);
+        const auto res0 = result[(i * 3) + 0];
+        const auto res1 = result[(i * 3) + 1];
+        const auto res2 = result[(i * 3) + 2];
+
+        const auto val_new0 = Deriatives::function_derivative(-1, i + 1);
+        const auto val_new1 = Deriatives::function_derivative(0, i + 1);
+        const auto val_new2 = Deriatives::function_derivative(1, i + 1);
+
+        EXPECT_NEAR(val_new0, res0, 0.01) << i;
+        EXPECT_NEAR(val_new1, res1, 0.01) << i;
+        EXPECT_NEAR(val_new2, res2, 0.01) << i;
     }
 }
 
 TEST(TestFastGauss, test_functions) {
-
     Vec3d a = { 0, 0, 0 };
     Vec3d b = { 0, 1, 0 };
-    EXPECT_EQ(Functions::euclidean_distance_3d(a, b), 1);
     EXPECT_NEAR(Functions::kernel(a, b, sigma), 0.999956, 0.0001);
     Vec3d c = { 0, 0, -1 };
-    EXPECT_EQ(Functions::euclidean_distance_3d(a, c), 1);
-    EXPECT_EQ(Functions::euclidean_distance_3d(a, a), 0);
     EXPECT_EQ(Functions::kernel(a, a, sigma), 1);
     Vec3d e = { 6, 4.5, -3.4 };
     Vec3d f = { 0, -8.3, 2 };
-    EXPECT_NEAR(Functions::euclidean_distance_3d(e, f), 15.132745950421556, 0.01);
     EXPECT_NEAR(Functions::kernel(e, f, sigma), 0.9898, 0.01);
 }
 
@@ -57,25 +60,25 @@ TEST(TestFastGauss, test_interaction_list) {
 
     list_node.set_cell_neuron_id(1235);
 
-    EXPECT_EQ(test_node.get_from_interactionlist(1),nullptr);
+    EXPECT_EQ(test_node.get_from_interactionlist(1), nullptr);
     test_node.add_to_interactionlist(&list_node);
-    EXPECT_EQ(test_node.get_interactionlist_length(),1);
+    EXPECT_EQ(test_node.get_interactionlist_length(), 1);
     temp = test_node.get_from_interactionlist(0);
     EXPECT_EQ(temp->get_cell().get_neuron_id(), 1235);
 }
 
 TEST(TestFastGauss, test_multiIndex) {
-Multiindex m = Multiindex();
-EXPECT_EQ(m.get_number_of_indices(), 64);
+    EXPECT_EQ(Multiindex::get_number_of_indices(), Constants::p3);
 
-const std::array<unsigned int,3> temp = m.get_index(1);
-EXPECT_EQ(temp.at(0),0);
-EXPECT_EQ(temp.at(1),0);
-EXPECT_EQ(temp.at(2),1);
+    const auto& indices = Multiindex::get_indices();
 
-const std::array<unsigned int,3> temp1 = m.get_index(63);
-EXPECT_EQ(temp1.at(0),3);
-EXPECT_EQ(temp1.at(1),3);
-EXPECT_EQ(temp1.at(2),3);
+    const std::array<unsigned int, 3> temp = indices[1];
+    EXPECT_EQ(temp.at(0), 0);
+    EXPECT_EQ(temp.at(1), 0);
+    EXPECT_EQ(temp.at(2), 1);
 
+    const std::array<unsigned int, 3> temp1 = indices[63];
+    EXPECT_EQ(temp1.at(0), 3);
+    EXPECT_EQ(temp1.at(1), 3);
+    EXPECT_EQ(temp1.at(2), 3);
 }

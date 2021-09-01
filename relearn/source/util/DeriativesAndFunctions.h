@@ -9,255 +9,298 @@
  */
 #pragma once
 
-#include <math.h>
-#include "Vec3.h"
 #include "Multiindex.h"
+#include "Vec3.h"
 #include "../structure/OctreeNode.h"
 #include "../util/Random.h"
 
+#include <math.h>
+
+template <typename T>
+T factorial(T value) noexcept {
+    if (value < 2) {
+        return 1;
+    }
+
+    T result = 1;
+    while (value > 1) {
+        result *= value;
+        value--;
+    }
+
+    return result;
+}
+
 namespace Deriatives {
+inline std::vector<int64_t> calculate_coefficients(unsigned int derivative_order) {
+    static std::vector<std::vector<int64_t>> sequences{};
 
-inline double original_func(double t){
-    return exp(-pow(t, 2));
-}   
-//this file contains all x derivatives of e that are required for the Fast Gauss algorithm
-inline double deriative1(double t) {
-    return -2 * t * exp(-pow(t, 2));
+    if (sequences.empty()) {
+        std::vector<int64_t> initial_sequence(2);
+        std::fill(std::begin(initial_sequence), std::end(initial_sequence), 0);
+        initial_sequence[0] = 1;
+
+        sequences.emplace_back(std::move(initial_sequence));
+    }
+
+    const auto old_size = sequences.size();
+
+    if (old_size > derivative_order) {
+        return sequences[derivative_order];
+    }
+
+    sequences.resize(derivative_order + 1);
+
+    for (auto i = old_size; i <= derivative_order; i++) {
+        std::vector<int64_t> current_sequence(i + 2);
+        std::fill(std::begin(current_sequence), std::end(current_sequence), 0);
+
+        for (auto j = 0; j <= i; j++) {
+            if (j != i) {
+                current_sequence[j] = sequences[i - 1][j + 1] * (j + 1);
+            }
+
+            if (j > 0) {
+                current_sequence[j] += sequences[i - 1][j - 1] * (-2);
+            }
+        }
+
+        sequences[i] = std::move(current_sequence);
+    }
+
+    return sequences[derivative_order];
 }
 
-inline double deriative2(double t) {
-    return ((4 * pow(t, 2)) - 2) * exp(-pow(t, 2));
-}
+inline double function_derivative(double t, unsigned int derivative_order) noexcept {
+    const auto& coefficients = calculate_coefficients(derivative_order);
 
-inline double deriative3(double t) {
-    return -((8 * pow(t, 3)) - (12 * t)) * exp(-pow(t, 2));
-}
+    auto result = 0.0;
+    for (auto monom_exponent = 0; monom_exponent <= derivative_order; monom_exponent++) {
+        const auto current_coefficient = coefficients[monom_exponent];
 
-inline double deriative4(double t) {
-    return ((16 * pow(t, 4)) - (48 * pow(t, 2)) + 12) * exp(-pow(t, 2));
-}
+        if (current_coefficient == 0) {
+            continue;
+        }
 
-inline double deriative5(double t) {
-    return -((32 * pow(t, 5)) - (160 * pow(t, 3)) + (120 * t)) * exp(-pow(t, 2));
-}
+        const auto powered = pow(t, monom_exponent);
+        const auto term = powered * current_coefficient;
+        result += term;
+    }
 
-inline double deriative6(double t) {
-    return ((64 * pow(t, 6)) - (480 * pow(t, 4)) + (720 * pow(t, 2)) - 120) * exp(-pow(t, 2));
-}
+    const auto factor = exp(-(t * t));
+    result *= factor;
 
-inline double deriative7(double t) {
-    return ((-128 * pow(t, 7)) + (1344 * pow(t, 5)) - (3360 * pow(t, 3)) + (1680 * t)) * exp(-pow(t, 2));
+    return result;
 }
-
-inline double deriative8(double t) {
-    return ((256 * pow(t, 8)) - (3584 * pow(t, 6)) + (13440 * pow(t, 4)) - (13440 * pow(t, 2)) + 1680) * exp(-pow(t, 2));
-}
-
-inline double deriative9(double t) {
-    return ((-512 * pow(t, 9)) + (9216 * pow(t, 7)) - (48384 * pow(t, 5)) + (80640 * pow(t, 3)) - (30240 * t)) * exp(-pow(t, 2));
-}
-
-inline double deriative10(double t) {
-    return ((1024 * pow(t, 10)) - (23040 * pow(t, 8)) + (161280 * pow(t, 6)) - (403200 * pow(t, 4)) + (302400 * pow(t, 2)) - 30240) * exp(-pow(t, 2));
-}
-
-inline double deriative11(double t) {
-    return ((-2048 * pow(t, 11)) + (56320 * pow(t, 9)) - (506880 * pow(t, 7)) + (1774080 * pow(t, 5)) - (2217600 * pow(t, 3)) + (665280 * t)) * exp(-pow(t, 2));
-}
-
-inline double deriative12(double t) {
-    return ((4096 * pow(t, 12)) - (135168 * pow(t, 10)) + (1520640 * pow(t, 8)) - (7096320 * pow(t, 6)) + (13305600 * pow(t, 4)) - (7983360 * pow(t, 2)) + 665280) * exp(-pow(t, 2));
-}
-
-inline double deriative13(double t) {
-    return ((-8192 * pow(t, 13)) + (319488 * pow(t, 11)) - (4392960 * pow(t, 9)) + (26357760 * pow(t, 7)) - (69189120 * pow(t, 5)) + (69189120 * pow(t, 3)) - (17297280 * t)) * exp(-pow(t, 2));
-}
-
-inline double deriative14(double t) {
-    return ((16384 * pow(t, 14)) - (745472 * pow(t, 12)) + (12300288 * pow(t, 10)) - (92252160 * pow(t, 8)) + (322882560 * pow(t, 6)) - (484323840 * pow(t, 4)) + (242161920 * pow(t, 2)) - 17297280) * exp(-pow(t, 2));
-}
-
-inline double deriative15(double t) {
-    return ((-32768 * pow(t, 15)) + (1720320 * pow(t, 13)) - (33546240 * pow(t, 11)) + (307507200 * pow(t, 9)) - (1383782400 * pow(t, 7)) + (2905943040 * pow(t, 5)) - (2421619200 * pow(t, 3)) + (518918400 * t)) * exp(-pow(t, 2));
-}
-
-inline double deriative16(double t) {
-    return ((65536 * pow(t, 16)) - (3932160 * pow(t, 14)) + (89456640 * pow(t, 12)) - (984023040 * pow(t, 10)) + (5535129600 * pow(t, 8)) - (15498362880 * pow(t, 6)) + (19372953600 * pow(t, 4)) - (8302694400 * pow(t, 2)) + 518918400) * exp(-pow(t, 2));
-}
-
-// pointer to deriative functions
-inline double (*der_ptr[17])(double x) = {
-    original_func,
-    deriative1,
-    deriative2,
-    deriative3,
-    deriative4,
-    deriative5,
-    deriative6,
-    deriative7,
-    deriative8,
-    deriative9,
-    deriative10,
-    deriative11,
-    deriative12,
-    deriative13,
-    deriative14,
-    deriative15,
-    deriative16,
-};
 }
 
 namespace Functions {
 // Hermite functions, returns -1 when n is smaller than 1
 inline double h(unsigned int n, double t) {
-        return exp(-pow(t, 2)) * pow(-1, n) * exp(pow(t, 2)) * (*Deriatives::der_ptr[n])(t);
-}
+    const auto t_squared = t * t;
 
-inline double h_multiindex(const std::array<unsigned int, 3> &n,const Vec3d &t) {
-    return h(n.at(0), t.get_x()) * h(n.at(1), t.get_y()) * h(n.at(2), t.get_z());
-}
+    const auto fac_1 = exp(-t_squared);
+    const auto fac_2 = exp(t_squared);
+    const auto fac_3 = Deriatives::function_derivative(t, n);
 
-// Calculates the factorial of a multiindex x
-inline int fac_multiindex(const std::array<unsigned int, 3> &x) {
-    int temp;
-    int result = 1;
-    for (int i = 0; i < 3; i++) {
-        temp = 1;
-        for (int j = 1; j < x.at(i); j++) {
-            temp = temp * j;
-        }
-        result = result * temp;
+    const auto product = fac_1 * fac_2 * fac_3;
+
+    if (n % 2 == 0) {
+        return product;
     }
-    return result;
+
+    return -product;
 }
 
-inline double pow_multiindex(const Vec3d &base_vector, const std::array<unsigned int, 3> &exponent) {
-    return pow(base_vector.get_x(), exponent.at(0)) * pow(base_vector.get_y(), exponent.at(1)) * pow(base_vector.get_z(), exponent.at(2));
-}
-inline double abs_multiindex(const std::array<unsigned int, 3> &x) {
-    return x.at(0) + x.at(1) + x.at(2);
+inline double h_multiindex(const std::array<unsigned int, 3>& multi_index, const Vec3d& vector) {
+    const auto h1 = h(multi_index[0], vector.get_x());
+    const auto h2 = h(multi_index[1], vector.get_y());
+    const auto h3 = h(multi_index[2], vector.get_z());
+
+    const auto h_total = h1 * h2 * h3;
+
+    return h_total;
 }
 
-// Calculates the Euclidean distance between two three-dimensional vectors
-inline double euclidean_distance_3d(const Vec3d &a, const Vec3d &b) {
-    return (a - b).calculate_p_norm(2);
+inline int fac_multiindex(const std::array<unsigned int, 3>& x) {
+    const auto fac_1 = factorial(x[0]);
+    const auto fac_2 = factorial(x[1]);
+    const auto fac_3 = factorial(x[2]);
+
+    const auto product = fac_1 * fac_2 * fac_3;
+
+    return product;
+}
+
+inline double pow_multiindex(const Vec3d& base_vector, const std::array<unsigned int, 3>& exponent) {
+    const auto fac_1 = pow(base_vector.get_x(), exponent[0]);
+    const auto fac_2 = pow(base_vector.get_y(), exponent[1]);
+    const auto fac_3 = pow(base_vector.get_z(), exponent[2]);
+
+    const auto product = fac_1 * fac_2 * fac_3;
+
+    return product;
+}
+
+inline unsigned int abs_multiindex(const std::array<unsigned int, 3>& x) {
+    const auto sum = x[0] + x[1] + x[2];
+    return sum;
 }
 
 // Kernel from Butz&Ooyen "A Simple Rule for Dendritic Spine and Axonal Bouton Formation Can Account for Cortical Reorganization afterFocal Retinal Lesions"
 // Calculates the attraction between two neurons, where a and b represent the position in three-dimensional space
-inline double kernel(const Vec3d &a, const Vec3d &b, const double sigma) {
-    return exp(-(pow(euclidean_distance_3d(a, b), 2) / pow(sigma, 2)));
+inline double kernel(const Vec3d& a, const Vec3d& b, const double sigma) {
+    const auto diff = a - b;
+    const auto squared_norm = diff.calculate_squared_2_norm();
+
+    return exp(-squared_norm / (sigma * sigma));
 }
 
 inline double calc_taylor_expansion(OctreeNode* source, OctreeNode* target, const double sigma, SignalType needed) {
-    Multiindex m = Multiindex();
-    int num_coef = m.get_number_of_indices();
-    std::array<double, Constants::p3> taylor_coef;
-    const auto target_center = target-> get_cell().get_dendrites_position_for(needed);
-    RelearnException::check(target_center.has_value(), "Target node has no position for Taylor calculation");
-    double result = 0;
-    for (unsigned int b = 0; b < num_coef; b++) {
+    const auto& opt_target_center = target->get_cell().get_dendrites_position_for(needed);
+    RelearnException::check(opt_target_center.has_value(), "Target node has no position for Taylor calculation");
+
+    const auto& target_center = opt_target_center.value();
+
+    const auto& indices = Multiindex::get_indices();
+    const auto number_coefficients = Multiindex::get_number_of_indices();
+
+    std::array<double, Constants::p3> taylor_coefficients{};
+
+    for (auto index = 0; index < number_coefficients; index++) {
         double temp = 0;
-        const auto& current_index = m.get_index(b);
-        for (unsigned int j = 0; j < Constants::number_oct; j++) {
-            OctreeNode* source_child = source->get_child(j);
-            if (source_child != nullptr){
-                int axon_num = source_child->get_cell().get_number_axons_for(needed);
-                if (axon_num>0){
-                    const auto child_pos =  source_child->get_cell().get_axons_position_for(needed);
-                    const Vec3d temp_vec = (child_pos.value()-target_center.value())/sigma;
-                    temp += source_child->get_cell().get_number_axons_for(needed) * h_multiindex(current_index, temp_vec);
-                }
-            } 
+        const auto& current_index = indices[index];
+
+        for (auto j = 0; j < Constants::number_oct; j++) {
+            const auto* source_child = source->get_child(j);
+            if (source_child == nullptr) {
+                continue;
+            }
+
+            const auto number_axons = source_child->get_cell().get_number_axons_for(needed);
+            if (number_axons == 0) {
+                continue;
+            }
+
+            const auto& child_pos = source_child->get_cell().get_axons_position_for(needed);
+            const auto& temp_vec = (child_pos.value() - target_center) / sigma;
+            temp += number_axons * h_multiindex(current_index, temp_vec);
         }
-        double C = (pow(-1, abs_multiindex(current_index)) / Functions::fac_multiindex(current_index)) * temp;
-        taylor_coef[b] = C;
+
+        const auto factorial_multiindex = Functions::fac_multiindex(current_index);
+        const auto coefficient = temp / factorial_multiindex;
+
+        const auto absolute_multiindex = abs_multiindex(current_index);
+
+        if (absolute_multiindex % 2 == 0) {
+            taylor_coefficients[index] = coefficient;
+        } else {
+            taylor_coefficients[index] = -coefficient;
+        }
     }
 
-    //Evaluate Taylor series at all sources
-    for (unsigned int j = 0; j < Constants::number_oct; j++) {
-        OctreeNode* target_child = target->get_child(j);
-            double temp = 0;
-            if (target_child != nullptr){
-                int dend_num = target_child->get_cell().get_number_dendrites_for(needed);
-                if (dend_num>0){
-                    const auto child_pos =  target_child->get_cell().get_dendrites_position_for(needed);
-                    const Vec3d temp_vec = (child_pos.value()-target_center.value()) / sigma;
-                    for (unsigned int b = 0; b < num_coef; b++) {
-                        temp += taylor_coef[b] * pow_multiindex(temp_vec, m.get_index(b));
-                    }
-                    result += dend_num * temp;
-                }
-            }   
+    double result = 0.0;
+
+    for (auto j = 0; j < Constants::number_oct; j++) {
+        const auto* target_child = target->get_child(j);
+        if (target_child == nullptr) {
+            continue;
+        }
+
+        const auto number_dendrites = target_child->get_cell().get_number_dendrites_for(needed);
+        if (number_dendrites == 0) {
+            continue;
+        }
+
+        const auto& child_pos = target_child->get_cell().get_dendrites_position_for(needed);
+        const auto& temp_vec = (child_pos.value() - target_center) / sigma;
+
+        double temp = 0.0;
+        for (auto b = 0; b < number_coefficients; b++) {
+            temp += taylor_coefficients[b] * pow_multiindex(temp_vec, indices[b]);
+        }
+
+        result += number_dendrites * temp;
     }
+
     return result;
 }
 
-inline double calc_direct_gauss(const std::vector<Vec3d> &sources, const std::vector<Vec3d> &targets, const double sigma) {
-    double result = 0;
-    for (unsigned int t = 0; t < targets.size(); t++) {
-        for (size_t s = 0; s < sources.size(); s++) {
-            result = result + Functions::kernel(targets.at(t), sources.at(s), sigma);
+inline double calc_direct_gauss(const std::vector<Vec3d>& sources, const std::vector<Vec3d>& targets, const double sigma) {
+    auto result = 0.0;
+
+    for (auto t = 0; t < targets.size(); t++) {
+        for (auto s = 0; s < sources.size(); s++) {
+            const auto kernel_value = Functions::kernel(targets[t], sources[s], sigma);
+            result += kernel_value;
         }
     }
+
     return result;
 }
 
 inline double calc_hermite(OctreeNode* source, OctreeNode* target, const double sigma, SignalType needed) {
-    double result = 0;
-    Multiindex m = Multiindex();
-    int coef_num = m.get_number_of_indices();
-    const auto source_center = source-> get_cell().get_axons_position_for(needed);
-    RelearnException::check(source_center.has_value(), "Source node has no axon position for Hermite calculation \n");
+    const auto& opt_source_center = source->get_cell().get_axons_position_for(needed);
+    RelearnException::check(opt_source_center.has_value(), "Source node has no axon position for Hermite calculation \n");
+    const auto& source_center = opt_source_center.value();
 
-    for (unsigned int j = 0; j < Constants::number_oct; j++) {
-        double temp = 0;
-        auto child_target = target->get_child(j);
-        if(child_target != nullptr){
-            int dend_num = child_target->get_cell().get_number_dendrites_for(needed);
-            if (dend_num>0){
-                const auto child_pos =  child_target->get_cell().get_dendrites_position_for(needed);
-                const Vec3d temp_vec = (child_pos.value() - source_center.value()) / sigma;
-                for (unsigned int a = 0; a < coef_num; a++) {
-                    temp += source->get_hermite_coef_for(a, needed) * h_multiindex(m.get_index(a), temp_vec);
-                }
-                result += dend_num * temp;
-            } 
-        }        
+    const auto& indices = Multiindex::get_indices();
+    const auto number_coefficients = Multiindex::get_number_of_indices();
+
+    double result = 0.0;
+
+    for (auto j = 0; j < Constants::number_oct; j++) {
+        const auto* child_target = target->get_child(j);
+        if (child_target == nullptr) {
+            continue;
+        }
+
+        double temp = 0.0;
+
+        const auto number_dendrites = child_target->get_cell().get_number_dendrites_for(needed);
+        if (number_dendrites == 0) {
+            continue;
+        }
+
+        const auto& child_pos = child_target->get_cell().get_dendrites_position_for(needed);
+        const auto& temp_vec = (child_pos.value() - source_center) / sigma;
+
+        for (auto a = 0; a < number_coefficients; a++) {
+            temp += source->get_hermite_coef_for(a, needed) * h_multiindex(indices[a], temp_vec);
+        }
+
+        result += number_dendrites * temp;
     }
+
     return result;
 }
 
-inline int choose_interval(std::vector<double> atractiveness) {
+inline int choose_interval(std::vector<double> attractiveness) {
     const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Octree, 0.0, std::nextafter(1.0, Constants::eps));
-    int vec_len = atractiveness.size();
-    std::vector<double> intervals;
-    intervals.reserve(vec_len+1);
-    intervals[0]=0;
+    const auto vec_len = attractiveness.size();
+
+    std::vector<double> intervals(vec_len + 1);
+    intervals[0] = 0;
+
     double sum = 0;
-    for (int i = 0; i < vec_len; i++)
-    {
-        sum = sum + atractiveness.at(i);
+    for (int i = 0; i < vec_len; i++) {
+        sum = sum + attractiveness[i];
     }
 
-   // RelearnException::check(temp,"The sum of all attractions was 0.");
-    for (int i = 1; i < vec_len+1; i++)
-    {
-        intervals[i]= intervals[i-1]+ (atractiveness.at(i-1)/sum);
+    // RelearnException::check(temp,"The sum of all attractions was 0.");
+    for (auto i = 1; i < vec_len + 1; i++) {
+        intervals[i] = intervals[i - 1] + (attractiveness[i - 1] / sum);
     }
-   
-    
+
     int i = 0;
-
-
-    while (random_number > intervals[i+1] && i<=vec_len)
-    {
+    while (random_number > intervals[i + 1] && i <= vec_len) {
         i++;
     }
-    if (i>=vec_len+1)
-    {
+
+    if (i >= vec_len + 1) {
         return 0;
     }
+
     return i;
 }
 }
