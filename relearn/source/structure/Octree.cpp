@@ -759,7 +759,7 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
     return rank_neuron_id;
 }
 
-const std::optional<const OctreeNode*> Octree::do_random_experiment(const OctreeNode* source, const std::vector<double>& atractiveness) const {
+const OctreeNode* Octree::do_random_experiment(const OctreeNode* source, const std::vector<double>& atractiveness) const {
     const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Octree, 0.0, std::nextafter(1.0, Constants::eps));
     
     int vec_len = atractiveness.size();

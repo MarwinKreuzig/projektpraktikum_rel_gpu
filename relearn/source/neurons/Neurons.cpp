@@ -732,7 +732,7 @@ void Neurons::make_creation_request_for(
                 target_node = current_node->get_from_interactionlist(0);
             }else {
                 const std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(current_node, needed);
-                target_node = global_tree->do_random_experiment(current_node, temp).value();
+                target_node = global_tree->do_random_experiment(current_node, temp);
             }
             current_node->reset_interactionlist();
             if (target_node->is_parent()) {
@@ -760,8 +760,8 @@ void Neurons::make_creation_request_for(
         if (current_node->get_interactionlist_length() > 0) {
             //find target node for one source node
             const std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(current_node, needed);
-            RelearnException::check(global_tree->do_random_experiment(current_node, temp).has_value(), "Random experiment gave no value back.");
-            const OctreeNode* target_node = global_tree->do_random_experiment(current_node, temp).value();
+            //global_tree->do_random_experiment(current_node, temp);
+            const OctreeNode* target_node = global_tree->do_random_experiment(current_node, temp);
 
             if (target_node->is_parent()){
                 for (size_t i = 0; i < 8; i++) {
