@@ -726,7 +726,7 @@ void Neurons::make_creation_request_for(
             size_t source_id = current_node->get_cell().get_neuron_id();
             size_t target_id = 0;
             int target_num = current_node->get_interactionlist_length();
-            OctreeNode* target_node;
+            const OctreeNode* target_node;
 
             if (target_num == 1){
                 target_node = current_node->get_from_interactionlist(0);
@@ -737,7 +737,7 @@ void Neurons::make_creation_request_for(
             current_node->reset_interactionlist();
             if (target_node->is_parent()) {
                 for (unsigned int i = 0; i < 8; i++) {
-                    OctreeNode* target_child = target_node->get_child(i);
+                    const OctreeNode* target_child = target_node->get_child(i);
                     if (target_child != nullptr){
                         if (target_child != current_node && target_child->get_cell().get_number_dendrites_for(needed) > 0) {
                             current_node->add_to_interactionlist(target_child);
@@ -761,14 +761,14 @@ void Neurons::make_creation_request_for(
             //find target node for one source node
             const std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(current_node, needed);
             RelearnException::check(global_tree->do_random_experiment(current_node, temp).has_value(), "Random experiment gave no value back.");
-            OctreeNode* target_node = global_tree->do_random_experiment(current_node, temp).value();
+            const OctreeNode* target_node = global_tree->do_random_experiment(current_node, temp).value();
 
             if (target_node->is_parent()){
                 for (size_t i = 0; i < 8; i++) {
                     OctreeNode* child_node = current_node->get_child(i);
                     if (child_node != nullptr && child_node->get_cell().get_number_axons_for(needed) > 0) {
                         for (int j = 0; j < 8; j++) {
-                            OctreeNode* child_target_node = target_node->get_child(j);
+                            const OctreeNode* child_target_node = target_node->get_child(j);
                             if (child_target_node != nullptr && child_target_node->get_cell().get_number_dendrites_for(needed) > 0)
                                 child_node->add_to_interactionlist(child_target_node);
                         }

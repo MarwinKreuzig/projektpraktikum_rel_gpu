@@ -56,7 +56,7 @@ TEST(TestFastGauss, test_functions) {
 TEST(TestFastGauss, test_interaction_list) {
     OctreeNode test_node;
     OctreeNode list_node;
-    OctreeNode* temp;
+    const OctreeNode* temp;
 
     list_node.set_cell_neuron_id(1235);
 

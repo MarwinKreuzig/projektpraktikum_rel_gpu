@@ -23,7 +23,7 @@ class OctreeNode {
 
     int rank{ -1 }; // MPI rank who owns this octree node
     size_t level{ Constants::uninitialized }; // Level in the tree [0 (= root) ... depth of tree]
-    std::vector<OctreeNode*> interaction_list;
+    std::vector<const OctreeNode*> interaction_list;
     std::array<double, Constants::p3> hermite_coefficients_ex{ -1.0 };
     std::array<double, Constants::p3> hermite_coefficients_in{ -1.0 };
 
@@ -148,15 +148,15 @@ public:
         }
     }
 
-    double get_hermite_coef_ex(unsigned int x) {
+    double get_hermite_coef_ex(unsigned int x) const {
         return hermite_coefficients_ex[x];
     }
 
-    double get_hermite_coef_in(unsigned int x) {
+    double get_hermite_coef_in(unsigned int x) const {
         return hermite_coefficients_in[x];
     }
 
-    double get_hermite_coef_for(unsigned int x, SignalType needed) {
+    double get_hermite_coef_for(unsigned int x, SignalType needed) const {
         if (needed == SignalType::EXCITATORY) {
             return get_hermite_coef_ex(x);
         } else {
@@ -164,11 +164,11 @@ public:
         }
     }
 
-    void add_to_interactionlist(OctreeNode* x) {
+    void add_to_interactionlist(const OctreeNode* x) {
         interaction_list.push_back(x);
     }
 
-    OctreeNode* get_from_interactionlist(unsigned int x) const {
+    const OctreeNode* get_from_interactionlist(unsigned int x) const {
         if (x >= interaction_list.size()) {
             return nullptr;
         }
