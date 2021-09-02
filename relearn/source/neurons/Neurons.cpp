@@ -709,28 +709,28 @@ void Neurons::make_creation_request_for(
         - push children to stack
         */
 
-       // for nodes at level 1
+        // for nodes at level 1
         if (current_node->get_level() == 1) {
             for (size_t i = 0; i < nodes_with_dend.size(); i++) {
-                //if the target and source nodes are different, the target node can simply be added to the interaction list 
+                //if the target and source nodes are different, the target node can simply be added to the interaction list
                 current_node->add_to_interactionlist(nodes_with_dend[i]);
-            }    
+            }
         }
-        
+
         /*if (current_node->get_cell().get_number_axons_for(needed) > Constants::max_neurons_in_source) {
             current_node->print_calculations(needed, Octree::default_sigma);
         }*/
-       
+
         //node is a leaf
-        if (!current_node->is_parent()){
+        if (!current_node->is_parent()) {
             size_t source_id = current_node->get_cell().get_neuron_id();
             size_t target_id = 0;
             int target_num = current_node->get_interactionlist_length();
             const OctreeNode* target_node;
 
-            if (target_num == 1){
+            if (target_num == 1) {
                 target_node = current_node->get_from_interactionlist(0);
-            }else {
+            } else {
                 const std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(current_node, needed);
                 target_node = global_tree->do_random_experiment(current_node, temp);
             }
@@ -738,14 +738,14 @@ void Neurons::make_creation_request_for(
             if (target_node->is_parent()) {
                 for (unsigned int i = 0; i < 8; i++) {
                     const OctreeNode* target_child = target_node->get_child(i);
-                    if (target_child != nullptr){
+                    if (target_child != nullptr) {
                         if (target_child != current_node && target_child->get_cell().get_number_dendrites_for(needed) > 0) {
                             current_node->add_to_interactionlist(target_child);
                         }
                     }
                 }
-                    nodes_with_ax.push(current_node);
-                //otherwise the target id is fetched     
+                nodes_with_ax.push(current_node);
+                //otherwise the target id is fetched
             } else {
                 target_id = target_node->get_cell().get_neuron_id();
                 if (target_id != source_id) {
@@ -754,16 +754,15 @@ void Neurons::make_creation_request_for(
                 }
             }
             continue;
-        }   
+        }
 
-        
         if (current_node->get_interactionlist_length() > 0) {
             //find target node for one source node
             const std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(current_node, needed);
             //global_tree->do_random_experiment(current_node, temp);
             const OctreeNode* target_node = global_tree->do_random_experiment(current_node, temp);
 
-            if (target_node->is_parent()){
+            if (target_node->is_parent()) {
                 for (size_t i = 0; i < 8; i++) {
                     OctreeNode* child_node = current_node->get_child(i);
                     if (child_node != nullptr && child_node->get_cell().get_number_axons_for(needed) > 0) {
@@ -772,17 +771,16 @@ void Neurons::make_creation_request_for(
                             if (child_target_node != nullptr && child_target_node->get_cell().get_number_dendrites_for(needed) > 0)
                                 child_node->add_to_interactionlist(child_target_node);
                         }
-                        //go one level down in the tree and put the children on the stack 
+                        //go one level down in the tree and put the children on the stack
                         nodes_with_ax.push(child_node);
                     }
                 }
-            }
-            else{
+            } else {
                 std::vector<double> attractiveness;
                 std::vector<double> index;
-                for(unsigned int i = 0; i < Constants::number_oct; i++){
+                for (unsigned int i = 0; i < Constants::number_oct; i++) {
                     OctreeNode* child_node = current_node->get_child(i);
-                    if(child_node != nullptr && child_node->get_cell().get_number_axons_for(needed) > 0){
+                    if (child_node != nullptr && child_node->get_cell().get_number_axons_for(needed) > 0) {
                         child_node->add_to_interactionlist(target_node);
                         const std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(child_node, needed);
                         attractiveness.push_back(temp[0]);
@@ -793,25 +791,25 @@ void Neurons::make_creation_request_for(
                 nodes_with_ax.push(current_node->get_child(index[x]));
             }
         }
-        // the interaction list must be reset for each node 
+        // the interaction list must be reset for each node
         current_node->reset_interactionlist();
     }
 }
 
 MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
-     MapSynapseCreationRequests synapse_creation_requests_outgoing;
+    MapSynapseCreationRequests synapse_creation_requests_outgoing;
     GlobalTimers::timers.start(TimerRegion::FIND_TARGET_NEURONS);
 
     //init
     OctreeNode* root = global_tree->get_local_root(0);
 
-    std::stack<OctreeNode*> nodes_with_ax_in;
-    std::stack<OctreeNode*> nodes_with_ax_ex;
-    std::stack<OctreeNode*> init_stack;
+    std::stack<OctreeNode*> nodes_with_ax_in{};
+    std::stack<OctreeNode*> nodes_with_ax_ex{};
+    std::stack<OctreeNode*> init_stack{};
     init_stack.push(root);
 
-    std::vector<OctreeNode*> nodes_with_dend_in;
-    std::vector<OctreeNode*> nodes_with_dend_ex;
+    std::vector<OctreeNode*> nodes_with_dend_in{};
+    std::vector<OctreeNode*> nodes_with_dend_ex{};
 
     OctreeNode* current_node;
     OctreeNode* child_node;
@@ -858,7 +856,6 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
 
     return synapse_creation_requests_outgoing;
 }
-
 
 MapSynapseCreationRequests Neurons::create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing) {
     MapSynapseCreationRequests synapse_creation_requests_incoming;
@@ -1225,21 +1222,20 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
     unsigned int sum_con_dendrites_ex = 0;
     unsigned int sum_con_dendrites_in = 0;
 
-    for(unsigned int i =0; i<num_neurons;i++){
-        if (axons->get_signal_type(i)==SignalType::EXCITATORY){
+    for (unsigned int i = 0; i < num_neurons; i++) {
+        if (axons->get_signal_type(i) == SignalType::EXCITATORY) {
             sum_axons_ex += axons->get_cnt(i);
             sum_dendrites_ex += dendrites_exc->get_cnt(i);
             sum_con_axons_ex += axons->get_connected_cnt(i);
-            sum_con_dendrites_ex +=  dendrites_exc->get_connected_cnt(i);
+            sum_con_dendrites_ex += dendrites_exc->get_connected_cnt(i);
         }
-        if (axons->get_signal_type(i)==SignalType::INHIBITORY){
+        if (axons->get_signal_type(i) == SignalType::INHIBITORY) {
             sum_axons_in += axons->get_cnt(i);
             sum_dendrites_in += dendrites_inh->get_cnt(i);
             sum_con_axons_in += axons->get_connected_cnt(i);
-            sum_con_dendrites_in +=  dendrites_inh->get_connected_cnt(i);
+            sum_con_dendrites_in += dendrites_inh->get_connected_cnt(i);
         }
     }
-
 
     // Output data
     if (0 == MPIWrapper::get_my_rank()) {
@@ -1272,21 +1268,21 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
 
         // Write data at step "step"
         ss << std::left
-           << std::setw(cwidth) << step <<","
-           << std::setw(cwidth) << sums_global[0] <<","
-           << std::setw(cwidth) << sums_global[1] <<","
-           << std::setw(cwidth) << sums_global[2] <<","
-           << std::setw(cwidth) << sums_global[3] <<","
-           << std::setw(cwidth) << sum_axons_ex <<","
-           << std::setw(cwidth) << sum_axons_in <<","
-           << std::setw(cwidth) << sum_dendrites_ex <<","
-           << std::setw(cwidth) << sum_dendrites_in <<","
-           << std::setw(cwidth) << sum_con_axons_ex <<","
-           << std::setw(cwidth) << sum_con_axons_in <<","
-           << std::setw(cwidth) << sum_con_dendrites_ex <<","
-           << std::setw(cwidth) << sum_con_dendrites_in <<","
-           << std::setw(cwidth) << sums_global[4] / 2 <<","// As counted on both of the neurons
-           << std::setw(cwidth) << sums_global[last_idx] / 2 <<","// As counted on both of the neurons
+           << std::setw(cwidth) << step << ","
+           << std::setw(cwidth) << sums_global[0] << ","
+           << std::setw(cwidth) << sums_global[1] << ","
+           << std::setw(cwidth) << sums_global[2] << ","
+           << std::setw(cwidth) << sums_global[3] << ","
+           << std::setw(cwidth) << sum_axons_ex << ","
+           << std::setw(cwidth) << sum_axons_in << ","
+           << std::setw(cwidth) << sum_dendrites_ex << ","
+           << std::setw(cwidth) << sum_dendrites_in << ","
+           << std::setw(cwidth) << sum_con_axons_ex << ","
+           << std::setw(cwidth) << sum_con_axons_in << ","
+           << std::setw(cwidth) << sum_con_dendrites_ex << ","
+           << std::setw(cwidth) << sum_con_dendrites_in << ","
+           << std::setw(cwidth) << sums_global[4] / 2 << "," // As counted on both of the neurons
+           << std::setw(cwidth) << sums_global[last_idx] / 2 << "," // As counted on both of the neurons
            << "\n";
 
         LogFiles::write_to_file(LogFiles::EventType::Sums, ss.str(), false);

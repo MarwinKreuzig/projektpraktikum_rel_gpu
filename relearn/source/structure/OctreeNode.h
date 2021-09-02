@@ -25,7 +25,11 @@ class OctreeNode {
 
     int rank{ -1 }; // MPI rank who owns this octree node
     size_t level{ Constants::uninitialized }; // Level in the tree [0 (= root) ... depth of tree]
-    std::vector<const OctreeNode*> interaction_list;
+
+    std::vector<const OctreeNode*> interaction_list{};
+
+    std::array<const OctreeNode*, 64> interaction_array{ nullptr };
+
     std::array<double, Constants::p3> hermite_coefficients_ex{ -1.0 };
     std::array<double, Constants::p3> hermite_coefficients_in{ -1.0 };
 
@@ -167,22 +171,38 @@ public:
     }
 
     void add_to_interactionlist(const OctreeNode* x) {
-        interaction_list.push_back(x);
+        for (auto i = 0; i < interaction_array.size(); i++) {
+            if (interaction_array[i] == nullptr) {
+                interaction_array[i] = x;
+                return;
+            }
+        }
+
+        RelearnException::fail("Oh no!");
     }
 
     const OctreeNode* get_from_interactionlist(unsigned int x) const {
-        if (x >= interaction_list.size()) {
+        if (x >= interaction_array.size()) {
             return nullptr;
         }
-        return interaction_list[x];
+        return interaction_array[x];
     }
 
     size_t get_interactionlist_length() const {
-        return interaction_list.size();
+        auto non_null_entries = 0;
+        for (auto i = 0; i < interaction_array.size(); i++) {
+            if (interaction_array[i] != nullptr) {
+                non_null_entries++;
+            }
+        }
+
+        return non_null_entries;
     }
 
     void reset_interactionlist() {
-        interaction_list.clear();
+        for (auto i = 0; i < interaction_array.size(); i++) {
+            interaction_array[i] = nullptr;
+        }
     }
 
     std::vector<Vec3d> get_all_dendrite_positions_for(SignalType needed) const {
