@@ -800,51 +800,40 @@ MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
     MapSynapseCreationRequests synapse_creation_requests_outgoing;
     GlobalTimers::timers.start(TimerRegion::FIND_TARGET_NEURONS);
 
-    //init
-    OctreeNode* root = global_tree->get_local_root(0);
+    std::vector<OctreeNode*> nodes_with_excitatory_dendrites{};
+    std::vector<OctreeNode*> nodes_with_inhibitory_dendrites{};
 
-    std::stack<OctreeNode*> nodes_with_ax_in{};
-    std::stack<OctreeNode*> nodes_with_ax_ex{};
-    std::stack<OctreeNode*> init_stack{};
-    init_stack.push(root);
+    std::stack<OctreeNode*> nodes_with_excitatory_axons{};
+    std::stack<OctreeNode*> nodes_with_inhibitory_axons{};
 
-    std::vector<OctreeNode*> nodes_with_dend_in{};
-    std::vector<OctreeNode*> nodes_with_dend_ex{};
+    OctreeNode* root = global_tree->get_root();
+    const auto& children = root->get_children();
 
-    OctreeNode* current_node;
-    OctreeNode* child_node;
-    while (!init_stack.empty()) {
+    for (auto* current_node : children) {
+        const auto& cell = current_node->get_cell();
 
-        current_node = init_stack.top();
-        init_stack.pop();
-        if (current_node->get_level() < 1) {
-            for (size_t j = 0; j < 8; j++) {
-                child_node = current_node->get_child(j);
-                if (child_node != nullptr) {
-                    init_stack.push(child_node);
-                }
-            }
+        if (cell.get_number_excitatory_axons() > 0) {
+            nodes_with_excitatory_axons.push(current_node);
         }
-        //sort nodes in their corresponding list
-        else {
-            if (current_node->get_cell().get_number_excitatory_axons() > 0) {
-                nodes_with_ax_ex.push(current_node);
-            }
-            if (current_node->get_cell().get_number_inhibitory_axons() > 0)
-                nodes_with_ax_in.push(current_node);
-            //prepare interaction lists
-            if (current_node->get_cell().get_number_inhibitory_dendrites() > 0) {
-                nodes_with_dend_in.push_back(current_node);
-            }
-            if (current_node->get_cell().get_number_excitatory_dendrites() > 0)
-                nodes_with_dend_ex.push_back(current_node);
+
+        if (cell.get_number_inhibitory_axons() > 0) {
+            nodes_with_inhibitory_axons.push(current_node);
+        }
+
+        if (cell.get_number_excitatory_dendrites() > 0) {
+            nodes_with_excitatory_dendrites.push_back(current_node);
+        }
+
+        if (cell.get_number_inhibitory_dendrites() > 0) {
+            nodes_with_inhibitory_dendrites.push_back(current_node);
         }
     }
-    if (!nodes_with_ax_ex.empty() && nodes_with_dend_ex.size() > 0) {
-        make_creation_request_for(SignalType::EXCITATORY, synapse_creation_requests_outgoing, nodes_with_ax_ex, nodes_with_dend_ex);
+
+    if (!nodes_with_excitatory_axons.empty() && nodes_with_excitatory_dendrites.size() > 0) {
+        make_creation_request_for(SignalType::EXCITATORY, synapse_creation_requests_outgoing, nodes_with_excitatory_axons, nodes_with_excitatory_dendrites);
     }
-    if (!nodes_with_ax_in.empty() && nodes_with_dend_in.size() > 0) {
-        make_creation_request_for(SignalType::INHIBITORY, synapse_creation_requests_outgoing, nodes_with_ax_in, nodes_with_dend_in);
+    if (!nodes_with_inhibitory_axons.empty() && nodes_with_inhibitory_dendrites.size() > 0) {
+        make_creation_request_for(SignalType::INHIBITORY, synapse_creation_requests_outgoing, nodes_with_inhibitory_axons, nodes_with_inhibitory_dendrites);
     }
 
     GlobalTimers::timers.stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
