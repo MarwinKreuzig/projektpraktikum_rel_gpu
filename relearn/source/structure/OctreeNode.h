@@ -28,7 +28,7 @@ class OctreeNode {
 
     std::vector<const OctreeNode*> interaction_list{};
 
-    std::array<const OctreeNode*, 64> interaction_array{ nullptr };
+    std::array<const OctreeNode*, 8> interaction_array{ nullptr };
 
     std::array<double, Constants::p3> hermite_coefficients_ex{ -1.0 };
     std::array<double, Constants::p3> hermite_coefficients_in{ -1.0 };

@@ -753,6 +753,9 @@ void Neurons::make_creation_request_for(
                     // No autapse
                     request[0].append(source_id, target_id, needed);
                 }
+
+                source_node->reset_interactionlist();
+
             }
             continue;
         }
@@ -776,6 +779,8 @@ void Neurons::make_creation_request_for(
                     continue;
                 }
 
+                source_child_node->reset_interactionlist();
+
                 for (auto* target_child_node : target_node->get_children()) {
                     if (target_child_node == nullptr) {
                         continue;
@@ -797,8 +802,8 @@ void Neurons::make_creation_request_for(
 
         // source_node is a parent, but target_node is a leaf node
 
-        std::vector<double> attractiveness;
-        std::vector<double> index;
+        std::vector<double> attractiveness{};
+        std::vector<double> index{};
 
         for (auto i = 0; i < Constants::number_oct; i++) {
             OctreeNode* source_child_node = source_children[i];
@@ -810,15 +815,13 @@ void Neurons::make_creation_request_for(
                 continue;
             }
 
+            source_child_node->reset_interactionlist();
+
             source_child_node->add_to_interactionlist(target_node);
-            const std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(source_child_node, needed);
-            attractiveness.push_back(temp[0]);
-            index.push_back(i);
+
+            nodes_with_axons.push(source_child_node);
         }
 
-        int x = Functions::choose_interval(attractiveness);
-        nodes_with_axons.push(source_children[index[x]]);
-        // the interaction list must be reset for each node
         source_node->reset_interactionlist();
     }
 }
