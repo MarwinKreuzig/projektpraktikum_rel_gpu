@@ -693,12 +693,15 @@ void Neurons::create_synapses_update_octree() {
 void Neurons::make_creation_request_for(
     SignalType needed,
     MapSynapseCreationRequests& request,
-    std::stack<OctreeNode*>& nodes_with_ax,
-    std::vector<OctreeNode*>& nodes_with_dend) {
+    std::stack<OctreeNode*>& nodes_with_axons,
+    std::vector<OctreeNode*>& nodes_with_dendrites) {
 
-    while (!nodes_with_ax.empty()) {
-        OctreeNode* current_node = nodes_with_ax.top();
-        nodes_with_ax.pop();
+    while (!nodes_with_axons.empty()) {
+        OctreeNode* current_node = nodes_with_axons.top();
+        nodes_with_axons.pop();
+
+        const auto& cell = current_node->get_cell();
+        const auto& children = current_node->get_children();
 
         /*
         - check if node is single neuron
@@ -711,29 +714,27 @@ void Neurons::make_creation_request_for(
 
         // for nodes at level 1
         if (current_node->get_level() == 1) {
-            for (size_t i = 0; i < nodes_with_dend.size(); i++) {
+            for (size_t i = 0; i < nodes_with_dendrites.size(); i++) {
                 //if the target and source nodes are different, the target node can simply be added to the interaction list
-                current_node->add_to_interactionlist(nodes_with_dend[i]);
+                current_node->add_to_interactionlist(nodes_with_dendrites[i]);
             }
         }
 
-        /*if (current_node->get_cell().get_number_axons_for(needed) > Constants::max_neurons_in_source) {
-            current_node->print_calculations(needed, Octree::default_sigma);
-        }*/
-
         //node is a leaf
         if (!current_node->is_parent()) {
-            size_t source_id = current_node->get_cell().get_neuron_id();
-            size_t target_id = 0;
-            int target_num = current_node->get_interactionlist_length();
-            const OctreeNode* target_node;
+            const auto source_id = cell.get_neuron_id();
 
+            const OctreeNode* target_node;
+            size_t target_id = 0;
+
+            const auto target_num = current_node->get_interactionlist_length();
             if (target_num == 1) {
                 target_node = current_node->get_from_interactionlist(0);
             } else {
                 const std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(current_node, needed);
                 target_node = global_tree->do_random_experiment(current_node, temp);
             }
+
             current_node->reset_interactionlist();
             if (target_node->is_parent()) {
                 for (unsigned int i = 0; i < 8; i++) {
@@ -744,7 +745,7 @@ void Neurons::make_creation_request_for(
                         }
                     }
                 }
-                nodes_with_ax.push(current_node);
+                nodes_with_axons.push(current_node);
                 //otherwise the target id is fetched
             } else {
                 target_id = target_node->get_cell().get_neuron_id();
@@ -756,40 +757,42 @@ void Neurons::make_creation_request_for(
             continue;
         }
 
-        if (current_node->get_interactionlist_length() > 0) {
-            //find target node for one source node
-            const std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(current_node, needed);
-            //global_tree->do_random_experiment(current_node, temp);
-            const OctreeNode* target_node = global_tree->do_random_experiment(current_node, temp);
+        if (current_node->get_interactionlist_length() == 0) {
+            continue;
+        }
 
-            if (target_node->is_parent()) {
-                for (size_t i = 0; i < 8; i++) {
-                    OctreeNode* child_node = current_node->get_child(i);
-                    if (child_node != nullptr && child_node->get_cell().get_number_axons_for(needed) > 0) {
-                        for (int j = 0; j < 8; j++) {
-                            const OctreeNode* child_target_node = target_node->get_child(j);
-                            if (child_target_node != nullptr && child_target_node->get_cell().get_number_dendrites_for(needed) > 0)
-                                child_node->add_to_interactionlist(child_target_node);
-                        }
-                        //go one level down in the tree and put the children on the stack
-                        nodes_with_ax.push(child_node);
+        //find target node for one source node
+        const std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(current_node, needed);
+        //global_tree->do_random_experiment(current_node, temp);
+        const OctreeNode* target_node = global_tree->do_random_experiment(current_node, temp);
+
+        if (target_node->is_parent()) {
+            for (size_t i = 0; i < 8; i++) {
+                OctreeNode* child_node = children[i];
+                if (child_node != nullptr && child_node->get_cell().get_number_axons_for(needed) > 0) {
+                    for (int j = 0; j < 8; j++) {
+                        const OctreeNode* child_target_node = target_node->get_child(j);
+                        if (child_target_node != nullptr && child_target_node->get_cell().get_number_dendrites_for(needed) > 0)
+                            child_node->add_to_interactionlist(child_target_node);
                     }
+                    //go one level down in the tree and put the children on the stack
+                    nodes_with_axons.push(child_node);
                 }
-            } else {
-                std::vector<double> attractiveness;
-                std::vector<double> index;
-                for (unsigned int i = 0; i < Constants::number_oct; i++) {
-                    OctreeNode* child_node = current_node->get_child(i);
-                    if (child_node != nullptr && child_node->get_cell().get_number_axons_for(needed) > 0) {
-                        child_node->add_to_interactionlist(target_node);
-                        const std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(child_node, needed);
-                        attractiveness.push_back(temp[0]);
-                        index.push_back(i);
-                    }
-                }
-                int x = Functions::choose_interval(attractiveness);
-                nodes_with_ax.push(current_node->get_child(index[x]));
             }
+        } else {
+            std::vector<double> attractiveness;
+            std::vector<double> index;
+            for (unsigned int i = 0; i < Constants::number_oct; i++) {
+                OctreeNode* child_node = children[i];
+                if (child_node != nullptr && child_node->get_cell().get_number_axons_for(needed) > 0) {
+                    child_node->add_to_interactionlist(target_node);
+                    const std::vector<double> temp = global_tree->calc_attractiveness_to_connect_FMM(child_node, needed);
+                    attractiveness.push_back(temp[0]);
+                    index.push_back(i);
+                }
+            }
+            int x = Functions::choose_interval(attractiveness);
+            nodes_with_axons.push(children[index[x]]);
         }
         // the interaction list must be reset for each node
         current_node->reset_interactionlist();

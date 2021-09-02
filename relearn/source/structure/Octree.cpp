@@ -469,42 +469,38 @@ double Octree::calc_attractiveness_to_connect(
     return ret_val;
 }
 
-const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode* source, const SignalType dendrite_type_needed) {
-    // calculate vacant number of neurons in souce box
-    const unsigned int source_num = source->get_cell().get_number_axons_for(dendrite_type_needed);
-    //find out the length of the interactionlist
-    size_t target_list_length = source->get_interactionlist_length();
-    //Initialize return value to 0
-    std::vector<double> result(target_list_length, 0);
-    //printf("source num = %i \n", source_num);
+std::vector<double> Octree::calc_attractiveness_to_connect_FMM(const OctreeNode* source, const SignalType dendrite_type_needed) const {
+    const auto source_number_axons = source->get_cell().get_number_axons_for(dendrite_type_needed);
+    const auto target_list_length = source->get_interactionlist_length();
 
-    //when there are not enough neurons in the source box ...
-    if (source_num <= Constants::max_neurons_in_source) {
-        for (size_t i = 0; i < target_list_length; i++) {
-            // calculate vacant number of neurons in target box
-            int target_num = (source->get_from_interactionlist(i))->get_cell().get_number_dendrites_for(dendrite_type_needed);
-            //... and there are not enough neurons in the target
-            if (target_num <= Constants::max_neurons_in_target) {
-                //fill target list
-                const std::vector<Vec3d> target_neurons_pos = source->get_from_interactionlist(i)->get_all_dendrite_positions_for(dendrite_type_needed);
-                //fill source list
-                const std::vector<Vec3d> source_neurons_pos = source->get_all_axon_positions_for(dendrite_type_needed);
-                //calculate via direct Gauss
-                result[i] = Functions::calc_direct_gauss(source_neurons_pos, target_neurons_pos, default_sigma);
+    std::vector<double> result(target_list_length, 0.0);
+
+    if (source_number_axons <= Constants::max_neurons_in_source) {
+        // There are not enough axons in the source box
+        for (auto i = 0; i < target_list_length; i++) {
+            const auto* current_target = source->get_from_interactionlist(i);
+            const auto target_number_dendrites = current_target->get_cell().get_number_dendrites_for(dendrite_type_needed);
+
+            if (target_number_dendrites <= Constants::max_neurons_in_target) {
+                // There are not enough dendrites in the target box
+
+                const auto& target_neuron_positions = current_target->get_all_dendrite_positions_for(dendrite_type_needed);
+                const auto& source_neuron_positions = source->get_all_axon_positions_for(dendrite_type_needed);
+
+                result[i] = Functions::calc_direct_gauss(source_neuron_positions, target_neuron_positions, default_sigma);
             } else {
-                //... and there are enough neurons in target
-                //source to Taylor-Series about center of box C and direkt evaluation
-                result[i] = Functions::calc_taylor_expansion(source, source->get_from_interactionlist(i), default_sigma, dendrite_type_needed);
+                // There are enough dendrites in the target box
+                result[i] = Functions::calc_taylor_expansion(source, current_target, default_sigma, dendrite_type_needed);
             }
         }
-    } else //when there are enough neurons in the source box...
-    { //Hermite Expansion about center of source box
-        for (size_t i = 0; i < target_list_length; i++) {
-            //... and there are not enough neurons in the target
-            //evaluate Hermite expansion at each target
-            result[i] = Functions::calc_hermite(source, source->get_from_interactionlist(i), default_sigma, dendrite_type_needed);
+    } else {
+        // There are enough axons in the source box
+        for (auto i = 0; i < target_list_length; i++) {
+            const auto* current_target = source->get_from_interactionlist(i);
+            result[i] = Functions::calc_hermite(source, current_target, default_sigma, dendrite_type_needed);
         }
     }
+
     return result;
 }
 

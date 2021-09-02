@@ -503,7 +503,7 @@ private:
     void construct_global_tree_part();
 
 public:
-    const std::vector<double> calc_attractiveness_to_connect_FMM(OctreeNode* source, const SignalType dendrite_type_needed);
+    std::vector<double> Octree::calc_attractiveness_to_connect_FMM(const OctreeNode* source, const SignalType dendrite_type_needed) const;
 
     // Root of the tree
     OctreeNode* root{ nullptr };
