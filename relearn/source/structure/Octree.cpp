@@ -486,9 +486,9 @@ const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode 
              //... and there are not enough neurons in the target
             if (target_num <= Constants::max_neurons_in_target) {
                 //fill target list
-                const std::vector<Vec3d> target_neurons_pos = source->get_from_interactionlist(i)->get_dendrites_pos_from_node_for(dendrite_type_needed);
+                const std::vector<Vec3d> target_neurons_pos = source->get_from_interactionlist(i)->get_all_dendrite_positions_for(dendrite_type_needed);
                 //fill source list
-                const std::vector<Vec3d> source_neurons_pos = source->get_axons_pos_from_node_for(dendrite_type_needed);
+                const std::vector<Vec3d> source_neurons_pos = source->get_all_axon_positions_for(dendrite_type_needed);
                 //calculate via direct Gauss
                 result[i] = Functions::calc_direct_gauss(source_neurons_pos,target_neurons_pos, default_sigma);
             } else {

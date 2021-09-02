@@ -185,7 +185,7 @@ public:
         interaction_list.clear();
     }
 
-    std::vector<Vec3d> get_dendrites_pos_from_node_for(SignalType needed) const {
+    std::vector<Vec3d> get_all_dendrite_positions_for(SignalType needed) const {
         std::vector<Vec3d> result{};
 
         std::stack<const OctreeNode*> stack{};
@@ -217,7 +217,7 @@ public:
         return result;
     }
 
-    std::vector<Vec3d> get_axons_pos_from_node_for(SignalType needed) const {
+    std::vector<Vec3d> get_all_axon_positions_for(SignalType needed) const {
         std::vector<Vec3d> result{};
 
         std::stack<const OctreeNode*> stack{};

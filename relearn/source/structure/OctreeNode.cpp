@@ -156,8 +156,8 @@ void OctreeNode::print() const {
 
 void OctreeNode::print_calculations(SignalType needed, double sigma) {
     for (int i = 0; i < this->get_interactionlist_length(); i++) {
-        auto sources = this->get_axons_pos_from_node_for(needed);
-        auto targets = this->get_from_interactionlist(i)->get_dendrites_pos_from_node_for(needed);
+        auto sources = this->get_all_axon_positions_for(needed);
+        auto targets = this->get_from_interactionlist(i)->get_all_dendrite_positions_for(needed);
         double direct = Functions::calc_direct_gauss(sources, targets, sigma);
         double taylor = Functions::calc_taylor_expansion(this, this->get_from_interactionlist(i), sigma, needed);
         double hermite = Functions::calc_hermite(this, this->get_from_interactionlist(i), sigma, needed);
