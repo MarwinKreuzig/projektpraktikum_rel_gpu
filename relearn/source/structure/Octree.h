@@ -138,8 +138,8 @@ private:
             // Sum of number of dendrites of all my children
             auto num_dendrites_exc = 0;
             auto num_dendrites_inh = 0;
-            auto num_axons_exc = 0;
-            auto num_axons_inh = 0;
+            auto number_excitatory_axons = 0;
+            auto number_inhibitory_axons = 0;
 
             // For all my children
             for (const auto& child : node->get_children()) {
@@ -154,8 +154,8 @@ private:
                 const auto temp_num_axons_inh = child->get_cell().get_number_inhibitory_axons();
                 num_dendrites_exc += temp_num_dendrites_exc;
                 num_dendrites_inh += temp_num_dendrites_inh;
-                num_axons_exc += temp_num_axons_exc;
-                num_axons_inh += temp_num_axons_inh;
+                number_excitatory_axons += temp_num_axons_exc;
+                number_inhibitory_axons += temp_num_axons_inh;
 
                 // Average the position by using the number of dendrites as weights
                 std::optional<Vec3d> temp_xyz_pos_dend_exc = child->get_cell().get_excitatory_dendrites_position();
@@ -164,8 +164,8 @@ private:
                 std::optional<Vec3d> temp_xyz_pos_ax_inh = child->get_cell().get_inhibitory_axons_position();
 
                 /**
-					 * We can use position if it's valid or if corresponding num of dendrites is 0 
-					 */
+				 * We can use position if it's valid or if corresponding num of dendrites is 0 
+				 */
                 RelearnException::check(temp_xyz_pos_dend_exc.has_value() || (0 == temp_num_dendrites_exc), "temp position dend_exc was bad");
                 RelearnException::check(temp_xyz_pos_dend_inh.has_value() || (0 == temp_num_dendrites_inh), "temp position dend_inh was bad");
                 RelearnException::check(temp_xyz_pos_ax_exc.has_value() || (0 == temp_num_axons_exc), "temp position ax_exc was bad");
@@ -190,7 +190,10 @@ private:
             }
 
             node->set_cell_number_dendrites(num_dendrites_exc, num_dendrites_inh);
-            node->set_cell_number_axons(num_axons_exc, num_axons_inh);
+            node->set_cell_number_axons(number_excitatory_axons, number_inhibitory_axons);
+            
+            const auto& indices = Multiindex::get_indices();
+            const auto num_coef = Multiindex::get_number_of_indices();
 
             /**
 			* For calculating the new weighted position, make sure that we don't
@@ -210,60 +213,65 @@ private:
                 node->set_cell_inhibitory_dendrites_position(std::optional<Vec3d>{ scaled_position });
             }
 
-            if (0 == num_axons_exc) {
+            if (0 == number_excitatory_axons) {
                 node->set_cell_excitatory_axons_position({});
             } else {
-                const auto scaled_position = xyz_pos_ax_exc / num_axons_exc;
+                const auto scaled_position = xyz_pos_ax_exc / number_excitatory_axons;
                 node->set_cell_excitatory_axons_position(std::optional<Vec3d>{ scaled_position });
-            }
 
-            if (0 == num_axons_inh) {
-                node->set_cell_inhibitory_axons_position({});
-            } else {
-                const auto scaled_position = xyz_pos_ax_inh / num_axons_inh;
-                node->set_cell_inhibitory_axons_position(std::optional<Vec3d>{ scaled_position });
-            }
-
-            //calculating herimte coef
-            const auto& indices = Multiindex::get_indices();
-            const auto num_coef = Multiindex::get_number_of_indices();
-
-            if (num_axons_exc > Constants::max_neurons_in_source) {
-                for (unsigned int a = 0; a < Constants::p3; a++) {
-                    double temp = 0;
-                    for (unsigned int i = 0; i < Constants::number_oct; i++) {
-                        auto child = node->get_child(i);
-                        if (child != nullptr) {
-                            int ax_num_ex = child->get_cell().get_number_excitatory_axons();
-                            if (ax_num_ex > 0) {
-                                const auto child_pos = child->get_cell().get_excitatory_axons_position();
-                                const Vec3d temp_vec = (child_pos.value() - (xyz_pos_ax_exc / num_axons_exc)) / Octree::default_sigma;
-                                temp += ax_num_ex * Functions::pow_multiindex(temp_vec, indices[a]);
+                if (number_excitatory_axons > Constants::max_neurons_in_source) {
+                    for (auto a = 0; a < Constants::p3; a++) {
+                        auto temp = 0.0;
+                        for (auto i = 0; i < Constants::number_oct; i++) {
+                            const auto* child = node->get_child(i);
+                            if (child == nullptr) {
+                                continue;
                             }
-                        }
-                    }
 
-                    const auto hermite_coefficient = 1.0 * temp / Functions::fac_multiindex(indices[a]);
-                    node->set_hermite_coef_ex(a, hermite_coefficient);
+                            const auto child_number_excitatory_axons = child->get_cell().get_number_excitatory_axons();
+                            if (child_number_excitatory_axons == 0) {
+                                continue;
+                            }
+
+                            const auto& child_pos = child->get_cell().get_excitatory_axons_position();
+                            const auto& temp_vec = (child_pos.value() - (xyz_pos_ax_exc / number_excitatory_axons)) / Octree::default_sigma;
+                            temp += child_number_excitatory_axons * Functions::pow_multiindex(temp_vec, indices[a]);
+                        }
+
+                        const auto hermite_coefficient = 1.0 * temp / Functions::fac_multiindex(indices[a]);
+                        node->set_hermite_coef_ex(a, hermite_coefficient);
+                    }
                 }
             }
-            if (num_axons_inh > Constants::max_neurons_in_source) {
-                for (unsigned int a = 0; a < num_coef; a++) {
-                    double temp = 0;
-                    for (unsigned int i = 0; i < Constants::number_oct; i++) {
-                        auto child = node->get_child(i);
-                        if (child != nullptr) {
-                            int ax_num_in = child->get_cell().get_number_inhibitory_axons();
-                            if (ax_num_in > 0) {
-                                const auto child_pos = child->get_cell().get_inhibitory_axons_position();
-                                const Vec3d temp_vec = (child_pos.value() - (xyz_pos_ax_inh / num_axons_inh)) / Octree::default_sigma;
-                                temp += ax_num_in * Functions::pow_multiindex(temp_vec, indices[a]);
-                            }
-                        }
-                    }
 
-                    const auto hermite_coefficient = 1.0 * temp / Functions::fac_multiindex(indices[a]);
-                    node->set_hermite_coef_in(a, hermite_coefficient);
+            if (0 == number_inhibitory_axons) {
+                node->set_cell_inhibitory_axons_position({});
+            } else {
+                const auto scaled_position = xyz_pos_ax_inh / number_inhibitory_axons;
+                node->set_cell_inhibitory_axons_position(std::optional<Vec3d>{ scaled_position });
+
+                if (number_inhibitory_axons > Constants::max_neurons_in_source) {
+                    for (auto a = 0; a < num_coef; a++) {
+                        auto temp = 0.0;
+                        for (auto i = 0; i < Constants::number_oct; i++) {
+                            const auto* child = node->get_child(i);
+                            if (child == nullptr) {
+                                continue;
+                            }
+
+                            const auto child_number_inhibitory_axons = child->get_cell().get_number_inhibitory_axons();
+                            if (child_number_inhibitory_axons == 0) {
+                                continue;
+                            }
+
+                            const auto& child_pos = child->get_cell().get_inhibitory_axons_position();
+                            const auto& temp_vec = (child_pos.value() - (xyz_pos_ax_inh / number_inhibitory_axons)) / Octree::default_sigma;
+                            temp += child_number_inhibitory_axons * Functions::pow_multiindex(temp_vec, indices[a]);
+                        }
+
+                        const auto hermite_coefficient = 1.0 * temp / Functions::fac_multiindex(indices[a]);
+                        node->set_hermite_coef_in(a, hermite_coefficient);
+                    }
                 }
             }
         }

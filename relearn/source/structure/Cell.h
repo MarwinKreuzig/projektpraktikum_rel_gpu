@@ -278,43 +278,11 @@ public:
     }
 
 private:
-    struct Dendrites {
-        // All dendrites have the same position
-        std::optional<Vec3d> xyz_pos{};
-        unsigned int num_dendrites{ 0 };
-        // TODO(future)
-        // List colliding_axons;
-    };
-
-    struct Axons {
-        // All axons have the same position
-        std::optional<Vec3d> xyz_pos{};
-        unsigned int num_axons = { 0 };
-    };
-
     // Two points describe size of cell
     Vec3d xyz_min{ Constants::uninitialized };
     Vec3d xyz_max{ Constants::uninitialized };
 
     AdditionalCellAttributes additional_attributes{};
-
-    /**
-	 * Cell contains info for one neuron, which could be a "super" neuron
-	 *
-	 * Info about EXCITATORY dendrites: dendrites_ex
-	 * Info about INHIBITORY dendrites: dendrites_in
-	 */
-    Dendrites dendrites_ex{};
-    Dendrites dendrites_in{};
-
-    /**
-	 * Cell contains info for one neuron, which could be a "super" neuron
-	 *
-	 * Info about EXCITATORY axons: axons_ex
-	 * Info about INHIBITORY axons: axons_in
-	 */
-    Axons axons_ex{};
-    Axons axons_in{};
 
     /**
 	 * ID of the neuron in the cell.
