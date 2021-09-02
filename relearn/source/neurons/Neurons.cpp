@@ -713,7 +713,7 @@ void Neurons::make_creation_request_for(
         if (current_node->get_level() == 1) {
             for (size_t i = 0; i < nodes_with_dend.size(); i++) {
                 //if the target and source nodes are different, the target node can simply be added to the interaction list 
-                current_node->add_to_interactionlist(nodes_with_dend.at(i));
+                current_node->add_to_interactionlist(nodes_with_dend[i]);
             }    
         }
         

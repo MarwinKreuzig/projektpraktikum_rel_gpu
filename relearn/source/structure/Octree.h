@@ -409,7 +409,7 @@ public:
 
     [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed);
 
-    const OctreeNode* do_random_experiment(const OctreeNode* source, const std::vector<double>& atractiveness) const;
+    const OctreeNode* do_random_experiment(const OctreeNode* source, const std::vector<double>& attractiveness) const;
 
     void empty_remote_nodes_cache();
 

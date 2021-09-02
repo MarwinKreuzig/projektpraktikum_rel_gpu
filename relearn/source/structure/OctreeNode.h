@@ -174,7 +174,7 @@ public:
         if (x >= interaction_list.size()) {
             return nullptr;
         }
-        return interaction_list.at(x);
+        return interaction_list[x];
     }
 
     size_t get_interactionlist_length() const {

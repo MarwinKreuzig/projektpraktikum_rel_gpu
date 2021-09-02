@@ -469,7 +469,7 @@ double Octree::calc_attractiveness_to_connect(
     return ret_val;
 }
 
-const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode *source, const SignalType dendrite_type_needed) {  
+const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode* source, const SignalType dendrite_type_needed) {
     // calculate vacant number of neurons in souce box
     const unsigned int source_num = source->get_cell().get_number_axons_for(dendrite_type_needed);
     //find out the length of the interactionlist
@@ -477,20 +477,20 @@ const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode 
     //Initialize return value to 0
     std::vector<double> result(target_list_length, 0);
     //printf("source num = %i \n", source_num);
-   
+
     //when there are not enough neurons in the source box ...
     if (source_num <= Constants::max_neurons_in_source) {
         for (size_t i = 0; i < target_list_length; i++) {
             // calculate vacant number of neurons in target box
             int target_num = (source->get_from_interactionlist(i))->get_cell().get_number_dendrites_for(dendrite_type_needed);
-             //... and there are not enough neurons in the target
+            //... and there are not enough neurons in the target
             if (target_num <= Constants::max_neurons_in_target) {
                 //fill target list
                 const std::vector<Vec3d> target_neurons_pos = source->get_from_interactionlist(i)->get_all_dendrite_positions_for(dendrite_type_needed);
                 //fill source list
                 const std::vector<Vec3d> source_neurons_pos = source->get_all_axon_positions_for(dendrite_type_needed);
                 //calculate via direct Gauss
-                result[i] = Functions::calc_direct_gauss(source_neurons_pos,target_neurons_pos, default_sigma);
+                result[i] = Functions::calc_direct_gauss(source_neurons_pos, target_neurons_pos, default_sigma);
             } else {
                 //... and there are enough neurons in target
                 //source to Taylor-Series about center of box C and direkt evaluation
@@ -501,8 +501,8 @@ const std::vector<double> Octree::calc_attractiveness_to_connect_FMM(OctreeNode 
     { //Hermite Expansion about center of source box
         for (size_t i = 0; i < target_list_length; i++) {
             //... and there are not enough neurons in the target
-                //evaluate Hermite expansion at each target
-                result[i] = Functions::calc_hermite(source, source->get_from_interactionlist(i), default_sigma, dendrite_type_needed);
+            //evaluate Hermite expansion at each target
+            result[i] = Functions::calc_hermite(source, source->get_from_interactionlist(i), default_sigma, dendrite_type_needed);
         }
     }
     return result;
@@ -550,7 +550,7 @@ void Octree::construct_global_tree_part() {
                 const auto& cell_position = cell_min + (cell_length / 2);
 
                 auto* current_node = root->insert(cell_position, Constants::uninitialized, my_rank);
-               
+
                 //const auto index1d = space_curve.map_3d_to_1d(Vec3s{ id_x, id_y, id_z });
                 //local_trees[index1d] = current_node;
             }
@@ -572,7 +572,7 @@ void Octree::construct_global_tree_part() {
 
         for (auto id = 0; id < 8; id++) {
             auto child_node = ptr->get_child(id);
-            
+
             const size_t larger_x = ((id & 1) == 0) ? 0 : 1;
             const size_t larger_y = ((id & 2) == 0) ? 0 : 1;
             const size_t larger_z = ((id & 4) == 0) ? 0 : 1;
@@ -640,9 +640,9 @@ void Octree::update_from_level(size_t max_level) {
     std::vector<unsigned int> axons_inh_connected_cnts;
 
     const FunctorUpdateNode update_functor(
-        dendrites_exc_cnts, 
-        dendrites_exc_connected_cnts, 
-        dendrites_inh_cnts, 
+        dendrites_exc_cnts,
+        dendrites_exc_connected_cnts,
+        dendrites_inh_cnts,
         dendrites_inh_connected_cnts,
         axons_exc_cnts,
         axons_exc_connected_cnts,
@@ -673,27 +673,25 @@ void Octree::update_local_trees(const SynapticElements& dendrites_exc, const Syn
     std::vector<double> ax_in_cnt;
     std::vector<std::seed_seq::result_type> ax_in_conn_cnt;
 
-    for(int i = 0; i < axons_cnt.size(); i++){
-        if (axons.get_signal_type(i) == SignalType::EXCITATORY)
-        {
-            ax_ex_cnt.push_back(axons_cnt.at(i));
-            ax_ex_conn_cnt.push_back(axons_conn_cnt.at(i));
+    for (int i = 0; i < axons_cnt.size(); i++) {
+        if (axons.get_signal_type(i) == SignalType::EXCITATORY) {
+            ax_ex_cnt.push_back(axons_cnt[i]);
+            ax_ex_conn_cnt.push_back(axons_conn_cnt[i]);
 
             ax_in_cnt.push_back(0);
             ax_in_conn_cnt.push_back(0);
         }
-        if (axons.get_signal_type(i) == SignalType::INHIBITORY){
-            ax_in_cnt.push_back(axons_cnt.at(i));
-            ax_in_conn_cnt.push_back(axons_conn_cnt.at(i));
-            
+        if (axons.get_signal_type(i) == SignalType::INHIBITORY) {
+            ax_in_cnt.push_back(axons_cnt[i]);
+            ax_in_conn_cnt.push_back(axons_conn_cnt[i]);
+
             ax_ex_cnt.push_back(0);
             ax_ex_conn_cnt.push_back(0);
         }
     }
-    
 
     for (auto* local_tree : local_trees) {
-        const FunctorUpdateNode update_functor(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt, ax_ex_cnt,ax_ex_conn_cnt,ax_in_cnt,ax_in_conn_cnt, num_neurons);
+        const FunctorUpdateNode update_functor(de_ex_cnt, de_ex_conn_cnt, de_in_cnt, de_in_conn_cnt, ax_ex_cnt, ax_ex_conn_cnt, ax_in_cnt, ax_in_conn_cnt, num_neurons);
 
         // The functor containing the visit function is of type FunctorUpdateNode
         tree_walk_postorder<FunctorUpdateNode>(local_tree, update_functor);
@@ -759,37 +757,27 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
     return rank_neuron_id;
 }
 
-const OctreeNode* Octree::do_random_experiment(const OctreeNode* source, const std::vector<double>& atractiveness) const {
+const OctreeNode* Octree::do_random_experiment(const OctreeNode* source, const std::vector<double>& attractiveness) const {
     const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Octree, 0.0, std::nextafter(1.0, Constants::eps));
-    
-    int vec_len = atractiveness.size();
-    std::vector<double> intervals;
-    intervals.reserve(vec_len+1);
-    intervals[0]=0;
-    double sum = 0;
-    for (int i = 0; i < vec_len; i++)
-    {
-        sum = sum + atractiveness.at(i);
+    const auto vec_len = attractiveness.size();
+    std::vector<double> intervals(vec_len + 1);
+    intervals[0] = 0;
+
+    auto sum = 0.0;
+    for (int i = 0; i < vec_len; i++) {
+        sum = sum + attractiveness[i];
     }
 
-   // RelearnException::check(temp,"The sum of all attractions was 0.");
-    for (int i = 1; i < vec_len+1; i++)
-    {
-        intervals[i]= intervals[i-1]+ (atractiveness.at(i-1)/sum);
+    // RelearnException::check(temp,"The sum of all attractions was 0.");
+    for (auto i = 1; i < vec_len + 1; i++) {
+        intervals[i] = intervals[i - 1] + (attractiveness[i - 1] / sum);
     }
-   
-    
-    int i = 0;
 
-
-    while (random_number > intervals[i+1] && i<=vec_len)
-    {
+    auto i = 0;
+    while (random_number > intervals[i + 1] && i <= vec_len) {
         i++;
     }
-    if (i>=vec_len+1)
-    {
-        return nullptr;
-    }
+
     return source->get_from_interactionlist(i);
 }
 
