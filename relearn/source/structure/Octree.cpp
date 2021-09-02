@@ -475,29 +475,31 @@ std::vector<double> Octree::calc_attractiveness_to_connect_FMM(const OctreeNode*
 
     std::vector<double> result(target_list_length, 0.0);
 
-    if (source_number_axons <= Constants::max_neurons_in_source) {
-        // There are not enough axons in the source box
-        for (auto i = 0; i < target_list_length; i++) {
-            const auto* current_target = source->get_from_interactionlist(i);
-            const auto target_number_dendrites = current_target->get_cell().get_number_dendrites_for(dendrite_type_needed);
-
-            if (target_number_dendrites <= Constants::max_neurons_in_target) {
-                // There are not enough dendrites in the target box
-
-                const auto& target_neuron_positions = current_target->get_all_dendrite_positions_for(dendrite_type_needed);
-                const auto& source_neuron_positions = source->get_all_axon_positions_for(dendrite_type_needed);
-
-                result[i] = Functions::calc_direct_gauss(source_neuron_positions, target_neuron_positions, default_sigma);
-            } else {
-                // There are enough dendrites in the target box
-                result[i] = Functions::calc_taylor_expansion(source, current_target, default_sigma, dendrite_type_needed);
-            }
-        }
-    } else {
+    if (source_number_axons > Constants::max_neurons_in_source) {
         // There are enough axons in the source box
         for (auto i = 0; i < target_list_length; i++) {
             const auto* current_target = source->get_from_interactionlist(i);
             result[i] = Functions::calc_hermite(source, current_target, default_sigma, dendrite_type_needed);
+        }
+
+        return result;
+    }
+
+    // There are not enough axons in the source box
+    for (auto i = 0; i < target_list_length; i++) {
+        const auto* current_target = source->get_from_interactionlist(i);
+        const auto target_number_dendrites = current_target->get_cell().get_number_dendrites_for(dendrite_type_needed);
+
+        if (target_number_dendrites <= Constants::max_neurons_in_target) {
+            // There are not enough dendrites in the target box
+
+            const auto& target_neuron_positions = current_target->get_all_dendrite_positions_for(dendrite_type_needed);
+            const auto& source_neuron_positions = source->get_all_axon_positions_for(dendrite_type_needed);
+
+            result[i] = Functions::calc_direct_gauss(source_neuron_positions, target_neuron_positions, default_sigma);
+        } else {
+            // There are enough dendrites in the target box
+            result[i] = Functions::calc_taylor_expansion(source, current_target, default_sigma, dendrite_type_needed);
         }
     }
 
