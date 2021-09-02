@@ -14,6 +14,8 @@
 
 #include <array>
 #include <optional>
+#include <stack>
+#include <vector>
 
 class OctreeNode {
     std::array<OctreeNode*, Constants::number_oct> children{ nullptr };
@@ -183,9 +185,69 @@ public:
         interaction_list.clear();
     }
 
-    std::vector<Vec3d> get_dendrites_pos_from_node_for(SignalType needed) const;
+    std::vector<Vec3d> get_dendrites_pos_from_node_for(SignalType needed) const {
+        std::vector<Vec3d> result{};
 
-    std::vector<Vec3d> get_axons_pos_from_node_for(SignalType needed) const;
+        std::stack<const OctreeNode*> stack{};
+        stack.push(this);
+
+        while (!stack.empty()) {
+            const OctreeNode* current_node = stack.top();
+            stack.pop();
+
+            if (!current_node->is_parent()) {
+                const auto& cell = current_node->get_cell();
+                const auto num_of_ports = cell.get_number_dendrites_for(needed);
+                if (num_of_ports > 0) {
+                    const auto& opt_position = cell.get_neuron_position();
+                    for (auto i = 0; i < num_of_ports; i++) {
+                        result.emplace_back(opt_position.value());
+                    }
+                }
+            } else {
+                for (auto i = 0; i < 8; i++) {
+                    const OctreeNode* children_node = current_node->get_child(i);
+                    if (children_node != nullptr && children_node->get_cell().get_number_dendrites_for(needed) > 0) {
+                        stack.push(children_node);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    std::vector<Vec3d> get_axons_pos_from_node_for(SignalType needed) const {
+        std::vector<Vec3d> result{};
+
+        std::stack<const OctreeNode*> stack{};
+        stack.push(this);
+
+        while (!stack.empty()) {
+            const OctreeNode* current_node = stack.top();
+            stack.pop();
+
+            if (!current_node->is_parent()) {
+                const auto& cell = current_node->get_cell();
+                const auto num_of_ports = cell.get_number_axons_for(needed);
+                if (num_of_ports > 0) {
+                    const auto& opt_position = cell.get_neuron_position();
+                    for (auto i = 0; i < num_of_ports; i++) {
+                        result.emplace_back(opt_position.value());
+                    }
+                }
+            } else {
+                for (auto i = 0; i < 8; i++) {
+                    const OctreeNode* children_node = current_node->get_child(i);
+                    if (children_node != nullptr && children_node->get_cell().get_number_axons_for(needed) > 0) {
+                        stack.push(children_node);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
 
     void print_calculations(SignalType needed, double sigma);
 };

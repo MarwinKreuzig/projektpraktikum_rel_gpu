@@ -15,7 +15,6 @@
 #include "../util/DeriativesAndFunctions.h"
 
 #include <sstream>
-#include <stack>
 
 bool OctreeNode::is_local() const noexcept {
     return rank == MPIWrapper::get_my_rank();
@@ -153,71 +152,6 @@ void OctreeNode::print() const {
     ss << "\n";
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, ss.str(), true);
-}
-
-std::vector<Vec3d> OctreeNode::get_dendrites_pos_from_node_for(SignalType needed) const {
-    int num_of_ports = 0;
-    std::vector<Vec3d> result;
-    std::stack<const OctreeNode*> stack;
-
-    stack.push(this);
-
-    while (!stack.empty()) {
-        const OctreeNode* current_node = stack.top();
-
-        stack.pop();
-        if (!current_node->is_parent()) {
-            num_of_ports = current_node->get_cell().get_number_dendrites_for(needed);
-            if (num_of_ports > 0) {
-                auto node_pos = current_node->get_cell().get_neuron_position().value();
-                for (int i = 0; i < num_of_ports; i++) {
-                    result.push_back(node_pos);
-                }
-            }
-        } else {
-            for (int i = 0; i < 8; i++) {
-
-                const OctreeNode* children_node = current_node->get_child(i);
-                if (children_node != nullptr && children_node->get_cell().get_number_dendrites_for(needed) > 0) {
-                    stack.push(children_node);
-                }
-            }
-        }
-    }
-
-    return result;
-}
-
-std::vector<Vec3d> OctreeNode::get_axons_pos_from_node_for(SignalType needed) const {
-    int num_of_ports = 0;
-    std::vector<Vec3d> result;
-    std::stack<const OctreeNode*> stack;
-
-    stack.push(this);
-
-    while (!stack.empty()) {
-        const OctreeNode* current_node = stack.top();
-
-        stack.pop();
-        if (!current_node->is_parent()) {
-            num_of_ports = current_node->get_cell().get_number_axons_for(needed);
-            if (num_of_ports > 0) {
-                auto node_pos = current_node->get_cell().get_neuron_position().value();
-                for (int i = 0; i < num_of_ports; i++) {
-                    result.push_back(node_pos);
-                }
-            }
-        } else {
-            for (int i = 0; i < 8; i++) {
-                const OctreeNode* children_node = current_node->get_child(i);
-                if (children_node != nullptr && children_node->get_cell().get_number_axons_for(needed) > 0) {
-                    stack.push(children_node);
-                }
-            }
-        }
-    }
-
-    return result;
 }
 
 void OctreeNode::print_calculations(SignalType needed, double sigma) {
