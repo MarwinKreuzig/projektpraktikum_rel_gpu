@@ -104,12 +104,6 @@ int main(int argc, char** argv) {
     unsigned int random_seed{ 0 };
     app.add_option("-r,--random-seed", random_seed, "Random seed. Default: 0.");
 
-    double beta{NeuronModels::default_beta};
-    app.add_option("--beta", beta, "Beta, parameter for NeuronModels. Default: 0,001.");
-
-    double nu{SynapticElements::default_nu};
-    app.add_option("--nu", nu, "Nu, parameter for SynapticElements. Default: 1e-5 ");
-
     int openmp_threads{ 1 };
     app.add_option("--openmp", openmp_threads, "Number of OpenMP Threads.");
 

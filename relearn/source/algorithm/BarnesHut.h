@@ -148,7 +148,7 @@ public:
 
             // Average the position by using the number of dendrites as weights
             std::optional<Vec3d> child_position_dendrites_excitatory = child->get_cell().get_excitatory_dendrite_position();
-            std::optional<Vec3d> child_position_dendrites_inhibitory = child->get_cell().get_inhibitory_dendrite_position();
+            std::optional<Vec3d> child_position_dendrites_inhibitory = child->get_cell().get_inhibitory_dendrites_position();
 
             /**
 			 * We can use position if it's valid or if corresponding num of dendrites is 0 

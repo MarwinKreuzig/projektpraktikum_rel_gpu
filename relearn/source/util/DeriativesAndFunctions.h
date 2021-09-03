@@ -11,6 +11,7 @@
 
 #include "Multiindex.h"
 #include "Vec3.h"
+#include "../algorithm/FastMultipoleMethodsCell.h"
 #include "../structure/OctreeNode.h"
 #include "../util/Random.h"
 
@@ -156,7 +157,7 @@ inline double kernel(const Vec3d& a, const Vec3d& b, const double sigma) {
     return exp(-squared_norm / (sigma * sigma));
 }
 
-inline double calc_taylor_expansion(const OctreeNode* source, const OctreeNode* target, const double sigma, const SignalType needed) {
+inline double calc_taylor_expansion(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const double sigma, const SignalType needed) {
     const auto& opt_target_center = target->get_cell().get_dendrites_position_for(needed);
     RelearnException::check(opt_target_center.has_value(), "Target node has no position for Taylor calculation");
 
@@ -239,7 +240,7 @@ inline double calc_direct_gauss(const std::vector<Vec3d>& sources, const std::ve
     return result;
 }
 
-inline double calc_hermite(const OctreeNode* source, const OctreeNode* target, const double sigma, const SignalType needed) {
+inline double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const double sigma, const SignalType needed) {
     const auto& opt_source_center = source->get_cell().get_axons_position_for(needed);
     RelearnException::check(opt_source_center.has_value(), "Source node has no axon position for Hermite calculation \n");
     const auto& source_center = opt_source_center.value();
@@ -276,7 +277,7 @@ inline double calc_hermite(const OctreeNode* source, const OctreeNode* target, c
 }
 
 inline int choose_interval(const std::vector<double>& attractiveness) {
-    const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Octree, 0.0, std::nextafter(1.0, Constants::eps));
+    const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(1.0, Constants::eps));
     const auto vec_len = attractiveness.size();
 
     std::vector<double> intervals(vec_len + 1);

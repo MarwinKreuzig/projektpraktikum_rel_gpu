@@ -17,9 +17,9 @@
 
 #include <array>
 #include <optional>
+#include <ostream>
 #include <stack>
 #include <vector>
-#include <ostream>
 
 /**
  * This class serves as the basic building blocks of the Octree.
@@ -392,9 +392,24 @@ public:
      */
     void set_cell_neuron_pos_exc(const std::optional<Vec3d>& opt_position) noexcept {
         cell.set_excitatory_dendrite_position(opt_position);
+    }
+
+    /**
+     * @brief Sets the optional position for the inhibitory position in the associated cell
+     * @param opt_position The optional position, can be empty
+     */
+    void set_cell_neuron_pos_inh(const std::optional<Vec3d>& opt_position) noexcept {
+        cell.set_excitatory_dendrite_position(opt_position);
+    }
+
     void set_cell_number_axons(unsigned int num_ex, unsigned int num_in) noexcept {
         cell.set_number_excitatory_axons(num_ex);
         cell.set_number_inhibitory_axons(num_in);
+    }
+
+    void set_cell_number_dendrites(unsigned int num_ex, unsigned int num_in) noexcept {
+        cell.set_number_excitatory_dendrites(num_ex);
+        cell.set_number_inhibitory_dendrites(num_in);
     }
 
     void set_cell_excitatory_dendrites_position(const std::optional<Vec3d>& opt_position) noexcept {
@@ -419,6 +434,10 @@ public:
      */
     [[nodiscard]] size_t get_cell_neuron_id() const noexcept {
         return cell.get_neuron_id();
+    }
+
+    void set_cell_neuron_id(size_t neuron_id) noexcept {
+        cell.set_neuron_id(neuron_id);
     }
 
     /**
@@ -534,6 +553,4 @@ public:
 
         return result;
     }
-
-    void print_calculations(SignalType needed, double sigma);
 };
