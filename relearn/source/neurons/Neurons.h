@@ -472,8 +472,7 @@ private:
     void make_creation_request_for(
      SignalType needed, 
      MapSynapseCreationRequests &request,  
-     std::stack<OctreeNode*> &nodes_with_ax,
-     std::vector<OctreeNode*> &nodes_with_dend);
+     std::stack<std::pair<OctreeNode*, std::array<const OctreeNode*, 8>>>& nodes_with_ax);
 
     [[nodiscard]] static MapSynapseCreationRequests create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 

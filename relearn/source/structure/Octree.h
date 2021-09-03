@@ -409,7 +409,7 @@ public:
 
     [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed);
 
-    const OctreeNode* do_random_experiment(const OctreeNode* source, const std::vector<double>& attractiveness) const;
+    unsigned int do_random_experiment(const OctreeNode* source, const std::vector<double>& attractiveness) const;
 
     void empty_remote_nodes_cache();
 
@@ -503,7 +503,8 @@ private:
     void construct_global_tree_part();
 
 public:
-    std::vector<double> Octree::calc_attractiveness_to_connect_FMM(const OctreeNode* source, const SignalType dendrite_type_needed) const;
+    std::vector<double> calc_attractiveness_to_connect_FMM(const OctreeNode* source, const std::array<const OctreeNode*, 8>& interaction_list,
+        const SignalType dendrite_type_needed) const;
 
     // Root of the tree
     OctreeNode* root{ nullptr };

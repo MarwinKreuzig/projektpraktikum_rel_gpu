@@ -469,16 +469,40 @@ double Octree::calc_attractiveness_to_connect(
     return ret_val;
 }
 
-std::vector<double> Octree::calc_attractiveness_to_connect_FMM(const OctreeNode* source, const SignalType dendrite_type_needed) const {
+std::vector<double> Octree::calc_attractiveness_to_connect_FMM(const OctreeNode* source, const std::array<const OctreeNode*, 8>& interaction_list,
+    const SignalType dendrite_type_needed) const {
+    const auto& count_non_zero_elements = [](const std::array<const OctreeNode*, 8>& arr) {
+        auto non_zero_counter = 0;
+        for (auto i = 0; i < 8; i++) {
+            if (arr[i] != nullptr) {
+                non_zero_counter++;
+            }
+        }
+        return non_zero_counter;
+    };
+
+    const auto& extract_element = [](const std::array<const OctreeNode*, 8>& arr, unsigned int index) -> const OctreeNode* {
+        auto non_zero_counter = 0;
+        for (auto i = 0; i < 8; i++) {
+            if (arr[i] != nullptr) {
+                if (index == non_zero_counter) {
+                    return arr[i];
+                }
+                non_zero_counter++;
+            }
+        }
+        return nullptr;
+    };
+    
     const auto source_number_axons = source->get_cell().get_number_axons_for(dendrite_type_needed);
-    const auto target_list_length = source->get_interactionlist_length();
+    const auto target_list_length = count_non_zero_elements(interaction_list);
 
     std::vector<double> result(target_list_length, 0.0);
 
     if (source_number_axons > Constants::max_neurons_in_source) {
         // There are enough axons in the source box
         for (auto i = 0; i < target_list_length; i++) {
-            const auto* current_target = source->get_from_interactionlist(i);
+            const auto* current_target = extract_element(interaction_list, i);
             result[i] = Functions::calc_hermite(source, current_target, default_sigma, dendrite_type_needed);
         }
 
@@ -487,7 +511,7 @@ std::vector<double> Octree::calc_attractiveness_to_connect_FMM(const OctreeNode*
 
     // There are not enough axons in the source box
     for (auto i = 0; i < target_list_length; i++) {
-        const auto* current_target = source->get_from_interactionlist(i);
+        const auto* current_target = extract_element(interaction_list, i);
         const auto target_number_dendrites = current_target->get_cell().get_number_dendrites_for(dendrite_type_needed);
 
         if (target_number_dendrites <= Constants::max_neurons_in_target) {
@@ -755,7 +779,7 @@ std::optional<RankNeuronId> Octree::find_target_neuron(size_t src_neuron_id, con
     return rank_neuron_id;
 }
 
-const OctreeNode* Octree::do_random_experiment(const OctreeNode* source, const std::vector<double>& attractiveness) const {
+unsigned int Octree::do_random_experiment(const OctreeNode* source, const std::vector<double>& attractiveness) const {
     const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Octree, 0.0, std::nextafter(1.0, Constants::eps));
     const auto vec_len = attractiveness.size();
     std::vector<double> intervals(vec_len + 1);
@@ -771,12 +795,12 @@ const OctreeNode* Octree::do_random_experiment(const OctreeNode* source, const s
         intervals[i] = intervals[i - 1] + (attractiveness[i - 1] / sum);
     }
 
-    auto i = 0;
+    unsigned int i = 0;
     while (random_number > intervals[i + 1] && i <= vec_len) {
         i++;
     }
 
-    return source->get_from_interactionlist(i);
+    return i;
 }
 
 void Octree::empty_remote_nodes_cache() {

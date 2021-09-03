@@ -53,20 +53,6 @@ TEST(TestFastGauss, test_functions) {
     EXPECT_NEAR(Functions::kernel(e, f, sigma), 0.9898, 0.01);
 }
 
-TEST(TestFastGauss, test_interaction_list) {
-    OctreeNode test_node;
-    OctreeNode list_node;
-    const OctreeNode* temp;
-
-    list_node.set_cell_neuron_id(1235);
-
-    EXPECT_EQ(test_node.get_from_interactionlist(1), nullptr);
-    test_node.add_to_interactionlist(&list_node);
-    EXPECT_EQ(test_node.get_interactionlist_length(), 1);
-    temp = test_node.get_from_interactionlist(0);
-    EXPECT_EQ(temp->get_cell().get_neuron_id(), 1235);
-}
-
 TEST(TestFastGauss, test_multiIndex) {
     EXPECT_EQ(Multiindex::get_number_of_indices(), Constants::p3);
 
