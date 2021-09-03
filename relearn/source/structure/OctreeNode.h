@@ -17,6 +17,8 @@
 
 #include <array>
 #include <optional>
+#include <stack>
+#include <vector>
 #include <ostream>
 
 /**
@@ -52,6 +54,10 @@ public:
      * @brief Returns the MPI rank to which this object belongs
      * @return The MPI rank to which this object belongs
      */
+    std::array<double, Constants::p3> hermite_coefficients_ex{ -1.0 };
+    std::array<double, Constants::p3> hermite_coefficients_in{ -1.0 };
+
+public:
     [[nodiscard]] int get_rank() const noexcept {
         return rank;
     }
@@ -386,22 +392,25 @@ public:
      */
     void set_cell_neuron_pos_exc(const std::optional<Vec3d>& opt_position) noexcept {
         cell.set_excitatory_dendrite_position(opt_position);
+    void set_cell_number_axons(unsigned int num_ex, unsigned int num_in) noexcept {
+        cell.set_number_excitatory_axons(num_ex);
+        cell.set_number_inhibitory_axons(num_in);
     }
 
-    /**
-     * @brief Sets the optional position for the inhibitory position in the associated cell
-     * @param opt_position The optional position, can be empty
-     */
-    void set_cell_neuron_pos_inh(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_inhibitory_dendrite_position(opt_position);
+    void set_cell_excitatory_dendrites_position(const std::optional<Vec3d>& opt_position) noexcept {
+        cell.set_excitatory_dendrites_position(opt_position);
     }
 
-    /**
-     * @brief Sets the neuron id in the associated cell
-     * @param neuron_id The new neuron id
-     */
-    void set_cell_neuron_id(size_t neuron_id) noexcept {
-        cell.set_neuron_id(neuron_id);
+    void set_cell_inhibitory_dendrites_position(const std::optional<Vec3d>& opt_position) noexcept {
+        cell.set_inhibitory_dendrites_position(opt_position);
+    }
+
+    void set_cell_excitatory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
+        cell.set_excitatory_axons_position(opt_position);
+    }
+
+    void set_cell_inhibitory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
+        cell.set_inhibitory_axons_position(opt_position);
     }
 
     /**
@@ -429,4 +438,102 @@ public:
     [[nodiscard]] std::tuple<Vec3d, Vec3d> get_total_number_objects() const noexcept {
         return cell.get_total_number_objects();
     }
+
+    void set_hermite_coef_ex(unsigned int x, double d) {
+        hermite_coefficients_ex[x] = d;
+    }
+
+    void set_hermite_coef_in(unsigned int x, double d) {
+        hermite_coefficients_in[x] = d;
+    }
+
+    void set_hermite_coef_for(unsigned int x, double d, SignalType needed) {
+        if (needed == SignalType::EXCITATORY) {
+            set_hermite_coef_ex(x, d);
+        } else {
+            set_hermite_coef_in(x, d);
+        }
+    }
+
+    double get_hermite_coef_ex(unsigned int x) const {
+        return hermite_coefficients_ex[x];
+    }
+
+    double get_hermite_coef_in(unsigned int x) const {
+        return hermite_coefficients_in[x];
+    }
+
+    double get_hermite_coef_for(unsigned int x, SignalType needed) const {
+        if (needed == SignalType::EXCITATORY) {
+            return get_hermite_coef_ex(x);
+        } else {
+            return get_hermite_coef_in(x);
+        }
+    }
+
+    std::vector<Vec3d> get_all_dendrite_positions_for(SignalType needed) const {
+        std::vector<Vec3d> result{};
+
+        std::stack<const OctreeNode*> stack{};
+        stack.push(this);
+
+        while (!stack.empty()) {
+            const OctreeNode* current_node = stack.top();
+            stack.pop();
+
+            if (!current_node->is_parent()) {
+                const auto& cell = current_node->get_cell();
+                const auto num_of_ports = cell.get_number_dendrites_for(needed);
+                if (num_of_ports > 0) {
+                    const auto& opt_position = cell.get_neuron_position();
+                    for (auto i = 0; i < num_of_ports; i++) {
+                        result.emplace_back(opt_position.value());
+                    }
+                }
+            } else {
+                for (auto i = 0; i < 8; i++) {
+                    const OctreeNode* children_node = current_node->get_child(i);
+                    if (children_node != nullptr && children_node->get_cell().get_number_dendrites_for(needed) > 0) {
+                        stack.push(children_node);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    std::vector<Vec3d> get_all_axon_positions_for(SignalType needed) const {
+        std::vector<Vec3d> result{};
+
+        std::stack<const OctreeNode*> stack{};
+        stack.push(this);
+
+        while (!stack.empty()) {
+            const OctreeNode* current_node = stack.top();
+            stack.pop();
+
+            if (!current_node->is_parent()) {
+                const auto& cell = current_node->get_cell();
+                const auto num_of_ports = cell.get_number_axons_for(needed);
+                if (num_of_ports > 0) {
+                    const auto& opt_position = cell.get_neuron_position();
+                    for (auto i = 0; i < num_of_ports; i++) {
+                        result.emplace_back(opt_position.value());
+                    }
+                }
+            } else {
+                for (auto i = 0; i < 8; i++) {
+                    const OctreeNode* children_node = current_node->get_child(i);
+                    if (children_node != nullptr && children_node->get_cell().get_number_axons_for(needed) > 0) {
+                        stack.push(children_node);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    void print_calculations(SignalType needed, double sigma);
 };

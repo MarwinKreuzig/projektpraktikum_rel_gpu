@@ -26,6 +26,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <stack>
 #include <tuple>
 #include <vector>
 
@@ -33,6 +34,7 @@ class NetworkGraph;
 class NeuronMonitor;
 class Octree;
 class Partition;
+class OctreeNode;
 
 /**
  * @brief This class gathers all information for the neurons and provides the primary interface for the simulation
@@ -681,6 +683,19 @@ public:
      */
     void debug_check_counts();
 
+    void force_growing(){
+        for(int i =0; i<num_neurons; i++){
+            axons.get()->update_cnt(i,1.1);
+            SignalType s_temp = axons.get()->get_signal_type(i);
+            if (s_temp == SignalType::EXCITATORY)
+            {
+                dendrites_exc.get()->update_cnt(i,1.1);
+            }else{
+                dendrites_inh.get()->update_cnt(i,1.1);
+            }          
+        }
+    }
+
 private:
     void update_calcium();
 
@@ -732,6 +747,11 @@ private:
     void create_synapses_update_octree();
 
     [[nodiscard]] MapSynapseCreationRequests create_synapses_find_targets();
+
+    void make_creation_request_for(
+     SignalType needed, 
+     MapSynapseCreationRequests &request,  
+     std::stack<std::pair<OctreeNode*, std::array<const OctreeNode*, 8>>>& nodes_with_ax);
 
     [[nodiscard]] static MapSynapseCreationRequests create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 

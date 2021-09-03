@@ -349,3 +349,6 @@ ASALocalRun/
 # clangd vscode extension
 .cache/
 /relearn/input/disable.txt
+/output/
+/relearn/googletest/
+/build

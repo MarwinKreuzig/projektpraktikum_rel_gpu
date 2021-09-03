@@ -155,6 +155,8 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
 
             const RankNeuronId target_id{ my_rank, neuron_id };
             const RankNeuronId source_id{ source_rank, source_neuron_id };
+            deleted_axons_connections[source_id] += weight;
+        }
 
             network_graph->add_edge_weight(target_id, source_id, -weight);
 
@@ -174,7 +176,7 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
     const auto number_deleted_edges_within = number_deleted_out_inh_edges_within + number_deleted_out_exc_edges_within;
     const auto weight_deleted_edges_within = weight_deleted_out_inh_edges_within + weight_deleted_out_exc_edges_within;
 
-    axons->update_after_deletion(deleted_axon_connections, neuron_ids);
+    axons->update_after_deletion(deleted_axons_connections, neuron_ids);
     dendrites_exc->update_after_deletion(deleted_dend_ex_connections, neuron_ids);
     dendrites_inh->update_after_deletion(deleted_dend_in_connections, neuron_ids);
 
@@ -765,6 +767,159 @@ void Neurons::create_synapses_update_octree() {
     // Makes sure that all ranks finished their local access epoch
     // before a remote origin opens an access epoch
     MPIWrapper::barrier();
+}
+
+void Neurons::make_creation_request_for(
+    SignalType needed,
+    MapSynapseCreationRequests& request,
+    std::stack<std::pair<OctreeNode*, std::array<const OctreeNode*, 8>>>& nodes_with_axons) {
+
+    const auto& count_non_zero_elements = [](const std::array<const OctreeNode*, 8>& arr) {
+        auto non_zero_counter = 0;
+        for (auto i = 0; i < 8; i++) {
+            if (arr[i] != nullptr) {
+                non_zero_counter++;
+            }
+        }
+        return non_zero_counter;
+    };
+
+    const auto& extract_element = [](const std::array<const OctreeNode*, 8>& arr, unsigned int index) -> const OctreeNode* {
+        auto non_zero_counter = 0;
+        for (auto i = 0; i < 8; i++) {
+            if (arr[i] != nullptr) {
+                if (index == non_zero_counter) {
+                    return arr[i];
+                }
+                non_zero_counter++;
+            }
+        }
+        return nullptr;
+    };
+
+    while (!nodes_with_axons.empty()) {
+        std::pair<OctreeNode*, std::array<const OctreeNode*, 8>> pair = nodes_with_axons.top();
+        nodes_with_axons.pop();
+
+        OctreeNode* source_node = std::get<0>(pair);
+        std::array<const OctreeNode*, 8> interaction_list = std::get<1>(pair);
+
+        const auto& cell = source_node->get_cell();
+
+        /*
+        - check if node is single neuron
+        - set interaction list of current node when level 3
+        - calculate atractiveness
+        - do random experiment
+        - set interaction list
+        - push source_children to stack
+        */
+
+        //node is a leaf
+        if (!source_node->is_parent()) {
+            const auto source_id = cell.get_neuron_id();
+
+            const OctreeNode* target_node;
+
+            const auto target_num = count_non_zero_elements(interaction_list);
+            if (target_num == 1) {
+                target_node = extract_element(interaction_list, 0);
+            } else {
+                const auto& connection_probabilities = global_tree->calc_attractiveness_to_connect_FMM(source_node, interaction_list, needed);
+                const auto chosen_index = global_tree->do_random_experiment(source_node, connection_probabilities);
+                target_node = extract_element(interaction_list, chosen_index);
+            }
+
+            if (target_node->is_parent()) {
+                std::array<const OctreeNode*, 8> new_interaction_list{ nullptr };
+                auto counter = 0;
+
+                for (auto* target_child : target_node->get_children()) {
+                    if (target_child == nullptr) {
+                        continue;
+                    }
+
+                    // Since source_node is a leaf node, we have to make sure we do not connect to ourselves
+                    if (target_child != source_node && target_child->get_cell().get_number_dendrites_for(needed) > 0) {
+                        new_interaction_list[counter] = target_child;
+                        counter++;
+                    }
+                }
+
+                nodes_with_axons.emplace(source_node, std::move(new_interaction_list));
+            } else {
+                const auto target_id = target_node->get_cell().get_neuron_id();
+                if (target_id != source_id) {
+                    // No autapse
+                    request[0].append(source_id, target_id, needed);
+                }
+            }
+            continue;
+        }
+
+        if (count_non_zero_elements(interaction_list) == 0) {
+            continue;
+        }
+
+        const auto& connection_probabilities = global_tree->calc_attractiveness_to_connect_FMM(source_node, interaction_list, needed);
+        const auto chosen_index = global_tree->do_random_experiment(source_node, connection_probabilities);
+        const auto* target_node = extract_element(interaction_list, chosen_index);
+
+        const auto& source_children = source_node->get_children();
+
+        if (target_node->is_parent()) {
+            for (auto* source_child_node : source_children) {
+                if (source_child_node == nullptr) {
+                    continue;
+                }
+
+                if (source_child_node->get_cell().get_number_axons_for(needed) == 0) {
+                    continue;
+                }
+
+                std::array<const OctreeNode*, 8> new_interaction_list{ nullptr };
+                auto counter = 0;
+
+                for (auto* target_child_node : target_node->get_children()) {
+                    if (target_child_node == nullptr) {
+                        continue;
+                    }
+
+                    if (target_child_node->get_cell().get_number_dendrites_for(needed) == 0) {
+                        continue;
+                    }
+
+                    new_interaction_list[counter] = target_child_node;
+                    counter++ ;
+                }
+
+                nodes_with_axons.emplace(source_child_node, std::move(new_interaction_list));
+            }
+            
+            continue;
+        }
+
+        // source_node is a parent, but target_node is a leaf node
+
+        std::vector<double> attractiveness{};
+        std::vector<double> index{};
+
+        for (auto i = 0; i < Constants::number_oct; i++) {
+            OctreeNode* source_child_node = source_children[i];
+            if (source_child_node == nullptr) {
+                continue;
+            }
+
+            if (source_child_node->get_cell().get_number_axons_for(needed) == 0) {
+                continue;
+            }
+
+            std::array<const OctreeNode*, 8> new_interaction_list{ nullptr };
+            new_interaction_list[0] = target_node;
+
+            nodes_with_axons.emplace(source_child_node, std::move(new_interaction_list));
+        }
+    }
 }
 
 MapSynapseCreationRequests Neurons::create_synapses_find_targets() {

@@ -24,6 +24,8 @@
 #include "../util/Random.h"
 #include "../util/RelearnException.h"
 #include "../util/Timers.h"
+#include "../util/Multiindex.h"
+#include "../util/DeriativesAndFunctions.h"
 
 #include <functional>
 #include <map>

@@ -763,10 +763,10 @@ TEST_F(OctreeTest, testOctreeNodeSetterCell) {
         const Vec3d pos_in{ urd_x(mt), urd_y(mt), urd_z(mt) };
 
         node.set_cell_neuron_id(id);
-        node.set_cell_num_dendrites(dends_ex, dends_in);
+        node.set_cell_number_dendrites(dends_ex, dends_in);
         node.set_cell_size(min, max);
-        node.set_cell_neuron_pos_exc(pos_ex);
-        node.set_cell_neuron_pos_inh(pos_in);
+        node.set_cell_excitatory_dendrites_position(pos_ex);
+        node.set_cell_inhibitory_dendrites_position(pos_in);
 
         ASSERT_TRUE(node.get_cell().get_neuron_id() == id);
         ASSERT_TRUE(cell.get_neuron_id() == id);
@@ -792,8 +792,8 @@ TEST_F(OctreeTest, testOctreeNodeSetterCell) {
         ASSERT_TRUE(node.get_cell().get_inhibitory_dendrite_position().value() == pos_in);
         ASSERT_TRUE(cell.get_inhibitory_dendrite_position().value() == pos_in);
 
-        node.set_cell_neuron_pos_exc({});
-        node.set_cell_neuron_pos_inh({});
+        node.set_cell_excitatory_dendrites_position({});
+        node.set_cell_inhibitory_dendrites_position({});
 
         ASSERT_FALSE(node.get_cell().get_excitatory_dendrite_position().has_value());
         ASSERT_FALSE(cell.get_excitatory_dendrite_position().has_value());

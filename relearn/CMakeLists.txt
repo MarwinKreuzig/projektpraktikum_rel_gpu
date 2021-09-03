@@ -140,3 +140,4 @@ target_link_libraries(runTests PRIVATE project_options)
 target_link_libraries(runTests PRIVATE gtest_main)
 
 add_test(NAME SerialTests COMMAND runTests)
+
