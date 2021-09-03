@@ -189,7 +189,7 @@ TEST_F(OctreeTest, testCellSize) {
 
         cell.set_size(min_1, max_1);
 
-        const auto& res_1 = cell.get_total_number_objects();
+        const auto& res_1 = cell.get_size();
 
         ASSERT_EQ(min_1, std::get<0>(res_1));
         ASSERT_EQ(max_1, std::get<1>(res_1));
@@ -200,7 +200,7 @@ TEST_F(OctreeTest, testCellSize) {
 
         cell.set_size(min_2, max_2);
 
-        const auto& res_2 = cell.get_total_number_objects();
+        const auto& res_2 = cell.get_size();
 
         ASSERT_EQ(min_2, std::get<0>(res_2));
         ASSERT_EQ(max_2, std::get<1>(res_2));
@@ -777,8 +777,8 @@ TEST_F(OctreeTest, testOctreeNodeSetterCell) {
         ASSERT_TRUE(node.get_cell().get_number_inhibitory_dendrites() == dends_in);
         ASSERT_TRUE(cell.get_number_inhibitory_dendrites() == dends_in);
 
-        ASSERT_TRUE(node.get_cell().get_total_number_objects() == box_sizes);
-        ASSERT_TRUE(cell.get_total_number_objects() == box_sizes);
+        ASSERT_TRUE(node.get_cell().get_size() == box_sizes);
+        ASSERT_TRUE(cell.get_size() == box_sizes);
 
         ASSERT_TRUE(node.get_cell().get_excitatory_dendrite_position().has_value());
         ASSERT_TRUE(cell.get_excitatory_dendrite_position().has_value());
@@ -1187,7 +1187,7 @@ TEST_F(OctreeTest, testOctreeStructure) {
                         ASSERT_TRUE(level + 1 == child->get_level());
                         octree_nodes.emplace(child, child->get_level());
 
-                        const auto& subcell_size = child->get_cell().get_total_number_objects();
+                        const auto& subcell_size = child->get_cell().get_size();
                         const auto& expected_subcell_size = current_node->get_cell().get_size_for_octant(i);
 
                         ASSERT_EQ(expected_subcell_size, subcell_size);
@@ -1207,7 +1207,7 @@ TEST_F(OctreeTest, testOctreeStructure) {
 
                 const auto& position = opt_position.value();
 
-                const auto& cell_size = cell.get_total_number_objects();
+                const auto& cell_size = cell.get_size();
                 const auto& cell_min = std::get<0>(cell_size);
                 const auto& cell_max = std::get<1>(cell_size);
 
@@ -1324,7 +1324,7 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
             auto* local_tree = octree.get_local_root(i);
 
             Vec3d cell_min, cell_max;
-            std::tie(cell_min, cell_max) = local_tree->get_cell().get_total_number_objects();
+            std::tie(cell_min, cell_max) = local_tree->get_cell().get_size();
 
             std::uniform_real_distribution urd_x(cell_min.get_x(), cell_max.get_x());
             std::uniform_real_distribution urd_y(cell_min.get_y(), cell_max.get_y());
@@ -1368,7 +1368,7 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
             ASSERT_EQ(local_tree->get_rank(), local_tree_saved->get_rank());
 
             ASSERT_EQ(local_tree->get_cell().get_neuron_id(), local_tree_saved->get_cell().get_neuron_id());
-            ASSERT_EQ(local_tree->get_cell().get_total_number_objects(), local_tree_saved->get_cell().get_total_number_objects());
+            ASSERT_EQ(local_tree->get_cell().get_size(), local_tree_saved->get_cell().get_size());
             ASSERT_EQ(local_tree->get_cell().get_dendrite_position(), local_tree_saved->get_cell().get_dendrite_position());
         }
 
@@ -1384,7 +1384,7 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
             ASSERT_EQ(local_tree->get_rank(), local_node->get_rank());
 
             ASSERT_EQ(local_tree->get_cell().get_neuron_id(), local_node->get_cell().get_neuron_id());
-            ASSERT_EQ(local_tree->get_cell().get_total_number_objects(), local_node->get_cell().get_total_number_objects());
+            ASSERT_EQ(local_tree->get_cell().get_size(), local_node->get_cell().get_size());
             ASSERT_EQ(local_tree->get_cell().get_dendrite_position(), local_node->get_cell().get_dendrite_position());
         }
 

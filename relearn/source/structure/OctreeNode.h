@@ -50,12 +50,6 @@ public:
         MemoryHolder<AdditionalCellAttributes>::make_available(node);
     }
 
-    /**
-     * @brief Returns the MPI rank to which this object belongs
-     * @return The MPI rank to which this object belongs
-     */
-    std::array<double, Constants::p3> hermite_coefficients_ex{ -1.0 };
-    std::array<double, Constants::p3> hermite_coefficients_in{ -1.0 };
 
 public:
     [[nodiscard]] int get_rank() const noexcept {
@@ -143,7 +137,7 @@ public:
         Vec3d cell_xyz_min;
         Vec3d cell_xyz_max;
 
-        std::tie(cell_xyz_min, cell_xyz_max) = cell.get_total_number_objects();
+        std::tie(cell_xyz_min, cell_xyz_max) = cell.get_size();
 
         RelearnException::check(cell_xyz_min.get_x() <= position.get_x() && position.get_x() <= cell_xyz_max.get_x(), "In OctreeNode::insert, x was not in range");
         RelearnException::check(cell_xyz_min.get_y() <= position.get_y() && position.get_y() <= cell_xyz_max.get_y(), "In OctreeNode::insert, y was not in range");
@@ -399,7 +393,7 @@ public:
      * @param opt_position The optional position, can be empty
      */
     void set_cell_neuron_pos_inh(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_excitatory_dendrite_position(opt_position);
+        cell.set_inhibitory_dendrites_position(opt_position);
     }
 
     void set_cell_number_axons(unsigned int num_ex, unsigned int num_in) noexcept {
@@ -454,40 +448,32 @@ public:
      * @brief Returns the size of the associated cell
      * @return The size of the cell
      */
-    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_total_number_objects() const noexcept {
-        return cell.get_total_number_objects();
+    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size() const noexcept {
+        return cell.get_size();
     }
 
     void set_hermite_coef_ex(unsigned int x, double d) {
-        hermite_coefficients_ex[x] = d;
+        cell.set_hermite_coef_ex(x, d);
     }
 
     void set_hermite_coef_in(unsigned int x, double d) {
-        hermite_coefficients_in[x] = d;
+        cell.set_hermite_coef_in(x, d);
     }
 
     void set_hermite_coef_for(unsigned int x, double d, SignalType needed) {
-        if (needed == SignalType::EXCITATORY) {
-            set_hermite_coef_ex(x, d);
-        } else {
-            set_hermite_coef_in(x, d);
-        }
+        cell.set_hermite_coef_for(x, d, needed);
     }
 
     double get_hermite_coef_ex(unsigned int x) const {
-        return hermite_coefficients_ex[x];
+        return cell.get_hermite_coef_ex(x);
     }
 
     double get_hermite_coef_in(unsigned int x) const {
-        return hermite_coefficients_in[x];
+        return cell.get_hermite_coef_in(x);
     }
 
     double get_hermite_coef_for(unsigned int x, SignalType needed) const {
-        if (needed == SignalType::EXCITATORY) {
-            return get_hermite_coef_ex(x);
-        } else {
-            return get_hermite_coef_in(x);
-        }
+        return cell.get_hermite_coef_for(x, needed);
     }
 
     std::vector<Vec3d> get_all_dendrite_positions_for(SignalType needed) const {

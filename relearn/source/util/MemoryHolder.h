@@ -111,7 +111,7 @@ public:
      * @brief Returns the number of objects that fit into the memory portion
      * @return The number of objects that fit into the memory portion
      */
-    [[nodiscard]] static size_t get_total_number_objects() noexcept {
+    [[nodiscard]] static size_t get_size() noexcept {
         return total;
     }
 

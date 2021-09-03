@@ -11,9 +11,11 @@
 #pragma once
 
 #include "Types.h"
+#include "../Config.h"
 #include "../neurons/SignalType.h"
 #include "../util/Vec3.h"
 
+#include <array>
 #include <optional>
 
 /**
@@ -183,10 +185,45 @@ public:
         return inhibitory_dendrites.position;
     }
 
+        void set_hermite_coef_ex(unsigned int x, double d) {
+        hermite_coefficients_ex[x] = d;
+    }
+
+    void set_hermite_coef_in(unsigned int x, double d) {
+        hermite_coefficients_in[x] = d;
+    }
+
+    void set_hermite_coef_for(unsigned int x, double d, SignalType needed) {
+        if (needed == SignalType::EXCITATORY) {
+            set_hermite_coef_ex(x, d);
+        } else {
+            set_hermite_coef_in(x, d);
+        }
+    }
+
+    double get_hermite_coef_ex(unsigned int x) const {
+        return hermite_coefficients_ex[x];
+    }
+
+    double get_hermite_coef_in(unsigned int x) const {
+        return hermite_coefficients_in[x];
+    }
+
+    double get_hermite_coef_for(unsigned int x, SignalType needed) const {
+        if (needed == SignalType::EXCITATORY) {
+            return get_hermite_coef_ex(x);
+        } else {
+            return get_hermite_coef_in(x);
+        }
+    }
+
 private:
     VirtualPlasticityElement excitatory_dendrites{};
     VirtualPlasticityElement inhibitory_dendrites{};
 
     VirtualPlasticityElement excitatory_axons{};
     VirtualPlasticityElement inhibitory_axons{};
+        
+    std::array<double, Constants::p3> hermite_coefficients_ex{ -1.0 };
+    std::array<double, Constants::p3> hermite_coefficients_in{ -1.0 };
 };

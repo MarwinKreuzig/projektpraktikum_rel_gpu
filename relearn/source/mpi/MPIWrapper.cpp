@@ -91,12 +91,6 @@ size_t MPIWrapper::init_window(size_t size_requested, size_t octree_node_size) {
 
     // Set window's displacement unit
     mpi_window = new MPI_Win;
-    std::cout << "I'm here" << std::endl;
-    std::cout << "base_ptr is: " << base_ptr << std::endl;
-    std::cout << "max_size is: " << max_size << std::endl;
-    std::cout << "MPI_INFO_NULL is: " << MPI_INFO_NULL << std::endl;
-    std::cout << "MPI_COMM_WORLD is: " << MPI_COMM_WORLD << std::endl;
-    std::cout << "mpi_window is: " << ((MPI_Win*)mpi_window) << std::endl;
 
     // NOLINTNEXTLINE
     const int error_code_2 = MPI_Win_create(base_ptr, max_size, 1, MPI_INFO_NULL, MPI_COMM_WORLD, (MPI_Win*)mpi_window);

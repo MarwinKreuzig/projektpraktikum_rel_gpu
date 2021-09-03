@@ -64,7 +64,7 @@ public:
      * @brief Returns the size of the cell as tuple of (1) min and (2) max
      * @return The size of the cell as tuple of (1) min and (2) max
      */
-    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_total_number_objects() const noexcept {
+    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size() const noexcept {
         return std::make_tuple(xyz_min, xyz_max);
     }
 
@@ -166,6 +166,7 @@ public:
 
         return std::make_tuple(octant_xyz_min, octant_xyz_max);
     }
+
     void set_inhibitory_dendrites_position(const std::optional<Vec3d>& opt_position) {
         additional_cell_attributes.set_inhibitory_dendrites_position(opt_position);
     }
@@ -210,6 +211,7 @@ public:
     void set_inhibitory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
         additional_cell_attributes.set_inhibitory_axons_position(opt_position);
     }
+
     /**
      * @brief Returns the dendrite position, for which either both positions must be empty or equal
      * @exception Throws a RelearnException if one position is valid and the other one invalid or if both are valid with different values
@@ -271,7 +273,7 @@ public:
         Vec3d xyz_min{};
         Vec3d xyz_max{};
 
-        std::tie(xyz_min, xyz_max) = cell.get_total_number_objects();
+        std::tie(xyz_min, xyz_max) = cell.get_size();
 
         output_stream << "  == Cell (" << reinterpret_cast<size_t>(&cell) << " ==\n";
         output_stream << "\tMin: " << xyz_min << "\n\tMax: " << xyz_max << '\n';
@@ -409,5 +411,29 @@ public:
      */
     [[nodiscard]] unsigned int get_number_inhibitory_dendrites() const noexcept {
         return additional_cell_attributes.get_number_inhibitory_dendrites();
+    }
+
+    void set_hermite_coef_ex(unsigned int x, double d) {
+        additional_cell_attributes.set_hermite_coef_ex(x, d);
+    }
+
+    void set_hermite_coef_in(unsigned int x, double d) {
+        additional_cell_attributes.set_hermite_coef_in(x, d);
+    }
+
+    void set_hermite_coef_for(unsigned int x, double d, SignalType needed) {
+        additional_cell_attributes.set_hermite_coef_for(x, d, needed);
+    }
+
+    double get_hermite_coef_ex(unsigned int x) const {
+        return additional_cell_attributes.get_hermite_coef_ex(x);
+    }
+
+    double get_hermite_coef_in(unsigned int x) const {
+        return additional_cell_attributes.get_hermite_coef_in(x);
+    }
+
+    double get_hermite_coef_for(unsigned int x, SignalType needed) const {
+        return additional_cell_attributes.get_hermite_coef_for(x, needed);
     }
 };
