@@ -1,7 +1,9 @@
 #include "GraphTest.hpp"
 
-#include <filesystem>
 #include <gtest/gtest.h>
+
+#include <algorithm>
+#include <filesystem>
 
 #define protected public
 #define private public
@@ -26,7 +28,15 @@ static void doTest(TestExample& example, bool use_cuda_if_available) {
     EXPECT_NEAR(glob_efficiency, expected_glob_efficiency, 10e-5);
 }
 
-static const std::string path_to_cases = "../test/cases";
+// Needed to get the correct path to the test cases, no matter the working directory
+// Allows calling the tests from any dir (ctest)
+[[nodiscard]] static std::string get_this_file_directory() {
+    // Future: replace __FILE__ with std::source_location::current()'s file_name()
+    std::filesystem::path p{ __FILE__ };
+    return p.parent_path().string() + "/";
+}
+
+static const std::string path_to_cases = get_this_file_directory() + "../test/cases";
 
 static Graph load_graph(const std::filesystem::path& path) {
     std::vector<std::filesystem::path> position_paths{};
