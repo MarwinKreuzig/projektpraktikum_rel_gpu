@@ -62,9 +62,8 @@ static void doTest(TestExample& example, bool use_cuda_if_available) {
 static void test(TestExample example) {
     doTest(example, false);
 
-    // If CUDA is available do CPU test,
-    // otherwise test already done on CPU
-    if constexpr (CUDA_FOUND) {
+    // If CUDA is available do GPU test
+    if (enable_cuda) {
         doTest(example, true);
     }
 }

@@ -70,9 +70,8 @@ static Graph load_graph(const std::filesystem::path& path) {
 static void test(TestExample example) {
     doTest(example, false);
 
-    // If CUDA is available do CPU test,
-    // otherwise test already done on CPU
-    if constexpr (CUDA_FOUND) {
+    // If CUDA is available do GPU test
+    if (enable_cuda) {
         doTest(example, true);
     }
 }

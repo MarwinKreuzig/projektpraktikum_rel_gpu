@@ -63,7 +63,7 @@ if (UNIX)
 endif ()
 
 target_compile_definitions(relearn-full_graph_static PUBLIC -DCUDA_FOUND=${CUDA_FOUND})
-target_include_directories(relearn-full_graph_static SYSTEM PRIVATE $<${CUDA_FOUND}:${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}>)
+target_include_directories(relearn-full_graph_static SYSTEM PUBLIC $<${CUDA_FOUND}:${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}>)
 
 include(FetchContent)
 FetchContent_Declare(

@@ -165,9 +165,9 @@ bool gpu_enough_memory(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr) 
     size_t total{};
     cudaMemGetInfo(&free, &total);
 
-    //spdlog::info("Johnson CUDA requesting {} B ({} MB), {} B ({} MB) is available",
-    //    required, required / 1000000,
-    //    free, free / 1000000);
+    // spdlog::info("Johnson CUDA requesting {} B ({} MB), {} B ({} MB) is available",
+    //     required, required / 1000000,
+    //     free, free / 1000000);
 
     return free >= required;
 }
@@ -180,9 +180,9 @@ __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_
     const int E = gr.E;
 
     if (!gpu_enough_memory(gr)) {
-        int device{};
-        cudaGetDevice(&device);
-        //spdlog::error("Johnson CUDA requested to much memory for this device ({})", device);
+        // int device{};
+        // cudaGetDevice(&device);
+        // spdlog::error("Johnson CUDA requested to much memory for this device ({})", device);
         return;
     }
 
@@ -219,7 +219,7 @@ __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_
     std::vector<float> h(bf_graph.V);
 
     if (bool r = bellman_ford_cuda(bf_graph, h); !r) {
-        //spdlog::error("Johnson CUDA: Negative cycles deteced! Terminating program");
+        // spdlog::error("Johnson CUDA: Negative cycles deteced! Terminating program");
         std::terminate();
     }
 
@@ -240,7 +240,7 @@ __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_
     copy(output, device_output, cudaMemcpyDeviceToHost);
 
     if (const cudaError_t errCode = cudaPeekAtLastError(); errCode != cudaSuccess) {
-        //spdlog::error("CUDA error: coda={}, {}", errCode, cudaGetErrorString(errCode));
+        // spdlog::error("CUDA error: coda={}, {}", errCode, cudaGetErrorString(errCode));
     }
 
     // Remember to reweight edges back -- for every s reweight every v
