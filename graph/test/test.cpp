@@ -1,3 +1,5 @@
+#include "GraphTest.hpp"
+
 #include <gtest/gtest.h>
 
 #include <filesystem>
@@ -11,8 +13,6 @@
 
 #include "../source/graph.h"
 #include "../source/apsp/apsp.h"
-
-const auto max = std::numeric_limits<double>::max();
 
 struct TestExample {
     Graph graph;
