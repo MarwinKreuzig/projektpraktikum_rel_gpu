@@ -1,6 +1,8 @@
 #include "apsp.h"
 
+#include <algorithm>
 #include <cassert>
+#include <ranges>
 #include <vector>
 
 #include "johnson.h"
@@ -100,22 +102,22 @@ std::vector<double> johnson_cuda(typename Graph::FullGraph& full_graph, const si
     // Need to sort edges by their starting vertex id
     // Need to zip weights and edges to keep the correct weight for each edge
     std::vector<std::pair<int, edge_t>> zipped{};
-    std::transform(
-        weights.begin(),
-        weights.end(),
-        cuda_edges.begin(),
+    std::ranges::transform(
+        weights,
+        cuda_edges,
         std::back_inserter(zipped),
         [](int& weight, edge_t& edge) -> std::pair<int, edge_t> {
             return { weight, edge };
         });
 
-    std::sort(
-        zipped.begin(),
-        zipped.end(),
+    std::ranges::sort(
+        zipped,
         [](const auto& a, const auto& b) -> bool {
-            if (!(std::get<1>(a).u < std::get<1>(b).u)) {
-                if (std::get<1>(a).u == std::get<1>(b).u) {
-                    return std::get<1>(a).v < std::get<1>(b).v;
+            const auto& [weight_a, edge_a] = a;
+            const auto& [weight_b, edge_b] = b;
+            if (!(edge_a.u < edge_b.u)) {
+                if (edge_a.u == edge_b.u) {
+                    return edge_a.v < edge_b.v;
                 }
                 return false;
             }
@@ -123,8 +125,8 @@ std::vector<double> johnson_cuda(typename Graph::FullGraph& full_graph, const si
         });
 
     // Unzip
-    std::transform(zipped.begin(), zipped.end(), weights.begin(), [](const auto& a) { return std::get<0>(a); });
-    std::transform(zipped.begin(), zipped.end(), cuda_edges.begin(), [](const auto& a) { return std::get<1>(a); });
+    std::ranges::transform(zipped, weights.begin(), [](const auto& a) { return std::get<0>(a); });
+    std::ranges::transform(zipped, cuda_edges.begin(), [](const auto& a) { return std::get<1>(a); });
 
     graph_cuda_t<std::vector<int>, std::vector<edge_t>> graph{
         static_cast<int>(num_neurons),
