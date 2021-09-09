@@ -17,12 +17,13 @@ constexpr auto max = std::numeric_limits<double>::max();
  * @return false else
  */
 [[nodiscard]] inline bool can_run_cuda() {
-    if constexpr (CUDA_FOUND) {
-        int device{};
-        const auto err = cudaGetDevice(&device);
-        return err == cudaSuccess;
-    }
+#if CUDA_FOUND
+    int device{};
+    const auto err = cudaGetDevice(&device);
+    return err == cudaSuccess;
+#else
     return false;
+#endif
 }
 
 const auto enable_cuda = can_run_cuda();
