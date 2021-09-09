@@ -176,7 +176,7 @@ public:
         const auto number_excitatory_dendrites = cell.get_number_excitatory_dendrites();
         const auto number_inhibitory_dendrites = cell.get_number_inhibitory_dendrites();
 
-        const auto& position_excitatory_dendrites_opt = cell.get_excitatory_dendrite_position();
+        const auto& position_excitatory_dendrites_opt = cell.get_excitatory_dendrites_position();
         const auto& position_inhibitory_dendrites_opt = cell.get_inhibitory_dendrites_position();
 
         const auto& position_excitatory_dendrites = position_excitatory_dendrites_opt.value();
@@ -308,7 +308,7 @@ public:
      * @return The position of the associated dendrite, can be empty
      */
     [[nodiscard]] std::optional<Vec3d> get_dendrites_position_for(SignalType dendrite_type) const noexcept {
-        additional_cell_attributes.get_inhibitory_dendrites_position(dendrite_type);
+        return additional_cell_attributes.get_dendrites_position_for(dendrite_type);
     }
 
     /**
@@ -326,18 +326,18 @@ public:
      * @return The position of the dendrite, can be empty
      */
     [[nodiscard]] std::optional<Vec3d> get_dendrites_position() const {
-        const auto& excitatory_dendrite_position_opt = get_excitatory_dendrites_position();
-        const auto& inhibitory_dendrite_position_opt = get_inhibitory_dendrites_position();
+        const auto& excitatory_dendrites_position_opt = get_excitatory_dendrites_position();
+        const auto& inhibitory_dendrites_position_opt = get_inhibitory_dendrites_position();
 
-        const bool ex_valid = excitatory_dendrite_position_opt.has_value();
-        const bool in_valid = inhibitory_dendrite_position_opt.has_value();
+        const bool ex_valid = excitatory_dendrites_position_opt.has_value();
+        const bool in_valid = inhibitory_dendrites_position_opt.has_value();
         if (!ex_valid && !in_valid) {
             return {};
         }
 
         if (ex_valid && in_valid) {
-            const auto& pos_ex = excitatory_dendrite_position_opt.value();
-            const auto& pos_in = inhibitory_dendrite_position_opt.value();
+            const auto& pos_ex = excitatory_dendrites_position_opt.value();
+            const auto& pos_in = inhibitory_dendrites_position_opt.value();
 
             const auto diff = pos_ex - pos_in;
             const bool exc_position_equals_inh_position = diff.get_x() == 0.0 && diff.get_y() == 0.0 && diff.get_z() == 0.0;

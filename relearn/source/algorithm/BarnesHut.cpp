@@ -140,7 +140,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags,
         return 0.0;
     }
 
-    const auto& target_xyz = node_with_dendrite.get_cell().get_dendrite_position_for(dendrite_type_needed);
+    const auto& target_xyz = node_with_dendrite.get_cell().get_dendrites_position_for(dendrite_type_needed);
     RelearnException::check(target_xyz.has_value(), "target_xyz is bad");
 
     const auto num_dendrites = node_with_dendrite.get_cell().get_number_dendrites_for(dendrite_type_needed);
@@ -213,7 +213,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags,
     }
 
     // Check distance between neuron with axon and neuron with dendrite
-    const auto& target_xyz = cell.get_dendrite_position_for(dendrite_type_needed);
+    const auto& target_xyz = cell.get_dendrites_position_for(dendrite_type_needed);
 
     // NOTE: This assertion fails when considering inner nodes that don't have dendrites.
     RelearnException::check(target_xyz.has_value(), "target_xyz was bad");

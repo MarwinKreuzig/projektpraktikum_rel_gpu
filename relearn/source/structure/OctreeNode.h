@@ -188,7 +188,7 @@ public:
 		         */
 
                 // Determine octant for neuron
-                const auto& cell_own_position = parent_node->get_cell().get_dendrite_position();
+                const auto& cell_own_position = parent_node->get_cell().get_dendrites_position();
                 RelearnException::check(cell_own_position.has_value(), "While building the octree, the cell doesn't have a position");
 
                 idx = parent_node->get_cell().get_octant_for_position(cell_own_position.value());
@@ -367,7 +367,7 @@ public:
      * @param opt_position The optional position, can be empty
      */
     void set_cell_neuron_position(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_dendrite_position(opt_position);
+        cell.set_dendrites_position(opt_position);
     }
 
     /**
@@ -385,7 +385,7 @@ public:
      * @param opt_position The optional position, can be empty
      */
     void set_cell_neuron_pos_exc(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_excitatory_dendrite_position(opt_position);
+        cell.set_excitatory_dendrites_position(opt_position);
     }
 
     /**
@@ -476,7 +476,7 @@ public:
         return cell.get_hermite_coefficient_for(index, needed);
     }
 
-    std::vector<Vec3d> get_all_dendrite_positions_for(SignalType needed) const {
+    std::vector<Vec3d> get_all_dendrites_positions_for(SignalType needed) const {
         std::vector<Vec3d> result{};
 
         std::stack<const OctreeNode*> stack{};

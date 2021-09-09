@@ -212,7 +212,7 @@ int main(int argc, char** argv) {
     }
 
     LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "#step: creations deletions netto");
-    LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateCSV, false, "#step:,creations,deletions,netto");
+    LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateCSV, false, "#step;creations;deletions;netto");
     LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false, "#step: creations deletions netto");
 
     Timers::start(TimerRegion::INITIALIZATION);
