@@ -452,28 +452,28 @@ public:
         return cell.get_size();
     }
 
-    void set_hermite_coef_ex(unsigned int x, double d) {
-        cell.set_hermite_coef_ex(x, d);
+    void set_cell_excitatory_hermite_coefficient(unsigned int x, double d) {
+        cell.set_excitatory_hermite_coefficient(x, d);
     }
 
-    void set_hermite_coef_in(unsigned int x, double d) {
-        cell.set_hermite_coef_in(x, d);
+    void set_cell_inhibitory_hermite_coefficient(unsigned int x, double d) {
+        cell.set_inhibitory_hermite_coefficient(x, d);
     }
 
-    void set_hermite_coef_for(unsigned int x, double d, SignalType needed) {
-        cell.set_hermite_coef_for(x, d, needed);
+    void set_cell_hermite_coefficient_for(unsigned int x, double d, SignalType needed) {
+        cell.set_hermite_coefficient_for(x, d, needed);
     }
 
-    double get_hermite_coef_ex(unsigned int x) const {
-        return cell.get_hermite_coef_ex(x);
+    double get_cell_excitatory_hermite_coefficient(unsigned int x) const {
+        return cell.get_excitatory_hermite_coefficient(x);
     }
 
-    double get_hermite_coef_in(unsigned int x) const {
-        return cell.get_hermite_coef_in(x);
+    double get_cell_inhibitory_hermite_coefficient(unsigned int x) const {
+        return cell.get_inhibitory_hermite_coefficient(x);
     }
 
-    double get_hermite_coef_for(unsigned int x, SignalType needed) const {
-        return cell.get_hermite_coef_for(x, needed);
+    double get_cell_hermite_coefficient_for(unsigned int x, SignalType needed) const {
+        return cell.get_hermite_coefficient_for(x, needed);
     }
 
     std::vector<Vec3d> get_all_dendrite_positions_for(SignalType needed) const {

@@ -413,27 +413,27 @@ public:
         return additional_cell_attributes.get_number_inhibitory_dendrites();
     }
 
-    void set_hermite_coef_ex(unsigned int x, double d) {
-        additional_cell_attributes.set_hermite_coef_ex(x, d);
+    void set_excitatory_hermite_coefficient(unsigned int x, double d) {
+        additional_cell_attributes.set_excitatory_hermite_coefficient(x, d);
     }
 
-    void set_hermite_coef_in(unsigned int x, double d) {
-        additional_cell_attributes.set_hermite_coef_in(x, d);
+    void set_inhibitory_hermite_coefficient(unsigned int x, double d) {
+        additional_cell_attributes.set_inhibitory_hermite_coefficient(x, d);
     }
 
-    void set_hermite_coef_for(unsigned int x, double d, SignalType needed) {
-        additional_cell_attributes.set_hermite_coef_for(x, d, needed);
+    void set_hermite_coefficient_for(unsigned int x, double d, SignalType needed) {
+        additional_cell_attributes.set_hermite_coefficient_for(x, d, needed);
     }
 
-    double get_hermite_coef_ex(unsigned int x) const {
-        return additional_cell_attributes.get_hermite_coef_ex(x);
+    double get_excitatory_hermite_coefficient(unsigned int x) const {
+        return additional_cell_attributes.get_excitatory_hermite_coefficient(x);
     }
 
-    double get_hermite_coef_in(unsigned int x) const {
-        return additional_cell_attributes.get_hermite_coef_in(x);
+    double get_inhibitory_hermite_coefficient(unsigned int x) const {
+        return additional_cell_attributes.get_inhibitory_hermite_coefficient(x);
     }
 
-    double get_hermite_coef_for(unsigned int x, SignalType needed) const {
-        return additional_cell_attributes.get_hermite_coef_for(x, needed);
+    double get_hermite_coefficient_for(unsigned int x, SignalType needed) const {
+        return additional_cell_attributes.get_hermite_coefficient_for(x, needed);
     }
 };

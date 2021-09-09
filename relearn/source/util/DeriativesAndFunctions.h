@@ -267,7 +267,7 @@ inline double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, c
         const auto& temp_vec = (child_pos.value() - source_center) / sigma;
 
         for (auto a = 0; a < number_coefficients; a++) {
-            temp += source->get_hermite_coef_for(a, needed) * h_multiindex(indices[a], temp_vec);
+            temp += source->get_cell_hermite_coefficient_for(a, needed) * h_multiindex(indices[a], temp_vec);
         }
 
         result += number_dendrites * temp;

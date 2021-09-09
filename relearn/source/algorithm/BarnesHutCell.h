@@ -56,6 +56,19 @@ public:
     }
 
     /**
+     * @brief Returns the number of free dendrites in this cell for the requested signal type
+     * @param dendrite_type The requested signal type
+     * @return The number of free dendrites
+     */
+    [[nodiscard]] unsigned int get_number_dendrites_for(SignalType dendrite_type) const noexcept {
+        if (dendrite_type == SignalType::EXCITATORY) {
+            return excitatory_dendrites.num_free_elements;
+        }
+
+        return inhibitory_dendrites.num_free_elements;
+    }
+
+    /**
      * @brief Sets the position of the inhibitory position, which can be empty
      * @param opt_position The new position of the inhibitory dendrite
      */
@@ -64,7 +77,7 @@ public:
     }
 
     /**
-     * @brief Returns the position of the inhibitory dendrite
+     * @brief Returns the position of the inhibitory dendrite, which can be empty
      * @return The position of the inhibitory dendrite
      */
     [[nodiscard]] std::optional<Vec3d> get_inhibitory_dendrites_position() const noexcept {
@@ -80,22 +93,19 @@ public:
     }
 
     /**
-     * @brief Returns the position of the excitatory dendrite
+     * @brief Returns the position of the excitatory dendrite, which can be empty
      * @return The position of the excitatory dendrite
      */
     [[nodiscard]] std::optional<Vec3d> get_excitatory_dendrites_position() const noexcept {
         return excitatory_dendrites.position;
     }
 
-    [[nodiscard]] unsigned int get_number_dendrites_for(SignalType axon_type) const noexcept {
-        if (axon_type == SignalType::EXCITATORY) {
-            return excitatory_dendrites.num_free_elements;
-        }
-
-        return inhibitory_dendrites.num_free_elements;
-    }
-
-    [[nodiscard]] std::optional<Vec3d> get_dendrites_position_for(SignalType dendrite_type) const {
+    /**
+     * @brief Returns the position of the dendrite for the requested signal type, which can be empty
+     * @param dendrite_type The requested signal type
+     * @return The position of the dendrite
+     */
+    [[nodiscard]] std::optional<Vec3d> get_dendrites_position_for(SignalType dendrite_type) const noexcept {
         if (dendrite_type == SignalType::EXCITATORY) {
             return excitatory_dendrites.position;
         }
