@@ -11,10 +11,11 @@ namespace apsp {
  *
  * @param full_graph the input graph
  * @param num_neurons number of neurons
+ * @param has_negative_edges if the graph has negative edges and needs to be checked by Bellman-Ford
  * @param use_cuda_if_available select the cuda implementation if the cuda implementation is available (compiled)
  * @return std::vector<double> distances
  */
-std::vector<double> johnson(typename Graph::FullGraph& full_graph, size_t num_neurons, bool use_cuda_if_available = true);
+std::vector<double> johnson(typename Graph::FullGraph& full_graph, size_t num_neurons, bool has_negative_edges = false, bool use_cuda_if_available = true);
 
 /**
  * @brief Johnson algorithm to get the avarage pair shortest paths; CUDA implementation
@@ -23,18 +24,20 @@ std::vector<double> johnson(typename Graph::FullGraph& full_graph, size_t num_ne
  *
  * @param full_graph the input graph
  * @param num_neurons number of neurons
+ * @param has_negative_edges if the graph has negative edges and needs to be checked by Bellman-Ford
  * @return std::vector<double> distances
  */
-std::vector<double> johnson_cuda(typename Graph::FullGraph& full_graph, size_t num_neurons);
+std::vector<double> johnson_cuda(typename Graph::FullGraph& full_graph, size_t num_neurons, bool has_negative_edges = false);
 
 /**
  * @brief Johnson algorithm to get the avarage pair shortest paths; OpenMP implementation (serial if no OpenMP available)
  *
  * @param full_graph the input graph
  * @param num_neurons number of neurons
+ * @param has_negative_edges if the graph has negative edges and needs to be checked by Bellman-Ford
  * @return std::vector<double> distances
  */
-std::vector<double> johnson_parallel(typename Graph::FullGraph& full_graph, size_t num_neurons);
+std::vector<double> johnson_parallel(typename Graph::FullGraph& full_graph, size_t num_neurons, bool has_negative_edges = false);
 }
 
 #endif

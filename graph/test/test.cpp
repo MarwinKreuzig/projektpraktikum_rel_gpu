@@ -23,7 +23,7 @@ struct TestExample {
 
 static void doTest(TestExample& example, bool use_cuda_if_available) {
     auto& [graph, expected_sum, expected_avg, expected_distances] = example;
-    const auto distances = apsp::johnson(graph.full_graph, graph.get_num_vertices(), use_cuda_if_available);
+    const auto distances = apsp::johnson(graph.full_graph, graph.get_num_vertices(), false, use_cuda_if_available);
 
     EXPECT_EQ(distances, expected_distances);
 

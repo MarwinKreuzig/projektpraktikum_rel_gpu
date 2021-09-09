@@ -62,43 +62,32 @@ static bool bellman_ford(const graph_t& gr, std::vector<double>& dist) {
     return no_neg_cycle;
 }
 
-void johnson_parallel_impl(graph_t& gr, std::vector<double>& output) {
+void johnson_parallel_impl(graph_t& gr, std::vector<double>& output, const bool has_negative_edges) {
 
     const int V = gr.V;
 
-    // Make new graph for Bellman-Ford
-    // First, a new node q is added to the graph, connected by zero-weight edges
-    // to each of the other nodes.
-    graph_t bf_graph{ V + 1, gr.E + V };
-    std::copy(gr.edge_array.begin(), gr.edge_array.end(), bf_graph.edge_array.begin());
-    std::copy(gr.weights.begin(), gr.weights.end(), bf_graph.weights.begin());
-    std::fill(bf_graph.weights.begin() + gr.E, bf_graph.weights.begin() + gr.E + V, 0);
+    if (has_negative_edges) {
+        // Make new graph for Bellman-Ford
+        // First, a new node q is added to the graph, connected by zero-weight edges
+        // to each of the other nodes.
+        graph_t bf_graph{ V + 1, gr.E + V };
+        std::copy(gr.edge_array.begin(), gr.edge_array.end(), bf_graph.edge_array.begin());
+        std::copy(gr.weights.begin(), gr.weights.end(), bf_graph.weights.begin());
+        std::fill(bf_graph.weights.begin() + gr.E, bf_graph.weights.begin() + gr.E + V, 0);
 
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int e = 0; e < V; e++) {
-        bf_graph.edge_array[e + gr.E] = APSP_Edge(V, e);
-    }
+        for (int e = 0; e < V; e++) {
+            bf_graph.edge_array[e + gr.E] = APSP_Edge(V, e);
+        }
 
-    // Second, the Bellman–Ford algorithm is used, starting from the new vertex q,
-    // to find for each vertex v the minimum weight h(v) of a path from q to v. If
-    // this step detects a negative cycle, the algorithm is terminated.
-    // TODO Can run parallel version?
-    std::vector<double> h(bf_graph.V);
-    if (const bool r = bellman_ford(bf_graph, h); !r) {
-        spdlog::error("Johnson: Negative cycles deteced! Terminating program");
-        std::terminate();
-    }
-    // Next the edges of the original graph are reweighted using the values computed
-    // by the Bellman–Ford algorithm: an edge from u to v, having length
-    // w(u,v), is given the new length w(u,v) + h(u) − h(v).
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for (int e = 0; e < gr.E; e++) {
-        const auto [u, v] = gr.edge_array[e];
-        gr.weights[e] = gr.weights[e] + h[u] - h[v];
+        // Check if there is a negative edge in the graph
+        std::vector<double> h(bf_graph.V);
+        if (const bool r = bellman_ford(bf_graph, h); !r) {
+            spdlog::error("Johnson: Negative cycles deteced! Terminating program");
+            std::terminate();
+        }
     }
 
     APSP_Graph G(gr.edge_array.begin(), gr.edge_array.end(), gr.weights.begin(), V);
@@ -110,7 +99,7 @@ void johnson_parallel_impl(graph_t& gr, std::vector<double>& output) {
         std::vector<double> d(V);
         boost::dijkstra_shortest_paths(G, s, boost::distance_map(d.data()));
         for (int v = 0; v < V; v++) {
-            output[static_cast<size_t>(s) * static_cast<size_t>(V) + static_cast<size_t>(v)] = d[v] + h[v] - h[s];
+            output[static_cast<size_t>(s) * static_cast<size_t>(V) + static_cast<size_t>(v)] = d[v];
         }
     }
 }

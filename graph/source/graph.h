@@ -101,6 +101,7 @@ private:
     Position offset{};
 
     bool use_cuda_{ true };
+    bool has_negative_edges_{ false };
 };
 
 // Base class template

@@ -74,6 +74,7 @@ void Graph::add_edges_from_file(const std::string& file_path) {
         }
 
         const int weight_in_boost = std::abs(weight);
+        has_negative_edges_ = has_negative_edges_ || (weight_in_boost < 0);
 
         const FullVertex dst_vtx = id_to_vtx_full[dst_id];
         const FullVertex src_vtx = id_to_vtx_full[src_id];
@@ -220,7 +221,7 @@ double Graph::calculate_average_euclidean_distance() {
 std::tuple<double, double> Graph::calculate_all_pairs_shortest_paths() {
     const auto num_neurons = get_num_vertices();
 
-    const auto distances = apsp::johnson(full_graph, num_neurons, use_cuda_);
+    const auto distances = apsp::johnson(full_graph, num_neurons, has_negative_edges_, use_cuda_);
 
     size_t number_values = 0;
 
@@ -309,6 +310,7 @@ void Graph::add_edge(size_t src_id, size_t dst_id, int weight) {
     }
 
     const int weight_in_boost = std::abs(weight);
+    has_negative_edges_ = has_negative_edges_ || (weight_in_boost < 0);
 
     const FullVertex dst_vtx_full = id_to_vtx_full[dst_id];
     const FullVertex src_vtx_full = id_to_vtx_full[src_id];

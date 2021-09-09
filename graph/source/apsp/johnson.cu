@@ -172,7 +172,7 @@ bool gpu_enough_memory(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr) 
     return free >= required;
 }
 
-__host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<double>& output) {
+__host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<double>& output, const bool has_negative_edges) {
     // cudaThreadSetCacheConfig(cudaFuncCachePreferL1);
 
     // Const Graph Initialization
@@ -205,35 +205,27 @@ __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_
     cudaMemcpyToSymbol(graph_const, &graph_params, sizeof(decltype(graph_params)));
     // End initialization
 
-    auto bf_graph = graph_cuda_t<std::vector<int>, std::vector<edge_t>>{
-        V + 1,
-        E,
-        std::vector<int>(),
-        std::vector<int>(E),
-        std::vector<edge_t>(E)
-    };
+    if (has_negative_edges) {
+        auto bf_graph = graph_cuda_t<std::vector<int>, std::vector<edge_t>>{
+            V + 1,
+            E,
+            std::vector<int>(),
+            std::vector<int>(E),
+            std::vector<edge_t>(E)
+        };
 
-    std::memcpy(bf_graph.edge_array.data(), gr.edge_array.data(), gr.E * sizeof(edge_t));
-    std::memcpy(bf_graph.weights.data(), gr.weights.data(), gr.E * sizeof(int));
+        std::memcpy(bf_graph.edge_array.data(), gr.edge_array.data(), gr.E * sizeof(edge_t));
+        std::memcpy(bf_graph.weights.data(), gr.weights.data(), gr.E * sizeof(int));
 
-    std::vector<float> h(bf_graph.V);
-
-    if (bool r = bellman_ford_cuda(bf_graph, h); !r) {
-        // spdlog::error("Johnson CUDA: Negative cycles deteced! Terminating program");
-        std::terminate();
-    }
-
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-    for (int e = 0; e < E; e++) {
-        const auto [u, v] = gr.edge_array[e];
-        gr.weights[e] += h[u] - h[v];
+        std::vector<float> h(bf_graph.V);
+        // Check if there is a negative edge in the graph
+        if (bool r = bellman_ford_cuda(bf_graph, h); !r) {
+            // spdlog::error("Johnson CUDA: Negative cycles deteced! Terminating program");
+            std::terminate();
+        }
     }
 
     const int blocks = (V + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-
-    copy(device_weights, gr.weights, cudaMemcpyHostToDevice);
 
     dijkstra_kernel<<<blocks, THREADS_PER_BLOCK>>>(View{ device_output }, View{ device_visited });
 
@@ -242,9 +234,6 @@ __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_
     if (const cudaError_t errCode = cudaPeekAtLastError(); errCode != cudaSuccess) {
         // spdlog::error("CUDA error: coda={}, {}", errCode, cudaGetErrorString(errCode));
     }
-
-    // Remember to reweight edges back -- for every s reweight every v
-    // Could do in a kernel launch or with OMP
 }
 
 } // namespace apsp

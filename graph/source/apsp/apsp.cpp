@@ -6,17 +6,17 @@
 
 namespace apsp {
 
-std::vector<double> johnson(typename Graph::FullGraph& full_graph, const size_t num_neurons, bool use_cuda_if_available) {
+std::vector<double> johnson(typename Graph::FullGraph& full_graph, const size_t num_neurons, const bool has_negative_edges, const bool use_cuda_if_available) {
 
     if constexpr (CUDA_FOUND) {
         if (use_cuda_if_available) {
-            return johnson_cuda(full_graph, num_neurons);
+            return johnson_cuda(full_graph, num_neurons, has_negative_edges);
         }
     }
-    return johnson_parallel(full_graph, num_neurons);
+    return johnson_parallel(full_graph, num_neurons, has_negative_edges);
 }
 
-std::vector<double> johnson_cuda(typename Graph::FullGraph& full_graph, size_t num_neurons) {
+std::vector<double> johnson_cuda(typename Graph::FullGraph& full_graph, const size_t num_neurons, const bool has_negative_edges) {
     if constexpr (!CUDA_FOUND) {
         assert(false && "Tried calling CUDA function johnson_cuda, but CUDA was not found.");
         return {};
@@ -93,11 +93,11 @@ std::vector<double> johnson_cuda(typename Graph::FullGraph& full_graph, size_t n
 
     std::vector<double> distances(num_neurons * num_neurons);
 
-    johnson_cuda_impl(graph, distances);
+    johnson_cuda_impl(graph, distances, has_negative_edges);
     return distances;
 }
 
-std::vector<double> johnson_parallel(typename Graph::FullGraph& full_graph, size_t num_neurons) {
+std::vector<double> johnson_parallel(typename Graph::FullGraph& full_graph, const size_t num_neurons, const bool has_negative_edges) {
     const auto [edge_begin_it, edge_end_it] = boost::edges(full_graph);
 
     const auto E = boost::num_edges(full_graph);
@@ -123,7 +123,7 @@ std::vector<double> johnson_parallel(typename Graph::FullGraph& full_graph, size
 
     std::vector<double> distances(num_neurons * num_neurons);
 
-    johnson_parallel_impl(graph, distances);
+    johnson_parallel_impl(graph, distances, has_negative_edges);
     return distances;
 }
 
