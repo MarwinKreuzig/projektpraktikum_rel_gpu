@@ -406,8 +406,8 @@ public:
      */
     void insert(const Vec3d& position, size_t neuron_id, int rank) {
         RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "In Octree::insert, x was not in range");
-        RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Octree::insert, x was not in range");
-        RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "In Octree::insert, x was not in range");
+        RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Octree::insert, y was not in range");
+        RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "In Octree::insert, z was not in range");
 
         RelearnException::check(rank >= 0, "In Octree::insert, rank was smaller than 0");
         RelearnException::check(neuron_id < Constants::uninitialized, "In Octree::insert, neuron_id was too large");
