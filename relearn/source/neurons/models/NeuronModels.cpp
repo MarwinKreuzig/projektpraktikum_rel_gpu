@@ -113,7 +113,7 @@ void NeuronModel::update_electrical_activity_calculate_background(const std::vec
             I_syn[neuron_id] = input;
         }
     } else {
-        std::fill(I_syn.begin(), I_syn.end(), 0.0);
+        std::fill(I_syn.begin(), I_syn.end(), base_background_activity);
     }
 
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
