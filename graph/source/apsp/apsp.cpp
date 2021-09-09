@@ -94,28 +94,16 @@ static std::vector<int> johnson_cuda_generate_starts_vector(const auto& cuda_edg
     return starts;
 }
 
-std::vector<double> johnson_cuda(typename Graph::FullGraph& full_graph, const size_t num_neurons, const bool has_negative_edges) {
-    if constexpr (!CUDA_FOUND) {
-        assert(false && "Tried calling CUDA function johnson_cuda, but CUDA was not found.");
-        return {};
-    }
-
-    const auto [edge_begin_it, edge_end_it] = boost::edges(full_graph);
-
-    const auto E = boost::num_edges(full_graph);
-
-    const auto weight_map = boost::get(&Graph::EdgeProperties::weight, full_graph);
-
-    std::vector<int> weights{};
-    std::transform(edge_begin_it, edge_end_it, std::back_inserter(weights), [&](const auto& edge) {
-        return weight_map(edge);
-    });
-
-    std::vector<edge_t> cuda_edges(E);
-    std::transform(edge_begin_it, edge_end_it, cuda_edges.begin(), [](const auto& edge) {
-        return edge_t{ static_cast<int>(edge.m_source), static_cast<int>(edge.m_target) };
-    });
-
+/**
+ * @brief Sorts the edges and weights such that the u (starts) in cuda_edges are in ascending order.
+ *
+ * The CUDA version of Johnson relies on the edges being sorted. We have to sort both edges and weights together
+ * to keep the correct weights for each edge at the same index as each edge.
+ *
+ * @param weights edge weights
+ * @param cuda_edges edges to sort
+ */
+static void johnson_cuda_sort_edges_and_weights(auto& weights, auto& cuda_edges) {
     // Need to sort edges by their starting vertex id
     // Need to zip weights and edges to keep the correct weight for each edge
     std::vector<std::pair<int, edge_t>> zipped{};
@@ -144,8 +132,24 @@ std::vector<double> johnson_cuda(typename Graph::FullGraph& full_graph, const si
     // Unzip
     std::ranges::transform(zipped, weights.begin(), [](const auto& a) { return std::get<0>(a); });
     std::ranges::transform(zipped, cuda_edges.begin(), [](const auto& a) { return std::get<1>(a); });
+}
+
+std::vector<double> johnson_cuda(typename Graph::FullGraph& full_graph, const size_t num_neurons, const bool has_negative_edges) {
+    if constexpr (!CUDA_FOUND) {
+        assert(false && "Tried calling CUDA function johnson_cuda, but CUDA was not found.");
+        return {};
+    }
+
+    const auto E = boost::num_edges(full_graph);
+
+    const auto weight_map = boost::get(&Graph::EdgeProperties::weight, full_graph);
+
+    const auto [edge_begin_it, edge_end_it] = boost::edges(full_graph);
+
     std::vector<int> weights = johnson_get_weights_vector(edge_begin_it, edge_end_it, weight_map);
     std::vector<edge_t> cuda_edges = johnson_get_edge_vector<edge_t>(edge_begin_it, edge_end_it, E);
+
+    johnson_cuda_sort_edges_and_weights(weights, cuda_edges);
 
     graph_cuda_t<std::vector<int>, std::vector<edge_t>> graph{
         static_cast<int>(num_neurons),
