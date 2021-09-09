@@ -19,6 +19,23 @@ std::vector<double> johnson(typename Graph::FullGraph& full_graph, const size_t 
     return johnson_parallel(full_graph, num_neurons, has_negative_edges);
 }
 
+static std::vector<int> johnson_get_weights_vector(auto edge_begin_it, const auto edge_end_it, const auto& weight_map) {
+    std::vector<int> weights{};
+    std::transform(edge_begin_it, edge_end_it, std::back_inserter(weights), [&](const auto& edge) {
+        return weight_map(edge);
+    });
+    return weights;
+}
+
+template <typename EdgeType>
+static std::vector<EdgeType> johnson_get_edge_vector(auto edge_begin_it, const auto edge_end_it, const auto E) {
+    std::vector<EdgeType> edges(E);
+    std::transform(edge_begin_it, edge_end_it, edges.begin(), [](const auto& edge) {
+        return EdgeType{ static_cast<int>(edge.m_source), static_cast<int>(edge.m_target) };
+    });
+    return edges;
+}
+
 /**
  * @brief Create the starts vector required for johnson_cuda
  *
@@ -127,6 +144,8 @@ std::vector<double> johnson_cuda(typename Graph::FullGraph& full_graph, const si
     // Unzip
     std::ranges::transform(zipped, weights.begin(), [](const auto& a) { return std::get<0>(a); });
     std::ranges::transform(zipped, cuda_edges.begin(), [](const auto& a) { return std::get<1>(a); });
+    std::vector<int> weights = johnson_get_weights_vector(edge_begin_it, edge_end_it, weight_map);
+    std::vector<edge_t> cuda_edges = johnson_get_edge_vector<edge_t>(edge_begin_it, edge_end_it, E);
 
     graph_cuda_t<std::vector<int>, std::vector<edge_t>> graph{
         static_cast<int>(num_neurons),
@@ -149,21 +168,11 @@ std::vector<double> johnson_parallel(typename Graph::FullGraph& full_graph, cons
 
     const auto weight_map = boost::get(&Graph::EdgeProperties::weight, full_graph);
 
-    std::vector<int> weights{};
-    std::transform(edge_begin_it, edge_end_it, std::back_inserter(weights), [&](const auto& edge) {
-        return weight_map(edge);
-    });
-
-    std::vector<APSP_Edge> edges(E);
-    std::transform(edge_begin_it, edge_end_it, edges.begin(), [](const auto& edge) {
-        return APSP_Edge{ static_cast<int>(edge.m_source), static_cast<int>(edge.m_target) };
-    });
-
     graph_t graph{
         static_cast<int>(num_neurons),
         static_cast<int>(E),
-        std::move(weights),
-        std::move(edges)
+        johnson_get_weights_vector(edge_begin_it, edge_end_it, weight_map),
+        johnson_get_edge_vector<APSP_Edge>(edge_begin_it, edge_end_it, E)
     };
 
     std::vector<double> distances(num_neurons * num_neurons);
