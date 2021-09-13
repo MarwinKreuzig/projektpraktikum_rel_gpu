@@ -2216,7 +2216,12 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisso
             for (unsigned int id = 0; id < desired_num_neurons; id++) {
                 ASSERT_NE(current_x[id], model_x[id]) << i << ' ' << j << ' ' << id;
 
-                ASSERT_EQ(0.0, model_I_syn[id])  << i << ' ' << j << ' ' << id;
+                if (j == 0) {
+                    ASSERT_EQ(0.0, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                } else {
+                    ASSERT_EQ(expected_base_background_activity, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                }
+
                 const auto current_refrac = model->get_secondary_variable(id);
                 if (model->get_fired(id)) {
                     ASSERT_EQ(current_refrac, expected_refrac)  << i << ' ' << j << ' ' << id;
@@ -2334,7 +2339,11 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhike
                     ASSERT_EQ(current_x[id], expected_c) << i << ' ' << j << ' ' << id;
                 }
 
-                ASSERT_EQ(0.0, model_I_syn[id]) << i << ' ' << j << ' ' << id;
+                if (j == 0) {
+                    ASSERT_EQ(0.0, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                } else {
+                    ASSERT_EQ(expected_base_background_activity, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                }
                 ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]) << i << ' ' << j << ' ' << id;
 
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -2411,7 +2420,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHu
         std::vector<char> disable_flags(desired_num_neurons, 1);
         std::vector<double> model_x = model->get_x();
         std::vector<double> model_secondary(desired_num_neurons);
-        std::vector<bool> model_fired = model->get_fired();
         std::vector<double> model_I_syn = model->get_I_syn();
 
         for (unsigned int id = 0; id < desired_num_neurons; id++) {
@@ -2422,21 +2430,23 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHu
             model->update_electrical_activity(empty_graph, disable_flags);
 
             const auto& current_x = model->get_x();
-            const auto& current_fired = model->get_fired();
             const auto& current_I_syn = model->get_I_syn();
 
             for (unsigned int id = 0; id < desired_num_neurons; id++) {
                 ASSERT_NE(current_x[id], model_x[id]);
-                ASSERT_EQ(current_fired[id], model_fired[id]);
 
-                ASSERT_EQ(0.0, model_I_syn[id]);
+                if (j == 0) {
+                    ASSERT_EQ(0.0, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                } else {
+                    ASSERT_EQ(expected_base_background_activity, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                }
+
                 ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
 
                 model_secondary[id] = model->get_secondary_variable(id);
             }
 
             model_x = current_x;
-            model_fired = current_fired;
             model_I_syn = current_I_syn;
         }
 
@@ -2451,7 +2461,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHu
 
             for (unsigned int id = 0; id < desired_num_neurons; id++) {
                 ASSERT_NE(current_x[id], model_x[id]);
-                ASSERT_EQ(current_fired[id], model_fired[id]);
 
                 ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
 
@@ -2459,7 +2468,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHu
             }
 
             model_x = current_x;
-            model_fired = current_fired;
             model_I_syn = current_I_syn;
         }
     }
@@ -2536,7 +2544,11 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) 
                     EXPECT_EQ(current_x[id], expected_E_L) << id << ' ' << j << ' ' << i;
                 }
 
-                ASSERT_EQ(0.0, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                if (j == 0) {
+                    ASSERT_EQ(0.0, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                } else {
+                    ASSERT_EQ(expected_base_background_activity, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                }
 
                 model_secondary[id] = model->get_secondary_variable(id);
             }
