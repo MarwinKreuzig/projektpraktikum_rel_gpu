@@ -724,7 +724,8 @@ size_t Neurons::create_synapses() {
 	*/
 
     create_synapses_update_octree();
-    MapSynapseCreationRequests synapse_creation_requests_outgoing = create_synapses_find_targets();
+    //MapSynapseCreationRequests synapse_creation_requests_outgoing = create_synapses_find_targets();
+    MapSynapseCreationRequests synapse_creation_requests_outgoing = algorithm->find_target_neurons(num_neurons, disable_flags, extra_info, axons);
 
     Timers::start(TimerRegion::CREATE_SYNAPSES);
 
@@ -765,71 +766,6 @@ void Neurons::create_synapses_update_octree() {
     // Makes sure that all ranks finished their local access epoch
     // before a remote origin opens an access epoch
     MPIWrapper::barrier();
-}
-
-MapSynapseCreationRequests Neurons::create_synapses_find_targets() {
-    MapSynapseCreationRequests synapse_creation_requests_outgoing;
-    Timers::start(TimerRegion::FIND_TARGET_NEURONS);
-
-    const std::vector<double>& axons_cnts = axons->get_total_counts();
-    const std::vector<unsigned int>& axons_connected_cnts = axons->get_connected_count();
-    const std::vector<SignalType>& axons_signal_types = axons->get_signal_types();
-
-    // For my neurons
-    for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == 0) {
-            continue;
-        }
-
-        // Number of vacant axons
-        const auto num_vacant_axons = static_cast<unsigned int>(axons_cnts[neuron_id]) - axons_connected_cnts[neuron_id];
-        RelearnException::check(num_vacant_axons >= 0, "num vacant axons is negative");
-
-        if (num_vacant_axons == 0) {
-            continue;
-        }
-
-        // DendriteType::EXCITATORY axon
-        SignalType dendrite_type_needed = SignalType::EXCITATORY;
-        if (SignalType::INHIBITORY == axons_signal_types[neuron_id]) {
-            // DendriteType::INHIBITORY axon
-            dendrite_type_needed = SignalType::INHIBITORY;
-        }
-
-        // Position of current neuron
-        const Vec3d axon_xyz_pos = extra_info->get_position(neuron_id);
-
-        // For all vacant axons of neuron "neuron_id"
-        for (size_t j = 0; j < num_vacant_axons; j++) {
-            /**
-			* Find target neuron for connecting and
-			* connect if target neuron has still dendrite available.
-			*
-			* The target neuron might not have any dendrites left
-			* as other axons might already have connected to them.
-			* Right now, those collisions are handled in a first-come-first-served fashion.
-			*/
-            std::optional<RankNeuronId> rank_neuron_id = algorithm->find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
-
-            if (rank_neuron_id.has_value()) {
-                RankNeuronId val = rank_neuron_id.value();
-                /*
-				* Append request for synapse creation to rank "target_rank"
-				* Note that "target_rank" could also be my own rank.
-				*/
-                synapse_creation_requests_outgoing[val.get_rank()].append(neuron_id, val.get_neuron_id(), dendrite_type_needed);
-            }
-        } /* all vacant axons of a neuron */
-    } /* my neurons */
-
-    Timers::stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
-
-    // Make cache empty for next connectivity update
-    Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
-    NodeCache::empty<BarnesHutCell>();
-    Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
-
-    return synapse_creation_requests_outgoing;
 }
 
 MapSynapseCreationRequests Neurons::create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing) {

@@ -734,8 +734,6 @@ private:
 
     void create_synapses_update_octree();
 
-    [[nodiscard]] MapSynapseCreationRequests create_synapses_find_targets();
-
     //void make_creation_request_for(
     // SignalType needed, 
     // MapSynapseCreationRequests &request,  

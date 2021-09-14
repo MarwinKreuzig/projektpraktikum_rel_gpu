@@ -11,11 +11,15 @@
 #pragma once
 
 #include "../neurons/helper/RankNeuronId.h"
+#include "../neurons/helper/SynapseCreationRequests.h"
 #include "../neurons/SignalType.h"
 #include "../util/Vec3.h"
 
 #include <optional>
 #include <vector>
+
+class NeuronsExtraInfo;
+class SynapticElements;
 
 /**
  * This is a virtual interface for all algorithms that can be used to find target neurons with vacant dendrites.
@@ -25,19 +29,20 @@
  * using AdditionalCellAttributes = Cell;
  */
 class Algorithm {
-public:
+public:    
     /**
-     * @brief Returns an optional RankNeuronId that the algorithm determined for the given source neuron. No actual request is made.
-     *      Might perform MPI communication
-     * @param src_neuron_id The neuron's id that wants to connect. Is used to disallow autapses (connections to itself)
-     * @param axon_pos_xyz The neuron's position that wants to connect. Is used in probability computations
-     * @param dendrite_type_needed The signal type that is searched.
+     * @brief Returns a collection of proposed synapse creations for each neuron with vacant axons
+     * @param num_neurons The number of local neurons
+     * @param disable_flags Flags that indicate if a local neuron is disabled. If so (== 0), the neuron is ignored
+     * @param extra_infos Used to access the positions of the local neurons
+     * @param axons The axon model that is used
      * @exception Can throw a RelearnException
-     * @return If the algorithm didn't find a matching neuron, the return value is empty.
-     *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
+     * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
-    virtual [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed) = 0;
-    
+    virtual [[nodiscard]] MapSynapseCreationRequests find_target_neurons(size_t num_neurons, const std::vector<char>& disable_flags,
+        const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons)
+        = 0;
+
     /**
      * @brief Updates all leaf nodes in the octree by the algorithm
      * @param disable_flags Flags that indicate if a neuron id disabled (0) or enabled (otherwise)

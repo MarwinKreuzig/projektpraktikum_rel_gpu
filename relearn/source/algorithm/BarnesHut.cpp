@@ -11,10 +11,13 @@
 #include "BarnesHut.h"
 
 #include "../io/LogFiles.h"
+#include "../neurons/NeuronsExtraInfo.h"
+#include "../neurons/models/SynapticElements.h"
 #include "../structure/NodeCache.h"
 #include "../structure/Octree.h"
 #include "../structure/OctreeNode.h"
 #include "../util/Random.h"
+#include "../util/Timers.h"
 
 #include <algorithm>
 #include <array>
@@ -83,6 +86,72 @@
 
     RankNeuronId rank_neuron_id{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
     return rank_neuron_id;
+}
+
+MapSynapseCreationRequests BarnesHut::find_target_neurons(size_t num_neurons, const std::vector<char>& disable_flags,
+    const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) {
+    MapSynapseCreationRequests synapse_creation_requests_outgoing;
+    Timers::start(TimerRegion::FIND_TARGET_NEURONS);
+
+    const std::vector<double>& axons_cnts = axons->get_total_counts();
+    const std::vector<unsigned int>& axons_connected_cnts = axons->get_connected_count();
+    const std::vector<SignalType>& axons_signal_types = axons->get_signal_types();
+
+    // For my neurons
+    for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+        if (disable_flags[neuron_id] == 0) {
+            continue;
+        }
+
+        // Number of vacant axons
+        const auto num_vacant_axons = static_cast<unsigned int>(axons_cnts[neuron_id]) - axons_connected_cnts[neuron_id];
+        RelearnException::check(num_vacant_axons >= 0, "num vacant axons is negative");
+
+        if (num_vacant_axons == 0) {
+            continue;
+        }
+
+        // DendriteType::EXCITATORY axon
+        SignalType dendrite_type_needed = SignalType::EXCITATORY;
+        if (SignalType::INHIBITORY == axons_signal_types[neuron_id]) {
+            // DendriteType::INHIBITORY axon
+            dendrite_type_needed = SignalType::INHIBITORY;
+        }
+
+        // Position of current neuron
+        const Vec3d axon_xyz_pos = extra_infos->get_position(neuron_id);
+
+        // For all vacant axons of neuron "neuron_id"
+        for (size_t j = 0; j < num_vacant_axons; j++) {
+            /**
+			* Find target neuron for connecting and
+			* connect if target neuron has still dendrite available.
+			*
+			* The target neuron might not have any dendrites left
+			* as other axons might already have connected to them.
+			* Right now, those collisions are handled in a first-come-first-served fashion.
+			*/
+            std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
+
+            if (rank_neuron_id.has_value()) {
+                RankNeuronId val = rank_neuron_id.value();
+                /*
+				* Append request for synapse creation to rank "target_rank"
+				* Note that "target_rank" could also be my own rank.
+				*/
+                synapse_creation_requests_outgoing[val.get_rank()].append(neuron_id, val.get_neuron_id(), dendrite_type_needed);
+            }
+        } /* all vacant axons of a neuron */
+    } /* my neurons */
+
+    Timers::stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
+
+    // Make cache empty for next connectivity update
+    Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
+    NodeCache::empty<BarnesHutCell>();
+    Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
+
+    return synapse_creation_requests_outgoing;
 }
 
 void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags,

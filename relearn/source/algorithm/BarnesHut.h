@@ -88,16 +88,8 @@ public:
         return acceptance_criterion;
     }
 
-    /**
-     * @brief Returns an optional RankNeuronId that the algorithm determined for the given source neuron. No actual request is made.
-     *      Might perform MPI communication via NodeCache::download_children()
-     * @param src_neuron_id The neuron's id that wants to connect. Is used to disallow autapses (connections to itself)
-     * @param axon_pos_xyz The neuron's position that wants to connect. Is used in probability computations
-     * @param dendrite_type_needed The signal type that is searched.
-     * @return If the algorithm didn't find a matching neuron, the return value is empty.
-     *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
-     */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed) override;
+    [[nodiscard]] MapSynapseCreationRequests find_target_neurons(size_t num_neurons, const std::vector<char>& disable_flags,
+        const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) override;
 
     /**
      * @brief Updates all leaf nodes in the octree by the algorithm
@@ -189,6 +181,17 @@ public:
     }
 
 private:
+    /**
+     * @brief Returns an optional RankNeuronId that the algorithm determined for the given source neuron. No actual request is made.
+     *      Might perform MPI communication via NodeCache::download_children()
+     * @param src_neuron_id The neuron's id that wants to connect. Is used to disallow autapses (connections to itself)
+     * @param axon_pos_xyz The neuron's position that wants to connect. Is used in probability computations
+     * @param dendrite_type_needed The signal type that is searched.
+     * @return If the algorithm didn't find a matching neuron, the return value is empty.
+     *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
+     */
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed);
+
     [[nodiscard]] double
     calc_attractiveness_to_connect(
         size_t src_neuron_id,
