@@ -186,14 +186,6 @@ size_t Partition::get_local_id(size_t global_id) const {
     return 0;
 }
 
-size_t Partition::get_total_num_neurons() const noexcept {
-    return total_num_neurons;
-}
-
-void Partition::set_total_num_neurons(size_t total_num) noexcept {
-    total_num_neurons = total_num;
-}
-
 void Partition::delete_subdomain_tree(size_t subdomain_id) {
     RelearnException::check(subdomain_id < my_num_subdomains, "Subdomain ID was too large");
     RelearnException::check(subdomains[subdomain_id].local_octree_view != nullptr, "Subdomain ID was too large");

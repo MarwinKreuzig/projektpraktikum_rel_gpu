@@ -21,7 +21,7 @@
 
 class Neurons;
 class NeuronToSubdomainAssignment;
-template<typename T>
+template <typename T>
 class OctreeNode;
 
 /**
@@ -206,7 +206,9 @@ public:
      * @exception Throws a RelearnException if the load_data_from_subdomain_assignment has not been called
      * @return The total number of neurons
      */
-    [[nodiscard]] size_t get_total_num_neurons() const noexcept;
+    [[nodiscard]] size_t get_total_num_neurons() const noexcept {
+        return total_num_neurons;
+    }
 
     /**
      * @brief Translates a local subdomain id to the global subdomain id 
@@ -223,7 +225,9 @@ public:
      * @brief Sets the total number of neurons
      * @param total_num The total number of neurons
      */
-    void set_total_num_neurons(size_t total_num) noexcept;
+    void set_total_num_neurons(size_t total_num) noexcept {
+        total_num_neurons = total_num;
+    }
 
     /**
      * @brief Deletes the OctreeNode* in the associated subdomain
@@ -233,7 +237,7 @@ public:
     void delete_subdomain_tree(size_t subdomain_id);
 
 private:
-    bool neurons_loaded{false};
+    bool neurons_loaded{ false };
 
     size_t total_num_neurons{ Constants::uninitialized };
     size_t my_num_neurons{ Constants::uninitialized };

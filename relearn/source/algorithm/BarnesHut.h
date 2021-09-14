@@ -55,29 +55,11 @@ public:
     }
 
     /**
-     * @brief Sets probability parameter used to determine the probability for a cell of being selected
-     * @param sigma The probability parameter, >= 0.0
-     * @exception Throws a RelearnExeption if sigma < 0.0
-     */
-    void set_probability_parameter(double sigma) {
-        RelearnException::check(sigma > 0.0, "In BarnesHut::set_probability_parameter, sigma was not greater than 0");
-        this->sigma = sigma;
-    }
-
-    /**
      * @brief Returns a boolean indicating if the naive version is used (acceptance_criterion == 0.0)
      * @return True iff the naive version is used
      */
     [[nodiscard]] bool is_naive_method_used() const noexcept {
         return naive_method;
-    }
-
-    /**
-     * @brief Returns the currently used probability parameter
-     * @return The currently used probability parameter
-     */
-    [[nodiscard]] double get_probabilty_parameter() const noexcept {
-        return sigma;
     }
 
     /**
@@ -211,14 +193,12 @@ private:
         SignalType dendrite_type_needed);
 
     double acceptance_criterion{ default_theta }; // Acceptance criterion
-    double sigma{ default_sigma }; // Probability parameter
     bool naive_method{ default_theta == 0.0 }; // If true, expand every cell regardless of whether dendrites are available or not
 
     std::shared_ptr<OctreeImplementation<BarnesHut>> global_tree{};
 
 public:
     constexpr static double default_theta{ 0.3 };
-    constexpr static double default_sigma{ 750.0 };
 
     constexpr static double max_theta{ 0.5 };
 };

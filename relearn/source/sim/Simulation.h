@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "../algorithm/Types.h"
+
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -100,6 +102,12 @@ public:
     void set_creation_interrupts(std::vector<std::pair<size_t, size_t>> interrupts) noexcept;
 
     /**
+     * @brief Sets the algorithm that is used for finding target neurons.
+     * @param algorithm The desired algorithm
+     */
+    void set_algorithm(AlgorithmEnum algorithm) noexcept;
+
+    /**
      * @brief Places the requested number of neurons with the requested fraction of excitatory neurons.
      *      The division to the MPI ranks is done with SubdomainFromNeuronDensity
      * @param num_neurons The number of neurons to place globally
@@ -171,6 +179,8 @@ private:
     std::vector<std::pair<size_t, size_t>> creation_interrupts{};
 
     double accept_criterion{ 0.0 };
+
+    AlgorithmEnum algorithm_enum{};
 
     int64_t total_synapse_creations{ 0 };
     int64_t total_synapse_deletions{ 0 };

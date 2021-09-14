@@ -436,6 +436,37 @@ public:
     }
 
     /**
+     * @brief Returns the axons position, for which either both positions must be empty or equal
+     * @exception Throws a RelearnException if one position is valid and the other one invalid or if both are valid with different values
+     * @return The position of the axons, can be empty
+     */
+    [[nodiscard]] std::optional<Vec3d> get_axons_position() const {
+        const auto& excitatory_axons_position_opt = get_excitatory_axons_position();
+        const auto& inhibitory_axons_position_opt = get_inhibitory_axons_position();
+
+        const bool ex_valid = excitatory_axons_position_opt.has_value();
+        const bool in_valid = inhibitory_axons_position_opt.has_value();
+        if (!ex_valid && !in_valid) {
+            return {};
+        }
+
+        if (ex_valid && in_valid) {
+            const auto& pos_ex = excitatory_axons_position_opt.value();
+            const auto& pos_in = inhibitory_axons_position_opt.value();
+
+            const auto diff = pos_ex - pos_in;
+            const bool exc_position_equals_inh_position = diff.get_x() == 0.0 && diff.get_y() == 0.0 && diff.get_z() == 0.0;
+            RelearnException::check(exc_position_equals_inh_position, "In get neuron position, positions are unequal");
+
+            return pos_ex;
+        }
+
+        RelearnException::fail("In Cell, one pos was valid and one was not");
+
+        return {};
+    }
+
+    /**
      * @brief Set's the specified hermite coefficient for the excitatory dendrites
      * @param index The index of the hermite coefficient
      * @param coefficient The new value for the hermite coefficient

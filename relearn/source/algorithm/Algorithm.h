@@ -29,7 +29,25 @@ class SynapticElements;
  * using AdditionalCellAttributes = Cell;
  */
 class Algorithm {
-public:    
+public:
+    /**
+     * @brief Sets probability parameter used to determine the probability for a cell of being selected
+     * @param sigma The probability parameter, >= 0.0
+     * @exception Throws a RelearnExeption if sigma < 0.0
+     */
+    void set_probability_parameter(double sigma) {
+        RelearnException::check(sigma > 0.0, "In BarnesHut::set_probability_parameter, sigma was not greater than 0");
+        this->sigma = sigma;
+    }
+
+    /**
+     * @brief Returns the currently used probability parameter
+     * @return The currently used probability parameter
+     */
+    [[nodiscard]] double get_probabilty_parameter() const noexcept {
+        return sigma;
+    }
+
     /**
      * @brief Returns a collection of proposed synapse creations for each neuron with vacant axons
      * @param num_neurons The number of local neurons
@@ -56,4 +74,10 @@ public:
         const std::vector<double>& dendrites_excitatory_counts, const std::vector<unsigned int>& dendrites_excitatory_connected_counts,
         const std::vector<double>& dendrites_inhibitory_counts, const std::vector<unsigned int>& dendrites_inhibitory_connected_counts)
         = 0;
+
+protected:
+    double sigma{ default_sigma };
+
+public:
+    constexpr static double default_sigma{ 750.0 };
 };

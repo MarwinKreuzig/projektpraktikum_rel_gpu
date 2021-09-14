@@ -12,6 +12,7 @@
 
 #include "../algorithm/Algorithm.h"
 #include "../algorithm/BarnesHut.h"
+#include "../algorithm/FastMultipoleMethods.h"
 #include "../Config.h"
 #include "../io/LogFiles.h"
 #include "../mpi/MPIWrapper.h"
@@ -83,6 +84,10 @@ void Simulation::set_creation_interrupts(std::vector<std::pair<size_t, size_t>> 
     creation_interrupts = std::move(interrupts);
 }
 
+void Simulation::set_algorithm(AlgorithmEnum algorithm) noexcept {
+    algorithm_enum = algorithm;
+}
+
 void Simulation::construct_neurons() {
     RelearnException::check(neuron_models != nullptr, "In simulation, neuron_models is nullptr");
     RelearnException::check(axons != nullptr, "In simulation, axons is nullptr");
@@ -132,27 +137,50 @@ void Simulation::initialize() {
 
     auto sim_box_min_max = partition->get_simulation_box_size();
 
-    auto octree = std::make_shared<OctreeImplementation<BarnesHut>>(std::move(std::get<0>(sim_box_min_max)), std::move(std::get<1>(sim_box_min_max)), partition->get_level_of_subdomain_trees());
-    global_tree = std::static_pointer_cast<Octree>(octree);
+    if (algorithm_enum == AlgorithmEnum::BarnesHut) {
+        auto octree = std::make_shared<OctreeImplementation<BarnesHut>>(std::move(std::get<0>(sim_box_min_max)), std::move(std::get<1>(sim_box_min_max)), partition->get_level_of_subdomain_trees());
+        global_tree = std::static_pointer_cast<Octree>(octree);
 
-    // Insert my local (subdomain) trees into my global tree
-    for (size_t i = 0; i < partition->get_my_num_subdomains(); i++) {
-        size_t index_1d = partition->get_1d_index_for_local_subdomain(i);
-        OctreeNode<BarnesHutCell>* local_tree = partition->get_subdomain_tree(i);
-        octree->insert_local_tree(local_tree, index_1d);
-        partition->delete_subdomain_tree(i);
+        // Insert my local (subdomain) trees into my global tree
+        for (size_t i = 0; i < partition->get_my_num_subdomains(); i++) {
+            size_t index_1d = partition->get_1d_index_for_local_subdomain(i);
+            OctreeNode<BarnesHutCell>* local_tree = partition->get_subdomain_tree(i);
+            octree->insert_local_tree(local_tree, index_1d);
+            partition->delete_subdomain_tree(i);
+        }
+
+        global_tree->initializes_leaf_nodes(partition->get_my_num_neurons());
+
+        LogFiles::print_message_rank(0, "Neurons inserted into subdomains");
+        LogFiles::print_message_rank(0, "Subdomains inserted into global tree");
+
+        network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
+
+        auto algorithm_barnes_hut = std::make_shared<BarnesHut>(octree);
+        algorithm_barnes_hut->set_acceptance_criterion(accept_criterion);
+        algorithm = std::move(algorithm_barnes_hut);
+    } else {
+        //auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(std::move(std::get<0>(sim_box_min_max)), std::move(std::get<1>(sim_box_min_max)), partition->get_level_of_subdomain_trees());
+        //global_tree = std::static_pointer_cast<Octree>(octree);
+
+        //// Insert my local (subdomain) trees into my global tree
+        //for (size_t i = 0; i < partition->get_my_num_subdomains(); i++) {
+        //    size_t index_1d = partition->get_1d_index_for_local_subdomain(i);
+        //    OctreeNode<FastMultipoleMethodsCell>* local_tree = partition->get_subdomain_tree(i);
+        //    octree->insert_local_tree(local_tree, index_1d);
+        //    partition->delete_subdomain_tree(i);
+        //}
+
+        //global_tree->initializes_leaf_nodes(partition->get_my_num_neurons());
+
+        //LogFiles::print_message_rank(0, "Neurons inserted into subdomains");
+        //LogFiles::print_message_rank(0, "Subdomains inserted into global tree");
+
+        //network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
+
+        //auto algorithm_barnes_hut = std::make_shared<FastMultipoleMethods>(octree);
+        //algorithm = std::move(algorithm_barnes_hut);
     }
-
-    octree->initializes_leaf_nodes(partition->get_my_num_neurons());
-
-    LogFiles::print_message_rank(0, "Neurons inserted into subdomains");
-    LogFiles::print_message_rank(0, "Subdomains inserted into global tree");
-
-    network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
-
-    auto algorithm_barnes_hut = std::make_shared<BarnesHut>(octree);
-    algorithm_barnes_hut->set_acceptance_criterion(accept_criterion);
-    algorithm = std::move(algorithm_barnes_hut);
 
     neurons->set_network_graph(network_graph);
     neurons->set_octree(global_tree);

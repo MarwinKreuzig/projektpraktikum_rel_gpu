@@ -476,7 +476,7 @@ public:
         return cell.get_hermite_coefficient_for(index, needed);
     }
 
-    std::vector<Vec3d> get_all_dendrites_positions_for(SignalType needed) const {
+    std::vector<Vec3d> get_all_dendrite_positions_for(SignalType needed) const {
         std::vector<Vec3d> result{};
 
         std::stack<const OctreeNode*> stack{};
@@ -490,7 +490,7 @@ public:
                 const auto& cell = current_node->get_cell();
                 const auto num_of_ports = cell.get_number_dendrites_for(needed);
                 if (num_of_ports > 0) {
-                    const auto& opt_position = cell.get_neuron_position();
+                    const auto& opt_position = cell.get_dendrites_position();
                     for (auto i = 0; i < num_of_ports; i++) {
                         result.emplace_back(opt_position.value());
                     }
@@ -522,7 +522,7 @@ public:
                 const auto& cell = current_node->get_cell();
                 const auto num_of_ports = cell.get_number_axons_for(needed);
                 if (num_of_ports > 0) {
-                    const auto& opt_position = cell.get_neuron_position();
+                    const auto& opt_position = cell.get_axons_position();
                     for (auto i = 0; i < num_of_ports; i++) {
                         result.emplace_back(opt_position.value());
                     }

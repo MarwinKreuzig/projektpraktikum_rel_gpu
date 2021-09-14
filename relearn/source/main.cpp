@@ -155,8 +155,6 @@ int main(int argc, char** argv) {
         RelearnException::check(!accept_criterion_set, "Acceptance criterion can only be set if Barnes-Hut is used");
     }
 
-    RelearnException::check(algorithm == AlgorithmEnum::BarnesHut, "Currently, only the Barnes-Hut algorithm is supported.");
-
     RelearnException::check(target_calcium >= SynapticElements::min_C_target, "Target calcium is smaller than {}", SynapticElements::min_C_target);
     RelearnException::check(target_calcium <= SynapticElements::max_C_target, "Target calcium is larger than {}", SynapticElements::max_C_target);
 
@@ -184,7 +182,7 @@ int main(int argc, char** argv) {
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier();
     if (0 == my_rank) {
-        LogFiles::print_message_rank(0, 
+        LogFiles::print_message_rank(0,
             "START: {}\n"
             "Chosen lower bound for vacant synaptic elements: {}\n"
             "Chosen upper bound for vacant synaptic elements: {}\n"
@@ -224,17 +222,31 @@ int main(int argc, char** argv) {
     const size_t my_num_subdomains = partition->get_my_num_subdomains();
     const size_t total_num_subdomains = partition->get_total_num_subdomains();
 
-    // Check if int type can contain total size of branch nodes to receive in bytes
-    // Every rank sends the same number of branch nodes, which is Partition::get_my_num_subdomains()
-    if (std::numeric_limits<int>::max() < (my_num_subdomains * sizeof(OctreeNode<BarnesHutCell>))) {
-        RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
-        exit(EXIT_FAILURE);
-    }
+    if (algorithm == AlgorithmEnum::BarnesHut) {
+        // Check if int type can contain total size of branch nodes to receive in bytes
+        // Every rank sends the same number of branch nodes, which is Partition::get_my_num_subdomains()
+        if (std::numeric_limits<int>::max() < (my_num_subdomains * sizeof(OctreeNode<BarnesHutCell>))) {
+            RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
+            exit(EXIT_FAILURE);
+        }
 
-    /**
-	 * Create MPI RMA memory allocator
-	 */
-    MPIWrapper::init_buffer_octree<BarnesHutCell>();
+        /**
+	     * Create MPI RMA memory allocator
+	      */
+        MPIWrapper::init_buffer_octree<BarnesHutCell>();
+    } else {
+        // Check if int type can contain total size of branch nodes to receive in bytes
+        // Every rank sends the same number of branch nodes, which is Partition::get_my_num_subdomains()
+        if (std::numeric_limits<int>::max() < (my_num_subdomains * sizeof(OctreeNode<FastMultipoleMethodsCell>))) {
+            RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
+            exit(EXIT_FAILURE);
+        }
+
+        /**
+	      * Create MPI RMA memory allocator
+	      */
+        MPIWrapper::init_buffer_octree<FastMultipoleMethodsCell>();
+    }
 
     auto neuron_models = std::make_unique<models::PoissonModel>(NeuronModel::default_k, NeuronModel::default_tau_C, beta, NeuronModel::default_h,
         base_background_activity, NeuronModel::default_background_activity_mean, NeuronModel::default_background_activity_stddev,
@@ -253,11 +265,14 @@ int main(int argc, char** argv) {
     MPIWrapper::lock_window(my_rank, MPI_Locktype::exclusive);
 
     Simulation sim(partition);
-    sim.set_acceptance_criterion_for_barnes_hut(accept_criterion);
     sim.set_neuron_model(std::move(neuron_models));
     sim.set_axons(std::move(axon_models));
     sim.set_dendrites_ex(std::move(dend_ex_models));
     sim.set_dendrites_in(std::move(dend_in_models));
+
+    if (algorithm == AlgorithmEnum::BarnesHut) {
+        sim.set_acceptance_criterion_for_barnes_hut(accept_criterion);
+    }
 
     if (static_cast<bool>(*opt_num_neurons)) {
         const double frac_exc = 0.8;
