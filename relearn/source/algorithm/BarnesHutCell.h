@@ -113,6 +113,15 @@ public:
         return inhibitory_dendrites.position;
     }
 
+    /**
+     * @brief Sets the position of the neuron for every necessary part of the cell
+     * @param opt_position The position, can be empty
+     */
+    void set_neuron_position(const std::optional<Vec3d>& opt_position) noexcept {
+        set_excitatory_dendrites_position(opt_position);
+        set_inhibitory_dendrites_position(opt_position);
+    }
+
 private:
     VirtualPlasticityElement excitatory_dendrites{};
     VirtualPlasticityElement inhibitory_dendrites{};

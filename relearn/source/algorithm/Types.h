@@ -16,7 +16,7 @@
 
 enum class AlgorithmEnum {
     BarnesHut,
-    FastMultipoleMethod
+    FastMultipoleMethods
 };
 
 /**

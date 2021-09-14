@@ -48,11 +48,11 @@ public:
 
         std::vector<size_t> global_neuron_ids{};
 
+        std::vector<Vec3d> local_positions{};
+
         size_t index_1d{ Constants::uninitialized };
 
         Vec3s index_3d{ Constants::uninitialized };
-
-        OctreeNode<BarnesHutCell>* local_octree_view{ nullptr };
     };
 
     /**
@@ -122,19 +122,6 @@ public:
         Vec3d max{ simulation_box_length };
 
         return std::make_tuple(min, max);
-    }
-
-    /**
-     * @brief Returns the pointer to the specified subdomain's octree portion
-     * @param subdomain_id The id of the subdomain which's octree portion should be returned
-     * @exception Throws a RelearnException if the load_data_from_subdomain_assignment has not been called or if subdomain_id exceeds the number of subdomains
-     * @return The pointer to the specified subdomain's octree portion
-     */
-    [[nodiscard]] OctreeNode<BarnesHutCell>* get_subdomain_tree(size_t subdomain_id) {
-        RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
-        RelearnException::check(subdomain_id < my_num_subdomains, "Subdomain ID was too large");
-
-        return subdomains[subdomain_id].local_octree_view;
     }
 
     /**
@@ -229,12 +216,20 @@ public:
         total_num_neurons = total_num;
     }
 
-    /**
-     * @brief Deletes the OctreeNode* in the associated subdomain
-     * @param subdomain_id The local subdomain id which's OctreeNode* shall be deleted
-     * @exception Throws a RelearnException if subdomain_id is >= number of local subdomains or if the respective OctreeNode* is nullptr
-     */
-    void delete_subdomain_tree(size_t subdomain_id);
+    template <typename AdditionalCellAttributes>
+    void insert_nodes_into(OctreeNode<AdditionalCellAttributes>* local_root, size_t subdomain_id) {
+        auto& current_subdomain = subdomains[subdomain_id];
+        size_t neuron_id = current_subdomain.neuron_local_id_start;
+
+        const auto my_rank = MPIWrapper::get_my_rank();
+        for (size_t j = 0; j < current_subdomain.num_neurons; j++) {
+            // Insert neuron into tree
+            auto* const node = local_root->insert(current_subdomain.local_positions[j], neuron_id, my_rank);
+            RelearnException::check(node != nullptr, "node is nullptr");
+
+            neuron_id++;
+        }
+    }
 
 private:
     bool neurons_loaded{ false };

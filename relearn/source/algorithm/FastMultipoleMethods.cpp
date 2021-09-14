@@ -376,7 +376,67 @@ MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t num_
     return synapse_creation_requests_outgoing;
 }
 
-void FastMultipoleMethods::update_leaf_nodes(const std::vector<char>& disable_flags,
-    const std::vector<double>& dendrites_excitatory_counts, const std::vector<unsigned int>& dendrites_excitatory_connected_counts,
-    const std::vector<double>& dendrites_inhibitory_counts, const std::vector<unsigned int>& dendrites_inhibitory_connected_counts) {
+void FastMultipoleMethods::update_leaf_nodes(const std::vector<char>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
+    const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites) {
+
+    const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_total_counts();
+    const std::vector<unsigned int>& dendrites_excitatory_connected_counts = excitatory_dendrites->get_connected_count();
+
+    const std::vector<double>& dendrites_inhibitory_counts = inhibitory_dendrites->get_total_counts();
+    const std::vector<unsigned int>& dendrites_inhibitory_connected_counts = inhibitory_dendrites->get_connected_count();
+
+    const std::vector<double>& axons_counts = axons->get_total_counts();
+    const std::vector<unsigned int>& axons_connected_counts = axons->get_connected_count();
+
+    const auto& leaf_nodes = global_tree->get_leaf_nodes();
+    const auto num_leaf_nodes = leaf_nodes.size();
+    const auto num_disable_flags = disable_flags.size();
+    const auto num_dendrites_excitatory_counts = dendrites_excitatory_counts.size();
+    const auto num_dendrites_excitatory_connected_counts = dendrites_excitatory_connected_counts.size();
+    const auto num_dendrites_inhibitory_counts = dendrites_inhibitory_counts.size();
+    const auto num_dendrites_inhibitory_connected_counts = dendrites_inhibitory_connected_counts.size();
+
+    const auto all_same_size = num_leaf_nodes == num_disable_flags
+        && num_leaf_nodes == num_dendrites_excitatory_counts
+        && num_leaf_nodes == num_dendrites_excitatory_connected_counts
+        && num_leaf_nodes == num_dendrites_inhibitory_counts
+        && num_leaf_nodes == num_dendrites_inhibitory_connected_counts;
+
+    RelearnException::check(all_same_size, "In BarnesHut::update_leaf_nodes, the vectors were of different sizes");
+
+    const auto& indices = Multiindex::get_indices();
+    const auto num_coef = Multiindex::get_number_of_indices();
+
+    for (size_t neuron_id = 0; neuron_id < num_leaf_nodes; neuron_id++) {
+        auto* node = leaf_nodes[neuron_id];
+
+        RelearnException::check(node != nullptr, "Node was nullptr: ", neuron_id);
+
+        const size_t other_neuron_id = node->get_cell().get_neuron_id();
+
+        RelearnException::check(neuron_id == other_neuron_id, "In BarnesHut::update_leaf_nodes, the nodes are not in order");
+
+        if (disable_flags[neuron_id] == 0) {
+            continue;
+        }
+
+        const auto number_vacant_dendrites_excitatory = static_cast<unsigned int>(dendrites_excitatory_counts[neuron_id] - dendrites_excitatory_connected_counts[neuron_id]);
+        const auto number_vacant_dendrites_inhibitory = static_cast<unsigned int>(dendrites_inhibitory_counts[neuron_id] - dendrites_inhibitory_connected_counts[neuron_id]);
+
+        node->set_cell_number_dendrites(number_vacant_dendrites_excitatory, number_vacant_dendrites_inhibitory);
+
+        const auto signal_type = axons->get_signal_type(neuron_id);
+
+        if (signal_type == SignalType::EXCITATORY) {
+            const auto number_vacant_excitatory_axons = static_cast<unsigned int>(axons_counts[neuron_id] - axons_connected_counts[neuron_id]);
+            const auto number_vacant_inhibitory_axons = 0;
+
+            node->set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
+        } else {
+            const auto number_vacant_excitatory_axons = 0;
+            const auto number_vacant_inhibitory_axons = static_cast<unsigned int>(axons_counts[neuron_id] - axons_connected_counts[neuron_id]);
+
+            node->set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
+        }
+    }
 }

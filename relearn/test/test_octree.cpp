@@ -1431,16 +1431,19 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
         octree.initializes_leaf_nodes(num_neurons);
 
         const auto max_vacant_exc = uid_max_vacant(mt);
-        const auto dends_exc = create_synaptic_elements(num_neurons, mt, max_vacant_exc, SignalType::EXCITATORY);
+        auto dends_exc = create_synaptic_elements(num_neurons, mt, max_vacant_exc, SignalType::EXCITATORY);
 
         const auto max_vacant_inh = uid_max_vacant(mt);
-        const auto dends_inh = create_synaptic_elements(num_neurons, mt, max_vacant_inh, SignalType::INHIBITORY);
+        auto dends_inh = create_synaptic_elements(num_neurons, mt, max_vacant_inh, SignalType::INHIBITORY);
 
         BarnesHut bh{ octree_ptr };
 
         std::vector<char> disable_flags(num_neurons, 1);
 
-        bh.update_leaf_nodes(disable_flags, dends_exc.get_total_counts(), dends_exc.get_connected_count(), dends_inh.get_total_counts(), dends_inh.get_connected_count());
+        auto unique_exc = std::make_unique<SynapticElements>(std::move(dends_exc));
+        auto unique_inh = std::make_unique<SynapticElements>(std::move(dends_inh));
+
+        bh.update_leaf_nodes(disable_flags, unique_exc, unique_exc, unique_inh);
         octree.update_local_trees();
 
         std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
@@ -1465,8 +1468,8 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
                     stack.emplace(child);
                 }
             } else {
-                sum_dends_exc = static_cast<size_t>(dends_exc.get_count(current->get_cell_neuron_id()));
-                sum_dends_inh = static_cast<size_t>(dends_inh.get_count(current->get_cell_neuron_id()));
+                sum_dends_exc = static_cast<size_t>(unique_exc->get_count(current->get_cell_neuron_id()));
+                sum_dends_inh = static_cast<size_t>(unique_inh->get_count(current->get_cell_neuron_id()));
             }
 
             ASSERT_EQ(current->get_cell().get_number_excitatory_dendrites(), sum_dends_exc);
@@ -1504,14 +1507,17 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
 
         octree.initializes_leaf_nodes(num_neurons);
 
-        const auto dends_exc = create_synaptic_elements(num_neurons, mt, 1, SignalType::EXCITATORY);
-        const auto dends_inh = create_synaptic_elements(num_neurons, mt, 1, SignalType::INHIBITORY);
+        auto dends_exc = create_synaptic_elements(num_neurons, mt, 1, SignalType::EXCITATORY);
+        auto dends_inh = create_synaptic_elements(num_neurons, mt, 1, SignalType::INHIBITORY);
+
+        auto unique_exc = std::make_unique<SynapticElements>(std::move(dends_exc));
+        auto unique_inh = std::make_unique<SynapticElements>(std::move(dends_inh));
 
         BarnesHut bh{ octree_ptr };
 
         std::vector<char> disable_flags(num_neurons, 1);
 
-        bh.update_leaf_nodes(disable_flags, dends_exc.get_total_counts(), dends_exc.get_connected_count(), dends_inh.get_total_counts(), dends_inh.get_connected_count());
+        bh.update_leaf_nodes(disable_flags, unique_exc, unique_exc, unique_inh);
         octree.update_local_trees();
 
         std::stack<std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool>> stack{};

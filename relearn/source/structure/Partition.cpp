@@ -186,13 +186,6 @@ size_t Partition::get_local_id(size_t global_id) const {
     return 0;
 }
 
-void Partition::delete_subdomain_tree(size_t subdomain_id) {
-    RelearnException::check(subdomain_id < my_num_subdomains, "Subdomain ID was too large");
-    RelearnException::check(subdomains[subdomain_id].local_octree_view != nullptr, "Subdomain ID was too large");
-    OctreeNode<BarnesHutCell>::free(subdomains[subdomain_id].local_octree_view);
-    subdomains[subdomain_id].local_octree_view = nullptr;
-}
-
 void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain) {
     RelearnException::check(!neurons_loaded, "Neurons are already loaded, cannot load anymore");
 
@@ -285,29 +278,10 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
             // Mark neuron as DendriteType::EXCITATORY or DendriteType::INHIBITORY
             signal_types[neuron_id] = vec_type[j];
 
-            if (j == 0) {
-                /**
-		         * Set octree parameters.
-		         * Only those that are necessary for
-		         * inserting neurons into the tree
-		         */
-                auto* local_root = OctreeNode<BarnesHutCell>::create();
-
-                local_root->set_cell_size(current_subdomain.xyz_min, current_subdomain.xyz_max);
-                local_root->set_level(level_of_subdomain_trees);
-                local_root->set_cell_neuron_id(neuron_id);
-                local_root->set_cell_neuron_position(vec_pos[j]);
-                local_root->set_rank(my_rank);
-
-                current_subdomain.local_octree_view = local_root;
-            } else {
-                // Insert neuron into tree
-                auto* const node = current_subdomain.local_octree_view->insert(vec_pos[j], neuron_id, my_rank);
-                RelearnException::check(node != nullptr, "node is nullptr");
-            }
-
             neuron_id++;
         }
+
+        current_subdomain.local_positions = std::move(vec_pos);
     }
 
     neurons->set_area_names(std::move(area_names));

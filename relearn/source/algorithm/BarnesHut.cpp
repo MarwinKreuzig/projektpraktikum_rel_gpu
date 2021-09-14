@@ -154,9 +154,14 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(size_t num_neurons, co
     return synapse_creation_requests_outgoing;
 }
 
-void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags,
-    const std::vector<double>& dendrites_excitatory_counts, const std::vector<unsigned int>& dendrites_excitatory_connected_counts,
-    const std::vector<double>& dendrites_inhibitory_counts, const std::vector<unsigned int>& dendrites_inhibitory_connected_counts) {
+void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
+    const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites) {
+
+    const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_total_counts();
+    const std::vector<unsigned int>& dendrites_excitatory_connected_counts = excitatory_dendrites->get_connected_count();
+
+    const std::vector<double>& dendrites_inhibitory_counts = inhibitory_dendrites->get_total_counts();
+    const std::vector<unsigned int>& dendrites_inhibitory_connected_counts = inhibitory_dendrites->get_connected_count();
 
     RelearnException::check(global_tree != nullptr, "In BarnesHut::update_leaf_nodes, global_tree was nullptr");
 
@@ -192,7 +197,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags,
         const auto number_vacant_dendrites_excitatory = static_cast<unsigned int>(dendrites_excitatory_counts[neuron_id] - dendrites_excitatory_connected_counts[neuron_id]);
         const auto number_vacant_dendrites_inhibitory = static_cast<unsigned int>(dendrites_inhibitory_counts[neuron_id] - dendrites_inhibitory_connected_counts[neuron_id]);
 
-        node->set_cell_num_dendrites(number_vacant_dendrites_excitatory, number_vacant_dendrites_inhibitory);
+        node->set_cell_number_dendrites(number_vacant_dendrites_excitatory, number_vacant_dendrites_inhibitory);
     }
 }
 
@@ -289,7 +294,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags,
 
     // Calc Euclidean distance between source and target neuron
     const auto distance_vector = target_xyz.value() - axon_pos_xyz;
-    
+
     //const auto distance = distance_vector.calculate_p_norm(2.0);
     const auto distance = distance_vector.calculate_2_norm();
 

@@ -64,15 +64,13 @@ public:
     /**
      * @brief Updates all leaf nodes in the octree by the algorithm
      * @param disable_flags Flags that indicate if a neuron id disabled (0) or enabled (otherwise)
-     * @param dendrites_excitatory_counts The number of total excitatory dendrites, accessed via operator[] with the neuron ids
-     * @param dendrites_excitatory_connected_counts The number of connected excitatory dendrites, accessed via operator[] with the neuron ids
-     * @param dendrites_inhibitory_counts The number of total inhibitory dendrites, accessed via operator[] with the neuron ids
-     * @param dendrites_inhibitory_connected_counts The number of connected inhibitory dendrites, accessed via operator[] with the neuron ids
-     * @exception Can throw a RelearnException
+     * @param axons The model for the axons
+     * @param excitatory_dendrites The model for the excitatory dendrites
+     * @param inhibitory_dendrites The model for the inhibitory dendrites
+     * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
      */
-    virtual void update_leaf_nodes(const std::vector<char>& disable_flags,
-        const std::vector<double>& dendrites_excitatory_counts, const std::vector<unsigned int>& dendrites_excitatory_connected_counts,
-        const std::vector<double>& dendrites_inhibitory_counts, const std::vector<unsigned int>& dendrites_inhibitory_connected_counts)
+    virtual void update_leaf_nodes(const std::vector<char>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
+        const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites)
         = 0;
 
 protected:

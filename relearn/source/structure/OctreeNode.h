@@ -367,7 +367,7 @@ public:
      * @param opt_position The optional position, can be empty
      */
     void set_cell_neuron_position(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_dendrites_position(opt_position);
+        cell.set_neuron_position(opt_position);
     }
 
     /**
@@ -375,25 +375,9 @@ public:
      * @param num_ex The number of free excitatory dendrites
      * @param num_in The number of free inhibitory dendrites
      */
-    void set_cell_num_dendrites(unsigned int num_ex, unsigned int num_in) noexcept {
+    void set_cell_number_dendrites(unsigned int num_ex, unsigned int num_in) noexcept {
         cell.set_number_excitatory_dendrites(num_ex);
         cell.set_number_inhibitory_dendrites(num_in);
-    }
-
-    /**
-     * @brief Sets the optional position for the excitatory position in the associated cell
-     * @param opt_position The optional position, can be empty
-     */
-    void set_cell_neuron_pos_exc(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_excitatory_dendrites_position(opt_position);
-    }
-
-    /**
-     * @brief Sets the optional position for the inhibitory position in the associated cell
-     * @param opt_position The optional position, can be empty
-     */
-    void set_cell_neuron_pos_inh(const std::optional<Vec3d>& opt_position) noexcept {
-        cell.set_inhibitory_dendrites_position(opt_position);
     }
 
     void set_cell_number_axons(unsigned int num_ex, unsigned int num_in) noexcept {
@@ -401,15 +385,18 @@ public:
         cell.set_number_inhibitory_axons(num_in);
     }
 
-    void set_cell_number_dendrites(unsigned int num_ex, unsigned int num_in) noexcept {
-        cell.set_number_excitatory_dendrites(num_ex);
-        cell.set_number_inhibitory_dendrites(num_in);
-    }
-
+    /**
+     * @brief Sets the optional position for the excitatory position in the associated cell
+     * @param opt_position The optional position, can be empty
+     */
     void set_cell_excitatory_dendrites_position(const std::optional<Vec3d>& opt_position) noexcept {
         cell.set_excitatory_dendrites_position(opt_position);
     }
 
+    /**
+     * @brief Sets the optional position for the inhibitory position in the associated cell
+     * @param opt_position The optional position, can be empty
+     */
     void set_cell_inhibitory_dendrites_position(const std::optional<Vec3d>& opt_position) noexcept {
         cell.set_inhibitory_dendrites_position(opt_position);
     }

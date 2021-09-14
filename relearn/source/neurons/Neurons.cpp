@@ -749,8 +749,7 @@ void Neurons::create_synapses_update_octree() {
 
     // Update my local trees bottom-up
     Timers::start(TimerRegion::UPDATE_LEAF_NODES);
-    algorithm->update_leaf_nodes(disable_flags, dendrites_exc->get_total_counts(),
-        dendrites_exc->get_connected_count(), dendrites_inh->get_total_counts(), dendrites_inh->get_connected_count());
+    algorithm->update_leaf_nodes(disable_flags, axons, dendrites_exc, dendrites_inh);
     Timers::stop_and_add(TimerRegion::UPDATE_LEAF_NODES);
 
     // Update my local trees bottom-up

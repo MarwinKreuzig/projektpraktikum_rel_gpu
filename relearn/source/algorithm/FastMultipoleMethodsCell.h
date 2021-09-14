@@ -206,7 +206,18 @@ public:
     }
 
     /**
-     * @brief Set's the specified hermite coefficient for the excitatory dendrites
+     * @brief Sets the position of the neuron for every necessary part of the cell
+     * @param opt_position The position, can be empty
+     */
+    void set_neuron_position(const std::optional<Vec3d>& opt_position) noexcept {
+        set_excitatory_dendrites_position(opt_position);
+        set_inhibitory_dendrites_position(opt_position);
+        set_excitatory_axons_position(opt_position);
+        set_inhibitory_axons_position(opt_position);
+    }
+
+    /**
+     * @brief Sets the specified hermite coefficient for the excitatory dendrites
      * @param index The index of the hermite coefficient
      * @param coefficient The new value for the hermite coefficient
      */
@@ -215,7 +226,7 @@ public:
     }
 
     /**
-     * @brief Set's the specified hermite coefficient for the inhibitory dendrites
+     * @brief Sets the specified hermite coefficient for the inhibitory dendrites
      * @param index The index of the hermite coefficient
      * @param coefficient The new value for the hermite coefficient
      */
@@ -224,7 +235,7 @@ public:
     }
 
     /**
-     * @brief Set's the specified hermite coefficient for the specified signal type
+     * @brief Sets the specified hermite coefficient for the specified signal type
      * @param index The index of the hermite coefficient
      * @param coefficient The new value for the hermite coefficient
      * @param signal_type The type of dendrite

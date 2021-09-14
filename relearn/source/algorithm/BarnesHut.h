@@ -12,9 +12,11 @@
 
 #include "Algorithm.h"
 #include "BarnesHutCell.h"
+#include "../neurons/models/SynapticElements.h"
 #include "../structure/OctreeNode.h"
 #include "../util/RelearnException.h"
 
+#include <memory>
 #include <tuple>
 
 template <typename T>
@@ -76,15 +78,13 @@ public:
     /**
      * @brief Updates all leaf nodes in the octree by the algorithm
      * @param disable_flags Flags that indicate if a neuron id disabled (0) or enabled (otherwise)
-     * @param dendrites_excitatory_counts The number of total excitatory dendrites, accessed via operator[] with the neuron ids
-     * @param dendrites_excitatory_connected_counts The number of connected excitatory dendrites, accessed via operator[] with the neuron ids
-     * @param dendrites_inhibitory_counts The number of total inhibitory dendrites, accessed via operator[] with the neuron ids
-     * @param dendrites_inhibitory_connected_counts The number of connected inhibitory dendrites, accessed via operator[] with the neuron ids
+     * @param axons The model for the axons
+     * @param excitatory_dendrites The model for the excitatory dendrites
+     * @param inhibitory_dendrites The model for the inhibitory dendrites
      * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
      */
-    void update_leaf_nodes(const std::vector<char>& disable_flags,
-        const std::vector<double>& dendrites_excitatory_counts, const std::vector<unsigned int>& dendrites_excitatory_connected_counts,
-        const std::vector<double>& dendrites_inhibitory_counts, const std::vector<unsigned int>& dendrites_inhibitory_connected_counts) override;
+    void update_leaf_nodes(const std::vector<char>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
+        const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites) override;
 
     /**
      * @brief Updates the passed node with the values of its children according to the algorithm
@@ -141,24 +141,24 @@ public:
             }
         }
 
-        node->set_cell_num_dendrites(my_number_dendrites_excitatory, my_number_dendrites_inhibitory);
+        node->set_cell_number_dendrites(my_number_dendrites_excitatory, my_number_dendrites_inhibitory);
 
         /**
 		 * For calculating the new weighted position, make sure that we don't
 		 * divide by 0. This happens if the my number of dendrites is 0.
 		 */
         if (0 == my_number_dendrites_excitatory) {
-            node->set_cell_neuron_pos_exc({});
+            node->set_cell_excitatory_dendrites_position({});
         } else {
             const auto scaled_position = my_position_dendrites_excitatory / my_number_dendrites_excitatory;
-            node->set_cell_neuron_pos_exc(std::optional<Vec3d>{ scaled_position });
+            node->set_cell_excitatory_dendrites_position(std::optional<Vec3d>{ scaled_position });
         }
 
         if (0 == my_number_dendrites_inhibitory) {
-            node->set_cell_neuron_pos_inh({});
+            node->set_cell_inhibitory_dendrites_position({});
         } else {
             const auto scaled_position = my_position_dendrites_inhibitory / my_number_dendrites_inhibitory;
-            node->set_cell_neuron_pos_inh(std::optional<Vec3d>{ scaled_position });
+            node->set_cell_inhibitory_dendrites_position(std::optional<Vec3d>{ scaled_position });
         }
     }
 

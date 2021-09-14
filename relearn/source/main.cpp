@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
     CLI::App app{ "" };
 
     AlgorithmEnum algorithm = AlgorithmEnum::BarnesHut;
-    std::map<std::string, AlgorithmEnum> cli_parse_map{ { "barnes-hut", AlgorithmEnum::BarnesHut }, { "fast-multipole-method", AlgorithmEnum::FastMultipoleMethod } };
+    std::map<std::string, AlgorithmEnum> cli_parse_map{ { "barnes-hut", AlgorithmEnum::BarnesHut }, { "fast-multipole-methods", AlgorithmEnum::FastMultipoleMethods } };
     auto* opt_algorithm = app.add_option("-a,--algorithm", algorithm, "The algorithm that is used for finding the targets");
     opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_map, CLI::ignore_case));
 
@@ -273,6 +273,8 @@ int main(int argc, char** argv) {
     if (algorithm == AlgorithmEnum::BarnesHut) {
         sim.set_acceptance_criterion_for_barnes_hut(accept_criterion);
     }
+
+    sim.set_algorithm(algorithm);
 
     if (static_cast<bool>(*opt_num_neurons)) {
         const double frac_exc = 0.8;
