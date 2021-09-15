@@ -22,6 +22,11 @@
 template <typename T>
 class OctreeNode;
 
+/**
+ * This class caches octree nodes from other MPI ranks on the local MPI rank.
+ * Some methods have the template parameter AdditionalCellAttributes, which must be
+ * BarnesHutCell or FastMultipoleMethodsCell, violating the Open-Close priinciple.
+ */
 class NodeCache {
 public:
     /**

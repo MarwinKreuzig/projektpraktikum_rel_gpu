@@ -22,8 +22,9 @@
 
 /**
  * This class summarizes all 'octree-relevant' data from a neuron.
- * It contains a size in the octree (min and max), a neuron id (value Constants::uninitialized for virtual neurons, aka. inner nodes in the octree), 
- * and a position for the inhibitory and excitatory dendrites
+ * It contains a size in the octree (min and max), a neuron id (value Constants::uninitialized for virtual neurons, aka. inner nodes in the octree).
+ * Depending on the template type, it also stores dendrite and axon positions, as well as calculated HermiteCoefficients.
+ * AdditionalCellAttributes should be BarnesHutCell or FastMultipoleCell
  */
 template <typename AdditionalCellAttributes>
 class Cell {
@@ -95,7 +96,7 @@ public:
 	 *		|  /      |  /     |
 	 *		| /       | /      | /
 	 *		|/        |/       |/
-	 *	   000 ----- 001       +-----> index
+	 *	   000 ----- 001       +-----> x
      */
     [[nodiscard]] unsigned char get_octant_for_position(const Vec3d& pos) const {
         unsigned char idx = 0;
@@ -107,7 +108,7 @@ public:
         /**
 	     * Sanity check: Make sure that the position is within this cell
 	     * This check returns false if negative coordinates are used.
-	     * Thus make sure to use positions >=0.
+	     * Thus make sure to use positions >= 0.
 	     */
         RelearnException::check(index >= xyz_min.get_x() && index <= xyz_max.get_x(), "index is bad");
         RelearnException::check(y >= xyz_min.get_y() && y <= xyz_max.get_y(), "y is bad");
@@ -122,7 +123,7 @@ public:
         //NOLINTNEXTLINE
         idx = idx | ((z < (xyz_min.get_z() + xyz_max.get_z()) / 2.0) ? 0 : 4); // idx | (pos_z < midpoint_dim_z) ? 0 : 4
 
-        RelearnException::check(idx < Constants::number_oct, "Octree octant must be smaller than 8");
+        RelearnException::check(idx < Constants::number_oct, "Octree octant must be smaller than Constants::number_oct");
 
         return idx;
     }
@@ -130,7 +131,7 @@ public:
     /**
      * @brief Returns the size of the cell in the in the given octant
      * @param octant The octant, between 0 and 7
-     * @exception Throws a RelearnException if octant > 7
+     * @exception Throws a RelearnException if octant > Constants::number_oct
      * @return A tuple with (min, max) for the cell in the given octant
      */
     [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size_for_octant(unsigned char octant) const /*noexcept*/ {

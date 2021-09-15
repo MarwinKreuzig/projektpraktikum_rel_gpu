@@ -12,15 +12,23 @@
 
 #include "Algorithm.h"
 #include "BarnesHutCell.h"
-#include "../neurons/models/SynapticElements.h"
+#include "../neurons/helper/RankNeuronId.h"
+#include "../neurons/helper/SynapseCreationRequests.h"
+#include "../neurons/SignalType.h"
 #include "../structure/OctreeNode.h"
 #include "../util/RelearnException.h"
+#include "../util/Vec3.h"
 
+#include <array>
 #include <memory>
+#include <optional>
 #include <tuple>
+#include <vector>
 
+class NeuronsExtraInfo;
 template <typename T>
 class OctreeImplementation;
+class SynapticElements;
 
 /**
  * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
@@ -72,6 +80,15 @@ public:
         return acceptance_criterion;
     }
 
+    /**
+     * @brief Returns a collection of proposed synapse creations for each neuron with vacant axons
+     * @param num_neurons The number of local neurons
+     * @param disable_flags Flags that indicate if a local neuron is disabled. If so (== 0), the neuron is ignored
+     * @param extra_infos Used to access the positions of the local neurons
+     * @param axons The axon model that is used
+     * @exception Can throw a RelearnException
+     * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
+     */
     [[nodiscard]] MapSynapseCreationRequests find_target_neurons(size_t num_neurons, const std::vector<char>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) override;
 
@@ -127,8 +144,8 @@ public:
             /**
 			 * We can use position if it's valid or if corresponding num of dendrites is 0 
 			 */
-            RelearnException::check(child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "temp position exc was bad");
-            RelearnException::check(child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "temp position inh was bad");
+            RelearnException::check(child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "The child had excitatory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
+            RelearnException::check(child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "The child had inhibitory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
 
             if (child_position_dendrites_excitatory.has_value()) {
                 const auto scaled_position = child_position_dendrites_excitatory.value() * static_cast<double>(child_number_dendrites_excitatory);

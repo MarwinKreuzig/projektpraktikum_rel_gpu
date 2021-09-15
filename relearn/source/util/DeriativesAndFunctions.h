@@ -7,6 +7,7 @@
  * See the LICENSE file in the base directory for details.
  *
  */
+
 #pragma once
 
 #include "Multiindex.h"
@@ -16,6 +17,8 @@
 #include "../util/Random.h"
 
 #include <math.h>
+
+// TODO: Move the functions into FastMultipoleMethods when applicable
 
 template <typename T>
 T factorial(T value) noexcept {

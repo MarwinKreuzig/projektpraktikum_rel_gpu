@@ -23,18 +23,44 @@
 template <typename T>
 class OctreeImplementation;
 
+/**
+ * This class represents the implementation and adaptation of fast multipole methods. The parameters can be set on the fly.
+ * It is strongly tied to Octree, which might perform MPI communication via NodeCache::download_children()
+ */
 class FastMultipoleMethods : public Algorithm {
 public:
     using AdditionalCellAttributes = FastMultipoleMethodsCell;
 
+    /**
+     * @brief Constructs a new instance with the given octree
+     * @param octree The octree on which the algorithm is to be performed, not null
+     * @exception Throws a RelearnException if octree is nullptr
+     */
     FastMultipoleMethods(const std::shared_ptr<OctreeImplementation<FastMultipoleMethods>>& octree)
         : global_tree(octree) {
         RelearnException::check(octree != nullptr, "In FastMultipoleMethods::FastMultipoleMethods, the octree was null");
     }
 
+     /**
+     * @brief Returns a collection of proposed synapse creations for each neuron with vacant axons. TODO: Does not work with MPI
+     * @param num_neurons The number of local neurons
+     * @param disable_flags Flags that indicate if a local neuron is disabled. If so (== 0), the neuron is ignored
+     * @param extra_infos Used to access the positions of the local neurons
+     * @param axons The axon model that is used
+     * @exception Can throw a RelearnException
+     * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. 
+     */
     MapSynapseCreationRequests find_target_neurons(size_t num_neurons, const std::vector<char>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) override;
 
+    /**
+     * @brief Updates all leaf nodes in the octree by the algorithm
+     * @param disable_flags Flags that indicate if a neuron id disabled (0) or enabled (otherwise)
+     * @param axons The model for the axons
+     * @param excitatory_dendrites The model for the excitatory dendrites
+     * @param inhibitory_dendrites The model for the inhibitory dendrites
+     * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
+     */
     void update_leaf_nodes(const std::vector<char>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
         const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites) override;
 
@@ -94,11 +120,11 @@ public:
             /**
 			 * We can use position if it's valid or if corresponding num of dendrites is 0 
 			 */
-            RelearnException::check(child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "temp position exc was bad");
-            RelearnException::check(child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "temp position inh was bad");
+            RelearnException::check(child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "The child had excitatory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
+            RelearnException::check(child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "The child had inhibitory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
 
-            RelearnException::check(child_position_axons_excitatory.has_value() || (0 == child_number_axons_excitatory), "temp position exc was bad");
-            RelearnException::check(child_position_axons_inhibitory.has_value() || (0 == child_number_axons_inhibitory), "temp position inh was bad");
+            RelearnException::check(child_position_axons_excitatory.has_value() || (0 == child_number_axons_excitatory), "The child had excitatory axons, but no position. ID: {}", child->get_cell_neuron_id());
+            RelearnException::check(child_position_axons_inhibitory.has_value() || (0 == child_number_axons_inhibitory), "The child had inhibitory axons, but no position. ID: {}", child->get_cell_neuron_id());
 
             if (child_position_dendrites_excitatory.has_value()) {
                 const auto scaled_position = child_position_dendrites_excitatory.value() * static_cast<double>(child_number_dendrites_excitatory);
@@ -166,7 +192,7 @@ public:
                         }
 
                         const auto& child_pos = child->get_cell().get_excitatory_axons_position();
-                        const auto& temp_vec = (child_pos.value() - scaled_position) / default_sigma; // TODO: Change default sigma to sigma
+                        const auto& temp_vec = (child_pos.value() - scaled_position) / default_sigma; // TODO: Change default_sigma to sigma
                         temp += child_number_excitatory_axons * Functions::pow_multiindex(temp_vec, indices[a]);
                     }
 
@@ -197,7 +223,7 @@ public:
                         }
 
                         const auto& child_pos = child->get_cell().get_inhibitory_axons_position();
-                        const auto& temp_vec = (child_pos.value() - scaled_position) / default_sigma;
+                        const auto& temp_vec = (child_pos.value() - scaled_position) / default_sigma; // TODO: Change default_sigma to sigma
                         temp += child_number_inhibitory_axons * Functions::pow_multiindex(temp_vec, indices[a]);
                     }
 

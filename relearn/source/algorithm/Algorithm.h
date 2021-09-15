@@ -10,12 +10,10 @@
 
 #pragma once
 
-#include "../neurons/helper/RankNeuronId.h"
 #include "../neurons/helper/SynapseCreationRequests.h"
-#include "../neurons/SignalType.h"
-#include "../util/Vec3.h"
+#include "../util/RelearnException.h"
 
-#include <optional>
+#include <memory>
 #include <vector>
 
 class NeuronsExtraInfo;

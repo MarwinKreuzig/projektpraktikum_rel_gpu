@@ -23,7 +23,7 @@
 
 /**
  * This class serves as the basic building blocks of the Octree.
- * Each object has up to 8 children (can be nullptr) and a Cell which summarizes the relevant biological aspects.
+ * Each object has up to Config::number_oct children (can be nullptr) and a Cell which summarizes the relevant biological aspects.
  * Additionally, an object stores its level within the tree (0 being root), its MPI rank and whether or not it is an inner node.
  */
 template <typename AdditionalCellAttributes>
@@ -50,8 +50,11 @@ public:
         MemoryHolder<AdditionalCellAttributes>::make_available(node);
     }
 
-
 public:
+    /**
+     * @brief Returns the MPI rank this node belongs to
+     * @return The MPI rank
+     */
     [[nodiscard]] int get_rank() const noexcept {
         return rank;
     }
@@ -380,13 +383,18 @@ public:
         cell.set_number_inhibitory_dendrites(num_in);
     }
 
+    /**
+     * @brief Sets the number of free excitatory and inhibitory axons in the associated cell
+     * @param num_ex The number of free excitatory axons
+     * @param num_in The number of free inhibitory axons
+     */
     void set_cell_number_axons(unsigned int num_ex, unsigned int num_in) noexcept {
         cell.set_number_excitatory_axons(num_ex);
         cell.set_number_inhibitory_axons(num_in);
     }
 
     /**
-     * @brief Sets the optional position for the excitatory position in the associated cell
+     * @brief Sets the optional position for the excitatory dendrites position in the associated cell
      * @param opt_position The optional position, can be empty
      */
     void set_cell_excitatory_dendrites_position(const std::optional<Vec3d>& opt_position) noexcept {
@@ -394,17 +402,25 @@ public:
     }
 
     /**
-     * @brief Sets the optional position for the inhibitory position in the associated cell
+     * @brief Sets the optional position for the inhibitory dendrites position in the associated cell
      * @param opt_position The optional position, can be empty
      */
     void set_cell_inhibitory_dendrites_position(const std::optional<Vec3d>& opt_position) noexcept {
         cell.set_inhibitory_dendrites_position(opt_position);
     }
 
+    /**
+     * @brief Sets the optional position for the excitatory axons position in the associated cell
+     * @param opt_position The optional position, can be empty
+     */
     void set_cell_excitatory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
         cell.set_excitatory_axons_position(opt_position);
     }
 
+    /**
+     * @brief Sets the optional position for the inhibitory axons position in the associated cell
+     * @param opt_position The optional position, can be empty
+     */
     void set_cell_inhibitory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
         cell.set_inhibitory_axons_position(opt_position);
     }
@@ -417,6 +433,10 @@ public:
         return cell.get_neuron_id();
     }
 
+    /**
+     * @brief Sets the neuron id for the associated cell. Can be set to Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
+     * @param neuron_id The neuron id
+     */
     void set_cell_neuron_id(size_t neuron_id) noexcept {
         cell.set_neuron_id(neuron_id);
     }
@@ -439,30 +459,64 @@ public:
         return cell.get_size();
     }
 
+    /**
+     * @brief Sets the specified hermite coefficient for the excitatory dendrites in the associated cell
+     * @param index The index of the hermite coefficient
+     * @param coefficient The new value for the hermite coefficient
+     */
     void set_cell_excitatory_hermite_coefficient(unsigned int index, double d) {
         cell.set_excitatory_hermite_coefficient(index, d);
     }
 
+    /**
+     * @brief Sets the specified hermite coefficient for the inhibitory dendrites in the associated cell
+     * @param index The index of the hermite coefficient
+     * @param coefficient The new value for the hermite coefficient
+     */
     void set_cell_inhibitory_hermite_coefficient(unsigned int index, double d) {
         cell.set_inhibitory_hermite_coefficient(index, d);
     }
 
+    /**
+     * @brief Sets the specified hermite coefficient for the specified signal type in the associated cell
+     * @param index The index of the hermite coefficient
+     * @param coefficient The new value for the hermite coefficient
+     * @param signal_type The type of dendrite
+     */
     void set_cell_hermite_coefficient_for(unsigned int index, double d, SignalType needed) {
         cell.set_hermite_coefficient_for(index, d, needed);
     }
 
+    /**
+     * @brief Returns the specified hermite coefficient for the excitatory dendrites in the associated cell
+     * @return The specified hermite coefficient
+     */
     double get_cell_excitatory_hermite_coefficient(unsigned int index) const {
         return cell.get_excitatory_hermite_coefficient(index);
     }
 
+    /**
+     * @brief Returns the specified hermite coefficient for the inhibitory dendrites in the associated cell
+     * @return The specified hermite coefficient
+     */
     double get_cell_inhibitory_hermite_coefficient(unsigned int index) const {
         return cell.get_inhibitory_hermite_coefficient(index);
     }
 
+    /**
+     * @brief Returns the specified hermite coefficient for the specified signal type in the associated cell
+     * @return The specified hermite coefficient
+     */
     double get_cell_hermite_coefficient_for(unsigned int index, SignalType needed) const {
         return cell.get_hermite_coefficient_for(index, needed);
     }
 
+    /**
+     * @brief Returns a vector of all actual dendrite positions that have a free port of the requested SignalType. 
+     *      Contains multiples if a dendrite has more than one free port. TODO: Omit the multiples, return tuple(num, pos) and multiply later in FMM
+     * @param needed The requested SignalType
+     * @return A vector of all actual positions
+     */
     std::vector<Vec3d> get_all_dendrite_positions_for(SignalType needed) const {
         std::vector<Vec3d> result{};
 
@@ -470,7 +524,7 @@ public:
         stack.push(this);
 
         while (!stack.empty()) {
-            const OctreeNode* current_node = stack.top();
+            const auto* current_node = stack.top();
             stack.pop();
 
             if (!current_node->is_parent()) {
@@ -484,7 +538,7 @@ public:
                 }
             } else {
                 for (auto i = 0; i < 8; i++) {
-                    const OctreeNode* children_node = current_node->get_child(i);
+                    const auto* children_node = current_node->get_child(i);
                     if (children_node != nullptr && children_node->get_cell().get_number_dendrites_for(needed) > 0) {
                         stack.push(children_node);
                     }
@@ -495,6 +549,12 @@ public:
         return result;
     }
 
+    /**
+     * @brief Returns a vector of all actual axon positions that have a free port of the requested SignalType. 
+     *      Contains multiples if a actual has more than one free port.
+     * @param needed The requested SignalType
+     * @return A vector of all actual positions
+     */
     std::vector<Vec3d> get_all_axon_positions_for(SignalType needed) const {
         std::vector<Vec3d> result{};
 
@@ -502,7 +562,7 @@ public:
         stack.push(this);
 
         while (!stack.empty()) {
-            const OctreeNode* current_node = stack.top();
+            const auto* current_node = stack.top();
             stack.pop();
 
             if (!current_node->is_parent()) {
@@ -516,7 +576,7 @@ public:
                 }
             } else {
                 for (auto i = 0; i < 8; i++) {
-                    const OctreeNode* children_node = current_node->get_child(i);
+                    const auto* children_node = current_node->get_child(i);
                     if (children_node != nullptr && children_node->get_cell().get_number_axons_for(needed) > 0) {
                         stack.push(children_node);
                     }

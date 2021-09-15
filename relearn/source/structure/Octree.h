@@ -24,7 +24,6 @@
 #include "../util/Random.h"
 #include "../util/RelearnException.h"
 #include "../util/Timers.h"
-#include "../util/Multiindex.h"
 #include "../util/DeriativesAndFunctions.h"
 
 #include <functional>
@@ -159,6 +158,9 @@ protected:
  * This type represents the (spatial) Octree in which the neurons are organised.
  * It offers general informations about the structure, the functionality to insert new neurons,
  * update from the bottom up, and synchronize parts with MPI.
+ * It is templated by the algorithm with which it is used. The type must provide
+ * Algorithm::AdditionalCellAttributes - will be used to template the Cell
+ * void Algorithm::update_functor(OctreeNode<Algorithm::AdditionalCellAttributes>*)
  */
 template <typename Algorithm>
 class OctreeImplementation : public Octree {

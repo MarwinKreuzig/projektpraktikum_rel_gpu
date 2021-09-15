@@ -15,10 +15,14 @@
 #include "../structure/OctreeNode.h"
 #include "../util/Timers.h"
 
-inline std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source, const std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>& interaction_list, const SignalType dendrite_type_needed) const {
-    const auto& count_non_zero_elements = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>& arr) {
+inline std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(
+    const OctreeNode<FastMultipoleMethodsCell>* source,
+    const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& interaction_list,
+    const SignalType dendrite_type_needed) const {
+
+    const auto& count_non_zero_elements = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& arr) {
         auto non_zero_counter = 0;
-        for (auto i = 0; i < 8; i++) {
+        for (auto i = 0; i < Constants::number_oct; i++) {
             if (arr[i] != nullptr) {
                 non_zero_counter++;
             }
@@ -26,9 +30,9 @@ inline std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_
         return non_zero_counter;
     };
 
-    const auto& extract_element = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>& arr, unsigned int index) -> const OctreeNode<FastMultipoleMethodsCell>* {
+    const auto& extract_element = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& arr, unsigned int index) -> const OctreeNode<FastMultipoleMethodsCell>* {
         auto non_zero_counter = 0;
-        for (auto i = 0; i < 8; i++) {
+        for (auto i = 0; i < Constants::number_oct; i++) {
             if (arr[i] != nullptr) {
                 if (index == non_zero_counter) {
                     return arr[i];
@@ -100,10 +104,10 @@ inline unsigned int FastMultipoleMethods::do_random_experiment(const OctreeNode<
 }
 
 std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source,
-    const std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>& interaction_list, const SignalType dendrite_type_needed) {
-    const auto& count_non_zero_elements = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>& arr) {
+    const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& interaction_list, const SignalType dendrite_type_needed) {
+    const auto& count_non_zero_elements = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& arr) {
         auto non_zero_counter = 0;
-        for (auto i = 0; i < 8; i++) {
+        for (auto i = 0; i < Constants::number_oct; i++) {
             if (arr[i] != nullptr) {
                 non_zero_counter++;
             }
@@ -111,9 +115,9 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(con
         return non_zero_counter;
     };
 
-    const auto& extract_element = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>& arr, unsigned int index) -> const OctreeNode<FastMultipoleMethodsCell>* {
+    const auto& extract_element = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& arr, unsigned int index) -> const OctreeNode<FastMultipoleMethodsCell>* {
         auto non_zero_counter = 0;
-        for (auto i = 0; i < 8; i++) {
+        for (auto i = 0; i < Constants::number_oct; i++) {
             if (arr[i] != nullptr) {
                 if (index == non_zero_counter) {
                     return arr[i];
@@ -161,11 +165,11 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(con
 }
 
 void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynapseCreationRequests& request,
-    std::stack<std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>>>& nodes_with_axons) {
+    std::stack<std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>>>& nodes_with_axons) {
 
-    const auto& count_non_zero_elements = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>& arr) {
+    const auto& count_non_zero_elements = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& arr) {
         auto non_zero_counter = 0;
-        for (auto i = 0; i < 8; i++) {
+        for (auto i = 0; i < Constants::number_oct; i++) {
             if (arr[i] != nullptr) {
                 non_zero_counter++;
             }
@@ -173,9 +177,9 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
         return non_zero_counter;
     };
 
-    const auto& extract_element = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>& arr, unsigned int index) -> const OctreeNode<FastMultipoleMethodsCell>* {
+    const auto& extract_element = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& arr, unsigned int index) -> const OctreeNode<FastMultipoleMethodsCell>* {
         auto non_zero_counter = 0;
-        for (auto i = 0; i < 8; i++) {
+        for (auto i = 0; i < Constants::number_oct; i++) {
             if (arr[i] != nullptr) {
                 if (index == non_zero_counter) {
                     return arr[i];
@@ -187,11 +191,11 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
     };
 
     while (!nodes_with_axons.empty()) {
-        std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>> pair = nodes_with_axons.top();
+        std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>> pair = nodes_with_axons.top();
         nodes_with_axons.pop();
 
         OctreeNode<FastMultipoleMethodsCell>* source_node = std::get<0>(pair);
-        std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8> interaction_list = std::get<1>(pair);
+        std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> interaction_list = std::get<1>(pair);
 
         const auto& cell = source_node->get_cell();
 
@@ -220,7 +224,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
             }
 
             if (target_node->is_parent()) {
-                std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8> new_interaction_list{ nullptr };
+                std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> new_interaction_list{ nullptr };
                 auto counter = 0;
 
                 for (auto* target_child : target_node->get_children()) {
@@ -266,7 +270,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
                     continue;
                 }
 
-                std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8> new_interaction_list{ nullptr };
+                std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> new_interaction_list{ nullptr };
                 auto counter = 0;
 
                 for (auto* target_child_node : target_node->get_children()) {
@@ -303,7 +307,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
                 continue;
             }
 
-            std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8> new_interaction_list{ nullptr };
+            std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> new_interaction_list{ nullptr };
             new_interaction_list[0] = target_node;
 
             nodes_with_axons.emplace(source_child_node, std::move(new_interaction_list));
@@ -320,8 +324,8 @@ MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t num_
     std::vector<OctreeNode<FastMultipoleMethodsCell>*> nodes_with_excitatory_dendrites{};
     std::vector<OctreeNode<FastMultipoleMethodsCell>*> nodes_with_inhibitory_dendrites{};
 
-    std::stack<std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>>> nodes_with_excitatory_axons{};
-    std::stack<std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>>> nodes_with_inhibitory_axons{};
+    std::stack<std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>>> nodes_with_excitatory_axons{};
+    std::stack<std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>>> nodes_with_inhibitory_axons{};
 
     OctreeNode<FastMultipoleMethodsCell>* root = global_tree->get_root();
     const auto& children = root->get_children();
@@ -341,7 +345,7 @@ MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t num_
         const auto& cell = current_node->get_cell();
 
         if (cell.get_number_excitatory_axons() > 0) {
-            std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8> interaction_list{ nullptr };
+            std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> interaction_list{ nullptr };
             for (auto i = 0; i < nodes_with_excitatory_dendrites.size(); i++) {
                 interaction_list[i] = nodes_with_excitatory_dendrites[i];
             }
@@ -350,7 +354,7 @@ MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t num_
         }
 
         if (cell.get_number_inhibitory_axons() > 0) {
-            std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8> interaction_list{ nullptr };
+            std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> interaction_list{ nullptr };
             for (auto i = 0; i < nodes_with_inhibitory_dendrites.size(); i++) {
                 interaction_list[i] = nodes_with_inhibitory_dendrites[i];
             }

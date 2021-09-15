@@ -35,7 +35,7 @@ public:
      * Subdomain is a type that represents one part of the octree at the level of the branching nodes.
      * It's composed of the min and max positions of the subdomain, the number of neurons in this subdomain,
      * the start and end local neuron ids, all global neuron ids for the local neurons, 
-     * it's 1d and 3d index for all Subdomains and a local octree view in which the part of that subdomain is constructed
+     * it's 1d and 3d index for all Subdomains and the positions of the neurons in that Subdomain.
      */
     struct Subdomain {
         Vec3d xyz_min{ Constants::uninitialized };
@@ -216,10 +216,21 @@ public:
         total_num_neurons = total_num;
     }
 
+    /**
+     * @brief Inserts all neurons for a given subdomain id into the octree node. 
+     * @tparam AdditionalCellAttributes The additional cell attributes for the octree node
+     * @param local_root The octree node where all neurons shall be inserted
+     * @param subdomain_id The local subdomain id which's neurons shall be inserted
+     * @exception Throws a RelearnException if local_root is nullptr, subdomain_id is larger than the stored subdomains,
+     *      or there was a memory error when creating the octree nodes
+     */
     template <typename AdditionalCellAttributes>
-    void insert_nodes_into(OctreeNode<AdditionalCellAttributes>* local_root, size_t subdomain_id) {
-        auto& current_subdomain = subdomains[subdomain_id];
-        size_t neuron_id = current_subdomain.neuron_local_id_start;
+    void insert_nodes_into(OctreeNode<AdditionalCellAttributes>* local_root, size_t subdomain_id) const {
+        RelearnException::check(local_root != nullptr, "local_root was nullptr in Partition");
+        RelearnException::check(subdomain_id < subdomains.size(), "subdomain_id was too large");
+
+        const auto& current_subdomain = subdomains[subdomain_id];
+        auto neuron_id = current_subdomain.neuron_local_id_start;
 
         const auto my_rank = MPIWrapper::get_my_rank();
         for (size_t j = 0; j < current_subdomain.num_neurons; j++) {
