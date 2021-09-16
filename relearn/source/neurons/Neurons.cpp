@@ -264,15 +264,25 @@ void Neurons::update_calcium() {
     // The following line is commented as compilers cannot make up their mind whether they want to have the constants shared or not
     //#pragma omp parallel for shared(fired, h, tau_C, beta) default(none)
     // NOLINTNEXTLINE
+
+    const auto val = (1 / static_cast<double>(h));
+
 #pragma omp parallel for
     for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {
             continue;
         }
 
-        for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-            // Update calcium depending on the firing
-            calcium[neuron_id] += (1 / static_cast<double>(h)) * (-calcium[neuron_id] / tau_C + beta * static_cast<double>(fired[neuron_id]));
+        if (fired[neuron_id] == 1) {
+            for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
+                // Update calcium depending on the firing
+                calcium[neuron_id] += val * (-calcium[neuron_id] / tau_C + beta);
+            }
+        } else {
+            for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
+                // Update calcium depending on the firing
+                calcium[neuron_id] += val * (-calcium[neuron_id] / tau_C);
+            }
         }
     }
 

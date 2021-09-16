@@ -76,7 +76,7 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
         /**
 		 * Determine synaptic input from neurons connected to me
 		 */
-
+        
         const auto my_rank = MPIWrapper::get_my_rank();
 
         // Walk through in-edges of my neuron
@@ -85,7 +85,7 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
         for (const auto& [key, edge_val] : in_edges) {
             const auto& [rank, src_neuron_id] = key;
 
-            if (rank == my_rank) {
+             if (rank == my_rank) {
                 const auto spike = fired[src_neuron_id];
                 I_syn[neuron_id] += k * (edge_val * spike);
             } else {
