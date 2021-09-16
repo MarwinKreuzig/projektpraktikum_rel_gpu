@@ -1798,7 +1798,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledPoisson) {
         std::vector<char> disable_flags(desired_num_neurons);
         std::vector<double> model_x = model->get_x();
         std::vector<double> model_secondary(desired_num_neurons);
-        std::vector<bool> model_fired = model->get_fired();
+        std::vector<char> model_fired = model->get_fired();
         std::vector<double> model_I_sync(desired_num_neurons);
 
         for (unsigned int id = 0; id < desired_num_neurons; id++) {
@@ -1903,7 +1903,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledIzhikevich) {
         std::vector<char> disable_flags(desired_num_neurons);
         std::vector<double> model_x = model->get_x();
         std::vector<double> model_secondary(desired_num_neurons);
-        std::vector<bool> model_fired = model->get_fired();
+        std::vector<char> model_fired = model->get_fired();
         std::vector<double> model_I_sync(desired_num_neurons);
 
         for (unsigned int id = 0; id < desired_num_neurons; id++) {
@@ -1998,7 +1998,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledFitzHughNagumo) {
         std::vector<char> disable_flags(desired_num_neurons);
         std::vector<double> model_x = model->get_x();
         std::vector<double> model_secondary(desired_num_neurons);
-        std::vector<bool> model_fired = model->get_fired();
+        std::vector<char> model_fired = model->get_fired();
         std::vector<double> model_I_sync(desired_num_neurons);
 
         for (unsigned int id = 0; id < desired_num_neurons; id++) {
@@ -2105,7 +2105,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledAEIF) {
         std::vector<char> disable_flags(desired_num_neurons);
         std::vector<double> model_x = model->get_x();
         std::vector<double> model_secondary(desired_num_neurons);
-        std::vector<bool> model_fired = model->get_fired();
+        std::vector<char> model_fired = model->get_fired();
         std::vector<double> model_I_sync(desired_num_neurons);
 
         for (unsigned int id = 0; id < desired_num_neurons; id++) {
@@ -2199,7 +2199,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisso
         std::vector<char> disable_flags(desired_num_neurons, 1);
         std::vector<double> model_x = model->get_x();
         std::vector<double> model_secondary(desired_num_neurons);
-        std::vector<bool> model_fired = model->get_fired();
+        std::vector<char> model_fired = model->get_fired();
         std::vector<double> model_I_syn = model->get_I_syn();
 
         for (unsigned int id = 0; id < desired_num_neurons; id++) {
@@ -2320,7 +2320,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhike
         std::vector<char> disable_flags(desired_num_neurons, 1);
         std::vector<double> model_x = model->get_x();
         std::vector<double> model_secondary(desired_num_neurons);
-        std::vector<bool> model_fired = model->get_fired();
+        std::vector<char> model_fired = model->get_fired();
         std::vector<double> model_I_syn = model->get_I_syn();
 
         for (unsigned int id = 0; id < desired_num_neurons; id++) {
@@ -2525,7 +2525,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) 
         std::vector<char> disable_flags(desired_num_neurons, 1);
         std::vector<double> model_x = model->get_x();
         std::vector<double> model_secondary(desired_num_neurons);
-        std::vector<bool> model_fired = model->get_fired();
+        std::vector<char> model_fired = model->get_fired();
         std::vector<double> model_I_syn = model->get_I_syn();
 
         for (unsigned int id = 0; id < desired_num_neurons; id++) {

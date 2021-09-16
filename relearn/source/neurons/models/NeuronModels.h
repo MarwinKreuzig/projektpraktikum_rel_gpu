@@ -184,14 +184,14 @@ public:
      */
     [[nodiscard]] bool get_fired(const size_t neuron_id) const {
         RelearnException::check(neuron_id < my_num_neurons, "In NeuronModels::get_fired, id is too large");
-        return fired[neuron_id];
+        return fired[neuron_id] == 1;
     }
 
     /**
      * @brief Returns a vector of flags that indicate if the neuron with the local id spiked in the current simulation step
      * @return A constant reference to the vector of flags. It is not invalidated by calls to other methods
      */
-    [[nodiscard]] const std::vector<bool>& get_fired() const noexcept {
+    [[nodiscard]] const std::vector<char>& get_fired() const noexcept {
         return fired;
     }
 
@@ -346,7 +346,7 @@ public:
     virtual void disable_neurons(const std::vector<size_t>& neuron_ids) {
         for (const auto neuron_id : neuron_ids) {
             RelearnException::check(neuron_id < my_num_neurons, "In NeuronModels::disable_neurons, there was a too large id: {} vs {}", neuron_id, my_num_neurons);
-            fired[neuron_id] = false;
+            fired[neuron_id] = 0;
         }
     }
 
@@ -415,7 +415,7 @@ protected:
      * @param neuron_id The local neuron id
      * @param new_value True iff the neuron fired in the current simulation step
      */
-    void set_fired(size_t neuron_id, bool new_value) noexcept {
+    void set_fired(size_t neuron_id, char new_value) noexcept {
         fired[neuron_id] = new_value;
     }
 
@@ -448,7 +448,7 @@ private:
     // Variables for each neuron where the array index denotes the local neuron ID
     std::vector<double> I_syn{}; // Synaptic input
     std::vector<double> x{}; // membrane potential v
-    std::vector<bool> fired{}; // true: neuron has fired, false: neuron is inactive
+    std::vector<char> fired{}; // 0: neuron is inactive, != 0: neuron fired
 };
 
 namespace models {

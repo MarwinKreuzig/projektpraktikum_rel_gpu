@@ -85,14 +85,16 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
         for (const auto& [key, edge_val] : in_edges) {
             const auto& [rank, src_neuron_id] = key;
 
-            bool spike{ false };
             if (rank == my_rank) {
-                spike = static_cast<bool>(fired[src_neuron_id]);
+                const auto spike = fired[src_neuron_id];
+                I_syn[neuron_id] += k * (edge_val * spike);
             } else {
                 const auto it = firing_neuron_ids_incoming.find(rank);
-                spike = (it != firing_neuron_ids_incoming.end()) && (it->second.find(src_neuron_id));
+                const auto found = (it != firing_neuron_ids_incoming.end()) && (it->second.find(src_neuron_id));
+                if (found) {
+                    I_syn[neuron_id] += k * edge_val;
+                }
             }
-            I_syn[neuron_id] += k * edge_val * static_cast<double>(spike);
         }
     }
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
@@ -272,7 +274,7 @@ std::vector<ModelParameter> NeuronModel::get_parameter() {
 void NeuronModel::init(size_t num_neurons) {
     my_num_neurons = num_neurons;
     x.resize(num_neurons, 0.0);
-    fired.resize(num_neurons, false);
+    fired.resize(num_neurons, 0);
     I_syn.resize(num_neurons, 0.0);
 }
 
@@ -282,6 +284,6 @@ void NeuronModel::create_neurons(size_t creation_count) {
     my_num_neurons = new_size;
 
     x.resize(new_size, 0.0);
-    fired.resize(new_size, false);
+    fired.resize(new_size, 0);
     I_syn.resize(new_size, 0.0);
 }
