@@ -43,7 +43,7 @@ public:
      * @param ptr The pointer to the memory location in which objects should be created and deleted
      * @param length The number of objects that fit into the memory
      */
-    static void init(OctreeNode<AdditionalCellAttributes>* ptr, size_t length) {
+    static void init(OctreeNode<AdditionalCellAttributes>* ptr, const size_t length) {
         non_available.resize(length, nullptr);
         base_ptr = ptr;
         total = length;
@@ -61,14 +61,14 @@ public:
      * @return A non-null pointer to a new object
      */
     [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_available() {
-        RelearnException::check(!available.empty(), "In MemoryHolder::get_available, there are no free nodes.");
+        RelearnException::check(!available.empty(), "MemoryHolder::get_available: There are no free nodes.");
 
         // Get last available element and save it
         OctreeNode<AdditionalCellAttributes>* ptr = available.front();
         available.pop();
         const size_t dist = std::distance(base_ptr, ptr);
 
-        RelearnException::check(dist < non_available.size(), "In MemoryHolder::get_available, the distance was too large.");
+        RelearnException::check(dist < non_available.size(), "MemoryHolder::get_available: The distance was too large: {} vs {}.", dist, non_available.size());
         non_available[dist] = ptr;
 
         return ptr;
@@ -80,11 +80,11 @@ public:
      * @exception Throws a RelearnException if ptr is nullptr or ptr did not come from get_available()
      */
     static void make_available(OctreeNode<AdditionalCellAttributes>* ptr) {
-        RelearnException::check(ptr != nullptr, "In MemoryHolder::make_available, ptr was nullptr");
+        RelearnException::check(ptr != nullptr, "MemoryHolder::make_available: ptr was nullptr");
 
         const size_t dist = std::distance(base_ptr, ptr);
 
-        RelearnException::check(dist < non_available.size(), "In MemoryHolder::get_available, the distance was too large.");
+        RelearnException::check(dist < non_available.size(), "MemoryHolder::get_available: The distance was too large: {} vs {}.", dist, non_available.size());
         available.push(ptr);
         non_available[dist] = nullptr;
 

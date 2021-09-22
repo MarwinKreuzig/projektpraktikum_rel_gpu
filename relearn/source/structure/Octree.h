@@ -55,7 +55,7 @@ public:
      * @param level_of_branch_nodes The level at which the branch nodes (that are exchanged via MPI) are
      * @exception Throws a RelearnException if xyz_min is not componentwise smaller than xyz_max
      */
-    Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes)
+    Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, const size_t level_of_branch_nodes)
         : level_of_branch_nodes(level_of_branch_nodes) {
         set_size(xyz_min, xyz_max);
     }
@@ -112,14 +112,14 @@ public:
      *      (e) Something went wrong within the insertion
      * @return A pointer to the newly created and inserted node
      */
-    virtual void insert(const Vec3d& position, size_t neuron_id, int rank) = 0;
+    virtual void insert(const Vec3d& position, const size_t neuron_id, const int rank) = 0;
 
     /**
      * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes
      * @param max_level The maximum level (inclusive) on which the nodes should be updated
      * @exception Throws a RelearnException if the functor throws
      */
-    virtual void update_from_level(size_t max_level) = 0;
+    virtual void update_from_level(const size_t max_level) = 0;
 
     /**
      * @brief Updates all local (!) branch nodes and their induced subtrees.
@@ -136,12 +136,13 @@ public:
      * @brief Gathers all leaf nodes and makes them available via get_leaf_nodes
      * @param num_neurons The number of neurons
      */
-    virtual void initializes_leaf_nodes(size_t num_neurons) = 0;
+    virtual void initializes_leaf_nodes(const size_t num_neurons) = 0;
 
 protected:
     // Set simulation box size of the tree
     void set_size(const Vec3d& min, const Vec3d& max) {
-        RelearnException::check(min.get_x() < max.get_x() && min.get_y() < max.get_y() && min.get_z() < max.get_z(), "In Octree::set_size, the minimum was not smaller than the maximum");
+        RelearnException::check(min.get_x() < max.get_x() && min.get_y() < max.get_y() && min.get_z() < max.get_z(), 
+            "Octree::set_size: The minimum was not smaller than the maximum");
 
         xyz_min = min;
         xyz_max = max;
@@ -189,11 +190,11 @@ protected:
          * @param depth_in_tree The depth of the current node
          * @exception Throws a RelearnException if octree_node is nullptr or depth_in_tree is larger than Cosntants::unitialized
         */
-        StackElement(OctreeNode<AdditionalCellAttributes>* octree_node, size_t depth_in_tree)
+        StackElement(OctreeNode<AdditionalCellAttributes>* octree_node, const size_t depth_in_tree)
             : ptr(octree_node)
             , depth(depth_in_tree) {
-            RelearnException::check(octree_node != nullptr, "StackElement::StackElement, octree_node was nullptr");
-            RelearnException::check(depth_in_tree < Constants::uninitialized, "StackElement::StackElement, depth_in_tree was too large");
+            RelearnException::check(octree_node != nullptr, "StackElement::StackElement: octree_node was nullptr");
+            RelearnException::check(depth_in_tree < Constants::uninitialized, "StackElement::StackElement: depth_in_tree was too large: {}", depth_in_tree);
         }
 
         /**
@@ -209,7 +210,7 @@ protected:
          * @exception Throws a RelearnException if this node was already visited before
          */
         void set_visited() {
-            RelearnException::check(!already_visited, "StackElement::set_visited, element is already visited");
+            RelearnException::check(!already_visited, "StackElement::set_visited: element is already visited");
             already_visited = true;
         }
 
@@ -238,7 +239,7 @@ public:
      * @param level_of_branch_nodes The level at which the branch nodes (that are exchanged via MPI) are
      * @exception Throws a RelearnException if xyz_min is not componentwise smaller than xyz_max
      */
-    OctreeImplementation(const Vec3d& xyz_min, const Vec3d& xyz_max, size_t level_of_branch_nodes)
+    OctreeImplementation(const Vec3d& xyz_min, const Vec3d& xyz_max, const size_t level_of_branch_nodes)
         : Octree(xyz_min, xyz_max, level_of_branch_nodes) {
 
         const auto num_local_trees = 1ULL << (3 * level_of_branch_nodes);
@@ -261,8 +262,8 @@ public:
      * @exception Throws a RelearnException if local_id is too large
      * @return The branch node with the specified local id. Ownership is not transfered
      */
-    [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_local_root(size_t local_id) {
-        RelearnException::check(local_id < branch_nodes.size(), "Octree::get_local_root, local_id was too large");
+    [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_local_root(const size_t local_id) {
+        RelearnException::check(local_id < branch_nodes.size(), "Octree::get_local_root: local_id was {}", local_id);
         OctreeNode<AdditionalCellAttributes>* local_tree = branch_nodes[local_id];
         return local_tree;
     }
@@ -280,7 +281,7 @@ public:
      * @param max_level The maximum level (inclusive) on which the nodes should be updated
      * @exception Throws a RelearnException if the functor throws
      */
-    void update_from_level(size_t max_level) override {
+    void update_from_level(const size_t max_level) override {
         tree_walk_postorder(Algorithm::update_functor, root, max_level);
     }
 
@@ -302,7 +303,7 @@ public:
      * @brief Gathers all leaf nodes and makes them available via get_leaf_nodes
      * @param num_neurons The number of neurons
      */
-    void initializes_leaf_nodes(size_t num_neurons) override {
+    void initializes_leaf_nodes(const size_t num_neurons) override {
         std::vector<OctreeNode<AdditionalCellAttributes>*> leaf_nodes(num_neurons);
 
         std::stack<OctreeNode<AdditionalCellAttributes>*> stack;
@@ -327,7 +328,7 @@ public:
                 }
             } else {
                 const auto neuron_id = node->get_cell_neuron_id();
-                RelearnException::check(neuron_id < leaf_nodes.size(), "Neuron id was too large for leaf nodes");
+                RelearnException::check(neuron_id < leaf_nodes.size(), "Octree::initializes_leaf_nodes: Neuron id was too large for leaf nodes: {}", neuron_id);
                 leaf_nodes[neuron_id] = node;
             }
         }
@@ -354,7 +355,8 @@ public:
         }
 
         // Allgather in-place branch nodes from every rank
-        RelearnException::check(num_local_trees < static_cast<size_t>(std::numeric_limits<int>::max()), "Too many branch nodes");
+        RelearnException::check(num_local_trees < static_cast<size_t>(std::numeric_limits<int>::max()), 
+            "Octree::synchronize_local_trees: Too many branch nodes: {}", num_local_trees);
         MPIWrapper::all_gather_inline(exchange_branch_nodes.data(), static_cast<int>(num_local_trees));
 
         Timers::stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
@@ -384,10 +386,10 @@ public:
      * @param index_1d The id for which to insert the local tree
      * @exception Throws a RelearnException if index_1d is too large or node_to_insert is nullptr
      */
-    void insert_local_tree(OctreeNode<AdditionalCellAttributes>* node_to_insert, size_t index_1d) {
-        RelearnException::check(index_1d < branch_nodes.size(), "Octree::insert_local_tree, local_id was too large");
-        RelearnException::check(node_to_insert != nullptr, "Octree::insert_local_tree, node_to_insert is nullptr");
-        RelearnException::check(node_to_insert->is_parent(), "Cannot insert an empty node");
+    void insert_local_tree(OctreeNode<AdditionalCellAttributes>* node_to_insert, const size_t index_1d) {
+        RelearnException::check(index_1d < branch_nodes.size(), "Octree::insert_local_tree: local_id was {}", index_1d);
+        RelearnException::check(node_to_insert != nullptr, "Octree::insert_local_tree: node_to_insert is nullptr");
+        RelearnException::check(node_to_insert->is_parent(), "Octree::insert_local_tree: Cannot insert an empty node");
         *branch_nodes[index_1d] = *node_to_insert;
     }
 
@@ -406,13 +408,25 @@ public:
      * @param neuron_id The local neuron id
      * @param rank The MPI rank that the neuron belongs to
      */
-    void insert(const Vec3d& position, size_t neuron_id, int rank) {
-        RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "In Octree::insert, x was not in range");
-        RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Octree::insert, y was not in range");
-        RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "In Octree::insert, z was not in range");
+    void insert(const Vec3d& position, const size_t neuron_id, const int rank) {
+        const auto& min_x = xyz_min.get_x();
+        const auto& min_y = xyz_min.get_y();
+        const auto& min_z = xyz_min.get_z();
 
-        RelearnException::check(rank >= 0, "In Octree::insert, rank was smaller than 0");
-        RelearnException::check(neuron_id < Constants::uninitialized, "In Octree::insert, neuron_id was too large");
+        const auto& max_x = xyz_max.get_x();
+        const auto& max_y = xyz_max.get_y();
+        const auto& max_z = xyz_max.get_z();
+
+        const auto& pos_x = position.get_x();
+        const auto& pos_y = position.get_y();
+        const auto& pos_z = position.get_z();
+
+        RelearnException::check(min_x <= pos_x && pos_x <= max_x, "Octree::insert: x was not in range: {} vs [{}, {}]", pos_x, min_x, max_x);
+        RelearnException::check(min_y <= pos_y && pos_y <= max_y, "Octree::insert: y was not in range: {} vs [{}, {}]", pos_y, min_y, max_y);
+        RelearnException::check(min_z <= pos_z && pos_z <= max_z, "Octree::insert: z was not in range: {} vs [{}, {}]", pos_z, min_z, max_z);
+
+        RelearnException::check(rank >= 0, "Octree::insert: rank was smaller than 0 ({})", rank);
+        RelearnException::check(neuron_id < Constants::uninitialized, "Octree::insert: neuron_id was {}", neuron_id);
 
         // Tree is empty
         if (nullptr == root) {
@@ -434,12 +448,12 @@ public:
         }
 
         auto* res = root->insert(position, neuron_id, rank);
-        RelearnException::check(res != nullptr, "Octree::insert had nullptr");
+        RelearnException::check(res != nullptr, "Octree::insert: res was nullptr");
     }
 
 protected:
-    void tree_walk_postorder(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function, OctreeNode<AdditionalCellAttributes>* root, size_t max_level = std::numeric_limits<size_t>::max()) {
-        RelearnException::check(root != nullptr, "In tree_walk_postorder, octree was nullptr");
+    void tree_walk_postorder(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function, OctreeNode<AdditionalCellAttributes>* root, const size_t max_level = std::numeric_limits<size_t>::max()) {
+        RelearnException::check(root != nullptr, "Octree::tree_walk_postorder: octree was nullptr");
 
         std::stack<StackElement> stack{};
 
@@ -454,7 +468,7 @@ protected:
 
             // Node should be visited now?
             if (current_element.get_visited()) {
-                RelearnException::check(current_octree_node->get_level() <= max_level, "current_element had bad level");
+                RelearnException::check(current_octree_node->get_level() <= max_level, "Octree::tree_walk_postorder: current_element had bad level");
 
                 // Apply action to node
                 function(current_octree_node);
@@ -481,7 +495,7 @@ protected:
     }
 
     void construct_global_tree_part() {
-        RelearnException::check(root == nullptr, "root was not null in the construction of the global state!");
+        RelearnException::check(root == nullptr, "Octree::construct_global_tree_part: root was not null");
 
         SpaceFillingCurve<Morton> space_curve{ static_cast<uint8_t>(level_of_branch_nodes) };
 
@@ -496,7 +510,7 @@ protected:
         const auto cell_length_z = cell_length.get_z();
 
         OctreeNode<AdditionalCellAttributes>* local_root = OctreeNode<AdditionalCellAttributes>::create();
-        RelearnException::check(local_root != nullptr, "local_root is nullptr");
+        RelearnException::check(local_root != nullptr, "Octree::construct_global_tree_part: local_root is nullptr");
 
         local_root->set_cell_neuron_id(Constants::uninitialized);
         local_root->set_cell_size(xyz_min, xyz_max);

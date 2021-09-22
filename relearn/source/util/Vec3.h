@@ -115,7 +115,7 @@ public:
     }
 
     /**
-     * @brief Casts to current object to an object of type Vec3<K>. Uses static_cast<K> component wise
+     * @brief Casts to current object to an object of type Vec3<K>. Uses static_cast<K> componentwise
      * @tparam K The new type of the components
      * @return A castet version of the current object
      */
@@ -126,7 +126,7 @@ public:
     }
 
     /**
-     * @brief Compares the current object to other and checks for equality
+     * @brief Compares the current object to other and checks for equality componentwise
      * @param other The other vector
      * @return True iff all components are equal
      */
@@ -215,10 +215,10 @@ public:
      * @exception Throws a RelearnException if any of the components are < 0
      * @return A newly created object with the floored values
      */
-    [[nodiscard]] Vec3<size_t> floor_componentwise() const /*noexcept*/ {
-        RelearnException::check(x >= 0, "floor_componentwise must be used on a positive vector: x");
-        RelearnException::check(y >= 0, "floor_componentwise must be used on a positive vector: y");
-        RelearnException::check(z >= 0, "floor_componentwise must be used on a positive vector: z");
+    [[nodiscard]] Vec3<size_t> floor_componentwise() const {
+        RelearnException::check(x >= 0, "Vec3::floor_componentwise: x was negative: {}", x);
+        RelearnException::check(y >= 0, "Vec3::floor_componentwise: y was negative: {}", y);
+        RelearnException::check(z >= 0, "Vec3::floor_componentwise: z was negative: {}", z);
 
         const auto floored_x = static_cast<size_t>(floor(x));
         const auto floored_y = static_cast<size_t>(floor(y));
@@ -228,7 +228,7 @@ public:
     }
 
     /**
-     * @brief Calculates the (signed) volume of the cube with the sidelength of the current object
+     * @brief Calculates the (signed) volume of the cube with the side length of the current object
      * @return The volume, calculated by x * y * z
      */
     [[nodiscard]] T get_volume() const noexcept {
@@ -314,7 +314,7 @@ public:
      * @return The calculated norm
 	 */
     [[nodiscard]] double calculate_p_norm(const double p) const {
-        RelearnException::check(p >= 1.0, "p-norm is only valid for p >= 1.0");
+        RelearnException::check(p >= 1.0, "Vec3::calculate_p_norm: p-norm is only valid for p >= 1.0, but it was: {}", p);
 
         const auto xx = pow(std::abs(static_cast<double>(x)), p);
         const auto yy = pow(std::abs(static_cast<double>(y)), p);

@@ -12,6 +12,7 @@
 
 #include "../mpi/MPIWrapper.h"
 #include "../structure/OctreeNode.h"
+#include "../util/RelearnException.h"
 
 void NodeCache::empty_barnes_hut() {
     for (auto& remode_node_in_cache : remote_nodes_cache_barnes_hut) {
@@ -34,7 +35,7 @@ void NodeCache::empty_fmm() {
 
     const auto target_rank = node->get_rank();
 
-    RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "Tried to download a local node");
+    RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "NodeCache::download_children_barnes_hut: Tried to download a local node");
 
     NodesCacheKey<BarnesHutCell> rank_addr_pair{};
     rank_addr_pair.first = target_rank;
@@ -85,7 +86,7 @@ std::array<OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> NodeCac
 
     const auto target_rank = node->get_rank();
 
-    RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "Tried to download a local node");
+    RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "NodeCache::download_children_fmm: Tried to download a local node");
 
     NodesCacheKey<FastMultipoleMethodsCell> rank_addr_pair{};
     rank_addr_pair.first = target_rank;

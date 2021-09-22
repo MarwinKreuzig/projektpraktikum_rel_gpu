@@ -43,7 +43,7 @@ private:
 
 public:
     /**
-     * @brief Allows to hide the messages, i.e., not print the messages to std:
+     * @brief Allows to hide the messages, i.e., not print the messages to std::
      */
     static inline bool hide_messages{ false };
 

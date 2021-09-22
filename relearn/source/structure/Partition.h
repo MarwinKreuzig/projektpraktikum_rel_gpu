@@ -61,7 +61,7 @@ public:
      * @param my_rank The current MPI rank
      * @exception Throws a RelearnException if 0 <= my_rank < num_ranks is violated, if the number of MPI ranks is not of the form 2^k
      */
-    Partition(size_t num_ranks, size_t my_rank);
+    Partition(const size_t num_ranks, const size_t my_rank);
 
     ~Partition() = default;
 
@@ -75,14 +75,14 @@ public:
      * @brief Prints the current subdomains as messages on the rank
      * @param rank The rank that should print the subdomains
      */
-    void print_my_subdomains_info_rank(int rank);
+    void print_my_subdomains_info_rank(const int rank);
 
     /**
      * @brief Checks if the neuron id is local to the current MPI rank
      * @param neuron_id The neuron id for which it should be determined if it's local on the current MPI rank
      * @return True iff the neuron id is local
      */
-    [[nodiscard]] bool is_neuron_local(size_t neuron_id) const;
+    [[nodiscard]] bool is_neuron_local(const size_t neuron_id) const;
 
     /**
      * @brief Loads the local neurons from neurons_in_subdomain into neurons
@@ -90,7 +90,7 @@ public:
      * @param neurons_in_subdomain The class that provides the neuron placements
      * @exception Throws a RelearnException of the neurons have already been loaded
      */
-    void load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain);
+    void load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment>&& neurons_in_subdomain);
 
     /**
      * @brief Returns the number of local neurons
@@ -98,7 +98,7 @@ public:
      * @return The number of local neurons
      */
     [[nodiscard]] size_t get_my_num_neurons() const {
-        RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
+        RelearnException::check(neurons_loaded, "Partition::get_my_num_neurons: Neurons are not loaded yet");
         return my_num_neurons;
     }
 
@@ -117,7 +117,7 @@ public:
      * @return The size of the simulation box as tuple (min, max)
      */
     [[nodiscard]] std::tuple<Vec3d, Vec3d> get_simulation_box_size() const {
-        RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
+        RelearnException::check(neurons_loaded, "Partition::get_simulation_box_size: Neurons are not loaded yet");
         Vec3d min{ 0 };
         Vec3d max{ simulation_box_length };
 
@@ -178,7 +178,7 @@ public:
      * @exception Throws a RelearnException if the load_data_from_subdomain_assignment has not been called
      * @return Returns the global neuron id
      */
-    [[nodiscard]] size_t get_global_id(size_t local_id) const;
+    [[nodiscard]] size_t get_global_id(const size_t local_id) const;
 
     /**
      * @brief Translates a global neuron id to a local neuron id
@@ -186,7 +186,7 @@ public:
      * @exception Throws a RelearnException if the load_data_from_subdomain_assignment has not been called
      * @return Returns the local neuron id
      */
-    [[nodiscard]] size_t get_local_id(size_t global_id) const;
+    [[nodiscard]] size_t get_local_id(const size_t global_id) const;
 
     /**
      * @brief Returns the total number of neurons
@@ -203,8 +203,8 @@ public:
      * @exception Throws a RelearnException if subdomain_id is >= number of local subdomains
      * @return Returns the global subdomain id
      */
-    [[nodiscard]] size_t get_1d_index_for_local_subdomain(size_t subdomain_id) const {
-        RelearnException::check(subdomain_id < my_num_subdomains, "Subdomain ID was too large");
+    [[nodiscard]] size_t get_1d_index_for_local_subdomain(const size_t subdomain_id) const {
+        RelearnException::check(subdomain_id < my_num_subdomains, "Partition::get_1d_index_for_local_subdomain: Subdomain ID was too large: {} vs {}", subdomain_id, subdomains.size());
         return subdomains[subdomain_id].index_1d;
     }
 
@@ -212,7 +212,7 @@ public:
      * @brief Sets the total number of neurons
      * @param total_num The total number of neurons
      */
-    void set_total_num_neurons(size_t total_num) noexcept {
+    void set_total_num_neurons(const size_t total_num) noexcept {
         total_num_neurons = total_num;
     }
 
@@ -225,9 +225,9 @@ public:
      *      or there was a memory error when creating the octree nodes
      */
     template <typename AdditionalCellAttributes>
-    void insert_nodes_into(OctreeNode<AdditionalCellAttributes>* local_root, size_t subdomain_id) const {
-        RelearnException::check(local_root != nullptr, "local_root was nullptr in Partition");
-        RelearnException::check(subdomain_id < subdomains.size(), "subdomain_id was too large");
+    void insert_nodes_into(OctreeNode<AdditionalCellAttributes>* local_root, const size_t subdomain_id) const {
+        RelearnException::check(local_root != nullptr, "Partition::insert_nodes_into: local_root was nullptr");
+        RelearnException::check(subdomain_id < subdomains.size(), "Partition::insert_nodes_into: subdomain_id was too large: {} vs {}", subdomain_id, subdomains.size());
 
         const auto& current_subdomain = subdomains[subdomain_id];
         auto neuron_id = current_subdomain.neuron_local_id_start;

@@ -30,8 +30,8 @@ template <typename T>
 std::tuple<T, T, T, size_t> min_max_acc(const std::vector<T>& values, const std::vector<char>& disable_flags) {
     static_assert(std::is_arithmetic<T>::value);
 
-    RelearnException::check(values.size() > 0, "In min_max_acc, values had size 0");
-    RelearnException::check(values.size() == disable_flags.size(), "In min_max_acc, values and disable_flags hat different sizes");
+    RelearnException::check(values.size() > 0, "Util::min_max_acc: values had size 0");
+    RelearnException::check(values.size() == disable_flags.size(), "Util::min_max_acc: values and disable_flags had different sizes");
 
     size_t first_index = 0;
 
@@ -39,7 +39,7 @@ std::tuple<T, T, T, size_t> min_max_acc(const std::vector<T>& values, const std:
         first_index++;
     }
 
-    RelearnException::check(first_index < values.size(), "In min_max_acc, all were disabled");
+    RelearnException::check(first_index < values.size(), "Util::min_max_acc: all were disabled");
 
     T min = values[first_index];
     T max = values[first_index];

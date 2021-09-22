@@ -58,8 +58,9 @@ public:
      * @exception Throws a RelearnException if lower_inclusive >= upper_exclusive
      * @return A uniformly distributed double in [lower_inclusive, upper_exclusive)
      */
-    static double get_random_uniform_double(RandomHolderKey key, double lower_inclusive, double upper_exclusive) {
-        RelearnException::check(lower_inclusive < upper_exclusive, "Random number from invalid interval");
+    static double get_random_uniform_double(const RandomHolderKey key, const double lower_inclusive, const double upper_exclusive) {
+        RelearnException::check(lower_inclusive < upper_exclusive, 
+            "RandomHolder::get_random_uniform_double: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, key);
         std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
 
         return urd(random_number_generators[key]);
@@ -74,8 +75,8 @@ public:
      * @exception Throws a RelearnException if stddev <= 0.0
      * @return A normally distributed double with specified mean and standard deviation
      */
-    static double get_random_normal_double(RandomHolderKey key, double mean, double stddev) {
-        RelearnException::check(0.0 < stddev, "Random number from invalid deviation");
+    static double get_random_normal_double(const RandomHolderKey key, const double mean, const double stddev) {
+        RelearnException::check(0.0 < stddev, "RandomHolder::get_random_normal_double: Random number with invalid standard deviation {} for key {}", stddev, key);
         std::normal_distribution<double> nd(mean, stddev);
 
         return nd(random_number_generators[key]);
@@ -90,7 +91,7 @@ public:
      * @tparam IteratorType The iterator type that is used to iterate the elements. Should be 'nice'.
      */
     template <typename IteratorType>
-    static void shuffle(RandomHolderKey key, IteratorType begin, IteratorType end) {
+    static void shuffle(const RandomHolderKey key, const IteratorType begin, const IteratorType end) {
         std::shuffle(begin, end, random_number_generators[key]);
     }
 
@@ -106,13 +107,13 @@ public:
      * @exception Throws a RelearnException if lower_inclusive >= upper_exclusive.
      */
     template <typename IteratorType>
-    static void fill(RandomHolderKey key, IteratorType begin, IteratorType end, double lower_inclusive, double upper_exclusive) {
-        RelearnException::check(lower_inclusive < upper_exclusive, "Random number from invalid interval");
+    static void fill(const RandomHolderKey key, const IteratorType begin, const IteratorType end, const double lower_inclusive, const double upper_exclusive) {
+        RelearnException::check(lower_inclusive < upper_exclusive, "RandomHolder::fill: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, key);
         std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
         auto& gen = random_number_generators[key];
 
-        for (; begin != end; begin++) {
-            *begin = urd(gen);
+        for (auto it = begin; it != end; it++) {
+            *it = urd(gen);
         }
     }
 
@@ -122,7 +123,7 @@ public:
      * @param key The type which's RNG shall be seeded 
      * @param seed The base seed that should be used
      */
-    static void seed(RandomHolderKey key, unsigned int seed) {
+    static void seed(const RandomHolderKey key, const unsigned int seed) {
         // NOLINTNEXTLINE
 #pragma omp parallel shared(key, seed)
         {

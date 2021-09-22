@@ -30,7 +30,7 @@ public:
      * @param idx The one dimensional index
      * @return The three dimensional index
      */
-    [[nodiscard]] static BoxCoordinates map_1d_to_3d(uint64_t idx) noexcept;
+    [[nodiscard]] static BoxCoordinates map_1d_to_3d(const uint64_t idx) noexcept;
    
     /**
      * @brief Maps a three dimensional index into the one dimensional domain.
@@ -51,24 +51,24 @@ public:
      * @brief Sets the new refinement level
      * @param refinement_level The new refinement level
      */
-    void set_refinement_level(size_t refinement_level) noexcept {
+    void set_refinement_level(const size_t refinement_level) noexcept {
         this->refinement_level = refinement_level;
     }
 
 private:
-    [[nodiscard]] static uint64_t set_bit(uint64_t variable, uint8_t bit) noexcept {
+    [[nodiscard]] static uint64_t set_bit(const uint64_t variable, const uint8_t bit) noexcept {
         const auto val = variable | (static_cast<uint64_t>(1) << bit);
         return val;
     }
 
-    [[nodiscard]] static uint64_t unset_bit(uint64_t variable, uint8_t bit) noexcept {
+    [[nodiscard]] static uint64_t unset_bit(const uint64_t variable, const uint8_t bit) noexcept {
         const auto val = variable & ~(static_cast<uint64_t>(1) << bit);
         return val;
     }
 
-    [[nodiscard]] static uint64_t copy_bit(uint64_t source, uint8_t source_bit, uint64_t destination, uint8_t destination_bit);
+    [[nodiscard]] static uint64_t copy_bit(const uint64_t source, const uint8_t source_bit, const uint64_t destination, const uint8_t destination_bit);
 
-    [[nodiscard]] static uint64_t select_bit(uint64_t number, uint8_t bit) noexcept {
+    [[nodiscard]] static uint64_t select_bit(const uint64_t number, const uint8_t bit) noexcept {
         return ((number & (static_cast<uint64_t>(1) << bit)) >> bit);
     }
 
@@ -93,7 +93,7 @@ public:
      * @param refinement_level The desired refinement level
      * @exception Throws a RelearnException if refinement_level > Constants::max_lvl_subdomains
      */
-    explicit SpaceFillingCurve(uint8_t refinement_level = 0) {
+    explicit SpaceFillingCurve(const uint8_t refinement_level = 0) {
         set_refinement_level(refinement_level);
     }
 
@@ -110,10 +110,11 @@ public:
      * @param refinement_level The new refinement level
      * @exception Throws a RelearnException if refinement_level > Constants::max_lvl_subdomains
      */
-    void set_refinement_level(size_t refinement_level) {
+    void set_refinement_level(const size_t refinement_level) {
         // With 64-bit keys we can only support 20 subdivisions per
         // dimension (i.e, 2^20 boxes per dimension)
-        RelearnException::check(refinement_level <= Constants::max_lvl_subdomains, "Number of subdivisions is too large");
+        RelearnException::check(refinement_level <= Constants::max_lvl_subdomains, 
+            "SpaceFillingCurve::set_refinement_level:Number of subdivisions is too large: {} vs {}", refinement_level, Constants::max_lvl_subdomains);
 
         curve.set_refinement_level(refinement_level);
     }
@@ -123,7 +124,7 @@ public:
      * @param idx The one dimensional index
      * @return The three dimensional index
      */
-    [[nodiscard]] BoxCoordinates map_1d_to_3d(uint64_t idx) const noexcept {
+    [[nodiscard]] BoxCoordinates map_1d_to_3d(const uint64_t idx) const noexcept {
         return curve.map_1d_to_3d(idx);
     }
 

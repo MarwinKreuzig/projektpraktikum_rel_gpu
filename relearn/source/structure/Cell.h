@@ -33,7 +33,7 @@ public:
      * @brief Sets the neuron id for the associated cell. Can be set to Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
      * @param neuron_id The neuron id, can be Constants::uninitialized
      */
-    void set_neuron_id(size_t neuron_id) noexcept {
+    void set_neuron_id(const size_t neuron_id) noexcept {
         this->neuron_id = neuron_id;
     }
 
@@ -52,9 +52,9 @@ public:
      * @exception Throws a RelearnException if one component of min is larger than the respective component of max
      */
     void set_size(const Vec3d& min, const Vec3d& max) {
-        RelearnException::check(min.get_x() <= max.get_x(), "In Cell::set_size, index was not ok");
-        RelearnException::check(min.get_y() <= max.get_y(), "In Cell::set_size, y was not ok");
-        RelearnException::check(min.get_z() <= max.get_z(), "In Cell::set_size, z was not ok");
+        RelearnException::check(min.get_x() <= max.get_x(), "Cell::set_size: x was not ok");
+        RelearnException::check(min.get_y() <= max.get_y(), "Cell::set_size: y was not ok");
+        RelearnException::check(min.get_z() <= max.get_z(), "Cell::set_size: z was not ok");
 
         xyz_min = min;
         xyz_max = max;
@@ -101,7 +101,7 @@ public:
     [[nodiscard]] unsigned char get_octant_for_position(const Vec3d& pos) const {
         unsigned char idx = 0;
 
-        const auto& index = pos.get_x();
+        const auto& x = pos.get_x();
         const auto& y = pos.get_y();
         const auto& z = pos.get_z();
 
@@ -110,12 +110,12 @@ public:
 	     * This check returns false if negative coordinates are used.
 	     * Thus make sure to use positions >= 0.
 	     */
-        RelearnException::check(index >= xyz_min.get_x() && index <= xyz_max.get_x(), "index is bad");
-        RelearnException::check(y >= xyz_min.get_y() && y <= xyz_max.get_y(), "y is bad");
-        RelearnException::check(z >= xyz_min.get_z() && z <= xyz_max.get_z(), "z is bad");
+        RelearnException::check(x >= xyz_min.get_x() && x <= xyz_max.get_x(), "Cell::get_octant_for_position: x is bad");
+        RelearnException::check(y >= xyz_min.get_y() && y <= xyz_max.get_y(), "Cell::get_octant_for_position: y is bad");
+        RelearnException::check(z >= xyz_min.get_z() && z <= xyz_max.get_z(), "Cell::get_octant_for_position: z is bad");
 
         //NOLINTNEXTLINE
-        idx = idx | ((index < (xyz_min.get_x() + xyz_max.get_x()) / 2.0) ? 0 : 1); // idx | (pos_x < midpoint_dim_x) ? 0 : 1
+        idx = idx | ((x < (xyz_min.get_x() + xyz_max.get_x()) / 2.0) ? 0 : 1); // idx | (pos_x < midpoint_dim_x) ? 0 : 1
 
         //NOLINTNEXTLINE
         idx = idx | ((y < (xyz_min.get_y() + xyz_max.get_y()) / 2.0) ? 0 : 2); // idx | (pos_y < midpoint_dim_y) ? 0 : 2
@@ -123,7 +123,7 @@ public:
         //NOLINTNEXTLINE
         idx = idx | ((z < (xyz_min.get_z() + xyz_max.get_z()) / 2.0) ? 0 : 4); // idx | (pos_z < midpoint_dim_z) ? 0 : 4
 
-        RelearnException::check(idx < Constants::number_oct, "Octree octant must be smaller than Constants::number_oct");
+        RelearnException::check(idx < Constants::number_oct, "Cell::get_octant_for_position: Calculated octant is too large: {}", idx);
 
         return idx;
     }
@@ -134,8 +134,8 @@ public:
      * @exception Throws a RelearnException if octant > Constants::number_oct
      * @return A tuple with (min, max) for the cell in the given octant
      */
-    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size_for_octant(unsigned char octant) const /*noexcept*/ {
-        RelearnException::check(octant <= Constants::number_oct, "Octant was too large");
+    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size_for_octant(const unsigned char octant) const {
+        RelearnException::check(octant <= Constants::number_oct, "Cell::get_size_for_octant: Octant was too large: {}", octant);
 
         const bool x_over_halfway_point = (octant & 1U) != 0;
         const bool y_over_halfway_point = (octant & 2U) != 0;
@@ -216,7 +216,7 @@ public:
      * @brief Sets the number of free excitatory dendrites in this cell
      * @param num_dendrites The number of free excitatory dendrites
      */
-    void set_number_excitatory_dendrites(unsigned int num_dendrites) noexcept {
+    void set_number_excitatory_dendrites(const unsigned int num_dendrites) noexcept {
         additional_cell_attributes.set_number_excitatory_dendrites(num_dendrites);
     }
 
@@ -232,7 +232,7 @@ public:
      * @brief Sets the number of free inhibitory dendrites in this cell
      * @param num_dendrites The number of free inhibitory dendrites
      */
-    void set_number_inhibitory_dendrites(unsigned int num_dendrites) noexcept {
+    void set_number_inhibitory_dendrites(const unsigned int num_dendrites) noexcept {
         additional_cell_attributes.set_number_inhibitory_dendrites(num_dendrites);
     }
 
@@ -249,7 +249,7 @@ public:
      * @param dendrite_type The requested dendrite type
      * @return The number of free dendrites for the associated type
      */
-    [[nodiscard]] unsigned int get_number_dendrites_for(SignalType dendrite_type) const noexcept {
+    [[nodiscard]] unsigned int get_number_dendrites_for(const SignalType dendrite_type) const noexcept {
         return additional_cell_attributes.get_number_dendrites_for(dendrite_type);
     }
 
@@ -262,9 +262,9 @@ public:
         if (opt_position.has_value()) {
             const auto& position = opt_position.value();
 
-            RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "In Cell::set_neuron_position_exc, index was not in the box");
-            RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Cell::set_neuron_position_exc, y was not in the box");
-            RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "In Cell::set_neuron_position_exc, z was not in the box");
+            RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "Cell::set_excitatory_dendrites_position: x was not in the box");
+            RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "Cell::set_excitatory_dendrites_position: y was not in the box");
+            RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "Cell::set_excitatory_dendrites_position: z was not in the box");
         }
 
         additional_cell_attributes.set_excitatory_dendrites_position(opt_position);
@@ -287,9 +287,9 @@ public:
         if (opt_position.has_value()) {
             const auto& position = opt_position.value();
 
-            RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "In Cell::set_neuron_position_exc, index was not in the box");
-            RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "In Cell::set_neuron_position_exc, y was not in the box");
-            RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "In Cell::set_neuron_position_exc, z was not in the box");
+            RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "Cell::set_inhibitory_dendrites_position: x was not in the box");
+            RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "Cell::set_inhibitory_dendrites_position: y was not in the box");
+            RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "Cell::set_inhibitory_dendrites_position: z was not in the box");
         }
 
         additional_cell_attributes.set_inhibitory_dendrites_position(opt_position);
@@ -308,7 +308,7 @@ public:
      * @param dendrite_type The type of dendrite which's position should be returned
      * @return The position of the associated dendrite, can be empty
      */
-    [[nodiscard]] std::optional<Vec3d> get_dendrites_position_for(SignalType dendrite_type) const noexcept {
+    [[nodiscard]] std::optional<Vec3d> get_dendrites_position_for(const SignalType dendrite_type) const noexcept {
         return additional_cell_attributes.get_dendrites_position_for(dendrite_type);
     }
 
@@ -342,7 +342,7 @@ public:
 
             const auto diff = pos_ex - pos_in;
             const bool exc_position_equals_inh_position = diff.get_x() == 0.0 && diff.get_y() == 0.0 && diff.get_z() == 0.0;
-            RelearnException::check(exc_position_equals_inh_position, "In get neuron position, positions are unequal");
+            RelearnException::check(exc_position_equals_inh_position, "Cell::get_dendrites_positions: positions are unequal");
 
             return pos_ex;
         }
@@ -356,7 +356,7 @@ public:
      * @brief Sets the number of free excitatory axons in this cell
      * @param num_axons The number of free excitatory axons
      */
-    void set_number_excitatory_axons(unsigned int num_axons) noexcept {
+    void set_number_excitatory_axons(const unsigned int num_axons) noexcept {
         additional_cell_attributes.set_number_excitatory_axons(num_axons);
     }
 
@@ -372,7 +372,7 @@ public:
      * @brief Sets the number of free inhibitory axons in this cell
      * @param num_dendrites The number of free inhibitory axons
      */
-    void set_number_inhibitory_axons(unsigned int num_axons) noexcept {
+    void set_number_inhibitory_axons(const unsigned int num_axons) noexcept {
         additional_cell_attributes.set_number_inhibitory_axons(num_axons);
     }
 
@@ -389,7 +389,7 @@ public:
      * @param axon_type The requested axons type
      * @return The number of free axons for the associated type
      */
-    [[nodiscard]] unsigned int get_number_axons_for(SignalType axon_type) const noexcept {
+    [[nodiscard]] unsigned int get_number_axons_for(const SignalType axon_type) const noexcept {
         return additional_cell_attributes.get_number_axons_for(axon_type);
     }
 
@@ -432,7 +432,7 @@ public:
      * @param dendrite_type The type of axons which's position should be returned
      * @return The position of the associated axons, can be empty
      */
-    [[nodiscard]] std::optional<Vec3d> get_axons_position_for(SignalType axon_type) const {
+    [[nodiscard]] std::optional<Vec3d> get_axons_position_for(const SignalType axon_type) const {
         return additional_cell_attributes.get_axons_position_for(axon_type);
     }
 
@@ -457,7 +457,7 @@ public:
 
             const auto diff = pos_ex - pos_in;
             const bool exc_position_equals_inh_position = diff.get_x() == 0.0 && diff.get_y() == 0.0 && diff.get_z() == 0.0;
-            RelearnException::check(exc_position_equals_inh_position, "In get neuron position, positions are unequal");
+            RelearnException::check(exc_position_equals_inh_position, "Cell::get_axons_position: positions are unequal");
 
             return pos_ex;
         }
@@ -481,8 +481,8 @@ public:
      * @param coefficient The new value for the hermite coefficient
      * @exception Throws a RelearnException if index is >= Constants::p3
      */
-    void set_excitatory_hermite_coefficient(unsigned int index, double coefficient) {
-        RelearnException::check(index < Constants::p3, "Index is too large in set_excitatory_hermite_coefficient");
+    void set_excitatory_hermite_coefficient(const unsigned int index, const double coefficient) {
+        RelearnException::check(index < Constants::p3, "Cell::set_excitatory_hermite_coefficient: Index is too large: {} vs {}", index, Constants::p3);
         additional_cell_attributes.set_excitatory_hermite_coefficient(index, coefficient);
     }
 
@@ -492,8 +492,8 @@ public:
      * @param coefficient The new value for the hermite coefficient
      * @exception Throws a RelearnException if index is >= Constants::p3
      */
-    void set_inhibitory_hermite_coefficient(unsigned int index, double coefficient) {
-        RelearnException::check(index < Constants::p3, "Index is too large in set_inhibitory_hermite_coefficient");
+    void set_inhibitory_hermite_coefficient(const unsigned int index, const double coefficient) {
+        RelearnException::check(index < Constants::p3, "Cell::set_inhibitory_hermite_coefficient: Index is too large: {} vs {}", index, Constants::p3);
         additional_cell_attributes.set_inhibitory_hermite_coefficient(index, coefficient);
     }
 
@@ -504,8 +504,8 @@ public:
      * @param signal_type The type of dendrite
      * @exception Throws a RelearnException if index is >= Constants::p3
      */
-    void set_hermite_coefficient_for(unsigned int index, double coefficient, SignalType needed) {
-        RelearnException::check(index < Constants::p3, "Index is too large in set_hermite_coefficient_for");
+    void set_hermite_coefficient_for(const unsigned int index, const double coefficient, const SignalType needed) {
+        RelearnException::check(index < Constants::p3, "Cell::set_hermite_coefficient_for: Index is too large: {} vs {}", index, Constants::p3);
         additional_cell_attributes.set_hermite_coefficient_for(index, coefficient, needed);
     }
 
@@ -514,8 +514,8 @@ public:
      * @exception Throws a RelearnException if index is >= Constants::p3
      * @return The specified hermite coefficient
      */
-    double get_excitatory_hermite_coefficient(unsigned int index) const {
-        RelearnException::check(index < Constants::p3, "Index is too large in get_excitatory_hermite_coefficient");
+    double get_excitatory_hermite_coefficient(const unsigned int index) const {
+        RelearnException::check(index < Constants::p3, "Cell::get_excitatory_hermite_coefficient: Index is too large: {} vs {}", index, Constants::p3);
         return additional_cell_attributes.get_excitatory_hermite_coefficient(index);
     }
 
@@ -524,8 +524,8 @@ public:
      * @exception Throws a RelearnException if index is >= Constants::p3
      * @return The specified hermite coefficient
      */
-    double get_inhibitory_hermite_coefficient(unsigned int index) const {
-        RelearnException::check(index < Constants::p3, "Index is too large in get_inhibitory_hermite_coefficient");
+    double get_inhibitory_hermite_coefficient(const unsigned int index) const {
+        RelearnException::check(index < Constants::p3, "Cell::get_inhibitory_hermite_coefficient: Index is too large: {} vs {}", index, Constants::p3);
         return additional_cell_attributes.get_inhibitory_hermite_coefficient(index);
     }
 
@@ -534,8 +534,8 @@ public:
      * @exception Throws a RelearnException if index is >= Constants::p3
      * @return The specified hermite coefficient
      */
-    double get_hermite_coefficient_for(unsigned int index, SignalType needed) const {
-        RelearnException::check(index < Constants::p3, "Index is too large in get_hermite_coefficient_for");
+    double get_hermite_coefficient_for(const unsigned int index, const SignalType needed) const {
+        RelearnException::check(index < Constants::p3, "Cell::get_hermite_coefficient_for: Index is too large: {} vs {}", index, Constants::p3);
         return additional_cell_attributes.get_hermite_coefficient_for(index, needed);
     }
 };

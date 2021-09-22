@@ -10,7 +10,7 @@
 
 #include "SpaceFillingCurve.h"
 
-Morton::BoxCoordinates Morton::map_1d_to_3d(uint64_t idx) noexcept {
+Morton::BoxCoordinates Morton::map_1d_to_3d(const uint64_t idx) noexcept {
     // clear coordinates
     BoxCoordinates coords{ 0 };
 
@@ -57,17 +57,17 @@ uint64_t Morton::map_3d_to_1d(const Morton::BoxCoordinates& coords) const noexce
     return result;
 }
 
-uint64_t Morton::copy_bit(uint64_t source, uint8_t source_bit, uint64_t destination, uint8_t destination_bit) /*noexcept*/ {
+uint64_t Morton::copy_bit(const uint64_t source, const uint8_t source_bit, const uint64_t destination, const uint8_t destination_bit) {
     // A simpler solution might be:
     // destination ^= (-select_bit(source, source_bit) ^ destination) & (1 << destination_bit);
 
     const uint64_t bit_in_source = select_bit(source, source_bit);
     if (1 == bit_in_source) {
-        destination = set_bit(destination, destination_bit);
-        return destination;
+        const auto return_value = set_bit(destination, destination_bit);
+        return return_value;
     }
 
     RelearnException::check(0 == bit_in_source, "In Morton, copy_bit, bit_in_source is neither 0 nor 1");
-    destination = unset_bit(destination, destination_bit);
-    return destination;
+    const auto return_value = unset_bit(destination, destination_bit);
+    return return_value;
 }

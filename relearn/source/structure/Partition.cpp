@@ -20,12 +20,12 @@
 
 #include <sstream>
 
-Partition::Partition(size_t num_ranks, size_t my_rank)
+Partition::Partition(const size_t num_ranks, const size_t my_rank)
     : my_num_neurons(0)
     , total_num_neurons(0)
     , neurons_loaded(false) {
-    RelearnException::check(num_ranks > 0, "Number of MPI ranks must be a positive number");
-    RelearnException::check(num_ranks > my_rank, "My rank must be smaller than number of ranks");
+    RelearnException::check(num_ranks > 0, "Partition::Partition: Number of MPI ranks must be a positive number: {}", num_ranks);
+    RelearnException::check(num_ranks > my_rank, "Partition::Partition: My rank must be smaller than number of ranks: {} vs {}", num_ranks, my_rank);
 
     /**
 	 * Total number of subdomains is smallest power of 8 that is >= num_ranks.
@@ -36,7 +36,7 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
     total_num_subdomains = 1ULL << (3 * level_of_subdomain_trees); // 8^level_of_subdomain_trees
 
     // Every rank should get at least one subdomain
-    RelearnException::check(total_num_subdomains >= num_ranks, "In partition, total num subdomains is smaller than number ranks");
+    RelearnException::check(total_num_subdomains >= num_ranks, "Partition::Partition: Total num subdomains is smaller than number ranks: {} vs {}", total_num_subdomains, num_ranks);
 
     /**
 	 * Calc my number of subdomains
@@ -55,7 +55,7 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
 
     if (rest != 0) {
         LogFiles::print_message_rank(-1, "My rank is: {}; There are {} ranks in total; The rest is: {}", my_rank, num_ranks, rest);
-        RelearnException::fail("Number of ranks must be of the form 2^n");
+        RelearnException::fail("Partition::Partition: Number of ranks must be of the form 2^n but was {}", num_ranks);
     }
 
     /**
@@ -85,8 +85,8 @@ Partition::Partition(size_t num_ranks, size_t my_rank)
     LogFiles::print_message_rank(0, "Number subdomains per dimension: {}", num_subdomains_per_dimension);
 }
 
-void Partition::print_my_subdomains_info_rank(int rank) {
-    std::stringstream sstream;
+void Partition::print_my_subdomains_info_rank(const int rank) {
+    std::stringstream sstream{};
 
     sstream << "My number of neurons   : " << my_num_neurons << "\n";
     sstream << "My number of subdomains: " << my_num_subdomains << "\n";
@@ -125,8 +125,8 @@ void Partition::print_my_subdomains_info_rank(int rank) {
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, sstream.str());
 }
 
-bool Partition::is_neuron_local(size_t neuron_id) const {
-    RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
+bool Partition::is_neuron_local(const size_t neuron_id) const {
+    RelearnException::check(neurons_loaded, "Partition::is_neuron_local: Neurons are not loaded yet");
     for (const Subdomain& subdomain : subdomains) {
         const bool found = std::binary_search(subdomain.global_neuron_ids.begin(), subdomain.global_neuron_ids.end(), neuron_id);
         if (found) {
@@ -138,7 +138,7 @@ bool Partition::is_neuron_local(size_t neuron_id) const {
 }
 
 size_t Partition::get_mpi_rank_from_pos(const Vec3d& pos) const {
-    RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
+    RelearnException::check(neurons_loaded, "Partition::get_mpi_rank_from_pos: Neurons are not loaded yet");
     const Vec3d subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
 
     const Vec3d subdomain_3d{ pos.get_x() / subdomain_length.get_x(), pos.get_y() / subdomain_length.get_y(), pos.get_z() / subdomain_length.get_z() };
@@ -150,8 +150,8 @@ size_t Partition::get_mpi_rank_from_pos(const Vec3d& pos) const {
     return rank;
 }
 
-size_t Partition::get_global_id(size_t local_id) const {
-    RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
+size_t Partition::get_global_id(const size_t local_id) const {
+    RelearnException::check(neurons_loaded, "Partition::get_global_id: Neurons are not loaded yet");
     size_t counter = 0;
     for (const auto& subdomain : subdomains) {
         const size_t old_counter = counter;
@@ -166,8 +166,8 @@ size_t Partition::get_global_id(size_t local_id) const {
     return local_id;
 }
 
-size_t Partition::get_local_id(size_t global_id) const {
-    RelearnException::check(neurons_loaded, "Neurons are not loaded yet");
+size_t Partition::get_local_id(const size_t global_id) const {
+    RelearnException::check(neurons_loaded, "Parition::get_local_id: Neurons are not loaded yet");
     size_t id = 0;
 
     for (const Subdomain& current_subdomain : subdomains) {
@@ -182,17 +182,17 @@ size_t Partition::get_local_id(size_t global_id) const {
         id += ids.size();
     }
 
-    RelearnException::fail("Didn't find global id in Partition.h");
+    RelearnException::fail("Partition::is_neuron_local: Didn't find global id {}", global_id);
     return 0;
 }
 
-void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment> neurons_in_subdomain) {
-    RelearnException::check(!neurons_loaded, "Neurons are already loaded, cannot load anymore");
+void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment>&& neurons_in_subdomain) {
+    RelearnException::check(!neurons_loaded, "Partition::load_data_from_subdomain_assignment:: Neurons are already loaded, cannot load anymore");
 
     simulation_box_length = neurons_in_subdomain->get_simulation_box_length();
 
     // Set subdomain length
-    const Vec3d subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
+    const auto& subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
 
     /**
 	 * Output all parameters calculated so far
@@ -273,7 +273,7 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
             y_dims[neuron_id] = vec_pos[j].get_y();
             z_dims[neuron_id] = vec_pos[j].get_z();
 
-            area_names[neuron_id] = vec_area[j];
+            area_names[neuron_id] = std::move(vec_area[j]);
 
             // Mark neuron as DendriteType::EXCITATORY or DendriteType::INHIBITORY
             signal_types[neuron_id] = vec_type[j];

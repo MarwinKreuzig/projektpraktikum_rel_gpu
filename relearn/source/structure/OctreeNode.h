@@ -14,6 +14,7 @@
 #include "../Config.h"
 #include "../mpi/MPIWrapper.h"
 #include "../util/MemoryHolder.h"
+#include "../util/RelearnException.h"
 
 #include <array>
 #include <optional>
@@ -88,8 +89,8 @@ public:
      * @exception Throws a RelearnException if idx >= Constants::number_oct
      * @return The associated child
      */
-    [[nodiscard]] const OctreeNodePtr get_child(size_t idx) const {
-        RelearnException::check(idx < Constants::number_oct, "In OctreeNode::get_child const, idx was: %u", idx);
+    [[nodiscard]] const OctreeNodePtr get_child(const size_t idx) const {
+        RelearnException::check(idx < Constants::number_oct, "OctreeNode::get_child const: idx was: {}", idx);
         // NOLINTNEXTLINE
         return children[idx];
     }
@@ -99,8 +100,8 @@ public:
      * @exception Throws a RelearnException if idx >= Constants::number_oct
      * @return The associated child
      */
-    [[nodiscard]] OctreeNodePtr get_child(size_t idx) {
-        RelearnException::check(idx < Constants::number_oct, "In OctreeNode::get_child, idx was: %u", idx);
+    [[nodiscard]] OctreeNodePtr get_child(const size_t idx) {
+        RelearnException::check(idx < Constants::number_oct, "OctreeNode::get_child: idx was: {}", idx);
         // NOLINTNEXTLINE
         return children[idx];
     }
@@ -136,18 +137,30 @@ public:
      *      (e) Something went wrong within the insertion
      * @return A pointer to the newly created and inserted node
      */
-    [[nodiscard]] OctreeNodePtr insert(const Vec3d& position, const size_t neuron_id, int rank) {
-        Vec3d cell_xyz_min;
-        Vec3d cell_xyz_max;
+    [[nodiscard]] OctreeNodePtr insert(const Vec3d& position, const size_t neuron_id, const int rank) {
+        Vec3d cell_xyz_min{};
+        Vec3d cell_xyz_max{};
 
         std::tie(cell_xyz_min, cell_xyz_max) = cell.get_size();
 
-        RelearnException::check(cell_xyz_min.get_x() <= position.get_x() && position.get_x() <= cell_xyz_max.get_x(), "In OctreeNode::insert, x was not in range");
-        RelearnException::check(cell_xyz_min.get_y() <= position.get_y() && position.get_y() <= cell_xyz_max.get_y(), "In OctreeNode::insert, y was not in range");
-        RelearnException::check(cell_xyz_min.get_z() <= position.get_z() && position.get_z() <= cell_xyz_max.get_z(), "In OctreeNode::insert, z was not in range");
+        const auto& min_x = cell_xyz_min.get_x();
+        const auto& min_y = cell_xyz_min.get_y();
+        const auto& min_z = cell_xyz_min.get_z();
 
-        RelearnException::check(rank >= 0, "In OctreeNode::insert, rank was smaller than 0");
-        RelearnException::check(neuron_id <= Constants::uninitialized, "In OctreeNode::insert, neuron_id was too large");
+        const auto& max_x = cell_xyz_max.get_x();
+        const auto& max_y = cell_xyz_max.get_y();
+        const auto& max_z = cell_xyz_max.get_z();
+
+        const auto& pos_x = position.get_x();
+        const auto& pos_y = position.get_y();
+        const auto& pos_z = position.get_z();
+
+        RelearnException::check(min_x <= pos_x && pos_x <= max_x, "OctreeNode::insert: x was not in range: {} vs [{}, {}]", pos_x, min_x, max_x);
+        RelearnException::check(min_y <= pos_y && pos_y <= max_y, "OctreeNode::insert: y was not in range: {} vs [{}, {}]", pos_y, min_y, max_y);
+        RelearnException::check(min_z <= pos_z && pos_z <= max_z, "OctreeNode::insert: z was not in range: {} vs [{}, {}]", pos_z, min_z, max_z);
+
+        RelearnException::check(rank >= 0, "OctreeNode::insert: rank was {}", rank);
+        RelearnException::check(neuron_id <= Constants::uninitialized, "OctreeNode::insert, neuron_id was {}", neuron_id);
 
         unsigned char new_position_octant = 0;
 
@@ -165,7 +178,7 @@ public:
             current_node = current_node->get_child(new_position_octant);
         }
 
-        RelearnException::check(parent_node != nullptr, "parent_node is nullptr");
+        RelearnException::check(parent_node != nullptr, "OctreeNode::insert: parent_node is nullptr");
 
         /**
 	     * Found my octant, but
@@ -192,7 +205,7 @@ public:
 
                 // Determine octant for neuron
                 const auto& cell_own_position = parent_node->get_cell().get_dendrites_position();
-                RelearnException::check(cell_own_position.has_value(), "While building the octree, the cell doesn't have a position");
+                RelearnException::check(cell_own_position.has_value(), "OctreeNode::insert: While building the octree, the cell doesn't have a position");
 
                 idx = parent_node->get_cell().get_octant_for_position(cell_own_position.value());
                 auto* new_node = OctreeNode<AdditionalCellAttributes>::create();
@@ -235,7 +248,7 @@ public:
         }
 
         OctreeNode* new_node_to_insert = OctreeNode<AdditionalCellAttributes>::create();
-        RelearnException::check(new_node_to_insert != nullptr, "new_node_to_insert is nullptr");
+        RelearnException::check(new_node_to_insert != nullptr, "OctreeNode::insert: new_node_to_insert is nullptr");
 
         /**
 	     * Found my position in children array,
@@ -244,8 +257,8 @@ public:
         parent_node->set_child(new_node_to_insert, new_position_octant);
         new_node_to_insert->set_level(parent_node->get_level() + 1); // Now we know level of me
 
-        Vec3d xyz_min;
-        Vec3d xyz_max;
+        Vec3d xyz_min{};
+        Vec3d xyz_max{};
         std::tie(xyz_min, xyz_max) = parent_node->get_cell().get_size_for_octant(new_position_octant);
 
         new_node_to_insert->set_cell_size(xyz_min, xyz_max);
@@ -261,7 +274,7 @@ public:
             }
         }
 
-        RelearnException::check(has_children, "");
+        RelearnException::check(has_children, "OctreeNode::insert: the node didn't have children");
 
         return new_node_to_insert;
     }
@@ -271,8 +284,8 @@ public:
      * @param new_rank The associated MPI rank, >= 0
      * @exception Throws a RelearnException if new_rank < 0
      */
-    void set_rank(int new_rank) {
-        RelearnException::check(new_rank >= 0, "In OctreeNode::set_rank, new_rank was: %u", new_rank);
+    void set_rank(const int new_rank) {
+        RelearnException::check(new_rank >= 0, "OctreeNode::set_rank: new_rank is {}", new_rank);
         rank = new_rank;
     }
 
@@ -281,8 +294,8 @@ public:
      * @param new_level The level in the octree, < Constants::uninitialized
      * @expection Throws a RelearnException if new_level is too large
      */
-    void set_level(size_t new_level) {
-        RelearnException::check(new_level < Constants::uninitialized, "In OctreeNode::set_level, new_level was: %u", new_level);
+    void set_level(const size_t new_level) {
+        RelearnException::check(new_level < Constants::uninitialized, "OctreeNode::set_level: new_level is {}", new_level);
         level = new_level;
     }
 
@@ -299,8 +312,8 @@ public:
      * @param idx The index of the child which shall be set, < Constants::number_oct
      * @exception Throws a RelearnException if idx >= Constants::number_oct
      */
-    void set_child(OctreeNodePtr node, size_t idx) {
-        RelearnException::check(idx < Constants::number_oct, "In OctreeNode::set_child, idx was: %u", idx);
+    void set_child(OctreeNodePtr node, const size_t idx) {
+        RelearnException::check(idx < Constants::number_oct, "OctreeNode::set_child: idx is {}", idx);
         // NOLINTNEXTLINE
         children[idx] = node;
 
@@ -378,7 +391,7 @@ public:
      * @param num_ex The number of free excitatory dendrites
      * @param num_in The number of free inhibitory dendrites
      */
-    void set_cell_number_dendrites(unsigned int num_ex, unsigned int num_in) noexcept {
+    void set_cell_number_dendrites(const unsigned int num_ex, const unsigned int num_in) noexcept {
         cell.set_number_excitatory_dendrites(num_ex);
         cell.set_number_inhibitory_dendrites(num_in);
     }
@@ -388,7 +401,7 @@ public:
      * @param num_ex The number of free excitatory axons
      * @param num_in The number of free inhibitory axons
      */
-    void set_cell_number_axons(unsigned int num_ex, unsigned int num_in) noexcept {
+    void set_cell_number_axons(const unsigned int num_ex, const unsigned int num_in) noexcept {
         cell.set_number_excitatory_axons(num_ex);
         cell.set_number_inhibitory_axons(num_in);
     }
@@ -437,7 +450,7 @@ public:
      * @brief Sets the neuron id for the associated cell. Can be set to Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
      * @param neuron_id The neuron id
      */
-    void set_cell_neuron_id(size_t neuron_id) noexcept {
+    void set_cell_neuron_id(const size_t neuron_id) noexcept {
         cell.set_neuron_id(neuron_id);
     }
 
@@ -445,7 +458,7 @@ public:
      * @brief Sets the min and max of the associated cell
      * @param min The minimum boundary of the cell
      * @param max The maximum boundary of the cell
-     * @exception Throws a RelearnException if one ordinate of min is larger than the associated of max
+     * @exception Might throw a RelearnException
      */
     void set_cell_size(const Vec3d& min, const Vec3d& max) {
         cell.set_size(min, max);
@@ -463,8 +476,9 @@ public:
      * @brief Sets the specified hermite coefficient for the excitatory dendrites in the associated cell
      * @param index The index of the hermite coefficient
      * @param coefficient The new value for the hermite coefficient
+     * @exception Might throw a RelearnException
      */
-    void set_cell_excitatory_hermite_coefficient(unsigned int index, double d) {
+    void set_cell_excitatory_hermite_coefficient(const unsigned int index, const double d) {
         cell.set_excitatory_hermite_coefficient(index, d);
     }
 
@@ -472,8 +486,9 @@ public:
      * @brief Sets the specified hermite coefficient for the inhibitory dendrites in the associated cell
      * @param index The index of the hermite coefficient
      * @param coefficient The new value for the hermite coefficient
+     * @exception Might throw a RelearnException
      */
-    void set_cell_inhibitory_hermite_coefficient(unsigned int index, double d) {
+    void set_cell_inhibitory_hermite_coefficient(const unsigned int index, const double d) {
         cell.set_inhibitory_hermite_coefficient(index, d);
     }
 
@@ -482,32 +497,36 @@ public:
      * @param index The index of the hermite coefficient
      * @param coefficient The new value for the hermite coefficient
      * @param signal_type The type of dendrite
+     * @exception Might throw a RelearnException
      */
-    void set_cell_hermite_coefficient_for(unsigned int index, double d, SignalType needed) {
+    void set_cell_hermite_coefficient_for(const unsigned int index, const double d, const SignalType needed) {
         cell.set_hermite_coefficient_for(index, d, needed);
     }
 
     /**
      * @brief Returns the specified hermite coefficient for the excitatory dendrites in the associated cell
+     * @exception Might throw a RelearnException
      * @return The specified hermite coefficient
      */
-    double get_cell_excitatory_hermite_coefficient(unsigned int index) const {
+    double get_cell_excitatory_hermite_coefficient(const unsigned int index) const {
         return cell.get_excitatory_hermite_coefficient(index);
     }
 
     /**
      * @brief Returns the specified hermite coefficient for the inhibitory dendrites in the associated cell
+     * @exception Might throw a RelearnException
      * @return The specified hermite coefficient
      */
-    double get_cell_inhibitory_hermite_coefficient(unsigned int index) const {
+    double get_cell_inhibitory_hermite_coefficient(const unsigned int index) const {
         return cell.get_inhibitory_hermite_coefficient(index);
     }
 
     /**
      * @brief Returns the specified hermite coefficient for the specified signal type in the associated cell
+     * @exception Might throw a RelearnException
      * @return The specified hermite coefficient
      */
-    double get_cell_hermite_coefficient_for(unsigned int index, SignalType needed) const {
+    double get_cell_hermite_coefficient_for(const unsigned int index, const SignalType needed) const {
         return cell.get_hermite_coefficient_for(index, needed);
     }
 
@@ -517,7 +536,7 @@ public:
      * @param needed The requested SignalType
      * @return A vector of all actual positions
      */
-    std::vector<Vec3d> get_all_dendrite_positions_for(SignalType needed) const {
+    std::vector<Vec3d> get_all_dendrite_positions_for(const SignalType needed) const {
         std::vector<Vec3d> result{};
 
         std::stack<const OctreeNode*> stack{};
@@ -555,7 +574,7 @@ public:
      * @param needed The requested SignalType
      * @return A vector of all actual positions
      */
-    std::vector<Vec3d> get_all_axon_positions_for(SignalType needed) const {
+    std::vector<Vec3d> get_all_axon_positions_for(const SignalType needed) const {
         std::vector<Vec3d> result{};
 
         std::stack<const OctreeNode*> stack{};
