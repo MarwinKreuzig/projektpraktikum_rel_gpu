@@ -16,11 +16,12 @@
 
 #include <limits>
 
-SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(size_t num_neurons, double desired_frac_neurons_exc, double um_per_neuron)
+SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t num_neurons, const double desired_frac_neurons_exc, const double um_per_neuron)
     : um_per_neuron_(um_per_neuron) {
 
-    RelearnException::check(desired_frac_neurons_exc >= 0.0 && desired_frac_neurons_exc <= 1.0, "The requested fraction of excitatory neurons is not in [0.0, 1.0]");
-    RelearnException::check(um_per_neuron > 0.0, "The requested um per neuron is <= 0.0");
+    RelearnException::check(desired_frac_neurons_exc >= 0.0 && desired_frac_neurons_exc <= 1.0,
+        "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: The requested fraction of excitatory neurons is not in [0.0, 1.0]: {}", desired_frac_neurons_exc);
+    RelearnException::check(um_per_neuron > 0.0, "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: The requested um per neuron is <= 0.0: {}", um_per_neuron);
 
     const auto my_rank = static_cast<unsigned int>(MPIWrapper::get_my_rank());
 
@@ -43,14 +44,14 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(size_t num_neurons, doubl
 void SubdomainFromNeuronDensity::place_neurons_in_area(
     const NeuronToSubdomainAssignment::Position& offset,
     const NeuronToSubdomainAssignment::Position& length_of_box,
-    size_t num_neurons, size_t subdomain_idx) {
+    const size_t num_neurons, const size_t subdomain_idx) {
 
     constexpr uint16_t max_short = std::numeric_limits<uint16_t>::max();
 
     const double simulation_box_length_ = get_simulation_box_length().get_maximum();
 
     RelearnException::check(length_of_box.get_x() <= simulation_box_length_ && length_of_box.get_y() <= simulation_box_length_ && length_of_box.get_z() <= simulation_box_length_,
-        "Requesting to fill neurons where no simulationbox is");
+        "SubdomainFromNeuronDensity::place_neurons_in_area: Requesting to fill neurons where no simulationbox is");
 
     const auto box = length_of_box - offset;
 
@@ -59,8 +60,8 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
     const auto neurons_on_z = static_cast<size_t>(round(box.get_z() / um_per_neuron_));
 
     const auto calculated_num_neurons = neurons_on_x * neurons_on_y * neurons_on_z;
-    RelearnException::check(calculated_num_neurons >= num_neurons, "Should emplace more neurons than space in box");
-    RelearnException::check(neurons_on_x <= max_short && neurons_on_y <= max_short && neurons_on_z <= max_short, "Should emplace more neurons in a dimension than possible");
+    RelearnException::check(calculated_num_neurons >= num_neurons, "SubdomainFromNeuronDensity::place_neurons_in_area: Should emplace more neurons than space in box");
+    RelearnException::check(neurons_on_x <= max_short && neurons_on_y <= max_short && neurons_on_z <= max_short, "SubdomainFromNeuronDensity::place_neurons_in_area: Should emplace more neurons in a dimension than possible");
 
     Nodes nodes{};
 
@@ -141,13 +142,13 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
         }
     }
 
-    RelearnException::fail("In SubdomainFromNeuronDensity, shouldn't be here");
+    RelearnException::fail("SubdomainFromNeuronDensity::place_neurons_in_area: Shouldn't be here");
 }
 
-void SubdomainFromNeuronDensity::fill_subdomain(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains, const Position& min, const Position& max) {
+void SubdomainFromNeuronDensity::fill_subdomain(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains, const Position& min, const Position& max) {
     const bool subdomain_already_filled = is_loaded(subdomain_idx);
     if (subdomain_already_filled) {
-        RelearnException::fail("Tried to fill an already filled subdomain.");
+        RelearnException::fail("SubdomainFromNeuronDensity::fill_subdomain: Tried to fill an already filled subdomain.");
         return;
     }
 
@@ -162,15 +163,15 @@ void SubdomainFromNeuronDensity::fill_subdomain(size_t subdomain_idx, [[maybe_un
     place_neurons_in_area(min, max, neurons_in_subdomain_count, subdomain_idx);
 }
 
-std::vector<size_t> SubdomainFromNeuronDensity::neuron_global_ids([[maybe_unused]] size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
-    [[maybe_unused]] size_t local_id_start, [[maybe_unused]] size_t local_id_end) const {
+std::vector<size_t> SubdomainFromNeuronDensity::neuron_global_ids([[maybe_unused]] const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains,
+    [[maybe_unused]] const size_t local_id_start, [[maybe_unused]] const size_t local_id_end) const {
 
     return {};
 }
 
 std::tuple<SubdomainFromNeuronDensity::Position, SubdomainFromNeuronDensity::Position> SubdomainFromNeuronDensity::get_subdomain_boundaries(
     const Vec3s& subdomain_3idx,
-    size_t num_subdomains_per_axis) const noexcept {
+    const size_t num_subdomains_per_axis) const noexcept {
     const auto length = get_simulation_box_length().get_maximum();
     const auto one_subdomain_length = length / num_subdomains_per_axis;
 

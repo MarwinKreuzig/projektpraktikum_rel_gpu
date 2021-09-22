@@ -23,11 +23,11 @@
 #include <array>
 #include <stack>
 
-[[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed) {
+[[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(const size_t src_neuron_id, const Vec3d& axon_pos_xyz, const SignalType dendrite_type_needed) {
     OctreeNode<BarnesHutCell>* node_selected = nullptr;
     OctreeNode<BarnesHutCell>* root_of_subtree = global_tree->get_root();
 
-    RelearnException::check(root_of_subtree != nullptr, "In BarnesHut::find_target_neuron, root_of_subtree was nullptr");
+    RelearnException::check(root_of_subtree != nullptr, "BarnesHut::find_target_neuron: root_of_subtree was nullptr");
 
     while (true) {
         /**
@@ -65,7 +65,7 @@
         }
         node_selected = vector[counter - 1];
 
-        RelearnException::check(node_selected != nullptr, "In BarnesHut::find_target_neuron, node_selected was nullptr");
+        RelearnException::check(node_selected != nullptr, "BarnesHut::find_target_neuron: node_selected was nullptr");
 
         /**
 	     * Leave loop if no node was selected OR
@@ -88,7 +88,7 @@
     return rank_neuron_id;
 }
 
-MapSynapseCreationRequests BarnesHut::find_target_neurons(size_t num_neurons, const std::vector<char>& disable_flags,
+MapSynapseCreationRequests BarnesHut::find_target_neurons(const size_t num_neurons, const std::vector<char>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) {
     MapSynapseCreationRequests synapse_creation_requests_outgoing;
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);
@@ -105,7 +105,7 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(size_t num_neurons, co
 
         // Number of vacant axons
         const auto num_vacant_axons = static_cast<unsigned int>(axons_cnts[neuron_id]) - axons_connected_cnts[neuron_id];
-        RelearnException::check(num_vacant_axons >= 0, "num vacant axons is negative");
+        RelearnException::check(num_vacant_axons >= 0, "BarnesHut::find_target_neurons: num vacant axons is negative: {}", num_vacant_axons);
 
         if (num_vacant_axons == 0) {
             continue;
@@ -163,7 +163,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     const std::vector<double>& dendrites_inhibitory_counts = inhibitory_dendrites->get_total_counts();
     const std::vector<unsigned int>& dendrites_inhibitory_connected_counts = inhibitory_dendrites->get_connected_count();
 
-    RelearnException::check(global_tree != nullptr, "In BarnesHut::update_leaf_nodes, global_tree was nullptr");
+    RelearnException::check(global_tree != nullptr, "BarnesHut::update_leaf_nodes: global_tree was nullptr");
 
     const auto& leaf_nodes = global_tree->get_leaf_nodes();
     const auto num_leaf_nodes = leaf_nodes.size();
@@ -179,16 +179,16 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
         && num_leaf_nodes == num_dendrites_inhibitory_counts
         && num_leaf_nodes == num_dendrites_inhibitory_connected_counts;
 
-    RelearnException::check(all_same_size, "In BarnesHut::update_leaf_nodes, the vectors were of different sizes");
+    RelearnException::check(all_same_size, "BarnesHut::update_leaf_nodes: The vectors were of different sizes");
 
     for (size_t neuron_id = 0; neuron_id < num_leaf_nodes; neuron_id++) {
         auto* node = leaf_nodes[neuron_id];
 
-        RelearnException::check(node != nullptr, "Node was nullptr: ", neuron_id);
+        RelearnException::check(node != nullptr, "BarnesHut::update_leaf_nodes: node was nullptr: ", neuron_id);
 
         const size_t other_neuron_id = node->get_cell().get_neuron_id();
 
-        RelearnException::check(neuron_id == other_neuron_id, "In BarnesHut::update_leaf_nodes, the nodes are not in order");
+        RelearnException::check(neuron_id == other_neuron_id, "BarnesHut::update_leaf_nodes: The nodes are not in order");
 
         if (disable_flags[neuron_id] == 0) {
             continue;
@@ -201,8 +201,8 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     }
 }
 
-[[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(size_t src_neuron_id, const Vec3d& axon_pos_xyz,
-    const OctreeNode<BarnesHutCell>& node_with_dendrite, SignalType dendrite_type_needed) const /*noexcept*/ {
+[[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(const size_t src_neuron_id, const Vec3d& axon_pos_xyz,
+    const OctreeNode<BarnesHutCell>& node_with_dendrite, const SignalType dendrite_type_needed) const {
 
     /**
      * If the axon's neuron itself is considered as target neuron, set attractiveness to 0 to avoid forming an autapse (connection to itself).
@@ -215,7 +215,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     }
 
     const auto& target_xyz = node_with_dendrite.get_cell().get_dendrites_position_for(dendrite_type_needed);
-    RelearnException::check(target_xyz.has_value(), "target_xyz is bad");
+    RelearnException::check(target_xyz.has_value(), "BarnesHut::update_leaf_nodes: target_xyz is bad");
 
     const auto num_dendrites = node_with_dendrite.get_cell().get_number_dendrites_for(dendrite_type_needed);
 
@@ -230,8 +230,8 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     return ret_val;
 }
 
-[[nodiscard]] std::vector<double> BarnesHut::create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz,
-    SignalType dendrite_type_needed, const std::vector<OctreeNode<BarnesHutCell>*>& vector) const {
+[[nodiscard]] std::vector<double> BarnesHut::create_interval(const size_t src_neuron_id, const Vec3d& axon_pos_xyz,
+    const SignalType dendrite_type_needed, const std::vector<OctreeNode<BarnesHutCell>*>& vector) const {
 
     if (vector.empty()) {
         return {};
@@ -241,7 +241,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
 
     std::vector<double> probabilities;
     std::for_each(vector.cbegin(), vector.cend(), [&](const OctreeNode<BarnesHutCell>* target_node) {
-        RelearnException::check(target_node != nullptr, "In BarnesHut::create_interval, target_node was nullptr");
+        RelearnException::check(target_node != nullptr, "BarnesHut::update_leaf_nodes: target_node was nullptr");
         const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *target_node, dendrite_type_needed);
         probabilities.push_back(prob);
         sum += prob;
@@ -261,9 +261,9 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
 }
 
 [[nodiscard]] std::tuple<bool, bool> BarnesHut::acceptance_criterion_test(const Vec3d& axon_pos_xyz, const OctreeNode<BarnesHutCell>* const node_with_dendrite,
-    SignalType dendrite_type_needed) const /*noexcept*/ {
+    const SignalType dendrite_type_needed) const {
 
-    RelearnException::check(node_with_dendrite != nullptr, "In BarnesHut::acceptance_criterion_test, node_with_dendrite was nullptr");
+    RelearnException::check(node_with_dendrite != nullptr, "BarnesHut::update_leaf_nodes:  node_with_dendrite was nullptr");
 
     const auto& cell = node_with_dendrite->get_cell();
     const auto has_vacant_dendrites = cell.get_number_dendrites_for(dendrite_type_needed) != 0;
@@ -290,7 +290,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     const auto& target_xyz = cell.get_dendrites_position_for(dendrite_type_needed);
 
     // NOTE: This assertion fails when considering inner nodes that don't have dendrites.
-    RelearnException::check(target_xyz.has_value(), "target_xyz was bad");
+    RelearnException::check(target_xyz.has_value(), "BarnesHut::update_leaf_nodes: target_xyz was bad");
 
     // Calc Euclidean distance between source and target neuron
     const auto distance_vector = target_xyz.value() - axon_pos_xyz;
@@ -310,7 +310,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
 }
 
 [[nodiscard]] std::vector<OctreeNode<BarnesHutCell>*> BarnesHut::get_nodes_for_interval(const Vec3d& axon_pos_xyz, OctreeNode<BarnesHutCell>* root,
-    SignalType dendrite_type_needed) {
+    const SignalType dendrite_type_needed) {
     if (root == nullptr) {
         return {};
     }

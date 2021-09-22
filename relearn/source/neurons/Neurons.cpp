@@ -28,7 +28,7 @@
 #include <optional>
 #include <sstream>
 
-void Neurons::init(size_t number_neurons) {
+void Neurons::init(const size_t number_neurons) {
     num_neurons = number_neurons;
 
     neuron_model->init(number_neurons);
@@ -107,7 +107,7 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
 
         for (const auto& [edge_key, weight] : out_edges) {
             const auto& [target_rank, target_neuron_id] = edge_key;
-            RelearnException::check(target_rank == my_rank, "Currently, disabling neurons is only supported without mpi");
+            RelearnException::check(target_rank == my_rank, "Neurons::disable_neurons:: Currently, disabling neurons is only supported without mpi");
 
             const RankNeuronId target_id{ target_rank, target_neuron_id };
             const RankNeuronId source_id{ my_rank, neuron_id };
@@ -144,14 +144,14 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
     size_t weight_deleted_in_edges_from_outside = 0;
 
     for (const auto neuron_id : neuron_ids) {
-        RelearnException::check(neuron_id < num_neurons, "In Neurons::disable_neurons, there was a too large id: {} vs {}", neuron_id, num_neurons);
+        RelearnException::check(neuron_id < num_neurons, "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id, num_neurons);
         disable_flags[neuron_id] = 0;
 
         const auto in_edges = network_graph->get_in_edges(neuron_id); // Intended copy
 
         for (const auto& [edge_key, weight] : in_edges) {
             const auto& [source_rank, source_neuron_id] = edge_key;
-            RelearnException::check(source_rank == my_rank, "Currently, disabling neurons is only supported without mpi");
+            RelearnException::check(source_rank == my_rank, "Neurons::disable_neurons:: Currently, disabling neurons is only supported without mpi");
 
             const RankNeuronId target_id{ my_rank, neuron_id };
             const RankNeuronId source_id{ source_rank, source_neuron_id };
@@ -163,7 +163,7 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
             bool is_within = std::binary_search(neuron_ids.begin(), neuron_ids.end(), source_neuron_id);
 
             if (is_within) {
-                RelearnException::fail("While disabling neurons, found a within-in-edge that has not been deleted");
+                RelearnException::fail("Neurons::disable_neurons: While disabling neurons, found a within-in-edge that has not been deleted");
             } else {
                 weight_deleted_in_edges_from_outside += std::abs(weight);
                 number_deleted_in_edges_from_outside++;
@@ -201,12 +201,12 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
 
 void Neurons::enable_neurons(const std::vector<size_t>& neuron_ids) {
     for (const auto neuron_id : neuron_ids) {
-        RelearnException::check(neuron_id < num_neurons, "In Neurons::enable_neurons, there was a too large id: %ull vs %ull", neuron_id, num_neurons);
+        RelearnException::check(neuron_id < num_neurons, "Neurons::enable_neurons: There was a too large id: {} vs {}", neuron_id, num_neurons);
         disable_flags[neuron_id] = 1;
     }
 }
 
-void Neurons::create_neurons(size_t creation_count) {
+void Neurons::create_neurons(const size_t creation_count) {
     const auto current_size = num_neurons;
     const auto new_size = current_size + creation_count;
 
@@ -289,7 +289,7 @@ void Neurons::update_calcium() {
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
 }
 
-Neurons::StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, int root, const std::vector<char>& disable_flags) const {
+Neurons::StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, const int root, const std::vector<char>& disable_flags) const {
     const auto [d_my_min, d_my_max, d_my_acc, d_num_values] = Util::min_max_acc(local_values, disable_flags);
     const double my_avg = d_my_acc / d_num_values;
 
@@ -414,10 +414,11 @@ std::pair<Neurons::PendingDeletionsV, std::vector<size_t>> Neurons::delete_synap
     return std::make_pair(pending_deletions, total_vector_affected_indices);
 }
 
-std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(size_t neuron_id,
-    ElementType element_type,
-    SignalType signal_type,
-    unsigned int num_synapses_to_delete,
+std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(
+    const size_t neuron_id,
+    const ElementType element_type,
+    const SignalType signal_type,
+    const unsigned int num_synapses_to_delete,
     PendingDeletionsV& pending_deletions,
     const PendingDeletionsV& other_pending_deletions) {
 
@@ -441,7 +442,7 @@ std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(size_t neur
         current_synapses = delete_synapses_register_edges(in_edges);
     }
 
-    RelearnException::check(num_synapses_to_delete <= current_synapses.size(), "num_synapses_to_delete > last_synapses.size()");
+    RelearnException::check(num_synapses_to_delete <= current_synapses.size(), "Neurons::delete_synapses_find_synapses_on_neuron:: num_synapses_to_delete > last_synapses.size()");
 
     /**
 	* Select synapses for deletion
@@ -457,7 +458,7 @@ std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(size_t neur
         // Make iterator point to selected element
         std::advance(synapse_selected, static_cast<int>(current_synapses.size() * random_number));
 
-        RelearnException::check(synapse_selected != current_synapses.cend(), "Didn't select a synapse to delete");
+        RelearnException::check(synapse_selected != current_synapses.cend(), "Neurons::delete_synapses_find_synapses_on_neuron: Didn't select a synapse to delete");
 
         RankNeuronId src_neuron_id = RankNeuronId(MPIWrapper::get_my_rank(), neuron_id);
         RankNeuronId tgt_neuron_id = synapse_selected->get_neuron_id();
@@ -662,7 +663,7 @@ size_t Neurons::delete_synapses_commit_deletions(const PendingDeletionsV& list) 
         const auto tgt_neuron_rank = tgt_neuron.get_rank();
         const auto tgt_neuron_id = tgt_neuron.get_neuron_id();
 
-        RelearnException::check(src_neuron_rank == my_rank || tgt_neuron_rank == my_rank, "Should delete a non-local synapse");
+        RelearnException::check(src_neuron_rank == my_rank || tgt_neuron_rank == my_rank, "Neurons::delete_synapses_commit_deletions: Should delete a non-local synapse");
 
         const auto signal_type = it.get_signal_type();
         const auto element_type = it.get_affected_element_type();
@@ -865,7 +866,7 @@ std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_pro
 
             // Sanity check: if the request received is targeted for me
             if (target_neuron_id >= num_neurons) {
-                RelearnException::fail("Target_neuron_id exceeds my neurons");
+                RelearnException::fail("Neurons::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
                 exit(EXIT_FAILURE);
             }
 
@@ -888,7 +889,7 @@ std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_pro
             }
 
             // Target neuron has still dendrite available, so connect
-            RelearnException::check((*dendrites_cnts)[target_neuron_id] - (*dendrites_connected_cnts)[target_neuron_id] >= 0, "Connectivity went downside");
+            RelearnException::check((*dendrites_cnts)[target_neuron_id] - (*dendrites_connected_cnts)[target_neuron_id] >= 0, "Neurons::create_synapses_process_requests: Connectivity went downside");
 
             const auto diff = static_cast<unsigned int>((*dendrites_cnts)[target_neuron_id] - (*dendrites_connected_cnts)[target_neuron_id]);
             if (diff != 0) {
@@ -919,7 +920,9 @@ std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_pro
     return std::make_pair(num_synapses_created, responses);
 }
 
-std::map<int, std::vector<char>> Neurons::create_synapses_exchange_responses(const std::map<int, std::vector<char>>& synapse_creation_responses, const MapSynapseCreationRequests& synapse_creation_requests_outgoing) {
+std::map<int, std::vector<char>> Neurons::create_synapses_exchange_responses(
+    const std::map<int, std::vector<char>>& synapse_creation_responses, 
+    const MapSynapseCreationRequests& synapse_creation_requests_outgoing) {
     /**
     * Send and receive responses for synapse requests
     */
@@ -962,7 +965,9 @@ std::map<int, std::vector<char>> Neurons::create_synapses_exchange_responses(con
     return received_responses;
 }
 
-size_t Neurons::create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing, const std::map<int, std::vector<char>>& received_responses) {
+size_t Neurons::create_synapses_process_responses(
+    const MapSynapseCreationRequests& synapse_creation_requests_outgoing, 
+    const std::map<int, std::vector<char>>& received_responses) {
     size_t num_synapses_created = 0;
 
     const auto my_rank = MPIWrapper::get_my_rank();
@@ -993,7 +998,7 @@ size_t Neurons::create_synapses_process_responses(const MapSynapseCreationReques
                 num_synapses_created++;
 
                 const double delta = axons->get_count(source_neuron_id) - axons->get_connected_count(source_neuron_id);
-                RelearnException::check(delta >= 0, "%f", delta);
+                RelearnException::check(delta >= 0, "Neurons::create_synapses_process_responses: delta is negative: {}", delta);
 
                 // I have already created the synapse in the network
                 // if the response comes from myself
@@ -1020,7 +1025,7 @@ void Neurons::debug_check_counts() {
         return;
     }
 
-    RelearnException::check(network_graph != nullptr, "network_graph is nullptr");
+    RelearnException::check(network_graph != nullptr, "Neurons::debug_check_counts: network_graph is nullptr");
 
     const std::vector<double>& axs_count = axons->get_total_counts();
     const std::vector<unsigned int>& axs_conn_count = axons->get_connected_count();
@@ -1034,9 +1039,9 @@ void Neurons::debug_check_counts() {
         const double diff_de = de_count[i] - de_conn_count[i];
         const double diff_di = di_count[i] - di_conn_count[i];
 
-        RelearnException::check(diff_axs >= 0.0, "%f", diff_axs);
-        RelearnException::check(diff_de >= 0.0, "%f", diff_de);
-        RelearnException::check(diff_di >= 0.0, "%f", diff_di);
+        RelearnException::check(diff_axs >= 0.0, "Neurons::debug_check_counts: {}", diff_axs);
+        RelearnException::check(diff_de >= 0.0, "Neurons::debug_check_counts: {}", diff_de);
+        RelearnException::check(diff_di >= 0.0, "Neurons::debug_check_counts: {}", diff_di);
     }
 
     for (size_t i = 0; i < num_neurons; i++) {
@@ -1052,9 +1057,9 @@ void Neurons::debug_check_counts() {
         const size_t num_in_exc_ng = network_graph->get_num_in_edges_ex(i);
         const size_t num_in_inh_ng = network_graph->get_num_in_edges_in(i);
 
-        RelearnException::check(num_conn_axons == num_out_ng, "In Neurons conn axons, %u vs. %u", num_conn_axons, num_out_ng);
-        RelearnException::check(num_conn_dend_ex == num_in_exc_ng, "In Neurons conn dend ex, %u vs. %u", num_conn_dend_ex, num_in_exc_ng);
-        RelearnException::check(num_conn_dend_in == num_in_inh_ng, "In Neurons conn dend in, %u vs. %u", num_conn_dend_in, num_in_inh_ng);
+        RelearnException::check(num_conn_axons == num_out_ng, "Neurons::debug_check_counts: In Neurons conn axons, {} vs. {}", num_conn_axons, num_out_ng);
+        RelearnException::check(num_conn_dend_ex == num_in_exc_ng, "Neurons::debug_check_counts: In Neurons conn dend ex, {} vs. {}", num_conn_dend_ex, num_in_exc_ng);
+        RelearnException::check(num_conn_dend_in == num_in_inh_ng, "Neurons::debug_check_counts: In Neurons conn dend in, {} vs. {}", num_conn_dend_in, num_in_inh_ng);
     }
 }
 
@@ -1075,7 +1080,7 @@ void Neurons::debug_check_counts() {
     return std::make_tuple(num_synapses_deleted, num_synapses_created);
 }
 
-void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, size_t sum_synapses_deleted, size_t sum_synapses_created) {
+void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const size_t step, const size_t sum_synapses_deleted, const size_t sum_synapses_created) {
     int64_t sum_axons_excitatory_counts = 0;
     int64_t sum_axons_excitatory_connected_counts = 0;
     int64_t sum_axons_inhibitory_counts = 0;
@@ -1161,7 +1166,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
     }
 }
 
-void Neurons::print_neurons_overview_to_log_file_on_rank_0(size_t step) {
+void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
     const auto total_num_neurons = partition->get_total_num_neurons();
 
     const StatisticalMeasures& calcium_statistics = global_statistics(calcium, 0, disable_flags);

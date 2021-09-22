@@ -17,7 +17,7 @@
 #include "../NetworkGraph.h"
 #include "../Neurons.h"
 
-NeuronModel::NeuronModel(double k, double tau_C, double beta, unsigned int h, double base_background_activity, double background_activity_mean, double background_activity_stddev)
+NeuronModel::NeuronModel(const double k, const double tau_C, const double beta, const unsigned int h, const double base_background_activity, const double background_activity_mean, const double background_activity_stddev)
     : k(k)
     , tau_C(tau_C)
     , beta(beta)

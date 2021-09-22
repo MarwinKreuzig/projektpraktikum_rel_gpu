@@ -155,8 +155,8 @@ void NetworkGraph::debug_check() const {
             const int out_edge_rank = out_edge_key.first;
             const size_t out_edge_neuron_id = out_edge_key.second;
 
-            RelearnException::check(out_edge_rank >= 0, "Rank is smaller than 0 (out)");
-            RelearnException::check(out_edge_val != 0, "Value is zero (out)");
+            RelearnException::check(out_edge_rank >= 0, "NetworkGraph::debug_check: Rank is smaller than 0 (out)");
+            RelearnException::check(out_edge_val != 0, "NetworkGraph::debug_check: Value is zero (out)");
 
             if (out_edge_rank != my_rank) {
                 continue;
@@ -172,8 +172,8 @@ void NetworkGraph::debug_check() const {
         for (const auto& [in_edge_key, in_edge_val] : in_edges) {
             const auto [in_edge_rank, in_edge_neuron_id] = in_edge_key;
 
-            RelearnException::check(in_edge_rank >= 0, "Rank is smaller than 0 (in)");
-            RelearnException::check(in_edge_val != 0, "Value is zero (in)");
+            RelearnException::check(in_edge_rank >= 0, "NetworkGraph::debug_check: Rank is smaller than 0 (in)");
+            RelearnException::check(in_edge_val != 0, "NetworkGraph::debug_check: Value is zero (in)");
 
             if (in_edge_rank != my_rank) {
                 continue;
@@ -184,18 +184,18 @@ void NetworkGraph::debug_check() const {
 
             const bool found = it != edges.cend();
 
-            RelearnException::check(found, "Edge not found");
+            RelearnException::check(found, "NetworkGraph::debug_check: Edge not found");
 
             const int golden_weight = it->second;
             const bool weight_matches = golden_weight == in_edge_val;
 
-            RelearnException::check(weight_matches, "Weight doesn't match");
+            RelearnException::check(weight_matches, "NetworkGraph::debug_check: Weight doesn't match");
 
             edges.erase(id_pair);
         }
     }
 
-    RelearnException::check(edges.empty(), "Edges is not empty");
+    RelearnException::check(edges.empty(), "NetworkGraph::debug_check: Edges is not empty");
 }
 
 void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id) {
@@ -218,7 +218,7 @@ void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_
 
     for (auto rank = 0; rank < num_ranks; rank++) {
         if (MPIWrapper::get_my_rank() == rank) {
-            RelearnException::check(global_ids_to_receive[rank].empty(), "Should receive ids from myself");
+            RelearnException::check(global_ids_to_receive[rank].empty(), "NetworkGraph::translate_global_to_local: Should receive ids from myself");
             continue;
         }
 
@@ -297,7 +297,7 @@ void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_
         std::vector<size_t>& translated_ids = global_ids_local_value[rank];
         std::vector<size_t>& local_global_ids = global_ids_to_send[rank];
 
-        RelearnException::check(translated_ids.size() == local_global_ids.size(), "The vectors have not the same size in load network");
+        RelearnException::check(translated_ids.size() == local_global_ids.size(), "NetworkGraph::translate_global_to_local: The vectors have not the same size in load network");
 
         for (auto i = 0; i < translated_ids.size(); i++) {
             const size_t local_id = translated_ids[i];
@@ -381,7 +381,7 @@ void NetworkGraph::load_synapses(
         std::stringstream sstream(line);
         const bool success = (sstream >> source_id) && (sstream >> target_id) && (sstream >> weight);
 
-        RelearnException::check(success, "Loading synapses was unsuccessfull!");
+        RelearnException::check(success, "NetworkGraph::load_synapses: Loading synapses was unsuccessfull!");
 
         // The neurons start with 1
         source_id--;
@@ -440,7 +440,7 @@ void NetworkGraph::load_synapses(
             continue;
         }
 
-        RelearnException::fail("In loading synapses, target and source are not conform.");
+        RelearnException::fail("NetworkGraph::load_synapses: In loading synapses, target and source are not conform.");
     }
 
     file_synapses.close();

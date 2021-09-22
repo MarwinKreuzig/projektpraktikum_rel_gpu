@@ -12,7 +12,17 @@
 
 using models::FitzHughNagumoModel;
 
-FitzHughNagumoModel::FitzHughNagumoModel(double k, double tau_C, double beta, unsigned int h, double base_background_activity, double background_activity_mean, double background_activity_stddev, const double a, const double b, const double phi)
+FitzHughNagumoModel::FitzHughNagumoModel(
+    const double k,
+    const double tau_C, 
+    const double beta, 
+    const unsigned int h, 
+    const double base_background_activity, 
+    const double background_activity_mean, 
+    const double background_activity_stddev,
+    const double a, 
+    const double b, 
+    const double phi)
     : NeuronModel{ k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev }
     , a{ a }
     , b{ b }
@@ -67,7 +77,7 @@ void FitzHughNagumoModel::update_activity(const size_t neuron_id) {
     set_x(neuron_id, x);
 }
 
-void FitzHughNagumoModel::init_neurons(size_t start_id, size_t end_id) {
+void FitzHughNagumoModel::init_neurons(const size_t start_id, const size_t end_id) {
     for (size_t neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
         const auto x = FitzHughNagumoModel::init_x;
         w[neuron_id] = iter_refrac(FitzHughNagumoModel::init_w, x);

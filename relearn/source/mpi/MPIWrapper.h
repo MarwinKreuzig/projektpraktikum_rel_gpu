@@ -82,13 +82,13 @@ public:
 private:
     MPIWrapper() = default;
 
-    [[nodiscard]] static size_t init_window(size_t size_requested, size_t octree_node_size);
+    [[nodiscard]] static size_t init_window(const size_t size_requested, const size_t octree_node_size);
 
     static void init_globals();
 
     static inline void* minsummax{};
 
-    static void* translate_reduce_function(ReduceFunction rf);
+    static void* translate_reduce_function(const ReduceFunction rf);
 
     static void register_custom_function();
 
@@ -108,25 +108,25 @@ private:
     // NOLINTNEXTLINE
     static inline std::string my_rank_str{ "-1" };
 
-    static void all_gather(const void* own_data, void* buffer, int size);
+    static void all_gather(const void* own_data, void* buffer, const int size);
 
-    static void all_gather_inl(void* ptr, int count);
+    static void all_gather_inl(void* ptr, const int count);
 
-    static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank);
-
-    // NOLINTNEXTLINE
-    static void async_s(const void* buffer, int count, int rank, AsyncToken& token);
+    static void reduce(const void* src, void* dst, const int size, const ReduceFunction function, const int root_rank);
 
     // NOLINTNEXTLINE
-    static void async_recv(void* buffer, int count, int rank, AsyncToken& token);
+    static void async_s(const void* buffer, const int count, const int rank, AsyncToken& token);
 
-    static int translate_lock_type(MPI_Locktype lock_type);
+    // NOLINTNEXTLINE
+    static void async_recv(void* buffer, const int count, const int rank, AsyncToken& token);
 
-    static void get(void* origin, size_t size, int target_rank, int64_t displacement);
+    static int translate_lock_type(const MPI_Locktype lock_type);
 
-    static void reduce_int64(const int64_t* src, int64_t* dst, size_t size, ReduceFunction function, int root_rank);
+    static void get(void* origin, const size_t size, const int target_rank, const int64_t displacement);
 
-    static void reduce_double(const double* src, double* dst, size_t size, ReduceFunction function, int root_rank);
+    static void reduce_int64(const int64_t* src, int64_t* dst, const size_t size, const ReduceFunction function, const int root_rank);
+
+    static void reduce_double(const double* src, double* dst, const size_t size, const ReduceFunction function, const int root_rank);
 
     /**
      * @brief Returns the base addresses of the memory windows of all memory windows.
@@ -144,7 +144,7 @@ public:
      * @param argc Is passed to MPI_Init_Thread
      * @param argv Is passed to MPI_Init_Thread
      */
-    static void init(int argc, char** argv);
+    static void init(const int argc, char** argv);
 
     /**
      * @brief Initializes the shared RMA memory. Must be called before any call involving OctreeNode*.
@@ -175,7 +175,7 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs or if root_rank is < 0
      * @return On the MPI rank root_rank: The result of the reduction; A dummy value on every other MPI rank
      */
-    [[nodiscard]] static double reduce(double value, ReduceFunction function, int root_rank);
+    [[nodiscard]] static double reduce(const double value, const ReduceFunction function, const int root_rank);
 
     /**
      * @brief Reduces a value for every MPI rank with a reduction function such that every rank has the final result
@@ -184,7 +184,7 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs
      * @return The final result of the reduction
      */
-    [[nodiscard]] static double all_reduce_double(double value, ReduceFunction function);
+    [[nodiscard]] static double all_reduce_double(const double value, const ReduceFunction function);
 
     /**
      * @brief Reduces a value for every MPI rank with a reduction function such that every rank has the final result
@@ -193,7 +193,7 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs
      * @return The final result of the reduction
      */
-    [[nodiscard]] static uint64_t all_reduce_uint64(uint64_t value, ReduceFunction function);
+    [[nodiscard]] static uint64_t all_reduce_uint64(const uint64_t value, const ReduceFunction function);
 
     /**
      * @brief Reduces multiple values for every MPI rank with a reduction function such that the root_rank has the final result. The reduction is performed componentwise
@@ -204,8 +204,8 @@ public:
      * @return On the MPI rank root_rank: The results of the componentwise reduction; A dummy value on every other MPI rank
      */
     template <size_t size>
-    [[nodiscard]] static std::array<double, size> reduce(const std::array<double, size>& src, ReduceFunction function, int root_rank) {
-        RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
+    [[nodiscard]] static std::array<double, size> reduce(const std::array<double, size>& src, const ReduceFunction function, const int root_rank) {
+        RelearnException::check(root_rank >= 0, "MPIWrapper::reduce: root_rank was negative");
 
         std::array<double, size> dst{ 0.0 };
         reduce_double(src.data(), dst.data(), size, function, root_rank);
@@ -222,8 +222,8 @@ public:
      * @return On the MPI rank root_rank: The results of the componentwise reduction; A dummy value on every other MPI rank
      */
     template <size_t size>
-    [[nodiscard]] static std::array<int64_t, size> reduce(const std::array<int64_t, size>& src, ReduceFunction function, int root_rank) {
-        RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
+    [[nodiscard]] static std::array<int64_t, size> reduce(const std::array<int64_t, size>& src, const ReduceFunction function, const int root_rank) {
+        RelearnException::check(root_rank >= 0, "MPIWrapper::reduce: root_rank was negative");
 
         std::array<int64_t, size> dst{ 0 };
         reduce_int64(src.data(), dst.data(), size, function, root_rank);
@@ -258,7 +258,7 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs or if count <= 0
      */
     template <typename T>
-    static void all_gather_inline(T* ptr, int count) {
+    static void all_gather_inline(T* ptr, const int count) {
         all_gather_inl(ptr, count * sizeof(T));
     }
 
@@ -272,7 +272,7 @@ public:
      */
     template <typename T>
     // NOLINTNEXTLINE
-    static void async_send(const T* buffer, size_t size_in_bytes, int rank, AsyncToken& token) {
+    static void async_send(const T* buffer, const size_t size_in_bytes, const int rank, AsyncToken& token) {
         async_s(buffer, static_cast<int>(size_in_bytes), rank, token);
     }
 
@@ -286,7 +286,7 @@ public:
      */
     template <typename T>
     // NOLINTNEXTLINE
-    static void async_receive(T* buffer, size_t size_in_bytes, int rank, AsyncToken& token) {
+    static void async_receive(T* buffer, const size_t size_in_bytes, const int rank, AsyncToken& token) {
         async_recv(buffer, static_cast<int>(size_in_bytes), rank, token);
     }
 
@@ -314,10 +314,10 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs or if target_rank < 0
      */
     template <typename AdditionalCellAttributes>
-    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, int target_rank, const OctreeNode<AdditionalCellAttributes>* src) {
-        RelearnException::check(target_rank >= 0, "target rank is negative in download_octree_nodet");
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const OctreeNode<AdditionalCellAttributes>* src) {
+        RelearnException::check(target_rank >= 0, "MPIWrapper::download_octree_node: target_rank is negative");
         const auto& base_ptrs = get_base_pointers();
-        RelearnException::check(target_rank < base_ptrs.size(), "target rank is greater than the base pointers");
+        RelearnException::check(target_rank < base_ptrs.size(), "MPIWrapper::download_octree_node: target_rank is larger than the pointers");
         const auto displacement = int64_t(src) - base_ptrs[target_rank];
 
         get(dst, sizeof(OctreeNode<AdditionalCellAttributes>), target_rank, displacement);
@@ -350,20 +350,20 @@ public:
      * @param lock_type The type of locking
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
-    static void lock_window(int rank, MPI_Locktype lock_type);
+    static void lock_window(const int rank, const MPI_Locktype lock_type);
 
     /**
      * @brief Unlocks the memory window on another MPI rank
      * @param The other MPI rank
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
-    static void unlock_window(int rank);
+    static void unlock_window(const int rank);
 
     /**
      * @brief Finalizes the local MPI implementation.
      * @exception Throws a RelearnException if an MPI error occurs
      */
-    static void finalize() /*noexcept*/;
+    static void finalize();
 };
 
 #endif

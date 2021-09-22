@@ -167,7 +167,7 @@ public:
 
     static void unlock_window(int rank);
 
-    static void finalize() /*noexcept*/;
+    static void finalize();
 };
 
 #endif

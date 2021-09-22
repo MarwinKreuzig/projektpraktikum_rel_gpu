@@ -29,7 +29,7 @@ public:
      * @param um_per_neuron The box length in which a single neuron is placed, must be > 0.0
      * @exception Throws a RelearnException if desired_frac_neurons_exc if not from [0.0, 1.0] or um_per_neuron <= 0.0
      */
-    SubdomainFromNeuronDensity(size_t num_neurons, double desired_frac_neurons_exc, double um_per_neuron);
+    SubdomainFromNeuronDensity(const size_t num_neurons, const double desired_frac_neurons_exc, const double um_per_neuron);
 
     SubdomainFromNeuronDensity(const SubdomainFromNeuronDensity& other) = delete;
     SubdomainFromNeuronDensity(SubdomainFromNeuronDensity&& other) = delete;
@@ -45,7 +45,7 @@ public:
      * @param num_subdomains_per_axis The number of subdomains per axis (the same for all dimensions), != 0
      * @return A tuple with (1) the minimum and (2) the maximum positions in the subdomain
      */
-    [[nodiscard]] std::tuple<Position, Position> get_subdomain_boundaries(const Vec3s& subdomain_3idx, size_t num_subdomains_per_axis) const noexcept override;
+    [[nodiscard]] std::tuple<Position, Position> get_subdomain_boundaries(const Vec3s& subdomain_3idx, const size_t num_subdomains_per_axis) const noexcept override;
 
     /** 
      * @brief Returns the subdomain boundaries for a given subdomain
@@ -63,13 +63,13 @@ public:
      * @param max The subdomain's maximum position
      * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file 
      */
-    void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) override;
+    void fill_subdomain(const size_t subdomain_idx, const size_t num_subdomains, const Position& min, const Position& max) override;
 
     /**
      * @brief This method is not implemented for this class
      */
-    [[nodiscard]] std::vector<size_t> neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
-        size_t local_id_start, size_t local_id_end) const override;
+    [[nodiscard]] std::vector<size_t> neuron_global_ids(const size_t subdomain_idx, const size_t num_subdomains,
+        const size_t local_id_start, const size_t local_id_end) const override;
 
     constexpr static double default_um_per_neuron = 26.0;
 
@@ -79,5 +79,5 @@ private:
     void place_neurons_in_area(
         const NeuronToSubdomainAssignment::Position& offset,
         const NeuronToSubdomainAssignment::Position& length_of_box,
-        size_t num_neurons, size_t subdomain_idx);
+        const size_t num_neurons, const size_t subdomain_idx);
 };

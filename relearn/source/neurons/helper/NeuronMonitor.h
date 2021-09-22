@@ -205,8 +205,8 @@ public:
             return;
         }
 
-        RelearnException::check(neurons_to_monitor.operator bool(), "In NeuronMonitor, the shared pointer is empty");
-        RelearnException::check(target_neuron_id < neurons_to_monitor->num_neurons, "In NeuronMonitor, the target id is too large for the neurons class");
+        RelearnException::check(neurons_to_monitor.operator bool(), "NeuronMonitor::record_data: The shared pointer is empty");
+        RelearnException::check(target_neuron_id < neurons_to_monitor->num_neurons, "NeuronMonitor::record_data: The target id is too large for the neurons class");
 
         const double& calcium = neurons_to_monitor->calcium[target_neuron_id];
         const double& x = neurons_to_monitor->neuron_model->x[target_neuron_id];

@@ -46,9 +46,7 @@ public:
      * @exception Throws a RelearnException if the rank is negative
      */
     [[nodiscard]] int get_rank() const {
-        RelearnException::check(rank >= 0, "RankNeuronId::get_rank, it was: %d", rank);
-        //const auto num_ranks = MPIWrapper::get_num_ranks();
-        //RelearnException::check(rank < num_ranks, "RankNeuronId::get_rank, it was %d but the number of ranks was only %d%", rank, num_ranks);
+        RelearnException::check(rank >= 0, "RankNeuronId::get_rank: It was negative: {}", rank);
         return rank;
     }
 
@@ -58,7 +56,7 @@ public:
      * @exception Throws a RelearnException if the id is not smaller than Constants::uninitialized
      */
     [[nodiscard]] size_t get_neuron_id() const {
-        RelearnException::check(neuron_id < Constants::uninitialized, "RankNeuronId::get_neuron_id, it was: %u", Constants::uninitialized);
+        RelearnException::check(neuron_id < Constants::uninitialized, "RankNeuronId::get_neuron_id: neuron_id is too large: {}", neuron_id);
         return neuron_id;
     }
 

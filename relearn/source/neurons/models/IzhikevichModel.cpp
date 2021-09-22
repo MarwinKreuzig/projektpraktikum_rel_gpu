@@ -12,7 +12,22 @@
 
 using models::IzhikevichModel;
 
-IzhikevichModel::IzhikevichModel(double k, double tau_C, double beta, unsigned int h, double base_background_activity, double background_activity_mean, double background_activity_stddev, const double a, const double b, const double c, const double d, const double V_spike, const double k1, const double k2, const double k3)
+IzhikevichModel::IzhikevichModel(
+    const double k, 
+    const double tau_C, 
+    const double beta, 
+    const unsigned int h, 
+    const double base_background_activity, 
+    const double background_activity_mean,
+    const double background_activity_stddev,
+    const double a, 
+    const double b, 
+    const double c,
+    const double d, 
+    const double V_spike, 
+    const double k1, 
+    const double k2, 
+    const double k3)
     : NeuronModel{ k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev }
     , a{ a }
     , b{ b }
@@ -45,13 +60,13 @@ IzhikevichModel::IzhikevichModel(double k, double tau_C, double beta, unsigned i
     return "IzhikevichModel";
 }
 
-void IzhikevichModel::init(size_t num_neurons) {
+void IzhikevichModel::init(const size_t num_neurons) {
     NeuronModel::init(num_neurons);
     u.resize(num_neurons);
     init_neurons(0, num_neurons);
 }
 
-void models::IzhikevichModel::create_neurons(size_t creation_count) {
+void models::IzhikevichModel::create_neurons(const size_t creation_count) {
     const auto old_size = NeuronModel::get_num_neurons();
     NeuronModel::create_neurons(creation_count);
     u.resize(old_size + creation_count);
@@ -81,7 +96,7 @@ void IzhikevichModel::update_activity(const size_t neuron_id) {
     set_x(neuron_id, x);
 }
 
-void IzhikevichModel::init_neurons(size_t start_id, size_t end_id) {
+void IzhikevichModel::init_neurons(const size_t start_id, const size_t end_id) {
     for (size_t neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
         const auto x = c;
         u[neuron_id] = iter_refrac(b * c, x);

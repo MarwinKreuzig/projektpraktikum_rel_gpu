@@ -29,7 +29,7 @@ public:
      * @brief Sets the number of free excitatory dendrites in this cell
      * @param num_dendrites The number of free excitatory dendrites
      */
-    void set_number_excitatory_dendrites(unsigned int num_dendrites) noexcept {
+    void set_number_excitatory_dendrites(const unsigned int num_dendrites) noexcept {
         excitatory_dendrites.num_free_elements = num_dendrites;
     }
 
@@ -45,7 +45,7 @@ public:
      * @brief Sets the number of free inhibitory dendrites in this cell
      * @param num_dendrites The number of free inhibitory dendrites
      */
-    void set_number_inhibitory_dendrites(unsigned int num_dendrites) noexcept {
+    void set_number_inhibitory_dendrites(const unsigned int num_dendrites) noexcept {
         inhibitory_dendrites.num_free_elements = num_dendrites;
     }
 
@@ -62,7 +62,7 @@ public:
      * @param dendrite_type The requested signal type
      * @return The number of free dendrites
      */
-    [[nodiscard]] unsigned int get_number_dendrites_for(SignalType dendrite_type) const noexcept {
+    [[nodiscard]] unsigned int get_number_dendrites_for(const SignalType dendrite_type) const noexcept {
         if (dendrite_type == SignalType::EXCITATORY) {
             return excitatory_dendrites.num_free_elements;
         }
@@ -107,7 +107,7 @@ public:
      * @param axon_type The requested signal type
      * @return The position of the dendrite
      */
-    [[nodiscard]] std::optional<Vec3d> get_dendrites_position_for(SignalType dendrite_type) const noexcept {
+    [[nodiscard]] std::optional<Vec3d> get_dendrites_position_for(const SignalType dendrite_type) const noexcept {
         if (dendrite_type == SignalType::EXCITATORY) {
             return excitatory_dendrites.position;
         }
@@ -119,7 +119,7 @@ public:
      * @brief Sets the number of free excitatory axons in this cell
      * @param num_axons The number of free excitatory axons
      */
-    void set_number_excitatory_axons(unsigned int num_axons) noexcept {
+    void set_number_excitatory_axons(const unsigned int num_axons) noexcept {
         excitatory_axons.num_free_elements = num_axons;
     }
 
@@ -135,7 +135,7 @@ public:
      * @brief Sets the number of free inhibitory axons in this cell
      * @param num_axons The number of free inhibitory axons
      */
-    void set_number_inhibitory_axons(unsigned int num_axons) noexcept {
+    void set_number_inhibitory_axons(const unsigned int num_axons) noexcept {
         inhibitory_axons.num_free_elements = num_axons;
     }
 
@@ -152,7 +152,7 @@ public:
      * @param axon_type The requested signal type
      * @return The number of free axons
      */
-    [[nodiscard]] unsigned int get_number_axons_for(SignalType axon_type) const noexcept {
+    [[nodiscard]] unsigned int get_number_axons_for(const SignalType axon_type) const noexcept {
         if (axon_type == SignalType::EXCITATORY) {
             return excitatory_axons.num_free_elements;
         }
@@ -197,7 +197,7 @@ public:
      * @param axon_type The requested signal type
      * @return The position of the dendrite
      */
-    [[nodiscard]] std::optional<Vec3d> get_axons_position_for(SignalType axon_type) const noexcept {
+    [[nodiscard]] std::optional<Vec3d> get_axons_position_for(const SignalType axon_type) const noexcept {
         if (axon_type == SignalType::EXCITATORY) {
             return excitatory_axons.position;
         }
@@ -221,7 +221,7 @@ public:
      * @param index The index of the hermite coefficient
      * @param coefficient The new value for the hermite coefficient
      */
-    void set_excitatory_hermite_coefficient(unsigned int index, double coefficient) noexcept {
+    void set_excitatory_hermite_coefficient(const unsigned int index, const double coefficient) noexcept {
         hermite_coefficients_ex[index] = coefficient;
     }
 
@@ -230,7 +230,7 @@ public:
      * @param index The index of the hermite coefficient
      * @param coefficient The new value for the hermite coefficient
      */
-    void set_inhibitory_hermite_coefficient(unsigned int index, double coefficient) noexcept {
+    void set_inhibitory_hermite_coefficient(const unsigned int index, const double coefficient) noexcept {
         hermite_coefficients_in[index] = coefficient;
     }
 
@@ -240,7 +240,7 @@ public:
      * @param coefficient The new value for the hermite coefficient
      * @param signal_type The type of dendrite
      */
-    void set_hermite_coefficient_for(unsigned int index, double coefficient, SignalType signal_type) noexcept {
+    void set_hermite_coefficient_for(const unsigned int index, const double coefficient, const SignalType signal_type) noexcept {
         if (signal_type == SignalType::EXCITATORY) {
             set_excitatory_hermite_coefficient(index, coefficient);
         } else {
@@ -252,7 +252,7 @@ public:
      * @brief Returns the specified hermite coefficient for the excitatory dendrites
      * @return The specified hermite coefficient
      */
-    [[nodiscard]] double get_excitatory_hermite_coefficient(unsigned int index) const noexcept {
+    [[nodiscard]] double get_excitatory_hermite_coefficient(const unsigned int index) const noexcept {
         return hermite_coefficients_ex[index];
     }
 
@@ -260,7 +260,7 @@ public:
      * @brief Returns the specified hermite coefficient for the inhibitory dendrites
      * @return The specified hermite coefficient
      */
-    [[nodiscard]] double get_inhibitory_hermite_coefficient(unsigned int index) const noexcept {
+    [[nodiscard]] double get_inhibitory_hermite_coefficient(const unsigned int index) const noexcept {
         return hermite_coefficients_in[index];
     }
 
@@ -268,7 +268,7 @@ public:
      * @brief Returns the specified hermite coefficient for the specified signal type
      * @return The specified hermite coefficient
      */
-    [[nodiscard]] double get_hermite_coefficient_for(unsigned int index, SignalType needed) const noexcept {
+    [[nodiscard]] double get_hermite_coefficient_for(const unsigned int index, const SignalType needed) const noexcept {
         if (needed == SignalType::EXCITATORY) {
             return get_excitatory_hermite_coefficient(index);
         }

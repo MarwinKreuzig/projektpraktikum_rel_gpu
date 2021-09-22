@@ -38,7 +38,7 @@ public:
      */
     FastMultipoleMethods(const std::shared_ptr<OctreeImplementation<FastMultipoleMethods>>& octree)
         : global_tree(octree) {
-        RelearnException::check(octree != nullptr, "In FastMultipoleMethods::FastMultipoleMethods, the octree was null");
+        RelearnException::check(octree != nullptr, "FastMultipoleMethods::FastMultipoleMethods: octree was null");
     }
 
      /**
@@ -50,7 +50,7 @@ public:
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. 
      */
-    MapSynapseCreationRequests find_target_neurons(size_t num_neurons, const std::vector<char>& disable_flags,
+    MapSynapseCreationRequests find_target_neurons(const size_t num_neurons, const std::vector<char>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) override;
 
     /**
@@ -70,7 +70,7 @@ public:
      * @exception Throws a RelearnException if node is nullptr
      */
     static void update_functor(OctreeNode<FastMultipoleMethodsCell>* node) {
-        RelearnException::check(node != nullptr, "In FunctorUpdateNode, node is nullptr");
+        RelearnException::check(node != nullptr, "FastMultipoleMethods::update_functor: node is nullptr");
 
         // NOLINTNEXTLINE
         if (!node->is_parent()) {
@@ -120,11 +120,11 @@ public:
             /**
 			 * We can use position if it's valid or if corresponding num of dendrites is 0 
 			 */
-            RelearnException::check(child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "The child had excitatory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
-            RelearnException::check(child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "The child had inhibitory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
+            RelearnException::check(child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "FastMultipoleMethods::update_functor: The child had excitatory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
+            RelearnException::check(child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "FastMultipoleMethods::update_functor: The child had inhibitory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
 
-            RelearnException::check(child_position_axons_excitatory.has_value() || (0 == child_number_axons_excitatory), "The child had excitatory axons, but no position. ID: {}", child->get_cell_neuron_id());
-            RelearnException::check(child_position_axons_inhibitory.has_value() || (0 == child_number_axons_inhibitory), "The child had inhibitory axons, but no position. ID: {}", child->get_cell_neuron_id());
+            RelearnException::check(child_position_axons_excitatory.has_value() || (0 == child_number_axons_excitatory), "FastMultipoleMethods::update_functor: The child had excitatory axons, but no position. ID: {}", child->get_cell_neuron_id());
+            RelearnException::check(child_position_axons_inhibitory.has_value() || (0 == child_number_axons_inhibitory), "FastMultipoleMethods::update_functor: The child had inhibitory axons, but no position. ID: {}", child->get_cell_neuron_id());
 
             if (child_position_dendrites_excitatory.has_value()) {
                 const auto scaled_position = child_position_dendrites_excitatory.value() * static_cast<double>(child_number_dendrites_excitatory);
@@ -243,7 +243,7 @@ private:
     std::vector<double> calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source,
         const std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>& interaction_list, const SignalType dendrite_type_needed);
 
-    void make_creation_request_for(SignalType needed, MapSynapseCreationRequests& request,
+    void make_creation_request_for(const SignalType needed, MapSynapseCreationRequests& request,
         std::stack<std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>>>& nodes_with_axons);
 
     std::shared_ptr<OctreeImplementation<FastMultipoleMethods>> global_tree{};

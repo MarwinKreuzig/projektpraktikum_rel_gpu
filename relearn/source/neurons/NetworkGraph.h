@@ -49,7 +49,7 @@ public:
      * @brief Constructs an object that has enough space to store the given number of neurons
      * @param num_neurons The number of neurons that the object shall handle
      */
-    explicit NetworkGraph(size_t num_neurons)
+    explicit NetworkGraph(const size_t num_neurons)
         : neuron_in_neighborhood(num_neurons)
         , neuron_out_neighborhood(num_neurons)
         , my_num_neurons(num_neurons) {
@@ -61,8 +61,8 @@ public:
      * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
      * @return A constant view of all in-edges that is invalidated when the state of the object changes
      */
-    [[nodiscard]] const Edges& get_in_edges(size_t neuron_id) const /*noexcept*/ {
-        RelearnException::check(neuron_id < neuron_in_neighborhood.size(), "In get_in_edges, tried with a too large id");
+    [[nodiscard]] const Edges& get_in_edges(const size_t neuron_id) const {
+        RelearnException::check(neuron_id < neuron_in_neighborhood.size(), "NetworkGraph::get_in_edges: Tried with a too large id of {}", neuron_id);
         return neuron_in_neighborhood[neuron_id];
     }
 
@@ -72,8 +72,8 @@ public:
      * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
      * @return A constant view of all out-edges that is invalidated when the state of the object changes
      */
-    [[nodiscard]] const Edges& get_out_edges(size_t neuron_id) const /*noexcept*/ {
-        RelearnException::check(neuron_id < neuron_out_neighborhood.size(), "In get_out_edges, tried with a too large id");
+    [[nodiscard]] const Edges& get_out_edges(const size_t neuron_id) const {
+        RelearnException::check(neuron_id < neuron_out_neighborhood.size(), "NetworkGraph::get_out_edges: Tried with a too large id of {}", neuron_id);
         return neuron_out_neighborhood[neuron_id];
     }
 
@@ -84,7 +84,7 @@ public:
      * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
      * @return A copy of all in-edges from a certain neuron signal type
      */
-    [[nodiscard]] Edges get_in_edges(size_t neuron_id, SignalType signal_type) const /*noexcept*/ {
+    [[nodiscard]] Edges get_in_edges(const size_t neuron_id, const SignalType signal_type) const {
         const Edges& all_edges = get_in_edges(neuron_id);
 
         Edges filtered_edges{};
@@ -110,7 +110,7 @@ public:
      * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
      * @return A copy of all out-edges to a certain neuron signal type
      */
-    [[nodiscard]] Edges get_out_edges(size_t neuron_id, SignalType signal_type) const /*noexcept*/ {
+    [[nodiscard]] Edges get_out_edges(const size_t neuron_id, const SignalType signal_type) const {
         const Edges& all_edges = get_out_edges(neuron_id);
 
         Edges filtered_edges{};
@@ -135,9 +135,9 @@ public:
      * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
      * @return The number of incoming synapses that the specified neuron formed from excitatory neurons
      */
-    [[nodiscard]] size_t get_num_in_edges_ex(size_t neuron_id) const {
+    [[nodiscard]] size_t get_num_in_edges_ex(const size_t neuron_id) const {
         RelearnException::check(neuron_id < neuron_in_neighborhood.size(),
-            "In get_num_in_edges, tried with a too large id: %u %u", neuron_id, my_num_neurons);
+            "NetworkGraph::get_num_in_edges_ex: Tried with a too large id: {} {}", neuron_id, my_num_neurons);
 
         size_t total_num_ports = 0;
 
@@ -156,9 +156,9 @@ public:
      * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
      * @return The number of incoming synapses that the specified neuron formed from inhibitory neurons
      */
-    [[nodiscard]] size_t get_num_in_edges_in(size_t neuron_id) const {
+    [[nodiscard]] size_t get_num_in_edges_in(const size_t neuron_id) const {
         RelearnException::check(neuron_id < neuron_in_neighborhood.size(),
-            "In get_num_in_edges, tried with a too large id: %u %u", neuron_id, my_num_neurons);
+            "NetworkGraph::get_num_in_edges_in: Tried with a too large id: {} {}", neuron_id, my_num_neurons);
 
         size_t total_num_ports = 0;
 
@@ -177,9 +177,9 @@ public:
      * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
      * @return The number of outgoing synapses that the specified neuron formed
      */
-    [[nodiscard]] size_t get_num_out_edges(size_t neuron_id) const {
+    [[nodiscard]] size_t get_num_out_edges(const size_t neuron_id) const {
         RelearnException::check(neuron_id < neuron_out_neighborhood.size(),
-            "In get_num_out_edges, tried with a too large id: %u %u", neuron_id, my_num_neurons);
+            "NetworkGraph::get_num_out_edges: Tried with a too large id: {} {}", neuron_id, my_num_neurons);
 
         size_t total_num_ports = 0;
 
@@ -195,7 +195,7 @@ public:
      * @param creation_count The number of additional neurons the network graph should handle
      * @exception Throws an exception if the allocation of memory fails
      */
-    void create_neurons(size_t creation_count) {
+    void create_neurons(const size_t creation_count) {
         const auto old_size = my_num_neurons;
         const auto new_size = old_size + creation_count;
 
@@ -216,11 +216,8 @@ public:
      * (b) neither the target nor the source are on the current rank,
      * (c) a local neuron id is larger than the number of neurons
 	 */
-    void add_edge_weight(const RankNeuronId& target, const RankNeuronId& source, int weight) {
-        if (weight == 0) {
-            RelearnException::fail("weight of edge to add is zero");
-            return;
-        }
+    void add_edge_weight(const RankNeuronId& target, const RankNeuronId& source, const int weight) {
+        RelearnException::check(weight != 0, "NetworkGraph::add_edge_weight: weight of edge to add is zero");
 
         const auto target_rank = target.get_rank();
         const auto target_neuron_id = target.get_neuron_id();
@@ -233,7 +230,7 @@ public:
         // Target neuron is mine
         if (target_rank == my_rank) {
             RelearnException::check(target_neuron_id < my_num_neurons,
-                "Want to add an in-edge with a too large target id: %u %u", target_neuron_id, my_num_neurons);
+                "NetworkGraph::add_edge_weight: Want to add an in-edge with a too large target id: {} {}", target_neuron_id, my_num_neurons);
 
             Edges& in_edges = neuron_in_neighborhood[target_neuron_id];
             add_edge(in_edges, source_rank, source_neuron_id, weight);
@@ -241,14 +238,14 @@ public:
 
         if (source_rank == my_rank) {
             RelearnException::check(source_neuron_id < my_num_neurons,
-                "Want to add an out-edge with a too large source id: ", target_neuron_id, my_num_neurons);
+                "NetworkGraph::add_edge_weight: Want to add an out-edge with a too large source id: {} {}", target_neuron_id, my_num_neurons);
 
             Edges& out_edges = neuron_out_neighborhood[source_neuron_id];
             add_edge(out_edges, target_rank, target_neuron_id, weight);
         }
 
         if (target_rank != my_rank && source_rank != my_rank) {
-            RelearnException::fail("In NetworkGraph::add_edge_weight, neither the target nor the source rank were for me.");
+            RelearnException::fail("NetworkGraph::add_edge_weight: In NetworkGraph::add_edge_weight, neither the target nor the source rank were for me.");
         }
     }
 
@@ -285,7 +282,7 @@ public:
 
 private:
     // NOLINTNEXTLINE
-    static void add_edge(Edges& edges, int rank, size_t neuron_id, int weight) {
+    static void add_edge(Edges& edges, const int rank, const size_t neuron_id, const int weight) {
         const EdgesKey rank_neuron_id_pair{ rank, neuron_id };
 
         size_t idx = 0;

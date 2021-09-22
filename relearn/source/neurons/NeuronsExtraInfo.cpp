@@ -13,8 +13,8 @@
 #include "../mpi/MPIWrapper.h"
 #include "../util/Random.h"
 
-void NeuronsExtraInfo::init(size_t number_neurons) {
-    RelearnException::check(size == 0, "NeuronsExtraInfo initialized two times");
+void NeuronsExtraInfo::init(const size_t number_neurons) {
+    RelearnException::check(size == 0, "NeuronsExtraInfo::init: NeuronsExtraInfo initialized two times");
     size = number_neurons;
 
     const int num_ranks = MPIWrapper::get_num_ranks();
@@ -32,16 +32,16 @@ void NeuronsExtraInfo::init(size_t number_neurons) {
     }
 }
 
-void NeuronsExtraInfo::create_neurons(size_t creation_count) {
+void NeuronsExtraInfo::create_neurons(const size_t creation_count) {
     RelearnException::check(creation_count != 0, "Cannot add 0 neurons");
 
-    RelearnException::check(!x_dims.empty(), "x_dims must not be empty");
-    RelearnException::check(!y_dims.empty(), "x_dims must not be empty");
-    RelearnException::check(!z_dims.empty(), "x_dims must not be empty");
+    RelearnException::check(!x_dims.empty(), "NeuronsExtraInfo::create_neurons: x_dims must not be empty");
+    RelearnException::check(!y_dims.empty(), "NeuronsExtraInfo::create_neurons: y_dims must not be empty");
+    RelearnException::check(!z_dims.empty(), "NeuronsExtraInfo::create_neurons: z_dims must not be empty");
 
     const auto num_ranks = MPIWrapper::get_num_ranks();
 
-    RelearnException::check(num_ranks == 1, "Cannot create neurons if more than 1 MPI rank is computing");
+    RelearnException::check(num_ranks == 1, "NeuronsExtraInfo::create_neurons: Cannot create neurons if more than 1 MPI rank is computing");
 
     const auto current_size = size;
     const auto new_size = current_size + creation_count;

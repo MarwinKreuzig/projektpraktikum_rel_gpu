@@ -116,7 +116,7 @@ void MPINoWrapper::unlock_window(int rank) {
     RelearnException::check(rank >= 0, "rank was: %d", rank);
 }
 
-void MPINoWrapper::finalize() /*noexcept*/ {
+void MPINoWrapper::finalize() {
 }
 
 #endif

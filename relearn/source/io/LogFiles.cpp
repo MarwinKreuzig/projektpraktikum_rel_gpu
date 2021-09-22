@@ -11,12 +11,11 @@
 #include "LogFiles.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "../mpi/MPIWrapper.h"
-#include "../util/RelearnException.h"
 
 #include <filesystem>
 #include <iostream>
 
-bool LogFiles::do_i_print(int rank) {
+bool LogFiles::do_i_print(const int rank) {
     return rank == MPIWrapper::get_my_rank() || rank == -1;
 }
 
@@ -74,7 +73,7 @@ std::string LogFiles::get_specific_file_prefix() {
     return MPIWrapper::get_my_rank_str();
 }
 
-void LogFiles::add_logfile(EventType type, const std::string& file_name, int rank, const std::string& file_ending) {
+void LogFiles::add_logfile(const EventType type, const std::string& file_name, const int rank, const std::string& file_ending) {
     if (disable) {
         return;
     }

@@ -84,7 +84,7 @@ public:
      * @exception Throws a RelearnException if num_subdomains_per_axis == 0
      * @return A tuple with (1) the minimum and (2) the maximum positions in the subdomain
      */
-    [[nodiscard]] virtual std::tuple<Vec3d, Vec3d> get_subdomain_boundaries(const Vec3s& subdomain_3idx, size_t num_subdomains_per_axis) const;
+    [[nodiscard]] virtual std::tuple<Vec3d, Vec3d> get_subdomain_boundaries(const Vec3s& subdomain_3idx, const size_t num_subdomains_per_axis) const;
 
     /** 
      * @brief Returns the subdomain boundaries for a given subdomain
@@ -103,7 +103,7 @@ public:
      * @param max The subdomain's maximum position
      * @exception Might throw a RelearnException
      */
-    virtual void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) = 0;
+    virtual void fill_subdomain(const size_t subdomain_idx, const size_t num_subdomains, const Position& min, const Position& max) = 0;
 
     /**
      * @brief Return number of neurons which are in the specified subdomain and have positions in the [min, max)
@@ -114,7 +114,7 @@ public:
      * @exception Might throw a RelearnException
      * @return The number of neurons in the subdomain
      */
-    [[nodiscard]] virtual size_t num_neurons(size_t subdomain_idx, size_t num_subdomains,
+    [[nodiscard]] virtual size_t num_neurons(const size_t subdomain_idx, const size_t num_subdomains,
         const Position& min, const Position& max) const;
 
     /**
@@ -126,7 +126,7 @@ public:
      * @exception Might throw a RelearnException
      * @return The positions of the neurons in the subdomain
      */
-    [[nodiscard]] virtual std::vector<Position> neuron_positions(size_t subdomain_idx, size_t num_subdomains,
+    [[nodiscard]] virtual std::vector<Position> neuron_positions(const size_t subdomain_idx, const size_t num_subdomains,
         const Position& min, const Position& max) const;
 
     /**
@@ -138,7 +138,7 @@ public:
      * @exception Might throw a RelearnException
      * @return The signal types of the neurons in the subdomain
      */
-    [[nodiscard]] virtual std::vector<SignalType> neuron_types(size_t subdomain_idx, size_t num_subdomains,
+    [[nodiscard]] virtual std::vector<SignalType> neuron_types(const size_t subdomain_idx, const size_t num_subdomains,
         const Position& min, const Position& max) const;
 
     /**
@@ -150,7 +150,7 @@ public:
      * @exception Might throw a RelearnException
      * @return The area names of the neurons in the subdomain
      */
-    [[nodiscard]] virtual std::vector<std::string> neuron_area_names(size_t subdomain_idx, size_t num_subdomains,
+    [[nodiscard]] virtual std::vector<std::string> neuron_area_names(const size_t subdomain_idx, const size_t num_subdomains,
         const Position& min, const Position& max) const;
 
     /**
@@ -172,8 +172,8 @@ public:
      * @exception Might throw a RelearnException
      * @return The global ids for the specified subdomain
      */
-    [[nodiscard]] virtual std::vector<size_t> neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
-        size_t local_id_start, size_t local_id_end) const = 0;
+    [[nodiscard]] virtual std::vector<size_t> neuron_global_ids(const size_t subdomain_idx, const size_t num_subdomains,
+        const size_t local_id_start, const size_t local_id_end) const = 0;
 
 protected:
     struct Node {
@@ -183,35 +183,30 @@ protected:
         std::string area_name{ "NOT SET" };
 
         struct less {
-            bool operator()(const Node& lhs, const Node& rhs) const /*noexcept*/ {
-                RelearnException::check(lhs.id != Constants::uninitialized, "lhs id is a dummy one");
-                RelearnException::check(rhs.id != Constants::uninitialized, "rhs id is a dummy one");
+            bool operator()(const Node& lhs, const Node& rhs) const {
+                RelearnException::check(lhs.id != Constants::uninitialized, "Node::less::operator(): lhs id is a dummy one");
+                RelearnException::check(rhs.id != Constants::uninitialized, "Node::less::operator(): rhs id is a dummy one");
 
                 return lhs.id < rhs.id;
-
-                Position::less less;
-                const bool less_struct = less(lhs.pos, rhs.pos);
-                const bool less_operator = lhs.pos < rhs.pos;
-                return less_struct;
             }
         };
     };
 
     using Nodes = std::set<Node, Node::less>;
 
-    void set_desired_frac_neurons_exc(double desired_frac_neurons_exc) noexcept {
+    void set_desired_frac_neurons_exc(const double desired_frac_neurons_exc) noexcept {
         desired_frac_neurons_exc_ = desired_frac_neurons_exc;
     }
 
-    void set_desired_num_neurons(size_t desired_num_neurons) noexcept {
+    void set_desired_num_neurons(const size_t desired_num_neurons) noexcept {
         desired_num_neurons_ = desired_num_neurons;
     }
 
-    void set_current_frac_neurons_exc(double current_frac_neurons_exc) noexcept {
+    void set_current_frac_neurons_exc(const double current_frac_neurons_exc) noexcept {
         current_frac_neurons_exc_ = current_frac_neurons_exc;
     }
 
-    void set_current_num_neurons(size_t current_num_neurons) noexcept {
+    void set_current_num_neurons(const size_t current_num_neurons) noexcept {
         current_num_neurons_ = current_num_neurons;
     }
 
@@ -235,18 +230,18 @@ protected:
         return current_num_neurons_;
     }
 
-    [[nodiscard]] const Nodes& get_nodes(size_t id) const {
+    [[nodiscard]] const Nodes& get_nodes(const size_t id) const {
         const auto contains = neurons_in_subdomain.find(id) != neurons_in_subdomain.end();
-        RelearnException::check(contains, "Cannot fetch nodes for id");
+        RelearnException::check(contains, "NeuronToSubdomainAssignment::get_nodes: Cannot fetch nodes for id {}", id);
 
         return neurons_in_subdomain.at(id);
     }
 
-    void set_nodes(size_t id, Nodes nodes) {
+    void set_nodes(const size_t id, Nodes&& nodes) {
         neurons_in_subdomain[id] = std::move(nodes);
     }
 
-    [[nodiscard]] bool is_loaded(size_t id) const noexcept {
+    [[nodiscard]] bool is_loaded(const size_t id) const noexcept {
         const auto contains = neurons_in_subdomain.find(id) != neurons_in_subdomain.end();
         if (!contains) {
             return false;

@@ -50,7 +50,7 @@ public:
      * @param max The subdomain's maximum position
      * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file 
      */
-    void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) override;
+    void fill_subdomain(const size_t subdomain_idx, const size_t num_subdomains, const Position& min, const Position& max) override;
 
     /**
      * @brief Reads all neuron ids from a file and returns those.
@@ -69,8 +69,8 @@ public:
      * @exception Throws a RelearnException if the subdomain is not loaded
      * @return The global ids for the specified subdomain
      */
-    [[nodiscard]] std::vector<size_t> neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
-        size_t local_id_start, size_t local_id_end) const override;
+    [[nodiscard]] std::vector<size_t> neuron_global_ids(const size_t subdomain_idx, const size_t num_subdomains,
+        const size_t local_id_start, const size_t local_id_end) const override;
 
     /**
      * @brief Returns the number of neurons in the associated file

@@ -90,7 +90,6 @@ inline unsigned int FastMultipoleMethods::do_random_experiment(const OctreeNode<
         sum = sum + attractiveness[i];
     }
 
-    // RelearnException::check(temp,"The sum of all attractions was 0.");
     for (auto i = 1; i < vec_len + 1; i++) {
         intervals[i] = intervals[i - 1] + (attractiveness[i - 1] / sum);
     }
@@ -406,7 +405,7 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<char>& disable_fl
         && num_leaf_nodes == num_dendrites_inhibitory_counts
         && num_leaf_nodes == num_dendrites_inhibitory_connected_counts;
 
-    RelearnException::check(all_same_size, "In BarnesHut::update_leaf_nodes, the vectors were of different sizes");
+    RelearnException::check(all_same_size, "FastMultipoleMethods::update_leaf_nodes: The vectors were of different sizes");
 
     const auto& indices = Multiindex::get_indices();
     const auto num_coef = Multiindex::get_number_of_indices();
@@ -414,11 +413,11 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<char>& disable_fl
     for (size_t neuron_id = 0; neuron_id < num_leaf_nodes; neuron_id++) {
         auto* node = leaf_nodes[neuron_id];
 
-        RelearnException::check(node != nullptr, "Node was nullptr: ", neuron_id);
+        RelearnException::check(node != nullptr, "FastMultipoleMethods::update_leaf_nodes: node was nullptr: ", neuron_id);
 
         const size_t other_neuron_id = node->get_cell().get_neuron_id();
 
-        RelearnException::check(neuron_id == other_neuron_id, "In BarnesHut::update_leaf_nodes, the nodes are not in order");
+        RelearnException::check(neuron_id == other_neuron_id, "FastMultipoleMethods::update_leaf_nodes: The nodes are not in order");
 
         if (disable_flags[neuron_id] == 0) {
             continue;

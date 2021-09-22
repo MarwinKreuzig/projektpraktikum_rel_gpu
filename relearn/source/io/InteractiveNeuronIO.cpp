@@ -22,7 +22,7 @@ std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_en
     const bool file_is_good = file.good();
     const bool file_is_not_good = file.fail() || file.eof();
 
-    RelearnException::check(file_is_good && !file_is_not_good, "Opening the file was not successful");
+    RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_enable_interrups: Opening the file was not successful");
 
     std::vector<std::pair<size_t, std::vector<size_t>>> return_value;
 
@@ -69,7 +69,7 @@ std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_di
     const bool file_is_good = file.good();
     const bool file_is_not_good = file.fail() || file.eof();
 
-    RelearnException::check(file_is_good && !file_is_not_good, "Opening the file was not successful");
+    RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_disable_interrups: Opening the file was not successful");
 
     std::vector<std::pair<size_t, std::vector<size_t>>> return_value;
 
@@ -116,7 +116,7 @@ std::vector<std::pair<size_t, size_t>> InteractiveNeuronIO::load_creation_interr
     const bool file_is_good = file.good();
     const bool file_is_not_good = file.fail() || file.eof();
 
-    RelearnException::check(file_is_good && !file_is_not_good, "Opening the file was not successful");
+    RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_creation_interrups: Opening the file was not successful");
 
     std::vector<std::pair<size_t, size_t>> return_value;
 

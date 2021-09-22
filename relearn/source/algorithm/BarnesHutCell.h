@@ -27,7 +27,7 @@ public:
      * @brief Sets the number of free excitatory dendrites in this cell
      * @param num_dendrites The number of free excitatory dendrites
      */
-    void set_number_excitatory_dendrites(unsigned int num_dendrites) noexcept {
+    void set_number_excitatory_dendrites(const unsigned int num_dendrites) noexcept {
         excitatory_dendrites.num_free_elements = num_dendrites;
     }
 
@@ -43,7 +43,7 @@ public:
      * @brief Sets the number of free inhibitory dendrites in this cell
      * @param num_dendrites The number of free inhibitory dendrites
      */
-    void set_number_inhibitory_dendrites(unsigned int num_dendrites) noexcept {
+    void set_number_inhibitory_dendrites(const unsigned int num_dendrites) noexcept {
         inhibitory_dendrites.num_free_elements = num_dendrites;
     }
 
@@ -60,7 +60,7 @@ public:
      * @param dendrite_type The requested signal type
      * @return The number of free dendrites
      */
-    [[nodiscard]] unsigned int get_number_dendrites_for(SignalType dendrite_type) const noexcept {
+    [[nodiscard]] unsigned int get_number_dendrites_for(const SignalType dendrite_type) const noexcept {
         if (dendrite_type == SignalType::EXCITATORY) {
             return excitatory_dendrites.num_free_elements;
         }
@@ -105,7 +105,7 @@ public:
      * @param dendrite_type The requested signal type
      * @return The position of the dendrite
      */
-    [[nodiscard]] std::optional<Vec3d> get_dendrites_position_for(SignalType dendrite_type) const noexcept {
+    [[nodiscard]] std::optional<Vec3d> get_dendrites_position_for(const SignalType dendrite_type) const noexcept {
         if (dendrite_type == SignalType::EXCITATORY) {
             return excitatory_dendrites.position;
         }

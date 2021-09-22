@@ -89,7 +89,7 @@ public:
      *       indicates whether it is an excitatory or inhibitory request
      */
     [[nodiscard]] std::tuple<size_t, size_t, SignalType> get_request(const size_t request_index) const {
-        RelearnException::check(request_index < num_requests, "Requests an index that is not in this SynapseCreationRequests");
+        RelearnException::check(request_index < num_requests, "SynapseCreationRequests::get_request: index out of bounds: {} vs {}", request_index, num_requests);
 
         const size_t base_index = 3 * request_index;
 
@@ -109,7 +109,7 @@ public:
      * @exception Throws a RelearnException if the request_index exceeds the stored number of responses
      */
     void set_response(const size_t request_index, const char connected) {
-        RelearnException::check(request_index < num_requests, "Sets an responce that is not in this SynapseCreationRequests");
+        RelearnException::check(request_index < num_requests, "SynapseCreationRequests::set_response: index out of bounds: {} vs {}", request_index, num_requests);
 
         responses[request_index] = connected;
     }
@@ -121,8 +121,7 @@ public:
      * @return A flag that specifies if the request is accepted (1) or denied (0)
      */
     [[nodiscard]] char get_response(const size_t request_index) const {
-        RelearnException::check(request_index < num_requests, "Gets an responce that is not in this SynapseCreationRequests");
-
+        RelearnException::check(request_index < num_requests, "SynapseCreationRequests::get_response: index out of bounds: {} vs {}", request_index, num_requests);
         return responses[request_index];
     }
 

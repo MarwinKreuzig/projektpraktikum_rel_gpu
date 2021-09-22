@@ -33,7 +33,7 @@ public:
      * @param sigma The probability parameter, >= 0.0
      * @exception Throws a RelearnExeption if sigma < 0.0
      */
-    void set_probability_parameter(double sigma) {
+    void set_probability_parameter(const double sigma) {
         RelearnException::check(sigma > 0.0, "In BarnesHut::set_probability_parameter, sigma was not greater than 0");
         this->sigma = sigma;
     }
@@ -55,7 +55,7 @@ public:
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
-    virtual [[nodiscard]] MapSynapseCreationRequests find_target_neurons(size_t num_neurons, const std::vector<char>& disable_flags,
+    virtual [[nodiscard]] MapSynapseCreationRequests find_target_neurons(const size_t num_neurons, const std::vector<char>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons)
         = 0;
 

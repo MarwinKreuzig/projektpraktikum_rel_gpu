@@ -15,7 +15,17 @@
 
 using models::PoissonModel;
 
-PoissonModel::PoissonModel(double k, double tau_C, double beta, unsigned int h, double base_background_activity, double background_activity_mean, double background_activity_stddev, const double x_0, const double tau_x, unsigned int refrac_time)
+PoissonModel::PoissonModel(
+    const double k,
+    const double tau_C, 
+    const double beta,
+    const unsigned int h, 
+    const double base_background_activity, 
+    const double background_activity_mean,
+    const double background_activity_stddev,
+    const double x_0,
+    const double tau_x, 
+    const unsigned int refrac_time)
     : NeuronModel{ k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev }
     , x_0{ x_0 }
     , tau_x{ tau_x }
@@ -38,14 +48,14 @@ PoissonModel::PoissonModel(double k, double tau_C, double beta, unsigned int h, 
     return "PoissonModel";
 }
 
-void PoissonModel::init(size_t num_neurons) {
+void PoissonModel::init(const size_t num_neurons) {
     NeuronModel::init(num_neurons);
     refrac.resize(num_neurons, 0);
     theta_values.resize(num_neurons, 0.0);
     init_neurons(0, num_neurons);
 }
 
-void models::PoissonModel::create_neurons(size_t creation_count) {
+void models::PoissonModel::create_neurons(const size_t creation_count) {
     const auto old_size = NeuronModel::get_num_neurons();
     NeuronModel::create_neurons(creation_count);
     refrac.resize(old_size + creation_count, 0);
@@ -78,7 +88,7 @@ void PoissonModel::update_activity(const size_t neuron_id) {
     set_x(neuron_id, x);
 }
 
-void PoissonModel::init_neurons(size_t start_id, size_t end_id) {
+void PoissonModel::init_neurons(const size_t start_id, const size_t end_id) {
     for (size_t neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
         const auto x = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
         const double threshold = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);

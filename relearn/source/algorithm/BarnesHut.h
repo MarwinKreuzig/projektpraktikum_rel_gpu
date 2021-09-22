@@ -45,7 +45,7 @@ public:
      */
     BarnesHut(const std::shared_ptr<OctreeImplementation<BarnesHut>>& octree)
         : global_tree(octree) {
-        RelearnException::check(octree != nullptr, "In BarnesHut::BarnesHut, the octree was null");
+        RelearnException::check(octree != nullptr, "BarnesHut::BarnesHut: octree was null");
     }
 
     /**
@@ -53,8 +53,8 @@ public:
      * @param acceptance_criterion The acceptance criterion, >= 0.0
      * @exception Throws a RelearnException if acceptance_criterion < 0.0
      */
-    void set_acceptance_criterion(double acceptance_criterion) {
-        RelearnException::check(acceptance_criterion >= 0.0, "In BarnesHut::set_acceptance_criterion, acceptance_criterion was less than 0");
+    void set_acceptance_criterion(const double acceptance_criterion) {
+        RelearnException::check(acceptance_criterion >= 0.0, "BarnesHut::set_acceptance_criterion: acceptance_criterion was less than 0 ({})", acceptance_criterion);
         this->acceptance_criterion = acceptance_criterion;
 
         if (acceptance_criterion == 0.0) {
@@ -89,7 +89,7 @@ public:
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
-    [[nodiscard]] MapSynapseCreationRequests find_target_neurons(size_t num_neurons, const std::vector<char>& disable_flags,
+    [[nodiscard]] MapSynapseCreationRequests find_target_neurons(const size_t num_neurons, const std::vector<char>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) override;
 
     /**
@@ -109,7 +109,7 @@ public:
      * @exception Throws a RelearnException if node is nullptr
      */
     static void update_functor(OctreeNode<BarnesHutCell>* node) {
-        RelearnException::check(node != nullptr, "In FunctorUpdateNode, node is nullptr");
+        RelearnException::check(node != nullptr, "BarnesHut::update_functor: node is nullptr");
 
         // NOLINTNEXTLINE
         if (!node->is_parent()) {
@@ -144,8 +144,8 @@ public:
             /**
 			 * We can use position if it's valid or if corresponding num of dendrites is 0 
 			 */
-            RelearnException::check(child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "The child had excitatory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
-            RelearnException::check(child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "The child had inhibitory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
+            RelearnException::check(child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "BarnesHut::update_functor: The child had excitatory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
+            RelearnException::check(child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "BarnesHut::update_functor: The child had inhibitory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
 
             if (child_position_dendrites_excitatory.has_value()) {
                 const auto scaled_position = child_position_dendrites_excitatory.value() * static_cast<double>(child_number_dendrites_excitatory);
@@ -189,25 +189,30 @@ private:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
      */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed);
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const size_t src_neuron_id, const Vec3d& axon_pos_xyz, const SignalType dendrite_type_needed);
 
     [[nodiscard]] double
     calc_attractiveness_to_connect(
-        size_t src_neuron_id,
+        const size_t src_neuron_id,
         const Vec3d& axon_pos_xyz,
         const OctreeNode<BarnesHutCell>& node_with_dendrite,
-        SignalType dendrite_type_needed) const;
+        const SignalType dendrite_type_needed) const;
 
-    [[nodiscard]] std::vector<double> create_interval(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed, const std::vector<OctreeNode<BarnesHutCell>*>& vector) const;
+    [[nodiscard]] std::vector<double> create_interval(
+        const size_t src_neuron_id, 
+        const Vec3d& axon_pos_xyz, 
+        const SignalType dendrite_type_needed, 
+        const std::vector<OctreeNode<BarnesHutCell>*>& vector) const;
 
-    [[nodiscard]] std::tuple<bool, bool> acceptance_criterion_test(const Vec3d& axon_pos_xyz,
+    [[nodiscard]] std::tuple<bool, bool> acceptance_criterion_test(
+        const Vec3d& axon_pos_xyz,
         const OctreeNode<BarnesHutCell>* const node_with_dendrite,
-        SignalType dendrite_type_needed) const;
+        const SignalType dendrite_type_needed) const;
 
     [[nodiscard]] std::vector<OctreeNode<BarnesHutCell>*> get_nodes_for_interval(
         const Vec3d& axon_pos_xyz,
         OctreeNode<BarnesHutCell>* root,
-        SignalType dendrite_type_needed);
+        const SignalType dendrite_type_needed);
 
     double acceptance_criterion{ default_theta }; // Acceptance criterion
     bool naive_method{ default_theta == 0.0 }; // If true, expand every cell regardless of whether dendrites are available or not

@@ -36,12 +36,12 @@ public:
      * @param max The maximal acceptable value when set from the outside
      * @exception Throws a RelearnException if max < min
      */
-    Parameter(std::string name, T& value, const T& min, const T& max) noexcept(false)
+    Parameter(std::string&& name, T& value, const T& min, const T& max) noexcept(false)
         : name_{ std::move(name) }
         , value_{ value }
         , min_{ min }
         , max_{ max } { 
-        RelearnException::check(min <= max, "In Parameter::Parameter, min was larger than max");
+        RelearnException::check(min <= max, "Parameter::Parameter: min was larger than max: {} vs {}", min, max);
     }
 
     /**
@@ -58,8 +58,8 @@ public:
      * @exception Throws a RelearnException if min() <= val <= max() is violated
      */
     void set_value(const value_type& val) {
-        RelearnException::check(min_ <= val, "In Parameter, val was smaller than min_");
-        RelearnException::check(val <= max_, "In Parameter, val was larger than max_");
+        RelearnException::check(min_ <= val, "Parameter::set_value: val was smaller than min_");
+        RelearnException::check(val <= max_, "Parameter::set_value: val was larger than max_");
 
         value_ = val;
     }

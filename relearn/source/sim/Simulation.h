@@ -47,38 +47,38 @@ public:
      *      Does not check for duplicates, etc.
      * @param neuron_id The local neuron id that should be monitored
      */
-    void register_neuron_monitor(size_t neuron_id);
+    void register_neuron_monitor(const size_t neuron_id);
 
     /**
      * @brief Sets the acceptance criterion (theta) for the barnes hut algorithm
      * @param value The acceptance criterion (theta) in [0.0, BarnesHut::max_theta]
      * @exception Throws a RelearnException if value is not from [0.0, BarnesHut::max_theta]
      */
-    void set_acceptance_criterion_for_barnes_hut(double value);
+    void set_acceptance_criterion_for_barnes_hut(const double value);
 
     /**
      * @brief Sets the neuron model used for the simulation
      * @param nm The neuron model
      */
-    void set_neuron_model(std::unique_ptr<NeuronModel> nm) noexcept;
+    void set_neuron_model(std::unique_ptr<NeuronModel>&& nm) noexcept;
 
     /**
      * @brief Sets the synaptic elements model for the axons
      * @param se The synaptic elements model
      */
-    void set_axons(std::unique_ptr<SynapticElements> se) noexcept;
+    void set_axons(std::unique_ptr<SynapticElements>&& se) noexcept;
 
     /**
      * @brief Sets the synaptic elements model for the excitatory dendrites
      * @param se The synaptic elements model
      */
-    void set_dendrites_ex(std::unique_ptr<SynapticElements> se) noexcept;
+    void set_dendrites_ex(std::unique_ptr<SynapticElements>&& se) noexcept;
 
     /**
      * @brief Sets the synaptic elements model for the inhibitory dendrites
      * @param se The synaptic elements model
      */
-    void set_dendrites_in(std::unique_ptr<SynapticElements> se) noexcept;
+    void set_dendrites_in(std::unique_ptr<SynapticElements>&& se) noexcept;
 
     /**
      * @brief Sets the enable interrupts during the simulation.
@@ -105,7 +105,7 @@ public:
      * @brief Sets the algorithm that is used for finding target neurons.
      * @param algorithm The desired algorithm
      */
-    void set_algorithm(AlgorithmEnum algorithm) noexcept;
+    void set_algorithm(const AlgorithmEnum algorithm) noexcept;
 
     /**
      * @brief Places the requested number of neurons with the requested fraction of excitatory neurons.
@@ -113,7 +113,7 @@ public:
      * @param num_neurons The number of neurons to place globally
      * @param frac_exc The fraction of excitatory neurons, must be in [0.0, 1.0]
      */
-    void place_random_neurons(size_t num_neurons, double frac_exc);
+    void place_random_neurons(const size_t num_neurons, const double frac_exc);
 
     /**
      * @brief Places all neurons from a file and optionally adds the specified synapses
@@ -128,7 +128,7 @@ public:
      * @param step_monitor The step size of the monitors, must be > 0
      * @exception Throws a RelearnException if step_monitor == 0
      */
-    void simulate(size_t number_steps, size_t step_monitor);
+    void simulate(const size_t number_steps, const size_t step_monitor);
 
     /**
      * @brief Finalizes the simulation in the sense that it prints the final statistics.
@@ -141,7 +141,7 @@ public:
      * @brief Increases the capacity of each registered neuron monitor by the requested size
      * @param size The size by which to increase the monitors
      */
-    void increase_monitoring_capacity(size_t size);
+    void increase_monitoring_capacity(const size_t size);
 
     /**
 	 * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned

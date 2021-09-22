@@ -76,19 +76,19 @@ class Neurons {
          * @exception Throws a RelearnException if any RankNeuronId is invalid (negative MPI rank or too large neuron id)
          */
         PendingSynapseDeletion(const RankNeuronId& src, const RankNeuronId& tgt, const RankNeuronId& aff,
-            ElementType elem, SignalType sign, unsigned int id)
+            const ElementType elem, const SignalType sign, const unsigned int id)
             : src_neuron_id(src)
             , tgt_neuron_id(tgt)
             , affected_neuron_id(aff)
             , affected_element_type(elem)
             , signal_type(sign)
             , synapse_id(id) {
-            RelearnException::check(src.get_neuron_id() < Constants::uninitialized, "PendingSynapseDeletion::PendingSynapseDeletion(), src neuron id was too large");
-            RelearnException::check(tgt.get_neuron_id() < Constants::uninitialized, "PendingSynapseDeletion::PendingSynapseDeletion(), tgt neuron id was too large");
-            RelearnException::check(aff.get_neuron_id() < Constants::uninitialized, "PendingSynapseDeletion::PendingSynapseDeletion(), aff neuron id was too large");
-            RelearnException::check(src.get_rank() >= 0, "PendingSynapseDeletion::PendingSynapseDeletion(), src MPI rank was negative");
-            RelearnException::check(tgt.get_rank() >= 0, "PendingSynapseDeletion::PendingSynapseDeletion(), tgt MPI rank was negative");
-            RelearnException::check(aff.get_rank() >= 0, "PendingSynapseDeletion::PendingSynapseDeletion(), aff MPI rank was negative");
+            RelearnException::check(src.get_neuron_id() < Constants::uninitialized, "PendingSynapseDeletion::PendingSynapseDeletion(): src neuron id was too large");
+            RelearnException::check(tgt.get_neuron_id() < Constants::uninitialized, "PendingSynapseDeletion::PendingSynapseDeletion(): tgt neuron id was too large");
+            RelearnException::check(aff.get_neuron_id() < Constants::uninitialized, "PendingSynapseDeletion::PendingSynapseDeletion(): aff neuron id was too large");
+            RelearnException::check(src.get_rank() >= 0, "PendingSynapseDeletion::PendingSynapseDeletion(): src MPI rank was negative");
+            RelearnException::check(tgt.get_rank() >= 0, "PendingSynapseDeletion::PendingSynapseDeletion(): tgt MPI rank was negative");
+            RelearnException::check(aff.get_rank() >= 0, "PendingSynapseDeletion::PendingSynapseDeletion(): aff MPI rank was negative");
         }
 
         PendingSynapseDeletion(const PendingSynapseDeletion& other) = default;
@@ -178,7 +178,7 @@ class Neurons {
          * @param id The other synapse' id
          * @return True iff (src, tgt, id) refer to the same synapse as this
          */
-        [[nodiscard]] bool check_light_equality(const RankNeuronId& src, const RankNeuronId& tgt, unsigned int id) const noexcept {
+        [[nodiscard]] bool check_light_equality(const RankNeuronId& src, const RankNeuronId& tgt, const unsigned int id) const noexcept {
             const bool src_neuron_id_eq = src == src_neuron_id;
             const bool tgt_neuron_id_eq = tgt == tgt_neuron_id;
 
@@ -202,11 +202,11 @@ class Neurons {
          * @param synapse_id The synapse' id, in case there are multiple synapses connecting two neurons
          * @exception Throws a RelearnException if the MPI rank is negative or neuron id is too large
          */
-        Synapse(RankNeuronId neuron_id, unsigned int synapse_id)
+        Synapse(const RankNeuronId& neuron_id, const unsigned int synapse_id)
             : neuron_id(neuron_id)
             , synapse_id(synapse_id) {
-            RelearnException::check(neuron_id.get_neuron_id() < Constants::uninitialized, "Synapse::Synapse(), neuron id was too large");
-            RelearnException::check(neuron_id.get_rank() >= 0, "Synapse::Synapse(), neuron_id MPI rank was negative");
+            RelearnException::check(neuron_id.get_neuron_id() < Constants::uninitialized, "Synapse::Synapse: neuron_id was too large: {}", neuron_id.get_neuron_id());
+            RelearnException::check(neuron_id.get_rank() >= 0, "Synapse::Synapse: neuron_id MPI rank was negative");
         }
 
         /**
@@ -245,7 +245,7 @@ class Neurons {
          * @brief Resizes the internal buffer to accomodate size-many requests
          * @param size The number of requests to be stored
          */
-        void resize(size_t size) {
+        void resize(const size_t size) {
             num_requests = size;
             requests.resize(Constants::num_items_per_request * size);
         }
@@ -257,8 +257,8 @@ class Neurons {
         void append(const PendingSynapseDeletion& pending_deletion) {
             num_requests++;
 
-            size_t affected_element_type_converted = pending_deletion.get_affected_element_type() == ElementType::AXON ? 0 : 1;
-            size_t signal_type_converted = pending_deletion.get_signal_type() == SignalType::EXCITATORY ? 0 : 1;
+            const size_t affected_element_type_converted = pending_deletion.get_affected_element_type() == ElementType::AXON ? 0 : 1;
+            const size_t signal_type_converted = pending_deletion.get_signal_type() == SignalType::EXCITATORY ? 0 : 1;
 
             requests.push_back(pending_deletion.get_source_neuron_id().get_neuron_id());
             requests.push_back(pending_deletion.get_target_neuron_id().get_neuron_id());
@@ -274,9 +274,9 @@ class Neurons {
          * @exception Throws a RelearnException if request_index is larger than the number of stored PendingSynapseDeletion
          * @return The source neuron id
          */
-        [[nodiscard]] size_t get_source_neuron_id(size_t request_index) const {
+        [[nodiscard]] size_t get_source_neuron_id(const size_t request_index) const {
             const auto index = Constants::num_items_per_request * request_index;
-            RelearnException::check(index < requests.size(), "Index is out of bounds");
+            RelearnException::check(index < requests.size(), "SynapseDeletionRequests::get_source_neuron_id: Index is out of bounds");
             return requests[index];
         }
 
@@ -286,9 +286,9 @@ class Neurons {
          * @exception Throws a RelearnException if request_index is larger than the number of stored PendingSynapseDeletion
          * @return The target neuron id
          */
-        [[nodiscard]] size_t get_target_neuron_id(size_t request_index) const {
+        [[nodiscard]] size_t get_target_neuron_id(const size_t request_index) const {
             const auto index = Constants::num_items_per_request * request_index + 1;
-            RelearnException::check(index < requests.size(), "Index is out of bounds");
+            RelearnException::check(index < requests.size(), "SynapseDeletionRequests::get_source_neuron_id: Index is out of bounds");
             return requests[index];
         }
 
@@ -298,9 +298,9 @@ class Neurons {
          * @exception Throws a RelearnException if request_index is larger than the number of stored PendingSynapseDeletion
          * @return The affected neuron id
          */
-        [[nodiscard]] size_t get_affected_neuron_id(size_t request_index) const {
+        [[nodiscard]] size_t get_affected_neuron_id(const size_t request_index) const {
             const auto index = Constants::num_items_per_request * request_index + 2;
-            RelearnException::check(index < requests.size(), "Index is out of bounds");
+            RelearnException::check(index < requests.size(), "SynapseDeletionRequests::get_affected_neuron_id: Index is out of bounds");
             return requests[index];
         }
 
@@ -310,9 +310,9 @@ class Neurons {
          * @exception Throws a RelearnException if request_index is larger than the number of stored PendingSynapseDeletion
          * @return The element type
          */
-        [[nodiscard]] ElementType get_affected_element_type(size_t request_index) const {
+        [[nodiscard]] ElementType get_affected_element_type(const size_t request_index) const {
             const auto index = Constants::num_items_per_request * request_index + 3;
-            RelearnException::check(index < requests.size(), "Index is out of bounds");
+            RelearnException::check(index < requests.size(), "SynapseDeletionRequests::get_affected_element_type: Index is out of bounds");
             const auto affected_element_type_converted = requests[index] == 0 ? ElementType::AXON : ElementType::DENDRITE;
             return affected_element_type_converted;
         }
@@ -323,9 +323,9 @@ class Neurons {
          * @exception Throws a RelearnException if request_index is larger than the number of stored PendingSynapseDeletion
          * @return The synapse' signal type
          */
-        [[nodiscard]] SignalType get_signal_type(size_t request_index) const {
+        [[nodiscard]] SignalType get_signal_type(const size_t request_index) const {
             const auto index = Constants::num_items_per_request * request_index + 4;
-            RelearnException::check(index < requests.size(), "Index is out of bounds");
+            RelearnException::check(index < requests.size(), "SynapseDeletionRequests::get_signal_type: Index is out of bounds");
             const auto affected_element_type_converted = requests[index] == 0 ? SignalType::EXCITATORY : SignalType::INHIBITORY;
             return affected_element_type_converted;
         }
@@ -336,9 +336,9 @@ class Neurons {
          * @exception Throws a RelearnException if request_index is larger than the number of stored PendingSynapseDeletion
          * @return The synapse' id
          */
-        [[nodiscard]] unsigned int get_synapse_id(size_t request_index) const {
+        [[nodiscard]] unsigned int get_synapse_id(const size_t request_index) const {
             const auto index = Constants::num_items_per_request * request_index + 5;
-            RelearnException::check(index < requests.size(), "Index is out of bounds");
+            RelearnException::check(index < requests.size(), "SynapseDeletionRequests::get_synapse_id: Index is out of bounds");
             const auto synapse_id = static_cast<unsigned int>(requests[index]);
             return synapse_id;
         }
@@ -423,7 +423,7 @@ public:
         , dendrites_inh(std::move(dend_in_ptr)) {
 
         const bool all_filled = this->partition && neuron_model && axons && dendrites_exc && dendrites_inh;
-        RelearnException::check(all_filled, "Neurons was constructed with some null arguments");
+        RelearnException::check(all_filled, "Neurons::Neurons: Neurons was constructed with some null arguments");
     }
 
     ~Neurons() = default;
@@ -443,7 +443,7 @@ public:
      *      (e) Calculates if the neurons fired once to initialize the calcium values to beta or 0.0
      * @param number_neurons 
      */
-    void init(size_t number_neurons);
+    void init(const size_t number_neurons);
 
     /**
      * @brief Sets the octree in which the neurons are stored
@@ -475,7 +475,7 @@ public:
      * @param signal_type The signal type, only relevant if element_type == dendrites
      * @return The model parameters for the specified synaptic elements
      */
-    [[nodiscard]] std::vector<ModelParameter> get_parameter(ElementType element_type, SignalType signal_type) {
+    [[nodiscard]] std::vector<ModelParameter> get_parameter(const ElementType element_type, const SignalType signal_type) {
         if (element_type == ElementType::AXON) {
             return axons->get_parameter();
         }
@@ -607,7 +607,7 @@ public:
      *      (f) Inserts the newly created neurons into the octree
      * @exception Throws a RelearnException if something unexpected happens
      */
-    void create_neurons(size_t creation_count);
+    void create_neurons(const size_t creation_count);
 
     /**
      * @brief Calls update_electrical_activity from the electrical model with the stored network graph,
@@ -643,14 +643,14 @@ public:
      * @param sum_synapses_deleted The number of deleted synapses (locally)
      * @param sum_synapses_created The number of created synapses (locally)
      */
-    void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, size_t sum_synapses_deleted, size_t sum_synapses_created);
+    void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const size_t step, const size_t sum_synapses_deleted, const size_t sum_synapses_created);
 
     /**
      * @brief Prints the overview of the neurons to LogFiles::EventType::NeuronsOverview
      *      Performs communication with MPI
      * @param step The current simulation step
      */
-    void print_neurons_overview_to_log_file_on_rank_0(size_t step);
+    void print_neurons_overview_to_log_file_on_rank_0(const size_t step);
 
     /**
      * @brief Prints the calcium statistics to LogFiles::EventType::Essentials
@@ -687,10 +687,10 @@ public:
 private:
     void update_calcium();
 
-    [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, int root, const std::vector<char>& disable_flags) const;
+    [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, const int root, const std::vector<char>& disable_flags) const;
 
     template <typename T>
-    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::vector<T>& local_values, int root, const std::vector<char>& disable_flags) const {
+    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::vector<T>& local_values, const int root, const std::vector<char>& disable_flags) const {
         std::vector<double> converted_values;
         converted_values.reserve(local_values.size());
 
@@ -715,10 +715,11 @@ private:
 	 * due to synapse deletion until all neurons have decided *independently* which synapse
 	 * to delete. This should reflect how it's done for a distributed memory implementation.
 	 */
-    [[nodiscard]] std::vector<size_t> delete_synapses_find_synapses_on_neuron(size_t neuron_id,
-        ElementType element_type,
-        SignalType signal_type,
-        unsigned int num_synapses_to_delete,
+    [[nodiscard]] std::vector<size_t> delete_synapses_find_synapses_on_neuron(
+        const size_t neuron_id,
+        const ElementType element_type,
+        const SignalType signal_type,
+        const unsigned int num_synapses_to_delete,
         PendingDeletionsV& pending_deletions,
         const PendingDeletionsV& other_pending_deletions);
 
@@ -734,159 +735,6 @@ private:
 
     void create_synapses_update_octree();
 
-    //void make_creation_request_for(
-    // SignalType needed, 
-    // MapSynapseCreationRequests &request,  
-    // std::stack<std::pair<OctreeNode*, std::array<const OctreeNode*, 8>>>& nodes_with_ax) {
-
-    //    const auto& count_non_zero_elements = [](const std::array<const OctreeNode*, 8>& arr) {
-    //        auto non_zero_counter = 0;
-    //        for (auto i = 0; i < 8; i++) {
-    //            if (arr[i] != nullptr) {
-    //                non_zero_counter++;
-    //            }
-    //        }
-    //        return non_zero_counter;
-    //    };
-
-    //    const auto& extract_element = [](const std::array<const OctreeNode*, 8>& arr, unsigned int index) -> const OctreeNode* {
-    //        auto non_zero_counter = 0;
-    //        for (auto i = 0; i < 8; i++) {
-    //            if (arr[i] != nullptr) {
-    //                if (index == non_zero_counter) {
-    //                    return arr[i];
-    //                }
-    //                non_zero_counter++;
-    //            }
-    //        }
-    //        return nullptr;
-    //    };
-
-    //    while (!nodes_with_axons.empty()) {
-    //        std::pair<OctreeNode*, std::array<const OctreeNode*, 8>> pair = nodes_with_axons.top();
-    //        nodes_with_axons.pop();
-
-    //        OctreeNode* source_node = std::get<0>(pair);
-    //        std::array<const OctreeNode*, 8> interaction_list = std::get<1>(pair);
-
-    //        const auto& cell = source_node->get_cell();
-
-    //        /*
-    //    - check if node is single neuron
-    //    - set interaction list of current node when level 3
-    //    - calculate atractiveness
-    //    - do random experiment
-    //    - set interaction list
-    //    - push source_children to stack
-    //    */
-
-    //        //node is a leaf
-    //        if (!source_node->is_parent()) {
-    //            const auto source_id = cell.get_neuron_id();
-
-    //            const OctreeNode* target_node;
-
-    //            const auto target_num = count_non_zero_elements(interaction_list);
-    //            if (target_num == 1) {
-    //                target_node = extract_element(interaction_list, 0);
-    //            } else {
-    //                const auto& connection_probabilities = global_tree->calc_attractiveness_to_connect_FMM(source_node, interaction_list, needed);
-    //                const auto chosen_index = global_tree->do_random_experiment(source_node, connection_probabilities);
-    //                target_node = extract_element(interaction_list, chosen_index);
-    //            }
-
-    //            if (target_node->is_parent()) {
-    //                std::array<const OctreeNode*, 8> new_interaction_list{ nullptr };
-    //                auto counter = 0;
-
-    //                for (auto* target_child : target_node->get_children()) {
-    //                    if (target_child == nullptr) {
-    //                        continue;
-    //                    }
-
-    //                    // Since source_node is a leaf node, we have to make sure we do not connect to ourselves
-    //                    if (target_child != source_node && target_child->get_cell().get_number_dendrites_for(needed) > 0) {
-    //                        new_interaction_list[counter] = target_child;
-    //                        counter++;
-    //                    }
-    //                }
-
-    //                nodes_with_axons.emplace(source_node, std::move(new_interaction_list));
-    //            } else {
-    //                const auto target_id = target_node->get_cell().get_neuron_id();
-    //                if (target_id != source_id) {
-    //                    // No autapse
-    //                    request[0].append(source_id, target_id, needed);
-    //                }
-    //            }
-    //            continue;
-    //        }
-
-    //        if (count_non_zero_elements(interaction_list) == 0) {
-    //            continue;
-    //        }
-
-    //        const auto& connection_probabilities = global_tree->calc_attractiveness_to_connect_FMM(source_node, interaction_list, needed);
-    //        const auto chosen_index = global_tree->do_random_experiment(source_node, connection_probabilities);
-    //        const auto* target_node = extract_element(interaction_list, chosen_index);
-
-    //        const auto& source_children = source_node->get_children();
-
-    //        if (target_node->is_parent()) {
-    //            for (auto* source_child_node : source_children) {
-    //                if (source_child_node == nullptr) {
-    //                    continue;
-    //                }
-
-    //                if (source_child_node->get_cell().get_number_axons_for(needed) == 0) {
-    //                    continue;
-    //                }
-
-    //                std::array<const OctreeNode*, 8> new_interaction_list{ nullptr };
-    //                auto counter = 0;
-
-    //                for (auto* target_child_node : target_node->get_children()) {
-    //                    if (target_child_node == nullptr) {
-    //                        continue;
-    //                    }
-
-    //                    if (target_child_node->get_cell().get_number_dendrites_for(needed) == 0) {
-    //                        continue;
-    //                    }
-
-    //                    new_interaction_list[counter] = target_child_node;
-    //                    counter++;
-    //                }
-
-    //                nodes_with_axons.emplace(source_child_node, std::move(new_interaction_list));
-    //            }
-
-    //            continue;
-    //        }
-
-    //        // source_node is a parent, but target_node is a leaf node
-
-    //        std::vector<double> attractiveness{};
-    //        std::vector<double> index{};
-
-    //        for (auto i = 0; i < Constants::number_oct; i++) {
-    //            OctreeNode* source_child_node = source_children[i];
-    //            if (source_child_node == nullptr) {
-    //                continue;
-    //            }
-
-    //            if (source_child_node->get_cell().get_number_axons_for(needed) == 0) {
-    //                continue;
-    //            }
-
-    //            std::array<const OctreeNode*, 8> new_interaction_list{ nullptr };
-    //            new_interaction_list[0] = target_node;
-
-    //            nodes_with_axons.emplace(source_child_node, std::move(new_interaction_list));
-    //        }
-    //    }
-    //}
-
     [[nodiscard]] static MapSynapseCreationRequests create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
     [[nodiscard]] std::pair<size_t, std::map<int, std::vector<char>>> create_synapses_process_requests(const MapSynapseCreationRequests& synapse_creation_requests_incoming);
@@ -897,7 +745,7 @@ private:
 
     static void print_pending_synapse_deletions(const PendingDeletionsV& list);
 
-    size_t num_neurons = 0; // Local number of neurons
+    size_t num_neurons = 0;
 
     std::shared_ptr<Partition> partition{};
 

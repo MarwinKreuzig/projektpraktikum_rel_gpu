@@ -28,7 +28,7 @@ SubdomainFromFile::SubdomainFromFile(const std::string& file_path)
     const bool file_is_good = file.good();
     const bool file_is_not_good = file.fail() || file.eof();
 
-    RelearnException::check(file_is_good && !file_is_not_good, "Opening the file was not successful");
+    RelearnException::check(file_is_good && !file_is_not_good, "SubdomainFromFile::SubdomainFromFile: Opening the file was not successful");
 
     read_dimensions_from_file();
 }
@@ -157,11 +157,11 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
     return nodes;
 }
 
-std::vector<size_t> SubdomainFromFile::neuron_global_ids(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
-    [[maybe_unused]] size_t local_id_start, [[maybe_unused]] size_t local_id_end) const {
+std::vector<size_t> SubdomainFromFile::neuron_global_ids(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains,
+    [[maybe_unused]] const size_t local_id_start, [[maybe_unused]] const size_t local_id_end) const {
     const bool contains = is_loaded(subdomain_idx);
     if (!contains) {
-        RelearnException::fail("Wanted to have neuron_global_ids of subdomain_idx that is not present");
+        RelearnException::fail("SubdomainFromFile::neuron_global_ids: Wanted to have neuron_global_ids of subdomain_idx that is not present");
         return {};
     }
 
@@ -179,7 +179,7 @@ std::vector<size_t> SubdomainFromFile::neuron_global_ids(size_t subdomain_idx, [
 void SubdomainFromFile::fill_subdomain(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains, const Position& min, const Position& max) {
     const bool subdomain_already_filled = is_loaded(subdomain_idx);
     if (subdomain_already_filled) {
-        RelearnException::fail("Tried to fill an already filled subdomain.");
+        RelearnException::fail("SubdomainFromFile::fill_subdomain: Tried to fill an already filled subdomain.");
         return;
     }
 

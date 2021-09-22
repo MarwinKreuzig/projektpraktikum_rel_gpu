@@ -10,7 +10,6 @@
 
 #pragma once
 
-#include "../util/RelearnException.h"
 #include "spdlog/fmt/bundled/core.h"
 #include "spdlog/spdlog.h"
 
@@ -59,11 +58,11 @@ private:
 
     static std::string get_specific_file_prefix();
 
-    static void add_logfile(EventType type, const std::string& file_name, int rank, const std::string& file_ending = ".txt");
+    static void add_logfile(const EventType type, const std::string& file_name, const int rank, const std::string& file_ending = ".txt");
 
     static bool disable;
 
-    [[nodiscard]] static bool do_i_print(int rank);
+    [[nodiscard]] static bool do_i_print(const int rank);
 
     [[nodiscard]] static std::string get_my_rank_str();
 
@@ -108,7 +107,7 @@ public:
      * @param args Variably many additional arguments that are inserted for the place-holders
      */
     template <typename FormatString, typename... Args>
-    static void write_to_file(EventType type, bool also_to_cout, FormatString&& format, Args&&... args) {
+    static void write_to_file(const EventType type, bool also_to_cout, FormatString&& format, Args&&... args) {
         auto message = fmt::format(format, std::forward<Args>(args)...);
 
         if (also_to_cout) {
@@ -129,7 +128,7 @@ public:
      * @param args Variably many additional arguments that are inserted for the place-holders
      */
     template <typename FormatString, typename... Args>
-    static void print_message_rank(int rank, FormatString&& format, Args&&... args) {
+    static void print_message_rank(const int rank, FormatString&& format, Args&&... args) {
         if (do_i_print(rank)) {
             write_to_file(LogFiles::EventType::Cout, true, "[INFO:Rank {}] {}", get_my_rank_str(), fmt::format(std::forward<FormatString>(format), std::forward<Args>(args)...));
         }

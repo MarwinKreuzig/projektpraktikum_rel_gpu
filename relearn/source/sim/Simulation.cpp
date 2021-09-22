@@ -36,31 +36,32 @@ Simulation::Simulation(std::shared_ptr<Partition> partition)
     : partition(std::move(partition)) {
 }
 
-void Simulation::register_neuron_monitor(size_t neuron_id) {
+void Simulation::register_neuron_monitor(const size_t neuron_id) {
     monitors.emplace_back(neuron_id);
 }
 
-void Simulation::set_acceptance_criterion_for_barnes_hut(double value) {
+void Simulation::set_acceptance_criterion_for_barnes_hut(const double value) {
     // Needed to avoid creating autapses
-    RelearnException::check(value <= BarnesHut::max_theta, "Acceptance criterion must be smaller or equal to {}", BarnesHut::max_theta);
-    RelearnException::check(value >= 0.0, "Acceptance criterion must not be smaller than 0.0");
+    RelearnException::check(value <= BarnesHut::max_theta, 
+        "Simulation::set_acceptance_criterion_for_barnes_hut: Acceptance criterion must be smaller or equal to {} but was {}", BarnesHut::max_theta, value);
+    RelearnException::check(value >= 0.0, "Simulation::set_acceptance_criterion_for_barnes_hut: Acceptance criterion must not be smaller than 0.0 but was {}", value);
 
     accept_criterion = value;
 }
 
-void Simulation::set_neuron_model(std::unique_ptr<NeuronModel> nm) noexcept {
+void Simulation::set_neuron_model(std::unique_ptr<NeuronModel>&& nm) noexcept {
     neuron_models = std::move(nm);
 }
 
-void Simulation::set_axons(std::unique_ptr<SynapticElements> se) noexcept {
+void Simulation::set_axons(std::unique_ptr<SynapticElements>&& se) noexcept {
     axons = std::move(se);
 }
 
-void Simulation::set_dendrites_ex(std::unique_ptr<SynapticElements> se) noexcept {
+void Simulation::set_dendrites_ex(std::unique_ptr<SynapticElements>&& se) noexcept {
     dendrites_ex = std::move(se);
 }
 
-void Simulation::set_dendrites_in(std::unique_ptr<SynapticElements> se) noexcept {
+void Simulation::set_dendrites_in(std::unique_ptr<SynapticElements>&& se) noexcept {
     dendrites_in = std::move(se);
 }
 
@@ -84,20 +85,20 @@ void Simulation::set_creation_interrupts(std::vector<std::pair<size_t, size_t>> 
     creation_interrupts = std::move(interrupts);
 }
 
-void Simulation::set_algorithm(AlgorithmEnum algorithm) noexcept {
+void Simulation::set_algorithm(const AlgorithmEnum algorithm) noexcept {
     algorithm_enum = algorithm;
 }
 
 void Simulation::construct_neurons() {
-    RelearnException::check(neuron_models != nullptr, "In simulation, neuron_models is nullptr");
-    RelearnException::check(axons != nullptr, "In simulation, axons is nullptr");
-    RelearnException::check(dendrites_ex != nullptr, "In simulation, dendrites_ex is nullptr");
-    RelearnException::check(dendrites_in != nullptr, "In simulation, dendrites_in is nullptr");
+    RelearnException::check(neuron_models != nullptr, "Simulation::construct_neurons: neuron_models is nullptr");
+    RelearnException::check(axons != nullptr, "Simulation::construct_neurons: axons is nullptr");
+    RelearnException::check(dendrites_ex != nullptr, "Simulation::construct_neurons: dendrites_ex is nullptr");
+    RelearnException::check(dendrites_in != nullptr, "Simulation::construct_neurons: dendrites_in is nullptr");
 
     neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons->clone(), dendrites_ex->clone(), dendrites_in->clone());
 }
 
-void Simulation::place_random_neurons(size_t num_neurons, double frac_exc) {
+void Simulation::place_random_neurons(const size_t num_neurons, const double frac_exc) {
     neuron_to_subdomain_assignment = std::make_unique<SubdomainFromNeuronDensity>(num_neurons, frac_exc, SubdomainFromNeuronDensity::default_um_per_neuron);
     partition->set_total_num_neurons(num_neurons);
     initialize();
@@ -187,8 +188,8 @@ void Simulation::initialize() {
     neurons->set_algorithm(algorithm);
 }
 
-void Simulation::simulate(size_t number_steps, size_t step_monitor) {
-    RelearnException::check(step_monitor > 0, "step_monitor must be greater than 0");
+void Simulation::simulate(const size_t number_steps, const size_t step_monitor) {
+    RelearnException::check(step_monitor > 0, "Simulation::simulate: step_monitor must be greater than 0");
 
     Timers::start(TimerRegion::SIMULATION_LOOP);
 
@@ -367,7 +368,7 @@ void Simulation::print_neuron_monitors() {
     }
 }
 
-void Simulation::increase_monitoring_capacity(size_t size) {
+void Simulation::increase_monitoring_capacity(const size_t size) {
     for (auto& mon : monitors) {
         mon.increase_monitoring_capacity(size);
     }

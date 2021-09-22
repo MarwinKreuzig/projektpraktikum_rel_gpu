@@ -16,15 +16,15 @@
 #include <fstream>
 #include <iomanip>
 
-std::tuple<Vec3d, Vec3d> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3s& subdomain_3idx, size_t num_subdomains_per_axis) const {
-    RelearnException::check(num_subdomains_per_axis > 0, "The number of subdomains per axis must be greater than 0");
+std::tuple<Vec3d, Vec3d> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3s& subdomain_3idx, const size_t num_subdomains_per_axis) const {
+    RelearnException::check(num_subdomains_per_axis > 0, "NeuronToSubdomainAssignment::get_subdomain_boundaries: The number of subdomains per axis must be greater than 0");
     return get_subdomain_boundaries(subdomain_3idx, Vec3s{ num_subdomains_per_axis });
 }
 
 std::tuple<Vec3d, Vec3d> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3s& subdomain_3idx, const Vec3s& num_subdomains_per_axis) const {
-    RelearnException::check(num_subdomains_per_axis.get_x() > 0, "The number of x subdomains must be greater than 0");
-    RelearnException::check(num_subdomains_per_axis.get_y() > 0, "The number of y subdomains must be greater than 0");
-    RelearnException::check(num_subdomains_per_axis.get_z() > 0, "The number of z subdomains must be greater than 0");
+    RelearnException::check(num_subdomains_per_axis.get_x() > 0, "NeuronToSubdomainAssignment::get_subdomain_boundaries: The number of x subdomains must be greater than 0");
+    RelearnException::check(num_subdomains_per_axis.get_y() > 0, "NeuronToSubdomainAssignment::get_subdomain_boundaries: The number of y subdomains must be greater than 0");
+    RelearnException::check(num_subdomains_per_axis.get_z() > 0, "NeuronToSubdomainAssignment::get_subdomain_boundaries: The number of z subdomains must be greater than 0");
 
     const auto& lengths = get_simulation_box_length();
     const auto x_subdomain_length = lengths.get_x() / num_subdomains_per_axis.get_x();
@@ -42,12 +42,12 @@ std::tuple<Vec3d, Vec3d> NeuronToSubdomainAssignment::get_subdomain_boundaries(c
     return std::make_tuple(min, max);
 }
 
-size_t NeuronToSubdomainAssignment::num_neurons(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
+size_t NeuronToSubdomainAssignment::num_neurons(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains,
     [[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max) const {
 
     const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
-        RelearnException::fail("Wanted to have num_neurons of subdomain_idx that is not present");
+        RelearnException::fail("NeuronToSubdomainAssignment::num_neurons: Wanted to have num_neurons of subdomain_idx that is not present");
         return 0;
     }
 
@@ -56,12 +56,12 @@ size_t NeuronToSubdomainAssignment::num_neurons(size_t subdomain_idx, [[maybe_un
     return cnt;
 }
 
-std::vector<NeuronToSubdomainAssignment::Position> NeuronToSubdomainAssignment::neuron_positions(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
+std::vector<NeuronToSubdomainAssignment::Position> NeuronToSubdomainAssignment::neuron_positions(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains,
     [[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max) const {
 
     const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
-        RelearnException::fail("Wanted to have neuron_positions of subdomain_idx that is not present");
+        RelearnException::fail("NeuronToSubdomainAssignment::neuron_positions: Wanted to have neuron_positions of subdomain_idx that is not present: {}", subdomain_idx);
         return {};
     }
 
@@ -76,12 +76,12 @@ std::vector<NeuronToSubdomainAssignment::Position> NeuronToSubdomainAssignment::
     return pos;
 }
 
-std::vector<SignalType> NeuronToSubdomainAssignment::neuron_types(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
+std::vector<SignalType> NeuronToSubdomainAssignment::neuron_types(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains,
     [[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max) const {
 
     const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
-        RelearnException::fail("Wanted to have neuron_types of subdomain_idx that is not present");
+        RelearnException::fail("NeuronToSubdomainAssignment::neuron_types: Wanted to have neuron_types of subdomain_idx that is not present: {}", subdomain_idx);
         return {};
     }
 
@@ -96,12 +96,12 @@ std::vector<SignalType> NeuronToSubdomainAssignment::neuron_types(size_t subdoma
     return types;
 }
 
-std::vector<std::string> NeuronToSubdomainAssignment::neuron_area_names(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains,
+std::vector<std::string> NeuronToSubdomainAssignment::neuron_area_names(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains,
     [[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max) const {
 
     const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
-        RelearnException::fail("Wanted to have neuron_area_names of subdomain_idx that is not present");
+        RelearnException::fail("NeuronToSubdomainAssignment::neuron_area_names: Wanted to have neuron_area_names of subdomain_idx that is not present: {}", subdomain_idx);
         return {};
     }
 
