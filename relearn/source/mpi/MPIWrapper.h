@@ -18,8 +18,6 @@
 using MPIWrapper = MPINoWrapper;
 #else // #if MPI_FOUND
 
-#pragma message("Using MPIWrapper")
-
 #include "../io/LogFiles.h"
 #include "../util/MemoryHolder.h"
 #include "../util/RelearnException.h"
@@ -144,7 +142,7 @@ public:
      * @param argc Is passed to MPI_Init_Thread
      * @param argv Is passed to MPI_Init_Thread
      */
-    static void init(const int argc, char** argv);
+    static void init(int argc, char** argv);
 
     /**
      * @brief Initializes the shared RMA memory. Must be called before any call involving OctreeNode*.

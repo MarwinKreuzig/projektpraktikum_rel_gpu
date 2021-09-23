@@ -4,8 +4,6 @@
 
 #if !RELEARN_MPI_FOUND
 
-#pragma message("Using MPINoWrapper")
-
 #include "../io/LogFiles.h"
 #include "../util/MemoryHolder.h"
 #include "../util/RelearnException.h"

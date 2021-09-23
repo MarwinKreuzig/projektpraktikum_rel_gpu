@@ -40,7 +40,7 @@
 std::map<MPIWrapper::AsyncToken, MPI_Request> translation_map{};
 size_t current_token{ 0 };
 
-void MPIWrapper::init(const int argc, char** argv) {
+void MPIWrapper::init(int argc, char** argv) {
     MPI_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &thread_level_provided);
 
     init_globals();
