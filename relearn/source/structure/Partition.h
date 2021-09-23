@@ -12,6 +12,7 @@
 
 #include "../algorithm/BarnesHutCell.h"
 #include "../Config.h"
+#include "../mpi/MPIWrapper.h"
 #include "../neurons/models/NeuronModels.h"
 #include "../structure/SpaceFillingCurve.h"
 
