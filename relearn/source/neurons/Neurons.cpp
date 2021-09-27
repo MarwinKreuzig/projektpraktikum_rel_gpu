@@ -265,7 +265,7 @@ void Neurons::update_calcium() {
     //#pragma omp parallel for shared(fired, h, tau_C, beta) default(none)
     // NOLINTNEXTLINE
 
-    const auto val = (1 / static_cast<double>(h));
+    const auto val = (1.0 / static_cast<double>(h));
 
 #pragma omp parallel for
     for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
@@ -273,14 +273,13 @@ void Neurons::update_calcium() {
             continue;
         }
 
+        // Update calcium depending on the firing
         if (fired[neuron_id] == 1) {
             for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-                // Update calcium depending on the firing
                 calcium[neuron_id] += val * (-calcium[neuron_id] / tau_C + beta);
             }
         } else {
             for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-                // Update calcium depending on the firing
                 calcium[neuron_id] += val * (-calcium[neuron_id] / tau_C);
             }
         }

@@ -158,5 +158,9 @@ void Timers::print() {
         sstring << "\n\n";
 
         LogFiles::write_to_file(LogFiles::EventType::Timers, true, sstring.str());
+
+        const auto avg_time = timers_global[3 * static_cast<size_t>(TimerRegion::SIMULATION_LOOP) + 1];
+
+        LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Simulation time [sec]: {}\n", avg_time);
     }
 }
