@@ -265,9 +265,9 @@ void Simulation::simulate(const size_t number_steps, const size_t step_monitor) 
                 total_synapse_creations += adjusted_global_cnts[1];
             }
 
-            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "{}: {} {} {}", step, adjusted_global_cnts[1], adjusted_global_cnts[0], adjusted_global_cnts[1] + adjusted_global_cnts[0]);
-            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateCSV, false, "{};{};{};{}", step, adjusted_global_cnts[1], adjusted_global_cnts[0], adjusted_global_cnts[1] + adjusted_global_cnts[0]);
-            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false, "{}: {} {} {}", step, local_cnts[1], local_cnts[0], local_cnts[1] + local_cnts[0]);
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "{}: {} {} {}", step, adjusted_global_cnts[1], adjusted_global_cnts[0], adjusted_global_cnts[1] - adjusted_global_cnts[0]);
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateCSV, false, "{};{};{};{}", step, adjusted_global_cnts[1], adjusted_global_cnts[0], adjusted_global_cnts[1] - adjusted_global_cnts[0]);
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false, "{}: {} {} {}", step, local_cnts[1], local_cnts[0], local_cnts[1] - local_cnts[0]);
 
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_synapses_deleted, num_synapses_created);
 
