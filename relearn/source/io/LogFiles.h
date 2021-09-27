@@ -45,6 +45,8 @@ public:
         Positions,
         Cout,
         Timers,
+        NetworkInHistogramLocal,
+        NetworkOutHistogramLocal,
         Essentials
     };
 
@@ -79,6 +81,10 @@ public:
         } else {
             output_path = path_to_containing_folder;
         }
+    }
+
+    static std::string get_output_path() noexcept {
+        return output_path;
     }
 
     /**

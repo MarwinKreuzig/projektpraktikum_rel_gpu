@@ -678,6 +678,8 @@ public:
      */
     void print_info_for_algorithm();
 
+    void print_local_network_histogram(size_t current_step);
+
     /**
      * @brief Performs debug checks on the synaptic element models if Config::do_debug_checks
      * @exception Throws a RelearnException if a check fails

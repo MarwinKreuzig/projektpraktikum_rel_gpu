@@ -280,6 +280,62 @@ public:
      */
     void debug_check() const;
 
+    std::vector<unsigned int> get_in_edges_histogram() const noexcept {
+        std::vector<unsigned int> result{};
+
+        auto latest_result = 0;
+
+        for (const auto& in_neighborhood : neuron_in_neighborhood) {
+            auto sum = 0;
+
+            for (const auto& [_, val] : in_neighborhood) {
+                if (val < 0) {
+                    sum -= val;
+                } else {
+                    sum += val;
+                }
+            }
+
+            if (result.size() <= sum) {
+                result.resize(sum * 2 + 1);
+                latest_result = sum;
+            }
+
+            result[sum]++;
+        }
+
+        result.resize(latest_result + 1);
+        return result;
+    }
+
+    std::vector<unsigned int> get_out_edges_histogram() const noexcept {
+        std::vector<unsigned int> result{};
+
+        auto latest_result = 0;
+
+        for (const auto& in_neighborhood : neuron_out_neighborhood) {
+            auto sum = 0;
+
+            for (const auto& [_, val] : in_neighborhood) {
+                if (val < 0) {
+                    sum -= val;
+                } else {
+                    sum += val;
+                }
+            }
+
+            if (result.size() <= sum) {
+                result.resize(sum * 2 + 1);
+                latest_result = sum;
+            }
+
+            result[sum]++;
+        }
+
+        result.resize(latest_result + 1);
+        return result;
+    }
+
 private:
     // NOLINTNEXTLINE
     static void add_edge(Edges& edges, const int rank, const size_t neuron_id, const int weight) {

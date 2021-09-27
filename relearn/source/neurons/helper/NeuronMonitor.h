@@ -201,7 +201,7 @@ public:
      * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons or if the std::shared_ptr is empty
      */
     void record_data() {
-        if (current_step >= informations.size()) {
+        if (current_step >= informations.capacity()) {
             return;
         }
 

@@ -920,7 +920,7 @@ std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_pro
 }
 
 std::map<int, std::vector<char>> Neurons::create_synapses_exchange_responses(
-    const std::map<int, std::vector<char>>& synapse_creation_responses, 
+    const std::map<int, std::vector<char>>& synapse_creation_responses,
     const MapSynapseCreationRequests& synapse_creation_requests_outgoing) {
     /**
     * Send and receive responses for synapse requests
@@ -965,7 +965,7 @@ std::map<int, std::vector<char>> Neurons::create_synapses_exchange_responses(
 }
 
 size_t Neurons::create_synapses_process_responses(
-    const MapSynapseCreationRequests& synapse_creation_requests_outgoing, 
+    const MapSynapseCreationRequests& synapse_creation_requests_outgoing,
     const std::map<int, std::vector<char>>& received_responses) {
     size_t num_synapses_created = 0;
 
@@ -1171,20 +1171,27 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
     const StatisticalMeasures& calcium_statistics = global_statistics(calcium, 0, disable_flags);
     const StatisticalMeasures& activity_statistics = global_statistics(neuron_model->get_x(), 0, disable_flags);
     const StatisticalMeasures& axons_statistics = global_statistics(axons->get_total_counts(), 0, disable_flags);
-    //const StatisticalMeasures& axons_conn_statistics = global_statistics_integral(axons->get_connected_cnts(), 0, disable_flags);
     const StatisticalMeasures& axons_free_statistics = global_statistics(axons->get_vacant_cnts(), 0, disable_flags);
+    const StatisticalMeasures& dendrites_excitatory_statistics = global_statistics(dendrites_exc->get_total_counts(), 0, disable_flags);
+    const StatisticalMeasures& dendrites_excitatory_free_statistics = global_statistics(dendrites_exc->get_vacant_cnts(), 0, disable_flags);
 
     if (0 != MPIWrapper::get_my_rank()) {
         // All ranks must compute the statistics, but only one should print them
         return;
     }
 
-    const int cwidth = 16; // Column width
+    const int cwidth = 20; // Column width
 
     // Write headers to file if not already done so
     if (0 == step) {
         LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, false,
-            "# ALL NEURONS\n{1:{0}}{2:{0}}{3:{0}}{4:{0}}{5:{0}}{6:{0}}{7:{0}}{8:{0}}{9:{0}}{10:{0}}{11:{0}}{12:{0}}{13:{0}}{14:{0}}{15:{0}}{16:{0}}{17:{0}}{18:{0}}{19:{0}}{20:{0}}{21:{0}}",
+            "# ALL NEURONS\n{1:{0}}"
+            "{2:{0}}{3:{0}}{4:{0}}{5:{0}}{6:{0}}"
+            "{7:{0}}{8:{0}}{9:{0}}{10:{0}}{11:{0}}"
+            "{12:{0}}{13:{0}}{14:{0}}{15:{0}}{16:{0}}"
+            "{17:{0}}{18:{0}}{19:{0}}{20:{0}}{21:{0}}"
+            "{22:{0}}{23:{0}}{24:{0}}{25:{0}}{26:{0}}"
+            "{27:{0}}{28:{0}}{29:{0}}{30:{0}}{31:{0}}",
             cwidth,
             "# step",
             "C (avg)",
@@ -1192,49 +1199,75 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
             "C (max)",
             "C (var)",
             "C (std_dev)",
-            "activity (avg)",
-            "activity (min)",
-            "activity (max)",
-            "activity (var)",
-            "activity (std_dev)",
+            "act (avg)",
+            "act (min)",
+            "act (max)",
+            "act (var)",
+            "act (std_dev)",
             "axons (avg)",
             "axons (min)",
             "axons (max)",
             "axons (var)",
             "axons (std_dev)",
-            "axons free (avg)",
-            "axons free (min)",
-            "axons free (max)",
-            "axons free (var)",
-            "axons free (std_dev)");
+            "axons.f (avg)",
+            "axons.f (min)",
+            "axons.f (max)",
+            "axons.f (var)",
+            "axons.f (std_dev)",
+            "den.ex (avg)",
+            "den.ex (min)",
+            "den.ex (max)",
+            "den.ex (var)",
+            "den.ex (std_dev)",
+            "den.ex.f (avg)",
+            "den.ex.f (min)",
+            "den.ex.f (max)",
+            "den.ex.f (var)",
+            "den.ex.f (std_dev)");
 
         LogFiles::write_to_file(LogFiles::EventType::NeuronsOverviewCSV, false,
-            "# step;"
-            "C (avg);"
-            "C (min);"
-            "C (max);"
-            "C (var);"
-            "C (std_dev);"
-            "activity (avg);"
-            "activity (min);"
-            "activity (max);"
-            "activity (var);"
-            "activity (std_dev);"
-            "axons (avg);"
-            "axons (min);"
-            "axons (max);"
-            "axons (var);"
-            "axons (std_dev);"
-            "axons free (avg);"
-            "axons free (min);"
-            "axons free (max);"
-            "axons free (var);"
-            "axons free (std_dev)");
+            "# step",
+            "C (avg)",
+            "C (min)",
+            "C (max)",
+            "C (var)",
+            "C (std_dev)",
+            "act (avg)",
+            "act (min)",
+            "act (max)",
+            "act (var)",
+            "act (std_dev)",
+            "axons (avg)",
+            "axons (min)",
+            "axons (max)",
+            "axons (var)",
+            "axons (std_dev)",
+            "axons.f (avg)",
+            "axons.f (min)",
+            "axons.f (max)",
+            "axons.f (var)",
+            "axons.f (std_dev)",
+            "den.ex (avg)",
+            "den.ex (min)",
+            "den.ex (max)",
+            "den.ex (var)",
+            "den.ex (std_dev)",
+            "den.ex.f (avg)",
+            "den.ex.f (min)",
+            "den.ex.f (max)",
+            "den.ex.f (var)",
+            "den.ex.f (std_dev)");
     }
 
     // Write data at step "step"
     LogFiles::write_to_file(LogFiles::EventType::NeuronsOverview, false,
-        "{2:<{0}}{3:<{0}.{1}f}{4:<{0}.{1}f}{5:<{0}.{1}f}{6:<{0}.{1}f}{7:<{0}.{1}f}{8:<{0}.{1}f}{9:<{0}.{1}f}{10:<{0}.{1}f}{11:<{0}.{1}f}{12:<{0}.{1}f}{13:<{0}.{1}f}{14:<{0}.{1}f}{15:<{0}.{1}f}{16:<{0}.{1}f}{17:<{0}.{1}f}{18:<{0}.{1}f}{19:<{0}.{1}f}{20:<{0}.{1}f}{21:<{0}.{1}f}{22:<{0}.{1}f}",
+        "{2:<{0}}"
+        "{3:<{0}.{1}f}{4:<{0}.{1}f}{5:<{0}.{1}f}{6:<{0}.{1}f}{7:<{0}.{1}f}"
+        "{8:<{0}.{1}f}{9:<{0}.{1}f}{10:<{0}.{1}f}{11:<{0}.{1}f}{12:<{0}.{1}f}"
+        "{13:<{0}.{1}f}{14:<{0}.{1}f}{15:<{0}.{1}f}{16:<{0}.{1}f}{17:<{0}.{1}f}"
+        "{18:<{0}.{1}f}{19:<{0}.{1}f}{20:<{0}.{1}f}{21:<{0}.{1}f}{22:<{0}.{1}f}"
+        "{23:<{0}.{1}f}{24:<{0}.{1}f}{25:<{0}.{1}f}{26:<{0}.{1}f}{27:<{0}.{1}f}"
+        "{28:<{0}.{1}f}{29:<{0}.{1}f}{30:<{0}.{1}f}{31:<{0}.{1}f}{32:<{0}.{1}f}",
         cwidth,
         Constants::print_precision,
         step,
@@ -1257,10 +1290,26 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
         axons_free_statistics.min,
         axons_free_statistics.max,
         axons_free_statistics.var,
-        axons_free_statistics.std);
+        axons_free_statistics.std,
+        dendrites_excitatory_statistics.avg,
+        dendrites_excitatory_statistics.min,
+        dendrites_excitatory_statistics.max,
+        dendrites_excitatory_statistics.var,
+        dendrites_excitatory_statistics.std,
+        dendrites_excitatory_free_statistics.avg,
+        dendrites_excitatory_free_statistics.min,
+        dendrites_excitatory_free_statistics.max,
+        dendrites_excitatory_free_statistics.var,
+        dendrites_excitatory_free_statistics.std);
 
     LogFiles::write_to_file(LogFiles::EventType::NeuronsOverviewCSV, false,
-        "{};{};{};{};{};{};{};{};{};{};{};{};{};{};{};{};{};{};{};{};{}",
+        "{};"
+        "{};{};{};{};{};"
+        "{};{};{};{};{};"
+        "{};{};{};{};{};"
+        "{};{};{};{};{};"
+        "{};{};{};{};{};"
+        "{};{};{};{};{}",
         step,
         calcium_statistics.avg,
         calcium_statistics.min,
@@ -1281,7 +1330,17 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
         axons_free_statistics.min,
         axons_free_statistics.max,
         axons_free_statistics.var,
-        axons_free_statistics.std);
+        axons_free_statistics.std,
+        dendrites_excitatory_statistics.avg,
+        dendrites_excitatory_statistics.min,
+        dendrites_excitatory_statistics.max,
+        dendrites_excitatory_statistics.var,
+        dendrites_excitatory_statistics.std,
+        dendrites_excitatory_free_statistics.avg,
+        dendrites_excitatory_free_statistics.min,
+        dendrites_excitatory_free_statistics.max,
+        dendrites_excitatory_free_statistics.var,
+        dendrites_excitatory_free_statistics.std);
 }
 
 void Neurons::print_calcium_statistics_to_essentials() {
@@ -1353,7 +1412,7 @@ void Neurons::print_positions_to_log_file() {
 void Neurons::print() {
     // Column widths
     const int cwidth_left = 6;
-    const int cwidth = 16;
+    const int cwidth = 20;
 
     std::stringstream ss;
 
@@ -1420,6 +1479,24 @@ void Neurons::print_info_for_algorithm() {
     }
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
+}
+
+void Neurons::print_local_network_histogram(size_t current_step) {
+    const auto& in_histogram = network_graph->get_in_edges_histogram();
+    const auto& out_histogram = network_graph->get_out_edges_histogram();
+
+    const auto conv_hist = [current_step](const std::vector<unsigned int>& hist) -> std::string {
+        std::stringstream ss{};
+        ss << '#' << current_step;
+        for (auto val : hist) {
+            ss << ";" << val;
+        }
+
+        return ss.str();
+    };
+
+    LogFiles::write_to_file(LogFiles::EventType::NetworkInHistogramLocal, false, conv_hist(in_histogram));
+    LogFiles::write_to_file(LogFiles::EventType::NetworkOutHistogramLocal, false, conv_hist(out_histogram));
 }
 
 void Neurons::print_pending_synapse_deletions(const PendingDeletionsV& list) {

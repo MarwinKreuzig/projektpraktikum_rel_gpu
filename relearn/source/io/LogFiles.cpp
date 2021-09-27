@@ -65,6 +65,9 @@ void LogFiles::init() {
     // Create log file for the local synapse creation and deletion
     LogFiles::add_logfile(EventType::PlasticityUpdateLocal, "plasticity_changes_local", -1);
 
+    LogFiles::add_logfile(EventType::NetworkInHistogramLocal, "network_in_histogram_local", -1);
+    LogFiles::add_logfile(EventType::NetworkOutHistogramLocal, "network_out_histogram_local", -1);
+    
     // Create log file for the essentials of the simulation
     LogFiles::add_logfile(EventType::Essentials, "essentials", 0);
 }

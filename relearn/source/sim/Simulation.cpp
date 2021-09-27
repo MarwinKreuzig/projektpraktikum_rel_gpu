@@ -273,12 +273,10 @@ void Simulation::simulate(const size_t number_steps, const size_t step_monitor) 
 
             network_graph->debug_check();
         }
-        //if (step % (Constants::plasticity_update_step*10) == 0) {
-        //    neurons->force_growing();
-        //}
 
         if (step % Constants::logfile_update_step == 0) {
             neurons->print_neurons_overview_to_log_file_on_rank_0(step);
+            neurons->print_local_network_histogram(step);
         }
 
         if (step % Constants::console_update_step == 0) {
@@ -333,7 +331,8 @@ std::vector<std::unique_ptr<NeuronModel>> Simulation::get_models() {
 
 void Simulation::print_neuron_monitors() {
     for (auto& monitor : monitors) {
-        std::ofstream outfile(std::to_string(monitor.get_target_id()) + ".csv", std::ios::trunc);
+        auto path = LogFiles::get_output_path();
+        std::ofstream outfile(path + std::to_string(monitor.get_target_id()) + ".csv", std::ios::trunc);
         outfile << std::setprecision(Constants::print_precision);
 
         outfile.imbue(std::locale());
