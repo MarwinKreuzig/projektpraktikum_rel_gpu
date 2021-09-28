@@ -11,6 +11,8 @@ file(GLOB_RECURSE TOP_TST "*.cpp")
 add_executable(runTests
     ${TOP_TST}
 )
+set_property(TARGET runTests PROPERTY
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 
 target_include_directories(runTests SYSTEM PRIVATE ${googletest_SRC_DIR}/include)
 
