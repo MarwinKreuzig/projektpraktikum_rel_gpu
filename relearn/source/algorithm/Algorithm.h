@@ -55,7 +55,7 @@ public:
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
-    virtual [[nodiscard]] MapSynapseCreationRequests find_target_neurons(const size_t num_neurons, const std::vector<char>& disable_flags,
+    [[nodiscard]] virtual MapSynapseCreationRequests find_target_neurons(const size_t num_neurons, const std::vector<char>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons)
         = 0;
 
