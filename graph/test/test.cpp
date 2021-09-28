@@ -9,7 +9,6 @@
 #include <boost/graph/adjacency_list.hpp>
 
 #define protected public
-#define private public
 
 #include "../source/graph.h"
 #include "../source/apsp/apsp.h"

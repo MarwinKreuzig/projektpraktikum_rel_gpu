@@ -75,7 +75,6 @@ public:
 
     void add_edge(size_t src_id, size_t dst_id, int weight);
 
-private:
     void init_edge_weight();
 
     double calculate_average_euclidean_distance();
