@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
+cmake_policy(SET CMP0091 NEW)
 project(relearn-full_graph C CXX)
 
 file(GLOB_RECURSE TOP_SRC "source/*.cpp" "source/*.c")
