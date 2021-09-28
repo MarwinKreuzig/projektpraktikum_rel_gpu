@@ -57,11 +57,11 @@ static Graph load_graph(const std::filesystem::path& path) {
     Graph graph{};
 
     for (const auto& path : position_paths) {
-        graph.add_vertices_from_file(path);
+        graph.add_vertices_from_file(path.string());
     }
 
     for (const auto& path : edges_paths) {
-        graph.add_edges_from_file(path);
+        graph.add_edges_from_file(path.string());
     }
 
     return graph;
