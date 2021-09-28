@@ -126,6 +126,8 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(con
         }
         return nullptr;
     };
+    
+    const auto sigma = get_probabilty_parameter();
 
     const auto source_number_axons = source->get_cell().get_number_axons_for(dendrite_type_needed);
     const auto target_list_length = count_non_zero_elements(interaction_list);

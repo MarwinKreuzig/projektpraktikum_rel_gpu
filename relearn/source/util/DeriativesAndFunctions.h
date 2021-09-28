@@ -10,15 +10,15 @@
 
 #pragma once
 
-#include "Multiindex.h"
-#include "Vec3.h"
 #include "../algorithm/FastMultipoleMethodsCell.h"
 #include "../structure/OctreeNode.h"
 #include "../util/Random.h"
+#include "Multiindex.h"
+#include "Vec3.h"
 
-#include <math.h>
+#include <cmath>
 
-// TODO: Move the functions into FastMultipoleMethods when applicable
+// TODO(hannah): Move the functions into FastMultipoleMethods when applicable
 
 template <typename T>
 T factorial(T value) noexcept {
@@ -53,7 +53,7 @@ inline std::vector<int64_t> calculate_coefficients(unsigned int derivative_order
         return sequences[derivative_order];
     }
 
-    sequences.resize(derivative_order + 1ull);
+    sequences.resize(derivative_order + 1ULL);
 
     for (auto i = old_size; i <= derivative_order; i++) {
         std::vector<int64_t> current_sequence(i + 2);
@@ -61,11 +61,11 @@ inline std::vector<int64_t> calculate_coefficients(unsigned int derivative_order
 
         for (auto j = 0; j <= i; j++) {
             if (j != i) {
-                current_sequence[j] = sequences[i - 1][j + 1ull] * (j + 1ull);
+                current_sequence[j] = sequences[i - 1][j + 1ULL] * (j + 1ULL);
             }
 
             if (j > 0) {
-                current_sequence[j] += sequences[i - 1][j - 1ull] * (-2);
+                current_sequence[j] += sequences[i - 1][j - 1ULL] * (-2);
             }
         }
 
@@ -96,7 +96,7 @@ inline double function_derivative(double t, unsigned int derivative_order) noexc
 
     return result;
 }
-}
+} // namespace Deriatives
 
 namespace Functions {
 // Hermite functions, returns -1 when n is smaller than 1
@@ -173,6 +173,7 @@ inline double calc_taylor_expansion(const OctreeNode<FastMultipoleMethodsCell>* 
 
     for (auto index = 0; index < number_coefficients; index++) {
         double temp = 0;
+        // NOLINTNEXTLINE
         const auto& current_index = indices[index];
 
         for (auto j = 0; j < Constants::number_oct; j++) {
@@ -197,8 +198,10 @@ inline double calc_taylor_expansion(const OctreeNode<FastMultipoleMethodsCell>* 
         const auto absolute_multiindex = abs_multiindex(current_index);
 
         if (absolute_multiindex % 2 == 0) {
+            // NOLINTNEXTLINE
             taylor_coefficients[index] = coefficient;
         } else {
+            // NOLINTNEXTLINE
             taylor_coefficients[index] = -coefficient;
         }
     }
@@ -221,6 +224,7 @@ inline double calc_taylor_expansion(const OctreeNode<FastMultipoleMethodsCell>* 
 
         double temp = 0.0;
         for (auto b = 0; b < number_coefficients; b++) {
+            // NOLINTNEXTLINE
             temp += taylor_coefficients[b] * pow_multiindex(temp_vec, indices[b]);
         }
 
@@ -233,9 +237,9 @@ inline double calc_taylor_expansion(const OctreeNode<FastMultipoleMethodsCell>* 
 inline double calc_direct_gauss(const std::vector<Vec3d>& sources, const std::vector<Vec3d>& targets, const double sigma) {
     auto result = 0.0;
 
-    for (auto t = 0; t < targets.size(); t++) {
-        for (auto s = 0; s < sources.size(); s++) {
-            const auto kernel_value = Functions::kernel(targets[t], sources[s], sigma);
+    for (const auto& target : targets) {
+        for (const auto& source: sources) {
+            const auto kernel_value = Functions::kernel(target, source, sigma);
             result += kernel_value;
         }
     }
@@ -270,6 +274,7 @@ inline double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, c
         const auto& temp_vec = (child_pos.value() - source_center) / sigma;
 
         for (auto a = 0; a < number_coefficients; a++) {
+            // NOLINTNEXTLINE
             temp += source->get_cell_hermite_coefficient_for(a, needed) * h_multiindex(indices[a], temp_vec);
         }
 
@@ -293,11 +298,11 @@ inline int choose_interval(const std::vector<double>& attractiveness) {
 
     // RelearnException::check(temp,"The sum of all attractions was 0.");
     for (auto i = 1; i < vec_len + 1; i++) {
-        intervals[i] = intervals[i - 1ull] + (attractiveness[i - 1ull] / sum);
+        intervals[i] = intervals[i - 1ULL] + (attractiveness[i - 1ULL] / sum);
     }
 
     int i = 0;
-    while (random_number > intervals[i + 1ull] && i <= vec_len) {
+    while (random_number > intervals[i + 1ULL] && i <= vec_len) {
         i++;
     }
 
@@ -307,4 +312,4 @@ inline int choose_interval(const std::vector<double>& attractiveness) {
 
     return i;
 }
-}
+} // namespace Functions

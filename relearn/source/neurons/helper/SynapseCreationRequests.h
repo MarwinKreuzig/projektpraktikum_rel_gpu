@@ -10,8 +10,8 @@
 
 #pragma once
 
-#include "../SignalType.h"
 #include "../../util/RelearnException.h"
+#include "../SignalType.h"
 
 #include <map>
 #include <vector>

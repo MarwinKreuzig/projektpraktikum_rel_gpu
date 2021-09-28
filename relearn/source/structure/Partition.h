@@ -10,8 +10,8 @@
 
 #pragma once
 
-#include "../algorithm/BarnesHutCell.h"
 #include "../Config.h"
+#include "../algorithm/BarnesHutCell.h"
 #include "../mpi/MPIWrapper.h"
 #include "../neurons/models/NeuronModels.h"
 #include "../structure/SpaceFillingCurve.h"
@@ -62,7 +62,7 @@ public:
      * @param my_rank The current MPI rank
      * @exception Throws a RelearnException if 0 <= my_rank < num_ranks is violated, if the number of MPI ranks is not of the form 2^k
      */
-    Partition(const size_t num_ranks, const size_t my_rank);
+    Partition(size_t num_ranks, size_t my_rank);
 
     ~Partition() = default;
 
@@ -76,14 +76,14 @@ public:
      * @brief Prints the current subdomains as messages on the rank
      * @param rank The rank that should print the subdomains
      */
-    void print_my_subdomains_info_rank(const int rank);
+    void print_my_subdomains_info_rank(int rank);
 
     /**
      * @brief Checks if the neuron id is local to the current MPI rank
      * @param neuron_id The neuron id for which it should be determined if it's local on the current MPI rank
      * @return True iff the neuron id is local
      */
-    [[nodiscard]] bool is_neuron_local(const size_t neuron_id) const;
+    [[nodiscard]] bool is_neuron_local(size_t neuron_id) const;
 
     /**
      * @brief Loads the local neurons from neurons_in_subdomain into neurons
@@ -179,7 +179,7 @@ public:
      * @exception Throws a RelearnException if the load_data_from_subdomain_assignment has not been called
      * @return Returns the global neuron id
      */
-    [[nodiscard]] size_t get_global_id(const size_t local_id) const;
+    [[nodiscard]] size_t get_global_id(size_t local_id) const;
 
     /**
      * @brief Translates a global neuron id to a local neuron id
@@ -187,7 +187,7 @@ public:
      * @exception Throws a RelearnException if the load_data_from_subdomain_assignment has not been called
      * @return Returns the local neuron id
      */
-    [[nodiscard]] size_t get_local_id(const size_t global_id) const;
+    [[nodiscard]] size_t get_local_id(size_t global_id) const;
 
     /**
      * @brief Returns the total number of neurons

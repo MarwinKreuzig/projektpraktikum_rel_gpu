@@ -80,13 +80,13 @@ public:
 private:
     MPIWrapper() = default;
 
-    [[nodiscard]] static size_t init_window(const size_t size_requested, const size_t octree_node_size);
+    [[nodiscard]] static size_t init_window(size_t size_requested, size_t octree_node_size);
 
     static void init_globals();
 
     static inline void* minsummax{};
 
-    static void* translate_reduce_function(const ReduceFunction rf);
+    static void* translate_reduce_function(ReduceFunction rf);
 
     static void register_custom_function();
 
@@ -106,25 +106,25 @@ private:
     // NOLINTNEXTLINE
     static inline std::string my_rank_str{ "-1" };
 
-    static void all_gather(const void* own_data, void* buffer, const int size);
+    static void all_gather(const void* own_data, void* buffer, int size);
 
-    static void all_gather_inl(void* ptr, const int count);
+    static void all_gather_inl(void* ptr, int count);
 
-    static void reduce(const void* src, void* dst, const int size, const ReduceFunction function, const int root_rank);
-
-    // NOLINTNEXTLINE
-    static void async_s(const void* buffer, const int count, const int rank, AsyncToken& token);
+    static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank);
 
     // NOLINTNEXTLINE
-    static void async_recv(void* buffer, const int count, const int rank, AsyncToken& token);
+    static void async_s(const void* buffer, int count, int rank, AsyncToken& token);
 
-    static int translate_lock_type(const MPI_Locktype lock_type);
+    // NOLINTNEXTLINE
+    static void async_recv(void* buffer, int count, int rank, AsyncToken& token);
 
-    static void get(void* origin, const size_t size, const int target_rank, const int64_t displacement);
+    static int translate_lock_type(MPI_Locktype lock_type);
 
-    static void reduce_int64(const int64_t* src, int64_t* dst, const size_t size, const ReduceFunction function, const int root_rank);
+    static void get(void* origin, size_t size, int target_rank, int64_t displacement);
 
-    static void reduce_double(const double* src, double* dst, const size_t size, const ReduceFunction function, const int root_rank);
+    static void reduce_int64(const int64_t* src, int64_t* dst, size_t size, ReduceFunction function, int root_rank);
+
+    static void reduce_double(const double* src, double* dst, size_t size, ReduceFunction function, int root_rank);
 
     /**
      * @brief Returns the base addresses of the memory windows of all memory windows.
@@ -152,6 +152,7 @@ public:
         const auto octree_node_size = sizeof(OctreeNode<AdditionalCellAttributes>);
         size_t max_num_objects = init_window(Constants::mpi_alloc_mem, octree_node_size);
 
+        // NOLINTNEXTLINE
         auto* cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr);
 
         MemoryHolder<AdditionalCellAttributes>::init(cast, max_num_objects);
@@ -173,7 +174,7 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs or if root_rank is < 0
      * @return On the MPI rank root_rank: The result of the reduction; A dummy value on every other MPI rank
      */
-    [[nodiscard]] static double reduce(const double value, const ReduceFunction function, const int root_rank);
+    [[nodiscard]] static double reduce(double value, ReduceFunction function, int root_rank);
 
     /**
      * @brief Reduces a value for every MPI rank with a reduction function such that every rank has the final result
@@ -182,7 +183,7 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs
      * @return The final result of the reduction
      */
-    [[nodiscard]] static double all_reduce_double(const double value, const ReduceFunction function);
+    [[nodiscard]] static double all_reduce_double( double value,  ReduceFunction function);
 
     /**
      * @brief Reduces a value for every MPI rank with a reduction function such that every rank has the final result
@@ -191,7 +192,7 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs
      * @return The final result of the reduction
      */
-    [[nodiscard]] static uint64_t all_reduce_uint64(const uint64_t value, const ReduceFunction function);
+    [[nodiscard]] static uint64_t all_reduce_uint64( uint64_t value,  ReduceFunction function);
 
     /**
      * @brief Reduces multiple values for every MPI rank with a reduction function such that the root_rank has the final result. The reduction is performed componentwise
@@ -348,14 +349,14 @@ public:
      * @param lock_type The type of locking
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
-    static void lock_window(const int rank, const MPI_Locktype lock_type);
+    static void lock_window( int rank,  MPI_Locktype lock_type);
 
     /**
      * @brief Unlocks the memory window on another MPI rank
      * @param The other MPI rank
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
-    static void unlock_window(const int rank);
+    static void unlock_window( int rank);
 
     /**
      * @brief Finalizes the local MPI implementation.

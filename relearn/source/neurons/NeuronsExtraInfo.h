@@ -41,14 +41,14 @@ public:
      * @param num_neurons The number of neurons, greater than 0
      * @exception Throws an RelearnAxception if number_neurons is 0 or if called multiple times.
      */
-    void init(const size_t number_neurons);
+    void init(size_t number_neurons);
 
     /**
      * @brief Inserts additional neurons with UNKNOWN area name and x-, y-, z- positions randomly picked from already existing ones. Requires only one MPI rank.
      * @param creation_count The number of new neuorns, greater than 0
      * @exception Throws an RelearnAxception if creation_count is 0, if x_dims, y_dims, or z_dims are empty, or if more than one MPI rank computes
      */
-    void create_neurons(const size_t creation_count);
+    void create_neurons(size_t creation_count);
 
     /**
      * @brief Overwrites the current area names with the supplied ones
@@ -192,7 +192,7 @@ public:
         const auto glob_id = mpi_rank_to_local_start_id[requested_rank] + requested_local_neuron_id;
 
         if (rank_neuron_id.get_rank() < mpi_rank_to_local_start_id.size() - 1) {
-            RelearnException::check(glob_id < mpi_rank_to_local_start_id[requested_rank + 1ull], "NeuronsExtraInfo::rank_neuron_id2glob_id: The translated id exceeded the starting id of the next rank");
+            RelearnException::check(glob_id < mpi_rank_to_local_start_id[requested_rank + 1ULL], "NeuronsExtraInfo::rank_neuron_id2glob_id: The translated id exceeded the starting id of the next rank");
         }
 
         return glob_id;

@@ -406,7 +406,7 @@ private:
 	 * 1. Delete vacant elements
 	 * 2. Delete bound elements
 	 */
-    [[nodiscard]] unsigned int update_number_elements(const size_t neuron_id);
+    [[nodiscard]] unsigned int update_number_elements(size_t neuron_id);
 
     [[nodiscard]] static double gaussian_growth_curve(const double Ca, const double eta, const double epsilon, const double growth_rate) noexcept {
         /**

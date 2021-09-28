@@ -19,6 +19,7 @@ constexpr bool OPENMPAVAILABLE = false;
 #endif
 
 // This exists for easier switching of compilation modes
+// NOLINTNEXTLINE
 #define RELEARN_MPI_FOUND MPI_FOUND
 
 namespace Constants {

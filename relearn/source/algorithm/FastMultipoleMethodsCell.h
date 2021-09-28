@@ -10,10 +10,10 @@
 
 #pragma once
 
-#include "Types.h"
 #include "../Config.h"
 #include "../neurons/SignalType.h"
 #include "../util/Vec3.h"
+#include "Types.h"
 
 #include <array>
 #include <optional>
@@ -222,6 +222,7 @@ public:
      * @param coefficient The new value for the hermite coefficient
      */
     void set_excitatory_hermite_coefficient(const unsigned int index, const double coefficient) noexcept {
+        // NOLINTNEXTLINE
         hermite_coefficients_ex[index] = coefficient;
     }
 
@@ -231,6 +232,7 @@ public:
      * @param coefficient The new value for the hermite coefficient
      */
     void set_inhibitory_hermite_coefficient(const unsigned int index, const double coefficient) noexcept {
+        // NOLINTNEXTLINE
         hermite_coefficients_in[index] = coefficient;
     }
 
@@ -253,6 +255,7 @@ public:
      * @return The specified hermite coefficient
      */
     [[nodiscard]] double get_excitatory_hermite_coefficient(const unsigned int index) const noexcept {
+        // NOLINTNEXTLINE
         return hermite_coefficients_ex[index];
     }
 
@@ -261,6 +264,7 @@ public:
      * @return The specified hermite coefficient
      */
     [[nodiscard]] double get_inhibitory_hermite_coefficient(const unsigned int index) const noexcept {
+        // NOLINTNEXTLINE
         return hermite_coefficients_in[index];
     }
 

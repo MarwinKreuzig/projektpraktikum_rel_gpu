@@ -10,11 +10,11 @@
 
 #pragma once
 
-#include "Algorithm.h"
-#include "FastMultipoleMethodsCell.h"
 #include "../structure/OctreeNode.h"
 #include "../util/DeriativesAndFunctions.h"
 #include "../util/RelearnException.h"
+#include "Algorithm.h"
+#include "FastMultipoleMethodsCell.h"
 
 #include <array>
 #include <memory>
@@ -211,6 +211,9 @@ public:
             if (my_number_axons_inhibitory > Constants::max_neurons_in_source) {
                 for (auto a = 0; a < num_coef; a++) {
                     auto temp = 0.0;
+                    // NOLINTNEXTLINE
+                    const auto& current_index = indices[a];
+
                     for (auto i = 0; i < Constants::number_oct; i++) {
                         const auto* child = node->get_child(i);
                         if (child == nullptr) {
@@ -224,10 +227,10 @@ public:
 
                         const auto& child_pos = child->get_cell().get_inhibitory_axons_position();
                         const auto& temp_vec = (child_pos.value() - scaled_position) / default_sigma; // TODO: Change default_sigma to sigma
-                        temp += child_number_inhibitory_axons * Functions::pow_multiindex(temp_vec, indices[a]);
+                        temp += child_number_inhibitory_axons * Functions::pow_multiindex(temp_vec, current_index);
                     }
 
-                    const auto hermite_coefficient = 1.0 * temp / Functions::fac_multiindex(indices[a]);
+                    const auto hermite_coefficient = 1.0 * temp / Functions::fac_multiindex(current_index);
                     node->set_cell_inhibitory_hermite_coefficient(a, hermite_coefficient);
                 }
             }

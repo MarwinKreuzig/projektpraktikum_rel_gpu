@@ -30,7 +30,7 @@ public:
      * @param idx The one dimensional index
      * @return The three dimensional index
      */
-    [[nodiscard]] static BoxCoordinates map_1d_to_3d(const uint64_t idx) noexcept;
+    [[nodiscard]] static BoxCoordinates map_1d_to_3d(uint64_t idx) noexcept;
    
     /**
      * @brief Maps a three dimensional index into the one dimensional domain.
@@ -66,7 +66,7 @@ private:
         return val;
     }
 
-    [[nodiscard]] static uint64_t copy_bit(const uint64_t source, const uint8_t source_bit, const uint64_t destination, const uint8_t destination_bit);
+    [[nodiscard]] static uint64_t copy_bit(uint64_t source, uint8_t source_bit, uint64_t destination, uint8_t destination_bit);
 
     [[nodiscard]] static uint64_t select_bit(const uint64_t number, const uint8_t bit) noexcept {
         return ((number & (static_cast<uint64_t>(1) << bit)) >> bit);

@@ -10,8 +10,8 @@
 
 #pragma once
 
-#include "../algorithm/Algorithm.h"
 #include "../Config.h"
+#include "../algorithm/Algorithm.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
 #include "ElementType.h"
@@ -25,8 +25,8 @@
 #include <array>
 #include <memory>
 #include <optional>
-#include <string>
 #include <stack>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -443,7 +443,7 @@ public:
      *      (e) Calculates if the neurons fired once to initialize the calcium values to beta or 0.0
      * @param number_neurons 
      */
-    void init(const size_t number_neurons);
+    void init(size_t number_neurons);
 
     /**
      * @brief Sets the octree in which the neurons are stored
@@ -607,7 +607,7 @@ public:
      *      (f) Inserts the newly created neurons into the octree
      * @exception Throws a RelearnException if something unexpected happens
      */
-    void create_neurons(const size_t creation_count);
+    void create_neurons(size_t creation_count);
 
     /**
      * @brief Calls update_electrical_activity from the electrical model with the stored network graph,
@@ -643,14 +643,14 @@ public:
      * @param sum_synapses_deleted The number of deleted synapses (locally)
      * @param sum_synapses_created The number of created synapses (locally)
      */
-    void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const size_t step, const size_t sum_synapses_deleted, const size_t sum_synapses_created);
+    void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, size_t sum_synapses_deleted, size_t sum_synapses_created);
 
     /**
      * @brief Prints the overview of the neurons to LogFiles::EventType::NeuronsOverview
      *      Performs communication with MPI
      * @param step The current simulation step
      */
-    void print_neurons_overview_to_log_file_on_rank_0(const size_t step);
+    void print_neurons_overview_to_log_file_on_rank_0(size_t step);
 
     /**
      * @brief Prints the calcium statistics to LogFiles::EventType::Essentials
@@ -689,7 +689,7 @@ public:
 private:
     void update_calcium();
 
-    [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, const int root, const std::vector<char>& disable_flags) const;
+    [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, int root, const std::vector<char>& disable_flags) const;
 
     template <typename T>
     [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::vector<T>& local_values, const int root, const std::vector<char>& disable_flags) const {
@@ -718,10 +718,10 @@ private:
 	 * to delete. This should reflect how it's done for a distributed memory implementation.
 	 */
     [[nodiscard]] std::vector<size_t> delete_synapses_find_synapses_on_neuron(
-        const size_t neuron_id,
-        const ElementType element_type,
-        const SignalType signal_type,
-        const unsigned int num_synapses_to_delete,
+        size_t neuron_id,
+        ElementType element_type,
+        SignalType signal_type,
+        unsigned int num_synapses_to_delete,
         PendingDeletionsV& pending_deletions,
         const PendingDeletionsV& other_pending_deletions);
 

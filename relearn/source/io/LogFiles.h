@@ -60,11 +60,11 @@ private:
 
     static std::string get_specific_file_prefix();
 
-    static void add_logfile(const EventType type, const std::string& file_name, const int rank, const std::string& file_ending = ".txt");
+    static void add_logfile(EventType type, const std::string& file_name, int rank, const std::string& file_ending = ".txt");
 
     static bool disable;
 
-    [[nodiscard]] static bool do_i_print(const int rank);
+    [[nodiscard]] static bool do_i_print(int rank);
 
     [[nodiscard]] static std::string get_my_rank_str();
 

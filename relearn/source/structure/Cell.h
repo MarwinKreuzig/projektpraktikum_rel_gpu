@@ -188,6 +188,7 @@ public:
 
         std::tie(xyz_min, xyz_max) = cell.get_size();
 
+        // NOLINTNEXTLINE
         output_stream << "  == Cell (" << reinterpret_cast<size_t>(&cell) << " ==\n";
         output_stream << "\tMin: " << xyz_min << "\n\tMax: " << xyz_max << '\n';
         output_stream << "\tnumber_excitatory_dendrites: " << number_excitatory_dendrites << "\tPosition: " << position_excitatory_dendrites << '\n';
@@ -316,7 +317,7 @@ public:
      * @brief Sets the dendrite position for both inhibitory and excitatory
      * @param opt_position The dendrite position, can be empty
      */
-    void set_dendrites_position(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_dendrites_position(const std::optional<Vec3d>& opt_position) {
         set_excitatory_dendrites_position(opt_position);
         set_inhibitory_dendrites_position(opt_position);
     }
@@ -514,7 +515,7 @@ public:
      * @exception Throws a RelearnException if index is >= Constants::p3
      * @return The specified hermite coefficient
      */
-    double get_excitatory_hermite_coefficient(const unsigned int index) const {
+    [[nodiscard]] double get_excitatory_hermite_coefficient(const unsigned int index) const {
         RelearnException::check(index < Constants::p3, "Cell::get_excitatory_hermite_coefficient: Index is too large: {} vs {}", index, Constants::p3);
         return additional_cell_attributes.get_excitatory_hermite_coefficient(index);
     }
@@ -524,7 +525,7 @@ public:
      * @exception Throws a RelearnException if index is >= Constants::p3
      * @return The specified hermite coefficient
      */
-    double get_inhibitory_hermite_coefficient(const unsigned int index) const {
+    [[nodiscard]] double get_inhibitory_hermite_coefficient(const unsigned int index) const {
         RelearnException::check(index < Constants::p3, "Cell::get_inhibitory_hermite_coefficient: Index is too large: {} vs {}", index, Constants::p3);
         return additional_cell_attributes.get_inhibitory_hermite_coefficient(index);
     }
@@ -534,7 +535,7 @@ public:
      * @exception Throws a RelearnException if index is >= Constants::p3
      * @return The specified hermite coefficient
      */
-    double get_hermite_coefficient_for(const unsigned int index, const SignalType needed) const {
+    [[nodiscard]] double get_hermite_coefficient_for(const unsigned int index, const SignalType needed) const {
         RelearnException::check(index < Constants::p3, "Cell::get_hermite_coefficient_for: Index is too large: {} vs {}", index, Constants::p3);
         return additional_cell_attributes.get_hermite_coefficient_for(index, needed);
     }

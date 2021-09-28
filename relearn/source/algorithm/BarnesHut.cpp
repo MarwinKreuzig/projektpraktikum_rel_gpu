@@ -214,6 +214,8 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
         return 0.0;
     }
 
+    const auto sigma = get_probabilty_parameter();
+
     const auto& target_xyz = node_with_dendrite.get_cell().get_dendrites_position_for(dendrite_type_needed);
     RelearnException::check(target_xyz.has_value(), "BarnesHut::update_leaf_nodes: target_xyz is bad");
 

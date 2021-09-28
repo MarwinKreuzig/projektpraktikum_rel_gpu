@@ -139,13 +139,13 @@ public:
      *      base_background_activity + N(background_activity_mean, background_activity_stddev)
      */
     NeuronModel(
-        const double k, 
-        const double tau_C, 
-        const double beta, 
-        const unsigned int h, 
-        const double base_background_activity, 
-        const double background_activity_mean, 
-        const double background_activity_stddev);
+        double k, 
+        double tau_C, 
+        double beta, 
+        unsigned int h, 
+        double base_background_activity, 
+        double background_activity_mean, 
+        double background_activity_stddev);
 
     virtual ~NeuronModel() = default;
 
@@ -398,7 +398,7 @@ protected:
      *      If OpenMP is activated, this is called in parallel for multiple ids
      * @param neuron_id The local neuron id that should be updated
      */
-    virtual void update_activity(const size_t neuron_id) = 0;
+    virtual void update_activity(size_t neuron_id) = 0;
 
     /**
      * @brief Provides a hook to initialize all neurons with local id in [start_id, end_id)
@@ -406,7 +406,7 @@ protected:
      * @param start_id The first local neuron id to initialize
      * @param end_id The next to last local neuron id to initialize
      */
-    virtual void init_neurons(const size_t start_id, const size_t end_id) = 0;
+    virtual void init_neurons(size_t start_id, size_t end_id) = 0;
 
     /**
      * @brief Sets the membrane potential for the specified neuron. Does not perform bound-checking
@@ -484,16 +484,16 @@ public:
      * @param refrac_time The number of steps a neuron doesn't spike after spiking
      */
     PoissonModel(
-        const double k,
-        const double tau_C,
-        const double beta,
-        const unsigned int h,
-        const double base_background_activity,
-        const double background_activity_mean,
-        const double background_activity_stddev,
-        const double x_0,
-        const double tau_x,
-        const unsigned int refrac_time);
+        double k,
+        double tau_C,
+        double beta,
+        unsigned int h,
+        double base_background_activity,
+        double background_activity_mean,
+        double background_activity_stddev,
+        double x_0,
+        double tau_x,
+        unsigned int refrac_time);
 
     /**
      * @brief Clones this instance and creates a new PoissonModel with the same parameters and 0 local neurons
@@ -551,13 +551,13 @@ public:
      *      Sets the initial refrac counter to 0
      * @param num_neurons The number of local neurons to store in this class
 	 */
-    void init(const size_t num_neurons) final;
+    void init(size_t num_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
      * @param creation_count The number of local neurons that should be added
      */
-    void create_neurons(const size_t creation_count) final;
+    void create_neurons(size_t creation_count) final;
 
     static constexpr double default_x_0{ 0.05 };
     static constexpr double default_tau_x{ 5.0 };
@@ -574,9 +574,9 @@ public:
 protected:
     void update_electrical_activity_serial_initialize(const std::vector<char>& disable_flags) final;
 
-    void update_activity(const size_t neuron_id) final;
+    void update_activity(size_t neuron_id) final;
 
-    void init_neurons(const size_t start_id, const size_t end_id) final;
+    void init_neurons(size_t start_id, size_t end_id) final;
 
 private:
     [[nodiscard]] double iter_x(const double x, const double I_syn) const noexcept {
@@ -628,21 +628,21 @@ public:
      * @param k3 The constant inside the equation for d/dt v(t)
      */
     IzhikevichModel(
-        const double k,
-        const double tau_C,
-        const double beta,
-        const unsigned int h,
-        const double base_background_activity,
-        const double background_activity_mean,
-        const double background_activity_stddev,
-        const double a,
-        const double b,
-        const double c,
-        const double d,
-        const double V_spike,
-        const double k1,
-        const double k2,
-        const double k3);
+        double k,
+        double tau_C,
+        double beta,
+        unsigned int h,
+        double base_background_activity,
+        double background_activity_mean,
+        double background_activity_stddev,
+        double a,
+        double b,
+        double c,
+        double d,
+        double V_spike,
+        double k1,
+        double k2,
+        double k3);
 
     /**
      * @brief Clones this instance and creates a new IzhikevichModel with the same parameters and 0 local neurons
@@ -739,13 +739,13 @@ public:
 	 * @brief Initializes the model to include num_neurons many local neurons.
      * @param num_neurons The number of local neurons to store in this class
 	 */
-    void init(const size_t num_neurons) final;
+    void init(size_t num_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
      * @param creation_count The number of local neurons that should be added
      */
-    void create_neurons(const size_t creation_count) final;
+    void create_neurons(size_t creation_count) final;
 
     static constexpr double default_a{ 0.1 };
     static constexpr double default_b{ 0.2 };
@@ -775,16 +775,16 @@ public:
     static constexpr double max_k3{ 200.0 };
 
 protected:
-    void update_activity(const size_t neuron_id) final;
+    void update_activity(size_t neuron_id) final;
 
-    void init_neurons(const size_t start_id, const size_t end_id) final;
+    void init_neurons(size_t start_id, size_t end_id) final;
 
 private:
-    [[nodiscard]] double iter_x(const double x, const double u, const double I_syn) const noexcept;
+    [[nodiscard]] double iter_x(double x, double u, double I_syn) const noexcept;
 
-    [[nodiscard]] double iter_refrac(const double u, const double x) const noexcept;
+    [[nodiscard]] double iter_refrac(double u, double x) const noexcept;
 
-    [[nodiscard]] bool spiked(const double x) const noexcept;
+    [[nodiscard]] bool spiked(double x) const noexcept;
 
     std::vector<double> u{}; // membrane recovery
 
@@ -828,16 +828,16 @@ public:
      * @param phi The dampening factor for w(t) 
      */
     FitzHughNagumoModel(
-        const double k,
-        const double tau_C,
-        const double beta,
-        const unsigned int h,
-        const double base_background_activity,
-        const double background_activity_mean,
-        const double background_activity_stddev,
-        const double a,
-        const double b,
-        const double phi);
+        double k,
+        double tau_C,
+        double beta,
+        unsigned int h,
+        double base_background_activity,
+        double background_activity_mean,
+        double background_activity_stddev,
+        double a,
+        double b,
+        double phi);
 
     /**
      * @brief Clones this instance and creates a new FitzHughNagumoModel with the same parameters and 0 local neurons
@@ -894,13 +894,13 @@ public:
 	 * @brief Initializes the model to include num_neurons many local neurons.
      * @param num_neurons The number of local neurons to store in this class
 	 */
-    void init(const size_t num_neurons) final;
+    void init(size_t num_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
      * @param creation_count The number of local neurons that should be added
      */
-    void create_neurons(const size_t creation_count) final;
+    void create_neurons(size_t creation_count) final;
 
     static constexpr double default_a{ 0.7 };
     static constexpr double default_b{ 0.8 };
@@ -918,16 +918,16 @@ public:
     static constexpr double init_w{ -0.6 };
 
 protected:
-    void update_activity(const size_t neuron_id) final;
+    void update_activity(size_t neuron_id) final;
 
-    void init_neurons(const size_t start_id, const size_t end_id) final;
+    void init_neurons(size_t start_id, size_t end_id) final;
 
 private:
-    [[nodiscard]] static double iter_x(const double x, const double w, const double I_syn) noexcept;
+    [[nodiscard]] static double iter_x(double x, double w, double I_syn) noexcept;
 
-    [[nodiscard]] double iter_refrac(const double w, const double x) const noexcept;
+    [[nodiscard]] double iter_refrac(double w, double x) const noexcept;
 
-    [[nodiscard]] static bool spiked(const double x, const double w) noexcept;
+    [[nodiscard]] static bool spiked(double x, double w) noexcept;
 
     std::vector<double> w{}; // recovery variable
 
@@ -973,22 +973,22 @@ public:
      * @param V_spike The spiking threshold in the spiking check
      */
     AEIFModel(
-        const double k,
-        const double tau_C,
-        const double beta,
-        const unsigned int h,
-        const double base_background_activity,
-        const double background_activity_mean,
-        const double background_activity_stddev,
-        const double C,
-        const double g_L,
-        const double E_L,
-        const double V_T,
-        const double d_T,
-        const double tau_w,
-        const double a,
-        const double b,
-        const double V_spike);
+        double k,
+        double tau_C,
+        double beta,
+        unsigned int h,
+        double base_background_activity,
+        double background_activity_mean,
+        double background_activity_stddev,
+        double C,
+        double g_L,
+        double E_L,
+        double V_T,
+        double d_T,
+        double tau_w,
+        double a,
+        double b,
+        double V_spike);
 
     /**
      * @brief Clones this instance and creates a new AEIFModel with the same parameters and 0 local neurons
@@ -1093,13 +1093,13 @@ public:
 	 * @brief Initializes the model to include num_neurons many local neurons.
      * @param num_neurons The number of local neurons to store in this class
 	 */
-    void init(const size_t num_neurons) final;
+    void init(size_t num_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
      * @param creation_count The number of local neurons that should be added
      */
-    void create_neurons(const size_t creation_count) final;
+    void create_neurons(size_t creation_count) final;
 
     static constexpr double default_C{ 281.0 };
     static constexpr double default_g_L{ 30.0 };
@@ -1132,16 +1132,16 @@ public:
     static constexpr double max_V_spike{ 70.0 };
 
 protected:
-    void update_activity(const size_t neuron_id) final;
+    void update_activity(size_t neuron_id) final;
 
-    void init_neurons(const size_t start_id, const size_t end_id) final;
+    void init_neurons(size_t start_id, size_t end_id) final;
 
 private:
-    [[nodiscard]] double f(const double x) const noexcept;
+    [[nodiscard]] double f(double x) const noexcept;
 
-    [[nodiscard]] double iter_x(const double x, const double w, const double I_syn) const noexcept;
+    [[nodiscard]] double iter_x(double x, double w, double I_syn) const noexcept;
 
-    [[nodiscard]] double iter_refrac(const double w, const double x) const noexcept;
+    [[nodiscard]] double iter_refrac(double w, double x) const noexcept;
 
     std::vector<double> w{}; // adaption variable
 

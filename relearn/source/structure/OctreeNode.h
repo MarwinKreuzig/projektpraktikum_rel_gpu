@@ -10,11 +10,11 @@
 
 #pragma once
 
-#include "Cell.h"
 #include "../Config.h"
 #include "../mpi/MPIWrapper.h"
 #include "../util/MemoryHolder.h"
 #include "../util/RelearnException.h"
+#include "Cell.h"
 
 #include <array>
 #include <optional>
@@ -51,7 +51,6 @@ public:
         MemoryHolder<AdditionalCellAttributes>::make_available(node);
     }
 
-public:
     /**
      * @brief Returns the MPI rank this node belongs to
      * @return The MPI rank
@@ -89,7 +88,7 @@ public:
      * @exception Throws a RelearnException if idx >= Constants::number_oct
      * @return The associated child
      */
-    [[nodiscard]] const OctreeNodePtr get_child(const size_t idx) const {
+    [[nodiscard]] OctreeNodePtr get_child(const size_t idx) const {
         RelearnException::check(idx < Constants::number_oct, "OctreeNode::get_child const: idx was: {}", idx);
         // NOLINTNEXTLINE
         return children[idx];
@@ -410,7 +409,7 @@ public:
      * @brief Sets the optional position for the excitatory dendrites position in the associated cell
      * @param opt_position The optional position, can be empty
      */
-    void set_cell_excitatory_dendrites_position(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_cell_excitatory_dendrites_position(const std::optional<Vec3d>& opt_position) {
         cell.set_excitatory_dendrites_position(opt_position);
     }
 
@@ -418,7 +417,7 @@ public:
      * @brief Sets the optional position for the inhibitory dendrites position in the associated cell
      * @param opt_position The optional position, can be empty
      */
-    void set_cell_inhibitory_dendrites_position(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_cell_inhibitory_dendrites_position(const std::optional<Vec3d>& opt_position) {
         cell.set_inhibitory_dendrites_position(opt_position);
     }
 
@@ -426,7 +425,7 @@ public:
      * @brief Sets the optional position for the excitatory axons position in the associated cell
      * @param opt_position The optional position, can be empty
      */
-    void set_cell_excitatory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_cell_excitatory_axons_position(const std::optional<Vec3d>& opt_position) {
         cell.set_excitatory_axons_position(opt_position);
     }
 
@@ -434,7 +433,7 @@ public:
      * @brief Sets the optional position for the inhibitory axons position in the associated cell
      * @param opt_position The optional position, can be empty
      */
-    void set_cell_inhibitory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_cell_inhibitory_axons_position(const std::optional<Vec3d>& opt_position) {
         cell.set_inhibitory_axons_position(opt_position);
     }
 
@@ -508,7 +507,7 @@ public:
      * @exception Might throw a RelearnException
      * @return The specified hermite coefficient
      */
-    double get_cell_excitatory_hermite_coefficient(const unsigned int index) const {
+    [[nodiscard]] double get_cell_excitatory_hermite_coefficient(const unsigned int index) const {
         return cell.get_excitatory_hermite_coefficient(index);
     }
 
@@ -517,7 +516,7 @@ public:
      * @exception Might throw a RelearnException
      * @return The specified hermite coefficient
      */
-    double get_cell_inhibitory_hermite_coefficient(const unsigned int index) const {
+    [[nodiscard]] double get_cell_inhibitory_hermite_coefficient(const unsigned int index) const {
         return cell.get_inhibitory_hermite_coefficient(index);
     }
 
@@ -526,7 +525,7 @@ public:
      * @exception Might throw a RelearnException
      * @return The specified hermite coefficient
      */
-    double get_cell_hermite_coefficient_for(const unsigned int index, const SignalType needed) const {
+    [[nodiscard]] double get_cell_hermite_coefficient_for(const unsigned int index, const SignalType needed) const {
         return cell.get_hermite_coefficient_for(index, needed);
     }
 
@@ -536,7 +535,7 @@ public:
      * @param needed The requested SignalType
      * @return A vector of all actual positions
      */
-    std::vector<Vec3d> get_all_dendrite_positions_for(const SignalType needed) const {
+    [[nodiscard]] std::vector<Vec3d> get_all_dendrite_positions_for(const SignalType needed) const {
         std::vector<Vec3d> result{};
 
         std::stack<const OctreeNode*> stack{};
@@ -556,7 +555,7 @@ public:
                     }
                 }
             } else {
-                for (auto i = 0; i < 8; i++) {
+                for (auto i = 0; i < Constants::number_oct; i++) {
                     const auto* children_node = current_node->get_child(i);
                     if (children_node != nullptr && children_node->get_cell().get_number_dendrites_for(needed) > 0) {
                         stack.push(children_node);
@@ -574,7 +573,7 @@ public:
      * @param needed The requested SignalType
      * @return A vector of all actual positions
      */
-    std::vector<Vec3d> get_all_axon_positions_for(const SignalType needed) const {
+    [[nodiscard]] std::vector<Vec3d> get_all_axon_positions_for(const SignalType needed) const {
         std::vector<Vec3d> result{};
 
         std::stack<const OctreeNode*> stack{};
@@ -594,7 +593,7 @@ public:
                     }
                 }
             } else {
-                for (auto i = 0; i < 8; i++) {
+                for (auto i = 0; i < Constants::number_oct; i++) {
                     const auto* children_node = current_node->get_child(i);
                     if (children_node != nullptr && children_node->get_cell().get_number_axons_for(needed) > 0) {
                         stack.push(children_node);

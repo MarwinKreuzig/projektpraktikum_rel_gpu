@@ -162,8 +162,11 @@ public:
     }
 
 private:
+    // NOLINTNEXTLINE
     static inline std::vector<std::chrono::high_resolution_clock::time_point> time_start{ NUM_TIMERS };
+    // NOLINTNEXTLINE
     static inline std::vector<std::chrono::high_resolution_clock::time_point> time_stop{ NUM_TIMERS };
 
+    // NOLINTNEXTLINE
     static inline std::vector<std::chrono::duration<double>> time_elapsed{ NUM_TIMERS };
 };

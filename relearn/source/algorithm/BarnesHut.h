@@ -10,14 +10,14 @@
 
 #pragma once
 
-#include "Algorithm.h"
-#include "BarnesHutCell.h"
+#include "../neurons/SignalType.h"
 #include "../neurons/helper/RankNeuronId.h"
 #include "../neurons/helper/SynapseCreationRequests.h"
-#include "../neurons/SignalType.h"
 #include "../structure/OctreeNode.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
+#include "Algorithm.h"
+#include "BarnesHutCell.h"
 
 #include <array>
 #include <memory>
@@ -43,7 +43,7 @@ public:
      * @param octree The octree on which the algorithm is to be performed, not null
      * @exception Throws a RelearnException if octree is nullptr
      */
-    BarnesHut(const std::shared_ptr<OctreeImplementation<BarnesHut>>& octree)
+    explicit BarnesHut(const std::shared_ptr<OctreeImplementation<BarnesHut>>& octree)
         : global_tree(octree) {
         RelearnException::check(octree != nullptr, "BarnesHut::BarnesHut: octree was null");
     }
@@ -56,12 +56,7 @@ public:
     void set_acceptance_criterion(const double acceptance_criterion) {
         RelearnException::check(acceptance_criterion >= 0.0, "BarnesHut::set_acceptance_criterion: acceptance_criterion was less than 0 ({})", acceptance_criterion);
         this->acceptance_criterion = acceptance_criterion;
-
-        if (acceptance_criterion == 0.0) {
-            naive_method = true;
-        } else {
-            naive_method = false;
-        }
+        naive_method = acceptance_criterion == 0.0;
     }
 
     /**
@@ -89,7 +84,7 @@ public:
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
-    [[nodiscard]] MapSynapseCreationRequests find_target_neurons(const size_t num_neurons, const std::vector<char>& disable_flags,
+    [[nodiscard]] MapSynapseCreationRequests find_target_neurons(size_t num_neurons, const std::vector<char>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) override;
 
     /**
@@ -189,30 +184,30 @@ private:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
      */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const size_t src_neuron_id, const Vec3d& axon_pos_xyz, const SignalType dendrite_type_needed);
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed);
 
     [[nodiscard]] double
     calc_attractiveness_to_connect(
-        const size_t src_neuron_id,
+        size_t src_neuron_id,
         const Vec3d& axon_pos_xyz,
         const OctreeNode<BarnesHutCell>& node_with_dendrite,
-        const SignalType dendrite_type_needed) const;
+        SignalType dendrite_type_needed) const;
 
     [[nodiscard]] std::vector<double> create_interval(
-        const size_t src_neuron_id, 
-        const Vec3d& axon_pos_xyz, 
-        const SignalType dendrite_type_needed, 
+        size_t src_neuron_id,
+        const Vec3d& axon_pos_xyz,
+        SignalType dendrite_type_needed,
         const std::vector<OctreeNode<BarnesHutCell>*>& vector) const;
 
     [[nodiscard]] std::tuple<bool, bool> acceptance_criterion_test(
         const Vec3d& axon_pos_xyz,
-        const OctreeNode<BarnesHutCell>* const node_with_dendrite,
-        const SignalType dendrite_type_needed) const;
+        const OctreeNode<BarnesHutCell>* node_with_dendrite,
+        SignalType dendrite_type_needed) const;
 
     [[nodiscard]] std::vector<OctreeNode<BarnesHutCell>*> get_nodes_for_interval(
         const Vec3d& axon_pos_xyz,
         OctreeNode<BarnesHutCell>* root,
-        const SignalType dendrite_type_needed);
+        SignalType dendrite_type_needed);
 
     double acceptance_criterion{ default_theta }; // Acceptance criterion
     bool naive_method{ default_theta == 0.0 }; // If true, expand every cell regardless of whether dendrites are available or not

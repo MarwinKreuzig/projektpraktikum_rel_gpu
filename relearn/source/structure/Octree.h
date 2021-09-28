@@ -11,20 +11,19 @@
 #pragma once
 
 #include "../Config.h"
+#include "../io/LogFiles.h"
 #include "../mpi/MPIWrapper.h"
+#include "../neurons/Neurons.h"
 #include "../neurons/SignalType.h"
 #include "../neurons/helper/RankNeuronId.h"
-#include "../structure/OctreeNode.h"
-#include "../util/RelearnException.h"
-#include "../util/Vec3.h"
-#include "../io/LogFiles.h"
-#include "../neurons/Neurons.h"
 #include "../neurons/models/SynapticElements.h"
+#include "../structure/OctreeNode.h"
 #include "../structure/SpaceFillingCurve.h"
+#include "../util/DeriativesAndFunctions.h"
 #include "../util/Random.h"
 #include "../util/RelearnException.h"
 #include "../util/Timers.h"
-#include "../util/DeriativesAndFunctions.h"
+#include "../util/Vec3.h"
 
 #include <functional>
 #include <map>
@@ -112,14 +111,14 @@ public:
      *      (e) Something went wrong within the insertion
      * @return A pointer to the newly created and inserted node
      */
-    virtual void insert(const Vec3d& position, const size_t neuron_id, const int rank) = 0;
+    virtual void insert(const Vec3d& position, size_t neuron_id, int rank) = 0;
 
     /**
      * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes
      * @param max_level The maximum level (inclusive) on which the nodes should be updated
      * @exception Throws a RelearnException if the functor throws
      */
-    virtual void update_from_level(const size_t max_level) = 0;
+    virtual void update_from_level(size_t max_level) = 0;
 
     /**
      * @brief Updates all local (!) branch nodes and their induced subtrees.
@@ -136,18 +135,19 @@ public:
      * @brief Gathers all leaf nodes and makes them available via get_leaf_nodes
      * @param num_neurons The number of neurons
      */
-    virtual void initializes_leaf_nodes(const size_t num_neurons) = 0;
+    virtual void initializes_leaf_nodes(size_t num_neurons) = 0;
 
 protected:
     // Set simulation box size of the tree
     void set_size(const Vec3d& min, const Vec3d& max) {
-        RelearnException::check(min.get_x() < max.get_x() && min.get_y() < max.get_y() && min.get_z() < max.get_z(), 
+        RelearnException::check(min.get_x() < max.get_x() && min.get_y() < max.get_y() && min.get_z() < max.get_z(),
             "Octree::set_size: The minimum was not smaller than the maximum");
 
         xyz_min = min;
         xyz_max = max;
     }
 
+private:
     // Two points describe simulation box size of the tree
     Vec3d xyz_min{ 0 };
     Vec3d xyz_max{ 0 };
@@ -355,7 +355,7 @@ public:
         }
 
         // Allgather in-place branch nodes from every rank
-        RelearnException::check(num_local_trees < static_cast<size_t>(std::numeric_limits<int>::max()), 
+        RelearnException::check(num_local_trees < static_cast<size_t>(std::numeric_limits<int>::max()),
             "Octree::synchronize_local_trees: Too many branch nodes: {}", num_local_trees);
         MPIWrapper::all_gather_inline(exchange_branch_nodes.data(), static_cast<int>(num_local_trees));
 
@@ -371,6 +371,8 @@ public:
 
         // Update global tree
         Timers::start(TimerRegion::UPDATE_GLOBAL_TREE);
+
+        const auto level_of_branch_nodes = get_level_of_branch_nodes();
 
         // Only update whenever there are other branches to update
         if (level_of_branch_nodes > 0) {
@@ -408,7 +410,10 @@ public:
      * @param neuron_id The local neuron id
      * @param rank The MPI rank that the neuron belongs to
      */
-    void insert(const Vec3d& position, const size_t neuron_id, const int rank) {
+    void insert(const Vec3d& position, const size_t neuron_id, const int rank) override {
+        const auto& xyz_min = get_xyz_min();
+        const auto& xyz_max = get_xyz_max();
+
         const auto& min_x = xyz_min.get_x();
         const auto& min_y = xyz_min.get_y();
         const auto& min_z = xyz_min.get_z();
@@ -435,7 +440,7 @@ public:
             RelearnException::check(new_node_to_insert != nullptr, "new_node_to_insert is nullptr");
 
             // Init cell size with simulation box size
-            new_node_to_insert->set_cell_size(this->xyz_min, this->xyz_max);
+            new_node_to_insert->set_cell_size(xyz_min, xyz_max);
             new_node_to_insert->set_cell_neuron_position({ position });
             new_node_to_insert->set_cell_neuron_id(neuron_id);
             new_node_to_insert->set_rank(rank);
@@ -497,11 +502,16 @@ protected:
     void construct_global_tree_part() {
         RelearnException::check(root == nullptr, "Octree::construct_global_tree_part: root was not null");
 
+        const auto level_of_branch_nodes = get_level_of_branch_nodes();
+
         SpaceFillingCurve<Morton> space_curve{ static_cast<uint8_t>(level_of_branch_nodes) };
 
         const auto my_rank = MPIWrapper::get_my_rank();
 
-        const auto num_cells_per_dimension = 1 << level_of_branch_nodes; // (2^level_of_branch_nodes)
+        const auto num_cells_per_dimension = 1ULL << level_of_branch_nodes; // (2^level_of_branch_nodes)
+
+        const auto& xyz_min = get_xyz_min();
+        const auto& xyz_max = get_xyz_max();
 
         const auto& cell_length = (xyz_max - xyz_min) / num_cells_per_dimension;
 
@@ -555,12 +565,12 @@ protected:
                 continue;
             }
 
-            for (auto id = 0; id < 8; id++) {
+            for (size_t id = 0; id < Constants::number_oct; id++) {
                 auto child_node = ptr->get_child(id);
 
-                const size_t larger_x = ((id & 1) == 0) ? 0 : 1;
-                const size_t larger_y = ((id & 2) == 0) ? 0 : 1;
-                const size_t larger_z = ((id & 4) == 0) ? 0 : 1;
+                const size_t larger_x = ((id & 1ULL) == 0) ? 0ULL : 1ULL;
+                const size_t larger_y = ((id & 2ULL) == 0) ? 0ULL : 1ULL;
+                const size_t larger_z = ((id & 4ULL) == 0) ? 0ULL : 1ULL;
 
                 const Vec3s offset{ larger_x, larger_y, larger_z };
                 const Vec3s pos = (index3d * 2) + offset;
@@ -569,7 +579,7 @@ protected:
         }
     }
 
-protected:
+private:
     // Root of the tree
     OctreeNode<AdditionalCellAttributes>* root{ nullptr };
 

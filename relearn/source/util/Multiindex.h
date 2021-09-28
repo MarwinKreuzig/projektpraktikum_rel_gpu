@@ -14,7 +14,7 @@
 
 #include <array>
 
-// TODO: Move into FastMultipoleMethods if applicable
+// TODO(hannah): Move into FastMultipoleMethods if applicable
 
 class Multiindex {
 public:
@@ -28,6 +28,7 @@ public:
         for (unsigned int i = 0; i < Constants::p; i++) {
             for (unsigned int j = 0; j < Constants::p; j++) {
                 for (unsigned int k = 0; k < Constants::p; k++) {
+                    // NOLINTNEXTLINE
                     result[index] = { i, j, k };
                     index++;
                 }

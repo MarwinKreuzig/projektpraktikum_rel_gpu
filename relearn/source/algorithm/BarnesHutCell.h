@@ -10,9 +10,9 @@
 
 #pragma once
 
-#include "Types.h"
 #include "../neurons/SignalType.h"
 #include "../util/Vec3.h"
+#include "Types.h"
 
 #include <optional>
 

@@ -80,9 +80,10 @@ public:
         base_ptr<AdditionalCellAttributes>.resize(max_num_objects, OctreeNode<AdditionalCellAttributes>());
 
         // create_rma_window();
-        base_pointers
-            = reinterpret_cast<int64_t>(base_ptr<AdditionalCellAttributes>.data());
+        // NOLINTNEXTLINE
+        base_pointers = reinterpret_cast<int64_t>(base_ptr<AdditionalCellAttributes>.data());
 
+        // NOLINTNEXTLINE
         auto cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr<AdditionalCellAttributes>.data());
 
         MemoryHolder<AdditionalCellAttributes>::init(cast, max_num_objects);
@@ -133,7 +134,7 @@ public:
     }
 
     template <typename AdditionalCellAttributes>
-    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, int target_rank, const OctreeNode<AdditionalCellAttributes>* src) {
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, [[maybe_unused]] int target_rank, const OctreeNode<AdditionalCellAttributes>* src) {
         *dst = *src;
     }
 

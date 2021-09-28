@@ -30,6 +30,7 @@ class OctreeNode;
  */
 template <typename AdditionalCellAttributes>
 class MemoryHolder {
+    // NOLINTNEXTLINE
     static inline std::queue<OctreeNode<AdditionalCellAttributes>*> available{};
     static inline std::vector<OctreeNode<AdditionalCellAttributes>*> non_available{};
     static inline OctreeNode<AdditionalCellAttributes>* base_ptr{ nullptr };

@@ -25,6 +25,7 @@
 #include "util/Random.h"
 #include "util/RelearnException.h"
 #include "util/Timers.h"
+
 #include "spdlog/spdlog.h"
 
 #include <CLI/App.hpp>
@@ -90,7 +91,7 @@ int main(int argc, char** argv) {
     auto* opt_file_creation_interrups = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
 
     double base_background_activity{ NeuronModel::default_base_background_activity };
-    auto* opt_base_background_activvity = app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are exited");
+    auto* opt_base_background_activity = app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are exited");
 
     std::string log_prefix{};
     auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
