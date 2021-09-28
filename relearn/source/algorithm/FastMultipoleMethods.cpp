@@ -91,11 +91,11 @@ inline unsigned int FastMultipoleMethods::do_random_experiment(const OctreeNode<
     }
 
     for (auto i = 1; i < vec_len + 1; i++) {
-        intervals[i] = intervals[i - 1] + (attractiveness[i - 1] / sum);
+        intervals[i] = intervals[i - 1ull] + (attractiveness[i - 1ull] / sum);
     }
 
     unsigned int i = 0;
-    while (random_number > intervals[i + 1] && i <= vec_len) {
+    while (random_number > intervals[i + 1ull] && i <= vec_len) {
         i++;
     }
 

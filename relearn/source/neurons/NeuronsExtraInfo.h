@@ -192,7 +192,7 @@ public:
         const auto glob_id = mpi_rank_to_local_start_id[requested_rank] + requested_local_neuron_id;
 
         if (rank_neuron_id.get_rank() < mpi_rank_to_local_start_id.size() - 1) {
-            RelearnException::check(glob_id < mpi_rank_to_local_start_id[requested_rank + 1], "NeuronsExtraInfo::rank_neuron_id2glob_id: The translated id exceeded the starting id of the next rank");
+            RelearnException::check(glob_id < mpi_rank_to_local_start_id[requested_rank + 1ull], "NeuronsExtraInfo::rank_neuron_id2glob_id: The translated id exceeded the starting id of the next rank");
         }
 
         return glob_id;

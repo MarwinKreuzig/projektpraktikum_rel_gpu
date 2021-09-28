@@ -63,9 +63,9 @@ void Neurons::init_synaptic_elements() {
     const std::vector<double>& dendrites_exc_cnts = dendrites_exc->get_total_counts();
 
     for (auto i = 0; i < num_neurons; i++) {
-        const size_t axon_connections = network_graph->get_num_out_edges(i);
-        const size_t dendrites_ex_connections = network_graph->get_num_in_edges_ex(i);
-        const size_t dendrites_in_connections = network_graph->get_num_in_edges_in(i);
+        const size_t axon_connections = network_graph->get_number_out_edges(i);
+        const size_t dendrites_ex_connections = network_graph->get_number_excitatory_in_edges(i);
+        const size_t dendrites_in_connections = network_graph->get_number_inhibitory_in_edges(i);
 
         axons->update_count(i, static_cast<double>(axon_connections));
         dendrites_exc->update_count(i, static_cast<double>(dendrites_ex_connections));
@@ -1052,9 +1052,9 @@ void Neurons::debug_check_counts() {
         const auto num_conn_dend_ex = static_cast<size_t>(connected_dend_exc);
         const auto num_conn_dend_in = static_cast<size_t>(connected_dend_inh);
 
-        const size_t num_out_ng = network_graph->get_num_out_edges(i);
-        const size_t num_in_exc_ng = network_graph->get_num_in_edges_ex(i);
-        const size_t num_in_inh_ng = network_graph->get_num_in_edges_in(i);
+        const size_t num_out_ng = network_graph->get_number_out_edges(i);
+        const size_t num_in_exc_ng = network_graph->get_number_excitatory_in_edges(i);
+        const size_t num_in_inh_ng = network_graph->get_number_inhibitory_in_edges(i);
 
         RelearnException::check(num_conn_axons == num_out_ng, "Neurons::debug_check_counts: In Neurons conn axons, {} vs. {}", num_conn_axons, num_out_ng);
         RelearnException::check(num_conn_dend_ex == num_in_exc_ng, "Neurons::debug_check_counts: In Neurons conn dend ex, {} vs. {}", num_conn_dend_ex, num_in_exc_ng);
@@ -1482,8 +1482,8 @@ void Neurons::print_info_for_algorithm() {
 }
 
 void Neurons::print_local_network_histogram(size_t current_step) {
-    const auto& in_histogram = network_graph->get_in_edges_histogram();
-    const auto& out_histogram = network_graph->get_out_edges_histogram();
+    const auto& in_histogram = network_graph->get_edges_histogram(NetworkGraph::EdgeDirection::In);
+    const auto& out_histogram = network_graph->get_edges_histogram(NetworkGraph::EdgeDirection::Out);
 
     const auto conv_hist = [current_step](const std::vector<unsigned int>& hist) -> std::string {
         std::stringstream ss{};

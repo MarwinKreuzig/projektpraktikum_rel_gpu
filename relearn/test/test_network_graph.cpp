@@ -24,9 +24,9 @@ TEST_F(NetworkGraphTest, testNetworkGraphConstructor) {
         NetworkGraph ng(num_neurons);
 
         for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-            size_t exc_in_edges_count = ng.get_num_in_edges_ex(neuron_id);
-            size_t inh_in_edges_count = ng.get_num_in_edges_in(neuron_id);
-            size_t out_edges_count = ng.get_num_out_edges(neuron_id);
+            size_t exc_in_edges_count = ng.get_number_excitatory_in_edges(neuron_id);
+            size_t inh_in_edges_count = ng.get_number_inhibitory_in_edges(neuron_id);
+            size_t out_edges_count = ng.get_number_out_edges(neuron_id);
 
             ASSERT_EQ(exc_in_edges_count, 0);
             ASSERT_EQ(inh_in_edges_count, 0);
@@ -51,9 +51,9 @@ TEST_F(NetworkGraphTest, testNetworkGraphConstructorExceptions) {
         NetworkGraph ng(num_neurons);
 
         for (size_t neuron_id = num_neurons; neuron_id < num_neurons + num_neurons; neuron_id++) {
-            ASSERT_THROW(size_t exc_in_edges_count = ng.get_num_in_edges_ex(neuron_id), RelearnException);
-            ASSERT_THROW(size_t inh_in_edges_count = ng.get_num_in_edges_in(neuron_id), RelearnException);
-            ASSERT_THROW(size_t out_edges_count = ng.get_num_out_edges(neuron_id), RelearnException);
+            ASSERT_THROW(size_t exc_in_edges_count = ng.get_number_excitatory_in_edges(neuron_id), RelearnException);
+            ASSERT_THROW(size_t inh_in_edges_count = ng.get_number_inhibitory_in_edges(neuron_id), RelearnException);
+            ASSERT_THROW(size_t out_edges_count = ng.get_number_out_edges(neuron_id), RelearnException);
 
             ASSERT_THROW(const NetworkGraph::Edges& in_edges = ng.get_in_edges(neuron_id), RelearnException);
             ASSERT_THROW(const NetworkGraph::Edges& out_edges = ng.get_out_edges(neuron_id), RelearnException);
@@ -124,9 +124,9 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
         }
 
         for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-            size_t exc_in_edges_count_ng = ng.get_num_in_edges_ex(neuron_id);
-            size_t inh_in_edges_count_ng = ng.get_num_in_edges_in(neuron_id);
-            size_t out_edges_count_ng = ng.get_num_out_edges(neuron_id);
+            size_t exc_in_edges_count_ng = ng.get_number_excitatory_in_edges(neuron_id);
+            size_t inh_in_edges_count_ng = ng.get_number_inhibitory_in_edges(neuron_id);
+            size_t out_edges_count_ng = ng.get_number_out_edges(neuron_id);
 
             const std::vector<std::pair<std::pair<int, size_t>, int>>& in_edges_ng = ng.get_in_edges(neuron_id);
             const std::vector<std::pair<std::pair<int, size_t>, int>>& out_edges_ng = ng.get_out_edges(neuron_id);
@@ -207,9 +207,9 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesSplit) {
         }
 
         for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-            size_t exc_in_edges_count_ng = ng.get_num_in_edges_ex(neuron_id);
-            size_t inh_in_edges_count_ng = ng.get_num_in_edges_in(neuron_id);
-            size_t out_edges_count_ng = ng.get_num_out_edges(neuron_id);
+            size_t exc_in_edges_count_ng = ng.get_number_excitatory_in_edges(neuron_id);
+            size_t inh_in_edges_count_ng = ng.get_number_inhibitory_in_edges(neuron_id);
+            size_t out_edges_count_ng = ng.get_number_out_edges(neuron_id);
 
             const std::vector<std::pair<std::pair<int, size_t>, int>>& in_edges_ng = ng.get_in_edges(neuron_id);
             const std::vector<std::pair<std::pair<int, size_t>, int>>& out_edges_ng = ng.get_out_edges(neuron_id);
@@ -322,9 +322,9 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
         }
 
         for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-            size_t exc_in_edges_count = ng.get_num_in_edges_ex(neuron_id);
-            size_t inh_in_edges_count = ng.get_num_in_edges_in(neuron_id);
-            size_t out_edges_count = ng.get_num_out_edges(neuron_id);
+            size_t exc_in_edges_count = ng.get_number_excitatory_in_edges(neuron_id);
+            size_t inh_in_edges_count = ng.get_number_inhibitory_in_edges(neuron_id);
+            size_t out_edges_count = ng.get_number_out_edges(neuron_id);
 
             ASSERT_EQ(exc_in_edges_count, 0);
             ASSERT_EQ(inh_in_edges_count, 0);
@@ -418,9 +418,9 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
         }
 
         for (size_t neuron_id = 0; neuron_id < total_num_neurons; neuron_id++) {
-            size_t exc_in_edges_count_ng = ng.get_num_in_edges_ex(neuron_id);
-            size_t inh_in_edges_count_ng = ng.get_num_in_edges_in(neuron_id);
-            size_t out_edges_count_ng = ng.get_num_out_edges(neuron_id);
+            size_t exc_in_edges_count_ng = ng.get_number_excitatory_in_edges(neuron_id);
+            size_t inh_in_edges_count_ng = ng.get_number_inhibitory_in_edges(neuron_id);
+            size_t out_edges_count_ng = ng.get_number_out_edges(neuron_id);
 
             const std::vector<std::pair<std::pair<int, size_t>, int>>& in_edges_ng = ng.get_in_edges(neuron_id);
             const std::vector<std::pair<std::pair<int, size_t>, int>>& out_edges_ng = ng.get_out_edges(neuron_id);

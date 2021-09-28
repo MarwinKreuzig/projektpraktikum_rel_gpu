@@ -551,7 +551,7 @@ public:
                 const auto num_of_ports = cell.get_number_dendrites_for(needed);
                 if (num_of_ports > 0) {
                     const auto& opt_position = cell.get_dendrites_position();
-                    for (auto i = 0; i < num_of_ports; i++) {
+                    for (unsigned int i = 0; i < num_of_ports; i++) {
                         result.emplace_back(opt_position.value());
                     }
                 }
@@ -589,7 +589,7 @@ public:
                 const auto num_of_ports = cell.get_number_axons_for(needed);
                 if (num_of_ports > 0) {
                     const auto& opt_position = cell.get_axons_position();
-                    for (auto i = 0; i < num_of_ports; i++) {
+                    for (unsigned int i = 0; i < num_of_ports; i++) {
                         result.emplace_back(opt_position.value());
                     }
                 }

@@ -53,7 +53,7 @@ inline std::vector<int64_t> calculate_coefficients(unsigned int derivative_order
         return sequences[derivative_order];
     }
 
-    sequences.resize(derivative_order + 1);
+    sequences.resize(derivative_order + 1ull);
 
     for (auto i = old_size; i <= derivative_order; i++) {
         std::vector<int64_t> current_sequence(i + 2);
@@ -61,11 +61,11 @@ inline std::vector<int64_t> calculate_coefficients(unsigned int derivative_order
 
         for (auto j = 0; j <= i; j++) {
             if (j != i) {
-                current_sequence[j] = sequences[i - 1][j + 1] * (j + 1);
+                current_sequence[j] = sequences[i - 1][j + 1ull] * (j + 1ull);
             }
 
             if (j > 0) {
-                current_sequence[j] += sequences[i - 1][j - 1] * (-2);
+                current_sequence[j] += sequences[i - 1][j - 1ull] * (-2);
             }
         }
 
@@ -79,7 +79,7 @@ inline double function_derivative(double t, unsigned int derivative_order) noexc
     const auto& coefficients = calculate_coefficients(derivative_order);
 
     auto result = 0.0;
-    for (auto monom_exponent = 0; monom_exponent <= derivative_order; monom_exponent++) {
+    for (unsigned int monom_exponent = 0; monom_exponent <= derivative_order; monom_exponent++) {
         const auto current_coefficient = coefficients[monom_exponent];
 
         if (current_coefficient == 0) {
@@ -293,11 +293,11 @@ inline int choose_interval(const std::vector<double>& attractiveness) {
 
     // RelearnException::check(temp,"The sum of all attractions was 0.");
     for (auto i = 1; i < vec_len + 1; i++) {
-        intervals[i] = intervals[i - 1] + (attractiveness[i - 1] / sum);
+        intervals[i] = intervals[i - 1ull] + (attractiveness[i - 1ull] / sum);
     }
 
     int i = 0;
-    while (random_number > intervals[i + 1] && i <= vec_len) {
+    while (random_number > intervals[i + 1ull] && i <= vec_len) {
         i++;
     }
 
