@@ -91,6 +91,16 @@ void Graph::add_edges_from_file(const std::string& file_path) {
             full_graph[edge].weight += weight_in_boost;
             continue;
         }
+
+        const ConnectivityVertex dst_vtx_conn = id_to_vtx_conn[dst_id];
+        const ConnectivityVertex src_vtx_conn = id_to_vtx_conn[src_id];
+
+        ConnectivityEdge edge_conn;
+        std::tie(edge_conn, success) = boost::edge(src_vtx_conn, dst_vtx_conn, conn_graph);
+
+        if (!success) {
+            boost::add_edge(src_vtx_conn, dst_vtx_conn, conn_graph);
+        }
     }
 }
 
@@ -126,14 +136,14 @@ void Graph::calculate_metrics(std::ostream& os) {
     const double avg_eucl_dist = calculate_average_euclidean_distance();
     os << "It was: " << avg_eucl_dist << "\n";
 
-    os << "Calculating all pairs shortest paths...\n";
-    const auto [avg, glob_eff] = calculate_all_pairs_shortest_paths();
-    os << "Average shortest path was: " << avg << "\n";
-    os << "Global efficiency was: " << glob_eff << "\n";
+    //os << "Calculating all pairs shortest paths...\n";
+    //const auto [avg, glob_eff] = calculate_all_pairs_shortest_paths();
+    //os << "Average shortest path was: " << avg << "\n";
+    //os << "Global efficiency was: " << glob_eff << "\n";
 
-    os << "Calculating average betweenness centrality...\n";
-    const double avg_betw_cent = calculate_average_betweenness_centrality();
-    os << "It was: " << avg_betw_cent << "\n";
+    //os << "Calculating average betweenness centrality...\n";
+    //const double avg_betw_cent = calculate_average_betweenness_centrality();
+    //os << "It was: " << avg_betw_cent << "\n";
 
     os << "Calculating clustering coefficient...\n";
     const double clust_coeff = calculate_clustering_coefficient();
@@ -271,11 +281,11 @@ double Graph::calculate_average_betweenness_centrality() {
 }
 
 double Graph::calculate_clustering_coefficient() {
-    average_clustering_coefficient(full_graph, WeightInverse<FullGraph>(full_graph));
-    average_clustering_coefficient(full_graph, WeightOne<FullGraph>(full_graph));
-    average_clustering_coefficient(full_graph, WeightDivMaxWeight<FullGraph>(full_graph));
+    //average_clustering_coefficient(full_graph, WeightInverse<FullGraph>(full_graph));
+    //average_clustering_coefficient(full_graph, WeightOne<FullGraph>(full_graph));
+    //average_clustering_coefficient(full_graph, WeightDivMaxWeight<FullGraph>(full_graph));
 
-    average_clustering_coefficient_unweighted_undirected(full_graph);
+    //average_clustering_coefficient_unweighted_undirected(full_graph);
 
     using ClusteringProperty = boost::exterior_vertex_property<ConnectivityGraph, double>;
     using ClusteringContainer = ClusteringProperty::container_type;
@@ -283,7 +293,10 @@ double Graph::calculate_clustering_coefficient() {
 
     ClusteringContainer coefs(num_vertices(conn_graph));
     ClusteringMap cm(coefs, conn_graph);
-    return all_clustering_coefficients(conn_graph, cm);
+
+    const auto ret_value = all_clustering_coefficients(conn_graph, cm);
+
+    return ret_value;
 }
 
 void Graph::add_vertex(const Position& pos, const std::string& name, size_t id) {
@@ -299,7 +312,7 @@ void Graph::add_vertex(const Position& pos, const std::string& name, size_t id) 
         vtx_to_pos[full_vtx] = pos;
         id_to_vtx_full[id] = full_vtx;
 
-        const FullVertex conn_vtx = boost::add_vertex(conn_graph);
+        const ConnectivityVertex conn_vtx = boost::add_vertex(conn_graph);
         id_to_vtx_conn[id] = conn_vtx;
     }
 }

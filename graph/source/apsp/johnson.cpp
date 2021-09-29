@@ -92,6 +92,8 @@ void johnson_parallel_impl(graph_t& gr, std::vector<double>& output, const bool 
 
     APSP_Graph G(gr.edge_array.begin(), gr.edge_array.end(), gr.weights.begin(), V);
 
+    std::atomic<unsigned int> counter(0);
+
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
@@ -100,6 +102,12 @@ void johnson_parallel_impl(graph_t& gr, std::vector<double>& output, const bool 
         boost::dijkstra_shortest_paths(G, s, boost::distance_map(d.data()));
         for (int v = 0; v < V; v++) {
             output[static_cast<size_t>(s) * static_cast<size_t>(V) + static_cast<size_t>(v)] = d[v];
+        }
+
+        auto val = counter++;
+
+        if (val % 100 == 0) {
+            std::cout << "Johnson for " << val << " vertices complete\n";
         }
     }
 }
