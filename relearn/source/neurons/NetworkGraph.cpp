@@ -149,37 +149,21 @@ void NetworkGraph::debug_check() const {
     std::map<std::pair<size_t, size_t>, int> edges{};
 
     for (size_t neuron_id = 0; neuron_id < my_num_neurons; neuron_id++) {
-        const Edges& out_edges = get_out_edges(neuron_id);
+        const auto& [local_out_edges, distant_out_edges] = get_out_edges(neuron_id);
 
-        for (const auto& [out_edge_key, out_edge_val] : out_edges) {
-            const int out_edge_rank = out_edge_key.first;
-            const size_t out_edge_neuron_id = out_edge_key.second;
-
-            RelearnException::check(out_edge_rank >= 0, "NetworkGraph::debug_check: Rank is smaller than 0 (out)");
-            RelearnException::check(out_edge_val != 0, "NetworkGraph::debug_check: Value is zero (out)");
-
-            if (out_edge_rank != my_rank) {
-                continue;
-            }
-
-            edges[std::make_pair(neuron_id, out_edge_neuron_id)] = out_edge_val;
+        for (const auto& [target_neuron_id, edge_val] : local_out_edges) {
+            RelearnException::check(edge_val != 0, "NetworkGraph::debug_check: Value is zero (out)");
+            edges[std::make_pair(neuron_id, target_neuron_id)] = edge_val;
         }
     }
 
     for (size_t neuron_id = 0; neuron_id < my_num_neurons; neuron_id++) {
-        const Edges& in_edges = get_in_edges(neuron_id);
+        const auto& [local_in_edges, distant_in_edges] = get_in_edges(neuron_id);
 
-        for (const auto& [in_edge_key, in_edge_val] : in_edges) {
-            const auto [in_edge_rank, in_edge_neuron_id] = in_edge_key;
+        for (const auto& [source_neuron_id, edge_val] : local_in_edges) {
+            RelearnException::check(edge_val != 0, "NetworkGraph::debug_check: Value is zero (out)");
 
-            RelearnException::check(in_edge_rank >= 0, "NetworkGraph::debug_check: Rank is smaller than 0 (in)");
-            RelearnException::check(in_edge_val != 0, "NetworkGraph::debug_check: Value is zero (in)");
-
-            if (in_edge_rank != my_rank) {
-                continue;
-            }
-
-            const std::pair<size_t, size_t> id_pair(in_edge_neuron_id, neuron_id);
+            const std::pair<size_t, size_t> id_pair(source_neuron_id, neuron_id);
             const auto it = edges.find(id_pair);
 
             const bool found = it != edges.cend();
@@ -187,7 +171,7 @@ void NetworkGraph::debug_check() const {
             RelearnException::check(found, "NetworkGraph::debug_check: Edge not found");
 
             const int golden_weight = it->second;
-            const bool weight_matches = golden_weight == in_edge_val;
+            const bool weight_matches = golden_weight == edge_val;
 
             RelearnException::check(weight_matches, "NetworkGraph::debug_check: Weight doesn't match");
 
@@ -452,46 +436,49 @@ void NetworkGraph::print(std::ostream& os, const std::unique_ptr<NeuronsExtraInf
     // For my neurons
     for (size_t target_neuron_id = 0; target_neuron_id < my_num_neurons; target_neuron_id++) {
         // Walk through in-edges of my neuron
-        const NetworkGraph::Edges& in_edges = get_in_edges(target_neuron_id);
+        const auto& [local_in_edges, distant_in_edges] = get_in_edges(target_neuron_id);
 
         RankNeuronId rank_neuron_id{ my_rank, target_neuron_id };
 
         const auto global_target = informations->rank_neuron_id2glob_id(rank_neuron_id);
 
-        for (auto it_in_edge = in_edges.cbegin(); it_in_edge != in_edges.cend(); ++it_in_edge) {
-            RankNeuronId tmp_rank_neuron_id{ it_in_edge->first.first, it_in_edge->first.second };
+        for (const auto& [local_source_id, edge_val] : local_in_edges) {
+            os
+                << (global_target + 1) << "\t"
+                << (local_source_id + 1) << "\t"
+                << edge_val << "\n";
+        }
 
-            const auto global_source = informations->rank_neuron_id2glob_id(tmp_rank_neuron_id);
+        for (const auto& [distant_neuron_id, edge_val] : distant_in_edges) {
+            const auto global_source = informations->rank_neuron_id2glob_id(distant_neuron_id);
 
             // <target neuron id>  <source neuron id>  <weight>
             os
                 << (global_target + 1) << "\t"
                 << (global_source + 1) << "\t"
-                << it_in_edge->second << "\n";
+                << edge_val << "\n";
         }
     }
 }
 
-void NetworkGraph::write_synapses_to_file(const std::string& filename, [[maybe_unused]] const Partition& partition) const {
-    std::ofstream ofstream(filename, std::ios::binary | std::ios::out);
-
-    ofstream << "# <source neuron id> <target neuron id> <weight> \n";
-
-    for (size_t source_neuron_id = 0; source_neuron_id < my_num_neurons; source_neuron_id++) {
-        // Walk through in-edges of my neuron
-        const NetworkGraph::Edges& out_edges = get_out_edges(source_neuron_id);
-
-        for (const auto& out_edge : out_edges) {
-            const EdgesKey& ek = out_edge.first;
-            const EdgesVal& ev = out_edge.second;
-
-            const size_t& target_neuron_id = ek.second;
-            //const int& target_neuron_rank = ek.first;
-
-            //const size_t global_source_neuron_id = partition.get_global_id(source_neuron_id);
-            //const size_t global_target_neuron_id = partition.get_global_id(target_neuron_id);
-
-            ofstream << source_neuron_id << "\t" << target_neuron_id << "\t" << ev << "\n";
-        }
-    }
-}
+//void NetworkGraph::write_synapses_to_file(const std::string& filename, [[maybe_unused]] const Partition& partition) const {
+//    std::ofstream ofstream(filename, std::ios::binary | std::ios::out);
+//
+//    ofstream << "# <source neuron id> <target neuron id> <weight> \n";
+//
+//    for (size_t source_neuron_id = 0; source_neuron_id < my_num_neurons; source_neuron_id++) {
+//        // Walk through in-edges of my neuron
+//        const auto& [local_out_edges, distant_out_edges] = get_out_edges(source_neuron_id);
+//
+//
+//
+//        for (const auto& out_edge : out_edges) {
+//            const EdgesKey& ek = out_edge.first;
+//            const EdgesVal& ev = out_edge.second;
+//
+//            const size_t& target_neuron_id = ek.second;
+//
+//            ofstream << source_neuron_id << "\t" << target_neuron_id << "\t" << ev << "\n";
+//        }
+//    }
+//}

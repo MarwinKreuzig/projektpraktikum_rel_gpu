@@ -725,7 +725,7 @@ private:
         PendingDeletionsV& pending_deletions,
         const PendingDeletionsV& other_pending_deletions);
 
-    [[nodiscard]] static std::vector<Neurons::Synapse> delete_synapses_register_edges(const std::vector<std::pair<std::pair<int, size_t>, int>>& edges);
+    [[nodiscard]] static std::vector<Neurons::Synapse> delete_synapses_register_edges(const std::vector<std::pair<RankNeuronId, int>>& edges);
 
     [[nodiscard]] static MapSynapseDeletionRequests delete_synapses_exchange_requests(const PendingDeletionsV& pending_deletions);
 

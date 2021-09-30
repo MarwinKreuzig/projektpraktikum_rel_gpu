@@ -83,16 +83,21 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
 
         for (const auto& [src_neuron_id, edge_val] : local_in_edges) {
             const auto spike = fired[src_neuron_id];
-            I_syn[neuron_id] += k * (edge_val * spike);
+            if (spike != 0) {
+                I_syn[neuron_id] += k * edge_val;
+            }
         }
 
         // Walk through the distant in-edges of my neuron
-        const NetworkGraph::Edges& in_edges = network_graph.get_distant_in_edges(neuron_id);
+        const NetworkGraph::DistantEdges& in_edges = network_graph.get_distant_in_edges(neuron_id);
 
         for (const auto& [key, edge_val] : in_edges) {
-            const auto& [rank, src_neuron_id] = key;
+            const auto& rank = key.get_rank();
+            const auto& src_neuron_id = key.get_neuron_id();
+
             const auto it = firing_neuron_ids_incoming.find(rank);
             const auto found = (it != firing_neuron_ids_incoming.end()) && (it->second.find(src_neuron_id));
+
             if (found) {
                 I_syn[neuron_id] += k * edge_val;
             }
@@ -231,13 +236,13 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_
         // My neuron fired
         if (static_cast<bool>(fired[neuron_id])) {
             // Don't send firing neuron id to myself as I already have this info
-            const NetworkGraph::Edges& distant_out_edges = network_graph.get_distant_out_edges(neuron_id);
+            const NetworkGraph::DistantEdges& distant_out_edges = network_graph.get_distant_out_edges(neuron_id);
 
             // Find all target neurons which should receive the signal fired.
             // That is, neurons which connect axons from neuron "neuron_id"
             for (const auto& [edge_key, edge_val] : distant_out_edges) {
                 //target_neuron_id = it_out_edge->first.second;
-                const auto target_rank = edge_key.first;
+                const auto target_rank = edge_key.get_rank();
 
                 // Function expects to insert neuron ids in sorted order
                 // Append if it is not already in

@@ -32,8 +32,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphConstructor) {
             ASSERT_EQ(inh_in_edges_count, 0);
             ASSERT_EQ(out_edges_count, 0);
 
-            const NetworkGraph::Edges& in_edges = ng.get_in_edges(neuron_id);
-            const NetworkGraph::Edges& out_edges = ng.get_out_edges(neuron_id);
+            const NetworkGraph::DistantEdges& in_edges = ng.get_all_in_edges(neuron_id);
+            const NetworkGraph::DistantEdges& out_edges = ng.get_all_out_edges(neuron_id);
 
             ASSERT_EQ(in_edges.size(), 0);
             ASSERT_EQ(out_edges.size(), 0);
@@ -55,8 +55,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphConstructorExceptions) {
             ASSERT_THROW(size_t inh_in_edges_count = ng.get_number_inhibitory_in_edges(neuron_id), RelearnException);
             ASSERT_THROW(size_t out_edges_count = ng.get_number_out_edges(neuron_id), RelearnException);
 
-            ASSERT_THROW(const NetworkGraph::Edges& in_edges = ng.get_in_edges(neuron_id), RelearnException);
-            ASSERT_THROW(const NetworkGraph::Edges& out_edges = ng.get_out_edges(neuron_id), RelearnException);
+            ASSERT_THROW(const NetworkGraph::DistantEdges& in_edges = ng.get_all_in_edges(neuron_id), RelearnException);
+            ASSERT_THROW(const NetworkGraph::DistantEdges& out_edges = ng.get_all_out_edges(neuron_id), RelearnException);
         }
 
         for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
@@ -87,8 +87,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
 
         NetworkGraph ng(num_neurons);
 
-        std::map<size_t, std::map<std::pair<int, size_t>, int>> in_edges;
-        std::map<size_t, std::map<std::pair<int, size_t>, int>> out_edges;
+        std::map<size_t, std::map<RankNeuronId, int>> in_edges;
+        std::map<size_t, std::map<RankNeuronId, int>> out_edges;
 
         for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
             int other_rank = uid_num_ranks(mt);
@@ -128,8 +128,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
             size_t inh_in_edges_count_ng = ng.get_number_inhibitory_in_edges(neuron_id);
             size_t out_edges_count_ng = ng.get_number_out_edges(neuron_id);
 
-            const std::vector<std::pair<std::pair<int, size_t>, int>>& in_edges_ng = ng.get_in_edges(neuron_id);
-            const std::vector<std::pair<std::pair<int, size_t>, int>>& out_edges_ng = ng.get_out_edges(neuron_id);
+            const std::vector<std::pair<RankNeuronId, int>>& in_edges_ng = ng.get_all_in_edges(neuron_id);
+            const std::vector<std::pair<RankNeuronId, int>>& out_edges_ng = ng.get_all_out_edges(neuron_id);
 
             size_t exc_in_edges_count_meta = 0;
             size_t inh_in_edges_count_meta = 0;
@@ -153,14 +153,14 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
 
             for (const auto& it : in_edges[neuron_id]) {
                 int weight_meta = it.second;
-                std::pair<int, size_t> key = it.first;
+                RankNeuronId key = it.first;
                 auto found_it = std::find(in_edges_ng.begin(), in_edges_ng.end(), std::make_pair(key, weight_meta));
                 ASSERT_TRUE(found_it != in_edges_ng.end());
             }
 
             for (const auto& it : out_edges[neuron_id]) {
                 int weight_meta = it.second;
-                std::pair<int, size_t> key = it.first;
+                RankNeuronId key = it.first;
                 auto found_it = std::find(out_edges_ng.begin(), out_edges_ng.end(), std::make_pair(key, weight_meta));
                 ASSERT_TRUE(found_it != out_edges_ng.end());
             }
@@ -211,13 +211,13 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesSplit) {
             size_t inh_in_edges_count_ng = ng.get_number_inhibitory_in_edges(neuron_id);
             size_t out_edges_count_ng = ng.get_number_out_edges(neuron_id);
 
-            const std::vector<std::pair<std::pair<int, size_t>, int>>& in_edges_ng = ng.get_in_edges(neuron_id);
-            const std::vector<std::pair<std::pair<int, size_t>, int>>& out_edges_ng = ng.get_out_edges(neuron_id);
+            const std::vector<std::pair<RankNeuronId, int>>& in_edges_ng = ng.get_all_in_edges(neuron_id);
+            const std::vector<std::pair<RankNeuronId, int>>& out_edges_ng = ng.get_all_out_edges(neuron_id);
 
-            std::vector<std::pair<std::pair<int, size_t>, int>> in_edges_ng_ex = ng.get_in_edges(neuron_id, SignalType::EXCITATORY);
-            std::vector<std::pair<std::pair<int, size_t>, int>> in_edges_ng_in = ng.get_in_edges(neuron_id, SignalType::INHIBITORY);
-            std::vector<std::pair<std::pair<int, size_t>, int>> out_edges_ng_ex = ng.get_out_edges(neuron_id, SignalType::EXCITATORY);
-            std::vector<std::pair<std::pair<int, size_t>, int>> out_edges_ng_in = ng.get_out_edges(neuron_id, SignalType::INHIBITORY);
+            std::vector<std::pair<RankNeuronId, int>> in_edges_ng_ex = ng.get_all_in_edges(neuron_id, SignalType::EXCITATORY);
+            std::vector<std::pair<RankNeuronId, int>> in_edges_ng_in = ng.get_all_in_edges(neuron_id, SignalType::INHIBITORY);
+            std::vector<std::pair<RankNeuronId, int>> out_edges_ng_ex = ng.get_all_out_edges(neuron_id, SignalType::EXCITATORY);
+            std::vector<std::pair<RankNeuronId, int>> out_edges_ng_in = ng.get_all_out_edges(neuron_id, SignalType::INHIBITORY);
 
             ASSERT_EQ(in_edges_ng.size(), in_edges_ng_ex.size() + in_edges_ng_in.size());
             ASSERT_EQ(out_edges_ng.size(), out_edges_ng_ex.size() + out_edges_ng_in.size());
@@ -330,8 +330,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
             ASSERT_EQ(inh_in_edges_count, 0);
             ASSERT_EQ(out_edges_count, 0);
 
-            const NetworkGraph::Edges& in_edges = ng.get_in_edges(neuron_id);
-            const NetworkGraph::Edges& out_edges = ng.get_out_edges(neuron_id);
+            const NetworkGraph::DistantEdges& in_edges = ng.get_all_in_edges(neuron_id);
+            const NetworkGraph::DistantEdges& out_edges = ng.get_all_out_edges(neuron_id);
 
             ASSERT_EQ(in_edges.size(), 0);
             ASSERT_EQ(out_edges.size(), 0);
@@ -422,8 +422,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
             size_t inh_in_edges_count_ng = ng.get_number_inhibitory_in_edges(neuron_id);
             size_t out_edges_count_ng = ng.get_number_out_edges(neuron_id);
 
-            const std::vector<std::pair<std::pair<int, size_t>, int>>& in_edges_ng = ng.get_in_edges(neuron_id);
-            const std::vector<std::pair<std::pair<int, size_t>, int>>& out_edges_ng = ng.get_out_edges(neuron_id);
+            const std::vector<std::pair<RankNeuronId, int>>& in_edges_ng = ng.get_all_in_edges(neuron_id);
+            const std::vector<std::pair<RankNeuronId, int>>& out_edges_ng = ng.get_all_out_edges(neuron_id);
 
             size_t exc_in_edges_count_meta = 0;
             size_t inh_in_edges_count_meta = 0;
@@ -448,14 +448,14 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
             for (const auto& it : in_edges[{ 0, neuron_id }]) {
                 int weight_meta = it.second;
                 RankNeuronId key = it.first;
-                auto found_it = std::find(in_edges_ng.begin(), in_edges_ng.end(), std::make_pair(std::make_pair(key.get_rank(), key.get_neuron_id()), weight_meta));
+                auto found_it = std::find(in_edges_ng.begin(), in_edges_ng.end(), std::make_pair(key, weight_meta));
                 ASSERT_TRUE(found_it != in_edges_ng.end());
             }
 
             for (const auto& it : out_edges[{ 0, neuron_id }]) {
                 int weight_meta = it.second;
                 RankNeuronId key = it.first;
-                auto found_it = std::find(out_edges_ng.begin(), out_edges_ng.end(), std::make_pair(std::make_pair(key.get_rank(), key.get_neuron_id()), weight_meta));
+                auto found_it = std::find(out_edges_ng.begin(), out_edges_ng.end(), std::make_pair(key, weight_meta));
                 ASSERT_TRUE(found_it != out_edges_ng.end());
             }
         }

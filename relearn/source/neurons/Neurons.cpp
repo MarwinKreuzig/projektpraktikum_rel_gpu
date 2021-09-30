@@ -103,13 +103,12 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
     size_t weight_deleted_out_inh_edges_to_outside = 0;
 
     for (const auto neuron_id : neuron_ids) {
-        const auto out_edges = network_graph->get_out_edges(neuron_id); // Intended copy
+        const auto [local_out_edges, distant_out_edges] = network_graph->get_out_edges(neuron_id); // Intended copy
 
-        for (const auto& [edge_key, weight] : out_edges) {
-            const auto& [target_rank, target_neuron_id] = edge_key;
-            RelearnException::check(target_rank == my_rank, "Neurons::disable_neurons:: Currently, disabling neurons is only supported without mpi");
+        RelearnException::check(distant_out_edges.empty(), "Neurons::disable_neurons:: Currently, disabling neurons is only supported without mpi");
 
-            const RankNeuronId target_id{ target_rank, target_neuron_id };
+        for (const auto& [target_neuron_id, weight] : local_out_edges) {
+            const RankNeuronId target_id{ my_rank, target_neuron_id };
             const RankNeuronId source_id{ my_rank, neuron_id };
 
             network_graph->add_edge_weight(target_id, source_id, -weight);
@@ -147,14 +146,12 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
         RelearnException::check(neuron_id < num_neurons, "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id, num_neurons);
         disable_flags[neuron_id] = 0;
 
-        const auto in_edges = network_graph->get_in_edges(neuron_id); // Intended copy
+        const auto [local_in_edges, distant_in_edges] = network_graph->get_in_edges(neuron_id); // Intended copy
+        RelearnException::check(distant_in_edges.empty(), "Neurons::disable_neurons:: Currently, disabling neurons is only supported without mpi");
 
-        for (const auto& [edge_key, weight] : in_edges) {
-            const auto& [source_rank, source_neuron_id] = edge_key;
-            RelearnException::check(source_rank == my_rank, "Neurons::disable_neurons:: Currently, disabling neurons is only supported without mpi");
-
+        for (const auto& [source_neuron_id, weight] : local_in_edges) {
             const RankNeuronId target_id{ my_rank, neuron_id };
-            const RankNeuronId source_id{ source_rank, source_neuron_id };
+            const RankNeuronId source_id{ my_rank, source_neuron_id };
 
             network_graph->add_edge_weight(target_id, source_id, -weight);
 
@@ -433,11 +430,11 @@ std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(
 
     if (is_axon) {
         // Walk through outgoing edges
-        const NetworkGraph::Edges& out_edges = network_graph->get_out_edges(neuron_id);
+        NetworkGraph::DistantEdges out_edges = network_graph->get_all_out_edges(neuron_id);
         current_synapses = delete_synapses_register_edges(out_edges);
     } else {
         // Walk through ingoing edges
-        const NetworkGraph::Edges& in_edges = network_graph->get_in_edges(neuron_id, signal_type);
+        NetworkGraph::DistantEdges in_edges = network_graph->get_all_in_edges(neuron_id, signal_type);
         current_synapses = delete_synapses_register_edges(in_edges);
     }
 
@@ -488,7 +485,7 @@ std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(
     return already_removed_indices;
 }
 
-std::vector<Neurons::Synapse> Neurons::delete_synapses_register_edges(const std::vector<std::pair<std::pair<int, size_t>, int>>& edges) {
+std::vector<Neurons::Synapse> Neurons::delete_synapses_register_edges(const std::vector<std::pair<RankNeuronId, int>>& edges) {
     std::vector<Neurons::Synapse> current_synapses;
 
     for (const auto& it : edges) {
@@ -496,8 +493,8 @@ std::vector<Neurons::Synapse> Neurons::delete_synapses_register_edges(const std:
 		* Create "edge weight" number of synapses and add them to the synapse list
 		* NOTE: We take abs(it->second) here as DendriteType::INHIBITORY synapses have count < 0
 		*/
-        const auto rank = it.first.first;
-        const auto id = it.first.second;
+        const auto rank = it.first.get_rank();
+        const auto id = it.first.get_neuron_id();
 
         const auto abs_synapse_weight = abs(it.second);
         if (abs_synapse_weight == 0) {
