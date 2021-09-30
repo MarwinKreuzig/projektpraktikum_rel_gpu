@@ -457,13 +457,64 @@ public:
     }
 
 protected:
-    void tree_walk_postorder(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function, OctreeNode<AdditionalCellAttributes>* root, const size_t max_level = std::numeric_limits<size_t>::max()) {
+    void tree_walk_postorder(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function,
+        OctreeNode<AdditionalCellAttributes>* root, const size_t max_level = std::numeric_limits<size_t>::max()) {
         RelearnException::check(root != nullptr, "Octree::tree_walk_postorder: octree was nullptr");
 
+        if (max_level > 2) {
+            tree_walk_postorder_parallel(function, root, max_level);
+            return;
+        }
+
+        walk_post_order(root, 0, max_level, function);
+    }
+
+    void tree_walk_postorder_parallel(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function,
+        OctreeNode<AdditionalCellAttributes>* root, const size_t max_level = std::numeric_limits<size_t>::max()) {
+
+        std::vector<OctreeNode<AdditionalCellAttributes>*> subtrees{};
+        std::stack<OctreeNode<AdditionalCellAttributes>*> tree_upper_part{};
+
+        tree_upper_part.emplace(root);
+
+        for (const auto& root_child : root->get_children()) {
+            if (root_child == nullptr) {
+                continue;
+            }
+
+            tree_upper_part.emplace(root_child);
+
+            for (const auto& root_child_child : root_child->get_children()) {
+                if (root_child_child == nullptr) {
+                    continue;
+                }
+
+                tree_upper_part.emplace(root_child_child);
+                subtrees.emplace_back(root_child_child);
+            }
+        }
+
+#pragma omp parallel for shared(subtrees, max_level, function) default(none)
+        for (auto i = 0; i < subtrees.size(); i++) {
+            auto* local_tree_root = subtrees[i];
+
+            walk_post_order(local_tree_root, 2, max_level, function);
+        }
+
+        while (!tree_upper_part.empty()) {
+            auto* node = tree_upper_part.top();
+            tree_upper_part.pop();
+
+            function(node);
+        }
+    }
+
+    void walk_post_order(OctreeNode<AdditionalCellAttributes>* local_tree_root,
+        const size_t current_level, const size_t max_level, std::function<void(OctreeNode<AdditionalCellAttributes>*)> function) {
         std::stack<StackElement> stack{};
 
         // Push node onto stack
-        stack.emplace(root, 0);
+        stack.emplace(local_tree_root, current_level);
 
         while (!stack.empty()) {
             // Get top-of-stack node
