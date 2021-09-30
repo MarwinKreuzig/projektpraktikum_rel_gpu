@@ -13,6 +13,7 @@
 #include <boost/graph/adjacency_list.hpp>
 
 #include "../graph.h"
+#include "../progress_status.h"
 
 namespace apsp {
 
@@ -69,9 +70,9 @@ struct graph_cuda_t {
 
 // If CUDA_FOUND is false the function won't be defined. When using this function make sure it is not
 // used when CUDA_FOUND is false or linker errors will occur. Use constexpr if or conditional preprocessor branches.
-void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<double>& output, bool has_negative_edges);
+void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<double>& output, progress_status& status, bool has_negative_edges);
 
-void johnson_parallel_impl(graph_t& gr, std::vector<double>& output, bool has_negative_edges);
+void johnson_parallel_impl(graph_t& gr, std::vector<double>& output, progress_status& status, bool has_negative_edges);
 } // namespace apsp
 
 #endif
