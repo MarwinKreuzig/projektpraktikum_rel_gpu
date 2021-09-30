@@ -436,20 +436,18 @@ void NetworkGraph::print(std::ostream& os, const std::unique_ptr<NeuronsExtraInf
     // For my neurons
     for (size_t target_neuron_id = 0; target_neuron_id < my_num_neurons; target_neuron_id++) {
         // Walk through in-edges of my neuron
-        const auto& [local_in_edges, distant_in_edges] = get_in_edges(target_neuron_id);
-
         RankNeuronId rank_neuron_id{ my_rank, target_neuron_id };
 
         const auto global_target = informations->rank_neuron_id2glob_id(rank_neuron_id);
 
-        for (const auto& [local_source_id, edge_val] : local_in_edges) {
+        for (const auto& [local_source_id, edge_val] : neuron_local_in_neighborhood[target_neuron_id]) {
             os
                 << (global_target + 1) << "\t"
                 << (local_source_id + 1) << "\t"
                 << edge_val << "\n";
         }
 
-        for (const auto& [distant_neuron_id, edge_val] : distant_in_edges) {
+        for (const auto& [distant_neuron_id, edge_val] : neuron_distant_in_neighborhood[target_neuron_id]) {
             const auto global_source = informations->rank_neuron_id2glob_id(distant_neuron_id);
 
             // <target neuron id>  <source neuron id>  <weight>

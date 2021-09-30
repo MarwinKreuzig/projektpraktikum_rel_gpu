@@ -1360,14 +1360,16 @@ void Neurons::print_calcium_statistics_to_essentials() {
 }
 
 void Neurons::print_network_graph_to_log_file() {
-    std::stringstream ss;
+    std::stringstream ss{};
 
     // Write output format to file
     ss << "# " << partition->get_total_num_neurons() << "\n"; // Total number of neurons
     ss << "# <target neuron id> <source neuron id> <weight>\n";
 
-    // Write network graph to file
-    network_graph->print(ss, extra_info);
+    if (extra_info != nullptr) {
+        // Write network graph to file
+        network_graph->print(ss, extra_info);
+    }
 
     LogFiles::write_to_file(LogFiles::EventType::Network, false, ss.str());
 }
