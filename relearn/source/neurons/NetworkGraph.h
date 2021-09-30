@@ -337,16 +337,20 @@ public:
             Edges& in_edges = neuron_in_neighborhood[target_neuron_id];
             add_edge(in_edges, source_rank, source_neuron_id, weight);
 
-            Edges& distant_in_edges = neuron_distant_in_neighborhood[target_neuron_id];
-            add_distant_edge(distant_in_edges, source_rank, source_neuron_id, weight);
+            if (source_rank != my_rank) {
+                Edges& distant_in_edges = neuron_distant_in_neighborhood[target_neuron_id];
+                add_distant_edge(distant_in_edges, source_rank, source_neuron_id, weight);
+            }
         }
 
         if (source_rank == my_rank) {
             Edges& out_edges = neuron_out_neighborhood[source_neuron_id];
             add_edge(out_edges, target_rank, target_neuron_id, weight);
 
-            Edges& distant_out_edges = neuron_distant_out_neighborhood[source_neuron_id];
-            add_distant_edge(distant_out_edges, target_rank, target_neuron_id, weight);
+            if (target_rank != my_rank) {
+                Edges& distant_out_edges = neuron_distant_out_neighborhood[source_neuron_id];
+                add_distant_edge(distant_out_edges, target_rank, target_neuron_id, weight);
+            }
         }
     }
 
