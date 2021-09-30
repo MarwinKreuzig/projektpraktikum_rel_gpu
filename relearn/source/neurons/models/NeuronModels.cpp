@@ -73,30 +73,32 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
         if (disable_flags[neuron_id] == 0) {
             continue;
         }
+
         /**
 		 * Determine synaptic input from neurons connected to me
 		 */
-        
-        const auto my_rank = MPIWrapper::get_my_rank();
 
-        // Walk through in-edges of my neuron
-        const NetworkGraph::Edges& in_edges = network_graph.get_in_edges(neuron_id);
+        // Walk through the local in-edges of my neuron
+        const NetworkGraph::LocalEdges& local_in_edges = network_graph.get_local_in_edges(neuron_id);
+
+        for (const auto& [src_neuron_id, edge_val] : local_in_edges) {
+            const auto spike = fired[src_neuron_id];
+            I_syn[neuron_id] += k * (edge_val * spike);
+        }
+
+        // Walk through the distant in-edges of my neuron
+        const NetworkGraph::Edges& in_edges = network_graph.get_distant_in_edges(neuron_id);
 
         for (const auto& [key, edge_val] : in_edges) {
             const auto& [rank, src_neuron_id] = key;
-
-             if (rank == my_rank) {
-                const auto spike = fired[src_neuron_id];
-                I_syn[neuron_id] += k * (edge_val * spike);
-            } else {
-                const auto it = firing_neuron_ids_incoming.find(rank);
-                const auto found = (it != firing_neuron_ids_incoming.end()) && (it->second.find(src_neuron_id));
-                if (found) {
-                    I_syn[neuron_id] += k * edge_val;
-                }
+            const auto it = firing_neuron_ids_incoming.find(rank);
+            const auto found = (it != firing_neuron_ids_incoming.end()) && (it->second.find(src_neuron_id));
+            if (found) {
+                I_syn[neuron_id] += k * edge_val;
             }
         }
     }
+
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
 }
 
@@ -211,15 +213,15 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_exchange
 }
 
 NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<char>& disable_flags) {
-    const auto my_rank = MPIWrapper::get_my_rank();
-
-    NeuronModel::MapFiringNeuronIds firing_neuron_ids_outgoing;
-
     /**
-	* Check which of my neurons fired and determine which ranks need to know about it.
-	* That is, they contain the neurons connecting the axons of my firing neurons.
-	*/
+	 * Check which of my neurons fired and determine which ranks need to know about it.
+	 * That is, they contain the neurons connecting the axons of my firing neurons.
+	 */
+
     Timers::start(TimerRegion::PREPARE_SENDING_SPIKES);
+
+    NeuronModel::MapFiringNeuronIds firing_neuron_ids_outgoing{};
+
     // For my neurons
     for (size_t neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {
@@ -228,20 +230,18 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_
 
         // My neuron fired
         if (static_cast<bool>(fired[neuron_id])) {
-            const NetworkGraph::Edges& out_edges = network_graph.get_out_edges(neuron_id);
+            // Don't send firing neuron id to myself as I already have this info
+            const NetworkGraph::Edges& distant_out_edges = network_graph.get_distant_out_edges(neuron_id);
 
             // Find all target neurons which should receive the signal fired.
             // That is, neurons which connect axons from neuron "neuron_id"
-            for (const auto& it_out_edge : out_edges) {
+            for (const auto& [edge_key, edge_val] : distant_out_edges) {
                 //target_neuron_id = it_out_edge->first.second;
-                const auto target_rank = it_out_edge.first.first;
+                const auto target_rank = edge_key.first;
 
-                // Don't send firing neuron id to myself as I already have this info
-                if (target_rank != my_rank) {
-                    // Function expects to insert neuron ids in sorted order
-                    // Append if it is not already in
-                    firing_neuron_ids_outgoing[target_rank].append_if_not_found_sorted(neuron_id);
-                }
+                // Function expects to insert neuron ids in sorted order
+                // Append if it is not already in
+                firing_neuron_ids_outgoing[target_rank].append_if_not_found_sorted(neuron_id);
             }
         } // My neuron fired
     } // For my neurons
