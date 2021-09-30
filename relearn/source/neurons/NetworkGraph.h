@@ -61,6 +61,21 @@ public:
     }
 
     /**
+     * @brief Resizes the network graph by adding space for more neurons. Invalidates iterators
+     * @param creation_count The number of additional neurons the network graph should handle
+     * @exception Throws an exception if the allocation of memory fails
+     */
+    void create_neurons(const size_t creation_count) {
+        const auto old_size = my_num_neurons;
+        const auto new_size = old_size + creation_count;
+
+        neuron_in_neighborhood.resize(new_size);
+        neuron_out_neighborhood.resize(new_size);
+
+        my_num_neurons = new_size;
+    }
+
+    /**
      * @brief Returns a constant reference to all in-edges to a neuron, i.e., a view on all neurons that connect to the specified one via a synapse
      * @param local_neuron_id The id of the neuron
      * @exception Throws a ReleanException if local_neuron_id is larger or equal to the number of neurons stored
@@ -196,21 +211,6 @@ public:
     }
 
     /**
-     * @brief Resizes the network graph by adding space for more neurons. Invalidates iterators
-     * @param creation_count The number of additional neurons the network graph should handle
-     * @exception Throws an exception if the allocation of memory fails
-     */
-    void create_neurons(const size_t creation_count) {
-        const auto old_size = my_num_neurons;
-        const auto new_size = old_size + creation_count;
-
-        neuron_in_neighborhood.resize(new_size);
-        neuron_out_neighborhood.resize(new_size);
-
-        my_num_neurons = new_size;
-    }
-
-    /**
      * @brief Adds the specified weight to the synapse from the neuron specified by source_id to the neuron specified by target_id.
      * If there was no edge before, it is created. If the updated weight is 0, it is deleted. Only updates the local part of the network graph.
 	 * @param target_id The target_id neuron's id and rank
@@ -255,14 +255,6 @@ public:
     }
 
     /**
-     * @brief Prints all stored connections to the out-stream. Uses the global neuron ids and starts with 1. The format is <target_id id> <source_id id> <weight>
-     * @param os The out-stream to which the network graph is printed
-     * @param informations The NeuronsExtraInfo that is used to translate between local neuron id and global neuron id
-     * @exception Throws a RelearnException if the translation of a neuron id fails
-     */
-    void print(std::ostream& os, const std::unique_ptr<NeuronsExtraInfo>& informations) const;
-
-    /**
      * @brief Loads all edges from the file that are relevant for the local network graph.
      * @param path_synapses The path to the file in which the synapses are stored (with the global neuron ids starting at 1)
      * @param path_neurons The path to the file in which the neurons are stored (with the global neuron ids starting at 1 and their positions)
@@ -278,12 +270,6 @@ public:
      * @return Returns true iff the file has the correct format and only ids in neuron_ids are present
      */
     [[nodiscard]] static bool check_edges_from_file(const std::string& path_synapses, const std::vector<size_t>& neuron_ids);
-
-    /**
-     * @brief Performs a debug check on the local portion of the network graph. All stored ranks must be greater or equal to zero, no weight must be equal to zero, and all purely local edges must have a matching counterpart.
-     * @exception Throws a RelearnException if any of the conditions is violated
-     */
-    void debug_check() const;
 
     /**
      * @brief Returns a histogram of the local neurons' connectivity
@@ -319,6 +305,20 @@ public:
         result.resize(latest_result + 1ull);
         return result;
     }
+
+    /**
+     * @brief Prints all stored connections to the out-stream. Uses the global neuron ids and starts with 1. The format is <target_id id> <source_id id> <weight>
+     * @param os The out-stream to which the network graph is printed
+     * @param informations The NeuronsExtraInfo that is used to translate between local neuron id and global neuron id
+     * @exception Throws a RelearnException if the translation of a neuron id fails
+     */
+    void print(std::ostream& os, const std::unique_ptr<NeuronsExtraInfo>& informations) const;
+
+    /**
+     * @brief Performs a debug check on the local portion of the network graph. All stored ranks must be greater or equal to zero, no weight must be equal to zero, and all purely local edges must have a matching counterpart.
+     * @exception Throws a RelearnException if any of the conditions is violated
+     */
+    void debug_check() const;
 
 private:
     // NOLINTNEXTLINE
