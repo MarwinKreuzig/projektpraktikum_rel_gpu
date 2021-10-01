@@ -83,6 +83,9 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(spdlog)
 target_link_libraries(relearn-full_graph_static PUBLIC spdlog)
 
+get_target_property(spdlog_includes spdlog INTERFACE_INCLUDE_DIRECTORIES)
+set_target_properties(spdlog PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${spdlog_includes}")
+
 add_executable(relearn-full_graph "source/main.cpp")
 
 
