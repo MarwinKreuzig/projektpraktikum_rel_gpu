@@ -45,7 +45,7 @@ void NodeCache::empty_fmm() {
 
     // Fetch remote children if they exist
     // NOLINTNEXTLINE
-    for (auto i = 7; i >= 0; i--) {
+    for (auto i = Constants::number_oct - 1; i >= 0; i--) {
         if (nullptr == node->get_child(i)) {
             // NOLINTNEXTLINE
             local_children[i] = nullptr;
@@ -96,7 +96,7 @@ std::array<OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> NodeCac
 
     // Fetch remote children if they exist
     // NOLINTNEXTLINE
-    for (auto i = 7; i >= 0; i--) {
+    for (auto i = Constants::number_oct - 1; i >= 0; i--) {
         if (nullptr == node->get_child(i)) {
             // NOLINTNEXTLINE
             local_children[i] = nullptr;

@@ -34,7 +34,7 @@ public:
      * @exception Throws a RelearnExeption if sigma < 0.0
      */
     void set_probability_parameter(const double sigma) {
-        RelearnException::check(sigma > 0.0, "In BarnesHut::set_probability_parameter, sigma was not greater than 0");
+        RelearnException::check(sigma > 0.0, "In Algorithm::set_probability_parameter, sigma was not greater than 0");
         this->sigma = sigma;
     }
 

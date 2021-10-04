@@ -93,7 +93,6 @@ void PoissonModel::init_neurons(const size_t start_id, const size_t end_id) {
         const auto x = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
         const double threshold = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
         const bool f = x >= threshold;
-        set_fired(neuron_id, true);
         set_fired(neuron_id, f); // Decide whether a neuron fires depending on its firing rate
         refrac[neuron_id] = f ? refrac_time : 0; // After having fired, a neuron is in a refractory state
 

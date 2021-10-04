@@ -161,6 +161,6 @@ void Timers::print() {
 
         const auto avg_time = timers_global[3 * static_cast<size_t>(TimerRegion::SIMULATION_LOOP) + 1];
 
-        LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Simulation time [sec]: {}\n", avg_time);
+        LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Simulation time [sec]: {}", avg_time);
     }
 }
