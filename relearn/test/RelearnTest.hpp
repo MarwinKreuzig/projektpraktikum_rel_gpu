@@ -18,6 +18,7 @@
 #include "../../../source/util/RelearnException.h"
 
 #include <chrono>
+#include <map>
 #include <random>
 
 class RelearnTest : public ::testing::Test {
@@ -79,11 +80,40 @@ protected:
     constexpr static size_t num_neurons_test = 1000;
     constexpr static double eps = 0.00001;
 
-    constexpr static bool use_predetermined_seed = false;
-    constexpr static unsigned int predetermined_seed = 1668390552;
+    constexpr static bool use_predetermined_seed = true;
+    constexpr static unsigned int predetermined_seed = 725595040;
 };
 
 class NetworkGraphTest : public RelearnTest {
+protected:
+    constexpr static size_t upper_bound_num_neurons = 10000;
+    constexpr static int bound_synapse_weight = 10;
+    constexpr static int num_ranks = 17;
+    constexpr static int num_synapses_per_neuron = 2;
+
+    template <typename T>
+    void erase_empty(std::map<T, int>& edges) {
+        for (auto iterator = edges.begin(); iterator != edges.end();) {
+            if (iterator->second == 0) {
+                iterator = edges.erase(iterator);
+            } else {
+                ++iterator;
+            }
+        }
+    }
+
+    template <typename T>
+    void erase_empties(std::map<T, std::map<T, int>>& edges) {
+        for (auto iterator = edges.begin(); iterator != edges.end();) {
+            erase_empty<T>(iterator->second);
+
+            if (iterator->second.empty()) {
+                iterator = edges.erase(iterator);
+            } else {
+                ++iterator;
+            }
+        }
+    }
 };
 
 class NeuronAssignmentTest : public RelearnTest {
@@ -99,17 +129,13 @@ class OctreeTest : public RelearnTest {
 };
 
 class PartitionTest : public RelearnTest {
-
 };
 
 class SynapticElementsTest : public RelearnTest {
-
 };
 
 class VectorTest : public RelearnTest {
-
 };
 
 class SpaceFillingCurveTest : public RelearnTest {
-
 };

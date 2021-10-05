@@ -103,7 +103,8 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
     size_t weight_deleted_out_inh_edges_to_outside = 0;
 
     for (const auto neuron_id : neuron_ids) {
-        const auto [local_out_edges, distant_out_edges] = network_graph->get_out_edges(neuron_id); // Intended copy
+        const auto local_out_edges = network_graph->get_local_out_edges(neuron_id);
+        const auto distant_out_edges = network_graph->get_distant_out_edges(neuron_id);
 
         RelearnException::check(distant_out_edges.empty(), "Neurons::disable_neurons:: Currently, disabling neurons is only supported without mpi");
 
@@ -146,7 +147,8 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
         RelearnException::check(neuron_id < num_neurons, "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id, num_neurons);
         disable_flags[neuron_id] = 0;
 
-        const auto [local_in_edges, distant_in_edges] = network_graph->get_in_edges(neuron_id); // Intended copy
+        const auto local_in_edges = network_graph->get_local_in_edges(neuron_id);
+        const auto distant_in_edges = network_graph->get_distant_in_edges(neuron_id);
         RelearnException::check(distant_in_edges.empty(), "Neurons::disable_neurons:: Currently, disabling neurons is only supported without mpi");
 
         for (const auto& [source_neuron_id, weight] : local_in_edges) {
@@ -1166,7 +1168,6 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
     const auto total_num_neurons = partition->get_total_num_neurons();
 
     const StatisticalMeasures& calcium_statistics = global_statistics(calcium, 0, disable_flags);
-    const StatisticalMeasures& activity_statistics = global_statistics(neuron_model->get_x(), 0, disable_flags);
     const StatisticalMeasures& axons_statistics = global_statistics(axons->get_total_counts(), 0, disable_flags);
     const StatisticalMeasures& axons_free_statistics = global_statistics(axons->get_vacant_cnts(), 0, disable_flags);
     const StatisticalMeasures& dendrites_excitatory_statistics = global_statistics(dendrites_exc->get_total_counts(), 0, disable_flags);
@@ -1187,8 +1188,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
             "{7:{0}}{8:{0}}{9:{0}}{10:{0}}{11:{0}}"
             "{12:{0}}{13:{0}}{14:{0}}{15:{0}}{16:{0}}"
             "{17:{0}}{18:{0}}{19:{0}}{20:{0}}{21:{0}}"
-            "{22:{0}}{23:{0}}{24:{0}}{25:{0}}{26:{0}}"
-            "{27:{0}}{28:{0}}{29:{0}}{30:{0}}{31:{0}}",
+            "{22:{0}}{23:{0}}{24:{0}}{25:{0}}{26:{0}}",
             cwidth,
             "# step",
             "C (avg)",
@@ -1196,11 +1196,6 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
             "C (max)",
             "C (var)",
             "C (std_dev)",
-            "act (avg)",
-            "act (min)",
-            "act (max)",
-            "act (var)",
-            "act (std_dev)",
             "axons (avg)",
             "axons (min)",
             "axons (max)",
@@ -1229,11 +1224,6 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
             "C (max)",
             "C (var)",
             "C (std_dev)",
-            "act (avg)",
-            "act (min)",
-            "act (max)",
-            "act (var)",
-            "act (std_dev)",
             "axons (avg)",
             "axons (min)",
             "axons (max)",
@@ -1263,8 +1253,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
         "{8:<{0}.{1}f}{9:<{0}.{1}f}{10:<{0}.{1}f}{11:<{0}.{1}f}{12:<{0}.{1}f}"
         "{13:<{0}.{1}f}{14:<{0}.{1}f}{15:<{0}.{1}f}{16:<{0}.{1}f}{17:<{0}.{1}f}"
         "{18:<{0}.{1}f}{19:<{0}.{1}f}{20:<{0}.{1}f}{21:<{0}.{1}f}{22:<{0}.{1}f}"
-        "{23:<{0}.{1}f}{24:<{0}.{1}f}{25:<{0}.{1}f}{26:<{0}.{1}f}{27:<{0}.{1}f}"
-        "{28:<{0}.{1}f}{29:<{0}.{1}f}{30:<{0}.{1}f}{31:<{0}.{1}f}{32:<{0}.{1}f}",
+        "{23:<{0}.{1}f}{24:<{0}.{1}f}{25:<{0}.{1}f}{26:<{0}.{1}f}{27:<{0}.{1}f}",
         cwidth,
         Constants::print_precision,
         step,
@@ -1273,11 +1262,6 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
         calcium_statistics.max,
         calcium_statistics.var,
         calcium_statistics.std,
-        activity_statistics.avg,
-        activity_statistics.min,
-        activity_statistics.max,
-        activity_statistics.var,
-        activity_statistics.std,
         axons_statistics.avg,
         axons_statistics.min,
         axons_statistics.max,
@@ -1305,7 +1289,6 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
         "{};{};{};{};{};"
         "{};{};{};{};{};"
         "{};{};{};{};{};"
-        "{};{};{};{};{};"
         "{};{};{};{};{}",
         step,
         calcium_statistics.avg,
@@ -1313,11 +1296,6 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
         calcium_statistics.max,
         calcium_statistics.var,
         calcium_statistics.std,
-        activity_statistics.avg,
-        activity_statistics.min,
-        activity_statistics.max,
-        activity_statistics.var,
-        activity_statistics.std,
         axons_statistics.avg,
         axons_statistics.min,
         axons_statistics.max,

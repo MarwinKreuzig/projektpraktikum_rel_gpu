@@ -143,13 +143,14 @@ void NetworkGraph::debug_check() const {
         return;
     }
 
-    const int my_rank = MPIWrapper::get_my_rank();
+    const auto my_rank = MPIWrapper::get_my_rank();
 
     // Golden map that stores all local edges
-    std::map<std::pair<size_t, size_t>, int> edges{};
+    std::map<std::pair<size_t, size_t>, EdgeWeight> edges{};
 
     for (size_t neuron_id = 0; neuron_id < my_num_neurons; neuron_id++) {
-        const auto& [local_out_edges, distant_out_edges] = get_out_edges(neuron_id);
+        const auto& local_out_edges = get_local_out_edges(neuron_id);
+        const auto& distant_out_edges = get_distant_out_edges(neuron_id);
 
         for (const auto& [target_neuron_id, edge_val] : local_out_edges) {
             RelearnException::check(edge_val != 0, "NetworkGraph::debug_check: Value is zero (out)");
@@ -158,7 +159,8 @@ void NetworkGraph::debug_check() const {
     }
 
     for (size_t neuron_id = 0; neuron_id < my_num_neurons; neuron_id++) {
-        const auto& [local_in_edges, distant_in_edges] = get_in_edges(neuron_id);
+        const auto local_in_edges = get_local_in_edges(neuron_id);
+        const auto distant_in_edges = get_distant_in_edges(neuron_id);
 
         for (const auto& [source_neuron_id, edge_val] : local_in_edges) {
             RelearnException::check(edge_val != 0, "NetworkGraph::debug_check: Value is zero (out)");
@@ -458,25 +460,3 @@ void NetworkGraph::print(std::ostream& os, const std::unique_ptr<NeuronsExtraInf
         }
     }
 }
-
-//void NetworkGraph::write_synapses_to_file(const std::string& filename, [[maybe_unused]] const Partition& partition) const {
-//    std::ofstream ofstream(filename, std::ios::binary | std::ios::out);
-//
-//    ofstream << "# <source neuron id> <target neuron id> <weight> \n";
-//
-//    for (size_t source_neuron_id = 0; source_neuron_id < my_num_neurons; source_neuron_id++) {
-//        // Walk through in-edges of my neuron
-//        const auto& [local_out_edges, distant_out_edges] = get_out_edges(source_neuron_id);
-//
-//
-//
-//        for (const auto& out_edge : out_edges) {
-//            const EdgesKey& ek = out_edge.first;
-//            const EdgesVal& ev = out_edge.second;
-//
-//            const size_t& target_neuron_id = ek.second;
-//
-//            ofstream << source_neuron_id << "\t" << target_neuron_id << "\t" << ev << "\n";
-//        }
-//    }
-//}
