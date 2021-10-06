@@ -341,7 +341,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
 
     std::stack<OctreeNode<BarnesHutCell>*> stack{};
 
-    const auto add_children_to_stack = [&stack](OctreeNode<BarnesHutCell>* node, const std::shared_ptr<OctreeImplementation<BarnesHut>>& octree) {
+    const auto add_children_to_stack = [&stack](OctreeNode<BarnesHutCell>* node) {
         std::array<OctreeNode<BarnesHutCell>*, Constants::number_oct> children{ nullptr };
 
         // Node is owned by this rank
@@ -361,7 +361,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     };
 
     // The algorithm expects that root is not considered directly, rather its children
-    add_children_to_stack(root, global_tree);
+    add_children_to_stack(root);
 
     std::vector<OctreeNode<BarnesHutCell>*> nodes_to_consider{};
     nodes_to_consider.reserve(Constants::number_oct);
@@ -390,7 +390,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
             continue;
         }
 
-        add_children_to_stack(stack_elem, global_tree);
+        add_children_to_stack(stack_elem);
     } // while
 
     return nodes_to_consider;
