@@ -8,7 +8,7 @@
  *
  */
 
-#include "BarnesHut.h"
+#include "Naive.h"
 
 #include "../io/LogFiles.h"
 #include "../neurons/NeuronsExtraInfo.h"
@@ -23,11 +23,11 @@
 #include <array>
 #include <stack>
 
-[[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(const size_t src_neuron_id, const Vec3d& axon_pos_xyz, const SignalType dendrite_type_needed) {
-    OctreeNode<BarnesHutCell>* node_selected = nullptr;
-    OctreeNode<BarnesHutCell>* root_of_subtree = global_tree->get_root();
+[[nodiscard]] std::optional<RankNeuronId> Naive::find_target_neuron(const size_t src_neuron_id, const Vec3d& axon_pos_xyz, const SignalType dendrite_type_needed) {
+    OctreeNode<NaiveCell>* node_selected = nullptr;
+    OctreeNode<NaiveCell>* root_of_subtree = global_tree->get_root();
 
-    RelearnException::check(root_of_subtree != nullptr, "BarnesHut::find_target_neuron: root_of_subtree was nullptr");
+    RelearnException::check(root_of_subtree != nullptr, "Naive::find_target_neuron: root_of_subtree was nullptr");
 
     while (true) {
         /**
@@ -65,7 +65,7 @@
         }
         node_selected = vector[counter - 1ull];
 
-        RelearnException::check(node_selected != nullptr, "BarnesHut::find_target_neuron: node_selected was nullptr");
+        RelearnException::check(node_selected != nullptr, "Naive::find_target_neuron: node_selected was nullptr");
 
         /**
 	     * Leave loop if no node was selected OR
@@ -88,7 +88,7 @@
     return rank_neuron_id;
 }
 
-MapSynapseCreationRequests BarnesHut::find_target_neurons(const size_t num_neurons, const std::vector<char>& disable_flags,
+MapSynapseCreationRequests Naive::find_target_neurons(const size_t num_neurons, const std::vector<char>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) {
     MapSynapseCreationRequests synapse_creation_requests_outgoing;
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);
@@ -105,7 +105,7 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(const size_t num_neuro
 
         // Number of vacant axons
         const auto num_vacant_axons = static_cast<unsigned int>(axons_cnts[neuron_id]) - axons_connected_cnts[neuron_id];
-        RelearnException::check(num_vacant_axons >= 0, "BarnesHut::find_target_neurons: num vacant axons is negative: {}", num_vacant_axons);
+        RelearnException::check(num_vacant_axons >= 0, "Naive::find_target_neurons: num vacant axons is negative: {}", num_vacant_axons);
 
         if (num_vacant_axons == 0) {
             continue;
@@ -148,13 +148,13 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(const size_t num_neuro
 
     // Make cache empty for next connectivity update
     Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
-    NodeCache::empty<BarnesHutCell>();
+    NodeCache::empty<NaiveCell>();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
     return synapse_creation_requests_outgoing;
 }
 
-void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
+void Naive::update_leaf_nodes(const std::vector<char>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
     const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites) {
 
     const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_total_counts();
@@ -163,7 +163,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     const std::vector<double>& dendrites_inhibitory_counts = inhibitory_dendrites->get_total_counts();
     const std::vector<unsigned int>& dendrites_inhibitory_connected_counts = inhibitory_dendrites->get_connected_count();
 
-    RelearnException::check(global_tree != nullptr, "BarnesHut::update_leaf_nodes: global_tree was nullptr");
+    RelearnException::check(global_tree != nullptr, "Naive::update_leaf_nodes: global_tree was nullptr");
 
     const auto& leaf_nodes = global_tree->get_leaf_nodes();
     const auto num_leaf_nodes = leaf_nodes.size();
@@ -179,16 +179,16 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
         && num_leaf_nodes == num_dendrites_inhibitory_counts
         && num_leaf_nodes == num_dendrites_inhibitory_connected_counts;
 
-    RelearnException::check(all_same_size, "BarnesHut::update_leaf_nodes: The vectors were of different sizes");
+    RelearnException::check(all_same_size, "Naive::update_leaf_nodes: The vectors were of different sizes");
 
     for (size_t neuron_id = 0; neuron_id < num_leaf_nodes; neuron_id++) {
         auto* node = leaf_nodes[neuron_id];
 
-        RelearnException::check(node != nullptr, "BarnesHut::update_leaf_nodes: node was nullptr: ", neuron_id);
+        RelearnException::check(node != nullptr, "Naive::update_leaf_nodes: node was nullptr: ", neuron_id);
 
         const size_t other_neuron_id = node->get_cell().get_neuron_id();
 
-        RelearnException::check(neuron_id == other_neuron_id, "BarnesHut::update_leaf_nodes: The nodes are not in order");
+        RelearnException::check(neuron_id == other_neuron_id, "Naive::update_leaf_nodes: The nodes are not in order");
 
         if (disable_flags[neuron_id] == 0) {
             continue;
@@ -201,8 +201,8 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     }
 }
 
-[[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(const size_t src_neuron_id, const Vec3d& axon_pos_xyz,
-    const OctreeNode<BarnesHutCell>& node_with_dendrite, const SignalType dendrite_type_needed) const {
+[[nodiscard]] double Naive::calc_attractiveness_to_connect(const size_t src_neuron_id, const Vec3d& axon_pos_xyz,
+    const OctreeNode<NaiveCell>& node_with_dendrite, const SignalType dendrite_type_needed) const {
 
     /**
      * If the axon's neuron itself is considered as target neuron, set attractiveness to 0 to avoid forming an autapse (connection to itself).
@@ -217,7 +217,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     const auto sigma = get_probabilty_parameter();
 
     const auto& target_xyz = node_with_dendrite.get_cell().get_dendrites_position_for(dendrite_type_needed);
-    RelearnException::check(target_xyz.has_value(), "BarnesHut::update_leaf_nodes: target_xyz is bad");
+    RelearnException::check(target_xyz.has_value(), "Naive::update_leaf_nodes: target_xyz is bad");
 
     const auto num_dendrites = node_with_dendrite.get_cell().get_number_dendrites_for(dendrite_type_needed);
 
@@ -232,8 +232,8 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     return ret_val;
 }
 
-[[nodiscard]] std::vector<double> BarnesHut::create_interval(const size_t src_neuron_id, const Vec3d& axon_pos_xyz,
-    const SignalType dendrite_type_needed, const std::vector<OctreeNode<BarnesHutCell>*>& vector) const {
+[[nodiscard]] std::vector<double> Naive::create_interval(const size_t src_neuron_id, const Vec3d& axon_pos_xyz,
+    const SignalType dendrite_type_needed, const std::vector<OctreeNode<NaiveCell>*>& vector) const {
 
     if (vector.empty()) {
         return {};
@@ -242,8 +242,8 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     double sum = 0.0;
 
     std::vector<double> probabilities;
-    std::for_each(vector.cbegin(), vector.cend(), [&](const OctreeNode<BarnesHutCell>* target_node) {
-        RelearnException::check(target_node != nullptr, "BarnesHut::update_leaf_nodes: target_node was nullptr");
+    std::for_each(vector.cbegin(), vector.cend(), [&](const OctreeNode<NaiveCell>* target_node) {
+        RelearnException::check(target_node != nullptr, "Naive::update_leaf_nodes: target_node was nullptr");
         const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *target_node, dendrite_type_needed);
         probabilities.push_back(prob);
         sum += prob;
@@ -262,51 +262,20 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     return probabilities;
 }
 
-[[nodiscard]] std::tuple<bool, bool> BarnesHut::acceptance_criterion_test(const Vec3d& axon_pos_xyz, const OctreeNode<BarnesHutCell>* const node_with_dendrite,
+[[nodiscard]] std::tuple<bool, bool> Naive::acceptance_criterion_test(const Vec3d& axon_pos_xyz, const OctreeNode<NaiveCell>* const node_with_dendrite,
     const SignalType dendrite_type_needed) const {
 
-    RelearnException::check(node_with_dendrite != nullptr, "BarnesHut::update_leaf_nodes:  node_with_dendrite was nullptr");
+    RelearnException::check(node_with_dendrite != nullptr, "Naive::update_leaf_nodes:  node_with_dendrite was nullptr");
 
     const auto& cell = node_with_dendrite->get_cell();
     const auto has_vacant_dendrites = cell.get_number_dendrites_for(dendrite_type_needed) != 0;
     const auto is_parent = node_with_dendrite->is_parent();
 
-    if (!has_vacant_dendrites) {
-        return std::make_tuple(false, false);
-    }
-
-    /**
-	 * Node is leaf node, i.e., not super neuron.
-	 * Thus the node is precise. Accept it no matter what.
-	 */
-    if (!is_parent) {
-        return std::make_tuple(true, true);
-    }
-
-    // Check distance between neuron with axon and neuron with dendrite
-    const auto& target_xyz = cell.get_dendrites_position_for(dendrite_type_needed);
-
-    // NOTE: This assertion fails when considering inner nodes that don't have dendrites.
-    RelearnException::check(target_xyz.has_value(), "BarnesHut::update_leaf_nodes: target_xyz was bad");
-
-    // Calc Euclidean distance between source and target neuron
-    const auto distance_vector = target_xyz.value() - axon_pos_xyz;
-
-    //const auto distance = distance_vector.calculate_p_norm(2.0);
-    const auto distance = distance_vector.calculate_2_norm();
-
-    if (distance == 0.0) {
-        return std::make_tuple(false, false);
-    }
-
-    const auto length = cell.get_maximal_dimension_difference();
-
-    // Original Barnes-Hut acceptance criterion
-    const auto ret_val = (length / distance) < acceptance_criterion;
-    return std::make_tuple(ret_val, has_vacant_dendrites);
+    // Accept leaf only
+    return std::make_tuple(!is_parent, has_vacant_dendrites);
 }
 
-[[nodiscard]] std::vector<OctreeNode<BarnesHutCell>*> BarnesHut::get_nodes_for_interval(const Vec3d& axon_pos_xyz, OctreeNode<BarnesHutCell>* root,
+[[nodiscard]] std::vector<OctreeNode<NaiveCell>*> Naive::get_nodes_for_interval(const Vec3d& axon_pos_xyz, OctreeNode<NaiveCell>* root,
     const SignalType dendrite_type_needed) {
     if (root == nullptr) {
         return {};
@@ -334,10 +303,10 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
         return {};
     }
 
-    std::stack<OctreeNode<BarnesHutCell>*> stack{};
+    std::stack<OctreeNode<NaiveCell>*> stack{};
 
-    const auto add_children_to_stack = [&stack](OctreeNode<BarnesHutCell>* node) {
-        std::array<OctreeNode<BarnesHutCell>*, Constants::number_oct> children{ nullptr };
+    const auto add_children_to_stack = [&stack](OctreeNode<NaiveCell>* node) {
+        std::array<OctreeNode<NaiveCell>*, Constants::number_oct> children{ nullptr };
 
         // Node is owned by this rank
         if (node->is_local()) {
@@ -345,7 +314,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
             children = node->get_children();
         } else {
             // Node owned by different rank, so we have do download the data to local nodes
-            children = NodeCache::download_children<BarnesHutCell>(node);
+            children = NodeCache::download_children<NaiveCell>(node);
         }
 
         for (auto it = children.crbegin(); it != children.crend(); ++it) {
@@ -358,7 +327,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     // The algorithm expects that root is not considered directly, rather its children
     add_children_to_stack(root);
 
-    std::vector<OctreeNode<BarnesHutCell>*> nodes_to_consider{};
+    std::vector<OctreeNode<NaiveCell>*> nodes_to_consider{};
     nodes_to_consider.reserve(Constants::number_oct);
 
     while (!stack.empty()) {

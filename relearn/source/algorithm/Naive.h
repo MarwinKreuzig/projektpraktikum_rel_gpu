@@ -17,7 +17,7 @@
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
 #include "Algorithm.h"
-#include "BarnesHutCell.h"
+#include "NaiveCell.h"
 
 #include <memory>
 #include <optional>
@@ -33,36 +33,18 @@ class SynapticElements;
  * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
  * It is strongly tied to Octree, which might perform MPI communication via NodeCache::download_children()
  */
-class BarnesHut : public Algorithm {
+class Naive : public Algorithm {
 public:
-    using AdditionalCellAttributes = BarnesHutCell;
+    using AdditionalCellAttributes = NaiveCell;
 
     /**
      * @brief Constructs a new instance with the given octree
      * @param octree The octree on which the algorithm is to be performed, not null
      * @exception Throws a RelearnException if octree is nullptr
      */
-    explicit BarnesHut(const std::shared_ptr<OctreeImplementation<BarnesHut>>& octree)
+    explicit Naive(const std::shared_ptr<OctreeImplementation<Naive>>& octree)
         : global_tree(octree) {
         RelearnException::check(octree != nullptr, "BarnesHut::BarnesHut: octree was null");
-    }
-
-    /**
-     * @brief Sets acceptance criterion for cells in the tree
-     * @param acceptance_criterion The acceptance criterion, >= 0.0
-     * @exception Throws a RelearnException if acceptance_criterion < 0.0
-     */
-    void set_acceptance_criterion(const double acceptance_criterion) {
-        RelearnException::check(acceptance_criterion > 0.0, "BarnesHut::set_acceptance_criterion: acceptance_criterion was less than or equal to 0 ({})", acceptance_criterion);
-        this->acceptance_criterion = acceptance_criterion;
-    }
-
-    /**
-     * @brief Returns the currently used acceptance criterion
-     * @return The currently used acceptance criterion
-     */
-    [[nodiscard]] double get_acceptance_criterion() const noexcept {
-        return acceptance_criterion;
     }
 
     /**
@@ -93,23 +75,12 @@ public:
      * @param node The node to update, must not be nullptr
      * @exception Throws a RelearnException if node is nullptr
      */
-    static void update_functor(OctreeNode<BarnesHutCell>* node) {
-        RelearnException::check(node != nullptr, "BarnesHut::update_functor: node is nullptr");
+    static void update_functor(OctreeNode<NaiveCell>* node) {
+        RelearnException::check(node != nullptr, "Naive::update_functor: node is nullptr");
 
-        // NOLINTNEXTLINE
-        if (!node->is_parent()) {
-            return;
-        }
-
-        // I'm inner node, i.e., I have a super neuron
-        Vec3d my_position_dendrites_excitatory = { 0., 0., 0. };
-        Vec3d my_position_dendrites_inhibitory = { 0., 0., 0. };
-
-        // Sum of number of dendrites of all my children
         auto my_number_dendrites_excitatory = 0;
         auto my_number_dendrites_inhibitory = 0;
 
-        // For all my children
         for (const auto& child : node->get_children()) {
             if (child == nullptr) {
                 continue;
@@ -121,47 +92,11 @@ public:
 
             my_number_dendrites_excitatory += child_number_dendrites_excitatory;
             my_number_dendrites_inhibitory += child_number_dendrites_inhibitory;
-
-            // Average the position by using the number of dendrites as weights
-            std::optional<Vec3d> child_position_dendrites_excitatory = child->get_cell().get_excitatory_dendrites_position();
-            std::optional<Vec3d> child_position_dendrites_inhibitory = child->get_cell().get_inhibitory_dendrites_position();
-
-            /**
-			 * We can use position if it's valid or if corresponding num of dendrites is 0 
-			 */
-            RelearnException::check(child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "BarnesHut::update_functor: The child had excitatory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
-            RelearnException::check(child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "BarnesHut::update_functor: The child had inhibitory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
-
-            if (child_position_dendrites_excitatory.has_value()) {
-                const auto scaled_position = child_position_dendrites_excitatory.value() * static_cast<double>(child_number_dendrites_excitatory);
-                my_position_dendrites_excitatory += scaled_position;
-            }
-
-            if (child_position_dendrites_inhibitory.has_value()) {
-                const auto scaled_position = child_position_dendrites_inhibitory.value() * static_cast<double>(child_number_dendrites_inhibitory);
-                my_position_dendrites_inhibitory += scaled_position;
-            }
         }
 
         node->set_cell_number_dendrites(my_number_dendrites_excitatory, my_number_dendrites_inhibitory);
 
-        /**
-		 * For calculating the new weighted position, make sure that we don't
-		 * divide by 0. This happens if the my number of dendrites is 0.
-		 */
-        if (0 == my_number_dendrites_excitatory) {
-            node->set_cell_excitatory_dendrites_position({});
-        } else {
-            const auto scaled_position = my_position_dendrites_excitatory / my_number_dendrites_excitatory;
-            node->set_cell_excitatory_dendrites_position(std::optional<Vec3d>{ scaled_position });
-        }
-
-        if (0 == my_number_dendrites_inhibitory) {
-            node->set_cell_inhibitory_dendrites_position({});
-        } else {
-            const auto scaled_position = my_position_dendrites_inhibitory / my_number_dendrites_inhibitory;
-            node->set_cell_inhibitory_dendrites_position(std::optional<Vec3d>{ scaled_position });
-        }
+        return;
     }
 
 private:
@@ -180,31 +115,24 @@ private:
     calc_attractiveness_to_connect(
         size_t src_neuron_id,
         const Vec3d& axon_pos_xyz,
-        const OctreeNode<BarnesHutCell>& node_with_dendrite,
+        const OctreeNode<NaiveCell>& node_with_dendrite,
         SignalType dendrite_type_needed) const;
 
     [[nodiscard]] std::vector<double> create_interval(
         size_t src_neuron_id,
         const Vec3d& axon_pos_xyz,
         SignalType dendrite_type_needed,
-        const std::vector<OctreeNode<BarnesHutCell>*>& vector) const;
+        const std::vector<OctreeNode<NaiveCell>*>& vector) const;
 
     [[nodiscard]] std::tuple<bool, bool> acceptance_criterion_test(
         const Vec3d& axon_pos_xyz,
-        const OctreeNode<BarnesHutCell>* node_with_dendrite,
+        const OctreeNode<NaiveCell>* node_with_dendrite,
         SignalType dendrite_type_needed) const;
 
-    [[nodiscard]] std::vector<OctreeNode<BarnesHutCell>*> get_nodes_for_interval(
+    [[nodiscard]] std::vector<OctreeNode<NaiveCell>*> get_nodes_for_interval(
         const Vec3d& axon_pos_xyz,
-        OctreeNode<BarnesHutCell>* root,
+        OctreeNode<NaiveCell>* root,
         SignalType dendrite_type_needed);
 
-    double acceptance_criterion{ default_theta }; // Acceptance criterion
-
-    std::shared_ptr<OctreeImplementation<BarnesHut>> global_tree{};
-
-public:
-    constexpr static double default_theta{ 0.3 };
-
-    constexpr static double max_theta{ 0.5 };
+    std::shared_ptr<OctreeImplementation<Naive>> global_tree{};
 };

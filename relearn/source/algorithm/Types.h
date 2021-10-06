@@ -15,8 +15,9 @@
 #include <optional>
 
 enum class AlgorithmEnum {
+    Naive,
     BarnesHut,
-    FastMultipoleMethods
+    FastMultipoleMethods,
 };
 
 /**
