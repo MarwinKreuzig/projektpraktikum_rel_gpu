@@ -147,6 +147,18 @@ void Timers::print() {
                 << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::FIND_TARGET_NEURONS) + 1] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::FIND_TARGET_NEURONS) + 2] << "\n";
 
+        sstring << "          Find target neurons actually         : " << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::FIND_TARGET_NEURONS_ACTUALLY)] << " | "
+                << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::FIND_TARGET_NEURONS_ACTUALLY) + 1] << " | "
+                << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::FIND_TARGET_NEURONS_ACTUALLY) + 2] << "\n";
+
+        sstring << "              Get nodes for interval           : " << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::GET_NODES_FOR_INTERVAL)] << " | "
+                << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::GET_NODES_FOR_INTERVAL) + 1] << " | "
+                << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::GET_NODES_FOR_INTERVAL) + 2] << "\n";
+
+        sstring << "              Create interval                  : " << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::CREATE_INTERVAL)] << " | "
+                << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::CREATE_INTERVAL) + 1] << " | "
+                << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::CREATE_INTERVAL) + 2] << "\n";
+
         sstring << "      Empty remote nodes cache                 : " << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::EMPTY_REMOTE_NODES_CACHE)] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::EMPTY_REMOTE_NODES_CACHE) + 1] << " | "
                 << std::setw(Constants::print_width) << timers_global[3 * static_cast<size_t>(TimerRegion::EMPTY_REMOTE_NODES_CACHE) + 2] << "\n";

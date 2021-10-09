@@ -34,7 +34,10 @@
 	     * Create vector with nodes that have at least one dendrite and are
 	     * precise enough given the position of an axon
 	     */
+
+        Timers::start(TimerRegion::GET_NODES_FOR_INTERVAL);
         const auto& vector = get_nodes_for_interval(axon_pos_xyz, root_of_subtree, dendrite_type_needed);
+        Timers::stop_and_add(TimerRegion::GET_NODES_FOR_INTERVAL);
 
         /**
 		 * Assign a probability to each node in the vector.
@@ -42,7 +45,9 @@
 		 * Nodes with 0 probability are removed.
 		 * The probabilities of all vector elements sum up to 1.
 		 */
+        Timers::start(TimerRegion::CREATE_INTERVAL);
         const auto& prob = create_interval(src_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
+        Timers::stop_and_add(TimerRegion::CREATE_INTERVAL);
 
         if (prob.empty()) {
             return {};
@@ -131,7 +136,10 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(const size_t num_neuro
 			* as other axons might already have connected to them.
 			* Right now, those collisions are handled in a first-come-first-served fashion.
 			*/
+
+            Timers::start(TimerRegion::FIND_TARGET_NEURONS_ACTUALLY);
             std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
+            Timers::stop_and_add(TimerRegion::FIND_TARGET_NEURONS_ACTUALLY);
 
             if (rank_neuron_id.has_value()) {
                 RankNeuronId val = rank_neuron_id.value();
