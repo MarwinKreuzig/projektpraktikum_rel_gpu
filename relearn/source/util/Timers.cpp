@@ -132,15 +132,6 @@ void Timers::print() {
     sstring << "      Find target neurons (w/ RMA)             : ";
     print_timer(sstring, TimerRegion::FIND_TARGET_NEURONS, timers_global);
 
-    sstring << "        Find target neurons actually           : ";
-    print_timer(sstring, TimerRegion::FIND_TARGET_NEURONS_ACTUALLY, timers_global);
-
-    sstring << "          BH: Get nodes for interval           : ";
-    print_timer(sstring, TimerRegion::BARNES_HUT_GET_NODES_FOR_INTERVAL, timers_global);
-
-    sstring << "          BH: Create interval                  : ";
-    print_timer(sstring, TimerRegion::BARNES_HUT_CREATE_INTERVAL, timers_global);
-
     sstring << "      Empty remote nodes cache                 : ";
     print_timer(sstring, TimerRegion::EMPTY_REMOTE_NODES_CACHE, timers_global);
 

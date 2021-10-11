@@ -35,9 +35,7 @@
 	     * precise enough given the position of an axon
 	     */
 
-        Timers::start(TimerRegion::BARNES_HUT_GET_NODES_FOR_INTERVAL);
         const auto& vector = get_nodes_for_interval(axon_pos_xyz, root_of_subtree, dendrite_type_needed);
-        Timers::stop_and_add(TimerRegion::BARNES_HUT_GET_NODES_FOR_INTERVAL);
 
         /**
 		 * Assign a probability to each node in the vector.
@@ -45,9 +43,7 @@
 		 * Nodes with 0 probability are removed.
 		 * The probabilities of all vector elements sum up to 1.
 		 */
-        Timers::start(TimerRegion::BARNES_HUT_CREATE_INTERVAL);
         const auto& [total_prob, probability_values] = create_interval(src_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
-        Timers::stop_and_add(TimerRegion::BARNES_HUT_CREATE_INTERVAL);
 
         if (probability_values.empty()) {
             return {};
@@ -94,9 +90,9 @@
 }
 
 MapSynapseCreationRequests BarnesHut::find_target_neurons(
-    const size_t num_neurons, 
+    const size_t num_neurons,
     const std::vector<char>& disable_flags,
-    const std::unique_ptr<NeuronsExtraInfo>& extra_infos, 
+    const std::unique_ptr<NeuronsExtraInfo>& extra_infos,
     const std::unique_ptr<SynapticElements>& axons) {
 
     MapSynapseCreationRequests synapse_creation_requests_outgoing{};
@@ -107,7 +103,8 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
     const std::vector<SignalType>& axons_signal_types = axons->get_signal_types();
 
     // For my neurons
-    for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+#pragma omp parallel for shared(axons_cnts, axons_connected_cnts, axons_signal_types, synapse_creation_requests_outgoing)
+    for (auto neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {
             continue;
         }
@@ -141,9 +138,7 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
 			 * Right now, those collisions are handled in a first-come-first-served fashion.
 			 */
 
-            Timers::start(TimerRegion::FIND_TARGET_NEURONS_ACTUALLY);
             std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
-            Timers::stop_and_add(TimerRegion::FIND_TARGET_NEURONS_ACTUALLY);
 
             if (rank_neuron_id.has_value()) {
                 RankNeuronId val = rank_neuron_id.value();
@@ -151,6 +146,7 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
 				 * Append request for synapse creation to rank "target_rank"
 				 * Note that "target_rank" could also be my own rank.
 				 */
+#pragma omp critical
                 synapse_creation_requests_outgoing[val.get_rank()].append(neuron_id, val.get_neuron_id(), dendrite_type_needed);
             }
         } /* all vacant axons of a neuron */
@@ -215,7 +211,6 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
 
 [[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(const size_t src_neuron_id, const Vec3d& axon_pos_xyz,
     const OctreeNode<BarnesHutCell>& node_with_dendrite, const SignalType dendrite_type_needed) const {
-
     /**
      * If the axon's neuron itself is considered as target neuron, set attractiveness to 0 to avoid forming an autapse (connection to itself).
      * This can be done as the axon's neuron cells are always resolved until the normal (vs. super) axon's neuron is reached.
@@ -227,6 +222,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     }
 
     const auto sigma = get_probabilty_parameter();
+    const auto squared_sigma = sigma * sigma;
 
     const auto& target_xyz = node_with_dendrite.get_cell().get_dendrites_position_for(dendrite_type_needed);
     RelearnException::check(target_xyz.has_value(), "BarnesHut::update_leaf_nodes: target_xyz is bad");
@@ -235,12 +231,13 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
 
     const auto position_diff = target_xyz.value() - axon_pos_xyz;
 
-    //const auto eucl_length = position_diff.calculate_p_norm(2.0);
-    //const auto numerator = pow(eucl_length, 2.0);
     const auto numerator = position_diff.calculate_squared_2_norm();
+    const auto exponent = -numerator / squared_sigma;
 
     // Criterion from Markus' paper with doi: 10.3389/fnsyn.2014.00007
-    const auto ret_val = (num_dendrites * exp(-numerator / (sigma * sigma)));
+    const auto exp_val = exp(exponent);
+    const auto ret_val = num_dendrites * exp_val;
+
     return ret_val;
 }
 
@@ -254,6 +251,8 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     double sum = 0.0;
 
     std::vector<double> probabilities{};
+    probabilities.reserve(vector.size());
+
     std::for_each(vector.cbegin(), vector.cend(), [&](const OctreeNode<BarnesHutCell>* target_node) {
         RelearnException::check(target_node != nullptr, "BarnesHut::update_leaf_nodes: target_node was nullptr");
         const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *target_node, dendrite_type_needed);
@@ -268,8 +267,6 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     if (sum == 0.0) {
         return { 0.0, {} };
     }
-
-    //std::transform(probabilities.begin(), probabilities.end(), probabilities.begin(), [sum](double prob) { return prob / sum; });
 
     return { sum, std::move(probabilities) };
 }
@@ -304,7 +301,6 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     // Calc Euclidean distance between source and target neuron
     const auto distance_vector = target_xyz.value() - axon_pos_xyz;
 
-    //const auto distance = distance_vector.calculate_p_norm(2.0);
     const auto distance = distance_vector.calculate_2_norm();
 
     if (distance == 0.0) {
@@ -315,6 +311,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
 
     // Original Barnes-Hut acceptance criterion
     const auto ret_val = (length / distance) < acceptance_criterion;
+
     return std::make_tuple(ret_val, has_vacant_dendrites);
 }
 
@@ -346,50 +343,43 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
         return {};
     }
 
-    std::stack<OctreeNode<BarnesHutCell>*> stack{};
+    std::vector<OctreeNode<BarnesHutCell>*> vector{};
+    vector.reserve(30);
 
-    const auto add_children_to_stack = [&stack](OctreeNode<BarnesHutCell>* node) {
-        std::array<OctreeNode<BarnesHutCell>*, Constants::number_oct> children{ nullptr };
-
-        // Node is owned by this rank
-        if (node->is_local()) {
-            // Node is owned by this rank, so the pointers are good
-            children = node->get_children();
-        } else {
-            // Node owned by different rank, so we have do download the data to local nodes
-            children = NodeCache::download_children<BarnesHutCell>(node);
-        }
+    const auto add_children_to_vector = [&vector](OctreeNode<BarnesHutCell>* node) {
+        const auto is_local = node->is_local();
+        const auto& children = is_local ? node->get_children() : NodeCache::download_children<BarnesHutCell>(node);
 
         for (auto it = children.crbegin(); it != children.crend(); ++it) {
             if (*it != nullptr) {
-                stack.push(*it);
+                vector.emplace_back(*it);
             }
         }
     };
 
     // The algorithm expects that root is not considered directly, rather its children
-    add_children_to_stack(root);
+    add_children_to_vector(root);
 
     std::vector<OctreeNode<BarnesHutCell>*> nodes_to_consider{};
-    nodes_to_consider.reserve(Constants::number_oct);
+    nodes_to_consider.reserve(30);
 
-    while (!stack.empty()) {
-        // Get top-of-stack node and remove it from stack
-        auto* stack_elem = stack.top();
-        stack.pop();
+    while (!vector.empty()) {
+        // Get top-of-stack node and remove it
+        auto* node = vector[vector.size() - 1];
+        vector.pop_back();
 
         /**
 		 * Should node be used for probability interval?
-		 *
 		 * Only take those that have dendrites available
 		 */
-        const auto acc_vac = acceptance_criterion_test(axon_pos_xyz, stack_elem, dendrite_type_needed);
+
+        const auto acc_vac = acceptance_criterion_test(axon_pos_xyz, node, dendrite_type_needed);
         const auto accept = std::get<0>(acc_vac);
         const auto has_vacant_dendrites = std::get<1>(acc_vac);
 
         if (accept) {
             // Insert node into vector
-            nodes_to_consider.emplace_back(stack_elem);
+            nodes_to_consider.emplace_back(node);
             continue;
         }
 
@@ -397,7 +387,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
             continue;
         }
 
-        add_children_to_stack(stack_elem);
+        add_children_to_vector(node);
     } // while
 
     return nodes_to_consider;
