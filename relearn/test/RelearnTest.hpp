@@ -80,7 +80,7 @@ protected:
     constexpr static size_t num_neurons_test = 1000;
     constexpr static double eps = 0.00001;
 
-    constexpr static bool use_predetermined_seed = true;
+    constexpr static bool use_predetermined_seed = false;
     constexpr static unsigned int predetermined_seed = 725595040;
 };
 

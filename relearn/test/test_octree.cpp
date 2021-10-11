@@ -682,7 +682,9 @@ TEST_F(OctreeTest, testOctreeNodeSetterGetter) {
             node.set_child(&(other_nodes[i]), i);
         }
 
-        ASSERT_THROW(node.set_rank(-rank), RelearnException);
+        if (rank != 0) {
+            ASSERT_THROW(node.set_rank(-rank), RelearnException) << rank;
+        }
         ASSERT_THROW(node.set_level(lvl + Constants::uninitialized), RelearnException);
 
         ASSERT_TRUE(node.is_parent());
