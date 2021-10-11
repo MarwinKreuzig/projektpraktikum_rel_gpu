@@ -128,6 +128,8 @@ void Simulation::load_neurons_from_file(const std::string& path_to_positions, co
 }
 
 void Simulation::initialize() {
+    const auto my_rank = MPIWrapper::get_my_rank();
+
     construct_neurons();
 
     partition->load_data_from_subdomain_assignment(neurons, std::move(neuron_to_subdomain_assignment));
@@ -157,7 +159,7 @@ void Simulation::initialize() {
         LogFiles::print_message_rank(0, "Neurons inserted into subdomains");
         LogFiles::print_message_rank(0, "Subdomains inserted into global tree");
 
-        network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
+        network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons(), my_rank);
 
         auto algorithm_barnes_hut = std::make_shared<BarnesHut>(octree);
         algorithm_barnes_hut->set_acceptance_criterion(accept_criterion);
@@ -179,7 +181,7 @@ void Simulation::initialize() {
         LogFiles::print_message_rank(0, "Neurons inserted into subdomains");
         LogFiles::print_message_rank(0, "Subdomains inserted into global tree");
 
-        network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons());
+        network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons(), my_rank);
 
         auto algorithm_barnes_hut = std::make_shared<FastMultipoleMethods>(octree);
         algorithm = std::move(algorithm_barnes_hut);

@@ -11,7 +11,6 @@
 #pragma once
 
 #include "../Config.h"
-#include "../mpi/MPIWrapper.h"
 #include "../util/Vec3.h"
 #include "../util/RelearnException.h"
 #include "helper/RankNeuronId.h"
@@ -64,14 +63,19 @@ public:
     /**
      * @brief Constructs an object that has enough space to store the given number of neurons
      * @param num_neurons The number of neurons that the object shall handle
+     * @param mpi_rank The mpi rank that handles this portion of the graph, must be >= 0
      * @exception Throws an exception if the allocation of memory fails
+     *      Throws a RelearnException if mpi_rank < 0
      */
-    explicit NetworkGraph(const size_t num_neurons)
+    NetworkGraph(const size_t num_neurons, const int mpi_rank)
         : neuron_distant_in_neighborhood(num_neurons)
         , neuron_distant_out_neighborhood(num_neurons)
         , neuron_local_in_neighborhood(num_neurons)
         , neuron_local_out_neighborhood(num_neurons)
-        , my_num_neurons(num_neurons) {
+        , my_num_neurons(num_neurons)
+        , mpi_rank(mpi_rank) {
+
+        RelearnException::check(mpi_rank >= 0, "NetworkGraph::NetworkGraph: mpi_rank was negative: {}", mpi_rank);
     }
 
     /**
@@ -158,7 +162,7 @@ public:
      * @return A copy of all in-edges from a certain neuron signal type
      */
     [[nodiscard]] DistantEdges get_all_in_edges(const size_t local_neuron_id, const SignalType signal_type) const {
-        const auto my_rank = MPIWrapper::get_my_rank();
+        const auto my_rank = mpi_rank;
 
         const DistantEdges& all_distant_edges = get_distant_in_edges(local_neuron_id);
         const LocalEdges& all_local_edges = get_local_in_edges(local_neuron_id);
@@ -199,7 +203,7 @@ public:
      * @return A copy of all out-edges to a certain neuron signal type
      */
     [[nodiscard]] DistantEdges get_all_out_edges(const size_t local_neuron_id, const SignalType signal_type) const {
-        const auto my_rank = MPIWrapper::get_my_rank();
+        const auto my_rank = mpi_rank;
 
         const DistantEdges& all_distant_edges = get_distant_out_edges(local_neuron_id);
         const LocalEdges& all_local_edges = get_local_out_edges(local_neuron_id);
@@ -240,7 +244,7 @@ public:
      * @return A copy of all in-edges
      */
     [[nodiscard]] DistantEdges get_all_in_edges(const size_t local_neuron_id) const {
-        const auto my_rank = MPIWrapper::get_my_rank();
+        const auto my_rank = mpi_rank;
 
         const DistantEdges& all_distant_edges = get_distant_in_edges(local_neuron_id);
         const LocalEdges& all_local_edges = get_local_in_edges(local_neuron_id);
@@ -269,7 +273,7 @@ public:
      * @return A copy of all out-edges
      */
     [[nodiscard]] DistantEdges get_all_out_edges(const size_t local_neuron_id) const {
-        const auto my_rank = MPIWrapper::get_my_rank();
+        const auto my_rank = mpi_rank;
 
         const DistantEdges& all_distant_edges = get_distant_out_edges(local_neuron_id);
         const LocalEdges& all_local_edges = get_local_out_edges(local_neuron_id);
@@ -387,15 +391,15 @@ public:
         const auto source_rank = source_id.get_rank();
         const auto source_neuron_id = source_id.get_neuron_id();
 
-        const auto my_rank = MPIWrapper::get_my_rank();
+        const auto my_rank = mpi_rank;
 
         if (target_rank != my_rank && source_rank != my_rank) {
             RelearnException::fail("NetworkGraph::add_edge_weight: In NetworkGraph::add_edge_weight, neither the target nor the source rank were for me.");
         }
 
         if (target_rank == my_rank) {
-            RelearnException::check(source_neuron_id < my_num_neurons,
-                "NetworkGraph::add_edge_weight: Want to add an in-edge with a too large source id: {} {}", target_neuron_id, my_num_neurons);
+            RelearnException::check(target_neuron_id < my_num_neurons,
+                "NetworkGraph::add_edge_weight: Want to add an in-edge with a too large target id: {} {}", target_neuron_id, my_num_neurons);
         }
 
         if (source_rank == my_rank) {
@@ -509,7 +513,7 @@ public:
     void debug_check() const;
 
 private:
-    template<typename Edges, typename NeuronId>
+    template <typename Edges, typename NeuronId>
     // NOLINTNEXTLINE
     static void add_edge(Edges& edges, const NeuronId other_neuron_id, const EdgeWeight weight) {
         size_t idx = 0;
@@ -541,9 +545,9 @@ private:
     static void load_neuron_positions(const std::string& path_neurons, std::set<size_t>& foreing_ids, std::map<size_t, Vec3d>& id_to_pos);
 
     // NOLINTNEXTLINE
-    static void load_synapses(const std::string& path_synapses, 
-        const Partition& partition, 
-        std::set<size_t>& foreing_ids, 
+    static void load_synapses(const std::string& path_synapses,
+        const Partition& partition,
+        std::set<size_t>& foreing_ids,
         std::vector<std::tuple<size_t, size_t, int>>& local_synapses,
         std::vector<std::tuple<size_t, size_t, int>>& out_synapses,
         std::vector<std::tuple<size_t, size_t, int>>& in_synapses);
@@ -555,4 +559,5 @@ private:
     NeuronLocalOutNeighborhood neuron_local_out_neighborhood{};
 
     size_t my_num_neurons{ Constants::uninitialized }; // My number of neurons
+    int mpi_rank{ -1 };
 };

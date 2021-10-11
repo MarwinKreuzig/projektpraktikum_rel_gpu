@@ -1,5 +1,6 @@
 #include "../googletest/include/gtest/gtest.h"
 
+#include <map>
 #include <numeric>
 #include <random>
 #include <tuple>
@@ -17,7 +18,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphConstructor) {
     for (auto i = 0; i < iterations; i++) {
         const auto num_neurons = uid_num_neurons(mt);
 
-        NetworkGraph ng(num_neurons);
+        NetworkGraph ng(num_neurons, 0);
 
         for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
             const auto exc_in_edges_count = ng.get_number_excitatory_in_edges(neuron_id);
@@ -63,7 +64,9 @@ TEST_F(NetworkGraphTest, testNetworkGraphConstructorExceptions) {
     for (auto i = 0; i < iterations; i++) {
         size_t num_neurons = uid_num_neurons(mt);
 
-        NetworkGraph ng(num_neurons);
+        NetworkGraph ng(num_neurons, 0);
+
+        ASSERT_THROW(NetworkGraph ng_exception(num_neurons, -num_neurons - 1);, RelearnException);
 
         for (size_t neuron_id = num_neurons; neuron_id < num_neurons + num_neurons; neuron_id++) {
             ASSERT_THROW(const auto exc_in_edges_count = ng.get_number_excitatory_in_edges(neuron_id);, RelearnException);
@@ -88,7 +91,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreateNeurons) {
 
     for (auto i = 0; i < iterations; i++) {
         const auto initial_num_neurons = uid_num_neurons(mt);
-        NetworkGraph ng(initial_num_neurons);
+        NetworkGraph ng(initial_num_neurons, 0);
 
         const auto new_neurons = uid_num_neurons(mt);
         ng.create_neurons(new_neurons);
@@ -138,7 +141,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreateNeuronsException) {
 
     for (auto i = 0; i < iterations; i++) {
         const auto initial_num_neurons = uid_num_neurons(mt);
-        NetworkGraph ng(initial_num_neurons);
+        NetworkGraph ng(initial_num_neurons, 0);
 
         const auto new_neurons = uid_num_neurons(mt);
         ng.create_neurons(new_neurons);
@@ -179,7 +182,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
 
         std::uniform_int_distribution<size_t> uid_actual_num_neurons(0, num_neurons - 1);
 
-        NetworkGraph ng(num_neurons);
+        NetworkGraph ng(num_neurons, 0);
 
         std::map<size_t, std::map<size_t, int>> incoming_edges{};
         std::map<size_t, std::map<size_t, int>> outgoing_edges{};
@@ -292,6 +295,68 @@ TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
     }
 }
 
+TEST_F(NetworkGraphTest, testNetworkGraphDistantEdges) {
+    std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
+    std::uniform_int_distribution<size_t> uid_num_synapses(0, upper_bound_num_neurons * num_synapses_per_neuron);
+    std::uniform_int_distribution<int> uid_edge_weight(-bound_synapse_weight, bound_synapse_weight);
+
+    std::uniform_int_distribution<int> uid_rank(0, 1);
+
+    for (auto i = 0; i < iterations; i++) {
+        const auto num_neurons_1 = uid_num_neurons(mt);
+        const auto num_neurons_2 = uid_num_neurons(mt);
+
+        const auto num_synapses = uid_num_synapses(mt);
+
+        NetworkGraph ng_1(num_neurons_1, 0);
+        NetworkGraph ng_2(num_neurons_2, 1);
+
+        std::uniform_int_distribution<size_t> uid_actual_neurons_1(0, num_neurons_1 - 1);
+        std::uniform_int_distribution<size_t> uid_actual_neurons_2(0, num_neurons_2 - 1);
+
+        std::map<std::tuple<RankNeuronId, RankNeuronId>, int> golden_connections{};
+
+        for (auto synapse_id = 0; synapse_id < num_synapses; synapse_id++) {
+            const auto source_rank = uid_rank(mt);
+            const auto target_rank = uid_rank(mt);
+
+            auto source_id = uid_actual_neurons_1(mt);
+            auto target_id = uid_actual_neurons_1(mt);
+
+            if (source_rank == 1) {
+                source_id = uid_actual_neurons_2(mt);
+            }
+
+            if (target_rank == 1) {
+                target_id = uid_actual_neurons_2(mt);
+            }
+
+            const auto is_rank_0_touched = source_rank == 0 || target_rank == 0;
+            const auto is_rank_1_touched = source_rank == 1 || target_rank == 1;
+
+            RankNeuronId rn_target{ target_rank, target_id };
+            RankNeuronId rn_source{ source_rank, source_id };
+
+            auto weight = uid_edge_weight(mt);
+            if (weight == 0) {
+                weight++;
+            }
+
+            if (is_rank_0_touched) {
+                ng_1.add_edge_weight(rn_target, rn_source, weight);
+            }
+
+            if (is_rank_1_touched) {
+                ng_2.add_edge_weight(rn_target, rn_source, weight);
+            }
+
+            std::tuple<RankNeuronId, RankNeuronId> key{ rn_target, rn_source };
+            golden_connections[key] += weight;
+        }
+
+    }
+}
+
 TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
     std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<size_t> uid_num_edges(0, upper_bound_num_neurons * num_synapses_per_neuron);
@@ -305,7 +370,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
 
         std::uniform_int_distribution<size_t> uid_actual_num_neurons(0, num_neurons - 1);
 
-        NetworkGraph ng(num_neurons);
+        NetworkGraph ng(num_neurons, 0);
 
         std::map<size_t, std::map<RankNeuronId, int>> in_edges;
         std::map<size_t, std::map<RankNeuronId, int>> out_edges;
@@ -401,7 +466,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesSplit) {
 
         std::uniform_int_distribution<size_t> uid_actual_num_neurons(0, num_neurons - 1);
 
-        NetworkGraph ng(num_neurons);
+        NetworkGraph ng(num_neurons, 0);
 
         for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
             int other_rank = uid_num_ranks(mt);
@@ -495,7 +560,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
 
         std::uniform_int_distribution<size_t> uid_actual_num_neurons(0, num_neurons - 1);
 
-        NetworkGraph ng(num_neurons);
+        NetworkGraph ng(num_neurons, 0);
 
         std::vector<std::tuple<size_t, int, size_t, int, int>> synapses(num_edges);
 
@@ -572,7 +637,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
 
         std::uniform_int_distribution<size_t> uid_actual_num_neurons(0, num_neurons - 1);
 
-        NetworkGraph ng(num_neurons);
+        NetworkGraph ng(num_neurons, 0);
 
         std::map<RankNeuronId, std::map<RankNeuronId, int>> in_edges;
         std::map<RankNeuronId, std::map<RankNeuronId, int>> out_edges;

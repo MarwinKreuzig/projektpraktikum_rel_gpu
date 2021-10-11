@@ -21,7 +21,7 @@ NetworkGraph generate_random_network_graph(size_t num_neurons, size_t num_synaps
     std::uniform_int_distribution<size_t> uid(0, num_neurons - 1);
     std::uniform_real_distribution<double> urd(0, 1.0);
 
-    NetworkGraph ng(num_neurons);
+    NetworkGraph ng(num_neurons, 0);
 
     for (size_t synapse_id = 0; synapse_id < num_synapses; synapse_id++) {
         const auto neuron_id_1 = uid(mt);

@@ -11,6 +11,7 @@
 #include "NetworkGraph.h"
 
 #include "../io/LogFiles.h"
+#include "../mpi/MPIWrapper.h"
 #include "../structure/Partition.h"
 #include "Neurons.h"
 #include "helper/RankNeuronId.h"
@@ -33,7 +34,7 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
     std::map<size_t, int> id_to_rank{};
     std::map<size_t, Vec3d> id_to_pos{};
 
-    const int my_rank = MPIWrapper::get_my_rank();
+    const int my_rank = mpi_rank;
 
     load_synapses(path_synapses, partition, foreing_ids, local_synapses, out_synapses, in_synapses);
     load_neuron_positions(path_neurons, foreing_ids, id_to_pos);
@@ -143,7 +144,7 @@ void NetworkGraph::debug_check() const {
         return;
     }
 
-    const auto my_rank = MPIWrapper::get_my_rank();
+    const auto my_rank = mpi_rank;
 
     // Golden map that stores all local edges
     std::map<std::pair<size_t, size_t>, EdgeWeight> edges{};
@@ -186,6 +187,7 @@ void NetworkGraph::debug_check() const {
 
 void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id) {
 
+    const int mpi_rank = MPIWrapper::get_my_rank();
     const int num_ranks = MPIWrapper::get_num_ranks();
 
     std::vector<size_t> num_foreign_ids_from_ranks_send(num_ranks, 0);
@@ -203,7 +205,7 @@ void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_
     MPIWrapper::all_to_all(num_foreign_ids_from_ranks_send, num_foreign_ids_from_ranks);
 
     for (auto rank = 0; rank < num_ranks; rank++) {
-        if (MPIWrapper::get_my_rank() == rank) {
+        if (mpi_rank == rank) {
             RelearnException::check(global_ids_to_receive[rank].empty(), "NetworkGraph::translate_global_to_local: Should receive ids from myself");
             continue;
         }
@@ -215,7 +217,7 @@ void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_
     int request_counter = 0;
 
     for (auto rank = 0; rank < num_ranks; rank++) {
-        if (MPIWrapper::get_my_rank() == rank) {
+        if (mpi_rank == rank) {
             continue;
         }
 
@@ -227,7 +229,7 @@ void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_
     }
 
     for (auto rank = 0; rank < num_ranks; rank++) {
-        if (MPIWrapper::get_my_rank() == rank) {
+        if (mpi_rank == rank) {
             continue;
         }
 
@@ -253,7 +255,7 @@ void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_
     request_counter = 0;
 
     for (auto rank = 0; rank < num_ranks; rank++) {
-        if (MPIWrapper::get_my_rank() == rank) {
+        if (mpi_rank == rank) {
             continue;
         }
 
@@ -265,7 +267,7 @@ void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_
     }
 
     for (auto rank = 0; rank < num_ranks; rank++) {
-        if (MPIWrapper::get_my_rank() == rank) {
+        if (mpi_rank == rank) {
             continue;
         }
 
@@ -433,7 +435,7 @@ void NetworkGraph::load_synapses(
 }
 
 void NetworkGraph::print(std::ostream& os, const std::unique_ptr<NeuronsExtraInfo>& informations) const {
-    const int my_rank = MPIWrapper::get_my_rank();
+    const int my_rank = mpi_rank;
 
     // For my neurons
     for (size_t target_neuron_id = 0; target_neuron_id < my_num_neurons; target_neuron_id++) {
