@@ -54,102 +54,104 @@ void Timers::print() {
         timers_global[idx] /= MPIWrapper::get_num_ranks();
     }
 
-    if (0 == MPIWrapper::get_my_rank()) {
-        // Set precision for aligned double output
-        const auto old_precision = sstring.precision();
-        sstring.precision(Constants::print_precision);
-
-        sstring << "\n======== TIMERS GLOBAL OVER ALL RANKS ========\n";
-        sstring << "                                                ("
-                << std::setw(Constants::print_width) << "    min | "
-                << std::setw(Constants::print_width) << "    avg | "
-                << std::setw(Constants::print_width) << "    max) sec.\n";
-        sstring << "TIMERS: main()\n";
-
-        sstring << "  Initialization                               : ";
-        print_timer(sstring, TimerRegion::INITIALIZATION, timers_global);
-
-        sstring << "  Simulation loop                              : ";
-        print_timer(sstring, TimerRegion::SIMULATION_LOOP, timers_global);
-
-        sstring << "    Update electrical activity                 : ";
-        print_timer(sstring, TimerRegion::UPDATE_ELECTRICAL_ACTIVITY, timers_global);
-
-        sstring << "      Prepare sending spikes                   : ";
-        print_timer(sstring, TimerRegion::PREPARE_SENDING_SPIKES, timers_global);
-
-        sstring << "      Prepare num neuron ids                   : ";
-        print_timer(sstring, TimerRegion::PREPARE_NUM_NEURON_IDS, timers_global);
-
-        sstring << "      All to all                               : ";
-        print_timer(sstring, TimerRegion::ALL_TO_ALL, timers_global);
-
-        sstring << "      Alloc mem for neuron ids                 : ";
-        print_timer(sstring, TimerRegion::ALLOC_MEM_FOR_NEURON_IDS, timers_global);
-
-        sstring << "      Exchange neuron ids                      : ";
-        print_timer(sstring, TimerRegion::EXCHANGE_NEURON_IDS, timers_global);
-
-        sstring << "      Calculate serial activity setup          : ";
-        print_timer(sstring, TimerRegion::CALC_SERIAL_ACTIVITY, timers_global);
-
-        sstring << "      Calculate synaptic background            : ";
-        print_timer(sstring, TimerRegion::CALC_SYNAPTIC_BACKGROUND, timers_global);
-
-        sstring << "      Calculate synaptic input                 : ";
-        print_timer(sstring, TimerRegion::CALC_SYNAPTIC_INPUT, timers_global);
-
-        sstring << "      Calculate activity                       : ";
-        print_timer(sstring, TimerRegion::CALC_ACTIVITY, timers_global);
-
-        sstring << "    Update #synaptic elements delta            : ";
-        print_timer(sstring, TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA, timers_global);
-
-        sstring << "    Connectivity update                        : ";
-        print_timer(sstring, TimerRegion::UPDATE_CONNECTIVITY, timers_global);
-
-        sstring << "      Update #synaptic elements + del synapses : ";
-        print_timer(sstring, TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES, timers_global);
-
-        sstring << "      Update leaf nodes                        : ";
-        print_timer(sstring, TimerRegion::UPDATE_LEAF_NODES, timers_global);
-
-        sstring << "      Update local trees                       : ";
-        print_timer(sstring, TimerRegion::UPDATE_LOCAL_TREES, timers_global);
-
-        sstring << "      Exchange branch nodes (w/ Allgather)     : ";
-        print_timer(sstring, TimerRegion::EXCHANGE_BRANCH_NODES, timers_global);
-
-        sstring << "      Insert branch nodes into global tree     : ";
-        print_timer(sstring, TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE, timers_global);
-
-        sstring << "      Update global tree                       : ";
-        print_timer(sstring, TimerRegion::UPDATE_GLOBAL_TREE, timers_global);
-
-        sstring << "      Find target neurons (w/ RMA)             : ";
-        print_timer(sstring, TimerRegion::FIND_TARGET_NEURONS, timers_global);
-
-        sstring << "          Find target neurons actually         : ";
-        print_timer(sstring, TimerRegion::FIND_TARGET_NEURONS_ACTUALLY, timers_global);
-
-        sstring << "              Get nodes for interval           : ";
-        print_timer(sstring, TimerRegion::BARNES_HUT_GET_NODES_FOR_INTERVAL, timers_global);
-
-        sstring << "              Create interval                  : ";
-        print_timer(sstring, TimerRegion::BARNES_HUT_CREATE_INTERVAL, timers_global);
-
-        sstring << "      Empty remote nodes cache                 : ";
-        print_timer(sstring, TimerRegion::EMPTY_REMOTE_NODES_CACHE, timers_global);
-
-        sstring << "      Create synapses (w/ Alltoall)            : ";
-        print_timer(sstring, TimerRegion::CREATE_SYNAPSES, timers_global);
-
-        sstring << "\n\n";
-
-        LogFiles::write_to_file(LogFiles::EventType::Timers, true, sstring.str());
-
-        const auto avg_time = timers_global[3 * static_cast<size_t>(TimerRegion::SIMULATION_LOOP) + 1];
-
-        LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Simulation time [sec]: {}", avg_time);
+    if (0 != MPIWrapper::get_my_rank()) {
+        return;
     }
+
+    // Set precision for aligned double output
+    const auto old_precision = sstring.precision();
+    sstring.precision(Constants::print_precision);
+
+    sstring << "\n======== TIMERS GLOBAL OVER ALL RANKS ========\n";
+    sstring << "                                                ("
+            << std::setw(Constants::print_width) << "    min | "
+            << std::setw(Constants::print_width) << "    avg | "
+            << std::setw(Constants::print_width) << "    max) sec.\n";
+    sstring << "TIMERS: main()\n";
+
+    sstring << "  Initialization                               : ";
+    print_timer(sstring, TimerRegion::INITIALIZATION, timers_global);
+
+    sstring << "  Simulation loop                              : ";
+    print_timer(sstring, TimerRegion::SIMULATION_LOOP, timers_global);
+
+    sstring << "    Update electrical activity                 : ";
+    print_timer(sstring, TimerRegion::UPDATE_ELECTRICAL_ACTIVITY, timers_global);
+
+    sstring << "      Prepare sending spikes                   : ";
+    print_timer(sstring, TimerRegion::PREPARE_SENDING_SPIKES, timers_global);
+
+    sstring << "      Prepare num neuron ids                   : ";
+    print_timer(sstring, TimerRegion::PREPARE_NUM_NEURON_IDS, timers_global);
+
+    sstring << "      All to all                               : ";
+    print_timer(sstring, TimerRegion::ALL_TO_ALL, timers_global);
+
+    sstring << "      Alloc mem for neuron ids                 : ";
+    print_timer(sstring, TimerRegion::ALLOC_MEM_FOR_NEURON_IDS, timers_global);
+
+    sstring << "      Exchange neuron ids                      : ";
+    print_timer(sstring, TimerRegion::EXCHANGE_NEURON_IDS, timers_global);
+
+    sstring << "      Calculate serial activity setup          : ";
+    print_timer(sstring, TimerRegion::CALC_SERIAL_ACTIVITY, timers_global);
+
+    sstring << "      Calculate synaptic background            : ";
+    print_timer(sstring, TimerRegion::CALC_SYNAPTIC_BACKGROUND, timers_global);
+
+    sstring << "      Calculate synaptic input                 : ";
+    print_timer(sstring, TimerRegion::CALC_SYNAPTIC_INPUT, timers_global);
+
+    sstring << "      Calculate activity                       : ";
+    print_timer(sstring, TimerRegion::CALC_ACTIVITY, timers_global);
+
+    sstring << "    Update #synaptic elements delta            : ";
+    print_timer(sstring, TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA, timers_global);
+
+    sstring << "    Connectivity update                        : ";
+    print_timer(sstring, TimerRegion::UPDATE_CONNECTIVITY, timers_global);
+
+    sstring << "      Update #synaptic elements + del synapses : ";
+    print_timer(sstring, TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES, timers_global);
+
+    sstring << "      Update leaf nodes                        : ";
+    print_timer(sstring, TimerRegion::UPDATE_LEAF_NODES, timers_global);
+
+    sstring << "      Update local trees                       : ";
+    print_timer(sstring, TimerRegion::UPDATE_LOCAL_TREES, timers_global);
+
+    sstring << "      Exchange branch nodes (w/ Allgather)     : ";
+    print_timer(sstring, TimerRegion::EXCHANGE_BRANCH_NODES, timers_global);
+
+    sstring << "      Insert branch nodes into global tree     : ";
+    print_timer(sstring, TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE, timers_global);
+
+    sstring << "      Update global tree                       : ";
+    print_timer(sstring, TimerRegion::UPDATE_GLOBAL_TREE, timers_global);
+
+    sstring << "      Find target neurons (w/ RMA)             : ";
+    print_timer(sstring, TimerRegion::FIND_TARGET_NEURONS, timers_global);
+
+    sstring << "        Find target neurons actually           : ";
+    print_timer(sstring, TimerRegion::FIND_TARGET_NEURONS_ACTUALLY, timers_global);
+
+    sstring << "          BH: Get nodes for interval           : ";
+    print_timer(sstring, TimerRegion::BARNES_HUT_GET_NODES_FOR_INTERVAL, timers_global);
+
+    sstring << "          BH: Create interval                  : ";
+    print_timer(sstring, TimerRegion::BARNES_HUT_CREATE_INTERVAL, timers_global);
+
+    sstring << "      Empty remote nodes cache                 : ";
+    print_timer(sstring, TimerRegion::EMPTY_REMOTE_NODES_CACHE, timers_global);
+
+    sstring << "      Create synapses (w/ Alltoall)            : ";
+    print_timer(sstring, TimerRegion::CREATE_SYNAPSES, timers_global);
+
+    sstring << "\n\n";
+
+    LogFiles::write_to_file(LogFiles::EventType::Timers, true, sstring.str());
+
+    const auto avg_time = timers_global[3 * static_cast<size_t>(TimerRegion::SIMULATION_LOOP) + 1];
+
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Simulation time [sec]: {}", avg_time);
 }

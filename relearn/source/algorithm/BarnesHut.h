@@ -183,7 +183,7 @@ private:
         const OctreeNode<BarnesHutCell>& node_with_dendrite,
         SignalType dendrite_type_needed) const;
 
-    [[nodiscard]] std::vector<double> create_interval(
+    [[nodiscard]] std::pair<double, std::vector<double>> create_interval(
         size_t src_neuron_id,
         const Vec3d& axon_pos_xyz,
         SignalType dendrite_type_needed,

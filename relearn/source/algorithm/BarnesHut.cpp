@@ -46,26 +46,26 @@
 		 * The probabilities of all vector elements sum up to 1.
 		 */
         Timers::start(TimerRegion::BARNES_HUT_CREATE_INTERVAL);
-        const auto& prob = create_interval(src_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
+        const auto& [total_prob, probability_values] = create_interval(src_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
         Timers::stop_and_add(TimerRegion::BARNES_HUT_CREATE_INTERVAL);
 
-        if (prob.empty()) {
+        if (probability_values.empty()) {
             return {};
         }
 
-        const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(1.0, Constants::eps));
+        const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(total_prob, Constants::eps));
 
         /**
          * This is done in case of rounding errors. 
          */
         auto counter = 0;
         auto sum_probabilities = 0.0;
-        while (counter < prob.size()) {
+        while (counter < probability_values.size()) {
             if (sum_probabilities >= random_number) {
                 break;
             }
 
-            sum_probabilities += prob[counter];
+            sum_probabilities += probability_values[counter];
             counter++;
         }
         node_selected = vector[counter - 1ull];
@@ -244,16 +244,16 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     return ret_val;
 }
 
-[[nodiscard]] std::vector<double> BarnesHut::create_interval(const size_t src_neuron_id, const Vec3d& axon_pos_xyz,
+[[nodiscard]] std::pair<double, std::vector<double>> BarnesHut::create_interval(const size_t src_neuron_id, const Vec3d& axon_pos_xyz,
     const SignalType dendrite_type_needed, const std::vector<OctreeNode<BarnesHutCell>*>& vector) const {
 
     if (vector.empty()) {
-        return {};
+        return { 0.0, {} };
     }
 
     double sum = 0.0;
 
-    std::vector<double> probabilities;
+    std::vector<double> probabilities{};
     std::for_each(vector.cbegin(), vector.cend(), [&](const OctreeNode<BarnesHutCell>* target_node) {
         RelearnException::check(target_node != nullptr, "BarnesHut::update_leaf_nodes: target_node was nullptr");
         const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *target_node, dendrite_type_needed);
@@ -266,12 +266,12 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
      * There is no neuron to connect to in that case.
 	 */
     if (sum == 0.0) {
-        return {};
+        return { 0.0, {} };
     }
 
-    std::transform(probabilities.begin(), probabilities.end(), probabilities.begin(), [sum](double prob) { return prob / sum; });
+    //std::transform(probabilities.begin(), probabilities.end(), probabilities.begin(), [sum](double prob) { return prob / sum; });
 
-    return probabilities;
+    return { sum, std::move(probabilities) };
 }
 
 [[nodiscard]] std::tuple<bool, bool> BarnesHut::acceptance_criterion_test(const Vec3d& axon_pos_xyz, const OctreeNode<BarnesHutCell>* const node_with_dendrite,
