@@ -12,6 +12,7 @@
 
 #include "../util/RelearnException.h"
 
+#include <array>
 #include <chrono>
 #include <sstream>
 #include <string>
@@ -163,7 +164,7 @@ public:
     }
 
 private:
-    static void Timers::print_timer(std::stringstream& sstream, TimerRegion timer_index, const std::array<double, size_t(3) * NUM_TIMERS>& timers);
+    static void print_timer(std::stringstream& sstream, TimerRegion timer_index, const std::array<double, size_t(3) * NUM_TIMERS>& timers);
 
     // NOLINTNEXTLINE
     static inline std::vector<std::chrono::high_resolution_clock::time_point> time_start{ NUM_TIMERS };
