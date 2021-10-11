@@ -1,5 +1,5 @@
 build-mpi:
-  image: relearn-ci-2
+  image: relearn-ci
   stage: build
   before_script:
     - cd relearn && mkdir build-docker && cd build-docker  
@@ -11,7 +11,7 @@ build-mpi:
 
 # run tests using the binary built before
 test-mpi:
-  image: relearn-ci-2
+  image: relearn-ci
   stage: test
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 relearn/build-docker/runTests
@@ -22,7 +22,7 @@ test-mpi:
       - relearn/build-docker
 
 build-nompi:
-  image: relearn-ci-2
+  image: relearn-ci
   stage: build
   before_script:
     - cd relearn && mkdir build-docker-nompi && cd build-docker-nompi  
@@ -34,7 +34,7 @@ build-nompi:
 
 # run tests using the binary built before
 test-nompi:
-  image: relearn-ci-2
+  image: relearn-ci
   stage: test
   script:
     - relearn/build-docker-nompi/runTests
@@ -45,19 +45,19 @@ test-nompi:
       - relearn/build-docker-nompi
 
 build-graph:
-  image: relearn-ci-2
+  image: relearn-ci
   stage: build
   before_script:
     - cd graph && mkdir build-docker && cd build-docker  
   script:
-    - cmake -DCMAKE_CUDA_COMPILER=/usr/local/cuda-11.4/bin/nvcc -DENABLE_CLANG_TIDY=0 .. && make -j 16
+    - cmake -DENABLE_CLANG_TIDY=0 .. && make -j 16
   artifacts:
     paths:
       - graph/build-docker
       
 # run tests using the binary built before
 test-graph:
-  image: relearn-ci-2
+  image: relearn-ci
   stage: test
   script:
     - graph/build-docker/test/runTests
@@ -69,7 +69,7 @@ test-graph:
       
    
 deploy-single:
-  image: relearn-ci-2
+  image: relearn-ci
   stage: deploy
   script:
     - relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16
@@ -85,7 +85,7 @@ deploy-create:
     when: never
   - if: '$TEST_DEPLOY == "TRUE"'
     when: always
-  image: relearn-ci-2
+  image: relearn-ci
   stage: deploy
   script:
     - relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --creation-interrupts relearn/input/tests/create-100-interrupt.txt
@@ -101,7 +101,7 @@ deploy-disable:
     when: never
   - if: '$TEST_DEPLOY == "TRUE"'
     when: always
-  image: relearn-ci-2
+  image: relearn-ci
   stage: deploy
   script:
     - relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --disable-interrupts relearn/input/tests/disable-100-interrupt.txt
@@ -117,7 +117,7 @@ deploy-enable:
     when: never
   - if: '$TEST_DEPLOY == "TRUE"'
     when: always
-  image: relearn-ci-2
+  image: relearn-ci
   stage: deploy
   script:
     - relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --enable-interrupts relearn/input/tests/enable-100-interrupt.txt
@@ -133,7 +133,7 @@ deploy-single-nompi:
     when: never
   - if: '$TEST_DEPLOY == "TRUE"'
     when: always
-  image: relearn-ci-2
+  image: relearn-ci
   stage: deploy
   script:
     - relearn/build-docker-nompi/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16
@@ -149,7 +149,7 @@ deploy-create-nompi:
     when: never
   - if: '$TEST_DEPLOY == "TRUE"'
     when: always
-  image: relearn-ci-2
+  image: relearn-ci
   stage: deploy
   script:
     - relearn/build-docker-nompi/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --creation-interrupts relearn/input/tests/create-100-interrupt.txt
@@ -165,7 +165,7 @@ deploy-disable-nompi:
     when: never
   - if: '$TEST_DEPLOY == "TRUE"'
     when: always
-  image: relearn-ci-2
+  image: relearn-ci
   stage: deploy
   script:
     - relearn/build-docker-nompi/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --disable-interrupts relearn/input/tests/disable-100-interrupt.txt
@@ -181,7 +181,7 @@ deploy-enable-nompi:
     when: never
   - if: '$TEST_DEPLOY == "TRUE"'
     when: always
-  image: relearn-ci-2
+  image: relearn-ci
   stage: deploy
   script:
     - relearn/build-docker-nompi/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --enable-interrupts relearn/input/tests/enable-100-interrupt.txt
@@ -198,7 +198,7 @@ deploy-mpi-1:
     when: never
   - if: '$TEST_DEPLOY == "TRUE"'
     when: always
-  image: relearn-ci-2
+  image: relearn-ci
   stage: deploy
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16
@@ -215,7 +215,7 @@ deploy-mpi-2:
     when: never
   - if: '$TEST_DEPLOY == "TRUE"'
     when: always
-  image: relearn-ci-2
+  image: relearn-ci
   stage: deploy
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 2 relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16
@@ -232,7 +232,7 @@ deploy-mpi-4:
     when: never
   - if: '$TEST_DEPLOY == "TRUE"'
     when: always
-  image: relearn-ci-2
+  image: relearn-ci
   stage: deploy
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 4 relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16
@@ -244,7 +244,7 @@ deploy-mpi-4:
       
    
 deploy-mpi-8:  
-  image: relearn-ci-2
+  image: relearn-ci
   stage: deploy
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 8 relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16
