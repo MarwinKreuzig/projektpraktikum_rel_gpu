@@ -13,6 +13,7 @@
 #include "../util/RelearnException.h"
 
 #include <chrono>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -43,8 +44,8 @@ enum class TimerRegion : int {
     EMPTY_REMOTE_NODES_CACHE = 20,
     CREATE_SYNAPSES = 21,
     UPDATE_LEAF_NODES = 22,
-    GET_NODES_FOR_INTERVAL = 23,
-    CREATE_INTERVAL = 24,
+    BARNES_HUT_GET_NODES_FOR_INTERVAL = 23,
+    BARNES_HUT_CREATE_INTERVAL = 24,
     FIND_TARGET_NEURONS_ACTUALLY = 25,
 };
 
@@ -165,6 +166,8 @@ public:
     }
 
 private:
+    static void Timers::print_timer(std::stringstream& sstream, TimerRegion timer_index, const std::array<double, size_t(3) * NUM_TIMERS>& timers);
+
     // NOLINTNEXTLINE
     static inline std::vector<std::chrono::high_resolution_clock::time_point> time_start{ NUM_TIMERS };
     // NOLINTNEXTLINE

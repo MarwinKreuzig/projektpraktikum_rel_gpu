@@ -35,9 +35,9 @@
 	     * precise enough given the position of an axon
 	     */
 
-        Timers::start(TimerRegion::GET_NODES_FOR_INTERVAL);
+        Timers::start(TimerRegion::BARNES_HUT_GET_NODES_FOR_INTERVAL);
         const auto& vector = get_nodes_for_interval(axon_pos_xyz, root_of_subtree, dendrite_type_needed);
-        Timers::stop_and_add(TimerRegion::GET_NODES_FOR_INTERVAL);
+        Timers::stop_and_add(TimerRegion::BARNES_HUT_GET_NODES_FOR_INTERVAL);
 
         /**
 		 * Assign a probability to each node in the vector.
@@ -45,9 +45,9 @@
 		 * Nodes with 0 probability are removed.
 		 * The probabilities of all vector elements sum up to 1.
 		 */
-        Timers::start(TimerRegion::CREATE_INTERVAL);
+        Timers::start(TimerRegion::BARNES_HUT_CREATE_INTERVAL);
         const auto& prob = create_interval(src_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
-        Timers::stop_and_add(TimerRegion::CREATE_INTERVAL);
+        Timers::stop_and_add(TimerRegion::BARNES_HUT_CREATE_INTERVAL);
 
         if (prob.empty()) {
             return {};
@@ -93,9 +93,13 @@
     return rank_neuron_id;
 }
 
-MapSynapseCreationRequests BarnesHut::find_target_neurons(const size_t num_neurons, const std::vector<char>& disable_flags,
-    const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) {
-    MapSynapseCreationRequests synapse_creation_requests_outgoing;
+MapSynapseCreationRequests BarnesHut::find_target_neurons(
+    const size_t num_neurons, 
+    const std::vector<char>& disable_flags,
+    const std::unique_ptr<NeuronsExtraInfo>& extra_infos, 
+    const std::unique_ptr<SynapticElements>& axons) {
+
+    MapSynapseCreationRequests synapse_creation_requests_outgoing{};
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);
 
     const std::vector<double>& axons_cnts = axons->get_total_counts();
@@ -124,18 +128,18 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(const size_t num_neuro
         }
 
         // Position of current neuron
-        const Vec3d axon_xyz_pos = extra_infos->get_position(neuron_id);
+        const auto& axon_xyz_pos = extra_infos->get_position(neuron_id);
 
         // For all vacant axons of neuron "neuron_id"
         for (size_t j = 0; j < num_vacant_axons; j++) {
             /**
-			* Find target neuron for connecting and
-			* connect if target neuron has still dendrite available.
-			*
-			* The target neuron might not have any dendrites left
-			* as other axons might already have connected to them.
-			* Right now, those collisions are handled in a first-come-first-served fashion.
-			*/
+			 * Find target neuron for connecting and
+			 * connect if target neuron has still dendrite available.
+			 *
+			 * The target neuron might not have any dendrites left
+			 * as other axons might already have connected to them.
+			 * Right now, those collisions are handled in a first-come-first-served fashion.
+			 */
 
             Timers::start(TimerRegion::FIND_TARGET_NEURONS_ACTUALLY);
             std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
@@ -144,9 +148,9 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(const size_t num_neuro
             if (rank_neuron_id.has_value()) {
                 RankNeuronId val = rank_neuron_id.value();
                 /*
-				* Append request for synapse creation to rank "target_rank"
-				* Note that "target_rank" could also be my own rank.
-				*/
+				 * Append request for synapse creation to rank "target_rank"
+				 * Note that "target_rank" could also be my own rank.
+				 */
                 synapse_creation_requests_outgoing[val.get_rank()].append(neuron_id, val.get_neuron_id(), dendrite_type_needed);
             }
         } /* all vacant axons of a neuron */

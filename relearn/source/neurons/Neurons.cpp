@@ -372,13 +372,15 @@ size_t Neurons::delete_synapses() {
     return num_synapses_deleted;
 }
 
-std::pair<Neurons::PendingDeletionsV, std::vector<size_t>> Neurons::delete_synapses_find_synapses(const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete,
+std::pair<Neurons::PendingDeletionsV, std::vector<size_t>> Neurons::delete_synapses_find_synapses(
+    const SynapticElements& synaptic_elements, 
+    const std::pair<unsigned int, std::vector<unsigned int>>& to_delete,
     const PendingDeletionsV& other_pending_deletions) {
 
     const auto& sum_to_delete = to_delete.first;
     const auto& number_deletions = to_delete.second;
 
-    PendingDeletionsV pending_deletions;
+    PendingDeletionsV pending_deletions{};
     pending_deletions.reserve(sum_to_delete);
 
     if (sum_to_delete == 0) {
@@ -387,7 +389,7 @@ std::pair<Neurons::PendingDeletionsV, std::vector<size_t>> Neurons::delete_synap
 
     const auto element_type = synaptic_elements.get_element_type();
 
-    std::vector<size_t> total_vector_affected_indices;
+    std::vector<size_t> total_vector_affected_indices{};
 
     for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {
@@ -395,9 +397,9 @@ std::pair<Neurons::PendingDeletionsV, std::vector<size_t>> Neurons::delete_synap
         }
 
         /**
-		* Create and delete synaptic elements as required.
-		* This function only deletes elements (bound and unbound), no synapses.
-		*/
+		 * Create and delete synaptic elements as required.
+		 * This function only deletes elements (bound and unbound), no synapses.
+		 */
         const auto num_synapses_to_delete = number_deletions[neuron_id];
         if (num_synapses_to_delete == 0) {
             continue;
@@ -723,14 +725,14 @@ size_t Neurons::delete_synapses_commit_deletions(const PendingDeletionsV& list) 
 
 size_t Neurons::create_synapses() {
     /**
-	* 2. Create Synapses
-	*
-	* - Update region trees (num dendrites in leaves and inner nodes) - postorder traversal (input: cnts, connected_cnts arrays)
-	* - Determine target region for every axon
-	* - Find target neuron for every axon (input: position, type; output: target neuron_id)
-	* - Update synaptic elements (no connection when target neuron's dendrites have already been taken by previous axon)
-	* - Update network
-	*/
+	 * 2. Create Synapses
+	 *
+	 * - Update region trees (num dendrites in leaves and inner nodes) - postorder traversal (input: cnts, connected_cnts arrays)
+	 * - Determine target region for every axon
+	 * - Find target neuron for every axon (input: position, type; output: target neuron_id)
+	 * - Update synaptic elements (no connection when target neuron's dendrites have already been taken by previous axon)
+	 * - Update network
+	 */
 
     create_synapses_update_octree();
     //MapSynapseCreationRequests synapse_creation_requests_outgoing = create_synapses_find_targets();
