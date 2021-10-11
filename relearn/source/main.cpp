@@ -10,6 +10,7 @@
 
 #include "Config.h"
 #include "algorithm/BarnesHut.h"
+#include "algorithm/FastMultipoleMethodsCell.h"
 #include "algorithm/Types.h"
 #include "io/InteractiveNeuronIO.h"
 #include "io/LogFiles.h"

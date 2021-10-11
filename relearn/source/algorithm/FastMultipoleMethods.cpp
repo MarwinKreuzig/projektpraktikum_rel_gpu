@@ -52,7 +52,7 @@ inline std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_
         // There are enough axons in the source box
         for (auto i = 0; i < target_list_length; i++) {
             const auto* current_target = extract_element(interaction_list, i);
-            result[i] = Functions::calc_hermite(source, current_target, default_sigma, dendrite_type_needed);
+            result[i] = calc_hermite(source, current_target, default_sigma, dendrite_type_needed);
         }
 
         return result;
@@ -69,10 +69,10 @@ inline std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_
             const auto& target_neuron_positions = current_target->get_all_dendrite_positions_for(dendrite_type_needed);
             const auto& source_neuron_positions = source->get_all_axon_positions_for(dendrite_type_needed);
 
-            result[i] = Functions::calc_direct_gauss(source_neuron_positions, target_neuron_positions, default_sigma);
+            result[i] = calc_direct_gauss(source_neuron_positions, target_neuron_positions, default_sigma);
         } else {
             // There are enough dendrites in the target box
-            result[i] = Functions::calc_taylor_expansion(source, current_target, default_sigma, dendrite_type_needed);
+            result[i] = calc_taylor_expansion(source, current_target, default_sigma, dendrite_type_needed);
         }
     }
 
@@ -126,7 +126,7 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(con
         }
         return nullptr;
     };
-    
+
     const auto sigma = get_probabilty_parameter();
 
     const auto source_number_axons = source->get_cell().get_number_axons_for(dendrite_type_needed);
@@ -138,7 +138,7 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(con
         // There are enough axons in the source box
         for (auto i = 0; i < target_list_length; i++) {
             const auto* current_target = extract_element(interaction_list, i);
-            result[i] = Functions::calc_hermite(source, current_target, sigma, dendrite_type_needed);
+            result[i] = calc_hermite(source, current_target, sigma, dendrite_type_needed);
         }
 
         return result;
@@ -155,10 +155,10 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(con
             const auto& target_neuron_positions = current_target->get_all_dendrite_positions_for(dendrite_type_needed);
             const auto& source_neuron_positions = source->get_all_axon_positions_for(dendrite_type_needed);
 
-            result[i] = Functions::calc_direct_gauss(source_neuron_positions, target_neuron_positions, sigma);
+            result[i] = calc_direct_gauss(source_neuron_positions, target_neuron_positions, sigma);
         } else {
             // There are enough dendrites in the target box
-            result[i] = Functions::calc_taylor_expansion(source, current_target, sigma, dendrite_type_needed);
+            result[i] = calc_taylor_expansion(source, current_target, sigma, dendrite_type_needed);
         }
     }
 
@@ -444,4 +444,115 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<char>& disable_fl
             node->set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
         }
     }
+}
+
+double FastMultipoleMethods::calc_taylor_expansion(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const double sigma, const SignalType needed) {
+    const auto& opt_target_center = target->get_cell().get_dendrites_position_for(needed);
+    RelearnException::check(opt_target_center.has_value(), "Target node has no position for Taylor calculation");
+
+    const auto& target_center = opt_target_center.value();
+
+    const auto& indices = Multiindex::get_indices();
+    const auto number_coefficients = Multiindex::get_number_of_indices();
+
+    std::array<double, Constants::p3> taylor_coefficients{};
+
+    for (auto index = 0; index < number_coefficients; index++) {
+        double temp = 0;
+        // NOLINTNEXTLINE
+        const auto& current_index = indices[index];
+
+        for (auto j = 0; j < Constants::number_oct; j++) {
+            const auto* source_child = source->get_child(j);
+            if (source_child == nullptr) {
+                continue;
+            }
+
+            const auto number_axons = source_child->get_cell().get_number_axons_for(needed);
+            if (number_axons == 0) {
+                continue;
+            }
+
+            const auto& child_pos = source_child->get_cell().get_axons_position_for(needed);
+            const auto& temp_vec = (child_pos.value() - target_center) / sigma;
+            temp += number_axons * h_multiindex(current_index, temp_vec);
+        }
+
+        const auto factorial_multiindex = fac_multiindex(current_index);
+        const auto coefficient = temp / factorial_multiindex;
+
+        const auto absolute_multiindex = abs_multiindex(current_index);
+
+        if (absolute_multiindex % 2 == 0) {
+            // NOLINTNEXTLINE
+            taylor_coefficients[index] = coefficient;
+        } else {
+            // NOLINTNEXTLINE
+            taylor_coefficients[index] = -coefficient;
+        }
+    }
+
+    double result = 0.0;
+
+    for (auto j = 0; j < Constants::number_oct; j++) {
+        const auto* target_child = target->get_child(j);
+        if (target_child == nullptr) {
+            continue;
+        }
+
+        const auto number_dendrites = target_child->get_cell().get_number_dendrites_for(needed);
+        if (number_dendrites == 0) {
+            continue;
+        }
+
+        const auto& child_pos = target_child->get_cell().get_dendrites_position_for(needed);
+        const auto& temp_vec = (child_pos.value() - target_center) / sigma;
+
+        double temp = 0.0;
+        for (auto b = 0; b < number_coefficients; b++) {
+            // NOLINTNEXTLINE
+            temp += taylor_coefficients[b] * pow_multiindex(temp_vec, indices[b]);
+        }
+
+        result += number_dendrites * temp;
+    }
+
+    return result;
+}
+
+double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const double sigma, const SignalType needed) {
+    const auto& opt_source_center = source->get_cell().get_axons_position_for(needed);
+    RelearnException::check(opt_source_center.has_value(), "Source node has no axon position for Hermite calculation \n");
+    const auto& source_center = opt_source_center.value();
+
+    const auto& indices = Multiindex::get_indices();
+    const auto number_coefficients = Multiindex::get_number_of_indices();
+
+    double result = 0.0;
+
+    for (auto j = 0; j < Constants::number_oct; j++) {
+        const auto* child_target = target->get_child(j);
+        if (child_target == nullptr) {
+            continue;
+        }
+
+        double temp = 0.0;
+
+        const auto number_dendrites = child_target->get_cell().get_number_dendrites_for(needed);
+        if (number_dendrites == 0) {
+            continue;
+        }
+
+        const auto& child_pos = child_target->get_cell().get_dendrites_position_for(needed);
+        const auto& temp_vec = (child_pos.value() - source_center) / sigma;
+
+        for (auto a = 0; a < number_coefficients; a++) {
+            // NOLINTNEXTLINE
+            temp += source->get_cell_hermite_coefficient_for(a, needed) * h_multiindex(indices[a], temp_vec);
+        }
+
+        result += number_dendrites * temp;
+    }
+
+    return result;
 }
