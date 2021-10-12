@@ -14,6 +14,8 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/johnson_all_pairs_shortest.hpp>
 
+#include "../util.h"
+
 namespace apsp {
 
 static bool bellman_ford(const graph_t& gr, std::vector<double>& dist) {
@@ -62,9 +64,10 @@ static bool bellman_ford(const graph_t& gr, std::vector<double>& dist) {
     return no_neg_cycle;
 }
 
-void johnson_parallel_impl(graph_t& gr, std::vector<double>& output, const bool has_negative_edges) {
+void johnson_parallel_impl(graph_t& gr, std::vector<double>& output, progress_status& status, const bool has_negative_edges) {
 
     const int V = gr.V;
+    status.total.store(V);
 
     if (has_negative_edges) {
         // Make new graph for Bellman-Ford
@@ -92,7 +95,7 @@ void johnson_parallel_impl(graph_t& gr, std::vector<double>& output, const bool 
 
     APSP_Graph G(gr.edge_array.begin(), gr.edge_array.end(), gr.weights.begin(), V);
 
-    std::atomic<unsigned int> counter(0);
+    status.started.store(true);
 
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
@@ -104,11 +107,7 @@ void johnson_parallel_impl(graph_t& gr, std::vector<double>& output, const bool 
             output[static_cast<size_t>(s) * static_cast<size_t>(V) + static_cast<size_t>(v)] = d[v];
         }
 
-        auto val = counter++;
-
-        if (val % 100 == 0) {
-            std::cout << "Johnson for " << val << " vertices complete\n";
-        }
+        status.progress.fetch_add(1);
     }
 }
 

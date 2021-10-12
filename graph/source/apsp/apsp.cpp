@@ -2,10 +2,15 @@
 
 #include <algorithm>
 #include <cassert>
+#include <future>
 #include <ranges>
+#include <thread>
 #include <vector>
 
+#include <spdlog/fmt/bundled/core.h>
+
 #include "johnson.h"
+#include "../util.h"
 
 namespace apsp {
 
@@ -161,7 +166,12 @@ std::vector<double> johnson_cuda(typename Graph::FullGraph& full_graph, const si
 
     std::vector<double> distances(num_neurons * num_neurons);
 
-    johnson_cuda_impl(graph, distances, has_negative_edges);
+    progress_status status{};
+    auto f2 = print_progress_bar_untill_finished_async(status, 100, [](auto& status) {
+        return fmt::format("Johnson CUDA {}/{} Vertices", status.progress, status.total);
+    });
+    johnson_cuda_impl(graph, distances, status, has_negative_edges);
+    status.done.store(true);
     return distances;
 }
 
@@ -181,7 +191,13 @@ std::vector<double> johnson_parallel(typename Graph::FullGraph& full_graph, cons
 
     std::vector<double> distances(num_neurons * num_neurons);
 
-    johnson_parallel_impl(graph, distances, has_negative_edges);
+    progress_status status{};
+    auto f2 = print_progress_bar_untill_finished_async(status, 100,
+        [](auto& status) {
+            return fmt::format("Johnson OpenMP {}/{} Vertices", status.progress, status.total);
+        });
+    johnson_parallel_impl(graph, distances, status, has_negative_edges);
+    status.done.store(true);
     return distances;
 }
 

@@ -40,12 +40,18 @@ __forceinline__
     return min_index;
 }
 
+static __device__ unsigned int dijkstra_kernel_progress_counter = 0U;
+
 __global__ void dijkstra_kernel(View<double> output, View<char> visited_global) {
     const auto s = blockIdx.x * blockDim.x + threadIdx.x; // NOLINT(readability-static-accessed-through-instance)
     const int V = graph_const.V;
 
     if (s >= V) {
         return;
+    }
+
+    if (s == 0) {
+        dijkstra_kernel_progress_counter = 0U;
     }
 
     const auto starts = graph_const.starts;
@@ -64,6 +70,10 @@ __global__ void dijkstra_kernel(View<double> output, View<char> visited_global) 
         const auto u = min_distance(dist, visited, V);
         const auto u_start = starts[u];
         visited[u] = 1;
+
+        if (s == 0) {
+            atomicAdd(&dijkstra_kernel_progress_counter, 1);
+        }
 
         if (u_start == -1) {
             continue;
@@ -172,7 +182,7 @@ bool gpu_enough_memory(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr) 
     return free >= required;
 }
 
-__host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<double>& output, const bool has_negative_edges) {
+__host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_t>>& gr, std::vector<double>& output, progress_status& status, const bool has_negative_edges) {
     // cudaThreadSetCacheConfig(cudaFuncCachePreferL1);
 
     // Const Graph Initialization
@@ -227,7 +237,35 @@ __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_
 
     const int blocks = (V + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
 
-    dijkstra_kernel<<<blocks, THREADS_PER_BLOCK>>>(View{ device_output }, View{ device_visited });
+    cudaStream_t stream1{};
+    cudaStream_t stream2{};
+    cudaStreamCreate(&stream1);
+    cudaStreamCreate(&stream2);
+
+    status.total.store(V - 1);
+    status.started.store(true);
+
+    dijkstra_kernel<<<blocks, THREADS_PER_BLOCK, 0, stream1>>>(View{ device_output }, View{ device_visited });
+
+    auto update_progress = [&]() {
+        unsigned int c{};
+        cudaMemcpyFromSymbolAsync(
+            reinterpret_cast<void*>(&c),
+            reinterpret_cast<void* const&>(dijkstra_kernel_progress_counter),
+            sizeof(unsigned int),
+            0,
+            cudaMemcpyDeviceToHost,
+            stream2);
+        cudaStreamSynchronize(stream2);
+        status.progress.store(c);
+    };
+
+    while (cudaStreamQuery(stream1) != cudaSuccess) {
+        update_progress();
+    }
+
+    cudaStreamSynchronize(stream1);
+    update_progress();
 
     copy(output, device_output, cudaMemcpyDeviceToHost);
 
