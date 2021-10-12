@@ -83,8 +83,30 @@ constexpr unsigned int num_digits(T val) noexcept {
         ++num_digits;
         // NOLINTNEXTLINE
         val /= 10;
-    } 
+    }
 
     return num_digits;
+}
+
+/**
+   * @brief Calculates the faculty.
+   * @param value 
+   * @tparam T Type of which a faculty should be calculated (should be unsigned int). 
+   * @return Returns the faculty of the paramter value.
+   */
+template <typename T>
+static T factorial(T value) noexcept {
+    static_assert(std::is_same<T, unsigned int>::value, "bad T");
+    if (value < 2) {
+        return 1;
+    }
+
+    T result = 1;
+    while (value > 1) {
+        result *= value;
+        value--;
+    }
+
+    return result;
 }
 } // namespace Util

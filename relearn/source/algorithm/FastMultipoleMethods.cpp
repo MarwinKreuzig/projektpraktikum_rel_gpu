@@ -207,7 +207,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
         - do random experiment
         - set interaction list
         - push source_children to stack
-        */
+         */
 
         //node is a leaf
         if (!source_node->is_parent()) {
