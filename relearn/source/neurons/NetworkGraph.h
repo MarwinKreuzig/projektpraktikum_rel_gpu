@@ -11,7 +11,6 @@
 #pragma once
 
 #include "../Config.h"
-#include "../mpi/MPIWrapper.h"
 #include "../util/Vec3.h"
 #include "../util/RelearnException.h"
 #include "helper/RankNeuronId.h"
@@ -31,23 +30,27 @@ class Partition;
 /**
   * An object of type NetworkGraph stores the synaptic connections between neurons, that are relevant for the current MPI rank.
   * The neurons are refered to by indices in the range [0, num_local_neurons).
-  * The class does not perform any communication or synchronization with other MPI ranks.
+  * The class does not perform any communication or synchronization with other MPI ranks when messing with edges;
+  * it only does so when calling NetworkGraph::translate_global_to_local, and in that, it does not 
+  * mess with edges.
+  * NetworkGraph differentiates between local edges (from the current MPI rank to the current MPI rank) and 
+  * distant edges (another MPI rank is the owner of the target or source neuron).
   */
 class NetworkGraph {
 public:
     /**
 	 * Type definitions
 	 */
-    using EdgesVal = int;
+    using EdgeWeight = int;
 
-    using DistantEdgesKey = RankNeuronId; // Pair of (rank, neuron id)
-    using DistantEdges = std::vector<std::pair<DistantEdgesKey, EdgesVal>>; // Map of neuron id to edge weight
+    using DistantEdgesKey = RankNeuronId; // Pair of (mpi rank, local neuron id)
+    using DistantEdges = std::vector<std::pair<DistantEdgesKey, EdgeWeight>>;
 
-    using NeuronInNeighborhood = std::vector<DistantEdges>;
-    using NeuronOutNeighborhood = std::vector<DistantEdges>;
+    using NeuronDistantInNeighborhood = std::vector<DistantEdges>;
+    using NeuronDistantOutNeighborhood = std::vector<DistantEdges>;
 
-    using LocalEdgesKey = size_t;
-    using LocalEdges = std::vector<std::pair<LocalEdgesKey, EdgesVal>>;
+    using LocalEdgesKey = size_t; // Only local neuron id
+    using LocalEdges = std::vector<std::pair<LocalEdgesKey, EdgeWeight>>;
 
     using NeuronLocalInNeighborhood = std::vector<LocalEdges>;
     using NeuronLocalOutNeighborhood = std::vector<LocalEdges>;
@@ -60,13 +63,19 @@ public:
     /**
      * @brief Constructs an object that has enough space to store the given number of neurons
      * @param num_neurons The number of neurons that the object shall handle
+     * @param mpi_rank The mpi rank that handles this portion of the graph, must be >= 0
+     * @exception Throws an exception if the allocation of memory fails
+     *      Throws a RelearnException if mpi_rank < 0
      */
-    explicit NetworkGraph(const size_t num_neurons)
+    NetworkGraph(const size_t num_neurons, const int mpi_rank)
         : neuron_distant_in_neighborhood(num_neurons)
         , neuron_distant_out_neighborhood(num_neurons)
         , neuron_local_in_neighborhood(num_neurons)
         , neuron_local_out_neighborhood(num_neurons)
-        , my_num_neurons(num_neurons) {
+        , my_num_neurons(num_neurons)
+        , mpi_rank(mpi_rank) {
+
+        RelearnException::check(mpi_rank >= 0, "NetworkGraph::NetworkGraph: mpi_rank was negative: {}", mpi_rank);
     }
 
     /**
@@ -88,58 +97,72 @@ public:
     }
 
     /**
-     * @brief Returns a constant reference to all in-edges to a neuron, i.e., a view on all neurons that connect to the specified one via a synapse
+     * @brief Returns a constant reference to all distant in-edges to a neuron, i.e., a view on neurons that connect to the specified one via a synapse
+     *      and belong to another MPI rank
      * @param local_neuron_id The id of the neuron
-     * @exception Throws a ReleanException if local_neuron_id is larger or equal to the number of neurons stored
-     * @return A constant view of all in-edges that is invalidated when the state of the object changes
+     * @exception Throws a RelearnException if local_neuron_id is larger or equal to the number of neurons stored
+     * @return A constant view of all distant in-edges.
      */
-    [[nodiscard]] std::pair<const LocalEdges&, const DistantEdges&> get_in_edges(const size_t local_neuron_id) const {
-        RelearnException::check(local_neuron_id < neuron_local_in_neighborhood.size(), "NetworkGraph::get_in_edges: Tried with a too large id of {}", local_neuron_id);
-        RelearnException::check(local_neuron_id < neuron_distant_in_neighborhood.size(), "NetworkGraph::get_in_edges: Tried with a too large id of {}", local_neuron_id);
-        return std::make_pair<const LocalEdges&, const DistantEdges&>(neuron_local_in_neighborhood[local_neuron_id], neuron_distant_in_neighborhood[local_neuron_id]);
-    }
-
-    /**
-     * @brief Returns a constant reference to all out-edges to a neuron, i.e., a view on all neurons that the specified one connectes to via a synapse
-     * @param local_neuron_id The id of the neuron
-     * @exception Throws a ReleanException if local_neuron_id is larger or equal to the number of neurons stored
-     * @return A constant view of all out-edges that is invalidated when the state of the object changes
-     */
-    [[nodiscard]] std::pair<const LocalEdges&, const DistantEdges&> get_out_edges(const size_t local_neuron_id) const {
-        RelearnException::check(local_neuron_id < neuron_local_out_neighborhood.size(), "NetworkGraph::get_out_edges: Tried with a too large id of {}", local_neuron_id);
-        RelearnException::check(local_neuron_id < neuron_distant_out_neighborhood.size(), "NetworkGraph::get_out_edges: Tried with a too large id of {}", local_neuron_id);
-        return std::make_pair<const LocalEdges&, const DistantEdges&>(neuron_local_out_neighborhood[local_neuron_id], neuron_distant_out_neighborhood[local_neuron_id]);
-    }
-
     [[nodiscard]] const DistantEdges& get_distant_in_edges(const size_t local_neuron_id) const {
-        RelearnException::check(local_neuron_id < neuron_distant_in_neighborhood.size(), "NetworkGraph::get_distant_in_edges: Tried with a too large id of {}", local_neuron_id);
+        RelearnException::check(local_neuron_id < neuron_distant_in_neighborhood.size(),
+            "NetworkGraph::get_distant_in_edges: Tried with a too large id of {}", local_neuron_id);
+
         return neuron_distant_in_neighborhood[local_neuron_id];
     }
 
+    /**
+     * @brief Returns a constant reference to all distant out-edges to a neuron, i.e., a view on all neurons that the specified one connectes to via a synapse
+     *      and belong to another MPI rank
+     * @param local_neuron_id The id of the neuron
+     * @exception Throws a RelearnException if local_neuron_id is larger or equal to the number of neurons stored
+     * @return A constant view of all distant out-edges.
+     */
     [[nodiscard]] const DistantEdges& get_distant_out_edges(const size_t local_neuron_id) const {
-        RelearnException::check(local_neuron_id < neuron_distant_out_neighborhood.size(), "NetworkGraph::get_distant_out_edges: Tried with a too large id of {}", local_neuron_id);
+        RelearnException::check(local_neuron_id < neuron_distant_out_neighborhood.size(),
+            "NetworkGraph::get_distant_out_edges: Tried with a too large id of {}", local_neuron_id);
+
         return neuron_distant_out_neighborhood[local_neuron_id];
     }
 
+    /**
+     * @brief Returns a constant reference to all local in-edges to a neuron, i.e., a view on neurons that connect to the specified one via a synapse
+     *      and belong to the current MPI rank
+     * @param local_neuron_id The id of the neuron
+     * @exception Throws a RelearnException if local_neuron_id is larger or equal to the number of neurons stored
+     * @return A constant view of all local in-edges.
+     */
     [[nodiscard]] const LocalEdges& get_local_in_edges(const size_t local_neuron_id) const {
-        RelearnException::check(local_neuron_id < neuron_local_in_neighborhood.size(), "NetworkGraph::get_local_in_edges: Tried with a too large id of {}", local_neuron_id);
+        RelearnException::check(local_neuron_id < neuron_local_in_neighborhood.size(),
+            "NetworkGraph::get_local_in_edges: Tried with a too large id of {}", local_neuron_id);
+
         return neuron_local_in_neighborhood[local_neuron_id];
     }
 
+    /**
+     * @brief Returns a constant reference to all local out-edges to a neuron, i.e., a view on all neurons that the specified one connectes to via a synapse
+     *      and belong to the current MPI rank
+     * @param local_neuron_id The id of the neuron
+     * @exception Throws a RelearnException if local_neuron_id is larger or equal to the number of neurons stored
+     * @return A constant view of all local out-edges.
+     */
     [[nodiscard]] const LocalEdges& get_local_out_edges(const size_t local_neuron_id) const {
-        RelearnException::check(local_neuron_id < neuron_local_out_neighborhood.size(), "NetworkGraph::get_local_out_edges: Tried with a too large id of {}", local_neuron_id);
+        RelearnException::check(local_neuron_id < neuron_local_out_neighborhood.size(),
+            "NetworkGraph::get_local_out_edges: Tried with a too large id of {}", local_neuron_id);
+
         return neuron_local_out_neighborhood[local_neuron_id];
     }
 
     /**
-     * @brief Returns a copy of all in-edges to a neuron, i.e., a copy of all neurons that connect to the specified one via a synapse, of a specified type
+     * @brief Returns a copy of all in-edges to a neuron, i.e., a copy of all neurons that connect to the specified one via a synapse, of a specified type.
+     *      All local in-edges are added with the current MPI rank.
      * @param local_neuron_id The id of the neuron
      * @param signal_type The type of neurons that should be returned
      * @exception Throws a ReleanException if local_neuron_id is larger or equal to the number of neurons stored
+     *      Throws an exception if the allocation of memory fails
      * @return A copy of all in-edges from a certain neuron signal type
      */
     [[nodiscard]] DistantEdges get_all_in_edges(const size_t local_neuron_id, const SignalType signal_type) const {
-        const auto my_rank = MPIWrapper::get_my_rank();
+        const auto my_rank = mpi_rank;
 
         const DistantEdges& all_distant_edges = get_distant_in_edges(local_neuron_id);
         const LocalEdges& all_local_edges = get_local_in_edges(local_neuron_id);
@@ -172,13 +195,15 @@ public:
 
     /**
      * @brief Returns a copy of all out-edges from a neuron, i.e., a copy of all neurons that the specified one connectes to via a synapse, of a specified type
+     *      All local in-edges are added with the current MPI rank.
      * @param local_neuron_id The id of the neuron
      * @param signal_type The type of neurons that should be returned
      * @exception Throws a ReleanException if local_neuron_id is larger or equal to the number of neurons stored
+     *      Throws an exception if the allocation of memory fails
      * @return A copy of all out-edges to a certain neuron signal type
      */
     [[nodiscard]] DistantEdges get_all_out_edges(const size_t local_neuron_id, const SignalType signal_type) const {
-        const auto my_rank = MPIWrapper::get_my_rank();
+        const auto my_rank = mpi_rank;
 
         const DistantEdges& all_distant_edges = get_distant_out_edges(local_neuron_id);
         const LocalEdges& all_local_edges = get_local_out_edges(local_neuron_id);
@@ -209,8 +234,17 @@ public:
         return filtered_edges;
     }
 
+    /**
+     * @brief Returns a copy of all in-edges to a neuron, i.e., a copy of all neurons that connect to the specified one via a synapse.
+     *      All local in-edges are added with the current MPI rank.
+     * @param local_neuron_id The id of the neuron
+     * @param signal_type The type of neurons that should be returned
+     * @exception Throws a ReleanException if local_neuron_id is larger or equal to the number of neurons stored
+     *      Throws an exception if the allocation of memory fails
+     * @return A copy of all in-edges
+     */
     [[nodiscard]] DistantEdges get_all_in_edges(const size_t local_neuron_id) const {
-        const auto my_rank = MPIWrapper::get_my_rank();
+        const auto my_rank = mpi_rank;
 
         const DistantEdges& all_distant_edges = get_distant_in_edges(local_neuron_id);
         const LocalEdges& all_local_edges = get_local_in_edges(local_neuron_id);
@@ -229,8 +263,17 @@ public:
         return filtered_edges;
     }
 
+    /**
+     * @brief Returns a copy of all out-edges from a neuron, i.e., a copy of all neurons that the specified one connectes to via a synapse
+     *      All local in-edges are added with the current MPI rank.
+     * @param local_neuron_id The id of the neuron
+     * @param signal_type The type of neurons that should be returned
+     * @exception Throws a ReleanException if local_neuron_id is larger or equal to the number of neurons stored
+     *      Throws an exception if the allocation of memory fails
+     * @return A copy of all out-edges
+     */
     [[nodiscard]] DistantEdges get_all_out_edges(const size_t local_neuron_id) const {
-        const auto my_rank = MPIWrapper::get_my_rank();
+        const auto my_rank = mpi_rank;
 
         const DistantEdges& all_distant_edges = get_distant_out_edges(local_neuron_id);
         const LocalEdges& all_local_edges = get_local_out_edges(local_neuron_id);
@@ -328,16 +371,18 @@ public:
 
     /**
      * @brief Adds the specified weight to the synapse from the neuron specified by source_id to the neuron specified by target_id.
-     * If there was no edge before, it is created. If the updated weight is 0, it is deleted. Only updates the local part of the network graph.
+     *      If there was no edge before, it is created. If the updated weight is 0, it is deleted. Only updates the local part of the network graph.
+     *      A call to this method can change the order in which the edges are stored.
 	 * @param target_id The target_id neuron's id and rank
      * @param source_id The source_id neuron's id and rank
      * @param weight The weight that should be added onto the current connections, not zero
      * @exception Throws a RelearnException if: 
-     * (a) the weight is zero, 
-     * (b) neither the target_id nor the source_id are on the current rank,
-     * (c) a local neuron id is larger than the number of neurons
+     *      (a) the weight is zero, 
+     *      (b) neither the target_id nor the source_id are on the current rank,
+     *      (c) a local neuron id is larger than the number of neurons
+     *      Throws an exception if the allocation of memory fails
 	 */
-    void add_edge_weight(const RankNeuronId& target_id, const RankNeuronId& source_id, const int weight) {
+    void add_edge_weight(const RankNeuronId& target_id, const RankNeuronId& source_id, const EdgeWeight weight) {
         RelearnException::check(weight != 0, "NetworkGraph::add_edge_weight: weight of edge to add is zero");
 
         const auto target_rank = target_id.get_rank();
@@ -346,15 +391,15 @@ public:
         const auto source_rank = source_id.get_rank();
         const auto source_neuron_id = source_id.get_neuron_id();
 
-        const auto my_rank = MPIWrapper::get_my_rank();
+        const auto my_rank = mpi_rank;
 
         if (target_rank != my_rank && source_rank != my_rank) {
             RelearnException::fail("NetworkGraph::add_edge_weight: In NetworkGraph::add_edge_weight, neither the target nor the source rank were for me.");
         }
 
         if (target_rank == my_rank) {
-            RelearnException::check(source_neuron_id < my_num_neurons,
-                "NetworkGraph::add_edge_weight: Want to add an in-edge with a too large source id: {} {}", target_neuron_id, my_num_neurons);
+            RelearnException::check(target_neuron_id < my_num_neurons,
+                "NetworkGraph::add_edge_weight: Want to add an in-edge with a too large target id: {} {}", target_neuron_id, my_num_neurons);
         }
 
         if (source_rank == my_rank) {
@@ -366,19 +411,20 @@ public:
             LocalEdges& in_edges = neuron_local_in_neighborhood[target_neuron_id];
             LocalEdges& out_edges = neuron_local_out_neighborhood[source_neuron_id];
 
-            add_local_edge(in_edges, source_neuron_id, weight);
-            add_local_edge(out_edges, target_neuron_id, weight);
+            add_edge<LocalEdges, LocalEdgesKey>(in_edges, source_neuron_id, weight);
+            add_edge<LocalEdges, LocalEdgesKey>(out_edges, target_neuron_id, weight);
         }
 
-        // Target neuron is mine
+        // Target neuron is mine but source neuron is not
         if (target_rank == my_rank && source_rank != my_rank) {
             DistantEdges& distant_in_edges = neuron_distant_in_neighborhood[target_neuron_id];
-            add_distant_edge(distant_in_edges, source_rank, source_neuron_id, weight);
+            add_edge<DistantEdges, DistantEdgesKey>(distant_in_edges, source_id, weight);
         }
 
+        // Source neuron is mine but target neuron is not
         if (source_rank == my_rank && target_rank != my_rank) {
             DistantEdges& distant_out_edges = neuron_distant_out_neighborhood[source_neuron_id];
-            add_distant_edge(distant_out_edges, target_rank, target_neuron_id, weight);
+            add_edge<DistantEdges, DistantEdgesKey>(distant_out_edges, target_id, weight);
         }
     }
 
@@ -387,7 +433,10 @@ public:
      * @param path_synapses The path to the file in which the synapses are stored (with the global neuron ids starting at 1)
      * @param path_neurons The path to the file in which the neurons are stored (with the global neuron ids starting at 1 and their positions)
      * @param partition The Partition object that is used to determine which neurons are local
-     * @exception Throws a RelearnException if (a) the parsing of the files failed, (b) the network graph was not initialized with enough storage space
+     * @exception Throws a RelearnException if 
+     *      (a) the parsing of the files failed, 
+     *      (b) the network graph was not initialized with enough storage space
+     *      Throws an exception if the allocation of memory fails
      */
     void add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, const Partition& partition);
 
@@ -395,51 +444,53 @@ public:
      * @brief Checks if the specified file contains only synapses between neurons with specified ids (only works locally).
      * @param path_synapses The path to the file in which the synapses are stored (with the global neuron ids starting at 1)
      * @param neuron_ids The neuron ids between which the synapses should be formed. Must be sorted ascendingly
+     * @exception Throws an exception if the allocation of memory fails
      * @return Returns true iff the file has the correct format and only ids in neuron_ids are present
      */
     [[nodiscard]] static bool check_edges_from_file(const std::string& path_synapses, const std::vector<size_t>& neuron_ids);
 
     /**
      * @brief Returns a histogram of the local neurons' connectivity
-     * @param edge_direction An enum that indicates if in edges or out edges should be considered
+     * @param edge_direction An enum that indicates if in-edges or out-edges should be considered
+     * @exception Throws an exception if the allocation of memory fails
      * @return A histogram of the connectivity, i.e., <return>[i] == c indicates that c local neurons have i edges in the requested direction
      */
-    std::vector<unsigned int> get_edges_histogram(EdgeDirection edge_direction) const noexcept {
+    std::vector<unsigned int> get_edges_histogram(EdgeDirection edge_direction) const {
         std::vector<unsigned int> result{};
 
-        auto latest_result = 0;
+        auto largest_number_edges = 0;
 
         const auto& local_neighborhood = (edge_direction == EdgeDirection::In) ? neuron_local_in_neighborhood : neuron_local_out_neighborhood;
         const auto& distant_neighborhood = (edge_direction == EdgeDirection::In) ? neuron_distant_in_neighborhood : neuron_distant_out_neighborhood;
 
         for (auto neuron_id = 0; neuron_id < my_num_neurons; neuron_id++) {
-            auto sum = 0;
+            auto number_of_connections = 0;
 
             for (const auto& [_, val] : local_neighborhood[neuron_id]) {
                 if (val < 0) {
-                    sum -= val;
+                    number_of_connections -= val;
                 } else {
-                    sum += val;
+                    number_of_connections += val;
                 }
             }
 
             for (const auto& [_, val] : distant_neighborhood[neuron_id]) {
                 if (val < 0) {
-                    sum -= val;
+                    number_of_connections -= val;
                 } else {
-                    sum += val;
+                    number_of_connections += val;
                 }
             }
 
-            if (result.size() <= sum) {
-                result.resize(sum * 2ull + 1);
-                latest_result = sum;
+            if (result.size() <= number_of_connections) {
+                result.resize(number_of_connections * 2ull + 1);
+                largest_number_edges = number_of_connections;
             }
 
-            result[sum]++;
+            result[number_of_connections]++;
         }
 
-        result.resize(latest_result + 1ull);
+        result.resize(largest_number_edges + 1ull);
         return result;
     }
 
@@ -448,26 +499,31 @@ public:
      * @param os The out-stream to which the network graph is printed
      * @param informations The NeuronsExtraInfo that is used to translate between local neuron id and global neuron id
      * @exception Throws a RelearnException if the translation of a neuron id fails
+     *      Might throw an exception related to the out-stream
      */
     void print(std::ostream& os, const std::unique_ptr<NeuronsExtraInfo>& informations) const;
 
     /**
-     * @brief Performs a debug check on the local portion of the network graph. All stored ranks must be greater or equal to zero, no weight must be equal to zero, and all purely local edges must have a matching counterpart.
+     * @brief Returns directly if !Config::do_debug_checks
+     *      Performs a debug check on the local portion of the network graph
+     *      All stored ranks must be greater or equal to zero, no weight must be equal to zero,
+     *      and all purely local edges must have a matching counterpart.
      * @exception Throws a RelearnException if any of the conditions is violated
      */
     void debug_check() const;
 
 private:
+    template <typename Edges, typename NeuronId>
     // NOLINTNEXTLINE
-    static void add_local_edge(LocalEdges& edges, const size_t local_neuron_id, const int weight) {
+    static void add_edge(Edges& edges, const NeuronId other_neuron_id, const EdgeWeight weight) {
         size_t idx = 0;
 
-        for (auto& [key, val] : edges) {
-            if (key == local_neuron_id) {
-                const int sum = val + weight;
-                val = sum;
+        for (auto& [neuron_id, edge_weight] : edges) {
+            if (neuron_id == other_neuron_id) {
+                const auto new_edge_weight = edge_weight + weight;
+                edge_weight = new_edge_weight;
 
-                if (sum == 0) {
+                if (new_edge_weight == 0) {
                     const auto idx_last = edges.size() - 1;
                     std::swap(edges[idx], edges[idx_last]);
                     edges.erase(edges.cend() - 1);
@@ -479,33 +535,7 @@ private:
             idx++;
         }
 
-        edges.emplace_back(local_neuron_id, weight);
-    }
-
-    // NOLINTNEXTLINE
-    static void add_distant_edge(DistantEdges& edges, const int rank, const size_t local_neuron_id, const int weight) {
-        const DistantEdgesKey rank_neuron_id_pair{ rank, local_neuron_id };
-
-        size_t idx = 0;
-
-        for (auto& [key, val] : edges) {
-            if (key == rank_neuron_id_pair) {
-                const int sum = val + weight;
-                val = sum;
-
-                if (sum == 0) {
-                    const auto idx_last = edges.size() - 1;
-                    std::swap(edges[idx], edges[idx_last]);
-                    edges.erase(edges.cend() - 1);
-                }
-
-                return;
-            }
-
-            idx++;
-        }
-
-        edges.emplace_back(rank_neuron_id_pair, weight);
+        edges.emplace_back(other_neuron_id, weight);
     }
 
     // NOLINTNEXTLINE
@@ -515,15 +545,19 @@ private:
     static void load_neuron_positions(const std::string& path_neurons, std::set<size_t>& foreing_ids, std::map<size_t, Vec3d>& id_to_pos);
 
     // NOLINTNEXTLINE
-    static void load_synapses(const std::string& path_synapses, const Partition& partition, std::set<size_t>& foreing_ids, std::vector<std::tuple<size_t, size_t, int>>& local_synapses, std::vector<std::tuple<size_t, size_t, int>>& out_synapses, std::vector<std::tuple<size_t, size_t, int>>& in_synapses);
+    static void load_synapses(const std::string& path_synapses,
+        const Partition& partition,
+        std::set<size_t>& foreing_ids,
+        std::vector<std::tuple<size_t, size_t, int>>& local_synapses,
+        std::vector<std::tuple<size_t, size_t, int>>& out_synapses,
+        std::vector<std::tuple<size_t, size_t, int>>& in_synapses);
 
-    //void write_synapses_to_file(const std::string& filename, const Partition& partition) const;
-
-    NeuronInNeighborhood neuron_distant_in_neighborhood{};
-    NeuronOutNeighborhood neuron_distant_out_neighborhood{};
+    NeuronDistantInNeighborhood neuron_distant_in_neighborhood{};
+    NeuronDistantOutNeighborhood neuron_distant_out_neighborhood{};
 
     NeuronLocalInNeighborhood neuron_local_in_neighborhood{};
     NeuronLocalOutNeighborhood neuron_local_out_neighborhood{};
 
     size_t my_num_neurons{ Constants::uninitialized }; // My number of neurons
+    int mpi_rank{ -1 };
 };

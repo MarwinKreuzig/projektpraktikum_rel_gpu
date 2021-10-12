@@ -55,7 +55,14 @@ public:
     template <typename AdditionalCellAttributes>
     [[nodiscard]] static std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> download_children(OctreeNode<AdditionalCellAttributes>* node) {
         if constexpr (std::is_same_v<AdditionalCellAttributes, BarnesHutCell>) {
-            return download_children_barnes_hut(node);
+            std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> ret_value;
+
+            {
+#pragma omp critical
+                ret_value = download_children_barnes_hut(node);
+            }
+
+            return ret_value;
         }
 
         if constexpr (std::is_same_v<AdditionalCellAttributes, FastMultipoleMethodsCell>) {

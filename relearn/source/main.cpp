@@ -10,7 +10,8 @@
 
 #include "Config.h"
 #include "algorithm/BarnesHut.h"
-#include "algorithm/FastMultipoleMethodsCell.h"
+#include "algorithm/FastMultipoleMethods.h"
+#include "algorithm/Naive.h"
 #include "algorithm/Types.h"
 #include "io/InteractiveNeuronIO.h"
 #include "io/LogFiles.h"
@@ -66,7 +67,12 @@ int main(int argc, char** argv) {
     CLI::App app{ "" };
 
     AlgorithmEnum algorithm = AlgorithmEnum::BarnesHut;
-    std::map<std::string, AlgorithmEnum> cli_parse_map{ { "barnes-hut", AlgorithmEnum::BarnesHut }, { "fast-multipole-methods", AlgorithmEnum::FastMultipoleMethods } };
+    std::map<std::string, AlgorithmEnum> cli_parse_map{
+        { "naive", AlgorithmEnum::Naive },
+        { "barnes-hut", AlgorithmEnum::BarnesHut },
+        { "fast-multipole-methods", AlgorithmEnum::FastMultipoleMethods }
+    };
+
     auto* opt_algorithm = app.add_option("-a,--algorithm", algorithm, "The algorithm that is used for finding the targets");
     opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_map, CLI::ignore_case));
 
@@ -151,10 +157,15 @@ int main(int argc, char** argv) {
 
     if (algorithm == AlgorithmEnum::BarnesHut) {
         RelearnException::check(accept_criterion <= BarnesHut::max_theta, "Acceptance criterion must be smaller or equal to {}", BarnesHut::max_theta);
-        RelearnException::check(accept_criterion >= 0.0, "Acceptance criterion must not be smaller than 0.0");
-    } else {
+        RelearnException::check(accept_criterion > 0.0, "Acceptance criterion must be larger than 0.0");
+    } else if (algorithm == AlgorithmEnum::FastMultipoleMethods) {
         const auto accept_criterion_set = opt_accept_criterion->count() > 0;
         RelearnException::check(!accept_criterion_set, "Acceptance criterion can only be set if Barnes-Hut is used");
+    } else if (algorithm == AlgorithmEnum::Naive) {
+        const auto accept_criterion_set = opt_accept_criterion->count() > 0;
+        RelearnException::check(!accept_criterion_set, "Acceptance criterion can only be set if Barnes-Hut is used");
+    } else {
+        RelearnException::fail("Wrong algorithm chosen");
     }
 
     RelearnException::check(target_calcium >= SynapticElements::min_C_target, "Target calcium is smaller than {}", SynapticElements::min_C_target);
@@ -236,7 +247,7 @@ int main(int argc, char** argv) {
 	     * Create MPI RMA memory allocator
 	      */
         MPIWrapper::init_buffer_octree<BarnesHutCell>();
-    } else {
+    } else if (algorithm == AlgorithmEnum::FastMultipoleMethods) {
         // Check if int type can contain total size of branch nodes to receive in bytes
         // Every rank sends the same number of branch nodes, which is Partition::get_my_num_subdomains()
         if (std::numeric_limits<int>::max() < (my_num_subdomains * sizeof(OctreeNode<FastMultipoleMethodsCell>))) {
@@ -248,6 +259,18 @@ int main(int argc, char** argv) {
 	      * Create MPI RMA memory allocator
 	      */
         MPIWrapper::init_buffer_octree<FastMultipoleMethodsCell>();
+    } else if (algorithm == AlgorithmEnum::Naive) {
+        // Check if int type can contain total size of branch nodes to receive in bytes
+        // Every rank sends the same number of branch nodes, which is Partition::get_my_num_subdomains()
+        if (std::numeric_limits<int>::max() < (my_num_subdomains * sizeof(OctreeNode<NaiveCell>))) {
+            RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
+            exit(EXIT_FAILURE);
+        }
+
+        /**
+	      * Create MPI RMA memory allocator
+	      */
+        MPIWrapper::init_buffer_octree<NaiveCell>();
     }
 
     auto neuron_models = std::make_unique<models::PoissonModel>(NeuronModel::default_k, NeuronModel::default_tau_C, beta, NeuronModel::default_h,

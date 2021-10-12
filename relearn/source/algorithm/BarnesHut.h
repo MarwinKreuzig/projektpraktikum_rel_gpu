@@ -19,7 +19,6 @@
 #include "Algorithm.h"
 #include "BarnesHutCell.h"
 
-#include <array>
 #include <memory>
 #include <optional>
 #include <tuple>
@@ -54,17 +53,8 @@ public:
      * @exception Throws a RelearnException if acceptance_criterion < 0.0
      */
     void set_acceptance_criterion(const double acceptance_criterion) {
-        RelearnException::check(acceptance_criterion >= 0.0, "BarnesHut::set_acceptance_criterion: acceptance_criterion was less than 0 ({})", acceptance_criterion);
+        RelearnException::check(acceptance_criterion > 0.0, "BarnesHut::set_acceptance_criterion: acceptance_criterion was less than or equal to 0 ({})", acceptance_criterion);
         this->acceptance_criterion = acceptance_criterion;
-        naive_method = acceptance_criterion == 0.0;
-    }
-
-    /**
-     * @brief Returns a boolean indicating if the naive version is used (acceptance_criterion == 0.0)
-     * @return True iff the naive version is used
-     */
-    [[nodiscard]] bool is_naive_method_used() const noexcept {
-        return naive_method;
     }
 
     /**
@@ -193,7 +183,7 @@ private:
         const OctreeNode<BarnesHutCell>& node_with_dendrite,
         SignalType dendrite_type_needed) const;
 
-    [[nodiscard]] std::vector<double> create_interval(
+    [[nodiscard]] std::pair<double, std::vector<double>> create_interval(
         size_t src_neuron_id,
         const Vec3d& axon_pos_xyz,
         SignalType dendrite_type_needed,
@@ -210,7 +200,6 @@ private:
         SignalType dendrite_type_needed);
 
     double acceptance_criterion{ default_theta }; // Acceptance criterion
-    bool naive_method{ default_theta == 0.0 }; // If true, expand every cell regardless of whether dendrites are available or not
 
     std::shared_ptr<OctreeImplementation<BarnesHut>> global_tree{};
 
