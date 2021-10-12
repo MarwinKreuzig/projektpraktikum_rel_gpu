@@ -205,8 +205,12 @@ void Simulation::simulate(const size_t number_steps, const size_t step_monitor) 
 	*/
     for (size_t step = 1; step <= number_steps; step++) {
         if (step % step_monitor == 0) {
+            const auto number_neurons = neurons->get_num_neurons();
+
             for (auto& mn : monitors) {
-                mn.record_data();
+                if (mn.get_target_id() < number_neurons) {
+                    mn.record_data();
+                }
             }
 
             NeuronMonitor::current_step++;
