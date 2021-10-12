@@ -1,48 +1,39 @@
 #!/bin/bash
 
-if test "$#" -ne 5; then
-    echo "Usage: $0 <num procs> <num nodes> <neurons per proc> <simulation steps> <num repetitions> [<file with neuron positions>]"
-    exit
+#SBATCH -J relearn
+#SBATCH -e ./stderr.relearn.%j.txt
+#SBATCH -o ./stdout.relearn.%j.txt
+#SBATCH -C avx512
+#SBATCH -n 1
+#SBATCH --mem-per-cpu=1024
+#SBATCH --time=1440
+#SBATCH --cpus-per-task=12
+#SBATCH --account=special00001
+
+if [ "$#" -ne 3 ]; then
+	echo "Must supply 3 arguments:"
+    echo "The target calcium value, the beta value, the growth rate"
+	exit 1
 fi
 
-num_procs=$1
-num_nodes=$2
-neurons_per_proc=$3
-num_sim_steps=$4
-num_repetitions=$5
-file_with_neuron_positions=$6
+module r
 
-home=/home/sr42myny/RELEARN/Klinikum-TUM
-bindir=$home/src.git
-outputdir=$home/joboutput
-prefix="relearn"
+echo "This is job $SLURM_JOB_ID"
+echo "Testing Relearn Network"
+echo $1 $2 $3
 
-num_neurons=$((neurons_per_proc * num_procs))
+mkdir ./output/
 
-name=${prefix}_procs${num_procs}_neurons${num_neurons}_steps${num_sim_steps}
-job=${name}.sbatch
-
-echo "#!/bin/bash"                                          >  $job
-echo "#SBATCH -A extension00001"                            >> $job
-echo "#SBATCH -J $name"                                     >> $job
-echo "#SBATCH -e $outputdir/${name}.%j.err"                 >> $job
-echo "#SBATCH -o $outputdir/${name}.%j.out"                 >> $job
-echo "#SBATCH -t 24:00:00"                                  >> $job
-echo "#SBATCH --mail-type=END,FAIL"                         >> $job
-echo "#SBATCH --mail-user=rinke@cs.tu-darmstadt.de"         >> $job
-echo "#SBATCH --exclusive"                                  >> $job
-echo "#SBATCH -N $num_nodes"                                >> $job
-echo "#SBATCH -n $num_procs"                                >> $job
-echo "#SBATCH --mem-per-cpu=1600"                           >> $job
-echo "#SBATCH --cpus-per-task=1"                            >> $job
-echo "#SBATCH -C \"avx&mpi\""                               >> $job
-#echo "#SBATCH -C \"avx&mpi&multi\""                         >> $job
-echo " "                                                    >> $job
-echo "module purge"                                         >> $job
-echo "module add gcc/8.3.0 openmpi/4.0.1"                   >> $job
-echo "cd $bindir"                                           >> $job
-echo "for n in \`seq $num_repetitions\`; do"                >> $job
-echo "    mpiexec -np $num_procs ./relearn 0.3 $num_neurons 5489 $num_sim_steps $file_with_neuron_positions"   >> $job
-echo "done"                                                 >> $job
-
-#sbatch $job
+./relearn \
+--log-path ./output/ \
+--steps 1000000 \
+--algorithm barnes-hut \
+--openmp 12 \
+--theta 0.3 \
+--file ./input/positions.txt \
+--graph ./input/network.txt \
+--synaptic-elements-lower-bound 0.3 \
+--synaptic-elements-upper-bound 0.7 \
+--target-ca $1 \
+--beta $2 \
+--growth-rate $3
