@@ -1,30 +1,26 @@
-FROM ubuntu:20.04
+FROM ubuntu:21.04
 
 RUN apt-get -y update
 RUN apt-get -y upgrade
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get -yq install build-essential gcc clang-tidy cmake openmpi-bin libopenmpi-dev git
+RUN apt-get install -y build-essential wget m4 flex bison cmake git
+RUN apt-get install -y gcc-10
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y clang-tidy
+RUN apt-get install -y libboost-all-dev
+RUN apt-get install -y nvidia-cuda-toolkit
+RUN apt-get install -y libglu1-mesa-dev
+RUN apt-get install -y freeglut3-dev
+RUN apt-get install -y mesa-common-dev
+RUN apt-get install -y mpich libmpich-dev
 
-RUN apt-get -y update
-#RUN DEBIAN_FRONTEND=noninteractive apt-get -yq install nvidia-cuda-toolkit
-
-RUN apt-get -y remove --purge --auto-remove cmake && apt-get -y install wget
-
-RUN mkdir /cmake && cd /cmake && wget https://github.com/Kitware/CMake/releases/download/v3.19.2/cmake-3.19.2-Linux-x86_64.sh && chmod 700 cmake-3.19.2-Linux-x86_64.sh
-RUN cd /cmake && ./cmake-3.19.2-Linux-x86_64.sh --skip-license --exclude-subdir
-
-RUN cp -r /cmake/* /usr/
-
-RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin && mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600 && wget https://developer.download.nvidia.com/compute/cuda/11.2.0/local_installers/cuda-repo-ubuntu2004-11-2-local_11.2.0-460.27.04-1_amd64.deb
-RUN dpkg -i cuda-repo-ubuntu2004-11-2-local_11.2.0-460.27.04-1_amd64.deb
-RUN DEBIAN_FRONTEND=noninteractive apt-key add /var/cuda-repo-ubuntu2004-11-2-local/7fa2af80.pub && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -qy install cuda
-
-ADD qt5* /qt/
-
-RUN apt-get update
-RUN apt-get install -y libglu1-mesa-dev freeglut3-dev mesa-common-dev
-RUN apt-get install -y /qt/qt515base.deb /qt/qt515declarative.deb /qt/qt515imageformats.deb /qt/qt5153d.deb
-
-ENV PATH "$PATH:/usr/local/cuda/bin"
+RUN ln -nsf /usr/bin/mpicxx.mpich /etc/alternatives/mpicc  
+RUN ln -nsf /usr/bin/mpicxx.mpich /etc/alternatives/mpiCC   
+RUN ln -nsf /usr/bin/mpicxx.mpich /etc/alternatives/mpic++  
+RUN ln -nsf /usr/bin/mpicxx.mpich /etc/alternatives/mpicxx  
+RUN ln -nsf /usr/bin/mpiexec.mpich /etc/alternatives/mpiexec 
+RUN ln -nsf /usr/bin/mpif77.mpich /etc/alternatives/mpif77  
+RUN ln -nsf /usr/bin/mpif90.mpich /etc/alternatives/mpif90  
+RUN ln -nsf /usr/bin/mpifort.mpich /etc/alternatives/mpifort 
+RUN ln -nsf /usr/bin/mpirun.mpich /etc/alternatives/mpirun  
 
 CMD [ "/bin/bash" ]
