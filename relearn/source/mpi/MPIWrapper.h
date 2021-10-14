@@ -50,7 +50,7 @@ namespace MPIUserDefinedOperation {
  * @param len The length of a tuple of data. Is only accessed hat *len.
  * @param dtype Unused
  */
-void min_sum_max(const int* invec, int* inoutvec, const int* len, void* dtype);
+void min_sum_max(const void* invec, void* inoutvec, const int* len, void* dtype);
 } // namespace MPIUserDefinedOperation
 
 /** 
