@@ -216,77 +216,10 @@ public:
         set_inhibitory_axons_position(opt_position);
     }
 
-    /**
-     * @brief Sets the specified hermite coefficient for the excitatory dendrites
-     * @param index The index of the hermite coefficient
-     * @param coefficient The new value for the hermite coefficient
-     */
-    void set_excitatory_hermite_coefficient(const unsigned int index, const double coefficient) noexcept {
-        // NOLINTNEXTLINE
-        hermite_coefficients_ex[index] = coefficient;
-    }
-
-    /**
-     * @brief Sets the specified hermite coefficient for the inhibitory dendrites
-     * @param index The index of the hermite coefficient
-     * @param coefficient The new value for the hermite coefficient
-     */
-    void set_inhibitory_hermite_coefficient(const unsigned int index, const double coefficient) noexcept {
-        // NOLINTNEXTLINE
-        hermite_coefficients_in[index] = coefficient;
-    }
-
-    /**
-     * @brief Sets the specified hermite coefficient for the specified signal type
-     * @param index The index of the hermite coefficient
-     * @param coefficient The new value for the hermite coefficient
-     * @param signal_type The type of dendrite
-     */
-    void set_hermite_coefficient_for(const unsigned int index, const double coefficient, const SignalType signal_type) noexcept {
-        if (signal_type == SignalType::EXCITATORY) {
-            set_excitatory_hermite_coefficient(index, coefficient);
-        } else {
-            set_inhibitory_hermite_coefficient(index, coefficient);
-        }
-    }
-
-    /**
-     * @brief Returns the specified hermite coefficient for the excitatory dendrites
-     * @return The specified hermite coefficient
-     */
-    [[nodiscard]] double get_excitatory_hermite_coefficient(const unsigned int index) const noexcept {
-        // NOLINTNEXTLINE
-        return hermite_coefficients_ex[index];
-    }
-
-    /**
-     * @brief Returns the specified hermite coefficient for the inhibitory dendrites
-     * @return The specified hermite coefficient
-     */
-    [[nodiscard]] double get_inhibitory_hermite_coefficient(const unsigned int index) const noexcept {
-        // NOLINTNEXTLINE
-        return hermite_coefficients_in[index];
-    }
-
-    /**
-     * @brief Returns the specified hermite coefficient for the specified signal type
-     * @return The specified hermite coefficient
-     */
-    [[nodiscard]] double get_hermite_coefficient_for(const unsigned int index, const SignalType needed) const noexcept {
-        if (needed == SignalType::EXCITATORY) {
-            return get_excitatory_hermite_coefficient(index);
-        }
-
-        return get_inhibitory_hermite_coefficient(index);
-    }
-
 private:
     VirtualPlasticityElement excitatory_dendrites{};
     VirtualPlasticityElement inhibitory_dendrites{};
 
     VirtualPlasticityElement excitatory_axons{};
     VirtualPlasticityElement inhibitory_axons{};
-
-    std::array<double, Constants::p3> hermite_coefficients_ex{ -1.0 };
-    std::array<double, Constants::p3> hermite_coefficients_in{ -1.0 };
 };

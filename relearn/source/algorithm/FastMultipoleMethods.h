@@ -179,30 +179,6 @@ public:
         } else {
             const auto scaled_position = my_position_axons_excitatory / my_number_axons_excitatory;
             node->set_cell_excitatory_axons_position(std::optional<Vec3d>{ scaled_position });
-
-            if (my_number_axons_excitatory > Constants::max_neurons_in_source) {
-                for (auto a = 0; a < Constants::p3; a++) {
-                    auto temp = 0.0;
-                    for (auto i = 0; i < Constants::number_oct; i++) {
-                        const auto* child = node->get_child(i);
-                        if (child == nullptr) {
-                            continue;
-                        }
-
-                        const auto child_number_excitatory_axons = child->get_cell().get_number_excitatory_axons();
-                        if (child_number_excitatory_axons == 0) {
-                            continue;
-                        }
-
-                        const auto& child_pos = child->get_cell().get_excitatory_axons_position();
-                        const auto& temp_vec = (child_pos.value() - scaled_position) / default_sigma; // TODO: Change default_sigma to sigma
-                        temp += child_number_excitatory_axons * pow_multiindex(temp_vec, indices[a]);
-                    }
-
-                    const auto hermite_coefficient = 1.0 * temp / fac_multiindex(indices[a]);
-                    node->set_cell_excitatory_hermite_coefficient(a, hermite_coefficient);
-                }
-            }
         }
 
         if (0 == my_number_axons_inhibitory) {
@@ -210,33 +186,6 @@ public:
         } else {
             const auto scaled_position = my_position_axons_inhibitory / my_number_axons_inhibitory;
             node->set_cell_inhibitory_axons_position(std::optional<Vec3d>{ scaled_position });
-
-            if (my_number_axons_inhibitory > Constants::max_neurons_in_source) {
-                for (auto a = 0; a < num_coef; a++) {
-                    auto temp = 0.0;
-                    // NOLINTNEXTLINE
-                    const auto& current_index = indices[a];
-
-                    for (auto i = 0; i < Constants::number_oct; i++) {
-                        const auto* child = node->get_child(i);
-                        if (child == nullptr) {
-                            continue;
-                        }
-
-                        const auto child_number_inhibitory_axons = child->get_cell().get_number_inhibitory_axons();
-                        if (child_number_inhibitory_axons == 0) {
-                            continue;
-                        }
-
-                        const auto& child_pos = child->get_cell().get_inhibitory_axons_position();
-                        const auto& temp_vec = (child_pos.value() - scaled_position) / default_sigma; // TODO: Change default_sigma to sigma
-                        temp += child_number_inhibitory_axons * pow_multiindex(temp_vec, current_index);
-                    }
-
-                    const auto hermite_coefficient = 1.0 * temp / fac_multiindex(current_index);
-                    node->set_cell_inhibitory_hermite_coefficient(a, hermite_coefficient);
-                }
-            }
         }
     }
 
@@ -460,14 +409,25 @@ private:
     }
 
     /**
+     * @brief Calculates the hermite coefficients for a source node. The calculation of coefficients and series 
+     * expansion is executed separately, since the coefficients can be reused.
+     * @param source Node with vacant axons.
+     * @param coefficients_buffer Memory location where the coefficients are stored.
+     * @param sigma Scaling constant.
+     * @param needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
+     */
+    static void calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, std::array<double, Constants::p3>& coefficients_buffer, const double sigma, const SignalType needed);
+
+    /**
    * @brief Calculates the force of attraction between two nodes of the octree using a Hermite series expansion.
    * @param source Node with vacant axons.
    * @param target Node with vacant dendrites.
+   * @param coefficients_buffer Memory location where the coefficients are stored.
    * @param sigma Scaling constant.
    * @param needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory)
    * @return Retunrs the attraction force.
    */
-    static double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const double sigma, const SignalType needed);
+    static double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, const double sigma, const SignalType needed);
 
     /**
    * @brief Randomly selects one of the different target nodes, to which the source node should connect.

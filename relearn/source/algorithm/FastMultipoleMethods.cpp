@@ -50,9 +50,11 @@ inline std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_
 
     if (source_number_axons > Constants::max_neurons_in_source) {
         // There are enough axons in the source box
+        std::array<double, Constants::p3> coefficents;
+        calc_hermite_coefficients(source, coefficents, default_sigma, dendrite_type_needed);
         for (auto i = 0; i < target_list_length; i++) {
             const auto* current_target = extract_element(interaction_list, i);
-            result[i] = calc_hermite(source, current_target, default_sigma, dendrite_type_needed);
+            result[i] = calc_hermite(source, current_target, coefficents, default_sigma, dendrite_type_needed);
         }
 
         return result;
@@ -136,9 +138,11 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(con
 
     if (source_number_axons > Constants::max_neurons_in_source) {
         // There are enough axons in the source box
+        std::array<double, Constants::p3> coefficents;
+        calc_hermite_coefficients(source, coefficents, sigma, dendrite_type_needed);
         for (auto i = 0; i < target_list_length; i++) {
             const auto* current_target = extract_element(interaction_list, i);
-            result[i] = calc_hermite(source, current_target, sigma, dendrite_type_needed);
+            result[i] = calc_hermite(source, current_target,coefficents, sigma, dendrite_type_needed);
         }
 
         return result;
@@ -520,7 +524,34 @@ double FastMultipoleMethods::calc_taylor_expansion(const OctreeNode<FastMultipol
     return result;
 }
 
-double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const double sigma, const SignalType needed) {
+void FastMultipoleMethods::calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, std::array<double, Constants::p3>& coefficients_buffer, const double sigma, const SignalType needed) {
+    const auto& indices = Multiindex::get_indices();
+
+    for (auto a = 0; a < Constants::p3; a++) {
+        auto temp = 0.0;
+        for (auto i = 0; i < Constants::number_oct; i++) {
+            const auto* child = source->get_child(i);
+            if (child == nullptr) {
+                continue;
+            }
+
+            const auto child_number_axons = child->get_cell().get_number_axons_for(needed);
+            if (child_number_axons == 0) {
+                continue;
+            }
+
+            const auto& child_pos = child->get_cell().get_axons_position_for(needed);
+            const auto& source_pos = source->get_cell().get_axons_position_for(needed);
+            const auto& temp_vec = (child_pos.value() - source_pos.value()) / sigma;
+            temp += child_number_axons * pow_multiindex(temp_vec, indices[a]);
+        }
+
+        const auto hermite_coefficient = 1.0 * temp / fac_multiindex(indices[a]);
+        coefficients_buffer[a] = hermite_coefficient;
+    }
+}
+
+double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, const double sigma, const SignalType needed) {
     const auto& opt_source_center = source->get_cell().get_axons_position_for(needed);
     RelearnException::check(opt_source_center.has_value(), "Source node has no axon position for Hermite calculation \n");
     const auto& source_center = opt_source_center.value();
@@ -548,7 +579,7 @@ double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsC
 
         for (auto a = 0; a < number_coefficients; a++) {
             // NOLINTNEXTLINE
-            temp += source->get_cell_hermite_coefficient_for(a, needed) * h_multiindex(indices[a], temp_vec);
+            temp += coefficients_buffer[a] * h_multiindex(indices[a], temp_vec);
         }
 
         result += number_dendrites * temp;
