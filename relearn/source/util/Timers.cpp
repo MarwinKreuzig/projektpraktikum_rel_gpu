@@ -138,6 +138,12 @@ void Timers::print() {
     sstring << "      Create synapses (w/ Alltoall)            : ";
     print_timer(sstring, TimerRegion::CREATE_SYNAPSES, timers_global);
 
+    sstring << "      Calculate Taylor Coefficients            : ";
+    print_timer(sstring, TimerRegion::CALC_TAYLOR_COEFFICIENTS, timers_global);
+
+    sstring << "      Calculate Hermite Coefficients           : ";
+    print_timer(sstring, TimerRegion::CALC_HERMITE_COEFFICIENTS, timers_global);
+
     sstring << "\n\n";
 
     LogFiles::write_to_file(LogFiles::EventType::Timers, true, sstring.str());

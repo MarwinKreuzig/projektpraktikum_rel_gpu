@@ -69,7 +69,6 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(con
     const auto target_list_length = count_non_zero_elements(interaction_list);
 
     std::vector<double> result(target_list_length, 0.0);
-
     if (source_number_axons > Constants::max_neurons_in_source) {
         // There are enough axons in the source box
         std::array<double, Constants::p3> coefficents = calc_hermite_coefficients(source, sigma, dendrite_type_needed);
@@ -384,6 +383,7 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<char>& disable_fl
 }
 
 double FastMultipoleMethods::calc_taylor_expansion(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const double sigma, const SignalType needed) {
+    Timers::start(TimerRegion::CALC_TAYLOR_COEFFICIENTS);
     const auto& opt_target_center = target->get_cell().get_dendrites_position_for(needed);
     RelearnException::check(opt_target_center.has_value(), "Target node has no position for Taylor calculation");
 
@@ -428,6 +428,7 @@ double FastMultipoleMethods::calc_taylor_expansion(const OctreeNode<FastMultipol
             taylor_coefficients[index] = -coefficient;
         }
     }
+    Timers::stop_and_add(TimerRegion::CALC_TAYLOR_COEFFICIENTS);
 
     double result = 0.0;
 
@@ -458,6 +459,7 @@ double FastMultipoleMethods::calc_taylor_expansion(const OctreeNode<FastMultipol
 }
 
 std::array<double, Constants::p3> FastMultipoleMethods::calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, const double sigma, const SignalType needed) {
+    Timers::start(TimerRegion::CALC_HERMITE_COEFFICIENTS);
     const auto& indices = Multiindex::get_indices();
     std::array<double, Constants::p3> result{};
 
@@ -484,6 +486,7 @@ std::array<double, Constants::p3> FastMultipoleMethods::calc_hermite_coefficient
         result[a] = hermite_coefficient;
     }
     return result;
+    Timers::stop_and_add(TimerRegion::CALC_HERMITE_COEFFICIENTS);
 }
 
 double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, const double sigma, const SignalType needed) {
