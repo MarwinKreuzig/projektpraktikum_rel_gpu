@@ -79,6 +79,9 @@ int main(int argc, char** argv) {
     double accept_criterion{ BarnesHut::default_theta };
     auto* opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Required Barnes-Hut.");
 
+    double scaling_const{ Algorithm::default_sigma };
+    app.add_option("--sigma", scaling_const, "Scaling parameter for the probabilty kernel. Default: 750");
+
     size_t num_neurons{};
     auto* opt_num_neurons = app.add_option("-n,--num-neurons", num_neurons, "Number of neurons.");
 

@@ -15,73 +15,7 @@
 #include "../structure/OctreeNode.h"
 #include "../util/Timers.h"
 
-inline std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(
-    const OctreeNode<FastMultipoleMethodsCell>* source,
-    const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& interaction_list,
-    const SignalType dendrite_type_needed) const {
-
-    const auto& count_non_zero_elements = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& arr) {
-        auto non_zero_counter = 0;
-        for (auto i = 0; i < Constants::number_oct; i++) {
-            if (arr[i] != nullptr) {
-                non_zero_counter++;
-            }
-        }
-        return non_zero_counter;
-    };
-
-    const auto& extract_element = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& arr, unsigned int index) -> const OctreeNode<FastMultipoleMethodsCell>* {
-        auto non_zero_counter = 0;
-        for (auto i = 0; i < Constants::number_oct; i++) {
-            if (arr[i] != nullptr) {
-                if (index == non_zero_counter) {
-                    return arr[i];
-                }
-                non_zero_counter++;
-            }
-        }
-        return nullptr;
-    };
-
-    const auto source_number_axons = source->get_cell().get_number_axons_for(dendrite_type_needed);
-    const auto target_list_length = count_non_zero_elements(interaction_list);
-
-    std::vector<double> result(target_list_length, 0.0);
-
-    if (source_number_axons > Constants::max_neurons_in_source) {
-        // There are enough axons in the source box
-        std::array<double, Constants::p3> coefficents;
-        calc_hermite_coefficients(source, coefficents, default_sigma, dendrite_type_needed);
-        for (auto i = 0; i < target_list_length; i++) {
-            const auto* current_target = extract_element(interaction_list, i);
-            result[i] = calc_hermite(source, current_target, coefficents, default_sigma, dendrite_type_needed);
-        }
-
-        return result;
-    }
-
-    // There are not enough axons in the source box
-    for (auto i = 0; i < target_list_length; i++) {
-        const auto* current_target = extract_element(interaction_list, i);
-        const auto target_number_dendrites = current_target->get_cell().get_number_dendrites_for(dendrite_type_needed);
-
-        if (target_number_dendrites <= Constants::max_neurons_in_target) {
-            // There are not enough dendrites in the target box
-
-            const auto& target_neuron_positions = current_target->get_all_dendrite_positions_for(dendrite_type_needed);
-            const auto& source_neuron_positions = source->get_all_axon_positions_for(dendrite_type_needed);
-
-            result[i] = calc_direct_gauss(source_neuron_positions, target_neuron_positions, default_sigma);
-        } else {
-            // There are enough dendrites in the target box
-            result[i] = calc_taylor_expansion(source, current_target, default_sigma, dendrite_type_needed);
-        }
-    }
-
-    return result;
-}
-
-inline unsigned int FastMultipoleMethods::do_random_experiment(const OctreeNode<FastMultipoleMethodsCell>* source, const std::vector<double>& attractiveness) const {
+unsigned int FastMultipoleMethods::do_random_experiment(const OctreeNode<FastMultipoleMethodsCell>* source, const std::vector<double>& attractiveness) const {
     const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(1.0, Constants::eps));
     const auto vec_len = attractiveness.size();
     std::vector<double> intervals(vec_len + 1);
@@ -138,11 +72,10 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(con
 
     if (source_number_axons > Constants::max_neurons_in_source) {
         // There are enough axons in the source box
-        std::array<double, Constants::p3> coefficents;
-        calc_hermite_coefficients(source, coefficents, sigma, dendrite_type_needed);
+        std::array<double, Constants::p3> coefficents = calc_hermite_coefficients(source, sigma, dendrite_type_needed);
         for (auto i = 0; i < target_list_length; i++) {
             const auto* current_target = extract_element(interaction_list, i);
-            result[i] = calc_hermite(source, current_target,coefficents, sigma, dendrite_type_needed);
+            result[i] = calc_hermite(source, current_target, coefficents, sigma, dendrite_type_needed);
         }
 
         return result;
@@ -213,7 +146,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
         - push source_children to stack
          */
 
-        //node is a leaf
+        // node is a leaf
         if (!source_node->is_parent()) {
             const auto source_id = cell.get_neuron_id();
 
@@ -524,8 +457,9 @@ double FastMultipoleMethods::calc_taylor_expansion(const OctreeNode<FastMultipol
     return result;
 }
 
-void FastMultipoleMethods::calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, std::array<double, Constants::p3>& coefficients_buffer, const double sigma, const SignalType needed) {
+std::array<double, Constants::p3> FastMultipoleMethods::calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, const double sigma, const SignalType needed) {
     const auto& indices = Multiindex::get_indices();
+    std::array<double, Constants::p3> result{};
 
     for (auto a = 0; a < Constants::p3; a++) {
         auto temp = 0.0;
@@ -547,8 +481,9 @@ void FastMultipoleMethods::calc_hermite_coefficients(const OctreeNode<FastMultip
         }
 
         const auto hermite_coefficient = 1.0 * temp / fac_multiindex(indices[a]);
-        coefficients_buffer[a] = hermite_coefficient;
+        result[a] = hermite_coefficient;
     }
+    return result;
 }
 
 double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, const double sigma, const SignalType needed) {

@@ -189,10 +189,6 @@ public:
         }
     }
 
-private:
-    std::vector<double> calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source, const std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>& interaction_list,
-        const SignalType dendrite_type_needed) const;
-
     unsigned int do_random_experiment(const OctreeNode<FastMultipoleMethodsCell>* source, const std::vector<double>& attractiveness) const;
 
     std::vector<double> calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source,
@@ -412,11 +408,11 @@ private:
      * @brief Calculates the hermite coefficients for a source node. The calculation of coefficients and series 
      * expansion is executed separately, since the coefficients can be reused.
      * @param source Node with vacant axons.
-     * @param coefficients_buffer Memory location where the coefficients are stored.
      * @param sigma Scaling constant.
      * @param needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
+     * @returns Returns an array of the hermite coefficients.
      */
-    static void calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, std::array<double, Constants::p3>& coefficients_buffer, const double sigma, const SignalType needed);
+    static std::array<double, Constants::p3> calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, const double sigma, const SignalType needed);
 
     /**
    * @brief Calculates the force of attraction between two nodes of the octree using a Hermite series expansion.

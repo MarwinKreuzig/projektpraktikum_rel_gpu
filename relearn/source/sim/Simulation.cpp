@@ -42,11 +42,15 @@ void Simulation::register_neuron_monitor(const size_t neuron_id) {
 
 void Simulation::set_acceptance_criterion_for_barnes_hut(const double value) {
     // Needed to avoid creating autapses
-    RelearnException::check(value <= BarnesHut::max_theta, 
+    RelearnException::check(value <= BarnesHut::max_theta,
         "Simulation::set_acceptance_criterion_for_barnes_hut: Acceptance criterion must be smaller or equal to {} but was {}", BarnesHut::max_theta, value);
     RelearnException::check(value >= 0.0, "Simulation::set_acceptance_criterion_for_barnes_hut: Acceptance criterion must not be smaller than 0.0 but was {}", value);
 
     accept_criterion = value;
+}
+
+void Simulation::set_probabilty_scaling_parameter(const double value) {
+    sigma = value;
 }
 
 void Simulation::set_neuron_model(std::unique_ptr<NeuronModel>&& nm) noexcept {
@@ -163,6 +167,7 @@ void Simulation::initialize() {
 
         auto algorithm_barnes_hut = std::make_shared<BarnesHut>(octree);
         algorithm_barnes_hut->set_acceptance_criterion(accept_criterion);
+        algorithm_barnes_hut->set_probability_parameter(sigma);
         algorithm = std::move(algorithm_barnes_hut);
     } else {
         auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(std::move(std::get<0>(sim_box_min_max)), std::move(std::get<1>(sim_box_min_max)), partition->get_level_of_subdomain_trees());
@@ -184,6 +189,7 @@ void Simulation::initialize() {
         network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons(), my_rank);
 
         auto algorithm_barnes_hut = std::make_shared<FastMultipoleMethods>(octree);
+        algorithm_barnes_hut->set_probability_parameter(sigma);
         algorithm = std::move(algorithm_barnes_hut);
     }
 
@@ -201,8 +207,8 @@ void Simulation::simulate(const size_t number_steps, const size_t step_monitor) 
     const auto previous_synapse_deletions = total_synapse_deletions;
 
     /**
-	* Simulation loop
-	*/
+     * Simulation loop
+     */
     for (size_t step = 1; step <= number_steps; step++) {
         if (step % step_monitor == 0) {
             const auto number_neurons = neurons->get_num_neurons();
