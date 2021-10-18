@@ -105,10 +105,10 @@ void Timers::print() {
     sstring << "      Calculate activity                       : ";
     print_timer(sstring, TimerRegion::CALC_ACTIVITY, timers_global);
 
-    sstring << "      Update #synaptic elements delta          : ";
+    sstring << "    Update #synaptic elements delta          : ";
     print_timer(sstring, TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA, timers_global);
 
-    sstring << "      Connectivity update                      : ";
+    sstring << "    Connectivity update                      : ";
     print_timer(sstring, TimerRegion::UPDATE_CONNECTIVITY, timers_global);
 
     sstring << "      Update #synaptic elements + del synapses : ";
@@ -138,10 +138,10 @@ void Timers::print() {
     sstring << "      Create synapses (w/ Alltoall)            : ";
     print_timer(sstring, TimerRegion::CREATE_SYNAPSES, timers_global);
 
-    sstring << "      Calculate Taylor Coefficients            : ";
+    sstring << "        FMM: Calculate Taylor Coefficients            : ";
     print_timer(sstring, TimerRegion::CALC_TAYLOR_COEFFICIENTS, timers_global);
 
-    sstring << "      Calculate Hermite Coefficients           : ";
+    sstring << "        FMM: Calculate Hermite Coefficients           : ";
     print_timer(sstring, TimerRegion::CALC_HERMITE_COEFFICIENTS, timers_global);
 
     sstring << "\n\n";
