@@ -95,7 +95,7 @@ endif()
 FetchContent_Declare(
   CLI11
   GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
-  GIT_TAG        main
+  GIT_TAG        5ce8958c7e3d2c871d1ba3180a4e4f1543eece4a
 )
 FetchContent_MakeAvailable(CLI11)
 target_include_directories(relearn SYSTEM PRIVATE ${CLI11_SOURCE_DIR}/include)
