@@ -26,7 +26,7 @@ std::vector<double> johnson(typename Graph::FullGraph& full_graph, const size_t 
 
 static std::vector<int> johnson_get_weights_vector(auto edge_begin_it, const auto edge_end_it, const auto& weight_map) {
     std::vector<int> weights{};
-    std::transform(edge_begin_it, edge_end_it, std::back_inserter(weights), [&](const auto& edge) {
+    std::transform(edge_begin_it, edge_end_it, std::back_inserter(weights), [&weight_map](const auto& edge) {
         return weight_map(edge);
     });
     return weights;
