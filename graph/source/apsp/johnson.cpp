@@ -64,10 +64,9 @@ static bool bellman_ford(const graph_t& gr, std::vector<double>& dist) {
     return no_neg_cycle;
 }
 
-void johnson_parallel_impl(graph_t& gr, std::vector<double>& output, progress_status& status, const bool has_negative_edges) {
+void johnson_parallel_impl(graph_t& gr, std::vector<double>& output, const bool has_negative_edges) {
 
     const int V = gr.V;
-    status.total.store(V);
 
     if (has_negative_edges) {
         // Make new graph for Bellman-Ford
@@ -95,7 +94,15 @@ void johnson_parallel_impl(graph_t& gr, std::vector<double>& output, progress_st
 
     APSP_Graph G(gr.edge_array.begin(), gr.edge_array.end(), gr.weights.begin(), V);
 
-    status.started.store(true);
+    RAII_progress_status<timed_progress_status>
+        status{
+            static_cast<size_t>(V),
+            100,
+            true,
+            [](const auto& status) {
+                return fmt::format("Johnson OpenMP {}/{} Vertices", status.progress, status.total);
+            }
+        };
 
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
@@ -107,7 +114,7 @@ void johnson_parallel_impl(graph_t& gr, std::vector<double>& output, progress_st
             output[static_cast<size_t>(s) * static_cast<size_t>(V) + static_cast<size_t>(v)] = d[v];
         }
 
-        status.progress.fetch_add(1);
+        ++status.status;
     }
 }
 
