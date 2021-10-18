@@ -428,6 +428,7 @@ double FastMultipoleMethods::calc_taylor_expansion(const OctreeNode<FastMultipol
             taylor_coefficients[index] = -coefficient;
         }
     }
+    
     Timers::stop_and_add(TimerRegion::CALC_TAYLOR_COEFFICIENTS);
 
     double result = 0.0;
@@ -485,8 +486,8 @@ std::array<double, Constants::p3> FastMultipoleMethods::calc_hermite_coefficient
         const auto hermite_coefficient = 1.0 * temp / fac_multiindex(indices[a]);
         result[a] = hermite_coefficient;
     }
-    return result;
     Timers::stop_and_add(TimerRegion::CALC_HERMITE_COEFFICIENTS);
+    return result;
 }
 
 double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, const double sigma, const SignalType needed) {

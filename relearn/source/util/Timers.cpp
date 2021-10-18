@@ -105,10 +105,10 @@ void Timers::print() {
     sstring << "      Calculate activity                       : ";
     print_timer(sstring, TimerRegion::CALC_ACTIVITY, timers_global);
 
-    sstring << "    Update #synaptic elements delta            : ";
+    sstring << "      Update #synaptic elements delta          : ";
     print_timer(sstring, TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA, timers_global);
 
-    sstring << "    Connectivity update                        : ";
+    sstring << "      Connectivity update                      : ";
     print_timer(sstring, TimerRegion::UPDATE_CONNECTIVITY, timers_global);
 
     sstring << "      Update #synaptic elements + del synapses : ";
