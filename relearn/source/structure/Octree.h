@@ -19,7 +19,6 @@
 #include "../neurons/models/SynapticElements.h"
 #include "../structure/OctreeNode.h"
 #include "../structure/SpaceFillingCurve.h"
-#include "../util/DeriativesAndFunctions.h"
 #include "../util/Random.h"
 #include "../util/RelearnException.h"
 #include "../util/Timers.h"

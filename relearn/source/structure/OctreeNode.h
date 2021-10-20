@@ -535,8 +535,8 @@ public:
      * @param needed The requested SignalType
      * @return A vector of all actual positions
      */
-    [[nodiscard]] std::vector<Vec3d> get_all_dendrite_positions_for(const SignalType needed) const {
-        std::vector<Vec3d> result{};
+    [[nodiscard]] std::vector<std::pair <Vec3d, unsigned int>> get_all_dendrite_positions_for(const SignalType needed) const {
+        std::vector<std::pair <Vec3d, unsigned int>> result{};
 
         std::stack<const OctreeNode*> stack{};
         stack.push(this);
@@ -548,12 +548,10 @@ public:
             if (!current_node->is_parent()) {
                 const auto& cell = current_node->get_cell();
                 const auto num_of_ports = cell.get_number_dendrites_for(needed);
-                if (num_of_ports > 0) {
-                    const auto& opt_position = cell.get_dendrites_position();
-                    for (unsigned int i = 0; i < num_of_ports; i++) {
-                        result.emplace_back(opt_position.value());
-                    }
-                }
+                const auto& opt_position = cell.get_dendrites_position();
+                std::pair <Vec3d, unsigned int> temp (opt_position.value(), num_of_ports);
+                result.emplace_back(temp);
+               
             } else {
                 for (auto i = 0; i < Constants::number_oct; i++) {
                     const auto* children_node = current_node->get_child(i);
@@ -573,8 +571,8 @@ public:
      * @param needed The requested SignalType
      * @return A vector of all actual positions
      */
-    [[nodiscard]] std::vector<Vec3d> get_all_axon_positions_for(const SignalType needed) const {
-        std::vector<Vec3d> result{};
+    [[nodiscard]] std::vector<std::pair <Vec3d, unsigned int>> get_all_axon_positions_for(const SignalType needed) const {
+        std::vector<std::pair <Vec3d, unsigned int>> result{};
 
         std::stack<const OctreeNode*> stack{};
         stack.push(this);
@@ -586,12 +584,10 @@ public:
             if (!current_node->is_parent()) {
                 const auto& cell = current_node->get_cell();
                 const auto num_of_ports = cell.get_number_axons_for(needed);
-                if (num_of_ports > 0) {
-                    const auto& opt_position = cell.get_axons_position();
-                    for (unsigned int i = 0; i < num_of_ports; i++) {
-                        result.emplace_back(opt_position.value());
-                    }
-                }
+                const auto& opt_position = cell.get_axons_position();
+                std::pair <Vec3d, unsigned int> temp (opt_position.value(), num_of_ports);
+                result.emplace_back(temp);
+                
             } else {
                 for (auto i = 0; i < Constants::number_oct; i++) {
                     const auto* children_node = current_node->get_child(i);
