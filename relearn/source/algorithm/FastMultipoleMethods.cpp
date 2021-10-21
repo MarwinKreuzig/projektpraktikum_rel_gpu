@@ -15,7 +15,7 @@
 #include "../structure/OctreeNode.h"
 #include "../util/Timers.h"
 
-unsigned int FastMultipoleMethods::do_random_experiment(const OctreeNode<FastMultipoleMethodsCell>* source, const std::vector<double>& attractiveness) const {
+unsigned int FastMultipoleMethods::choose_target_node(const OctreeNode<FastMultipoleMethodsCell>* source, const std::vector<double>& attractiveness) const {
     const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(1.0, Constants::eps));
     const auto vec_len = attractiveness.size();
     std::vector<double> intervals(vec_len + 1);
@@ -38,8 +38,7 @@ unsigned int FastMultipoleMethods::do_random_experiment(const OctreeNode<FastMul
     return i;
 }
 
-std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source,
-    const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& interaction_list, const SignalType dendrite_type_needed) {
+std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source, const SignalType dendrite_type_needed) {
     const auto& count_non_zero_elements = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& arr) {
         auto non_zero_counter = 0;
         for (auto i = 0; i < Constants::number_oct; i++) {
@@ -94,7 +93,7 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(con
             result[i] = calc_direct_gauss(source_neuron_positions, target_neuron_positions, sigma);
         } else {
             // There are enough dendrites in the target box
-            result[i] = calc_taylor_expansion(source, current_target, sigma, dendrite_type_needed);
+            result[i] = calc_taylor(source, current_target, sigma, dendrite_type_needed);
         }
     }
 
@@ -132,7 +131,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
         nodes_with_axons.pop();
 
         OctreeNode<FastMultipoleMethodsCell>* source_node = std::get<0>(pair);
-        std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> interaction_list = std::get<1>(pair);
+        interaction_list = std::get<1>(pair);
 
         const auto& cell = source_node->get_cell();
 
@@ -155,8 +154,8 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
             if (target_num == 1) {
                 target_node = extract_element(interaction_list, 0);
             } else {
-                const auto& connection_probabilities = calc_attractiveness_to_connect_FMM(source_node, interaction_list, needed);
-                const auto chosen_index = do_random_experiment(source_node, connection_probabilities);
+                const auto& connection_probabilities = calc_attractiveness_to_connect_FMM(source_node, needed);
+                const auto chosen_index = choose_target_node(source_node, connection_probabilities);
                 target_node = extract_element(interaction_list, chosen_index);
             }
 
@@ -191,8 +190,8 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
             continue;
         }
 
-        const auto& connection_probabilities = calc_attractiveness_to_connect_FMM(source_node, interaction_list, needed);
-        const auto chosen_index = do_random_experiment(source_node, connection_probabilities);
+        const auto& connection_probabilities = calc_attractiveness_to_connect_FMM(source_node, needed);
+        const auto chosen_index = choose_target_node(source_node, connection_probabilities);
         const auto* target_node = extract_element(interaction_list, chosen_index);
 
         const auto& source_children = source_node->get_children();
@@ -382,19 +381,20 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<char>& disable_fl
     }
 }
 
-double FastMultipoleMethods::calc_taylor_expansion(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const double sigma, const SignalType needed) {
+double FastMultipoleMethods::calc_taylor(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const double sigma, const SignalType needed) {
     Timers::start(TimerRegion::CALC_TAYLOR_COEFFICIENTS);
-    const auto& opt_target_center = target->get_cell().get_dendrites_position_for(needed);
-    RelearnException::check(opt_target_center.has_value(), "Target node has no position for Taylor calculation");
+    RelearnException::check(target->is_parent(), "FastMultipoleMethods::calc_taylor: target node was a leaf node.");
+    RelearnException::check(source->is_parent(), "FastMultipoleMethods::calc_taylor: source node was a leaf node.");
 
+    const auto& opt_target_center = target->get_cell().get_dendrites_position_for(needed);
+    RelearnException::check(opt_target_center.has_value(), "FastMultipoleMethods::calc_taylor: target node has no position.");
     const auto& target_center = opt_target_center.value();
 
     const auto& indices = Multiindex::get_indices();
-    const auto number_coefficients = Multiindex::get_number_of_indices();
 
     std::array<double, Constants::p3> taylor_coefficients{};
 
-    for (auto index = 0; index < number_coefficients; index++) {
+    for (auto index = 0; index < Constants::p3; index++) {
         double temp = 0;
         // NOLINTNEXTLINE
         const auto& current_index = indices[index];
@@ -411,6 +411,7 @@ double FastMultipoleMethods::calc_taylor_expansion(const OctreeNode<FastMultipol
             }
 
             const auto& child_pos = source_child->get_cell().get_axons_position_for(needed);
+            RelearnException::check(child_pos.has_value(), "FastMultipoleMethods::calc_taylor: source child has no position.");
             const auto& temp_vec = (child_pos.value() - target_center) / sigma;
             temp += number_axons * h_multiindex(current_index, temp_vec);
         }
@@ -428,7 +429,6 @@ double FastMultipoleMethods::calc_taylor_expansion(const OctreeNode<FastMultipol
             taylor_coefficients[index] = -coefficient;
         }
     }
-    
     Timers::stop_and_add(TimerRegion::CALC_TAYLOR_COEFFICIENTS);
 
     double result = 0.0;
@@ -445,14 +445,14 @@ double FastMultipoleMethods::calc_taylor_expansion(const OctreeNode<FastMultipol
         }
 
         const auto& child_pos = target_child->get_cell().get_dendrites_position_for(needed);
+        RelearnException::check(child_pos.has_value(), "FastMultipoleMethods::calc_taylor: target child has no position.");
         const auto& temp_vec = (child_pos.value() - target_center) / sigma;
 
         double temp = 0.0;
-        for (auto b = 0; b < number_coefficients; b++) {
+        for (auto b = 0; b < Constants::p3; b++) {
             // NOLINTNEXTLINE
             temp += taylor_coefficients[b] * pow_multiindex(temp_vec, indices[b]);
         }
-
         result += number_dendrites * temp;
     }
 
@@ -461,12 +461,15 @@ double FastMultipoleMethods::calc_taylor_expansion(const OctreeNode<FastMultipol
 
 std::array<double, Constants::p3> FastMultipoleMethods::calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, const double sigma, const SignalType needed) {
     Timers::start(TimerRegion::CALC_HERMITE_COEFFICIENTS);
+    RelearnException::check(source->is_parent(), "FastMultipoleMethods::calc hermite_coefficients: source node was a leaf node");
+
     const auto& indices = Multiindex::get_indices();
     std::array<double, Constants::p3> result{};
 
     for (auto a = 0; a < Constants::p3; a++) {
         auto temp = 0.0;
         for (auto i = 0; i < Constants::number_oct; i++) {
+
             const auto* child = source->get_child(i);
             if (child == nullptr) {
                 continue;
@@ -478,7 +481,9 @@ std::array<double, Constants::p3> FastMultipoleMethods::calc_hermite_coefficient
             }
 
             const auto& child_pos = child->get_cell().get_axons_position_for(needed);
+            RelearnException::check(child_pos.has_value(), "FastMultipoleMethods::calc_hermite_coefficients: source child has no valid position.");
             const auto& source_pos = source->get_cell().get_axons_position_for(needed);
+            RelearnException::check(source_pos.has_value(), "FastMultipoleMethods::calc_hermite_coefficients: source has no valid position.");
             const auto& temp_vec = (child_pos.value() - source_pos.value()) / sigma;
             temp += child_number_axons * pow_multiindex(temp_vec, indices[a]);
         }
@@ -487,12 +492,15 @@ std::array<double, Constants::p3> FastMultipoleMethods::calc_hermite_coefficient
         result[a] = hermite_coefficient;
     }
     Timers::stop_and_add(TimerRegion::CALC_HERMITE_COEFFICIENTS);
+
     return result;
 }
 
 double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, const double sigma, const SignalType needed) {
+    RelearnException::check(target->is_parent(), "FastMultipoleMethods::calc hermite: target node was a leaf node");
+
     const auto& opt_source_center = source->get_cell().get_axons_position_for(needed);
-    RelearnException::check(opt_source_center.has_value(), "Source node has no axon position for Hermite calculation \n");
+    RelearnException::check(opt_source_center.has_value(), "FastMultipoleMethods::calc_hermite: source node has no axon position.");
     const auto& source_center = opt_source_center.value();
 
     const auto& indices = Multiindex::get_indices();
@@ -514,6 +522,7 @@ double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsC
         }
 
         const auto& child_pos = child_target->get_cell().get_dendrites_position_for(needed);
+        RelearnException::check(child_pos.has_value(), "FastMultipoleMethods::calc_hermite: target child node has no axon position.");
         const auto& temp_vec = (child_pos.value() - source_center) / sigma;
 
         for (auto a = 0; a < number_coefficients; a++) {
@@ -523,6 +532,5 @@ double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsC
 
         result += number_dendrites * temp;
     }
-
     return result;
 }

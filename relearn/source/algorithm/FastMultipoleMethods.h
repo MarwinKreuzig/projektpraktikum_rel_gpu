@@ -189,10 +189,9 @@ public:
         }
     }
 
-    unsigned int do_random_experiment(const OctreeNode<FastMultipoleMethodsCell>* source, const std::vector<double>& attractiveness) const;
+    unsigned int choose_target_node(const OctreeNode<FastMultipoleMethodsCell>* source, const std::vector<double>& attractiveness) const;
 
-    std::vector<double> calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source,
-        const std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>& interaction_list, const SignalType dendrite_type_needed);
+    std::vector<double> calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source, const SignalType dendrite_type_needed);
 
     void make_creation_request_for(const SignalType needed, MapSynapseCreationRequests& request,
         std::stack<std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>>>& nodes_with_axons);
@@ -379,7 +378,7 @@ public:
    * @param needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory)
    * @return Retunrs the attraction force.
    */
-    static double calc_taylor_expansion(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const double sigma, const SignalType needed);
+    static double calc_taylor(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const double sigma, const SignalType needed);
 
     /**
    * @brief Calculates the force of attraction between two sets of neurons by using the kernel 
@@ -443,7 +442,6 @@ public:
             sum = sum + attractiveness[i];
         }
 
-        // RelearnException::check(temp,"The sum of all attractions was 0.");
         for (auto i = 1; i < vec_len + 1; i++) {
             intervals[i] = intervals[i - 1ULL] + (attractiveness[i - 1ULL] / sum);
         }
@@ -461,6 +459,7 @@ public:
     }
 
     std::shared_ptr<OctreeImplementation<FastMultipoleMethods>> global_tree{};
+    std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> interaction_list{};
 
     /**
    * This class represents a mathematical three-dimensional multi-index, which is required for the 
