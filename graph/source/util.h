@@ -5,6 +5,8 @@
 #include <future>
 #include <concepts>
 
+#include <iostream>
+#include <ostream>
 #include <spdlog/fmt/bundled/core.h>
 #include <spdlog/fmt/bundled/chrono.h>
 
@@ -155,12 +157,36 @@ template <typename PrintFunction>
         while (!status.started) {
             sleep();
         }
+
+        print();
+
+        auto prev_perc = 0.0f;
+        auto prev_time = std::chrono::steady_clock::now();
+
+        static constexpr auto seconds_to_pass = 30;
+        const auto seconds_passed = [](const auto& duration) {
+            return std::chrono::duration_cast<std::chrono::seconds>(duration).count() > seconds_to_pass;
+        };
+
+        static constexpr auto perc_threshold = 0.001f;
+        const auto perc_diff_threshold_passed = [](const auto perc_diff) {
+            return perc_diff > perc_threshold;
+        };
+
         while (!status.done) {
-            print();
+            const auto next_perc = status.get_percentage();
+            const auto next_time = std::chrono::steady_clock::now();
+            if (perc_diff_threshold_passed(next_perc - prev_perc) || seconds_passed(next_time - prev_time)) {
+                print();
+                std::cout << std::flush;
+                prev_time = next_time;
+                prev_perc = next_perc;
+            }
             sleep();
         }
         print();
         fmt::print("\n");
+        std::cout << std::flush;
     });
 }
 }
