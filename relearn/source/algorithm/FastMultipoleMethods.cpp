@@ -15,29 +15,6 @@
 #include "../structure/OctreeNode.h"
 #include "../util/Timers.h"
 
-unsigned int FastMultipoleMethods::choose_target_node(const OctreeNode<FastMultipoleMethodsCell>* source, const std::vector<double>& attractiveness) const {
-    const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(1.0, Constants::eps));
-    const auto vec_len = attractiveness.size();
-    std::vector<double> intervals(vec_len + 1);
-    intervals[0] = 0;
-
-    auto sum = 0.0;
-    for (int i = 0; i < vec_len; i++) {
-        sum = sum + attractiveness[i];
-    }
-
-    for (auto i = 1; i < vec_len + 1; i++) {
-        intervals[i] = intervals[i - 1ull] + (attractiveness[i - 1ull] / sum);
-    }
-
-    unsigned int i = 0;
-    while (random_number > intervals[i + 1ull] && i <= vec_len) {
-        i++;
-    }
-
-    return i;
-}
-
 std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source, const SignalType dendrite_type_needed) {
     const auto& count_non_zero_elements = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& arr) {
         auto non_zero_counter = 0;
@@ -155,7 +132,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
                 target_node = extract_element(interaction_list, 0);
             } else {
                 const auto& connection_probabilities = calc_attractiveness_to_connect_FMM(source_node, needed);
-                const auto chosen_index = choose_target_node(source_node, connection_probabilities);
+                const auto chosen_index = choose_interval(connection_probabilities);
                 target_node = extract_element(interaction_list, chosen_index);
             }
 
@@ -191,7 +168,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
         }
 
         const auto& connection_probabilities = calc_attractiveness_to_connect_FMM(source_node, needed);
-        const auto chosen_index = choose_target_node(source_node, connection_probabilities);
+        const auto chosen_index = choose_interval(connection_probabilities);
         const auto* target_node = extract_element(interaction_list, chosen_index);
 
         const auto& source_children = source_node->get_children();

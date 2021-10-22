@@ -171,9 +171,6 @@ public:
             node->set_cell_inhibitory_dendrites_position(std::optional<Vec3d>{ scaled_position });
         }
 
-        const auto& indices = Multiindex::get_indices();
-        const auto num_coef = Multiindex::get_number_of_indices();
-
         if (0 == my_number_axons_excitatory) {
             node->set_cell_excitatory_axons_position({});
         } else {
@@ -188,8 +185,6 @@ public:
             node->set_cell_inhibitory_axons_position(std::optional<Vec3d>{ scaled_position });
         }
     }
-
-    unsigned int choose_target_node(const OctreeNode<FastMultipoleMethodsCell>* source, const std::vector<double>& attractiveness) const;
 
     std::vector<double> calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source, const SignalType dendrite_type_needed);
 
