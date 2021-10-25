@@ -169,7 +169,7 @@ TEST(TestFastGauss, test_multiIndex) {
     EXPECT_EQ(temp.at(1), 0);
     EXPECT_EQ(temp.at(2), 1);
 
-    const std::array<unsigned int, 3> temp1 = indices[Constants::p3-1];
+    const std::array<unsigned int, 3> temp1 = indices[Constants::p3 - 1];
     EXPECT_EQ(temp1.at(0), Constants::p - 1);
     EXPECT_EQ(temp1.at(1), Constants::p - 1);
     EXPECT_EQ(temp1.at(2), Constants::p - 1);
@@ -190,7 +190,7 @@ TEST(TestFastGauss, test_static_multiindex_functions) {
     EXPECT_EQ(FastMultipoleMethods::abs_multiindex(test_index2), 6);
     EXPECT_EQ(FastMultipoleMethods::abs_multiindex(test_index3), 9);
 
-    //pow
+    // pow
     Vec3d test_vector1 = Vec3d(0, 0, 0);
     Vec3d test_vector2 = Vec3d(3.12, 5.7, -3.14);
     Vec3d test_vector3 = Vec3d(-6.98, -4.77, 2.94);
@@ -209,7 +209,7 @@ TEST(TestFastGauss, test_static_multiindex_functions) {
 }
 
 TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendritesFMM) {
-    make_mpi_mem_available();
+    make_mpi_mem_available<AdditionalCellAttributes>();
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -285,12 +285,12 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendritesFMM) {
             ASSERT_EQ(current->get_cell().get_number_inhibitory_dendrites(), sum_dends_inh);
         }
 
-        make_mpi_mem_available();
+        make_mpi_mem_available<AdditionalCellAttributes>();
     }
 }
 
 TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendritesFMM) {
-    make_mpi_mem_available();
+    make_mpi_mem_available<AdditionalCellAttributes>();
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -433,6 +433,6 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendritesFMM) {
             }
         }
 
-        make_mpi_mem_available();
+        make_mpi_mem_available<AdditionalCellAttributes>();
     }
 }

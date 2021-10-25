@@ -234,56 +234,37 @@ MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t num_
     MapSynapseCreationRequests synapse_creation_requests_outgoing;
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);
 
-    std::vector<OctreeNode<FastMultipoleMethodsCell>*> nodes_with_excitatory_dendrites{};
-    std::vector<OctreeNode<FastMultipoleMethodsCell>*> nodes_with_inhibitory_dendrites{};
     std::vector<std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>>> nodes_with_excitatory_axons{};
     std::vector<std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>>> nodes_with_inhibitory_axons{};
-
-    nodes_with_excitatory_dendrites.reserve(8);
-    nodes_with_inhibitory_dendrites.reserve(8);
     nodes_with_excitatory_axons.reserve(8);
     nodes_with_inhibitory_axons.reserve(8);
 
     OctreeNode<FastMultipoleMethodsCell>* root = global_tree->get_root();
     const auto& children = root->get_children();
 
-    for (auto* current_node : children) {
-        const auto& cell = current_node->get_cell();
-        if (cell.get_number_excitatory_dendrites() > 0) {
-            nodes_with_excitatory_dendrites.push_back(current_node);
-        }
+    const auto total_number_dendrites_ex = root->get_cell().get_number_excitatory_dendrites();
+    const auto total_number_dendrites_in = root->get_cell().get_number_inhibitory_dendrites();
 
-        if (cell.get_number_inhibitory_dendrites() > 0) {
-            nodes_with_inhibitory_dendrites.push_back(current_node);
-        }
+    for (auto i = 0; i < Constants::number_oct; i++) {
+        interaction_list[i] = children[i];
     }
 
     for (auto* current_node : children) {
         const auto& cell = current_node->get_cell();
 
         if (cell.get_number_excitatory_axons() > 0) {
-            std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> interaction_list{ nullptr };
-            for (auto i = 0; i < nodes_with_excitatory_dendrites.size(); i++) {
-                interaction_list[i] = nodes_with_excitatory_dendrites[i];
-            }
-
             nodes_with_excitatory_axons.emplace_back(current_node, std::move(interaction_list));
         }
 
         if (cell.get_number_inhibitory_axons() > 0) {
-            std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> interaction_list{ nullptr };
-            for (auto i = 0; i < nodes_with_inhibitory_dendrites.size(); i++) {
-                interaction_list[i] = nodes_with_inhibitory_dendrites[i];
-            }
-
             nodes_with_inhibitory_axons.emplace_back(current_node, std::move(interaction_list));
         }
     }
 
-    if (!nodes_with_excitatory_axons.empty() && nodes_with_excitatory_dendrites.size() > 0) {
+    if (!nodes_with_excitatory_axons.empty() && total_number_dendrites_ex > 0) {
         make_creation_request_for(SignalType::EXCITATORY, synapse_creation_requests_outgoing, nodes_with_excitatory_axons);
     }
-    if (!nodes_with_inhibitory_axons.empty() && nodes_with_inhibitory_dendrites.size() > 0) {
+    if (!nodes_with_inhibitory_axons.empty() && total_number_dendrites_in > 0) {
         make_creation_request_for(SignalType::INHIBITORY, synapse_creation_requests_outgoing, nodes_with_inhibitory_axons);
     }
 

@@ -72,8 +72,9 @@ protected:
         std::cerr << "Test finished\n";
     }
 
+    template<typename AdditionalCellAttributes>
     void make_mpi_mem_available() {
-        MemoryHolder<BarnesHutCell>::make_all_available();
+        MemoryHolder<AdditionalCellAttributes>::make_all_available();
     }
 
     constexpr static int iterations = 10;
