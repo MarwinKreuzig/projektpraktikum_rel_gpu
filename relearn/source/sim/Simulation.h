@@ -13,6 +13,7 @@
 #include "../algorithm/Types.h"
 #include "../util/StatisticalMeasures.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <functional>
@@ -264,4 +265,6 @@ private:
 
     int64_t delta_synapse_creations{ 0 };
     int64_t delta_synapse_deletions{ 0 };
+
+    size_t step{ 1 };
 };

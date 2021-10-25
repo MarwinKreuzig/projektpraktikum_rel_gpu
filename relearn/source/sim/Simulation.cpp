@@ -222,9 +222,10 @@ void Simulation::simulate(const size_t number_steps) {
     const auto previous_synapse_deletions = total_synapse_deletions;
 
     /**
-	 * Simulation loop
-	 */
-    for (size_t step = 1; step <= number_steps; step++) {
+     * Simulation loop
+     */
+    const auto final_step_count = step + number_steps;
+    for (; step <= final_step_count; ++step) { // NOLINT(altera-id-dependent-backward-branch)
         if (step % Config::monitor_step == 0) {
             const auto number_neurons = neurons->get_num_neurons();
 
@@ -341,7 +342,7 @@ void Simulation::simulate(const size_t number_steps) {
     Timers::stop_and_add(TimerRegion::SIMULATION_LOOP);
 
     print_neuron_monitors();
-    
+
     neurons->print_positions_to_log_file();
     neurons->print_network_graph_to_log_file();
 }
@@ -419,7 +420,7 @@ void Simulation::increase_monitoring_capacity(const size_t size) {
 
 void Simulation::snapshot_monitors() {
     if (monitors->size() > 0) {
-        //record data at step 0
+        // record data at step 0
         for (auto& m : *monitors) {
             m.record_data();
         }
@@ -427,7 +428,7 @@ void Simulation::snapshot_monitors() {
 }
 
 void Simulation::save_network_graph(size_t current_steps) {
-    //Check wether there are multiple runs or not
+    // Check wether there are multiple runs or not
     if (current_steps == 0) {
         neurons->print_network_graph_to_log_file();
     } else {
