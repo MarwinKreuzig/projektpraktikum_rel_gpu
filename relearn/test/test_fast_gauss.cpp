@@ -209,6 +209,8 @@ TEST(TestFastGauss, test_static_multiindex_functions) {
 }
 
 TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendritesFMM) {
+    make_mpi_mem_available();
+
     const auto my_rank = MPIWrapper::get_my_rank();
 
     std::uniform_int_distribution<size_t> uid_lvl(0, 6);
@@ -288,6 +290,8 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendritesFMM) {
 }
 
 TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendritesFMM) {
+    make_mpi_mem_available();
+
     const auto my_rank = MPIWrapper::get_my_rank();
 
     std::uniform_int_distribution<size_t> uid_lvl(0, 6);

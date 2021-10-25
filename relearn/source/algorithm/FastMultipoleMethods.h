@@ -189,7 +189,7 @@ public:
     std::vector<double> calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source, const SignalType dendrite_type_needed);
 
     void make_creation_request_for(const SignalType needed, MapSynapseCreationRequests& request,
-        std::stack<std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>>>& nodes_with_axons);
+        std::vector<std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>>>& nodes_with_axons);
 
     /**
    * @brief Calculates the coefficients which are needed for the derivatives of e^(-t^2).
