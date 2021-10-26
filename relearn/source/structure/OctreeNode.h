@@ -142,22 +142,9 @@ public:
 
         std::tie(cell_xyz_min, cell_xyz_max) = cell.get_size();
 
-        const auto& min_x = cell_xyz_min.get_x();
-        const auto& min_y = cell_xyz_min.get_y();
-        const auto& min_z = cell_xyz_min.get_z();
+        const auto is_in_box = position.check_in_box(cell_xyz_min, cell_xyz_max);
 
-        const auto& max_x = cell_xyz_max.get_x();
-        const auto& max_y = cell_xyz_max.get_y();
-        const auto& max_z = cell_xyz_max.get_z();
-
-        const auto& pos_x = position.get_x();
-        const auto& pos_y = position.get_y();
-        const auto& pos_z = position.get_z();
-
-        RelearnException::check(min_x <= pos_x && pos_x <= max_x, "OctreeNode::insert: x was not in range: {} vs [{}, {}]", pos_x, min_x, max_x);
-        RelearnException::check(min_y <= pos_y && pos_y <= max_y, "OctreeNode::insert: y was not in range: {} vs [{}, {}]", pos_y, min_y, max_y);
-        RelearnException::check(min_z <= pos_z && pos_z <= max_z, "OctreeNode::insert: z was not in range: {} vs [{}, {}]", pos_z, min_z, max_z);
-
+        RelearnException::check(is_in_box, "OctreeNode::insert: position is not in box: {} in [{}, {}]", position, cell_xyz_min, cell_xyz_max);
         RelearnException::check(rank >= 0, "OctreeNode::insert: rank was {}", rank);
         RelearnException::check(neuron_id <= Constants::uninitialized, "OctreeNode::insert, neuron_id was {}", neuron_id);
 

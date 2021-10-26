@@ -81,7 +81,7 @@ public:
 
     /**
      * @brief Calculates the octant for the position.
-     * @param pos The position inside the current cell which's octant position should be found
+     * @param position The position inside the current cell which's octant position should be found
      * @exception Throws a RelearnException if the position is not within the current cell
      * @return A value from 0 to 7 that indicates which octant the position is
      * 
@@ -98,21 +98,21 @@ public:
 	 *		|/        |/       |/
 	 *	   000 ----- 001       +-----> x
      */
-    [[nodiscard]] unsigned char get_octant_for_position(const Vec3d& pos) const {
+    [[nodiscard]] unsigned char get_octant_for_position(const Vec3d& position) const {
         unsigned char idx = 0;
 
-        const auto& x = pos.get_x();
-        const auto& y = pos.get_y();
-        const auto& z = pos.get_z();
+        const auto& x = position.get_x();
+        const auto& y = position.get_y();
+        const auto& z = position.get_z();
+
 
         /**
 	     * Sanity check: Make sure that the position is within this cell
 	     * This check returns false if negative coordinates are used.
 	     * Thus make sure to use positions >= 0.
 	     */
-        RelearnException::check(x >= xyz_min.get_x() && x <= xyz_max.get_x(), "Cell::get_octant_for_position: x is bad");
-        RelearnException::check(y >= xyz_min.get_y() && y <= xyz_max.get_y(), "Cell::get_octant_for_position: y is bad");
-        RelearnException::check(z >= xyz_min.get_z() && z <= xyz_max.get_z(), "Cell::get_octant_for_position: z is bad");
+        const auto is_in_box = position.check_in_box(xyz_min, xyz_max);
+        RelearnException::check(is_in_box, "Cell::get_octant_for_position: position is not in box: {} in [{}, {}]", position, xyz_min, xyz_max);
 
         //NOLINTNEXTLINE
         idx = idx | ((x < (xyz_min.get_x() + xyz_max.get_x()) / 2.0) ? 0 : 1); // idx | (pos_x < midpoint_dim_x) ? 0 : 1
@@ -262,10 +262,8 @@ public:
     void set_excitatory_dendrites_position(const std::optional<Vec3d>& opt_position) {
         if (opt_position.has_value()) {
             const auto& position = opt_position.value();
-
-            RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "Cell::set_excitatory_dendrites_position: x was not in the box");
-            RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "Cell::set_excitatory_dendrites_position: y was not in the box");
-            RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "Cell::set_excitatory_dendrites_position: z was not in the box");
+            const auto is_in_box = position.check_in_box(xyz_min, xyz_max);
+            RelearnException::check(is_in_box, "Cell::set_excitatory_dendrites_position: position is not in box: {} in [{}, {}]", position, xyz_min, xyz_max);
         }
 
         additional_cell_attributes.set_excitatory_dendrites_position(opt_position);
@@ -287,10 +285,8 @@ public:
     void set_inhibitory_dendrites_position(const std::optional<Vec3d>& opt_position) {
         if (opt_position.has_value()) {
             const auto& position = opt_position.value();
-
-            RelearnException::check(xyz_min.get_x() <= position.get_x() && position.get_x() <= xyz_max.get_x(), "Cell::set_inhibitory_dendrites_position: x was not in the box");
-            RelearnException::check(xyz_min.get_y() <= position.get_y() && position.get_y() <= xyz_max.get_y(), "Cell::set_inhibitory_dendrites_position: y was not in the box");
-            RelearnException::check(xyz_min.get_z() <= position.get_z() && position.get_z() <= xyz_max.get_z(), "Cell::set_inhibitory_dendrites_position: z was not in the box");
+            const auto is_in_box = position.check_in_box(xyz_min, xyz_max);
+            RelearnException::check(is_in_box, "Cell::set_inhibitory_dendrites_position: position is not in box: {} in [{}, {}]", position, xyz_min, xyz_max);
         }
 
         additional_cell_attributes.set_inhibitory_dendrites_position(opt_position);

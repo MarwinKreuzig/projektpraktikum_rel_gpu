@@ -410,6 +410,27 @@ public:
     }
 
     /**
+     * @brief Checks if *this is in [lower, upper] component-wise, required lower <= upper component-wise, and returns a flag indicating the result
+     * @param lower The lower bound for each component
+     * @param upper The upper bound for each component
+     * @exception Throws a RelearnException if lower <= upper is violated
+     * @return True iff *this is in [lower, upper]
+     */
+    bool check_in_box(const Vec3<T>& lower, const Vec3<T>& upper) const {
+        RelearnException::check(lower.x <= upper.x, "Vec3::check_in_box: lower.x ({}) is larger than upper.x ({})", lower.x, upper.x);
+        RelearnException::check(lower.y <= upper.y, "Vec3::check_in_box: lower.y ({}) is larger than upper.y ({})", lower.y, upper.y);
+        RelearnException::check(lower.z <= upper.z, "Vec3::check_in_box: lower.z ({}) is larger than upper.z ({})", lower.z, upper.z);
+
+        const auto is_in_x_range = lower.x <= x && x <= upper.x;
+        const auto is_in_y_range = lower.y <= y && y <= upper.y;
+        const auto is_in_z_range = lower.z <= z && z <= upper.z;
+
+        const auto is_in_box = is_in_x_range && is_in_y_range && is_in_z_range;
+
+        return is_in_box;
+    }
+
+    /**
      * @brief This struct is here to allow Vec3<T> in std::map, etc.
      */
     struct less {

@@ -118,7 +118,7 @@ void Simulation::load_neurons_from_file(const std::string& path_to_positions, co
 
         neurons->init_synaptic_elements();
         neurons->debug_check_counts();
-        LogFiles::print_message_rank(0, "Synaptic elements initialized \n");
+        LogFiles::print_message_rank(0, "Synaptic elements initialized");
     } else {
         LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded synapses: 0");
     }
