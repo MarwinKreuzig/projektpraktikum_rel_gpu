@@ -30,7 +30,7 @@ public:
      * @param num_dendrites The number of free excitatory dendrites
      */
     void set_number_excitatory_dendrites(const unsigned int num_dendrites) noexcept {
-        excitatory_dendrites.num_free_elements = num_dendrites;
+        excitatory_dendrites.set_number_free_elements(num_dendrites);
     }
 
     /**
@@ -38,7 +38,7 @@ public:
      * @return The number of free excitatory dendrites
      */
     [[nodiscard]] unsigned int get_number_excitatory_dendrites() const noexcept {
-        return excitatory_dendrites.num_free_elements;
+        return excitatory_dendrites.get_number_free_elements();
     }
 
     /**
@@ -46,7 +46,7 @@ public:
      * @param num_dendrites The number of free inhibitory dendrites
      */
     void set_number_inhibitory_dendrites(const unsigned int num_dendrites) noexcept {
-        inhibitory_dendrites.num_free_elements = num_dendrites;
+        inhibitory_dendrites.set_number_free_elements(num_dendrites);
     }
 
     /**
@@ -54,7 +54,7 @@ public:
      * @return The number of free inhibitory dendrites
      */
     [[nodiscard]] unsigned int get_number_inhibitory_dendrites() const noexcept {
-        return inhibitory_dendrites.num_free_elements;
+        return inhibitory_dendrites.get_number_free_elements();
     }
 
     /**
@@ -64,10 +64,10 @@ public:
      */
     [[nodiscard]] unsigned int get_number_dendrites_for(const SignalType dendrite_type) const noexcept {
         if (dendrite_type == SignalType::EXCITATORY) {
-            return excitatory_dendrites.num_free_elements;
+            return excitatory_dendrites.get_number_free_elements();
         }
 
-        return inhibitory_dendrites.num_free_elements;
+        return inhibitory_dendrites.get_number_free_elements();
     }
 
     /**
@@ -75,7 +75,7 @@ public:
      * @param opt_position The new position of the inhibitory dendrite
      */
     void set_inhibitory_dendrites_position(const std::optional<Vec3d>& opt_position) noexcept {
-        inhibitory_dendrites.position = opt_position;
+        inhibitory_dendrites.set_position(opt_position);
     }
 
     /**
@@ -83,7 +83,7 @@ public:
      * @return The position of the inhibitory dendrite
      */
     [[nodiscard]] std::optional<Vec3d> get_inhibitory_dendrites_position() const noexcept {
-        return inhibitory_dendrites.position;
+        return inhibitory_dendrites.get_position();
     }
 
     /**
@@ -91,7 +91,7 @@ public:
      * @param opt_position The new position of the excitatory dendrite
      */
     void set_excitatory_dendrites_position(const std::optional<Vec3d>& opt_position) noexcept {
-        excitatory_dendrites.position = opt_position;
+        excitatory_dendrites.set_position(opt_position);
     }
 
     /**
@@ -99,7 +99,7 @@ public:
      * @return The position of the excitatory dendrite
      */
     [[nodiscard]] std::optional<Vec3d> get_excitatory_dendrites_position() const noexcept {
-        return excitatory_dendrites.position;
+        return excitatory_dendrites.get_position();
     }
 
     /**
@@ -109,10 +109,10 @@ public:
      */
     [[nodiscard]] std::optional<Vec3d> get_dendrites_position_for(const SignalType dendrite_type) const noexcept {
         if (dendrite_type == SignalType::EXCITATORY) {
-            return excitatory_dendrites.position;
+            return excitatory_dendrites.get_position();
         }
 
-        return inhibitory_dendrites.position;
+        return inhibitory_dendrites.get_position();
     }
 
     /**
@@ -120,7 +120,7 @@ public:
      * @param num_axons The number of free excitatory axons
      */
     void set_number_excitatory_axons(const unsigned int num_axons) noexcept {
-        excitatory_axons.num_free_elements = num_axons;
+        excitatory_axons.set_number_free_elements(num_axons);
     }
 
     /**
@@ -128,7 +128,7 @@ public:
      * @return The number of free excitatory axons
      */
     [[nodiscard]] unsigned int get_number_excitatory_axons() const noexcept {
-        return excitatory_axons.num_free_elements;
+        return excitatory_axons.get_number_free_elements();
     }
 
     /**
@@ -136,7 +136,7 @@ public:
      * @param num_axons The number of free inhibitory axons
      */
     void set_number_inhibitory_axons(const unsigned int num_axons) noexcept {
-        inhibitory_axons.num_free_elements = num_axons;
+        inhibitory_axons.set_number_free_elements(num_axons);
     }
 
     /**
@@ -144,7 +144,7 @@ public:
      * @return The number of free inhibitory axons
      */
     [[nodiscard]] unsigned int get_number_inhibitory_axons() const noexcept {
-        return inhibitory_axons.num_free_elements;
+        return inhibitory_axons.get_number_free_elements();
     }
 
     /**
@@ -154,10 +154,10 @@ public:
      */
     [[nodiscard]] unsigned int get_number_axons_for(const SignalType axon_type) const noexcept {
         if (axon_type == SignalType::EXCITATORY) {
-            return excitatory_axons.num_free_elements;
+            return excitatory_axons.get_number_free_elements();
         }
 
-        return inhibitory_axons.num_free_elements;
+        return inhibitory_axons.get_number_free_elements();
     }
 
     /**
@@ -165,7 +165,7 @@ public:
      * @param opt_position The new position of the inhibitory axons
      */
     void set_inhibitory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
-        inhibitory_axons.position = opt_position;
+        inhibitory_axons.set_position(opt_position);
     }
 
     /**
@@ -173,7 +173,7 @@ public:
      * @return The position of the inhibitory axons
      */
     [[nodiscard]] std::optional<Vec3d> get_inhibitory_axons_position() const noexcept {
-        return inhibitory_axons.position;
+        return inhibitory_axons.get_position();
     }
 
     /**
@@ -181,7 +181,7 @@ public:
      * @param opt_position The new position of the excitatory axons
      */
     void set_excitatory_axons_position(const std::optional<Vec3d>& opt_position) noexcept {
-        excitatory_axons.position = opt_position;
+        excitatory_axons.set_position(opt_position);
     }
 
     /**
@@ -189,7 +189,7 @@ public:
      * @return The position of the excitatory axons
      */
     [[nodiscard]] std::optional<Vec3d> get_excitatory_axons_position() const noexcept {
-        return excitatory_axons.position;
+        return excitatory_axons.get_position();
     }
 
     /**
@@ -199,10 +199,10 @@ public:
      */
     [[nodiscard]] std::optional<Vec3d> get_axons_position_for(const SignalType axon_type) const noexcept {
         if (axon_type == SignalType::EXCITATORY) {
-            return excitatory_axons.position;
+            return excitatory_axons.get_position();
         }
 
-        return inhibitory_axons.position;
+        return inhibitory_axons.get_position();
     }
 
     /**

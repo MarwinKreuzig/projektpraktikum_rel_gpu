@@ -23,10 +23,100 @@ enum class AlgorithmEnum {
 /**
  * This type is used to represent a virtual plasticity element,
  * i.e., axons and dendrites, when it comes to combining multiple of them
- * in the octree
+ * in the octree. Does not use std::optional
  */
-struct VirtualPlasticityElement {
-    // All elements have the same position
+class VirtualPlasticityElementManual {
+    // Avoiding std::optional<> saves 8 bytes, which translates to 32 bytes per FFM-cell
+
+    Vec3d position{};
+    unsigned int num_free_elements{ 0 };
+    bool is_valid{ false };
+
+public:
+    /**
+     * @brief Sets the number of free elements
+     * @param number_free_elements The number of free elements
+     */
+    void set_number_free_elements(unsigned int number_free_elements) noexcept {
+        num_free_elements = number_free_elements;
+    }
+
+    /**
+     * @brief Returns the number of free elements
+     * @return The number of free elements
+     */
+    unsigned int get_number_free_elements() const noexcept {
+        return num_free_elements;
+    }
+
+    /**
+     * @brief Sets the position of this plasticity element. Can be empty
+     * @param virtual_position The new position
+     */
+    void set_position(const std::optional<Vec3d>& virtual_position) noexcept {
+        const auto valid_pos = virtual_position.has_value();
+        is_valid = valid_pos;
+
+        if (valid_pos) {
+            position = virtual_position.value();
+        }
+    }
+
+    /**
+     * @brief Returns the position of this plasticity element. Can be empty
+     * @return The current position
+     */
+    std::optional<Vec3d> get_position() const noexcept {
+        if (!is_valid) {
+            return {};
+        }
+
+        return position;
+    }
+};
+
+/**
+ * This type is used to represent a virtual plasticity element,
+ * i.e., axons and dendrites, when it comes to combining multiple of them
+ * in the octree. Uses std::optional
+ */
+class VirtualPlasticityElementOptional {
     std::optional<Vec3d> position{};
     unsigned int num_free_elements{ 0 };
+
+public:
+    /**
+     * @brief Sets the number of free elements
+     * @param number_free_elements The number of free elements
+     */
+    void set_number_free_elements(unsigned int number_free_elements) noexcept {
+        num_free_elements = number_free_elements;
+    }
+
+    /**
+     * @brief Returns the number of free elements
+     * @return The number of free elements
+     */
+    unsigned int get_number_free_elements() const noexcept {
+        return num_free_elements;
+    }
+
+    /**
+     * @brief Sets the position of this plasticity element. Can be empty
+     * @param virtual_position The new position
+     */
+    void set_position(const std::optional<Vec3d>& virtual_position) noexcept {
+        position = virtual_position;
+    }
+
+    /**
+     * @brief Returns the position of this plasticity element. Can be empty
+     * @return The current position
+     */
+    std::optional<Vec3d> get_position() const noexcept {
+        return position;
+    }
 };
+
+// Switch for the implementation of VPE (space vs. time trade-off)
+using VirtualPlasticityElement = VirtualPlasticityElementManual;
