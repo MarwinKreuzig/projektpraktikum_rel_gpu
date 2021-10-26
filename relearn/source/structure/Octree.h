@@ -444,8 +444,6 @@ public:
             new_node_to_insert->set_cell_neuron_id(neuron_id);
             new_node_to_insert->set_rank(rank);
 
-            // Init root with tree's root level
-            new_node_to_insert->set_level(0);
             root = new_node_to_insert;
 
             return;
@@ -523,8 +521,6 @@ protected:
 
             // Node should be visited now?
             if (current_element.get_visited()) {
-                RelearnException::check(current_octree_node->get_level() <= max_level, "Octree::tree_walk_postorder: current_element had bad level");
-
                 // Apply action to node
                 function(current_octree_node);
 
@@ -574,7 +570,6 @@ protected:
 
         local_root->set_cell_neuron_id(Constants::uninitialized);
         local_root->set_cell_size(xyz_min, xyz_max);
-        local_root->set_level(0);
         local_root->set_rank(my_rank);
         local_root->set_cell_neuron_position(xyz_min + (cell_length / 2));
 

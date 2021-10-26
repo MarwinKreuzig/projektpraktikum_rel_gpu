@@ -25,7 +25,7 @@
 /**
  * This class serves as the basic building blocks of the Octree.
  * Each object has up to Config::number_oct children (can be nullptr) and a Cell which summarizes the relevant biological aspects.
- * Additionally, an object stores its level within the tree (0 being root), its MPI rank and whether or not it is an inner node.
+ * Additionally, an object stores its its MPI rank and whether or not it is an inner node.
  */
 template <typename AdditionalCellAttributes>
 class OctreeNode {
@@ -57,14 +57,6 @@ public:
      */
     [[nodiscard]] int get_rank() const noexcept {
         return rank;
-    }
-
-    /**
-     * @brief Returns the level in the octree, 0 being root
-     * @return The level in the octree
-     */
-    [[nodiscard]] size_t get_level() const noexcept {
-        return level;
     }
 
     /**
@@ -221,9 +213,6 @@ public:
                 // MPI rank who owns this node
                 new_node->set_rank(parent_node->get_rank());
 
-                // New node is one level below
-                new_node->set_level(parent_node->get_level() + 1);
-
                 // Determine my octant
                 new_position_octant = parent_node->get_cell().get_octant_for_position(position);
 
@@ -241,7 +230,6 @@ public:
 	     * add myself to the array now
 	     */
         parent_node->set_child(new_node_to_insert, new_position_octant);
-        new_node_to_insert->set_level(parent_node->get_level() + 1); // Now we know level of me
 
         Vec3d xyz_min{};
         Vec3d xyz_max{};
@@ -273,16 +261,6 @@ public:
     void set_rank(const int new_rank) {
         RelearnException::check(new_rank >= 0, "OctreeNode::set_rank: new_rank is {}", new_rank);
         rank = new_rank;
-    }
-
-    /**
-     * @brief Sets the level in the octree
-     * @param new_level The level in the octree, < Constants::uninitialized
-     * @expection Throws a RelearnException if new_level is too large
-     */
-    void set_level(const size_t new_level) {
-        RelearnException::check(new_level < Constants::uninitialized, "OctreeNode::set_level: new_level is {}", new_level);
-        level = new_level;
     }
 
     /**
@@ -320,14 +298,12 @@ public:
      *      (b) The children are newly constructed
      *      (c) parent is false
      *      (d) rank is -1
-     *      (e) level is Constants::uninitialized
      */
     void reset() noexcept {
         cell = Cell<AdditionalCellAttributes>{};
         children = std::array<OctreeNodePtr, Constants::number_oct>{ nullptr };
         parent = false;
         rank = -1;
-        level = Constants::uninitialized;
     }
 
     /**
@@ -346,8 +322,7 @@ public:
         output_stream << "\n";
 
         output_stream << "  is_parent  : " << octree_node.is_parent() << "\n\n";
-        output_stream << "  rank       : " << octree_node.get_rank() << "\n";
-        output_stream << "  level      : " << octree_node.get_level() << "\n\n";
+        output_stream << "  rank       : " << octree_node.get_rank() << "\n\n";
         output_stream << octree_node.get_cell();
         output_stream << "\n";
 
@@ -361,7 +336,6 @@ private:
     bool parent{ false };
 
     int rank{ -1 }; // MPI rank who owns this octree node
-    size_t level{ Constants::uninitialized }; // Level in the tree [0 (= root) ... depth of tree]
 
 public:
     /**
