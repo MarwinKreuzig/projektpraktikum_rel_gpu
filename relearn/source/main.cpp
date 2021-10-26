@@ -76,7 +76,6 @@ void print_sizes() {
     const auto sizeof_bh_octreenode = sizeof(OctreeNode<BarnesHutCell>);
     const auto sizeof_naive_octreenode = sizeof(OctreeNode<NaiveCell>);
 
-    
     std::stringstream ss{};
 
     ss << '\n';
@@ -100,7 +99,7 @@ void print_sizes() {
 
 void print_arguments(int argc, char** argv) {
     std::stringstream ss{};
-    
+
     for (auto i = 0; i < argc; i++) {
         ss << argv[i] << ' ';
     }

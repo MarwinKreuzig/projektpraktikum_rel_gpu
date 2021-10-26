@@ -115,30 +115,46 @@ public:
                 continue;
             }
 
+            const auto& child_cell = child->get_cell();
+
             // Sum up number of dendrites
-            const auto child_number_dendrites_excitatory = child->get_cell().get_number_excitatory_dendrites();
-            const auto child_number_dendrites_inhibitory = child->get_cell().get_number_inhibitory_dendrites();
+            const auto child_number_dendrites_excitatory = child_cell.get_number_excitatory_dendrites();
+            const auto child_number_dendrites_inhibitory = child_cell.get_number_inhibitory_dendrites();
 
             my_number_dendrites_excitatory += child_number_dendrites_excitatory;
             my_number_dendrites_inhibitory += child_number_dendrites_inhibitory;
 
             // Average the position by using the number of dendrites as weights
-            std::optional<Vec3d> child_position_dendrites_excitatory = child->get_cell().get_excitatory_dendrites_position();
-            std::optional<Vec3d> child_position_dendrites_inhibitory = child->get_cell().get_inhibitory_dendrites_position();
+            std::optional<Vec3d> opt_child_position_dendrites_excitatory = child_cell.get_excitatory_dendrites_position();
+            std::optional<Vec3d> opt_child_position_dendrites_inhibitory = child_cell.get_inhibitory_dendrites_position();
 
             /**
 			 * We can use position if it's valid or if corresponding num of dendrites is 0 
 			 */
-            RelearnException::check(child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "BarnesHut::update_functor: The child had excitatory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
-            RelearnException::check(child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "BarnesHut::update_functor: The child had inhibitory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
+            RelearnException::check(opt_child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "BarnesHut::update_functor: The child had excitatory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
+            RelearnException::check(opt_child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "BarnesHut::update_functor: The child had inhibitory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
 
-            if (child_position_dendrites_excitatory.has_value()) {
-                const auto scaled_position = child_position_dendrites_excitatory.value() * static_cast<double>(child_number_dendrites_excitatory);
+            if (opt_child_position_dendrites_excitatory.has_value()) {
+                const auto& child_position_dendrites_excitatory = opt_child_position_dendrites_excitatory.value();
+
+                const auto& [child_cell_xyz_min, child_cell_xyz_max] = child_cell.get_size();
+                const auto is_in_box = child_position_dendrites_excitatory.check_in_box(child_cell_xyz_min, child_cell_xyz_max);
+
+                RelearnException::check(is_in_box, "BarnesHut::update_functor: The excitatory child is not in its cell");
+
+                const auto& scaled_position = child_position_dendrites_excitatory * static_cast<double>(child_number_dendrites_excitatory);
                 my_position_dendrites_excitatory += scaled_position;
             }
 
-            if (child_position_dendrites_inhibitory.has_value()) {
-                const auto scaled_position = child_position_dendrites_inhibitory.value() * static_cast<double>(child_number_dendrites_inhibitory);
+            if (opt_child_position_dendrites_inhibitory.has_value()) {
+                const auto& child_position_dendrites_inhibitory = opt_child_position_dendrites_inhibitory.value();
+
+                const auto& [child_cell_xyz_min, child_cell_xyz_max] = child_cell.get_size();
+                const auto is_in_box = child_position_dendrites_inhibitory.check_in_box(child_cell_xyz_min, child_cell_xyz_max);
+
+                RelearnException::check(is_in_box, "BarnesHut::update_functor: The inhibitory child is not in its cell");
+
+                const auto& scaled_position = child_position_dendrites_inhibitory * static_cast<double>(child_number_dendrites_inhibitory);
                 my_position_dendrites_inhibitory += scaled_position;
             }
         }

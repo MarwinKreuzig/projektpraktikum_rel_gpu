@@ -194,9 +194,26 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
 
         RelearnException::check(node != nullptr, "BarnesHut::update_leaf_nodes: node was nullptr: ", neuron_id);
 
-        const size_t other_neuron_id = node->get_cell().get_neuron_id();
+        const auto& cell = node->get_cell();
+        const size_t other_neuron_id = cell.get_neuron_id();
 
         RelearnException::check(neuron_id == other_neuron_id, "BarnesHut::update_leaf_nodes: The nodes are not in order");
+
+        const auto& [cell_xyz_min, cell_xyz_max] = cell.get_size();
+        const auto& opt_excitatory_position = cell.get_excitatory_dendrites_position();
+        const auto& opt_inhibitory_position = cell.get_inhibitory_dendrites_position();
+
+        RelearnException::check(opt_excitatory_position.has_value(), "BarnesHut::update_leaf_nodes: Neuron {} does not have an excitatory position", neuron_id);
+        RelearnException::check(opt_inhibitory_position.has_value(), "BarnesHut::update_leaf_nodes: Neuron {} does not have an inhibitory position", neuron_id);
+
+        const auto& excitatory_position = opt_excitatory_position.value();
+        const auto& inhibitory_position = opt_inhibitory_position.value();
+
+        const auto excitatory_position_in_box = excitatory_position.check_in_box(cell_xyz_min, cell_xyz_max);
+        const auto inhibitory_position_in_box = inhibitory_position.check_in_box(cell_xyz_min, cell_xyz_max);
+
+        RelearnException::check(excitatory_position_in_box, "BarnesHut::update_leaf_nodes: Excitatory position ({}) is not in cell: [({}), ({})]", excitatory_position, cell_xyz_min, cell_xyz_max);
+        RelearnException::check(inhibitory_position_in_box, "BarnesHut::update_leaf_nodes: Inhibitory position ({}) is not in cell: [({}), ({})]", inhibitory_position, cell_xyz_min, cell_xyz_max);
 
         if (disable_flags[neuron_id] == 0) {
             continue;
