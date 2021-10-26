@@ -62,6 +62,7 @@ void print_sizes() {
 
     const auto sizeof_virtual_plasticity_element = sizeof(VirtualPlasticityElement);
 
+    const auto sizeof_empty_t = sizeof(empty_t);
     const auto sizeof_fmm_cell_attributes = sizeof(FastMultipoleMethodsCell);
     const auto sizeof_bh_cell_attributes = sizeof(BarnesHutCell);
     const auto sizeof_bh_naive_attributes = sizeof(NaiveCell);
@@ -83,6 +84,7 @@ void print_sizes() {
     ss << "Size of Vec3s: " << sizeof_vec3_size_t << '\n';
     ss << "Size of VirtualPlasticityElement: " << sizeof_virtual_plasticity_element << "\n";
     ss << "Size of FastMultipoleMethodsCell: " << sizeof_fmm_cell_attributes << '\n';
+    ss << "Size of empty_t: " << sizeof_empty_t << '\n';
     ss << "Size of BarnesHutCell: " << sizeof_bh_cell_attributes << '\n';
     ss << "Size of NaiveCell: " << sizeof_bh_naive_attributes << "\n";
     ss << "Size of Cell<empty_t>: " << sizeof_empty_cell << '\n';
