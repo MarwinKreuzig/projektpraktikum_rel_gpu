@@ -15,6 +15,8 @@
 #include <filesystem>
 #include <iostream>
 
+bool LogFiles::disable = false;
+
 bool LogFiles::do_i_print(const int rank) {
     return rank == MPIWrapper::get_my_rank() || rank == -1;
 }
@@ -22,8 +24,6 @@ bool LogFiles::do_i_print(const int rank) {
 std::string LogFiles::get_my_rank_str() {
     return MPIWrapper::get_my_rank_str();
 }
-
-bool LogFiles::disable = false;
 
 void LogFiles::init() {
     if (disable) {
@@ -74,6 +74,21 @@ void LogFiles::init() {
 
 std::string LogFiles::get_specific_file_prefix() {
     return MPIWrapper::get_my_rank_str();
+}
+
+void LogFiles::save_and_open_new(EventType type, const std::string& new_file_name) {
+    const auto iterator = log_files.find(type);
+    RelearnException::check(iterator != log_files.end(), "The LogFiles don't contain the requested type");
+
+    auto complete_path = output_path + general_prefix + get_specific_file_prefix() + "_" + new_file_name + ".txt";
+
+    iterator->second->flush();
+
+    spdlog::drop(iterator->second->name());
+
+    auto new_logger = spdlog::basic_logger_mt(new_file_name, complete_path);
+    new_logger->set_pattern("%v");
+    iterator->second = std::move(new_logger);
 }
 
 void LogFiles::add_logfile(const EventType type, const std::string& file_name, const int rank, const std::string& file_ending) {

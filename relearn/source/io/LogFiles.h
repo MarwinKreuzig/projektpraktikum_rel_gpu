@@ -104,6 +104,13 @@ public:
      */
     static void init();
 
+    static void save_and_open_new(EventType type, const std::string& new_file_name);
+
+    // Clear log_files to create new files in future runs
+    static void clear_log_files() {
+        log_files.clear();
+    }
+
     /**
      * @brief Write the message into the file which is associated with the type.
      *      Optionally prints the message also to std::cout. The message can have place-holders of the form "{}", which are filled with additional arguments in the order of occurrence.
@@ -113,7 +120,7 @@ public:
      * @param args Variably many additional arguments that are inserted for the place-holders
      */
     template <typename FormatString, typename... Args>
-    static void write_to_file(const EventType type, bool also_to_cout, FormatString&& format, Args&&... args) {
+    static void write_to_file(const EventType type, const bool also_to_cout, FormatString&& format, Args&&... args) {
         auto message = fmt::format(format, std::forward<Args>(args)...);
 
         if (also_to_cout) {
