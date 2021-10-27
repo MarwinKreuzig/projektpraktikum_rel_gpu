@@ -15,73 +15,7 @@
 #include "../structure/OctreeNode.h"
 #include "../util/Timers.h"
 
-inline std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(
-    const OctreeNode<FastMultipoleMethodsCell>* source,
-    const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& interaction_list,
-    const SignalType dendrite_type_needed) const {
-
-    const auto& count_non_zero_elements = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& arr) {
-        auto non_zero_counter = 0;
-        for (auto i = 0; i < Constants::number_oct; i++) {
-            if (arr[i] != nullptr) {
-                non_zero_counter++;
-            }
-        }
-        return non_zero_counter;
-    };
-
-    const auto& extract_element = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& arr, unsigned int index) -> const OctreeNode<FastMultipoleMethodsCell>* {
-        auto non_zero_counter = 0;
-        for (auto i = 0; i < Constants::number_oct; i++) {
-            if (arr[i] != nullptr) {
-                if (index == non_zero_counter) {
-                    return arr[i];
-                }
-                non_zero_counter++;
-            }
-        }
-        return nullptr;
-    };
-
-    const auto source_number_axons = source->get_cell().get_number_axons_for(dendrite_type_needed);
-    const auto target_list_length = count_non_zero_elements(interaction_list);
-
-    std::vector<double> result(target_list_length, 0.0);
-
-    if (source_number_axons > Constants::max_neurons_in_source) {
-        // There are enough axons in the source box
-        std::array<double, Constants::p3> coefficents;
-        calc_hermite_coefficients(source, coefficents, default_sigma, dendrite_type_needed);
-        for (auto i = 0; i < target_list_length; i++) {
-            const auto* current_target = extract_element(interaction_list, i);
-            result[i] = calc_hermite(source, current_target, coefficents, default_sigma, dendrite_type_needed);
-        }
-
-        return result;
-    }
-
-    // There are not enough axons in the source box
-    for (auto i = 0; i < target_list_length; i++) {
-        const auto* current_target = extract_element(interaction_list, i);
-        const auto target_number_dendrites = current_target->get_cell().get_number_dendrites_for(dendrite_type_needed);
-
-        if (target_number_dendrites <= Constants::max_neurons_in_target) {
-            // There are not enough dendrites in the target box
-
-            const auto& target_neuron_positions = current_target->get_all_dendrite_positions_for(dendrite_type_needed);
-            const auto& source_neuron_positions = source->get_all_axon_positions_for(dendrite_type_needed);
-
-            result[i] = calc_direct_gauss(source_neuron_positions, target_neuron_positions, default_sigma);
-        } else {
-            // There are enough dendrites in the target box
-            result[i] = calc_taylor_expansion(source, current_target, default_sigma, dendrite_type_needed);
-        }
-    }
-
-    return result;
-}
-
-inline unsigned int FastMultipoleMethods::do_random_experiment(const OctreeNode<FastMultipoleMethodsCell>* source, const std::vector<double>& attractiveness) const {
+unsigned int FastMultipoleMethods::do_random_experiment(const OctreeNode<FastMultipoleMethodsCell>* source, const std::vector<double>& attractiveness) const {
     const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(1.0, Constants::eps));
     const auto vec_len = attractiveness.size();
     std::vector<double> intervals(vec_len + 1);
@@ -104,8 +38,10 @@ inline unsigned int FastMultipoleMethods::do_random_experiment(const OctreeNode<
     return i;
 }
 
-std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source,
-    const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& interaction_list, const SignalType dendrite_type_needed) {
+std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(
+    const OctreeNode<FastMultipoleMethodsCell>* source,
+    const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& interaction_list,
+    const SignalType dendrite_type_needed) const {
     const auto& count_non_zero_elements = [](const std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>& arr) {
         auto non_zero_counter = 0;
         for (auto i = 0; i < Constants::number_oct; i++) {
@@ -142,7 +78,7 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(con
         calc_hermite_coefficients(source, coefficents, sigma, dendrite_type_needed);
         for (auto i = 0; i < target_list_length; i++) {
             const auto* current_target = extract_element(interaction_list, i);
-            result[i] = calc_hermite(source, current_target,coefficents, sigma, dendrite_type_needed);
+            result[i] = calc_hermite(source, current_target, coefficents, sigma, dendrite_type_needed);
         }
 
         return result;
@@ -413,6 +349,8 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<char>& disable_fl
 
     RelearnException::check(all_same_size, "FastMultipoleMethods::update_leaf_nodes: The vectors were of different sizes");
 
+    using counter_type = FastMultipoleMethodsCell::counter_type;
+
     const auto& indices = Multiindex::get_indices();
     const auto num_coef = Multiindex::get_number_of_indices();
 
@@ -429,21 +367,21 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<char>& disable_fl
             continue;
         }
 
-        const auto number_vacant_dendrites_excitatory = static_cast<unsigned int>(dendrites_excitatory_counts[neuron_id] - dendrites_excitatory_connected_counts[neuron_id]);
-        const auto number_vacant_dendrites_inhibitory = static_cast<unsigned int>(dendrites_inhibitory_counts[neuron_id] - dendrites_inhibitory_connected_counts[neuron_id]);
+        const auto number_vacant_dendrites_excitatory = static_cast<counter_type>(dendrites_excitatory_counts[neuron_id] - dendrites_excitatory_connected_counts[neuron_id]);
+        const auto number_vacant_dendrites_inhibitory = static_cast<counter_type>(dendrites_inhibitory_counts[neuron_id] - dendrites_inhibitory_connected_counts[neuron_id]);
 
         node->set_cell_number_dendrites(number_vacant_dendrites_excitatory, number_vacant_dendrites_inhibitory);
 
         const auto signal_type = axons->get_signal_type(neuron_id);
 
         if (signal_type == SignalType::EXCITATORY) {
-            const auto number_vacant_excitatory_axons = static_cast<unsigned int>(axons_counts[neuron_id] - axons_connected_counts[neuron_id]);
+            const auto number_vacant_excitatory_axons = static_cast<counter_type>(axons_counts[neuron_id] - axons_connected_counts[neuron_id]);
             const auto number_vacant_inhibitory_axons = 0;
 
             node->set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
         } else {
             const auto number_vacant_excitatory_axons = 0;
-            const auto number_vacant_inhibitory_axons = static_cast<unsigned int>(axons_counts[neuron_id] - axons_connected_counts[neuron_id]);
+            const auto number_vacant_inhibitory_axons = static_cast<counter_type>(axons_counts[neuron_id] - axons_connected_counts[neuron_id]);
 
             node->set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
         }

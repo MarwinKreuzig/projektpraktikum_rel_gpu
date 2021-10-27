@@ -198,9 +198,6 @@ private:
 
     unsigned int do_random_experiment(const OctreeNode<FastMultipoleMethodsCell>* source, const std::vector<double>& attractiveness) const;
 
-    std::vector<double> calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source,
-        const std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>& interaction_list, const SignalType dendrite_type_needed);
-
     void make_creation_request_for(const SignalType needed, MapSynapseCreationRequests& request,
         std::stack<std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>>>& nodes_with_axons);
 

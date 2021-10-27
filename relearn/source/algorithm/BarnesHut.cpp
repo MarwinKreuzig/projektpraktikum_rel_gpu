@@ -189,6 +189,8 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
 
     RelearnException::check(all_same_size, "BarnesHut::update_leaf_nodes: The vectors were of different sizes");
 
+    using counter_type = BarnesHutCell::counter_type;
+
     for (size_t neuron_id = 0; neuron_id < num_leaf_nodes; neuron_id++) {
         auto* node = leaf_nodes[neuron_id];
 
@@ -219,8 +221,8 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
             continue;
         }
 
-        const auto number_vacant_dendrites_excitatory = static_cast<unsigned int>(dendrites_excitatory_counts[neuron_id] - dendrites_excitatory_connected_counts[neuron_id]);
-        const auto number_vacant_dendrites_inhibitory = static_cast<unsigned int>(dendrites_inhibitory_counts[neuron_id] - dendrites_inhibitory_connected_counts[neuron_id]);
+        const auto number_vacant_dendrites_excitatory = static_cast<counter_type>(dendrites_excitatory_counts[neuron_id] - dendrites_excitatory_connected_counts[neuron_id]);
+        const auto number_vacant_dendrites_inhibitory = static_cast<counter_type>(dendrites_inhibitory_counts[neuron_id] - dendrites_inhibitory_connected_counts[neuron_id]);
 
         node->set_cell_number_dendrites(number_vacant_dendrites_excitatory, number_vacant_dendrites_inhibitory);
     }

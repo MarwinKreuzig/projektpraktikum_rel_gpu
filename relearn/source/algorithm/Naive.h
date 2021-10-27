@@ -79,8 +79,10 @@ public:
     static void update_functor(OctreeNode<NaiveCell>* node) {
         RelearnException::check(node != nullptr, "Naive::update_functor: node is nullptr");
 
-        auto my_number_dendrites_excitatory = 0;
-        auto my_number_dendrites_inhibitory = 0;
+        using counter_type = NaiveCell::counter_type;
+
+        counter_type my_number_dendrites_excitatory = 0;
+        counter_type my_number_dendrites_inhibitory = 0;
 
         for (const auto& child : node->get_children()) {
             if (child == nullptr) {
