@@ -287,7 +287,7 @@ void Neurons::update_calcium() {
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
 }
 
-Neurons::StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, const int root, const std::vector<char>& disable_flags) const {
+StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, const int root, const std::vector<char>& disable_flags) const {
     const auto [d_my_min, d_my_max, d_my_acc, d_num_values] = Util::min_max_acc(local_values, disable_flags);
     const double my_avg = d_my_acc / d_num_values;
 
