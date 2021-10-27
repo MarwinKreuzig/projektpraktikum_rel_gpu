@@ -350,5 +350,6 @@ ASALocalRun/
 .cache/
 /relearn/input/disable.txt
 /output/
+/output-clang-tidy/
 /relearn/googletest/
 /build
