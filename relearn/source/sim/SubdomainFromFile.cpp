@@ -34,8 +34,8 @@ SubdomainFromFile::SubdomainFromFile(const std::string& file_path)
 }
 
 void SubdomainFromFile::read_dimensions_from_file() {
-    box_size_type minimum(std::numeric_limits<double>::max());
-    box_size_type maximum(std::numeric_limits<double>::min());
+    box_size_type minimum(std::numeric_limits<box_size_type::value_type>::max());
+    box_size_type maximum(std::numeric_limits<box_size_type::value_type>::min());
 
     size_t found_ex_neurons = 0;
     size_t found_in_neurons = 0;
@@ -49,9 +49,9 @@ void SubdomainFromFile::read_dimensions_from_file() {
         }
 
         size_t id{};
-        double pos_x{};
-        double pos_y{};
-        double pos_z{};
+        box_size_type::value_type pos_x{};
+        box_size_type::value_type pos_y{};
+        box_size_type::value_type pos_z{};
         std::string area_name{};
         std::string signal_type{};
 
@@ -117,9 +117,9 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
         std::string signal_type{};
 
         Node node{};
-        double pos_x{};
-        double pos_y{};
-        double pos_z{};
+        box_size_type::value_type pos_x{};
+        box_size_type::value_type pos_y{};
+        box_size_type::value_type pos_z{};
         std::stringstream sstream(line);
         bool success = (sstream >> node.id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> node.area_name) && (sstream >> signal_type);
 
@@ -212,9 +212,9 @@ std::optional<std::vector<size_t>> SubdomainFromFile::read_neuron_ids_from_file(
         }
 
         size_t id{};
-        double pos_x{};
-        double pos_y{};
-        double pos_z{};
+        box_size_type::value_type pos_x{};
+        box_size_type::value_type pos_y{};
+        box_size_type::value_type pos_z{};
         std::string area_name{};
         std::string signal_type{};
 

@@ -100,9 +100,9 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
         const size_t y_it = (pos_bitmask >> 16U) & max_short;
         const size_t z_it = pos_bitmask & max_short;
 
-        const double x_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0) + x_it;
-        const double y_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0) + y_it;
-        const double z_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0) + z_it;
+        const box_size_type::value_type x_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0) + x_it;
+        const box_size_type::value_type y_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0) + y_it;
+        const box_size_type::value_type z_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0) + z_it;
 
         box_size_type pos_rnd{ x_pos_rnd, y_pos_rnd, z_pos_rnd };
         pos_rnd *= um_per_neuron_;
@@ -195,9 +195,9 @@ std::tuple<SubdomainFromNeuronDensity::box_size_type, SubdomainFromNeuronDensity
 
     box_size_type min{ subdomain_3idx.get_x() * x_subdomain_length, subdomain_3idx.get_y() * y_subdomain_length, subdomain_3idx.get_z() * z_subdomain_length };
 
-    const auto next_x = static_cast<double>(subdomain_3idx.get_x() + 1) * x_subdomain_length;
-    const auto next_y = static_cast<double>(subdomain_3idx.get_y() + 1) * y_subdomain_length;
-    const auto next_z = static_cast<double>(subdomain_3idx.get_z() + 1) * z_subdomain_length;
+    const auto next_x = static_cast<box_size_type::value_type>(subdomain_3idx.get_x() + 1) * x_subdomain_length;
+    const auto next_y = static_cast<box_size_type::value_type>(subdomain_3idx.get_y() + 1) * y_subdomain_length;
+    const auto next_z = static_cast<box_size_type::value_type>(subdomain_3idx.get_z() + 1) * z_subdomain_length;
 
     box_size_type max{ next_x, next_y, next_z };
 
