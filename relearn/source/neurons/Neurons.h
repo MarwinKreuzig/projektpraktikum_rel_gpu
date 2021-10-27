@@ -522,6 +522,14 @@ public:
     }
 
     /**
+     * @brief Returns a constant reference to the extra informations
+     * @return The extra informations for the neurons
+     */
+    const std::unique_ptr<NeuronsExtraInfo>& get_extra_info() const noexcept {
+        return extra_info;
+    }
+
+    /**
      * @brief Sets the signal types in the extra infos
      * @param names The signal types
      * @exception Throws the same RelearnException as NeuronsExtraInfo::set_signal_types
