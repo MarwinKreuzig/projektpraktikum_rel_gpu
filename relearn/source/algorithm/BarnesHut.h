@@ -36,6 +36,8 @@ class SynapticElements;
 class BarnesHut : public Algorithm {
 public:
     using AdditionalCellAttributes = BarnesHutCell;
+    
+    using position_type = BarnesHutCell::position_type;
 
     /**
      * @brief Constructs a new instance with the given octree
@@ -101,8 +103,8 @@ public:
             return;
         }
 
-        using position_type = VirtualPlasticityElement::position_type;
-        using counter_type = VirtualPlasticityElement::counter_type;
+        using position_type = BarnesHutCell::position_type;
+        using counter_type = BarnesHutCell::counter_type;
 
         // I'm inner node, i.e., I have a super neuron
         position_type my_position_dendrites_excitatory = { 0., 0., 0. };
@@ -172,14 +174,14 @@ public:
             node->set_cell_excitatory_dendrites_position({});
         } else {
             const auto scaled_position = my_position_dendrites_excitatory / my_number_dendrites_excitatory;
-            node->set_cell_excitatory_dendrites_position(std::optional<Vec3d>{ scaled_position });
+            node->set_cell_excitatory_dendrites_position(std::optional<position_type>{ scaled_position });
         }
 
         if (0 == my_number_dendrites_inhibitory) {
             node->set_cell_inhibitory_dendrites_position({});
         } else {
             const auto scaled_position = my_position_dendrites_inhibitory / my_number_dendrites_inhibitory;
-            node->set_cell_inhibitory_dendrites_position(std::optional<Vec3d>{ scaled_position });
+            node->set_cell_inhibitory_dendrites_position(std::optional<position_type>{ scaled_position });
         }
     }
 
@@ -193,28 +195,28 @@ private:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
      */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed);
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const position_type& axon_pos_xyz, SignalType dendrite_type_needed);
 
     [[nodiscard]] double
     calc_attractiveness_to_connect(
         size_t src_neuron_id,
-        const Vec3d& axon_pos_xyz,
+        const position_type& axon_pos_xyz,
         const OctreeNode<BarnesHutCell>& node_with_dendrite,
         SignalType dendrite_type_needed) const;
 
     [[nodiscard]] std::pair<double, std::vector<double>> create_interval(
         size_t src_neuron_id,
-        const Vec3d& axon_pos_xyz,
+        const position_type& axon_pos_xyz,
         SignalType dendrite_type_needed,
         const std::vector<OctreeNode<BarnesHutCell>*>& vector) const;
 
     [[nodiscard]] std::tuple<bool, bool> acceptance_criterion_test(
-        const Vec3d& axon_pos_xyz,
+        const position_type& axon_pos_xyz,
         const OctreeNode<BarnesHutCell>* node_with_dendrite,
         SignalType dendrite_type_needed) const;
 
     [[nodiscard]] std::vector<OctreeNode<BarnesHutCell>*> get_nodes_for_interval(
-        const Vec3d& axon_pos_xyz,
+        const position_type& axon_pos_xyz,
         OctreeNode<BarnesHutCell>* root,
         SignalType dendrite_type_needed);
 

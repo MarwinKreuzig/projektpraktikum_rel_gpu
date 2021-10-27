@@ -34,8 +34,8 @@ SubdomainFromFile::SubdomainFromFile(const std::string& file_path)
 }
 
 void SubdomainFromFile::read_dimensions_from_file() {
-    Vec3d minimum(std::numeric_limits<double>::max());
-    Vec3d maximum(std::numeric_limits<double>::min());
+    box_size_type minimum(std::numeric_limits<double>::max());
+    box_size_type maximum(std::numeric_limits<double>::min());
 
     size_t found_ex_neurons = 0;
     size_t found_in_neurons = 0;
@@ -97,7 +97,7 @@ void SubdomainFromFile::read_dimensions_from_file() {
     set_simulation_box_length(simulation_box_length);
 }
 
-std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_from_file(const Position& min, const Position& max) {
+std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_from_file(const box_size_type& min, const box_size_type& max) {
     file.clear();
     file.seekg(0);
 
@@ -176,7 +176,7 @@ std::vector<size_t> SubdomainFromFile::neuron_global_ids(const size_t subdomain_
     return global_ids;
 }
 
-void SubdomainFromFile::fill_subdomain(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains, const Position& min, const Position& max) {
+void SubdomainFromFile::fill_subdomain(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains, const box_size_type& min, const box_size_type& max) {
     const bool subdomain_already_filled = is_loaded(subdomain_idx);
     if (subdomain_already_filled) {
         RelearnException::fail("SubdomainFromFile::fill_subdomain: Tried to fill an already filled subdomain.");

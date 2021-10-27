@@ -23,7 +23,7 @@
 #include <array>
 #include <stack>
 
-[[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(const size_t src_neuron_id, const Vec3d& axon_pos_xyz, const SignalType dendrite_type_needed) {
+[[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(const size_t src_neuron_id, const position_type& axon_pos_xyz, const SignalType dendrite_type_needed) {
     OctreeNode<BarnesHutCell>* node_selected = nullptr;
     OctreeNode<BarnesHutCell>* root_of_subtree = global_tree->get_root();
 
@@ -226,7 +226,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     }
 }
 
-[[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(const size_t src_neuron_id, const Vec3d& axon_pos_xyz,
+[[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(const size_t src_neuron_id, const position_type& axon_pos_xyz,
     const OctreeNode<BarnesHutCell>& node_with_dendrite, const SignalType dendrite_type_needed) const {
     /**
      * If the axon's neuron itself is considered as target neuron, set attractiveness to 0 to avoid forming an autapse (connection to itself).
@@ -258,7 +258,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     return ret_val;
 }
 
-[[nodiscard]] std::pair<double, std::vector<double>> BarnesHut::create_interval(const size_t src_neuron_id, const Vec3d& axon_pos_xyz,
+[[nodiscard]] std::pair<double, std::vector<double>> BarnesHut::create_interval(const size_t src_neuron_id, const position_type& axon_pos_xyz,
     const SignalType dendrite_type_needed, const std::vector<OctreeNode<BarnesHutCell>*>& vector) const {
 
     if (vector.empty()) {
@@ -288,7 +288,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     return { sum, std::move(probabilities) };
 }
 
-[[nodiscard]] std::tuple<bool, bool> BarnesHut::acceptance_criterion_test(const Vec3d& axon_pos_xyz, const OctreeNode<BarnesHutCell>* const node_with_dendrite,
+[[nodiscard]] std::tuple<bool, bool> BarnesHut::acceptance_criterion_test(const position_type& axon_pos_xyz, const OctreeNode<BarnesHutCell>* const node_with_dendrite,
     const SignalType dendrite_type_needed) const {
 
     RelearnException::check(node_with_dendrite != nullptr, "BarnesHut::update_leaf_nodes:  node_with_dendrite was nullptr");
@@ -332,7 +332,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     return std::make_tuple(ret_val, has_vacant_dendrites);
 }
 
-[[nodiscard]] std::vector<OctreeNode<BarnesHutCell>*> BarnesHut::get_nodes_for_interval(const Vec3d& axon_pos_xyz, OctreeNode<BarnesHutCell>* root,
+[[nodiscard]] std::vector<OctreeNode<BarnesHutCell>*> BarnesHut::get_nodes_for_interval(const position_type& axon_pos_xyz, OctreeNode<BarnesHutCell>* root,
     const SignalType dendrite_type_needed) {
     if (root == nullptr) {
         return {};

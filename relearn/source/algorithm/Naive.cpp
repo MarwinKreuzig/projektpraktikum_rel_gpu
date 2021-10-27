@@ -23,7 +23,7 @@
 #include <array>
 #include <stack>
 
-[[nodiscard]] std::optional<RankNeuronId> Naive::find_target_neuron(const size_t src_neuron_id, const Vec3d& axon_pos_xyz, const SignalType dendrite_type_needed) {
+[[nodiscard]] std::optional<RankNeuronId> Naive::find_target_neuron(const size_t src_neuron_id, const position_type& axon_pos_xyz, const SignalType dendrite_type_needed) {
     OctreeNode<NaiveCell>* node_selected = nullptr;
     OctreeNode<NaiveCell>* root_of_subtree = global_tree->get_root();
 
@@ -201,7 +201,7 @@ void Naive::update_leaf_nodes(const std::vector<char>& disable_flags, const std:
     }
 }
 
-[[nodiscard]] double Naive::calc_attractiveness_to_connect(const size_t src_neuron_id, const Vec3d& axon_pos_xyz,
+[[nodiscard]] double Naive::calc_attractiveness_to_connect(const size_t src_neuron_id, const position_type& axon_pos_xyz,
     const OctreeNode<NaiveCell>& node_with_dendrite, const SignalType dendrite_type_needed) const {
 
     /**
@@ -232,7 +232,7 @@ void Naive::update_leaf_nodes(const std::vector<char>& disable_flags, const std:
     return ret_val;
 }
 
-[[nodiscard]] std::vector<double> Naive::create_interval(const size_t src_neuron_id, const Vec3d& axon_pos_xyz,
+[[nodiscard]] std::vector<double> Naive::create_interval(const size_t src_neuron_id, const position_type& axon_pos_xyz,
     const SignalType dendrite_type_needed, const std::vector<OctreeNode<NaiveCell>*>& vector) const {
 
     if (vector.empty()) {
@@ -262,7 +262,7 @@ void Naive::update_leaf_nodes(const std::vector<char>& disable_flags, const std:
     return probabilities;
 }
 
-[[nodiscard]] std::tuple<bool, bool> Naive::acceptance_criterion_test(const Vec3d& axon_pos_xyz, const OctreeNode<NaiveCell>* const node_with_dendrite,
+[[nodiscard]] std::tuple<bool, bool> Naive::acceptance_criterion_test(const position_type& axon_pos_xyz, const OctreeNode<NaiveCell>* const node_with_dendrite,
     const SignalType dendrite_type_needed) const {
 
     RelearnException::check(node_with_dendrite != nullptr, "Naive::update_leaf_nodes:  node_with_dendrite was nullptr");
@@ -275,7 +275,7 @@ void Naive::update_leaf_nodes(const std::vector<char>& disable_flags, const std:
     return std::make_tuple(!is_parent, has_vacant_dendrites);
 }
 
-[[nodiscard]] std::vector<OctreeNode<NaiveCell>*> Naive::get_nodes_for_interval(const Vec3d& axon_pos_xyz, OctreeNode<NaiveCell>* root,
+[[nodiscard]] std::vector<OctreeNode<NaiveCell>*> Naive::get_nodes_for_interval(const position_type& axon_pos_xyz, OctreeNode<NaiveCell>* root,
     const SignalType dendrite_type_needed) {
     if (root == nullptr) {
         return {};

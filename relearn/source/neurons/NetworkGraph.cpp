@@ -296,7 +296,7 @@ void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_
     }
 }
 
-void NetworkGraph::load_neuron_positions(const std::string& path_neurons, std::set<size_t>& foreing_ids, std::map<size_t, Vec3d>& id_to_pos) {
+void NetworkGraph::load_neuron_positions(const std::string& path_neurons, std::set<size_t>& foreing_ids, std::map<size_t, position_type>& id_to_pos) {
     std::string line;
     std::ifstream file_neurons(path_neurons, std::ios::binary | std::ios::in);
 
@@ -307,9 +307,9 @@ void NetworkGraph::load_neuron_positions(const std::string& path_neurons, std::s
         }
 
         size_t id{};
-        double pos_x = 0.0;
-        double pos_y = 0.0;
-        double pos_z = 0.0;
+        position_type::value_type pos_x = 0.0;
+        position_type::value_type pos_y = 0.0;
+        position_type::value_type pos_z = 0.0;
         std::string area_name{};
         std::string type{};
 

@@ -27,7 +27,7 @@ enum class AlgorithmEnum {
  */
 class VirtualPlasticityElementManual {
 public:
-    using position_type = Vec3d;
+    using position_type = RelearnTypes::position_type;
     using counter_type = unsigned int;
 
 private:

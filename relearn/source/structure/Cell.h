@@ -31,7 +31,7 @@ class Cell {
 public:
     using position_type = typename AdditionalCellAttributes::position_type;
     using counter_type = typename AdditionalCellAttributes::counter_type; 
-    using box_size_type = position_type; // In the future, this might become a different type
+    using box_size_type = RelearnTypes::box_size_type;
 
     /**
      * @brief Sets the neuron id for the associated cell. Can be set to Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree

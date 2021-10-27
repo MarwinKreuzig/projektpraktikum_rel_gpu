@@ -44,6 +44,9 @@ class Octree {
 public:
     friend class Partition;
 
+    using box_size_type = RelearnTypes::box_size_type;
+    using position_type = RelearnTypes::position_type;
+
     using AccessEpochsStarted = std::vector<bool>;
 
     /**
@@ -53,7 +56,7 @@ public:
      * @param level_of_branch_nodes The level at which the branch nodes (that are exchanged via MPI) are
      * @exception Throws a RelearnException if xyz_min is not componentwise smaller than xyz_max
      */
-    Octree(const Vec3d& xyz_min, const Vec3d& xyz_max, const size_t level_of_branch_nodes)
+    Octree(const box_size_type& xyz_min, const box_size_type& xyz_max, const size_t level_of_branch_nodes)
         : level_of_branch_nodes(level_of_branch_nodes) {
         set_size(xyz_min, xyz_max);
     }
@@ -70,7 +73,7 @@ public:
      * @brief Returns the minimum position in the Octree
      * @return The minimum position in the Octree
      */
-    [[nodiscard]] const Vec3d& get_xyz_min() const noexcept {
+    [[nodiscard]] const box_size_type& get_xyz_min() const noexcept {
         return xyz_min;
     }
 
@@ -78,7 +81,7 @@ public:
      * @brief Returns the maximum position in the Octree
      * @return The maximum position in the Octree
      */
-    [[nodiscard]] const Vec3d& get_xyz_max() const noexcept {
+    [[nodiscard]] const box_size_type& get_xyz_max() const noexcept {
         return xyz_max;
     }
 
@@ -110,7 +113,7 @@ public:
      *      (e) Something went wrong within the insertion
      * @return A pointer to the newly created and inserted node
      */
-    virtual void insert(const Vec3d& position, size_t neuron_id, int rank) = 0;
+    virtual void insert(const box_size_type& position, size_t neuron_id, int rank) = 0;
 
     /**
      * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes
@@ -138,7 +141,7 @@ public:
 
 protected:
     // Set simulation box size of the tree
-    void set_size(const Vec3d& min, const Vec3d& max) {
+    void set_size(const box_size_type& min, const box_size_type& max) {
         RelearnException::check(min.get_x() < max.get_x() && min.get_y() < max.get_y() && min.get_z() < max.get_z(),
             "Octree::set_size: The minimum was not smaller than the maximum");
 
@@ -148,8 +151,8 @@ protected:
 
 private:
     // Two points describe simulation box size of the tree
-    Vec3d xyz_min{ 0 };
-    Vec3d xyz_max{ 0 };
+    box_size_type xyz_min{ 0 };
+    box_size_type xyz_max{ 0 };
 
     size_t level_of_branch_nodes{ Constants::uninitialized };
 };
@@ -238,7 +241,7 @@ public:
      * @param level_of_branch_nodes The level at which the branch nodes (that are exchanged via MPI) are
      * @exception Throws a RelearnException if xyz_min is not componentwise smaller than xyz_max
      */
-    OctreeImplementation(const Vec3d& xyz_min, const Vec3d& xyz_max, const size_t level_of_branch_nodes)
+    OctreeImplementation(const box_size_type& xyz_min, const box_size_type& xyz_max, const size_t level_of_branch_nodes)
         : Octree(xyz_min, xyz_max, level_of_branch_nodes) {
 
         const auto num_local_trees = 1ULL << (3 * level_of_branch_nodes);
@@ -409,7 +412,7 @@ public:
      * @param neuron_id The local neuron id
      * @param rank The MPI rank that the neuron belongs to
      */
-    void insert(const Vec3d& position, const size_t neuron_id, const int rank) override {
+    void insert(const box_size_type& position, const size_t neuron_id, const int rank) override {
         const auto& xyz_min = get_xyz_min();
         const auto& xyz_max = get_xyz_max();
 
@@ -585,7 +588,7 @@ protected:
                         continue;
                     }
 
-                    const Vec3d cell_offset{ id_x * cell_length_x, id_y * cell_length_y, id_z * cell_length_z };
+                    const box_size_type cell_offset{ id_x * cell_length_x, id_y * cell_length_y, id_z * cell_length_z };
                     const auto& cell_min = xyz_min + cell_offset;
                     const auto& cell_position = cell_min + (cell_length / 2);
 

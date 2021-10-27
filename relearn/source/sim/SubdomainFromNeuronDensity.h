@@ -45,7 +45,7 @@ public:
      * @param num_subdomains_per_axis The number of subdomains per axis (the same for all dimensions), != 0
      * @return A tuple with (1) the minimum and (2) the maximum positions in the subdomain
      */
-    [[nodiscard]] std::tuple<Position, Position> get_subdomain_boundaries(const Vec3s& subdomain_3idx, const size_t num_subdomains_per_axis) const noexcept override;
+    [[nodiscard]] std::tuple<box_size_type, box_size_type> get_subdomain_boundaries(const Vec3s& subdomain_3idx, const size_t num_subdomains_per_axis) const noexcept override;
 
     /** 
      * @brief Returns the subdomain boundaries for a given subdomain
@@ -53,7 +53,7 @@ public:
      * @param num_subdomains_per_axis The number of subdomains per axis (can have varying number per dimension)
      * @return A tuple with (1) the minimum and (2) the maximum positions in the subdomain
      */
-    [[nodiscard]] std::tuple<Position, Position> get_subdomain_boundaries(const Vec3s& subdomain_3idx, const Vec3s& num_subdomains_per_axis) const noexcept override;
+    [[nodiscard]] std::tuple<box_size_type, box_size_type> get_subdomain_boundaries(const Vec3s& subdomain_3idx, const Vec3s& num_subdomains_per_axis) const noexcept override;
 
     /**
      * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
@@ -63,7 +63,7 @@ public:
      * @param max The subdomain's maximum position
      * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file 
      */
-    void fill_subdomain(const size_t subdomain_idx, const size_t num_subdomains, const Position& min, const Position& max) override;
+    void fill_subdomain(const size_t subdomain_idx, const size_t num_subdomains, const box_size_type& min, const box_size_type& max) override;
 
     /**
      * @brief This method is not implemented for this class
@@ -77,7 +77,7 @@ private:
     const double um_per_neuron_{ default_um_per_neuron }; // Micrometer per neuron in one dimension
 
     void place_neurons_in_area(
-        const NeuronToSubdomainAssignment::Position& offset,
-        const NeuronToSubdomainAssignment::Position& length_of_box,
+        const NeuronToSubdomainAssignment::box_size_type& offset,
+        const NeuronToSubdomainAssignment::box_size_type& length_of_box,
         const size_t num_neurons, const size_t subdomain_idx);
 };

@@ -32,6 +32,8 @@ class Vec3 {
     static_assert(std::is_arithmetic_v<T>);
 
 public:
+    using value_type = T;
+
     /**
      * @brief Constructs a new instance and initializes all values with 0
      */
@@ -465,3 +467,9 @@ public:
 
 using Vec3d = Vec3<double>;
 using Vec3s = Vec3<size_t>;
+
+namespace RelearnTypes {
+// In the future, these might become different types
+using box_size_type = Vec3d;
+using position_type = Vec3d;
+} // namespace RelearnTypes

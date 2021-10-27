@@ -15,6 +15,7 @@
 #include "../mpi/MPIWrapper.h"
 #include "../neurons/models/NeuronModels.h"
 #include "../structure/SpaceFillingCurve.h"
+#include "../util/Vec3.h"
 
 #include <memory>
 #include <tuple>
@@ -32,6 +33,9 @@ class OctreeNode;
  */
 class Partition {
 public:
+    using position_type = RelearnTypes::position_type;
+    using box_size_type = RelearnTypes::box_size_type;
+
     /**
      * Subdomain is a type that represents one part of the octree at the level of the branching nodes.
      * It's composed of the min and max positions of the subdomain, the number of neurons in this subdomain,
@@ -39,8 +43,8 @@ public:
      * it's 1d and 3d index for all Subdomains and the positions of the neurons in that Subdomain.
      */
     struct Subdomain {
-        Vec3d xyz_min{ Constants::uninitialized };
-        Vec3d xyz_max{ Constants::uninitialized };
+        box_size_type xyz_min{ Constants::uninitialized };
+        box_size_type xyz_max{ Constants::uninitialized };
 
         size_t num_neurons{ Constants::uninitialized };
 
@@ -49,7 +53,7 @@ public:
 
         std::vector<size_t> global_neuron_ids{};
 
-        std::vector<Vec3d> local_positions{};
+        std::vector<position_type> local_positions{};
 
         size_t index_1d{ Constants::uninitialized };
 
@@ -117,10 +121,10 @@ public:
      * @exception Throws a RelearnException if the load_data_from_subdomain_assignment has not been called
      * @return The size of the simulation box as tuple (min, max)
      */
-    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_simulation_box_size() const {
+    [[nodiscard]] std::tuple<box_size_type, box_size_type> get_simulation_box_size() const {
         RelearnException::check(neurons_loaded, "Partition::get_simulation_box_size: Neurons are not loaded yet");
-        Vec3d min{ 0 };
-        Vec3d max{ simulation_box_length };
+        box_size_type min{ 0 };
+        box_size_type max{ simulation_box_length };
 
         return std::make_tuple(min, max);
     }
@@ -171,7 +175,7 @@ public:
      * @exception Throws a RelearnException if the load_data_from_subdomain_assignment has not been called
      * @return Returns the MPI rank that is responsible for the position
      */
-    [[nodiscard]] size_t get_mpi_rank_from_pos(const Vec3d& pos) const;
+    [[nodiscard]] size_t get_mpi_rank_from_pos(const position_type& pos) const;
 
     /**
      * @brief Translates a local neuron id to a global neuron id by prefix-summing the local neuron ids over all MPI ranks
@@ -257,7 +261,7 @@ private:
     size_t my_subdomain_id_start{ Constants::uninitialized };
     size_t my_subdomain_id_end{ Constants::uninitialized };
 
-    Vec3d simulation_box_length{ Constants::uninitialized };
+    box_size_type simulation_box_length{ Constants::uninitialized };
 
     std::vector<Subdomain> subdomains{};
     SpaceFillingCurve<Morton> space_curve{};
