@@ -247,7 +247,7 @@ __host__ void johnson_cuda_impl(graph_cuda_t<std::vector<int>, std::vector<edge_
 
     dijkstra_kernel<<<blocks, THREADS_PER_BLOCK, 0, stream1>>>(View{ device_output }, View{ device_visited });
 
-    auto update_progress = [&]() {
+    auto update_progress = [&stream2, &status]() {
         unsigned int c{};
         cudaMemcpyFromSymbolAsync(
             reinterpret_cast<void*>(&c),
