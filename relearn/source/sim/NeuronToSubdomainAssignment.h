@@ -23,7 +23,7 @@
 
 /**
  * This class provides an interface for every algorithm that is used to assign neurons to MPI processes
- */ 
+ */
 class NeuronToSubdomainAssignment {
 public:
     using position_type = RelearnTypes::position_type;
@@ -52,7 +52,7 @@ public:
     [[nodiscard]] size_t placed_num_neurons() const noexcept {
         return current_num_neurons_;
     }
-    
+
     /**
      * @brief Returns the total fraction of excitatory neurons that should be placed
      * @return The total fraction of excitatory neurons that should be placed

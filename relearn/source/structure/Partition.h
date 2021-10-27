@@ -11,7 +11,6 @@
 #pragma once
 
 #include "../Config.h"
-#include "../algorithm/BarnesHutCell.h"
 #include "../mpi/MPIWrapper.h"
 #include "../neurons/models/NeuronModels.h"
 #include "../structure/SpaceFillingCurve.h"

@@ -183,7 +183,7 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs
      * @return The final result of the reduction
      */
-    [[nodiscard]] static double all_reduce_double( double value,  ReduceFunction function);
+    [[nodiscard]] static double all_reduce_double(double value, ReduceFunction function);
 
     /**
      * @brief Reduces a value for every MPI rank with a reduction function such that every rank has the final result
@@ -192,7 +192,7 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs
      * @return The final result of the reduction
      */
-    [[nodiscard]] static uint64_t all_reduce_uint64( uint64_t value,  ReduceFunction function);
+    [[nodiscard]] static uint64_t all_reduce_uint64(uint64_t value, ReduceFunction function);
 
     /**
      * @brief Reduces multiple values for every MPI rank with a reduction function such that the root_rank has the final result. The reduction is performed componentwise
@@ -349,14 +349,14 @@ public:
      * @param lock_type The type of locking
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
-    static void lock_window( int rank,  MPI_Locktype lock_type);
+    static void lock_window(int rank, MPI_Locktype lock_type);
 
     /**
      * @brief Unlocks the memory window on another MPI rank
      * @param The other MPI rank
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
-    static void unlock_window( int rank);
+    static void unlock_window(int rank);
 
     /**
      * @brief Finalizes the local MPI implementation.

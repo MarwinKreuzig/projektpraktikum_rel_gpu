@@ -59,7 +59,7 @@ public:
      * @return A uniformly distributed double in [lower_inclusive, upper_exclusive)
      */
     static double get_random_uniform_double(const RandomHolderKey key, const double lower_inclusive, const double upper_exclusive) {
-        RelearnException::check(lower_inclusive < upper_exclusive, 
+        RelearnException::check(lower_inclusive < upper_exclusive,
             "RandomHolder::get_random_uniform_double: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, key);
         std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
 

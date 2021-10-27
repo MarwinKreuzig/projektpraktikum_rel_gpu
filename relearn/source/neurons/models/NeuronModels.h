@@ -139,12 +139,12 @@ public:
      *      base_background_activity + N(background_activity_mean, background_activity_stddev)
      */
     NeuronModel(
-        double k, 
-        double tau_C, 
-        double beta, 
-        unsigned int h, 
-        double base_background_activity, 
-        double background_activity_mean, 
+        double k,
+        double tau_C,
+        double beta,
+        unsigned int h,
+        double base_background_activity,
+        double background_activity_mean,
         double background_activity_stddev);
 
     virtual ~NeuronModel() = default;

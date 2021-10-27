@@ -30,7 +30,7 @@ template <typename AdditionalCellAttributes>
 class Cell {
 public:
     using position_type = typename AdditionalCellAttributes::position_type;
-    using counter_type = typename AdditionalCellAttributes::counter_type; 
+    using counter_type = typename AdditionalCellAttributes::counter_type;
     using box_size_type = RelearnTypes::box_size_type;
 
     /**
@@ -108,7 +108,6 @@ public:
         const auto& x = position.get_x();
         const auto& y = position.get_y();
         const auto& z = position.get_z();
-
 
         /**
 	     * Sanity check: Make sure that the position is within this cell
@@ -445,7 +444,7 @@ public:
 
         const bool ex_valid = excitatory_axons_position_opt.has_value();
         const bool in_valid = inhibitory_axons_position_opt.has_value();
-        
+
         if (!ex_valid && !in_valid) {
             return {};
         }

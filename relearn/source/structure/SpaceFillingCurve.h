@@ -31,7 +31,7 @@ public:
      * @return The three dimensional index
      */
     [[nodiscard]] static BoxCoordinates map_1d_to_3d(uint64_t idx) noexcept;
-   
+
     /**
      * @brief Maps a three dimensional index into the one dimensional domain.
      * @param idx The three dimensional index
@@ -113,7 +113,7 @@ public:
     void set_refinement_level(const size_t refinement_level) {
         // With 64-bit keys we can only support 20 subdivisions per
         // dimension (i.e, 2^20 boxes per dimension)
-        RelearnException::check(refinement_level <= Constants::max_lvl_subdomains, 
+        RelearnException::check(refinement_level <= Constants::max_lvl_subdomains,
             "SpaceFillingCurve::set_refinement_level:Number of subdivisions is too large: {} vs {}", refinement_level, Constants::max_lvl_subdomains);
 
         curve.set_refinement_level(refinement_level);

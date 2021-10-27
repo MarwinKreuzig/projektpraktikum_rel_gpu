@@ -373,7 +373,7 @@ size_t Neurons::delete_synapses() {
 }
 
 std::pair<Neurons::PendingDeletionsV, std::vector<size_t>> Neurons::delete_synapses_find_synapses(
-    const SynapticElements& synaptic_elements, 
+    const SynapticElements& synaptic_elements,
     const std::pair<unsigned int, std::vector<unsigned int>>& to_delete,
     const PendingDeletionsV& other_pending_deletions) {
 

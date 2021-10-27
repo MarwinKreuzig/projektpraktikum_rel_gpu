@@ -64,9 +64,12 @@ void Timers::print() {
 
     sstring << "\n======== TIMERS GLOBAL OVER ALL RANKS ========\n";
     sstring << "                                                ("
-            << std::setw(Constants::print_width) << " min" << " | "
-            << std::setw(Constants::print_width) << " avg" << " | "
-            << std::setw(Constants::print_width) << " max" << ") sec.\n";
+            << std::setw(Constants::print_width) << " min"
+            << " | "
+            << std::setw(Constants::print_width) << " avg"
+            << " | "
+            << std::setw(Constants::print_width) << " max"
+            << ") sec.\n";
     sstring << "TIMERS: main()\n";
 
     sstring << "  Initialization                               : ";

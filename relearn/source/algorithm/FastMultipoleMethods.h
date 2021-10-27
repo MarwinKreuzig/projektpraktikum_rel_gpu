@@ -79,7 +79,7 @@ public:
         if (!node->is_parent()) {
             return;
         }
-                
+
         using position_type = FastMultipoleMethodsCell::position_type;
         using counter_type = FastMultipoleMethodsCell::counter_type;
 

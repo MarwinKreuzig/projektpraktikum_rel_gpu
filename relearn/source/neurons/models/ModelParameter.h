@@ -40,7 +40,7 @@ public:
         : name_{ std::move(name) }
         , value_{ value }
         , min_{ min }
-        , max_{ max } { 
+        , max_{ max } {
         RelearnException::check(min <= max, "Parameter::Parameter: min was larger than max: {} vs {}", min, max);
     }
 

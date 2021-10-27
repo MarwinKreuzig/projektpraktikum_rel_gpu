@@ -36,7 +36,7 @@ class SynapticElements;
 class BarnesHut : public Algorithm {
 public:
     using AdditionalCellAttributes = BarnesHutCell;
-    
+
     using position_type = BarnesHutCell::position_type;
 
     /**

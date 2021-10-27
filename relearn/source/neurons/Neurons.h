@@ -692,7 +692,6 @@ public:
         return global_statistics(neuron_model->get_x(), 0, disable_flags);
     }
 
-
 private:
     void update_calcium();
 
