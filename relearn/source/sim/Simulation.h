@@ -11,6 +11,7 @@
 #pragma once
 
 #include "../algorithm/Types.h"
+#include "../util/StatisticalMeasures.h"
 
 #include <cstdint>
 #include <memory>
@@ -149,6 +150,34 @@ public:
 	 */
     static std::vector<std::unique_ptr<NeuronModel>> get_models();
 
+    std::shared_ptr<Neurons> get_neurons() {
+        return neurons;
+    }
+
+    std::shared_ptr<NetworkGraph> get_network_graph() {
+        return network_graph;
+    }
+
+    std::shared_ptr<std::vector<NeuronMonitor>> get_monitors() {
+        return monitors;
+    }
+
+    void snapshot_monitors();
+
+    void measure_calcium();
+
+    void measure_activity();
+
+    void save_network_graph(size_t current_steps);
+
+    const std::vector<StatisticalMeasures>& get_calcium_statistics() {
+        return calcium_statistics;
+    }
+
+    const std::vector<StatisticalMeasures>& get_activity_statistics() {
+        return activity_statistics;
+    }
+
 private:
     void construct_neurons();
 
@@ -172,11 +201,14 @@ private:
 
     std::shared_ptr<NetworkGraph> network_graph{};
 
-    std::vector<NeuronMonitor> monitors{};
+    std::shared_ptr<std::vector<NeuronMonitor>> monitors{};
 
     std::vector<std::pair<size_t, std::vector<size_t>>> enable_interrupts{};
     std::vector<std::pair<size_t, std::vector<size_t>>> disable_interrupts{};
     std::vector<std::pair<size_t, size_t>> creation_interrupts{};
+
+    std::vector<StatisticalMeasures> calcium_statistics{};
+    std::vector<StatisticalMeasures> activity_statistics{};
 
     double accept_criterion{ 0.0 };
 

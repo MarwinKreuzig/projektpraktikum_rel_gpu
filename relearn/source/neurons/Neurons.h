@@ -13,6 +13,7 @@
 #include "../Config.h"
 #include "../algorithm/Algorithm.h"
 #include "../util/RelearnException.h"
+#include "../util/StatisticalMeasures.h"
 #include "../util/Vec3.h"
 #include "ElementType.h"
 #include "NeuronsExtraInfo.h"
@@ -379,17 +380,6 @@ class Neurons {
             // This vector is used as MPI communication buffer
     };
 
-    /**
-     * @brief This struct is used to aggregate different statistical parameters
-     */
-    struct StatisticalMeasures {
-        double min{ 0.0 };
-        double max{ 0.0 };
-        double avg{ 0.0 };
-        double var{ 0.0 };
-        double std{ 0.0 };
-    };
-
 public:
     // Types
     using Axons = SynapticElements;
@@ -685,6 +675,15 @@ public:
      * @exception Throws a RelearnException if a check fails
      */
     void debug_check_counts();
+
+    StatisticalMeasures get_calcium_statistics() {
+        return global_statistics(calcium, 0, disable_flags);
+    }
+
+    StatisticalMeasures get_activity_statistics() {
+        return global_statistics(neuron_model->get_x(), 0, disable_flags);
+    }
+
 
 private:
     void update_calcium();
