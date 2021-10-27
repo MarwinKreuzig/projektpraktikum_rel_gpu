@@ -32,6 +32,10 @@ class OctreeNode {
 public:
     using OctreeNodePtr = OctreeNode<AdditionalCellAttributes>*;
 
+    using position_type = typename Cell<AdditionalCellAttributes>::position_type;
+    using counter_type = typename Cell<AdditionalCellAttributes>::counter_type;
+    using box_size_type = typename Cell<AdditionalCellAttributes>::box_size_type;
+
     /**
      * @brief Returns a pointer to a fresh OctreeNode in the MPI memory window.
      *      Does not transfer ownership.
@@ -128,12 +132,8 @@ public:
      *      (e) Something went wrong within the insertion
      * @return A pointer to the newly created and inserted node
      */
-    [[nodiscard]] OctreeNodePtr insert(const Vec3d& position, const size_t neuron_id, const int rank) {
-        Vec3d cell_xyz_min{};
-        Vec3d cell_xyz_max{};
-
-        std::tie(cell_xyz_min, cell_xyz_max) = cell.get_size();
-
+    [[nodiscard]] OctreeNodePtr insert(const box_size_type& position, const size_t neuron_id, const int rank) {
+        const auto& [cell_xyz_min, cell_xyz_max] = cell.get_size();
         const auto is_in_box = position.check_in_box(cell_xyz_min, cell_xyz_max);
 
         RelearnException::check(is_in_box, "OctreeNode::insert: position is not in box: {} in [{}, {}]", position, cell_xyz_min, cell_xyz_max);
@@ -192,9 +192,7 @@ public:
                 /**
 			     * Init this new node properly
 			     */
-                Vec3d xyz_min;
-                Vec3d xyz_max;
-                std::tie(xyz_min, xyz_max) = parent_node->get_cell().get_size_for_octant(idx);
+                const auto& [xyz_min, xyz_max] = parent_node->get_cell().get_size_for_octant(idx);
 
                 new_node->set_cell_size(xyz_min, xyz_max);
                 new_node->set_cell_neuron_position(cell_own_position);
@@ -231,9 +229,7 @@ public:
 	     */
         parent_node->set_child(new_node_to_insert, new_position_octant);
 
-        Vec3d xyz_min{};
-        Vec3d xyz_max{};
-        std::tie(xyz_min, xyz_max) = parent_node->get_cell().get_size_for_octant(new_position_octant);
+        const auto& [xyz_min, xyz_max] = parent_node->get_cell().get_size_for_octant(new_position_octant);
 
         new_node_to_insert->set_cell_size(xyz_min, xyz_max);
         new_node_to_insert->set_cell_neuron_position({ position });
@@ -342,7 +338,7 @@ public:
      * @brief Sets the optional position for both the excitatory and inhibitory positions in the associated cell
      * @param opt_position The optional position, can be empty
      */
-    void set_cell_neuron_position(const std::optional<Vec3d>& opt_position) noexcept {
+    void set_cell_neuron_position(const std::optional<position_type>& opt_position) noexcept {
         cell.set_neuron_position(opt_position);
     }
 
@@ -351,7 +347,7 @@ public:
      * @param num_ex The number of free excitatory dendrites
      * @param num_in The number of free inhibitory dendrites
      */
-    void set_cell_number_dendrites(const unsigned int num_ex, const unsigned int num_in) noexcept {
+    void set_cell_number_dendrites(const counter_type num_ex, const counter_type num_in) noexcept {
         cell.set_number_excitatory_dendrites(num_ex);
         cell.set_number_inhibitory_dendrites(num_in);
     }
@@ -361,7 +357,7 @@ public:
      * @param num_ex The number of free excitatory axons
      * @param num_in The number of free inhibitory axons
      */
-    void set_cell_number_axons(const unsigned int num_ex, const unsigned int num_in) noexcept {
+    void set_cell_number_axons(const counter_type num_ex, const counter_type num_in) noexcept {
         cell.set_number_excitatory_axons(num_ex);
         cell.set_number_inhibitory_axons(num_in);
     }
@@ -370,7 +366,7 @@ public:
      * @brief Sets the optional position for the excitatory dendrites position in the associated cell
      * @param opt_position The optional position, can be empty
      */
-    void set_cell_excitatory_dendrites_position(const std::optional<Vec3d>& opt_position) {
+    void set_cell_excitatory_dendrites_position(const std::optional<position_type>& opt_position) {
         cell.set_excitatory_dendrites_position(opt_position);
     }
 
@@ -378,7 +374,7 @@ public:
      * @brief Sets the optional position for the inhibitory dendrites position in the associated cell
      * @param opt_position The optional position, can be empty
      */
-    void set_cell_inhibitory_dendrites_position(const std::optional<Vec3d>& opt_position) {
+    void set_cell_inhibitory_dendrites_position(const std::optional<position_type>& opt_position) {
         cell.set_inhibitory_dendrites_position(opt_position);
     }
 
@@ -386,7 +382,7 @@ public:
      * @brief Sets the optional position for the excitatory axons position in the associated cell
      * @param opt_position The optional position, can be empty
      */
-    void set_cell_excitatory_axons_position(const std::optional<Vec3d>& opt_position) {
+    void set_cell_excitatory_axons_position(const std::optional<position_type>& opt_position) {
         cell.set_excitatory_axons_position(opt_position);
     }
 
@@ -394,7 +390,7 @@ public:
      * @brief Sets the optional position for the inhibitory axons position in the associated cell
      * @param opt_position The optional position, can be empty
      */
-    void set_cell_inhibitory_axons_position(const std::optional<Vec3d>& opt_position) {
+    void set_cell_inhibitory_axons_position(const std::optional<position_type>& opt_position) {
         cell.set_inhibitory_axons_position(opt_position);
     }
 
@@ -420,7 +416,7 @@ public:
      * @param max The maximum boundary of the cell
      * @exception Might throw a RelearnException
      */
-    void set_cell_size(const Vec3d& min, const Vec3d& max) {
+    void set_cell_size(const box_size_type& min, const box_size_type& max) {
         cell.set_size(min, max);
     }
 
@@ -428,7 +424,7 @@ public:
      * @brief Returns the size of the associated cell
      * @return The size of the cell
      */
-    [[nodiscard]] std::tuple<Vec3d, Vec3d> get_size() const noexcept {
+    [[nodiscard]] std::tuple<box_size_type, box_size_type> get_size() const noexcept {
         return cell.get_size();
     }
 
@@ -438,7 +434,7 @@ public:
      * @param coefficient The new value for the hermite coefficient
      * @exception Might throw a RelearnException
      */
-    void set_cell_excitatory_hermite_coefficient(const unsigned int index, const double d) {
+    void set_cell_excitatory_hermite_coefficient(const counter_type index, const double d) {
         cell.set_excitatory_hermite_coefficient(index, d);
     }
 
@@ -448,7 +444,7 @@ public:
      * @param coefficient The new value for the hermite coefficient
      * @exception Might throw a RelearnException
      */
-    void set_cell_inhibitory_hermite_coefficient(const unsigned int index, const double d) {
+    void set_cell_inhibitory_hermite_coefficient(const counter_type index, const double d) {
         cell.set_inhibitory_hermite_coefficient(index, d);
     }
 
@@ -459,7 +455,7 @@ public:
      * @param signal_type The type of dendrite
      * @exception Might throw a RelearnException
      */
-    void set_cell_hermite_coefficient_for(const unsigned int index, const double d, const SignalType needed) {
+    void set_cell_hermite_coefficient_for(const counter_type index, const double d, const SignalType needed) {
         cell.set_hermite_coefficient_for(index, d, needed);
     }
 
@@ -468,7 +464,7 @@ public:
      * @exception Might throw a RelearnException
      * @return The specified hermite coefficient
      */
-    [[nodiscard]] double get_cell_excitatory_hermite_coefficient(const unsigned int index) const {
+    [[nodiscard]] double get_cell_excitatory_hermite_coefficient(const counter_type index) const {
         return cell.get_excitatory_hermite_coefficient(index);
     }
 
@@ -477,7 +473,7 @@ public:
      * @exception Might throw a RelearnException
      * @return The specified hermite coefficient
      */
-    [[nodiscard]] double get_cell_inhibitory_hermite_coefficient(const unsigned int index) const {
+    [[nodiscard]] double get_cell_inhibitory_hermite_coefficient(const counter_type index) const {
         return cell.get_inhibitory_hermite_coefficient(index);
     }
 
@@ -486,7 +482,7 @@ public:
      * @exception Might throw a RelearnException
      * @return The specified hermite coefficient
      */
-    [[nodiscard]] double get_cell_hermite_coefficient_for(const unsigned int index, const SignalType needed) const {
+    [[nodiscard]] double get_cell_hermite_coefficient_for(const counter_type index, const SignalType needed) const {
         return cell.get_hermite_coefficient_for(index, needed);
     }
 
@@ -496,8 +492,8 @@ public:
      * @param needed The requested SignalType
      * @return A vector of all actual positions
      */
-    [[nodiscard]] std::vector<std::pair <Vec3d, unsigned int>> get_all_dendrite_positions_for(const SignalType needed) const {
-        std::vector<std::pair <Vec3d, unsigned int>> result{};
+    [[nodiscard]] std::vector<std::pair<position_type, counter_type>> get_all_dendrite_positions_for(const SignalType needed) const {
+        std::vector<std::pair<position_type, counter_type>> result{};
 
         std::stack<const OctreeNode*> stack{};
         stack.push(this);
@@ -510,9 +506,9 @@ public:
                 const auto& cell = current_node->get_cell();
                 const auto num_of_ports = cell.get_number_dendrites_for(needed);
                 const auto& opt_position = cell.get_dendrites_position();
-                std::pair <Vec3d, unsigned int> temp (opt_position.value(), num_of_ports);
+                std::pair<position_type, counter_type> temp(opt_position.value(), num_of_ports);
                 result.emplace_back(temp);
-               
+
             } else {
                 for (auto i = 0; i < Constants::number_oct; i++) {
                     const auto* children_node = current_node->get_child(i);
@@ -532,8 +528,8 @@ public:
      * @param needed The requested SignalType
      * @return A vector of all actual positions
      */
-    [[nodiscard]] std::vector<std::pair <Vec3d, unsigned int>> get_all_axon_positions_for(const SignalType needed) const {
-        std::vector<std::pair <Vec3d, unsigned int>> result{};
+    [[nodiscard]] std::vector<std::pair<position_type, counter_type>> get_all_axon_positions_for(const SignalType needed) const {
+        std::vector<std::pair<position_type, counter_type>> result{};
 
         std::stack<const OctreeNode*> stack{};
         stack.push(this);
@@ -546,9 +542,9 @@ public:
                 const auto& cell = current_node->get_cell();
                 const auto num_of_ports = cell.get_number_axons_for(needed);
                 const auto& opt_position = cell.get_axons_position();
-                std::pair <Vec3d, unsigned int> temp (opt_position.value(), num_of_ports);
+                std::pair<position_type, counter_type> temp(opt_position.value(), num_of_ports);
                 result.emplace_back(temp);
-                
+
             } else {
                 for (auto i = 0; i < Constants::number_oct; i++) {
                     const auto* children_node = current_node->get_child(i);

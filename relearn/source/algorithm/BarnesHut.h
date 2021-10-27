@@ -101,13 +101,16 @@ public:
             return;
         }
 
+        using position_type = VirtualPlasticityElement::position_type;
+        using counter_type = VirtualPlasticityElement::counter_type;
+
         // I'm inner node, i.e., I have a super neuron
-        Vec3d my_position_dendrites_excitatory = { 0., 0., 0. };
-        Vec3d my_position_dendrites_inhibitory = { 0., 0., 0. };
+        position_type my_position_dendrites_excitatory = { 0., 0., 0. };
+        position_type my_position_dendrites_inhibitory = { 0., 0., 0. };
 
         // Sum of number of dendrites of all my children
-        auto my_number_dendrites_excitatory = 0;
-        auto my_number_dendrites_inhibitory = 0;
+        counter_type my_number_dendrites_excitatory = 0;
+        counter_type my_number_dendrites_inhibitory = 0;
 
         // For all my children
         for (const auto& child : node->get_children()) {
@@ -125,8 +128,8 @@ public:
             my_number_dendrites_inhibitory += child_number_dendrites_inhibitory;
 
             // Average the position by using the number of dendrites as weights
-            std::optional<Vec3d> opt_child_position_dendrites_excitatory = child_cell.get_excitatory_dendrites_position();
-            std::optional<Vec3d> opt_child_position_dendrites_inhibitory = child_cell.get_inhibitory_dendrites_position();
+            std::optional<position_type> opt_child_position_dendrites_excitatory = child_cell.get_excitatory_dendrites_position();
+            std::optional<position_type> opt_child_position_dendrites_inhibitory = child_cell.get_inhibitory_dendrites_position();
 
             /**
 			 * We can use position if it's valid or if corresponding num of dendrites is 0 

@@ -55,7 +55,10 @@ void omp_set_num_threads(int num) { }
 #include <memory>
 
 void print_sizes() {
-    struct empty_t { };
+    struct empty_t {
+        using position_type = VirtualPlasticityElement::position_type;
+        using counter_type = VirtualPlasticityElement::counter_type;
+    };
 
     const auto sizeof_vec3_double = sizeof(Vec3d);
     const auto sizeof_vec3_size_t = sizeof(Vec3s);
