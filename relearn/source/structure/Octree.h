@@ -176,8 +176,8 @@ public:
 
 protected:
     /**
-	 * Type for stack used in postorder tree walk
-	 */
+     * Type for stack used in postorder tree walk
+     */
     struct StackElement {
     private:
         OctreeNode<AdditionalCellAttributes>* ptr{ nullptr };
@@ -195,7 +195,7 @@ protected:
          * @param octree_node The node that should be visited, not nullptr
          * @param depth_in_tree The depth of the current node
          * @exception Throws a RelearnException if octree_node is nullptr or depth_in_tree is larger than Cosntants::unitialized
-        */
+         */
         StackElement(OctreeNode<AdditionalCellAttributes>* octree_node, const size_t depth_in_tree)
             : ptr(octree_node)
             , depth(depth_in_tree) {
@@ -587,8 +587,8 @@ protected:
 
                     auto* current_node = root->insert(cell_position, Constants::uninitialized, my_rank);
 
-                    //const auto index1d = space_curve.map_3d_to_1d(Vec3s{ id_x, id_y, id_z });
-                    //branch_nodes[index1d] = current_node;
+                    // const auto index1d = space_curve.map_3d_to_1d(Vec3s{ id_x, id_y, id_z });
+                    // branch_nodes[index1d] = current_node;
                 }
             }
         }

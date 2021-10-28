@@ -79,7 +79,7 @@ public:
      * @param format The format string. Placeholders can used: "{}"
      * @param ...args The values that shall be substituted for the placeholders
      * @exception Throws an exception if the number of args does not match the number of placeholders in format
-     *      Throws a RelearnException 
+     *      Throws a RelearnException
      */
     template <typename FormatString, typename... Args>
     static void fail(FormatString&& format, Args&&... args) {

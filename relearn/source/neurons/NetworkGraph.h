@@ -27,19 +27,19 @@
 class NeuronIdTranslator;
 
 /**
-  * An object of type NetworkGraph stores the synaptic connections between neurons, that are relevant for the current MPI rank.
-  * The neurons are refered to by indices in the range [0, num_local_neurons).
-  * The class does not perform any communication or synchronization with other MPI ranks when messing with edges;
-  * it only does so when calling NetworkGraph::translate_global_to_local, and in that, it does not 
-  * mess with edges.
-  * NetworkGraph differentiates between local edges (from the current MPI rank to the current MPI rank) and 
-  * distant edges (another MPI rank is the owner of the target or source neuron).
-  */
+ * An object of type NetworkGraph stores the synaptic connections between neurons, that are relevant for the current MPI rank.
+ * The neurons are refered to by indices in the range [0, num_local_neurons).
+ * The class does not perform any communication or synchronization with other MPI ranks when messing with edges;
+ * it only does so when calling NetworkGraph::translate_global_to_local, and in that, it does not
+ * mess with edges.
+ * NetworkGraph differentiates between local edges (from the current MPI rank to the current MPI rank) and
+ * distant edges (another MPI rank is the owner of the target or source neuron).
+ */
 class NetworkGraph {
 public:
     /**
-	 * Type definitions
-	 */
+     * Type definitions
+     */
     using EdgeWeight = int;
 
     using DistantEdgesKey = RankNeuronId; // Pair of (mpi rank, local neuron id)
@@ -378,15 +378,15 @@ public:
      * @brief Adds the specified weight to the synapse from the neuron specified by source_id to the neuron specified by target_id.
      *      If there was no edge before, it is created. If the updated weight is 0, it is deleted. Only updates the local part of the network graph.
      *      A call to this method can change the order in which the edges are stored.
-	 * @param target_id The target_id neuron's id and rank
+     * @param target_id The target_id neuron's id and rank
      * @param source_id The source_id neuron's id and rank
      * @param weight The weight that should be added onto the current connections, not zero
-     * @exception Throws a RelearnException if: 
-     *      (a) the weight is zero, 
+     * @exception Throws a RelearnException if:
+     *      (a) the weight is zero,
      *      (b) neither the target_id nor the source_id are on the current rank,
      *      (c) a local neuron id is larger than the number of neurons
      *      Throws an exception if the allocation of memory fails
-	 */
+     */
     void add_edge_weight(const RankNeuronId& target_id, const RankNeuronId& source_id, const EdgeWeight weight) {
         RelearnException::check(weight != 0, "NetworkGraph::add_edge_weight: weight of edge to add is zero");
 
@@ -438,8 +438,8 @@ public:
      * @param local_edges All edges between two neurons on the current MPI rank
      * @param in_edges All edges that have a target on the current MPI rank and a source from another rank
      * @param out_edges All edges that have a source on the current MPI rank and a target from another rank
-    */
-    void add_edges(const std::vector<local_synapse>& local_edges, const std::vector<in_synapse>& in_edges, const std::vector<out_synapse>& out_edges) {        
+     */
+    void add_edges(const std::vector<local_synapse>& local_edges, const std::vector<in_synapse>& in_edges, const std::vector<out_synapse>& out_edges) {
         for (const auto& [source_id, target_id, weight] : local_edges) {
             RelearnException::check(target_id < neuron_local_in_neighborhood.size(),
                 "NetworkGraph::add_edges: local_in_neighborhood is too small: {} vs {}", target_id, neuron_local_in_neighborhood.size());

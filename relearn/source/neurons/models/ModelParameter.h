@@ -16,16 +16,16 @@
 #include <variant>
 
 /**
-  * An object of type Parameter<T> represents a parameter of the model, the synaptic elements, etc.
-  * It has a min and a max value, a name and supports setting a value to the specified parameter via a reference. Ensure that an object of type Parameter does not outlive referenced parameter.
-  * Checks that min <= x <= max whenever a value is set through the object.
-  */
+ * An object of type Parameter<T> represents a parameter of the model, the synaptic elements, etc.
+ * It has a min and a max value, a name and supports setting a value to the specified parameter via a reference. Ensure that an object of type Parameter does not outlive referenced parameter.
+ * Checks that min <= x <= max whenever a value is set through the object.
+ */
 template <typename T>
 class Parameter {
 public:
     /**
-	 * Type definition
-	 */
+     * Type definition
+     */
     using value_type = T;
 
     /**

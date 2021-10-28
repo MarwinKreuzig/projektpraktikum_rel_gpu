@@ -33,9 +33,9 @@ class NeuronModel {
 
 public:
     /**
-	 * This type collects all local neuron ids for neurons that fired in the current simulation step.
+     * This type collects all local neuron ids for neurons that fired in the current simulation step.
      * It is used as communication buffer for MPI collectives.
-	 */
+     */
     class FiringNeuronIds {
     public:
         /**
@@ -48,7 +48,7 @@ public:
 
         /**
          * @brief Resizes the internal buffer to the requested size
-         * @param size The desired size 
+         * @param size The desired size
          */
         void resize(const size_t size) {
             neuron_ids.resize(size);
@@ -124,9 +124,9 @@ public:
     };
 
     /**
-	 * Map of (MPI rank; FiringNeuronIds)
-	 * The MPI rank specifies the corresponding process
-	 */
+     * Map of (MPI rank; FiringNeuronIds)
+     * The MPI rank specifies the corresponding process
+     */
     using MapFiringNeuronIds = std::map<int, FiringNeuronIds>;
 
     /**
@@ -144,7 +144,7 @@ public:
      * @param base_background_activity The base background activity that all neurons are exited with. Is only used if background_activity_stddev > 0.0
      * @param background_activity_mean The mean of background activity taht all neurons are exited with. Is only used if background_activity_stddev > 0.0
      * @param background_activity_stddev The standard deviation of background activity taht all neurons are exited with. Is only used if background_activity_stddev > 0.0
-     * 
+     *
      * If background_activity_stddev > 0.0, all neurons are exited with
      *      base_background_activity + N(background_activity_mean, background_activity_stddev)
      */
@@ -324,22 +324,22 @@ public:
     void update_electrical_activity(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags);
 
     /**
-	 * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned
+     * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned
      * @return A vector with all inherited classes
-	 */
+     */
     [[nodiscard]] static std::vector<std::unique_ptr<NeuronModel>> get_models();
 
     /**
-	 * @brief Returns a vector with all adjustable ModelParameter
+     * @brief Returns a vector with all adjustable ModelParameter
      * @return A vector with all adjustable ModelParameter
-	 */
+     */
     [[nodiscard]] virtual std::vector<ModelParameter> get_parameter();
 
     /**
-	 * @brief Initializes the model to include number_neurons many local neurons.
+     * @brief Initializes the model to include number_neurons many local neurons.
      *      Sets the initial membrane potential and initial synaptic inputs to 0.0 and fired to false
      * @param number_neurons The number of local neurons to store in this class
-	 */
+     */
     virtual void init(size_t number_neurons);
 
     /**
@@ -349,9 +349,9 @@ public:
     virtual void create_neurons(size_t creation_count);
 
     /**
-	 * @brief Returns the name of the current model
+     * @brief Returns the name of the current model
      * @return The name of the current model
-	 */
+     */
     [[nodiscard]] virtual std::string name() = 0;
 
     /**
@@ -368,8 +368,8 @@ public:
     }
 
     static constexpr double default_k{ 0.03 };
-    static constexpr double default_tau_C{ 10000 }; //5000;   //very old 60.0;
-    static constexpr double default_beta{ 0.001 }; //very old 0.05;
+    static constexpr double default_tau_C{ 10000 }; // 5000;   //very old 60.0;
+    static constexpr double default_beta{ 0.001 }; // very old 0.05;
     static constexpr unsigned int default_h{ 10 };
 
     static constexpr double default_base_background_activity{ 0.0 };
@@ -490,7 +490,7 @@ public:
      * @param background_activity_mean See NeuronModel(...)
      * @param background_activity_stddev See NeuronModel(...)
      * @param x_0 The resting membrane potential
-     * @param tau_x The dampening factor by which the membrane potential decreases 
+     * @param tau_x The dampening factor by which the membrane potential decreases
      * @param refrac_time The number of steps a neuron doesn't spike after spiking
      */
     PoissonModel(
@@ -521,9 +521,9 @@ public:
     }
 
     /**
-	 * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
+     * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
      * @return A vector with all adjustable ModelParameter
-	 */
+     */
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
     /**
@@ -557,10 +557,10 @@ public:
     }
 
     /**
-	 * @brief Initializes the model to include number_neurons many local neurons.
+     * @brief Initializes the model to include number_neurons many local neurons.
      *      Sets the initial refrac counter to 0
      * @param number_neurons The number of local neurons to store in this class
-	 */
+     */
     void init(size_t number_neurons) final;
 
     /**
@@ -670,9 +670,9 @@ public:
     }
 
     /**
-	 * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
+     * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
      * @return A vector with all adjustable ModelParameter
-	 */
+     */
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
     /**
@@ -746,9 +746,9 @@ public:
     }
 
     /**
-	 * @brief Initializes the model to include number_neurons many local neurons.
+     * @brief Initializes the model to include number_neurons many local neurons.
      * @param number_neurons The number of local neurons to store in this class
-	 */
+     */
     void init(size_t number_neurons) final;
 
     /**
@@ -835,7 +835,7 @@ public:
      * @param background_activity_stddev See NeuronModel(...)
      * @param a The constant inside the equation for d/dt w(t)
      * @param b The dampening factor for w(t) inside the equation for d/dt w(t)
-     * @param phi The dampening factor for w(t) 
+     * @param phi The dampening factor for w(t)
      */
     FitzHughNagumoModel(
         double k,
@@ -865,9 +865,9 @@ public:
     }
 
     /**
-	 * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
+     * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
      * @return A vector with all adjustable ModelParameter
-	 */
+     */
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
     /**
@@ -901,9 +901,9 @@ public:
     }
 
     /**
-	 * @brief Initializes the model to include number_neurons many local neurons.
+     * @brief Initializes the model to include number_neurons many local neurons.
      * @param number_neurons The number of local neurons to store in this class
-	 */
+     */
     void init(size_t number_neurons) final;
 
     /**
@@ -1016,9 +1016,9 @@ public:
     }
 
     /**
-	 * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
+     * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
      * @return A vector with all adjustable ModelParameter
-	 */
+     */
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
     /**
@@ -1100,9 +1100,9 @@ public:
     }
 
     /**
-	 * @brief Initializes the model to include number_neurons many local neurons.
+     * @brief Initializes the model to include number_neurons many local neurons.
      * @param number_neurons The number of local neurons to store in this class
-	 */
+     */
     void init(size_t number_neurons) final;
 
     /**

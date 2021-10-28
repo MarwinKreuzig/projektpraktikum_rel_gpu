@@ -156,7 +156,7 @@ public:
 /**
  * An object of type NeuronMonitor monitors a specified neuron throughout the simulation.
  * It automatically gathers all necessary data, however, it only does so if there is space left.
- * 
+ *
  * Offers the following static member:
  * neurons_to_monitor - an std::shared_ptr to the neurons to monitor. Has to be set before a call to record_data()
  */

@@ -38,7 +38,7 @@ class NeuronMonitor;
  */
 inline double gaussian_growth_curve(const double current, const double eta, const double epsilon, const double growth_rate) noexcept {
     const auto factor = 1.6651092223153955127063292897904020952611777045288814583336582344;
-    //1.6651092223153955127063292897904020952611777045288814583336582344... = (2 * sqrt(-log(0.5)))
+    // 1.6651092223153955127063292897904020952611777045288814583336582344... = (2 * sqrt(-log(0.5)))
 
     const auto xi = (eta + epsilon) / 2;
     const auto zeta = (eta - epsilon) / factor;
@@ -151,9 +151,9 @@ public:
     }
 
     /**
-	 * @brief Returns a vector with an std::unique_ptr for each significant instance (axons, dendrites (excitatory, inhibitory))
+     * @brief Returns a vector with an std::unique_ptr for each significant instance (axons, dendrites (excitatory, inhibitory))
      * @return A vector with all significant instances
-	 */
+     */
     [[nodiscard]] static std::vector<std::unique_ptr<SynapticElements>> get_elements() {
         std::vector<std::unique_ptr<SynapticElements>> res;
         res.emplace_back(std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons));
@@ -163,9 +163,9 @@ public:
     }
 
     /**
-	 * @brief Returns a vector with all adjustable ModelParameter
+     * @brief Returns a vector with all adjustable ModelParameter
      * @return A vector with all adjustable ModelParameter
-	 */
+     */
     [[nodiscard]] std::vector<ModelParameter> get_parameter() {
         return {
             Parameter<double>{ "Minimum calcium to grow", min_C_level_to_grow, SynapticElements::min_min_C_level_to_grow, SynapticElements::max_min_C_level_to_grow },
@@ -313,7 +313,7 @@ public:
      * @brief Returns the accumulated delta for the specified neuron id
      * @param neuron_id The neuron
      * @exception Throws a RelearnException if neuron_id is too large
-     * @return The accumulated delta 
+     * @return The accumulated delta
      */
     [[nodiscard]] double get_delta(const size_t neuron_id) const {
         RelearnException::check(neuron_id < deltas_since_last_update.size(), "SynapticElements::get_delta: neuron_id is too large: {}", neuron_id);
@@ -331,7 +331,7 @@ public:
         return signal_types[neuron_id];
     }
 
-    /** 
+    /**
      * @brief Returns the element type
      * @return The element type
      */
@@ -359,9 +359,9 @@ public:
             }
 
             /**
-		     * Create and delete synaptic elements as required.
-		     * This function only deletes elements (bound and unbound), no synapses.
-		     */
+             * Create and delete synaptic elements as required.
+             * This function only deletes elements (bound and unbound), no synapses.
+             */
             const auto num_synapses_to_delete = update_number_elements(neuron_id);
 
             number_deletions[neuron_id] = num_synapses_to_delete;
@@ -372,7 +372,7 @@ public:
     }
 
     /**
-     * @brief Updates the accumulated delta for each enabled neuron based on its current calcium value 
+     * @brief Updates the accumulated delta for each enabled neuron based on its current calcium value
      * @param calcium The current calcium value for each neuron
      * @param target_calcium The target calcium value for each neuron
      * @param disable_flags Indicates that a neuron should not be updated (= 0)
@@ -399,16 +399,16 @@ public:
 
 private:
     /**
-	 * @brief Updates the number of synaptic elements for the specified neuron.
-	 *      Returns the number of synapses to be deleted as a consequence of deleting synaptic elements
+     * @brief Updates the number of synaptic elements for the specified neuron.
+     *      Returns the number of synapses to be deleted as a consequence of deleting synaptic elements
      * @param neuron_id The neuron
      * @exception Throws a RelearnException if neuron_id is too large or there was a calculation error
      * @return The number of synapses that must be deleted as a consequence
-     * 
-	 * Synaptic elements are deleted based on "deltas_since_last_update" in the following way:
-	 * 1. Delete vacant elements
-	 * 2. Delete bound elements
-	 */
+     *
+     * Synaptic elements are deleted based on "deltas_since_last_update" in the following way:
+     * 1. Delete vacant elements
+     * 2. Delete bound elements
+     */
     [[nodiscard]] unsigned int update_number_elements(size_t neuron_id);
 
 public:
@@ -440,8 +440,8 @@ private:
     std::vector<double> deltas_since_last_update{}; // Keeps track of changes in number of elements until those changes are applied in next connectivity update
     std::vector<unsigned int> connected_elements{};
     std::vector<SignalType> signal_types{}; // Signal type of synaptic elements, i.e., EXCITATORY or INHIBITORY.
-        // Note: Given that current exc. and inh. dendrites are in different objects, this would only be needed for axons.
-        //       A more memory-efficient solution would be to use a different class for axons which has the signal_types array.
+                                            // Note: Given that current exc. and inh. dendrites are in different objects, this would only be needed for axons.
+                                            //       A more memory-efficient solution would be to use a different class for axons which has the signal_types array.
 
     // Parameters
     double min_C_level_to_grow{ 0.0 }; // Minimum level of calcium needed for elements to grow

@@ -55,7 +55,7 @@ public:
     /**
      * @brief Returns the associated SynapseLoader (some type that inherites from SynapseLoader)
      * @exception Throws a RelearnException if synapse_loader is nullptr
-     * @return The associated SynapseLoader 
+     * @return The associated SynapseLoader
      */
     std::shared_ptr<SynapseLoader> get_synapse_loader() const {
         RelearnException::check(synapse_loader.operator bool(), "NeuronToSubdomainAssignment::get_synapse_loader: synapse_loader is empty");
@@ -65,7 +65,7 @@ public:
     /**
      * @brief Returns the associated NeuronIdTranslator (some type that inherites from NeuronIdTranslator)
      * @exception Throws a RelearnException if neuron_id_translator is nullptr
-     * @return The associated NeuronIdTranslator 
+     * @return The associated NeuronIdTranslator
      */
     std::shared_ptr<NeuronIdTranslator> get_neuron_id_translator() const {
         RelearnException::check(neuron_id_translator.operator bool(), "NeuronToSubdomainAssignment::get_neuron_id_translator: neuron_id_translator is empty");
@@ -258,10 +258,10 @@ public:
     /**
      * @brief Writes all loaded neurons into the specified file.
      *      The format is
-     *      # ID, Position (x y z),	Area, type 
+     *      # ID, Position (x y z),	Area, type
      * @param file_path The filepath where to write the neurons
      * @exception Might throw a RelearnException
-    */
+     */
     virtual void write_neurons_to_file(const std::filesystem::path& file_path) const;
 
 protected:

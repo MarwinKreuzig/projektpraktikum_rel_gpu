@@ -46,7 +46,7 @@ public:
         , neuron_id(neuron_id) {
     }
 
-    /** 
+    /**
      * @brief Returns the associated MPI rank
      * @return The MPI rank
      * @exception Throws a RelearnException if the rank is negative

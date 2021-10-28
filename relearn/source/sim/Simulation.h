@@ -157,9 +157,9 @@ public:
     void increase_monitoring_capacity(size_t size);
 
     /**
-	 * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned
+     * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned
      * @return A vector with all inherited classes
-	 */
+     */
     static std::vector<std::unique_ptr<NeuronModel>> get_models();
 
     /**

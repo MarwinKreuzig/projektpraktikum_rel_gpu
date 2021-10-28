@@ -26,8 +26,8 @@ void Timers::print_timer(std::stringstream& sstream, const TimerRegion timer_ind
 
 void Timers::print() {
     /**
-	 * Print timers and memory usage
-	 */
+     * Print timers and memory usage
+     */
     constexpr size_t expected_num_timers = size_t(3) * NUM_TIMERS;
 
     std::array<double, expected_num_timers> timers_local{};

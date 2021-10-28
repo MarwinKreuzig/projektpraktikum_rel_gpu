@@ -110,7 +110,7 @@ public:
     }
 
     /**
-     * @brief Returns a flag that indicates if this object belongs to the current MPI process. 
+     * @brief Returns a flag that indicates if this object belongs to the current MPI process.
      *      Achieves so by calling MPIWrapper::get_my_rank()
      * @exception Throws a RelearnException if the MPIWrapper is not properly initialized
      * @return True iff this object belongs to the current MPI process
@@ -147,9 +147,9 @@ public:
         // Correct position for new node not found yet
         for (OctreeNodePtr current_node = this; nullptr != current_node;) {
             /**
-		     * My parent already exists.
-		     * Calc which child to follow, i.e., determine octant
-		     */
+             * My parent already exists.
+             * Calc which child to follow, i.e., determine octant
+             */
             new_position_octant = current_node->get_cell().get_octant_for_position(position);
 
             parent_node = current_node;
@@ -159,10 +159,10 @@ public:
         RelearnException::check(parent_node != nullptr, "OctreeNode::insert: parent_node is nullptr");
 
         /**
-	     * Found my octant, but
-	     * I'm the very first child of that node.
-	     * I.e., the node is a leaf.
-	     */
+         * Found my octant, but
+         * I'm the very first child of that node.
+         * I.e., the node is a leaf.
+         */
         if (!parent_node->is_parent()) {
             /**
              * The found parent node is virtual and can just be substituted,
@@ -177,9 +177,9 @@ public:
 
             for (unsigned char idx = new_position_octant; idx == new_position_octant;) {
                 /**
-		         * Make node containing my octant a parent by
-		         * adding neuron in this node as child node
-		         */
+                 * Make node containing my octant a parent by
+                 * adding neuron in this node as child node
+                 */
 
                 // Determine octant for neuron
                 const auto& cell_own_position = parent_node->get_cell().get_dendrites_position();
@@ -202,9 +202,9 @@ public:
                 new_node->set_cell_neuron_id(prev_neuron_id);
 
                 /**
-			     * Set neuron ID of parent (inner node) to uninitialized.
-			     * It is not used for inner nodes.
-			     */
+                 * Set neuron ID of parent (inner node) to uninitialized.
+                 * It is not used for inner nodes.
+                 */
                 parent_node->set_cell_neuron_id(Constants::uninitialized);
                 parent_node->set_parent(); // Mark node as parent
 
@@ -224,9 +224,9 @@ public:
         RelearnException::check(new_node_to_insert != nullptr, "OctreeNode::insert: new_node_to_insert is nullptr");
 
         /**
-	     * Found my position in children array,
-	     * add myself to the array now
-	     */
+         * Found my position in children array,
+         * add myself to the array now
+         */
         parent_node->set_child(new_node_to_insert, new_position_octant);
 
         const auto& [minimum_position, maximum_position] = parent_node->get_cell().get_size_for_octant(new_position_octant);
@@ -487,7 +487,7 @@ public:
     }
 
     /**
-     * @brief Returns a vector of all actual dendrite positions that have a free port of the requested SignalType. 
+     * @brief Returns a vector of all actual dendrite positions that have a free port of the requested SignalType.
      *      Contains multiples if a dendrite has more than one free port. TODO: Omit the multiples, return tuple(num, pos) and multiply later in FMM
      * @param needed The requested SignalType
      * @return A vector of all actual positions
@@ -523,7 +523,7 @@ public:
     }
 
     /**
-     * @brief Returns a vector of all actual axon positions that have a free port of the requested SignalType. 
+     * @brief Returns a vector of all actual axon positions that have a free port of the requested SignalType.
      *      Contains multiples if a actual has more than one free port.
      * @param needed The requested SignalType
      * @return A vector of all actual positions

@@ -22,7 +22,7 @@ class SynapticElements;
 
 /**
  * This is a virtual interface for all algorithms that can be used to find target neurons with vacant dendrites.
- * It provides Algorithm::find_target_neuron, Algorithm::update_leaf_nodes and every derived class must also implement 
+ * It provides Algorithm::find_target_neuron, Algorithm::update_leaf_nodes and every derived class must also implement
  * static void update_functor(OctreeNode<Cell>* node)
  * with Cell being exposed publicly via
  * using AdditionalCellAttributes = Cell;

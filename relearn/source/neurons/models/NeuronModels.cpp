@@ -35,12 +35,12 @@ void NeuronModel::update_electrical_activity(const NetworkGraph& network_graph, 
     MapFiringNeuronIds firing_neuron_ids_incoming = update_electrical_activity_exchange_neuron_ids(firing_neuron_ids_outgoing, num_incoming_ids);
 
     /**
-	 * Now fired contains spikes only from my own neurons
-	 * (spikes from local neurons)
-	 *
-	 * The incoming spikes of neurons from other ranks are in firing_neuron_ids_incoming
-	 * (spikes from neurons from other ranks)
-	 */
+     * Now fired contains spikes only from my own neurons
+     * (spikes from local neurons)
+     *
+     * The incoming spikes of neurons from other ranks are in firing_neuron_ids_incoming
+     * (spikes from neurons from other ranks)
+     */
 
     update_electrical_activity_serial_initialize(disable_flags);
 
@@ -76,8 +76,8 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
         }
 
         /**
-		 * Determine synaptic input from neurons connected to me
-		 */
+         * Determine synaptic input from neurons connected to me
+         */
 
         // Walk through the local in-edges of my neuron
         const NetworkGraph::LocalEdges& local_in_edges = network_graph.get_local_in_edges(neuron_id);
@@ -136,9 +136,9 @@ std::vector<size_t> NeuronModel::update_electrical_activity_prepare_receiving_sp
     std::vector<size_t> num_firing_neuron_ids_incoming(num_ranks, 0);
 
     /**
-	* Send to every rank the number of firing neuron ids it should prepare for from me.
-	* Likewise, receive the number of firing neuron ids that I should prepare for from every rank.
-	*/
+     * Send to every rank the number of firing neuron ids it should prepare for from me.
+     * Likewise, receive the number of firing neuron ids that I should prepare for from every rank.
+     */
     std::vector<size_t> num_firing_neuron_ids_for_ranks(num_ranks, 0);
     std::vector<size_t> num_firing_neuron_ids_from_ranks(num_ranks, Constants::uninitialized);
 
@@ -172,8 +172,8 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_exchange
     Timers::start(TimerRegion::EXCHANGE_NEURON_IDS);
 
     /**
-	* Send and receive actual neuron ids
-	*/
+     * Send and receive actual neuron ids
+     */
 
     MapFiringNeuronIds firing_neuron_ids_incoming;
     for (auto rank = 0; rank < MPIWrapper::get_num_ranks(); rank++) {
@@ -218,16 +218,16 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_exchange
     return firing_neuron_ids_incoming;
 }
 
-NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {       
-    // If there is no other rank, then we can just skip    
+NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
+    // If there is no other rank, then we can just skip
     if (const auto number_mpi_ranks = MPIWrapper::get_num_ranks(); number_mpi_ranks == 1) {
         return {};
     }
 
     /**
-	 * Check which of my neurons fired and determine which ranks need to know about it.
-	 * That is, they contain the neurons connecting the axons of my firing neurons.
-	 */
+     * Check which of my neurons fired and determine which ranks need to know about it.
+     * That is, they contain the neurons connecting the axons of my firing neurons.
+     */
 
     Timers::start(TimerRegion::PREPARE_SENDING_SPIKES);
 

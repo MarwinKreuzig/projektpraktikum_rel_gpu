@@ -19,11 +19,11 @@
 #include <vector>
 
 /**
-  * An object of type NeuronsExtraInfo additional informations of neurons.
-  * For a single neuron, these additional informations are: its x-, y-, and z- position and the name of the area the neuron is in.
-  * It furthermore stores a map from the MPI rank to the (global) starting neuron id. 
-  * This is useful whenever one wants to print all neurons across multiple MPI ranks, while ommiting the MPI rank itself.
-  */
+ * An object of type NeuronsExtraInfo additional informations of neurons.
+ * For a single neuron, these additional informations are: its x-, y-, and z- position and the name of the area the neuron is in.
+ * It furthermore stores a map from the MPI rank to the (global) starting neuron id.
+ * This is useful whenever one wants to print all neurons across multiple MPI ranks, while ommiting the MPI rank itself.
+ */
 class NeuronsExtraInfo {
 public:
     using position_type = RelearnTypes::position_type;
@@ -56,7 +56,7 @@ public:
     /**
      * @brief Overwrites the current area names with the supplied ones
      * @param names The new area names, must have the same size as neurons are stored
-     * @exception Throws an RelearnAxception if names.empty() or if the number of supplied elements does not match the number of stored neurons 
+     * @exception Throws an RelearnAxception if names.empty() or if the number of supplied elements does not match the number of stored neurons
      */
     void set_area_names(std::vector<std::string> names) {
         RelearnException::check(!names.empty(), "NeuronsExtraInformation::set_area_names: New area names are empty");
@@ -75,7 +75,7 @@ public:
     /**
      * @brief Overwrites the current positions with the supplied ones
      * @param names The new positions, must have the same size as neurons are stored
-     * @exception Throws an RelearnAxception if pos.empty() or if the number of supplied elements does not match the number of stored neurons 
+     * @exception Throws an RelearnAxception if pos.empty() or if the number of supplied elements does not match the number of stored neurons
      */
     void set_positions(std::vector<position_type> pos) {
         RelearnException::check(!pos.empty(), "NeuronsExtraInformation::set_x_dims: New x dimensions are empty");

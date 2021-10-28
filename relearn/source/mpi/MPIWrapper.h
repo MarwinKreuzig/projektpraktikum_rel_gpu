@@ -43,10 +43,10 @@ enum class MPI_Locktype {
 namespace MPIUserDefinedOperation {
 /**
  * @brief Provides a custom reduction function for MPI that simultaneously computes the min, sum, and max of multiple values.
- * @param invec A double* (cast to int* because of MPI) with a tuple of data to reduce. 
+ * @param invec A double* (cast to int* because of MPI) with a tuple of data to reduce.
  *      Size must be at least *len / sizeof(double) / 3
- * @param inoutvec A double* (cast to int* because of MPI) with a tuple of data to reduce. 
- *      Size must be at least *len / sizeof(double) / 3. 
+ * @param inoutvec A double* (cast to int* because of MPI) with a tuple of data to reduce.
+ *      Size must be at least *len / sizeof(double) / 3.
  *      Is also used as return value.
  * @param len The length of a tuple of data. Is only accessed hat *len.
  * @param dtype Unused
@@ -54,7 +54,7 @@ namespace MPIUserDefinedOperation {
 void min_sum_max(const void* invec, void* inoutvec, const int* len, void* dtype);
 } // namespace MPIUserDefinedOperation
 
-/** 
+/**
  * This class provides a static interface to every kind of MPI functionality that should be called from other classes.
  * It wraps functionality in a C++ type safe manner.
  * The first call must be MPIWrapper::init(...) and the last one MPIWrapper::finalize(), not calling any of those inbetween.
@@ -98,7 +98,7 @@ private:
 
     static inline int thread_level_provided{ -1 }; // Thread level provided by MPI
 
-    //NOLINTNEXTLINE
+    // NOLINTNEXTLINE
     static inline void* mpi_window{ nullptr }; // RMA window object
 
     static inline void* base_ptr{ nullptr }; // Start address of MPI-allocated memory
@@ -348,7 +348,7 @@ public:
         return retrieved_data;
     }
 
-    /** 
+    /**
      * @brief Downloads an OctreeNode on another MPI rank
      * @param dst The local node which shall be the copy of the remote node
      * @param target_rank The other MPI rank

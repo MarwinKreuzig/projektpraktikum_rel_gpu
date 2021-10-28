@@ -28,14 +28,14 @@
 #include <vector>
 
 /**
-  * IMPORTANT: MPI expects int array with receive counts and displacements for vector operations
-  *
-  * The int receive count limits the number of neurons per rank to ~2e9 (2^31 - 1).
-  * The int displacement limits the *total* number of neurons to ~2e9 (2^31 - 1) which is a problem.
-  * A way to solve this problem is to use communication operations without displacement.
-  *
-  * Solving the problem is future work. Until it is solved the total number of neurons is limited to 2^31-1.
-  */
+ * IMPORTANT: MPI expects int array with receive counts and displacements for vector operations
+ *
+ * The int receive count limits the number of neurons per rank to ~2e9 (2^31 - 1).
+ * The int displacement limits the *total* number of neurons to ~2e9 (2^31 - 1) which is a problem.
+ * A way to solve this problem is to use communication operations without displacement.
+ *
+ * Solving the problem is future work. Until it is solved the total number of neurons is limited to 2^31-1.
+ */
 
 std::map<MPIWrapper::AsyncToken, MPI_Request> translation_map{};
 size_t current_token{ 0 };

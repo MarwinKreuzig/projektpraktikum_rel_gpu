@@ -38,11 +38,11 @@ public:
 
     constexpr static size_t mpi_alloc_mem = 1024 * 1024 * 300;
 
-    //Constants for Fast Gauss
+    // Constants for Fast Gauss
     constexpr static int p = 4;
     constexpr static int p3 = p * p * p;
-    constexpr static int max_neurons_in_target = 70; //cutoff for target box
-    constexpr static int max_neurons_in_source = 70; //cutoff for source box
+    constexpr static int max_neurons_in_target = 70; // cutoff for target box
+    constexpr static int max_neurons_in_source = 70; // cutoff for source box
 };
 
 class Config {

@@ -31,17 +31,17 @@
 
     while (true) {
         /**
-	     * Create vector with nodes that have at least one dendrite and are
-	     * precise enough given the position of an axon
-	     */
+         * Create vector with nodes that have at least one dendrite and are
+         * precise enough given the position of an axon
+         */
 
         const auto& vector = get_nodes_for_interval(axon_pos_xyz, root_of_subtree, dendrite_type_needed);
 
         /**
-		 * Assign a probability to each node in the vector.
-		 * The probability for connecting to the same neuron (i.e., the axon's neuron) is set 0.
-		 * Nodes with 0 probability are removed.
-		 */
+         * Assign a probability to each node in the vector.
+         * The probability for connecting to the same neuron (i.e., the axon's neuron) is set 0.
+         * Nodes with 0 probability are removed.
+         */
         const auto& [total_prob, probability_values] = create_interval(src_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
 
         if (probability_values.empty()) {
@@ -51,7 +51,7 @@
         const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(total_prob, Constants::eps));
 
         /**
-         * This is done in case of rounding errors. 
+         * This is done in case of rounding errors.
          */
         auto counter = 0;
         auto sum_probabilities = 0.0;
@@ -68,12 +68,12 @@
         RelearnException::check(node_selected != nullptr, "BarnesHut::find_target_neuron: node_selected was nullptr");
 
         /**
-	     * Leave loop if no node was selected OR
-	     * the selected node is leaf node, i.e., contains normal neuron.
-	     *
-	     * No node is selected when all nodes in the interval, created in
-	     * get_nodes_for_interval(), have probability 0 to connect.
-	     */
+         * Leave loop if no node was selected OR
+         * the selected node is leaf node, i.e., contains normal neuron.
+         *
+         * No node is selected when all nodes in the interval, created in
+         * get_nodes_for_interval(), have probability 0 to connect.
+         */
         const auto done = !node_selected->is_parent();
 
         if (done) {
@@ -129,22 +129,22 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
         // For all vacant axons of neuron "neuron_id"
         for (size_t j = 0; j < num_vacant_axons; j++) {
             /**
-			 * Find target neuron for connecting and
-			 * connect if target neuron has still dendrite available.
-			 *
-			 * The target neuron might not have any dendrites left
-			 * as other axons might already have connected to them.
-			 * Right now, those collisions are handled in a first-come-first-served fashion.
-			 */
+             * Find target neuron for connecting and
+             * connect if target neuron has still dendrite available.
+             *
+             * The target neuron might not have any dendrites left
+             * as other axons might already have connected to them.
+             * Right now, those collisions are handled in a first-come-first-served fashion.
+             */
 
             std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
 
             if (rank_neuron_id.has_value()) {
                 RankNeuronId val = rank_neuron_id.value();
                 /*
-				 * Append request for synapse creation to rank "target_rank"
-				 * Note that "target_rank" could also be my own rank.
-				 */
+                 * Append request for synapse creation to rank "target_rank"
+                 * Note that "target_rank" could also be my own rank.
+                 */
 #pragma omp critical
                 synapse_creation_requests_outgoing[val.get_rank()].append(neuron_id, val.get_neuron_id(), dendrite_type_needed);
             }
@@ -279,9 +279,9 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     });
 
     /**
-	 * Make sure that we don't divide by 0 in case all probabilities from above are 0.
+     * Make sure that we don't divide by 0 in case all probabilities from above are 0.
      * There is no neuron to connect to in that case.
-	 */
+     */
     if (sum == 0.0) {
         return { 0.0, {} };
     }
@@ -303,9 +303,9 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     }
 
     /**
-	 * Node is leaf node, i.e., not super neuron.
-	 * Thus the node is precise. Accept it no matter what.
-	 */
+     * Node is leaf node, i.e., not super neuron.
+     * Thus the node is precise. Accept it no matter what.
+     */
     if (!is_parent) {
         return std::make_tuple(true, true);
     }
@@ -345,11 +345,11 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
 
     if (!root->is_parent()) {
         /**
-		 * The root node is a leaf and thus contains the target neuron.
-		 *
-		 * NOTE: Root is not intended to be a leaf but we handle this as well.
-		 * Without pushing root onto the stack, it would not make it into the "vector" of nodes.
-		 */
+         * The root node is a leaf and thus contains the target neuron.
+         *
+         * NOTE: Root is not intended to be a leaf but we handle this as well.
+         * Without pushing root onto the stack, it would not make it into the "vector" of nodes.
+         */
 
         const auto [accept, _] = acceptance_criterion_test(axon_pos_xyz, root, dendrite_type_needed);
 
@@ -386,9 +386,9 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
         vector.pop_back();
 
         /**
-		 * Should node be used for probability interval?
-		 * Only take those that have dendrites available
-		 */
+         * Should node be used for probability interval?
+         * Only take those that have dendrites available
+         */
         const auto [accept, has_vacant_dendrites] = acceptance_criterion_test(axon_pos_xyz, node, dendrite_type_needed);
 
         if (accept) {

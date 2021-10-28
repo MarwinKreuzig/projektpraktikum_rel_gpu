@@ -117,8 +117,8 @@ void print_arguments(int argc, char** argv) {
 
 int main(int argc, char** argv) {
     /**
-	 * Init MPI and store some MPI infos
-	 */
+     * Init MPI and store some MPI infos
+     */
     MPIWrapper::init(argc, argv);
 
     print_arguments(argc, argv);
@@ -264,8 +264,8 @@ int main(int argc, char** argv) {
     omp_set_num_threads(openmp_threads);
 
     /**
-	 * Initialize the simuliation log files
-	 */
+     * Initialize the simuliation log files
+     */
     if (static_cast<bool>(*opt_log_path)) {
         LogFiles::set_output_path(log_path);
     }
@@ -316,8 +316,8 @@ int main(int argc, char** argv) {
     Timers::start(TimerRegion::INITIALIZATION);
 
     /**
-	 * Calculate what my partition of the domain consist of
-	 */
+     * Calculate what my partition of the domain consist of
+     */
     auto partition = std::make_shared<Partition>(num_ranks, my_rank);
     const size_t number_local_subdomains = partition->get_number_local_subdomains();
     const size_t total_number_subdomains = partition->get_total_number_subdomains();
@@ -331,8 +331,8 @@ int main(int argc, char** argv) {
         }
 
         /**
-	     * Create MPI RMA memory allocator
-	      */
+         * Create MPI RMA memory allocator
+         */
         MPIWrapper::init_buffer_octree<BarnesHutCell>();
     } else if (algorithm == AlgorithmEnum::FastMultipoleMethods) {
         // Check if int type can contain total size of branch nodes to receive in bytes
@@ -343,8 +343,8 @@ int main(int argc, char** argv) {
         }
 
         /**
-	      * Create MPI RMA memory allocator
-	      */
+         * Create MPI RMA memory allocator
+         */
         MPIWrapper::init_buffer_octree<FastMultipoleMethodsCell>();
     } else if (algorithm == AlgorithmEnum::Naive) {
         // Check if int type can contain total size of branch nodes to receive in bytes
@@ -355,8 +355,8 @@ int main(int argc, char** argv) {
         }
 
         /**
-	      * Create MPI RMA memory allocator
-	      */
+         * Create MPI RMA memory allocator
+         */
         MPIWrapper::init_buffer_octree<NaiveCell>();
     }
 

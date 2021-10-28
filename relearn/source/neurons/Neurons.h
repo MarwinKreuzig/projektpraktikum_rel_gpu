@@ -45,11 +45,11 @@ class Neurons {
     friend class NeuronMonitor;
 
     /**
-	 * This type represents a synapse deletion request.
+     * This type represents a synapse deletion request.
      * It is exchanged via MPI ranks but does not perform MPI communication on its own.
      * A synapse is (src_neuron_id, axon, signal_type) ---synapse_id---> (tgt_neuron_id, dendrite, signal_type), the deletion if initiated from one side,
      * and the other side is saved as (affected_neuron_id, affected_element_type, signal_type)
-	 */
+     */
     class PendingSynapseDeletion {
         RankNeuronId src_neuron_id{}; // Synapse source neuron id
         RankNeuronId tgt_neuron_id{}; // Synapse target neuron id
@@ -58,11 +58,11 @@ class Neurons {
         SignalType signal_type{ SignalType::EXCITATORY }; // Signal type (exc/inh) of the synapse
         unsigned int synapse_id{ 0 }; // Synapse id of the synapse to be deleted
         bool affected_element_already_deleted{ false }; // "True" if the element to be set vacant was already deleted by the neuron owning it
-            // "False" if the element must be set vacant
+                                                        // "False" if the element must be set vacant
 
     public:
         /**
-         * Creates a new object 
+         * Creates a new object
          */
         PendingSynapseDeletion() = default;
 
@@ -191,8 +191,8 @@ class Neurons {
     using PendingDeletionsV = std::vector<PendingSynapseDeletion>;
 
     /**
-	 * This type is used as aggregate when it comes to selecting a synapse for deletion
-	 */
+     * This type is used as aggregate when it comes to selecting a synapse for deletion
+     */
     class Synapse {
         RankNeuronId neuron_id{};
         unsigned int synapse_id{}; // Id of the synapse. Used to distinguish multiple synapses between the same neuron pair
@@ -228,9 +228,9 @@ class Neurons {
     };
 
     /**
-	 * This type aggregates multiple PendingSynapseDeletion into one and facilitates MPI communication.
+     * This type aggregates multiple PendingSynapseDeletion into one and facilitates MPI communication.
      * It does not perform MPI communication.
-	 */
+     */
     struct SynapseDeletionRequests {
         SynapseDeletionRequests() = default;
 
@@ -373,11 +373,11 @@ class Neurons {
     private:
         size_t num_requests{ 0 }; // Number of synapse deletion requests
         std::vector<size_t> requests{}; // Each request to delete a synapse is a 6-tuple:
-            // (src_neuron_id, tgt_neuron_id, affected_neuron_id, affected_element_type, signal_type, synapse_id)
-            // That is why requests.size() == 6*num_requests
-            // Note, a more memory-efficient implementation would use a smaller data type (not size_t)
-            // for affected_element_type, signal_type.
-            // This vector is used as MPI communication buffer
+                                        // (src_neuron_id, tgt_neuron_id, affected_neuron_id, affected_element_type, signal_type, synapse_id)
+                                        // That is why requests.size() == 6*num_requests
+                                        // Note, a more memory-efficient implementation would use a smaller data type (not size_t)
+                                        // for affected_element_type, signal_type.
+                                        // This vector is used as MPI communication buffer
     };
 
 public:
@@ -387,12 +387,12 @@ public:
     using DendritesInhibitory = SynapticElements;
 
     /**
-	 * Map of (MPI rank; SynapseDeletionRequests)
-	 * The MPI rank specifies the corresponding process
-	 */
+     * Map of (MPI rank; SynapseDeletionRequests)
+     * The MPI rank specifies the corresponding process
+     */
     using MapSynapseDeletionRequests = std::map<int, SynapseDeletionRequests>;
 
-    /** 
+    /**
      * @brief Creates a new object with the passed Partition, NeuronModel, Axons, DendritesExc, and DendritesInh
      * @param partition The partition, is only used for printing, must not be empty
      * @param model_ptr The electrical model for the neurons, must not be empty
@@ -448,7 +448,7 @@ public:
 
     /**
      * @brief Sets the algorithm that calculates to which neuron a neuron connects during the plasticity update
-     * @param algorithm_ptr The pointer to the algorithm 
+     * @param algorithm_ptr The pointer to the algorithm
      */
     void set_algorithm(std::shared_ptr<Algorithm> algorithm_ptr) noexcept {
         algorithm = std::move(algorithm_ptr);
@@ -471,7 +471,7 @@ public:
     }
 
     /**
-     * @brief Returns the model parameters for the specified synaptic elements 
+     * @brief Returns the model parameters for the specified synaptic elements
      * @param element_type The element type
      * @param signal_type The signal type, only relevant if element_type == dendrites
      * @return The model parameters for the specified synaptic elements
@@ -721,14 +721,14 @@ private:
         const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete, const PendingDeletionsV& other_pending_deletions);
 
     /**
-	 * Determines which synapses should be deleted.
-	 * The selected synapses connect with neuron "neuron_id" and the type of
-	 * those synapses is given by "signal_type".
-	 *
-	 * NOTE: The semantics of the function is not nice but used to postpone all updates
-	 * due to synapse deletion until all neurons have decided *independently* which synapse
-	 * to delete. This should reflect how it's done for a distributed memory implementation.
-	 */
+     * Determines which synapses should be deleted.
+     * The selected synapses connect with neuron "neuron_id" and the type of
+     * those synapses is given by "signal_type".
+     *
+     * NOTE: The semantics of the function is not nice but used to postpone all updates
+     * due to synapse deletion until all neurons have decided *independently* which synapse
+     * to delete. This should reflect how it's done for a distributed memory implementation.
+     */
     [[nodiscard]] std::vector<size_t> delete_synapses_find_synapses_on_neuron(
         size_t neuron_id,
         ElementType element_type,

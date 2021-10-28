@@ -134,9 +134,9 @@ public:
     static void print();
 
     /**
-	 * @brief Returns the current time as a string
+     * @brief Returns the current time as a string
      * @return The current time as a string
-	 */
+     */
     [[nodiscard]] static std::string wall_clock_time() {
 #ifdef __linux__
         time_t rawtime = 0;

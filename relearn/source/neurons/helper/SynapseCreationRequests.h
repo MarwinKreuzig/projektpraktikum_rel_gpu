@@ -18,7 +18,7 @@
 
 /**
  * An object of type SynapseCreationRequests stores the requests from the current MPI rank to a dedicated other MPI rank.
- * It stores all requests flattened and can manage the responses. 
+ * It stores all requests flattened and can manage the responses.
  * The class does not perform any communication or synchronization with other MPI ranks.
  */
 class SynapseCreationRequests {
@@ -47,7 +47,7 @@ public:
     }
 
     /**
-     * @brief Appends a pending request, comprising of the source and target neuron ids and a flag that denotes the 
+     * @brief Appends a pending request, comprising of the source and target neuron ids and a flag that denotes the
      *      required dendrite type; 0 for excitatory and 1 for inhibitory
      * @param source_neuron_id The local neuron id of the requesting neuron
      * @param target_neuron_id The local (to the other rank) neuron id of the requested neuron
@@ -64,7 +64,7 @@ public:
     }
 
     /**
-     * @brief Appends a pending request, comprising of the source and target neuron ids and an enum that denotes the 
+     * @brief Appends a pending request, comprising of the source and target neuron ids and an enum that denotes the
      *      required dendrite type
      * @param source_neuron_id The local neuron id of the requesting neuron
      * @param target_neuron_id The local (to the other rank) neuron id of the requested neuron
@@ -83,7 +83,7 @@ public:
     /**
      * @brief Returns the requested index as a three-tuple of the source' local neuron id, the targets local neuron id,
      *      and a enum that indicates whether it is an excitatory or inhibitory request
-     * @param request_index The required request-index 
+     * @param request_index The required request-index
      * @exception Throws a RelearnException if the request_index exceeds the stored number of requests
      * @return A tuple consisting of the local neuron id of source and target, and a enum that
      *       indicates whether it is an excitatory or inhibitory request
@@ -104,7 +104,7 @@ public:
 
     /**
      * @brief Sets the responce for the index-specified request
-     * @param request_index The request index 
+     * @param request_index The request index
      * @param connected A flag that specifies if the request is accepted (1) or denied (0)
      * @exception Throws a RelearnException if the request_index exceeds the stored number of responses
      */
@@ -116,7 +116,7 @@ public:
 
     /**
      * @brief Gets the responce for the index-specified request
-     * @param request_index The request index 
+     * @param request_index The request index
      * @exception Throws a RelearnException if the request_index exceeds the stored number of responses
      * @return A flag that specifies if the request is accepted (1) or denied (0)
      */
@@ -168,12 +168,12 @@ public:
 private:
     size_t num_requests{ 0 }; // Number of synapse creation requests
     std::vector<size_t> requests{}; // Each request to form a synapse is a 3-tuple: (source_neuron_id, target_neuron_id, dendrite_type_needed)
-        // That is why requests.size() == 3*responses.size()
-        // Note, a more memory-efficient implementation would use a smaller data type (not size_t) for dendrite_type_needed.
-        // This vector is used as MPI communication buffer
+                                    // That is why requests.size() == 3*responses.size()
+                                    // Note, a more memory-efficient implementation would use a smaller data type (not size_t) for dendrite_type_needed.
+                                    // This vector is used as MPI communication buffer
     std::vector<char> responses{}; // Response if the corresponding request was accepted and thus the synapse was formed
-        // responses[i] refers to requests[3*i,...,3*i+2]
-        // This vector is used as MPI communication buffer
+                                   // responses[i] refers to requests[3*i,...,3*i+2]
+                                   // This vector is used as MPI communication buffer
 };
 
 /**

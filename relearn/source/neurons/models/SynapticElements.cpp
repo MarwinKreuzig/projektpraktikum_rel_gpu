@@ -1,13 +1,13 @@
 #include "SynapticElements.h"
 
 /**
-* Updates the number of synaptic elements for neuron "neuron_id"
-* Returns the number of synapses to be deleted as a consequence of deleting synaptic elements
-*
-* Synaptic elements are deleted based on "deltas_since_last_update" in the following way:
-* 1. Delete vacant elements
-* 2. Delete bound elements
-*/
+ * Updates the number of synaptic elements for neuron "neuron_id"
+ * Returns the number of synapses to be deleted as a consequence of deleting synaptic elements
+ *
+ * Synaptic elements are deleted based on "deltas_since_last_update" in the following way:
+ * 1. Delete vacant elements
+ * 2. Delete bound elements
+ */
 
 unsigned int SynapticElements::update_number_elements(const size_t neuron_id) {
     RelearnException::check(neuron_id < size, "SynapticElements::update_number_elements: {} is too large! {}", neuron_id, size);
@@ -34,9 +34,9 @@ unsigned int SynapticElements::update_number_elements(const size_t neuron_id) {
     }
 
     /**
-	* More bound elements should be deleted than are available.
-	* Now, neither vacant (see if branch above) nor bound elements are left.
-	*/
+     * More bound elements should be deleted than are available.
+     * Now, neither vacant (see if branch above) nor bound elements are left.
+     */
     if (current_count + current_delta < 0.0) {
         connected_elements[neuron_id] = 0;
         grown_elements[neuron_id] = 0.0;

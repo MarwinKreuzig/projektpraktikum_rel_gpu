@@ -134,7 +134,7 @@ public:
             std::optional<position_type> opt_child_position_dendrites_inhibitory = child_cell.get_inhibitory_dendrites_position();
 
             /**
-			 * We can use position if it's valid or if corresponding num of dendrites is 0 
+			 * We can use position if it's valid or if corresponding num of dendrites is 0
 			 */
             RelearnException::check(opt_child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "BarnesHut::update_functor: The child had excitatory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
             RelearnException::check(opt_child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "BarnesHut::update_functor: The child had inhibitory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
@@ -167,9 +167,9 @@ public:
         node->set_cell_number_dendrites(my_number_dendrites_excitatory, my_number_dendrites_inhibitory);
 
         /**
-		 * For calculating the new weighted position, make sure that we don't
-		 * divide by 0. This happens if the my number of dendrites is 0.
-		 */
+         * For calculating the new weighted position, make sure that we don't
+         * divide by 0. This happens if the my number of dendrites is 0.
+         */
         if (0 == my_number_dendrites_excitatory) {
             node->set_cell_excitatory_dendrites_position({});
         } else {

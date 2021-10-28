@@ -149,7 +149,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
         - push source_children to stack
          */
 
-        //node is a leaf
+        // node is a leaf
         if (!source_node->is_parent()) {
             const auto source_id = cell.get_neuron_id();
 

@@ -25,7 +25,7 @@
 class Partition;
 
 /**
- * This class inherits form NeuronToSubdomainAssignment. It reads the neurons with their positions from a file and, 
+ * This class inherits form NeuronToSubdomainAssignment. It reads the neurons with their positions from a file and,
  * based on this, determines the size of the simulation box and the number of neurons in every individual subdomain.
  */
 class SubdomainFromFile : public NeuronToSubdomainAssignment {
@@ -34,7 +34,7 @@ public:
      * @brief Constructs a new object and reads the specified file to determine the simulation box' size.
      *      Does not load any neurons.
      * @param file_path The path to the file to load
-     * @exception Throws a RelearnException if there occurred some erros while processing the file 
+     * @exception Throws a RelearnException if there occurred some erros while processing the file
      */
     SubdomainFromFile(const std::filesystem::path& file_path, const std::optional<std::filesystem::path>& file_path_positions, std::shared_ptr<Partition> partition);
 
@@ -68,7 +68,7 @@ protected:
      * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
      * @param local_subdomain_index The local index of the subdomain which's neurons are to be filled
      * @param total_number_subdomains The total number of subdomains
-     * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file 
+     * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file
      */
     void fill_subdomain(size_t local_subdomain_index, size_t total_number_subdomains) override;
 
