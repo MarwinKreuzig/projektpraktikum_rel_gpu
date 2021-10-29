@@ -208,8 +208,7 @@ TEST(TestFastGauss, test_static_multiindex_functions) {
     EXPECT_NEAR(FastMultipoleMethods::pow_multiindex(test_vector3, test_index3), 937914.81, 0.01);
 }
 
-TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendritesFMM) {
-    make_mpi_mem_available<AdditionalCellAttributes>();
+TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -289,8 +288,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendritesFMM) {
     }
 }
 
-TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendritesFMM) {
-    make_mpi_mem_available<AdditionalCellAttributes>();
+TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
