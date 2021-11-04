@@ -279,6 +279,10 @@ void Simulation::simulate(const size_t number_steps, const size_t step_monitor) 
 
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_synapses_deleted, num_synapses_created);
 
+            for (auto& [attribute, vector] : statistics) {
+                vector.emplace_back(neurons->get_statistics(attribute));
+            }
+
             network_graph->debug_check();
         }
 
@@ -381,14 +385,6 @@ void Simulation::increase_monitoring_capacity(const size_t size) {
     for (auto& mon : *monitors) {
         mon.increase_monitoring_capacity(size);
     }
-}
-
-void Simulation::measure_calcium() {
-    calcium_statistics.push_back(neurons->get_statistics(NeuronAttribute::Calcium));
-}
-
-void Simulation::measure_activity() {
-    activity_statistics.push_back(neurons->get_statistics(NeuronAttribute::X));
 }
 
 void Simulation::snapshot_monitors() {

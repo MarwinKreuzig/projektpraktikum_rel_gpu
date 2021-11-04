@@ -14,6 +14,7 @@
 #include "../util/StatisticalMeasures.h"
 
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
@@ -162,21 +163,25 @@ public:
         return monitors;
     }
 
+    void add_statistical_overview(NeuronAttribute neuron_attribute_to_observe) {
+        if (statistics.find(neuron_attribute_to_observe) == statistics.end()) {
+            statistics.emplace(neuron_attribute_to_observe, std::vector<StatisticalMeasures>{});
+        }
+    }
+
+    const std::vector<StatisticalMeasures>& get_statistics(NeuronAttribute neuron_attribute_to_observe) const {
+        if (statistics.find(neuron_attribute_to_observe) == statistics.end()) {
+            RelearnException::fail("Simulation::get_statistics: The attribute was not observed: {}", neuron_attribute_to_observe);
+        }
+
+        const auto& return_value = statistics.at(neuron_attribute_to_observe);
+
+        return return_value;
+    }
+
     void snapshot_monitors();
 
-    void measure_calcium();
-
-    void measure_activity();
-
     void save_network_graph(size_t current_steps);
-
-    const std::vector<StatisticalMeasures>& get_calcium_statistics() {
-        return calcium_statistics;
-    }
-
-    const std::vector<StatisticalMeasures>& get_activity_statistics() {
-        return activity_statistics;
-    }
 
 private:
     void construct_neurons();
@@ -207,8 +212,7 @@ private:
     std::vector<std::pair<size_t, std::vector<size_t>>> disable_interrupts{};
     std::vector<std::pair<size_t, size_t>> creation_interrupts{};
 
-    std::vector<StatisticalMeasures> calcium_statistics{};
-    std::vector<StatisticalMeasures> activity_statistics{};
+    std::map<NeuronAttribute, std::vector<StatisticalMeasures>> statistics{};
 
     double accept_criterion{ 0.0 };
 
