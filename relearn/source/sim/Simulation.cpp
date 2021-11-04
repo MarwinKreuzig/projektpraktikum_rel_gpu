@@ -279,15 +279,16 @@ void Simulation::simulate(const size_t number_steps, const size_t step_monitor) 
 
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_synapses_deleted, num_synapses_created);
 
-            for (auto& [attribute, vector] : statistics) {
-                vector.emplace_back(neurons->get_statistics(attribute));
-            }
-
             network_graph->debug_check();
         }
 
         if (step % Constants::logfile_update_step == 0) {
             neurons->print_neurons_overview_to_log_file_on_rank_0(step);
+
+            for (auto& [attribute, vector] : statistics) {
+                vector.emplace_back(neurons->get_statistics(attribute));
+            }
+
             neurons->print_local_network_histogram(step);
         }
 

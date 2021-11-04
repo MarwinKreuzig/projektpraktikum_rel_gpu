@@ -53,7 +53,7 @@ protected:
     }
 
     void SetUp() override {
-        if constexpr (use_predetermined_seed) {
+        if (use_predetermined_seed) {
             std::cerr << "Using predetermined seed: " << predetermined_seed << '\n';
             mt.seed(predetermined_seed);
         } else {
@@ -76,20 +76,20 @@ protected:
         MemoryHolder<BarnesHutCell>::make_all_available();
     }
 
-    constexpr static int iterations = 10;
-    constexpr static size_t num_neurons_test = 1000;
-    constexpr static double eps = 0.00001;
+    static int iterations;
+    static size_t num_neurons_test;
+    static double eps;
 
-    constexpr static bool use_predetermined_seed = false;
-    constexpr static unsigned int predetermined_seed = 397600912;
+    static bool use_predetermined_seed;
+    static unsigned int predetermined_seed;
 };
 
 class NetworkGraphTest : public RelearnTest {
 protected:
-    constexpr static size_t upper_bound_num_neurons = 10000;
-    constexpr static int bound_synapse_weight = 10;
-    constexpr static int num_ranks = 17;
-    constexpr static int num_synapses_per_neuron = 2;
+    static size_t upper_bound_num_neurons;
+    static int bound_synapse_weight;
+    static int num_ranks;
+    static int num_synapses_per_neuron;
 
     template <typename T>
     void erase_empty(std::map<T, int>& edges) {
