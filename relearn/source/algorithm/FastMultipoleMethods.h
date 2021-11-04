@@ -390,9 +390,8 @@ public:
         for (const auto& target : targets) {
             for (const auto& source : sources) {
                 const auto kernel_value = kernel(target.first, source.first, sigma);
-                result += kernel_value * source.second;
+                result += kernel_value * source.second * target.second;
             }
-            result = result * target.second;
         }
 
         return result;
