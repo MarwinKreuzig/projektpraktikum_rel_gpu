@@ -297,7 +297,7 @@ public:
     }
 
     /**
-     * @brief Returns the secondary variables used for computation of the electrical activity.
+     * @brief Returns the secondary variable used for computation of the electrical activity.
      *      The meaning of the variable can vary between classes that inherit from NeuronModels
      * @param neuron_id The local neuron id for the neuron that should be queried
      * @exception Throws a RelearnException if neuron_id is too large

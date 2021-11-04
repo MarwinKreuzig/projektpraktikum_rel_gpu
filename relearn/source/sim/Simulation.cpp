@@ -384,11 +384,11 @@ void Simulation::increase_monitoring_capacity(const size_t size) {
 }
 
 void Simulation::measure_calcium() {
-    calcium_statistics.push_back(neurons->get_calcium_statistics());
+    calcium_statistics.push_back(neurons->get_statistics(NeuronAttribute::Calcium));
 }
 
 void Simulation::measure_activity() {
-    activity_statistics.push_back(neurons->get_activity_statistics());
+    activity_statistics.push_back(neurons->get_statistics(NeuronAttribute::X));
 }
 
 void Simulation::snapshot_monitors() {

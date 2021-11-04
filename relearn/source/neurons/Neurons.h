@@ -684,13 +684,13 @@ public:
      */
     void debug_check_counts();
 
-    StatisticalMeasures get_calcium_statistics() {
-        return global_statistics(calcium, 0, disable_flags);
-    }
-
-    StatisticalMeasures get_activity_statistics() {
-        return global_statistics(neuron_model->get_x(), 0, disable_flags);
-    }
+    /**
+     * @brief Returns a statistical measure for the selected attribute, considering all MPI ranks.
+     *      Performs communication across MPI processes
+     * @param attribute The selected attribute of the neurons
+     * @return The statistical measure across all MPI processes. All MPI processes have the same return value
+     */
+    StatisticalMeasures get_statistics(NeuronAttribute attribute) const;
 
 private:
     void update_calcium();

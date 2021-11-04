@@ -1063,6 +1063,44 @@ void Neurons::debug_check_counts() {
     }
 }
 
+StatisticalMeasures Neurons::get_statistics(NeuronAttribute attribute) const {
+    switch (attribute) {
+    case NeuronAttribute::Calcium:
+        return global_statistics(calcium, 0, disable_flags);
+
+    case NeuronAttribute::X:
+        return global_statistics(neuron_model->get_x(), 0, disable_flags);
+
+    case NeuronAttribute::Fired:
+        return global_statistics_integral(neuron_model->get_fired(), 0, disable_flags);
+
+    case NeuronAttribute::I_sync:
+        return global_statistics(neuron_model->get_I_syn(), 0, disable_flags);
+
+    case NeuronAttribute::Axons:
+        return global_statistics(axons->get_total_counts(), 0, disable_flags);
+
+    case NeuronAttribute::AxonsConnected:
+        return global_statistics_integral(axons->get_connected_count(), 0, disable_flags);
+
+    case NeuronAttribute::DendritesExcitatory:
+        return global_statistics(dendrites_exc->get_total_counts(), 0, disable_flags);
+
+    case NeuronAttribute::DendritesExcitatoryConnected:
+        return global_statistics_integral(dendrites_exc->get_connected_count(), 0, disable_flags);
+
+    case NeuronAttribute::DendritesInhibitory:
+        return global_statistics(dendrites_inh->get_total_counts(), 0, disable_flags);
+
+    case NeuronAttribute::DendritesInhibitoryConnected:
+        return global_statistics_integral(dendrites_inh->get_connected_count(), 0, disable_flags);
+    }
+
+    RelearnException::fail("Neurons::get_statistics: Got an unsupported attribute: {}", attribute);
+
+    return {};
+}
+
 [[nodiscard]] std::tuple<size_t, size_t> Neurons::update_connectivity() {
     RelearnException::check(network_graph != nullptr, "Network graph is nullptr");
     RelearnException::check(global_tree != nullptr, "Global octree is nullptr");
@@ -1169,11 +1207,11 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const si
 void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
     const auto total_num_neurons = partition->get_total_num_neurons();
 
-    const StatisticalMeasures& calcium_statistics = global_statistics(calcium, 0, disable_flags);
-    const StatisticalMeasures& axons_statistics = global_statistics(axons->get_total_counts(), 0, disable_flags);
-    const StatisticalMeasures& axons_free_statistics = global_statistics(axons->get_vacant_cnts(), 0, disable_flags);
-    const StatisticalMeasures& dendrites_excitatory_statistics = global_statistics(dendrites_exc->get_total_counts(), 0, disable_flags);
-    const StatisticalMeasures& dendrites_excitatory_free_statistics = global_statistics(dendrites_exc->get_vacant_cnts(), 0, disable_flags);
+    const StatisticalMeasures& calcium_statistics = get_statistics(NeuronAttribute::Calcium);
+    const StatisticalMeasures& axons_statistics = get_statistics(NeuronAttribute::Axons);
+    const StatisticalMeasures& axons_free_statistics = get_statistics(NeuronAttribute::AxonsConnected);
+    const StatisticalMeasures& dendrites_excitatory_statistics = get_statistics(NeuronAttribute::DendritesExcitatory);
+    const StatisticalMeasures& dendrites_excitatory_free_statistics = get_statistics(NeuronAttribute::DendritesExcitatoryConnected);
 
     if (0 != MPIWrapper::get_my_rank()) {
         // All ranks must compute the statistics, but only one should print them
