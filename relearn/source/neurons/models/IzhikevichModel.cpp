@@ -13,20 +13,20 @@
 using models::IzhikevichModel;
 
 IzhikevichModel::IzhikevichModel(
-    const double k, 
-    const double tau_C, 
-    const double beta, 
-    const unsigned int h, 
-    const double base_background_activity, 
+    const double k,
+    const double tau_C,
+    const double beta,
+    const unsigned int h,
+    const double base_background_activity,
     const double background_activity_mean,
     const double background_activity_stddev,
-    const double a, 
-    const double b, 
+    const double a,
+    const double b,
     const double c,
-    const double d, 
-    const double V_spike, 
-    const double k1, 
-    const double k2, 
+    const double d,
+    const double V_spike,
+    const double k1,
+    const double k2,
     const double k3)
     : NeuronModel{ k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev }
     , a{ a }

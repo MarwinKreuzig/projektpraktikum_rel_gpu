@@ -17,14 +17,14 @@ using models::PoissonModel;
 
 PoissonModel::PoissonModel(
     const double k,
-    const double tau_C, 
+    const double tau_C,
     const double beta,
-    const unsigned int h, 
-    const double base_background_activity, 
+    const unsigned int h,
+    const double base_background_activity,
     const double background_activity_mean,
     const double background_activity_stddev,
     const double x_0,
-    const double tau_x, 
+    const double tau_x,
     const unsigned int refrac_time)
     : NeuronModel{ k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev }
     , x_0{ x_0 }
@@ -115,4 +115,3 @@ void models::PoissonModel::update_electrical_activity_serial_initialize(const st
 
     Timers::stop_and_add(TimerRegion::CALC_SERIAL_ACTIVITY);
 }
-

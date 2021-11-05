@@ -23,7 +23,7 @@
 #include <array>
 #include <stack>
 
-[[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(const size_t src_neuron_id, const Vec3d& axon_pos_xyz, const SignalType dendrite_type_needed) {
+[[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(const size_t src_neuron_id, const position_type& axon_pos_xyz, const SignalType dendrite_type_needed) {
     OctreeNode<BarnesHutCell>* node_selected = nullptr;
     OctreeNode<BarnesHutCell>* root_of_subtree = global_tree->get_root();
 
@@ -189,27 +189,46 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
 
     RelearnException::check(all_same_size, "BarnesHut::update_leaf_nodes: The vectors were of different sizes");
 
+    using counter_type = BarnesHutCell::counter_type;
+
     for (size_t neuron_id = 0; neuron_id < num_leaf_nodes; neuron_id++) {
         auto* node = leaf_nodes[neuron_id];
 
         RelearnException::check(node != nullptr, "BarnesHut::update_leaf_nodes: node was nullptr: ", neuron_id);
 
-        const size_t other_neuron_id = node->get_cell().get_neuron_id();
+        const auto& cell = node->get_cell();
+        const size_t other_neuron_id = cell.get_neuron_id();
 
         RelearnException::check(neuron_id == other_neuron_id, "BarnesHut::update_leaf_nodes: The nodes are not in order");
+
+        const auto& [cell_xyz_min, cell_xyz_max] = cell.get_size();
+        const auto& opt_excitatory_position = cell.get_excitatory_dendrites_position();
+        const auto& opt_inhibitory_position = cell.get_inhibitory_dendrites_position();
+
+        RelearnException::check(opt_excitatory_position.has_value(), "BarnesHut::update_leaf_nodes: Neuron {} does not have an excitatory position", neuron_id);
+        RelearnException::check(opt_inhibitory_position.has_value(), "BarnesHut::update_leaf_nodes: Neuron {} does not have an inhibitory position", neuron_id);
+
+        const auto& excitatory_position = opt_excitatory_position.value();
+        const auto& inhibitory_position = opt_inhibitory_position.value();
+
+        const auto excitatory_position_in_box = excitatory_position.check_in_box(cell_xyz_min, cell_xyz_max);
+        const auto inhibitory_position_in_box = inhibitory_position.check_in_box(cell_xyz_min, cell_xyz_max);
+
+        RelearnException::check(excitatory_position_in_box, "BarnesHut::update_leaf_nodes: Excitatory position ({}) is not in cell: [({}), ({})]", excitatory_position, cell_xyz_min, cell_xyz_max);
+        RelearnException::check(inhibitory_position_in_box, "BarnesHut::update_leaf_nodes: Inhibitory position ({}) is not in cell: [({}), ({})]", inhibitory_position, cell_xyz_min, cell_xyz_max);
 
         if (disable_flags[neuron_id] == 0) {
             continue;
         }
 
-        const auto number_vacant_dendrites_excitatory = static_cast<unsigned int>(dendrites_excitatory_counts[neuron_id] - dendrites_excitatory_connected_counts[neuron_id]);
-        const auto number_vacant_dendrites_inhibitory = static_cast<unsigned int>(dendrites_inhibitory_counts[neuron_id] - dendrites_inhibitory_connected_counts[neuron_id]);
+        const auto number_vacant_dendrites_excitatory = static_cast<counter_type>(dendrites_excitatory_counts[neuron_id] - dendrites_excitatory_connected_counts[neuron_id]);
+        const auto number_vacant_dendrites_inhibitory = static_cast<counter_type>(dendrites_inhibitory_counts[neuron_id] - dendrites_inhibitory_connected_counts[neuron_id]);
 
         node->set_cell_number_dendrites(number_vacant_dendrites_excitatory, number_vacant_dendrites_inhibitory);
     }
 }
 
-[[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(const size_t src_neuron_id, const Vec3d& axon_pos_xyz,
+[[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(const size_t src_neuron_id, const position_type& axon_pos_xyz,
     const OctreeNode<BarnesHutCell>& node_with_dendrite, const SignalType dendrite_type_needed) const {
     /**
      * If the axon's neuron itself is considered as target neuron, set attractiveness to 0 to avoid forming an autapse (connection to itself).
@@ -241,7 +260,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     return ret_val;
 }
 
-[[nodiscard]] std::pair<double, std::vector<double>> BarnesHut::create_interval(const size_t src_neuron_id, const Vec3d& axon_pos_xyz,
+[[nodiscard]] std::pair<double, std::vector<double>> BarnesHut::create_interval(const size_t src_neuron_id, const position_type& axon_pos_xyz,
     const SignalType dendrite_type_needed, const std::vector<OctreeNode<BarnesHutCell>*>& vector) const {
 
     if (vector.empty()) {
@@ -271,7 +290,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     return { sum, std::move(probabilities) };
 }
 
-[[nodiscard]] std::tuple<bool, bool> BarnesHut::acceptance_criterion_test(const Vec3d& axon_pos_xyz, const OctreeNode<BarnesHutCell>* const node_with_dendrite,
+[[nodiscard]] std::tuple<bool, bool> BarnesHut::acceptance_criterion_test(const position_type& axon_pos_xyz, const OctreeNode<BarnesHutCell>* const node_with_dendrite,
     const SignalType dendrite_type_needed) const {
 
     RelearnException::check(node_with_dendrite != nullptr, "BarnesHut::update_leaf_nodes:  node_with_dendrite was nullptr");
@@ -315,7 +334,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     return std::make_tuple(ret_val, has_vacant_dendrites);
 }
 
-[[nodiscard]] std::vector<OctreeNode<BarnesHutCell>*> BarnesHut::get_nodes_for_interval(const Vec3d& axon_pos_xyz, OctreeNode<BarnesHutCell>* root,
+[[nodiscard]] std::vector<OctreeNode<BarnesHutCell>*> BarnesHut::get_nodes_for_interval(const position_type& axon_pos_xyz, OctreeNode<BarnesHutCell>* root,
     const SignalType dendrite_type_needed) {
     if (root == nullptr) {
         return {};

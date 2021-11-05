@@ -50,7 +50,7 @@ public:
      * @param max The subdomain's maximum position
      * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file 
      */
-    void fill_subdomain(const size_t subdomain_idx, const size_t num_subdomains, const Position& min, const Position& max) override;
+    void fill_subdomain(const size_t subdomain_idx, const size_t num_subdomains, const box_size_type& min, const box_size_type& max) override;
 
     /**
      * @brief Reads all neuron ids from a file and returns those.
@@ -83,7 +83,7 @@ public:
 private:
     void read_dimensions_from_file();
 
-    [[nodiscard]] std::vector<NeuronToSubdomainAssignment::Node> read_nodes_from_file(const Position& min, const Position& max);
+    [[nodiscard]] std::vector<NeuronToSubdomainAssignment::Node> read_nodes_from_file(const box_size_type& min, const box_size_type& max);
 
     std::ifstream file{};
     size_t total_num_neurons_in_file{ Constants::uninitialized };

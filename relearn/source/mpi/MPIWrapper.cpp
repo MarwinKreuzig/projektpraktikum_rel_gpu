@@ -373,13 +373,13 @@ void MPIWrapper::finalize() {
 }
 
 // This combination function assumes that it's called with the correct MPI datatype
-void MPIUserDefinedOperation::min_sum_max(const int* invec, int* inoutvec, const int* const len, [[maybe_unused]] void* dtype) {
-    const auto real_length = *len / sizeof(double) / 3;
+void MPIUserDefinedOperation::min_sum_max(const void* invec, void* inoutvec, const int* const len, [[maybe_unused]] void* dtype) {
+    const auto real_length = *len / 3;
 
     // NOLINTNEXTLINE
-    const auto in = reinterpret_cast<const double*>(invec);
+    const auto* in = reinterpret_cast<const double*>(invec);
     // NOLINTNEXTLINE
-    auto inout = reinterpret_cast<double*>(inoutvec);
+    auto* inout = reinterpret_cast<double*>(inoutvec);
 
     for (int i = 0; i < real_length; i++) {
         // NOLINTNEXTLINE

@@ -97,7 +97,7 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons(OctreeNode<AdditionalCell
     return return_value;
 }
 
-template<typename T>
+template <typename T>
 std::vector<std::tuple<Vec3d, size_t>> extract_neurons(const OctreeImplementation<T>& octree) {
     std::vector<std::tuple<Vec3d, size_t>> return_value;
 
@@ -110,17 +110,17 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons(const OctreeImplementatio
 }
 
 std::vector<std::tuple<Vec3d, size_t>> extract_unused_neurons(OctreeNode<AdditionalCellAttributes>* root) {
-    std::vector<std::tuple<Vec3d, size_t>> return_value;
+    std::vector<std::tuple<Vec3d, size_t>> return_value{};
 
-    std::stack<OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
-    octree_nodes.push(root);
+    std::stack<std::pair<OctreeNode<AdditionalCellAttributes>*, size_t>> octree_nodes{};
+    octree_nodes.emplace(root, 0);
 
     while (!octree_nodes.empty()) {
-        OctreeNode<AdditionalCellAttributes>* current_node = octree_nodes.top();
+        const auto [current_node, level] = octree_nodes.top();
         octree_nodes.pop();
 
         if (current_node->get_cell().get_neuron_id() == Constants::uninitialized) {
-            return_value.emplace_back(current_node->get_cell().get_dendrites_position().value(), current_node->get_level());
+            return_value.emplace_back(current_node->get_cell().get_dendrites_position().value(), level);
         }
 
         if (current_node->is_parent()) {
@@ -128,7 +128,7 @@ std::vector<std::tuple<Vec3d, size_t>> extract_unused_neurons(OctreeNode<Additio
             for (auto i = 0; i < 8; i++) {
                 const auto child = childs[i];
                 if (child != nullptr) {
-                    octree_nodes.push(child);
+                    octree_nodes.emplace(child, level + 1);
                 }
             }
         }
@@ -620,7 +620,6 @@ TEST_F(OctreeTest, testOctreeNodeReset) {
     OctreeNode<AdditionalCellAttributes> node{};
 
     ASSERT_FALSE(node.is_parent());
-    ASSERT_TRUE(node.get_level() == Constants::uninitialized);
     ASSERT_TRUE(node.get_rank() == -1);
     ASSERT_TRUE(node.get_children().size() == Constants::number_oct);
 
@@ -637,7 +636,6 @@ TEST_F(OctreeTest, testOctreeNodeReset) {
         std::uniform_int_distribution<size_t> uid_level(0, 1000);
         std::uniform_int_distribution<int> uid_rank(0, 1000);
 
-        node.set_level(uid_level(mt));
         node.set_rank(uid_rank(mt));
 
         std::vector<OctreeNode<AdditionalCellAttributes>> other_nodes(Constants::number_oct);
@@ -648,7 +646,6 @@ TEST_F(OctreeTest, testOctreeNodeReset) {
         node.reset();
 
         ASSERT_FALSE(node.is_parent());
-        ASSERT_TRUE(node.get_level() == Constants::uninitialized);
         ASSERT_TRUE(node.get_rank() == -1);
         ASSERT_TRUE(node.get_children().size() == Constants::number_oct);
 
@@ -674,7 +671,6 @@ TEST_F(OctreeTest, testOctreeNodeSetterGetter) {
         const auto lvl = uid_level(mt);
         const auto rank = uid_rank(mt);
 
-        node.set_level(lvl);
         node.set_rank(rank);
 
         std::vector<OctreeNode<AdditionalCellAttributes>> other_nodes(Constants::number_oct);
@@ -685,10 +681,8 @@ TEST_F(OctreeTest, testOctreeNodeSetterGetter) {
         if (rank != 0) {
             ASSERT_THROW(node.set_rank(-rank), RelearnException) << rank;
         }
-        ASSERT_THROW(node.set_level(lvl + Constants::uninitialized), RelearnException);
 
         ASSERT_TRUE(node.is_parent());
-        ASSERT_TRUE(node.get_level() == lvl);
         ASSERT_TRUE(node.get_rank() == rank);
         ASSERT_TRUE(node.get_children().size() == Constants::number_oct);
 
@@ -828,7 +822,6 @@ TEST_F(OctreeTest, testOctreeNodeInsert) {
         Vec3d own_position{ urd_x(mt), urd_y(mt), urd_z(mt) };
 
         OctreeNode<AdditionalCellAttributes> node{};
-        node.set_level(level);
         node.set_rank(my_rank);
         node.set_cell_size(min, max);
 
@@ -1167,7 +1160,6 @@ TEST_F(OctreeTest, testOctreeStructure) {
         const auto root = octree.get_root();
 
         std::stack<std::pair<OctreeNode<AdditionalCellAttributes>*, size_t>> octree_nodes{};
-        octree_nodes.emplace(root, root->get_level());
 
         while (!octree_nodes.empty()) {
             const auto& elem = octree_nodes.top();
@@ -1186,8 +1178,7 @@ TEST_F(OctreeTest, testOctreeStructure) {
                 for (auto i = 0; i < 8; i++) {
                     const auto child = childs[i];
                     if (child != nullptr) {
-                        ASSERT_TRUE(level + 1 == child->get_level());
-                        octree_nodes.emplace(child, child->get_level());
+                        octree_nodes.emplace(child, level + 1);
 
                         const auto& subcell_size = child->get_cell().get_size();
                         const auto& expected_subcell_size = current_node->get_cell().get_size_for_octant(i);
@@ -1338,12 +1329,10 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
             node.set_cell_size(cell_min, cell_max);
             node.set_cell_neuron_position(position);
             node.set_rank(my_rank);
-            node.set_level(level_of_branch_nodes);
 
             nodes_to_save_new_local_trees[i]->set_cell_size(cell_min, cell_max);
             nodes_to_save_new_local_trees[i]->set_cell_neuron_position(position);
             nodes_to_save_new_local_trees[i]->set_rank(my_rank);
-            nodes_to_save_new_local_trees[i]->set_level(level_of_branch_nodes);
 
             for (auto j = 0; j < 8; j++) {
                 const auto id_nodes = uid_nodes(mt);
@@ -1366,7 +1355,6 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
             auto* local_tree_saved = nodes_to_save_new_local_trees[i];
 
             ASSERT_EQ(local_tree->get_children(), local_tree_saved->get_children());
-            ASSERT_EQ(local_tree->get_level(), local_tree_saved->get_level());
             ASSERT_EQ(local_tree->get_rank(), local_tree_saved->get_rank());
 
             ASSERT_EQ(local_tree->get_cell().get_neuron_id(), local_tree_saved->get_cell().get_neuron_id());
@@ -1382,7 +1370,6 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
             auto* local_tree = octree.get_local_root(i);
 
             ASSERT_EQ(local_tree->get_children(), local_node->get_children());
-            ASSERT_EQ(local_tree->get_level(), local_node->get_level());
             ASSERT_EQ(local_tree->get_rank(), local_node->get_rank());
 
             ASSERT_EQ(local_tree->get_cell().get_neuron_id(), local_node->get_cell().get_neuron_id());

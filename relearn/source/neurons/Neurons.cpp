@@ -287,7 +287,7 @@ void Neurons::update_calcium() {
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
 }
 
-Neurons::StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, const int root, const std::vector<char>& disable_flags) const {
+StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, const int root, const std::vector<char>& disable_flags) const {
     const auto [d_my_min, d_my_max, d_my_acc, d_num_values] = Util::min_max_acc(local_values, disable_flags);
     const double my_avg = d_my_acc / d_num_values;
 
@@ -373,7 +373,7 @@ size_t Neurons::delete_synapses() {
 }
 
 std::pair<Neurons::PendingDeletionsV, std::vector<size_t>> Neurons::delete_synapses_find_synapses(
-    const SynapticElements& synaptic_elements, 
+    const SynapticElements& synaptic_elements,
     const std::pair<unsigned int, std::vector<unsigned int>>& to_delete,
     const PendingDeletionsV& other_pending_deletions) {
 

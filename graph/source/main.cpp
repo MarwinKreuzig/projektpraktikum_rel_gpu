@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
     std::filesystem::path output_path{ "./output/" };
     app.add_option("-o,--output-path", output_path, "Path to output folder")->capture_default_str();
 
-    auto flag_omp_instead_of_cuda = [&]() -> std::optional<CLI::Option*> {
+    auto flag_omp_instead_of_cuda = [&app]() -> std::optional<CLI::Option*> {
         if constexpr (CUDA_FOUND) {
             // variable needed to resolve ambiguous function call
             const std::string desc{ "Use OpenMP instead of CUDA algorithms" };

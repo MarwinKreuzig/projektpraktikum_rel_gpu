@@ -306,6 +306,8 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<char>& disable_fl
 
     RelearnException::check(all_same_size, "FastMultipoleMethods::update_leaf_nodes: The vectors were of different sizes");
 
+    using counter_type = FastMultipoleMethodsCell::counter_type;
+
     const auto& indices = Multiindex::get_indices();
     const auto num_coef = Multiindex::get_number_of_indices();
 
@@ -322,21 +324,21 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<char>& disable_fl
             continue;
         }
 
-        const auto number_vacant_dendrites_excitatory = static_cast<unsigned int>(dendrites_excitatory_counts[neuron_id] - dendrites_excitatory_connected_counts[neuron_id]);
-        const auto number_vacant_dendrites_inhibitory = static_cast<unsigned int>(dendrites_inhibitory_counts[neuron_id] - dendrites_inhibitory_connected_counts[neuron_id]);
+        const auto number_vacant_dendrites_excitatory = static_cast<counter_type>(dendrites_excitatory_counts[neuron_id] - dendrites_excitatory_connected_counts[neuron_id]);
+        const auto number_vacant_dendrites_inhibitory = static_cast<counter_type>(dendrites_inhibitory_counts[neuron_id] - dendrites_inhibitory_connected_counts[neuron_id]);
 
         node->set_cell_number_dendrites(number_vacant_dendrites_excitatory, number_vacant_dendrites_inhibitory);
 
         const auto signal_type = axons->get_signal_type(neuron_id);
 
         if (signal_type == SignalType::EXCITATORY) {
-            const auto number_vacant_excitatory_axons = static_cast<unsigned int>(axons_counts[neuron_id] - axons_connected_counts[neuron_id]);
+            const auto number_vacant_excitatory_axons = static_cast<counter_type>(axons_counts[neuron_id] - axons_connected_counts[neuron_id]);
             const auto number_vacant_inhibitory_axons = 0;
 
             node->set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
         } else {
             const auto number_vacant_excitatory_axons = 0;
-            const auto number_vacant_inhibitory_axons = static_cast<unsigned int>(axons_counts[neuron_id] - axons_connected_counts[neuron_id]);
+            const auto number_vacant_inhibitory_axons = static_cast<counter_type>(axons_counts[neuron_id] - axons_connected_counts[neuron_id]);
 
             node->set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
         }

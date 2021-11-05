@@ -267,7 +267,7 @@ TEST_F(NeuronsTest, testNeuronsExtraInfoInit) {
 
 TEST_F(NeuronsTest, testNeuronsExtraInfoCreate) {
 
-    std::uniform_int_distribution<size_t> uid_id(0, 10000);
+    std::uniform_int_distribution<size_t> uid_id(1, 10000);
     std::uniform_real_distribution<double> urd_pos(-10000.0, 10000.0);
 
     for (auto it = 0; it < iterations; it++) {

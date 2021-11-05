@@ -54,11 +54,72 @@ void omp_set_num_threads(int num) { }
 #include <locale>
 #include <memory>
 
+void print_sizes() {
+    struct empty_t {
+        using position_type = VirtualPlasticityElement::position_type;
+        using counter_type = VirtualPlasticityElement::counter_type;
+    };
+
+    const auto sizeof_vec3_double = sizeof(Vec3d);
+    const auto sizeof_vec3_size_t = sizeof(Vec3s);
+
+    const auto sizeof_virtual_plasticity_element = sizeof(VirtualPlasticityElement);
+
+    const auto sizeof_empty_t = sizeof(empty_t);
+    const auto sizeof_fmm_cell_attributes = sizeof(FastMultipoleMethodsCell);
+    const auto sizeof_bh_cell_attributes = sizeof(BarnesHutCell);
+    const auto sizeof_bh_naive_attributes = sizeof(NaiveCell);
+
+    const auto sizeof_empty_cell = sizeof(Cell<empty_t>);
+    const auto sizeof_fmm_cell = sizeof(Cell<FastMultipoleMethodsCell>);
+    const auto sizeof_bh_cell = sizeof(Cell<BarnesHutCell>);
+    const auto sizeof_naive_cell = sizeof(Cell<NaiveCell>);
+
+    const auto sizeof_octreenode = sizeof(OctreeNode<empty_t>);
+    const auto sizeof_fmm_octreenode = sizeof(OctreeNode<FastMultipoleMethodsCell>);
+    const auto sizeof_bh_octreenode = sizeof(OctreeNode<BarnesHutCell>);
+    const auto sizeof_naive_octreenode = sizeof(OctreeNode<NaiveCell>);
+
+    std::stringstream ss{};
+
+    ss << '\n';
+    ss << "Size of Vec3d: " << sizeof_vec3_double << '\n';
+    ss << "Size of Vec3s: " << sizeof_vec3_size_t << '\n';
+    ss << "Size of VirtualPlasticityElement: " << sizeof_virtual_plasticity_element << "\n";
+    ss << "Size of FastMultipoleMethodsCell: " << sizeof_fmm_cell_attributes << '\n';
+    ss << "Size of empty_t: " << sizeof_empty_t << '\n';
+    ss << "Size of BarnesHutCell: " << sizeof_bh_cell_attributes << '\n';
+    ss << "Size of NaiveCell: " << sizeof_bh_naive_attributes << "\n";
+    ss << "Size of Cell<empty_t>: " << sizeof_empty_cell << '\n';
+    ss << "Size of Cell<FastMultipoleMethodsCell>: " << sizeof_fmm_cell << '\n';
+    ss << "Size of Cell<BarnesHutCell>: " << sizeof_bh_cell << '\n';
+    ss << "Size of Cell<NaiveCell>: " << sizeof_naive_cell << "\n";
+    ss << "Size of OctreeNode<empty_t>: " << sizeof_octreenode << '\n';
+    ss << "Size of OctreeNode<FastMultipoleMethodsCell>: " << sizeof_fmm_octreenode << '\n';
+    ss << "Size of OctreeNode<BarnesHutCell>: " << sizeof_bh_octreenode << '\n';
+    ss << "Size of OctreeNode<NaiveCell>: " << sizeof_naive_octreenode;
+
+    LogFiles::print_message_rank(0, ss.str());
+}
+
+void print_arguments(int argc, char** argv) {
+    std::stringstream ss{};
+
+    for (auto i = 0; i < argc; i++) {
+        ss << argv[i] << ' ';
+    }
+
+    LogFiles::print_message_rank(0, ss.str());
+}
+
 int main(int argc, char** argv) {
     /**
 	 * Init MPI and store some MPI infos
 	 */
     MPIWrapper::init(argc, argv);
+
+    print_arguments(argc, argv);
+    print_sizes();
 
     const int my_rank = MPIWrapper::get_my_rank();
     const int num_ranks = MPIWrapper::get_num_ranks();

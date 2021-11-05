@@ -23,11 +23,11 @@
 
 /**
  * This class provides an interface for every algorithm that is used to assign neurons to MPI processes
- */ 
+ */
 class NeuronToSubdomainAssignment {
 public:
-    // Helper class to store neuron positions
-    using Position = Vec3<double>;
+    using position_type = RelearnTypes::position_type;
+    using box_size_type = RelearnTypes::box_size_type;
 
     virtual ~NeuronToSubdomainAssignment() = default;
 
@@ -52,7 +52,7 @@ public:
     [[nodiscard]] size_t placed_num_neurons() const noexcept {
         return current_num_neurons_;
     }
-    
+
     /**
      * @brief Returns the total fraction of excitatory neurons that should be placed
      * @return The total fraction of excitatory neurons that should be placed
@@ -73,7 +73,7 @@ public:
      * @brief Returns the size of the simulation box
      * @return The size of the simulation box
      */
-    [[nodiscard]] const Vec3d& get_simulation_box_length() const noexcept {
+    [[nodiscard]] const box_size_type& get_simulation_box_length() const noexcept {
         return simulation_box_length_;
     }
 
@@ -84,7 +84,7 @@ public:
      * @exception Throws a RelearnException if num_subdomains_per_axis == 0
      * @return A tuple with (1) the minimum and (2) the maximum positions in the subdomain
      */
-    [[nodiscard]] virtual std::tuple<Vec3d, Vec3d> get_subdomain_boundaries(const Vec3s& subdomain_3idx, size_t num_subdomains_per_axis) const;
+    [[nodiscard]] virtual std::tuple<box_size_type, box_size_type> get_subdomain_boundaries(const Vec3s& subdomain_3idx, size_t num_subdomains_per_axis) const;
 
     /** 
      * @brief Returns the subdomain boundaries for a given subdomain
@@ -93,7 +93,7 @@ public:
      * @exception Might throw a RelearnException
      * @return A tuple with (1) the minimum and (2) the maximum positions in the subdomain
      */
-    [[nodiscard]] virtual std::tuple<Vec3d, Vec3d> get_subdomain_boundaries(const Vec3s& subdomain_3idx, const Vec3s& num_subdomains_per_axis) const;
+    [[nodiscard]] virtual std::tuple<box_size_type, box_size_type> get_subdomain_boundaries(const Vec3s& subdomain_3idx, const Vec3s& num_subdomains_per_axis) const;
 
     /**
      * @brief Fills the subdomain with the given index and the boundaries. The implementation is left to the inhereting classes
@@ -103,7 +103,7 @@ public:
      * @param max The subdomain's maximum position
      * @exception Might throw a RelearnException
      */
-    virtual void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const Position& min, const Position& max) = 0;
+    virtual void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const box_size_type& min, const box_size_type& max) = 0;
 
     /**
      * @brief Return number of neurons which are in the specified subdomain and have positions in the [min, max)
@@ -115,7 +115,7 @@ public:
      * @return The number of neurons in the subdomain
      */
     [[nodiscard]] virtual size_t num_neurons(size_t subdomain_idx, size_t num_subdomains,
-        const Position& min, const Position& max) const;
+        const box_size_type& min, const box_size_type& max) const;
 
     /**
      * @brief Return the positions of the neurons which are in the specified subdomain and have positions in the [min, max)
@@ -126,8 +126,8 @@ public:
      * @exception Might throw a RelearnException
      * @return The positions of the neurons in the subdomain
      */
-    [[nodiscard]] virtual std::vector<Position> neuron_positions(size_t subdomain_idx, size_t num_subdomains,
-        const Position& min, const Position& max) const;
+    [[nodiscard]] virtual std::vector<position_type> neuron_positions(size_t subdomain_idx, size_t num_subdomains,
+        const box_size_type& min, const box_size_type& max) const;
 
     /**
      * @brief Return the signal type of the neurons which are in the specified subdomain and have positions in the [min, max)
@@ -139,7 +139,7 @@ public:
      * @return The signal types of the neurons in the subdomain
      */
     [[nodiscard]] virtual std::vector<SignalType> neuron_types(size_t subdomain_idx, size_t num_subdomains,
-        const Position& min, const Position& max) const;
+        const box_size_type& min, const box_size_type& max) const;
 
     /**
      * @brief Return the area names of the neurons which are in the specified subdomain and have positions in the [min, max)
@@ -151,7 +151,7 @@ public:
      * @return The area names of the neurons in the subdomain
      */
     [[nodiscard]] virtual std::vector<std::string> neuron_area_names(size_t subdomain_idx, size_t num_subdomains,
-        const Position& min, const Position& max) const;
+        const box_size_type& min, const box_size_type& max) const;
 
     /**
      * @brief Writes all loaded neurons into the specified file.
@@ -177,7 +177,7 @@ public:
 
 protected:
     struct Node {
-        Position pos{ 0 };
+        position_type pos{ 0 };
         size_t id{ Constants::uninitialized };
         SignalType signal_type{ SignalType::EXCITATORY };
         std::string area_name{ "NOT SET" };
@@ -210,7 +210,7 @@ protected:
         current_num_neurons_ = current_num_neurons;
     }
 
-    void set_simulation_box_length(const Vec3d& simulation_box_length) noexcept {
+    void set_simulation_box_length(const box_size_type& simulation_box_length) noexcept {
         simulation_box_length_ = simulation_box_length;
     }
 
@@ -250,7 +250,7 @@ protected:
         return !neurons_in_subdomain.at(id).empty();
     }
 
-    [[nodiscard]] static bool position_in_box(const Position& pos, const Position& box_min, const Position& box_max) noexcept;
+    [[nodiscard]] static bool position_in_box(const position_type& pos, const box_size_type& box_min, const box_size_type& box_max) noexcept;
 
     NeuronToSubdomainAssignment() = default;
 
@@ -263,5 +263,5 @@ private:
     double current_frac_neurons_exc_{ 0.0 };
     size_t current_num_neurons_{ 0 };
 
-    Vec3d simulation_box_length_{ 0 };
+    box_size_type simulation_box_length_{ 0 };
 };

@@ -34,10 +34,12 @@
 
 Simulation::Simulation(std::shared_ptr<Partition> partition)
     : partition(std::move(partition)) {
+
+    monitors = std::make_shared<std::vector<NeuronMonitor>>();
 }
 
 void Simulation::register_neuron_monitor(const size_t neuron_id) {
-    monitors.emplace_back(neuron_id);
+    monitors->emplace_back(neuron_id);
 }
 
 void Simulation::set_acceptance_criterion_for_barnes_hut(const double value) {
@@ -122,7 +124,7 @@ void Simulation::load_neurons_from_file(const std::string& path_to_positions, co
 
         neurons->init_synaptic_elements();
         neurons->debug_check_counts();
-        LogFiles::print_message_rank(0, "Synaptic elements initialized \n");
+        LogFiles::print_message_rank(0, "Synaptic elements initialized");
     } else {
         LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded synapses: 0");
     }
@@ -213,7 +215,7 @@ void Simulation::simulate(const size_t number_steps, const size_t step_monitor) 
         if (step % step_monitor == 0) {
             const auto number_neurons = neurons->get_num_neurons();
 
-            for (auto& mn : monitors) {
+            for (auto& mn : *monitors) {
                 if (mn.get_target_id() < number_neurons) {
                     mn.record_data();
                 }
@@ -342,7 +344,7 @@ std::vector<std::unique_ptr<NeuronModel>> Simulation::get_models() {
 }
 
 void Simulation::print_neuron_monitors() {
-    for (auto& monitor : monitors) {
+    for (auto& monitor : *monitors) {
         auto path = LogFiles::get_output_path();
         std::ofstream outfile(path + std::to_string(monitor.get_target_id()) + ".csv", std::ios::trunc);
         outfile << std::setprecision(Constants::print_precision);
@@ -382,7 +384,39 @@ void Simulation::print_neuron_monitors() {
 }
 
 void Simulation::increase_monitoring_capacity(const size_t size) {
-    for (auto& mon : monitors) {
+    for (auto& mon : *monitors) {
         mon.increase_monitoring_capacity(size);
+    }
+}
+
+void Simulation::measure_calcium() {
+    calcium_statistics.push_back(neurons->get_calcium_statistics());
+}
+
+void Simulation::measure_activity() {
+    activity_statistics.push_back(neurons->get_activity_statistics());
+}
+
+void Simulation::snapshot_monitors() {
+    if (monitors->size() > 0) {
+        increase_monitoring_capacity(1);
+
+        //record data at step 0
+        for (auto& m : *monitors) {
+            m.record_data();
+        }
+
+        NeuronMonitor::current_step += 1;
+        NeuronMonitor::max_steps += 1;
+    }
+}
+
+void Simulation::save_network_graph(size_t current_steps) {
+    //Check wether there are multiple runs or not
+    if (current_steps == 0) {
+        neurons->print_network_graph_to_log_file();
+    } else {
+        LogFiles::save_and_open_new(LogFiles::EventType::Network, "network_" + std::to_string(current_steps));
+        neurons->print_network_graph_to_log_file();
     }
 }

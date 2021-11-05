@@ -16,12 +16,12 @@
 #include <fstream>
 #include <iomanip>
 
-std::tuple<Vec3d, Vec3d> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3s& subdomain_3idx, const size_t num_subdomains_per_axis) const {
+std::tuple<NeuronToSubdomainAssignment::box_size_type, NeuronToSubdomainAssignment::box_size_type> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3s& subdomain_3idx, const size_t num_subdomains_per_axis) const {
     RelearnException::check(num_subdomains_per_axis > 0, "NeuronToSubdomainAssignment::get_subdomain_boundaries: The number of subdomains per axis must be greater than 0");
     return get_subdomain_boundaries(subdomain_3idx, Vec3s{ num_subdomains_per_axis });
 }
 
-std::tuple<Vec3d, Vec3d> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3s& subdomain_3idx, const Vec3s& num_subdomains_per_axis) const {
+std::tuple<NeuronToSubdomainAssignment::box_size_type, NeuronToSubdomainAssignment::box_size_type> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3s& subdomain_3idx, const Vec3s& num_subdomains_per_axis) const {
     RelearnException::check(num_subdomains_per_axis.get_x() > 0, "NeuronToSubdomainAssignment::get_subdomain_boundaries: The number of x subdomains must be greater than 0");
     RelearnException::check(num_subdomains_per_axis.get_y() > 0, "NeuronToSubdomainAssignment::get_subdomain_boundaries: The number of y subdomains must be greater than 0");
     RelearnException::check(num_subdomains_per_axis.get_z() > 0, "NeuronToSubdomainAssignment::get_subdomain_boundaries: The number of z subdomains must be greater than 0");
@@ -31,19 +31,19 @@ std::tuple<Vec3d, Vec3d> NeuronToSubdomainAssignment::get_subdomain_boundaries(c
     const auto y_subdomain_length = lengths.get_y() / num_subdomains_per_axis.get_y();
     const auto z_subdomain_length = lengths.get_z() / num_subdomains_per_axis.get_z();
 
-    Vec3d min{ subdomain_3idx.get_x() * x_subdomain_length, subdomain_3idx.get_y() * y_subdomain_length, subdomain_3idx.get_z() * z_subdomain_length };
+    box_size_type min{ subdomain_3idx.get_x() * x_subdomain_length, subdomain_3idx.get_y() * y_subdomain_length, subdomain_3idx.get_z() * z_subdomain_length };
 
     const auto next_x = static_cast<double>(subdomain_3idx.get_x() + 1) * x_subdomain_length;
     const auto next_y = static_cast<double>(subdomain_3idx.get_y() + 1) * y_subdomain_length;
     const auto next_z = static_cast<double>(subdomain_3idx.get_z() + 1) * z_subdomain_length;
 
-    Vec3d max{ next_x, next_y, next_z };
+    box_size_type max{ next_x, next_y, next_z };
 
     return std::make_tuple(min, max);
 }
 
 size_t NeuronToSubdomainAssignment::num_neurons(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains,
-    [[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max) const {
+    [[maybe_unused]] const box_size_type& min, [[maybe_unused]] const box_size_type& max) const {
 
     const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
@@ -56,8 +56,8 @@ size_t NeuronToSubdomainAssignment::num_neurons(const size_t subdomain_idx, [[ma
     return cnt;
 }
 
-std::vector<NeuronToSubdomainAssignment::Position> NeuronToSubdomainAssignment::neuron_positions(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains,
-    [[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max) const {
+std::vector<NeuronToSubdomainAssignment::position_type> NeuronToSubdomainAssignment::neuron_positions(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains,
+    [[maybe_unused]] const box_size_type& min, [[maybe_unused]] const box_size_type& max) const {
 
     const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
@@ -66,7 +66,7 @@ std::vector<NeuronToSubdomainAssignment::Position> NeuronToSubdomainAssignment::
     }
 
     const Nodes& nodes = neurons_in_subdomain.at(subdomain_idx);
-    std::vector<Position> pos;
+    std::vector<position_type> pos{};
     pos.reserve(nodes.size());
 
     for (const Node& node : nodes) {
@@ -77,7 +77,7 @@ std::vector<NeuronToSubdomainAssignment::Position> NeuronToSubdomainAssignment::
 }
 
 std::vector<SignalType> NeuronToSubdomainAssignment::neuron_types(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains,
-    [[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max) const {
+    [[maybe_unused]] const box_size_type& min, [[maybe_unused]] const box_size_type& max) const {
 
     const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
@@ -86,7 +86,7 @@ std::vector<SignalType> NeuronToSubdomainAssignment::neuron_types(const size_t s
     }
 
     const Nodes& nodes = neurons_in_subdomain.at(subdomain_idx);
-    std::vector<SignalType> types;
+    std::vector<SignalType> types{};
     types.reserve(nodes.size());
 
     for (const Node& node : nodes) {
@@ -97,7 +97,7 @@ std::vector<SignalType> NeuronToSubdomainAssignment::neuron_types(const size_t s
 }
 
 std::vector<std::string> NeuronToSubdomainAssignment::neuron_area_names(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains,
-    [[maybe_unused]] const Position& min, [[maybe_unused]] const Position& max) const {
+    [[maybe_unused]] const box_size_type& min, [[maybe_unused]] const box_size_type& max) const {
 
     const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
@@ -116,7 +116,7 @@ std::vector<std::string> NeuronToSubdomainAssignment::neuron_area_names(const si
     return areas;
 }
 
-bool NeuronToSubdomainAssignment::position_in_box(const Position& pos, const Position& box_min, const Position& box_max) noexcept {
+bool NeuronToSubdomainAssignment::position_in_box(const position_type& pos, const box_size_type& box_min, const box_size_type& box_max) noexcept {
     return ((pos.get_x() >= box_min.get_x() && pos.get_x() <= box_max.get_x()) && (pos.get_y() >= box_min.get_y() && pos.get_y() <= box_max.get_y()) && (pos.get_z() >= box_min.get_z() && pos.get_z() <= box_max.get_z()));
 }
 

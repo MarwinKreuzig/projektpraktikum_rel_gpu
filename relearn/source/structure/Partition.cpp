@@ -136,11 +136,11 @@ bool Partition::is_neuron_local(const size_t neuron_id) const {
     return false;
 }
 
-size_t Partition::get_mpi_rank_from_pos(const Vec3d& pos) const {
+size_t Partition::get_mpi_rank_from_pos(const position_type& pos) const {
     RelearnException::check(neurons_loaded, "Partition::get_mpi_rank_from_pos: Neurons are not loaded yet");
-    const Vec3d subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
+    const box_size_type subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
 
-    const Vec3d subdomain_3d{ pos.get_x() / subdomain_length.get_x(), pos.get_y() / subdomain_length.get_y(), pos.get_z() / subdomain_length.get_z() };
+    const box_size_type subdomain_3d{ pos.get_x() / subdomain_length.get_x(), pos.get_y() / subdomain_length.get_y(), pos.get_z() / subdomain_length.get_z() };
     const Vec3s id_3d = subdomain_3d.floor_componentwise();
     const size_t id_1d = space_curve.map_3d_to_1d(id_3d);
 
@@ -254,7 +254,7 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
         const auto subdomain_idx = i + my_subdomain_id_start;
 
         // Get neuron positions in subdomain i
-        std::vector<NeuronToSubdomainAssignment::Position> vec_pos = neurons_in_subdomain->neuron_positions(subdomain_idx, total_num_subdomains,
+        std::vector<NeuronToSubdomainAssignment::position_type> vec_pos = neurons_in_subdomain->neuron_positions(subdomain_idx, total_num_subdomains,
             subdomain_pos_min, subdomain_pos_max);
 
         // Get neuron area names in subdomain i

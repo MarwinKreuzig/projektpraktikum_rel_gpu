@@ -36,6 +36,7 @@ class SynapticElements;
 class Naive : public Algorithm {
 public:
     using AdditionalCellAttributes = NaiveCell;
+    using position_type = AdditionalCellAttributes::position_type;
 
     /**
      * @brief Constructs a new instance with the given octree
@@ -78,8 +79,10 @@ public:
     static void update_functor(OctreeNode<NaiveCell>* node) {
         RelearnException::check(node != nullptr, "Naive::update_functor: node is nullptr");
 
-        auto my_number_dendrites_excitatory = 0;
-        auto my_number_dendrites_inhibitory = 0;
+        using counter_type = NaiveCell::counter_type;
+
+        counter_type my_number_dendrites_excitatory = 0;
+        counter_type my_number_dendrites_inhibitory = 0;
 
         for (const auto& child : node->get_children()) {
             if (child == nullptr) {
@@ -109,28 +112,28 @@ private:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
      */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const Vec3d& axon_pos_xyz, SignalType dendrite_type_needed);
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const position_type& axon_pos_xyz, SignalType dendrite_type_needed);
 
     [[nodiscard]] double
     calc_attractiveness_to_connect(
         size_t src_neuron_id,
-        const Vec3d& axon_pos_xyz,
+        const position_type& axon_pos_xyz,
         const OctreeNode<NaiveCell>& node_with_dendrite,
         SignalType dendrite_type_needed) const;
 
     [[nodiscard]] std::vector<double> create_interval(
         size_t src_neuron_id,
-        const Vec3d& axon_pos_xyz,
+        const position_type& axon_pos_xyz,
         SignalType dendrite_type_needed,
         const std::vector<OctreeNode<NaiveCell>*>& vector) const;
 
     [[nodiscard]] std::tuple<bool, bool> acceptance_criterion_test(
-        const Vec3d& axon_pos_xyz,
+        const position_type& axon_pos_xyz,
         const OctreeNode<NaiveCell>* node_with_dendrite,
         SignalType dendrite_type_needed) const;
 
     [[nodiscard]] std::vector<OctreeNode<NaiveCell>*> get_nodes_for_interval(
-        const Vec3d& axon_pos_xyz,
+        const position_type& axon_pos_xyz,
         OctreeNode<NaiveCell>* root,
         SignalType dendrite_type_needed);
 

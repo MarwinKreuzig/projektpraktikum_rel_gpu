@@ -80,19 +80,22 @@ public:
             return;
         }
 
-        // I'm inner node, i.e., I have a super neuron
-        Vec3d my_position_dendrites_excitatory = { 0., 0., 0. };
-        Vec3d my_position_dendrites_inhibitory = { 0., 0., 0. };
+        using position_type = FastMultipoleMethodsCell::position_type;
+        using counter_type = FastMultipoleMethodsCell::counter_type;
 
-        Vec3d my_position_axons_excitatory = { 0., 0., 0. };
-        Vec3d my_position_axons_inhibitory = { 0., 0., 0. };
+        // I'm inner node, i.e., I have a super neuron
+        position_type my_position_dendrites_excitatory = { 0., 0., 0. };
+        position_type my_position_dendrites_inhibitory = { 0., 0., 0. };
+
+        position_type my_position_axons_excitatory = { 0., 0., 0. };
+        position_type my_position_axons_inhibitory = { 0., 0., 0. };
 
         // Sum of number of dendrites of all my children
-        auto my_number_dendrites_excitatory = 0;
-        auto my_number_dendrites_inhibitory = 0;
+        counter_type my_number_dendrites_excitatory = 0;
+        counter_type my_number_dendrites_inhibitory = 0;
 
-        auto my_number_axons_excitatory = 0;
-        auto my_number_axons_inhibitory = 0;
+        counter_type my_number_axons_excitatory = 0;
+        counter_type my_number_axons_inhibitory = 0;
 
         // For all my children
         for (const auto& child : node->get_children()) {
@@ -114,15 +117,15 @@ public:
             my_number_axons_inhibitory += child_number_axons_inhibitory;
 
             // Average the position by using the number of dendrites as weights
-            std::optional<Vec3d> child_position_dendrites_excitatory = child->get_cell().get_excitatory_dendrites_position();
-            std::optional<Vec3d> child_position_dendrites_inhibitory = child->get_cell().get_inhibitory_dendrites_position();
+            std::optional<position_type> child_position_dendrites_excitatory = child->get_cell().get_excitatory_dendrites_position();
+            std::optional<position_type> child_position_dendrites_inhibitory = child->get_cell().get_inhibitory_dendrites_position();
 
-            std::optional<Vec3d> child_position_axons_excitatory = child->get_cell().get_excitatory_axons_position();
-            std::optional<Vec3d> child_position_axons_inhibitory = child->get_cell().get_inhibitory_axons_position();
+            std::optional<position_type> child_position_axons_excitatory = child->get_cell().get_excitatory_axons_position();
+            std::optional<position_type> child_position_axons_inhibitory = child->get_cell().get_inhibitory_axons_position();
 
             /**
-         * We can use position if it's valid or if corresponding num of dendrites is 0 
-         */
+             * We can use position if it's valid or if corresponding num of dendrites is 0 
+             */
             RelearnException::check(child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "FastMultipoleMethods::update_functor: The child had excitatory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
             RelearnException::check(child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "FastMultipoleMethods::update_functor: The child had inhibitory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
 
@@ -154,35 +157,35 @@ public:
         node->set_cell_number_axons(my_number_axons_excitatory, my_number_axons_inhibitory);
 
         /**
-     * For calculating the new weighted position, make sure that we don't
-     * divide by 0. This happens if the my number of dendrites is 0.
-     */
+         * For calculating the new weighted position, make sure that we don't
+         * divide by 0. This happens if the my number of dendrites is 0.
+         */
         if (0 == my_number_dendrites_excitatory) {
             node->set_cell_excitatory_dendrites_position({});
         } else {
             const auto scaled_position = my_position_dendrites_excitatory / my_number_dendrites_excitatory;
-            node->set_cell_excitatory_dendrites_position(std::optional<Vec3d>{ scaled_position });
+            node->set_cell_excitatory_dendrites_position(std::optional<position_type>{ scaled_position });
         }
 
         if (0 == my_number_dendrites_inhibitory) {
             node->set_cell_inhibitory_dendrites_position({});
         } else {
             const auto scaled_position = my_position_dendrites_inhibitory / my_number_dendrites_inhibitory;
-            node->set_cell_inhibitory_dendrites_position(std::optional<Vec3d>{ scaled_position });
+            node->set_cell_inhibitory_dendrites_position(std::optional<position_type>{ scaled_position });
         }
 
         if (0 == my_number_axons_excitatory) {
             node->set_cell_excitatory_axons_position({});
         } else {
             const auto scaled_position = my_position_axons_excitatory / my_number_axons_excitatory;
-            node->set_cell_excitatory_axons_position(std::optional<Vec3d>{ scaled_position });
+            node->set_cell_excitatory_axons_position(std::optional<position_type>{ scaled_position });
         }
 
         if (0 == my_number_axons_inhibitory) {
             node->set_cell_inhibitory_axons_position({});
         } else {
             const auto scaled_position = my_position_axons_inhibitory / my_number_axons_inhibitory;
-            node->set_cell_inhibitory_axons_position(std::optional<Vec3d>{ scaled_position });
+            node->set_cell_inhibitory_axons_position(std::optional<position_type>{ scaled_position });
         }
     }
 

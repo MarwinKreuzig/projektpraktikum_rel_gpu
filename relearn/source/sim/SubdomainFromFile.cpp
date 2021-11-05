@@ -34,8 +34,8 @@ SubdomainFromFile::SubdomainFromFile(const std::string& file_path)
 }
 
 void SubdomainFromFile::read_dimensions_from_file() {
-    Vec3d minimum(std::numeric_limits<double>::max());
-    Vec3d maximum(std::numeric_limits<double>::min());
+    box_size_type minimum(std::numeric_limits<box_size_type::value_type>::max());
+    box_size_type maximum(std::numeric_limits<box_size_type::value_type>::min());
 
     size_t found_ex_neurons = 0;
     size_t found_in_neurons = 0;
@@ -49,9 +49,9 @@ void SubdomainFromFile::read_dimensions_from_file() {
         }
 
         size_t id{};
-        double pos_x{};
-        double pos_y{};
-        double pos_z{};
+        box_size_type::value_type pos_x{};
+        box_size_type::value_type pos_y{};
+        box_size_type::value_type pos_z{};
         std::string area_name{};
         std::string signal_type{};
 
@@ -84,7 +84,7 @@ void SubdomainFromFile::read_dimensions_from_file() {
     }
 
     total_num_neurons_in_file = total_number_neurons;
-        
+
     LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded neurons: {}", total_number_neurons);
 
     const auto desired_num_neurons_ = found_ex_neurons + found_in_neurons;
@@ -97,7 +97,7 @@ void SubdomainFromFile::read_dimensions_from_file() {
     set_simulation_box_length(simulation_box_length);
 }
 
-std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_from_file(const Position& min, const Position& max) {
+std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_from_file(const box_size_type& min, const box_size_type& max) {
     file.clear();
     file.seekg(0);
 
@@ -117,9 +117,9 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
         std::string signal_type{};
 
         Node node{};
-        double pos_x{};
-        double pos_y{};
-        double pos_z{};
+        box_size_type::value_type pos_x{};
+        box_size_type::value_type pos_y{};
+        box_size_type::value_type pos_z{};
         std::stringstream sstream(line);
         bool success = (sstream >> node.id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> node.area_name) && (sstream >> signal_type);
 
@@ -176,7 +176,7 @@ std::vector<size_t> SubdomainFromFile::neuron_global_ids(const size_t subdomain_
     return global_ids;
 }
 
-void SubdomainFromFile::fill_subdomain(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains, const Position& min, const Position& max) {
+void SubdomainFromFile::fill_subdomain(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains, const box_size_type& min, const box_size_type& max) {
     const bool subdomain_already_filled = is_loaded(subdomain_idx);
     if (subdomain_already_filled) {
         RelearnException::fail("SubdomainFromFile::fill_subdomain: Tried to fill an already filled subdomain.");
@@ -212,9 +212,9 @@ std::optional<std::vector<size_t>> SubdomainFromFile::read_neuron_ids_from_file(
         }
 
         size_t id{};
-        double pos_x{};
-        double pos_y{};
-        double pos_z{};
+        box_size_type::value_type pos_x{};
+        box_size_type::value_type pos_y{};
+        box_size_type::value_type pos_z{};
         std::string area_name{};
         std::string signal_type{};
 

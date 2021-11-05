@@ -15,21 +15,21 @@
 using models::AEIFModel;
 
 AEIFModel::AEIFModel(
-    const double k, 
-    const double tau_C, 
-    const double beta, 
-    const unsigned int h, 
-    const double base_background_activity, 
-    const double background_activity_mean, 
-    const double background_activity_stddev, 
-    const double C, 
+    const double k,
+    const double tau_C,
+    const double beta,
+    const unsigned int h,
+    const double base_background_activity,
+    const double background_activity_mean,
+    const double background_activity_stddev,
+    const double C,
     const double g_L,
     const double E_L,
-    const double V_T, 
-    const double d_T, 
-    const double tau_w, 
+    const double V_T,
+    const double d_T,
+    const double tau_w,
     const double a,
-    const double b, 
+    const double b,
     const double V_spike)
     : NeuronModel{ k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev }
     , C{ C }

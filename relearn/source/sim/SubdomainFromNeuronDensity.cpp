@@ -32,7 +32,7 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t num_neurons,
     const auto approx_number_of_neurons_per_dimension = ceil(pow(static_cast<double>(num_neurons), 1. / 3));
     const auto simulation_box_length_ = approx_number_of_neurons_per_dimension * um_per_neuron;
 
-    set_simulation_box_length(Vec3d(simulation_box_length_));
+    set_simulation_box_length(box_size_type(simulation_box_length_));
 
     set_desired_frac_neurons_exc(desired_frac_neurons_exc);
     set_desired_num_neurons(num_neurons);
@@ -42,8 +42,8 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t num_neurons,
 }
 
 void SubdomainFromNeuronDensity::place_neurons_in_area(
-    const NeuronToSubdomainAssignment::Position& offset,
-    const NeuronToSubdomainAssignment::Position& length_of_box,
+    const box_size_type& offset,
+    const box_size_type& length_of_box,
     const size_t num_neurons, const size_t subdomain_idx) {
 
     constexpr uint16_t max_short = std::numeric_limits<uint16_t>::max();
@@ -100,14 +100,14 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
         const size_t y_it = (pos_bitmask >> 16U) & max_short;
         const size_t z_it = pos_bitmask & max_short;
 
-        const double x_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0) + x_it;
-        const double y_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0) + y_it;
-        const double z_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0) + z_it;
+        const box_size_type::value_type x_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0) + x_it;
+        const box_size_type::value_type y_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0) + y_it;
+        const box_size_type::value_type z_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0) + z_it;
 
-        Position pos_rnd{ x_pos_rnd, y_pos_rnd, z_pos_rnd };
+        box_size_type pos_rnd{ x_pos_rnd, y_pos_rnd, z_pos_rnd };
         pos_rnd *= um_per_neuron_;
 
-        const Position pos = pos_rnd + offset;
+        const box_size_type pos = pos_rnd + offset;
 
         const double type_indicator = RandomHolder::get_random_uniform_double(RandomHolderKey::SubdomainFromNeuronDensity, 0.0, 1.0);
 
@@ -145,7 +145,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
     RelearnException::fail("SubdomainFromNeuronDensity::place_neurons_in_area: Shouldn't be here");
 }
 
-void SubdomainFromNeuronDensity::fill_subdomain(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains, const Position& min, const Position& max) {
+void SubdomainFromNeuronDensity::fill_subdomain(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains, const box_size_type& min, const box_size_type& max) {
     const bool subdomain_already_filled = is_loaded(subdomain_idx);
     if (subdomain_already_filled) {
         RelearnException::fail("SubdomainFromNeuronDensity::fill_subdomain: Tried to fill an already filled subdomain.");
@@ -169,14 +169,14 @@ std::vector<size_t> SubdomainFromNeuronDensity::neuron_global_ids([[maybe_unused
     return {};
 }
 
-std::tuple<SubdomainFromNeuronDensity::Position, SubdomainFromNeuronDensity::Position> SubdomainFromNeuronDensity::get_subdomain_boundaries(
+std::tuple<SubdomainFromNeuronDensity::box_size_type, SubdomainFromNeuronDensity::box_size_type> SubdomainFromNeuronDensity::get_subdomain_boundaries(
     const Vec3s& subdomain_3idx,
     const size_t num_subdomains_per_axis) const noexcept {
     const auto length = get_simulation_box_length().get_maximum();
     const auto one_subdomain_length = length / num_subdomains_per_axis;
 
-    auto min = static_cast<Vec3d>(subdomain_3idx) * one_subdomain_length;
-    auto max = static_cast<Vec3d>(subdomain_3idx + 1) * one_subdomain_length;
+    auto min = static_cast<box_size_type>(subdomain_3idx) * one_subdomain_length;
+    auto max = static_cast<box_size_type>(subdomain_3idx + 1) * one_subdomain_length;
 
     min.round_to_larger_multiple(um_per_neuron_);
     max.round_to_larger_multiple(um_per_neuron_);
@@ -184,7 +184,7 @@ std::tuple<SubdomainFromNeuronDensity::Position, SubdomainFromNeuronDensity::Pos
     return std::make_tuple(min, max);
 }
 
-std::tuple<SubdomainFromNeuronDensity::Position, SubdomainFromNeuronDensity::Position> SubdomainFromNeuronDensity::get_subdomain_boundaries(
+std::tuple<SubdomainFromNeuronDensity::box_size_type, SubdomainFromNeuronDensity::box_size_type> SubdomainFromNeuronDensity::get_subdomain_boundaries(
     const Vec3s& subdomain_3idx,
     const Vec3s& num_subdomains_per_axis) const noexcept {
 
@@ -193,13 +193,13 @@ std::tuple<SubdomainFromNeuronDensity::Position, SubdomainFromNeuronDensity::Pos
     const auto y_subdomain_length = length / num_subdomains_per_axis.get_y();
     const auto z_subdomain_length = length / num_subdomains_per_axis.get_z();
 
-    Vec3d min{ subdomain_3idx.get_x() * x_subdomain_length, subdomain_3idx.get_y() * y_subdomain_length, subdomain_3idx.get_z() * z_subdomain_length };
+    box_size_type min{ subdomain_3idx.get_x() * x_subdomain_length, subdomain_3idx.get_y() * y_subdomain_length, subdomain_3idx.get_z() * z_subdomain_length };
 
-    const auto next_x = static_cast<double>(subdomain_3idx.get_x() + 1) * x_subdomain_length;
-    const auto next_y = static_cast<double>(subdomain_3idx.get_y() + 1) * y_subdomain_length;
-    const auto next_z = static_cast<double>(subdomain_3idx.get_z() + 1) * z_subdomain_length;
+    const auto next_x = static_cast<box_size_type::value_type>(subdomain_3idx.get_x() + 1) * x_subdomain_length;
+    const auto next_y = static_cast<box_size_type::value_type>(subdomain_3idx.get_y() + 1) * y_subdomain_length;
+    const auto next_z = static_cast<box_size_type::value_type>(subdomain_3idx.get_z() + 1) * z_subdomain_length;
 
-    Vec3d max{ next_x, next_y, next_z };
+    box_size_type max{ next_x, next_y, next_z };
 
     min.round_to_larger_multiple(um_per_neuron_);
     max.round_to_larger_multiple(um_per_neuron_);

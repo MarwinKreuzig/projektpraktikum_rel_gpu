@@ -45,7 +45,7 @@ void check_types_fraction(std::vector<SignalType>& types, double& frac_ex, unsig
     ASSERT_NEAR(frac_ex, frac_ex_, static_cast<double>(total_subdomains) / static_cast<double>(num_neurons));
 }
 
-void check_positions(std::vector<NeuronToSubdomainAssignment::Position>& pos, double um_per_neuron, size_t& expected_neurons_per_dimension, bool* flags) {
+void check_positions(std::vector<NeuronToSubdomainAssignment::position_type>& pos, double um_per_neuron, size_t& expected_neurons_per_dimension, bool* flags) {
     std::vector<Vec3<size_t>> pos_fixed;
     for (auto& p : pos) {
         pos_fixed.emplace_back((Vec3<size_t>)(p * (1 / um_per_neuron)));
