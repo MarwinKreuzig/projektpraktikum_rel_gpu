@@ -452,6 +452,7 @@ public:
         return i;
     }
 
+    using interaction_list_type = std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>;
     std::shared_ptr<OctreeImplementation<FastMultipoleMethods>> global_tree{};
     std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> interaction_list{};
 

@@ -22,11 +22,13 @@
 #include <map>
 #include <random>
 
+inline bool initialized = false;
+
 class RelearnTest : public ::testing::Test {
 protected:
+    
     template <typename AdditionalCellAttributes>
     static void init() {
-        static bool initialized = false;
 
         if (initialized) {
             return;
