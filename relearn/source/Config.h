@@ -22,34 +22,35 @@ constexpr bool OPENMPAVAILABLE = false;
 // NOLINTNEXTLINE
 #define RELEARN_MPI_FOUND MPI_FOUND
 
-namespace Constants {
-constexpr size_t number_oct = 8;
-constexpr size_t uninitialized = 1111222233334444;
+class Constants {
+public:
+    constexpr static size_t number_oct = 8;
+    constexpr static size_t uninitialized = 1111222233334444;
 
-constexpr size_t max_lvl_subdomains = 20;
+    constexpr static size_t max_lvl_subdomains = 20;
 
-constexpr size_t num_items_per_request = 6;
+    constexpr static size_t num_items_per_request = 6;
 
-constexpr double eps = 0.00001;
+    constexpr static double eps = 0.00001;
 
-constexpr size_t print_width = 22;
-constexpr size_t print_precision = 8;
+    constexpr static size_t print_width = 22;
+    constexpr static size_t print_precision = 8;
 
-// Update connectivity every 100 ms
-constexpr size_t plasticity_update_step = 100;
-// Print details every 500 ms
-constexpr size_t logfile_update_step = 500;
-// Print to cout every 10000 ms
-constexpr size_t console_update_step = 100;
+    // Update connectivity every 100 ms
+    inline static size_t plasticity_update_step = 100;
+    // Print details every 500 ms
+    inline static size_t logfile_update_step = 500;
+    // Print to cout every 10000 ms
+    inline static size_t console_update_step = 100;
 
-constexpr size_t mpi_alloc_mem = 1024 * 1024 * 300;
+    constexpr static size_t mpi_alloc_mem = 1024 * 1024 * 300;
 
-//Constants for Fast Gauss
-constexpr int p = 4;
-constexpr int p3 = p * p * p;
-constexpr int max_neurons_in_target = 70; //cutoff for target box
-constexpr int max_neurons_in_source = 70; //cutoff for source box
-} // namespace Constants
+    //Constants for Fast Gauss
+    constexpr static int p = 4;
+    constexpr static int p3 = p * p * p;
+    constexpr static int max_neurons_in_target = 70; //cutoff for target box
+    constexpr static int max_neurons_in_source = 70; //cutoff for source box
+};
 
 namespace Config {
 constexpr bool do_debug_checks = false;
