@@ -403,9 +403,7 @@ int main(int argc, char** argv) {
     const auto step_monitor = 100;
     const auto steps_per_simulation = simulation_steps / step_monitor;
 
-    NeuronMonitor::max_steps = steps_per_simulation;
-    NeuronMonitor::current_step = 0;
-
+    sim.increase_monitoring_capacity(steps_per_simulation);
     sim.register_neuron_monitor(6);
     sim.register_neuron_monitor(1164);
     sim.register_neuron_monitor(28001);

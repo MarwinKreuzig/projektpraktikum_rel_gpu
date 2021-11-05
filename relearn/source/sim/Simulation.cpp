@@ -214,8 +214,6 @@ void Simulation::simulate(const size_t number_steps, const size_t step_monitor) 
                     mn.record_data();
                 }
             }
-
-            NeuronMonitor::current_step++;
         }
 
         for (const auto& [disable_step, disable_ids] : disable_interrupts) {
@@ -390,15 +388,10 @@ void Simulation::increase_monitoring_capacity(const size_t size) {
 
 void Simulation::snapshot_monitors() {
     if (monitors->size() > 0) {
-        increase_monitoring_capacity(1);
-
         //record data at step 0
         for (auto& m : *monitors) {
             m.record_data();
         }
-
-        NeuronMonitor::current_step += 1;
-        NeuronMonitor::max_steps += 1;
     }
 }
 
