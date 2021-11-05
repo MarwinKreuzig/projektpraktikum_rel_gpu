@@ -194,8 +194,8 @@ void Simulation::initialize() {
     neurons->set_algorithm(algorithm);
 }
 
-void Simulation::simulate(const size_t number_steps, const size_t step_monitor) {
-    RelearnException::check(step_monitor > 0, "Simulation::simulate: step_monitor must be greater than 0");
+void Simulation::simulate(const size_t number_steps) {
+    RelearnException::check(number_steps > 0, "Simulation::simulate: number_steps must be greater than 0");
 
     Timers::start(TimerRegion::SIMULATION_LOOP);
 
@@ -206,7 +206,7 @@ void Simulation::simulate(const size_t number_steps, const size_t step_monitor) 
 	* Simulation loop
 	*/
     for (size_t step = 1; step <= number_steps; step++) {
-        if (step % step_monitor == 0) {
+        if (step % Constants::monitor_step == 0) {
             const auto number_neurons = neurons->get_num_neurons();
 
             for (auto& mn : *monitors) {
@@ -281,13 +281,15 @@ void Simulation::simulate(const size_t number_steps, const size_t step_monitor) 
         }
 
         if (step % Constants::logfile_update_step == 0) {
+            neurons->print_local_network_histogram(step);
+        }
+
+        if (step % Constants::statistics_step == 0) {
             neurons->print_neurons_overview_to_log_file_on_rank_0(step);
 
             for (auto& [attribute, vector] : statistics) {
                 vector.emplace_back(neurons->get_statistics(attribute));
             }
-
-            neurons->print_local_network_histogram(step);
         }
 
         if (step % Constants::console_update_step == 0) {

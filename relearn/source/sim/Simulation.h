@@ -126,11 +126,10 @@ public:
 
     /**
      * @brief Simulates the neurons for the requested number of steps. Every step_monitor-th step, records all neuron monitors
-     * @param number_steps The number of simulation steps
-     * @param step_monitor The step size of the monitors, must be > 0
-     * @exception Throws a RelearnException if step_monitor == 0
+     * @param number_steps The number of simulation steps, must be > 0
+     * @exception Throws a RelearnException if number_steps == 0
      */
-    void simulate(size_t number_steps, size_t step_monitor);
+    void simulate(size_t number_steps);
 
     /**
      * @brief Finalizes the simulation in the sense that it prints the final statistics.

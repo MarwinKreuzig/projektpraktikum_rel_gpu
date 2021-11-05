@@ -400,16 +400,15 @@ int main(int argc, char** argv) {
 
     Timers::stop_and_add(TimerRegion::INITIALIZATION);
 
-    const auto step_monitor = 100;
-    const auto steps_per_simulation = simulation_steps / step_monitor;
-
-    sim.increase_monitoring_capacity(steps_per_simulation);
     sim.register_neuron_monitor(6);
     sim.register_neuron_monitor(1164);
     sim.register_neuron_monitor(28001);
 
+    const auto steps_per_simulation = simulation_steps / Constants::monitor_step;
+    sim.increase_monitoring_capacity(steps_per_simulation);
+
     auto simulate = [&]() {
-        sim.simulate(simulation_steps, step_monitor);
+        sim.simulate(simulation_steps);
 
         Timers::print();
 
