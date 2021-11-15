@@ -25,35 +25,35 @@ TEST_F(NetworkGraphTest, testNetworkGraphConstructor) {
             const auto inh_in_edges_count = ng.get_number_inhibitory_in_edges(neuron_id);
             const auto out_edges_count = ng.get_number_out_edges(neuron_id);
 
-            ASSERT_EQ(exc_in_edges_count, 0);
-            ASSERT_EQ(inh_in_edges_count, 0);
-            ASSERT_EQ(out_edges_count, 0);
+            ASSERT_EQ(exc_in_edges_count, 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(inh_in_edges_count, 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(out_edges_count, 0) << i << num_neurons << neuron_id;
 
             const auto& local_in_edges = ng.get_local_in_edges(neuron_id);
             const auto& distant_in_edges = ng.get_distant_in_edges(neuron_id);
             const auto& local_out_edges = ng.get_local_out_edges(neuron_id);
             const auto& distant_out_edges = ng.get_distant_out_edges(neuron_id);
 
-            ASSERT_EQ(local_in_edges.size(), 0);
-            ASSERT_EQ(distant_in_edges.size(), 0);
-            ASSERT_EQ(local_out_edges.size(), 0);
-            ASSERT_EQ(distant_out_edges.size(), 0);
+            ASSERT_EQ(local_in_edges.size(), 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(distant_in_edges.size(), 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(local_out_edges.size(), 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(distant_out_edges.size(), 0) << i << num_neurons << neuron_id;
 
             const auto& all_in_edges_excitatory = ng.get_all_in_edges(neuron_id, SignalType::EXCITATORY);
             const auto& all_in_edges_inhibitory = ng.get_all_in_edges(neuron_id, SignalType::INHIBITORY);
             const auto& all_out_edges_excitatory = ng.get_all_out_edges(neuron_id, SignalType::EXCITATORY);
             const auto& all_out_edges_inhibitory = ng.get_all_out_edges(neuron_id, SignalType::INHIBITORY);
 
-            ASSERT_EQ(all_in_edges_excitatory.size(), 0);
-            ASSERT_EQ(all_in_edges_inhibitory.size(), 0);
-            ASSERT_EQ(all_out_edges_excitatory.size(), 0);
-            ASSERT_EQ(all_out_edges_inhibitory.size(), 0);
+            ASSERT_EQ(all_in_edges_excitatory.size(), 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(all_in_edges_inhibitory.size(), 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(all_out_edges_excitatory.size(), 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(all_out_edges_inhibitory.size(), 0) << i << num_neurons << neuron_id;
 
             const auto& in_edges = ng.get_all_in_edges(neuron_id);
             const auto& out_edges = ng.get_all_out_edges(neuron_id);
 
-            ASSERT_EQ(in_edges.size(), 0);
-            ASSERT_EQ(out_edges.size(), 0);
+            ASSERT_EQ(in_edges.size(), 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(out_edges.size(), 0) << i << num_neurons << neuron_id;
         }
     }
 }
@@ -66,22 +66,24 @@ TEST_F(NetworkGraphTest, testNetworkGraphConstructorExceptions) {
 
         NetworkGraph ng(num_neurons, 0);
 
-        ASSERT_THROW(NetworkGraph ng_exception(num_neurons, -num_neurons - 1);, RelearnException);
+        ASSERT_THROW(NetworkGraph ng_exception(num_neurons, -num_neurons - 1);, RelearnException) << i << num_neurons;
 
-        for (size_t neuron_id = num_neurons; neuron_id < num_neurons + num_neurons; neuron_id++) {
-            ASSERT_THROW(const auto exc_in_edges_count = ng.get_number_excitatory_in_edges(neuron_id);, RelearnException);
-            ASSERT_THROW(const auto inh_in_edges_count = ng.get_number_inhibitory_in_edges(neuron_id);, RelearnException);
-            ASSERT_THROW(const auto out_edges_count = ng.get_number_out_edges(neuron_id);, RelearnException);
+        for (auto j = 0; j < iterations; j++) {
+            const auto neuron_id = num_neurons + 1 + uid_num_neurons(mt);
 
-            ASSERT_THROW(const auto& local_in_edges = ng.get_local_in_edges(neuron_id);, RelearnException);
-            ASSERT_THROW(const auto& distant_in_edges = ng.get_distant_in_edges(neuron_id);, RelearnException);
-            ASSERT_THROW(const auto& local_out_edges = ng.get_local_out_edges(neuron_id);, RelearnException);
-            ASSERT_THROW(const auto& distant_out_edges = ng.get_distant_out_edges(neuron_id);, RelearnException);
+            ASSERT_THROW(const auto exc_in_edges_count = ng.get_number_excitatory_in_edges(neuron_id);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto inh_in_edges_count = ng.get_number_inhibitory_in_edges(neuron_id);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto out_edges_count = ng.get_number_out_edges(neuron_id);, RelearnException) << i << num_neurons << neuron_id;
 
-            ASSERT_THROW(const auto& all_in_edges_excitatory = ng.get_all_in_edges(neuron_id, SignalType::EXCITATORY);, RelearnException);
-            ASSERT_THROW(const auto& all_in_edges_inhibitory = ng.get_all_in_edges(neuron_id, SignalType::INHIBITORY);, RelearnException);
-            ASSERT_THROW(const auto& all_out_edges_excitatory = ng.get_all_out_edges(neuron_id, SignalType::EXCITATORY);, RelearnException);
-            ASSERT_THROW(const auto& all_out_edges_inhibitory = ng.get_all_out_edges(neuron_id, SignalType::INHIBITORY);, RelearnException);
+            ASSERT_THROW(const auto& local_in_edges = ng.get_local_in_edges(neuron_id);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto& distant_in_edges = ng.get_distant_in_edges(neuron_id);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto& local_out_edges = ng.get_local_out_edges(neuron_id);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto& distant_out_edges = ng.get_distant_out_edges(neuron_id);, RelearnException) << i << num_neurons << neuron_id;
+
+            ASSERT_THROW(const auto& all_in_edges_excitatory = ng.get_all_in_edges(neuron_id, SignalType::EXCITATORY);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto& all_in_edges_inhibitory = ng.get_all_in_edges(neuron_id, SignalType::INHIBITORY);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto& all_out_edges_excitatory = ng.get_all_out_edges(neuron_id, SignalType::EXCITATORY);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto& all_out_edges_inhibitory = ng.get_all_out_edges(neuron_id, SignalType::INHIBITORY);, RelearnException) << i << num_neurons << neuron_id;
         }
     }
 }
@@ -103,35 +105,35 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreateNeurons) {
             const auto inh_in_edges_count = ng.get_number_inhibitory_in_edges(neuron_id);
             const auto out_edges_count = ng.get_number_out_edges(neuron_id);
 
-            ASSERT_EQ(exc_in_edges_count, 0);
-            ASSERT_EQ(inh_in_edges_count, 0);
-            ASSERT_EQ(out_edges_count, 0);
+            ASSERT_EQ(exc_in_edges_count, 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(inh_in_edges_count, 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(out_edges_count, 0) << i << num_neurons << neuron_id;
 
             const auto& local_in_edges = ng.get_local_in_edges(neuron_id);
             const auto& distant_in_edges = ng.get_distant_in_edges(neuron_id);
             const auto& local_out_edges = ng.get_local_out_edges(neuron_id);
             const auto& distant_out_edges = ng.get_distant_out_edges(neuron_id);
 
-            ASSERT_EQ(local_in_edges.size(), 0);
-            ASSERT_EQ(distant_in_edges.size(), 0);
-            ASSERT_EQ(local_out_edges.size(), 0);
-            ASSERT_EQ(distant_out_edges.size(), 0);
+            ASSERT_EQ(local_in_edges.size(), 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(distant_in_edges.size(), 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(local_out_edges.size(), 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(distant_out_edges.size(), 0) << i << num_neurons << neuron_id;
 
             const auto& all_in_edges_excitatory = ng.get_all_in_edges(neuron_id, SignalType::EXCITATORY);
             const auto& all_in_edges_inhibitory = ng.get_all_in_edges(neuron_id, SignalType::INHIBITORY);
             const auto& all_out_edges_excitatory = ng.get_all_out_edges(neuron_id, SignalType::EXCITATORY);
             const auto& all_out_edges_inhibitory = ng.get_all_out_edges(neuron_id, SignalType::INHIBITORY);
 
-            ASSERT_EQ(all_in_edges_excitatory.size(), 0);
-            ASSERT_EQ(all_in_edges_inhibitory.size(), 0);
-            ASSERT_EQ(all_out_edges_excitatory.size(), 0);
-            ASSERT_EQ(all_out_edges_inhibitory.size(), 0);
+            ASSERT_EQ(all_in_edges_excitatory.size(), 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(all_in_edges_inhibitory.size(), 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(all_out_edges_excitatory.size(), 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(all_out_edges_inhibitory.size(), 0) << i << num_neurons << neuron_id;
 
             const auto& in_edges = ng.get_all_in_edges(neuron_id);
             const auto& out_edges = ng.get_all_out_edges(neuron_id);
 
-            ASSERT_EQ(in_edges.size(), 0);
-            ASSERT_EQ(out_edges.size(), 0);
+            ASSERT_EQ(in_edges.size(), 0) << i << num_neurons << neuron_id;
+            ASSERT_EQ(out_edges.size(), 0) << i << num_neurons << neuron_id;
         }
     }
 }
@@ -148,23 +150,25 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreateNeuronsException) {
 
         const auto num_neurons = initial_num_neurons + new_neurons;
 
-        for (size_t neuron_id = num_neurons; neuron_id < num_neurons + num_neurons; neuron_id++) {
-            ASSERT_THROW(const auto exc_in_edges_count = ng.get_number_excitatory_in_edges(neuron_id);, RelearnException);
-            ASSERT_THROW(const auto inh_in_edges_count = ng.get_number_inhibitory_in_edges(neuron_id);, RelearnException);
-            ASSERT_THROW(const auto out_edges_count = ng.get_number_out_edges(neuron_id);, RelearnException);
+        for (auto j = 0; j < iterations; j++) {
+            const auto neuron_id = num_neurons + 1 + uid_num_neurons(mt);
 
-            ASSERT_THROW(const auto& local_in_edges = ng.get_local_in_edges(neuron_id);, RelearnException);
-            ASSERT_THROW(const auto& distant_in_edges = ng.get_distant_in_edges(neuron_id);, RelearnException);
-            ASSERT_THROW(const auto& local_out_edges = ng.get_local_out_edges(neuron_id);, RelearnException);
-            ASSERT_THROW(const auto& distant_out_edges = ng.get_distant_out_edges(neuron_id);, RelearnException);
+            ASSERT_THROW(const auto exc_in_edges_count = ng.get_number_excitatory_in_edges(neuron_id);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto inh_in_edges_count = ng.get_number_inhibitory_in_edges(neuron_id);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto out_edges_count = ng.get_number_out_edges(neuron_id);, RelearnException) << i << num_neurons << neuron_id;
 
-            ASSERT_THROW(const auto& all_in_edges_excitatory = ng.get_all_in_edges(neuron_id, SignalType::EXCITATORY);, RelearnException);
-            ASSERT_THROW(const auto& all_in_edges_inhibitory = ng.get_all_in_edges(neuron_id, SignalType::INHIBITORY);, RelearnException);
-            ASSERT_THROW(const auto& all_out_edges_excitatory = ng.get_all_out_edges(neuron_id, SignalType::EXCITATORY);, RelearnException);
-            ASSERT_THROW(const auto& all_out_edges_inhibitory = ng.get_all_out_edges(neuron_id, SignalType::INHIBITORY);, RelearnException);
+            ASSERT_THROW(const auto& local_in_edges = ng.get_local_in_edges(neuron_id);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto& distant_in_edges = ng.get_distant_in_edges(neuron_id);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto& local_out_edges = ng.get_local_out_edges(neuron_id);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto& distant_out_edges = ng.get_distant_out_edges(neuron_id);, RelearnException) << i << num_neurons << neuron_id;
 
-            ASSERT_THROW(const auto& in_edges = ng.get_all_in_edges(neuron_id);, RelearnException);
-            ASSERT_THROW(const auto& out_edges = ng.get_all_out_edges(neuron_id);, RelearnException);
+            ASSERT_THROW(const auto& all_in_edges_excitatory = ng.get_all_in_edges(neuron_id, SignalType::EXCITATORY);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto& all_in_edges_inhibitory = ng.get_all_in_edges(neuron_id, SignalType::INHIBITORY);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto& all_out_edges_excitatory = ng.get_all_out_edges(neuron_id, SignalType::EXCITATORY);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto& all_out_edges_inhibitory = ng.get_all_out_edges(neuron_id, SignalType::INHIBITORY);, RelearnException) << i << num_neurons << neuron_id;
+
+            ASSERT_THROW(const auto& in_edges = ng.get_all_in_edges(neuron_id);, RelearnException) << i << num_neurons << neuron_id;
+            ASSERT_THROW(const auto& out_edges = ng.get_all_out_edges(neuron_id);, RelearnException) << i << num_neurons << neuron_id;
         }
     }
 }
@@ -353,7 +357,6 @@ TEST_F(NetworkGraphTest, testNetworkGraphDistantEdges) {
             std::tuple<RankNeuronId, RankNeuronId> key{ rn_target, rn_source };
             golden_connections[key] += weight;
         }
-
     }
 }
 

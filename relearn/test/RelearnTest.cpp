@@ -17,7 +17,7 @@ size_t RelearnTest::num_neurons_test = 1000;
 double RelearnTest::eps = 0.00001;
 
 bool RelearnTest::use_predetermined_seed = false;
-unsigned int RelearnTest::predetermined_seed = 397600912;
+unsigned int RelearnTest::predetermined_seed = 3328292864;
 
 size_t NetworkGraphTest::upper_bound_num_neurons = 10000;
 int NetworkGraphTest::bound_synapse_weight = 10;
