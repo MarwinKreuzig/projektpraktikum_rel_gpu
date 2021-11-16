@@ -49,7 +49,7 @@ FileSynapseLoader::internal_load_synapses() {
 
     while (std::getline(file_synapses, line)) {
         // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
+        if (line.empty() || '#' == line[0]) {
             continue;
         }
 

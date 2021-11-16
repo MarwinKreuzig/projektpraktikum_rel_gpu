@@ -31,7 +31,7 @@ bool NetworkGraph::check_edges_from_file(const std::filesystem::path& path_synap
 
     for (std::string line{}; std::getline(file_synapses, line);) {
         // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
+        if (line.empty() || '#' == line[0]) {
             continue;
         }
 

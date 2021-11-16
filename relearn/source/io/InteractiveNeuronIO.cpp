@@ -30,7 +30,7 @@ std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_en
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
+        if (line.empty() || '#' == line[0]) {
             continue;
         }
 
@@ -77,7 +77,7 @@ std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_di
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
+        if (line.empty() || '#' == line[0]) {
             continue;
         }
 
@@ -124,7 +124,7 @@ std::vector<std::pair<size_t, size_t>> InteractiveNeuronIO::load_creation_interr
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
+        if (line.empty() || '#' == line[0]) {
             continue;
         }
 

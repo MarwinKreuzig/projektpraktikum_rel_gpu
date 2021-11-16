@@ -51,7 +51,7 @@ void SubdomainFromFile::read_dimensions_from_file() {
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
+        if (line.empty() || '#' == line[0]) {
             continue;
         }
 
@@ -123,23 +123,26 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
+        if (line.empty() || '#' == line[0]) {
             continue;
         }
 
         std::string signal_type{};
 
+        size_t id{};
         Node node{};
         box_size_type::value_type pos_x{};
         box_size_type::value_type pos_y{};
         box_size_type::value_type pos_z{};
         std::stringstream sstream(line);
-        bool success = (sstream >> node.id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> node.area_name) && (sstream >> signal_type);
+        bool success = (sstream >> id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> node.area_name) && (sstream >> signal_type);
 
         if (!success) {
             spdlog::info("Skipping line: {}", line);
             continue;
         }
+
+        node.id = id;
 
         node.pos = { pos_x, pos_y, pos_z };
 
@@ -221,7 +224,7 @@ std::optional<std::vector<size_t>> SubdomainFromFile::read_neuron_ids_from_file(
 
     for (std::string line{}; std::getline(local_file, line);) {
         // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
+        if (line.empty() || '#' == line[0]) {
             continue;
         }
 
