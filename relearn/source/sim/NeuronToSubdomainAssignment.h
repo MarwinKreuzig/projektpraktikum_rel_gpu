@@ -14,6 +14,7 @@
 #include "../neurons/SignalType.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
+#include "../util/TaggedID.h"
 
 #include <filesystem>
 #include <functional>
@@ -236,7 +237,7 @@ public:
      * @exception Might throw a RelearnException
      * @return The global ids for the specified subdomain
      */
-    [[nodiscard]] virtual std::vector<size_t> get_neuron_global_ids_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const = 0;
+    [[nodiscard]] virtual std::vector<NeuronID> get_neuron_global_ids_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const = 0;
 
     /**
      * @brief Returns the global ids of the neurons which are in the specified subdomains.
@@ -245,14 +246,14 @@ public:
      * @param subdomain_index_1d_end The 1d index of the last subdomain which is inquired
      * @param total_number_subdomains The total number of subdomains
      * @exception Might throw a RelearnException
-     * @return The  global ids of the neurons in the subdomains
+     * @return The global ids of the neurons in the subdomains
      */
-    [[nodiscard]] std::vector<size_t> get_neuron_global_ids_in_subdomains(size_t subdomain_index_1d_start, size_t subdomain_index_1d_end, size_t total_number_subdomains) const {
+    [[nodiscard]] std::vector<NeuronID> get_neuron_global_ids_in_subdomains(size_t subdomain_index_1d_start, size_t subdomain_index_1d_end, size_t total_number_subdomains) const {
         auto function = [this](size_t subdomain_index_1d, size_t total_number_subdomains) {
             return get_neuron_global_ids_in_subdomain(subdomain_index_1d, total_number_subdomains);
         };
 
-        return get_all_values<size_t>(subdomain_index_1d_start, subdomain_index_1d_end, total_number_subdomains, function);
+        return get_all_values<NeuronID>(subdomain_index_1d_start, subdomain_index_1d_end, total_number_subdomains, function);
     }
 
     /**
@@ -267,14 +268,14 @@ public:
 protected:
     struct Node {
         position_type pos{ 0 };
-        size_t id{ Constants::uninitialized };
+        NeuronID id{ NeuronID::uninitialized_id() };
         SignalType signal_type{ SignalType::EXCITATORY };
         std::string area_name{ "NOT SET" };
 
         struct less {
             bool operator()(const Node& lhs, const Node& rhs) const {
-                RelearnException::check(lhs.id != Constants::uninitialized, "Node::less::operator(): lhs id is a dummy one");
-                RelearnException::check(rhs.id != Constants::uninitialized, "Node::less::operator(): rhs id is a dummy one");
+                RelearnException::check(lhs.id.is_initialized, "Node::less::operator(): lhs id is a dummy one");
+                RelearnException::check(rhs.id.is_initialized, "Node::less::operator(): rhs id is a dummy one");
 
                 return lhs.id < rhs.id;
             }

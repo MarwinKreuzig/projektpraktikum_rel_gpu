@@ -142,12 +142,11 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
             continue;
         }
 
-        node.id = id;
-
+        node.id = NeuronID{ id };
         node.pos = { pos_x, pos_y, pos_z };
 
         // Ids start with 1
-        node.id--;
+        --node.id;
 
         if (bool is_in_subdomain = node.pos.check_in_box(min, max); !is_in_subdomain) {
             continue;
@@ -173,7 +172,7 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
     return nodes;
 }
 
-std::vector<size_t> SubdomainFromFile::get_neuron_global_ids_in_subdomain(const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {
+std::vector<NeuronID> SubdomainFromFile::get_neuron_global_ids_in_subdomain(const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {
     const bool contains = is_subdomain_loaded(subdomain_index_1d);
     if (!contains) {
         RelearnException::fail("SubdomainFromFile::get_neuron_global_ids_in_subdomain: Wanted to have neuron_global_ids of subdomain_index_1d that is not present");
@@ -181,7 +180,7 @@ std::vector<size_t> SubdomainFromFile::get_neuron_global_ids_in_subdomain(const 
     }
 
     const Nodes& nodes = get_nodes_for_subdomain(subdomain_index_1d);
-    std::vector<size_t> global_ids;
+    std::vector<NeuronID> global_ids;
     global_ids.reserve(nodes.size());
 
     for (const Node& node : nodes) {

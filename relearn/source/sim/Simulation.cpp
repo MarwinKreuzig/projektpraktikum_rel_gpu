@@ -37,7 +37,7 @@ Simulation::Simulation(std::shared_ptr<Partition> partition)
     monitors = std::make_shared<std::vector<NeuronMonitor>>();
 }
 
-void Simulation::register_neuron_monitor(const size_t neuron_id) {
+void Simulation::register_neuron_monitor(const NeuronID& neuron_id) {
     monitors->emplace_back(neuron_id);
 }
 
@@ -66,15 +66,15 @@ void Simulation::set_dendrites_in(std::unique_ptr<SynapticElements>&& se) noexce
     dendrites_in = std::move(se);
 }
 
-void Simulation::set_target_calcium_calculator(std::function<double(size_t)> calculator) noexcept {
+void Simulation::set_target_calcium_calculator(std::function<double(NeuronID)> calculator) noexcept {
     target_calcium_calculator = std::move(calculator);
 }
 
-void Simulation::set_initial_calcium_calculator(std::function<double(size_t)> initiator) noexcept {
+void Simulation::set_initial_calcium_calculator(std::function<double(NeuronID)> initiator) noexcept {
     initial_calcium_initiator = std::move(initiator);
 }
 
-void Simulation::set_enable_interrupts(std::vector<std::pair<size_t, std::vector<size_t>>> interrupts) {
+void Simulation::set_enable_interrupts(std::vector<std::pair<size_t, std::vector<NeuronID>>> interrupts) {
     enable_interrupts = std::move(interrupts);
 
     for (auto& [step, ids] : enable_interrupts) {
@@ -82,7 +82,7 @@ void Simulation::set_enable_interrupts(std::vector<std::pair<size_t, std::vector
     }
 }
 
-void Simulation::set_disable_interrupts(std::vector<std::pair<size_t, std::vector<size_t>>> interrupts) {
+void Simulation::set_disable_interrupts(std::vector<std::pair<size_t, std::vector<NeuronID>>> interrupts) {
     disable_interrupts = std::move(interrupts);
 
     for (auto& [step, ids] : disable_interrupts) {
@@ -120,12 +120,12 @@ void Simulation::initialize() {
 
     std::vector<double> target_calcium_values(number_local_neurons, 0.0);
     for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
-        target_calcium_values[neuron_id] = target_calcium_calculator(neuron_id);
+        target_calcium_values[neuron_id] = target_calcium_calculator(NeuronID{ neuron_id });
     }
 
     std::vector<double> initial_calcium_values(number_local_neurons, 0.0);
     for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
-        initial_calcium_values[neuron_id] = initial_calcium_initiator(neuron_id);
+        initial_calcium_values[neuron_id] = initial_calcium_initiator(NeuronID{ neuron_id });
     }
 
     neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons->clone(), dendrites_ex->clone(), dendrites_in->clone());
@@ -164,7 +164,7 @@ void Simulation::initialize() {
 
     for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
         const auto& position = neuron_positions[neuron_id];
-        global_tree->insert(position, neuron_id, my_rank);
+        global_tree->insert(position, NeuronID{ neuron_id }, my_rank);
     }
 
     global_tree->initializes_leaf_nodes(number_local_neurons);
@@ -230,7 +230,7 @@ void Simulation::simulate(const size_t number_steps) {
             const auto number_neurons = neurons->get_num_neurons();
 
             for (auto& mn : *monitors) {
-                if (mn.get_target_id() < number_neurons) {
+                if (mn.get_target_id().id < number_neurons) {
                     mn.record_data();
                 }
             }
@@ -257,12 +257,12 @@ void Simulation::simulate(const size_t number_steps) {
 
                 std::vector<double> new_target_calcium_values(creation_count, 0.0);
                 for (size_t neuron_id = 0; neuron_id < creation_count; neuron_id++) {
-                    new_target_calcium_values[neuron_id] = target_calcium_calculator(neuron_id);
+                    new_target_calcium_values[neuron_id] = target_calcium_calculator(NeuronID{ neuron_id });
                 }
 
                 std::vector<double> new_initial_calcium_values(creation_count, 0.0);
                 for (size_t neuron_id = 0; neuron_id < creation_count; neuron_id++) {
-                    new_initial_calcium_values[neuron_id] = initial_calcium_initiator(neuron_id);
+                    new_initial_calcium_values[neuron_id] = initial_calcium_initiator(NeuronID{ neuron_id });
                 }
 
                 neurons->create_neurons(creation_count, std::move(new_target_calcium_values), std::move(new_initial_calcium_values));
@@ -375,7 +375,7 @@ std::vector<std::unique_ptr<NeuronModel>> Simulation::get_models() {
 void Simulation::print_neuron_monitors() {
     for (auto& monitor : *monitors) {
         auto path = LogFiles::get_output_path();
-        std::ofstream outfile(path + std::to_string(monitor.get_target_id()) + ".csv", std::ios::trunc);
+        std::ofstream outfile(path + std::to_string(monitor.get_target_id().id) + ".csv", std::ios::trunc);
         outfile << std::setprecision(Constants::print_precision);
 
         outfile.imbue(std::locale());

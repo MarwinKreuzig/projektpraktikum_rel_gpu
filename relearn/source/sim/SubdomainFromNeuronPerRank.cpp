@@ -52,7 +52,7 @@ SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank(const size_t number_neuro
     set_number_placed_neurons(0);
 }
 
-std::vector<size_t> SubdomainFromNeuronPerRank::get_neuron_global_ids_in_subdomain(const size_t subdomain_index_1d, const size_t total_number_subdomains) const {
+std::vector<NeuronID> SubdomainFromNeuronPerRank::get_neuron_global_ids_in_subdomain(const size_t subdomain_index_1d, const size_t total_number_subdomains) const {
     return {};
 }
 
@@ -67,7 +67,7 @@ void SubdomainFromNeuronPerRank::fill_subdomain(const size_t local_subdomain_ind
     const auto additional_neuron = (local_subdomain_index < number_neurons_per_rank % number_local_subdomains) ? 1 : 0;
 
     const auto number_neurons_per_subdomain = preliminary_number_neurons_per_subdomain + additional_neuron;
-    
+
     const auto subdomain_index_1d = partition->get_1d_index_of_subdomain(local_subdomain_index);
     const bool subdomain_already_filled = is_subdomain_loaded(subdomain_index_1d);
     if (subdomain_already_filled) {
@@ -155,11 +155,11 @@ void SubdomainFromNeuronPerRank::place_neurons_in_area(const NeuronToSubdomainAs
         const double type_indicator = RandomHolder::get_random_uniform_double(RandomHolderKey::Subdomain, 0.0, 1.0);
 
         if (placed_ex_neurons < expected_number_ex && (type_indicator < desired_ex || placed_in_neurons == expected_number_in)) {
-            Node node{ pos, i, SignalType::EXCITATORY, "random" };
+            Node node{ pos, NeuronID{ i }, SignalType::EXCITATORY, "random" };
             placed_ex_neurons++;
             nodes.emplace(node);
         } else {
-            Node node{ pos, i, SignalType::INHIBITORY, "random" };
+            Node node{ pos, NeuronID{ i }, SignalType::INHIBITORY, "random" };
             placed_in_neurons++;
             nodes.emplace(node);
         }
@@ -175,7 +175,7 @@ void SubdomainFromNeuronPerRank::place_neurons_in_area(const NeuronToSubdomainAs
             set_number_placed_neurons(new_num_neurons);
 
             const auto now_ex_neurons = former_ex_neurons + placed_ex_neurons;
-            //const auto now_in_neurons = former_in_neurons + placed_in_neurons;
+            // const auto now_in_neurons = former_in_neurons + placed_in_neurons;
 
             const auto current_frac_ex = static_cast<double>(now_ex_neurons) / static_cast<double>(new_num_neurons);
 

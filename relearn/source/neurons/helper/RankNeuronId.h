@@ -13,6 +13,7 @@
 #include "../../Config.h"
 #include "../../mpi/MPIWrapper.h"
 #include "../../util/RelearnException.h"
+#include "../../util/TaggedID.h"
 
 #include <ostream>
 #include <utility>
@@ -24,11 +25,11 @@
 class RankNeuronId {
 public:
     using rank_type = int;
-    using neuron_id_type = size_t;
+    using neuron_id_type = NeuronID;
 
 private:
     rank_type rank{ -1 }; // MPI rank of the owner
-    neuron_id_type neuron_id{ Constants::uninitialized }; // Neuron id on the owner
+    NeuronID neuron_id{ NeuronID::uninitialized_id() }; // Neuron id on the owner
 
 public:
     /**
@@ -62,7 +63,7 @@ public:
      * @exception Throws a RelearnException if the id is not smaller than Constants::uninitialized
      */
     [[nodiscard]] neuron_id_type get_neuron_id() const {
-        RelearnException::check(neuron_id < Constants::uninitialized, "RankNeuronId::get_neuron_id: neuron_id is too large: {}", neuron_id);
+        RelearnException::check(neuron_id.is_initialized, "RankNeuronId::get_neuron_id: neuron_id is not initialized");
         return neuron_id;
     }
 
@@ -144,4 +145,4 @@ struct tuple_element<1, ::RankNeuronId> {
     using type = RankNeuronId::neuron_id_type;
 };
 
-} //namespace std
+} // namespace std

@@ -74,26 +74,28 @@ void NetworkGraph::debug_check() const {
     const auto my_rank = mpi_rank;
 
     // Golden map that stores all local edges
-    std::map<std::pair<size_t, size_t>, EdgeWeight> edges{};
+    std::map<std::pair<NeuronID, NeuronID>, EdgeWeight> edges{};
 
     for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
-        const auto& local_out_edges = get_local_out_edges(neuron_id);
-        const auto& distant_out_edges = get_distant_out_edges(neuron_id);
+        const auto id = NeuronID{ neuron_id };
+        const auto& local_out_edges = get_local_out_edges(id);
+        const auto& distant_out_edges = get_distant_out_edges(id);
 
         for (const auto& [target_neuron_id, edge_val] : local_out_edges) {
             RelearnException::check(edge_val != 0, "NetworkGraph::debug_check: Value is zero (out)");
-            edges[std::make_pair(neuron_id, target_neuron_id)] = edge_val;
+            edges[std::make_pair(id, target_neuron_id)] = edge_val;
         }
     }
 
     for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
-        const auto local_in_edges = get_local_in_edges(neuron_id);
-        const auto distant_in_edges = get_distant_in_edges(neuron_id);
+        const auto id = NeuronID{ neuron_id };
+        const auto local_in_edges = get_local_in_edges(id);
+        const auto distant_in_edges = get_distant_in_edges(id);
 
         for (const auto& [source_neuron_id, edge_val] : local_in_edges) {
             RelearnException::check(edge_val != 0, "NetworkGraph::debug_check: Value is zero (out)");
 
-            const std::pair<size_t, size_t> id_pair(source_neuron_id, neuron_id);
+            const std::pair<NeuronID, NeuronID> id_pair(source_neuron_id, neuron_id);
             const auto it = edges.find(id_pair);
 
             const bool found = it != edges.cend();
@@ -141,7 +143,7 @@ void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTransla
     std::vector<std::vector<size_t>> exchange_id_my_responses(num_ranks);
     for (auto rank = 0; rank < num_ranks; rank++) {
         for (const auto& local_id : exchange_ids_others_requests[rank]) {
-            const auto& global_id = translator->get_global_id(local_id);
+            const auto& global_id = translator->get_global_id(NeuronID{ local_id });
             exchange_id_my_responses[rank].emplace_back(global_id);
         }
     }
@@ -150,11 +152,11 @@ void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTransla
 
     // For my neurons
     for (size_t target_neuron_id = 0; target_neuron_id < number_local_neurons; target_neuron_id++) {
-        const auto global_target_id = translator->get_global_id(target_neuron_id);
+        const auto global_target_id = translator->get_global_id(NeuronID{ target_neuron_id });
 
         for (const auto& [local_source_id, edge_val] : neuron_local_in_neighborhood[target_neuron_id]) {
             const auto global_source_id = translator->get_global_id(local_source_id);
-          
+
             os << (global_target_id + 1) << "\t"
                << (global_source_id + 1) << "\t"
                << edge_val << "\n";
@@ -163,9 +165,8 @@ void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTransla
         for (const auto& [distant_neuron_id, edge_val] : neuron_distant_in_neighborhood[target_neuron_id]) {
             const auto& [distant_rank, distant_local_neuron_id] = distant_neuron_id;
 
-            const auto& request_iterator =
-                std::find(exchange_id_my_requests[distant_rank].begin(), 
-                    exchange_id_my_requests[distant_rank].end(), distant_local_neuron_id);
+            const auto& request_iterator = std::find(exchange_id_my_requests[distant_rank].begin(),
+                exchange_id_my_requests[distant_rank].end(), distant_local_neuron_id.id);
 
             const auto& distance = std::distance(exchange_id_my_requests[distant_rank].begin(), request_iterator);
 

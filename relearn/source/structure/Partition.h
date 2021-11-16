@@ -14,6 +14,7 @@
 #include "../structure/SpaceFillingCurve.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
+#include "../util/TaggedID.h"
 
 #include <functional>
 #include <tuple>
@@ -39,8 +40,8 @@ public:
 
         size_t number_neurons{ Constants::uninitialized };
 
-        size_t neuron_local_id_start{ Constants::uninitialized };
-        size_t neuron_local_id_end{ Constants::uninitialized };
+        NeuronID neuron_local_id_start{ NeuronID::uninitialized_id() };
+        NeuronID neuron_local_id_end{ NeuronID::uninitialized_id() };
 
         size_t index_1d{ Constants::uninitialized };
         Vec3s index_3d{ Constants::uninitialized };
@@ -218,7 +219,7 @@ public:
      * @exception Throws a RelearnException if local_subdomain_index is larger or equal to the number of local subdomains
      * @return The first local neuron id of the subdomain
      */
-    [[nodiscard]] size_t get_local_subdomain_local_neuron_id_start(const size_t local_subdomain_index) const {
+    [[nodiscard]] NeuronID get_local_subdomain_local_neuron_id_start(const size_t local_subdomain_index) const {
         RelearnException::check(local_subdomain_index < local_subdomains.size(),
             "Partition::get_local_subdomain_local_neuron_id_start: index ({}) was too large for the number of local subdomains ({})", local_subdomain_index, local_subdomains.size());
         return local_subdomains[local_subdomain_index].neuron_local_id_start;
@@ -230,7 +231,7 @@ public:
      * @exception Throws a RelearnException if local_subdomain_index is larger or equal to the number of local subdomains
      * @return The last local neuron id of the subdomain
      */
-    [[nodiscard]] size_t get_local_subdomain_local_neuron_id_end(const size_t local_subdomain_index) const {
+    [[nodiscard]] NeuronID get_local_subdomain_local_neuron_id_end(const size_t local_subdomain_index) const {
         RelearnException::check(local_subdomain_index < local_subdomains.size(),
             "Partition::get_local_subdomain_local_neuron_id_start: index ({}) was too large for the number of local subdomains ({})", local_subdomain_index, local_subdomains.size());
         return local_subdomains[local_subdomain_index].neuron_local_id_end;
@@ -256,7 +257,7 @@ public:
 
             // Set start and end of local neuron ids
             // 0-th subdomain starts with neuron id 0
-            current_subdomain.neuron_local_id_start = (subdomain_index == 0) ? 0 : (local_subdomains[subdomain_index - 1].neuron_local_id_end + 1);
+            current_subdomain.neuron_local_id_start = (subdomain_index == 0) ? NeuronID{ 0 } : (local_subdomains[subdomain_index - 1].neuron_local_id_end + 1);
             current_subdomain.neuron_local_id_end = current_subdomain.neuron_local_id_start + current_subdomain.number_neurons - 1;
         }
     }

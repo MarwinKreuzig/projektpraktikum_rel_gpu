@@ -419,10 +419,10 @@ int main(int argc, char** argv) {
         sim.set_creation_interrupts(std::move(creation_interrups));
     }
 
-    auto target_calcium_calculator = [target = target_calcium](size_t neuron_id) { return target; };
+    auto target_calcium_calculator = [target = target_calcium](NeuronID neuron_id) { return target; };
     sim.set_target_calcium_calculator(std::move(target_calcium_calculator));
 
-    auto initial_calcium_calculator = [inital = initial_calcium](size_t neuron_id) { return inital; };
+    auto initial_calcium_calculator = [inital = initial_calcium](NeuronID neuron_id) { return inital; };
     sim.set_initial_calcium_calculator(std::move(initial_calcium_calculator));
 
     /**********************************************************************************/
@@ -442,9 +442,9 @@ int main(int argc, char** argv) {
 
     Timers::stop_and_add(TimerRegion::INITIALIZATION);
 
-    sim.register_neuron_monitor(6);
-    sim.register_neuron_monitor(1164);
-    sim.register_neuron_monitor(28001);
+    sim.register_neuron_monitor(NeuronID{ 6 });
+    sim.register_neuron_monitor(NeuronID{ 1164 });
+    sim.register_neuron_monitor(NeuronID{ 28001 });
 
     auto simulate = [&]() {
         sim.simulate(simulation_steps);

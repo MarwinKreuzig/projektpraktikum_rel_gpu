@@ -10,7 +10,10 @@
 
 #pragma once
 
+#include "../util/TaggedID.h"
+
 #include <filesystem>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -32,7 +35,7 @@ public:
      * @exception Throws a RelearnException if opening the file fails
      * @return A collection of pairs: (<simulation step>, <all neurons that should be enabled in the simulation step>)
      */
-    static std::vector<std::pair<size_t, std::vector<size_t>>> load_enable_interrups(const std::filesystem::path& path_to_file);
+    static std::vector<std::pair<size_t, std::vector<NeuronID>>> load_enable_interrups(const std::filesystem::path& path_to_file);
 
     /**
      * @brief Reads the file specified by the path and extracts all disable-interrupts.
@@ -46,7 +49,7 @@ public:
      * @exception Throws a RelearnException if opening the file fails
      * @return A collection of pairs: (<simulation step>, <all neurons that should be disabled in the simulation step>)
      */
-    static std::vector<std::pair<size_t, std::vector<size_t>>> load_disable_interrups(const std::filesystem::path& path_to_file);
+    static std::vector<std::pair<size_t, std::vector<NeuronID>>> load_disable_interrups(const std::filesystem::path& path_to_file);
 
     /**
      * @brief Reads the file specified by the path and extracts all creation-interrupts.

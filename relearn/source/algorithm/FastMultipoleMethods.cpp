@@ -356,12 +356,13 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<UpdateStatus>& di
 
     for (size_t neuron_id = 0; neuron_id < num_leaf_nodes; neuron_id++) {
         auto* node = leaf_nodes[neuron_id];
+        const auto id = NeuronID{ neuron_id };
 
         RelearnException::check(node != nullptr, "FastMultipoleMethods::update_leaf_nodes: node was nullptr: ", neuron_id);
 
-        const size_t other_neuron_id = node->get_cell().get_neuron_id();
+        const auto other_neuron_id = node->get_cell().get_neuron_id();
 
-        RelearnException::check(neuron_id == other_neuron_id, "FastMultipoleMethods::update_leaf_nodes: The nodes are not in order");
+        RelearnException::check(id == other_neuron_id, "FastMultipoleMethods::update_leaf_nodes: The nodes are not in order");
 
         if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
@@ -372,7 +373,7 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<UpdateStatus>& di
 
         node->set_cell_number_dendrites(number_vacant_dendrites_excitatory, number_vacant_dendrites_inhibitory);
 
-        const auto signal_type = axons->get_signal_type(neuron_id);
+        const auto signal_type = axons->get_signal_type(id);
 
         if (signal_type == SignalType::EXCITATORY) {
             const auto number_vacant_excitatory_axons = static_cast<counter_type>(axons_counts[neuron_id] - axons_connected_counts[neuron_id]);

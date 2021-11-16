@@ -20,7 +20,7 @@
 #include <sstream>
 #include <string>
 
-std::pair<FileSynapseLoader::synapses_tuple_type, std::vector<FileSynapseLoader::neuron_id>>
+std::pair<FileSynapseLoader::synapses_tuple_type, std::vector<NeuronID>>
 FileSynapseLoader::internal_load_synapses() {
 
     if (!optional_path_to_file.has_value()) {
@@ -45,7 +45,7 @@ FileSynapseLoader::internal_load_synapses() {
 
     std::ifstream file_synapses(path_to_file, std::ios::binary | std::ios::in);
 
-    std::set<neuron_id> foreign_ids{};
+    std::set<NeuronID> foreign_ids{};
 
     while (std::getline(file_synapses, line)) {
         // Skip line with comments
@@ -53,25 +53,28 @@ FileSynapseLoader::internal_load_synapses() {
             continue;
         }
 
-        neuron_id source_id = 0;
-        neuron_id target_id = 0;
+        size_t read_source_id = 0;
+        size_t read_target_id = 0;
         synapse_weight weight = 0;
 
         std::stringstream sstream(line);
-        const bool success = (sstream >> source_id) && (sstream >> target_id) && (sstream >> weight);
+        const bool success = (sstream >> read_source_id) && (sstream >> read_target_id) && (sstream >> weight);
+
+        auto source_id = NeuronID{ read_source_id };
+        auto target_id = NeuronID{ read_target_id };
 
         RelearnException::check(success, "FileSynapseLoader::internal_load_synapses: Loading synapses was unsuccessfull!");
 
-        RelearnException::check(source_id > 0, "FileSynapseLoader::internal_load_synapses: source_id was 0");
-        RelearnException::check(target_id > 0, "FileSynapseLoader::internal_load_synapses: target_id was 0");
+        RelearnException::check(source_id.id > 0, "FileSynapseLoader::internal_load_synapses: source_id was 0");
+        RelearnException::check(target_id.id > 0, "FileSynapseLoader::internal_load_synapses: target_id was 0");
         RelearnException::check(weight != 0, "FileSynapseLoader::internal_load_synapses: weight was 0");
 
         // The neurons start with 1
-        source_id--;
-        target_id--;
+        --source_id;
+        --target_id;
 
-        const f_status source_f = id_is_local[source_id];
-        const f_status target_f = id_is_local[target_id];
+        const f_status source_f = id_is_local[read_source_id];
+        const f_status target_f = id_is_local[read_target_id];
 
         bool source_is_local = false;
         bool target_is_local = false;
@@ -83,9 +86,9 @@ FileSynapseLoader::internal_load_synapses() {
         } else {
             source_is_local = nit->is_neuron_local(source_id);
             if (source_is_local) {
-                id_is_local[source_id] = f_status::local;
+                id_is_local[source_id.id] = f_status::local;
             } else {
-                id_is_local[source_id] = f_status::not_local;
+                id_is_local[source_id.id] = f_status::not_local;
             }
         }
 
@@ -96,9 +99,9 @@ FileSynapseLoader::internal_load_synapses() {
         } else {
             target_is_local = nit->is_neuron_local(target_id);
             if (target_is_local) {
-                id_is_local[target_id] = f_status::local;
+                id_is_local[target_id.id] = f_status::local;
             } else {
-                id_is_local[target_id] = f_status::not_local;
+                id_is_local[target_id.id] = f_status::not_local;
             }
         }
 
@@ -126,7 +129,7 @@ FileSynapseLoader::internal_load_synapses() {
         RelearnException::fail("FileSynapseLoader::internal_load_synapses: In loading synapses, target and source are not conform.");
     }
 
-    std::vector<neuron_id> global_ids{};
+    std::vector<NeuronID> global_ids{};
     global_ids.reserve(foreign_ids.size());
 
     for (const auto& foreign_id : foreign_ids) {

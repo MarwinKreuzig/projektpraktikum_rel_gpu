@@ -132,13 +132,13 @@ public:
      *      (e) Something went wrong within the insertion
      * @return A pointer to the newly created and inserted node
      */
-    [[nodiscard]] OctreeNodePtr insert(const box_size_type& position, const size_t neuron_id, const int rank) {
+    [[nodiscard]] OctreeNodePtr insert(const box_size_type& position, const NeuronID& neuron_id, const int rank) {
         const auto& [cell_xyz_min, cell_xyz_max] = cell.get_size();
         const auto is_in_box = position.check_in_box(cell_xyz_min, cell_xyz_max);
 
         RelearnException::check(is_in_box, "OctreeNode::insert: position is not in box: {} in [{}, {}]", position, cell_xyz_min, cell_xyz_max);
         RelearnException::check(rank >= 0, "OctreeNode::insert: rank was {}", rank);
-        RelearnException::check(neuron_id <= Constants::uninitialized, "OctreeNode::insert, neuron_id was {}", neuron_id);
+        RelearnException::check(neuron_id.is_initialized, "OctreeNode::insert, neuron_id is not initialized");
 
         unsigned char new_position_octant = 0;
 
@@ -168,7 +168,7 @@ public:
              * The found parent node is virtual and can just be substituted,
              * i.e., it was constructed while constructing the upper part to the branch nodes.
              */
-            if (parent_node->get_cell_neuron_id() == Constants::uninitialized && neuron_id != parent_node->get_cell_neuron_id()) {
+            if (parent_node->get_cell_neuron_id().is_virtual && neuron_id != parent_node->get_cell_neuron_id()) {
                 parent_node->set_cell_neuron_id(neuron_id);
                 parent_node->set_cell_neuron_position({ position });
                 parent_node->set_rank(rank);
@@ -205,7 +205,7 @@ public:
                  * Set neuron ID of parent (inner node) to uninitialized.
                  * It is not used for inner nodes.
                  */
-                parent_node->set_cell_neuron_id(Constants::uninitialized);
+                parent_node->set_cell_neuron_id(NeuronID::virtual_id());
                 parent_node->set_parent(); // Mark node as parent
 
                 // MPI rank who owns this node
@@ -260,7 +260,7 @@ public:
     }
 
     /**
-     * @brief Marks this node as a parent (an inner node) 
+     * @brief Marks this node as a parent (an inner node)
      */
     void set_parent() noexcept {
         parent = true;
@@ -398,7 +398,7 @@ public:
      * @brief Returns the neuron id for the associated cell. Is Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
      * @return The neuron id
      */
-    [[nodiscard]] size_t get_cell_neuron_id() const noexcept {
+    [[nodiscard]] NeuronID get_cell_neuron_id() const noexcept {
         return cell.get_neuron_id();
     }
 
@@ -406,7 +406,7 @@ public:
      * @brief Sets the neuron id for the associated cell. Can be set to Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
      * @param neuron_id The neuron id
      */
-    void set_cell_neuron_id(const size_t neuron_id) noexcept {
+    void set_cell_neuron_id(const NeuronID& neuron_id) noexcept {
         cell.set_neuron_id(neuron_id);
     }
 

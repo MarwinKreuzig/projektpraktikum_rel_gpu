@@ -18,6 +18,7 @@
 #include "../source/structure/OctreeNode.h"
 #include "../source/util/MemoryHolder.h"
 #include "../source/util/RelearnException.h"
+#include "../source/util/TaggedID.h"
 
 #include <chrono>
 #include <cmath>
@@ -149,9 +150,9 @@ protected:
         return uid_num_synapses(mt);
     }
 
-    size_t get_random_neuron_id(size_t number_neurons) {
+    NeuronID get_random_neuron_id(size_t number_neurons) {
         std::uniform_int_distribution<size_t> uid(0, number_neurons - 1);
-        return uid(mt);
+        return NeuronID{ uid(mt) };
     }
 
     int get_random_synapse_weight() {
@@ -162,8 +163,8 @@ protected:
         return get_random_integer<unsigned int>(0, 10);
     }
 
-    std::vector<std::tuple<size_t, size_t, int>> get_random_synapses(size_t number_neurons, size_t number_synapses) {
-        std::vector<std::tuple<size_t, size_t, int>> synapses(number_synapses);
+    std::vector<std::tuple<NeuronID, NeuronID, int>> get_random_synapses(size_t number_neurons, size_t number_synapses) {
+        std::vector<std::tuple<NeuronID, NeuronID, int>> synapses(number_synapses);
 
         for (auto i = 0; i < number_synapses; i++) {
             const auto source_id = get_random_neuron_id(number_neurons);
@@ -283,7 +284,7 @@ protected:
     void generate_neuron_positions(std::vector<Vec3d>& positions,
         std::vector<std::string>& area_names, std::vector<SignalType>& types);
 
-    void generate_synapses(std::vector<std::tuple<size_t, size_t, int>>& synapses, size_t number_neurons);
+    void generate_synapses(std::vector<std::tuple<NeuronID, NeuronID, int>>& synapses, size_t number_neurons);
 };
 
 class NeuronModelsTest : public RelearnTest {
@@ -362,4 +363,21 @@ private:
 };
 
 class SpaceFillingCurveTest : public RelearnTest {
+};
+
+template <typename T>
+class TaggedIDTest : public RelearnTest {
+protected:
+    template <typename U>
+    [[nodiscard]] U get_random_integer(const std::integral auto min, const std::integral auto max) {
+        std::uniform_int_distribution<U> uid(min, max);
+        return uid(mt);
+    }
+
+    [[nodiscard]] bool get_random_bool() {
+        std::uniform_int_distribution<std::uint8_t> uid(0, 1);
+        return 0U == uid(mt);
+    }
+
+    static_assert(sizeof(typename TaggedID<T>::value_type) == sizeof(T));
 };

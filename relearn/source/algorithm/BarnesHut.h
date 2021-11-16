@@ -195,17 +195,17 @@ private:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
      */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const position_type& axon_pos_xyz, SignalType dendrite_type_needed);
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz, SignalType dendrite_type_needed);
 
     [[nodiscard]] double
     calc_attractiveness_to_connect(
-        size_t src_neuron_id,
+        const NeuronID& src_neuron_id,
         const position_type& axon_pos_xyz,
         const OctreeNode<BarnesHutCell>& node_with_dendrite,
         SignalType dendrite_type_needed) const;
 
     [[nodiscard]] std::pair<double, std::vector<double>> create_interval(
-        size_t src_neuron_id,
+        const NeuronID& src_neuron_id,
         const position_type& axon_pos_xyz,
         SignalType dendrite_type_needed,
         const std::vector<OctreeNode<BarnesHutCell>*>& vector) const;

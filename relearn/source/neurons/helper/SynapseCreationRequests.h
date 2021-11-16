@@ -12,6 +12,7 @@
 
 #include "../../util/RelearnException.h"
 #include "../SignalType.h"
+#include "../../util/TaggedID.h"
 
 #include <map>
 #include <vector>
@@ -53,11 +54,11 @@ public:
      * @param target_neuron_id The local (to the other rank) neuron id of the requested neuron
      * @param dendrite_type_needed The required type, coded with 0 for excitatory and 1 for inhibitory
      */
-    void append(const size_t source_neuron_id, const size_t target_neuron_id, const size_t dendrite_type_needed) {
+    void append(const NeuronID& source_neuron_id, const NeuronID& target_neuron_id, const size_t dendrite_type_needed) {
         num_requests++;
 
-        requests.push_back(source_neuron_id);
-        requests.push_back(target_neuron_id);
+        requests.push_back(source_neuron_id.id);
+        requests.push_back(target_neuron_id.id);
         requests.push_back(dendrite_type_needed);
 
         responses.resize(responses.size() + 1);
@@ -70,7 +71,7 @@ public:
      * @param target_neuron_id The local (to the other rank) neuron id of the requested neuron
      * @param dendrite_type_needed The required type as enum
      */
-    void append(const size_t source_neuron_id, const size_t target_neuron_id, const SignalType dendrite_type_needed) {
+    void append(const NeuronID& source_neuron_id, const NeuronID& target_neuron_id, const SignalType dendrite_type_needed) {
         size_t dendrite_type_val = 0;
 
         if (dendrite_type_needed == SignalType::INHIBITORY) {
@@ -88,18 +89,18 @@ public:
      * @return A tuple consisting of the local neuron id of source and target, and a enum that
      *       indicates whether it is an excitatory or inhibitory request
      */
-    [[nodiscard]] std::tuple<size_t, size_t, SignalType> get_request(const size_t request_index) const {
+    [[nodiscard]] std::tuple<NeuronID, NeuronID, SignalType> get_request(const size_t request_index) const {
         RelearnException::check(request_index < num_requests, "SynapseCreationRequests::get_request: index out of bounds: {} vs {}", request_index, num_requests);
 
         const size_t base_index = 3 * request_index;
 
-        const size_t source_neuron_id = requests[base_index];
-        const size_t target_neuron_id = requests[base_index + 1];
-        const size_t dendrite_type_needed = requests[base_index + 2];
+        const auto source_neuron_id = requests[base_index];
+        const auto target_neuron_id = requests[base_index + 1];
+        const auto dendrite_type_needed = requests[base_index + 2];
 
         const SignalType dendrite_type_needed_converted = (dendrite_type_needed == 0) ? SignalType::EXCITATORY : SignalType::INHIBITORY;
 
-        return std::make_tuple(source_neuron_id, target_neuron_id, dendrite_type_needed_converted);
+        return { NeuronID{ source_neuron_id }, NeuronID{ target_neuron_id }, dendrite_type_needed_converted };
     }
 
     /**

@@ -28,19 +28,17 @@ class Partition;
  */
 class SynapseLoader {
 public:
-    using neuron_id = size_t;
-
-    using LocalSynapse = std::tuple<neuron_id, neuron_id, int>;
-    using InSynapse = std::tuple<RankNeuronId, neuron_id, int>;
-    using OutSynapse = std::tuple<neuron_id, RankNeuronId, int>;
+    using LocalSynapse = std::tuple<NeuronID, NeuronID, int>;
+    using InSynapse = std::tuple<RankNeuronId, NeuronID, int>;
+    using OutSynapse = std::tuple<NeuronID, RankNeuronId, int>;
 
     using LocalSynapses = std::vector<LocalSynapse>;
     using InSynapses = std::vector<InSynapse>;
     using OutSynapses = std::vector<OutSynapse>;
 
 protected:
-    using source_neuron_id = neuron_id;
-    using target_neuron_id = neuron_id;
+    using source_neuron_id = NeuronID;
+    using target_neuron_id = NeuronID;
 
     using synapse_weight = int;
 
@@ -58,7 +56,7 @@ protected:
     std::shared_ptr<Partition> partition{};
     std::shared_ptr<NeuronIdTranslator> nit{};
 
-    virtual std::pair<synapses_tuple_type, std::vector<neuron_id>> internal_load_synapses() = 0;
+    virtual std::pair<synapses_tuple_type, std::vector<NeuronID>> internal_load_synapses() = 0;
 
 public:
     /**
@@ -87,7 +85,7 @@ class FileSynapseLoader : public SynapseLoader {
     std::optional<std::filesystem::path> optional_path_to_file{};
 
 protected:
-    std::pair<synapses_tuple_type, std::vector<neuron_id>> internal_load_synapses() override;
+    std::pair<synapses_tuple_type, std::vector<NeuronID>> internal_load_synapses() override;
 
 public:
     /**
@@ -97,7 +95,7 @@ public:
      * @param neuron_id_translator The neuron id translator that is used to determine if neuron ids are local
      * @param path_to_synapses The path to the synapses, can be empty
      */
-    FileSynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator, 
+    FileSynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator,
         const std::optional<std::filesystem::path>& path_to_synapses)
         : SynapseLoader(std::move(partition), std::move(neuron_id_translator))
         , optional_path_to_file(path_to_synapses) { }
@@ -105,8 +103,8 @@ public:
 
 class RandomSynapseLoader : public SynapseLoader {
 protected:
-    std::pair<synapses_tuple_type, std::vector<neuron_id>> internal_load_synapses() override {
-        return std::pair<synapses_tuple_type, std::vector<neuron_id>>();
+    std::pair<synapses_tuple_type, std::vector<NeuronID>> internal_load_synapses() override {
+        return std::pair<synapses_tuple_type, std::vector<NeuronID>>();
     }
 
 public:

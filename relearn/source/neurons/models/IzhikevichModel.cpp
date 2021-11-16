@@ -73,7 +73,7 @@ void models::IzhikevichModel::create_neurons(const size_t creation_count) {
     init_neurons(old_size, creation_count);
 }
 
-void IzhikevichModel::update_activity(const size_t neuron_id) {
+void IzhikevichModel::update_activity(const NeuronID& neuron_id) {
     const auto h = get_h();
     const auto I_syn = get_I_syn(neuron_id);
     auto x = get_x(neuron_id);
@@ -81,12 +81,12 @@ void IzhikevichModel::update_activity(const size_t neuron_id) {
     auto has_spiked = false;
 
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-        x += iter_x(x, u[neuron_id], I_syn) / h;
-        u[neuron_id] += iter_refrac(u[neuron_id], x) / h;
+        x += iter_x(x, u[neuron_id.id], I_syn) / h;
+        u[neuron_id.id] += iter_refrac(u[neuron_id.id], x) / h;
 
         if (spiked(x)) {
             x = c;
-            u[neuron_id] += d;
+            u[neuron_id.id] += d;
             has_spiked = true;
             break;
         }
@@ -100,9 +100,9 @@ void IzhikevichModel::init_neurons(const size_t start_id, const size_t end_id) {
     for (size_t neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
         const auto x = c;
         u[neuron_id] = iter_refrac(b * c, x);
-
-        set_fired(neuron_id, x >= V_spike);
-        set_x(neuron_id, x);
+        const auto id = NeuronID{ neuron_id };
+        set_fired(id, x >= V_spike);
+        set_x(id, x);
     }
 }
 

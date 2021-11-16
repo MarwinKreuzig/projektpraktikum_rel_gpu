@@ -124,7 +124,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
         const auto signal_type = signal_types[i];
 
-        Node node{ pos, i, signal_type, "random" };
+        Node node{ pos, NeuronID{ i }, signal_type, "random" };
         nodes.emplace(node);
 
         placed_neurons++;
@@ -193,7 +193,7 @@ void SubdomainFromNeuronDensity::calculate_total_number_neurons() const {
     set_total_number_placed_neurons(total_number);
 }
 
-std::vector<size_t> SubdomainFromNeuronDensity::get_neuron_global_ids_in_subdomain([[maybe_unused]] const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {
+std::vector<NeuronID> SubdomainFromNeuronDensity::get_neuron_global_ids_in_subdomain([[maybe_unused]] const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {
 
     return {};
 }

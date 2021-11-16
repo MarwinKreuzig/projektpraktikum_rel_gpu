@@ -23,7 +23,7 @@
 #include <array>
 #include <stack>
 
-[[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(const size_t src_neuron_id, const position_type& axon_pos_xyz, const SignalType dendrite_type_needed) {
+[[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz, const SignalType dendrite_type_needed) {
     OctreeNode<BarnesHutCell>* node_selected = nullptr;
     OctreeNode<BarnesHutCell>* root_of_subtree = global_tree->get_root();
 
@@ -123,8 +123,10 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
             dendrite_type_needed = SignalType::INHIBITORY;
         }
 
+        const auto id = NeuronID{ neuron_id };
+
         // Position of current neuron
-        const auto& axon_xyz_pos = extra_infos->get_position(neuron_id);
+        const auto& axon_xyz_pos = extra_infos->get_position(id);
 
         // For all vacant axons of neuron "neuron_id"
         for (size_t j = 0; j < num_vacant_axons; j++) {
@@ -137,7 +139,7 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
              * Right now, those collisions are handled in a first-come-first-served fashion.
              */
 
-            std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
+            std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(id, axon_xyz_pos, dendrite_type_needed);
 
             if (rank_neuron_id.has_value()) {
                 RankNeuronId val = rank_neuron_id.value();
@@ -146,7 +148,7 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
                  * Note that "target_rank" could also be my own rank.
                  */
 #pragma omp critical
-                synapse_creation_requests_outgoing[val.get_rank()].append(neuron_id, val.get_neuron_id(), dendrite_type_needed);
+                synapse_creation_requests_outgoing[val.get_rank()].append(id, val.get_neuron_id(), dendrite_type_needed);
             }
         } /* all vacant axons of a neuron */
     } /* my neurons */
@@ -196,9 +198,9 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
         RelearnException::check(node != nullptr, "BarnesHut::update_leaf_nodes: node was nullptr: {}", neuron_id);
 
         const auto& cell = node->get_cell();
-        const size_t other_neuron_id = cell.get_neuron_id();
+        const auto other_neuron_id = cell.get_neuron_id();
 
-        RelearnException::check(neuron_id == other_neuron_id, "BarnesHut::update_leaf_nodes: The nodes are not in order");
+        RelearnException::check(neuron_id == other_neuron_id.id, "BarnesHut::update_leaf_nodes: The nodes are not in order");
 
         const auto& [cell_xyz_min, cell_xyz_max] = cell.get_size();
         const auto& opt_excitatory_position = cell.get_excitatory_dendrites_position();
@@ -227,7 +229,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     }
 }
 
-[[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(const size_t src_neuron_id, const position_type& axon_pos_xyz,
+[[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz,
     const OctreeNode<BarnesHutCell>& node_with_dendrite, const SignalType dendrite_type_needed) const {
     /**
      * If the axon's neuron itself is considered as target neuron, set attractiveness to 0 to avoid forming an autapse (connection to itself).
@@ -259,7 +261,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     return ret_val;
 }
 
-[[nodiscard]] std::pair<double, std::vector<double>> BarnesHut::create_interval(const size_t src_neuron_id, const position_type& axon_pos_xyz,
+[[nodiscard]] std::pair<double, std::vector<double>> BarnesHut::create_interval(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz,
     const SignalType dendrite_type_needed, const std::vector<OctreeNode<BarnesHutCell>*>& vector) const {
 
     if (vector.empty()) {

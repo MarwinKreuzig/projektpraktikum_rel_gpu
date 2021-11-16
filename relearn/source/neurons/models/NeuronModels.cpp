@@ -59,7 +59,7 @@ void NeuronModel::update_electrical_activity_update_activity(const std::vector<U
             continue;
         }
 
-        update_activity(neuron_id);
+        update_activity(NeuronID{ neuron_id });
     }
 
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
@@ -75,22 +75,23 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
             continue;
         }
 
+        NeuronID id{ neuron_id };
         /**
          * Determine synaptic input from neurons connected to me
          */
 
         // Walk through the local in-edges of my neuron
-        const NetworkGraph::LocalEdges& local_in_edges = network_graph.get_local_in_edges(neuron_id);
+        const NetworkGraph::LocalEdges& local_in_edges = network_graph.get_local_in_edges(id);
 
         for (const auto& [src_neuron_id, edge_val] : local_in_edges) {
-            const auto spike = fired[src_neuron_id];
+            const auto spike = fired[src_neuron_id.id];
             if (spike != 0) {
                 I_syn[neuron_id] += k * edge_val;
             }
         }
 
         // Walk through the distant in-edges of my neuron
-        const NetworkGraph::DistantEdges& in_edges = network_graph.get_distant_in_edges(neuron_id);
+        const NetworkGraph::DistantEdges& in_edges = network_graph.get_distant_in_edges(id);
 
         for (const auto& [key, edge_val] : in_edges) {
             const auto& rank = key.get_rank();
@@ -243,8 +244,10 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_
             continue;
         }
 
+        const auto id = NeuronID{ neuron_id };
+
         // Don't send firing neuron id to myself as I already have this info
-        const NetworkGraph::DistantEdges& distant_out_edges = network_graph.get_distant_out_edges(neuron_id);
+        const NetworkGraph::DistantEdges& distant_out_edges = network_graph.get_distant_out_edges(id);
 
         // Find all target neurons which should receive the signal fired.
         // That is, neurons which connect axons from neuron "neuron_id"
@@ -253,7 +256,7 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_
 
             // Function expects to insert neuron ids in sorted order
             // Append if it is not already in
-            firing_neuron_ids_outgoing[target_rank].append(neuron_id);
+            firing_neuron_ids_outgoing[target_rank].append(id);
         }
     } // For my neurons
     Timers::stop_and_add(TimerRegion::PREPARE_SENDING_SPIKES);

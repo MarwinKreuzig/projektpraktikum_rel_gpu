@@ -15,6 +15,7 @@
 #include "../neurons/SignalType.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
+#include "../util/TaggedID.h"
 
 #include <optional>
 #include <ostream>
@@ -37,7 +38,7 @@ public:
      * @brief Sets the neuron id for the associated cell. Can be set to Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
      * @param neuron_id The neuron id, can be Constants::uninitialized
      */
-    void set_neuron_id(const size_t neuron_id) noexcept {
+    void set_neuron_id(const NeuronID& neuron_id) noexcept {
         this->neuron_id = neuron_id;
     }
 
@@ -45,7 +46,7 @@ public:
      * @brief Returns the neuron id for the associated cell. Is Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
      * @return The neuron id
      */
-    [[nodiscard]] size_t get_neuron_id() const noexcept {
+    [[nodiscard]] NeuronID get_neuron_id() const noexcept {
         return neuron_id;
     }
 
@@ -208,7 +209,7 @@ private:
      * For those with a super neuron, it has no meaning.
      * This info is used to identify (return) the target neuron for a given axon
      */
-    size_t neuron_id{ Constants::uninitialized };
+    NeuronID neuron_id{ NeuronID::uninitialized_id() };
 
     // Two points describe size of cell
     box_size_type minimum_position{ Constants::uninitialized };

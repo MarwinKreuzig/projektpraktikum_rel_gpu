@@ -49,7 +49,7 @@ public:
     /**
      * @brief This method is not implemented for this class
      */
-    [[nodiscard]] std::vector<size_t> get_neuron_global_ids_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const override;
+    [[nodiscard]] std::vector<NeuronID> get_neuron_global_ids_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const override;
 
     /**
      * @brief Returns a function object that is used to fix calculated subdomain boundaries.

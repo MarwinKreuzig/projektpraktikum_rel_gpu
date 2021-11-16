@@ -27,8 +27,8 @@ NeuronIdTranslator::NeuronIdTranslator(std::shared_ptr<Partition> partition)
     global_neuron_ids.resize(this->partition->get_number_local_subdomains());
 }
 
-bool NeuronIdTranslator::is_neuron_local(size_t global_id) const {
-    for (const auto& global_ids: global_neuron_ids) {
+bool NeuronIdTranslator::is_neuron_local(NeuronID global_id) const {
+    for (const auto& global_ids : global_neuron_ids) {
         const bool found = std::binary_search(global_ids.begin(), global_ids.end(), global_id);
         if (found) {
             return true;
@@ -38,8 +38,8 @@ bool NeuronIdTranslator::is_neuron_local(size_t global_id) const {
     return false;
 }
 
-size_t NeuronIdTranslator::get_local_id(size_t global_id) const {
-    size_t id = 0;
+NeuronID NeuronIdTranslator::get_local_id(NeuronID global_id) const {
+    NeuronID id{ 0 };
 
     for (const auto& ids : global_neuron_ids) {
         const auto pos = std::lower_bound(ids.begin(), ids.end(), global_id);
@@ -53,18 +53,18 @@ size_t NeuronIdTranslator::get_local_id(size_t global_id) const {
     }
 
     RelearnException::fail("Partition::is_neuron_local: Didn't find global id {}", global_id);
-    return 0;
+    return {};
 }
 
-size_t NeuronIdTranslator::get_global_id(size_t local_id) const {
+NeuronID NeuronIdTranslator::get_global_id(NeuronID local_id) const {
     size_t counter = 0;
     for (auto i = 0; i < partition->get_number_local_subdomains(); i++) {
         const size_t old_counter = counter;
 
         counter += global_neuron_ids[i].size();
-        if (local_id < counter) {
-            const size_t local_local_id = local_id - old_counter;
-            return global_neuron_ids[i][local_local_id];
+        if (local_id.id < counter) {
+            const NeuronID local_local_id = local_id - old_counter;
+            return global_neuron_ids[i][local_local_id.id];
         }
     }
 
@@ -79,8 +79,8 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
     const int mpi_rank = MPIWrapper::get_my_rank();
     const int num_ranks = MPIWrapper::get_num_ranks();
 
-    std::vector<neuron_id> num_foreign_ids_from_ranks_send(num_ranks, 0);
-    std::vector<neuron_id> num_foreign_ids_from_ranks(num_ranks, 0);
+    std::vector<size_t> num_foreign_ids_from_ranks_send(num_ranks, 0);
+    std::vector<size_t> num_foreign_ids_from_ranks(num_ranks, 0);
 
     std::vector<std::vector<neuron_id>> global_ids_to_send(num_ranks);
     std::vector<std::vector<neuron_id>> global_ids_to_receive(num_ranks);
@@ -118,7 +118,7 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
             continue;
         }
 
-        size_t* buffer = global_ids_to_receive[rank].data();
+        auto* buffer = global_ids_to_receive[rank].data();
         const auto size_in_bytes = static_cast<int>(global_ids_to_receive[rank].size() * sizeof(size_t));
 
         MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[request_counter]);
@@ -130,7 +130,7 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
             continue;
         }
 
-        const size_t* buffer = global_ids_to_send[rank].data();
+        const auto* buffer = global_ids_to_send[rank].data();
         const auto size_in_bytes = static_cast<int>(global_ids_to_send[rank].size() * sizeof(size_t));
 
         // Reserve enough space for the answer - it will be as long as the request
@@ -156,7 +156,7 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
             continue;
         }
 
-        size_t* buffer = global_ids_local_value[rank].data();
+        auto* buffer = global_ids_local_value[rank].data();
         const auto size_in_bytes = static_cast<int>(global_ids_local_value[rank].size() * sizeof(size_t));
 
         MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[request_counter]);
@@ -168,7 +168,7 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
             continue;
         }
 
-        const size_t* buffer = global_ids_to_receive[rank].data();
+        const auto* buffer = global_ids_to_receive[rank].data();
         const auto size_in_bytes = static_cast<int>(global_ids_to_receive[rank].size() * sizeof(size_t));
 
         MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[request_counter]);
@@ -216,7 +216,7 @@ std::map<FileNeuronIdTranslator::neuron_id, FileNeuronIdTranslator::position_typ
             continue;
         }
 
-        neuron_id id{};
+        size_t read_id{};
         position_type::value_type pos_x = 0.0;
         position_type::value_type pos_y = 0.0;
         position_type::value_type pos_z = 0.0;
@@ -224,7 +224,7 @@ std::map<FileNeuronIdTranslator::neuron_id, FileNeuronIdTranslator::position_typ
         std::string type{};
 
         std::stringstream sstream(line);
-        const bool success = (sstream >> id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> area_name) && (sstream >> type);
+        const bool success = (sstream >> read_id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> area_name) && (sstream >> type);
 
         if (!success) {
             spdlog::info("Skipping line: \"{}\"", line);
@@ -232,7 +232,8 @@ std::map<FileNeuronIdTranslator::neuron_id, FileNeuronIdTranslator::position_typ
         }
 
         // File starts at 1
-        id--;
+        --read_id;
+        neuron_id id{ read_id };
 
         if (std::binary_search(global_ids.cbegin(), global_ids.cend(), id)) {
             translation_map[id] = { pos_x, pos_y, pos_z };
@@ -276,7 +277,7 @@ std::map<RandomNeuronIdTranslator::neuron_id, RankNeuronId> RandomNeuronIdTransl
 
     if (num_ranks == 1) {
         for (const auto& global_id : global_ids) {
-            RelearnException::check(global_id < number_local_neurons,
+            RelearnException::check(global_id.id < number_local_neurons,
                 "RandomNeuronIdTranslator::translate_global_ids: Global id ({}) is too large for the number of local neurons ({})", global_id, number_local_neurons);
 
             return_value.emplace(global_id, RankNeuronId{ 0, global_id });
@@ -290,7 +291,8 @@ std::map<RandomNeuronIdTranslator::neuron_id, RankNeuronId> RandomNeuronIdTransl
         auto current_rank = 1;
         auto current_start = mpi_rank_to_local_start_id[current_rank];
 
-        while (current_start <= global_id) {
+        const auto id = global_id.id;
+        while (current_start <= id) {
             last_rank++;
             current_rank++;
 
@@ -301,10 +303,10 @@ std::map<RandomNeuronIdTranslator::neuron_id, RankNeuronId> RandomNeuronIdTransl
             current_start = mpi_rank_to_local_start_id[current_rank];
         }
 
-        RelearnException::check(global_id >= current_start, "RandomNeuronIdTranslator::translate_global_ids: Error in while loop");
+        RelearnException::check(global_id.id >= current_start, "RandomNeuronIdTranslator::translate_global_ids: Error in while loop");
 
         if (current_rank < num_ranks) {
-            RelearnException::check(global_id < current_rank, "RandomNeuronIdTranslator::translate_global_ids: While loop breaked too early");
+            RelearnException::check(global_id.id < current_rank, "RandomNeuronIdTranslator::translate_global_ids: While loop breaked too early");
         }
 
         const auto local_id = global_id - current_start;
@@ -319,12 +321,12 @@ RandomNeuronIdTranslator::neuron_id RandomNeuronIdTranslator::translate_rank_neu
     const auto& [rank, local_neuron_id] = rni;
     RelearnException::check(rank >= 0, "RandomNeuronIdTranslator::translate_rank_neuron_ids: There was a negative MPI rank");
     RelearnException::check(rank < mpi_rank_to_local_start_id.size(), "RandomNeuronIdTranslator::translate_rank_neuron_ids: The requested MPI rank is not stored");
-    RelearnException::check(local_neuron_id < Constants::uninitialized, "RandomNeuronIdTranslator::translate_rank_neuron_ids: The requested neuron id is unitialized");
+    RelearnException::check(local_neuron_id.is_initialized, "RandomNeuronIdTranslator::translate_rank_neuron_ids: The requested neuron id is unitialized");
 
-    const auto glob_id = mpi_rank_to_local_start_id[rank] + local_neuron_id;
+    const auto glob_id = local_neuron_id + mpi_rank_to_local_start_id[rank];
 
-    if (local_neuron_id < mpi_rank_to_local_start_id.size() - 1) {
-        RelearnException::check(glob_id < mpi_rank_to_local_start_id[rank + 1ULL], "RandomNeuronIdTranslator::translate_rank_neuron_ids: The translated id exceeded the starting id of the next rank");
+    if (local_neuron_id.id < mpi_rank_to_local_start_id.size() - 1) {
+        RelearnException::check(glob_id.id < mpi_rank_to_local_start_id[rank + 1ULL], "RandomNeuronIdTranslator::translate_rank_neuron_ids: The translated id exceeded the starting id of the next rank");
     }
 
     return glob_id;
@@ -337,12 +339,12 @@ std::map<RankNeuronId, RandomNeuronIdTranslator::neuron_id> RandomNeuronIdTransl
         const auto& [rank, local_neuron_id] = id;
         RelearnException::check(rank >= 0, "RandomNeuronIdTranslator::translate_rank_neuron_ids: There was a negative MPI rank");
         RelearnException::check(rank < mpi_rank_to_local_start_id.size(), "RandomNeuronIdTranslator::translate_rank_neuron_ids: The requested MPI rank is not stored");
-        RelearnException::check(local_neuron_id < Constants::uninitialized, "RandomNeuronIdTranslator::translate_rank_neuron_ids: The requested neuron id is unitialized");
+        RelearnException::check(local_neuron_id.is_initialized, "RandomNeuronIdTranslator::translate_rank_neuron_ids: The requested neuron id is unitialized");
 
-        const auto glob_id = mpi_rank_to_local_start_id[rank] + local_neuron_id;
+        const auto glob_id = local_neuron_id + mpi_rank_to_local_start_id[rank];
 
-        if (local_neuron_id < mpi_rank_to_local_start_id.size() - 1) {
-            RelearnException::check(glob_id < mpi_rank_to_local_start_id[rank + 1ULL], "RandomNeuronIdTranslator::translate_rank_neuron_ids: The translated id exceeded the starting id of the next rank");
+        if (local_neuron_id.id < mpi_rank_to_local_start_id.size() - 1) {
+            RelearnException::check(glob_id.id < mpi_rank_to_local_start_id[rank + 1ULL], "RandomNeuronIdTranslator::translate_rank_neuron_ids: The translated id exceeded the starting id of the next rank");
         }
 
         return_value.emplace(id, glob_id);

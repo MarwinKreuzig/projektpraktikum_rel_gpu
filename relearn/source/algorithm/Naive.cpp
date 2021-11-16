@@ -23,7 +23,7 @@
 #include <array>
 #include <stack>
 
-[[nodiscard]] std::optional<RankNeuronId> Naive::find_target_neuron(const size_t src_neuron_id, const position_type& axon_pos_xyz, const SignalType dendrite_type_needed) {
+[[nodiscard]] std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz, const SignalType dendrite_type_needed) {
     OctreeNode<NaiveCell>* node_selected = nullptr;
     OctreeNode<NaiveCell>* root_of_subtree = global_tree->get_root();
 
@@ -118,8 +118,10 @@ MapSynapseCreationRequests Naive::find_target_neurons(const size_t number_neuron
             dendrite_type_needed = SignalType::INHIBITORY;
         }
 
+        const auto id = NeuronID{ neuron_id };
+
         // Position of current neuron
-        const Vec3d axon_xyz_pos = extra_infos->get_position(neuron_id);
+        const Vec3d axon_xyz_pos = extra_infos->get_position(id);
 
         // For all vacant axons of neuron "neuron_id"
         for (size_t j = 0; j < num_vacant_axons; j++) {
@@ -131,7 +133,7 @@ MapSynapseCreationRequests Naive::find_target_neurons(const size_t number_neuron
              * as other axons might already have connected to them.
              * Right now, those collisions are handled in a first-come-first-served fashion.
              */
-            std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
+            std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(id, axon_xyz_pos, dendrite_type_needed);
 
             if (rank_neuron_id.has_value()) {
                 RankNeuronId val = rank_neuron_id.value();
@@ -139,7 +141,7 @@ MapSynapseCreationRequests Naive::find_target_neurons(const size_t number_neuron
                  * Append request for synapse creation to rank "target_rank"
                  * Note that "target_rank" could also be my own rank.
                  */
-                synapse_creation_requests_outgoing[val.get_rank()].append(neuron_id, val.get_neuron_id(), dendrite_type_needed);
+                synapse_creation_requests_outgoing[val.get_rank()].append(id, val.get_neuron_id(), dendrite_type_needed);
             }
         } /* all vacant axons of a neuron */
     } /* my neurons */
@@ -186,9 +188,9 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags, co
 
         RelearnException::check(node != nullptr, "Naive::update_leaf_nodes: node was nullptr: ", neuron_id);
 
-        const size_t other_neuron_id = node->get_cell().get_neuron_id();
+        const auto other_neuron_id = node->get_cell().get_neuron_id();
 
-        RelearnException::check(neuron_id == other_neuron_id, "Naive::update_leaf_nodes: The nodes are not in order");
+        RelearnException::check(NeuronID{ neuron_id } == other_neuron_id, "Naive::update_leaf_nodes: The nodes are not in order");
 
         if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
@@ -201,7 +203,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags, co
     }
 }
 
-[[nodiscard]] double Naive::calc_attractiveness_to_connect(const size_t src_neuron_id, const position_type& axon_pos_xyz,
+[[nodiscard]] double Naive::calc_attractiveness_to_connect(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz,
     const OctreeNode<NaiveCell>& node_with_dendrite, const SignalType dendrite_type_needed) const {
 
     /**
@@ -232,7 +234,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags, co
     return ret_val;
 }
 
-[[nodiscard]] std::vector<double> Naive::create_interval(const size_t src_neuron_id, const position_type& axon_pos_xyz,
+[[nodiscard]] std::vector<double> Naive::create_interval(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz,
     const SignalType dendrite_type_needed, const std::vector<OctreeNode<NaiveCell>*>& vector) const {
 
     if (vector.empty()) {

@@ -284,12 +284,14 @@ void CellTest::test_cell_set_neuron_id() {
     Cell<AdditionalCellAttributes> cell{};
 
     const auto neuron_id_1 = get_random_number_neurons();
-    cell.set_neuron_id(neuron_id_1);
-    ASSERT_EQ(neuron_id_1, cell.get_neuron_id());
+    const auto id1 = NeuronID{ neuron_id_1 };
+    cell.set_neuron_id(id1);
+    ASSERT_EQ(id1, cell.get_neuron_id());
 
     const auto neuron_id_2 = get_random_number_neurons();
-    cell.set_neuron_id(neuron_id_2);
-    ASSERT_EQ(neuron_id_2, cell.get_neuron_id());
+    const auto id2 = NeuronID{ neuron_id_2 };
+    cell.set_neuron_id(id2);
+    ASSERT_EQ(id2, cell.get_neuron_id());
 }
 
 template <typename AdditionalCellAttributes>
