@@ -10,14 +10,14 @@
 
 #include "gtest/gtest.h"
 
-#include "../../../source/algorithm/BarnesHutCell.h"
-#include "../../../source/mpi/MPIWrapper.h"
-#include "../../../source/io/LogFiles.h"
-#include "../../../source/structure/OctreeNode.h"
-#include "../../../source/util/MemoryHolder.h"
-#include "../../../source/util/RelearnException.h"
-#include "../../../source/neurons/ElementType.h"
-#include "../../../source/neurons/SignalType.h"
+#include "../source/algorithm/BarnesHutCell.h"
+#include "../source/io/LogFiles.h"
+#include "../source/mpi/MPIWrapper.h"
+#include "../source/neurons/ElementType.h"
+#include "../source/neurons/SignalType.h"
+#include "../source/structure/OctreeNode.h"
+#include "../source/util/MemoryHolder.h"
+#include "../source/util/RelearnException.h"
 
 #include <chrono>
 #include <cmath>
@@ -290,7 +290,6 @@ class NeuronModelsTest : public RelearnTest {
 };
 
 class RankNeuronIdTest : public RelearnTest {
-
 };
 
 class NeuronsTest : public RelearnTest {
