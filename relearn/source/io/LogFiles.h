@@ -122,7 +122,7 @@ public:
      */
     template <typename FormatString, typename... Args>
     static void write_to_file(const EventType type, const bool also_to_cout, FormatString&& format, Args&&... args) {
-        auto message = fmt::format(format, std::forward<Args>(args)...);
+        auto message = fmt::format(fmt::runtime(std::forward<FormatString>(format)), std::forward<Args>(args)...);
 
         if (also_to_cout) {
             spdlog::info(message);
@@ -144,7 +144,7 @@ public:
     template <typename FormatString, typename... Args>
     static void print_message_rank(const int rank, FormatString&& format, Args&&... args) {
         if (do_i_print(rank)) {
-            write_to_file(LogFiles::EventType::Cout, true, "[INFO:Rank {}] {}", get_my_rank_str(), fmt::format(std::forward<FormatString>(format), std::forward<Args>(args)...));
+            write_to_file(LogFiles::EventType::Cout, true, "[INFO:Rank {}] {}", get_my_rank_str(), fmt::format(fmt::runtime(std::forward<FormatString>(format)), std::forward<Args>(args)...));
         }
     }
 };

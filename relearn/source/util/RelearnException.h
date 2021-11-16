@@ -87,7 +87,7 @@ public:
             throw RelearnException{};
         }
 
-        auto message = fmt::format(std::forward<FormatString>(format), std::forward<Args>(args)...);
+        auto message = fmt::format(fmt::runtime(std::forward<FormatString>(format)), std::forward<Args>(args)...);
         log_message(message);
         throw RelearnException{ std::move(message) };
     }
