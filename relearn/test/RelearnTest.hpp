@@ -30,15 +30,21 @@ protected:
     template <typename AdditionalCellAttributes>
     static void init() {
 
-        if (initialized) {
+        static bool template_initialized = false;
+
+        if (template_initialized) {
             return;
         }
 
-        initialized = true;
+        if (!initialized) {
+            initialized = true;
 
-        char* argument = (char*)"./runTests";
-        MPIWrapper::init(1, &argument);
+            char* argument = (char*)"./runTests";
+            MPIWrapper::init(1, &argument);
+        }
+
         MPIWrapper::init_buffer_octree<AdditionalCellAttributes>();
+        template_initialized = true;
     }
 
     template <typename AdditionalCellAttributes>
