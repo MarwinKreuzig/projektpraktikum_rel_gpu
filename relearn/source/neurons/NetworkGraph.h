@@ -16,10 +16,10 @@
 #include "helper/RankNeuronId.h"
 #include "SignalType.h"
 
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <set>
-#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -440,7 +440,7 @@ public:
      *      (b) the network graph was not initialized with enough storage space
      *      Throws an exception if the allocation of memory fails
      */
-    void add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, const Partition& partition);
+    void add_edges_from_file(const std::filesystem::path& path_synapses, const std::filesystem::path& path_neurons, const Partition& partition);
 
     /**
      * @brief Checks if the specified file contains only synapses between neurons with specified ids (only works locally).
@@ -449,7 +449,7 @@ public:
      * @exception Throws an exception if the allocation of memory fails
      * @return Returns true iff the file has the correct format and only ids in neuron_ids are present
      */
-    [[nodiscard]] static bool check_edges_from_file(const std::string& path_synapses, const std::vector<size_t>& neuron_ids);
+    [[nodiscard]] static bool check_edges_from_file(const std::filesystem::path& path_synapses, const std::vector<size_t>& neuron_ids);
 
     /**
      * @brief Returns a histogram of the local neurons' connectivity
@@ -544,10 +544,10 @@ private:
     static void translate_global_to_local(const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id);
 
     // NOLINTNEXTLINE
-    static void load_neuron_positions(const std::string& path_neurons, std::set<size_t>& foreing_ids, std::map<size_t, position_type>& id_to_pos);
+    static void load_neuron_positions(const std::filesystem::path& path_neurons, std::set<size_t>& foreing_ids, std::map<size_t, position_type>& id_to_pos);
 
     // NOLINTNEXTLINE
-    static void load_synapses(const std::string& path_synapses,
+    static void load_synapses(const std::filesystem::path& path_synapses,
         const Partition& partition,
         std::set<size_t>& foreing_ids,
         std::vector<std::tuple<size_t, size_t, int>>& local_synapses,

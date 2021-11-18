@@ -23,8 +23,9 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <string>
 
-void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const std::string& path_neurons, const Partition& partition) {
+void NetworkGraph::add_edges_from_file(const std::filesystem::path& path_synapses, const std::filesystem::path& path_neurons, const Partition& partition) {
     std::vector<std::tuple<size_t, size_t, int>> local_synapses{};
     std::vector<std::tuple<size_t, size_t, int>> out_synapses{};
     std::vector<std::tuple<size_t, size_t, int>> in_synapses{};
@@ -97,7 +98,7 @@ void NetworkGraph::add_edges_from_file(const std::string& path_synapses, const s
     LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded synapses: {}", total_num_synapses);
 }
 
-bool NetworkGraph::check_edges_from_file(const std::string& path_synapses, const std::vector<size_t>& neuron_ids) {
+bool NetworkGraph::check_edges_from_file(const std::filesystem::path& path_synapses, const std::vector<size_t>& neuron_ids) {
     std::ifstream file_synapses(path_synapses, std::ios::binary | std::ios::in);
 
     std::set<size_t> ids_in_file{};
@@ -296,7 +297,7 @@ void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_
     }
 }
 
-void NetworkGraph::load_neuron_positions(const std::string& path_neurons, std::set<size_t>& foreing_ids, std::map<size_t, position_type>& id_to_pos) {
+void NetworkGraph::load_neuron_positions(const std::filesystem::path& path_neurons, std::set<size_t>& foreing_ids, std::map<size_t, position_type>& id_to_pos) {
     std::string line;
     std::ifstream file_neurons(path_neurons, std::ios::binary | std::ios::in);
 
@@ -338,7 +339,7 @@ void NetworkGraph::load_neuron_positions(const std::string& path_neurons, std::s
 }
 
 void NetworkGraph::load_synapses(
-    const std::string& path_synapses,
+    const std::filesystem::path& path_synapses,
     const Partition& partition,
     std::set<size_t>& foreing_ids,
     std::vector<std::tuple<size_t, size_t, int>>& local_synapses,
