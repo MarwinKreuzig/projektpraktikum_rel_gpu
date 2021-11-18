@@ -25,7 +25,6 @@
 enum class CalculationType { DIRECT,
     HERMITE,
     TAYLOR,
-    SPECIAL, // when boxsize is to big for precise calculation
     };
 
 template <typename T>
@@ -252,10 +251,8 @@ public:
      * @param needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory)
      * @return CalculationType
      */
-    static CalculationType check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, SignalType needed, double sigma);
+    static CalculationType check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, SignalType needed);
 
-    static double calculation_for_big_nodes(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, SignalType needed, double sigma);
-    
     /**
      * @brief Calculates the value of a certain derivative of e^(-t^2) at a desired point.
      * @param t Point for which the calculation is made.

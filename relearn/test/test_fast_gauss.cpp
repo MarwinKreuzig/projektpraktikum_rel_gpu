@@ -778,10 +778,6 @@ TEST_F(OctreeTestFMM, testOctreeSeriesExpansionsFMM) {
                                 auto const taylor = fmm.calc_taylor(source, target, cur_sigma, SignalType::EXCITATORY);
                                 ASSERT_NEAR(direct, taylor, eps);
                             }
-                            case CalculationType::SPECIAL:{
-                                auto const special = fmm. calculation_for_big_nodes(source, target, SignalType::EXCITATORY, cur_sigma);
-                                ASSERT_NEAR(direct, special, eps);
-                            }
                             case CalculationType::DIRECT: {
                             }
                             }
