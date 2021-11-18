@@ -721,6 +721,7 @@ TEST_F(OctreeTestFMM, testOctreeSeriesExpansionsFMM) {
         std::tie(min, max) = get_random_simulation_box_size_FMM(mt);
 
         auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
+
         auto& octree = *octree_ptr;
 
         const size_t num_neurons = uid(mt);
@@ -752,6 +753,7 @@ TEST_F(OctreeTestFMM, testOctreeSeriesExpansionsFMM) {
 
         OctreeNode<AdditionalCellAttributes>* root = octree.get_root();
         auto const children = root->get_children();
+
         for (auto i = 0; i < Constants::number_oct; i++) {
             const auto source = children[i];
             if (source != nullptr) {
@@ -761,18 +763,28 @@ TEST_F(OctreeTestFMM, testOctreeSeriesExpansionsFMM) {
                     for (auto j = 0; j < Constants::number_oct; j++) {
                         auto const target = children[j];
                         if (i != j && target != nullptr && target->get_cell().get_number_excitatory_dendrites() > 0) {
+                            CalculationType current_calculation = fmm.check_calculation_requirements(source, target, SignalType::EXCITATORY, cur_sigma);
+
                             auto const direct = fmm.calc_direct_gauss(source->get_all_axon_positions_for(SignalType::EXCITATORY),
                                 target->get_all_dendrite_positions_for(SignalType::EXCITATORY), cur_sigma);
-                            auto const taylor = fmm.calc_taylor(source, target, cur_sigma, SignalType::EXCITATORY);
-                            auto const hermite = fmm.calc_hermite(source, target, coef, cur_sigma, SignalType::EXCITATORY);
-                            
-                            const auto eps = direct*0.10;
-                            printf("direct  = %f\n", direct);
-                            printf("taylor  = %f\n", taylor);
-                            printf("hermite = %f\n \n", hermite);
-                            ASSERT_NEAR(hermite, taylor, eps);
-                            ASSERT_NEAR(direct, taylor, eps);
-                            ASSERT_NEAR(direct, hermite, eps);
+                            const auto eps = direct * 0.10;
+
+                            switch (current_calculation) {
+                            case CalculationType::HERMITE: {
+                                auto const hermite = fmm.calc_hermite(source, target, coef, cur_sigma, SignalType::EXCITATORY);
+                                ASSERT_NEAR(direct, hermite, eps);
+                            }
+                            case CalculationType::TAYLOR: {
+                                auto const taylor = fmm.calc_taylor(source, target, cur_sigma, SignalType::EXCITATORY);
+                                ASSERT_NEAR(direct, taylor, eps);
+                            }
+                            case CalculationType::SPECIAL:{
+                                auto const special = fmm. calculation_for_big_nodes(source, target, SignalType::EXCITATORY, cur_sigma);
+                                ASSERT_NEAR(direct, special, eps);
+                            }
+                            case CalculationType::DIRECT: {
+                            }
+                            }
                         }
                     }
                 }

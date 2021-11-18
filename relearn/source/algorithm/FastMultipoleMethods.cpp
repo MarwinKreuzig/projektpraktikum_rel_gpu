@@ -41,36 +41,42 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(con
 
     const auto sigma = get_probabilty_parameter();
 
-    const auto source_number_axons = source->get_cell().get_number_axons_for(dendrite_type_needed);
+    interaction_list_type interaction_list{};
     const auto target_list_length = count_non_zero_elements(interaction_list);
 
     std::vector<double> result(target_list_length, 0.0);
-    if (source_number_axons > Constants::max_neurons_in_source) {
-        // There are enough axons in the source box
-        std::array<double, Constants::p3> coefficents = calc_hermite_coefficients(source, sigma, dendrite_type_needed);
-        for (auto i = 0; i < target_list_length; i++) {
-            const auto* current_target = extract_element(interaction_list, i);
-            result[i] = calc_hermite(source, current_target, coefficents, sigma, dendrite_type_needed);
-        }
-
-        return result;
-    }
 
     // There are not enough axons in the source box
     for (auto i = 0; i < target_list_length; i++) {
         const auto* current_target = extract_element(interaction_list, i);
-        const auto target_number_dendrites = current_target->get_cell().get_number_dendrites_for(dendrite_type_needed);
+        CalculationType current_calculation = check_calculation_requirements(source, current_target, dendrite_type_needed, sigma);
 
-        if (target_number_dendrites <= Constants::max_neurons_in_target) {
-            // There are not enough dendrites in the target box
+        switch (current_calculation) {
+        case CalculationType::HERMITE: {
+            std::array<double, Constants::p3> coefficents = calc_hermite_coefficients(source, sigma, dendrite_type_needed);
+            result[0] = calc_hermite(source, current_target, coefficents, sigma, dendrite_type_needed);
+            for (auto j = 1; j < target_list_length; j++) {
+                current_target = extract_element(interaction_list, j);
+                result[j] = calc_hermite(source, current_target, coefficents, sigma, dendrite_type_needed);
+            }
+            return result;
+        }
 
+        case CalculationType::TAYLOR: {
+            result[i] = calc_taylor(source, current_target, sigma, dendrite_type_needed);
+            break;
+        }
+
+        case CalculationType::DIRECT: {
             const auto& target_neuron_positions = current_target->get_all_dendrite_positions_for(dendrite_type_needed);
             const auto& source_neuron_positions = source->get_all_axon_positions_for(dendrite_type_needed);
 
             result[i] = calc_direct_gauss(source_neuron_positions, target_neuron_positions, sigma);
-        } else {
-            // There are enough dendrites in the target box
-            result[i] = calc_taylor(source, current_target, sigma, dendrite_type_needed);
+            break;
+        }
+        case CalculationType::SPECIAL: {
+            result[i] = calculation_for_big_nodes(source, current_target, dendrite_type_needed, sigma);
+        }
         }
     }
 
@@ -102,6 +108,8 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
         }
         return nullptr;
     };
+
+    interaction_list_type interaction_list{};
 
     while (!nodes_with_axons.empty()) {
         std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>> pair = nodes_with_axons[nodes_with_axons.size() - 1];
@@ -245,6 +253,8 @@ MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t num_
     const auto total_number_dendrites_ex = root->get_cell().get_number_excitatory_dendrites();
     const auto total_number_dendrites_in = root->get_cell().get_number_inhibitory_dendrites();
 
+    interaction_list_type interaction_list{};
+
     for (auto i = 0; i < Constants::number_oct; i++) {
         interaction_list[i] = children[i];
     }
@@ -343,6 +353,118 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<char>& disable_fl
             node->set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
         }
     }
+}
+
+CalculationType FastMultipoleMethods::check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, SignalType needed, double sigma) {
+    Vec3d min_t{};
+    Vec3d max_t{};
+    Vec3d min_s{};
+    Vec3d max_s{};
+    std::tie(min_t, max_t) = target->get_size();
+    std::tie(min_s, max_s) = source->get_size();
+    const auto size_t = max_t.get_x() - min_t.get_x();
+    const auto size_s = max_s.get_x() - min_s.get_x();
+    const auto valid_size = 0.5 * sqrt(2 * sigma);
+
+    if (size_t > valid_size || size_s > valid_size) {
+        return CalculationType::SPECIAL;
+    }
+    if (source->get_cell().get_number_axons_for(needed) > Constants::max_neurons_in_source) {
+        return CalculationType::HERMITE;
+    }
+    if (target->get_cell().get_number_dendrites_for(needed) <= Constants::max_neurons_in_target) {
+        return CalculationType::DIRECT;
+    } else {
+        return CalculationType::TAYLOR;
+    }
+}
+
+double FastMultipoleMethods::calculation_for_big_nodes(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, SignalType needed, double sigma) {
+
+    double valid_size = 0.5 * sqrt(2 * sigma);
+    std::vector<const OctreeNode<FastMultipoleMethodsCell>*> stack;
+    stack.reserve(10);
+
+    std::vector<const OctreeNode<FastMultipoleMethodsCell>*> new_sources{};
+    std::vector<const OctreeNode<FastMultipoleMethodsCell>*> new_targets{};
+
+    stack.emplace_back(source);
+    while (!stack.empty()) {
+        const auto current_node = stack[stack.size() - 1];
+        stack.pop_back();
+
+        // ceck node size
+        Vec3d min{};
+        Vec3d max{};
+        std::tie(min, max) = current_node->get_size();
+        auto const node_size = max.get_x() - min.get_x();
+        if (node_size > valid_size && current_node->is_parent()) {
+            const auto children = current_node->get_children();
+            for (unsigned int i = 0; i < Constants::number_oct; i++) {
+                if (children[i] != nullptr && children[i]->get_cell().get_number_axons_for(needed)) {
+                    stack.emplace_back(children[i]);
+                }
+            }
+        } else
+            new_sources.emplace_back(current_node);
+    }
+
+    stack.emplace_back(target);
+    while (!stack.empty()) {
+        const auto current_node = stack[stack.size() - 1];
+        stack.pop_back();
+
+        // ceck node size
+        Vec3d min{};
+        Vec3d max{};
+        std::tie(min, max) = current_node->get_size();
+        auto const node_size = max.get_x() - min.get_x();
+        if (node_size > valid_size) {
+            const auto children = current_node->get_children();
+            for (unsigned int i = 0; i < Constants::number_oct; i++) {
+                if (children[i] != nullptr && children[i]->get_cell().get_number_dendrites_for(needed)) {
+                    stack.emplace_back(children[i]);
+                }
+            }
+        } else
+            new_targets.emplace_back(current_node);
+    }
+
+    double result = 0;
+    for (auto cur_source : new_sources) {
+    break_inner_loop:
+        for (auto cur_target : new_targets) {
+            const auto calc_type = check_calculation_requirements(cur_source, cur_target, needed, sigma);
+
+            switch (calc_type) {
+            case CalculationType::HERMITE: {
+                std::array<double, Constants::p3> coefficents = calc_hermite_coefficients(cur_source, sigma, needed);
+                result += calc_hermite(cur_source, cur_target, coefficents, sigma, needed);
+                for (auto i = 1; i < new_targets.size(); i++) {
+                    result += calc_hermite(source, new_targets[i], coefficents, sigma, needed);
+                }
+                goto break_inner_loop;
+            }
+
+            case CalculationType::TAYLOR: {
+                result += calc_taylor(cur_source, cur_target, sigma, needed);
+                break;
+            }
+
+            case CalculationType::DIRECT: {
+                const auto& target_neuron_positions = cur_target->get_all_dendrite_positions_for(needed);
+                const auto& source_neuron_positions = cur_source->get_all_axon_positions_for(needed);
+
+                result += calc_direct_gauss(source_neuron_positions, target_neuron_positions, sigma);
+                break;
+            }
+            case CalculationType::SPECIAL: {
+                RelearnException::fail("Nodes are still to big.");
+            }
+            }
+        }
+    }
+    return result;
 }
 
 double FastMultipoleMethods::calc_taylor(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const double sigma, const SignalType needed) {
