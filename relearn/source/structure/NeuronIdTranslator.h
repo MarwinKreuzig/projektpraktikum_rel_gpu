@@ -15,14 +15,23 @@
 
 #include <filesystem>
 #include <map>
+#include <memory>
 #include <vector>
+
+class Partition;
 
 class NeuronIdTranslator {
     using position_type = RelearnTypes::position_type;
 
+    std::shared_ptr<Partition> partition{};
+    std::filesystem::path path_to_neurons{};
+
 public:
-    std::map<size_t, RankNeuronId> translate_global_ids(const std::vector<size_t>& global_ids, const std::filesystem::path& path_to_neurons);
+    NeuronIdTranslator(std::shared_ptr<Partition> partition, std::filesystem::path path_to_neurons)
+        : partition(std::move(partition)), path_to_neurons(std::move(path_to_neurons)) { }
+
+    std::map<size_t, RankNeuronId> translate_global_ids(const std::vector<size_t>& global_ids);
 
 private:
-    std::map<size_t, position_type> load_neuron_positions(const std::vector<size_t>& global_ids, const std::filesystem::path& path_neurons);
+    std::map<size_t, position_type> load_neuron_positions(const std::vector<size_t>& global_ids);
 };
