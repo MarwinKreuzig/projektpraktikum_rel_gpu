@@ -38,6 +38,16 @@ public:
     }
 
     /**
+     * @brief Checks if the number of stored requests and responses is 0
+     *
+     * @return true iff there are no requests
+     * @return false else
+     */
+    [[nodiscard]] bool empty() const noexcept {
+        return size() == 0;
+    }
+
+    /**
      * @brief Resizes the object so that it can hold the specified number of requests, allocates the necessary amount of memory
      * @param size The number of requests and responses to the stored
      */

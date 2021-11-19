@@ -95,6 +95,7 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
     const std::unique_ptr<SynapticElements>& axons) {
 
     MapSynapseCreationRequests synapse_creation_requests_outgoing{};
+    std::vector<std::pair<std::mutex, SynapseCreationRequests>> synapse_creation_requests_outgoing_vec(MPIWrapper::get_num_ranks());
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);
 
     const std::vector<double>& axons_cnts = axons->get_grown_elements();
@@ -102,7 +103,7 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
     const std::vector<SignalType>& axons_signal_types = axons->get_signal_types();
 
     // For my neurons
-#pragma omp parallel for shared(axons_cnts, axons_connected_cnts, axons_signal_types, synapse_creation_requests_outgoing)
+#pragma omp parallel for shared(axons_cnts, axons_connected_cnts, axons_signal_types, synapse_creation_requests_outgoing_vec)
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
@@ -116,12 +117,7 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
             continue;
         }
 
-        // DendriteType::EXCITATORY axon
-        SignalType dendrite_type_needed = SignalType::EXCITATORY;
-        if (SignalType::INHIBITORY == axons_signal_types[neuron_id]) {
-            // DendriteType::INHIBITORY axon
-            dendrite_type_needed = SignalType::INHIBITORY;
-        }
+        const SignalType dendrite_type_needed = axons_signal_types[neuron_id];
 
         const auto id = NeuronID{ neuron_id };
 
@@ -138,20 +134,27 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
              * as other axons might already have connected to them.
              * Right now, those collisions are handled in a first-come-first-served fashion.
              */
-
             std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(id, axon_xyz_pos, dendrite_type_needed);
 
             if (rank_neuron_id.has_value()) {
-                RankNeuronId val = rank_neuron_id.value();
+                const RankNeuronId& val = rank_neuron_id.value();
                 /*
                  * Append request for synapse creation to rank "target_rank"
                  * Note that "target_rank" could also be my own rank.
                  */
-#pragma omp critical
-                synapse_creation_requests_outgoing[val.get_rank()].append(id, val.get_neuron_id(), dendrite_type_needed);
+                auto& [mutex, request] = synapse_creation_requests_outgoing_vec[val.get_rank()];
+                auto l = std::lock_guard{ mutex };
+                request.append(id, val.get_neuron_id(), dendrite_type_needed);
             }
         } /* all vacant axons of a neuron */
     } /* my neurons */
+
+    for (int i = 0; i < synapse_creation_requests_outgoing_vec.size(); ++i) {
+        auto& [_, request] = synapse_creation_requests_outgoing_vec[i];
+        if (!request.empty()) {
+            synapse_creation_requests_outgoing.emplace(i, std::move(request));
+        }
+    }
 
     Timers::stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
 
@@ -159,7 +162,6 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
     Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
     NodeCache::empty<BarnesHutCell>();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
-
     return synapse_creation_requests_outgoing;
 }
 
