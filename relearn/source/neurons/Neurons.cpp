@@ -289,15 +289,17 @@ void Neurons::update_calcium() {
         }
 
         // Update calcium depending on the firing
+        auto c = calcium[neuron_id];
         if (fired[neuron_id] == 1) {
             for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-                calcium[neuron_id] += val * (-calcium[neuron_id] / tau_C + beta);
+                c += val * (-c / tau_C + beta);
             }
         } else {
             for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-                calcium[neuron_id] += val * (-calcium[neuron_id] / tau_C);
+                c += val * (-c / tau_C);
             }
         }
+        calcium[neuron_id] = c;
     }
 
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
