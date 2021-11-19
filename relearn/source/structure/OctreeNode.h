@@ -190,8 +190,8 @@ public:
                 parent_node->set_child(new_node, idx);
 
                 /**
-			     * Init this new node properly
-			     */
+                 * Init this new node properly
+                 */
                 const auto& [minimum_position, maximum_position] = parent_node->get_cell().get_size_for_octant(idx);
 
                 new_node->set_cell_size(minimum_position, maximum_position);

@@ -55,13 +55,8 @@
          */
         auto counter = 0;
         auto sum_probabilities = 0.0;
-        while (counter < probability_values.size()) {
-            if (sum_probabilities >= random_number) {
-                break;
-            }
-
+        for (; counter < probability_values.size() && sum_probabilities < random_number; counter++) {
             sum_probabilities += probability_values[counter];
-            counter++;
         }
         node_selected = vector[counter - 1ull];
 
@@ -84,8 +79,7 @@
         root_of_subtree = node_selected;
     }
 
-    RankNeuronId rank_neuron_id{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
-    return rank_neuron_id;
+    return RankNeuronId{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
 }
 
 MapSynapseCreationRequests BarnesHut::find_target_neurons(
@@ -275,11 +269,11 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     std::vector<double> probabilities{};
     probabilities.reserve(vector.size());
 
-    std::for_each(vector.cbegin(), vector.cend(), [&](const OctreeNode<BarnesHutCell>* target_node) {
+    std::transform(vector.begin(), vector.cend(), std::back_inserter(probabilities), [&](const OctreeNode<BarnesHutCell>* target_node) {
         RelearnException::check(target_node != nullptr, "BarnesHut::update_leaf_nodes: target_node was nullptr");
         const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *target_node, dendrite_type_needed);
-        probabilities.push_back(prob);
         sum += prob;
+        return prob;
     });
 
     /**

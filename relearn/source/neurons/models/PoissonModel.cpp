@@ -77,7 +77,7 @@ void PoissonModel::update_activity(const NeuronID& neuron_id) {
     if (refrac[neuron_id.id] == 0) {
         const bool f = x >= theta_values[neuron_id.id];
         set_fired(neuron_id, f); // Decide whether a neuron fires depending on its firing rate
-        refrac[neuron_id.id] = f ? refrac_time : 0; // After having fired, a neuron is in a refractory state
+        refrac[neuron_id.id] = static_cast<unsigned int>(f) * refrac_time; // After having fired, a neuron is in a refractory state
     }
     // Neuron now/still in refractory state
     else {
