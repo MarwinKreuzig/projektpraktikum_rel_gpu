@@ -1412,7 +1412,7 @@ void Neurons::print_positions_to_log_file() {
         RankNeuronId rank_neuron_id{ my_rank, neuron_id };
 
         const auto global_id = extra_info->rank_neuron_id2glob_id(rank_neuron_id);
-        const auto& signal_type_name = (signal_types[neuron_id] == SignalType::EXCITATORY) ? std::string("ex") : std::string("int");
+        const auto& signal_type_name = (signal_types[neuron_id] == SignalType::EXCITATORY) ? std::string("ex") : std::string("in");
 
         LogFiles::write_to_file(LogFiles::EventType::Positions, false,
             "{1:<} {2:<.{0}} {3:<.{0}} {4:<.{0}} {5:<} {6:<}",

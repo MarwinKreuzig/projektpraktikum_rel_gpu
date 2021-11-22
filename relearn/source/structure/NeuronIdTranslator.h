@@ -35,6 +35,8 @@ public:
 
     virtual std::map<neuron_id, RankNeuronId> translate_global_ids(const std::vector<neuron_id>& global_ids) = 0;
 
+    virtual neuron_id translate_rank_neuron_id(const RankNeuronId& rni) = 0;
+
     virtual std::map<RankNeuronId, neuron_id> translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) = 0;
 
     virtual ~NeuronIdTranslator() = default;
@@ -51,6 +53,8 @@ public:
 
     std::map<neuron_id, RankNeuronId> translate_global_ids(const std::vector<neuron_id>& global_ids) override;
 
+    neuron_id translate_rank_neuron_id(const RankNeuronId& rni) override;
+
     std::map<RankNeuronId, neuron_id> translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) override;
 
 private:
@@ -64,6 +68,8 @@ public:
     RandomNeuronIdTranslator(std::shared_ptr<Partition> partition, size_t number_local_neurons);
 
     std::map<neuron_id, RankNeuronId> translate_global_ids(const std::vector<neuron_id>& global_ids) override;
+
+    neuron_id translate_rank_neuron_id(const RankNeuronId& rni) override;
 
     std::map<RankNeuronId, neuron_id> translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) override;
 };
