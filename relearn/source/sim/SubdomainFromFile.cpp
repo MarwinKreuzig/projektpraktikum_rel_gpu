@@ -21,7 +21,7 @@
 #include <iostream>
 #include <sstream>
 
-SubdomainFromFile::SubdomainFromFile(const std::string& file_path)
+SubdomainFromFile::SubdomainFromFile(const std::filesystem::path& file_path, std::shared_ptr<Partition> partition)
     : file(file_path) {
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, "Loading: {} \n", file_path);
 

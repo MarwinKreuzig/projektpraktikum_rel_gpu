@@ -10,10 +10,15 @@
 
 #pragma once
 
+#include "../structure/SynapseLoader.h"
+#include "../structure/NeuronIdTranslator.h"
 #include "NeuronToSubdomainAssignment.h"
 
+#include <memory>
 #include <tuple>
 #include <vector>
+
+class Partition;
 
 /**
  * This class fills every subdomain with neurons at random positions. The size of the simulation box and the number of neurons per
@@ -29,7 +34,7 @@ public:
      * @param um_per_neuron The box length in which a single neuron is placed, must be > 0.0
      * @exception Throws a RelearnException if desired_frac_neurons_exc if not from [0.0, 1.0] or um_per_neuron <= 0.0
      */
-    SubdomainFromNeuronDensity(const size_t num_neurons, const double desired_frac_neurons_exc, const double um_per_neuron);
+    SubdomainFromNeuronDensity(const size_t num_neurons, const double desired_frac_neurons_exc, const double um_per_neuron, std::shared_ptr<Partition> partition);
 
     SubdomainFromNeuronDensity(const SubdomainFromNeuronDensity& other) = delete;
     SubdomainFromNeuronDensity(SubdomainFromNeuronDensity&& other) = delete;
@@ -38,6 +43,14 @@ public:
     SubdomainFromNeuronDensity& operator=(SubdomainFromNeuronDensity&& other) = delete;
 
     ~SubdomainFromNeuronDensity() override = default;
+
+    std::shared_ptr<SynapseLoader> get_synapse_loader() const noexcept override {
+        return synapse_loader;
+    }
+
+    std::shared_ptr<NeuronIdTranslator> get_neuron_id_translator() const noexcept override {
+        return neuron_id_translator;
+    }
 
     /** 
      * @brief Returns the subdomain boundaries for a given subdomain
@@ -74,6 +87,9 @@ public:
     constexpr static double default_um_per_neuron = 26.0;
 
 private:
+    std::shared_ptr<RandomSynapseLoader> synapse_loader{};
+    std::shared_ptr<RandomNeuronIdTranslator> neuron_id_translator{};
+
     const double um_per_neuron_{ default_um_per_neuron }; // Micrometer per neuron in one dimension
 
     void place_neurons_in_area(

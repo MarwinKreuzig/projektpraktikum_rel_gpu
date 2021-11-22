@@ -16,10 +16,14 @@
 #include "../util/Vec3.h"
 
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <tuple>
 #include <vector>
+
+class NeuronIdTranslator;
+class SynapseLoader;
 
 /**
  * This class provides an interface for every algorithm that is used to assign neurons to MPI processes
@@ -36,6 +40,9 @@ public:
 
     NeuronToSubdomainAssignment& operator=(const NeuronToSubdomainAssignment& other) = delete;
     NeuronToSubdomainAssignment& operator=(NeuronToSubdomainAssignment&& other) = delete;
+
+    virtual std::shared_ptr<SynapseLoader> get_synapse_loader() const noexcept = 0;
+    virtual std::shared_ptr<NeuronIdTranslator> get_neuron_id_translator() const noexcept = 0;
 
     /**
      * @brief Returns the total number of neurons that should be placed

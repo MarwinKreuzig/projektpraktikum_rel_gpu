@@ -77,7 +77,8 @@ void generate_neuron_positions(std::vector<Vec3d>& positions,
     auto frac_ex = urd(mt);
     auto um_per_neuron = urd(mt) * 100;
 
-    SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
+    auto part = std::make_shared<Partition>(1, 0);
+    SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron, part };
 
     auto num_neurons_ = sfnd.desired_num_neurons();
 
@@ -113,7 +114,8 @@ TEST_F(NeuronAssignmentTest, test_constructor) {
         auto frac_ex = urd(mt);
         auto um_per_neuron = urd(mt) * 100;
 
-        SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
+        auto part = std::make_shared<Partition>(1, 0);
+        SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron, part };
 
         auto num_neurons_ = sfnd.desired_num_neurons();
         auto frac_ex_ = sfnd.desired_ratio_neurons_exc();
@@ -145,7 +147,8 @@ TEST_F(NeuronAssignmentTest, test_lazily_fill) {
         auto lower_bound_ex = static_cast<size_t>(floor(num_neurons * frac_ex));
         auto upper_bound_ex = static_cast<size_t>(ceil(num_neurons * frac_ex));
 
-        SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
+        auto part = std::make_shared<Partition>(1, 0);
+        SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron, part };
 
         auto box_length = sfnd.get_simulation_box_length().get_maximum();
 
@@ -182,7 +185,8 @@ TEST_F(NeuronAssignmentTest, test_lazily_fill_multiple) {
         auto lower_bound_ex = static_cast<size_t>(floor(num_neurons * frac_ex));
         auto upper_bound_ex = static_cast<size_t>(ceil(num_neurons * frac_ex));
 
-        SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
+        auto part = std::make_shared<Partition>(1, 0);
+        SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron, part };
 
         auto box_length = sfnd.get_simulation_box_length().get_maximum();
 
@@ -228,7 +232,8 @@ TEST_F(NeuronAssignmentTest, test_lazily_fill_positions) {
 
         std::vector<bool> flags(size, false);
 
-        SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
+        auto part = std::make_shared<Partition>(1, 0);
+        SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron, part };
 
         auto box_length = sfnd.get_simulation_box_length().get_maximum();
 
@@ -299,7 +304,8 @@ TEST_F(NeuronAssignmentTest, test_lazily_fill_positions_multiple_subdomains) {
 
         std::vector<bool> flags(size, false);
 
-        SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
+        auto part = std::make_shared<Partition>(1, 0);
+        SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron, part };
 
         auto box_length = sfnd.get_simulation_box_length().get_maximum();
 
@@ -396,7 +402,8 @@ TEST_F(NeuronAssignmentTest, test_multiple_lazily_fill_positions_multiple_subdom
             flags[j] = false;
         }
 
-        SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron };
+        auto part = std::make_shared<Partition>(1, 0);
+        SubdomainFromNeuronDensity sfnd{ num_neurons, frac_ex, um_per_neuron, part };
 
         auto box_length = sfnd.get_simulation_box_length().get_maximum();
 
@@ -536,7 +543,7 @@ TEST_F(NeuronAssignmentTest, test_reloading) {
 
         auto num_neurons = positions.size();
 
-        SubdomainFromFile sff{ "neurons.tmp" };
+        SubdomainFromFile sff{ "neurons.tmp", part };
         part->set_total_num_neurons(sff.get_total_num_neurons_in_file());
 
         const auto box_length = sff.get_simulation_box_length().get_maximum();
@@ -585,7 +592,8 @@ TEST_F(NeuronAssignmentTest, test_reloading_multiple) {
 
         auto num_neurons = positions.size();
 
-        SubdomainFromFile sff{ "neurons.tmp" };
+        auto part = std::make_shared<Partition>(1, 0);
+        SubdomainFromFile sff{ "neurons.tmp", part };
 
         part->set_total_num_neurons(sff.get_total_num_neurons_in_file());
 
@@ -669,16 +677,16 @@ TEST_F(NeuronAssignmentTest, test_neuron_placement_store_and_load) {
     constexpr auto num_neurons = 10;
     constexpr auto frac_neurons_exc = 0.5;
 
+    auto part = std::make_shared<Partition>(1, 0);
     // create from density
-    SubdomainFromNeuronDensity sdnd{ num_neurons, frac_neurons_exc, 26 };
+    SubdomainFromNeuronDensity sdnd{ num_neurons, frac_neurons_exc, 26, part };
     // fill_subdomain
     sdnd.fill_subdomain(subdomain_id, 1, Vec3d{ 0 }, Vec3d{ sdnd.get_simulation_box_length().get_maximum() });
     // save to file
     sdnd.write_neurons_to_file(file);
 
-    auto part = std::make_shared<Partition>(1, 0);
     // load from file
-    SubdomainFromFile sdff{ file };
+    SubdomainFromFile sdff{ file, part };
     part->set_total_num_neurons(sdff.get_total_num_neurons_in_file());
     // fill_subdomain from file
     sdff.fill_subdomain(subdomain_id, 1, Vec3d{ 0 }, Vec3d{ sdff.get_simulation_box_length().get_maximum() });

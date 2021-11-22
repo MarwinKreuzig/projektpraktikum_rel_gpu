@@ -101,13 +101,13 @@ void Simulation::construct_neurons() {
 }
 
 void Simulation::place_random_neurons(const size_t num_neurons, const double frac_exc) {
-    neuron_to_subdomain_assignment = std::make_unique<SubdomainFromNeuronDensity>(num_neurons, frac_exc, SubdomainFromNeuronDensity::default_um_per_neuron);
+    neuron_to_subdomain_assignment = std::make_unique<SubdomainFromNeuronDensity>(num_neurons, frac_exc, SubdomainFromNeuronDensity::default_um_per_neuron, partition);
     partition->set_total_num_neurons(num_neurons);
     initialize();
 }
 
 void Simulation::load_neurons_from_file(const std::string& path_to_positions, const std::optional<std::string>& optional_path_to_connections) {
-    auto local_ptr = std::make_unique<SubdomainFromFile>(path_to_positions);
+    auto local_ptr = std::make_unique<SubdomainFromFile>(path_to_positions, partition);
     partition->set_total_num_neurons(local_ptr->get_total_num_neurons_in_file());
     neuron_to_subdomain_assignment = std::move(local_ptr);
     initialize();
