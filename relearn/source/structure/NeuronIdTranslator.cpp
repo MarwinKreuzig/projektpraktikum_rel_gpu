@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-std::map<size_t, RankNeuronId> NeuronIdTranslator::translate_global_ids(const std::vector<size_t>& global_ids) {
+std::map<size_t, RankNeuronId> NeuronIdTranslatorFile::translate_global_ids(const std::vector<size_t>& global_ids) {
     const int mpi_rank = MPIWrapper::get_my_rank();
     const int num_ranks = MPIWrapper::get_num_ranks();
 
@@ -145,7 +145,7 @@ std::map<size_t, RankNeuronId> NeuronIdTranslator::translate_global_ids(const st
     return final_translation_map;
 }
 
-std::map<size_t, NeuronIdTranslator::position_type> NeuronIdTranslator::load_neuron_positions(const std::vector<size_t>& global_ids) {
+std::map<size_t, NeuronIdTranslatorFile::position_type> NeuronIdTranslatorFile::load_neuron_positions(const std::vector<size_t>& global_ids) {
     std::map<size_t, position_type> translation_map{};
 
     std::string line{};

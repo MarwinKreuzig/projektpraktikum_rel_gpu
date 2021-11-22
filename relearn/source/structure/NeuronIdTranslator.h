@@ -21,14 +21,27 @@
 class Partition;
 
 class NeuronIdTranslator {
+protected:
     using position_type = RelearnTypes::position_type;
-
     std::shared_ptr<Partition> partition{};
+
+public:
+    explicit NeuronIdTranslator(std::shared_ptr<Partition> partition)
+        : partition(std::move(partition)) { }
+
+    virtual std::map<size_t, RankNeuronId> translate_global_ids(const std::vector<size_t>& global_ids) = 0;
+
+    virtual ~NeuronIdTranslator() = default;
+};
+
+class NeuronIdTranslatorFile : public NeuronIdTranslator {
+protected:
     std::filesystem::path path_to_neurons{};
 
 public:
-    NeuronIdTranslator(std::shared_ptr<Partition> partition, std::filesystem::path path_to_neurons)
-        : partition(std::move(partition)), path_to_neurons(std::move(path_to_neurons)) { }
+    NeuronIdTranslatorFile(std::shared_ptr<Partition> partition, std::filesystem::path path_to_neurons)
+        : NeuronIdTranslator(std::move(partition))
+        , path_to_neurons(std::move(path_to_neurons)) { }
 
     std::map<size_t, RankNeuronId> translate_global_ids(const std::vector<size_t>& global_ids);
 
