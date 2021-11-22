@@ -25,6 +25,9 @@
 #include <sstream>
 #include <string>
 
+inline void NetworkGraph::add_edges(const std::vector<local_synapse>& local_edges, const std::vector<in_synapse>& in_edges, const std::vector<out_synapse>& out_edges) {
+}
+
 void NetworkGraph::add_edges_from_file(const std::filesystem::path& path_synapses, const std::filesystem::path& path_neurons, const Partition& partition) {
     std::vector<std::tuple<size_t, size_t, int>> local_synapses{};
     std::vector<std::tuple<size_t, size_t, int>> out_synapses{};

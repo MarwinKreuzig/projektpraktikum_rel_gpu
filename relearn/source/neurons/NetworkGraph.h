@@ -55,6 +55,10 @@ public:
     using NeuronLocalInNeighborhood = std::vector<LocalEdges>;
     using NeuronLocalOutNeighborhood = std::vector<LocalEdges>;
 
+    using local_synapse = std::tuple<size_t, size_t, EdgeWeight>;
+    using in_synapse = std::tuple<RankNeuronId, size_t, EdgeWeight>;
+    using out_synapse = std::tuple<size_t, RankNeuronId, EdgeWeight>;
+
     using position_type = RelearnTypes::position_type;
 
     enum class EdgeDirection {
@@ -429,6 +433,8 @@ public:
             add_edge<DistantEdges, DistantEdgesKey>(distant_out_edges, target_id, weight);
         }
     }
+
+    void add_edges(const std::vector<local_synapse>& local_edges, const std::vector<in_synapse>& in_edges, const std::vector<out_synapse>& out_edges);
 
     /**
      * @brief Loads all edges from the file that are relevant for the local network graph.
