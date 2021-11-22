@@ -37,6 +37,8 @@ class OctreeImplementation;
 class FastMultipoleMethods : public Algorithm {
 public:
     using AdditionalCellAttributes = FastMultipoleMethodsCell;
+    using interaction_list_type = std::array<OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>;
+    std::shared_ptr<OctreeImplementation<FastMultipoleMethods>> global_tree{};
 
     /**
      * @brief Constructs a new instance with the given octree
@@ -194,10 +196,23 @@ public:
         }
     }
 
-    std::vector<double> calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source, const SignalType dendrite_type_needed);
+    /**
+     * @brief Calculates the attraction between source and all nodes in the interaction_list and returns it in a vector. Only those nodes are considered that are not equal to zero ptr.
+     * @param source Node with vacant axons.
+     * @param interaction_list List with potential target nodes.
+     * @param dendrite_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory)
+     * @return std::vector<double> 
+     */
+    std::vector<double> calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source, const interaction_list_type interaction_list, const SignalType dendrite_type_needed);
 
-    void make_creation_request_for(const SignalType needed, MapSynapseCreationRequests& request,
-        std::vector<std::pair<OctreeNode<FastMultipoleMethodsCell>*, std::array<const OctreeNode<FastMultipoleMethodsCell>*, 8>>>& nodes_with_axons);
+    /**
+     * @brief 
+     * 
+     * @param needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory)
+     * @param request Request which should be extended. This must be created before the method is called, as this variable is written to.
+     * @param nodes_with_axons 
+     */
+    void make_creation_request_for(const SignalType needed, MapSynapseCreationRequests& request);
 
     /**
      * @brief Calculates the coefficients which are needed for the derivatives of e^(-t^2).
@@ -469,8 +484,9 @@ public:
         return i;
     }
 
-    using interaction_list_type = std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>;
-    std::shared_ptr<OctreeImplementation<FastMultipoleMethods>> global_tree{};
+    static unsigned int count_non_zero_elements(const interaction_list_type &arr);
+    static OctreeNode<AdditionalCellAttributes>* extract_element(const interaction_list_type &arr, unsigned int index);
+    static void add_children_to_vector (OctreeNode<AdditionalCellAttributes>* node, interaction_list_type &vector);
 
     /**
      * This class represents a mathematical three-dimensional multi-index, which is required for the

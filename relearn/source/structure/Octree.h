@@ -279,6 +279,14 @@ public:
     }
 
     /**
+     * @brief Get all branch nodes of the tree
+     * @return a vector branch nodes
+     */
+    std::vector<OctreeNode<AdditionalCellAttributes>*> get_branch_nodes() const {
+        return branch_nodes;
+    }    
+
+    /**
      * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes
      * @param max_level The maximum level (inclusive) on which the nodes should be updated
      * @exception Throws a RelearnException if the functor throws

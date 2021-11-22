@@ -786,7 +786,6 @@ TEST_F(OctreeTestFMM, testOctreeSeriesExpansionsFMM) {
                 }
             }
         }
-
         make_mpi_mem_available<AdditionalCellAttributes>();
     }
 }
