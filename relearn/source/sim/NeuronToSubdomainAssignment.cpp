@@ -11,6 +11,7 @@
 #include "NeuronToSubdomainAssignment.h"
 
 #include "../neurons/models/SynapticElements.h"
+#include "../structure/NeuronIdTranslator.h"
 #include "../structure/Partition.h"
 #include "../util/RelearnException.h"
 
@@ -172,7 +173,10 @@ void NeuronToSubdomainAssignment::initialize() {
         partition->set_subdomain_num_neurons(i, number_neurons);
 
         auto global_ids = neuron_global_ids(subdomain.index_1d, num_subdomains);
+        std::sort(global_ids.begin(), global_ids.end());
 
-        partition->set_subdomain_global_ids(i, std::move(global_ids));
+        neuron_id_translator->set_global_ids(i, std::move(global_ids));
     }
+
+    partition->calculate_local_ids();
 }

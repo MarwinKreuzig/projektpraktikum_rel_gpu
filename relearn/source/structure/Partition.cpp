@@ -124,18 +124,6 @@ void Partition::print_my_subdomains_info_rank(const int rank) {
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, sstream.str());
 }
 
-bool Partition::is_neuron_local(const size_t neuron_id) const {
-    RelearnException::check(neurons_loaded, "Partition::is_neuron_local: Neurons are not loaded yet");
-    for (const Subdomain& subdomain : subdomains) {
-        const bool found = std::binary_search(subdomain.global_neuron_ids.begin(), subdomain.global_neuron_ids.end(), neuron_id);
-        if (found) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 size_t Partition::get_mpi_rank_from_pos(const position_type& pos) const {
     RelearnException::check(neurons_loaded, "Partition::get_mpi_rank_from_pos: Neurons are not loaded yet");
     const box_size_type subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
@@ -147,42 +135,6 @@ size_t Partition::get_mpi_rank_from_pos(const position_type& pos) const {
     const size_t rank = id_1d / my_num_subdomains;
 
     return rank;
-}
-
-size_t Partition::get_global_id(const size_t local_id) const {
-    RelearnException::check(neurons_loaded, "Partition::get_global_id: Neurons are not loaded yet");
-    size_t counter = 0;
-    for (const auto& subdomain : subdomains) {
-        const size_t old_counter = counter;
-
-        counter += subdomain.global_neuron_ids.size();
-        if (local_id < counter) {
-            const size_t local_local_id = local_id - old_counter;
-            return subdomain.global_neuron_ids[local_local_id];
-        }
-    }
-
-    return local_id;
-}
-
-size_t Partition::get_local_id(const size_t global_id) const {
-    RelearnException::check(neurons_loaded, "Parition::get_local_id: Neurons are not loaded yet");
-    size_t id = 0;
-
-    for (const Subdomain& current_subdomain : subdomains) {
-        const std::vector<size_t>& ids = current_subdomain.global_neuron_ids;
-        const auto pos = std::lower_bound(ids.begin(), ids.end(), global_id);
-
-        if (pos != ids.end()) {
-            id += pos - ids.begin();
-            return id;
-        }
-
-        id += ids.size();
-    }
-
-    RelearnException::fail("Partition::is_neuron_local: Didn't find global id {}", global_id);
-    return 0;
 }
 
 void Partition::calculate_local_ids() {

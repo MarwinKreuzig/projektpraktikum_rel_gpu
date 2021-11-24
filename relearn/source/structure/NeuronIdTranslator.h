@@ -28,8 +28,20 @@ protected:
 
     std::shared_ptr<Partition> partition{};
 
+    std::vector<std::vector<size_t>> global_neuron_ids{};
+
 public:
     explicit NeuronIdTranslator(std::shared_ptr<Partition> partition);
+
+    void set_global_ids(size_t subdomain_idx, std::vector<size_t> global_ids) {
+        global_neuron_ids[subdomain_idx] = std::move(global_ids);
+    }
+
+    bool is_neuron_local(size_t neuron_id) const;
+
+    [[nodiscard]] size_t get_local_id(size_t global_id) const;
+
+    [[nodiscard]] size_t get_global_id(size_t local_id) const;
 
     virtual std::map<neuron_id, RankNeuronId> translate_global_ids(const std::vector<neuron_id>& global_ids) = 0;
 

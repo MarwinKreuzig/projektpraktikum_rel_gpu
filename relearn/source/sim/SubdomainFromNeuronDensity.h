@@ -44,14 +44,6 @@ public:
 
     ~SubdomainFromNeuronDensity() override = default;
 
-    std::shared_ptr<SynapseLoader> get_synapse_loader() const noexcept override {
-        return synapse_loader;
-    }
-
-    std::shared_ptr<NeuronIdTranslator> get_neuron_id_translator() const noexcept override {
-        return neuron_id_translator;
-    }
-
     /** 
      * @brief Returns the subdomain boundaries for a given subdomain
      * @param subdomain_3idx The 3d index of the subdomain which's boundaries are requested
@@ -86,9 +78,6 @@ public:
     constexpr static double default_um_per_neuron = 26.0;
 
 private:
-    std::shared_ptr<RandomSynapseLoader> synapse_loader{};
-    std::shared_ptr<RandomNeuronIdTranslator> neuron_id_translator{};
-
     const double um_per_neuron_{ default_um_per_neuron }; // Micrometer per neuron in one dimension
 
     void place_neurons_in_area(

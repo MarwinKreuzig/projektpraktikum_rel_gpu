@@ -17,11 +17,13 @@
 #include <utility>
 #include <vector>
 
+class NeuronIdTranslator;
 class Partition;
 
 class SynapseLoader {
 protected:
     std::shared_ptr<Partition> partition{};
+    std::shared_ptr<NeuronIdTranslator> nit{};
 
 public:
     using neuron_id = size_t;
@@ -41,8 +43,9 @@ public:
 
     using synapses_tuple_type = std::tuple<local_synapses_type, in_synapses_type, out_synapses_type>;
 
-    explicit SynapseLoader(std::shared_ptr<Partition> partition)
-        : partition(std::move(partition)) { }
+    SynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator)
+        : partition(std::move(partition))
+        , nit(std::move(neuron_id_translator)) { }
 
     virtual std::pair<synapses_tuple_type, std::vector<neuron_id>> load_synapses(const std::vector<neuron_id>& affected_neuron_ids) = 0;
 
@@ -53,16 +56,16 @@ class FileSynapseLoader : public SynapseLoader {
     std::optional<std::filesystem::path> optional_path_to_file{};
 
 public:
-    FileSynapseLoader(std::shared_ptr<Partition> partition, const std::optional<std::filesystem::path>& path_to_synapses)
-        : SynapseLoader(std::move(partition))
+    FileSynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator, const std::optional<std::filesystem::path>& path_to_synapses)
+        : SynapseLoader(std::move(partition), std::move(neuron_id_translator))
         , optional_path_to_file(path_to_synapses) { }
 
     std::pair<synapses_tuple_type, std::vector<neuron_id>> load_synapses(const std::vector<neuron_id>& affected_neuron_ids) override;
 };
 
 class RandomSynapseLoader : public SynapseLoader {
-    explicit RandomSynapseLoader(std::shared_ptr<Partition> partition)
-        : SynapseLoader(std::move(partition)) { }
+    RandomSynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator)
+        : SynapseLoader(std::move(partition), std::move(neuron_id_translator)) { }
 
     std::pair<synapses_tuple_type, std::vector<neuron_id>> load_synapses(const std::vector<neuron_id>& affected_neuron_ids) {
         return std::pair<synapses_tuple_type, std::vector<neuron_id>>();

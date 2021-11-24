@@ -64,12 +64,9 @@ TEST_F(PartitionTest, test_partition_constructor) {
             ASSERT_EQ(partition.get_level_of_subdomain_trees(), oct_exponent);
             ASSERT_EQ(partition.get_num_subdomains_per_dimension(), num_subdomains_per_dim);
 
-            ASSERT_THROW(auto err = partition.is_neuron_local(0), RelearnException);
             ASSERT_THROW(auto err = partition.get_my_num_neurons(), RelearnException);
             ASSERT_THROW(auto err = partition.get_simulation_box_size(), RelearnException);
             ASSERT_THROW(auto err = partition.get_mpi_rank_from_pos(min), RelearnException);
-            ASSERT_THROW(auto err = partition.get_global_id(0), RelearnException);
-            ASSERT_THROW(auto err = partition.get_local_id(0), RelearnException);
         }
     }
 }

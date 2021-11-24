@@ -12,6 +12,7 @@
 
 #include "../io/LogFiles.h"
 #include "../mpi/MPIWrapper.h"
+#include "../structure/NeuronIdTranslator.h"
 #include "../structure/Partition.h"
 #include "Neurons.h"
 #include "helper/RankNeuronId.h"
@@ -25,10 +26,11 @@
 #include <sstream>
 #include <string>
 
-inline void NetworkGraph::add_edges(const std::vector<local_synapse>& local_edges, const std::vector<in_synapse>& in_edges, const std::vector<out_synapse>& out_edges) {
+void NetworkGraph::add_edges(const std::vector<local_synapse>& local_edges, const std::vector<in_synapse>& in_edges, const std::vector<out_synapse>& out_edges) {
 }
 
-void NetworkGraph::add_edges_from_file(const std::filesystem::path& path_synapses, const std::filesystem::path& path_neurons, const Partition& partition) {
+void NetworkGraph::add_edges_from_file(const std::filesystem::path& path_synapses, 
+    const std::filesystem::path& path_neurons, const Partition& partition, const std::shared_ptr<NeuronIdTranslator>& nit) {
     std::vector<std::tuple<size_t, size_t, int>> local_synapses{};
     std::vector<std::tuple<size_t, size_t, int>> out_synapses{};
     std::vector<std::tuple<size_t, size_t, int>> in_synapses{};
@@ -40,7 +42,7 @@ void NetworkGraph::add_edges_from_file(const std::filesystem::path& path_synapse
 
     const int my_rank = mpi_rank;
 
-    load_synapses(path_synapses, partition, foreing_ids, local_synapses, out_synapses, in_synapses);
+    load_synapses(path_synapses, partition, foreing_ids, local_synapses, out_synapses, in_synapses, nit);
     load_neuron_positions(path_neurons, foreing_ids, id_to_pos);
 
     for (const auto& [id, pos] : id_to_pos) {
@@ -51,12 +53,12 @@ void NetworkGraph::add_edges_from_file(const std::filesystem::path& path_synapse
     std::map<size_t, size_t> global_id_to_local_id{};
 
     if (!id_to_pos.empty()) {
-        translate_global_to_local(id_to_rank, partition, global_id_to_local_id);
+        translate_global_to_local(id_to_rank, partition, global_id_to_local_id, nit);
     }
 
     for (const auto& [source_neuron_id, target_neuron_id, weight] : local_synapses) {
-        const size_t translated_source_neuron_id = partition.get_local_id(source_neuron_id);
-        const size_t translated_target_neuron_id = partition.get_local_id(target_neuron_id);
+        const size_t translated_source_neuron_id = nit->get_local_id(source_neuron_id);
+        const size_t translated_target_neuron_id = nit->get_local_id(target_neuron_id);
 
         const int source_rank = my_rank;
         const int target_rank = my_rank;
@@ -68,7 +70,7 @@ void NetworkGraph::add_edges_from_file(const std::filesystem::path& path_synapse
     }
 
     for (const auto& [source_neuron_id, target_neuron_id, weight] : out_synapses) {
-        const size_t translated_source_neuron_id = partition.get_local_id(source_neuron_id);
+        const size_t translated_source_neuron_id = nit->get_local_id(source_neuron_id);
 
         const int source_rank = my_rank;
         const int target_rank = id_to_rank[target_neuron_id];
@@ -81,7 +83,7 @@ void NetworkGraph::add_edges_from_file(const std::filesystem::path& path_synapse
     }
 
     for (const auto& [source_neuron_id, target_neuron_id, weight] : in_synapses) {
-        const size_t translated_target_neuron_id = partition.get_local_id(target_neuron_id);
+        const size_t translated_target_neuron_id = nit->get_local_id(target_neuron_id);
 
         const int source_rank = id_to_rank[source_neuron_id];
         const int target_rank = my_rank;
@@ -189,7 +191,7 @@ void NetworkGraph::debug_check() const {
     RelearnException::check(edges.empty(), "NetworkGraph::debug_check: Edges is not empty");
 }
 
-void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id) {
+void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id, const std::shared_ptr<NeuronIdTranslator>& nit) {
 
     const int mpi_rank = MPIWrapper::get_my_rank();
     const int num_ranks = MPIWrapper::get_num_ranks();
@@ -251,7 +253,7 @@ void NetworkGraph::translate_global_to_local(const std::map<size_t, int>& id_to_
     MPIWrapper::wait_all_tokens(mpi_requests);
     for (auto& vec : global_ids_to_receive) {
         for (auto& global_id : vec) {
-            global_id = partition.get_local_id(global_id);
+            global_id = nit->get_local_id(global_id);
         }
     }
 
@@ -347,7 +349,7 @@ void NetworkGraph::load_synapses(
     std::set<size_t>& foreing_ids,
     std::vector<std::tuple<size_t, size_t, int>>& local_synapses,
     std::vector<std::tuple<size_t, size_t, int>>& out_synapses,
-    std::vector<std::tuple<size_t, size_t, int>>& in_synapses) {
+    std::vector<std::tuple<size_t, size_t, int>>& in_synapses, const std::shared_ptr<NeuronIdTranslator>& nit) {
     enum class f_status : char {
         not_known = 0,
         local = 1,
@@ -390,7 +392,7 @@ void NetworkGraph::load_synapses(
         } else if (source_f == f_status::not_local) {
             source_is_local = false;
         } else {
-            source_is_local = partition.is_neuron_local(source_id);
+            source_is_local = nit->is_neuron_local(source_id);
             if (source_is_local) {
                 id_is_local[source_id] = f_status::local;
             } else {
@@ -403,7 +405,7 @@ void NetworkGraph::load_synapses(
         } else if (target_f == f_status::not_local) {
             target_is_local = false;
         } else {
-            target_is_local = partition.is_neuron_local(target_id);
+            target_is_local = nit->is_neuron_local(target_id);
             if (target_is_local) {
                 id_is_local[target_id] = f_status::local;
             } else {

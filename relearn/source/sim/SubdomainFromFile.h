@@ -46,14 +46,6 @@ public:
 
     ~SubdomainFromFile() override = default;
 
-    std::shared_ptr<SynapseLoader> get_synapse_loader() const noexcept override {
-        return synapse_loader;
-    }
-
-    std::shared_ptr<NeuronIdTranslator> get_neuron_id_translator() const noexcept override {
-        return neuron_id_translator;
-    }
-
     /**
      * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
      * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
@@ -95,9 +87,6 @@ private:
     void read_dimensions_from_file();
 
     [[nodiscard]] std::vector<NeuronToSubdomainAssignment::Node> read_nodes_from_file(const box_size_type& min, const box_size_type& max);
-
-    std::shared_ptr<FileSynapseLoader> synapse_loader{};
-    std::shared_ptr<FileNeuronIdTranslator> neuron_id_translator{};
 
     std::filesystem::path path{};
     size_t total_num_neurons_in_file{ Constants::uninitialized };

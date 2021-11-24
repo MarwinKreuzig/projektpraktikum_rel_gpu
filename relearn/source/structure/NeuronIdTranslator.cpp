@@ -23,6 +23,52 @@
 
 NeuronIdTranslator::NeuronIdTranslator(std::shared_ptr<Partition> partition)
     : partition(std::move(partition)) {
+
+    global_neuron_ids.resize(this->partition->get_my_num_subdomains());
+}
+
+bool NeuronIdTranslator::is_neuron_local(size_t neuron_id) const {
+    for (const auto& global_ids: global_neuron_ids) {
+        const bool found = std::binary_search(global_ids.begin(), global_ids.end(), neuron_id);
+        if (found) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+size_t NeuronIdTranslator::get_local_id(size_t global_id) const {
+    size_t id = 0;
+
+    for (const auto& ids : global_neuron_ids) {
+        const auto pos = std::lower_bound(ids.begin(), ids.end(), global_id);
+
+        if (pos != ids.end()) {
+            id += pos - ids.begin();
+            return id;
+        }
+
+        id += ids.size();
+    }
+
+    RelearnException::fail("Partition::is_neuron_local: Didn't find global id {}", global_id);
+    return 0;
+}
+
+size_t NeuronIdTranslator::get_global_id(size_t local_id) const {
+    size_t counter = 0;
+    for (auto i = 0; i < partition->get_my_num_subdomains(); i++) {
+        const size_t old_counter = counter;
+
+        counter += global_neuron_ids[i].size();
+        if (local_id < counter) {
+            const size_t local_local_id = local_id - old_counter;
+            return global_neuron_ids[i][local_local_id];
+        }
+    }
+
+    return local_id;
 }
 
 std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::translate_global_ids(const std::vector<neuron_id>& global_ids) {
@@ -94,7 +140,7 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
     MPIWrapper::wait_all_tokens(mpi_requests);
     for (auto& vec : global_ids_to_receive) {
         for (auto& global_id : vec) {
-            global_id = partition->get_local_id(global_id);
+            global_id = get_local_id(global_id);
         }
     }
 

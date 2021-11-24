@@ -20,11 +20,6 @@
 #include <tuple>
 #include <vector>
 
-class Neurons;
-class NeuronToSubdomainAssignment;
-template <typename T>
-class OctreeNode;
-
 /**
  * This class provides all kinds of functionality that deals with the the local portion of neurons on the current MPI rank.
  * It constructs OctreeNode* via the MPIWrapper and deletes those again.
@@ -51,8 +46,6 @@ public:
         size_t neuron_local_id_end{ Constants::uninitialized };
 
         std::vector<size_t> global_neuron_ids{};
-
-        std::vector<position_type> local_positions{};
 
         size_t index_1d{ Constants::uninitialized };
 
@@ -85,10 +78,6 @@ public:
         neurons_loaded = true;
     }
 
-    void set_local_positions(size_t subdomain_idx, std::vector<position_type> pos) {
-        subdomains[subdomain_idx].local_positions = std::move(pos);
-    }
-
     const Subdomain& get_subdomain(size_t subdomain_idx) const noexcept {
         return subdomains[subdomain_idx];
     }
@@ -101,19 +90,6 @@ public:
     void set_subdomain_num_neurons(size_t subdomain_idx, size_t num_neurons) {
         subdomains[subdomain_idx].num_neurons = num_neurons;
     }
-
-    void set_subdomain_global_ids(size_t subdomain_idx, std::vector<size_t> global_ids) {
-        subdomains[subdomain_idx].global_neuron_ids = std::move(global_ids);
-        std::sort(subdomains[subdomain_idx].global_neuron_ids.begin(), subdomains[subdomain_idx].global_neuron_ids.end());
-
-    }
-
-    /**
-     * @brief Checks if the neuron id is local to the current MPI rank
-     * @param neuron_id The neuron id for which it should be determined if it's local on the current MPI rank
-     * @return True iff the neuron id is local
-     */
-    [[nodiscard]] bool is_neuron_local(size_t neuron_id) const;
 
     /**
      * @brief Loads the local neurons from neurons_in_subdomain into neurons
@@ -216,22 +192,6 @@ public:
      * @return Returns the MPI rank that is responsible for the position
      */
     [[nodiscard]] size_t get_mpi_rank_from_pos(const position_type& pos) const;
-
-    /**
-     * @brief Translates a local neuron id to a global neuron id by prefix-summing the local neuron ids over all MPI ranks
-     * @param local_id The local neuron id that should be translated
-     * @exception Throws a RelearnException if the calculate_local_ids has not been called
-     * @return Returns the global neuron id
-     */
-    [[nodiscard]] size_t get_global_id(size_t local_id) const;
-
-    /**
-     * @brief Translates a global neuron id to a local neuron id
-     * @param local_id The global neuron id that should be translated
-     * @exception Throws a RelearnException if the calculate_local_ids has not been called
-     * @return Returns the local neuron id
-     */
-    [[nodiscard]] size_t get_local_id(size_t global_id) const;
 
     /**
      * @brief Returns the total number of neurons

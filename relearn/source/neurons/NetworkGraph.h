@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+class NeuronIdTranslator;
 class NeuronsExtraInfo;
 class Partition;
 
@@ -446,7 +447,7 @@ public:
      *      (b) the network graph was not initialized with enough storage space
      *      Throws an exception if the allocation of memory fails
      */
-    void add_edges_from_file(const std::filesystem::path& path_synapses, const std::filesystem::path& path_neurons, const Partition& partition);
+    void add_edges_from_file(const std::filesystem::path& path_synapses, const std::filesystem::path& path_neurons, const Partition& partition, const std::shared_ptr<NeuronIdTranslator>& nit);
 
     /**
      * @brief Checks if the specified file contains only synapses between neurons with specified ids (only works locally).
@@ -547,7 +548,7 @@ private:
     }
 
     // NOLINTNEXTLINE
-    static void translate_global_to_local(const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id);
+    static void translate_global_to_local(const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id, const std::shared_ptr<NeuronIdTranslator>& nit);
 
     // NOLINTNEXTLINE
     static void load_neuron_positions(const std::filesystem::path& path_neurons, std::set<size_t>& foreing_ids, std::map<size_t, position_type>& id_to_pos);
@@ -558,7 +559,7 @@ private:
         std::set<size_t>& foreing_ids,
         std::vector<std::tuple<size_t, size_t, int>>& local_synapses,
         std::vector<std::tuple<size_t, size_t, int>>& out_synapses,
-        std::vector<std::tuple<size_t, size_t, int>>& in_synapses);
+        std::vector<std::tuple<size_t, size_t, int>>& in_synapses, const std::shared_ptr<NeuronIdTranslator>& nit);
 
     NeuronDistantInNeighborhood neuron_distant_in_neighborhood{};
     NeuronDistantOutNeighborhood neuron_distant_out_neighborhood{};

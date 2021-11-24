@@ -46,8 +46,13 @@ public:
     NeuronToSubdomainAssignment& operator=(const NeuronToSubdomainAssignment& other) = delete;
     NeuronToSubdomainAssignment& operator=(NeuronToSubdomainAssignment&& other) = delete;
 
-    virtual std::shared_ptr<SynapseLoader> get_synapse_loader() const noexcept = 0;
-    virtual std::shared_ptr<NeuronIdTranslator> get_neuron_id_translator() const noexcept = 0;
+    std::shared_ptr<SynapseLoader> get_synapse_loader() const noexcept {
+        return synapse_loader;
+    }
+
+    std::shared_ptr<NeuronIdTranslator> get_neuron_id_translator() const noexcept {
+        return neuron_id_translator;
+    }
 
     void initialize();
 
@@ -264,6 +269,9 @@ protected:
     [[nodiscard]] static bool position_in_box(const position_type& pos, const box_size_type& box_min, const box_size_type& box_max) noexcept;
 
     std::shared_ptr<Partition> partition;
+
+    std::shared_ptr<SynapseLoader> synapse_loader{};
+    std::shared_ptr<NeuronIdTranslator> neuron_id_translator{};
 
 private:
     std::map<size_t, Nodes> neurons_in_subdomain;

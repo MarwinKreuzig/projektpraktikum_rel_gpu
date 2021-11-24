@@ -113,10 +113,13 @@ void Simulation::load_neurons_from_file(const std::filesystem::path& path_to_pos
     neuron_to_subdomain_assignment = std::move(local_ptr);
     initialize();
 
+    auto nit = neuron_to_subdomain_assignment->get_neuron_id_translator();
+    auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
+
     if (optional_path_to_connections.has_value()) {
         const auto& path_to_connections = optional_path_to_connections.value();
 
-        network_graph->add_edges_from_file(path_to_connections, path_to_positions, *partition);
+        network_graph->add_edges_from_file(path_to_connections, path_to_positions, *partition, nit);
         LogFiles::print_message_rank(0, "Network graph created");
 
         neurons->init_synaptic_elements();
@@ -138,8 +141,6 @@ void Simulation::initialize() {
     neuron_to_subdomain_assignment->initialize();
 
     std::map<int, std::vector<Vec3d>> local_positions{};
-
-    partition->calculate_local_ids();
 
     {
         const auto my_num_neurons = partition->get_my_num_neurons();

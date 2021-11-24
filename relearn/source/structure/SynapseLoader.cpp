@@ -10,6 +10,7 @@
 
 #include "SynapseLoader.h"
 
+#include "../structure/NeuronIdTranslator.h"
 #include "../util/RelearnException.h"
 #include "Partition.h"
 
@@ -75,7 +76,7 @@ FileSynapseLoader::load_synapses(const std::vector<neuron_id>& affected_neuron_i
         } else if (source_f == f_status::not_local) {
             source_is_local = false;
         } else {
-            source_is_local = partition->is_neuron_local(source_id);
+            source_is_local = nit->is_neuron_local(source_id);
             if (source_is_local) {
                 id_is_local[source_id] = f_status::local;
             } else {
@@ -88,7 +89,7 @@ FileSynapseLoader::load_synapses(const std::vector<neuron_id>& affected_neuron_i
         } else if (target_f == f_status::not_local) {
             target_is_local = false;
         } else {
-            target_is_local = partition->is_neuron_local(target_id);
+            target_is_local = nit->is_neuron_local(target_id);
             if (target_is_local) {
                 id_is_local[target_id] = f_status::local;
             } else {
