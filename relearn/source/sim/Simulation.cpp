@@ -109,26 +109,8 @@ void Simulation::place_random_neurons(const size_t num_neurons, const double fra
 void Simulation::load_neurons_from_file(const std::filesystem::path& path_to_positions, const std::optional<std::filesystem::path>& optional_path_to_connections) {
     auto local_ptr = std::make_unique<SubdomainFromFile>(path_to_positions, optional_path_to_connections, partition);
     partition->set_total_num_neurons(local_ptr->get_total_num_neurons_in_file());
-
     neuron_to_subdomain_assignment = std::move(local_ptr);
     initialize();
-
-    auto nit = neuron_to_subdomain_assignment->get_neuron_id_translator();
-    auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
-
-    auto [local_synapses, in_synapses, out_synapses] = synapse_loader->load_synapses();
-
-    network_graph->add_edges(local_synapses, in_synapses, out_synapses);
-        
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded {} local synapses, {} in synapses, and {} out synapses", local_synapses.size(), in_synapses.size(), out_synapses.size());
-
-    LogFiles::print_message_rank(0, "Network graph created");
-    LogFiles::print_message_rank(0, "Synaptic elements initialized");
-
-    neurons->init_synaptic_elements();
-    neurons->debug_check_counts();
-    neurons->print_neurons_overview_to_log_file_on_rank_0(0);
-    neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0);
 }
 
 void Simulation::initialize() {
@@ -280,6 +262,23 @@ void Simulation::initialize() {
     neurons->set_network_graph(network_graph);
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
+
+    auto nit = neuron_to_subdomain_assignment->get_neuron_id_translator();
+    auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
+
+    auto [local_synapses, in_synapses, out_synapses] = synapse_loader->load_synapses();
+
+    network_graph->add_edges(local_synapses, in_synapses, out_synapses);
+
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded {} local synapses, {} in synapses, and {} out synapses", local_synapses.size(), in_synapses.size(), out_synapses.size());
+
+    LogFiles::print_message_rank(0, "Network graph created");
+    LogFiles::print_message_rank(0, "Synaptic elements initialized");
+
+    neurons->init_synaptic_elements();
+    neurons->debug_check_counts();
+    neurons->print_neurons_overview_to_log_file_on_rank_0(0);
+    neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0);
 }
 
 void Simulation::simulate(const size_t number_steps) {

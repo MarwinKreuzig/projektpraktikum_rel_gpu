@@ -135,7 +135,6 @@ FileSynapseLoader::internal_load_synapses() {
 }
 
 std::tuple<SynapseLoader::LocalSynapses, SynapseLoader::InSynapses, SynapseLoader::OutSynapses> SynapseLoader::load_synapses() {
-
     const auto& [synapses, global_ids] = internal_load_synapses();
     const auto& [local_synapses, in_synapses, out_synapses] = synapses;
 

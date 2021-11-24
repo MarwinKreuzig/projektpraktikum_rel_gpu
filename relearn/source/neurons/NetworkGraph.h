@@ -433,7 +433,25 @@ public:
         }
     }
 
-    void add_edges(const std::vector<local_synapse>& local_edges, const std::vector<in_synapse>& in_edges, const std::vector<out_synapse>& out_edges);
+    void add_edges(const std::vector<local_synapse>& local_edges, const std::vector<in_synapse>& in_edges, const std::vector<out_synapse>& out_edges) {
+        for (const auto& [source_id, target_id, weight] : local_edges) {
+            LocalEdges& in_edges = neuron_local_in_neighborhood[target_id];
+            LocalEdges& out_edges = neuron_local_out_neighborhood[source_id];
+
+            add_edge<LocalEdges, LocalEdgesKey>(in_edges, source_id, weight);
+            add_edge<LocalEdges, LocalEdgesKey>(out_edges, target_id, weight);
+        }
+
+        for (const auto& [source_rni, target_id, weight] : in_edges) {
+            DistantEdges& distant_in_edges = neuron_distant_in_neighborhood[target_id];
+            add_edge<DistantEdges, DistantEdgesKey>(distant_in_edges, source_rni, weight);
+        }
+
+        for (const auto& [source_id, target_rni, weight] : out_edges) {
+            DistantEdges& distant_out_edges = neuron_distant_out_neighborhood[source_id];
+            add_edge<DistantEdges, DistantEdgesKey>(distant_out_edges, target_rni, weight);
+        }
+    }
 
     /**
      * @brief Checks if the specified file contains only synapses between neurons with specified ids (only works locally).
