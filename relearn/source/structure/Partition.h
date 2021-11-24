@@ -128,6 +128,20 @@ public:
         return std::make_tuple(min, max);
     }
 
+    void set_simulation_box_size(const Vec3d& min, const Vec3d& max) {
+        simulation_box_length = max - min;
+        // Set subdomain length
+        const auto& subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
+
+        /**
+	     * Output all parameters calculated so far
+	     */
+        LogFiles::print_message_rank(0, "Simulation box length (height, width, depth)\t: ({}, {}, {})",
+            simulation_box_length.get_x(), simulation_box_length.get_y(), simulation_box_length.get_z());
+        LogFiles::print_message_rank(0, "Subdomain length (height, width, depth)\t: ({}, {}, {})",
+            subdomain_length.get_x(), subdomain_length.get_y(), subdomain_length.get_z());
+    }
+
     /**
      * @brief Returns the first id of the local subdomains in the global setting (don't use that in combination with get_subdomain_tree)
      * @return The first id of the local subdomains in the global setting

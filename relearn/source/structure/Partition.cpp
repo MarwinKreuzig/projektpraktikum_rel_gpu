@@ -188,19 +188,6 @@ size_t Partition::get_local_id(const size_t global_id) const {
 void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment>&& neurons_in_subdomain) {
     RelearnException::check(!neurons_loaded, "Partition::load_data_from_subdomain_assignment:: Neurons are already loaded, cannot load anymore");
 
-    simulation_box_length = neurons_in_subdomain->get_simulation_box_length();
-
-    // Set subdomain length
-    const auto& subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
-
-    /**
-	 * Output all parameters calculated so far
-	 */
-    LogFiles::print_message_rank(0, "Simulation box length (height, width, depth)\t: ({}, {}, {})",
-        simulation_box_length.get_x(), simulation_box_length.get_y(), simulation_box_length.get_z());
-    LogFiles::print_message_rank(0, "Subdomain length (height, width, depth)\t: ({}, {}, {})",
-        subdomain_length.get_x(), subdomain_length.get_y(), subdomain_length.get_z());
-
     my_num_neurons = 0;
     for (size_t i = 0; i < my_num_subdomains; i++) {
         Subdomain& current_subdomain = subdomains[i];

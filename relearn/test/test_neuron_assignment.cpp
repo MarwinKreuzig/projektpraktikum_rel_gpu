@@ -543,7 +543,7 @@ TEST_F(NeuronAssignmentTest, test_reloading) {
 
         auto num_neurons = positions.size();
 
-        SubdomainFromFile sff{ "neurons.tmp", part };
+        SubdomainFromFile sff{ "neurons.tmp", {}, part };
         part->set_total_num_neurons(sff.get_total_num_neurons_in_file());
 
         const auto box_length = sff.get_simulation_box_length().get_maximum();
@@ -593,7 +593,7 @@ TEST_F(NeuronAssignmentTest, test_reloading_multiple) {
         auto num_neurons = positions.size();
 
         auto part = std::make_shared<Partition>(1, 0);
-        SubdomainFromFile sff{ "neurons.tmp", part };
+        SubdomainFromFile sff{ "neurons.tmp", {}, part };
 
         part->set_total_num_neurons(sff.get_total_num_neurons_in_file());
 
@@ -686,7 +686,7 @@ TEST_F(NeuronAssignmentTest, test_neuron_placement_store_and_load) {
     sdnd.write_neurons_to_file(file);
 
     // load from file
-    SubdomainFromFile sdff{ file, part };
+    SubdomainFromFile sdff{ file, {}, part };
     part->set_total_num_neurons(sdff.get_total_num_neurons_in_file());
     // fill_subdomain from file
     sdff.fill_subdomain(subdomain_id, 1, Vec3d{ 0 }, Vec3d{ sdff.get_simulation_box_length().get_maximum() });

@@ -23,6 +23,7 @@
 #include <vector>
 
 class NeuronIdTranslator;
+class Partition;
 class SynapseLoader;
 
 /**
@@ -32,6 +33,10 @@ class NeuronToSubdomainAssignment {
 public:
     using position_type = RelearnTypes::position_type;
     using box_size_type = RelearnTypes::box_size_type;
+
+    NeuronToSubdomainAssignment(std::shared_ptr<Partition> partition)
+        : partition(std::move(partition)) {
+    }
 
     virtual ~NeuronToSubdomainAssignment() = default;
 
@@ -217,9 +222,7 @@ protected:
         current_num_neurons_ = current_num_neurons;
     }
 
-    void set_simulation_box_length(const box_size_type& simulation_box_length) noexcept {
-        simulation_box_length_ = simulation_box_length;
-    }
+    void set_simulation_box_length(const box_size_type& simulation_box_length) noexcept;
 
     [[nodiscard]] double get_desired_frac_neurons_exc() const noexcept {
         return desired_frac_neurons_exc_;
@@ -259,7 +262,7 @@ protected:
 
     [[nodiscard]] static bool position_in_box(const position_type& pos, const box_size_type& box_min, const box_size_type& box_max) noexcept;
 
-    NeuronToSubdomainAssignment() = default;
+    std::shared_ptr<Partition> partition;
 
 private:
     std::map<size_t, Nodes> neurons_in_subdomain;

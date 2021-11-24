@@ -21,6 +21,12 @@
 std::pair<FileSynapseLoader::synapses_tuple_type, std::vector<FileSynapseLoader::neuron_id>>
 FileSynapseLoader::load_synapses(const std::vector<neuron_id>& affected_neuron_ids) {
 
+    if (!optional_path_to_file.has_value()) {
+        return {};
+    }
+
+    const auto& path_to_file = optional_path_to_file.value();
+
     local_synapses_type local_synapses{};
     in_synapses_type in_synapses{};
     out_synapses_type out_synapses{};

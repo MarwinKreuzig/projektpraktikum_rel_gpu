@@ -14,6 +14,7 @@
 #include "../util/StatisticalMeasures.h"
 
 #include <cstdint>
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <optional>
@@ -122,7 +123,7 @@ public:
      * @param path_to_positions The path to the neurons file
      * @param optional_path_to_connections The path to the synapses file, can be empty to indicate no initial synapses
      */
-    void load_neurons_from_file(const std::string& path_to_positions, const std::optional<std::string>& optional_path_to_connections);
+    void load_neurons_from_file(const std::filesystem::path& path_to_positions, const std::optional<std::filesystem::path>& optional_path_to_connections);
 
     /**
      * @brief Simulates the neurons for the requested number of steps. Every step_monitor-th step, records all neuron monitors

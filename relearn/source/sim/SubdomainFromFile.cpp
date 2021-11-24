@@ -21,8 +21,11 @@
 #include <iostream>
 #include <sstream>
 
-SubdomainFromFile::SubdomainFromFile(const std::filesystem::path& file_path, std::shared_ptr<Partition> partition)
-    : file(file_path) {
+SubdomainFromFile::SubdomainFromFile(
+    const std::filesystem::path& file_path, const std::optional<std::filesystem::path>& file_path_positions, std::shared_ptr<Partition> partition)
+    : NeuronToSubdomainAssignment(partition)
+    , file(file_path)
+    , synapse_loader(std::make_shared<FileSynapseLoader>(partition, file_path_positions)) {
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, "Loading: {} \n", file_path);
 
     const bool file_is_good = file.good();

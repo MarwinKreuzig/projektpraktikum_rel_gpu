@@ -17,7 +17,8 @@
 #include <limits>
 
 SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t num_neurons, const double desired_frac_neurons_exc, const double um_per_neuron, std::shared_ptr<Partition> partition)
-    : um_per_neuron_(um_per_neuron) {
+    : NeuronToSubdomainAssignment(partition)
+    , um_per_neuron_(um_per_neuron) {
 
     RelearnException::check(desired_frac_neurons_exc >= 0.0 && desired_frac_neurons_exc <= 1.0,
         "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: The requested fraction of excitatory neurons is not in [0.0, 1.0]: {}", desired_frac_neurons_exc);

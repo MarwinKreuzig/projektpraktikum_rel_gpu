@@ -11,6 +11,7 @@
 #include "NeuronToSubdomainAssignment.h"
 
 #include "../neurons/models/SynapticElements.h"
+#include "../structure/Partition.h"
 #include "../util/RelearnException.h"
 
 #include <fstream>
@@ -114,6 +115,11 @@ std::vector<std::string> NeuronToSubdomainAssignment::neuron_area_names(const si
     }
 
     return areas;
+}
+
+void NeuronToSubdomainAssignment::set_simulation_box_length(const box_size_type& simulation_box_length) noexcept {
+    simulation_box_length_ = simulation_box_length;
+    partition->set_simulation_box_size({ 0, 0, 0 }, simulation_box_length);
 }
 
 bool NeuronToSubdomainAssignment::position_in_box(const position_type& pos, const box_size_type& box_min, const box_size_type& box_max) noexcept {

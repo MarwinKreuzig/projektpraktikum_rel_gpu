@@ -12,6 +12,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -49,12 +50,12 @@ public:
 };
 
 class FileSynapseLoader : public SynapseLoader {
-    std::filesystem::path path_to_file{};
+    std::optional<std::filesystem::path> optional_path_to_file{};
 
 public:
-    FileSynapseLoader(std::shared_ptr<Partition> partition, std::filesystem::path path_to_synapses)
+    FileSynapseLoader(std::shared_ptr<Partition> partition, const std::optional<std::filesystem::path>& path_to_synapses)
         : SynapseLoader(std::move(partition))
-        , path_to_file(std::move(path_to_synapses)) { }
+        , optional_path_to_file(path_to_synapses) { }
 
     std::pair<synapses_tuple_type, std::vector<neuron_id>> load_synapses(const std::vector<neuron_id>& affected_neuron_ids) override;
 };
