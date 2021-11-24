@@ -24,19 +24,21 @@
 SubdomainFromFile::SubdomainFromFile(
     const std::filesystem::path& file_path, const std::optional<std::filesystem::path>& file_path_positions, std::shared_ptr<Partition> partition)
     : NeuronToSubdomainAssignment(partition)
-    , file(file_path)
+    , path(file_path)
     , synapse_loader(std::make_shared<FileSynapseLoader>(partition, file_path_positions)) {
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, "Loading: {} \n", file_path);
-
-    const bool file_is_good = file.good();
-    const bool file_is_not_good = file.fail() || file.eof();
-
-    RelearnException::check(file_is_good && !file_is_not_good, "SubdomainFromFile::SubdomainFromFile: Opening the file was not successful");
 
     read_dimensions_from_file();
 }
 
 void SubdomainFromFile::read_dimensions_from_file() {
+    std::ifstream file(path);
+
+    const bool file_is_good = file.good();
+    const bool file_is_not_good = file.fail() || file.eof();
+
+    RelearnException::check(file_is_good && !file_is_not_good, "SubdomainFromFile::read_dimensions_from_file: Opening the file was not successful");
+
     box_size_type minimum(std::numeric_limits<box_size_type::value_type>::max());
     box_size_type maximum(std::numeric_limits<box_size_type::value_type>::min());
 
@@ -101,8 +103,12 @@ void SubdomainFromFile::read_dimensions_from_file() {
 }
 
 std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_from_file(const box_size_type& min, const box_size_type& max) {
-    file.clear();
-    file.seekg(0);
+    std::ifstream file(path);
+
+    const bool file_is_good = file.good();
+    const bool file_is_not_good = file.fail() || file.eof();
+
+    RelearnException::check(file_is_good && !file_is_not_good, "SubdomainFromFile::read_nodes_from_file: Opening the file was not successful");
 
     double placed_ex_neurons = 0.0;
     double placed_in_neurons = 0.0;
