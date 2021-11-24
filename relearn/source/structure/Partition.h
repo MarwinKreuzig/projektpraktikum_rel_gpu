@@ -11,9 +11,8 @@
 #pragma once
 
 #include "../Config.h"
-#include "../io/LogFiles.h"
-#include "../neurons/models/NeuronModels.h"
 #include "../structure/SpaceFillingCurve.h"
+#include "../util/RelearnException.h"
 #include "../util/Vec3.h"
 
 #include <memory>
@@ -244,15 +243,7 @@ public:
      * @param min The smallest position in the simulation box
      * @param max The largest position in the simulation box
      */
-    void set_simulation_box_size(const Vec3d& min, const Vec3d& max) {
-        simulation_box_length = max - min;
-        const auto& subdomain_length = simulation_box_length / static_cast<double>(number_subdomains_per_dimension);
-
-        LogFiles::print_message_rank(0, "Simulation box length (height, width, depth)\t: ({}, {}, {})",
-            simulation_box_length.get_x(), simulation_box_length.get_y(), simulation_box_length.get_z());
-        LogFiles::print_message_rank(0, "Subdomain length (height, width, depth)\t: ({}, {}, {})",
-            subdomain_length.get_x(), subdomain_length.get_y(), subdomain_length.get_z());
-    }
+    void set_simulation_box_size(const Vec3d& min, const Vec3d& max);
 
     /**
      * @brief Returns the size of the simulation box

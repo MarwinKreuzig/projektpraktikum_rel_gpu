@@ -11,11 +11,6 @@
 #include "Partition.h"
 
 #include "../io/LogFiles.h"
-#include "../neurons/Neurons.h"
-#include "../sim/NeuronToSubdomainAssignment.h"
-#include "../util/RelearnException.h"
-#include "../util/Vec3.h"
-#include "OctreeNode.h"
 
 #include <sstream>
 
@@ -121,4 +116,14 @@ void Partition::print_my_subdomains_info_rank(const int rank) {
     }
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, sstream.str());
+}
+
+void Partition::set_simulation_box_size(const Vec3d& min, const Vec3d& max) {
+    simulation_box_length = max - min;
+    const auto& subdomain_length = simulation_box_length / static_cast<double>(number_subdomains_per_dimension);
+
+    LogFiles::print_message_rank(0, "Simulation box length (height, width, depth)\t: ({}, {}, {})",
+        simulation_box_length.get_x(), simulation_box_length.get_y(), simulation_box_length.get_z());
+    LogFiles::print_message_rank(0, "Subdomain length (height, width, depth)\t: ({}, {}, {})",
+        subdomain_length.get_x(), subdomain_length.get_y(), subdomain_length.get_z());
 }
