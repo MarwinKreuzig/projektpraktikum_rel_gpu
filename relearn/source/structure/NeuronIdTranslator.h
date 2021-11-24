@@ -78,7 +78,7 @@ class RandomNeuronIdTranslator : public NeuronIdTranslator {
     size_t number_local_neurons{ Constants::uninitialized };
 
 public:
-    RandomNeuronIdTranslator(std::shared_ptr<Partition> partition, size_t number_local_neurons);
+    explicit RandomNeuronIdTranslator(std::shared_ptr<Partition> partition);
 
     std::map<neuron_id, RankNeuronId> translate_global_ids(const std::vector<neuron_id>& global_ids) override;
 

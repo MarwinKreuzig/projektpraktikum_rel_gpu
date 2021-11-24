@@ -11,6 +11,7 @@
 #include "SubdomainFromNeuronDensity.h"
 
 #include "../mpi/MPIWrapper.h"
+#include "../structure/SynapseLoader.h"
 #include "../util/Random.h"
 #include "../util/RelearnException.h"
 
@@ -167,6 +168,13 @@ void SubdomainFromNeuronDensity::fill_subdomain(const size_t subdomain_idx, [[ma
 std::vector<size_t> SubdomainFromNeuronDensity::neuron_global_ids([[maybe_unused]] const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains) const {
 
     return {};
+}
+
+void SubdomainFromNeuronDensity::initialize() {
+    NeuronToSubdomainAssignment::initialize();
+
+    neuron_id_translator = std::make_shared<RandomNeuronIdTranslator>(partition);
+    synapse_loader = std::make_shared<RandomSynapseLoader>(partition, neuron_id_translator);
 }
 
 std::tuple<SubdomainFromNeuronDensity::box_size_type, SubdomainFromNeuronDensity::box_size_type> SubdomainFromNeuronDensity::get_subdomain_boundaries(

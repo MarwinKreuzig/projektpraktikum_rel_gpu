@@ -54,7 +54,7 @@ public:
         return neuron_id_translator;
     }
 
-    void initialize();
+    virtual void initialize();
 
     /**
      * @brief Returns the total number of neurons that should be placed

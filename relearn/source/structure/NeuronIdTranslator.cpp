@@ -246,8 +246,10 @@ std::map<RankNeuronId, NeuronIdTranslator::neuron_id> FileNeuronIdTranslator::tr
     return std::map<RankNeuronId, neuron_id>();
 }
 
-RandomNeuronIdTranslator::RandomNeuronIdTranslator(std::shared_ptr<Partition> partition, size_t number_local_neurons)
+RandomNeuronIdTranslator::RandomNeuronIdTranslator(std::shared_ptr<Partition> partition)
     : NeuronIdTranslator(std::move(partition)) {
+    number_local_neurons = this->partition->get_number_local_neurons();
+
     const auto num_ranks = MPIWrapper::get_num_ranks();
 
     // Gather the number of neurons of every process

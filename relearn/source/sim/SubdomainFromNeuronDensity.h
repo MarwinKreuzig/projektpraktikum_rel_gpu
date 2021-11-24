@@ -77,6 +77,8 @@ public:
 
     constexpr static double default_um_per_neuron = 26.0;
 
+    void initialize() override;
+
 private:
     const double um_per_neuron_{ default_um_per_neuron }; // Micrometer per neuron in one dimension
 

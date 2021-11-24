@@ -23,18 +23,18 @@ class NeuronIdTranslator;
 class Partition;
 
 class SynapseLoader {
-
 public:
-    using LocalSynapse = std::tuple<size_t, size_t, int>;
-    using InSynapse = std::tuple<RankNeuronId, size_t, int>;
-    using OutSynapse = std::tuple<size_t, RankNeuronId, int>;
+    using neuron_id = size_t;
+
+    using LocalSynapse = std::tuple<neuron_id, neuron_id, int>;
+    using InSynapse = std::tuple<RankNeuronId, neuron_id, int>;
+    using OutSynapse = std::tuple<neuron_id, RankNeuronId, int>;
 
     using LocalSynapses = std::vector<LocalSynapse>;
     using InSynapses = std::vector<InSynapse>;
     using OutSynapses = std::vector<OutSynapse>;
 
-    using neuron_id = size_t;
-
+protected:
     using source_neuron_id = neuron_id;
     using target_neuron_id = neuron_id;
 
@@ -80,7 +80,6 @@ public:
 };
 
 class RandomSynapseLoader : public SynapseLoader {
-
 protected:
     std::pair<synapses_tuple_type, std::vector<neuron_id>> internal_load_synapses() override {
         return std::pair<synapses_tuple_type, std::vector<neuron_id>>();

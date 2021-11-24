@@ -15,7 +15,6 @@
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
 
-#include <memory>
 #include <tuple>
 #include <vector>
 
