@@ -137,6 +137,8 @@ void Simulation::initialize() {
 
     neuron_to_subdomain_assignment->initialize();
 
+    std::map<int, std::vector<Vec3d>> local_positions{};
+
     partition->calculate_local_ids();
 
     {
@@ -164,8 +166,7 @@ void Simulation::initialize() {
             const auto subdomain_idx = i + my_subdomain_id_start;
 
             // Get neuron positions in subdomain i
-            std::vector<NeuronToSubdomainAssignment::position_type> vec_pos =
-                neuron_to_subdomain_assignment->neuron_positions(subdomain_idx, total_num_subdomains,
+            std::vector<NeuronToSubdomainAssignment::position_type> vec_pos = neuron_to_subdomain_assignment->neuron_positions(subdomain_idx, total_num_subdomains,
                 subdomain_pos_min, subdomain_pos_max);
 
             // Get neuron area names in subdomain i
@@ -191,7 +192,7 @@ void Simulation::initialize() {
                 neuron_id++;
             }
 
-            partition->set_local_positions(i, std::move(vec_pos));
+            local_positions[i] = std::move(vec_pos);
         }
 
         neurons->set_area_names(std::move(area_names));
@@ -220,7 +221,18 @@ void Simulation::initialize() {
             size_t index_1d = partition->get_1d_index_for_local_subdomain(i);
 
             auto* local_root = octree->get_local_root(index_1d);
-            partition->insert_nodes_into(local_root, i);
+
+            const auto& subdomain = partition->get_subdomain(i);
+            auto neuron_id = subdomain.neuron_local_id_start;
+
+            const auto& positions = local_positions[i];
+
+            for (const auto& position : local_positions[i]) {
+                auto* const node = local_root->insert(position, neuron_id, my_rank);
+                RelearnException::check(node != nullptr, "node is nullptr");
+
+                neuron_id++;
+            }
         }
 
         global_tree->initializes_leaf_nodes(partition->get_my_num_neurons());
@@ -242,7 +254,17 @@ void Simulation::initialize() {
             size_t index_1d = partition->get_1d_index_for_local_subdomain(i);
 
             auto* local_root = octree->get_local_root(index_1d);
-            partition->insert_nodes_into(local_root, i);
+            const auto& subdomain = partition->get_subdomain(i);
+            auto neuron_id = subdomain.neuron_local_id_start;
+
+            const auto& positions = local_positions[i];
+
+            for (const auto& position : local_positions[i]) {
+                auto* const node = local_root->insert(position, neuron_id, my_rank);
+                RelearnException::check(node != nullptr, "node is nullptr");
+
+                neuron_id++;
+            }
         }
 
         global_tree->initializes_leaf_nodes(partition->get_my_num_neurons());

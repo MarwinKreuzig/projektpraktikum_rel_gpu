@@ -11,7 +11,7 @@
 #pragma once
 
 #include "../Config.h"
-#include "../mpi/MPIWrapper.h"
+#include "../io/LogFiles.h"
 #include "../neurons/models/NeuronModels.h"
 #include "../structure/SpaceFillingCurve.h"
 #include "../util/Vec3.h"
@@ -259,32 +259,6 @@ public:
      */
     void set_total_num_neurons(const size_t total_num) noexcept {
         total_num_neurons = total_num;
-    }
-
-    /**
-     * @brief Inserts all neurons for a given subdomain id into the octree node. 
-     * @tparam AdditionalCellAttributes The additional cell attributes for the octree node
-     * @param local_root The octree node where all neurons shall be inserted
-     * @param subdomain_id The local subdomain id which's neurons shall be inserted
-     * @exception Throws a RelearnException if local_root is nullptr, subdomain_id is larger than the stored subdomains,
-     *      or there was a memory error when creating the octree nodes
-     */
-    template <typename AdditionalCellAttributes>
-    void insert_nodes_into(OctreeNode<AdditionalCellAttributes>* local_root, const size_t subdomain_id) const {
-        RelearnException::check(local_root != nullptr, "Partition::insert_nodes_into: local_root was nullptr");
-        RelearnException::check(subdomain_id < subdomains.size(), "Partition::insert_nodes_into: subdomain_id was too large: {} vs {}", subdomain_id, subdomains.size());
-
-        const auto& current_subdomain = subdomains[subdomain_id];
-        auto neuron_id = current_subdomain.neuron_local_id_start;
-
-        const auto my_rank = MPIWrapper::get_my_rank();
-        for (size_t j = 0; j < current_subdomain.num_neurons; j++) {
-            // Insert neuron into tree
-            auto* const node = local_root->insert(current_subdomain.local_positions[j], neuron_id, my_rank);
-            RelearnException::check(node != nullptr, "node is nullptr");
-
-            neuron_id++;
-        }
     }
 
 private:
