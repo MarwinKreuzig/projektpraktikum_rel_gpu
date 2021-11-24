@@ -28,10 +28,8 @@ protected:
 
     std::shared_ptr<Partition> partition{};
 
-    size_t number_local_neurons{ Constants::uninitialized };
-
 public:
-    NeuronIdTranslator(std::shared_ptr<Partition> partition, size_t number_local_neurons);
+    explicit NeuronIdTranslator(std::shared_ptr<Partition> partition);
 
     virtual std::map<neuron_id, RankNeuronId> translate_global_ids(const std::vector<neuron_id>& global_ids) = 0;
 
@@ -47,8 +45,8 @@ protected:
     std::filesystem::path path_to_neurons{};
 
 public:
-    FileNeuronIdTranslator(std::shared_ptr<Partition> partition, size_t number_local_neurons, std::filesystem::path path_to_neurons)
-        : NeuronIdTranslator(std::move(partition), number_local_neurons)
+    FileNeuronIdTranslator(std::shared_ptr<Partition> partition, std::filesystem::path path_to_neurons)
+        : NeuronIdTranslator(std::move(partition))
         , path_to_neurons(std::move(path_to_neurons)) { }
 
     std::map<neuron_id, RankNeuronId> translate_global_ids(const std::vector<neuron_id>& global_ids) override;
@@ -63,6 +61,8 @@ private:
 
 class RandomNeuronIdTranslator : public NeuronIdTranslator {
     std::vector<size_t> mpi_rank_to_local_start_id{};
+
+    size_t number_local_neurons{ Constants::uninitialized };
 
 public:
     RandomNeuronIdTranslator(std::shared_ptr<Partition> partition, size_t number_local_neurons);

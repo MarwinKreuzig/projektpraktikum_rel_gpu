@@ -25,7 +25,8 @@ SubdomainFromFile::SubdomainFromFile(
     const std::filesystem::path& file_path, const std::optional<std::filesystem::path>& file_path_positions, std::shared_ptr<Partition> partition)
     : NeuronToSubdomainAssignment(partition)
     , path(file_path)
-    , synapse_loader(std::make_shared<FileSynapseLoader>(partition, file_path_positions)) {
+    , synapse_loader(std::make_shared<FileSynapseLoader>(partition, file_path_positions))
+    , neuron_id_translator(std::make_shared<FileNeuronIdTranslator>(partition, file_path)) {
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, "Loading: {} \n", file_path);
 
     read_dimensions_from_file();

@@ -21,9 +21,8 @@
 #include <string>
 #include <vector>
 
-NeuronIdTranslator::NeuronIdTranslator(std::shared_ptr<Partition> partition, size_t number_local_neurons)
-    : partition(std::move(partition))
-    , number_local_neurons(number_local_neurons) {
+NeuronIdTranslator::NeuronIdTranslator(std::shared_ptr<Partition> partition)
+    : partition(std::move(partition)) {
 }
 
 std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::translate_global_ids(const std::vector<neuron_id>& global_ids) {
@@ -202,7 +201,7 @@ std::map<RankNeuronId, NeuronIdTranslator::neuron_id> FileNeuronIdTranslator::tr
 }
 
 RandomNeuronIdTranslator::RandomNeuronIdTranslator(std::shared_ptr<Partition> partition, size_t number_local_neurons)
-    : NeuronIdTranslator(std::move(partition), number_local_neurons) {
+    : NeuronIdTranslator(std::move(partition)) {
     const auto num_ranks = MPIWrapper::get_num_ranks();
 
     // Gather the number of neurons of every process
@@ -225,7 +224,7 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> RandomNeuronIdTranslator::
 
     if (num_ranks == 1) {
         for (const auto& global_id : global_ids) {
-            RelearnException::check(global_id < number_local_neurons, 
+            RelearnException::check(global_id < number_local_neurons,
                 "RandomNeuronIdTranslator::translate_global_ids: Global id ({}) is too large for the number of local neurons ({})", global_id, number_local_neurons);
 
             return_value.emplace(global_id, RankNeuronId{ 0, global_id });
@@ -251,7 +250,7 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> RandomNeuronIdTranslator::
         }
 
         RelearnException::check(global_id >= current_start, "RandomNeuronIdTranslator::translate_global_ids: Error in while loop");
-        
+
         if (current_rank < num_ranks) {
             RelearnException::check(global_id < current_rank, "RandomNeuronIdTranslator::translate_global_ids: While loop breaked too early");
         }
