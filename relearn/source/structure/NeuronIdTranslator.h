@@ -22,10 +22,11 @@
 class Partition;
 
 class NeuronIdTranslator {
-protected:
+public:
     using neuron_id = size_t;
     using position_type = RelearnTypes::position_type;
 
+protected:
     std::shared_ptr<Partition> partition{};
 
     std::vector<std::vector<size_t>> global_neuron_ids{};

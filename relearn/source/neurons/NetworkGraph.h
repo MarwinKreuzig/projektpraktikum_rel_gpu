@@ -24,9 +24,7 @@
 #include <utility>
 #include <vector>
 
-class NeuronIdTranslator;
 class NeuronsExtraInfo;
-class Partition;
 
 /**
   * An object of type NetworkGraph stores the synaptic connections between neurons, that are relevant for the current MPI rank.
@@ -438,18 +436,6 @@ public:
     void add_edges(const std::vector<local_synapse>& local_edges, const std::vector<in_synapse>& in_edges, const std::vector<out_synapse>& out_edges);
 
     /**
-     * @brief Loads all edges from the file that are relevant for the local network graph.
-     * @param path_synapses The path to the file in which the synapses are stored (with the global neuron ids starting at 1)
-     * @param path_neurons The path to the file in which the neurons are stored (with the global neuron ids starting at 1 and their positions)
-     * @param partition The Partition object that is used to determine which neurons are local
-     * @exception Throws a RelearnException if 
-     *      (a) the parsing of the files failed, 
-     *      (b) the network graph was not initialized with enough storage space
-     *      Throws an exception if the allocation of memory fails
-     */
-    void add_edges_from_file(const std::filesystem::path& path_synapses, const std::filesystem::path& path_neurons, const Partition& partition, const std::shared_ptr<NeuronIdTranslator>& nit);
-
-    /**
      * @brief Checks if the specified file contains only synapses between neurons with specified ids (only works locally).
      * @param path_synapses The path to the file in which the synapses are stored (with the global neuron ids starting at 1)
      * @param neuron_ids The neuron ids between which the synapses should be formed. Must be sorted ascendingly
@@ -546,20 +532,6 @@ private:
 
         edges.emplace_back(other_neuron_id, weight);
     }
-
-    // NOLINTNEXTLINE
-    static void translate_global_to_local(const std::map<size_t, int>& id_to_rank, const Partition& partition, std::map<size_t, size_t>& global_id_to_local_id, const std::shared_ptr<NeuronIdTranslator>& nit);
-
-    // NOLINTNEXTLINE
-    static void load_neuron_positions(const std::filesystem::path& path_neurons, std::set<size_t>& foreing_ids, std::map<size_t, position_type>& id_to_pos);
-
-    // NOLINTNEXTLINE
-    static void load_synapses(const std::filesystem::path& path_synapses,
-        const Partition& partition,
-        std::set<size_t>& foreing_ids,
-        std::vector<std::tuple<size_t, size_t, int>>& local_synapses,
-        std::vector<std::tuple<size_t, size_t, int>>& out_synapses,
-        std::vector<std::tuple<size_t, size_t, int>>& in_synapses, const std::shared_ptr<NeuronIdTranslator>& nit);
 
     NeuronDistantInNeighborhood neuron_distant_in_neighborhood{};
     NeuronDistantOutNeighborhood neuron_distant_out_neighborhood{};

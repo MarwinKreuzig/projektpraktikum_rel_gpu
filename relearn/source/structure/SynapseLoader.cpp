@@ -20,7 +20,7 @@
 #include <string>
 
 std::pair<FileSynapseLoader::synapses_tuple_type, std::vector<FileSynapseLoader::neuron_id>>
-FileSynapseLoader::load_synapses(const std::vector<neuron_id>& affected_neuron_ids) {
+FileSynapseLoader::internal_load_synapses() {
 
     if (!optional_path_to_file.has_value()) {
         return {};
@@ -132,4 +132,35 @@ FileSynapseLoader::load_synapses(const std::vector<neuron_id>& affected_neuron_i
     auto return_value = std::make_pair(std::move(return_synapses), std::move(global_ids));
 
     return return_value;
+}
+
+std::tuple<SynapseLoader::LocalSynapses, SynapseLoader::InSynapses, SynapseLoader::OutSynapses> SynapseLoader::load_synapses() {
+
+    const auto& [synapses, global_ids] = internal_load_synapses();
+    const auto& [local_synapses, in_synapses, out_synapses] = synapses;
+
+    LocalSynapses return_local_synapses{};
+    return_local_synapses.reserve(local_synapses.size());
+
+    InSynapses return_in_synapses{};
+    return_in_synapses.reserve(in_synapses.size());
+
+    OutSynapses return_out_synapses{};
+    return_out_synapses.reserve(out_synapses.size());
+
+    const auto& translated_ids = nit->translate_global_ids(global_ids);
+
+    for (const auto& [source_id, target_id, weight] : local_synapses) {
+        return_local_synapses.emplace_back(source_id, target_id, weight);
+    }
+
+    for (const auto& [source_id, target_id, weight] : in_synapses) {
+        return_in_synapses.emplace_back(translated_ids.at(source_id), target_id, weight);
+    }
+
+    for (const auto& [source_id, target_id, weight] : out_synapses) {
+        return_out_synapses.emplace_back(source_id, translated_ids.at(target_id), weight);
+    }
+
+    return { return_local_synapses, return_in_synapses, return_out_synapses };
 }

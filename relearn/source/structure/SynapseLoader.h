@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "../neurons/helper/RankNeuronId.h"
+
 #include <filesystem>
 #include <memory>
 #include <optional>
@@ -21,11 +23,16 @@ class NeuronIdTranslator;
 class Partition;
 
 class SynapseLoader {
-protected:
-    std::shared_ptr<Partition> partition{};
-    std::shared_ptr<NeuronIdTranslator> nit{};
 
 public:
+    using LocalSynapse = std::tuple<size_t, size_t, int>;
+    using InSynapse = std::tuple<RankNeuronId, size_t, int>;
+    using OutSynapse = std::tuple<size_t, RankNeuronId, int>;
+
+    using LocalSynapses = std::vector<LocalSynapse>;
+    using InSynapses = std::vector<InSynapse>;
+    using OutSynapses = std::vector<OutSynapse>;
+
     using neuron_id = size_t;
 
     using source_neuron_id = neuron_id;
@@ -43,31 +50,43 @@ public:
 
     using synapses_tuple_type = std::tuple<local_synapses_type, in_synapses_type, out_synapses_type>;
 
+protected:
+    std::shared_ptr<Partition> partition{};
+    std::shared_ptr<NeuronIdTranslator> nit{};
+
+    virtual std::pair<synapses_tuple_type, std::vector<neuron_id>> internal_load_synapses() = 0;
+
+public:
     SynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator)
         : partition(std::move(partition))
         , nit(std::move(neuron_id_translator)) { }
 
-    virtual std::pair<synapses_tuple_type, std::vector<neuron_id>> load_synapses(const std::vector<neuron_id>& affected_neuron_ids) = 0;
+    std::tuple<LocalSynapses, InSynapses, OutSynapses> load_synapses();
 
-    virtual ~SynapseLoader() = default;
+    virtual ~SynapseLoader()
+        = default;
 };
 
 class FileSynapseLoader : public SynapseLoader {
     std::optional<std::filesystem::path> optional_path_to_file{};
 
+protected:
+    std::pair<synapses_tuple_type, std::vector<neuron_id>> internal_load_synapses() override;
+
 public:
     FileSynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator, const std::optional<std::filesystem::path>& path_to_synapses)
         : SynapseLoader(std::move(partition), std::move(neuron_id_translator))
         , optional_path_to_file(path_to_synapses) { }
-
-    std::pair<synapses_tuple_type, std::vector<neuron_id>> load_synapses(const std::vector<neuron_id>& affected_neuron_ids) override;
 };
 
 class RandomSynapseLoader : public SynapseLoader {
-    RandomSynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator)
-        : SynapseLoader(std::move(partition), std::move(neuron_id_translator)) { }
 
-    std::pair<synapses_tuple_type, std::vector<neuron_id>> load_synapses(const std::vector<neuron_id>& affected_neuron_ids) {
+protected:
+    std::pair<synapses_tuple_type, std::vector<neuron_id>> internal_load_synapses() override {
         return std::pair<synapses_tuple_type, std::vector<neuron_id>>();
     }
+
+public:
+    RandomSynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator)
+        : SynapseLoader(std::move(partition), std::move(neuron_id_translator)) { }
 };

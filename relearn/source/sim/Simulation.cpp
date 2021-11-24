@@ -116,19 +116,17 @@ void Simulation::load_neurons_from_file(const std::filesystem::path& path_to_pos
     auto nit = neuron_to_subdomain_assignment->get_neuron_id_translator();
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
 
-    if (optional_path_to_connections.has_value()) {
-        const auto& path_to_connections = optional_path_to_connections.value();
+    auto [local_synapses, in_synapses, out_synapses] = synapse_loader->load_synapses();
 
-        network_graph->add_edges_from_file(path_to_connections, path_to_positions, *partition, nit);
-        LogFiles::print_message_rank(0, "Network graph created");
+    network_graph->add_edges(local_synapses, in_synapses, out_synapses);
+        
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded {} local synapses, {} in synapses, and {} out synapses", local_synapses.size(), in_synapses.size(), out_synapses.size());
 
-        neurons->init_synaptic_elements();
-        neurons->debug_check_counts();
-        LogFiles::print_message_rank(0, "Synaptic elements initialized");
-    } else {
-        LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded synapses: 0");
-    }
+    LogFiles::print_message_rank(0, "Network graph created");
+    LogFiles::print_message_rank(0, "Synaptic elements initialized");
 
+    neurons->init_synaptic_elements();
+    neurons->debug_check_counts();
     neurons->print_neurons_overview_to_log_file_on_rank_0(0);
     neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0);
 }
