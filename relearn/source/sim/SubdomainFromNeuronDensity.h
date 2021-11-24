@@ -81,8 +81,7 @@ public:
     /**
      * @brief This method is not implemented for this class
      */
-    [[nodiscard]] std::vector<size_t> neuron_global_ids(const size_t subdomain_idx, const size_t num_subdomains,
-        const size_t local_id_start, const size_t local_id_end) const override;
+    [[nodiscard]] std::vector<size_t> neuron_global_ids(const size_t subdomain_idx, const size_t num_subdomains) const override;
 
     constexpr static double default_um_per_neuron = 26.0;
 

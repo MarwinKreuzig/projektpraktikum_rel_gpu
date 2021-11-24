@@ -81,8 +81,7 @@ public:
      * @exception Throws a RelearnException if the subdomain is not loaded
      * @return The global ids for the specified subdomain
      */
-    [[nodiscard]] std::vector<size_t> neuron_global_ids(const size_t subdomain_idx, const size_t num_subdomains,
-        const size_t local_id_start, const size_t local_id_end) const override;
+    [[nodiscard]] std::vector<size_t> neuron_global_ids(const size_t subdomain_idx, const size_t num_subdomains) const override;
 
     /**
      * @brief Returns the number of neurons in the associated file

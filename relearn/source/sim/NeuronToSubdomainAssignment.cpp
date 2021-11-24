@@ -156,3 +156,23 @@ void NeuronToSubdomainAssignment::write_neurons_to_file(const std::string& filen
     of.flush();
     of.close();
 }
+
+void NeuronToSubdomainAssignment::initialize() {
+    const auto num_subdomains = partition->get_my_num_subdomains();
+
+    for (auto i = 0; i < num_subdomains; i++) {
+        const auto& subdomain = partition->get_subdomain(i);
+
+        const auto& [min, max] = get_subdomain_boundaries(subdomain.index_3d, partition->get_num_subdomains_per_dimension());
+        partition->set_subdomain_boundaries(i, min, max);
+
+        fill_subdomain(subdomain.index_1d, num_subdomains, min, max);
+
+        const auto number_neurons = num_neurons(subdomain.index_1d, num_subdomains, min, max);
+        partition->set_subdomain_num_neurons(i, number_neurons);
+
+        auto global_ids = neuron_global_ids(subdomain.index_1d, num_subdomains);
+
+        partition->set_subdomain_global_ids(i, std::move(global_ids));
+    }
+}

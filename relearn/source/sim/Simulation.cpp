@@ -135,7 +135,73 @@ void Simulation::initialize() {
 
     construct_neurons();
 
-    partition->load_data_from_subdomain_assignment(neurons, std::move(neuron_to_subdomain_assignment));
+    neuron_to_subdomain_assignment->initialize();
+
+    partition->calculate_local_ids();
+
+    {
+        const auto my_num_neurons = partition->get_my_num_neurons();
+        const auto my_num_subdomains = partition->get_my_num_subdomains();
+        const auto total_num_subdomains = partition->get_total_num_subdomains();
+        const auto my_subdomain_id_start = partition->get_my_subdomain_id_start();
+
+        const auto my_rank = MPIWrapper::get_my_rank();
+
+        neurons->init(my_num_neurons);
+
+        std::vector<double> x_dims(my_num_neurons);
+        std::vector<double> y_dims(my_num_neurons);
+        std::vector<double> z_dims(my_num_neurons);
+
+        std::vector<std::string> area_names(my_num_neurons);
+        std::vector<SignalType> signal_types(my_num_neurons);
+
+        for (size_t i = 0; i < my_num_subdomains; i++) {
+            const auto& current_subdomain = partition->get_subdomain(i);
+            const auto& subdomain_pos_min = current_subdomain.xyz_min;
+            const auto& subdomain_pos_max = current_subdomain.xyz_max;
+
+            const auto subdomain_idx = i + my_subdomain_id_start;
+
+            // Get neuron positions in subdomain i
+            std::vector<NeuronToSubdomainAssignment::position_type> vec_pos =
+                neuron_to_subdomain_assignment->neuron_positions(subdomain_idx, total_num_subdomains,
+                subdomain_pos_min, subdomain_pos_max);
+
+            // Get neuron area names in subdomain i
+            std::vector<std::string> vec_area = neuron_to_subdomain_assignment->neuron_area_names(subdomain_idx, total_num_subdomains,
+                subdomain_pos_min, subdomain_pos_max);
+
+            // Get neuron types in subdomain i
+            std::vector<SignalType> vec_type = neuron_to_subdomain_assignment->neuron_types(subdomain_idx, total_num_subdomains,
+                subdomain_pos_min, subdomain_pos_max);
+
+            size_t neuron_id = current_subdomain.neuron_local_id_start;
+
+            for (size_t j = 0; j < current_subdomain.num_neurons; j++) {
+                x_dims[neuron_id] = vec_pos[j].get_x();
+                y_dims[neuron_id] = vec_pos[j].get_y();
+                z_dims[neuron_id] = vec_pos[j].get_z();
+
+                area_names[neuron_id] = std::move(vec_area[j]);
+
+                // Mark neuron as DendriteType::EXCITATORY or DendriteType::INHIBITORY
+                signal_types[neuron_id] = vec_type[j];
+
+                neuron_id++;
+            }
+
+            partition->set_local_positions(i, std::move(vec_pos));
+        }
+
+        neurons->set_area_names(std::move(area_names));
+        neurons->set_x_dims(std::move(x_dims));
+        neurons->set_y_dims(std::move(y_dims));
+        neurons->set_z_dims(std::move(z_dims));
+        neurons->set_signal_types(std::move(signal_types));
+
+        partition->set_loaded();
+    }
 
     NeuronMonitor::neurons_to_monitor = neurons;
 

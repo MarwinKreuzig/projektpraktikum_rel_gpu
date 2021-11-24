@@ -81,6 +81,33 @@ public:
      */
     void print_my_subdomains_info_rank(int rank);
 
+    void set_loaded() noexcept {
+        neurons_loaded = true;
+    }
+
+    void set_local_positions(size_t subdomain_idx, std::vector<position_type> pos) {
+        subdomains[subdomain_idx].local_positions = std::move(pos);
+    }
+
+    const Subdomain& get_subdomain(size_t subdomain_idx) const noexcept {
+        return subdomains[subdomain_idx];
+    }
+
+    void set_subdomain_boundaries(size_t subdomain_idx, const Vec3d& min, const Vec3d& max) {
+        subdomains[subdomain_idx].xyz_min = min;
+        subdomains[subdomain_idx].xyz_max = max;
+    }
+
+    void set_subdomain_num_neurons(size_t subdomain_idx, size_t num_neurons) {
+        subdomains[subdomain_idx].num_neurons = num_neurons;
+    }
+
+    void set_subdomain_global_ids(size_t subdomain_idx, std::vector<size_t> global_ids) {
+        subdomains[subdomain_idx].global_neuron_ids = std::move(global_ids);
+        std::sort(subdomains[subdomain_idx].global_neuron_ids.begin(), subdomains[subdomain_idx].global_neuron_ids.end());
+
+    }
+
     /**
      * @brief Checks if the neuron id is local to the current MPI rank
      * @param neuron_id The neuron id for which it should be determined if it's local on the current MPI rank
@@ -94,21 +121,21 @@ public:
      * @param neurons_in_subdomain The class that provides the neuron placements
      * @exception Throws a RelearnException of the neurons have already been loaded
      */
-    void load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment>&& neurons_in_subdomain);
+    void calculate_local_ids();
 
     /**
      * @brief Returns the number of local neurons
-     * @exception Throws a RelearnException if the load_data_from_subdomain_assignment has not been called
+     * @exception Throws a RelearnException if the calculate_local_ids has not been called
      * @return The number of local neurons
      */
     [[nodiscard]] size_t get_my_num_neurons() const {
-        RelearnException::check(neurons_loaded, "Partition::get_my_num_neurons: Neurons are not loaded yet");
+        RelearnException::check(my_num_neurons < Constants::uninitialized, "Partition::get_my_num_neurons: Neurons are not loaded yet");
         return my_num_neurons;
     }
 
     /**
      * @brief Returns the number of local subdomains
-     * @exception Throws a RelearnException if the load_data_from_subdomain_assignment has not been called
+     * @exception Throws a RelearnException if the calculate_local_ids has not been called
      * @return The number of local subdomains (1, 2, or 4)
      */
     [[nodiscard]] size_t get_my_num_subdomains() const noexcept {
@@ -117,7 +144,7 @@ public:
 
     /**
      * @brief Returns the size of the simulation box
-     * @exception Throws a RelearnException if the load_data_from_subdomain_assignment has not been called
+     * @exception Throws a RelearnException if the calculate_local_ids has not been called
      * @return The size of the simulation box as tuple (min, max)
      */
     [[nodiscard]] std::tuple<box_size_type, box_size_type> get_simulation_box_size() const {
@@ -185,7 +212,7 @@ public:
     /**
      * @brief Returns the mpi rank that is responsible for the position
      * @param pos The position which shall be resolved
-     * @exception Throws a RelearnException if the load_data_from_subdomain_assignment has not been called
+     * @exception Throws a RelearnException if the calculate_local_ids has not been called
      * @return Returns the MPI rank that is responsible for the position
      */
     [[nodiscard]] size_t get_mpi_rank_from_pos(const position_type& pos) const;
@@ -193,7 +220,7 @@ public:
     /**
      * @brief Translates a local neuron id to a global neuron id by prefix-summing the local neuron ids over all MPI ranks
      * @param local_id The local neuron id that should be translated
-     * @exception Throws a RelearnException if the load_data_from_subdomain_assignment has not been called
+     * @exception Throws a RelearnException if the calculate_local_ids has not been called
      * @return Returns the global neuron id
      */
     [[nodiscard]] size_t get_global_id(size_t local_id) const;
@@ -201,14 +228,14 @@ public:
     /**
      * @brief Translates a global neuron id to a local neuron id
      * @param local_id The global neuron id that should be translated
-     * @exception Throws a RelearnException if the load_data_from_subdomain_assignment has not been called
+     * @exception Throws a RelearnException if the calculate_local_ids has not been called
      * @return Returns the local neuron id
      */
     [[nodiscard]] size_t get_local_id(size_t global_id) const;
 
     /**
      * @brief Returns the total number of neurons
-     * @exception Throws a RelearnException if the load_data_from_subdomain_assignment has not been called
+     * @exception Throws a RelearnException if the calculate_local_ids has not been called
      * @return The total number of neurons
      */
     [[nodiscard]] size_t get_total_num_neurons() const noexcept {

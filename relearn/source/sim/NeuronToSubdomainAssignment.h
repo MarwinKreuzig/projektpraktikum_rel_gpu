@@ -49,6 +49,8 @@ public:
     virtual std::shared_ptr<SynapseLoader> get_synapse_loader() const noexcept = 0;
     virtual std::shared_ptr<NeuronIdTranslator> get_neuron_id_translator() const noexcept = 0;
 
+    void initialize();
+
     /**
      * @brief Returns the total number of neurons that should be placed
      * @return The total number of neurons that should be placed
@@ -184,8 +186,7 @@ public:
      * @exception Might throw a RelearnException
      * @return The global ids for the specified subdomain
      */
-    [[nodiscard]] virtual std::vector<size_t> neuron_global_ids(size_t subdomain_idx, size_t num_subdomains,
-        size_t local_id_start, size_t local_id_end) const = 0;
+    [[nodiscard]] virtual std::vector<size_t> neuron_global_ids(size_t subdomain_idx, size_t num_subdomains) const = 0;
 
 protected:
     struct Node {

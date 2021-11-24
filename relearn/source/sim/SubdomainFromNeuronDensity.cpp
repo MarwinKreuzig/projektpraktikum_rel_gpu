@@ -164,8 +164,7 @@ void SubdomainFromNeuronDensity::fill_subdomain(const size_t subdomain_idx, [[ma
     place_neurons_in_area(min, max, neurons_in_subdomain_count, subdomain_idx);
 }
 
-std::vector<size_t> SubdomainFromNeuronDensity::neuron_global_ids([[maybe_unused]] const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains,
-    [[maybe_unused]] const size_t local_id_start, [[maybe_unused]] const size_t local_id_end) const {
+std::vector<size_t> SubdomainFromNeuronDensity::neuron_global_ids([[maybe_unused]] const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains) const {
 
     return {};
 }

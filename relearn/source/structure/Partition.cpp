@@ -185,26 +185,12 @@ size_t Partition::get_local_id(const size_t global_id) const {
     return 0;
 }
 
-void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment>&& neurons_in_subdomain) {
-    RelearnException::check(!neurons_loaded, "Partition::load_data_from_subdomain_assignment:: Neurons are already loaded, cannot load anymore");
+void Partition::calculate_local_ids() {
+    RelearnException::check(!neurons_loaded, "Partition::calculate_local_ids:: Neurons are already loaded, cannot load anymore");
 
     my_num_neurons = 0;
     for (size_t i = 0; i < my_num_subdomains; i++) {
         Subdomain& current_subdomain = subdomains[i];
-
-        // Set position of subdomain
-        std::tie(current_subdomain.xyz_min, current_subdomain.xyz_max) = neurons_in_subdomain->get_subdomain_boundaries(current_subdomain.index_3d,
-            num_subdomains_per_dimension);
-
-        // Set number of neurons in this subdomain
-        const auto& xyz_min = current_subdomain.xyz_min;
-        const auto& xyz_max = current_subdomain.xyz_max;
-
-        neurons_in_subdomain->fill_subdomain(current_subdomain.index_1d,
-            total_num_subdomains, xyz_min, xyz_max);
-
-        current_subdomain.num_neurons = neurons_in_subdomain->num_neurons(current_subdomain.index_1d,
-            total_num_subdomains, xyz_min, xyz_max);
 
         // Add subdomain's number of neurons to rank's number of neurons
         my_num_neurons += current_subdomain.num_neurons;
@@ -213,68 +199,5 @@ void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neuron
         // 0-th subdomain starts with neuron id 0
         current_subdomain.neuron_local_id_start = (i == 0) ? 0 : (subdomains[i - 1].neuron_local_id_end + 1);
         current_subdomain.neuron_local_id_end = current_subdomain.neuron_local_id_start + current_subdomain.num_neurons - 1;
-
-        current_subdomain.global_neuron_ids = neurons_in_subdomain->neuron_global_ids(current_subdomain.index_1d,
-            total_num_subdomains,
-            current_subdomain.neuron_local_id_start,
-            current_subdomain.neuron_local_id_end);
-
-        std::sort(current_subdomain.global_neuron_ids.begin(), current_subdomain.global_neuron_ids.end());
     }
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
-    neurons->init(my_num_neurons);
-
-    std::vector<double> x_dims(my_num_neurons);
-    std::vector<double> y_dims(my_num_neurons);
-    std::vector<double> z_dims(my_num_neurons);
-
-    std::vector<std::string> area_names(my_num_neurons);
-    std::vector<SignalType> signal_types(my_num_neurons);
-
-    for (size_t i = 0; i < my_num_subdomains; i++) {
-        auto& current_subdomain = subdomains[i];
-        const auto& subdomain_pos_min = current_subdomain.xyz_min;
-        const auto& subdomain_pos_max = current_subdomain.xyz_max;
-
-        const auto subdomain_idx = i + my_subdomain_id_start;
-
-        // Get neuron positions in subdomain i
-        std::vector<NeuronToSubdomainAssignment::position_type> vec_pos = neurons_in_subdomain->neuron_positions(subdomain_idx, total_num_subdomains,
-            subdomain_pos_min, subdomain_pos_max);
-
-        // Get neuron area names in subdomain i
-        std::vector<std::string> vec_area = neurons_in_subdomain->neuron_area_names(subdomain_idx, total_num_subdomains,
-            subdomain_pos_min, subdomain_pos_max);
-
-        // Get neuron types in subdomain i
-        std::vector<SignalType> vec_type = neurons_in_subdomain->neuron_types(subdomain_idx, total_num_subdomains,
-            subdomain_pos_min, subdomain_pos_max);
-
-        size_t neuron_id = current_subdomain.neuron_local_id_start;
-
-        for (size_t j = 0; j < current_subdomain.num_neurons; j++) {
-            x_dims[neuron_id] = vec_pos[j].get_x();
-            y_dims[neuron_id] = vec_pos[j].get_y();
-            z_dims[neuron_id] = vec_pos[j].get_z();
-
-            area_names[neuron_id] = std::move(vec_area[j]);
-
-            // Mark neuron as DendriteType::EXCITATORY or DendriteType::INHIBITORY
-            signal_types[neuron_id] = vec_type[j];
-
-            neuron_id++;
-        }
-
-        current_subdomain.local_positions = std::move(vec_pos);
-    }
-
-    neurons->set_area_names(std::move(area_names));
-    neurons->set_x_dims(std::move(x_dims));
-    neurons->set_y_dims(std::move(y_dims));
-    neurons->set_z_dims(std::move(z_dims));
-    neurons->set_signal_types(std::move(signal_types));
-
-    neurons_loaded = true;
 }
