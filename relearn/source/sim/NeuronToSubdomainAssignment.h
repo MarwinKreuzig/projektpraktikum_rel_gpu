@@ -46,14 +46,30 @@ public:
     NeuronToSubdomainAssignment& operator=(const NeuronToSubdomainAssignment& other) = delete;
     NeuronToSubdomainAssignment& operator=(NeuronToSubdomainAssignment&& other) = delete;
 
-    std::shared_ptr<SynapseLoader> get_synapse_loader() const noexcept {
+    /**
+     * @brief Returns the associated SynapseLoader (some type that inherites from SynapseLoader)
+     * @exception Throws a RelearnException if synapse_loader is nullptr
+     * @return The associated SynapseLoader 
+     */
+    std::shared_ptr<SynapseLoader> get_synapse_loader() const {
+        RelearnException::check(synapse_loader.operator bool(), "NeuronToSubdomainAssignment::get_synapse_loader: synapse_loader is empty");
         return synapse_loader;
     }
 
-    std::shared_ptr<NeuronIdTranslator> get_neuron_id_translator() const noexcept {
+    /**
+     * @brief Returns the associated NeuronIdTranslator (some type that inherites from NeuronIdTranslator)
+     * @exception Throws a RelearnException if neuron_id_translator is nullptr
+     * @return The associated NeuronIdTranslator 
+     */
+    std::shared_ptr<NeuronIdTranslator> get_neuron_id_translator() const {
+        RelearnException::check(neuron_id_translator.operator bool(), "NeuronToSubdomainAssignment::get_neuron_id_translator: neuron_id_translator is empty");
         return neuron_id_translator;
     }
 
+    /**
+     * @brief Initializes the assignment class, i.e., loads all neurons for the subdomains.
+     *      This method is only virtual in case an inheriting class must do something afterwards.
+     */
     virtual void initialize();
 
     /**
@@ -87,32 +103,6 @@ public:
     [[nodiscard]] double placed_ratio_neurons_exc() const noexcept {
         return current_frac_neurons_exc_;
     }
-
-    /**
-     * @brief Returns the size of the simulation box
-     * @return The size of the simulation box
-     */
-    [[nodiscard]] const box_size_type& get_simulation_box_length() const noexcept {
-        return simulation_box_length_;
-    }
-
-    /** 
-     * @brief Returns the subdomain boundaries for a given subdomain
-     * @param subdomain_3idx The 3d index of the subdomain which's boundaries are requested
-     * @param num_subdomains_per_axis The number of local_subdomains per axis (the same for all dimensions), != 0
-     * @exception Throws a RelearnException if num_subdomains_per_axis == 0
-     * @return A tuple with (1) the minimum and (2) the maximum positions in the subdomain
-     */
-    [[nodiscard]] virtual std::tuple<box_size_type, box_size_type> get_subdomain_boundaries(const Vec3s& subdomain_3idx, size_t num_subdomains_per_axis) const;
-
-    /** 
-     * @brief Returns the subdomain boundaries for a given subdomain
-     * @param subdomain_3idx The 3d index of the subdomain which's boundaries are requested
-     * @param num_subdomains_per_axis The number of local_subdomains per axis (can have varying number per dimension)
-     * @exception Might throw a RelearnException
-     * @return A tuple with (1) the minimum and (2) the maximum positions in the subdomain
-     */
-    [[nodiscard]] virtual std::tuple<box_size_type, box_size_type> get_subdomain_boundaries(const Vec3s& subdomain_3idx, const Vec3s& num_subdomains_per_axis) const;
 
     /**
      * @brief Fills the subdomain with the given index and the boundaries. The implementation is left to the inhereting classes
@@ -218,8 +208,6 @@ protected:
         current_num_neurons_ = current_num_neurons;
     }
 
-    void set_simulation_box_length(const box_size_type& simulation_box_length) noexcept;
-
     [[nodiscard]] double get_desired_frac_neurons_exc() const noexcept {
         return desired_frac_neurons_exc_;
     }
@@ -271,6 +259,4 @@ private:
 
     double current_frac_neurons_exc_{ 0.0 };
     size_t current_num_neurons_{ 0 };
-
-    box_size_type simulation_box_length_{ 0 };
 };

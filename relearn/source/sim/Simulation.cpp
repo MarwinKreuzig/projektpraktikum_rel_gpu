@@ -124,9 +124,6 @@ void Simulation::initialize() {
 
     {
         const auto number_local_neurons = partition->get_number_local_neurons();
-        const auto number_local_subdomains = partition->get_number_local_subdomains();
-        const auto total_number_subdomains = partition->get_total_number_subdomains();
-        const auto local_subdomain_id_start = partition->get_local_subdomain_id_start();
 
         const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -139,7 +136,10 @@ void Simulation::initialize() {
         std::vector<std::string> area_names(number_local_neurons);
         std::vector<SignalType> signal_types(number_local_neurons);
 
+        const auto number_local_subdomains = partition->get_number_local_subdomains();
         for (size_t i = 0; i < number_local_subdomains; i++) {
+            const auto total_number_subdomains = partition->get_total_number_subdomains();
+            const auto local_subdomain_id_start = partition->get_local_subdomain_id_start();
             const auto subdomain_idx = i + local_subdomain_id_start;
 
             // Get neuron positions in subdomain i

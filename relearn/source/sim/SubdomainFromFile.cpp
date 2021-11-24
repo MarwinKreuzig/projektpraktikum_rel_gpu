@@ -101,7 +101,8 @@ void SubdomainFromFile::read_dimensions_from_file() {
 
     set_desired_num_neurons(desired_num_neurons_);
     set_desired_frac_neurons_exc(desired_frac_neurons_exc_);
-    set_simulation_box_length(simulation_box_length);
+
+    partition->set_simulation_box_size({ 0, 0, 0 }, simulation_box_length);
 }
 
 std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_from_file(const box_size_type& min, const box_size_type& max) {

@@ -43,23 +43,7 @@ public:
     SubdomainFromNeuronDensity& operator=(SubdomainFromNeuronDensity&& other) = delete;
 
     ~SubdomainFromNeuronDensity() override = default;
-
-    /** 
-     * @brief Returns the subdomain boundaries for a given subdomain
-     * @param subdomain_3idx The 3d index of the subdomain which's boundaries are requested
-     * @param num_subdomains_per_axis The number of local_subdomains per axis (the same for all dimensions), != 0
-     * @return A tuple with (1) the minimum and (2) the maximum positions in the subdomain
-     */
-    [[nodiscard]] std::tuple<box_size_type, box_size_type> get_subdomain_boundaries(const Vec3s& subdomain_3idx, const size_t num_subdomains_per_axis) const noexcept override;
-
-    /** 
-     * @brief Returns the subdomain boundaries for a given subdomain
-     * @param subdomain_3idx The 3d index of the subdomain which's boundaries are requested
-     * @param num_subdomains_per_axis The number of local_subdomains per axis (can have varying number per dimension)
-     * @return A tuple with (1) the minimum and (2) the maximum positions in the subdomain
-     */
-    [[nodiscard]] std::tuple<box_size_type, box_size_type> get_subdomain_boundaries(const Vec3s& subdomain_3idx, const Vec3s& num_subdomains_per_axis) const noexcept override;
-
+    
     /**
      * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
      * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled

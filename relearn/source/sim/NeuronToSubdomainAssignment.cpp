@@ -18,32 +18,6 @@
 #include <fstream>
 #include <iomanip>
 
-std::tuple<NeuronToSubdomainAssignment::box_size_type, NeuronToSubdomainAssignment::box_size_type> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3s& subdomain_3idx, const size_t num_subdomains_per_axis) const {
-    RelearnException::check(num_subdomains_per_axis > 0, "NeuronToSubdomainAssignment::get_subdomain_boundaries: The number of local_subdomains per axis must be greater than 0");
-    return get_subdomain_boundaries(subdomain_3idx, Vec3s{ num_subdomains_per_axis });
-}
-
-std::tuple<NeuronToSubdomainAssignment::box_size_type, NeuronToSubdomainAssignment::box_size_type> NeuronToSubdomainAssignment::get_subdomain_boundaries(const Vec3s& subdomain_3idx, const Vec3s& num_subdomains_per_axis) const {
-    RelearnException::check(num_subdomains_per_axis.get_x() > 0, "NeuronToSubdomainAssignment::get_subdomain_boundaries: The number of x local_subdomains must be greater than 0");
-    RelearnException::check(num_subdomains_per_axis.get_y() > 0, "NeuronToSubdomainAssignment::get_subdomain_boundaries: The number of y local_subdomains must be greater than 0");
-    RelearnException::check(num_subdomains_per_axis.get_z() > 0, "NeuronToSubdomainAssignment::get_subdomain_boundaries: The number of z local_subdomains must be greater than 0");
-
-    const auto& lengths = get_simulation_box_length();
-    const auto x_subdomain_length = lengths.get_x() / num_subdomains_per_axis.get_x();
-    const auto y_subdomain_length = lengths.get_y() / num_subdomains_per_axis.get_y();
-    const auto z_subdomain_length = lengths.get_z() / num_subdomains_per_axis.get_z();
-
-    box_size_type min{ subdomain_3idx.get_x() * x_subdomain_length, subdomain_3idx.get_y() * y_subdomain_length, subdomain_3idx.get_z() * z_subdomain_length };
-
-    const auto next_x = static_cast<double>(subdomain_3idx.get_x() + 1) * x_subdomain_length;
-    const auto next_y = static_cast<double>(subdomain_3idx.get_y() + 1) * y_subdomain_length;
-    const auto next_z = static_cast<double>(subdomain_3idx.get_z() + 1) * z_subdomain_length;
-
-    box_size_type max{ next_x, next_y, next_z };
-
-    return std::make_tuple(min, max);
-}
-
 size_t NeuronToSubdomainAssignment::number_neurons(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains) const {
 
     const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
@@ -114,11 +88,6 @@ std::vector<std::string> NeuronToSubdomainAssignment::neuron_area_names(const si
     return areas;
 }
 
-void NeuronToSubdomainAssignment::set_simulation_box_length(const box_size_type& simulation_box_length) noexcept {
-    simulation_box_length_ = simulation_box_length;
-    partition->set_simulation_box_size({ 0, 0, 0 }, simulation_box_length);
-}
-
 bool NeuronToSubdomainAssignment::position_in_box(const position_type& pos, const box_size_type& box_min, const box_size_type& box_max) noexcept {
     return ((pos.get_x() >= box_min.get_x() && pos.get_x() <= box_max.get_x()) && (pos.get_y() >= box_min.get_y() && pos.get_y() <= box_max.get_y()) && (pos.get_z() >= box_min.get_z() && pos.get_z() <= box_max.get_z()));
 }
@@ -163,7 +132,7 @@ void NeuronToSubdomainAssignment::initialize() {
         const auto& index_1d = partition->get_1d_index_of_subdomain(i);
         const auto& index_3d = partition->get_3d_index_of_subdomain(i);
 
-        const auto& [min, max] = get_subdomain_boundaries(index_3d, partition->get_number_subdomains_per_dimension());
+        const auto& [min, max] = partition->get_subdomain_boundaries(index_3d);
         partition->set_subdomain_boundaries(i, min, max);
 
         fill_subdomain(index_1d, num_subdomains, min, max);

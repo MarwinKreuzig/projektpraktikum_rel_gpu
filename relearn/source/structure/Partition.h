@@ -245,6 +245,49 @@ public:
     void set_simulation_box_size(const Vec3d& min, const Vec3d& max);
 
     /**
+     * @brief Returns the boundaries of the subdomain
+     * @param subdomain_index_1d The flattened index of the subdomain
+     * @return (minimum, maximum) of the subdomain
+     */
+    std::pair<Vec3d, Vec3d> get_subdomain_boundaries(const size_t subdomain_index_1d) {
+        return get_subdomain_boundaries(space_curve.map_1d_to_3d(subdomain_index_1d));
+    }
+
+    /**
+     * @brief Returns the boundaries of the subdomain
+     * @param subdomain_index_3d The 3-dimensional index of the subdomain
+     * @return (minimum, maximum) of the subdomain
+     */
+    std::pair<Vec3d, Vec3d> get_subdomain_boundaries(const Vec3s& subdomain_index_3d) {
+        const auto requested_subdomain_x = subdomain_index_3d.get_x();
+        const auto requested_subdomain_y = subdomain_index_3d.get_y();
+        const auto requested_subdomain_z = subdomain_index_3d.get_z();
+
+        const auto& [sim_box_min, sim_box_max] = get_simulation_box_size();
+        const auto& simulation_box_length = (sim_box_max - sim_box_min);
+
+        const auto& subdomain_length = simulation_box_length / number_subdomains_per_dimension;
+
+        const auto subdomain_x_length = subdomain_length.get_x();
+        const auto subdomain_y_length = subdomain_length.get_y();
+        const auto subdomain_z_length = subdomain_length.get_z();
+
+        box_size_type min{
+            requested_subdomain_x * subdomain_x_length,
+            requested_subdomain_y * subdomain_y_length,
+            requested_subdomain_z * subdomain_z_length
+        };
+
+        const auto next_x = static_cast<box_size_type::value_type>(requested_subdomain_x + 1) * subdomain_x_length;
+        const auto next_y = static_cast<box_size_type::value_type>(requested_subdomain_y + 1) * subdomain_y_length;
+        const auto next_z = static_cast<box_size_type::value_type>(requested_subdomain_z + 1) * subdomain_z_length;
+
+        box_size_type max{ next_x, next_y, next_z };
+
+        return std::make_pair(min, max);
+    }
+
+    /**
      * @brief Returns the size of the simulation box
      * @exception Throws a RelearnException if set_simulation_box_size was not called before
      * @return The size of the simulation box as tuple (min, max)
