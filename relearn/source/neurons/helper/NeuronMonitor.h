@@ -170,7 +170,7 @@ public:
 
     /**
      * @brief Constructs a NeuronMonitor that monitors the specified neuron
-     * @param num_neurons The local neuron id for the object to monitor
+     * @param neuron_id The local neuron id for the object to monitor
      */
     explicit NeuronMonitor(const size_t neuron_id) noexcept
         : target_neuron_id(neuron_id) {
@@ -198,7 +198,7 @@ public:
      */
     void record_data() {
         RelearnException::check(neurons_to_monitor.operator bool(), "NeuronMonitor::record_data: The shared pointer is empty");
-        RelearnException::check(target_neuron_id < neurons_to_monitor->num_neurons, "NeuronMonitor::record_data: The target id is too large for the neurons class");
+        RelearnException::check(target_neuron_id < neurons_to_monitor->number_neurons, "NeuronMonitor::record_data: The target id is too large for the neurons class");
 
         const double& calcium = neurons_to_monitor->calcium[target_neuron_id];
         const double& x = neurons_to_monitor->neuron_model->x[target_neuron_id];

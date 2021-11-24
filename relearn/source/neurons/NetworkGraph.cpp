@@ -74,7 +74,7 @@ void NetworkGraph::debug_check() const {
     // Golden map that stores all local edges
     std::map<std::pair<size_t, size_t>, EdgeWeight> edges{};
 
-    for (size_t neuron_id = 0; neuron_id < my_num_neurons; neuron_id++) {
+    for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
         const auto& local_out_edges = get_local_out_edges(neuron_id);
         const auto& distant_out_edges = get_distant_out_edges(neuron_id);
 
@@ -84,7 +84,7 @@ void NetworkGraph::debug_check() const {
         }
     }
 
-    for (size_t neuron_id = 0; neuron_id < my_num_neurons; neuron_id++) {
+    for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
         const auto local_in_edges = get_local_in_edges(neuron_id);
         const auto distant_in_edges = get_distant_in_edges(neuron_id);
 
@@ -114,7 +114,7 @@ void NetworkGraph::print(std::ostream& os, const std::unique_ptr<NeuronsExtraInf
     const int my_rank = mpi_rank;
 
     // For my neurons
-    for (size_t target_neuron_id = 0; target_neuron_id < my_num_neurons; target_neuron_id++) {
+    for (size_t target_neuron_id = 0; target_neuron_id < number_local_neurons; target_neuron_id++) {
         // Walk through in-edges of my neuron
         RankNeuronId rank_neuron_id{ my_rank, target_neuron_id };
 

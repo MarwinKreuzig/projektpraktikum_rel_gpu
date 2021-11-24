@@ -53,7 +53,7 @@ void NeuronModel::update_electrical_activity_update_activity(const std::vector<c
 
     // For my neurons
 #pragma omp parallel for shared(disable_flags) default(none)
-    for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
+    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {
             continue;
         }
@@ -69,7 +69,7 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
     // For my neurons
 
 #pragma omp parallel for shared(firing_neuron_ids_incoming, network_graph, disable_flags) default(none)
-    for (auto neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
+    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {
             continue;
         }
@@ -112,7 +112,7 @@ void NeuronModel::update_electrical_activity_calculate_background(const std::vec
 
     // There might be background activity
     if (background_activity_stddev > 0.0) {
-        for (size_t neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
+        for (size_t neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
             if (disable_flags[neuron_id] == 0) {
                 continue;
             }
@@ -228,7 +228,7 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_
     NeuronModel::MapFiringNeuronIds firing_neuron_ids_outgoing{};
 
     // For my neurons
-    for (size_t neuron_id = 0; neuron_id < my_num_neurons; ++neuron_id) {
+    for (size_t neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {
             continue;
         }
@@ -276,17 +276,17 @@ std::vector<ModelParameter> NeuronModel::get_parameter() {
     };
 }
 
-void NeuronModel::init(size_t num_neurons) {
-    my_num_neurons = num_neurons;
-    x.resize(num_neurons, 0.0);
-    fired.resize(num_neurons, 0);
-    I_syn.resize(num_neurons, 0.0);
+void NeuronModel::init(size_t number_neurons) {
+    number_local_neurons = number_neurons;
+    x.resize(number_neurons, 0.0);
+    fired.resize(number_neurons, 0);
+    I_syn.resize(number_neurons, 0.0);
 }
 
 void NeuronModel::create_neurons(size_t creation_count) {
-    const auto current_size = my_num_neurons;
+    const auto current_size = number_local_neurons;
     const auto new_size = current_size + creation_count;
-    my_num_neurons = new_size;
+    number_local_neurons = new_size;
 
     x.resize(new_size, 0.0);
     fired.resize(new_size, 0);

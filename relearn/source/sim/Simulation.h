@@ -113,10 +113,10 @@ public:
     /**
      * @brief Places the requested number of neurons with the requested fraction of excitatory neurons.
      *      The division to the MPI ranks is done with SubdomainFromNeuronDensity
-     * @param num_neurons The number of neurons to place globally
+     * @param number_neurons The number of neurons to place globally
      * @param frac_exc The fraction of excitatory neurons, must be in [0.0, 1.0]
      */
-    void place_random_neurons(size_t num_neurons, double frac_exc);
+    void place_random_neurons(size_t number_neurons, double frac_exc);
 
     /**
      * @brief Places all neurons from a file and optionally adds the specified synapses

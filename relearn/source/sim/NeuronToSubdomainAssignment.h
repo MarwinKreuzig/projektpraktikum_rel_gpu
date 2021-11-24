@@ -99,7 +99,7 @@ public:
     /** 
      * @brief Returns the subdomain boundaries for a given subdomain
      * @param subdomain_3idx The 3d index of the subdomain which's boundaries are requested
-     * @param num_subdomains_per_axis The number of subdomains per axis (the same for all dimensions), != 0
+     * @param num_subdomains_per_axis The number of local_subdomains per axis (the same for all dimensions), != 0
      * @exception Throws a RelearnException if num_subdomains_per_axis == 0
      * @return A tuple with (1) the minimum and (2) the maximum positions in the subdomain
      */
@@ -108,7 +108,7 @@ public:
     /** 
      * @brief Returns the subdomain boundaries for a given subdomain
      * @param subdomain_3idx The 3d index of the subdomain which's boundaries are requested
-     * @param num_subdomains_per_axis The number of subdomains per axis (can have varying number per dimension)
+     * @param num_subdomains_per_axis The number of local_subdomains per axis (can have varying number per dimension)
      * @exception Might throw a RelearnException
      * @return A tuple with (1) the minimum and (2) the maximum positions in the subdomain
      */
@@ -117,7 +117,7 @@ public:
     /**
      * @brief Fills the subdomain with the given index and the boundaries. The implementation is left to the inhereting classes
      * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
-     * @param num_subdomains The total number of subdomains
+     * @param num_subdomains The total number of local_subdomains
      * @param min The subdomain's minimum position
      * @param max The subdomain's maximum position
      * @exception Might throw a RelearnException
@@ -127,50 +127,40 @@ public:
     /**
      * @brief Return number of neurons which are in the specified subdomain and have positions in the [min, max)
      * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
-     * @param num_subdomains The total number of subdomains
-     * @param min The subdomain's minimum position
-     * @param max The subdomain's maximum position
+     * @param num_subdomains The total number of local_subdomains
      * @exception Might throw a RelearnException
      * @return The number of neurons in the subdomain
      */
-    [[nodiscard]] virtual size_t num_neurons(size_t subdomain_idx, size_t num_subdomains,
-        const box_size_type& min, const box_size_type& max) const;
+    [[nodiscard]] virtual size_t number_neurons(size_t subdomain_idx, size_t num_subdomains) const;
 
     /**
      * @brief Return the positions of the neurons which are in the specified subdomain and have positions in the [min, max)
      * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
-     * @param num_subdomains The total number of subdomains
-     * @param min The subdomain's minimum position
-     * @param max The subdomain's maximum position
+     * @param num_subdomains The total number of local_subdomains
      * @exception Might throw a RelearnException
      * @return The positions of the neurons in the subdomain
      */
-    [[nodiscard]] virtual std::vector<position_type> neuron_positions(size_t subdomain_idx, size_t num_subdomains,
-        const box_size_type& min, const box_size_type& max) const;
+    [[nodiscard]] virtual std::vector<position_type> neuron_positions(size_t subdomain_idx, size_t num_subdomains) const;
 
     /**
      * @brief Return the signal type of the neurons which are in the specified subdomain and have positions in the [min, max)
      * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
-     * @param num_subdomains The total number of subdomains
-     * @param min The subdomain's minimum position
-     * @param max The subdomain's maximum position
+     * @param num_subdomains The total number of local_subdomains
      * @exception Might throw a RelearnException
      * @return The signal types of the neurons in the subdomain
      */
-    [[nodiscard]] virtual std::vector<SignalType> neuron_types(size_t subdomain_idx, size_t num_subdomains,
-        const box_size_type& min, const box_size_type& max) const;
+    [[nodiscard]] virtual std::vector<SignalType> neuron_types(size_t subdomain_idx, size_t num_subdomains) const;
 
     /**
      * @brief Return the area names of the neurons which are in the specified subdomain and have positions in the [min, max)
      * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
-     * @param num_subdomains The total number of subdomains
+     * @param num_subdomains The total number of local_subdomains
      * @param min The subdomain's minimum position
      * @param max The subdomain's maximum position
      * @exception Might throw a RelearnException
      * @return The area names of the neurons in the subdomain
      */
-    [[nodiscard]] virtual std::vector<std::string> neuron_area_names(size_t subdomain_idx, size_t num_subdomains,
-        const box_size_type& min, const box_size_type& max) const;
+    [[nodiscard]] virtual std::vector<std::string> neuron_area_names(size_t subdomain_idx, size_t num_subdomains) const;
 
     /**
      * @brief Writes all loaded neurons into the specified file.
@@ -185,7 +175,7 @@ public:
      * @brief Returns the global ids for a given subdomain and local start and end ids.
      *      Might not be implemented
      * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
-     * @param num_subdomains The total number of subdomains
+     * @param num_subdomains The total number of local_subdomains
      * @param local_id_start The first local id
      * @param local_id_end The last local id
      * @exception Might throw a RelearnException

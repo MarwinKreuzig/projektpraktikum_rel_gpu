@@ -482,7 +482,7 @@ public:
      * @return The number of neurons in this object
      */
     [[nodiscard]] size_t get_num_neurons() const noexcept {
-        return num_neurons;
+        return number_neurons;
     }
 
     /**
@@ -753,7 +753,7 @@ private:
 
     static void print_pending_synapse_deletions(const PendingDeletionsV& list);
 
-    size_t num_neurons = 0;
+    size_t number_neurons = 0;
 
     std::shared_ptr<Partition> partition{};
 

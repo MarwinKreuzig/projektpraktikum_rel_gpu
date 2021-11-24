@@ -40,7 +40,7 @@ FileSynapseLoader::internal_load_synapses() {
 
     std::string line{};
 
-    std::vector<f_status> id_is_local(partition->get_total_num_neurons(), f_status::not_known);
+    std::vector<f_status> id_is_local(partition->get_total_number_neurons(), f_status::not_known);
 
     std::ifstream file_synapses(path_to_file, std::ios::binary | std::ios::in);
 

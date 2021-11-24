@@ -67,17 +67,17 @@ public:
 
     /**
      * @brief Constructs an object that has enough space to store the given number of neurons
-     * @param num_neurons The number of neurons that the object shall handle
+     * @param number_neurons The number of neurons that the object shall handle
      * @param mpi_rank The mpi rank that handles this portion of the graph, must be >= 0
      * @exception Throws an exception if the allocation of memory fails
      *      Throws a RelearnException if mpi_rank < 0
      */
-    NetworkGraph(const size_t num_neurons, const int mpi_rank)
-        : neuron_distant_in_neighborhood(num_neurons)
-        , neuron_distant_out_neighborhood(num_neurons)
-        , neuron_local_in_neighborhood(num_neurons)
-        , neuron_local_out_neighborhood(num_neurons)
-        , my_num_neurons(num_neurons)
+    NetworkGraph(const size_t number_neurons, const int mpi_rank)
+        : neuron_distant_in_neighborhood(number_neurons)
+        , neuron_distant_out_neighborhood(number_neurons)
+        , neuron_local_in_neighborhood(number_neurons)
+        , neuron_local_out_neighborhood(number_neurons)
+        , number_local_neurons(number_neurons)
         , mpi_rank(mpi_rank) {
 
         RelearnException::check(mpi_rank >= 0, "NetworkGraph::NetworkGraph: mpi_rank was negative: {}", mpi_rank);
@@ -89,7 +89,7 @@ public:
      * @exception Throws an exception if the allocation of memory fails
      */
     void create_neurons(const size_t creation_count) {
-        const auto old_size = my_num_neurons;
+        const auto old_size = number_local_neurons;
         const auto new_size = old_size + creation_count;
 
         neuron_distant_in_neighborhood.resize(new_size);
@@ -98,7 +98,7 @@ public:
         neuron_local_in_neighborhood.resize(new_size);
         neuron_local_out_neighborhood.resize(new_size);
 
-        my_num_neurons = new_size;
+        number_local_neurons = new_size;
     }
 
     /**
@@ -403,13 +403,13 @@ public:
         }
 
         if (target_rank == my_rank) {
-            RelearnException::check(target_neuron_id < my_num_neurons,
-                "NetworkGraph::add_edge_weight: Want to add an in-edge with a too large target id: {} {}", target_neuron_id, my_num_neurons);
+            RelearnException::check(target_neuron_id < number_local_neurons,
+                "NetworkGraph::add_edge_weight: Want to add an in-edge with a too large target id: {} {}", target_neuron_id, number_local_neurons);
         }
 
         if (source_rank == my_rank) {
-            RelearnException::check(source_neuron_id < my_num_neurons,
-                "NetworkGraph::add_edge_weight: Want to add an out-edge with a too large source id: {} {}", source_neuron_id, my_num_neurons);
+            RelearnException::check(source_neuron_id < number_local_neurons,
+                "NetworkGraph::add_edge_weight: Want to add an out-edge with a too large source id: {} {}", source_neuron_id, number_local_neurons);
         }
 
         if (target_rank == source_rank) {
@@ -476,7 +476,7 @@ public:
         const auto& local_neighborhood = (edge_direction == EdgeDirection::In) ? neuron_local_in_neighborhood : neuron_local_out_neighborhood;
         const auto& distant_neighborhood = (edge_direction == EdgeDirection::In) ? neuron_distant_in_neighborhood : neuron_distant_out_neighborhood;
 
-        for (auto neuron_id = 0; neuron_id < my_num_neurons; neuron_id++) {
+        for (auto neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
             auto number_of_connections = 0;
 
             for (const auto& [_, val] : local_neighborhood[neuron_id]) {
@@ -557,6 +557,6 @@ private:
     NeuronLocalInNeighborhood neuron_local_in_neighborhood{};
     NeuronLocalOutNeighborhood neuron_local_out_neighborhood{};
 
-    size_t my_num_neurons{ Constants::uninitialized }; // My number of neurons
+    size_t number_local_neurons{ Constants::uninitialized }; // My number of neurons
     int mpi_rank{ -1 };
 };

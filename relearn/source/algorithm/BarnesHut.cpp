@@ -90,7 +90,7 @@
 }
 
 MapSynapseCreationRequests BarnesHut::find_target_neurons(
-    const size_t num_neurons,
+    const size_t number_neurons,
     const std::vector<char>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos,
     const std::unique_ptr<SynapticElements>& axons) {
@@ -104,7 +104,7 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
 
     // For my neurons
 #pragma omp parallel for shared(axons_cnts, axons_connected_cnts, axons_signal_types, synapse_creation_requests_outgoing)
-    for (auto neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+    for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {
             continue;
         }

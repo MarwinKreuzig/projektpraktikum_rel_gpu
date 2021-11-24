@@ -55,18 +55,18 @@ TEST_F(PartitionTest, test_partition_constructor) {
         for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
             Partition partition(num_ranks, my_rank);
 
-            ASSERT_EQ(partition.get_total_num_subdomains(), num_subdomains);
-            ASSERT_EQ(partition.get_my_num_subdomains(), my_subdomains);
+            ASSERT_EQ(partition.get_total_number_subdomains(), num_subdomains);
+            ASSERT_EQ(partition.get_number_local_subdomains(), my_subdomains);
 
-            ASSERT_EQ(partition.get_my_subdomain_id_start(), my_subdomains * my_rank);
-            ASSERT_EQ(partition.get_my_subdomain_id_end(), my_subdomains * (my_rank + 1) - 1);
+            ASSERT_EQ(partition.get_local_subdomain_id_start(), my_subdomains * my_rank);
+            ASSERT_EQ(partition.get_local_subdomain_id_end(), my_subdomains * (my_rank + 1) - 1);
 
             ASSERT_EQ(partition.get_level_of_subdomain_trees(), oct_exponent);
-            ASSERT_EQ(partition.get_num_subdomains_per_dimension(), num_subdomains_per_dim);
+            ASSERT_EQ(partition.get_number_subdomains_per_dimension(), num_subdomains_per_dim);
 
-            ASSERT_THROW(auto err = partition.get_my_num_neurons(), RelearnException);
+            ASSERT_THROW(auto err = partition.get_number_local_neurons(), RelearnException);
             ASSERT_THROW(auto err = partition.get_simulation_box_size(), RelearnException);
-            ASSERT_THROW(auto err = partition.get_mpi_rank_from_pos(min), RelearnException);
+            ASSERT_THROW(auto err = partition.get_mpi_rank_from_position(min), RelearnException);
         }
     }
 }

@@ -17,18 +17,18 @@
 #include <tuple>
 #include <vector>
 
-NetworkGraph generate_random_network_graph(size_t num_neurons, size_t num_synapses, double threshold_exc, std::mt19937& mt) {
-    std::uniform_int_distribution<size_t> uid(0, num_neurons - 1);
+NetworkGraph generate_random_network_graph(size_t number_neurons, size_t num_synapses, double threshold_exc, std::mt19937& mt) {
+    std::uniform_int_distribution<size_t> uid(0, number_neurons - 1);
     std::uniform_real_distribution<double> urd(0, 1.0);
 
-    NetworkGraph ng(num_neurons, 0);
+    NetworkGraph ng(number_neurons, 0);
 
     for (size_t synapse_id = 0; synapse_id < num_synapses; synapse_id++) {
         const auto neuron_id_1 = uid(mt);
         auto neuron_id_2 = uid(mt);
 
         if (neuron_id_2 == neuron_id_1) {
-            neuron_id_2 = (neuron_id_1 + 1) % num_neurons;
+            neuron_id_2 = (neuron_id_1 + 1) % number_neurons;
         }
 
         const auto uniform_double = urd(mt);
@@ -983,27 +983,27 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitPoisson) {
 
             model->init(desired_num_neurons);
 
-            const auto num_neurons = model->get_num_neurons();
+            const auto number_neurons = model->get_num_neurons();
 
             const auto& x = model->get_x();
             const auto& fired = model->get_fired();
 
-            ASSERT_EQ(desired_num_neurons, num_neurons);
+            ASSERT_EQ(desired_num_neurons, number_neurons);
             ASSERT_EQ(desired_num_neurons, x.size());
             ASSERT_EQ(desired_num_neurons, fired.size());
 
-            for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+            for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
                 ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
                 ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
                 ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
                 ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
             }
 
-            for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-                ASSERT_THROW(auto tmp = model->get_x(neuron_id + num_neurons), RelearnException);
-                ASSERT_THROW(auto tmp = model->get_fired(neuron_id + num_neurons), RelearnException);
-                ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + num_neurons), RelearnException);
-                ASSERT_THROW(auto tmp = model->get_I_syn(neuron_id + num_neurons), RelearnException);
+            for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+                ASSERT_THROW(auto tmp = model->get_x(neuron_id + number_neurons), RelearnException);
+                ASSERT_THROW(auto tmp = model->get_fired(neuron_id + number_neurons), RelearnException);
+                ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + number_neurons), RelearnException);
+                ASSERT_THROW(auto tmp = model->get_I_syn(neuron_id + number_neurons), RelearnException);
             }
         }
     }
@@ -1059,27 +1059,27 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitIzhikevich) {
 
             model->init(desired_num_neurons);
 
-            const auto num_neurons = model->get_num_neurons();
+            const auto number_neurons = model->get_num_neurons();
 
             const auto& x = model->get_x();
             const auto& fired = model->get_fired();
 
-            ASSERT_EQ(desired_num_neurons, num_neurons);
+            ASSERT_EQ(desired_num_neurons, number_neurons);
             ASSERT_EQ(desired_num_neurons, x.size());
             ASSERT_EQ(desired_num_neurons, fired.size());
 
-            for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+            for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
                 ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
                 ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
                 ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
                 ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
             }
 
-            for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-                ASSERT_THROW(auto tmp = model->get_x(neuron_id + num_neurons), RelearnException);
-                ASSERT_THROW(auto tmp = model->get_fired(neuron_id + num_neurons), RelearnException);
-                ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + num_neurons), RelearnException);
-                ASSERT_THROW(auto tmp = model->get_I_syn(neuron_id + num_neurons), RelearnException);
+            for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+                ASSERT_THROW(auto tmp = model->get_x(neuron_id + number_neurons), RelearnException);
+                ASSERT_THROW(auto tmp = model->get_fired(neuron_id + number_neurons), RelearnException);
+                ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + number_neurons), RelearnException);
+                ASSERT_THROW(auto tmp = model->get_I_syn(neuron_id + number_neurons), RelearnException);
             }
         }
     }
@@ -1125,27 +1125,27 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitFitzHughNagumo) {
 
             model->init(desired_num_neurons);
 
-            const auto num_neurons = model->get_num_neurons();
+            const auto number_neurons = model->get_num_neurons();
 
             const auto& x = model->get_x();
             const auto& fired = model->get_fired();
 
-            ASSERT_EQ(desired_num_neurons, num_neurons);
+            ASSERT_EQ(desired_num_neurons, number_neurons);
             ASSERT_EQ(desired_num_neurons, x.size());
             ASSERT_EQ(desired_num_neurons, fired.size());
 
-            for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+            for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
                 ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
                 ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
                 ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
                 ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
             }
 
-            for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-                ASSERT_THROW(auto tmp = model->get_x(neuron_id + num_neurons), RelearnException);
-                ASSERT_THROW(auto tmp = model->get_fired(neuron_id + num_neurons), RelearnException);
-                ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + num_neurons), RelearnException);
-                ASSERT_THROW(auto tmp = model->get_I_syn(neuron_id + num_neurons), RelearnException);
+            for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+                ASSERT_THROW(auto tmp = model->get_x(neuron_id + number_neurons), RelearnException);
+                ASSERT_THROW(auto tmp = model->get_fired(neuron_id + number_neurons), RelearnException);
+                ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + number_neurons), RelearnException);
+                ASSERT_THROW(auto tmp = model->get_I_syn(neuron_id + number_neurons), RelearnException);
             }
         }
     }
@@ -1203,27 +1203,27 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitAEIF) {
 
             model->init(desired_num_neurons);
 
-            const auto num_neurons = model->get_num_neurons();
+            const auto number_neurons = model->get_num_neurons();
 
             const auto& x = model->get_x();
             const auto& fired = model->get_fired();
 
-            ASSERT_EQ(desired_num_neurons, num_neurons);
+            ASSERT_EQ(desired_num_neurons, number_neurons);
             ASSERT_EQ(desired_num_neurons, x.size());
             ASSERT_EQ(desired_num_neurons, fired.size());
 
-            for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+            for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
                 ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
                 ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
                 ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
                 ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
             }
 
-            for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
-                ASSERT_THROW(auto tmp = model->get_x(neuron_id + num_neurons), RelearnException);
-                ASSERT_THROW(auto tmp = model->get_fired(neuron_id + num_neurons), RelearnException);
-                ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + num_neurons), RelearnException);
-                ASSERT_THROW(auto tmp = model->get_I_syn(neuron_id + num_neurons), RelearnException);
+            for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+                ASSERT_THROW(auto tmp = model->get_x(neuron_id + number_neurons), RelearnException);
+                ASSERT_THROW(auto tmp = model->get_fired(neuron_id + number_neurons), RelearnException);
+                ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + number_neurons), RelearnException);
+                ASSERT_THROW(auto tmp = model->get_I_syn(neuron_id + number_neurons), RelearnException);
             }
         }
     }
@@ -1270,12 +1270,12 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsPoisson) {
 
             model->create_neurons(desired_num_neurons);
 
-            const auto num_neurons = model->get_num_neurons();
+            const auto number_neurons = model->get_num_neurons();
 
             const auto& x = model->get_x();
             const auto& fired = model->get_fired();
 
-            ASSERT_EQ(current_num_neurons, num_neurons);
+            ASSERT_EQ(current_num_neurons, number_neurons);
             ASSERT_EQ(current_num_neurons, x.size());
             ASSERT_EQ(current_num_neurons, fired.size());
 
@@ -1347,12 +1347,12 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsIzhikevich) {
 
             model->create_neurons(desired_num_neurons);
 
-            const auto num_neurons = model->get_num_neurons();
+            const auto number_neurons = model->get_num_neurons();
 
             const auto& x = model->get_x();
             const auto& fired = model->get_fired();
 
-            ASSERT_EQ(current_num_neurons, num_neurons);
+            ASSERT_EQ(current_num_neurons, number_neurons);
             ASSERT_EQ(current_num_neurons, x.size());
             ASSERT_EQ(current_num_neurons, fired.size());
 
@@ -1414,12 +1414,12 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsFitzHughNagumo) {
 
             model->create_neurons(desired_num_neurons);
 
-            const auto num_neurons = model->get_num_neurons();
+            const auto number_neurons = model->get_num_neurons();
 
             const auto& x = model->get_x();
             const auto& fired = model->get_fired();
 
-            ASSERT_EQ(current_num_neurons, num_neurons);
+            ASSERT_EQ(current_num_neurons, number_neurons);
             ASSERT_EQ(current_num_neurons, x.size());
             ASSERT_EQ(current_num_neurons, fired.size());
 
@@ -1493,12 +1493,12 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsAEIF) {
 
             model->create_neurons(desired_num_neurons);
 
-            const auto num_neurons = model->get_num_neurons();
+            const auto number_neurons = model->get_num_neurons();
 
             const auto& x = model->get_x();
             const auto& fired = model->get_fired();
 
-            ASSERT_EQ(current_num_neurons, num_neurons);
+            ASSERT_EQ(current_num_neurons, number_neurons);
             ASSERT_EQ(current_num_neurons, x.size());
             ASSERT_EQ(current_num_neurons, fired.size());
 
@@ -1551,23 +1551,23 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredPoisson) {
             expected_x0, expected_tau_x, expected_refrac);
 
         std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
-        const auto num_neurons = uid_num_neurons(mt);
+        const auto number_neurons = uid_num_neurons(mt);
 
-        std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, num_neurons);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, number_neurons);
         const auto num_disables = uid_num_neurons_disables(mt);
 
-        const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables, mt);
+        const auto disable_ids = generate_random_ids(0, number_neurons - 1, num_disables, mt);
 
-        model->init(num_neurons);
+        model->init(number_neurons);
         model->disable_neurons(disable_ids);
 
-        for (unsigned int id = 0; id < num_neurons; id++) {
+        for (unsigned int id = 0; id < number_neurons; id++) {
             if (std::find(disable_ids.cbegin(), disable_ids.cend(), id) != disable_ids.cend()) {
                 ASSERT_FALSE(model->get_fired(id));
             }
         }
 
-        const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables, mt);
+        const auto disable_ids_failure = generate_random_ids(number_neurons, number_neurons + number_neurons, num_disables, mt);
 
         ASSERT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
     }
@@ -1615,23 +1615,23 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredIzhikevich) {
             expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
 
         std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
-        const auto num_neurons = uid_num_neurons(mt);
+        const auto number_neurons = uid_num_neurons(mt);
 
-        std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, num_neurons);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, number_neurons);
         const auto num_disables = uid_num_neurons_disables(mt);
 
-        const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables, mt);
+        const auto disable_ids = generate_random_ids(0, number_neurons - 1, num_disables, mt);
 
-        model->init(num_neurons);
+        model->init(number_neurons);
         model->disable_neurons(disable_ids);
 
-        for (unsigned int id = 0; id < num_neurons; id++) {
+        for (unsigned int id = 0; id < number_neurons; id++) {
             if (std::find(disable_ids.cbegin(), disable_ids.cend(), id) != disable_ids.cend()) {
                 ASSERT_FALSE(model->get_fired(id));
             }
         }
 
-        const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables, mt);
+        const auto disable_ids_failure = generate_random_ids(number_neurons, number_neurons + number_neurons, num_disables, mt);
 
         ASSERT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
     }
@@ -1669,23 +1669,23 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredFitzHughNagumo) {
             expected_a, expected_b, expected_phi);
 
         std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
-        const auto num_neurons = uid_num_neurons(mt);
+        const auto number_neurons = uid_num_neurons(mt);
 
-        std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, num_neurons);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, number_neurons);
         const auto num_disables = uid_num_neurons_disables(mt);
 
-        const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables, mt);
+        const auto disable_ids = generate_random_ids(0, number_neurons - 1, num_disables, mt);
 
-        model->init(num_neurons);
+        model->init(number_neurons);
         model->disable_neurons(disable_ids);
 
-        for (unsigned int id = 0; id < num_neurons; id++) {
+        for (unsigned int id = 0; id < number_neurons; id++) {
             if (std::find(disable_ids.cbegin(), disable_ids.cend(), id) != disable_ids.cend()) {
                 ASSERT_FALSE(model->get_fired(id));
             }
         }
 
-        const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables, mt);
+        const auto disable_ids_failure = generate_random_ids(number_neurons, number_neurons + number_neurons, num_disables, mt);
 
         ASSERT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
     }
@@ -1735,23 +1735,23 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredAEIF) {
             expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_spike);
 
         std::uniform_int_distribution<unsigned int> uid_num_neurons(1, num_neurons_test);
-        const auto num_neurons = uid_num_neurons(mt);
+        const auto number_neurons = uid_num_neurons(mt);
 
-        std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, num_neurons);
+        std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, number_neurons);
         const auto num_disables = uid_num_neurons_disables(mt);
 
-        const auto disable_ids = generate_random_ids(0, num_neurons - 1, num_disables, mt);
+        const auto disable_ids = generate_random_ids(0, number_neurons - 1, num_disables, mt);
 
-        model->init(num_neurons);
+        model->init(number_neurons);
         model->disable_neurons(disable_ids);
 
-        for (unsigned int id = 0; id < num_neurons; id++) {
+        for (unsigned int id = 0; id < number_neurons; id++) {
             if (std::find(disable_ids.cbegin(), disable_ids.cend(), id) != disable_ids.cend()) {
                 ASSERT_FALSE(model->get_fired(id));
             }
         }
 
-        const auto disable_ids_failure = generate_random_ids(num_neurons, num_neurons + num_neurons, num_disables, mt);
+        const auto disable_ids_failure = generate_random_ids(number_neurons, number_neurons + number_neurons, num_disables, mt);
 
         ASSERT_THROW(model->disable_neurons(disable_ids_failure), RelearnException);
     }

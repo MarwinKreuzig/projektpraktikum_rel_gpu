@@ -140,8 +140,8 @@ int main(int argc, char** argv) {
     double accept_criterion{ BarnesHut::default_theta };
     auto* opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Required Barnes-Hut.");
 
-    size_t num_neurons{};
-    auto* opt_num_neurons = app.add_option("-n,--num-neurons", num_neurons, "Number of neurons.");
+    size_t number_neurons{};
+    auto* opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons.");
 
     std::string file_positions{};
     auto* opt_file_positions = app.add_option("-f,--file", file_positions, "File with neuron positions.");
@@ -212,7 +212,7 @@ int main(int argc, char** argv) {
 
     RelearnException::check(synaptic_elements_init_lb >= 0.0, "The minimum number of vacant synaptic elements must not be negative");
     RelearnException::check(synaptic_elements_init_ub >= synaptic_elements_init_lb, "The minimum number of vacant synaptic elements must not be larger than the maximum number");
-    RelearnException::check(static_cast<bool>(*opt_num_neurons) || static_cast<bool>(*opt_file_positions), "Missing command line option, need num_neurons (-n,--num-neurons) or file_positions (-f,--file).");
+    RelearnException::check(static_cast<bool>(*opt_num_neurons) || static_cast<bool>(*opt_file_positions), "Missing command line option, need number_neurons (-n,--num-neurons) or file_positions (-f,--file).");
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
     RelearnException::check(base_background_activity >= 0.0, "The base background activity must be non-negative.");
 
@@ -293,13 +293,13 @@ int main(int argc, char** argv) {
 	 * Calculate what my partition of the domain consist of
 	 */
     auto partition = std::make_shared<Partition>(num_ranks, my_rank);
-    const size_t my_num_subdomains = partition->get_my_num_subdomains();
-    const size_t total_num_subdomains = partition->get_total_num_subdomains();
+    const size_t number_local_subdomains = partition->get_number_local_subdomains();
+    const size_t total_number_subdomains = partition->get_total_number_subdomains();
 
     if (algorithm == AlgorithmEnum::BarnesHut) {
         // Check if int type can contain total size of branch nodes to receive in bytes
-        // Every rank sends the same number of branch nodes, which is Partition::get_my_num_subdomains()
-        if (std::numeric_limits<int>::max() < (my_num_subdomains * sizeof(OctreeNode<BarnesHutCell>))) {
+        // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
+        if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<BarnesHutCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
             exit(EXIT_FAILURE);
         }
@@ -310,8 +310,8 @@ int main(int argc, char** argv) {
         MPIWrapper::init_buffer_octree<BarnesHutCell>();
     } else if (algorithm == AlgorithmEnum::FastMultipoleMethods) {
         // Check if int type can contain total size of branch nodes to receive in bytes
-        // Every rank sends the same number of branch nodes, which is Partition::get_my_num_subdomains()
-        if (std::numeric_limits<int>::max() < (my_num_subdomains * sizeof(OctreeNode<FastMultipoleMethodsCell>))) {
+        // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
+        if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<FastMultipoleMethodsCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
             exit(EXIT_FAILURE);
         }
@@ -322,8 +322,8 @@ int main(int argc, char** argv) {
         MPIWrapper::init_buffer_octree<FastMultipoleMethodsCell>();
     } else if (algorithm == AlgorithmEnum::Naive) {
         // Check if int type can contain total size of branch nodes to receive in bytes
-        // Every rank sends the same number of branch nodes, which is Partition::get_my_num_subdomains()
-        if (std::numeric_limits<int>::max() < (my_num_subdomains * sizeof(OctreeNode<NaiveCell>))) {
+        // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
+        if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<NaiveCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
             exit(EXIT_FAILURE);
         }
@@ -364,7 +364,7 @@ int main(int argc, char** argv) {
 
     if (static_cast<bool>(*opt_num_neurons)) {
         const double frac_exc = 0.8;
-        sim.place_random_neurons(num_neurons, frac_exc);
+        sim.place_random_neurons(number_neurons, frac_exc);
     } else {
         if (static_cast<bool>(*opt_file_network)) {
             sim.load_neurons_from_file(file_positions, file_network);

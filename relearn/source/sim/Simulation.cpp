@@ -100,15 +100,15 @@ void Simulation::construct_neurons() {
     neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons->clone(), dendrites_ex->clone(), dendrites_in->clone());
 }
 
-void Simulation::place_random_neurons(const size_t num_neurons, const double frac_exc) {
-    neuron_to_subdomain_assignment = std::make_unique<SubdomainFromNeuronDensity>(num_neurons, frac_exc, SubdomainFromNeuronDensity::default_um_per_neuron, partition);
-    partition->set_total_num_neurons(num_neurons);
+void Simulation::place_random_neurons(const size_t number_neurons, const double frac_exc) {
+    neuron_to_subdomain_assignment = std::make_unique<SubdomainFromNeuronDensity>(number_neurons, frac_exc, SubdomainFromNeuronDensity::default_um_per_neuron, partition);
+    partition->set_total_number_neurons(number_neurons);
     initialize();
 }
 
 void Simulation::load_neurons_from_file(const std::filesystem::path& path_to_positions, const std::optional<std::filesystem::path>& optional_path_to_connections) {
     auto local_ptr = std::make_unique<SubdomainFromFile>(path_to_positions, optional_path_to_connections, partition);
-    partition->set_total_num_neurons(local_ptr->get_total_num_neurons_in_file());
+    partition->set_total_number_neurons(local_ptr->get_total_num_neurons_in_file());
     neuron_to_subdomain_assignment = std::move(local_ptr);
     initialize();
 }
@@ -123,44 +123,37 @@ void Simulation::initialize() {
     std::map<int, std::vector<Vec3d>> local_positions{};
 
     {
-        const auto my_num_neurons = partition->get_my_num_neurons();
-        const auto my_num_subdomains = partition->get_my_num_subdomains();
-        const auto total_num_subdomains = partition->get_total_num_subdomains();
-        const auto my_subdomain_id_start = partition->get_my_subdomain_id_start();
+        const auto number_local_neurons = partition->get_number_local_neurons();
+        const auto number_local_subdomains = partition->get_number_local_subdomains();
+        const auto total_number_subdomains = partition->get_total_number_subdomains();
+        const auto local_subdomain_id_start = partition->get_local_subdomain_id_start();
 
         const auto my_rank = MPIWrapper::get_my_rank();
 
-        neurons->init(my_num_neurons);
+        neurons->init(number_local_neurons);
 
-        std::vector<double> x_dims(my_num_neurons);
-        std::vector<double> y_dims(my_num_neurons);
-        std::vector<double> z_dims(my_num_neurons);
+        std::vector<double> x_dims(number_local_neurons);
+        std::vector<double> y_dims(number_local_neurons);
+        std::vector<double> z_dims(number_local_neurons);
 
-        std::vector<std::string> area_names(my_num_neurons);
-        std::vector<SignalType> signal_types(my_num_neurons);
+        std::vector<std::string> area_names(number_local_neurons);
+        std::vector<SignalType> signal_types(number_local_neurons);
 
-        for (size_t i = 0; i < my_num_subdomains; i++) {
-            const auto& current_subdomain = partition->get_subdomain(i);
-            const auto& subdomain_pos_min = current_subdomain.xyz_min;
-            const auto& subdomain_pos_max = current_subdomain.xyz_max;
-
-            const auto subdomain_idx = i + my_subdomain_id_start;
+        for (size_t i = 0; i < number_local_subdomains; i++) {
+            const auto subdomain_idx = i + local_subdomain_id_start;
 
             // Get neuron positions in subdomain i
-            std::vector<NeuronToSubdomainAssignment::position_type> vec_pos = neuron_to_subdomain_assignment->neuron_positions(subdomain_idx, total_num_subdomains,
-                subdomain_pos_min, subdomain_pos_max);
+            std::vector<NeuronToSubdomainAssignment::position_type> vec_pos = neuron_to_subdomain_assignment->neuron_positions(subdomain_idx, total_number_subdomains);
 
             // Get neuron area names in subdomain i
-            std::vector<std::string> vec_area = neuron_to_subdomain_assignment->neuron_area_names(subdomain_idx, total_num_subdomains,
-                subdomain_pos_min, subdomain_pos_max);
+            std::vector<std::string> vec_area = neuron_to_subdomain_assignment->neuron_area_names(subdomain_idx, total_number_subdomains);
 
             // Get neuron types in subdomain i
-            std::vector<SignalType> vec_type = neuron_to_subdomain_assignment->neuron_types(subdomain_idx, total_num_subdomains,
-                subdomain_pos_min, subdomain_pos_max);
+            std::vector<SignalType> vec_type = neuron_to_subdomain_assignment->neuron_types(subdomain_idx, total_number_subdomains);
 
-            size_t neuron_id = current_subdomain.neuron_local_id_start;
+            size_t neuron_id = partition->get_local_subdomain_local_neuron_id_start(i);
 
-            for (size_t j = 0; j < current_subdomain.num_neurons; j++) {
+            for (size_t j = 0; j < vec_pos.size(); j++) {
                 x_dims[neuron_id] = vec_pos[j].get_x();
                 y_dims[neuron_id] = vec_pos[j].get_y();
                 z_dims[neuron_id] = vec_pos[j].get_z();
@@ -181,8 +174,6 @@ void Simulation::initialize() {
         neurons->set_y_dims(std::move(y_dims));
         neurons->set_z_dims(std::move(z_dims));
         neurons->set_signal_types(std::move(signal_types));
-
-        partition->set_loaded();
     }
 
     NeuronMonitor::neurons_to_monitor = neurons;
@@ -198,13 +189,11 @@ void Simulation::initialize() {
         global_tree = std::static_pointer_cast<Octree>(octree);
 
         // Insert my local (subdomain) trees into my global tree
-        for (size_t i = 0; i < partition->get_my_num_subdomains(); i++) {
-            size_t index_1d = partition->get_1d_index_for_local_subdomain(i);
+        for (size_t i = 0; i < partition->get_number_local_subdomains(); i++) {
+            size_t index_1d = partition->get_1d_index_of_subdomain(i);
 
             auto* local_root = octree->get_local_root(index_1d);
-
-            const auto& subdomain = partition->get_subdomain(i);
-            auto neuron_id = subdomain.neuron_local_id_start;
+            auto neuron_id = partition->get_local_subdomain_local_neuron_id_start(i);
 
             const auto& positions = local_positions[i];
 
@@ -216,9 +205,9 @@ void Simulation::initialize() {
             }
         }
 
-        global_tree->initializes_leaf_nodes(partition->get_my_num_neurons());
+        global_tree->initializes_leaf_nodes(partition->get_number_local_neurons());
 
-        LogFiles::print_message_rank(0, "Neurons inserted into subdomains");
+        LogFiles::print_message_rank(0, "Neurons inserted into local_subdomains");
         LogFiles::print_message_rank(0, "Subdomains inserted into global tree");
 
         network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons(), my_rank);
@@ -231,12 +220,11 @@ void Simulation::initialize() {
         global_tree = std::static_pointer_cast<Octree>(octree);
 
         // Insert my local (subdomain) trees into my global tree
-        for (size_t i = 0; i < partition->get_my_num_subdomains(); i++) {
-            size_t index_1d = partition->get_1d_index_for_local_subdomain(i);
+        for (size_t i = 0; i < partition->get_number_local_subdomains(); i++) {
+            size_t index_1d = partition->get_1d_index_of_subdomain(i);
 
             auto* local_root = octree->get_local_root(index_1d);
-            const auto& subdomain = partition->get_subdomain(i);
-            auto neuron_id = subdomain.neuron_local_id_start;
+            auto neuron_id = partition->get_local_subdomain_local_neuron_id_start(i);
 
             const auto& positions = local_positions[i];
 
@@ -248,9 +236,9 @@ void Simulation::initialize() {
             }
         }
 
-        global_tree->initializes_leaf_nodes(partition->get_my_num_neurons());
+        global_tree->initializes_leaf_nodes(partition->get_number_local_neurons());
 
-        LogFiles::print_message_rank(0, "Neurons inserted into subdomains");
+        LogFiles::print_message_rank(0, "Neurons inserted into local_subdomains");
         LogFiles::print_message_rank(0, "Subdomains inserted into global tree");
 
         network_graph = std::make_shared<NetworkGraph>(neurons->get_num_neurons(), my_rank);

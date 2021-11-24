@@ -24,7 +24,7 @@
 NeuronIdTranslator::NeuronIdTranslator(std::shared_ptr<Partition> partition)
     : partition(std::move(partition)) {
 
-    global_neuron_ids.resize(this->partition->get_my_num_subdomains());
+    global_neuron_ids.resize(this->partition->get_number_local_subdomains());
 }
 
 bool NeuronIdTranslator::is_neuron_local(size_t neuron_id) const {
@@ -58,7 +58,7 @@ size_t NeuronIdTranslator::get_local_id(size_t global_id) const {
 
 size_t NeuronIdTranslator::get_global_id(size_t local_id) const {
     size_t counter = 0;
-    for (auto i = 0; i < partition->get_my_num_subdomains(); i++) {
+    for (auto i = 0; i < partition->get_number_local_subdomains(); i++) {
         const size_t old_counter = counter;
 
         counter += global_neuron_ids[i].size();
@@ -86,7 +86,7 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
     const auto& id_to_position = load_neuron_positions(global_ids);
 
     for (const auto& [neuron_id, neuron_position] : id_to_position) {
-        const auto rank = partition->get_mpi_rank_from_pos(neuron_position);
+        const auto rank = partition->get_mpi_rank_from_position(neuron_position);
         neuron_id_to_rank[neuron_id] = rank;
         global_ids_to_send[rank].emplace_back(neuron_id);
     }

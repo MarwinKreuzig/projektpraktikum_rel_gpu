@@ -192,9 +192,9 @@ public:
                 /**
 			     * Init this new node properly
 			     */
-                const auto& [xyz_min, xyz_max] = parent_node->get_cell().get_size_for_octant(idx);
+                const auto& [minimum_position, maximum_position] = parent_node->get_cell().get_size_for_octant(idx);
 
-                new_node->set_cell_size(xyz_min, xyz_max);
+                new_node->set_cell_size(minimum_position, maximum_position);
                 new_node->set_cell_neuron_position(cell_own_position);
 
                 // Neuron ID
@@ -229,9 +229,9 @@ public:
 	     */
         parent_node->set_child(new_node_to_insert, new_position_octant);
 
-        const auto& [xyz_min, xyz_max] = parent_node->get_cell().get_size_for_octant(new_position_octant);
+        const auto& [minimum_position, maximum_position] = parent_node->get_cell().get_size_for_octant(new_position_octant);
 
-        new_node_to_insert->set_cell_size(xyz_min, xyz_max);
+        new_node_to_insert->set_cell_size(minimum_position, maximum_position);
         new_node_to_insert->set_cell_neuron_position({ position });
         new_node_to_insert->set_cell_neuron_id(neuron_id);
         new_node_to_insert->set_rank(rank);

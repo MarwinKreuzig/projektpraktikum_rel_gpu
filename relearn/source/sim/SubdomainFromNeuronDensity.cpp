@@ -16,7 +16,7 @@
 
 #include <limits>
 
-SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t num_neurons, const double desired_frac_neurons_exc, const double um_per_neuron, std::shared_ptr<Partition> partition)
+SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t number_neurons, const double desired_frac_neurons_exc, const double um_per_neuron, std::shared_ptr<Partition> partition)
     : NeuronToSubdomainAssignment(partition)
     , um_per_neuron_(um_per_neuron) {
 
@@ -29,14 +29,14 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t num_neurons,
     RandomHolder::seed(RandomHolderKey::SubdomainFromNeuronDensity, my_rank);
 
     // Calculate size of simulation box based on neuron density
-    // num_neurons^(1/3) == #neurons per dimension
-    const auto approx_number_of_neurons_per_dimension = ceil(pow(static_cast<double>(num_neurons), 1. / 3));
+    // number_neurons^(1/3) == #neurons per dimension
+    const auto approx_number_of_neurons_per_dimension = ceil(pow(static_cast<double>(number_neurons), 1. / 3));
     const auto simulation_box_length_ = approx_number_of_neurons_per_dimension * um_per_neuron;
 
     set_simulation_box_length(box_size_type(simulation_box_length_));
 
     set_desired_frac_neurons_exc(desired_frac_neurons_exc);
-    set_desired_num_neurons(num_neurons);
+    set_desired_num_neurons(number_neurons);
 
     set_current_frac_neurons_exc(0.0);
     set_current_num_neurons(0);
@@ -45,7 +45,7 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t num_neurons,
 void SubdomainFromNeuronDensity::place_neurons_in_area(
     const box_size_type& offset,
     const box_size_type& length_of_box,
-    const size_t num_neurons, const size_t subdomain_idx) {
+    const size_t number_neurons, const size_t subdomain_idx) {
 
     constexpr uint16_t max_short = std::numeric_limits<uint16_t>::max();
 
@@ -61,15 +61,15 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
     const auto neurons_on_z = static_cast<size_t>(round(box.get_z() / um_per_neuron_));
 
     const auto calculated_num_neurons = neurons_on_x * neurons_on_y * neurons_on_z;
-    RelearnException::check(calculated_num_neurons >= num_neurons, "SubdomainFromNeuronDensity::place_neurons_in_area: Should emplace more neurons than space in box");
+    RelearnException::check(calculated_num_neurons >= number_neurons, "SubdomainFromNeuronDensity::place_neurons_in_area: Should emplace more neurons than space in box");
     RelearnException::check(neurons_on_x <= max_short && neurons_on_y <= max_short && neurons_on_z <= max_short, "SubdomainFromNeuronDensity::place_neurons_in_area: Should emplace more neurons in a dimension than possible");
 
     Nodes nodes{};
 
     const double desired_ex = get_desired_frac_neurons_exc();
 
-    const size_t expected_number_in = num_neurons - static_cast<size_t>(ceil(num_neurons * desired_ex));
-    const size_t expected_number_ex = num_neurons - expected_number_in;
+    const size_t expected_number_in = number_neurons - static_cast<size_t>(ceil(number_neurons * desired_ex));
+    const size_t expected_number_ex = number_neurons - expected_number_in;
 
     size_t placed_neurons = 0;
     size_t placed_in_neurons = 0;
@@ -95,7 +95,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
     RandomHolder::shuffle(RandomHolderKey::SubdomainFromNeuronDensity, positions.begin(), positions.end());
 
-    for (size_t i = 0; i < num_neurons; i++) {
+    for (size_t i = 0; i < number_neurons; i++) {
         const size_t pos_bitmask = positions[i];
         const size_t x_it = (pos_bitmask >> 32U) & max_short;
         const size_t y_it = (pos_bitmask >> 16U) & max_short;
@@ -124,7 +124,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
         placed_neurons++;
 
-        if (placed_neurons == num_neurons) {
+        if (placed_neurons == number_neurons) {
             const auto current_num_neurons = get_current_num_neurons();
             const auto former_ex_neurons = current_num_neurons * get_current_frac_neurons_exc();
 

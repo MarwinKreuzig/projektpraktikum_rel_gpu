@@ -22,7 +22,6 @@
 
 /**
  * This class provides all kinds of functionality that deals with the the local portion of neurons on the current MPI rank.
- * It constructs OctreeNode* via the MPIWrapper and deletes those again.
  * The local neurons are divided into Subdomains, from which each MPI rank has 1, 2, or 4
  */
 class Partition {
@@ -33,22 +32,18 @@ public:
     /**
      * Subdomain is a type that represents one part of the octree at the level of the branching nodes.
      * It's composed of the min and max positions of the subdomain, the number of neurons in this subdomain,
-     * the start and end local neuron ids, all global neuron ids for the local neurons, 
-     * it's 1d and 3d index for all Subdomains and the positions of the neurons in that Subdomain.
+     * the start and end local neuron ids, and its 1d and 3d index for all Subdomains.
      */
     struct Subdomain {
-        box_size_type xyz_min{ Constants::uninitialized };
-        box_size_type xyz_max{ Constants::uninitialized };
+        box_size_type minimum_position{ Constants::uninitialized };
+        box_size_type maximum_position{ Constants::uninitialized };
 
-        size_t num_neurons{ Constants::uninitialized };
+        size_t number_neurons{ Constants::uninitialized };
 
         size_t neuron_local_id_start{ Constants::uninitialized };
         size_t neuron_local_id_end{ Constants::uninitialized };
 
-        std::vector<size_t> global_neuron_ids{};
-
         size_t index_1d{ Constants::uninitialized };
-
         Vec3s index_3d{ Constants::uninitialized };
     };
 
@@ -69,120 +64,85 @@ public:
     Partition& operator=(Partition&& other) = default;
 
     /**
-     * @brief Prints the current subdomains as messages on the rank
-     * @param rank The rank that should print the subdomains
+     * @brief Prints the current local_subdomains as messages on the rank
+     * @param rank The rank that should print the local_subdomains
      */
     void print_my_subdomains_info_rank(int rank);
 
-    void set_loaded() noexcept {
-        neurons_loaded = true;
-    }
-
-    const Subdomain& get_subdomain(size_t subdomain_idx) const noexcept {
-        return subdomains[subdomain_idx];
-    }
-
-    void set_subdomain_boundaries(size_t subdomain_idx, const Vec3d& min, const Vec3d& max) {
-        subdomains[subdomain_idx].xyz_min = min;
-        subdomains[subdomain_idx].xyz_max = max;
-    }
-
-    void set_subdomain_num_neurons(size_t subdomain_idx, size_t num_neurons) {
-        subdomains[subdomain_idx].num_neurons = num_neurons;
+    /**
+     * @brief Sets the total number of neurons
+     * @param total_num The total number of neurons
+     */
+    void set_total_number_neurons(const size_t total_num) noexcept {
+        total_number_neurons = total_num;
     }
 
     /**
-     * @brief Loads the local neurons from neurons_in_subdomain into neurons
-     * @param neurons The neurons that will be filled
-     * @param neurons_in_subdomain The class that provides the neuron placements
-     * @exception Throws a RelearnException of the neurons have already been loaded
+     * @brief Returns the total number of neurons
+     * @exception Throws a RelearnException if the number has not been set previously
+     * @return The total number of neurons
      */
-    void calculate_local_ids();
+    [[nodiscard]] size_t get_total_number_neurons() const {
+        RelearnException::check(total_number_neurons < Constants::uninitialized, "Partition::get_total_number_neurons: total_number_neurons was not set");
+        return total_number_neurons;
+    }
 
     /**
      * @brief Returns the number of local neurons
      * @exception Throws a RelearnException if the calculate_local_ids has not been called
      * @return The number of local neurons
      */
-    [[nodiscard]] size_t get_my_num_neurons() const {
-        RelearnException::check(my_num_neurons < Constants::uninitialized, "Partition::get_my_num_neurons: Neurons are not loaded yet");
-        return my_num_neurons;
+    [[nodiscard]] size_t get_number_local_neurons() const {
+        RelearnException::check(number_local_neurons < Constants::uninitialized, "Partition::get_number_local_neurons: Neurons are not loaded yet");
+        return number_local_neurons;
     }
 
     /**
-     * @brief Returns the number of local subdomains
-     * @exception Throws a RelearnException if the calculate_local_ids has not been called
-     * @return The number of local subdomains (1, 2, or 4)
+     * @brief Returns the total number of local_subdomains
+     * @return The total number of local_subdomains
      */
-    [[nodiscard]] size_t get_my_num_subdomains() const noexcept {
-        return my_num_subdomains;
+    [[nodiscard]] size_t get_total_number_subdomains() const noexcept {
+        return total_number_subdomains;
     }
 
     /**
-     * @brief Returns the size of the simulation box
-     * @exception Throws a RelearnException if the calculate_local_ids has not been called
-     * @return The size of the simulation box as tuple (min, max)
+     * @brief Returns the number of local_subdomains per dimension (total number of local_subdomains)^(1/3)
+     * @return The number of local_subdomains per dimension
      */
-    [[nodiscard]] std::tuple<box_size_type, box_size_type> get_simulation_box_size() const {
-        RelearnException::check(neurons_loaded, "Partition::get_simulation_box_size: Neurons are not loaded yet");
-        box_size_type min{ 0 };
-        box_size_type max{ simulation_box_length };
-
-        return std::make_tuple(min, max);
-    }
-
-    void set_simulation_box_size(const Vec3d& min, const Vec3d& max) {
-        simulation_box_length = max - min;
-        // Set subdomain length
-        const auto& subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
-
-        /**
-	     * Output all parameters calculated so far
-	     */
-        LogFiles::print_message_rank(0, "Simulation box length (height, width, depth)\t: ({}, {}, {})",
-            simulation_box_length.get_x(), simulation_box_length.get_y(), simulation_box_length.get_z());
-        LogFiles::print_message_rank(0, "Subdomain length (height, width, depth)\t: ({}, {}, {})",
-            subdomain_length.get_x(), subdomain_length.get_y(), subdomain_length.get_z());
+    [[nodiscard]] size_t get_number_subdomains_per_dimension() const noexcept {
+        return number_subdomains_per_dimension;
     }
 
     /**
-     * @brief Returns the first id of the local subdomains in the global setting (don't use that in combination with get_subdomain_tree)
-     * @return The first id of the local subdomains in the global setting
-     */
-    [[nodiscard]] size_t get_my_subdomain_id_start() const noexcept {
-        return my_subdomain_id_start;
-    }
-
-    /**
-     * @brief Returns the last id of the local subdomains in the global setting (don't use that in combination with get_subdomain_tree)
-     * @return The last id of the local subdomains in the global setting
-     */
-    [[nodiscard]] size_t get_my_subdomain_id_end() const noexcept {
-        return my_subdomain_id_end;
-    }
-
-    /**
-     * @brief Returns the level in the octree on which the subdomains start
-     * @return The level in the octree on which the subdomains start
+     * @brief Returns the level in the octree on which the local_subdomains start
+     * @return The level in the octree on which the local_subdomains start
      */
     [[nodiscard]] size_t get_level_of_subdomain_trees() const noexcept {
         return level_of_subdomain_trees;
     }
 
     /**
-     * @brief Returns the total number of subdomains
-     * @return The total number of subdomains
+     * @brief Returns the number of local subdomains
+     * @return The number of local subdomains (1, 2, or 4)
      */
-    [[nodiscard]] size_t get_total_num_subdomains() const noexcept {
-        return total_num_subdomains;
+    [[nodiscard]] size_t get_number_local_subdomains() const noexcept {
+        return number_local_subdomains;
     }
 
     /**
-     * @brief Returns the number of subdomains per dimension (total number of subdomains)^(1/3)
-     * @return The number of subdomains per dimension
+     * @brief Returns the first id of the local subdomains in the global setting
+     * @return The first id of the local local_subdomains in the global setting
      */
-    [[nodiscard]] size_t get_num_subdomains_per_dimension() const noexcept {
-        return num_subdomains_per_dimension;
+    [[nodiscard]] size_t get_local_subdomain_id_start() const noexcept {
+        return local_subdomain_id_start;
+    }
+
+    /**
+     * @brief Returns the last id of the local subdomains in the global setting
+     * @return The last id of the local local_subdomains in the global setting
+     */
+    [[nodiscard]] size_t get_local_subdomain_id_end() const noexcept {
+        return local_subdomain_id_end;
     }
 
     /**
@@ -191,52 +151,136 @@ public:
      * @exception Throws a RelearnException if the calculate_local_ids has not been called
      * @return Returns the MPI rank that is responsible for the position
      */
-    [[nodiscard]] size_t get_mpi_rank_from_pos(const position_type& pos) const;
+    [[nodiscard]] size_t get_mpi_rank_from_position(const position_type& position) const {
+        RelearnException::check(simulation_box_length.get_x() < Constants::uninitialized / 2, "Partition::get_mpi_rank_from_position: Neurons are not loaded yet");
+        const box_size_type subdomain_length = simulation_box_length / static_cast<double>(number_subdomains_per_dimension);
 
-    /**
-     * @brief Returns the total number of neurons
-     * @exception Throws a RelearnException if the calculate_local_ids has not been called
-     * @return The total number of neurons
-     */
-    [[nodiscard]] size_t get_total_num_neurons() const noexcept {
-        return total_num_neurons;
+        const box_size_type subdomain_3d{ position.get_x() / subdomain_length.get_x(), position.get_y() / subdomain_length.get_y(), position.get_z() / subdomain_length.get_z() };
+        const Vec3s id_3d = subdomain_3d.floor_componentwise();
+        const size_t id_1d = space_curve.map_3d_to_1d(id_3d);
+
+        const size_t rank = id_1d / number_local_subdomains;
+
+        return rank;
     }
 
     /**
-     * @brief Translates a local subdomain id to the global subdomain id 
-     * @param subdomain_id The local subdomain id that should be translated
-     * @exception Throws a RelearnException if subdomain_id is >= number of local subdomains
-     * @return Returns the global subdomain id
+     * @brief Returns the flattened index of the subdomain in the global setting
+     * @param local_subdomain_index The local subdomain index
+     * @exception Throws a RelearnException if local_subdomain_index is larger or equal to the number of local subdomains
+     * @return The flattened index of the subdomain in the local index
      */
-    [[nodiscard]] size_t get_1d_index_for_local_subdomain(const size_t subdomain_id) const {
-        RelearnException::check(subdomain_id < my_num_subdomains, "Partition::get_1d_index_for_local_subdomain: Subdomain ID was too large: {} vs {}", subdomain_id, subdomains.size());
-        return subdomains[subdomain_id].index_1d;
+    [[nodiscard]] size_t get_1d_index_of_subdomain(const size_t local_subdomain_index) const {
+        RelearnException::check(local_subdomain_index < local_subdomains.size(),
+            "Partition::get_1d_index_of_subdomain: index ({}) was too large for the number of local subdomains ({})", local_subdomain_index, local_subdomains.size());
+        return local_subdomains[local_subdomain_index].index_1d;
     }
 
     /**
-     * @brief Sets the total number of neurons
-     * @param total_num The total number of neurons
+     * @brief Returns the 3-dimensional index of the subdomain in the global setting
+     * @param local_subdomain_index The local subdomain index
+     * @exception Throws a RelearnException if local_subdomain_index is larger or equal to the number of local subdomains
+     * @return The 3-dimensional of the subdomain in the global setting
      */
-    void set_total_num_neurons(const size_t total_num) noexcept {
-        total_num_neurons = total_num;
+    [[nodiscard]] Vec3s get_3d_index_of_subdomain(const size_t local_subdomain_index) const {
+        RelearnException::check(local_subdomain_index < local_subdomains.size(),
+            "Partition::get_3d_index_of_subdomain: index ({}) was too large for the number of local subdomains ({})", local_subdomain_index, local_subdomains.size());
+        return local_subdomains[local_subdomain_index].index_3d;
+    }
+
+    /**
+     * @brief Returns the first local neuron id of the subdomain
+     * @param local_subdomain_index The local subdomain index
+     * @exception Throws a RelearnException if local_subdomain_index is larger or equal to the number of local subdomains
+     * @return The first local neuron id of the subdomain
+     */
+    [[nodiscard]] size_t get_local_subdomain_local_neuron_id_start(const size_t local_subdomain_index) const {
+        RelearnException::check(local_subdomain_index < local_subdomains.size(),
+            "Partition::get_local_subdomain_local_neuron_id_start: index ({}) was too large for the number of local subdomains ({})", local_subdomain_index, local_subdomains.size());
+        return local_subdomains[local_subdomain_index].neuron_local_id_start;
+    }
+
+    /**
+     * @brief Sets the number of neurons in all subdomains, and updates the dependent values
+     * @param number_local_neurons_in_subdomains The number of neurons in each local subdomain
+     * @exception Throws a RelearnException if number_local_neurons_in_subdomains has a size unequal to the number of local subdomains
+     */
+    void set_subdomain_number_neurons(const std::vector<size_t>& number_local_neurons_in_subdomains) {
+        RelearnException::check(number_local_neurons_in_subdomains.size() == local_subdomains.size(),
+            "Partition::set_subdomain_number_neurons: number_local_neurons_in_subdomains had a different size ({}) then the number of local subdomains ({})", number_local_neurons_in_subdomains.size(), local_subdomains.size());
+
+        number_local_neurons = 0;
+        for (auto subdomain_index = 0; subdomain_index < number_local_neurons_in_subdomains.size(); subdomain_index++) {
+            Subdomain& current_subdomain = local_subdomains[subdomain_index];
+
+            current_subdomain.number_neurons = number_local_neurons_in_subdomains[subdomain_index];
+
+            // Add subdomain's number of neurons to rank's number of neurons
+            number_local_neurons += current_subdomain.number_neurons;
+
+            // Set start and end of local neuron ids
+            // 0-th subdomain starts with neuron id 0
+            current_subdomain.neuron_local_id_start = (subdomain_index == 0) ? 0 : (local_subdomains[subdomain_index - 1].neuron_local_id_end + 1);
+            current_subdomain.neuron_local_id_end = current_subdomain.neuron_local_id_start + current_subdomain.number_neurons - 1;
+        }
+    }
+
+    /**
+     * @brief Sets the boundaries of the subdomain
+     * @param local_subdomain_index The local subdomain index
+     * @param min The smallest position in the subdomain
+     * @param max The largest position in the subdomain
+     * @exception Throws a RelearnException if local_subdomain_index is larger or equal to the number of local subdomains
+     */
+    void set_subdomain_boundaries(const size_t local_subdomain_index, const Vec3d& min, const Vec3d& max) {
+        RelearnException::check(local_subdomain_index < local_subdomains.size(),
+            "Partition::set_subdomain_boundaries: index ({}) was too large for the number of local subdomains ({})", local_subdomain_index, local_subdomains.size());
+        local_subdomains[local_subdomain_index].minimum_position = min;
+        local_subdomains[local_subdomain_index].maximum_position = max;
+    }
+
+    /**
+     * @brief Sets the boundaries of the simulation box
+     * @param min The smallest position in the simulation box
+     * @param max The largest position in the simulation box
+     */
+    void set_simulation_box_size(const Vec3d& min, const Vec3d& max) {
+        simulation_box_length = max - min;
+        const auto& subdomain_length = simulation_box_length / static_cast<double>(number_subdomains_per_dimension);
+
+        LogFiles::print_message_rank(0, "Simulation box length (height, width, depth)\t: ({}, {}, {})",
+            simulation_box_length.get_x(), simulation_box_length.get_y(), simulation_box_length.get_z());
+        LogFiles::print_message_rank(0, "Subdomain length (height, width, depth)\t: ({}, {}, {})",
+            subdomain_length.get_x(), subdomain_length.get_y(), subdomain_length.get_z());
+    }
+
+    /**
+     * @brief Returns the size of the simulation box
+     * @exception Throws a RelearnException if set_simulation_box_size was not called before
+     * @return The size of the simulation box as tuple (min, max)
+     */
+    [[nodiscard]] std::tuple<box_size_type, box_size_type> get_simulation_box_size() const {
+        RelearnException::check(simulation_box_length.get_x() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before");
+        box_size_type min{ 0 };
+        box_size_type max{ simulation_box_length };
+
+        return std::make_tuple(min, max);
     }
 
 private:
-    bool neurons_loaded{ false };
+    size_t total_number_neurons{ Constants::uninitialized };
+    size_t number_local_neurons{ Constants::uninitialized };
 
-    size_t total_num_neurons{ Constants::uninitialized };
-    size_t my_num_neurons{ Constants::uninitialized };
-
-    size_t total_num_subdomains{ Constants::uninitialized };
-    size_t num_subdomains_per_dimension{ Constants::uninitialized };
+    size_t total_number_subdomains{ Constants::uninitialized };
+    size_t number_subdomains_per_dimension{ Constants::uninitialized };
     size_t level_of_subdomain_trees{ Constants::uninitialized };
 
-    size_t my_num_subdomains{ Constants::uninitialized };
-    size_t my_subdomain_id_start{ Constants::uninitialized };
-    size_t my_subdomain_id_end{ Constants::uninitialized };
+    size_t number_local_subdomains{ Constants::uninitialized };
+    size_t local_subdomain_id_start{ Constants::uninitialized };
+    size_t local_subdomain_id_end{ Constants::uninitialized };
 
     box_size_type simulation_box_length{ Constants::uninitialized };
 
-    std::vector<Subdomain> subdomains{};
+    std::vector<Subdomain> local_subdomains{};
     SpaceFillingCurve<Morton> space_curve{};
 };

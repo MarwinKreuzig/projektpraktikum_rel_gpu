@@ -60,10 +60,10 @@ IzhikevichModel::IzhikevichModel(
     return "IzhikevichModel";
 }
 
-void IzhikevichModel::init(const size_t num_neurons) {
-    NeuronModel::init(num_neurons);
-    u.resize(num_neurons);
-    init_neurons(0, num_neurons);
+void IzhikevichModel::init(const size_t number_neurons) {
+    NeuronModel::init(number_neurons);
+    u.resize(number_neurons);
+    init_neurons(0, number_neurons);
 }
 
 void models::IzhikevichModel::create_neurons(const size_t creation_count) {

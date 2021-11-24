@@ -43,7 +43,7 @@ public:
     /**
      * @brief Initializes a NeuronsExtraInfo that holds at most the given number of neurons. Performs communication across all MPI ranks. 
      *      Must only be called once. Does not initialize dimensions or area names.
-     * @param num_neurons The number of neurons, greater than 0
+     * @param number_neurons The number of neurons, greater than 0
      * @exception Throws an RelearnAxception if number_neurons is 0 or if called multiple times.
      */
     void init(size_t number_neurons);

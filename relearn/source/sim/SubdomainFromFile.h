@@ -49,7 +49,7 @@ public:
     /**
      * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
      * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
-     * @param num_subdomains The total number of subdomains
+     * @param num_subdomains The total number of local_subdomains
      * @param min The subdomain's minimum position
      * @param max The subdomain's maximum position
      * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file 
@@ -67,7 +67,7 @@ public:
     /**
      * @brief Returns the global ids for a given subdomain and local start and end ids
      * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
-     * @param num_subdomains The total number of subdomains
+     * @param num_subdomains The total number of local_subdomains
      * @param local_id_start The first local id
      * @param local_id_end The last local id
      * @exception Throws a RelearnException if the subdomain is not loaded

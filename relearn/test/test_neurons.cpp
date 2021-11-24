@@ -17,7 +17,7 @@
 #include <tuple>
 #include <vector>
 
-void assert_empty(const NeuronsExtraInfo& nei, size_t num_neurons) {
+void assert_empty(const NeuronsExtraInfo& nei, size_t number_neurons) {
     const auto& x_dims = nei.get_x_dims();
     const auto& y_dims = nei.get_y_dims();
     const auto& z_dims = nei.get_z_dims();
@@ -28,7 +28,7 @@ void assert_empty(const NeuronsExtraInfo& nei, size_t num_neurons) {
     ASSERT_EQ(0, z_dims.size());
     ASSERT_EQ(0, area_names.size());
 
-    for (auto neuron_id = 0; neuron_id < num_neurons * 2; neuron_id++) {
+    for (auto neuron_id = 0; neuron_id < number_neurons * 2; neuron_id++) {
         ASSERT_THROW(auto tmp = nei.get_position(neuron_id), RelearnException);
         ASSERT_THROW(auto tmp = nei.get_x(neuron_id), RelearnException);
         ASSERT_THROW(auto tmp = nei.get_y(neuron_id), RelearnException);
@@ -37,7 +37,7 @@ void assert_empty(const NeuronsExtraInfo& nei, size_t num_neurons) {
     }
 }
 
-void assert_contains(const NeuronsExtraInfo& nei, size_t num_neurons, size_t num_neurons_check, const std::vector<std::string>& expected_area_names,
+void assert_contains(const NeuronsExtraInfo& nei, size_t number_neurons, size_t num_neurons_check, const std::vector<std::string>& expected_area_names,
     const std::vector<double>& expected_x_dims, const std::vector<double>& expected_y_dims, const std::vector<double>& expected_z_dims) {
 
     ASSERT_EQ(num_neurons_check, expected_area_names.size());
@@ -50,10 +50,10 @@ void assert_contains(const NeuronsExtraInfo& nei, size_t num_neurons, size_t num
     const auto& actual_z_dims = nei.get_z_dims();
     const auto& actual_area_names = nei.get_area_names();
 
-    ASSERT_EQ(actual_x_dims.size(), num_neurons);
-    ASSERT_EQ(actual_y_dims.size(), num_neurons);
-    ASSERT_EQ(actual_z_dims.size(), num_neurons);
-    ASSERT_EQ(actual_area_names.size(), num_neurons);
+    ASSERT_EQ(actual_x_dims.size(), number_neurons);
+    ASSERT_EQ(actual_y_dims.size(), number_neurons);
+    ASSERT_EQ(actual_z_dims.size(), number_neurons);
+    ASSERT_EQ(actual_area_names.size(), number_neurons);
 
     for (auto neuron_id = 0; neuron_id < num_neurons_check; neuron_id++) {
         ASSERT_EQ(expected_x_dims[neuron_id], actual_x_dims[neuron_id]);
@@ -72,7 +72,7 @@ void assert_contains(const NeuronsExtraInfo& nei, size_t num_neurons, size_t num
         ASSERT_EQ(nei.get_position(neuron_id), pos);
     }
 
-    for (auto neuron_id = num_neurons; neuron_id < num_neurons * 2; neuron_id++) {
+    for (auto neuron_id = number_neurons; neuron_id < number_neurons * 2; neuron_id++) {
         ASSERT_THROW(auto tmp = nei.get_position(neuron_id), RelearnException);
         ASSERT_THROW(auto tmp = nei.get_x(neuron_id), RelearnException);
         ASSERT_THROW(auto tmp = nei.get_y(neuron_id), RelearnException);
@@ -201,13 +201,13 @@ TEST_F(NeuronsTest, testNeuronsExtraInfoInit) {
     for (auto it = 0; it < iterations; it++) {
         NeuronsExtraInfo nei{};
 
-        const auto num_neurons = uid_id(mt);
+        const auto number_neurons = uid_id(mt);
 
-        nei.init(num_neurons);
-        assert_empty(nei, num_neurons);
+        nei.init(number_neurons);
+        assert_empty(nei, number_neurons);
 
         auto num_neurons_wrong = uid_id(mt);
-        if (num_neurons_wrong == num_neurons) {
+        if (num_neurons_wrong == number_neurons) {
             num_neurons_wrong++;
         }
 
@@ -221,14 +221,14 @@ TEST_F(NeuronsTest, testNeuronsExtraInfoInit) {
         ASSERT_THROW(nei.set_z_dims(z_dims_wrong), RelearnException);
         ASSERT_THROW(nei.set_area_names(area_names_wrong), RelearnException);
 
-        assert_empty(nei, num_neurons);
+        assert_empty(nei, number_neurons);
 
-        std::vector<double> x_dims_right(num_neurons);
-        std::vector<double> y_dims_right(num_neurons);
-        std::vector<double> z_dims_right(num_neurons);
-        std::vector<std::string> area_names_right(num_neurons);
+        std::vector<double> x_dims_right(number_neurons);
+        std::vector<double> y_dims_right(number_neurons);
+        std::vector<double> z_dims_right(number_neurons);
+        std::vector<std::string> area_names_right(number_neurons);
 
-        for (auto neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+        for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
             x_dims_right[neuron_id] = urd_pos(mt);
             y_dims_right[neuron_id] = urd_pos(mt);
             z_dims_right[neuron_id] = urd_pos(mt);
@@ -241,14 +241,14 @@ TEST_F(NeuronsTest, testNeuronsExtraInfoInit) {
         nei.set_z_dims(z_dims_right);
         nei.set_area_names(area_names_right);
 
-        assert_contains(nei, num_neurons, num_neurons, area_names_right, x_dims_right, y_dims_right, z_dims_right);
+        assert_contains(nei, number_neurons, number_neurons, area_names_right, x_dims_right, y_dims_right, z_dims_right);
 
-        std::vector<double> x_dims_right_2(num_neurons);
-        std::vector<double> y_dims_right_2(num_neurons);
-        std::vector<double> z_dims_right_2(num_neurons);
-        std::vector<std::string> area_names_right_2(num_neurons);
+        std::vector<double> x_dims_right_2(number_neurons);
+        std::vector<double> y_dims_right_2(number_neurons);
+        std::vector<double> z_dims_right_2(number_neurons);
+        std::vector<std::string> area_names_right_2(number_neurons);
 
-        for (auto neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+        for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
             x_dims_right_2[neuron_id] = urd_pos(mt);
             y_dims_right_2[neuron_id] = urd_pos(mt);
             z_dims_right_2[neuron_id] = urd_pos(mt);
@@ -261,7 +261,7 @@ TEST_F(NeuronsTest, testNeuronsExtraInfoInit) {
         nei.set_z_dims(z_dims_right_2);
         nei.set_area_names(area_names_right_2);
 
-        assert_contains(nei, num_neurons, num_neurons, area_names_right_2, x_dims_right_2, y_dims_right_2, z_dims_right_2);
+        assert_contains(nei, number_neurons, number_neurons, area_names_right_2, x_dims_right_2, y_dims_right_2, z_dims_right_2);
     }
 }
 

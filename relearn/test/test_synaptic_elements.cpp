@@ -18,14 +18,14 @@ TEST_F(SynapticElementsTest, testSynapticElementsConstructor) {
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
     for (auto i = 0; i < iterations; i++) {
-        size_t num_neurons = uid_num_neurons(mt);
+        size_t number_neurons = uid_num_neurons(mt);
 
         ElementType element_type = uid_bool(mt) == 0 ? ElementType::AXON : ElementType::DENDRITE;
 
         SynapticElements synaptic_elements(element_type, 0.0);
-        synaptic_elements.init(num_neurons);
+        synaptic_elements.init(number_neurons);
 
-        for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+        for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
             const double cnt = synaptic_elements.get_count(neuron_id);
             const double conn_cnt = synaptic_elements.get_connected_count(neuron_id);
             const double delta_cnt = synaptic_elements.get_delta_count(neuron_id);
@@ -40,10 +40,10 @@ TEST_F(SynapticElementsTest, testSynapticElementsConstructor) {
         const std::vector<double>& delta_cnts = synaptic_elements.get_total_counts();
         const std::vector<SignalType>& types = synaptic_elements.get_signal_types();
 
-        ASSERT_EQ(cnts.size(), num_neurons);
-        ASSERT_EQ(conn_cnts.size(), num_neurons);
-        ASSERT_EQ(delta_cnts.size(), num_neurons);
-        ASSERT_EQ(types.size(), num_neurons);
+        ASSERT_EQ(cnts.size(), number_neurons);
+        ASSERT_EQ(conn_cnts.size(), number_neurons);
+        ASSERT_EQ(delta_cnts.size(), number_neurons);
+        ASSERT_EQ(types.size(), number_neurons);
 
         for (double d : cnts) {
             ASSERT_EQ(d, 0.0);
@@ -66,19 +66,19 @@ TEST_F(SynapticElementsTest, testSynapticElementsConstructorException) {
     std::uniform_real_distribution<double> urd_C;
 
     for (auto i = 0; i < iterations; i++) {
-        size_t num_neurons = uid_num_neurons(mt);
+        size_t number_neurons = uid_num_neurons(mt);
 
         ElementType element_type = uid_bool(mt) == 0 ? ElementType::AXON : ElementType::DENDRITE;
 
         SynapticElements synaptic_elements(element_type, 0.0);
-        synaptic_elements.init(num_neurons);
+        synaptic_elements.init(number_neurons);
 
-        std::vector<double> golden_cnts(num_neurons);
-        std::vector<unsigned int> golden_conn_cnts(num_neurons);
-        std::vector<double> golden_delta_cnts(num_neurons);
-        std::vector<SignalType> golden_signal_types(num_neurons);
+        std::vector<double> golden_cnts(number_neurons);
+        std::vector<unsigned int> golden_conn_cnts(number_neurons);
+        std::vector<double> golden_delta_cnts(number_neurons);
+        std::vector<SignalType> golden_signal_types(number_neurons);
 
-        for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+        for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
             const double cnt = urd_C(mt);
             const double conn_cnt = urd_C(mt);
             const double delta_cnt = urd_C(mt);
@@ -93,7 +93,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsConstructorException) {
             synaptic_elements.set_signal_type(neuron_id, signal_type);
         }
 
-        for (size_t neuron_id = num_neurons; neuron_id < num_neurons + 10; neuron_id++) {
+        for (size_t neuron_id = number_neurons; neuron_id < number_neurons + 10; neuron_id++) {
             const double cnt = urd_C(mt);
             const unsigned int conn_cnt = static_cast<unsigned int>(urd_C(mt));
             const SignalType signal_type = uid_bool(mt) == 0 ? SignalType::EXCITATORY : SignalType::INHIBITORY;
@@ -108,12 +108,12 @@ TEST_F(SynapticElementsTest, testSynapticElementsConstructorException) {
         const std::vector<double>& delta_cnts = synaptic_elements.get_delta_counts();
         const std::vector<SignalType>& types = synaptic_elements.get_signal_types();
 
-        ASSERT_EQ(cnts.size(), num_neurons);
-        ASSERT_EQ(conn_cnts.size(), num_neurons);
-        ASSERT_EQ(delta_cnts.size(), num_neurons);
-        ASSERT_EQ(types.size(), num_neurons);
+        ASSERT_EQ(cnts.size(), number_neurons);
+        ASSERT_EQ(conn_cnts.size(), number_neurons);
+        ASSERT_EQ(delta_cnts.size(), number_neurons);
+        ASSERT_EQ(types.size(), number_neurons);
 
-        for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+        for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
             const auto a1 = golden_cnts[neuron_id];
             const auto a2 = synaptic_elements.get_count(neuron_id);
             const auto a3 = cnts[neuron_id];
@@ -143,7 +143,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsConstructorException) {
             ASSERT_TRUE(d_is_correct);
         }
 
-        for (size_t neuron_id = num_neurons; neuron_id < num_neurons + 10; neuron_id++) {
+        for (size_t neuron_id = number_neurons; neuron_id < number_neurons + 10; neuron_id++) {
             ASSERT_THROW(auto val = synaptic_elements.get_count(neuron_id), RelearnException);
             ASSERT_THROW(auto val = synaptic_elements.get_connected_count(neuron_id), RelearnException);
             ASSERT_THROW(auto val = synaptic_elements.get_delta_count(neuron_id), RelearnException);
@@ -159,13 +159,13 @@ TEST_F(SynapticElementsTest, testSynapticElementsParameters) {
     std::uniform_real_distribution<double> urd_C;
 
     for (auto i = 0; i < iterations; i++) {
-        const size_t num_neurons = uid_num_neurons(mt);
+        const size_t number_neurons = uid_num_neurons(mt);
         const double C = urd_C(mt);
 
         ElementType element_type = uid_bool(mt) == 0 ? ElementType::AXON : ElementType::DENDRITE;
 
         SynapticElements synaptic_elements(element_type, C);
-        synaptic_elements.init(num_neurons);
+        synaptic_elements.init(number_neurons);
 
         std::vector<ModelParameter> parameters = synaptic_elements.get_parameter();
 
@@ -216,19 +216,19 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdate) {
     std::uniform_real_distribution<double> urd_delta(0, 10);
 
     for (auto i = 0; i < iterations; i++) {
-        size_t num_neurons = uid_num_neurons(mt);
+        size_t number_neurons = uid_num_neurons(mt);
 
         ElementType element_type = uid_bool(mt) == 0 ? ElementType::AXON : ElementType::DENDRITE;
 
         SynapticElements synaptic_elements(element_type, 0.0);
-        synaptic_elements.init(num_neurons);
+        synaptic_elements.init(number_neurons);
 
-        std::vector<double> golden_cnts(num_neurons);
-        std::vector<unsigned int> golden_conn_cnts(num_neurons);
-        std::vector<double> golden_delta_cnts(num_neurons);
-        std::vector<SignalType> golden_signal_types(num_neurons);
+        std::vector<double> golden_cnts(number_neurons);
+        std::vector<unsigned int> golden_conn_cnts(number_neurons);
+        std::vector<double> golden_delta_cnts(number_neurons);
+        std::vector<SignalType> golden_signal_types(number_neurons);
 
-        for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+        for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
             const double cnt = urd_cnt(mt);
             const unsigned int conn_cnt = uid_connected(mt);
             const double delta_cnt = urd_delta(mt);
@@ -244,7 +244,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdate) {
             synaptic_elements.set_signal_type(neuron_id, signal_type);
         }
 
-        for (size_t neuron_id = num_neurons; neuron_id < num_neurons + 10; neuron_id++) {
+        for (size_t neuron_id = number_neurons; neuron_id < number_neurons + 10; neuron_id++) {
             const double cnt = urd_cnt(mt);
             const auto conn_cnt = uid_connected(mt);
             const SignalType signal_type = uid_bool(mt) == 0 ? SignalType::EXCITATORY : SignalType::INHIBITORY;
@@ -259,12 +259,12 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdate) {
         const std::vector<double>& delta_cnts = synaptic_elements.get_delta_counts();
         const std::vector<SignalType>& types = synaptic_elements.get_signal_types();
 
-        ASSERT_EQ(cnts.size(), num_neurons);
-        ASSERT_EQ(conn_cnts.size(), num_neurons);
-        ASSERT_EQ(delta_cnts.size(), num_neurons);
-        ASSERT_EQ(types.size(), num_neurons);
+        ASSERT_EQ(cnts.size(), number_neurons);
+        ASSERT_EQ(conn_cnts.size(), number_neurons);
+        ASSERT_EQ(delta_cnts.size(), number_neurons);
+        ASSERT_EQ(types.size(), number_neurons);
 
-        for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+        for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
             ASSERT_EQ(golden_cnts[neuron_id], synaptic_elements.get_count(neuron_id));
             ASSERT_EQ(golden_cnts[neuron_id], cnts[neuron_id]);
 
@@ -275,7 +275,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdate) {
             ASSERT_EQ(golden_signal_types[neuron_id], types[neuron_id]);
         }
 
-        for (size_t neuron_id = num_neurons; neuron_id < num_neurons + 10; neuron_id++) {
+        for (size_t neuron_id = number_neurons; neuron_id < number_neurons + 10; neuron_id++) {
             ASSERT_THROW(auto val = synaptic_elements.get_count(neuron_id), RelearnException);
             ASSERT_THROW(auto val = synaptic_elements.get_connected_count(neuron_id), RelearnException);
             ASSERT_THROW(auto val = synaptic_elements.get_delta_count(neuron_id), RelearnException);
@@ -293,19 +293,19 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
     std::uniform_real_distribution<double> urd_delta(0, 10);
 
     for (auto i = 0; i < iterations; i++) {
-        size_t num_neurons = uid_num_neurons(mt);
+        size_t number_neurons = uid_num_neurons(mt);
 
         ElementType element_type = uid_bool(mt) == 0 ? ElementType::AXON : ElementType::DENDRITE;
 
         SynapticElements synaptic_elements(element_type, 0.0);
-        synaptic_elements.init(num_neurons);
+        synaptic_elements.init(number_neurons);
 
-        std::vector<double> golden_cnts(num_neurons, 0.0);
-        std::vector<unsigned int> golden_conn_cnts(num_neurons, 0);
-        std::vector<double> golden_delta_cnts(num_neurons, 0.0);
-        std::vector<SignalType> golden_signal_types(num_neurons);
+        std::vector<double> golden_cnts(number_neurons, 0.0);
+        std::vector<unsigned int> golden_conn_cnts(number_neurons, 0);
+        std::vector<double> golden_delta_cnts(number_neurons, 0.0);
+        std::vector<SignalType> golden_signal_types(number_neurons);
 
-        for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+        for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
             const auto cnt = urd_cnt(mt);
             const auto conn_cnt = uid_connected(mt);
             const auto delta_cnt = urd_delta(mt);
@@ -325,12 +325,12 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
         const std::vector<double>& delta_cnts = synaptic_elements.get_delta_counts();
         const std::vector<SignalType>& types = synaptic_elements.get_signal_types();
 
-        ASSERT_EQ(cnts.size(), num_neurons);
-        ASSERT_EQ(conn_cnts.size(), num_neurons);
-        ASSERT_EQ(delta_cnts.size(), num_neurons);
-        ASSERT_EQ(types.size(), num_neurons);
+        ASSERT_EQ(cnts.size(), number_neurons);
+        ASSERT_EQ(conn_cnts.size(), number_neurons);
+        ASSERT_EQ(delta_cnts.size(), number_neurons);
+        ASSERT_EQ(types.size(), number_neurons);
 
-        for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+        for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
             ASSERT_EQ(golden_cnts[neuron_id], synaptic_elements.get_count(neuron_id));
             ASSERT_EQ(golden_cnts[neuron_id], cnts[neuron_id]);
 

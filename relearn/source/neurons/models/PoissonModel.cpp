@@ -48,11 +48,11 @@ PoissonModel::PoissonModel(
     return "PoissonModel";
 }
 
-void PoissonModel::init(const size_t num_neurons) {
-    NeuronModel::init(num_neurons);
-    refrac.resize(num_neurons, 0);
-    theta_values.resize(num_neurons, 0.0);
-    init_neurons(0, num_neurons);
+void PoissonModel::init(const size_t number_neurons) {
+    NeuronModel::init(number_neurons);
+    refrac.resize(number_neurons, 0);
+    theta_values.resize(number_neurons, 0.0);
+    init_neurons(0, number_neurons);
 }
 
 void models::PoissonModel::create_neurons(const size_t creation_count) {

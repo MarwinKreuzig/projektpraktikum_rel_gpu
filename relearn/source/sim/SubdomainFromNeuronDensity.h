@@ -29,12 +29,12 @@ class SubdomainFromNeuronDensity : public NeuronToSubdomainAssignment {
 public:
     /**
      * @brief Constructs a new object with the specified parameters
-     * @param num_neurons The number of neurons
+     * @param number_neurons The number of neurons
      * @param desired_frac_neurons_exc The fraction of excitatory neurons, must be in [0.0, 1.0]
      * @param um_per_neuron The box length in which a single neuron is placed, must be > 0.0
      * @exception Throws a RelearnException if desired_frac_neurons_exc if not from [0.0, 1.0] or um_per_neuron <= 0.0
      */
-    SubdomainFromNeuronDensity(const size_t num_neurons, const double desired_frac_neurons_exc, const double um_per_neuron, std::shared_ptr<Partition> partition);
+    SubdomainFromNeuronDensity(const size_t number_neurons, const double desired_frac_neurons_exc, const double um_per_neuron, std::shared_ptr<Partition> partition);
 
     SubdomainFromNeuronDensity(const SubdomainFromNeuronDensity& other) = delete;
     SubdomainFromNeuronDensity(SubdomainFromNeuronDensity&& other) = delete;
@@ -47,7 +47,7 @@ public:
     /** 
      * @brief Returns the subdomain boundaries for a given subdomain
      * @param subdomain_3idx The 3d index of the subdomain which's boundaries are requested
-     * @param num_subdomains_per_axis The number of subdomains per axis (the same for all dimensions), != 0
+     * @param num_subdomains_per_axis The number of local_subdomains per axis (the same for all dimensions), != 0
      * @return A tuple with (1) the minimum and (2) the maximum positions in the subdomain
      */
     [[nodiscard]] std::tuple<box_size_type, box_size_type> get_subdomain_boundaries(const Vec3s& subdomain_3idx, const size_t num_subdomains_per_axis) const noexcept override;
@@ -55,7 +55,7 @@ public:
     /** 
      * @brief Returns the subdomain boundaries for a given subdomain
      * @param subdomain_3idx The 3d index of the subdomain which's boundaries are requested
-     * @param num_subdomains_per_axis The number of subdomains per axis (can have varying number per dimension)
+     * @param num_subdomains_per_axis The number of local_subdomains per axis (can have varying number per dimension)
      * @return A tuple with (1) the minimum and (2) the maximum positions in the subdomain
      */
     [[nodiscard]] std::tuple<box_size_type, box_size_type> get_subdomain_boundaries(const Vec3s& subdomain_3idx, const Vec3s& num_subdomains_per_axis) const noexcept override;
@@ -63,7 +63,7 @@ public:
     /**
      * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
      * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
-     * @param num_subdomains The total number of subdomains
+     * @param num_subdomains The total number of local_subdomains
      * @param min The subdomain's minimum position
      * @param max The subdomain's maximum position
      * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file 
@@ -83,5 +83,5 @@ private:
     void place_neurons_in_area(
         const NeuronToSubdomainAssignment::box_size_type& offset,
         const NeuronToSubdomainAssignment::box_size_type& length_of_box,
-        const size_t num_neurons, const size_t subdomain_idx);
+        const size_t number_neurons, const size_t subdomain_idx);
 };
