@@ -20,11 +20,11 @@
 
 NeuronToSubdomainAssignment::NeuronToSubdomainAssignment(std::shared_ptr<Partition> partition)
     : partition(std::move(partition)) {
-    partition->set_boundary_correction_function(get_subdomain_boundary_fix());
-    partition->calculate_and_set_subdomain_boundaries();
+    this->partition->set_boundary_correction_function(get_subdomain_boundary_fix());
 }
 
 void NeuronToSubdomainAssignment::initialize() {
+    this->partition->calculate_and_set_subdomain_boundaries();
     const auto total_number_subdomains = partition->get_number_local_subdomains();
 
     std::vector<size_t> number_neurons_in_subdomains(total_number_subdomains);
