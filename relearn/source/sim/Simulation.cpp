@@ -143,13 +143,13 @@ void Simulation::initialize() {
             const auto subdomain_idx = i + local_subdomain_id_start;
 
             // Get neuron positions in subdomain i
-            std::vector<NeuronToSubdomainAssignment::position_type> vec_pos = neuron_to_subdomain_assignment->neuron_positions(subdomain_idx, total_number_subdomains);
+            std::vector<NeuronToSubdomainAssignment::position_type> vec_pos = neuron_to_subdomain_assignment->get_neuron_positions_in_subdomain(subdomain_idx, total_number_subdomains);
 
             // Get neuron area names in subdomain i
-            std::vector<std::string> vec_area = neuron_to_subdomain_assignment->neuron_area_names(subdomain_idx, total_number_subdomains);
+            std::vector<std::string> vec_area = neuron_to_subdomain_assignment->get_neuron_area_names_in_subdomain(subdomain_idx, total_number_subdomains);
 
             // Get neuron types in subdomain i
-            std::vector<SignalType> vec_type = neuron_to_subdomain_assignment->neuron_types(subdomain_idx, total_number_subdomains);
+            std::vector<SignalType> vec_type = neuron_to_subdomain_assignment->get_neuron_types_in_subdomain(subdomain_idx, total_number_subdomains);
 
             size_t neuron_id = partition->get_local_subdomain_local_neuron_id_start(i);
 

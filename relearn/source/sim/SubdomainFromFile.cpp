@@ -169,10 +169,10 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
     return nodes;
 }
 
-std::vector<size_t> SubdomainFromFile::neuron_global_ids(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains) const {
+std::vector<size_t> SubdomainFromFile::get_neuron_global_ids_in_subdomain(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains) const {
     const bool contains = is_loaded(subdomain_idx);
     if (!contains) {
-        RelearnException::fail("SubdomainFromFile::neuron_global_ids: Wanted to have neuron_global_ids of subdomain_idx that is not present");
+        RelearnException::fail("SubdomainFromFile::get_neuron_global_ids_in_subdomain: Wanted to have neuron_global_ids of subdomain_idx that is not present");
         return {};
     }
 

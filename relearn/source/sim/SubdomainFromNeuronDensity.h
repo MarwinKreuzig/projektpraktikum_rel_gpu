@@ -43,7 +43,19 @@ public:
     SubdomainFromNeuronDensity& operator=(SubdomainFromNeuronDensity&& other) = delete;
 
     ~SubdomainFromNeuronDensity() override = default;
-    
+
+    /**
+     * @brief This method is not implemented for this class
+     */
+    [[nodiscard]] std::vector<size_t> get_neuron_global_ids_in_subdomain(const size_t subdomain_idx, const size_t num_subdomains) const override;
+
+    constexpr static double default_um_per_neuron = 26.0;
+
+    void initialize() override;
+
+    std::function<Vec3d(Vec3d)> get_subdomain_boundary_fix() const override;
+
+protected:
     /**
      * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
      * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
@@ -53,17 +65,6 @@ public:
      * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file 
      */
     void fill_subdomain(const size_t subdomain_idx, const size_t num_subdomains, const box_size_type& min, const box_size_type& max) override;
-
-    /**
-     * @brief This method is not implemented for this class
-     */
-    [[nodiscard]] std::vector<size_t> neuron_global_ids(const size_t subdomain_idx, const size_t num_subdomains) const override;
-
-    constexpr static double default_um_per_neuron = 26.0;
-
-    void initialize() override;
-
-    std::function<Vec3d(Vec3d)> get_subdomain_boundary_fix() const override;
 
 private:
     const double um_per_neuron_{ default_um_per_neuron }; // Micrometer per neuron in one dimension

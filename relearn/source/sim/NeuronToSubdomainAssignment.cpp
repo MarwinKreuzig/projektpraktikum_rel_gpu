@@ -18,89 +18,120 @@
 #include <fstream>
 #include <iomanip>
 
-size_t NeuronToSubdomainAssignment::number_neurons(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains) const {
+NeuronToSubdomainAssignment::NeuronToSubdomainAssignment(std::shared_ptr<Partition> partition)
+    : partition(std::move(partition)) {
+    partition->set_boundary_correction_function(get_subdomain_boundary_fix());
+}
 
-    const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
+void NeuronToSubdomainAssignment::initialize() {
+    const auto num_subdomains = partition->get_number_local_subdomains();
+
+    std::vector<size_t> number_neurons_in_subdomains(num_subdomains);
+
+    for (auto i = 0; i < num_subdomains; i++) {
+        const auto& index_1d = partition->get_1d_index_of_subdomain(i);
+        const auto& index_3d = partition->get_3d_index_of_subdomain(i);
+
+        const auto& [min, max] = partition->get_subdomain_boundaries(index_3d);
+        partition->set_subdomain_boundaries(i, min, max);
+
+        fill_subdomain(index_1d, num_subdomains, min, max);
+
+        const auto num_neurons = get_number_neurons_in_subdomain(index_1d, num_subdomains);
+
+        number_neurons_in_subdomains[i] = num_neurons;
+
+        auto global_ids = get_neuron_global_ids_in_subdomain(index_1d, num_subdomains);
+        std::sort(global_ids.begin(), global_ids.end());
+
+        neuron_id_translator->set_global_ids(i, std::move(global_ids));
+    }
+
+    partition->set_subdomain_number_neurons(number_neurons_in_subdomains);
+}
+
+size_t NeuronToSubdomainAssignment::get_number_neurons_in_subdomain(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains) const {
+
+    const auto contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
         RelearnException::fail("NeuronToSubdomainAssignment::number_neurons: Wanted to have number_neurons of subdomain_idx that is not present");
         return 0;
     }
 
-    const Nodes& nodes = neurons_in_subdomain.at(subdomain_idx);
-    const size_t cnt = nodes.size();
+    const auto& nodes = neurons_in_subdomain.at(subdomain_idx);
+    const auto cnt = nodes.size();
     return cnt;
 }
 
-std::vector<NeuronToSubdomainAssignment::position_type> NeuronToSubdomainAssignment::neuron_positions(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains) const {
+std::vector<NeuronToSubdomainAssignment::position_type> NeuronToSubdomainAssignment::get_neuron_positions_in_subdomain(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains) const {
 
-    const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
+    const auto contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
-        RelearnException::fail("NeuronToSubdomainAssignment::neuron_positions: Wanted to have neuron_positions of subdomain_idx that is not present: {}", subdomain_idx);
+        RelearnException::fail("NeuronToSubdomainAssignment::get_neuron_positions_in_subdomain: Wanted to have get_neuron_positions_in_subdomain of subdomain_idx that is not present: {}", subdomain_idx);
         return {};
     }
 
-    const Nodes& nodes = neurons_in_subdomain.at(subdomain_idx);
+    const auto& nodes = neurons_in_subdomain.at(subdomain_idx);
     std::vector<position_type> pos{};
     pos.reserve(nodes.size());
 
-    for (const Node& node : nodes) {
+    for (const auto& node : nodes) {
         pos.push_back(node.pos);
     }
 
     return pos;
 }
 
-std::vector<SignalType> NeuronToSubdomainAssignment::neuron_types(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains) const {
+std::vector<SignalType> NeuronToSubdomainAssignment::get_neuron_types_in_subdomain(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains) const {
 
-    const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
+    const auto contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
-        RelearnException::fail("NeuronToSubdomainAssignment::neuron_types: Wanted to have neuron_types of subdomain_idx that is not present: {}", subdomain_idx);
+        RelearnException::fail("NeuronToSubdomainAssignment::get_neuron_types_in_subdomain: Wanted to have get_neuron_types_in_subdomain of subdomain_idx that is not present: {}", subdomain_idx);
         return {};
     }
 
-    const Nodes& nodes = neurons_in_subdomain.at(subdomain_idx);
+    const auto& nodes = neurons_in_subdomain.at(subdomain_idx);
     std::vector<SignalType> types{};
     types.reserve(nodes.size());
 
-    for (const Node& node : nodes) {
+    for (const auto& node : nodes) {
         types.push_back(node.signal_type);
     }
 
     return types;
 }
 
-std::vector<std::string> NeuronToSubdomainAssignment::neuron_area_names(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains) const {
+std::vector<std::string> NeuronToSubdomainAssignment::get_neuron_area_names_in_subdomain(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains) const {
 
-    const bool contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
+    const auto contains = neurons_in_subdomain.find(subdomain_idx) != neurons_in_subdomain.end();
     if (!contains) {
-        RelearnException::fail("NeuronToSubdomainAssignment::neuron_area_names: Wanted to have neuron_area_names of subdomain_idx that is not present: {}", subdomain_idx);
+        RelearnException::fail("NeuronToSubdomainAssignment::get_neuron_area_names_in_subdomain: Wanted to have get_neuron_area_names_in_subdomain of subdomain_idx that is not present: {}", subdomain_idx);
         return {};
     }
 
-    const Nodes& nodes = neurons_in_subdomain.at(subdomain_idx);
+    const auto& nodes = neurons_in_subdomain.at(subdomain_idx);
     std::vector<std::string> areas;
     areas.reserve(nodes.size());
 
-    for (const Node& node : nodes) {
+    for (const auto& node : nodes) {
         areas.push_back(node.area_name);
     }
 
     return areas;
 }
 
-bool NeuronToSubdomainAssignment::position_in_box(const position_type& pos, const box_size_type& box_min, const box_size_type& box_max) noexcept {
-    return ((pos.get_x() >= box_min.get_x() && pos.get_x() <= box_max.get_x()) && (pos.get_y() >= box_min.get_y() && pos.get_y() <= box_max.get_y()) && (pos.get_z() >= box_min.get_z() && pos.get_z() <= box_max.get_z()));
-}
-
-void NeuronToSubdomainAssignment::write_neurons_to_file(const std::string& filename) const {
+void NeuronToSubdomainAssignment::write_neurons_to_file(const std::filesystem::path& filename) const {
     std::ofstream of(filename, std::ios::binary | std::ios::out);
 
+    const auto is_good = of.good();
+    const auto is_bad = of.bad();
+
+    RelearnException::check(is_good && !is_bad, "NeuronToSubdomainAssignment::write_neurons_to_file: The ofstream failed to open");
+
     of << std::setprecision(std::numeric_limits<double>::digits10);
-    of << "# ID, Position (x y z),	Area, type \n";
+    of << "# ID, Position (x y z),  Area,   type \n";
 
-    for (const auto& it : neurons_in_subdomain) {
-        const Nodes& nodes = it.second;
-
+    for (const auto& [_, nodes] : neurons_in_subdomain) {
         for (const auto& node : nodes) {
             const auto id = node.id + 1;
 
@@ -118,38 +149,4 @@ void NeuronToSubdomainAssignment::write_neurons_to_file(const std::string& filen
             }
         }
     }
-
-    of.flush();
-    of.close();
-}
-
-void NeuronToSubdomainAssignment::initialize() {
-    const auto num_subdomains = partition->get_number_local_subdomains();
-
-    std::vector<size_t> number_neurons_in_subdomains(num_subdomains);
-
-    for (auto i = 0; i < num_subdomains; i++) {
-        const auto& index_1d = partition->get_1d_index_of_subdomain(i);
-        const auto& index_3d = partition->get_3d_index_of_subdomain(i);
-
-        const auto& [min, max] = partition->get_subdomain_boundaries(index_3d);
-        partition->set_subdomain_boundaries(i, min, max);
-
-        fill_subdomain(index_1d, num_subdomains, min, max);
-
-        const auto num_neurons = number_neurons(index_1d, num_subdomains);
-
-        number_neurons_in_subdomains[i] = num_neurons;
-
-        auto global_ids = neuron_global_ids(index_1d, num_subdomains);
-        std::sort(global_ids.begin(), global_ids.end());
-
-        neuron_id_translator->set_global_ids(i, std::move(global_ids));
-    }
-
-    partition->set_subdomain_number_neurons(number_neurons_in_subdomains);
-}
-
-std::function<Vec3d(Vec3d)> NeuronToSubdomainAssignment::get_subdomain_boundary_fix() const {
-    return [](Vec3d arg) { return arg; };
 }

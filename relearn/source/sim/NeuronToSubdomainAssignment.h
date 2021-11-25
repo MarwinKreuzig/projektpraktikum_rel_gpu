@@ -12,10 +12,10 @@
 
 #include "../Config.h"
 #include "../neurons/SignalType.h"
-#include "../structure/Partition.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
 
+#include <filesystem>
 #include <functional>
 #include <map>
 #include <memory>
@@ -36,10 +36,7 @@ public:
     using position_type = RelearnTypes::position_type;
     using box_size_type = RelearnTypes::box_size_type;
 
-    NeuronToSubdomainAssignment(std::shared_ptr<Partition> partition)
-        : partition(std::move(partition)) {
-        partition->set_boundary_correction_function(get_subdomain_boundary_fix());
-    }
+    NeuronToSubdomainAssignment(std::shared_ptr<Partition> partition);
 
     virtual ~NeuronToSubdomainAssignment() = default;
 
@@ -75,13 +72,20 @@ public:
      */
     virtual void initialize();
 
-    virtual std::function<Vec3d(Vec3d)> get_subdomain_boundary_fix() const;
+    /**
+     * @brief Returns a function object that is used to fix calculated subdomain boundaries.
+     *      This might be necessary if special boundaries must be considered
+     * @return A function object that corrects subdomain boundaries
+    */
+    virtual std::function<Vec3d(Vec3d)> get_subdomain_boundary_fix() const {
+        return [](Vec3d arg) { return arg; };
+    }
 
     /**
      * @brief Returns the total number of neurons that should be placed
      * @return The total number of neurons that should be placed
      */
-    [[nodiscard]] size_t desired_num_neurons() const noexcept {
+    [[nodiscard]] size_t get_number_requested_neurons() const noexcept {
         return desired_num_neurons_;
     }
 
@@ -89,7 +93,7 @@ public:
      * @brief Returns the current number of placed neurons 
      * @return The current number of placed neurons
      */
-    [[nodiscard]] size_t placed_num_neurons() const noexcept {
+    [[nodiscard]] size_t get_number_placed_neurons() const noexcept {
         return current_num_neurons_;
     }
 
@@ -97,7 +101,7 @@ public:
      * @brief Returns the total fraction of excitatory neurons that should be placed
      * @return The total fraction of excitatory neurons that should be placed
      */
-    [[nodiscard]] double desired_ratio_neurons_exc() const noexcept {
+    [[nodiscard]] double get_requested_ratio_excitatory_neurons() const noexcept {
         return desired_frac_neurons_exc_;
     }
 
@@ -105,57 +109,55 @@ public:
      * @brief Returns the current fraction of placed excitatory neurons
      * @return The total current fraction of placed excitatory neurons
      */
-    [[nodiscard]] double placed_ratio_neurons_exc() const noexcept {
+    [[nodiscard]] double get_ratio_placed_excitatory_neurons() const noexcept {
         return current_frac_neurons_exc_;
     }
 
     /**
-     * @brief Fills the subdomain with the given index and the boundaries. The implementation is left to the inhereting classes
-     * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
-     * @param num_subdomains The total number of local_subdomains
-     * @param min The subdomain's minimum position
-     * @param max The subdomain's maximum position
-     * @exception Might throw a RelearnException
-     */
-    virtual void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const box_size_type& min, const box_size_type& max) = 0;
-
-    /**
-     * @brief Return number of neurons which are in the specified subdomain and have positions in the [min, max)
-     * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
+     * @brief Return number of neurons which are in the specified subdomain
+     * @param subdomain_idx The 1d index of the subdomain which is inquired
      * @param num_subdomains The total number of local_subdomains
      * @exception Might throw a RelearnException
      * @return The number of neurons in the subdomain
      */
-    [[nodiscard]] virtual size_t number_neurons(size_t subdomain_idx, size_t num_subdomains) const;
+    [[nodiscard]] virtual size_t get_number_neurons_in_subdomain(size_t subdomain_idx, size_t num_subdomains) const;
 
     /**
-     * @brief Return the positions of the neurons which are in the specified subdomain and have positions in the [min, max)
-     * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
+     * @brief Return the positions of the neurons which are in the specified subdomain
+     * @param subdomain_idx The 1d index of the subdomain which is inquired
      * @param num_subdomains The total number of local_subdomains
      * @exception Might throw a RelearnException
      * @return The positions of the neurons in the subdomain
      */
-    [[nodiscard]] virtual std::vector<position_type> neuron_positions(size_t subdomain_idx, size_t num_subdomains) const;
+    [[nodiscard]] virtual std::vector<position_type> get_neuron_positions_in_subdomain(size_t subdomain_idx, size_t num_subdomains) const;
 
     /**
-     * @brief Return the signal type of the neurons which are in the specified subdomain and have positions in the [min, max)
-     * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
+     * @brief Return the signal type of the neurons which are in the specified subdomain
+     * @param subdomain_idx The 1d index of the subdomain which is inquired
      * @param num_subdomains The total number of local_subdomains
      * @exception Might throw a RelearnException
      * @return The signal types of the neurons in the subdomain
      */
-    [[nodiscard]] virtual std::vector<SignalType> neuron_types(size_t subdomain_idx, size_t num_subdomains) const;
+    [[nodiscard]] virtual std::vector<SignalType> get_neuron_types_in_subdomain(size_t subdomain_idx, size_t num_subdomains) const;
 
     /**
-     * @brief Return the area names of the neurons which are in the specified subdomain and have positions in the [min, max)
-     * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
+     * @brief Return the area names of the neurons which are in the specified subdomain
+     * @param subdomain_idx The 1d index of the subdomain which is inquired
      * @param num_subdomains The total number of local_subdomains
-     * @param min The subdomain's minimum position
-     * @param max The subdomain's maximum position
      * @exception Might throw a RelearnException
      * @return The area names of the neurons in the subdomain
      */
-    [[nodiscard]] virtual std::vector<std::string> neuron_area_names(size_t subdomain_idx, size_t num_subdomains) const;
+    [[nodiscard]] virtual std::vector<std::string> get_neuron_area_names_in_subdomain(size_t subdomain_idx, size_t num_subdomains) const;
+
+    /**
+     * @brief Returns the global ids for a given subdomain.
+     *      Might not be implemented
+     * @param subdomain_idx The 1d index of the subdomain which is inquired
+     * @param num_subdomains The total number of subdomains
+     * @exception Might throw a RelearnException
+     * @return The global ids for the specified subdomain
+     */
+    [[nodiscard]] virtual std::vector<size_t> get_neuron_global_ids_in_subdomain(size_t subdomain_idx, size_t num_subdomains) const = 0;
 
     /**
      * @brief Writes all loaded neurons into the specified file.
@@ -164,19 +166,7 @@ public:
      * @param filename The filepath where to write the neurons
      * @exception Might throw a RelearnException
     */
-    virtual void write_neurons_to_file(const std::string& filename) const;
-
-    /**
-     * @brief Returns the global ids for a given subdomain and local start and end ids.
-     *      Might not be implemented
-     * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
-     * @param num_subdomains The total number of local_subdomains
-     * @param local_id_start The first local id
-     * @param local_id_end The last local id
-     * @exception Might throw a RelearnException
-     * @return The global ids for the specified subdomain
-     */
-    [[nodiscard]] virtual std::vector<size_t> neuron_global_ids(size_t subdomain_idx, size_t num_subdomains) const = 0;
+    virtual void write_neurons_to_file(const std::filesystem::path& filename) const;
 
 protected:
     struct Node {
@@ -197,12 +187,22 @@ protected:
 
     using Nodes = std::set<Node, Node::less>;
 
+    /**
+     * @brief Fills the subdomain with the given index and the boundaries. The implementation is left to the inhereting classes
+     * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
+     * @param num_subdomains The total number of local_subdomains
+     * @param min The subdomain's minimum position
+     * @param max The subdomain's maximum position
+     * @exception Might throw a RelearnException
+     */
+    virtual void fill_subdomain(size_t subdomain_idx, size_t num_subdomains, const box_size_type& min, const box_size_type& max) = 0;
+
     void set_desired_frac_neurons_exc(const double desired_frac_neurons_exc) noexcept {
         desired_frac_neurons_exc_ = desired_frac_neurons_exc;
     }
 
-    void set_desired_num_neurons(const size_t desired_num_neurons) noexcept {
-        desired_num_neurons_ = desired_num_neurons;
+    void set_desired_num_neurons(const size_t get_number_requested_neurons) noexcept {
+        desired_num_neurons_ = get_number_requested_neurons;
     }
 
     void set_current_frac_neurons_exc(const double current_frac_neurons_exc) noexcept {
@@ -249,7 +249,9 @@ protected:
         return !neurons_in_subdomain.at(id).empty();
     }
 
-    [[nodiscard]] static bool position_in_box(const position_type& pos, const box_size_type& box_min, const box_size_type& box_max) noexcept;
+    [[nodiscard]] static bool position_in_box(const position_type& pos, const box_size_type& box_min, const box_size_type& box_max) noexcept {
+        return ((pos.get_x() >= box_min.get_x() && pos.get_x() <= box_max.get_x()) && (pos.get_y() >= box_min.get_y() && pos.get_y() <= box_max.get_y()) && (pos.get_z() >= box_min.get_z() && pos.get_z() <= box_max.get_z()));
+    }
 
     std::shared_ptr<Partition> partition;
 
