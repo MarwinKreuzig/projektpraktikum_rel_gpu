@@ -108,7 +108,7 @@ void Simulation::place_random_neurons(const size_t number_neurons, const double 
 
 void Simulation::load_neurons_from_file(const std::filesystem::path& path_to_positions, const std::optional<std::filesystem::path>& optional_path_to_connections) {
     auto local_ptr = std::make_unique<SubdomainFromFile>(path_to_positions, optional_path_to_connections, partition);
-    partition->set_total_number_neurons(local_ptr->get_total_num_neurons_in_file());
+    partition->set_total_number_neurons(local_ptr->get_total_number_neurons_in_file());
     neuron_to_subdomain_assignment = std::move(local_ptr);
     initialize();
 }

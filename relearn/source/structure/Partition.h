@@ -260,7 +260,6 @@ public:
      * @return (minimum, maximum) of the subdomain
      */
     std::pair<Vec3d, Vec3d> get_subdomain_boundaries(const Vec3s& subdomain_index_3d) {
-        // auto f = std::bind(&Foo::print_sum, &foo, 95, _1);
         const auto requested_subdomain_x = subdomain_index_3d.get_x();
         const auto requested_subdomain_y = subdomain_index_3d.get_y();
         const auto requested_subdomain_z = subdomain_index_3d.get_z();

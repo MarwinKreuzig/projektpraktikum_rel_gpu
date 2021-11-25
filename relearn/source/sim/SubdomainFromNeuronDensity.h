@@ -53,18 +53,27 @@ public:
 
     void initialize() override;
 
-    std::function<Vec3d(Vec3d)> get_subdomain_boundary_fix() const override;
+    std::function<Vec3d(Vec3d)> get_subdomain_boundary_fix() const override {
+        auto lambda = [](Vec3d arg, double multiple) -> Vec3d {
+            arg.round_to_larger_multiple(multiple);
+            return arg;
+        };
+
+        auto bound_lambda = std::bind(lambda, std::placeholders::_1, um_per_neuron_);
+
+        return bound_lambda;
+    }
 
 protected:
     /**
      * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
      * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
-     * @param num_subdomains The total number of local_subdomains
+     * @param total_number_subdomains The total number of local_subdomains
      * @param min The subdomain's minimum position
      * @param max The subdomain's maximum position
      * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file 
      */
-    void fill_subdomain(const size_t subdomain_idx, const size_t num_subdomains, const box_size_type& min, const box_size_type& max) override;
+    void fill_subdomain(const size_t subdomain_idx, const size_t total_number_subdomains, const box_size_type& min, const box_size_type& max) override;
 
 private:
     const double um_per_neuron_{ default_um_per_neuron }; // Micrometer per neuron in one dimension

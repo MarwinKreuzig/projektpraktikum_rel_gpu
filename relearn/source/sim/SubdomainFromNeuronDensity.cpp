@@ -47,7 +47,7 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t number_neuro
 void SubdomainFromNeuronDensity::place_neurons_in_area(
     const box_size_type& offset,
     const box_size_type& length_of_box,
-    const size_t number_neurons, const size_t subdomain_idx) {
+    const size_t number_neurons, const size_t subdomain_index_1d) {
 
     constexpr uint16_t max_short = std::numeric_limits<uint16_t>::max();
 
@@ -141,7 +141,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
             const auto current_frac_ex = static_cast<double>(now_ex_neurons) / static_cast<double>(new_num_neurons);
 
             set_current_frac_neurons_exc(current_frac_ex);
-            set_nodes(subdomain_idx, std::move(nodes));
+            set_nodes(subdomain_index_1d, std::move(nodes));
             return;
         }
     }
@@ -149,8 +149,8 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
     RelearnException::fail("SubdomainFromNeuronDensity::place_neurons_in_area: Shouldn't be here");
 }
 
-void SubdomainFromNeuronDensity::fill_subdomain(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains, const box_size_type& min, const box_size_type& max) {
-    const bool subdomain_already_filled = is_loaded(subdomain_idx);
+void SubdomainFromNeuronDensity::fill_subdomain(const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains, const box_size_type& min, const box_size_type& max) {
+    const bool subdomain_already_filled = is_loaded(subdomain_index_1d);
     if (subdomain_already_filled) {
         RelearnException::fail("SubdomainFromNeuronDensity::fill_subdomain: Tried to fill an already filled subdomain.");
         return;
@@ -165,10 +165,10 @@ void SubdomainFromNeuronDensity::fill_subdomain(const size_t subdomain_idx, [[ma
     const auto neuron_portion = total_volume / volume;
     const auto neurons_in_subdomain_count = static_cast<size_t>(round(get_desired_num_neurons() / neuron_portion));
 
-    place_neurons_in_area(min, max, neurons_in_subdomain_count, subdomain_idx);
+    place_neurons_in_area(min, max, neurons_in_subdomain_count, subdomain_index_1d);
 }
 
-std::vector<size_t> SubdomainFromNeuronDensity::get_neuron_global_ids_in_subdomain([[maybe_unused]] const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains) const {
+std::vector<size_t> SubdomainFromNeuronDensity::get_neuron_global_ids_in_subdomain([[maybe_unused]] const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {
 
     return {};
 }
@@ -180,13 +180,3 @@ void SubdomainFromNeuronDensity::initialize() {
     synapse_loader = std::make_shared<RandomSynapseLoader>(partition, neuron_id_translator);
 }
 
-std::function<Vec3d(Vec3d)> SubdomainFromNeuronDensity::get_subdomain_boundary_fix() const {
-    auto lambda = [](Vec3d arg, double multiple) -> Vec3d {
-        arg.round_to_larger_multiple(multiple);
-        return arg;
-    };
-
-    auto bound_lambda = std::bind(lambda, std::placeholders::_1, um_per_neuron_);
-
-    return bound_lambda;
-}
