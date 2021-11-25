@@ -85,7 +85,7 @@ public:
      * @brief Returns the total number of neurons that should be placed
      * @return The total number of neurons that should be placed
      */
-    [[nodiscard]] size_t get_number_requested_neurons() const noexcept {
+    [[nodiscard]] size_t get_requested_number_neurons() const noexcept {
         return desired_num_neurons_;
     }
 
@@ -197,60 +197,40 @@ protected:
      */
     virtual void fill_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains, const box_size_type& min, const box_size_type& max) = 0;
 
-    void set_desired_frac_neurons_exc(const double desired_frac_neurons_exc) noexcept {
+    void set_requested_ratio_excitatory_neurons(const double desired_frac_neurons_exc) noexcept {
         desired_frac_neurons_exc_ = desired_frac_neurons_exc;
     }
 
-    void set_desired_num_neurons(const size_t get_number_requested_neurons) noexcept {
-        desired_num_neurons_ = get_number_requested_neurons;
+    void set_requested_number_neurons(const size_t get_requested_number_neurons) noexcept {
+        desired_num_neurons_ = get_requested_number_neurons;
     }
 
-    void set_current_frac_neurons_exc(const double current_frac_neurons_exc) noexcept {
+    void set_ratio_placed_excitatory_neurons(const double current_frac_neurons_exc) noexcept {
         current_frac_neurons_exc_ = current_frac_neurons_exc;
     }
 
-    void set_current_num_neurons(const size_t current_num_neurons) noexcept {
+    void set_number_placed_neurons(const size_t current_num_neurons) noexcept {
         current_num_neurons_ = current_num_neurons;
     }
 
-    [[nodiscard]] double get_desired_frac_neurons_exc() const noexcept {
-        return desired_frac_neurons_exc_;
+    [[nodiscard]] const Nodes& get_nodes_for_subdomain(const size_t subdomain_index_1d) const {
+        const auto contains = is_subdomain_loaded(subdomain_index_1d);
+        RelearnException::check(contains, "NeuronToSubdomainAssignment::get_nodes_for_subdomain: Cannot fetch nodes for id {}", subdomain_index_1d);
+
+        return neurons_in_subdomain.at(subdomain_index_1d);
     }
 
-    [[nodiscard]] size_t get_desired_num_neurons() const noexcept {
-        return desired_num_neurons_;
+    void set_nodes_for_subdomain(const size_t subdomain_index_1d, Nodes&& nodes) {
+        neurons_in_subdomain[subdomain_index_1d] = std::move(nodes);
     }
 
-    [[nodiscard]] double get_current_frac_neurons_exc() const noexcept {
-        return current_frac_neurons_exc_;
-    }
-
-    [[nodiscard]] size_t get_current_num_neurons() const noexcept {
-        return current_num_neurons_;
-    }
-
-    [[nodiscard]] const Nodes& get_nodes(const size_t id) const {
-        const auto contains = neurons_in_subdomain.find(id) != neurons_in_subdomain.end();
-        RelearnException::check(contains, "NeuronToSubdomainAssignment::get_nodes: Cannot fetch nodes for id {}", id);
-
-        return neurons_in_subdomain.at(id);
-    }
-
-    void set_nodes(const size_t id, Nodes&& nodes) {
-        neurons_in_subdomain[id] = std::move(nodes);
-    }
-
-    [[nodiscard]] bool is_loaded(const size_t id) const noexcept {
-        const auto contains = neurons_in_subdomain.find(id) != neurons_in_subdomain.end();
+    [[nodiscard]] bool is_subdomain_loaded(const size_t subdomain_index_1d) const noexcept {
+        const auto contains = neurons_in_subdomain.find(subdomain_index_1d) != neurons_in_subdomain.end();
         if (!contains) {
             return false;
         }
 
-        return !neurons_in_subdomain.at(id).empty();
-    }
-
-    [[nodiscard]] static bool position_in_box(const position_type& pos, const box_size_type& box_min, const box_size_type& box_max) noexcept {
-        return ((pos.get_x() >= box_min.get_x() && pos.get_x() <= box_max.get_x()) && (pos.get_y() >= box_min.get_y() && pos.get_y() <= box_max.get_y()) && (pos.get_z() >= box_min.get_z() && pos.get_z() <= box_max.get_z()));
+        return !neurons_in_subdomain.at(subdomain_index_1d).empty();
     }
 
     std::shared_ptr<Partition> partition{};

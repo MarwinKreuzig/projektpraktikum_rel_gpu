@@ -80,7 +80,7 @@ void generate_neuron_positions(std::vector<Vec3d>& positions,
     auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromNeuronDensity sfnd{ number_neurons, frac_ex, um_per_neuron, part };
 
-    auto num_neurons_ = sfnd.get_number_requested_neurons();
+    auto num_neurons_ = sfnd.get_requested_number_neurons();
 
     ASSERT_EQ(number_neurons, num_neurons_);
 
@@ -118,7 +118,7 @@ TEST_F(NeuronAssignmentTest, test_constructor) {
         auto part = std::make_shared<Partition>(1, 0);
         SubdomainFromNeuronDensity sfnd{ number_neurons, frac_ex, um_per_neuron, part };
 
-        auto num_neurons_ = sfnd.get_number_requested_neurons();
+        auto num_neurons_ = sfnd.get_requested_number_neurons();
         auto frac_ex_ = sfnd.get_requested_ratio_excitatory_neurons();
 
         ASSERT_EQ(number_neurons, num_neurons_);
@@ -161,14 +161,14 @@ TEST_F(NeuronAssignmentTest, test_lazily_fill) {
 
         sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
 
-        auto num_neurons_ = sfnd.get_number_requested_neurons();
+        auto num_neurons_ = sfnd.get_requested_number_neurons();
         auto frac_ex_ = sfnd.get_requested_ratio_excitatory_neurons();
 
         ASSERT_EQ(number_neurons, num_neurons_);
 
         ASSERT_NEAR(frac_ex, frac_ex_, 1.0 / number_neurons);
 
-        ASSERT_EQ(sfnd.get_number_requested_neurons(), sfnd.get_number_placed_neurons());
+        ASSERT_EQ(sfnd.get_requested_number_neurons(), sfnd.get_number_placed_neurons());
         ASSERT_NEAR(sfnd.get_requested_ratio_excitatory_neurons(), sfnd.get_ratio_placed_excitatory_neurons(), 1.0 / number_neurons);
 
         ASSERT_LE(sfnd.get_requested_ratio_excitatory_neurons(), sfnd.get_ratio_placed_excitatory_neurons());
@@ -208,14 +208,14 @@ TEST_F(NeuronAssignmentTest, test_lazily_fill_multiple) {
             }
         }
 
-        auto num_neurons_ = sfnd.get_number_requested_neurons();
+        auto num_neurons_ = sfnd.get_requested_number_neurons();
         auto frac_ex_ = sfnd.get_requested_ratio_excitatory_neurons();
 
         ASSERT_EQ(number_neurons, num_neurons_);
 
         ASSERT_NEAR(frac_ex, frac_ex_, 1.0 / number_neurons);
 
-        ASSERT_EQ(sfnd.get_number_requested_neurons(), sfnd.get_number_placed_neurons());
+        ASSERT_EQ(sfnd.get_requested_number_neurons(), sfnd.get_number_placed_neurons());
         ASSERT_NEAR(sfnd.get_requested_ratio_excitatory_neurons(), sfnd.get_ratio_placed_excitatory_neurons(), 1.0 / number_neurons);
 
         ASSERT_LE(sfnd.get_requested_ratio_excitatory_neurons(), sfnd.get_ratio_placed_excitatory_neurons());
@@ -706,18 +706,18 @@ TEST_F(NeuronAssignmentTest, test_neuron_placement_store_and_load) {
     sdff.fill_subdomain(subdomain_id, 1, Vec3d{ 0 }, Vec3d{ box_length });
 
     // check neuron placement numbers
-    ASSERT_EQ(sdff.get_number_requested_neurons(), sdnd.get_number_requested_neurons());
+    ASSERT_EQ(sdff.get_requested_number_neurons(), sdnd.get_requested_number_neurons());
     ASSERT_EQ(sdff.get_number_placed_neurons(), sdnd.get_number_placed_neurons());
     ASSERT_EQ(sdff.get_requested_ratio_excitatory_neurons(), sdnd.get_requested_ratio_excitatory_neurons());
     ASSERT_EQ(sdff.get_ratio_placed_excitatory_neurons(), sdnd.get_ratio_placed_excitatory_neurons());
 
     // check for same number of local_subdomains
-    ASSERT_EQ(sdff.get_nodes(subdomain_id).size(), sdnd.get_nodes(subdomain_id).size());
+    ASSERT_EQ(sdff.get_nodes_for_subdomain(subdomain_id).size(), sdnd.get_nodes_for_subdomain(subdomain_id).size());
 
     // compare both neurons_in_subdomain maps for differences
     std::vector<NeuronToSubdomainAssignment::Node> diff{};
-    std::set_symmetric_difference(std::begin(sdff.get_nodes(subdomain_id)), std::end(sdff.get_nodes(subdomain_id)),
-        std::begin(sdnd.get_nodes(subdomain_id)), std::end(sdnd.get_nodes(subdomain_id)),
+    std::set_symmetric_difference(std::begin(sdff.get_nodes_for_subdomain(subdomain_id)), std::end(sdff.get_nodes_for_subdomain(subdomain_id)),
+        std::begin(sdnd.get_nodes_for_subdomain(subdomain_id)), std::end(sdnd.get_nodes_for_subdomain(subdomain_id)),
         std::back_inserter(diff));
     ASSERT_EQ(diff.size(), 0);
 

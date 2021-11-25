@@ -37,11 +37,11 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t number_neuro
 
     partition->set_simulation_box_size({ 0, 0, 0 }, box_size_type(simulation_box_length_));
 
-    set_desired_frac_neurons_exc(desired_frac_neurons_exc);
-    set_desired_num_neurons(number_neurons);
+    set_requested_ratio_excitatory_neurons(desired_frac_neurons_exc);
+    set_requested_number_neurons(number_neurons);
 
-    set_current_frac_neurons_exc(0.0);
-    set_current_num_neurons(0);
+    set_ratio_placed_excitatory_neurons(0.0);
+    set_number_placed_neurons(0);
 }
 
 void SubdomainFromNeuronDensity::place_neurons_in_area(
@@ -69,7 +69,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
     Nodes nodes{};
 
-    const double desired_ex = get_desired_frac_neurons_exc();
+    const double desired_ex = get_requested_ratio_excitatory_neurons();
 
     const size_t expected_number_in = number_neurons - static_cast<size_t>(ceil(number_neurons * desired_ex));
     const size_t expected_number_ex = number_neurons - expected_number_in;
@@ -128,20 +128,20 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
         placed_neurons++;
 
         if (placed_neurons == number_neurons) {
-            const auto current_num_neurons = get_current_num_neurons();
-            const auto former_ex_neurons = current_num_neurons * get_current_frac_neurons_exc();
+            const auto current_num_neurons = get_number_placed_neurons();
+            const auto former_ex_neurons = current_num_neurons * get_ratio_placed_excitatory_neurons();
 
             const auto new_num_neurons = current_num_neurons + placed_neurons;
 
-            set_current_num_neurons(new_num_neurons);
+            set_number_placed_neurons(new_num_neurons);
 
             const auto now_ex_neurons = former_ex_neurons + placed_ex_neurons;
             //const auto now_in_neurons = former_in_neurons + placed_in_neurons;
 
             const auto current_frac_ex = static_cast<double>(now_ex_neurons) / static_cast<double>(new_num_neurons);
 
-            set_current_frac_neurons_exc(current_frac_ex);
-            set_nodes(subdomain_index_1d, std::move(nodes));
+            set_ratio_placed_excitatory_neurons(current_frac_ex);
+            set_nodes_for_subdomain(subdomain_index_1d, std::move(nodes));
             return;
         }
     }
@@ -150,7 +150,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 }
 
 void SubdomainFromNeuronDensity::fill_subdomain(const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains, const box_size_type& min, const box_size_type& max) {
-    const bool subdomain_already_filled = is_loaded(subdomain_index_1d);
+    const bool subdomain_already_filled = is_subdomain_loaded(subdomain_index_1d);
     if (subdomain_already_filled) {
         RelearnException::fail("SubdomainFromNeuronDensity::fill_subdomain: Tried to fill an already filled subdomain.");
         return;
@@ -163,7 +163,7 @@ void SubdomainFromNeuronDensity::fill_subdomain(const size_t subdomain_index_1d,
     const auto& total_volume = (sim_box_max - sim_box_min).get_volume();
 
     const auto neuron_portion = total_volume / volume;
-    const auto neurons_in_subdomain_count = static_cast<size_t>(round(get_desired_num_neurons() / neuron_portion));
+    const auto neurons_in_subdomain_count = static_cast<size_t>(round(get_requested_number_neurons() / neuron_portion));
 
     place_neurons_in_area(min, max, neurons_in_subdomain_count, subdomain_index_1d);
 }

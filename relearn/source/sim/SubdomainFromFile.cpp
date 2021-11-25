@@ -99,8 +99,8 @@ void SubdomainFromFile::read_dimensions_from_file() {
 
     const auto simulation_box_length = maximum;
 
-    set_desired_num_neurons(desired_num_neurons_);
-    set_desired_frac_neurons_exc(desired_frac_neurons_exc_);
+    set_requested_number_neurons(desired_num_neurons_);
+    set_requested_ratio_excitatory_neurons(desired_frac_neurons_exc_);
 
     partition->set_simulation_box_size({ 0, 0, 0 }, simulation_box_length);
 }
@@ -145,7 +145,7 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
         // Ids start with 1
         node.id--;
 
-        if (bool is_in_subdomain = position_in_box(node.pos, min, max); !is_in_subdomain) {
+        if (bool is_in_subdomain = node.pos.check_in_box(min, max); !is_in_subdomain) {
             continue;
         }
 
@@ -163,20 +163,20 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
 
     const auto current_frac_neurons_exc_ = placed_ex_neurons / static_cast<double>(current_num_neurons_);
 
-    set_current_num_neurons(current_num_neurons_);
-    set_current_frac_neurons_exc(current_frac_neurons_exc_);
+    set_number_placed_neurons(current_num_neurons_);
+    set_ratio_placed_excitatory_neurons(current_frac_neurons_exc_);
 
     return nodes;
 }
 
 std::vector<size_t> SubdomainFromFile::get_neuron_global_ids_in_subdomain(const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {
-    const bool contains = is_loaded(subdomain_index_1d);
+    const bool contains = is_subdomain_loaded(subdomain_index_1d);
     if (!contains) {
         RelearnException::fail("SubdomainFromFile::get_neuron_global_ids_in_subdomain: Wanted to have neuron_global_ids of subdomain_index_1d that is not present");
         return {};
     }
 
-    const Nodes& nodes = get_nodes(subdomain_index_1d);
+    const Nodes& nodes = get_nodes_for_subdomain(subdomain_index_1d);
     std::vector<size_t> global_ids;
     global_ids.reserve(nodes.size());
 
@@ -188,7 +188,7 @@ std::vector<size_t> SubdomainFromFile::get_neuron_global_ids_in_subdomain(const 
 }
 
 void SubdomainFromFile::fill_subdomain(size_t subdomain_index_1d, [[maybe_unused]] size_t total_number_subdomains, const box_size_type& min, const box_size_type& max) {
-    const bool subdomain_already_filled = is_loaded(subdomain_index_1d);
+    const bool subdomain_already_filled = is_subdomain_loaded(subdomain_index_1d);
     if (subdomain_already_filled) {
         RelearnException::fail("SubdomainFromFile::fill_subdomain: Tried to fill an already filled subdomain.");
         return;
@@ -201,7 +201,7 @@ void SubdomainFromFile::fill_subdomain(size_t subdomain_index_1d, [[maybe_unused
         nodes.emplace(node);
     }
 
-    set_nodes(subdomain_index_1d, std::move(nodes));
+    set_nodes_for_subdomain(subdomain_index_1d, std::move(nodes));
 }
 
 std::optional<std::vector<size_t>> SubdomainFromFile::read_neuron_ids_from_file(const std::string& file_path) {
