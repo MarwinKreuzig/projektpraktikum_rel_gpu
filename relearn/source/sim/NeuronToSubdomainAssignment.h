@@ -195,7 +195,7 @@ protected:
      * @param max The subdomain's maximum position
      * @exception Might throw a RelearnException
      */
-    virtual void fill_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains, const box_size_type& min, const box_size_type& max) = 0;
+    virtual void fill_subdomain(size_t local_subdomain_index, size_t total_number_subdomains) = 0;
 
     void set_requested_ratio_excitatory_neurons(const double desired_frac_neurons_exc) noexcept {
         desired_frac_neurons_exc_ = desired_frac_neurons_exc;

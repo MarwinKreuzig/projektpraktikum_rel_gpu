@@ -118,7 +118,7 @@ void Partition::print_my_subdomains_info_rank(const int rank) {
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, sstream.str());
 }
 
-void Partition::set_simulation_box_size(const Vec3d& min, const Vec3d& max) {
+void Partition::set_simulation_box_size(const box_size_type& min, const box_size_type& max) {
     simulation_box_length = max - min;
     const auto& subdomain_length = simulation_box_length / static_cast<double>(number_subdomains_per_dimension);
 

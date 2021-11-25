@@ -187,7 +187,8 @@ std::vector<size_t> SubdomainFromFile::get_neuron_global_ids_in_subdomain(const 
     return global_ids;
 }
 
-void SubdomainFromFile::fill_subdomain(size_t subdomain_index_1d, [[maybe_unused]] size_t total_number_subdomains, const box_size_type& min, const box_size_type& max) {
+void SubdomainFromFile::fill_subdomain(const size_t local_subdomain_index, [[maybe_unused]] const size_t total_number_subdomains) {
+    const auto subdomain_index_1d = partition->get_1d_index_of_subdomain(local_subdomain_index);
     const bool subdomain_already_filled = is_subdomain_loaded(subdomain_index_1d);
     if (subdomain_already_filled) {
         RelearnException::fail("SubdomainFromFile::fill_subdomain: Tried to fill an already filled subdomain.");
@@ -196,6 +197,7 @@ void SubdomainFromFile::fill_subdomain(size_t subdomain_index_1d, [[maybe_unused
 
     Nodes nodes{};
 
+    const auto& [min, max] = partition->get_subdomain_boundaries(subdomain_index_1d);
     auto nodes_vector = read_nodes_from_file(min, max);
     for (const auto& node : nodes_vector) {
         nodes.emplace(node);

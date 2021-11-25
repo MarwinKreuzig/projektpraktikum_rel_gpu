@@ -231,7 +231,7 @@ public:
      * @param max The largest position in the subdomain
      * @exception Throws a RelearnException if local_subdomain_index is larger or equal to the number of local subdomains
      */
-    void set_subdomain_boundaries(const size_t local_subdomain_index, const Vec3d& min, const Vec3d& max) {
+    void set_subdomain_boundaries(const size_t local_subdomain_index, const box_size_type& min, const box_size_type& max) {
         RelearnException::check(local_subdomain_index < local_subdomains.size(),
             "Partition::set_subdomain_boundaries: index ({}) was too large for the number of local subdomains ({})", local_subdomain_index, local_subdomains.size());
         local_subdomains[local_subdomain_index].minimum_position = min;
@@ -243,23 +243,34 @@ public:
      * @param min The smallest position in the simulation box
      * @param max The largest position in the simulation box
      */
-    void set_simulation_box_size(const Vec3d& min, const Vec3d& max);
+    void set_simulation_box_size(const box_size_type& min, const box_size_type& max);
 
     /**
-     * @brief Returns the boundaries of the subdomain
-     * @param subdomain_index_1d The flattened index of the subdomain
-     * @return (minimum, maximum) of the subdomain
+     * @brief Calculates the subdomain boundaries for all local subdomains and sets them accordingly
      */
-    std::pair<Vec3d, Vec3d> get_subdomain_boundaries(const size_t subdomain_index_1d) {
-        return get_subdomain_boundaries(space_curve.map_1d_to_3d(subdomain_index_1d));
+    void calculate_and_set_subdomain_boundaries() noexcept {
+        for (auto& subdomain : local_subdomains) {
+            const auto& [min, max] = calculate_subdomain_boundaries(subdomain.index_1d);
+            subdomain.minimum_position = min;
+            subdomain.maximum_position = max;
+        }
     }
 
     /**
-     * @brief Returns the boundaries of the subdomain
+     * @brief Calculates the boundaries of the subdomain
+     * @param subdomain_index_1d The flattened index of the subdomain
+     * @return (minimum, maximum) of the subdomain
+     */
+    [[nodiscard]] std::pair<box_size_type, box_size_type> calculate_subdomain_boundaries(const size_t subdomain_index_1d) const noexcept {
+        return calculate_subdomain_boundaries(space_curve.map_1d_to_3d(subdomain_index_1d));
+    }
+
+    /**
+     * @brief Calculates the boundaries of the subdomain
      * @param subdomain_index_3d The 3-dimensional index of the subdomain
      * @return (minimum, maximum) of the subdomain
      */
-    std::pair<Vec3d, Vec3d> get_subdomain_boundaries(const Vec3s& subdomain_index_3d) {
+    [[nodiscard]] std::pair<box_size_type, box_size_type> calculate_subdomain_boundaries(const Vec3s& subdomain_index_3d) const noexcept {
         const auto requested_subdomain_x = subdomain_index_3d.get_x();
         const auto requested_subdomain_y = subdomain_index_3d.get_y();
         const auto requested_subdomain_z = subdomain_index_3d.get_z();
@@ -289,6 +300,17 @@ public:
         auto currected_max = boundary_corrector(max);
 
         return std::make_pair(currected_min, currected_max);
+    }
+
+    /**
+     * @brief Returns the boundaries of the subdomain
+     * @param local_subdomain_index The local index of the subdomain
+     * @return (minimum, maximum) of the subdomain
+     */
+    [[nodiscard]] std::pair<box_size_type, box_size_type> get_subdomain_boundaries(const size_t local_subdomain_index) const {
+        RelearnException::check(local_subdomain_index < local_subdomains.size(),
+            "Partition::get_subdomain_boundaries: index ({}) was too large for the number of local subdomains ({})", local_subdomain_index, local_subdomains.size());
+        return std::make_pair(local_subdomains[local_subdomain_index].minimum_position, local_subdomains[local_subdomain_index].maximum_position);
     }
 
     /**

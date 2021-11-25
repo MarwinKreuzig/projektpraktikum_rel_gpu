@@ -149,13 +149,15 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
     RelearnException::fail("SubdomainFromNeuronDensity::place_neurons_in_area: Shouldn't be here");
 }
 
-void SubdomainFromNeuronDensity::fill_subdomain(const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains, const box_size_type& min, const box_size_type& max) {
+void SubdomainFromNeuronDensity::fill_subdomain(const size_t local_subdomain_index, [[maybe_unused]] const size_t total_number_subdomains) {
+    const auto subdomain_index_1d = partition->get_1d_index_of_subdomain(local_subdomain_index);
     const bool subdomain_already_filled = is_subdomain_loaded(subdomain_index_1d);
     if (subdomain_already_filled) {
         RelearnException::fail("SubdomainFromNeuronDensity::fill_subdomain: Tried to fill an already filled subdomain.");
         return;
     }
 
+    const auto& [min, max] = partition->get_subdomain_boundaries(subdomain_index_1d);
     const auto diff = max - min;
     const auto volume = diff.get_volume();
 

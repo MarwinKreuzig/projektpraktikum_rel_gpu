@@ -87,7 +87,7 @@ void generate_neuron_positions(std::vector<Vec3d>& positions,
     const auto& [sim_box_min, sim_box_max] = part->get_simulation_box_size();
     auto box_length = (sim_box_max - sim_box_min).get_maximum();
 
-    sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
+    sfnd.initialize();
 
     positions = sfnd.get_neuron_positions_in_subdomain(0, 1);
     area_names = sfnd.get_neuron_area_names_in_subdomain(0, 1);
@@ -159,7 +159,7 @@ TEST_F(NeuronAssignmentTest, test_lazily_fill) {
 
         ASSERT_GE(box_length, 0);
 
-        sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
+        sfnd.initialize();
 
         auto num_neurons_ = sfnd.get_requested_number_neurons();
         auto frac_ex_ = sfnd.get_requested_ratio_excitatory_neurons();
@@ -202,9 +202,9 @@ TEST_F(NeuronAssignmentTest, test_lazily_fill_multiple) {
 
         for (auto j = 0; j < num_fills; j++) {
             if (j >= 1) {
-                ASSERT_THROW(sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length }), RelearnException);
+                ASSERT_THROW(sfnd.initialize(), RelearnException);
             } else {
-                sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
+                sfnd.initialize();
             }
         }
 
@@ -244,7 +244,7 @@ TEST_F(NeuronAssignmentTest, test_lazily_fill_positions) {
         const auto& [sim_box_min, sim_box_max] = part->get_simulation_box_size();
         auto box_length = (sim_box_max - sim_box_min).get_maximum();
 
-        sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
+        sfnd.initialize();
 
         std::vector<Vec3d> pos = sfnd.get_neuron_positions_in_subdomain(0, 1);
 
@@ -321,7 +321,7 @@ TEST_F(NeuronAssignmentTest, test_lazily_fill_positions_multiple_subdomains) {
         auto subdomain_length_y = box_length / subdomains_y;
         auto subdomain_length_z = box_length / subdomains_z;
 
-        sfnd.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
+        sfnd.initialize();
 
         std::vector<Vec3d> pos;
         for (auto x_it = 0; x_it < subdomains_x; x_it++) {
@@ -430,15 +430,14 @@ TEST_F(NeuronAssignmentTest, test_multiple_lazily_fill_positions_multiple_subdom
                     Vec3d subdomain_max{};
 
                     Vec3<size_t> subdomain_pos{ x_it, y_it, z_it };
-                    std::tie(subdomain_min, subdomain_max) = part->get_subdomain_boundaries(subdomain_pos);
+                    std::tie(subdomain_min, subdomain_max) = part->calculate_subdomain_boundaries(subdomain_pos);
 
-                    sfnd.fill_subdomain(current_idx, total_subdomains, subdomain_min, subdomain_max);
                     auto vec = sfnd.get_neuron_positions_in_subdomain(current_idx, total_subdomains);
                     pos.insert(pos.end(), vec.begin(), vec.end());
                 }
             }
         }
-
+        sfnd.initialize();
         auto diff_neurons = std::max(pos.size(), number_neurons) - std::min(pos.size(), number_neurons);
         ASSERT_LE(diff_neurons, total_subdomains);
 
@@ -558,7 +557,7 @@ TEST_F(NeuronAssignmentTest, test_reloading) {
         const auto& [sim_box_min, sim_box_max] = part->get_simulation_box_size();
         auto box_length = (sim_box_max - sim_box_min).get_maximum();
 
-        sff.fill_subdomain(0, 1, Vec3d{ 0 }, Vec3d{ box_length });
+        sff.initialize();
 
         std::vector<Vec3d> loaded_positions = sff.get_neuron_positions_in_subdomain(0, 1);
         std::vector<std::string> loaded_area_names = sff.get_neuron_area_names_in_subdomain(0, 1);
@@ -634,9 +633,7 @@ TEST_F(NeuronAssignmentTest, test_reloading_multiple) {
             Vec3d min{ 0 };
             Vec3d max{ 0 };
 
-            std::tie(min, max) = part->get_subdomain_boundaries(idx);
-
-            sff.fill_subdomain(j, 8, min, max);
+            std::tie(min, max) = part->calculate_subdomain_boundaries(idx);
 
             loaded_positions[j] = sff.get_neuron_positions_in_subdomain(j, 8);
             loaded_area_names[j] = sff.get_neuron_area_names_in_subdomain(j, 8);
@@ -646,6 +643,8 @@ TEST_F(NeuronAssignmentTest, test_reloading_multiple) {
             total_loaded_area_names.insert(total_loaded_area_names.end(), loaded_area_names[j].begin(), loaded_area_names[j].end());
             total_loaded_types.insert(total_loaded_types.end(), loaded_types[j].begin(), loaded_types[j].end());
         }
+
+        sff.initialize();
 
         ASSERT_EQ(number_neurons, total_loaded_positions.size());
         ASSERT_EQ(number_neurons, total_loaded_area_names.size());
@@ -693,9 +692,9 @@ TEST_F(NeuronAssignmentTest, test_neuron_placement_store_and_load) {
     SubdomainFromNeuronDensity sdnd{ number_neurons, frac_neurons_exc, 26, part };
     // fill_subdomain
 
-        const auto& [sim_box_min, sim_box_max] = part->get_simulation_box_size();
+    const auto& [sim_box_min, sim_box_max] = part->get_simulation_box_size();
     auto box_length = (sim_box_max - sim_box_min).get_maximum();
-        sdnd.fill_subdomain(subdomain_id, 1, Vec3d{ 0 }, Vec3d{ box_length });
+    sdnd.initialize();
     // save to file
     sdnd.write_neurons_to_file(file);
 
@@ -703,7 +702,7 @@ TEST_F(NeuronAssignmentTest, test_neuron_placement_store_and_load) {
     SubdomainFromFile sdff{ file, {}, part };
     part->set_total_number_neurons(sdff.get_total_number_neurons_in_file());
     // fill_subdomain from file
-    sdff.fill_subdomain(subdomain_id, 1, Vec3d{ 0 }, Vec3d{ box_length });
+    sdff.initialize();
 
     // check neuron placement numbers
     ASSERT_EQ(sdff.get_requested_number_neurons(), sdnd.get_requested_number_neurons());

@@ -21,6 +21,7 @@
 NeuronToSubdomainAssignment::NeuronToSubdomainAssignment(std::shared_ptr<Partition> partition)
     : partition(std::move(partition)) {
     partition->set_boundary_correction_function(get_subdomain_boundary_fix());
+    partition->calculate_and_set_subdomain_boundaries();
 }
 
 void NeuronToSubdomainAssignment::initialize() {
@@ -30,21 +31,16 @@ void NeuronToSubdomainAssignment::initialize() {
 
     for (auto i = 0; i < total_number_subdomains; i++) {
         const auto& index_1d = partition->get_1d_index_of_subdomain(i);
-        const auto& index_3d = partition->get_3d_index_of_subdomain(i);
 
-        const auto& [min, max] = partition->get_subdomain_boundaries(index_3d);
-        partition->set_subdomain_boundaries(i, min, max);
+        fill_subdomain(index_1d, total_number_subdomains);
+        const auto number_neurons_in_subdomain = get_number_neurons_in_subdomain(index_1d, total_number_subdomains);
 
-        fill_subdomain(index_1d, total_number_subdomains, min, max);
+        number_neurons_in_subdomains[i] = number_neurons_in_subdomain;
 
-        const auto num_neurons = get_number_neurons_in_subdomain(index_1d, total_number_subdomains);
+        auto global_ids_in_subdomain = get_neuron_global_ids_in_subdomain(index_1d, total_number_subdomains);
+        std::sort(global_ids_in_subdomain.begin(), global_ids_in_subdomain.end());
 
-        number_neurons_in_subdomains[i] = num_neurons;
-
-        auto global_ids = get_neuron_global_ids_in_subdomain(index_1d, total_number_subdomains);
-        std::sort(global_ids.begin(), global_ids.end());
-
-        neuron_id_translator->set_global_ids(i, std::move(global_ids));
+        neuron_id_translator->set_global_ids(i, std::move(global_ids_in_subdomain));
     }
 
     partition->set_subdomain_number_neurons(number_neurons_in_subdomains);
