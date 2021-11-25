@@ -57,7 +57,7 @@ public:
     /**
      * @brief Returns the global ids for a given subdomain
      * @param subdomain_index_1d The 1d index of the subdomain which is inquired
-     * @param total_number_subdomains The total number of local_subdomains
+     * @param total_number_subdomains The total number of subdomains
      * @exception Throws a RelearnException if the subdomain is not loaded
      * @return The global ids for the specified subdomain
      */
@@ -75,7 +75,7 @@ protected:
     /**
      * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
      * @param local_subdomain_index The local index of the subdomain which's neurons are to be filled
-     * @param total_number_subdomains The total number of local_subdomains
+     * @param total_number_subdomains The total number of subdomains
      * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file 
      */
     void fill_subdomain(size_t local_subdomain_index, size_t total_number_subdomains) override;
