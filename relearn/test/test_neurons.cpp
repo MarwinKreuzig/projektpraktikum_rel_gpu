@@ -18,21 +18,11 @@
 #include <vector>
 
 void assert_empty(const NeuronsExtraInfo& nei, size_t number_neurons) {
-    const auto& x_dims = nei.get_x_dims();
-    const auto& y_dims = nei.get_y_dims();
-    const auto& z_dims = nei.get_z_dims();
     const auto& area_names = nei.get_area_names();
-
-    ASSERT_EQ(0, x_dims.size());
-    ASSERT_EQ(0, y_dims.size());
-    ASSERT_EQ(0, z_dims.size());
     ASSERT_EQ(0, area_names.size());
 
     for (auto neuron_id = 0; neuron_id < number_neurons * 2; neuron_id++) {
         ASSERT_THROW(auto tmp = nei.get_position(neuron_id), RelearnException);
-        ASSERT_THROW(auto tmp = nei.get_x(neuron_id), RelearnException);
-        ASSERT_THROW(auto tmp = nei.get_y(neuron_id), RelearnException);
-        ASSERT_THROW(auto tmp = nei.get_z(neuron_id), RelearnException);
         ASSERT_THROW(auto tmp = nei.get_area_name(neuron_id), RelearnException);
     }
 }
@@ -45,26 +35,11 @@ void assert_contains(const NeuronsExtraInfo& nei, size_t number_neurons, size_t 
     ASSERT_EQ(num_neurons_check, expected_y_dims.size());
     ASSERT_EQ(num_neurons_check, expected_z_dims.size());
 
-    const auto& actual_x_dims = nei.get_x_dims();
-    const auto& actual_y_dims = nei.get_y_dims();
-    const auto& actual_z_dims = nei.get_z_dims();
     const auto& actual_area_names = nei.get_area_names();
 
-    ASSERT_EQ(actual_x_dims.size(), number_neurons);
-    ASSERT_EQ(actual_y_dims.size(), number_neurons);
-    ASSERT_EQ(actual_z_dims.size(), number_neurons);
     ASSERT_EQ(actual_area_names.size(), number_neurons);
 
     for (auto neuron_id = 0; neuron_id < num_neurons_check; neuron_id++) {
-        ASSERT_EQ(expected_x_dims[neuron_id], actual_x_dims[neuron_id]);
-        ASSERT_EQ(expected_x_dims[neuron_id], nei.get_x(neuron_id));
-
-        ASSERT_EQ(expected_y_dims[neuron_id], actual_y_dims[neuron_id]);
-        ASSERT_EQ(expected_y_dims[neuron_id], nei.get_y(neuron_id));
-
-        ASSERT_EQ(expected_z_dims[neuron_id], actual_z_dims[neuron_id]);
-        ASSERT_EQ(expected_z_dims[neuron_id], nei.get_z(neuron_id));
-
         ASSERT_EQ(expected_area_names[neuron_id], actual_area_names[neuron_id]);
         ASSERT_EQ(expected_area_names[neuron_id], nei.get_area_name(neuron_id));
 
@@ -74,9 +49,6 @@ void assert_contains(const NeuronsExtraInfo& nei, size_t number_neurons, size_t 
 
     for (auto neuron_id = number_neurons; neuron_id < number_neurons * 2; neuron_id++) {
         ASSERT_THROW(auto tmp = nei.get_position(neuron_id), RelearnException);
-        ASSERT_THROW(auto tmp = nei.get_x(neuron_id), RelearnException);
-        ASSERT_THROW(auto tmp = nei.get_y(neuron_id), RelearnException);
-        ASSERT_THROW(auto tmp = nei.get_z(neuron_id), RelearnException);
         ASSERT_THROW(auto tmp = nei.get_area_name(neuron_id), RelearnException);
     }
 }
@@ -177,18 +149,12 @@ TEST_F(NeuronsTest, testNeuronsExtraInfo) {
         assert_empty(nei, 1000);
 
         ASSERT_THROW(nei.set_area_names(std::vector<std::string>{}), RelearnException);
-        ASSERT_THROW(nei.set_x_dims(std::vector<double>{}), RelearnException);
-        ASSERT_THROW(nei.set_y_dims(std::vector<double>{}), RelearnException);
-        ASSERT_THROW(nei.set_z_dims(std::vector<double>{}), RelearnException);
 
         assert_empty(nei, 1000);
 
         const auto new_size = uid_id(mt);
 
         ASSERT_THROW(nei.set_area_names(std::vector<std::string>(new_size)), RelearnException);
-        ASSERT_THROW(nei.set_x_dims(std::vector<double>(new_size)), RelearnException);
-        ASSERT_THROW(nei.set_y_dims(std::vector<double>(new_size)), RelearnException);
-        ASSERT_THROW(nei.set_z_dims(std::vector<double>(new_size)), RelearnException);
 
         assert_empty(nei, 1000);
     }
@@ -216,9 +182,6 @@ TEST_F(NeuronsTest, testNeuronsExtraInfoInit) {
         std::vector<double> z_dims_wrong(num_neurons_wrong);
         std::vector<std::string> area_names_wrong(num_neurons_wrong);
 
-        ASSERT_THROW(nei.set_x_dims(x_dims_wrong), RelearnException);
-        ASSERT_THROW(nei.set_y_dims(y_dims_wrong), RelearnException);
-        ASSERT_THROW(nei.set_z_dims(z_dims_wrong), RelearnException);
         ASSERT_THROW(nei.set_area_names(area_names_wrong), RelearnException);
 
         assert_empty(nei, number_neurons);
@@ -236,9 +199,6 @@ TEST_F(NeuronsTest, testNeuronsExtraInfoInit) {
             area_names_right[neuron_id] = std::to_string(urd_pos(mt));
         }
 
-        nei.set_x_dims(x_dims_right);
-        nei.set_y_dims(y_dims_right);
-        nei.set_z_dims(z_dims_right);
         nei.set_area_names(area_names_right);
 
         assert_contains(nei, number_neurons, number_neurons, area_names_right, x_dims_right, y_dims_right, z_dims_right);
@@ -256,9 +216,6 @@ TEST_F(NeuronsTest, testNeuronsExtraInfoInit) {
             area_names_right_2[neuron_id] = std::to_string(urd_pos(mt));
         }
 
-        nei.set_x_dims(x_dims_right_2);
-        nei.set_y_dims(y_dims_right_2);
-        nei.set_z_dims(z_dims_right_2);
         nei.set_area_names(area_names_right_2);
 
         assert_contains(nei, number_neurons, number_neurons, area_names_right_2, x_dims_right_2, y_dims_right_2, z_dims_right_2);
@@ -299,9 +256,6 @@ TEST_F(NeuronsTest, testNeuronsExtraInfoCreate) {
             area_names_right[neuron_id] = std::to_string(urd_pos(mt));
         }
 
-        nei.set_x_dims(x_dims_right);
-        nei.set_y_dims(y_dims_right);
-        nei.set_z_dims(z_dims_right);
         nei.set_area_names(area_names_right);
 
         nei.create_neurons(num_neurons_create_1);
@@ -321,9 +275,6 @@ TEST_F(NeuronsTest, testNeuronsExtraInfoCreate) {
             area_names_right_2[neuron_id] = std::to_string(urd_pos(mt));
         }
 
-        nei.set_x_dims(x_dims_right_2);
-        nei.set_y_dims(y_dims_right_2);
-        nei.set_z_dims(z_dims_right_2);
         nei.set_area_names(area_names_right_2);
 
         assert_contains(nei, num_neurons_total_1, num_neurons_total_1, area_names_right_2, x_dims_right_2, y_dims_right_2, z_dims_right_2);
@@ -345,9 +296,6 @@ TEST_F(NeuronsTest, testNeuronsExtraInfoCreate) {
             area_names_right_3[neuron_id] = std::to_string(urd_pos(mt));
         }
 
-        nei.set_x_dims(x_dims_right_3);
-        nei.set_y_dims(y_dims_right_3);
-        nei.set_z_dims(z_dims_right_3);
         nei.set_area_names(area_names_right_3);
 
         assert_contains(nei, num_neurons_total_2, num_neurons_total_2, area_names_right_3, x_dims_right_3, y_dims_right_3, z_dims_right_3);

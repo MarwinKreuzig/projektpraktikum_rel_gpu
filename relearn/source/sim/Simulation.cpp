@@ -127,10 +127,6 @@ void Simulation::initialize() {
     const auto local_subdomain_id_start = partition->get_local_subdomain_id_start();
     const auto local_subdomain_id_end = partition->get_local_subdomain_id_end();
 
-    std::vector<double> x_dims(number_local_neurons);
-    std::vector<double> y_dims(number_local_neurons);
-    std::vector<double> z_dims(number_local_neurons);
-
     auto number_local_neurons_ntsa = neuron_to_subdomain_assignment->get_number_neurons_in_subdomains(local_subdomain_id_start, local_subdomain_id_end, number_local_subdomains);
 
     RelearnException::check(number_local_neurons_ntsa == number_local_neurons,
@@ -143,19 +139,6 @@ void Simulation::initialize() {
     RelearnException::check(neuron_positions.size() == number_local_neurons, "Simulation::initialize: neuron_positions had the wrong size");
     RelearnException::check(area_names.size() == number_local_neurons, "Simulation::initialize: area_names had the wrong size");
     RelearnException::check(signal_types.size() == number_local_neurons, "Simulation::initialize: signal_types had the wrong size");
-
-    for (auto i = 0; i < number_local_neurons; i++) {
-        const auto& position = neuron_positions[i];
-        x_dims[i] = position.get_x();
-        y_dims[i] = position.get_y();
-        z_dims[i] = position.get_z();
-    }
-
-    neurons->set_area_names(std::move(area_names));
-    neurons->set_x_dims(std::move(x_dims));
-    neurons->set_y_dims(std::move(y_dims));
-    neurons->set_z_dims(std::move(z_dims));
-    neurons->set_signal_types(std::move(signal_types));
 
     NeuronMonitor::neurons_to_monitor = neurons;
 
@@ -207,6 +190,10 @@ void Simulation::initialize() {
         auto algorithm_barnes_hut = std::make_shared<FastMultipoleMethods>(octree);
         algorithm = std::move(algorithm_barnes_hut);
     }
+
+    neurons->set_area_names(std::move(area_names));
+    neurons->set_signal_types(std::move(signal_types));
+    neurons->set_positions(std::move(neuron_positions));
 
     neurons->set_network_graph(network_graph);
     neurons->set_octree(global_tree);

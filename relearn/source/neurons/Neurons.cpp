@@ -234,12 +234,10 @@ void Neurons::create_neurons(const size_t creation_count) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    const auto& x_dims = extra_info->get_x_dims();
-    const auto& y_dims = extra_info->get_y_dims();
-    const auto& z_dims = extra_info->get_z_dims();
-
     for (size_t i = current_size; i < new_size; i++) {
-        global_tree->insert({ x_dims[i], y_dims[i], z_dims[i] }, i, my_rank);
+        const auto& pos = extra_info->get_position(i);
+
+        global_tree->insert(pos, i, my_rank);
     }
 
     global_tree->initializes_leaf_nodes(new_size);
@@ -1396,12 +1394,8 @@ void Neurons::print_positions_to_log_file() {
     std::stringstream ss;
     // Write total number of neurons to log file
     LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# {}\n#\n<global id> <pos x> <pos y> <pos z> <area> <type>", partition->get_total_number_neurons());
-
-    const std::vector<double>& axons_x_dims = extra_info->get_x_dims();
-    const std::vector<double>& axons_y_dims = extra_info->get_y_dims();
-    const std::vector<double>& axons_z_dims = extra_info->get_z_dims();
+    
     const std::vector<std::string>& area_names = extra_info->get_area_names();
-
     const std::vector<SignalType>& signal_types = axons->get_signal_types();
 
     // Print global ids, positions, and areas of local neurons
@@ -1414,10 +1408,15 @@ void Neurons::print_positions_to_log_file() {
         const auto global_id = extra_info->rank_neuron_id2glob_id(rank_neuron_id);
         const auto& signal_type_name = (signal_types[neuron_id] == SignalType::EXCITATORY) ? std::string("ex") : std::string("in");
 
+        const auto& pos = extra_info->get_position(neuron_id);
+
+        const auto x = pos.get_x();
+        const auto y = pos.get_y();
+        const auto z = pos.get_z();
+
         LogFiles::write_to_file(LogFiles::EventType::Positions, false,
             "{1:<} {2:<.{0}} {3:<.{0}} {4:<.{0}} {5:<} {6:<}",
-            Constants::print_precision, (global_id + 1), axons_x_dims[neuron_id], axons_y_dims[neuron_id],
-            axons_z_dims[neuron_id], area_names[neuron_id], signal_type_name);
+            Constants::print_precision, (global_id + 1), x, y, z, area_names[neuron_id], signal_type_name);
     }
 
     ss << std::flush;
@@ -1446,10 +1445,6 @@ void Neurons::print() {
 }
 
 void Neurons::print_info_for_algorithm() {
-    const std::vector<double>& x_dims = extra_info->get_x_dims();
-    const std::vector<double>& y_dims = extra_info->get_y_dims();
-    const std::vector<double>& z_dims = extra_info->get_z_dims();
-
     const std::vector<double>& axons_cnts = axons->get_total_counts();
     const std::vector<double>& dendrites_exc_cnts = dendrites_exc->get_total_counts();
     const std::vector<double>& dendrites_inh_cnts = dendrites_inh->get_total_counts();
@@ -1476,9 +1471,11 @@ void Neurons::print_info_for_algorithm() {
     for (size_t i = 0; i < number_neurons; i++) {
         ss << std::left << std::setw(cwidth_small) << i;
 
-        const auto x = static_cast<unsigned int>(x_dims[i]);
-        const auto y = static_cast<unsigned int>(y_dims[i]);
-        const auto z = static_cast<unsigned int>(z_dims[i]);
+        const auto& pos = extra_info->get_position(i);
+
+        const auto x = pos.get_x();
+        const auto y = pos.get_y();
+        const auto z = pos.get_z();
 
         my_string = "(" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")";
         ss << std::setw(cwidth_medium) << my_string;

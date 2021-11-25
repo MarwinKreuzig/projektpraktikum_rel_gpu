@@ -494,31 +494,8 @@ public:
         extra_info->set_area_names(std::move(names));
     }
 
-    /**
-     * @brief Sets the x dimensions in the extra infos
-     * @param names The x dimensions
-     * @exception Throws the same RelearnException as NeuronsExtraInfo::set_x_dims
-     */
-    void set_x_dims(std::vector<double> x_dims) {
-        extra_info->set_x_dims(std::move(x_dims));
-    }
-
-    /**
-     * @brief Sets the y dimensions in the extra infos
-     * @param names The y dimensions
-     * @exception Throws the same RelearnException as NeuronsExtraInfo::set_y_dims
-     */
-    void set_y_dims(std::vector<double> y_dims) {
-        extra_info->set_y_dims(std::move(y_dims));
-    }
-
-    /**
-     * @brief Sets the z dimensions in the extra infos
-     * @param names The z dimensions
-     * @exception Throws the same RelearnException as NeuronsExtraInfo::set_z_dims
-     */
-    void set_z_dims(std::vector<double> z_dims) {
-        extra_info->set_z_dims(std::move(z_dims));
+    void set_positions(std::vector<NeuronsExtraInfo::position_type> pos) {
+        extra_info->set_positions(std::move(pos));
     }
 
     /**
