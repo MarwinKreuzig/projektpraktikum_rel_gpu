@@ -119,62 +119,43 @@ void Simulation::initialize() {
     construct_neurons();
 
     neuron_to_subdomain_assignment->initialize();
+    const auto number_local_neurons = partition->get_number_local_neurons();
 
-    std::map<int, std::vector<Vec3d>> local_positions{};
+    neurons->init(number_local_neurons);
 
-    {
-        const auto number_local_neurons = partition->get_number_local_neurons();
+    const auto number_local_subdomains = partition->get_number_local_subdomains();
+    const auto local_subdomain_id_start = partition->get_local_subdomain_id_start();
+    const auto local_subdomain_id_end = partition->get_local_subdomain_id_end();
 
-        const auto my_rank = MPIWrapper::get_my_rank();
+    std::vector<double> x_dims(number_local_neurons);
+    std::vector<double> y_dims(number_local_neurons);
+    std::vector<double> z_dims(number_local_neurons);
 
-        neurons->init(number_local_neurons);
+    auto number_local_neurons_ntsa = neuron_to_subdomain_assignment->get_number_neurons_in_subdomains(local_subdomain_id_start, local_subdomain_id_end, number_local_subdomains);
 
-        std::vector<double> x_dims(number_local_neurons);
-        std::vector<double> y_dims(number_local_neurons);
-        std::vector<double> z_dims(number_local_neurons);
+    RelearnException::check(number_local_neurons_ntsa == number_local_neurons,
+        "Simulation::initialize: The partition and the NTSA had a disagreement about the number of local neurons");
 
-        std::vector<std::string> area_names(number_local_neurons);
-        std::vector<SignalType> signal_types(number_local_neurons);
+    auto neuron_positions = neuron_to_subdomain_assignment->get_neuron_positions_in_subdomains(local_subdomain_id_start, local_subdomain_id_end, number_local_subdomains);
+    auto area_names = neuron_to_subdomain_assignment->get_neuron_area_names_in_subdomains(local_subdomain_id_start, local_subdomain_id_end, number_local_subdomains);
+    auto signal_types = neuron_to_subdomain_assignment->get_neuron_types_in_subdomains(local_subdomain_id_start, local_subdomain_id_end, number_local_subdomains);
 
-        const auto number_local_subdomains = partition->get_number_local_subdomains();
-        for (size_t i = 0; i < number_local_subdomains; i++) {
-            const auto total_number_subdomains = partition->get_total_number_subdomains();
-            const auto local_subdomain_id_start = partition->get_local_subdomain_id_start();
-            const auto subdomain_idx = i + local_subdomain_id_start;
+    RelearnException::check(neuron_positions.size() == number_local_neurons, "Simulation::initialize: neuron_positions had the wrong size");
+    RelearnException::check(area_names.size() == number_local_neurons, "Simulation::initialize: area_names had the wrong size");
+    RelearnException::check(signal_types.size() == number_local_neurons, "Simulation::initialize: signal_types had the wrong size");
 
-            // Get neuron positions in subdomain i
-            std::vector<NeuronToSubdomainAssignment::position_type> vec_pos = neuron_to_subdomain_assignment->get_neuron_positions_in_subdomain(subdomain_idx, total_number_subdomains);
-
-            // Get neuron area names in subdomain i
-            std::vector<std::string> vec_area = neuron_to_subdomain_assignment->get_neuron_area_names_in_subdomain(subdomain_idx, total_number_subdomains);
-
-            // Get neuron types in subdomain i
-            std::vector<SignalType> vec_type = neuron_to_subdomain_assignment->get_neuron_types_in_subdomain(subdomain_idx, total_number_subdomains);
-
-            size_t neuron_id = partition->get_local_subdomain_local_neuron_id_start(i);
-
-            for (size_t j = 0; j < vec_pos.size(); j++) {
-                x_dims[neuron_id] = vec_pos[j].get_x();
-                y_dims[neuron_id] = vec_pos[j].get_y();
-                z_dims[neuron_id] = vec_pos[j].get_z();
-
-                area_names[neuron_id] = std::move(vec_area[j]);
-
-                // Mark neuron as DendriteType::EXCITATORY or DendriteType::INHIBITORY
-                signal_types[neuron_id] = vec_type[j];
-
-                neuron_id++;
-            }
-
-            local_positions[i] = std::move(vec_pos);
-        }
-
-        neurons->set_area_names(std::move(area_names));
-        neurons->set_x_dims(std::move(x_dims));
-        neurons->set_y_dims(std::move(y_dims));
-        neurons->set_z_dims(std::move(z_dims));
-        neurons->set_signal_types(std::move(signal_types));
+    for (auto i = 0; i < number_local_neurons; i++) {
+        const auto& position = neuron_positions[i];
+        x_dims[i] = position.get_x();
+        y_dims[i] = position.get_y();
+        z_dims[i] = position.get_z();
     }
+
+    neurons->set_area_names(std::move(area_names));
+    neurons->set_x_dims(std::move(x_dims));
+    neurons->set_y_dims(std::move(y_dims));
+    neurons->set_z_dims(std::move(z_dims));
+    neurons->set_signal_types(std::move(signal_types));
 
     NeuronMonitor::neurons_to_monitor = neurons;
 
@@ -188,21 +169,11 @@ void Simulation::initialize() {
         auto octree = std::make_shared<OctreeImplementation<BarnesHut>>(std::move(std::get<0>(sim_box_min_max)), std::move(std::get<1>(sim_box_min_max)), partition->get_level_of_subdomain_trees());
         global_tree = std::static_pointer_cast<Octree>(octree);
 
-        // Insert my local (subdomain) trees into my global tree
-        for (size_t i = 0; i < partition->get_number_local_subdomains(); i++) {
-            size_t index_1d = partition->get_1d_index_of_subdomain(i);
-
-            auto* local_root = octree->get_local_root(index_1d);
-            auto neuron_id = partition->get_local_subdomain_local_neuron_id_start(i);
-
-            const auto& positions = local_positions[i];
-
-            for (const auto& position : local_positions[i]) {
-                auto* const node = local_root->insert(position, neuron_id, my_rank);
-                RelearnException::check(node != nullptr, "node is nullptr");
-
-                neuron_id++;
-            }
+        auto* root = octree->get_root();
+        for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
+            const auto& position = neuron_positions[neuron_id];
+            auto* const node = root->insert(position, neuron_id, my_rank);
+            RelearnException::check(node != nullptr, "node is nullptr");
         }
 
         global_tree->initializes_leaf_nodes(partition->get_number_local_neurons());
@@ -219,21 +190,11 @@ void Simulation::initialize() {
         auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(std::move(std::get<0>(sim_box_min_max)), std::move(std::get<1>(sim_box_min_max)), partition->get_level_of_subdomain_trees());
         global_tree = std::static_pointer_cast<Octree>(octree);
 
-        // Insert my local (subdomain) trees into my global tree
-        for (size_t i = 0; i < partition->get_number_local_subdomains(); i++) {
-            size_t index_1d = partition->get_1d_index_of_subdomain(i);
-
-            auto* local_root = octree->get_local_root(index_1d);
-            auto neuron_id = partition->get_local_subdomain_local_neuron_id_start(i);
-
-            const auto& positions = local_positions[i];
-
-            for (const auto& position : local_positions[i]) {
-                auto* const node = local_root->insert(position, neuron_id, my_rank);
-                RelearnException::check(node != nullptr, "node is nullptr");
-
-                neuron_id++;
-            }
+        auto* root = octree->get_root();
+        for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
+            const auto& position = neuron_positions[neuron_id];
+            auto* const node = root->insert(position, neuron_id, my_rank);
+            RelearnException::check(node != nullptr, "node is nullptr");
         }
 
         global_tree->initializes_leaf_nodes(partition->get_number_local_neurons());
