@@ -63,6 +63,8 @@ public:
 
     void initialize() override;
 
+    std::function<Vec3d(Vec3d)> get_subdomain_boundary_fix() const override;
+
 private:
     const double um_per_neuron_{ default_um_per_neuron }; // Micrometer per neuron in one dimension
 

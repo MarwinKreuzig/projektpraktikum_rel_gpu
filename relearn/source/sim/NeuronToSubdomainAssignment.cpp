@@ -149,3 +149,7 @@ void NeuronToSubdomainAssignment::initialize() {
 
     partition->set_subdomain_number_neurons(number_neurons_in_subdomains);
 }
+
+std::function<Vec3d(Vec3d)> NeuronToSubdomainAssignment::get_subdomain_boundary_fix() const {
+    return [](Vec3d arg) { return arg; };
+}

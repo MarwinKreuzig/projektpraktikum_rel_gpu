@@ -161,7 +161,7 @@ void SubdomainFromNeuronDensity::fill_subdomain(const size_t subdomain_idx, [[ma
 
     const auto& [sim_box_min, sim_box_max] = partition->get_simulation_box_size();
     const auto& total_volume = (sim_box_max - sim_box_min).get_volume();
-    
+
     const auto neuron_portion = total_volume / volume;
     const auto neurons_in_subdomain_count = static_cast<size_t>(round(get_desired_num_neurons() / neuron_portion));
 
@@ -178,4 +178,15 @@ void SubdomainFromNeuronDensity::initialize() {
 
     neuron_id_translator = std::make_shared<RandomNeuronIdTranslator>(partition);
     synapse_loader = std::make_shared<RandomSynapseLoader>(partition, neuron_id_translator);
+}
+
+std::function<Vec3d(Vec3d)> SubdomainFromNeuronDensity::get_subdomain_boundary_fix() const {
+    auto lambda = [](Vec3d arg, double multiple) -> Vec3d {
+        arg.round_to_larger_multiple(multiple);
+        return arg;
+    };
+
+    auto bound_lambda = std::bind(lambda, std::placeholders::_1, um_per_neuron_);
+
+    return bound_lambda;
 }

@@ -15,6 +15,7 @@
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
 
+#include <functional>
 #include <tuple>
 #include <vector>
 
@@ -259,6 +260,7 @@ public:
      * @return (minimum, maximum) of the subdomain
      */
     std::pair<Vec3d, Vec3d> get_subdomain_boundaries(const Vec3s& subdomain_index_3d) {
+        // auto f = std::bind(&Foo::print_sum, &foo, 95, _1);
         const auto requested_subdomain_x = subdomain_index_3d.get_x();
         const auto requested_subdomain_y = subdomain_index_3d.get_y();
         const auto requested_subdomain_z = subdomain_index_3d.get_z();
@@ -284,7 +286,10 @@ public:
 
         box_size_type max{ next_x, next_y, next_z };
 
-        return std::make_pair(min, max);
+        auto currected_min = boundary_corrector(min);
+        auto currected_max = boundary_corrector(max);
+
+        return std::make_pair(currected_min, currected_max);
     }
 
     /**
@@ -298,6 +303,16 @@ public:
         box_size_type max{ simulation_box_length };
 
         return std::make_tuple(min, max);
+    }
+
+    /**
+     * @brief Sets the correction function for the boundaries of the subdomains
+     * @param corrector The correction function
+     * @exception Throws a RelearnException if corrector is not valid
+     */
+    void set_boundary_correction_function(std::function<box_size_type(box_size_type)> corrector) {
+        RelearnException::check(corrector.operator bool(), "Partition::set_boundary_correction_function: corrector was empty");
+        boundary_corrector = std::move(corrector);
     }
 
 private:
@@ -316,4 +331,8 @@ private:
 
     std::vector<Subdomain> local_subdomains{};
     SpaceFillingCurve<Morton> space_curve{};
+
+    std::function<box_size_type(box_size_type)> boundary_corrector{
+        [](box_size_type bst) { return bst; }
+    };
 };

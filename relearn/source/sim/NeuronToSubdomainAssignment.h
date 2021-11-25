@@ -12,9 +12,11 @@
 
 #include "../Config.h"
 #include "../neurons/SignalType.h"
+#include "../structure/Partition.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <set>
@@ -36,6 +38,7 @@ public:
 
     NeuronToSubdomainAssignment(std::shared_ptr<Partition> partition)
         : partition(std::move(partition)) {
+        partition->set_boundary_correction_function(get_subdomain_boundary_fix());
     }
 
     virtual ~NeuronToSubdomainAssignment() = default;
@@ -71,6 +74,8 @@ public:
      *      This method is only virtual in case an inheriting class must do something afterwards.
      */
     virtual void initialize();
+
+    virtual std::function<Vec3d(Vec3d)> get_subdomain_boundary_fix() const;
 
     /**
      * @brief Returns the total number of neurons that should be placed
