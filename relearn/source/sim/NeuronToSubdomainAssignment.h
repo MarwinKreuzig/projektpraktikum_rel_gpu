@@ -47,10 +47,10 @@ public:
     NeuronToSubdomainAssignment& operator=(NeuronToSubdomainAssignment&& other) = delete;
 
     /**
-     * @brief Initializes the assignment class, i.e., loads all neurons for the subdomains.
-     *      This method is only virtual in case an inheriting class must do something afterwards.
+     * @brief Initializes the assignment class, i.e., loads all neurons for the subdomains
+     * @exception Can throw a RelearnException
      */
-    virtual void initialize();
+    void initialize();
 
     /**
      * @brief Returns the associated SynapseLoader (some type that inherites from SynapseLoader)
@@ -86,7 +86,7 @@ public:
      * @return The total number of neurons that should be placed
      */
     [[nodiscard]] size_t get_requested_number_neurons() const noexcept {
-        return desired_num_neurons_;
+        return requested_number_neurons;
     }
 
     /**
@@ -94,7 +94,7 @@ public:
      * @return The current number of placed neurons
      */
     [[nodiscard]] size_t get_number_placed_neurons() const noexcept {
-        return current_num_neurons_;
+        return number_placed_neurons;
     }
 
     /**
@@ -102,7 +102,7 @@ public:
      * @return The total fraction of excitatory neurons that should be placed
      */
     [[nodiscard]] double get_requested_ratio_excitatory_neurons() const noexcept {
-        return desired_frac_neurons_exc_;
+        return requested_ratio_excitatory_neurons;
     }
 
     /**
@@ -110,7 +110,7 @@ public:
      * @return The total current fraction of placed excitatory neurons
      */
     [[nodiscard]] double get_ratio_placed_excitatory_neurons() const noexcept {
-        return current_frac_neurons_exc_;
+        return ratio_placed_excitatory_neurons;
     }
 
     /**
@@ -282,24 +282,24 @@ protected:
     virtual void fill_subdomain(size_t local_subdomain_index, size_t total_number_subdomains) = 0;
 
     void set_requested_ratio_excitatory_neurons(const double desired_frac_neurons_exc) noexcept {
-        desired_frac_neurons_exc_ = desired_frac_neurons_exc;
+        requested_ratio_excitatory_neurons = desired_frac_neurons_exc;
     }
 
     void set_requested_number_neurons(const size_t get_requested_number_neurons) noexcept {
-        desired_num_neurons_ = get_requested_number_neurons;
+        requested_number_neurons = get_requested_number_neurons;
     }
 
     void set_ratio_placed_excitatory_neurons(const double current_frac_neurons_exc) noexcept {
-        current_frac_neurons_exc_ = current_frac_neurons_exc;
+        ratio_placed_excitatory_neurons = current_frac_neurons_exc;
     }
 
     void set_number_placed_neurons(const size_t current_num_neurons) noexcept {
-        current_num_neurons_ = current_num_neurons;
+        number_placed_neurons = current_num_neurons;
     }
 
     [[nodiscard]] const Nodes& get_nodes_for_subdomain(const size_t subdomain_index_1d) const {
-        const auto contains = is_subdomain_loaded(subdomain_index_1d);
-        RelearnException::check(contains, "NeuronToSubdomainAssignment::get_nodes_for_subdomain: Cannot fetch nodes for id {}", subdomain_index_1d);
+        const auto subdomain_is_loaded = is_subdomain_loaded(subdomain_index_1d);
+        RelearnException::check(subdomain_is_loaded, "NeuronToSubdomainAssignment::get_nodes_for_subdomain: Cannot fetch nodes for id {}", subdomain_index_1d);
 
         return neurons_in_subdomain.at(subdomain_index_1d);
     }
@@ -317,6 +317,8 @@ protected:
         return !neurons_in_subdomain.at(subdomain_index_1d).empty();
     }
 
+    virtual void post_initialization() = 0;
+
     std::shared_ptr<Partition> partition{};
 
     std::shared_ptr<SynapseLoader> synapse_loader{};
@@ -330,7 +332,7 @@ private:
         std::vector<T> all_values;
 
         for (size_t subdomain_id = subdomain_index_1d_start; subdomain_id <= subdomain_index_1d_end; subdomain_id++) {
-            auto partial_values = subdomain_function(subdomain_id, total_number_subdomains);
+            const auto& partial_values = subdomain_function(subdomain_id, total_number_subdomains);
             all_values.insert(all_values.cend(), partial_values.begin(), partial_values.end());
         }
 
@@ -339,9 +341,9 @@ private:
 
     std::map<size_t, Nodes> neurons_in_subdomain{};
 
-    double desired_frac_neurons_exc_{ 0.0 };
-    size_t desired_num_neurons_{ 0 };
+    double requested_ratio_excitatory_neurons{ 0.0 };
+    size_t requested_number_neurons{ 0 };
 
-    double current_frac_neurons_exc_{ 0.0 };
-    size_t current_num_neurons_{ 0 };
+    double ratio_placed_excitatory_neurons{ 0.0 };
+    size_t number_placed_neurons{ 0 };
 };

@@ -30,11 +30,11 @@ public:
     /**
      * @brief Constructs a new object with the specified parameters
      * @param number_neurons The number of neurons
-     * @param desired_frac_neurons_exc The fraction of excitatory neurons, must be in [0.0, 1.0]
+     * @param fraction_excitatory_neurons The fraction of excitatory neurons, must be in [0.0, 1.0]
      * @param um_per_neuron The box length in which a single neuron is placed, must be > 0.0
-     * @exception Throws a RelearnException if desired_frac_neurons_exc if not from [0.0, 1.0] or um_per_neuron <= 0.0
+     * @exception Throws a RelearnException if fraction_excitatory_neurons if not from [0.0, 1.0] or um_per_neuron <= 0.0
      */
-    SubdomainFromNeuronDensity(const size_t number_neurons, const double desired_frac_neurons_exc, const double um_per_neuron, std::shared_ptr<Partition> partition);
+    SubdomainFromNeuronDensity(const size_t number_neurons, const double fraction_excitatory_neurons, const double um_per_neuron, std::shared_ptr<Partition> partition);
 
     SubdomainFromNeuronDensity(const SubdomainFromNeuronDensity& other) = delete;
     SubdomainFromNeuronDensity(SubdomainFromNeuronDensity&& other) = delete;
@@ -51,17 +51,15 @@ public:
 
     constexpr static double default_um_per_neuron = 26.0;
 
-    void initialize() override;
+    void post_initialization() override;
 
     std::function<Vec3d(Vec3d)> get_subdomain_boundary_fix() const override {
-        auto lambda = [](Vec3d arg, double multiple) -> Vec3d {
+        auto lambda = [multiple = um_per_neuron_](Vec3d arg) -> Vec3d {
             arg.round_to_larger_multiple(multiple);
             return arg;
         };
 
-        auto bound_lambda = std::bind(lambda, std::placeholders::_1, um_per_neuron_);
-
-        return bound_lambda;
+        return lambda;
     }
 
 protected:

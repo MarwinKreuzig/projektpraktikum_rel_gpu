@@ -94,13 +94,13 @@ void SubdomainFromFile::read_dimensions_from_file() {
 
     LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded neurons: {}", total_number_neurons);
 
-    const auto desired_num_neurons_ = found_ex_neurons + found_in_neurons;
-    const auto desired_frac_neurons_exc_ = static_cast<double>(found_ex_neurons) / static_cast<double>(desired_num_neurons_);
+    const auto requested_number_neurons = found_ex_neurons + found_in_neurons;
+    const auto requested_ratio_excitatory_neurons = static_cast<double>(found_ex_neurons) / static_cast<double>(requested_number_neurons);
 
     const auto simulation_box_length = maximum;
 
-    set_requested_number_neurons(desired_num_neurons_);
-    set_requested_ratio_excitatory_neurons(desired_frac_neurons_exc_);
+    set_requested_number_neurons(requested_number_neurons);
+    set_requested_ratio_excitatory_neurons(requested_ratio_excitatory_neurons);
 
     partition->set_simulation_box_size({ 0, 0, 0 }, simulation_box_length);
 }
@@ -116,7 +116,7 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
     double placed_ex_neurons = 0.0;
     double placed_in_neurons = 0.0;
 
-    size_t current_num_neurons_ = 0;
+    size_t number_placed_neurons = 0;
 
     std::vector<NeuronToSubdomainAssignment::Node> nodes;
 
@@ -157,14 +157,14 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
             ++placed_in_neurons;
         }
 
-        ++current_num_neurons_;
+        ++number_placed_neurons;
         nodes.emplace_back(node);
     }
 
-    const auto current_frac_neurons_exc_ = placed_ex_neurons / static_cast<double>(current_num_neurons_);
+    const auto ratio_placed_excitatory_neurons = placed_ex_neurons / static_cast<double>(number_placed_neurons);
 
-    set_number_placed_neurons(current_num_neurons_);
-    set_ratio_placed_excitatory_neurons(current_frac_neurons_exc_);
+    set_number_placed_neurons(number_placed_neurons);
+    set_ratio_placed_excitatory_neurons(ratio_placed_excitatory_neurons);
 
     return nodes;
 }
@@ -206,7 +206,7 @@ void SubdomainFromFile::fill_subdomain(const size_t local_subdomain_index, [[may
     set_nodes_for_subdomain(subdomain_index_1d, std::move(nodes));
 }
 
-std::optional<std::vector<size_t>> SubdomainFromFile::read_neuron_ids_from_file(const std::string& file_path) {
+std::optional<std::vector<size_t>> SubdomainFromFile::read_neuron_ids_from_file(const std::filesystem::path& file_path) {
     std::ifstream local_file(file_path);
 
     const bool file_is_good = local_file.good();

@@ -18,12 +18,12 @@
 
 #include <limits>
 
-SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t number_neurons, const double desired_frac_neurons_exc, const double um_per_neuron, std::shared_ptr<Partition> partition)
+SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t number_neurons, const double fraction_excitatory_neurons, const double um_per_neuron, std::shared_ptr<Partition> partition)
     : NeuronToSubdomainAssignment(partition)
     , um_per_neuron_(um_per_neuron) {
 
-    RelearnException::check(desired_frac_neurons_exc >= 0.0 && desired_frac_neurons_exc <= 1.0,
-        "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: The requested fraction of excitatory neurons is not in [0.0, 1.0]: {}", desired_frac_neurons_exc);
+    RelearnException::check(fraction_excitatory_neurons >= 0.0 && fraction_excitatory_neurons <= 1.0,
+        "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: The requested fraction of excitatory neurons is not in [0.0, 1.0]: {}", fraction_excitatory_neurons);
     RelearnException::check(um_per_neuron > 0.0, "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: The requested um per neuron is <= 0.0: {}", um_per_neuron);
 
     const auto my_rank = static_cast<unsigned int>(MPIWrapper::get_my_rank());
@@ -37,7 +37,7 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t number_neuro
 
     partition->set_simulation_box_size({ 0, 0, 0 }, box_size_type(simulation_box_length_));
 
-    set_requested_ratio_excitatory_neurons(desired_frac_neurons_exc);
+    set_requested_ratio_excitatory_neurons(fraction_excitatory_neurons);
     set_requested_number_neurons(number_neurons);
 
     set_ratio_placed_excitatory_neurons(0.0);
@@ -175,9 +175,7 @@ std::vector<size_t> SubdomainFromNeuronDensity::get_neuron_global_ids_in_subdoma
     return {};
 }
 
-void SubdomainFromNeuronDensity::initialize() {
-    NeuronToSubdomainAssignment::initialize();
-
+void SubdomainFromNeuronDensity::post_initialization() {
     neuron_id_translator = std::make_shared<RandomNeuronIdTranslator>(partition);
     synapse_loader = std::make_shared<RandomSynapseLoader>(partition, neuron_id_translator);
 }

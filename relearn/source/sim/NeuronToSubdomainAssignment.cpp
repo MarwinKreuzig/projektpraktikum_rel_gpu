@@ -44,12 +44,13 @@ void NeuronToSubdomainAssignment::initialize() {
     }
 
     partition->set_subdomain_number_neurons(number_neurons_in_subdomains);
+
+    post_initialization();
 }
 
 size_t NeuronToSubdomainAssignment::get_number_neurons_in_subdomain(const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {
-
-    const auto contains = is_subdomain_loaded(subdomain_index_1d);
-    if (!contains) {
+    const auto subdomain_is_loaded = is_subdomain_loaded(subdomain_index_1d);
+    if (!subdomain_is_loaded) {
         RelearnException::fail("NeuronToSubdomainAssignment::number_neurons: Wanted to have number_neurons of subdomain_index_1d that is not present");
         return 0;
     }
@@ -60,9 +61,8 @@ size_t NeuronToSubdomainAssignment::get_number_neurons_in_subdomain(const size_t
 }
 
 std::vector<NeuronToSubdomainAssignment::position_type> NeuronToSubdomainAssignment::get_neuron_positions_in_subdomain(const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {
-
-    const auto contains = is_subdomain_loaded(subdomain_index_1d);
-    if (!contains) {
+    const auto subdomain_is_loaded = is_subdomain_loaded(subdomain_index_1d);
+    if (!subdomain_is_loaded) {
         RelearnException::fail("NeuronToSubdomainAssignment::get_neuron_positions_in_subdomain: Wanted to have get_neuron_positions_in_subdomain of subdomain_index_1d that is not present: {}", subdomain_index_1d);
         return {};
     }
@@ -79,9 +79,8 @@ std::vector<NeuronToSubdomainAssignment::position_type> NeuronToSubdomainAssignm
 }
 
 std::vector<SignalType> NeuronToSubdomainAssignment::get_neuron_types_in_subdomain(const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {
-
-    const auto contains = is_subdomain_loaded(subdomain_index_1d);
-    if (!contains) {
+    const auto subdomain_is_loaded = is_subdomain_loaded(subdomain_index_1d);
+    if (!subdomain_is_loaded) {
         RelearnException::fail("NeuronToSubdomainAssignment::get_neuron_types_in_subdomain: Wanted to have get_neuron_types_in_subdomain of subdomain_index_1d that is not present: {}", subdomain_index_1d);
         return {};
     }
@@ -98,15 +97,14 @@ std::vector<SignalType> NeuronToSubdomainAssignment::get_neuron_types_in_subdoma
 }
 
 std::vector<std::string> NeuronToSubdomainAssignment::get_neuron_area_names_in_subdomain(const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {
-
-    const auto contains = is_subdomain_loaded(subdomain_index_1d);
-    if (!contains) {
+    const auto subdomain_is_loaded = is_subdomain_loaded(subdomain_index_1d);
+    if (!subdomain_is_loaded) {
         RelearnException::fail("NeuronToSubdomainAssignment::get_neuron_area_names_in_subdomain: Wanted to have get_neuron_area_names_in_subdomain of subdomain_index_1d that is not present: {}", subdomain_index_1d);
         return {};
     }
 
     const auto& nodes = neurons_in_subdomain.at(subdomain_index_1d);
-    std::vector<std::string> areas;
+    std::vector<std::string> areas{};
     areas.reserve(nodes.size());
 
     for (const auto& node : nodes) {
