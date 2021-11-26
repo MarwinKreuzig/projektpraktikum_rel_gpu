@@ -12,6 +12,8 @@
 
 #include "RelearnTest.hpp"
 
+double RelearnTest::position_bounary = 10000;
+
 int RelearnTest::iterations = 10;
 size_t RelearnTest::num_neurons_test = 1000;
 double RelearnTest::eps = 0.00001;

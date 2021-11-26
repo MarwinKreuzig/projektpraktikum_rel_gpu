@@ -21,24 +21,6 @@
 
 using AdditionalCellAttributes = BarnesHutCell;
 
-std::tuple<Vec3d, Vec3d> get_random_simulation_box_size(std::mt19937& mt) {
-    std::uniform_real_distribution<double> urd(-10000.0, +10000.0);
-
-    const auto rand_x_1 = urd(mt);
-    const auto rand_x_2 = urd(mt);
-
-    const auto rand_y_1 = urd(mt);
-    const auto rand_y_2 = urd(mt);
-
-    const auto rand_z_1 = urd(mt);
-    const auto rand_z_2 = urd(mt);
-
-    return {
-        { std::min(rand_x_1, rand_x_2), std::min(rand_y_1, rand_y_2), std::min(rand_z_1, rand_z_2) },
-        { std::max(rand_x_1, rand_x_2), std::max(rand_y_1, rand_y_2), std::max(rand_z_1, rand_z_2) }
-    };
-}
-
 std::vector<std::tuple<Vec3d, size_t>> generate_random_neurons(const Vec3d& min, const Vec3d& max, size_t count, size_t max_id, std::mt19937& mt) {
     std::uniform_real_distribution<double> urd_x(min.get_x(), max.get_x());
     std::uniform_real_distribution<double> urd_y(min.get_y(), max.get_y());

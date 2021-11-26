@@ -14,9 +14,7 @@
 
 #include <sstream>
 
-Partition::Partition(const size_t num_ranks, const size_t my_rank)
-    : number_local_neurons(0)
-    , total_number_neurons(0) {
+Partition::Partition(const size_t num_ranks, const size_t my_rank) {
     RelearnException::check(num_ranks > 0, "Partition::Partition: Number of MPI ranks must be a positive number: {}", num_ranks);
     RelearnException::check(num_ranks > my_rank, "Partition::Partition: My rank must be smaller than number of ranks: {} vs {}", num_ranks, my_rank);
 
@@ -119,7 +117,32 @@ void Partition::print_my_subdomains_info_rank(const int rank) {
 }
 
 void Partition::set_simulation_box_size(const box_size_type& min, const box_size_type& max) {
-    simulation_box_length = max - min;
+    const auto min_x = min.get_x();
+    const auto min_y = min.get_y();
+    const auto min_z = min.get_z();
+
+    const auto max_x = max.get_x();
+    const auto max_y = max.get_y();
+    const auto max_z = max.get_z();
+    
+    const auto half_constant = static_cast<double>(Constants::uninitialized) / 2;
+
+    RelearnException::check(min_x < max_x, "Partition::set_simulation_box_size: minimum had a larger x than maximum: {} vs {}", min_x, max_x);
+    RelearnException::check(min_y < max_y, "Partition::set_simulation_box_size: minimum had a larger y than maximum: {} vs {}", min_y, max_y);
+    RelearnException::check(min_z < max_z, "Partition::set_simulation_box_size: minimum had a larger z than maximum: {} vs {}", min_z, max_z);
+
+    RelearnException::check(-half_constant < min_x && min_x < half_constant, "Partition::set_simulation_box_size: minimum had a bad value for x: {}", min_x);
+    RelearnException::check(-half_constant < min_y && min_y < half_constant, "Partition::set_simulation_box_size: minimum had a bad value for y: {}", min_y);
+    RelearnException::check(-half_constant < min_z && min_z < half_constant, "Partition::set_simulation_box_size: minimum had a bad value for y: {}", min_z);
+
+    RelearnException::check(-half_constant < max_x && max_x < half_constant, "Partition::set_simulation_box_size: maximum had a bad value for x: {}", max_x);
+    RelearnException::check(-half_constant < max_y && max_y < half_constant, "Partition::set_simulation_box_size: maximum had a bad value for y: {}", max_y);
+    RelearnException::check(-half_constant < max_z && max_z < half_constant, "Partition::set_simulation_box_size: maximum had a bad value for y: {}", max_z);
+
+    simulation_box_minimum = min;
+    simulation_box_maximum = max;
+
+    const auto& simulation_box_length = max - min;
     const auto& subdomain_length = simulation_box_length / static_cast<double>(number_subdomains_per_dimension);
 
     LogFiles::print_message_rank(0, "Simulation box length (height, width, depth)\t: ({}, {}, {})",

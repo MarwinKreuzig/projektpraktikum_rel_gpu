@@ -40,6 +40,34 @@ private:
 protected:
     std::mt19937 mt;
 
+    std::tuple<Vec3d, Vec3d> get_random_simulation_box_size(std::mt19937& mt) {
+        std::uniform_real_distribution<double> urd(-position_bounary, +position_bounary);
+
+        const auto rand_x_1 = urd(mt);
+        const auto rand_x_2 = urd(mt);
+
+        const auto rand_y_1 = urd(mt);
+        const auto rand_y_2 = urd(mt);
+
+        const auto rand_z_1 = urd(mt);
+        const auto rand_z_2 = urd(mt);
+
+        return {
+            { std::min(rand_x_1, rand_x_2), std::min(rand_y_1, rand_y_2), std::min(rand_z_1, rand_z_2) },
+            { std::max(rand_x_1, rand_x_2), std::max(rand_y_1, rand_y_2), std::max(rand_z_1, rand_z_2) }
+        };
+    }
+
+    Vec3d get_random_position_in_box(const Vec3d& min, const Vec3d& max, std::mt19937& mt) {
+        std::uniform_real_distribution urd_x(min.get_x(), max.get_x());
+        std::uniform_real_distribution urd_y(min.get_y(), max.get_y());
+        std::uniform_real_distribution urd_z(min.get_z(), max.get_z());
+
+        return {
+            urd_x(mt), urd_y(mt), urd_z(mt)
+        };
+    }
+
     static void SetUpTestCase() {
         RelearnException::hide_messages = true;
         LogFiles::disable = true;
@@ -75,6 +103,8 @@ protected:
     void make_mpi_mem_available() {
         MemoryHolder<BarnesHutCell>::make_all_available();
     }
+
+    static double position_bounary;
 
     static int iterations;
     static size_t num_neurons_test;
@@ -129,6 +159,10 @@ class OctreeTest : public RelearnTest {
 };
 
 class PartitionTest : public RelearnTest {
+
+protected:
+    constexpr static int upper_bound_my_rank = 32;
+    constexpr static int upper_bound_num_ranks = 32;
 };
 
 class SynapticElementsTest : public RelearnTest {

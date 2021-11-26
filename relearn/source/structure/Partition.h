@@ -151,10 +151,19 @@ public:
      * @return Returns the MPI rank that is responsible for the position
      */
     [[nodiscard]] size_t get_mpi_rank_from_position(const position_type& position) const {
-        RelearnException::check(simulation_box_length.get_x() < Constants::uninitialized / 2, "Partition::get_mpi_rank_from_position: Neurons are not loaded yet");
+        const auto half_constant = static_cast<double>(Constants::uninitialized) / 2;
+
+        RelearnException::check(simulation_box_minimum.get_x() < half_constant, "Partition::get_mpi_rank_from_position: Neurons are not loaded yet");
+        RelearnException::check(simulation_box_minimum.get_y() < half_constant, "Partition::get_mpi_rank_from_position: Neurons are not loaded yet");
+        RelearnException::check(simulation_box_minimum.get_z() < half_constant, "Partition::get_mpi_rank_from_position: Neurons are not loaded yet");
+
+        const auto& relative_position = position - simulation_box_minimum;
+
+        const auto& simulation_box_length = simulation_box_maximum - simulation_box_minimum;
+
         const box_size_type subdomain_length = simulation_box_length / static_cast<double>(number_subdomains_per_dimension);
 
-        const box_size_type subdomain_3d{ position.get_x() / subdomain_length.get_x(), position.get_y() / subdomain_length.get_y(), position.get_z() / subdomain_length.get_z() };
+        const box_size_type subdomain_3d{ relative_position.get_x() / subdomain_length.get_x(), relative_position.get_y() / subdomain_length.get_y(), relative_position.get_z() / subdomain_length.get_z() };
         const Vec3s id_3d = subdomain_3d.floor_componentwise();
         const size_t id_1d = space_curve.map_3d_to_1d(id_3d);
 
@@ -200,6 +209,18 @@ public:
     }
 
     /**
+     * @brief Returns the last local neuron id of the subdomain
+     * @param local_subdomain_index The local subdomain index
+     * @exception Throws a RelearnException if local_subdomain_index is larger or equal to the number of local subdomains
+     * @return The last local neuron id of the subdomain
+     */
+    [[nodiscard]] size_t get_local_subdomain_local_neuron_id_end(const size_t local_subdomain_index) const {
+        RelearnException::check(local_subdomain_index < local_subdomains.size(),
+            "Partition::get_local_subdomain_local_neuron_id_start: index ({}) was too large for the number of local subdomains ({})", local_subdomain_index, local_subdomains.size());
+        return local_subdomains[local_subdomain_index].neuron_local_id_end;
+    }
+
+    /**
      * @brief Sets the number of neurons in all subdomains, and updates the dependent values
      * @param number_local_neurons_in_subdomains The number of neurons in each local subdomain
      * @exception Throws a RelearnException if number_local_neurons_in_subdomains has a size unequal to the number of local subdomains
@@ -225,23 +246,10 @@ public:
     }
 
     /**
-     * @brief Sets the boundaries of the subdomain
-     * @param local_subdomain_index The local subdomain index
-     * @param min The smallest position in the subdomain
-     * @param max The largest position in the subdomain
-     * @exception Throws a RelearnException if local_subdomain_index is larger or equal to the number of local subdomains
-     */
-    void set_subdomain_boundaries(const size_t local_subdomain_index, const box_size_type& min, const box_size_type& max) {
-        RelearnException::check(local_subdomain_index < local_subdomains.size(),
-            "Partition::set_subdomain_boundaries: index ({}) was too large for the number of local subdomains ({})", local_subdomain_index, local_subdomains.size());
-        local_subdomains[local_subdomain_index].minimum_position = min;
-        local_subdomains[local_subdomain_index].maximum_position = max;
-    }
-
-    /**
      * @brief Sets the boundaries of the simulation box
      * @param min The smallest position in the simulation box
-     * @param max The largest position in the simulation box
+     * @param max The largest position in the simulation box1
+     * @exception Throws a RelearnException if min >= max componentwise or any value is outside of [-Constants::uninitialized, Constants::uninitialized]
      */
     void set_simulation_box_size(const box_size_type& min, const box_size_type& max);
 
@@ -296,10 +304,13 @@ public:
 
         box_size_type max{ next_x, next_y, next_z };
 
-        auto currected_min = boundary_corrector(min);
-        auto currected_max = boundary_corrector(max);
+        const auto adjusted_min = min + simulation_box_minimum;
+        const auto adjusted_max = max + simulation_box_minimum;
 
-        return std::make_pair(currected_min, currected_max);
+        auto corrected_min = boundary_corrector(adjusted_min);
+        auto corrected_max = boundary_corrector(adjusted_max);
+
+        return std::make_pair(corrected_min, corrected_max);
     }
 
     /**
@@ -319,11 +330,11 @@ public:
      * @return The size of the simulation box as tuple (min, max)
      */
     [[nodiscard]] std::tuple<box_size_type, box_size_type> get_simulation_box_size() const {
-        RelearnException::check(simulation_box_length.get_x() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before");
-        box_size_type min{ 0 };
-        box_size_type max{ simulation_box_length };
+        RelearnException::check(simulation_box_minimum.get_x() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before");
+        RelearnException::check(simulation_box_minimum.get_y() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before");
+        RelearnException::check(simulation_box_minimum.get_z() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before");
 
-        return std::make_tuple(min, max);
+        return std::make_tuple(simulation_box_minimum, simulation_box_maximum);
     }
 
     /**
@@ -348,7 +359,8 @@ private:
     size_t local_subdomain_id_start{ Constants::uninitialized };
     size_t local_subdomain_id_end{ Constants::uninitialized };
 
-    box_size_type simulation_box_length{ Constants::uninitialized };
+    box_size_type simulation_box_minimum{ Constants::uninitialized };
+    box_size_type simulation_box_maximum{ Constants::uninitialized };
 
     std::vector<Subdomain> local_subdomains{};
     SpaceFillingCurve<Morton> space_curve{};

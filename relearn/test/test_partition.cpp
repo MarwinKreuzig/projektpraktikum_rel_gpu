@@ -1,15 +1,13 @@
 #include "../googletest/include/gtest/gtest.h"
 
 #include <cmath>
+#include <numeric>
 #include <random>
 
 #include "RelearnTest.hpp"
 
 #include "../source/structure/Partition.h"
 #include "../source/util/RelearnException.h"
-
-constexpr const int upper_bound_my_rank = 32;
-constexpr const int upper_bound_num_ranks = 32;
 
 size_t round_to_next_exponent(size_t numToRound, size_t exponent) {
     auto log = std::log(static_cast<double>(numToRound)) / std::log(static_cast<double>(exponent));
@@ -18,56 +16,325 @@ size_t round_to_next_exponent(size_t numToRound, size_t exponent) {
     return static_cast<size_t>(new_val);
 }
 
+bool is_power_of_two(size_t number) {
+    auto counter = 0;
+
+    while (number != 0) {
+        auto res = number & 1;
+        if (res == 1) {
+            counter++;
+        }
+        number >>= 1;
+    }
+
+    return counter == 1;
+}
+
 TEST_F(PartitionTest, test_partition_constructor_arguments) {
     std::uniform_int_distribution<size_t> uid_my_rank(0, upper_bound_my_rank);
     std::uniform_int_distribution<size_t> uid_num_ranks(0, upper_bound_num_ranks);
 
     for (auto i = 0; i < iterations; i++) {
-        auto my_rank = uid_my_rank(mt);
-        auto num_ranks = uid_num_ranks(mt);
+        const auto my_rank = uid_my_rank(mt);
+        const auto num_ranks = uid_num_ranks(mt);
 
-        auto exponent = std::log2(static_cast<double>(num_ranks));
-        auto floored_exponent = std::floor(exponent);
-        auto exp_diff = exponent - floored_exponent;
-
-        if (my_rank >= num_ranks || exp_diff > eps) {
-            ASSERT_THROW(Partition part(num_ranks, my_rank), RelearnException);
-        } else {
-            ASSERT_NO_THROW(Partition part(num_ranks, my_rank));
+        if (num_ranks == 0) {
+            ASSERT_THROW(Partition part(num_ranks, my_rank), RelearnException) << num_ranks << my_rank;
+            break;
         }
+
+        bool is_rank_power_2 = is_power_of_two(num_ranks);
+
+        if (!is_rank_power_2) {
+            ASSERT_THROW(Partition part(num_ranks, my_rank), RelearnException) << num_ranks << my_rank;
+            break;
+        }
+
+        if (my_rank >= num_ranks) {
+            ASSERT_THROW(Partition part(num_ranks, my_rank), RelearnException) << num_ranks << my_rank;
+            break;
+        }
+
+        ASSERT_NO_THROW(Partition part(num_ranks, my_rank)) << num_ranks << my_rank;
     }
 }
+
 TEST_F(PartitionTest, test_partition_constructor) {
     std::uniform_int_distribution<size_t> uid_num_ranks(1, upper_bound_num_ranks);
 
     for (auto i = 0; i < iterations; i++) {
-        auto my_ranks_rand = uid_num_ranks(mt);
-        auto num_ranks = round_to_next_exponent(my_ranks_rand, 2);
-        auto num_subdomains = round_to_next_exponent(my_ranks_rand, 8);
+        const auto my_ranks_rand = uid_num_ranks(mt);
+        const auto num_ranks = round_to_next_exponent(my_ranks_rand, 2);
+        const auto num_subdomains = round_to_next_exponent(my_ranks_rand, 8);
 
-        auto my_subdomains = num_subdomains / num_ranks;
+        const auto my_subdomains = num_subdomains / num_ranks;
 
-        auto oct_exponent = static_cast<size_t>(std::log(static_cast<double>(num_subdomains)) / std::log(8.0));
-        auto num_subdomains_per_dim = static_cast<size_t>(std::ceil(std::pow(static_cast<double>(num_subdomains), 1.0 / 3.0)));
-
-        Vec3d min, max;
+        const auto oct_exponent = static_cast<size_t>(std::log(static_cast<double>(num_subdomains)) / std::log(8.0));
+        const auto num_subdomains_per_dim = static_cast<size_t>(std::ceil(std::pow(static_cast<double>(num_subdomains), 1.0 / 3.0)));
 
         for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
             Partition partition(num_ranks, my_rank);
 
-            ASSERT_EQ(partition.get_total_number_subdomains(), num_subdomains);
-            ASSERT_EQ(partition.get_number_local_subdomains(), my_subdomains);
+            ASSERT_EQ(partition.get_total_number_subdomains(), num_subdomains) << num_subdomains;
+            ASSERT_EQ(partition.get_number_local_subdomains(), my_subdomains) << my_subdomains;
 
-            ASSERT_EQ(partition.get_local_subdomain_id_start(), my_subdomains * my_rank);
-            ASSERT_EQ(partition.get_local_subdomain_id_end(), my_subdomains * (my_rank + 1) - 1);
+            ASSERT_EQ(partition.get_local_subdomain_id_start(), my_subdomains * my_rank) << my_subdomains << my_rank;
+            ASSERT_EQ(partition.get_local_subdomain_id_end(), my_subdomains * (my_rank + 1) - 1) << my_subdomains << my_rank;
 
-            ASSERT_EQ(partition.get_level_of_subdomain_trees(), oct_exponent);
-            ASSERT_EQ(partition.get_number_subdomains_per_dimension(), num_subdomains_per_dim);
-
-            ASSERT_THROW(auto err = partition.get_number_local_neurons(), RelearnException);
-            ASSERT_THROW(auto err = partition.get_simulation_box_size(), RelearnException);
-            ASSERT_THROW(auto err = partition.get_mpi_rank_from_position(min), RelearnException);
+            ASSERT_EQ(partition.get_level_of_subdomain_trees(), oct_exponent) << oct_exponent;
+            ASSERT_EQ(partition.get_number_subdomains_per_dimension(), num_subdomains_per_dim) << num_subdomains_per_dim;
         }
     }
 }
 
+TEST_F(PartitionTest, test_partition_number_neurons) {
+    std::uniform_int_distribution<size_t> uid_num_ranks(1, upper_bound_num_ranks);
+    std::uniform_int_distribution<size_t> uid_num_neurons(1, num_neurons_test);
+
+    for (auto i = 0; i < iterations; i++) {
+        const auto my_ranks_rand = uid_num_ranks(mt);
+        const auto num_ranks = round_to_next_exponent(my_ranks_rand, 2);
+
+        const auto num_subdomains = round_to_next_exponent(my_ranks_rand, 8);
+        const auto my_subdomains = num_subdomains / num_ranks;
+
+        std::vector<std::vector<size_t>> number_local_neurons(num_ranks);
+        size_t number_total_neurons = 0;
+
+        for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
+            number_local_neurons[my_rank] = std::vector<size_t>(my_subdomains);
+
+            for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
+                const auto num_local_neurons = uid_num_neurons(mt);
+
+                number_local_neurons[my_rank][my_subdomain] = num_local_neurons;
+                number_total_neurons += num_local_neurons;
+            }
+        }
+
+        for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
+            const auto& local_neurons = number_local_neurons[my_rank];
+
+            std::vector<size_t> local_ids_start(my_subdomains, 0);
+            std::vector<size_t> local_ids_ends(my_subdomains, 0);
+
+            for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
+                if (my_subdomain > 0) {
+                    local_ids_start[my_subdomain] = local_ids_ends[my_subdomain - 1] + 1;
+                }
+
+                local_ids_ends[my_subdomain] = local_ids_start[my_subdomain] + local_neurons[my_subdomain] - 1;
+            }
+
+            Partition partition(num_ranks, my_rank);
+
+            ASSERT_THROW(partition.get_total_number_neurons(), RelearnException);
+            partition.set_total_number_neurons(number_total_neurons);
+            ASSERT_EQ(partition.get_total_number_neurons(), number_total_neurons);
+
+            partition.set_subdomain_number_neurons(local_neurons);
+            const auto num_local_neurons = std::reduce(local_neurons.begin(), local_neurons.end(), 0);
+
+            ASSERT_EQ(partition.get_number_local_neurons(), num_local_neurons);
+
+            for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
+                ASSERT_EQ(partition.get_local_subdomain_local_neuron_id_start(my_subdomain), local_ids_start[my_subdomain]);
+                ASSERT_EQ(partition.get_local_subdomain_local_neuron_id_end(my_subdomain), local_ids_ends[my_subdomain]);
+            }
+        }
+    }
+}
+
+TEST_F(PartitionTest, test_partition_subdomain_indices) {
+    std::uniform_int_distribution<size_t> uid_num_ranks(1, upper_bound_num_ranks);
+    std::uniform_int_distribution<size_t> uid_num_neurons(1, num_neurons_test);
+
+    for (auto i = 0; i < iterations; i++) {
+        const auto my_ranks_rand = uid_num_ranks(mt);
+        const auto num_ranks = round_to_next_exponent(my_ranks_rand, 2);
+
+        const auto num_subdomains = round_to_next_exponent(my_ranks_rand, 8);
+        const auto my_subdomains = num_subdomains / num_ranks;
+
+        const auto oct_exponent = static_cast<size_t>(std::log(static_cast<double>(num_subdomains)) / std::log(8.0));
+        const auto num_subdomains_per_dim = static_cast<size_t>(std::ceil(std::pow(static_cast<double>(num_subdomains), 1.0 / 3.0)));
+
+        SpaceFillingCurve<Morton> sfc(oct_exponent);
+
+        std::vector<bool> found_indices(num_subdomains, false);
+
+        for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
+            Partition partition(num_ranks, my_rank);
+
+            for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
+                const auto index_1 = partition.get_1d_index_of_subdomain(my_subdomain);
+                const auto index_3 = partition.get_3d_index_of_subdomain(my_subdomain);
+
+                const auto translated_index_3 = sfc.map_1d_to_3d(index_1);
+                const auto translated_index_1 = sfc.map_3d_to_1d(index_3);
+
+                ASSERT_EQ(index_1, translated_index_1) << index_1 << translated_index_1;
+                ASSERT_EQ(index_3, translated_index_3) << index_3 << translated_index_3;
+
+                ASSERT_FALSE(found_indices[index_1]) << index_1;
+                ASSERT_TRUE(index_1 < num_subdomains) << index_1 << num_subdomains;
+
+                found_indices[index_1] = true;
+            }
+
+            for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
+                ASSERT_THROW(partition.get_1d_index_of_subdomain(my_subdomain + num_subdomains), RelearnException);
+                ASSERT_THROW(partition.get_3d_index_of_subdomain(my_subdomain + num_subdomains), RelearnException);
+            }
+        }
+    }
+}
+
+TEST_F(PartitionTest, test_partition_subdomain_boundaries) {
+    std::uniform_int_distribution<size_t> uid_num_ranks(1, upper_bound_num_ranks);
+    std::uniform_int_distribution<size_t> uid_num_neurons(1, num_neurons_test);
+
+    for (auto i = 0; i < iterations; i++) {
+        const auto my_ranks_rand = uid_num_ranks(mt);
+        const auto num_ranks = round_to_next_exponent(my_ranks_rand, 2);
+
+        const auto num_subdomains = round_to_next_exponent(my_ranks_rand, 8);
+        const auto my_subdomains = num_subdomains / num_ranks;
+
+        const auto oct_exponent = static_cast<size_t>(std::log(static_cast<double>(num_subdomains)) / std::log(8.0));
+        const auto num_subdomains_per_dim = static_cast<size_t>(std::ceil(std::pow(static_cast<double>(num_subdomains), 1.0 / 3.0)));
+
+        SpaceFillingCurve<Morton> sfc(oct_exponent);
+
+        const auto& [simulation_box_minimum, simulation_box_maximum] = get_random_simulation_box_size(mt);
+
+        const auto& simulation_box_dimensions = simulation_box_maximum - simulation_box_minimum;
+        const auto& subdomain_box_dimensions = simulation_box_dimensions / num_subdomains_per_dim;
+
+        for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
+            Partition partition(num_ranks, my_rank);
+
+            ASSERT_THROW(partition.set_simulation_box_size(simulation_box_maximum, simulation_box_minimum), RelearnException);
+
+            ASSERT_THROW(partition.set_simulation_box_size({ simulation_box_minimum.get_x() + Constants::uninitialized, simulation_box_minimum.get_y(), simulation_box_minimum.get_z() }, simulation_box_maximum), RelearnException);
+            ASSERT_THROW(partition.set_simulation_box_size({ simulation_box_minimum.get_x(), simulation_box_minimum.get_y() + Constants::uninitialized, simulation_box_minimum.get_z() }, simulation_box_maximum), RelearnException);
+            ASSERT_THROW(partition.set_simulation_box_size({ simulation_box_minimum.get_x(), simulation_box_minimum.get_y(), simulation_box_minimum.get_z() + Constants::uninitialized }, simulation_box_maximum), RelearnException);
+
+            ASSERT_THROW(partition.set_simulation_box_size(simulation_box_minimum, { simulation_box_maximum.get_x() + Constants::uninitialized, simulation_box_maximum.get_y(), simulation_box_maximum.get_z() }), RelearnException);
+            ASSERT_THROW(partition.set_simulation_box_size(simulation_box_minimum, { simulation_box_maximum.get_x(), simulation_box_maximum.get_y() + Constants::uninitialized, simulation_box_maximum.get_z() }), RelearnException);
+            ASSERT_THROW(partition.set_simulation_box_size(simulation_box_minimum, { simulation_box_maximum.get_x(), simulation_box_maximum.get_y(), simulation_box_maximum.get_z() + Constants::uninitialized }), RelearnException);
+
+            ASSERT_THROW(partition.set_simulation_box_size({ simulation_box_minimum.get_x() - Constants::uninitialized, simulation_box_minimum.get_y(), simulation_box_minimum.get_z() }, simulation_box_maximum), RelearnException);
+            ASSERT_THROW(partition.set_simulation_box_size({ simulation_box_minimum.get_x(), simulation_box_minimum.get_y() - Constants::uninitialized, simulation_box_minimum.get_z() }, simulation_box_maximum), RelearnException);
+            ASSERT_THROW(partition.set_simulation_box_size({ simulation_box_minimum.get_x(), simulation_box_minimum.get_y(), simulation_box_minimum.get_z() - Constants::uninitialized }, simulation_box_maximum), RelearnException);
+
+            ASSERT_THROW(partition.set_simulation_box_size(simulation_box_minimum, { simulation_box_maximum.get_x() - Constants::uninitialized, simulation_box_maximum.get_y(), simulation_box_maximum.get_z() }), RelearnException);
+            ASSERT_THROW(partition.set_simulation_box_size(simulation_box_minimum, { simulation_box_maximum.get_x(), simulation_box_maximum.get_y() - Constants::uninitialized, simulation_box_maximum.get_z() }), RelearnException);
+            ASSERT_THROW(partition.set_simulation_box_size(simulation_box_minimum, { simulation_box_maximum.get_x(), simulation_box_maximum.get_y(), simulation_box_maximum.get_z() - Constants::uninitialized }), RelearnException);
+
+            ASSERT_THROW(auto val = partition.get_simulation_box_size(), RelearnException);
+
+            partition.set_simulation_box_size(simulation_box_minimum, simulation_box_maximum);
+            const auto& [retrieved_min, retrieved_max] = partition.get_simulation_box_size();
+
+            ASSERT_EQ(simulation_box_minimum, retrieved_min);
+            ASSERT_EQ(simulation_box_maximum, retrieved_max);
+        }
+
+        for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
+            Partition partition(num_ranks, my_rank);
+            partition.set_simulation_box_size(simulation_box_minimum, simulation_box_maximum);
+
+            for (size_t subdomain_index_1 = 0; subdomain_index_1 < num_subdomains; subdomain_index_1++) {
+                const auto& subdomain_index_3 = sfc.map_1d_to_3d(subdomain_index_1);
+
+                const auto& [min_1, max_1] = partition.calculate_subdomain_boundaries(subdomain_index_1);
+                const auto& [min_3, max_3] = partition.calculate_subdomain_boundaries(subdomain_index_3);
+
+                ASSERT_EQ(min_1, min_3) << min_1 << min_3;
+                ASSERT_EQ(max_1, max_3) << max_1 << max_3;
+
+                Vec3d subdomain_expected_min = Vec3d{
+                    subdomain_box_dimensions.get_x() * subdomain_index_3.get_x(),
+                    subdomain_box_dimensions.get_y() * subdomain_index_3.get_y(),
+                    subdomain_box_dimensions.get_z() * subdomain_index_3.get_z()
+                } + simulation_box_minimum;
+
+                Vec3d subdomain_expected_max = subdomain_expected_min + subdomain_box_dimensions;
+
+                const auto& difference_min = min_1 - subdomain_expected_min;
+                const auto& difference_max = max_1 - subdomain_expected_max;
+
+                ASSERT_NEAR(difference_min.calculate_p_norm(1.0), 0.0, eps) << min_1 << subdomain_expected_min;
+                ASSERT_NEAR(difference_max.calculate_p_norm(1.0), 0.0, eps) << max_1 << subdomain_expected_max;
+            }
+
+            partition.calculate_and_set_subdomain_boundaries();
+
+            for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
+                const auto& [min, max] = partition.get_subdomain_boundaries(my_subdomain);
+                const auto index_1 = partition.get_1d_index_of_subdomain(my_subdomain);
+
+                const auto& [min1, max1] = partition.calculate_subdomain_boundaries(index_1);
+
+                ASSERT_EQ(min, min1);
+                ASSERT_EQ(max, max1);
+            }
+
+            for (auto my_subdomain = 0; my_subdomain < num_ranks; my_subdomain++) {
+                ASSERT_THROW(auto val = partition.get_subdomain_boundaries(my_subdomain + num_ranks), RelearnException);
+            }
+        }
+    }
+}
+
+TEST_F(PartitionTest, test_partition_position_to_mpi) {
+    std::uniform_int_distribution<size_t> uid_num_ranks(1, upper_bound_num_ranks);
+    std::uniform_int_distribution<size_t> uid_num_neurons(1, num_neurons_test);
+
+    for (auto i = 0; i < iterations; i++) {
+        const auto my_ranks_rand = uid_num_ranks(mt);
+        const auto num_ranks = round_to_next_exponent(my_ranks_rand, 2);
+
+        const auto num_subdomains = round_to_next_exponent(my_ranks_rand, 8);
+        const auto my_subdomains = num_subdomains / num_ranks;
+
+        const auto oct_exponent = static_cast<size_t>(std::log(static_cast<double>(num_subdomains)) / std::log(8.0));
+        const auto num_subdomains_per_dim = static_cast<size_t>(std::ceil(std::pow(static_cast<double>(num_subdomains), 1.0 / 3.0)));
+
+        SpaceFillingCurve<Morton> sfc(oct_exponent);
+
+        const auto& [simulation_box_minimum, simulation_box_maximum] = get_random_simulation_box_size(mt);
+
+        const auto& simulation_box_dimensions = simulation_box_maximum - simulation_box_minimum;
+        const auto& subdomain_box_dimensions = simulation_box_dimensions / num_subdomains_per_dim;
+
+        for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
+            Partition partition(num_ranks, my_rank);
+
+            for (auto j = 0; j < iterations; j++) {
+                const auto& position = get_random_position_in_box(simulation_box_minimum, simulation_box_maximum, mt);
+                ASSERT_THROW(partition.get_mpi_rank_from_position(position), RelearnException);
+            }
+
+            partition.set_simulation_box_size(simulation_box_minimum, simulation_box_maximum);
+
+            for (auto j = 0; j < iterations; j++) {
+                const auto& position = get_random_position_in_box(simulation_box_minimum, simulation_box_maximum, mt);
+                const auto proposed_rank = partition.get_mpi_rank_from_position(position);
+
+                const auto index_1_start = proposed_rank * my_subdomains;
+
+                auto correct = false;
+
+                for (auto subdomain_id = index_1_start; subdomain_id < index_1_start + my_subdomains; subdomain_id++) {
+                    const auto& [min, max] = partition.calculate_subdomain_boundaries(subdomain_id);
+                    const auto& is_in_subdomain = position.check_in_box(min, max);
+                    correct |= is_in_subdomain;
+                }
+
+                ASSERT_TRUE(correct);
+            }
+        }
+    }
+}
