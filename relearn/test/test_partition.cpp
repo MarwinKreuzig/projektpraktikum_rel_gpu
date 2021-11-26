@@ -277,12 +277,12 @@ TEST_F(PartitionTest, test_partition_subdomain_boundaries) {
 
                 const auto& [min1, max1] = partition.calculate_subdomain_boundaries(index_1);
 
-                ASSERT_EQ(min, min1);
-                ASSERT_EQ(max, max1);
+                ASSERT_EQ(min, min1) << min << min1;
+                ASSERT_EQ(max, max1) << max << max1;
             }
 
             for (auto my_subdomain = 0; my_subdomain < num_ranks; my_subdomain++) {
-                ASSERT_THROW(auto val = partition.get_subdomain_boundaries(my_subdomain + num_ranks), RelearnException);
+                ASSERT_THROW(auto val = partition.get_subdomain_boundaries(my_subdomain + num_subdomains), RelearnException) << my_subdomain << num_ranks;
             }
         }
     }

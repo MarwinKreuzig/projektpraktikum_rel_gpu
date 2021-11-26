@@ -18,6 +18,10 @@
 bool LogFiles::disable = false;
 
 bool LogFiles::do_i_print(const int rank) {
+    if (disable) {
+        return false;
+    }
+
     return rank == MPIWrapper::get_my_rank() || rank == -1;
 }
 
