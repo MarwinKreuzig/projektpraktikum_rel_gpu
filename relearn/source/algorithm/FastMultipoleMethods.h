@@ -37,7 +37,7 @@ class OctreeImplementation;
 class FastMultipoleMethods : public Algorithm {
 public:
     using AdditionalCellAttributes = FastMultipoleMethodsCell;
-    using interaction_list_type = std::array<OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>;
+    using interaction_list_type = std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>;
     std::shared_ptr<OctreeImplementation<FastMultipoleMethods>> global_tree{};
 
     /**
@@ -485,8 +485,8 @@ public:
     }
 
     static unsigned int count_non_zero_elements(const interaction_list_type &arr);
-    static OctreeNode<AdditionalCellAttributes>* extract_element(const interaction_list_type &arr, unsigned int index);
-    static void add_children_to_vector (OctreeNode<AdditionalCellAttributes>* node, interaction_list_type &vector);
+    static const OctreeNode<AdditionalCellAttributes>* extract_element(const interaction_list_type &arr, unsigned int index);
+    static void add_children_to_vector (const OctreeNode<AdditionalCellAttributes>* node, interaction_list_type &vector);
 
     /**
      * This class represents a mathematical three-dimensional multi-index, which is required for the

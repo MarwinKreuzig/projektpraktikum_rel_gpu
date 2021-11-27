@@ -104,7 +104,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
 
             const auto& connection_probabilities = calc_attractiveness_to_connect_FMM(current_branch_node, temp_interaction_list, needed);
             const auto chosen_index = choose_interval(connection_probabilities);
-            OctreeNode<FastMultipoleMethodsCell>* target = extract_element(temp_interaction_list, chosen_index);
+            const OctreeNode<FastMultipoleMethodsCell>* target = extract_element(temp_interaction_list, chosen_index);
 
             auto counter = 0;
             add_children_to_vector(target, temp_interaction_list);
@@ -139,7 +139,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
         if (!source_node->is_parent()) {
             const auto source_id = cell.get_neuron_id();
 
-            OctreeNode<FastMultipoleMethodsCell>* target_node;
+            const OctreeNode<FastMultipoleMethodsCell>* target_node;
 
             const auto target_num = count_non_zero_elements(interaction_list);
             if (target_num == 1) {
@@ -415,8 +415,10 @@ double FastMultipoleMethods::calc_taylor(const OctreeNode<FastMultipoleMethodsCe
 
     double result = 0.0;
 
-    for (auto j = 0; j < Constants::number_oct; j++) {
-        const auto* target_child = target->get_child(j);
+    interaction_list_type target_children {nullptr};
+    unsigned int children_counter = count_non_zero_elements(target_children);
+    for (auto j = 0; j < children_counter; j++) {
+        const auto* target_child = extract_element(target_children, j);
         if (target_child == nullptr) {
             continue;
         }
@@ -490,8 +492,12 @@ double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsC
 
     double result = 0.0;
 
-    for (auto j = 0; j < Constants::number_oct; j++) {
-        const auto* child_target = target->get_child(j);
+    interaction_list_type target_children {nullptr};
+    add_children_to_vector(target, target_children);
+    unsigned int children_count = count_non_zero_elements(target_children);
+
+    for (auto j = 0; j < children_count; j++) {
+        const auto* child_target = extract_element(target_children, j);
         if (child_target == nullptr) {
             continue;
         }
@@ -527,7 +533,7 @@ unsigned int FastMultipoleMethods::count_non_zero_elements(const interaction_lis
     return non_zero_counter;
 }
 
-OctreeNode<FastMultipoleMethodsCell>* FastMultipoleMethods::extract_element(const interaction_list_type& arr, unsigned int index) {
+const OctreeNode<FastMultipoleMethodsCell>* FastMultipoleMethods::extract_element(const interaction_list_type& arr, unsigned int index) {
     auto non_zero_counter = 0;
     for (auto i = 0; i < Constants::number_oct; i++) {
         if (arr[i] != nullptr) {
@@ -539,9 +545,16 @@ OctreeNode<FastMultipoleMethodsCell>* FastMultipoleMethods::extract_element(cons
     }
     return nullptr;
 }
-void FastMultipoleMethods::add_children_to_vector(OctreeNode<FastMultipoleMethodsCell>* node, interaction_list_type& arr) {
+
+void FastMultipoleMethods::add_children_to_vector(const OctreeNode<FastMultipoleMethodsCell>* node, interaction_list_type& arr) {
     const auto is_local = node->is_local();
-    const auto& children = is_local ? node->get_children() : NodeCache::download_children<AdditionalCellAttributes>(node);
+    std::array<OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> children {nullptr};
+    if (node->is_local()){
+        children = node->get_children();
+    }else{
+        children = NodeCache::download_children<AdditionalCellAttributes>(const_cast<OctreeNode<FastMultipoleMethodsCell>*>(node));   
+    }
+
     unsigned int i = 0;
     for (auto it = children.crbegin(); it != children.crend(); ++it) {
         if (*it != nullptr) {
