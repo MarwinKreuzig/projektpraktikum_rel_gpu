@@ -73,7 +73,7 @@ Partition::Partition(const size_t num_ranks, const size_t my_rank) {
     }
 
     LogFiles::print_message_rank(0, "Total number local_subdomains        : {}", total_number_subdomains);
-    LogFiles::print_message_rank(0, "Number local_subdomains per dimension: {}", number_subdomains_per_dimension);
+    LogFiles::print_message_rank(0, "Number subdomains per dimension: {}", number_subdomains_per_dimension);
 }
 
 void Partition::print_my_subdomains_info_rank(const int rank) {

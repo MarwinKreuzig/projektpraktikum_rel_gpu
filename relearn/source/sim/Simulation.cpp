@@ -121,6 +121,8 @@ void Simulation::initialize() {
     neuron_to_subdomain_assignment->initialize();
     const auto number_local_neurons = partition->get_number_local_neurons();
 
+    RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank);
+    
     neurons->init(number_local_neurons);
 
     const auto number_local_subdomains = partition->get_number_local_subdomains();
