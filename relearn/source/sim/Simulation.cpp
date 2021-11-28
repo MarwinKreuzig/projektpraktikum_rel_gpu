@@ -148,10 +148,11 @@ void Simulation::initialize() {
 
     LogFiles::print_message_rank(0, "Neurons created");
 
-    auto sim_box_min_max = partition->get_simulation_box_size();
+    const auto& [simulation_box_min, simulation_box_max] = partition->get_simulation_box_size();
+    const auto level_of_branch_nodes = partition->get_level_of_subdomain_trees();
 
     if (algorithm_enum == AlgorithmEnum::BarnesHut) {
-        auto octree = std::make_shared<OctreeImplementation<BarnesHut>>(std::move(std::get<0>(sim_box_min_max)), std::move(std::get<1>(sim_box_min_max)), partition->get_level_of_subdomain_trees());
+        auto octree = std::make_shared<OctreeImplementation<BarnesHut>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
         global_tree = std::static_pointer_cast<Octree>(octree);
 
         auto* root = octree->get_root();
@@ -161,7 +162,7 @@ void Simulation::initialize() {
             RelearnException::check(node != nullptr, "node is nullptr");
         }
 
-        global_tree->initializes_leaf_nodes(partition->get_number_local_neurons());
+        global_tree->initializes_leaf_nodes(number_local_neurons);
 
         LogFiles::print_message_rank(0, "Neurons inserted into local_subdomains");
         LogFiles::print_message_rank(0, "Subdomains inserted into global tree");
@@ -172,7 +173,7 @@ void Simulation::initialize() {
         algorithm_barnes_hut->set_acceptance_criterion(accept_criterion);
         algorithm = std::move(algorithm_barnes_hut);
     } else {
-        auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(std::move(std::get<0>(sim_box_min_max)), std::move(std::get<1>(sim_box_min_max)), partition->get_level_of_subdomain_trees());
+        auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
         global_tree = std::static_pointer_cast<Octree>(octree);
 
         auto* root = octree->get_root();
@@ -182,7 +183,7 @@ void Simulation::initialize() {
             RelearnException::check(node != nullptr, "node is nullptr");
         }
 
-        global_tree->initializes_leaf_nodes(partition->get_number_local_neurons());
+        global_tree->initializes_leaf_nodes(number_local_neurons);
 
         LogFiles::print_message_rank(0, "Neurons inserted into local_subdomains");
         LogFiles::print_message_rank(0, "Subdomains inserted into global tree");
@@ -228,8 +229,8 @@ void Simulation::simulate(const size_t number_steps) {
     const auto previous_synapse_deletions = total_synapse_deletions;
 
     /**
-	* Simulation loop
-	*/
+	 * Simulation loop
+	 */
     for (size_t step = 1; step <= number_steps; step++) {
         if (step % Constants::monitor_step == 0) {
             const auto number_neurons = neurons->get_num_neurons();
