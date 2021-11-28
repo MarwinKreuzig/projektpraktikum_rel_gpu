@@ -154,15 +154,22 @@ std::tuple<SynapseLoader::LocalSynapses, SynapseLoader::InSynapses, SynapseLoade
     const auto& translated_ids = nit->translate_global_ids(global_ids);
 
     for (const auto& [source_id, target_id, weight] : local_synapses) {
-        return_local_synapses.emplace_back(source_id, target_id, weight);
+        const auto local_source_id = nit->get_local_id(source_id);
+        const auto local_target_id = nit->get_local_id(target_id);
+
+        return_local_synapses.emplace_back(local_source_id, local_target_id, weight);
     }
 
     for (const auto& [source_id, target_id, weight] : in_synapses) {
-        return_in_synapses.emplace_back(translated_ids.at(source_id), target_id, weight);
+        const auto local_target_id = nit->get_local_id(target_id);
+
+        return_in_synapses.emplace_back(translated_ids.at(source_id), local_target_id, weight);
     }
 
     for (const auto& [source_id, target_id, weight] : out_synapses) {
-        return_out_synapses.emplace_back(source_id, translated_ids.at(target_id), weight);
+        const auto local_source_id = nit->get_local_id(source_id);
+
+        return_out_synapses.emplace_back(local_source_id, translated_ids.at(target_id), weight);
     }
 
     return { return_local_synapses, return_in_synapses, return_out_synapses };

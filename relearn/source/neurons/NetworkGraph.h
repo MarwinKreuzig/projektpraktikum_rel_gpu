@@ -433,8 +433,13 @@ public:
         }
     }
 
-    void add_edges(const std::vector<local_synapse>& local_edges, const std::vector<in_synapse>& in_edges, const std::vector<out_synapse>& out_edges) {
+    void add_edges(const std::vector<local_synapse>& local_edges, const std::vector<in_synapse>& in_edges, const std::vector<out_synapse>& out_edges) {        
         for (const auto& [source_id, target_id, weight] : local_edges) {
+            RelearnException::check(target_id < neuron_local_in_neighborhood.size(),
+                "NetworkGraph::add_edges: local_in_neighborhood is too small: {} vs {}", target_id, neuron_local_in_neighborhood.size());
+            RelearnException::check(source_id < neuron_local_out_neighborhood.size(),
+                "NetworkGraph::add_edges: local_out_neighborhood is too small: {} vs {}", source_id, neuron_distant_out_neighborhood.size());
+
             LocalEdges& in_edges = neuron_local_in_neighborhood[target_id];
             LocalEdges& out_edges = neuron_local_out_neighborhood[source_id];
 
@@ -443,11 +448,17 @@ public:
         }
 
         for (const auto& [source_rni, target_id, weight] : in_edges) {
+            RelearnException::check(target_id < neuron_distant_in_neighborhood.size(),
+                "NetworkGraph::add_edges: distant_in_neighborhood is too small: {} vs {}", target_id, neuron_distant_in_neighborhood.size());
+
             DistantEdges& distant_in_edges = neuron_distant_in_neighborhood[target_id];
             add_edge<DistantEdges, DistantEdgesKey>(distant_in_edges, source_rni, weight);
         }
 
         for (const auto& [source_id, target_rni, weight] : out_edges) {
+            RelearnException::check(source_id < neuron_distant_out_neighborhood.size(),
+                "NetworkGraph::add_edges: distant_out_neighborhood is too small: {} vs {}", source_id, neuron_distant_out_neighborhood.size());
+
             DistantEdges& distant_out_edges = neuron_distant_out_neighborhood[source_id];
             add_edge<DistantEdges, DistantEdgesKey>(distant_out_edges, target_rni, weight);
         }
