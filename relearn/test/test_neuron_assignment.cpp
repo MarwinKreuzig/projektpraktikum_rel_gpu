@@ -39,6 +39,29 @@ void NeuronAssignmentTest::generate_neuron_positions(std::vector<Vec3d>& positio
     sfnd.write_neurons_to_file("neurons.tmp");
 }
 
+void NeuronAssignmentTest::generate_synapses(std::vector<std::tuple<size_t, size_t, int>>& synapses, size_t number_neurons, std::mt19937& mt) {
+    const auto number_synapses = uid_num_synapses(mt);
+
+    std::map<std::pair<size_t, size_t>, int> synapse_map{};
+
+    for (auto i = 0; i < number_synapses; i++) {
+        const auto source = get_random_neuron_id(number_neurons, mt);
+        const auto target = get_random_neuron_id(number_neurons, mt);
+        const auto weight = uid_synapse_weight(mt);
+
+        synapse_map[{ source, target }] += weight;
+    }
+
+    synapses.resize(0);
+
+    for (const auto& [pair, weight] : synapse_map) {
+        const auto& [source, target] = pair;
+        if (weight != 0) {
+            synapses.emplace_back(source, target, weight);
+        }
+    }
+}
+
 double calculate_excitatory_fraction(const std::vector<SignalType>& types) {
     auto number_excitatory = 0;
     auto number_inhibitory = 0;
@@ -53,6 +76,14 @@ double calculate_excitatory_fraction(const std::vector<SignalType>& types) {
 
     const auto ratio = static_cast<double>(number_excitatory) / static_cast<double>(number_excitatory + number_inhibitory);
     return ratio;
+}
+
+void write_synapses_to_file(const std::vector<std::tuple<size_t, size_t, int>>& synapses, std::filesystem::path path) {
+    std::ofstream of(path);
+
+    for (const auto& [source, target, weight] : synapses) {
+        of << (source + 1) << ' ' << (target + 1) << ' ' << weight << '\n';
+    }
 }
 
 TEST_F(NeuronAssignmentTest, test_density_too_few_neurons) {
@@ -593,6 +624,83 @@ TEST_F(NeuronAssignmentTest, test_file_load_multiple_domains) {
 
                 ASSERT_NEAR(norm, 0.0, eps);
             }
+        }
+    }
+}
+
+TEST_F(NeuronAssignmentTest, test_file_neuron_id_translator_single_domain) {
+    for (auto i = 0; i < iterations; i++) {
+        std::vector<Vec3d> positions{};
+        std::vector<std::string> area_names{};
+        std::vector<SignalType> types{};
+
+        generate_neuron_positions(positions, area_names, types, mt);
+
+        const auto number_neurons = positions.size();
+
+        const auto part = std::make_shared<Partition>(1, 0);
+        SubdomainFromFile sff{ "neurons.tmp", {}, part };
+
+        sff.initialize();
+
+        const auto translator = sff.get_neuron_id_translator();
+        const auto& global_ids = sff.get_neuron_global_ids_in_subdomain(0, 1);
+
+        for (auto local_neuron_id = 0; local_neuron_id < global_ids.size(); local_neuron_id++) {
+            const auto global_neuron_id = global_ids[local_neuron_id];
+            const auto translated_global_neuron_id = translator->get_global_id(local_neuron_id);
+
+            ASSERT_EQ(global_neuron_id, translated_global_neuron_id);
+
+            const auto translated_local_neuron_id = translator->get_local_id(global_neuron_id);
+
+            ASSERT_EQ(translated_local_neuron_id, local_neuron_id);
+
+            ASSERT_TRUE(translator->is_neuron_local(global_neuron_id));
+        }
+    }
+}
+
+TEST_F(NeuronAssignmentTest, test_file_load_network_single_domain) {
+    for (auto i = 0; i < iterations; i++) {
+        std::vector<Vec3d> positions{};
+        std::vector<std::string> area_names{};
+        std::vector<SignalType> types{};
+
+        generate_neuron_positions(positions, area_names, types, mt);
+
+        const auto number_neurons = positions.size();
+
+        std::vector<std::tuple<size_t, size_t, int>> synapses{};
+
+        generate_synapses(synapses, number_neurons, mt);
+        write_synapses_to_file(synapses, "synapses.tmp");
+
+        const auto part = std::make_shared<Partition>(1, 0);
+        SubdomainFromFile sff{ "neurons.tmp", "synapses.tmp", part };
+
+        sff.initialize();
+
+        const auto translator = sff.get_neuron_id_translator();
+        const auto loader = sff.get_synapse_loader();
+
+        const auto& [local_synapses, in_synapses, out_synapses] = loader->load_synapses();
+
+        ASSERT_TRUE(in_synapses.empty());
+        ASSERT_TRUE(out_synapses.empty());
+
+        std::map<std::pair<size_t, size_t>, int> synapse_map{};
+
+        for (const auto& [source, target, weight] : local_synapses) {
+            synapse_map[{ source, target }] += weight;
+        }
+
+        for (const auto& [source, target, weight] : synapses) {
+            synapse_map[{ source, target }] -= weight;
+        }
+
+        for (const auto& [_, weight] : synapse_map) {
+            ASSERT_EQ(weight, 0);
         }
     }
 }

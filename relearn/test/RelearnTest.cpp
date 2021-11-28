@@ -22,10 +22,11 @@ unsigned int RelearnTest::predetermined_seed = 2572984436;
 
 std::uniform_int_distribution<size_t> RelearnTest::uid_num_ranks(1, upper_bound_num_ranks);
 std::uniform_int_distribution<size_t> RelearnTest::uid_num_neurons(1, upper_bound_num_neurons);
+std::uniform_int_distribution<size_t> RelearnTest::uid_num_synapses(1, upper_bound_num_synapses);
+
+std::uniform_int_distribution<int> RelearnTest::uid_synapse_weight(-bound_synapse_weight, bound_synapse_weight);
 
 std::uniform_real_distribution<double> RelearnTest::urd_percentage(0.0, std::nextafter(1.0, 2.0)); // [0.0, 1.0]
 
-size_t NetworkGraphTest::upper_bound_num_neurons = 10000;
-int NetworkGraphTest::bound_synapse_weight = 10;
 int NetworkGraphTest::num_ranks = 17;
 int NetworkGraphTest::num_synapses_per_neuron = 2;

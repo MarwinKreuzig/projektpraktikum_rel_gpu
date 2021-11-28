@@ -21,6 +21,7 @@
 #include <cmath>
 #include <map>
 #include <random>
+#include <tuple>
 
 class RelearnTest : public ::testing::Test {
 private:
@@ -123,6 +124,11 @@ protected:
         return uid_num_neurons(mt);
     }
 
+    size_t get_random_neuron_id(size_t number_neurons, std::mt19937& mt) {
+        std::uniform_int_distribution<size_t> uid(0, number_neurons - 1);
+        return uid(mt);
+    }
+
     double get_random_percentage(std::mt19937& mt) {
         return urd_percentage(mt);
     }
@@ -133,9 +139,15 @@ protected:
     constexpr static int upper_bound_num_ranks = 32;
 
     constexpr static int upper_bound_num_neurons = 1000;
+    constexpr static int upper_bound_num_synapses = 1000;
+
+    constexpr static int bound_synapse_weight = 10;
 
     static std::uniform_int_distribution<size_t> uid_num_ranks;
     static std::uniform_int_distribution<size_t> uid_num_neurons;
+    static std::uniform_int_distribution<size_t> uid_num_synapses;
+
+    static std::uniform_int_distribution<int> uid_synapse_weight;
 
     static std::uniform_real_distribution<double> urd_percentage;
 
@@ -150,8 +162,6 @@ protected:
 
 class NetworkGraphTest : public RelearnTest {
 protected:
-    static size_t upper_bound_num_neurons;
-    static int bound_synapse_weight;
     static int num_ranks;
     static int num_synapses_per_neuron;
 
@@ -188,6 +198,8 @@ protected:
 
     void generate_neuron_positions(std::vector<Vec3d>& positions,
         std::vector<std::string>& area_names, std::vector<SignalType>& types, std::mt19937& mt);
+
+    void generate_synapses(std::vector<std::tuple<size_t, size_t, int>>& synapses, size_t number_neurons, std::mt19937& mt);
 };
 
 class NeuronModelsTest : public RelearnTest {

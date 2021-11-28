@@ -27,9 +27,9 @@ NeuronIdTranslator::NeuronIdTranslator(std::shared_ptr<Partition> partition)
     global_neuron_ids.resize(this->partition->get_number_local_subdomains());
 }
 
-bool NeuronIdTranslator::is_neuron_local(size_t neuron_id) const {
+bool NeuronIdTranslator::is_neuron_local(size_t global_id) const {
     for (const auto& global_ids: global_neuron_ids) {
-        const bool found = std::binary_search(global_ids.begin(), global_ids.end(), neuron_id);
+        const bool found = std::binary_search(global_ids.begin(), global_ids.end(), global_id);
         if (found) {
             return true;
         }

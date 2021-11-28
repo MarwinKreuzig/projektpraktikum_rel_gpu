@@ -59,7 +59,11 @@ FileSynapseLoader::internal_load_synapses() {
         std::stringstream sstream(line);
         const bool success = (sstream >> source_id) && (sstream >> target_id) && (sstream >> weight);
 
-        RelearnException::check(success, "NetworkGraph::load_synapses: Loading synapses was unsuccessfull!");
+        RelearnException::check(success, "FileSynapseLoader::internal_load_synapses: Loading synapses was unsuccessfull!");
+
+        RelearnException::check(source_id > 0, "FileSynapseLoader::internal_load_synapses: source_id was 0");
+        RelearnException::check(target_id > 0, "FileSynapseLoader::internal_load_synapses: target_id was 0");
+        RelearnException::check(weight != 0, "FileSynapseLoader::internal_load_synapses: weight was 0");
 
         // The neurons start with 1
         source_id--;
@@ -118,7 +122,7 @@ FileSynapseLoader::internal_load_synapses() {
             continue;
         }
 
-        RelearnException::fail("NetworkGraph::load_synapses: In loading synapses, target and source are not conform.");
+        RelearnException::fail("FileSynapseLoader::internal_load_synapses: In loading synapses, target and source are not conform.");
     }
 
     std::vector<neuron_id> global_ids{};
