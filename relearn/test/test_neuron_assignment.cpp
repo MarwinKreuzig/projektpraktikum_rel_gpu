@@ -253,7 +253,7 @@ TEST_F(NeuronAssignmentTest, test_density_initialize_multiple_subdomains) {
 
         ASSERT_LE(difference_neurons, number_subdomains);
 
-        ASSERT_NEAR(golden_fraction_excitatory_neurons, actual_ratio_excitatory_neurons, golden_number_ranks / golden_um_per_neuron);
+        ASSERT_NEAR(golden_fraction_excitatory_neurons, actual_ratio_excitatory_neurons, static_cast<double>(golden_number_ranks) / golden_um_per_neuron);
     }
 }
 
@@ -366,7 +366,7 @@ TEST_F(NeuronAssignmentTest, test_density_neuron_attributes_semantic_single_subd
         const auto& area_names = sfnd.get_neuron_area_names_in_subdomain(0, 1);
 
         const auto calculated_ratio_excitatory_neurons = calculate_excitatory_fraction(types);
-        ASSERT_NEAR(placed_ratio_excitatory_neurons, calculated_ratio_excitatory_neurons, 1 / golden_number_neurons);
+        ASSERT_NEAR(placed_ratio_excitatory_neurons, calculated_ratio_excitatory_neurons, 1.0 / golden_number_neurons);
 
         const auto& [sim_box_min, sim_box_max] = part->get_simulation_box_size();
         const auto neurons_per_dimension = pow(golden_number_neurons, 1. / 3);
@@ -421,7 +421,7 @@ TEST_F(NeuronAssignmentTest, test_density_neuron_attributes_semantic_multiple_su
             const auto all_placed_neurons_in_subdomains = sfnd.get_number_neurons_in_subdomains(number_subdomains_per_rank * rank, number_subdomains_per_rank * rank + number_subdomains_per_rank - 1, number_subdomains);
 
             const auto calculated_ratio_excitatory_neurons = calculate_excitatory_fraction(all_types);
-            ASSERT_NEAR(placed_ratio_excitatory_neurons, calculated_ratio_excitatory_neurons, number_subdomains_per_rank / golden_number_neurons);
+            ASSERT_NEAR(placed_ratio_excitatory_neurons, calculated_ratio_excitatory_neurons, static_cast<double>(number_subdomains) / golden_number_neurons) << golden_number_neurons;
 
             for (auto subdomain_id = 0; subdomain_id < number_subdomains_per_rank; subdomain_id++) {
                 const auto& positions = sfnd.get_neuron_positions_in_subdomain(number_subdomains_per_rank * rank + subdomain_id, number_subdomains);
@@ -429,7 +429,7 @@ TEST_F(NeuronAssignmentTest, test_density_neuron_attributes_semantic_multiple_su
                 const auto placed_neurons_in_subdomain = sfnd.get_number_neurons_in_subdomain(number_subdomains_per_rank * rank + subdomain_id, number_subdomains);
 
                 const auto calculated_ratio_excitatory_neurons_subdomain = calculate_excitatory_fraction(types);
-                ASSERT_NEAR(placed_ratio_excitatory_neurons, calculated_ratio_excitatory_neurons_subdomain, static_cast<double>(number_subdomains) / golden_number_neurons);
+                ASSERT_NEAR(placed_ratio_excitatory_neurons, calculated_ratio_excitatory_neurons_subdomain, static_cast<double>(number_subdomains) / placed_neurons_in_subdomain) << golden_number_neurons;
 
                 const auto& [subdomain_min, subdomain_max] = part->get_subdomain_boundaries(subdomain_id);
 
