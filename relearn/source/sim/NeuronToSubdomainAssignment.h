@@ -314,7 +314,7 @@ protected:
             return false;
         }
 
-        return !neurons_in_subdomain.at(subdomain_index_1d).empty();
+        return true;
     }
 
     virtual void post_initialization() = 0;

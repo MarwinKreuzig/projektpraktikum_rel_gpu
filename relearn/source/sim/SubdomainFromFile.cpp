@@ -197,7 +197,7 @@ void SubdomainFromFile::fill_subdomain(const size_t local_subdomain_index, [[may
 
     Nodes nodes{};
 
-    const auto& [min, max] = partition->get_subdomain_boundaries(subdomain_index_1d);
+    const auto& [min, max] = partition->get_subdomain_boundaries(local_subdomain_index);
     auto nodes_vector = read_nodes_from_file(min, max);
     for (const auto& node : nodes_vector) {
         nodes.emplace(node);

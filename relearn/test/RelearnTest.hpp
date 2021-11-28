@@ -185,6 +185,9 @@ protected:
     double calculate_box_length(const size_t number_neurons, const double um_per_neuron) const noexcept {
         return ceil(pow(static_cast<double>(number_neurons), 1 / 3.)) * um_per_neuron;
     }
+
+    void generate_neuron_positions(std::vector<Vec3d>& positions,
+        std::vector<std::string>& area_names, std::vector<SignalType>& types, std::mt19937& mt);
 };
 
 class NeuronModelsTest : public RelearnTest {
