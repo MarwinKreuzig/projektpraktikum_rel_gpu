@@ -26,6 +26,9 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t number_neuro
         "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: The requested fraction of excitatory neurons is not in [0.0, 1.0]: {}", fraction_excitatory_neurons);
     RelearnException::check(um_per_neuron > 0.0, "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: The requested um per neuron is <= 0.0: {}", um_per_neuron);
 
+    RelearnException::check(number_neurons >= partition->get_total_number_subdomains(),
+        "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: There are {} subdomains but only {} neurons.", partition->get_total_number_subdomains(), number_neurons);
+
     const auto my_rank = static_cast<unsigned int>(MPIWrapper::get_my_rank());
 
     RandomHolder::seed(RandomHolderKey::SubdomainFromNeuronDensity, my_rank);
@@ -146,7 +149,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
         }
     }
 
-    RelearnException::fail("SubdomainFromNeuronDensity::place_neurons_in_area: Shouldn't be here");
+    RelearnException::fail("SubdomainFromNeuronDensity::place_neurons_in_area: Subdomain {} does not have enough neurons: {}!", subdomain_index_1d, number_neurons);
 }
 
 void SubdomainFromNeuronDensity::fill_subdomain(const size_t local_subdomain_index, [[maybe_unused]] const size_t total_number_subdomains) {
@@ -157,17 +160,25 @@ void SubdomainFromNeuronDensity::fill_subdomain(const size_t local_subdomain_ind
         return;
     }
 
-    const auto& [min, max] = partition->get_subdomain_boundaries(subdomain_index_1d);
-    const auto diff = max - min;
-    const auto volume = diff.get_volume();
+    const auto& [min, max] = partition->get_subdomain_boundaries(local_subdomain_index);
+    const auto volume = (max - min).get_volume();
+    const auto number_boxes = volume / (um_per_neuron_ * um_per_neuron_ * um_per_neuron_);
 
     const auto& [sim_box_min, sim_box_max] = partition->get_simulation_box_size();
-    const auto& total_volume = (sim_box_max - sim_box_min).get_volume();
+    const auto total_volume = (sim_box_max - sim_box_min).get_volume();
+    const auto total_number_boxes = total_volume / (um_per_neuron_ * um_per_neuron_ * um_per_neuron_);
 
-    const auto neuron_portion = total_volume / volume;
-    const auto neurons_in_subdomain_count = static_cast<size_t>(round(get_requested_number_neurons() / neuron_portion));
+    const auto requested_number_neurons = get_requested_number_neurons();
+    const auto number_subdomains = partition->get_total_number_subdomains();
+    const auto free_neurons = requested_number_neurons - number_subdomains;
+    const auto proposed_number_local_neurons = floor(free_neurons * number_boxes / total_number_boxes);
+  
+    const auto adjustment_neuron = (proposed_number_local_neurons == 0) ? 2 : 1;
 
-    place_neurons_in_area(min, max, neurons_in_subdomain_count, subdomain_index_1d);
+    const auto neurons_in_subdomain_count = proposed_number_local_neurons + adjustment_neuron;
+    const auto final_neuron_count = std::min(std::round(number_boxes), neurons_in_subdomain_count);
+
+    place_neurons_in_area(min, max, final_neuron_count, subdomain_index_1d);
 }
 
 std::vector<size_t> SubdomainFromNeuronDensity::get_neuron_global_ids_in_subdomain([[maybe_unused]] const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {
@@ -179,4 +190,3 @@ void SubdomainFromNeuronDensity::post_initialization() {
     neuron_id_translator = std::make_shared<RandomNeuronIdTranslator>(partition);
     synapse_loader = std::make_shared<RandomSynapseLoader>(partition, neuron_id_translator);
 }
-

@@ -23,6 +23,8 @@ class Partition;
 /**
  * This class fills every subdomain with neurons at random positions. The size of the simulation box and the number of neurons per
  * subdomain depend on the requested neuron density, i.e., micrometer per neuron in each of the three dimensions. 
+ * It does not necessarily place the requested number of neurons, but it always places a number of neurons in
+ * [number_neurons - number_subdomains + 1, number_neurons + number_subdomains - 1].
  * It inherits from NeuronToSubdomainAssignment.
  */
 class SubdomainFromNeuronDensity : public NeuronToSubdomainAssignment {
@@ -51,8 +53,6 @@ public:
 
     constexpr static double default_um_per_neuron = 26.0;
 
-    void post_initialization() override;
-
     std::function<Vec3d(Vec3d)> get_subdomain_boundary_fix() const override {
         auto lambda = [multiple = um_per_neuron_](Vec3d arg) -> Vec3d {
             arg.round_to_larger_multiple(multiple);
@@ -63,6 +63,8 @@ public:
     }
 
 protected:
+    void post_initialization() override;
+
     /**
      * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
      * @param local_subdomain_index The local index of the subdomain which's neurons are to be filled

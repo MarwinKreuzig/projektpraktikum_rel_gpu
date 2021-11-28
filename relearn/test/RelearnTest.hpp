@@ -18,6 +18,7 @@
 #include "../../../source/util/RelearnException.h"
 
 #include <chrono>
+#include <cmath>
 #include <map>
 #include <random>
 
@@ -38,36 +39,6 @@ private:
     }
 
 protected:
-    std::mt19937 mt;
-
-    std::tuple<Vec3d, Vec3d> get_random_simulation_box_size(std::mt19937& mt) {
-        std::uniform_real_distribution<double> urd(-position_bounary, +position_bounary);
-
-        const auto rand_x_1 = urd(mt);
-        const auto rand_x_2 = urd(mt);
-
-        const auto rand_y_1 = urd(mt);
-        const auto rand_y_2 = urd(mt);
-
-        const auto rand_z_1 = urd(mt);
-        const auto rand_z_2 = urd(mt);
-
-        return {
-            { std::min(rand_x_1, rand_x_2), std::min(rand_y_1, rand_y_2), std::min(rand_z_1, rand_z_2) },
-            { std::max(rand_x_1, rand_x_2), std::max(rand_y_1, rand_y_2), std::max(rand_z_1, rand_z_2) }
-        };
-    }
-
-    Vec3d get_random_position_in_box(const Vec3d& min, const Vec3d& max, std::mt19937& mt) {
-        std::uniform_real_distribution urd_x(min.get_x(), max.get_x());
-        std::uniform_real_distribution urd_y(min.get_y(), max.get_y());
-        std::uniform_real_distribution urd_z(min.get_z(), max.get_z());
-
-        return {
-            urd_x(mt), urd_y(mt), urd_z(mt)
-        };
-    }
-
     static void SetUpTestCase() {
         RelearnException::hide_messages = true;
         LogFiles::disable = true;
@@ -104,10 +75,73 @@ protected:
         MemoryHolder<BarnesHutCell>::make_all_available();
     }
 
+    std::tuple<Vec3d, Vec3d> get_random_simulation_box_size(std::mt19937& mt) {
+        std::uniform_real_distribution<double> urd(-position_bounary, +position_bounary);
+
+        const auto rand_x_1 = urd(mt);
+        const auto rand_x_2 = urd(mt);
+
+        const auto rand_y_1 = urd(mt);
+        const auto rand_y_2 = urd(mt);
+
+        const auto rand_z_1 = urd(mt);
+        const auto rand_z_2 = urd(mt);
+
+        return {
+            { std::min(rand_x_1, rand_x_2), std::min(rand_y_1, rand_y_2), std::min(rand_z_1, rand_z_2) },
+            { std::max(rand_x_1, rand_x_2), std::max(rand_y_1, rand_y_2), std::max(rand_z_1, rand_z_2) }
+        };
+    }
+
+    Vec3d get_random_position_in_box(const Vec3d& min, const Vec3d& max, std::mt19937& mt) {
+        std::uniform_real_distribution urd_x(min.get_x(), max.get_x());
+        std::uniform_real_distribution urd_y(min.get_y(), max.get_y());
+        std::uniform_real_distribution urd_z(min.get_z(), max.get_z());
+
+        return {
+            urd_x(mt), urd_y(mt), urd_z(mt)
+        };
+    }
+
+    size_t round_to_next_exponent(size_t numToRound, size_t exponent) {
+        auto log = std::log(static_cast<double>(numToRound)) / std::log(static_cast<double>(exponent));
+        auto rounded_exp = std::ceil(log);
+        auto new_val = std::pow(static_cast<double>(exponent), rounded_exp);
+        return static_cast<size_t>(new_val);
+    }
+
+    size_t get_random_number_ranks(std::mt19937& mt) {
+        return uid_num_ranks(mt);
+    }
+
+    size_t get_adjusted_random_number_ranks(std::mt19937& mt) {
+        const auto random_rank = get_random_number_ranks(mt);
+        return round_to_next_exponent(random_rank, 2);
+    }
+
+    size_t get_random_number_neurons(std::mt19937& mt) {
+        return uid_num_neurons(mt);
+    }
+
+    double get_random_percentage(std::mt19937& mt) {
+        return urd_percentage(mt);
+    }
+
+    std::mt19937 mt;
+
+    constexpr static int upper_bound_my_rank = 32;
+    constexpr static int upper_bound_num_ranks = 32;
+
+    constexpr static int upper_bound_num_neurons = 1000;
+
+    static std::uniform_int_distribution<size_t> uid_num_ranks;
+    static std::uniform_int_distribution<size_t> uid_num_neurons;
+
+    static std::uniform_real_distribution<double> urd_percentage;
+
     static double position_bounary;
 
     static int iterations;
-    static size_t num_neurons_test;
     static double eps;
 
     static bool use_predetermined_seed;
@@ -147,6 +181,10 @@ protected:
 };
 
 class NeuronAssignmentTest : public RelearnTest {
+protected:
+    double calculate_box_length(const size_t number_neurons, const double um_per_neuron) const noexcept {
+        return ceil(pow(static_cast<double>(number_neurons), 1 / 3.)) * um_per_neuron;
+    }
 };
 
 class NeuronModelsTest : public RelearnTest {
@@ -159,10 +197,6 @@ class OctreeTest : public RelearnTest {
 };
 
 class PartitionTest : public RelearnTest {
-
-protected:
-    constexpr static int upper_bound_my_rank = 32;
-    constexpr static int upper_bound_num_ranks = 32;
 };
 
 class SynapticElementsTest : public RelearnTest {

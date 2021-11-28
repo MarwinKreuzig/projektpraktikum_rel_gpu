@@ -15,11 +15,15 @@
 double RelearnTest::position_bounary = 10000;
 
 int RelearnTest::iterations = 10;
-size_t RelearnTest::num_neurons_test = 1000;
 double RelearnTest::eps = 0.00001;
 
-bool RelearnTest::use_predetermined_seed = false;
-unsigned int RelearnTest::predetermined_seed = 4260214720;
+bool RelearnTest::use_predetermined_seed = true;
+unsigned int RelearnTest::predetermined_seed = 1087518576;
+
+std::uniform_int_distribution<size_t> RelearnTest::uid_num_ranks(1, upper_bound_num_ranks);
+std::uniform_int_distribution<size_t> RelearnTest::uid_num_neurons(1, upper_bound_num_neurons);
+
+std::uniform_real_distribution<double> RelearnTest::urd_percentage(0.0, std::nextafter(1.0, 2.0)); // [0.0, 1.0]
 
 size_t NetworkGraphTest::upper_bound_num_neurons = 10000;
 int NetworkGraphTest::bound_synapse_weight = 10;
