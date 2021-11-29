@@ -25,8 +25,6 @@
 #include "../util/RelearnException.h"
 #include "../util/Timers.h"
 #include "NeuronToSubdomainAssignment.h"
-#include "SubdomainFromFile.h"
-#include "SubdomainFromNeuronDensity.h"
 
 #include <fstream>
 #include <iomanip>
@@ -91,6 +89,10 @@ void Simulation::set_algorithm(const AlgorithmEnum algorithm) noexcept {
     algorithm_enum = algorithm;
 }
 
+void Simulation::set_subdomain_assignment(std::unique_ptr<NeuronToSubdomainAssignment>&& subdomain_assignment) {
+    neuron_to_subdomain_assignment = std::move(subdomain_assignment);
+}
+
 void Simulation::construct_neurons() {
     RelearnException::check(neuron_models != nullptr, "Simulation::construct_neurons: neuron_models is nullptr");
     RelearnException::check(axons != nullptr, "Simulation::construct_neurons: axons is nullptr");
@@ -100,25 +102,13 @@ void Simulation::construct_neurons() {
     neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons->clone(), dendrites_ex->clone(), dendrites_in->clone());
 }
 
-void Simulation::place_random_neurons(const size_t number_neurons, const double frac_exc) {
-    neuron_to_subdomain_assignment = std::make_unique<SubdomainFromNeuronDensity>(number_neurons, frac_exc, SubdomainFromNeuronDensity::default_um_per_neuron, partition);
-    partition->set_total_number_neurons(number_neurons);
-    initialize();
-}
-
-void Simulation::load_neurons_from_file(const std::filesystem::path& path_to_positions, const std::optional<std::filesystem::path>& optional_path_to_connections) {
-    auto local_ptr = std::make_unique<SubdomainFromFile>(path_to_positions, optional_path_to_connections, partition);
-    partition->set_total_number_neurons(local_ptr->get_total_number_neurons_in_file());
-    neuron_to_subdomain_assignment = std::move(local_ptr);
-    initialize();
-}
-
 void Simulation::initialize() {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     construct_neurons();
 
     neuron_to_subdomain_assignment->initialize();
+    partition->set_total_number_neurons(neuron_to_subdomain_assignment->get_total_number_placed_neurons());
     const auto number_local_neurons = partition->get_number_local_neurons();
 
     RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank);

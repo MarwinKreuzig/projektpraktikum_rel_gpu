@@ -90,11 +90,24 @@ public:
     }
 
     /**
-     * @brief Returns the current number of placed neurons 
+     * @brief Returns the current number of placed neurons on this MPI rank
      * @return The current number of placed neurons
      */
     [[nodiscard]] size_t get_number_placed_neurons() const noexcept {
         return number_placed_neurons;
+    }
+
+    /**
+     * @brief Returns the total number of placed neurons across all MPI ranks
+     * @return The total number of placed neurons across all MPI ranks
+     */
+    [[nodiscard]] size_t get_total_number_placed_neurons() const {
+        if (total_number_neurons == Constants::uninitialized) {
+
+            calculate_total_number_neurons();
+        }
+
+        return total_number_neurons;
     }
 
     /**
@@ -297,6 +310,10 @@ protected:
         number_placed_neurons = current_num_neurons;
     }
 
+    void set_total_number_placed_neurons(const size_t total_number_placed_neurons) const {
+        total_number_neurons = total_number_placed_neurons;
+    }
+
     [[nodiscard]] const Nodes& get_nodes_for_subdomain(const size_t subdomain_index_1d) const {
         const auto subdomain_is_loaded = is_subdomain_loaded(subdomain_index_1d);
         RelearnException::check(subdomain_is_loaded, "NeuronToSubdomainAssignment::get_nodes_for_subdomain: Cannot fetch nodes for id {}", subdomain_index_1d);
@@ -316,6 +333,8 @@ protected:
 
         return true;
     }
+
+    virtual void calculate_total_number_neurons() const = 0;
 
     virtual void post_initialization() = 0;
 
@@ -346,4 +365,6 @@ private:
 
     double ratio_placed_excitatory_neurons{ 0.0 };
     size_t number_placed_neurons{ 0 };
+
+    mutable size_t total_number_neurons{ Constants::uninitialized };
 };

@@ -17,6 +17,7 @@
 #include "../util/RelearnException.h"
 
 #include <limits>
+#include <numeric>
 
 SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t number_neurons, const double fraction_excitatory_neurons, const double um_per_neuron, std::shared_ptr<Partition> partition)
     : NeuronToSubdomainAssignment(partition)
@@ -179,6 +180,18 @@ void SubdomainFromNeuronDensity::fill_subdomain(const size_t local_subdomain_ind
     const auto final_neuron_count = std::min(std::round(number_boxes), neurons_in_subdomain_count);
 
     place_neurons_in_area(min, max, final_neuron_count, subdomain_index_1d);
+}
+
+void SubdomainFromNeuronDensity::calculate_total_number_neurons() const {
+    const auto number_local_neurons = get_number_placed_neurons();
+    const auto num_ranks = MPIWrapper::get_num_ranks();
+
+    std::vector<size_t> all_number_local_neurons(num_ranks, 0);
+
+    MPIWrapper::all_gather(number_local_neurons, all_number_local_neurons);
+
+    const auto total_number = std::reduce(all_number_local_neurons.begin(), all_number_local_neurons.end(), 0, std::plus{});
+    set_total_number_placed_neurons(total_number);
 }
 
 std::vector<size_t> SubdomainFromNeuronDensity::get_neuron_global_ids_in_subdomain([[maybe_unused]] const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {

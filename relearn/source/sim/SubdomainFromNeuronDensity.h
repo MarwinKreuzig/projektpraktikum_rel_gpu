@@ -73,6 +73,8 @@ protected:
      */
     void fill_subdomain(size_t local_subdomain_index, size_t total_number_subdomains) override;
 
+    void calculate_total_number_neurons() const override;
+
 private:
     const double um_per_neuron_{ default_um_per_neuron }; // Micrometer per neuron in one dimension
 

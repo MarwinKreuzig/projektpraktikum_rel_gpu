@@ -110,20 +110,9 @@ public:
      */
     void set_algorithm(AlgorithmEnum algorithm) noexcept;
 
-    /**
-     * @brief Places the requested number of neurons with the requested fraction of excitatory neurons.
-     *      The division to the MPI ranks is done with SubdomainFromNeuronDensity
-     * @param number_neurons The number of neurons to place globally
-     * @param frac_exc The fraction of excitatory neurons, must be in [0.0, 1.0]
-     */
-    void place_random_neurons(size_t number_neurons, double frac_exc);
+    void set_subdomain_assignment(std::unique_ptr<NeuronToSubdomainAssignment>&& subdomain_assignment);
 
-    /**
-     * @brief Places all neurons from a file and optionally adds the specified synapses
-     * @param path_to_positions The path to the neurons file
-     * @param optional_path_to_connections The path to the synapses file, can be empty to indicate no initial synapses
-     */
-    void load_neurons_from_file(const std::filesystem::path& path_to_positions, const std::optional<std::filesystem::path>& optional_path_to_connections);
+    void initialize();
 
     /**
      * @brief Simulates the neurons for the requested number of steps. Every step_monitor-th step, records all neuron monitors
@@ -185,8 +174,6 @@ public:
 
 private:
     void construct_neurons();
-
-    void initialize();
 
     void print_neuron_monitors();
 

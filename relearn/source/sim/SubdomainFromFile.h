@@ -67,14 +67,6 @@ public:
      */
     [[nodiscard]] std::vector<size_t> get_neuron_global_ids_in_subdomain(const size_t subdomain_index_1d, const size_t total_number_subdomains) const override;
 
-    /**
-     * @brief Returns the number of neurons in the associated file
-     * @return The number of neurons in the associated file
-     */
-    [[nodiscard]] size_t get_total_number_neurons_in_file() const noexcept {
-        return total_num_neurons_in_file;
-    }
-
 protected:
     /**
      * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
@@ -83,6 +75,10 @@ protected:
      * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file 
      */
     void fill_subdomain(size_t local_subdomain_index, size_t total_number_subdomains) override;
+
+    void calculate_total_number_neurons() const override {
+        set_total_number_placed_neurons(total_num_neurons_in_file);
+    }
 
 private:
     void read_dimensions_from_file();

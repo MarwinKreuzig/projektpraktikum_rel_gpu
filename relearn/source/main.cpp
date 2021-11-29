@@ -21,6 +21,8 @@
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
 #include "sim/NeuronToSubdomainAssignment.h"
+#include "sim/SubdomainFromFile.h"
+#include "sim/SubdomainFromNeuronDensity.h"
 #include "sim/Simulation.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
@@ -363,14 +365,16 @@ int main(int argc, char** argv) {
     sim.set_algorithm(algorithm);
 
     if (static_cast<bool>(*opt_num_neurons)) {
-        const double frac_exc = 0.8;
-        sim.place_random_neurons(number_neurons, frac_exc);
+        auto sfnd = std::make_unique<SubdomainFromNeuronDensity>(number_neurons, 0.8, SubdomainFromNeuronDensity::default_um_per_neuron, partition);
+        sim.set_subdomain_assignment(std::move(sfnd));
     } else {
+        std::optional<std::filesystem::path> path_to_network{};
         if (static_cast<bool>(*opt_file_network)) {
-            sim.load_neurons_from_file(file_positions, file_network);
-        } else {
-            sim.load_neurons_from_file(file_positions, {});
+            path_to_network = file_network;
         }
+        
+        auto sff = std::make_unique<SubdomainFromFile>(file_positions, path_to_network, partition);
+        sim.set_subdomain_assignment(std::move(sff));
     }
 
     if (*opt_file_enable_interrupts) {
@@ -406,6 +410,8 @@ int main(int argc, char** argv) {
 
     const auto steps_per_simulation = simulation_steps / Constants::monitor_step;
     sim.increase_monitoring_capacity(steps_per_simulation);
+
+    sim.initialize();
 
     auto simulate = [&]() {
         sim.simulate(simulation_steps);
