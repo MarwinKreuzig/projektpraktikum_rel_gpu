@@ -22,6 +22,7 @@
 #include "../neurons/models/NeuronModels.h"
 #include "../structure/Octree.h"
 #include "../structure/Partition.h"
+#include "../structure/SynapseLoader.h"
 #include "../util/RelearnException.h"
 #include "../util/Timers.h"
 #include "NeuronToSubdomainAssignment.h"
