@@ -22,6 +22,10 @@
 class NeuronIdTranslator;
 class Partition;
 
+/**
+ * SynapseLoader is a type that abstracts away the mechanics of how synapses are loaded.
+ * It provides load_synapses and relies on NeuronIdTranslator.
+ */
 class SynapseLoader {
 public:
     using neuron_id = size_t;
@@ -57,10 +61,22 @@ protected:
     virtual std::pair<synapses_tuple_type, std::vector<neuron_id>> internal_load_synapses() = 0;
 
 public:
+    /**
+     * @brief Constructs a SynapseLoader with the given Partition and NeuronIdTranslator
+     * @param partition The partition to use
+     * @param neuron_id_translator The neuron id translator that is used to determine if neuron ids are local
+     */
     SynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator)
         : partition(std::move(partition))
         , nit(std::move(neuron_id_translator)) { }
 
+    /**
+     * @brief Loads all synapses that affect the local neurons, which are
+     *      (1) local synapses (local neuron to local neuron)
+     *      (2) in synapses (non-local neuron to local neuron)
+     *      (3) out synpases (local neuron to non-local neuron)
+     * @return A tuple of (local, in, out) synapes
+     */
     std::tuple<LocalSynapses, InSynapses, OutSynapses> load_synapses();
 
     virtual ~SynapseLoader()
@@ -74,7 +90,15 @@ protected:
     std::pair<synapses_tuple_type, std::vector<neuron_id>> internal_load_synapses() override;
 
 public:
-    FileSynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator, const std::optional<std::filesystem::path>& path_to_synapses)
+    /**
+     * @brief Constructs a FileSynapseLoader with the given Partition and NeuronIdTranslator.
+     *      Can load synapses from a file
+     * @param partition The partition to use
+     * @param neuron_id_translator The neuron id translator that is used to determine if neuron ids are local
+     * @param path_to_synapses The path to the synapses, can be empty
+     */
+    FileSynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator, 
+        const std::optional<std::filesystem::path>& path_to_synapses)
         : SynapseLoader(std::move(partition), std::move(neuron_id_translator))
         , optional_path_to_file(path_to_synapses) { }
 };
@@ -86,6 +110,12 @@ protected:
     }
 
 public:
+    /**
+     * @brief Constructs a RandomSynapseLoader with the given Partition and NeuronIdTranslator.
+     *      Does not provide any synapses
+     * @param partition The partition to use
+     * @param neuron_id_translator The neuron id translator that is used to determine if neuron ids are local
+     */
     RandomSynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator)
         : SynapseLoader(std::move(partition), std::move(neuron_id_translator)) { }
 };
