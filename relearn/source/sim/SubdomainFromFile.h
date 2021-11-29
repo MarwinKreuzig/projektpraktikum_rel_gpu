@@ -46,10 +46,6 @@ public:
 
     ~SubdomainFromFile() override = default;
 
-    void post_initialization() override {
-
-    }
-
     /**
      * @brief Reads all neuron ids from a file and returns those.
      *      The file must be ascendingly sorted
@@ -75,6 +71,9 @@ protected:
      * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file 
      */
     void fill_subdomain(size_t local_subdomain_index, size_t total_number_subdomains) override;
+
+    void post_initialization() override {
+    }
 
     void calculate_total_number_neurons() const override {
         set_total_number_placed_neurons(total_num_neurons_in_file);

@@ -76,7 +76,7 @@ public:
      * @brief Returns a function object that is used to fix calculated subdomain boundaries.
      *      This might be necessary if special boundaries must be considered
      * @return A function object that corrects subdomain boundaries
-    */
+     */
     virtual std::function<Vec3d(Vec3d)> get_subdomain_boundary_fix() const {
         return [](Vec3d arg) { return arg; };
     }

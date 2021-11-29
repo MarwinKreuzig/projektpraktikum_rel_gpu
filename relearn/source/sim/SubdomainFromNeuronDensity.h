@@ -51,8 +51,11 @@ public:
      */
     [[nodiscard]] std::vector<size_t> get_neuron_global_ids_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const override;
 
-    constexpr static double default_um_per_neuron = 26.0;
-
+    /**
+     * @brief Returns a function object that is used to fix calculated subdomain boundaries.
+     *      It rounds the boundaries up to the next multiple of um_per_neuron
+     * @return A function object that corrects subdomain boundaries
+     */
     std::function<Vec3d(Vec3d)> get_subdomain_boundary_fix() const override {
         auto lambda = [multiple = um_per_neuron_](Vec3d arg) -> Vec3d {
             arg.round_to_larger_multiple(multiple);
@@ -61,6 +64,8 @@ public:
 
         return lambda;
     }
+
+    constexpr static double default_um_per_neuron = 26.0;
 
 protected:
     void post_initialization() override;

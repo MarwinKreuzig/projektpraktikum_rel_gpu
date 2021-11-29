@@ -34,7 +34,7 @@ class SynapticElements;
 
 /**
  * This class encapsulates all necessary attributes of a simulation.
- * The neuron model and the synaptic elements must be set before loading the neurons,
+ * The neuron model, the synaptic elements, and the subdomain assignment must be set before calling initialize,
  * which in turn must happen before calling simulate.
  */
 class Simulation {
@@ -110,8 +110,16 @@ public:
      */
     void set_algorithm(AlgorithmEnum algorithm) noexcept;
 
-    void set_subdomain_assignment(std::unique_ptr<NeuronToSubdomainAssignment>&& subdomain_assignment);
+    /**
+     * @brief Sets the subdomain assignment that determines how the neurons are loaded.
+     * @param subdomain_assignment The desired subdomain assignment
+     */
+    void set_subdomain_assignment(std::unique_ptr<NeuronToSubdomainAssignment>&& subdomain_assignment) noexcept;
 
+    /**
+     * @brief Initializes the simulation and all other objects.
+     * @exception Throws a RelearnException if one object is missing or something went wrong otherwise
+     */
     void initialize();
 
     /**
@@ -140,24 +148,47 @@ public:
 	 */
     static std::vector<std::unique_ptr<NeuronModel>> get_models();
 
-    std::shared_ptr<Neurons> get_neurons() {
+    /**
+     * @brief Returns an std::shared_ptr to the neurons object
+     * @return The neurons object
+     */
+    std::shared_ptr<Neurons> get_neurons() noexcept {
         return neurons;
     }
 
-    std::shared_ptr<NetworkGraph> get_network_graph() {
+    /**
+     * @brief Returns an std::shared_ptr to the network graph
+     * @return The network graph
+     */
+    std::shared_ptr<NetworkGraph> get_network_graph() noexcept {
         return network_graph;
     }
 
-    std::shared_ptr<std::vector<NeuronMonitor>> get_monitors() {
+    /**
+     * @brief Returns an std::shared_ptr to all neuron monitors
+     * @return All neuron monitors
+     */
+    std::shared_ptr<std::vector<NeuronMonitor>> get_monitors() noexcept {
         return monitors;
     }
 
-    void add_statistical_overview(NeuronAttribute neuron_attribute_to_observe) {
+    /**
+     * @brief Adds the statistics for the global statistics overview
+     *      Does nothing if the statistics has been added before
+     * @param neuron_attribute_to_observe The statistics that should be observed
+     */
+    void add_statistical_overview(NeuronAttribute neuron_attribute_to_observe) noexcept {
         if (statistics.find(neuron_attribute_to_observe) == statistics.end()) {
             statistics.emplace(neuron_attribute_to_observe, std::vector<StatisticalMeasures>{});
         }
     }
 
+    /**
+     * @brief Returns the statistics observered for the requested attribute
+     * @param neuron_attribute_to_observe The statistics
+     * @exception Throws a RelearnException if the statistics have not been observed
+     * @return A constants reference to the statistics
+     */
     const std::vector<StatisticalMeasures>& get_statistics(NeuronAttribute neuron_attribute_to_observe) const {
         if (statistics.find(neuron_attribute_to_observe) == statistics.end()) {
             RelearnException::fail("Simulation::get_statistics: The attribute was not observed: {}", neuron_attribute_to_observe);
@@ -168,13 +199,18 @@ public:
         return return_value;
     }
 
+    /**
+     * @brief Records one snapshot of each neuron monitor
+     */
     void snapshot_monitors();
 
+    /**
+     * @brief Prints the current network graph with the attached number of steps to the file
+     * @param current_steps The current number of steps that will appear in the file name
+     */
     void save_network_graph(size_t current_steps);
 
 private:
-    void construct_neurons();
-
     void print_neuron_monitors();
 
     std::shared_ptr<Partition> partition{};
