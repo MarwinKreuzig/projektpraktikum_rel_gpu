@@ -158,6 +158,7 @@ TEST_F(NeuronAssignmentTest, test_density_constructor_multiple_subdomains) {
 }
 
 TEST_F(NeuronAssignmentTest, test_density_initialize_single_subdomain) {
+    // 2964244976
     for (auto i = 0; i < iterations; i++) {
         const auto golden_number_neurons = get_random_number_neurons(mt);
         const auto golden_fraction_excitatory_neurons = get_random_percentage(mt);
@@ -705,6 +706,88 @@ TEST_F(NeuronAssignmentTest, test_file_load_network_single_domain) {
     }
 }
 
+TEST_F(NeuronAssignmentTest, test_file_roi_1_4_single_domain) {
+
+    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-4/new_positions.txt" };
+    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-4/new_synapses.txt" };
+
+    const auto part = std::make_shared<Partition>(1, 0);
+    SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
+
+    sff.initialize();
+
+    const auto& global_ids = sff.get_neuron_global_ids_in_subdomain(0, 1);
+    const auto& positions = sff.get_neuron_positions_in_subdomain(0, 1);
+
+    ASSERT_EQ(global_ids.size(), 426124);
+    ASSERT_EQ(positions.size(), 426124);
+
+    const auto nit = sff.get_neuron_id_translator();
+    const auto sl = sff.get_synapse_loader();
+
+    const auto& [local_synapses, in_synapses, out_synapses] = sl->load_synapses();
+
+    ASSERT_TRUE(in_synapses.empty());
+    ASSERT_TRUE(out_synapses.empty());
+
+    std::vector<int> found_in_synapses(426124, 0);
+    std::vector<int> found_out_synapses(426124, 0);
+
+    for (const auto& [source_id, target_id, weight] : local_synapses) {
+        found_in_synapses[target_id] += weight;
+        found_out_synapses[source_id] += weight;
+    }
+
+    ASSERT_EQ(found_in_synapses.size(), 426124);
+    ASSERT_EQ(found_out_synapses.size(), 426124);
+
+    for (auto neuron_id = 0; neuron_id < 426124; neuron_id++) {
+        ASSERT_EQ(found_in_synapses[neuron_id], 5) << neuron_id;
+        ASSERT_EQ(found_out_synapses[neuron_id], 5) << neuron_id;
+    }
+}
+
+TEST_F(NeuronAssignmentTest, test_file_roi_1_5_single_domain) {
+
+    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-5/new_positions.txt" };
+    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-5/new_synapses.txt" };
+
+    const auto part = std::make_shared<Partition>(1, 0);
+    SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
+
+    sff.initialize();
+
+    const auto& global_ids = sff.get_neuron_global_ids_in_subdomain(0, 1);
+    const auto& positions = sff.get_neuron_positions_in_subdomain(0, 1);
+
+    ASSERT_EQ(global_ids.size(), 426124);
+    ASSERT_EQ(positions.size(), 426124);
+
+    const auto nit = sff.get_neuron_id_translator();
+    const auto sl = sff.get_synapse_loader();
+
+    const auto& [local_synapses, in_synapses, out_synapses] = sl->load_synapses();
+
+    ASSERT_TRUE(in_synapses.empty());
+    ASSERT_TRUE(out_synapses.empty());
+
+    std::vector<int> found_in_synapses(426124, 0);
+    std::vector<int> found_out_synapses(426124, 0);
+
+    for (const auto& [source_id, target_id, weight] : local_synapses) {
+        found_in_synapses[target_id] += weight;
+        found_out_synapses[source_id] += weight;
+    }
+
+    ASSERT_EQ(found_in_synapses.size(), 426124);
+    ASSERT_EQ(found_out_synapses.size(), 426124);
+
+    for (auto neuron_id = 0; neuron_id < 426124; neuron_id++) {
+        ASSERT_EQ(found_in_synapses[neuron_id], 6) << neuron_id;
+        ASSERT_EQ(found_out_synapses[neuron_id], 6) << neuron_id;
+    }
+}
+
 TEST_F(NeuronAssignmentTest, test_file_roi_1_6_single_domain) {
 
     std::filesystem::path path_to_neurons{ "../../input/roi_split/1-6/new_positions.txt" };
@@ -729,8 +812,8 @@ TEST_F(NeuronAssignmentTest, test_file_roi_1_6_single_domain) {
     ASSERT_TRUE(in_synapses.empty());
     ASSERT_TRUE(out_synapses.empty());
 
-    std::map<size_t, int> found_in_synapses{};
-    std::map<size_t, int> found_out_synapses{};
+    std::vector<int> found_in_synapses(426124, 0);
+    std::vector<int> found_out_synapses(426124, 0);
 
     for (const auto& [source_id, target_id, weight] : local_synapses) {
         found_in_synapses[target_id] += weight;
@@ -740,12 +823,9 @@ TEST_F(NeuronAssignmentTest, test_file_roi_1_6_single_domain) {
     ASSERT_EQ(found_in_synapses.size(), 426124);
     ASSERT_EQ(found_out_synapses.size(), 426124);
 
-    for (const auto& [neuron_id, weight] : found_in_synapses) {
-        ASSERT_EQ(weight, 7) << neuron_id;
-    }
-
-    for (const auto& [neuron_id, weight] : found_out_synapses) {
-        ASSERT_EQ(weight, 7) << neuron_id;
+    for (auto neuron_id = 0; neuron_id < 426124; neuron_id++) {
+        ASSERT_EQ(found_in_synapses[neuron_id], 7) << neuron_id;
+        ASSERT_EQ(found_out_synapses[neuron_id], 7) << neuron_id;
     }
 }
 
@@ -773,8 +853,8 @@ TEST_F(NeuronAssignmentTest, test_file_roi_1_7_single_domain) {
     ASSERT_TRUE(in_synapses.empty());
     ASSERT_TRUE(out_synapses.empty());
 
-    std::map<size_t, int> found_in_synapses{};
-    std::map<size_t, int> found_out_synapses{};
+    std::vector<int> found_in_synapses(426124, 0);
+    std::vector<int> found_out_synapses(426124, 0);
 
     for (const auto& [source_id, target_id, weight] : local_synapses) {
         found_in_synapses[target_id] += weight;
@@ -784,11 +864,8 @@ TEST_F(NeuronAssignmentTest, test_file_roi_1_7_single_domain) {
     ASSERT_EQ(found_in_synapses.size(), 426124);
     ASSERT_EQ(found_out_synapses.size(), 426124);
 
-    for (const auto& [neuron_id, weight] : found_in_synapses) {
-        ASSERT_EQ(weight, 8) << neuron_id;
-    }
-
-    for (const auto& [neuron_id, weight] : found_out_synapses) {
-        ASSERT_EQ(weight, 8) << neuron_id;
+    for (auto neuron_id = 0; neuron_id < 426124; neuron_id++) {
+        ASSERT_EQ(found_in_synapses[neuron_id], 8) << neuron_id;
+        ASSERT_EQ(found_out_synapses[neuron_id], 8) << neuron_id;
     }
 }
