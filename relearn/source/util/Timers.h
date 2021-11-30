@@ -45,12 +45,15 @@ enum class TimerRegion : int {
     EMPTY_REMOTE_NODES_CACHE = 20,
     CREATE_SYNAPSES = 21,
     UPDATE_LEAF_NODES = 22,
+    LOAD_SYNAPSES = 23,
+    TRANSLATE_GLOBAL_IDS = 24,
+    INITIALIZE_NETWORK_GRAPH = 25,
 };
 
 /**
  * This number is used as a shortcut to count the number of values valid for TimerRegion
  */
-constexpr size_t NUM_TIMERS = 23;
+constexpr size_t NUM_TIMERS = 26;
 
 /**
  * This class is used to collect all sorts of different timers (see TimerRegion).

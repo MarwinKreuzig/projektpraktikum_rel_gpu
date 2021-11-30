@@ -72,6 +72,10 @@ size_t NeuronIdTranslator::get_global_id(size_t local_id) const {
 }
 
 std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::translate_global_ids(const std::vector<neuron_id>& global_ids) {
+    if (global_ids.empty()) {
+        return {};
+    }
+
     const int mpi_rank = MPIWrapper::get_my_rank();
     const int num_ranks = MPIWrapper::get_num_ranks();
 

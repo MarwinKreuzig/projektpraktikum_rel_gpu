@@ -402,16 +402,16 @@ int main(int argc, char** argv) {
     // rank which has not finished (or even begun) its local stores
     MPIWrapper::barrier(); // TODO(future) Really needed?
 
+    const auto steps_per_simulation = simulation_steps / Constants::monitor_step;
+    sim.increase_monitoring_capacity(steps_per_simulation);
+
+    sim.initialize();
+
     Timers::stop_and_add(TimerRegion::INITIALIZATION);
 
     sim.register_neuron_monitor(6);
     sim.register_neuron_monitor(1164);
     sim.register_neuron_monitor(28001);
-
-    const auto steps_per_simulation = simulation_steps / Constants::monitor_step;
-    sim.increase_monitoring_capacity(steps_per_simulation);
-
-    sim.initialize();
 
     auto simulate = [&]() {
         sim.simulate(simulation_steps);

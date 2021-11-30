@@ -12,6 +12,7 @@
 
 #include "../structure/NeuronIdTranslator.h"
 #include "../util/RelearnException.h"
+#include "../util/Timers.h"
 #include "Partition.h"
 
 #include <fstream>
@@ -139,8 +140,10 @@ FileSynapseLoader::internal_load_synapses() {
 }
 
 std::tuple<SynapseLoader::LocalSynapses, SynapseLoader::InSynapses, SynapseLoader::OutSynapses> SynapseLoader::load_synapses() {
+    Timers::start(TimerRegion::LOAD_SYNAPSES);
     const auto& [synapses, global_ids] = internal_load_synapses();
     const auto& [local_synapses, in_synapses, out_synapses] = synapses;
+    Timers::stop_and_add(TimerRegion::LOAD_SYNAPSES);
 
     LocalSynapses return_local_synapses{};
     return_local_synapses.reserve(local_synapses.size());
@@ -151,7 +154,9 @@ std::tuple<SynapseLoader::LocalSynapses, SynapseLoader::InSynapses, SynapseLoade
     OutSynapses return_out_synapses{};
     return_out_synapses.reserve(out_synapses.size());
 
+    Timers::start(TimerRegion::TRANSLATE_GLOBAL_IDS);
     const auto& translated_ids = nit->translate_global_ids(global_ids);
+    Timers::stop_and_add(TimerRegion::TRANSLATE_GLOBAL_IDS);
 
     for (const auto& [source_id, target_id, weight] : local_synapses) {
         const auto local_source_id = nit->get_local_id(source_id);

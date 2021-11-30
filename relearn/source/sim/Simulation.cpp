@@ -180,7 +180,9 @@ void Simulation::initialize() {
 
     auto [local_synapses, in_synapses, out_synapses] = synapse_loader->load_synapses();
 
+    Timers::start(TimerRegion::INITIALIZE_NETWORK_GRAPH);
     network_graph->add_edges(local_synapses, in_synapses, out_synapses);
+    Timers::stop_and_add(TimerRegion::INITIALIZE_NETWORK_GRAPH);
 
     LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded {} local synapses, {} in synapses, and {} out synapses", local_synapses.size(), in_synapses.size(), out_synapses.size());
 
