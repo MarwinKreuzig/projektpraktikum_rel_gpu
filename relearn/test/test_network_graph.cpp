@@ -361,15 +361,12 @@ TEST_F(NetworkGraphTest, testNetworkGraphDistantEdges) {
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
-    std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
-    std::uniform_int_distribution<size_t> uid_num_edges(0, upper_bound_num_neurons * num_synapses_per_neuron);
-
     std::uniform_int_distribution<int> uid_num_ranks(1, num_ranks);
     std::uniform_int_distribution<int> uid_edge_weight(-bound_synapse_weight, bound_synapse_weight);
 
     for (auto i = 0; i < iterations; i++) {
-        size_t number_neurons = uid_num_neurons(mt);
-        size_t num_edges = uid_num_edges(mt) + number_neurons;
+        const auto number_neurons = get_random_number_neurons(mt);
+        const auto number_synapses = get_random_number_synapses(mt) + number_neurons;
 
         std::uniform_int_distribution<size_t> uid_actual_num_neurons(0, number_neurons - 1);
 
@@ -378,7 +375,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
         std::map<size_t, std::map<RankNeuronId, int>> in_edges;
         std::map<size_t, std::map<RankNeuronId, int>> out_edges;
 
-        for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
+        for (size_t edge_id = 0; edge_id < number_synapses; edge_id++) {
             int other_rank = uid_num_ranks(mt);
             size_t my_neuron_id = uid_actual_num_neurons(mt);
             size_t other_neuron_id = uid_actual_num_neurons(mt);
@@ -746,6 +743,138 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
                 auto found_it = std::find(out_edges_ng.begin(), out_edges_ng.end(), std::make_pair(key, weight_meta));
                 ASSERT_TRUE(found_it != out_edges_ng.end());
             }
+        }
+    }
+}
+
+TEST_F(NetworkGraphTest, testNetworkGraphHistogramPositiveWeight) {
+    for (auto i = 0; i < iterations; i++) {
+        const auto number_neurons = get_random_number_neurons(mt);
+        const auto number_synapses = get_random_number_synapses(mt) + number_neurons;
+
+        const auto& synapses = get_random_synapses(number_neurons, number_synapses, mt);
+
+        NetworkGraph ng(number_neurons, 0);
+
+        std::map<std::pair<size_t, size_t>, int> reduced_synapses{};
+
+        for (const auto& [source_id, target_id, weight] : synapses) {
+            if (weight == 0) {
+                continue;
+            }
+
+            const auto abs_weight = std::abs(weight);
+
+            ng.add_edge_weight({ 0, target_id }, { 0, source_id }, abs_weight);
+            reduced_synapses[{ source_id, target_id }] += abs_weight;
+        }
+
+        std::map<size_t, int> in_synapses{};
+        std::map<size_t, int> out_synapses{};
+
+        for (const auto& [source_target, weight] : reduced_synapses) {
+            const auto& [source_id, target_id] = source_target;
+
+            out_synapses[source_id] += weight;
+            in_synapses[target_id] += weight;
+        }
+
+        for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+            out_synapses[neuron_id] = out_synapses[neuron_id];
+            in_synapses[neuron_id] = in_synapses[neuron_id];
+        }
+
+        std::map<int, size_t> golden_in_histogram{};
+        std::map<int, size_t> golden_out_histogram{};
+
+        for (const auto& [_, weight] : in_synapses) {
+            golden_in_histogram[weight]++;
+        }
+
+        for (const auto& [_, weight] : out_synapses) {
+            golden_out_histogram[weight]++;
+        }
+
+        const auto& in_histogram = ng.get_edges_histogram(NetworkGraph::EdgeDirection::In);
+        const auto& out_histogram = ng.get_edges_histogram(NetworkGraph::EdgeDirection::Out);
+
+        for (auto i = 0; i < in_histogram.size(); i++) {
+            const auto golden_number_in_edges = golden_in_histogram[i];
+            const auto number_in_edges = in_histogram[i];
+
+            ASSERT_EQ(golden_number_in_edges, number_in_edges);
+        }
+
+        for (auto i = 0; i < out_histogram.size(); i++) {
+            const auto golden_number_out_edges = golden_out_histogram[i];
+            const auto number_out_edges = out_histogram[i];
+
+            ASSERT_EQ(golden_number_out_edges, number_out_edges);
+        }
+    }
+}
+
+TEST_F(NetworkGraphTest, testNetworkGraphHistogram) {
+    for (auto i = 0; i < iterations; i++) {
+        const auto number_neurons = get_random_number_neurons(mt);
+        const auto number_synapses = get_random_number_synapses(mt) + number_neurons;
+
+        const auto& synapses = get_random_synapses(number_neurons, number_synapses, mt);
+
+        NetworkGraph ng(number_neurons, 0);
+
+        std::map<std::pair<size_t, size_t>, int> reduced_synapses{};
+
+        for (const auto& [source_id, target_id, weight] : synapses) {
+            if (weight == 0) {
+                continue;
+            }
+
+            ng.add_edge_weight({ 0, target_id }, { 0, source_id }, weight);
+            reduced_synapses[{ source_id, target_id }] += weight;
+        }
+
+        std::map<size_t, int> in_synapses{};
+        std::map<size_t, int> out_synapses{};
+
+        for (const auto& [source_target, weight] : reduced_synapses) {
+            const auto& [source_id, target_id] = source_target;
+
+            out_synapses[source_id] += std::abs(weight);
+            in_synapses[target_id] += std::abs(weight);
+        }
+
+        for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+            out_synapses[neuron_id] = out_synapses[neuron_id];
+            in_synapses[neuron_id] = in_synapses[neuron_id];
+        }
+
+        std::map<int, size_t> golden_in_histogram{};
+        std::map<int, size_t> golden_out_histogram{};
+
+        for (const auto& [_, weight] : in_synapses) {
+            golden_in_histogram[weight]++;
+        }
+
+        for (const auto& [_, weight] : out_synapses) {
+            golden_out_histogram[weight]++;
+        }
+
+        const auto& in_histogram = ng.get_edges_histogram(NetworkGraph::EdgeDirection::In);
+        const auto& out_histogram = ng.get_edges_histogram(NetworkGraph::EdgeDirection::Out);
+
+        for (auto i = 0; i < in_histogram.size(); i++) {
+            const auto golden_number_in_edges = golden_in_histogram[i];
+            const auto number_in_edges = in_histogram[i];
+
+            ASSERT_EQ(golden_number_in_edges, number_in_edges);
+        }
+
+        for (auto i = 0; i < out_histogram.size(); i++) {
+            const auto golden_number_out_edges = golden_out_histogram[i];
+            const auto number_out_edges = out_histogram[i];
+
+            ASSERT_EQ(golden_number_out_edges, number_out_edges);
         }
     }
 }

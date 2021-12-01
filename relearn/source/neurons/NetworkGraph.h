@@ -508,8 +508,9 @@ public:
 
             if (result.size() <= number_of_connections) {
                 result.resize(number_of_connections * 2ull + 1);
-                largest_number_edges = number_of_connections;
             }
+
+            largest_number_edges = std::max(number_of_connections, largest_number_edges);
 
             result[number_of_connections]++;
         }

@@ -124,9 +124,31 @@ protected:
         return uid_num_neurons(mt);
     }
 
+    size_t get_random_number_synapses(std::mt19937& mt) {
+        return uid_num_synapses(mt);
+    }
+
     size_t get_random_neuron_id(size_t number_neurons, std::mt19937& mt) {
         std::uniform_int_distribution<size_t> uid(0, number_neurons - 1);
         return uid(mt);
+    }
+
+    int get_random_synapse_weight(std::mt19937& mt) {
+        return uid_synapse_weight(mt);
+    }
+
+    std::vector<std::tuple<size_t, size_t, int>> get_random_synapses(size_t number_neurons, size_t number_synapses, std::mt19937& mt) {
+        std::vector<std::tuple<size_t, size_t, int>> synapses(number_synapses);
+
+        for (auto i = 0; i < number_synapses; i++) {
+            const auto source_id = get_random_neuron_id(number_neurons, mt);
+            const auto target_id = get_random_neuron_id(number_neurons, mt);
+            const auto weight = get_random_synapse_weight(mt);
+
+            synapses[i] = { source_id, target_id, weight };
+        }
+
+        return synapses;
     }
 
     double get_random_percentage(std::mt19937& mt) {
