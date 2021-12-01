@@ -162,6 +162,14 @@ void SubdomainFromNeuronDensity::fill_subdomain(const size_t local_subdomain_ind
     }
 
     const auto& [min, max] = partition->get_subdomain_boundaries(local_subdomain_index);
+    const auto requested_number_neurons = get_requested_number_neurons();
+    const auto number_subdomains = partition->get_total_number_subdomains();
+
+    if (number_subdomains == 1) {
+        place_neurons_in_area(min, max, requested_number_neurons, 0);
+        return;
+    }
+
     const auto volume = (max - min).get_volume();
     const auto number_boxes = volume / (um_per_neuron_ * um_per_neuron_ * um_per_neuron_);
 
@@ -169,8 +177,6 @@ void SubdomainFromNeuronDensity::fill_subdomain(const size_t local_subdomain_ind
     const auto total_volume = (sim_box_max - sim_box_min).get_volume();
     const auto total_number_boxes = total_volume / (um_per_neuron_ * um_per_neuron_ * um_per_neuron_);
 
-    const auto requested_number_neurons = get_requested_number_neurons();
-    const auto number_subdomains = partition->get_total_number_subdomains();
     const auto free_neurons = requested_number_neurons - number_subdomains;
     const auto proposed_number_local_neurons = floor(free_neurons * number_boxes / total_number_boxes);
   
