@@ -38,12 +38,16 @@ public:
 
     // Update connectivity every 100 ms
     inline static size_t plasticity_update_step = 100;
-    // Print details every 500 ms
-    inline static size_t logfile_update_step = 500;
+
+    // Print details every 100 ms
+    inline static size_t logfile_update_step = 100;
+
     // Print to cout every 10000 ms
     inline static size_t console_update_step = 100;
+
     // Capture individual neuron informations ever 100 ms
     inline static size_t monitor_step = 100;
+
     // Capture the global statistics every 100 ms
     inline static size_t statistics_step = 100;
 

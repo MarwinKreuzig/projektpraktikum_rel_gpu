@@ -1207,9 +1207,9 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
 
     const StatisticalMeasures& calcium_statistics = get_statistics(NeuronAttribute::Calcium);
     const StatisticalMeasures& axons_statistics = get_statistics(NeuronAttribute::Axons);
-    const StatisticalMeasures& axons_free_statistics = get_statistics(NeuronAttribute::AxonsConnected);
+    const StatisticalMeasures& axons_connected_statistics = get_statistics(NeuronAttribute::AxonsConnected);
     const StatisticalMeasures& dendrites_excitatory_statistics = get_statistics(NeuronAttribute::DendritesExcitatory);
-    const StatisticalMeasures& dendrites_excitatory_free_statistics = get_statistics(NeuronAttribute::DendritesExcitatoryConnected);
+    const StatisticalMeasures& dendrites_excitatory_connected_statistics = get_statistics(NeuronAttribute::DendritesExcitatoryConnected);
 
     if (0 != MPIWrapper::get_my_rank()) {
         // All ranks must compute the statistics, but only one should print them
@@ -1239,21 +1239,21 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
             "axons (max)",
             "axons (var)",
             "axons (std_dev)",
-            "axons.f (avg)",
-            "axons.f (min)",
-            "axons.f (max)",
-            "axons.f (var)",
-            "axons.f (std_dev)",
+            "axons.c (avg)",
+            "axons.c (min)",
+            "axons.c (max)",
+            "axons.c (var)",
+            "axons.c (std_dev)",
             "den.ex (avg)",
             "den.ex (min)",
             "den.ex (max)",
             "den.ex (var)",
             "den.ex (std_dev)",
-            "den.ex.f (avg)",
-            "den.ex.f (min)",
-            "den.ex.f (max)",
-            "den.ex.f (var)",
-            "den.ex.f (std_dev)");
+            "den.ex.c (avg)",
+            "den.ex.c (min)",
+            "den.ex.c (max)",
+            "den.ex.c (var)",
+            "den.ex.c (std_dev)");
 
         LogFiles::write_to_file(LogFiles::EventType::NeuronsOverviewCSV, false,
             "# step",
@@ -1267,21 +1267,21 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
             "axons (max)",
             "axons (var)",
             "axons (std_dev)",
-            "axons.f (avg)",
-            "axons.f (min)",
-            "axons.f (max)",
-            "axons.f (var)",
-            "axons.f (std_dev)",
+            "axons.c (avg)",
+            "axons.c (min)",
+            "axons.c (max)",
+            "axons.c (var)",
+            "axons.c (std_dev)",
             "den.ex (avg)",
             "den.ex (min)",
             "den.ex (max)",
             "den.ex (var)",
             "den.ex (std_dev)",
-            "den.ex.f (avg)",
-            "den.ex.f (min)",
-            "den.ex.f (max)",
-            "den.ex.f (var)",
-            "den.ex.f (std_dev)");
+            "den.ex.c (avg)",
+            "den.ex.c (min)",
+            "den.ex.c (max)",
+            "den.ex.c (var)",
+            "den.ex.c (std_dev)");
     }
 
     // Write data at step "step"
@@ -1305,21 +1305,21 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
         axons_statistics.max,
         axons_statistics.var,
         axons_statistics.std,
-        axons_free_statistics.avg,
-        axons_free_statistics.min,
-        axons_free_statistics.max,
-        axons_free_statistics.var,
-        axons_free_statistics.std,
+        axons_connected_statistics.avg,
+        axons_connected_statistics.min,
+        axons_connected_statistics.max,
+        axons_connected_statistics.var,
+        axons_connected_statistics.std,
         dendrites_excitatory_statistics.avg,
         dendrites_excitatory_statistics.min,
         dendrites_excitatory_statistics.max,
         dendrites_excitatory_statistics.var,
         dendrites_excitatory_statistics.std,
-        dendrites_excitatory_free_statistics.avg,
-        dendrites_excitatory_free_statistics.min,
-        dendrites_excitatory_free_statistics.max,
-        dendrites_excitatory_free_statistics.var,
-        dendrites_excitatory_free_statistics.std);
+        dendrites_excitatory_connected_statistics.avg,
+        dendrites_excitatory_connected_statistics.min,
+        dendrites_excitatory_connected_statistics.max,
+        dendrites_excitatory_connected_statistics.var,
+        dendrites_excitatory_connected_statistics.std);
 
     LogFiles::write_to_file(LogFiles::EventType::NeuronsOverviewCSV, false,
         "{};"
@@ -1339,21 +1339,21 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
         axons_statistics.max,
         axons_statistics.var,
         axons_statistics.std,
-        axons_free_statistics.avg,
-        axons_free_statistics.min,
-        axons_free_statistics.max,
-        axons_free_statistics.var,
-        axons_free_statistics.std,
+        axons_connected_statistics.avg,
+        axons_connected_statistics.min,
+        axons_connected_statistics.max,
+        axons_connected_statistics.var,
+        axons_connected_statistics.std,
         dendrites_excitatory_statistics.avg,
         dendrites_excitatory_statistics.min,
         dendrites_excitatory_statistics.max,
         dendrites_excitatory_statistics.var,
         dendrites_excitatory_statistics.std,
-        dendrites_excitatory_free_statistics.avg,
-        dendrites_excitatory_free_statistics.min,
-        dendrites_excitatory_free_statistics.max,
-        dendrites_excitatory_free_statistics.var,
-        dendrites_excitatory_free_statistics.std);
+        dendrites_excitatory_connected_statistics.avg,
+        dendrites_excitatory_connected_statistics.min,
+        dendrites_excitatory_connected_statistics.max,
+        dendrites_excitatory_connected_statistics.var,
+        dendrites_excitatory_connected_statistics.std);
 }
 
 void Neurons::print_calcium_statistics_to_essentials() {
