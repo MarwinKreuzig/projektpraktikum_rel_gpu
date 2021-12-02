@@ -340,13 +340,13 @@ int main(int argc, char** argv) {
         base_background_activity, NeuronModel::default_background_activity_mean, NeuronModel::default_background_activity_stddev,
         models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
 
-    auto axon_models = std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons, target_calcium,
+    auto axon_models = std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons,
         nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-    auto dend_ex_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc, target_calcium,
+    auto dend_ex_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc,
         nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-    auto dend_in_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh, target_calcium,
+    auto dend_in_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh,
         nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     // Lock local RMA memory for local stores
@@ -372,7 +372,7 @@ int main(int argc, char** argv) {
         if (static_cast<bool>(*opt_file_network)) {
             path_to_network = file_network;
         }
-        
+
         auto sff = std::make_unique<SubdomainFromFile>(file_positions, path_to_network, partition);
         sim.set_subdomain_assignment(std::move(sff));
     }
@@ -391,6 +391,9 @@ int main(int argc, char** argv) {
         auto creation_interrups = InteractiveNeuronIO::load_creation_interrups(file_creation_interrupts);
         sim.set_creation_interrupts(std::move(creation_interrups));
     }
+
+    auto target_calcium_calculator = [target = target_calcium](size_t neuron_id) { return target; };
+    sim.set_target_calcium_calculator(std::move(target_calcium_calculator));
 
     // Unlock local RMA memory and make local stores visible in public window copy
     MPIWrapper::unlock_window(my_rank);

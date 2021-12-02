@@ -47,7 +47,8 @@ public:
         Timers,
         NetworkInHistogramLocal,
         NetworkOutHistogramLocal,
-        Essentials
+        Essentials,
+        CalciumValues,
     };
 
 private:

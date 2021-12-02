@@ -66,6 +66,10 @@ void Simulation::set_dendrites_in(std::unique_ptr<SynapticElements>&& se) noexce
     dendrites_in = std::move(se);
 }
 
+void Simulation::set_target_calcium_calculator(std::function<double(size_t)> calculator) noexcept {
+    target_calcium_calculator = std::move(calculator);
+}
+
 void Simulation::set_enable_interrupts(std::vector<std::pair<size_t, std::vector<size_t>>> interrupts) {
     enable_interrupts = std::move(interrupts);
 
@@ -110,8 +114,13 @@ void Simulation::initialize() {
     const auto my_rank = MPIWrapper::get_my_rank();
     RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank);
 
+    std::vector<double> target_calcium_values(number_local_neurons, 0.0);
+    for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
+        target_calcium_values[neuron_id] = target_calcium_calculator(neuron_id);
+    }
+
     neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons->clone(), dendrites_ex->clone(), dendrites_in->clone());
-    neurons->init(number_local_neurons);
+    neurons->init(number_local_neurons, std::move(target_calcium_values));
     NeuronMonitor::neurons_to_monitor = neurons;
 
     const auto number_local_subdomains = partition->get_number_local_subdomains();
@@ -235,7 +244,13 @@ void Simulation::simulate(const size_t number_steps) {
         for (const auto& [creation_step, creation_count] : creation_interrupts) {
             if (creation_step == step) {
                 LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Creating {} neurons in step {}", creation_count, creation_step);
-                neurons->create_neurons(creation_count);
+
+                std::vector<double> new_target_calcium_values(creation_count, 0.0);
+                for (size_t neuron_id = 0; neuron_id < creation_count; neuron_id++) {
+                    new_target_calcium_values[neuron_id] = target_calcium_calculator(neuron_id);
+                }
+
+                neurons->create_neurons(creation_count, std::move(new_target_calcium_values));
             }
         }
 
@@ -283,6 +298,10 @@ void Simulation::simulate(const size_t number_steps) {
 
         if (step % Constants::logfile_update_step == 0) {
             neurons->print_local_network_histogram(step);
+        }
+
+        if (step % Constants::calcium_step == 0) {
+            neurons->print_calcium_values_to_file(step);
         }
 
         if (step % Constants::statistics_step == 0) {

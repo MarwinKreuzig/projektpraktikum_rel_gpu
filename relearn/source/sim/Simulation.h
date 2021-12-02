@@ -15,6 +15,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <map>
 #include <memory>
 #include <optional>
@@ -82,6 +83,12 @@ public:
      * @param se The synaptic elements model
      */
     void set_dendrites_in(std::unique_ptr<SynapticElements>&& se) noexcept;
+
+    /**
+     * @brief Sets the function that is used to determine the target calcium value of the neurons
+     * @param calculator The function that maps neuron id to target calcium value
+     */
+    void set_target_calcium_calculator(std::function<double(size_t)> calculator) noexcept;
 
     /**
      * @brief Sets the enable interrupts during the simulation.
@@ -236,6 +243,8 @@ private:
     std::vector<std::pair<size_t, size_t>> creation_interrupts{};
 
     std::map<NeuronAttribute, std::vector<StatisticalMeasures>> statistics{};
+
+    std::function<double(size_t)> target_calcium_calculator{};
 
     double accept_criterion{ 0.0 };
 

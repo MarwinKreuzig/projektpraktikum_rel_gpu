@@ -42,7 +42,7 @@ public:
     // Print details every 100 ms
     inline static size_t logfile_update_step = 100;
 
-    // Print to cout every 10000 ms
+    // Print to cout every 100 ms
     inline static size_t console_update_step = 100;
 
     // Capture individual neuron informations ever 100 ms
@@ -50,6 +50,9 @@ public:
 
     // Capture the global statistics every 100 ms
     inline static size_t statistics_step = 100;
+
+    // Capture the calcium values every 10000 ms
+    inline static size_t calcium_step = 10000;
 
     constexpr static size_t mpi_alloc_mem = 1024 * 1024 * 300;
 

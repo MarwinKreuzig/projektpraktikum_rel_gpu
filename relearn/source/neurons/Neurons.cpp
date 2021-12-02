@@ -28,7 +28,10 @@
 #include <optional>
 #include <sstream>
 
-void Neurons::init(const size_t num_neurons) {
+void Neurons::init(const size_t num_neurons, std::vector<double> target_calcium_values) {
+    RelearnException::check(num_neurons > 0, "Neurons::init: num_neurons was 0");
+    RelearnException::check(num_neurons == target_calcium_values.size(), "Neurons::init: num_neurons was different than target_calcium_values.size()");
+
     number_neurons = num_neurons;
 
     neuron_model->init(number_neurons);
@@ -48,6 +51,7 @@ void Neurons::init(const size_t num_neurons) {
 
     disable_flags.resize(number_neurons, 1);
     calcium.resize(number_neurons);
+    target_calcium = std::move(target_calcium_values);
 
     // Init member variables
     for (size_t i = 0; i < number_neurons; i++) {
@@ -205,7 +209,9 @@ void Neurons::enable_neurons(const std::vector<size_t>& neuron_ids) {
     }
 }
 
-void Neurons::create_neurons(const size_t creation_count) {
+void Neurons::create_neurons(const size_t creation_count, const std::vector<double>& new_target_calcium_values) {
+    RelearnException::check(creation_count == new_target_calcium_values.size(), "Neurons::create_neurons: creation_count was unequal to new_target_calcium_values.size()");
+
     const auto current_size = number_neurons;
     const auto new_size = current_size + creation_count;
 
@@ -225,6 +231,8 @@ void Neurons::create_neurons(const size_t creation_count) {
 
     disable_flags.resize(new_size, 1);
     calcium.resize(new_size);
+
+    target_calcium.insert(target_calcium.cend(), new_target_calcium_values.begin(), new_target_calcium_values.end());
 
     for (size_t i = current_size; i < new_size; i++) {
         // Set calcium concentration
@@ -1394,7 +1402,7 @@ void Neurons::print_positions_to_log_file() {
     std::stringstream ss;
     // Write total number of neurons to log file
     LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# {}\n#\n<global id> <pos x> <pos y> <pos z> <area> <type>", partition->get_total_number_neurons());
-    
+
     const std::vector<std::string>& area_names = extra_info->get_area_names();
     const std::vector<SignalType>& signal_types = axons->get_signal_types();
 
@@ -1495,7 +1503,7 @@ void Neurons::print_info_for_algorithm() {
     LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
 }
 
-void Neurons::print_local_network_histogram(size_t current_step) {
+void Neurons::print_local_network_histogram(const size_t current_step) {
     const auto& in_histogram = network_graph->get_edges_histogram(NetworkGraph::EdgeDirection::In);
     const auto& out_histogram = network_graph->get_edges_histogram(NetworkGraph::EdgeDirection::Out);
 
@@ -1503,7 +1511,7 @@ void Neurons::print_local_network_histogram(size_t current_step) {
         std::stringstream ss{};
         ss << '#' << current_step;
         for (auto val : hist) {
-            ss << ";" << val;
+            ss << ';' << val;
         }
 
         return ss.str();
@@ -1511,6 +1519,17 @@ void Neurons::print_local_network_histogram(size_t current_step) {
 
     LogFiles::write_to_file(LogFiles::EventType::NetworkInHistogramLocal, false, conv_hist(in_histogram));
     LogFiles::write_to_file(LogFiles::EventType::NetworkOutHistogramLocal, false, conv_hist(out_histogram));
+}
+
+void Neurons::print_calcium_values_to_file(const size_t current_step) {
+    std::stringstream ss{};
+
+    ss << '#' << current_step;
+    for (auto val : calcium) {
+        ss << ';' << val;
+    }
+
+    LogFiles::write_to_file(LogFiles::EventType::CalciumValues, false, ss.str());
 }
 
 void Neurons::print_pending_synapse_deletions(const PendingDeletionsV& list) {

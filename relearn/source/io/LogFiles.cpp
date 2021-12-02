@@ -74,6 +74,9 @@ void LogFiles::init() {
 
     // Create log file for the essentials of the simulation
     LogFiles::add_logfile(EventType::Essentials, "essentials", 0);
+
+    // Create log file for all calcium values
+    LogFiles::add_logfile(EventType::CalciumValues, "calcium_values", -1);
 }
 
 std::string LogFiles::get_specific_file_prefix() {

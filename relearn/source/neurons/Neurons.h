@@ -431,9 +431,11 @@ public:
      *      (c) Initializes the synaptic models
      *      (d) Enables all neurons
      *      (e) Calculates if the neurons fired once to initialize the calcium values to beta or 0.0
-     * @param number_neurons 
+     * @param number_neurons The number of local neurons
+     * @param target_calcium_values The target calcium values for the local neurons
+     * @exception Throws a RelearnException if target_calcium_values.size() != number_neurons, number_neurons == 0, or something unexpected happened
      */
-    void init(size_t number_neurons);
+    void init(size_t number_neurons, std::vector<double> target_calcium_values);
 
     /**
      * @brief Sets the octree in which the neurons are stored
@@ -580,9 +582,11 @@ public:
      *      (d) Enables all created neurons
      *      (e) Calculates if the neurons fired once to initialize the calcium values to beta or 0.0
      *      (f) Inserts the newly created neurons into the octree
-     * @exception Throws a RelearnException if something unexpected happens
+     * @param creation_count The number of newly created neurons
+     * @param new_target_calcium_values The target calcium values for the newly created neurons
+     * @exception Throws a RelearnException if creation_count != new_target_calcium_values.size(), or if something unexpected happens
      */
-    void create_neurons(size_t creation_count);
+    void create_neurons(size_t creation_count, const std::vector<double>& new_target_calcium_values);
 
     /**
      * @brief Calls update_electrical_activity from the electrical model with the stored network graph,
@@ -596,9 +600,9 @@ public:
      * @exception Throws a RelearnException if something unexpected happens
      */
     void update_number_synaptic_elements_delta() {
-        axons->update_number_elements_delta(calcium, disable_flags);
-        dendrites_exc->update_number_elements_delta(calcium, disable_flags);
-        dendrites_inh->update_number_elements_delta(calcium, disable_flags);
+        axons->update_number_elements_delta(calcium, target_calcium, disable_flags);
+        dendrites_exc->update_number_elements_delta(calcium, target_calcium, disable_flags);
+        dendrites_inh->update_number_elements_delta(calcium, target_calcium, disable_flags);
     }
 
     /**
@@ -654,6 +658,8 @@ public:
     void print_info_for_algorithm();
 
     void print_local_network_histogram(size_t current_step);
+
+    void print_calcium_values_to_file(size_t current_step);
 
     /**
      * @brief Performs debug checks on the synaptic element models if Config::do_debug_checks
@@ -745,6 +751,7 @@ private:
     std::unique_ptr<DendritesExcitatory> dendrites_exc{};
     std::unique_ptr<DendritesInhibitory> dendrites_inh{};
 
+    std::vector<double> target_calcium{};
     std::vector<double> calcium{}; // Intracellular calcium concentration of every neuron
 
     std::vector<char> disable_flags{};
