@@ -708,8 +708,8 @@ TEST_F(NeuronAssignmentTest, test_file_load_network_single_domain) {
 
 TEST_F(NeuronAssignmentTest, test_file_roi_1_4_single_domain) {
 
-    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-4/new_positions.txt" };
-    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-4/new_synapses.txt" };
+    std::filesystem::path path_to_neurons{ "../input/roi_split/1-4/new_positions.txt" };
+    std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-4/new_synapses.txt" };
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
@@ -749,8 +749,8 @@ TEST_F(NeuronAssignmentTest, test_file_roi_1_4_single_domain) {
 
 TEST_F(NeuronAssignmentTest, test_file_roi_1_5_single_domain) {
 
-    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-5/new_positions.txt" };
-    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-5/new_synapses.txt" };
+    std::filesystem::path path_to_neurons{ "../input/roi_split/1-5/new_positions.txt" };
+    std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-5/new_synapses.txt" };
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
@@ -790,8 +790,8 @@ TEST_F(NeuronAssignmentTest, test_file_roi_1_5_single_domain) {
 
 TEST_F(NeuronAssignmentTest, test_file_roi_1_6_single_domain) {
 
-    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-6/new_positions.txt" };
-    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-6/new_synapses.txt" };
+    std::filesystem::path path_to_neurons{ "../input/roi_split/1-6/new_positions.txt" };
+    std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-6/new_synapses.txt" };
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
@@ -831,8 +831,8 @@ TEST_F(NeuronAssignmentTest, test_file_roi_1_6_single_domain) {
 
 TEST_F(NeuronAssignmentTest, test_file_roi_1_7_single_domain) {
 
-    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-7/new_positions.txt" };
-    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-7/new_synapses.txt" };
+    std::filesystem::path path_to_neurons{ "../input/roi_split/1-7/new_positions.txt" };
+    std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-7/new_synapses.txt" };
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
