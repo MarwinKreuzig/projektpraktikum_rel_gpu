@@ -39,7 +39,7 @@ test-nompi:
   image: relearn-ci
   stage: test
   before_script:
-    - cd relearn/build-docker
+    - cd relearn/build-docker-nompi
   script:
     - ./runTests
   dependencies: 
