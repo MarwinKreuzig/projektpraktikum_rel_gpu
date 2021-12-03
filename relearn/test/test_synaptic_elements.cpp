@@ -170,17 +170,14 @@ TEST_F(SynapticElementsTest, testSynapticElementsParameters) {
         std::vector<ModelParameter> parameters = synaptic_elements.get_parameter();
 
         Parameter<double> param_min_C = std::get<Parameter<double>>(parameters[0]);
-        Parameter<double> param_target_C = std::get<Parameter<double>>(parameters[1]);
-        Parameter<double> param_nu = std::get<Parameter<double>>(parameters[2]);
-        Parameter<double> param_vacant = std::get<Parameter<double>>(parameters[3]);
+        Parameter<double> param_nu = std::get<Parameter<double>>(parameters[1]);
+        Parameter<double> param_vacant = std::get<Parameter<double>>(parameters[2]);
+        Parameter<double> param_lower_bound = std::get<Parameter<double>>(parameters[3]);
+        Parameter<double> param_upper_bound = std::get<Parameter<double>>(parameters[4]);
 
         ASSERT_EQ(param_min_C.min(), SynapticElements::min_min_C_level_to_grow);
         ASSERT_EQ(param_min_C.value(), C);
         ASSERT_EQ(param_min_C.max(), SynapticElements::max_min_C_level_to_grow);
-
-        ASSERT_EQ(param_target_C.min(), SynapticElements::min_C_target);
-        ASSERT_EQ(param_target_C.value(), SynapticElements::default_C_target);
-        ASSERT_EQ(param_target_C.max(), SynapticElements::max_C_target);
 
         ASSERT_EQ(param_nu.min(), SynapticElements::min_nu);
         ASSERT_EQ(param_nu.value(), SynapticElements::default_nu);
@@ -190,20 +187,31 @@ TEST_F(SynapticElementsTest, testSynapticElementsParameters) {
         ASSERT_EQ(param_vacant.value(), SynapticElements::default_vacant_retract_ratio);
         ASSERT_EQ(param_vacant.max(), SynapticElements::max_vacant_retract_ratio);
 
+        ASSERT_EQ(param_lower_bound.min(), SynapticElements::min_vacant_elements_initially);
+        ASSERT_EQ(param_lower_bound.value(), SynapticElements::default_vacant_elements_initially_lower_bound);
+        ASSERT_EQ(param_lower_bound.max(), SynapticElements::max_vacant_elements_initially);
+
+        ASSERT_EQ(param_upper_bound.min(), SynapticElements::min_vacant_elements_initially);
+        ASSERT_EQ(param_upper_bound.value(), SynapticElements::default_vacant_elements_initially_upper_bound);
+        ASSERT_EQ(param_upper_bound.max(), SynapticElements::max_vacant_elements_initially);
+
         const double d1 = urd_C(mt);
         const double d2 = urd_C(mt);
         const double d3 = urd_C(mt);
         const double d4 = urd_C(mt);
+        const double d5 = urd_C(mt);
 
         param_min_C.set_value(d1);
-        param_target_C.set_value(d2);
-        param_nu.set_value(d3);
-        param_vacant.set_value(d4);
+        param_nu.set_value(d2);
+        param_vacant.set_value(d3);
+        param_lower_bound.set_value(d4);
+        param_upper_bound.set_value(d5);
 
         ASSERT_EQ(param_min_C.value(), d1);
-        ASSERT_EQ(param_target_C.value(), d2);
-        ASSERT_EQ(param_nu.value(), d3);
-        ASSERT_EQ(param_vacant.value(), d4);
+        ASSERT_EQ(param_nu.value(), d2);
+        ASSERT_EQ(param_vacant.value(), d3);
+        ASSERT_EQ(param_lower_bound.value(), d4);
+        ASSERT_EQ(param_upper_bound.value(), d5);
     }
 }
 
