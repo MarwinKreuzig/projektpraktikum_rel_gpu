@@ -20,6 +20,11 @@
 
 class Partition;
 
+/**
+ * This class fills every subdomain with neurons at random positions. It assigns a fixed number
+ * of neurons to each MPI rank.
+ * It inherits from NeuronToSubdomainAssignment.
+ */
 class SubdomainFromNeuronPerRank : public NeuronToSubdomainAssignment {
 public:
     /**

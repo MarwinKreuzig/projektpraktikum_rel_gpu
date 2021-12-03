@@ -36,8 +36,6 @@ class NeuronMonitor;
 class Octree;
 class Partition;
 
-//class OctreeNode;
-
 /**
  * @brief This class gathers all information for the neurons and provides the primary interface for the simulation
  */
@@ -496,6 +494,11 @@ public:
         extra_info->set_area_names(std::move(names));
     }
 
+    /**
+     * @brief Sets the positions in the extra infos
+     * @param names The positions
+     * @exception Throws the same RelearnException as NeuronsExtraInfo::set_positions
+     */
     void set_positions(std::vector<NeuronsExtraInfo::position_type> pos) {
         extra_info->set_positions(std::move(pos));
     }
@@ -657,8 +660,16 @@ public:
      */
     void print_info_for_algorithm();
 
+    /**
+     * @brief Prints the histogram of in edges for the local neurons at the current simulation step
+     * @param current_step The current simulation step
+     */
     void print_local_network_histogram(size_t current_step);
 
+    /**
+     * @brief Prints the histogram of out edges for the local neurons at the current simulation step
+     * @param current_step The current simulation step
+     */
     void print_calcium_values_to_file(size_t current_step);
 
     /**

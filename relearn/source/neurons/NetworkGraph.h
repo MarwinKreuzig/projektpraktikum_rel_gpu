@@ -433,6 +433,12 @@ public:
         }
     }
 
+    /**
+     * @brief Adds all provided edges into the network graph at once.
+     * @param local_edges All edges between two neurons on the current MPI rank
+     * @param in_edges All edges that have a target on the current MPI rank and a source from another rank
+     * @param out_edges All edges that have a source on the current MPI rank and a target from another rank
+    */
     void add_edges(const std::vector<local_synapse>& local_edges, const std::vector<in_synapse>& in_edges, const std::vector<out_synapse>& out_edges) {        
         for (const auto& [source_id, target_id, weight] : local_edges) {
             RelearnException::check(target_id < neuron_local_in_neighborhood.size(),

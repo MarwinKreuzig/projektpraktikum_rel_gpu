@@ -63,21 +63,31 @@ public:
         area_names = std::move(names);
     }
 
+    /**
+     * @brief Returns the currently stored area names as a vector. The reference is invalidated whenever init or create_neurons is called.
+     * @return The currently stored area names as a vector
+     */
+    [[nodiscard]] const std::vector<std::string>& get_area_names() const noexcept {
+        return area_names;
+    }
+
+    /**
+     * @brief Overwrites the current positions with the supplied ones
+     * @param names The new positions, must have the same size as neurons are stored
+     * @exception Throws an RelearnAxception if pos.empty() or if the number of supplied elements does not match the number of stored neurons 
+     */
     void set_positions(std::vector<position_type> pos) {
         RelearnException::check(!pos.empty(), "NeuronsExtraInformation::set_x_dims: New x dimensions are empty");
         RelearnException::check(size == pos.size(), "NeuronsExtraInformation::set_x_dims: Size does not match area names count");
         positions = std::move(pos);
     }
 
+    /**
+     * @brief Returns the currently stored positions as a vector. The reference is invalidated whenever init or create_neurons is called.
+     * @return The currently stored positions as a vector
+     */
     [[nodiscard]] const std::vector<position_type>& get_positions() const noexcept {
         return positions;
-    }
-
-    /**
-     * @brief Returns the currently stored area names as a vector. The reference is invalidated whenever init or create_neurons is called.
-     */
-    [[nodiscard]] const std::vector<std::string>& get_area_names() const noexcept {
-        return area_names;
     }
 
     /**
