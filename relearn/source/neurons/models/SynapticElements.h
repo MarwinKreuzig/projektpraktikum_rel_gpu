@@ -381,7 +381,7 @@ public:
         RelearnException::check(target_calcium.size() == size, "SynapticElements::commit_updates: target_calcium was not of the right size");
         RelearnException::check(disable_flags.size() == size, "SynapticElements::commit_updates: disable_flags was not of the right size");
 
-#pragma omp parallel for shared(calcium, disable_flags) default(none)
+#pragma omp parallel for shared(calcium, target_calcium, disable_flags) default(none)
         for (auto neuron_id = 0; neuron_id < size; ++neuron_id) {
             if (disable_flags[neuron_id] == 0) {
                 continue;
