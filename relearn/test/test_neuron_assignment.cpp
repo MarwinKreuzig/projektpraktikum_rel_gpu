@@ -28,7 +28,7 @@ void NeuronAssignmentTest::generate_neuron_positions(std::vector<Vec3d>& positio
     const auto um_per_neuron = urd_percentage(mt) * 100;
 
     const auto part = std::make_shared<Partition>(1, 0);
-    SubdomainFromNeuronDensity sfnd{ number_neurons, fraction_excitatory_neurons, um_per_neuron, part };
+    Subdomain sfnd{ number_neurons, fraction_excitatory_neurons, um_per_neuron, part };
 
     sfnd.initialize();
 
@@ -94,7 +94,7 @@ TEST_F(NeuronAssignmentTest, test_density_too_few_neurons) {
 
         for (auto rank = 0; rank < golden_number_ranks; rank++) {
             const auto part = std::make_shared<Partition>(golden_number_ranks, rank);
-            ASSERT_THROW(SubdomainFromNeuronDensity sfnd(rank, golden_fraction_excitatory_neurons, golden_um_per_neuron, part), RelearnException);
+            ASSERT_THROW(Subdomain sfnd(rank, golden_fraction_excitatory_neurons, golden_um_per_neuron, part), RelearnException);
         }
     }
 }
@@ -106,7 +106,7 @@ TEST_F(NeuronAssignmentTest, test_density_constructor_single_subdomain) {
         const auto golden_um_per_neuron = get_random_percentage(mt) * 100;
 
         const auto part = std::make_shared<Partition>(1, 0);
-        SubdomainFromNeuronDensity sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
+        Subdomain sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
 
         const auto number_neurons = sfnd.get_requested_number_neurons();
         const auto fraction_excitatory_neurons = sfnd.get_requested_ratio_excitatory_neurons();
@@ -136,7 +136,7 @@ TEST_F(NeuronAssignmentTest, test_density_constructor_multiple_subdomains) {
 
         for (auto rank = 0; rank < golden_number_ranks; rank++) {
             const auto part = std::make_shared<Partition>(golden_number_ranks, rank);
-            SubdomainFromNeuronDensity sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
+            Subdomain sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
 
             const auto number_neurons = sfnd.get_requested_number_neurons();
             const auto fraction_excitatory_neurons = sfnd.get_requested_ratio_excitatory_neurons();
@@ -168,7 +168,7 @@ TEST_F(NeuronAssignmentTest, test_density_initialize_single_subdomain) {
         const auto upper_bound_ex = static_cast<size_t>(ceil(golden_number_neurons * golden_fraction_excitatory_neurons));
 
         const auto part = std::make_shared<Partition>(1, 0);
-        SubdomainFromNeuronDensity sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
+        Subdomain sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
 
         const auto& [sim_box_min, sim_box_max] = part->get_simulation_box_size();
         const auto box_length = (sim_box_max - sim_box_min).get_maximum();
@@ -208,7 +208,7 @@ TEST_F(NeuronAssignmentTest, test_density_initialize_multiple_subdomains) {
 
         for (auto rank = 0; rank < golden_number_ranks; rank++) {
             const auto part = std::make_shared<Partition>(golden_number_ranks, rank);
-            SubdomainFromNeuronDensity sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
+            Subdomain sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
 
             sfnd.initialize();
 
@@ -236,7 +236,7 @@ TEST_F(NeuronAssignmentTest, test_density_neuron_attributes_size_single_subdomai
         const auto golden_um_per_neuron = get_random_percentage(mt) * 100;
 
         const auto part = std::make_shared<Partition>(1, 0);
-        SubdomainFromNeuronDensity sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
+        Subdomain sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
 
         sfnd.initialize();
 
@@ -278,7 +278,7 @@ TEST_F(NeuronAssignmentTest, test_density_neuron_attributes_size_multiple_subdom
 
         for (auto rank = 0; rank < golden_number_ranks; rank++) {
             const auto part = std::make_shared<Partition>(golden_number_ranks, rank);
-            SubdomainFromNeuronDensity sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
+            Subdomain sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
 
             sfnd.initialize();
 
@@ -326,7 +326,7 @@ TEST_F(NeuronAssignmentTest, test_density_neuron_attributes_semantic_single_subd
         const auto golden_um_per_neuron = get_random_percentage(mt) * 100;
 
         const auto part = std::make_shared<Partition>(1, 0);
-        SubdomainFromNeuronDensity sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
+        Subdomain sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
 
         sfnd.initialize();
 
@@ -379,7 +379,7 @@ TEST_F(NeuronAssignmentTest, test_density_neuron_attributes_semantic_multiple_su
 
         for (auto rank = 0; rank < golden_number_ranks; rank++) {
             const auto part = std::make_shared<Partition>(golden_number_ranks, rank);
-            SubdomainFromNeuronDensity sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
+            Subdomain sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
 
             sfnd.initialize();
 

@@ -365,7 +365,7 @@ int main(int argc, char** argv) {
     sim.set_algorithm(algorithm);
 
     if (static_cast<bool>(*opt_num_neurons)) {
-        auto sfnd = std::make_unique<SubdomainFromNeuronDensity>(number_neurons, 0.8, SubdomainFromNeuronDensity::default_um_per_neuron, partition);
+        auto sfnd = std::make_unique<Subdomain>(number_neurons, 0.8, Subdomain::default_um_per_neuron, partition);
         sim.set_subdomain_assignment(std::move(sfnd));
     } else {
         std::optional<std::filesystem::path> path_to_network{};
