@@ -103,7 +103,6 @@ public:
      */
     [[nodiscard]] size_t get_total_number_placed_neurons() const {
         if (total_number_neurons == Constants::uninitialized) {
-
             calculate_total_number_neurons();
         }
 

@@ -160,6 +160,7 @@ void Simulation::initialize() {
 
     global_tree->initializes_leaf_nodes(number_local_neurons);
 
+    LogFiles::print_message_rank(0, "Inserted a total of {} neurons", number_total_neurons);
     LogFiles::print_message_rank(0, "Neurons inserted into subdomains");
     LogFiles::print_message_rank(0, "Subdomains inserted into global tree");
 

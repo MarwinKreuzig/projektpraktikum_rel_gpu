@@ -81,6 +81,9 @@ void SubdomainFromNeuronPerRank::fill_subdomain(const size_t local_subdomain_ind
 }
 
 void SubdomainFromNeuronPerRank::calculate_total_number_neurons() const {
+    const auto number_local_neurons = number_neurons_per_rank;
+    const auto num_ranks = MPIWrapper::get_num_ranks();
+    set_total_number_placed_neurons(number_local_neurons * num_ranks);
 }
 
 void SubdomainFromNeuronPerRank::place_neurons_in_area(const NeuronToSubdomainAssignment::box_size_type& offset, const NeuronToSubdomainAssignment::box_size_type& length_of_box,

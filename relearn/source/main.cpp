@@ -23,6 +23,7 @@
 #include "sim/NeuronToSubdomainAssignment.h"
 #include "sim/SubdomainFromFile.h"
 #include "sim/SubdomainFromNeuronDensity.h"
+#include "sim/SubdomainFromNeuronPerRank.h"
 #include "sim/Simulation.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
@@ -145,6 +146,9 @@ int main(int argc, char** argv) {
     size_t number_neurons{};
     auto* opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons.");
 
+    size_t number_neurons_per_rank{};
+    auto* opt_num_neurons_per_rank = app.add_option("--num-neurons-per-rank", number_neurons_per_rank, "Number neurons per MPI rank.");
+
     std::string file_positions{};
     auto* opt_file_positions = app.add_option("-f,--file", file_positions, "File with neuron positions.");
 
@@ -185,6 +189,14 @@ int main(int argc, char** argv) {
     opt_file_positions->excludes(opt_num_neurons);
     opt_file_network->excludes(opt_num_neurons);
 
+    opt_num_neurons_per_rank->excludes(opt_num_neurons);
+    opt_num_neurons->excludes(opt_num_neurons_per_rank);
+
+    opt_num_neurons_per_rank->excludes(opt_file_positions);
+    opt_num_neurons_per_rank->excludes(opt_file_network);
+    opt_file_positions->excludes(opt_num_neurons_per_rank);
+    opt_file_network->excludes(opt_num_neurons_per_rank);
+
     opt_file_network->needs(opt_file_positions);
 
     opt_file_positions->check(CLI::ExistingFile);
@@ -214,7 +226,8 @@ int main(int argc, char** argv) {
 
     RelearnException::check(synaptic_elements_init_lb >= 0.0, "The minimum number of vacant synaptic elements must not be negative");
     RelearnException::check(synaptic_elements_init_ub >= synaptic_elements_init_lb, "The minimum number of vacant synaptic elements must not be larger than the maximum number");
-    RelearnException::check(static_cast<bool>(*opt_num_neurons) || static_cast<bool>(*opt_file_positions), "Missing command line option, need number_neurons (-n,--num-neurons) or file_positions (-f,--file).");
+    RelearnException::check(static_cast<bool>(*opt_num_neurons) || static_cast<bool>(*opt_file_positions) || static_cast<bool>(*opt_num_neurons_per_rank),
+        "Missing command line option, need a total number of neurons (-n,--num-neurons), a number of neurons per rank (--num-neurons-per-rank), or file_positions (-f,--file).");
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
     RelearnException::check(base_background_activity >= 0.0, "The base background activity must be non-negative.");
 
@@ -367,6 +380,9 @@ int main(int argc, char** argv) {
     if (static_cast<bool>(*opt_num_neurons)) {
         auto sfnd = std::make_unique<SubdomainFromNeuronDensity>(number_neurons, 0.8, SubdomainFromNeuronDensity::default_um_per_neuron, partition);
         sim.set_subdomain_assignment(std::move(sfnd));
+    } else if (static_cast<bool>(*opt_num_neurons_per_rank)) {
+        auto sfdpr = std::make_unique<SubdomainFromNeuronPerRank>(number_neurons_per_rank, 0.8, SubdomainFromNeuronPerRank::default_um_per_neuron, partition);
+        sim.set_subdomain_assignment(std::move(sfdpr));
     } else {
         std::optional<std::filesystem::path> path_to_network{};
         if (static_cast<bool>(*opt_file_network)) {
