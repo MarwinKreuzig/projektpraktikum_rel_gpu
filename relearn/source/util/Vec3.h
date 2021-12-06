@@ -455,10 +455,7 @@ public:
      *      Is not marked as [[nodiscard]] as that typically does happen when chaining <<
      */
     friend std::ostream& operator<<(std::ostream& output_stream, const Vec3<T>& vec) {
-        const auto& x = vec.get_x();
-        const auto& y = vec.get_y();
-        const auto& z = vec.get_z();
-
+        const auto& [x, y, z] = vec;
         output_stream << '(' << x << ", " << y << ", " << z << ')';
 
         return output_stream;

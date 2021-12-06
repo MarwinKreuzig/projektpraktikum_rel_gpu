@@ -134,12 +134,13 @@ void NeuronToSubdomainAssignment::write_neurons_to_file(const std::filesystem::p
     for (const auto& [_, nodes] : neurons_in_subdomain) {
         for (const auto& node : nodes) {
             const auto id = node.id + 1;
+            const auto& [x, y, z] = node.pos;
 
             of
                 << id << "\t"
-                << node.pos.get_x() << " "
-                << node.pos.get_y() << " "
-                << node.pos.get_z() << "\t"
+                << x << " "
+                << y << " "
+                << z << "\t"
                 << node.area_name << "\t";
 
             if (node.signal_type == SignalType::EXCITATORY) {

@@ -1480,10 +1480,7 @@ void Neurons::print_info_for_algorithm() {
         ss << std::left << std::setw(cwidth_small) << i;
 
         const auto& pos = extra_info->get_position(i);
-
-        const auto x = pos.get_x();
-        const auto y = pos.get_y();
-        const auto z = pos.get_z();
+        const auto& [x, y, z] = pos;
 
         my_string = "(" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")";
         ss << std::setw(cwidth_medium) << my_string;
