@@ -157,10 +157,8 @@ public:
  * An object of type NeuronMonitor monitors a specified neuron throughout the simulation.
  * It automatically gathers all necessary data, however, it only does so if there is space left.
  * 
- * Offers the following static members:
+ * Offers the following static member:
  * neurons_to_monitor - an std::shared_ptr to the neurons to monitor. Has to be set before a call to record_data()
- * max_steps - the number of pre-allocated slots for NeuronInformations
- * current_step - The current step for each monitor. Has to be incremented from the outside
  */
 class NeuronMonitor {
     size_t target_neuron_id{};
@@ -169,17 +167,15 @@ class NeuronMonitor {
 
 public:
     static inline std::shared_ptr<Neurons> neurons_to_monitor{};
-    static inline size_t max_steps = 0;
-    static inline size_t current_step = 0;
 
     /**
      * @brief Constructs a NeuronMonitor that monitors the specified neuron
-     * @param num_neurons The local neuron id for the object to monitor
+     * @param neuron_id The local neuron id for the object to monitor
      */
     explicit NeuronMonitor(const size_t neuron_id) noexcept
         : target_neuron_id(neuron_id) {
-        informations.reserve(max_steps);
     }
+
     ~NeuronMonitor() = default;
 
     NeuronMonitor(const NeuronMonitor& other) noexcept = delete;
@@ -201,12 +197,8 @@ public:
      * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons or if the std::shared_ptr is empty
      */
     void record_data() {
-        if (current_step >= informations.capacity()) {
-            return;
-        }
-
         RelearnException::check(neurons_to_monitor.operator bool(), "NeuronMonitor::record_data: The shared pointer is empty");
-        RelearnException::check(target_neuron_id < neurons_to_monitor->num_neurons, "NeuronMonitor::record_data: The target id is too large for the neurons class");
+        RelearnException::check(target_neuron_id < neurons_to_monitor->number_neurons, "NeuronMonitor::record_data: The target id is too large for the neurons class");
 
         const double& calcium = neurons_to_monitor->calcium[target_neuron_id];
         const double& x = neurons_to_monitor->neuron_model->x[target_neuron_id];
@@ -225,7 +217,7 @@ public:
     }
 
     /**
-     * @brief Increases the capacity for stored NeuronInformations
+     * @brief Increases the capacity for stored NeuronInformations by reserving
      * @param neuron_id The amount by which the storage should be increased
      */
     void increase_monitoring_capacity(const size_t increase_by) noexcept {
@@ -233,7 +225,14 @@ public:
     }
 
     /**
-     * @brief Returns the stored informations. The reference is invalidated by calls to increase_monitor_capacity
+     * @brief Clears the recorded data
+     */
+    void clear() noexcept {
+        informations.clear();
+    }
+
+    /**
+     * @brief Returns the stored informations
      * @return An std::vector of NeuronInformation
      */
     [[nodiscard]] const std::vector<NeuronInformation>& get_informations() const noexcept {

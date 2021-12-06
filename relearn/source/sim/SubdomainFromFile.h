@@ -11,9 +11,13 @@
 #pragma once
 
 #include "../Config.h"
-#include "../sim/NeuronToSubdomainAssignment.h"
+#include "../structure/SynapseLoader.h"
+#include "../structure/NeuronIdTranslator.h"
+#include "NeuronToSubdomainAssignment.h"
 
+#include <filesystem>
 #include <fstream>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -32,7 +36,7 @@ public:
      * @param file_path The path to the file to load
      * @exception Throws a RelearnException if there occurred some erros while processing the file 
      */
-    explicit SubdomainFromFile(const std::string& file_path);
+    SubdomainFromFile(const std::filesystem::path& file_path, const std::optional<std::filesystem::path>& file_path_positions, std::shared_ptr<Partition> partition);
 
     SubdomainFromFile(const SubdomainFromFile& other) = delete;
     SubdomainFromFile(SubdomainFromFile&& other) = delete;
@@ -43,41 +47,36 @@ public:
     ~SubdomainFromFile() override = default;
 
     /**
-     * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
-     * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
-     * @param num_subdomains The total number of subdomains
-     * @param min The subdomain's minimum position
-     * @param max The subdomain's maximum position
-     * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file 
-     */
-    void fill_subdomain(const size_t subdomain_idx, const size_t num_subdomains, const box_size_type& min, const box_size_type& max) override;
-
-    /**
      * @brief Reads all neuron ids from a file and returns those.
      *      The file must be ascendingly sorted
      * @param file_path The path to the file to load
      * @return Empty if the file did not meet the sorting requirement, the ascending ids otherwise
      */
-    [[nodiscard]] static std::optional<std::vector<size_t>> read_neuron_ids_from_file(const std::string& file_path);
+    [[nodiscard]] static std::optional<std::vector<size_t>> read_neuron_ids_from_file(const std::filesystem::path& file_path);
 
     /**
-     * @brief Returns the global ids for a given subdomain and local start and end ids
-     * @param subdomain_idx The 1d index of the subdomain which's neurons are to be filled
-     * @param num_subdomains The total number of subdomains
-     * @param local_id_start The first local id
-     * @param local_id_end The last local id
+     * @brief Returns the global ids for a given subdomain
+     * @param subdomain_index_1d The 1d index of the subdomain which is inquired
+     * @param total_number_subdomains The total number of subdomains
      * @exception Throws a RelearnException if the subdomain is not loaded
      * @return The global ids for the specified subdomain
      */
-    [[nodiscard]] std::vector<size_t> neuron_global_ids(const size_t subdomain_idx, const size_t num_subdomains,
-        const size_t local_id_start, const size_t local_id_end) const override;
+    [[nodiscard]] std::vector<size_t> get_neuron_global_ids_in_subdomain(const size_t subdomain_index_1d, const size_t total_number_subdomains) const override;
 
+protected:
     /**
-     * @brief Returns the number of neurons in the associated file
-     * @return The number of neurons in the associated file
+     * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
+     * @param local_subdomain_index The local index of the subdomain which's neurons are to be filled
+     * @param total_number_subdomains The total number of subdomains
+     * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file 
      */
-    [[nodiscard]] size_t get_total_num_neurons_in_file() const noexcept {
-        return total_num_neurons_in_file;
+    void fill_subdomain(size_t local_subdomain_index, size_t total_number_subdomains) override;
+
+    void post_initialization() override {
+    }
+
+    void calculate_total_number_neurons() const override {
+        set_total_number_placed_neurons(total_num_neurons_in_file);
     }
 
 private:
@@ -85,6 +84,6 @@ private:
 
     [[nodiscard]] std::vector<NeuronToSubdomainAssignment::Node> read_nodes_from_file(const box_size_type& min, const box_size_type& max);
 
-    std::ifstream file{};
+    std::filesystem::path path{};
     size_t total_num_neurons_in_file{ Constants::uninitialized };
 };

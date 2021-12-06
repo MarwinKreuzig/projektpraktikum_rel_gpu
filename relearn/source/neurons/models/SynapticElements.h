@@ -35,21 +35,18 @@ public:
      * @brief Creates a new object with the given parameters. Does not initialize the vectors
      * @param type The type (axon or dendrite) of the elements stored in this object
      * @param min_C_level_to_grow The minimum calcium value for the elements to grow
-     * @param C_target The target calcium value for the elements
      * @param nu The growth rate for the elements in ms^-1
      * @param vacant_retract_ratio The retract ratio for unconnected elements
      * @param initial_vacant_elements_lb The minimum number of free vacant elements during initialization
      * @param initial_vacant_elements_ub The maximum number of free vacant elements during initialization
      */
     SynapticElements(const ElementType type, const double min_C_level_to_grow,
-        const double C_target = SynapticElements::default_C_target,
         const double nu = SynapticElements::default_nu,
         const double vacant_retract_ratio = SynapticElements::default_vacant_retract_ratio,
         const double initial_vacant_elements_lb = SynapticElements::default_vacant_elements_initially_lower_bound,
         const double initial_vacant_elements_ub = SynapticElements::default_vacant_elements_initially_upper_bound)
         : type(type)
         , min_C_level_to_grow(min_C_level_to_grow)
-        , C_target(C_target)
         , nu(nu)
         , vacant_retract_ratio(vacant_retract_ratio)
         , initial_vacant_elements_lower_bound(initial_vacant_elements_lb)
@@ -122,7 +119,7 @@ public:
      * @brief Clones this instance and creates a new SynapticElements with the same parameters and 0 local neurons
      */
     [[nodiscard]] std::unique_ptr<SynapticElements> clone() const {
-        return std::make_unique<SynapticElements>(type, min_C_level_to_grow, C_target, nu, vacant_retract_ratio, initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
+        return std::make_unique<SynapticElements>(type, min_C_level_to_grow, nu, vacant_retract_ratio, initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
     }
 
     /**
@@ -144,7 +141,6 @@ public:
     [[nodiscard]] std::vector<ModelParameter> get_parameter() {
         return {
             Parameter<double>{ "Minimum calcium to grow", min_C_level_to_grow, SynapticElements::min_min_C_level_to_grow, SynapticElements::max_min_C_level_to_grow },
-            Parameter<double>{ "Target calcium", C_target, SynapticElements::min_C_target, SynapticElements::max_C_target },
             Parameter<double>{ "nu", nu, SynapticElements::min_nu, SynapticElements::max_nu },
             Parameter<double>{ "Vacant synapse retract ratio", vacant_retract_ratio, SynapticElements::min_vacant_retract_ratio, SynapticElements::max_vacant_retract_ratio },
             Parameter<double>{ "Initial vacant elements lower bound", initial_vacant_elements_lower_bound, SynapticElements::min_vacant_elements_initially, SynapticElements::max_vacant_elements_initially },
@@ -376,20 +372,25 @@ public:
     /**
      * @brief Updates the accumulated delta for each enabled neuron based on its current calcium value 
      * @param calcium The current calcium value for each neuron
+     * @param target_calcium The target calcium value for each neuron
      * @param disable_flags Indicates that a neuron should not be updated (= 0)
      * @exception Throws a RelearnException if calcium.size() or disable_flags.size() does not match the number of stored neurons
     */
-    void update_number_elements_delta(const std::vector<double>& calcium, const std::vector<char>& disable_flags) {
+    void update_number_elements_delta(const std::vector<double>& calcium, const std::vector<double>& target_calcium, const std::vector<char>& disable_flags) {
         RelearnException::check(calcium.size() == size, "SynapticElements::commit_updates: calcium was not of the right size");
+        RelearnException::check(target_calcium.size() == size, "SynapticElements::commit_updates: target_calcium was not of the right size");
         RelearnException::check(disable_flags.size() == size, "SynapticElements::commit_updates: disable_flags was not of the right size");
 
-#pragma omp parallel for shared(calcium, disable_flags) default(none)
+#pragma omp parallel for shared(calcium, target_calcium, disable_flags) default(none)
         for (auto neuron_id = 0; neuron_id < size; ++neuron_id) {
             if (disable_flags[neuron_id] == 0) {
                 continue;
             }
+            
+            const auto target_calcium_value = target_calcium[neuron_id];
+            const auto current_calcium_value = calcium[neuron_id];
+            const auto inc = gaussian_growth_curve(current_calcium_value, min_C_level_to_grow, target_calcium_value, nu);
 
-            const auto inc = gaussian_growth_curve(calcium[neuron_id], min_C_level_to_grow, C_target, nu);
             delta_cnts[neuron_id] += inc;
         }
     }
@@ -465,7 +466,6 @@ private:
 
     // Parameters
     double min_C_level_to_grow{ 0.0 }; // Minimum level of calcium needed for elements to grow
-    double C_target{ default_C_target }; // Desired calcium level (possible extension of the model: Give all neurons individual C_target values!)
     double nu{ default_nu }; // Growth rate for synaptic elements in ms^-1. Needs to be much smaller than 1 to separate activity and structural dynamics.
     double vacant_retract_ratio{ default_vacant_retract_ratio }; // Percentage of how many vacant synaptic elements should be deleted during each connectivity update
 

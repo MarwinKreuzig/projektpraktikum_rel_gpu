@@ -190,7 +190,7 @@ public:
      * @return True iff the neuron spiked
      */
     [[nodiscard]] bool get_fired(const size_t neuron_id) const {
-        RelearnException::check(neuron_id < my_num_neurons, "NeuronModels::get_fired: id is too large: {}", neuron_id);
+        RelearnException::check(neuron_id < number_local_neurons, "NeuronModels::get_fired: id is too large: {}", neuron_id);
         return fired[neuron_id] == 1;
     }
 
@@ -209,7 +209,7 @@ public:
      * @return The neuron's membrane potential
      */
     [[nodiscard]] double get_x(const size_t neuron_id) const {
-        RelearnException::check(neuron_id < my_num_neurons, "NeuronModels::get_x: id is too large: {}", neuron_id);
+        RelearnException::check(neuron_id < number_local_neurons, "NeuronModels::get_x: id is too large: {}", neuron_id);
         return x[neuron_id];
     }
 
@@ -276,7 +276,7 @@ public:
      * @return A double that indicates the synaptic input for the specified neuron
      */
     [[nodiscard]] double get_I_syn(const size_t neuron_id) const {
-        RelearnException::check(neuron_id < my_num_neurons, "NeuronModels::get_I_syn: id is too large: {}", neuron_id);
+        RelearnException::check(neuron_id < number_local_neurons, "NeuronModels::get_I_syn: id is too large: {}", neuron_id);
         return I_syn[neuron_id];
     }
 
@@ -293,11 +293,11 @@ public:
      * @return The number of neurons that are stored in the object
      */
     [[nodiscard]] size_t get_num_neurons() const noexcept {
-        return my_num_neurons;
+        return number_local_neurons;
     }
 
     /**
-     * @brief Returns the secondary variables used for computation of the electrical activity.
+     * @brief Returns the secondary variable used for computation of the electrical activity.
      *      The meaning of the variable can vary between classes that inherit from NeuronModels
      * @param neuron_id The local neuron id for the neuron that should be queried
      * @exception Throws a RelearnException if neuron_id is too large
@@ -326,11 +326,11 @@ public:
     [[nodiscard]] virtual std::vector<ModelParameter> get_parameter();
 
     /**
-	 * @brief Initializes the model to include num_neurons many local neurons.
+	 * @brief Initializes the model to include number_neurons many local neurons.
      *      Sets the initial membrane potential and initial synaptic inputs to 0.0 and fired to false
-     * @param num_neurons The number of local neurons to store in this class
+     * @param number_neurons The number of local neurons to store in this class
 	 */
-    virtual void init(size_t num_neurons);
+    virtual void init(size_t number_neurons);
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
@@ -352,7 +352,7 @@ public:
      */
     virtual void disable_neurons(const std::vector<size_t>& neuron_ids) {
         for (const auto neuron_id : neuron_ids) {
-            RelearnException::check(neuron_id < my_num_neurons, "NeuronModels::disable_neurons: There is a too large id: {} vs {}", neuron_id, my_num_neurons);
+            RelearnException::check(neuron_id < number_local_neurons, "NeuronModels::disable_neurons: There is a too large id: {} vs {}", neuron_id, number_local_neurons);
             fired[neuron_id] = 0;
         }
     }
@@ -440,7 +440,7 @@ private:
     void update_electrical_activity_calculate_background(const std::vector<char>& disable_flags);
 
     // My local number of neurons
-    size_t my_num_neurons{ 0 };
+    size_t number_local_neurons{ 0 };
 
     // Model parameters for all neurons
     double k{ default_k }; // Proportionality factor for synapses in Hz
@@ -547,11 +547,11 @@ public:
     }
 
     /**
-	 * @brief Initializes the model to include num_neurons many local neurons.
+	 * @brief Initializes the model to include number_neurons many local neurons.
      *      Sets the initial refrac counter to 0
-     * @param num_neurons The number of local neurons to store in this class
+     * @param number_neurons The number of local neurons to store in this class
 	 */
-    void init(size_t num_neurons) final;
+    void init(size_t number_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
@@ -736,10 +736,10 @@ public:
     }
 
     /**
-	 * @brief Initializes the model to include num_neurons many local neurons.
-     * @param num_neurons The number of local neurons to store in this class
+	 * @brief Initializes the model to include number_neurons many local neurons.
+     * @param number_neurons The number of local neurons to store in this class
 	 */
-    void init(size_t num_neurons) final;
+    void init(size_t number_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
@@ -891,10 +891,10 @@ public:
     }
 
     /**
-	 * @brief Initializes the model to include num_neurons many local neurons.
-     * @param num_neurons The number of local neurons to store in this class
+	 * @brief Initializes the model to include number_neurons many local neurons.
+     * @param number_neurons The number of local neurons to store in this class
 	 */
-    void init(size_t num_neurons) final;
+    void init(size_t number_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
@@ -1090,10 +1090,10 @@ public:
     }
 
     /**
-	 * @brief Initializes the model to include num_neurons many local neurons.
-     * @param num_neurons The number of local neurons to store in this class
+	 * @brief Initializes the model to include number_neurons many local neurons.
+     * @param number_neurons The number of local neurons to store in this class
 	 */
-    void init(size_t num_neurons) final;
+    void init(size_t number_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.

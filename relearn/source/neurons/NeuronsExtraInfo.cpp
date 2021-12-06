@@ -35,9 +35,7 @@ void NeuronsExtraInfo::init(const size_t number_neurons) {
 void NeuronsExtraInfo::create_neurons(const size_t creation_count) {
     RelearnException::check(creation_count != 0, "Cannot add 0 neurons");
 
-    RelearnException::check(!x_dims.empty(), "NeuronsExtraInfo::create_neurons: x_dims must not be empty");
-    RelearnException::check(!y_dims.empty(), "NeuronsExtraInfo::create_neurons: y_dims must not be empty");
-    RelearnException::check(!z_dims.empty(), "NeuronsExtraInfo::create_neurons: z_dims must not be empty");
+    RelearnException::check(!positions.empty(), "NeuronsExtraInfo::create_neurons: positions must not be empty");
 
     const auto num_ranks = MPIWrapper::get_num_ranks();
 
@@ -48,22 +46,18 @@ void NeuronsExtraInfo::create_neurons(const size_t creation_count) {
 
     area_names.resize(new_size, "UNKNOWN (inserted by creation");
 
-    x_dims.resize(new_size);
-    y_dims.resize(new_size);
-    z_dims.resize(new_size);
+    positions.resize(new_size);
 
     for (size_t i = current_size; i < new_size; i++) {
         const auto x_it = RandomHolder::get_random_uniform_double(RandomHolderKey::NeuronsExtraInformation, 0.0, 1.0);
         const auto y_it = RandomHolder::get_random_uniform_double(RandomHolderKey::NeuronsExtraInformation, 0.0, 1.0);
         const auto z_it = RandomHolder::get_random_uniform_double(RandomHolderKey::NeuronsExtraInformation, 0.0, 1.0);
 
-        const auto x_pos = x_dims[static_cast<size_t>(x_it * current_size)];
-        const auto y_pos = y_dims[static_cast<size_t>(y_it * current_size)];
-        const auto z_pos = z_dims[static_cast<size_t>(z_it * current_size)];
+        const auto x_pos = positions[static_cast<size_t>(x_it * current_size)].get_x();
+        const auto y_pos = positions[static_cast<size_t>(y_it * current_size)].get_y();
+        const auto z_pos = positions[static_cast<size_t>(z_it * current_size)].get_z();
 
-        x_dims[i] = x_pos;
-        y_dims[i] = y_pos;
-        z_dims[i] = z_pos;
+        positions[i] = { x_pos, y_pos, z_pos };
     }
 
     size = new_size;

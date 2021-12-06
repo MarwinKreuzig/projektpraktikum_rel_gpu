@@ -20,3 +20,20 @@ struct StatisticalMeasures {
     double var{ 0.0 };
     double std{ 0.0 };
 };
+
+/**
+ * @brief This enum provides a way to choose the attributes
+ * of the neurons for which the statistics should be calculated
+ */
+enum class NeuronAttribute {
+    Calcium,
+    X,
+    Fired,
+    I_sync,
+    Axons,
+    AxonsConnected,
+    DendritesExcitatory,
+    DendritesExcitatoryConnected,
+    DendritesInhibitory,
+    DendritesInhibitoryConnected
+};

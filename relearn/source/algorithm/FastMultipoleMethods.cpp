@@ -245,7 +245,7 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType needed, Ma
     }
 }
 
-MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t num_neurons, const std::vector<char>& disable_flags,
+MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t number_neurons, const std::vector<char>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) {
 
     MapSynapseCreationRequests synapse_creation_requests_outgoing;

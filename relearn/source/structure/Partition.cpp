@@ -11,46 +11,38 @@
 #include "Partition.h"
 
 #include "../io/LogFiles.h"
-#include "../neurons/Neurons.h"
-#include "../sim/NeuronToSubdomainAssignment.h"
-#include "../util/RelearnException.h"
-#include "../util/Vec3.h"
-#include "OctreeNode.h"
 
 #include <sstream>
 
-Partition::Partition(const size_t num_ranks, const size_t my_rank)
-    : my_num_neurons(0)
-    , total_num_neurons(0)
-    , neurons_loaded(false) {
+Partition::Partition(const size_t num_ranks, const size_t my_rank) {
     RelearnException::check(num_ranks > 0, "Partition::Partition: Number of MPI ranks must be a positive number: {}", num_ranks);
     RelearnException::check(num_ranks > my_rank, "Partition::Partition: My rank must be smaller than number of ranks: {} vs {}", num_ranks, my_rank);
 
     /**
-	 * Total number of subdomains is smallest power of 8 that is >= num_ranks.
-	 * We choose power of 8 as every domain subdivision creates 8 subdomains (in 3d).
+	 * Total number of local_subdomains is smallest power of 8 that is >= num_ranks.
+	 * We choose power of 8 as every domain subdivision creates 8 local_subdomains (in 3d).
 	 */
     const double smallest_exponent = ceil(log(num_ranks) / log(8.0));
     level_of_subdomain_trees = static_cast<size_t>(smallest_exponent);
-    total_num_subdomains = 1ULL << (3 * level_of_subdomain_trees); // 8^level_of_subdomain_trees
+    total_number_subdomains = 1ULL << (3 * level_of_subdomain_trees); // 8^level_of_subdomain_trees
 
     // Every rank should get at least one subdomain
-    RelearnException::check(total_num_subdomains >= num_ranks, "Partition::Partition: Total num subdomains is smaller than number ranks: {} vs {}", total_num_subdomains, num_ranks);
+    RelearnException::check(total_number_subdomains >= num_ranks, "Partition::Partition: Total num local_subdomains is smaller than number ranks: {} vs {}", total_number_subdomains, num_ranks);
 
     /**
-	 * Calc my number of subdomains
+	 * Calc my number of local_subdomains
 	 *
 	 * NOTE:
-	 * Every rank gets the same number of subdomains first.
-	 * The remaining m subdomains are then assigned to the first m ranks,
+	 * Every rank gets the same number of local_subdomains first.
+	 * The remaining m local_subdomains are then assigned to the first m ranks,
 	 * one subdomain more per rank.
 	 *
-	 * For #procs = 2^n and 8^level_of_subdomain_trees subdomains, every proc's #subdomains is the same power of two of {1, 2, 4}.
+	 * For #procs = 2^n and 8^level_of_subdomain_trees local_subdomains, every proc's #local_subdomains is the same power of two of {1, 2, 4}.
 	 */
     // NOLINTNEXTLINE
-    my_num_subdomains = total_num_subdomains / num_ranks;
-    const size_t rest = total_num_subdomains % num_ranks;
-    my_num_subdomains += (my_rank < rest) ? 1 : 0;
+    number_local_subdomains = total_number_subdomains / num_ranks;
+    const size_t rest = total_number_subdomains % num_ranks;
+    number_local_subdomains += (my_rank < rest) ? 1 : 0;
 
     if (rest != 0) {
         LogFiles::print_message_rank(-1, "My rank is: {}; There are {} ranks in total; The rest is: {}", my_rank, num_ranks, rest);
@@ -59,235 +51,102 @@ Partition::Partition(const size_t num_ranks, const size_t my_rank)
 
     /**
 	 * Set parameter of space filling curve before it can be used.
-	 * total_num_subdomains = 8^level_of_subdomain_trees = (2^3)^level_of_subdomain_trees = 2^(3*level_of_subdomain_trees).
-	 * Thus, number of subdomains per dimension (3d) is (2^(3*level_of_subdomain_trees))^(1/3) = 2^level_of_subdomain_trees.
+	 * total_number_subdomains = 8^level_of_subdomain_trees = (2^3)^level_of_subdomain_trees = 2^(3*level_of_subdomain_trees).
+	 * Thus, number of local_subdomains per dimension (3d) is (2^(3*level_of_subdomain_trees))^(1/3) = 2^level_of_subdomain_trees.
 	 */
-    num_subdomains_per_dimension = 1ULL << level_of_subdomain_trees;
+    number_subdomains_per_dimension = 1ULL << level_of_subdomain_trees;
     space_curve.set_refinement_level(level_of_subdomain_trees);
 
     // Calc start and end index of subdomain
-    my_subdomain_id_start = (total_num_subdomains / num_ranks) * my_rank;
-    my_subdomain_id_end = my_subdomain_id_start + my_num_subdomains - 1;
+    local_subdomain_id_start = (total_number_subdomains / num_ranks) * my_rank;
+    local_subdomain_id_end = local_subdomain_id_start + number_local_subdomains - 1;
 
-    // Allocate vector with my number of subdomains
-    subdomains = std::vector<Subdomain>(my_num_subdomains);
+    // Allocate vector with my number of local_subdomains
+    local_subdomains = std::vector<Subdomain>(number_local_subdomains);
 
-    for (size_t i = 0; i < my_num_subdomains; i++) {
-        Subdomain& current_subdomain = subdomains[i];
+    for (size_t i = 0; i < number_local_subdomains; i++) {
+        Subdomain& current_subdomain = local_subdomains[i];
 
         // Set space filling curve indices in 1d and 3d
-        current_subdomain.index_1d = my_subdomain_id_start + i;
+        current_subdomain.index_1d = local_subdomain_id_start + i;
         current_subdomain.index_3d = space_curve.map_1d_to_3d(static_cast<uint64_t>(current_subdomain.index_1d));
     }
 
-    LogFiles::print_message_rank(0, "Total number subdomains        : {}", total_num_subdomains);
-    LogFiles::print_message_rank(0, "Number subdomains per dimension: {}", num_subdomains_per_dimension);
+    LogFiles::print_message_rank(0, "Total number local_subdomains        : {}", total_number_subdomains);
+    LogFiles::print_message_rank(0, "Number subdomains per dimension: {}", number_subdomains_per_dimension);
 }
 
 void Partition::print_my_subdomains_info_rank(const int rank) {
     std::stringstream sstream{};
 
-    sstream << "My number of neurons   : " << my_num_neurons << "\n";
-    sstream << "My number of subdomains: " << my_num_subdomains << "\n";
-    sstream << "My subdomain ids       : [ " << my_subdomain_id_start
+    sstream << "My number of neurons   : " << number_local_neurons << "\n";
+    sstream << "My number of local_subdomains: " << number_local_subdomains << "\n";
+    sstream << "My subdomain ids       : [ " << local_subdomain_id_start
             << " , "
-            << my_subdomain_id_end
+            << local_subdomain_id_end
             << " ]"
             << "\n";
 
-    for (size_t i = 0; i < my_num_subdomains; i++) {
+    for (size_t i = 0; i < number_local_subdomains; i++) {
         sstream << "Subdomain: " << i << "\n";
-        sstream << "    num_neurons: " << subdomains[i].num_neurons << "\n";
-        sstream << "    index_1d   : " << subdomains[i].index_1d << "\n";
+        sstream << "    number_neurons: " << local_subdomains[i].number_neurons << "\n";
+        sstream << "    index_1d   : " << local_subdomains[i].index_1d << "\n";
 
         sstream << "    index_3d   : "
-                << "( " << subdomains[i].index_3d.get_x()
-                << " , " << subdomains[i].index_3d.get_y()
-                << " , " << subdomains[i].index_3d.get_z()
+                << "( " << local_subdomains[i].index_3d.get_x()
+                << " , " << local_subdomains[i].index_3d.get_y()
+                << " , " << local_subdomains[i].index_3d.get_z()
                 << " )"
                 << "\n";
 
-        sstream << "    xyz_min    : "
-                << "( " << subdomains[i].xyz_min.get_x()
-                << " , " << subdomains[i].xyz_min.get_y()
-                << " , " << subdomains[i].xyz_min.get_z()
+        sstream << "    minimum_position    : "
+                << "( " << local_subdomains[i].minimum_position.get_x()
+                << " , " << local_subdomains[i].minimum_position.get_y()
+                << " , " << local_subdomains[i].minimum_position.get_z()
                 << " )"
                 << "\n";
 
-        sstream << "    xyz_max    : "
-                << "( " << subdomains[i].xyz_max.get_x()
-                << " , " << subdomains[i].xyz_max.get_y()
-                << " , " << subdomains[i].xyz_max.get_z()
+        sstream << "    maximum_position    : "
+                << "( " << local_subdomains[i].maximum_position.get_x()
+                << " , " << local_subdomains[i].maximum_position.get_y()
+                << " , " << local_subdomains[i].maximum_position.get_z()
                 << " )\n";
     }
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, sstream.str());
 }
 
-bool Partition::is_neuron_local(const size_t neuron_id) const {
-    RelearnException::check(neurons_loaded, "Partition::is_neuron_local: Neurons are not loaded yet");
-    for (const Subdomain& subdomain : subdomains) {
-        const bool found = std::binary_search(subdomain.global_neuron_ids.begin(), subdomain.global_neuron_ids.end(), neuron_id);
-        if (found) {
-            return true;
-        }
-    }
+void Partition::set_simulation_box_size(const box_size_type& min, const box_size_type& max) {
+    const auto min_x = min.get_x();
+    const auto min_y = min.get_y();
+    const auto min_z = min.get_z();
 
-    return false;
-}
+    const auto max_x = max.get_x();
+    const auto max_y = max.get_y();
+    const auto max_z = max.get_z();
+    
+    const auto half_constant = static_cast<double>(Constants::uninitialized) / 2;
 
-size_t Partition::get_mpi_rank_from_pos(const position_type& pos) const {
-    RelearnException::check(neurons_loaded, "Partition::get_mpi_rank_from_pos: Neurons are not loaded yet");
-    const box_size_type subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
+    RelearnException::check(min_x < max_x, "Partition::set_simulation_box_size: minimum had a larger x than maximum: {} vs {}", min_x, max_x);
+    RelearnException::check(min_y < max_y, "Partition::set_simulation_box_size: minimum had a larger y than maximum: {} vs {}", min_y, max_y);
+    RelearnException::check(min_z < max_z, "Partition::set_simulation_box_size: minimum had a larger z than maximum: {} vs {}", min_z, max_z);
 
-    const box_size_type subdomain_3d{ pos.get_x() / subdomain_length.get_x(), pos.get_y() / subdomain_length.get_y(), pos.get_z() / subdomain_length.get_z() };
-    const Vec3s id_3d = subdomain_3d.floor_componentwise();
-    const size_t id_1d = space_curve.map_3d_to_1d(id_3d);
+    RelearnException::check(-half_constant < min_x && min_x < half_constant, "Partition::set_simulation_box_size: minimum had a bad value for x: {}", min_x);
+    RelearnException::check(-half_constant < min_y && min_y < half_constant, "Partition::set_simulation_box_size: minimum had a bad value for y: {}", min_y);
+    RelearnException::check(-half_constant < min_z && min_z < half_constant, "Partition::set_simulation_box_size: minimum had a bad value for y: {}", min_z);
 
-    const size_t rank = id_1d / my_num_subdomains;
+    RelearnException::check(-half_constant < max_x && max_x < half_constant, "Partition::set_simulation_box_size: maximum had a bad value for x: {}", max_x);
+    RelearnException::check(-half_constant < max_y && max_y < half_constant, "Partition::set_simulation_box_size: maximum had a bad value for y: {}", max_y);
+    RelearnException::check(-half_constant < max_z && max_z < half_constant, "Partition::set_simulation_box_size: maximum had a bad value for y: {}", max_z);
 
-    return rank;
-}
+    simulation_box_minimum = min;
+    simulation_box_maximum = max;
 
-size_t Partition::get_global_id(const size_t local_id) const {
-    RelearnException::check(neurons_loaded, "Partition::get_global_id: Neurons are not loaded yet");
-    size_t counter = 0;
-    for (const auto& subdomain : subdomains) {
-        const size_t old_counter = counter;
+    const auto& simulation_box_length = max - min;
+    const auto& subdomain_length = simulation_box_length / static_cast<double>(number_subdomains_per_dimension);
 
-        counter += subdomain.global_neuron_ids.size();
-        if (local_id < counter) {
-            const size_t local_local_id = local_id - old_counter;
-            return subdomain.global_neuron_ids[local_local_id];
-        }
-    }
-
-    return local_id;
-}
-
-size_t Partition::get_local_id(const size_t global_id) const {
-    RelearnException::check(neurons_loaded, "Parition::get_local_id: Neurons are not loaded yet");
-    size_t id = 0;
-
-    for (const Subdomain& current_subdomain : subdomains) {
-        const std::vector<size_t>& ids = current_subdomain.global_neuron_ids;
-        const auto pos = std::lower_bound(ids.begin(), ids.end(), global_id);
-
-        if (pos != ids.end()) {
-            id += pos - ids.begin();
-            return id;
-        }
-
-        id += ids.size();
-    }
-
-    RelearnException::fail("Partition::is_neuron_local: Didn't find global id {}", global_id);
-    return 0;
-}
-
-void Partition::load_data_from_subdomain_assignment(const std::shared_ptr<Neurons>& neurons, std::unique_ptr<NeuronToSubdomainAssignment>&& neurons_in_subdomain) {
-    RelearnException::check(!neurons_loaded, "Partition::load_data_from_subdomain_assignment:: Neurons are already loaded, cannot load anymore");
-
-    simulation_box_length = neurons_in_subdomain->get_simulation_box_length();
-
-    // Set subdomain length
-    const auto& subdomain_length = simulation_box_length / static_cast<double>(num_subdomains_per_dimension);
-
-    /**
-	 * Output all parameters calculated so far
-	 */
     LogFiles::print_message_rank(0, "Simulation box length (height, width, depth)\t: ({}, {}, {})",
         simulation_box_length.get_x(), simulation_box_length.get_y(), simulation_box_length.get_z());
     LogFiles::print_message_rank(0, "Subdomain length (height, width, depth)\t: ({}, {}, {})",
         subdomain_length.get_x(), subdomain_length.get_y(), subdomain_length.get_z());
-
-    my_num_neurons = 0;
-    for (size_t i = 0; i < my_num_subdomains; i++) {
-        Subdomain& current_subdomain = subdomains[i];
-
-        // Set position of subdomain
-        std::tie(current_subdomain.xyz_min, current_subdomain.xyz_max) = neurons_in_subdomain->get_subdomain_boundaries(current_subdomain.index_3d,
-            num_subdomains_per_dimension);
-
-        // Set number of neurons in this subdomain
-        const auto& xyz_min = current_subdomain.xyz_min;
-        const auto& xyz_max = current_subdomain.xyz_max;
-
-        neurons_in_subdomain->fill_subdomain(current_subdomain.index_1d,
-            total_num_subdomains, xyz_min, xyz_max);
-
-        current_subdomain.num_neurons = neurons_in_subdomain->num_neurons(current_subdomain.index_1d,
-            total_num_subdomains, xyz_min, xyz_max);
-
-        // Add subdomain's number of neurons to rank's number of neurons
-        my_num_neurons += current_subdomain.num_neurons;
-
-        // Set start and end of local neuron ids
-        // 0-th subdomain starts with neuron id 0
-        current_subdomain.neuron_local_id_start = (i == 0) ? 0 : (subdomains[i - 1].neuron_local_id_end + 1);
-        current_subdomain.neuron_local_id_end = current_subdomain.neuron_local_id_start + current_subdomain.num_neurons - 1;
-
-        current_subdomain.global_neuron_ids = neurons_in_subdomain->neuron_global_ids(current_subdomain.index_1d,
-            total_num_subdomains,
-            current_subdomain.neuron_local_id_start,
-            current_subdomain.neuron_local_id_end);
-
-        std::sort(current_subdomain.global_neuron_ids.begin(), current_subdomain.global_neuron_ids.end());
-    }
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
-    neurons->init(my_num_neurons);
-
-    std::vector<double> x_dims(my_num_neurons);
-    std::vector<double> y_dims(my_num_neurons);
-    std::vector<double> z_dims(my_num_neurons);
-
-    std::vector<std::string> area_names(my_num_neurons);
-    std::vector<SignalType> signal_types(my_num_neurons);
-
-    for (size_t i = 0; i < my_num_subdomains; i++) {
-        auto& current_subdomain = subdomains[i];
-        const auto& subdomain_pos_min = current_subdomain.xyz_min;
-        const auto& subdomain_pos_max = current_subdomain.xyz_max;
-
-        const auto subdomain_idx = i + my_subdomain_id_start;
-
-        // Get neuron positions in subdomain i
-        std::vector<NeuronToSubdomainAssignment::position_type> vec_pos = neurons_in_subdomain->neuron_positions(subdomain_idx, total_num_subdomains,
-            subdomain_pos_min, subdomain_pos_max);
-
-        // Get neuron area names in subdomain i
-        std::vector<std::string> vec_area = neurons_in_subdomain->neuron_area_names(subdomain_idx, total_num_subdomains,
-            subdomain_pos_min, subdomain_pos_max);
-
-        // Get neuron types in subdomain i
-        std::vector<SignalType> vec_type = neurons_in_subdomain->neuron_types(subdomain_idx, total_num_subdomains,
-            subdomain_pos_min, subdomain_pos_max);
-
-        size_t neuron_id = current_subdomain.neuron_local_id_start;
-
-        for (size_t j = 0; j < current_subdomain.num_neurons; j++) {
-            x_dims[neuron_id] = vec_pos[j].get_x();
-            y_dims[neuron_id] = vec_pos[j].get_y();
-            z_dims[neuron_id] = vec_pos[j].get_z();
-
-            area_names[neuron_id] = std::move(vec_area[j]);
-
-            // Mark neuron as DendriteType::EXCITATORY or DendriteType::INHIBITORY
-            signal_types[neuron_id] = vec_type[j];
-
-            neuron_id++;
-        }
-
-        current_subdomain.local_positions = std::move(vec_pos);
-    }
-
-    neurons->set_area_names(std::move(area_names));
-    neurons->set_x_dims(std::move(x_dims));
-    neurons->set_y_dims(std::move(y_dims));
-    neurons->set_z_dims(std::move(z_dims));
-    neurons->set_signal_types(std::move(signal_types));
-
-    neurons_loaded = true;
 }

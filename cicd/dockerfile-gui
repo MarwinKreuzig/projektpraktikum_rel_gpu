@@ -1,0 +1,27 @@
+FROM ubuntu:21.04
+
+RUN apt-get -y update
+RUN apt-get -y upgrade
+
+RUN apt-get install -y build-essential wget m4 flex bison cmake git
+RUN apt-get install -y gcc-10
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y clang-tidy
+RUN apt-get install -y libboost-all-dev
+RUN apt-get install -y nvidia-cuda-toolkit
+RUN apt-get install -y libglu1-mesa-dev
+RUN apt-get install -y freeglut3-dev
+RUN apt-get install -y mesa-common-dev
+RUN apt-get install -y mpich libmpich-dev
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools qttools5-dev-tools qt3d5-dev libqwt-qt5-dev
+
+RUN ln -nsf /usr/bin/mpicxx.mpich /etc/alternatives/mpicc  
+RUN ln -nsf /usr/bin/mpicxx.mpich /etc/alternatives/mpiCC   
+RUN ln -nsf /usr/bin/mpicxx.mpich /etc/alternatives/mpic++  
+RUN ln -nsf /usr/bin/mpicxx.mpich /etc/alternatives/mpicxx  
+RUN ln -nsf /usr/bin/mpiexec.mpich /etc/alternatives/mpiexec 
+RUN ln -nsf /usr/bin/mpif77.mpich /etc/alternatives/mpif77  
+RUN ln -nsf /usr/bin/mpif90.mpich /etc/alternatives/mpif90  
+RUN ln -nsf /usr/bin/mpifort.mpich /etc/alternatives/mpifort 
+RUN ln -nsf /usr/bin/mpirun.mpich /etc/alternatives/mpirun  
+
+CMD [ "/bin/bash" ]

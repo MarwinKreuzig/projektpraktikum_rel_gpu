@@ -65,10 +65,10 @@ AEIFModel::AEIFModel(
     return "AEIFModel";
 }
 
-void AEIFModel::init(const size_t num_neurons) {
-    NeuronModel::init(num_neurons);
-    w.resize(num_neurons);
-    init_neurons(0, num_neurons);
+void AEIFModel::init(const size_t number_neurons) {
+    NeuronModel::init(number_neurons);
+    w.resize(number_neurons);
+    init_neurons(0, number_neurons);
 }
 
 void models::AEIFModel::create_neurons(const size_t creation_count) {

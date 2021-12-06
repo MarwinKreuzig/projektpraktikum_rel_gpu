@@ -75,6 +75,15 @@ void Timers::print() {
     sstring << "  Initialization                               : ";
     print_timer(sstring, TimerRegion::INITIALIZATION, timers_global);
 
+    sstring << "    Load Synapses                              : ";
+    print_timer(sstring, TimerRegion::LOAD_SYNAPSES, timers_global);
+
+    sstring << "    Translate Global IDs                       : ";
+    print_timer(sstring, TimerRegion::TRANSLATE_GLOBAL_IDS, timers_global);
+
+    sstring << "    Initialize Network Graph                   : ";
+    print_timer(sstring, TimerRegion::INITIALIZE_NETWORK_GRAPH, timers_global);
+
     sstring << "  Simulation loop                              : ";
     print_timer(sstring, TimerRegion::SIMULATION_LOOP, timers_global);
 

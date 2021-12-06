@@ -60,8 +60,8 @@ public:
         RelearnException::check(min.get_y() <= max.get_y(), "Cell::set_size: y was not ok");
         RelearnException::check(min.get_z() <= max.get_z(), "Cell::set_size: z was not ok");
 
-        xyz_min = min;
-        xyz_max = max;
+        minimum_position = min;
+        maximum_position = max;
     }
 
     /**
@@ -69,7 +69,7 @@ public:
      * @return The size of the cell as tuple of (1) min and (2) max
      */
     [[nodiscard]] std::tuple<box_size_type, box_size_type> get_size() const noexcept {
-        return std::make_tuple(xyz_min, xyz_max);
+        return std::make_tuple(minimum_position, maximum_position);
     }
 
     /**
@@ -77,7 +77,7 @@ public:
 	 * @return The maximum edge length of the cell
 	 */
     [[nodiscard]] double get_maximal_dimension_difference() const noexcept {
-        const auto diff_vector = xyz_max - xyz_min;
+        const auto diff_vector = maximum_position - minimum_position;
         const auto diff = diff_vector.get_maximum();
 
         return diff;
@@ -114,17 +114,17 @@ public:
 	     * This check returns false if negative coordinates are used.
 	     * Thus make sure to use positions >= 0.
 	     */
-        const auto is_in_box = position.check_in_box(xyz_min, xyz_max);
-        RelearnException::check(is_in_box, "Cell::get_octant_for_position: position is not in box: {} in [{}, {}]", position, xyz_min, xyz_max);
+        const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
+        RelearnException::check(is_in_box, "Cell::get_octant_for_position: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
 
         //NOLINTNEXTLINE
-        idx = idx | ((x < (xyz_min.get_x() + xyz_max.get_x()) / 2.0) ? 0 : 1); // idx | (pos_x < midpoint_dim_x) ? 0 : 1
+        idx = idx | ((x < (minimum_position.get_x() + maximum_position.get_x()) / 2.0) ? 0 : 1); // idx | (pos_x < midpoint_dim_x) ? 0 : 1
 
         //NOLINTNEXTLINE
-        idx = idx | ((y < (xyz_min.get_y() + xyz_max.get_y()) / 2.0) ? 0 : 2); // idx | (pos_y < midpoint_dim_y) ? 0 : 2
+        idx = idx | ((y < (minimum_position.get_y() + maximum_position.get_y()) / 2.0) ? 0 : 2); // idx | (pos_y < midpoint_dim_y) ? 0 : 2
 
         //NOLINTNEXTLINE
-        idx = idx | ((z < (xyz_min.get_z() + xyz_max.get_z()) / 2.0) ? 0 : 4); // idx | (pos_z < midpoint_dim_z) ? 0 : 4
+        idx = idx | ((z < (minimum_position.get_z() + maximum_position.get_z()) / 2.0) ? 0 : 4); // idx | (pos_z < midpoint_dim_z) ? 0 : 4
 
         RelearnException::check(idx < Constants::number_oct, "Cell::get_octant_for_position: Calculated octant is too large: {}", idx);
 
@@ -144,8 +144,8 @@ public:
         const bool y_over_halfway_point = (octant & 2U) != 0;
         const bool z_over_halfway_point = (octant & 4U) != 0;
 
-        auto octant_xyz_min = this->xyz_min;
-        auto octant_xyz_max = this->xyz_max;
+        auto octant_xyz_min = this->minimum_position;
+        auto octant_xyz_max = this->maximum_position;
         // NOLINTNEXTLINE
         const auto& octant_xyz_middle = (octant_xyz_min + octant_xyz_max) / 2.0;
 
@@ -186,11 +186,11 @@ public:
         const auto& position_excitatory_dendrites = position_excitatory_dendrites_opt.value();
         const auto& position_inhibitory_dendrites = position_inhibitory_dendrites_opt.value();
 
-        const auto& [xyz_min, xyz_max] = cell.get_size();
+        const auto& [minimum_position, maximum_position] = cell.get_size();
 
         // NOLINTNEXTLINE
         output_stream << "  == Cell (" << reinterpret_cast<size_t>(&cell) << " ==\n";
-        output_stream << "\tMin: " << xyz_min << "\n\tMax: " << xyz_max << '\n';
+        output_stream << "\tMin: " << minimum_position << "\n\tMax: " << maximum_position << '\n';
         output_stream << "\tnumber_excitatory_dendrites: " << number_excitatory_dendrites << "\tPosition: " << position_excitatory_dendrites << '\n';
         output_stream << "\tnumber_inhibitory_dendrites: " << number_inhibitory_dendrites << "\tPosition: " << position_inhibitory_dendrites << '\n';
 
@@ -207,8 +207,8 @@ private:
     size_t neuron_id{ Constants::uninitialized };
 
     // Two points describe size of cell
-    box_size_type xyz_min{ Constants::uninitialized };
-    box_size_type xyz_max{ Constants::uninitialized };
+    box_size_type minimum_position{ Constants::uninitialized };
+    box_size_type maximum_position{ Constants::uninitialized };
 
     AdditionalCellAttributes additional_cell_attributes{};
 
@@ -262,8 +262,8 @@ public:
     void set_excitatory_dendrites_position(const std::optional<position_type>& opt_position) {
         if (opt_position.has_value()) {
             const auto& position = opt_position.value();
-            const auto is_in_box = position.check_in_box(xyz_min, xyz_max);
-            RelearnException::check(is_in_box, "Cell::set_excitatory_dendrites_position: position is not in box: {} in [{}, {}]", position, xyz_min, xyz_max);
+            const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
+            RelearnException::check(is_in_box, "Cell::set_excitatory_dendrites_position: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
         }
 
         additional_cell_attributes.set_excitatory_dendrites_position(opt_position);
@@ -285,8 +285,8 @@ public:
     void set_inhibitory_dendrites_position(const std::optional<position_type>& opt_position) {
         if (opt_position.has_value()) {
             const auto& position = opt_position.value();
-            const auto is_in_box = position.check_in_box(xyz_min, xyz_max);
-            RelearnException::check(is_in_box, "Cell::set_inhibitory_dendrites_position: position is not in box: {} in [{}, {}]", position, xyz_min, xyz_max);
+            const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
+            RelearnException::check(is_in_box, "Cell::set_inhibitory_dendrites_position: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
         }
 
         additional_cell_attributes.set_inhibitory_dendrites_position(opt_position);

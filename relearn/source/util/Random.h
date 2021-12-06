@@ -31,7 +31,7 @@ inline int omp_get_thread_num() { return 0; }
 enum class RandomHolderKey : char {
     Algorithm = 0,
     Partition = 1,
-    SubdomainFromNeuronDensity = 2,
+    Subdomain = 2,
     PoissonModel = 3,
     Neurons = 4,
     NeuronModel = 5,

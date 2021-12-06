@@ -36,8 +36,6 @@ class NeuronMonitor;
 class Octree;
 class Partition;
 
-//class OctreeNode;
-
 /**
  * @brief This class gathers all information for the neurons and provides the primary interface for the simulation
  */
@@ -431,9 +429,11 @@ public:
      *      (c) Initializes the synaptic models
      *      (d) Enables all neurons
      *      (e) Calculates if the neurons fired once to initialize the calcium values to beta or 0.0
-     * @param number_neurons 
+     * @param number_neurons The number of local neurons
+     * @param target_calcium_values The target calcium values for the local neurons
+     * @exception Throws a RelearnException if target_calcium_values.size() != number_neurons, number_neurons == 0, or something unexpected happened
      */
-    void init(size_t number_neurons);
+    void init(size_t number_neurons, std::vector<double> target_calcium_values);
 
     /**
      * @brief Sets the octree in which the neurons are stored
@@ -482,7 +482,7 @@ public:
      * @return The number of neurons in this object
      */
     [[nodiscard]] size_t get_num_neurons() const noexcept {
-        return num_neurons;
+        return number_neurons;
     }
 
     /**
@@ -495,30 +495,12 @@ public:
     }
 
     /**
-     * @brief Sets the x dimensions in the extra infos
-     * @param names The x dimensions
-     * @exception Throws the same RelearnException as NeuronsExtraInfo::set_x_dims
+     * @brief Sets the positions in the extra infos
+     * @param names The positions
+     * @exception Throws the same RelearnException as NeuronsExtraInfo::set_positions
      */
-    void set_x_dims(std::vector<double> x_dims) {
-        extra_info->set_x_dims(std::move(x_dims));
-    }
-
-    /**
-     * @brief Sets the y dimensions in the extra infos
-     * @param names The y dimensions
-     * @exception Throws the same RelearnException as NeuronsExtraInfo::set_y_dims
-     */
-    void set_y_dims(std::vector<double> y_dims) {
-        extra_info->set_y_dims(std::move(y_dims));
-    }
-
-    /**
-     * @brief Sets the z dimensions in the extra infos
-     * @param names The z dimensions
-     * @exception Throws the same RelearnException as NeuronsExtraInfo::set_z_dims
-     */
-    void set_z_dims(std::vector<double> z_dims) {
-        extra_info->set_z_dims(std::move(z_dims));
+    void set_positions(std::vector<NeuronsExtraInfo::position_type> pos) {
+        extra_info->set_positions(std::move(pos));
     }
 
     /**
@@ -603,9 +585,11 @@ public:
      *      (d) Enables all created neurons
      *      (e) Calculates if the neurons fired once to initialize the calcium values to beta or 0.0
      *      (f) Inserts the newly created neurons into the octree
-     * @exception Throws a RelearnException if something unexpected happens
+     * @param creation_count The number of newly created neurons
+     * @param new_target_calcium_values The target calcium values for the newly created neurons
+     * @exception Throws a RelearnException if creation_count != new_target_calcium_values.size(), or if something unexpected happens
      */
-    void create_neurons(size_t creation_count);
+    void create_neurons(size_t creation_count, const std::vector<double>& new_target_calcium_values);
 
     /**
      * @brief Calls update_electrical_activity from the electrical model with the stored network graph,
@@ -619,9 +603,9 @@ public:
      * @exception Throws a RelearnException if something unexpected happens
      */
     void update_number_synaptic_elements_delta() {
-        axons->update_number_elements_delta(calcium, disable_flags);
-        dendrites_exc->update_number_elements_delta(calcium, disable_flags);
-        dendrites_inh->update_number_elements_delta(calcium, disable_flags);
+        axons->update_number_elements_delta(calcium, target_calcium, disable_flags);
+        dendrites_exc->update_number_elements_delta(calcium, target_calcium, disable_flags);
+        dendrites_inh->update_number_elements_delta(calcium, target_calcium, disable_flags);
     }
 
     /**
@@ -676,7 +660,17 @@ public:
      */
     void print_info_for_algorithm();
 
+    /**
+     * @brief Prints the histogram of in edges for the local neurons at the current simulation step
+     * @param current_step The current simulation step
+     */
     void print_local_network_histogram(size_t current_step);
+
+    /**
+     * @brief Prints the histogram of out edges for the local neurons at the current simulation step
+     * @param current_step The current simulation step
+     */
+    void print_calcium_values_to_file(size_t current_step);
 
     /**
      * @brief Performs debug checks on the synaptic element models if Config::do_debug_checks
@@ -684,13 +678,13 @@ public:
      */
     void debug_check_counts();
 
-    StatisticalMeasures get_calcium_statistics() {
-        return global_statistics(calcium, 0, disable_flags);
-    }
-
-    StatisticalMeasures get_activity_statistics() {
-        return global_statistics(neuron_model->get_x(), 0, disable_flags);
-    }
+    /**
+     * @brief Returns a statistical measure for the selected attribute, considering all MPI ranks.
+     *      Performs communication across MPI processes
+     * @param attribute The selected attribute of the neurons
+     * @return The statistical measure across all MPI processes. All MPI processes have the same return value
+     */
+    StatisticalMeasures get_statistics(NeuronAttribute attribute) const;
 
 private:
     void update_calcium();
@@ -753,7 +747,7 @@ private:
 
     static void print_pending_synapse_deletions(const PendingDeletionsV& list);
 
-    size_t num_neurons = 0;
+    size_t number_neurons = 0;
 
     std::shared_ptr<Partition> partition{};
 
@@ -768,6 +762,7 @@ private:
     std::unique_ptr<DendritesExcitatory> dendrites_exc{};
     std::unique_ptr<DendritesInhibitory> dendrites_inh{};
 
+    std::vector<double> target_calcium{};
     std::vector<double> calcium{}; // Intracellular calcium concentration of every neuron
 
     std::vector<char> disable_flags{};

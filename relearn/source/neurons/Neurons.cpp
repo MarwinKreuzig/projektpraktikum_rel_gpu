@@ -28,8 +28,11 @@
 #include <optional>
 #include <sstream>
 
-void Neurons::init(const size_t number_neurons) {
-    num_neurons = number_neurons;
+void Neurons::init(const size_t num_neurons, std::vector<double> target_calcium_values) {
+    RelearnException::check(num_neurons > 0, "Neurons::init: num_neurons was 0");
+    RelearnException::check(num_neurons == target_calcium_values.size(), "Neurons::init: num_neurons was different than target_calcium_values.size()");
+
+    number_neurons = num_neurons;
 
     neuron_model->init(number_neurons);
     extra_info->init(number_neurons);
@@ -48,6 +51,7 @@ void Neurons::init(const size_t number_neurons) {
 
     disable_flags.resize(number_neurons, 1);
     calcium.resize(number_neurons);
+    target_calcium = std::move(target_calcium_values);
 
     // Init member variables
     for (size_t i = 0; i < number_neurons; i++) {
@@ -62,7 +66,7 @@ void Neurons::init_synaptic_elements() {
     const std::vector<double>& dendrites_inh_cnts = dendrites_inh->get_total_counts();
     const std::vector<double>& dendrites_exc_cnts = dendrites_exc->get_total_counts();
 
-    for (auto i = 0; i < num_neurons; i++) {
+    for (auto i = 0; i < number_neurons; i++) {
         const size_t axon_connections = network_graph->get_number_out_edges(i);
         const size_t dendrites_ex_connections = network_graph->get_number_excitatory_in_edges(i);
         const size_t dendrites_in_connections = network_graph->get_number_inhibitory_in_edges(i);
@@ -86,9 +90,9 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    std::vector<int> deleted_axon_connections(num_neurons, 0);
-    std::vector<int> deleted_dend_ex_connections(num_neurons, 0);
-    std::vector<int> deleted_dend_in_connections(num_neurons, 0);
+    std::vector<int> deleted_axon_connections(number_neurons, 0);
+    std::vector<int> deleted_dend_ex_connections(number_neurons, 0);
+    std::vector<int> deleted_dend_in_connections(number_neurons, 0);
 
     size_t number_deleted_out_inh_edges_within = 0;
     size_t number_deleted_out_exc_edges_within = 0;
@@ -144,7 +148,7 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
     size_t weight_deleted_in_edges_from_outside = 0;
 
     for (const auto neuron_id : neuron_ids) {
-        RelearnException::check(neuron_id < num_neurons, "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id, num_neurons);
+        RelearnException::check(neuron_id < number_neurons, "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
         disable_flags[neuron_id] = 0;
 
         const auto local_in_edges = network_graph->get_local_in_edges(neuron_id);
@@ -200,13 +204,15 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
 
 void Neurons::enable_neurons(const std::vector<size_t>& neuron_ids) {
     for (const auto neuron_id : neuron_ids) {
-        RelearnException::check(neuron_id < num_neurons, "Neurons::enable_neurons: There was a too large id: {} vs {}", neuron_id, num_neurons);
+        RelearnException::check(neuron_id < number_neurons, "Neurons::enable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
         disable_flags[neuron_id] = 1;
     }
 }
 
-void Neurons::create_neurons(const size_t creation_count) {
-    const auto current_size = num_neurons;
+void Neurons::create_neurons(const size_t creation_count, const std::vector<double>& new_target_calcium_values) {
+    RelearnException::check(creation_count == new_target_calcium_values.size(), "Neurons::create_neurons: creation_count was unequal to new_target_calcium_values.size()");
+
+    const auto current_size = number_neurons;
     const auto new_size = current_size + creation_count;
 
     neuron_model->create_neurons(creation_count);
@@ -226,6 +232,8 @@ void Neurons::create_neurons(const size_t creation_count) {
     disable_flags.resize(new_size, 1);
     calcium.resize(new_size);
 
+    target_calcium.insert(target_calcium.cend(), new_target_calcium_values.begin(), new_target_calcium_values.end());
+
     for (size_t i = current_size; i < new_size; i++) {
         // Set calcium concentration
         const auto fired = neuron_model->get_fired(i);
@@ -234,17 +242,15 @@ void Neurons::create_neurons(const size_t creation_count) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    const auto& x_dims = extra_info->get_x_dims();
-    const auto& y_dims = extra_info->get_y_dims();
-    const auto& z_dims = extra_info->get_z_dims();
-
     for (size_t i = current_size; i < new_size; i++) {
-        global_tree->insert({ x_dims[i], y_dims[i], z_dims[i] }, i, my_rank);
+        const auto& pos = extra_info->get_position(i);
+
+        global_tree->insert(pos, i, my_rank);
     }
 
     global_tree->initializes_leaf_nodes(new_size);
 
-    num_neurons = new_size;
+    number_neurons = new_size;
 }
 
 void Neurons::update_electrical_activity() {
@@ -303,7 +309,7 @@ StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_
 	 * Calc variance
 	 */
     double my_var = 0;
-    for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+    for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {
             continue;
         }
@@ -391,7 +397,7 @@ std::pair<Neurons::PendingDeletionsV, std::vector<size_t>> Neurons::delete_synap
 
     std::vector<size_t> total_vector_affected_indices{};
 
-    for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+    for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {
             continue;
         }
@@ -736,7 +742,7 @@ size_t Neurons::create_synapses() {
 
     create_synapses_update_octree();
     //MapSynapseCreationRequests synapse_creation_requests_outgoing = create_synapses_find_targets();
-    MapSynapseCreationRequests synapse_creation_requests_outgoing = algorithm->find_target_neurons(num_neurons, disable_flags, extra_info, axons);
+    MapSynapseCreationRequests synapse_creation_requests_outgoing = algorithm->find_target_neurons(number_neurons, disable_flags, extra_info, axons);
 
     Timers::start(TimerRegion::CREATE_SYNAPSES);
 
@@ -865,7 +871,7 @@ std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_pro
             std::tie(source_neuron_id, target_neuron_id, dendrite_type_needed) = requests.get_request(request_index);
 
             // Sanity check: if the request received is targeted for me
-            if (target_neuron_id >= num_neurons) {
+            if (target_neuron_id >= number_neurons) {
                 RelearnException::fail("Neurons::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
                 exit(EXIT_FAILURE);
             }
@@ -1034,7 +1040,7 @@ void Neurons::debug_check_counts() {
     const std::vector<double>& di_count = dendrites_inh->get_total_counts();
     const std::vector<unsigned int>& di_conn_count = dendrites_inh->get_connected_count();
 
-    for (size_t i = 0; i < num_neurons; i++) {
+    for (size_t i = 0; i < number_neurons; i++) {
         const double diff_axs = axs_count[i] - axs_conn_count[i];
         const double diff_de = de_count[i] - de_conn_count[i];
         const double diff_di = di_count[i] - di_conn_count[i];
@@ -1044,7 +1050,7 @@ void Neurons::debug_check_counts() {
         RelearnException::check(diff_di >= 0.0, "Neurons::debug_check_counts: {}", diff_di);
     }
 
-    for (size_t i = 0; i < num_neurons; i++) {
+    for (size_t i = 0; i < number_neurons; i++) {
         const double connected_axons = axs_conn_count[i];
         const double connected_dend_exc = de_conn_count[i];
         const double connected_dend_inh = di_conn_count[i];
@@ -1061,6 +1067,44 @@ void Neurons::debug_check_counts() {
         RelearnException::check(num_conn_dend_ex == num_in_exc_ng, "Neurons::debug_check_counts: In Neurons conn dend ex, {} vs. {}", num_conn_dend_ex, num_in_exc_ng);
         RelearnException::check(num_conn_dend_in == num_in_inh_ng, "Neurons::debug_check_counts: In Neurons conn dend in, {} vs. {}", num_conn_dend_in, num_in_inh_ng);
     }
+}
+
+StatisticalMeasures Neurons::get_statistics(NeuronAttribute attribute) const {
+    switch (attribute) {
+    case NeuronAttribute::Calcium:
+        return global_statistics(calcium, 0, disable_flags);
+
+    case NeuronAttribute::X:
+        return global_statistics(neuron_model->get_x(), 0, disable_flags);
+
+    case NeuronAttribute::Fired:
+        return global_statistics_integral(neuron_model->get_fired(), 0, disable_flags);
+
+    case NeuronAttribute::I_sync:
+        return global_statistics(neuron_model->get_I_syn(), 0, disable_flags);
+
+    case NeuronAttribute::Axons:
+        return global_statistics(axons->get_total_counts(), 0, disable_flags);
+
+    case NeuronAttribute::AxonsConnected:
+        return global_statistics_integral(axons->get_connected_count(), 0, disable_flags);
+
+    case NeuronAttribute::DendritesExcitatory:
+        return global_statistics(dendrites_exc->get_total_counts(), 0, disable_flags);
+
+    case NeuronAttribute::DendritesExcitatoryConnected:
+        return global_statistics_integral(dendrites_exc->get_connected_count(), 0, disable_flags);
+
+    case NeuronAttribute::DendritesInhibitory:
+        return global_statistics(dendrites_inh->get_total_counts(), 0, disable_flags);
+
+    case NeuronAttribute::DendritesInhibitoryConnected:
+        return global_statistics_integral(dendrites_inh->get_connected_count(), 0, disable_flags);
+    }
+
+    RelearnException::fail("Neurons::get_statistics: Got an unsupported attribute: {}", attribute);
+
+    return {};
 }
 
 [[nodiscard]] std::tuple<size_t, size_t> Neurons::update_connectivity() {
@@ -1090,7 +1134,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const si
     const auto& axons_connected_counts = axons->get_connected_count();
     const auto& axons_signal_types = axons->get_signal_types();
 
-    for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+    for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (SignalType::EXCITATORY == axons_signal_types[neuron_id]) {
             sum_axons_excitatory_counts += static_cast<int64_t>(axon_counts[neuron_id]);
             sum_axons_excitatory_connected_counts += static_cast<int64_t>(axons_connected_counts[neuron_id]);
@@ -1104,7 +1148,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const si
     int64_t sum_dendrites_excitatory_connected_counts = 0;
     const auto& excitatory_dendrites_counts = dendrites_exc->get_total_counts();
     const auto& excitatory_dendrites_connected_counts = dendrites_exc->get_connected_count();
-    for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+    for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         sum_dendrites_excitatory_counts += static_cast<int64_t>(excitatory_dendrites_counts[neuron_id]);
         sum_dendrites_excitatory_connected_counts += static_cast<int64_t>(excitatory_dendrites_connected_counts[neuron_id]);
     }
@@ -1113,7 +1157,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const si
     int64_t sum_dendrites_inhibitory_connected_counts = 0;
     const auto& inhibitory_dendrites_counts = dendrites_inh->get_total_counts();
     const auto& inhibitory_dendrites_connected_counts = dendrites_inh->get_connected_count();
-    for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+    for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         sum_dendrites_inhibitory_counts += static_cast<int64_t>(inhibitory_dendrites_counts[neuron_id]);
         sum_dendrites_inhibitory_connected_counts += static_cast<int64_t>(inhibitory_dendrites_connected_counts[neuron_id]);
     }
@@ -1167,13 +1211,13 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const si
 }
 
 void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
-    const auto total_num_neurons = partition->get_total_num_neurons();
+    const auto total_number_neurons = partition->get_total_number_neurons();
 
-    const StatisticalMeasures& calcium_statistics = global_statistics(calcium, 0, disable_flags);
-    const StatisticalMeasures& axons_statistics = global_statistics(axons->get_total_counts(), 0, disable_flags);
-    const StatisticalMeasures& axons_free_statistics = global_statistics(axons->get_vacant_cnts(), 0, disable_flags);
-    const StatisticalMeasures& dendrites_excitatory_statistics = global_statistics(dendrites_exc->get_total_counts(), 0, disable_flags);
-    const StatisticalMeasures& dendrites_excitatory_free_statistics = global_statistics(dendrites_exc->get_vacant_cnts(), 0, disable_flags);
+    const StatisticalMeasures& calcium_statistics = get_statistics(NeuronAttribute::Calcium);
+    const StatisticalMeasures& axons_statistics = get_statistics(NeuronAttribute::Axons);
+    const StatisticalMeasures& axons_connected_statistics = get_statistics(NeuronAttribute::AxonsConnected);
+    const StatisticalMeasures& dendrites_excitatory_statistics = get_statistics(NeuronAttribute::DendritesExcitatory);
+    const StatisticalMeasures& dendrites_excitatory_connected_statistics = get_statistics(NeuronAttribute::DendritesExcitatoryConnected);
 
     if (0 != MPIWrapper::get_my_rank()) {
         // All ranks must compute the statistics, but only one should print them
@@ -1203,21 +1247,21 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
             "axons (max)",
             "axons (var)",
             "axons (std_dev)",
-            "axons.f (avg)",
-            "axons.f (min)",
-            "axons.f (max)",
-            "axons.f (var)",
-            "axons.f (std_dev)",
+            "axons.c (avg)",
+            "axons.c (min)",
+            "axons.c (max)",
+            "axons.c (var)",
+            "axons.c (std_dev)",
             "den.ex (avg)",
             "den.ex (min)",
             "den.ex (max)",
             "den.ex (var)",
             "den.ex (std_dev)",
-            "den.ex.f (avg)",
-            "den.ex.f (min)",
-            "den.ex.f (max)",
-            "den.ex.f (var)",
-            "den.ex.f (std_dev)");
+            "den.ex.c (avg)",
+            "den.ex.c (min)",
+            "den.ex.c (max)",
+            "den.ex.c (var)",
+            "den.ex.c (std_dev)");
 
         LogFiles::write_to_file(LogFiles::EventType::NeuronsOverviewCSV, false,
             "# step",
@@ -1231,21 +1275,21 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
             "axons (max)",
             "axons (var)",
             "axons (std_dev)",
-            "axons.f (avg)",
-            "axons.f (min)",
-            "axons.f (max)",
-            "axons.f (var)",
-            "axons.f (std_dev)",
+            "axons.c (avg)",
+            "axons.c (min)",
+            "axons.c (max)",
+            "axons.c (var)",
+            "axons.c (std_dev)",
             "den.ex (avg)",
             "den.ex (min)",
             "den.ex (max)",
             "den.ex (var)",
             "den.ex (std_dev)",
-            "den.ex.f (avg)",
-            "den.ex.f (min)",
-            "den.ex.f (max)",
-            "den.ex.f (var)",
-            "den.ex.f (std_dev)");
+            "den.ex.c (avg)",
+            "den.ex.c (min)",
+            "den.ex.c (max)",
+            "den.ex.c (var)",
+            "den.ex.c (std_dev)");
     }
 
     // Write data at step "step"
@@ -1269,21 +1313,21 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
         axons_statistics.max,
         axons_statistics.var,
         axons_statistics.std,
-        axons_free_statistics.avg,
-        axons_free_statistics.min,
-        axons_free_statistics.max,
-        axons_free_statistics.var,
-        axons_free_statistics.std,
+        axons_connected_statistics.avg,
+        axons_connected_statistics.min,
+        axons_connected_statistics.max,
+        axons_connected_statistics.var,
+        axons_connected_statistics.std,
         dendrites_excitatory_statistics.avg,
         dendrites_excitatory_statistics.min,
         dendrites_excitatory_statistics.max,
         dendrites_excitatory_statistics.var,
         dendrites_excitatory_statistics.std,
-        dendrites_excitatory_free_statistics.avg,
-        dendrites_excitatory_free_statistics.min,
-        dendrites_excitatory_free_statistics.max,
-        dendrites_excitatory_free_statistics.var,
-        dendrites_excitatory_free_statistics.std);
+        dendrites_excitatory_connected_statistics.avg,
+        dendrites_excitatory_connected_statistics.min,
+        dendrites_excitatory_connected_statistics.max,
+        dendrites_excitatory_connected_statistics.var,
+        dendrites_excitatory_connected_statistics.std);
 
     LogFiles::write_to_file(LogFiles::EventType::NeuronsOverviewCSV, false,
         "{};"
@@ -1303,25 +1347,25 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
         axons_statistics.max,
         axons_statistics.var,
         axons_statistics.std,
-        axons_free_statistics.avg,
-        axons_free_statistics.min,
-        axons_free_statistics.max,
-        axons_free_statistics.var,
-        axons_free_statistics.std,
+        axons_connected_statistics.avg,
+        axons_connected_statistics.min,
+        axons_connected_statistics.max,
+        axons_connected_statistics.var,
+        axons_connected_statistics.std,
         dendrites_excitatory_statistics.avg,
         dendrites_excitatory_statistics.min,
         dendrites_excitatory_statistics.max,
         dendrites_excitatory_statistics.var,
         dendrites_excitatory_statistics.std,
-        dendrites_excitatory_free_statistics.avg,
-        dendrites_excitatory_free_statistics.min,
-        dendrites_excitatory_free_statistics.max,
-        dendrites_excitatory_free_statistics.var,
-        dendrites_excitatory_free_statistics.std);
+        dendrites_excitatory_connected_statistics.avg,
+        dendrites_excitatory_connected_statistics.min,
+        dendrites_excitatory_connected_statistics.max,
+        dendrites_excitatory_connected_statistics.var,
+        dendrites_excitatory_connected_statistics.std);
 }
 
 void Neurons::print_calcium_statistics_to_essentials() {
-    const auto total_num_neurons = partition->get_total_num_neurons();
+    const auto total_number_neurons = partition->get_total_number_neurons();
 
     const StatisticalMeasures& calcium_statistics = global_statistics(calcium, 0, disable_flags);
 
@@ -1343,7 +1387,7 @@ void Neurons::print_network_graph_to_log_file() {
     std::stringstream ss{};
 
     // Write output format to file
-    ss << "# " << partition->get_total_num_neurons() << "\n"; // Total number of neurons
+    ss << "# " << partition->get_total_number_neurons() << "\n"; // Total number of neurons
     ss << "# <target neuron id> <source neuron id> <weight>\n";
 
     if (extra_info != nullptr) {
@@ -1357,29 +1401,30 @@ void Neurons::print_network_graph_to_log_file() {
 void Neurons::print_positions_to_log_file() {
     std::stringstream ss;
     // Write total number of neurons to log file
-    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# {}\n#\n<global id> <pos x> <pos y> <pos z> <area> <type>", partition->get_total_num_neurons());
+    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# {}\n#\n<global id> <pos x> <pos y> <pos z> <area> <type>", partition->get_total_number_neurons());
 
-    const std::vector<double>& axons_x_dims = extra_info->get_x_dims();
-    const std::vector<double>& axons_y_dims = extra_info->get_y_dims();
-    const std::vector<double>& axons_z_dims = extra_info->get_z_dims();
     const std::vector<std::string>& area_names = extra_info->get_area_names();
-
     const std::vector<SignalType>& signal_types = axons->get_signal_types();
 
     // Print global ids, positions, and areas of local neurons
     const int my_rank = MPIWrapper::get_my_rank();
     ss << std::fixed << std::setprecision(Constants::print_precision);
 
-    for (size_t neuron_id = 0; neuron_id < num_neurons; neuron_id++) {
+    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         RankNeuronId rank_neuron_id{ my_rank, neuron_id };
 
         const auto global_id = extra_info->rank_neuron_id2glob_id(rank_neuron_id);
-        const auto& signal_type_name = (signal_types[neuron_id] == SignalType::EXCITATORY) ? std::string("ex") : std::string("int");
+        const auto& signal_type_name = (signal_types[neuron_id] == SignalType::EXCITATORY) ? std::string("ex") : std::string("in");
+
+        const auto& pos = extra_info->get_position(neuron_id);
+
+        const auto x = pos.get_x();
+        const auto y = pos.get_y();
+        const auto z = pos.get_z();
 
         LogFiles::write_to_file(LogFiles::EventType::Positions, false,
             "{1:<} {2:<.{0}} {3:<.{0}} {4:<.{0}} {5:<} {6:<}",
-            Constants::print_precision, (global_id + 1), axons_x_dims[neuron_id], axons_y_dims[neuron_id],
-            axons_z_dims[neuron_id], area_names[neuron_id], signal_type_name);
+            Constants::print_precision, (global_id + 1), x, y, z, area_names[neuron_id], signal_type_name);
     }
 
     ss << std::flush;
@@ -1399,7 +1444,7 @@ void Neurons::print() {
     LogFiles::write_to_file(LogFiles::EventType::Cout, true, "{2:<{1}}{3:<{0}}{4:<{0}}{5:<{0}}{6:<{0}}{7:<{0}}{8:<{0}}{9:<{0}}", cwidth, cwidth_left, "gid", "x", "AP", "refrac", "C", "A", "D_ex", "D_in");
 
     // Values
-    for (size_t i = 0; i < num_neurons; i++) {
+    for (size_t i = 0; i < number_neurons; i++) {
         LogFiles::write_to_file(LogFiles::EventType::Cout, true, "{3:<{1}}{4:<{0}.{2}f}{5:<{0}}{6:<{0}.{2}f}{7:<{0}.{2}f}{8:<{0}.{2}f}{9:<{0}.{2}f}{10:<{0}.{2}f}", cwidth, cwidth_left, Constants::print_precision, i, neuron_model->get_x(i), neuron_model->get_fired(i),
             neuron_model->get_secondary_variable(i), calcium[i], axons->get_count(i), dendrites_exc->get_count(i), dendrites_inh->get_count(i));
     }
@@ -1408,10 +1453,6 @@ void Neurons::print() {
 }
 
 void Neurons::print_info_for_algorithm() {
-    const std::vector<double>& x_dims = extra_info->get_x_dims();
-    const std::vector<double>& y_dims = extra_info->get_y_dims();
-    const std::vector<double>& z_dims = extra_info->get_z_dims();
-
     const std::vector<double>& axons_cnts = axons->get_total_counts();
     const std::vector<double>& dendrites_exc_cnts = dendrites_exc->get_total_counts();
     const std::vector<double>& dendrites_inh_cnts = dendrites_inh->get_total_counts();
@@ -1435,12 +1476,14 @@ void Neurons::print_info_for_algorithm() {
        << "\n";
 
     // Values
-    for (size_t i = 0; i < num_neurons; i++) {
+    for (size_t i = 0; i < number_neurons; i++) {
         ss << std::left << std::setw(cwidth_small) << i;
 
-        const auto x = static_cast<unsigned int>(x_dims[i]);
-        const auto y = static_cast<unsigned int>(y_dims[i]);
-        const auto z = static_cast<unsigned int>(z_dims[i]);
+        const auto& pos = extra_info->get_position(i);
+
+        const auto x = pos.get_x();
+        const auto y = pos.get_y();
+        const auto z = pos.get_z();
 
         my_string = "(" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")";
         ss << std::setw(cwidth_medium) << my_string;
@@ -1460,7 +1503,7 @@ void Neurons::print_info_for_algorithm() {
     LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
 }
 
-void Neurons::print_local_network_histogram(size_t current_step) {
+void Neurons::print_local_network_histogram(const size_t current_step) {
     const auto& in_histogram = network_graph->get_edges_histogram(NetworkGraph::EdgeDirection::In);
     const auto& out_histogram = network_graph->get_edges_histogram(NetworkGraph::EdgeDirection::Out);
 
@@ -1468,7 +1511,7 @@ void Neurons::print_local_network_histogram(size_t current_step) {
         std::stringstream ss{};
         ss << '#' << current_step;
         for (auto val : hist) {
-            ss << ";" << val;
+            ss << ';' << val;
         }
 
         return ss.str();
@@ -1476,6 +1519,17 @@ void Neurons::print_local_network_histogram(size_t current_step) {
 
     LogFiles::write_to_file(LogFiles::EventType::NetworkInHistogramLocal, false, conv_hist(in_histogram));
     LogFiles::write_to_file(LogFiles::EventType::NetworkOutHistogramLocal, false, conv_hist(out_histogram));
+}
+
+void Neurons::print_calcium_values_to_file(const size_t current_step) {
+    std::stringstream ss{};
+
+    ss << '#' << current_step;
+    for (auto val : calcium) {
+        ss << ';' << val;
+    }
+
+    LogFiles::write_to_file(LogFiles::EventType::CalciumValues, false, ss.str());
 }
 
 void Neurons::print_pending_synapse_deletions(const PendingDeletionsV& list) {

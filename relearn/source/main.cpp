@@ -21,6 +21,9 @@
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
 #include "sim/NeuronToSubdomainAssignment.h"
+#include "sim/SubdomainFromFile.h"
+#include "sim/SubdomainFromNeuronDensity.h"
+#include "sim/SubdomainFromNeuronPerRank.h"
 #include "sim/Simulation.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
@@ -143,8 +146,11 @@ int main(int argc, char** argv) {
     double scaling_const{ Algorithm::default_sigma };
     app.add_option("--sigma", scaling_const, "Scaling parameter for the probabilty kernel. Default: 750");
 
-    size_t num_neurons{};
-    auto* opt_num_neurons = app.add_option("-n,--num-neurons", num_neurons, "Number of neurons.");
+    size_t number_neurons{};
+    auto* opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons.");
+
+    size_t number_neurons_per_rank{};
+    auto* opt_num_neurons_per_rank = app.add_option("--num-neurons-per-rank", number_neurons_per_rank, "Number neurons per MPI rank.");
 
     std::string file_positions{};
     auto* opt_file_positions = app.add_option("-f,--file", file_positions, "File with neuron positions.");
@@ -186,6 +192,14 @@ int main(int argc, char** argv) {
     opt_file_positions->excludes(opt_num_neurons);
     opt_file_network->excludes(opt_num_neurons);
 
+    opt_num_neurons_per_rank->excludes(opt_num_neurons);
+    opt_num_neurons->excludes(opt_num_neurons_per_rank);
+
+    opt_num_neurons_per_rank->excludes(opt_file_positions);
+    opt_num_neurons_per_rank->excludes(opt_file_network);
+    opt_file_positions->excludes(opt_num_neurons_per_rank);
+    opt_file_network->excludes(opt_num_neurons_per_rank);
+
     opt_file_network->needs(opt_file_positions);
 
     opt_file_positions->check(CLI::ExistingFile);
@@ -215,7 +229,8 @@ int main(int argc, char** argv) {
 
     RelearnException::check(synaptic_elements_init_lb >= 0.0, "The minimum number of vacant synaptic elements must not be negative");
     RelearnException::check(synaptic_elements_init_ub >= synaptic_elements_init_lb, "The minimum number of vacant synaptic elements must not be larger than the maximum number");
-    RelearnException::check(static_cast<bool>(*opt_num_neurons) || static_cast<bool>(*opt_file_positions), "Missing command line option, need num_neurons (-n,--num-neurons) or file_positions (-f,--file).");
+    RelearnException::check(static_cast<bool>(*opt_num_neurons) || static_cast<bool>(*opt_file_positions) || static_cast<bool>(*opt_num_neurons_per_rank),
+        "Missing command line option, need a total number of neurons (-n,--num-neurons), a number of neurons per rank (--num-neurons-per-rank), or file_positions (-f,--file).");
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
     RelearnException::check(base_background_activity >= 0.0, "The base background activity must be non-negative.");
 
@@ -296,13 +311,13 @@ int main(int argc, char** argv) {
 	 * Calculate what my partition of the domain consist of
 	 */
     auto partition = std::make_shared<Partition>(num_ranks, my_rank);
-    const size_t my_num_subdomains = partition->get_my_num_subdomains();
-    const size_t total_num_subdomains = partition->get_total_num_subdomains();
+    const size_t number_local_subdomains = partition->get_number_local_subdomains();
+    const size_t total_number_subdomains = partition->get_total_number_subdomains();
 
     if (algorithm == AlgorithmEnum::BarnesHut) {
         // Check if int type can contain total size of branch nodes to receive in bytes
-        // Every rank sends the same number of branch nodes, which is Partition::get_my_num_subdomains()
-        if (std::numeric_limits<int>::max() < (my_num_subdomains * sizeof(OctreeNode<BarnesHutCell>))) {
+        // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
+        if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<BarnesHutCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
             exit(EXIT_FAILURE);
         }
@@ -313,8 +328,8 @@ int main(int argc, char** argv) {
         MPIWrapper::init_buffer_octree<BarnesHutCell>();
     } else if (algorithm == AlgorithmEnum::FastMultipoleMethods) {
         // Check if int type can contain total size of branch nodes to receive in bytes
-        // Every rank sends the same number of branch nodes, which is Partition::get_my_num_subdomains()
-        if (std::numeric_limits<int>::max() < (my_num_subdomains * sizeof(OctreeNode<FastMultipoleMethodsCell>))) {
+        // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
+        if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<FastMultipoleMethodsCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
             exit(EXIT_FAILURE);
         }
@@ -325,8 +340,8 @@ int main(int argc, char** argv) {
         MPIWrapper::init_buffer_octree<FastMultipoleMethodsCell>();
     } else if (algorithm == AlgorithmEnum::Naive) {
         // Check if int type can contain total size of branch nodes to receive in bytes
-        // Every rank sends the same number of branch nodes, which is Partition::get_my_num_subdomains()
-        if (std::numeric_limits<int>::max() < (my_num_subdomains * sizeof(OctreeNode<NaiveCell>))) {
+        // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
+        if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<NaiveCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
             exit(EXIT_FAILURE);
         }
@@ -341,13 +356,13 @@ int main(int argc, char** argv) {
         base_background_activity, NeuronModel::default_background_activity_mean, NeuronModel::default_background_activity_stddev,
         models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
 
-    auto axon_models = std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons, target_calcium,
+    auto axon_models = std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons,
         nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-    auto dend_ex_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc, target_calcium,
+    auto dend_ex_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc,
         nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-    auto dend_in_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh, target_calcium,
+    auto dend_in_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh,
         nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     // Lock local RMA memory for local stores
@@ -366,14 +381,19 @@ int main(int argc, char** argv) {
     sim.set_algorithm(algorithm);
 
     if (static_cast<bool>(*opt_num_neurons)) {
-        const double frac_exc = 0.8;
-        sim.place_random_neurons(num_neurons, frac_exc);
+        auto sfnd = std::make_unique<SubdomainFromNeuronDensity>(number_neurons, 0.8, SubdomainFromNeuronDensity::default_um_per_neuron, partition);
+        sim.set_subdomain_assignment(std::move(sfnd));
+    } else if (static_cast<bool>(*opt_num_neurons_per_rank)) {
+        auto sfdpr = std::make_unique<SubdomainFromNeuronPerRank>(number_neurons_per_rank, 0.8, SubdomainFromNeuronPerRank::default_um_per_neuron, partition);
+        sim.set_subdomain_assignment(std::move(sfdpr));
     } else {
+        std::optional<std::filesystem::path> path_to_network{};
         if (static_cast<bool>(*opt_file_network)) {
-            sim.load_neurons_from_file(file_positions, file_network);
-        } else {
-            sim.load_neurons_from_file(file_positions, {});
+            path_to_network = file_network;
         }
+
+        auto sff = std::make_unique<SubdomainFromFile>(file_positions, path_to_network, partition);
+        sim.set_subdomain_assignment(std::move(sff));
     }
 
     if (*opt_file_enable_interrupts) {
@@ -391,6 +411,9 @@ int main(int argc, char** argv) {
         sim.set_creation_interrupts(std::move(creation_interrups));
     }
 
+    auto target_calcium_calculator = [target = target_calcium](size_t neuron_id) { return target; };
+    sim.set_target_calcium_calculator(std::move(target_calcium_calculator));
+
     // Unlock local RMA memory and make local stores visible in public window copy
     MPIWrapper::unlock_window(my_rank);
 
@@ -401,20 +424,19 @@ int main(int argc, char** argv) {
     // rank which has not finished (or even begun) its local stores
     MPIWrapper::barrier(); // TODO(future) Really needed?
 
+    const auto steps_per_simulation = simulation_steps / Constants::monitor_step;
+    sim.increase_monitoring_capacity(steps_per_simulation);
+
+    sim.initialize();
+
     Timers::stop_and_add(TimerRegion::INITIALIZATION);
-
-    const auto step_monitor = 100;
-    const auto steps_per_simulation = simulation_steps / step_monitor;
-
-    NeuronMonitor::max_steps = steps_per_simulation;
-    NeuronMonitor::current_step = 0;
 
     sim.register_neuron_monitor(6);
     sim.register_neuron_monitor(1164);
     sim.register_neuron_monitor(28001);
 
     auto simulate = [&]() {
-        sim.simulate(simulation_steps, step_monitor);
+        sim.simulate(simulation_steps);
 
         Timers::print();
 

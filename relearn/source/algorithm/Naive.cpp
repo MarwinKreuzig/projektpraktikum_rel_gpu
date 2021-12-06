@@ -88,7 +88,7 @@
     return rank_neuron_id;
 }
 
-MapSynapseCreationRequests Naive::find_target_neurons(const size_t num_neurons, const std::vector<char>& disable_flags,
+MapSynapseCreationRequests Naive::find_target_neurons(const size_t number_neurons, const std::vector<char>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) {
     MapSynapseCreationRequests synapse_creation_requests_outgoing;
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);
@@ -98,7 +98,7 @@ MapSynapseCreationRequests Naive::find_target_neurons(const size_t num_neurons, 
     const std::vector<SignalType>& axons_signal_types = axons->get_signal_types();
 
     // For my neurons
-    for (size_t neuron_id = 0; neuron_id < num_neurons; ++neuron_id) {
+    for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == 0) {
             continue;
         }

@@ -21,19 +21,26 @@
 #include <iostream>
 #include <sstream>
 
-SubdomainFromFile::SubdomainFromFile(const std::string& file_path)
-    : file(file_path) {
+SubdomainFromFile::SubdomainFromFile(
+    const std::filesystem::path& file_path, const std::optional<std::filesystem::path>& file_path_positions, std::shared_ptr<Partition> partition)
+    : NeuronToSubdomainAssignment(partition)
+    , path(file_path) {
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, "Loading: {} \n", file_path);
 
-    const bool file_is_good = file.good();
-    const bool file_is_not_good = file.fail() || file.eof();
-
-    RelearnException::check(file_is_good && !file_is_not_good, "SubdomainFromFile::SubdomainFromFile: Opening the file was not successful");
+    neuron_id_translator = std::make_shared<FileNeuronIdTranslator>(partition, file_path);
+    synapse_loader = std::make_shared<FileSynapseLoader>(partition, neuron_id_translator, file_path_positions);
 
     read_dimensions_from_file();
 }
 
 void SubdomainFromFile::read_dimensions_from_file() {
+    std::ifstream file(path);
+
+    const bool file_is_good = file.good();
+    const bool file_is_not_good = file.fail() || file.eof();
+
+    RelearnException::check(file_is_good && !file_is_not_good, "SubdomainFromFile::read_dimensions_from_file: Opening the file was not successful");
+
     box_size_type minimum(std::numeric_limits<box_size_type::value_type>::max());
     box_size_type maximum(std::numeric_limits<box_size_type::value_type>::min());
 
@@ -87,24 +94,30 @@ void SubdomainFromFile::read_dimensions_from_file() {
 
     LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded neurons: {}", total_number_neurons);
 
-    const auto desired_num_neurons_ = found_ex_neurons + found_in_neurons;
-    const auto desired_frac_neurons_exc_ = static_cast<double>(found_ex_neurons) / static_cast<double>(desired_num_neurons_);
+    const auto requested_number_neurons = found_ex_neurons + found_in_neurons;
+    const auto requested_ratio_excitatory_neurons = static_cast<double>(found_ex_neurons) / static_cast<double>(requested_number_neurons);
 
     const auto simulation_box_length = maximum;
 
-    set_desired_num_neurons(desired_num_neurons_);
-    set_desired_frac_neurons_exc(desired_frac_neurons_exc_);
-    set_simulation_box_length(simulation_box_length);
+    set_requested_number_neurons(requested_number_neurons);
+    set_requested_ratio_excitatory_neurons(requested_ratio_excitatory_neurons);
+
+    partition->set_simulation_box_size({ 0, 0, 0 }, simulation_box_length);
+    partition->set_total_number_neurons(total_number_neurons);
 }
 
 std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_from_file(const box_size_type& min, const box_size_type& max) {
-    file.clear();
-    file.seekg(0);
+    std::ifstream file(path);
+
+    const bool file_is_good = file.good();
+    const bool file_is_not_good = file.fail() || file.eof();
+
+    RelearnException::check(file_is_good && !file_is_not_good, "SubdomainFromFile::read_nodes_from_file: Opening the file was not successful");
 
     double placed_ex_neurons = 0.0;
     double placed_in_neurons = 0.0;
 
-    size_t current_num_neurons_ = 0;
+    size_t number_placed_neurons = 0;
 
     std::vector<NeuronToSubdomainAssignment::Node> nodes;
 
@@ -133,7 +146,7 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
         // Ids start with 1
         node.id--;
 
-        if (bool is_in_subdomain = position_in_box(node.pos, min, max); !is_in_subdomain) {
+        if (bool is_in_subdomain = node.pos.check_in_box(min, max); !is_in_subdomain) {
             continue;
         }
 
@@ -145,27 +158,26 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
             ++placed_in_neurons;
         }
 
-        ++current_num_neurons_;
+        ++number_placed_neurons;
         nodes.emplace_back(node);
     }
 
-    const auto current_frac_neurons_exc_ = placed_ex_neurons / static_cast<double>(current_num_neurons_);
+    const auto ratio_placed_excitatory_neurons = placed_ex_neurons / static_cast<double>(number_placed_neurons);
 
-    set_current_num_neurons(current_num_neurons_);
-    set_current_frac_neurons_exc(current_frac_neurons_exc_);
+    set_number_placed_neurons(number_placed_neurons);
+    set_ratio_placed_excitatory_neurons(ratio_placed_excitatory_neurons);
 
     return nodes;
 }
 
-std::vector<size_t> SubdomainFromFile::neuron_global_ids(const size_t subdomain_idx, [[maybe_unused]] const size_t num_subdomains,
-    [[maybe_unused]] const size_t local_id_start, [[maybe_unused]] const size_t local_id_end) const {
-    const bool contains = is_loaded(subdomain_idx);
+std::vector<size_t> SubdomainFromFile::get_neuron_global_ids_in_subdomain(const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {
+    const bool contains = is_subdomain_loaded(subdomain_index_1d);
     if (!contains) {
-        RelearnException::fail("SubdomainFromFile::neuron_global_ids: Wanted to have neuron_global_ids of subdomain_idx that is not present");
+        RelearnException::fail("SubdomainFromFile::get_neuron_global_ids_in_subdomain: Wanted to have neuron_global_ids of subdomain_index_1d that is not present");
         return {};
     }
 
-    const Nodes& nodes = get_nodes(subdomain_idx);
+    const Nodes& nodes = get_nodes_for_subdomain(subdomain_index_1d);
     std::vector<size_t> global_ids;
     global_ids.reserve(nodes.size());
 
@@ -176,8 +188,9 @@ std::vector<size_t> SubdomainFromFile::neuron_global_ids(const size_t subdomain_
     return global_ids;
 }
 
-void SubdomainFromFile::fill_subdomain(size_t subdomain_idx, [[maybe_unused]] size_t num_subdomains, const box_size_type& min, const box_size_type& max) {
-    const bool subdomain_already_filled = is_loaded(subdomain_idx);
+void SubdomainFromFile::fill_subdomain(const size_t local_subdomain_index, [[maybe_unused]] const size_t total_number_subdomains) {
+    const auto subdomain_index_1d = partition->get_1d_index_of_subdomain(local_subdomain_index);
+    const bool subdomain_already_filled = is_subdomain_loaded(subdomain_index_1d);
     if (subdomain_already_filled) {
         RelearnException::fail("SubdomainFromFile::fill_subdomain: Tried to fill an already filled subdomain.");
         return;
@@ -185,15 +198,16 @@ void SubdomainFromFile::fill_subdomain(size_t subdomain_idx, [[maybe_unused]] si
 
     Nodes nodes{};
 
+    const auto& [min, max] = partition->get_subdomain_boundaries(local_subdomain_index);
     auto nodes_vector = read_nodes_from_file(min, max);
     for (const auto& node : nodes_vector) {
         nodes.emplace(node);
     }
 
-    set_nodes(subdomain_idx, std::move(nodes));
+    set_nodes_for_subdomain(subdomain_index_1d, std::move(nodes));
 }
 
-std::optional<std::vector<size_t>> SubdomainFromFile::read_neuron_ids_from_file(const std::string& file_path) {
+std::optional<std::vector<size_t>> SubdomainFromFile::read_neuron_ids_from_file(const std::filesystem::path& file_path) {
     std::ifstream local_file(file_path);
 
     const bool file_is_good = local_file.good();

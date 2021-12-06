@@ -15,14 +15,20 @@
 #include "../../util/RelearnException.h"
 
 #include <ostream>
+#include <utility>
 
 /**
  * Identifies a neuron by the MPI rank of its owner
  * and its neuron id on the owner, i.e., the pair <rank, neuron_id>
  */
 class RankNeuronId {
-    int rank{ -1 }; // MPI rank of the owner
-    size_t neuron_id{ Constants::uninitialized }; // Neuron id on the owner
+public:
+    using rank_type = int;
+    using neuron_id_type = size_t;
+
+private:
+    rank_type rank{ -1 }; // MPI rank of the owner
+    neuron_id_type neuron_id{ Constants::uninitialized }; // Neuron id on the owner
 
 public:
     /**
@@ -35,7 +41,7 @@ public:
      * @param rank The MPI rank
      * @param neuron_id The neuron id
      */
-    RankNeuronId(const int rank, const size_t neuron_id) noexcept
+    RankNeuronId(const rank_type rank, const neuron_id_type neuron_id) noexcept
         : rank(rank)
         , neuron_id(neuron_id) {
     }
@@ -45,7 +51,7 @@ public:
      * @return The MPI rank
      * @exception Throws a RelearnException if the rank is negative
      */
-    [[nodiscard]] int get_rank() const {
+    [[nodiscard]] rank_type get_rank() const {
         RelearnException::check(rank >= 0, "RankNeuronId::get_rank: It was negative: {}", rank);
         return rank;
     }
@@ -55,7 +61,7 @@ public:
      * @return The neuron id
      * @exception Throws a RelearnException if the id is not smaller than Constants::uninitialized
      */
-    [[nodiscard]] size_t get_neuron_id() const {
+    [[nodiscard]] neuron_id_type get_neuron_id() const {
         RelearnException::check(neuron_id < Constants::uninitialized, "RankNeuronId::get_neuron_id: neuron_id is too large: {}", neuron_id);
         return neuron_id;
     }
@@ -96,4 +102,54 @@ public:
         os << "Rank: " << rni.get_rank() << "\t id: " << rni.get_neuron_id() << "\n";
         return os;
     }
+
+    template <std::size_t Index>
+    std::tuple_element_t<Index, RankNeuronId>& get() & {
+        if constexpr (Index == 0)
+            return rank;
+        if constexpr (Index == 1)
+            return neuron_id;
+    }
+
+    template <std::size_t Index>
+    std::tuple_element_t<Index, RankNeuronId> const& get() const& {
+        if constexpr (Index == 0)
+            return rank;
+        if constexpr (Index == 1)
+            return neuron_id;
+    }
+
+    template <std::size_t Index>
+    std::tuple_element_t<Index, RankNeuronId>& get() && {
+        if constexpr (Index == 0)
+            return std::move(rank);
+        if constexpr (Index == 1)
+            return std::move(neuron_id);
+    }
+
+    template <std::size_t Index>
+    std::tuple_element_t<Index, RankNeuronId> const& get() const&& {
+        if constexpr (Index == 0)
+            return std::move(rank);
+        if constexpr (Index == 1)
+            return std::move(neuron_id);
+    }
 };
+
+namespace std {
+template <>
+struct tuple_size<::RankNeuronId> {
+    static constexpr size_t value = 2;
+};
+
+template <>
+struct tuple_element<0, ::RankNeuronId> {
+    using type = RankNeuronId::rank_type;
+};
+
+template <>
+struct tuple_element<1, ::RankNeuronId> {
+    using type = RankNeuronId::neuron_id_type;
+};
+
+} //namespace std

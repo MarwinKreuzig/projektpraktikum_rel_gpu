@@ -51,7 +51,9 @@ public:
 
         for (size_t counter = 0; counter < length; counter++) {
             // NOLINTNEXTLINE
-            available.push(ptr + counter);
+            auto* current_value = ptr + counter;
+            current_value->reset();
+            available.push(current_value);
         }
     }
 

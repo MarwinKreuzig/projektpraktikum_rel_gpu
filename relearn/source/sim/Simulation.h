@@ -14,6 +14,9 @@
 #include "../util/StatisticalMeasures.h"
 
 #include <cstdint>
+#include <filesystem>
+#include <functional>
+#include <map>
 #include <memory>
 #include <optional>
 #include <string>
@@ -32,7 +35,7 @@ class SynapticElements;
 
 /**
  * This class encapsulates all necessary attributes of a simulation.
- * The neuron model and the synaptic elements must be set before loading the neurons,
+ * The neuron model, the synaptic elements, and the subdomain assignment must be set before calling initialize,
  * which in turn must happen before calling simulate.
  */
 class Simulation {
@@ -88,6 +91,12 @@ public:
     void set_dendrites_in(std::unique_ptr<SynapticElements>&& se) noexcept;
 
     /**
+     * @brief Sets the function that is used to determine the target calcium value of the neurons
+     * @param calculator The function that maps neuron id to target calcium value
+     */
+    void set_target_calcium_calculator(std::function<double(size_t)> calculator) noexcept;
+
+    /**
      * @brief Sets the enable interrupts during the simulation.
      *      An enable interrupt is a pair of (1) the simulation set (2) all local ids that should be enabled
      * @param interrupts The enable interrupts
@@ -115,27 +124,23 @@ public:
     void set_algorithm(AlgorithmEnum algorithm) noexcept;
 
     /**
-     * @brief Places the requested number of neurons with the requested fraction of excitatory neurons.
-     *      The division to the MPI ranks is done with SubdomainFromNeuronDensity
-     * @param num_neurons The number of neurons to place globally
-     * @param frac_exc The fraction of excitatory neurons, must be in [0.0, 1.0]
+     * @brief Sets the subdomain assignment that determines how the neurons are loaded.
+     * @param subdomain_assignment The desired subdomain assignment
      */
-    void place_random_neurons(size_t num_neurons, double frac_exc);
+    void set_subdomain_assignment(std::unique_ptr<NeuronToSubdomainAssignment>&& subdomain_assignment) noexcept;
 
     /**
-     * @brief Places all neurons from a file and optionally adds the specified synapses
-     * @param path_to_positions The path to the neurons file
-     * @param optional_path_to_connections The path to the synapses file, can be empty to indicate no initial synapses
+     * @brief Initializes the simulation and all other objects.
+     * @exception Throws a RelearnException if one object is missing or something went wrong otherwise
      */
-    void load_neurons_from_file(const std::string& path_to_positions, const std::optional<std::string>& optional_path_to_connections);
+    void initialize();
 
     /**
      * @brief Simulates the neurons for the requested number of steps. Every step_monitor-th step, records all neuron monitors
-     * @param number_steps The number of simulation steps
-     * @param step_monitor The step size of the monitors, must be > 0
-     * @exception Throws a RelearnException if step_monitor == 0
+     * @param number_steps The number of simulation steps, must be > 0
+     * @exception Throws a RelearnException if number_steps == 0
      */
-    void simulate(size_t number_steps, size_t step_monitor);
+    void simulate(size_t number_steps);
 
     /**
      * @brief Finalizes the simulation in the sense that it prints the final statistics.
@@ -156,39 +161,69 @@ public:
      */
     static std::vector<std::unique_ptr<NeuronModel>> get_models();
 
-    std::shared_ptr<Neurons> get_neurons() {
+    /**
+     * @brief Returns an std::shared_ptr to the neurons object
+     * @return The neurons object
+     */
+    std::shared_ptr<Neurons> get_neurons() noexcept {
         return neurons;
     }
 
-    std::shared_ptr<NetworkGraph> get_network_graph() {
+    /**
+     * @brief Returns an std::shared_ptr to the network graph
+     * @return The network graph
+     */
+    std::shared_ptr<NetworkGraph> get_network_graph() noexcept {
         return network_graph;
     }
 
-    std::shared_ptr<std::vector<NeuronMonitor>> get_monitors() {
+    /**
+     * @brief Returns an std::shared_ptr to all neuron monitors
+     * @return All neuron monitors
+     */
+    std::shared_ptr<std::vector<NeuronMonitor>> get_monitors() noexcept {
         return monitors;
     }
 
+    /**
+     * @brief Adds the statistics for the global statistics overview
+     *      Does nothing if the statistics has been added before
+     * @param neuron_attribute_to_observe The statistics that should be observed
+     */
+    void add_statistical_overview(NeuronAttribute neuron_attribute_to_observe) noexcept {
+        if (statistics.find(neuron_attribute_to_observe) == statistics.end()) {
+            statistics.emplace(neuron_attribute_to_observe, std::vector<StatisticalMeasures>{});
+        }
+    }
+
+    /**
+     * @brief Returns the statistics observered for the requested attribute
+     * @param neuron_attribute_to_observe The statistics
+     * @exception Throws a RelearnException if the statistics have not been observed
+     * @return A constants reference to the statistics
+     */
+    const std::vector<StatisticalMeasures>& get_statistics(NeuronAttribute neuron_attribute_to_observe) const {
+        if (statistics.find(neuron_attribute_to_observe) == statistics.end()) {
+            RelearnException::fail("Simulation::get_statistics: The attribute was not observed: {}", neuron_attribute_to_observe);
+        }
+
+        const auto& return_value = statistics.at(neuron_attribute_to_observe);
+
+        return return_value;
+    }
+
+    /**
+     * @brief Records one snapshot of each neuron monitor
+     */
     void snapshot_monitors();
 
-    void measure_calcium();
-
-    void measure_activity();
-
+    /**
+     * @brief Prints the current network graph with the attached number of steps to the file
+     * @param current_steps The current number of steps that will appear in the file name
+     */
     void save_network_graph(size_t current_steps);
 
-    const std::vector<StatisticalMeasures>& get_calcium_statistics() {
-        return calcium_statistics;
-    }
-
-    const std::vector<StatisticalMeasures>& get_activity_statistics() {
-        return activity_statistics;
-    }
-
 private:
-    void construct_neurons();
-
-    void initialize();
-
     void print_neuron_monitors();
 
     std::shared_ptr<Partition> partition{};
@@ -213,8 +248,9 @@ private:
     std::vector<std::pair<size_t, std::vector<size_t>>> disable_interrupts{};
     std::vector<std::pair<size_t, size_t>> creation_interrupts{};
 
-    std::vector<StatisticalMeasures> calcium_statistics{};
-    std::vector<StatisticalMeasures> activity_statistics{};
+    std::map<NeuronAttribute, std::vector<StatisticalMeasures>> statistics{};
+
+    std::function<double(size_t)> target_calcium_calculator{};
 
     double sigma{ 750 };
     double accept_criterion{ 0.0 };

@@ -13,8 +13,10 @@ build-mpi:
 test-mpi:
   image: relearn-ci
   stage: test
+  before_script:
+    - cd relearn/build-docker
   script:
-    - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 relearn/build-docker/runTests
+    - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 ./runTests
   dependencies: 
     - build-mpi
   artifacts:
@@ -36,8 +38,10 @@ build-nompi:
 test-nompi:
   image: relearn-ci
   stage: test
+  before_script:
+    - cd relearn/build-docker-nompi
   script:
-    - relearn/build-docker-nompi/runTests
+    - ./runTests
   dependencies: 
     - build-nompi
   artifacts:

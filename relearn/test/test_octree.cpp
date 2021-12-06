@@ -21,24 +21,6 @@
 
 using AdditionalCellAttributes = BarnesHutCell;
 
-std::tuple<Vec3d, Vec3d> get_random_simulation_box_size(std::mt19937& mt) {
-    std::uniform_real_distribution<double> urd(-10000.0, +10000.0);
-
-    const auto rand_x_1 = urd(mt);
-    const auto rand_x_2 = urd(mt);
-
-    const auto rand_y_1 = urd(mt);
-    const auto rand_y_2 = urd(mt);
-
-    const auto rand_z_1 = urd(mt);
-    const auto rand_z_2 = urd(mt);
-
-    return {
-        { std::min(rand_x_1, rand_x_2), std::min(rand_y_1, rand_y_2), std::min(rand_z_1, rand_z_2) },
-        { std::max(rand_x_1, rand_x_2), std::max(rand_y_1, rand_y_2), std::max(rand_z_1, rand_z_2) }
-    };
-}
-
 std::vector<std::tuple<Vec3d, size_t>> generate_random_neurons(const Vec3d& min, const Vec3d& max, size_t count, size_t max_id, std::mt19937& mt) {
     std::uniform_real_distribution<double> urd_x(min.get_x(), max.get_x());
     std::uniform_real_distribution<double> urd_y(min.get_y(), max.get_y());
@@ -827,10 +809,10 @@ TEST_F(OctreeTest, testOctreeNodeInsert) {
 
         node.set_cell_neuron_position(own_position);
 
-        size_t num_neurons = uid(mt);
+        size_t number_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
 
-        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids, mt);
+        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
         for (const auto& [pos, id] : neurons_to_place) {
             auto tmp = node.insert(pos, id, my_rank);
@@ -1052,10 +1034,10 @@ TEST_F(OctreeTest, testOctreeInsertNeurons) {
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
-        size_t num_neurons = uid(mt);
+        size_t number_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
 
-        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids, mt);
+        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
         for (const auto& [position, id] : neurons_to_place) {
             octree.insert(position, id, my_rank);
@@ -1097,10 +1079,10 @@ TEST_F(OctreeTest, testOctreeInsertNeuronsExceptions) {
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
-        size_t num_neurons = uid(mt);
+        size_t number_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
 
-        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids, mt);
+        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
         for (const auto& [position, id] : neurons_to_place) {
             const auto rank = uid_rank(mt);
@@ -1148,10 +1130,10 @@ TEST_F(OctreeTest, testOctreeStructure) {
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
-        size_t num_neurons = uid(mt);
+        size_t number_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
 
-        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids, mt);
+        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
         for (const auto& [position, id] : neurons_to_place) {
             octree.insert(position, id, my_rank);
@@ -1215,7 +1197,7 @@ TEST_F(OctreeTest, testOctreeStructure) {
                 const auto neuron_id = cell.get_neuron_id();
 
                 if (neuron_id < Constants::uninitialized) {
-                    ASSERT_LE(neuron_id, num_neurons + num_additional_ids);
+                    ASSERT_LE(neuron_id, number_neurons + num_additional_ids);
                 }
             }
         }
@@ -1288,10 +1270,10 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
-        size_t num_neurons = uid(mt);
+        size_t number_neurons = uid(mt);
         size_t num_additional_ids = uid(mt);
 
-        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons + num_additional_ids, mt);
+        std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
         for (const auto& [position, id] : neurons_to_place) {
             octree.insert(position, id, my_rank);
@@ -1409,25 +1391,25 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
         auto octree_ptr = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
         auto& octree = *octree_ptr;
 
-        const size_t num_neurons = uid(mt);
+        const size_t number_neurons = uid(mt);
 
-        const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons, mt);
+        const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons, mt);
 
         for (const auto& [position, id] : neurons_to_place) {
             octree.insert(position, id, my_rank);
         }
 
-        octree.initializes_leaf_nodes(num_neurons);
+        octree.initializes_leaf_nodes(number_neurons);
 
         const auto max_vacant_exc = uid_max_vacant(mt);
-        auto dends_exc = create_synaptic_elements(num_neurons, mt, max_vacant_exc, SignalType::EXCITATORY);
+        auto dends_exc = create_synaptic_elements(number_neurons, mt, max_vacant_exc, SignalType::EXCITATORY);
 
         const auto max_vacant_inh = uid_max_vacant(mt);
-        auto dends_inh = create_synaptic_elements(num_neurons, mt, max_vacant_inh, SignalType::INHIBITORY);
+        auto dends_inh = create_synaptic_elements(number_neurons, mt, max_vacant_inh, SignalType::INHIBITORY);
 
         BarnesHut bh{ octree_ptr };
 
-        std::vector<char> disable_flags(num_neurons, 1);
+        std::vector<char> disable_flags(number_neurons, 1);
 
         auto unique_exc = std::make_unique<SynapticElements>(std::move(dends_exc));
         auto unique_inh = std::make_unique<SynapticElements>(std::move(dends_inh));
@@ -1486,25 +1468,25 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
         auto octree_ptr = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
         auto& octree = *octree_ptr;
 
-        const size_t num_neurons = uid(mt);
+        const size_t number_neurons = uid(mt);
 
-        const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, num_neurons, num_neurons, mt);
+        const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons, mt);
 
         for (const auto& [position, id] : neurons_to_place) {
             octree.insert(position, id, my_rank);
         }
 
-        octree.initializes_leaf_nodes(num_neurons);
+        octree.initializes_leaf_nodes(number_neurons);
 
-        auto dends_exc = create_synaptic_elements(num_neurons, mt, 1, SignalType::EXCITATORY);
-        auto dends_inh = create_synaptic_elements(num_neurons, mt, 1, SignalType::INHIBITORY);
+        auto dends_exc = create_synaptic_elements(number_neurons, mt, 1, SignalType::EXCITATORY);
+        auto dends_inh = create_synaptic_elements(number_neurons, mt, 1, SignalType::INHIBITORY);
 
         auto unique_exc = std::make_unique<SynapticElements>(std::move(dends_exc));
         auto unique_inh = std::make_unique<SynapticElements>(std::move(dends_inh));
 
         BarnesHut bh{ octree_ptr };
 
-        std::vector<char> disable_flags(num_neurons, 1);
+        std::vector<char> disable_flags(number_neurons, 1);
 
         bh.update_leaf_nodes(disable_flags, unique_exc, unique_exc, unique_inh);
         octree.update_local_trees();

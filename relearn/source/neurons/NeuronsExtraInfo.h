@@ -33,17 +33,14 @@ private:
     size_t size{ 0 };
 
     std::vector<std::string> area_names{};
-    std::vector<position_component_type> x_dims{};
-    std::vector<position_component_type> y_dims{};
-    std::vector<position_component_type> z_dims{};
-
+    std::vector<position_type> positions{};
     std::vector<size_t> mpi_rank_to_local_start_id{};
 
 public:
     /**
      * @brief Initializes a NeuronsExtraInfo that holds at most the given number of neurons. Performs communication across all MPI ranks. 
      *      Must only be called once. Does not initialize dimensions or area names.
-     * @param num_neurons The number of neurons, greater than 0
+     * @param number_neurons The number of neurons, greater than 0
      * @exception Throws an RelearnAxception if number_neurons is 0 or if called multiple times.
      */
     void init(size_t number_neurons);
@@ -67,64 +64,30 @@ public:
     }
 
     /**
-     * @brief Overwrites the current x- positions with the supplied ones
-     * @param dims The x- positions, must have the same size as neurons are stored
-     * @exception Throws an RelearnAxception if dims.empty() or if the number of supplied elements does not match the number of stored neurons 
-     */
-    void set_x_dims(std::vector<position_component_type> dims) {
-        RelearnException::check(!dims.empty(), "NeuronsExtraInformation::set_x_dims: New x dimensions are empty");
-        RelearnException::check(size == dims.size(), "NeuronsExtraInformation::set_x_dims: Size does not match area names count");
-        x_dims = std::move(dims);
-    }
-
-    /**
-     * @brief Overwrites the current y- positions with the supplied ones
-     * @param dims The y- positions, must have the same size as neurons are stored
-     * @exception Throws an RelearnAxception if dims.empty() or if the number of supplied elements does not match the number of stored neurons 
-     */
-    void set_y_dims(std::vector<position_component_type> dims) {
-        RelearnException::check(!dims.empty(), "NeuronsExtraInformation::set_y_dims: New y dimensions are empty");
-        RelearnException::check(size == dims.size(), "NeuronsExtraInformation::set_y_dims: Size does not match area names count");
-        y_dims = std::move(dims);
-    }
-
-    /**
-     * @brief Overwrites the current z- positions with the supplied ones
-     * @param dims The z- positions, must have the same size as neurons are stored
-     * @exception Throws an RelearnAxception if dims.empty() or if the number of supplied elements does not match the number of stored neurons 
-     */
-    void set_z_dims(std::vector<position_component_type> dims) {
-        RelearnException::check(!dims.empty(), "NeuronsExtraInformation::set_z_dims: New z dimensions are empty");
-        RelearnException::check(size == dims.size(), "NeuronsExtraInformation::set_z_dims: Size does not match area names count");
-        z_dims = std::move(dims);
-    }
-
-    /**
-     * @brief Returns the currently stored x- positions as a vector. The reference is invalidated whenever init or create_neurons is called.
-     */
-    [[nodiscard]] const std::vector<position_component_type>& get_x_dims() const noexcept {
-        return x_dims;
-    }
-
-    /**
-     * @brief Returns the currently stored y- positions as a vector. The reference is invalidated whenever init or create_neurons is called.
-     */
-    [[nodiscard]] const std::vector<position_component_type>& get_y_dims() const noexcept {
-        return y_dims;
-    }
-
-    /**
-     * @brief Returns the currently stored z- positions as a vector. The reference is invalidated whenever init or create_neurons is called.
-     */
-    [[nodiscard]] const std::vector<position_component_type>& get_z_dims() const noexcept {
-        return z_dims;
-    }
-
-    /**
      * @brief Returns the currently stored area names as a vector. The reference is invalidated whenever init or create_neurons is called.
+     * @return The currently stored area names as a vector
      */
     [[nodiscard]] const std::vector<std::string>& get_area_names() const noexcept {
         return area_names;
+    }
+
+    /**
+     * @brief Overwrites the current positions with the supplied ones
+     * @param names The new positions, must have the same size as neurons are stored
+     * @exception Throws an RelearnAxception if pos.empty() or if the number of supplied elements does not match the number of stored neurons 
+     */
+    void set_positions(std::vector<position_type> pos) {
+        RelearnException::check(!pos.empty(), "NeuronsExtraInformation::set_x_dims: New x dimensions are empty");
+        RelearnException::check(size == pos.size(), "NeuronsExtraInformation::set_x_dims: Size does not match area names count");
+        positions = std::move(pos);
+    }
+
+    /**
+     * @brief Returns the currently stored positions as a vector. The reference is invalidated whenever init or create_neurons is called.
+     * @return The currently stored positions as a vector
+     */
+    [[nodiscard]] const std::vector<position_type>& get_positions() const noexcept {
+        return positions;
     }
 
     /**
@@ -134,40 +97,8 @@ public:
      */
     [[nodiscard]] position_type get_position(const size_t neuron_id) const {
         RelearnException::check(neuron_id < size, "NeuronsExtraInfo::get_position: neuron_id must be smaller than size but was {}", neuron_id);
-        RelearnException::check(neuron_id < x_dims.size(), "NeuronsExtraInfo::get_position: neuron_id must be smaller than x_dims.size() but was {}", neuron_id);
-        RelearnException::check(neuron_id < y_dims.size(), "NeuronsExtraInfo::get_position: neuron_id must be smaller than y_dims.size() but was {}", neuron_id);
-        RelearnException::check(neuron_id < z_dims.size(), "NeuronsExtraInfo::get_position: neuron_id must be smaller than z_dims.size() but was {}", neuron_id);
-        return position_type{ x_dims[neuron_id], y_dims[neuron_id], z_dims[neuron_id] };
-    }
-
-    /**
-     * @brief Returns the x- position for a specified neuron.
-     * @param neuron_id The local id of the neuron, i.e., from [0, num_local_neurons)
-     * @exception Throws an RelearnAxception if the specified id exceeds the number of stored neurons
-     */
-    [[nodiscard]] position_component_type get_x(const size_t neuron_id) const {
-        RelearnException::check(neuron_id < x_dims.size(), "NeuronsExtraInfo::get_x: neuron_id must be smaller than size but was {}", neuron_id);
-        return x_dims[neuron_id];
-    }
-
-    /**
-     * @brief Returns the y- position for a specified neuron.
-     * @param neuron_id The local id of the neuron, i.e., from [0, num_local_neurons)
-     * @exception Throws an RelearnAxception if the specified id exceeds the number of stored neurons
-     */
-    [[nodiscard]] position_component_type get_y(const size_t neuron_id) const {
-        RelearnException::check(neuron_id < y_dims.size(), "NeuronsExtraInfo::get_y: neuron_id must be smaller than size but was {}", neuron_id);
-        return y_dims[neuron_id];
-    }
-
-    /**
-     * @brief Returns the z- positions for a specified neuron.
-     * @param neuron_id The local id of the neuron, i.e., from [0, num_local_neurons)
-     * @exception Throws an RelearnAxception if the specified id exceeds the number of stored neurons
-     */
-    [[nodiscard]] position_component_type get_z(const size_t neuron_id) const {
-        RelearnException::check(neuron_id < z_dims.size(), "NeuronsExtraInfo::get_z: neuron_id must be smaller than size but was {}", neuron_id);
-        return z_dims[neuron_id];
+        RelearnException::check(neuron_id < positions.size(), "NeuronsExtraInfo::get_position: neuron_id must be smaller than positions.size() but was {}", neuron_id);
+        return positions[neuron_id];
     }
 
     /**
