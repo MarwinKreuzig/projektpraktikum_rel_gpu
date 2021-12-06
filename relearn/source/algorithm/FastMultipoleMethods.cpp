@@ -15,6 +15,9 @@
 #include "../structure/OctreeNode.h"
 #include "../util/Timers.h"
 
+using position_type = typename Cell<FastMultipoleMethodsCell>::position_type;
+using counter_type = typename Cell<FastMultipoleMethodsCell>::counter_type;
+
 std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source, const interaction_list_type interaction_list, const SignalType dendrite_type_needed) {
 
     const auto sigma = get_probabilty_parameter();
@@ -45,8 +48,8 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(con
         }
 
         case CalculationType::DIRECT: {
-            const auto& target_neuron_positions = current_target->get_all_dendrite_positions_for(dendrite_type_needed);
-            const auto& source_neuron_positions = source->get_all_axon_positions_for(dendrite_type_needed);
+            const auto& target_neuron_positions = get_all_dendrite_positions_for(current_target, dendrite_type_needed);
+            const auto& source_neuron_positions = get_all_axon_positions_for(source, dendrite_type_needed);
 
             result[i] = calc_direct_gauss(source_neuron_positions, target_neuron_positions, sigma);
             break;
@@ -57,40 +60,29 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(con
     return result;
 }
 
-void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynapseCreationRequests& request) {
+void FastMultipoleMethods::make_creation_request_for(const SignalType needed, MapSynapseCreationRequests& request) {
 
     // init stack
-    std::vector<std::pair<OctreeNode<FastMultipoleMethodsCell>*, interaction_list_type>> nodes_with_axons;
+    std::vector<std::pair<const OctreeNode<FastMultipoleMethodsCell>*, interaction_list_type>> nodes_with_axons;
     nodes_with_axons.reserve(20);
     OctreeNode<FastMultipoleMethodsCell>* root = global_tree->get_root();
-    std::vector<OctreeNode<FastMultipoleMethodsCell>*> local_roots{};
+    const auto local_roots = global_tree->get_local_branch_nodes();
+    const auto size = local_roots.size();
 
-    // get all local branch nodes
-    for (auto* node : global_tree->get_branch_nodes()) {
-        if (node == nullptr) {
-            continue;
-        }
-        if (node->get_cell().get_number_axons_for(needed) == 0) {
-            continue;
-        }
-        if (!node->is_local()) {
-            continue;
-        }
-        local_roots.push_back(node);
+    if (local_roots.empty()) {
+        return;
     }
 
     // get all children of the root
     interaction_list_type init_interaction_list{ nullptr };
-    auto counter = 0;
-    for (auto* child : root->get_children()) {
+    add_children_to_vector(root, init_interaction_list);
+    for (auto& child : init_interaction_list) {
         if (child == nullptr) {
             continue;
         }
         if (child->get_cell().get_number_dendrites_for(needed) == 0) {
-            continue;
+            child = nullptr;
         }
-        init_interaction_list[counter] = child;
-        counter++;
     }
 
     auto const branch_level = global_tree->get_level_of_branch_nodes();
@@ -109,7 +101,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
             auto counter = 0;
             add_children_to_vector(target, temp_interaction_list);
 
-            for (auto& child : temp_interaction_list) {//maybe * instaed &
+            for (auto& child : temp_interaction_list) { //maybe * instaed &
                 if (child == nullptr) {
                     continue;
                 }
@@ -124,13 +116,14 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
         nodes_with_axons.emplace_back(current_branch_node, std::move(temp_interaction_list));
     }
 
+    int round = 1;
     // start the calculation
     while (!nodes_with_axons.empty()) {
         // get node and interaction list from stack
-        std::pair<OctreeNode<FastMultipoleMethodsCell>*, interaction_list_type> pair = nodes_with_axons[nodes_with_axons.size() - 1];
+        std::pair<const OctreeNode<FastMultipoleMethodsCell>*, interaction_list_type> pair = nodes_with_axons[nodes_with_axons.size() - 1];
         nodes_with_axons.pop_back();
 
-        OctreeNode<FastMultipoleMethodsCell>* source_node = std::get<0>(pair);
+        const OctreeNode<FastMultipoleMethodsCell>* source_node = std::get<0>(pair);
         interaction_list_type interaction_list = std::get<1>(pair);
 
         const auto& cell = source_node->get_cell();
@@ -162,7 +155,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
                     }
 
                     // Since source_node is a leaf node, we have to make sure we do not connect to ourselves
-                    if(target_child == source_node){
+                    if (target_child == source_node) {
                         target_child = nullptr;
                         continue;
                     }
@@ -173,8 +166,8 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
                     }
                 }
                 nodes_with_axons.emplace_back(source_node, std::move(new_interaction_list));
-            
-            //current target is a leaf node
+
+                //current target is a leaf node
             } else {
                 const auto target_id = target_node->get_cell().get_neuron_id();
                 if (target_id != source_id) {
@@ -248,6 +241,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
 
             nodes_with_axons.emplace_back(source_child_node, std::move(new_interaction_list));
         }
+        round++;
     }
 }
 
@@ -260,17 +254,13 @@ MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t num_
     OctreeNode<FastMultipoleMethodsCell>* root = global_tree->get_root();
     RelearnException::check(root != nullptr, "FastMultpoleMethods::find_target_neurons: root was nullptr");
 
-    OctreeNode<FastMultipoleMethodsCell>* local_root; // TODO
-
     const auto total_number_dendrites_ex = root->get_cell().get_number_excitatory_dendrites();
     const auto total_number_dendrites_in = root->get_cell().get_number_inhibitory_dendrites();
-    const auto total_number_axons_ex = local_root->get_cell().get_number_excitatory_axons();
-    const auto total_number_axons_in = local_root->get_cell().get_number_inhibitory_axons();
 
-    if (total_number_axons_ex > 0 && total_number_dendrites_ex > 0) {
+    if (total_number_dendrites_ex > 0) {
         make_creation_request_for(SignalType::EXCITATORY, synapse_creation_requests_outgoing);
     }
-    if (total_number_axons_in > 0 && total_number_dendrites_in > 0) {
+    if (total_number_dendrites_in > 0) {
         make_creation_request_for(SignalType::INHIBITORY, synapse_creation_requests_outgoing);
     }
 
@@ -415,7 +405,7 @@ double FastMultipoleMethods::calc_taylor(const OctreeNode<FastMultipoleMethodsCe
 
     double result = 0.0;
 
-    interaction_list_type target_children {nullptr};
+    interaction_list_type target_children{ nullptr };
     unsigned int children_counter = count_non_zero_elements(target_children);
     for (auto j = 0; j < children_counter; j++) {
         const auto* target_child = extract_element(target_children, j);
@@ -492,7 +482,7 @@ double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsC
 
     double result = 0.0;
 
-    interaction_list_type target_children {nullptr};
+    interaction_list_type target_children{ nullptr };
     add_children_to_vector(target, target_children);
     unsigned int children_count = count_non_zero_elements(target_children);
 
@@ -548,18 +538,108 @@ const OctreeNode<FastMultipoleMethodsCell>* FastMultipoleMethods::extract_elemen
 
 void FastMultipoleMethods::add_children_to_vector(const OctreeNode<FastMultipoleMethodsCell>* node, interaction_list_type& arr) {
     const auto is_local = node->is_local();
-    std::array<OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> children {nullptr};
-    if (node->is_local()){
-        children = node->get_children();
-    }else{
-        children = NodeCache::download_children<AdditionalCellAttributes>(const_cast<OctreeNode<FastMultipoleMethodsCell>*>(node));   
-    }
+    const auto& children = is_local ? node->get_children() : NodeCache::download_children<FastMultipoleMethodsCell>(const_cast<OctreeNode<FastMultipoleMethodsCell>*>(node));
 
     unsigned int i = 0;
+
     for (auto it = children.crbegin(); it != children.crend(); ++it) {
         if (*it != nullptr) {
             arr[i] = (*it);
         }
         i++;
     }
+}
+
+const std::vector<std::pair<position_type, counter_type>> FastMultipoleMethods::get_all_dendrite_positions_for(const OctreeNode<FastMultipoleMethodsCell>* node, const SignalType needed) {
+    std::vector<std::pair<position_type, counter_type>> result{};
+
+    std::vector<const OctreeNode<FastMultipoleMethodsCell>*> stack{};
+    stack.reserve(30);
+    stack.emplace_back(node);
+
+    while (!stack.empty()) {
+        const auto* current_node = stack[stack.size() - 1];
+        stack.pop_back();
+        if (!current_node->is_parent()) {
+            const auto& cell = current_node->get_cell();
+            const auto num_of_ports = cell.get_number_dendrites_for(needed);
+            const auto& opt_position = cell.get_dendrites_position();
+            std::pair<position_type, counter_type> temp(opt_position.value(), num_of_ports);
+            result.emplace_back(temp);
+
+        } else {
+            std::array<const OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> current_children{ nullptr };
+            auto add_children_to_vector = [&current_children](const OctreeNode<AdditionalCellAttributes>* node) {
+                const auto is_local = node->is_local();
+                const auto& children = is_local ? node->get_children() : NodeCache::download_children<AdditionalCellAttributes>(const_cast<OctreeNode<AdditionalCellAttributes>*>(node));
+
+                unsigned int i = 0;
+
+                for (auto it = children.crbegin(); it != children.crend(); ++it) {
+                    if (*it != nullptr) {
+                        current_children[i] = (*it);
+                    }
+                    i++;
+                }
+            };
+            add_children_to_vector(current_node);
+            for (auto& children_node : current_children) {
+                if (children_node == nullptr) {
+                    continue;
+                }
+                if (children_node->get_cell().get_number_dendrites_for(needed) == 0) {
+                    children_node = nullptr;
+                }
+            }
+        }
+    }
+    return result;
+}
+
+const std::vector<std::pair<position_type, counter_type>> FastMultipoleMethods::get_all_axon_positions_for(const OctreeNode<FastMultipoleMethodsCell>* node, const SignalType needed) {
+    std::vector<std::pair<position_type, counter_type>> result{};
+
+    std::vector<const OctreeNode<FastMultipoleMethodsCell>*> stack{};
+    stack.reserve(30);
+    stack.emplace_back(node);
+
+    while (!stack.empty()) {
+        const auto* current_node = stack[stack.size() - 1];
+        stack.pop_back();
+
+        if (!current_node->is_parent()) {
+            const auto& cell = current_node->get_cell();
+            const auto num_of_ports = cell.get_number_axons_for(needed);
+            const auto& opt_position = cell.get_axons_position();
+            std::pair<position_type, counter_type> temp(opt_position.value(), num_of_ports);
+            result.emplace_back(temp);
+
+        } else {
+            std::array<const OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> current_children{ nullptr };
+            auto add_children_to_vector = [&current_children](const OctreeNode<AdditionalCellAttributes>* node) {
+                const auto is_local = node->is_local();
+                const auto& children = is_local ? node->get_children() : NodeCache::download_children<AdditionalCellAttributes>(const_cast<OctreeNode<AdditionalCellAttributes>*>(node));
+
+                unsigned int i = 0;
+
+                for (auto it = children.crbegin(); it != children.crend(); ++it) {
+                    if (*it != nullptr) {
+                        current_children[i] = (*it);
+                    }
+                    i++;
+                }
+            };
+            add_children_to_vector(current_node);
+            for (auto& children_node : current_children) {
+                if (children_node == nullptr) {
+                    continue;
+                }
+                if (children_node->get_cell().get_number_axons_for(needed) == 0) {
+                    children_node = nullptr;
+                }
+            }
+        }
+    }
+
+    return result;
 }

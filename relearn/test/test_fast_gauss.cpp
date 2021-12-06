@@ -765,8 +765,8 @@ TEST_F(OctreeTestFMM, testOctreeSeriesExpansionsFMM) {
                         if (i != j && target != nullptr && target->get_cell().get_number_excitatory_dendrites() > 0) {
                             CalculationType current_calculation = fmm.check_calculation_requirements(source, target, SignalType::EXCITATORY);
 
-                            auto const direct = fmm.calc_direct_gauss(source->get_all_axon_positions_for(SignalType::EXCITATORY),
-                                target->get_all_dendrite_positions_for(SignalType::EXCITATORY), cur_sigma);
+                            auto const direct = fmm.calc_direct_gauss(fmm.get_all_axon_positions_for(source, SignalType::EXCITATORY),
+                                fmm.get_all_dendrite_positions_for(target, SignalType::EXCITATORY), cur_sigma);
                             const auto eps = direct * 0.10;
 
                             switch (current_calculation) {

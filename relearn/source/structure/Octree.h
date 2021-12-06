@@ -279,12 +279,20 @@ public:
     }
 
     /**
-     * @brief Get all branch nodes of the tree
-     * @return a vector branch nodes
+     * @brief Get all local branch nodes
+     * @return a vector the local branch nodes
      */
-    std::vector<OctreeNode<AdditionalCellAttributes>*> get_branch_nodes() const {
-        return branch_nodes;
-    }    
+    std::vector<const OctreeNode<AdditionalCellAttributes>*> get_local_branch_nodes() const {
+        std::vector<const OctreeNode<AdditionalCellAttributes>*> result;
+        for (const auto& node: branch_nodes){
+            if(! node->is_local()){
+                continue;
+            }
+            result.emplace_back(node);
+        }
+
+        return result;
+    }
 
     /**
      * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes

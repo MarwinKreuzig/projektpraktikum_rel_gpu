@@ -25,7 +25,7 @@
 enum class CalculationType { DIRECT,
     HERMITE,
     TAYLOR,
-    };
+};
 
 template <typename T>
 class OctreeImplementation;
@@ -38,6 +38,8 @@ class FastMultipoleMethods : public Algorithm {
 public:
     using AdditionalCellAttributes = FastMultipoleMethodsCell;
     using interaction_list_type = std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>;
+    using position_type = typename Cell<AdditionalCellAttributes>::position_type;
+    using counter_type = typename Cell<AdditionalCellAttributes>::counter_type;
     std::shared_ptr<OctreeImplementation<FastMultipoleMethods>> global_tree{};
 
     /**
@@ -206,13 +208,49 @@ public:
     std::vector<double> calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source, const interaction_list_type interaction_list, const SignalType dendrite_type_needed);
 
     /**
-     * @brief 
-     * 
+     * @brief Appends pairs of neurons to a SynapseCreationRequest which are suitable for a synapse formation.
      * @param needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory)
      * @param request Request which should be extended. This must be created before the method is called, as this variable is written to.
-     * @param nodes_with_axons 
      */
     void make_creation_request_for(const SignalType needed, MapSynapseCreationRequests& request);
+
+    /**
+     * @brief Counts the elements in an interaction list that are not nullptr.
+     * @param arr Interaction list containing OctreeNodes.
+     * @return Number of elements unequal to nullptr.
+     */
+    static unsigned int count_non_zero_elements(const interaction_list_type& arr);
+
+    /**
+     * @brief Returns the OctreeNode at the given index, nullptr elements are not counted.
+     * @param arr Interaction list containing OctreeNodes.
+     * @param index Index of the desired node.
+     * @return const OctreeNode<AdditionalCellAttributes>* 
+     */
+    static const OctreeNode<AdditionalCellAttributes>* extract_element(const interaction_list_type& arr, unsigned int index);
+
+    /**
+     * @brief Checks whether a node is already in the cache and reloads the child nodes if necessary.
+     * @param node Node which is checked.
+     * @param vector Array in which the children are loaded.
+     */
+    static void add_children_to_vector(const OctreeNode<AdditionalCellAttributes>* node, interaction_list_type& vector);
+
+    /**
+     * @brief Returns a vector of all actual dendrite positions that have a free port of the requested SignalType. 
+     *      Contains multiples if a dendrite has more than one free port. TODO: Omit the multiples, return tuple(num, pos) and multiply later in FMM
+     * @param needed The requested SignalType
+     * @return A vector of all actual positions
+     */
+    static const std::vector<std::pair<position_type, counter_type>> get_all_dendrite_positions_for(const OctreeNode<AdditionalCellAttributes>* node, const SignalType needed);
+
+    /**
+     * @brief Returns a vector of all actual axon positions that have a free port of the requested SignalType. 
+     *      Contains multiples if a actual has more than one free port.
+     * @param needed The requested SignalType
+     * @return A vector of all actual positions
+     */
+    static const std::vector<std::pair<position_type, counter_type>> get_all_axon_positions_for(const OctreeNode<AdditionalCellAttributes>* node, const SignalType needed);
 
     /**
      * @brief Calculates the coefficients which are needed for the derivatives of e^(-t^2).
@@ -483,10 +521,6 @@ public:
 
         return i;
     }
-
-    static unsigned int count_non_zero_elements(const interaction_list_type &arr);
-    static const OctreeNode<AdditionalCellAttributes>* extract_element(const interaction_list_type &arr, unsigned int index);
-    static void add_children_to_vector (const OctreeNode<AdditionalCellAttributes>* node, interaction_list_type &vector);
 
     /**
      * This class represents a mathematical three-dimensional multi-index, which is required for the
