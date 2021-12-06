@@ -28,9 +28,10 @@
 #include <optional>
 #include <sstream>
 
-void Neurons::init(const size_t num_neurons, std::vector<double> target_calcium_values) {
+void Neurons::init(const size_t num_neurons, std::vector<double> target_calcium_values, std::vector<double> initial_calcium_values) {
     RelearnException::check(num_neurons > 0, "Neurons::init: num_neurons was 0");
     RelearnException::check(num_neurons == target_calcium_values.size(), "Neurons::init: num_neurons was different than target_calcium_values.size()");
+    RelearnException::check(num_neurons == initial_calcium_values.size(), "Neurons::init: num_neurons was different than initial_calcium_values.size()");
 
     number_neurons = num_neurons;
 
@@ -50,14 +51,16 @@ void Neurons::init(const size_t num_neurons, std::vector<double> target_calcium_
     }
 
     disable_flags.resize(number_neurons, 1);
-    calcium.resize(number_neurons);
+    calcium = std::move(initial_calcium_values);
     target_calcium = std::move(target_calcium_values);
 
     // Init member variables
     for (size_t i = 0; i < number_neurons; i++) {
         // Set calcium concentration
         const auto fired = neuron_model->get_fired(i);
-        calcium[i] = fired ? neuron_model->get_beta() : 0.0;
+        if (fired) {
+            calcium[i] += neuron_model->get_beta();
+        }
     }
 }
 
@@ -209,8 +212,9 @@ void Neurons::enable_neurons(const std::vector<size_t>& neuron_ids) {
     }
 }
 
-void Neurons::create_neurons(const size_t creation_count, const std::vector<double>& new_target_calcium_values) {
+void Neurons::create_neurons(const size_t creation_count, const std::vector<double>& new_target_calcium_values, const std::vector<double>& new_initial_calcium_values) {
     RelearnException::check(creation_count == new_target_calcium_values.size(), "Neurons::create_neurons: creation_count was unequal to new_target_calcium_values.size()");
+    RelearnException::check(creation_count == new_initial_calcium_values.size(), "Neurons::create_neurons: creation_count was unequal to new_initial_calcium_values.size()");
 
     const auto current_size = number_neurons;
     const auto new_size = current_size + creation_count;
@@ -230,14 +234,16 @@ void Neurons::create_neurons(const size_t creation_count, const std::vector<doub
     }
 
     disable_flags.resize(new_size, 1);
-    calcium.resize(new_size);
 
+    calcium.insert(calcium.cend(), new_initial_calcium_values.begin(), new_initial_calcium_values.end());
     target_calcium.insert(target_calcium.cend(), new_target_calcium_values.begin(), new_target_calcium_values.end());
 
     for (size_t i = current_size; i < new_size; i++) {
         // Set calcium concentration
         const auto fired = neuron_model->get_fired(i);
-        calcium[i] = fired ? neuron_model->get_beta() : 0.0;
+        if (fired) {
+            calcium[i] += neuron_model->get_beta();
+        }
     }
 
     const auto my_rank = MPIWrapper::get_my_rank();

@@ -91,6 +91,12 @@ public:
     void set_target_calcium_calculator(std::function<double(size_t)> calculator) noexcept;
 
     /**
+     * @brief Sets the function that is used to determine the initial calcium value of the neurons
+     * @param calculator The function that maps neuron id to initial calcium value
+     */
+    void set_initial_calcium_calculator(std::function<double(size_t)> initiator) noexcept;
+
+    /**
      * @brief Sets the enable interrupts during the simulation.
      *      An enable interrupt is a pair of (1) the simulation set (2) all local ids that should be enabled
      * @param interrupts The enable interrupts
@@ -245,6 +251,7 @@ private:
     std::map<NeuronAttribute, std::vector<StatisticalMeasures>> statistics{};
 
     std::function<double(size_t)> target_calcium_calculator{};
+    std::function<double(size_t)> initial_calcium_initiator{};
 
     double accept_criterion{ 0.0 };
 

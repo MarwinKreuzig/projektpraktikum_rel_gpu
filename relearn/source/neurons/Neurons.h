@@ -431,9 +431,10 @@ public:
      *      (e) Calculates if the neurons fired once to initialize the calcium values to beta or 0.0
      * @param number_neurons The number of local neurons
      * @param target_calcium_values The target calcium values for the local neurons
-     * @exception Throws a RelearnException if target_calcium_values.size() != number_neurons, number_neurons == 0, or something unexpected happened
+     * @param initial_calcium_values The initial calcium values for the local neurons
+     * @exception Throws a RelearnException if target_calcium_values.size() != number_neurons, initial_calcium_values.size() != number_neurons, number_neurons == 0, or something unexpected happened
      */
-    void init(size_t number_neurons, std::vector<double> target_calcium_values);
+    void init(size_t number_neurons, std::vector<double> target_calcium_values, std::vector<double> initial_calcium_values);
 
     /**
      * @brief Sets the octree in which the neurons are stored
@@ -587,9 +588,10 @@ public:
      *      (f) Inserts the newly created neurons into the octree
      * @param creation_count The number of newly created neurons
      * @param new_target_calcium_values The target calcium values for the newly created neurons
+     * @param new_initial_calcium_values The initial calcium values for the newly created neurons
      * @exception Throws a RelearnException if creation_count != new_target_calcium_values.size(), or if something unexpected happens
      */
-    void create_neurons(size_t creation_count, const std::vector<double>& new_target_calcium_values);
+    void create_neurons(size_t creation_count, const std::vector<double>& new_target_calcium_values, const std::vector<double>& new_initial_calcium_values);
 
     /**
      * @brief Calls update_electrical_activity from the electrical model with the stored network graph,
