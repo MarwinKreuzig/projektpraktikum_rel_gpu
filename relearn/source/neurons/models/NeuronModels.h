@@ -66,6 +66,15 @@ public:
         }
 
         /**
+         * @brief Pushes the passed neuron id onto the vector.
+         *      It is required that neuron_id is larger than every other already stored id
+         * @param neuron_id The local neuron id to be saved
+         */
+        void append(const size_t neuron_id) {
+            neuron_ids.push_back(neuron_id);
+        }
+
+        /**
          * @brief Searches the neuron id in the internal buffer via a binary search
          * @param neuron_id The neuron id to be searched
          * @return True iff the internal buffer contains neuron_id
