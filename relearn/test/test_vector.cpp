@@ -23,8 +23,6 @@ TEST_F(VectorTest, test_vector_constructor_empty) {
 TEST_F(VectorTest, test_vector_constructor_one) {
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
-    mt.seed(rand());
-
     for (auto i = 0; i < iterations; i++) {
         auto val = urd(mt);
 
@@ -39,8 +37,6 @@ TEST_F(VectorTest, test_vector_constructor_one) {
 TEST_F(VectorTest, test_vector_constructor_three) {
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
-    mt.seed(rand());
-
     for (auto i = 0; i < iterations; i++) {
         auto x = urd(mt);
         auto y = urd(mt);
@@ -54,10 +50,50 @@ TEST_F(VectorTest, test_vector_constructor_three) {
     }
 }
 
-TEST_F(VectorTest, test_vector_copy_construct) {
+TEST_F(VectorTest, test_vector_structured_binding) {
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
-    mt.seed(rand());
+    for (auto i = 0; i < iterations; i++) {
+        auto x = urd(mt);
+        auto y = urd(mt);
+        auto z = urd(mt);
+
+        Vec3<double> v{ x, y, z };
+
+        const auto& [x2, y2, z2] = v;
+
+        ASSERT_EQ(x, x2);
+        ASSERT_EQ(y, y2);
+        ASSERT_EQ(z, z2);
+
+        auto& [x3, y3, z3] = v;
+
+        ASSERT_EQ(x, x3);
+        ASSERT_EQ(y, y3);
+        ASSERT_EQ(z, z3);
+
+        auto [x4, y4, z4] = v;
+
+        ASSERT_EQ(x, x4);
+        ASSERT_EQ(y, y4);
+        ASSERT_EQ(z, z4);
+
+        auto new_x = urd(mt);
+        auto new_y = urd(mt);
+        auto new_z = urd(mt);
+
+        x3 = new_x;
+        y3 = new_y;
+        z3 = new_z;
+
+        ASSERT_EQ(new_x, v.get_x());
+        ASSERT_EQ(new_y, v.get_y());
+        ASSERT_EQ(new_z, v.get_z());
+    }
+}
+
+TEST_F(VectorTest, test_vector_copy_construct) {
+    std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
     for (auto i = 0; i < iterations; i++) {
         auto x = urd(mt);
@@ -76,8 +112,6 @@ TEST_F(VectorTest, test_vector_copy_construct) {
 
 TEST_F(VectorTest, test_vector_copy_assign) {
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
-
-    mt.seed(rand());
 
     for (auto i = 0; i < iterations; i++) {
         auto x = urd(mt);
@@ -98,8 +132,6 @@ TEST_F(VectorTest, test_vector_copy_assign) {
 TEST_F(VectorTest, test_vector_move_construct) {
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
-    mt.seed(rand());
-
     for (auto i = 0; i < iterations; i++) {
         auto x = urd(mt);
         auto y = urd(mt);
@@ -117,8 +149,6 @@ TEST_F(VectorTest, test_vector_move_construct) {
 
 TEST_F(VectorTest, test_vector_move_assign) {
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
-
-    mt.seed(rand());
 
     for (auto i = 0; i < iterations; i++) {
         auto x = urd(mt);
@@ -139,8 +169,6 @@ TEST_F(VectorTest, test_vector_move_assign) {
 TEST_F(VectorTest, test_vector_operator_plus_vec) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
-
-    mt.seed(rand());
 
     for (auto i = 0; i < iterations; i++) {
         auto x1 = urd(mt);
@@ -175,8 +203,6 @@ TEST_F(VectorTest, test_vector_operator_minus_vec) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
-    mt.seed(rand());
-
     for (auto i = 0; i < iterations; i++) {
         auto x1 = urd(mt);
         auto y1 = urd(mt);
@@ -210,8 +236,6 @@ TEST_F(VectorTest, test_vector_operator_plus_scalar) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
-    mt.seed(rand());
-
     for (auto i = 0; i < iterations; i++) {
         auto x1 = urd(mt);
         auto y1 = urd(mt);
@@ -239,8 +263,6 @@ TEST_F(VectorTest, test_vector_operator_plus_scalar) {
 TEST_F(VectorTest, test_vector_operator_minus_scalar) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
-
-    mt.seed(rand());
 
     for (auto i = 0; i < iterations; i++) {
         auto x1 = urd(mt);
@@ -270,8 +292,6 @@ TEST_F(VectorTest, test_vector_operator_mul_scalar) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
-    mt.seed(rand());
-
     for (auto i = 0; i < iterations; i++) {
         auto x1 = urd(mt);
         auto y1 = urd(mt);
@@ -299,8 +319,6 @@ TEST_F(VectorTest, test_vector_operator_mul_scalar) {
 TEST_F(VectorTest, test_vector_operator_div_scalar) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
-
-    mt.seed(rand());
 
     for (auto i = 0; i < iterations; i++) {
         auto x1 = urd(mt);
@@ -334,8 +352,6 @@ TEST_F(VectorTest, test_vector_operator_plus_assign_scalar) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
-    mt.seed(rand());
-
     for (auto i = 0; i < iterations; i++) {
         auto x1 = urd(mt);
         auto y1 = urd(mt);
@@ -359,8 +375,6 @@ TEST_F(VectorTest, test_vector_operator_plus_assign_scalar) {
 TEST_F(VectorTest, test_vector_operator_plus_assign_vector) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
-
-    mt.seed(rand());
 
     for (auto i = 0; i < iterations; i++) {
         const auto x1 = urd(mt);
@@ -387,8 +401,6 @@ TEST_F(VectorTest, test_vector_operator_minus_assign_vector) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
-    mt.seed(rand());
-
     for (auto i = 0; i < iterations; i++) {
         const auto x1 = urd(mt);
         const auto y1 = urd(mt);
@@ -414,8 +426,6 @@ TEST_F(VectorTest, test_vector_operator_mul_assign_scalar) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
-    mt.seed(rand());
-
     for (auto i = 0; i < iterations; i++) {
         auto x1 = urd(mt);
         auto y1 = urd(mt);
@@ -440,8 +450,6 @@ TEST_F(VectorTest, test_vector_volume) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
-    mt.seed(rand());
-
     for (auto i = 0; i < iterations; i++) {
         auto x = urd(mt);
         auto y = urd(mt);
@@ -462,8 +470,6 @@ TEST_F(VectorTest, test_vector_volume) {
 TEST_F(VectorTest, test_vector_equal) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
-
-    mt.seed(rand());
 
     for (auto i = 0; i < iterations; i++) {
         auto x = urd(mt);
@@ -508,8 +514,6 @@ TEST_F(VectorTest, test_vector_componentwise_min_max) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
-    mt.seed(rand());
-
     for (auto i = 0; i < iterations; i++) {
         auto x_1 = urd(mt);
         auto y_1 = urd(mt);
@@ -548,8 +552,6 @@ TEST_F(VectorTest, test_vector_min_max) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
 
-    mt.seed(rand());
-
     for (auto i = 0; i < iterations; i++) {
         auto x = urd(mt);
         auto y = urd(mt);
@@ -580,8 +582,6 @@ TEST_F(VectorTest, test_vector_componentwise_floor) {
 
     std::uniform_real_distribution<double> urd(0.0001, upper_bound);
 
-    mt.seed(rand());
-
     for (auto i = 0; i < iterations; i++) {
         auto x = urd(mt);
         auto y = urd(mt);
@@ -608,8 +608,6 @@ TEST_F(VectorTest, test_vector_componentwise_floor) {
 
 TEST_F(VectorTest, test_vector_componentwise_floor_assert) {
     std::uniform_real_distribution<double> urd(0.0001, upper_bound);
-
-    mt.seed(rand());
 
     for (auto i = 0; i < iterations; i++) {
         auto x = urd(mt);
@@ -650,8 +648,6 @@ TEST_F(VectorTest, test_vector_norm) {
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
     std::uniform_real_distribution<double> urd_p(1.0, 10.1);
 
-    mt.seed(rand());
-
     for (auto i = 0; i < iterations; i++) {
         auto x = urd(mt);
         auto y = urd(mt);
@@ -678,8 +674,6 @@ TEST_F(VectorTest, test_vector_norm_assert) {
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
     std::uniform_real_distribution<double> urd_bad_p(lower_bound, 1.0);
 
-    mt.seed(rand());
-
     for (auto i = 0; i < iterations; i++) {
         auto x = urd(mt);
         auto y = urd(mt);
@@ -697,8 +691,6 @@ TEST_F(VectorTest, test_vector_rounding) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
     std::uniform_real_distribution<double> urd_multiple(1.0, 10.1);
-
-    mt.seed(rand());
 
     for (auto i = 0; i < iterations; i++) {
         auto x = urd(mt);
@@ -745,8 +737,6 @@ TEST_F(VectorTest, test_vector_order) {
 
     std::uniform_real_distribution<double> urd(lower_bound, upper_bound);
     std::uniform_real_distribution<double> urd_offset(1.0, 10.1);
-
-    mt.seed(rand());
 
     for (auto i = 0; i < iterations; i++) {
         auto x = urd(mt);
@@ -840,8 +830,6 @@ TEST_F(VectorTest, test_vector_order) {
 TEST_F(VectorTest, test_vector_cast) {
 
     std::uniform_real_distribution<double> urd(0.0, upper_bound);
-
-    mt.seed(rand());
 
     for (auto i = 0; i < iterations; i++) {
         auto x = urd(mt);
