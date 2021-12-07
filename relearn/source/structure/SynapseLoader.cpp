@@ -158,24 +158,33 @@ std::tuple<SynapseLoader::LocalSynapses, SynapseLoader::InSynapses, SynapseLoade
     const auto& translated_ids = nit->translate_global_ids(global_ids);
     Timers::stop_and_add(TimerRegion::TRANSLATE_GLOBAL_IDS);
 
+    auto total_local_weight = 0;
     for (const auto& [source_id, target_id, weight] : local_synapses) {
         const auto local_source_id = nit->get_local_id(source_id);
         const auto local_target_id = nit->get_local_id(target_id);
 
         return_local_synapses.emplace_back(local_source_id, local_target_id, weight);
+        total_local_weight += weight;
     }
 
+    auto total_in_weight = 0;
     for (const auto& [source_id, target_id, weight] : in_synapses) {
         const auto local_target_id = nit->get_local_id(target_id);
 
         return_in_synapses.emplace_back(translated_ids.at(source_id), local_target_id, weight);
+        total_in_weight += weight;
     }
 
+    auto total_out_weight = 0;
     for (const auto& [source_id, target_id, weight] : out_synapses) {
         const auto local_source_id = nit->get_local_id(source_id);
 
         return_out_synapses.emplace_back(local_source_id, translated_ids.at(target_id), weight);
+        total_out_weight += weight;
     }
+
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded {} local synapses, {} in synapses, and {} out synapses", local_synapses.size(), in_synapses.size(), out_synapses.size());
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "They had a total weight of: {}, {}, {}", total_local_weight, total_in_weight, total_out_weight);
 
     return { return_local_synapses, return_in_synapses, return_out_synapses };
 }
