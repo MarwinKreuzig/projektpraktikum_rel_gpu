@@ -101,7 +101,7 @@ TEST_F(NeuronAssignmentTest, testDensityTooFewNeurons) {
 
 TEST_F(NeuronAssignmentTest, testDensityConstructorSingleSubdomain) {
     for (auto i = 0; i < iterations; i++) {
-        const auto golden_number_neurons = get_random_number_neurons();
+        const auto golden_number_neurons = get_random_number_neurons() + 100;
         const auto golden_fraction_excitatory_neurons = get_random_percentage();
         const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -130,7 +130,7 @@ TEST_F(NeuronAssignmentTest, testDensityConstructorMultipleSubdomains) {
     for (auto i = 0; i < iterations; i++) {
         const auto golden_number_ranks = get_adjusted_random_number_ranks();
         const auto number_subdomains = round_to_next_exponent(golden_number_ranks, 8);
-        const auto golden_number_neurons = get_random_number_neurons() + number_subdomains * 4;
+        const auto golden_number_neurons = get_random_number_neurons() + 100 + number_subdomains * 4;
         const auto golden_fraction_excitatory_neurons = get_random_percentage();
         const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -160,7 +160,7 @@ TEST_F(NeuronAssignmentTest, testDensityConstructorMultipleSubdomains) {
 TEST_F(NeuronAssignmentTest, testDensityInitializeSingleSubdomain) {
     // 2964244976
     for (auto i = 0; i < iterations; i++) {
-        const auto golden_number_neurons = get_random_number_neurons();
+        const auto golden_number_neurons = get_random_number_neurons() + 100;
         const auto golden_fraction_excitatory_neurons = get_random_percentage();
         const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -199,7 +199,7 @@ TEST_F(NeuronAssignmentTest, testDensityInitializeMultipleSubdomains) {
     for (auto i = 0; i < iterations; i++) {
         const auto golden_number_ranks = get_adjusted_random_number_ranks();
         const auto number_subdomains = round_to_next_exponent(golden_number_ranks, 8);
-        const auto golden_number_neurons = get_random_number_neurons() + number_subdomains * 4;
+        const auto golden_number_neurons = get_random_number_neurons() + 100 + number_subdomains * 4;
         const auto golden_fraction_excitatory_neurons = get_random_percentage();
         const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -231,7 +231,7 @@ TEST_F(NeuronAssignmentTest, testDensityInitializeMultipleSubdomains) {
 
 TEST_F(NeuronAssignmentTest, testDensityNeuronAttributesSizesSingleSubdomain) {
     for (auto i = 0; i < iterations; i++) {
-        const auto golden_number_neurons = get_random_number_neurons();
+        const auto golden_number_neurons = get_random_number_neurons() + 100;
         const auto golden_fraction_excitatory_neurons = get_random_percentage();
         const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -270,7 +270,7 @@ TEST_F(NeuronAssignmentTest, testDensityNeuronAttributesSizeMultipleSubdomains) 
         const auto golden_number_ranks = get_adjusted_random_number_ranks();
         const auto number_subdomains = round_to_next_exponent(golden_number_ranks, 8);
         const auto number_subdomains_per_rank = number_subdomains / golden_number_ranks;
-        const auto golden_number_neurons = get_random_number_neurons() + number_subdomains * 4;
+        const auto golden_number_neurons = get_random_number_neurons() + 100 + number_subdomains * 4;
         const auto golden_fraction_excitatory_neurons = get_random_percentage();
         const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -321,7 +321,7 @@ TEST_F(NeuronAssignmentTest, testDensityNeuronAttributesSizeMultipleSubdomains) 
 
 TEST_F(NeuronAssignmentTest, testDensityNeuronAttributesSemanticSingleSubdomain) {
     for (auto i = 0; i < iterations; i++) {
-        const auto golden_number_neurons = get_random_number_neurons();
+        const auto golden_number_neurons = get_random_number_neurons() + 100;
         const auto golden_fraction_excitatory_neurons = get_random_percentage();
         const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -371,7 +371,7 @@ TEST_F(NeuronAssignmentTest, testDensityNeuronAttributesSemanticMultipleSubdomai
         const auto golden_number_ranks = get_adjusted_random_number_ranks();
         const auto number_subdomains = round_to_next_exponent(golden_number_ranks, 8);
         const auto number_subdomains_per_rank = number_subdomains / golden_number_ranks;
-        const auto golden_number_neurons = get_random_number_neurons() + number_subdomains * 4;
+        const auto golden_number_neurons = get_random_number_neurons() + 100 + number_subdomains * 4;
         const auto golden_fraction_excitatory_neurons = get_random_percentage();
         const auto golden_um_per_neuron = get_random_percentage() * 100;
 
