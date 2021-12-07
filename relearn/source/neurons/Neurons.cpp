@@ -1405,16 +1405,14 @@ void Neurons::print_network_graph_to_log_file() {
 }
 
 void Neurons::print_positions_to_log_file() {
-    std::stringstream ss;
     // Write total number of neurons to log file
-    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# {}\n#\n<global id> <pos x> <pos y> <pos z> <area> <type>", partition->get_total_number_neurons());
+    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# {}\n#<global id> <pos x> <pos y> <pos z> <area> <type>", partition->get_total_number_neurons());
 
     const std::vector<std::string>& area_names = extra_info->get_area_names();
     const std::vector<SignalType>& signal_types = axons->get_signal_types();
 
     // Print global ids, positions, and areas of local neurons
     const int my_rank = MPIWrapper::get_my_rank();
-    ss << std::fixed << std::setprecision(Constants::print_precision);
 
     for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         RankNeuronId rank_neuron_id{ my_rank, neuron_id };
@@ -1432,11 +1430,6 @@ void Neurons::print_positions_to_log_file() {
             "{1:<} {2:<.{0}} {3:<.{0}} {4:<.{0}} {5:<} {6:<}",
             Constants::print_precision, (global_id + 1), x, y, z, area_names[neuron_id], signal_type_name);
     }
-
-    ss << std::flush;
-    ss << std::defaultfloat;
-
-    LogFiles::write_to_file(LogFiles::EventType::Positions, false, ss.str());
 }
 
 void Neurons::print() {
