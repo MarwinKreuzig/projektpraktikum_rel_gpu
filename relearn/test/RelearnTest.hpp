@@ -246,7 +246,6 @@ protected:
     }
 
 private:
-
     constexpr static double lower_bound = -100.0;
     constexpr static double upper_bound = 100.0;
 
@@ -254,4 +253,24 @@ private:
 };
 
 class SpaceFillingCurveTest : public RelearnTest {
+protected:
+    uint8_t get_random_refinement_level() noexcept {
+        return static_cast<uint8_t>(uid_refinement(mt));
+    }
+
+    uint8_t get_small_refinement_level() noexcept {
+        return static_cast<uint8_t>(uid_small_refinement(mt));
+    }
+
+    uint8_t get_large_refinement_level() noexcept {
+        return static_cast<uint8_t>(uid_large_refinement(mt));
+    }
+
+    constexpr static unsigned short small_refinement_level = 5;
+    constexpr static unsigned short max_refinement_level = Constants::max_lvl_subdomains;
+
+private:
+    static std::uniform_int_distribution<unsigned short> uid_refinement;
+    static std::uniform_int_distribution<unsigned short> uid_small_refinement;
+    static std::uniform_int_distribution<unsigned short> uid_large_refinement;
 };
