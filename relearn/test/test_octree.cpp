@@ -287,7 +287,7 @@ TEST_F(OctreeTest, testOctreeNodeSetterCell) {
     std::uniform_int_distribution<unsigned int> uid_dends(0, 1000);
 
     for (auto it = 0; it < iterations; it++) {
-        const auto& box_sizes = get_random_simulation_box_size(mt);
+        const auto& box_sizes = get_random_simulation_box_size();
 
         const auto id = uid_id(mt);
         const auto dends_ex = uid_dends(mt);
@@ -357,7 +357,7 @@ TEST_F(OctreeTest, testOctreeNodeInsert) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
         size_t level = uid_lvl(mt);
 
         std::uniform_real_distribution<double> urd_x(min.get_x(), max.get_x());
@@ -407,7 +407,7 @@ TEST_F(OctreeTest, testOctreeConstructor) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
 
         size_t level_of_branch_nodes = uid(mt);
 
@@ -444,7 +444,7 @@ TEST_F(OctreeTest, testOctreeConstructor) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
 
         size_t level_of_branch_nodes = uid(mt);
 
@@ -492,7 +492,7 @@ TEST_F(OctreeTest, testOctreeConstructorExceptions) {
         Vec3d min_xyz{};
         Vec3d max_xyz{};
 
-        std::tie(min_xyz, max_xyz) = get_random_simulation_box_size(mt);
+        std::tie(min_xyz, max_xyz) = get_random_simulation_box_size();
 
         size_t level_of_branch_nodes = uid(mt);
 
@@ -512,7 +512,7 @@ TEST_F(OctreeTest, testOctreeSetterGetter) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
 
         size_t level_of_branch_nodes = uid(mt);
 
@@ -536,13 +536,13 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
 
         size_t level_of_branch_nodes = uid(mt);
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
 
         make_mpi_mem_available();
     }
@@ -551,13 +551,13 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
 
         size_t level_of_branch_nodes = uid(mt);
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
 
         make_mpi_mem_available();
     }
@@ -566,13 +566,13 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
 
         size_t level_of_branch_nodes = uid(mt);
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
 
         make_mpi_mem_available();
     }
@@ -591,7 +591,7 @@ TEST_F(OctreeTest, testOctreeInsertNeurons) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
 
         size_t level_of_branch_nodes = uid_lvl(mt);
 
@@ -636,7 +636,7 @@ TEST_F(OctreeTest, testOctreeInsertNeuronsExceptions) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
 
         size_t level_of_branch_nodes = uid_lvl(mt);
 
@@ -687,7 +687,7 @@ TEST_F(OctreeTest, testOctreeStructure) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
 
         size_t level_of_branch_nodes = uid_lvl(mt);
 
@@ -779,7 +779,7 @@ TEST_F(OctreeTest, testOctreeLocalTrees) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
 
         size_t level_of_branch_nodes = uid(mt);
 
@@ -827,7 +827,7 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
 
         size_t level_of_branch_nodes = uid_lvl(mt);
 
@@ -949,7 +949,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
 
         auto octree_ptr = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
         auto& octree = *octree_ptr;
@@ -1026,7 +1026,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
         Vec3d min{};
         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size(mt);
+        std::tie(min, max) = get_random_simulation_box_size();
 
         auto octree_ptr = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
         auto& octree = *octree_ptr;

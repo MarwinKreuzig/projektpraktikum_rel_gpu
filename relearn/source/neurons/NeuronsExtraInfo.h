@@ -27,7 +27,6 @@
 class NeuronsExtraInfo {
 public:
     using position_type = RelearnTypes::position_type;
-    using position_component_type = position_type::value_type;
 
 private:
     size_t size{ 0 };

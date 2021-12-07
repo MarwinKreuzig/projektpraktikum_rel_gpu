@@ -23,6 +23,8 @@
 #include <random>
 #include <tuple>
 
+class NeuronsExtraInfo;
+
 class RelearnTest : public ::testing::Test {
 private:
     static void init() {
@@ -76,7 +78,7 @@ protected:
         MemoryHolder<BarnesHutCell>::make_all_available();
     }
 
-    std::tuple<Vec3d, Vec3d> get_random_simulation_box_size(std::mt19937& mt) {
+    std::tuple<Vec3d, Vec3d> get_random_simulation_box_size() {
         std::uniform_real_distribution<double> urd(-position_bounary, +position_bounary);
 
         const auto rand_x_1 = urd(mt);
@@ -94,7 +96,17 @@ protected:
         };
     }
 
-    Vec3d get_random_position_in_box(const Vec3d& min, const Vec3d& max, std::mt19937& mt) {
+    Vec3d get_random_position() {
+        std::uniform_real_distribution<double> urd(-position_bounary, +position_bounary);
+
+        const auto x = urd(mt);
+        const auto y = urd(mt);
+        const auto z = urd(mt);
+
+        return { x, y, z };
+    }
+
+    Vec3d get_random_position_in_box(const Vec3d& min, const Vec3d& max) {
         std::uniform_real_distribution urd_x(min.get_x(), max.get_x());
         std::uniform_real_distribution urd_y(min.get_y(), max.get_y());
         std::uniform_real_distribution urd_z(min.get_z(), max.get_z());
@@ -111,39 +123,39 @@ protected:
         return static_cast<size_t>(new_val);
     }
 
-    size_t get_random_number_ranks(std::mt19937& mt) {
+    size_t get_random_number_ranks() {
         return uid_num_ranks(mt);
     }
 
-    size_t get_adjusted_random_number_ranks(std::mt19937& mt) {
-        const auto random_rank = get_random_number_ranks(mt);
+    size_t get_adjusted_random_number_ranks() {
+        const auto random_rank = get_random_number_ranks();
         return round_to_next_exponent(random_rank, 2);
     }
 
-    size_t get_random_number_neurons(std::mt19937& mt) {
+    size_t get_random_number_neurons() {
         return uid_num_neurons(mt);
     }
 
-    size_t get_random_number_synapses(std::mt19937& mt) {
+    size_t get_random_number_synapses() {
         return uid_num_synapses(mt);
     }
 
-    size_t get_random_neuron_id(size_t number_neurons, std::mt19937& mt) {
+    size_t get_random_neuron_id(size_t number_neurons) {
         std::uniform_int_distribution<size_t> uid(0, number_neurons - 1);
         return uid(mt);
     }
 
-    int get_random_synapse_weight(std::mt19937& mt) {
+    int get_random_synapse_weight() {
         return uid_synapse_weight(mt);
     }
 
-    std::vector<std::tuple<size_t, size_t, int>> get_random_synapses(size_t number_neurons, size_t number_synapses, std::mt19937& mt) {
+    std::vector<std::tuple<size_t, size_t, int>> get_random_synapses(size_t number_neurons, size_t number_synapses) {
         std::vector<std::tuple<size_t, size_t, int>> synapses(number_synapses);
 
         for (auto i = 0; i < number_synapses; i++) {
-            const auto source_id = get_random_neuron_id(number_neurons, mt);
-            const auto target_id = get_random_neuron_id(number_neurons, mt);
-            const auto weight = get_random_synapse_weight(mt);
+            const auto source_id = get_random_neuron_id(number_neurons);
+            const auto target_id = get_random_neuron_id(number_neurons);
+            const auto weight = get_random_synapse_weight();
 
             synapses[i] = { source_id, target_id, weight };
         }
@@ -151,7 +163,7 @@ protected:
         return synapses;
     }
 
-    double get_random_percentage(std::mt19937& mt) {
+    double get_random_percentage() {
         return urd_percentage(mt);
     }
 
@@ -162,6 +174,8 @@ protected:
 
     constexpr static int upper_bound_num_neurons = 1000;
     constexpr static int upper_bound_num_synapses = 1000;
+
+    constexpr static int number_neurons_out_of_scope = 100;
 
     constexpr static int bound_synapse_weight = 10;
 
@@ -219,15 +233,20 @@ protected:
     }
 
     void generate_neuron_positions(std::vector<Vec3d>& positions,
-        std::vector<std::string>& area_names, std::vector<SignalType>& types, std::mt19937& mt);
+        std::vector<std::string>& area_names, std::vector<SignalType>& types);
 
-    void generate_synapses(std::vector<std::tuple<size_t, size_t, int>>& synapses, size_t number_neurons, std::mt19937& mt);
+    void generate_synapses(std::vector<std::tuple<size_t, size_t, int>>& synapses, size_t number_neurons);
 };
 
 class NeuronModelsTest : public RelearnTest {
 };
 
 class NeuronsTest : public RelearnTest {
+protected:
+    void assert_empty(const NeuronsExtraInfo& nei, size_t number_neurons);
+
+    void assert_contains(const NeuronsExtraInfo& nei, size_t number_neurons, size_t num_neurons_check,
+        const std::vector<std::string>& expected_area_names, const std::vector<Vec3d>& expected_positions);
 };
 
 class CellTest : public RelearnTest {

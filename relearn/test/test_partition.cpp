@@ -23,15 +23,15 @@ bool is_power_of_two(size_t number) {
 
 TEST_F(PartitionTest, testPartitionZeroRanks) {
     for (auto i = 0; i < iterations; i++) {
-        const auto my_rank = get_random_number_ranks(mt);
+        const auto my_rank = get_random_number_ranks();
         ASSERT_THROW(Partition part(0, my_rank), RelearnException) << my_rank;
     }
 }
 
 TEST_F(PartitionTest, testPartitionConstructorArguments) {
     for (auto i = 0; i < iterations; i++) {
-        const auto my_rank = get_random_number_ranks(mt);
-        const auto num_ranks = get_random_number_ranks(mt);
+        const auto my_rank = get_random_number_ranks();
+        const auto num_ranks = get_random_number_ranks();
         const auto is_rank_power_2 = is_power_of_two(num_ranks);
 
         if (!is_rank_power_2) {
@@ -50,7 +50,7 @@ TEST_F(PartitionTest, testPartitionConstructorArguments) {
 
 TEST_F(PartitionTest, testPartitionConstructor) {
     for (auto i = 0; i < iterations; i++) {
-        const auto num_ranks = get_adjusted_random_number_ranks(mt);
+        const auto num_ranks = get_adjusted_random_number_ranks();
         const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
 
         const auto my_subdomains = num_subdomains / num_ranks;
@@ -75,7 +75,7 @@ TEST_F(PartitionTest, testPartitionConstructor) {
 
 TEST_F(PartitionTest, testPartitionNumberNeurons) {
     for (auto i = 0; i < iterations; i++) {
-        const auto num_ranks = get_adjusted_random_number_ranks(mt);
+        const auto num_ranks = get_adjusted_random_number_ranks();
         const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
         const auto my_subdomains = num_subdomains / num_ranks;
 
@@ -86,7 +86,7 @@ TEST_F(PartitionTest, testPartitionNumberNeurons) {
             number_local_neurons[my_rank] = std::vector<size_t>(my_subdomains);
 
             for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
-                const auto num_local_neurons = get_random_number_neurons(mt);
+                const auto num_local_neurons = get_random_number_neurons();
 
                 number_local_neurons[my_rank][my_subdomain] = num_local_neurons;
                 number_total_neurons += num_local_neurons;
@@ -128,7 +128,7 @@ TEST_F(PartitionTest, testPartitionNumberNeurons) {
 
 TEST_F(PartitionTest, testPartitionSubdomainIndices) {
     for (auto i = 0; i < iterations; i++) {
-        const auto num_ranks = get_adjusted_random_number_ranks(mt);
+        const auto num_ranks = get_adjusted_random_number_ranks();
         const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
         const auto my_subdomains = num_subdomains / num_ranks;
 
@@ -168,7 +168,7 @@ TEST_F(PartitionTest, testPartitionSubdomainIndices) {
 
 TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
     for (auto i = 0; i < iterations; i++) {
-        const auto num_ranks = get_adjusted_random_number_ranks(mt);
+        const auto num_ranks = get_adjusted_random_number_ranks();
         const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
         const auto my_subdomains = num_subdomains / num_ranks;
 
@@ -177,7 +177,7 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
 
         SpaceFillingCurve<Morton> sfc(oct_exponent);
 
-        const auto& [simulation_box_minimum, simulation_box_maximum] = get_random_simulation_box_size(mt);
+        const auto& [simulation_box_minimum, simulation_box_maximum] = get_random_simulation_box_size();
 
         const auto& simulation_box_dimensions = simulation_box_maximum - simulation_box_minimum;
         const auto& subdomain_box_dimensions = simulation_box_dimensions / num_subdomains_per_dim;
@@ -261,7 +261,7 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
 
 TEST_F(PartitionTest, testPartitionPositionToMpi) {
     for (auto i = 0; i < iterations; i++) {
-        const auto num_ranks = get_adjusted_random_number_ranks(mt);
+        const auto num_ranks = get_adjusted_random_number_ranks();
         const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
         const auto my_subdomains = num_subdomains / num_ranks;
 
@@ -270,7 +270,7 @@ TEST_F(PartitionTest, testPartitionPositionToMpi) {
 
         SpaceFillingCurve<Morton> sfc(oct_exponent);
 
-        const auto& [simulation_box_minimum, simulation_box_maximum] = get_random_simulation_box_size(mt);
+        const auto& [simulation_box_minimum, simulation_box_maximum] = get_random_simulation_box_size();
 
         const auto& simulation_box_dimensions = simulation_box_maximum - simulation_box_minimum;
         const auto& subdomain_box_dimensions = simulation_box_dimensions / num_subdomains_per_dim;
@@ -279,14 +279,14 @@ TEST_F(PartitionTest, testPartitionPositionToMpi) {
             Partition partition(num_ranks, my_rank);
 
             for (auto j = 0; j < iterations; j++) {
-                const auto& position = get_random_position_in_box(simulation_box_minimum, simulation_box_maximum, mt);
+                const auto& position = get_random_position_in_box(simulation_box_minimum, simulation_box_maximum);
                 ASSERT_THROW(auto val = partition.get_mpi_rank_from_position(position), RelearnException);
             }
 
             partition.set_simulation_box_size(simulation_box_minimum, simulation_box_maximum);
 
             for (auto j = 0; j < iterations; j++) {
-                const auto& position = get_random_position_in_box(simulation_box_minimum, simulation_box_maximum, mt);
+                const auto& position = get_random_position_in_box(simulation_box_minimum, simulation_box_maximum);
                 const auto proposed_rank = partition.get_mpi_rank_from_position(position);
 
                 const auto index_1_start = proposed_rank * my_subdomains;

@@ -977,7 +977,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitPoisson) {
             expected_x0, expected_tau_x, expected_refrac);
 
         for (auto j = 0; j < iterations; j++) {
-            const auto get_requested_number_neurons = get_random_number_neurons(mt);
+            const auto get_requested_number_neurons = get_random_number_neurons();
 
             model->init(get_requested_number_neurons);
 
@@ -1051,7 +1051,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitIzhikevich) {
             expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
 
         for (auto j = 0; j < iterations; j++) {
-            const auto get_requested_number_neurons = get_random_number_neurons(mt);
+            const auto get_requested_number_neurons = get_random_number_neurons();
 
             model->init(get_requested_number_neurons);
 
@@ -1115,7 +1115,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitFitzHughNagumo) {
             expected_a, expected_b, expected_phi);
 
         for (auto j = 0; j < iterations; j++) {
-            const auto get_requested_number_neurons = get_random_number_neurons(mt);
+            const auto get_requested_number_neurons = get_random_number_neurons();
 
             model->init(get_requested_number_neurons);
 
@@ -1191,7 +1191,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitAEIF) {
             expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_spike);
 
         for (auto j = 0; j < iterations; j++) {
-            const auto get_requested_number_neurons = get_random_number_neurons(mt);
+            const auto get_requested_number_neurons = get_random_number_neurons();
 
             model->init(get_requested_number_neurons);
 
@@ -1255,7 +1255,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsPoisson) {
         size_t current_num_neurons = 0;
 
         for (auto j = 0; j < 3; j++) {
-            const auto get_requested_number_neurons = get_random_number_neurons(mt);
+            const auto get_requested_number_neurons = get_random_number_neurons();
             current_num_neurons += get_requested_number_neurons;
 
             model->create_neurons(get_requested_number_neurons);
@@ -1330,7 +1330,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsIzhikevich) {
         size_t current_num_neurons = 0;
 
         for (auto j = 0; j < 3; j++) {
-            const auto get_requested_number_neurons = get_random_number_neurons(mt);
+            const auto get_requested_number_neurons = get_random_number_neurons();
             current_num_neurons += get_requested_number_neurons;
 
             model->create_neurons(get_requested_number_neurons);
@@ -1395,7 +1395,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsFitzHughNagumo) {
         size_t current_num_neurons = 0;
 
         for (auto j = 0; j < 3; j++) {
-            const auto get_requested_number_neurons = get_random_number_neurons(mt);
+            const auto get_requested_number_neurons = get_random_number_neurons();
             current_num_neurons += get_requested_number_neurons;
 
             model->create_neurons(get_requested_number_neurons);
@@ -1472,7 +1472,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsAEIF) {
         size_t current_num_neurons = 0;
 
         for (auto j = 0; j < 3; j++) {
-            const auto get_requested_number_neurons = get_random_number_neurons(mt);
+            const auto get_requested_number_neurons = get_random_number_neurons();
             current_num_neurons += get_requested_number_neurons;
 
             model->create_neurons(get_requested_number_neurons);
@@ -1534,7 +1534,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredPoisson) {
         auto model = std::make_unique<PoissonModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_x0, expected_tau_x, expected_refrac);
 
-        const auto number_neurons = get_random_number_neurons(mt);
+        const auto number_neurons = get_random_number_neurons();
 
         std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, number_neurons);
         const auto num_disables = uid_num_neurons_disables(mt);
@@ -1597,7 +1597,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredIzhikevich) {
         auto model = std::make_unique<IzhikevichModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
 
-        const auto number_neurons = get_random_number_neurons(mt);
+        const auto number_neurons = get_random_number_neurons();
 
         std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, number_neurons);
         const auto num_disables = uid_num_neurons_disables(mt);
@@ -1650,7 +1650,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredFitzHughNagumo) {
         auto model = std::make_unique<FitzHughNagumoModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_phi);
 
-        const auto number_neurons = get_random_number_neurons(mt);
+        const auto number_neurons = get_random_number_neurons();
 
         std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, number_neurons);
         const auto num_disables = uid_num_neurons_disables(mt);
@@ -1715,7 +1715,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredAEIF) {
         auto model = std::make_unique<AEIFModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_spike);
 
-        const auto number_neurons = get_random_number_neurons(mt);
+        const auto number_neurons = get_random_number_neurons();
 
         std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, number_neurons);
         const auto num_disables = uid_num_neurons_disables(mt);
@@ -1768,7 +1768,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledPoisson) {
         auto model = std::make_unique<PoissonModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_x0, expected_tau_x, expected_refrac);
 
-        const auto get_requested_number_neurons = get_random_number_neurons(mt);
+        const auto get_requested_number_neurons = get_random_number_neurons();
 
         const auto empty_graph = generate_random_network_graph(get_requested_number_neurons, 0, 1.0, mt);
 
@@ -1872,7 +1872,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledIzhikevich) {
         auto model = std::make_unique<IzhikevichModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
 
-        const auto get_requested_number_neurons = get_random_number_neurons(mt);
+        const auto get_requested_number_neurons = get_random_number_neurons();
 
         const auto empty_graph = generate_random_network_graph(get_requested_number_neurons, 0, 1.0, mt);
 
@@ -1966,7 +1966,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledFitzHughNagumo) {
         auto model = std::make_unique<FitzHughNagumoModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_phi);
 
-        const auto get_requested_number_neurons = get_random_number_neurons(mt);
+        const auto get_requested_number_neurons = get_random_number_neurons();
 
         const auto empty_graph = generate_random_network_graph(get_requested_number_neurons, 0, 1.0, mt);
 
@@ -2072,7 +2072,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledAEIF) {
         auto model = std::make_unique<AEIFModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_spike);
 
-        const auto get_requested_number_neurons = get_random_number_neurons(mt);
+        const auto get_requested_number_neurons = get_random_number_neurons();
 
         const auto empty_graph = generate_random_network_graph(get_requested_number_neurons, 0, 1.0, mt);
 
@@ -2165,7 +2165,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisso
         auto model = std::make_unique<PoissonModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_x0, expected_tau_x, expected_refrac);
 
-        const auto get_requested_number_neurons = get_random_number_neurons(mt);
+        const auto get_requested_number_neurons = get_random_number_neurons();
 
         const auto empty_graph = generate_random_network_graph(get_requested_number_neurons, 0, 1.0, mt);
 
@@ -2285,7 +2285,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhike
         auto model = std::make_unique<IzhikevichModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
 
-        const auto get_requested_number_neurons = get_random_number_neurons(mt);
+        const auto get_requested_number_neurons = get_random_number_neurons();
 
         const auto empty_graph = generate_random_network_graph(get_requested_number_neurons, 0, 1.0, mt);
 
@@ -2384,7 +2384,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHu
         auto model = std::make_unique<FitzHughNagumoModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_a, expected_b, expected_phi);
 
-        const auto get_requested_number_neurons = get_random_number_neurons(mt);
+        const auto get_requested_number_neurons = get_random_number_neurons();
 
         const auto empty_graph = generate_random_network_graph(get_requested_number_neurons, 0, 1.0, mt);
 
@@ -2488,7 +2488,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) 
         auto model = std::make_unique<AEIFModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
             expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_spike);
 
-        const auto get_requested_number_neurons = get_random_number_neurons(mt);
+        const auto get_requested_number_neurons = get_random_number_neurons();
 
         const auto empty_graph = generate_random_network_graph(get_requested_number_neurons, 0, 1.0, mt);
 

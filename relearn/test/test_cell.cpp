@@ -17,7 +17,7 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_size() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& box_sizes_1 = get_random_simulation_box_size(mt);
+    const auto& box_sizes_1 = get_random_simulation_box_size();
     const auto& min_1 = std::get<0>(box_sizes_1);
     const auto& max_1 = std::get<1>(box_sizes_1);
 
@@ -28,7 +28,7 @@ void CellTest::test_cell_size() {
     ASSERT_EQ(min_1, std::get<0>(res_1));
     ASSERT_EQ(max_1, std::get<1>(res_1));
 
-    const auto& box_sizes_2 = get_random_simulation_box_size(mt);
+    const auto& box_sizes_2 = get_random_simulation_box_size();
     const auto& min_2 = std::get<0>(box_sizes_2);
     const auto& max_2 = std::get<1>(box_sizes_2);
 
@@ -46,7 +46,7 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_position() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& box_sizes = get_random_simulation_box_size(mt);
+    const auto& box_sizes = get_random_simulation_box_size();
     const auto& min = std::get<0>(box_sizes);
     const auto& max = std::get<1>(box_sizes);
 
@@ -113,7 +113,7 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_position_exception() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& box_sizes = get_random_simulation_box_size(mt);
+    const auto& box_sizes = get_random_simulation_box_size();
     const auto& min = std::get<0>(box_sizes);
     const auto& max = std::get<1>(box_sizes);
 
@@ -228,7 +228,7 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_position_combined() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& box_sizes = get_random_simulation_box_size(mt);
+    const auto& box_sizes = get_random_simulation_box_size();
     const auto& min = std::get<0>(box_sizes);
     const auto& max = std::get<1>(box_sizes);
 
@@ -286,8 +286,8 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_set_number_dendrites() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto num_dends_ex_1 = get_random_number_neurons(mt);
-    const auto num_dends_in_1 = get_random_number_neurons(mt);
+    const auto num_dends_ex_1 = get_random_number_neurons();
+    const auto num_dends_in_1 = get_random_number_neurons();
 
     cell.set_number_excitatory_dendrites(num_dends_ex_1);
     cell.set_number_inhibitory_dendrites(num_dends_in_1);
@@ -297,8 +297,8 @@ void CellTest::test_cell_set_number_dendrites() {
     ASSERT_EQ(num_dends_in_1, cell.get_number_inhibitory_dendrites());
     ASSERT_EQ(num_dends_in_1, cell.get_number_dendrites_for(SignalType::INHIBITORY));
 
-    const auto num_dends_ex_2 = get_random_number_neurons(mt);
-    const auto num_dends_in_2 = get_random_number_neurons(mt);
+    const auto num_dends_ex_2 = get_random_number_neurons();
+    const auto num_dends_in_2 = get_random_number_neurons();
 
     cell.set_number_excitatory_dendrites(num_dends_ex_2);
     cell.set_number_inhibitory_dendrites(num_dends_in_2);
@@ -313,11 +313,11 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_set_neuron_id() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto neuron_id_1 = get_random_number_neurons(mt);
+    const auto neuron_id_1 = get_random_number_neurons();
     cell.set_neuron_id(neuron_id_1);
     ASSERT_EQ(neuron_id_1, cell.get_neuron_id());
 
-    const auto neuron_id_2 = get_random_number_neurons(mt);
+    const auto neuron_id_2 = get_random_number_neurons();
     cell.set_neuron_id(neuron_id_2);
     ASSERT_EQ(neuron_id_2, cell.get_neuron_id());
 }
@@ -326,7 +326,7 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_octants() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& box_sizes = get_random_simulation_box_size(mt);
+    const auto& box_sizes = get_random_simulation_box_size();
     const auto& min = std::get<0>(box_sizes);
     const auto& max = std::get<1>(box_sizes);
 
@@ -359,7 +359,7 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_octants_exception() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& box_sizes = get_random_simulation_box_size(mt);
+    const auto& box_sizes = get_random_simulation_box_size();
     const auto& min = std::get<0>(box_sizes);
     const auto& max = std::get<1>(box_sizes);
 
@@ -385,7 +385,7 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_octants_size() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& box_sizes = get_random_simulation_box_size(mt);
+    const auto& box_sizes = get_random_simulation_box_size();
     const auto& min = std::get<0>(box_sizes);
     const auto& max = std::get<1>(box_sizes);
 
@@ -435,13 +435,13 @@ void CellTest::test_vpe_number_elements() {
     const auto& number_initially_free_elements = vpe.get_number_free_elements();
     ASSERT_EQ(number_initially_free_elements, 0) << number_initially_free_elements;
 
-    const auto nfe_1 = get_random_number_neurons(mt);
+    const auto nfe_1 = get_random_number_neurons();
     vpe.set_number_free_elements(nfe_1);
 
     const auto& number_free_elements_1 = vpe.get_number_free_elements();
     ASSERT_EQ(number_free_elements_1, nfe_1) << number_free_elements_1 << ' ' << nfe_1;
 
-    const auto nfe_2 = get_random_number_neurons(mt);
+    const auto nfe_2 = get_random_number_neurons();
     vpe.set_number_free_elements(nfe_2);
 
     const auto& number_free_elements_2 = vpe.get_number_free_elements();
@@ -455,7 +455,7 @@ void CellTest::test_vpe_position() {
     const auto& initial_position = vpe.get_position();
     ASSERT_FALSE(initial_position.has_value());
 
-    const auto& [pos_1, pos_3] = get_random_simulation_box_size(mt);
+    const auto& [pos_1, pos_3] = get_random_simulation_box_size();
 
     vpe.set_position(pos_1);
     const auto& position_1 = vpe.get_position();
@@ -479,7 +479,7 @@ void CellTest::test_vpe_mixed() {
     const auto& initial_position = vpe.get_position();
     ASSERT_FALSE(initial_position.has_value());
 
-    const auto& [pos_1, pos_3] = get_random_simulation_box_size(mt);
+    const auto& [pos_1, pos_3] = get_random_simulation_box_size();
 
     vpe.set_position(pos_1);
     const auto& position_1 = vpe.get_position();
@@ -489,7 +489,7 @@ void CellTest::test_vpe_mixed() {
     const auto& number_initially_free_elements = vpe.get_number_free_elements();
     ASSERT_EQ(number_initially_free_elements, 0) << number_initially_free_elements;
 
-    const auto nfe_1 = get_random_number_neurons(mt);
+    const auto nfe_1 = get_random_number_neurons();
     vpe.set_number_free_elements(nfe_1);
 
     const auto& number_free_elements_1 = vpe.get_number_free_elements();
@@ -504,7 +504,7 @@ void CellTest::test_vpe_mixed() {
     ASSERT_TRUE(position_3.has_value());
     ASSERT_EQ(position_3.value(), pos_3);
 
-    const auto nfe_2 = get_random_number_neurons(mt);
+    const auto nfe_2 = get_random_number_neurons();
     vpe.set_number_free_elements(nfe_2);
 
     const auto& number_free_elements_2 = vpe.get_number_free_elements();

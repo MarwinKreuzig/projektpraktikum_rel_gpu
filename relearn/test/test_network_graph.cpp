@@ -365,8 +365,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
     std::uniform_int_distribution<int> uid_edge_weight(-bound_synapse_weight, bound_synapse_weight);
 
     for (auto i = 0; i < iterations; i++) {
-        const auto number_neurons = get_random_number_neurons(mt);
-        const auto number_synapses = get_random_number_synapses(mt) + number_neurons;
+        const auto number_neurons = get_random_number_neurons();
+        const auto number_synapses = get_random_number_synapses() + number_neurons;
 
         std::uniform_int_distribution<size_t> uid_actual_num_neurons(0, number_neurons - 1);
 
@@ -749,10 +749,10 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
 
 TEST_F(NetworkGraphTest, testNetworkGraphHistogramPositiveWeight) {
     for (auto i = 0; i < iterations; i++) {
-        const auto number_neurons = get_random_number_neurons(mt);
-        const auto number_synapses = get_random_number_synapses(mt) + number_neurons;
+        const auto number_neurons = get_random_number_neurons();
+        const auto number_synapses = get_random_number_synapses() + number_neurons;
 
-        const auto& synapses = get_random_synapses(number_neurons, number_synapses, mt);
+        const auto& synapses = get_random_synapses(number_neurons, number_synapses);
 
         NetworkGraph ng(number_neurons, 0);
 
@@ -816,10 +816,10 @@ TEST_F(NetworkGraphTest, testNetworkGraphHistogramPositiveWeight) {
 
 TEST_F(NetworkGraphTest, testNetworkGraphHistogram) {
     for (auto i = 0; i < iterations; i++) {
-        const auto number_neurons = get_random_number_neurons(mt);
-        const auto number_synapses = get_random_number_synapses(mt) + number_neurons;
+        const auto number_neurons = get_random_number_neurons();
+        const auto number_synapses = get_random_number_synapses() + number_neurons;
 
-        const auto& synapses = get_random_synapses(number_neurons, number_synapses, mt);
+        const auto& synapses = get_random_synapses(number_neurons, number_synapses);
 
         NetworkGraph ng(number_neurons, 0);
 
