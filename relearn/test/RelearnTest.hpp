@@ -230,6 +230,36 @@ class NeuronModelsTest : public RelearnTest {
 class NeuronsTest : public RelearnTest {
 };
 
+class CellTest : public RelearnTest {
+protected:
+    template <typename AdditionalCellAttributes>
+    void test_cell_size();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_position();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_position_exception();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_position_combined();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_set_number_dendrites();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_set_neuron_id();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_octants();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_octants_exception();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_octants_size();
+};
+
 class OctreeTest : public RelearnTest {
 };
 
