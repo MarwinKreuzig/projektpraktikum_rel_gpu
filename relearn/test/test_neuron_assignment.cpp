@@ -710,7 +710,7 @@ TEST_F(NeuronAssignmentTest, testFileRoi14SingleSubdomain) {
 #ifdef _WIN32
     std::filesystem::path path_to_neurons{ "../../input/roi_split/1-4/new_positions.txt" };
     std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-4/new_synapses.txt" };
-#elif
+#else
     std::filesystem::path path_to_neurons{ "../input/roi_split/1-4/new_positions.txt" };
     std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-4/new_synapses.txt" };
 #endif
@@ -755,7 +755,7 @@ TEST_F(NeuronAssignmentTest, testFileRoi15SingleSubdomain) {
 #ifdef _WIN32
     std::filesystem::path path_to_neurons{ "../../input/roi_split/1-5/new_positions.txt" };
     std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-5/new_synapses.txt" };
-#elif
+#else
     std::filesystem::path path_to_neurons{ "../input/roi_split/1-5/new_positions.txt" };
     std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-5/new_synapses.txt" };
 #endif
@@ -800,7 +800,7 @@ TEST_F(NeuronAssignmentTest, testFileRoi16SingleSubdomain) {
 #ifdef _WIN32
     std::filesystem::path path_to_neurons{ "../../input/roi_split/1-6/new_positions.txt" };
     std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-6/new_synapses.txt" };
-#elif
+#else
     std::filesystem::path path_to_neurons{ "../input/roi_split/1-6/new_positions.txt" };
     std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-6/new_synapses.txt" };
 #endif
@@ -845,7 +845,7 @@ TEST_F(NeuronAssignmentTest, testFileRoi17SingleSubdomain) {
 #ifdef _WIN32
     std::filesystem::path path_to_neurons{ "../../input/roi_split/1-7/new_positions.txt" };
     std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-7/new_synapses.txt" };
-#elif
+#else
     std::filesystem::path path_to_neurons{ "../input/roi_split/1-7/new_positions.txt" };
     std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-7/new_synapses.txt" };
 #endif
