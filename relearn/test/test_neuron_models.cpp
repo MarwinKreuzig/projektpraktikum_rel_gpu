@@ -1135,7 +1135,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitFitzHughNagumo) {
                 ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
             }
 
-            for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+            for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
                 ASSERT_THROW(auto tmp = model->get_x(neuron_id + number_neurons), RelearnException);
                 ASSERT_THROW(auto tmp = model->get_fired(neuron_id + number_neurons), RelearnException);
                 ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + number_neurons), RelearnException);
@@ -1211,7 +1211,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitAEIF) {
                 ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
             }
 
-            for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+            for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
                 ASSERT_THROW(auto tmp = model->get_x(neuron_id + number_neurons), RelearnException);
                 ASSERT_THROW(auto tmp = model->get_fired(neuron_id + number_neurons), RelearnException);
                 ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + number_neurons), RelearnException);
@@ -1276,7 +1276,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsPoisson) {
                 ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
             }
 
-            for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
+            for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
                 ASSERT_THROW(auto tmp = model->get_x(neuron_id + current_num_neurons), RelearnException);
                 ASSERT_THROW(auto tmp = model->get_fired(neuron_id + current_num_neurons), RelearnException);
                 ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
@@ -1351,7 +1351,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsIzhikevich) {
                 ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
             }
 
-            for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
+            for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
                 ASSERT_THROW(auto tmp = model->get_x(neuron_id + current_num_neurons), RelearnException);
                 ASSERT_THROW(auto tmp = model->get_fired(neuron_id + current_num_neurons), RelearnException);
                 ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
@@ -1416,7 +1416,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsFitzHughNagumo) {
                 ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
             }
 
-            for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
+            for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
                 ASSERT_THROW(auto tmp = model->get_x(neuron_id + current_num_neurons), RelearnException);
                 ASSERT_THROW(auto tmp = model->get_fired(neuron_id + current_num_neurons), RelearnException);
                 ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
@@ -1493,7 +1493,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsAEIF) {
                 ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
             }
 
-            for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
+            for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
                 ASSERT_THROW(auto tmp = model->get_x(neuron_id + current_num_neurons), RelearnException);
                 ASSERT_THROW(auto tmp = model->get_fired(neuron_id + current_num_neurons), RelearnException);
                 ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);

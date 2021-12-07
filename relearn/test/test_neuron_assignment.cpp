@@ -707,9 +707,13 @@ TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
 }
 
 TEST_F(NeuronAssignmentTest, testFileRoi14SingleSubdomain) {
-
+#ifdef _WIN32
+    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-4/new_positions.txt" };
+    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-4/new_synapses.txt" };
+#elif
     std::filesystem::path path_to_neurons{ "../input/roi_split/1-4/new_positions.txt" };
     std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-4/new_synapses.txt" };
+#endif
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
@@ -748,9 +752,13 @@ TEST_F(NeuronAssignmentTest, testFileRoi14SingleSubdomain) {
 }
 
 TEST_F(NeuronAssignmentTest, testFileRoi15SingleSubdomain) {
-
+#ifdef _WIN32
+    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-5/new_positions.txt" };
+    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-5/new_synapses.txt" };
+#elif
     std::filesystem::path path_to_neurons{ "../input/roi_split/1-5/new_positions.txt" };
     std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-5/new_synapses.txt" };
+#endif
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
@@ -789,9 +797,13 @@ TEST_F(NeuronAssignmentTest, testFileRoi15SingleSubdomain) {
 }
 
 TEST_F(NeuronAssignmentTest, testFileRoi16SingleSubdomain) {
-
+#ifdef _WIN32
+    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-6/new_positions.txt" };
+    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-6/new_synapses.txt" };
+#elif
     std::filesystem::path path_to_neurons{ "../input/roi_split/1-6/new_positions.txt" };
     std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-6/new_synapses.txt" };
+#endif
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
@@ -830,9 +842,13 @@ TEST_F(NeuronAssignmentTest, testFileRoi16SingleSubdomain) {
 }
 
 TEST_F(NeuronAssignmentTest, testFileRoi17SingleSubdomain) {
-
+#ifdef _WIN32
+    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-7/new_positions.txt" };
+    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-7/new_synapses.txt" };
+#elif
     std::filesystem::path path_to_neurons{ "../input/roi_split/1-7/new_positions.txt" };
     std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-7/new_synapses.txt" };
+#endif
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
