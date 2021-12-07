@@ -258,6 +258,15 @@ protected:
 
     template <typename AdditionalCellAttributes>
     void test_cell_octants_size();
+
+    template <typename VirtualPlasticityElement>
+    void test_vpe_number_elements();
+
+    template <typename VirtualPlasticityElement>
+    void test_vpe_position();
+
+    template <typename VirtualPlasticityElement>
+    void test_vpe_mixed();
 };
 
 class OctreeTest : public RelearnTest {

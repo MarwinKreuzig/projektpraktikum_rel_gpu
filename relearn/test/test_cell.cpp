@@ -428,56 +428,163 @@ void CellTest::test_cell_octants_size() {
     }
 }
 
-TEST_F(CellTest, testCellSize) {
+template <typename VirtualPlasticityElement>
+void CellTest::test_vpe_number_elements() {
+    VirtualPlasticityElement vpe{};
+
+    const auto& number_initially_free_elements = vpe.get_number_free_elements();
+    ASSERT_EQ(number_initially_free_elements, 0) << number_initially_free_elements;
+
+    const auto nfe_1 = get_random_number_neurons(mt);
+    vpe.set_number_free_elements(nfe_1);
+
+    const auto& number_free_elements_1 = vpe.get_number_free_elements();
+    ASSERT_EQ(number_free_elements_1, nfe_1) << number_free_elements_1 << ' ' << nfe_1;
+
+    const auto nfe_2 = get_random_number_neurons(mt);
+    vpe.set_number_free_elements(nfe_2);
+
+    const auto& number_free_elements_2 = vpe.get_number_free_elements();
+    ASSERT_EQ(number_free_elements_2, nfe_2) << number_free_elements_2 << ' ' << nfe_2;    
+}
+
+template <typename VirtualPlasticityElement>
+void CellTest::test_vpe_position() {
+    VirtualPlasticityElement vpe{};
+
+    const auto& initial_position = vpe.get_position();
+    ASSERT_FALSE(initial_position.has_value());
+
+    const auto& [pos_1, pos_3] = get_random_simulation_box_size(mt);
+
+    vpe.set_position(pos_1);
+    const auto& position_1 = vpe.get_position();
+    ASSERT_TRUE(position_1.has_value());
+    ASSERT_EQ(position_1.value(), pos_1);
+
+    vpe.set_position({});
+    const auto& position_2 = vpe.get_position();
+    ASSERT_FALSE(position_2.has_value());
+
+    vpe.set_position(pos_3);
+    const auto& position_3 = vpe.get_position();
+    ASSERT_TRUE(position_3.has_value());
+    ASSERT_EQ(position_3.value(), pos_3);
+}
+
+template <typename VirtualPlasticityElement>
+void CellTest::test_vpe_mixed() {
+    VirtualPlasticityElement vpe{};
+
+    const auto& initial_position = vpe.get_position();
+    ASSERT_FALSE(initial_position.has_value());
+
+    const auto& [pos_1, pos_3] = get_random_simulation_box_size(mt);
+
+    vpe.set_position(pos_1);
+    const auto& position_1 = vpe.get_position();
+    ASSERT_TRUE(position_1.has_value());
+    ASSERT_EQ(position_1.value(), pos_1);
+
+    const auto& number_initially_free_elements = vpe.get_number_free_elements();
+    ASSERT_EQ(number_initially_free_elements, 0) << number_initially_free_elements;
+
+    const auto nfe_1 = get_random_number_neurons(mt);
+    vpe.set_number_free_elements(nfe_1);
+
+    const auto& number_free_elements_1 = vpe.get_number_free_elements();
+    ASSERT_EQ(number_free_elements_1, nfe_1) << number_free_elements_1 << ' ' << nfe_1;
+
+    vpe.set_position({});
+    const auto& position_2 = vpe.get_position();
+    ASSERT_FALSE(position_2.has_value());
+
+    vpe.set_position(pos_3);
+    const auto& position_3 = vpe.get_position();
+    ASSERT_TRUE(position_3.has_value());
+    ASSERT_EQ(position_3.value(), pos_3);
+
+    const auto nfe_2 = get_random_number_neurons(mt);
+    vpe.set_number_free_elements(nfe_2);
+
+    const auto& number_free_elements_2 = vpe.get_number_free_elements();
+    ASSERT_EQ(number_free_elements_2, nfe_2) << number_free_elements_2 << ' ' << nfe_2;
+}
+
+TEST_F(CellTest, testBarnesHutCellSize) {
     for (auto i = 0; i < iterations; i++) {
         test_cell_size<BarnesHutCell>();
     }
 }
 
-TEST_F(CellTest, testCellPosition) {
+TEST_F(CellTest, testBarnesHutCellPosition) {
     for (auto i = 0; i < iterations; i++) {
         test_cell_position<BarnesHutCell>();
     }
 }
 
-TEST_F(CellTest, testCellPositionException) {
+TEST_F(CellTest, testBarnesHutCellPositionException) {
     for (auto i = 0; i < iterations; i++) {
         test_cell_position_exception<BarnesHutCell>();
     }
 }
 
-TEST_F(CellTest, testCellPositionCombined) {
+TEST_F(CellTest, testBarnesHutCellPositionCombined) {
     for (auto i = 0; i < iterations; i++) {
         test_cell_position_combined<BarnesHutCell>();
     }
 }
 
-TEST_F(CellTest, testCellSetNumDendrites) {
+TEST_F(CellTest, testBarnesHutCellSetNumDendrites) {
     for (auto i = 0; i < iterations; i++) {
         test_cell_set_number_dendrites<BarnesHutCell>();
     }
 }
 
-TEST_F(CellTest, testCellSetNeuronId) {
+TEST_F(CellTest, testBarnesHutCellSetNeuronId) {
     for (auto i = 0; i < iterations; i++) {
         test_cell_set_neuron_id<BarnesHutCell>();
     }
 }
 
-TEST_F(CellTest, testCellOctants) {
+TEST_F(CellTest, testBarnesHutCellOctants) {
     for (auto i = 0; i < iterations; i++) {
         test_cell_octants<BarnesHutCell>();
     }
 }
 
-TEST_F(CellTest, testCellOctantsException) {
+TEST_F(CellTest, testBarnesHutCellOctantsException) {
     for (auto i = 0; i < iterations; i++) {
         test_cell_octants_exception<BarnesHutCell>();
     }
 }
 
-TEST_F(CellTest, testCellOctantsSize) {
+TEST_F(CellTest, testBarnesHutCellOctantsSize) {
     for (auto i = 0; i < iterations; i++) {
         test_cell_octants_size<BarnesHutCell>();
+    }
+}
+
+TEST_F(CellTest, testVPEManualNumberFreeElements) {
+    for (auto i = 0; i < iterations; i++) {
+        test_vpe_number_elements<VirtualPlasticityElementManual>();
+    }
+}
+
+TEST_F(CellTest, testVPEManualPosition) {
+    for (auto i = 0; i < iterations; i++) {
+        test_vpe_position<VirtualPlasticityElementManual>();
+    }
+}
+
+TEST_F(CellTest, testVPEOptionalNumberFreeElements) {
+    for (auto i = 0; i < iterations; i++) {
+        test_vpe_number_elements<VirtualPlasticityElementOptional>();
+    }
+}
+
+TEST_F(CellTest, testVPEOptionalPosition) {
+    for (auto i = 0; i < iterations; i++) {
+        test_vpe_position<VirtualPlasticityElementOptional>();
     }
 }
