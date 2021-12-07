@@ -21,34 +21,34 @@ bool is_power_of_two(size_t number) {
     return counter == 1;
 }
 
-TEST_F(PartitionTest, test_partition_zero_ranks) {
+TEST_F(PartitionTest, testPartitionZeroRanks) {
     for (auto i = 0; i < iterations; i++) {
         const auto my_rank = get_random_number_ranks(mt);
         ASSERT_THROW(Partition part(0, my_rank), RelearnException) << my_rank;
     }
 }
 
-TEST_F(PartitionTest, test_partition_constructor_arguments) {
+TEST_F(PartitionTest, testPartitionConstructorArguments) {
     for (auto i = 0; i < iterations; i++) {
         const auto my_rank = get_random_number_ranks(mt);
         const auto num_ranks = get_random_number_ranks(mt);
         const auto is_rank_power_2 = is_power_of_two(num_ranks);
 
         if (!is_rank_power_2) {
-            ASSERT_THROW(Partition part(num_ranks, my_rank), RelearnException) << num_ranks << my_rank;
+            ASSERT_THROW(Partition part(num_ranks, my_rank), RelearnException) << num_ranks << ' ' << my_rank;
             break;
         }
 
         if (my_rank >= num_ranks) {
-            ASSERT_THROW(Partition part(num_ranks, my_rank), RelearnException) << num_ranks << my_rank;
+            ASSERT_THROW(Partition part(num_ranks, my_rank), RelearnException) << num_ranks << ' ' << my_rank;
             break;
         }
 
-        ASSERT_NO_THROW(Partition part(num_ranks, my_rank)) << num_ranks << my_rank;
+        ASSERT_NO_THROW(Partition part(num_ranks, my_rank)) << num_ranks << ' ' << my_rank;
     }
 }
 
-TEST_F(PartitionTest, test_partition_constructor) {
+TEST_F(PartitionTest, testPartitionConstructor) {
     for (auto i = 0; i < iterations; i++) {
         const auto num_ranks = get_adjusted_random_number_ranks(mt);
         const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
@@ -64,8 +64,8 @@ TEST_F(PartitionTest, test_partition_constructor) {
             ASSERT_EQ(partition.get_total_number_subdomains(), num_subdomains) << num_subdomains;
             ASSERT_EQ(partition.get_number_local_subdomains(), my_subdomains) << my_subdomains;
 
-            ASSERT_EQ(partition.get_local_subdomain_id_start(), my_subdomains * my_rank) << my_subdomains << my_rank;
-            ASSERT_EQ(partition.get_local_subdomain_id_end(), my_subdomains * (my_rank + 1) - 1) << my_subdomains << my_rank;
+            ASSERT_EQ(partition.get_local_subdomain_id_start(), my_subdomains * my_rank) << my_subdomains << ' ' << my_rank;
+            ASSERT_EQ(partition.get_local_subdomain_id_end(), my_subdomains * (my_rank + 1) - 1) << my_subdomains << ' ' << my_rank;
 
             ASSERT_EQ(partition.get_level_of_subdomain_trees(), oct_exponent) << oct_exponent;
             ASSERT_EQ(partition.get_number_subdomains_per_dimension(), num_subdomains_per_dim) << num_subdomains_per_dim;
@@ -73,7 +73,7 @@ TEST_F(PartitionTest, test_partition_constructor) {
     }
 }
 
-TEST_F(PartitionTest, test_partition_number_neurons) {
+TEST_F(PartitionTest, testPartitionNumberNeurons) {
     for (auto i = 0; i < iterations; i++) {
         const auto num_ranks = get_adjusted_random_number_ranks(mt);
         const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
@@ -126,7 +126,7 @@ TEST_F(PartitionTest, test_partition_number_neurons) {
     }
 }
 
-TEST_F(PartitionTest, test_partition_subdomain_indices) {
+TEST_F(PartitionTest, testPartitionSubdomainIndices) {
     for (auto i = 0; i < iterations; i++) {
         const auto num_ranks = get_adjusted_random_number_ranks(mt);
         const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
@@ -149,11 +149,11 @@ TEST_F(PartitionTest, test_partition_subdomain_indices) {
                 const auto translated_index_3 = sfc.map_1d_to_3d(index_1);
                 const auto translated_index_1 = sfc.map_3d_to_1d(index_3);
 
-                ASSERT_EQ(index_1, translated_index_1) << index_1 << translated_index_1;
-                ASSERT_EQ(index_3, translated_index_3) << index_3 << translated_index_3;
+                ASSERT_EQ(index_1, translated_index_1) << index_1 << ' ' << translated_index_1;
+                ASSERT_EQ(index_3, translated_index_3) << index_3 << ' ' << translated_index_3;
 
                 ASSERT_FALSE(found_indices[index_1]) << index_1;
-                ASSERT_TRUE(index_1 < num_subdomains) << index_1 << num_subdomains;
+                ASSERT_TRUE(index_1 < num_subdomains) << index_1 << ' ' << num_subdomains;
 
                 found_indices[index_1] = true;
             }
@@ -166,7 +166,7 @@ TEST_F(PartitionTest, test_partition_subdomain_indices) {
     }
 }
 
-TEST_F(PartitionTest, test_partition_subdomain_boundaries) {
+TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
     for (auto i = 0; i < iterations; i++) {
         const auto num_ranks = get_adjusted_random_number_ranks(mt);
         const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
@@ -259,7 +259,7 @@ TEST_F(PartitionTest, test_partition_subdomain_boundaries) {
     }
 }
 
-TEST_F(PartitionTest, test_partition_position_to_mpi) {
+TEST_F(PartitionTest, testPartitionPositionToMpi) {
     for (auto i = 0; i < iterations; i++) {
         const auto num_ranks = get_adjusted_random_number_ranks(mt);
         const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
