@@ -2,20 +2,7 @@
 
 #include "RelearnTest.hpp"
 
-#include "../source/neurons/Neurons.h"
-#include "../source/neurons/models/NeuronModels.h"
-
-#include "../source/neurons/NetworkGraph.h"
-
-#include "../source/structure/Partition.h"
-
-#include <algorithm>
-#include <map>
-#include <numeric>
-#include <random>
-#include <stack>
-#include <tuple>
-#include <vector>
+#include "../source/neurons/NeuronsExtraInfo.h"
 
 void NeuronsTest::assert_empty(const NeuronsExtraInfo& nei, size_t number_neurons) {
     const auto& area_names = nei.get_area_names();
@@ -41,7 +28,7 @@ void NeuronsTest::assert_contains(const NeuronsExtraInfo& nei, size_t number_neu
     const auto& expected_area_names_size = expected_area_names.size();
     const auto& expected_positions_size = expected_positions.size();
 
-    ASSERT_EQ(num_neurons_check, expected_area_names_size) << num_neurons_check << ' ' << expected_area_names;
+    ASSERT_EQ(num_neurons_check, expected_area_names_size) << num_neurons_check << ' ' << expected_area_names_size;
     ASSERT_EQ(num_neurons_check, expected_positions_size) << num_neurons_check << ' ' << expected_positions_size;
 
     const auto& actual_area_names = nei.get_area_names();

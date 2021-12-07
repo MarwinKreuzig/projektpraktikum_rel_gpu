@@ -22,6 +22,7 @@
 #include <map>
 #include <random>
 #include <tuple>
+#include <vector>
 
 class NeuronsExtraInfo;
 
