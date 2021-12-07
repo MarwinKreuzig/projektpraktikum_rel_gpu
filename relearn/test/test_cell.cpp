@@ -52,11 +52,7 @@ void CellTest::test_cell_position() {
 
     cell.set_size(min, max);
 
-    std::uniform_real_distribution urd_x(min.get_x(), max.get_x());
-    std::uniform_real_distribution urd_y(min.get_y(), max.get_y());
-    std::uniform_real_distribution urd_z(min.get_z(), max.get_z());
-
-    const Vec3d pos_ex_1{ urd_x(mt), urd_y(mt), urd_z(mt) };
+    const auto& pos_ex_1 = get_random_position_in_box(min, max);
     cell.set_excitatory_dendrites_position(pos_ex_1);
 
     ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
@@ -69,7 +65,7 @@ void CellTest::test_cell_position() {
     ASSERT_FALSE(cell.get_excitatory_dendrites_position().has_value());
     ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::EXCITATORY).has_value());
 
-    const Vec3d pos_ex_2{ urd_x(mt), urd_y(mt), urd_z(mt) };
+    const auto& pos_ex_2 = get_random_position_in_box(min, max);
     cell.set_excitatory_dendrites_position(pos_ex_2);
 
     ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
@@ -82,7 +78,7 @@ void CellTest::test_cell_position() {
     ASSERT_FALSE(cell.get_excitatory_dendrites_position().has_value());
     ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::EXCITATORY).has_value());
 
-    const Vec3d pos_in_1{ urd_x(mt), urd_y(mt), urd_z(mt) };
+    const auto& pos_in_1 = get_random_position_in_box(min, max);
     cell.set_inhibitory_dendrites_position(pos_in_1);
 
     ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
@@ -95,7 +91,7 @@ void CellTest::test_cell_position() {
     ASSERT_FALSE(cell.get_excitatory_dendrites_position().has_value());
     ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::EXCITATORY).has_value());
 
-    const Vec3d pos_in_2{ urd_x(mt), urd_y(mt), urd_z(mt) };
+    const auto& pos_in_2 = get_random_position_in_box(min, max);
     cell.set_inhibitory_dendrites_position(pos_in_2);
 
     ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
@@ -119,24 +115,20 @@ void CellTest::test_cell_position_exception() {
 
     cell.set_size(min, max);
 
-    std::uniform_real_distribution urd_x(min.get_x(), max.get_x());
-    std::uniform_real_distribution urd_y(min.get_y(), max.get_y());
-    std::uniform_real_distribution urd_z(min.get_z(), max.get_z());
-
-    const Vec3d pos_ex_1{ urd_x(mt), urd_y(mt), urd_z(mt) };
+    const auto& pos_ex_1 = get_random_position_in_box(min, max);
     cell.set_excitatory_dendrites_position(pos_ex_1);
 
-    const Vec3d pos_ex_1_invalid_x_max = max + Vec3d{ 1, 0, 0 };
-    const Vec3d pos_ex_1_invalid_y_max = max + Vec3d{ 0, 1, 0 };
-    const Vec3d pos_ex_1_invalid_z_max = max + Vec3d{ 0, 0, 1 };
+    const auto& pos_ex_1_invalid_x_max = max + Vec3d{ 1, 0, 0 };
+    const auto& pos_ex_1_invalid_y_max = max + Vec3d{ 0, 1, 0 };
+    const auto& pos_ex_1_invalid_z_max = max + Vec3d{ 0, 0, 1 };
 
     ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_1_invalid_x_max), RelearnException);
     ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_1_invalid_y_max), RelearnException);
     ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_1_invalid_z_max), RelearnException);
 
-    const Vec3d pos_ex_1_invalid_x_min = min - Vec3d{ 1, 0, 0 };
-    const Vec3d pos_ex_1_invalid_y_min = min - Vec3d{ 0, 1, 0 };
-    const Vec3d pos_ex_1_invalid_z_min = min - Vec3d{ 0, 0, 1 };
+    const auto& pos_ex_1_invalid_x_min = min - Vec3d{ 1, 0, 0 };
+    const auto& pos_ex_1_invalid_y_min = min - Vec3d{ 0, 1, 0 };
+    const auto& pos_ex_1_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
     ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_1_invalid_x_min), RelearnException);
     ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_1_invalid_y_min), RelearnException);
@@ -148,20 +140,20 @@ void CellTest::test_cell_position_exception() {
     ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::EXCITATORY).has_value());
     ASSERT_EQ(pos_ex_1, cell.get_dendrites_position_for(SignalType::EXCITATORY).value());
 
-    const Vec3d pos_ex_2{ urd_x(mt), urd_y(mt), urd_z(mt) };
+    const auto& pos_ex_2 = get_random_position_in_box(min, max);
     cell.set_excitatory_dendrites_position(pos_ex_2);
 
-    const Vec3d pos_ex_2_invalid_x_max = max + Vec3d{ 1, 0, 0 };
-    const Vec3d pos_ex_2_invalid_y_max = max + Vec3d{ 0, 1, 0 };
-    const Vec3d pos_ex_2_invalid_z_max = max + Vec3d{ 0, 0, 1 };
+    const auto& pos_ex_2_invalid_x_max = max + Vec3d{ 1, 0, 0 };
+    const auto& pos_ex_2_invalid_y_max = max + Vec3d{ 0, 1, 0 };
+    const auto& pos_ex_2_invalid_z_max = max + Vec3d{ 0, 0, 1 };
 
     ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_2_invalid_x_max), RelearnException);
     ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_2_invalid_y_max), RelearnException);
     ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_2_invalid_z_max), RelearnException);
 
-    const Vec3d pos_ex_2_invalid_x_min = min - Vec3d{ 1, 0, 0 };
-    const Vec3d pos_ex_2_invalid_y_min = min - Vec3d{ 0, 1, 0 };
-    const Vec3d pos_ex_2_invalid_z_min = min - Vec3d{ 0, 0, 1 };
+    const auto& pos_ex_2_invalid_x_min = min - Vec3d{ 1, 0, 0 };
+    const auto& pos_ex_2_invalid_y_min = min - Vec3d{ 0, 1, 0 };
+    const auto& pos_ex_2_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
     ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_2_invalid_x_min), RelearnException);
     ASSERT_THROW(cell.set_excitatory_dendrites_position(pos_ex_2_invalid_y_min), RelearnException);
@@ -173,20 +165,20 @@ void CellTest::test_cell_position_exception() {
     ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::EXCITATORY).has_value());
     ASSERT_EQ(pos_ex_2, cell.get_dendrites_position_for(SignalType::EXCITATORY).value());
 
-    const Vec3d pos_in_1{ urd_x(mt), urd_y(mt), urd_z(mt) };
+    const auto& pos_in_1 = get_random_position_in_box(min, max);
     cell.set_inhibitory_dendrites_position(pos_in_1);
 
-    const Vec3d pos_in_1_invalid_x_max = max + Vec3d{ 1, 0, 0 };
-    const Vec3d pos_in_1_invalid_y_max = max + Vec3d{ 0, 1, 0 };
-    const Vec3d pos_in_1_invalid_z_max = max + Vec3d{ 0, 0, 1 };
+    const auto& pos_in_1_invalid_x_max = max + Vec3d{ 1, 0, 0 };
+    const auto& pos_in_1_invalid_y_max = max + Vec3d{ 0, 1, 0 };
+    const auto& pos_in_1_invalid_z_max = max + Vec3d{ 0, 0, 1 };
 
     ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_1_invalid_x_max), RelearnException);
     ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_1_invalid_y_max), RelearnException);
     ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_1_invalid_z_max), RelearnException);
 
-    const Vec3d pos_in_1_invalid_x_min = min - Vec3d{ 1, 0, 0 };
-    const Vec3d pos_in_1_invalid_y_min = min - Vec3d{ 0, 1, 0 };
-    const Vec3d pos_in_1_invalid_z_min = min - Vec3d{ 0, 0, 1 };
+    const auto& pos_in_1_invalid_x_min = min - Vec3d{ 1, 0, 0 };
+    const auto& pos_in_1_invalid_y_min = min - Vec3d{ 0, 1, 0 };
+    const auto& pos_in_1_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
     ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_1_invalid_x_min), RelearnException);
     ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_1_invalid_y_min), RelearnException);
@@ -198,20 +190,20 @@ void CellTest::test_cell_position_exception() {
     ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::INHIBITORY).has_value());
     ASSERT_EQ(pos_in_1, cell.get_dendrites_position_for(SignalType::INHIBITORY).value());
 
-    const Vec3d pos_in_2{ urd_x(mt), urd_y(mt), urd_z(mt) };
+    const auto& pos_in_2 = get_random_position_in_box(min, max);
     cell.set_inhibitory_dendrites_position(pos_in_2);
 
-    const Vec3d pos_in_2_invalid_x_max = max + Vec3d{ 1, 0, 0 };
-    const Vec3d pos_in_2_invalid_y_max = max + Vec3d{ 0, 1, 0 };
-    const Vec3d pos_in_2_invalid_z_max = max + Vec3d{ 0, 0, 1 };
+    const auto& pos_in_2_invalid_x_max = max + Vec3d{ 1, 0, 0 };
+    const auto& pos_in_2_invalid_y_max = max + Vec3d{ 0, 1, 0 };
+    const auto& pos_in_2_invalid_z_max = max + Vec3d{ 0, 0, 1 };
 
     ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_2_invalid_x_max), RelearnException);
     ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_2_invalid_y_max), RelearnException);
     ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_2_invalid_z_max), RelearnException);
 
-    const Vec3d pos_in_2_invalid_x_min = min - Vec3d{ 1, 0, 0 };
-    const Vec3d pos_in_2_invalid_y_min = min - Vec3d{ 0, 1, 0 };
-    const Vec3d pos_in_2_invalid_z_min = min - Vec3d{ 0, 0, 1 };
+    const auto& pos_in_2_invalid_x_min = min - Vec3d{ 1, 0, 0 };
+    const auto& pos_in_2_invalid_y_min = min - Vec3d{ 0, 1, 0 };
+    const auto& pos_in_2_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
     ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_2_invalid_x_min), RelearnException);
     ASSERT_THROW(cell.set_inhibitory_dendrites_position(pos_in_2_invalid_y_min), RelearnException);
@@ -234,14 +226,10 @@ void CellTest::test_cell_position_combined() {
 
     cell.set_size(min, max);
 
-    std::uniform_real_distribution urd_x(min.get_x(), max.get_x());
-    std::uniform_real_distribution urd_y(min.get_y(), max.get_y());
-    std::uniform_real_distribution urd_z(min.get_z(), max.get_z());
-
-    const Vec3d pos_1{ urd_x(mt), urd_y(mt), urd_z(mt) };
-    const Vec3d pos_2{ urd_x(mt), urd_y(mt), urd_z(mt) };
-    const Vec3d pos_3{ urd_x(mt), urd_y(mt), urd_z(mt) };
-    const Vec3d pos_4{ urd_x(mt), urd_y(mt), urd_z(mt) };
+    const auto& pos_1 = get_random_position_in_box(min, max);
+    const auto& pos_2 = get_random_position_in_box(min, max);
+    const auto& pos_3 = get_random_position_in_box(min, max);
+    const auto& pos_4 = get_random_position_in_box(min, max);
 
     cell.set_dendrites_position({});
 
@@ -334,14 +322,8 @@ void CellTest::test_cell_octants() {
 
     const auto midpoint = (min + max) / 2;
 
-    std::uniform_real_distribution urd_x(min.get_x(), max.get_x());
-    std::uniform_real_distribution urd_y(min.get_y(), max.get_y());
-    std::uniform_real_distribution urd_z(min.get_z(), max.get_z());
-
     for (auto id = 0; id < 1000; id++) {
-        const Vec3d position{
-            urd_x(mt), urd_y(mt), urd_z(mt)
-        };
+        const auto& position = get_random_position_in_box(min, max);
 
         const auto larger_x = position.get_x() >= midpoint.get_x() ? 1 : 0;
         const auto larger_y = position.get_y() >= midpoint.get_y() ? 2 : 0;
@@ -365,13 +347,13 @@ void CellTest::test_cell_octants_exception() {
 
     cell.set_size(min, max);
 
-    const Vec3d pos_invalid_x_max = max + Vec3d{ 1, 0, 0 };
-    const Vec3d pos_invalid_y_max = max + Vec3d{ 0, 1, 0 };
-    const Vec3d pos_invalid_z_max = max + Vec3d{ 0, 0, 1 };
+    const auto& pos_invalid_x_max = max + Vec3d{ 1, 0, 0 };
+    const auto& pos_invalid_y_max = max + Vec3d{ 0, 1, 0 };
+    const auto& pos_invalid_z_max = max + Vec3d{ 0, 0, 1 };
 
-    const Vec3d pos_invalid_x_min = min - Vec3d{ 1, 0, 0 };
-    const Vec3d pos_invalid_y_min = min - Vec3d{ 0, 1, 0 };
-    const Vec3d pos_invalid_z_min = min - Vec3d{ 0, 0, 1 };
+    const auto& pos_invalid_x_min = min - Vec3d{ 1, 0, 0 };
+    const auto& pos_invalid_y_min = min - Vec3d{ 0, 1, 0 };
+    const auto& pos_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
     ASSERT_THROW(auto tmp = cell.get_octant_for_position(pos_invalid_x_max), RelearnException);
     ASSERT_THROW(auto tmp = cell.get_octant_for_position(pos_invalid_y_max), RelearnException);
@@ -445,7 +427,7 @@ void CellTest::test_vpe_number_elements() {
     vpe.set_number_free_elements(nfe_2);
 
     const auto& number_free_elements_2 = vpe.get_number_free_elements();
-    ASSERT_EQ(number_free_elements_2, nfe_2) << number_free_elements_2 << ' ' << nfe_2;    
+    ASSERT_EQ(number_free_elements_2, nfe_2) << number_free_elements_2 << ' ' << nfe_2;
 }
 
 template <typename VirtualPlasticityElement>

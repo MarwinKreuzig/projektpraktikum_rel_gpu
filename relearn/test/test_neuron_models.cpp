@@ -997,7 +997,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitPoisson) {
                 ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
             }
 
-            for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+            for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
                 ASSERT_THROW(auto tmp = model->get_x(neuron_id + number_neurons), RelearnException);
                 ASSERT_THROW(auto tmp = model->get_fired(neuron_id + number_neurons), RelearnException);
                 ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + number_neurons), RelearnException);
@@ -1071,7 +1071,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitIzhikevich) {
                 ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
             }
 
-            for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+            for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
                 ASSERT_THROW(auto tmp = model->get_x(neuron_id + number_neurons), RelearnException);
                 ASSERT_THROW(auto tmp = model->get_fired(neuron_id + number_neurons), RelearnException);
                 ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + number_neurons), RelearnException);

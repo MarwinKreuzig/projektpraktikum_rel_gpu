@@ -168,7 +168,20 @@ protected:
         return urd_percentage(mt);
     }
 
-    std::mt19937 mt;
+    uint8_t get_random_refinement_level() noexcept {
+        return static_cast<uint8_t>(uid_refinement(mt));
+    }
+
+    uint8_t get_small_refinement_level() noexcept {
+        return static_cast<uint8_t>(uid_small_refinement(mt));
+    }
+
+    uint8_t get_large_refinement_level() noexcept {
+        return static_cast<uint8_t>(uid_large_refinement(mt));
+    }
+
+    constexpr static unsigned short small_refinement_level = 5;
+    constexpr static unsigned short max_refinement_level = Constants::max_lvl_subdomains;
 
     constexpr static int upper_bound_my_rank = 32;
     constexpr static int upper_bound_num_ranks = 32;
@@ -179,6 +192,16 @@ protected:
     constexpr static int number_neurons_out_of_scope = 100;
 
     constexpr static int bound_synapse_weight = 10;
+    
+    std::mt19937 mt;
+
+    static int iterations;
+    static double eps;
+
+private:
+    static std::uniform_int_distribution<unsigned short> uid_refinement;
+    static std::uniform_int_distribution<unsigned short> uid_small_refinement;
+    static std::uniform_int_distribution<unsigned short> uid_large_refinement;
 
     static std::uniform_int_distribution<size_t> uid_num_ranks;
     static std::uniform_int_distribution<size_t> uid_num_neurons;
@@ -189,9 +212,6 @@ protected:
     static std::uniform_real_distribution<double> urd_percentage;
 
     static double position_bounary;
-
-    static int iterations;
-    static double eps;
 
     static bool use_predetermined_seed;
     static unsigned int predetermined_seed;
@@ -312,24 +332,4 @@ private:
 };
 
 class SpaceFillingCurveTest : public RelearnTest {
-protected:
-    uint8_t get_random_refinement_level() noexcept {
-        return static_cast<uint8_t>(uid_refinement(mt));
-    }
-
-    uint8_t get_small_refinement_level() noexcept {
-        return static_cast<uint8_t>(uid_small_refinement(mt));
-    }
-
-    uint8_t get_large_refinement_level() noexcept {
-        return static_cast<uint8_t>(uid_large_refinement(mt));
-    }
-
-    constexpr static unsigned short small_refinement_level = 5;
-    constexpr static unsigned short max_refinement_level = Constants::max_lvl_subdomains;
-
-private:
-    static std::uniform_int_distribution<unsigned short> uid_refinement;
-    static std::uniform_int_distribution<unsigned short> uid_small_refinement;
-    static std::uniform_int_distribution<unsigned short> uid_large_refinement;
 };

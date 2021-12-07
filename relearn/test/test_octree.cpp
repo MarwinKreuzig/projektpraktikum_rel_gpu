@@ -372,8 +372,8 @@ TEST_F(OctreeTest, testOctreeNodeInsert) {
 
         node.set_cell_neuron_position(own_position);
 
-        size_t number_neurons = uid(mt);
-        size_t num_additional_ids = uid(mt);
+        size_t number_neurons = get_random_number_neurons();
+        size_t num_additional_ids = get_random_number_neurons();
 
         std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
@@ -597,8 +597,8 @@ TEST_F(OctreeTest, testOctreeInsertNeurons) {
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
-        size_t number_neurons = uid(mt);
-        size_t num_additional_ids = uid(mt);
+        size_t number_neurons = get_random_number_neurons();
+        size_t num_additional_ids = get_random_number_neurons();
 
         std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
@@ -642,8 +642,8 @@ TEST_F(OctreeTest, testOctreeInsertNeuronsExceptions) {
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
-        size_t number_neurons = uid(mt);
-        size_t num_additional_ids = uid(mt);
+        size_t number_neurons = get_random_number_neurons();
+        size_t num_additional_ids = get_random_number_neurons();
 
         std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
@@ -693,8 +693,8 @@ TEST_F(OctreeTest, testOctreeStructure) {
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
-        size_t number_neurons = uid(mt);
-        size_t num_additional_ids = uid(mt);
+        size_t number_neurons = get_random_number_neurons();
+        size_t num_additional_ids = get_random_number_neurons();
 
         std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
@@ -833,8 +833,8 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
-        size_t number_neurons = uid(mt);
-        size_t num_additional_ids = uid(mt);
+        size_t number_neurons = get_random_number_neurons();
+        size_t num_additional_ids = get_random_number_neurons();
 
         std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
@@ -954,7 +954,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
         auto octree_ptr = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
         auto& octree = *octree_ptr;
 
-        const size_t number_neurons = uid(mt);
+        const size_t number_neurons = get_random_number_neurons();
 
         const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons, mt);
 
@@ -1031,7 +1031,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
         auto octree_ptr = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
         auto& octree = *octree_ptr;
 
-        const size_t number_neurons = uid(mt);
+        const size_t number_neurons = get_random_number_neurons();
 
         const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons, mt);
 
