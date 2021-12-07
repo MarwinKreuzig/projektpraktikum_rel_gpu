@@ -14,11 +14,10 @@
 constexpr const size_t upper_bound_num_neurons = 10000;
 
 TEST_F(SynapticElementsTest, testSynapticElementsConstructor) {
-    std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
     for (auto i = 0; i < iterations; i++) {
-        size_t number_neurons = uid_num_neurons(mt);
+        size_t number_neurons = get_random_number_neurons();
 
         ElementType element_type = uid_bool(mt) == 0 ? ElementType::AXON : ElementType::DENDRITE;
 
@@ -60,13 +59,12 @@ TEST_F(SynapticElementsTest, testSynapticElementsConstructor) {
 }
 
 TEST_F(SynapticElementsTest, testSynapticElementsConstructorException) {
-    std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
     std::uniform_real_distribution<double> urd_C;
 
     for (auto i = 0; i < iterations; i++) {
-        size_t number_neurons = uid_num_neurons(mt);
+        size_t number_neurons = get_random_number_neurons();
 
         ElementType element_type = uid_bool(mt) == 0 ? ElementType::AXON : ElementType::DENDRITE;
 
@@ -153,13 +151,12 @@ TEST_F(SynapticElementsTest, testSynapticElementsConstructorException) {
 }
 
 TEST_F(SynapticElementsTest, testSynapticElementsParameters) {
-    std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
     std::uniform_real_distribution<double> urd_C;
 
     for (auto i = 0; i < iterations; i++) {
-        const size_t number_neurons = uid_num_neurons(mt);
+        const size_t number_neurons = get_random_number_neurons();
         const double C = urd_C(mt);
 
         ElementType element_type = uid_bool(mt) == 0 ? ElementType::AXON : ElementType::DENDRITE;
@@ -216,7 +213,6 @@ TEST_F(SynapticElementsTest, testSynapticElementsParameters) {
 }
 
 TEST_F(SynapticElementsTest, testSynapticElementsUpdate) {
-    std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
     std::uniform_real_distribution<double> urd_cnt(0, 10);
@@ -224,7 +220,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdate) {
     std::uniform_real_distribution<double> urd_delta(0, 10);
 
     for (auto i = 0; i < iterations; i++) {
-        size_t number_neurons = uid_num_neurons(mt);
+        size_t number_neurons = get_random_number_neurons();
 
         ElementType element_type = uid_bool(mt) == 0 ? ElementType::AXON : ElementType::DENDRITE;
 
@@ -293,7 +289,6 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdate) {
 }
 
 TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
-    std::uniform_int_distribution<size_t> uid_num_neurons(0, upper_bound_num_neurons);
     std::uniform_int_distribution<int> uid_bool(0, 1);
 
     std::uniform_real_distribution<double> urd_cnt(0, 10);
@@ -301,7 +296,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
     std::uniform_real_distribution<double> urd_delta(0, 10);
 
     for (auto i = 0; i < iterations; i++) {
-        size_t number_neurons = uid_num_neurons(mt);
+        size_t number_neurons = get_random_number_neurons();
 
         ElementType element_type = uid_bool(mt) == 0 ? ElementType::AXON : ElementType::DENDRITE;
 

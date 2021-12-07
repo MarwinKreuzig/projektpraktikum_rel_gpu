@@ -283,13 +283,12 @@ TEST_F(OctreeTest, testOctreeNodeSetterCell) {
 
     const Cell<AdditionalCellAttributes>& cell = node.get_cell();
 
-    std::uniform_int_distribution<size_t> uid_id(0, 1000);
     std::uniform_int_distribution<unsigned int> uid_dends(0, 1000);
 
     for (auto it = 0; it < iterations; it++) {
         const auto& box_sizes = get_random_simulation_box_size();
 
-        const auto id = uid_id(mt);
+        const auto id = get_random_neuron_id(1000);
         const auto dends_ex = uid_dends(mt);
         const auto dends_in = uid_dends(mt);
 
@@ -348,8 +347,6 @@ TEST_F(OctreeTest, testOctreeNodeInsert) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
-    std::uniform_int_distribution<size_t> uid(0, 10000);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -358,7 +355,7 @@ TEST_F(OctreeTest, testOctreeNodeInsert) {
         Vec3d max{};
 
         std::tie(min, max) = get_random_simulation_box_size();
-        size_t level = uid_lvl(mt);
+        size_t level = get_small_refinement_level();
 
         std::uniform_real_distribution<double> urd_x(min.get_x(), max.get_x());
         std::uniform_real_distribution<double> urd_y(min.get_y(), max.get_y());
@@ -399,7 +396,6 @@ TEST_F(OctreeTest, testOctreeNodeInsert) {
 
 TEST_F(OctreeTest, testOctreeConstructor) {
 
-    std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -409,7 +405,7 @@ TEST_F(OctreeTest, testOctreeConstructor) {
 
         std::tie(min, max) = get_random_simulation_box_size();
 
-        size_t level_of_branch_nodes = uid(mt);
+        size_t level_of_branch_nodes = get_small_refinement_level();
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
@@ -446,7 +442,7 @@ TEST_F(OctreeTest, testOctreeConstructor) {
 
         std::tie(min, max) = get_random_simulation_box_size();
 
-        size_t level_of_branch_nodes = uid(mt);
+        size_t level_of_branch_nodes = get_small_refinement_level();
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
@@ -484,7 +480,6 @@ TEST_F(OctreeTest, testOctreeConstructor) {
 
 TEST_F(OctreeTest, testOctreeConstructorExceptions) {
 
-    std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -494,7 +489,7 @@ TEST_F(OctreeTest, testOctreeConstructorExceptions) {
 
         std::tie(min_xyz, max_xyz) = get_random_simulation_box_size();
 
-        size_t level_of_branch_nodes = uid(mt);
+        size_t level_of_branch_nodes = get_small_refinement_level();
 
         ASSERT_THROW(OctreeImplementation<BarnesHut> octree(max_xyz, min_xyz, level_of_branch_nodes), RelearnException);
 
@@ -504,7 +499,6 @@ TEST_F(OctreeTest, testOctreeConstructorExceptions) {
 
 TEST_F(OctreeTest, testOctreeSetterGetter) {
 
-    std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -514,7 +508,7 @@ TEST_F(OctreeTest, testOctreeSetterGetter) {
 
         std::tie(min, max) = get_random_simulation_box_size();
 
-        size_t level_of_branch_nodes = uid(mt);
+        size_t level_of_branch_nodes = get_small_refinement_level();
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
@@ -528,7 +522,6 @@ TEST_F(OctreeTest, testOctreeSetterGetter) {
 
 TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
 
-    std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -538,7 +531,7 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
 
         std::tie(min, max) = get_random_simulation_box_size();
 
-        size_t level_of_branch_nodes = uid(mt);
+        size_t level_of_branch_nodes = get_small_refinement_level();
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
@@ -553,7 +546,7 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
 
         std::tie(min, max) = get_random_simulation_box_size();
 
-        size_t level_of_branch_nodes = uid(mt);
+        size_t level_of_branch_nodes = get_small_refinement_level();
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
@@ -568,7 +561,7 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
 
         std::tie(min, max) = get_random_simulation_box_size();
 
-        size_t level_of_branch_nodes = uid(mt);
+        size_t level_of_branch_nodes = get_small_refinement_level();
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
@@ -582,8 +575,6 @@ TEST_F(OctreeTest, testOctreeInsertNeurons) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
-    std::uniform_int_distribution<size_t> uid(0, 10000);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -593,7 +584,8 @@ TEST_F(OctreeTest, testOctreeInsertNeurons) {
 
         std::tie(min, max) = get_random_simulation_box_size();
 
-        size_t level_of_branch_nodes = uid_lvl(mt);
+        size_t level_of_branch_nodes = get_small_refinement_level();
+        ;
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
@@ -626,9 +618,7 @@ TEST_F(OctreeTest, testOctreeInsertNeurons) {
 
 TEST_F(OctreeTest, testOctreeInsertNeuronsExceptions) {
 
-    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
     std::uniform_int_distribution<int> uid_rank(0, 1000);
-    std::uniform_int_distribution<size_t> uid(0, 10000);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -638,7 +628,8 @@ TEST_F(OctreeTest, testOctreeInsertNeuronsExceptions) {
 
         std::tie(min, max) = get_random_simulation_box_size();
 
-        size_t level_of_branch_nodes = uid_lvl(mt);
+        size_t level_of_branch_nodes = get_small_refinement_level();
+        ;
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
@@ -678,8 +669,6 @@ TEST_F(OctreeTest, testOctreeStructure) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
-    std::uniform_int_distribution<size_t> uid(0, 10000);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -689,7 +678,8 @@ TEST_F(OctreeTest, testOctreeStructure) {
 
         std::tie(min, max) = get_random_simulation_box_size();
 
-        size_t level_of_branch_nodes = uid_lvl(mt);
+        size_t level_of_branch_nodes = get_small_refinement_level();
+        ;
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
@@ -771,7 +761,6 @@ TEST_F(OctreeTest, testOctreeStructure) {
 
 TEST_F(OctreeTest, testOctreeLocalTrees) {
 
-    std::uniform_int_distribution<size_t> uid(0, 6);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -781,7 +770,7 @@ TEST_F(OctreeTest, testOctreeLocalTrees) {
 
         std::tie(min, max) = get_random_simulation_box_size();
 
-        size_t level_of_branch_nodes = uid(mt);
+        size_t level_of_branch_nodes = get_small_refinement_level();
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
@@ -818,8 +807,6 @@ TEST_F(OctreeTest, testOctreeLocalTrees) {
 TEST_F(OctreeTest, testOctreeInsertLocalTree) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
-    std::uniform_int_distribution<size_t> uid(0, 10000);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -829,7 +816,8 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
 
         std::tie(min, max) = get_random_simulation_box_size();
 
-        size_t level_of_branch_nodes = uid_lvl(mt);
+        size_t level_of_branch_nodes = get_small_refinement_level();
+        ;
 
         OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
@@ -938,8 +926,6 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
 TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
-    std::uniform_int_distribution<size_t> uid(0, 10000);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -1017,8 +1003,6 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
 TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
-    std::uniform_int_distribution<size_t> uid(0, 10000);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 

@@ -63,12 +63,10 @@ TEST_F(SpaceFillingCurveTest, testMortonTranslationStochastic) {
         const size_t num_boxes_per_dimension = size_t(1) << refinement_level;
         const size_t total_num_boxes = num_boxes_per_dimension * num_boxes_per_dimension * num_boxes_per_dimension;
 
-        std::uniform_int_distribution<size_t> uid_idx(0, num_boxes_per_dimension - 1);
-
         for (auto rep = 0; rep < 1000; rep++) {
-            const size_t x = uid_idx(mt);
-            const size_t y = uid_idx(mt);
-            const size_t z = uid_idx(mt);
+            const size_t x = get_random_neuron_id(num_boxes_per_dimension); // Hijacking, is not a neuron id
+            const size_t y = get_random_neuron_id(num_boxes_per_dimension); // Hijacking, is not a neuron id
+            const size_t z = get_random_neuron_id(num_boxes_per_dimension); // Hijacking, is not a neuron id
 
             Morton::BoxCoordinates index3d{ x, y, z };
 
@@ -182,12 +180,10 @@ TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonTranslationStochastic) 
         const size_t num_boxes_per_dimension = size_t(1) << refinement_level;
         const size_t total_num_boxes = num_boxes_per_dimension * num_boxes_per_dimension * num_boxes_per_dimension;
 
-        std::uniform_int_distribution<size_t> uid_idx(0, num_boxes_per_dimension - 1);
-
         for (auto rep = 0; rep < 1000; rep++) {
-            const size_t x = uid_idx(mt);
-            const size_t y = uid_idx(mt);
-            const size_t z = uid_idx(mt);
+            const size_t x = get_random_neuron_id(num_boxes_per_dimension); // Hijacking, is not a neuron id
+            const size_t y = get_random_neuron_id(num_boxes_per_dimension); // Hijacking, is not a neuron id
+            const size_t z = get_random_neuron_id(num_boxes_per_dimension); // Hijacking, is not a neuron id
 
             Vec3s index3d{ x, y, z };
 
