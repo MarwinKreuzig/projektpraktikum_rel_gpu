@@ -240,6 +240,17 @@ class SynapticElementsTest : public RelearnTest {
 };
 
 class VectorTest : public RelearnTest {
+protected:
+    double get_random_vector_element() noexcept {
+        return uniform_vector_elements(mt);
+    }
+
+private:
+
+    constexpr static double lower_bound = -100.0;
+    constexpr static double upper_bound = 100.0;
+
+    static std::uniform_real_distribution<double> uniform_vector_elements;
 };
 
 class SpaceFillingCurveTest : public RelearnTest {
