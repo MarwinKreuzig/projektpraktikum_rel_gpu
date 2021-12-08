@@ -4,7 +4,6 @@
 
 #include "../source/algorithm/BarnesHut.h"
 #include "../source/structure/Cell.h"
-#include "../source/util/RelearnException.h"
 #include "../source/util/Vec3.h"
 
 #include <algorithm>

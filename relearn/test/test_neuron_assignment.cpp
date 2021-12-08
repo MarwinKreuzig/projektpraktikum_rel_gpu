@@ -1,16 +1,11 @@
 #include "../googletest/include/gtest/gtest.h"
 
 #include <algorithm>
-#include <array>
 #include <fstream>
 #include <memory>
 #include <numeric>
-#include <random>
-#include <set>
 #include <sstream>
 #include <string>
-#include <tuple>
-#include <vector>
 
 #include "RelearnTest.hpp"
 
@@ -18,7 +13,6 @@
 #include "../source/structure/Partition.h"
 #include "../source/sim/SubdomainFromNeuronDensity.h"
 #include "../source/sim/SubdomainFromFile.h"
-#include "../source/util/RelearnException.h"
 
 void NeuronAssignmentTest::generate_neuron_positions(std::vector<Vec3d>& positions,
     std::vector<std::string>& area_names, std::vector<SignalType>& types) {

@@ -2,15 +2,11 @@
 
 #include <map>
 #include <numeric>
-#include <random>
-#include <tuple>
 #include <utility>
-#include <vector>
 
 #include "RelearnTest.hpp"
 
 #include "../source/neurons/NetworkGraph.h"
-#include "../source/util/RelearnException.h"
 
 TEST_F(NetworkGraphTest, testNetworkGraphConstructor) {
     for (auto i = 0; i < iterations; i++) {

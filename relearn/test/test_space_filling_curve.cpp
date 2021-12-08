@@ -5,9 +5,6 @@
 #include "../source/structure/SpaceFillingCurve.h"
 #include "../source/util/RelearnException.h"
 
-#include <cmath>
-#include <cstdint>
-#include <random>
 #include <sstream>
 
 TEST_F(SpaceFillingCurveTest, testMortonConstructor) {
