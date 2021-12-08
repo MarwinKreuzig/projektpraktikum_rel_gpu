@@ -32,6 +32,7 @@
 #include <vector>
 
 class NetworkGraph;
+class NeuronIdTranslator;
 class NeuronMonitor;
 class Octree;
 class Partition;
@@ -461,6 +462,14 @@ public:
     }
 
     /**
+     * @brief Sets the neuron id translator for the neurons are stored
+     * @param octree The translator
+     */
+    void set_neuron_id_translator(std::shared_ptr<NeuronIdTranslator> neuron_id_translator) {
+        translator = std::move(neuron_id_translator);
+    }
+
+    /**
      * @brief Returns the model parameters for the specified synaptic elements 
      * @param element_type The element type
      * @param signal_type The signal type, only relevant if element_type == dendrites
@@ -757,6 +766,7 @@ private:
     std::shared_ptr<Algorithm> algorithm{};
 
     std::shared_ptr<NetworkGraph> network_graph{};
+    std::shared_ptr<NeuronIdTranslator> translator{};
 
     std::unique_ptr<NeuronModel> neuron_model{};
 

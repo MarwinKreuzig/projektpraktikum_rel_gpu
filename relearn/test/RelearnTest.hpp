@@ -289,6 +289,10 @@ protected:
 class NeuronModelsTest : public RelearnTest {
 };
 
+class RankNeuronIdTest : public RelearnTest {
+
+};
+
 class NeuronsTest : public RelearnTest {
 protected:
     void assert_empty(const NeuronsExtraInfo& nei, size_t number_neurons);

@@ -24,7 +24,7 @@
 #include <utility>
 #include <vector>
 
-class NeuronsExtraInfo;
+class NeuronIdTranslator;
 
 /**
   * An object of type NetworkGraph stores the synaptic connections between neurons, that are relevant for the current MPI rank.
@@ -532,7 +532,7 @@ public:
      * @exception Throws a RelearnException if the translation of a neuron id fails
      *      Might throw an exception related to the out-stream
      */
-    void print(std::ostream& os, const std::unique_ptr<NeuronsExtraInfo>& informations) const;
+    void print(std::ostream& os, const std::shared_ptr<NeuronIdTranslator>& translator) const;
 
     /**
      * @brief Returns directly if !Config::do_debug_checks

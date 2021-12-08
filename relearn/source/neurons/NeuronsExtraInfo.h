@@ -33,16 +33,18 @@ private:
 
     std::vector<std::string> area_names{};
     std::vector<position_type> positions{};
-    std::vector<size_t> mpi_rank_to_local_start_id{};
 
 public:
     /**
-     * @brief Initializes a NeuronsExtraInfo that holds at most the given number of neurons. Performs communication across all MPI ranks. 
+     * @brief Initializes a NeuronsExtraInfo that holds at most the given number of neurons.
      *      Must only be called once. Does not initialize dimensions or area names.
      * @param number_neurons The number of neurons, greater than 0
      * @exception Throws an RelearnAxception if number_neurons is 0 or if called multiple times.
      */
-    void init(size_t number_neurons);
+    void init(size_t number_neurons) {
+        RelearnException::check(size == 0, "NeuronsExtraInfo::init: NeuronsExtraInfo initialized two times");
+        size = number_neurons;
+    }
 
     /**
      * @brief Inserts additional neurons with UNKNOWN area name and x-, y-, z- positions randomly picked from already existing ones. Requires only one MPI rank.
@@ -108,28 +110,5 @@ public:
     [[nodiscard]] const std::string& get_area_name(const size_t neuron_id) const {
         RelearnException::check(neuron_id < area_names.size(), "NeuronsExtraInfo::get_area_name: neuron_id must be smaller than size but was {}", neuron_id);
         return area_names[neuron_id];
-    }
-
-    /**
-     * @brief Returns the global neuron id for a specified pair of MPI rank and local neuron id
-     * @param rank_neuron_id The specified MPI rank and local neuron id
-     * @exception Throws an RelearnAxception the MPI rank is smaller than 0 or exceeds the number of stored MPI ranks, 
-     *      if the local neuron id is unitialized or if the translated neuron id exceeds the number of local neurons for the specified rank 
-     */
-    [[nodiscard]] size_t rank_neuron_id2glob_id(const RankNeuronId& rank_neuron_id) {
-        const auto requested_rank = rank_neuron_id.get_rank();
-        const auto requested_local_neuron_id = rank_neuron_id.get_neuron_id();
-
-        RelearnException::check(requested_rank >= 0, "NeuronsExtraInfo::rank_neuron_id2glob_id: There was a negative MPI rank");
-        RelearnException::check(requested_rank < mpi_rank_to_local_start_id.size(), "NeuronsExtraInfo::rank_neuron_id2glob_id: The requested MPI rank is not stored");
-        RelearnException::check(requested_local_neuron_id < Constants::uninitialized, "NeuronsExtraInfo::rank_neuron_id2glob_id: The requested neuron id is unitialized");
-
-        const auto glob_id = mpi_rank_to_local_start_id[requested_rank] + requested_local_neuron_id;
-
-        if (rank_neuron_id.get_rank() < mpi_rank_to_local_start_id.size() - 1) {
-            RelearnException::check(glob_id < mpi_rank_to_local_start_id[requested_rank + 1ULL], "NeuronsExtraInfo::rank_neuron_id2glob_id: The translated id exceeded the starting id of the next rank");
-        }
-
-        return glob_id;
     }
 };

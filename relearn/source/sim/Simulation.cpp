@@ -194,7 +194,7 @@ void Simulation::initialize() {
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
-    auto nit = neuron_to_subdomain_assignment->get_neuron_id_translator();
+    neuron_id_translator = neuron_to_subdomain_assignment->get_neuron_id_translator();
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
 
     auto [local_synapses, in_synapses, out_synapses] = synapse_loader->load_synapses();
@@ -345,7 +345,7 @@ void Simulation::simulate(const size_t number_steps) {
     Timers::stop_and_add(TimerRegion::SIMULATION_LOOP);
 
     print_neuron_monitors();
-
+    
     neurons->print_positions_to_log_file();
     neurons->print_network_graph_to_log_file();
 }

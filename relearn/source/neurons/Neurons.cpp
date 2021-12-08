@@ -12,6 +12,7 @@
 
 #include "../io/LogFiles.h"
 #include "../mpi/MPIWrapper.h"
+#include "../structure/NeuronIdTranslator.h"
 #include "../structure/NodeCache.h"
 #include "../structure/Octree.h"
 #include "../structure/Partition.h"
@@ -1396,9 +1397,9 @@ void Neurons::print_network_graph_to_log_file() {
     ss << "# " << partition->get_total_number_neurons() << "\n"; // Total number of neurons
     ss << "# <target neuron id> <source neuron id> <weight>\n";
 
-    if (extra_info != nullptr) {
+    if (translator != nullptr) {
         // Write network graph to file
-        network_graph->print(ss, extra_info);
+        network_graph->print(ss, translator);
     }
 
     LogFiles::write_to_file(LogFiles::EventType::Network, false, ss.str());
@@ -1417,7 +1418,7 @@ void Neurons::print_positions_to_log_file() {
     for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         RankNeuronId rank_neuron_id{ my_rank, neuron_id };
 
-        const auto global_id = extra_info->rank_neuron_id2glob_id(rank_neuron_id);
+        const auto global_id = translator->translate_rank_neuron_id(rank_neuron_id);
         const auto& signal_type_name = (signal_types[neuron_id] == SignalType::EXCITATORY) ? std::string("ex") : std::string("in");
 
         const auto& pos = extra_info->get_position(neuron_id);

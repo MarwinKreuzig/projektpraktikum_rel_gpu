@@ -11,6 +11,7 @@
 #include "NetworkGraph.h"
 
 #include "../io/LogFiles.h"
+#include "../structure/NeuronIdTranslator.h"
 #include "Neurons.h"
 
 #include "spdlog/spdlog.h"
@@ -110,7 +111,7 @@ void NetworkGraph::debug_check() const {
     RelearnException::check(edges.empty(), "NetworkGraph::debug_check: Edges is not empty");
 }
 
-void NetworkGraph::print(std::ostream& os, const std::unique_ptr<NeuronsExtraInfo>& informations) const {
+void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTranslator>& translator) const {
     const int my_rank = mpi_rank;
 
     // For my neurons
@@ -118,7 +119,7 @@ void NetworkGraph::print(std::ostream& os, const std::unique_ptr<NeuronsExtraInf
         // Walk through in-edges of my neuron
         RankNeuronId rank_neuron_id{ my_rank, target_neuron_id };
 
-        const auto global_target = informations->rank_neuron_id2glob_id(rank_neuron_id);
+        const auto global_target = translator->translate_rank_neuron_id(rank_neuron_id);
 
         for (const auto& [local_source_id, edge_val] : neuron_local_in_neighborhood[target_neuron_id]) {
             os
@@ -128,7 +129,7 @@ void NetworkGraph::print(std::ostream& os, const std::unique_ptr<NeuronsExtraInf
         }
 
         for (const auto& [distant_neuron_id, edge_val] : neuron_distant_in_neighborhood[target_neuron_id]) {
-            const auto global_source = informations->rank_neuron_id2glob_id(distant_neuron_id);
+            const auto global_source = translator->translate_rank_neuron_id(rank_neuron_id);
 
             // <target neuron id>  <source neuron id>  <weight>
             os
