@@ -3,10 +3,8 @@
 #include "RelearnTest.hpp"
 
 #include "../source/util/Vec3.h"
-#include "../source/util/RelearnException.h"
 
 #include <sstream>
-#include <random>
 
 TEST_F(VectorTest, testVectorEmptyConstructor) {
     const Vec3<double> v{};
