@@ -11,11 +11,13 @@
 #include "gtest/gtest.h"
 
 #include "../../../source/algorithm/BarnesHutCell.h"
-#include "../../../source/structure/OctreeNode.h"
 #include "../../../source/mpi/MPIWrapper.h"
 #include "../../../source/io/LogFiles.h"
+#include "../../../source/structure/OctreeNode.h"
 #include "../../../source/util/MemoryHolder.h"
 #include "../../../source/util/RelearnException.h"
+#include "../../../source/neurons/ElementType.h"
+#include "../../../source/neurons/SignalType.h"
 
 #include <chrono>
 #include <cmath>
@@ -79,17 +81,33 @@ protected:
         MemoryHolder<BarnesHutCell>::make_all_available();
     }
 
+    size_t round_to_next_exponent(size_t numToRound, size_t exponent) {
+        auto log = std::log(static_cast<double>(numToRound)) / std::log(static_cast<double>(exponent));
+        auto rounded_exp = std::ceil(log);
+        auto new_val = std::pow(static_cast<double>(exponent), rounded_exp);
+        return static_cast<size_t>(new_val);
+    }
+
+    double get_random_double(double min, double max) {
+        std::uniform_real_distribution<double> urd(min, max);
+        return urd(mt);
+    }
+
+    template <typename T>
+    T get_random_integer(T min, T max) {
+        std::uniform_int_distribution<T> uid(min, max);
+        return uid(mt);
+    }
+
     std::tuple<Vec3d, Vec3d> get_random_simulation_box_size() {
-        std::uniform_real_distribution<double> urd(-position_bounary, +position_bounary);
+        const auto rand_x_1 = get_random_double(-position_bounary, +position_bounary);
+        const auto rand_x_2 = get_random_double(-position_bounary, +position_bounary);
 
-        const auto rand_x_1 = urd(mt);
-        const auto rand_x_2 = urd(mt);
+        const auto rand_y_1 = get_random_double(-position_bounary, +position_bounary);
+        const auto rand_y_2 = get_random_double(-position_bounary, +position_bounary);
 
-        const auto rand_y_1 = urd(mt);
-        const auto rand_y_2 = urd(mt);
-
-        const auto rand_z_1 = urd(mt);
-        const auto rand_z_2 = urd(mt);
+        const auto rand_z_1 = get_random_double(-position_bounary, +position_bounary);
+        const auto rand_z_2 = get_random_double(-position_bounary, +position_bounary);
 
         return {
             { std::min(rand_x_1, rand_x_2), std::min(rand_y_1, rand_y_2), std::min(rand_z_1, rand_z_2) },
@@ -98,30 +116,19 @@ protected:
     }
 
     Vec3d get_random_position() {
-        std::uniform_real_distribution<double> urd(-position_bounary, +position_bounary);
-
-        const auto x = urd(mt);
-        const auto y = urd(mt);
-        const auto z = urd(mt);
+        const auto x = get_random_double(-position_bounary, +position_bounary);
+        const auto y = get_random_double(-position_bounary, +position_bounary);
+        const auto z = get_random_double(-position_bounary, +position_bounary);
 
         return { x, y, z };
     }
 
     Vec3d get_random_position_in_box(const Vec3d& min, const Vec3d& max) {
-        std::uniform_real_distribution urd_x(min.get_x(), max.get_x());
-        std::uniform_real_distribution urd_y(min.get_y(), max.get_y());
-        std::uniform_real_distribution urd_z(min.get_z(), max.get_z());
+        const auto x = get_random_double(min.get_x(), max.get_x());
+        const auto y = get_random_double(min.get_y(), max.get_y());
+        const auto z = get_random_double(min.get_z(), max.get_z());
 
-        return {
-            urd_x(mt), urd_y(mt), urd_z(mt)
-        };
-    }
-
-    size_t round_to_next_exponent(size_t numToRound, size_t exponent) {
-        auto log = std::log(static_cast<double>(numToRound)) / std::log(static_cast<double>(exponent));
-        auto rounded_exp = std::ceil(log);
-        auto new_val = std::pow(static_cast<double>(exponent), rounded_exp);
-        return static_cast<size_t>(new_val);
+        return { x, y, z };
     }
 
     size_t get_random_number_ranks() {
@@ -150,6 +157,10 @@ protected:
         return uid_synapse_weight(mt);
     }
 
+    unsigned int get_random_synaptic_element_connected_count() {
+        return get_random_integer<unsigned int>(0, 10);
+    }
+
     std::vector<std::tuple<size_t, size_t, int>> get_random_synapses(size_t number_neurons, size_t number_synapses) {
         std::vector<std::tuple<size_t, size_t, int>> synapses(number_synapses);
 
@@ -165,7 +176,11 @@ protected:
     }
 
     double get_random_percentage() {
-        return urd_percentage(mt);
+        return get_random_double(0.0, std::nextafter(1.0, 2.0));
+    }
+
+    double get_random_synaptic_element_count() {
+        return get_random_double(0.0, std::nextafter(10.0, 11.0));
     }
 
     uint8_t get_random_refinement_level() noexcept {
@@ -180,6 +195,19 @@ protected:
         return static_cast<uint8_t>(uid_large_refinement(mt));
     }
 
+    bool get_random_bool() noexcept {
+        std::uniform_int_distribution<unsigned short> uid_bool(0, 1);
+        return uid_bool(mt) == 0;
+    }
+
+    ElementType get_random_element_type() noexcept {
+        return get_random_bool() ? ElementType::AXON : ElementType::DENDRITE;
+    }
+
+    SignalType get_random_signal_type() noexcept {
+        return get_random_bool() ? SignalType::EXCITATORY : SignalType::INHIBITORY;
+    }
+
     constexpr static unsigned short small_refinement_level = 5;
     constexpr static unsigned short max_refinement_level = Constants::max_lvl_subdomains;
 
@@ -192,7 +220,7 @@ protected:
     constexpr static int number_neurons_out_of_scope = 100;
 
     constexpr static int bound_synapse_weight = 10;
-    
+
     std::mt19937 mt;
 
     static int iterations;
@@ -208,8 +236,6 @@ private:
     static std::uniform_int_distribution<size_t> uid_num_synapses;
 
     static std::uniform_int_distribution<int> uid_synapse_weight;
-
-    static std::uniform_real_distribution<double> urd_percentage;
 
     static double position_bounary;
 
