@@ -463,7 +463,7 @@ public:
 
     /**
      * @brief Sets the neuron id translator for the neurons are stored
-     * @param octree The translator
+     * @param neuron_id_translator The translator
      */
     void set_neuron_id_translator(std::shared_ptr<NeuronIdTranslator> neuron_id_translator) {
         translator = std::move(neuron_id_translator);

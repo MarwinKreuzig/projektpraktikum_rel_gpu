@@ -195,6 +195,7 @@ void Simulation::initialize() {
     neurons->set_algorithm(algorithm);
 
     neuron_id_translator = neuron_to_subdomain_assignment->get_neuron_id_translator();
+    neurons->set_neuron_id_translator(neuron_id_translator);
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
 
     auto [local_synapses, in_synapses, out_synapses] = synapse_loader->load_synapses();
