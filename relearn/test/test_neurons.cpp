@@ -4,6 +4,7 @@
 
 #include "../source/neurons/Neurons.h"
 #include "../source/neurons/models/NeuronModels.h"
+#include "../source/neurons/models/SynapticElements.h"
 #include "../source/structure/Partition.h"
 
 TEST_F(NeuronsTest, testNeuronsConstructor) {

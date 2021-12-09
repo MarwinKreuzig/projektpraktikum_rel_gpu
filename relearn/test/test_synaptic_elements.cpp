@@ -8,6 +8,42 @@
 
 TEST_F(SynapticElementsTest, testSynapticElementsConstructor) {
     for (auto i = 0; i < iterations; i++) {
+        const auto& calcium_to_grow = get_random_double(SynapticElements::min_min_C_level_to_grow, SynapticElements::max_min_C_level_to_grow);
+        const auto& nu = get_random_double(SynapticElements::min_nu, SynapticElements::max_nu);
+        const auto& retract_ratio = get_random_double(SynapticElements::min_vacant_retract_ratio, SynapticElements::max_vacant_retract_ratio);
+        const auto& vacant_elements_lb = get_random_double(SynapticElements::min_vacant_elements_initially, SynapticElements::max_vacant_elements_initially);
+        const auto& vacant_elements_ub = get_random_double(SynapticElements::min_vacant_elements_initially, SynapticElements::max_vacant_elements_initially);
+
+        const auto& element_type = get_random_element_type();
+
+        std::stringstream ss{};
+        ss << element_type << ' ';
+        ss << calcium_to_grow << ' ';
+        ss << nu << ' ';
+        ss << retract_ratio << ' ';
+        ss << vacant_elements_lb << ' ';
+        ss << vacant_elements_ub << '\n';
+
+        SynapticElements synaptic_elements(element_type, calcium_to_grow, nu, retract_ratio, vacant_elements_lb, vacant_elements_lb);
+
+        const auto& parameters = synaptic_elements.get_parameter();
+
+        Parameter<double> param_min_C = std::get<Parameter<double>>(parameters[0]);
+        Parameter<double> param_nu = std::get<Parameter<double>>(parameters[1]);
+        Parameter<double> param_vacant = std::get<Parameter<double>>(parameters[2]);
+        Parameter<double> param_lower_bound = std::get<Parameter<double>>(parameters[3]);
+        Parameter<double> param_upper_bound = std::get<Parameter<double>>(parameters[4]);
+
+        ASSERT_EQ(param_min_C.value(), calcium_to_grow) << ss.str();
+        ASSERT_EQ(param_nu.value(), nu) << ss.str();
+        ASSERT_EQ(param_vacant.value(), retract_ratio) << ss.str();
+        ASSERT_EQ(param_lower_bound.value(), vacant_elements_lb) << ss.str();
+        ASSERT_EQ(param_upper_bound.value(), vacant_elements_ub) << ss.str();
+    }
+}
+
+TEST_F(SynapticElementsTest, testSynapticElementsInitialize) {
+    for (auto i = 0; i < iterations; i++) {
         const auto& number_neurons = get_random_number_neurons();
         const auto& element_type = get_random_element_type();
 
@@ -51,7 +87,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsConstructor) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsConstructorException) {
+TEST_F(SynapticElementsTest, testSynapticElementsInitializeException) {
     for (auto i = 0; i < iterations; i++) {
         const auto& number_neurons = get_random_number_neurons();
         const auto& element_type = get_random_element_type();
