@@ -257,7 +257,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
     std::uniform_int_distribution<size_t> uid(0, 10000);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
+    
     std::uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
 
     for (auto i = 0; i < iterations; i++) {
@@ -705,87 +705,87 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
     }
 }
 
-TEST_F(OctreeTestFMM, testOctreeSeriesExpansionsFMM) {
+// TEST_F(OctreeTestFMM, testOctreeSeriesExpansionsFMM) {
 
-    const auto my_rank = MPIWrapper::get_my_rank();
+//     const auto my_rank = MPIWrapper::get_my_rank();
 
-    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
-    std::uniform_int_distribution<size_t> uid(0, 10000);
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
+//     std::uniform_int_distribution<size_t> uid_lvl(0, 6);
+//     std::uniform_int_distribution<size_t> uid(0, 10000);
+//     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+//     std::uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
 
-    for (auto i = 0; i < iterations; i++) {
-        Vec3d min{};
-        Vec3d max{};
+//     for (auto i = 0; i < iterations; i++) {
+//         Vec3d min{};
+//         Vec3d max{};
 
-        std::tie(min, max) = get_random_simulation_box_size_FMM(mt);
+//         std::tie(min, max) = get_random_simulation_box_size_FMM(mt);
 
-        auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
+//         auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
 
-        auto& octree = *octree_ptr;
+//         auto& octree = *octree_ptr;
 
-        const size_t num_neurons = uid(mt);
+//         const size_t num_neurons = uid(mt);
 
-        const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
+//         const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
 
-        for (const auto& [position, id] : neurons_to_place) {
-            octree.insert(position, id, my_rank);
-        }
+//         for (const auto& [position, id] : neurons_to_place) {
+//             octree.insert(position, id, my_rank);
+//         }
 
-        octree.initializes_leaf_nodes(num_neurons);
+//         octree.initializes_leaf_nodes(num_neurons);
 
-        const auto max_vacant_elements = uid_max_vacant(mt);
+//         const auto max_vacant_elements = uid_max_vacant(mt);
 
-        auto elements = create_synaptic_elements(num_neurons, mt, max_vacant_elements);
+//         auto elements = create_synaptic_elements(num_neurons, mt, max_vacant_elements);
 
-        auto unique_ax = std::make_unique<SynapticElements>(std::move(elements[0]));
-        auto unique_dend_exc = std::make_unique<SynapticElements>(std::move(elements[1]));
-        auto unique_dend_inh = std::make_unique<SynapticElements>(std::move(elements[2]));
+//         auto unique_ax = std::make_unique<SynapticElements>(std::move(elements[0]));
+//         auto unique_dend_exc = std::make_unique<SynapticElements>(std::move(elements[1]));
+//         auto unique_dend_inh = std::make_unique<SynapticElements>(std::move(elements[2]));
 
-        FastMultipoleMethods fmm{ octree_ptr };
+//         FastMultipoleMethods fmm{ octree_ptr };
 
-        std::vector<char> disable_flags(num_neurons, 1);
+//         std::vector<char> disable_flags(num_neurons, 1);
 
-        fmm.update_leaf_nodes(disable_flags, unique_ax, unique_dend_exc, unique_dend_inh);
-        octree.update_local_trees();
+//         fmm.update_leaf_nodes(disable_flags, unique_ax, unique_dend_exc, unique_dend_inh);
+//         octree.update_local_trees();
 
-        const auto cur_sigma = urd_sigma(mt);
+//         const auto cur_sigma = urd_sigma(mt);
 
-        OctreeNode<AdditionalCellAttributes>* root = octree.get_root();
-        auto const children = root->get_children();
+//         OctreeNode<AdditionalCellAttributes>* root = octree.get_root();
+//         auto const children = root->get_children();
 
-        for (auto i = 0; i < Constants::number_oct; i++) {
-            const auto source = children[i];
-            if (source != nullptr) {
-                auto const num_ax_ex = source->get_cell().get_number_excitatory_axons();
-                if (num_ax_ex > 0) {
-                    auto const coef = fmm.calc_hermite_coefficients(source, cur_sigma, SignalType::EXCITATORY);
-                    for (auto j = 0; j < Constants::number_oct; j++) {
-                        auto const target = children[j];
-                        if (i != j && target != nullptr && target->get_cell().get_number_excitatory_dendrites() > 0) {
-                            CalculationType current_calculation = fmm.check_calculation_requirements(source, target, SignalType::EXCITATORY);
+//         for (auto i = 0; i < Constants::number_oct; i++) {
+//             const auto source = children[i];
+//             if (source != nullptr) {
+//                 auto const num_ax_ex = source->get_cell().get_number_excitatory_axons();
+//                 if (num_ax_ex > 0) {
+//                     auto const coef = fmm.calc_hermite_coefficients(source, cur_sigma, SignalType::EXCITATORY);
+//                     for (auto j = 0; j < Constants::number_oct; j++) {
+//                         auto const target = children[j];
+//                         if (i != j && target != nullptr && target->get_cell().get_number_excitatory_dendrites() > 0) {
+//                             CalculationType current_calculation = fmm.check_calculation_requirements(source, target, SignalType::EXCITATORY);
 
-                            auto const direct = fmm.calc_direct_gauss(fmm.get_all_axon_positions_for(source, SignalType::EXCITATORY),
-                                fmm.get_all_dendrite_positions_for(target, SignalType::EXCITATORY), cur_sigma);
-                            const auto eps = direct * 0.10;
+//                             auto const direct = fmm.calc_direct_gauss(fmm.get_all_axon_positions_for(source, SignalType::EXCITATORY),
+//                                 fmm.get_all_dendrite_positions_for(target, SignalType::EXCITATORY), cur_sigma);
+//                             const auto eps = direct * 0.10;
 
-                            switch (current_calculation) {
-                            case CalculationType::HERMITE: {
-                                auto const hermite = fmm.calc_hermite(source, target, coef, cur_sigma, SignalType::EXCITATORY);
-                                ASSERT_NEAR(direct, hermite, eps);
-                            }
-                            case CalculationType::TAYLOR: {
-                                auto const taylor = fmm.calc_taylor(source, target, cur_sigma, SignalType::EXCITATORY);
-                                ASSERT_NEAR(direct, taylor, eps);
-                            }
-                            case CalculationType::DIRECT: {
-                            }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        make_mpi_mem_available<AdditionalCellAttributes>();
-    }
-}
+//                             switch (current_calculation) {
+//                             case CalculationType::HERMITE: {
+//                                 auto const hermite = fmm.calc_hermite(source, target, coef, cur_sigma, SignalType::EXCITATORY);
+//                                 ASSERT_NEAR(direct, hermite, eps);
+//                             }
+//                             case CalculationType::TAYLOR: {
+//                                 auto const taylor = fmm.calc_taylor(source, target, cur_sigma, SignalType::EXCITATORY);
+//                                 ASSERT_NEAR(direct, taylor, eps);
+//                             }
+//                             case CalculationType::DIRECT: {
+//                             }
+//                             }
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//         make_mpi_mem_available<AdditionalCellAttributes>();
+//     }
+// }
