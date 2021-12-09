@@ -24,7 +24,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsConstructor) {
         ss << vacant_elements_lb << ' ';
         ss << vacant_elements_ub << '\n';
 
-        SynapticElements synaptic_elements(element_type, calcium_to_grow, nu, retract_ratio, vacant_elements_lb, vacant_elements_lb);
+        SynapticElements synaptic_elements(element_type, calcium_to_grow, nu, retract_ratio, vacant_elements_lb, vacant_elements_ub);
 
         const auto& parameters = synaptic_elements.get_parameter();
 
