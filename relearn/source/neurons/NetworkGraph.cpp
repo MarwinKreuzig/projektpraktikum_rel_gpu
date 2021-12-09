@@ -119,7 +119,7 @@ void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTransla
         // Walk through in-edges of my neuron
         RankNeuronId rank_neuron_id{ my_rank, target_neuron_id };
 
-        const auto global_target = translator->translate_rank_neuron_id(rank_neuron_id);
+        const auto global_target = translator->get_global_id(target_neuron_id);
 
         for (const auto& [local_source_id, edge_val] : neuron_local_in_neighborhood[target_neuron_id]) {
             os

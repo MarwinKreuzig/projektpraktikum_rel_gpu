@@ -1412,13 +1412,9 @@ void Neurons::print_positions_to_log_file() {
     const std::vector<std::string>& area_names = extra_info->get_area_names();
     const std::vector<SignalType>& signal_types = axons->get_signal_types();
 
-    // Print global ids, positions, and areas of local neurons
-    const int my_rank = MPIWrapper::get_my_rank();
-
     for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        RankNeuronId rank_neuron_id{ my_rank, neuron_id };
-
-        const auto global_id = translator->translate_rank_neuron_id(rank_neuron_id);
+        
+        const auto global_id = translator->get_global_id(neuron_id);
         const auto& signal_type_name = (signal_types[neuron_id] == SignalType::EXCITATORY) ? std::string("ex") : std::string("in");
 
         const auto& pos = extra_info->get_position(neuron_id);
