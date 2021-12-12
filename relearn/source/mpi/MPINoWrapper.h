@@ -162,6 +162,13 @@ public:
     // NOLINTNEXTLINE
     static void wait_all_tokens(std::vector<AsyncToken>& tokens);
 
+    template <typename T>
+    static std::vector<std::vector<T>> exchange_values(const std::vector<std::vector<T>>& values) {
+        RelearnException::check(values.size() == 1 && values[0].size() == 0, "MPINoWrapper::exchange_values: There were values!");
+        std::vector<std::vector<T>> return_value(1, std::vector<T>(0));
+        return return_values;
+    }
+
     static void lock_window(int rank, MPI_Locktype lock_type);
 
     static void unlock_window(int rank);
