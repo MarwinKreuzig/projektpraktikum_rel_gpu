@@ -166,7 +166,7 @@ public:
     static std::vector<std::vector<T>> exchange_values(const std::vector<std::vector<T>>& values) {
         RelearnException::check(values.size() == 1 && values[0].size() == 0, "MPINoWrapper::exchange_values: There were values!");
         std::vector<std::vector<T>> return_value(1, std::vector<T>(0));
-        return return_values;
+        return return_value;
     }
 
     static void lock_window(int rank, MPI_Locktype lock_type);
