@@ -53,7 +53,7 @@ TEST_F(SpaceFillingCurveTest, testMortonTranslationStochastic) {
     Morton morton{};
     std::stringstream ss{};
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto refinement_level = get_large_refinement_level();
         morton.set_refinement_level(refinement_level);
 
@@ -93,7 +93,7 @@ TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonConstructor) {
         ASSERT_EQ(refinement_level, res) << ss.str();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto refinement_level = get_random_refinement_level();
         const auto refinement_level_2 = get_random_refinement_level();
 
@@ -115,7 +115,7 @@ TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonConstructor) {
 }
 
 TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonConstructorException) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto refinement_level = get_random_refinement_level() + Constants::max_lvl_subdomains + 1;
 
         std::stringstream ss{};
@@ -128,7 +128,7 @@ TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonConstructorException) {
 TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonSetRefinementException) {
     SpaceFillingCurve<Morton> sfc{};
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto refinement_level = get_random_refinement_level() + Constants::max_lvl_subdomains + 1;
 
         std::stringstream ss{};
@@ -170,7 +170,7 @@ TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonTranslationStochastic) 
     SpaceFillingCurve<Morton> sfc{};
     std::stringstream ss{};
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto refinement_level = get_large_refinement_level();
         sfc.set_refinement_level(refinement_level);
 

@@ -10,7 +10,7 @@
 #include <utility>
 
 TEST_F(NetworkGraphTest, testNetworkGraphConstructor) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto number_neurons = get_random_number_neurons();
         NetworkGraph ng(number_neurons, 0);
 
@@ -58,7 +58,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphConstructor) {
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphConstructorExceptions) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto number_neurons = get_random_number_neurons();
         NetworkGraph ng(number_neurons, 0);
 
@@ -93,7 +93,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphConstructorExceptions) {
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphCreateNeurons) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto initial_num_neurons = get_random_number_neurons();
         NetworkGraph ng(initial_num_neurons, 0);
 
@@ -146,7 +146,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreateNeurons) {
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphCreateNeuronsException) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto initial_num_neurons = get_random_number_neurons();
         NetworkGraph ng(initial_num_neurons, 0);
 
@@ -185,7 +185,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreateNeuronsException) {
 TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto number_neurons = get_random_number_neurons();
         const auto num_synapses = get_random_number_synapses() + number_neurons;
 
@@ -305,7 +305,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
 TEST_F(NetworkGraphTest, testNetworkGraphDistantEdges) {
     std::uniform_int_distribution<int> uid_rank(0, 1);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto num_neurons_1 = get_random_number_neurons();
         const auto num_neurons_2 = get_random_number_neurons();
 
@@ -357,7 +357,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphDistantEdges) {
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto number_neurons = get_random_number_neurons();
         const auto number_synapses = get_random_number_synapses() + number_neurons;
 
@@ -440,7 +440,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphEdgesSplit) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto number_neurons = get_random_number_neurons();
         const auto num_edges = get_random_number_synapses() + number_neurons;
 
@@ -525,7 +525,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesSplit) {
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto number_neurons = get_random_number_neurons();
         const auto num_edges = get_random_number_synapses() + number_neurons;
 
@@ -593,7 +593,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto number_neurons = get_random_number_neurons();
         const auto num_edges = get_random_number_synapses() + number_neurons;
 
@@ -700,7 +700,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphHistogramPositiveWeight) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto number_neurons = get_random_number_neurons();
         const auto number_synapses = get_random_number_synapses() + number_neurons;
 
@@ -767,7 +767,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphHistogramPositiveWeight) {
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphHistogram) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto number_neurons = get_random_number_neurons();
         const auto number_synapses = get_random_number_synapses() + number_neurons;
 

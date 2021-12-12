@@ -15,7 +15,7 @@ TEST_F(VectorTest, testVectorEmptyConstructor) {
 }
 
 TEST_F(VectorTest, testVectorSameValueConstructor) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto val = get_random_vector_element();
 
         const Vec3<double> v{ val };
@@ -30,7 +30,7 @@ TEST_F(VectorTest, testVectorSameValueConstructor) {
 }
 
 TEST_F(VectorTest, testVectorThreeValuesConstructor) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -47,7 +47,7 @@ TEST_F(VectorTest, testVectorThreeValuesConstructor) {
 }
 
 TEST_F(VectorTest, testVectorStructuredBinding) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -92,7 +92,7 @@ TEST_F(VectorTest, testVectorStructuredBinding) {
 }
 
 TEST_F(VectorTest, testVectorCopyConstructor) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -111,7 +111,7 @@ TEST_F(VectorTest, testVectorCopyConstructor) {
 }
 
 TEST_F(VectorTest, testVectorCopyAssignment) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -131,7 +131,7 @@ TEST_F(VectorTest, testVectorCopyAssignment) {
 }
 
 TEST_F(VectorTest, testVectorMoveConstructor) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -150,7 +150,7 @@ TEST_F(VectorTest, testVectorMoveConstructor) {
 }
 
 TEST_F(VectorTest, testVectorMoveAssignment) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -170,7 +170,7 @@ TEST_F(VectorTest, testVectorMoveAssignment) {
 }
 
 TEST_F(VectorTest, testVectorSetComponents) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -196,7 +196,7 @@ TEST_F(VectorTest, testVectorSetComponents) {
 }
 
 TEST_F(VectorTest, testVectorOperatorPlusVector) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -230,7 +230,7 @@ TEST_F(VectorTest, testVectorOperatorPlusVector) {
 }
 
 TEST_F(VectorTest, testVectorOperatorMinusVector) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -264,7 +264,7 @@ TEST_F(VectorTest, testVectorOperatorMinusVector) {
 }
 
 TEST_F(VectorTest, testVectorOperatorPlusScalar) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -290,7 +290,7 @@ TEST_F(VectorTest, testVectorOperatorPlusScalar) {
 }
 
 TEST_F(VectorTest, testVectorOperatorMinusScalar) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -316,7 +316,7 @@ TEST_F(VectorTest, testVectorOperatorMinusScalar) {
 }
 
 TEST_F(VectorTest, testVectorOperatorMultiplyScalar) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -341,7 +341,7 @@ TEST_F(VectorTest, testVectorOperatorMultiplyScalar) {
 }
 
 TEST_F(VectorTest, testVectorOperatorDivideScalar) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -370,7 +370,7 @@ TEST_F(VectorTest, testVectorOperatorDivideScalar) {
 }
 
 TEST_F(VectorTest, testVectorOperatorPlusAssignVector) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -396,7 +396,7 @@ TEST_F(VectorTest, testVectorOperatorPlusAssignVector) {
 }
 
 TEST_F(VectorTest, testVectorOperatorPlusAssignScalar) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -418,7 +418,7 @@ TEST_F(VectorTest, testVectorOperatorPlusAssignScalar) {
 }
 
 TEST_F(VectorTest, testVectorOperatorMinusAssignVector) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -444,7 +444,7 @@ TEST_F(VectorTest, testVectorOperatorMinusAssignVector) {
 }
 
 TEST_F(VectorTest, testVectorOperatorMinusAssignScalar) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -466,7 +466,7 @@ TEST_F(VectorTest, testVectorOperatorMinusAssignScalar) {
 }
 
 TEST_F(VectorTest, testVectorOperatorMultiplyAssignScalar) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         auto x1 = get_random_vector_element();
         auto y1 = get_random_vector_element();
         auto z1 = get_random_vector_element();
@@ -488,7 +488,7 @@ TEST_F(VectorTest, testVectorOperatorMultiplyAssignScalar) {
 }
 
 TEST_F(VectorTest, testVectorOperatorDivideAssignScalar) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         auto x1 = get_random_vector_element();
         auto y1 = get_random_vector_element();
         auto z1 = get_random_vector_element();
@@ -513,7 +513,7 @@ TEST_F(VectorTest, testVectorOperatorDivideAssignScalar) {
 }
 
 TEST_F(VectorTest, testVectorVolume) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -534,7 +534,7 @@ TEST_F(VectorTest, testVectorVolume) {
 }
 
 TEST_F(VectorTest, testVectorEqual) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -552,7 +552,7 @@ TEST_F(VectorTest, testVectorEqual) {
 }
 
 TEST_F(VectorTest, testVectorUnequal) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = x + 1;
         const auto z = y + 1;
@@ -582,7 +582,7 @@ TEST_F(VectorTest, testVectorUnequal) {
 }
 
 TEST_F(VectorTest, testVectorComponentwiseMinMax) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -621,7 +621,7 @@ TEST_F(VectorTest, testVectorComponentwiseMinMax) {
 }
 
 TEST_F(VectorTest, testVectorMinMax) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -651,7 +651,7 @@ TEST_F(VectorTest, testVectorMinMax) {
 }
 
 TEST_F(VectorTest, testVectorComponentwiseFloor) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = std::abs(get_random_vector_element()) + eps;
         const auto y = std::abs(get_random_vector_element()) + eps;
         const auto z = std::abs(get_random_vector_element()) + eps;
@@ -679,7 +679,7 @@ TEST_F(VectorTest, testVectorComponentwiseFloor) {
 }
 
 TEST_F(VectorTest, testVectorComponentwiseFloorException) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         auto x = std::abs(get_random_vector_element()) + eps;
         const auto y = std::abs(get_random_vector_element()) + eps;
         const auto z = std::abs(get_random_vector_element()) + eps;
@@ -693,7 +693,7 @@ TEST_F(VectorTest, testVectorComponentwiseFloorException) {
         ASSERT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException) << ss.str();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = std::abs(get_random_vector_element()) + eps;
         auto y = std::abs(get_random_vector_element()) + eps;
         const auto z = std::abs(get_random_vector_element()) + eps;
@@ -707,7 +707,7 @@ TEST_F(VectorTest, testVectorComponentwiseFloorException) {
         ASSERT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException) << ss.str();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = std::abs(get_random_vector_element()) + eps;
         const auto y = std::abs(get_random_vector_element()) + eps;
         auto z = std::abs(get_random_vector_element()) + eps;
@@ -725,7 +725,7 @@ TEST_F(VectorTest, testVectorComponentwiseFloorException) {
 TEST_F(VectorTest, testVectorNorm) {
     std::uniform_real_distribution<double> urd_p(1.0, 10.1);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -752,7 +752,7 @@ TEST_F(VectorTest, testVectorNorm) {
 }
 
 TEST_F(VectorTest, testVectorNorm2) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -780,7 +780,7 @@ TEST_F(VectorTest, testVectorNorm2) {
 TEST_F(VectorTest, testVectorNormException) {
     std::uniform_real_distribution<double> urd_bad_p(-10.0, 1.0);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -800,7 +800,7 @@ TEST_F(VectorTest, testVectorNormException) {
 TEST_F(VectorTest, testVectorRound) {
     std::uniform_real_distribution<double> urd_multiple(1.0, 10.1);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -848,7 +848,7 @@ TEST_F(VectorTest, testVectorRound) {
 TEST_F(VectorTest, testVectorOrder) {
     std::uniform_real_distribution<double> urd_offset(1.0, 10.1);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -863,7 +863,7 @@ TEST_F(VectorTest, testVectorOrder) {
         ASSERT_FALSE(is_smaller) << ss.str();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -884,7 +884,7 @@ TEST_F(VectorTest, testVectorOrder) {
         ASSERT_FALSE(is_smaller_2_1) << ss.str();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -905,7 +905,7 @@ TEST_F(VectorTest, testVectorOrder) {
         ASSERT_FALSE(is_smaller_2_1) << ss.str();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = get_random_vector_element();
         const auto y = get_random_vector_element();
         const auto z = get_random_vector_element();
@@ -926,7 +926,7 @@ TEST_F(VectorTest, testVectorOrder) {
         ASSERT_FALSE(is_smaller_2_1) << ss.str();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -957,7 +957,7 @@ TEST_F(VectorTest, testVectorOrder) {
 }
 
 TEST_F(VectorTest, testVectorCast) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x = std::abs(get_random_vector_element());
         const auto y = std::abs(get_random_vector_element());
         const auto z = std::abs(get_random_vector_element());
@@ -979,7 +979,7 @@ TEST_F(VectorTest, testVectorCast) {
 }
 
 TEST_F(VectorTest, testVectorInBoxTrue) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -998,7 +998,7 @@ TEST_F(VectorTest, testVectorInBoxTrue) {
         ASSERT_NO_THROW(w.check_in_box(v, v)) << ss.str();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -1038,7 +1038,7 @@ TEST_F(VectorTest, testVectorInBoxTrue) {
 }
 
 TEST_F(VectorTest, testVectorInBoxFalse) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -1076,7 +1076,7 @@ TEST_F(VectorTest, testVectorInBoxFalse) {
         ASSERT_FALSE(is_in_box) << ss.str();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -1114,7 +1114,7 @@ TEST_F(VectorTest, testVectorInBoxFalse) {
         ASSERT_FALSE(is_in_box) << ss.str();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -1152,7 +1152,7 @@ TEST_F(VectorTest, testVectorInBoxFalse) {
         ASSERT_FALSE(is_in_box) << ss.str();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -1190,7 +1190,7 @@ TEST_F(VectorTest, testVectorInBoxFalse) {
         ASSERT_FALSE(is_in_box) << ss.str();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -1228,7 +1228,7 @@ TEST_F(VectorTest, testVectorInBoxFalse) {
         ASSERT_FALSE(is_in_box) << ss.str();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -1268,7 +1268,7 @@ TEST_F(VectorTest, testVectorInBoxFalse) {
 }
 
 TEST_F(VectorTest, testVectorInBoxException) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -1305,7 +1305,7 @@ TEST_F(VectorTest, testVectorInBoxException) {
         ASSERT_THROW(const auto is_in_box = v.check_in_box(v_min, v_max), RelearnException) << ss.str();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();
@@ -1342,7 +1342,7 @@ TEST_F(VectorTest, testVectorInBoxException) {
         ASSERT_THROW(const auto is_in_box = v.check_in_box(v_min, v_max), RelearnException) << ss.str();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto x1 = get_random_vector_element();
         const auto y1 = get_random_vector_element();
         const auto z1 = get_random_vector_element();

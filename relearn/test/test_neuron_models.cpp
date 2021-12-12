@@ -58,7 +58,7 @@ std::vector<size_t> generate_random_ids(size_t id_low, size_t id_high, size_t nu
 TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorPoisson) {
     using namespace models;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto expected_k = NeuronModel::default_k;
         const auto expected_tau_C = NeuronModel::default_tau_C;
         const auto expected_beta = NeuronModel::default_beta;
@@ -90,7 +90,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorPoisson) {
 TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorIzhikevich) {
     using namespace models;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto expected_k = NeuronModel::default_k;
         const auto expected_tau_C = NeuronModel::default_tau_C;
         const auto expected_beta = NeuronModel::default_beta;
@@ -132,7 +132,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorIzhikevich) {
 TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorFitzHughNagumo) {
     using namespace models;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto expected_k = NeuronModel::default_k;
         const auto expected_tau_C = NeuronModel::default_tau_C;
         const auto expected_beta = NeuronModel::default_beta;
@@ -164,7 +164,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorFitzHughNagumo) {
 TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorAEIF) {
     using namespace models;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto expected_k = NeuronModel::default_k;
         const auto expected_tau_C = NeuronModel::default_tau_C;
         const auto expected_beta = NeuronModel::default_beta;
@@ -210,7 +210,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorPoisson) {
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -257,7 +257,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorIzhikevich) {
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -319,7 +319,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorFitzHughNagumo) {
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -366,7 +366,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorAEIF) {
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -431,7 +431,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsClonePoisson) {
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -494,7 +494,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneIzhikevich) {
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -577,7 +577,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneFitzHughNagumo) {
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -640,7 +640,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneAEIF) {
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -727,7 +727,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreatePoisson) {
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -774,7 +774,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateIzhikevich) {
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -836,7 +836,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateFitzHughNagumo) {
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -883,7 +883,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateAEIF) {
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -948,7 +948,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitPoisson) {
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -1012,7 +1012,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitIzhikevich) {
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -1086,7 +1086,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitFitzHughNagumo) {
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -1150,7 +1150,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitAEIF) {
     using urd = std::uniform_real_distribution<double>;
     using uid = std::uniform_int_distribution<unsigned int>;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -1506,7 +1506,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsAEIF) {
 TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredPoisson) {
     using namespace models;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -1559,7 +1559,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredPoisson) {
 TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredIzhikevich) {
     using namespace models;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -1622,7 +1622,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredIzhikevich) {
 TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredFitzHughNagumo) {
     using namespace models;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -1675,7 +1675,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredFitzHughNagumo) {
 TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredAEIF) {
     using namespace models;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -1740,7 +1740,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredAEIF) {
 TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledPoisson) {
     using namespace models;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -1834,7 +1834,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledPoisson) {
 TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledIzhikevich) {
     using namespace models;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -1938,7 +1938,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledIzhikevich) {
 TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledFitzHughNagumo) {
     using namespace models;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -2032,7 +2032,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledFitzHughNagumo) {
 TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledAEIF) {
     using namespace models;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -2138,7 +2138,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledAEIF) {
 TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisson) {
     using namespace models;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -2189,21 +2189,21 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisso
             const auto& current_I_syn = model->get_I_syn();
 
             for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
-                ASSERT_NE(current_x[id], model_x[id]) << i << ' ' << j << ' ' << id;
+                ASSERT_NE(current_x[id], model_x[id]) <<  ' ' << j << ' ' << id;
 
                 if (j == 0) {
-                    ASSERT_EQ(0.0, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                    ASSERT_EQ(0.0, model_I_syn[id]) << id << ' ' << j << ' ' ;
                 } else {
-                    ASSERT_EQ(expected_base_background_activity, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                    ASSERT_EQ(expected_base_background_activity, model_I_syn[id]) << id << ' ' << j << ' ' ;
                 }
 
                 const auto current_refrac = model->get_secondary_variable(id);
                 if (model->get_fired(id)) {
-                    ASSERT_EQ(current_refrac, expected_refrac) << i << ' ' << j << ' ' << id;
+                    ASSERT_EQ(current_refrac, expected_refrac) <<  ' ' << j << ' ' << id;
                 } else if (model_secondary[id] == 0) {
-                    ASSERT_EQ(current_refrac, 0) << i << ' ' << j << ' ' << id;
+                    ASSERT_EQ(current_refrac, 0) <<  ' ' << j << ' ' << id;
                 } else {
-                    ASSERT_EQ(current_refrac, model_secondary[id] - 1) << i << ' ' << j << ' ' << id;
+                    ASSERT_EQ(current_refrac, model_secondary[id] - 1) <<  ' ' << j << ' ' << id;
                 }
 
                 model_secondary[id] = model->get_secondary_variable(id);
@@ -2248,7 +2248,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisso
 TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhikevich) {
     using namespace models;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -2310,15 +2310,15 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhike
 
             for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
                 if (current_fired[id]) {
-                    ASSERT_EQ(current_x[id], expected_c) << i << ' ' << j << ' ' << id;
+                    ASSERT_EQ(current_x[id], expected_c) <<  ' ' << j << ' ' << id;
                 }
 
                 if (j == 0) {
-                    ASSERT_EQ(0.0, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                    ASSERT_EQ(0.0, model_I_syn[id]) << id << ' ' << j << ' ' ;
                 } else {
-                    ASSERT_EQ(expected_base_background_activity, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                    ASSERT_EQ(expected_base_background_activity, model_I_syn[id]) << id << ' ' << j << ' ' ;
                 }
-                ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]) << i << ' ' << j << ' ' << id;
+                ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]) <<  ' ' << j << ' ' << id;
 
                 model_secondary[id] = model->get_secondary_variable(id);
             }
@@ -2339,7 +2339,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhike
 
             for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
                 if (current_fired[id]) {
-                    ASSERT_EQ(current_x[id], expected_c) << i << ' ' << j << ' ' << id;
+                    ASSERT_EQ(current_x[id], expected_c) <<  ' ' << j << ' ' << id;
                 }
 
                 ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
@@ -2357,7 +2357,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhike
 TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHughNagumo) {
     using namespace models;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -2409,9 +2409,9 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHu
                 ASSERT_NE(current_x[id], model_x[id]);
 
                 if (j == 0) {
-                    ASSERT_EQ(0.0, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                    ASSERT_EQ(0.0, model_I_syn[id]) << id << ' ' << j << ' ' ;
                 } else {
-                    ASSERT_EQ(expected_base_background_activity, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                    ASSERT_EQ(expected_base_background_activity, model_I_syn[id]) << id << ' ' << j << ' ' ;
                 }
 
                 ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
@@ -2449,7 +2449,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHu
 TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) {
     using namespace models;
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
         std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
         std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -2513,13 +2513,13 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) 
 
             for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
                 if (current_fired[id]) {
-                    EXPECT_EQ(current_x[id], expected_E_L) << id << ' ' << j << ' ' << i;
+                    EXPECT_EQ(current_x[id], expected_E_L) << id << ' ' << j << ' ' ;
                 }
 
                 if (j == 0) {
-                    ASSERT_EQ(0.0, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                    ASSERT_EQ(0.0, model_I_syn[id]) << id << ' ' << j << ' ' ;
                 } else {
-                    ASSERT_EQ(expected_base_background_activity, model_I_syn[id]) << id << ' ' << j << ' ' << i;
+                    ASSERT_EQ(expected_base_background_activity, model_I_syn[id]) << id << ' ' << j << ' ' ;
                 }
 
                 model_secondary[id] = model->get_secondary_variable(id);

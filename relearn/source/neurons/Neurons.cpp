@@ -1472,22 +1472,22 @@ void Neurons::print_info_for_algorithm() {
        << "\n";
 
     // Values
-    for (size_t i = 0; i < number_neurons; i++) {
-        ss << std::left << std::setw(cwidth_small) << i;
+    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        ss << std::left << std::setw(cwidth_small) << neuron_id;
 
-        const auto& pos = extra_info->get_position(i);
+        const auto& pos = extra_info->get_position(neuron_id);
         const auto& [x, y, z] = pos;
 
         my_string = "(" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")";
         ss << std::setw(cwidth_medium) << my_string;
 
-        my_string = std::to_string(axons_cnts[i]) + "|" + std::to_string(axons_connected_cnts[i]);
+        my_string = std::to_string(axons_cnts[neuron_id]) + "|" + std::to_string(axons_connected_cnts[neuron_id]);
         ss << std::setw(cwidth_big) << my_string;
 
-        my_string = std::to_string(dendrites_exc_cnts[i]) + "|" + std::to_string(dendrites_exc_connected_cnts[i]);
+        my_string = std::to_string(dendrites_exc_cnts[neuron_id]) + "|" + std::to_string(dendrites_exc_connected_cnts[neuron_id]);
         ss << std::setw(cwidth_big) << my_string;
 
-        my_string = std::to_string(dendrites_inh_cnts[i]) + "|" + std::to_string(dendrites_inh_connected_cnts[i]);
+        my_string = std::to_string(dendrites_inh_cnts[neuron_id]) + "|" + std::to_string(dendrites_inh_connected_cnts[neuron_id]);
         ss << std::setw(cwidth_big) << my_string;
 
         ss << "\n";

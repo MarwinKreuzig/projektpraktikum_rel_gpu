@@ -493,79 +493,79 @@ void CellTest::test_vpe_mixed() {
 }
 
 TEST_F(CellTest, testBarnesHutCellSize) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         test_cell_size<BarnesHutCell>();
     }
 }
 
 TEST_F(CellTest, testBarnesHutCellPosition) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         test_cell_position<BarnesHutCell>();
     }
 }
 
 TEST_F(CellTest, testBarnesHutCellPositionException) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         test_cell_position_exception<BarnesHutCell>();
     }
 }
 
 TEST_F(CellTest, testBarnesHutCellPositionCombined) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         test_cell_position_combined<BarnesHutCell>();
     }
 }
 
 TEST_F(CellTest, testBarnesHutCellSetNumDendrites) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         test_cell_set_number_dendrites<BarnesHutCell>();
     }
 }
 
 TEST_F(CellTest, testBarnesHutCellSetNeuronId) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         test_cell_set_neuron_id<BarnesHutCell>();
     }
 }
 
 TEST_F(CellTest, testBarnesHutCellOctants) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         test_cell_octants<BarnesHutCell>();
     }
 }
 
 TEST_F(CellTest, testBarnesHutCellOctantsException) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         test_cell_octants_exception<BarnesHutCell>();
     }
 }
 
 TEST_F(CellTest, testBarnesHutCellOctantsSize) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         test_cell_octants_size<BarnesHutCell>();
     }
 }
 
 TEST_F(CellTest, testVPEManualNumberFreeElements) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         test_vpe_number_elements<VirtualPlasticityElementManual>();
     }
 }
 
 TEST_F(CellTest, testVPEManualPosition) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         test_vpe_position<VirtualPlasticityElementManual>();
     }
 }
 
 TEST_F(CellTest, testVPEOptionalNumberFreeElements) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         test_vpe_number_elements<VirtualPlasticityElementOptional>();
     }
 }
 
 TEST_F(CellTest, testVPEOptionalPosition) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         test_vpe_position<VirtualPlasticityElementOptional>();
     }
 }

@@ -22,26 +22,24 @@ bool is_power_of_two(size_t number) {
 }
 
 TEST_F(PartitionTest, testPartitionZeroRanks) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto my_rank = get_random_number_ranks();
         ASSERT_THROW(Partition part(0, my_rank), RelearnException) << my_rank;
     }
 }
 
 TEST_F(PartitionTest, testPartitionConstructorArguments) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto my_rank = get_random_number_ranks();
         const auto num_ranks = get_random_number_ranks();
         const auto is_rank_power_2 = is_power_of_two(num_ranks);
 
         if (!is_rank_power_2) {
             ASSERT_THROW(Partition part(num_ranks, my_rank), RelearnException) << num_ranks << ' ' << my_rank;
-            break;
         }
 
         if (my_rank >= num_ranks) {
             ASSERT_THROW(Partition part(num_ranks, my_rank), RelearnException) << num_ranks << ' ' << my_rank;
-            break;
         }
 
         ASSERT_NO_THROW(Partition part(num_ranks, my_rank)) << num_ranks << ' ' << my_rank;
@@ -49,7 +47,7 @@ TEST_F(PartitionTest, testPartitionConstructorArguments) {
 }
 
 TEST_F(PartitionTest, testPartitionConstructor) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto num_ranks = get_adjusted_random_number_ranks();
         const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
 
@@ -74,7 +72,7 @@ TEST_F(PartitionTest, testPartitionConstructor) {
 }
 
 TEST_F(PartitionTest, testPartitionNumberNeurons) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto num_ranks = get_adjusted_random_number_ranks();
         const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
         const auto my_subdomains = num_subdomains / num_ranks;
@@ -127,7 +125,7 @@ TEST_F(PartitionTest, testPartitionNumberNeurons) {
 }
 
 TEST_F(PartitionTest, testPartitionSubdomainIndices) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto num_ranks = get_adjusted_random_number_ranks();
         const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
         const auto my_subdomains = num_subdomains / num_ranks;
@@ -167,7 +165,7 @@ TEST_F(PartitionTest, testPartitionSubdomainIndices) {
 }
 
 TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto num_ranks = get_adjusted_random_number_ranks();
         const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
         const auto my_subdomains = num_subdomains / num_ranks;
@@ -260,7 +258,7 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
 }
 
 TEST_F(PartitionTest, testPartitionPositionToMpi) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto num_ranks = get_adjusted_random_number_ranks();
         const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
         const auto my_subdomains = num_subdomains / num_ranks;

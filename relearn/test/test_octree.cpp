@@ -399,7 +399,7 @@ TEST_F(OctreeTest, testOctreeConstructor) {
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         Vec3d min{};
         Vec3d max{};
 
@@ -436,7 +436,7 @@ TEST_F(OctreeTest, testOctreeConstructor) {
         make_mpi_mem_available();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         Vec3d min{};
         Vec3d max{};
 
@@ -483,7 +483,7 @@ TEST_F(OctreeTest, testOctreeConstructorExceptions) {
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         Vec3d min_xyz{};
         Vec3d max_xyz{};
 
@@ -502,7 +502,7 @@ TEST_F(OctreeTest, testOctreeSetterGetter) {
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         Vec3d min{};
         Vec3d max{};
 
@@ -525,7 +525,7 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         Vec3d min{};
         Vec3d max{};
 
@@ -540,7 +540,7 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
         make_mpi_mem_available();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         Vec3d min{};
         Vec3d max{};
 
@@ -555,7 +555,7 @@ TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
         make_mpi_mem_available();
     }
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         Vec3d min{};
         Vec3d max{};
 
@@ -578,7 +578,7 @@ TEST_F(OctreeTest, testOctreeInsertNeurons) {
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         Vec3d min{};
         Vec3d max{};
 
@@ -622,7 +622,7 @@ TEST_F(OctreeTest, testOctreeInsertNeuronsExceptions) {
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         Vec3d min{};
         Vec3d max{};
 
@@ -672,7 +672,7 @@ TEST_F(OctreeTest, testOctreeStructure) {
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         Vec3d min{};
         Vec3d max{};
 
@@ -764,7 +764,7 @@ TEST_F(OctreeTest, testOctreeLocalTrees) {
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         Vec3d min{};
         Vec3d max{};
 
@@ -810,7 +810,7 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         Vec3d min{};
         Vec3d max{};
 
@@ -931,7 +931,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
 
     std::uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         Vec3d min{};
         Vec3d max{};
 
@@ -1006,7 +1006,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         Vec3d min{};
         Vec3d max{};
 

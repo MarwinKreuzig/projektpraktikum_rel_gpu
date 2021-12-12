@@ -7,7 +7,7 @@
 #include <sstream>
 
 TEST_F(SynapticElementsTest, testSynapticElementsConstructor) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto& calcium_to_grow = get_random_double(SynapticElements::min_min_C_level_to_grow, SynapticElements::max_min_C_level_to_grow);
         const auto& nu = get_random_double(SynapticElements::min_nu, SynapticElements::max_nu);
         const auto& retract_ratio = get_random_double(SynapticElements::min_vacant_retract_ratio, SynapticElements::max_vacant_retract_ratio);
@@ -43,7 +43,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsConstructor) {
 }
 
 TEST_F(SynapticElementsTest, testSynapticElementsInitialize) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto& number_neurons = get_random_number_neurons();
         const auto& element_type = get_random_element_type();
 
@@ -88,7 +88,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialize) {
 }
 
 TEST_F(SynapticElementsTest, testSynapticElementsInitializeException) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto& number_neurons = get_random_number_neurons();
         const auto& element_type = get_random_element_type();
 
@@ -178,7 +178,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitializeException) {
 }
 
 TEST_F(SynapticElementsTest, testSynapticElementsParameters) {
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto& number_neurons = get_random_number_neurons();
         const auto& C = get_random_percentage();
 
@@ -243,7 +243,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsParameters) {
 TEST_F(SynapticElementsTest, testSynapticElementsUpdate) {
     std::uniform_int_distribution<unsigned int> uid_connected(0, 10);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto& number_neurons = get_random_number_neurons();
         const auto& element_type = get_random_element_type();
 
@@ -317,7 +317,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdate) {
 TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
     std::uniform_int_distribution<unsigned int> uid_connected(0, 10);
 
-    for (auto i = 0; i < iterations; i++) {
+    {
         const auto& number_neurons = get_random_number_neurons();
         const auto& element_type = get_random_element_type();
 
