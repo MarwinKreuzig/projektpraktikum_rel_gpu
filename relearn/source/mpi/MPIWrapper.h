@@ -24,6 +24,7 @@ using MPIWrapper = MPINoWrapper;
 
 #include <array>
 #include <cstdint>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -304,6 +305,48 @@ public:
      */
     // NOLINTNEXTLINE
     static void wait_all_tokens(std::vector<AsyncToken>& tokens);
+
+    template <typename T>
+    static std::vector<std::vector<T>> exchange_values(const std::vector<std::vector<T>>& values) {
+        RelearnException::check(values.size() == num_ranks,
+            "MPIWrapper::exchange_values: There are too many values: {} for the number of ranks {}!", values.size(), num_ranks);
+
+        std::vector<size_t> request_sizes(num_ranks, 0);
+        for (auto target_rank = 0; target_rank < num_ranks; target_rank++) {
+            request_sizes[target_rank] = values[target_rank].size();
+        }
+
+        std::vector<size_t> response_sizes(num_ranks, 0);
+        all_to_all(request_sizes, response_sizes);
+
+        std::vector<std::vector<T>> retrieved_data(num_ranks);
+        for (auto rank = 0; rank < num_ranks; rank++) {
+            retrieved_data[rank].resize(response_sizes[rank]);
+        }
+
+        auto async_counter = 0;
+        std::vector<AsyncToken> async_tokens(2 * num_ranks - 2);
+        for (auto rank = 0; rank < num_ranks; rank++) {
+            if (rank == my_rank) {
+                continue;
+            }
+
+            async_receive(retrieved_data[rank].data(), sizeof(T) * response_sizes[rank], rank, async_tokens[async_counter]);
+            async_counter++;
+        }
+
+        for (auto rank = 0; rank < num_ranks; rank++) {
+            if (rank == my_rank) {
+                continue;
+            }
+
+            async_send(values[rank].data(), sizeof(T) * values[rank].size(), rank, async_tokens[async_counter]);
+            async_counter++;
+        }
+
+        wait_all_tokens(async_tokens);
+        return retrieved_data;
+    }
 
     /** 
      * @brief Downloads an OctreeNode on another MPI rank

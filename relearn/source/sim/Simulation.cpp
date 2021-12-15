@@ -70,6 +70,10 @@ void Simulation::set_target_calcium_calculator(std::function<double(size_t)> cal
     target_calcium_calculator = std::move(calculator);
 }
 
+void Simulation::set_initial_calcium_calculator(std::function<double(size_t)> initiator) noexcept {
+    initial_calcium_initiator = std::move(initiator);
+}
+
 void Simulation::set_enable_interrupts(std::vector<std::pair<size_t, std::vector<size_t>>> interrupts) {
     enable_interrupts = std::move(interrupts);
 
@@ -119,8 +123,13 @@ void Simulation::initialize() {
         target_calcium_values[neuron_id] = target_calcium_calculator(neuron_id);
     }
 
+    std::vector<double> initial_calcium_values(number_local_neurons, 0.0);
+    for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
+        initial_calcium_values[neuron_id] = initial_calcium_initiator(neuron_id);
+    }
+
     neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons->clone(), dendrites_ex->clone(), dendrites_in->clone());
-    neurons->init(number_local_neurons, std::move(target_calcium_values));
+    neurons->init(number_local_neurons, std::move(target_calcium_values), std::move(initial_calcium_values));
     NeuronMonitor::neurons_to_monitor = neurons;
 
     const auto number_local_subdomains = partition->get_number_local_subdomains();
@@ -185,7 +194,8 @@ void Simulation::initialize() {
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
-    auto nit = neuron_to_subdomain_assignment->get_neuron_id_translator();
+    neuron_id_translator = neuron_to_subdomain_assignment->get_neuron_id_translator();
+    neurons->set_neuron_id_translator(neuron_id_translator);
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
 
     auto [local_synapses, in_synapses, out_synapses] = synapse_loader->load_synapses();
@@ -193,8 +203,6 @@ void Simulation::initialize() {
     Timers::start(TimerRegion::INITIALIZE_NETWORK_GRAPH);
     network_graph->add_edges(local_synapses, in_synapses, out_synapses);
     Timers::stop_and_add(TimerRegion::INITIALIZE_NETWORK_GRAPH);
-
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded {} local synapses, {} in synapses, and {} out synapses", local_synapses.size(), in_synapses.size(), out_synapses.size());
 
     LogFiles::print_message_rank(0, "Network graph created");
     LogFiles::print_message_rank(0, "Synaptic elements initialized");
@@ -251,7 +259,12 @@ void Simulation::simulate(const size_t number_steps) {
                     new_target_calcium_values[neuron_id] = target_calcium_calculator(neuron_id);
                 }
 
-                neurons->create_neurons(creation_count, std::move(new_target_calcium_values));
+                std::vector<double> new_initial_calcium_values(creation_count, 0.0);
+                for (size_t neuron_id = 0; neuron_id < creation_count; neuron_id++) {
+                    new_initial_calcium_values[neuron_id] = initial_calcium_initiator(neuron_id);
+                }
+
+                neurons->create_neurons(creation_count, std::move(new_target_calcium_values), std::move(new_initial_calcium_values));
             }
         }
 
@@ -333,7 +346,7 @@ void Simulation::simulate(const size_t number_steps) {
     Timers::stop_and_add(TimerRegion::SIMULATION_LOOP);
 
     print_neuron_monitors();
-
+    
     neurons->print_positions_to_log_file();
     neurons->print_network_graph_to_log_file();
 }

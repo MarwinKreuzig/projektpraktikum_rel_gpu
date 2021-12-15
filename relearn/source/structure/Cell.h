@@ -56,9 +56,12 @@ public:
      * @exception Throws a RelearnException if one component of min is larger than the respective component of max
      */
     void set_size(const box_size_type& min, const box_size_type& max) {
-        RelearnException::check(min.get_x() <= max.get_x(), "Cell::set_size: x was not ok");
-        RelearnException::check(min.get_y() <= max.get_y(), "Cell::set_size: y was not ok");
-        RelearnException::check(min.get_z() <= max.get_z(), "Cell::set_size: z was not ok");
+        const auto& [min_x, min_y, min_z] = min;
+        const auto& [max_x, max_y, max_z] = max;
+        
+        RelearnException::check(min_x <= max_x, "Cell::set_size: x was not ok");
+        RelearnException::check(min_y <= max_y, "Cell::set_size: y was not ok");
+        RelearnException::check(min_z <= max_z, "Cell::set_size: z was not ok");
 
         minimum_position = min;
         maximum_position = max;
@@ -102,12 +105,9 @@ public:
 	 *		|/        |/       |/
 	 *	   000 ----- 001       +-----> x
      */
-    [[nodiscard]] unsigned char get_octant_for_position(const box_size_type& position) const {
-        unsigned char idx = 0;
-
-        const auto& x = position.get_x();
-        const auto& y = position.get_y();
-        const auto& z = position.get_z();
+    [[nodiscard]] unsigned char get_octant_for_position(const box_size_type& position) const
+    {
+        const auto& [x, y, z] = position;
 
         /**
 	     * Sanity check: Make sure that the position is within this cell
@@ -117,14 +117,18 @@ public:
         const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
         RelearnException::check(is_in_box, "Cell::get_octant_for_position: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
 
+        const auto& [min_x, min_y, min_z] = minimum_position;
+        const auto& [max_x, max_y, max_z] = maximum_position;
+
+        unsigned char idx = 0;
         //NOLINTNEXTLINE
-        idx = idx | ((x < (minimum_position.get_x() + maximum_position.get_x()) / 2.0) ? 0 : 1); // idx | (pos_x < midpoint_dim_x) ? 0 : 1
+        idx = idx | ((x < (min_x + max_x) / 2.0) ? 0 : 1); // idx | (pos_x < midpoint_dim_x) ? 0 : 1
 
         //NOLINTNEXTLINE
-        idx = idx | ((y < (minimum_position.get_y() + maximum_position.get_y()) / 2.0) ? 0 : 2); // idx | (pos_y < midpoint_dim_y) ? 0 : 2
+        idx = idx | ((y < (min_y + max_y) / 2.0) ? 0 : 2); // idx | (pos_y < midpoint_dim_y) ? 0 : 2
 
         //NOLINTNEXTLINE
-        idx = idx | ((z < (minimum_position.get_z() + maximum_position.get_z()) / 2.0) ? 0 : 4); // idx | (pos_z < midpoint_dim_z) ? 0 : 4
+        idx = idx | ((z < (min_z + max_z) / 2.0) ? 0 : 4); // idx | (pos_z < midpoint_dim_z) ? 0 : 4
 
         RelearnException::check(idx < Constants::number_oct, "Cell::get_octant_for_position: Calculated octant is too large: {}", idx);
 
@@ -148,23 +152,24 @@ public:
         auto octant_xyz_max = this->maximum_position;
         // NOLINTNEXTLINE
         const auto& octant_xyz_middle = (octant_xyz_min + octant_xyz_max) / 2.0;
+        const auto& [middle_x, middle_y, middle_z] = octant_xyz_middle;
 
         if (x_over_halfway_point) {
-            octant_xyz_min.set_x(octant_xyz_middle.get_x());
+            octant_xyz_min.set_x(middle_x);
         } else {
-            octant_xyz_max.set_x(octant_xyz_middle.get_x());
+            octant_xyz_max.set_x(middle_x);
         }
 
         if (y_over_halfway_point) {
-            octant_xyz_min.set_y(octant_xyz_middle.get_y());
+            octant_xyz_min.set_y(middle_y);
         } else {
-            octant_xyz_max.set_y(octant_xyz_middle.get_y());
+            octant_xyz_max.set_y(middle_y);
         }
 
         if (z_over_halfway_point) {
-            octant_xyz_min.set_z(octant_xyz_middle.get_z());
+            octant_xyz_min.set_z(middle_z);
         } else {
-            octant_xyz_max.set_z(octant_xyz_middle.get_z());
+            octant_xyz_max.set_z(middle_z);
         }
 
         return std::make_tuple(octant_xyz_min, octant_xyz_max);

@@ -10,12 +10,13 @@
 
 #pragma once
 
-#include <string>
+#include <filesystem>
 #include <utility>
 #include <vector>
 
 /**
- * This class provides a static interface to load interrupts from files, i.e., when during the simulation the neurons should be altered.
+ * This class provides a static interface to load interrupts from files,
+ * i.e., when during the simulation the neurons should be altered.
  */
 class InteractiveNeuronIO {
 public:
@@ -31,7 +32,7 @@ public:
      * @exception Throws a RelearnException if opening the file fails
      * @return A collection of pairs: (<simulation step>, <all neurons that should be enabled in the simulation step>)
      */
-    static std::vector<std::pair<size_t, std::vector<size_t>>> load_enable_interrups(const std::string& path_to_file);
+    static std::vector<std::pair<size_t, std::vector<size_t>>> load_enable_interrups(const std::filesystem::path& path_to_file);
 
     /**
      * @brief Reads the file specified by the path and extracts all disable-interrupts.
@@ -45,7 +46,7 @@ public:
      * @exception Throws a RelearnException if opening the file fails
      * @return A collection of pairs: (<simulation step>, <all neurons that should be disabled in the simulation step>)
      */
-    static std::vector<std::pair<size_t, std::vector<size_t>>> load_disable_interrups(const std::string& path_to_file);
+    static std::vector<std::pair<size_t, std::vector<size_t>>> load_disable_interrups(const std::filesystem::path& path_to_file);
 
     /**
      * @brief Reads the file specified by the path and extracts all creation-interrupts.
@@ -59,5 +60,5 @@ public:
      * @exception Throws a RelearnException if opening the file fails
      * @return A collection of pairs: (<simulation step>, <number of neurons to be created>)
      */
-    static std::vector<std::pair<size_t, size_t>> load_creation_interrups(const std::string& path_to_file);
+    static std::vector<std::pair<size_t, size_t>> load_creation_interrups(const std::filesystem::path& path_to_file);
 };

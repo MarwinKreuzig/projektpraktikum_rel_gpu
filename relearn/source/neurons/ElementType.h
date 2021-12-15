@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include <ostream>
+
 /**
   * An instance of this enum classifies the synaptic elements of a neuron.
   * In this simulation, there exists exaclty two different ones: axonal elements and dendritic elements.
@@ -17,3 +19,13 @@
   */
 enum class ElementType { AXON,
     DENDRITE };
+
+inline std::ostream& operator<<(std::ostream& out, const ElementType& element_type) {
+    if (element_type == ElementType::AXON) {
+        return out << "AXON";
+    } else if (element_type == ElementType::DENDRITE) {
+        return out << "DENDRITE";
+    }
+
+    return out;
+}
