@@ -104,7 +104,7 @@ public:
     }
 
     template <std::size_t Index>
-    std::tuple_element_t<Index, RankNeuronId>& get() & {
+    auto& get() & {
         if constexpr (Index == 0)
             return rank;
         if constexpr (Index == 1)
@@ -112,7 +112,7 @@ public:
     }
 
     template <std::size_t Index>
-    std::tuple_element_t<Index, RankNeuronId> const& get() const& {
+    auto const& get() const& {
         if constexpr (Index == 0)
             return rank;
         if constexpr (Index == 1)
@@ -120,15 +120,7 @@ public:
     }
 
     template <std::size_t Index>
-    std::tuple_element_t<Index, RankNeuronId>& get() && {
-        if constexpr (Index == 0)
-            return std::move(rank);
-        if constexpr (Index == 1)
-            return std::move(neuron_id);
-    }
-
-    template <std::size_t Index>
-    std::tuple_element_t<Index, RankNeuronId> const& get() const&& {
+    auto&& get() && {
         if constexpr (Index == 0)
             return std::move(rank);
         if constexpr (Index == 1)

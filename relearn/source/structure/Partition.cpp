@@ -117,13 +117,8 @@ void Partition::print_my_subdomains_info_rank(const int rank) {
 }
 
 void Partition::set_simulation_box_size(const box_size_type& min, const box_size_type& max) {
-    const auto min_x = min.get_x();
-    const auto min_y = min.get_y();
-    const auto min_z = min.get_z();
-
-    const auto max_x = max.get_x();
-    const auto max_y = max.get_y();
-    const auto max_z = max.get_z();
+    const auto& [min_x, min_y, min_z] = min;
+    const auto& [max_x, max_y, max_z] = max;
     
     const auto half_constant = static_cast<double>(Constants::uninitialized) / 2;
 

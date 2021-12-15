@@ -1,16 +1,11 @@
 #include "../googletest/include/gtest/gtest.h"
 
 #include <algorithm>
-#include <array>
 #include <fstream>
 #include <memory>
 #include <numeric>
-#include <random>
-#include <set>
 #include <sstream>
 #include <string>
-#include <tuple>
-#include <vector>
 
 #include "RelearnTest.hpp"
 
@@ -18,14 +13,13 @@
 #include "../source/structure/Partition.h"
 #include "../source/sim/SubdomainFromNeuronDensity.h"
 #include "../source/sim/SubdomainFromFile.h"
-#include "../source/util/RelearnException.h"
 
 void NeuronAssignmentTest::generate_neuron_positions(std::vector<Vec3d>& positions,
-    std::vector<std::string>& area_names, std::vector<SignalType>& types, std::mt19937& mt) {
+    std::vector<std::string>& area_names, std::vector<SignalType>& types) {
 
-    const auto number_neurons = uid_num_neurons(mt);
-    const auto fraction_excitatory_neurons = urd_percentage(mt);
-    const auto um_per_neuron = urd_percentage(mt) * 100;
+    const auto number_neurons = get_random_number_neurons();
+    const auto fraction_excitatory_neurons = get_random_percentage();
+    const auto um_per_neuron =get_random_percentage() * 100;
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromNeuronDensity sfnd{ number_neurons, fraction_excitatory_neurons, um_per_neuron, part };
@@ -39,15 +33,15 @@ void NeuronAssignmentTest::generate_neuron_positions(std::vector<Vec3d>& positio
     sfnd.write_neurons_to_file("neurons.tmp");
 }
 
-void NeuronAssignmentTest::generate_synapses(std::vector<std::tuple<size_t, size_t, int>>& synapses, size_t number_neurons, std::mt19937& mt) {
-    const auto number_synapses = uid_num_synapses(mt);
+void NeuronAssignmentTest::generate_synapses(std::vector<std::tuple<size_t, size_t, int>>& synapses, size_t number_neurons) {
+    const auto number_synapses = get_random_number_synapses();
 
     std::map<std::pair<size_t, size_t>, int> synapse_map{};
 
     for (auto i = 0; i < number_synapses; i++) {
-        const auto source = get_random_neuron_id(number_neurons, mt);
-        const auto target = get_random_neuron_id(number_neurons, mt);
-        const auto weight = uid_synapse_weight(mt);
+        const auto source = get_random_neuron_id(number_neurons);
+        const auto target = get_random_neuron_id(number_neurons);
+        const auto weight = get_random_synapse_weight();
 
         synapse_map[{ source, target }] += weight;
     }
@@ -86,11 +80,11 @@ void write_synapses_to_file(const std::vector<std::tuple<size_t, size_t, int>>& 
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_density_too_few_neurons) {
-    for (auto i = 0; i < iterations; i++) {
-        const auto golden_number_ranks = get_adjusted_random_number_ranks(mt);
-        const auto golden_fraction_excitatory_neurons = get_random_percentage(mt);
-        const auto golden_um_per_neuron = get_random_percentage(mt) * 100;
+TEST_F(NeuronAssignmentTest, testDensityTooFewNeurons) {
+    {
+        const auto golden_number_ranks = get_adjusted_random_number_ranks();
+        const auto golden_fraction_excitatory_neurons = get_random_percentage();
+        const auto golden_um_per_neuron = get_random_percentage() * 100;
 
         for (auto rank = 0; rank < golden_number_ranks; rank++) {
             const auto part = std::make_shared<Partition>(golden_number_ranks, rank);
@@ -99,11 +93,11 @@ TEST_F(NeuronAssignmentTest, test_density_too_few_neurons) {
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_density_constructor_single_subdomain) {
-    for (auto i = 0; i < iterations; i++) {
-        const auto golden_number_neurons = get_random_number_neurons(mt);
-        const auto golden_fraction_excitatory_neurons = get_random_percentage(mt);
-        const auto golden_um_per_neuron = get_random_percentage(mt) * 100;
+TEST_F(NeuronAssignmentTest, testDensityConstructorSingleSubdomain) {
+    {
+        const auto golden_number_neurons = get_random_number_neurons() + 100;
+        const auto golden_fraction_excitatory_neurons = get_random_percentage();
+        const auto golden_um_per_neuron = get_random_percentage() * 100;
 
         const auto part = std::make_shared<Partition>(1, 0);
         SubdomainFromNeuronDensity sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
@@ -126,13 +120,13 @@ TEST_F(NeuronAssignmentTest, test_density_constructor_single_subdomain) {
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_density_constructor_multiple_subdomains) {
-    for (auto i = 0; i < iterations; i++) {
-        const auto golden_number_ranks = get_adjusted_random_number_ranks(mt);
+TEST_F(NeuronAssignmentTest, testDensityConstructorMultipleSubdomains) {
+    {
+        const auto golden_number_ranks = get_adjusted_random_number_ranks();
         const auto number_subdomains = round_to_next_exponent(golden_number_ranks, 8);
-        const auto golden_number_neurons = get_random_number_neurons(mt) + number_subdomains * 4;
-        const auto golden_fraction_excitatory_neurons = get_random_percentage(mt);
-        const auto golden_um_per_neuron = get_random_percentage(mt) * 100;
+        const auto golden_number_neurons = get_random_number_neurons() + number_subdomains * 50;
+        const auto golden_fraction_excitatory_neurons = get_random_percentage();
+        const auto golden_um_per_neuron = get_random_percentage() * 100;
 
         for (auto rank = 0; rank < golden_number_ranks; rank++) {
             const auto part = std::make_shared<Partition>(golden_number_ranks, rank);
@@ -157,12 +151,12 @@ TEST_F(NeuronAssignmentTest, test_density_constructor_multiple_subdomains) {
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_density_initialize_single_subdomain) {
+TEST_F(NeuronAssignmentTest, testDensityInitializeSingleSubdomain) {
     // 2964244976
-    for (auto i = 0; i < iterations; i++) {
-        const auto golden_number_neurons = get_random_number_neurons(mt);
-        const auto golden_fraction_excitatory_neurons = get_random_percentage(mt);
-        const auto golden_um_per_neuron = get_random_percentage(mt) * 100;
+    {
+        const auto golden_number_neurons = get_random_number_neurons() + 100;
+        const auto golden_fraction_excitatory_neurons = get_random_percentage();
+        const auto golden_um_per_neuron = get_random_percentage() * 100;
 
         const auto lower_bound_ex = static_cast<size_t>(floor(golden_number_neurons * golden_fraction_excitatory_neurons));
         const auto upper_bound_ex = static_cast<size_t>(ceil(golden_number_neurons * golden_fraction_excitatory_neurons));
@@ -195,13 +189,13 @@ TEST_F(NeuronAssignmentTest, test_density_initialize_single_subdomain) {
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_density_initialize_multiple_subdomains) {
-    for (auto i = 0; i < iterations; i++) {
-        const auto golden_number_ranks = get_adjusted_random_number_ranks(mt);
+TEST_F(NeuronAssignmentTest, testDensityInitializeMultipleSubdomains) {
+    {
+        const auto golden_number_ranks = get_adjusted_random_number_ranks();
         const auto number_subdomains = round_to_next_exponent(golden_number_ranks, 8);
-        const auto golden_number_neurons = get_random_number_neurons(mt) + number_subdomains * 4;
-        const auto golden_fraction_excitatory_neurons = get_random_percentage(mt);
-        const auto golden_um_per_neuron = get_random_percentage(mt) * 100;
+        const auto golden_number_neurons = get_random_number_neurons() + number_subdomains * 50;
+        const auto golden_fraction_excitatory_neurons = get_random_percentage();
+        const auto golden_um_per_neuron = get_random_percentage() * 100;
 
         auto accumulated_placed_neurons = 0;
         auto accumulated_ratio_excitatory_neurons = 0.0;
@@ -225,15 +219,15 @@ TEST_F(NeuronAssignmentTest, test_density_initialize_multiple_subdomains) {
 
         ASSERT_LE(difference_neurons, number_subdomains);
 
-        ASSERT_NEAR(golden_fraction_excitatory_neurons, actual_ratio_excitatory_neurons, static_cast<double>(number_subdomains) / golden_number_neurons);
+        ASSERT_NEAR(golden_fraction_excitatory_neurons, actual_ratio_excitatory_neurons, static_cast<double>(number_subdomains) / golden_number_neurons) << accumulated_placed_neurons << ' ' << number_subdomains;
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_density_neuron_attributes_size_single_subdomain) {
-    for (auto i = 0; i < iterations; i++) {
-        const auto golden_number_neurons = get_random_number_neurons(mt);
-        const auto golden_fraction_excitatory_neurons = get_random_percentage(mt);
-        const auto golden_um_per_neuron = get_random_percentage(mt) * 100;
+TEST_F(NeuronAssignmentTest, testDensityNeuronAttributesSizesSingleSubdomain) {
+    {
+        const auto golden_number_neurons = get_random_number_neurons() + 100;
+        const auto golden_fraction_excitatory_neurons = get_random_percentage();
+        const auto golden_um_per_neuron = get_random_percentage() * 100;
 
         const auto part = std::make_shared<Partition>(1, 0);
         SubdomainFromNeuronDensity sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
@@ -265,14 +259,14 @@ TEST_F(NeuronAssignmentTest, test_density_neuron_attributes_size_single_subdomai
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_density_neuron_attributes_size_multiple_subdomains) {
-    for (auto i = 0; i < iterations; i++) {
-        const auto golden_number_ranks = get_adjusted_random_number_ranks(mt);
+TEST_F(NeuronAssignmentTest, testDensityNeuronAttributesSizeMultipleSubdomains) {
+    {
+        const auto golden_number_ranks = get_adjusted_random_number_ranks();
         const auto number_subdomains = round_to_next_exponent(golden_number_ranks, 8);
         const auto number_subdomains_per_rank = number_subdomains / golden_number_ranks;
-        const auto golden_number_neurons = get_random_number_neurons(mt) + number_subdomains * 4;
-        const auto golden_fraction_excitatory_neurons = get_random_percentage(mt);
-        const auto golden_um_per_neuron = get_random_percentage(mt) * 100;
+        const auto golden_number_neurons = get_random_number_neurons() + number_subdomains * 50;
+        const auto golden_fraction_excitatory_neurons = get_random_percentage();
+        const auto golden_um_per_neuron = get_random_percentage() * 100;
 
         auto accumulated_placed_neurons = 0;
 
@@ -319,11 +313,11 @@ TEST_F(NeuronAssignmentTest, test_density_neuron_attributes_size_multiple_subdom
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_density_neuron_attributes_semantic_single_subdomain) {
-    for (auto i = 0; i < iterations; i++) {
-        const auto golden_number_neurons = get_random_number_neurons(mt);
-        const auto golden_fraction_excitatory_neurons = get_random_percentage(mt);
-        const auto golden_um_per_neuron = get_random_percentage(mt) * 100;
+TEST_F(NeuronAssignmentTest, testDensityNeuronAttributesSemanticSingleSubdomain) {
+    {
+        const auto golden_number_neurons = get_random_number_neurons() + 100;
+        const auto golden_fraction_excitatory_neurons = get_random_percentage();
+        const auto golden_um_per_neuron = get_random_percentage() * 100;
 
         const auto part = std::make_shared<Partition>(1, 0);
         SubdomainFromNeuronDensity sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
@@ -366,14 +360,14 @@ TEST_F(NeuronAssignmentTest, test_density_neuron_attributes_semantic_single_subd
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_density_neuron_attributes_semantic_multiple_subdomains) {
-    for (auto i = 0; i < iterations; i++) {
-        const auto golden_number_ranks = get_adjusted_random_number_ranks(mt);
+TEST_F(NeuronAssignmentTest, testDensityNeuronAttributesSemanticMultipleSubdomains) {
+    {
+        const auto golden_number_ranks = get_adjusted_random_number_ranks();
         const auto number_subdomains = round_to_next_exponent(golden_number_ranks, 8);
         const auto number_subdomains_per_rank = number_subdomains / golden_number_ranks;
-        const auto golden_number_neurons = get_random_number_neurons(mt) + number_subdomains * 4;
-        const auto golden_fraction_excitatory_neurons = get_random_percentage(mt);
-        const auto golden_um_per_neuron = get_random_percentage(mt) * 100;
+        const auto golden_number_neurons = get_random_number_neurons() + number_subdomains * 50;
+        const auto golden_fraction_excitatory_neurons = get_random_percentage();
+        const auto golden_um_per_neuron = get_random_percentage() * 100;
 
         auto accumulated_placed_neurons = 0;
 
@@ -434,13 +428,13 @@ TEST_F(NeuronAssignmentTest, test_density_neuron_attributes_semantic_multiple_su
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_density_write_to_file_single_domain) {
-    for (auto i = 0; i < iterations; i++) {
+TEST_F(NeuronAssignmentTest, testDensityWriteToFileSingleSubdomain) {
+    {
         std::vector<Vec3d> positions{};
         std::vector<std::string> area_names{};
         std::vector<SignalType> types{};
 
-        generate_neuron_positions(positions, area_names, types, mt);
+        generate_neuron_positions(positions, area_names, types);
 
         const auto number_neurons = positions.size();
 
@@ -512,13 +506,13 @@ TEST_F(NeuronAssignmentTest, test_density_write_to_file_single_domain) {
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_file_load_single_domain) {
-    for (auto i = 0; i < iterations; i++) {
+TEST_F(NeuronAssignmentTest, testFileLoadSingleSubdomain) {
+    {
         std::vector<Vec3d> positions{};
         std::vector<std::string> area_names{};
         std::vector<SignalType> types{};
 
-        generate_neuron_positions(positions, area_names, types, mt);
+        generate_neuron_positions(positions, area_names, types);
 
         const auto number_neurons = positions.size();
 
@@ -552,9 +546,9 @@ TEST_F(NeuronAssignmentTest, test_file_load_single_domain) {
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_file_load_multiple_domains) {
-    for (auto i = 0; i < iterations; i++) {
-        const auto golden_number_ranks = get_adjusted_random_number_ranks(mt);
+TEST_F(NeuronAssignmentTest, testFileLoadMultipleSubdomains) {
+    {
+        const auto golden_number_ranks = get_adjusted_random_number_ranks();
         const auto number_subdomains = round_to_next_exponent(golden_number_ranks, 8);
         const auto number_subdomains_per_rank = number_subdomains / golden_number_ranks;
 
@@ -562,7 +556,7 @@ TEST_F(NeuronAssignmentTest, test_file_load_multiple_domains) {
         std::vector<std::string> area_names{};
         std::vector<SignalType> types{};
 
-        generate_neuron_positions(positions, area_names, types, mt);
+        generate_neuron_positions(positions, area_names, types);
 
         const auto number_neurons = positions.size();
 
@@ -629,13 +623,13 @@ TEST_F(NeuronAssignmentTest, test_file_load_multiple_domains) {
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_file_neuron_id_translator_single_domain) {
-    for (auto i = 0; i < iterations; i++) {
+TEST_F(NeuronAssignmentTest, testFileNeuronIdTranslatorSingleSubdomain) {
+    {
         std::vector<Vec3d> positions{};
         std::vector<std::string> area_names{};
         std::vector<SignalType> types{};
 
-        generate_neuron_positions(positions, area_names, types, mt);
+        generate_neuron_positions(positions, area_names, types);
 
         const auto number_neurons = positions.size();
 
@@ -662,19 +656,19 @@ TEST_F(NeuronAssignmentTest, test_file_neuron_id_translator_single_domain) {
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_file_load_network_single_domain) {
-    for (auto i = 0; i < iterations; i++) {
+TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
+    {
         std::vector<Vec3d> positions{};
         std::vector<std::string> area_names{};
         std::vector<SignalType> types{};
 
-        generate_neuron_positions(positions, area_names, types, mt);
+        generate_neuron_positions(positions, area_names, types);
 
         const auto number_neurons = positions.size();
 
         std::vector<std::tuple<size_t, size_t, int>> synapses{};
 
-        generate_synapses(synapses, number_neurons, mt);
+        generate_synapses(synapses, number_neurons);
         write_synapses_to_file(synapses, "synapses.tmp");
 
         const auto part = std::make_shared<Partition>(1, 0);
@@ -706,10 +700,14 @@ TEST_F(NeuronAssignmentTest, test_file_load_network_single_domain) {
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_file_roi_1_4_single_domain) {
-
+TEST_F(NeuronAssignmentTest, testFileRoi14SingleSubdomainONCE) {
+#ifdef _WIN32
+    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-4/new_positions.txt" };
+    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-4/new_synapses.txt" };
+#else
     std::filesystem::path path_to_neurons{ "../input/roi_split/1-4/new_positions.txt" };
     std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-4/new_synapses.txt" };
+#endif
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
@@ -747,10 +745,14 @@ TEST_F(NeuronAssignmentTest, test_file_roi_1_4_single_domain) {
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_file_roi_1_5_single_domain) {
-
+TEST_F(NeuronAssignmentTest, testFileRoi15SingleSubdomainONCE) {
+#ifdef _WIN32
+    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-5/new_positions.txt" };
+    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-5/new_synapses.txt" };
+#else
     std::filesystem::path path_to_neurons{ "../input/roi_split/1-5/new_positions.txt" };
     std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-5/new_synapses.txt" };
+#endif
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
@@ -788,10 +790,14 @@ TEST_F(NeuronAssignmentTest, test_file_roi_1_5_single_domain) {
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_file_roi_1_6_single_domain) {
-
+TEST_F(NeuronAssignmentTest, testFileRoi16SingleSubdomainONCE) {
+#ifdef _WIN32
+    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-6/new_positions.txt" };
+    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-6/new_synapses.txt" };
+#else
     std::filesystem::path path_to_neurons{ "../input/roi_split/1-6/new_positions.txt" };
     std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-6/new_synapses.txt" };
+#endif
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
@@ -829,10 +835,14 @@ TEST_F(NeuronAssignmentTest, test_file_roi_1_6_single_domain) {
     }
 }
 
-TEST_F(NeuronAssignmentTest, test_file_roi_1_7_single_domain) {
-
+TEST_F(NeuronAssignmentTest, testFileRoi17SingleSubdomainONCE) {
+#ifdef _WIN32
+    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-7/new_positions.txt" };
+    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-7/new_synapses.txt" };
+#else
     std::filesystem::path path_to_neurons{ "../input/roi_split/1-7/new_positions.txt" };
     std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-7/new_synapses.txt" };
+#endif
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };

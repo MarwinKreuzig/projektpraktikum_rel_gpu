@@ -43,7 +43,7 @@ public:
      * @brief Returns the current refinement level
      * @return The current refinement level
      */
-    [[nodiscard]] size_t get_refinement_level() const noexcept {
+    [[nodiscard]] uint8_t get_random_refinement_level() const noexcept {
         return this->refinement_level;
     }
 
@@ -51,7 +51,7 @@ public:
      * @brief Sets the new refinement level
      * @param refinement_level The new refinement level
      */
-    void set_refinement_level(const size_t refinement_level) noexcept {
+    void set_refinement_level(const uint8_t refinement_level) noexcept {
         this->refinement_level = refinement_level;
     }
 
@@ -72,7 +72,7 @@ private:
         return ((number & (static_cast<uint64_t>(1) << bit)) >> bit);
     }
 
-    size_t refinement_level{ 0 };
+    uint8_t refinement_level{ 0 };
 };
 
 /**
@@ -101,8 +101,8 @@ public:
      * @brief Returns the current refinement level
      * @return The current refinement level
      */
-    [[nodiscard]] size_t get_refinement_level() const noexcept {
-        return curve.get_refinement_level();
+    [[nodiscard]] size_t get_random_refinement_level() const noexcept {
+        return curve.get_random_refinement_level();
     }
 
     /**
@@ -110,7 +110,7 @@ public:
      * @param refinement_level The new refinement level
      * @exception Throws a RelearnException if refinement_level > Constants::max_lvl_subdomains
      */
-    void set_refinement_level(const size_t refinement_level) {
+    void set_refinement_level(const uint8_t refinement_level) {
         // With 64-bit keys we can only support 20 subdivisions per
         // dimension (i.e, 2^20 boxes per dimension)
         RelearnException::check(refinement_level <= Constants::max_lvl_subdomains,
