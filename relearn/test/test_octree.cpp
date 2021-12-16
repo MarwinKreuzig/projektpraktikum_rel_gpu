@@ -193,11 +193,11 @@ TEST_F(OctreeTest, testOctreeNodeReset) {
     ASSERT_TRUE(node.get_rank() == -1);
     ASSERT_TRUE(node.get_children().size() == Constants::number_oct);
 
-    const auto& children = node.get_children();
+    const auto& new_children = node.get_children();
 
     for (auto i = 0; i < Constants::number_oct; i++) {
         ASSERT_TRUE(node.get_child(i) == nullptr);
-        ASSERT_TRUE(children[i] == nullptr);
+        ASSERT_TRUE(new_children[i] == nullptr);
     }
 }
 

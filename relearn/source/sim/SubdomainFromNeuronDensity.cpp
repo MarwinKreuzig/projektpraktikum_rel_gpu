@@ -79,8 +79,6 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
     const size_t expected_number_ex = number_neurons - expected_number_in;
 
     size_t placed_neurons = 0;
-    size_t placed_in_neurons = 0;
-    size_t placed_ex_neurons = 0;
 
     size_t random_counter = 0;
     std::vector<size_t> positions(calculated_num_neurons);
@@ -102,6 +100,11 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
     RandomHolder::shuffle(RandomHolderKey::Subdomain, positions.begin(), positions.end());
 
+    std::vector<SignalType> signal_types(expected_number_ex, SignalType::EXCITATORY);
+    signal_types.insert(signal_types.cend(), expected_number_in, SignalType::INHIBITORY);
+
+    RandomHolder::shuffle(RandomHolderKey::Subdomain, signal_types.begin(), signal_types.end());
+
     for (size_t i = 0; i < number_neurons; i++) {
         const size_t pos_bitmask = positions[i];
         const size_t x_it = (pos_bitmask >> 32U) & max_short;
@@ -119,38 +122,28 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
         const double type_indicator = RandomHolder::get_random_uniform_double(RandomHolderKey::Subdomain, 0.0, 1.0);
 
-        if (placed_ex_neurons < expected_number_ex && (type_indicator < desired_ex || placed_in_neurons == expected_number_in)) {
-            Node node{ pos, i, SignalType::EXCITATORY, "random" };
-            placed_ex_neurons++;
-            nodes.emplace(node);
-        } else {
-            Node node{ pos, i, SignalType::INHIBITORY, "random" };
-            placed_in_neurons++;
-            nodes.emplace(node);
-        }
+        const auto signal_type = signal_types[i];
+
+        Node node{ pos, i, signal_type, "random" };
+        nodes.emplace(node);
 
         placed_neurons++;
-
-        if (placed_neurons == number_neurons) {
-            const auto current_num_neurons = get_number_placed_neurons();
-            const auto former_ex_neurons = current_num_neurons * get_ratio_placed_excitatory_neurons();
-
-            const auto new_num_neurons = current_num_neurons + placed_neurons;
-
-            set_number_placed_neurons(new_num_neurons);
-
-            const auto now_ex_neurons = former_ex_neurons + placed_ex_neurons;
-            //const auto now_in_neurons = former_in_neurons + placed_in_neurons;
-
-            const auto current_frac_ex = static_cast<double>(now_ex_neurons) / static_cast<double>(new_num_neurons);
-
-            set_ratio_placed_excitatory_neurons(current_frac_ex);
-            set_nodes_for_subdomain(subdomain_index_1d, std::move(nodes));
-            return;
-        }
     }
 
-    RelearnException::fail("SubdomainFromNeuronDensity::place_neurons_in_area: Subdomain {} does not have enough neurons: {}!", subdomain_index_1d, number_neurons);
+    const auto current_num_neurons = get_number_placed_neurons();
+    const auto former_ex_neurons = current_num_neurons * get_ratio_placed_excitatory_neurons();
+
+    const auto new_num_neurons = current_num_neurons + placed_neurons;
+
+    set_number_placed_neurons(new_num_neurons);
+
+    const auto now_ex_neurons = former_ex_neurons + expected_number_ex;
+    //const auto now_in_neurons = former_in_neurons + placed_in_neurons;
+
+    const auto current_frac_ex = static_cast<double>(now_ex_neurons) / static_cast<double>(new_num_neurons);
+
+    set_ratio_placed_excitatory_neurons(current_frac_ex);
+    set_nodes_for_subdomain(subdomain_index_1d, std::move(nodes));
 }
 
 void SubdomainFromNeuronDensity::fill_subdomain(const size_t local_subdomain_index, [[maybe_unused]] const size_t total_number_subdomains) {
@@ -179,7 +172,7 @@ void SubdomainFromNeuronDensity::fill_subdomain(const size_t local_subdomain_ind
 
     const auto free_neurons = requested_number_neurons - number_subdomains;
     const auto proposed_number_local_neurons = floor(free_neurons * number_boxes / total_number_boxes);
-  
+
     const auto adjustment_neuron = (proposed_number_local_neurons == 0) ? 2 : 1;
 
     const auto neurons_in_subdomain_count = proposed_number_local_neurons + adjustment_neuron;

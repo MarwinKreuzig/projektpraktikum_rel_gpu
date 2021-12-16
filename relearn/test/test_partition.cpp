@@ -33,10 +33,12 @@ TEST_F(PartitionTest, testPartitionConstructorArguments) {
 
     if (!is_rank_power_2) {
         ASSERT_THROW(Partition part(num_ranks, my_rank), RelearnException) << num_ranks << ' ' << my_rank;
+        return;
     }
 
     if (my_rank >= num_ranks) {
         ASSERT_THROW(Partition part(num_ranks, my_rank), RelearnException) << num_ranks << ' ' << my_rank;
+        return;
     }
 
     ASSERT_NO_THROW(Partition part(num_ranks, my_rank)) << num_ranks << ' ' << my_rank;
