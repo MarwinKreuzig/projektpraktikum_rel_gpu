@@ -293,9 +293,7 @@ void Naive::update_leaf_nodes(const std::vector<char>& disable_flags, const std:
 		 * Without pushing root onto the stack, it would not make it into the "vector" of nodes.
 		 */
 
-        const auto acc_vac = acceptance_criterion_test(axon_pos_xyz, root, dendrite_type_needed);
-        const auto accept = std::get<0>(acc_vac);
-
+        const auto [accept, _] = acceptance_criterion_test(axon_pos_xyz, root, dendrite_type_needed);
         if (accept) {
             return { root };
         }
@@ -340,9 +338,7 @@ void Naive::update_leaf_nodes(const std::vector<char>& disable_flags, const std:
 		 *
 		 * Only take those that have dendrites available
 		 */
-        const auto acc_vac = acceptance_criterion_test(axon_pos_xyz, stack_elem, dendrite_type_needed);
-        const auto accept = std::get<0>(acc_vac);
-        const auto has_vacant_dendrites = std::get<1>(acc_vac);
+        const auto [accept, has_vacant_dendrites] = acceptance_criterion_test(axon_pos_xyz, stack_elem, dendrite_type_needed);
 
         if (accept) {
             // Insert node into vector

@@ -285,9 +285,7 @@ void Simulation::simulate(const size_t number_steps) {
 
             Timers::start(TimerRegion::UPDATE_CONNECTIVITY);
 
-            std::tuple<size_t, size_t> deleted_created = neurons->update_connectivity();
-            num_synapses_deleted = std::get<0>(deleted_created);
-            num_synapses_created = std::get<1>(deleted_created);
+            const auto& [num_synapses_deleted, num_synapses_created] = neurons->update_connectivity();
 
             Timers::stop_and_add(TimerRegion::UPDATE_CONNECTIVITY);
 
@@ -346,7 +344,7 @@ void Simulation::simulate(const size_t number_steps) {
     Timers::stop_and_add(TimerRegion::SIMULATION_LOOP);
 
     print_neuron_monitors();
-    
+
     neurons->print_positions_to_log_file();
     neurons->print_network_graph_to_log_file();
 }

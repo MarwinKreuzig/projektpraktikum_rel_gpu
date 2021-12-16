@@ -41,7 +41,6 @@
 		 * Assign a probability to each node in the vector.
 		 * The probability for connecting to the same neuron (i.e., the axon's neuron) is set 0.
 		 * Nodes with 0 probability are removed.
-		 * The probabilities of all vector elements sum up to 1.
 		 */
         const auto& [total_prob, probability_values] = create_interval(src_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
 
@@ -194,7 +193,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
     for (size_t neuron_id = 0; neuron_id < num_leaf_nodes; neuron_id++) {
         auto* node = leaf_nodes[neuron_id];
 
-        RelearnException::check(node != nullptr, "BarnesHut::update_leaf_nodes: node was nullptr: ", neuron_id);
+        RelearnException::check(node != nullptr, "BarnesHut::update_leaf_nodes: node was nullptr: {}", neuron_id);
 
         const auto& cell = node->get_cell();
         const size_t other_neuron_id = cell.get_neuron_id();
@@ -352,8 +351,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
 		 * Without pushing root onto the stack, it would not make it into the "vector" of nodes.
 		 */
 
-        const auto acc_vac = acceptance_criterion_test(axon_pos_xyz, root, dendrite_type_needed);
-        const auto accept = std::get<0>(acc_vac);
+        const auto [accept, _] = acceptance_criterion_test(axon_pos_xyz, root, dendrite_type_needed);
 
         if (accept) {
             return { root };
@@ -391,10 +389,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
 		 * Should node be used for probability interval?
 		 * Only take those that have dendrites available
 		 */
-
-        const auto acc_vac = acceptance_criterion_test(axon_pos_xyz, node, dendrite_type_needed);
-        const auto accept = std::get<0>(acc_vac);
-        const auto has_vacant_dendrites = std::get<1>(acc_vac);
+        const auto [accept, has_vacant_dendrites] = acceptance_criterion_test(axon_pos_xyz, node, dendrite_type_needed);
 
         if (accept) {
             // Insert node into vector

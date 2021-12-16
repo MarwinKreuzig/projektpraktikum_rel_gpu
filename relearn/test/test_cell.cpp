@@ -10,33 +10,25 @@
 #include <numeric>
 #include <random>
 
-using AdditionalCellAttributes = BarnesHutCell;
-
 template <typename AdditionalCellAttributes>
 void CellTest::test_cell_size() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& box_sizes_1 = get_random_simulation_box_size();
-    const auto& min_1 = std::get<0>(box_sizes_1);
-    const auto& max_1 = std::get<1>(box_sizes_1);
-
+    const auto& [min_1, max_1] = get_random_simulation_box_size();
     cell.set_size(min_1, max_1);
 
-    const auto& res_1 = cell.get_size();
+    const auto& [res_min_1, res_max_1] = cell.get_size();
 
-    ASSERT_EQ(min_1, std::get<0>(res_1));
-    ASSERT_EQ(max_1, std::get<1>(res_1));
+    ASSERT_EQ(min_1, res_min_1);
+    ASSERT_EQ(max_1, res_max_1);
 
-    const auto& box_sizes_2 = get_random_simulation_box_size();
-    const auto& min_2 = std::get<0>(box_sizes_2);
-    const auto& max_2 = std::get<1>(box_sizes_2);
-
+    const auto& [min_2, max_2] = get_random_simulation_box_size();
     cell.set_size(min_2, max_2);
 
-    const auto& res_2 = cell.get_size();
+    const auto& [res_min_2, res_max_2] = cell.get_size();
 
-    ASSERT_EQ(min_2, std::get<0>(res_2));
-    ASSERT_EQ(max_2, std::get<1>(res_2));
+    ASSERT_EQ(min_2, res_min_2);
+    ASSERT_EQ(max_2, res_max_2);
 
     ASSERT_EQ(cell.get_maximal_dimension_difference(), (max_2 - min_2).get_maximum());
 }
@@ -45,10 +37,7 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_position() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& box_sizes = get_random_simulation_box_size();
-    const auto& min = std::get<0>(box_sizes);
-    const auto& max = std::get<1>(box_sizes);
-
+    const auto& [min, max] = get_random_simulation_box_size();
     cell.set_size(min, max);
 
     const auto& pos_ex_1 = get_random_position_in_box(min, max);
@@ -108,10 +97,7 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_position_exception() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& box_sizes = get_random_simulation_box_size();
-    const auto& min = std::get<0>(box_sizes);
-    const auto& max = std::get<1>(box_sizes);
-
+    const auto& [min, max] = get_random_simulation_box_size();
     cell.set_size(min, max);
 
     const auto& pos_ex_1 = get_random_position_in_box(min, max);
@@ -219,10 +205,7 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_position_combined() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& box_sizes = get_random_simulation_box_size();
-    const auto& min = std::get<0>(box_sizes);
-    const auto& max = std::get<1>(box_sizes);
-
+    const auto& [min, max] = get_random_simulation_box_size();
     cell.set_size(min, max);
 
     const auto& pos_1 = get_random_position_in_box(min, max);
@@ -313,10 +296,7 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_octants() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& box_sizes = get_random_simulation_box_size();
-    const auto& min = std::get<0>(box_sizes);
-    const auto& max = std::get<1>(box_sizes);
-
+    const auto& [min, max] = get_random_simulation_box_size();
     cell.set_size(min, max);
 
     const auto midpoint = (min + max) / 2;
@@ -340,10 +320,7 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_octants_exception() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& box_sizes = get_random_simulation_box_size();
-    const auto& min = std::get<0>(box_sizes);
-    const auto& max = std::get<1>(box_sizes);
-
+    const auto& [min, max] = get_random_simulation_box_size();
     cell.set_size(min, max);
 
     const auto& pos_invalid_x_max = max + Vec3d{ 1, 0, 0 };
@@ -366,10 +343,7 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_octants_size() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& box_sizes = get_random_simulation_box_size();
-    const auto& min = std::get<0>(box_sizes);
-    const auto& max = std::get<1>(box_sizes);
-
+    const auto& [min, max] = get_random_simulation_box_size();
     cell.set_size(min, max);
 
     const auto midpoint = (min + max) / 2;
@@ -397,9 +371,7 @@ void CellTest::test_cell_octants_size() {
             subcell_max += Vec3d{ 0, 0, midpoint.get_z() - min.get_z() };
         }
 
-        const auto& subcell_received_dims = cell.get_size_for_octant(id);
-        const auto& subcell_received_min = std::get<0>(subcell_received_dims);
-        const auto& subcell_received_max = std::get<1>(subcell_received_dims);
+        const auto& [subcell_received_min, subcell_received_max] = cell.get_size_for_octant(id);
 
         const auto diff_subcell_min = subcell_min - subcell_received_min;
         const auto diff_subcell_max = subcell_max - subcell_received_max;
@@ -493,79 +465,53 @@ void CellTest::test_vpe_mixed() {
 }
 
 TEST_F(CellTest, testBarnesHutCellSize) {
-    {
-        test_cell_size<BarnesHutCell>();
-    }
+    test_cell_size<BarnesHutCell>();
 }
 
 TEST_F(CellTest, testBarnesHutCellPosition) {
-    {
-        test_cell_position<BarnesHutCell>();
-    }
+    test_cell_position<BarnesHutCell>();
 }
 
 TEST_F(CellTest, testBarnesHutCellPositionException) {
-    {
-        test_cell_position_exception<BarnesHutCell>();
-    }
+    test_cell_position_exception<BarnesHutCell>();
 }
 
 TEST_F(CellTest, testBarnesHutCellPositionCombined) {
-    {
-        test_cell_position_combined<BarnesHutCell>();
-    }
+    test_cell_position_combined<BarnesHutCell>();
 }
 
 TEST_F(CellTest, testBarnesHutCellSetNumDendrites) {
-    {
-        test_cell_set_number_dendrites<BarnesHutCell>();
-    }
+    test_cell_set_number_dendrites<BarnesHutCell>();
 }
 
 TEST_F(CellTest, testBarnesHutCellSetNeuronId) {
-    {
-        test_cell_set_neuron_id<BarnesHutCell>();
-    }
+    test_cell_set_neuron_id<BarnesHutCell>();
 }
 
 TEST_F(CellTest, testBarnesHutCellOctants) {
-    {
-        test_cell_octants<BarnesHutCell>();
-    }
+    test_cell_octants<BarnesHutCell>();
 }
 
 TEST_F(CellTest, testBarnesHutCellOctantsException) {
-    {
-        test_cell_octants_exception<BarnesHutCell>();
-    }
+    test_cell_octants_exception<BarnesHutCell>();
 }
 
 TEST_F(CellTest, testBarnesHutCellOctantsSize) {
-    {
-        test_cell_octants_size<BarnesHutCell>();
-    }
+    test_cell_octants_size<BarnesHutCell>();
 }
 
 TEST_F(CellTest, testVPEManualNumberFreeElements) {
-    {
-        test_vpe_number_elements<VirtualPlasticityElementManual>();
-    }
+    test_vpe_number_elements<VirtualPlasticityElementManual>();
 }
 
 TEST_F(CellTest, testVPEManualPosition) {
-    {
-        test_vpe_position<VirtualPlasticityElementManual>();
-    }
+    test_vpe_position<VirtualPlasticityElementManual>();
 }
 
 TEST_F(CellTest, testVPEOptionalNumberFreeElements) {
-    {
-        test_vpe_number_elements<VirtualPlasticityElementOptional>();
-    }
+    test_vpe_number_elements<VirtualPlasticityElementOptional>();
 }
 
 TEST_F(CellTest, testVPEOptionalPosition) {
-    {
-        test_vpe_position<VirtualPlasticityElementOptional>();
-    }
+    test_vpe_position<VirtualPlasticityElementOptional>();
 }
