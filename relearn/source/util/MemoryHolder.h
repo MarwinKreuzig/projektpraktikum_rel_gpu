@@ -25,7 +25,6 @@ class OctreeNode;
  * 
  * In effect calls OctreeNode<AdditionalCellAttributes>::reset()
  * 
- * @tparam OctreeNode The templated type of objects that are (de-)allocated in the memory portion
  * @tparam AdditionalCellAttributes The template parameter of the objects
  */
 template <typename AdditionalCellAttributes>

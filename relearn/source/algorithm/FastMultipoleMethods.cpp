@@ -325,13 +325,13 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<char>& disable_fl
     const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites) {
 
     const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_total_counts();
-    const std::vector<unsigned int>& dendrites_excitatory_connected_counts = excitatory_dendrites->get_connected_count();
+    const std::vector<unsigned int>& dendrites_excitatory_connected_counts = excitatory_dendrites->get_connected_counts();
 
     const std::vector<double>& dendrites_inhibitory_counts = inhibitory_dendrites->get_total_counts();
-    const std::vector<unsigned int>& dendrites_inhibitory_connected_counts = inhibitory_dendrites->get_connected_count();
+    const std::vector<unsigned int>& dendrites_inhibitory_connected_counts = inhibitory_dendrites->get_connected_counts();
 
     const std::vector<double>& axons_counts = axons->get_total_counts();
-    const std::vector<unsigned int>& axons_connected_counts = axons->get_connected_count();
+    const std::vector<unsigned int>& axons_connected_counts = axons->get_connected_counts();
 
     const auto& leaf_nodes = global_tree->get_leaf_nodes();
     const auto num_leaf_nodes = leaf_nodes.size();

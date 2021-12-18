@@ -160,7 +160,7 @@ public:
      * @brief Returns the connected counts, indexed by the local neuron id (how many elements from the neuron are connected via synapses)
      * @return The connected counts
      */
-    [[nodiscard]] const std::vector<unsigned int>& get_connected_count() const noexcept {
+    [[nodiscard]] const std::vector<unsigned int>& get_connected_counts() const noexcept {
         return connected_cnts;
     }
 
@@ -170,19 +170,6 @@ public:
      */
     [[nodiscard]] const std::vector<double>& get_delta_counts() const noexcept {
         return delta_cnts;
-    }
-
-    /**
-     * @brief Returns the vacant counts, indexed by the local neuron id (how many elements from the neuron are not connected via synapses)
-     * @return The vacant counts
-     */
-    [[nodiscard]] std::vector<double> get_vacant_cnts() const {
-        std::vector<double> vacant_cnts = cnts;
-        for (auto i = 0; i < cnts.size(); i++) {
-            vacant_cnts[i] -= connected_cnts[i];
-        }
-
-        return vacant_cnts;
     }
 
     /**
@@ -293,18 +280,6 @@ public:
     [[nodiscard]] unsigned int get_connected_count(const size_t neuron_id) const {
         RelearnException::check(neuron_id < connected_cnts.size(), "SynapticElements::get_connected_count: neuron_id is too large: {}", neuron_id);
         return connected_cnts[neuron_id];
-    }
-
-    /**
-     * @brief Returns the number of vacant elements for the specified neuron id
-     * @param neuron_id The neuron
-     * @exception Throws a RelearnException if neuron_id is too large
-     * @return The number of vacant elements
-     */
-    [[nodiscard]] unsigned int get_vacant_count(const size_t neuron_id) const {
-        RelearnException::check(neuron_id < connected_cnts.size() && neuron_id < cnts.size(), "SynapticElements::get_vacant_count: neuron_id is too large: {}", neuron_id);
-        const auto ret_val = cnts[neuron_id] - connected_cnts[neuron_id];
-        return static_cast<unsigned int>(ret_val);
     }
 
     /**

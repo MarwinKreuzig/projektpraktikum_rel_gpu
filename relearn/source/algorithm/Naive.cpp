@@ -94,7 +94,7 @@ MapSynapseCreationRequests Naive::find_target_neurons(const size_t number_neuron
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);
 
     const std::vector<double>& axons_cnts = axons->get_total_counts();
-    const std::vector<unsigned int>& axons_connected_cnts = axons->get_connected_count();
+    const std::vector<unsigned int>& axons_connected_cnts = axons->get_connected_counts();
     const std::vector<SignalType>& axons_signal_types = axons->get_signal_types();
 
     // For my neurons
@@ -158,10 +158,10 @@ void Naive::update_leaf_nodes(const std::vector<char>& disable_flags, const std:
     const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites) {
 
     const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_total_counts();
-    const std::vector<unsigned int>& dendrites_excitatory_connected_counts = excitatory_dendrites->get_connected_count();
+    const std::vector<unsigned int>& dendrites_excitatory_connected_counts = excitatory_dendrites->get_connected_counts();
 
     const std::vector<double>& dendrites_inhibitory_counts = inhibitory_dendrites->get_total_counts();
-    const std::vector<unsigned int>& dendrites_inhibitory_connected_counts = inhibitory_dendrites->get_connected_count();
+    const std::vector<unsigned int>& dendrites_inhibitory_connected_counts = inhibitory_dendrites->get_connected_counts();
 
     RelearnException::check(global_tree != nullptr, "Naive::update_leaf_nodes: global_tree was nullptr");
 
