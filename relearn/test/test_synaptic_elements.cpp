@@ -210,6 +210,225 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialize) {
     }
 }
 
+TEST_F(SynapticElementsTest, testSynapticElementsCreateNeurons) {
+    const auto& number_neurons_initially = get_random_number_neurons();
+    const auto& number_neurons_added = get_random_number_neurons();
+    const auto& element_type = get_random_element_type();
+
+    std::stringstream ss{};
+    ss << number_neurons_initially << ' ' << number_neurons_added << ' ' << element_type << '\n';
+
+    SynapticElements synaptic_elements(element_type, 0.0);
+    synaptic_elements.init(number_neurons_initially);
+    synaptic_elements.create_neurons(number_neurons_added);
+
+    const auto& number_neurons = number_neurons_initially + number_neurons_added;
+
+    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        const auto& grown_element = synaptic_elements.get_count(neuron_id);
+        const auto& connected_grown_element = synaptic_elements.get_connected_count(neuron_id);
+        const auto& delta_grown_element = synaptic_elements.get_delta_count(neuron_id);
+
+        ASSERT_EQ(grown_element, 0.0) << ss.str() << neuron_id;
+        ASSERT_EQ(connected_grown_element, 0.0) << ss.str() << neuron_id;
+        ASSERT_EQ(delta_grown_element, 0.0) << ss.str() << neuron_id;
+    }
+
+    for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
+        const auto neuron_id = get_random_neuron_id(number_neurons) + number_neurons;
+
+        ASSERT_THROW(synaptic_elements.get_count(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(synaptic_elements.get_connected_count(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(synaptic_elements.get_delta_count(neuron_id), RelearnException) << ss.str() << neuron_id;
+    }
+
+    const auto& grown_elements = synaptic_elements.get_total_counts();
+    const auto& connected_grown_elements = synaptic_elements.get_total_counts();
+    const auto& delta_grown_elements = synaptic_elements.get_total_counts();
+    const auto& signal_types = synaptic_elements.get_signal_types();
+
+    ASSERT_EQ(grown_elements.size(), number_neurons) << ss.str();
+    ASSERT_EQ(connected_grown_elements.size(), number_neurons) << ss.str();
+    ASSERT_EQ(delta_grown_elements.size(), number_neurons) << ss.str();
+    ASSERT_EQ(signal_types.size(), number_neurons) << ss.str();
+
+    for (const auto& grown_element : grown_elements) {
+        ASSERT_EQ(grown_element, 0.0) << ss.str();
+    }
+
+    for (const auto& connected_grown_element : connected_grown_elements) {
+        ASSERT_EQ(connected_grown_element, 0.0) << ss.str();
+    }
+
+    for (const auto& delta_grown_element : delta_grown_elements) {
+        ASSERT_EQ(delta_grown_element, 0.0) << ss.str();
+    }
+}
+
+TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsConstant) {
+    const auto& number_neurons_initially = get_random_number_neurons();
+    const auto& number_neurons_added = get_random_number_neurons();
+    const auto& element_type = get_random_element_type();
+
+    const auto& number_neurons = number_neurons_initially + number_neurons_added;
+
+    std::stringstream ss{};
+    ss << number_neurons_initially << ' ' << number_neurons_added << ' ' << element_type << '\n';
+
+    const auto& min_c = get_random_percentage();
+    const auto& nu = get_random_percentage();
+    const auto& retract_ratio = get_random_percentage();
+
+    const auto& bound = get_random_double(0.0, 10.0);
+
+    ss << min_c << ' ' << nu << ' ' << retract_ratio << ' ' << bound << '\n';
+
+    SynapticElements synaptic_elements(element_type, min_c, nu, retract_ratio, bound, bound);
+
+    synaptic_elements.init(number_neurons_initially);
+    synaptic_elements.create_neurons(number_neurons_added);
+
+    const auto& counts = synaptic_elements.get_total_counts();
+
+    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        const auto grown_elements_1 = synaptic_elements.get_count(neuron_id);
+        const auto grown_elements_2 = counts[neuron_id];
+
+        ASSERT_EQ(grown_elements_1, grown_elements_2) << ss.str() << neuron_id;
+        ASSERT_EQ(grown_elements_1, bound) << ss.str() << neuron_id;
+    }
+}
+
+TEST_F(SynapticElementsTest, testSynapticElementsInitialElements) {
+    const auto& number_neurons_initially = get_random_number_neurons();
+    const auto& number_neurons_added = get_random_number_neurons();
+    const auto& element_type = get_random_element_type();
+
+    const auto& number_neurons = number_neurons_initially + number_neurons_added;
+
+    std::stringstream ss{};
+    ss << number_neurons_initially << ' ' << number_neurons_added << ' ' << element_type << '\n';
+
+    const auto& min_c = get_random_percentage();
+    const auto& nu = get_random_percentage();
+    const auto& retract_ratio = get_random_percentage();
+
+    const auto& bound_1 = get_random_double(0.0, 10.0);
+    const auto& bound_2 = get_random_double(0.0, 10.0);
+
+    const auto& lower_bound = std::min(bound_1, bound_2);
+    const auto& upper_bound = std::max(bound_1, bound_2) + 1.0;
+
+    ss << min_c << ' ' << nu << ' ' << retract_ratio << ' ' << lower_bound << ' ' << upper_bound << '\n';
+
+    SynapticElements synaptic_elements(element_type, min_c, nu, retract_ratio, lower_bound, upper_bound);
+
+    synaptic_elements.init(number_neurons_initially);
+    synaptic_elements.create_neurons(number_neurons_added);
+
+    const auto& counts = synaptic_elements.get_total_counts();
+
+    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        const auto grown_elements_1 = synaptic_elements.get_count(neuron_id);
+        const auto grown_elements_2 = counts[neuron_id];
+
+        ASSERT_EQ(grown_elements_1, grown_elements_2) << ss.str() << neuron_id;
+
+        ASSERT_TRUE(lower_bound <= grown_elements_1) << ss.str() << neuron_id;
+        ASSERT_TRUE(grown_elements_1 <= upper_bound) << ss.str() << neuron_id;
+    }
+}
+
+TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsException) {
+    const auto& number_neurons_initially = get_random_number_neurons();
+    const auto& number_neurons_added = get_random_number_neurons();
+    const auto& element_type = get_random_element_type();
+
+    std::stringstream ss{};
+    ss << number_neurons_initially << ' ' << number_neurons_added << ' ' << element_type << '\n';
+
+    const auto& min_c = get_random_percentage();
+    const auto& nu = get_random_percentage();
+    const auto& retract_ratio = get_random_percentage();
+
+    const auto& bound_1 = get_random_double(0.0, 10.0);
+    const auto& bound_2 = get_random_double(0.0, 10.0);
+
+    const auto& lower_bound = std::min(bound_1, bound_2);
+    const auto& upper_bound = std::max(bound_1, bound_2) + 1.0;
+
+    ss << min_c << ' ' << nu << ' ' << retract_ratio << ' ' << lower_bound << ' ' << upper_bound << '\n';
+
+    SynapticElements synaptic_elements(element_type, min_c, nu, retract_ratio, upper_bound, lower_bound);
+
+    ASSERT_THROW(synaptic_elements.init(number_neurons_initially), RelearnException) << ss.str();
+    ASSERT_THROW(synaptic_elements.create_neurons(number_neurons_added), RelearnException) << ss.str();
+}
+
+TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsMultipleBounds) {
+    const auto& number_neurons_initially = get_random_number_neurons();
+    const auto& number_neurons_added = get_random_number_neurons();
+    const auto& element_type = get_random_element_type();
+
+    const auto& number_neurons = number_neurons_initially + number_neurons_added;
+
+    std::stringstream ss{};
+    ss << number_neurons_initially << ' ' << number_neurons_added << ' ' << element_type << '\n';
+
+    const auto& min_c = get_random_percentage();
+    const auto& nu = get_random_percentage();
+    const auto& retract_ratio = get_random_percentage();
+
+    const auto& bound_1 = get_random_double(0.0, 10.0);
+    const auto& bound_2 = get_random_double(0.0, 10.0);
+
+    const auto& lower_bound_1 = std::min(bound_1, bound_2);
+    const auto& upper_bound_1 = std::max(bound_1, bound_2) + 1.0;
+
+    const auto& bound_3 = get_random_double(0.0, 10.0);
+    const auto& bound_4 = get_random_double(0.0, 10.0);
+
+    const auto& lower_bound_2 = std::min(bound_3, bound_4);
+    const auto& upper_bound_2 = std::max(bound_3, bound_4) + 1.0;
+
+    ss << min_c << ' ' << nu << ' ' << retract_ratio << ' ' << lower_bound_1 << ' ' << upper_bound_1 << ' ' << lower_bound_2 << ' ' << upper_bound_2 << '\n';
+
+    SynapticElements synaptic_elements(element_type, min_c, nu, retract_ratio, lower_bound_1, upper_bound_1);
+    synaptic_elements.init(number_neurons_initially);
+
+    auto parameters = synaptic_elements.get_parameter();
+
+    Parameter<double> param_lower_bound = std::get<Parameter<double>>(parameters[3]);
+    Parameter<double> param_upper_bound = std::get<Parameter<double>>(parameters[4]);
+
+    param_lower_bound.set_value(lower_bound_2);
+    param_upper_bound.set_value(upper_bound_2);
+
+    synaptic_elements.create_neurons(number_neurons_added);
+
+    const auto& counts = synaptic_elements.get_total_counts();
+
+    for (auto neuron_id = 0; neuron_id < number_neurons_initially; neuron_id++) {
+        const auto grown_elements_1 = synaptic_elements.get_count(neuron_id);
+        const auto grown_elements_2 = counts[neuron_id];
+
+        ASSERT_EQ(grown_elements_1, grown_elements_2) << ss.str() << neuron_id;
+
+        ASSERT_TRUE(lower_bound_1 <= grown_elements_1) << ss.str() << neuron_id;
+        ASSERT_TRUE(grown_elements_1 <= upper_bound_1) << ss.str() << neuron_id;
+    }
+
+    for (auto neuron_id = number_neurons_initially; neuron_id < number_neurons; neuron_id++) {
+        const auto grown_elements_1 = synaptic_elements.get_count(neuron_id);
+        const auto grown_elements_2 = counts[neuron_id];
+
+        ASSERT_EQ(grown_elements_1, grown_elements_2) << ss.str() << neuron_id;
+
+        ASSERT_TRUE(lower_bound_2 <= grown_elements_1) << ss.str() << neuron_id;
+        ASSERT_TRUE(grown_elements_1 <= upper_bound_2) << ss.str() << neuron_id;
+    }
+}
+
 TEST_F(SynapticElementsTest, testSynapticElementsSignalTypes) {
     const auto& number_neurons = get_random_number_neurons();
     const auto& element_type = get_random_element_type();
