@@ -94,9 +94,9 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    std::vector<int> deleted_axon_connections(number_neurons, 0);
-    std::vector<int> deleted_dend_ex_connections(number_neurons, 0);
-    std::vector<int> deleted_dend_in_connections(number_neurons, 0);
+    std::vector<unsigned int> deleted_axon_connections(number_neurons, 0);
+    std::vector<unsigned int> deleted_dend_ex_connections(number_neurons, 0);
+    std::vector<unsigned int> deleted_dend_in_connections(number_neurons, 0);
 
     size_t number_deleted_out_inh_edges_within = 0;
     size_t number_deleted_out_exc_edges_within = 0;
@@ -128,7 +128,7 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
                 if (weight > 0) {
                     deleted_dend_ex_connections[target_neuron_id] += weight;
                     number_deleted_out_exc_edges_within++;
-                    weight_deleted_out_exc_edges_within += std::abs(weight);
+                    weight_deleted_out_exc_edges_within += weight;
                 } else {
                     deleted_dend_in_connections[target_neuron_id] -= weight;
                     number_deleted_out_inh_edges_within++;
@@ -138,7 +138,7 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
                 if (weight > 0) {
                     deleted_dend_ex_connections[target_neuron_id] += weight;
                     number_deleted_out_exc_edges_to_outside++;
-                    weight_deleted_out_exc_edges_to_outside += std::abs(weight);
+                    weight_deleted_out_exc_edges_to_outside += weight;
                 } else {
                     deleted_dend_in_connections[target_neuron_id] -= weight;
                     number_deleted_out_inh_edges_to_outside++;
@@ -165,7 +165,7 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
 
             network_graph->add_edge_weight(target_id, source_id, -weight);
 
-            deleted_axon_connections[source_neuron_id] += weight;
+            deleted_axon_connections[source_neuron_id] += std::abs(weight);
 
             bool is_within = std::binary_search(neuron_ids.begin(), neuron_ids.end(), source_neuron_id);
 

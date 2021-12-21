@@ -24,6 +24,33 @@
 class NeuronMonitor;
 
 /**
+ * @brief A gaussian curve that is compressed by growth-factor nu and intersects the x-axis at
+ *      eta (left intersection) and epsilon (right intersection).
+ *      It is positive on (eta, epsilon) and negative at (-inf, eta), (epsilon, inf)
+ *      Its maximum is at m := (eta + epsilon) / 2, and it is symmetric wrt. m.
+ *      It attracts (-inf, eta) to -inf and (eta, inf) to epsilon.
+ *      See Butz and van Ooyen, 2013 PloS Comp Biol, Equation 4.
+ * @param current The current value (of calcium in the neuron)
+ * @param eta The left intersection with the x-axis
+ * @param epsilon The right intersection with the x-axis
+ * @param growth_rate A linear scaling factor, i.e., the maximum of the function at (eta + epsilon) / 2
+ */
+inline double gaussian_growth_curve(const double current, const double eta, const double epsilon, const double growth_rate) noexcept {
+    const auto factor = 1.6651092223153955127063292897904020952611777045288814583336582344;
+    //1.6651092223153955127063292897904020952611777045288814583336582344... = (2 * sqrt(-log(0.5)))
+
+    const auto xi = (eta + epsilon) / 2;
+    const auto zeta = (eta - epsilon) / factor;
+
+    const auto difference = current - xi;
+    const auto quotient = difference / zeta;
+    const auto product = quotient * quotient;
+
+    const auto dz = growth_rate * (2 * exp(-product) - 1);
+    return dz;
+}
+
+/**
  * This type is a SoA for synaptic elements (can be used for axons and dendrites, both for excitatory and inhibitory).
  * It stores the number of grown and connected elements, and a delta that is accumulated during the electrical updates and committed during the synaptic updates.
  */
@@ -237,17 +264,16 @@ public:
      * @param disabled_neuron_ids The local neuron ids that should be disabled
      * @exception Throws a RelearnException if
      *      (a) changes.size() is not equal to the number of stored neurons
-     *      (b) changes[i] is negative
-     *      (c) changes[i] is larger than the connected counts for i
-     *      (d) disabled_neuron_ids[i] is larger than the number of stored neurons
+     *      (b) changes[i] is larger than the connected counts for i
+     *      (c) disabled_neuron_ids[i] is larger than the number of stored neurons
      */
-    void update_after_deletion(const std::vector<int>& changes, const std::vector<size_t>& disabled_neuron_ids) {
+    void update_after_deletion(const std::vector<unsigned int>& changes, const std::vector<size_t>& disabled_neuron_ids) {
         RelearnException::check(changes.size() == size, "SynapticElements::update_after_deletion: The number of changes does not match the number of elements");
 
         for (auto neuron_id = 0; neuron_id < size; neuron_id++) {
             const auto change = changes[neuron_id];
-            RelearnException::check(change >= 0, "SynapticElements::update_after_deletion: The number of deleted elements must not be negative");
-            RelearnException::check(connected_cnts[neuron_id] >= static_cast<unsigned int>(change), "SynapticElements::update_after_deletion: Cannot delete more connections than present");
+            RelearnException::check(connected_cnts[neuron_id] >= change,
+                "SynapticElements::update_after_deletion: Cannot delete more connections than present for neuron {}: {} vs {}", neuron_id, change, connected_cnts[neuron_id]);
 
             connected_cnts[neuron_id] -= change;
         }
@@ -350,7 +376,7 @@ public:
      * @param target_calcium The target calcium value for each neuron
      * @param disable_flags Indicates that a neuron should not be updated (= 0)
      * @exception Throws a RelearnException if calcium.size() or disable_flags.size() does not match the number of stored neurons
-    */
+     */
     void update_number_elements_delta(const std::vector<double>& calcium, const std::vector<double>& target_calcium, const std::vector<char>& disable_flags) {
         RelearnException::check(calcium.size() == size, "SynapticElements::commit_updates: calcium was not of the right size");
         RelearnException::check(target_calcium.size() == size, "SynapticElements::commit_updates: target_calcium was not of the right size");
@@ -361,7 +387,7 @@ public:
             if (disable_flags[neuron_id] == 0) {
                 continue;
             }
-            
+
             const auto target_calcium_value = target_calcium[neuron_id];
             const auto current_calcium_value = calcium[neuron_id];
             const auto inc = gaussian_growth_curve(current_calcium_value, min_C_level_to_grow, target_calcium_value, nu);
@@ -383,29 +409,6 @@ private:
 	 * 2. Delete bound elements
 	 */
     [[nodiscard]] unsigned int update_number_elements(size_t neuron_id);
-
-    [[nodiscard]] static double gaussian_growth_curve(const double Ca, const double eta, const double epsilon, const double growth_rate) noexcept {
-        /**
-		 * gaussian_growth_curve generates a gaussian curve that is compressed by
-		 * growth-factor nu and intersects the x-axis at
-		 * eta (left intersection) and epsilon (right intersection).
-		 * xi and zeta are helper variables that directly follow from eta and epsilon.
-		 * See Butz and van Ooyen, 2013 PloS Comp Biol, Equation 4.
-		 */
-
-        const auto factor = 1.6651092223153955127063292897904020952611777045288814583336582344;
-        //1.6651092223153955127063292897904020952611777045288814583336582344... = (2 * sqrt(-log(0.5)));
-
-        const auto xi = (eta + epsilon) / 2;
-        const auto zeta = (eta - epsilon) / factor;
-
-        const auto difference = Ca - xi;
-        const auto quotient = difference / zeta;
-        const auto product = quotient * quotient;
-
-        const auto dz = growth_rate * (2 * exp(-product) - 1);
-        return dz;
-    }
 
 public:
     static constexpr double default_C_target{ 0.7 }; // gold 0.5;
