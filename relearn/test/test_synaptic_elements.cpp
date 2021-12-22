@@ -311,9 +311,9 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialize) {
     for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
         const auto neuron_id = get_random_neuron_id(number_neurons) + number_neurons;
 
-        ASSERT_THROW(synaptic_elements.get_count(neuron_id), RelearnException) << ss.str() << neuron_id;
-        ASSERT_THROW(synaptic_elements.get_connected_count(neuron_id), RelearnException) << ss.str() << neuron_id;
-        ASSERT_THROW(synaptic_elements.get_delta_count(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_count(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_connected_count(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_delta_count(neuron_id), RelearnException) << ss.str() << neuron_id;
     }
 
     const auto& grown_elements = synaptic_elements.get_total_counts();
@@ -366,9 +366,9 @@ TEST_F(SynapticElementsTest, testSynapticElementsCreateNeurons) {
     for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
         const auto neuron_id = get_random_neuron_id(number_neurons) + number_neurons;
 
-        ASSERT_THROW(synaptic_elements.get_count(neuron_id), RelearnException) << ss.str() << neuron_id;
-        ASSERT_THROW(synaptic_elements.get_connected_count(neuron_id), RelearnException) << ss.str() << neuron_id;
-        ASSERT_THROW(synaptic_elements.get_delta_count(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_count(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_connected_count(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_delta_count(neuron_id), RelearnException) << ss.str() << neuron_id;
     }
 
     const auto& grown_elements = synaptic_elements.get_total_counts();
@@ -668,9 +668,9 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateException) {
     for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
         const auto neuron_id = get_random_neuron_id(number_neurons) + number_neurons;
 
-        ASSERT_THROW(synaptic_elements.get_count(neuron_id), RelearnException) << ss.str() << neuron_id;
-        ASSERT_THROW(synaptic_elements.get_connected_count(neuron_id), RelearnException) << ss.str() << neuron_id;
-        ASSERT_THROW(synaptic_elements.get_delta_count(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_count(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_connected_count(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_delta_count(neuron_id), RelearnException) << ss.str() << neuron_id;
     }
 
     for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
@@ -1335,6 +1335,6 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdatesException) {
     std::vector<char> disable_flags_too_small(number_too_small_disable_flags, 0);
     std::vector<char> disable_flags_too_large(number_too_large_disable_flags, 0);
 
-    ASSERT_THROW(synaptic_elements.commit_updates(disable_flags_too_small), RelearnException) << ss.str() << number_too_small_disable_flags;
-    ASSERT_THROW(synaptic_elements.commit_updates(disable_flags_too_large), RelearnException) << ss.str() << number_too_large_disable_flags;
+    ASSERT_THROW(auto ret = synaptic_elements.commit_updates(disable_flags_too_small), RelearnException) << ss.str() << number_too_small_disable_flags;
+    ASSERT_THROW(auto ret = synaptic_elements.commit_updates(disable_flags_too_large), RelearnException) << ss.str() << number_too_large_disable_flags;
 }
