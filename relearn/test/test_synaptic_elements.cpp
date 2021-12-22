@@ -1037,7 +1037,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdateNumberElements) {
         synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(connected_grown_element));
         synaptic_elements.set_signal_type(neuron_id, signal_type);
     }
-    
+
     std::vector<double> golden_delta_counts(number_neurons, 0.0);
 
     for (auto i = 0; i < 10; i++) {
@@ -1057,7 +1057,6 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdateNumberElements) {
 
         synaptic_elements.update_number_elements_delta(calcium, target_calcium, disable_flags);
     }
-
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(synaptic_elements.get_connected_count(neuron_id), golden_connected_counts[neuron_id]) << ss.str() << neuron_id;
@@ -1165,4 +1164,177 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElementsException) 
     lambda(calcium_too_large, target_calcium_too_small, disable_flags_too_large);
     lambda(calcium_too_large, target_calcium, disable_flags_too_large);
     lambda(calcium_too_large, target_calcium_too_large, disable_flags_too_large);
+}
+
+TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdates) {
+    const auto minimum_calcium_to_grow = get_random_double(-100.0, 100.0);
+    const auto growth_factor = get_random_double(1e-6, 100.0);
+
+    const auto number_neurons = get_random_number_neurons();
+    const auto element_type = get_random_element_type();
+
+    const auto retract_ratio = get_random_double(0.0, 1.0);
+
+    std::stringstream ss{};
+    ss << number_neurons << ' ' << element_type << ' ' << minimum_calcium_to_grow << ' ' << growth_factor << ' ' << retract_ratio << '\n';
+
+    SynapticElements synaptic_elements(element_type, minimum_calcium_to_grow, growth_factor, retract_ratio);
+    synaptic_elements.init(number_neurons);
+
+    std::vector<double> golden_counts(number_neurons);
+    std::vector<unsigned int> golden_connected_counts(number_neurons);
+    std::vector<SignalType> golden_signal_types(number_neurons);
+
+    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        const auto& grown_element = get_random_double(0, 10.0);
+        const auto& connected_grown_element = get_random_integer<unsigned int>(0, static_cast<unsigned int>(grown_element));
+        const auto& signal_type = get_random_signal_type();
+
+        golden_counts[neuron_id] = grown_element;
+        golden_connected_counts[neuron_id] = static_cast<unsigned int>(connected_grown_element);
+        golden_signal_types[neuron_id] = signal_type;
+
+        synaptic_elements.update_count(neuron_id, grown_element);
+        synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(connected_grown_element));
+        synaptic_elements.set_signal_type(neuron_id, signal_type);
+    }
+
+    std::vector<double> calcium(number_neurons, 0.0);
+    std::vector<double> target_calcium(number_neurons, 0.0);
+    std::vector<char> enable_flags(number_neurons, 1);
+    std::vector<char> disable_flags(number_neurons, 0);
+
+    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        calcium[neuron_id] = get_random_double(-100.0, 100.0);
+        target_calcium[neuron_id] = get_random_double(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0);
+        if (get_random_bool()) {
+            disable_flags[neuron_id] = 1;
+        }
+    }
+
+    synaptic_elements.update_number_elements_delta(calcium, target_calcium, enable_flags);
+    const auto& [number_deleted_elements, deleted_element_counts] = synaptic_elements.commit_updates(disable_flags);
+
+    const auto& deltas = synaptic_elements.get_delta_counts();
+
+    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        const auto computed_delta = gaussian_growth_curve(calcium[neuron_id], minimum_calcium_to_grow, target_calcium[neuron_id], growth_factor);
+        const auto delta = synaptic_elements.get_delta_count(neuron_id);
+        if (disable_flags[neuron_id] == 0) {
+            ASSERT_NEAR(delta, computed_delta, eps) << ss.str() << neuron_id;
+            ASSERT_NEAR(deltas[neuron_id], computed_delta, eps) << ss.str() << neuron_id;
+        } else {
+            ASSERT_EQ(delta, 0.0) << ss.str() << neuron_id;
+            ASSERT_EQ(deltas[neuron_id], 0.0) << ss.str() << neuron_id;
+        }
+    }
+
+    auto summed_number_deletions = 0;
+    for (auto deleted_counts : deleted_element_counts) {
+        summed_number_deletions += deleted_counts;
+    }
+
+    ASSERT_EQ(summed_number_deletions, number_deleted_elements) << ss.str() << summed_number_deletions << ' ' << number_deleted_elements;
+
+    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        if (disable_flags[neuron_id] == 0) {
+            continue;
+        }
+
+        const auto previous_count = golden_counts[neuron_id];
+        const auto previous_connected = golden_connected_counts[neuron_id];
+        const auto previous_vacant = previous_count - previous_connected;
+
+        const auto current_count = synaptic_elements.get_count(neuron_id);
+        const auto current_connected = synaptic_elements.get_connected_count(neuron_id);
+        const auto current_delta = synaptic_elements.get_delta_count(neuron_id);
+
+        const auto computed_delta = gaussian_growth_curve(calcium[neuron_id], minimum_calcium_to_grow, target_calcium[neuron_id], growth_factor);
+        const auto new_vacant = previous_vacant + computed_delta;
+
+        ASSERT_EQ(current_delta, 0.0) << ss.str() << neuron_id;
+
+        if (new_vacant >= 0.0) {
+            const auto retracted_count = (1 - retract_ratio) * new_vacant;
+            const auto expected_count = retracted_count + previous_connected;
+
+            ASSERT_NEAR(expected_count, current_count, eps) << ss.str() << neuron_id;
+            ASSERT_EQ(previous_connected, current_connected) << ss.str() << neuron_id;
+
+            continue;
+        }
+
+        const auto expected_deletions = static_cast<unsigned int>(std::ceil(std::abs(new_vacant)));
+
+        if (expected_deletions > previous_connected) {
+            ASSERT_EQ(current_count, 0.0) << ss.str() << neuron_id;
+            ASSERT_EQ(current_connected, 0) << ss.str() << neuron_id;
+
+            continue;
+        }
+
+        if (expected_deletions == previous_connected) {
+            const auto expected_count = (1 - retract_ratio) * (previous_count + computed_delta);
+
+            ASSERT_NEAR(current_count, expected_count, eps) << ss.str() << neuron_id;
+            ASSERT_EQ(current_connected, 0) << ss.str() << neuron_id;
+
+            continue;
+        }
+
+        const auto expected_connected = previous_connected - expected_deletions;
+
+        ASSERT_EQ(expected_connected, current_connected) << ss.str() << neuron_id;
+        ASSERT_EQ(expected_deletions, deleted_element_counts[neuron_id]) << ss.str() << neuron_id;
+        
+        const auto expected_count = (1 - retract_ratio) * (previous_count + computed_delta - expected_connected) + expected_connected;
+        ASSERT_NEAR(current_count, expected_count, eps) << ss.str() << neuron_id;
+    }
+}
+
+TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdatesException) {
+    const auto minimum_calcium_to_grow = get_random_double(-100.0, 100.0);
+    const auto growth_factor = get_random_double(1e-6, 100.0);
+
+    const auto& number_neurons = get_random_number_neurons();
+    const auto& element_type = get_random_element_type();
+
+    std::stringstream ss{};
+    ss << number_neurons << ' ' << element_type << ' ' << minimum_calcium_to_grow << ' ' << growth_factor << '\n';
+
+    SynapticElements synaptic_elements(element_type, minimum_calcium_to_grow, growth_factor);
+    synaptic_elements.init(number_neurons);
+
+    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        const auto& grown_element = get_random_percentage();
+        const auto& connected_grown_element = get_random_synaptic_element_connected_count();
+        const auto& signal_type = get_random_signal_type();
+
+        synaptic_elements.update_count(neuron_id, grown_element);
+        synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(connected_grown_element));
+        synaptic_elements.set_signal_type(neuron_id, signal_type);
+    }
+
+    std::vector<double> calcium(number_neurons, 0.0);
+    std::vector<double> target_calcium(number_neurons, 0.0);
+    std::vector<char> disable_flags(number_neurons, 0);
+
+    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        calcium[neuron_id] = get_random_double(-100.0, 100.0);
+        target_calcium[neuron_id] = get_random_double(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0);
+        if (get_random_bool()) {
+            disable_flags[neuron_id] = 1;
+        }
+    }
+
+    synaptic_elements.update_number_elements_delta(calcium, target_calcium, disable_flags);
+
+    const auto number_too_small_disable_flags = get_random_neuron_id(number_neurons);
+    const auto number_too_large_disable_flags = get_random_neuron_id(number_neurons) + number_neurons + 1;
+
+    std::vector<char> disable_flags_too_small(number_too_small_disable_flags, 0);
+    std::vector<char> disable_flags_too_large(number_too_large_disable_flags, 0);
+
+    ASSERT_THROW(synaptic_elements.commit_updates(disable_flags_too_small), RelearnException) << ss.str() << number_too_small_disable_flags;
+    ASSERT_THROW(synaptic_elements.commit_updates(disable_flags_too_large), RelearnException) << ss.str() << number_too_large_disable_flags;
 }

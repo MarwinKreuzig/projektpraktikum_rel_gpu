@@ -46,17 +46,19 @@ unsigned int SynapticElements::update_number_elements(const size_t neuron_id) {
         return num_delete_connected;
     }
 
-    const auto new_cnts = current_count + current_delta;
-    const auto new_connected_cnt = floor(new_cnts);
-    const auto num_vacant = new_cnts - new_connected_cnt;
+    const auto new_count = current_count + current_delta;
+    const auto new_connected_count = floor(new_count);
+    const auto num_vacant = new_count - new_connected_count;
+
+    const auto retracted_new_count = (1 - vacant_retract_ratio) * num_vacant + new_connected_count;
 
     RelearnException::check(num_vacant >= 0, "SynapticElements::update_number_elements: num vacant is neg");
 
-    connected_cnts[neuron_id] = static_cast<unsigned int>(new_connected_cnt);
-    cnts[neuron_id] = new_cnts;
+    connected_cnts[neuron_id] = static_cast<unsigned int>(new_connected_count);
+    cnts[neuron_id] = retracted_new_count;
     delta_cnts[neuron_id] = 0.0;
 
-    const auto deleted_cnts = current_connected_count - new_connected_cnt;
+    const auto deleted_cnts = current_connected_count - new_connected_count;
 
     RelearnException::check(deleted_cnts >= 0.0, "SynapticElements::update_number_elements:  deleted was negative");
     const auto num_delete_connected = static_cast<unsigned int>(deleted_cnts);

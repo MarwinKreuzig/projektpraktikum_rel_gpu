@@ -347,7 +347,7 @@ public:
     [[nodiscard]] std::pair<unsigned int, std::vector<unsigned int>> commit_updates(const std::vector<char>& disable_flags) {
         RelearnException::check(disable_flags.size() == size, ":SynapticElements::commit_updates: disable_flags was not of the right size");
 
-        std::vector<unsigned int> number_deletions(size);
+        std::vector<unsigned int> number_deletions(size, 0);
         unsigned int sum_to_delete = 0;
 
 #pragma omp parallel for reduction(+ \
