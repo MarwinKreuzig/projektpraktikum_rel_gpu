@@ -18,6 +18,7 @@
 #include "ElementType.h"
 #include "NeuronsExtraInfo.h"
 #include "SignalType.h"
+#include "UpdateStatus.h"
 #include "helper/RankNeuronId.h"
 #include "helper/SynapseCreationRequests.h"
 #include "models/NeuronModels.h"
@@ -562,7 +563,7 @@ public:
      *      The reference is never invalidated
      * @return A constant reference to the disable flags
      */
-    [[nodiscard]] const std::vector<char>& get_disable_flags() const noexcept {
+    [[nodiscard]] const std::vector<UpdateStatus>& get_disable_flags() const noexcept {
         return disable_flags;
     }
 
@@ -700,10 +701,10 @@ public:
 private:
     void update_calcium();
 
-    [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, int root, const std::vector<char>& disable_flags) const;
+    [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, int root, const std::vector<UpdateStatus>& disable_flags) const;
 
     template <typename T>
-    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::vector<T>& local_values, const int root, const std::vector<char>& disable_flags) const {
+    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::vector<T>& local_values, const int root, const std::vector<UpdateStatus>& disable_flags) const {
         std::vector<double> converted_values;
         converted_values.reserve(local_values.size());
 
@@ -777,7 +778,7 @@ private:
     std::vector<double> target_calcium{};
     std::vector<double> calcium{}; // Intracellular calcium concentration of every neuron
 
-    std::vector<char> disable_flags{};
+    std::vector<UpdateStatus> disable_flags{};
 
     std::unique_ptr<NeuronsExtraInfo> extra_info{ std::make_unique<NeuronsExtraInfo>() };
 };

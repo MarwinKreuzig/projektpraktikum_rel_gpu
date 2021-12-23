@@ -12,6 +12,7 @@
 
 #include "../../util/RelearnException.h"
 #include "ModelParameter.h"
+#include "../UpdateStatus.h"
 
 #include <algorithm>
 #include <map>
@@ -320,7 +321,7 @@ public:
      * @param network_graph The network graph that specifies which neurons are connected. Is used to determine which spikes effect the local portion.
      * @param disable_flags A vector of flags that specify which neurons should be left alone during the update
      */
-    void update_electrical_activity(const NetworkGraph& network_graph, const std::vector<char>& disable_flags);
+    void update_electrical_activity(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags);
 
     /**
 	 * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned
@@ -399,7 +400,7 @@ protected:
      *      It provides a hook to initialize variables serially
      * @param disable_flags The local neuron ids that should be skipped
      */
-    virtual void update_electrical_activity_serial_initialize(const std::vector<char>& disable_flags) {
+    virtual void update_electrical_activity_serial_initialize(const std::vector<UpdateStatus>& disable_flags) {
     }
 
     /**
@@ -440,13 +441,13 @@ private:
 
     [[nodiscard]] static MapFiringNeuronIds update_electrical_activity_exchange_neuron_ids(const MapFiringNeuronIds& firing_neuron_ids_outgoing, const std::vector<size_t>& num_incoming_ids);
 
-    [[nodiscard]] MapFiringNeuronIds update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<char>& disable_flags);
+    [[nodiscard]] MapFiringNeuronIds update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags);
 
-    void update_electrical_activity_update_activity(const std::vector<char>& disable_flags);
+    void update_electrical_activity_update_activity(const std::vector<UpdateStatus>& disable_flags);
 
-    void update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const MapFiringNeuronIds& firing_neuron_ids_incoming, const std::vector<char>& disable_flags);
+    void update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const MapFiringNeuronIds& firing_neuron_ids_incoming, const std::vector<UpdateStatus>& disable_flags);
 
-    void update_electrical_activity_calculate_background(const std::vector<char>& disable_flags);
+    void update_electrical_activity_calculate_background(const std::vector<UpdateStatus>& disable_flags);
 
     // My local number of neurons
     size_t number_local_neurons{ 0 };
@@ -581,7 +582,7 @@ public:
     static constexpr unsigned int max_refrac_time{ 1000 };
 
 protected:
-    void update_electrical_activity_serial_initialize(const std::vector<char>& disable_flags) final;
+    void update_electrical_activity_serial_initialize(const std::vector<UpdateStatus>& disable_flags) final;
 
     void update_activity(size_t neuron_id) final;
 

@@ -930,7 +930,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
 
     BarnesHut bh{ octree_ptr };
 
-    std::vector<char> disable_flags(number_neurons, 1);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::ENABLED);
 
     auto unique_exc = std::make_unique<SynapticElements>(std::move(dends_exc));
     auto unique_inh = std::make_unique<SynapticElements>(std::move(dends_inh));
@@ -1003,7 +1003,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
 
     BarnesHut bh{ octree_ptr };
 
-    std::vector<char> disable_flags(number_neurons, 1);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::ENABLED);
 
     bh.update_leaf_nodes(disable_flags, unique_exc, unique_exc, unique_inh);
     octree.update_local_trees();

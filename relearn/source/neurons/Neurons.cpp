@@ -51,7 +51,7 @@ void Neurons::init(const size_t num_neurons, std::vector<double> target_calcium_
         dendrites_inh->set_signal_type(i, SignalType::INHIBITORY);
     }
 
-    disable_flags.resize(number_neurons, 1);
+    disable_flags.resize(number_neurons, UpdateStatus::ENABLED);
     calcium = std::move(initial_calcium_values);
     target_calcium = std::move(target_calcium_values);
 
@@ -153,7 +153,7 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
 
     for (const auto neuron_id : neuron_ids) {
         RelearnException::check(neuron_id < number_neurons, "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
-        disable_flags[neuron_id] = 0;
+        disable_flags[neuron_id] = UpdateStatus::DISABLED;
 
         const auto local_in_edges = network_graph->get_local_in_edges(neuron_id);
         const auto distant_in_edges = network_graph->get_distant_in_edges(neuron_id);
@@ -209,7 +209,7 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
 void Neurons::enable_neurons(const std::vector<size_t>& neuron_ids) {
     for (const auto neuron_id : neuron_ids) {
         RelearnException::check(neuron_id < number_neurons, "Neurons::enable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
-        disable_flags[neuron_id] = 1;
+        disable_flags[neuron_id] = UpdateStatus::ENABLED;
     }
 }
 
@@ -234,7 +234,7 @@ void Neurons::create_neurons(const size_t creation_count, const std::vector<doub
         dendrites_inh->set_signal_type(i, SignalType::INHIBITORY);
     }
 
-    disable_flags.resize(new_size, 1);
+    disable_flags.resize(new_size, UpdateStatus::ENABLED);
 
     calcium.insert(calcium.cend(), new_initial_calcium_values.begin(), new_initial_calcium_values.end());
     target_calcium.insert(target_calcium.cend(), new_target_calcium_values.begin(), new_target_calcium_values.end());
@@ -281,7 +281,7 @@ void Neurons::update_calcium() {
 
 #pragma omp parallel for
     for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
-        if (disable_flags[neuron_id] == 0) {
+        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
         }
 
@@ -300,7 +300,7 @@ void Neurons::update_calcium() {
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
 }
 
-StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, const int root, const std::vector<char>& disable_flags) const {
+StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, const int root, const std::vector<UpdateStatus>& disable_flags) const {
     const auto [d_my_min, d_my_max, d_my_acc, d_num_values] = Util::min_max_acc(local_values, disable_flags);
     const double my_avg = d_my_acc / d_num_values;
 
@@ -317,7 +317,7 @@ StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_
 	 */
     double my_var = 0;
     for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == 0) {
+        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
         }
 
@@ -405,7 +405,7 @@ std::pair<Neurons::PendingDeletionsV, std::vector<size_t>> Neurons::delete_synap
     std::vector<size_t> total_vector_affected_indices{};
 
     for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == 0) {
+        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
         }
 

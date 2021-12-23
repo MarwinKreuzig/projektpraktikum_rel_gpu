@@ -256,7 +256,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
     }
 }
 
-MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t number_neurons, const std::vector<char>& disable_flags,
+MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) {
 
     MapSynapseCreationRequests synapse_creation_requests_outgoing;
@@ -321,7 +321,7 @@ MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t numb
     return synapse_creation_requests_outgoing;
 }
 
-void FastMultipoleMethods::update_leaf_nodes(const std::vector<char>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
+void FastMultipoleMethods::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
     const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites) {
 
     const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_total_counts();
@@ -363,7 +363,7 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<char>& disable_fl
 
         RelearnException::check(neuron_id == other_neuron_id, "FastMultipoleMethods::update_leaf_nodes: The nodes are not in order");
 
-        if (disable_flags[neuron_id] == 0) {
+        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
         }
 

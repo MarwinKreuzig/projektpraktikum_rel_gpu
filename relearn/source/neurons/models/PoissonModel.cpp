@@ -100,12 +100,12 @@ void PoissonModel::init_neurons(const size_t start_id, const size_t end_id) {
     }
 }
 
-void models::PoissonModel::update_electrical_activity_serial_initialize(const std::vector<char>& disable_flags) {
+void models::PoissonModel::update_electrical_activity_serial_initialize(const std::vector<UpdateStatus>& disable_flags) {
     Timers::start(TimerRegion::CALC_SERIAL_ACTIVITY);
 
 #pragma omp parallel for shared(disable_flags) default(none) // NOLINTNEXTLINE
     for (int neuron_id = 0; neuron_id < theta_values.size(); neuron_id++) {
-        if (disable_flags[neuron_id] == 0) {
+        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
         }
 

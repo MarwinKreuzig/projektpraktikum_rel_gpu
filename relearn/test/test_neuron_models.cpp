@@ -3,6 +3,7 @@
 #include "RelearnTest.hpp"
 
 #include "../source/neurons/Neurons.h"
+#include "../source/neurons/UpdateStatus.h"
 #include "../source/neurons/models/NeuronModels.h"
 
 #include "../source/neurons/NetworkGraph.h"
@@ -1717,7 +1718,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledPoisson) {
 
     model->init(get_requested_number_neurons);
 
-    std::vector<char> disable_flags(get_requested_number_neurons);
+    std::vector<UpdateStatus> disable_flags(get_requested_number_neurons, UpdateStatus::DISABLED);
     std::vector<double> model_x = model->get_x();
     std::vector<double> model_secondary(get_requested_number_neurons);
     std::vector<char> model_fired = model->get_fired();
@@ -1819,7 +1820,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledIzhikevich) {
 
     model->init(get_requested_number_neurons);
 
-    std::vector<char> disable_flags(get_requested_number_neurons);
+    std::vector<UpdateStatus> disable_flags(get_requested_number_neurons, UpdateStatus::DISABLED);
     std::vector<double> model_x = model->get_x();
     std::vector<double> model_secondary(get_requested_number_neurons);
     std::vector<char> model_fired = model->get_fired();
@@ -1911,7 +1912,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledFitzHughNagumo) {
 
     model->init(get_requested_number_neurons);
 
-    std::vector<char> disable_flags(get_requested_number_neurons);
+    std::vector<UpdateStatus> disable_flags(get_requested_number_neurons, UpdateStatus::DISABLED);
     std::vector<double> model_x = model->get_x();
     std::vector<double> model_secondary(get_requested_number_neurons);
     std::vector<char> model_fired = model->get_fired();
@@ -2015,7 +2016,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledAEIF) {
 
     model->init(get_requested_number_neurons);
 
-    std::vector<char> disable_flags(get_requested_number_neurons);
+    std::vector<UpdateStatus> disable_flags(get_requested_number_neurons, UpdateStatus::DISABLED);
     std::vector<double> model_x = model->get_x();
     std::vector<double> model_secondary(get_requested_number_neurons);
     std::vector<char> model_fired = model->get_fired();
@@ -2106,7 +2107,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisso
 
     model->init(get_requested_number_neurons);
 
-    std::vector<char> disable_flags(get_requested_number_neurons, 1);
+    std::vector<UpdateStatus> disable_flags(get_requested_number_neurons, UpdateStatus::ENABLED);
     std::vector<double> model_x = model->get_x();
     std::vector<double> model_secondary(get_requested_number_neurons);
     std::vector<char> model_fired = model->get_fired();
@@ -2224,7 +2225,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhike
 
     model->init(get_requested_number_neurons);
 
-    std::vector<char> disable_flags(get_requested_number_neurons, 1);
+    std::vector<UpdateStatus> disable_flags(get_requested_number_neurons, UpdateStatus::ENABLED);
     std::vector<double> model_x = model->get_x();
     std::vector<double> model_secondary(get_requested_number_neurons);
     std::vector<char> model_fired = model->get_fired();
@@ -2321,7 +2322,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHu
 
     model->init(get_requested_number_neurons);
 
-    std::vector<char> disable_flags(get_requested_number_neurons, 1);
+    std::vector<UpdateStatus> disable_flags(get_requested_number_neurons, UpdateStatus::ENABLED);
     std::vector<double> model_x = model->get_x();
     std::vector<double> model_secondary(get_requested_number_neurons);
     std::vector<double> model_I_syn = model->get_I_syn();
@@ -2423,7 +2424,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) 
 
     model->init(get_requested_number_neurons);
 
-    std::vector<char> disable_flags(get_requested_number_neurons, 1);
+    std::vector<UpdateStatus> disable_flags(get_requested_number_neurons, UpdateStatus::ENABLED);
     std::vector<double> model_x = model->get_x();
     std::vector<double> model_secondary(get_requested_number_neurons);
     std::vector<char> model_fired = model->get_fired();

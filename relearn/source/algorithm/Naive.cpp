@@ -88,7 +88,7 @@
     return rank_neuron_id;
 }
 
-MapSynapseCreationRequests Naive::find_target_neurons(const size_t number_neurons, const std::vector<char>& disable_flags,
+MapSynapseCreationRequests Naive::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) {
     MapSynapseCreationRequests synapse_creation_requests_outgoing;
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);
@@ -99,7 +99,7 @@ MapSynapseCreationRequests Naive::find_target_neurons(const size_t number_neuron
 
     // For my neurons
     for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == 0) {
+        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
         }
 
@@ -154,7 +154,7 @@ MapSynapseCreationRequests Naive::find_target_neurons(const size_t number_neuron
     return synapse_creation_requests_outgoing;
 }
 
-void Naive::update_leaf_nodes(const std::vector<char>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
+void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
     const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites) {
 
     const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_total_counts();
@@ -190,7 +190,7 @@ void Naive::update_leaf_nodes(const std::vector<char>& disable_flags, const std:
 
         RelearnException::check(neuron_id == other_neuron_id, "Naive::update_leaf_nodes: The nodes are not in order");
 
-        if (disable_flags[neuron_id] == 0) {
+        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
         }
 

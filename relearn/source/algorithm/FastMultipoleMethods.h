@@ -52,7 +52,7 @@ public:
    * @exception Can throw a RelearnException
    * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. 
    */
-    MapSynapseCreationRequests find_target_neurons(const size_t number_neurons, const std::vector<char>& disable_flags,
+    MapSynapseCreationRequests find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) override;
 
     /**
@@ -63,7 +63,7 @@ public:
    * @param inhibitory_dendrites The model for the inhibitory dendrites
    * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
    */
-    void update_leaf_nodes(const std::vector<char>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
+    void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
         const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites) override;
 
     /**

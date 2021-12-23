@@ -3,6 +3,7 @@
 #include "RelearnTest.hpp"
 
 #include "../source/neurons/models/SynapticElements.h"
+#include "../source/neurons/UpdateStatus.h"
 
 #include <numeric>
 #include <sstream>
@@ -975,13 +976,13 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElements) {
 
     std::vector<double> calcium(number_neurons, 0.0);
     std::vector<double> target_calcium(number_neurons, 0.0);
-    std::vector<char> disable_flags(number_neurons, 0);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::DISABLED);
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         calcium[neuron_id] = get_random_double(-100.0, 100.0);
         target_calcium[neuron_id] = get_random_double(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0);
         if (get_random_bool()) {
-            disable_flags[neuron_id] = 1;
+            disable_flags[neuron_id] = UpdateStatus::ENABLED;
         }
     }
 
@@ -997,7 +998,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElements) {
         const auto actual_delta = synaptic_elements.get_delta_count(neuron_id);
         const auto computed_delta = gaussian_growth_curve(calcium[neuron_id], minimum_calcium_to_grow, target_calcium[neuron_id], growth_factor);
 
-        if (disable_flags[neuron_id] == 0) {
+        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             ASSERT_NEAR(actual_delta, 0.0, eps) << ss.str() << neuron_id;
             ASSERT_NEAR(actual_deltas[neuron_id], 0.0, eps) << ss.str() << neuron_id;
         } else {
@@ -1043,13 +1044,13 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdateNumberElements) {
     for (auto i = 0; i < 10; i++) {
         std::vector<double> calcium(number_neurons, 0.0);
         std::vector<double> target_calcium(number_neurons, 0.0);
-        std::vector<char> disable_flags(number_neurons, 0);
+        std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::DISABLED);
 
         for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
             calcium[neuron_id] = get_random_double(-100.0, 100.0);
             target_calcium[neuron_id] = get_random_double(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0);
             if (get_random_bool()) {
-                disable_flags[neuron_id] = 1;
+                disable_flags[neuron_id] = UpdateStatus::ENABLED;
                 const auto current_expected_delta = gaussian_growth_curve(calcium[neuron_id], minimum_calcium_to_grow, target_calcium[neuron_id], growth_factor);
                 golden_delta_counts[neuron_id] += current_expected_delta;
             }
@@ -1119,9 +1120,9 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElementsException) 
     std::vector<double> target_calcium(number_neurons, 0.0);
     std::vector<double> target_calcium_too_large(number_too_large_target_calcium, 0.0);
 
-    std::vector<char> disable_flags_too_small(number_too_small_disable_flags, 0);
-    std::vector<char> disable_flags(number_neurons, 0);
-    std::vector<char> disable_flags_too_large(number_too_large_disable_flags, 0);
+    std::vector<UpdateStatus> disable_flags_too_small(number_too_small_disable_flags, UpdateStatus::DISABLED);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::DISABLED);
+    std::vector<UpdateStatus> disable_flags_too_large(number_too_large_disable_flags, UpdateStatus::DISABLED);
 
     auto lambda = [&ss, &synaptic_elements](auto calcium, auto target_calcium, auto disable_flags) {
         ASSERT_THROW(synaptic_elements.update_number_elements_delta(calcium, target_calcium, disable_flags), RelearnException) << ss.str()
@@ -1201,14 +1202,14 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdates) {
 
     std::vector<double> calcium(number_neurons, 0.0);
     std::vector<double> target_calcium(number_neurons, 0.0);
-    std::vector<char> enable_flags(number_neurons, 1);
-    std::vector<char> disable_flags(number_neurons, 0);
+    std::vector<UpdateStatus> enable_flags(number_neurons, UpdateStatus::ENABLED);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::DISABLED);
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         calcium[neuron_id] = get_random_double(-100.0, 100.0);
         target_calcium[neuron_id] = get_random_double(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0);
         if (get_random_bool()) {
-            disable_flags[neuron_id] = 1;
+            disable_flags[neuron_id] = UpdateStatus::ENABLED;
         }
     }
 
@@ -1220,7 +1221,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdates) {
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         const auto computed_delta = gaussian_growth_curve(calcium[neuron_id], minimum_calcium_to_grow, target_calcium[neuron_id], growth_factor);
         const auto delta = synaptic_elements.get_delta_count(neuron_id);
-        if (disable_flags[neuron_id] == 0) {
+        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             ASSERT_NEAR(delta, computed_delta, eps) << ss.str() << neuron_id;
             ASSERT_NEAR(deltas[neuron_id], computed_delta, eps) << ss.str() << neuron_id;
         } else {
@@ -1237,7 +1238,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdates) {
     ASSERT_EQ(summed_number_deletions, number_deleted_elements) << ss.str() << summed_number_deletions << ' ' << number_deleted_elements;
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        if (disable_flags[neuron_id] == 0) {
+        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
         }
 
@@ -1317,13 +1318,13 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdatesException) {
 
     std::vector<double> calcium(number_neurons, 0.0);
     std::vector<double> target_calcium(number_neurons, 0.0);
-    std::vector<char> disable_flags(number_neurons, 0);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::DISABLED);
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         calcium[neuron_id] = get_random_double(-100.0, 100.0);
         target_calcium[neuron_id] = get_random_double(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0);
         if (get_random_bool()) {
-            disable_flags[neuron_id] = 1;
+            disable_flags[neuron_id] = UpdateStatus::ENABLED;
         }
     }
 
@@ -1332,8 +1333,8 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdatesException) {
     const auto number_too_small_disable_flags = get_random_neuron_id(number_neurons);
     const auto number_too_large_disable_flags = get_random_neuron_id(number_neurons) + number_neurons + 1;
 
-    std::vector<char> disable_flags_too_small(number_too_small_disable_flags, 0);
-    std::vector<char> disable_flags_too_large(number_too_large_disable_flags, 0);
+    std::vector<UpdateStatus> disable_flags_too_small(number_too_small_disable_flags, UpdateStatus::DISABLED);
+    std::vector<UpdateStatus> disable_flags_too_large(number_too_large_disable_flags, UpdateStatus::DISABLED);
 
     ASSERT_THROW(auto ret = synaptic_elements.commit_updates(disable_flags_too_small), RelearnException) << ss.str() << number_too_small_disable_flags;
     ASSERT_THROW(auto ret = synaptic_elements.commit_updates(disable_flags_too_large), RelearnException) << ss.str() << number_too_large_disable_flags;

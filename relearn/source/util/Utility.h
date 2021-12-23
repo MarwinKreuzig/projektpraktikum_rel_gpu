@@ -14,6 +14,7 @@
 #include <tuple>
 #include <type_traits>
 
+#include "../neurons/UpdateStatus.h"
 #include "RelearnException.h"
 
 namespace Util {
@@ -27,7 +28,7 @@ namespace Util {
  * @return Returns a tuple with (1) minimum and (2) maximum value from values, (3) the sum of all enabled values and (4) the number of enabled values
  */
 template <typename T>
-std::tuple<T, T, T, size_t> min_max_acc(const std::vector<T>& values, const std::vector<char>& disable_flags) {
+std::tuple<T, T, T, size_t> min_max_acc(const std::vector<T>& values, const std::vector<UpdateStatus>& disable_flags) {
     static_assert(std::is_arithmetic<T>::value);
 
     RelearnException::check(values.size() > 0, "Util::min_max_acc: values had size 0");
@@ -35,7 +36,7 @@ std::tuple<T, T, T, size_t> min_max_acc(const std::vector<T>& values, const std:
 
     size_t first_index = 0;
 
-    while (disable_flags[first_index] == 0) {
+    while (disable_flags[first_index] == UpdateStatus::DISABLED) {
         first_index++;
     }
 
@@ -48,7 +49,7 @@ std::tuple<T, T, T, size_t> min_max_acc(const std::vector<T>& values, const std:
     size_t num_values = 1;
 
     for (auto i = first_index + 1; i < values.size(); i++) {
-        if (disable_flags[i] == 0) {
+        if (disable_flags[i] == UpdateStatus::DISABLED) {
             continue;
         }
 

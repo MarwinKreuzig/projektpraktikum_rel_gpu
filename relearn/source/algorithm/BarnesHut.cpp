@@ -90,7 +90,7 @@
 
 MapSynapseCreationRequests BarnesHut::find_target_neurons(
     const size_t number_neurons,
-    const std::vector<char>& disable_flags,
+    const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos,
     const std::unique_ptr<SynapticElements>& axons) {
 
@@ -104,7 +104,7 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
     // For my neurons
 #pragma omp parallel for shared(axons_cnts, axons_connected_cnts, axons_signal_types, synapse_creation_requests_outgoing)
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == 0) {
+        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
         }
 
@@ -161,7 +161,7 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
     return synapse_creation_requests_outgoing;
 }
 
-void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
+void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
     const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites) {
 
     const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_total_counts();
@@ -216,7 +216,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<char>& disable_flags, const 
         RelearnException::check(excitatory_position_in_box, "BarnesHut::update_leaf_nodes: Excitatory position ({}) is not in cell: [({}), ({})]", excitatory_position, cell_xyz_min, cell_xyz_max);
         RelearnException::check(inhibitory_position_in_box, "BarnesHut::update_leaf_nodes: Inhibitory position ({}) is not in cell: [({}), ({})]", inhibitory_position, cell_xyz_min, cell_xyz_max);
 
-        if (disable_flags[neuron_id] == 0) {
+        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
         }
 

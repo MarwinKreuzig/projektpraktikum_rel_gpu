@@ -27,7 +27,7 @@ NeuronModel::NeuronModel(const double k, const double tau_C, const double beta, 
     , background_activity_stddev(background_activity_stddev) {
 }
 
-void NeuronModel::update_electrical_activity(const NetworkGraph& network_graph, const std::vector<char>& disable_flags) {
+void NeuronModel::update_electrical_activity(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
 
     MapFiringNeuronIds firing_neuron_ids_outgoing = update_electrical_activity_prepare_sending_spikes(network_graph, disable_flags);
     std::vector<size_t> num_incoming_ids = update_electrical_activity_prepare_receiving_spikes(firing_neuron_ids_outgoing);
@@ -49,13 +49,13 @@ void NeuronModel::update_electrical_activity(const NetworkGraph& network_graph, 
     update_electrical_activity_update_activity(disable_flags);
 }
 
-void NeuronModel::update_electrical_activity_update_activity(const std::vector<char>& disable_flags) {
+void NeuronModel::update_electrical_activity_update_activity(const std::vector<UpdateStatus>& disable_flags) {
     Timers::start(TimerRegion::CALC_ACTIVITY);
 
     // For my neurons
 #pragma omp parallel for shared(disable_flags) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == 0) {
+        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
         }
 
@@ -65,13 +65,13 @@ void NeuronModel::update_electrical_activity_update_activity(const std::vector<c
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
 }
 
-void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const MapFiringNeuronIds& firing_neuron_ids_incoming, const std::vector<char>& disable_flags) {
+void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const MapFiringNeuronIds& firing_neuron_ids_incoming, const std::vector<UpdateStatus>& disable_flags) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
     // For my neurons
 
 #pragma omp parallel for shared(firing_neuron_ids_incoming, network_graph, disable_flags) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == 0) {
+        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
         }
 
@@ -108,13 +108,13 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
 }
 
-void NeuronModel::update_electrical_activity_calculate_background(const std::vector<char>& disable_flags) {
+void NeuronModel::update_electrical_activity_calculate_background(const std::vector<UpdateStatus>& disable_flags) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
 
     // There might be background activity
     if (background_activity_stddev > 0.0) {
         for (size_t neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
-            if (disable_flags[neuron_id] == 0) {
+            if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
                 continue;
             }
 
@@ -218,7 +218,7 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_exchange
     return firing_neuron_ids_incoming;
 }
 
-NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<char>& disable_flags) {       
+NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {       
     // If there is no other rank, then we can just skip    
     if (const auto number_mpi_ranks = MPIWrapper::get_num_ranks(); number_mpi_ranks == 1) {
         return {};
@@ -235,7 +235,7 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_
 
     // For my neurons
     for (size_t neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == 0) {
+        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
         }
 
