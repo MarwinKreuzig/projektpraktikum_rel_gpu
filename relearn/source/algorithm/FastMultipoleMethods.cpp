@@ -74,7 +74,7 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(
 
     if (source_number_axons > Constants::max_neurons_in_source) {
         // There are enough axons in the source box
-        std::array<double, Constants::p3> coefficents;
+        std::array<double, Constants::p3> coefficents{};
         calc_hermite_coefficients(source, coefficents, sigma, dendrite_type_needed);
         for (auto i = 0; i < target_list_length; i++) {
             const auto* current_target = extract_element(interaction_list, i);
@@ -180,7 +180,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
                     }
                 }
 
-                nodes_with_axons.emplace(source_node, std::move(new_interaction_list));
+                nodes_with_axons.emplace(source_node, new_interaction_list);
             } else {
                 const auto target_id = target_node->get_cell().get_neuron_id();
                 if (target_id != source_id) {
@@ -227,7 +227,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
                     counter++;
                 }
 
-                nodes_with_axons.emplace(source_child_node, std::move(new_interaction_list));
+                nodes_with_axons.emplace(source_child_node, new_interaction_list);
             }
 
             continue;
@@ -251,7 +251,7 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
             std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> new_interaction_list{ nullptr };
             new_interaction_list[0] = target_node;
 
-            nodes_with_axons.emplace(source_child_node, std::move(new_interaction_list));
+            nodes_with_axons.emplace(source_child_node, new_interaction_list);
         }
     }
 }
@@ -291,7 +291,7 @@ MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t numb
                 interaction_list[i] = nodes_with_excitatory_dendrites[i];
             }
 
-            nodes_with_excitatory_axons.emplace(current_node, std::move(interaction_list));
+            nodes_with_excitatory_axons.emplace(current_node, interaction_list);
         }
 
         if (cell.get_number_inhibitory_axons() > 0) {
@@ -300,7 +300,7 @@ MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t numb
                 interaction_list[i] = nodes_with_inhibitory_dendrites[i];
             }
 
-            nodes_with_inhibitory_axons.emplace(current_node, std::move(interaction_list));
+            nodes_with_inhibitory_axons.emplace(current_node, interaction_list);
         }
     }
 

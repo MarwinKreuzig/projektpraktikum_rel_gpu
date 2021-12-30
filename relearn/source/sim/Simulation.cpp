@@ -265,7 +265,7 @@ void Simulation::simulate(const size_t number_steps) {
                     new_initial_calcium_values[neuron_id] = initial_calcium_initiator(NeuronID{ neuron_id });
                 }
 
-                neurons->create_neurons(creation_count, std::move(new_target_calcium_values), std::move(new_initial_calcium_values));
+                neurons->create_neurons(creation_count, new_target_calcium_values, new_initial_calcium_values);
             }
         }
 

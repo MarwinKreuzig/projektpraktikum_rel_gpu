@@ -37,7 +37,7 @@ public:
     using position_type = RelearnTypes::position_type;
     using box_size_type = RelearnTypes::box_size_type;
 
-    NeuronToSubdomainAssignment(std::shared_ptr<Partition> partition);
+    explicit NeuronToSubdomainAssignment(std::shared_ptr<Partition> partition);
 
     virtual ~NeuronToSubdomainAssignment() = default;
 

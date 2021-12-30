@@ -125,12 +125,12 @@ public:
     }
 
     template <std::size_t Index>
-    auto&& get() && {
+    [[nodiscard]] auto&& get() && {
         if constexpr (Index == 0) {
-            return std::move(rank);
+            return rank;
         }
         if constexpr (Index == 1) {
-            return std::move(neuron_id);
+            return neuron_id;
         }
     }
 };
