@@ -327,11 +327,7 @@ protected:
 
     [[nodiscard]] bool is_subdomain_loaded(const size_t subdomain_index_1d) const noexcept {
         const auto contains = neurons_in_subdomain.find(subdomain_index_1d) != neurons_in_subdomain.end();
-        if (!contains) {
-            return false;
-        }
-
-        return true;
+        return contains;
     }
 
     virtual void calculate_total_number_neurons() const = 0;

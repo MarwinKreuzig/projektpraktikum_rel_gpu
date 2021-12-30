@@ -61,7 +61,7 @@ public:
      * @exception Throws a RelearnException if the subdomain is not loaded
      * @return The global ids for the specified subdomain
      */
-    [[nodiscard]] std::vector<NeuronID> get_neuron_global_ids_in_subdomain(const size_t subdomain_index_1d, const size_t total_number_subdomains) const override;
+    [[nodiscard]] std::vector<NeuronID> get_neuron_global_ids_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const override;
 
 protected:
     /**

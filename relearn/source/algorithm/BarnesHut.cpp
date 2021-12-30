@@ -59,7 +59,7 @@
         for (; counter < probability_values.size() && sum_probabilities < random_number; counter++) {
             sum_probabilities += probability_values[counter];
         }
-        node_selected = vector[counter - 1ull];
+        node_selected = vector[counter - 1ULL];
 
         RelearnException::check(node_selected != nullptr, "BarnesHut::find_target_neuron: node_selected was nullptr");
 

@@ -64,7 +64,7 @@
             sum_probabilities += prob[counter];
             counter++;
         }
-        node_selected = vector[counter - 1ull];
+        node_selected = vector[counter - 1ULL];
 
         RelearnException::check(node_selected != nullptr, "Naive::find_target_neuron: node_selected was nullptr");
 
@@ -266,7 +266,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags, co
 }
 
 [[nodiscard]] std::tuple<bool, bool> Naive::acceptance_criterion_test(const position_type& axon_pos_xyz, const OctreeNode<NaiveCell>* const node_with_dendrite,
-    const SignalType dendrite_type_needed) const {
+    const SignalType dendrite_type_needed) {
 
     RelearnException::check(node_with_dendrite != nullptr, "Naive::update_leaf_nodes:  node_with_dendrite was nullptr");
 

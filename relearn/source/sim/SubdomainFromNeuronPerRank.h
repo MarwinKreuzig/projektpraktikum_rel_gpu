@@ -86,5 +86,5 @@ private:
     void place_neurons_in_area(
         const NeuronToSubdomainAssignment::box_size_type& offset,
         const NeuronToSubdomainAssignment::box_size_type& length_of_box,
-        const size_t number_neurons, const size_t subdomain_idx);
+        size_t number_neurons, size_t subdomain_idx);
 };

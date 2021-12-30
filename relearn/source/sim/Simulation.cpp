@@ -419,7 +419,7 @@ void Simulation::increase_monitoring_capacity(const size_t size) {
 }
 
 void Simulation::snapshot_monitors() {
-    if (monitors->size() > 0) {
+    if (!monitors->empty()) {
         // record data at step 0
         for (auto& m : *monitors) {
             m.record_data();

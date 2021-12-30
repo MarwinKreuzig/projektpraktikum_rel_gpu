@@ -15,7 +15,7 @@
 #include "../structure/OctreeNode.h"
 #include "../util/Timers.h"
 
-unsigned int FastMultipoleMethods::do_random_experiment(const OctreeNode<FastMultipoleMethodsCell>* source, const std::vector<double>& attractiveness) const {
+unsigned int FastMultipoleMethods::do_random_experiment(const OctreeNode<FastMultipoleMethodsCell>* source, const std::vector<double>& attractiveness) {
     const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(1.0, Constants::eps));
     const auto vec_len = attractiveness.size();
     std::vector<double> intervals(vec_len + 1);
@@ -27,11 +27,11 @@ unsigned int FastMultipoleMethods::do_random_experiment(const OctreeNode<FastMul
     }
 
     for (auto i = 1; i < vec_len + 1; i++) {
-        intervals[i] = intervals[i - 1ull] + (attractiveness[i - 1ull] / sum);
+        intervals[i] = intervals[i - 1ULL] + (attractiveness[i - 1ULL] / sum);
     }
 
     unsigned int i = 0;
-    while (random_number > intervals[i + 1ull] && i <= vec_len) {
+    while (random_number > intervals[i + 1ULL] && i <= vec_len) {
         i++;
     }
 
@@ -304,10 +304,10 @@ MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t numb
         }
     }
 
-    if (!nodes_with_excitatory_axons.empty() && nodes_with_excitatory_dendrites.size() > 0) {
+    if (!nodes_with_excitatory_axons.empty() && !nodes_with_excitatory_dendrites.empty()) {
         make_creation_request_for(SignalType::EXCITATORY, synapse_creation_requests_outgoing, nodes_with_excitatory_axons);
     }
-    if (!nodes_with_inhibitory_axons.empty() && nodes_with_inhibitory_dendrites.size() > 0) {
+    if (!nodes_with_inhibitory_axons.empty() && !nodes_with_inhibitory_dendrites.empty()) {
         make_creation_request_for(SignalType::INHIBITORY, synapse_creation_requests_outgoing, nodes_with_inhibitory_axons);
     }
 

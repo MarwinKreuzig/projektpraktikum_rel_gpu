@@ -52,7 +52,7 @@ protected:
 
     using synapses_tuple_type = std::tuple<local_synapses_type, in_synapses_type, out_synapses_type>;
 
-protected:
+
     std::shared_ptr<Partition> partition{};
     std::shared_ptr<NeuronIdTranslator> nit{};
 

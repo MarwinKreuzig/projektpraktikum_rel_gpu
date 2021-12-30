@@ -97,7 +97,7 @@ void AEIFModel::update_activity(const NeuronID& neuron_id) {
         }
     }
 
-    set_fired(neuron_id, has_spiked);
+    set_fired(neuron_id, static_cast<char>(has_spiked));
     set_x(neuron_id, x);
 }
 
@@ -107,7 +107,7 @@ void AEIFModel::init_neurons(const size_t start_id, const size_t end_id) {
         w[neuron_id] = iter_refrac(0, x);
 
         const auto id = NeuronID{ neuron_id };
-        set_fired(id, x >= V_spike);
+        set_fired(id, static_cast<char>(x >= V_spike));
         set_x(id, x);
     }
 }

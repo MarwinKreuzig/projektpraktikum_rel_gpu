@@ -72,7 +72,7 @@ public:
      * @param other The other RankNeuronId
      * @return True iff both ranks and both neuron ids are equal
      */
-    bool operator==(const RankNeuronId& other) const noexcept {
+    [[nodiscard]] bool operator==(const RankNeuronId& other) const noexcept {
         return (this->rank == other.rank && this->neuron_id == other.neuron_id);
     }
 
@@ -81,7 +81,7 @@ public:
      * @param other The other RankNeuronId
      * @return False iff both ranks and both neuron ids are equal
      */
-    bool operator!=(const RankNeuronId& other) const noexcept {
+    [[nodiscard]] bool operator!=(const RankNeuronId& other) const noexcept {
         return !(*this == other);
     }
 
@@ -90,7 +90,7 @@ public:
      * @param other The other RankNeuronId
      * @return True iff this' rank is smaller than the other's or if the ranks are equal and this' neuron_id is smaller
      */
-    bool operator<(const RankNeuronId& other) const noexcept {
+    [[nodiscard]] bool operator<(const RankNeuronId& other) const noexcept {
         return (this->rank < other.rank) || (this->rank == other.rank && this->neuron_id < other.neuron_id);
     }
 
@@ -105,27 +105,33 @@ public:
     }
 
     template <std::size_t Index>
-    auto& get() & {
-        if constexpr (Index == 0)
+    [[nodiscard]] auto& get() & {
+        if constexpr (Index == 0) {
             return rank;
-        if constexpr (Index == 1)
+        }
+        if constexpr (Index == 1) {
             return neuron_id;
+        }
     }
 
     template <std::size_t Index>
     [[nodiscard]] auto const& get() const& {
-        if constexpr (Index == 0)
+        if constexpr (Index == 0) {
             return rank;
-        if constexpr (Index == 1)
+        }
+        if constexpr (Index == 1) {
             return neuron_id;
+        }
     }
 
     template <std::size_t Index>
     auto&& get() && {
-        if constexpr (Index == 0)
+        if constexpr (Index == 0) {
             return std::move(rank);
-        if constexpr (Index == 1)
+        }
+        if constexpr (Index == 1) {
             return std::move(neuron_id);
+        }
     }
 };
 

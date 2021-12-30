@@ -36,7 +36,7 @@ public:
      * @param um_per_neuron The box length in which a single neuron is placed, must be > 0.0
      * @exception Throws a RelearnException if fraction_excitatory_neurons if not from [0.0, 1.0] or um_per_neuron <= 0.0
      */
-    SubdomainFromNeuronDensity(const size_t number_neurons, const double fraction_excitatory_neurons, const double um_per_neuron, std::shared_ptr<Partition> partition);
+    SubdomainFromNeuronDensity(size_t number_neurons, double fraction_excitatory_neurons, double um_per_neuron, std::shared_ptr<Partition> partition);
 
     SubdomainFromNeuronDensity(const SubdomainFromNeuronDensity& other) = delete;
     SubdomainFromNeuronDensity(SubdomainFromNeuronDensity&& other) = delete;
@@ -86,5 +86,5 @@ private:
     void place_neurons_in_area(
         const NeuronToSubdomainAssignment::box_size_type& offset,
         const NeuronToSubdomainAssignment::box_size_type& length_of_box,
-        const size_t number_neurons, const size_t subdomain_idx);
+        size_t number_neurons, size_t subdomain_index_1d);
 };
