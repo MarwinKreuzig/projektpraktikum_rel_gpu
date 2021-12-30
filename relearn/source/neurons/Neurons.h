@@ -518,7 +518,7 @@ public:
      * @brief Returns a constant reference to the extra informations
      * @return The extra informations for the neurons
      */
-    const std::unique_ptr<NeuronsExtraInfo>& get_extra_info() const noexcept {
+    [[nodiscard]] const std::unique_ptr<NeuronsExtraInfo>& get_extra_info() const noexcept {
         return extra_info;
     }
 
@@ -696,7 +696,7 @@ public:
      * @param attribute The selected attribute of the neurons
      * @return The statistical measure across all MPI processes. All MPI processes have the same return value
      */
-    StatisticalMeasures get_statistics(NeuronAttribute attribute) const;
+    [[nodiscard]] StatisticalMeasures get_statistics(NeuronAttribute attribute) const;
 
 private:
     void update_calcium();

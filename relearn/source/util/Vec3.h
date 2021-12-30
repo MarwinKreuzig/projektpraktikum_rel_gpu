@@ -418,7 +418,7 @@ public:
      * @exception Throws a RelearnException if lower <= upper is violated
      * @return True iff *this is in [lower, upper]
      */
-    bool check_in_box(const Vec3<T>& lower, const Vec3<T>& upper) const {
+    [[nodiscard]] bool check_in_box(const Vec3<T>& lower, const Vec3<T>& upper) const {
         RelearnException::check(lower.x <= upper.x, "Vec3::check_in_box: lower.x ({}) is larger than upper.x ({})", lower.x, upper.x);
         RelearnException::check(lower.y <= upper.y, "Vec3::check_in_box: lower.y ({}) is larger than upper.y ({})", lower.y, upper.y);
         RelearnException::check(lower.z <= upper.z, "Vec3::check_in_box: lower.z ({}) is larger than upper.z ({})", lower.z, upper.z);

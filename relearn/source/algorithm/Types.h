@@ -50,7 +50,7 @@ public:
      * @brief Returns the number of free elements
      * @return The number of free elements
      */
-    counter_type get_number_free_elements() const noexcept {
+    [[nodiscard]] counter_type get_number_free_elements() const noexcept {
         return num_free_elements;
     }
 
@@ -71,7 +71,7 @@ public:
      * @brief Returns the position of this plasticity element. Can be empty
      * @return The current position
      */
-    std::optional<position_type> get_position() const noexcept {
+    [[nodiscard]] std::optional<position_type> get_position() const noexcept {
         if (!is_valid) {
             return {};
         }
@@ -107,7 +107,7 @@ public:
      * @brief Returns the number of free elements
      * @return The number of free elements
      */
-    counter_type get_number_free_elements() const noexcept {
+    [[nodiscard]] counter_type get_number_free_elements() const noexcept {
         return num_free_elements;
     }
 
@@ -123,7 +123,7 @@ public:
      * @brief Returns the position of this plasticity element. Can be empty
      * @return The current position
      */
-    std::optional<position_type> get_position() const noexcept {
+    [[nodiscard]] std::optional<position_type> get_position() const noexcept {
         return position;
     }
 };

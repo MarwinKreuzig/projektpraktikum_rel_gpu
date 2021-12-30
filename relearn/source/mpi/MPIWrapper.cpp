@@ -299,7 +299,7 @@ void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
 }
 
 void* MPIWrapper::translate_reduce_function(const ReduceFunction rf) {
-    MPI_Op* op = new MPI_Op;
+    auto* op = new MPI_Op;
 
     switch (rf) {
     case ReduceFunction::min:

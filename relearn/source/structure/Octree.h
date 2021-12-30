@@ -406,7 +406,7 @@ public:
      *      The reference is never invalidated
      * @return All leaf nodes
      */
-    const std::vector<OctreeNode<AdditionalCellAttributes>*>& get_leaf_nodes() const noexcept {
+    [[nodiscard]] const std::vector<OctreeNode<AdditionalCellAttributes>*>& get_leaf_nodes() const noexcept {
         return all_leaf_nodes;
     }
 

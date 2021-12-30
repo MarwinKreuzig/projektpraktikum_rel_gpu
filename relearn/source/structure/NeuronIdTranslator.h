@@ -56,7 +56,7 @@ public:
      * @param global_id The global neuron id
      * @return True iff the global neuron id belongs to the current MPI rank
      */
-    bool is_neuron_local(NeuronID global_id) const;
+    [[nodiscard]] bool is_neuron_local(NeuronID global_id) const;
 
     /**
      * @brief Translated the global neuron id to the local neuron id

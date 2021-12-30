@@ -113,7 +113,7 @@ public:
     }
 
     template <std::size_t Index>
-    auto const& get() const& {
+    [[nodiscard]] auto const& get() const& {
         if constexpr (Index == 0)
             return rank;
         if constexpr (Index == 1)

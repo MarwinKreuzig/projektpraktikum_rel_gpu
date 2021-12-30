@@ -205,7 +205,7 @@ public:
      * @exception Throws a RelearnException if the statistics have not been observed
      * @return A constants reference to the statistics
      */
-    const std::vector<StatisticalMeasures>& get_statistics(NeuronAttribute neuron_attribute_to_observe) const {
+    [[nodiscard]] const std::vector<StatisticalMeasures>& get_statistics(NeuronAttribute neuron_attribute_to_observe) const {
         if (statistics.find(neuron_attribute_to_observe) == statistics.end()) {
             RelearnException::fail("Simulation::get_statistics: The attribute was not observed: {}", neuron_attribute_to_observe);
         }

@@ -485,7 +485,7 @@ public:
      * @exception Throws an exception if the allocation of memory fails
      * @return A histogram of the connectivity, i.e., <return>[i] == c indicates that c local neurons have i edges in the requested direction
      */
-    std::vector<unsigned int> get_edges_histogram(EdgeDirection edge_direction) const {
+    [[nodiscard]] std::vector<unsigned int> get_edges_histogram(EdgeDirection edge_direction) const {
         std::vector<unsigned int> result{};
 
         auto largest_number_edges = 0;
