@@ -153,16 +153,16 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
         if (!source_node->is_parent()) {
             const auto source_id = cell.get_neuron_id();
 
-            const OctreeNode<FastMultipoleMethodsCell>* target_node;
-
-            const auto target_num = count_non_zero_elements(interaction_list);
-            if (target_num == 1) {
-                target_node = extract_element(interaction_list, 0);
-            } else {
-                const auto& connection_probabilities = calc_attractiveness_to_connect_FMM(source_node, interaction_list, needed);
-                const auto chosen_index = do_random_experiment(source_node, connection_probabilities);
-                target_node = extract_element(interaction_list, chosen_index);
-            }
+            const OctreeNode<FastMultipoleMethodsCell>* const target_node = [&count_non_zero_elements, &interaction_list, &extract_element, this, &source_node, &needed]() {
+                const auto target_num = count_non_zero_elements(interaction_list);
+                if (target_num == 1) {
+                    return extract_element(interaction_list, 0);
+                } else {
+                    const auto& connection_probabilities = calc_attractiveness_to_connect_FMM(source_node, interaction_list, needed);
+                    const auto chosen_index = do_random_experiment(source_node, connection_probabilities);
+                    return extract_element(interaction_list, chosen_index);
+                }
+            }();
 
             if (target_node->is_parent()) {
                 std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> new_interaction_list{ nullptr };

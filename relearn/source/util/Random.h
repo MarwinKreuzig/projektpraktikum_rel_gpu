@@ -63,6 +63,7 @@ public:
             "RandomHolder::get_random_uniform_double: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, key);
         std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
 
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         return urd(random_number_generators[static_cast<int>(key)]);
     }
 
@@ -79,6 +80,7 @@ public:
         RelearnException::check(0.0 < stddev, "RandomHolder::get_random_normal_double: Random number with invalid standard deviation {} for key {}", stddev, key);
         std::normal_distribution<double> nd(mean, stddev);
 
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         return nd(random_number_generators[static_cast<int>(key)]);
     }
 
@@ -92,6 +94,7 @@ public:
      */
     template <typename IteratorType>
     static void shuffle(const RandomHolderKey key, const IteratorType begin, const IteratorType end) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         std::shuffle(begin, end, random_number_generators[static_cast<int>(key)]);
     }
 
@@ -110,6 +113,7 @@ public:
     static void fill(const RandomHolderKey key, const IteratorType begin, const IteratorType end, const double lower_inclusive, const double upper_exclusive) {
         RelearnException::check(lower_inclusive < upper_exclusive, "RandomHolder::fill: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, key);
         std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         auto& gen = random_number_generators[static_cast<int>(key)];
 
         for (auto it = begin; it != end; it++) {
@@ -128,6 +132,7 @@ public:
 #pragma omp parallel shared(key, seed)
         {
             const auto thread_id = omp_get_thread_num();
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
             random_number_generators[static_cast<int>(key)].seed(seed + thread_id);
         }
     }

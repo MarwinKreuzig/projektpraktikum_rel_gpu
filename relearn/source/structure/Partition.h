@@ -301,14 +301,14 @@ public:
         const auto& [sim_box_min, sim_box_max] = get_simulation_box_size();
         const auto& simulation_box_length = (sim_box_max - sim_box_min);
 
-        const auto& subdomain_length = simulation_box_length / number_subdomains_per_dimension;
+        const auto& subdomain_length = simulation_box_length / static_cast<double>(number_subdomains_per_dimension);
 
         const auto& [subdomain_length_x, subdomain_length_y, subdomain_length_z] = subdomain_length;
 
         box_size_type min{
-            requested_subdomain_x * subdomain_length_x,
-            requested_subdomain_y * subdomain_length_y,
-            requested_subdomain_z * subdomain_length_z
+            static_cast<double>(requested_subdomain_x) * subdomain_length_x,
+            static_cast<double>(requested_subdomain_y) * subdomain_length_y,
+            static_cast<double>(requested_subdomain_z) * subdomain_length_z
         };
 
         const auto next_x = static_cast<box_size_type::value_type>(requested_subdomain_x + 1) * subdomain_length_x;

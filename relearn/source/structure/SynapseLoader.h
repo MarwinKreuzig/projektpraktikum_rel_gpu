@@ -52,7 +52,6 @@ protected:
 
     using synapses_tuple_type = std::tuple<local_synapses_type, in_synapses_type, out_synapses_type>;
 
-
     std::shared_ptr<Partition> partition{};
     std::shared_ptr<NeuronIdTranslator> nit{};
 
@@ -68,6 +67,16 @@ public:
         : partition(std::move(partition))
         , nit(std::move(neuron_id_translator)) { }
 
+    SynapseLoader(const SynapseLoader&) = default;
+
+    SynapseLoader& operator=(const SynapseLoader&) = default;
+
+    SynapseLoader(SynapseLoader&&) = default;
+
+    SynapseLoader& operator=(SynapseLoader&&) = default;
+
+    virtual ~SynapseLoader() = default;
+
     /**
      * @brief Loads all synapses that affect the local neurons, which are
      *      (1) local synapses (local neuron to local neuron)
@@ -76,9 +85,6 @@ public:
      * @return A tuple of (local, in, out) synapes
      */
     std::tuple<LocalSynapses, InSynapses, OutSynapses> load_synapses();
-
-    virtual ~SynapseLoader()
-        = default;
 };
 
 class FileSynapseLoader : public SynapseLoader {

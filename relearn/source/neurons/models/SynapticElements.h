@@ -130,9 +130,9 @@ public:
         grown_elements.resize(new_size);
 
         if (initial_vacant_elements_lower_bound < initial_vacant_elements_upper_bound) {
-            RandomHolder::fill(RandomHolderKey::SynapticElements, grown_elements.begin() + current_size, grown_elements.end(), initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
+            RandomHolder::fill(RandomHolderKey::SynapticElements, grown_elements.begin() + static_cast<std::int64_t>(current_size), grown_elements.end(), initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
         } else if (initial_vacant_elements_lower_bound == initial_vacant_elements_upper_bound) {
-            std::fill(grown_elements.begin() + current_size, grown_elements.end(), initial_vacant_elements_lower_bound);
+            std::fill(grown_elements.begin() + static_cast<std::int64_t>(current_size), grown_elements.end(), initial_vacant_elements_lower_bound);
         } else {
             RelearnException::fail("SynapticElements::create_neurons: Should initialize synaptic elements with values between in the wrong order (lower is larger than upper)");
         }

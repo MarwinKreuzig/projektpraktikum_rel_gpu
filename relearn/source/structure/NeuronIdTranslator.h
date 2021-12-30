@@ -42,6 +42,16 @@ public:
      */
     explicit NeuronIdTranslator(std::shared_ptr<Partition> partition);
 
+    NeuronIdTranslator(const NeuronIdTranslator&) = default;
+
+    NeuronIdTranslator& operator=(const NeuronIdTranslator&) = default;
+
+    NeuronIdTranslator(NeuronIdTranslator&&) = default;
+
+    NeuronIdTranslator& operator=(NeuronIdTranslator&&) = default;
+
+    virtual ~NeuronIdTranslator() = default;
+
     /**
      * @brief Sets the global ids for the subdomain
      * @param subdomain_idx The subdomain index
@@ -92,8 +102,6 @@ public:
      * @return A translation map from RankNeuronId to global neuron id
      */
     virtual std::map<RankNeuronId, neuron_id> translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) = 0;
-
-    virtual ~NeuronIdTranslator() = default;
 };
 
 /**
