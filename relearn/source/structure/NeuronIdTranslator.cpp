@@ -199,7 +199,7 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
     return final_translation_map;
 }
 
-FileNeuronIdTranslator::neuron_id FileNeuronIdTranslator::translate_rank_neuron_id(const RankNeuronId& rni) {
+FileNeuronIdTranslator::neuron_id FileNeuronIdTranslator::translate_rank_neuron_id(const RankNeuronId&  /*rni*/) {
     RelearnException::fail("FileNeuronIdTranslator::translate_rank_neuron_id: Should not be here");
     return {};
 }
@@ -246,7 +246,7 @@ std::map<FileNeuronIdTranslator::neuron_id, FileNeuronIdTranslator::position_typ
     return translation_map;
 }
 
-std::map<RankNeuronId, FileNeuronIdTranslator::neuron_id> FileNeuronIdTranslator::translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) {
+std::map<RankNeuronId, FileNeuronIdTranslator::neuron_id> FileNeuronIdTranslator::translate_rank_neuron_ids(const std::vector<RankNeuronId>&  /*ids*/) {
     RelearnException::fail("FileNeuronIdTranslator::translate_rank_neuron_ids: Should not be here");
     return {};
 }

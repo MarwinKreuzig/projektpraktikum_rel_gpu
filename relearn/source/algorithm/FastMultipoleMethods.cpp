@@ -15,7 +15,7 @@
 #include "../structure/OctreeNode.h"
 #include "../util/Timers.h"
 
-unsigned int FastMultipoleMethods::do_random_experiment(const OctreeNode<FastMultipoleMethodsCell>* source, const std::vector<double>& attractiveness) {
+unsigned int FastMultipoleMethods::do_random_experiment(const OctreeNode<FastMultipoleMethodsCell>* /*source*/, const std::vector<double>& attractiveness) {
     const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(1.0, Constants::eps));
     const auto vec_len = attractiveness.size();
     std::vector<double> intervals(vec_len + 1);
@@ -256,8 +256,8 @@ void FastMultipoleMethods::make_creation_request_for(SignalType needed, MapSynap
     }
 }
 
-MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
-    const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) {
+MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t /*number_neurons*/, const std::vector<UpdateStatus>& /*disable_flags*/,
+    const std::unique_ptr<NeuronsExtraInfo>& /*extra_infos*/, const std::unique_ptr<SynapticElements>& /*axons*/) {
 
     MapSynapseCreationRequests synapse_creation_requests_outgoing;
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);

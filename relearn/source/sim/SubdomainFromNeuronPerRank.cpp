@@ -52,7 +52,7 @@ SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank(const size_t number_neuro
     set_number_placed_neurons(0);
 }
 
-std::vector<NeuronID> SubdomainFromNeuronPerRank::get_neuron_global_ids_in_subdomain(const size_t subdomain_index_1d, const size_t total_number_subdomains) const {
+std::vector<NeuronID> SubdomainFromNeuronPerRank::get_neuron_global_ids_in_subdomain(const size_t  /*subdomain_index_1d*/, const size_t  /*total_number_subdomains*/) const {
     return {};
 }
 
@@ -61,7 +61,7 @@ void SubdomainFromNeuronPerRank::post_initialization() {
     synapse_loader = std::make_shared<RandomSynapseLoader>(partition, neuron_id_translator);
 }
 
-void SubdomainFromNeuronPerRank::fill_subdomain(const size_t local_subdomain_index, const size_t total_number_subdomains) {
+void SubdomainFromNeuronPerRank::fill_subdomain(const size_t local_subdomain_index, const size_t  /*total_number_subdomains*/) {
     const auto number_local_subdomains = partition->get_number_local_subdomains();
     const auto preliminary_number_neurons_per_subdomain = number_neurons_per_rank / number_local_subdomains;
     const auto additional_neuron = (local_subdomain_index < number_neurons_per_rank % number_local_subdomains) ? 1 : 0;

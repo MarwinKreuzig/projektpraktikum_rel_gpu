@@ -78,7 +78,7 @@ Partition::Partition(const size_t num_ranks, const size_t my_rank)
     LogFiles::print_message_rank(0, "Number subdomains per dimension: {}", number_subdomains_per_dimension);
 }
 
-void Partition::print_my_subdomains_info_rank(const int rank) {
+void Partition::print_my_subdomains_info_rank(const int  /*rank*/) {
     std::stringstream sstream{};
 
     sstream << "My number of neurons   : " << number_local_neurons << "\n";

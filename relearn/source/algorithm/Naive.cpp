@@ -157,7 +157,7 @@ MapSynapseCreationRequests Naive::find_target_neurons(const size_t number_neuron
     return synapse_creation_requests_outgoing;
 }
 
-void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
+void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags, const std::unique_ptr<SynapticElements>& /*axons*/,
     const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites) {
 
     const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_grown_elements();
@@ -265,7 +265,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags, co
     return probabilities;
 }
 
-[[nodiscard]] std::tuple<bool, bool> Naive::acceptance_criterion_test(const position_type& axon_pos_xyz, const OctreeNode<NaiveCell>* const node_with_dendrite,
+[[nodiscard]] std::tuple<bool, bool> Naive::acceptance_criterion_test(const position_type& /*axon_pos_xyz*/, const OctreeNode<NaiveCell>* const node_with_dendrite,
     const SignalType dendrite_type_needed) {
 
     RelearnException::check(node_with_dendrite != nullptr, "Naive::update_leaf_nodes:  node_with_dendrite was nullptr");

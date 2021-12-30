@@ -419,7 +419,7 @@ int main(int argc, char** argv) {
         sim.set_creation_interrupts(std::move(creation_interrups));
     }
 
-    auto target_calcium_calculator = [target = target_calcium](NeuronID neuron_id) { return target; };
+    auto target_calcium_calculator = [target = target_calcium](NeuronID  /*neuron_id*/) { return target; };
     sim.set_target_calcium_calculator(std::move(target_calcium_calculator));
 
     auto initial_calcium_calculator = [inital = initial_calcium](NeuronID neuron_id) { return inital; };
