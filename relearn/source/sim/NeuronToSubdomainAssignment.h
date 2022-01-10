@@ -82,7 +82,7 @@ public:
     }
 
     /**
-     * @brief Returns the total number of neurons that should be placed
+     * @brief Returns the total number of neurons that should be placed on the current MPI rank
      * @return The total number of neurons that should be placed
      */
     [[nodiscard]] size_t get_requested_number_neurons() const noexcept {

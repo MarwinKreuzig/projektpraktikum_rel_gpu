@@ -64,7 +64,7 @@ void SubdomainFromNeuronPerRank::post_initialization() {
 void SubdomainFromNeuronPerRank::fill_subdomain(const size_t local_subdomain_index, const size_t total_number_subdomains) {
     const auto number_local_subdomains = partition->get_number_local_subdomains();
     const auto preliminary_number_neurons_per_subdomain = number_neurons_per_rank / number_local_subdomains;
-    const auto additional_neuron = (number_neurons_per_rank % number_local_subdomains < local_subdomain_index) ? 1 : 0;
+    const auto additional_neuron = (local_subdomain_index < number_neurons_per_rank % number_local_subdomains) ? 1 : 0;
 
     const auto number_neurons_per_subdomain = preliminary_number_neurons_per_subdomain + additional_neuron;
     
