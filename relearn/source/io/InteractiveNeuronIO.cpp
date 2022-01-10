@@ -11,12 +11,14 @@
 #include "InteractiveNeuronIO.h"
 
 #include "../util/RelearnException.h"
+#include "spdlog/spdlog.h"
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <string>
 
-std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_enable_interrups(const std::string& path_to_file) {
+std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_enable_interrups(const std::filesystem::path& path_to_file) {
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();
@@ -63,7 +65,7 @@ std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_en
     return return_value;
 }
 
-std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_disable_interrups(const std::string& path_to_file) {
+std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_disable_interrups(const std::filesystem::path& path_to_file) {
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();
@@ -87,13 +89,13 @@ std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_di
         bool success = (sstream >> step) && (sstream >> delim);
 
         if (!success) {
-            std::cerr << "Skipping line: \"" << line << "\"\n";
+            spdlog::info("Skipping line: {}", line);
             continue;
         }
 
         if (delim != 'd') {
             if (delim != 'e' && delim != 'c') {
-                std::cerr << "Wrong deliminator: \"" << line << "\"\n";
+                spdlog::info("Wrong deliminator: {}", line);
             }
             continue;
         }
@@ -110,7 +112,7 @@ std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_di
     return return_value;
 }
 
-std::vector<std::pair<size_t, size_t>> InteractiveNeuronIO::load_creation_interrups(const std::string& path_to_file) {
+std::vector<std::pair<size_t, size_t>> InteractiveNeuronIO::load_creation_interrups(const std::filesystem::path& path_to_file) {
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();

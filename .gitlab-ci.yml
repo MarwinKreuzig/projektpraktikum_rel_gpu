@@ -10,13 +10,27 @@ build-mpi:
       - relearn/build-docker
 
 # run tests using the binary built before
-test-mpi:
+test-mpi-once:
   image: relearn-ci
   stage: test
   before_script:
     - cd relearn/build-docker
   script:
-    - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 ./runTests
+    - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 ./runTests --gtest_filter=*ONCE
+  dependencies: 
+    - build-mpi
+  artifacts:
+    paths:
+      - relearn/build-docker
+      
+# run tests using the binary built before
+test-mpi-multiple:
+  image: relearn-ci
+  stage: test
+  before_script:
+    - cd relearn/build-docker
+  script:
+    - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 ./runTests --gtest_filter=*-*ONCE  --gtest_repeats=10 --gtest_shuffle
   dependencies: 
     - build-mpi
   artifacts:
@@ -35,13 +49,27 @@ build-nompi:
       - relearn/build-docker-nompi
 
 # run tests using the binary built before
-test-nompi:
+test-nompi-once:
   image: relearn-ci
   stage: test
   before_script:
     - cd relearn/build-docker-nompi
   script:
-    - ./runTests
+    - ./runTests --gtest_filter=*ONCE
+  dependencies: 
+    - build-nompi
+  artifacts:
+    paths:
+      - relearn/build-docker-nompi
+
+# run tests using the binary built before
+test-nompi-multiple:
+  image: relearn-ci
+  stage: test
+  before_script:
+    - cd relearn/build-docker-nompi
+  script:
+    - ./runTests --gtest_filter=*-*ONCE  --gtest_repeats=10 --gtest_shuffle
   dependencies: 
     - build-nompi
   artifacts:
@@ -78,7 +106,7 @@ deploy-single:
   script:
     - relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16
   dependencies:
-    - test-mpi
+    - test-mpi-multiple
   artifacts:
     paths:
       - relearn/build-docker  
@@ -94,7 +122,7 @@ deploy-create:
   script:
     - relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --creation-interrupts relearn/input/tests/create-100-interrupt.txt
   dependencies:
-    - test-mpi
+    - test-mpi-multiple
   artifacts:
     paths:
       - relearn/build-docker
@@ -110,7 +138,7 @@ deploy-disable:
   script:
     - relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --disable-interrupts relearn/input/tests/disable-100-interrupt.txt
   dependencies:
-    - test-mpi
+    - test-mpi-multiple
   artifacts:
     paths:
       - relearn/build-docker    
@@ -126,7 +154,7 @@ deploy-enable:
   script:
     - relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --enable-interrupts relearn/input/tests/enable-100-interrupt.txt
   dependencies:
-    - test-mpi
+    - test-mpi-multiple
   artifacts:
     paths:
       - relearn/build-docker     
@@ -142,7 +170,7 @@ deploy-single-nompi:
   script:
     - relearn/build-docker-nompi/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16
   dependencies:
-    - test-nompi
+    - test-nompi-multiple
   artifacts:
     paths:
       - relearn/build-docker-nompi 
@@ -158,7 +186,7 @@ deploy-create-nompi:
   script:
     - relearn/build-docker-nompi/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --creation-interrupts relearn/input/tests/create-100-interrupt.txt
   dependencies:
-    - test-nompi
+    - test-nompi-multiple
   artifacts:
     paths:
       - relearn/build-docker-nompi     
@@ -174,7 +202,7 @@ deploy-disable-nompi:
   script:
     - relearn/build-docker-nompi/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --disable-interrupts relearn/input/tests/disable-100-interrupt.txt
   dependencies:
-    - test-nompi
+    - test-nompi-multiple
   artifacts:
     paths:
       - relearn/build-docker-nompi    
@@ -190,7 +218,7 @@ deploy-enable-nompi:
   script:
     - relearn/build-docker-nompi/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --enable-interrupts relearn/input/tests/enable-100-interrupt.txt
   dependencies:
-    - test-nompi
+    - test-nompi-multiple
   artifacts:
     paths:
       - relearn/build-docker-nompi    
@@ -207,7 +235,7 @@ deploy-mpi-1:
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16
   dependencies:
-    - test-mpi
+    - test-mpi-multiple
   artifacts:
     paths:
       - relearn/build-docker 
@@ -224,7 +252,7 @@ deploy-mpi-2:
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 2 relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 8
   dependencies:
-    - test-mpi
+    - test-mpi-multiple
   artifacts:
     paths:
       - relearn/build-docker 
@@ -241,7 +269,7 @@ deploy-mpi-4:
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 4 relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 4
   dependencies:
-    - test-mpi
+    - test-mpi-multiple
   artifacts:
     paths:
       - relearn/build-docker 
@@ -253,7 +281,7 @@ deploy-mpi-8:
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 8 relearn/build-docker/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/network.txt --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 2
   dependencies:
-    - test-mpi
+    - test-mpi-multiple
   artifacts:
     paths:
       - relearn/build-docker 

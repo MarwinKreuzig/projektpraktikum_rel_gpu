@@ -33,6 +33,7 @@ void NeuronModel::update_electrical_activity(const NetworkGraph& network_graph, 
     std::vector<size_t> num_incoming_ids = update_electrical_activity_prepare_receiving_spikes(firing_neuron_ids_outgoing);
 
     MapFiringNeuronIds firing_neuron_ids_incoming = update_electrical_activity_exchange_neuron_ids(firing_neuron_ids_outgoing, num_incoming_ids);
+
     /**
 	 * Now fired contains spikes only from my own neurons
 	 * (spikes from local neurons)
@@ -217,7 +218,12 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_exchange
     return firing_neuron_ids_incoming;
 }
 
-NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<char>& disable_flags) {
+NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<char>& disable_flags) {       
+    // If there is no other rank, then we can just skip    
+    if (const auto number_mpi_ranks = MPIWrapper::get_num_ranks(); number_mpi_ranks == 1) {
+        return {};
+    }
+
     /**
 	 * Check which of my neurons fired and determine which ranks need to know about it.
 	 * That is, they contain the neurons connecting the axons of my firing neurons.
@@ -233,22 +239,22 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_
             continue;
         }
 
-        // My neuron fired
-        if (static_cast<bool>(fired[neuron_id])) {
-            // Don't send firing neuron id to myself as I already have this info
-            const NetworkGraph::DistantEdges& distant_out_edges = network_graph.get_distant_out_edges(neuron_id);
+        if (fired[neuron_id] == 0) {
+            continue;
+        }
 
-            // Find all target neurons which should receive the signal fired.
-            // That is, neurons which connect axons from neuron "neuron_id"
-            for (const auto& [edge_key, edge_val] : distant_out_edges) {
-                //target_neuron_id = it_out_edge->first.second;
-                const auto target_rank = edge_key.get_rank();
+        // Don't send firing neuron id to myself as I already have this info
+        const NetworkGraph::DistantEdges& distant_out_edges = network_graph.get_distant_out_edges(neuron_id);
 
-                // Function expects to insert neuron ids in sorted order
-                // Append if it is not already in
-                firing_neuron_ids_outgoing[target_rank].append_if_not_found_sorted(neuron_id);
-            }
-        } // My neuron fired
+        // Find all target neurons which should receive the signal fired.
+        // That is, neurons which connect axons from neuron "neuron_id"
+        for (const auto& [edge_key, _] : distant_out_edges) {
+            const auto target_rank = edge_key.get_rank();
+
+            // Function expects to insert neuron ids in sorted order
+            // Append if it is not already in
+            firing_neuron_ids_outgoing[target_rank].append(neuron_id);
+        }
     } // For my neurons
     Timers::stop_and_add(TimerRegion::PREPARE_SENDING_SPIKES);
 

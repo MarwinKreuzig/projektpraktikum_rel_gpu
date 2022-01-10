@@ -12,6 +12,7 @@
 
 #include "../io/LogFiles.h"
 #include "../mpi/MPIWrapper.h"
+#include "../structure/NeuronIdTranslator.h"
 #include "../structure/NodeCache.h"
 #include "../structure/Octree.h"
 #include "../structure/Partition.h"
@@ -28,9 +29,10 @@
 #include <optional>
 #include <sstream>
 
-void Neurons::init(const size_t num_neurons, std::vector<double> target_calcium_values) {
+void Neurons::init(const size_t num_neurons, std::vector<double> target_calcium_values, std::vector<double> initial_calcium_values) {
     RelearnException::check(num_neurons > 0, "Neurons::init: num_neurons was 0");
     RelearnException::check(num_neurons == target_calcium_values.size(), "Neurons::init: num_neurons was different than target_calcium_values.size()");
+    RelearnException::check(num_neurons == initial_calcium_values.size(), "Neurons::init: num_neurons was different than initial_calcium_values.size()");
 
     number_neurons = num_neurons;
 
@@ -50,14 +52,16 @@ void Neurons::init(const size_t num_neurons, std::vector<double> target_calcium_
     }
 
     disable_flags.resize(number_neurons, 1);
-    calcium.resize(number_neurons);
+    calcium = std::move(initial_calcium_values);
     target_calcium = std::move(target_calcium_values);
 
     // Init member variables
     for (size_t i = 0; i < number_neurons; i++) {
         // Set calcium concentration
         const auto fired = neuron_model->get_fired(i);
-        calcium[i] = fired ? neuron_model->get_beta() : 0.0;
+        if (fired) {
+            calcium[i] += neuron_model->get_beta();
+        }
     }
 }
 
@@ -209,8 +213,9 @@ void Neurons::enable_neurons(const std::vector<size_t>& neuron_ids) {
     }
 }
 
-void Neurons::create_neurons(const size_t creation_count, const std::vector<double>& new_target_calcium_values) {
+void Neurons::create_neurons(const size_t creation_count, const std::vector<double>& new_target_calcium_values, const std::vector<double>& new_initial_calcium_values) {
     RelearnException::check(creation_count == new_target_calcium_values.size(), "Neurons::create_neurons: creation_count was unequal to new_target_calcium_values.size()");
+    RelearnException::check(creation_count == new_initial_calcium_values.size(), "Neurons::create_neurons: creation_count was unequal to new_initial_calcium_values.size()");
 
     const auto current_size = number_neurons;
     const auto new_size = current_size + creation_count;
@@ -230,14 +235,16 @@ void Neurons::create_neurons(const size_t creation_count, const std::vector<doub
     }
 
     disable_flags.resize(new_size, 1);
-    calcium.resize(new_size);
 
+    calcium.insert(calcium.cend(), new_initial_calcium_values.begin(), new_initial_calcium_values.end());
     target_calcium.insert(target_calcium.cend(), new_target_calcium_values.begin(), new_target_calcium_values.end());
 
     for (size_t i = current_size; i < new_size; i++) {
         // Set calcium concentration
         const auto fired = neuron_model->get_fired(i);
-        calcium[i] = fired ? neuron_model->get_beta() : 0.0;
+        if (fired) {
+            calcium[i] += neuron_model->get_beta();
+        }
     }
 
     const auto my_rank = MPIWrapper::get_my_rank();
@@ -1390,30 +1397,24 @@ void Neurons::print_network_graph_to_log_file() {
     ss << "# " << partition->get_total_number_neurons() << "\n"; // Total number of neurons
     ss << "# <target neuron id> <source neuron id> <weight>\n";
 
-    if (extra_info != nullptr) {
+    if (translator != nullptr) {
         // Write network graph to file
-        network_graph->print(ss, extra_info);
+        network_graph->print(ss, translator);
     }
 
     LogFiles::write_to_file(LogFiles::EventType::Network, false, ss.str());
 }
 
 void Neurons::print_positions_to_log_file() {
-    std::stringstream ss;
     // Write total number of neurons to log file
-    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# {}\n#\n<global id> <pos x> <pos y> <pos z> <area> <type>", partition->get_total_number_neurons());
+    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# {}\n#<global id> <pos x> <pos y> <pos z> <area> <type>", partition->get_total_number_neurons());
 
     const std::vector<std::string>& area_names = extra_info->get_area_names();
     const std::vector<SignalType>& signal_types = axons->get_signal_types();
 
-    // Print global ids, positions, and areas of local neurons
-    const int my_rank = MPIWrapper::get_my_rank();
-    ss << std::fixed << std::setprecision(Constants::print_precision);
-
     for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        RankNeuronId rank_neuron_id{ my_rank, neuron_id };
-
-        const auto global_id = extra_info->rank_neuron_id2glob_id(rank_neuron_id);
+        
+        const auto global_id = translator->get_global_id(neuron_id);
         const auto& signal_type_name = (signal_types[neuron_id] == SignalType::EXCITATORY) ? std::string("ex") : std::string("in");
 
         const auto& pos = extra_info->get_position(neuron_id);
@@ -1426,11 +1427,6 @@ void Neurons::print_positions_to_log_file() {
             "{1:<} {2:<.{0}} {3:<.{0}} {4:<.{0}} {5:<} {6:<}",
             Constants::print_precision, (global_id + 1), x, y, z, area_names[neuron_id], signal_type_name);
     }
-
-    ss << std::flush;
-    ss << std::defaultfloat;
-
-    LogFiles::write_to_file(LogFiles::EventType::Positions, false, ss.str());
 }
 
 void Neurons::print() {
@@ -1476,25 +1472,22 @@ void Neurons::print_info_for_algorithm() {
        << "\n";
 
     // Values
-    for (size_t i = 0; i < number_neurons; i++) {
-        ss << std::left << std::setw(cwidth_small) << i;
+    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        ss << std::left << std::setw(cwidth_small) << neuron_id;
 
-        const auto& pos = extra_info->get_position(i);
-
-        const auto x = pos.get_x();
-        const auto y = pos.get_y();
-        const auto z = pos.get_z();
+        const auto& pos = extra_info->get_position(neuron_id);
+        const auto& [x, y, z] = pos;
 
         my_string = "(" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")";
         ss << std::setw(cwidth_medium) << my_string;
 
-        my_string = std::to_string(axons_cnts[i]) + "|" + std::to_string(axons_connected_cnts[i]);
+        my_string = std::to_string(axons_cnts[neuron_id]) + "|" + std::to_string(axons_connected_cnts[neuron_id]);
         ss << std::setw(cwidth_big) << my_string;
 
-        my_string = std::to_string(dendrites_exc_cnts[i]) + "|" + std::to_string(dendrites_exc_connected_cnts[i]);
+        my_string = std::to_string(dendrites_exc_cnts[neuron_id]) + "|" + std::to_string(dendrites_exc_connected_cnts[neuron_id]);
         ss << std::setw(cwidth_big) << my_string;
 
-        my_string = std::to_string(dendrites_inh_cnts[i]) + "|" + std::to_string(dendrites_inh_connected_cnts[i]);
+        my_string = std::to_string(dendrites_inh_cnts[neuron_id]) + "|" + std::to_string(dendrites_inh_connected_cnts[neuron_id]);
         ss << std::setw(cwidth_big) << my_string;
 
         ss << "\n";

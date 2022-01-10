@@ -25,6 +25,7 @@
 
 class Algorithm;
 class NetworkGraph;
+class NeuronIdTranslator;
 class NeuronModel;
 class NeuronMonitor;
 class NeuronToSubdomainAssignment;
@@ -95,6 +96,12 @@ public:
      * @param calculator The function that maps neuron id to target calcium value
      */
     void set_target_calcium_calculator(std::function<double(size_t)> calculator) noexcept;
+
+    /**
+     * @brief Sets the function that is used to determine the initial calcium value of the neurons
+     * @param calculator The function that maps neuron id to initial calcium value
+     */
+    void set_initial_calcium_calculator(std::function<double(size_t)> initiator) noexcept;
 
     /**
      * @brief Sets the enable interrupts during the simulation.
@@ -229,6 +236,7 @@ private:
     std::shared_ptr<Partition> partition{};
 
     std::unique_ptr<NeuronToSubdomainAssignment> neuron_to_subdomain_assignment{};
+    std::shared_ptr<NeuronIdTranslator> neuron_id_translator{};
 
     std::unique_ptr<SynapticElements> axons{};
     std::unique_ptr<SynapticElements> dendrites_ex{};
@@ -251,6 +259,7 @@ private:
     std::map<NeuronAttribute, std::vector<StatisticalMeasures>> statistics{};
 
     std::function<double(size_t)> target_calcium_calculator{};
+    std::function<double(size_t)> initial_calcium_initiator{};
 
     double sigma{ 750 };
     double accept_criterion{ 0.0 };

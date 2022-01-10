@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
     app.add_option("--sigma", scaling_const, "Scaling parameter for the probabilty kernel. Default: 750");
 
     size_t number_neurons{};
-    auto* opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons.");
+    auto* opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons. This option is only advised when using one MPI rank!");
 
     size_t number_neurons_per_rank{};
     auto* opt_num_neurons_per_rank = app.add_option("--num-neurons-per-rank", number_neurons_per_rank, "Number neurons per MPI rank.");
@@ -169,6 +169,9 @@ int main(int argc, char** argv) {
 
     double base_background_activity{ NeuronModel::default_base_background_activity };
     auto* opt_base_background_activity = app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are exited");
+
+    double retract_ratio{ SynapticElements::default_vacant_retract_ratio };
+    auto* opt_vacant_retract_ratio = app.add_option("--retract-ratio", retract_ratio, "The ratio by which vacant synapses retract.");
 
     std::string log_prefix{};
     auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
@@ -218,6 +221,9 @@ int main(int argc, char** argv) {
 
     double target_calcium{ SynapticElements::default_C_target };
     app.add_option("--target-ca", target_calcium, "The target Ca2+ ions in each neuron. Default is 0.7.");
+
+    double initial_calcium{ 0.0 };
+    app.add_option("--initial-ca", initial_calcium, "The initial Ca2+ ions in each neuron. Default is 0.0.");
 
     double nu{ SynapticElements::default_nu };
     app.add_option("--growth-rate", nu, "The growth rate for the synaptic elements. Default is 1e-5");
@@ -357,13 +363,13 @@ int main(int argc, char** argv) {
         models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
 
     auto axon_models = std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons,
-        nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
+        nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     auto dend_ex_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc,
-        nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
+        nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     auto dend_in_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh,
-        nu, SynapticElements::default_vacant_retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
+        nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     // Lock local RMA memory for local stores
     MPIWrapper::lock_window(my_rank, MPI_Locktype::exclusive);
@@ -414,8 +420,8 @@ int main(int argc, char** argv) {
     auto target_calcium_calculator = [target = target_calcium](size_t neuron_id) { return target; };
     sim.set_target_calcium_calculator(std::move(target_calcium_calculator));
 
-    // Unlock local RMA memory and make local stores visible in public window copy
-    MPIWrapper::unlock_window(my_rank);
+    auto initial_calcium_calculator = [inital = initial_calcium](size_t neuron_id) { return inital; };
+    sim.set_initial_calcium_calculator(std::move(initial_calcium_calculator));
 
     /**********************************************************************************/
 
@@ -428,6 +434,9 @@ int main(int argc, char** argv) {
     sim.increase_monitoring_capacity(steps_per_simulation);
 
     sim.initialize();
+
+    // Unlock local RMA memory and make local stores visible in public window copy
+    MPIWrapper::unlock_window(my_rank);
 
     Timers::stop_and_add(TimerRegion::INITIALIZATION);
 

@@ -279,28 +279,24 @@ public:
      * @return (minimum, maximum) of the subdomain
      */
     [[nodiscard]] std::pair<box_size_type, box_size_type> calculate_subdomain_boundaries(const Vec3s& subdomain_index_3d) const noexcept {
-        const auto requested_subdomain_x = subdomain_index_3d.get_x();
-        const auto requested_subdomain_y = subdomain_index_3d.get_y();
-        const auto requested_subdomain_z = subdomain_index_3d.get_z();
+        const auto& [requested_subdomain_x, requested_subdomain_y, requested_subdomain_z] = subdomain_index_3d;
 
         const auto& [sim_box_min, sim_box_max] = get_simulation_box_size();
         const auto& simulation_box_length = (sim_box_max - sim_box_min);
 
         const auto& subdomain_length = simulation_box_length / number_subdomains_per_dimension;
-
-        const auto subdomain_x_length = subdomain_length.get_x();
-        const auto subdomain_y_length = subdomain_length.get_y();
-        const auto subdomain_z_length = subdomain_length.get_z();
+        
+        const auto& [subdomain_length_x, subdomain_length_y, subdomain_length_z] = subdomain_length;
 
         box_size_type min{
-            requested_subdomain_x * subdomain_x_length,
-            requested_subdomain_y * subdomain_y_length,
-            requested_subdomain_z * subdomain_z_length
+            requested_subdomain_x * subdomain_length_x,
+            requested_subdomain_y * subdomain_length_y,
+            requested_subdomain_z * subdomain_length_z
         };
 
-        const auto next_x = static_cast<box_size_type::value_type>(requested_subdomain_x + 1) * subdomain_x_length;
-        const auto next_y = static_cast<box_size_type::value_type>(requested_subdomain_y + 1) * subdomain_y_length;
-        const auto next_z = static_cast<box_size_type::value_type>(requested_subdomain_z + 1) * subdomain_z_length;
+        const auto next_x = static_cast<box_size_type::value_type>(requested_subdomain_x + 1) * subdomain_length_x;
+        const auto next_y = static_cast<box_size_type::value_type>(requested_subdomain_y + 1) * subdomain_length_y;
+        const auto next_z = static_cast<box_size_type::value_type>(requested_subdomain_z + 1) * subdomain_length_z;
 
         box_size_type max{ next_x, next_y, next_z };
 

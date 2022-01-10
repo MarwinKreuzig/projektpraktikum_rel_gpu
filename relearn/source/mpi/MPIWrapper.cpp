@@ -292,7 +292,9 @@ void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
         requests[i] = translated_token;
     }
 
-    const int errorcode = MPI_Waitall(size, requests.data(), MPI_STATUSES_IGNORE);
+    std::vector<MPI_Status> statuses(size);
+    const int errorcode = MPI_Waitall(size, requests.data(), statuses.data());
+
     RelearnException::check(errorcode == 0, "MPIWrapper::wait_all_tokens: Error code received: {}", errorcode);
 }
 

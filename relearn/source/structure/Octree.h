@@ -142,8 +142,12 @@ public:
 protected:
     // Set simulation box size of the tree
     void set_size(const box_size_type& min, const box_size_type& max) {
-        RelearnException::check(min.get_x() < max.get_x() && min.get_y() < max.get_y() && min.get_z() < max.get_z(),
-            "Octree::set_size: The minimum was not smaller than the maximum");
+        const auto& [min_x, min_y, min_z] = min;
+        const auto& [max_x, max_y, max_z] = max;
+
+        RelearnException::check(min_x <= max_x, "Octree::set_size: x was not ok");
+        RelearnException::check(min_y <= max_y, "Octree::set_size: y was not ok");
+        RelearnException::check(min_z <= max_z, "Octree::set_size: z was not ok");
 
         xyz_min = min;
         xyz_max = max;
@@ -432,17 +436,9 @@ public:
         const auto& xyz_min = get_xyz_min();
         const auto& xyz_max = get_xyz_max();
 
-        const auto& min_x = xyz_min.get_x();
-        const auto& min_y = xyz_min.get_y();
-        const auto& min_z = xyz_min.get_z();
-
-        const auto& max_x = xyz_max.get_x();
-        const auto& max_y = xyz_max.get_y();
-        const auto& max_z = xyz_max.get_z();
-
-        const auto& pos_x = position.get_x();
-        const auto& pos_y = position.get_y();
-        const auto& pos_z = position.get_z();
+        const auto& [min_x, min_y, min_z] = xyz_min;
+        const auto& [max_x, max_y, max_z] = xyz_max;
+        const auto& [pos_x, pos_y, pos_z] = position;
 
         RelearnException::check(min_x <= pos_x && pos_x <= max_x, "Octree::insert: x was not in range: {} vs [{}, {}]", pos_x, min_x, max_x);
         RelearnException::check(min_y <= pos_y && pos_y <= max_y, "Octree::insert: y was not in range: {} vs [{}, {}]", pos_y, min_y, max_y);
@@ -579,10 +575,7 @@ protected:
         const auto& xyz_max = get_xyz_max();
 
         const auto& cell_length = (xyz_max - xyz_min) / num_cells_per_dimension;
-
-        const auto cell_length_x = cell_length.get_x();
-        const auto cell_length_y = cell_length.get_y();
-        const auto cell_length_z = cell_length.get_z();
+        const auto& [cell_length_x, cell_length_y, cell_length_z] = cell_length;
 
         OctreeNode<AdditionalCellAttributes>* local_root = OctreeNode<AdditionalCellAttributes>::create();
         RelearnException::check(local_root != nullptr, "Octree::construct_global_tree_part: local_root is nullptr");

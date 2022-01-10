@@ -52,7 +52,7 @@ public:
     inline static size_t statistics_step = 100;
 
     // Capture the calcium values every 10000 ms
-    inline static size_t calcium_step = 10000;
+    inline static size_t calcium_step = 1000000;
 
     constexpr static size_t mpi_alloc_mem = 1024 * 1024 * 300;
 
