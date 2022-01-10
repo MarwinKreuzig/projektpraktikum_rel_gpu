@@ -187,6 +187,9 @@ int main(int argc, char** argv) {
 
     auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
 
+    size_t first_plasticity_step{ Constants::first_plasticity_update };
+    auto* opt_first_plasticity_update_step = app.add_option("--first-plasticity-step", first_plasticity_step, "The first step in which the plasticity is updated.");
+
     opt_num_neurons->excludes(opt_file_positions);
     opt_num_neurons->excludes(opt_file_network);
     opt_file_positions->excludes(opt_num_neurons);
@@ -255,6 +258,8 @@ int main(int argc, char** argv) {
 
     RelearnException::check(nu >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
     RelearnException::check(nu <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
+
+    Constants::first_plasticity_update = first_plasticity_step;
 
     omp_set_num_threads(openmp_threads);
 
