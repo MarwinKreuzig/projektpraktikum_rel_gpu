@@ -43,6 +43,11 @@ public:
     constexpr static int p3 = p * p * p;
     constexpr static int max_neurons_in_target = 70; //cutoff for target box
     constexpr static int max_neurons_in_source = 70; //cutoff for source box
+};
+
+class Config {
+public:
+    constexpr static bool do_debug_checks = false;
 
     // Update connectivity every <plasticity_update_step> ms
     inline static size_t plasticity_update_step = 100;
@@ -65,7 +70,3 @@ public:
     // Capture the calcium values every <calcium_step> ms
     inline static size_t calcium_step = 1000000;
 };
-
-namespace Config {
-constexpr bool do_debug_checks = false;
-} // namespace Config

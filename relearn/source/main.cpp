@@ -187,7 +187,7 @@ int main(int argc, char** argv) {
 
     auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
 
-    size_t first_plasticity_step{ Constants::first_plasticity_update };
+    size_t first_plasticity_step{ Config::first_plasticity_update };
     auto* opt_first_plasticity_update_step = app.add_option("--first-plasticity-step", first_plasticity_step, "The first step in which the plasticity is updated.");
 
     opt_num_neurons->excludes(opt_file_positions);
@@ -259,7 +259,7 @@ int main(int argc, char** argv) {
     RelearnException::check(nu >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
     RelearnException::check(nu <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
 
-    Constants::first_plasticity_update = first_plasticity_step;
+    Config::first_plasticity_update = first_plasticity_step;
 
     omp_set_num_threads(openmp_threads);
 
@@ -432,7 +432,7 @@ int main(int argc, char** argv) {
     // rank which has not finished (or even begun) its local stores
     MPIWrapper::barrier(); // TODO(future) Really needed?
 
-    const auto steps_per_simulation = simulation_steps / Constants::monitor_step;
+    const auto steps_per_simulation = simulation_steps / Config::monitor_step;
     sim.increase_monitoring_capacity(steps_per_simulation);
 
     sim.initialize();
