@@ -300,9 +300,9 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialize) {
     synaptic_elements.init(number_neurons);
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        const auto& grown_element = synaptic_elements.get_count(neuron_id);
-        const auto& connected_grown_element = synaptic_elements.get_connected_count(neuron_id);
-        const auto& delta_grown_element = synaptic_elements.get_delta_count(neuron_id);
+        const auto& grown_element = synaptic_elements.get_grown_elements(neuron_id);
+        const auto& connected_grown_element = synaptic_elements.get_connected_elements(neuron_id);
+        const auto& delta_grown_element = synaptic_elements.get_delta(neuron_id);
 
         ASSERT_EQ(grown_element, 0.0) << ss.str() << neuron_id;
         ASSERT_EQ(connected_grown_element, 0.0) << ss.str() << neuron_id;
@@ -312,14 +312,14 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialize) {
     for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
         const auto neuron_id = get_random_neuron_id(number_neurons) + number_neurons;
 
-        ASSERT_THROW(auto ret = synaptic_elements.get_count(neuron_id), RelearnException) << ss.str() << neuron_id;
-        ASSERT_THROW(auto ret = synaptic_elements.get_connected_count(neuron_id), RelearnException) << ss.str() << neuron_id;
-        ASSERT_THROW(auto ret = synaptic_elements.get_delta_count(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_grown_elements(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_connected_elements(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_delta(neuron_id), RelearnException) << ss.str() << neuron_id;
     }
 
-    const auto& grown_elements = synaptic_elements.get_total_counts();
-    const auto& connected_grown_elements = synaptic_elements.get_total_counts();
-    const auto& delta_grown_elements = synaptic_elements.get_total_counts();
+    const auto& grown_elements = synaptic_elements.get_grown_elements();
+    const auto& connected_grown_elements = synaptic_elements.get_grown_elements();
+    const auto& delta_grown_elements = synaptic_elements.get_grown_elements();
     const auto& signal_types = synaptic_elements.get_signal_types();
 
     ASSERT_EQ(grown_elements.size(), number_neurons) << ss.str();
@@ -355,9 +355,9 @@ TEST_F(SynapticElementsTest, testSynapticElementsCreateNeurons) {
     const auto& number_neurons = number_neurons_initially + number_neurons_added;
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        const auto& grown_element = synaptic_elements.get_count(neuron_id);
-        const auto& connected_grown_element = synaptic_elements.get_connected_count(neuron_id);
-        const auto& delta_grown_element = synaptic_elements.get_delta_count(neuron_id);
+        const auto& grown_element = synaptic_elements.get_grown_elements(neuron_id);
+        const auto& connected_grown_element = synaptic_elements.get_connected_elements(neuron_id);
+        const auto& delta_grown_element = synaptic_elements.get_delta(neuron_id);
 
         ASSERT_EQ(grown_element, 0.0) << ss.str() << neuron_id;
         ASSERT_EQ(connected_grown_element, 0.0) << ss.str() << neuron_id;
@@ -367,14 +367,14 @@ TEST_F(SynapticElementsTest, testSynapticElementsCreateNeurons) {
     for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
         const auto neuron_id = get_random_neuron_id(number_neurons) + number_neurons;
 
-        ASSERT_THROW(auto ret = synaptic_elements.get_count(neuron_id), RelearnException) << ss.str() << neuron_id;
-        ASSERT_THROW(auto ret = synaptic_elements.get_connected_count(neuron_id), RelearnException) << ss.str() << neuron_id;
-        ASSERT_THROW(auto ret = synaptic_elements.get_delta_count(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_grown_elements(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_connected_elements(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_delta(neuron_id), RelearnException) << ss.str() << neuron_id;
     }
 
-    const auto& grown_elements = synaptic_elements.get_total_counts();
-    const auto& connected_grown_elements = synaptic_elements.get_total_counts();
-    const auto& delta_grown_elements = synaptic_elements.get_total_counts();
+    const auto& grown_elements = synaptic_elements.get_grown_elements();
+    const auto& connected_grown_elements = synaptic_elements.get_grown_elements();
+    const auto& delta_grown_elements = synaptic_elements.get_grown_elements();
     const auto& signal_types = synaptic_elements.get_signal_types();
 
     ASSERT_EQ(grown_elements.size(), number_neurons) << ss.str();
@@ -418,10 +418,10 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsConstant) {
     synaptic_elements.init(number_neurons_initially);
     synaptic_elements.create_neurons(number_neurons_added);
 
-    const auto& counts = synaptic_elements.get_total_counts();
+    const auto& counts = synaptic_elements.get_grown_elements();
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        const auto grown_elements_1 = synaptic_elements.get_count(neuron_id);
+        const auto grown_elements_1 = synaptic_elements.get_grown_elements(neuron_id);
         const auto grown_elements_2 = counts[neuron_id];
 
         ASSERT_EQ(grown_elements_1, grown_elements_2) << ss.str() << neuron_id;
@@ -456,10 +456,10 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialElements) {
     synaptic_elements.init(number_neurons_initially);
     synaptic_elements.create_neurons(number_neurons_added);
 
-    const auto& counts = synaptic_elements.get_total_counts();
+    const auto& counts = synaptic_elements.get_grown_elements();
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        const auto grown_elements_1 = synaptic_elements.get_count(neuron_id);
+        const auto grown_elements_1 = synaptic_elements.get_grown_elements(neuron_id);
         const auto grown_elements_2 = counts[neuron_id];
 
         ASSERT_EQ(grown_elements_1, grown_elements_2) << ss.str() << neuron_id;
@@ -536,10 +536,10 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsMultipleBounds) 
 
     synaptic_elements.create_neurons(number_neurons_added);
 
-    const auto& counts = synaptic_elements.get_total_counts();
+    const auto& counts = synaptic_elements.get_grown_elements();
 
     for (auto neuron_id = 0; neuron_id < number_neurons_initially; neuron_id++) {
-        const auto grown_elements_1 = synaptic_elements.get_count(neuron_id);
+        const auto grown_elements_1 = synaptic_elements.get_grown_elements(neuron_id);
         const auto grown_elements_2 = counts[neuron_id];
 
         ASSERT_EQ(grown_elements_1, grown_elements_2) << ss.str() << neuron_id;
@@ -549,7 +549,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsMultipleBounds) 
     }
 
     for (auto neuron_id = number_neurons_initially; neuron_id < number_neurons; neuron_id++) {
-        const auto grown_elements_1 = synaptic_elements.get_count(neuron_id);
+        const auto grown_elements_1 = synaptic_elements.get_grown_elements(neuron_id);
         const auto grown_elements_2 = counts[neuron_id];
 
         ASSERT_EQ(grown_elements_1, grown_elements_2) << ss.str() << neuron_id;
@@ -610,14 +610,14 @@ TEST_F(SynapticElementsTest, testSynapticElementsSingleUpdate) {
         golden_connected_counts[neuron_id] = static_cast<unsigned int>(connected_grown_element);
         golden_signal_types[neuron_id] = signal_type;
 
-        synaptic_elements.update_count(neuron_id, grown_element);
-        synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(connected_grown_element));
+        synaptic_elements.update_grown_elements(neuron_id, grown_element);
+        synaptic_elements.update_connected_elements(neuron_id, static_cast<int>(connected_grown_element));
         synaptic_elements.set_signal_type(neuron_id, signal_type);
     }
 
-    const auto& grown_elements = synaptic_elements.get_total_counts();
-    const auto& connected_grown_elements = synaptic_elements.get_connected_counts();
-    const auto& delta_grown_elements = synaptic_elements.get_delta_counts();
+    const auto& grown_elements = synaptic_elements.get_grown_elements();
+    const auto& connected_grown_elements = synaptic_elements.get_connected_elements();
+    const auto& delta_grown_elements = synaptic_elements.get_deltas();
     const auto& signal_types = synaptic_elements.get_signal_types();
 
     ASSERT_EQ(grown_elements.size(), number_neurons) << ss.str();
@@ -627,21 +627,21 @@ TEST_F(SynapticElementsTest, testSynapticElementsSingleUpdate) {
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         const auto& a1 = golden_cnts[neuron_id];
-        const auto& a2 = synaptic_elements.get_count(neuron_id);
+        const auto& a2 = synaptic_elements.get_grown_elements(neuron_id);
         const auto& a3 = grown_elements[neuron_id];
 
         const auto& a_is_correct = a1 == a2 && a1 == a3;
         ASSERT_TRUE(a_is_correct) << ss.str() << neuron_id;
 
         const auto& b1 = golden_connected_counts[neuron_id];
-        const auto& b2 = synaptic_elements.get_connected_count(neuron_id);
+        const auto& b2 = synaptic_elements.get_connected_elements(neuron_id);
         const auto& b3 = connected_grown_elements[neuron_id];
 
         const auto& b_is_correct = b1 == b2 && b1 == b3;
         ASSERT_TRUE(b_is_correct) << ss.str() << neuron_id;
 
         const auto& c1 = golden_delta_counts[neuron_id];
-        const auto& c2 = synaptic_elements.get_delta_count(neuron_id);
+        const auto& c2 = synaptic_elements.get_delta(neuron_id);
         const auto& c3 = delta_grown_elements[neuron_id];
 
         const auto& c_is_correct = c1 == c2 && c1 == c3;
@@ -669,9 +669,9 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateException) {
     for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
         const auto neuron_id = get_random_neuron_id(number_neurons) + number_neurons;
 
-        ASSERT_THROW(auto ret = synaptic_elements.get_count(neuron_id), RelearnException) << ss.str() << neuron_id;
-        ASSERT_THROW(auto ret = synaptic_elements.get_connected_count(neuron_id), RelearnException) << ss.str() << neuron_id;
-        ASSERT_THROW(auto ret = synaptic_elements.get_delta_count(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_grown_elements(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_connected_elements(neuron_id), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(auto ret = synaptic_elements.get_delta(neuron_id), RelearnException) << ss.str() << neuron_id;
     }
 
     for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
@@ -681,8 +681,8 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateException) {
         const auto& connected_grown_element = get_random_synaptic_element_connected_count();
         const auto& signal_type = get_random_signal_type();
 
-        ASSERT_THROW(synaptic_elements.update_count(neuron_id, grown_element), RelearnException) << ss.str() << neuron_id;
-        ASSERT_THROW(synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(connected_grown_element)), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(synaptic_elements.update_grown_elements(neuron_id, grown_element), RelearnException) << ss.str() << neuron_id;
+        ASSERT_THROW(synaptic_elements.update_connected_elements(neuron_id, static_cast<int>(connected_grown_element)), RelearnException) << ss.str() << neuron_id;
         ASSERT_THROW(synaptic_elements.set_signal_type(neuron_id, signal_type), RelearnException) << ss.str() << neuron_id;
     }
 }
@@ -714,15 +714,15 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
             golden_connected_counts[neuron_id] += connected_grown_element;
             golden_signal_types[neuron_id] = signal_type;
 
-            synaptic_elements.update_count(neuron_id, grown_element);
-            synaptic_elements.update_connected_counts(neuron_id, connected_grown_element);
+            synaptic_elements.update_grown_elements(neuron_id, grown_element);
+            synaptic_elements.update_connected_elements(neuron_id, connected_grown_element);
             synaptic_elements.set_signal_type(neuron_id, signal_type);
         }
     }
 
-    const auto& grown_elements = synaptic_elements.get_total_counts();
-    const auto& connected_grown_elements = synaptic_elements.get_connected_counts();
-    const auto& delta_grown_elements = synaptic_elements.get_delta_counts();
+    const auto& grown_elements = synaptic_elements.get_grown_elements();
+    const auto& connected_grown_elements = synaptic_elements.get_connected_elements();
+    const auto& delta_grown_elements = synaptic_elements.get_deltas();
     const auto& signal_types = synaptic_elements.get_signal_types();
 
     ASSERT_EQ(grown_elements.size(), number_neurons) << ss.str();
@@ -731,10 +731,10 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
     ASSERT_EQ(signal_types.size(), number_neurons) << ss.str();
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        ASSERT_EQ(golden_cnts[neuron_id], synaptic_elements.get_count(neuron_id)) << ss.str() << neuron_id;
+        ASSERT_EQ(golden_cnts[neuron_id], synaptic_elements.get_grown_elements(neuron_id)) << ss.str() << neuron_id;
         ASSERT_EQ(golden_cnts[neuron_id], grown_elements[neuron_id]) << ss.str() << neuron_id;
 
-        ASSERT_EQ(golden_connected_counts[neuron_id], synaptic_elements.get_connected_count(neuron_id)) << ss.str() << neuron_id;
+        ASSERT_EQ(golden_connected_counts[neuron_id], synaptic_elements.get_connected_elements(neuron_id)) << ss.str() << neuron_id;
         ASSERT_EQ(golden_connected_counts[neuron_id], connected_grown_elements[neuron_id]) << ss.str() << neuron_id;
 
         ASSERT_EQ(golden_signal_types[neuron_id], synaptic_elements.get_signal_type(neuron_id)) << ss.str() << neuron_id;
@@ -766,8 +766,8 @@ TEST_F(SynapticElementsTest, testSynapticElementsDisable) {
         golden_connected_counts[neuron_id] = static_cast<unsigned int>(connected_grown_element);
         golden_signal_types[neuron_id] = signal_type;
 
-        synaptic_elements.update_count(neuron_id, grown_element);
-        synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(connected_grown_element));
+        synaptic_elements.update_grown_elements(neuron_id, grown_element);
+        synaptic_elements.update_connected_elements(neuron_id, static_cast<int>(connected_grown_element));
         synaptic_elements.set_signal_type(neuron_id, signal_type);
     }
 
@@ -793,13 +793,13 @@ TEST_F(SynapticElementsTest, testSynapticElementsDisable) {
         ASSERT_EQ(synaptic_elements.get_signal_type(neuron_id), golden_signal_types[neuron_id]) << ss.str() << neuron_id;
 
         if (is_disabled) {
-            ASSERT_EQ(synaptic_elements.get_connected_count(neuron_id), 0) << ss.str() << neuron_id << " disabled";
-            ASSERT_EQ(synaptic_elements.get_count(neuron_id), 0.0) << ss.str() << neuron_id << " disabled";
-            ASSERT_EQ(synaptic_elements.get_delta_count(neuron_id), 0.0) << ss.str() << neuron_id << " disabled";
+            ASSERT_EQ(synaptic_elements.get_connected_elements(neuron_id), 0) << ss.str() << neuron_id << " disabled";
+            ASSERT_EQ(synaptic_elements.get_grown_elements(neuron_id), 0.0) << ss.str() << neuron_id << " disabled";
+            ASSERT_EQ(synaptic_elements.get_delta(neuron_id), 0.0) << ss.str() << neuron_id << " disabled";
         } else {
-            ASSERT_EQ(synaptic_elements.get_connected_count(neuron_id), golden_connected_counts[neuron_id]) << ss.str() << neuron_id << " enabled";
-            ASSERT_EQ(synaptic_elements.get_count(neuron_id), golden_counts[neuron_id]) << ss.str() << neuron_id << " enabled";
-            ASSERT_EQ(synaptic_elements.get_delta_count(neuron_id), golden_delta_counts[neuron_id]) << ss.str() << neuron_id << " enabled";
+            ASSERT_EQ(synaptic_elements.get_connected_elements(neuron_id), golden_connected_counts[neuron_id]) << ss.str() << neuron_id << " enabled";
+            ASSERT_EQ(synaptic_elements.get_grown_elements(neuron_id), golden_counts[neuron_id]) << ss.str() << neuron_id << " enabled";
+            ASSERT_EQ(synaptic_elements.get_delta(neuron_id), golden_delta_counts[neuron_id]) << ss.str() << neuron_id << " enabled";
         }
     }
 }
@@ -819,8 +819,8 @@ TEST_F(SynapticElementsTest, testSynapticElementsDisableException) {
         const auto& connected_grown_element = get_random_synaptic_element_connected_count();
         const auto& signal_type = get_random_signal_type();
 
-        synaptic_elements.update_count(neuron_id, grown_element);
-        synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(connected_grown_element));
+        synaptic_elements.update_grown_elements(neuron_id, grown_element);
+        synaptic_elements.update_connected_elements(neuron_id, static_cast<int>(connected_grown_element));
         synaptic_elements.set_signal_type(neuron_id, signal_type);
     }
 
@@ -868,8 +868,8 @@ TEST_F(SynapticElementsTest, testSynapticElementsDelete) {
         golden_connected_counts[neuron_id] = static_cast<unsigned int>(connected_grown_element);
         golden_signal_types[neuron_id] = signal_type;
 
-        synaptic_elements.update_count(neuron_id, grown_element);
-        synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(connected_grown_element));
+        synaptic_elements.update_grown_elements(neuron_id, grown_element);
+        synaptic_elements.update_connected_elements(neuron_id, static_cast<int>(connected_grown_element));
         synaptic_elements.set_signal_type(neuron_id, signal_type);
     }
 
@@ -887,9 +887,9 @@ TEST_F(SynapticElementsTest, testSynapticElementsDelete) {
         const auto new_connected_count = golden_connected_counts[neuron_id] - changes[neuron_id];
 
         ASSERT_EQ(synaptic_elements.get_signal_type(neuron_id), golden_signal_types[neuron_id]) << ss.str() << neuron_id;
-        ASSERT_EQ(synaptic_elements.get_connected_count(neuron_id), new_connected_count) << ss.str() << neuron_id;
-        ASSERT_EQ(synaptic_elements.get_count(neuron_id), golden_counts[neuron_id]) << ss.str() << neuron_id;
-        ASSERT_EQ(synaptic_elements.get_delta_count(neuron_id), golden_delta_counts[neuron_id]) << ss.str() << neuron_id;
+        ASSERT_EQ(synaptic_elements.get_connected_elements(neuron_id), new_connected_count) << ss.str() << neuron_id;
+        ASSERT_EQ(synaptic_elements.get_grown_elements(neuron_id), golden_counts[neuron_id]) << ss.str() << neuron_id;
+        ASSERT_EQ(synaptic_elements.get_delta(neuron_id), golden_delta_counts[neuron_id]) << ss.str() << neuron_id;
     }
 }
 
@@ -912,8 +912,8 @@ TEST_F(SynapticElementsTest, testSynapticElementsDeleteException) {
 
         golden_connected_counts[neuron_id] = connected_grown_element;
 
-        synaptic_elements.update_count(neuron_id, grown_element);
-        synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(connected_grown_element));
+        synaptic_elements.update_grown_elements(neuron_id, grown_element);
+        synaptic_elements.update_connected_elements(neuron_id, static_cast<int>(connected_grown_element));
         synaptic_elements.set_signal_type(neuron_id, signal_type);
     }
 
@@ -969,8 +969,8 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElements) {
         golden_connected_counts[neuron_id] = static_cast<unsigned int>(connected_grown_element);
         golden_signal_types[neuron_id] = signal_type;
 
-        synaptic_elements.update_count(neuron_id, grown_element);
-        synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(connected_grown_element));
+        synaptic_elements.update_grown_elements(neuron_id, grown_element);
+        synaptic_elements.update_connected_elements(neuron_id, static_cast<int>(connected_grown_element));
         synaptic_elements.set_signal_type(neuron_id, signal_type);
     }
 
@@ -989,13 +989,13 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElements) {
     synaptic_elements.update_number_elements_delta(calcium, target_calcium, disable_flags);
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        ASSERT_EQ(synaptic_elements.get_connected_count(neuron_id), golden_connected_counts[neuron_id]) << ss.str() << neuron_id;
-        ASSERT_EQ(synaptic_elements.get_count(neuron_id), golden_counts[neuron_id]) << ss.str() << neuron_id;
+        ASSERT_EQ(synaptic_elements.get_connected_elements(neuron_id), golden_connected_counts[neuron_id]) << ss.str() << neuron_id;
+        ASSERT_EQ(synaptic_elements.get_grown_elements(neuron_id), golden_counts[neuron_id]) << ss.str() << neuron_id;
     }
 
-    const auto& actual_deltas = synaptic_elements.get_delta_counts();
+    const auto& actual_deltas = synaptic_elements.get_deltas();
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        const auto actual_delta = synaptic_elements.get_delta_count(neuron_id);
+        const auto actual_delta = synaptic_elements.get_delta(neuron_id);
         const auto computed_delta = gaussian_growth_curve(calcium[neuron_id], minimum_calcium_to_grow, target_calcium[neuron_id], growth_factor);
 
         if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
@@ -1034,8 +1034,8 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdateNumberElements) {
         golden_connected_counts[neuron_id] = static_cast<unsigned int>(connected_grown_element);
         golden_signal_types[neuron_id] = signal_type;
 
-        synaptic_elements.update_count(neuron_id, grown_element);
-        synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(connected_grown_element));
+        synaptic_elements.update_grown_elements(neuron_id, grown_element);
+        synaptic_elements.update_connected_elements(neuron_id, static_cast<int>(connected_grown_element));
         synaptic_elements.set_signal_type(neuron_id, signal_type);
     }
 
@@ -1060,13 +1060,13 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdateNumberElements) {
     }
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        ASSERT_EQ(synaptic_elements.get_connected_count(neuron_id), golden_connected_counts[neuron_id]) << ss.str() << neuron_id;
-        ASSERT_EQ(synaptic_elements.get_count(neuron_id), golden_counts[neuron_id]) << ss.str() << neuron_id;
+        ASSERT_EQ(synaptic_elements.get_connected_elements(neuron_id), golden_connected_counts[neuron_id]) << ss.str() << neuron_id;
+        ASSERT_EQ(synaptic_elements.get_grown_elements(neuron_id), golden_counts[neuron_id]) << ss.str() << neuron_id;
     }
 
-    const auto& actual_deltas = synaptic_elements.get_delta_counts();
+    const auto& actual_deltas = synaptic_elements.get_deltas();
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        const auto actual_delta = synaptic_elements.get_delta_count(neuron_id);
+        const auto actual_delta = synaptic_elements.get_delta(neuron_id);
         const auto expected_delta = golden_delta_counts[neuron_id];
 
         ASSERT_NEAR(actual_delta, expected_delta, eps) << ss.str() << neuron_id;
@@ -1098,8 +1098,8 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElementsException) 
         golden_connected_counts[neuron_id] = static_cast<unsigned int>(connected_grown_element);
         golden_signal_types[neuron_id] = signal_type;
 
-        synaptic_elements.update_count(neuron_id, grown_element);
-        synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(connected_grown_element));
+        synaptic_elements.update_grown_elements(neuron_id, grown_element);
+        synaptic_elements.update_connected_elements(neuron_id, static_cast<int>(connected_grown_element));
         synaptic_elements.set_signal_type(neuron_id, signal_type);
     }
 
@@ -1195,8 +1195,8 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdates) {
         golden_connected_counts[neuron_id] = static_cast<unsigned int>(connected_grown_element);
         golden_signal_types[neuron_id] = signal_type;
 
-        synaptic_elements.update_count(neuron_id, grown_element);
-        synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(connected_grown_element));
+        synaptic_elements.update_grown_elements(neuron_id, grown_element);
+        synaptic_elements.update_connected_elements(neuron_id, static_cast<int>(connected_grown_element));
         synaptic_elements.set_signal_type(neuron_id, signal_type);
     }
 
@@ -1216,11 +1216,11 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdates) {
     synaptic_elements.update_number_elements_delta(calcium, target_calcium, enable_flags);
     const auto& [number_deleted_elements, deleted_element_counts] = synaptic_elements.commit_updates(disable_flags);
 
-    const auto& deltas = synaptic_elements.get_delta_counts();
+    const auto& deltas = synaptic_elements.get_deltas();
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         const auto computed_delta = gaussian_growth_curve(calcium[neuron_id], minimum_calcium_to_grow, target_calcium[neuron_id], growth_factor);
-        const auto delta = synaptic_elements.get_delta_count(neuron_id);
+        const auto delta = synaptic_elements.get_delta(neuron_id);
         if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             ASSERT_NEAR(delta, computed_delta, eps) << ss.str() << neuron_id;
             ASSERT_NEAR(deltas[neuron_id], computed_delta, eps) << ss.str() << neuron_id;
@@ -1246,9 +1246,9 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdates) {
         const auto previous_connected = golden_connected_counts[neuron_id];
         const auto previous_vacant = previous_count - previous_connected;
 
-        const auto current_count = synaptic_elements.get_count(neuron_id);
-        const auto current_connected = synaptic_elements.get_connected_count(neuron_id);
-        const auto current_delta = synaptic_elements.get_delta_count(neuron_id);
+        const auto current_count = synaptic_elements.get_grown_elements(neuron_id);
+        const auto current_connected = synaptic_elements.get_connected_elements(neuron_id);
+        const auto current_delta = synaptic_elements.get_delta(neuron_id);
 
         const auto computed_delta = gaussian_growth_curve(calcium[neuron_id], minimum_calcium_to_grow, target_calcium[neuron_id], growth_factor);
         const auto new_vacant = previous_vacant + computed_delta;
@@ -1311,8 +1311,8 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdatesException) {
         const auto& connected_grown_element = get_random_synaptic_element_connected_count();
         const auto& signal_type = get_random_signal_type();
 
-        synaptic_elements.update_count(neuron_id, grown_element);
-        synaptic_elements.update_connected_counts(neuron_id, static_cast<int>(connected_grown_element));
+        synaptic_elements.update_grown_elements(neuron_id, grown_element);
+        synaptic_elements.update_connected_elements(neuron_id, static_cast<int>(connected_grown_element));
         synaptic_elements.set_signal_type(neuron_id, signal_type);
     }
 

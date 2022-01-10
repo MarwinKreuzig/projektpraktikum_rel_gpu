@@ -97,8 +97,8 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
     MapSynapseCreationRequests synapse_creation_requests_outgoing{};
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);
 
-    const std::vector<double>& axons_cnts = axons->get_total_counts();
-    const std::vector<unsigned int>& axons_connected_cnts = axons->get_connected_counts();
+    const std::vector<double>& axons_cnts = axons->get_grown_elements();
+    const std::vector<unsigned int>& axons_connected_cnts = axons->get_connected_elements();
     const std::vector<SignalType>& axons_signal_types = axons->get_signal_types();
 
     // For my neurons
@@ -164,11 +164,11 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
 void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
     const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites) {
 
-    const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_total_counts();
-    const std::vector<unsigned int>& dendrites_excitatory_connected_counts = excitatory_dendrites->get_connected_counts();
+    const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_grown_elements();
+    const std::vector<unsigned int>& dendrites_excitatory_connected_counts = excitatory_dendrites->get_connected_elements();
 
-    const std::vector<double>& dendrites_inhibitory_counts = inhibitory_dendrites->get_total_counts();
-    const std::vector<unsigned int>& dendrites_inhibitory_connected_counts = inhibitory_dendrites->get_connected_counts();
+    const std::vector<double>& dendrites_inhibitory_counts = inhibitory_dendrites->get_grown_elements();
+    const std::vector<unsigned int>& dendrites_inhibitory_connected_counts = inhibitory_dendrites->get_connected_elements();
 
     RelearnException::check(global_tree != nullptr, "BarnesHut::update_leaf_nodes: global_tree was nullptr");
 

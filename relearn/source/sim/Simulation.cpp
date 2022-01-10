@@ -279,7 +279,7 @@ void Simulation::simulate(const size_t number_steps) {
         neurons->update_number_synaptic_elements_delta();
         Timers::stop_and_add(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
 
-        if (step % Constants::plasticity_update_step == 0) {
+        if (step % Constants::plasticity_update_step == 0 && step >= Constants::first_plasticity_update) {
             Timers::start(TimerRegion::UPDATE_CONNECTIVITY);
 
             const auto& [num_synapses_deleted, num_synapses_created] = neurons->update_connectivity();

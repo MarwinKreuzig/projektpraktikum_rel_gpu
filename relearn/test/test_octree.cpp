@@ -154,7 +154,7 @@ SynapticElements create_synaptic_elements(size_t size, std::mt19937& mt, double 
 
     for (auto i = 0; i < size; i++) {
         se.set_signal_type(i, st);
-        se.update_count(i, urd(mt));
+        se.update_grown_elements(i, urd(mt));
     }
 
     return se;
@@ -960,8 +960,8 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
                 stack.emplace(child);
             }
         } else {
-            sum_dends_exc = static_cast<size_t>(unique_exc->get_count(current->get_cell_neuron_id()));
-            sum_dends_inh = static_cast<size_t>(unique_inh->get_count(current->get_cell_neuron_id()));
+            sum_dends_exc = static_cast<size_t>(unique_exc->get_grown_elements(current->get_cell_neuron_id()));
+            sum_dends_inh = static_cast<size_t>(unique_inh->get_grown_elements(current->get_cell_neuron_id()));
         }
 
         ASSERT_EQ(current->get_cell().get_number_excitatory_dendrites(), sum_dends_exc);

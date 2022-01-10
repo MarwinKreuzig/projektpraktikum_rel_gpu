@@ -36,24 +36,6 @@ public:
     constexpr static size_t print_width = 22;
     constexpr static size_t print_precision = 8;
 
-    // Update connectivity every 100 ms
-    inline static size_t plasticity_update_step = 100;
-
-    // Print details every 100 ms
-    inline static size_t logfile_update_step = 100;
-
-    // Print to cout every 100 ms
-    inline static size_t console_update_step = 100;
-
-    // Capture individual neuron informations ever 100 ms
-    inline static size_t monitor_step = 100;
-
-    // Capture the global statistics every 100 ms
-    inline static size_t statistics_step = 100;
-
-    // Capture the calcium values every 10000 ms
-    inline static size_t calcium_step = 1000000;
-
     constexpr static size_t mpi_alloc_mem = 1024 * 1024 * 300;
 
     //Constants for Fast Gauss
@@ -61,6 +43,27 @@ public:
     constexpr static int p3 = p * p * p;
     constexpr static int max_neurons_in_target = 70; //cutoff for target box
     constexpr static int max_neurons_in_source = 70; //cutoff for source box
+
+    // Update connectivity every <plasticity_update_step> ms
+    inline static size_t plasticity_update_step = 100;
+
+    // Update connectivity starting at <first_plasticity_update> ms
+    inline static size_t first_plasticity_update = 0;
+
+    // Print details every <logfile_update_step> ms
+    inline static size_t logfile_update_step = 100;
+
+    // Print to cout every <console_update_step> ms
+    inline static size_t console_update_step = 100;
+
+    // Capture individual neuron informations ever <monitor_step> ms
+    inline static size_t monitor_step = 100;
+
+    // Capture the global statistics every <statistics_step> ms
+    inline static size_t statistics_step = 100;
+
+    // Capture the calcium values every <calcium_step> ms
+    inline static size_t calcium_step = 1000000;
 };
 
 namespace Config {

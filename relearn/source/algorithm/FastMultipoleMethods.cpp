@@ -324,14 +324,14 @@ MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t numb
 void FastMultipoleMethods::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
     const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites) {
 
-    const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_total_counts();
-    const std::vector<unsigned int>& dendrites_excitatory_connected_counts = excitatory_dendrites->get_connected_counts();
+    const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_grown_elements();
+    const std::vector<unsigned int>& dendrites_excitatory_connected_counts = excitatory_dendrites->get_connected_elements();
 
-    const std::vector<double>& dendrites_inhibitory_counts = inhibitory_dendrites->get_total_counts();
-    const std::vector<unsigned int>& dendrites_inhibitory_connected_counts = inhibitory_dendrites->get_connected_counts();
+    const std::vector<double>& dendrites_inhibitory_counts = inhibitory_dendrites->get_grown_elements();
+    const std::vector<unsigned int>& dendrites_inhibitory_connected_counts = inhibitory_dendrites->get_connected_elements();
 
-    const std::vector<double>& axons_counts = axons->get_total_counts();
-    const std::vector<unsigned int>& axons_connected_counts = axons->get_connected_counts();
+    const std::vector<double>& axons_counts = axons->get_grown_elements();
+    const std::vector<unsigned int>& axons_connected_counts = axons->get_connected_elements();
 
     const auto& leaf_nodes = global_tree->get_leaf_nodes();
     const auto num_leaf_nodes = leaf_nodes.size();
