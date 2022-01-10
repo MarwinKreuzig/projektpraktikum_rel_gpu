@@ -17,6 +17,8 @@
 
 using position_type = typename Cell<FastMultipoleMethodsCell>::position_type;
 using counter_type = typename Cell<FastMultipoleMethodsCell>::counter_type;
+using AdditionalCellAttributes = FastMultipoleMethodsCell;
+using interaction_list_type = std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>;
 
 MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t number_neurons, const std::vector<char>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) {
@@ -114,71 +116,157 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<char>& disable_fl
     }
 }
 
-void FastMultipoleMethods::make_creation_request_for(const SignalType needed, MapSynapseCreationRequests& request) {
+void FastMultipoleMethods::make_creation_request_for(const SignalType signal_type_needed, MapSynapseCreationRequests& request) {
 
     // init stack
     std::vector<std::pair<const OctreeNode<FastMultipoleMethodsCell>*, interaction_list_type>> nodes_with_axons;
-    nodes_with_axons.reserve(20);
+    nodes_with_axons.reserve(200);
     OctreeNode<FastMultipoleMethodsCell>* root = global_tree->get_root();
     const auto local_roots = global_tree->get_local_branch_nodes();
-    const auto size = local_roots.size();
 
     if (local_roots.empty()) {
         return;
     }
 
-    // get all children of the root
-    interaction_list_type init_interaction_list{ nullptr };
-    add_children_to_vector(root, init_interaction_list);
-    for (auto& child : init_interaction_list) {
-        if (child == nullptr) {
-            continue;
-        }
-        if (child->get_cell().get_number_dendrites_for(needed) == 0) {
-            child = nullptr;
-        }
-    }
-
-    auto const branch_level = global_tree->get_level_of_branch_nodes();
-    if (branch_level == 0) {
-        for (auto& node : init_interaction_list) {
-            nodes_with_axons.emplace_back(node, std::move(init_interaction_list));
-        }
-    } else {
-        // align level of branch nodes and target nodes
-        for (auto const current_branch_node : local_roots) {
-            interaction_list_type temp_interaction_list = init_interaction_list;
-            unsigned int current_target_level = 1;
-            OctreeNode<AdditionalCellAttributes>* target;
-            while (current_target_level < branch_level) {
-
-                const auto& connection_probabilities = calc_attractiveness_to_connect_FMM(current_branch_node, temp_interaction_list, needed);
-                const auto chosen_index = choose_interval(connection_probabilities);
-                const OctreeNode<FastMultipoleMethodsCell>* target = extract_element(temp_interaction_list, chosen_index);
-
-                auto counter = 0;
-                add_children_to_vector(target, temp_interaction_list);
-
-                for (auto& child : temp_interaction_list) {
-                    if (child == nullptr) {
-                        continue;
-                    }
-                    if (child->get_cell().get_number_dendrites_for(needed) <= 0) {
-                        child = nullptr;
-                        continue;
-                    }
-                    counter++;
-                }
-                current_target_level++;
+    auto get_rid_of_null_elements = [signal_type_needed](const ElementType type, interaction_list_type& list) {
+        for (auto& i : list) {
+            if (i == nullptr) {
+                continue;
             }
-            nodes_with_axons.emplace_back(current_branch_node, std::move(temp_interaction_list));
+            if (type == ElementType::AXON && i->get_cell().get_number_axons_for(signal_type_needed) == 0) {
+                i = nullptr;
+                continue;
+            }
+            if (type == ElementType::DENDRITE && i->get_cell().get_number_dendrites_for(signal_type_needed) == 0) {
+                i = nullptr;
+                continue;
+            }
         }
-    }
+    };
 
-    unsigned int step = 0;
+    auto process_target_node_for_leaf_node = [&request, &nodes_with_axons, signal_type_needed](const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target) {
+        if (target->is_parent()) {
+            interaction_list_type new_interaction_list = Utilities::get_children_to_interaction_list(target);
+
+            for (auto& target_child : new_interaction_list) {
+                if (target_child == nullptr) {
+                    continue;
+                }
+                // Since source_node is a leaf node, we have to make sure we do not connect to ourselves
+                if (target_child == source) {
+                    target_child = nullptr;
+                    continue;
+                }
+                if (target_child->get_cell().get_number_dendrites_for(signal_type_needed) <= 0) {
+                    target_child = nullptr;
+                    continue;
+                }
+            }
+            nodes_with_axons.emplace_back(source, std::move(new_interaction_list));
+
+            //current target is a leaf node
+        } else {
+            const auto target_id = target->get_cell().get_neuron_id();
+            const auto source_id = source->get_cell().get_neuron_id();
+            if (target_id != source_id) {
+                int target_rank = target->get_rank();
+
+                // No autapse
+                request[target_rank].append(source_id, target_id, signal_type_needed);
+            }
+        }
+    };
+
+    auto process_target_node_for_inner_node = [&request, &nodes_with_axons, signal_type_needed, this, get_rid_of_null_elements](const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target) {
+        const auto& source_children = source->get_children();
+
+        //target is a inner node
+        if (target->is_parent()) {
+            interaction_list_type new_interaction_list = Utilities::get_children_to_interaction_list(target);
+            get_rid_of_null_elements(ElementType::DENDRITE, new_interaction_list);
+
+            for (auto& source_child_node : source_children) {
+                if (source_child_node == nullptr) {
+                    continue;
+                }
+                if (source_child_node->get_cell().get_number_axons_for(signal_type_needed) == 0) {
+                    continue;
+                }
+                nodes_with_axons.emplace_back(source_child_node, std::move(new_interaction_list));
+            }
+
+        } else {
+            // target_node is a leaf node
+            std::vector<double> attractiveness{};
+            attractiveness.resize(8);
+
+            interaction_list_type new_interaction_list{ nullptr };
+            new_interaction_list[0] = target;
+
+            for (auto i = 0; i < Constants::number_oct; i++) {
+                OctreeNode<FastMultipoleMethodsCell>* source_child_node = source_children[i];
+                if (source_child_node == nullptr) {
+                    attractiveness[i] = 0;
+                    continue;
+                }
+                if (source_child_node->get_cell().get_number_axons_for(signal_type_needed) == 0) {
+                    attractiveness[i] = 0;
+                    continue;
+                }
+                const auto& connection_probabilities = calc_attractiveness_to_connect(source, new_interaction_list, signal_type_needed);
+                attractiveness[i] = connection_probabilities[0];
+            }
+
+            const auto chosen_index = choose_interval(attractiveness);
+            nodes_with_axons.emplace_back(source_children[chosen_index], std::move(new_interaction_list));
+        }
+    };
+
+    auto init_stack = [get_rid_of_null_elements, this, &nodes_with_axons, &root, &local_roots, signal_type_needed]() {
+        interaction_list_type root_children = Utilities::get_children_to_interaction_list(root);
+        auto const branch_level = global_tree->get_level_of_branch_nodes();
+
+        // only one MPI Process
+        if (branch_level == 0) {
+            interaction_list_type source_list = root_children;
+            interaction_list_type target_list = root_children;
+            get_rid_of_null_elements(ElementType::DENDRITE, target_list);
+            get_rid_of_null_elements(ElementType::AXON, source_list);
+
+            const auto count = Utilities::count_non_zero_elements(source_list);
+            for (auto i = 0; i < count; i++) {
+                nodes_with_axons.emplace_back(Utilities::extract_element(source_list, i), std::move(target_list));
+            }
+
+            // multiple MPI processes
+        } else {
+            // align level of branch nodes and target nodes
+            get_rid_of_null_elements(ElementType::DENDRITE, root_children);
+
+            for (auto const current_branch_node : local_roots) {
+                interaction_list_type temp_interaction_list = root_children;
+                unsigned int current_target_level = 1;
+                OctreeNode<AdditionalCellAttributes>* target;
+
+                while (current_target_level < branch_level) {
+                    const auto& connection_probabilities = calc_attractiveness_to_connect(current_branch_node, temp_interaction_list, signal_type_needed);
+                    const auto chosen_index = choose_interval(connection_probabilities);
+                    const OctreeNode<FastMultipoleMethodsCell>* target = Utilities::extract_element(temp_interaction_list, chosen_index);
+
+                    temp_interaction_list = Utilities::get_children_to_interaction_list(target);
+                    get_rid_of_null_elements(ElementType::DENDRITE, temp_interaction_list);
+                    current_target_level++;
+                }
+
+                nodes_with_axons.emplace_back(current_branch_node, std::move(temp_interaction_list));
+            }
+        }
+    };
+
+    init_stack();
+    
     // start the calculation
     while (!nodes_with_axons.empty()) {
-        step++;
         // get node and interaction list from stack
         std::pair<const OctreeNode<FastMultipoleMethodsCell>*, interaction_list_type> pair = nodes_with_axons[nodes_with_axons.size() - 1];
         nodes_with_axons.pop_back();
@@ -186,167 +274,67 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType needed, Ma
         const OctreeNode<FastMultipoleMethodsCell>* source_node = std::get<0>(pair);
         interaction_list_type interaction_list = std::get<1>(pair);
 
+        //interaction list is empty
+        if (Utilities::count_non_zero_elements(interaction_list) == 0) {
+            continue;
+        }
+
+        RelearnException::check((source_node != nullptr), "FastMultipoleMethods::make_creation_request_for: source_node was a nullptr.");
+
         const auto& cell = source_node->get_cell();
 
         // current source node is a leaf node
         if (!source_node->is_parent()) {
-            const auto source_id = cell.get_neuron_id();
-
             const OctreeNode<FastMultipoleMethodsCell>* target_node;
 
-            const auto target_num = count_non_zero_elements(interaction_list);
+            const auto target_num = Utilities::count_non_zero_elements(interaction_list);
             if (target_num == 1) {
-                target_node = extract_element(interaction_list, 0);
+                target_node = Utilities::extract_element(interaction_list, 0);
             } else {
-                const auto& connection_probabilities = calc_attractiveness_to_connect_FMM(source_node, interaction_list, needed);
+                const auto& connection_probabilities = calc_attractiveness_to_connect(source_node, interaction_list, signal_type_needed);
                 const auto chosen_index = choose_interval(connection_probabilities);
-                target_node = extract_element(interaction_list, chosen_index);
+                target_node = Utilities::extract_element(interaction_list, chosen_index);
             }
 
-            // current target is a inner node
-            if (target_node->is_parent()) {
-                interaction_list_type new_interaction_list{ nullptr };
-                add_children_to_vector(target_node, new_interaction_list);
-                auto counter = 0;
-
-                for (auto& target_child : new_interaction_list) {
-                    if (target_child == nullptr) {
-                        continue;
-                    }
-
-                    // Since source_node is a leaf node, we have to make sure we do not connect to ourselves
-                    if (target_child == source_node) {
-                        target_child = nullptr;
-                        continue;
-                    }
-
-                    if (target_child->get_cell().get_number_dendrites_for(needed) <= 0) {
-                        target_child = nullptr;
-                        continue;
-                    }
-                }
-                nodes_with_axons.emplace_back(source_node, std::move(new_interaction_list));
-
-                //current target is a leaf node
-            } else {
-                const auto target_id = target_node->get_cell().get_neuron_id();
-                if (target_id != source_id) {
-                    int target_rank = target_node->get_rank();
-
-                    // No autapse
-                    request[target_rank].append(source_id, target_id, needed);
-                }
-            }
-            continue;
-        }
-
-        //interaction list is empty
-        if (count_non_zero_elements(interaction_list) == 0) {
+            process_target_node_for_leaf_node(source_node, target_node);
             continue;
         }
 
         //source is an inner node
-        const auto& connection_probabilities = calc_attractiveness_to_connect_FMM(source_node, interaction_list, needed);
+        const auto& connection_probabilities = calc_attractiveness_to_connect(source_node, interaction_list, signal_type_needed);
         const auto chosen_index = choose_interval(connection_probabilities);
-        auto* target_node = extract_element(interaction_list, chosen_index);
-
-        const auto& source_children = source_node->get_children();
-
-        //target is a inner node
-        if (target_node->is_parent()) {
-            for (auto* source_child_node : source_children) {
-                if (source_child_node == nullptr) {
-                    continue;
-                }
-
-                if (source_child_node->get_cell().get_number_axons_for(needed) == 0) {
-                    continue;
-                }
-
-                interaction_list_type new_interaction_list{ nullptr };
-                add_children_to_vector(target_node, new_interaction_list);
-
-                for (auto& target_child_node : new_interaction_list) {
-                    if (target_child_node == nullptr) {
-                        continue;
-                    }
-
-                    if (target_child_node->get_cell().get_number_dendrites_for(needed) == 0) {
-                        target_child_node = nullptr;
-                        continue;
-                    }
-                }
-
-                nodes_with_axons.emplace_back(source_child_node, std::move(new_interaction_list));
-            }
-
-            continue;
-        }
-
-        // source_node is a parent, but target_node is a leaf node
-
-        std::vector<double> attractiveness{};
-        std::vector<double> index{};
-
-        for (auto i = 0; i < Constants::number_oct; i++) {
-            OctreeNode<FastMultipoleMethodsCell>* source_child_node = source_children[i];
-            if (source_child_node == nullptr) {
-                continue;
-            }
-
-            if (source_child_node->get_cell().get_number_axons_for(needed) == 0) {
-                continue;
-            }
-
-            interaction_list_type new_interaction_list{ nullptr };
-            new_interaction_list[0] = target_node;
-
-            nodes_with_axons.emplace_back(source_child_node, std::move(new_interaction_list));
-        }
+        auto* target_node = Utilities::extract_element(interaction_list, chosen_index);
+        process_target_node_for_inner_node(source_node, target_node);
     }
 }
 
-std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(const OctreeNode<FastMultipoleMethodsCell>* source, const interaction_list_type interaction_list, const SignalType dendrite_type_needed) {
+std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect(const OctreeNode<FastMultipoleMethodsCell>* source, const interaction_list_type interaction_list, const SignalType signal_type_needed) {
 
     const auto sigma = get_probabilty_parameter();
-
-    const auto target_list_length = count_non_zero_elements(interaction_list);
-
+    const auto target_list_length = Utilities::count_non_zero_elements(interaction_list);
     std::vector<double> result(target_list_length, 0.0);
+    bool init = false;
+    std::array<double, Constants::p3> coefficents{ 0 };
 
-    // There are not enough axons in the source box
     for (auto i = 0; i < target_list_length; i++) {
-        const auto* current_target = extract_element(interaction_list, i);
-        CalculationType current_calculation = check_calculation_requirements(source, current_target, dendrite_type_needed);
+        const auto* current_target = Utilities::extract_element(interaction_list, i);
+        CalculationType current_calculation = check_calculation_requirements(source, current_target, signal_type_needed);
 
         switch (current_calculation) {
         case CalculationType::HERMITE: {
-            std::array<double, Constants::p3> coefficents = calc_hermite_coefficients(source, sigma, dendrite_type_needed);
-            result[0] = calc_hermite(source, current_target, coefficents, sigma, dendrite_type_needed);
-            for (auto j = 1; j < target_list_length; j++) {
-                current_target = extract_element(interaction_list, j);
-                if (!current_target->is_parent()) {
-                    const auto& target_neuron_positions = get_all_dendrite_positions_for(current_target, dendrite_type_needed);
-                    const auto& source_neuron_positions = get_all_axon_positions_for(source, dendrite_type_needed);
-                    result[j] = calc_direct_gauss(source_neuron_positions, target_neuron_positions, sigma);
-                }
-                else{
-                    result[j] = calc_hermite(source, current_target, coefficents, sigma, dendrite_type_needed);
-                } 
+            if (!init) {
+                coefficents = calc_hermite_coefficients(source, sigma, signal_type_needed);
             }
-            return result;
+            result[i] = calc_hermite(source, current_target, coefficents, sigma, signal_type_needed);
         }
 
         case CalculationType::TAYLOR: {
-            result[i] = calc_taylor(source, current_target, sigma, dendrite_type_needed);
+            result[i] = calc_taylor(source, current_target, sigma, signal_type_needed);
             break;
         }
 
         case CalculationType::DIRECT: {
-            const auto& target_neuron_positions = get_all_dendrite_positions_for(current_target, dendrite_type_needed);
-            const auto& source_neuron_positions = get_all_axon_positions_for(source, dendrite_type_needed);
-
-            result[i] = calc_direct_gauss(source_neuron_positions, target_neuron_positions, sigma);
+            result[i] = calc_direct_gauss(source, current_target, sigma, signal_type_needed);
             break;
         }
         }
@@ -355,24 +343,25 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect_FMM(con
     return result;
 }
 
-CalculationType FastMultipoleMethods::check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, SignalType needed) {
-    if (source->is_parent() && target->is_parent()) {
-        if (target->get_cell().get_number_dendrites_for(needed) > Constants::max_neurons_in_target) {
-            if (source->get_cell().get_number_axons_for(needed) > Constants::max_neurons_in_source) {
-                return CalculationType::HERMITE;
-            }
-            return CalculationType::TAYLOR;
+CalculationType FastMultipoleMethods::check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, SignalType signal_type_needed) {
+    if (!source->is_parent() || !target->is_parent()) {
+        return CalculationType::DIRECT;
+    }
+    if (target->get_cell().get_number_dendrites_for(signal_type_needed) > Constants::max_neurons_in_target) {
+        if (source->get_cell().get_number_axons_for(signal_type_needed) > Constants::max_neurons_in_source) {
+            return CalculationType::HERMITE;
         }
+        return CalculationType::TAYLOR;
     }
     return CalculationType::DIRECT;
 }
 
-double FastMultipoleMethods::calc_taylor(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const double sigma, const SignalType needed) {
+double FastMultipoleMethods::calc_taylor(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const double sigma, const SignalType signal_type_needed) {
     Timers::start(TimerRegion::CALC_TAYLOR_COEFFICIENTS);
     RelearnException::check(target->is_parent(), "FastMultipoleMethods::calc_taylor: target node was a leaf node.");
     RelearnException::check(source->is_parent(), "FastMultipoleMethods::calc_taylor: source node was a leaf node.");
 
-    const auto& opt_target_center = target->get_cell().get_dendrites_position_for(needed);
+    const auto& opt_target_center = target->get_cell().get_dendrites_position_for(signal_type_needed);
     RelearnException::check(opt_target_center.has_value(), "FastMultipoleMethods::calc_taylor: target node has no position.");
     const auto& target_center = opt_target_center.value();
 
@@ -391,21 +380,21 @@ double FastMultipoleMethods::calc_taylor(const OctreeNode<FastMultipoleMethodsCe
                 continue;
             }
 
-            const auto number_axons = source_child->get_cell().get_number_axons_for(needed);
+            const auto number_axons = source_child->get_cell().get_number_axons_for(signal_type_needed);
             if (number_axons == 0) {
                 continue;
             }
 
-            const auto& child_pos = source_child->get_cell().get_axons_position_for(needed);
+            const auto& child_pos = source_child->get_cell().get_axons_position_for(signal_type_needed);
             RelearnException::check(child_pos.has_value(), "FastMultipoleMethods::calc_taylor: source child has no position.");
             const auto& temp_vec = (child_pos.value() - target_center) / sigma;
-            temp += number_axons * h_multiindex(current_index, temp_vec);
+            temp += number_axons * Utilities::h_multiindex(current_index, temp_vec);
         }
 
-        const auto factorial_multiindex = fac_multiindex(current_index);
+        const auto factorial_multiindex = Utilities::fac_multiindex(current_index);
         const auto coefficient = temp / factorial_multiindex;
 
-        const auto absolute_multiindex = abs_multiindex(current_index);
+        const auto absolute_multiindex = Utilities::abs_multiindex(current_index);
 
         if (absolute_multiindex % 2 == 0) {
             // NOLINTNEXTLINE
@@ -420,26 +409,23 @@ double FastMultipoleMethods::calc_taylor(const OctreeNode<FastMultipoleMethodsCe
     double result = 0.0;
 
     interaction_list_type target_children{ nullptr };
-    unsigned int children_counter = count_non_zero_elements(target_children);
+    unsigned int children_counter = Utilities::count_non_zero_elements(target_children);
     for (auto j = 0; j < children_counter; j++) {
-        const auto* target_child = extract_element(target_children, j);
-        if (target_child == nullptr) {
-            continue;
-        }
+        const auto* target_child = Utilities::extract_element(target_children, j);
 
-        const auto number_dendrites = target_child->get_cell().get_number_dendrites_for(needed);
+        const auto number_dendrites = target_child->get_cell().get_number_dendrites_for(signal_type_needed);
         if (number_dendrites == 0) {
             continue;
         }
 
-        const auto& child_pos = target_child->get_cell().get_dendrites_position_for(needed);
+        const auto& child_pos = target_child->get_cell().get_dendrites_position_for(signal_type_needed);
         RelearnException::check(child_pos.has_value(), "FastMultipoleMethods::calc_taylor: target child has no position.");
         const auto& temp_vec = (child_pos.value() - target_center) / sigma;
 
         double temp = 0.0;
         for (auto b = 0; b < Constants::p3; b++) {
             // NOLINTNEXTLINE
-            temp += taylor_coefficients[b] * pow_multiindex(temp_vec, indices[b]);
+            temp += taylor_coefficients[b] * Utilities::pow_multiindex(temp_vec, indices[b]);
         }
         result += number_dendrites * temp;
     }
@@ -447,7 +433,7 @@ double FastMultipoleMethods::calc_taylor(const OctreeNode<FastMultipoleMethodsCe
     return result;
 }
 
-std::array<double, Constants::p3> FastMultipoleMethods::calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, const double sigma, const SignalType needed) {
+std::array<double, Constants::p3> FastMultipoleMethods::calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, const double sigma, const SignalType signal_type_needed) {
     Timers::start(TimerRegion::CALC_HERMITE_COEFFICIENTS);
     RelearnException::check(source->is_parent(), "FastMultipoleMethods::calc hermite_coefficients: source node was a leaf node");
 
@@ -463,20 +449,20 @@ std::array<double, Constants::p3> FastMultipoleMethods::calc_hermite_coefficient
                 continue;
             }
 
-            const auto child_number_axons = child->get_cell().get_number_axons_for(needed);
+            const auto child_number_axons = child->get_cell().get_number_axons_for(signal_type_needed);
             if (child_number_axons == 0) {
                 continue;
             }
 
-            const auto& child_pos = child->get_cell().get_axons_position_for(needed);
+            const auto& child_pos = child->get_cell().get_axons_position_for(signal_type_needed);
             RelearnException::check(child_pos.has_value(), "FastMultipoleMethods::calc_hermite_coefficients: source child has no valid position.");
-            const auto& source_pos = source->get_cell().get_axons_position_for(needed);
+            const auto& source_pos = source->get_cell().get_axons_position_for(signal_type_needed);
             RelearnException::check(source_pos.has_value(), "FastMultipoleMethods::calc_hermite_coefficients: source has no valid position.");
             const auto& temp_vec = (child_pos.value() - source_pos.value()) / sigma;
-            temp += child_number_axons * pow_multiindex(temp_vec, indices[a]);
+            temp += child_number_axons * Utilities::pow_multiindex(temp_vec, indices[a]);
         }
 
-        const auto hermite_coefficient = 1.0 * temp / fac_multiindex(indices[a]);
+        const auto hermite_coefficient = 1.0 * temp / Utilities::fac_multiindex(indices[a]);
         result[a] = hermite_coefficient;
     }
     Timers::stop_and_add(TimerRegion::CALC_HERMITE_COEFFICIENTS);
@@ -484,10 +470,10 @@ std::array<double, Constants::p3> FastMultipoleMethods::calc_hermite_coefficient
     return result;
 }
 
-double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, const double sigma, const SignalType needed) {
+double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, const double sigma, const SignalType signal_type_needed) {
     RelearnException::check(target->is_parent(), "FastMultipoleMethods::calc hermite: target node was a leaf node");
 
-    const auto& opt_source_center = source->get_cell().get_axons_position_for(needed);
+    const auto& opt_source_center = source->get_cell().get_axons_position_for(signal_type_needed);
     RelearnException::check(opt_source_center.has_value(), "FastMultipoleMethods::calc_hermite: source node has no axon position.");
     const auto& source_center = opt_source_center.value();
 
@@ -496,30 +482,29 @@ double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsC
 
     double result = 0.0;
 
-    interaction_list_type target_children{ nullptr };
-    add_children_to_vector(target, target_children);
-    unsigned int children_count = count_non_zero_elements(target_children);
+    interaction_list_type target_children = Utilities::get_children_to_interaction_list(target);
+    unsigned int children_count = Utilities::count_non_zero_elements(target_children);
 
     for (auto j = 0; j < children_count; j++) {
-        const auto* child_target = extract_element(target_children, j);
+        const auto* child_target = Utilities::extract_element(target_children, j);
         if (child_target == nullptr) {
             continue;
         }
 
         double temp = 0.0;
 
-        const auto number_dendrites = child_target->get_cell().get_number_dendrites_for(needed);
+        const auto number_dendrites = child_target->get_cell().get_number_dendrites_for(signal_type_needed);
         if (number_dendrites == 0) {
             continue;
         }
 
-        const auto& child_pos = child_target->get_cell().get_dendrites_position_for(needed);
+        const auto& child_pos = child_target->get_cell().get_dendrites_position_for(signal_type_needed);
         RelearnException::check(child_pos.has_value(), "FastMultipoleMethods::calc_hermite: target child node has no axon position.");
         const auto& temp_vec = (child_pos.value() - source_center) / sigma;
 
         for (auto a = 0; a < number_coefficients; a++) {
             // NOLINTNEXTLINE
-            temp += coefficients_buffer[a] * h_multiindex(indices[a], temp_vec);
+            temp += coefficients_buffer[a] * Utilities::h_multiindex(indices[a], temp_vec);
         }
 
         result += number_dendrites * temp;
@@ -527,7 +512,7 @@ double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsC
     return result;
 }
 
-unsigned int FastMultipoleMethods::count_non_zero_elements(const interaction_list_type& arr) {
+unsigned int FastMultipoleMethods::Utilities::count_non_zero_elements(const interaction_list_type& arr) {
     auto non_zero_counter = 0;
     for (auto i = 0; i < Constants::number_oct; i++) {
         if (arr[i] != nullptr) {
@@ -537,7 +522,7 @@ unsigned int FastMultipoleMethods::count_non_zero_elements(const interaction_lis
     return non_zero_counter;
 }
 
-const OctreeNode<FastMultipoleMethodsCell>* FastMultipoleMethods::extract_element(const interaction_list_type& arr, unsigned int index) {
+const OctreeNode<FastMultipoleMethodsCell>* FastMultipoleMethods::Utilities::extract_element(const interaction_list_type& arr, unsigned int index) {
     auto non_zero_counter = 0;
     for (auto i = 0; i < Constants::number_oct; i++) {
         if (arr[i] != nullptr) {
@@ -550,7 +535,10 @@ const OctreeNode<FastMultipoleMethodsCell>* FastMultipoleMethods::extract_elemen
     return nullptr;
 }
 
-void FastMultipoleMethods::add_children_to_vector(const OctreeNode<FastMultipoleMethodsCell>* node, interaction_list_type& arr) {
+interaction_list_type FastMultipoleMethods::Utilities::get_children_to_interaction_list(const OctreeNode<AdditionalCellAttributes>* node) {
+
+    interaction_list_type result{ nullptr };
+
     const auto is_local = node->is_local();
     const auto& children = is_local ? node->get_children() : NodeCache::download_children<FastMultipoleMethodsCell>(const_cast<OctreeNode<FastMultipoleMethodsCell>*>(node));
 
@@ -558,59 +546,16 @@ void FastMultipoleMethods::add_children_to_vector(const OctreeNode<FastMultipole
 
     for (auto it = children.crbegin(); it != children.crend(); ++it) {
         if (*it != nullptr) {
-            arr[i] = (*it);
+            result[i] = (*it);
         }
         i++;
-    }
-}
-
-const std::vector<std::pair<position_type, counter_type>> FastMultipoleMethods::get_all_dendrite_positions_for(const OctreeNode<FastMultipoleMethodsCell>* node, const SignalType needed) {
-    std::vector<std::pair<position_type, counter_type>> result{};
-
-    std::vector<const OctreeNode<FastMultipoleMethodsCell>*> stack{};
-    stack.reserve(30);
-    stack.emplace_back(node);
-
-    while (!stack.empty()) {
-        const auto* current_node = stack[stack.size() - 1];
-        stack.pop_back();
-        if (!current_node->is_parent()) {
-            const auto& cell = current_node->get_cell();
-            const auto num_of_ports = cell.get_number_dendrites_for(needed);
-            const auto& opt_position = cell.get_dendrites_position();
-            std::pair<position_type, counter_type> temp(opt_position.value(), num_of_ports);
-            result.emplace_back(temp);
-
-        } else {
-            std::array<const OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> current_children{ nullptr };
-            auto add_children_to_vector = [&current_children](const OctreeNode<AdditionalCellAttributes>* node) {
-                const auto is_local = node->is_local();
-                const auto& children = is_local ? node->get_children() : NodeCache::download_children<AdditionalCellAttributes>(const_cast<OctreeNode<AdditionalCellAttributes>*>(node));
-
-                unsigned int i = 0;
-
-                for (auto it = children.crbegin(); it != children.crend(); ++it) {
-                    if (*it != nullptr) {
-                        current_children[i] = (*it);
-                    }
-                    i++;
-                }
-            };
-            add_children_to_vector(current_node);
-            for (auto& children_node : current_children) {
-                if (children_node == nullptr) {
-                    continue;
-                }
-                if (children_node->get_cell().get_number_dendrites_for(needed) == 0) {
-                    children_node = nullptr;
-                }
-            }
-        }
     }
     return result;
 }
 
-const std::vector<std::pair<position_type, counter_type>> FastMultipoleMethods::get_all_axon_positions_for(const OctreeNode<FastMultipoleMethodsCell>* node, const SignalType needed) {
+const std::vector<std::pair<position_type, counter_type>>
+FastMultipoleMethods::Utilities::get_all_positions_for(const OctreeNode<FastMultipoleMethodsCell>* node, const ElementType type, const SignalType signal_type_needed) {
+
     std::vector<std::pair<position_type, counter_type>> result{};
 
     std::vector<const OctreeNode<FastMultipoleMethodsCell>*> stack{};
@@ -621,39 +566,39 @@ const std::vector<std::pair<position_type, counter_type>> FastMultipoleMethods::
         const auto* current_node = stack[stack.size() - 1];
         stack.pop_back();
 
+        // node is leaf
         if (!current_node->is_parent()) {
             const auto& cell = current_node->get_cell();
-            const auto num_of_ports = cell.get_number_axons_for(needed);
-            const auto& opt_position = cell.get_axons_position();
-            std::pair<position_type, counter_type> temp(opt_position.value(), num_of_ports);
-            result.emplace_back(temp);
+            auto num_of_ports = 0;
+            std::optional<VirtualPlasticityElementManual::position_type> opt_position;
 
-        } else {
-            std::array<const OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> current_children{ nullptr };
-            auto add_children_to_vector = [&current_children](const OctreeNode<AdditionalCellAttributes>* node) {
-                const auto is_local = node->is_local();
-                const auto& children = is_local ? node->get_children() : NodeCache::download_children<AdditionalCellAttributes>(const_cast<OctreeNode<AdditionalCellAttributes>*>(node));
-
-                unsigned int i = 0;
-
-                for (auto it = children.crbegin(); it != children.crend(); ++it) {
-                    if (*it != nullptr) {
-                        current_children[i] = (*it);
-                    }
-                    i++;
-                }
-            };
-            add_children_to_vector(current_node);
-            for (auto& children_node : current_children) {
-                if (children_node == nullptr) {
-                    continue;
-                }
-                if (children_node->get_cell().get_number_axons_for(needed) == 0) {
-                    children_node = nullptr;
-                }
+            if (type == ElementType::DENDRITE) {
+                num_of_ports = cell.get_number_dendrites_for(signal_type_needed);
+                opt_position = cell.get_dendrites_position();
+            } else {
+                num_of_ports = cell.get_number_axons_for(signal_type_needed);
+                opt_position = cell.get_axons_position();
             }
+
+            RelearnException::check(opt_position.has_value(), "FastMultipoleMethods::Utilities::get_all_positions_for: opt_position has no value.");
+            result.emplace_back(std::pair<position_type, counter_type>(opt_position.value(), num_of_ports));
+            continue;
+        }
+
+        // node is inner node
+        const auto is_local = current_node->is_local();
+        const auto& children = is_local ? current_node->get_children() : NodeCache::download_children<AdditionalCellAttributes>(const_cast<OctreeNode<AdditionalCellAttributes>*>(current_node));
+
+        for (auto it = children.crbegin(); it != children.crend(); ++it) {
+            if (*it == nullptr) {
+                continue;
+            }
+            auto number_syn_elemts = type == ElementType::DENDRITE ? (*it)->get_cell().get_number_dendrites_for(signal_type_needed) : (*it)->get_cell().get_number_axons_for(signal_type_needed);
+            if (number_syn_elemts == 0) {
+                continue;
+            }
+            stack.emplace_back(*it);
         }
     }
-
     return result;
 }

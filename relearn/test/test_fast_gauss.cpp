@@ -154,101 +154,6 @@ SynapticElements create_axons(size_t size, std::mt19937& mt, double max_free) {
     return se;
 }
 
-TEST(TestFastGauss, test_static_functions) {
-    // function_derivative test
-    double result[] = {
-        0.74, 0, -0.74,
-        0.74, -2, 0.74,
-        -1.47, 0, 1.47,
-        -7.36, 12, -7.36,
-        -2.94, 0, 2.94,
-        67.69, -120, 67.69,
-        170.7, 0, -170.7,
-        -606.27, 1680, -606.27,
-        -3943.67, 0, 3943.67,
-        3025.44, -30240, 3025.44,
-        84924.23, 0, -84924.23,
-        103288.77, 665280, 103288.77,
-        -1831604.05, 0, 1831604.05,
-        -6348716.24, -17297280, -6348716.24,
-        38587480.85, 0, -38587480.85,
-        267636449.02, 518918400, 267636449.02
-    };
-
-    for (int i = 0; i < 16; i++) {
-        const auto res0 = result[(i * 3) + 0];
-        const auto res1 = result[(i * 3) + 1];
-        const auto res2 = result[(i * 3) + 2];
-
-        const auto val_new0 = FastMultipoleMethods::function_derivative(-1, i + 1);
-        const auto val_new1 = FastMultipoleMethods::function_derivative(0, i + 1);
-        const auto val_new2 = FastMultipoleMethods::function_derivative(1, i + 1);
-
-        EXPECT_NEAR(val_new0, res0, 0.01) << i;
-        EXPECT_NEAR(val_new1, res1, 0.01) << i;
-        EXPECT_NEAR(val_new2, res2, 0.01) << i;
-    }
-
-    // kernel test
-    Vec3d a = { 0, 0, 0 };
-    Vec3d b = { 0, 1, 0 };
-    EXPECT_NEAR(FastMultipoleMethods::kernel(a, b, sigma), 0.999956, 0.0001);
-    Vec3d c = { 0, 0, -1 };
-    EXPECT_EQ(FastMultipoleMethods::kernel(a, a, sigma), 1);
-    Vec3d e = { 6, 4.5, -3.4 };
-    Vec3d f = { 0, -8.3, 2 };
-    EXPECT_NEAR(FastMultipoleMethods::kernel(e, f, sigma), 0.9898, 0.01);
-}
-
-TEST(TestFastGauss, test_multiIndex) {
-    EXPECT_EQ(FastMultipoleMethods::Multiindex::get_number_of_indices(), Constants::p3);
-
-    const auto& indices = FastMultipoleMethods::Multiindex::get_indices();
-
-    const std::array<unsigned int, 3> temp = indices[1];
-    EXPECT_EQ(temp.at(0), 0);
-    EXPECT_EQ(temp.at(1), 0);
-    EXPECT_EQ(temp.at(2), 1);
-
-    const std::array<unsigned int, 3> temp1 = indices[Constants::p3 - 1];
-    EXPECT_EQ(temp1.at(0), Constants::p - 1);
-    EXPECT_EQ(temp1.at(1), Constants::p - 1);
-    EXPECT_EQ(temp1.at(2), Constants::p - 1);
-}
-
-TEST(TestFastGauss, test_static_multiindex_functions) {
-    const std::array<unsigned int, 3> test_index1 = { 0, 0, 0 };
-    const std::array<unsigned int, 3> test_index2 = { 1, 2, 3 };
-    const std::array<unsigned int, 3> test_index3 = { 3, 3, 3 };
-
-    // factorial
-    EXPECT_EQ(FastMultipoleMethods::fac_multiindex(test_index1), 1);
-    EXPECT_EQ(FastMultipoleMethods::fac_multiindex(test_index2), 12);
-    EXPECT_EQ(FastMultipoleMethods::fac_multiindex(test_index3), 216);
-
-    // abs
-    EXPECT_EQ(FastMultipoleMethods::abs_multiindex(test_index1), 0);
-    EXPECT_EQ(FastMultipoleMethods::abs_multiindex(test_index2), 6);
-    EXPECT_EQ(FastMultipoleMethods::abs_multiindex(test_index3), 9);
-
-    // pow
-    Vec3d test_vector1 = Vec3d(0, 0, 0);
-    Vec3d test_vector2 = Vec3d(3.12, 5.7, -3.14);
-    Vec3d test_vector3 = Vec3d(-6.98, -4.77, 2.94);
-
-    EXPECT_EQ(FastMultipoleMethods::pow_multiindex(test_vector1, test_index1), 1);
-    EXPECT_EQ(FastMultipoleMethods::pow_multiindex(test_vector1, test_index2), 0);
-    EXPECT_EQ(FastMultipoleMethods::pow_multiindex(test_vector1, test_index3), 0);
-
-    EXPECT_EQ(FastMultipoleMethods::pow_multiindex(test_vector2, test_index1), 1);
-    EXPECT_NEAR(FastMultipoleMethods::pow_multiindex(test_vector2, test_index2), -3138.29, 0.01);
-    EXPECT_NEAR(FastMultipoleMethods::pow_multiindex(test_vector2, test_index3), -174131.48, 0.01);
-
-    EXPECT_EQ(FastMultipoleMethods::pow_multiindex(test_vector3, test_index1), 1);
-    EXPECT_NEAR(FastMultipoleMethods::pow_multiindex(test_vector3, test_index2), -4035.84, 0.01);
-    EXPECT_NEAR(FastMultipoleMethods::pow_multiindex(test_vector3, test_index3), 937914.81, 0.01);
-}
-
 TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
@@ -257,7 +162,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
     std::uniform_int_distribution<size_t> uid(0, 10000);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-    
+
     std::uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
 
     for (auto i = 0; i < iterations; i++) {
@@ -789,3 +694,111 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
 //         make_mpi_mem_available<AdditionalCellAttributes>();
 //     }
 // }
+
+class FMMPrivateFunctionTest : public ::testing::Test {
+
+protected:
+    double function_derivative(double t, unsigned int derivative_order) { return FastMultipoleMethods::Utilities::function_derivative(t, derivative_order); }
+    double kernel(const Vec3d& a, const Vec3d& b, double sigma) { return FastMultipoleMethods::Utilities::kernel(a, b, sigma); }
+    unsigned int get_number_of_indices() { return FastMultipoleMethods::Multiindex::get_number_of_indices(); }
+    std::array<std::array<unsigned int, 3>, Constants::p3> get_indices() { return FastMultipoleMethods::Multiindex::get_indices(); }
+    size_t fac_multiindex(const std::array<unsigned int, 3>& x) { return FastMultipoleMethods::Utilities::fac_multiindex(x); }
+    size_t abs_multiindex(const std::array<unsigned int, 3>& x) { return FastMultipoleMethods::Utilities::abs_multiindex(x); }
+    double pow_multiindex(const Vec3d& base_vector, const std::array<unsigned int, 3>& exponent) { return FastMultipoleMethods::Utilities::pow_multiindex(base_vector, exponent); }
+   
+};
+
+TEST_F(FMMPrivateFunctionTest, test_static_functions) {
+    // function_derivative test
+    double result[] = {
+        0.74, 0, -0.74,
+        0.74, -2, 0.74,
+        -1.47, 0, 1.47,
+        -7.36, 12, -7.36,
+        -2.94, 0, 2.94,
+        67.69, -120, 67.69,
+        170.7, 0, -170.7,
+        -606.27, 1680, -606.27,
+        -3943.67, 0, 3943.67,
+        3025.44, -30240, 3025.44,
+        84924.23, 0, -84924.23,
+        103288.77, 665280, 103288.77,
+        -1831604.05, 0, 1831604.05,
+        -6348716.24, -17297280, -6348716.24,
+        38587480.85, 0, -38587480.85,
+        267636449.02, 518918400, 267636449.02
+    };
+
+    for (int i = 0; i < 16; i++) {
+        const auto res0 = result[(i * 3) + 0];
+        const auto res1 = result[(i * 3) + 1];
+        const auto res2 = result[(i * 3) + 2];
+
+        const auto val_new0 = function_derivative(-1, i + 1);
+        const auto val_new1 = function_derivative(0, i + 1);
+        const auto val_new2 = function_derivative(1, i + 1);
+
+        EXPECT_NEAR(val_new0, res0, 0.01) << i;
+        EXPECT_NEAR(val_new1, res1, 0.01) << i;
+        EXPECT_NEAR(val_new2, res2, 0.01) << i;
+    }
+
+    // kernel test
+    Vec3d a = { 0, 0, 0 };
+    Vec3d b = { 0, 1, 0 };
+    EXPECT_NEAR(kernel(a, b, sigma), 0.999956, 0.0001);
+    Vec3d c = { 0, 0, -1 };
+    EXPECT_EQ(kernel(a, a, sigma), 1);
+    Vec3d e = { 6, 4.5, -3.4 };
+    Vec3d f = { 0, -8.3, 2 };
+    EXPECT_NEAR(kernel(e, f, sigma), 0.9898, 0.01);
+}
+
+TEST_F(FMMPrivateFunctionTest, test_multiIndex) {
+    EXPECT_EQ(get_number_of_indices(), Constants::p3);
+
+    const auto& indices = get_indices();
+
+    const std::array<unsigned int, 3> temp = indices[1];
+    EXPECT_EQ(temp.at(0), 0);
+    EXPECT_EQ(temp.at(1), 0);
+    EXPECT_EQ(temp.at(2), 1);
+
+    const std::array<unsigned int, 3> temp1 = indices[Constants::p3 - 1];
+    EXPECT_EQ(temp1.at(0), Constants::p - 1);
+    EXPECT_EQ(temp1.at(1), Constants::p - 1);
+    EXPECT_EQ(temp1.at(2), Constants::p - 1);
+}
+
+TEST_F(FMMPrivateFunctionTest, test_static_multiindex_functions) {
+    const std::array<unsigned int, 3> test_index1 = { 0, 0, 0 };
+    const std::array<unsigned int, 3> test_index2 = { 1, 2, 3 };
+    const std::array<unsigned int, 3> test_index3 = { 3, 3, 3 };
+
+    // factorial
+    EXPECT_EQ(fac_multiindex(test_index1), 1);
+    EXPECT_EQ(fac_multiindex(test_index2), 12);
+    EXPECT_EQ(fac_multiindex(test_index3), 216);
+
+    // abs
+    EXPECT_EQ(abs_multiindex(test_index1), 0);
+    EXPECT_EQ(abs_multiindex(test_index2), 6);
+    EXPECT_EQ(abs_multiindex(test_index3), 9);
+
+    // pow
+    Vec3d test_vector1 = Vec3d(0, 0, 0);
+    Vec3d test_vector2 = Vec3d(3.12, 5.7, -3.14);
+    Vec3d test_vector3 = Vec3d(-6.98, -4.77, 2.94);
+
+    EXPECT_EQ(pow_multiindex(test_vector1, test_index1), 1);
+    EXPECT_EQ(pow_multiindex(test_vector1, test_index2), 0);
+    EXPECT_EQ(pow_multiindex(test_vector1, test_index3), 0);
+
+    EXPECT_EQ(pow_multiindex(test_vector2, test_index1), 1);
+    EXPECT_NEAR(pow_multiindex(test_vector2, test_index2), -3138.29, 0.01);
+    EXPECT_NEAR(pow_multiindex(test_vector2, test_index3), -174131.48, 0.01);
+
+    EXPECT_EQ(pow_multiindex(test_vector3, test_index1), 1);
+    EXPECT_NEAR(pow_multiindex(test_vector3, test_index2), -4035.84, 0.01);
+    EXPECT_NEAR(pow_multiindex(test_vector3, test_index3), 937914.81, 0.01);
+}
