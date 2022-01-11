@@ -341,7 +341,7 @@ void Simulation::simulate(const size_t number_steps) {
     Timers::stop_and_add(TimerRegion::SIMULATION_LOOP);
 
     print_neuron_monitors();
-
+    
     neurons->print_positions_to_log_file();
     neurons->print_network_graph_to_log_file();
 }
