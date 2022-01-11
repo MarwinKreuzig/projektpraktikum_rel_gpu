@@ -56,6 +56,9 @@ TEST_F(PartitionTest, testPartitionConstructor) {
     for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
         Partition partition(num_ranks, my_rank);
 
+        ASSERT_EQ(partition.get_number_mpi_ranks(), num_ranks);
+        ASSERT_EQ(partition.get_my_mpi_rank(), my_rank);
+
         ASSERT_EQ(partition.get_total_number_subdomains(), num_subdomains) << num_subdomains;
         ASSERT_EQ(partition.get_number_local_subdomains(), my_subdomains) << my_subdomains;
 

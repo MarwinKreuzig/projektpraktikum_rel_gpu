@@ -145,6 +145,22 @@ public:
     }
 
     /**
+     * @brief Returns the MPI rank id that was passed in the constructor
+     * @return The MPI rank id
+     */
+    [[nodiscard]] size_t get_my_mpi_rank() const noexcept {
+        return my_mpi_rank;
+    }
+
+    /**
+     * @brief Returns the number of MPI ranks that was passed in the constructor
+     * @return The number of MPI ranks
+     */
+    [[nodiscard]] size_t get_number_mpi_ranks() const noexcept {
+        return number_mpi_ranks;
+    }
+
+    /**
      * @brief Returns the mpi rank that is responsible for the position
      * @param pos The position which shall be resolved
      * @exception Throws a RelearnException if the calculate_local_ids has not been called
@@ -344,6 +360,9 @@ public:
     }
 
 private:
+    size_t my_mpi_rank{ Constants::uninitialized };
+    size_t number_mpi_ranks{ Constants::uninitialized };
+
     size_t total_number_neurons{ Constants::uninitialized };
     size_t number_local_neurons{ Constants::uninitialized };
 

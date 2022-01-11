@@ -24,8 +24,8 @@ SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank(const size_t number_neuro
 
     RelearnException::check(number_neurons_per_rank >= 1, "SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank: There must be at least one neuron per mpi rank!");
 
-    const auto my_rank = static_cast<unsigned int>(MPIWrapper::get_my_rank());
-    const auto number_ranks = MPIWrapper::get_num_ranks();
+    const auto my_rank = static_cast<unsigned int>(partition->get_my_mpi_rank());
+    const auto number_ranks = partition->get_number_mpi_ranks();
     const auto number_local_subdomains = partition->get_number_local_subdomains();
 
     RandomHolder::seed(RandomHolderKey::Subdomain, my_rank);
@@ -82,7 +82,7 @@ void SubdomainFromNeuronPerRank::fill_subdomain(const size_t local_subdomain_ind
 
 void SubdomainFromNeuronPerRank::calculate_total_number_neurons() const {
     const auto number_local_neurons = number_neurons_per_rank;
-    const auto num_ranks = MPIWrapper::get_num_ranks();
+    const auto num_ranks = partition->get_number_mpi_ranks();
     set_total_number_placed_neurons(number_local_neurons * num_ranks);
 }
 

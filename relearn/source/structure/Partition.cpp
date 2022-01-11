@@ -14,7 +14,9 @@
 
 #include <sstream>
 
-Partition::Partition(const size_t num_ranks, const size_t my_rank) {
+Partition::Partition(const size_t num_ranks, const size_t my_rank)
+    : my_mpi_rank{ my_rank }
+    , number_mpi_ranks{ num_ranks } {
     RelearnException::check(num_ranks > 0, "Partition::Partition: Number of MPI ranks must be a positive number: {}", num_ranks);
     RelearnException::check(num_ranks > my_rank, "Partition::Partition: My rank must be smaller than number of ranks: {} vs {}", num_ranks, my_rank);
 
@@ -119,7 +121,7 @@ void Partition::print_my_subdomains_info_rank(const int rank) {
 void Partition::set_simulation_box_size(const box_size_type& min, const box_size_type& max) {
     const auto& [min_x, min_y, min_z] = min;
     const auto& [max_x, max_y, max_z] = max;
-    
+
     const auto half_constant = static_cast<double>(Constants::uninitialized) / 2;
 
     RelearnException::check(min_x < max_x, "Partition::set_simulation_box_size: minimum had a larger x than maximum: {} vs {}", min_x, max_x);

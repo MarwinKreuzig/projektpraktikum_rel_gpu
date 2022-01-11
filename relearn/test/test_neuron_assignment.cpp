@@ -532,14 +532,16 @@ TEST_F(NeuronAssignmentTest, testPerRankConstructorMultipleSubdomains) {
         const auto number_neurons = sfnpr.get_requested_number_neurons();
         const auto fraction_excitatory_neurons = sfnpr.get_requested_ratio_excitatory_neurons();
 
-        ASSERT_EQ(golden_number_neurons, number_neurons);
+        ASSERT_EQ(golden_number_neurons * golden_number_ranks, number_neurons);
 
         ASSERT_NEAR(golden_fraction_excitatory_neurons, fraction_excitatory_neurons, 1.0 / golden_number_neurons);
 
         const auto& [sim_box_min, sim_box_max] = part->get_simulation_box_size();
         const auto box_length = (sim_box_max - sim_box_min).get_maximum();
 
-        const auto golden_box_length = calculate_box_length(golden_number_neurons * golden_number_ranks, golden_um_per_neuron);
+        const auto number_neurons_per_box_max = ceil(static_cast<double>(golden_number_neurons) / part->get_number_local_subdomains());
+
+        const auto golden_box_length = calculate_box_length(number_neurons_per_box_max, golden_um_per_neuron) * part->get_number_subdomains_per_dimension();
         ASSERT_NEAR(box_length, golden_box_length, 1.0 / golden_number_neurons);
 
         ASSERT_EQ(0, sfnpr.get_number_placed_neurons());
