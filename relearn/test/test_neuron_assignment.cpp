@@ -352,8 +352,6 @@ TEST_F(NeuronAssignmentTest, testDensityNeuronAttributesSemanticMultipleSubdomai
     const auto golden_fraction_excitatory_neurons = get_random_percentage();
     const auto golden_um_per_neuron = get_random_percentage() * 100;
 
-    auto accumulated_placed_neurons = 0;
-
     for (auto rank = 0; rank < golden_number_ranks; rank++) {
         const auto part = std::make_shared<Partition>(golden_number_ranks, rank);
         SubdomainFromNeuronDensity sfnd{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
@@ -362,8 +360,6 @@ TEST_F(NeuronAssignmentTest, testDensityNeuronAttributesSemanticMultipleSubdomai
 
         const auto placed_number_neurons = sfnd.get_number_placed_neurons();
         const auto placed_ratio_excitatory_neurons = sfnd.get_ratio_placed_excitatory_neurons();
-
-        accumulated_placed_neurons += placed_number_neurons;
 
         const auto& all_positions = sfnd.get_neuron_positions_in_subdomains(number_subdomains_per_rank * rank, number_subdomains_per_rank * rank + number_subdomains_per_rank - 1, number_subdomains);
         const auto& all_types = sfnd.get_neuron_types_in_subdomains(number_subdomains_per_rank * rank, number_subdomains_per_rank * rank + number_subdomains_per_rank - 1, number_subdomains);
@@ -606,7 +602,198 @@ TEST_F(NeuronAssignmentTest, testPerRankInitializeMultipleSubdomains) {
         const auto placed_ratio_excitatory_neurons = sfnpr.get_ratio_placed_excitatory_neurons();
 
         ASSERT_EQ(placed_number_neurons, golden_number_neurons);
-        ASSERT_NEAR(golden_fraction_excitatory_neurons, placed_ratio_excitatory_neurons, 1.0 / golden_number_neurons);
+        ASSERT_NEAR(golden_fraction_excitatory_neurons, placed_ratio_excitatory_neurons, static_cast<double>(number_subdomains) / golden_number_neurons);
+    }
+}
+
+TEST_F(NeuronAssignmentTest, testPerRankNeuronAttributesSizesSingleSubdomain) {
+    const auto golden_number_neurons = get_random_number_neurons() + 100;
+    const auto golden_fraction_excitatory_neurons = get_random_percentage();
+    const auto golden_um_per_neuron = get_random_percentage() * 100;
+
+    const auto part = std::make_shared<Partition>(1, 0);
+    SubdomainFromNeuronPerRank sfnpr{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
+
+    sfnpr.initialize();
+
+    const auto placed_number_neurons = sfnpr.get_number_placed_neurons();
+    const auto placed_fraction_excitatory_neurons = sfnpr.get_ratio_placed_excitatory_neurons();
+
+    const auto& positions = sfnpr.get_neuron_positions_in_subdomain(0, 1);
+    const auto& types = sfnpr.get_neuron_types_in_subdomain(0, 1);
+    const auto& area_names = sfnpr.get_neuron_area_names_in_subdomain(0, 1);
+    const auto placed_number_neurons_in_subdomain = sfnpr.get_number_neurons_in_subdomain(0, 1);
+
+    ASSERT_EQ(placed_number_neurons, placed_number_neurons_in_subdomain);
+    ASSERT_EQ(placed_number_neurons, positions.size());
+    ASSERT_EQ(placed_number_neurons, types.size());
+    ASSERT_EQ(placed_number_neurons, area_names.size());
+
+    const auto& all_positions = sfnpr.get_neuron_positions_in_subdomains(0, 0, 1);
+    const auto& all_types = sfnpr.get_neuron_types_in_subdomains(0, 0, 1);
+    const auto& all_area_names = sfnpr.get_neuron_area_names_in_subdomains(0, 0, 1);
+    const auto all_placed_neurons_in_subdomains = sfnpr.get_number_neurons_in_subdomains(0, 0, 1);
+
+    ASSERT_EQ(placed_number_neurons, all_placed_neurons_in_subdomains);
+    ASSERT_EQ(placed_number_neurons, all_positions.size());
+    ASSERT_EQ(placed_number_neurons, all_types.size());
+    ASSERT_EQ(placed_number_neurons, all_area_names.size());
+}
+
+TEST_F(NeuronAssignmentTest, testPerRankNeuronAttributesSizeMultipleSubdomains) {
+    const auto golden_number_ranks = get_adjusted_random_number_ranks();
+    const auto number_subdomains = round_to_next_exponent(golden_number_ranks, 8);
+    const auto number_subdomains_per_rank = number_subdomains / golden_number_ranks;
+    const auto golden_number_neurons = get_random_number_neurons() + number_subdomains * 50;
+    const auto golden_fraction_excitatory_neurons = get_random_percentage();
+    const auto golden_um_per_neuron = get_random_percentage() * 100;
+
+    auto accumulated_placed_neurons = 0;
+
+    for (auto rank = 0; rank < golden_number_ranks; rank++) {
+        const auto part = std::make_shared<Partition>(golden_number_ranks, rank);
+        SubdomainFromNeuronPerRank sfnpr{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
+
+        sfnpr.initialize();
+
+        const auto placed_number_neurons = sfnpr.get_number_placed_neurons();
+        accumulated_placed_neurons += placed_number_neurons;
+
+        const auto& all_positions = sfnpr.get_neuron_positions_in_subdomains(number_subdomains_per_rank * rank, number_subdomains_per_rank * rank + number_subdomains_per_rank - 1, number_subdomains);
+        const auto& all_types = sfnpr.get_neuron_types_in_subdomains(number_subdomains_per_rank * rank, number_subdomains_per_rank * rank + number_subdomains_per_rank - 1, number_subdomains);
+        const auto& all_area_names = sfnpr.get_neuron_area_names_in_subdomains(number_subdomains_per_rank * rank, number_subdomains_per_rank * rank + number_subdomains_per_rank - 1, number_subdomains);
+        const auto all_placed_neurons_in_subdomains = sfnpr.get_number_neurons_in_subdomains(number_subdomains_per_rank * rank, number_subdomains_per_rank * rank + number_subdomains_per_rank - 1, number_subdomains);
+
+        ASSERT_EQ(placed_number_neurons, all_placed_neurons_in_subdomains);
+        ASSERT_EQ(placed_number_neurons, all_positions.size());
+        ASSERT_EQ(placed_number_neurons, all_types.size());
+        ASSERT_EQ(placed_number_neurons, all_area_names.size());
+
+        auto counter = 0;
+
+        for (auto subdomain_id = 0; subdomain_id < number_subdomains_per_rank; subdomain_id++) {
+            const auto& positions = sfnpr.get_neuron_positions_in_subdomain(number_subdomains_per_rank * rank + subdomain_id, number_subdomains);
+            const auto& types = sfnpr.get_neuron_types_in_subdomain(number_subdomains_per_rank * rank + subdomain_id, number_subdomains);
+            const auto& area_names = sfnpr.get_neuron_area_names_in_subdomain(number_subdomains_per_rank * rank + subdomain_id, number_subdomains);
+            const auto placed_neurons_in_subdomain = sfnpr.get_number_neurons_in_subdomain(number_subdomains_per_rank * rank + subdomain_id, number_subdomains);
+
+            ASSERT_EQ(placed_neurons_in_subdomain, positions.size());
+            ASSERT_EQ(placed_neurons_in_subdomain, types.size());
+            ASSERT_EQ(placed_neurons_in_subdomain, area_names.size());
+
+            counter += placed_neurons_in_subdomain;
+        }
+
+        ASSERT_EQ(counter, placed_number_neurons);
+    }
+
+    ASSERT_EQ(accumulated_placed_neurons, golden_number_ranks * golden_number_neurons);
+}
+
+TEST_F(NeuronAssignmentTest, testPerRankNeuronAttributesSemanticSingleSubdomain) {
+    const auto golden_number_neurons = get_random_number_neurons() + 100;
+    const auto golden_fraction_excitatory_neurons = get_random_percentage();
+    const auto golden_um_per_neuron = get_random_percentage() * 100;
+
+    const auto part = std::make_shared<Partition>(1, 0);
+    SubdomainFromNeuronPerRank sfnpr{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
+
+    sfnpr.initialize();
+
+    const auto placed_number_neurons_in_subdomain = sfnpr.get_number_placed_neurons();
+    const auto placed_ratio_excitatory_neurons = sfnpr.get_ratio_placed_excitatory_neurons();
+
+    const auto& positions = sfnpr.get_neuron_positions_in_subdomain(0, 1);
+    const auto& types = sfnpr.get_neuron_types_in_subdomain(0, 1);
+    const auto& area_names = sfnpr.get_neuron_area_names_in_subdomain(0, 1);
+
+    const auto calculated_ratio_excitatory_neurons = calculate_excitatory_fraction(types);
+    ASSERT_NEAR(placed_ratio_excitatory_neurons, calculated_ratio_excitatory_neurons, 1.0 / golden_number_neurons);
+
+    const auto& [sim_box_min, sim_box_max] = part->get_simulation_box_size();
+    const auto neurons_per_dimension = pow(golden_number_neurons, 1. / 3);
+    const auto number_boxes = static_cast<size_t>(ceil(neurons_per_dimension));
+
+    std::vector<bool> box_full(number_boxes * number_boxes * number_boxes, false);
+
+    for (const auto& position : positions) {
+        ASSERT_TRUE(position.check_in_box(sim_box_min, sim_box_max));
+        Vec3s cast_position = (Vec3s)(position / golden_um_per_neuron);
+
+        const auto x = cast_position.get_x();
+        const auto y = cast_position.get_y();
+        const auto z = cast_position.get_z();
+
+        ASSERT_LE(x, number_boxes);
+        ASSERT_LE(y, number_boxes);
+        ASSERT_LE(z, number_boxes);
+
+        const auto flag = box_full[z * number_boxes * number_boxes + y * number_boxes + x];
+
+        ASSERT_FALSE(flag);
+        box_full[z * number_boxes * number_boxes + y * number_boxes + x] = true;
+    }
+}
+
+TEST_F(NeuronAssignmentTest, testPerRankNeuronAttributesSemanticMultipleSubdomains) {
+    const auto golden_number_ranks = get_adjusted_random_number_ranks();
+    const auto number_subdomains = round_to_next_exponent(golden_number_ranks, 8);
+    const auto number_subdomains_per_rank = number_subdomains / golden_number_ranks;
+    const auto golden_number_neurons = get_random_number_neurons() + number_subdomains * 50;
+    const auto golden_fraction_excitatory_neurons = get_random_percentage();
+    const auto golden_um_per_neuron = get_random_percentage() * 100;
+
+    for (auto rank = 0; rank < golden_number_ranks; rank++) {
+        const auto part = std::make_shared<Partition>(golden_number_ranks, rank);
+        SubdomainFromNeuronPerRank sfnpr{ golden_number_neurons, golden_fraction_excitatory_neurons, golden_um_per_neuron, part };
+
+        sfnpr.initialize();
+
+        const auto placed_number_neurons = sfnpr.get_number_placed_neurons();
+        const auto placed_ratio_excitatory_neurons = sfnpr.get_ratio_placed_excitatory_neurons();
+
+        const auto& all_positions = sfnpr.get_neuron_positions_in_subdomains(number_subdomains_per_rank * rank, number_subdomains_per_rank * rank + number_subdomains_per_rank - 1, number_subdomains);
+        const auto& all_types = sfnpr.get_neuron_types_in_subdomains(number_subdomains_per_rank * rank, number_subdomains_per_rank * rank + number_subdomains_per_rank - 1, number_subdomains);
+        const auto all_placed_neurons_in_subdomains = sfnpr.get_number_neurons_in_subdomains(number_subdomains_per_rank * rank, number_subdomains_per_rank * rank + number_subdomains_per_rank - 1, number_subdomains);
+
+        const auto calculated_ratio_excitatory_neurons = calculate_excitatory_fraction(all_types);
+        ASSERT_NEAR(placed_ratio_excitatory_neurons, calculated_ratio_excitatory_neurons, static_cast<double>(number_subdomains) / golden_number_neurons) << golden_number_neurons;
+
+        for (auto subdomain_id = 0; subdomain_id < number_subdomains_per_rank; subdomain_id++) {
+            const auto& positions = sfnpr.get_neuron_positions_in_subdomain(number_subdomains_per_rank * rank + subdomain_id, number_subdomains);
+            const auto& types = sfnpr.get_neuron_types_in_subdomain(number_subdomains_per_rank * rank + subdomain_id, number_subdomains);
+            const auto placed_neurons_in_subdomain = sfnpr.get_number_neurons_in_subdomain(number_subdomains_per_rank * rank + subdomain_id, number_subdomains);
+
+            const auto calculated_ratio_excitatory_neurons_subdomain = calculate_excitatory_fraction(types);
+            ASSERT_NEAR(placed_ratio_excitatory_neurons, calculated_ratio_excitatory_neurons_subdomain, static_cast<double>(number_subdomains) / placed_neurons_in_subdomain) << golden_number_neurons;
+
+            const auto& [subdomain_min, subdomain_max] = part->get_subdomain_boundaries(subdomain_id);
+
+            const auto& subdomain_length = subdomain_max - subdomain_min;
+            const auto& boxes_in_subdomain = subdomain_length / golden_um_per_neuron;
+
+            const auto number_boxes = static_cast<size_t>(ceil(boxes_in_subdomain.calculate_p_norm(1.0)));
+
+            std::vector<bool> box_full(number_boxes * number_boxes * number_boxes, false);
+
+            for (const auto& position : positions) {
+                ASSERT_TRUE(position.check_in_box(subdomain_min, subdomain_max));
+                Vec3s cast_position = (Vec3s)((position - subdomain_min) / golden_um_per_neuron);
+
+                const auto x = cast_position.get_x();
+                const auto y = cast_position.get_y();
+                const auto z = cast_position.get_z();
+
+                ASSERT_LE(x, number_boxes);
+                ASSERT_LE(y, number_boxes);
+                ASSERT_LE(z, number_boxes);
+
+                const auto flag = box_full[z * number_boxes * number_boxes + y * number_boxes + x];
+
+                ASSERT_FALSE(flag);
+                box_full[z * number_boxes * number_boxes + y * number_boxes + x] = true;
+            }
+        }
     }
 }
 
