@@ -210,7 +210,7 @@ TEST_F(NeuronAssignmentTest, testDensityInitializeMultipleSubdomains) {
 
     ASSERT_LE(difference_neurons, number_subdomains);
 
-    ASSERT_NEAR(golden_fraction_excitatory_neurons, actual_ratio_excitatory_neurons, static_cast<double>(number_subdomains) / golden_number_neurons) << accumulated_placed_neurons << ' ' << number_subdomains;
+    ASSERT_NEAR(golden_fraction_excitatory_neurons, actual_ratio_excitatory_neurons, 2.0 * static_cast<double>(number_subdomains) / golden_number_neurons) << accumulated_placed_neurons << ' ' << number_subdomains;
 }
 
 TEST_F(NeuronAssignmentTest, testDensityNeuronAttributesSizesSingleSubdomain) {
