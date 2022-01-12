@@ -144,6 +144,12 @@ void Timers::print() {
     sstring << "      Find target neurons (w/ RMA)             : ";
     print_timer(sstring, TimerRegion::FIND_TARGET_NEURONS, timers_global);
 
+    sstring << "        FMM: Calculate Taylor Coefficients     : ";
+    print_timer(sstring, TimerRegion::CALC_TAYLOR_COEFFICIENTS, timers_global);
+
+    sstring << "        FMM: Calculate Hermite Coefficients    : ";
+    print_timer(sstring, TimerRegion::CALC_HERMITE_COEFFICIENTS, timers_global);
+
     sstring << "      Empty remote nodes cache                 : ";
     print_timer(sstring, TimerRegion::EMPTY_REMOTE_NODES_CACHE, timers_global);
 

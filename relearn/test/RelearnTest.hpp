@@ -11,6 +11,8 @@
 #include "gtest/gtest.h"
 
 #include "../../../source/algorithm/BarnesHutCell.h"
+#include "../../../source/algorithm/FastMultipoleMethodsCell.h"
+#include "../../../source/structure/OctreeNode.h"
 #include "../../../source/mpi/MPIWrapper.h"
 #include "../../../source/io/LogFiles.h"
 #include "../../../source/structure/OctreeNode.h"
@@ -29,29 +31,39 @@
 
 class NeuronsExtraInfo;
 
-class RelearnTest : public ::testing::Test {
-private:
-    static void init() {
-        static bool initialized = false;
+inline bool initialized = false;
 
-        if (initialized) {
+class RelearnTest : public ::testing::Test {
+protected:
+    template <typename AdditionalCellAttributes>
+    static void init() {
+
+        static bool template_initialized = false;
+
+        if (template_initialized) {
             return;
         }
 
-        initialized = true;
+        if (!initialized) {
+            initialized = true;
 
-        char* argument = (char*)"./runTests";
-        MPIWrapper::init(1, &argument);
-        MPIWrapper::init_buffer_octree<BarnesHutCell>();
+            char* argument = (char*)"./runTests";
+            MPIWrapper::init(1, &argument);
+        }
+        MPIWrapper::init_buffer_octree<AdditionalCellAttributes>();
+        template_initialized = true;
     }
 
 protected:
-    static void SetUpTestCase() {
+    template <typename AdditionalCellAttributes>
+    static void SetUpTestCaseTemplate() {
         RelearnException::hide_messages = true;
         LogFiles::disable = true;
 
-        init();
+        init<AdditionalCellAttributes>();
     }
+
+    static void SetUpTestCase();
 
     static void TearDownTestCase() {
         RelearnException::hide_messages = false;
@@ -78,8 +90,9 @@ protected:
         std::cerr << "Test finished\n";
     }
 
+    template <typename AdditionalCellAttributes>
     void make_mpi_mem_available() {
-        MemoryHolder<BarnesHutCell>::make_all_available();
+        MemoryHolder<AdditionalCellAttributes>::make_all_available();
     }
 
     size_t round_to_next_exponent(size_t numToRound, size_t exponent) {
@@ -249,6 +262,10 @@ protected:
     static int num_ranks;
     static int num_synapses_per_neuron;
 
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+
     template <typename T>
     void erase_empty(std::map<T, int>& edges) {
         for (auto iterator = edges.begin(); iterator != edges.end();) {
@@ -276,6 +293,9 @@ protected:
 
 class NeuronAssignmentTest : public RelearnTest {
 protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
     double calculate_box_length(const size_t number_neurons, const double um_per_neuron) const noexcept {
         return ceil(pow(static_cast<double>(number_neurons), 1 / 3.)) * um_per_neuron;
     }
@@ -287,14 +307,25 @@ protected:
 };
 
 class NeuronModelsTest : public RelearnTest {
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
 };
 
 class RankNeuronIdTest : public RelearnTest {
-
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
 };
 
 class NeuronsTest : public RelearnTest {
 protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+
     void assert_empty(const NeuronsExtraInfo& nei, size_t number_neurons);
 
     void assert_contains(const NeuronsExtraInfo& nei, size_t number_neurons, size_t num_neurons_check,
@@ -303,6 +334,10 @@ protected:
 
 class CellTest : public RelearnTest {
 protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+
     template <typename AdditionalCellAttributes>
     void test_cell_size();
 
@@ -341,16 +376,38 @@ protected:
 };
 
 class OctreeTest : public RelearnTest {
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
+class OctreeTestFMM : public RelearnTest {
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<FastMultipoleMethodsCell>();
+    }
 };
 
 class PartitionTest : public RelearnTest {
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
 };
 
 class SynapticElementsTest : public RelearnTest {
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
 };
 
 class VectorTest : public RelearnTest {
 protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
     double get_random_vector_element() noexcept {
         return uniform_vector_elements(mt);
     }
@@ -363,4 +420,8 @@ private:
 };
 
 class SpaceFillingCurveTest : public RelearnTest {
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
 };

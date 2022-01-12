@@ -50,6 +50,10 @@ void Simulation::set_acceptance_criterion_for_barnes_hut(const double value) {
     accept_criterion = value;
 }
 
+void Simulation::set_probabilty_scaling_parameter(const double value) {
+    sigma = value;
+}
+
 void Simulation::set_neuron_model(std::unique_ptr<NeuronModel>&& nm) noexcept {
     neuron_models = std::move(nm);
 }
@@ -177,10 +181,12 @@ void Simulation::initialize() {
         auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHut>>(global_tree);
         auto algorithm_barnes_hut = std::make_shared<BarnesHut>(std::move(cast));
         algorithm_barnes_hut->set_acceptance_criterion(accept_criterion);
+        algorithm_barnes_hut->set_probability_parameter(sigma);
         algorithm = std::move(algorithm_barnes_hut);
     } else {
         auto cast = std::static_pointer_cast<OctreeImplementation<FastMultipoleMethods>>(global_tree);
         auto algorithm_barnes_hut = std::make_shared<FastMultipoleMethods>(std::move(cast));
+        algorithm_barnes_hut->set_probability_parameter(sigma);
         algorithm = std::move(algorithm_barnes_hut);
     }
 
@@ -222,8 +228,8 @@ void Simulation::simulate(const size_t number_steps) {
     const auto previous_synapse_deletions = total_synapse_deletions;
 
     /**
-	 * Simulation loop
-	 */
+     * Simulation loop
+     */
     for (size_t step = 1; step <= number_steps; step++) {
         if (step % Config::monitor_step == 0) {
             const auto number_neurons = neurons->get_num_neurons();

@@ -283,6 +283,22 @@ public:
     }
 
     /**
+     * @brief Get all local branch nodes
+     * @return a vector the local branch nodes
+     */
+    std::vector<const OctreeNode<AdditionalCellAttributes>*> get_local_branch_nodes() const {
+        std::vector<const OctreeNode<AdditionalCellAttributes>*> result;
+        for (const auto& node: branch_nodes){
+            if(! node->is_local()){
+                continue;
+            }
+            result.emplace_back(node);
+        }
+
+        return result;
+    }
+
+    /**
      * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes
      * @param max_level The maximum level (inclusive) on which the nodes should be updated
      * @exception Throws a RelearnException if the functor throws

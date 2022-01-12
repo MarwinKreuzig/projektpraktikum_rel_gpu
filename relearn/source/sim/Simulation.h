@@ -62,6 +62,12 @@ public:
     void set_acceptance_criterion_for_barnes_hut(double value);
 
     /**
+     * @brief Set the probabilty scaling parameter (sigma).
+     * @param value The probabilty scaling parameter
+     */
+    void set_probabilty_scaling_parameter(double value);
+
+    /**
      * @brief Sets the neuron model used for the simulation
      * @param nm The neuron model
      */
@@ -157,9 +163,9 @@ public:
     void increase_monitoring_capacity(size_t size);
 
     /**
-	 * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned
+     * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned
      * @return A vector with all inherited classes
-	 */
+     */
     static std::vector<std::unique_ptr<NeuronModel>> get_models();
 
     /**
@@ -255,6 +261,7 @@ private:
     std::function<double(size_t)> target_calcium_calculator{};
     std::function<double(size_t)> initial_calcium_initiator{};
 
+    double sigma{ 750 };
     double accept_criterion{ 0.0 };
 
     AlgorithmEnum algorithm_enum{};
