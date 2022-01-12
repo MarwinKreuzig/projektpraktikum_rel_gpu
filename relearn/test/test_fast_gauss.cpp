@@ -116,15 +116,15 @@ std::vector<SynapticElements> create_synaptic_elements(size_t size, std::mt19937
             dend_ex.set_signal_type(i, SignalType::EXCITATORY);
             dend_in.set_signal_type(i, SignalType::EXCITATORY);
 
-            ax.update_count(i, urd(mt));
-            dend_ex.update_count(i, urd(mt));
+            ax.update_grown_elements(i, urd(mt));
+            dend_ex.update_grown_elements(i, urd(mt));
         } else {
             ax.set_signal_type(i, SignalType::INHIBITORY);
             dend_ex.set_signal_type(i, SignalType::INHIBITORY);
             dend_in.set_signal_type(i, SignalType::INHIBITORY);
 
-            ax.update_count(i, urd(mt));
-            dend_in.update_count(i, urd(mt));
+            ax.update_grown_elements(i, urd(mt));
+            dend_in.update_grown_elements(i, urd(mt));
         }
     }
     std::vector<SynapticElements> result{};
@@ -148,7 +148,7 @@ SynapticElements create_axons(size_t size, std::mt19937& mt, double max_free) {
         } else {
             se.set_signal_type(i, SignalType::INHIBITORY);
         }
-        se.update_count(i, urd(mt));
+        se.update_grown_elements(i, urd(mt));
     }
 
     return se;
@@ -186,7 +186,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
 
         FastMultipoleMethods fmm{ octree_ptr };
 
-        std::vector<char> disable_flags(num_neurons, 1);
+        std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::ENABLED);
 
         const auto max_vacant_elements = uid_max_vacant(mt);
 
@@ -221,8 +221,8 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
                     stack.emplace(child);
                 }
             } else {
-                sum_dends_exc = static_cast<size_t>(unique_dend_exc->get_count(current->get_cell_neuron_id()));
-                sum_dends_inh = static_cast<size_t>(unique_dend_inh->get_count(current->get_cell_neuron_id()));
+                sum_dends_exc = static_cast<size_t>(unique_dend_exc->get_grown_elements(current->get_cell_neuron_id()));
+                sum_dends_inh = static_cast<size_t>(unique_dend_inh->get_grown_elements(current->get_cell_neuron_id()));
             }
 
             ASSERT_EQ(current->get_cell().get_number_excitatory_dendrites(), sum_dends_exc);
@@ -269,7 +269,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
 
         FastMultipoleMethods fmm{ octree_ptr };
 
-        std::vector<char> disable_flags(num_neurons, 1);
+        std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::ENABLED);
 
         fmm.update_leaf_nodes(disable_flags, unique_ax, unique_dend_exc, unique_dend_inh);
         octree.update_local_trees();
@@ -411,7 +411,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
 
         FastMultipoleMethods fmm{ octree_ptr };
 
-        std::vector<char> disable_flags(num_neurons, 1);
+        std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::ENABLED);
 
         const auto max_vacant_elements = uid_max_vacant(mt);
 
@@ -449,9 +449,9 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
                 auto const id = current->get_cell_neuron_id();
                 auto const st = unique_ax->get_signal_type(id);
                 if (st == SignalType::EXCITATORY) {
-                    sum_axons_exc = static_cast<size_t>(unique_ax->get_count(id));
+                    sum_axons_exc = static_cast<size_t>(unique_ax->get_grown_elements(id));
                 } else {
-                    sum_axons_inh = static_cast<size_t>(unique_ax->get_count(id));
+                    sum_axons_inh = static_cast<size_t>(unique_ax->get_grown_elements(id));
                 }
             }
 
@@ -499,7 +499,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
 
         FastMultipoleMethods fmm{ octree_ptr };
 
-        std::vector<char> disable_flags(num_neurons, 1);
+        std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::ENABLED);
 
         fmm.update_leaf_nodes(disable_flags, unique_ax, unique_dend_exc, unique_dend_inh);
         octree.update_local_trees();
@@ -705,7 +705,6 @@ protected:
     size_t fac_multiindex(const std::array<unsigned int, 3>& x) { return FastMultipoleMethods::Utilities::fac_multiindex(x); }
     size_t abs_multiindex(const std::array<unsigned int, 3>& x) { return FastMultipoleMethods::Utilities::abs_multiindex(x); }
     double pow_multiindex(const Vec3d& base_vector, const std::array<unsigned int, 3>& exponent) { return FastMultipoleMethods::Utilities::pow_multiindex(base_vector, exponent); }
-   
 };
 
 TEST_F(FMMPrivateFunctionTest, test_static_functions) {

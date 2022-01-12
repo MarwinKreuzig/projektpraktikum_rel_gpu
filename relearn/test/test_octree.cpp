@@ -481,8 +481,7 @@ TEST_F(OctreeTest, testOctreeConstructorExceptions) {
 
     ASSERT_THROW(OctreeImplementation<BarnesHut> octree(max_xyz, min_xyz, level_of_branch_nodes), RelearnException);
 
-        make_mpi_mem_available<AdditionalCellAttributes>();
-    }
+    make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TEST_F(OctreeTest, testOctreeSetterGetter) {
@@ -503,8 +502,7 @@ TEST_F(OctreeTest, testOctreeSetterGetter) {
     ASSERT_EQ(octree.get_xyz_max(), max);
     ASSERT_EQ(octree.get_xyz_min(), min);
 
-        make_mpi_mem_available<AdditionalCellAttributes>();
-    }
+    make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
@@ -597,8 +595,7 @@ TEST_F(OctreeTest, testOctreeInsertNeurons) {
         ASSERT_EQ(expected_neuron, found_neuron);
     }
 
-        make_mpi_mem_available<AdditionalCellAttributes>();
-    }
+    make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TEST_F(OctreeTest, testOctreeInsertNeuronsExceptions) {
@@ -645,8 +642,7 @@ TEST_F(OctreeTest, testOctreeInsertNeuronsExceptions) {
         ASSERT_THROW(octree.insert(pos_invalid_z_min, id, rank), RelearnException);
     }
 
-        make_mpi_mem_available<AdditionalCellAttributes>();
-    }
+    make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TEST_F(OctreeTest, testOctreeStructure) {
@@ -738,8 +734,7 @@ TEST_F(OctreeTest, testOctreeStructure) {
         }
     }
 
-        make_mpi_mem_available<AdditionalCellAttributes>();
-    }
+    make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TEST_F(OctreeTest, testOctreeLocalTrees) {
@@ -782,8 +777,7 @@ TEST_F(OctreeTest, testOctreeLocalTrees) {
         ASSERT_EQ(local_tree, branch_node);
     }
 
-        make_mpi_mem_available<AdditionalCellAttributes>();
-    }
+    make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TEST_F(OctreeTest, testOctreeInsertLocalTree) {
@@ -899,8 +893,7 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
         delete nodes_to_save_new_local_trees[i];
     }
 
-        make_mpi_mem_available<AdditionalCellAttributes>();
-    }
+    make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
@@ -975,8 +968,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
         ASSERT_EQ(current->get_cell().get_number_inhibitory_dendrites(), sum_dends_inh);
     }
 
-        make_mpi_mem_available<AdditionalCellAttributes>();
-    }
+    make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
@@ -1118,6 +1110,5 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
         }
     }
 
-        make_mpi_mem_available<AdditionalCellAttributes>();
-    }
+    make_mpi_mem_available<AdditionalCellAttributes>();
 }

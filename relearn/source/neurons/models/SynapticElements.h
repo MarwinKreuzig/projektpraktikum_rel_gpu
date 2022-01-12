@@ -218,7 +218,7 @@ public:
     void update_grown_elements(const size_t neuron_id, const double delta) {
         RelearnException::check(neuron_id < grown_elements.size(), "SynapticElements::update_grown_elements: neuron_id is too large: {}", neuron_id);
         grown_elements[neuron_id] += delta;
-        RelearnException::check(grown_elements[neuron_id] >= 0.0, "SynapticElements::update_grown_elements: update_count was negative");
+        RelearnException::check(grown_elements[neuron_id] >= 0.0, "SynapticElements::update_grown_elements: update_grown_elements was negative");
     }
 
     /**

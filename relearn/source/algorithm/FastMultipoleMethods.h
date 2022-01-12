@@ -205,7 +205,7 @@ public:
    * @exception Can throw a RelearnException
    * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. 
    */
-    MapSynapseCreationRequests find_target_neurons(const size_t number_neurons, const std::vector<char>& disable_flags,
+    MapSynapseCreationRequests find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) override;
 
 private:
@@ -330,7 +330,7 @@ private:
         return i;
     }
 
-     /**
+    /**
      * This class contains service functions that are independent of class attributes, but are required for the FMM class.
      */
     class Utilities {
