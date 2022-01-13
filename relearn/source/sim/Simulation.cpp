@@ -281,11 +281,14 @@ void Simulation::simulate(const size_t number_steps) {
 
         // Calc how many synaptic elements grow/retract
         // Apply the change in number of elements during connectivity update
-        Timers::start(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
-        neurons->update_number_synaptic_elements_delta();
-        Timers::stop_and_add(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
 
-        if (step % Config::plasticity_update_step == 0 && step >= Config::first_plasticity_update) {
+        if (step >= Config::first_plasticity_update) {
+            Timers::start(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
+            neurons->update_number_synaptic_elements_delta();
+            Timers::stop_and_add(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
+        }
+
+        if (step % Config::plasticity_update_step == 0) {
             Timers::start(TimerRegion::UPDATE_CONNECTIVITY);
 
             const auto& [num_synapses_deleted, num_synapses_created] = neurons->update_connectivity();

@@ -1488,7 +1488,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredPoisson) {
 
     const auto number_neurons = get_random_number_neurons();
 
-    std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, number_neurons);
+    std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1u, static_cast<unsigned int>(number_neurons));
     const auto num_disables = uid_num_neurons_disables(mt);
 
     const auto disable_ids = generate_random_ids(0, number_neurons - 1, num_disables, mt);
@@ -1549,7 +1549,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredIzhikevich) {
 
     const auto number_neurons = get_random_number_neurons();
 
-    std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, number_neurons);
+    std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1u, static_cast<unsigned int>(number_neurons));
     const auto num_disables = uid_num_neurons_disables(mt);
 
     const auto disable_ids = generate_random_ids(0, number_neurons - 1, num_disables, mt);
@@ -1600,7 +1600,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredFitzHughNagumo) {
 
     const auto number_neurons = get_random_number_neurons();
 
-    std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, number_neurons);
+    std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1u, static_cast<unsigned int>(number_neurons));
     const auto num_disables = uid_num_neurons_disables(mt);
 
     const auto disable_ids = generate_random_ids(0, number_neurons - 1, num_disables, mt);
@@ -1663,7 +1663,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredAEIF) {
 
     const auto number_neurons = get_random_number_neurons();
 
-    std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1, number_neurons);
+    std::uniform_int_distribution<unsigned int> uid_num_neurons_disables(1u, static_cast<unsigned int>(number_neurons));
     const auto num_disables = uid_num_neurons_disables(mt);
 
     const auto disable_ids = generate_random_ids(0, number_neurons - 1, num_disables, mt);

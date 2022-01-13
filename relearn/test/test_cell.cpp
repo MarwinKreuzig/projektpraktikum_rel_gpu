@@ -259,8 +259,8 @@ void CellTest::test_cell_set_number_dendrites() {
     const auto num_dends_ex_1 = get_random_number_neurons();
     const auto num_dends_in_1 = get_random_number_neurons();
 
-    cell.set_number_excitatory_dendrites(num_dends_ex_1);
-    cell.set_number_inhibitory_dendrites(num_dends_in_1);
+    cell.set_number_excitatory_dendrites(static_cast<Cell<AdditionalCellAttributes>::counter_type>(num_dends_ex_1));
+    cell.set_number_inhibitory_dendrites(static_cast<Cell<AdditionalCellAttributes>::counter_type>(num_dends_in_1));
 
     ASSERT_EQ(num_dends_ex_1, cell.get_number_excitatory_dendrites());
     ASSERT_EQ(num_dends_ex_1, cell.get_number_dendrites_for(SignalType::EXCITATORY));
@@ -270,8 +270,8 @@ void CellTest::test_cell_set_number_dendrites() {
     const auto num_dends_ex_2 = get_random_number_neurons();
     const auto num_dends_in_2 = get_random_number_neurons();
 
-    cell.set_number_excitatory_dendrites(num_dends_ex_2);
-    cell.set_number_inhibitory_dendrites(num_dends_in_2);
+    cell.set_number_excitatory_dendrites(static_cast<Cell<AdditionalCellAttributes>::counter_type>(num_dends_ex_2));
+    cell.set_number_inhibitory_dendrites(static_cast<Cell<AdditionalCellAttributes>::counter_type>(num_dends_in_2));
 
     ASSERT_EQ(num_dends_ex_2, cell.get_number_excitatory_dendrites());
     ASSERT_EQ(num_dends_ex_2, cell.get_number_dendrites_for(SignalType::EXCITATORY));
@@ -389,13 +389,13 @@ void CellTest::test_vpe_number_elements() {
     ASSERT_EQ(number_initially_free_elements, 0) << number_initially_free_elements;
 
     const auto nfe_1 = get_random_number_neurons();
-    vpe.set_number_free_elements(nfe_1);
+    vpe.set_number_free_elements(static_cast<VirtualPlasticityElement::counter_type>(nfe_1));
 
     const auto& number_free_elements_1 = vpe.get_number_free_elements();
     ASSERT_EQ(number_free_elements_1, nfe_1) << number_free_elements_1 << ' ' << nfe_1;
 
     const auto nfe_2 = get_random_number_neurons();
-    vpe.set_number_free_elements(nfe_2);
+    vpe.set_number_free_elements(static_cast<VirtualPlasticityElement::counter_type>(nfe_2));
 
     const auto& number_free_elements_2 = vpe.get_number_free_elements();
     ASSERT_EQ(number_free_elements_2, nfe_2) << number_free_elements_2 << ' ' << nfe_2;

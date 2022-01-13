@@ -113,10 +113,16 @@ TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonConstructor) {
 TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonConstructorException) {
     const auto refinement_level = get_random_refinement_level() + Constants::max_lvl_subdomains + 1;
 
-    std::stringstream ss{};
-    ss << "Refinement level: " << refinement_level;
+    if (refinement_level > std::numeric_limits<uint8_t>::max()) {
+        return;
+    }
 
-    ASSERT_THROW(SpaceFillingCurve<Morton> sfc(refinement_level);, RelearnException) << ss.str();
+    const auto cast_refinement_level = static_cast<uint8_t>(refinement_level);
+
+    std::stringstream ss{};
+    ss << "Refinement level: " << cast_refinement_level;
+
+    ASSERT_THROW(SpaceFillingCurve<Morton> sfc(cast_refinement_level);, RelearnException) << ss.str();
 }
 
 TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonSetRefinementException) {
@@ -124,10 +130,16 @@ TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonSetRefinementException)
 
     const auto refinement_level = get_random_refinement_level() + Constants::max_lvl_subdomains + 1;
 
-    std::stringstream ss{};
-    ss << "Refinement level: " << refinement_level;
+    if (refinement_level > std::numeric_limits<uint8_t>::max()) {
+        return;
+    }
 
-    ASSERT_THROW(sfc.set_refinement_level(refinement_level);, RelearnException) << ss.str();
+    const auto cast_refinement_level = static_cast<uint8_t>(refinement_level);
+
+    std::stringstream ss{};
+    ss << "Refinement level: " << cast_refinement_level;
+
+    ASSERT_THROW(sfc.set_refinement_level(cast_refinement_level);, RelearnException) << ss.str();
 }
 
 TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonTranslationBruteForce) {

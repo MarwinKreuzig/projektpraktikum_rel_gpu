@@ -547,7 +547,7 @@ private:
          * @brief Returns the number of all three-dimensional indices that the multi-index has. This depends on the selected p.
          * @return Returns the number of all indices.
          */
-        static constexpr size_t
+        static constexpr unsigned int
         get_number_of_indices() noexcept {
             return Constants::p3;
         }

@@ -166,7 +166,7 @@ public:
      * @exception Throws a RelearnException if the calculate_local_ids has not been called
      * @return Returns the MPI rank that is responsible for the position
      */
-    [[nodiscard]] size_t get_mpi_rank_from_position(const position_type& position) const {
+    [[nodiscard]] int get_mpi_rank_from_position(const position_type& position) const {
         const auto half_constant = static_cast<double>(Constants::uninitialized) / 2;
 
         RelearnException::check(simulation_box_minimum.get_x() < half_constant, "Partition::get_mpi_rank_from_position: Neurons are not loaded yet");
@@ -185,7 +185,9 @@ public:
 
         const size_t rank = id_1d / number_local_subdomains;
 
-        return rank;
+        const auto cast_rank = static_cast<int>(rank);
+
+        return cast_rank;
     }
 
     /**
@@ -300,7 +302,7 @@ public:
         const auto& [sim_box_min, sim_box_max] = get_simulation_box_size();
         const auto& simulation_box_length = (sim_box_max - sim_box_min);
 
-        const auto& subdomain_length = simulation_box_length / number_subdomains_per_dimension;
+        const auto& subdomain_length = simulation_box_length / static_cast<box_size_type::value_type>(number_subdomains_per_dimension);
         
         const auto& [subdomain_length_x, subdomain_length_y, subdomain_length_z] = subdomain_length;
 

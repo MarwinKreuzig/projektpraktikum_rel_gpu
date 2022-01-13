@@ -57,7 +57,11 @@ Partition::Partition(const size_t num_ranks, const size_t my_rank)
 	 * Thus, number of local_subdomains per dimension (3d) is (2^(3*level_of_subdomain_trees))^(1/3) = 2^level_of_subdomain_trees.
 	 */
     number_subdomains_per_dimension = 1ULL << level_of_subdomain_trees;
-    space_curve.set_refinement_level(level_of_subdomain_trees);
+
+    if (level_of_subdomain_trees > std::numeric_limits<uint8_t>::max()) {
+        RelearnException::fail("Partition::Partition: level_of_subdomain_trees was too large: {}", level_of_subdomain_trees);
+    }
+    space_curve.set_refinement_level(static_cast<uint8_t>(level_of_subdomain_trees));
 
     // Calc start and end index of subdomain
     local_subdomain_id_start = (total_number_subdomains / num_ranks) * my_rank;

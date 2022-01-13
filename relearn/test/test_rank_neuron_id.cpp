@@ -6,7 +6,7 @@
 
 TEST_F(RankNeuronIdTest, testNeuronRankIdValid) {
     for (auto i = 0; i < 1000; i++) {
-        const int rank = get_random_number_ranks();
+        const auto rank = static_cast<int>(get_random_number_ranks());
         const auto id = get_random_number_neurons();
 
         const RankNeuronId rni{ rank, id };
@@ -30,7 +30,7 @@ TEST_F(RankNeuronIdTest, testNeuronRankIdInvalidRank) {
 
 TEST_F(RankNeuronIdTest, testNeuronRankIdInvalidId) {
     for (auto i = 0; i < 1000; i++) {
-        const int rank = get_random_number_ranks();
+        const auto rank = static_cast<int>(get_random_number_ranks());
         const auto id = get_random_number_neurons();
 
         RankNeuronId rni(rank, id + Constants::uninitialized);
@@ -42,10 +42,10 @@ TEST_F(RankNeuronIdTest, testNeuronRankIdInvalidId) {
 
 TEST_F(RankNeuronIdTest, testNeuronRankIdEquality) {
     for (auto i = 0; i < 1000; i++) {
-        const int rank_1 = get_random_number_ranks();
+        const auto rank_1 = static_cast<int>(get_random_number_ranks());
         const auto id_1 = get_random_number_neurons();
 
-        const int rank_2 = get_random_number_ranks();
+        const auto rank_2 = static_cast<int>(get_random_number_ranks());
         const auto id_2 = get_random_number_neurons();
 
         const RankNeuronId rni_1(rank_1, id_1);

@@ -211,23 +211,23 @@ TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
         const auto out_edges_count = ng.get_number_out_edges(neuron_id);
 
         const auto golden_excitatory_in_edges_count = std::accumulate(golden_in_edges.cbegin(), golden_in_edges.cend(),
-            0, [](const std::size_t previous, const std::pair<size_t, int>& p) {
+            size_t(0), [](const std::size_t previous, const std::pair<size_t, int>& p) {
                 if (p.second < 0) {
                     return previous;
                 }
-                return previous + p.second;
+                return previous + static_cast<size_t>(p.second);
             });
 
         const auto golden_inhibitory_in_edges_count = std::accumulate(golden_in_edges.cbegin(), golden_in_edges.cend(),
-            0, [](const std::size_t previous, const std::pair<size_t, int>& p) {
+            size_t(0), [](const std::size_t previous, const std::pair<size_t, int>& p) {
                 if (p.second > 0) {
                     return previous;
                 }
-                return previous - p.second;
+                return previous + static_cast<size_t>(std::abs(p.second));
             });
 
         const auto golden_out_edges_count = std::accumulate(golden_out_edges.cbegin(), golden_out_edges.cend(),
-            0, [](const std::size_t previous, const std::pair<size_t, int>& p) {
+            size_t(0), [](const std::size_t previous, const std::pair<size_t, int>& p) {
                 return previous + std::abs(p.second);
             });
 
@@ -306,8 +306,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphDistantEdges) {
     std::map<std::tuple<RankNeuronId, RankNeuronId>, int> golden_connections{};
 
     for (auto synapse_id = 0; synapse_id < num_synapses; synapse_id++) {
-        const int source_rank = get_random_number_ranks();
-        const int target_rank = get_random_number_ranks();
+        const int source_rank = static_cast<int>(get_random_number_ranks());
+        const int target_rank = static_cast<int>(get_random_number_ranks());
 
         auto source_id = get_random_neuron_id(num_neurons_1);
         auto target_id = get_random_neuron_id(num_neurons_1);
@@ -354,7 +354,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
     std::map<size_t, std::map<RankNeuronId, int>> out_edges;
 
     for (size_t edge_id = 0; edge_id < number_synapses; edge_id++) {
-        const int other_rank = get_random_number_ranks();
+        const int other_rank = static_cast<int>(get_random_number_ranks());
         const auto my_neuron_id = get_random_neuron_id(number_neurons);
         const auto other_neuron_id = get_random_neuron_id(number_neurons);
 
@@ -432,7 +432,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesSplit) {
     NetworkGraph ng(number_neurons, 0);
 
     for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
-        const int other_rank = get_random_number_ranks();
+        const int other_rank = static_cast<int>(get_random_number_ranks());
         const auto neuron_id = get_random_neuron_id(number_neurons);
         const auto other_neuron_id = get_random_neuron_id(number_neurons);
 
@@ -517,7 +517,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
     std::vector<std::tuple<size_t, int, size_t, int, int>> synapses(num_edges);
 
     for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
-        const int other_rank = get_random_number_ranks();
+        const int other_rank = static_cast<int>(get_random_number_ranks());
         const auto neuron_id = get_random_neuron_id(number_neurons);
         const auto other_neuron_id = get_random_neuron_id(number_neurons);
 
@@ -579,7 +579,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
     std::map<RankNeuronId, std::map<RankNeuronId, int>> out_edges;
 
     for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
-        const int other_rank = get_random_number_ranks();
+        const int other_rank = static_cast<int>(get_random_number_ranks());
         const auto neuron_id = get_random_neuron_id(number_neurons);
         const auto other_neuron_id = get_random_neuron_id(number_neurons);
 
@@ -611,7 +611,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
     ng.create_neurons(num_new_neurons);
 
     for (size_t edge_id = num_edges; edge_id < total_num_edges; edge_id++) {
-        const int other_rank = get_random_number_ranks();
+        const int other_rank = static_cast<int>(get_random_number_ranks());
         const auto neuron_id = get_random_neuron_id(number_neurons);
         const auto other_neuron_id = get_random_neuron_id(number_neurons);
 

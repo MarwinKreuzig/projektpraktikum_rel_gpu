@@ -227,7 +227,7 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
             get_rid_of_null_elements(ElementType::AXON, source_list);
 
             const auto count = Utilities::count_non_zero_elements(source_list);
-            for (auto i = 0; i < count; i++) {
+            for (unsigned int i = 0; i < count; i++) {
                 nodes_with_axons.emplace_back(Utilities::extract_element(source_list, i), std::move(target_list));
             }
         } else {
@@ -306,7 +306,7 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect(const O
     bool init = false;
 
     // For every target calculate the attractiveness
-    for (auto i = 0; i < target_list_length; i++) {
+    for (unsigned int i = 0; i < target_list_length; i++) {
         const auto* current_target = Utilities::extract_element(interaction_list, i);
         const auto current_calculation = check_calculation_requirements(source, current_target, signal_type_needed);
 
@@ -412,7 +412,7 @@ double FastMultipoleMethods::calc_taylor(const OctreeNode<FastMultipoleMethodsCe
 
     // calculate attractiveness
     const auto children_counter = Utilities::count_non_zero_elements(target_children);
-    for (auto j = 0; j < children_counter; j++) {
+    for (unsigned int j = 0; j < children_counter; j++) {
         const auto* target_child = Utilities::extract_element(target_children, j);
 
         const auto number_dendrites = target_child->get_cell().get_number_dendrites_for(signal_type_needed);
@@ -487,7 +487,7 @@ double FastMultipoleMethods::calc_hermite(const OctreeNode<FastMultipoleMethodsC
     interaction_list_type target_children = Utilities::get_children_to_interaction_list(target);
     unsigned int children_count = Utilities::count_non_zero_elements(target_children);
 
-    for (auto j = 0; j < children_count; j++) {
+    for (unsigned int j = 0; j < children_count; j++) {
         const auto* child_target = Utilities::extract_element(target_children, j);
         if (child_target == nullptr) {
             continue;

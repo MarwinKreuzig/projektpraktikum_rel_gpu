@@ -574,7 +574,7 @@ protected:
         const auto& xyz_min = get_xyz_min();
         const auto& xyz_max = get_xyz_max();
 
-        const auto& cell_length = (xyz_max - xyz_min) / num_cells_per_dimension;
+        const auto& cell_length = (xyz_max - xyz_min) / static_cast<box_size_type::value_type>(num_cells_per_dimension);
         const auto& [cell_length_x, cell_length_y, cell_length_z] = cell_length;
 
         OctreeNode<AdditionalCellAttributes>* local_root = OctreeNode<AdditionalCellAttributes>::create();

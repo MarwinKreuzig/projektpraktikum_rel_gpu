@@ -110,7 +110,7 @@ TEST_F(PartitionTest, testPartitionNumberNeurons) {
         ASSERT_EQ(partition.get_total_number_neurons(), number_total_neurons);
 
         partition.set_subdomain_number_neurons(local_neurons);
-        const auto num_local_neurons = std::reduce(local_neurons.begin(), local_neurons.end(), 0);
+        const auto num_local_neurons = std::reduce(local_neurons.begin(), local_neurons.end(), size_t(0));
 
         ASSERT_EQ(partition.get_number_local_neurons(), num_local_neurons);
 
@@ -127,9 +127,13 @@ TEST_F(PartitionTest, testPartitionSubdomainIndices) {
     const auto my_subdomains = num_subdomains / num_ranks;
 
     const auto oct_exponent = static_cast<size_t>(std::log(static_cast<double>(num_subdomains)) / std::log(8.0));
-    const auto num_subdomains_per_dim = static_cast<size_t>(std::ceil(std::pow(static_cast<double>(num_subdomains), 1.0 / 3.0)));
 
-    SpaceFillingCurve<Morton> sfc(oct_exponent);
+    if (oct_exponent >= std::numeric_limits<uint8_t>::max()) {
+        return;
+    }
+
+    const auto oct_exponent_cast = static_cast<uint8_t>(oct_exponent);
+    SpaceFillingCurve<Morton> sfc(oct_exponent_cast);
 
     std::vector<bool> found_indices(num_subdomains, false);
 
@@ -165,9 +169,14 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
     const auto my_subdomains = num_subdomains / num_ranks;
 
     const auto oct_exponent = static_cast<size_t>(std::log(static_cast<double>(num_subdomains)) / std::log(8.0));
-    const auto num_subdomains_per_dim = static_cast<size_t>(std::ceil(std::pow(static_cast<double>(num_subdomains), 1.0 / 3.0)));
+    if (oct_exponent >= std::numeric_limits<uint8_t>::max()) {
+        return;
+    }
 
-    SpaceFillingCurve<Morton> sfc(oct_exponent);
+    const auto oct_exponent_cast = static_cast<uint8_t>(oct_exponent);
+    const auto num_subdomains_per_dim = std::ceil(std::pow(static_cast<double>(num_subdomains), 1.0 / 3.0));
+
+    SpaceFillingCurve<Morton> sfc(oct_exponent_cast);
 
     const auto& [simulation_box_minimum, simulation_box_maximum] = get_random_simulation_box_size();
 
@@ -256,9 +265,13 @@ TEST_F(PartitionTest, testPartitionPositionToMpi) {
     const auto my_subdomains = num_subdomains / num_ranks;
 
     const auto oct_exponent = static_cast<size_t>(std::log(static_cast<double>(num_subdomains)) / std::log(8.0));
-    const auto num_subdomains_per_dim = static_cast<size_t>(std::ceil(std::pow(static_cast<double>(num_subdomains), 1.0 / 3.0)));
+    const auto num_subdomains_per_dim = std::ceil(std::pow(static_cast<double>(num_subdomains), 1.0 / 3.0));
+    if (oct_exponent >= std::numeric_limits<uint8_t>::max()) {
+        return;
+    }
 
-    SpaceFillingCurve<Morton> sfc(oct_exponent);
+    const auto oct_exponent_cast = static_cast<uint8_t>(oct_exponent);
+    SpaceFillingCurve<Morton> sfc(oct_exponent_cast);
 
     const auto& [simulation_box_minimum, simulation_box_maximum] = get_random_simulation_box_size();
 
