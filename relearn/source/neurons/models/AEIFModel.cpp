@@ -119,7 +119,6 @@ void AEIFModel::init_neurons(const size_t start_id, const size_t end_id) {
 }
 
 [[nodiscard]] double AEIFModel::iter_x(const double x, const double w, const double I_syn) const noexcept {
-    const auto f_x = f(x);
     return (f(x) - w + I_syn) / C;
 }
 

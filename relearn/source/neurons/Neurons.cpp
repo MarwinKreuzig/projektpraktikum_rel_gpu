@@ -676,11 +676,9 @@ size_t Neurons::delete_synapses_commit_deletions(const PendingDeletionsV& list) 
         // the neuron id need to be validated as well.
         const auto& src_neuron = it.get_source_neuron_id();
         const auto src_neuron_rank = src_neuron.get_rank();
-        const auto src_neuron_id = src_neuron.get_neuron_id();
 
         const auto& tgt_neuron = it.get_target_neuron_id();
         const auto tgt_neuron_rank = tgt_neuron.get_rank();
-        const auto tgt_neuron_id = tgt_neuron.get_neuron_id();
 
         RelearnException::check(src_neuron_rank == my_rank || tgt_neuron_rank == my_rank, "Neurons::delete_synapses_commit_deletions: Should delete a non-local synapse");
 
@@ -1219,8 +1217,6 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const si
 }
 
 void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
-    const auto total_number_neurons = partition->get_total_number_neurons();
-
     const StatisticalMeasures& calcium_statistics = get_statistics(NeuronAttribute::Calcium);
     const StatisticalMeasures& axons_statistics = get_statistics(NeuronAttribute::Axons);
     const StatisticalMeasures& axons_connected_statistics = get_statistics(NeuronAttribute::AxonsConnected);
@@ -1373,8 +1369,6 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
 }
 
 void Neurons::print_calcium_statistics_to_essentials() {
-    const auto total_number_neurons = partition->get_total_number_neurons();
-
     const StatisticalMeasures& calcium_statistics = global_statistics(calcium, 0, disable_flags);
 
     if (0 != MPIWrapper::get_my_rank()) {

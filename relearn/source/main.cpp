@@ -165,10 +165,10 @@ int main(int argc, char** argv) {
     auto* opt_file_creation_interrups = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
 
     double base_background_activity{ NeuronModel::default_base_background_activity };
-    auto* opt_base_background_activity = app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are exited");
+    app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are exited");
 
     double retract_ratio{ SynapticElements::default_vacant_retract_ratio };
-    auto* opt_vacant_retract_ratio = app.add_option("--retract-ratio", retract_ratio, "The ratio by which vacant synapses retract.");
+    app.add_option("--retract-ratio", retract_ratio, "The ratio by which vacant synapses retract.");
 
     std::string log_prefix{};
     auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
@@ -188,7 +188,7 @@ int main(int argc, char** argv) {
     auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
 
     size_t first_plasticity_step{ Config::first_plasticity_update };
-    auto* opt_first_plasticity_update_step = app.add_option("--first-plasticity-step", first_plasticity_step, "The first step in which the plasticity is updated.");
+    app.add_option("--first-plasticity-step", first_plasticity_step, "The first step in which the plasticity is updated.");
 
     opt_num_neurons->excludes(opt_file_positions);
     opt_num_neurons->excludes(opt_file_network);
@@ -320,7 +320,6 @@ int main(int argc, char** argv) {
      */
     auto partition = std::make_shared<Partition>(num_ranks, my_rank);
     const size_t number_local_subdomains = partition->get_number_local_subdomains();
-    const size_t total_number_subdomains = partition->get_total_number_subdomains();
 
     if (algorithm == AlgorithmEnum::BarnesHut) {
         // Check if int type can contain total size of branch nodes to receive in bytes

@@ -59,7 +59,6 @@ void Timers::print() {
     }
 
     // Set precision for aligned double output
-    const auto old_precision = sstring.precision();
     sstring.precision(Constants::print_precision);
 
     sstring << "\n======== TIMERS GLOBAL OVER ALL RANKS ========\n";

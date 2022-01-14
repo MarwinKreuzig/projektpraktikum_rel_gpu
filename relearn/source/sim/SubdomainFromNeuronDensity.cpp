@@ -120,8 +120,6 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
         const box_size_type pos = pos_rnd + offset;
 
-        const double type_indicator = RandomHolder::get_random_uniform_double(RandomHolderKey::Subdomain, 0.0, 1.0);
-
         const auto signal_type = signal_types[i];
 
         Node node{ pos, NeuronID{ i }, signal_type, "random" };

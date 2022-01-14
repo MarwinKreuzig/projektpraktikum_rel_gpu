@@ -115,7 +115,6 @@ void NetworkGraph::debug_check() const {
 }
 
 void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTranslator>& translator) const {
-    const auto my_rank = mpi_rank;
     const auto num_ranks = MPIWrapper::get_num_ranks();
 
     std::map<int, std::set<size_t>> required_ids{};

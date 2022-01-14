@@ -352,7 +352,6 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<UpdateStatus>& di
     using counter_type = FastMultipoleMethodsCell::counter_type;
 
     const auto& indices = Multiindex::get_indices();
-    const auto num_coef = Multiindex::get_number_of_indices();
 
     for (size_t neuron_id = 0; neuron_id < num_leaf_nodes; neuron_id++) {
         auto* node = leaf_nodes[neuron_id];

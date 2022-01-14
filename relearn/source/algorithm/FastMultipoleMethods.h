@@ -175,7 +175,6 @@ public:
         }
 
         const auto& indices = Multiindex::get_indices();
-        const auto num_coef = Multiindex::get_number_of_indices();
 
         if (0 == my_number_axons_excitatory) {
             node->set_cell_excitatory_axons_position({});
