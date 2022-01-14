@@ -881,7 +881,6 @@ std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_pro
             // Sanity check: if the request received is targeted for me
             if (target_neuron_id.id >= number_neurons) {
                 RelearnException::fail("Neurons::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
-                exit(EXIT_FAILURE);
             }
 
             int num_axons_connected_increment = 0;

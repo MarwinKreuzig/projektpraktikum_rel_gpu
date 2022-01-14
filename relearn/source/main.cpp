@@ -326,7 +326,6 @@ int main(int argc, char** argv) {
         // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
         if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<BarnesHutCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
-            exit(EXIT_FAILURE);
         }
 
         /**
@@ -338,7 +337,6 @@ int main(int argc, char** argv) {
         // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
         if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<FastMultipoleMethodsCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
-            exit(EXIT_FAILURE);
         }
 
         /**
@@ -350,7 +348,6 @@ int main(int argc, char** argv) {
         // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
         if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<NaiveCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
-            exit(EXIT_FAILURE);
         }
 
         /**
