@@ -98,7 +98,7 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
     const std::vector<SignalType>& axons_signal_types = axons->get_signal_types();
 
     // For my neurons
-#pragma omp parallel for shared(axons_cnts, axons_connected_cnts, axons_signal_types, synapse_creation_requests_outgoing_vec)
+#pragma omp parallel for default(none) shared(number_neurons, extra_infos, disable_flags, axons_cnts, axons_connected_cnts, axons_signal_types, synapse_creation_requests_outgoing_vec)
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;

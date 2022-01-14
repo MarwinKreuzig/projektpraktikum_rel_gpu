@@ -282,7 +282,7 @@ void Neurons::update_calcium() {
 
     const auto val = (1.0 / static_cast<double>(h));
 
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(fired, h, val, tau_C, beta)
     for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
