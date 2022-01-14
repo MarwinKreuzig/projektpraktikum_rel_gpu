@@ -463,32 +463,41 @@ public:
 
     template <std::size_t Index>
     auto& get() & {
-        if constexpr (Index == 0)
+        if constexpr (Index == 0) {
             return x;
-        if constexpr (Index == 1)
+        }
+        if constexpr (Index == 1) {
             return y;
-        if constexpr (Index == 2)
+        }
+        if constexpr (Index == 2) {
             return z;
+        }
     }
 
     template <std::size_t Index>
     auto const& get() const& {
-        if constexpr (Index == 0)
+        if constexpr (Index == 0) {
             return x;
-        if constexpr (Index == 1)
+        }
+        if constexpr (Index == 1) {
             return y;
-        if constexpr (Index == 2)
+        }
+        if constexpr (Index == 2) {
             return z;
+        }
     }
 
     template <std::size_t Index>
     auto&& get() && {
-        if constexpr (Index == 0)
+        if constexpr (Index == 0) {
             return std::move(x);
-        if constexpr (Index == 1)
+        }
+        if constexpr (Index == 1) {
             return std::move(y);
-        if constexpr (Index == 2)
+        }
+        if constexpr (Index == 2) {
             return std::move(z);
+        }
     }
 };
 
@@ -513,7 +522,7 @@ struct tuple_element<2, ::Vec3<T>> {
     using type = typename Vec3<T>::value_type;
 };
 
-} //namespace std
+} // namespace std
 
 using Vec3d = Vec3<double>;
 using Vec3s = Vec3<size_t>;
