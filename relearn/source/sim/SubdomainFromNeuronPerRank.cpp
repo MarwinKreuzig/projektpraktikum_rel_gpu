@@ -14,7 +14,7 @@
 #include "../util/Random.h"
 
 SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank(const size_t number_neurons_per_rank, const double fraction_excitatory_neurons, const double um_per_neuron, std::shared_ptr<Partition> partition)
-    : NeuronToSubdomainAssignment(partition)
+    : NeuronToSubdomainAssignment(std::move(partition))
     , um_per_neuron_(um_per_neuron)
     , number_neurons_per_rank(number_neurons_per_rank) {
 
@@ -24,9 +24,9 @@ SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank(const size_t number_neuro
 
     RelearnException::check(number_neurons_per_rank >= 1, "SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank: There must be at least one neuron per mpi rank!");
 
-    const auto my_rank = static_cast<unsigned int>(partition->get_my_mpi_rank());
-    const auto number_ranks = partition->get_number_mpi_ranks();
-    const auto number_local_subdomains = partition->get_number_local_subdomains();
+    const auto my_rank = static_cast<unsigned int>(this->partition->get_my_mpi_rank());
+    const auto number_ranks = this->partition->get_number_mpi_ranks();
+    const auto number_local_subdomains = this->partition->get_number_local_subdomains();
 
     RandomHolder::seed(RandomHolderKey::Subdomain, my_rank);
 
@@ -39,11 +39,11 @@ SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank(const size_t number_neuro
     // Calculate size of simulation box based on neuron density
     // number_neurons_per_subdomain^(1/3) == #neurons per dimension for one subdomain
     const auto number_boxes_per_subdomain_one_dimension = static_cast<size_t>(ceil(pow(static_cast<double>(number_neurons_per_subdomain), 1. / 3)));
-    const auto number_boxes_one_dimension = partition->get_number_subdomains_per_dimension() * number_boxes_per_subdomain_one_dimension;
+    const auto number_boxes_one_dimension = this->partition->get_number_subdomains_per_dimension() * number_boxes_per_subdomain_one_dimension;
 
     const auto simulation_box_length_ = number_boxes_one_dimension * um_per_neuron;
 
-    partition->set_simulation_box_size({ 0, 0, 0 }, box_size_type(simulation_box_length_));
+    this->partition->set_simulation_box_size({ 0, 0, 0 }, box_size_type(simulation_box_length_));
 
     set_requested_ratio_excitatory_neurons(fraction_excitatory_neurons);
     set_requested_number_neurons(number_neurons);
@@ -52,7 +52,7 @@ SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank(const size_t number_neuro
     set_number_placed_neurons(0);
 }
 
-std::vector<NeuronID> SubdomainFromNeuronPerRank::get_neuron_global_ids_in_subdomain(const size_t  /*subdomain_index_1d*/, const size_t  /*total_number_subdomains*/) const {
+std::vector<NeuronID> SubdomainFromNeuronPerRank::get_neuron_global_ids_in_subdomain(const size_t /*subdomain_index_1d*/, const size_t /*total_number_subdomains*/) const {
     return {};
 }
 
@@ -61,7 +61,7 @@ void SubdomainFromNeuronPerRank::post_initialization() {
     synapse_loader = std::make_shared<RandomSynapseLoader>(partition, neuron_id_translator);
 }
 
-void SubdomainFromNeuronPerRank::fill_subdomain(const size_t local_subdomain_index, const size_t  /*total_number_subdomains*/) {
+void SubdomainFromNeuronPerRank::fill_subdomain(const size_t local_subdomain_index, const size_t /*total_number_subdomains*/) {
     const auto number_local_subdomains = partition->get_number_local_subdomains();
     const auto preliminary_number_neurons_per_subdomain = number_neurons_per_rank / number_local_subdomains;
     const auto additional_neuron = (local_subdomain_index < number_neurons_per_rank % number_local_subdomains) ? 1 : 0;

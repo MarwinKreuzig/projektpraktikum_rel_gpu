@@ -20,15 +20,15 @@
 #include <numeric>
 
 SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t number_neurons, const double fraction_excitatory_neurons, const double um_per_neuron, std::shared_ptr<Partition> partition)
-    : NeuronToSubdomainAssignment(partition)
+    : NeuronToSubdomainAssignment(std::move(partition))
     , um_per_neuron_(um_per_neuron) {
 
     RelearnException::check(fraction_excitatory_neurons >= 0.0 && fraction_excitatory_neurons <= 1.0,
         "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: The requested fraction of excitatory neurons is not in [0.0, 1.0]: {}", fraction_excitatory_neurons);
     RelearnException::check(um_per_neuron > 0.0, "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: The requested um per neuron is <= 0.0: {}", um_per_neuron);
 
-    RelearnException::check(number_neurons >= partition->get_total_number_subdomains(),
-        "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: There are {} subdomains but only {} neurons.", partition->get_total_number_subdomains(), number_neurons);
+    RelearnException::check(number_neurons >= this->partition->get_total_number_subdomains(),
+        "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: There are {} subdomains but only {} neurons.", this->partition->get_total_number_subdomains(), number_neurons);
 
     const auto my_rank = static_cast<unsigned int>(MPIWrapper::get_my_rank());
 
@@ -39,7 +39,7 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t number_neuro
     const auto approx_number_of_neurons_per_dimension = ceil(pow(static_cast<double>(number_neurons), 1. / 3));
     const auto simulation_box_length_ = approx_number_of_neurons_per_dimension * um_per_neuron;
 
-    partition->set_simulation_box_size({ 0, 0, 0 }, box_size_type(simulation_box_length_));
+    this->partition->set_simulation_box_size({ 0, 0, 0 }, box_size_type(simulation_box_length_));
 
     set_requested_ratio_excitatory_neurons(fraction_excitatory_neurons);
     set_requested_number_neurons(number_neurons);
