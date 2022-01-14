@@ -32,9 +32,13 @@ void Timers::print() {
 
     std::array<double, expected_num_timers> timers_local{};
 
+    std::stringstream local_timer_output{};
+
     for (size_t i = 0; i < NUM_TIMERS; ++i) {
         const auto timer = static_cast<TimerRegion>(i);
         const double elapsed = get_elapsed(timer);
+
+        local_timer_output << elapsed << '\n';
 
         for (int j = 0; j < 3; ++j) {
             const size_t idx = 3 * i + j;
@@ -42,6 +46,8 @@ void Timers::print() {
             timers_local[idx] = elapsed;
         }
     }
+
+    LogFiles::write_to_file(LogFiles::EventType::TimersLocal, true, local_timer_output.str());
 
     std::array<double, expected_num_timers> timers_global = MPIWrapper::reduce(timers_local, MPIWrapper::ReduceFunction::minsummax, 0);
     std::stringstream sstring{};

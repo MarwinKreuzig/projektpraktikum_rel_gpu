@@ -45,6 +45,7 @@ public:
         Positions,
         Cout,
         Timers,
+        TimersLocal,
         NetworkInHistogramLocal,
         NetworkOutHistogramLocal,
         Essentials,

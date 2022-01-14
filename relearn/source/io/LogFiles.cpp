@@ -62,6 +62,9 @@ void LogFiles::init() {
     // Create log file for the timers
     LogFiles::add_logfile(EventType::Timers, "timers", 0);
 
+    // Create log file for the local timers
+    LogFiles::add_logfile(EventType::TimersLocal, "timers_local", -1);
+
     // Create log file for the synapse creation and deletion
     LogFiles::add_logfile(EventType::PlasticityUpdate, "plasticity_changes", 0);
     LogFiles::add_logfile(EventType::PlasticityUpdateCSV, "plasticity_changes_csv", 0, ".csv");
