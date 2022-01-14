@@ -934,7 +934,7 @@ TEST_F(VectorTest, testVectorInBoxNoThrow) {
     const Vec3<double> v{ x1, y1, z1 };
     const Vec3<double> w{ x2, y2, z2 };
 
-    ASSERT_NO_THROW(w.check_in_box(v, v)) << ss.str();
+    ASSERT_NO_THROW(std::ignore = w.check_in_box(v, v)) << ss.str();
 }
 
 TEST_F(VectorTest, testVectorInBoxTrue) {
