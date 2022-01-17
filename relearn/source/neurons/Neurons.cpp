@@ -310,7 +310,7 @@ StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_
     const double num_values = static_cast<double>(MPIWrapper::all_reduce_uint64(d_num_values, MPIWrapper::ReduceFunction::sum));
 
     // Get global avg at all ranks (needed for variance)
-    const double avg = MPIWrapper::all_reduce_double(my_avg, MPIWrapper::ReduceFunction::sum);
+    const double avg = MPIWrapper::all_reduce_double(my_avg, MPIWrapper::ReduceFunction::sum) / MPIWrapper::get_num_ranks();
 
     /**
 	 * Calc variance
