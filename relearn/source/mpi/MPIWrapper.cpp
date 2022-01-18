@@ -223,7 +223,7 @@ void MPIWrapper::all_gather_inl(void* ptr, const int count) {
 void MPIWrapper::get(void* origin, const size_t size, const int target_rank, const int64_t displacement) {
 
     const MPI_Aint displacement_mpi(displacement);
-    auto* const window = *mpi_window;
+    const auto window = *mpi_window; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
 
     RelearnException::check(size < static_cast<size_t>(std::numeric_limits<int>::max()), "MPIWrapper::get: Too much to reduce");
 
@@ -307,14 +307,14 @@ void MPIWrapper::lock_window(const int rank, const MPI_Locktype lock_type) {
     RelearnException::check(rank >= 0, "MPIWrapper::lock_window: rank was: {}", rank);
     const auto lock_type_int = translate_lock_type(lock_type);
 
-    auto* const window = *mpi_window;
+    const auto window = *mpi_window; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
     const int errorcode = MPI_Win_lock(lock_type_int, rank, MPI_MODE_NOCHECK, window);
     RelearnException::check(errorcode == 0, "MPIWrapper::lock_window: Error code received: {}", errorcode);
 }
 
 void MPIWrapper::unlock_window(const int rank) {
     RelearnException::check(rank >= 0, "MPIWrapper::unlock_window: rank was: {}", rank);
-    auto* const window = *mpi_window;
+    const auto window = *mpi_window; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
     const int errorcode = MPI_Win_unlock(rank, window);
     RelearnException::check(errorcode == 0, "MPIWrapper::unlock_window: Error code received: {}", errorcode);
 }
