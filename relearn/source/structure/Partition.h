@@ -273,7 +273,7 @@ public:
     /**
      * @brief Calculates the subdomain boundaries for all local subdomains and sets them accordingly
      */
-    void calculate_and_set_subdomain_boundaries() noexcept {
+    void calculate_and_set_subdomain_boundaries() {
         for (auto& subdomain : local_subdomains) {
             const auto& [min, max] = calculate_subdomain_boundaries(subdomain.index_1d);
             subdomain.minimum_position = min;
@@ -286,7 +286,7 @@ public:
      * @param subdomain_index_1d The flattened index of the subdomain
      * @return (minimum, maximum) of the subdomain
      */
-    [[nodiscard]] std::pair<box_size_type, box_size_type> calculate_subdomain_boundaries(const size_t subdomain_index_1d) const noexcept {
+    [[nodiscard]] std::pair<box_size_type, box_size_type> calculate_subdomain_boundaries(const size_t subdomain_index_1d) const {
         return calculate_subdomain_boundaries(space_curve.map_1d_to_3d(subdomain_index_1d));
     }
 
@@ -295,14 +295,14 @@ public:
      * @param subdomain_index_3d The 3-dimensional index of the subdomain
      * @return (minimum, maximum) of the subdomain
      */
-    [[nodiscard]] std::pair<box_size_type, box_size_type> calculate_subdomain_boundaries(const Vec3s& subdomain_index_3d) const noexcept {
+    [[nodiscard]] std::pair<box_size_type, box_size_type> calculate_subdomain_boundaries(const Vec3s& subdomain_index_3d) const {
         const auto& [requested_subdomain_x, requested_subdomain_y, requested_subdomain_z] = subdomain_index_3d;
 
         const auto& [sim_box_min, sim_box_max] = get_simulation_box_size();
         const auto& simulation_box_length = (sim_box_max - sim_box_min);
 
         const auto& subdomain_length = simulation_box_length / number_subdomains_per_dimension;
-        
+
         const auto& [subdomain_length_x, subdomain_length_y, subdomain_length_z] = subdomain_length;
 
         box_size_type min{
@@ -343,9 +343,9 @@ public:
      * @return The size of the simulation box as tuple (min, max)
      */
     [[nodiscard]] std::tuple<box_size_type, box_size_type> get_simulation_box_size() const {
-        RelearnException::check(simulation_box_minimum.get_x() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before");
-        RelearnException::check(simulation_box_minimum.get_y() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before");
-        RelearnException::check(simulation_box_minimum.get_z() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before");
+        RelearnException::check(simulation_box_minimum.get_x() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before"); // NOLINT(bugprone-integer-division)
+        RelearnException::check(simulation_box_minimum.get_y() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before"); // NOLINT(bugprone-integer-division)
+        RelearnException::check(simulation_box_minimum.get_z() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before"); // NOLINT(bugprone-integer-division)
 
         return std::make_tuple(simulation_box_minimum, simulation_box_maximum);
     }

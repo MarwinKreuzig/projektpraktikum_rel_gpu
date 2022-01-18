@@ -232,7 +232,7 @@ private:
 
             for (auto j = 0; j <= i; j++) {
                 if (j != i) {
-                    current_sequence[j] = sequences[i - 1][j + 1ULL] * (j + 1ULL);
+                    current_sequence[j] = sequences[i - 1][j + 1ULL] * (j + 1);
                 }
 
                 if (j > 0) {
