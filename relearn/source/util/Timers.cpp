@@ -47,7 +47,7 @@ void Timers::print() {
         }
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::TimersLocal, true, local_timer_output.str());
+    LogFiles::write_to_file(LogFiles::EventType::TimersLocal, false, local_timer_output.str());
 
     std::array<double, expected_num_timers> timers_global = MPIWrapper::reduce(timers_local, MPIWrapper::ReduceFunction::minsummax, 0);
     std::stringstream sstring{};
