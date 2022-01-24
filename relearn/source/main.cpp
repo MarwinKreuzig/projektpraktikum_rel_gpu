@@ -170,6 +170,12 @@ int main(int argc, char** argv) {
     double base_background_activity{ NeuronModel::default_base_background_activity };
     auto* opt_base_background_activity = app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are exited");
 
+    double synapse_conductance{ NeuronModel::default_k };
+    app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transfered to its neighbors when a neuron spikes. Default is 0.03");
+
+    double calcium_decay{ NeuronModel::default_tau_C };
+    app.add_option("--calcium-decay", calcium_decay, "The decay constant for the intercellular calcium");
+
     double retract_ratio{ SynapticElements::default_vacant_retract_ratio };
     auto* opt_vacant_retract_ratio = app.add_option("--retract-ratio", retract_ratio, "The ratio by which vacant synapses retract.");
 
@@ -234,6 +240,15 @@ int main(int argc, char** argv) {
     double beta{ NeuronModel::default_beta };
     app.add_option("--beta", beta, "The amount of calcium ions gathered when a neuron fires. Default is 0.001");
 
+    double min_calcium_axons{ SynapticElements::default_eta_Axons };
+    app.add_option("--min-calcium-axons", min_calcium_axons, "The minimum intercellular calcium for axons to grow. Default is 0.4");
+
+    double min_calcium_excitatory_dendrites{ SynapticElements::default_eta_Dendrites_exc };
+    app.add_option("--min-calcium-excitatory-dendrites", min_calcium_excitatory_dendrites, "The minimum intercellular calcium for excitatory dendrites to grow. Default is 0.1");
+
+    double min_calcium_inhibitory_dendrites{ SynapticElements::default_eta_Dendrites_inh };
+    app.add_option("--min-calcium-inhibitory-dendrites", min_calcium_inhibitory_dendrites, "The minimum intercellular calcium for inhibitory dendrites to grow. Default is 0.0");
+
     CLI11_PARSE(app, argc, argv);
 
     RelearnException::check(synaptic_elements_init_lb >= 0.0, "The minimum number of vacant synaptic elements must not be negative");
@@ -242,6 +257,7 @@ int main(int argc, char** argv) {
         "Missing command line option, need a total number of neurons (-n,--num-neurons), a number of neurons per rank (--num-neurons-per-rank), or file_positions (-f,--file).");
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
     RelearnException::check(base_background_activity >= 0.0, "The base background activity must be non-negative.");
+    RelearnException::check(calcium_decay > 0.0, "The calcium decay constant must be greater than 0.");
 
     if (algorithm == AlgorithmEnum::BarnesHut) {
         RelearnException::check(accept_criterion <= BarnesHut::max_theta, "Acceptance criterion must be smaller or equal to {}", BarnesHut::max_theta);
@@ -333,9 +349,7 @@ int main(int argc, char** argv) {
             exit(EXIT_FAILURE);
         }
 
-        /**
-	     * Create MPI RMA memory allocator
-	      */
+        // Create MPI RMA memory allocator
         MPIWrapper::init_buffer_octree<BarnesHutCell>();
     } else if (algorithm == AlgorithmEnum::FastMultipoleMethods) {
         // Check if int type can contain total size of branch nodes to receive in bytes
@@ -345,9 +359,7 @@ int main(int argc, char** argv) {
             exit(EXIT_FAILURE);
         }
 
-        /**
-	      * Create MPI RMA memory allocator
-	      */
+        // Create MPI RMA memory allocator
         MPIWrapper::init_buffer_octree<FastMultipoleMethodsCell>();
     } else if (algorithm == AlgorithmEnum::Naive) {
         // Check if int type can contain total size of branch nodes to receive in bytes
@@ -357,23 +369,21 @@ int main(int argc, char** argv) {
             exit(EXIT_FAILURE);
         }
 
-        /**
-	      * Create MPI RMA memory allocator
-	      */
+        // Create MPI RMA memory allocator
         MPIWrapper::init_buffer_octree<NaiveCell>();
     }
 
-    auto neuron_models = std::make_unique<models::PoissonModel>(NeuronModel::default_k, NeuronModel::default_tau_C, beta, NeuronModel::default_h,
+    auto neuron_models = std::make_unique<models::PoissonModel>(synapse_conductance, calcium_decay, beta, NeuronModel::default_h,
         base_background_activity, NeuronModel::default_background_activity_mean, NeuronModel::default_background_activity_stddev,
         models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
 
-    auto axon_models = std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons,
+    auto axon_models = std::make_unique<SynapticElements>(ElementType::AXON, min_calcium_axons,
         nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-    auto dend_ex_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc,
+    auto dend_ex_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, min_calcium_excitatory_dendrites,
         nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-    auto dend_in_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh,
+    auto dend_in_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, min_calcium_inhibitory_dendrites,
         nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     // Lock local RMA memory for local stores
