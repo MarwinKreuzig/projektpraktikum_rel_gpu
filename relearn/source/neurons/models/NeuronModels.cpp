@@ -67,7 +67,6 @@ void NeuronModel::update_electrical_activity_update_activity(const std::vector<U
 
 void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const MapFiringNeuronIds& firing_neuron_ids_incoming, const std::vector<UpdateStatus>& disable_flags) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
-    // For my neurons
 
 #pragma omp parallel for shared(firing_neuron_ids_incoming, network_graph, disable_flags) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
@@ -218,8 +217,8 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_exchange
     return firing_neuron_ids_incoming;
 }
 
-NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {       
-    // If there is no other rank, then we can just skip    
+NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
+    // If there is no other rank, then we can just skip
     if (const auto number_mpi_ranks = MPIWrapper::get_num_ranks(); number_mpi_ranks == 1) {
         return {};
     }

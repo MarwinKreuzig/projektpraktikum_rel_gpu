@@ -308,8 +308,9 @@ int main(int argc, char** argv) {
             "Chosen target calcium value: {}\n"
             "Chosen beta value: {}\n"
             "Chosen nu value: {}\n"
+            "Chosen synapse conductance: {}\n"
             "Chosen background activity: {}",
-            Timers::wall_clock_time(), synaptic_elements_init_lb, synaptic_elements_init_ub, target_calcium, beta, nu, base_background_activity);
+            Timers::wall_clock_time(), synaptic_elements_init_lb, synaptic_elements_init_ub, target_calcium, beta, nu, synapse_conductance, base_background_activity);
 
         LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
             "Number of steps: {}\n"
@@ -318,6 +319,7 @@ int main(int argc, char** argv) {
             "Chosen target calcium value: {}\n"
             "Chosen beta value: {}\n"
             "Chosen nu value: {}\n"
+            "Chosen synapse conductance: {}\n"
             "Chosen background activity: {}",
             simulation_steps,
             synaptic_elements_init_lb,
@@ -325,6 +327,7 @@ int main(int argc, char** argv) {
             target_calcium,
             beta,
             nu,
+            synapse_conductance,
             base_background_activity);
     }
 
