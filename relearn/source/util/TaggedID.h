@@ -20,6 +20,8 @@
 #include <spdlog/fmt/bundled/core.h>
 #include <spdlog/fmt/bundled/ostream.h>
 
+#include "RelearnException.h"
+
 namespace detail {
 template <std::integral T>
 [[nodiscard]] inline constexpr T get_max_size(const std::size_t& bit_count) {
@@ -61,8 +63,7 @@ struct TaggedIDNumericalLimits : public std::conditional_t<
  * Flag members include is_global, is_virtual and is_initialized.
  * The limits type can be used to query the range of id values the tagged id can represent.
  *
- * The id and all flags can be set mannually.
- * The flags is_virtual and is_global are false by default and are only changed manually.
+ * The flags is_virtual and is_global are false by default and can only be specified in the constructor.
  * The is_initialized flag is true when the id was explicitly initialized with an id value,
  * or the id object gets an id assigned.
  *
@@ -81,14 +82,14 @@ public:
      *
      * @return constexpr TaggedID uninitialized id
      */
-    static constexpr TaggedID uninitialized_id() { return TaggedID{}; }
+    static constexpr TaggedID uninitialized_id() noexcept { return TaggedID{}; }
 
     /**
      * @brief Get a virtual id (is initialized, but virtual)
      *
      * @return constexpr TaggedID
      */
-    static constexpr TaggedID virtual_id() { return TaggedID{ false, true, 0 }; }
+    static constexpr TaggedID virtual_id() noexcept { return TaggedID{ false, true, 0 }; }
 
     /**
      * @brief Construct a new TaggedID object where the flag is_initialized is false
@@ -101,7 +102,7 @@ public:
      *
      * @param id the id value
      */
-    constexpr explicit TaggedID(std::integral auto id)
+    constexpr explicit TaggedID(std::integral auto id) noexcept
         : is_initialized_{ true }
         , id_{ static_cast<value_type>(id) } { }
 
@@ -112,14 +113,14 @@ public:
      * @param is_virtual flag if the id should be marked virtual
      * @param id the id value
      */
-    constexpr explicit TaggedID(bool is_global, bool is_virtual, std::integral auto id)
+    constexpr explicit TaggedID(bool is_global, bool is_virtual, std::integral auto id) noexcept
         : is_initialized_{ true }
         , is_global_{ is_global }
         , is_virtual_{ is_virtual }
         , id_{ static_cast<value_type>(id) } { }
 
-    TaggedID(const TaggedID&) = default;
-    TaggedID& operator=(const TaggedID&) = default;
+    TaggedID(const TaggedID&) noexcept = default;
+    TaggedID& operator=(const TaggedID&) noexcept = default;
 
     TaggedID(TaggedID&&) noexcept = default;
     TaggedID& operator=(TaggedID&&) noexcept = default;
@@ -132,37 +133,59 @@ public:
      * @param id the new id
      * @return TaggedID& *this
      */
-    constexpr TaggedID& operator=(const std::integral auto& id) {
+    constexpr TaggedID& operator=(const std::integral auto& id) noexcept {
         is_initialized_ = true;
         this->id_ = static_cast<value_type>(id);
         return *this;
     }
 
-    [[nodiscard]] constexpr explicit operator value_type() const {
+    [[nodiscard]] constexpr explicit operator value_type() const noexcept {
         return id();
     }
 
-    [[nodiscard]] constexpr explicit operator bool() const {
+    [[nodiscard]] constexpr explicit operator bool() const noexcept {
         return is_initialized();
     }
 
     [[nodiscard]] constexpr value_type id() const { return id_; }
 
-    [[nodiscard]] constexpr bool is_initialized() const { return is_initialized_; }
+    [[nodiscard]] constexpr value_type get_global_id() const {
+        RelearnException::check(is_global(), "TaggedID::get_global_id is not global {:s}", *this);
+        return id();
+    }
 
-    [[nodiscard]] constexpr bool is_virtual() const { return is_virtual_; }
+    [[nodiscard]] constexpr value_type get_local_id() const {
+        RelearnException::check(is_local(), "TaggedID::get_local_id is not local {:s}", *this);
+        return id();
+    }
 
-    [[nodiscard]] constexpr bool is_global() const { return is_global_; }
+    [[nodiscard]] constexpr bool is_initialized() const noexcept { return is_initialized_; }
 
-    [[nodiscard]] constexpr bool is_local() const { return !is_global_; }
+    [[nodiscard]] constexpr bool is_virtual() const noexcept { return is_virtual_; }
 
-    [[nodiscard]] constexpr TaggedID operator+(const std::integral auto& v) const {
+    [[nodiscard]] constexpr bool is_global() const noexcept { return is_global_; }
+
+    [[nodiscard]] constexpr bool is_local() const noexcept { return !is_global_; }
+
+    [[nodiscard]] constexpr TaggedID operator+(const TaggedID& v) const noexcept {
+        auto res = *this;
+        res.id_ += v.id();
+        return res;
+    }
+
+    [[nodiscard]] constexpr TaggedID operator-(const TaggedID& v) const noexcept {
+        auto res = *this;
+        res.id_ -= v.id();
+        return res;
+    }
+
+    [[nodiscard]] constexpr TaggedID operator+(const std::integral auto& v) const noexcept {
         auto res = *this;
         res.id_ += v;
         return res;
     }
 
-    [[nodiscard]] constexpr TaggedID operator-(const std::integral auto& v) const {
+    [[nodiscard]] constexpr TaggedID operator-(const std::integral auto& v) const noexcept {
         auto res = *this;
         res.id_ -= v;
         return res;
@@ -175,7 +198,7 @@ public:
      *
      * @return std::strong_ordering ordering
      */
-    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const TaggedID&, const TaggedID&) = default;
+    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const TaggedID&, const TaggedID&) noexcept = default;
 
 private:
     // the ordering of members is important for the defaulted <=> comparison
