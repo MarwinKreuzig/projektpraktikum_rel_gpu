@@ -156,91 +156,15 @@ public:
 
     [[nodiscard]] constexpr bool is_local() const { return !is_global_; }
 
-    constexpr TaggedID& operator++() {
-        ++id_;
-        return *this;
-    }
-
-    [[nodiscard]] constexpr TaggedID operator++(int) & { // NOLINT(cert-dcl21-cpp)
-        TaggedID res = *this;
-        ++(*this);
-        return res;
-    }
-
-    constexpr TaggedID& operator--() {
-        --id_;
-        return *this;
-    }
-
-    [[nodiscard]] constexpr TaggedID operator--(int) & { // NOLINT(cert-dcl21-cpp)
-        TaggedID res = *this;
-        --(*this);
-        return res;
-    }
-
-    constexpr TaggedID& operator+=(const TaggedID& v) {
-        *this += v.id();
-        return *this;
-    }
-
-    constexpr TaggedID& operator-=(const TaggedID& v) {
-        *this -= v.id();
-        return *this;
-    }
-
-    constexpr TaggedID& operator%=(const TaggedID& v) {
-        *this %= v.id();
-        return *this;
-    }
-
-    [[nodiscard]] constexpr TaggedID operator+(const TaggedID& v) const {
-        auto res = *this;
-        res += v;
-        return res;
-    }
-
-    [[nodiscard]] constexpr TaggedID operator-(const TaggedID& v) const {
-        auto res = *this;
-        res -= v;
-        return res;
-    }
-
-    [[nodiscard]] constexpr TaggedID operator%(const TaggedID& v) const {
-        auto res = *this;
-        res %= v;
-        return res;
-    }
-
-    constexpr TaggedID& operator+=(const std::integral auto& v) {
-        id_ += v;
-        return *this;
-    }
-
-    constexpr TaggedID& operator-=(const std::integral auto& v) {
-        id_ -= v;
-        return *this;
-    }
-
-    constexpr TaggedID& operator%=(const std::integral auto& v) {
-        id_ %= v;
-        return *this;
-    }
-
     [[nodiscard]] constexpr TaggedID operator+(const std::integral auto& v) const {
         auto res = *this;
-        res += v;
+        res.id_ += v;
         return res;
     }
 
     [[nodiscard]] constexpr TaggedID operator-(const std::integral auto& v) const {
         auto res = *this;
-        res -= v;
-        return res;
-    }
-
-    [[nodiscard]] constexpr TaggedID operator%(const std::integral auto& v) const {
-        auto res = *this;
-        res %= v;
+        res.id_ -= v;
         return res;
     }
 

@@ -60,18 +60,17 @@ FileSynapseLoader::internal_load_synapses() {
         std::stringstream sstream(line);
         const bool success = (sstream >> read_source_id) && (sstream >> read_target_id) && (sstream >> weight);
 
-        auto source_id = NeuronID{ read_source_id };
-        auto target_id = NeuronID{ read_target_id };
-
         RelearnException::check(success, "FileSynapseLoader::internal_load_synapses: Loading synapses was unsuccessfull!");
 
-        RelearnException::check(source_id.id() > 0, "FileSynapseLoader::internal_load_synapses: source_id was 0");
-        RelearnException::check(target_id.id() > 0, "FileSynapseLoader::internal_load_synapses: target_id was 0");
+        RelearnException::check(read_source_id > 0, "FileSynapseLoader::internal_load_synapses: source_id was 0");
+        RelearnException::check(read_target_id > 0, "FileSynapseLoader::internal_load_synapses: target_id was 0");
         RelearnException::check(weight != 0, "FileSynapseLoader::internal_load_synapses: weight was 0");
 
         // The neurons start with 1
-        --source_id;
-        --target_id;
+        --read_source_id;
+        --read_target_id;
+        auto source_id = NeuronID{ read_source_id };
+        auto target_id = NeuronID{ read_target_id };
 
         const f_status source_f = id_is_local[source_id.id()];
         const f_status target_f = id_is_local[target_id.id()];

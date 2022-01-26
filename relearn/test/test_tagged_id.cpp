@@ -80,22 +80,6 @@ TYPED_TEST(TaggedIDTest, testTaggedIDAssignToUninitializeForInitialization) { //
     ASSERT_FALSE(id.is_virtual());
 }
 
-TYPED_TEST(TaggedIDTest, testTaggedIDIncrementDecrement) { // NOLINT
-    constexpr auto edge_distance = TypeParam{ 3 };
-    auto id_val = get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min + edge_distance, TaggedID<TypeParam>::limits::max - edge_distance);
-
-    TaggedID<TypeParam> id{ id_val };
-    const auto old = id;
-
-    ASSERT_EQ(static_cast<TypeParam>(--id), --id_val);
-    ASSERT_EQ(static_cast<TypeParam>(++id), ++id_val);
-    ASSERT_EQ(static_cast<TypeParam>(id--), id_val--);
-    ASSERT_EQ(static_cast<TypeParam>(id), id_val);
-    ASSERT_EQ(static_cast<TypeParam>(id++), id_val++);
-    ASSERT_EQ(static_cast<TypeParam>(id), id_val);
-    ASSERT_EQ(id, old);
-}
-
 TYPED_TEST(TaggedIDTest, testTaggedIDArithmetic) { // NOLINT
     constexpr static auto min = TaggedID<TypeParam>::limits::min;
     constexpr static auto max = TaggedID<TypeParam>::limits::max;
@@ -136,72 +120,19 @@ TYPED_TEST(TaggedIDTest, testTaggedIDArithmetic) { // NOLINT
         };
 
     // TaggedID& operator std::integral&
-    // implemented in terms of:
-    // TaggedID& operator compound-assign const std::integral&
     verify(
         id,
         id_val,
         get_rand(is_unsigned ? 0 : -id_distance_to_min, id_distance_to_max),
-        "TaggedID& operator+ std::integral&",
+        "TaggedID operator+(const TaggedID& v) const",
         [](auto v, const auto& r) { return v + r; });
 
     verify(
         id,
         id_val,
         get_rand(is_unsigned ? 0 : -id_distance_to_max, id_distance_to_min),
-        "TaggedID& operator- std::integral&",
+        "TaggedID operator-(const TaggedID& v) const",
         [](auto v, const auto& r) { return v - r; });
-
-    verify(
-        id,
-        id_val,
-        get_rand(1, max),
-        "TaggedID& operator% std::integral&",
-        [](auto v, const auto& r) { return v % r; });
-
-    // TaggedID& operator TaggedID&
-    // implemented in terms of:
-    // TaggedID& operator compound-assign TaggedID&
-    // implemented in terms of:
-    // TaggedID& operator compound-assign std::integral&
-    verify(
-        id,
-        id_val,
-        TaggedID<TypeParam>{ get_rand(is_unsigned ? 0 : std::max<TypeParam>(-id_distance_to_min, min), std::min<TypeParam>(id_distance_to_max, max)) },
-        "TaggedID& operator+ TaggedID&",
-        [](auto v, const auto& r) {
-            if constexpr (std::is_same_v<decltype(v), TaggedID<TypeParam>>) {
-                return v + r;
-            } else {
-                return v + r.id();
-            }
-        });
-
-    verify(
-        id,
-        id_val,
-        TaggedID<TypeParam>{ get_rand(is_unsigned ? 0 : std::max<TypeParam>(-id_distance_to_max, min), std::min<TypeParam>(id_distance_to_min, max)) },
-        "TaggedID& operator- TaggedID&",
-        [](auto v, const auto& r) {
-            if constexpr (std::is_same_v<decltype(v), TaggedID<TypeParam>>) {
-                return v - r;
-            } else {
-                return v - r.id();
-            }
-        });
-
-    verify(
-        id,
-        id_val,
-        TaggedID<TypeParam>{ get_rand(1, max) },
-        "TaggedID& operator% TaggedID&",
-        [](auto v, const auto& r) {
-            if constexpr (std::is_same_v<decltype(v), TaggedID<TypeParam>>) {
-                return v % r;
-            } else {
-                return v % r.id();
-            }
-        });
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDComparisons1) { // NOLINT

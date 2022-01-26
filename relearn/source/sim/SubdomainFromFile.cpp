@@ -142,11 +142,10 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
             continue;
         }
 
+        // Ids start with 1
+        --id;
         node.id = NeuronID{ id };
         node.pos = { pos_x, pos_y, pos_z };
-
-        // Ids start with 1
-        --node.id;
 
         if (bool is_in_subdomain = node.pos.check_in_box(min, max); !is_in_subdomain) {
             continue;

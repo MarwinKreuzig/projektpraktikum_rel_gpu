@@ -29,7 +29,7 @@ NetworkGraph generate_random_network_graph(size_t number_neurons, size_t num_syn
         auto neuron_id_2 = NeuronID{ uid(mt) };
 
         if (neuron_id_2 == neuron_id_1) {
-            neuron_id_2 = (neuron_id_1 + 1) % number_neurons;
+            neuron_id_2 = (neuron_id_1.id() + 1) % number_neurons;
         }
 
         const auto uniform_double = urd(mt);

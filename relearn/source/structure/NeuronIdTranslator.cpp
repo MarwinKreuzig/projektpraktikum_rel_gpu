@@ -39,21 +39,21 @@ bool NeuronIdTranslator::is_neuron_local(NeuronID global_id) const {
 }
 
 NeuronID NeuronIdTranslator::get_local_id(NeuronID global_id) const {
-    NeuronID id{ 0 };
+    typename NeuronID::value_type id{ 0 };
 
     for (const auto& ids : global_neuron_ids) {
         const auto pos = std::lower_bound(ids.begin(), ids.end(), global_id);
 
         if (pos != ids.end()) {
             id += pos - ids.begin();
-            return id;
+            return NeuronID{ id };
         }
 
         id += ids.size();
     }
 
     RelearnException::fail("Partition::is_neuron_local: Didn't find global id {}", global_id);
-    return {};
+    return NeuronID{};
 }
 
 NeuronID NeuronIdTranslator::get_global_id(NeuronID local_id) const {
