@@ -1406,13 +1406,11 @@ void Neurons::print_positions_to_log_file() {
     const std::vector<std::string>& area_names = extra_info->get_area_names();
     const std::vector<SignalType>& signal_types = axons->get_signal_types();
 
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        const auto id = NeuronID{ neuron_id };
+    for (auto neuron_id : NeuronID::range(number_neurons)) {
+        const auto global_id = translator->get_global_id(neuron_id);
+        const auto& signal_type_name = (signal_types[neuron_id.id()] == SignalType::EXCITATORY) ? std::string("ex") : std::string("in");
 
-        const auto global_id = translator->get_global_id(id);
-        const auto& signal_type_name = (signal_types[neuron_id] == SignalType::EXCITATORY) ? std::string("ex") : std::string("in");
-
-        const auto& pos = extra_info->get_position(NeuronID{ neuron_id });
+        const auto& pos = extra_info->get_position(neuron_id);
 
         const auto x = pos.get_x();
         const auto y = pos.get_y();
@@ -1420,7 +1418,7 @@ void Neurons::print_positions_to_log_file() {
 
         LogFiles::write_to_file(LogFiles::EventType::Positions, false,
             "{1:<} {2:<.{0}} {3:<.{0}} {4:<.{0}} {5:<} {6:<}",
-            Constants::print_precision, (global_id + 1), x, y, z, area_names[neuron_id], signal_type_name);
+            Constants::print_precision, (global_id + 1), x, y, z, area_names[neuron_id.id()], signal_type_name);
     }
 }
 
@@ -1468,22 +1466,21 @@ void Neurons::print_info_for_algorithm() {
        << "\n";
 
     // Values
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        const auto id = NeuronID{ neuron_id };
-        ss << std::left << std::setw(cwidth_small) << id;
+    for (auto neuron_id : NeuronID::range(number_neurons)) {
+        ss << std::left << std::setw(cwidth_small) << neuron_id;
 
-        const auto [x, y, z] = extra_info->get_position(id);
+        const auto [x, y, z] = extra_info->get_position(neuron_id);
 
         my_string = "(" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")";
         ss << std::setw(cwidth_medium) << my_string;
 
-        my_string = std::to_string(axons_cnts[neuron_id]) + "|" + std::to_string(axons_connected_cnts[neuron_id]);
+        my_string = std::to_string(axons_cnts[neuron_id.id()]) + "|" + std::to_string(axons_connected_cnts[neuron_id.id()]);
         ss << std::setw(cwidth_big) << my_string;
 
-        my_string = std::to_string(dendrites_exc_cnts[neuron_id]) + "|" + std::to_string(dendrites_exc_connected_cnts[neuron_id]);
+        my_string = std::to_string(dendrites_exc_cnts[neuron_id.id()]) + "|" + std::to_string(dendrites_exc_connected_cnts[neuron_id.id()]);
         ss << std::setw(cwidth_big) << my_string;
 
-        my_string = std::to_string(dendrites_inh_cnts[neuron_id]) + "|" + std::to_string(dendrites_inh_connected_cnts[neuron_id]);
+        my_string = std::to_string(dendrites_inh_cnts[neuron_id.id()]) + "|" + std::to_string(dendrites_inh_connected_cnts[neuron_id.id()]);
         ss << std::setw(cwidth_big) << my_string;
 
         ss << "\n";

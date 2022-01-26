@@ -15,6 +15,7 @@
 #include <concepts>
 #include <cstdint>
 #include <ostream>
+#include <ranges>
 #include <type_traits>
 
 #include <spdlog/fmt/bundled/core.h>
@@ -90,6 +91,29 @@ public:
      * @return constexpr TaggedID virtual id
      */
     [[nodiscard]] static constexpr TaggedID virtual_id() noexcept { return TaggedID{ false, true, 0 }; }
+
+    /**
+     * @brief Create a range of TaggedIDs within the range [0, size)
+     *
+     * @param size size of the range
+     * @return constexpr auto range of TaggedIDs
+     */
+    [[nodiscard]] static constexpr auto range(size_t size) {
+        return std::views::iota(0U, size)
+            | std::views::transform([](const size_t id) { return TaggedID{ id }; });
+    }
+
+    /**
+     * @brief Create a range of TaggedIDs within the range [begin, end)
+     *
+     * @param begin begin of the range
+     * @param end end of the range
+     * @return constexpr auto range of TaggedIDs
+     */
+    [[nodiscard]] static constexpr auto range(size_t begin, size_t end) {
+        return std::views::iota(begin, end)
+            | std::views::transform([](const size_t id) { return TaggedID{ id }; });
+    }
 
     /**
      * @brief Construct a new TaggedID object where the flag is_initialized is false

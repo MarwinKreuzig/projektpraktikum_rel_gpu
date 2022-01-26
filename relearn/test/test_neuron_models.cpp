@@ -958,20 +958,18 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitPoisson) {
         ASSERT_EQ(get_requested_number_neurons, x.size());
         ASSERT_EQ(get_requested_number_neurons, fired.size());
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-            const auto id = NeuronID{ neuron_id };
-            ASSERT_NO_THROW(auto tmp = model->get_x(id));
-            ASSERT_NO_THROW(auto tmp = model->get_fired(id));
-            ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(id));
-            ASSERT_NO_THROW(auto tmp = model->get_I_syn(id));
+        for (auto neuron_id : NeuronID::range(number_neurons)) {
+            ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
         }
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
-            const auto id = NeuronID{ neuron_id };
-            ASSERT_THROW(auto tmp = model->get_x(id + number_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_fired(id + number_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_secondary_variable(id + number_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_I_syn(id + number_neurons), RelearnException);
+        for (auto neuron_id : NeuronID::range(number_neurons_out_of_scope)) {
+            ASSERT_THROW(auto tmp = model->get_x(neuron_id + number_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_fired(neuron_id + number_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + number_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_I_syn(neuron_id + number_neurons), RelearnException);
         }
     }
 }
@@ -1032,20 +1030,18 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitIzhikevich) {
         ASSERT_EQ(get_requested_number_neurons, x.size());
         ASSERT_EQ(get_requested_number_neurons, fired.size());
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-            const auto id = NeuronID{ neuron_id };
-            ASSERT_NO_THROW(auto tmp = model->get_x(id));
-            ASSERT_NO_THROW(auto tmp = model->get_fired(id));
-            ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(id));
-            ASSERT_NO_THROW(auto tmp = model->get_I_syn(id));
+        for (auto neuron_id : NeuronID::range(number_neurons)) {
+            ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
         }
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
-            const auto id = NeuronID{ neuron_id };
-            ASSERT_THROW(auto tmp = model->get_x(id + number_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_fired(id + number_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_secondary_variable(id + number_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_I_syn(id + number_neurons), RelearnException);
+        for (auto neuron_id : NeuronID::range(number_neurons_out_of_scope)) {
+            ASSERT_THROW(auto tmp = model->get_x(neuron_id + number_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_fired(neuron_id + number_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + number_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_I_syn(neuron_id + number_neurons), RelearnException);
         }
     }
 }
@@ -1096,20 +1092,18 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitFitzHughNagumo) {
         ASSERT_EQ(get_requested_number_neurons, x.size());
         ASSERT_EQ(get_requested_number_neurons, fired.size());
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-            const auto id = NeuronID{ neuron_id };
-            ASSERT_NO_THROW(auto tmp = model->get_x(id));
-            ASSERT_NO_THROW(auto tmp = model->get_fired(id));
-            ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(id));
-            ASSERT_NO_THROW(auto tmp = model->get_I_syn(id));
+        for (auto neuron_id : NeuronID::range(number_neurons)) {
+            ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
         }
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
-            const auto id = NeuronID{ neuron_id };
-            ASSERT_THROW(auto tmp = model->get_x(id + number_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_fired(id + number_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_secondary_variable(id + number_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_I_syn(id + number_neurons), RelearnException);
+        for (auto neuron_id : NeuronID::range(number_neurons_out_of_scope)) {
+            ASSERT_THROW(auto tmp = model->get_x(neuron_id + number_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_fired(neuron_id + number_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + number_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_I_syn(neuron_id + number_neurons), RelearnException);
         }
     }
 }
@@ -1172,20 +1166,18 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitAEIF) {
         ASSERT_EQ(get_requested_number_neurons, x.size());
         ASSERT_EQ(get_requested_number_neurons, fired.size());
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-            const auto id = NeuronID{ neuron_id };
-            ASSERT_NO_THROW(auto tmp = model->get_x(id));
-            ASSERT_NO_THROW(auto tmp = model->get_fired(id));
-            ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(id));
-            ASSERT_NO_THROW(auto tmp = model->get_I_syn(id));
+        for (auto neuron_id : NeuronID::range(number_neurons)) {
+            ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
         }
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
-            const auto id = NeuronID{ neuron_id };
-            ASSERT_THROW(auto tmp = model->get_x(id + number_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_fired(id + number_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_secondary_variable(id + number_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_I_syn(id + number_neurons), RelearnException);
+        for (auto neuron_id : NeuronID::range(number_neurons_out_of_scope)) {
+            ASSERT_THROW(auto tmp = model->get_x(neuron_id + number_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_fired(neuron_id + number_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + number_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_I_syn(neuron_id + number_neurons), RelearnException);
         }
     }
 }
@@ -1237,20 +1229,18 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsPoisson) {
         ASSERT_EQ(current_num_neurons, x.size());
         ASSERT_EQ(current_num_neurons, fired.size());
 
-        for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
-            const auto id = NeuronID{ neuron_id };
-            ASSERT_NO_THROW(auto tmp = model->get_x(id));
-            ASSERT_NO_THROW(auto tmp = model->get_fired(id));
-            ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(id));
-            ASSERT_NO_THROW(auto tmp = model->get_I_syn(id));
+        for (auto neuron_id : NeuronID::range(current_num_neurons)) {
+            ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
         }
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
-            const auto id = NeuronID{ neuron_id };
-            ASSERT_THROW(auto tmp = model->get_x(id + current_num_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_fired(id + current_num_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_secondary_variable(id + current_num_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_I_syn(id + current_num_neurons), RelearnException);
+        for (auto neuron_id : NeuronID::range(number_neurons_out_of_scope)) {
+            ASSERT_THROW(auto tmp = model->get_x(neuron_id + current_num_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_fired(neuron_id + current_num_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_I_syn(neuron_id + current_num_neurons), RelearnException);
         }
     }
 }
@@ -1312,20 +1302,18 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsIzhikevich) {
         ASSERT_EQ(current_num_neurons, x.size());
         ASSERT_EQ(current_num_neurons, fired.size());
 
-        for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
-            const auto id = NeuronID{ neuron_id };
-            ASSERT_NO_THROW(auto tmp = model->get_x(id));
-            ASSERT_NO_THROW(auto tmp = model->get_fired(id));
-            ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(id));
-            ASSERT_NO_THROW(auto tmp = model->get_I_syn(id));
+        for (auto neuron_id : NeuronID::range(current_num_neurons)) {
+            ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
         }
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
-            const auto id = NeuronID{ neuron_id };
-            ASSERT_THROW(auto tmp = model->get_x(id + current_num_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_fired(id + current_num_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_secondary_variable(id + current_num_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_I_syn(id + current_num_neurons), RelearnException);
+        for (auto neuron_id : NeuronID::range(number_neurons_out_of_scope)) {
+            ASSERT_THROW(auto tmp = model->get_x(neuron_id + current_num_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_fired(neuron_id + current_num_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_I_syn(neuron_id + current_num_neurons), RelearnException);
         }
     }
 }
@@ -1377,20 +1365,18 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsFitzHughNagumo) {
         ASSERT_EQ(current_num_neurons, x.size());
         ASSERT_EQ(current_num_neurons, fired.size());
 
-        for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
-            const auto id = NeuronID{ neuron_id };
-            ASSERT_NO_THROW(auto tmp = model->get_x(id));
-            ASSERT_NO_THROW(auto tmp = model->get_fired(id));
-            ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(id));
-            ASSERT_NO_THROW(auto tmp = model->get_I_syn(id));
+        for (auto neuron_id : NeuronID::range(current_num_neurons)) {
+            ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
         }
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
-            const auto id = NeuronID{ neuron_id };
-            ASSERT_THROW(auto tmp = model->get_x(id + current_num_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_fired(id + current_num_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_secondary_variable(id + current_num_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_I_syn(id + current_num_neurons), RelearnException);
+        for (auto neuron_id : NeuronID::range(number_neurons_out_of_scope)) {
+            ASSERT_THROW(auto tmp = model->get_x(neuron_id + current_num_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_fired(neuron_id + current_num_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_I_syn(neuron_id + current_num_neurons), RelearnException);
         }
     }
 }
@@ -1454,20 +1440,18 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsAEIF) {
         ASSERT_EQ(current_num_neurons, x.size());
         ASSERT_EQ(current_num_neurons, fired.size());
 
-        for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
-            const auto id = NeuronID{ neuron_id };
-            ASSERT_NO_THROW(auto tmp = model->get_x(id));
-            ASSERT_NO_THROW(auto tmp = model->get_fired(id));
-            ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(id));
-            ASSERT_NO_THROW(auto tmp = model->get_I_syn(id));
+        for (auto neuron_id : NeuronID::range(current_num_neurons)) {
+            ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
+            ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
         }
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
-            const auto id = NeuronID{ neuron_id };
-            ASSERT_THROW(auto tmp = model->get_x(id + current_num_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_fired(id + current_num_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_secondary_variable(id + current_num_neurons), RelearnException);
-            ASSERT_THROW(auto tmp = model->get_I_syn(id + current_num_neurons), RelearnException);
+        for (auto neuron_id : NeuronID::range(number_neurons_out_of_scope)) {
+            ASSERT_THROW(auto tmp = model->get_x(neuron_id + current_num_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_fired(neuron_id + current_num_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
+            ASSERT_THROW(auto tmp = model->get_I_syn(neuron_id + current_num_neurons), RelearnException);
         }
     }
 }
