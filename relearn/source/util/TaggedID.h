@@ -82,14 +82,14 @@ public:
      *
      * @return constexpr TaggedID uninitialized id
      */
-    static constexpr TaggedID uninitialized_id() noexcept { return TaggedID{}; }
+    [[nodiscard]] static constexpr TaggedID uninitialized_id() noexcept { return TaggedID{}; }
 
     /**
      * @brief Get a virtual id (is initialized, but virtual)
      *
-     * @return constexpr TaggedID
+     * @return constexpr TaggedID virtual id
      */
-    static constexpr TaggedID virtual_id() noexcept { return TaggedID{ false, true, 0 }; }
+    [[nodiscard]] static constexpr TaggedID virtual_id() noexcept { return TaggedID{ false, true, 0 }; }
 
     /**
      * @brief Construct a new TaggedID object where the flag is_initialized is false
@@ -139,69 +139,111 @@ public:
         return *this;
     }
 
+    /**
+     * @brief Get the id
+     *
+     * The same as calling id()
+     *
+     * @return value_type id
+     */
     [[nodiscard]] constexpr explicit operator value_type() const noexcept {
         return id();
     }
 
+    /**
+     * @brief Check if the id is initialized
+     *
+     * The same as calling is_initialized()
+     * @return true iff the id is initialized
+     */
     [[nodiscard]] constexpr explicit operator bool() const noexcept {
         return is_initialized();
     }
 
+    /**
+     * @brief Get the id
+     *
+     * No check is performed.
+     *
+     * @return constexpr value_type id
+     */
     [[nodiscard]] constexpr value_type id() const { return id_; }
 
+    /**
+     * @brief Get the global id
+     *
+     * @exception RelearnException if the id is not global
+     * @return constexpr value_type id
+     */
     [[nodiscard]] constexpr value_type get_global_id() const {
         RelearnException::check(is_global(), "TaggedID::get_global_id is not global {:s}", *this);
         return id();
     }
 
+    /**
+     * @brief Get the local id
+     *
+     * @exception RelearnException if the id is not local
+     * @return constexpr value_type id
+     */
     [[nodiscard]] constexpr value_type get_local_id() const {
         RelearnException::check(is_local(), "TaggedID::get_local_id is not local {:s}", *this);
         return id();
     }
 
+    /**
+     * @brief Check if the id is initialized
+     *
+     * @return true iff the id is initialized
+     */
     [[nodiscard]] constexpr bool is_initialized() const noexcept { return is_initialized_; }
 
+    /**
+     * @brief Check if the id is virtual
+     *
+     * @return true iff the id is virtual
+     */
     [[nodiscard]] constexpr bool is_virtual() const noexcept { return is_virtual_; }
 
+    /**
+     * @brief Check if the id is global
+     *
+     * @return true iff the id is global
+     */
     [[nodiscard]] constexpr bool is_global() const noexcept { return is_global_; }
 
+    /**
+     * @brief Check if the id is local
+     *
+     * @return true iff the id is local
+     */
     [[nodiscard]] constexpr bool is_local() const noexcept { return !is_global_; }
 
-    [[nodiscard]] friend constexpr TaggedID operator+(const TaggedID& lhs, const TaggedID& rhs) {
-        RelearnException::check(lhs.is_initialized(), "lhs is not initialized");
-        RelearnException::check(rhs.is_initialized(), "rhs is not initialized");
-        const auto same_locality_spec = lhs.is_global() == rhs.is_global();
-        RelearnException::check(same_locality_spec, "lhs and rhs don't have the same locality specified (global or local): {:s} vs {:s}", lhs, rhs);
-
-        const auto same_virtuality_spec = lhs.is_virtual() == rhs.is_virtual();
-        RelearnException::check(same_virtuality_spec, "lhs and rhs don't have the same virtual specifier: {:s} vs {:s}", lhs, rhs);
-
-        return TaggedID{ lhs.is_global(), lhs.is_virtual(), lhs.id() + rhs.id() };
-    }
-
-    [[nodiscard]] friend constexpr TaggedID operator-(const TaggedID& lhs, const TaggedID& rhs) {
-        RelearnException::check(lhs.is_initialized(), "lhs is not initialized");
-        RelearnException::check(rhs.is_initialized(), "rhs is not initialized");
-        const auto same_locality_spec = lhs.is_global() == rhs.is_global();
-        RelearnException::check(same_locality_spec, "lhs and rhs don't have the same locality specified (global or local): {:s} vs {:s}", lhs, rhs);
-
-        const auto same_virtuality_spec = lhs.is_virtual() == rhs.is_virtual();
-        RelearnException::check(same_virtuality_spec, "lhs and rhs don't have the same virtual specifier: {:s} vs {:s}", lhs, rhs);
-
-        return TaggedID{ lhs.is_global(), lhs.is_virtual(), lhs.id() - rhs.id() };
-    }
-
-    [[nodiscard]] constexpr TaggedID operator+(const std::integral auto& v) const {
+    /**
+     * @brief Get an ID that is offset by offset
+     *
+     * @exception RelearnException iff the ID is not initialized
+     * @param offset offset to add to the id
+     * @return constexpr TaggedID the same ID as this, but offset by offset
+     */
+    [[nodiscard]] constexpr TaggedID operator+(const std::integral auto& offset) const {
         RelearnException::check(is_initialized(), "TaggedID is not initialized");
         auto res = *this;
-        res.id_ += v;
+        res.id_ += offset;
         return res;
     }
 
-    [[nodiscard]] constexpr TaggedID operator-(const std::integral auto& v) const noexcept {
+    /**
+     * @brief Get an ID that is negatively offset by offset
+     *
+     * @exception RelearnException iff the ID is not initialized
+     * @param offset offset to subtract to the id
+     * @return constexpr TaggedID the same ID as this, but negatively offset by offset
+     */
+    [[nodiscard]] constexpr TaggedID operator-(const std::integral auto& offset) const noexcept {
         RelearnException::check(is_initialized(), "TaggedID is not initialized");
         auto res = *this;
-        res.id_ -= v;
+        res.id_ -= offset;
         return res;
     }
 
