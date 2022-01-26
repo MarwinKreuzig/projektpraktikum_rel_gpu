@@ -326,7 +326,7 @@ public:
                         continue;
                     }
 
-                    if (const auto neuron_id = child->get_cell_neuron_id(); !child->is_parent() && (neuron_id.is_virtual || !neuron_id.is_initialized)) {
+                    if (const auto neuron_id = child->get_cell_neuron_id(); !child->is_parent() && (neuron_id.is_virtual() || !neuron_id.is_initialized())) {
                         continue;
                     }
 
@@ -334,8 +334,8 @@ public:
                 }
             } else {
                 const auto neuron_id = node->get_cell_neuron_id();
-                RelearnException::check(neuron_id.id < leaf_nodes.size(), "Octree::initializes_leaf_nodes: Neuron id was too large for leaf nodes: {}", neuron_id);
-                leaf_nodes[neuron_id.id] = node;
+                RelearnException::check(neuron_id.id() < leaf_nodes.size(), "Octree::initializes_leaf_nodes: Neuron id was too large for leaf nodes: {}", neuron_id);
+                leaf_nodes[neuron_id.id()] = node;
             }
         }
 
@@ -429,7 +429,7 @@ public:
         RelearnException::check(min_z <= pos_z && pos_z <= max_z, "Octree::insert: z was not in range: {} vs [{}, {}]", pos_z, min_z, max_z);
 
         RelearnException::check(rank >= 0, "Octree::insert: rank was smaller than 0 ({})", rank);
-        RelearnException::check(neuron_id.is_initialized, "Octree::insert: neuron_id {} was uninitialized", neuron_id);
+        RelearnException::check(neuron_id.is_initialized(), "Octree::insert: neuron_id {} was uninitialized", neuron_id);
 
         // Tree is empty
         if (nullptr == root) {

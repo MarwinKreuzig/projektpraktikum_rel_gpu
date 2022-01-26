@@ -63,7 +63,7 @@ public:
      * @exception Throws a RelearnException if the id is not smaller than Constants::uninitialized
      */
     [[nodiscard]] neuron_id_type get_neuron_id() const {
-        RelearnException::check(neuron_id.is_initialized, "RankNeuronId::get_neuron_id: neuron_id is not initialized");
+        RelearnException::check(neuron_id.is_initialized(), "RankNeuronId::get_neuron_id: neuron_id is not initialized");
         return neuron_id;
     }
 

@@ -65,16 +65,16 @@ FileSynapseLoader::internal_load_synapses() {
 
         RelearnException::check(success, "FileSynapseLoader::internal_load_synapses: Loading synapses was unsuccessfull!");
 
-        RelearnException::check(source_id.id > 0, "FileSynapseLoader::internal_load_synapses: source_id was 0");
-        RelearnException::check(target_id.id > 0, "FileSynapseLoader::internal_load_synapses: target_id was 0");
+        RelearnException::check(source_id.id() > 0, "FileSynapseLoader::internal_load_synapses: source_id was 0");
+        RelearnException::check(target_id.id() > 0, "FileSynapseLoader::internal_load_synapses: target_id was 0");
         RelearnException::check(weight != 0, "FileSynapseLoader::internal_load_synapses: weight was 0");
 
         // The neurons start with 1
         --source_id;
         --target_id;
 
-        const f_status source_f = id_is_local[read_source_id];
-        const f_status target_f = id_is_local[read_target_id];
+        const f_status source_f = id_is_local[source_id.id()];
+        const f_status target_f = id_is_local[target_id.id()];
 
         bool source_is_local = false;
         bool target_is_local = false;
@@ -86,9 +86,9 @@ FileSynapseLoader::internal_load_synapses() {
         } else {
             source_is_local = nit->is_neuron_local(source_id);
             if (source_is_local) {
-                id_is_local[source_id.id] = f_status::local;
+                id_is_local[source_id.id()] = f_status::local;
             } else {
-                id_is_local[source_id.id] = f_status::not_local;
+                id_is_local[source_id.id()] = f_status::not_local;
             }
         }
 
@@ -99,9 +99,9 @@ FileSynapseLoader::internal_load_synapses() {
         } else {
             target_is_local = nit->is_neuron_local(target_id);
             if (target_is_local) {
-                id_is_local[target_id.id] = f_status::local;
+                id_is_local[target_id.id()] = f_status::local;
             } else {
-                id_is_local[target_id.id] = f_status::not_local;
+                id_is_local[target_id.id()] = f_status::not_local;
             }
         }
 

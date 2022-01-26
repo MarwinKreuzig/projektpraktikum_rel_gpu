@@ -17,9 +17,9 @@ template <typename T>
 
 TYPED_TEST(TaggedIDTest, testTaggedIDConstructorDefault) { // NOLINT
     TaggedID<TypeParam> id{};
-    ASSERT_FALSE(id.is_initialized);
-    ASSERT_FALSE(id.is_global);
-    ASSERT_FALSE(id.is_virtual);
+    ASSERT_FALSE(id.is_initialized());
+    ASSERT_FALSE(id.is_global());
+    ASSERT_FALSE(id.is_virtual());
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDConstructorOnlyID) { // NOLINT
@@ -27,12 +27,12 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorOnlyID) { // NOLINT
 
     const TaggedID<TypeParam> id{ id_val };
 
-    ASSERT_EQ(id.id, id_val);
+    ASSERT_EQ(id.id(), id_val);
     ASSERT_EQ(static_cast<TypeParam>(id), id_val);
-    ASSERT_TRUE(id.is_initialized);
+    ASSERT_TRUE(id.is_initialized());
     ASSERT_TRUE(static_cast<bool>(id));
-    ASSERT_FALSE(id.is_global);
-    ASSERT_FALSE(id.is_virtual);
+    ASSERT_FALSE(id.is_global());
+    ASSERT_FALSE(id.is_virtual());
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDConstructorFlagsAndID) { // NOLINT
@@ -42,29 +42,29 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorFlagsAndID) { // NOLINT
 
     const TaggedID<TypeParam> id{ is_global, is_virtual, id_val };
 
-    ASSERT_EQ(id.id, id_val);
+    ASSERT_EQ(id.id(), id_val);
     ASSERT_EQ(static_cast<TypeParam>(id), id_val);
-    ASSERT_TRUE(id.is_initialized);
+    ASSERT_TRUE(id.is_initialized());
     ASSERT_TRUE(static_cast<bool>(id));
-    ASSERT_EQ(id.is_global, is_global);
-    ASSERT_EQ(id.is_virtual, is_virtual);
+    ASSERT_EQ(id.is_global(), is_global);
+    ASSERT_EQ(id.is_virtual(), is_virtual);
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDUninitialized) { // NOLINT
     const auto id = TaggedID<TypeParam>::uninitialized_id();
 
-    ASSERT_FALSE(id.is_initialized);
-    ASSERT_FALSE(id.is_global);
-    ASSERT_FALSE(id.is_virtual);
+    ASSERT_FALSE(id.is_initialized());
+    ASSERT_FALSE(id.is_global());
+    ASSERT_FALSE(id.is_virtual());
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDVirtual) { // NOLINT
     const auto id = TaggedID<TypeParam>::virtual_id();
 
-    ASSERT_TRUE(id.is_initialized);
+    ASSERT_TRUE(id.is_initialized());
     ASSERT_TRUE(static_cast<bool>(id));
-    ASSERT_FALSE(id.is_global);
-    ASSERT_TRUE(id.is_virtual);
+    ASSERT_FALSE(id.is_global());
+    ASSERT_TRUE(id.is_virtual());
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDAssignToUninitializeForInitialization) { // NOLINT
@@ -72,12 +72,12 @@ TYPED_TEST(TaggedIDTest, testTaggedIDAssignToUninitializeForInitialization) { //
     const auto id_val = get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max);
     id = id_val;
 
-    ASSERT_EQ(id.id, id_val);
+    ASSERT_EQ(id.id(), id_val);
     ASSERT_EQ(static_cast<TypeParam>(id), id_val);
-    ASSERT_TRUE(id.is_initialized);
+    ASSERT_TRUE(id.is_initialized());
     ASSERT_TRUE(static_cast<bool>(id));
-    ASSERT_FALSE(id.is_global);
-    ASSERT_FALSE(id.is_virtual);
+    ASSERT_FALSE(id.is_global());
+    ASSERT_FALSE(id.is_virtual());
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDIncrementDecrement) { // NOLINT
@@ -173,7 +173,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDArithmetic) { // NOLINT
             if constexpr (std::is_same_v<decltype(v), TaggedID<TypeParam>>) {
                 return v + r;
             } else {
-                return v + r.id;
+                return v + r.id();
             }
         });
 
@@ -186,7 +186,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDArithmetic) { // NOLINT
             if constexpr (std::is_same_v<decltype(v), TaggedID<TypeParam>>) {
                 return v - r;
             } else {
-                return v - r.id;
+                return v - r.id();
             }
         });
 
@@ -199,7 +199,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDArithmetic) { // NOLINT
             if constexpr (std::is_same_v<decltype(v), TaggedID<TypeParam>>) {
                 return v % r;
             } else {
-                return v % r.id;
+                return v % r.id();
             }
         });
 }
@@ -213,7 +213,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDComparisons1) { // NOLINT
     const auto id1 = get_random_id();
     const auto id2 = get_random_id();
 
-    EXPECT_EQ(id1 <=> id2, id1.id <=> id2.id);
+    EXPECT_EQ(id1 <=> id2, id1.id() <=> id2.id());
     EXPECT_EQ(TaggedID<TypeParam>{}, TaggedID<TypeParam>{});
 }
 
@@ -228,7 +228,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDComparisons2) { // NOLINT
             get_random_integer<TypeParam>(min, max)
         };
 
-        res.is_initialized = this->get_random_bool();
+        // res.is_initialized() = this->get_random_bool();
         return res;
     };
 
@@ -239,16 +239,16 @@ TYPED_TEST(TaggedIDTest, testTaggedIDComparisons2) { // NOLINT
     // only compare equal if all members compare equal, otherwise compare unequal
     EXPECT_EQ(
         id1 == id2,
-        id1.is_initialized == id2.is_initialized
-            && id1.is_global == id2.is_global
-            && id1.is_virtual == id2.is_virtual
-            && id1.id == id2.id);
+        id1.is_initialized() == id2.is_initialized()
+            && id1.is_global() == id2.is_global()
+            && id1.is_virtual() == id2.is_virtual()
+            && id1.id() == id2.id());
 
     const auto comp = id1 <=> id2;
-    const auto initialized_comparison = id1.is_initialized <=> id2.is_initialized;
-    const auto global_comprison = id1.is_global <=> id2.is_global;
-    const auto virtual_comparison = id1.is_virtual <=> id2.is_virtual;
-    const auto id_comparison = id1.id <=> id2.id;
+    const auto initialized_comparison = id1.is_initialized() <=> id2.is_initialized();
+    const auto global_comprison = id1.is_global() <=> id2.is_global();
+    const auto virtual_comparison = id1.is_virtual() <=> id2.is_virtual();
+    const auto id_comparison = id1.id() <=> id2.id();
 
     // members are compared in order of declaration
     // -> if any compares not equal,

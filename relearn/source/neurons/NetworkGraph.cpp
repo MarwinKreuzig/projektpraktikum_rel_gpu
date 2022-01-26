@@ -165,7 +165,7 @@ void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTransla
             const auto& [distant_rank, distant_local_neuron_id] = distant_neuron_id;
 
             const auto& request_iterator = std::find(exchange_id_my_requests[distant_rank].begin(),
-                exchange_id_my_requests[distant_rank].end(), distant_local_neuron_id.id);
+                exchange_id_my_requests[distant_rank].end(), distant_local_neuron_id.id());
 
             const auto& distance = std::distance(exchange_id_my_requests[distant_rank].begin(), request_iterator);
 

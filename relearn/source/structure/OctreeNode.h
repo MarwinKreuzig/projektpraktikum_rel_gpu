@@ -138,7 +138,7 @@ public:
 
         RelearnException::check(is_in_box, "OctreeNode::insert: position is not in box: {} in [{}, {}]", position, cell_xyz_min, cell_xyz_max);
         RelearnException::check(rank >= 0, "OctreeNode::insert: rank was {}", rank);
-        RelearnException::check(neuron_id.is_initialized, "OctreeNode::insert, neuron_id is not initialized");
+        RelearnException::check(neuron_id.is_initialized(), "OctreeNode::insert, neuron_id is not initialized");
 
         unsigned char new_position_octant = 0;
 
@@ -168,7 +168,7 @@ public:
              * The found parent node is virtual and can just be substituted,
              * i.e., it was constructed while constructing the upper part to the branch nodes.
              */
-            if (parent_node->get_cell_neuron_id().is_virtual && neuron_id != parent_node->get_cell_neuron_id()) {
+            if (parent_node->get_cell_neuron_id().is_virtual() && neuron_id != parent_node->get_cell_neuron_id()) {
                 parent_node->set_cell_neuron_id(neuron_id);
                 parent_node->set_cell_neuron_position({ position });
                 parent_node->set_rank(rank);

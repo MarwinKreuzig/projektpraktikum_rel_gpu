@@ -876,10 +876,10 @@ TEST_F(NeuronAssignmentTest, testFileLoadMultipleSubdomains) {
             for (auto it = 0; it < loaded_neurons; it++) {
                 const auto neuron_id = loaded_global_ids[it];
 
-                ASSERT_EQ(types[neuron_id.id], loaded_types[it]);
-                ASSERT_EQ(area_names[neuron_id.id], loaded_area_names[it]);
+                ASSERT_EQ(types[neuron_id.id()], loaded_types[it]);
+                ASSERT_EQ(area_names[neuron_id.id()], loaded_area_names[it]);
 
-                const auto& difference_position = positions[neuron_id.id] - loaded_positions[it];
+                const auto& difference_position = positions[neuron_id.id()] - loaded_positions[it];
                 const auto norm = difference_position.calculate_2_norm();
 
                 ASSERT_NEAR(norm, 0.0, eps);
@@ -901,10 +901,10 @@ TEST_F(NeuronAssignmentTest, testFileLoadMultipleSubdomains) {
         for (auto it = 0; it < loaded_neurons; it++) {
             const auto neuron_id = loaded_global_ids[it];
 
-            ASSERT_EQ(types[neuron_id.id], loaded_types[it]);
-            ASSERT_EQ(area_names[neuron_id.id], loaded_area_names[it]);
+            ASSERT_EQ(types[neuron_id.id()], loaded_types[it]);
+            ASSERT_EQ(area_names[neuron_id.id()], loaded_area_names[it]);
 
-            const auto& difference_position = positions[neuron_id.id] - loaded_positions[it];
+            const auto& difference_position = positions[neuron_id.id()] - loaded_positions[it];
             const auto norm = difference_position.calculate_2_norm();
 
             ASSERT_NEAR(norm, 0.0, eps);
@@ -1017,8 +1017,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi14SingleSubdomainONCE) {
     std::vector<int> found_out_synapses(426124, 0);
 
     for (const auto& [source_id, target_id, weight] : local_synapses) {
-        found_in_synapses[target_id.id] += weight;
-        found_out_synapses[source_id.id] += weight;
+        found_in_synapses[target_id.id()] += weight;
+        found_out_synapses[source_id.id()] += weight;
     }
 
     ASSERT_EQ(found_in_synapses.size(), 426124);
@@ -1062,8 +1062,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi15SingleSubdomainONCE) {
     std::vector<int> found_out_synapses(426124, 0);
 
     for (const auto& [source_id, target_id, weight] : local_synapses) {
-        found_in_synapses[target_id.id] += weight;
-        found_out_synapses[source_id.id] += weight;
+        found_in_synapses[target_id.id()] += weight;
+        found_out_synapses[source_id.id()] += weight;
     }
 
     ASSERT_EQ(found_in_synapses.size(), 426124);
@@ -1107,8 +1107,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi16SingleSubdomainONCE) {
     std::vector<int> found_out_synapses(426124, 0);
 
     for (const auto& [source_id, target_id, weight] : local_synapses) {
-        found_in_synapses[target_id.id] += weight;
-        found_out_synapses[source_id.id] += weight;
+        found_in_synapses[target_id.id()] += weight;
+        found_out_synapses[source_id.id()] += weight;
     }
 
     ASSERT_EQ(found_in_synapses.size(), 426124);
@@ -1152,8 +1152,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi17SingleSubdomainONCE) {
     std::vector<int> found_out_synapses(426124, 0);
 
     for (const auto& [source_id, target_id, weight] : local_synapses) {
-        found_in_synapses[target_id.id] += weight;
-        found_out_synapses[source_id.id] += weight;
+        found_in_synapses[target_id.id()] += weight;
+        found_out_synapses[source_id.id()] += weight;
     }
 
     ASSERT_EQ(found_in_synapses.size(), 426124);

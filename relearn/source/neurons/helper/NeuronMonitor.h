@@ -198,20 +198,20 @@ public:
      */
     void record_data() {
         RelearnException::check(neurons_to_monitor.operator bool(), "NeuronMonitor::record_data: The shared pointer is empty");
-        RelearnException::check(target_neuron_id.id < neurons_to_monitor->number_neurons, "NeuronMonitor::record_data: The target id is too large for the neurons class");
+        RelearnException::check(target_neuron_id.id() < neurons_to_monitor->number_neurons, "NeuronMonitor::record_data: The target id is too large for the neurons class");
 
-        const double& calcium = neurons_to_monitor->calcium[target_neuron_id.id];
-        const double& x = neurons_to_monitor->neuron_model->x[target_neuron_id.id];
-        const bool& fired = neurons_to_monitor->neuron_model->fired[target_neuron_id.id] == 1;
+        const double& calcium = neurons_to_monitor->calcium[target_neuron_id.id()];
+        const double& x = neurons_to_monitor->neuron_model->x[target_neuron_id.id()];
+        const bool& fired = neurons_to_monitor->neuron_model->fired[target_neuron_id.id()] == 1;
         const double& secondary = neurons_to_monitor->neuron_model->get_secondary_variable(target_neuron_id);
-        const double& I_sync = neurons_to_monitor->neuron_model->I_syn[target_neuron_id.id];
+        const double& I_sync = neurons_to_monitor->neuron_model->I_syn[target_neuron_id.id()];
 
-        const double& axons = neurons_to_monitor->axons->grown_elements[target_neuron_id.id];
-        const unsigned int& axons_connected = neurons_to_monitor->axons->connected_elements[target_neuron_id.id];
-        const double& dendrites_exc = neurons_to_monitor->dendrites_exc->grown_elements[target_neuron_id.id];
-        const unsigned int& dendrites_exc_connected = neurons_to_monitor->dendrites_exc->connected_elements[target_neuron_id.id];
-        const double& dendrites_inh = neurons_to_monitor->dendrites_inh->grown_elements[target_neuron_id.id];
-        const unsigned int& dendrites_inh_connected = neurons_to_monitor->dendrites_inh->connected_elements[target_neuron_id.id];
+        const double& axons = neurons_to_monitor->axons->grown_elements[target_neuron_id.id()];
+        const unsigned int& axons_connected = neurons_to_monitor->axons->connected_elements[target_neuron_id.id()];
+        const double& dendrites_exc = neurons_to_monitor->dendrites_exc->grown_elements[target_neuron_id.id()];
+        const unsigned int& dendrites_exc_connected = neurons_to_monitor->dendrites_exc->connected_elements[target_neuron_id.id()];
+        const double& dendrites_inh = neurons_to_monitor->dendrites_inh->grown_elements[target_neuron_id.id()];
+        const unsigned int& dendrites_inh_connected = neurons_to_monitor->dendrites_inh->connected_elements[target_neuron_id.id()];
 
         informations.emplace_back(calcium, x, fired, secondary, I_sync, axons, axons_connected, dendrites_exc, dendrites_exc_connected, dendrites_inh, dendrites_inh_connected);
     }

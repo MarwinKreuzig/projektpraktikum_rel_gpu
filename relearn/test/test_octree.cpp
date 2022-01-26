@@ -70,7 +70,7 @@ std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons(OctreeNode<AdditionalCe
 
             const auto position = opt_position.value();
 
-            if (neuron_id.is_initialized && !neuron_id.is_virtual) {
+            if (neuron_id.is_initialized() && !neuron_id.is_virtual()) {
                 return_value.emplace_back(position, neuron_id);
             }
         }
@@ -101,7 +101,7 @@ std::vector<std::tuple<Vec3d, size_t>> extract_virtual_neurons(OctreeNode<Additi
         const auto [current_node, level] = octree_nodes.top();
         octree_nodes.pop();
 
-        if (current_node->get_cell().get_neuron_id().is_virtual) {
+        if (current_node->get_cell().get_neuron_id().is_virtual()) {
             return_value.emplace_back(current_node->get_cell().get_dendrites_position().value(), level);
         }
 
@@ -729,7 +729,7 @@ TEST_F(OctreeTest, testOctreeStructure) {
 
             const auto neuron_id = cell.get_neuron_id();
 
-            if (!neuron_id.is_initialized) {
+            if (!neuron_id.is_initialized()) {
                 ASSERT_LE(neuron_id, NeuronID{ number_neurons + num_additional_ids });
             }
         }

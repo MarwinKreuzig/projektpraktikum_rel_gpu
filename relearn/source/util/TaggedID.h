@@ -69,7 +69,8 @@ struct TaggedIDNumericalLimits : public std::conditional_t<
  * @tparam T value type of the underlying id
  */
 template <std::integral T = std::uint64_t>
-struct TaggedID {
+class TaggedID {
+public:
     using value_type = T;
     static constexpr auto num_flags = 3;
     static constexpr auto id_bit_count = sizeof(value_type) * 8 - num_flags;
@@ -101,8 +102,8 @@ struct TaggedID {
      * @param id the id value
      */
     constexpr explicit TaggedID(std::integral auto id)
-        : is_initialized{ true }
-        , id{ static_cast<value_type>(id) } { }
+        : is_initialized_{ true }
+        , id_{ static_cast<value_type>(id) } { }
 
     /**
      * @brief Construct a new initialized TaggedID object with the given flags and id
@@ -112,10 +113,10 @@ struct TaggedID {
      * @param id the id value
      */
     constexpr explicit TaggedID(bool is_global, bool is_virtual, std::integral auto id)
-        : is_initialized{ true }
-        , is_global{ is_global }
-        , is_virtual{ is_virtual }
-        , id{ static_cast<value_type>(id) } { }
+        : is_initialized_{ true }
+        , is_global_{ is_global }
+        , is_virtual_{ is_virtual }
+        , id_{ static_cast<value_type>(id) } { }
 
     TaggedID(const TaggedID&) = default;
     TaggedID& operator=(const TaggedID&) = default;
@@ -132,21 +133,31 @@ struct TaggedID {
      * @return TaggedID& *this
      */
     constexpr TaggedID& operator=(const std::integral auto& id) {
-        is_initialized = true;
-        this->id = static_cast<value_type>(id);
+        is_initialized_ = true;
+        this->id_ = static_cast<value_type>(id);
         return *this;
     }
 
     [[nodiscard]] constexpr explicit operator value_type() const {
-        return id;
+        return id();
     }
 
     [[nodiscard]] constexpr explicit operator bool() const {
-        return is_initialized;
+        return is_initialized();
     }
 
+    [[nodiscard]] constexpr value_type id() const { return id_; }
+
+    [[nodiscard]] constexpr bool is_initialized() const { return is_initialized_; }
+
+    [[nodiscard]] constexpr bool is_virtual() const { return is_virtual_; }
+
+    [[nodiscard]] constexpr bool is_global() const { return is_global_; }
+
+    [[nodiscard]] constexpr bool is_local() const { return !is_global_; }
+
     constexpr TaggedID& operator++() {
-        ++id;
+        ++id_;
         return *this;
     }
 
@@ -157,7 +168,7 @@ struct TaggedID {
     }
 
     constexpr TaggedID& operator--() {
-        --id;
+        --id_;
         return *this;
     }
 
@@ -168,17 +179,17 @@ struct TaggedID {
     }
 
     constexpr TaggedID& operator+=(const TaggedID& v) {
-        *this += v.id;
+        *this += v.id();
         return *this;
     }
 
     constexpr TaggedID& operator-=(const TaggedID& v) {
-        *this -= v.id;
+        *this -= v.id();
         return *this;
     }
 
     constexpr TaggedID& operator%=(const TaggedID& v) {
-        *this %= v.id;
+        *this %= v.id();
         return *this;
     }
 
@@ -201,17 +212,17 @@ struct TaggedID {
     }
 
     constexpr TaggedID& operator+=(const std::integral auto& v) {
-        id += v;
+        id_ += v;
         return *this;
     }
 
     constexpr TaggedID& operator-=(const std::integral auto& v) {
-        id -= v;
+        id_ -= v;
         return *this;
     }
 
     constexpr TaggedID& operator%=(const std::integral auto& v) {
-        id %= v;
+        id_ %= v;
         return *this;
     }
 
@@ -242,12 +253,13 @@ struct TaggedID {
      */
     [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const TaggedID&, const TaggedID&) = default;
 
+private:
     // the ordering of members is important for the defaulted <=> comparison
 
-    bool is_initialized : 1 = false;
-    bool is_global : 1 = false;
-    bool is_virtual : 1 = false;
-    value_type id : id_bit_count = 0;
+    bool is_initialized_ : 1 = false;
+    bool is_global_ : 1 = false;
+    bool is_virtual_ : 1 = false;
+    value_type id_ : id_bit_count = 0;
 };
 
 /**
@@ -264,7 +276,7 @@ struct TaggedID {
  * - l: large               -> initialized: bool, global: bool, virtual: bool:123456
  *
  * The id can be formatted with the appropriate
- * formatting for it's type.
+ * formatting for its type.
  * Requirement: TaggedID formatting has to be specified
  * before the formatting of the id.
  * Example: "{:s>20}"
@@ -294,25 +306,25 @@ public:
             format_to(
                 ctx.out(),
                 "{:1b}{:1b}{:1b}:",
-                id.is_initialized, id.is_global, id.is_virtual);
+                id.is_initialized(), id.is_global(), id.is_virtual());
             break;
         case 'm':
             format_to(
                 ctx.out(),
                 "i{:1b}g{:1b}v{:1b}:",
-                id.is_initialized, id.is_global, id.is_virtual);
+                id.is_initialized(), id.is_global(), id.is_virtual());
             break;
         case 'l':
             format_to(
                 ctx.out(),
                 "initialized: {:5}, global: {:5}, virtual: {:5}, id: ",
-                id.is_initialized, id.is_global, id.is_virtual);
+                id.is_initialized(), id.is_global(), id.is_virtual());
             break;
         default:
             throw format_error("unrecognized format for TaggedID<T>");
         }
 
-        return fmt::formatter<typename TaggedID<T>::value_type>::format(id.id, ctx);
+        return fmt::formatter<typename TaggedID<T>::value_type>::format(id.id(), ctx);
     }
 
 private:

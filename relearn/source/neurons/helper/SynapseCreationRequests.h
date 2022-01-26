@@ -67,8 +67,8 @@ public:
     void append(const NeuronID& source_neuron_id, const NeuronID& target_neuron_id, const size_t dendrite_type_needed) {
         num_requests++;
 
-        requests.push_back(source_neuron_id.id);
-        requests.push_back(target_neuron_id.id);
+        requests.push_back(source_neuron_id.id());
+        requests.push_back(target_neuron_id.id());
         requests.push_back(dendrite_type_needed);
 
         responses.resize(responses.size() + 1);

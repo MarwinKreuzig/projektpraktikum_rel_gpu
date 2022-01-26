@@ -84,9 +84,9 @@ class Neurons {
             , affected_element_type(elem)
             , signal_type(sign)
             , synapse_id(id) {
-            RelearnException::check(src.get_neuron_id().is_initialized, "PendingSynapseDeletion::PendingSynapseDeletion(): src neuron id not initialized");
-            RelearnException::check(tgt.get_neuron_id().is_initialized, "PendingSynapseDeletion::PendingSynapseDeletion(): tgt neuron id not initialized");
-            RelearnException::check(aff.get_neuron_id().is_initialized, "PendingSynapseDeletion::PendingSynapseDeletion(): aff neuron id not initialized");
+            RelearnException::check(src.get_neuron_id().is_initialized(), "PendingSynapseDeletion::PendingSynapseDeletion(): src neuron id not initialized");
+            RelearnException::check(tgt.get_neuron_id().is_initialized(), "PendingSynapseDeletion::PendingSynapseDeletion(): tgt neuron id not initialized");
+            RelearnException::check(aff.get_neuron_id().is_initialized(), "PendingSynapseDeletion::PendingSynapseDeletion(): aff neuron id not initialized");
             RelearnException::check(src.get_rank() >= 0, "PendingSynapseDeletion::PendingSynapseDeletion(): src MPI rank was negative");
             RelearnException::check(tgt.get_rank() >= 0, "PendingSynapseDeletion::PendingSynapseDeletion(): tgt MPI rank was negative");
             RelearnException::check(aff.get_rank() >= 0, "PendingSynapseDeletion::PendingSynapseDeletion(): aff MPI rank was negative");
@@ -206,7 +206,7 @@ class Neurons {
         Synapse(const RankNeuronId& neuron_id, const unsigned int synapse_id)
             : neuron_id(neuron_id)
             , synapse_id(synapse_id) {
-            RelearnException::check(neuron_id.get_neuron_id().is_initialized, "Synapse::Synapse: neuron_id is not initialized");
+            RelearnException::check(neuron_id.get_neuron_id().is_initialized(), "Synapse::Synapse: neuron_id is not initialized");
             RelearnException::check(neuron_id.get_rank() >= 0, "Synapse::Synapse: neuron_id MPI rank was negative");
         }
 
@@ -261,9 +261,9 @@ class Neurons {
             const size_t affected_element_type_converted = pending_deletion.get_affected_element_type() == ElementType::AXON ? 0 : 1;
             const size_t signal_type_converted = pending_deletion.get_signal_type() == SignalType::EXCITATORY ? 0 : 1;
 
-            requests.push_back(pending_deletion.get_source_neuron_id().get_neuron_id().id);
-            requests.push_back(pending_deletion.get_target_neuron_id().get_neuron_id().id);
-            requests.push_back(pending_deletion.get_affected_neuron_id().get_neuron_id().id);
+            requests.push_back(pending_deletion.get_source_neuron_id().get_neuron_id().id());
+            requests.push_back(pending_deletion.get_target_neuron_id().get_neuron_id().id());
+            requests.push_back(pending_deletion.get_affected_neuron_id().get_neuron_id().id());
             requests.push_back(affected_element_type_converted);
             requests.push_back(signal_type_converted);
             requests.push_back(pending_deletion.get_synapse_id());

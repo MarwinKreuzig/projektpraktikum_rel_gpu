@@ -274,8 +274,8 @@ protected:
 
         struct less {
             bool operator()(const Node& lhs, const Node& rhs) const {
-                RelearnException::check(lhs.id.is_initialized, "Node::less::operator(): lhs id is a dummy one");
-                RelearnException::check(rhs.id.is_initialized, "Node::less::operator(): rhs id is a dummy one");
+                RelearnException::check(lhs.id.is_initialized(), "Node::less::operator(): lhs id is a dummy one");
+                RelearnException::check(rhs.id.is_initialized(), "Node::less::operator(): rhs id is a dummy one");
 
                 return lhs.id < rhs.id;
             }

@@ -128,21 +128,21 @@ size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
 
             if (is_within) {
                 if (weight > 0) {
-                    deleted_dend_ex_connections[target_neuron_id.id] += weight;
+                    deleted_dend_ex_connections[target_neuron_id.id()] += weight;
                     number_deleted_out_exc_edges_within++;
                     weight_deleted_out_exc_edges_within += weight;
                 } else {
-                    deleted_dend_in_connections[target_neuron_id.id] -= weight;
+                    deleted_dend_in_connections[target_neuron_id.id()] -= weight;
                     number_deleted_out_inh_edges_within++;
                     weight_deleted_out_inh_edges_within += std::abs(weight);
                 }
             } else {
                 if (weight > 0) {
-                    deleted_dend_ex_connections[target_neuron_id.id] += weight;
+                    deleted_dend_ex_connections[target_neuron_id.id()] += weight;
                     number_deleted_out_exc_edges_to_outside++;
                     weight_deleted_out_exc_edges_to_outside += weight;
                 } else {
-                    deleted_dend_in_connections[target_neuron_id.id] -= weight;
+                    deleted_dend_in_connections[target_neuron_id.id()] -= weight;
                     number_deleted_out_inh_edges_to_outside++;
                     weight_deleted_out_inh_edges_to_outside += std::abs(weight);
                 }
@@ -154,8 +154,8 @@ size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
     size_t weight_deleted_in_edges_from_outside = 0;
 
     for (const auto neuron_id : neuron_ids) {
-        RelearnException::check(neuron_id.id < number_neurons, "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
-        disable_flags[neuron_id.id] = UpdateStatus::DISABLED;
+        RelearnException::check(neuron_id.id() < number_neurons, "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
+        disable_flags[neuron_id.id()] = UpdateStatus::DISABLED;
 
         const auto local_in_edges = network_graph->get_local_in_edges(neuron_id);
         const auto distant_in_edges = network_graph->get_distant_in_edges(neuron_id);
@@ -167,7 +167,7 @@ size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
 
             network_graph->add_edge_weight(target_id, source_id, -weight);
 
-            deleted_axon_connections[source_neuron_id.id] += std::abs(weight);
+            deleted_axon_connections[source_neuron_id.id()] += std::abs(weight);
 
             bool is_within = std::binary_search(neuron_ids.begin(), neuron_ids.end(), source_neuron_id);
 
@@ -210,8 +210,8 @@ size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
 
 void Neurons::enable_neurons(const std::vector<NeuronID>& neuron_ids) {
     for (const auto neuron_id : neuron_ids) {
-        RelearnException::check(neuron_id.id < number_neurons, "Neurons::enable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
-        disable_flags[neuron_id.id] = UpdateStatus::ENABLED;
+        RelearnException::check(neuron_id.id() < number_neurons, "Neurons::enable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
+        disable_flags[neuron_id.id()] = UpdateStatus::ENABLED;
     }
 }
 
@@ -879,7 +879,7 @@ std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_pro
             const auto [source_neuron_id, target_neuron_id, dendrite_type_needed] = requests.get_request(request_index);
 
             // Sanity check: if the request received is targeted for me
-            if (target_neuron_id.id >= number_neurons) {
+            if (target_neuron_id.id() >= number_neurons) {
                 RelearnException::fail("Neurons::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
             }
 
@@ -902,9 +902,9 @@ std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_pro
             }
 
             // Target neuron has still dendrite available, so connect
-            RelearnException::check((*dendrites_cnts)[target_neuron_id.id] - (*dendrites_connected_cnts)[target_neuron_id.id] >= 0, "Neurons::create_synapses_process_requests: Connectivity went downside");
+            RelearnException::check((*dendrites_cnts)[target_neuron_id.id()] - (*dendrites_connected_cnts)[target_neuron_id.id()] >= 0, "Neurons::create_synapses_process_requests: Connectivity went downside");
 
-            const auto diff = static_cast<unsigned int>((*dendrites_cnts)[target_neuron_id.id] - (*dendrites_connected_cnts)[target_neuron_id.id]);
+            const auto diff = static_cast<unsigned int>((*dendrites_cnts)[target_neuron_id.id()] - (*dendrites_connected_cnts)[target_neuron_id.id()]);
             if (diff != 0) {
                 // Increment num of connected dendrites
                 if (SignalType::INHIBITORY == dendrite_type_needed) {

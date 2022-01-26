@@ -197,7 +197,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
         const auto& cell = node->get_cell();
         const auto other_neuron_id = cell.get_neuron_id();
 
-        RelearnException::check(neuron_id == other_neuron_id.id, "BarnesHut::update_leaf_nodes: The nodes are not in order");
+        RelearnException::check(neuron_id == other_neuron_id.id(), "BarnesHut::update_leaf_nodes: The nodes are not in order");
 
         const auto& [cell_xyz_min, cell_xyz_max] = cell.get_size();
         const auto& opt_excitatory_position = cell.get_excitatory_dendrites_position();
