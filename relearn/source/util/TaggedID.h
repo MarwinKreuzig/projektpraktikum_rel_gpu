@@ -167,25 +167,39 @@ public:
 
     [[nodiscard]] constexpr bool is_local() const noexcept { return !is_global_; }
 
-    [[nodiscard]] constexpr TaggedID operator+(const TaggedID& v) const noexcept {
-        auto res = *this;
-        res.id_ += v.id();
-        return res;
+    [[nodiscard]] friend constexpr TaggedID operator+(const TaggedID& lhs, const TaggedID& rhs) {
+        RelearnException::check(lhs.is_initialized(), "lhs is not initialized");
+        RelearnException::check(rhs.is_initialized(), "rhs is not initialized");
+        const auto same_locality_spec = lhs.is_global() == rhs.is_global();
+        RelearnException::check(same_locality_spec, "lhs and rhs don't have the same locality specified (global or local): {:s} vs {:s}", lhs, rhs);
+
+        const auto same_virtuality_spec = lhs.is_virtual() == rhs.is_virtual();
+        RelearnException::check(same_virtuality_spec, "lhs and rhs don't have the same virtual specifier: {:s} vs {:s}", lhs, rhs);
+
+        return TaggedID{ lhs.is_global(), lhs.is_virtual(), lhs.id() + rhs.id() };
     }
 
-    [[nodiscard]] constexpr TaggedID operator-(const TaggedID& v) const noexcept {
-        auto res = *this;
-        res.id_ -= v.id();
-        return res;
+    [[nodiscard]] friend constexpr TaggedID operator-(const TaggedID& lhs, const TaggedID& rhs) {
+        RelearnException::check(lhs.is_initialized(), "lhs is not initialized");
+        RelearnException::check(rhs.is_initialized(), "rhs is not initialized");
+        const auto same_locality_spec = lhs.is_global() == rhs.is_global();
+        RelearnException::check(same_locality_spec, "lhs and rhs don't have the same locality specified (global or local): {:s} vs {:s}", lhs, rhs);
+
+        const auto same_virtuality_spec = lhs.is_virtual() == rhs.is_virtual();
+        RelearnException::check(same_virtuality_spec, "lhs and rhs don't have the same virtual specifier: {:s} vs {:s}", lhs, rhs);
+
+        return TaggedID{ lhs.is_global(), lhs.is_virtual(), lhs.id() - rhs.id() };
     }
 
-    [[nodiscard]] constexpr TaggedID operator+(const std::integral auto& v) const noexcept {
+    [[nodiscard]] constexpr TaggedID operator+(const std::integral auto& v) const {
+        RelearnException::check(is_initialized(), "TaggedID is not initialized");
         auto res = *this;
         res.id_ += v;
         return res;
     }
 
     [[nodiscard]] constexpr TaggedID operator-(const std::integral auto& v) const noexcept {
+        RelearnException::check(is_initialized(), "TaggedID is not initialized");
         auto res = *this;
         res.id_ -= v;
         return res;
