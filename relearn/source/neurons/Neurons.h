@@ -403,9 +403,9 @@ public:
      */
     Neurons(std::shared_ptr<Partition> partition,
         std::unique_ptr<NeuronModel> model_ptr,
-        std::unique_ptr<Axons> axons_ptr,
-        std::unique_ptr<DendritesExcitatory> dend_ex_ptr,
-        std::unique_ptr<DendritesInhibitory> dend_in_ptr)
+        std::shared_ptr<Axons> axons_ptr,
+        std::shared_ptr<DendritesExcitatory> dend_ex_ptr,
+        std::shared_ptr<DendritesInhibitory> dend_in_ptr)
         : partition(std::move(partition))
         , neuron_model(std::move(model_ptr))
         , axons(std::move(axons_ptr))
@@ -767,9 +767,9 @@ private:
 
     std::unique_ptr<NeuronModel> neuron_model{};
 
-    std::unique_ptr<Axons> axons{};
-    std::unique_ptr<DendritesExcitatory> dendrites_exc{};
-    std::unique_ptr<DendritesInhibitory> dendrites_inh{};
+    std::shared_ptr<Axons> axons{};
+    std::shared_ptr<DendritesExcitatory> dendrites_exc{};
+    std::shared_ptr<DendritesInhibitory> dendrites_inh{};
 
     std::vector<double> target_calcium{};
     std::vector<double> calcium{}; // Intracellular calcium concentration of every neuron

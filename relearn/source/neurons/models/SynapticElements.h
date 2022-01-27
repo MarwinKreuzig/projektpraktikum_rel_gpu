@@ -146,19 +146,19 @@ public:
     /**
      * @brief Clones this instance and creates a new SynapticElements with the same parameters and 0 local neurons
      */
-    [[nodiscard]] std::unique_ptr<SynapticElements> clone() const {
-        return std::make_unique<SynapticElements>(type, min_C_level_to_grow, nu, vacant_retract_ratio, initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
+    [[nodiscard]] std::shared_ptr<SynapticElements> clone() const {
+        return std::make_shared<SynapticElements>(type, min_C_level_to_grow, nu, vacant_retract_ratio, initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
     }
 
     /**
-	 * @brief Returns a vector with an std::unique_ptr for each significant instance (axons, dendrites (excitatory, inhibitory))
+	 * @brief Returns a vector with an std::shared_ptr for each significant instance (axons, dendrites (excitatory, inhibitory))
      * @return A vector with all significant instances
 	 */
-    [[nodiscard]] static std::vector<std::unique_ptr<SynapticElements>> get_elements() {
-        std::vector<std::unique_ptr<SynapticElements>> res;
-        res.emplace_back(std::make_unique<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons));
-        res.emplace_back(std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc));
-        res.emplace_back(std::make_unique<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh));
+    [[nodiscard]] static std::vector<std::shared_ptr<SynapticElements>> get_elements() {
+        std::vector<std::shared_ptr<SynapticElements>> res;
+        res.emplace_back(std::make_shared<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons));
+        res.emplace_back(std::make_shared<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc));
+        res.emplace_back(std::make_shared<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh));
         return res;
     }
 
@@ -313,7 +313,13 @@ public:
         RelearnException::check(neuron_id < connected_elements.size(), "SynapticElements::get_connected_elements: neuron_id is too large: {}", neuron_id);
         return connected_elements[neuron_id];
     }
-
+   
+    /**
+     * @brief Returns the number of free elements for the specified neuron id
+     * @param neuron_id The neuron
+     * @exception Throws a RelearnException if neuron_id is too large or if the number of connected elements exceeds the number of grown elements
+     * @return The number of free elements
+     */
     [[nodiscard]] unsigned int get_free_elements(const size_t neuron_id) const {
         RelearnException::check(neuron_id < connected_elements.size(), "SynapticElements::get_free_elements: neuron_id is too large: {}", neuron_id);
         RelearnException::check(connected_elements[neuron_id] <= grown_elements[neuron_id], "SynapticElements::get_free_elements: More elements were connected then free: {}, {} vs {}", neuron_id, connected_elements[neuron_id], grown_elements[neuron_id]);

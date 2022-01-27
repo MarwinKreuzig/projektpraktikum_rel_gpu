@@ -749,7 +749,7 @@ size_t Neurons::create_synapses() {
 
     create_synapses_update_octree();
 
-    MapSynapseCreationRequests synapse_creation_requests_outgoing = algorithm->find_target_neurons(number_neurons, disable_flags, extra_info, axons);
+    MapSynapseCreationRequests synapse_creation_requests_outgoing = algorithm->find_target_neurons(number_neurons, disable_flags, extra_info);
 
     Timers::start(TimerRegion::CREATE_SYNAPSES);
 
@@ -770,7 +770,7 @@ void Neurons::create_synapses_update_octree() {
 
     // Update my local trees bottom-up
     Timers::start(TimerRegion::UPDATE_LEAF_NODES);
-    algorithm->update_leaf_nodes(disable_flags, axons, dendrites_exc, dendrites_inh);
+    algorithm->update_leaf_nodes(disable_flags);
     Timers::stop_and_add(TimerRegion::UPDATE_LEAF_NODES);
 
     // Update my local trees bottom-up

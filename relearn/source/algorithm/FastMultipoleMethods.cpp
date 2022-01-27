@@ -16,7 +16,7 @@
 #include "../util/Timers.h"
 
 MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
-    const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons) {
+    const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 
     // Create Request and start timer
     MapSynapseCreationRequests synapse_creation_requests_outgoing{};
@@ -46,8 +46,7 @@ MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t numb
     return synapse_creation_requests_outgoing;
 }
 
-void FastMultipoleMethods::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
-    const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites) {
+void FastMultipoleMethods::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
 
     const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_grown_elements();
     const std::vector<unsigned int>& dendrites_excitatory_connected_counts = excitatory_dendrites->get_connected_elements();

@@ -77,19 +77,19 @@ public:
      * @brief Sets the synaptic elements model for the axons
      * @param se The synaptic elements model
      */
-    void set_axons(std::unique_ptr<SynapticElements>&& se) noexcept;
+    void set_axons(std::shared_ptr<SynapticElements>&& se) noexcept;
 
     /**
      * @brief Sets the synaptic elements model for the excitatory dendrites
      * @param se The synaptic elements model
      */
-    void set_dendrites_ex(std::unique_ptr<SynapticElements>&& se) noexcept;
+    void set_dendrites_ex(std::shared_ptr<SynapticElements>&& se) noexcept;
 
     /**
      * @brief Sets the synaptic elements model for the inhibitory dendrites
      * @param se The synaptic elements model
      */
-    void set_dendrites_in(std::unique_ptr<SynapticElements>&& se) noexcept;
+    void set_dendrites_in(std::shared_ptr<SynapticElements>&& se) noexcept;
 
     /**
      * @brief Sets the function that is used to determine the target calcium value of the neurons
@@ -238,9 +238,9 @@ private:
     std::unique_ptr<NeuronToSubdomainAssignment> neuron_to_subdomain_assignment{};
     std::shared_ptr<NeuronIdTranslator> neuron_id_translator{};
 
-    std::unique_ptr<SynapticElements> axons{};
-    std::unique_ptr<SynapticElements> dendrites_ex{};
-    std::unique_ptr<SynapticElements> dendrites_in{};
+    std::shared_ptr<SynapticElements> axons{};
+    std::shared_ptr<SynapticElements> dendrites_ex{};
+    std::shared_ptr<SynapticElements> dendrites_in{};
 
     std::unique_ptr<NeuronModel> neuron_models{};
     std::shared_ptr<Neurons> neurons{};

@@ -380,13 +380,13 @@ int main(int argc, char** argv) {
         base_background_activity, NeuronModel::default_background_activity_mean, NeuronModel::default_background_activity_stddev,
         models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
 
-    auto axon_models = std::make_unique<SynapticElements>(ElementType::AXON, min_calcium_axons,
+    auto axon_models = std::make_shared<SynapticElements>(ElementType::AXON, min_calcium_axons,
         nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-    auto dend_ex_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, min_calcium_excitatory_dendrites,
+    auto dend_ex_models = std::make_shared<SynapticElements>(ElementType::DENDRITE, min_calcium_excitatory_dendrites,
         nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-    auto dend_in_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, min_calcium_inhibitory_dendrites,
+    auto dend_in_models = std::make_shared<SynapticElements>(ElementType::DENDRITE, min_calcium_inhibitory_dendrites,
         nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     // Lock local RMA memory for local stores

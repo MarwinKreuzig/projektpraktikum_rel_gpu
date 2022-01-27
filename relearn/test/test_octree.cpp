@@ -932,10 +932,10 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
 
     std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::ENABLED);
 
-    auto unique_exc = std::make_unique<SynapticElements>(std::move(dends_exc));
-    auto unique_inh = std::make_unique<SynapticElements>(std::move(dends_inh));
-
-    bh.update_leaf_nodes(disable_flags, unique_exc, unique_exc, unique_inh);
+    auto unique_exc = std::make_shared<SynapticElements>(std::move(dends_exc));
+    auto unique_inh = std::make_shared<SynapticElements>(std::move(dends_inh));
+    bh.set_synaptic_elements(unique_exc, unique_exc, unique_inh);
+    bh.update_leaf_nodes(disable_flags);
     octree.update_local_trees();
 
     std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
@@ -998,14 +998,15 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
     auto dends_exc = create_synaptic_elements(number_neurons, mt, 1, SignalType::EXCITATORY);
     auto dends_inh = create_synaptic_elements(number_neurons, mt, 1, SignalType::INHIBITORY);
 
-    auto unique_exc = std::make_unique<SynapticElements>(std::move(dends_exc));
-    auto unique_inh = std::make_unique<SynapticElements>(std::move(dends_inh));
+    auto unique_exc = std::make_shared<SynapticElements>(std::move(dends_exc));
+    auto unique_inh = std::make_shared<SynapticElements>(std::move(dends_inh));
 
     BarnesHut bh{ octree_ptr };
 
     std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::ENABLED);
 
-    bh.update_leaf_nodes(disable_flags, unique_exc, unique_exc, unique_inh);
+    bh.set_synaptic_elements(unique_exc, unique_exc, unique_inh);
+    bh.update_leaf_nodes(disable_flags);
     octree.update_local_trees();
 
     std::stack<std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool>> stack{};

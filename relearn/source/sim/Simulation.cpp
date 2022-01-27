@@ -58,15 +58,15 @@ void Simulation::set_neuron_model(std::unique_ptr<NeuronModel>&& nm) noexcept {
     neuron_models = std::move(nm);
 }
 
-void Simulation::set_axons(std::unique_ptr<SynapticElements>&& se) noexcept {
+void Simulation::set_axons(std::shared_ptr<SynapticElements>&& se) noexcept {
     axons = std::move(se);
 }
 
-void Simulation::set_dendrites_ex(std::unique_ptr<SynapticElements>&& se) noexcept {
+void Simulation::set_dendrites_ex(std::shared_ptr<SynapticElements>&& se) noexcept {
     dendrites_ex = std::move(se);
 }
 
-void Simulation::set_dendrites_in(std::unique_ptr<SynapticElements>&& se) noexcept {
+void Simulation::set_dendrites_in(std::shared_ptr<SynapticElements>&& se) noexcept {
     dendrites_in = std::move(se);
 }
 
@@ -132,7 +132,7 @@ void Simulation::initialize() {
         initial_calcium_values[neuron_id] = initial_calcium_initiator(neuron_id);
     }
 
-    neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons->clone(), dendrites_ex->clone(), dendrites_in->clone());
+    neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons, dendrites_ex, dendrites_in);
     neurons->init(number_local_neurons, std::move(target_calcium_values), std::move(initial_calcium_values));
     NeuronMonitor::neurons_to_monitor = neurons;
 
@@ -183,14 +183,18 @@ void Simulation::initialize() {
         algorithm_barnes_hut->set_acceptance_criterion(accept_criterion);
         algorithm_barnes_hut->set_probability_parameter(sigma);
         algorithm = std::move(algorithm_barnes_hut);
-    } else {
+    } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
         auto cast = std::static_pointer_cast<OctreeImplementation<FastMultipoleMethods>>(global_tree);
         auto algorithm_barnes_hut = std::make_shared<FastMultipoleMethods>(std::move(cast));
         algorithm_barnes_hut->set_probability_parameter(sigma);
         algorithm = std::move(algorithm_barnes_hut);
+    } else {
+        RelearnException::fail("Simulation::initialize: AlgorithmEnum {} not yet implemented!", algorithm_enum);
     }
 
     network_graph = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
+
+    algorithm->set_synaptic_elements(axons, dendrites_ex, dendrites_in);
 
     neurons->set_area_names(std::move(area_names));
     neurons->set_signal_types(std::move(signal_types));

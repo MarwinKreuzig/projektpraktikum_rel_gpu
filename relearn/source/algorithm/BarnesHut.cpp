@@ -91,8 +91,7 @@
 MapSynapseCreationRequests BarnesHut::find_target_neurons(
     const size_t number_neurons,
     const std::vector<UpdateStatus>& disable_flags,
-    const std::unique_ptr<NeuronsExtraInfo>& extra_infos,
-    const std::unique_ptr<SynapticElements>& axons) {
+    const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 
     MapSynapseCreationRequests synapse_creation_requests_outgoing{};
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);
@@ -161,8 +160,7 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
     return synapse_creation_requests_outgoing;
 }
 
-void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
-    const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites) {
+void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
 
     const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_grown_elements();
     const std::vector<unsigned int>& dendrites_excitatory_connected_counts = excitatory_dendrites->get_connected_elements();

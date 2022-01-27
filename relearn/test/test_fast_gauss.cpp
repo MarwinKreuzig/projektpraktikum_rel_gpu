@@ -192,11 +192,13 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
 
         auto elements = create_synaptic_elements(num_neurons, mt, max_vacant_elements);
 
-        auto unique_ax = std::make_unique<SynapticElements>(std::move(elements[0]));
-        auto unique_dend_exc = std::make_unique<SynapticElements>(std::move(elements[1]));
-        auto unique_dend_inh = std::make_unique<SynapticElements>(std::move(elements[2]));
+        auto unique_ax = std::make_shared<SynapticElements>(std::move(elements[0]));
+        auto unique_dend_exc = std::make_shared<SynapticElements>(std::move(elements[1]));
+        auto unique_dend_inh = std::make_shared<SynapticElements>(std::move(elements[2]));
 
-        fmm.update_leaf_nodes(disable_flags, unique_ax, unique_dend_exc, unique_dend_inh);
+        fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
+
+        fmm.update_leaf_nodes(disable_flags);
         octree.update_local_trees();
 
         std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
@@ -263,15 +265,15 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
 
         auto elements = create_synaptic_elements(num_neurons, mt, 1);
 
-        auto unique_ax = std::make_unique<SynapticElements>(std::move(elements[0]));
-        auto unique_dend_exc = std::make_unique<SynapticElements>(std::move(elements[1]));
-        auto unique_dend_inh = std::make_unique<SynapticElements>(std::move(elements[2]));
+        auto unique_ax = std::make_shared<SynapticElements>(std::move(elements[0]));
+        auto unique_dend_exc = std::make_shared<SynapticElements>(std::move(elements[1]));
+        auto unique_dend_inh = std::make_shared<SynapticElements>(std::move(elements[2]));
 
         FastMultipoleMethods fmm{ octree_ptr };
 
         std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::ENABLED);
-
-        fmm.update_leaf_nodes(disable_flags, unique_ax, unique_dend_exc, unique_dend_inh);
+        fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
+        fmm.update_leaf_nodes(disable_flags);
         octree.update_local_trees();
 
         std::stack<std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool>> stack{};
@@ -417,11 +419,11 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
 
         auto elements = create_synaptic_elements(num_neurons, mt, max_vacant_elements);
 
-        auto unique_ax = std::make_unique<SynapticElements>(std::move(elements[0]));
-        auto unique_dend_exc = std::make_unique<SynapticElements>(std::move(elements[1]));
-        auto unique_dend_inh = std::make_unique<SynapticElements>(std::move(elements[2]));
-
-        fmm.update_leaf_nodes(disable_flags, unique_ax, unique_dend_exc, unique_dend_inh);
+        auto unique_ax = std::make_shared<SynapticElements>(std::move(elements[0]));
+        auto unique_dend_exc = std::make_shared<SynapticElements>(std::move(elements[1]));
+        auto unique_dend_inh = std::make_shared<SynapticElements>(std::move(elements[2]));
+        fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
+        fmm.update_leaf_nodes(disable_flags);
         octree.update_local_trees();
 
         std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
@@ -493,15 +495,15 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
 
         auto elements = create_synaptic_elements(num_neurons, mt, 1);
 
-        auto unique_ax = std::make_unique<SynapticElements>(std::move(elements[0]));
-        auto unique_dend_exc = std::make_unique<SynapticElements>(std::move(elements[1]));
-        auto unique_dend_inh = std::make_unique<SynapticElements>(std::move(elements[2]));
+        auto unique_ax = std::make_shared<SynapticElements>(std::move(elements[0]));
+        auto unique_dend_exc = std::make_shared<SynapticElements>(std::move(elements[1]));
+        auto unique_dend_inh = std::make_shared<SynapticElements>(std::move(elements[2]));
 
         FastMultipoleMethods fmm{ octree_ptr };
 
         std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::ENABLED);
-
-        fmm.update_leaf_nodes(disable_flags, unique_ax, unique_dend_exc, unique_dend_inh);
+        fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
+        fmm.update_leaf_nodes(disable_flags);
         octree.update_local_trees();
 
         std::stack<std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool>> stack{};

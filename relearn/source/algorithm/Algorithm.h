@@ -12,6 +12,7 @@
 
 #include "../neurons/UpdateStatus.h"
 #include "../neurons/helper/SynapseCreationRequests.h"
+#include "../neurons/models/SynapticElements.h"
 #include "../util/RelearnException.h"
 
 #include <memory>
@@ -57,23 +58,44 @@ public:
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
     [[nodiscard]] virtual MapSynapseCreationRequests find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
-        const std::unique_ptr<NeuronsExtraInfo>& extra_infos, const std::unique_ptr<SynapticElements>& axons)
+        const std::unique_ptr<NeuronsExtraInfo>& extra_infos)
         = 0;
 
     /**
      * @brief Updates all leaf nodes in the octree by the algorithm
      * @param disable_flags Flags that indicate if a neuron id disabled (0) or enabled (otherwise)
+     * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
+     */
+    virtual void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) = 0;
+
+    /**
+     * @brief Registeres the synaptic elements with the algorithm
      * @param axons The model for the axons
      * @param excitatory_dendrites The model for the excitatory dendrites
      * @param inhibitory_dendrites The model for the inhibitory dendrites
-     * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
-     */
-    virtual void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags, const std::unique_ptr<SynapticElements>& axons,
-        const std::unique_ptr<SynapticElements>& excitatory_dendrites, const std::unique_ptr<SynapticElements>& inhibitory_dendrites)
-        = 0;
+     * @exception Throws a RelearnException if one of the pointers is empty
+    */
+    void set_synaptic_elements(std::shared_ptr<SynapticElements> axons, std::shared_ptr<SynapticElements> excitatory_dendrites, std::shared_ptr<SynapticElements> inhibitory_dendrites) {
+        const bool axons_full = axons.operator bool();
+        const bool excitatory_dendrites_full = axons.operator bool();
+        const bool inhibitory_dendrites_full = axons.operator bool();
+
+        RelearnException::check(axons_full, "Algorithm::set_synaptic_elements: axons was empty");
+        RelearnException::check(excitatory_dendrites_full, "Algorithm::set_synaptic_elements: excitatory_dendrites was empty");
+        RelearnException::check(inhibitory_dendrites_full, "Algorithm::set_synaptic_elements: inhibitory_dendrites was empty");
+
+        this->axons = std::move(axons);
+        this->excitatory_dendrites = std::move(excitatory_dendrites);
+        this->inhibitory_dendrites = std::move(inhibitory_dendrites);
+    }
 
 private:
     double sigma{ default_sigma };
+
+protected:
+    std::shared_ptr<SynapticElements> axons{};
+    std::shared_ptr<SynapticElements> excitatory_dendrites{};
+    std::shared_ptr<SynapticElements> inhibitory_dendrites{};
 
 public:
     constexpr static double default_sigma{ 750.0 };
