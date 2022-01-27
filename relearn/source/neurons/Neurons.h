@@ -349,7 +349,7 @@ class Neurons {
          *      Does not transfer ownership
          * @return A raw pointer to the requests
          */
-        [[nodiscard]] size_t* data() noexcept {
+        [[nodiscard]] size_t* get_requests() noexcept {
             return requests.data();
         }
 
@@ -358,7 +358,7 @@ class Neurons {
          *      Does not transfer ownership
          * @return A raw pointer to the requests
          */
-        [[nodiscard]] const size_t* data() const noexcept {
+        [[nodiscard]] const size_t* get_requests() const noexcept {
             return requests.data();
         }
 

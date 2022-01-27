@@ -202,7 +202,7 @@ public:
         std::vector<size_t> num_synapse_requests_for_ranks(number_ranks, 0);
         // Fill vector with my number of synapse requests for every rank (including me)
         for (const auto& [rank, requests] : outgoing_requests) {
-            RelearnException::check(rank < number_ranks, "Neurons::create_synapses_exchange_requests: rank was too large: {} of {}", rank, number_ranks);
+            RelearnException::check(rank < number_ranks, "SynapseCreationRequests::exchange_requests: rank was too large: {} of {}", rank, number_ranks);
             const auto num_requests = requests.size();
             num_synapse_requests_for_ranks[rank] = num_requests;
         }
@@ -260,7 +260,7 @@ public:
      * @param responses_from_me My local responses to previous creation requests
      * @param responses_for_me The responses for me. Must be the same that was used in exchange_requests beforehand
      */
-    static void exchange_responses(const MapSynapseCreationRequests& responses_from_me, MapSynapseCreationRequests& responses_for_me) {
+    static void exchange_responses(const std::map<int, SynapseCreationRequests>& responses_from_me, std::map<int, SynapseCreationRequests>& responses_for_me) {
         auto mpi_requests_index = 0;
         std::vector<MPIWrapper::AsyncToken> mpi_requests(responses_for_me.size() + responses_from_me.size());
 
