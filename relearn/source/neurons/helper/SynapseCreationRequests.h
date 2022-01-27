@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "../../mpi/MPIWrapper.h"
 #include "../../util/RelearnException.h"
 #include "../SignalType.h"
 
@@ -19,7 +20,6 @@
 /**
  * An object of type SynapseCreationRequests stores the requests from the current MPI rank to a dedicated other MPI rank.
  * It stores all requests flattened and can manage the responses. 
- * The class does not perform any communication or synchronization with other MPI ranks.
  */
 class SynapseCreationRequests {
 public:
@@ -129,7 +129,7 @@ public:
      * @brief Gets a raw non-owning pointer for the encoded requests. The pointer is invalidated by append()
      * @return The pointer to the encoded requests
      */
-    [[nodiscard]] size_t* get_requests() noexcept {
+    [[nodiscard]] size_t* data() noexcept {
         return requests.data();
     }
 
@@ -137,8 +137,16 @@ public:
      * @brief Gets a raw non-owning and non-mutable pointer for the encoded requests. The pointer is invalidated by append()
      * @return The pointer to the encoded requests
      */
-    [[nodiscard]] const size_t* get_requests() const noexcept {
+    [[nodiscard]] const size_t* data() const noexcept {
         return requests.data();
+    }
+
+    /**
+     * @brief Gets a raw non-owning pointer for the stored responses. The pointer is invalidated by append()
+     * @return The pointer to the encoded answers: (1) for true, (0) for false
+     */
+    [[nodiscard]] char* get_responses() noexcept {
+        return responses.data();
     }
 
     /**
@@ -174,6 +182,75 @@ private:
     std::vector<char> responses{}; // Response if the corresponding request was accepted and thus the synapse was formed
         // responses[i] refers to requests[3*i,...,3*i+2]
         // This vector is used as MPI communication buffer
+
+public:
+    /**
+     * @brief Exchanges all requests across all MPI ranks, that is,
+     *      if MPI rank i had the requests r for MPI rank j,
+     *      i calls this function with outgoing_requests[j] = r,
+     *      then after it returns j has <return>[i] = r
+     * @param outgoing_requests The outgoing synapse creation requests for other ranks
+     * @return The incoming synapse creation requests from other ranks
+    */
+    static std::map<int, SynapseCreationRequests> exchange_requests(const std::map<int, SynapseCreationRequests>& outgoing_requests) {
+        const auto number_ranks = MPIWrapper::get_num_ranks();
+
+        /**
+	     * Send to every rank the number of requests it should prepare for from me.
+	     * Likewise, receive the number of requests that I should prepare for from every rank.
+	     */
+        std::vector<size_t> num_synapse_requests_for_ranks(number_ranks, 0);
+        // Fill vector with my number of synapse requests for every rank (including me)
+        for (const auto& [rank, requests] : outgoing_requests) {
+            RelearnException::check(rank < number_ranks, "Neurons::create_synapses_exchange_requests: rank was too large: {} of {}", rank, number_ranks);
+            const auto num_requests = requests.size();
+            num_synapse_requests_for_ranks[rank] = num_requests;
+        }
+
+        std::vector<size_t> num_synapse_requests_from_ranks(number_ranks, 0);
+        MPIWrapper::all_to_all(num_synapse_requests_for_ranks, num_synapse_requests_from_ranks);
+
+        // Now I know how many requests I will get from every rank.
+        // Allocate memory for all incoming synapse requests.
+        std::map<int, SynapseCreationRequests> incoming_requests{};
+        for (auto rank = 0; rank < number_ranks; rank++) {
+            if (const auto num_requests = num_synapse_requests_from_ranks[rank]; 0 != num_requests) {
+                incoming_requests[rank].resize(num_requests);
+            }
+        }
+
+        std::vector<MPIWrapper::AsyncToken> mpi_requests(outgoing_requests.size() + incoming_requests.size());
+
+        /**
+	     * Send and receive actual synapse requests
+	     */
+        auto mpi_requests_index = 0;
+
+        // Receive actual synapse requests
+        for (auto& [rank, requests] : incoming_requests) {
+            auto* buffer = requests.data();
+            const auto size_in_bytes = static_cast<int>(requests.get_requests_size_in_bytes());
+
+            MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
+
+            mpi_requests_index++;
+        }
+
+        // Send actual synapse requests
+        for (const auto& [rank, requests] : outgoing_requests) {
+            const auto* const buffer = requests.data();
+            const auto size_in_bytes = static_cast<int>(requests.get_requests_size_in_bytes());
+
+            MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
+
+            mpi_requests_index++;
+        }
+
+        // Wait for all sends and receives to complete
+        MPIWrapper::wait_all_tokens(mpi_requests);
+
+        return incoming_requests;
+    }
 };
 
 /**

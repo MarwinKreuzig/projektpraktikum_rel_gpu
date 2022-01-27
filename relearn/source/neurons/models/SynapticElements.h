@@ -309,6 +309,12 @@ public:
         return connected_elements[neuron_id];
     }
 
+    [[nodiscard]] unsigned int get_free_elements(const size_t neuron_id) const {
+        RelearnException::check(neuron_id < connected_elements.size(), "SynapticElements::get_free_elements: neuron_id is too large: {}", neuron_id);
+        RelearnException::check(connected_elements[neuron_id] <= grown_elements[neuron_id], "SynapticElements::get_free_elements: More elements were connected then free: {}, {} vs {}", neuron_id, connected_elements[neuron_id], grown_elements[neuron_id]);
+        return static_cast<unsigned int>(grown_elements[neuron_id] - connected_elements[neuron_id]);
+    }
+
     /**
      * @brief Returns the accumulated delta for the specified neuron id
      * @param neuron_id The neuron

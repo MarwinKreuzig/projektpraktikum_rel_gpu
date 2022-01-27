@@ -593,7 +593,7 @@ Neurons::MapSynapseDeletionRequests Neurons::delete_synapses_exchange_requests(c
     // Receive actual synapse deletion requests
     for (auto& it : synapse_deletion_requests_incoming) {
         const auto rank = it.first;
-        auto* buffer = it.second.get_requests();
+        auto* buffer = it.second.data();
         const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
 
         MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
@@ -604,7 +604,7 @@ Neurons::MapSynapseDeletionRequests Neurons::delete_synapses_exchange_requests(c
     // Send actual synapse deletion requests
     for (const auto& it : synapse_deletion_requests_outgoing) {
         const auto rank = it.first;
-        const auto* const buffer = it.second.get_requests();
+        const auto* const buffer = it.second.data();
         const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
 
         MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
@@ -748,17 +748,17 @@ size_t Neurons::create_synapses() {
 	 */
 
     create_synapses_update_octree();
-    //MapSynapseCreationRequests synapse_creation_requests_outgoing = create_synapses_find_targets();
+
     MapSynapseCreationRequests synapse_creation_requests_outgoing = algorithm->find_target_neurons(number_neurons, disable_flags, extra_info, axons);
 
     Timers::start(TimerRegion::CREATE_SYNAPSES);
 
-    MapSynapseCreationRequests synapse_creation_requests_incoming = create_synapses_exchange_requests(synapse_creation_requests_outgoing);
-    const auto& local_results = create_synapses_process_requests(synapse_creation_requests_incoming);
-    const auto synapses_created_locally = local_results.first;
+    auto synapse_creation_requests_incoming = SynapseCreationRequests::exchange_requests(synapse_creation_requests_outgoing);
 
-    const auto& received_responses = create_synapses_exchange_responses(local_results.second, synapse_creation_requests_outgoing);
-    const auto synapses_created_remotely = create_synapses_process_responses(synapse_creation_requests_outgoing, received_responses);
+    const auto synapses_created_locally = create_synapses_process_requests(synapse_creation_requests_incoming);
+
+    create_synapses_exchange_responses(synapse_creation_requests_incoming, synapse_creation_requests_outgoing);
+    const auto synapses_created_remotely = create_synapses_process_responses(synapse_creation_requests_outgoing);
 
     Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES);
 
@@ -791,121 +791,39 @@ void Neurons::create_synapses_update_octree() {
     MPIWrapper::barrier();
 }
 
-MapSynapseCreationRequests Neurons::create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing) {
-    MapSynapseCreationRequests synapse_creation_requests_incoming;
-
-    /**
-		* Send to every rank the number of requests it should prepare for from me.
-		* Likewise, receive the number of requests that I should prepare for from every rank.
-		*/
-    std::vector<size_t> num_synapse_requests_for_ranks(MPIWrapper::get_num_ranks(), 0);
-    // Fill vector with my number of synapse requests for every rank (including me)
-    for (const auto& it : synapse_creation_requests_outgoing) {
-        auto rank = it.first;
-        auto num_requests = (it.second).size();
-
-        num_synapse_requests_for_ranks[rank] = num_requests;
-    }
-
-    std::vector<size_t> num_synapse_requests_from_ranks(MPIWrapper::get_num_ranks(), Constants::uninitialized);
-    // Send and receive the number of synapse requests
-    MPIWrapper::all_to_all(num_synapse_requests_for_ranks, num_synapse_requests_from_ranks);
-    // Now I know how many requests I will get from every rank.
-    // Allocate memory for all incoming synapse requests.
-    for (auto rank = 0; rank < MPIWrapper::get_num_ranks(); rank++) {
-        if (auto num_requests = num_synapse_requests_from_ranks[rank]; 0 != num_requests) {
-            synapse_creation_requests_incoming[rank].resize(num_requests);
-        }
-    }
-
-    std::vector<MPIWrapper::AsyncToken>
-        mpi_requests(synapse_creation_requests_outgoing.size() + synapse_creation_requests_incoming.size());
-
-    /**
-		* Send and receive actual synapse requests
-		*/
-    auto mpi_requests_index = 0;
-
-    // Receive actual synapse requests
-    for (auto& it : synapse_creation_requests_incoming) {
-        const auto rank = it.first;
-        auto* buffer = it.second.get_requests();
-        const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
-
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
-
-        mpi_requests_index++;
-    }
-    // Send actual synapse requests
-    for (const auto& it : synapse_creation_requests_outgoing) {
-        const auto rank = it.first;
-        const auto* const buffer = it.second.get_requests();
-        const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
-
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
-
-        mpi_requests_index++;
-    }
-
-    // Wait for all sends and receives to complete
-    MPIWrapper::wait_all_tokens(mpi_requests);
-
-    return synapse_creation_requests_incoming;
-}
-
-std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_process_requests(const MapSynapseCreationRequests& synapse_creation_requests_incoming) {
+size_t Neurons::create_synapses_process_requests(MapSynapseCreationRequests& synapse_creation_requests_incoming) {
     if (synapse_creation_requests_incoming.empty()) {
-        return std::make_pair(0, std::map<int, std::vector<char>>{});
+        return 0;
     }
 
     size_t num_synapses_created = 0;
-    std::map<int, std::vector<char>> responses;
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    for (const auto& it : synapse_creation_requests_incoming) {
-        const auto source_rank = it.first;
-        const SynapseCreationRequests& requests = it.second;
+    for (auto& [source_rank, requests] : synapse_creation_requests_incoming) {
         const auto num_requests = requests.size();
-
-        responses[source_rank].resize(num_requests);
 
         // All requests of a rank
         for (auto request_index = 0; request_index < num_requests; request_index++) {
-            size_t source_neuron_id{ Constants::uninitialized };
-            size_t target_neuron_id{ Constants::uninitialized };
-            SignalType dendrite_type_needed = SignalType::EXCITATORY;
-            std::tie(source_neuron_id, target_neuron_id, dendrite_type_needed) = requests.get_request(request_index);
-
-            // Sanity check: if the request received is targeted for me
-            if (target_neuron_id >= number_neurons) {
-                RelearnException::fail("Neurons::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
-                exit(EXIT_FAILURE);
-            }
+            const auto& [source_neuron_id, target_neuron_id, dendrite_type_needed] = requests.get_request(request_index);
+            RelearnException::check(target_neuron_id < number_neurons, "Neurons::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
 
             int num_axons_connected_increment = 0;
-
-            const std::vector<double>* dendrites_cnts = nullptr; // TODO(fabian) find a nicer solution
-            const std::vector<unsigned int>* dendrites_connected_cnts = nullptr;
+            unsigned int number_free_elements = 0;
 
             // DendriteType::INHIBITORY dendrite requested
             if (SignalType::INHIBITORY == dendrite_type_needed) {
-                dendrites_cnts = &dendrites_inh->get_grown_elements();
-                dendrites_connected_cnts = &dendrites_inh->get_connected_elements();
+                number_free_elements = dendrites_inh->get_free_elements(target_neuron_id);
                 num_axons_connected_increment = -1;
             }
             // DendriteType::EXCITATORY dendrite requested
             else {
-                dendrites_cnts = &dendrites_exc->get_grown_elements();
-                dendrites_connected_cnts = &dendrites_exc->get_connected_elements();
+                number_free_elements = dendrites_exc->get_free_elements(target_neuron_id);
                 num_axons_connected_increment = +1;
             }
 
             // Target neuron has still dendrite available, so connect
-            RelearnException::check((*dendrites_cnts)[target_neuron_id] - (*dendrites_connected_cnts)[target_neuron_id] >= 0, "Neurons::create_synapses_process_requests: Connectivity went downside");
-
-            const auto diff = static_cast<unsigned int>((*dendrites_cnts)[target_neuron_id] - (*dendrites_connected_cnts)[target_neuron_id]);
-            if (diff != 0) {
+            if (number_free_elements != 0) {
                 // Increment num of connected dendrites
                 if (SignalType::INHIBITORY == dendrite_type_needed) {
                     dendrites_inh->update_connected_elements(target_neuron_id, 1);
@@ -920,22 +838,20 @@ std::pair<size_t, std::map<int, std::vector<char>>> Neurons::create_synapses_pro
                 network_graph->add_edge_weight(target_id, source_id, num_axons_connected_increment);
 
                 // Set response to "connected" (success)
-                responses[source_rank][request_index] = 1;
+                requests.set_response(request_index, 1);
                 num_synapses_created++;
             } else {
                 // Other axons were faster and came first
                 // Set response to "not connected" (not success)
-                responses[source_rank][request_index] = 0;
+                requests.set_response(request_index, 0);
             }
         } // All requests of a rank
     } // Increasing order of ranks that sent requests
 
-    return std::make_pair(num_synapses_created, responses);
+    return num_synapses_created;
 }
 
-std::map<int, std::vector<char>> Neurons::create_synapses_exchange_responses(
-    const std::map<int, std::vector<char>>& synapse_creation_responses,
-    const MapSynapseCreationRequests& synapse_creation_requests_outgoing) {
+void Neurons::create_synapses_exchange_responses(const MapSynapseCreationRequests& synapse_creation_responses, MapSynapseCreationRequests& synapse_creation_requests_outgoing) {
     /**
     * Send and receive responses for synapse requests
     */
@@ -943,30 +859,20 @@ std::map<int, std::vector<char>> Neurons::create_synapses_exchange_responses(
     std::vector<MPIWrapper::AsyncToken>
         mpi_requests(synapse_creation_requests_outgoing.size() + synapse_creation_responses.size());
 
-    std::map<int, std::vector<char>> received_responses;
-
-    for (const auto& it : synapse_creation_requests_outgoing) {
-        const auto rank = it.first;
-        const auto size = it.second.size();
-
-        received_responses[rank].resize(size);
-    }
-
     // Receive responses
-    for (auto& it : received_responses) {
-        const auto rank = it.first;
-        auto* buffer = it.second.data();
-        const auto size_in_bytes = static_cast<int>(it.second.size());
+    for (auto& [rank, requests] : synapse_creation_requests_outgoing) {
+        auto* buffer = requests.get_responses();
+        const auto size_in_bytes = static_cast<int>(requests.size());
 
         MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
 
         mpi_requests_index++;
     }
+
     // Send responses
-    for (const auto& it : synapse_creation_responses) {
-        const auto rank = it.first;
-        const auto* const buffer = it.second.data();
-        const auto size_in_bytes = static_cast<int>(it.second.size());
+    for (const auto& [rank, requests] : synapse_creation_responses) {
+        const auto* const buffer = requests.get_responses();
+        const auto size_in_bytes = static_cast<int>(requests.size());
 
         MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
 
@@ -974,13 +880,9 @@ std::map<int, std::vector<char>> Neurons::create_synapses_exchange_responses(
     }
     // Wait for all sends and receives to complete
     MPIWrapper::wait_all_tokens(mpi_requests);
-
-    return received_responses;
 }
 
-size_t Neurons::create_synapses_process_responses(
-    const MapSynapseCreationRequests& synapse_creation_requests_outgoing,
-    const std::map<int, std::vector<char>>& received_responses) {
+size_t Neurons::create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing) {
     size_t num_synapses_created = 0;
 
     const auto my_rank = MPIWrapper::get_my_rank();
@@ -997,7 +899,7 @@ size_t Neurons::create_synapses_process_responses(
 
         // All responses from a rank
         for (auto request_index = 0; request_index < num_requests; request_index++) {
-            char connected = received_responses.at(target_rank)[request_index];
+            char connected = requests.get_response(request_index);
             size_t source_neuron_id{ Constants::uninitialized };
             size_t target_neuron_id{ Constants::uninitialized };
             SignalType dendrite_type_needed = SignalType::EXCITATORY;
@@ -1413,7 +1315,7 @@ void Neurons::print_positions_to_log_file() {
     const std::vector<SignalType>& signal_types = axons->get_signal_types();
 
     for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        
+
         const auto global_id = translator->get_global_id(neuron_id);
         const auto& signal_type_name = (signal_types[neuron_id] == SignalType::EXCITATORY) ? std::string("ex") : std::string("in");
 

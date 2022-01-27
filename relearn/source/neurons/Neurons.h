@@ -349,7 +349,7 @@ class Neurons {
          *      Does not transfer ownership
          * @return A raw pointer to the requests
          */
-        [[nodiscard]] size_t* get_requests() noexcept {
+        [[nodiscard]] size_t* data() noexcept {
             return requests.data();
         }
 
@@ -358,7 +358,7 @@ class Neurons {
          *      Does not transfer ownership
          * @return A raw pointer to the requests
          */
-        [[nodiscard]] const size_t* get_requests() const noexcept {
+        [[nodiscard]] const size_t* data() const noexcept {
             return requests.data();
         }
 
@@ -749,13 +749,11 @@ private:
 
     void create_synapses_update_octree();
 
-    [[nodiscard]] static MapSynapseCreationRequests create_synapses_exchange_requests(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
+    [[nodiscard]] size_t create_synapses_process_requests(MapSynapseCreationRequests& synapse_creation_requests_incoming);
 
-    [[nodiscard]] std::pair<size_t, std::map<int, std::vector<char>>> create_synapses_process_requests(const MapSynapseCreationRequests& synapse_creation_requests_incoming);
+    [[nodiscard]] static void create_synapses_exchange_responses(const MapSynapseCreationRequests& synapse_creation_responses, MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
-    [[nodiscard]] static std::map<int, std::vector<char>> create_synapses_exchange_responses(const std::map<int, std::vector<char>>& synapse_creation_responses, const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
-
-    [[nodiscard]] size_t create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing, const std::map<int, std::vector<char>>& received_responses);
+    [[nodiscard]] size_t create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
     static void print_pending_synapse_deletions(const PendingDeletionsV& list);
 
