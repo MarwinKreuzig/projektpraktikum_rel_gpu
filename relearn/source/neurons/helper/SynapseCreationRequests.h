@@ -192,7 +192,7 @@ public:
      * @param outgoing_requests The outgoing synapse creation requests for other ranks
      * @return The incoming synapse creation requests from other ranks
     */
-    static std::map<int, SynapseCreationRequests> exchange_requests(const std::map<int, SynapseCreationRequests>& outgoing_requests) {
+    [[nodiscard]] static std::map<int, SynapseCreationRequests> exchange_requests(const std::map<int, SynapseCreationRequests>& outgoing_requests) {
         const auto number_ranks = MPIWrapper::get_num_ranks();
 
         /**
@@ -250,6 +250,40 @@ public:
         MPIWrapper::wait_all_tokens(mpi_requests);
 
         return incoming_requests;
+    }
+
+    /**
+     * @brief Exchanges all responses across all MPI ranks, that is,
+     *      if MPI rank i had the response r for MPI rank j,
+     *      i calls this function with responses_from_me[j] = r,
+     *      then after it returns j has responses_for_me[i] = r 
+     * @param responses_from_me My local responses to previous creation requests
+     * @param responses_for_me The responses for me. Must be the same that was used in exchange_requests beforehand
+     */
+    static void exchange_responses(const MapSynapseCreationRequests& responses_from_me, MapSynapseCreationRequests& responses_for_me) {
+        auto mpi_requests_index = 0;
+        std::vector<MPIWrapper::AsyncToken> mpi_requests(responses_for_me.size() + responses_from_me.size());
+
+        for (auto& [rank, requests] : responses_for_me) {
+            auto* buffer = requests.get_responses();
+            const auto size_in_bytes = static_cast<int>(requests.size());
+
+            MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
+
+            mpi_requests_index++;
+        }
+
+        for (const auto& [rank, requests] : responses_from_me) {
+            const auto* const buffer = requests.get_responses();
+            const auto size_in_bytes = static_cast<int>(requests.size());
+
+            MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
+
+            mpi_requests_index++;
+        }
+
+        // Wait for all sends and receives to complete
+        MPIWrapper::wait_all_tokens(mpi_requests);
     }
 };
 

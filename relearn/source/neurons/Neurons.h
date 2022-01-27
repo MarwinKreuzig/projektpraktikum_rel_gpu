@@ -751,8 +751,6 @@ private:
 
     [[nodiscard]] size_t create_synapses_process_requests(MapSynapseCreationRequests& synapse_creation_requests_incoming);
 
-    [[nodiscard]] static void create_synapses_exchange_responses(const MapSynapseCreationRequests& synapse_creation_responses, MapSynapseCreationRequests& synapse_creation_requests_outgoing);
-
     [[nodiscard]] size_t create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
     static void print_pending_synapse_deletions(const PendingDeletionsV& list);

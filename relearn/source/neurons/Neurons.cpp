@@ -757,7 +757,7 @@ size_t Neurons::create_synapses() {
 
     const auto synapses_created_locally = create_synapses_process_requests(synapse_creation_requests_incoming);
 
-    create_synapses_exchange_responses(synapse_creation_requests_incoming, synapse_creation_requests_outgoing);
+    SynapseCreationRequests::exchange_responses(synapse_creation_requests_incoming, synapse_creation_requests_outgoing);
     const auto synapses_created_remotely = create_synapses_process_responses(synapse_creation_requests_outgoing);
 
     Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES);
@@ -851,37 +851,6 @@ size_t Neurons::create_synapses_process_requests(MapSynapseCreationRequests& syn
     return num_synapses_created;
 }
 
-void Neurons::create_synapses_exchange_responses(const MapSynapseCreationRequests& synapse_creation_responses, MapSynapseCreationRequests& synapse_creation_requests_outgoing) {
-    /**
-    * Send and receive responses for synapse requests
-    */
-    int mpi_requests_index = 0;
-    std::vector<MPIWrapper::AsyncToken>
-        mpi_requests(synapse_creation_requests_outgoing.size() + synapse_creation_responses.size());
-
-    // Receive responses
-    for (auto& [rank, requests] : synapse_creation_requests_outgoing) {
-        auto* buffer = requests.get_responses();
-        const auto size_in_bytes = static_cast<int>(requests.size());
-
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
-
-        mpi_requests_index++;
-    }
-
-    // Send responses
-    for (const auto& [rank, requests] : synapse_creation_responses) {
-        const auto* const buffer = requests.get_responses();
-        const auto size_in_bytes = static_cast<int>(requests.size());
-
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
-
-        mpi_requests_index++;
-    }
-    // Wait for all sends and receives to complete
-    MPIWrapper::wait_all_tokens(mpi_requests);
-}
-
 size_t Neurons::create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing) {
     size_t num_synapses_created = 0;
 
@@ -892,43 +861,28 @@ size_t Neurons::create_synapses_process_responses(const MapSynapseCreationReques
 	 * NOTE: Do not create synapses in the network for my own responses as the corresponding synapses, if possible,
 	 * would have been created before sending the response to myself (see above).
 	 */
-    for (const auto& it : synapse_creation_requests_outgoing) {
-        const auto target_rank = it.first;
-        const SynapseCreationRequests& requests = it.second;
+    for (const auto& [target_rank, requests] : synapse_creation_requests_outgoing) {
         const auto num_requests = requests.size();
+        RelearnException::check(target_rank != my_rank, "Neurons::create_synapses_process_responses: There is a request for my rank, but that should not be handled here.");
 
         // All responses from a rank
         for (auto request_index = 0; request_index < num_requests; request_index++) {
-            char connected = requests.get_response(request_index);
-            size_t source_neuron_id{ Constants::uninitialized };
-            size_t target_neuron_id{ Constants::uninitialized };
-            SignalType dendrite_type_needed = SignalType::EXCITATORY;
-            std::tie(source_neuron_id, target_neuron_id, dendrite_type_needed) = requests.get_request(request_index);
+            const auto connected = requests.get_response(request_index);
 
-            // Request to form synapse succeeded
-            if (connected != 0) {
-                // Increment num of connected axons
-                axons->update_connected_elements(source_neuron_id, 1);
-                //axons_connected_cnts[source_neuron_id]++;
-                num_synapses_created++;
-
-                const double delta = axons->get_grown_elements(source_neuron_id) - axons->get_connected_elements(source_neuron_id);
-                RelearnException::check(delta >= 0, "Neurons::create_synapses_process_responses: delta is negative: {}", delta);
-
-                // I have already created the synapse in the network
-                // if the response comes from myself
-                if (target_rank != my_rank) {
-                    // Update network
-                    const auto num_axons_connected_increment_2 = (SignalType::INHIBITORY == dendrite_type_needed) ? -1 : +1;
-
-                    const RankNeuronId target_id{ target_rank, target_neuron_id };
-                    const RankNeuronId source_id{ my_rank, source_neuron_id };
-
-                    network_graph->add_edge_weight(target_id, source_id, num_axons_connected_increment_2);
-                }
-            } else {
-                // Other axons were faster and came first
+            if (connected == 0) {
+                continue;
             }
+
+            const auto& [source_neuron_id, target_neuron_id, dendrite_type_needed] = requests.get_request(request_index);
+            num_synapses_created++;
+
+            axons->update_connected_elements(source_neuron_id, 1);
+
+            const RankNeuronId target_id{ target_rank, target_neuron_id };
+            const RankNeuronId source_id{ my_rank, source_neuron_id };
+            const auto weight = (SignalType::INHIBITORY == dendrite_type_needed) ? -1 : +1;
+
+            network_graph->add_edge_weight(target_id, source_id, weight);
         } // All responses from a rank
     } // All outgoing requests
 

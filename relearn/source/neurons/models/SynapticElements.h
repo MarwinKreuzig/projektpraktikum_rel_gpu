@@ -234,6 +234,11 @@ public:
             RelearnException::check(connected_elements[neuron_id] >= abs_delta, "SynapticElements::update_connected_elements: {}: {}", neuron_id, delta);
         }
 
+        if (delta > 0) {
+            const auto number_free_elements = get_free_elements(neuron_id);
+            RelearnException::check(number_free_elements >= static_cast<unsigned int>(delta), "SynapticElements::update_connected_elements: There are not enogh free elements {}: {} vs {}", neuron_id, delta, number_free_elements);
+        }
+
         connected_elements[neuron_id] += delta;
     }
 
