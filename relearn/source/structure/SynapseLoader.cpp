@@ -58,7 +58,7 @@ FileSynapseLoader::internal_load_synapses() {
         synapse_weight weight = 0;
 
         std::stringstream sstream(line);
-        const bool success = (sstream >> source_id) && (sstream >> target_id) && (sstream >> weight);
+        const bool success = (sstream >> target_id) && (sstream >> source_id) && (sstream >> weight);
 
         RelearnException::check(success, "FileSynapseLoader::internal_load_synapses: Loading synapses was unsuccessfull!");
 
