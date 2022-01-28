@@ -27,7 +27,6 @@ class Partition;
  */
 class NeuronIdTranslator {
 public:
-    using neuron_id = NeuronID;
     using position_type = RelearnTypes::position_type;
 
 protected:
@@ -87,21 +86,21 @@ public:
      * @param global_ids The global neuron ids
      * @return A translation map from global neuron id to RankNeuronId
      */
-    virtual std::map<neuron_id, RankNeuronId> translate_global_ids(const std::vector<neuron_id>& global_ids) = 0;
+    virtual std::map<NeuronID, RankNeuronId> translate_global_ids(const std::vector<NeuronID>& global_ids) = 0;
 
     /**
      * @brief Translated a RankNeuronId to a global neuron id
      * @param rni The rank neuron id
      * @return The global neuron id of that neuron
      */
-    virtual neuron_id translate_rank_neuron_id(const RankNeuronId& rni) = 0;
+    virtual NeuronID translate_rank_neuron_id(const RankNeuronId& rni) = 0;
 
     /**
      * @brief Translated a bunch of RankNeuronIds to global neuron ids
      * @param ids The RankNeuronIds
      * @return A translation map from RankNeuronId to global neuron id
      */
-    virtual std::map<RankNeuronId, neuron_id> translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) = 0;
+    virtual std::map<RankNeuronId, NeuronID> translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) = 0;
 };
 
 /**
@@ -127,24 +126,24 @@ public:
      * @param global_ids The global neuron ids
      * @return A translation map from global neuron id to RankNeuronId
      */
-    std::map<neuron_id, RankNeuronId> translate_global_ids(const std::vector<neuron_id>& global_ids) override;
+    std::map<NeuronID, RankNeuronId> translate_global_ids(const std::vector<NeuronID>& global_ids) override;
 
     /**
      * @brief Translated a RankNeuronId to a global neuron id
      * @param rni The rank neuron id
      * @return The global neuron id of that neuron
      */
-    neuron_id translate_rank_neuron_id(const RankNeuronId& rni) override;
+    NeuronID translate_rank_neuron_id(const RankNeuronId& rni) override;
 
     /**
      * @brief Translated a bunch of RankNeuronIds to global neuron ids
      * @param ids The RankNeuronIds
      * @return A translation map from RankNeuronId to global neuron id
      */
-    std::map<RankNeuronId, neuron_id> translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) override;
+    std::map<RankNeuronId, NeuronID> translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) override;
 
 private:
-    std::map<neuron_id, position_type> load_neuron_positions(const std::vector<neuron_id>& global_ids);
+    std::map<NeuronID, position_type> load_neuron_positions(const std::vector<NeuronID>& global_ids);
 };
 
 /**
@@ -169,19 +168,19 @@ public:
      * @param global_ids The global neuron ids
      * @return A translation map from global neuron id to RankNeuronId
      */
-    std::map<neuron_id, RankNeuronId> translate_global_ids(const std::vector<neuron_id>& global_ids) override;
+    std::map<NeuronID, RankNeuronId> translate_global_ids(const std::vector<NeuronID>& global_ids) override;
 
     /**
      * @brief Translated a RankNeuronId to a global neuron id
      * @param rni The rank neuron id
      * @return The global neuron id of that neuron
      */
-    neuron_id translate_rank_neuron_id(const RankNeuronId& rni) override;
+    NeuronID translate_rank_neuron_id(const RankNeuronId& rni) override;
 
     /**
      * @brief Translated a bunch of RankNeuronIds to global neuron ids
      * @param ids The RankNeuronIds
      * @return A translation map from RankNeuronId to global neuron id
      */
-    std::map<RankNeuronId, neuron_id> translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) override;
+    std::map<RankNeuronId, NeuronID> translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) override;
 };

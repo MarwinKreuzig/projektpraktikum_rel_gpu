@@ -25,7 +25,6 @@
 class RankNeuronId {
 public:
     using rank_type = int;
-    using neuron_id_type = NeuronID;
 
 private:
     rank_type rank{ -1 }; // MPI rank of the owner
@@ -42,7 +41,7 @@ public:
      * @param rank The MPI rank
      * @param neuron_id The neuron id
      */
-    RankNeuronId(const rank_type rank, const neuron_id_type neuron_id) noexcept
+    RankNeuronId(const rank_type rank, const NeuronID neuron_id) noexcept
         : rank(rank)
         , neuron_id(neuron_id) {
     }
@@ -62,7 +61,7 @@ public:
      * @return The neuron id
      * @exception Throws a RelearnException if the id is not smaller than Constants::uninitialized
      */
-    [[nodiscard]] neuron_id_type get_neuron_id() const {
+    [[nodiscard]] NeuronID get_neuron_id() const {
         RelearnException::check(neuron_id.is_initialized(), "RankNeuronId::get_neuron_id: neuron_id is not initialized");
         return neuron_id;
     }
@@ -148,7 +147,7 @@ struct tuple_element<0, ::RankNeuronId> {
 
 template <>
 struct tuple_element<1, ::RankNeuronId> {
-    using type = RankNeuronId::neuron_id_type;
+    using type = NeuronID;
 };
 
 } // namespace std

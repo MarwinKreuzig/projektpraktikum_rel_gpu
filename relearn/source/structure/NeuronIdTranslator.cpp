@@ -71,7 +71,7 @@ NeuronID NeuronIdTranslator::get_global_id(NeuronID local_id) const {
     return local_id;
 }
 
-std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::translate_global_ids(const std::vector<neuron_id>& global_ids) {
+std::map<NeuronID, RankNeuronId> FileNeuronIdTranslator::translate_global_ids(const std::vector<NeuronID>& global_ids) {
     if (global_ids.empty()) {
         return {};
     }
@@ -82,11 +82,11 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
     std::vector<size_t> num_foreign_ids_from_ranks_send(num_ranks, 0);
     std::vector<size_t> num_foreign_ids_from_ranks(num_ranks, 0);
 
-    std::vector<std::vector<neuron_id>> global_ids_to_send(num_ranks);
-    std::vector<std::vector<neuron_id>> global_ids_to_receive(num_ranks);
-    std::vector<std::vector<neuron_id>> global_ids_local_value(num_ranks);
+    std::vector<std::vector<NeuronID>> global_ids_to_send(num_ranks);
+    std::vector<std::vector<NeuronID>> global_ids_to_receive(num_ranks);
+    std::vector<std::vector<NeuronID>> global_ids_local_value(num_ranks);
 
-    std::map<neuron_id, int> neuron_id_to_rank{};
+    std::map<NeuronID, int> neuron_id_to_rank{};
     const auto& id_to_position = load_neuron_positions(global_ids);
 
     for (const auto& [neuron_id, neuron_position] : id_to_position) {
@@ -178,17 +178,17 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
     // Wait for all sends and receives to complete
     MPIWrapper::wait_all_tokens(mpi_requests);
 
-    std::map<neuron_id, RankNeuronId> final_translation_map{};
+    std::map<NeuronID, RankNeuronId> final_translation_map{};
 
     for (auto rank = 0; rank < num_ranks; rank++) {
-        std::vector<neuron_id>& translated_ids = global_ids_local_value[rank];
-        std::vector<neuron_id>& local_global_ids = global_ids_to_send[rank];
+        std::vector<NeuronID>& translated_ids = global_ids_local_value[rank];
+        std::vector<NeuronID>& local_global_ids = global_ids_to_send[rank];
 
         RelearnException::check(translated_ids.size() == local_global_ids.size(), "FileNeuronIdTranslator::translate_global_to_local: The vectors have not the same size in load network");
 
         for (auto i = 0; i < translated_ids.size(); i++) {
-            const neuron_id local_id = translated_ids[i];
-            const neuron_id global_id = local_global_ids[i];
+            const NeuronID local_id = translated_ids[i];
+            const NeuronID global_id = local_global_ids[i];
 
             const auto rank = neuron_id_to_rank[global_id];
 
@@ -199,13 +199,13 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
     return final_translation_map;
 }
 
-FileNeuronIdTranslator::neuron_id FileNeuronIdTranslator::translate_rank_neuron_id(const RankNeuronId& /*rni*/) {
+NeuronID FileNeuronIdTranslator::translate_rank_neuron_id(const RankNeuronId& /*rni*/) {
     RelearnException::fail("FileNeuronIdTranslator::translate_rank_neuron_id: Should not be here");
     return {};
 }
 
-std::map<FileNeuronIdTranslator::neuron_id, FileNeuronIdTranslator::position_type> FileNeuronIdTranslator::load_neuron_positions(const std::vector<neuron_id>& global_ids) {
-    std::map<neuron_id, position_type> translation_map{};
+std::map<NeuronID, FileNeuronIdTranslator::position_type> FileNeuronIdTranslator::load_neuron_positions(const std::vector<NeuronID>& global_ids) {
+    std::map<NeuronID, position_type> translation_map{};
 
     std::string line{};
     std::ifstream file_neurons(path_to_neurons, std::ios::binary | std::ios::in);
@@ -233,7 +233,7 @@ std::map<FileNeuronIdTranslator::neuron_id, FileNeuronIdTranslator::position_typ
 
         // File starts at 1
         --read_id;
-        neuron_id id{ read_id };
+        NeuronID id{ read_id };
 
         if (std::binary_search(global_ids.cbegin(), global_ids.cend(), id)) {
             translation_map[id] = { pos_x, pos_y, pos_z };
@@ -246,7 +246,7 @@ std::map<FileNeuronIdTranslator::neuron_id, FileNeuronIdTranslator::position_typ
     return translation_map;
 }
 
-std::map<RankNeuronId, FileNeuronIdTranslator::neuron_id> FileNeuronIdTranslator::translate_rank_neuron_ids(const std::vector<RankNeuronId>& /*ids*/) {
+std::map<RankNeuronId, NeuronID> FileNeuronIdTranslator::translate_rank_neuron_ids(const std::vector<RankNeuronId>& /*ids*/) {
     RelearnException::fail("FileNeuronIdTranslator::translate_rank_neuron_ids: Should not be here");
     return {};
 }
@@ -270,8 +270,8 @@ RandomNeuronIdTranslator::RandomNeuronIdTranslator(std::shared_ptr<Partition> pa
     }
 }
 
-std::map<RandomNeuronIdTranslator::neuron_id, RankNeuronId> RandomNeuronIdTranslator::translate_global_ids(const std::vector<neuron_id>& global_ids) {
-    std::map<neuron_id, RankNeuronId> return_value{};
+std::map<NeuronID, RankNeuronId> RandomNeuronIdTranslator::translate_global_ids(const std::vector<NeuronID>& global_ids) {
+    std::map<NeuronID, RankNeuronId> return_value{};
 
     const auto num_ranks = MPIWrapper::get_num_ranks();
 
@@ -317,7 +317,7 @@ std::map<RandomNeuronIdTranslator::neuron_id, RankNeuronId> RandomNeuronIdTransl
     return return_value;
 }
 
-RandomNeuronIdTranslator::neuron_id RandomNeuronIdTranslator::translate_rank_neuron_id(const RankNeuronId& rni) {
+NeuronID RandomNeuronIdTranslator::translate_rank_neuron_id(const RankNeuronId& rni) {
     const auto& [rank, local_neuron_id] = rni;
     RelearnException::check(rank >= 0, "RandomNeuronIdTranslator::translate_rank_neuron_ids: There was a negative MPI rank");
     RelearnException::check(rank < mpi_rank_to_local_start_id.size(), "RandomNeuronIdTranslator::translate_rank_neuron_ids: The requested MPI rank is not stored");
@@ -332,8 +332,8 @@ RandomNeuronIdTranslator::neuron_id RandomNeuronIdTranslator::translate_rank_neu
     return glob_id;
 }
 
-std::map<RankNeuronId, RandomNeuronIdTranslator::neuron_id> RandomNeuronIdTranslator::translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) {
-    std::map<RankNeuronId, neuron_id> return_value{};
+std::map<RankNeuronId, NeuronID> RandomNeuronIdTranslator::translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) {
+    std::map<RankNeuronId, NeuronID> return_value{};
 
     for (const auto& id : ids) {
         const auto& [rank, local_neuron_id] = id;
