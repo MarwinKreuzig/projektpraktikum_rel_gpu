@@ -15,6 +15,7 @@
 #include "../../util/TaggedID.h"
 
 #include <map>
+#include <span>
 #include <vector>
 
 /**
@@ -137,27 +138,27 @@ public:
     }
 
     /**
-     * @brief Gets a raw non-owning pointer for the encoded requests. The pointer is invalidated by append()
-     * @return The pointer to the encoded requests
+     * @brief Gets a raw non-owning span for the encoded requests. The span is invalidated by append()
+     * @return The span to the encoded requests
      */
-    [[nodiscard]] size_t* get_requests() noexcept {
-        return requests.data();
+    [[nodiscard]] std::span<size_t> get_requests() noexcept {
+        return requests;
     }
 
     /**
-     * @brief Gets a raw non-owning and non-mutable pointer for the encoded requests. The pointer is invalidated by append()
-     * @return The pointer to the encoded requests
+     * @brief Gets a raw non-owning and non-mutable span for the encoded requests. The span is invalidated by append()
+     * @return The span to the encoded requests
      */
-    [[nodiscard]] const size_t* get_requests() const noexcept {
-        return requests.data();
+    [[nodiscard]] std::span<const size_t> get_requests() const noexcept {
+        return requests;
     }
 
     /**
-     * @brief Gets a raw non-owning and non-mutable pointer for the stored responses. The pointer is invalidated by append()
-     * @return The pointer to the encoded answers: (1) for true, (0) for false
+     * @brief Gets a raw non-owning and non-mutable span for the stored responses. The span is invalidated by append()
+     * @return The span to the encoded answers: (1) for true, (0) for false
      */
-    [[nodiscard]] const char* get_responses() const noexcept {
-        return responses.data();
+    [[nodiscard]] std::span<const char> get_responses() const noexcept {
+        return responses;
     }
 
     /**
@@ -165,7 +166,7 @@ public:
      * @return The number of bytes all stored requests take
      */
     [[nodiscard]] size_t get_requests_size_in_bytes() const noexcept {
-        return requests.size() * sizeof(size_t);
+        return get_requests().size_bytes();
     }
 
     /**
@@ -173,7 +174,7 @@ public:
      * @return The number of bytes all stored responses take
      */
     [[nodiscard]] size_t get_responses_size_in_bytes() const noexcept {
-        return responses.size() * sizeof(char);
+        return get_responses().size_bytes();
     }
 
 private:

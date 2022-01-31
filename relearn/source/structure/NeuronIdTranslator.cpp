@@ -118,10 +118,7 @@ std::map<NeuronID, RankNeuronId> FileNeuronIdTranslator::translate_global_ids(co
             continue;
         }
 
-        auto* buffer = global_ids_to_receive[rank].data();
-        const auto size_in_bytes = static_cast<int>(global_ids_to_receive[rank].size() * sizeof(size_t));
-
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[request_counter]);
+        MPIWrapper::async_receive(std::span{ global_ids_to_receive[rank] }, rank, mpi_requests[request_counter]);
         request_counter++;
     }
 
@@ -130,13 +127,10 @@ std::map<NeuronID, RankNeuronId> FileNeuronIdTranslator::translate_global_ids(co
             continue;
         }
 
-        const auto* buffer = global_ids_to_send[rank].data();
-        const auto size_in_bytes = static_cast<int>(global_ids_to_send[rank].size() * sizeof(size_t));
-
         // Reserve enough space for the answer - it will be as long as the request
         global_ids_local_value[rank].resize(global_ids_to_send[rank].size());
 
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[request_counter]);
+        MPIWrapper::async_send(std::span{ global_ids_to_send[rank] }, rank, mpi_requests[request_counter]);
         request_counter++;
     }
 
@@ -156,10 +150,7 @@ std::map<NeuronID, RankNeuronId> FileNeuronIdTranslator::translate_global_ids(co
             continue;
         }
 
-        auto* buffer = global_ids_local_value[rank].data();
-        const auto size_in_bytes = static_cast<int>(global_ids_local_value[rank].size() * sizeof(size_t));
-
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[request_counter]);
+        MPIWrapper::async_receive(std::span{ global_ids_local_value[rank] }, rank, mpi_requests[request_counter]);
         request_counter++;
     }
 
@@ -168,10 +159,7 @@ std::map<NeuronID, RankNeuronId> FileNeuronIdTranslator::translate_global_ids(co
             continue;
         }
 
-        const auto* buffer = global_ids_to_receive[rank].data();
-        const auto size_in_bytes = static_cast<int>(global_ids_to_receive[rank].size() * sizeof(size_t));
-
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[request_counter]);
+        MPIWrapper::async_send(std::span{ global_ids_to_receive[rank] }, rank, mpi_requests[request_counter]);
         request_counter++;
     }
 

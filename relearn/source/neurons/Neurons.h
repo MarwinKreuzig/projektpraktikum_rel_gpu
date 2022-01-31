@@ -349,8 +349,8 @@ class Neurons {
          *      Does not transfer ownership
          * @return A raw pointer to the requests
          */
-        [[nodiscard]] size_t* get_requests() noexcept {
-            return requests.data();
+        [[nodiscard]] std::span<size_t> get_requests() noexcept {
+            return requests;
         }
 
         /**
@@ -358,8 +358,8 @@ class Neurons {
          *      Does not transfer ownership
          * @return A raw pointer to the requests
          */
-        [[nodiscard]] const size_t* get_requests() const noexcept {
-            return requests.data();
+        [[nodiscard]] std::span<const size_t> get_requests() const noexcept {
+            return requests;
         }
 
         /**
@@ -367,7 +367,7 @@ class Neurons {
          * @return The size of the internal buffer in bytes
          */
         [[nodiscard]] size_t get_requests_size_in_bytes() const noexcept {
-            return requests.size() * sizeof(size_t);
+            return get_requests().size_bytes();
         }
 
     private:

@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <map>
 #include <memory>
+#include <span>
 #include <vector>
 
 class NetworkGraph;
@@ -97,19 +98,19 @@ public:
         }
 
         /**
-         * @brief Returns a modifiable pointer to the internal buffer. Ownership is not transfered.
-         * @return A modifiable pointer to the internal buffer
+         * @brief Returns a modifiable span to the internal buffer. Ownership is not transfered.
+         * @return A modifiable span to the internal buffer
          */
-        [[nodiscard]] NeuronID* get_neuron_ids() noexcept {
-            return neuron_ids.data();
+        [[nodiscard]] std::span<NeuronID> get_neuron_ids() noexcept {
+            return neuron_ids;
         }
 
         /**
-         * @brief Returns a non-modifiable pointer to the internal buffer. Ownership is not transfered.
-         * @return A modifiable non-pointer to the internal buffer
+         * @brief Returns a non-modifiable span to the internal buffer. Ownership is not transfered.
+         * @return A non-modifiable span to the internal buffer
          */
-        [[nodiscard]] const NeuronID* get_neuron_ids() const noexcept {
-            return neuron_ids.data();
+        [[nodiscard]] std::span<const NeuronID> get_neuron_ids() const noexcept {
+            return neuron_ids;
         }
 
         /**
@@ -117,7 +118,7 @@ public:
          * @return The size in bytes of the internal buffer
          */
         [[nodiscard]] size_t get_neuron_ids_size_in_bytes() const noexcept {
-            return neuron_ids.size() * sizeof(size_t);
+            return get_neuron_ids().size_bytes();
         }
 
     private:

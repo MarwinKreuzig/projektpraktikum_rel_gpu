@@ -28,6 +28,7 @@ using MPIWrapper = MPINoWrapper;
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -255,41 +256,37 @@ public:
 
     /**
      * @brief Gathers multiple values for each MPI rank into the provided buffer on all MPI ranks
-     * @param ptr The buffer to which the data will be written. The values of MPI rank i are in ptr[count * i + {0, 1, ..., count - 1}]
+     * @param buffer The buffer to which the data will be written. The values of MPI rank i are in ptr[count * i + {0, 1, ..., count - 1}]
      * @param count The number of local values that shall be gathered
      * @exception Throws a RelearnException if an MPI error occurs or if count <= 0
      */
     template <typename T>
-    static void all_gather_inline(T* ptr, const int count) {
-        all_gather_inl(ptr, count * sizeof(T));
+    static void all_gather_inline(std::span<T> buffer) {
+        all_gather_inl(buffer.data(), buffer.size_bytes());
     }
 
     /**
      * @brief Sends data to another MPI rank asynchronously
-     * @param buffer The data that shall be sent to the other MPI rank
-     * @param size_in_bytes The number of bytes that shall be sent
+     * @param buffer The buffer that shall be sent to the other MPI rank
      * @param rank The other MPI rank that shall receive the data
      * @param token A token that can be used to query if the asynchronous communication completed
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
     template <typename T>
-    // NOLINTNEXTLINE
-    static void async_send(const T* buffer, const size_t size_in_bytes, const int rank, AsyncToken& token) {
-        async_s(buffer, static_cast<int>(size_in_bytes), rank, token);
+    static void async_send(std::span<T> buffer, const int rank, AsyncToken& token) {
+        async_s(buffer.data(), buffer.size_bytes(), rank, token);
     }
 
     /**
      * @brief Receives data from another MPI rank asynchronously
-     * @param buffer The address where the data shall be written to
-     * @param size_in_bytes The number of bytes that shall be received
+     * @param buffer The buffer where the data shall be written to
      * @param rank The other MPI rank that shall send the data
      * @param token A token that can be used to query if the asynchronous communication completed
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
     template <typename T>
-    // NOLINTNEXTLINE
-    static void async_receive(T* buffer, const size_t size_in_bytes, const int rank, AsyncToken& token) {
-        async_recv(buffer, static_cast<int>(size_in_bytes), rank, token);
+    static void async_receive(std::span<T> buffer, const int rank, AsyncToken& token) {
+        async_recv(buffer.data(), buffer.size_bytes(), rank, token);
     }
 
     /**
@@ -333,7 +330,7 @@ public:
                 continue;
             }
 
-            async_receive(retrieved_data[rank].data(), sizeof(T) * response_sizes[rank], rank, async_tokens[async_counter]);
+            async_receive(std::span{ retrieved_data[rank] }, rank, async_tokens[async_counter]);
             async_counter++;
         }
 
@@ -342,7 +339,7 @@ public:
                 continue;
             }
 
-            async_send(values[rank].data(), sizeof(T) * values[rank].size(), rank, async_tokens[async_counter]);
+            async_send(std::span{ values[rank] }, rank, async_tokens[async_counter]);
             async_counter++;
         }
 

@@ -193,23 +193,15 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_exchange
     auto mpi_requests_index = 0;
 
     // Receive actual neuron ids
-    for (auto& it : firing_neuron_ids_incoming) {
-        auto rank = it.first;
-        auto* buffer = it.second.get_neuron_ids();
-        const auto size_in_bytes = static_cast<int>(it.second.get_neuron_ids_size_in_bytes());
-
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
+    for (auto& [rank, firing_ids] : firing_neuron_ids_incoming) {
+        MPIWrapper::async_receive(firing_ids.get_neuron_ids(), rank, mpi_requests[mpi_requests_index]);
 
         ++mpi_requests_index;
     }
 
     // Send actual neuron ids
-    for (const auto& it : firing_neuron_ids_outgoing) {
-        auto rank = it.first;
-        const auto* buffer = it.second.get_neuron_ids();
-        const auto size_in_bytes = static_cast<int>(it.second.get_neuron_ids_size_in_bytes());
-
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
+    for (const auto& [rank, firing_ids] : firing_neuron_ids_outgoing) {
+        MPIWrapper::async_send(firing_ids.get_neuron_ids(), rank, mpi_requests[mpi_requests_index]);
 
         ++mpi_requests_index;
     }

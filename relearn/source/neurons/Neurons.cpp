@@ -597,23 +597,15 @@ Neurons::MapSynapseDeletionRequests Neurons::delete_synapses_exchange_requests(c
     auto mpi_requests_index = 0;
 
     // Receive actual synapse deletion requests
-    for (auto& it : synapse_deletion_requests_incoming) {
-        const auto rank = it.first;
-        auto* buffer = it.second.get_requests();
-        const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
-
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
+    for (auto& [rank, deletion_requests] : synapse_deletion_requests_incoming) {
+        MPIWrapper::async_receive(std::span{ deletion_requests.get_requests() }, rank, mpi_requests[mpi_requests_index]);
 
         ++mpi_requests_index;
     }
 
     // Send actual synapse deletion requests
-    for (const auto& it : synapse_deletion_requests_outgoing) {
-        const auto rank = it.first;
-        const auto* const buffer = it.second.get_requests();
-        const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
-
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
+    for (const auto& [rank, deletion_requests] : synapse_deletion_requests_outgoing) {
+        MPIWrapper::async_send(std::span{ deletion_requests.get_requests() }, rank, mpi_requests[mpi_requests_index]);
 
         ++mpi_requests_index;
     }
@@ -831,22 +823,14 @@ MapSynapseCreationRequests Neurons::create_synapses_exchange_requests(const MapS
     auto mpi_requests_index = 0;
 
     // Receive actual synapse requests
-    for (auto& it : synapse_creation_requests_incoming) {
-        const auto rank = it.first;
-        auto* buffer = it.second.get_requests();
-        const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
-
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
+    for (auto& [rank, creation_requests] : synapse_creation_requests_incoming) {
+        MPIWrapper::async_receive(creation_requests.get_requests(), rank, mpi_requests[mpi_requests_index]);
 
         mpi_requests_index++;
     }
     // Send actual synapse requests
-    for (const auto& it : synapse_creation_requests_outgoing) {
-        const auto rank = it.first;
-        const auto* const buffer = it.second.get_requests();
-        const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
-
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
+    for (const auto& [rank, creation_requests] : synapse_creation_requests_outgoing) {
+        MPIWrapper::async_send(creation_requests.get_requests(), rank, mpi_requests[mpi_requests_index]);
 
         mpi_requests_index++;
     }
@@ -953,22 +937,14 @@ std::map<int, std::vector<char>> Neurons::create_synapses_exchange_responses(
     }
 
     // Receive responses
-    for (auto& it : received_responses) {
-        const auto rank = it.first;
-        auto* buffer = it.second.data();
-        const auto size_in_bytes = static_cast<int>(it.second.size());
-
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
+    for (auto& [rank, response] : received_responses) {
+        MPIWrapper::async_receive(std::span{ response }, rank, mpi_requests[mpi_requests_index]);
 
         mpi_requests_index++;
     }
     // Send responses
-    for (const auto& it : synapse_creation_responses) {
-        const auto rank = it.first;
-        const auto* const buffer = it.second.data();
-        const auto size_in_bytes = static_cast<int>(it.second.size());
-
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
+    for (const auto& [rank, response] : synapse_creation_responses) {
+        MPIWrapper::async_send(std::span{ response }, rank, mpi_requests[mpi_requests_index]);
 
         mpi_requests_index++;
     }
