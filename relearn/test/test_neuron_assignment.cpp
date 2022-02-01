@@ -77,7 +77,7 @@ void write_synapses_to_file(const std::vector<std::tuple<size_t, size_t, int>>& 
     std::ofstream of(path);
 
     for (const auto& [source, target, weight] : synapses) {
-        of << (source + 1) << ' ' << (target + 1) << ' ' << weight << '\n';
+        of << (target + 1) << ' ' << (source + 1) << ' ' << weight << '\n';
     }
 }
 

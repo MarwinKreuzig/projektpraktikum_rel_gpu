@@ -20,6 +20,7 @@
 #include "../../../source/util/RelearnException.h"
 #include "../../../source/neurons/ElementType.h"
 #include "../../../source/neurons/SignalType.h"
+#include "../../../source/neurons/models/SynapticElements.h"
 
 #include <chrono>
 #include <cmath>
@@ -171,8 +172,8 @@ protected:
         return uid_synapse_weight(mt);
     }
 
-    unsigned int get_random_synaptic_element_connected_count() {
-        return get_random_integer<unsigned int>(0, 10);
+    unsigned int get_random_synaptic_element_connected_count(unsigned int maximum) {
+        return get_random_integer<unsigned int>(0, maximum);
     }
 
     std::vector<std::tuple<size_t, size_t, int>> get_random_synapses(size_t number_neurons, size_t number_synapses) {
@@ -194,7 +195,7 @@ protected:
     }
 
     double get_random_synaptic_element_count() {
-        return get_random_double(0.0, std::nextafter(10.0, 11.0));
+        return get_random_double(min_grown_elements, std::nextafter(max_grown_elements, max_grown_elements * 2.0));
     }
 
     uint8_t get_random_refinement_level() noexcept {
@@ -221,6 +222,38 @@ protected:
     SignalType get_random_signal_type() noexcept {
         return get_random_bool() ? SignalType::EXCITATORY : SignalType::INHIBITORY;
     }
+
+    std::tuple<SynapticElements, std::vector<double>, std::vector<unsigned int>, std::vector<SignalType>>
+    create_random_synaptic_elements(size_t number_elements, ElementType element_type, double min_calcium_to_grow,
+        double growth_factor = SynapticElements::default_nu, double retract_ratio = SynapticElements::default_vacant_retract_ratio,
+        double lb_free_elements = SynapticElements::default_vacant_elements_initially_lower_bound, double ub_free_elements = SynapticElements::default_vacant_elements_initially_upper_bound) {
+
+        SynapticElements se(element_type, min_calcium_to_grow, growth_factor, retract_ratio, lb_free_elements, ub_free_elements);
+        se.init(number_elements);
+
+        std::vector<double> grown_elements(number_elements);
+        std::vector<unsigned int> connected_elements(number_elements);
+        std::vector<SignalType> signal_types(number_elements);
+
+        for (auto i = 0; i < number_elements; i++) {
+            const auto number_grown_elements = get_random_synaptic_element_count();
+            const auto number_connected_elements = get_random_synaptic_element_connected_count(static_cast<unsigned int>(number_grown_elements));
+            const auto signal_type = get_random_signal_type();
+
+            se.update_grown_elements(i, number_grown_elements);
+            se.update_connected_elements(i, number_connected_elements);
+            se.set_signal_type(i, signal_type);
+
+            grown_elements[i] = number_grown_elements;
+            connected_elements[i] = number_connected_elements;
+            signal_types[i] = signal_type;
+        }
+
+        return std::make_tuple<SynapticElements, std::vector<double>, std::vector<unsigned int>, std::vector<SignalType>>(std::move(se), std::move(grown_elements), std::move(connected_elements), std::move(signal_types));
+    }
+
+    constexpr static double min_grown_elements = 0.0;
+    constexpr static double max_grown_elements = 10.0;
 
     constexpr static unsigned short small_refinement_level = 5;
     constexpr static unsigned short max_refinement_level = Constants::max_lvl_subdomains;

@@ -168,7 +168,13 @@ int main(int argc, char** argv) {
     auto* opt_file_creation_interrups = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
 
     double base_background_activity{ NeuronModel::default_base_background_activity };
-    auto* opt_base_background_activity = app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are exited");
+    auto* opt_base_background_activity = app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+
+    double background_activity_mean{ NeuronModel::default_background_activity_mean };
+    auto* opt_background_activity_mean = app.add_option("--background-activity-mean", background_activity_mean, "The mean background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+
+    double background_activity_stddev{ NeuronModel::default_background_activity_stddev };
+    auto* opt_background_activity_stddev = app.add_option("--background-activity-stddev", background_activity_stddev, "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
     double synapse_conductance{ NeuronModel::default_k };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transfered to its neighbors when a neuron spikes. Default is 0.03");
@@ -256,7 +262,6 @@ int main(int argc, char** argv) {
     RelearnException::check(static_cast<bool>(*opt_num_neurons) || static_cast<bool>(*opt_file_positions) || static_cast<bool>(*opt_num_neurons_per_rank),
         "Missing command line option, need a total number of neurons (-n,--num-neurons), a number of neurons per rank (--num-neurons-per-rank), or file_positions (-f,--file).");
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
-    RelearnException::check(base_background_activity >= 0.0, "The base background activity must be non-negative.");
     RelearnException::check(calcium_decay > 0.0, "The calcium decay constant must be greater than 0.");
 
     if (algorithm == AlgorithmEnum::BarnesHut) {
@@ -309,8 +314,19 @@ int main(int argc, char** argv) {
             "Chosen beta value: {}\n"
             "Chosen nu value: {}\n"
             "Chosen synapse conductance: {}\n"
-            "Chosen background activity: {}",
-            Timers::wall_clock_time(), synaptic_elements_init_lb, synaptic_elements_init_ub, target_calcium, beta, nu, synapse_conductance, base_background_activity);
+            "Chosen background activity base: {}\n"
+            "Chosen background activity mean: {}\n"
+            "Chosen background activity stddev: {}",
+            Timers::wall_clock_time(),
+            synaptic_elements_init_lb, 
+            synaptic_elements_init_ub, 
+            target_calcium,
+            beta,
+            nu, 
+            synapse_conductance, 
+            base_background_activity,
+            background_activity_mean,
+            background_activity_stddev);
 
         LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
             "Number of steps: {}\n"
@@ -320,7 +336,9 @@ int main(int argc, char** argv) {
             "Chosen beta value: {}\n"
             "Chosen nu value: {}\n"
             "Chosen synapse conductance: {}\n"
-            "Chosen background activity: {}",
+            "Chosen background activity base: {}\n"
+            "Chosen background activity mean: {}\n"
+            "Chosen background activity stddev: {}",
             simulation_steps,
             synaptic_elements_init_lb,
             synaptic_elements_init_ub,
@@ -328,7 +346,9 @@ int main(int argc, char** argv) {
             beta,
             nu,
             synapse_conductance,
-            base_background_activity);
+            base_background_activity,
+            background_activity_mean,
+            background_activity_stddev);
     }
 
     LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "#step: creations deletions netto");
@@ -377,7 +397,7 @@ int main(int argc, char** argv) {
     }
 
     auto neuron_models = std::make_unique<models::PoissonModel>(synapse_conductance, calcium_decay, beta, NeuronModel::default_h,
-        base_background_activity, NeuronModel::default_background_activity_mean, NeuronModel::default_background_activity_stddev,
+        base_background_activity, background_activity_mean, background_activity_stddev,
         models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
 
     auto axon_models = std::make_shared<SynapticElements>(ElementType::AXON, min_calcium_axons,
