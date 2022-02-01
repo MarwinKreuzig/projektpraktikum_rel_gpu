@@ -16,6 +16,8 @@
 
 #include "spdlog/spdlog.h"
 
+#include <algorithm>
+
 RandomNeuronIdTranslator::RandomNeuronIdTranslator(std::shared_ptr<Partition> partition)
     : RandomNeuronIdTranslator(std::move(partition), MPIWrapper::all_gather<size_t>) { }
 
@@ -86,30 +88,16 @@ std::map<RandomNeuronIdTranslator::neuron_id, RankNeuronId> RandomNeuronIdTransl
     }
 
     for (const auto& global_id : global_ids) {
-        auto last_rank = 0;
-        auto current_rank = 1;
-        auto current_start = mpi_rank_to_local_start_id[current_rank];
+        auto upper_bound = std::upper_bound(mpi_rank_to_local_start_id.begin(), mpi_rank_to_local_start_id.end(), global_id);
+        RelearnException::check(upper_bound != mpi_rank_to_local_start_id.begin(), "RandomNeuronIdTranslator::translate_global_ids: upper_bound found the beginning");
 
-        while (current_start <= global_id) {
-            last_rank++;
-            current_rank++;
+        const auto rank = static_cast<RankNeuronId::rank_type>(std::distance(mpi_rank_to_local_start_id.begin(), upper_bound) - 1);
+        RelearnException::check(rank < num_ranks, "RandomNeuronIdTranslator::translate_global_ids: The rank is too large");
 
-            if (current_rank == num_ranks) {
-                break;
-            }
+        const auto rank_start = mpi_rank_to_local_start_id[rank];
+        const auto local_id = global_id - rank_start;
 
-            current_start = mpi_rank_to_local_start_id[current_rank];
-        }
-
-        RelearnException::check(global_id >= current_start, "RandomNeuronIdTranslator::translate_global_ids: Error in while loop");
-
-        if (current_rank < num_ranks) {
-            RelearnException::check(global_id < current_rank, "RandomNeuronIdTranslator::translate_global_ids: While loop breaked too early");
-        }
-
-        const auto local_id = global_id - current_start;
-
-        return_value.emplace(global_id, RankNeuronId{ last_rank, local_id });
+        return_value.emplace(global_id, RankNeuronId{ rank, local_id });
     }
 
     return return_value;
