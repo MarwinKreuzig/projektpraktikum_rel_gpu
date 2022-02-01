@@ -11,9 +11,9 @@
 
 #include "../source/sim/NeuronToSubdomainAssignment.h"
 #include "../source/structure/Partition.h"
-#include "../source/sim/SubdomainFromNeuronDensity.h"
-#include "../source/sim/SubdomainFromNeuronPerRank.h"
-#include "../source/sim/SubdomainFromFile.h"
+#include "../source/sim/random/SubdomainFromNeuronDensity.h"
+#include "../source/sim/random/SubdomainFromNeuronPerRank.h"
+#include "../source/sim/file/SubdomainFromFile.h"
 
 void NeuronAssignmentTest::generate_neuron_positions(std::vector<Vec3d>& positions,
     std::vector<std::string>& area_names, std::vector<SignalType>& types) {

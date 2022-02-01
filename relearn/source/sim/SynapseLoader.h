@@ -12,7 +12,6 @@
 
 #include "../neurons/helper/RankNeuronId.h"
 
-#include <filesystem>
 #include <memory>
 #include <optional>
 #include <tuple>
@@ -81,41 +80,4 @@ public:
 
     virtual ~SynapseLoader()
         = default;
-};
-
-class FileSynapseLoader : public SynapseLoader {
-    std::optional<std::filesystem::path> optional_path_to_file{};
-
-protected:
-    std::pair<synapses_tuple_type, std::vector<neuron_id>> internal_load_synapses() override;
-
-public:
-    /**
-     * @brief Constructs a FileSynapseLoader with the given Partition and NeuronIdTranslator.
-     *      Can load synapses from a file
-     * @param partition The partition to use
-     * @param neuron_id_translator The neuron id translator that is used to determine if neuron ids are local
-     * @param path_to_synapses The path to the synapses, can be empty
-     */
-    FileSynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator, 
-        const std::optional<std::filesystem::path>& path_to_synapses)
-        : SynapseLoader(std::move(partition), std::move(neuron_id_translator))
-        , optional_path_to_file(path_to_synapses) { }
-};
-
-class RandomSynapseLoader : public SynapseLoader {
-protected:
-    std::pair<synapses_tuple_type, std::vector<neuron_id>> internal_load_synapses() override {
-        return std::pair<synapses_tuple_type, std::vector<neuron_id>>();
-    }
-
-public:
-    /**
-     * @brief Constructs a RandomSynapseLoader with the given Partition and NeuronIdTranslator.
-     *      Does not provide any synapses
-     * @param partition The partition to use
-     * @param neuron_id_translator The neuron id translator that is used to determine if neuron ids are local
-     */
-    RandomSynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator)
-        : SynapseLoader(std::move(partition), std::move(neuron_id_translator)) { }
 };

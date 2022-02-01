@@ -12,7 +12,7 @@
 
 #include "../io/LogFiles.h"
 #include "../mpi/MPIWrapper.h"
-#include "../structure/NeuronIdTranslator.h"
+#include "../sim/NeuronIdTranslator.h"
 #include "../structure/NodeCache.h"
 #include "../structure/Octree.h"
 #include "../structure/Partition.h"

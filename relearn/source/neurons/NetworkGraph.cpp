@@ -11,7 +11,7 @@
 #include "NetworkGraph.h"
 
 #include "../io/LogFiles.h"
-#include "../structure/NeuronIdTranslator.h"
+#include "../sim/NeuronIdTranslator.h"
 #include "Neurons.h"
 
 #include "spdlog/spdlog.h"

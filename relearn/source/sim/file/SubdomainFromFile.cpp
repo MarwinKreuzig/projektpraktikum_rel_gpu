@@ -10,11 +10,13 @@
 
 #include "SubdomainFromFile.h"
 
-#include "../Config.h"
-#include "../io/LogFiles.h"
-#include "../sim/NeuronToSubdomainAssignment.h"
-#include "../structure/Partition.h"
-#include "../util/RelearnException.h"
+#include "../../Config.h"
+#include "../../io/LogFiles.h"
+#include "../../sim/NeuronToSubdomainAssignment.h"
+#include "../../sim/file/FileNeuronIdTranslator.h"
+#include "../../sim/file/FileSynapseLoader.h"
+#include "../../structure/Partition.h"
+#include "../../util/RelearnException.h"
 #include "spdlog/spdlog.h"
 
 #include <cmath>
@@ -205,6 +207,24 @@ void SubdomainFromFile::fill_subdomain(const size_t local_subdomain_index, [[may
     }
 
     set_nodes_for_subdomain(subdomain_index_1d, std::move(nodes));
+}
+
+void SubdomainFromFile::post_initialization() {
+    auto casted_ptr = std::static_pointer_cast<FileNeuronIdTranslator>(neuron_id_translator);
+
+    const auto total_number_subdomains = partition->get_number_local_subdomains();
+    std::vector<std::vector<size_t>> global_ids(total_number_subdomains);
+
+    for (auto i = 0; i < total_number_subdomains; i++) {
+        const auto& index_1d = partition->get_1d_index_of_subdomain(i);
+
+        auto global_ids_in_subdomain = get_neuron_global_ids_in_subdomain(index_1d, total_number_subdomains);
+        std::sort(global_ids_in_subdomain.begin(), global_ids_in_subdomain.end());
+
+        global_ids[i] = std::move(global_ids_in_subdomain);
+    }
+
+    casted_ptr->set_global_ids(std::move(global_ids));
 }
 
 std::optional<std::vector<size_t>> SubdomainFromFile::read_neuron_ids_from_file(const std::filesystem::path& file_path) {

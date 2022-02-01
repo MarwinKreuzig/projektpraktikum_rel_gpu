@@ -10,9 +10,9 @@
 
 #pragma once
 
-#include "../structure/SynapseLoader.h"
-#include "../structure/NeuronIdTranslator.h"
-#include "NeuronToSubdomainAssignment.h"
+#include "../NeuronIdTranslator.h"
+#include "../NeuronToSubdomainAssignment.h"
+#include "../SynapseLoader.h"
 
 #include <memory>
 #include <tuple>

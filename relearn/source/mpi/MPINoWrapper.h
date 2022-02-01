@@ -125,8 +125,10 @@ public:
     }
 
     template <typename T>
-    static void all_gather(T own_data, std::vector<T>& results) {
+    static std::vector<T> all_gather(T own_data) {
+        std::vector<T> results(1);
         all_gather(&own_data, results.data(), sizeof(T));
+        return results;
     }
 
     template <typename T>

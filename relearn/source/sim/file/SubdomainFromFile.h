@@ -10,10 +10,10 @@
 
 #pragma once
 
-#include "../Config.h"
-#include "../structure/SynapseLoader.h"
-#include "../structure/NeuronIdTranslator.h"
-#include "NeuronToSubdomainAssignment.h"
+#include "../../Config.h"
+#include "../SynapseLoader.h"
+#include "../NeuronIdTranslator.h"
+#include "../NeuronToSubdomainAssignment.h"
 
 #include <filesystem>
 #include <fstream>
@@ -72,8 +72,7 @@ protected:
      */
     void fill_subdomain(size_t local_subdomain_index, size_t total_number_subdomains) override;
 
-    void post_initialization() override {
-    }
+    void post_initialization() override;
 
     void calculate_total_number_neurons() const override {
         set_total_number_placed_neurons(total_num_neurons_in_file);

@@ -429,6 +429,13 @@ protected:
     }
 };
 
+class NeuronIdTest : public RelearnTest {
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
 class SynapticElementsTest : public RelearnTest {
 protected:
     static void SetUpTestCase() {

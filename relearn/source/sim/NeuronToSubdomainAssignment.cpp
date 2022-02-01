@@ -11,7 +11,7 @@
 #include "NeuronToSubdomainAssignment.h"
 
 #include "../neurons/models/SynapticElements.h"
-#include "../structure/NeuronIdTranslator.h"
+#include "../sim/NeuronIdTranslator.h"
 #include "../structure/Partition.h"
 #include "../util/RelearnException.h"
 
@@ -29,7 +29,6 @@ void NeuronToSubdomainAssignment::initialize() {
 
     std::vector<size_t> number_neurons_in_subdomains(total_number_subdomains);
 
-    std::map<int, std::vector<size_t>> map{};
 
     for (auto i = 0; i < total_number_subdomains; i++) {
         const auto& index_1d = partition->get_1d_index_of_subdomain(i);
@@ -38,20 +37,11 @@ void NeuronToSubdomainAssignment::initialize() {
         const auto number_neurons_in_subdomain = get_number_neurons_in_subdomain(index_1d, total_number_subdomains);
 
         number_neurons_in_subdomains[i] = number_neurons_in_subdomain;
-
-        auto global_ids_in_subdomain = get_neuron_global_ids_in_subdomain(index_1d, total_number_subdomains);
-        std::sort(global_ids_in_subdomain.begin(), global_ids_in_subdomain.end());
-
-        map[i] = std::move(global_ids_in_subdomain);
     }
 
     partition->set_subdomain_number_neurons(number_neurons_in_subdomains);
 
     post_initialization();
-
-    for (auto& [i, global_ids] : map) {
-        neuron_id_translator->set_global_ids(i, std::move(global_ids));
-    }
 }
 
 size_t NeuronToSubdomainAssignment::get_number_neurons_in_subdomain(const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {

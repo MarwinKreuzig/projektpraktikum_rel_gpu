@@ -10,8 +10,10 @@
 
 #include "SubdomainFromNeuronPerRank.h"
 
-#include "../structure/Partition.h"
-#include "../util/Random.h"
+#include "../../sim/random/RandomNeuronIdTranslator.h"
+#include "../../sim/random/RandomSynapseLoader.h"
+#include "../../structure/Partition.h"
+#include "../../util/Random.h"
 
 SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank(const size_t number_neurons_per_rank, const double fraction_excitatory_neurons, const double um_per_neuron, std::shared_ptr<Partition> partition)
     : NeuronToSubdomainAssignment(partition)

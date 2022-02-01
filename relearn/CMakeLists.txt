@@ -29,6 +29,8 @@ file(GLOB_RECURSE SRC_ALG "source/algorithm/*")
 file(GLOB_RECURSE SRC_IO "source/io/*")
 file(GLOB_RECURSE SRC_MPI "source/mpi/*")
 file(GLOB_RECURSE SRC_SIM "source/sim/*")
+file(GLOB_RECURSE SRC_SIM_FILE "source/sim/file/*")
+file(GLOB_RECURSE SRC_SIM_RANDOM "source/sim/random/*")
 file(GLOB_RECURSE SRC_STR "source/structure/*")
 file(GLOB_RECURSE SRC_UTIL "source/util/*")
 file(GLOB_RECURSE SRC_NEU "source/neurons/*.h" "source/neurons/*.cpp")
@@ -40,7 +42,10 @@ file(GLOB_RECURSE SRC_CONF "source/Config.h")
 
 file(GLOB_RECURSE SRC_TST "test/*")
 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRC_ALG} ${SRC_IO} ${SRC_MPI} ${SRC_SIM} ${SRC_STR} ${SRC_UTIL} ${SRC_NEU} ${SRC_NEU_MOD} ${SRC_NEU_HEL} ${SRC_MAIN} ${SRC_CONF})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES 
+${SRC_ALG} ${SRC_IO} ${SRC_MPI} ${SRC_SIM} 
+${SRC_STR} ${SRC_UTIL} ${SRC_NEU} ${SRC_NEU_MOD} 
+${SRC_NEU_HEL} ${SRC_MAIN} ${SRC_CONF} ${SRC_SIM_FILE} ${SRC_SIM_RANDOM})
 
 source_group("tests\\" FILES ${SRC_TST})
 
@@ -82,6 +87,8 @@ add_executable(relearn
 	${SRC_NEU_HEL}
 	${SRC_MAIN}
 	${SRC_CONF}
+	${SRC_SIM_FILE}
+	${SRC_SIM_RANDOM}
 )
 
 set_target_properties(relearn PROPERTIES ENABLE_EXPORTS 1)
@@ -137,6 +144,8 @@ add_executable(runTests
 	${SRC_NEU_HEL}
 	${SRC_CONF}
 	${SRC_TST}
+	${SRC_SIM_FILE}
+	${SRC_SIM_RANDOM}
 )
 
 target_link_libraries(runTests PRIVATE project_options)

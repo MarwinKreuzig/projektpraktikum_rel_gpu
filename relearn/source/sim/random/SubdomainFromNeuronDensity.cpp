@@ -10,11 +10,13 @@
 
 #include "SubdomainFromNeuronDensity.h"
 
-#include "../mpi/MPIWrapper.h"
-#include "../structure/Partition.h"
-#include "../structure/SynapseLoader.h"
-#include "../util/Random.h"
-#include "../util/RelearnException.h"
+#include "../../mpi/MPIWrapper.h"
+#include "../../sim/SynapseLoader.h"
+#include "../../sim/random/RandomNeuronIdTranslator.h"
+#include "../../sim/random/RandomSynapseLoader.h"
+#include "../../structure/Partition.h"
+#include "../../util/Random.h"
+#include "../../util/RelearnException.h"
 
 #include <limits>
 #include <numeric>
@@ -185,9 +187,7 @@ void SubdomainFromNeuronDensity::calculate_total_number_neurons() const {
     const auto number_local_neurons = get_number_placed_neurons();
     const auto num_ranks = MPIWrapper::get_num_ranks();
 
-    std::vector<size_t> all_number_local_neurons(num_ranks, 0);
-
-    MPIWrapper::all_gather(number_local_neurons, all_number_local_neurons);
+    const auto& all_number_local_neurons = MPIWrapper::all_gather(number_local_neurons);
 
     const auto total_number = std::reduce(all_number_local_neurons.begin(), all_number_local_neurons.end(), size_t(0), std::plus{});
     set_total_number_placed_neurons(total_number);

@@ -243,12 +243,14 @@ public:
     /**
      * @brief Gathers one value for each MPI rank into a vector on all MPI ranks
      * @param own_data The local value that shall be sent to all MPI ranks
-     * @param results The data from all MPI ranks. The value of MPI rank i is in results[i]
+     * @return The data from all MPI ranks. The value of MPI rank i is in results[i]
      * @exception Throws a RelearnException if an MPI error occurs
      */
     template <typename T>
-    static void all_gather(T own_data, std::vector<T>& results) {
+    [[nodiscard]] static std::vector<T> all_gather(T own_data) {
+        std::vector<T> results(get_num_ranks());
         all_gather(&own_data, results.data(), sizeof(T));
+        return results;
     }
 
     /**
