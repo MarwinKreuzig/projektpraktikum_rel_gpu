@@ -10,11 +10,13 @@
 
 #pragma once
 
+#include "../../Types.h"
 #include "../../mpi/MPIWrapper.h"
 #include "../../util/RelearnException.h"
 #include "../SignalType.h"
 
 #include <map>
+#include <utility>
 #include <vector>
 
 /**
@@ -23,6 +25,83 @@
  */
 class SynapseCreationRequests {
 public:
+    /**
+     * One Request always consists of a target neuron, a source neuron, and a signal type
+     */
+    class Request {
+        RelearnTypes::neuron_id target{};
+        RelearnTypes::neuron_id source{};
+        SignalType signal_type{};
+
+    public:
+        Request() = default;
+
+        /**
+         * @brief Constructs a new reqest with the arguments
+         * @param target The neuron target id of the request
+         * @param source The neuron source id of the request
+         * @param signal_type The signal type
+         */
+        Request(RelearnTypes::neuron_id target, RelearnTypes::neuron_id source, SignalType signal_type)
+            : target(target)
+            , source(source)
+            , signal_type(signal_type) { }
+
+        /**
+         * @brief Returns the target of the request
+         * @return The target
+         */
+        [[nodiscard]] RelearnTypes::neuron_id get_target() const noexcept {
+            return target;
+        }
+
+        /**
+         * @brief Returns the source of the request
+         * @return The source
+         */
+        [[nodiscard]] RelearnTypes::neuron_id get_source() const noexcept {
+            return source;
+        }
+
+        /**
+         * @brief Returns the neuron type of the request
+         * @return The neuron type
+         */
+        [[nodiscard]] SignalType get_signal_type() const noexcept {
+            return signal_type;
+        }
+
+        template <std::size_t Index>
+        auto& get() & {
+            if constexpr (Index == 0)
+                return target;
+            if constexpr (Index == 1)
+                return source;
+            if constexpr (Index == 2)
+                return signal_type;
+        }
+
+        template <std::size_t Index>
+        auto const& get() const& {
+            if constexpr (Index == 0)
+                return target;
+            if constexpr (Index == 1)
+                return source;
+            if constexpr (Index == 2)
+                return signal_type;
+        }
+
+        template <std::size_t Index>
+        auto&& get() && {
+            if constexpr (Index == 0)
+                return std::move(target);
+            if constexpr (Index == 1)
+                return std::move(source);
+            if constexpr (Index == 2)
+                return std::move(signal_type);
+        }
+    };
+
     /**
      * @brief Creates an object with zero requests and responses.
      */
@@ -33,7 +112,7 @@ public:
      * @return The number of requests and responses
      */
     [[nodiscard]] size_t size() const noexcept {
-        return num_requests;
+        return requests.size();
     }
 
     /**
@@ -41,8 +120,7 @@ public:
      * @param size The number of requests and responses to the stored
      */
     void resize(const size_t size) {
-        num_requests = size;
-        requests.resize(3 * size);
+        requests.resize(size);
         responses.resize(size);
     }
 
@@ -53,15 +131,15 @@ public:
      * @param target_neuron_id The local (to the other rank) neuron id of the requested neuron
      * @param dendrite_type_needed The required type, coded with 0 for excitatory and 1 for inhibitory
      */
-    void append(const size_t source_neuron_id, const size_t target_neuron_id, const size_t dendrite_type_needed) {
-        num_requests++;
+    //void append(const size_t source_neuron_id, const size_t target_neuron_id, const size_t dendrite_type_needed) {
+    //    num_requests++;
 
-        requests.push_back(source_neuron_id);
-        requests.push_back(target_neuron_id);
-        requests.push_back(dendrite_type_needed);
+    //    requests.push_back(source_neuron_id);
+    //    requests.push_back(target_neuron_id);
+    //    requests.push_back(dendrite_type_needed);
 
-        responses.resize(responses.size() + 1);
-    }
+    //    responses.resize(responses.size() + 1);
+    //}
 
     /**
      * @brief Appends a pending request, comprising of the source and target neuron ids and an enum that denotes the 
@@ -71,13 +149,8 @@ public:
      * @param dendrite_type_needed The required type as enum
      */
     void append(const size_t source_neuron_id, const size_t target_neuron_id, const SignalType dendrite_type_needed) {
-        size_t dendrite_type_val = 0;
-
-        if (dendrite_type_needed == SignalType::INHIBITORY) {
-            dendrite_type_val = 1;
-        }
-
-        append(source_neuron_id, target_neuron_id, dendrite_type_val);
+        requests.emplace_back(target_neuron_id, source_neuron_id, dendrite_type_needed);
+        responses.resize(responses.size() + 1);
     }
 
     /**
@@ -89,16 +162,12 @@ public:
      *       indicates whether it is an excitatory or inhibitory request
      */
     [[nodiscard]] std::tuple<size_t, size_t, SignalType> get_request(const size_t request_index) const {
-        RelearnException::check(request_index < num_requests, "SynapseCreationRequests::get_request: index out of bounds: {} vs {}", request_index, num_requests);
-
-        const size_t base_index = 3 * request_index;
-
-        const size_t source_neuron_id = requests[base_index];
-        const size_t target_neuron_id = requests[base_index + 1];
-        const size_t dendrite_type_needed = requests[base_index + 2];
-
-        const SignalType dendrite_type_needed_converted = (dendrite_type_needed == 0) ? SignalType::EXCITATORY : SignalType::INHIBITORY;
-
+        RelearnException::check(request_index < requests.size(), "SynapseCreationRequests::get_request: index out of bounds: {} vs {}", request_index, requests.size());
+        //const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed_converted] = requests[request_index];
+        const auto target_neuron_id = requests[request_index].get_target();
+        const auto source_neuron_id = requests[request_index].get_source();
+        const auto dendrite_type_needed_converted = requests[request_index].get_signal_type();
+        
         return std::make_tuple(source_neuron_id, target_neuron_id, dendrite_type_needed_converted);
     }
 
@@ -109,7 +178,7 @@ public:
      * @exception Throws a RelearnException if the request_index exceeds the stored number of responses
      */
     void set_response(const size_t request_index, const char connected) {
-        RelearnException::check(request_index < num_requests, "SynapseCreationRequests::set_response: index out of bounds: {} vs {}", request_index, num_requests);
+        RelearnException::check(request_index < responses.size(), "SynapseCreationRequests::set_response: index out of bounds: {} vs {}", request_index, responses.size());
 
         responses[request_index] = connected;
     }
@@ -121,7 +190,7 @@ public:
      * @return A flag that specifies if the request is accepted (1) or denied (0)
      */
     [[nodiscard]] char get_response(const size_t request_index) const {
-        RelearnException::check(request_index < num_requests, "SynapseCreationRequests::get_response: index out of bounds: {} vs {}", request_index, num_requests);
+        RelearnException::check(request_index < responses.size(), "SynapseCreationRequests::get_response: index out of bounds: {} vs {}", request_index, responses.size());
         return responses[request_index];
     }
 
@@ -129,7 +198,7 @@ public:
      * @brief Gets a raw non-owning pointer for the encoded requests. The pointer is invalidated by append()
      * @return The pointer to the encoded requests
      */
-    [[nodiscard]] size_t* data() noexcept {
+    [[nodiscard]] Request* data() noexcept {
         return requests.data();
     }
 
@@ -137,7 +206,7 @@ public:
      * @brief Gets a raw non-owning and non-mutable pointer for the encoded requests. The pointer is invalidated by append()
      * @return The pointer to the encoded requests
      */
-    [[nodiscard]] const size_t* data() const noexcept {
+    [[nodiscard]] const Request* data() const noexcept {
         return requests.data();
     }
 
@@ -162,7 +231,7 @@ public:
      * @return The number of bytes all stored requests take
      */
     [[nodiscard]] size_t get_requests_size_in_bytes() const noexcept {
-        return requests.size() * sizeof(size_t);
+        return requests.size() * sizeof(Request);
     }
 
     /**
@@ -175,7 +244,7 @@ public:
 
 private:
     size_t num_requests{ 0 }; // Number of synapse creation requests
-    std::vector<size_t> requests{}; // Each request to form a synapse is a 3-tuple: (source_neuron_id, target_neuron_id, dendrite_type_needed)
+    std::vector<Request> requests{}; // Each request to form a synapse is a 3-tuple: (source_neuron_id, target_neuron_id, dendrite_type_needed)
         // That is why requests.size() == 3*responses.size()
         // Note, a more memory-efficient implementation would use a smaller data type (not size_t) for dendrite_type_needed.
         // This vector is used as MPI communication buffer
@@ -292,3 +361,26 @@ public:
  * The MPI rank specifies the corresponding process
  */
 using MapSynapseCreationRequests = std::map<int, SynapseCreationRequests>;
+
+namespace std {
+template<>
+struct tuple_size<typename ::SynapseCreationRequests::Request> {
+    static constexpr size_t value = 3;
+};
+
+template <>
+struct tuple_element<0, typename ::SynapseCreationRequests::Request> {
+    using type = RelearnTypes::neuron_id;
+};
+
+template <>
+struct tuple_element<1, typename ::SynapseCreationRequests::Request> {
+    using type = RelearnTypes::neuron_id;
+};
+
+template <>
+struct tuple_element<2, typename ::SynapseCreationRequests::Request> {
+    using type = SignalType;
+};
+
+} //namespace std
