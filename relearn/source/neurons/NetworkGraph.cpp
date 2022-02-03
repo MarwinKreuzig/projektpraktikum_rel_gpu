@@ -74,7 +74,7 @@ void NetworkGraph::debug_check() const {
     const auto my_rank = mpi_rank;
 
     // Golden map that stores all local edges
-    std::map<std::pair<size_t, size_t>, EdgeWeight> edges{};
+    std::map<std::pair<size_t, size_t>, RelearnTypes::synapse_weight> edges{};
 
     for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
         const auto& local_out_edges = get_local_out_edges(neuron_id);

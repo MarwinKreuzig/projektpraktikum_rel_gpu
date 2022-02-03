@@ -20,7 +20,7 @@
 #include <sstream>
 #include <string>
 
-std::tuple<SynapseLoader::LocalSynapses, SynapseLoader::InSynapses, SynapseLoader::OutSynapses> SynapseLoader::load_synapses() {
+std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> SynapseLoader::load_synapses() {
     Timers::start(TimerRegion::LOAD_SYNAPSES);
     const auto& [synapses, global_ids] = internal_load_synapses();
     const auto& [local_synapses, in_synapses, out_synapses] = synapses;
@@ -29,10 +29,10 @@ std::tuple<SynapseLoader::LocalSynapses, SynapseLoader::InSynapses, SynapseLoade
     LocalSynapses return_local_synapses{};
     return_local_synapses.reserve(local_synapses.size());
 
-    InSynapses return_in_synapses{};
+    DistantInSynapses return_in_synapses{};
     return_in_synapses.reserve(in_synapses.size());
 
-    OutSynapses return_out_synapses{};
+    DistantOutSynapses return_out_synapses{};
     return_out_synapses.reserve(out_synapses.size());
 
     Timers::start(TimerRegion::TRANSLATE_GLOBAL_IDS);
@@ -44,7 +44,7 @@ std::tuple<SynapseLoader::LocalSynapses, SynapseLoader::InSynapses, SynapseLoade
         const auto local_source_id = nit->get_local_id(source_id);
         const auto local_target_id = nit->get_local_id(target_id);
 
-        return_local_synapses.emplace_back(local_source_id, local_target_id, weight);
+        return_local_synapses.emplace_back(local_target_id, local_source_id, weight);
         total_local_weight += weight;
     }
 
@@ -52,7 +52,7 @@ std::tuple<SynapseLoader::LocalSynapses, SynapseLoader::InSynapses, SynapseLoade
     for (const auto& [source_id, target_id, weight] : in_synapses) {
         const auto local_target_id = nit->get_local_id(target_id);
 
-        return_in_synapses.emplace_back(translated_ids.at(source_id), local_target_id, weight);
+        return_in_synapses.emplace_back(local_target_id, translated_ids.at(source_id), weight);
         total_in_weight += weight;
     }
 
@@ -60,7 +60,7 @@ std::tuple<SynapseLoader::LocalSynapses, SynapseLoader::InSynapses, SynapseLoade
     for (const auto& [source_id, target_id, weight] : out_synapses) {
         const auto local_source_id = nit->get_local_id(source_id);
 
-        return_out_synapses.emplace_back(local_source_id, translated_ids.at(target_id), weight);
+        return_out_synapses.emplace_back(translated_ids.at(target_id), local_source_id, weight);
         total_out_weight += weight;
     }
 

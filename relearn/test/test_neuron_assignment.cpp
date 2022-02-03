@@ -972,7 +972,7 @@ TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
 
     std::map<std::pair<size_t, size_t>, int> synapse_map{};
 
-    for (const auto& [source, target, weight] : local_synapses) {
+    for (const auto& [target, source, weight] : local_synapses) {
         synapse_map[{ source, target }] += weight;
     }
 

@@ -39,23 +39,16 @@ public:
     /**
 	 * Type definitions
 	 */
-    using EdgeWeight = int;
-
     using DistantEdgesKey = RankNeuronId; // Pair of (mpi rank, local neuron id)
-    using DistantEdges = std::vector<std::pair<DistantEdgesKey, EdgeWeight>>;
+    using DistantEdges = std::vector<std::pair<DistantEdgesKey, RelearnTypes::synapse_weight>>;
 
     using NeuronDistantInNeighborhood = std::vector<DistantEdges>;
     using NeuronDistantOutNeighborhood = std::vector<DistantEdges>;
 
-    using LocalEdgesKey = size_t; // Only local neuron id
-    using LocalEdges = std::vector<std::pair<LocalEdgesKey, EdgeWeight>>;
+    using LocalEdges = std::vector<std::pair<RelearnTypes::neuron_id, RelearnTypes::synapse_weight>>;
 
     using NeuronLocalInNeighborhood = std::vector<LocalEdges>;
     using NeuronLocalOutNeighborhood = std::vector<LocalEdges>;
-
-    using local_synapse = std::tuple<size_t, size_t, EdgeWeight>;
-    using in_synapse = std::tuple<RankNeuronId, size_t, EdgeWeight>;
-    using out_synapse = std::tuple<size_t, RankNeuronId, EdgeWeight>;
 
     using position_type = RelearnTypes::position_type;
 
@@ -386,7 +379,7 @@ public:
      *      (c) a local neuron id is larger than the number of neurons
      *      Throws an exception if the allocation of memory fails
 	 */
-    void add_edge_weight(const RankNeuronId& target_id, const RankNeuronId& source_id, const EdgeWeight weight) {
+    void add_edge_weight(const RankNeuronId& target_id, const RankNeuronId& source_id, const RelearnTypes::synapse_weight& weight) {
         RelearnException::check(weight != 0, "NetworkGraph::add_edge_weight: weight of edge to add is zero");
 
         const auto target_rank = target_id.get_rank();
@@ -415,8 +408,8 @@ public:
             LocalEdges& in_edges = neuron_local_in_neighborhood[target_neuron_id];
             LocalEdges& out_edges = neuron_local_out_neighborhood[source_neuron_id];
 
-            add_edge<LocalEdges, LocalEdgesKey>(in_edges, source_neuron_id, weight);
-            add_edge<LocalEdges, LocalEdgesKey>(out_edges, target_neuron_id, weight);
+            add_edge<LocalEdges, RelearnTypes::neuron_id>(in_edges, source_neuron_id, weight);
+            add_edge<LocalEdges, RelearnTypes::neuron_id>(out_edges, target_neuron_id, weight);
         }
 
         // Target neuron is mine but source neuron is not
@@ -433,13 +426,75 @@ public:
     }
 
     /**
+     * @brief Adds a local synapse to the networgh graph
+     * @param synapse The local synapse
+     * @exception Throws a RelearnException if
+     *      (a) The target is larger than the number neurons
+     *      (b) The source is larger than the number neurons
+     *      (c) The weight is equal to 0
+     */
+    void add_synapse(const LocalSynapse& synapse) {
+        const auto& [target, source, weight] = synapse;
+
+        RelearnException::check(target < number_local_neurons, "NetworkGraph::add_synapse: Local synapse had a too large target: {} vs {}", target, number_local_neurons);
+        RelearnException::check(source < number_local_neurons, "NetworkGraph::add_synapse: Local synapse had a too large source: {} vs {}", source, number_local_neurons);
+        RelearnException::check(weight != 0, "NetworkGraph::add_synapse: Local synapse had weight 0");
+
+        LocalEdges& in_edges = neuron_local_in_neighborhood[target];
+        LocalEdges& out_edges = neuron_local_out_neighborhood[source];
+
+        add_edge<LocalEdges, RelearnTypes::neuron_id>(in_edges, source, weight);
+        add_edge<LocalEdges, RelearnTypes::neuron_id>(out_edges, target, weight);
+    }
+
+    /**
+     * @brief Adds a distant in-synapse to the networgh graph
+     * @param synapse The distant in-synapse, must come from another rank
+     * @exception Throws a RelearnException if
+     *      (a) The target is larger than the number neurons
+     *      (b) The source rank is the same as the current rank
+     *      (c) The weight is equal to 0
+     */
+    void add_synapse(const DistantInSynapse& synapse) {
+        const auto& [target, source_rni, weight] = synapse;
+        const auto& [source_rank, source_id] = source_rni;
+
+        RelearnException::check(target < number_local_neurons, "NetworkGraph::add_synapse: Distant in-synapse had a too large target: {} vs {}", target, number_local_neurons);
+        RelearnException::check(source_rank != mpi_rank, "NetworkGraph::add_synapse: Distant in-synapse had the target on my rank! {}", source_rank);
+        RelearnException::check(weight != 0, "NetworkGraph::add_synapse: Local synapse had weight 0");
+
+        DistantEdges& distant_in_edges = neuron_distant_in_neighborhood[target];
+        add_edge<DistantEdges, DistantEdgesKey>(distant_in_edges, source_rni, weight);
+    }
+
+    /**
+     * @brief Adds a distant out-synapse to the networgh graph
+     * @param synapse The distant out-synapse, must come from another rank
+     * @exception Throws a RelearnException if
+     *      (a) The target rank is the same as the current rank
+     *      (b) The source is larger than the number neurons
+     *      (c) The weight is equal to 0
+     */
+    void add_synapse(const DistantOutSynapse& synapse) {
+        const auto& [target_rni, source, weight] = synapse;
+        const auto& [target_rank, target_id] = target_rni;
+
+        RelearnException::check(source < number_local_neurons, "NetworkGraph::add_synapse: Distant out-synapse had a too large target: {} vs {}", source, number_local_neurons);
+        RelearnException::check(target_rank != mpi_rank, "NetworkGraph::add_synapse: Distant out-synapse had the target on my rank! {}", target_rank);
+        RelearnException::check(weight != 0, "NetworkGraph::add_synapse: Local synapse had weight 0");
+
+        DistantEdges& distant_out_edges = neuron_distant_out_neighborhood[source];
+        add_edge<DistantEdges, DistantEdgesKey>(distant_out_edges, target_rni, weight);
+    }
+
+    /**
      * @brief Adds all provided edges into the network graph at once.
      * @param local_edges All edges between two neurons on the current MPI rank
      * @param in_edges All edges that have a target on the current MPI rank and a source from another rank
      * @param out_edges All edges that have a source on the current MPI rank and a target from another rank
     */
-    void add_edges(const std::vector<local_synapse>& local_edges, const std::vector<in_synapse>& in_edges, const std::vector<out_synapse>& out_edges) {        
-        for (const auto& [source_id, target_id, weight] : local_edges) {
+    void add_edges(const LocalSynapses& local_edges, const DistantInSynapses& in_edges, const DistantOutSynapses& out_edges) {
+        for (const auto& [target_id, source_id, weight] : local_edges) {
             RelearnException::check(target_id < neuron_local_in_neighborhood.size(),
                 "NetworkGraph::add_edges: local_in_neighborhood is too small: {} vs {}", target_id, neuron_local_in_neighborhood.size());
             RelearnException::check(source_id < neuron_local_out_neighborhood.size(),
@@ -448,11 +503,11 @@ public:
             LocalEdges& in_edges = neuron_local_in_neighborhood[target_id];
             LocalEdges& out_edges = neuron_local_out_neighborhood[source_id];
 
-            add_edge<LocalEdges, LocalEdgesKey>(in_edges, source_id, weight);
-            add_edge<LocalEdges, LocalEdgesKey>(out_edges, target_id, weight);
+            add_edge<LocalEdges, RelearnTypes::neuron_id>(in_edges, source_id, weight);
+            add_edge<LocalEdges, RelearnTypes::neuron_id>(out_edges, target_id, weight);
         }
 
-        for (const auto& [source_rni, target_id, weight] : in_edges) {
+        for (const auto& [target_id, source_rni, weight] : in_edges) {
             RelearnException::check(target_id < neuron_distant_in_neighborhood.size(),
                 "NetworkGraph::add_edges: distant_in_neighborhood is too small: {} vs {}", target_id, neuron_distant_in_neighborhood.size());
 
@@ -460,7 +515,7 @@ public:
             add_edge<DistantEdges, DistantEdgesKey>(distant_in_edges, source_rni, weight);
         }
 
-        for (const auto& [source_id, target_rni, weight] : out_edges) {
+        for (const auto& [target_rni, source_id, weight] : out_edges) {
             RelearnException::check(source_id < neuron_distant_out_neighborhood.size(),
                 "NetworkGraph::add_edges: distant_out_neighborhood is too small: {} vs {}", source_id, neuron_distant_out_neighborhood.size());
 
@@ -545,7 +600,7 @@ public:
 private:
     template <typename Edges, typename NeuronId>
     // NOLINTNEXTLINE
-    static void add_edge(Edges& edges, const NeuronId other_neuron_id, const EdgeWeight weight) {
+    static void add_edge(Edges& edges, const NeuronId other_neuron_id, const RelearnTypes::synapse_weight& weight) {
         size_t idx = 0;
 
         for (auto& [neuron_id, edge_weight] : edges) {

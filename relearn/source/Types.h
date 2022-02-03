@@ -14,6 +14,8 @@
 #include "neurons/helper/Synapse.h"
 #include "util/Vec3.h"
 
+#include <vector>
+
 enum class AlgorithmEnum {
     Naive,
     BarnesHut,
@@ -34,3 +36,8 @@ using LocalSynapse = Synapse<RelearnTypes::neuron_id, RelearnTypes::neuron_id, R
 using DistantInSynapse = Synapse<RelearnTypes::neuron_id, RankNeuronId, RelearnTypes::synapse_weight>;
 using DistantOutSynapse = Synapse<RankNeuronId, RelearnTypes::neuron_id, RelearnTypes::synapse_weight>;
 using DistantSynapse = Synapse<RankNeuronId, RankNeuronId, RelearnTypes::synapse_weight>;
+
+using LocalSynapses = std::vector<LocalSynapse>;
+using DistantInSynapses = std::vector<DistantInSynapse>;
+using DistantOutSynapses = std::vector<DistantOutSynapse>;
+using DistantSynapses = std::vector<DistantSynapse>;

@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "../neurons/helper/RankNeuronId.h"
+#include "../Types.h"
 
 #include <memory>
 #include <optional>
@@ -28,14 +28,6 @@ class Partition;
 class SynapseLoader {
 public:
     using neuron_id = size_t;
-
-    using LocalSynapse = std::tuple<neuron_id, neuron_id, int>;
-    using InSynapse = std::tuple<RankNeuronId, neuron_id, int>;
-    using OutSynapse = std::tuple<neuron_id, RankNeuronId, int>;
-
-    using LocalSynapses = std::vector<LocalSynapse>;
-    using InSynapses = std::vector<InSynapse>;
-    using OutSynapses = std::vector<OutSynapse>;
 
 protected:
     using source_neuron_id = neuron_id;
@@ -76,7 +68,7 @@ public:
      *      (3) out synpases (local neuron to non-local neuron)
      * @return A tuple of (local, in, out) synapes
      */
-    std::tuple<LocalSynapses, InSynapses, OutSynapses> load_synapses();
+    std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> load_synapses();
 
     virtual ~SynapseLoader()
         = default;
