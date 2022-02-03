@@ -162,6 +162,9 @@ void Timers::print() {
     sstring << "      Create synapses (w/ Alltoall)            : ";
     print_timer(sstring, TimerRegion::CREATE_SYNAPSES, timers_global);
 
+    sstring << "      Add synapses in local network graphs     : ";
+    print_timer(sstring, TimerRegion::ADD_SYNAPSES_TO_NETWORKGRAPH, timers_global);
+
     sstring << "\n\n";
 
     LogFiles::write_to_file(LogFiles::EventType::Timers, true, sstring.str());

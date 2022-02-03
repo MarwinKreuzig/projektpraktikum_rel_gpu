@@ -49,13 +49,14 @@ enum class TimerRegion : int {
     CALC_HERMITE_COEFFICIENTS = 24,
     LOAD_SYNAPSES = 25,
     TRANSLATE_GLOBAL_IDS = 26,
-    INITIALIZE_NETWORK_GRAPH = 27
+    INITIALIZE_NETWORK_GRAPH = 27,
+    ADD_SYNAPSES_TO_NETWORKGRAPH = 28
 };
 
 /**
  * This number is used as a shortcut to count the number of values valid for TimerRegion
  */
-constexpr size_t NUM_TIMERS = 28;
+constexpr size_t NUM_TIMERS = 29;
 
 /**
  * This class is used to collect all sorts of different timers (see TimerRegion).

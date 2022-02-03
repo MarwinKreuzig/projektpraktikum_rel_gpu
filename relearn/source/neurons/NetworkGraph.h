@@ -448,43 +448,49 @@ public:
     }
 
     /**
-     * @brief Adds a distant in-synapse to the networgh graph
+     * @brief Adds a distant in-synapse to the networgh graph (it might actually come from the same node, that's no problem)
      * @param synapse The distant in-synapse, must come from another rank
      * @exception Throws a RelearnException if
      *      (a) The target is larger than the number neurons
-     *      (b) The source rank is the same as the current rank
-     *      (c) The weight is equal to 0
+     *      (b) The weight is equal to 0
      */
     void add_synapse(const DistantInSynapse& synapse) {
         const auto& [target, source_rni, weight] = synapse;
         const auto& [source_rank, source_id] = source_rni;
 
         RelearnException::check(target < number_local_neurons, "NetworkGraph::add_synapse: Distant in-synapse had a too large target: {} vs {}", target, number_local_neurons);
-        RelearnException::check(source_rank != mpi_rank, "NetworkGraph::add_synapse: Distant in-synapse had the target on my rank! {}", source_rank);
         RelearnException::check(weight != 0, "NetworkGraph::add_synapse: Local synapse had weight 0");
 
-        DistantEdges& distant_in_edges = neuron_distant_in_neighborhood[target];
-        add_edge<DistantEdges, DistantEdgesKey>(distant_in_edges, source_rni, weight);
+        if (source_rank != mpi_rank) {
+            DistantEdges& distant_in_edges = neuron_distant_in_neighborhood[target];
+            add_edge<DistantEdges, DistantEdgesKey>(distant_in_edges, source_rni, weight);
+        } else {
+            LocalEdges& in_edges = neuron_local_in_neighborhood[target];
+            add_edge<LocalEdges, RelearnTypes::neuron_id>(in_edges, source_id, weight);
+        }
     }
 
     /**
-     * @brief Adds a distant out-synapse to the networgh graph
+     * @brief Adds a distant out-synapse to the networgh graph (it might actually come from the same node, that's no problem)
      * @param synapse The distant out-synapse, must come from another rank
      * @exception Throws a RelearnException if
      *      (a) The target rank is the same as the current rank
-     *      (b) The source is larger than the number neurons
-     *      (c) The weight is equal to 0
+     *      (b) The weight is equal to 0
      */
     void add_synapse(const DistantOutSynapse& synapse) {
         const auto& [target_rni, source, weight] = synapse;
         const auto& [target_rank, target_id] = target_rni;
 
         RelearnException::check(source < number_local_neurons, "NetworkGraph::add_synapse: Distant out-synapse had a too large target: {} vs {}", source, number_local_neurons);
-        RelearnException::check(target_rank != mpi_rank, "NetworkGraph::add_synapse: Distant out-synapse had the target on my rank! {}", target_rank);
         RelearnException::check(weight != 0, "NetworkGraph::add_synapse: Local synapse had weight 0");
 
-        DistantEdges& distant_out_edges = neuron_distant_out_neighborhood[source];
-        add_edge<DistantEdges, DistantEdgesKey>(distant_out_edges, target_rni, weight);
+        if (target_rank != mpi_rank) {
+            DistantEdges& distant_out_edges = neuron_distant_out_neighborhood[source];
+            add_edge<DistantEdges, DistantEdgesKey>(distant_out_edges, target_rni, weight);
+        } else {
+            LocalEdges& out_edges = neuron_local_out_neighborhood[source];
+            add_edge<LocalEdges, RelearnTypes::neuron_id>(out_edges, target_id, weight);
+        }
     }
 
     /**

@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "../Types.h"
 #include "../neurons/UpdateStatus.h"
 #include "../neurons/helper/SynapseCreationRequests.h"
 #include "../neurons/models/SynapticElements.h"
@@ -61,6 +62,9 @@ public:
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos)
         = 0;
 
+    [[nodiscard]] virtual std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+        const std::unique_ptr<NeuronsExtraInfo>& extra_infos);
+
     /**
      * @brief Updates all leaf nodes in the octree by the algorithm
      * @param disable_flags Flags that indicate if a neuron id disabled (0) or enabled (otherwise)
@@ -91,6 +95,9 @@ public:
 
 private:
     double sigma{ default_sigma };
+
+    DistantInSynapses Algorithm::create_synapses_process_requests(size_t number_neurons, MapSynapseCreationRequests& synapse_creation_requests_incoming);
+    DistantOutSynapses Algorithm::create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
 protected:
     std::shared_ptr<SynapticElements> axons{};

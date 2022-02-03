@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <iomanip>
+#include <iostream>
 #include <numeric>
 #include <optional>
 #include <sstream>
@@ -737,38 +738,12 @@ size_t Neurons::delete_synapses_commit_deletions(const PendingDeletionsV& list) 
 }
 
 size_t Neurons::create_synapses() {
-    /**
-	 * 2. Create Synapses
-	 *
-	 * - Update region trees (num dendrites in leaves and inner nodes) - postorder traversal (input: grown_elements, connected_elements arrays)
-	 * - Determine target region for every axon
-	 * - Find target neuron for every axon (input: position, type; output: target neuron_id)
-	 * - Update synaptic elements (no connection when target neuron's dendrites have already been taken by previous axon)
-	 * - Update network
-	 */
+    const auto my_rank = MPIWrapper::get_my_rank();
 
-    create_synapses_update_octree();
+    // Lock local RMA memory for local stores 
+    MPIWrapper::lock_window(my_rank, MPI_Locktype::exclusive);
 
-    MapSynapseCreationRequests synapse_creation_requests_outgoing = algorithm->find_target_neurons(number_neurons, disable_flags, extra_info);
-
-    Timers::start(TimerRegion::CREATE_SYNAPSES);
-
-    auto synapse_creation_requests_incoming = SynapseCreationRequests::exchange_requests(synapse_creation_requests_outgoing);
-    const auto num_synapses_created = create_synapses_process_requests(synapse_creation_requests_incoming);
-
-    SynapseCreationRequests::exchange_responses(synapse_creation_requests_incoming, synapse_creation_requests_outgoing);
-    create_synapses_process_responses(synapse_creation_requests_outgoing);
-
-    Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES);
-
-    return num_synapses_created;
-}
-
-void Neurons::create_synapses_update_octree() {
-    // Lock local RMA memory for local stores
-    MPIWrapper::lock_window(MPIWrapper::get_my_rank(), MPI_Locktype::exclusive);
-
-    // Update my local trees bottom-up
+    // Update my leaf nodes
     Timers::start(TimerRegion::UPDATE_LEAF_NODES);
     algorithm->update_leaf_nodes(disable_flags);
     Timers::stop_and_add(TimerRegion::UPDATE_LEAF_NODES);
@@ -778,119 +753,29 @@ void Neurons::create_synapses_update_octree() {
     global_tree->update_local_trees();
     Timers::stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
 
+    // Exchange the local trees
     global_tree->synchronize_local_trees();
 
     // Unlock local RMA memory and make local stores visible in public window copy
-    MPIWrapper::unlock_window(MPIWrapper::get_my_rank());
+    MPIWrapper::unlock_window(my_rank);
 
     // Makes sure that all ranks finished their local access epoch
     // before a remote origin opens an access epoch
     MPIWrapper::barrier();
-}
 
-size_t Neurons::create_synapses_process_requests(MapSynapseCreationRequests& synapse_creation_requests_incoming) {
-    if (synapse_creation_requests_incoming.empty()) {
-        return 0;
-    }
+    // Delegate the creation of new synapses to the algorithm
+    const auto& [local_synapses, distant_in_synapses, distant_out_synapses]
+        = algorithm->update_connectivity(number_neurons, disable_flags, extra_info);
 
-    const auto my_rank = MPIWrapper::get_my_rank();
-    std::vector<std::tuple<RankNeuronId, RankNeuronId, int>> synapses{};
+    // Update the network graph all at once
+    Timers::start(TimerRegion::ADD_SYNAPSES_TO_NETWORKGRAPH);
+    network_graph->add_edges(local_synapses, distant_in_synapses, distant_out_synapses);
+    Timers::stop_and_add(TimerRegion::ADD_SYNAPSES_TO_NETWORKGRAPH);
 
-    for (auto& [source_rank, requests] : synapse_creation_requests_incoming) {
-        const auto num_requests = requests.size();
+    // The distant_out_synapses are counted on the ranks where they are in
+    const auto num_synapses_created = local_synapses.size() + distant_in_synapses.size();
 
-        // All requests of a rank
-        for (auto request_index = 0; request_index < num_requests; request_index++) {
-            const auto& [source_neuron_id, target_neuron_id, dendrite_type_needed] = requests.get_request(request_index);
-            RelearnException::check(target_neuron_id < number_neurons, "Neurons::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
-
-            int weight = 0;
-            unsigned int number_free_elements = 0;
-
-            // DendriteType::INHIBITORY dendrite requested
-            if (SignalType::INHIBITORY == dendrite_type_needed) {
-                number_free_elements = dendrites_inh->get_free_elements(target_neuron_id);
-                weight = -1;
-            }
-            // DendriteType::EXCITATORY dendrite requested
-            else {
-                number_free_elements = dendrites_exc->get_free_elements(target_neuron_id);
-                weight = +1;
-            }
-
-            if (number_free_elements > 0) {
-                // Increment num of connected dendrites
-                if (SignalType::INHIBITORY == dendrite_type_needed) {
-                    dendrites_inh->update_connected_elements(target_neuron_id, 1);
-                } else {
-                    dendrites_exc->update_connected_elements(target_neuron_id, 1);
-                }
-
-                const RankNeuronId target_id{ my_rank, target_neuron_id };
-                const RankNeuronId source_id{ source_rank, source_neuron_id };
-
-                synapses.emplace_back(target_id, source_id, weight);
-
-                // Set response to "connected" (success)
-                requests.set_response(request_index, 1);
-            } else {
-                // Other axons were faster and came first
-                // Set response to "not connected" (not success)
-                requests.set_response(request_index, 0);
-            }
-        } // All requests of a rank
-    } // Increasing order of ranks that sent requests
-
-    for (const auto& [target_id, source_id, weight] : synapses) {
-        network_graph->add_edge_weight(target_id, source_id, weight);
-    }
-
-    const auto num_synapses_created = synapses.size();
     return num_synapses_created;
-}
-
-void Neurons::create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing) {
-    const auto my_rank = MPIWrapper::get_my_rank();
-    std::vector<std::tuple<RankNeuronId, RankNeuronId, int>> synapses{};
-    /**
-	 * Register which axons could be connected
-	 *
-	 * NOTE: Do not create synapses in the network for my own responses as the corresponding synapses, if possible,
-	 * would have been created before sending the response to myself (see above).
-	 */
-    for (const auto& [target_rank, requests] : synapse_creation_requests_outgoing) {
-        const auto num_requests = requests.size();
-
-        // All responses from a rank
-        for (auto request_index = 0; request_index < num_requests; request_index++) {
-            const auto connected = requests.get_response(request_index);
-
-            if (connected == 0) {
-                continue;
-            }
-
-            const auto& [source_neuron_id, target_neuron_id, dendrite_type_needed] = requests.get_request(request_index);
-
-            // Increment num of connected axons
-            axons->update_connected_elements(source_neuron_id, 1);
-
-            // I have already created the synapse in the network
-            // if the response comes from myself
-            if (target_rank != my_rank) {
-                // Update network
-                const auto weight = (SignalType::INHIBITORY == dendrite_type_needed) ? -1 : +1;
-
-                const RankNeuronId target_id{ target_rank, target_neuron_id };
-                const RankNeuronId source_id{ my_rank, source_neuron_id };
-
-                synapses.emplace_back(target_id, source_id, weight);
-            }
-        } // All responses from a rank
-    } // All outgoing requests
-
-    for (const auto& [target_id, source_id, weight] : synapses) {
-        network_graph->add_edge_weight(target_id, source_id, weight);
-    }
 }
 
 void Neurons::debug_check_counts() {
