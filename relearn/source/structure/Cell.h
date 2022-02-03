@@ -11,6 +11,7 @@
 #pragma once
 
 #include "../Config.h"
+#include "../Types.h"
 #include "../neurons/ElementType.h"
 #include "../neurons/SignalType.h"
 #include "../util/RelearnException.h"

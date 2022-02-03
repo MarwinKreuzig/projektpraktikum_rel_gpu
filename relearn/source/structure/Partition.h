@@ -11,6 +11,7 @@
 #pragma once
 
 #include "../Config.h"
+#include "../Types.h"
 #include "../structure/SpaceFillingCurve.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"

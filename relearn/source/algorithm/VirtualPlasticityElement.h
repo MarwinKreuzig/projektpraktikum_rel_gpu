@@ -10,15 +10,9 @@
 
 #pragma once
 
-#include "../util/Vec3.h"
+#include "../Types.h"
 
 #include <optional>
-
-enum class AlgorithmEnum {
-    Naive,
-    BarnesHut,
-    FastMultipoleMethods,
-};
 
 /**
  * This type is used to represent a virtual plasticity element,
@@ -87,7 +81,7 @@ public:
  */
 class VirtualPlasticityElementOptional {
 public:
-    using position_type = Vec3d;
+    using position_type = RelearnTypes::position_type;
     using counter_type = unsigned int;
 
 private:

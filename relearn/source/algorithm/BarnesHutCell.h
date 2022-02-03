@@ -11,7 +11,7 @@
 #pragma once
 
 #include "../neurons/SignalType.h"
-#include "Types.h"
+#include "VirtualPlasticityElement.h"
 
 #include <optional>
 

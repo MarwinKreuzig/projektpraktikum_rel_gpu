@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <ostream>
 #include <type_traits>
+#include <utility>
 
 /**
  * @brief A Vec3 holds three different values of type T and allows computations via operators.
@@ -517,9 +518,3 @@ struct tuple_element<2, ::Vec3<T>> {
 
 using Vec3d = Vec3<double>;
 using Vec3s = Vec3<size_t>;
-
-namespace RelearnTypes {
-// In the future, these might become different types
-using box_size_type = Vec3d;
-using position_type = Vec3d;
-} // namespace RelearnTypes

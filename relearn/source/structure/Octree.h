@@ -11,6 +11,7 @@
 #pragma once
 
 #include "../Config.h"
+#include "../Types.h"
 #include "../io/LogFiles.h"
 #include "../mpi/MPIWrapper.h"
 #include "../neurons/Neurons.h"

@@ -10,6 +10,7 @@
 
 #include "../NeuronIdTranslator.h"
 #include "../../Config.h"
+#include "../../Types.h"
 #include "../../neurons/helper/RankNeuronId.h"
 #include "../../util/Vec3.h"
 

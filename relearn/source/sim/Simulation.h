@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "../algorithm/Types.h"
+#include "../Types.h"
 #include "../util/StatisticalMeasures.h"
 
 #include <cstdint>
