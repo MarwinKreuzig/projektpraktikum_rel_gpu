@@ -380,13 +380,12 @@ size_t Neurons::delete_synapses() {
     return num_synapses_deleted;
 }
 
-std::pair<Neurons::PendingDeletionsV, std::vector<size_t>> Neurons::delete_synapses_find_synapses(
+std::pair<PendingDeletionsV, std::vector<size_t>> Neurons::delete_synapses_find_synapses(
     const SynapticElements& synaptic_elements,
     const std::pair<unsigned int, std::vector<unsigned int>>& to_delete,
     const PendingDeletionsV& other_pending_deletions) {
 
-    const auto& sum_to_delete = to_delete.first;
-    const auto& number_deletions = to_delete.second;
+    const auto& [sum_to_delete, number_deletions] = to_delete;
 
     PendingDeletionsV pending_deletions{};
     pending_deletions.reserve(sum_to_delete);
@@ -522,7 +521,7 @@ std::vector<Neurons::Synapse> Neurons::delete_synapses_register_edges(const std:
     return current_synapses;
 }
 
-Neurons::MapSynapseDeletionRequests Neurons::delete_synapses_exchange_requests(const PendingDeletionsV& pending_deletions) {
+MapSynapseDeletionRequests Neurons::delete_synapses_exchange_requests(const PendingDeletionsV& pending_deletions) {
     /**
 	* - Go through list with pending synapse deletions and copy those into map "synapse_deletion_requests_outgoing"
 	*   where the other neuron affected by the deletion is not one of my neurons
