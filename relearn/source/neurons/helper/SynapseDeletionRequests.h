@@ -11,12 +11,14 @@
 #pragma once
 
 #include "../../Config.h"
+#include "../../mpi/MPIWrapper.h"
 #include "../../util/RelearnException.h"
 #include "../ElementType.h"
 #include "../SignalType.h"
 #include "RankNeuronId.h"
 
 #include <map>
+#include <utility>
 #include <vector>
 
 /**
@@ -162,6 +164,60 @@ public:
 
         return src_neuron_id_eq && tgt_neuron_id_eq && id_eq;
     }
+
+    template <std::size_t Index>
+    auto& get() & {
+        if constexpr (Index == 0)
+            return src_neuron_id;
+        if constexpr (Index == 1)
+            return tgt_neuron_id;
+        if constexpr (Index == 2)
+            return affected_neuron_id;
+        if constexpr (Index == 3)
+            return affected_element_type;
+        if constexpr (Index == 4)
+            return signal_type;
+        if constexpr (Index == 5)
+            return synapse_id;
+        if constexpr (Index == 6)
+            return affected_element_already_deleted;
+    }
+
+    template <std::size_t Index>
+    auto const& get() const& {
+        if constexpr (Index == 0)
+            return src_neuron_id;
+        if constexpr (Index == 1)
+            return tgt_neuron_id;
+        if constexpr (Index == 2)
+            return affected_neuron_id;
+        if constexpr (Index == 3)
+            return affected_element_type;
+        if constexpr (Index == 4)
+            return signal_type;
+        if constexpr (Index == 5)
+            return synapse_id;
+        if constexpr (Index == 6)
+            return affected_element_already_deleted;
+    }
+
+    template <std::size_t Index>
+    auto&& get() && {
+        if constexpr (Index == 0)
+            return std::move(src_neuron_id);
+        if constexpr (Index == 1)
+            return std::move(tgt_neuron_id);
+        if constexpr (Index == 2)
+            return std::move(affected_neuron_id);
+        if constexpr (Index == 3)
+            return std::move(affected_element_type);
+        if constexpr (Index == 4)
+            return std::move(signal_type);
+        if constexpr (Index == 5)
+            return std::move(synapse_id);
+        if constexpr (Index == 6)
+            return std::move(affected_element_already_deleted);
+    }
 };
 using PendingDeletionsV = std::vector<PendingSynapseDeletion>;
 
@@ -195,6 +251,17 @@ public:
      */
     void append(const PendingSynapseDeletion& pending_deletion) {
         requests.push_back(pending_deletion);
+    }
+
+    /**
+     * @brief Returns the PendingSynapseDeletion with the requested index
+     * @param request_index The index of the PendingSynapseDeletion
+     * @exception Throws a RelearnException if request_index is larger than the number of stored PendingSynapseDeletion
+     * @return The deletion reques
+     */
+    [[nodiscard]] PendingSynapseDeletion get_request(const size_t request_index) const {
+        RelearnException::check(request_index < requests.size(), "SynapseDeletionRequests::get_request: Index is out of bounds");
+        return requests[request_index];
     }
 
     /**
@@ -292,6 +359,98 @@ public:
 
 private:
     std::vector<PendingSynapseDeletion> requests{}; // This vector is used as MPI communication buffer
+
+public:
+    static std::map<int, SynapseDeletionRequests> exchange_requests(const PendingDeletionsV& pending_deletions) {
+        /**
+	     * - Go through list with pending synapse deletions and copy those into map "synapse_deletion_requests_outgoing"
+	     *   where the other neuron affected by the deletion is not one of my neurons
+	     * - Tell every rank how many deletion requests to receive from me
+	     * - Prepare for corresponding number of deletion requests from every rank and receive them
+	     * - Add received deletion requests to the list with pending deletions
+	     * - Execute pending deletions
+	     */
+
+        /**
+	     * Go through list with pending synapse deletions and copy those into
+	     * map "synapse_deletion_requests_outgoing" where the other neuron
+	     * affected by the deletion is not one of my neurons
+	     */
+
+        std::map<int, SynapseDeletionRequests> synapse_deletion_requests_incoming;
+        std::map<int, SynapseDeletionRequests> synapse_deletion_requests_outgoing;
+        // All pending deletion requests
+        for (const auto& list_it : pending_deletions) {
+            const auto target_rank = list_it.get_affected_neuron_id().get_rank();
+
+            // Affected neuron of deletion request resides on different rank.
+            // Thus the request needs to be communicated.
+            if (target_rank != MPIWrapper::get_my_rank()) {
+                synapse_deletion_requests_outgoing[target_rank].append(list_it);
+            }
+        }
+
+        /**
+	     * Send to every rank the number of deletion requests it should prepare for from me.
+	     * Likewise, receive the number of deletion requests that I should prepare for from every rank.
+	     */
+
+        std::vector<size_t> num_synapse_deletion_requests_for_ranks(MPIWrapper::get_num_ranks(), 0);
+        // Fill vector with my number of synapse deletion requests for every rank
+        // Requests to myself are kept local and not sent to myself again.
+        for (const auto& it : synapse_deletion_requests_outgoing) {
+            auto rank = it.first;
+            auto num_requests = it.second.size();
+
+            num_synapse_deletion_requests_for_ranks[rank] = num_requests;
+        }
+
+        std::vector<size_t> num_synapse_deletion_requests_from_ranks(MPIWrapper::get_num_ranks(), Constants::uninitialized);
+        // Send and receive the number of synapse deletion requests
+        MPIWrapper::all_to_all(num_synapse_deletion_requests_for_ranks, num_synapse_deletion_requests_from_ranks);
+        // Now I know how many requests I will get from every rank.
+        // Allocate memory for all incoming synapse deletion requests.
+        for (auto rank = 0; rank < MPIWrapper::get_num_ranks(); ++rank) {
+            if (auto num_requests = num_synapse_deletion_requests_from_ranks[rank]; 0 != num_requests) {
+                synapse_deletion_requests_incoming[rank].resize(num_requests);
+            }
+        }
+
+        std::vector<MPIWrapper::AsyncToken> mpi_requests(synapse_deletion_requests_outgoing.size() + synapse_deletion_requests_incoming.size());
+
+        /**
+	     * Send and receive actual synapse deletion requests
+	     */
+
+        auto mpi_requests_index = 0;
+
+        // Receive actual synapse deletion requests
+        for (auto& it : synapse_deletion_requests_incoming) {
+            const auto rank = it.first;
+            auto* buffer = it.second.get_requests();
+            const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
+
+            MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
+
+            ++mpi_requests_index;
+        }
+
+        // Send actual synapse deletion requests
+        for (const auto& it : synapse_deletion_requests_outgoing) {
+            const auto rank = it.first;
+            const auto* const buffer = it.second.get_requests();
+            const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
+
+            MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
+
+            ++mpi_requests_index;
+        }
+
+        // Wait for all sends and receives to complete
+        MPIWrapper::wait_all_tokens(mpi_requests);
+
+        return synapse_deletion_requests_incoming;
+    }
 };
 
 /**
@@ -299,3 +458,46 @@ private:
  * The MPI rank specifies the corresponding process
  */
 using MapSynapseDeletionRequests = std::map<int, SynapseDeletionRequests>;
+
+namespace std {
+template <>
+struct tuple_size<typename ::PendingSynapseDeletion> {
+    static constexpr size_t value = 7;
+};
+
+template <>
+struct tuple_element<0, typename ::PendingSynapseDeletion> {
+    using type = RankNeuronId;
+};
+
+template <>
+struct tuple_element<1, typename ::PendingSynapseDeletion> {
+    using type = RankNeuronId;
+};
+
+template <>
+struct tuple_element<2, typename ::PendingSynapseDeletion> {
+    using type = RankNeuronId;
+};
+
+template <>
+struct tuple_element<3, typename ::PendingSynapseDeletion> {
+    using type = ElementType;
+};
+
+template <>
+struct tuple_element<4, typename ::PendingSynapseDeletion> {
+    using type = SignalType;
+};
+
+template <>
+struct tuple_element<5, typename ::PendingSynapseDeletion> {
+    using type = unsigned int;
+};
+
+template <>
+struct tuple_element<6, typename ::PendingSynapseDeletion> {
+    using type = bool;
+};
+
+} //namespace std

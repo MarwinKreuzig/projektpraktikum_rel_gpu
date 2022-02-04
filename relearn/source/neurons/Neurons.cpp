@@ -361,7 +361,7 @@ size_t Neurons::delete_synapses() {
     pending_deletions.insert(pending_deletions.cend(), deletions_dendrites_excitatory.first.begin(), deletions_dendrites_excitatory.first.end());
     pending_deletions.insert(pending_deletions.cend(), deletions_dendrites_inhibitory.first.begin(), deletions_dendrites_inhibitory.first.end());
 
-    MapSynapseDeletionRequests synapse_deletion_requests_incoming = delete_synapses_exchange_requests(pending_deletions);
+    MapSynapseDeletionRequests synapse_deletion_requests_incoming = SynapseDeletionRequests::exchange_requests(pending_deletions);
     delete_synapses_process_requests(synapse_deletion_requests_incoming, pending_deletions);
 
     /**
@@ -452,8 +452,8 @@ std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(
     RelearnException::check(num_synapses_to_delete <= current_synapses.size(), "Neurons::delete_synapses_find_synapses_on_neuron:: num_synapses_to_delete > last_synapses.size()");
 
     /**
-	* Select synapses for deletion
-	*/
+	 * Select synapses for deletion
+	 */
     std::vector<size_t> already_removed_indices;
 
     for (unsigned int num_synapses_selected = 0; num_synapses_selected < num_synapses_to_delete; ++num_synapses_selected) {
@@ -521,97 +521,6 @@ std::vector<Neurons::Synapse> Neurons::delete_synapses_register_edges(const std:
     return current_synapses;
 }
 
-MapSynapseDeletionRequests Neurons::delete_synapses_exchange_requests(const PendingDeletionsV& pending_deletions) {
-    /**
-	* - Go through list with pending synapse deletions and copy those into map "synapse_deletion_requests_outgoing"
-	*   where the other neuron affected by the deletion is not one of my neurons
-	* - Tell every rank how many deletion requests to receive from me
-	* - Prepare for corresponding number of deletion requests from every rank and receive them
-	* - Add received deletion requests to the list with pending deletions
-	* - Execute pending deletions
-	*/
-
-    /**
-	* Go through list with pending synapse deletions and copy those into
-	* map "synapse_deletion_requests_outgoing" where the other neuron
-	* affected by the deletion is not one of my neurons
-	*/
-
-    MapSynapseDeletionRequests synapse_deletion_requests_incoming;
-    MapSynapseDeletionRequests synapse_deletion_requests_outgoing;
-    // All pending deletion requests
-    for (const auto& list_it : pending_deletions) {
-        const auto target_rank = list_it.get_affected_neuron_id().get_rank();
-
-        // Affected neuron of deletion request resides on different rank.
-        // Thus the request needs to be communicated.
-        if (target_rank != MPIWrapper::get_my_rank()) {
-            synapse_deletion_requests_outgoing[target_rank].append(list_it);
-        }
-    }
-
-    /**
-	* Send to every rank the number of deletion requests it should prepare for from me.
-	* Likewise, receive the number of deletion requests that I should prepare for from every rank.
-	*/
-
-    std::vector<size_t> num_synapse_deletion_requests_for_ranks(MPIWrapper::get_num_ranks(), 0);
-    // Fill vector with my number of synapse deletion requests for every rank
-    // Requests to myself are kept local and not sent to myself again.
-    for (const auto& it : synapse_deletion_requests_outgoing) {
-        auto rank = it.first;
-        auto num_requests = it.second.size();
-
-        num_synapse_deletion_requests_for_ranks[rank] = num_requests;
-    }
-
-    std::vector<size_t> num_synapse_deletion_requests_from_ranks(MPIWrapper::get_num_ranks(), Constants::uninitialized);
-    // Send and receive the number of synapse deletion requests
-    MPIWrapper::all_to_all(num_synapse_deletion_requests_for_ranks, num_synapse_deletion_requests_from_ranks);
-    // Now I know how many requests I will get from every rank.
-    // Allocate memory for all incoming synapse deletion requests.
-    for (auto rank = 0; rank < MPIWrapper::get_num_ranks(); ++rank) {
-        if (auto num_requests = num_synapse_deletion_requests_from_ranks[rank]; 0 != num_requests) {
-            synapse_deletion_requests_incoming[rank].resize(num_requests);
-        }
-    }
-
-    std::vector<MPIWrapper::AsyncToken> mpi_requests(synapse_deletion_requests_outgoing.size() + synapse_deletion_requests_incoming.size());
-
-    /**
-	* Send and receive actual synapse deletion requests
-	*/
-
-    auto mpi_requests_index = 0;
-
-    // Receive actual synapse deletion requests
-    for (auto& it : synapse_deletion_requests_incoming) {
-        const auto rank = it.first;
-        auto* buffer = it.second.get_requests();
-        const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
-
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
-
-        ++mpi_requests_index;
-    }
-
-    // Send actual synapse deletion requests
-    for (const auto& it : synapse_deletion_requests_outgoing) {
-        const auto rank = it.first;
-        const auto* const buffer = it.second.get_requests();
-        const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
-
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
-
-        ++mpi_requests_index;
-    }
-
-    // Wait for all sends and receives to complete
-    MPIWrapper::wait_all_tokens(mpi_requests);
-
-    return synapse_deletion_requests_incoming;
-}
-
 void Neurons::delete_synapses_process_requests(const MapSynapseDeletionRequests& synapse_deletion_requests_incoming, PendingDeletionsV& pending_deletions) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -623,19 +532,19 @@ void Neurons::delete_synapses_process_requests(const MapSynapseDeletionRequests&
 
         // All requests of a rank
         for (auto request_index = 0; request_index < num_requests; ++request_index) {
-            const auto src_neuron_id = requests.get_source_neuron_id(request_index);
-            const auto tgt_neuron_id = requests.get_target_neuron_id(request_index);
-            const auto affected_neuron_id = requests.get_affected_neuron_id(request_index);
-            const auto affected_element_type = requests.get_affected_element_type(request_index);
-            const auto signal_type = requests.get_signal_type(request_index);
-            const auto synapse_id = requests.get_synapse_id(request_index);
 
-            RankNeuronId src_id(my_rank, src_neuron_id);
-            RankNeuronId tgt_id(other_rank, tgt_neuron_id);
+            const auto& [src_neuron_id, tgt_neuron_id, affected_neuron_id, affected_element_type,
+                signal_type, captured_synapse_id, _]
+                = requests.get_request(request_index);
+
+            const auto synapse_id = captured_synapse_id;
+
+            RankNeuronId src_id(my_rank, src_neuron_id.get_neuron_id());
+            RankNeuronId tgt_id(other_rank, tgt_neuron_id.get_neuron_id());
 
             if (ElementType::DENDRITE == affected_element_type) {
-                src_id = RankNeuronId(other_rank, src_neuron_id);
-                tgt_id = RankNeuronId(my_rank, tgt_neuron_id);
+                src_id = RankNeuronId(other_rank, src_neuron_id.get_neuron_id());
+                tgt_id = RankNeuronId(my_rank, tgt_neuron_id.get_neuron_id());
             }
 
             auto pending_deletion = std::find_if(pending_deletions.begin(), pending_deletions.end(), [&src_id, &tgt_id, synapse_id](auto param) {
@@ -643,7 +552,7 @@ void Neurons::delete_synapses_process_requests(const MapSynapseDeletionRequests&
             });
 
             if (pending_deletion == pending_deletions.end()) {
-                pending_deletions.emplace_back(src_id, tgt_id, RankNeuronId(my_rank, affected_neuron_id),
+                pending_deletions.emplace_back(src_id, tgt_id, RankNeuronId(my_rank, affected_neuron_id.get_neuron_id()),
                     affected_element_type, signal_type, synapse_id);
             } else {
                 pending_deletion->set_affected_element_already_deleted();
