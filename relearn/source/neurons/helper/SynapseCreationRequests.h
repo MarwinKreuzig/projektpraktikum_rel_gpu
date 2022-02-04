@@ -103,6 +103,14 @@ public:
     };
 
     /**
+     * The response for a request can be that the request failed or succeeded
+     */
+    enum class Response : char {
+        failed = 0,
+        succeeded = 1,
+    };
+
+    /**
      * @brief Creates an object with zero requests and responses.
      */
     SynapseCreationRequests() = default;
@@ -142,7 +150,7 @@ public:
      *       indicates whether it is an excitatory or inhibitory request
      */
     [[nodiscard]] Request get_request(const size_t request_index) const {
-        RelearnException::check(request_index < requests.size(), "SynapseCreationRequests::get_request: index out of bounds: {} vs {}", request_index, requests.size());        
+        RelearnException::check(request_index < requests.size(), "SynapseCreationRequests::get_request: index out of bounds: {} vs {}", request_index, requests.size());
         return requests[request_index];
     }
 
@@ -152,7 +160,7 @@ public:
      * @param connected A flag that specifies if the request is accepted (1) or denied (0)
      * @exception Throws a RelearnException if the request_index exceeds the stored number of responses
      */
-    void set_response(const size_t request_index, const char connected) {
+    void set_response(const size_t request_index, const Response connected) {
         RelearnException::check(request_index < responses.size(), "SynapseCreationRequests::set_response: index out of bounds: {} vs {}", request_index, responses.size());
         responses[request_index] = connected;
     }
@@ -163,7 +171,7 @@ public:
      * @exception Throws a RelearnException if the request_index exceeds the stored number of responses
      * @return A flag that specifies if the request is accepted (1) or denied (0)
      */
-    [[nodiscard]] char get_response(const size_t request_index) const {
+    [[nodiscard]] Response get_response(const size_t request_index) const {
         RelearnException::check(request_index < responses.size(), "SynapseCreationRequests::get_response: index out of bounds: {} vs {}", request_index, responses.size());
         return responses[request_index];
     }
@@ -188,7 +196,7 @@ public:
      * @brief Gets a raw non-owning pointer for the stored responses. The pointer is invalidated by append()
      * @return The pointer to the encoded answers: (1) for true, (0) for false
      */
-    [[nodiscard]] char* get_responses() noexcept {
+    [[nodiscard]] Response* get_responses() noexcept {
         return responses.data();
     }
 
@@ -196,7 +204,7 @@ public:
      * @brief Gets a raw non-owning and non-mutable pointer for the stored responses. The pointer is invalidated by append()
      * @return The pointer to the encoded answers: (1) for true, (0) for false
      */
-    [[nodiscard]] const char* get_responses() const noexcept {
+    [[nodiscard]] const Response* get_responses() const noexcept {
         return responses.data();
     }
 
@@ -217,8 +225,8 @@ public:
     }
 
 private:
-    std::vector<Request> requests{}; // This vector is used as MPI communication buffer        
-    std::vector<char> responses{}; // This vector is used as MPI communication buffer        
+    std::vector<Request> requests{}; // This vector is used as MPI communication buffer
+    std::vector<Response> responses{}; // This vector is used as MPI communication buffer
 
 public:
     /**
@@ -331,7 +339,7 @@ public:
 using MapSynapseCreationRequests = std::map<int, SynapseCreationRequests>;
 
 namespace std {
-template<>
+template <>
 struct tuple_size<typename ::SynapseCreationRequests::Request> {
     static constexpr size_t value = 3;
 };

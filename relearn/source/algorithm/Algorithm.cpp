@@ -40,56 +40,42 @@ std::pair<LocalSynapses, DistantInSynapses> Algorithm::create_synapses_process_r
     }
 
     const auto my_rank = MPIWrapper::get_my_rank();
-    LocalSynapses local_synapses{};
-    DistantInSynapses distant_synapses{};
 
+    LocalSynapses local_synapses{};
+    local_synapses.reserve(number_neurons);
+
+    DistantInSynapses distant_synapses{};
+    distant_synapses.reserve(number_neurons);
+
+    // For all requests I received
     for (auto& [source_rank, requests] : synapse_creation_requests_incoming) {
         const auto num_requests = requests.size();
 
         // All requests of a rank
         for (auto request_index = 0; request_index < num_requests; request_index++) {
-            const auto request = requests.get_request(request_index);
-
-            //const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = requests[request_index];
-            const auto target_neuron_id = request.get_target();
-            const auto source_neuron_id = request.get_source();
-            const auto dendrite_type_needed = request.get_signal_type();
-
+            const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = requests.get_request(request_index);
             RelearnException::check(target_neuron_id < number_neurons, "Neurons::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
 
-            int weight = 0;
-            unsigned int number_free_elements = 0;
+            const auto& dendrites = (SignalType::INHIBITORY == dendrite_type_needed) ? inhibitory_dendrites : excitatory_dendrites;
 
-            // DendriteType::INHIBITORY dendrite requested
-            if (SignalType::INHIBITORY == dendrite_type_needed) {
-                number_free_elements = inhibitory_dendrites->get_free_elements(target_neuron_id);
-                weight = -1;
-            }
-            // DendriteType::EXCITATORY dendrite requested
-            else {
-                number_free_elements = excitatory_dendrites->get_free_elements(target_neuron_id);
-                weight = +1;
-            }
+            const auto weight = (SignalType::INHIBITORY == dendrite_type_needed) ? -1 : 1;
+            const auto number_free_elements = dendrites->get_free_elements(target_neuron_id);
 
-            if (number_free_elements > 0) {
-                // Increment num of connected dendrites
-                if (SignalType::INHIBITORY == dendrite_type_needed) {
-                    inhibitory_dendrites->update_connected_elements(target_neuron_id, 1);
-                } else {
-                    excitatory_dendrites->update_connected_elements(target_neuron_id, 1);
-                }
-
-                distant_synapses.emplace_back(target_neuron_id, RankNeuronId{ source_rank, source_neuron_id }, weight);
-
-                // Set response to "connected" (success)
-                requests.set_response(request_index, 1);
-            } else {
+            if (number_free_elements == 0) {
                 // Other axons were faster and came first
-                // Set response to "not connected" (not success)
-                requests.set_response(request_index, 0);
+                requests.set_response(request_index, SynapseCreationRequests::Response::failed);
+                continue;
             }
-        } // All requests of a rank
-    } // Increasing order of ranks that sent requests
+
+            // Increment number of connected dendrites
+            dendrites->update_connected_elements(target_neuron_id, 1);
+
+            distant_synapses.emplace_back(target_neuron_id, RankNeuronId{ source_rank, source_neuron_id }, weight);
+
+            // Set response to "connected" (success)
+            requests.set_response(request_index, SynapseCreationRequests::Response::succeeded);
+        }
+    }
 
     return { local_synapses, distant_synapses };
 }
@@ -98,42 +84,32 @@ DistantOutSynapses Algorithm::create_synapses_process_responses(const MapSynapse
     const auto my_rank = MPIWrapper::get_my_rank();
     DistantOutSynapses synapses{};
 
-    /**
-	 * Register which axons could be connected
-	 *
-	 * NOTE: Do not create synapses in the network for my own responses as the corresponding synapses, if possible,
-	 * would have been created before sending the response to myself (see above).
-	 */
+    // Process the responses of all mpi ranks
     for (const auto& [target_rank, requests] : synapse_creation_requests_outgoing) {
         const auto num_requests = requests.size();
 
         // All responses from a rank
         for (auto request_index = 0; request_index < num_requests; request_index++) {
             const auto connected = requests.get_response(request_index);
-
-            if (connected == 0) {
+            if (connected == SynapseCreationRequests::Response::failed) {
                 continue;
             }
 
-            const auto request = requests.get_request(request_index);
+            const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = requests.get_request(request_index);
 
-            //const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = requests[request_index];
-            const auto target_neuron_id = request.get_target();
-            const auto source_neuron_id = request.get_source();
-            const auto dendrite_type_needed = request.get_signal_type();
-
-            // Increment num of connected axons
+            // Increment number of connected axons
             axons->update_connected_elements(source_neuron_id, 1);
 
-            // I have already created the synapse in the network
-            // if the response comes from myself
-            if (target_rank != my_rank) {
-                // Update network
-                const auto weight = (SignalType::INHIBITORY == dendrite_type_needed) ? -1 : +1;
-                synapses.emplace_back(RankNeuronId{ target_rank, target_neuron_id }, source_neuron_id, weight);
+            if (target_rank == my_rank) {
+                // I have already created the synapse in the network if the response comes from myself
+                continue;
             }
-        } // All responses from a rank
-    } // All outgoing requests
+
+            // Mark this synapse for later use (must be added to the network graph)
+            const auto weight = (SignalType::INHIBITORY == dendrite_type_needed) ? -1 : +1;
+            synapses.emplace_back(RankNeuronId{ target_rank, target_neuron_id }, source_neuron_id, weight);
+        }
+    }
 
     return synapses;
 }
