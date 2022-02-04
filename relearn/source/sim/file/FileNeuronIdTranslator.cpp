@@ -206,7 +206,7 @@ std::map<FileNeuronIdTranslator::neuron_id, FileNeuronIdTranslator::position_typ
 
     while (std::getline(file_neurons, line)) {
         // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
+        if (line.empty() || '#' == line[0]) {
             continue;
         }
 

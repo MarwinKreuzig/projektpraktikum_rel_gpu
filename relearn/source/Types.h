@@ -22,6 +22,13 @@ enum class AlgorithmEnum {
     FastMultipoleMethods,
 };
 
+enum class NeuronModelEnum {
+    Poisson,
+    Izhikevich,
+    AEIF,
+    FitzHughNagumo
+};
+
 namespace RelearnTypes {
 // In the future, these might become different types
 using box_size_type = Vec3d;
