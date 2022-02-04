@@ -134,12 +134,13 @@ MapSynapseCreationRequests Naive::find_target_neurons(const size_t number_neuron
             std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
 
             if (rank_neuron_id.has_value()) {
-                RankNeuronId val = rank_neuron_id.value();
+                const auto& [target_rank, target_id] = rank_neuron_id.value();
                 /*
 				* Append request for synapse creation to rank "target_rank"
 				* Note that "target_rank" could also be my own rank.
 				*/
-                synapse_creation_requests_outgoing[val.get_rank()].append(neuron_id, val.get_neuron_id(), dendrite_type_needed);
+                const SynapseCreationRequests::Request creation_request(target_id, neuron_id, dendrite_type_needed);
+                synapse_creation_requests_outgoing[target_rank].append(creation_request);
             }
         } /* all vacant axons of a neuron */
     } /* my neurons */

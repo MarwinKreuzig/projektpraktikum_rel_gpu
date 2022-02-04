@@ -118,10 +118,7 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
         RelearnException::check(distant_out_edges.empty(), "Neurons::disable_neurons:: Currently, disabling neurons is only supported without mpi");
 
         for (const auto& [target_neuron_id, weight] : local_out_edges) {
-            const RankNeuronId target_id{ my_rank, target_neuron_id };
-            const RankNeuronId source_id{ my_rank, neuron_id };
-
-            network_graph->add_edge_weight(target_id, source_id, -weight);
+            network_graph->add_synapse(LocalSynapse(target_neuron_id, neuron_id, -weight));
 
             bool is_within = std::binary_search(neuron_ids.begin(), neuron_ids.end(), target_neuron_id);
 
@@ -161,10 +158,7 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
         RelearnException::check(distant_in_edges.empty(), "Neurons::disable_neurons:: Currently, disabling neurons is only supported without mpi");
 
         for (const auto& [source_neuron_id, weight] : local_in_edges) {
-            const RankNeuronId target_id{ my_rank, neuron_id };
-            const RankNeuronId source_id{ my_rank, source_neuron_id };
-
-            network_graph->add_edge_weight(target_id, source_id, -weight);
+            network_graph->add_synapse(LocalSynapse(neuron_id, source_neuron_id, -weight));
 
             deleted_axon_connections[source_neuron_id] += std::abs(weight);
 

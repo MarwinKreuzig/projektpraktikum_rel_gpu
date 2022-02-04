@@ -96,8 +96,8 @@ public:
 private:
     double sigma{ default_sigma };
 
-    DistantInSynapses Algorithm::create_synapses_process_requests(size_t number_neurons, MapSynapseCreationRequests& synapse_creation_requests_incoming);
-    DistantOutSynapses Algorithm::create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
+    std::pair<LocalSynapses, DistantInSynapses> create_synapses_process_requests(size_t number_neurons, MapSynapseCreationRequests& synapse_creation_requests_incoming);
+    DistantOutSynapses  create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
 
 protected:
     std::shared_ptr<SynapticElements> axons{};

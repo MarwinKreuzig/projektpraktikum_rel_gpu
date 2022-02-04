@@ -166,7 +166,8 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
             // No autapse
             if (target_id != source_id) {
                 const auto target_rank = target->get_rank();
-                request[target_rank].append(source_id, target_id, signal_type_needed);
+                const SynapseCreationRequests::Request creation_request(target_id, source_id, signal_type_needed);
+                request[target_rank].append(creation_request);
             }
         }
     };

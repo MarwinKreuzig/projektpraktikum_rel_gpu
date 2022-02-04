@@ -111,7 +111,8 @@ public:
      * @brief Returns the number of stored requests and responses
      * @return The number of requests and responses
      */
-    [[nodiscard]] size_t size() const noexcept {
+    [[nodiscard]] size_t size() const {
+        RelearnException::check(requests.size() == responses.size(), "SynapseCreationRequests::size: requests ({}) and responses ({}) had different sizes", requests.size(), responses.size());
         return requests.size();
     }
 
@@ -125,31 +126,10 @@ public:
     }
 
     /**
-     * @brief Appends a pending request, comprising of the source and target neuron ids and a flag that denotes the 
-     *      required dendrite type; 0 for excitatory and 1 for inhibitory
-     * @param source_neuron_id The local neuron id of the requesting neuron
-     * @param target_neuron_id The local (to the other rank) neuron id of the requested neuron
-     * @param dendrite_type_needed The required type, coded with 0 for excitatory and 1 for inhibitory
+     * @brief Appends a pending request
      */
-    //void append(const size_t source_neuron_id, const size_t target_neuron_id, const size_t dendrite_type_needed) {
-    //    num_requests++;
-
-    //    requests.push_back(source_neuron_id);
-    //    requests.push_back(target_neuron_id);
-    //    requests.push_back(dendrite_type_needed);
-
-    //    responses.resize(responses.size() + 1);
-    //}
-
-    /**
-     * @brief Appends a pending request, comprising of the source and target neuron ids and an enum that denotes the 
-     *      required dendrite type
-     * @param source_neuron_id The local neuron id of the requesting neuron
-     * @param target_neuron_id The local (to the other rank) neuron id of the requested neuron
-     * @param dendrite_type_needed The required type as enum
-     */
-    void append(const size_t source_neuron_id, const size_t target_neuron_id, const SignalType dendrite_type_needed) {
-        requests.emplace_back(target_neuron_id, source_neuron_id, dendrite_type_needed);
+    void append(const Request& request) noexcept {
+        requests.emplace_back(request);
         responses.resize(responses.size() + 1);
     }
 
@@ -161,14 +141,9 @@ public:
      * @return A tuple consisting of the local neuron id of source and target, and a enum that
      *       indicates whether it is an excitatory or inhibitory request
      */
-    [[nodiscard]] std::tuple<size_t, size_t, SignalType> get_request(const size_t request_index) const {
-        RelearnException::check(request_index < requests.size(), "SynapseCreationRequests::get_request: index out of bounds: {} vs {}", request_index, requests.size());
-        //const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed_converted] = requests[request_index];
-        const auto target_neuron_id = requests[request_index].get_target();
-        const auto source_neuron_id = requests[request_index].get_source();
-        const auto dendrite_type_needed_converted = requests[request_index].get_signal_type();
-        
-        return std::make_tuple(source_neuron_id, target_neuron_id, dendrite_type_needed_converted);
+    [[nodiscard]] Request get_request(const size_t request_index) const {
+        RelearnException::check(request_index < requests.size(), "SynapseCreationRequests::get_request: index out of bounds: {} vs {}", request_index, requests.size());        
+        return requests[request_index];
     }
 
     /**
@@ -179,7 +154,6 @@ public:
      */
     void set_response(const size_t request_index, const char connected) {
         RelearnException::check(request_index < responses.size(), "SynapseCreationRequests::set_response: index out of bounds: {} vs {}", request_index, responses.size());
-
         responses[request_index] = connected;
     }
 
@@ -243,14 +217,8 @@ public:
     }
 
 private:
-    size_t num_requests{ 0 }; // Number of synapse creation requests
-    std::vector<Request> requests{}; // Each request to form a synapse is a 3-tuple: (source_neuron_id, target_neuron_id, dendrite_type_needed)
-        // That is why requests.size() == 3*responses.size()
-        // Note, a more memory-efficient implementation would use a smaller data type (not size_t) for dendrite_type_needed.
-        // This vector is used as MPI communication buffer
-    std::vector<char> responses{}; // Response if the corresponding request was accepted and thus the synapse was formed
-        // responses[i] refers to requests[3*i,...,3*i+2]
-        // This vector is used as MPI communication buffer
+    std::vector<Request> requests{}; // This vector is used as MPI communication buffer        
+    std::vector<char> responses{}; // This vector is used as MPI communication buffer        
 
 public:
     /**

@@ -17,21 +17,12 @@ std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> Algorithm::upda
 
     MapSynapseCreationRequests synapse_creation_requests_outgoing = find_target_neurons(number_neurons, disable_flags, extra_infos);
 
-    //std::stringstream ss{};
-    //ss << "I'm rank " << MPIWrapper::get_my_rank() << " and I have the following requests:\n";
-    //for (const auto& [rank, requests] : synapse_creation_requests_outgoing) {
-    //    ss << rank << ": " << requests.size() << '\n';
-    //}
-
-    //std::cout << ss.str();
-    //fflush(stdout);
-
     Timers::start(TimerRegion::CREATE_SYNAPSES);
 
     auto synapse_creation_requests_incoming = SynapseCreationRequests::exchange_requests(synapse_creation_requests_outgoing);
-    auto in_synapses = create_synapses_process_requests(number_neurons, synapse_creation_requests_incoming);
+    auto [local_synapses, distant_in_synapses] = create_synapses_process_requests(number_neurons, synapse_creation_requests_incoming);
 
-    const auto num_synapses_created = in_synapses.size();
+    const auto num_synapses_created = local_synapses.size() + distant_in_synapses.size();
 
     SynapseCreationRequests::exchange_responses(synapse_creation_requests_incoming, synapse_creation_requests_outgoing);
     auto out_synapses = create_synapses_process_responses(synapse_creation_requests_outgoing);
@@ -39,25 +30,31 @@ std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> Algorithm::upda
     Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES);
 
     return {
-        {}, std::move(in_synapses), std::move(out_synapses)
+        std::move(local_synapses), std::move(distant_in_synapses), std::move(out_synapses)
     };
 }
 
-
-DistantInSynapses Algorithm::create_synapses_process_requests(size_t number_neurons, MapSynapseCreationRequests& synapse_creation_requests_incoming) {
+std::pair<LocalSynapses, DistantInSynapses> Algorithm::create_synapses_process_requests(size_t number_neurons, MapSynapseCreationRequests& synapse_creation_requests_incoming) {
     if (synapse_creation_requests_incoming.empty()) {
         return {};
     }
 
     const auto my_rank = MPIWrapper::get_my_rank();
-    DistantInSynapses synapses{};
+    LocalSynapses local_synapses{};
+    DistantInSynapses distant_synapses{};
 
     for (auto& [source_rank, requests] : synapse_creation_requests_incoming) {
         const auto num_requests = requests.size();
 
         // All requests of a rank
         for (auto request_index = 0; request_index < num_requests; request_index++) {
-            const auto& [source_neuron_id, target_neuron_id, dendrite_type_needed] = requests.get_request(request_index);
+            const auto request = requests.get_request(request_index);
+
+            //const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = requests[request_index];
+            const auto target_neuron_id = request.get_target();
+            const auto source_neuron_id = request.get_source();
+            const auto dendrite_type_needed = request.get_signal_type();
+
             RelearnException::check(target_neuron_id < number_neurons, "Neurons::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
 
             int weight = 0;
@@ -82,7 +79,7 @@ DistantInSynapses Algorithm::create_synapses_process_requests(size_t number_neur
                     excitatory_dendrites->update_connected_elements(target_neuron_id, 1);
                 }
 
-                synapses.emplace_back(target_neuron_id, RankNeuronId{ source_rank, source_neuron_id }, weight);
+                distant_synapses.emplace_back(target_neuron_id, RankNeuronId{ source_rank, source_neuron_id }, weight);
 
                 // Set response to "connected" (success)
                 requests.set_response(request_index, 1);
@@ -94,7 +91,7 @@ DistantInSynapses Algorithm::create_synapses_process_requests(size_t number_neur
         } // All requests of a rank
     } // Increasing order of ranks that sent requests
 
-    return synapses;
+    return { local_synapses, distant_synapses };
 }
 
 DistantOutSynapses Algorithm::create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing) {
@@ -118,7 +115,12 @@ DistantOutSynapses Algorithm::create_synapses_process_responses(const MapSynapse
                 continue;
             }
 
-            const auto& [source_neuron_id, target_neuron_id, dendrite_type_needed] = requests.get_request(request_index);
+            const auto request = requests.get_request(request_index);
+
+            //const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = requests[request_index];
+            const auto target_neuron_id = request.get_target();
+            const auto source_neuron_id = request.get_source();
+            const auto dendrite_type_needed = request.get_signal_type();
 
             // Increment num of connected axons
             axons->update_connected_elements(source_neuron_id, 1);

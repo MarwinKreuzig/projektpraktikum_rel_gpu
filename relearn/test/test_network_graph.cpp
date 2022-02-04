@@ -195,7 +195,6 @@ TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
         const auto target_id = get_random_neuron_id(number_neurons);
 
         ng.add_synapse(LocalSynapse(target_id, source_id, weight));
-        //ng.add_edge_weight(RankNeuronId(my_rank, target_id), RankNeuronId(my_rank, source_id), weight);
         incoming_edges[target_id][source_id] += weight;
         outgoing_edges[source_id][target_id] += weight;
     }
@@ -319,7 +318,6 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
 
         if (is_in_synapse) {
             ng.add_synapse(DistantInSynapse(my_neuron_id, other_id, weight));
-            //ng.add_edge_weight(my_id, other_id, weight);
             in_edges[my_neuron_id][{ other_rank, other_neuron_id }] += weight;
 
             if (in_edges[my_neuron_id][{ other_rank, other_neuron_id }] == 0) {
@@ -327,7 +325,6 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
             }
         } else {
             ng.add_synapse(DistantOutSynapse(other_id, my_neuron_id, weight));
-            //ng.add_edge_weight(other_id, my_id, weight);
             out_edges[my_neuron_id][{ other_rank, other_neuron_id }] += weight;
 
             if (out_edges[my_neuron_id][{ other_rank, other_neuron_id }] == 0) {
@@ -399,10 +396,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesSplit) {
 
         if (is_in_synapse) {
             ng.add_synapse(DistantInSynapse(neuron_id, other_id, weight));
-            //           ng.add_edge_weight(my_id, other_id, weight);
         } else {
             ng.add_synapse(DistantOutSynapse(other_id, neuron_id, weight));
-            //         ng.add_edge_weight(other_id, my_id, weight);
         }
     }
 
@@ -492,11 +487,9 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
 
         if (is_in_synapse) {
             ng.add_synapse(DistantInSynapse(neuron_id, other_id, weight));
-            //ng.add_edge_weight(my_id, other_id, weight);
             synapses[edge_id] = std::make_tuple(neuron_id, 0, other_neuron_id, other_rank, weight);
         } else {
             ng.add_synapse(DistantOutSynapse(other_id, neuron_id, weight));
-            //ng.add_edge_weight(other_id, my_id, weight);
             synapses[edge_id] = std::make_tuple(other_neuron_id, other_rank, neuron_id, 0, weight);
         }
     }
@@ -521,8 +514,6 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
         }
 
         ng.add_synapse(DistantInSynapse(target_neuron_id, source_id, -weight));
-
-        // ng.add_edge_weight(target_id, source_id, -weight);
     }
 
     for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
@@ -568,11 +559,9 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
 
         if (is_in_synapse) {
             ng.add_synapse(DistantInSynapse(neuron_id, other_id, weight));
-            //ng.add_edge_weight(my_id, other_id, weight);
             in_edges[my_id][other_id] += weight;
         } else {
             ng.add_synapse(DistantOutSynapse(other_id, neuron_id, weight));
-            //ng.add_edge_weight(other_id, my_id, weight);
             out_edges[my_id][other_id] += weight;
         }
     }
@@ -602,11 +591,9 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
 
         if (is_in_synapse) {
             ng.add_synapse(DistantInSynapse(neuron_id, other_id, weight));
-            //ng.add_edge_weight(my_id, other_id, weight);
             in_edges[my_id][other_id] += weight;
         } else {
             ng.add_synapse(DistantOutSynapse(other_id, neuron_id, weight));
-            //ng.add_edge_weight(other_id, my_id, weight);
             out_edges[my_id][other_id] += weight;
         }
     }
@@ -669,7 +656,6 @@ TEST_F(NetworkGraphTest, testNetworkGraphHistogramPositiveWeight) {
         const auto abs_weight = std::abs(weight);
 
         ng.add_synapse(LocalSynapse(target_id, source_id, abs_weight));
-        //ng.add_edge_weight({ 0, target_id }, { 0, source_id }, abs_weight);
         reduced_synapses[{ source_id, target_id }] += abs_weight;
     }
 
@@ -733,7 +719,6 @@ TEST_F(NetworkGraphTest, testNetworkGraphHistogram) {
         }
 
         ng.add_synapse(LocalSynapse(target_id, source_id, weight));
-        //ng.add_edge_weight({ 0, target_id }, { 0, source_id }, weight);
         reduced_synapses[{ source_id, target_id }] += weight;
     }
 

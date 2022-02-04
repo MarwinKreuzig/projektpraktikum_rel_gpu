@@ -38,7 +38,7 @@ NetworkGraph generate_random_network_graph(size_t number_neurons, size_t num_syn
         RankNeuronId target_id{ 0, neuron_id_1 };
         RankNeuronId source_id{ 0, neuron_id_2 };
 
-        ng.add_edge_weight(target_id, source_id, weight);
+        ng.add_synapse(LocalSynapse(neuron_id_1, neuron_id_2, weight));
     }
 
     return ng;
