@@ -334,50 +334,95 @@ size_t Neurons::delete_synapses() {
 	* 1. Update number of synaptic elements and delete synapses if necessary
 	*/
 
+    auto deletion_helper = [this](std::shared_ptr<SynapticElements> synaptic_elements) {
+        const auto to_delete = synaptic_elements->commit_updates(disable_flags);
+        const auto outgoing_deletion_requests = delete_synapses_find_synapses(*synaptic_elements, to_delete);
+        const auto incoming_deletion_requests = SynapseDeletionRequests::exchange_requests(outgoing_deletion_requests);
+
+        //std::stringstream ss{};
+        //ss << "I'm rank: " << MPIWrapper::get_my_rank() << '\n';
+        //for (const auto& [rank, requests] : outgoing_deletion_requests) {
+        //    ss << "\t I have " << requests.size() << " requests for rank " << rank << '\n';
+        //}
+        //ss << '\n';
+
+        //for (const auto& [rank, requests] : incoming_deletion_requests) {
+        //    ss << "\t I received " << requests.size() << " requests from rank " << rank << '\n';
+        //}
+        //ss << '\n';
+
+        //std::cout << ss.str();
+        //fflush(stdout);
+
+        const auto newly_freed_dendrites = delete_synapses_commit_deletions(incoming_deletion_requests);
+
+        return newly_freed_dendrites;
+    };
+
     Timers::start(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
 
-    /**
-	* Create list with synapses to delete (pending synapse deletions)
-	*/
-    // Dendrite exc cannot delete a synapse that is connected to a dendrite inh. pending_deletions is used as an empty dummy
-    const auto to_delete_axons = axons->commit_updates(disable_flags);
-    const auto to_delete_dendrites_excitatory = dendrites_exc->commit_updates(disable_flags);
-    const auto to_delete_dendrites_inhibitory = dendrites_inh->commit_updates(disable_flags);
+    const auto axons_deleted = deletion_helper(axons);
 
-    auto deletions_axons = delete_synapses_find_synapses(*axons, to_delete_axons, {});
-    const auto deletions_dendrites_excitatory = delete_synapses_find_synapses(*dendrites_exc, to_delete_dendrites_excitatory, deletions_axons.first);
-    const auto deletions_dendrites_inhibitory = delete_synapses_find_synapses(*dendrites_inh, to_delete_dendrites_inhibitory, deletions_axons.first);
+    debug_check_counts();
 
-    for (const auto index : deletions_dendrites_excitatory.second) {
-        deletions_axons.first[index].set_affected_element_already_deleted();
-    }
+    const auto excitatory_dendrites_deleted = deletion_helper(dendrites_exc);
 
-    for (const auto index : deletions_dendrites_inhibitory.second) {
-        deletions_axons.first[index].set_affected_element_already_deleted();
-    }
+    debug_check_counts();
 
-    PendingDeletionsV pending_deletions;
-    pending_deletions.insert(pending_deletions.cend(), deletions_axons.first.begin(), deletions_axons.first.end());
-    pending_deletions.insert(pending_deletions.cend(), deletions_dendrites_excitatory.first.begin(), deletions_dendrites_excitatory.first.end());
-    pending_deletions.insert(pending_deletions.cend(), deletions_dendrites_inhibitory.first.begin(), deletions_dendrites_inhibitory.first.end());
+    const auto inhibitory_dendrites_deleted = deletion_helper(dendrites_inh);
 
-    MapSynapseDeletionRequests synapse_deletion_requests_incoming = SynapseDeletionRequests::exchange_requests(pending_deletions);
-    delete_synapses_process_requests(synapse_deletion_requests_incoming, pending_deletions);
-
-    /**
-	* Now the list with pending synapse deletions contains all deletion requests
-	* of synapses that are connected to at least one of my neurons
-	*
-	* NOTE:
-	* (i)  A synapse can be connected to two of my neurons
-	* (ii) A synapse can be connected to one of my neurons and the other neuron belongs to another rank
-	*/
-
-    /* Delete all synapses pending for deletion */
-    const auto num_synapses_deleted = delete_synapses_commit_deletions(pending_deletions);
     Timers::stop_and_add(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
 
-    return num_synapses_deleted;
+    return axons_deleted + excitatory_dendrites_deleted + inhibitory_dendrites_deleted;
+
+    //   const auto to_delete_axons = axons->commit_updates(disable_flags);
+    //   const auto oitgoing_axon_deletion_requests = delete_synapses_find_synapses(*axons, to_delete_axons);
+    //   const auto incoming_axon_deletion_requests = SynapseDeletionRequests::exchange_requests(oitgoing_axon_deletion_requests);
+
+    //   const auto newly_freed_dendrites = delete_synapses_commit_deletions(incoming_axon_deletion_requests);
+
+    //   /**
+    //* Create list with synapses to delete (pending synapse deletions)
+    //*/
+    //   // Dendrite exc cannot delete a synapse that is connected to a dendrite inh. pending_deletions is used as an empty dummy
+    //   const auto to_delete_axons = axons->commit_updates(disable_flags);
+    //   const auto to_delete_dendrites_excitatory = dendrites_exc->commit_updates(disable_flags);
+    //   const auto to_delete_dendrites_inhibitory = dendrites_inh->commit_updates(disable_flags);
+
+    //   auto deletions_axons = delete_synapses_find_synapses(*axons, to_delete_axons, {});
+    //   const auto deletions_dendrites_excitatory = delete_synapses_find_synapses(*dendrites_exc, to_delete_dendrites_excitatory, deletions_axons.first);
+    //   const auto deletions_dendrites_inhibitory = delete_synapses_find_synapses(*dendrites_inh, to_delete_dendrites_inhibitory, deletions_axons.first);
+
+    //   for (const auto index : deletions_dendrites_excitatory.second) {
+    //       deletions_axons.first[index].set_affected_element_already_deleted();
+    //   }
+
+    //   for (const auto index : deletions_dendrites_inhibitory.second) {
+    //       deletions_axons.first[index].set_affected_element_already_deleted();
+    //   }
+
+    //   PendingDeletionsV pending_deletions;
+    //   pending_deletions.insert(pending_deletions.cend(), deletions_axons.first.begin(), deletions_axons.first.end());
+    //   pending_deletions.insert(pending_deletions.cend(), deletions_dendrites_excitatory.first.begin(), deletions_dendrites_excitatory.first.end());
+    //   pending_deletions.insert(pending_deletions.cend(), deletions_dendrites_inhibitory.first.begin(), deletions_dendrites_inhibitory.first.end());
+
+    //   MapSynapseDeletionRequests synapse_deletion_requests_incoming = SynapseDeletionRequests::exchange_requests(pending_deletions);
+    //   delete_synapses_process_requests(synapse_deletion_requests_incoming, pending_deletions);
+
+    //   /**
+    //* Now the list with pending synapse deletions contains all deletion requests
+    //* of synapses that are connected to at least one of my neurons
+    //*
+    //* NOTE:
+    //* (i)  A synapse can be connected to two of my neurons
+    //* (ii) A synapse can be connected to one of my neurons and the other neuron belongs to another rank
+    //*/
+
+    //   /* Delete all synapses pending for deletion */
+    //   const auto num_synapses_deleted = delete_synapses_commit_deletions(pending_deletions);
+    //   Timers::stop_and_add(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
+
+    //   return num_synapses_deleted;
 }
 
 std::pair<PendingDeletionsV, std::vector<size_t>> Neurons::delete_synapses_find_synapses(
@@ -421,11 +466,60 @@ std::pair<PendingDeletionsV, std::vector<size_t>> Neurons::delete_synapses_find_
     return std::make_pair(pending_deletions, total_vector_affected_indices);
 }
 
+MapSynapseDeletionRequests Neurons::delete_synapses_find_synapses(const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) {
+    const auto& [sum_to_delete, number_deletions] = to_delete;
+
+    if (sum_to_delete == 0) {
+        return {};
+    }
+
+    const auto element_type = synaptic_elements.get_element_type();
+
+    MapSynapseDeletionRequests deletion_requests{};
+
+    const auto my_rank = MPIWrapper::get_my_rank();
+
+    for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
+        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
+            continue;
+        }
+
+        /**
+		 * Create and delete synaptic elements as required.
+		 * This function only deletes elements (bound and unbound), no synapses.
+		 */
+        const auto num_synapses_to_delete = number_deletions[neuron_id];
+        if (num_synapses_to_delete == 0) {
+            continue;
+        }
+
+        const auto signal_type = synaptic_elements.get_signal_type(neuron_id);
+        const auto affected_indices = delete_synapses_find_synapses_on_neuron(neuron_id, element_type, signal_type, num_synapses_to_delete);
+
+        for (const auto& [rank, other_neuron_id] : affected_indices) {
+            PendingSynapseDeletion psd(RankNeuronId(my_rank, neuron_id), RankNeuronId(rank, other_neuron_id), RankNeuronId(rank, other_neuron_id), element_type, signal_type, 0);
+            deletion_requests[rank].append(psd);
+
+            if (my_rank != rank) {
+                const auto weight = (SignalType::EXCITATORY == signal_type) ? -1 : 1;
+                if (ElementType::AXON == element_type) {
+                    network_graph->add_edge_weight(RankNeuronId(rank, other_neuron_id), RankNeuronId(my_rank, neuron_id), weight);
+                } else {
+                    network_graph->add_edge_weight(RankNeuronId(my_rank, neuron_id), RankNeuronId(rank, other_neuron_id), weight);
+                }
+            }
+
+        }
+    }
+
+    return deletion_requests;
+}
+
 std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(
-    const size_t neuron_id,
-    const ElementType element_type,
-    const SignalType signal_type,
-    const unsigned int num_synapses_to_delete,
+    size_t neuron_id,
+    ElementType element_type,
+    SignalType signal_type,
+    unsigned int num_synapses_to_delete,
     PendingDeletionsV& pending_deletions,
     const PendingDeletionsV& other_pending_deletions) {
 
@@ -494,6 +588,54 @@ std::vector<size_t> Neurons::delete_synapses_find_synapses_on_neuron(
     }
 
     return already_removed_indices;
+}
+
+std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
+    size_t neuron_id,
+    ElementType element_type,
+    SignalType signal_type,
+    unsigned int num_synapses_to_delete) {
+
+    // Only do something if necessary
+    if (0 == num_synapses_to_delete) {
+        return {};
+    }
+
+    const auto is_axon = element_type == ElementType::AXON;
+    const auto other_element_type = is_axon ? ElementType::DENDRITE : ElementType::AXON;
+
+    std::vector<Synapse> current_synapses;
+
+    if (is_axon) {
+        // Walk through outgoing edges
+        NetworkGraph::DistantEdges out_edges = network_graph->get_all_out_edges(neuron_id);
+        current_synapses = delete_synapses_register_edges(out_edges);
+    } else {
+        // Walk through ingoing edges
+        NetworkGraph::DistantEdges in_edges = network_graph->get_all_in_edges(neuron_id, signal_type);
+        current_synapses = delete_synapses_register_edges(in_edges);
+    }
+
+    RelearnException::check(num_synapses_to_delete <= current_synapses.size(), "Neurons::delete_synapses_find_synapses_on_neuron:: num_synapses_to_delete > last_synapses.size()");
+
+    std::vector<unsigned int> drawn_indices{};
+    std::uniform_int_distribution<unsigned int> uid{};
+
+    for (auto i = 0; i < num_synapses_to_delete; i++) {
+        auto random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::Neurons, 0, num_synapses_to_delete - 1);
+        while (std::find(drawn_indices.begin(), drawn_indices.end(), random_number) != drawn_indices.end()) {
+            random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::Neurons, 0, num_synapses_to_delete - 1);
+        }
+
+        drawn_indices.emplace_back(random_number);
+    }
+
+    std::vector<RankNeuronId> affected_neurons{};
+    for (const auto index : drawn_indices) {
+        affected_neurons.emplace_back(current_synapses[index].get_neuron_id());
+    }
+
+    return affected_neurons;
 }
 
 std::vector<Neurons::Synapse> Neurons::delete_synapses_register_edges(const std::vector<std::pair<RankNeuronId, int>>& edges) {
@@ -567,62 +709,44 @@ size_t Neurons::delete_synapses_commit_deletions(const PendingDeletionsV& list) 
     size_t num_synapses_deleted = 0;
 
     /* Execute pending synapse deletions */
-    for (const auto& it : list) {
+    for (const auto& [src_neuron, tgt_neuron, affected_neuron, element_type, signal_type, _, already_deleted] : list) {
         // Pending synapse deletion is valid (not completely) if source or
         // target neuron belong to me. To be completely valid, things such as
         // the neuron id need to be validated as well.
-        const auto& src_neuron = it.get_source_neuron_id();
-        const auto src_neuron_rank = src_neuron.get_rank();
-        const auto src_neuron_id = src_neuron.get_neuron_id();
-
-        const auto& tgt_neuron = it.get_target_neuron_id();
-        const auto tgt_neuron_rank = tgt_neuron.get_rank();
-        const auto tgt_neuron_id = tgt_neuron.get_neuron_id();
+        const auto& [src_neuron_rank, src_neuron_id] = src_neuron;
+        const auto& [tgt_neuron_rank, tgt_neuron_id] = tgt_neuron;
 
         RelearnException::check(src_neuron_rank == my_rank || tgt_neuron_rank == my_rank, "Neurons::delete_synapses_commit_deletions: Should delete a non-local synapse");
 
-        const auto signal_type = it.get_signal_type();
-        const auto element_type = it.get_affected_element_type();
-
-        const auto& affected_neuron = it.get_affected_neuron_id();
-
         if (src_neuron_rank == my_rank && tgt_neuron_rank == my_rank) {
             /**
-			* Count the deleted synapse once for each connected neuron.
-			* The reason is that synapses where neurons are on different ranks are also
-			* counted once on each rank
-			*/
+			 * Count the deleted synapse once for each connected neuron.
+			 * The reason is that synapses where neurons are on different ranks are also
+			 * counted once on each rank
+			 */
             num_synapses_deleted += 2;
         } else {
             num_synapses_deleted += 1;
         }
 
         /**
-		*  Update network graph
-		*/
-        int weight_increment = 0;
-        if (SignalType::EXCITATORY == signal_type) {
-            // DendriteType::EXCITATORY synapses have positive count, so decrement
-            weight_increment = -1;
-        } else {
-            // DendriteType::INHIBITORY synapses have negative count, so increment
-            weight_increment = +1;
-        }
-
-        network_graph->add_edge_weight(tgt_neuron, src_neuron, weight_increment);
+		 *  Update network graph
+		 */
+        const auto weight = (SignalType::EXCITATORY == signal_type) ? -1 : 1;
+        network_graph->add_edge_weight(tgt_neuron, src_neuron, weight);
 
         /**
-		* Set element of affected neuron vacant if necessary,
-		* i.e., only if the affected neuron belongs to me and the
-		* element of the affected neuron still exists.
-		*
-		* NOTE: Checking that the affected neuron belongs to me is important
-		* because the list of pending deletion requests also contains requests whose
-		* affected neuron belongs to a different rank.
-		*/
+		 * Set element of affected neuron vacant if necessary,
+		 * i.e., only if the affected neuron belongs to me and the
+		 * element of the affected neuron still exists.
+		 *
+		 * NOTE: Checking that the affected neuron belongs to me is important
+		 * because the list of pending deletion requests also contains requests whose
+		 * affected neuron belongs to a different rank.
+		 */
         const auto affected_neuron_id = affected_neuron.get_neuron_id();
 
-        if (affected_neuron.get_rank() == my_rank && !it.get_affected_element_already_deleted()) {
+        if (affected_neuron.get_rank() == my_rank && !already_deleted) {
             if (ElementType::AXON == element_type) {
                 axons->update_connected_elements(affected_neuron_id, -1);
                 continue;
@@ -639,10 +763,61 @@ size_t Neurons::delete_synapses_commit_deletions(const PendingDeletionsV& list) 
     return num_synapses_deleted;
 }
 
+size_t Neurons::delete_synapses_commit_deletions(const MapSynapseDeletionRequests& list) {
+    const int my_rank = MPIWrapper::get_my_rank();
+    size_t num_synapses_deleted = 0;
+
+    for (const auto& [other_rank, requests] : list) {
+        num_synapses_deleted += requests.size();
+
+        for (auto i = 0; i < requests.size(); i++) {
+            const auto& [other_neuron, my_neuron, _1, element_type, signal_type, _2, _3] = requests.get_request(i);
+            const auto& [other_neuron_rank, other_neuron_id] = other_neuron;
+            const auto& [my_neuron_rank, my_neuron_id] = my_neuron;
+
+            RelearnException::check(my_neuron_rank == my_rank || other_neuron_rank == my_rank, "Neurons::delete_synapses_commit_deletions: Should delete a non-local synapse");
+
+            /**
+		     *  Update network graph
+		     */
+            const auto weight = (SignalType::EXCITATORY == signal_type) ? -1 : 1;
+
+            if (ElementType::DENDRITE == element_type) {
+                network_graph->add_edge_weight(other_neuron, my_neuron, weight);
+            } else {
+                network_graph->add_edge_weight(my_neuron, other_neuron, weight);
+            }
+
+            /**
+		     * Set element of affected neuron vacant if necessary,
+		     * i.e., only if the affected neuron belongs to me and the
+		     * element of the affected neuron still exists.
+		     *
+		     * NOTE: Checking that the affected neuron belongs to me is important
+		     * because the list of pending deletion requests also contains requests whose
+		     * affected neuron belongs to a different rank.
+		     */
+
+            if (ElementType::DENDRITE == element_type) {
+                axons->update_connected_elements(my_neuron_id, -1);
+                continue;
+            }
+
+            if (SignalType::EXCITATORY == signal_type) {
+                dendrites_exc->update_connected_elements(my_neuron_id, -1);
+            } else {
+                dendrites_inh->update_connected_elements(my_neuron_id, -1);
+            }
+        }
+    }
+
+    return num_synapses_deleted;
+}
+
 size_t Neurons::create_synapses() {
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    // Lock local RMA memory for local stores 
+    // Lock local RMA memory for local stores
     MPIWrapper::lock_window(my_rank, MPI_Locktype::exclusive);
 
     // Update my leaf nodes
@@ -687,39 +862,46 @@ void Neurons::debug_check_counts() {
 
     RelearnException::check(network_graph != nullptr, "Neurons::debug_check_counts: network_graph is nullptr");
 
-    const std::vector<double>& axs_count = axons->get_grown_elements();
-    const std::vector<unsigned int>& axs_conn_count = axons->get_connected_elements();
-    const std::vector<double>& de_count = dendrites_exc->get_grown_elements();
-    const std::vector<unsigned int>& de_conn_count = dendrites_exc->get_connected_elements();
-    const std::vector<double>& di_count = dendrites_inh->get_grown_elements();
-    const std::vector<unsigned int>& di_conn_count = dendrites_inh->get_connected_elements();
+    const auto my_rank = MPIWrapper::get_my_rank();
 
-    for (size_t i = 0; i < number_neurons; i++) {
-        const double diff_axs = axs_count[i] - axs_conn_count[i];
-        const double diff_de = de_count[i] - de_conn_count[i];
-        const double diff_di = di_count[i] - di_conn_count[i];
+    const auto& grown_axons = axons->get_grown_elements();
+    const auto& connected_axons = axons->get_connected_elements();
+    const auto& grown_excitatory_dendrites = dendrites_exc->get_grown_elements();
+    const auto& connected_excitatory_dendrites = dendrites_exc->get_connected_elements();
+    const auto& grown_inhibitory_dendrites = dendrites_inh->get_grown_elements();
+    const auto& connected_inhibitory_dendrites = dendrites_inh->get_connected_elements();
 
-        RelearnException::check(diff_axs >= 0.0, "Neurons::debug_check_counts: {}", diff_axs);
-        RelearnException::check(diff_de >= 0.0, "Neurons::debug_check_counts: {}", diff_de);
-        RelearnException::check(diff_di >= 0.0, "Neurons::debug_check_counts: {}", diff_di);
+    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        const auto vacant_axons = grown_axons[neuron_id] - connected_axons[neuron_id];
+        const auto vacant_excitatory_dendrites = grown_excitatory_dendrites[neuron_id] - connected_excitatory_dendrites[neuron_id];
+        const auto vacant_inhibitory_dendrites = grown_inhibitory_dendrites[neuron_id] - connected_inhibitory_dendrites[neuron_id];
+
+        RelearnException::check(vacant_axons >= 0.0, "Neurons::debug_check_counts: {} has a weird number of vacant axons: {}", neuron_id, vacant_axons);
+        RelearnException::check(vacant_excitatory_dendrites >= 0.0, "Neurons::debug_check_counts: {} has a weird number of vacant excitatory dendrites: {}", neuron_id, vacant_excitatory_dendrites);
+        RelearnException::check(vacant_inhibitory_dendrites >= 0.0, "Neurons::debug_check_counts: {} has a weird number of vacant inhibitory dendrites: {}", neuron_id, vacant_inhibitory_dendrites);
     }
 
-    for (size_t i = 0; i < number_neurons; i++) {
-        const double connected_axons = axs_conn_count[i];
-        const double connected_dend_exc = de_conn_count[i];
-        const double connected_dend_inh = di_conn_count[i];
+    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        const double connected_axons_neuron = connected_axons[neuron_id];
+        const double connected_excitatory_dendrites_neuron = connected_excitatory_dendrites[neuron_id];
+        const double connected_inhibitory_dendrites_neuron = connected_inhibitory_dendrites[neuron_id];
 
-        const auto num_conn_axons = static_cast<size_t>(connected_axons);
-        const auto num_conn_dend_ex = static_cast<size_t>(connected_dend_exc);
-        const auto num_conn_dend_in = static_cast<size_t>(connected_dend_inh);
+        const auto number_connected_axons = static_cast<size_t>(connected_axons_neuron);
+        const auto number_connected_excitatory_dendrites = static_cast<size_t>(connected_excitatory_dendrites_neuron);
+        const auto number_connected_inhibitory_dendrites = static_cast<size_t>(connected_inhibitory_dendrites_neuron);
 
-        const size_t num_out_ng = network_graph->get_number_out_edges(i);
-        const size_t num_in_exc_ng = network_graph->get_number_excitatory_in_edges(i);
-        const size_t num_in_inh_ng = network_graph->get_number_inhibitory_in_edges(i);
+        const size_t number_out_edges = network_graph->get_number_out_edges(neuron_id);
+        const size_t number_excitatory_in_edges = network_graph->get_number_excitatory_in_edges(neuron_id);
+        const size_t number_inhibitory_in_edges = network_graph->get_number_inhibitory_in_edges(neuron_id);
 
-        RelearnException::check(num_conn_axons == num_out_ng, "Neurons::debug_check_counts: In Neurons conn axons, {} vs. {}", num_conn_axons, num_out_ng);
-        RelearnException::check(num_conn_dend_ex == num_in_exc_ng, "Neurons::debug_check_counts: In Neurons conn dend ex, {} vs. {}", num_conn_dend_ex, num_in_exc_ng);
-        RelearnException::check(num_conn_dend_in == num_in_inh_ng, "Neurons::debug_check_counts: In Neurons conn dend in, {} vs. {}", num_conn_dend_in, num_in_inh_ng);
+        RelearnException::check(number_connected_axons == number_out_edges,
+            "Neurons::debug_check_counts: Neuron {} has {} axons but {} out edges (rank {})", neuron_id, number_connected_axons, number_out_edges, my_rank);
+
+        RelearnException::check(number_connected_excitatory_dendrites == number_excitatory_in_edges,
+            "Neurons::debug_check_counts: Neuron {} has {} excitatory dendrites but {} excitatory in edges (rank {})", neuron_id, number_connected_excitatory_dendrites, number_excitatory_in_edges, my_rank);
+
+        RelearnException::check(number_connected_inhibitory_dendrites == number_inhibitory_in_edges,
+            "Neurons::debug_check_counts: Neuron {} has {} inhibitory dendrites but {} inhibitory in edges (rank {})", neuron_id, number_connected_inhibitory_dendrites, number_inhibitory_in_edges, my_rank);
     }
 }
 
@@ -761,7 +943,7 @@ StatisticalMeasures Neurons::get_statistics(NeuronAttribute attribute) const {
     return {};
 }
 
-[[nodiscard]] std::tuple<size_t, size_t> Neurons::update_connectivity() {
+std::tuple<size_t, size_t> Neurons::update_connectivity() {
     RelearnException::check(network_graph != nullptr, "Network graph is nullptr");
     RelearnException::check(global_tree != nullptr, "Global octree is nullptr");
     RelearnException::check(algorithm != nullptr, "Algorithm is nullptr");

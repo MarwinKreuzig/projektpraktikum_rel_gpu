@@ -82,7 +82,6 @@ class Neurons {
         }
     };
 
-
 public:
     // Types
     using Axons = SynapticElements;
@@ -417,6 +416,8 @@ private:
     [[nodiscard]] std::pair<PendingDeletionsV, std::vector<size_t>> delete_synapses_find_synapses(
         const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete, const PendingDeletionsV& other_pending_deletions);
 
+    [[nodiscard]] MapSynapseDeletionRequests delete_synapses_find_synapses(const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete);
+
     /**
 	 * Determines which synapses should be deleted.
 	 * The selected synapses connect with neuron "neuron_id" and the type of
@@ -434,11 +435,19 @@ private:
         PendingDeletionsV& pending_deletions,
         const PendingDeletionsV& other_pending_deletions);
 
+    [[nodiscard]] std::vector<RankNeuronId> delete_synapses_find_synapses_on_neuron(
+        size_t neuron_id,
+        ElementType element_type,
+        SignalType signal_type,
+        unsigned int num_synapses_to_delete);
+
     [[nodiscard]] static std::vector<Neurons::Synapse> delete_synapses_register_edges(const std::vector<std::pair<RankNeuronId, int>>& edges);
 
     static void delete_synapses_process_requests(const MapSynapseDeletionRequests& synapse_deletion_requests_incoming, PendingDeletionsV& pending_deletions);
 
     [[nodiscard]] size_t delete_synapses_commit_deletions(const PendingDeletionsV& list);
+
+    [[nodiscard]] size_t delete_synapses_commit_deletions(const MapSynapseDeletionRequests& list);
 
     [[nodiscard]] size_t create_synapses();
 

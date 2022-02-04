@@ -371,21 +371,23 @@ public:
 	     * - Execute pending deletions
 	     */
 
+        const auto number_ranks = MPIWrapper::get_num_ranks();
+        const auto my_rank = MPIWrapper::get_my_rank();
+
         /**
 	     * Go through list with pending synapse deletions and copy those into
 	     * map "synapse_deletion_requests_outgoing" where the other neuron
 	     * affected by the deletion is not one of my neurons
 	     */
 
-        std::map<int, SynapseDeletionRequests> synapse_deletion_requests_incoming;
-        std::map<int, SynapseDeletionRequests> synapse_deletion_requests_outgoing;
+        std::map<int, SynapseDeletionRequests> synapse_deletion_requests_outgoing{};
         // All pending deletion requests
         for (const auto& list_it : pending_deletions) {
             const auto target_rank = list_it.get_affected_neuron_id().get_rank();
 
             // Affected neuron of deletion request resides on different rank.
             // Thus the request needs to be communicated.
-            if (target_rank != MPIWrapper::get_my_rank()) {
+            if (target_rank != my_rank) {
                 synapse_deletion_requests_outgoing[target_rank].append(list_it);
             }
         }
@@ -395,40 +397,37 @@ public:
 	     * Likewise, receive the number of deletion requests that I should prepare for from every rank.
 	     */
 
-        std::vector<size_t> num_synapse_deletion_requests_for_ranks(MPIWrapper::get_num_ranks(), 0);
+        std::vector<size_t> number_requests_for_ranks(number_ranks, 0);
         // Fill vector with my number of synapse deletion requests for every rank
         // Requests to myself are kept local and not sent to myself again.
-        for (const auto& it : synapse_deletion_requests_outgoing) {
-            auto rank = it.first;
-            auto num_requests = it.second.size();
-
-            num_synapse_deletion_requests_for_ranks[rank] = num_requests;
+        for (const auto& [rank, requests] : synapse_deletion_requests_outgoing) {
+            RelearnException::check(rank < number_ranks, "SynapseDeletionRequests::exchange_requests: rank was too large: {} of {}", rank, number_ranks);
+            const auto num_requests = requests.size();
+            number_requests_for_ranks[rank] = num_requests;
         }
 
-        std::vector<size_t> num_synapse_deletion_requests_from_ranks(MPIWrapper::get_num_ranks(), Constants::uninitialized);
-        // Send and receive the number of synapse deletion requests
-        MPIWrapper::all_to_all(num_synapse_deletion_requests_for_ranks, num_synapse_deletion_requests_from_ranks);
+        std::vector<size_t> number_requests_from_ranks(number_ranks, 0);
+        MPIWrapper::all_to_all(number_requests_for_ranks, number_requests_from_ranks);
+        
         // Now I know how many requests I will get from every rank.
-        // Allocate memory for all incoming synapse deletion requests.
-        for (auto rank = 0; rank < MPIWrapper::get_num_ranks(); ++rank) {
-            if (auto num_requests = num_synapse_deletion_requests_from_ranks[rank]; 0 != num_requests) {
-                synapse_deletion_requests_incoming[rank].resize(num_requests);
+        std::map<int, SynapseDeletionRequests> incoming_requests{};
+        for (auto rank = 0; rank < number_ranks; ++rank) {
+            if (const auto num_requests = number_requests_from_ranks[rank]; 0 != num_requests) {
+                incoming_requests[rank].resize(num_requests);
             }
         }
 
-        std::vector<MPIWrapper::AsyncToken> mpi_requests(synapse_deletion_requests_outgoing.size() + synapse_deletion_requests_incoming.size());
+        std::vector<MPIWrapper::AsyncToken> mpi_requests(synapse_deletion_requests_outgoing.size() + incoming_requests.size());
 
         /**
 	     * Send and receive actual synapse deletion requests
 	     */
-
         auto mpi_requests_index = 0;
 
         // Receive actual synapse deletion requests
-        for (auto& it : synapse_deletion_requests_incoming) {
-            const auto rank = it.first;
-            auto* buffer = it.second.get_requests();
-            const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
+        for (auto& [rank, requests] : incoming_requests) {
+            auto* buffer = requests.get_requests();
+            const auto size_in_bytes = static_cast<int>(requests.get_requests_size_in_bytes());
 
             MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
 
@@ -436,20 +435,72 @@ public:
         }
 
         // Send actual synapse deletion requests
-        for (const auto& it : synapse_deletion_requests_outgoing) {
-            const auto rank = it.first;
-            const auto* const buffer = it.second.get_requests();
-            const auto size_in_bytes = static_cast<int>(it.second.get_requests_size_in_bytes());
+        for (const auto& [rank, requests] : synapse_deletion_requests_outgoing) {
+            const auto* const buffer = requests.get_requests();
+            const auto size_in_bytes = static_cast<int>(requests.get_requests_size_in_bytes());
 
             MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
-
             ++mpi_requests_index;
         }
 
         // Wait for all sends and receives to complete
         MPIWrapper::wait_all_tokens(mpi_requests);
 
-        return synapse_deletion_requests_incoming;
+        return incoming_requests;
+    }
+
+    static std::map<int, SynapseDeletionRequests> exchange_requests(const std::map<int, SynapseDeletionRequests>& synapse_deletion_requests_outgoing) {
+        const auto number_ranks = MPIWrapper::get_num_ranks();
+
+        std::vector<size_t> number_requests_for_ranks(number_ranks, 0);
+        // Fill vector with my number of synapse deletion requests for every rank
+        for (const auto& [rank, requests] : synapse_deletion_requests_outgoing) {
+            RelearnException::check(rank < number_ranks, "SynapseDeletionRequests::exchange_requests: rank was too large: {} of {}", rank, number_ranks);
+            const auto num_requests = requests.size();
+            number_requests_for_ranks[rank] = num_requests;
+        }
+
+        std::vector<size_t> number_requests_from_ranks(number_ranks, 0);
+        MPIWrapper::all_to_all(number_requests_for_ranks, number_requests_from_ranks);
+
+        // Now I know how many requests I will get from every rank.
+        std::map<int, SynapseDeletionRequests> incoming_requests{};
+        for (auto rank = 0; rank < number_ranks; ++rank) {
+            if (const auto num_requests = number_requests_from_ranks[rank]; 0 != num_requests) {
+                incoming_requests[rank].resize(num_requests);
+            }
+        }
+
+        std::vector<MPIWrapper::AsyncToken> mpi_requests(synapse_deletion_requests_outgoing.size() + incoming_requests.size());
+
+        /**
+	     * Send and receive actual synapse deletion requests
+	     */
+        auto mpi_requests_index = 0;
+
+        // Receive actual synapse deletion requests
+        for (auto& [rank, requests] : incoming_requests) {
+            auto* buffer = requests.get_requests();
+            const auto size_in_bytes = static_cast<int>(requests.get_requests_size_in_bytes());
+
+            MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
+
+            ++mpi_requests_index;
+        }
+
+        // Send actual synapse deletion requests
+        for (const auto& [rank, requests] : synapse_deletion_requests_outgoing) {
+            const auto* const buffer = requests.get_requests();
+            const auto size_in_bytes = static_cast<int>(requests.get_requests_size_in_bytes());
+
+            MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
+            ++mpi_requests_index;
+        }
+
+        // Wait for all sends and receives to complete
+        MPIWrapper::wait_all_tokens(mpi_requests);
+
+        return incoming_requests;
     }
 };
 

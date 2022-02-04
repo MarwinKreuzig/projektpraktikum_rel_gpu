@@ -244,22 +244,21 @@ public:
 	     * Send to every rank the number of requests it should prepare for from me.
 	     * Likewise, receive the number of requests that I should prepare for from every rank.
 	     */
-        std::vector<size_t> num_synapse_requests_for_ranks(number_ranks, 0);
+        std::vector<size_t> number_requests_for_ranks(number_ranks, 0);
         // Fill vector with my number of synapse requests for every rank (including me)
         for (const auto& [rank, requests] : outgoing_requests) {
             RelearnException::check(rank < number_ranks, "SynapseCreationRequests::exchange_requests: rank was too large: {} of {}", rank, number_ranks);
             const auto num_requests = requests.size();
-            num_synapse_requests_for_ranks[rank] = num_requests;
+            number_requests_for_ranks[rank] = num_requests;
         }
 
-        std::vector<size_t> num_synapse_requests_from_ranks(number_ranks, 0);
-        MPIWrapper::all_to_all(num_synapse_requests_for_ranks, num_synapse_requests_from_ranks);
+        std::vector<size_t> number_requests_from_ranks(number_ranks, 0);
+        MPIWrapper::all_to_all(number_requests_for_ranks, number_requests_from_ranks);
 
         // Now I know how many requests I will get from every rank.
-        // Allocate memory for all incoming synapse requests.
         std::map<int, SynapseCreationRequests> incoming_requests{};
         for (auto rank = 0; rank < number_ranks; rank++) {
-            if (const auto num_requests = num_synapse_requests_from_ranks[rank]; 0 != num_requests) {
+            if (const auto num_requests = number_requests_from_ranks[rank]; 0 != num_requests) {
                 incoming_requests[rank].resize(num_requests);
             }
         }
