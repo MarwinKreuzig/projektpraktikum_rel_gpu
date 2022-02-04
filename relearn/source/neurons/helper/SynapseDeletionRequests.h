@@ -169,7 +169,8 @@ using PendingDeletionsV = std::vector<PendingSynapseDeletion>;
  * This type aggregates multiple PendingSynapseDeletion into one and facilitates MPI communication.
  * It does not perform MPI communication.
  */
-struct SynapseDeletionRequests {
+class SynapseDeletionRequests {
+public:
     SynapseDeletionRequests() = default;
 
     /**
@@ -177,7 +178,7 @@ struct SynapseDeletionRequests {
      * @return The number of stored requests
      */
     [[nodiscard]] size_t size() const noexcept {
-        return num_requests;
+        return requests.size();
     }
 
     /**
@@ -185,8 +186,7 @@ struct SynapseDeletionRequests {
      * @param size The number of requests to be stored
      */
     void resize(const size_t size) {
-        num_requests = size;
-        requests.resize(Constants::num_items_per_request * size);
+        requests.resize(size);
     }
 
     /**
@@ -194,17 +194,7 @@ struct SynapseDeletionRequests {
      * @param pending_deletion The new PendingSynapseDeletion that should be appended
      */
     void append(const PendingSynapseDeletion& pending_deletion) {
-        num_requests++;
-
-        const size_t affected_element_type_converted = pending_deletion.get_affected_element_type() == ElementType::AXON ? 0 : 1;
-        const size_t signal_type_converted = pending_deletion.get_signal_type() == SignalType::EXCITATORY ? 0 : 1;
-
-        requests.push_back(pending_deletion.get_source_neuron_id().get_neuron_id());
-        requests.push_back(pending_deletion.get_target_neuron_id().get_neuron_id());
-        requests.push_back(pending_deletion.get_affected_neuron_id().get_neuron_id());
-        requests.push_back(affected_element_type_converted);
-        requests.push_back(signal_type_converted);
-        requests.push_back(pending_deletion.get_synapse_id());
+        requests.push_back(pending_deletion);
     }
 
     /**
@@ -214,9 +204,8 @@ struct SynapseDeletionRequests {
      * @return The source neuron id
      */
     [[nodiscard]] size_t get_source_neuron_id(const size_t request_index) const {
-        const auto index = Constants::num_items_per_request * request_index;
-        RelearnException::check(index < requests.size(), "SynapseDeletionRequests::get_source_neuron_id: Index is out of bounds");
-        return requests[index];
+        RelearnException::check(request_index < requests.size(), "SynapseDeletionRequests::get_source_neuron_id: Index is out of bounds");
+        return requests[request_index].get_source_neuron_id().get_neuron_id();
     }
 
     /**
@@ -226,9 +215,8 @@ struct SynapseDeletionRequests {
      * @return The target neuron id
      */
     [[nodiscard]] size_t get_target_neuron_id(const size_t request_index) const {
-        const auto index = Constants::num_items_per_request * request_index + 1;
-        RelearnException::check(index < requests.size(), "SynapseDeletionRequests::get_source_neuron_id: Index is out of bounds");
-        return requests[index];
+        RelearnException::check(request_index < requests.size(), "SynapseDeletionRequests::get_source_neuron_id: Index is out of bounds");
+        return requests[request_index].get_target_neuron_id().get_neuron_id();
     }
 
     /**
@@ -238,9 +226,8 @@ struct SynapseDeletionRequests {
      * @return The affected neuron id
      */
     [[nodiscard]] size_t get_affected_neuron_id(const size_t request_index) const {
-        const auto index = Constants::num_items_per_request * request_index + 2;
-        RelearnException::check(index < requests.size(), "SynapseDeletionRequests::get_affected_neuron_id: Index is out of bounds");
-        return requests[index];
+        RelearnException::check(request_index < requests.size(), "SynapseDeletionRequests::get_affected_neuron_id: Index is out of bounds");
+        return requests[request_index].get_affected_neuron_id().get_neuron_id();
     }
 
     /**
@@ -250,10 +237,8 @@ struct SynapseDeletionRequests {
      * @return The element type
      */
     [[nodiscard]] ElementType get_affected_element_type(const size_t request_index) const {
-        const auto index = Constants::num_items_per_request * request_index + 3;
-        RelearnException::check(index < requests.size(), "SynapseDeletionRequests::get_affected_element_type: Index is out of bounds");
-        const auto affected_element_type_converted = requests[index] == 0 ? ElementType::AXON : ElementType::DENDRITE;
-        return affected_element_type_converted;
+        RelearnException::check(request_index < requests.size(), "SynapseDeletionRequests::get_affected_element_type: Index is out of bounds");
+        return requests[request_index].get_affected_element_type();
     }
 
     /**
@@ -263,10 +248,8 @@ struct SynapseDeletionRequests {
      * @return The synapse' signal type
      */
     [[nodiscard]] SignalType get_signal_type(const size_t request_index) const {
-        const auto index = Constants::num_items_per_request * request_index + 4;
-        RelearnException::check(index < requests.size(), "SynapseDeletionRequests::get_signal_type: Index is out of bounds");
-        const auto affected_element_type_converted = requests[index] == 0 ? SignalType::EXCITATORY : SignalType::INHIBITORY;
-        return affected_element_type_converted;
+        RelearnException::check(request_index < requests.size(), "SynapseDeletionRequests::get_signal_type: Index is out of bounds");
+        return requests[request_index].get_signal_type();
     }
 
     /**
@@ -276,9 +259,8 @@ struct SynapseDeletionRequests {
      * @return The synapse' id
      */
     [[nodiscard]] unsigned int get_synapse_id(const size_t request_index) const {
-        const auto index = Constants::num_items_per_request * request_index + 5;
-        RelearnException::check(index < requests.size(), "SynapseDeletionRequests::get_synapse_id: Index is out of bounds");
-        const auto synapse_id = static_cast<unsigned int>(requests[index]);
+        RelearnException::check(request_index < requests.size(), "SynapseDeletionRequests::get_synapse_id: Index is out of bounds");
+        const auto synapse_id = requests[request_index].get_synapse_id();
         return synapse_id;
     }
 
@@ -287,7 +269,7 @@ struct SynapseDeletionRequests {
      *      Does not transfer ownership
      * @return A raw pointer to the requests
      */
-    [[nodiscard]] size_t* get_requests() noexcept {
+    [[nodiscard]] PendingSynapseDeletion* get_requests() noexcept {
         return requests.data();
     }
 
@@ -296,7 +278,7 @@ struct SynapseDeletionRequests {
      *      Does not transfer ownership
      * @return A raw pointer to the requests
      */
-    [[nodiscard]] const size_t* get_requests() const noexcept {
+    [[nodiscard]] const PendingSynapseDeletion* get_requests() const noexcept {
         return requests.data();
     }
 
@@ -305,17 +287,11 @@ struct SynapseDeletionRequests {
      * @return The size of the internal buffer in bytes
      */
     [[nodiscard]] size_t get_requests_size_in_bytes() const noexcept {
-        return requests.size() * sizeof(size_t);
+        return requests.size() * sizeof(PendingSynapseDeletion);
     }
 
 private:
-    size_t num_requests{ 0 }; // Number of synapse deletion requests
-    std::vector<size_t> requests{}; // Each request to delete a synapse is a 6-tuple:
-        // (src_neuron_id, tgt_neuron_id, affected_neuron_id, affected_element_type, signal_type, synapse_id)
-        // That is why requests.size() == 6*num_requests
-        // Note, a more memory-efficient implementation would use a smaller data type (not size_t)
-        // for affected_element_type, signal_type.
-        // This vector is used as MPI communication buffer
+    std::vector<PendingSynapseDeletion> requests{}; // This vector is used as MPI communication buffer
 };
 
 /**
