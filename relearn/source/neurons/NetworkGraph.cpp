@@ -138,7 +138,7 @@ void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTransla
     const auto& exchange_ids_others_requests = MPIWrapper::exchange_values(exchange_id_my_requests);
 
     std::vector<std::vector<size_t>> exchange_id_my_responses(num_ranks);
-    for (auto rank = 0; rank < num_ranks; rank++) {
+    for (auto rank : MPIWrapper::get_ranks()) {
         for (const auto& local_id : exchange_ids_others_requests[rank]) {
             const auto& global_id = translator->get_global_id(NeuronID{ local_id });
             exchange_id_my_responses[rank].emplace_back(global_id);

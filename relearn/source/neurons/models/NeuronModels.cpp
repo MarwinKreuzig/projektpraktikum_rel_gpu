@@ -161,7 +161,7 @@ std::vector<size_t> NeuronModel::update_electrical_activity_prepare_receiving_sp
     Timers::start(TimerRegion::ALLOC_MEM_FOR_NEURON_IDS);
     // Now I know how many neuron ids I will get from every rank.
     // Allocate memory for all incoming neuron ids.
-    for (auto rank = 0; rank < num_ranks; ++rank) {
+    for (auto rank : MPIWrapper::get_ranks()) {
         // Only create key-value pair in map for "rank" if necessary
         if (auto num_neuron_ids = num_firing_neuron_ids_from_ranks[rank]; 0 != num_neuron_ids) {
             num_firing_neuron_ids_incoming[rank] = num_neuron_ids;
@@ -180,7 +180,7 @@ NeuronModel::MapFiringNeuronIds NeuronModel::update_electrical_activity_exchange
      */
 
     MapFiringNeuronIds firing_neuron_ids_incoming;
-    for (auto rank = 0; rank < MPIWrapper::get_num_ranks(); rank++) {
+    for (auto rank : MPIWrapper::get_ranks()) {
         const auto num_incoming_ids_from_frank = num_incoming_ids[rank];
         if (num_incoming_ids_from_frank > 0) {
             firing_neuron_ids_incoming[rank].resize(num_incoming_ids_from_frank);

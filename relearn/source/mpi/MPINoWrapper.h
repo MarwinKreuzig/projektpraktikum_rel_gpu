@@ -11,6 +11,7 @@
 #include <array>
 #include <map>
 #include <memory>
+#include <ranges>
 #include <span>
 #include <string>
 #include <vector>
@@ -142,6 +143,15 @@ public:
     }
 
     [[nodiscard]] static int get_num_ranks();
+
+    [[nodiscard]] static auto get_ranks() {
+        return std::views::iota(0, get_num_ranks());
+    }
+
+    [[nodiscard]] static auto get_ranks_without_my_rank() {
+        return std::views::iota(0, get_num_ranks())
+            | std::views::filter([my_rank = get_my_rank()](const auto& rank) { return rank != my_rank; });
+    }
 
     [[nodiscard]] static int get_my_rank();
 
