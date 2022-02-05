@@ -81,8 +81,8 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
         // Walk through the local in-edges of my neuron
         const NetworkGraph::LocalEdges& local_in_edges = network_graph.get_local_in_edges(neuron_id);
 
-        for (const auto& [src_neuron_id, edge_val] : local_in_edges) {
-            const auto spike = fired[src_neuron_id];
+        for (const auto& [initiator_neuron_id, edge_val] : local_in_edges) {
+            const auto spike = fired[initiator_neuron_id];
             if (spike != 0) {
                 I_syn[neuron_id] += k * edge_val;
             }
@@ -93,10 +93,10 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
 
         for (const auto& [key, edge_val] : in_edges) {
             const auto& rank = key.get_rank();
-            const auto& src_neuron_id = key.get_neuron_id();
+            const auto& initiator_neuron_id = key.get_neuron_id();
 
             const auto it = firing_neuron_ids_incoming.find(rank);
-            const auto found = (it != firing_neuron_ids_incoming.end()) && (it->second.find(src_neuron_id));
+            const auto found = (it != firing_neuron_ids_incoming.end()) && (it->second.find(initiator_neuron_id));
 
             if (found) {
                 I_syn[neuron_id] += k * edge_val;

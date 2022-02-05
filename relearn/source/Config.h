@@ -29,8 +29,6 @@ public:
 
     constexpr static size_t max_lvl_subdomains = 20;
 
-    constexpr static size_t num_items_per_request = 6;
-
     constexpr static double eps = 0.00001;
 
     constexpr static size_t print_width = 22;

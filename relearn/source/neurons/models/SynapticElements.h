@@ -313,7 +313,7 @@ public:
         RelearnException::check(neuron_id < connected_elements.size(), "SynapticElements::get_connected_elements: neuron_id is too large: {}", neuron_id);
         return connected_elements[neuron_id];
     }
-   
+
     /**
      * @brief Returns the number of free elements for the specified neuron id
      * @param neuron_id The neuron

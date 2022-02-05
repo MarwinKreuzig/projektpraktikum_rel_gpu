@@ -391,7 +391,7 @@ public:
         const auto my_rank = mpi_rank;
 
         if (target_rank != my_rank && source_rank != my_rank) {
-            RelearnException::fail("NetworkGraph::add_edge_weight: In NetworkGraph::add_edge_weight, neither the target nor the source rank were for me.");
+            RelearnException::fail("NetworkGraph::add_edge_weight: In NetworkGraph::add_edge_weight, neither the target {} nor the source rank {} were for me.", target_rank, source_rank);
         }
 
         if (target_rank == my_rank) {

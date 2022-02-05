@@ -50,13 +50,17 @@ enum class TimerRegion : int {
     LOAD_SYNAPSES = 25,
     TRANSLATE_GLOBAL_IDS = 26,
     INITIALIZE_NETWORK_GRAPH = 27,
-    ADD_SYNAPSES_TO_NETWORKGRAPH = 28
+    ADD_SYNAPSES_TO_NETWORKGRAPH = 28,
+    DELETE_SYNAPSES_ALL_TO_ALL = 29,
+    FIND_SYNAPSES_TO_DELETE = 30,
+    PROCESS_DELETE_REQUESTS = 31,
+    COMMIT_NUM_SYNAPTIC_ELEMENTS = 32,
 };
 
 /**
  * This number is used as a shortcut to count the number of values valid for TimerRegion
  */
-constexpr size_t NUM_TIMERS = 29;
+constexpr size_t NUM_TIMERS = 33;
 
 /**
  * This class is used to collect all sorts of different timers (see TimerRegion).

@@ -34,16 +34,15 @@ unsigned int SynapticElements::update_number_elements(const size_t neuron_id) {
     }
 
     /**
-	* More bound elements should be deleted than are available.
-	* Now, neither vacant (see if branch above) nor bound elements are left.
-	*/
+	 * More bound elements should be deleted than are available.
+	 * Now, neither vacant (see if branch above) nor bound elements are left.
+	 */
     if (current_count + current_delta < 0.0) {
         connected_elements[neuron_id] = 0;
         grown_elements[neuron_id] = 0.0;
         deltas_since_last_update[neuron_id] = 0.0;
 
-        const auto num_delete_connected = static_cast<unsigned int>(current_connected_count);
-        return num_delete_connected;
+        return current_connected_count_integral;
     }
 
     const auto new_count = current_count + current_delta;

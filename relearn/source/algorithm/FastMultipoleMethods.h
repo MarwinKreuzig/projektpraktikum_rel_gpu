@@ -204,7 +204,7 @@ private:
     /**
      * @brief Appends pairs of neurons to a SynapseCreationRequest which are suitable for a synapse formation.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory)
-     * @param request Request which should be extended. This must be created before the method is called.
+     * @param request SynapseCreationRequest which should be extended. This must be created before the method is called.
      * @exception Can throw a RelearnException.
      */
     void make_creation_request_for(SignalType signal_type_needed, MapSynapseCreationRequests& request);
