@@ -129,8 +129,20 @@ void Timers::print() {
     sstring << "    Connectivity update                        : ";
     print_timer(sstring, TimerRegion::UPDATE_CONNECTIVITY, timers_global);
 
-    sstring << "      Update #synaptic elements + del synapses : ";
+    sstring << "      Delete synapses                          : ";
     print_timer(sstring, TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES, timers_global);
+
+    sstring << "        Commit #synaptic elements              : ";
+    print_timer(sstring, TimerRegion::COMMIT_NUM_SYNAPTIC_ELEMENTS, timers_global);
+
+    sstring << "        Find synapses to delete                : ";
+    print_timer(sstring, TimerRegion::FIND_SYNAPSES_TO_DELETE, timers_global);
+
+    sstring << "        Exchange deletions (w/ alltoall)       : ";
+    print_timer(sstring, TimerRegion::PROCESS_DELETE_REQUESTS, timers_global);
+
+    sstring << "        Process deletion requests              : ";
+    print_timer(sstring, TimerRegion::PROCESS_DELETE_REQUESTS, timers_global);
 
     sstring << "      Update leaf nodes                        : ";
     print_timer(sstring, TimerRegion::UPDATE_LEAF_NODES, timers_global);

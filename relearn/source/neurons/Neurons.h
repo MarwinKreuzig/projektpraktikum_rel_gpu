@@ -40,50 +40,12 @@ class Octree;
 class Partition;
 
 /**
- * @brief This class gathers all information for the neurons and provides the primary interface for the simulation
+ * This class gathers all information for the neurons and provides the primary interface for the simulation
  */
 class Neurons {
     friend class NeuronMonitor;
 
-    /**
-	 * This type is used as aggregate when it comes to selecting a synapse for deletion
-	 */
-    class Synapse {
-        RankNeuronId neuron_id{};
-        unsigned int synapse_id{}; // Id of the synapse. Used to distinguish multiple synapses between the same neuron pair
-    public:
-        /**
-         * @brief Creates a new object with the passed neuron id and synapse id
-         * @param neuron_id The "other" neuron id
-         * @param synapse_id The synapse' id, in case there are multiple synapses connecting two neurons
-         * @exception Throws a RelearnException if the MPI rank is negative or neuron id is too large
-         */
-        Synapse(const RankNeuronId& neuron_id, const unsigned int synapse_id)
-            : neuron_id(neuron_id)
-            , synapse_id(synapse_id) {
-            RelearnException::check(neuron_id.get_neuron_id() < Constants::uninitialized, "Synapse::Synapse: neuron_id was too large: {}", neuron_id.get_neuron_id());
-            RelearnException::check(neuron_id.get_rank() >= 0, "Synapse::Synapse: neuron_id MPI rank was negative");
-        }
-
-        /**
-         * @brief Returns the neuron id
-         * @return The neuron id
-         */
-        [[nodiscard]] RankNeuronId get_neuron_id() const noexcept {
-            return neuron_id;
-        }
-
-        /**
-         * @brief Returns the synapse' id
-         * @return The synapse' id
-         */
-        [[nodiscard]] unsigned int get_synapse_id() const noexcept {
-            return synapse_id;
-        }
-    };
-
 public:
-    // Types
     using Axons = SynapticElements;
     using DendritesExcitatory = SynapticElements;
     using DendritesInhibitory = SynapticElements;
@@ -413,45 +375,13 @@ private:
 
     [[nodiscard]] size_t delete_synapses();
 
-    [[nodiscard]] std::pair<PendingDeletionsV, std::vector<size_t>> delete_synapses_find_synapses(
-        const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete, const PendingDeletionsV& other_pending_deletions);
-
     [[nodiscard]] MapSynapseDeletionRequests delete_synapses_find_synapses(const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete);
 
-    /**
-	 * Determines which synapses should be deleted.
-	 * The selected synapses connect with neuron "neuron_id" and the type of
-	 * those synapses is given by "signal_type".
-	 *
-	 * NOTE: The semantics of the function is not nice but used to postpone all updates
-	 * due to synapse deletion until all neurons have decided *independently* which synapse
-	 * to delete. This should reflect how it's done for a distributed memory implementation.
-	 */
-    [[nodiscard]] std::vector<size_t> delete_synapses_find_synapses_on_neuron(
-        size_t neuron_id,
-        ElementType element_type,
-        SignalType signal_type,
-        unsigned int num_synapses_to_delete,
-        PendingDeletionsV& pending_deletions,
-        const PendingDeletionsV& other_pending_deletions);
-
-    [[nodiscard]] std::vector<RankNeuronId> delete_synapses_find_synapses_on_neuron(
-        size_t neuron_id,
-        ElementType element_type,
-        SignalType signal_type,
-        unsigned int num_synapses_to_delete);
-
-    [[nodiscard]] static std::vector<Neurons::Synapse> delete_synapses_register_edges(const std::vector<std::pair<RankNeuronId, int>>& edges);
-
-    static void delete_synapses_process_requests(const MapSynapseDeletionRequests& synapse_deletion_requests_incoming, PendingDeletionsV& pending_deletions);
-
-    [[nodiscard]] size_t delete_synapses_commit_deletions(const PendingDeletionsV& list);
+    [[nodiscard]] std::vector<RankNeuronId> delete_synapses_find_synapses_on_neuron(size_t neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete);
 
     [[nodiscard]] size_t delete_synapses_commit_deletions(const MapSynapseDeletionRequests& list);
 
     [[nodiscard]] size_t create_synapses();
-
-    static void print_pending_synapse_deletions(const PendingDeletionsV& list);
 
     size_t number_neurons = 0;
 

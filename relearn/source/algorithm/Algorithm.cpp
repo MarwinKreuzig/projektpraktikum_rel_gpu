@@ -63,7 +63,7 @@ std::pair<LocalSynapses, DistantInSynapses> Algorithm::create_synapses_process_r
 
             if (number_free_elements == 0) {
                 // Other axons were faster and came first
-                requests.set_response(request_index, SynapseCreationRequests::Response::failed);
+                requests.set_response(request_index, SynapseCreationResponse::failed);
                 continue;
             }
 
@@ -71,7 +71,7 @@ std::pair<LocalSynapses, DistantInSynapses> Algorithm::create_synapses_process_r
             dendrites->update_connected_elements(target_neuron_id, 1);
 
             // Set response to "connected" (success)
-            requests.set_response(request_index, SynapseCreationRequests::Response::succeeded);
+            requests.set_response(request_index, SynapseCreationResponse::succeeded);
 
             if (source_rank == my_rank) {
                 local_synapses.emplace_back(target_neuron_id, source_neuron_id, weight);
@@ -96,7 +96,7 @@ DistantOutSynapses Algorithm::create_synapses_process_responses(const MapSynapse
         // All responses from a rank
         for (auto request_index = 0; request_index < num_requests; request_index++) {
             const auto connected = requests.get_response(request_index);
-            if (connected == SynapseCreationRequests::Response::failed) {
+            if (connected == SynapseCreationResponse::failed) {
                 continue;
             }
 

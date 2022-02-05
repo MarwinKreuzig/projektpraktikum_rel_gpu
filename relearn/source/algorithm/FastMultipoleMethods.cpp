@@ -18,7 +18,7 @@
 MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 
-    // Create Request and start timer
+    // Create SynapseCreationRequest and start timer
     MapSynapseCreationRequests synapse_creation_requests_outgoing{};
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);
 
@@ -166,7 +166,7 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
             // No autapse
             if (target_id != source_id) {
                 const auto target_rank = target->get_rank();
-                const SynapseCreationRequests::Request creation_request(target_id, source_id, signal_type_needed);
+                const SynapseCreationRequest creation_request(target_id, source_id, signal_type_needed);
                 request[target_rank].append(creation_request);
             }
         }

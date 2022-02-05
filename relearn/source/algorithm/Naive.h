@@ -105,23 +105,23 @@ private:
     /**
      * @brief Returns an optional RankNeuronId that the algorithm determined for the given source neuron. No actual request is made.
      *      Might perform MPI communication via NodeCache::download_children()
-     * @param src_neuron_id The neuron's id that wants to connect. Is used to disallow autapses (connections to itself)
+     * @param initiator_neuron_id The neuron's id that wants to connect. Is used to disallow autapses (connections to itself)
      * @param axon_pos_xyz The neuron's position that wants to connect. Is used in probability computations
      * @param dendrite_type_needed The signal type that is searched.
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
      */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t src_neuron_id, const position_type& axon_pos_xyz, SignalType dendrite_type_needed);
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t initiator_neuron_id, const position_type& axon_pos_xyz, SignalType dendrite_type_needed);
 
     [[nodiscard]] double
     calc_attractiveness_to_connect(
-        size_t src_neuron_id,
+        size_t initiator_neuron_id,
         const position_type& axon_pos_xyz,
         const OctreeNode<NaiveCell>& node_with_dendrite,
         SignalType dendrite_type_needed) const;
 
     [[nodiscard]] std::vector<double> create_interval(
-        size_t src_neuron_id,
+        size_t initiator_neuron_id,
         const position_type& axon_pos_xyz,
         SignalType dendrite_type_needed,
         const std::vector<OctreeNode<NaiveCell>*>& vector) const;

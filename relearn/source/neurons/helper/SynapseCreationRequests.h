@@ -20,96 +20,119 @@
 #include <vector>
 
 /**
+ * One SynapseCreationRequest always consists of a target neuron, a source neuron, and a signal type
+ */
+class SynapseCreationRequest {
+    RelearnTypes::neuron_id target{};
+    RelearnTypes::neuron_id source{};
+    SignalType signal_type{};
+
+public:
+    SynapseCreationRequest() = default;
+
+    /**
+     * @brief Constructs a new reqest with the arguments
+     * @param target The neuron target id of the request
+     * @param source The neuron source id of the request
+     * @param signal_type The signal type
+     */
+    SynapseCreationRequest(RelearnTypes::neuron_id target, RelearnTypes::neuron_id source, SignalType signal_type)
+        : target(target)
+        , source(source)
+        , signal_type(signal_type) { }
+
+    /**
+     * @brief Returns the target of the request
+     * @return The target
+     */
+    [[nodiscard]] RelearnTypes::neuron_id get_target() const noexcept {
+        return target;
+    }
+
+    /**
+     * @brief Returns the source of the request
+     * @return The source
+     */
+    [[nodiscard]] RelearnTypes::neuron_id get_source() const noexcept {
+        return source;
+    }
+
+    /**
+     * @brief Returns the neuron type of the request
+     * @return The neuron type
+     */
+    [[nodiscard]] SignalType get_signal_type() const noexcept {
+        return signal_type;
+    }
+
+    template <std::size_t Index>
+    auto& get() & {
+        if constexpr (Index == 0)
+            return target;
+        if constexpr (Index == 1)
+            return source;
+        if constexpr (Index == 2)
+            return signal_type;
+    }
+
+    template <std::size_t Index>
+    auto const& get() const& {
+        if constexpr (Index == 0)
+            return target;
+        if constexpr (Index == 1)
+            return source;
+        if constexpr (Index == 2)
+            return signal_type;
+    }
+
+    template <std::size_t Index>
+    auto&& get() && {
+        if constexpr (Index == 0)
+            return std::move(target);
+        if constexpr (Index == 1)
+            return std::move(source);
+        if constexpr (Index == 2)
+            return std::move(signal_type);
+    }
+};
+
+namespace std {
+template <>
+struct tuple_size<typename ::SynapseCreationRequest> {
+    static constexpr size_t value = 3;
+};
+
+template <>
+struct tuple_element<0, typename ::SynapseCreationRequest> {
+    using type = RelearnTypes::neuron_id;
+};
+
+template <>
+struct tuple_element<1, typename ::SynapseCreationRequest> {
+    using type = RelearnTypes::neuron_id;
+};
+
+template <>
+struct tuple_element<2, typename ::SynapseCreationRequest> {
+    using type = SignalType;
+};
+
+} //namespace std
+
+/**
+ * The response for a request can be that the request failed or succeeded
+ */
+enum class SynapseCreationResponse : char {
+    failed = 0,
+    succeeded = 1,
+};
+
+/**
  * An object of type SynapseCreationRequests stores the requests from the current MPI rank to a dedicated other MPI rank.
  * It stores all requests flattened and can manage the responses. 
  */
 class SynapseCreationRequests {
 public:
-    /**
-     * One Request always consists of a target neuron, a source neuron, and a signal type
-     */
-    class Request {
-        RelearnTypes::neuron_id target{};
-        RelearnTypes::neuron_id source{};
-        SignalType signal_type{};
-
-    public:
-        Request() = default;
-
-        /**
-         * @brief Constructs a new reqest with the arguments
-         * @param target The neuron target id of the request
-         * @param source The neuron source id of the request
-         * @param signal_type The signal type
-         */
-        Request(RelearnTypes::neuron_id target, RelearnTypes::neuron_id source, SignalType signal_type)
-            : target(target)
-            , source(source)
-            , signal_type(signal_type) { }
-
-        /**
-         * @brief Returns the target of the request
-         * @return The target
-         */
-        [[nodiscard]] RelearnTypes::neuron_id get_target() const noexcept {
-            return target;
-        }
-
-        /**
-         * @brief Returns the source of the request
-         * @return The source
-         */
-        [[nodiscard]] RelearnTypes::neuron_id get_source() const noexcept {
-            return source;
-        }
-
-        /**
-         * @brief Returns the neuron type of the request
-         * @return The neuron type
-         */
-        [[nodiscard]] SignalType get_signal_type() const noexcept {
-            return signal_type;
-        }
-
-        template <std::size_t Index>
-        auto& get() & {
-            if constexpr (Index == 0)
-                return target;
-            if constexpr (Index == 1)
-                return source;
-            if constexpr (Index == 2)
-                return signal_type;
-        }
-
-        template <std::size_t Index>
-        auto const& get() const& {
-            if constexpr (Index == 0)
-                return target;
-            if constexpr (Index == 1)
-                return source;
-            if constexpr (Index == 2)
-                return signal_type;
-        }
-
-        template <std::size_t Index>
-        auto&& get() && {
-            if constexpr (Index == 0)
-                return std::move(target);
-            if constexpr (Index == 1)
-                return std::move(source);
-            if constexpr (Index == 2)
-                return std::move(signal_type);
-        }
-    };
-
-    /**
-     * The response for a request can be that the request failed or succeeded
-     */
-    enum class Response : char {
-        failed = 0,
-        succeeded = 1,
-    };
-
     /**
      * @brief Creates an object with zero requests and responses.
      */
@@ -136,7 +159,7 @@ public:
     /**
      * @brief Appends a pending request
      */
-    void append(const Request& request) noexcept {
+    void append(const SynapseCreationRequest& request) noexcept {
         requests.emplace_back(request);
         responses.resize(responses.size() + 1);
     }
@@ -149,7 +172,7 @@ public:
      * @return A tuple consisting of the local neuron id of source and target, and a enum that
      *       indicates whether it is an excitatory or inhibitory request
      */
-    [[nodiscard]] Request get_request(const size_t request_index) const {
+    [[nodiscard]] SynapseCreationRequest get_request(const size_t request_index) const {
         RelearnException::check(request_index < requests.size(), "SynapseCreationRequests::get_request: index out of bounds: {} vs {}", request_index, requests.size());
         return requests[request_index];
     }
@@ -160,7 +183,7 @@ public:
      * @param connected A flag that specifies if the request is accepted (1) or denied (0)
      * @exception Throws a RelearnException if the request_index exceeds the stored number of responses
      */
-    void set_response(const size_t request_index, const Response connected) {
+    void set_response(const size_t request_index, const SynapseCreationResponse connected) {
         RelearnException::check(request_index < responses.size(), "SynapseCreationRequests::set_response: index out of bounds: {} vs {}", request_index, responses.size());
         responses[request_index] = connected;
     }
@@ -171,7 +194,7 @@ public:
      * @exception Throws a RelearnException if the request_index exceeds the stored number of responses
      * @return A flag that specifies if the request is accepted (1) or denied (0)
      */
-    [[nodiscard]] Response get_response(const size_t request_index) const {
+    [[nodiscard]] SynapseCreationResponse get_response(const size_t request_index) const {
         RelearnException::check(request_index < responses.size(), "SynapseCreationRequests::get_response: index out of bounds: {} vs {}", request_index, responses.size());
         return responses[request_index];
     }
@@ -180,7 +203,7 @@ public:
      * @brief Gets a raw non-owning pointer for the encoded requests. The pointer is invalidated by append()
      * @return The pointer to the encoded requests
      */
-    [[nodiscard]] Request* data() noexcept {
+    [[nodiscard]] SynapseCreationRequest* data() noexcept {
         return requests.data();
     }
 
@@ -188,7 +211,7 @@ public:
      * @brief Gets a raw non-owning and non-mutable pointer for the encoded requests. The pointer is invalidated by append()
      * @return The pointer to the encoded requests
      */
-    [[nodiscard]] const Request* data() const noexcept {
+    [[nodiscard]] const SynapseCreationRequest* data() const noexcept {
         return requests.data();
     }
 
@@ -196,7 +219,7 @@ public:
      * @brief Gets a raw non-owning pointer for the stored responses. The pointer is invalidated by append()
      * @return The pointer to the encoded answers: (1) for true, (0) for false
      */
-    [[nodiscard]] Response* get_responses() noexcept {
+    [[nodiscard]] SynapseCreationResponse* get_responses() noexcept {
         return responses.data();
     }
 
@@ -204,7 +227,7 @@ public:
      * @brief Gets a raw non-owning and non-mutable pointer for the stored responses. The pointer is invalidated by append()
      * @return The pointer to the encoded answers: (1) for true, (0) for false
      */
-    [[nodiscard]] const Response* get_responses() const noexcept {
+    [[nodiscard]] const SynapseCreationResponse* get_responses() const noexcept {
         return responses.data();
     }
 
@@ -213,7 +236,7 @@ public:
      * @return The number of bytes all stored requests take
      */
     [[nodiscard]] size_t get_requests_size_in_bytes() const noexcept {
-        return requests.size() * sizeof(Request);
+        return requests.size() * sizeof(SynapseCreationRequest);
     }
 
     /**
@@ -225,8 +248,8 @@ public:
     }
 
 private:
-    std::vector<Request> requests{}; // This vector is used as MPI communication buffer
-    std::vector<Response> responses{}; // This vector is used as MPI communication buffer
+    std::vector<SynapseCreationRequest> requests{}; // This vector is used as MPI communication buffer
+    std::vector<SynapseCreationResponse> responses{}; // This vector is used as MPI communication buffer
 
 public:
     /**
@@ -336,26 +359,3 @@ public:
  * The MPI rank specifies the corresponding process
  */
 using MapSynapseCreationRequests = std::map<int, SynapseCreationRequests>;
-
-namespace std {
-template <>
-struct tuple_size<typename ::SynapseCreationRequests::Request> {
-    static constexpr size_t value = 3;
-};
-
-template <>
-struct tuple_element<0, typename ::SynapseCreationRequests::Request> {
-    using type = RelearnTypes::neuron_id;
-};
-
-template <>
-struct tuple_element<1, typename ::SynapseCreationRequests::Request> {
-    using type = RelearnTypes::neuron_id;
-};
-
-template <>
-struct tuple_element<2, typename ::SynapseCreationRequests::Request> {
-    using type = SignalType;
-};
-
-} //namespace std

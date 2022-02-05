@@ -23,7 +23,7 @@
 #include <array>
 #include <stack>
 
-[[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(const size_t src_neuron_id, const position_type& axon_pos_xyz, const SignalType dendrite_type_needed) {
+[[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(const size_t initiator_neuron_id, const position_type& axon_pos_xyz, const SignalType dendrite_type_needed) {
     OctreeNode<BarnesHutCell>* node_selected = nullptr;
     OctreeNode<BarnesHutCell>* root_of_subtree = global_tree->get_root();
 
@@ -42,7 +42,7 @@
 		 * The probability for connecting to the same neuron (i.e., the axon's neuron) is set 0.
 		 * Nodes with 0 probability are removed.
 		 */
-        const auto& [total_prob, probability_values] = create_interval(src_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
+        const auto& [total_prob, probability_values] = create_interval(initiator_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
 
         if (probability_values.empty()) {
             return {};
@@ -140,7 +140,7 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
 
             if (rank_neuron_id.has_value()) {
                 const auto& [target_rank, target_id] = rank_neuron_id.value();
-                const SynapseCreationRequests::Request creation_request(target_id, neuron_id, dendrite_type_needed);
+                const SynapseCreationRequest creation_request(target_id, neuron_id, dendrite_type_needed);
 
                 /*
 				 * Append request for synapse creation to rank "target_rank"
@@ -227,7 +227,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     }
 }
 
-[[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(const size_t src_neuron_id, const position_type& axon_pos_xyz,
+[[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(const size_t initiator_neuron_id, const position_type& axon_pos_xyz,
     const OctreeNode<BarnesHutCell>& node_with_dendrite, const SignalType dendrite_type_needed) const {
     /**
      * If the axon's neuron itself is considered as target neuron, set attractiveness to 0 to avoid forming an autapse (connection to itself).
@@ -235,7 +235,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
      * That is, the dendrites of the axon's neuron are not included in any super neuron considered.
      * However, this only works under the requirement that "acceptance_criterion" is <= 0.5.
      */
-    if ((!node_with_dendrite.is_parent()) && (src_neuron_id == node_with_dendrite.get_cell_neuron_id())) {
+    if ((!node_with_dendrite.is_parent()) && (initiator_neuron_id == node_with_dendrite.get_cell_neuron_id())) {
         return 0.0;
     }
 
@@ -259,7 +259,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     return ret_val;
 }
 
-[[nodiscard]] std::pair<double, std::vector<double>> BarnesHut::create_interval(const size_t src_neuron_id, const position_type& axon_pos_xyz,
+[[nodiscard]] std::pair<double, std::vector<double>> BarnesHut::create_interval(const size_t initiator_neuron_id, const position_type& axon_pos_xyz,
     const SignalType dendrite_type_needed, const std::vector<OctreeNode<BarnesHutCell>*>& vector) const {
 
     if (vector.empty()) {
@@ -273,7 +273,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
 
     std::for_each(vector.cbegin(), vector.cend(), [&](const OctreeNode<BarnesHutCell>* target_node) {
         RelearnException::check(target_node != nullptr, "BarnesHut::update_leaf_nodes: target_node was nullptr");
-        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *target_node, dendrite_type_needed);
+        const auto prob = calc_attractiveness_to_connect(initiator_neuron_id, axon_pos_xyz, *target_node, dendrite_type_needed);
         probabilities.push_back(prob);
         sum += prob;
     });
