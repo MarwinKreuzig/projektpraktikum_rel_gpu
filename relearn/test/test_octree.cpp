@@ -21,16 +21,16 @@
 
 using AdditionalCellAttributes = BarnesHutCell;
 
-std::vector<std::tuple<Vec3d, size_t>> generate_random_neurons(const Vec3d& min, const Vec3d& max, size_t count, size_t max_id, std::mt19937& mt) {
+std::vector<std::tuple<Vec3d, NeuronID>> generate_random_neurons(const Vec3d& min, const Vec3d& max, size_t count, size_t max_id, std::mt19937& mt) {
     std::uniform_real_distribution<double> urd_x(min.get_x(), max.get_x());
     std::uniform_real_distribution<double> urd_y(min.get_y(), max.get_y());
     std::uniform_real_distribution<double> urd_z(min.get_z(), max.get_z());
 
-    std::vector<size_t> ids(max_id);
+    std::vector<NeuronID> ids(max_id);
     std::iota(ids.begin(), ids.end(), 0);
     std::shuffle(ids.begin(), ids.end(), mt);
 
-    std::vector<std::tuple<Vec3d, size_t>> return_value(count);
+    std::vector<std::tuple<Vec3d, NeuronID>> return_value(count);
 
     for (auto i = 0; i < count; i++) {
         const auto rand_x = urd_x(mt);
@@ -43,8 +43,8 @@ std::vector<std::tuple<Vec3d, size_t>> generate_random_neurons(const Vec3d& min,
     return return_value;
 }
 
-std::vector<std::tuple<Vec3d, size_t>> extract_neurons(OctreeNode<AdditionalCellAttributes>* root) {
-    std::vector<std::tuple<Vec3d, size_t>> return_value;
+std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons(OctreeNode<AdditionalCellAttributes>* root) {
+    std::vector<std::tuple<Vec3d, NeuronID>> return_value;
 
     std::stack<OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
     octree_nodes.push(root);
@@ -70,7 +70,7 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons(OctreeNode<AdditionalCell
 
             const auto position = opt_position.value();
 
-            if (neuron_id < Constants::uninitialized) {
+            if (neuron_id.is_initialized() && !neuron_id.is_virtual()) {
                 return_value.emplace_back(position, neuron_id);
             }
         }
@@ -80,8 +80,8 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons(OctreeNode<AdditionalCell
 }
 
 template <typename T>
-std::vector<std::tuple<Vec3d, size_t>> extract_neurons(const OctreeImplementation<T>& octree) {
-    std::vector<std::tuple<Vec3d, size_t>> return_value;
+std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons(const OctreeImplementation<T>& octree) {
+    std::vector<std::tuple<Vec3d, NeuronID>> return_value;
 
     const auto root = octree.get_root();
     if (root == nullptr) {
@@ -91,8 +91,8 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons(const OctreeImplementatio
     return extract_neurons(root);
 }
 
-std::vector<std::tuple<Vec3d, size_t>> extract_unused_neurons(OctreeNode<AdditionalCellAttributes>* root) {
-    std::vector<std::tuple<Vec3d, size_t>> return_value{};
+std::vector<std::tuple<Vec3d, size_t>> extract_virtual_neurons(OctreeNode<AdditionalCellAttributes>* root) {
+    std::vector<std::tuple<Vec3d, size_t>> return_value;
 
     std::stack<std::pair<OctreeNode<AdditionalCellAttributes>*, size_t>> octree_nodes{};
     octree_nodes.emplace(root, 0);
@@ -101,7 +101,7 @@ std::vector<std::tuple<Vec3d, size_t>> extract_unused_neurons(OctreeNode<Additio
         const auto [current_node, level] = octree_nodes.top();
         octree_nodes.pop();
 
-        if (current_node->get_cell().get_neuron_id() == Constants::uninitialized) {
+        if (current_node->get_cell().get_neuron_id().is_virtual()) {
             return_value.emplace_back(current_node->get_cell().get_dendrites_position().value(), level);
         }
 
@@ -153,8 +153,9 @@ SynapticElements create_synaptic_elements(size_t size, std::mt19937& mt, double 
     std::uniform_real_distribution<double> urd(0, max_free);
 
     for (auto i = 0; i < size; i++) {
-        se.set_signal_type(i, st);
-        se.update_grown_elements(i, urd(mt));
+        const auto id = NeuronID{ i };
+        se.set_signal_type(id, st);
+        se.update_grown_elements(id, urd(mt));
     }
 
     return se;
@@ -362,16 +363,16 @@ TEST_F(OctreeTest, testOctreeNodeInsert) {
     size_t number_neurons = get_random_number_neurons();
     size_t num_additional_ids = get_random_number_neurons();
 
-    std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
+    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
     for (const auto& [pos, id] : neurons_to_place) {
         auto tmp = node.insert(pos, id, my_rank);
     }
 
-    std::vector<std::tuple<Vec3d, size_t>> placed_neurons = extract_neurons(&node);
+    std::vector<std::tuple<Vec3d, NeuronID>> placed_neurons = extract_neurons(&node);
 
-    std::sort(neurons_to_place.begin(), neurons_to_place.end(), [](std::tuple<Vec3d, size_t> a, std::tuple<Vec3d, size_t> b) { return std::get<1>(a) > std::get<1>(b); });
-    std::sort(placed_neurons.begin(), placed_neurons.end(), [](std::tuple<Vec3d, size_t> a, std::tuple<Vec3d, size_t> b) { return std::get<1>(a) > std::get<1>(b); });
+    std::sort(neurons_to_place.begin(), neurons_to_place.end(), [](std::tuple<Vec3d, NeuronID> a, std::tuple<Vec3d, NeuronID> b) { return std::get<1>(a) > std::get<1>(b); });
+    std::sort(placed_neurons.begin(), placed_neurons.end(), [](std::tuple<Vec3d, NeuronID> a, std::tuple<Vec3d, NeuronID> b) { return std::get<1>(a) > std::get<1>(b); });
 
     ASSERT_EQ(neurons_to_place.size(), placed_neurons.size());
 
@@ -402,7 +403,7 @@ TEST_F(OctreeTest, testOctreeConstructor) {
         ASSERT_EQ(octree.get_xyz_max(), max);
         ASSERT_EQ(octree.get_xyz_min(), min);
 
-        const auto& virtual_neurons = extract_unused_neurons(octree.get_root());
+        const auto virtual_neurons = extract_virtual_neurons(octree.get_root());
 
         std::map<size_t, size_t> level_to_count{};
 
@@ -439,7 +440,7 @@ TEST_F(OctreeTest, testOctreeConstructor) {
         ASSERT_EQ(octree.get_xyz_max(), max);
         ASSERT_EQ(octree.get_xyz_min(), min);
 
-        const auto& virtual_neurons = extract_unused_neurons(octree.get_root());
+        const auto virtual_neurons = extract_virtual_neurons(octree.get_root());
 
         std::map<size_t, size_t> level_to_count{};
 
@@ -575,16 +576,16 @@ TEST_F(OctreeTest, testOctreeInsertNeurons) {
     size_t number_neurons = get_random_number_neurons();
     size_t num_additional_ids = get_random_number_neurons();
 
-    std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
+    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
     for (const auto& [position, id] : neurons_to_place) {
         octree.insert(position, id, my_rank);
     }
 
-    std::vector<std::tuple<Vec3d, size_t>> placed_neurons = extract_neurons(octree);
+    std::vector<std::tuple<Vec3d, NeuronID>> placed_neurons = extract_neurons(octree);
 
-    std::sort(neurons_to_place.begin(), neurons_to_place.end(), [](std::tuple<Vec3d, size_t> a, std::tuple<Vec3d, size_t> b) { return std::get<1>(a) > std::get<1>(b); });
-    std::sort(placed_neurons.begin(), placed_neurons.end(), [](std::tuple<Vec3d, size_t> a, std::tuple<Vec3d, size_t> b) { return std::get<1>(a) > std::get<1>(b); });
+    std::sort(neurons_to_place.begin(), neurons_to_place.end(), [](std::tuple<Vec3d, NeuronID> a, std::tuple<Vec3d, NeuronID> b) { return std::get<1>(a) > std::get<1>(b); });
+    std::sort(placed_neurons.begin(), placed_neurons.end(), [](std::tuple<Vec3d, NeuronID> a, std::tuple<Vec3d, NeuronID> b) { return std::get<1>(a) > std::get<1>(b); });
 
     ASSERT_EQ(neurons_to_place.size(), placed_neurons.size());
 
@@ -617,7 +618,7 @@ TEST_F(OctreeTest, testOctreeInsertNeuronsExceptions) {
     size_t number_neurons = get_random_number_neurons();
     size_t num_additional_ids = get_random_number_neurons();
 
-    std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
+    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
     for (const auto& [position, id] : neurons_to_place) {
         const auto rank = uid_rank(mt);
@@ -631,7 +632,7 @@ TEST_F(OctreeTest, testOctreeInsertNeuronsExceptions) {
         const Vec3d pos_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
         ASSERT_THROW(octree.insert(position, id, -rank - 1), RelearnException);
-        ASSERT_THROW(octree.insert(position, id + Constants::uninitialized, rank), RelearnException);
+        ASSERT_THROW(octree.insert(position, NeuronID::uninitialized_id(), rank), RelearnException);
 
         ASSERT_THROW(octree.insert(pos_invalid_x_max, id, rank), RelearnException);
         ASSERT_THROW(octree.insert(pos_invalid_y_max, id, rank), RelearnException);
@@ -665,7 +666,7 @@ TEST_F(OctreeTest, testOctreeStructure) {
     size_t number_neurons = get_random_number_neurons();
     size_t num_additional_ids = get_random_number_neurons();
 
-    std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
+    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
     for (const auto& [position, id] : neurons_to_place) {
         octree.insert(position, id, my_rank);
@@ -704,7 +705,7 @@ TEST_F(OctreeTest, testOctreeStructure) {
             }
 
             ASSERT_TRUE(one_child_exists);
-            ASSERT_EQ(current_node->get_cell().get_neuron_id(), Constants::uninitialized);
+            ASSERT_EQ(current_node->get_cell().get_neuron_id(), NeuronID::uninitialized_id());
 
         } else {
             const auto& cell = current_node->get_cell();
@@ -728,8 +729,8 @@ TEST_F(OctreeTest, testOctreeStructure) {
 
             const auto neuron_id = cell.get_neuron_id();
 
-            if (neuron_id < Constants::uninitialized) {
-                ASSERT_LE(neuron_id, number_neurons + num_additional_ids);
+            if (!neuron_id.is_initialized()) {
+                ASSERT_LE(neuron_id, NeuronID{ number_neurons + num_additional_ids });
             }
         }
     }
@@ -798,7 +799,7 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
     size_t number_neurons = get_random_number_neurons();
     size_t num_additional_ids = get_random_number_neurons();
 
-    std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
+    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
     for (const auto& [position, id] : neurons_to_place) {
         octree.insert(position, id, my_rank);
@@ -914,7 +915,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
 
     const size_t number_neurons = get_random_number_neurons();
 
-    const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons, mt);
+    const std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons, mt);
 
     for (const auto& [position, id] : neurons_to_place) {
         octree.insert(position, id, my_rank);
@@ -987,7 +988,7 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
 
     const size_t number_neurons = get_random_number_neurons();
 
-    const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons, mt);
+    const std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons, mt);
 
     for (const auto& [position, id] : neurons_to_place) {
         octree.insert(position, id, my_rank);

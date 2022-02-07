@@ -47,7 +47,7 @@ public:
     /**
      * @brief This method is not implemented for this class
      */
-    [[nodiscard]] std::vector<size_t> get_neuron_global_ids_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const override;
+    [[nodiscard]] std::vector<NeuronID> get_neuron_global_ids_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const override;
 
     /**
      * @brief Returns a function object that is used to fix calculated subdomain boundaries.
@@ -72,7 +72,7 @@ protected:
      * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
      * @param local_subdomain_index The local index of the subdomain which's neurons are to be filled
      * @param total_number_subdomains The total number of local_subdomains
-     * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file 
+     * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file
      */
     void fill_subdomain(size_t local_subdomain_index, size_t total_number_subdomains) override;
 
@@ -86,5 +86,5 @@ private:
     void place_neurons_in_area(
         const NeuronToSubdomainAssignment::box_size_type& offset,
         const NeuronToSubdomainAssignment::box_size_type& length_of_box,
-        const size_t number_neurons, const size_t subdomain_idx);
+        size_t number_neurons, size_t subdomain_idx);
 };

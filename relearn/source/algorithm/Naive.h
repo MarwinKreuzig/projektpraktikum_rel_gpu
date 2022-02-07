@@ -97,8 +97,6 @@ public:
         }
 
         node->set_cell_number_dendrites(my_number_dendrites_excitatory, my_number_dendrites_inhibitory);
-
-        return;
     }
 
 private:
@@ -111,25 +109,25 @@ private:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
      */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t initiator_neuron_id, const position_type& axon_pos_xyz, SignalType dendrite_type_needed);
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz, SignalType dendrite_type_needed);
 
     [[nodiscard]] double
     calc_attractiveness_to_connect(
-        size_t initiator_neuron_id,
+        const NeuronID& src_neuron_id,
         const position_type& axon_pos_xyz,
         const OctreeNode<NaiveCell>& node_with_dendrite,
         SignalType dendrite_type_needed) const;
 
     [[nodiscard]] std::vector<double> create_interval(
-        size_t initiator_neuron_id,
+        const NeuronID& src_neuron_id,
         const position_type& axon_pos_xyz,
         SignalType dendrite_type_needed,
         const std::vector<OctreeNode<NaiveCell>*>& vector) const;
 
-    [[nodiscard]] std::tuple<bool, bool> acceptance_criterion_test(
+    [[nodiscard]] static std::tuple<bool, bool> acceptance_criterion_test(
         const position_type& axon_pos_xyz,
         const OctreeNode<NaiveCell>* node_with_dendrite,
-        SignalType dendrite_type_needed) const;
+        SignalType dendrite_type_needed);
 
     [[nodiscard]] std::vector<OctreeNode<NaiveCell>*> get_nodes_for_interval(
         const position_type& axon_pos_xyz,

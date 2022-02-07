@@ -107,7 +107,7 @@ public:
 
     /**
      * @brief Sets the algorithm that calculates to which neuron a neuron connects during the plasticity update
-     * @param algorithm_ptr The pointer to the algorithm 
+     * @param algorithm_ptr The pointer to the algorithm
      */
     void set_algorithm(std::shared_ptr<Algorithm> algorithm_ptr) noexcept {
         algorithm = std::move(algorithm_ptr);
@@ -130,7 +130,7 @@ public:
     }
 
     /**
-     * @brief Returns the model parameters for the specified synaptic elements 
+     * @brief Returns the model parameters for the specified synaptic elements
      * @param element_type The element type
      * @param signal_type The signal type, only relevant if element_type == dendrites
      * @return The model parameters for the specified synaptic elements
@@ -177,7 +177,7 @@ public:
      * @brief Returns a constant reference to the extra informations
      * @return The extra informations for the neurons
      */
-    const std::unique_ptr<NeuronsExtraInfo>& get_extra_info() const noexcept {
+    [[nodiscard]] const std::unique_ptr<NeuronsExtraInfo>& get_extra_info() const noexcept {
         return extra_info;
     }
 
@@ -238,14 +238,14 @@ public:
      *      Otherwise, also deletes all synapses from the disabled neurons
      * @exception Throws RelearnExceptions if something unexpected happens
      */
-    size_t disable_neurons(const std::vector<size_t>& neuron_ids);
+    size_t disable_neurons(const std::vector<NeuronID>& neuron_ids);
 
     /**
      * @brief Enables all neurons with specified ids
      *      If a neuron is already enabled, nothing happens for that one
      * @exception Throws RelearnExceptions if something unexpected happens
      */
-    void enable_neurons(const std::vector<size_t>& neuron_ids);
+    void enable_neurons(const std::vector<NeuronID>& neuron_ids);
 
     /**
      * @brief Creates creation_count many new neurons with default values
@@ -355,7 +355,7 @@ public:
      * @param attribute The selected attribute of the neurons
      * @return The statistical measure across all MPI processes. All MPI processes have the same return value
      */
-    StatisticalMeasures get_statistics(NeuronAttribute attribute) const;
+    [[nodiscard]] StatisticalMeasures get_statistics(NeuronAttribute attribute) const;
 
 private:
     void update_calcium();

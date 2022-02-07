@@ -15,6 +15,7 @@
 #include "../structure/SpaceFillingCurve.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
+#include "../util/TaggedID.h"
 
 #include <functional>
 #include <tuple>
@@ -40,8 +41,8 @@ public:
 
         size_t number_neurons{ Constants::uninitialized };
 
-        size_t neuron_local_id_start{ Constants::uninitialized };
-        size_t neuron_local_id_end{ Constants::uninitialized };
+        NeuronID neuron_local_id_start{ NeuronID::uninitialized_id() };
+        NeuronID neuron_local_id_end{ NeuronID::uninitialized_id() };
 
         size_t index_1d{ Constants::uninitialized };
         Vec3s index_3d{ Constants::uninitialized };
@@ -221,7 +222,7 @@ public:
      * @exception Throws a RelearnException if local_subdomain_index is larger or equal to the number of local subdomains
      * @return The first local neuron id of the subdomain
      */
-    [[nodiscard]] size_t get_local_subdomain_local_neuron_id_start(const size_t local_subdomain_index) const {
+    [[nodiscard]] NeuronID get_local_subdomain_local_neuron_id_start(const size_t local_subdomain_index) const {
         RelearnException::check(local_subdomain_index < local_subdomains.size(),
             "Partition::get_local_subdomain_local_neuron_id_start: index ({}) was too large for the number of local subdomains ({})", local_subdomain_index, local_subdomains.size());
         return local_subdomains[local_subdomain_index].neuron_local_id_start;
@@ -233,7 +234,7 @@ public:
      * @exception Throws a RelearnException if local_subdomain_index is larger or equal to the number of local subdomains
      * @return The last local neuron id of the subdomain
      */
-    [[nodiscard]] size_t get_local_subdomain_local_neuron_id_end(const size_t local_subdomain_index) const {
+    [[nodiscard]] NeuronID get_local_subdomain_local_neuron_id_end(const size_t local_subdomain_index) const {
         RelearnException::check(local_subdomain_index < local_subdomains.size(),
             "Partition::get_local_subdomain_local_neuron_id_start: index ({}) was too large for the number of local subdomains ({})", local_subdomain_index, local_subdomains.size());
         return local_subdomains[local_subdomain_index].neuron_local_id_end;
@@ -259,7 +260,7 @@ public:
 
             // Set start and end of local neuron ids
             // 0-th subdomain starts with neuron id 0
-            current_subdomain.neuron_local_id_start = (subdomain_index == 0) ? 0 : (local_subdomains[subdomain_index - 1].neuron_local_id_end + 1);
+            current_subdomain.neuron_local_id_start = (subdomain_index == 0) ? NeuronID{ 0 } : (local_subdomains[subdomain_index - 1].neuron_local_id_end + 1);
             current_subdomain.neuron_local_id_end = current_subdomain.neuron_local_id_start + current_subdomain.number_neurons - 1;
         }
     }
@@ -275,7 +276,7 @@ public:
     /**
      * @brief Calculates the subdomain boundaries for all local subdomains and sets them accordingly
      */
-    void calculate_and_set_subdomain_boundaries() noexcept {
+    void calculate_and_set_subdomain_boundaries() {
         for (auto& subdomain : local_subdomains) {
             const auto& [min, max] = calculate_subdomain_boundaries(subdomain.index_1d);
             subdomain.minimum_position = min;
@@ -288,7 +289,7 @@ public:
      * @param subdomain_index_1d The flattened index of the subdomain
      * @return (minimum, maximum) of the subdomain
      */
-    [[nodiscard]] std::pair<box_size_type, box_size_type> calculate_subdomain_boundaries(const size_t subdomain_index_1d) const noexcept {
+    [[nodiscard]] std::pair<box_size_type, box_size_type> calculate_subdomain_boundaries(const size_t subdomain_index_1d) const {
         return calculate_subdomain_boundaries(space_curve.map_1d_to_3d(subdomain_index_1d));
     }
 
@@ -297,7 +298,7 @@ public:
      * @param subdomain_index_3d The 3-dimensional index of the subdomain
      * @return (minimum, maximum) of the subdomain
      */
-    [[nodiscard]] std::pair<box_size_type, box_size_type> calculate_subdomain_boundaries(const Vec3s& subdomain_index_3d) const noexcept {
+    [[nodiscard]] std::pair<box_size_type, box_size_type> calculate_subdomain_boundaries(const Vec3s& subdomain_index_3d) const {
         const auto& [requested_subdomain_x, requested_subdomain_y, requested_subdomain_z] = subdomain_index_3d;
 
         const auto& [sim_box_min, sim_box_max] = get_simulation_box_size();
@@ -308,9 +309,9 @@ public:
         const auto& [subdomain_length_x, subdomain_length_y, subdomain_length_z] = subdomain_length;
 
         box_size_type min{
-            requested_subdomain_x * subdomain_length_x,
-            requested_subdomain_y * subdomain_length_y,
-            requested_subdomain_z * subdomain_length_z
+            static_cast<double>(requested_subdomain_x) * subdomain_length_x,
+            static_cast<double>(requested_subdomain_y) * subdomain_length_y,
+            static_cast<double>(requested_subdomain_z) * subdomain_length_z
         };
 
         const auto next_x = static_cast<box_size_type::value_type>(requested_subdomain_x + 1) * subdomain_length_x;
@@ -345,9 +346,9 @@ public:
      * @return The size of the simulation box as tuple (min, max)
      */
     [[nodiscard]] std::tuple<box_size_type, box_size_type> get_simulation_box_size() const {
-        RelearnException::check(simulation_box_minimum.get_x() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before");
-        RelearnException::check(simulation_box_minimum.get_y() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before");
-        RelearnException::check(simulation_box_minimum.get_z() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before");
+        RelearnException::check(simulation_box_minimum.get_x() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before"); // NOLINT(bugprone-integer-division)
+        RelearnException::check(simulation_box_minimum.get_y() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before"); // NOLINT(bugprone-integer-division)
+        RelearnException::check(simulation_box_minimum.get_z() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before"); // NOLINT(bugprone-integer-division)
 
         return std::make_tuple(simulation_box_minimum, simulation_box_maximum);
     }

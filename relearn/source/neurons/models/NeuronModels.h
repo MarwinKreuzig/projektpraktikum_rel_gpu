@@ -12,11 +12,13 @@
 
 #include "../../mpi/CommunicationMap.h"
 #include "../../util/RelearnException.h"
+#include "../../util/TaggedID.h"
 #include "../UpdateStatus.h"
 #include "ModelParameter.h"
 
 #include <algorithm>
 #include <memory>
+#include <span>
 #include <vector>
 
 class NetworkGraph;
@@ -47,7 +49,7 @@ public:
      * @param base_background_activity The base background activity that all neurons are exited with. Is only used if background_activity_stddev > 0.0
      * @param background_activity_mean The mean of background activity taht all neurons are exited with. Is only used if background_activity_stddev > 0.0
      * @param background_activity_stddev The standard deviation of background activity taht all neurons are exited with. Is only used if background_activity_stddev > 0.0
-     * 
+     *
      * If background_activity_stddev > 0.0, all neurons are exited with
      *      base_background_activity + N(background_activity_mean, background_activity_stddev)
      */
@@ -102,9 +104,9 @@ public:
      * @exception Throws a RelearnException if neuron_id is too large
      * @return True iff the neuron spiked
      */
-    [[nodiscard]] bool get_fired(const size_t neuron_id) const {
-        RelearnException::check(neuron_id < number_local_neurons, "NeuronModels::get_fired: id is too large: {}", neuron_id);
-        return fired[neuron_id] == 1;
+    [[nodiscard]] bool get_fired(const NeuronID& neuron_id) const {
+        RelearnException::check(neuron_id.id() < number_local_neurons, "NeuronModels::get_fired: id is too large: {}", neuron_id);
+        return fired[neuron_id.id()] == 1;
     }
 
     /**
@@ -121,9 +123,9 @@ public:
      * @exception Throws a RelearnException if neuron_id is too large
      * @return The neuron's membrane potential
      */
-    [[nodiscard]] double get_x(const size_t neuron_id) const {
-        RelearnException::check(neuron_id < number_local_neurons, "NeuronModels::get_x: id is too large: {}", neuron_id);
-        return x[neuron_id];
+    [[nodiscard]] double get_x(const NeuronID& neuron_id) const {
+        RelearnException::check(neuron_id.id() < number_local_neurons, "NeuronModels::get_x: id is too large: {}", neuron_id);
+        return x[neuron_id.id()];
     }
 
     /**
@@ -188,9 +190,9 @@ public:
      * @exception Throws a RelearnException if neuron_id is too large
      * @return A double that indicates the synaptic input for the specified neuron
      */
-    [[nodiscard]] double get_I_syn(const size_t neuron_id) const {
-        RelearnException::check(neuron_id < number_local_neurons, "NeuronModels::get_I_syn: id is too large: {}", neuron_id);
-        return I_syn[neuron_id];
+    [[nodiscard]] double get_I_syn(const NeuronID& neuron_id) const {
+        RelearnException::check(neuron_id.id() < number_local_neurons, "NeuronModels::get_I_syn: id is too large: {}", neuron_id);
+        return I_syn[neuron_id.id()];
     }
 
     /**
@@ -216,7 +218,7 @@ public:
      * @exception Throws a RelearnException if neuron_id is too large
      * @return A double that indicates the secondary variable for the specified neuron
      */
-    [[nodiscard]] virtual double get_secondary_variable(size_t neuron_id) const = 0;
+    [[nodiscard]] virtual double get_secondary_variable(const NeuronID& neuron_id) const = 0;
 
     /**
      * @brief Performs one step of simulating the electrical activity for all neurons.
@@ -227,22 +229,22 @@ public:
     void update_electrical_activity(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags);
 
     /**
-	 * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned
+     * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned
      * @return A vector with all inherited classes
-	 */
+     */
     [[nodiscard]] static std::vector<std::unique_ptr<NeuronModel>> get_models();
 
     /**
-	 * @brief Returns a vector with all adjustable ModelParameter
+     * @brief Returns a vector with all adjustable ModelParameter
      * @return A vector with all adjustable ModelParameter
-	 */
+     */
     [[nodiscard]] virtual std::vector<ModelParameter> get_parameter();
 
     /**
-	 * @brief Initializes the model to include number_neurons many local neurons.
+     * @brief Initializes the model to include number_neurons many local neurons.
      *      Sets the initial membrane potential and initial synaptic inputs to 0.0 and fired to false
      * @param number_neurons The number of local neurons to store in this class
-	 */
+     */
     virtual void init(size_t number_neurons);
 
     /**
@@ -252,9 +254,9 @@ public:
     virtual void create_neurons(size_t creation_count);
 
     /**
-	 * @brief Returns the name of the current model
+     * @brief Returns the name of the current model
      * @return The name of the current model
-	 */
+     */
     [[nodiscard]] virtual std::string name() = 0;
 
     /**
@@ -263,16 +265,16 @@ public:
      * @param neuron_ids The local neuron ids that should be disabled
      * @exception Throws a RelearnException if a specified id is too large
      */
-    virtual void disable_neurons(const std::vector<size_t>& neuron_ids) {
-        for (const auto neuron_id : neuron_ids) {
-            RelearnException::check(neuron_id < number_local_neurons, "NeuronModels::disable_neurons: There is a too large id: {} vs {}", neuron_id, number_local_neurons);
-            fired[neuron_id] = 0;
+    virtual void disable_neurons(const std::vector<NeuronID>& neuron_ids) {
+        for (const NeuronID& neuron_id : neuron_ids) {
+            RelearnException::check(neuron_id.id() < number_local_neurons, "NeuronModels::disable_neurons: There is a too large id: {} vs {}", neuron_id, number_local_neurons);
+            fired[neuron_id.id()] = 0;
         }
     }
 
     static constexpr double default_k{ 0.03 };
-    static constexpr double default_tau_C{ 10000 }; //5000;   //very old 60.0;
-    static constexpr double default_beta{ 0.001 }; //very old 0.05;
+    static constexpr double default_tau_C{ 10000 }; // 5000;   //very old 60.0;
+    static constexpr double default_beta{ 0.001 }; // very old 0.05;
     static constexpr unsigned int default_h{ 10 };
 
     static constexpr double default_base_background_activity{ 0.0 };
@@ -311,7 +313,7 @@ protected:
      *      If OpenMP is activated, this is called in parallel for multiple ids
      * @param neuron_id The local neuron id that should be updated
      */
-    virtual void update_activity(size_t neuron_id) = 0;
+    virtual void update_activity(const NeuronID& neuron_id) = 0;
 
     /**
      * @brief Provides a hook to initialize all neurons with local id in [start_id, end_id)
@@ -326,8 +328,8 @@ protected:
      * @param neuron_id The local neuron id
      * @param new_value The new membrane potential
      */
-    void set_x(const size_t neuron_id, const double new_value) noexcept {
-        x[neuron_id] = new_value;
+    void set_x(const NeuronID& neuron_id, const double new_value) noexcept {
+        x[neuron_id.id()] = new_value;
     }
 
     /**
@@ -335,8 +337,8 @@ protected:
      * @param neuron_id The local neuron id
      * @param new_value True iff the neuron fired in the current simulation step
      */
-    void set_fired(const size_t neuron_id, const char new_value) noexcept {
-        fired[neuron_id] = new_value;
+    void set_fired(const NeuronID& neuron_id, const char new_value) noexcept {
+        fired[neuron_id.id()] = new_value;
     }
 
 private:
@@ -389,7 +391,7 @@ public:
      * @param background_activity_mean See NeuronModel(...)
      * @param background_activity_stddev See NeuronModel(...)
      * @param x_0 The resting membrane potential
-     * @param tau_x The dampening factor by which the membrane potential decreases 
+     * @param tau_x The dampening factor by which the membrane potential decreases
      * @param refrac_time The number of steps a neuron doesn't spike after spiking
      */
     PoissonModel(
@@ -414,15 +416,15 @@ public:
      * @exception Throws a RelearnException if neuron_id is too large
      * @return The refrac time (The number of steps a neuron doesn't spike after spiking)
      */
-    [[nodiscard]] double get_secondary_variable(const size_t neuron_id) const final {
-        RelearnException::check(neuron_id < get_num_neurons(), "PoissonModel::get_secondary_variable: id is too large: {}", neuron_id);
-        return refrac[neuron_id];
+    [[nodiscard]] double get_secondary_variable(const NeuronID& neuron_id) const final {
+        RelearnException::check(neuron_id.id() < get_num_neurons(), "PoissonModel::get_secondary_variable: id is too large: {}", neuron_id);
+        return refrac[neuron_id.id()];
     }
 
     /**
-	 * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
+     * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
      * @return A vector with all adjustable ModelParameter
-	 */
+     */
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
     /**
@@ -456,10 +458,10 @@ public:
     }
 
     /**
-	 * @brief Initializes the model to include number_neurons many local neurons.
+     * @brief Initializes the model to include number_neurons many local neurons.
      *      Sets the initial refrac counter to 0
      * @param number_neurons The number of local neurons to store in this class
-	 */
+     */
     void init(size_t number_neurons) final;
 
     /**
@@ -483,7 +485,7 @@ public:
 protected:
     void update_electrical_activity_serial_initialize(const std::vector<UpdateStatus>& disable_flags) final;
 
-    void update_activity(size_t neuron_id) final;
+    void update_activity(const NeuronID& neuron_id) final;
 
     void init_neurons(size_t start_id, size_t end_id) final;
 
@@ -563,15 +565,15 @@ public:
      * @exception Throws a RelearnException if neuron_id is too large
      * @return The dampending variable u
      */
-    [[nodiscard]] double get_secondary_variable(const size_t neuron_id) const final {
-        RelearnException::check(neuron_id < get_num_neurons(), "IzhikevichModel::get_secondary_variable: id is too large: {}", neuron_id);
-        return u[neuron_id];
+    [[nodiscard]] double get_secondary_variable(const NeuronID& neuron_id) const final {
+        RelearnException::check(neuron_id.id() < get_num_neurons(), "IzhikevichModel::get_secondary_variable: id is too large: {}", neuron_id);
+        return u[neuron_id.id()];
     }
 
     /**
-	 * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
+     * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
      * @return A vector with all adjustable ModelParameter
-	 */
+     */
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
     /**
@@ -645,9 +647,9 @@ public:
     }
 
     /**
-	 * @brief Initializes the model to include number_neurons many local neurons.
+     * @brief Initializes the model to include number_neurons many local neurons.
      * @param number_neurons The number of local neurons to store in this class
-	 */
+     */
     void init(size_t number_neurons) final;
 
     /**
@@ -684,7 +686,7 @@ public:
     static constexpr double max_k3{ 200.0 };
 
 protected:
-    void update_activity(size_t neuron_id) final;
+    void update_activity(const NeuronID& neuron_id) final;
 
     void init_neurons(size_t start_id, size_t end_id) final;
 
@@ -734,7 +736,7 @@ public:
      * @param background_activity_stddev See NeuronModel(...)
      * @param a The constant inside the equation for d/dt w(t)
      * @param b The dampening factor for w(t) inside the equation for d/dt w(t)
-     * @param phi The dampening factor for w(t) 
+     * @param phi The dampening factor for w(t)
      */
     FitzHughNagumoModel(
         double k,
@@ -758,15 +760,15 @@ public:
      * @exception Throws a RelearnException if neuron_id is too large
      * @return The dampending variable w
      */
-    [[nodiscard]] double get_secondary_variable(const size_t neuron_id) const final {
-        RelearnException::check(neuron_id < get_num_neurons(), "In FitzHughNagumoModel::get_secondary_variable, id is too large");
-        return w[neuron_id];
+    [[nodiscard]] double get_secondary_variable(const NeuronID& neuron_id) const final {
+        RelearnException::check(neuron_id.id() < get_num_neurons(), "In FitzHughNagumoModel::get_secondary_variable, id is too large");
+        return w[neuron_id.id()];
     }
 
     /**
-	 * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
+     * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
      * @return A vector with all adjustable ModelParameter
-	 */
+     */
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
     /**
@@ -800,9 +802,9 @@ public:
     }
 
     /**
-	 * @brief Initializes the model to include number_neurons many local neurons.
+     * @brief Initializes the model to include number_neurons many local neurons.
      * @param number_neurons The number of local neurons to store in this class
-	 */
+     */
     void init(size_t number_neurons) final;
 
     /**
@@ -827,7 +829,7 @@ public:
     static constexpr double init_w{ -0.6 };
 
 protected:
-    void update_activity(size_t neuron_id) final;
+    void update_activity(const NeuronID& neuron_id) final;
 
     void init_neurons(size_t start_id, size_t end_id) final;
 
@@ -909,15 +911,15 @@ public:
      * @exception Throws a RelearnException if neuron_id is too large
      * @return The dampending variable w
      */
-    [[nodiscard]] double get_secondary_variable(const size_t neuron_id) const final {
-        RelearnException::check(neuron_id < get_num_neurons(), "In AEIFModel::get_secondary_variable, id is too large");
-        return w[neuron_id];
+    [[nodiscard]] double get_secondary_variable(const NeuronID& neuron_id) const final {
+        RelearnException::check(neuron_id.id() < get_num_neurons(), "In AEIFModel::get_secondary_variable, id is too large");
+        return w[neuron_id.id()];
     }
 
     /**
-	 * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
+     * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
      * @return A vector with all adjustable ModelParameter
-	 */
+     */
     [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
 
     /**
@@ -999,9 +1001,9 @@ public:
     }
 
     /**
-	 * @brief Initializes the model to include number_neurons many local neurons.
+     * @brief Initializes the model to include number_neurons many local neurons.
      * @param number_neurons The number of local neurons to store in this class
-	 */
+     */
     void init(size_t number_neurons) final;
 
     /**
@@ -1041,7 +1043,7 @@ public:
     static constexpr double max_V_spike{ 70.0 };
 
 protected:
-    void update_activity(size_t neuron_id) final;
+    void update_activity(const NeuronID& neuron_id) final;
 
     void init_neurons(size_t start_id, size_t end_id) final;
 

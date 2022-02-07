@@ -30,7 +30,7 @@ public:
      * @param idx The one dimensional index
      * @return The three dimensional index
      */
-    [[nodiscard]] static BoxCoordinates map_1d_to_3d(uint64_t idx) noexcept;
+    [[nodiscard]] static BoxCoordinates map_1d_to_3d(uint64_t idx);
 
     /**
      * @brief Maps a three dimensional index into the one dimensional domain.

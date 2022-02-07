@@ -12,6 +12,8 @@
 #include <array>
 #include <map>
 #include <memory>
+#include <ranges>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -103,15 +105,13 @@ public:
     [[nodiscard]] static std::vector<size_t> all_to_all(const std::vector<size_t>& src);
 
     template <typename T>
-    // NOLINTNEXTLINE
-    static void async_send(const T* buffer, size_t size_in_bytes, int rank, AsyncToken& token) {
-        async_s(buffer, static_cast<int>(size_in_bytes), rank, token);
+    static void async_send(std::span<T> buffer, const int rank, AsyncToken& token) {
+        async_s(buffer.data(), buffer.size_bytes(), rank, token);
     }
 
     template <typename T>
-    // NOLINTNEXTLINE
-    static void async_receive(T* buffer, size_t size_in_bytes, int rank, AsyncToken& token) {
-        async_recv(buffer, static_cast<int>(size_in_bytes), rank, token);
+    static void async_receive(std::span<T> buffer, const int rank, AsyncToken& token) {
+        async_recv(buffer.data(), buffer.size_bytes(), rank, token);
     }
 
     template <typename T, size_t size>
@@ -137,7 +137,7 @@ public:
     }
 
     template <typename T>
-    static void all_gather_inline(T* ptr, int count) {
+    static void all_gather_inline(std::span<T> buffer) {
     }
 
     template <typename AdditionalCellAttributes>
@@ -150,6 +150,15 @@ public:
     }
 
     [[nodiscard]] static int get_num_ranks();
+
+    [[nodiscard]] static auto get_ranks() {
+        return std::views::iota(0, get_num_ranks());
+    }
+
+    [[nodiscard]] static auto get_ranks_without_my_rank() {
+        return std::views::iota(0, get_num_ranks())
+            | std::views::filter([my_rank = get_my_rank()](const auto& rank) { return rank != my_rank; });
+    }
 
     [[nodiscard]] static int get_my_rank();
 

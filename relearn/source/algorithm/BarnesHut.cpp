@@ -21,9 +21,10 @@
 
 #include <algorithm>
 #include <array>
+#include <ranges>
 #include <stack>
 
-[[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(const size_t initiator_neuron_id, const position_type& axon_pos_xyz, const SignalType dendrite_type_needed) {
+[[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz, const SignalType dendrite_type_needed) {
     OctreeNode<BarnesHutCell>* node_selected = nullptr;
     OctreeNode<BarnesHutCell>* root_of_subtree = global_tree->get_root();
 
@@ -31,18 +32,18 @@
 
     while (true) {
         /**
-	     * Create vector with nodes that have at least one dendrite and are
-	     * precise enough given the position of an axon
-	     */
+         * Create vector with nodes that have at least one dendrite and are
+         * precise enough given the position of an axon
+         */
 
         const auto& vector = get_nodes_for_interval(axon_pos_xyz, root_of_subtree, dendrite_type_needed);
 
         /**
-		 * Assign a probability to each node in the vector.
-		 * The probability for connecting to the same neuron (i.e., the axon's neuron) is set 0.
-		 * Nodes with 0 probability are removed.
-		 */
-        const auto& [total_prob, probability_values] = create_interval(initiator_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
+         * Assign a probability to each node in the vector.
+         * The probability for connecting to the same neuron (i.e., the axon's neuron) is set 0.
+         * Nodes with 0 probability are removed.
+         */
+        const auto& [total_prob, probability_values] = create_interval(src_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
 
         if (probability_values.empty()) {
             return {};
@@ -51,29 +52,24 @@
         const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(total_prob, Constants::eps));
 
         /**
-         * This is done in case of rounding errors. 
+         * This is done in case of rounding errors.
          */
         auto counter = 0;
         auto sum_probabilities = 0.0;
-        while (counter < probability_values.size()) {
-            if (sum_probabilities >= random_number) {
-                break;
-            }
-
+        for (; counter < probability_values.size() && sum_probabilities < random_number; counter++) {
             sum_probabilities += probability_values[counter];
-            counter++;
         }
-        node_selected = vector[counter - 1ull];
+        node_selected = vector[counter - 1ULL];
 
         RelearnException::check(node_selected != nullptr, "BarnesHut::find_target_neuron: node_selected was nullptr");
 
         /**
-	     * Leave loop if no node was selected OR
-	     * the selected node is leaf node, i.e., contains normal neuron.
-	     *
-	     * No node is selected when all nodes in the interval, created in
-	     * get_nodes_for_interval(), have probability 0 to connect.
-	     */
+         * Leave loop if no node was selected OR
+         * the selected node is leaf node, i.e., contains normal neuron.
+         *
+         * No node is selected when all nodes in the interval, created in
+         * get_nodes_for_interval(), have probability 0 to connect.
+         */
         const auto done = !node_selected->is_parent();
 
         if (done) {
@@ -84,8 +80,7 @@
         root_of_subtree = node_selected;
     }
 
-    RankNeuronId rank_neuron_id{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
-    return rank_neuron_id;
+    return RankNeuronId{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
 }
 
 CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(
@@ -104,7 +99,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(
     const std::vector<SignalType>& axons_signal_types = axons->get_signal_types();
 
     // For my neurons
-#pragma omp parallel for shared(axons_cnts, axons_connected_cnts, axons_signal_types, synapse_creation_requests_outgoing)
+#pragma omp parallel for default(none) shared(number_neurons, extra_infos, disable_flags, axons_cnts, axons_connected_cnts, axons_signal_types, synapse_creation_requests_outgoing_vec)
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
@@ -118,28 +113,24 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(
             continue;
         }
 
-        // DendriteType::EXCITATORY axon
-        SignalType dendrite_type_needed = SignalType::EXCITATORY;
-        if (SignalType::INHIBITORY == axons_signal_types[neuron_id]) {
-            // DendriteType::INHIBITORY axon
-            dendrite_type_needed = SignalType::INHIBITORY;
-        }
+        const SignalType dendrite_type_needed = axons_signal_types[neuron_id];
+
+        const auto id = NeuronID{ neuron_id };
 
         // Position of current neuron
-        const auto& axon_xyz_pos = extra_infos->get_position(neuron_id);
+        const auto& axon_xyz_pos = extra_infos->get_position(id);
 
         // For all vacant axons of neuron "neuron_id"
         for (size_t j = 0; j < num_vacant_axons; j++) {
             /**
-			 * Find target neuron for connecting and
-			 * connect if target neuron has still dendrite available.
-			 *
-			 * The target neuron might not have any dendrites left
-			 * as other axons might already have connected to them.
-			 * Right now, those collisions are handled in a first-come-first-served fashion.
-			 */
-
-            std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(neuron_id, axon_xyz_pos, dendrite_type_needed);
+             * Find target neuron for connecting and
+             * connect if target neuron has still dendrite available.
+             *
+             * The target neuron might not have any dendrites left
+             * as other axons might already have connected to them.
+             * Right now, those collisions are handled in a first-come-first-served fashion.
+             */
+            std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(id, axon_xyz_pos, dendrite_type_needed);
 
             if (rank_neuron_id.has_value()) {
                 const auto& [target_rank, target_id] = rank_neuron_id.value();
@@ -161,7 +152,6 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(
     Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
     NodeCache::empty<BarnesHutCell>();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
-
     return synapse_creation_requests_outgoing;
 }
 
@@ -199,9 +189,9 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
         RelearnException::check(node != nullptr, "BarnesHut::update_leaf_nodes: node was nullptr: {}", neuron_id);
 
         const auto& cell = node->get_cell();
-        const size_t other_neuron_id = cell.get_neuron_id();
+        const auto other_neuron_id = cell.get_neuron_id();
 
-        RelearnException::check(neuron_id == other_neuron_id, "BarnesHut::update_leaf_nodes: The nodes are not in order");
+        RelearnException::check(neuron_id == other_neuron_id.id(), "BarnesHut::update_leaf_nodes: The nodes are not in order");
 
         const auto& [cell_xyz_min, cell_xyz_max] = cell.get_size();
         const auto& opt_excitatory_position = cell.get_excitatory_dendrites_position();
@@ -230,7 +220,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     }
 }
 
-[[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(const size_t initiator_neuron_id, const position_type& axon_pos_xyz,
+[[nodiscard]] double BarnesHut::calc_attractiveness_to_connect(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz,
     const OctreeNode<BarnesHutCell>& node_with_dendrite, const SignalType dendrite_type_needed) const {
     /**
      * If the axon's neuron itself is considered as target neuron, set attractiveness to 0 to avoid forming an autapse (connection to itself).
@@ -262,7 +252,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     return ret_val;
 }
 
-[[nodiscard]] std::pair<double, std::vector<double>> BarnesHut::create_interval(const size_t initiator_neuron_id, const position_type& axon_pos_xyz,
+[[nodiscard]] std::pair<double, std::vector<double>> BarnesHut::create_interval(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz,
     const SignalType dendrite_type_needed, const std::vector<OctreeNode<BarnesHutCell>*>& vector) const {
 
     if (vector.empty()) {
@@ -274,17 +264,17 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     std::vector<double> probabilities{};
     probabilities.reserve(vector.size());
 
-    std::for_each(vector.cbegin(), vector.cend(), [&](const OctreeNode<BarnesHutCell>* target_node) {
+    std::transform(vector.begin(), vector.cend(), std::back_inserter(probabilities), [&](const OctreeNode<BarnesHutCell>* target_node) {
         RelearnException::check(target_node != nullptr, "BarnesHut::update_leaf_nodes: target_node was nullptr");
-        const auto prob = calc_attractiveness_to_connect(initiator_neuron_id, axon_pos_xyz, *target_node, dendrite_type_needed);
-        probabilities.push_back(prob);
+        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *target_node, dendrite_type_needed);
         sum += prob;
+        return prob;
     });
 
     /**
-	 * Make sure that we don't divide by 0 in case all probabilities from above are 0.
+     * Make sure that we don't divide by 0 in case all probabilities from above are 0.
      * There is no neuron to connect to in that case.
-	 */
+     */
     if (sum == 0.0) {
         return { 0.0, {} };
     }
@@ -306,9 +296,9 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     }
 
     /**
-	 * Node is leaf node, i.e., not super neuron.
-	 * Thus the node is precise. Accept it no matter what.
-	 */
+     * Node is leaf node, i.e., not super neuron.
+     * Thus the node is precise. Accept it no matter what.
+     */
     if (!is_parent) {
         return std::make_tuple(true, true);
     }
@@ -348,11 +338,11 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
 
     if (!root->is_parent()) {
         /**
-		 * The root node is a leaf and thus contains the target neuron.
-		 *
-		 * NOTE: Root is not intended to be a leaf but we handle this as well.
-		 * Without pushing root onto the stack, it would not make it into the "vector" of nodes.
-		 */
+         * The root node is a leaf and thus contains the target neuron.
+         *
+         * NOTE: Root is not intended to be a leaf but we handle this as well.
+         * Without pushing root onto the stack, it would not make it into the "vector" of nodes.
+         */
 
         const auto [accept, _] = acceptance_criterion_test(axon_pos_xyz, root, dendrite_type_needed);
 
@@ -370,9 +360,9 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
         const auto is_local = node->is_local();
         const auto& children = is_local ? node->get_children() : NodeCache::download_children<BarnesHutCell>(node);
 
-        for (auto it = children.crbegin(); it != children.crend(); ++it) {
-            if (*it != nullptr) {
-                vector.emplace_back(*it);
+        for (auto it : std::ranges::reverse_view(children)) {
+            if (it != nullptr) {
+                vector.emplace_back(it);
             }
         }
     };
@@ -389,9 +379,9 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
         vector.pop_back();
 
         /**
-		 * Should node be used for probability interval?
-		 * Only take those that have dendrites available
-		 */
+         * Should node be used for probability interval?
+         * Only take those that have dendrites available
+         */
         const auto [accept, has_vacant_dendrites] = acceptance_criterion_test(axon_pos_xyz, node, dendrite_type_needed);
 
         if (accept) {

@@ -79,7 +79,7 @@ public:
      * @param format The format string. Placeholders can used: "{}"
      * @param ...args The values that shall be substituted for the placeholders
      * @exception Throws an exception if the number of args does not match the number of placeholders in format
-     *      Throws a RelearnException 
+     *      Throws a RelearnException
      */
     template <typename FormatString, typename... Args>
     static void fail(FormatString&& format, Args&&... args) {
@@ -87,7 +87,7 @@ public:
             throw RelearnException{};
         }
 
-        auto message = fmt::format(std::forward<FormatString>(format), std::forward<Args>(args)...);
+        auto message = fmt::format(fmt::runtime(std::forward<FormatString>(format)), std::forward<Args>(args)...);
         log_message(message);
         throw RelearnException{ std::move(message) };
     }

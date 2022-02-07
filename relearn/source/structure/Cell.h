@@ -16,6 +16,7 @@
 #include "../neurons/SignalType.h"
 #include "../util/RelearnException.h"
 #include "../util/Vec3.h"
+#include "../util/TaggedID.h"
 
 #include <optional>
 #include <ostream>
@@ -38,7 +39,7 @@ public:
      * @brief Sets the neuron id for the associated cell. Can be set to Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
      * @param neuron_id The neuron id, can be Constants::uninitialized
      */
-    void set_neuron_id(const size_t neuron_id) noexcept {
+    void set_neuron_id(const NeuronID& neuron_id) noexcept {
         this->neuron_id = neuron_id;
     }
 
@@ -46,7 +47,7 @@ public:
      * @brief Returns the neuron id for the associated cell. Is Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
      * @return The neuron id
      */
-    [[nodiscard]] size_t get_neuron_id() const noexcept {
+    [[nodiscard]] NeuronID get_neuron_id() const noexcept {
         return neuron_id;
     }
 
@@ -59,7 +60,7 @@ public:
     void set_size(const box_size_type& min, const box_size_type& max) {
         const auto& [min_x, min_y, min_z] = min;
         const auto& [max_x, max_y, max_z] = max;
-        
+
         RelearnException::check(min_x <= max_x, "Cell::set_size: x was not ok");
         RelearnException::check(min_y <= max_y, "Cell::set_size: y was not ok");
         RelearnException::check(min_z <= max_z, "Cell::set_size: z was not ok");
@@ -77,9 +78,9 @@ public:
     }
 
     /**
-	 * @brief Returns maximum edge length of the cell, i.e., ||max - min||_1
-	 * @return The maximum edge length of the cell
-	 */
+     * @brief Returns maximum edge length of the cell, i.e., ||max - min||_1
+     * @return The maximum edge length of the cell
+     */
     [[nodiscard]] double get_maximal_dimension_difference() const noexcept {
         const auto diff_vector = maximum_position - minimum_position;
         const auto diff = diff_vector.get_maximum();
@@ -92,29 +93,28 @@ public:
      * @param position The position inside the current cell which's octant position should be found
      * @exception Throws a RelearnException if the position is not within the current cell
      * @return A value from 0 to 7 that indicates which octant the position is
-     * 
+     *
      * The binary numbering is computed as follows:
-     * 
+     *
      * 		   110 ----- 111
-	 *		   /|        /|
-	 *		  / |       / |
-	 *		 /  |      /  |
-	 *	   010 ----- 011  |    y
-	 *		|  100 ---|- 101   ^   z
-	 *		|  /      |  /     |
-	 *		| /       | /      | /
-	 *		|/        |/       |/
-	 *	   000 ----- 001       +-----> x
+     *		   /|        /|
+     *		  / |       / |
+     *		 /  |      /  |
+     *	   010 ----- 011  |    y
+     *		|  100 ---|- 101   ^   z
+     *		|  /      |  /     |
+     *		| /       | /      | /
+     *		|/        |/       |/
+     *	   000 ----- 001       +-----> x
      */
-    [[nodiscard]] unsigned char get_octant_for_position(const box_size_type& position) const
-    {
+    [[nodiscard]] unsigned char get_octant_for_position(const box_size_type& position) const {
         const auto& [x, y, z] = position;
 
         /**
-	     * Sanity check: Make sure that the position is within this cell
-	     * This check returns false if negative coordinates are used.
-	     * Thus make sure to use positions >= 0.
-	     */
+         * Sanity check: Make sure that the position is within this cell
+         * This check returns false if negative coordinates are used.
+         * Thus make sure to use positions >= 0.
+         */
         const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
         RelearnException::check(is_in_box, "Cell::get_octant_for_position: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
 
@@ -122,13 +122,13 @@ public:
         const auto& [max_x, max_y, max_z] = maximum_position;
 
         unsigned char idx = 0;
-        //NOLINTNEXTLINE
+        // NOLINTNEXTLINE
         idx = idx | ((x < (min_x + max_x) / 2.0) ? 0 : 1); // idx | (pos_x < midpoint_dim_x) ? 0 : 1
 
-        //NOLINTNEXTLINE
+        // NOLINTNEXTLINE
         idx = idx | ((y < (min_y + max_y) / 2.0) ? 0 : 2); // idx | (pos_y < midpoint_dim_y) ? 0 : 2
 
-        //NOLINTNEXTLINE
+        // NOLINTNEXTLINE
         idx = idx | ((z < (min_z + max_z) / 2.0) ? 0 : 4); // idx | (pos_z < midpoint_dim_z) ? 0 : 4
 
         RelearnException::check(idx < Constants::number_oct, "Cell::get_octant_for_position: Calculated octant is too large: {}", idx);
@@ -205,12 +205,12 @@ public:
 
 private:
     /**
-	 * ID of the neuron in the cell.
-	 * This is only valid for cells that contain a normal neuron.
-	 * For those with a super neuron, it has no meaning.
-	 * This info is used to identify (return) the target neuron for a given axon
-	 */
-    size_t neuron_id{ Constants::uninitialized };
+     * ID of the neuron in the cell.
+     * This is only valid for cells that contain a normal neuron.
+     * For those with a super neuron, it has no meaning.
+     * This info is used to identify (return) the target neuron for a given axon
+     */
+    NeuronID neuron_id{ NeuronID::uninitialized_id() };
 
     // Two points describe size of cell
     box_size_type minimum_position{ Constants::uninitialized };

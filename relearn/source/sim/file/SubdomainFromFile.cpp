@@ -25,12 +25,12 @@
 
 SubdomainFromFile::SubdomainFromFile(
     const std::filesystem::path& file_path, const std::optional<std::filesystem::path>& file_path_positions, std::shared_ptr<Partition> partition)
-    : NeuronToSubdomainAssignment(partition)
+    : NeuronToSubdomainAssignment(std::move(partition))
     , path(file_path) {
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, "Loading: {} \n", file_path);
 
-    neuron_id_translator = std::make_shared<FileNeuronIdTranslator>(partition, file_path);
-    synapse_loader = std::make_shared<FileSynapseLoader>(partition, neuron_id_translator, file_path_positions);
+    neuron_id_translator = std::make_shared<FileNeuronIdTranslator>(this->partition, file_path);
+    synapse_loader = std::make_shared<FileSynapseLoader>(this->partition, neuron_id_translator, file_path_positions);
 
     read_dimensions_from_file();
 }
@@ -53,7 +53,7 @@ void SubdomainFromFile::read_dimensions_from_file() {
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
+        if (line.empty() || '#' == line[0]) {
             continue;
         }
 
@@ -125,28 +125,29 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
+        if (line.empty() || '#' == line[0]) {
             continue;
         }
 
         std::string signal_type{};
 
+        size_t id{};
         Node node{};
         box_size_type::value_type pos_x{};
         box_size_type::value_type pos_y{};
         box_size_type::value_type pos_z{};
         std::stringstream sstream(line);
-        bool success = (sstream >> node.id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> node.area_name) && (sstream >> signal_type);
+        bool success = (sstream >> id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> node.area_name) && (sstream >> signal_type);
 
         if (!success) {
             spdlog::info("Skipping line: {}", line);
             continue;
         }
 
-        node.pos = { pos_x, pos_y, pos_z };
-
         // Ids start with 1
-        node.id--;
+        --id;
+        node.id = NeuronID{ id };
+        node.pos = { pos_x, pos_y, pos_z };
 
         if (bool is_in_subdomain = node.pos.check_in_box(min, max); !is_in_subdomain) {
             continue;
@@ -172,7 +173,7 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
     return nodes;
 }
 
-std::vector<size_t> SubdomainFromFile::get_neuron_global_ids_in_subdomain(const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {
+std::vector<NeuronID> SubdomainFromFile::get_neuron_global_ids_in_subdomain(const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {
     const bool contains = is_subdomain_loaded(subdomain_index_1d);
     if (!contains) {
         RelearnException::fail("SubdomainFromFile::get_neuron_global_ids_in_subdomain: Wanted to have neuron_global_ids of subdomain_index_1d that is not present");
@@ -180,7 +181,7 @@ std::vector<size_t> SubdomainFromFile::get_neuron_global_ids_in_subdomain(const 
     }
 
     const Nodes& nodes = get_nodes_for_subdomain(subdomain_index_1d);
-    std::vector<size_t> global_ids;
+    std::vector<NeuronID> global_ids;
     global_ids.reserve(nodes.size());
 
     for (const Node& node : nodes) {
@@ -241,7 +242,7 @@ std::optional<std::vector<size_t>> SubdomainFromFile::read_neuron_ids_from_file(
 
     for (std::string line{}; std::getline(local_file, line);) {
         // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
+        if (line.empty() || '#' == line[0]) {
             continue;
         }
 

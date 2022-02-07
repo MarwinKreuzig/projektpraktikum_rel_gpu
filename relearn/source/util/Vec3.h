@@ -23,7 +23,7 @@
 /**
  * @brief A Vec3 holds three different values of type T and allows computations via operators.
  * @tparam T The type that shall be stored inside this class. Is required to fullfill std::is_arithmetic_v<T>
-*/
+ */
 template <typename T>
 class Vec3 {
     T x{ 0 };
@@ -43,7 +43,7 @@ public:
 
     /**
      * @brief Constructs a new instance and initializes all values with val
-     * @param val The value that is used to initialize all values 
+     * @param val The value that is used to initialize all values
      */
     explicit Vec3(const T& val) noexcept
         : x(val)
@@ -311,11 +311,11 @@ public:
     }
 
     /**
-	 * @brief Calculated the p norm of the current obejct
+     * @brief Calculated the p norm of the current obejct
      * @param p The exponent of the norm, must be >= 1.0
      * @exception Throws a RelearnException if p < 1.0
      * @return The calculated norm
-	 */
+     */
     [[nodiscard]] double calculate_p_norm(const double p) const {
         RelearnException::check(p >= 1.0, "Vec3::calculate_p_norm: p-norm is only valid for p >= 1.0, but it was: {}", p);
 
@@ -419,7 +419,7 @@ public:
      * @exception Throws a RelearnException if lower <= upper is violated
      * @return True iff *this is in [lower, upper]
      */
-    bool check_in_box(const Vec3<T>& lower, const Vec3<T>& upper) const {
+    [[nodiscard]] bool check_in_box(const Vec3<T>& lower, const Vec3<T>& upper) const {
         RelearnException::check(lower.x <= upper.x, "Vec3::check_in_box: lower.x ({}) is larger than upper.x ({})", lower.x, upper.x);
         RelearnException::check(lower.y <= upper.y, "Vec3::check_in_box: lower.y ({}) is larger than upper.y ({})", lower.y, upper.y);
         RelearnException::check(lower.z <= upper.z, "Vec3::check_in_box: lower.z ({}) is larger than upper.z ({})", lower.z, upper.z);
@@ -464,32 +464,41 @@ public:
 
     template <std::size_t Index>
     auto& get() & {
-        if constexpr (Index == 0)
+        if constexpr (Index == 0) {
             return x;
-        if constexpr (Index == 1)
+        }
+        if constexpr (Index == 1) {
             return y;
-        if constexpr (Index == 2)
+        }
+        if constexpr (Index == 2) {
             return z;
+        }
     }
 
     template <std::size_t Index>
     auto const& get() const& {
-        if constexpr (Index == 0)
+        if constexpr (Index == 0) {
             return x;
-        if constexpr (Index == 1)
+        }
+        if constexpr (Index == 1) {
             return y;
-        if constexpr (Index == 2)
+        }
+        if constexpr (Index == 2) {
             return z;
+        }
     }
 
     template <std::size_t Index>
     auto&& get() && {
-        if constexpr (Index == 0)
+        if constexpr (Index == 0) {
             return std::move(x);
-        if constexpr (Index == 1)
+        }
+        if constexpr (Index == 1) {
             return std::move(y);
-        if constexpr (Index == 2)
+        }
+        if constexpr (Index == 2) {
             return std::move(z);
+        }
     }
 };
 
@@ -514,7 +523,7 @@ struct tuple_element<2, ::Vec3<T>> {
     using type = typename Vec3<T>::value_type;
 };
 
-} //namespace std
+} // namespace std
 
 using Vec3d = Vec3<double>;
 using Vec3s = Vec3<size_t>;

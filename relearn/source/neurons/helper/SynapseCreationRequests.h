@@ -12,6 +12,7 @@
 
 #include "../../Types.h"
 #include "../SignalType.h"
+#include "../../util/TaggedID.h"
 
 #include <utility>
 

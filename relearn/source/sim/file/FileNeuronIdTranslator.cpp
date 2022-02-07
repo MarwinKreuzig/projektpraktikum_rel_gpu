@@ -21,7 +21,7 @@
 #include <sstream>
 #include <string>
 
-bool FileNeuronIdTranslator::is_neuron_local(size_t global_id) const {
+bool FileNeuronIdTranslator::is_neuron_local(NeuronID global_id) const {
     for (const auto& global_ids : global_neuron_ids) {
         const bool found = std::binary_search(global_ids.begin(), global_ids.end(), global_id);
         if (found) {
@@ -32,40 +32,40 @@ bool FileNeuronIdTranslator::is_neuron_local(size_t global_id) const {
     return false;
 }
 
-size_t FileNeuronIdTranslator::get_local_id(size_t global_id) const {
-    size_t id = 0;
+NeuronID NeuronIdTranslator::get_local_id(NeuronID global_id) const {
+    typename NeuronID::value_type id{ 0 };
 
     for (const auto& ids : global_neuron_ids) {
         const auto pos = std::lower_bound(ids.begin(), ids.end(), global_id);
 
         if (pos != ids.end()) {
             id += pos - ids.begin();
-            return id;
+            return NeuronID{ id };
         }
 
         id += ids.size();
     }
 
     RelearnException::fail("Partition::is_neuron_local: Didn't find global id {}", global_id);
-    return 0;
+    return NeuronID{};
 }
 
-size_t FileNeuronIdTranslator::get_global_id(size_t local_id) const {
+NeuronID NeuronIdTranslator::get_global_id(NeuronID local_id) const {
     size_t counter = 0;
     for (auto i = 0; i < partition->get_number_local_subdomains(); i++) {
         const size_t old_counter = counter;
 
         counter += global_neuron_ids[i].size();
-        if (local_id < counter) {
-            const size_t local_local_id = local_id - old_counter;
-            return global_neuron_ids[i][local_local_id];
+        if (local_id.id() < counter) {
+            const NeuronID local_local_id = local_id - old_counter;
+            return global_neuron_ids[i][local_local_id.id()];
         }
     }
 
     return local_id;
 }
 
-std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::translate_global_ids(const std::vector<neuron_id>& global_ids) {
+std::map<NeuronID, RankNeuronId> FileNeuronIdTranslator::translate_global_ids(const std::vector<NeuronID>& global_ids) {
     if (global_ids.empty()) {
         return {};
     }
@@ -73,13 +73,14 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
     const int mpi_rank = MPIWrapper::get_my_rank();
     const int num_ranks = MPIWrapper::get_num_ranks();
 
-    std::vector<neuron_id> num_foreign_ids_from_ranks_send(num_ranks, 0);
+    std::vector<size_t> num_foreign_ids_from_ranks_send(num_ranks, 0);
+    std::vector<size_t> num_foreign_ids_from_ranks(num_ranks, 0);
 
-    std::vector<std::vector<neuron_id>> global_ids_to_send(num_ranks);
-    std::vector<std::vector<neuron_id>> global_ids_to_receive(num_ranks);
-    std::vector<std::vector<neuron_id>> global_ids_local_value(num_ranks);
+    std::vector<std::vector<NeuronID>> global_ids_to_send(num_ranks);
+    std::vector<std::vector<NeuronID>> global_ids_to_receive(num_ranks);
+    std::vector<std::vector<NeuronID>> global_ids_local_value(num_ranks);
 
-    std::map<neuron_id, int> neuron_id_to_rank{};
+    std::map<NeuronID, int> neuron_id_to_rank{};
     const auto& id_to_position = load_neuron_positions(global_ids);
 
     for (const auto& [neuron_id, neuron_position] : id_to_position) {
@@ -88,13 +89,13 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
         global_ids_to_send[rank].emplace_back(neuron_id);
     }
 
-    for (auto rank = 0; rank < num_ranks; rank++) {
+    for (auto rank : MPIWrapper::get_ranks()) {
         num_foreign_ids_from_ranks_send[rank] = global_ids_to_send[rank].size();
     }
 
     std::vector<neuron_id> num_foreign_ids_from_ranks = MPIWrapper::all_to_all(num_foreign_ids_from_ranks_send);
 
-    for (auto rank = 0; rank < num_ranks; rank++) {
+    for (auto rank : MPIWrapper::get_ranks()) {
         if (mpi_rank == rank) {
             RelearnException::check(global_ids_to_receive[rank].empty(), "FileNeuronIdTranslator::translate_global_to_local: Should receive ids from myself");
             continue;
@@ -106,30 +107,16 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
     std::vector<MPIWrapper::AsyncToken> mpi_requests(static_cast<size_t>(num_ranks) * 2 - 2);
     int request_counter = 0;
 
-    for (auto rank = 0; rank < num_ranks; rank++) {
-        if (mpi_rank == rank) {
-            continue;
-        }
-
-        size_t* buffer = global_ids_to_receive[rank].data();
-        const auto size_in_bytes = static_cast<int>(global_ids_to_receive[rank].size() * sizeof(size_t));
-
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[request_counter]);
+    for (auto rank : MPIWrapper::get_ranks_without_my_rank()) {
+        MPIWrapper::async_receive(std::span{ global_ids_to_receive[rank] }, rank, mpi_requests[request_counter]);
         request_counter++;
     }
 
-    for (auto rank = 0; rank < num_ranks; rank++) {
-        if (mpi_rank == rank) {
-            continue;
-        }
-
-        const size_t* buffer = global_ids_to_send[rank].data();
-        const auto size_in_bytes = static_cast<int>(global_ids_to_send[rank].size() * sizeof(size_t));
-
+    for (auto rank : MPIWrapper::get_ranks_without_my_rank()) {
         // Reserve enough space for the answer - it will be as long as the request
         global_ids_local_value[rank].resize(global_ids_to_send[rank].size());
 
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[request_counter]);
+        MPIWrapper::async_send(std::span{ global_ids_to_send[rank] }, rank, mpi_requests[request_counter]);
         request_counter++;
     }
 
@@ -144,44 +131,30 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
     mpi_requests = std::vector<MPIWrapper::AsyncToken>(static_cast<size_t>(num_ranks) * 2 - 2);
     request_counter = 0;
 
-    for (auto rank = 0; rank < num_ranks; rank++) {
-        if (mpi_rank == rank) {
-            continue;
-        }
-
-        size_t* buffer = global_ids_local_value[rank].data();
-        const auto size_in_bytes = static_cast<int>(global_ids_local_value[rank].size() * sizeof(size_t));
-
-        MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[request_counter]);
+    for (auto rank : MPIWrapper::get_ranks_without_my_rank()) {
+        MPIWrapper::async_receive(std::span{ global_ids_local_value[rank] }, rank, mpi_requests[request_counter]);
         request_counter++;
     }
 
-    for (auto rank = 0; rank < num_ranks; rank++) {
-        if (mpi_rank == rank) {
-            continue;
-        }
-
-        const size_t* buffer = global_ids_to_receive[rank].data();
-        const auto size_in_bytes = static_cast<int>(global_ids_to_receive[rank].size() * sizeof(size_t));
-
-        MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[request_counter]);
+    for (auto rank : MPIWrapper::get_ranks_without_my_rank()) {
+        MPIWrapper::async_send(std::span{ global_ids_to_receive[rank] }, rank, mpi_requests[request_counter]);
         request_counter++;
     }
 
     // Wait for all sends and receives to complete
     MPIWrapper::wait_all_tokens(mpi_requests);
 
-    std::map<neuron_id, RankNeuronId> final_translation_map{};
+    std::map<NeuronID, RankNeuronId> final_translation_map{};
 
-    for (auto rank = 0; rank < num_ranks; rank++) {
-        std::vector<neuron_id>& translated_ids = global_ids_local_value[rank];
-        std::vector<neuron_id>& local_global_ids = global_ids_to_send[rank];
+    for (auto rank : MPIWrapper::get_ranks()) {
+        std::vector<NeuronID>& translated_ids = global_ids_local_value[rank];
+        std::vector<NeuronID>& local_global_ids = global_ids_to_send[rank];
 
         RelearnException::check(translated_ids.size() == local_global_ids.size(), "FileNeuronIdTranslator::translate_global_to_local: The vectors have not the same size in load network");
 
         for (auto i = 0; i < translated_ids.size(); i++) {
-            const neuron_id local_id = translated_ids[i];
-            const neuron_id global_id = local_global_ids[i];
+            const NeuronID local_id = translated_ids[i];
+            const NeuronID global_id = local_global_ids[i];
 
             const auto rank = neuron_id_to_rank[global_id];
 
@@ -192,13 +165,13 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
     return final_translation_map;
 }
 
-FileNeuronIdTranslator::neuron_id FileNeuronIdTranslator::translate_rank_neuron_id(const RankNeuronId& rni) {
+NeuronID FileNeuronIdTranslator::translate_rank_neuron_id(const RankNeuronId& /*rni*/) {
     RelearnException::fail("FileNeuronIdTranslator::translate_rank_neuron_id: Should not be here");
-    return neuron_id();
+    return {};
 }
 
-std::map<FileNeuronIdTranslator::neuron_id, FileNeuronIdTranslator::position_type> FileNeuronIdTranslator::load_neuron_positions(const std::vector<neuron_id>& global_ids) {
-    std::map<neuron_id, position_type> translation_map{};
+std::map<NeuronID, FileNeuronIdTranslator::position_type> FileNeuronIdTranslator::load_neuron_positions(const std::vector<NeuronID>& global_ids) {
+    std::map<NeuronID, position_type> translation_map{};
 
     std::string line{};
     std::ifstream file_neurons(path_to_neurons, std::ios::binary | std::ios::in);
@@ -209,7 +182,7 @@ std::map<FileNeuronIdTranslator::neuron_id, FileNeuronIdTranslator::position_typ
             continue;
         }
 
-        neuron_id id{};
+        size_t read_id{};
         position_type::value_type pos_x = 0.0;
         position_type::value_type pos_y = 0.0;
         position_type::value_type pos_z = 0.0;
@@ -217,7 +190,7 @@ std::map<FileNeuronIdTranslator::neuron_id, FileNeuronIdTranslator::position_typ
         std::string type{};
 
         std::stringstream sstream(line);
-        const bool success = (sstream >> id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> area_name) && (sstream >> type);
+        const bool success = (sstream >> read_id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> area_name) && (sstream >> type);
 
         if (!success) {
             spdlog::info("Skipping line: \"{}\"", line);
@@ -225,7 +198,8 @@ std::map<FileNeuronIdTranslator::neuron_id, FileNeuronIdTranslator::position_typ
         }
 
         // File starts at 1
-        id--;
+        --read_id;
+        NeuronID id{ read_id };
 
         if (std::binary_search(global_ids.cbegin(), global_ids.cend(), id)) {
             translation_map[id] = { pos_x, pos_y, pos_z };
@@ -238,7 +212,7 @@ std::map<FileNeuronIdTranslator::neuron_id, FileNeuronIdTranslator::position_typ
     return translation_map;
 }
 
-std::map<RankNeuronId, FileNeuronIdTranslator::neuron_id> FileNeuronIdTranslator::translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) {
+std::map<RankNeuronId, NeuronID> FileNeuronIdTranslator::translate_rank_neuron_ids(const std::vector<RankNeuronId>& /*ids*/) {
     RelearnException::fail("FileNeuronIdTranslator::translate_rank_neuron_ids: Should not be here");
-    return std::map<RankNeuronId, neuron_id>();
+    return {};
 }

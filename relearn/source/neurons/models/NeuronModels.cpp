@@ -33,12 +33,12 @@ void NeuronModel::update_electrical_activity(const NetworkGraph& network_graph, 
     const auto& firing_neuron_ids_incoming = MPIWrapper::exchange_requests(firing_neuron_ids_outgoing);
 
     /**
-	 * Now fired contains spikes only from my own neurons
-	 * (spikes from local neurons)
-	 *
-	 * The incoming spikes of neurons from other ranks are in firing_neuron_ids_incoming
-	 * (spikes from neurons from other ranks)
-	 */
+     * Now fired contains spikes only from my own neurons
+     * (spikes from local neurons)
+     *
+     * The incoming spikes of neurons from other ranks are in firing_neuron_ids_incoming
+     * (spikes from neurons from other ranks)
+     */
 
     update_electrical_activity_serial_initialize(disable_flags);
 
@@ -57,7 +57,7 @@ void NeuronModel::update_electrical_activity_update_activity(const std::vector<U
             continue;
         }
 
-        update_activity(neuron_id);
+        update_activity(NeuronID{ neuron_id });
     }
 
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
@@ -72,22 +72,24 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
             continue;
         }
 
+        NeuronID id{ neuron_id };
         /**
-		 * Determine synaptic input from neurons connected to me
-		 */
+         * Determine synaptic input from neurons connected to me
+         */
 
         // Walk through the local in-edges of my neuron
-        const NetworkGraph::LocalEdges& local_in_edges = network_graph.get_local_in_edges(neuron_id);
+        const NetworkGraph::LocalEdges& local_in_edges = network_graph.get_local_in_edges(id);
 
-        for (const auto& [initiator_neuron_id, edge_val] : local_in_edges) {
-            const auto spike = fired[initiator_neuron_id];
+        auto I = I_syn[neuron_id];
+        for (const auto& [src_neuron_id, edge_val] : local_in_edges) {
+            const auto spike = fired[src_neuron_id.id()];
             if (spike != 0) {
-                I_syn[neuron_id] += k * edge_val;
+                I += k * edge_val;
             }
         }
 
         // Walk through the distant in-edges of my neuron
-        const NetworkGraph::DistantEdges& in_edges = network_graph.get_distant_in_edges(neuron_id);
+        const NetworkGraph::DistantEdges& in_edges = network_graph.get_distant_in_edges(id);
 
         for (const auto& [key, edge_val] : in_edges) {
             const auto& rank = key.get_rank();
@@ -104,6 +106,8 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
                 I_syn[neuron_id] += k * edge_val;
             }
         }
+
+        I_syn[neuron_id] = I;
     }
 
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
@@ -142,9 +146,9 @@ CommunicationMap<size_t> NeuronModel::update_electrical_activity_prepare_sending
     }
 
     /**
-	 * Check which of my neurons fired and determine which ranks need to know about it.
-	 * That is, they contain the neurons connecting the axons of my firing neurons.
-	 */
+     * Check which of my neurons fired and determine which ranks need to know about it.
+     * That is, they contain the neurons connecting the axons of my firing neurons.
+     */
 
     Timers::start(TimerRegion::PREPARE_SENDING_SPIKES);
 
@@ -158,8 +162,10 @@ CommunicationMap<size_t> NeuronModel::update_electrical_activity_prepare_sending
             continue;
         }
 
+        const auto id = NeuronID{ neuron_id };
+
         // Don't send firing neuron id to myself as I already have this info
-        const NetworkGraph::DistantEdges& distant_out_edges = network_graph.get_distant_out_edges(neuron_id);
+        const NetworkGraph::DistantEdges& distant_out_edges = network_graph.get_distant_out_edges(id);
 
         // Find all target neurons which should receive the signal fired.
         // That is, neurons which connect axons from neuron "neuron_id"

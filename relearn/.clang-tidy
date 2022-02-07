@@ -3,6 +3,7 @@ Checks: '
         -llvm-header-guard,
         -fuchsia*,
         -llvmlibc*,
+        -altera*,
 		-google-runtime-references,
         -modernize-use-trailing-return-type,
         '
