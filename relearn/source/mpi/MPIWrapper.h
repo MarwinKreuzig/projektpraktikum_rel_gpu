@@ -236,7 +236,7 @@ public:
      * @param src The values that shall be sent to the other MPI ranks. MPI rank i receives src[i]
      * @return The values that were transmitted by the other MPI ranks. MPI rank i sent <return>[i]
      */
-    static std::vector<size_t> MPIWrapper::all_to_all(const std::vector<size_t>& src);
+    static std::vector<size_t> all_to_all(const std::vector<size_t>& src);
 
     /**
      * @brief Gathers one value for each MPI rank into a vector on all MPI ranks
@@ -367,7 +367,7 @@ public:
 
         std::vector<size_t> number_requests_outgoing = outgoing_requests.get_request_sizes();
 
-        std::vector<size_t> number_requests_incoming = MPIWrapper::all_to_all(number_requests_outgoing);
+        std::vector<size_t> number_requests_incoming = all_to_all(number_requests_outgoing);
 
         CommunicationMap<RequestType> incoming_requests(number_ranks);
 
@@ -411,7 +411,7 @@ public:
         }
 
         // Wait for all sends and receives to complete
-        MPIWrapper::wait_all_tokens(mpi_requests);
+        wait_all_tokens(mpi_requests);
 
         return incoming_requests;
     }
