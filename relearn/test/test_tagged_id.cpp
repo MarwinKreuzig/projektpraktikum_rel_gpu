@@ -22,7 +22,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorDefault) { // NOLINT
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDConstructorOnlyID) { // NOLINT
-    const auto id_val = this->get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max);
+    const auto id_val = this->template get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max);
 
     const TaggedID<TypeParam> id{ id_val };
 
@@ -37,7 +37,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorOnlyID) { // NOLINT
 TYPED_TEST(TaggedIDTest, testTaggedIDConstructorFlagsAndID) { // NOLINT
     const bool is_global = TaggedIDTest<TypeParam>::get_random_bool();
     const bool is_virtual = TaggedIDTest<TypeParam>::get_random_bool();
-    const TypeParam id_val = this->get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max);
+    const TypeParam id_val = this->template get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max);
 
     const TaggedID<TypeParam> id{ is_global, is_virtual, id_val };
 
@@ -68,7 +68,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDVirtual) { // NOLINT
 
 TYPED_TEST(TaggedIDTest, testTaggedIDAssignToUninitializeForInitialization) { // NOLINT
     auto id = TaggedID<TypeParam>::uninitialized_id();
-    const TypeParam id_val = this->get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max);
+    const TypeParam id_val = this->template get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max);
     id = id_val;
 
     ASSERT_EQ(id.id(), id_val);
@@ -84,7 +84,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDArithmetic) { // NOLINT
     constexpr static auto max = TaggedID<TypeParam>::limits::max;
 
     const auto get_rand = [this](const auto min2, const auto max2) {
-        const auto rand = this->get_random_integer<TypeParam>(min2, max2);
+        const auto rand = this->template get_random_integer<TypeParam>(min2, max2);
         return rand;
     };
 
@@ -138,7 +138,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDComparisons1) { // NOLINT
     constexpr static auto min = TaggedID<TypeParam>::limits::min;
     constexpr static auto max = TaggedID<TypeParam>::limits::max;
 
-    const auto get_random_id = [this]() { return TaggedID<TypeParam>{ this->get_random_integer<TypeParam>(min, max) }; };
+    const auto get_random_id = [this]() { return TaggedID<TypeParam>{ this->template get_random_integer<TypeParam>(min, max) }; };
 
     const auto id1 = get_random_id();
     const auto id2 = get_random_id();
@@ -155,7 +155,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDComparisons2) { // NOLINT
         auto res = TaggedID<TypeParam>{
             this->get_random_bool(),
             this->get_random_bool(),
-            this->get_random_integer<TypeParam>(min, max)
+            this->template get_random_integer<TypeParam>(min, max)
         };
 
         // res.is_initialized() = this->get_random_bool();
