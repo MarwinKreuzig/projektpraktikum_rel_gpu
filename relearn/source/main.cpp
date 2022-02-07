@@ -16,6 +16,7 @@
 #include "io/InteractiveNeuronIO.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
+#include "mpi/CommunicationMap.h"
 #include "neurons/ElementType.h"
 #include "neurons/helper/NeuronMonitor.h"
 #include "neurons/models/NeuronModels.h"
@@ -120,6 +121,8 @@ int main(int argc, char** argv) {
 	 * Init MPI and store some MPI infos
 	 */
     MPIWrapper::init(argc, argv);
+
+    CommunicationMap<int> cm(10, 21);
 
     print_arguments(argc, argv);
     print_sizes();

@@ -21,10 +21,10 @@ using MPIWrapper = MPINoWrapper;
 #include "../io/LogFiles.h"
 #include "../util/MemoryHolder.h"
 #include "../util/RelearnException.h"
+#include "CommunicationMap.h"
 
 #include <array>
 #include <cstdint>
-#include <map>
 #include <string>
 #include <vector>
 
@@ -348,6 +348,63 @@ public:
 
         wait_all_tokens(async_tokens);
         return retrieved_data;
+    }
+
+    template <typename RequestType>
+    static CommunicationMap<RequestType> exchange_requests(const CommunicationMap<RequestType>& outgoing_requests) {
+        const auto number_ranks = get_num_ranks();
+        const auto my_rank = get_my_rank();
+
+        std::vector<size_t> number_requests_outgoing = outgoing_requests.get_request_sizes();
+
+        std::vector<size_t> number_requests_incoming(number_ranks, 0);
+        MPIWrapper::all_to_all(number_requests_outgoing, number_requests_incoming);
+
+        CommunicationMap<RequestType> incoming_requests(my_rank, number_ranks);
+
+        for (auto rank_id = 0; rank_id < number_ranks; rank_id++) {
+            if (const auto num_requests = number_requests_incoming[rank_id]; 0 != num_requests) {
+                incoming_requests.resize(rank_id, number_requests_incoming[rank_id]);
+            }
+        }
+
+        std::vector<AsyncToken> mpi_requests(outgoing_requests.size() + incoming_requests.size());
+
+        /**
+	     * Send and receive actual synapse requests
+	     */
+        auto mpi_requests_index = 0;
+
+        for (auto rank_id = 0; rank_id < number_ranks; rank_id++) {
+            if (!incoming_requests.contains(rank_id)) {
+                continue;
+            }
+
+            auto* buffer = incoming_requests.get_data(rank_id);
+            const auto size_in_bytes = incoming_requests.get_size_in_bytes(rank_id);
+
+            MPIWrapper::async_receive(buffer, size_in_bytes, rank_id, mpi_requests[mpi_requests_index]);
+
+            mpi_requests_index++;
+        }
+
+        for (auto rank_id = 0; rank_id < number_ranks; rank_id++) {
+            if (!outgoing_requests.contains(rank_id)) {
+                continue;
+            }
+
+            const auto* buffer = outgoing_requests.get_data(rank_id);
+            const auto size_in_bytes = outgoing_requests.get_size_in_bytes(rank_id);
+
+            MPIWrapper::async_send(buffer, size_in_bytes, rank_id, mpi_requests[mpi_requests_index]);
+
+            mpi_requests_index++;
+        }
+
+        // Wait for all sends and receives to complete
+        MPIWrapper::wait_all_tokens(mpi_requests);
+
+        return incoming_requests;
     }
 
     /** 

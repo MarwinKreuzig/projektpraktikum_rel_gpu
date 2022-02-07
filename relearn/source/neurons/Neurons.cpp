@@ -342,7 +342,7 @@ size_t Neurons::delete_synapses() {
         Timers::stop_and_add(TimerRegion::FIND_SYNAPSES_TO_DELETE);
 
         Timers::start(TimerRegion::DELETE_SYNAPSES_ALL_TO_ALL);
-        const auto incoming_deletion_requests = SynapseDeletionRequests::exchange_requests(outgoing_deletion_requests);
+        const auto incoming_deletion_requests = MPIWrapper::exchange_requests(outgoing_deletion_requests);
         Timers::stop_and_add(TimerRegion::DELETE_SYNAPSES_ALL_TO_ALL);
 
         Timers::start(TimerRegion::PROCESS_DELETE_REQUESTS);
@@ -361,17 +361,19 @@ size_t Neurons::delete_synapses() {
     return axons_deleted + excitatory_dendrites_deleted + inhibitory_dendrites_deleted;
 }
 
-MapSynapseDeletionRequests Neurons::delete_synapses_find_synapses(const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) {
+CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) {
     const auto& [sum_to_delete, number_deletions] = to_delete;
 
+    const auto number_ranks = MPIWrapper::get_num_ranks();
+    const auto my_rank = MPIWrapper::get_my_rank();
+
+    CommunicationMap<SynapseDeletionRequest> deletion_requests(my_rank, number_ranks);
+
     if (sum_to_delete == 0) {
-        return {};
+        return deletion_requests;
     }
 
-    const auto my_rank = MPIWrapper::get_my_rank();
     const auto element_type = synaptic_elements.get_element_type();
-
-    MapSynapseDeletionRequests deletion_requests{};
 
     for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
@@ -392,7 +394,7 @@ MapSynapseDeletionRequests Neurons::delete_synapses_find_synapses(const Synaptic
 
         for (const auto& [rank, other_neuron_id] : affected_neuron_ids) {
             SynapseDeletionRequest psd(neuron_id, other_neuron_id, element_type, signal_type);
-            deletion_requests[rank].append(psd);
+            deletion_requests.append(rank, psd);
 
             if (my_rank == rank) {
                 continue;
@@ -475,7 +477,7 @@ std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
     return affected_neurons;
 }
 
-size_t Neurons::delete_synapses_commit_deletions(const MapSynapseDeletionRequests& list) {
+size_t Neurons::delete_synapses_commit_deletions(const CommunicationMap<SynapseDeletionRequest>& list) {
     const int my_rank = MPIWrapper::get_my_rank();
     size_t num_synapses_deleted = 0;
 
@@ -483,7 +485,7 @@ size_t Neurons::delete_synapses_commit_deletions(const MapSynapseDeletionRequest
         num_synapses_deleted += requests.size();
 
         for (auto i = 0; i < requests.size(); i++) {
-            const auto& [other_neuron_id, my_neuron_id, element_type, signal_type] = requests.get_request(i);
+            const auto& [other_neuron_id, my_neuron_id, element_type, signal_type] = requests[i];
             const auto weight = (SignalType::EXCITATORY == signal_type) ? -1 : 1;
 
             /**

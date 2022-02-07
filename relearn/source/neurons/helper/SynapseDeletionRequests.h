@@ -11,14 +11,11 @@
 #pragma once
 
 #include "../../Config.h"
-#include "../../mpi/MPIWrapper.h"
 #include "../../util/RelearnException.h"
 #include "../ElementType.h"
 #include "../SignalType.h"
 
-#include <map>
 #include <utility>
-#include <vector>
 
 /**
  * This type represents a synapse deletion request.
@@ -159,137 +156,3 @@ struct tuple_element<3, typename ::SynapseDeletionRequest> {
 };
 
 } //namespace std
-
-/**
- * This type aggregates multiple SynapseDeletionRequest into one and facilitates MPI communication.
- * It does not perform MPI communication.
- */
-class SynapseDeletionRequests {
-public:
-    SynapseDeletionRequests() = default;
-
-    /**
-     * @brief Returns the number of stored requests
-     * @return The number of stored requests
-     */
-    [[nodiscard]] size_t size() const noexcept {
-        return requests.size();
-    }
-
-    /**
-     * @brief Resizes the internal buffer to accomodate size-many requests
-     * @param size The number of requests to be stored
-     */
-    void resize(const size_t size) {
-        requests.resize(size);
-    }
-
-    /**
-     * @brief Appends the SynapseDeletionRequest to the end of the buffer
-     * @param pending_deletion The new SynapseDeletionRequest that should be appended
-     */
-    void append(const SynapseDeletionRequest& pending_deletion) {
-        requests.push_back(pending_deletion);
-    }
-
-    /**
-     * @brief Returns the SynapseDeletionRequest with the requested index
-     * @param request_index The index of the SynapseDeletionRequest
-     * @exception Throws a RelearnException if request_index is larger than the number of stored SynapseDeletionRequest
-     * @return The deletion reques
-     */
-    [[nodiscard]] SynapseDeletionRequest get_request(const size_t request_index) const {
-        RelearnException::check(request_index < requests.size(), "SynapseDeletionRequests::get_request: Index is out of bounds");
-        return requests[request_index];
-    }
-
-    /**
-     * @brief Returns the raw pointer to the requests.
-     *      Does not transfer ownership
-     * @return A raw pointer to the requests
-     */
-    [[nodiscard]] SynapseDeletionRequest* get_requests() noexcept {
-        return requests.data();
-    }
-
-    /**
-     * @brief Returns the raw pointer to the requests.
-     *      Does not transfer ownership
-     * @return A raw pointer to the requests
-     */
-    [[nodiscard]] const SynapseDeletionRequest* get_requests() const noexcept {
-        return requests.data();
-    }
-
-    /**
-     * @brief Returns the size of the internal buffer in bytes
-     * @return The size of the internal buffer in bytes
-     */
-    [[nodiscard]] size_t get_requests_size_in_bytes() const noexcept {
-        return requests.size() * sizeof(SynapseDeletionRequest);
-    }
-
-private:
-    std::vector<SynapseDeletionRequest> requests{}; // This vector is used as MPI communication buffer
-
-public:
-    static std::map<int, SynapseDeletionRequests> exchange_requests(const std::map<int, SynapseDeletionRequests>& synapse_deletion_requests_outgoing) {
-        const auto number_ranks = MPIWrapper::get_num_ranks();
-
-        std::vector<size_t> number_requests_for_ranks(number_ranks, 0);
-        // Fill vector with my number of synapse deletion requests for every rank
-        for (const auto& [rank, requests] : synapse_deletion_requests_outgoing) {
-            RelearnException::check(rank < number_ranks, "SynapseDeletionRequests::exchange_requests: rank was too large: {} of {}", rank, number_ranks);
-            const auto num_requests = requests.size();
-            number_requests_for_ranks[rank] = num_requests;
-        }
-
-        std::vector<size_t> number_requests_from_ranks(number_ranks, 0);
-        MPIWrapper::all_to_all(number_requests_for_ranks, number_requests_from_ranks);
-
-        // Now I know how many requests I will get from every rank.
-        std::map<int, SynapseDeletionRequests> incoming_requests{};
-        for (auto rank = 0; rank < number_ranks; ++rank) {
-            if (const auto num_requests = number_requests_from_ranks[rank]; 0 != num_requests) {
-                incoming_requests[rank].resize(num_requests);
-            }
-        }
-
-        std::vector<MPIWrapper::AsyncToken> mpi_requests(synapse_deletion_requests_outgoing.size() + incoming_requests.size());
-
-        /**
-	     * Send and receive actual synapse deletion requests
-	     */
-        auto mpi_requests_index = 0;
-
-        // Receive actual synapse deletion requests
-        for (auto& [rank, requests] : incoming_requests) {
-            auto* buffer = requests.get_requests();
-            const auto size_in_bytes = static_cast<int>(requests.get_requests_size_in_bytes());
-
-            MPIWrapper::async_receive(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
-
-            ++mpi_requests_index;
-        }
-
-        // Send actual synapse deletion requests
-        for (const auto& [rank, requests] : synapse_deletion_requests_outgoing) {
-            const auto* const buffer = requests.get_requests();
-            const auto size_in_bytes = static_cast<int>(requests.get_requests_size_in_bytes());
-
-            MPIWrapper::async_send(buffer, size_in_bytes, rank, mpi_requests[mpi_requests_index]);
-            ++mpi_requests_index;
-        }
-
-        // Wait for all sends and receives to complete
-        MPIWrapper::wait_all_tokens(mpi_requests);
-
-        return incoming_requests;
-    }
-};
-
-/**
- * Map of (MPI rank; SynapseDeletionRequests)
- * The MPI rank specifies the corresponding process
- */
-using MapSynapseDeletionRequests = std::map<int, SynapseDeletionRequests>;

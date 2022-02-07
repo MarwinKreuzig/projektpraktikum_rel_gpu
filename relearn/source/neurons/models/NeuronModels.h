@@ -55,18 +55,6 @@ public:
         }
 
         /**
-         * @brief Pushes the passed neuron id onto the vector, if it is not contained within the vector.
-         *      It is required that neuron_id - if not already present in the vector - is larger than every other already stored id
-         * @param neuron_id The local neuron id to be saved
-         */
-        void append_if_not_found_sorted(const size_t neuron_id) {
-            // Neuron id not included yet
-            if (const bool found = find(neuron_id); !found) {
-                neuron_ids.push_back(neuron_id);
-            }
-        }
-
-        /**
          * @brief Pushes the passed neuron id onto the vector.
          *      It is required that neuron_id is larger than every other already stored id
          * @param neuron_id The local neuron id to be saved
