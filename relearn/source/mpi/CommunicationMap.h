@@ -13,6 +13,7 @@
 #include "../util/RelearnException.h"
 
 #include <map>
+#include <span>
 #include <vector>
 
 /**
@@ -176,6 +177,14 @@ public:
         RelearnException::check(contains(mpi_rank), "CommunicationMap::get_data const: There are no requests for rank {}", mpi_rank);
 
         return requests.at(mpi_rank).data();
+    }
+
+    std::span<RequestType> get_span(const int mpi_rank) {
+        return std::span<RequestType>{ requests.at(mpi_rank) };
+    }
+
+    std::span<const RequestType> get_span(const int mpi_rank) const {
+        return std::span<const RequestType>{ requests.at(mpi_rank) };
     }
 
     /**

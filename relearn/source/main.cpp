@@ -181,7 +181,6 @@ int main(int argc, char** argv) {
 
     double base_background_activity{ NeuronModel::default_base_background_activity };
     auto* opt_base_background_activity = app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
-    app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are exited");
 
     double background_activity_mean{ NeuronModel::default_background_activity_mean };
     auto* opt_background_activity_mean = app.add_option("--background-activity-mean", background_activity_mean, "The mean background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");

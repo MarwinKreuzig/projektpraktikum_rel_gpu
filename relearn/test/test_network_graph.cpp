@@ -210,8 +210,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
         const auto target_id = get_random_neuron_id(number_neurons);
 
         ng.add_synapse(LocalSynapse(target_id, source_id, weight));
-        incoming_edges[target_id][source_id] += weight;
-        outgoing_edges[source_id][target_id] += weight;
+        incoming_edges[target_id.id()][source_id.id()] += weight;
+        outgoing_edges[source_id.id()][target_id.id()] += weight;
     }
 
     erase_empties(incoming_edges);
@@ -333,14 +333,14 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
 
         if (is_in_synapse) {
             ng.add_synapse(DistantInSynapse(my_neuron_id, other_id, weight));
-            in_edges[my_neuron_id][{ other_rank, other_neuron_id }] += weight;
+            in_edges[my_neuron_id.id()][{ other_rank, other_neuron_id }] += weight;
 
             if (in_edges[my_neuron_id.id()][{ other_rank, other_neuron_id }] == 0) {
                 in_edges[my_neuron_id.id()].erase({ other_rank, other_neuron_id });
             }
         } else {
             ng.add_synapse(DistantOutSynapse(other_id, my_neuron_id, weight));
-            out_edges[my_neuron_id][{ other_rank, other_neuron_id }] += weight;
+            out_edges[my_neuron_id.id()][{ other_rank, other_neuron_id }] += weight;
 
             if (out_edges[my_neuron_id.id()][{ other_rank, other_neuron_id }] == 0) {
                 out_edges[my_neuron_id.id()].erase({ other_rank, other_neuron_id });

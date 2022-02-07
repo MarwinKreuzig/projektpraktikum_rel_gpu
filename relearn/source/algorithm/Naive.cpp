@@ -146,7 +146,7 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t
 				* Append request for synapse creation to rank "target_rank"
 				* Note that "target_rank" could also be my own rank.
 				*/
-                const SynapseCreationRequest creation_request(target_id, neuron_id, dendrite_type_needed);
+                const SynapseCreationRequest creation_request(target_id, id, dendrite_type_needed);
                 synapse_creation_requests_outgoing.append(target_rank, creation_request);
             }
         } /* all vacant axons of a neuron */
@@ -217,7 +217,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
      * That is, the dendrites of the axon's neuron are not included in any super neuron considered.
      * However, this only works under the requirement that "acceptance_criterion" is <= 0.5.
      */
-    if ((!node_with_dendrite.is_parent()) && (initiator_neuron_id == node_with_dendrite.get_cell_neuron_id())) {
+    if ((!node_with_dendrite.is_parent()) && (src_neuron_id == node_with_dendrite.get_cell_neuron_id())) {
         return 0.0;
     }
 
@@ -251,7 +251,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
     std::vector<double> probabilities;
     std::for_each(vector.cbegin(), vector.cend(), [&](const OctreeNode<NaiveCell>* target_node) {
         RelearnException::check(target_node != nullptr, "Naive::update_leaf_nodes: target_node was nullptr");
-        const auto prob = calc_attractiveness_to_connect(initiator_neuron_id, axon_pos_xyz, *target_node, dendrite_type_needed);
+        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *target_node, dendrite_type_needed);
         probabilities.push_back(prob);
         sum += prob;
     });

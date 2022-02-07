@@ -39,9 +39,9 @@ using synapse_weight = int;
 
 } // namespace RelearnTypes
 
-using LocalSynapse = Synapse<RelearnTypes::neuron_id, RelearnTypes::neuron_id, RelearnTypes::synapse_weight>;
-using DistantInSynapse = Synapse<RelearnTypes::neuron_id, RankNeuronId, RelearnTypes::synapse_weight>;
-using DistantOutSynapse = Synapse<RankNeuronId, RelearnTypes::neuron_id, RelearnTypes::synapse_weight>;
+using LocalSynapse = Synapse<NeuronID, NeuronID, RelearnTypes::synapse_weight>;
+using DistantInSynapse = Synapse<NeuronID, RankNeuronId, RelearnTypes::synapse_weight>;
+using DistantOutSynapse = Synapse<RankNeuronId, NeuronID, RelearnTypes::synapse_weight>;
 using DistantSynapse = Synapse<RankNeuronId, RankNeuronId, RelearnTypes::synapse_weight>;
 
 using LocalSynapses = std::vector<LocalSynapse>;

@@ -268,6 +268,17 @@ void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
     std::vector<MPI_Status> statuses(size);
     const int errorcode = MPI_Waitall(size, requests.data(), statuses.data());
 
+    if (errorcode != 0) {
+        std::stringstream ss{};
+        ss << "I'm " << my_rank << ", i have " << size << " tokens and my errors are:\n";
+        for (const auto& status : statuses) {
+            ss << status.MPI_ERROR << ' ' << status.MPI_SOURCE << ' '  << status.MPI_TAG << '\n';
+        }
+
+        std::cout << ss.str();
+        fflush(stdout);
+    }
+
     RelearnException::check(errorcode == 0, "MPIWrapper::wait_all_tokens: Error code received: {}", errorcode);
 }
 

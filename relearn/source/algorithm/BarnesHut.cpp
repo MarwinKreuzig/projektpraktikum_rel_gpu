@@ -99,7 +99,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(
     const std::vector<SignalType>& axons_signal_types = axons->get_signal_types();
 
     // For my neurons
-#pragma omp parallel for default(none) shared(number_neurons, extra_infos, disable_flags, axons_cnts, axons_connected_cnts, axons_signal_types, synapse_creation_requests_outgoing_vec)
+#pragma omp parallel for default(none) shared(number_neurons, extra_infos, disable_flags, axons_cnts, axons_connected_cnts, axons_signal_types, synapse_creation_requests_outgoing)
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
@@ -134,7 +134,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(
 
             if (rank_neuron_id.has_value()) {
                 const auto& [target_rank, target_id] = rank_neuron_id.value();
-                const SynapseCreationRequest creation_request(target_id, neuron_id, dendrite_type_needed);
+                const SynapseCreationRequest creation_request(target_id, id, dendrite_type_needed);
 
                 /*
 				 * Append request for synapse creation to rank "target_rank"
@@ -228,7 +228,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
      * That is, the dendrites of the axon's neuron are not included in any super neuron considered.
      * However, this only works under the requirement that "acceptance_criterion" is <= 0.5.
      */
-    if ((!node_with_dendrite.is_parent()) && (initiator_neuron_id == node_with_dendrite.get_cell_neuron_id())) {
+    if ((!node_with_dendrite.is_parent()) && (src_neuron_id == node_with_dendrite.get_cell_neuron_id())) {
         return 0.0;
     }
 

@@ -11,10 +11,12 @@
 #include "gtest/gtest.h"
 
 #include "../source/algorithm/BarnesHutCell.h"
+#include "../source/algorithm/FastMultipoleMethodsCell.h"
 #include "../source/io/LogFiles.h"
 #include "../source/mpi/MPIWrapper.h"
 #include "../source/neurons/ElementType.h"
 #include "../source/neurons/SignalType.h"
+#include "../source/neurons/models/SynapticElements.h"
 #include "../source/structure/OctreeNode.h"
 #include "../source/util/MemoryHolder.h"
 #include "../source/util/RelearnException.h"
@@ -233,14 +235,16 @@ protected:
         std::vector<unsigned int> connected_elements(number_elements);
         std::vector<SignalType> signal_types(number_elements);
 
-        for (auto i = 0; i < number_elements; i++) {
+        for (auto neuron_id : NeuronID::range(number_elements)) { 
             const auto number_grown_elements = get_random_synaptic_element_count();
             const auto number_connected_elements = get_random_synaptic_element_connected_count(static_cast<unsigned int>(number_grown_elements));
             const auto signal_type = get_random_signal_type();
 
-            se.update_grown_elements(i, number_grown_elements);
-            se.update_connected_elements(i, number_connected_elements);
-            se.set_signal_type(i, signal_type);
+            se.update_grown_elements(neuron_id, number_grown_elements);
+            se.update_connected_elements(neuron_id, number_connected_elements);
+            se.set_signal_type(neuron_id, signal_type);
+
+            const auto i = neuron_id.id();
 
             grown_elements[i] = number_grown_elements;
             connected_elements[i] = number_connected_elements;
@@ -467,15 +471,8 @@ protected:
 template <typename T>
 class TaggedIDTest : public RelearnTest {
 protected:
-    template <typename U>
-    [[nodiscard]] U get_random_integer(const std::integral auto min, const std::integral auto max) {
-        std::uniform_int_distribution<U> uid(min, max);
-        return uid(mt);
-    }
-
-    [[nodiscard]] bool get_random_bool() {
-        std::uniform_int_distribution<std::uint8_t> uid(0, 1);
-        return 0U == uid(mt);
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
     }
 
     static_assert(sizeof(typename TaggedID<T>::value_type) == sizeof(T));

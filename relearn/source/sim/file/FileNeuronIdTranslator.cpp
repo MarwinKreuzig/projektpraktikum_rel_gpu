@@ -32,7 +32,7 @@ bool FileNeuronIdTranslator::is_neuron_local(NeuronID global_id) const {
     return false;
 }
 
-NeuronID NeuronIdTranslator::get_local_id(NeuronID global_id) const {
+NeuronID FileNeuronIdTranslator::get_local_id(NeuronID global_id) const {
     typename NeuronID::value_type id{ 0 };
 
     for (const auto& ids : global_neuron_ids) {
@@ -50,7 +50,7 @@ NeuronID NeuronIdTranslator::get_local_id(NeuronID global_id) const {
     return NeuronID{};
 }
 
-NeuronID NeuronIdTranslator::get_global_id(NeuronID local_id) const {
+NeuronID FileNeuronIdTranslator::get_global_id(NeuronID local_id) const {
     size_t counter = 0;
     for (auto i = 0; i < partition->get_number_local_subdomains(); i++) {
         const size_t old_counter = counter;
@@ -74,7 +74,6 @@ std::map<NeuronID, RankNeuronId> FileNeuronIdTranslator::translate_global_ids(co
     const int num_ranks = MPIWrapper::get_num_ranks();
 
     std::vector<size_t> num_foreign_ids_from_ranks_send(num_ranks, 0);
-    std::vector<size_t> num_foreign_ids_from_ranks(num_ranks, 0);
 
     std::vector<std::vector<NeuronID>> global_ids_to_send(num_ranks);
     std::vector<std::vector<NeuronID>> global_ids_to_receive(num_ranks);
@@ -93,7 +92,7 @@ std::map<NeuronID, RankNeuronId> FileNeuronIdTranslator::translate_global_ids(co
         num_foreign_ids_from_ranks_send[rank] = global_ids_to_send[rank].size();
     }
 
-    std::vector<neuron_id> num_foreign_ids_from_ranks = MPIWrapper::all_to_all(num_foreign_ids_from_ranks_send);
+    std::vector<size_t> num_foreign_ids_from_ranks = MPIWrapper::all_to_all(num_foreign_ids_from_ranks_send);
 
     for (auto rank : MPIWrapper::get_ranks()) {
         if (mpi_rank == rank) {

@@ -1,5 +1,4 @@
 #include "RelearnTest.hpp"
-#include <bits/ranges_algo.h>
 #include <cstdint>
 #include <functional>
 #include <gtest/gtest-typed-test.h>
@@ -7,7 +6,7 @@
 #include <spdlog/fmt/bundled/core.h>
 #include <type_traits>
 
-using test_types = ::testing::Types<std::uint8_t, std::uint16_t, std::int16_t, typename NeuronID::value_type>;
+using test_types = ::testing::Types<std::uint16_t, std::int16_t, typename NeuronID::value_type>;
 TYPED_TEST_SUITE(TaggedIDTest, test_types);
 
 template <typename T>
@@ -23,7 +22,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorDefault) { // NOLINT
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDConstructorOnlyID) { // NOLINT
-    const auto id_val = get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max);
+    const auto id_val = this->get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max);
 
     const TaggedID<TypeParam> id{ id_val };
 
@@ -36,9 +35,9 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorOnlyID) { // NOLINT
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDConstructorFlagsAndID) { // NOLINT
-    const auto is_global = TaggedIDTest<TypeParam>::get_random_bool();
-    const auto is_virtual = TaggedIDTest<TypeParam>::get_random_bool();
-    const auto id_val = get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max);
+    const bool is_global = TaggedIDTest<TypeParam>::get_random_bool();
+    const bool is_virtual = TaggedIDTest<TypeParam>::get_random_bool();
+    const TypeParam id_val = this->get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max);
 
     const TaggedID<TypeParam> id{ is_global, is_virtual, id_val };
 
@@ -69,7 +68,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDVirtual) { // NOLINT
 
 TYPED_TEST(TaggedIDTest, testTaggedIDAssignToUninitializeForInitialization) { // NOLINT
     auto id = TaggedID<TypeParam>::uninitialized_id();
-    const auto id_val = get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max);
+    const TypeParam id_val = this->get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max);
     id = id_val;
 
     ASSERT_EQ(id.id(), id_val);
@@ -85,12 +84,12 @@ TYPED_TEST(TaggedIDTest, testTaggedIDArithmetic) { // NOLINT
     constexpr static auto max = TaggedID<TypeParam>::limits::max;
 
     const auto get_rand = [this](const auto min2, const auto max2) {
-        const auto rand = get_random_integer<TypeParam>(min2, max2);
+        const auto rand = this->get_random_integer<TypeParam>(min2, max2);
         return rand;
     };
 
-    const auto initial_val = get_rand(min, max);
-    const auto id_val = initial_val;
+    const TypeParam initial_val = get_rand(min, max);
+    const TypeParam id_val = initial_val;
 
     const TaggedID<TypeParam> id{ id_val };
 
@@ -139,7 +138,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDComparisons1) { // NOLINT
     constexpr static auto min = TaggedID<TypeParam>::limits::min;
     constexpr static auto max = TaggedID<TypeParam>::limits::max;
 
-    const auto get_random_id = [this]() { return TaggedID<TypeParam>{ get_random_integer<TypeParam>(min, max) }; };
+    const auto get_random_id = [this]() { return TaggedID<TypeParam>{ this->get_random_integer<TypeParam>(min, max) }; };
 
     const auto id1 = get_random_id();
     const auto id2 = get_random_id();
@@ -156,7 +155,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDComparisons2) { // NOLINT
         auto res = TaggedID<TypeParam>{
             this->get_random_bool(),
             this->get_random_bool(),
-            get_random_integer<TypeParam>(min, max)
+            this->get_random_integer<TypeParam>(min, max)
         };
 
         // res.is_initialized() = this->get_random_bool();

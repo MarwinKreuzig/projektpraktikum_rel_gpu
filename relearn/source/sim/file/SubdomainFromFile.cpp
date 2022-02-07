@@ -214,7 +214,7 @@ void SubdomainFromFile::post_initialization() {
     auto casted_ptr = std::static_pointer_cast<FileNeuronIdTranslator>(neuron_id_translator);
 
     const auto total_number_subdomains = partition->get_number_local_subdomains();
-    std::vector<std::vector<size_t>> global_ids(total_number_subdomains);
+    std::vector<std::vector<NeuronID>> global_ids(total_number_subdomains);
 
     for (auto i = 0; i < total_number_subdomains; i++) {
         const auto& index_1d = partition->get_1d_index_of_subdomain(i);

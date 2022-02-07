@@ -99,7 +99,7 @@ public:
      * @return constexpr auto range of TaggedIDs
      */
     [[nodiscard]] static constexpr auto range(size_t size) {
-        return std::views::iota(0U, size)
+        return std::views::iota(size_t{ 0 }, size)
             | std::views::transform([](const size_t id) { return TaggedID{ id }; });
     }
 
@@ -157,9 +157,9 @@ public:
      * @param id the new id
      * @return TaggedID& *this
      */
-    constexpr TaggedID& operator=(const std::integral auto& id) noexcept {
+    constexpr TaggedID& operator=(const value_type& id) noexcept {
         is_initialized_ = true;
-        this->id_ = static_cast<value_type>(id);
+        this->id_ = id;
         return *this;
     }
 
@@ -250,7 +250,7 @@ public:
      * @param offset offset to add to the id
      * @return constexpr TaggedID the same ID as this, but offset by offset
      */
-    [[nodiscard]] constexpr TaggedID operator+(const std::integral auto& offset) const {
+    [[nodiscard]] constexpr TaggedID<T> operator+(const size_t& offset) const {
         RelearnException::check(is_initialized(), "TaggedID is not initialized");
         auto res = *this;
         res.id_ += offset;
@@ -264,7 +264,7 @@ public:
      * @param offset offset to subtract to the id
      * @return constexpr TaggedID the same ID as this, but negatively offset by offset
      */
-    [[nodiscard]] constexpr TaggedID operator-(const std::integral auto& offset) const noexcept {
+    [[nodiscard]] constexpr TaggedID<T> operator-(const size_t& offset) const noexcept {
         RelearnException::check(is_initialized(), "TaggedID is not initialized");
         auto res = *this;
         res.id_ -= offset;

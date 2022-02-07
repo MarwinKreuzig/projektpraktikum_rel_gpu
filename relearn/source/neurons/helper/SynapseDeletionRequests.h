@@ -24,8 +24,8 @@
  *      (initiator_neuron_id, initiator_element_type, signal_type) <---> (affected_neuron_id, !initiator_element_type, signal_type)
  */
 class SynapseDeletionRequest {
-    RelearnTypes::neuron_id initiator_neuron_id{};
-    RelearnTypes::neuron_id affected_neuron_id{};
+    NeuronID initiator_neuron_id{};
+    NeuronID affected_neuron_id{};
     ElementType initiator_element_type{ ElementType::AXON };
     SignalType signal_type{ SignalType::EXCITATORY };
 
@@ -43,13 +43,13 @@ public:
      * @param signal_type The signal type of the synapse
      * @exception Throws a RelearnException if any neuron id is invalid
      */
-    SynapseDeletionRequest(RelearnTypes::neuron_id initiator_neuron, RelearnTypes::neuron_id affected_neuron, const ElementType element_type, const SignalType signal_type)
+    SynapseDeletionRequest(NeuronID initiator_neuron, NeuronID affected_neuron, const ElementType element_type, const SignalType signal_type)
         : initiator_neuron_id(initiator_neuron)
         , affected_neuron_id(affected_neuron)
         , initiator_element_type(element_type)
         , signal_type(signal_type) {
-        RelearnException::check(initiator_neuron < Constants::uninitialized, "SynapseDeletionRequest::SynapseDeletionRequest(): initiator_neuron neuron id was too large");
-        RelearnException::check(affected_neuron < Constants::uninitialized, "SynapseDeletionRequest::SynapseDeletionRequest(): affected_neuron neuron id was too large");
+        RelearnException::check(initiator_neuron.id() < Constants::uninitialized, "SynapseDeletionRequest::SynapseDeletionRequest(): initiator_neuron neuron id was too large");
+        RelearnException::check(affected_neuron.id() < Constants::uninitialized, "SynapseDeletionRequest::SynapseDeletionRequest(): affected_neuron neuron id was too large");
     }
 
     SynapseDeletionRequest(const SynapseDeletionRequest& other) = default;
@@ -64,7 +64,7 @@ public:
      * @brief Returns the initiator neuron id, i.e., the neuron which started the deletion
      * @return The source neuron id
      */
-    [[nodiscard]] RelearnTypes::neuron_id get_initiator_neuron_id() const noexcept {
+    [[nodiscard]] NeuronID get_initiator_neuron_id() const noexcept {
         return initiator_neuron_id;
     }
 
@@ -72,7 +72,7 @@ public:
      * @brief Returns the affected neuron id, i.e., the neuron that must be notified
      * @return The target neuron id
      */
-    [[nodiscard]] RelearnTypes::neuron_id get_affected_neuron_id() const noexcept {
+    [[nodiscard]] NeuronID get_affected_neuron_id() const noexcept {
         return affected_neuron_id;
     }
 
@@ -137,12 +137,12 @@ struct tuple_size<typename ::SynapseDeletionRequest> {
 
 template <>
 struct tuple_element<0, typename ::SynapseDeletionRequest> {
-    using type = RelearnTypes::neuron_id;
+    using type = NeuronID;
 };
 
 template <>
 struct tuple_element<1, typename ::SynapseDeletionRequest> {
-    using type = RelearnTypes::neuron_id;
+    using type = NeuronID;
 };
 
 template <>

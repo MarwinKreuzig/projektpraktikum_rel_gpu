@@ -80,7 +80,4 @@ public:
      * @return A tuple of (local, in, out) synapes
      */
     std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> load_synapses();
-
-    virtual ~SynapseLoader()
-        = default;
 };

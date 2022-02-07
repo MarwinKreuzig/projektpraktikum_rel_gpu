@@ -20,8 +20,8 @@
  * One SynapseCreationRequest always consists of a target neuron, a source neuron, and a signal type
  */
 class SynapseCreationRequest {
-    RelearnTypes::neuron_id target{};
-    RelearnTypes::neuron_id source{};
+    NeuronID target{};
+    NeuronID source{};
     SignalType signal_type{};
 
 public:
@@ -33,7 +33,7 @@ public:
      * @param source The neuron source id of the request
      * @param signal_type The signal type
      */
-    SynapseCreationRequest(RelearnTypes::neuron_id target, RelearnTypes::neuron_id source, SignalType signal_type)
+    SynapseCreationRequest(NeuronID target, NeuronID source, SignalType signal_type)
         : target(target)
         , source(source)
         , signal_type(signal_type) { }
@@ -42,7 +42,7 @@ public:
      * @brief Returns the target of the request
      * @return The target
      */
-    [[nodiscard]] RelearnTypes::neuron_id get_target() const noexcept {
+    [[nodiscard]] NeuronID get_target() const noexcept {
         return target;
     }
 
@@ -50,7 +50,7 @@ public:
      * @brief Returns the source of the request
      * @return The source
      */
-    [[nodiscard]] RelearnTypes::neuron_id get_source() const noexcept {
+    [[nodiscard]] NeuronID get_source() const noexcept {
         return source;
     }
 
@@ -101,12 +101,12 @@ struct tuple_size<typename ::SynapseCreationRequest> {
 
 template <>
 struct tuple_element<0, typename ::SynapseCreationRequest> {
-    using type = RelearnTypes::neuron_id;
+    using type = NeuronID;
 };
 
 template <>
 struct tuple_element<1, typename ::SynapseCreationRequest> {
-    using type = RelearnTypes::neuron_id;
+    using type = NeuronID;
 };
 
 template <>

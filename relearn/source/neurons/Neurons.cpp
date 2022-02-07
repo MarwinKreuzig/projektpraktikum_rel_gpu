@@ -396,10 +396,10 @@ CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(
 
         const auto id = NeuronID{ neuron_id };
         const auto signal_type = synaptic_elements.get_signal_type(id);
-        const auto affected_indices = delete_synapses_find_synapses_on_neuron(id, element_type, signal_type, num_synapses_to_delete, pending_deletions, other_pending_deletions);
+        const auto affected_neuron_ids = delete_synapses_find_synapses_on_neuron(id, element_type, signal_type, num_synapses_to_delete);
 
         for (const auto& [rank, other_neuron_id] : affected_neuron_ids) {
-            SynapseDeletionRequest psd(neuron_id, other_neuron_id, element_type, signal_type);
+            SynapseDeletionRequest psd(id, other_neuron_id, element_type, signal_type);
             deletion_requests.append(rank, psd);
 
             if (my_rank == rank) {
@@ -408,9 +408,9 @@ CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(
 
             const auto weight = (SignalType::EXCITATORY == signal_type) ? -1 : 1;
             if (ElementType::AXON == element_type) {
-                network_graph->add_synapse(DistantOutSynapse(RankNeuronId(rank, other_neuron_id), neuron_id, weight));
+                network_graph->add_synapse(DistantOutSynapse(RankNeuronId(rank, other_neuron_id), id, weight));
             } else {
-                network_graph->add_synapse(DistantInSynapse(neuron_id, RankNeuronId(rank, other_neuron_id), weight));
+                network_graph->add_synapse(DistantInSynapse(id, RankNeuronId(rank, other_neuron_id), weight));
             }
         }
     }
@@ -419,7 +419,7 @@ CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(
 }
 
 std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
-    size_t neuron_id,
+    NeuronID neuron_id,
     ElementType element_type,
     SignalType signal_type,
     unsigned int num_synapses_to_delete) {
@@ -596,10 +596,10 @@ void Neurons::debug_check_counts() {
         RelearnException::check(vacant_inhibitory_dendrites >= 0.0, "Neurons::debug_check_counts: {} has a weird number of vacant inhibitory dendrites: {}", neuron_id, vacant_inhibitory_dendrites);
     }
 
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        const double connected_axons_neuron = connected_axons[neuron_id];
-        const double connected_excitatory_dendrites_neuron = connected_excitatory_dendrites[neuron_id];
-        const double connected_inhibitory_dendrites_neuron = connected_inhibitory_dendrites[neuron_id];
+    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+        const double connected_axons_neuron = connected_axons[neuron_id.id()];
+        const double connected_excitatory_dendrites_neuron = connected_excitatory_dendrites[neuron_id.id()];
+        const double connected_inhibitory_dendrites_neuron = connected_inhibitory_dendrites[neuron_id.id()];
 
         const auto number_connected_axons = static_cast<size_t>(connected_axons_neuron);
         const auto number_connected_excitatory_dendrites = static_cast<size_t>(connected_excitatory_dendrites_neuron);
@@ -964,7 +964,7 @@ void Neurons::print_positions_to_log_file() {
 
         LogFiles::write_to_file(LogFiles::EventType::Positions, false,
             "{1:<} {2:<.{0}} {3:<.{0}} {4:<.{0}} {5:<} {6:<}",
-            Constants::print_precision, (global_id + 1), x, y, z, area_names[neuron_id.id()], signal_type_name);
+            Constants::print_precision, (global_id.id() + 1), x, y, z, area_names[neuron_id.id()], signal_type_name);
     }
 }
 

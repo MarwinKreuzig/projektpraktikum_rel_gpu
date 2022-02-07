@@ -63,7 +63,7 @@ void NeuronModel::update_electrical_activity_update_activity(const std::vector<U
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
 }
 
-void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const CommunicationMap<size_t>& firing_neuron_ids_incoming, const std::vector<UpdateStatus>& disable_flags) {
+void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const CommunicationMap<NeuronID>& firing_neuron_ids_incoming, const std::vector<UpdateStatus>& disable_flags) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
 #pragma omp parallel for shared(firing_neuron_ids_incoming, network_graph, disable_flags) default(none)
@@ -134,11 +134,11 @@ void NeuronModel::update_electrical_activity_calculate_background(const std::vec
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
 }
 
-CommunicationMap<size_t> NeuronModel::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
+CommunicationMap<NeuronID> NeuronModel::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
     const auto mpi_ranks = MPIWrapper::get_num_ranks();
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    CommunicationMap<size_t> spiking_ids(mpi_ranks);
+    CommunicationMap<NeuronID> spiking_ids(mpi_ranks);
 
     // If there is no other rank, then we can just skip
     if (mpi_ranks == 1) {
@@ -174,7 +174,7 @@ CommunicationMap<size_t> NeuronModel::update_electrical_activity_prepare_sending
 
             // Function expects to insert neuron ids in sorted order
             // Append if it is not already in
-            spiking_ids.append(target_rank, neuron_id);
+            spiking_ids.append(target_rank, NeuronID(neuron_id));
         }
     } // For my neurons
     Timers::stop_and_add(TimerRegion::PREPARE_SENDING_SPIKES);

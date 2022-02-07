@@ -389,9 +389,10 @@ public:
             }
 
             auto* buffer = incoming_requests.get_data(rank_id);
-            const auto size_in_bytes = incoming_requests.get_size_in_bytes(rank_id);
+            const auto size = incoming_requests.size(rank_id);
+            //const auto size_in_bytes = incoming_requests.get_size_in_bytes(rank_id);
 
-            MPIWrapper::async_receive(buffer, size_in_bytes, rank_id, mpi_requests[mpi_requests_index]);
+            MPIWrapper::async_receive(incoming_requests.get_span(rank_id), rank_id, mpi_requests[mpi_requests_index]);
 
             mpi_requests_index++;
         }
@@ -402,9 +403,10 @@ public:
             }
 
             const auto* buffer = outgoing_requests.get_data(rank_id);
-            const auto size_in_bytes = outgoing_requests.get_size_in_bytes(rank_id);
+            const auto size = outgoing_requests.size(rank_id);
+            // const auto size_in_bytes = outgoing_requests.get_size_in_bytes(rank_id);
 
-            MPIWrapper::async_send(buffer, size_in_bytes, rank_id, mpi_requests[mpi_requests_index]);
+            MPIWrapper::async_send(outgoing_requests.get_span(rank_id), rank_id, mpi_requests[mpi_requests_index]);
 
             mpi_requests_index++;
         }

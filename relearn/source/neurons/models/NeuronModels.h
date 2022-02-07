@@ -342,11 +342,11 @@ protected:
     }
 
 private:
-    [[nodiscard]] CommunicationMap<size_t> update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags);
+    [[nodiscard]] CommunicationMap<NeuronID> update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags);
 
     void update_electrical_activity_update_activity(const std::vector<UpdateStatus>& disable_flags);
 
-    void update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const CommunicationMap<size_t>& firing_neuron_ids_incoming, const std::vector<UpdateStatus>& disable_flags);
+    void update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const CommunicationMap<NeuronID>& firing_neuron_ids_incoming, const std::vector<UpdateStatus>& disable_flags);
 
     void update_electrical_activity_calculate_background(const std::vector<UpdateStatus>& disable_flags);
 

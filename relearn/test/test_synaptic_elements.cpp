@@ -608,7 +608,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsSingleUpdate) {
     ASSERT_EQ(signal_types.size(), number_neurons) << ss.str();
 
     for (auto neuron_id : NeuronID::range(number_neurons)) {
-        const auto& a1 = golden_cnts[neuron_id.id()];
+        const auto& a1 = golden_counts[neuron_id.id()];
         const auto& a2 = synaptic_elements.get_grown_elements(neuron_id);
         const auto& a3 = grown_elements[neuron_id.id()];
 
@@ -622,7 +622,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsSingleUpdate) {
         const auto& b_is_correct = b1 == b2 && b1 == b3;
         ASSERT_TRUE(b_is_correct) << ss.str() << neuron_id;
 
-        const auto& c1 = golden_delta_counts[neuron_id.id()];
+        const auto& c1 = 0.0;
         const auto& c2 = synaptic_elements.get_delta(neuron_id);
         const auto& c3 = delta_grown_elements[neuron_id.id()];
 
@@ -691,9 +691,9 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
             const auto& connected_grown_element = get_random_synaptic_element_connected_count(static_cast<unsigned int>(grown_element));
             const auto& signal_type = get_random_signal_type();
 
-            golden_counts[neuron_id] += grown_element;
-            golden_connected_counts[neuron_id] += connected_grown_element;
-            golden_signal_types[neuron_id] = signal_type;
+            golden_counts[neuron_id.id()] += grown_element;
+            golden_connected_counts[neuron_id.id()] += connected_grown_element;
+            golden_signal_types[neuron_id.id()] = signal_type;
 
             synaptic_elements.update_grown_elements(neuron_id, grown_element);
             synaptic_elements.update_connected_elements(neuron_id, connected_grown_element);
@@ -761,7 +761,6 @@ TEST_F(SynapticElementsTest, testSynapticElementsDisable) {
         } else {
             ASSERT_EQ(synaptic_elements.get_connected_elements(neuron_id), golden_connected_counts[neuron_id.id()]) << ss.str() << neuron_id << " enabled";
             ASSERT_EQ(synaptic_elements.get_grown_elements(neuron_id), golden_counts[neuron_id.id()]) << ss.str() << neuron_id << " enabled";
-            ASSERT_EQ(synaptic_elements.get_delta(neuron_id), golden_delta_counts[neuron_id.id()]) << ss.str() << neuron_id << " enabled";
         }
     }
 }
@@ -822,7 +821,6 @@ TEST_F(SynapticElementsTest, testSynapticElementsDelete) {
         ASSERT_EQ(synaptic_elements.get_signal_type(neuron_id), golden_signal_types[neuron_id.id()]) << ss.str() << neuron_id;
         ASSERT_EQ(synaptic_elements.get_connected_elements(neuron_id), new_connected_count) << ss.str() << neuron_id;
         ASSERT_EQ(synaptic_elements.get_grown_elements(neuron_id), golden_counts[neuron_id.id()]) << ss.str() << neuron_id;
-        ASSERT_EQ(synaptic_elements.get_delta(neuron_id), golden_delta_counts[neuron_id.id()]) << ss.str() << neuron_id;
     }
 }
 

@@ -63,12 +63,12 @@ Algorithm::create_synapses_process_requests(size_t number_neurons, const Communi
         // All requests of a rank
         for (auto request_index = 0; request_index < num_requests; request_index++) {
             const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = requests[request_index];
-            RelearnException::check(target_neuron_id < number_neurons, "Neurons::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
+            RelearnException::check(target_neuron_id.id() < number_neurons, "Neurons::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
 
             const auto& dendrites = (SignalType::INHIBITORY == dendrite_type_needed) ? inhibitory_dendrites : excitatory_dendrites;
 
             const auto weight = (SignalType::INHIBITORY == dendrite_type_needed) ? -1 : 1;
-            const auto number_free_elements = dendrites->get_free_elements(target_neuron_id);
+            const auto number_free_elements = dendrites->get_free_elements(NeuronID{ target_neuron_id });
 
             if (number_free_elements == 0) {
                 // Other axons were faster and came first
@@ -77,7 +77,7 @@ Algorithm::create_synapses_process_requests(size_t number_neurons, const Communi
             }
 
             // Increment number of connected dendrites
-            dendrites->update_connected_elements(target_neuron_id, 1);
+            dendrites->update_connected_elements(NeuronID{ target_neuron_id }, 1);
 
             // Set response to "connected" (success)
             responses.append(source_rank, SynapseCreationResponse::succeeded);
@@ -87,7 +87,7 @@ Algorithm::create_synapses_process_requests(size_t number_neurons, const Communi
                 continue;
             }
 
-            distant_synapses.emplace_back(target_neuron_id, RankNeuronId{ source_rank, source_neuron_id }, weight);
+            distant_synapses.emplace_back(target_neuron_id, RankNeuronId{ source_rank, NeuronID{ source_neuron_id } }, weight);
         }
     }
 
@@ -112,7 +112,7 @@ DistantOutSynapses Algorithm::create_synapses_process_responses(const Communicat
             const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = creation_requests.get_request(target_rank, request_index);
 
             // Increment number of connected axons
-            axons->update_connected_elements(source_neuron_id, 1);
+            axons->update_connected_elements(NeuronID{ source_neuron_id }, 1);
 
             if (target_rank == my_rank) {
                 // I have already created the synapse in the network if the response comes from myself
@@ -121,7 +121,7 @@ DistantOutSynapses Algorithm::create_synapses_process_responses(const Communicat
 
             // Mark this synapse for later use (must be added to the network graph)
             const auto weight = (SignalType::INHIBITORY == dendrite_type_needed) ? -1 : +1;
-            synapses.emplace_back(RankNeuronId{ target_rank, target_neuron_id }, source_neuron_id, weight);
+            synapses.emplace_back(RankNeuronId{ target_rank, NeuronID{ target_neuron_id } }, source_neuron_id, weight);
         }
     }
 

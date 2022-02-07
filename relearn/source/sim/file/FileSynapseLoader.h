@@ -24,7 +24,7 @@ class FileSynapseLoader : public SynapseLoader {
     std::optional<std::filesystem::path> optional_path_to_file{};
 
 protected:
-    std::pair<synapses_tuple_type, std::vector<neuron_id>> internal_load_synapses() override;
+    std::pair<synapses_tuple_type, std::vector<NeuronID>> internal_load_synapses() override;
 
 public:
     /**

@@ -378,7 +378,7 @@ private:
 
     [[nodiscard]] CommunicationMap<SynapseDeletionRequest> delete_synapses_find_synapses(const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete);
 
-    [[nodiscard]] std::vector<RankNeuronId> delete_synapses_find_synapses_on_neuron(size_t neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete);
+    [[nodiscard]] std::vector<RankNeuronId> delete_synapses_find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete);
 
     [[nodiscard]] size_t delete_synapses_commit_deletions(const CommunicationMap<SynapseDeletionRequest>& list);
 

@@ -260,7 +260,8 @@ public:
 
             // Set start and end of local neuron ids
             // 0-th subdomain starts with neuron id 0
-            current_subdomain.neuron_local_id_start = (subdomain_index == 0) ? NeuronID{ 0 } : (local_subdomains[subdomain_index - 1].neuron_local_id_end + 1);
+            current_subdomain.neuron_local_id_start = (subdomain_index == 0) ? NeuronID(0)
+                : (local_subdomains[subdomain_index - 1].neuron_local_id_end + 1);
             current_subdomain.neuron_local_id_end = current_subdomain.neuron_local_id_start + current_subdomain.number_neurons - 1;
         }
     }
