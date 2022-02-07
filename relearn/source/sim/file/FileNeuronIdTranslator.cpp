@@ -74,7 +74,6 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
     const int num_ranks = MPIWrapper::get_num_ranks();
 
     std::vector<neuron_id> num_foreign_ids_from_ranks_send(num_ranks, 0);
-    std::vector<neuron_id> num_foreign_ids_from_ranks(num_ranks, 0);
 
     std::vector<std::vector<neuron_id>> global_ids_to_send(num_ranks);
     std::vector<std::vector<neuron_id>> global_ids_to_receive(num_ranks);
@@ -93,7 +92,7 @@ std::map<NeuronIdTranslator::neuron_id, RankNeuronId> FileNeuronIdTranslator::tr
         num_foreign_ids_from_ranks_send[rank] = global_ids_to_send[rank].size();
     }
 
-    MPIWrapper::all_to_all(num_foreign_ids_from_ranks_send, num_foreign_ids_from_ranks);
+    std::vector<neuron_id> num_foreign_ids_from_ranks = MPIWrapper::all_to_all(num_foreign_ids_from_ranks_send);
 
     for (auto rank = 0; rank < num_ranks; rank++) {
         if (mpi_rank == rank) {

@@ -44,7 +44,7 @@ Algorithm::create_synapses_process_requests(size_t number_neurons, const Communi
     const auto my_rank = MPIWrapper::get_my_rank();
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
-    CommunicationMap<SynapseCreationResponse> responses(my_rank, number_ranks);
+    CommunicationMap<SynapseCreationResponse> responses(number_ranks);
 
     if (synapse_creation_requests_incoming.empty()) {
         return { responses, {} };

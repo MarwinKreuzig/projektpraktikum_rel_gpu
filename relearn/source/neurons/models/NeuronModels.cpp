@@ -134,7 +134,7 @@ CommunicationMap<size_t> NeuronModel::update_electrical_activity_prepare_sending
     const auto mpi_ranks = MPIWrapper::get_num_ranks();
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    CommunicationMap<size_t> spiking_ids(my_rank, mpi_ranks);
+    CommunicationMap<size_t> spiking_ids(mpi_ranks);
 
     // If there is no other rank, then we can just skip
     if (mpi_ranks == 1) {

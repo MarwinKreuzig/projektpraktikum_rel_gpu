@@ -367,7 +367,7 @@ CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(
     const auto number_ranks = MPIWrapper::get_num_ranks();
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    CommunicationMap<SynapseDeletionRequest> deletion_requests(my_rank, number_ranks);
+    CommunicationMap<SynapseDeletionRequest> deletion_requests(number_ranks);
 
     if (sum_to_delete == 0) {
         return deletion_requests;
@@ -460,7 +460,7 @@ std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
     std::vector<unsigned int> drawn_indices{};
     std::uniform_int_distribution<unsigned int> uid{};
 
-    for (auto i = 0; i < num_synapses_to_delete; i++) {
+    for (unsigned int i = 0; i < num_synapses_to_delete; i++) {
         auto random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::Neurons, 0, num_synapses_to_delete - 1);
         while (std::find(drawn_indices.begin(), drawn_indices.end(), random_number) != drawn_indices.end()) {
             random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::Neurons, 0, num_synapses_to_delete - 1);

@@ -174,15 +174,14 @@ void MPIWrapper::reduce_int64(const int64_t* src, int64_t* dst, const size_t siz
     delete mpi_reduce_function;
 }
 
-void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst) {
+std::vector<size_t> MPIWrapper::all_to_all(const std::vector<size_t>& src) {
     const size_t count_src = src.size();
-    const size_t count_dst = dst.size();
-
-    RelearnException::check(count_src == count_dst, "MPIWrapper::all_to_all: src and dst are not of the same size");
+    std::vector<size_t> dst(count_src, 0);
 
     // NOLINTNEXTLINE
     const int errorcode = MPI_Alltoall(src.data(), sizeof(size_t), MPI_CHAR, dst.data(), sizeof(size_t), MPI_CHAR, MPI_COMM_WORLD);
     RelearnException::check(errorcode == 0, "MPIWrapper::all_to_all: Error code received: {}", errorcode);
+    return dst;
 }
 
 void MPIWrapper::async_s(const void* buffer, const int count, const int rank, AsyncToken& token) {

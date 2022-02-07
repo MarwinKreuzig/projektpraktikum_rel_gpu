@@ -99,8 +99,7 @@ public:
 
     [[nodiscard]] static uint64_t all_reduce_uint64(uint64_t value, ReduceFunction function);
 
-    // NOLINTNEXTLINE
-    static void all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst);
+    [[nodiscard]] static std::vector<size_t> all_to_all(const std::vector<size_t>& src);
 
     template <typename T>
     // NOLINTNEXTLINE
@@ -122,6 +121,11 @@ public:
         reduce(src.data(), dst.data(), src.size() * sizeof(T), function, root_rank);
 
         return dst;
+    }
+
+    template <typename RequestType>
+    [[nodiscard]] static CommunicationMap<RequestType> exchange_requests(const CommunicationMap<RequestType>& outgoing_requests) {
+        return outgoing_requests;
     }
 
     template <typename T>

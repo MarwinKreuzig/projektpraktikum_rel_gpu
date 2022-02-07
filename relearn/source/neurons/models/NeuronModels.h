@@ -16,7 +16,6 @@
 #include "ModelParameter.h"
 
 #include <algorithm>
-#include <map>
 #include <memory>
 #include <vector>
 
@@ -345,7 +344,7 @@ private:
 
     void update_electrical_activity_update_activity(const std::vector<UpdateStatus>& disable_flags);
 
-    void update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const const CommunicationMap<size_t>& firing_neuron_ids_incoming, const std::vector<UpdateStatus>& disable_flags);
+    void update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const CommunicationMap<size_t>& firing_neuron_ids_incoming, const std::vector<UpdateStatus>& disable_flags);
 
     void update_electrical_activity_calculate_background(const std::vector<UpdateStatus>& disable_flags);
 

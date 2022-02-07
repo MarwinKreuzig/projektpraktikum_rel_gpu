@@ -234,11 +234,9 @@ public:
     /**
      * @brief Exchanges one size_t between every pair for MPI ranks
      * @param src The values that shall be sent to the other MPI ranks. MPI rank i receives src[i]
-     * @param dst The values that were transmitted by the other MPI ranks. MPI rank i sent dst[i]
-     * @exception Throws a RelearnException if an MPI error occurs or if src.size() != dst.size()
+     * @return The values that were transmitted by the other MPI ranks. MPI rank i sent <return>[i]
      */
-    // NOLINTNEXTLINE
-    static void all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst);
+    static std::vector<size_t> MPIWrapper::all_to_all(const std::vector<size_t>& src);
 
     /**
      * @brief Gathers one value for each MPI rank into a vector on all MPI ranks
@@ -308,8 +306,15 @@ public:
     // NOLINTNEXTLINE
     static void wait_all_tokens(std::vector<AsyncToken>& tokens);
 
+    /**
+     * @brief Exchanges vectors of data with all MPI ranks
+     * @tparam T The type that should be exchanged
+     * @param values The values that should be exchanged. values[i] should be send to MPI rank i
+     * @exception Throws a RelearnException if values.size() does not match the number of MPI ranks
+     * @return The values that were received from the MPI ranks. <return>[i] on rank j was values[j] on rank i
+     */
     template <typename T>
-    static std::vector<std::vector<T>> exchange_values(const std::vector<std::vector<T>>& values) {
+    [[nodiscard]] static std::vector<std::vector<T>> exchange_values(const std::vector<std::vector<T>>& values) {
         RelearnException::check(values.size() == num_ranks,
             "MPIWrapper::exchange_values: There are too many values: {} for the number of ranks {}!", values.size(), num_ranks);
 
@@ -318,8 +323,7 @@ public:
             request_sizes[target_rank] = values[target_rank].size();
         }
 
-        std::vector<size_t> response_sizes(num_ranks, 0);
-        all_to_all(request_sizes, response_sizes);
+        std::vector<size_t> response_sizes = all_to_all(request_sizes);
 
         std::vector<std::vector<T>> retrieved_data(num_ranks);
         for (auto rank = 0; rank < num_ranks; rank++) {
@@ -350,17 +354,22 @@ public:
         return retrieved_data;
     }
 
+    /**
+     * @brief Exchanges data with all MPI ranks
+     * @tparam RequestType The type that should be exchanged
+     * @param outgoing_requests The values that should be exchanged. values[i] should be send to MPI rank i (if present)
+     * @return The values that were received from the MPI ranks. <return>[i] on rank j was values[j] on rank i
+     */
     template <typename RequestType>
-    static CommunicationMap<RequestType> exchange_requests(const CommunicationMap<RequestType>& outgoing_requests) {
+    [[nodiscard]] static CommunicationMap<RequestType> exchange_requests(const CommunicationMap<RequestType>& outgoing_requests) {
         const auto number_ranks = get_num_ranks();
         const auto my_rank = get_my_rank();
 
         std::vector<size_t> number_requests_outgoing = outgoing_requests.get_request_sizes();
 
-        std::vector<size_t> number_requests_incoming(number_ranks, 0);
-        MPIWrapper::all_to_all(number_requests_outgoing, number_requests_incoming);
+        std::vector<size_t> number_requests_incoming = MPIWrapper::all_to_all(number_requests_outgoing);
 
-        CommunicationMap<RequestType> incoming_requests(my_rank, number_ranks);
+        CommunicationMap<RequestType> incoming_requests(number_ranks);
 
         for (auto rank_id = 0; rank_id < number_ranks; rank_id++) {
             if (const auto num_requests = number_requests_incoming[rank_id]; 0 != num_requests) {

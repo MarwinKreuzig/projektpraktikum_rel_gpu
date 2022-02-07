@@ -122,8 +122,6 @@ int main(int argc, char** argv) {
 	 */
     MPIWrapper::init(argc, argv);
 
-    CommunicationMap<int> cm(10, 21);
-
     print_arguments(argc, argv);
     print_sizes();
 

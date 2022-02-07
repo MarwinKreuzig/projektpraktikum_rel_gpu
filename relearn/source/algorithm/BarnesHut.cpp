@@ -96,7 +96,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(
     const auto my_rank = MPIWrapper::get_my_rank();
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
-    CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(my_rank, number_ranks);
+    CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks);
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);
 
     const std::vector<double>& axons_cnts = axons->get_grown_elements();
