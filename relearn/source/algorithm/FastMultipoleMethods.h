@@ -197,7 +197,7 @@ public:
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. 
      */
-    MapSynapseCreationRequests find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+    CommunicationMap<SynapseCreationRequest> find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override;
 
 private:
@@ -207,7 +207,7 @@ private:
      * @param request SynapseCreationRequest which should be extended. This must be created before the method is called.
      * @exception Can throw a RelearnException.
      */
-    void make_creation_request_for(SignalType signal_type_needed, MapSynapseCreationRequests& request);
+    void make_creation_request_for(SignalType signal_type_needed, CommunicationMap<SynapseCreationRequest>& request);
 
     /**
      * @brief Calculates the attraction between a single source neuron and all target neurons in the interaction list.

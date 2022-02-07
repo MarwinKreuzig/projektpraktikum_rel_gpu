@@ -15,11 +15,15 @@
 #include "../structure/OctreeNode.h"
 #include "../util/Timers.h"
 
-MapSynapseCreationRequests FastMultipoleMethods::find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+CommunicationMap<SynapseCreationRequest> FastMultipoleMethods::find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 
     // Create SynapseCreationRequest and start timer
-    MapSynapseCreationRequests synapse_creation_requests_outgoing{};
+
+    const auto my_rank = MPIWrapper::get_my_rank();
+    const auto number_ranks = MPIWrapper::get_num_ranks();
+
+    CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(my_rank, number_ranks);
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);
 
     OctreeNode<FastMultipoleMethodsCell>* root = global_tree->get_root();
@@ -112,7 +116,7 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<UpdateStatus>& di
     }
 }
 
-void FastMultipoleMethods::make_creation_request_for(const SignalType signal_type_needed, MapSynapseCreationRequests& request) {
+void FastMultipoleMethods::make_creation_request_for(const SignalType signal_type_needed, CommunicationMap<SynapseCreationRequest>& request) {
     std::vector<std::pair<const OctreeNode<FastMultipoleMethodsCell>*, interaction_list_type>> nodes_with_axons{};
     nodes_with_axons.reserve(200);
 
@@ -167,7 +171,7 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
             if (target_id != source_id) {
                 const auto target_rank = target->get_rank();
                 const SynapseCreationRequest creation_request(target_id, source_id, signal_type_needed);
-                request[target_rank].append(creation_request);
+                request.append(target_rank, creation_request);
             }
         }
     };

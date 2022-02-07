@@ -11,6 +11,7 @@
 #pragma once
 
 #include "../Types.h"
+#include "../mpi/CommunicationMap.h"
 #include "../neurons/UpdateStatus.h"
 #include "../neurons/helper/SynapseCreationRequests.h"
 #include "../neurons/models/SynapticElements.h"
@@ -58,7 +59,7 @@ public:
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
-    [[nodiscard]] virtual MapSynapseCreationRequests find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+    [[nodiscard]] virtual CommunicationMap<SynapseCreationRequest> find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos)
         = 0;
 
@@ -96,8 +97,10 @@ public:
 private:
     double sigma{ default_sigma };
 
-    std::pair<LocalSynapses, DistantInSynapses> create_synapses_process_requests(size_t number_neurons, MapSynapseCreationRequests& synapse_creation_requests_incoming);
-    DistantOutSynapses  create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
+    std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
+    create_synapses_process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& synapse_creation_requests_incoming);
+
+    DistantOutSynapses create_synapses_process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests, const CommunicationMap<SynapseCreationResponse>& creation_responses);
 
 protected:
     std::shared_ptr<SynapticElements> axons{};

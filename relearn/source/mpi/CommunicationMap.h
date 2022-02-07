@@ -35,6 +35,10 @@ public:
         return requests.size();
     }
 
+    [[nodiscard]] bool empty() const noexcept {
+        return requests.empty();
+    }
+
     void append(const int mpi_rank, const RequestType& request) {
         RelearnException::check(mpi_rank < number_ranks, "CommunicationMap::append: rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
         requests[mpi_rank].emplace_back(request);
@@ -44,7 +48,7 @@ public:
         RelearnException::check(mpi_rank < number_ranks, "CommunicationMap::get_request: rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
         RelearnException::check(contains(mpi_rank), "CommunicationMap::get_request: There are no requests for rank {}", mpi_rank);
 
-        const auto& requests_for_rank = requests.at(mpi_ranks);
+        const auto& requests_for_rank = requests.at(mpi_rank);
         RelearnException::check(request_index < requests_for_rank.size(), "CommunicationMap::get_request: index out of bounds: {} vs {}", request_index, requests_for_rank.size());
 
         return requests_for_rank[request_index];

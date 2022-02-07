@@ -88,12 +88,15 @@
     return rank_neuron_id;
 }
 
-MapSynapseCreationRequests BarnesHut::find_target_neurons(
+CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(
     const size_t number_neurons,
     const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 
-    MapSynapseCreationRequests synapse_creation_requests_outgoing{};
+    const auto my_rank = MPIWrapper::get_my_rank();
+    const auto number_ranks = MPIWrapper::get_num_ranks();
+
+    CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(my_rank, number_ranks);
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);
 
     const std::vector<double>& axons_cnts = axons->get_grown_elements();
@@ -147,7 +150,7 @@ MapSynapseCreationRequests BarnesHut::find_target_neurons(
 				 * Note that "target_rank" could also be my own rank.
 				 */
 #pragma omp critical
-                synapse_creation_requests_outgoing[target_rank].append(creation_request);
+                synapse_creation_requests_outgoing.append(target_rank, creation_request);
             }
         } /* all vacant axons of a neuron */
     } /* my neurons */
