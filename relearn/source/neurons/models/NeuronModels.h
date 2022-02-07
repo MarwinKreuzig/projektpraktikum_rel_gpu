@@ -10,9 +10,10 @@
 
 #pragma once
 
+#include "../../mpi/CommunicationMap.h"
 #include "../../util/RelearnException.h"
-#include "ModelParameter.h"
 #include "../UpdateStatus.h"
+#include "ModelParameter.h"
 
 #include <algorithm>
 #include <map>
@@ -32,91 +33,6 @@ class NeuronModel {
     friend class NeuronMonitor;
 
 public:
-    /**
-	 * This type collects all local neuron ids for neurons that fired in the current simulation step.
-     * It is used as communication buffer for MPI collectives.
-	 */
-    class FiringNeuronIds {
-    public:
-        /**
-         * @brief Returns the number of stored ids
-         * @return The number of stored ids
-         */
-        [[nodiscard]] size_t size() const noexcept {
-            return neuron_ids.size();
-        }
-
-        /**
-         * @brief Resizes the internal buffer to the requested size
-         * @param size The desired size 
-         */
-        void resize(const size_t size) {
-            neuron_ids.resize(size);
-        }
-
-        /**
-         * @brief Pushes the passed neuron id onto the vector.
-         *      It is required that neuron_id is larger than every other already stored id
-         * @param neuron_id The local neuron id to be saved
-         */
-        void append(const size_t neuron_id) {
-            neuron_ids.push_back(neuron_id);
-        }
-
-        /**
-         * @brief Searches the neuron id in the internal buffer via a binary search
-         * @param neuron_id The neuron id to be searched
-         * @return True iff the internal buffer contains neuron_id
-         */
-        [[nodiscard]] bool find(const size_t neuron_id) const {
-            return std::binary_search(neuron_ids.begin(), neuron_ids.end(), neuron_id);
-        }
-
-        /**
-         * @brief Returns the stored neuron id at the requested index
-         * @param neuron_id_index The index of the neuron id that shall be returned
-         * @exception Throws a RelearnException if neuron_id_index is too large for the internal buffer
-         * @return The neuron id at the index
-         */
-        [[nodiscard]] size_t get_neuron_id(const size_t neuron_id_index) const {
-            RelearnException ::check(neuron_id_index < neuron_ids.size(), "FiringNeuronIds::get_neuron_id: index was too large: {}", neuron_id_index);
-            return neuron_ids[neuron_id_index];
-        }
-
-        /**
-         * @brief Returns a modifiable pointer to the internal buffer. Ownership is not transfered.
-         * @return A modifiable pointer to the internal buffer
-         */
-        [[nodiscard]] size_t* get_neuron_ids() noexcept {
-            return neuron_ids.data();
-        }
-
-        /**
-         * @brief Returns a non-modifiable pointer to the internal buffer. Ownership is not transfered.
-         * @return A modifiable non-pointer to the internal buffer
-         */
-        [[nodiscard]] const size_t* get_neuron_ids() const noexcept {
-            return neuron_ids.data();
-        }
-
-        /**
-         * @brief Returns the size in bytes of the internal buffer
-         * @return The size in bytes of the internal buffer
-         */
-        [[nodiscard]] size_t get_neuron_ids_size_in_bytes() const noexcept {
-            return neuron_ids.size() * sizeof(size_t);
-        }
-
-    private:
-        std::vector<size_t> neuron_ids{}; // This vector is used as MPI communication buffer and contains all firing neuron ids in ascending order.
-    };
-
-    /**
-	 * Map of (MPI rank; FiringNeuronIds)
-	 * The MPI rank specifies the corresponding process
-	 */
-    using MapFiringNeuronIds = std::map<int, FiringNeuronIds>;
-
     /**
      * @brief Construcs a new instance of type NeuronModel with 0 neurons and default values for all parameters
      */
@@ -425,15 +341,11 @@ protected:
     }
 
 private:
-    [[nodiscard]] static std::vector<size_t> update_electrical_activity_prepare_receiving_spikes(const MapFiringNeuronIds& firing_neuron_ids_outgoing);
-
-    [[nodiscard]] static MapFiringNeuronIds update_electrical_activity_exchange_neuron_ids(const MapFiringNeuronIds& firing_neuron_ids_outgoing, const std::vector<size_t>& num_incoming_ids);
-
-    [[nodiscard]] MapFiringNeuronIds update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags);
+    [[nodiscard]] CommunicationMap<size_t> update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags);
 
     void update_electrical_activity_update_activity(const std::vector<UpdateStatus>& disable_flags);
 
-    void update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const MapFiringNeuronIds& firing_neuron_ids_incoming, const std::vector<UpdateStatus>& disable_flags);
+    void update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const const CommunicationMap<size_t>& firing_neuron_ids_incoming, const std::vector<UpdateStatus>& disable_flags);
 
     void update_electrical_activity_calculate_background(const std::vector<UpdateStatus>& disable_flags);
 

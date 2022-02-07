@@ -54,6 +54,13 @@ public:
         return requests_for_rank[request_index];
     }
 
+    [[nodiscard]] const std::vector<RequestType>& get_requests(const int mpi_rank) const {
+        RelearnException::check(mpi_rank < number_ranks, "CommunicationMap::get_request: rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
+        RelearnException::check(contains(mpi_rank), "CommunicationMap::get_request: There are no requests for rank {}", mpi_rank);
+
+        return requests.at(mpi_rank);
+    }
+
     void resize(const int mpi_rank, const size_t size) {
         RelearnException::check(mpi_rank < number_ranks, "CommunicationMap::resize: rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
         requests[mpi_rank].resize(size);
