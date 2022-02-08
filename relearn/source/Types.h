@@ -12,6 +12,7 @@
 
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/Synapse.h"
+#include "util/TaggedID.h"
 #include "util/Vec3.h"
 
 #include <vector>
@@ -34,7 +35,6 @@ namespace RelearnTypes {
 using box_size_type = Vec3d;
 using position_type = Vec3d;
 
-using neuron_id = size_t;
 using synapse_weight = int;
 
 } // namespace RelearnTypes

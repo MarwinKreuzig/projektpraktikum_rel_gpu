@@ -63,6 +63,15 @@ public:
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos)
         = 0;
 
+    /**
+     * @brief Updates the connectivity with the algorithm. Already updates the synaptic elements, i.e., the axons and dendrites (both excitatory and inhibitory).
+     *      Does not update the network graph. Performs communication with MPI
+     * @param number_neurons The number of local neurons
+     * @param disable_flags Flags that indicate if a local neuron is disabled. If so (== 0), the neuron is ignored
+     * @param extra_infos Used to access the positions of the local neurons
+     * @exception Can throw a RelearnException
+     * @return A tuple with the created synapses that must be committed to the network graph
+     */
     [[nodiscard]] virtual std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos);
 
