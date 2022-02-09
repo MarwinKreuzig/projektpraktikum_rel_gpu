@@ -365,7 +365,6 @@ public:
         const auto my_rank = get_my_rank();
 
         std::vector<size_t> number_requests_outgoing = outgoing_requests.get_request_sizes();
-
         std::vector<size_t> number_requests_incoming = all_to_all(number_requests_outgoing);
 
         CommunicationMap<RequestType> incoming_requests(number_ranks);
