@@ -16,6 +16,7 @@
 #include "io/InteractiveNeuronIO.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
+#include "mpi/CommunicationMap.h"
 #include "neurons/ElementType.h"
 #include "neurons/helper/NeuronMonitor.h"
 #include "neurons/models/NeuronModels.h"
@@ -117,8 +118,8 @@ void print_arguments(int argc, char** argv) {
 
 int main(int argc, char** argv) {
     /**
-	 * Init MPI and store some MPI infos
-	 */
+     * Init MPI and store some MPI infos
+     */
     MPIWrapper::init(argc, argv);
 
     print_arguments(argc, argv);
@@ -194,7 +195,7 @@ int main(int argc, char** argv) {
     app.add_option("--calcium-decay", calcium_decay, "The decay constant for the intercellular calcium");
 
     double retract_ratio{ SynapticElements::default_vacant_retract_ratio };
-    auto* opt_vacant_retract_ratio = app.add_option("--retract-ratio", retract_ratio, "The ratio by which vacant synapses retract.");
+    app.add_option("--retract-ratio", retract_ratio, "The ratio by which vacant synapses retract.");
 
     std::string log_prefix{};
     auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
@@ -214,7 +215,7 @@ int main(int argc, char** argv) {
     auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
 
     size_t first_plasticity_step{ Config::first_plasticity_update };
-    auto* opt_first_plasticity_update_step = app.add_option("--first-plasticity-step", first_plasticity_step, "The first step in which the plasticity is updated.");
+    app.add_option("--first-plasticity-step", first_plasticity_step, "The first step in which the plasticity is updated.");
 
     opt_num_neurons->excludes(opt_file_positions);
     opt_num_neurons->excludes(opt_file_network);
@@ -299,8 +300,8 @@ int main(int argc, char** argv) {
     omp_set_num_threads(openmp_threads);
 
     /**
-	 * Initialize the simuliation log files
-	 */
+     * Initialize the simuliation log files
+     */
     if (static_cast<bool>(*opt_log_path)) {
         LogFiles::set_output_path(log_path);
     }
@@ -369,18 +370,16 @@ int main(int argc, char** argv) {
     Timers::start(TimerRegion::INITIALIZATION);
 
     /**
-	 * Calculate what my partition of the domain consist of
-	 */
+     * Calculate what my partition of the domain consist of
+     */
     auto partition = std::make_shared<Partition>(num_ranks, my_rank);
     const size_t number_local_subdomains = partition->get_number_local_subdomains();
-    const size_t total_number_subdomains = partition->get_total_number_subdomains();
 
     if (algorithm == AlgorithmEnum::BarnesHut) {
         // Check if int type can contain total size of branch nodes to receive in bytes
         // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
         if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<BarnesHutCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
-            exit(EXIT_FAILURE);
         }
 
         // Create MPI RMA memory allocator
@@ -390,7 +389,6 @@ int main(int argc, char** argv) {
         // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
         if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<FastMultipoleMethodsCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
-            exit(EXIT_FAILURE);
         }
 
         // Create MPI RMA memory allocator
@@ -400,7 +398,6 @@ int main(int argc, char** argv) {
         // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
         if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<NaiveCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
-            exit(EXIT_FAILURE);
         }
 
         // Create MPI RMA memory allocator
@@ -485,10 +482,10 @@ int main(int argc, char** argv) {
         sim.set_creation_interrupts(std::move(creation_interrups));
     }
 
-    auto target_calcium_calculator = [target = target_calcium](size_t neuron_id) { return target; };
+    auto target_calcium_calculator = [target = target_calcium](NeuronID::value_type /*neuron_id*/) { return target; };
     sim.set_target_calcium_calculator(std::move(target_calcium_calculator));
 
-    auto initial_calcium_calculator = [inital = initial_calcium](size_t neuron_id) { return inital; };
+    auto initial_calcium_calculator = [inital = initial_calcium](NeuronID::value_type /*neuron_id*/) { return inital; };
     sim.set_initial_calcium_calculator(std::move(initial_calcium_calculator));
 
     /**********************************************************************************/
@@ -508,9 +505,9 @@ int main(int argc, char** argv) {
 
     Timers::stop_and_add(TimerRegion::INITIALIZATION);
 
-    sim.register_neuron_monitor(6);
-    sim.register_neuron_monitor(1164);
-    sim.register_neuron_monitor(28001);
+    sim.register_neuron_monitor(NeuronID{ 6 });
+    sim.register_neuron_monitor(NeuronID{ 1164 });
+    sim.register_neuron_monitor(NeuronID{ 28001 });
 
     auto simulate = [&]() {
         sim.simulate(simulation_steps);
@@ -528,8 +525,7 @@ int main(int argc, char** argv) {
         while (true) {
             spdlog::info("Interactive run. Run another {} simulation steps? [y/n]\n", simulation_steps);
             char yn{ 'n' };
-            auto n = scanf(" %c", &yn);
-            RelearnException::check(static_cast<bool>(n), "Error on while reading input with scanf.");
+            std::cin >> std::ws >> yn;
 
             if (yn == 'n' || yn == 'N') {
                 break;

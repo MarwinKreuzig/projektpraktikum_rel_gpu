@@ -22,7 +22,7 @@ class Partition;
 
 /**
  * This class fills every subdomain with neurons at random positions. The size of the simulation box and the number of neurons per
- * subdomain depend on the requested neuron density, i.e., micrometer per neuron in each of the three dimensions. 
+ * subdomain depend on the requested neuron density, i.e., micrometer per neuron in each of the three dimensions.
  * It does not necessarily place the requested number of neurons, but it always places a number of neurons in
  * [number_neurons - number_subdomains + 1, number_neurons + number_subdomains - 1].
  * It inherits from NeuronToSubdomainAssignment.
@@ -36,7 +36,7 @@ public:
      * @param um_per_neuron The box length in which a single neuron is placed, must be > 0.0
      * @exception Throws a RelearnException if fraction_excitatory_neurons if not from [0.0, 1.0] or um_per_neuron <= 0.0
      */
-    SubdomainFromNeuronDensity(const size_t number_neurons, const double fraction_excitatory_neurons, const double um_per_neuron, std::shared_ptr<Partition> partition);
+    SubdomainFromNeuronDensity(size_t number_neurons, double fraction_excitatory_neurons, double um_per_neuron, std::shared_ptr<Partition> partition);
 
     SubdomainFromNeuronDensity(const SubdomainFromNeuronDensity& other) = delete;
     SubdomainFromNeuronDensity(SubdomainFromNeuronDensity&& other) = delete;
@@ -49,7 +49,7 @@ public:
     /**
      * @brief This method is not implemented for this class
      */
-    [[nodiscard]] std::vector<size_t> get_neuron_global_ids_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const override;
+    [[nodiscard]] std::vector<NeuronID> get_neuron_global_ids_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const override;
 
     /**
      * @brief Returns a function object that is used to fix calculated subdomain boundaries.
@@ -74,7 +74,7 @@ protected:
      * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
      * @param local_subdomain_index The local index of the subdomain which's neurons are to be filled
      * @param total_number_subdomains The total number of local_subdomains
-     * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file 
+     * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file
      */
     void fill_subdomain(size_t local_subdomain_index, size_t total_number_subdomains) override;
 
@@ -86,5 +86,5 @@ private:
     void place_neurons_in_area(
         const NeuronToSubdomainAssignment::box_size_type& offset,
         const NeuronToSubdomainAssignment::box_size_type& length_of_box,
-        const size_t number_neurons, const size_t subdomain_idx);
+        size_t number_neurons, size_t subdomain_index_1d);
 };

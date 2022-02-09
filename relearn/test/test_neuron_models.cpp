@@ -25,11 +25,11 @@ NetworkGraph generate_random_network_graph(size_t number_neurons, size_t num_syn
     NetworkGraph ng(number_neurons, 0);
 
     for (size_t synapse_id = 0; synapse_id < num_synapses; synapse_id++) {
-        const auto neuron_id_1 = uid(mt);
-        auto neuron_id_2 = uid(mt);
+        const auto neuron_id_1 = NeuronID{ uid(mt) };
+        auto neuron_id_2 = NeuronID{ uid(mt) };
 
         if (neuron_id_2 == neuron_id_1) {
-            neuron_id_2 = (neuron_id_1 + 1) % number_neurons;
+            neuron_id_2 = (neuron_id_1.id() + 1) % number_neurons;
         }
 
         const auto uniform_double = urd(mt);
@@ -44,13 +44,13 @@ NetworkGraph generate_random_network_graph(size_t number_neurons, size_t num_syn
     return ng;
 }
 
-std::vector<size_t> generate_random_ids(size_t id_low, size_t id_high, size_t num_disables, std::mt19937& mt) {
-    std::vector<size_t> disable_ids(num_disables);
+std::vector<NeuronID> generate_random_ids(size_t id_low, size_t id_high, size_t num_disables, std::mt19937& mt) {
+    std::vector<NeuronID> disable_ids(num_disables);
 
     std::uniform_int_distribution<size_t> uid(id_low, id_high);
 
     for (size_t i = 0; i < num_disables; i++) {
-        disable_ids[i] = uid(mt);
+        disable_ids[i] = NeuronID{ uid(mt) };
     }
 
     return disable_ids;
@@ -958,14 +958,14 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitPoisson) {
         ASSERT_EQ(get_requested_number_neurons, x.size());
         ASSERT_EQ(get_requested_number_neurons, fired.size());
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        for (auto neuron_id : NeuronID::range(number_neurons)) {
             ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
         }
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
+        for (auto neuron_id : NeuronID::range(number_neurons_out_of_scope)) {
             ASSERT_THROW(auto tmp = model->get_x(neuron_id + number_neurons), RelearnException);
             ASSERT_THROW(auto tmp = model->get_fired(neuron_id + number_neurons), RelearnException);
             ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + number_neurons), RelearnException);
@@ -1030,14 +1030,14 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitIzhikevich) {
         ASSERT_EQ(get_requested_number_neurons, x.size());
         ASSERT_EQ(get_requested_number_neurons, fired.size());
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        for (auto neuron_id : NeuronID::range(number_neurons)) {
             ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
         }
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
+        for (auto neuron_id : NeuronID::range(number_neurons_out_of_scope)) {
             ASSERT_THROW(auto tmp = model->get_x(neuron_id + number_neurons), RelearnException);
             ASSERT_THROW(auto tmp = model->get_fired(neuron_id + number_neurons), RelearnException);
             ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + number_neurons), RelearnException);
@@ -1092,14 +1092,14 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitFitzHughNagumo) {
         ASSERT_EQ(get_requested_number_neurons, x.size());
         ASSERT_EQ(get_requested_number_neurons, fired.size());
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        for (auto neuron_id : NeuronID::range(number_neurons)) {
             ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
         }
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
+        for (auto neuron_id : NeuronID::range(number_neurons_out_of_scope)) {
             ASSERT_THROW(auto tmp = model->get_x(neuron_id + number_neurons), RelearnException);
             ASSERT_THROW(auto tmp = model->get_fired(neuron_id + number_neurons), RelearnException);
             ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + number_neurons), RelearnException);
@@ -1166,14 +1166,14 @@ TEST_F(NeuronModelsTest, testNeuronModelsInitAEIF) {
         ASSERT_EQ(get_requested_number_neurons, x.size());
         ASSERT_EQ(get_requested_number_neurons, fired.size());
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        for (auto neuron_id : NeuronID::range(number_neurons)) {
             ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
         }
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
+        for (auto neuron_id : NeuronID::range(number_neurons_out_of_scope)) {
             ASSERT_THROW(auto tmp = model->get_x(neuron_id + number_neurons), RelearnException);
             ASSERT_THROW(auto tmp = model->get_fired(neuron_id + number_neurons), RelearnException);
             ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + number_neurons), RelearnException);
@@ -1229,14 +1229,14 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsPoisson) {
         ASSERT_EQ(current_num_neurons, x.size());
         ASSERT_EQ(current_num_neurons, fired.size());
 
-        for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
+        for (auto neuron_id : NeuronID::range(current_num_neurons)) {
             ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
         }
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
+        for (auto neuron_id : NeuronID::range(number_neurons_out_of_scope)) {
             ASSERT_THROW(auto tmp = model->get_x(neuron_id + current_num_neurons), RelearnException);
             ASSERT_THROW(auto tmp = model->get_fired(neuron_id + current_num_neurons), RelearnException);
             ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
@@ -1302,14 +1302,14 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsIzhikevich) {
         ASSERT_EQ(current_num_neurons, x.size());
         ASSERT_EQ(current_num_neurons, fired.size());
 
-        for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
+        for (auto neuron_id : NeuronID::range(current_num_neurons)) {
             ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
         }
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
+        for (auto neuron_id : NeuronID::range(number_neurons_out_of_scope)) {
             ASSERT_THROW(auto tmp = model->get_x(neuron_id + current_num_neurons), RelearnException);
             ASSERT_THROW(auto tmp = model->get_fired(neuron_id + current_num_neurons), RelearnException);
             ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
@@ -1365,14 +1365,14 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsFitzHughNagumo) {
         ASSERT_EQ(current_num_neurons, x.size());
         ASSERT_EQ(current_num_neurons, fired.size());
 
-        for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
+        for (auto neuron_id : NeuronID::range(current_num_neurons)) {
             ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
         }
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
+        for (auto neuron_id : NeuronID::range(number_neurons_out_of_scope)) {
             ASSERT_THROW(auto tmp = model->get_x(neuron_id + current_num_neurons), RelearnException);
             ASSERT_THROW(auto tmp = model->get_fired(neuron_id + current_num_neurons), RelearnException);
             ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
@@ -1383,7 +1383,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsFitzHughNagumo) {
 
 TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsAEIF) {
     using namespace models;
-     
+
     std::uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
     std::uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
     std::uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
@@ -1440,14 +1440,14 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsAEIF) {
         ASSERT_EQ(current_num_neurons, x.size());
         ASSERT_EQ(current_num_neurons, fired.size());
 
-        for (size_t neuron_id = 0; neuron_id < current_num_neurons; neuron_id++) {
+        for (auto neuron_id : NeuronID::range(current_num_neurons)) {
             ASSERT_NO_THROW(auto tmp = model->get_x(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_fired(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_secondary_variable(neuron_id));
             ASSERT_NO_THROW(auto tmp = model->get_I_syn(neuron_id));
         }
 
-        for (size_t neuron_id = 0; neuron_id < number_neurons_out_of_scope; neuron_id++) {
+        for (auto neuron_id : NeuronID::range(number_neurons_out_of_scope)) {
             ASSERT_THROW(auto tmp = model->get_x(neuron_id + current_num_neurons), RelearnException);
             ASSERT_THROW(auto tmp = model->get_fired(neuron_id + current_num_neurons), RelearnException);
             ASSERT_THROW(auto tmp = model->get_secondary_variable(neuron_id + current_num_neurons), RelearnException);
@@ -1497,8 +1497,9 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredPoisson) {
     model->disable_neurons(disable_ids);
 
     for (unsigned int id = 0; id < number_neurons; id++) {
-        if (std::find(disable_ids.cbegin(), disable_ids.cend(), id) != disable_ids.cend()) {
-            ASSERT_FALSE(model->get_fired(id));
+        const auto neuron_id = NeuronID{ id };
+        if (std::find(disable_ids.cbegin(), disable_ids.cend(), neuron_id) != disable_ids.cend()) {
+            ASSERT_FALSE(model->get_fired(neuron_id));
         }
     }
 
@@ -1558,8 +1559,9 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredIzhikevich) {
     model->disable_neurons(disable_ids);
 
     for (unsigned int id = 0; id < number_neurons; id++) {
-        if (std::find(disable_ids.cbegin(), disable_ids.cend(), id) != disable_ids.cend()) {
-            ASSERT_FALSE(model->get_fired(id));
+        const auto neuron_id = NeuronID{ id };
+        if (std::find(disable_ids.cbegin(), disable_ids.cend(), neuron_id) != disable_ids.cend()) {
+            ASSERT_FALSE(model->get_fired(neuron_id));
         }
     }
 
@@ -1609,8 +1611,9 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredFitzHughNagumo) {
     model->disable_neurons(disable_ids);
 
     for (unsigned int id = 0; id < number_neurons; id++) {
-        if (std::find(disable_ids.cbegin(), disable_ids.cend(), id) != disable_ids.cend()) {
-            ASSERT_FALSE(model->get_fired(id));
+        const auto neuron_id = NeuronID{ id };
+        if (std::find(disable_ids.cbegin(), disable_ids.cend(), neuron_id) != disable_ids.cend()) {
+            ASSERT_FALSE(model->get_fired(neuron_id));
         }
     }
 
@@ -1672,8 +1675,9 @@ TEST_F(NeuronModelsTest, testNeuronModelsDisableFiredAEIF) {
     model->disable_neurons(disable_ids);
 
     for (unsigned int id = 0; id < number_neurons; id++) {
-        if (std::find(disable_ids.cbegin(), disable_ids.cend(), id) != disable_ids.cend()) {
-            ASSERT_FALSE(model->get_fired(id));
+        const auto neuron_id = NeuronID{ id };
+        if (std::find(disable_ids.cbegin(), disable_ids.cend(), neuron_id) != disable_ids.cend()) {
+            ASSERT_FALSE(model->get_fired(neuron_id));
         }
     }
 
@@ -1725,8 +1729,9 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledPoisson) {
     std::vector<double> model_I_sync(get_requested_number_neurons);
 
     for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
-        model_secondary[id] = model->get_secondary_variable(id);
-        model_I_sync[id] = model->get_I_syn(id);
+        const auto neuron_id = NeuronID{ id };
+        model_secondary[id] = model->get_secondary_variable(neuron_id);
+        model_I_sync[id] = model->get_I_syn(neuron_id);
     }
 
     for (auto j = 0; j < 3; j++) {
@@ -1736,14 +1741,15 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledPoisson) {
         const auto& current_fired = model->get_fired();
 
         for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
+            const auto neuron_id = NeuronID{ id };
             ASSERT_EQ(current_x[id], model_x[id]);
             ASSERT_EQ(current_fired[id], model_fired[id]);
 
-            ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
-            ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+            ASSERT_EQ(model->get_I_syn(neuron_id), model_I_sync[id]);
+            ASSERT_EQ(model->get_secondary_variable(neuron_id), model_secondary[id]);
 
-            model_I_sync[id] = model->get_I_syn(id);
-            model_secondary[id] = model->get_secondary_variable(id);
+            model_I_sync[id] = model->get_I_syn(neuron_id);
+            model_secondary[id] = model->get_secondary_variable(neuron_id);
         }
 
         model_x = current_x;
@@ -1759,14 +1765,16 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledPoisson) {
         const auto& current_fired = model->get_fired();
 
         for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
+            const auto neuron_id = NeuronID{ id };
+
             ASSERT_EQ(current_x[id], model_x[id]);
             ASSERT_EQ(current_fired[id], model_fired[id]);
 
-            ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
-            ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+            ASSERT_EQ(model->get_I_syn(neuron_id), model_I_sync[id]);
+            ASSERT_EQ(model->get_secondary_variable(neuron_id), model_secondary[id]);
 
-            model_I_sync[id] = model->get_I_syn(id);
-            model_secondary[id] = model->get_secondary_variable(id);
+            model_I_sync[id] = model->get_I_syn(neuron_id);
+            model_secondary[id] = model->get_secondary_variable(neuron_id);
         }
 
         model_x = current_x;
@@ -1827,8 +1835,9 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledIzhikevich) {
     std::vector<double> model_I_sync(get_requested_number_neurons);
 
     for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
-        model_secondary[id] = model->get_secondary_variable(id);
-        model_I_sync[id] = model->get_I_syn(id);
+        const auto neuron_id = NeuronID{ id };
+        model_secondary[id] = model->get_secondary_variable(neuron_id);
+        model_I_sync[id] = model->get_I_syn(neuron_id);
     }
 
     for (auto j = 0; j < 3; j++) {
@@ -1838,14 +1847,15 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledIzhikevich) {
         const auto& current_fired = model->get_fired();
 
         for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
+            const auto neuron_id = NeuronID{ id };
             ASSERT_EQ(current_x[id], model_x[id]);
             ASSERT_EQ(current_fired[id], model_fired[id]);
 
-            ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
-            ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+            ASSERT_EQ(model->get_I_syn(neuron_id), model_I_sync[id]);
+            ASSERT_EQ(model->get_secondary_variable(neuron_id), model_secondary[id]);
 
-            model_I_sync[id] = model->get_I_syn(id);
-            model_secondary[id] = model->get_secondary_variable(id);
+            model_I_sync[id] = model->get_I_syn(neuron_id);
+            model_secondary[id] = model->get_secondary_variable(neuron_id);
         }
 
         model_x = current_x;
@@ -1861,14 +1871,15 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledIzhikevich) {
         const auto& current_fired = model->get_fired();
 
         for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
+            const auto neuron_id = NeuronID{ id };
             ASSERT_EQ(current_x[id], model_x[id]);
             ASSERT_EQ(current_fired[id], model_fired[id]);
 
-            ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
-            ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+            ASSERT_EQ(model->get_I_syn(neuron_id), model_I_sync[id]);
+            ASSERT_EQ(model->get_secondary_variable(neuron_id), model_secondary[id]);
 
-            model_I_sync[id] = model->get_I_syn(id);
-            model_secondary[id] = model->get_secondary_variable(id);
+            model_I_sync[id] = model->get_I_syn(neuron_id);
+            model_secondary[id] = model->get_secondary_variable(neuron_id);
         }
 
         model_x = current_x;
@@ -1919,8 +1930,9 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledFitzHughNagumo) {
     std::vector<double> model_I_sync(get_requested_number_neurons);
 
     for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
-        model_secondary[id] = model->get_secondary_variable(id);
-        model_I_sync[id] = model->get_I_syn(id);
+        const auto neuron_id = NeuronID{ id };
+        model_secondary[id] = model->get_secondary_variable(neuron_id);
+        model_I_sync[id] = model->get_I_syn(neuron_id);
     }
 
     for (auto j = 0; j < 3; j++) {
@@ -1930,14 +1942,15 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledFitzHughNagumo) {
         const auto& current_fired = model->get_fired();
 
         for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
+            const auto neuron_id = NeuronID{ id };
             ASSERT_EQ(current_x[id], model_x[id]);
             ASSERT_EQ(current_fired[id], model_fired[id]);
 
-            ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
-            ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+            ASSERT_EQ(model->get_I_syn(neuron_id), model_I_sync[id]);
+            ASSERT_EQ(model->get_secondary_variable(neuron_id), model_secondary[id]);
 
-            model_I_sync[id] = model->get_I_syn(id);
-            model_secondary[id] = model->get_secondary_variable(id);
+            model_I_sync[id] = model->get_I_syn(neuron_id);
+            model_secondary[id] = model->get_secondary_variable(neuron_id);
         }
 
         model_x = current_x;
@@ -1953,14 +1966,15 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledFitzHughNagumo) {
         const auto& current_fired = model->get_fired();
 
         for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
+            const auto neuron_id = NeuronID{ id };
             ASSERT_EQ(current_x[id], model_x[id]);
             ASSERT_EQ(current_fired[id], model_fired[id]);
 
-            ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
-            ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+            ASSERT_EQ(model->get_I_syn(neuron_id), model_I_sync[id]);
+            ASSERT_EQ(model->get_secondary_variable(neuron_id), model_secondary[id]);
 
-            model_I_sync[id] = model->get_I_syn(id);
-            model_secondary[id] = model->get_secondary_variable(id);
+            model_I_sync[id] = model->get_I_syn(neuron_id);
+            model_secondary[id] = model->get_secondary_variable(neuron_id);
         }
 
         model_x = current_x;
@@ -2023,8 +2037,9 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledAEIF) {
     std::vector<double> model_I_sync(get_requested_number_neurons);
 
     for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
-        model_secondary[id] = model->get_secondary_variable(id);
-        model_I_sync[id] = model->get_I_syn(id);
+        const auto neuron_id = NeuronID{ id };
+        model_secondary[id] = model->get_secondary_variable(neuron_id);
+        model_I_sync[id] = model->get_I_syn(neuron_id);
     }
 
     for (auto j = 0; j < 3; j++) {
@@ -2034,14 +2049,15 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledAEIF) {
         const auto& current_fired = model->get_fired();
 
         for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
+            const auto neuron_id = NeuronID{ id };
             ASSERT_EQ(current_x[id], model_x[id]);
             ASSERT_EQ(current_fired[id], model_fired[id]);
 
-            ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
-            ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+            ASSERT_EQ(model->get_I_syn(neuron_id), model_I_sync[id]);
+            ASSERT_EQ(model->get_secondary_variable(neuron_id), model_secondary[id]);
 
-            model_I_sync[id] = model->get_I_syn(id);
-            model_secondary[id] = model->get_secondary_variable(id);
+            model_I_sync[id] = model->get_I_syn(neuron_id);
+            model_secondary[id] = model->get_secondary_variable(neuron_id);
         }
 
         model_x = current_x;
@@ -2057,14 +2073,15 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityDisabledAEIF) {
         const auto& current_fired = model->get_fired();
 
         for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
+            const auto neuron_id = NeuronID{ id };
             ASSERT_EQ(current_x[id], model_x[id]);
             ASSERT_EQ(current_fired[id], model_fired[id]);
 
-            ASSERT_EQ(model->get_I_syn(id), model_I_sync[id]);
-            ASSERT_EQ(model->get_secondary_variable(id), model_secondary[id]);
+            ASSERT_EQ(model->get_I_syn(neuron_id), model_I_sync[id]);
+            ASSERT_EQ(model->get_secondary_variable(neuron_id), model_secondary[id]);
 
-            model_I_sync[id] = model->get_I_syn(id);
-            model_secondary[id] = model->get_secondary_variable(id);
+            model_I_sync[id] = model->get_I_syn(neuron_id);
+            model_secondary[id] = model->get_secondary_variable(neuron_id);
         }
 
         model_x = current_x;
@@ -2114,7 +2131,8 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisso
     std::vector<double> model_I_syn = model->get_I_syn();
 
     for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
-        model_secondary[id] = model->get_secondary_variable(id);
+        const auto neuron_id = NeuronID{ id };
+        model_secondary[id] = model->get_secondary_variable(neuron_id);
     }
 
     for (auto j = 0; j < 3; j++) {
@@ -2125,6 +2143,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisso
         const auto& current_I_syn = model->get_I_syn();
 
         for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
+            const auto neuron_id = NeuronID{ id };
             ASSERT_NE(current_x[id], model_x[id]) << ' ' << j << ' ' << id;
 
             if (j == 0) {
@@ -2133,8 +2152,8 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisso
                 ASSERT_EQ(expected_base_background_activity, model_I_syn[id]) << id << ' ' << j << ' ';
             }
 
-            const auto current_refrac = model->get_secondary_variable(id);
-            if (model->get_fired(id)) {
+            const auto current_refrac = model->get_secondary_variable(neuron_id);
+            if (model->get_fired(neuron_id)) {
                 ASSERT_EQ(current_refrac, expected_refrac) << ' ' << j << ' ' << id;
             } else if (model_secondary[id] == 0) {
                 ASSERT_EQ(current_refrac, 0) << ' ' << j << ' ' << id;
@@ -2142,7 +2161,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisso
                 ASSERT_EQ(current_refrac, model_secondary[id] - 1) << ' ' << j << ' ' << id;
             }
 
-            model_secondary[id] = model->get_secondary_variable(id);
+            model_secondary[id] = model->get_secondary_variable(neuron_id);
         }
 
         model_x = current_x;
@@ -2160,10 +2179,11 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisso
         const auto& current_I_syn = model->get_I_syn();
 
         for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
+            const auto neuron_id = NeuronID{ id };
             ASSERT_NE(current_x[id], model_x[id]);
 
-            const auto current_refrac = model->get_secondary_variable(id);
-            if (model->get_fired(id)) {
+            const auto current_refrac = model->get_secondary_variable(neuron_id);
+            if (model->get_fired(neuron_id)) {
                 ASSERT_EQ(current_refrac, expected_refrac);
             } else if (model_secondary[id] == 0) {
                 ASSERT_EQ(current_refrac, 0);
@@ -2171,7 +2191,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundPoisso
                 ASSERT_EQ(current_refrac, model_secondary[id] - 1);
             }
 
-            model_secondary[id] = model->get_secondary_variable(id);
+            model_secondary[id] = model->get_secondary_variable(neuron_id);
         }
 
         model_x = current_x;
@@ -2232,7 +2252,8 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhike
     std::vector<double> model_I_syn = model->get_I_syn();
 
     for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
-        model_secondary[id] = model->get_secondary_variable(id);
+        const auto neuron_id = NeuronID{ id };
+        model_secondary[id] = model->get_secondary_variable(neuron_id);
     }
 
     for (auto j = 0; j < 3; j++) {
@@ -2243,6 +2264,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhike
         const auto& current_I_syn = model->get_I_syn();
 
         for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
+            const auto neuron_id = NeuronID{ id };
             if (current_fired[id]) {
                 ASSERT_EQ(current_x[id], expected_c) << ' ' << j << ' ' << id;
             }
@@ -2252,9 +2274,9 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhike
             } else {
                 ASSERT_EQ(expected_base_background_activity, model_I_syn[id]) << id << ' ' << j << ' ';
             }
-            ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]) << ' ' << j << ' ' << id;
+            ASSERT_NE(model->get_secondary_variable(neuron_id), model_secondary[id]) << ' ' << j << ' ' << id;
 
-            model_secondary[id] = model->get_secondary_variable(id);
+            model_secondary[id] = model->get_secondary_variable(neuron_id);
         }
 
         model_x = current_x;
@@ -2272,13 +2294,14 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundIzhike
         const auto& current_I_syn = model->get_I_syn();
 
         for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
+            const auto neuron_id = NeuronID{ id };
             if (current_fired[id]) {
                 ASSERT_EQ(current_x[id], expected_c) << ' ' << j << ' ' << id;
             }
 
-            ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
+            ASSERT_NE(model->get_secondary_variable(neuron_id), model_secondary[id]);
 
-            model_secondary[id] = model->get_secondary_variable(id);
+            model_secondary[id] = model->get_secondary_variable(neuron_id);
         }
 
         model_x = current_x;
@@ -2328,7 +2351,8 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHu
     std::vector<double> model_I_syn = model->get_I_syn();
 
     for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
-        model_secondary[id] = model->get_secondary_variable(id);
+        const auto neuron_id = NeuronID{ id };
+        model_secondary[id] = model->get_secondary_variable(neuron_id);
     }
 
     for (auto j = 0; j < 3; j++) {
@@ -2338,6 +2362,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHu
         const auto& current_I_syn = model->get_I_syn();
 
         for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
+            const auto neuron_id = NeuronID{ id };
             ASSERT_NE(current_x[id], model_x[id]);
 
             if (j == 0) {
@@ -2346,9 +2371,9 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHu
                 ASSERT_EQ(expected_base_background_activity, model_I_syn[id]) << id << ' ' << j << ' ';
             }
 
-            ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
+            ASSERT_NE(model->get_secondary_variable(neuron_id), model_secondary[id]);
 
-            model_secondary[id] = model->get_secondary_variable(id);
+            model_secondary[id] = model->get_secondary_variable(neuron_id);
         }
 
         model_x = current_x;
@@ -2365,11 +2390,12 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundFitzHu
         const auto& current_I_syn = model->get_I_syn();
 
         for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
+            const auto neuron_id = NeuronID{ id };
             ASSERT_NE(current_x[id], model_x[id]);
 
-            ASSERT_NE(model->get_secondary_variable(id), model_secondary[id]);
+            ASSERT_NE(model->get_secondary_variable(neuron_id), model_secondary[id]);
 
-            model_secondary[id] = model->get_secondary_variable(id);
+            model_secondary[id] = model->get_secondary_variable(neuron_id);
         }
 
         model_x = current_x;
@@ -2431,7 +2457,8 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) 
     std::vector<double> model_I_syn = model->get_I_syn();
 
     for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
-        model_secondary[id] = model->get_secondary_variable(id);
+        const auto neuron_id = NeuronID{ id };
+        model_secondary[id] = model->get_secondary_variable(neuron_id);
     }
 
     for (auto j = 0; j < 3; j++) {
@@ -2442,6 +2469,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) 
         const auto& current_I_syn = model->get_I_syn();
 
         for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
+            const auto neuron_id = NeuronID{ id };
             if (current_fired[id]) {
                 EXPECT_EQ(current_x[id], expected_E_L) << id << ' ' << j << ' ';
             }
@@ -2452,7 +2480,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) 
                 ASSERT_EQ(expected_base_background_activity, model_I_syn[id]) << id << ' ' << j << ' ';
             }
 
-            model_secondary[id] = model->get_secondary_variable(id);
+            model_secondary[id] = model->get_secondary_variable(neuron_id);
         }
 
         model_x = current_x;
@@ -2470,11 +2498,12 @@ TEST_F(NeuronModelsTest, testNeuronModelsUpdateActivityEnabledNoBackgroundAEIF) 
         const auto& current_I_syn = model->get_I_syn();
 
         for (unsigned int id = 0; id < get_requested_number_neurons; id++) {
+            const auto neuron_id = NeuronID{ id };
             if (current_fired[id]) {
                 EXPECT_EQ(current_x[id], expected_E_L) << id;
             }
 
-            model_secondary[id] = model->get_secondary_variable(id);
+            model_secondary[id] = model->get_secondary_variable(neuron_id);
         }
 
         model_x = current_x;

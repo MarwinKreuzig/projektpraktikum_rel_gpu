@@ -21,10 +21,14 @@ using MPIWrapper = MPINoWrapper;
 #include "../io/LogFiles.h"
 #include "../util/MemoryHolder.h"
 #include "../util/RelearnException.h"
+#include "CommunicationMap.h"
+
+#include <mpi.h>
 
 #include <array>
 #include <cstdint>
-#include <map>
+#include <ranges>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -43,10 +47,10 @@ enum class MPI_Locktype {
 namespace MPIUserDefinedOperation {
 /**
  * @brief Provides a custom reduction function for MPI that simultaneously computes the min, sum, and max of multiple values.
- * @param invec A double* (cast to int* because of MPI) with a tuple of data to reduce. 
+ * @param invec A double* (cast to int* because of MPI) with a tuple of data to reduce.
  *      Size must be at least *len / sizeof(double) / 3
- * @param inoutvec A double* (cast to int* because of MPI) with a tuple of data to reduce. 
- *      Size must be at least *len / sizeof(double) / 3. 
+ * @param inoutvec A double* (cast to int* because of MPI) with a tuple of data to reduce.
+ *      Size must be at least *len / sizeof(double) / 3.
  *      Is also used as return value.
  * @param len The length of a tuple of data. Is only accessed hat *len.
  * @param dtype Unused
@@ -54,7 +58,7 @@ namespace MPIUserDefinedOperation {
 void min_sum_max(const void* invec, void* inoutvec, const int* len, void* dtype);
 } // namespace MPIUserDefinedOperation
 
-/** 
+/**
  * This class provides a static interface to every kind of MPI functionality that should be called from other classes.
  * It wraps functionality in a C++ type safe manner.
  * The first call must be MPIWrapper::init(...) and the last one MPIWrapper::finalize(), not calling any of those inbetween.
@@ -85,9 +89,9 @@ private:
 
     static void init_globals();
 
-    static inline void* minsummax{};
+    static inline std::unique_ptr<MPI_Op> minsummax{ nullptr };
 
-    static void* translate_reduce_function(ReduceFunction rf);
+    [[nodiscard]] static std::unique_ptr<MPI_Op> translate_reduce_function(ReduceFunction rf);
 
     static void register_custom_function();
 
@@ -98,8 +102,7 @@ private:
 
     static inline int thread_level_provided{ -1 }; // Thread level provided by MPI
 
-    //NOLINTNEXTLINE
-    static inline void* mpi_window{ nullptr }; // RMA window object
+    static inline std::unique_ptr<MPI_Win> mpi_window{ nullptr }; // RMA window object
 
     static inline void* base_ptr{ nullptr }; // Start address of MPI-allocated memory
     static inline std::vector<int64_t> base_pointers{}; // RMA window base pointers of all procs
@@ -119,7 +122,7 @@ private:
     // NOLINTNEXTLINE
     static void async_recv(void* buffer, int count, int rank, AsyncToken& token);
 
-    static int translate_lock_type(MPI_Locktype lock_type);
+    [[nodiscard]] static int translate_lock_type(MPI_Locktype lock_type);
 
     static void get(void* origin, size_t size, int target_rank, int64_t displacement);
 
@@ -234,11 +237,9 @@ public:
     /**
      * @brief Exchanges one size_t between every pair for MPI ranks
      * @param src The values that shall be sent to the other MPI ranks. MPI rank i receives src[i]
-     * @param dst The values that were transmitted by the other MPI ranks. MPI rank i sent dst[i]
-     * @exception Throws a RelearnException if an MPI error occurs or if src.size() != dst.size()
+     * @return The values that were transmitted by the other MPI ranks. MPI rank i sent <return>[i]
      */
-    // NOLINTNEXTLINE
-    static void all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst);
+    static std::vector<size_t> all_to_all(const std::vector<size_t>& src);
 
     /**
      * @brief Gathers one value for each MPI rank into a vector on all MPI ranks
@@ -255,41 +256,37 @@ public:
 
     /**
      * @brief Gathers multiple values for each MPI rank into the provided buffer on all MPI ranks
-     * @param ptr The buffer to which the data will be written. The values of MPI rank i are in ptr[count * i + {0, 1, ..., count - 1}]
+     * @param buffer The buffer to which the data will be written. The values of MPI rank i are in ptr[count * i + {0, 1, ..., count - 1}]
      * @param count The number of local values that shall be gathered
      * @exception Throws a RelearnException if an MPI error occurs or if count <= 0
      */
     template <typename T>
-    static void all_gather_inline(T* ptr, const int count) {
-        all_gather_inl(ptr, count * sizeof(T));
+    static void all_gather_inline(std::span<T> buffer) {
+        all_gather_inl(buffer.data(), buffer.size_bytes());
     }
 
     /**
      * @brief Sends data to another MPI rank asynchronously
-     * @param buffer The data that shall be sent to the other MPI rank
-     * @param size_in_bytes The number of bytes that shall be sent
+     * @param buffer The buffer that shall be sent to the other MPI rank
      * @param rank The other MPI rank that shall receive the data
      * @param token A token that can be used to query if the asynchronous communication completed
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
     template <typename T>
-    // NOLINTNEXTLINE
-    static void async_send(const T* buffer, const size_t size_in_bytes, const int rank, AsyncToken& token) {
-        async_s(buffer, static_cast<int>(size_in_bytes), rank, token);
+    static void async_send(std::span<T> buffer, const int rank, AsyncToken& token) {
+        async_s(buffer.data(), buffer.size_bytes(), rank, token);
     }
 
     /**
      * @brief Receives data from another MPI rank asynchronously
-     * @param buffer The address where the data shall be written to
-     * @param size_in_bytes The number of bytes that shall be received
+     * @param buffer The buffer where the data shall be written to
      * @param rank The other MPI rank that shall send the data
      * @param token A token that can be used to query if the asynchronous communication completed
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
     template <typename T>
-    // NOLINTNEXTLINE
-    static void async_receive(T* buffer, const size_t size_in_bytes, const int rank, AsyncToken& token) {
-        async_recv(buffer, static_cast<int>(size_in_bytes), rank, token);
+    static void async_receive(std::span<T> buffer, const int rank, AsyncToken& token) {
+        async_recv(buffer.data(), buffer.size_bytes(), rank, token);
     }
 
     /**
@@ -308,8 +305,15 @@ public:
     // NOLINTNEXTLINE
     static void wait_all_tokens(std::vector<AsyncToken>& tokens);
 
+    /**
+     * @brief Exchanges vectors of data with all MPI ranks
+     * @tparam T The type that should be exchanged
+     * @param values The values that should be exchanged. values[i] should be send to MPI rank i
+     * @exception Throws a RelearnException if values.size() does not match the number of MPI ranks
+     * @return The values that were received from the MPI ranks. <return>[i] on rank j was values[j] on rank i
+     */
     template <typename T>
-    static std::vector<std::vector<T>> exchange_values(const std::vector<std::vector<T>>& values) {
+    [[nodiscard]] static std::vector<std::vector<T>> exchange_values(const std::vector<std::vector<T>>& values) {
         RelearnException::check(values.size() == num_ranks,
             "MPIWrapper::exchange_values: There are too many values: {} for the number of ranks {}!", values.size(), num_ranks);
 
@@ -318,8 +322,7 @@ public:
             request_sizes[target_rank] = values[target_rank].size();
         }
 
-        std::vector<size_t> response_sizes(num_ranks, 0);
-        all_to_all(request_sizes, response_sizes);
+        std::vector<size_t> response_sizes = all_to_all(request_sizes);
 
         std::vector<std::vector<T>> retrieved_data(num_ranks);
         for (auto rank = 0; rank < num_ranks; rank++) {
@@ -333,7 +336,7 @@ public:
                 continue;
             }
 
-            async_receive(retrieved_data[rank].data(), sizeof(T) * response_sizes[rank], rank, async_tokens[async_counter]);
+            async_receive(std::span{ retrieved_data[rank] }, rank, async_tokens[async_counter]);
             async_counter++;
         }
 
@@ -342,12 +345,76 @@ public:
                 continue;
             }
 
-            async_send(values[rank].data(), sizeof(T) * values[rank].size(), rank, async_tokens[async_counter]);
+            async_send(std::span{ values[rank] }, rank, async_tokens[async_counter]);
             async_counter++;
         }
 
         wait_all_tokens(async_tokens);
         return retrieved_data;
+    }
+
+    /**
+     * @brief Exchanges data with all MPI ranks
+     * @tparam RequestType The type that should be exchanged
+     * @param outgoing_requests The values that should be exchanged. values[i] should be send to MPI rank i (if present)
+     * @return The values that were received from the MPI ranks. <return>[i] on rank j was values[j] on rank i
+     */
+    template <typename RequestType>
+    [[nodiscard]] static CommunicationMap<RequestType> exchange_requests(const CommunicationMap<RequestType>& outgoing_requests) {
+        const auto number_ranks = get_num_ranks();
+        const auto my_rank = get_my_rank();
+
+        std::vector<size_t> number_requests_outgoing = outgoing_requests.get_request_sizes();
+
+        std::vector<size_t> number_requests_incoming = all_to_all(number_requests_outgoing);
+
+        CommunicationMap<RequestType> incoming_requests(number_ranks);
+
+        for (auto rank_id = 0; rank_id < number_ranks; rank_id++) {
+            if (const auto num_requests = number_requests_incoming[rank_id]; 0 != num_requests) {
+                incoming_requests.resize(rank_id, number_requests_incoming[rank_id]);
+            }
+        }
+
+        std::vector<AsyncToken> mpi_requests(outgoing_requests.size() + incoming_requests.size());
+
+        /**
+	     * Send and receive actual synapse requests
+	     */
+        auto mpi_requests_index = 0;
+
+        for (auto rank_id = 0; rank_id < number_ranks; rank_id++) {
+            if (!incoming_requests.contains(rank_id)) {
+                continue;
+            }
+
+            auto* buffer = incoming_requests.get_data(rank_id);
+            const auto size = incoming_requests.size(rank_id);
+            //const auto size_in_bytes = incoming_requests.get_size_in_bytes(rank_id);
+
+            MPIWrapper::async_receive(incoming_requests.get_span(rank_id), rank_id, mpi_requests[mpi_requests_index]);
+
+            mpi_requests_index++;
+        }
+
+        for (auto rank_id = 0; rank_id < number_ranks; rank_id++) {
+            if (!outgoing_requests.contains(rank_id)) {
+                continue;
+            }
+
+            const auto* buffer = outgoing_requests.get_data(rank_id);
+            const auto size = outgoing_requests.size(rank_id);
+            // const auto size_in_bytes = outgoing_requests.get_size_in_bytes(rank_id);
+
+            MPIWrapper::async_send(outgoing_requests.get_span(rank_id), rank_id, mpi_requests[mpi_requests_index]);
+
+            mpi_requests_index++;
+        }
+
+        // Wait for all sends and receives to complete
+        wait_all_tokens(mpi_requests);
+
+        return incoming_requests;
     }
 
     /** 
@@ -373,6 +440,25 @@ public:
      * @return The number of MPI ranks
      */
     [[nodiscard]] static int get_num_ranks();
+
+    /**
+     * @brief Get a range of all ranks [0, num_ranks)
+     *
+     * @return auto the range of all ranks
+     */
+    [[nodiscard]] static auto get_ranks() {
+        return std::views::iota(0, get_num_ranks());
+    }
+
+    /**
+     * @brief Get a range of all ranks [0, num_ranks) without the own rank
+     *
+     * @return auto the range of all ranks except the own rank
+     */
+    [[nodiscard]] static auto get_ranks_without_my_rank() {
+        return std::views::iota(0, get_num_ranks())
+            | std::views::filter([my_rank = get_my_rank()](const auto& rank) { return rank != my_rank; });
+    }
 
     /**
      * @brief Returns the current MPI rank's id

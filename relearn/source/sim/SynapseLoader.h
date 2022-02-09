@@ -27,11 +27,13 @@ class Partition;
  */
 class SynapseLoader {
 public:
-    using neuron_id = size_t;
+    using LocalSynapse = std::tuple<NeuronID, NeuronID, int>;
+    using InSynapse = std::tuple<RankNeuronId, NeuronID, int>;
+    using OutSynapse = std::tuple<NeuronID, RankNeuronId, int>;
 
 protected:
-    using source_neuron_id = neuron_id;
-    using target_neuron_id = neuron_id;
+    using source_neuron_id = NeuronID;
+    using target_neuron_id = NeuronID;
 
     using synapse_weight = int;
 
@@ -45,11 +47,10 @@ protected:
 
     using synapses_tuple_type = std::tuple<local_synapses_type, in_synapses_type, out_synapses_type>;
 
-protected:
     std::shared_ptr<Partition> partition{};
     std::shared_ptr<NeuronIdTranslator> nit{};
 
-    virtual std::pair<synapses_tuple_type, std::vector<neuron_id>> internal_load_synapses() = 0;
+    virtual std::pair<synapses_tuple_type, std::vector<NeuronID>> internal_load_synapses() = 0;
 
 public:
     /**
@@ -61,6 +62,16 @@ public:
         : partition(std::move(partition))
         , nit(std::move(neuron_id_translator)) { }
 
+    SynapseLoader(const SynapseLoader&) = default;
+
+    SynapseLoader& operator=(const SynapseLoader&) = default;
+
+    SynapseLoader(SynapseLoader&&) = default;
+
+    SynapseLoader& operator=(SynapseLoader&&) = default;
+
+    virtual ~SynapseLoader() = default;
+
     /**
      * @brief Loads all synapses that affect the local neurons, which are
      *      (1) local synapses (local neuron to local neuron)
@@ -69,7 +80,4 @@ public:
      * @return A tuple of (local, in, out) synapes
      */
     std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> load_synapses();
-
-    virtual ~SynapseLoader()
-        = default;
 };

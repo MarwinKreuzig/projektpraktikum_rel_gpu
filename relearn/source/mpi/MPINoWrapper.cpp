@@ -38,8 +38,8 @@ void MPINoWrapper::barrier() {
     return value;
 }
 
-void MPINoWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst) {
-    dst = src;
+std::vector<size_t> MPINoWrapper::all_to_all(const std::vector<size_t>& src) {
+    return src;
 }
 
 void MPINoWrapper::async_s(const void* buffer, int count, int /*rank*/, AsyncToken& token) {

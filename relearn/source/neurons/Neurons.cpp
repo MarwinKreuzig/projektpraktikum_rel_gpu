@@ -45,11 +45,11 @@ void Neurons::init(const size_t num_neurons, std::vector<double> target_calcium_
     dendrites_inh->init(number_neurons);
 
     /**
-	* Mark dendrites as exc./inh.
-	*/
-    for (size_t i = 0; i < number_neurons; i++) {
-        dendrites_exc->set_signal_type(i, SignalType::EXCITATORY);
-        dendrites_inh->set_signal_type(i, SignalType::INHIBITORY);
+     * Mark dendrites as exc./inh.
+     */
+    for (const auto& id : NeuronID::range(number_neurons)) {
+        dendrites_exc->set_signal_type(id, SignalType::EXCITATORY);
+        dendrites_inh->set_signal_type(id, SignalType::INHIBITORY);
     }
 
     disable_flags.resize(number_neurons, UpdateStatus::ENABLED);
@@ -57,11 +57,11 @@ void Neurons::init(const size_t num_neurons, std::vector<double> target_calcium_
     target_calcium = std::move(target_calcium_values);
 
     // Init member variables
-    for (size_t i = 0; i < number_neurons; i++) {
+    for (const auto& id : NeuronID::range(number_neurons)) {
         // Set calcium concentration
-        const auto fired = neuron_model->get_fired(i);
+        const auto fired = neuron_model->get_fired(id);
         if (fired) {
-            calcium[i] += neuron_model->get_beta();
+            calcium[id.get_local_id()] += neuron_model->get_beta();
         }
     }
 }
@@ -71,26 +71,28 @@ void Neurons::init_synaptic_elements() {
     const std::vector<double>& dendrites_inh_cnts = dendrites_inh->get_grown_elements();
     const std::vector<double>& dendrites_exc_cnts = dendrites_exc->get_grown_elements();
 
-    for (auto i = 0; i < number_neurons; i++) {
-        const size_t axon_connections = network_graph->get_number_out_edges(i);
-        const size_t dendrites_ex_connections = network_graph->get_number_excitatory_in_edges(i);
-        const size_t dendrites_in_connections = network_graph->get_number_inhibitory_in_edges(i);
+    for (const auto& id : NeuronID::range(number_neurons)) {
+        const size_t axon_connections = network_graph->get_number_out_edges(id);
+        const size_t dendrites_ex_connections = network_graph->get_number_excitatory_in_edges(id);
+        const size_t dendrites_in_connections = network_graph->get_number_inhibitory_in_edges(id);
 
-        axons->update_grown_elements(i, static_cast<double>(axon_connections));
-        dendrites_exc->update_grown_elements(i, static_cast<double>(dendrites_ex_connections));
-        dendrites_inh->update_grown_elements(i, static_cast<double>(dendrites_in_connections));
+        axons->update_grown_elements(id, static_cast<double>(axon_connections));
+        dendrites_exc->update_grown_elements(id, static_cast<double>(dendrites_ex_connections));
+        dendrites_inh->update_grown_elements(id, static_cast<double>(dendrites_in_connections));
 
-        axons->update_connected_elements(i, static_cast<int>(axon_connections));
-        dendrites_exc->update_connected_elements(i, static_cast<int>(dendrites_ex_connections));
-        dendrites_inh->update_connected_elements(i, static_cast<int>(dendrites_in_connections));
+        axons->update_connected_elements(id, static_cast<int>(axon_connections));
+        dendrites_exc->update_connected_elements(id, static_cast<int>(dendrites_ex_connections));
+        dendrites_inh->update_connected_elements(id, static_cast<int>(dendrites_in_connections));
 
-        RelearnException::check(axons_cnts[i] >= axons->get_connected_elements()[i], "Error is with: %d", i);
-        RelearnException::check(dendrites_inh_cnts[i] >= dendrites_inh->get_connected_elements()[i], "Error is with: %d", i);
-        RelearnException::check(dendrites_exc_cnts[i] >= dendrites_exc->get_connected_elements()[i], "Error is with: %d", i);
+        const auto local_id = id.get_local_id();
+
+        RelearnException::check(axons_cnts[local_id] >= axons->get_connected_elements()[local_id], "Error is with: %d", local_id);
+        RelearnException::check(dendrites_inh_cnts[local_id] >= dendrites_inh->get_connected_elements()[local_id], "Error is with: %d", local_id);
+        RelearnException::check(dendrites_exc_cnts[local_id] >= dendrites_exc->get_connected_elements()[local_id], "Error is with: %d", local_id);
     }
 }
 
-size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
+size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
     neuron_model->disable_neurons(neuron_ids);
 
     const auto my_rank = MPIWrapper::get_my_rank();
@@ -121,24 +123,25 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
             network_graph->add_synapse(LocalSynapse(target_neuron_id, neuron_id, -weight));
 
             bool is_within = std::binary_search(neuron_ids.begin(), neuron_ids.end(), target_neuron_id);
+            const auto local_target_neuron_id = target_neuron_id.get_local_id();
 
             if (is_within) {
                 if (weight > 0) {
-                    deleted_dend_ex_connections[target_neuron_id] += weight;
+                    deleted_dend_ex_connections[local_target_neuron_id] += weight;
                     number_deleted_out_exc_edges_within++;
                     weight_deleted_out_exc_edges_within += weight;
                 } else {
-                    deleted_dend_in_connections[target_neuron_id] -= weight;
+                    deleted_dend_in_connections[local_target_neuron_id] -= weight;
                     number_deleted_out_inh_edges_within++;
                     weight_deleted_out_inh_edges_within += std::abs(weight);
                 }
             } else {
                 if (weight > 0) {
-                    deleted_dend_ex_connections[target_neuron_id] += weight;
+                    deleted_dend_ex_connections[local_target_neuron_id] += weight;
                     number_deleted_out_exc_edges_to_outside++;
                     weight_deleted_out_exc_edges_to_outside += weight;
                 } else {
-                    deleted_dend_in_connections[target_neuron_id] -= weight;
+                    deleted_dend_in_connections[local_target_neuron_id] -= weight;
                     number_deleted_out_inh_edges_to_outside++;
                     weight_deleted_out_inh_edges_to_outside += std::abs(weight);
                 }
@@ -150,8 +153,8 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
     size_t weight_deleted_in_edges_from_outside = 0;
 
     for (const auto neuron_id : neuron_ids) {
-        RelearnException::check(neuron_id < number_neurons, "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
-        disable_flags[neuron_id] = UpdateStatus::DISABLED;
+        RelearnException::check(neuron_id.get_local_id() < number_neurons, "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
+        disable_flags[neuron_id.get_local_id()] = UpdateStatus::DISABLED;
 
         const auto local_in_edges = network_graph->get_local_in_edges(neuron_id);
         const auto distant_in_edges = network_graph->get_distant_in_edges(neuron_id);
@@ -160,7 +163,7 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
         for (const auto& [source_neuron_id, weight] : local_in_edges) {
             network_graph->add_synapse(LocalSynapse(neuron_id, source_neuron_id, -weight));
 
-            deleted_axon_connections[source_neuron_id] += std::abs(weight);
+            deleted_axon_connections[source_neuron_id.get_local_id()] += std::abs(weight);
 
             bool is_within = std::binary_search(neuron_ids.begin(), neuron_ids.end(), source_neuron_id);
 
@@ -201,10 +204,10 @@ size_t Neurons::disable_neurons(const std::vector<size_t>& neuron_ids) {
     return deleted_connections_to_outer_world + weight_deleted_edges_within;
 }
 
-void Neurons::enable_neurons(const std::vector<size_t>& neuron_ids) {
+void Neurons::enable_neurons(const std::vector<NeuronID>& neuron_ids) {
     for (const auto neuron_id : neuron_ids) {
-        RelearnException::check(neuron_id < number_neurons, "Neurons::enable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
-        disable_flags[neuron_id] = UpdateStatus::ENABLED;
+        RelearnException::check(neuron_id.get_local_id() < number_neurons, "Neurons::enable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
+        disable_flags[neuron_id.get_local_id()] = UpdateStatus::ENABLED;
     }
 }
 
@@ -225,8 +228,9 @@ void Neurons::create_neurons(const size_t creation_count, const std::vector<doub
     dendrites_inh->create_neurons(creation_count);
 
     for (size_t i = current_size; i < new_size; i++) {
-        dendrites_exc->set_signal_type(i, SignalType::EXCITATORY);
-        dendrites_inh->set_signal_type(i, SignalType::INHIBITORY);
+        const auto id = NeuronID{ i };
+        dendrites_exc->set_signal_type(id, SignalType::EXCITATORY);
+        dendrites_inh->set_signal_type(id, SignalType::INHIBITORY);
     }
 
     disable_flags.resize(new_size, UpdateStatus::ENABLED);
@@ -236,7 +240,7 @@ void Neurons::create_neurons(const size_t creation_count, const std::vector<doub
 
     for (size_t i = current_size; i < new_size; i++) {
         // Set calcium concentration
-        const auto fired = neuron_model->get_fired(i);
+        const auto fired = neuron_model->get_fired(NeuronID{ i });
         if (fired) {
             calcium[i] += neuron_model->get_beta();
         }
@@ -245,9 +249,9 @@ void Neurons::create_neurons(const size_t creation_count, const std::vector<doub
     const auto my_rank = MPIWrapper::get_my_rank();
 
     for (size_t i = current_size; i < new_size; i++) {
-        const auto& pos = extra_info->get_position(i);
-
-        global_tree->insert(pos, i, my_rank);
+        auto id = NeuronID{ i };
+        const auto& pos = extra_info->get_position(id);
+        global_tree->insert(pos, id, my_rank);
     }
 
     global_tree->initializes_leaf_nodes(new_size);
@@ -274,22 +278,24 @@ void Neurons::update_calcium() {
 
     const auto val = (1.0 / static_cast<double>(h));
 
-#pragma omp parallel for
+#pragma omp parallel for default(none) shared(fired, h, val, tau_C, beta)
     for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
         }
 
         // Update calcium depending on the firing
+        auto c = calcium[neuron_id];
         if (fired[neuron_id] == 1) {
             for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-                calcium[neuron_id] += val * (-calcium[neuron_id] / tau_C + beta);
+                c += val * (-c / tau_C + beta);
             }
         } else {
             for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-                calcium[neuron_id] += val * (-calcium[neuron_id] / tau_C);
+                c += val * (-c / tau_C);
             }
         }
+        calcium[neuron_id] = c;
     }
 
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
@@ -302,14 +308,14 @@ StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_
     const double d_min = MPIWrapper::reduce(d_my_min, MPIWrapper::ReduceFunction::min, root);
     const double d_max = MPIWrapper::reduce(d_my_max, MPIWrapper::ReduceFunction::max, root);
 
-    const double num_values = static_cast<double>(MPIWrapper::all_reduce_uint64(d_num_values, MPIWrapper::ReduceFunction::sum));
+    const auto num_values = static_cast<double>(MPIWrapper::all_reduce_uint64(d_num_values, MPIWrapper::ReduceFunction::sum));
 
     // Get global avg at all ranks (needed for variance)
     const double avg = MPIWrapper::all_reduce_double(my_avg, MPIWrapper::ReduceFunction::sum) / MPIWrapper::get_num_ranks();
 
     /**
-	 * Calc variance
-	 */
+     * Calc variance
+     */
     double my_var = 0;
     for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
@@ -342,7 +348,7 @@ size_t Neurons::delete_synapses() {
         Timers::stop_and_add(TimerRegion::FIND_SYNAPSES_TO_DELETE);
 
         Timers::start(TimerRegion::DELETE_SYNAPSES_ALL_TO_ALL);
-        const auto incoming_deletion_requests = SynapseDeletionRequests::exchange_requests(outgoing_deletion_requests);
+        const auto incoming_deletion_requests = MPIWrapper::exchange_requests(outgoing_deletion_requests);
         Timers::stop_and_add(TimerRegion::DELETE_SYNAPSES_ALL_TO_ALL);
 
         Timers::start(TimerRegion::PROCESS_DELETE_REQUESTS);
@@ -361,17 +367,19 @@ size_t Neurons::delete_synapses() {
     return axons_deleted + excitatory_dendrites_deleted + inhibitory_dendrites_deleted;
 }
 
-MapSynapseDeletionRequests Neurons::delete_synapses_find_synapses(const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) {
+CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) {
     const auto& [sum_to_delete, number_deletions] = to_delete;
 
+    const auto number_ranks = MPIWrapper::get_num_ranks();
+    const auto my_rank = MPIWrapper::get_my_rank();
+
+    CommunicationMap<SynapseDeletionRequest> deletion_requests(number_ranks);
+
     if (sum_to_delete == 0) {
-        return {};
+        return deletion_requests;
     }
 
-    const auto my_rank = MPIWrapper::get_my_rank();
     const auto element_type = synaptic_elements.get_element_type();
-
-    MapSynapseDeletionRequests deletion_requests{};
 
     for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
@@ -379,20 +387,21 @@ MapSynapseDeletionRequests Neurons::delete_synapses_find_synapses(const Synaptic
         }
 
         /**
-		 * Create and delete synaptic elements as required.
-		 * This function only deletes elements (bound and unbound), no synapses.
-		 */
+         * Create and delete synaptic elements as required.
+         * This function only deletes elements (bound and unbound), no synapses.
+         */
         const auto num_synapses_to_delete = number_deletions[neuron_id];
         if (num_synapses_to_delete == 0) {
             continue;
         }
 
-        const auto signal_type = synaptic_elements.get_signal_type(neuron_id);
-        const auto affected_neuron_ids = delete_synapses_find_synapses_on_neuron(neuron_id, element_type, signal_type, num_synapses_to_delete);
+        const auto id = NeuronID{ neuron_id };
+        const auto signal_type = synaptic_elements.get_signal_type(id);
+        const auto affected_neuron_ids = delete_synapses_find_synapses_on_neuron(id, element_type, signal_type, num_synapses_to_delete);
 
         for (const auto& [rank, other_neuron_id] : affected_neuron_ids) {
-            SynapseDeletionRequest psd(neuron_id, other_neuron_id, element_type, signal_type);
-            deletion_requests[rank].append(psd);
+            SynapseDeletionRequest psd(id, other_neuron_id, element_type, signal_type);
+            deletion_requests.append(rank, psd);
 
             if (my_rank == rank) {
                 continue;
@@ -400,9 +409,9 @@ MapSynapseDeletionRequests Neurons::delete_synapses_find_synapses(const Synaptic
 
             const auto weight = (SignalType::EXCITATORY == signal_type) ? -1 : 1;
             if (ElementType::AXON == element_type) {
-                network_graph->add_synapse(DistantOutSynapse(RankNeuronId(rank, other_neuron_id), neuron_id, weight));
+                network_graph->add_synapse(DistantOutSynapse(RankNeuronId(rank, other_neuron_id), id, weight));
             } else {
-                network_graph->add_synapse(DistantInSynapse(neuron_id, RankNeuronId(rank, other_neuron_id), weight));
+                network_graph->add_synapse(DistantInSynapse(id, RankNeuronId(rank, other_neuron_id), weight));
             }
         }
     }
@@ -411,7 +420,7 @@ MapSynapseDeletionRequests Neurons::delete_synapses_find_synapses(const Synaptic
 }
 
 std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
-    size_t neuron_id,
+    NeuronID neuron_id,
     ElementType element_type,
     SignalType signal_type,
     unsigned int num_synapses_to_delete) {
@@ -458,7 +467,7 @@ std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
     std::vector<unsigned int> drawn_indices{};
     std::uniform_int_distribution<unsigned int> uid{};
 
-    for (auto i = 0; i < num_synapses_to_delete; i++) {
+    for (unsigned int i = 0; i < num_synapses_to_delete; i++) {
         auto random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::Neurons, 0, num_synapses_to_delete - 1);
         while (std::find(drawn_indices.begin(), drawn_indices.end(), random_number) != drawn_indices.end()) {
             random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::Neurons, 0, num_synapses_to_delete - 1);
@@ -475,7 +484,7 @@ std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
     return affected_neurons;
 }
 
-size_t Neurons::delete_synapses_commit_deletions(const MapSynapseDeletionRequests& list) {
+size_t Neurons::delete_synapses_commit_deletions(const CommunicationMap<SynapseDeletionRequest>& list) {
     const int my_rank = MPIWrapper::get_my_rank();
     size_t num_synapses_deleted = 0;
 
@@ -483,7 +492,7 @@ size_t Neurons::delete_synapses_commit_deletions(const MapSynapseDeletionRequest
         num_synapses_deleted += requests.size();
 
         for (auto i = 0; i < requests.size(); i++) {
-            const auto& [other_neuron_id, my_neuron_id, element_type, signal_type] = requests.get_request(i);
+            const auto& [other_neuron_id, my_neuron_id, element_type, signal_type] = requests[i];
             const auto weight = (SignalType::EXCITATORY == signal_type) ? -1 : 1;
 
             /**
@@ -588,10 +597,12 @@ void Neurons::debug_check_counts() {
         RelearnException::check(vacant_inhibitory_dendrites >= 0.0, "Neurons::debug_check_counts: {} has a weird number of vacant inhibitory dendrites: {}", neuron_id, vacant_inhibitory_dendrites);
     }
 
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        const double connected_axons_neuron = connected_axons[neuron_id];
-        const double connected_excitatory_dendrites_neuron = connected_excitatory_dendrites[neuron_id];
-        const double connected_inhibitory_dendrites_neuron = connected_inhibitory_dendrites[neuron_id];
+    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+        const auto local_neuron_id = neuron_id.get_local_id();
+
+        const double connected_axons_neuron = connected_axons[local_neuron_id];
+        const double connected_excitatory_dendrites_neuron = connected_excitatory_dendrites[local_neuron_id];
+        const double connected_inhibitory_dendrites_neuron = connected_inhibitory_dendrites[local_neuron_id];
 
         const auto number_connected_axons = static_cast<size_t>(connected_axons_neuron);
         const auto number_connected_excitatory_dendrites = static_cast<size_t>(connected_excitatory_dendrites_neuron);
@@ -754,8 +765,6 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const si
 }
 
 void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
-    const auto total_number_neurons = partition->get_total_number_neurons();
-
     const StatisticalMeasures& calcium_statistics = get_statistics(NeuronAttribute::Calcium);
     const StatisticalMeasures& axons_statistics = get_statistics(NeuronAttribute::Axons);
     const StatisticalMeasures& axons_connected_statistics = get_statistics(NeuronAttribute::AxonsConnected);
@@ -908,8 +917,6 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
 }
 
 void Neurons::print_calcium_statistics_to_essentials() {
-    const auto total_number_neurons = partition->get_total_number_neurons();
-
     const StatisticalMeasures& calcium_statistics = global_statistics(calcium, 0, disable_flags);
 
     if (0 != MPIWrapper::get_my_rank()) {
@@ -948,10 +955,9 @@ void Neurons::print_positions_to_log_file() {
     const std::vector<std::string>& area_names = extra_info->get_area_names();
     const std::vector<SignalType>& signal_types = axons->get_signal_types();
 
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-
+    for (auto neuron_id : NeuronID::range(number_neurons)) {
         const auto global_id = translator->get_global_id(neuron_id);
-        const auto& signal_type_name = (signal_types[neuron_id] == SignalType::EXCITATORY) ? std::string("ex") : std::string("in");
+        const auto& signal_type_name = (signal_types[neuron_id.get_local_id()] == SignalType::EXCITATORY) ? std::string("ex") : std::string("in");
 
         const auto& pos = extra_info->get_position(neuron_id);
 
@@ -961,7 +967,7 @@ void Neurons::print_positions_to_log_file() {
 
         LogFiles::write_to_file(LogFiles::EventType::Positions, false,
             "{1:<} {2:<.{0}} {3:<.{0}} {4:<.{0}} {5:<} {6:<}",
-            Constants::print_precision, (global_id + 1), x, y, z, area_names[neuron_id], signal_type_name);
+            Constants::print_precision, (global_id.get_global_id() + 1), x, y, z, area_names[neuron_id.get_local_id()], signal_type_name);
     }
 }
 
@@ -977,8 +983,9 @@ void Neurons::print() {
 
     // Values
     for (size_t i = 0; i < number_neurons; i++) {
-        LogFiles::write_to_file(LogFiles::EventType::Cout, true, "{3:<{1}}{4:<{0}.{2}f}{5:<{0}}{6:<{0}.{2}f}{7:<{0}.{2}f}{8:<{0}.{2}f}{9:<{0}.{2}f}{10:<{0}.{2}f}", cwidth, cwidth_left, Constants::print_precision, i, neuron_model->get_x(i), neuron_model->get_fired(i),
-            neuron_model->get_secondary_variable(i), calcium[i], axons->get_grown_elements(i), dendrites_exc->get_grown_elements(i), dendrites_inh->get_grown_elements(i));
+        const auto id = NeuronID{ i };
+        LogFiles::write_to_file(LogFiles::EventType::Cout, true, "{3:<{1}}{4:<{0}.{2}f}{5:<{0}}{6:<{0}.{2}f}{7:<{0}.{2}f}{8:<{0}.{2}f}{9:<{0}.{2}f}{10:<{0}.{2}f}", cwidth, cwidth_left, Constants::print_precision, i, neuron_model->get_x(id), neuron_model->get_fired(id),
+            neuron_model->get_secondary_variable(id), calcium[i], axons->get_grown_elements(id), dendrites_exc->get_grown_elements(id), dendrites_inh->get_grown_elements(id));
     }
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
@@ -1008,22 +1015,23 @@ void Neurons::print_info_for_algorithm() {
        << "\n";
 
     // Values
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (auto neuron_id : NeuronID::range(number_neurons)) {
+        const auto local_neuron_id = neuron_id.get_local_id();
+
         ss << std::left << std::setw(cwidth_small) << neuron_id;
 
-        const auto& pos = extra_info->get_position(neuron_id);
-        const auto& [x, y, z] = pos;
+        const auto [x, y, z] = extra_info->get_position(neuron_id);
 
         my_string = "(" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")";
         ss << std::setw(cwidth_medium) << my_string;
 
-        my_string = std::to_string(axons_cnts[neuron_id]) + "|" + std::to_string(axons_connected_cnts[neuron_id]);
+        my_string = std::to_string(axons_cnts[local_neuron_id]) + "|" + std::to_string(axons_connected_cnts[local_neuron_id]);
         ss << std::setw(cwidth_big) << my_string;
 
-        my_string = std::to_string(dendrites_exc_cnts[neuron_id]) + "|" + std::to_string(dendrites_exc_connected_cnts[neuron_id]);
+        my_string = std::to_string(dendrites_exc_cnts[local_neuron_id]) + "|" + std::to_string(dendrites_exc_connected_cnts[local_neuron_id]);
         ss << std::setw(cwidth_big) << my_string;
 
-        my_string = std::to_string(dendrites_inh_cnts[neuron_id]) + "|" + std::to_string(dendrites_inh_connected_cnts[neuron_id]);
+        my_string = std::to_string(dendrites_inh_cnts[local_neuron_id]) + "|" + std::to_string(dendrites_inh_connected_cnts[local_neuron_id]);
         ss << std::setw(cwidth_big) << my_string;
 
         ss << "\n";

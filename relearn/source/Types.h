@@ -12,6 +12,7 @@
 
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/Synapse.h"
+#include "util/TaggedID.h"
 #include "util/Vec3.h"
 
 #include <vector>
@@ -34,14 +35,13 @@ namespace RelearnTypes {
 using box_size_type = Vec3d;
 using position_type = Vec3d;
 
-using neuron_id = size_t;
 using synapse_weight = int;
 
 } // namespace RelearnTypes
 
-using LocalSynapse = Synapse<RelearnTypes::neuron_id, RelearnTypes::neuron_id, RelearnTypes::synapse_weight>;
-using DistantInSynapse = Synapse<RelearnTypes::neuron_id, RankNeuronId, RelearnTypes::synapse_weight>;
-using DistantOutSynapse = Synapse<RankNeuronId, RelearnTypes::neuron_id, RelearnTypes::synapse_weight>;
+using LocalSynapse = Synapse<NeuronID, NeuronID, RelearnTypes::synapse_weight>;
+using DistantInSynapse = Synapse<NeuronID, RankNeuronId, RelearnTypes::synapse_weight>;
+using DistantOutSynapse = Synapse<RankNeuronId, NeuronID, RelearnTypes::synapse_weight>;
 using DistantSynapse = Synapse<RankNeuronId, RankNeuronId, RelearnTypes::synapse_weight>;
 
 using LocalSynapses = std::vector<LocalSynapse>;

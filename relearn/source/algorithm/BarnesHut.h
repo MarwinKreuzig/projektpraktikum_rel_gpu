@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "../Types.h"
 #include "../neurons/SignalType.h"
 #include "../neurons/helper/RankNeuronId.h"
 #include "../neurons/helper/SynapseCreationRequests.h"
@@ -76,7 +77,7 @@ public:
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
-    [[nodiscard]] MapSynapseCreationRequests find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+    [[nodiscard]] CommunicationMap<SynapseCreationRequest> find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override;
 
     /**
@@ -133,8 +134,8 @@ public:
             std::optional<position_type> opt_child_position_dendrites_inhibitory = child_cell.get_inhibitory_dendrites_position();
 
             /**
-			 * We can use position if it's valid or if corresponding num of dendrites is 0 
-			 */
+             * We can use position if it's valid or if corresponding num of dendrites is 0
+             */
             RelearnException::check(opt_child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "BarnesHut::update_functor: The child had excitatory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
             RelearnException::check(opt_child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "BarnesHut::update_functor: The child had inhibitory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
 
@@ -166,9 +167,9 @@ public:
         node->set_cell_number_dendrites(my_number_dendrites_excitatory, my_number_dendrites_inhibitory);
 
         /**
-		 * For calculating the new weighted position, make sure that we don't
-		 * divide by 0. This happens if the my number of dendrites is 0.
-		 */
+         * For calculating the new weighted position, make sure that we don't
+         * divide by 0. This happens if the my number of dendrites is 0.
+         */
         if (0 == my_number_dendrites_excitatory) {
             node->set_cell_excitatory_dendrites_position({});
         } else {
@@ -194,17 +195,17 @@ private:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
      */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(size_t initiator_neuron_id, const position_type& axon_pos_xyz, SignalType dendrite_type_needed);
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz, SignalType dendrite_type_needed);
 
     [[nodiscard]] double
     calc_attractiveness_to_connect(
-        size_t initiator_neuron_id,
+        const NeuronID& src_neuron_id,
         const position_type& axon_pos_xyz,
         const OctreeNode<BarnesHutCell>& node_with_dendrite,
         SignalType dendrite_type_needed) const;
 
     [[nodiscard]] std::pair<double, std::vector<double>> create_interval(
-        size_t initiator_neuron_id,
+        const NeuronID& src_neuron_id,
         const position_type& axon_pos_xyz,
         SignalType dendrite_type_needed,
         const std::vector<OctreeNode<BarnesHutCell>*>& vector) const;

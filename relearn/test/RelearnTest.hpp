@@ -10,17 +10,17 @@
 
 #include "gtest/gtest.h"
 
-#include "../../../source/algorithm/BarnesHutCell.h"
-#include "../../../source/algorithm/FastMultipoleMethodsCell.h"
-#include "../../../source/structure/OctreeNode.h"
-#include "../../../source/mpi/MPIWrapper.h"
-#include "../../../source/io/LogFiles.h"
-#include "../../../source/structure/OctreeNode.h"
-#include "../../../source/util/MemoryHolder.h"
-#include "../../../source/util/RelearnException.h"
-#include "../../../source/neurons/ElementType.h"
-#include "../../../source/neurons/SignalType.h"
-#include "../../../source/neurons/models/SynapticElements.h"
+#include "../source/algorithm/BarnesHutCell.h"
+#include "../source/algorithm/FastMultipoleMethodsCell.h"
+#include "../source/io/LogFiles.h"
+#include "../source/mpi/MPIWrapper.h"
+#include "../source/neurons/ElementType.h"
+#include "../source/neurons/SignalType.h"
+#include "../source/neurons/models/SynapticElements.h"
+#include "../source/structure/OctreeNode.h"
+#include "../source/util/MemoryHolder.h"
+#include "../source/util/RelearnException.h"
+#include "../source/util/TaggedID.h"
 
 #include <chrono>
 #include <cmath>
@@ -163,9 +163,9 @@ protected:
         return uid_num_synapses(mt);
     }
 
-    size_t get_random_neuron_id(size_t number_neurons) {
+    NeuronID get_random_neuron_id(size_t number_neurons) {
         std::uniform_int_distribution<size_t> uid(0, number_neurons - 1);
-        return uid(mt);
+        return NeuronID{ uid(mt) };
     }
 
     int get_random_synapse_weight() {
@@ -176,8 +176,8 @@ protected:
         return get_random_integer<unsigned int>(0, maximum);
     }
 
-    std::vector<std::tuple<size_t, size_t, int>> get_random_synapses(size_t number_neurons, size_t number_synapses) {
-        std::vector<std::tuple<size_t, size_t, int>> synapses(number_synapses);
+    std::vector<std::tuple<NeuronID, NeuronID, int>> get_random_synapses(size_t number_neurons, size_t number_synapses) {
+        std::vector<std::tuple<NeuronID, NeuronID, int>> synapses(number_synapses);
 
         for (auto i = 0; i < number_synapses; i++) {
             const auto source_id = get_random_neuron_id(number_neurons);
@@ -235,14 +235,16 @@ protected:
         std::vector<unsigned int> connected_elements(number_elements);
         std::vector<SignalType> signal_types(number_elements);
 
-        for (auto i = 0; i < number_elements; i++) {
+        for (auto neuron_id : NeuronID::range(number_elements)) { 
             const auto number_grown_elements = get_random_synaptic_element_count();
             const auto number_connected_elements = get_random_synaptic_element_connected_count(static_cast<unsigned int>(number_grown_elements));
             const auto signal_type = get_random_signal_type();
 
-            se.update_grown_elements(i, number_grown_elements);
-            se.update_connected_elements(i, number_connected_elements);
-            se.set_signal_type(i, signal_type);
+            se.update_grown_elements(neuron_id, number_grown_elements);
+            se.update_connected_elements(neuron_id, number_connected_elements);
+            se.set_signal_type(neuron_id, signal_type);
+
+            const auto i = neuron_id.id();
 
             grown_elements[i] = number_grown_elements;
             connected_elements[i] = number_connected_elements;
@@ -336,7 +338,7 @@ protected:
     void generate_neuron_positions(std::vector<Vec3d>& positions,
         std::vector<std::string>& area_names, std::vector<SignalType>& types);
 
-    void generate_synapses(std::vector<std::tuple<size_t, size_t, int>>& synapses, size_t number_neurons);
+    void generate_synapses(std::vector<std::tuple<NeuronID, NeuronID, int>>& synapses, size_t number_neurons);
 };
 
 class NeuronModelsTest : public RelearnTest {
@@ -464,4 +466,14 @@ protected:
     static void SetUpTestCase() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
+};
+
+template <typename T>
+class TaggedIDTest : public RelearnTest {
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+
+    static_assert(sizeof(typename TaggedID<T>::value_type) == sizeof(T));
 };

@@ -31,7 +31,7 @@ template <typename T>
 std::tuple<T, T, T, size_t> min_max_acc(const std::vector<T>& values, const std::vector<UpdateStatus>& disable_flags) {
     static_assert(std::is_arithmetic<T>::value);
 
-    RelearnException::check(values.size() > 0, "Util::min_max_acc: values had size 0");
+    RelearnException::check(!values.empty(), "Util::min_max_acc: values are empty");
     RelearnException::check(values.size() == disable_flags.size(), "Util::min_max_acc: values and disable_flags had different sizes");
 
     size_t first_index = 0;
@@ -91,8 +91,8 @@ constexpr unsigned int num_digits(T val) noexcept {
 
 /**
  * @brief Calculates the faculty.
- * @param value 
- * @tparam T Type of which a faculty should be calculated (should be unsigned int). 
+ * @param value
+ * @tparam T Type of which a faculty should be calculated (should be unsigned int).
  * @return Returns the faculty of the paramter value.
  */
 template <typename T>

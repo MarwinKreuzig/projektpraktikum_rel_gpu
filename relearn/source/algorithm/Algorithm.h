@@ -11,6 +11,7 @@
 #pragma once
 
 #include "../Types.h"
+#include "../mpi/CommunicationMap.h"
 #include "../neurons/UpdateStatus.h"
 #include "../neurons/helper/SynapseCreationRequests.h"
 #include "../neurons/models/SynapticElements.h"
@@ -24,7 +25,7 @@ class SynapticElements;
 
 /**
  * This is a virtual interface for all algorithms that can be used to find target neurons with vacant dendrites.
- * It provides Algorithm::find_target_neuron, Algorithm::update_leaf_nodes and every derived class must also implement 
+ * It provides Algorithm::find_target_neuron, Algorithm::update_leaf_nodes and every derived class must also implement
  * static void update_functor(OctreeNode<Cell>* node)
  * with Cell being exposed publicly via
  * using AdditionalCellAttributes = Cell;
@@ -58,10 +59,19 @@ public:
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
-    [[nodiscard]] virtual MapSynapseCreationRequests find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+    [[nodiscard]] virtual CommunicationMap<SynapseCreationRequest> find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos)
         = 0;
 
+    /**
+     * @brief Updates the connectivity with the algorithm. Already updates the synaptic elements, i.e., the axons and dendrites (both excitatory and inhibitory).
+     *      Does not update the network graph. Performs communication with MPI
+     * @param number_neurons The number of local neurons
+     * @param disable_flags Flags that indicate if a local neuron is disabled. If so (== 0), the neuron is ignored
+     * @param extra_infos Used to access the positions of the local neurons
+     * @exception Can throw a RelearnException
+     * @return A tuple with the created synapses that must be committed to the network graph
+     */
     [[nodiscard]] virtual std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos);
 
@@ -96,8 +106,10 @@ public:
 private:
     double sigma{ default_sigma };
 
-    std::pair<LocalSynapses, DistantInSynapses> create_synapses_process_requests(size_t number_neurons, MapSynapseCreationRequests& synapse_creation_requests_incoming);
-    DistantOutSynapses  create_synapses_process_responses(const MapSynapseCreationRequests& synapse_creation_requests_outgoing);
+    std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
+    create_synapses_process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& synapse_creation_requests_incoming);
+
+    DistantOutSynapses create_synapses_process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests, const CommunicationMap<SynapseCreationResponse>& creation_responses);
 
 protected:
     std::shared_ptr<SynapticElements> axons{};

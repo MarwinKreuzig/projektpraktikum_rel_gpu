@@ -21,8 +21,8 @@ class Partition;
 
 class RandomSynapseLoader : public SynapseLoader {
 protected:
-    std::pair<synapses_tuple_type, std::vector<neuron_id>> internal_load_synapses() override {
-        return std::pair<synapses_tuple_type, std::vector<neuron_id>>();
+    std::pair<synapses_tuple_type, std::vector<NeuronID>> internal_load_synapses() override {
+        return std::pair<synapses_tuple_type, std::vector<NeuronID>>();
     }
 
 public:

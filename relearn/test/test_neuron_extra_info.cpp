@@ -40,12 +40,12 @@ void NeuronsTest::assert_contains(const NeuronsExtraInfo& nei, size_t number_neu
     ASSERT_EQ(area_names_size, number_neurons) << area_names_size << ' ' << number_neurons;
     ASSERT_EQ(positions_size, number_neurons) << positions_size << ' ' << number_neurons;
 
-    for (auto neuron_id = 0; neuron_id < num_neurons_check; neuron_id++) {
-        ASSERT_EQ(expected_area_names[neuron_id], actual_area_names[neuron_id]) << neuron_id;
-        ASSERT_EQ(expected_area_names[neuron_id], nei.get_area_name(neuron_id)) << neuron_id;
+    for (auto neuron_id : NeuronID::range(num_neurons_check)) {
+        ASSERT_EQ(expected_area_names[neuron_id.id()], actual_area_names[neuron_id.id()]) << neuron_id;
+        ASSERT_EQ(expected_area_names[neuron_id.id()], nei.get_area_name(neuron_id)) << neuron_id;
 
-        ASSERT_EQ(expected_positions[neuron_id], actual_positions[neuron_id]) << neuron_id;
-        ASSERT_EQ(expected_positions[neuron_id], nei.get_position(neuron_id)) << neuron_id;
+        ASSERT_EQ(expected_positions[neuron_id.id()], actual_positions[neuron_id.id()]) << neuron_id;
+        ASSERT_EQ(expected_positions[neuron_id.id()], nei.get_position(neuron_id)) << neuron_id;
     }
 
     for (auto i = 0; i < number_neurons_out_of_scope; i++) {

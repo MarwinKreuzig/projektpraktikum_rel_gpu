@@ -13,6 +13,7 @@
 #include "../../Config.h"
 #include "../../mpi/MPIWrapper.h"
 #include "../../util/RelearnException.h"
+#include "../../util/TaggedID.h"
 
 #include <ostream>
 #include <utility>
@@ -24,11 +25,10 @@
 class RankNeuronId {
 public:
     using rank_type = int;
-    using neuron_id_type = size_t;
 
 private:
     rank_type rank{ -1 }; // MPI rank of the owner
-    neuron_id_type neuron_id{ Constants::uninitialized }; // Neuron id on the owner
+    NeuronID neuron_id{ NeuronID::uninitialized_id() }; // Neuron id on the owner
 
 public:
     /**
@@ -41,12 +41,12 @@ public:
      * @param rank The MPI rank
      * @param neuron_id The neuron id
      */
-    RankNeuronId(const rank_type rank, const neuron_id_type neuron_id) noexcept
+    RankNeuronId(const rank_type rank, const NeuronID neuron_id) noexcept
         : rank(rank)
         , neuron_id(neuron_id) {
     }
 
-    /** 
+    /**
      * @brief Returns the associated MPI rank
      * @return The MPI rank
      * @exception Throws a RelearnException if the rank is negative
@@ -61,8 +61,8 @@ public:
      * @return The neuron id
      * @exception Throws a RelearnException if the id is not smaller than Constants::uninitialized
      */
-    [[nodiscard]] neuron_id_type get_neuron_id() const {
-        RelearnException::check(neuron_id < Constants::uninitialized, "RankNeuronId::get_neuron_id: neuron_id is too large: {}", neuron_id);
+    [[nodiscard]] NeuronID get_neuron_id() const {
+        RelearnException::check(neuron_id.is_initialized(), "RankNeuronId::get_neuron_id: neuron_id is not initialized");
         return neuron_id;
     }
 
@@ -71,7 +71,7 @@ public:
      * @param other The other RankNeuronId
      * @return True iff both ranks and both neuron ids are equal
      */
-    bool operator==(const RankNeuronId& other) const noexcept {
+    [[nodiscard]] bool operator==(const RankNeuronId& other) const noexcept {
         return (this->rank == other.rank && this->neuron_id == other.neuron_id);
     }
 
@@ -80,7 +80,7 @@ public:
      * @param other The other RankNeuronId
      * @return False iff both ranks and both neuron ids are equal
      */
-    bool operator!=(const RankNeuronId& other) const noexcept {
+    [[nodiscard]] bool operator!=(const RankNeuronId& other) const noexcept {
         return !(*this == other);
     }
 
@@ -89,7 +89,7 @@ public:
      * @param other The other RankNeuronId
      * @return True iff this' rank is smaller than the other's or if the ranks are equal and this' neuron_id is smaller
      */
-    bool operator<(const RankNeuronId& other) const noexcept {
+    [[nodiscard]] bool operator<(const RankNeuronId& other) const noexcept {
         return (this->rank < other.rank) || (this->rank == other.rank && this->neuron_id < other.neuron_id);
     }
 
@@ -104,27 +104,33 @@ public:
     }
 
     template <std::size_t Index>
-    auto& get() & {
-        if constexpr (Index == 0)
+    [[nodiscard]] auto& get() & {
+        if constexpr (Index == 0) {
             return rank;
-        if constexpr (Index == 1)
+        }
+        if constexpr (Index == 1) {
             return neuron_id;
+        }
     }
 
     template <std::size_t Index>
-    auto const& get() const& {
-        if constexpr (Index == 0)
+    [[nodiscard]] auto const& get() const& {
+        if constexpr (Index == 0) {
             return rank;
-        if constexpr (Index == 1)
+        }
+        if constexpr (Index == 1) {
             return neuron_id;
+        }
     }
 
     template <std::size_t Index>
-    auto&& get() && {
-        if constexpr (Index == 0)
-            return std::move(rank);
-        if constexpr (Index == 1)
-            return std::move(neuron_id);
+    [[nodiscard]] auto&& get() && {
+        if constexpr (Index == 0) {
+            return rank;
+        }
+        if constexpr (Index == 1) {
+            return neuron_id;
+        }
     }
 };
 
@@ -141,7 +147,7 @@ struct tuple_element<0, ::RankNeuronId> {
 
 template <>
 struct tuple_element<1, ::RankNeuronId> {
-    using type = RankNeuronId::neuron_id_type;
+    using type = NeuronID;
 };
 
-} //namespace std
+} // namespace std

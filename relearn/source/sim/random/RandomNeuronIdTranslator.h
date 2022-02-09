@@ -11,6 +11,7 @@
 #include "../NeuronIdTranslator.h"
 #include "../../Config.h"
 #include "../../neurons/helper/RankNeuronId.h"
+#include "../../util/TaggedID.h"
 
 #include <functional>
 #include <map>
@@ -49,40 +50,40 @@ public:
      * @param global_id The global neuron id 
      * @return True iff the global neuron id belongs to the current MPI rank
      */
-    [[nodiscard]] bool is_neuron_local(size_t global_id) const override;
+    [[nodiscard]] bool is_neuron_local(NeuronID global_id) const override;
 
     /**
      * @brief Translated the global neuron id to the local neuron id
      * @param global_id The global neuron id
      * @return The local neuron id
      */
-    [[nodiscard]] size_t get_local_id(size_t global_id) const override;
+    [[nodiscard]] NeuronID get_local_id(NeuronID global_id) const override;
 
     /**
      * @brief Translated the local neuron id to the global neuron id
      * @param global_id The local neuron id
      * @return The global neuron id
      */
-    [[nodiscard]] size_t get_global_id(size_t local_id) const override;
+    [[nodiscard]] NeuronID get_global_id(NeuronID local_id) const override;
 
     /**
      * @brief Translated a bunch of global neuron ids to RankNeuronIds
      * @param global_ids The global neuron ids
      * @return A translation map from global neuron id to RankNeuronId
      */
-    [[nodiscard]] std::map<neuron_id, RankNeuronId> translate_global_ids(const std::vector<neuron_id>& global_ids) override;
+    [[nodiscard]] std::map<NeuronID, RankNeuronId> translate_global_ids(const std::vector<NeuronID>& global_ids) override;
 
     /**
      * @brief Translated a RankNeuronId to a global neuron id 
      * @param rni The rank neuron id
      * @return The global neuron id of that neuron
      */
-    [[nodiscard]] neuron_id translate_rank_neuron_id(const RankNeuronId& rni) override;
+    [[nodiscard]] NeuronID translate_rank_neuron_id(const RankNeuronId& rni) override;
 
     /**
      * @brief Translated a bunch of RankNeuronIds to global neuron ids
      * @param ids The RankNeuronIds
      * @return A translation map from RankNeuronId to global neuron id
      */
-    [[nodiscard]] std::map<RankNeuronId, neuron_id> translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) override;
+    [[nodiscard]] std::map<RankNeuronId, NeuronID> translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) override;
 };

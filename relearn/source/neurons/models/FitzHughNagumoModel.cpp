@@ -58,20 +58,22 @@ void models::FitzHughNagumoModel::create_neurons(size_t creation_count) {
     init_neurons(old_size, creation_count);
 }
 
-void FitzHughNagumoModel::update_activity(const size_t neuron_id) {
+void FitzHughNagumoModel::update_activity(const NeuronID& neuron_id) {
     const auto h = get_h();
     const auto I_syn = get_I_syn(neuron_id);
     auto x = get_x(neuron_id);
 
+    const auto local_neuron_id = neuron_id.get_local_id();
+
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-        x += iter_x(x, w[neuron_id], I_syn) / h;
-        w[neuron_id] += iter_refrac(w[neuron_id], x) / h;
+        x += iter_x(x, w[local_neuron_id], I_syn) / h;
+        w[local_neuron_id] += iter_refrac(w[local_neuron_id], x) / h;
     }
 
-    if (FitzHughNagumoModel::spiked(x, w[neuron_id])) {
-        set_fired(neuron_id, true);
+    if (FitzHughNagumoModel::spiked(x, w[local_neuron_id])) {
+        set_fired(neuron_id, 1);
     } else {
-        set_fired(neuron_id, false);
+        set_fired(neuron_id, 0);
     }
 
     set_x(neuron_id, x);
@@ -82,9 +84,9 @@ void FitzHughNagumoModel::init_neurons(const size_t start_id, const size_t end_i
         const auto x = FitzHughNagumoModel::init_x;
         w[neuron_id] = iter_refrac(FitzHughNagumoModel::init_w, x);
         const auto f = spiked(x, w[neuron_id]);
-
-        set_fired(neuron_id, f);
-        set_x(neuron_id, x);
+        const auto id = NeuronID{ neuron_id };
+        set_fired(id, static_cast<char>(f));
+        set_x(id, x);
     }
 }
 

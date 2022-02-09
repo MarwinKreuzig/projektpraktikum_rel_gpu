@@ -63,7 +63,7 @@ void models::PoissonModel::create_neurons(const size_t creation_count) {
     init_neurons(old_size, creation_count);
 }
 
-void PoissonModel::update_activity(const size_t neuron_id) {
+void PoissonModel::update_activity(const NeuronID& neuron_id) {
     const auto h = get_h();
     const auto I_syn = get_I_syn(neuron_id);
     auto x = get_x(neuron_id);
@@ -73,16 +73,18 @@ void PoissonModel::update_activity(const size_t neuron_id) {
         x += iter_x(x, I_syn) / h;
     }
 
+    const auto local_neuron_id = neuron_id.get_local_id();
+
     // Neuron ready to fire again
-    if (refrac[neuron_id] == 0) {
-        const bool f = x >= theta_values[neuron_id];
-        set_fired(neuron_id, f); // Decide whether a neuron fires depending on its firing rate
-        refrac[neuron_id] = f ? refrac_time : 0; // After having fired, a neuron is in a refractory state
+    if (refrac[local_neuron_id] == 0) {
+        const bool f = x >= theta_values[local_neuron_id];
+        set_fired(neuron_id, static_cast<char>(f)); // Decide whether a neuron fires depending on its firing rate
+        refrac[local_neuron_id] = static_cast<unsigned int>(f) * refrac_time; // After having fired, a neuron is in a refractory state
     }
     // Neuron now/still in refractory state
     else {
-        set_fired(neuron_id, false); // Set neuron inactive
-        --refrac[neuron_id]; // Decrease refractory time
+        set_fired(neuron_id, 0); // Set neuron inactive
+        --refrac[local_neuron_id]; // Decrease refractory time
     }
 
     set_x(neuron_id, x);
@@ -93,10 +95,10 @@ void PoissonModel::init_neurons(const size_t start_id, const size_t end_id) {
         const auto x = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
         const double threshold = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
         const bool f = x >= threshold;
-        set_fired(neuron_id, f); // Decide whether a neuron fires depending on its firing rate
+        const auto id = NeuronID{ neuron_id };
+        set_fired(id, static_cast<char>(f)); // Decide whether a neuron fires depending on its firing rate
         refrac[neuron_id] = f ? refrac_time : 0; // After having fired, a neuron is in a refractory state
-
-        set_x(neuron_id, x);
+        set_x(id, x);
     }
 }
 
