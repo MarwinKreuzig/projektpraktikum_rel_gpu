@@ -36,7 +36,10 @@ public:
     SynapseCreationRequest(NeuronID target, NeuronID source, SignalType signal_type)
         : target(target)
         , source(source)
-        , signal_type(signal_type) { }
+        , signal_type(signal_type) {
+        RelearnException::check(target.is_local(), "SynapseCreationRequest::SynapseCreationRequest: Can only serve local ids (target): {}", target);
+        RelearnException::check(source.is_local(), "SynapseCreationRequest::SynapseCreationRequest: Can only serve local ids (source): {}", source);
+    }
 
     /**
      * @brief Returns the target of the request

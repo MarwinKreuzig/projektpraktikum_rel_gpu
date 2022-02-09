@@ -48,8 +48,8 @@ public:
         , affected_neuron_id(affected_neuron)
         , initiator_element_type(element_type)
         , signal_type(signal_type) {
-        RelearnException::check(initiator_neuron.id() < Constants::uninitialized, "SynapseDeletionRequest::SynapseDeletionRequest(): initiator_neuron neuron id was too large");
-        RelearnException::check(affected_neuron.id() < Constants::uninitialized, "SynapseDeletionRequest::SynapseDeletionRequest(): affected_neuron neuron id was too large");
+        RelearnException::check(initiator_neuron.is_local(), "SynapseDeletionRequest::SynapseDeletionRequest(): initiator_neuron is not local: {}", initiator_neuron);
+        RelearnException::check(affected_neuron.is_local(), "SynapseDeletionRequest::SynapseDeletionRequest(): affected_neuron is not local: {}", affected_neuron);
     }
 
     SynapseDeletionRequest(const SynapseDeletionRequest& other) = default;

@@ -234,14 +234,14 @@ public:
      *
      * @return true iff the id is global
      */
-    [[nodiscard]] constexpr bool is_global() const noexcept { return is_global_; }
+    [[nodiscard]] constexpr bool is_global() const noexcept { return is_global_ && is_initialized_; }
 
     /**
      * @brief Check if the id is local
      *
      * @return true iff the id is local
      */
-    [[nodiscard]] constexpr bool is_local() const noexcept { return !is_global_; }
+    [[nodiscard]] constexpr bool is_local() const noexcept { return !is_global_ && is_initialized_; }
 
     /**
      * @brief Get an ID that is offset by offset
