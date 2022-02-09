@@ -100,11 +100,13 @@ public:
      * @exception Throws a RelearnException if local_neuron_id is larger or equal to the number of neurons stored
      * @return A constant view of all distant in-edges.
      */
-    [[nodiscard]] const DistantEdges& get_distant_in_edges(const NeuronID& local_neuron_id) const {
-        RelearnException::check(local_neuron_id.id() < neuron_distant_in_neighborhood.size(),
-            "NetworkGraph::get_distant_in_edges: Tried with a too large id of {}", local_neuron_id);
+    [[nodiscard]] const DistantEdges& get_distant_in_edges(const NeuronID& neuron_id) const {
+        const auto local_neuron_id = neuron_id.get_local_id();
 
-        return neuron_distant_in_neighborhood[local_neuron_id.id()];
+        RelearnException::check(local_neuron_id < neuron_distant_in_neighborhood.size(),
+            "NetworkGraph::get_distant_in_edges: Tried with a too large id of {}", neuron_id);
+
+        return neuron_distant_in_neighborhood[local_neuron_id];
     }
 
     /**
@@ -114,11 +116,13 @@ public:
      * @exception Throws a RelearnException if local_neuron_id is larger or equal to the number of neurons stored
      * @return A constant view of all distant out-edges.
      */
-    [[nodiscard]] const DistantEdges& get_distant_out_edges(const NeuronID& local_neuron_id) const {
-        RelearnException::check(local_neuron_id.id() < neuron_distant_out_neighborhood.size(),
-            "NetworkGraph::get_distant_out_edges: Tried with a too large id of {}", local_neuron_id);
+    [[nodiscard]] const DistantEdges& get_distant_out_edges(const NeuronID& neuron_id) const {
+        const auto local_neuron_id = neuron_id.get_local_id();
 
-        return neuron_distant_out_neighborhood[local_neuron_id.id()];
+        RelearnException::check(local_neuron_id < neuron_distant_out_neighborhood.size(),
+            "NetworkGraph::get_distant_out_edges: Tried with a too large id of {}", neuron_id);
+
+        return neuron_distant_out_neighborhood[local_neuron_id];
     }
 
     /**
@@ -128,11 +132,13 @@ public:
      * @exception Throws a RelearnException if local_neuron_id is larger or equal to the number of neurons stored
      * @return A constant view of all local in-edges.
      */
-    [[nodiscard]] const LocalEdges& get_local_in_edges(const NeuronID& local_neuron_id) const {
-        RelearnException::check(local_neuron_id.id() < neuron_local_in_neighborhood.size(),
-            "NetworkGraph::get_local_in_edges: Tried with a too large id of {}", local_neuron_id);
+    [[nodiscard]] const LocalEdges& get_local_in_edges(const NeuronID& neuron_id) const {
+        const auto local_neuron_id = neuron_id.get_local_id();
 
-        return neuron_local_in_neighborhood[local_neuron_id.id()];
+        RelearnException::check(local_neuron_id < neuron_local_in_neighborhood.size(),
+            "NetworkGraph::get_local_in_edges: Tried with a too large id of {}", neuron_id);
+
+        return neuron_local_in_neighborhood[local_neuron_id];
     }
 
     /**
@@ -142,11 +148,13 @@ public:
      * @exception Throws a RelearnException if local_neuron_id is larger or equal to the number of neurons stored
      * @return A constant view of all local out-edges.
      */
-    [[nodiscard]] const LocalEdges& get_local_out_edges(const NeuronID& local_neuron_id) const {
-        RelearnException::check(local_neuron_id.id() < neuron_local_out_neighborhood.size(),
-            "NetworkGraph::get_local_out_edges: Tried with a too large id of {}", local_neuron_id);
+    [[nodiscard]] const LocalEdges& get_local_out_edges(const NeuronID& neuron_id) const {
+        const auto local_neuron_id = neuron_id.get_local_id();
 
-        return neuron_local_out_neighborhood[local_neuron_id.id()];
+        RelearnException::check(local_neuron_id < neuron_local_out_neighborhood.size(),
+            "NetworkGraph::get_local_out_edges: Tried with a too large id of {}", neuron_id);
+
+        return neuron_local_out_neighborhood[local_neuron_id];
     }
 
     /**
@@ -384,9 +392,11 @@ public:
 
         const auto target_rank = target_id.get_rank();
         const auto target_neuron_id = target_id.get_neuron_id();
+        const auto local_target_neuron_id = target_neuron_id.get_local_id();
 
         const auto source_rank = source_id.get_rank();
         const auto source_neuron_id = source_id.get_neuron_id();
+        const auto local_source_neuron_id = source_neuron_id.get_local_id();
 
         const auto my_rank = mpi_rank;
 
@@ -395,18 +405,18 @@ public:
         }
 
         if (target_rank == my_rank) {
-            RelearnException::check(target_neuron_id.id() < number_local_neurons,
+            RelearnException::check(local_target_neuron_id < number_local_neurons,
                 "NetworkGraph::add_edge_weight: Want to add an in-edge with a too large target id: {} {}", target_neuron_id, number_local_neurons);
         }
 
         if (source_rank == my_rank) {
-            RelearnException::check(source_neuron_id.id() < number_local_neurons,
+            RelearnException::check(local_source_neuron_id < number_local_neurons,
                 "NetworkGraph::add_edge_weight: Want to add an out-edge with a too large source id: {} {}", source_neuron_id, number_local_neurons);
         }
 
         if (target_rank == source_rank) {
-            LocalEdges& in_edges = neuron_local_in_neighborhood[target_neuron_id.id()];
-            LocalEdges& out_edges = neuron_local_out_neighborhood[source_neuron_id.id()];
+            LocalEdges& in_edges = neuron_local_in_neighborhood[local_target_neuron_id];
+            LocalEdges& out_edges = neuron_local_out_neighborhood[local_source_neuron_id];
 
             add_edge<LocalEdges, NeuronID>(in_edges, source_neuron_id, weight);
             add_edge<LocalEdges, NeuronID>(out_edges, target_neuron_id, weight);
@@ -414,13 +424,13 @@ public:
 
         // Target neuron is mine but source neuron is not
         if (target_rank == my_rank && source_rank != my_rank) {
-            DistantEdges& distant_in_edges = neuron_distant_in_neighborhood[target_neuron_id.id()];
+            DistantEdges& distant_in_edges = neuron_distant_in_neighborhood[local_target_neuron_id];
             add_edge<DistantEdges, DistantEdgesKey>(distant_in_edges, source_id, weight);
         }
 
         // Source neuron is mine but target neuron is not
         if (source_rank == my_rank && target_rank != my_rank) {
-            DistantEdges& distant_out_edges = neuron_distant_out_neighborhood[source_neuron_id.id()];
+            DistantEdges& distant_out_edges = neuron_distant_out_neighborhood[local_source_neuron_id];
             add_edge<DistantEdges, DistantEdgesKey>(distant_out_edges, target_id, weight);
         }
     }
@@ -436,12 +446,15 @@ public:
     void add_synapse(const LocalSynapse& synapse) {
         const auto& [target, source, weight] = synapse;
 
-        RelearnException::check(target.id() < number_local_neurons, "NetworkGraph::add_synapse: Local synapse had a too large target: {} vs {}", target, number_local_neurons);
-        RelearnException::check(source.id() < number_local_neurons, "NetworkGraph::add_synapse: Local synapse had a too large source: {} vs {}", source, number_local_neurons);
+        const auto local_target_id = target.get_local_id();
+        const auto local_source_id = source.get_local_id();
+
+        RelearnException::check(local_target_id < number_local_neurons, "NetworkGraph::add_synapse: Local synapse had a too large target: {} vs {}", target, number_local_neurons);
+        RelearnException::check(local_source_id < number_local_neurons, "NetworkGraph::add_synapse: Local synapse had a too large source: {} vs {}", source, number_local_neurons);
         RelearnException::check(weight != 0, "NetworkGraph::add_synapse: Local synapse had weight 0");
 
-        LocalEdges& in_edges = neuron_local_in_neighborhood[target.id()];
-        LocalEdges& out_edges = neuron_local_out_neighborhood[source.id()];
+        LocalEdges& in_edges = neuron_local_in_neighborhood[local_target_id];
+        LocalEdges& out_edges = neuron_local_out_neighborhood[local_source_id];
 
         add_edge<LocalEdges, NeuronID>(in_edges, source, weight);
         add_edge<LocalEdges, NeuronID>(out_edges, target, weight);
@@ -457,13 +470,15 @@ public:
      */
     void add_synapse(const DistantInSynapse& synapse) {
         const auto& [target, source_rni, weight] = synapse;
+        const auto local_target_id = target.get_local_id();
+
         const auto& [source_rank, source_id] = source_rni;
 
-        RelearnException::check(target.id() < number_local_neurons, "NetworkGraph::add_synapse: Distant in-synapse had a too large target: {} vs {}", target, number_local_neurons);
+        RelearnException::check(local_target_id < number_local_neurons, "NetworkGraph::add_synapse: Distant in-synapse had a too large target: {} vs {}", target, number_local_neurons);
         RelearnException::check(source_rank != mpi_rank, "NetworkGraph::add_synapse: Distant in-synapse was on my rank: {}", source_rank);
         RelearnException::check(weight != 0, "NetworkGraph::add_synapse: Local synapse had weight 0");
 
-        DistantEdges& distant_in_edges = neuron_distant_in_neighborhood[target.id()];
+        DistantEdges& distant_in_edges = neuron_distant_in_neighborhood[local_target_id];
         add_edge<DistantEdges, DistantEdgesKey>(distant_in_edges, source_rni, weight);
     }
 
@@ -477,13 +492,15 @@ public:
      */
     void add_synapse(const DistantOutSynapse& synapse) {
         const auto& [target_rni, source, weight] = synapse;
+        const auto local_source_id = source.get_local_id();
+
         const auto& [target_rank, target_id] = target_rni;
 
-        RelearnException::check(source.id() < number_local_neurons, "NetworkGraph::add_synapse: Distant out-synapse had a too large target: {} vs {}", source, number_local_neurons);
+        RelearnException::check(local_source_id < number_local_neurons, "NetworkGraph::add_synapse: Distant out-synapse had a too large target: {} vs {}", source, number_local_neurons);
         RelearnException::check(target_rank != mpi_rank, "NetworkGraph::add_synapse: Distant out-synapse was on my rank: {}", target_rank);
         RelearnException::check(weight != 0, "NetworkGraph::add_synapse: Local synapse had weight 0");
 
-        DistantEdges& distant_out_edges = neuron_distant_out_neighborhood[source.id()];
+        DistantEdges& distant_out_edges = neuron_distant_out_neighborhood[local_source_id];
         add_edge<DistantEdges, DistantEdgesKey>(distant_out_edges, target_rni, weight);
     }
 
@@ -495,31 +512,38 @@ public:
     */
     void add_edges(const LocalSynapses& local_edges, const DistantInSynapses& in_edges, const DistantOutSynapses& out_edges) {
         for (const auto& [target_id, source_id, weight] : local_edges) {
-            RelearnException::check(target_id.id() < neuron_local_in_neighborhood.size(),
+            const auto local_target_id = target_id.get_local_id();
+            const auto local_source_id = source_id.get_local_id();
+
+            RelearnException::check(local_target_id < neuron_local_in_neighborhood.size(),
                 "NetworkGraph::add_edges: local_in_neighborhood is too small: {} vs {}", target_id, neuron_local_in_neighborhood.size());
-            RelearnException::check(source_id.id() < neuron_local_out_neighborhood.size(),
+            RelearnException::check(local_source_id < neuron_local_out_neighborhood.size(),
                 "NetworkGraph::add_edges: local_out_neighborhood is too small: {} vs {}", source_id, neuron_distant_out_neighborhood.size());
 
-            LocalEdges& in_edges = neuron_local_in_neighborhood[target_id.id()];
-            LocalEdges& out_edges = neuron_local_out_neighborhood[source_id.id()];
+            LocalEdges& in_edges = neuron_local_in_neighborhood[local_target_id];
+            LocalEdges& out_edges = neuron_local_out_neighborhood[local_source_id];
 
             add_edge<LocalEdges, NeuronID>(in_edges, source_id, weight);
             add_edge<LocalEdges, NeuronID>(out_edges, target_id, weight);
         }
 
         for (const auto& [target_id, source_rni, weight] : in_edges) {
-            RelearnException::check(target_id.id() < neuron_distant_in_neighborhood.size(),
+            const auto local_target_id = target_id.get_local_id();
+
+            RelearnException::check(local_target_id < neuron_distant_in_neighborhood.size(),
                 "NetworkGraph::add_edges: distant_in_neighborhood is too small: {} vs {}", target_id, neuron_distant_in_neighborhood.size());
 
-            DistantEdges& distant_in_edges = neuron_distant_in_neighborhood[target_id.id()];
+            DistantEdges& distant_in_edges = neuron_distant_in_neighborhood[local_target_id];
             add_edge<DistantEdges, DistantEdgesKey>(distant_in_edges, source_rni, weight);
         }
 
         for (const auto& [target_rni, source_id, weight] : out_edges) {
-            RelearnException::check(source_id.id() < neuron_distant_out_neighborhood.size(),
+            const auto local_source_id = source_id.get_local_id();
+
+            RelearnException::check(local_source_id < neuron_distant_out_neighborhood.size(),
                 "NetworkGraph::add_edges: distant_out_neighborhood is too small: {} vs {}", source_id, neuron_distant_out_neighborhood.size());
 
-            DistantEdges& distant_out_edges = neuron_distant_out_neighborhood[source_id.id()];
+            DistantEdges& distant_out_edges = neuron_distant_out_neighborhood[local_source_id];
             add_edge<DistantEdges, DistantEdgesKey>(distant_out_edges, target_rni, weight);
         }
     }
