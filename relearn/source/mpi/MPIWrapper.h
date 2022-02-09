@@ -117,10 +117,10 @@ private:
     static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank);
 
     // NOLINTNEXTLINE
-    static void async_s(const void* buffer, int count, int rank, AsyncToken& token);
+    [[nodiscard]] static AsyncToken async_s(const void* buffer, int count, int rank);
 
     // NOLINTNEXTLINE
-    static void async_recv(void* buffer, int count, int rank, AsyncToken& token);
+    [[nodiscard]] static AsyncToken async_recv(void* buffer, int count, int rank);
 
     [[nodiscard]] static int translate_lock_type(MPI_Locktype lock_type);
 
@@ -138,6 +138,37 @@ private:
     [[nodiscard]] static const std::vector<int64_t>& get_base_pointers() noexcept {
         return base_pointers;
     }
+
+    /**
+     * @brief Sends data to another MPI rank asynchronously
+     * @param buffer The buffer that shall be sent to the other MPI rank
+     * @param rank The other MPI rank that shall receive the data
+     * @param token A token that can be used to query if the asynchronous communication completed
+     * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
+     */
+    template <typename T>
+    [[nodiscard]] static AsyncToken async_send(std::span<T> buffer, const int rank) {
+        return async_s(buffer.data(), buffer.size_bytes(), rank);
+    }
+
+    /**
+     * @brief Receives data from another MPI rank asynchronously
+     * @param buffer The buffer where the data shall be written to
+     * @param rank The other MPI rank that shall send the data
+     * @param token A token that can be used to query if the asynchronous communication completed
+     * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
+     */
+    template <typename T>
+    [[nodiscard]] static AsyncToken async_receive(std::span<T> buffer, const int rank) {
+        return async_recv(buffer.data(), buffer.size_bytes(), rank);
+    }
+
+    /**
+     * @brief Waits for all supplied tokens
+     * @param The tokens to be waited on
+     * @exception Throws a RelearnException if an MPI error occurs
+     */
+    static void wait_all_tokens(const std::vector<AsyncToken>& tokens);
 
 public:
     /**
@@ -266,38 +297,6 @@ public:
     }
 
     /**
-     * @brief Sends data to another MPI rank asynchronously
-     * @param buffer The buffer that shall be sent to the other MPI rank
-     * @param rank The other MPI rank that shall receive the data
-     * @param token A token that can be used to query if the asynchronous communication completed
-     * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
-     */
-    template <typename T>
-    static void async_send(std::span<T> buffer, const int rank, AsyncToken& token) {
-        async_s(buffer.data(), buffer.size_bytes(), rank, token);
-    }
-
-    /**
-     * @brief Receives data from another MPI rank asynchronously
-     * @param buffer The buffer where the data shall be written to
-     * @param rank The other MPI rank that shall send the data
-     * @param token A token that can be used to query if the asynchronous communication completed
-     * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
-     */
-    template <typename T>
-    static void async_receive(std::span<T> buffer, const int rank, AsyncToken& token) {
-        async_recv(buffer.data(), buffer.size_bytes(), rank, token);
-    }
-
-    /**
-     * @brief Waits for all supplied tokens
-     * @param The tokens to be waited on
-     * @exception Throws a RelearnException if an MPI error occurs
-     */
-    // NOLINTNEXTLINE
-    static void wait_all_tokens(std::vector<AsyncToken>& tokens);
-
-    /**
      * @brief Exchanges vectors of data with all MPI ranks
      * @tparam T The type that should be exchanged
      * @param values The values that should be exchanged. values[i] should be send to MPI rank i
@@ -321,15 +320,14 @@ public:
             retrieved_data[rank].resize(response_sizes[rank]);
         }
 
-        auto async_counter = 0;
-        std::vector<AsyncToken> async_tokens(2 * num_ranks - 2);
+        std::vector<AsyncToken> async_tokens{};
         for (auto rank = 0; rank < num_ranks; rank++) {
             if (rank == my_rank) {
                 continue;
             }
 
-            async_receive(std::span{ retrieved_data[rank] }, rank, async_tokens[async_counter]);
-            async_counter++;
+            const auto token = async_receive(std::span{ retrieved_data[rank] }, rank);
+            async_tokens.emplace_back(token);
         }
 
         for (auto rank = 0; rank < num_ranks; rank++) {
@@ -337,8 +335,8 @@ public:
                 continue;
             }
 
-            async_send(std::span{ values[rank] }, rank, async_tokens[async_counter]);
-            async_counter++;
+            const auto token = async_send(std::span{ values[rank] }, rank);
+            async_tokens.emplace_back(token);
         }
 
         wait_all_tokens(async_tokens);
@@ -367,12 +365,7 @@ public:
             }
         }
 
-        std::vector<AsyncToken> mpi_requests(outgoing_requests.size() + incoming_requests.size());
-
-        /**
-	     * Send and receive actual synapse requests
-	     */
-        auto mpi_requests_index = 0;
+        std::vector<AsyncToken> async_tokens{};
 
         for (auto rank_id = 0; rank_id < number_ranks; rank_id++) {
             if (!incoming_requests.contains(rank_id)) {
@@ -381,11 +374,9 @@ public:
 
             auto* buffer = incoming_requests.get_data(rank_id);
             const auto size = incoming_requests.size(rank_id);
-            //const auto size_in_bytes = incoming_requests.get_size_in_bytes(rank_id);
 
-            MPIWrapper::async_receive(incoming_requests.get_span(rank_id), rank_id, mpi_requests[mpi_requests_index]);
-
-            mpi_requests_index++;
+            const auto token = async_receive(incoming_requests.get_span(rank_id), rank_id);
+            async_tokens.emplace_back(token);
         }
 
         for (auto rank_id = 0; rank_id < number_ranks; rank_id++) {
@@ -395,15 +386,13 @@ public:
 
             const auto* buffer = outgoing_requests.get_data(rank_id);
             const auto size = outgoing_requests.size(rank_id);
-            // const auto size_in_bytes = outgoing_requests.get_size_in_bytes(rank_id);
 
-            MPIWrapper::async_send(outgoing_requests.get_span(rank_id), rank_id, mpi_requests[mpi_requests_index]);
-
-            mpi_requests_index++;
+            const auto token = async_send(outgoing_requests.get_span(rank_id), rank_id);
+            async_tokens.emplace_back(token);
         }
 
         // Wait for all sends and receives to complete
-        wait_all_tokens(mpi_requests);
+        wait_all_tokens(async_tokens);
 
         return incoming_requests;
     }
