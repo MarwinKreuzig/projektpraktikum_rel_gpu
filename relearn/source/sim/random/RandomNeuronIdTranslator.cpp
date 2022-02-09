@@ -39,12 +39,13 @@ RandomNeuronIdTranslator::RandomNeuronIdTranslator(std::shared_ptr<Partition> pa
 }
 
 bool RandomNeuronIdTranslator::is_neuron_local(NeuronID global_id) const {
+    const auto global_neuron_id = global_id.get_global_id();
     const auto my_rank = partition->get_my_mpi_rank();
 
     const auto my_global_ids_start = mpi_rank_to_local_start_id[my_rank];
     const auto my_global_ids_end = my_global_ids_start + number_local_neurons;
 
-    const auto is_local = my_global_ids_start <= global_id.id() && global_id.id() < my_global_ids_end;
+    const auto is_local = my_global_ids_start <= global_neuron_id && global_neuron_id < my_global_ids_end;
 
     return is_local;
 }
@@ -80,24 +81,27 @@ std::map<NeuronID, RankNeuronId> RandomNeuronIdTranslator::translate_global_ids(
 
     if (num_ranks == 1) {
         for (const auto& global_id : global_ids) {
-            RelearnException::check(global_id.id() < number_local_neurons,
+            RelearnException::check(global_id.get_global_id() < number_local_neurons,
                 "RandomNeuronIdTranslator::translate_global_ids: Global id ({}) is too large for the number of local neurons ({})", global_id, number_local_neurons);
 
-            return_value.emplace(global_id, RankNeuronId{ 0, global_id });
+            const NeuronID translated_id{ false, false, global_id.get_global_id() };
+            return_value.emplace(global_id, RankNeuronId{ 0, translated_id });
         }
 
         return return_value;
     }
 
     for (const auto& global_id : global_ids) {
-        auto upper_bound = std::upper_bound(mpi_rank_to_local_start_id.begin(), mpi_rank_to_local_start_id.end(), global_id.id());
+        const auto global_neuron_id = global_id.get_global_id();
+
+        auto upper_bound = std::upper_bound(mpi_rank_to_local_start_id.begin(), mpi_rank_to_local_start_id.end(), global_neuron_id);
         RelearnException::check(upper_bound != mpi_rank_to_local_start_id.begin(), "RandomNeuronIdTranslator::translate_global_ids: upper_bound found the beginning");
 
         const auto rank = static_cast<RankNeuronId::rank_type>(std::distance(mpi_rank_to_local_start_id.begin(), upper_bound) - 1);
         RelearnException::check(rank < num_ranks, "RandomNeuronIdTranslator::translate_global_ids: The rank is too large");
 
         const auto rank_start = mpi_rank_to_local_start_id[rank];
-        const auto local_id = global_id - rank_start;
+        const NeuronID local_id{ false, false, global_neuron_id - rank_start };
 
         return_value.emplace(global_id, RankNeuronId(rank, local_id));
     }
@@ -135,7 +139,7 @@ std::map<RankNeuronId, NeuronID> RandomNeuronIdTranslator::translate_rank_neuron
             RelearnException::check(glob_id < mpi_rank_to_local_start_id[rank + 1ULL], "RandomNeuronIdTranslator::translate_rank_neuron_ids: The translated id exceeded the starting id of the next rank");
         }
 
-        return_value.emplace(id, glob_id);
+        return_value.emplace(id, NeuronID{ true, false, glob_id });
     }
 
     return return_value;

@@ -73,8 +73,6 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
     RelearnException::check(calculated_num_neurons >= number_neurons, "SubdomainFromNeuronDensity::place_neurons_in_area: Should emplace more neurons than space in box");
     RelearnException::check(neurons_on_x <= max_short && neurons_on_y <= max_short && neurons_on_z <= max_short, "SubdomainFromNeuronDensity::place_neurons_in_area: Should emplace more neurons in a dimension than possible");
 
-    Nodes nodes{};
-
     const double desired_ex = get_requested_ratio_excitatory_neurons();
 
     const size_t expected_number_in = number_neurons - static_cast<size_t>(ceil(number_neurons * desired_ex));
@@ -106,6 +104,8 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
     signal_types.insert(signal_types.cend(), expected_number_in, SignalType::INHIBITORY);
 
     RandomHolder::shuffle(RandomHolderKey::Subdomain, signal_types.begin(), signal_types.end());
+
+    Nodes nodes{};
 
     for (size_t i = 0; i < number_neurons; i++) {
         const size_t pos_bitmask = positions[i];
