@@ -290,14 +290,6 @@ public:
     }
 
     /**
-     * @brief Waits for the token if it is not a dummy token
-     * @param request The token to be waited on
-     * @exception Throws a RelearnException if an MPI error occurs
-     */
-    // NOLINTNEXTLINE
-    static void wait_request(AsyncToken& request);
-
-    /**
      * @brief Waits for all supplied tokens
      * @param The tokens to be waited on
      * @exception Throws a RelearnException if an MPI error occurs

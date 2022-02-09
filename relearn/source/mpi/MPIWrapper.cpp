@@ -245,14 +245,6 @@ std::string MPIWrapper::get_my_rank_str() {
     return my_rank_str;
 }
 
-void MPIWrapper::wait_request(AsyncToken& request) {
-    MPI_Request translated_token = translation_map[request];
-    translation_map.erase(request);
-
-    const int errorcode = MPI_Wait(&translated_token, MPI_STATUS_IGNORE);
-    RelearnException::check(errorcode == 0, "MPIWrapper::wait_request: Error code received: {}", errorcode);
-}
-
 void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
     const int size = static_cast<int>(tokens.size());
 

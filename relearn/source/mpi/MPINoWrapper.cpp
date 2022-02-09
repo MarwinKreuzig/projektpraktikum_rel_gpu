@@ -102,9 +102,6 @@ void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size) {
     return my_rank_str;
 }
 
-void MPINoWrapper::wait_request(AsyncToken& /*request*/) {
-}
-
 void MPINoWrapper::wait_all_tokens(std::vector<AsyncToken>& /*tokens*/) {
 }
 

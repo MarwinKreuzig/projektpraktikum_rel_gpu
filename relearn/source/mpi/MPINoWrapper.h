@@ -173,9 +173,6 @@ public:
     [[nodiscard]] static std::string get_my_rank_str();
 
     // NOLINTNEXTLINE
-    static void wait_request(AsyncToken& request);
-
-    // NOLINTNEXTLINE
     static void wait_all_tokens(std::vector<AsyncToken>& tokens);
 
     template <typename T>
