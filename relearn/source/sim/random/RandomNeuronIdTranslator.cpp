@@ -50,25 +50,27 @@ bool RandomNeuronIdTranslator::is_neuron_local(NeuronID global_id) const {
 }
 
 NeuronID RandomNeuronIdTranslator::get_local_id(NeuronID global_id) const {
+    const auto global_neuron_id = global_id.get_global_id();
     const auto my_rank = partition->get_my_mpi_rank();
 
     const auto my_global_ids_start = mpi_rank_to_local_start_id[my_rank];
     const auto my_global_ids_end = my_global_ids_start + number_local_neurons;
 
-    const auto is_local = my_global_ids_start <= global_id.id() && global_id.id() < my_global_ids_end;
+    const auto is_local = my_global_ids_start <= global_neuron_id && global_neuron_id < my_global_ids_end;
 
     RelearnException::check(is_local, "RandomNeuronIdTranslator::get_local_id: The global id is not local! {} vs [{}, {})", global_id, my_global_ids_start, my_global_ids_end);
 
-    return global_id - my_global_ids_start;
+    return NeuronID{ false, false, global_neuron_id - my_global_ids_start };
 }
 
 NeuronID RandomNeuronIdTranslator::get_global_id(NeuronID local_id) const {
-    RelearnException::check(local_id.id() < number_local_neurons, "RandomNeuronIdTranslator::get_local_id: The local id is too large! {} vs {}", local_id, number_local_neurons);
+    const auto local_neuron_id = local_id.get_local_id();
+    RelearnException::check(local_neuron_id < number_local_neurons, "RandomNeuronIdTranslator::get_local_id: The local id is too large! {} vs {}", local_id, number_local_neurons);
 
     const auto my_rank = partition->get_my_mpi_rank();
     const auto my_global_ids_start = mpi_rank_to_local_start_id[my_rank];
 
-    return local_id + my_global_ids_start;
+    return NeuronID{ true, false, local_neuron_id + my_global_ids_start };
 }
 
 std::map<NeuronID, RankNeuronId> RandomNeuronIdTranslator::translate_global_ids(const std::vector<NeuronID>& global_ids) {
