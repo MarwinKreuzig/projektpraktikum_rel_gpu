@@ -85,13 +85,15 @@ void AEIFModel::update_activity(const NeuronID& neuron_id) {
 
     auto has_spiked = false;
 
+    const auto local_neuron_id = neuron_id.get_local_id();
+
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-        x += iter_x(x, w[neuron_id.id()], I_syn) / h;
-        w[neuron_id.id()] += iter_refrac(w[neuron_id.id()], x) / h;
+        x += iter_x(x, w[local_neuron_id], I_syn) / h;
+        w[local_neuron_id] += iter_refrac(w[local_neuron_id], x) / h;
 
         if (x >= V_spike) {
             x = E_L;
-            w[neuron_id.id()] += b;
+            w[local_neuron_id] += b;
             has_spiked = true;
             break;
         }

@@ -78,15 +78,17 @@ void IzhikevichModel::update_activity(const NeuronID& neuron_id) {
     const auto I_syn = get_I_syn(neuron_id);
     auto x = get_x(neuron_id);
 
+    const auto local_neuron_id = neuron_id.get_local_id();
+
     auto has_spiked = false;
 
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-        x += iter_x(x, u[neuron_id.id()], I_syn) / h;
-        u[neuron_id.id()] += iter_refrac(u[neuron_id.id()], x) / h;
+        x += iter_x(x, u[local_neuron_id], I_syn) / h;
+        u[local_neuron_id] += iter_refrac(u[local_neuron_id], x) / h;
 
         if (spiked(x)) {
             x = c;
-            u[neuron_id.id()] += d;
+            u[local_neuron_id] += d;
             has_spiked = true;
             break;
         }

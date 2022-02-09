@@ -10,13 +10,15 @@
  */
 
 unsigned int SynapticElements::update_number_elements(const NeuronID& neuron_id) {
-    RelearnException::check(neuron_id.id() < size, "SynapticElements::update_number_elements: {} is too large! {}", neuron_id, size);
+    const auto local_neuron_id = neuron_id.get_local_id();
 
-    const auto current_count = grown_elements[neuron_id.id()];
-    const auto current_connected_count_integral = connected_elements[neuron_id.id()];
+    RelearnException::check(local_neuron_id < size, "SynapticElements::update_number_elements: {} is too large! {}", neuron_id, size);
+
+    const auto current_count = grown_elements[local_neuron_id];
+    const auto current_connected_count_integral = connected_elements[local_neuron_id];
     const auto current_connected_count = static_cast<double>(current_connected_count_integral);
     const auto current_vacant = current_count - current_connected_count;
-    const auto current_delta = deltas_since_last_update[neuron_id.id()];
+    const auto current_delta = deltas_since_last_update[local_neuron_id];
 
     RelearnException::check(current_count >= 0.0, "SynapticElements::update_number_elements: {}", current_count);
     RelearnException::check(current_connected_count >= 0.0, "SynapticElements::update_number_elements: {}", current_connected_count);
@@ -28,8 +30,8 @@ unsigned int SynapticElements::update_number_elements(const NeuronID& neuron_id)
         const auto new_count = (1 - vacant_retract_ratio) * new_vacant + current_connected_count;
         RelearnException::check(new_count >= current_connected_count, "SynapticElements::update_number_elements: new count is smaller than connected count");
 
-        grown_elements[neuron_id.id()] = new_count;
-        deltas_since_last_update[neuron_id.id()] = 0.0;
+        grown_elements[local_neuron_id] = new_count;
+        deltas_since_last_update[local_neuron_id] = 0.0;
         return 0;
     }
 
@@ -38,9 +40,9 @@ unsigned int SynapticElements::update_number_elements(const NeuronID& neuron_id)
      * Now, neither vacant (see if branch above) nor bound elements are left.
      */
     if (current_count + current_delta < 0.0) {
-        connected_elements[neuron_id.id()] = 0;
-        grown_elements[neuron_id.id()] = 0.0;
-        deltas_since_last_update[neuron_id.id()] = 0.0;
+        connected_elements[local_neuron_id] = 0;
+        grown_elements[local_neuron_id] = 0.0;
+        deltas_since_last_update[local_neuron_id] = 0.0;
 
         return current_connected_count_integral;
     }
@@ -53,9 +55,9 @@ unsigned int SynapticElements::update_number_elements(const NeuronID& neuron_id)
 
     RelearnException::check(num_vacant >= 0, "SynapticElements::update_number_elements: num vacant is neg");
 
-    connected_elements[neuron_id.id()] = static_cast<unsigned int>(new_connected_count);
-    grown_elements[neuron_id.id()] = retracted_new_count;
-    deltas_since_last_update[neuron_id.id()] = 0.0;
+    connected_elements[local_neuron_id] = static_cast<unsigned int>(new_connected_count);
+    grown_elements[local_neuron_id] = retracted_new_count;
+    deltas_since_last_update[local_neuron_id] = 0.0;
 
     const auto deleted_cnts = current_connected_count - new_connected_count;
 

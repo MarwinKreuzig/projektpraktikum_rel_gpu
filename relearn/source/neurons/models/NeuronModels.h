@@ -105,8 +105,10 @@ public:
      * @return True iff the neuron spiked
      */
     [[nodiscard]] bool get_fired(const NeuronID& neuron_id) const {
-        RelearnException::check(neuron_id.id() < number_local_neurons, "NeuronModels::get_fired: id is too large: {}", neuron_id);
-        return fired[neuron_id.id()] == 1;
+        const auto local_neuron_id = neuron_id.get_local_id();
+
+        RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::get_fired: id is too large: {}", neuron_id);
+        return fired[local_neuron_id] == 1;
     }
 
     /**
@@ -124,8 +126,10 @@ public:
      * @return The neuron's membrane potential
      */
     [[nodiscard]] double get_x(const NeuronID& neuron_id) const {
-        RelearnException::check(neuron_id.id() < number_local_neurons, "NeuronModels::get_x: id is too large: {}", neuron_id);
-        return x[neuron_id.id()];
+        const auto local_neuron_id = neuron_id.get_local_id();
+
+        RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::get_x: id is too large: {}", neuron_id);
+        return x[local_neuron_id];
     }
 
     /**
@@ -191,8 +195,10 @@ public:
      * @return A double that indicates the synaptic input for the specified neuron
      */
     [[nodiscard]] double get_I_syn(const NeuronID& neuron_id) const {
-        RelearnException::check(neuron_id.id() < number_local_neurons, "NeuronModels::get_I_syn: id is too large: {}", neuron_id);
-        return I_syn[neuron_id.id()];
+        const auto local_neuron_id = neuron_id.get_local_id();
+
+        RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::get_I_syn: id is too large: {}", neuron_id);
+        return I_syn[local_neuron_id];
     }
 
     /**
@@ -267,8 +273,10 @@ public:
      */
     virtual void disable_neurons(const std::vector<NeuronID>& neuron_ids) {
         for (const NeuronID& neuron_id : neuron_ids) {
-            RelearnException::check(neuron_id.id() < number_local_neurons, "NeuronModels::disable_neurons: There is a too large id: {} vs {}", neuron_id, number_local_neurons);
-            fired[neuron_id.id()] = 0;
+            const auto local_neuron_id = neuron_id.get_local_id();
+
+            RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::disable_neurons: There is a too large id: {} vs {}", neuron_id, number_local_neurons);
+            fired[local_neuron_id] = 0;
         }
     }
 
@@ -329,7 +337,8 @@ protected:
      * @param new_value The new membrane potential
      */
     void set_x(const NeuronID& neuron_id, const double new_value) noexcept {
-        x[neuron_id.id()] = new_value;
+        const auto local_neuron_id = neuron_id.get_local_id();
+        x[local_neuron_id] = new_value;
     }
 
     /**
@@ -338,7 +347,8 @@ protected:
      * @param new_value True iff the neuron fired in the current simulation step
      */
     void set_fired(const NeuronID& neuron_id, const char new_value) noexcept {
-        fired[neuron_id.id()] = new_value;
+        const auto local_neuron_id = neuron_id.get_local_id();
+        fired[local_neuron_id] = new_value;
     }
 
 private:
@@ -417,8 +427,10 @@ public:
      * @return The refrac time (The number of steps a neuron doesn't spike after spiking)
      */
     [[nodiscard]] double get_secondary_variable(const NeuronID& neuron_id) const final {
-        RelearnException::check(neuron_id.id() < get_num_neurons(), "PoissonModel::get_secondary_variable: id is too large: {}", neuron_id);
-        return refrac[neuron_id.id()];
+        const auto local_neuron_id = neuron_id.get_local_id();
+
+        RelearnException::check(local_neuron_id < get_num_neurons(), "PoissonModel::get_secondary_variable: id is too large: {}", neuron_id);
+        return refrac[local_neuron_id];
     }
 
     /**
@@ -566,8 +578,10 @@ public:
      * @return The dampending variable u
      */
     [[nodiscard]] double get_secondary_variable(const NeuronID& neuron_id) const final {
-        RelearnException::check(neuron_id.id() < get_num_neurons(), "IzhikevichModel::get_secondary_variable: id is too large: {}", neuron_id);
-        return u[neuron_id.id()];
+        const auto local_neuron_id = neuron_id.get_local_id();
+
+        RelearnException::check(local_neuron_id < get_num_neurons(), "IzhikevichModel::get_secondary_variable: id is too large: {}", neuron_id);
+        return u[local_neuron_id];
     }
 
     /**
@@ -761,8 +775,10 @@ public:
      * @return The dampending variable w
      */
     [[nodiscard]] double get_secondary_variable(const NeuronID& neuron_id) const final {
-        RelearnException::check(neuron_id.id() < get_num_neurons(), "In FitzHughNagumoModel::get_secondary_variable, id is too large");
-        return w[neuron_id.id()];
+        const auto local_neuron_id = neuron_id.get_local_id();
+
+        RelearnException::check(local_neuron_id < get_num_neurons(), "In FitzHughNagumoModel::get_secondary_variable, id is too large");
+        return w[local_neuron_id];
     }
 
     /**
@@ -912,8 +928,10 @@ public:
      * @return The dampending variable w
      */
     [[nodiscard]] double get_secondary_variable(const NeuronID& neuron_id) const final {
-        RelearnException::check(neuron_id.id() < get_num_neurons(), "In AEIFModel::get_secondary_variable, id is too large");
-        return w[neuron_id.id()];
+        const auto local_neuron_id = neuron_id.get_local_id();
+
+        RelearnException::check(local_neuron_id < get_num_neurons(), "In AEIFModel::get_secondary_variable, id is too large");
+        return w[local_neuron_id];
     }
 
     /**

@@ -174,7 +174,7 @@ CommunicationMap<NeuronID> NeuronModel::update_electrical_activity_prepare_sendi
 
             // Function expects to insert neuron ids in sorted order
             // Append if it is not already in
-            spiking_ids.append(target_rank, NeuronID(neuron_id));
+            spiking_ids.append(target_rank, id);
         }
     } // For my neurons
     Timers::stop_and_add(TimerRegion::PREPARE_SENDING_SPIKES);

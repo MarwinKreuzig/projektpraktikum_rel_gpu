@@ -73,16 +73,18 @@ void PoissonModel::update_activity(const NeuronID& neuron_id) {
         x += iter_x(x, I_syn) / h;
     }
 
+    const auto local_neuron_id = neuron_id.get_local_id();
+
     // Neuron ready to fire again
-    if (refrac[neuron_id.id()] == 0) {
-        const bool f = x >= theta_values[neuron_id.id()];
+    if (refrac[local_neuron_id] == 0) {
+        const bool f = x >= theta_values[local_neuron_id];
         set_fired(neuron_id, static_cast<char>(f)); // Decide whether a neuron fires depending on its firing rate
-        refrac[neuron_id.id()] = static_cast<unsigned int>(f) * refrac_time; // After having fired, a neuron is in a refractory state
+        refrac[local_neuron_id] = static_cast<unsigned int>(f) * refrac_time; // After having fired, a neuron is in a refractory state
     }
     // Neuron now/still in refractory state
     else {
         set_fired(neuron_id, 0); // Set neuron inactive
-        --refrac[neuron_id.id()]; // Decrease refractory time
+        --refrac[local_neuron_id]; // Decrease refractory time
     }
 
     set_x(neuron_id, x);
