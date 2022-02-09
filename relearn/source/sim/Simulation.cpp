@@ -25,6 +25,7 @@
 #include "../structure/Partition.h"
 #include "../util/RelearnException.h"
 #include "../util/Timers.h"
+#include "NeuronIdTranslator.h"
 #include "NeuronToSubdomainAssignment.h"
 
 #include <fstream>
@@ -70,11 +71,11 @@ void Simulation::set_dendrites_in(std::shared_ptr<SynapticElements>&& se) noexce
     dendrites_in = std::move(se);
 }
 
-void Simulation::set_target_calcium_calculator(std::function<double(NeuronID)> calculator) noexcept {
+void Simulation::set_target_calcium_calculator(std::function<double(NeuronID::value_type)> calculator) noexcept {
     target_calcium_calculator = std::move(calculator);
 }
 
-void Simulation::set_initial_calcium_calculator(std::function<double(NeuronID)> initiator) noexcept {
+void Simulation::set_initial_calcium_calculator(std::function<double(NeuronID::value_type)> initiator) noexcept {
     initial_calcium_initiator = std::move(initiator);
 }
 
@@ -114,6 +115,7 @@ void Simulation::initialize() {
     RelearnException::check(neuron_to_subdomain_assignment != nullptr, "Simulation::initialize: neuron_to_subdomain_assignment is nullptr");
 
     neuron_to_subdomain_assignment->initialize();
+    neuron_id_translator = neuron_to_subdomain_assignment->get_neuron_id_translator();
     const auto number_total_neurons = neuron_to_subdomain_assignment->get_total_number_placed_neurons();
 
     partition->set_total_number_neurons(number_total_neurons);
@@ -123,13 +125,15 @@ void Simulation::initialize() {
     RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank);
 
     std::vector<double> target_calcium_values(number_local_neurons, 0.0);
-    for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
-        target_calcium_values[neuron_id] = target_calcium_calculator(NeuronID{ neuron_id });
+    for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
+        const auto global_id = neuron_id_translator->get_global_id(neuron_id);
+        target_calcium_values[neuron_id.get_local_id()] = target_calcium_calculator(global_id.get_global_id());
     }
 
     std::vector<double> initial_calcium_values(number_local_neurons, 0.0);
-    for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
-        initial_calcium_values[neuron_id] = initial_calcium_initiator(NeuronID{ neuron_id });
+    for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
+        const auto global_id = neuron_id_translator->get_global_id(neuron_id);
+        initial_calcium_values[neuron_id.get_local_id()] = initial_calcium_initiator(global_id.get_global_id());
     }
 
     neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons, dendrites_ex, dendrites_in);
@@ -166,9 +170,9 @@ void Simulation::initialize() {
         global_tree = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     }
 
-    for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
-        const auto& position = neuron_positions[neuron_id];
-        global_tree->insert(position, NeuronID{ neuron_id }, my_rank);
+    for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
+        const auto& position = neuron_positions[neuron_id.get_local_id()];
+        global_tree->insert(position, neuron_id, my_rank);
     }
 
     global_tree->initializes_leaf_nodes(number_local_neurons);
@@ -204,7 +208,6 @@ void Simulation::initialize() {
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
-    neuron_id_translator = neuron_to_subdomain_assignment->get_neuron_id_translator();
     neurons->set_neuron_id_translator(neuron_id_translator);
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
 
@@ -267,12 +270,12 @@ void Simulation::simulate(const size_t number_steps) {
 
                 std::vector<double> new_target_calcium_values(creation_count, 0.0);
                 for (size_t neuron_id = 0; neuron_id < creation_count; neuron_id++) {
-                    new_target_calcium_values[neuron_id] = target_calcium_calculator(NeuronID{ neuron_id });
+                    new_target_calcium_values[neuron_id] = target_calcium_calculator(neuron_id);
                 }
 
                 std::vector<double> new_initial_calcium_values(creation_count, 0.0);
                 for (size_t neuron_id = 0; neuron_id < creation_count; neuron_id++) {
-                    new_initial_calcium_values[neuron_id] = initial_calcium_initiator(NeuronID{ neuron_id });
+                    new_initial_calcium_values[neuron_id] = initial_calcium_initiator(neuron_id);
                 }
 
                 neurons->create_neurons(creation_count, new_target_calcium_values, new_initial_calcium_values);
