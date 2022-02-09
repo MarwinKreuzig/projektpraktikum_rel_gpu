@@ -26,10 +26,7 @@ enum class TimerRegion : int {
     SIMULATION_LOOP = 1,
     UPDATE_ELECTRICAL_ACTIVITY = 2,
     PREPARE_SENDING_SPIKES = 3,
-    PREPARE_NUM_NEURON_IDS = 4,
-    ALL_TO_ALL = 5,
-    ALLOC_MEM_FOR_NEURON_IDS = 6,
-    EXCHANGE_NEURON_IDS = 7,
+    EXCHANGE_NEURON_IDS = 4,
     CALC_SYNAPTIC_BACKGROUND = 8,
     CALC_SERIAL_ACTIVITY = 9,
     CALC_SYNAPTIC_INPUT = 10,
@@ -52,15 +49,15 @@ enum class TimerRegion : int {
     INITIALIZE_NETWORK_GRAPH = 27,
     ADD_SYNAPSES_TO_NETWORKGRAPH = 28,
     DELETE_SYNAPSES_ALL_TO_ALL = 29,
-    FIND_SYNAPSES_TO_DELETE = 30,
-    PROCESS_DELETE_REQUESTS = 31,
-    COMMIT_NUM_SYNAPTIC_ELEMENTS = 32,
+    FIND_SYNAPSES_TO_DELETE = 7,
+    PROCESS_DELETE_REQUESTS = 6,
+    COMMIT_NUM_SYNAPTIC_ELEMENTS = 5,
 };
 
 /**
  * This number is used as a shortcut to count the number of values valid for TimerRegion
  */
-constexpr size_t NUM_TIMERS = 33;
+constexpr size_t NUM_TIMERS = 30;
 
 /**
  * This class is used to collect all sorts of different timers (see TimerRegion).

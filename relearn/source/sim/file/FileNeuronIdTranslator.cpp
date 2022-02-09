@@ -71,98 +71,49 @@ std::map<NeuronID, RankNeuronId> FileNeuronIdTranslator::translate_global_ids(co
         return {};
     }
 
-    const int mpi_rank = MPIWrapper::get_my_rank();
+    const int my_rank = MPIWrapper::get_my_rank();
     const int num_ranks = MPIWrapper::get_num_ranks();
 
-    std::vector<size_t> num_foreign_ids_from_ranks_send(num_ranks, 0);
-
-    std::vector<std::vector<NeuronID>> global_ids_to_send(num_ranks);
-    std::vector<std::vector<NeuronID>> global_ids_to_receive(num_ranks);
-    std::vector<std::vector<NeuronID>> global_ids_local_value(num_ranks);
-
-    std::map<NeuronID, int> neuron_id_to_rank{};
     const auto& id_to_position = load_neuron_positions(global_ids);
+
+    CommunicationMap<NeuronID> foreign_ids_send{ num_ranks };
 
     for (const auto& [neuron_id, neuron_position] : id_to_position) {
         const auto rank = partition->get_mpi_rank_from_position(neuron_position);
-        neuron_id_to_rank[neuron_id] = rank;
-        global_ids_to_send[rank].emplace_back(neuron_id);
+        foreign_ids_send.append(rank, neuron_id);
     }
 
-    for (auto rank : MPIWrapper::get_ranks()) {
-        num_foreign_ids_from_ranks_send[rank] = global_ids_to_send[rank].size();
-    }
+    const auto& foreign_ids_receive = MPIWrapper::exchange_requests(foreign_ids_send);
 
-    std::vector<size_t> num_foreign_ids_from_ranks = MPIWrapper::all_to_all(num_foreign_ids_from_ranks_send);
+    CommunicationMap<NeuronID> translated_ids_send{ num_ranks };
 
-    for (auto rank : MPIWrapper::get_ranks()) {
-        if (mpi_rank == rank) {
-            RelearnException::check(global_ids_to_receive[rank].empty(), "FileNeuronIdTranslator::translate_global_to_local: Should receive ids from myself");
-            continue;
-        }
-
-        global_ids_to_receive[rank].resize(num_foreign_ids_from_ranks[rank]);
-    }
-
-    std::vector<MPIWrapper::AsyncToken> mpi_requests(static_cast<size_t>(num_ranks) * 2 - 2);
-    int request_counter = 0;
-
-    for (auto rank : MPIWrapper::get_ranks_without_my_rank()) {
-        MPIWrapper::async_receive(std::span{ global_ids_to_receive[rank] }, rank, mpi_requests[request_counter]);
-        request_counter++;
-    }
-
-    for (auto rank : MPIWrapper::get_ranks_without_my_rank()) {
-        // Reserve enough space for the answer - it will be as long as the request
-        global_ids_local_value[rank].resize(global_ids_to_send[rank].size());
-
-        MPIWrapper::async_send(std::span{ global_ids_to_send[rank] }, rank, mpi_requests[request_counter]);
-        request_counter++;
-    }
-
-    // Wait for all sends and receives to complete
-    MPIWrapper::wait_all_tokens(mpi_requests);
-    for (auto& vec : global_ids_to_receive) {
-        for (auto& global_id : vec) {
-            global_id = get_local_id(global_id);
+    for (const auto& [rank, neuron_ids] : foreign_ids_receive) {
+        for (const auto& neuron_id : neuron_ids) {
+            const auto& translated_id = get_local_id(neuron_id);
+            translated_ids_send.append(rank, translated_id);
         }
     }
 
-    mpi_requests = std::vector<MPIWrapper::AsyncToken>(static_cast<size_t>(num_ranks) * 2 - 2);
-    request_counter = 0;
+    const auto& translated_ids_receive = MPIWrapper::exchange_requests(translated_ids_send);
 
-    for (auto rank : MPIWrapper::get_ranks_without_my_rank()) {
-        MPIWrapper::async_receive(std::span{ global_ids_local_value[rank] }, rank, mpi_requests[request_counter]);
-        request_counter++;
-    }
+    std::map<NeuronID, RankNeuronId> result{};
 
-    for (auto rank : MPIWrapper::get_ranks_without_my_rank()) {
-        MPIWrapper::async_send(std::span{ global_ids_to_receive[rank] }, rank, mpi_requests[request_counter]);
-        request_counter++;
-    }
+    for (const auto& mpi_rank : MPIWrapper::get_ranks()) {
+        const auto number_requested = foreign_ids_send.size(mpi_rank);
+        const auto number_responses = translated_ids_receive.size(mpi_rank);
 
-    // Wait for all sends and receives to complete
-    MPIWrapper::wait_all_tokens(mpi_requests);
+        RelearnException::check(number_requested == number_responses, "FileNeuronIdTranslator::translate_global_ids: I ({}) have sent {} requests to {} but received {} responses.", 
+            my_rank, number_requested, mpi_rank, number_responses);
 
-    std::map<NeuronID, RankNeuronId> final_translation_map{};
+        for (auto request_id = 0; request_id < number_requested; request_id++) {
+            const auto& request = foreign_ids_send.get_request(mpi_rank, request_id);
+            const auto& response = translated_ids_receive.get_request(mpi_rank, request_id);
 
-    for (auto rank : MPIWrapper::get_ranks()) {
-        std::vector<NeuronID>& translated_ids = global_ids_local_value[rank];
-        std::vector<NeuronID>& local_global_ids = global_ids_to_send[rank];
-
-        RelearnException::check(translated_ids.size() == local_global_ids.size(), "FileNeuronIdTranslator::translate_global_to_local: The vectors have not the same size in load network");
-
-        for (auto i = 0; i < translated_ids.size(); i++) {
-            const NeuronID local_id = translated_ids[i];
-            const NeuronID global_id = local_global_ids[i];
-
-            const auto rank = neuron_id_to_rank[global_id];
-
-            final_translation_map[global_id] = { rank, local_id };
+            result.emplace(request, RankNeuronId{ mpi_rank, response });
         }
     }
 
-    return final_translation_map;
+    return result;
 }
 
 NeuronID FileNeuronIdTranslator::translate_rank_neuron_id(const RankNeuronId& /*rni*/) {

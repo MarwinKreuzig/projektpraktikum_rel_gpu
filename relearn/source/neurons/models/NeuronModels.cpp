@@ -28,9 +28,11 @@ NeuronModel::NeuronModel(const double k, const double tau_C, const double beta, 
 }
 
 void NeuronModel::update_electrical_activity(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
-
     const auto& firing_neuron_ids_outgoing = update_electrical_activity_prepare_sending_spikes(network_graph, disable_flags);
+
+    Timers::start(TimerRegion::EXCHANGE_NEURON_IDS);
     const auto& firing_neuron_ids_incoming = MPIWrapper::exchange_requests(firing_neuron_ids_outgoing);
+    Timers::stop_and_add(TimerRegion::EXCHANGE_NEURON_IDS);
 
     /**
      * Now fired contains spikes only from my own neurons

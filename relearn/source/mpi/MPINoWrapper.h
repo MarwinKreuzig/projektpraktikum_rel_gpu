@@ -59,19 +59,11 @@ private:
 
     static inline int64_t base_pointers{}; // RMA window base pointers of all procs
 
-    using async_type = std::tuple<const void*, void*, int>;
-
-    static inline std::map<AsyncToken, async_type> tuple_map{};
-
     static inline std::string my_rank_str{ '0' };
 
     static void all_gather(const void* own_data, void* buffer, int size);
 
     static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank);
-
-    static void async_s(const void* buffer, int count, int rank, AsyncToken& token);
-
-    static void async_recv(void* buffer, int count, int rank, AsyncToken& token);
 
 public:
     static void init(int argc, char** argv);
@@ -103,16 +95,6 @@ public:
     [[nodiscard]] static uint64_t all_reduce_uint64(uint64_t value, ReduceFunction function);
 
     [[nodiscard]] static std::vector<size_t> all_to_all(const std::vector<size_t>& src);
-
-    template <typename T>
-    static void async_send(std::span<T> buffer, const int rank, AsyncToken& token) {
-        async_s(buffer.data(), buffer.size_bytes(), rank, token);
-    }
-
-    template <typename T>
-    static void async_receive(std::span<T> buffer, const int rank, AsyncToken& token) {
-        async_recv(buffer.data(), buffer.size_bytes(), rank, token);
-    }
 
     template <typename T, size_t size>
     [[nodiscard]] static std::array<T, size> reduce(const std::array<T, size>& src, ReduceFunction function, int root_rank) {
@@ -171,12 +153,6 @@ public:
     [[nodiscard]] static size_t get_my_neuron_id_end();
 
     [[nodiscard]] static std::string get_my_rank_str();
-
-    // NOLINTNEXTLINE
-    static void wait_request(AsyncToken& request);
-
-    // NOLINTNEXTLINE
-    static void wait_all_tokens(std::vector<AsyncToken>& tokens);
 
     template <typename T>
     static std::vector<std::vector<T>> exchange_values(const std::vector<std::vector<T>>& values) {

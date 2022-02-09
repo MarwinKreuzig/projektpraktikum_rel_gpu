@@ -166,24 +166,28 @@ std::vector<size_t> MPIWrapper::all_to_all(const std::vector<size_t>& src) {
     return dst;
 }
 
-void MPIWrapper::async_s(const void* buffer, const int count, const int rank, AsyncToken& token) {
+MPIWrapper::AsyncToken MPIWrapper::async_s(const void* buffer, const int count, const int rank) {
     RelearnException::check(rank >= 0, "MPIWrapper::async_s: Error in async s, rank is <= 0");
 
-    token = current_token++;
+    const auto token = current_token++;
     MPI_Request& translated_token = translation_map[token];
 
     const int errorcode = MPI_Isend(buffer, count, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &translated_token);
     RelearnException::check(errorcode == 0, "MPIWrapper::async_s: Error code received: {}", errorcode);
+
+    return token;
 }
 
-void MPIWrapper::async_recv(void* buffer, const int count, const int rank, AsyncToken& token) {
+MPIWrapper::AsyncToken MPIWrapper::async_recv(void* buffer, const int count, const int rank) {
     RelearnException::check(rank >= 0, "MPIWrapper::async_recv: Error in async recv, rank is <= 0");
 
-    token = current_token++;
+    const auto token = current_token++;
     MPI_Request& translated_token = translation_map[token];
 
     const int errorcode = MPI_Irecv(buffer, count, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &translated_token);
     RelearnException::check(errorcode == 0, "MPIWrapper::async_recv: Error code received: {}", errorcode);
+
+    return token;
 }
 
 int MPIWrapper::translate_lock_type(const MPI_Locktype lock_type) {
@@ -245,15 +249,7 @@ std::string MPIWrapper::get_my_rank_str() {
     return my_rank_str;
 }
 
-void MPIWrapper::wait_request(AsyncToken& request) {
-    MPI_Request translated_token = translation_map[request];
-    translation_map.erase(request);
-
-    const int errorcode = MPI_Wait(&translated_token, MPI_STATUS_IGNORE);
-    RelearnException::check(errorcode == 0, "MPIWrapper::wait_request: Error code received: {}", errorcode);
-}
-
-void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
+void MPIWrapper::wait_all_tokens(const std::vector<AsyncToken>& tokens) {
     const int size = static_cast<int>(tokens.size());
 
     std::vector<MPI_Request> requests(size);
@@ -272,7 +268,7 @@ void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
         std::stringstream ss{};
         ss << "I'm " << my_rank << ", i have " << size << " tokens and my errors are:\n";
         for (const auto& status : statuses) {
-            ss << status.MPI_ERROR << ' ' << status.MPI_SOURCE << ' '  << status.MPI_TAG << '\n';
+            ss << status.MPI_ERROR << ' ' << status.MPI_SOURCE << ' ' << status.MPI_TAG << '\n';
         }
 
         std::cout << ss.str();
