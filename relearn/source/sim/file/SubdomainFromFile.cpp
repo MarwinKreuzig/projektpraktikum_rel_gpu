@@ -57,7 +57,7 @@ void SubdomainFromFile::read_dimensions_from_file() {
             continue;
         }
 
-        size_t id{};
+        NeuronID::value_type id{};
         box_size_type::value_type pos_x{};
         box_size_type::value_type pos_y{};
         box_size_type::value_type pos_z{};
@@ -121,7 +121,7 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
 
     size_t number_placed_neurons = 0;
 
-    std::vector<NeuronToSubdomainAssignment::Node> nodes;
+    std::vector<NeuronToSubdomainAssignment::Node> nodes{};
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
@@ -131,7 +131,7 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
 
         std::string signal_type{};
 
-        size_t id{};
+        NeuronID::value_type id{};
         Node node{};
         box_size_type::value_type pos_x{};
         box_size_type::value_type pos_y{};
@@ -146,7 +146,7 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
 
         // Ids start with 1
         --id;
-        node.id = NeuronID{ id };
+        node.id = NeuronID{ true, false, id };
         node.pos = { pos_x, pos_y, pos_z };
 
         if (bool is_in_subdomain = node.pos.check_in_box(min, max); !is_in_subdomain) {
@@ -181,7 +181,7 @@ std::vector<NeuronID> SubdomainFromFile::get_neuron_global_ids_in_subdomain(cons
     }
 
     const Nodes& nodes = get_nodes_for_subdomain(subdomain_index_1d);
-    std::vector<NeuronID> global_ids;
+    std::vector<NeuronID> global_ids{};
     global_ids.reserve(nodes.size());
 
     for (const Node& node : nodes) {
@@ -228,7 +228,7 @@ void SubdomainFromFile::post_initialization() {
     casted_ptr->set_global_ids(std::move(global_ids));
 }
 
-std::optional<std::vector<size_t>> SubdomainFromFile::read_neuron_ids_from_file(const std::filesystem::path& file_path) {
+std::optional<std::vector<NeuronID>> SubdomainFromFile::read_neuron_ids_from_file(const std::filesystem::path& file_path) {
     std::ifstream local_file(file_path);
 
     const bool file_is_good = local_file.good();
@@ -238,7 +238,7 @@ std::optional<std::vector<size_t>> SubdomainFromFile::read_neuron_ids_from_file(
         return {};
     }
 
-    std::vector<size_t> ids;
+    std::vector<NeuronID> ids;
 
     for (std::string line{}; std::getline(local_file, line);) {
         // Skip line with comments
@@ -246,7 +246,7 @@ std::optional<std::vector<size_t>> SubdomainFromFile::read_neuron_ids_from_file(
             continue;
         }
 
-        size_t id{};
+        NeuronID::value_type id{};
         box_size_type::value_type pos_x{};
         box_size_type::value_type pos_y{};
         box_size_type::value_type pos_z{};
@@ -261,14 +261,14 @@ std::optional<std::vector<size_t>> SubdomainFromFile::read_neuron_ids_from_file(
         }
 
         if (!ids.empty()) {
-            const auto last_id = ids[ids.size() - 1];
+            const auto last_id = ids[ids.size() - 1].get_global_id();
 
             if (last_id >= id) {
                 return {};
             }
         }
 
-        ids.push_back(id);
+        ids.emplace_back(true, false, id);
     }
 
     return ids;

@@ -69,11 +69,11 @@ FileSynapseLoader::internal_load_synapses() {
         // The neurons start with 1
         --read_source_id;
         --read_target_id;
-        auto source_id = NeuronID{ read_source_id };
-        auto target_id = NeuronID{ read_target_id };
+        auto source_id = NeuronID{ true, false, read_source_id };
+        auto target_id = NeuronID{ true, false, read_target_id };
 
-        const f_status source_f = id_is_local[source_id.id()];
-        const f_status target_f = id_is_local[target_id.id()];
+        const f_status source_f = id_is_local[source_id.get_global_id()];
+        const f_status target_f = id_is_local[target_id.get_global_id()];
 
         bool source_is_local = false;
         bool target_is_local = false;
@@ -85,9 +85,9 @@ FileSynapseLoader::internal_load_synapses() {
         } else {
             source_is_local = nit->is_neuron_local(source_id);
             if (source_is_local) {
-                id_is_local[source_id.id()] = f_status::local;
+                id_is_local[source_id.get_global_id()] = f_status::local;
             } else {
-                id_is_local[source_id.id()] = f_status::not_local;
+                id_is_local[source_id.get_global_id()] = f_status::not_local;
             }
         }
 
@@ -98,9 +98,9 @@ FileSynapseLoader::internal_load_synapses() {
         } else {
             target_is_local = nit->is_neuron_local(target_id);
             if (target_is_local) {
-                id_is_local[target_id.id()] = f_status::local;
+                id_is_local[target_id.get_global_id()] = f_status::local;
             } else {
-                id_is_local[target_id.id()] = f_status::not_local;
+                id_is_local[target_id.get_global_id()] = f_status::not_local;
             }
         }
 

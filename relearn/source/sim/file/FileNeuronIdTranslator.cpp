@@ -40,25 +40,26 @@ NeuronID FileNeuronIdTranslator::get_local_id(NeuronID global_id) const {
 
         if (pos != ids.end()) {
             id += pos - ids.begin();
-            return NeuronID{ id };
+            return NeuronID{ false, false, id };
         }
 
         id += ids.size();
     }
 
     RelearnException::fail("Partition::is_neuron_local: Didn't find global id {}", global_id);
-    return NeuronID{};
+    return NeuronID::uninitialized_id();
 }
 
 NeuronID FileNeuronIdTranslator::get_global_id(NeuronID local_id) const {
+    const auto local_neuron_id = local_id.get_local_id();
+
     size_t counter = 0;
     for (auto i = 0; i < partition->get_number_local_subdomains(); i++) {
         const size_t old_counter = counter;
 
         counter += global_neuron_ids[i].size();
-        if (local_id.id() < counter) {
-            const NeuronID local_local_id = local_id - old_counter;
-            return global_neuron_ids[i][local_local_id.id()];
+        if (local_neuron_id < counter) {
+            return global_neuron_ids[i][local_neuron_id - old_counter];
         }
     }
 
@@ -198,7 +199,7 @@ std::map<NeuronID, FileNeuronIdTranslator::position_type> FileNeuronIdTranslator
 
         // File starts at 1
         --read_id;
-        NeuronID id{ read_id };
+        NeuronID id{ true, false, read_id };
 
         if (std::binary_search(global_ids.cbegin(), global_ids.cend(), id)) {
             translation_map[id] = { pos_x, pos_y, pos_z };

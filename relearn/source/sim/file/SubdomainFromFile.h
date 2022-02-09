@@ -52,7 +52,7 @@ public:
      * @param file_path The path to the file to load
      * @return Empty if the file did not meet the sorting requirement, the ascending ids otherwise
      */
-    [[nodiscard]] static std::optional<std::vector<size_t>> read_neuron_ids_from_file(const std::filesystem::path& file_path);
+    [[nodiscard]] static std::optional<std::vector<NeuronID>> read_neuron_ids_from_file(const std::filesystem::path& file_path);
 
     /**
      * @brief Returns the global ids for a given subdomain
