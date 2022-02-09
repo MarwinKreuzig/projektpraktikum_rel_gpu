@@ -36,10 +36,12 @@ public:
     using box_size_type = RelearnTypes::box_size_type;
 
     /**
-     * @brief Sets the neuron id for the associated cell. Can be set to Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
-     * @param neuron_id The neuron id, can be Constants::uninitialized
+     * @brief Sets the neuron id for the associated cell
+     * @param neuron_id The neuron id
+     * @exception Throws a RelearnException if the neuron_id is not initialized
      */
-    void set_neuron_id(const NeuronID& neuron_id) noexcept {
+    void set_neuron_id(const NeuronID& neuron_id) {
+        RelearnException::check(neuron_id.is_initialized(), "Cell::set:neuron_id: The neuron id was not initialized: {}", neuron_id);
         this->neuron_id = neuron_id;
     }
 

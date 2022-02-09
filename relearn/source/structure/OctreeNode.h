@@ -395,7 +395,7 @@ public:
     }
 
     /**
-     * @brief Returns the neuron id for the associated cell. Is Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
+     * @brief Returns the neuron id for the associated cell
      * @return The neuron id
      */
     [[nodiscard]] NeuronID get_cell_neuron_id() const noexcept {
@@ -403,10 +403,11 @@ public:
     }
 
     /**
-     * @brief Sets the neuron id for the associated cell. Can be set to Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
+     * @brief Sets the neuron id for the associated cell
      * @param neuron_id The neuron id
+     * @exception Throws a RelearnException if the neuron_id is not initialized
      */
-    void set_cell_neuron_id(const NeuronID& neuron_id) noexcept {
+    void set_cell_neuron_id(const NeuronID& neuron_id) {
         cell.set_neuron_id(neuron_id);
     }
 
