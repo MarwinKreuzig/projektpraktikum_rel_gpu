@@ -80,11 +80,11 @@ TEST_F(NeuronIdTest, testRandomNeuronIdTranslatorLocalGlobal) {
             const auto golden_global_id = neuron_id + start_local_ids;
             const auto global_id = rnit.get_global_id(NeuronID(neuron_id));
 
-            ASSERT_EQ(global_id, NeuronID(golden_global_id));
+            ASSERT_EQ(global_id, NeuronID(true, false, golden_global_id));
 
-            const auto local_id = rnit.get_local_id(NeuronID(golden_global_id));
+            const auto local_id = rnit.get_local_id(NeuronID(true, false, golden_global_id));
 
-            ASSERT_EQ(local_id, NeuronID(neuron_id));
+            ASSERT_EQ(local_id, NeuronID(false, false, neuron_id));
         }
     }
 }
@@ -162,17 +162,17 @@ TEST_F(NeuronIdTest, testRandomNeuronIdTranslatorLocalGlobalException) {
             }
 
             const auto too_small_id = get_random_integer<size_t>(0, start_local_ids - 1);
-            ASSERT_THROW(auto val = rnit.get_local_id(NeuronID(too_small_id)), RelearnException);
+            ASSERT_THROW(auto val = rnit.get_local_id(NeuronID(true, false, too_small_id)), RelearnException);
         }
 
         for (auto counter = 0; counter < number_neurons_out_of_scope; counter++) {
             const auto too_small_id = get_random_integer<size_t>(end_local_ids, end_local_ids + number_total_neurons);
-            ASSERT_THROW(auto val = rnit.get_local_id(NeuronID(too_small_id)), RelearnException);
+            ASSERT_THROW(auto val = rnit.get_local_id(NeuronID(true, false, too_small_id)), RelearnException);
         }
 
         for (auto counter = 0; counter < number_neurons_out_of_scope; counter++) {
             const auto too_large_global_id = get_random_integer<size_t>(number_local_neurons, number_local_neurons + number_total_neurons);
-            ASSERT_THROW(auto val = rnit.get_global_id(NeuronID(too_large_global_id)), RelearnException);
+            ASSERT_THROW(auto val = rnit.get_global_id(NeuronID(true, false, too_large_global_id)), RelearnException);
         }
     }
 }
@@ -235,7 +235,10 @@ TEST_F(NeuronIdTest, testRandomNeuronIdTranslatorGlobalIdToRankNeuronId) {
         return number_neurons;
     };
 
-    std::vector<NeuronID> global_ids(NeuronID::range(number_total_neurons).begin(), NeuronID::range(number_total_neurons).end());
+    std::vector<NeuronID> global_ids{};
+    for (const auto& id : NeuronID::range(number_total_neurons)) {
+        global_ids.emplace_back(true, false, id.get_local_id());
+    }
 
     for (auto rank_id = 0; rank_id < num_ranks; rank_id++) {
         auto partition = partitions[rank_id];
@@ -256,7 +259,7 @@ TEST_F(NeuronIdTest, testRandomNeuronIdTranslatorGlobalIdToRankNeuronId) {
             ASSERT_LT(rank, num_ranks) << rank << ' ' << num_ranks;
 
             const auto remote_start = start_ids[rank];
-            const auto expected_local_id = neuron_id - remote_start;
+            const auto expected_local_id = NeuronID(false, false, neuron_id.get_global_id() - remote_start);
 
             ASSERT_EQ(local_id, expected_local_id) << rank << ' ' << expected_local_id << " vs. " << local_id << " for: " << neuron_id;
         }

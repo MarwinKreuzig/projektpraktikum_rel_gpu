@@ -357,7 +357,7 @@ TEST_F(OctreeTest, testOctreeNodeInsert) {
     OctreeNode<AdditionalCellAttributes> node{};
     node.set_rank(my_rank);
     node.set_cell_size(min, max);
-
+    node.set_cell_neuron_id(NeuronID::virtual_id());
     node.set_cell_neuron_position(own_position);
 
     size_t number_neurons = get_random_number_neurons();
