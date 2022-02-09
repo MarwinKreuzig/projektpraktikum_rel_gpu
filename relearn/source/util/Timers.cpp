@@ -98,15 +98,6 @@ void Timers::print() {
     sstring << "      Prepare sending spikes                   : ";
     print_timer(sstring, TimerRegion::PREPARE_SENDING_SPIKES, timers_global);
 
-    sstring << "      Prepare num neuron ids                   : ";
-    print_timer(sstring, TimerRegion::PREPARE_NUM_NEURON_IDS, timers_global);
-
-    sstring << "      All to all                               : ";
-    print_timer(sstring, TimerRegion::ALL_TO_ALL, timers_global);
-
-    sstring << "      Alloc mem for neuron ids                 : ";
-    print_timer(sstring, TimerRegion::ALLOC_MEM_FOR_NEURON_IDS, timers_global);
-
     sstring << "      Exchange neuron ids                      : ";
     print_timer(sstring, TimerRegion::EXCHANGE_NEURON_IDS, timers_global);
 
