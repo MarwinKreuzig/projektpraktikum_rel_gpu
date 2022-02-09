@@ -10,14 +10,16 @@
 
 #pragma once
 
+#include "../Types.h"
+
 #include <filesystem>
 #include <functional>
 #include <utility>
 
 class CalciumIO {
 public:
-    using initial_value_calculator = std::function<double(size_t)>;
-    using target_value_calculator = std::function<double(size_t)>;
+    using initial_value_calculator = std::function<double(NeuronID::value_type)>;
+    using target_value_calculator = std::function<double(NeuronID::value_type)>;
 
     static initial_value_calculator load_initial_function(const std::filesystem::path& path_to_file);
 
