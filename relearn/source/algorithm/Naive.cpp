@@ -103,33 +103,23 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t
     const std::vector<SignalType>& axons_signal_types = axons->get_signal_types();
 
     // For my neurons
-    for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
+    for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
             continue;
         }
 
-        // Number of vacant axons
-        const auto num_vacant_axons = static_cast<unsigned int>(axons_cnts[neuron_id]) - axons_connected_cnts[neuron_id];
-        RelearnException::check(num_vacant_axons >= 0, "Naive::find_target_neurons: num vacant axons is negative: {}", num_vacant_axons);
+        const auto id = NeuronID{ neuron_id };
 
-        if (num_vacant_axons == 0) {
+        const auto number_vacant_axons = axons->get_free_elements(id);
+        if (number_vacant_axons == 0) {
             continue;
         }
 
-        // DendriteType::EXCITATORY axon
-        SignalType dendrite_type_needed = SignalType::EXCITATORY;
-        if (SignalType::INHIBITORY == axons_signal_types[neuron_id]) {
-            // DendriteType::INHIBITORY axon
-            dendrite_type_needed = SignalType::INHIBITORY;
-        }
-
-        const auto id = NeuronID{ neuron_id };
-
-        // Position of current neuron
-        const Vec3d axon_xyz_pos = extra_infos->get_position(id);
+        const auto dendrite_type_needed = axons->get_signal_type(id);
+        const auto& axon_position = extra_infos->get_position(id);
 
         // For all vacant axons of neuron "neuron_id"
-        for (size_t j = 0; j < num_vacant_axons; j++) {
+        for (unsigned int j = 0; j < number_vacant_axons; j++) {
             /**
              * Find target neuron for connecting and
              * connect if target neuron has still dendrite available.
@@ -138,19 +128,22 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t
              * as other axons might already have connected to them.
              * Right now, those collisions are handled in a first-come-first-served fashion.
              */
-            std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(id, axon_xyz_pos, dendrite_type_needed);
-
-            if (rank_neuron_id.has_value()) {
-                const auto& [target_rank, target_id] = rank_neuron_id.value();
-                /*
-				* Append request for synapse creation to rank "target_rank"
-				* Note that "target_rank" could also be my own rank.
-				*/
-                const SynapseCreationRequest creation_request(target_id, id, dendrite_type_needed);
-                synapse_creation_requests_outgoing.append(target_rank, creation_request);
+            std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(id, axon_position, dendrite_type_needed);
+            if (!rank_neuron_id.has_value()) {
+                // If finding failed, it won't succeed in later iterations
+                break;
             }
-        } /* all vacant axons of a neuron */
-    } /* my neurons */
+
+            const auto& [target_rank, target_id] = rank_neuron_id.value();
+            const SynapseCreationRequest creation_request(target_id, id, dendrite_type_needed);
+
+            /**
+			 * Append request for synapse creation to rank "target_rank"
+			 * Note that "target_rank" could also be my own rank.
+			 */
+            synapse_creation_requests_outgoing.append(target_rank, creation_request);
+        }
+    }
 
     Timers::stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
 
@@ -188,21 +181,22 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
 
     RelearnException::check(all_same_size, "Naive::update_leaf_nodes: The vectors were of different sizes");
 
-    for (size_t neuron_id = 0; neuron_id < num_leaf_nodes; neuron_id++) {
-        auto* node = leaf_nodes[neuron_id];
+    for (const auto neuron_id : NeuronID::range(num_leaf_nodes)) {
+        const auto local_neuron_id = neuron_id.get_local_id();
+        if (disable_flags[local_neuron_id] == UpdateStatus::DISABLED) {
+            continue;
+        }
+
+        auto* node = leaf_nodes[local_neuron_id];
 
         RelearnException::check(node != nullptr, "Naive::update_leaf_nodes: node was nullptr: ", neuron_id);
 
         const auto other_neuron_id = node->get_cell().get_neuron_id();
 
-        RelearnException::check(NeuronID{ neuron_id } == other_neuron_id, "Naive::update_leaf_nodes: The nodes are not in order");
+        RelearnException::check(neuron_id == other_neuron_id, "Naive::update_leaf_nodes: The nodes are not in order");
 
-        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
-            continue;
-        }
-
-        const auto number_vacant_dendrites_excitatory = static_cast<unsigned int>(dendrites_excitatory_counts[neuron_id] - dendrites_excitatory_connected_counts[neuron_id]);
-        const auto number_vacant_dendrites_inhibitory = static_cast<unsigned int>(dendrites_inhibitory_counts[neuron_id] - dendrites_inhibitory_connected_counts[neuron_id]);
+        const auto number_vacant_dendrites_excitatory = excitatory_dendrites->get_free_elements(neuron_id);
+        const auto number_vacant_dendrites_inhibitory = inhibitory_dendrites->get_free_elements(neuron_id);
 
         node->set_cell_number_dendrites(number_vacant_dendrites_excitatory, number_vacant_dendrites_inhibitory);
     }
