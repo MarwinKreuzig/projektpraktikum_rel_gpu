@@ -61,7 +61,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorOnlyID) { // NOLINT
 
     ASSERT_EQ(id.get_local_id(), id_val);
     ASSERT_EQ(static_cast<TypeParam>(id), id_val);
-    ASSERT_THROW(id.get_global_id(), RelearnException);
+    ASSERT_THROW(auto val = id.get_global_id(), RelearnException);
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDConstructorLocal) {
@@ -77,7 +77,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorLocal) {
 
     ASSERT_EQ(id.get_local_id(), id_val);
     ASSERT_EQ(static_cast<TypeParam>(id), id_val);
-    ASSERT_THROW(id.get_global_id(), RelearnException);
+    ASSERT_THROW(auto val = id.get_global_id(), RelearnException);
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDConstructorGlobal) {
@@ -93,7 +93,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorGlobal) {
 
     ASSERT_EQ(id.get_global_id(), id_val);
     ASSERT_EQ(static_cast<TypeParam>(id), id_val);
-    ASSERT_THROW(id.get_local_id(), RelearnException);
+    ASSERT_THROW(auto val = id.get_local_id(), RelearnException);
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDConstructorVirtual) {
@@ -108,8 +108,8 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorVirtual) {
     ASSERT_FALSE(id.is_global());
     ASSERT_FALSE(id.is_local());
 
-    ASSERT_THROW(id.get_global_id(), RelearnException);
-    ASSERT_THROW(id.get_local_id(), RelearnException);
+    ASSERT_THROW(auto val = id.get_global_id(), RelearnException);
+    ASSERT_THROW(auto val = id.get_local_id(), RelearnException);
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDComparisons1) { // NOLINT
