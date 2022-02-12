@@ -93,7 +93,7 @@ public:
     [[nodiscard]] static constexpr TaggedID virtual_id() noexcept { return TaggedID{ false, true, 0 }; }
 
     /**
-     * @brief Create a range of TaggedIDs within the range [0, size)
+     * @brief Create a range of local TaggedIDs within the range [0, size)
      *
      * @param size size of the range
      * @return constexpr auto range of TaggedIDs
@@ -101,6 +101,17 @@ public:
     [[nodiscard]] static constexpr auto range(size_t size) {
         return std::views::iota(size_t{ 0 }, size)
             | std::views::transform([](const size_t id) { return TaggedID{ id }; });
+    }
+
+    /**
+     * @brief Create a range of global TaggedIDs within the range [0, size)
+     *
+     * @param size size of the range
+     * @return constexpr auto range of TaggedIDs
+     */
+    [[nodiscard]] static constexpr auto global_range(size_t size) {
+        return std::views::iota(size_t{ 0 }, size)
+            | std::views::transform([](const size_t id) { return TaggedID{ true, false, id }; });
     }
 
     /**
@@ -113,6 +124,18 @@ public:
     [[nodiscard]] static constexpr auto range(size_t begin, size_t end) {
         return std::views::iota(begin, end)
             | std::views::transform([](const size_t id) { return TaggedID{ id }; });
+    }
+
+    /**
+     * @brief Create a global range of TaggedIDs within the range [begin, end)
+     *
+     * @param begin begin of the range
+     * @param end end of the range
+     * @return constexpr auto range of TaggedIDs
+     */
+    [[nodiscard]] static constexpr auto range_global(size_t begin, size_t end) {
+        return std::views::iota(begin, end)
+            | std::views::transform([](const size_t id) { return TaggedID{ true, false, id }; });
     }
 
     /**

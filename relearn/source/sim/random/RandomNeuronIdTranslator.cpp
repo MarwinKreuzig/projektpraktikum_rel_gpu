@@ -144,3 +144,10 @@ std::map<RankNeuronId, NeuronID> RandomNeuronIdTranslator::translate_rank_neuron
 
     return return_value;
 }
+
+void RandomNeuronIdTranslator::create_neurons(size_t number_local_creations) {
+    const auto num_ranks = MPIWrapper::get_num_ranks();
+    RelearnException::check(num_ranks == 1, "RandomNeuronIdTranslator::create_neurons: Can only create neurons for files with one mpi rank, but there were {}", num_ranks);
+
+    number_local_neurons += number_local_creations;
+}

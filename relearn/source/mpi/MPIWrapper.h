@@ -23,8 +23,6 @@ using MPIWrapper = MPINoWrapper;
 #include "../util/RelearnException.h"
 #include "CommunicationMap.h"
 
-#include <mpi.h>
-
 #include <array>
 #include <cstdint>
 #include <ranges>
@@ -89,10 +87,6 @@ private:
 
     static void init_globals();
 
-    static inline std::unique_ptr<MPI_Op> minsummax{ nullptr };
-
-    [[nodiscard]] static std::unique_ptr<MPI_Op> translate_reduce_function(ReduceFunction rf);
-
     static void register_custom_function();
 
     static void free_custom_function();
@@ -101,8 +95,6 @@ private:
     static inline int my_rank{ -1 }; // My rank in MPI_COMM_WORLD
 
     static inline int thread_level_provided{ -1 }; // Thread level provided by MPI
-
-    static inline std::unique_ptr<MPI_Win> mpi_window{ nullptr }; // RMA window object
 
     static inline void* base_ptr{ nullptr }; // Start address of MPI-allocated memory
     static inline std::vector<int64_t> base_pointers{}; // RMA window base pointers of all procs

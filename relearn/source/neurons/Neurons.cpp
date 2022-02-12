@@ -221,6 +221,8 @@ void Neurons::create_neurons(const size_t creation_count, const std::vector<doub
     neuron_model->create_neurons(creation_count);
     extra_info->create_neurons(creation_count);
 
+    translator->create_neurons(creation_count);
+
     network_graph->create_neurons(creation_count);
 
     axons->create_neurons(creation_count);
