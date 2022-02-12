@@ -254,34 +254,10 @@ public:
     /**
      * @brief Compare two TaggedIDs
      *
-     * Compares the members in order:
-     *  (1) initialized, (2) virtual, (3) global, (4) id.
-     * Is not defaulted because GCC10.3 has issues
+     * Compares the members in order of declaration
      * @return std::strong_ordering ordering
      */
-    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const TaggedID& first, const TaggedID& second) noexcept {
-        auto initialized_comp = first.is_initialized_ <=> second.is_initialized_;
-        if (initialized_comp != std::strong_ordering::equal) {
-            return initialized_comp;
-        }
-
-        auto virtual_comp = first.is_virtual_ <=> second.is_virtual_;
-        if (virtual_comp != std::strong_ordering::equal) {
-            return virtual_comp;
-        }
-
-        auto global_comp = first.is_global_ <=> second.is_global_;
-        if (global_comp != std::strong_ordering::equal) {
-            return global_comp;
-        }
-
-        value_type id1 = first.id_;
-        value_type id2 = second.id_;
-
-        std::strong_ordering order = id1 <=> id2;
-
-        return order;
-    }
+    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const TaggedID& first, const TaggedID& second) noexcept = default;
 
 private:
     // the ordering of members is important for the defaulted <=> comparison
