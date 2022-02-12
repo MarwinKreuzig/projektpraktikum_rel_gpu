@@ -23,6 +23,9 @@
 
 #include "RelearnException.h"
 
+template<typename U>
+class TaggedIDTest;
+
 namespace detail {
 template <std::integral T>
 [[nodiscard]] inline constexpr T get_max_size(const std::size_t& bit_count) {
@@ -72,6 +75,9 @@ struct TaggedIDNumericalLimits : public std::conditional_t<
  */
 template <std::integral T = std::uint64_t>
 class TaggedID {
+    template <typename U>
+    friend class TaggedIDTest;
+
 public:
     using value_type = T;
     static constexpr auto num_flags = 3;
@@ -175,26 +181,12 @@ public:
     ~TaggedID() = default;
 
     /**
-     * @brief Assign the new id to this tagged id and set is_initialized to true
-     *
-     * @param id the new id
-     * @return TaggedID& *this
-     */
-    constexpr TaggedID& operator=(const value_type& id) noexcept {
-        is_initialized_ = true;
-        this->id_ = id;
-        return *this;
-    }
-
-    /**
      * @brief Get the id
-     *
-     * The same as calling id()
      *
      * @return value_type id
      */
     [[nodiscard]] constexpr explicit operator value_type() const noexcept {
-        return id();
+        return id_;
     }
 
     /**
@@ -208,15 +200,6 @@ public:
     }
 
     /**
-     * @brief Get the id
-     *
-     * No check is performed.
-     *
-     * @return constexpr value_type id
-     */
-    [[nodiscard]] constexpr value_type id() const { return id_; }
-
-    /**
      * @brief Get the global id
      *
      * @exception RelearnException if the id is not global
@@ -224,7 +207,8 @@ public:
      */
     [[nodiscard]] constexpr value_type get_global_id() const {
         RelearnException::check(is_global(), "TaggedID::get_global_id is not global {:s}", *this);
-        return id();
+        RelearnException::check(!is_virtual(), "TaggedID::get_global_id is virtual {:s}", *this);
+        return id_;
     }
 
     /**
@@ -235,7 +219,8 @@ public:
      */
     [[nodiscard]] constexpr value_type get_local_id() const {
         RelearnException::check(is_local(), "TaggedID::get_local_id is not local {:s}", *this);
-        return id();
+        RelearnException::check(!is_virtual(), "TaggedID::get_global_id is virtual {:s}", *this);
+        return id_;
     }
 
     /**
@@ -257,42 +242,14 @@ public:
      *
      * @return true iff the id is global
      */
-    [[nodiscard]] constexpr bool is_global() const noexcept { return is_global_ && is_initialized_; }
+    [[nodiscard]] constexpr bool is_global() const noexcept { return is_global_ && is_initialized_ && !is_virtual_; }
 
     /**
      * @brief Check if the id is local
      *
      * @return true iff the id is local
      */
-    [[nodiscard]] constexpr bool is_local() const noexcept { return !is_global_ && is_initialized_; }
-
-    /**
-     * @brief Get an ID that is offset by offset
-     *
-     * @exception RelearnException iff the ID is not initialized
-     * @param offset offset to add to the id
-     * @return constexpr TaggedID the same ID as this, but offset by offset
-     */
-    [[nodiscard]] constexpr TaggedID<T> operator+(const size_t& offset) const {
-        RelearnException::check(is_initialized(), "TaggedID is not initialized");
-        auto res = *this;
-        res.id_ += offset;
-        return res;
-    }
-
-    /**
-     * @brief Get an ID that is negatively offset by offset
-     *
-     * @exception RelearnException iff the ID is not initialized
-     * @param offset offset to subtract to the id
-     * @return constexpr TaggedID the same ID as this, but negatively offset by offset
-     */
-    [[nodiscard]] constexpr TaggedID<T> operator-(const size_t& offset) const noexcept {
-        RelearnException::check(is_initialized(), "TaggedID is not initialized");
-        auto res = *this;
-        res.id_ -= offset;
-        return res;
-    }
+    [[nodiscard]] constexpr bool is_local() const noexcept { return !is_global_ && is_initialized_ && !is_virtual_; }
 
     /**
      * @brief Compare two TaggedIDs
@@ -307,8 +264,8 @@ private:
     // the ordering of members is important for the defaulted <=> comparison
 
     bool is_initialized_ : 1 = false;
-    bool is_global_ : 1 = false;
     bool is_virtual_ : 1 = false;
+    bool is_global_ : 1 = false;
     value_type id_ : id_bit_count = 0;
 };
 
@@ -374,7 +331,23 @@ public:
             throw format_error("unrecognized format for TaggedID<T>");
         }
 
-        return fmt::formatter<typename TaggedID<T>::value_type>::format(id.id(), ctx);
+        using type = typename TaggedID<T>::value_type;
+
+        type id_ = 0;
+
+        if (!id.is_initialized()) {
+            id_ = std::numeric_limits<type>::max();
+        } else if (id.is_virtual()) {
+            id_ = std::numeric_limits<type>::max() - 1;
+        } else if (id.is_local()) {
+            id_ = id.get_local_id();
+        } else if (id.is_global()) {
+            id_ = id.get_global_id();
+        } else {
+            RelearnException::fail("Format of neuron id failed!");
+        }
+
+        return fmt::formatter<type>::format(id_, ctx);
     }
 
 private:

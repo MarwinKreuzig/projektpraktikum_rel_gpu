@@ -140,7 +140,7 @@ private:
      */
     template <typename T>
     [[nodiscard]] static AsyncToken async_send(std::span<T> buffer, const int rank) {
-        return async_s(buffer.data(), buffer.size_bytes(), rank);
+        return async_s(buffer.data(), static_cast<int>( buffer.size_bytes()), rank);
     }
 
     /**
@@ -152,7 +152,7 @@ private:
      */
     template <typename T>
     [[nodiscard]] static AsyncToken async_receive(std::span<T> buffer, const int rank) {
-        return async_recv(buffer.data(), buffer.size_bytes(), rank);
+        return async_recv(buffer.data(), static_cast<int>(buffer.size_bytes()), rank);
     }
 
     /**
@@ -285,7 +285,7 @@ public:
      */
     template <typename T>
     static void all_gather_inline(std::span<T> buffer) {
-        all_gather_inl(buffer.data(), buffer.size_bytes());
+        all_gather_inl(buffer.data(), static_cast<int>(buffer.size_bytes()));
     }
 
     /**

@@ -151,19 +151,19 @@ void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTransla
     for (auto target_neuron_id : NeuronID::range(number_local_neurons)) {
         const auto global_target_id = translator->get_global_id(target_neuron_id);
 
-        for (const auto& [local_source_id, edge_val] : neuron_local_in_neighborhood[target_neuron_id.id()]) {
+        for (const auto& [local_source_id, edge_val] : neuron_local_in_neighborhood[target_neuron_id.get_local_id()]) {
             const auto global_source_id = translator->get_global_id(local_source_id);
 
-            os << (global_target_id + 1) << "\t"
-               << (global_source_id + 1) << "\t"
+            os << (global_target_id.get_global_id() + 1) << "\t"
+               << (global_source_id.get_global_id() + 1) << "\t"
                << edge_val << "\n";
         }
 
-        for (const auto& [distant_neuron_id, edge_val] : neuron_distant_in_neighborhood[target_neuron_id.id()]) {
+        for (const auto& [distant_neuron_id, edge_val] : neuron_distant_in_neighborhood[target_neuron_id.get_local_id()]) {
             const auto& [distant_rank, distant_local_neuron_id] = distant_neuron_id;
 
             const auto& request_iterator = std::find(exchange_id_my_requests[distant_rank].begin(),
-                exchange_id_my_requests[distant_rank].end(), distant_local_neuron_id.id());
+                exchange_id_my_requests[distant_rank].end(), distant_local_neuron_id.get_local_id());
 
             const auto& distance = std::distance(exchange_id_my_requests[distant_rank].begin(), request_iterator);
 
@@ -171,7 +171,7 @@ void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTransla
 
             // <target neuron id>  <source neuron id>  <weight>
             os
-                << (global_target_id + 1) << "\t"
+                << (global_target_id.get_global_id() + 1) << "\t"
                 << (global_source_id + 1) << "\t"
                 << edge_val << "\n";
         }

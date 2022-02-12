@@ -84,7 +84,7 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
 
         auto I = I_syn[neuron_id];
         for (const auto& [src_neuron_id, edge_val] : local_in_edges) {
-            const auto spike = fired[src_neuron_id.id()];
+            const auto spike = fired[src_neuron_id.get_local_id()];
             if (spike != 0) {
                 I += k * edge_val;
             }

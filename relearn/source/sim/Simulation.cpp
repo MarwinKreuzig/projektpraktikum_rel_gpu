@@ -243,7 +243,7 @@ void Simulation::simulate(const size_t number_steps) {
             const auto number_neurons = neurons->get_num_neurons();
 
             for (auto& mn : *monitors) {
-                if (mn.get_target_id().id() < number_neurons) {
+                if (mn.get_target_id().get_local_id() < number_neurons) {
                     mn.record_data();
                 }
             }
@@ -390,7 +390,7 @@ std::vector<std::unique_ptr<NeuronModel>> Simulation::get_models() {
 void Simulation::print_neuron_monitors() {
     for (auto& monitor : *monitors) {
         auto path = LogFiles::get_output_path();
-        std::ofstream outfile(path + std::to_string(monitor.get_target_id().id()) + ".csv", std::ios::trunc);
+        std::ofstream outfile(path + std::to_string(monitor.get_target_id().get_local_id()) + ".csv", std::ios::trunc);
         outfile << std::setprecision(Constants::print_precision);
 
         outfile.imbue(std::locale());

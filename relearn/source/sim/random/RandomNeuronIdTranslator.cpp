@@ -113,11 +113,11 @@ NeuronID RandomNeuronIdTranslator::translate_rank_neuron_id(const RankNeuronId& 
     const auto& [rank, local_neuron_id] = rni;
     RelearnException::check(rank >= 0, "RandomNeuronIdTranslator::translate_rank_neuron_ids: There was a negative MPI rank");
     RelearnException::check(rank < mpi_rank_to_local_start_id.size(), "RandomNeuronIdTranslator::translate_rank_neuron_ids: The requested MPI rank is not stored");
-    RelearnException::check(local_neuron_id.id() < Constants::uninitialized, "RandomNeuronIdTranslator::translate_rank_neuron_ids: The requested neuron id is unitialized");
+    RelearnException::check(local_neuron_id.get_local_id() < Constants::uninitialized, "RandomNeuronIdTranslator::translate_rank_neuron_ids: The requested neuron id is unitialized");
 
-    const auto glob_id = mpi_rank_to_local_start_id[rank] + local_neuron_id.id();
+    const auto glob_id = mpi_rank_to_local_start_id[rank] + local_neuron_id.get_local_id();
 
-    if (local_neuron_id.id() < mpi_rank_to_local_start_id.size() - 1) {
+    if (local_neuron_id.get_local_id() < mpi_rank_to_local_start_id.size() - 1) {
         RelearnException::check(glob_id < mpi_rank_to_local_start_id[rank + 1ULL], "RandomNeuronIdTranslator::translate_rank_neuron_ids: The translated id exceeded the starting id of the next rank");
     }
 
@@ -131,11 +131,11 @@ std::map<RankNeuronId, NeuronID> RandomNeuronIdTranslator::translate_rank_neuron
         const auto& [rank, local_neuron_id] = id;
         RelearnException::check(rank >= 0, "RandomNeuronIdTranslator::translate_rank_neuron_ids: There was a negative MPI rank");
         RelearnException::check(rank < mpi_rank_to_local_start_id.size(), "RandomNeuronIdTranslator::translate_rank_neuron_ids: The requested MPI rank is not stored");
-        RelearnException::check(local_neuron_id.id() < Constants::uninitialized, "RandomNeuronIdTranslator::translate_rank_neuron_ids: The requested neuron id is unitialized");
+        RelearnException::check(local_neuron_id.get_local_id() < Constants::uninitialized, "RandomNeuronIdTranslator::translate_rank_neuron_ids: The requested neuron id is unitialized");
 
-        const auto glob_id = mpi_rank_to_local_start_id[rank] + local_neuron_id.id();
+        const auto glob_id = mpi_rank_to_local_start_id[rank] + local_neuron_id.get_local_id();
 
-        if (local_neuron_id.id() < mpi_rank_to_local_start_id.size() - 1) {
+        if (local_neuron_id.get_local_id() < mpi_rank_to_local_start_id.size() - 1) {
             RelearnException::check(glob_id < mpi_rank_to_local_start_id[rank + 1ULL], "RandomNeuronIdTranslator::translate_rank_neuron_ids: The translated id exceeded the starting id of the next rank");
         }
 
