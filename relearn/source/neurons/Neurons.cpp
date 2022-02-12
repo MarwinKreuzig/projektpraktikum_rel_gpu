@@ -658,7 +658,7 @@ StatisticalMeasures Neurons::get_statistics(NeuronAttribute attribute) const {
         return global_statistics_integral(dendrites_inh->get_connected_elements(), 0, disable_flags);
     }
 
-    RelearnException::fail("Neurons::get_statistics: Got an unsupported attribute: {}", attribute);
+    RelearnException::fail("Neurons::get_statistics: Got an unsupported attribute: {}", static_cast<int>(attribute));
 
     return {};
 }

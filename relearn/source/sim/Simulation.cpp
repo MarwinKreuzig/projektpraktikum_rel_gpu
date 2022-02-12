@@ -193,7 +193,7 @@ void Simulation::initialize() {
         algorithm_barnes_hut->set_probability_parameter(sigma);
         algorithm = std::move(algorithm_barnes_hut);
     } else {
-        RelearnException::fail("Simulation::initialize: AlgorithmEnum {} not yet implemented!", algorithm_enum);
+        RelearnException::fail("Simulation::initialize: AlgorithmEnum {} not yet implemented!", static_cast<int>(algorithm_enum));
     }
 
     network_graph = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
