@@ -168,8 +168,8 @@ public:
      */
     constexpr explicit TaggedID(bool is_global, bool is_virtual, std::integral auto id) noexcept
         : is_initialized_{ true }
-        , is_global_{ is_global }
         , is_virtual_{ is_virtual }
+        , is_global_{ is_global }
         , id_{ static_cast<value_type>(id) } { }
 
     TaggedID(const TaggedID&) noexcept = default;
