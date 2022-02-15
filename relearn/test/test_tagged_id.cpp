@@ -147,9 +147,9 @@ TYPED_TEST(TaggedIDTest, testTaggedIDComparisons2) { // NOLINT
     // only compare equal if all members compare equal, otherwise compare unequal
     EXPECT_EQ(
         id1 == id2,
-        id1.is_initialized() == id2.is_initialized()
-            && id1.is_global() == id2.is_global()
-            && id1.is_virtual() == id2.is_virtual()
+        this->get_initialized(id1) == this->get_initialized(id2))
+            && this->get_virtual(id1) == this->get_virtual(id2))
+            && this->get_global(id1) == this->get_global(id2))
             && this->get_id(id1) == this->get_id(id2));
 
     std::stringstream ss{};
@@ -158,9 +158,9 @@ TYPED_TEST(TaggedIDTest, testTaggedIDComparisons2) { // NOLINT
     ss << "ID 2: (" << this->get_id(id2) << ", " << id2.is_initialized() << ", " << id2.is_global() << ", " << id2.is_virtual() << ")\n";
 
     const auto comp = id1 <=> id2;
-    const auto initialized_comparison = id1.is_initialized() <=> id2.is_initialized();
-    const auto virtual_comparison = id1.is_virtual() <=> id2.is_virtual();
-    const auto global_comprison = id1.is_global() <=> id2.is_global();
+    const auto initialized_comparison =  this->get_initialized(id1) <=> this->get_initialized(id2));
+    const auto virtual_comparison = this->get_virtual(id1) <=> this->get_virtual(id2));
+    const auto global_comprison = this->get_global(id1) <=> this->get_global(id2));
     const auto id_comparison = this->get_id(id1) <=> this->get_id(id2);
 
     // members are compared in order of declaration

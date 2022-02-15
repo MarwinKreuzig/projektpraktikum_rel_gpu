@@ -475,6 +475,18 @@ protected:
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 
+    static bool get_initialized(const TaggedID<T>& id) {
+        return id.is_initialized_;
+    }
+
+    static bool get_virtual(const TaggedID<T>& id) {
+        return id.is_virtual_;
+    }
+
+    static bool get_global(const TaggedID<T>& id) {
+        return id.is_global_;
+    }
+
     static TaggedID<T>::value_type get_id(const TaggedID<T>& id) {
         return id.id_;
     }
