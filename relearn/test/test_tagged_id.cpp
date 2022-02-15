@@ -147,9 +147,9 @@ TYPED_TEST(TaggedIDTest, testTaggedIDComparisons2) { // NOLINT
     // only compare equal if all members compare equal, otherwise compare unequal
     EXPECT_EQ(
         id1 == id2,
-        this->get_initialized(id1) == this->get_initialized(id2))
-            && this->get_virtual(id1) == this->get_virtual(id2))
-            && this->get_global(id1) == this->get_global(id2))
+        this->get_initialized(id1) == this->get_initialized(id2)
+            && this->get_virtual(id1) == this->get_virtual(id2)
+            && this->get_global(id1) == this->get_global(id2)
             && this->get_id(id1) == this->get_id(id2));
 
     std::stringstream ss{};
