@@ -391,7 +391,7 @@ private:
 
             for (auto j = 0; j <= i; j++) {
                 if (j != i) {
-                    current_sequence[j] = sequences[i - 1][j + 1ULL] * (j + 1);
+                    current_sequence[j] = sequences[i - 1][j + 1ULL] * (j + 1ULL);
                 }
 
                     if (j > 0) {

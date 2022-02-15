@@ -163,8 +163,8 @@ protected:
         return uid_num_synapses(mt);
     }
 
-    NeuronID get_random_neuron_id(size_t number_neurons) {
-        std::uniform_int_distribution<size_t> uid(0, number_neurons - 1);
+    NeuronID get_random_neuron_id(size_t number_neurons, size_t offset = 0) {
+        std::uniform_int_distribution<size_t> uid(offset, offset + number_neurons - 1);
         return NeuronID{ uid(mt) };
     }
 
@@ -244,7 +244,7 @@ protected:
             se.update_connected_elements(neuron_id, number_connected_elements);
             se.set_signal_type(neuron_id, signal_type);
 
-            const auto i = neuron_id.id();
+            const auto i = neuron_id.get_local_id();
 
             grown_elements[i] = number_grown_elements;
             connected_elements[i] = number_connected_elements;
@@ -473,6 +473,22 @@ class TaggedIDTest : public RelearnTest {
 protected:
     static void SetUpTestCase() {
         SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+
+    static bool get_initialized(const TaggedID<T>& id) {
+        return id.is_initialized_;
+    }
+
+    static bool get_virtual(const TaggedID<T>& id) {
+        return id.is_virtual_;
+    }
+
+    static bool get_global(const TaggedID<T>& id) {
+        return id.is_global_;
+    }
+
+    static TaggedID<T>::value_type get_id(const TaggedID<T>& id) {
+        return id.id_;
     }
 
     static_assert(sizeof(typename TaggedID<T>::value_type) == sizeof(T));

@@ -27,7 +27,9 @@ std::vector<std::tuple<Vec3d, NeuronID>> generate_random_neurons(const Vec3d& mi
     std::uniform_real_distribution<double> urd_z(min.get_z(), max.get_z());
 
     std::vector<NeuronID> ids(max_id);
-    std::iota(ids.begin(), ids.end(), 0);
+    for (auto i = 0; i < max_id; i++) {
+        ids[i] = NeuronID(i);
+    }
     std::shuffle(ids.begin(), ids.end(), mt);
 
     std::vector<std::tuple<Vec3d, NeuronID>> return_value(count);

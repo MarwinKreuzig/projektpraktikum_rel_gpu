@@ -94,6 +94,13 @@ public:
      * @return A translation map from RankNeuronId to global neuron id
      */
     [[nodiscard]] std::map<RankNeuronId, NeuronID> translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) override;
+   
+    /**
+     * @brief Creates the number of neurons locally, i.e., every MPI rank must specify its own number of creations.
+     *      Might throw a RelearnException if this is not supported.
+     * @param number_local_creations The number of new neurons on this rank. 
+     */
+    void create_neurons(size_t number_local_creations) override;
 
 private:
     std::map<NeuronID, position_type> load_neuron_positions(const std::vector<NeuronID>& global_ids);

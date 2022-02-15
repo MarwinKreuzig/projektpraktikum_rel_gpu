@@ -267,7 +267,8 @@ public:
                 current_subdomain.neuron_local_id_start = NeuronID(false, false, last_subdomain_end.get_local_id() + 1);
             }
 
-            current_subdomain.neuron_local_id_end = current_subdomain.neuron_local_id_start + current_subdomain.number_neurons - 1;
+            const auto local_end = current_subdomain.neuron_local_id_start.get_local_id() + current_subdomain.number_neurons - 1;
+            current_subdomain.neuron_local_id_end = NeuronID(false, false, local_end);
         }
     }
 

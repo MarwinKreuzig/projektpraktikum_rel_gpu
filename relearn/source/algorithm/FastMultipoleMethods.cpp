@@ -80,20 +80,8 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<UpdateStatus>& di
     const auto& indices = Multiindex::get_indices();
     constexpr const auto num_coef = Multiindex::get_number_of_indices();
 
-    auto rng = NeuronID::range(1000);
-
-    auto begin = rng.begin();
-    auto end = rng.end();
-
-    auto flag = begin == end;
-
-    for (auto i : rng) {
-
-    }
-
-
     for (const auto neuron_id : NeuronID::range(num_leaf_nodes)) {
-        auto* node = leaf_nodes[neuron_id.id()];
+        auto* node = leaf_nodes[neuron_id.get_local_id()];
 
         RelearnException::check(node != nullptr, "FastMultipoleMethods::update_leaf_nodes: node was nullptr: {}", neuron_id);
 
@@ -101,25 +89,25 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<UpdateStatus>& di
 
         RelearnException::check(neuron_id == other_neuron_id, "FastMultipoleMethods::update_leaf_nodes: The nodes are not in order");
 
-        if (disable_flags[neuron_id.id()] == UpdateStatus::DISABLED) {
+        if (disable_flags[neuron_id.get_local_id()] == UpdateStatus::DISABLED) {
             continue;
         }
 
-        const auto number_vacant_dendrites_excitatory = static_cast<counter_type>(dendrites_excitatory_counts[neuron_id.id()] - dendrites_excitatory_connected_counts[neuron_id.id()]);
-        const auto number_vacant_dendrites_inhibitory = static_cast<counter_type>(dendrites_inhibitory_counts[neuron_id.id()] - dendrites_inhibitory_connected_counts[neuron_id.id()]);
+        const auto number_vacant_dendrites_excitatory = static_cast<counter_type>(dendrites_excitatory_counts[neuron_id.get_local_id()] - dendrites_excitatory_connected_counts[neuron_id.get_local_id()]);
+        const auto number_vacant_dendrites_inhibitory = static_cast<counter_type>(dendrites_inhibitory_counts[neuron_id.get_local_id()] - dendrites_inhibitory_connected_counts[neuron_id.get_local_id()]);
 
         node->set_cell_number_dendrites(number_vacant_dendrites_excitatory, number_vacant_dendrites_inhibitory);
 
         const auto signal_type = axons->get_signal_type(neuron_id);
 
         if (signal_type == SignalType::EXCITATORY) {
-            const auto number_vacant_excitatory_axons = static_cast<counter_type>(axons_counts[neuron_id.id()] - axons_connected_counts[neuron_id.id()]);
+            const auto number_vacant_excitatory_axons = static_cast<counter_type>(axons_counts[neuron_id.get_local_id()] - axons_connected_counts[neuron_id.get_local_id()]);
             const auto number_vacant_inhibitory_axons = 0;
 
             node->set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
         } else {
             const auto number_vacant_excitatory_axons = 0;
-            const auto number_vacant_inhibitory_axons = static_cast<counter_type>(axons_counts[neuron_id.id()] - axons_connected_counts[neuron_id.id()]);
+            const auto number_vacant_inhibitory_axons = static_cast<counter_type>(axons_counts[neuron_id.get_local_id()] - axons_connected_counts[neuron_id.get_local_id()]);
 
             node->set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
         }
@@ -186,7 +174,8 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
         }
     };
 
-    auto process_target_node_for_inner_node = [&nodes_with_axons, signal_type_needed, get_rid_of_null_elements, this](const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target) {
+    auto process_target_node_for_inner_node = [&nodes_with_axons, signal_type_needed, get_rid_of_null_elements, this]
+    (const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target) {
         const auto& source_children = source->get_children();
 
         //target is a inner node

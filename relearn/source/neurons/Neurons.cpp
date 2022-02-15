@@ -221,6 +221,8 @@ void Neurons::create_neurons(const size_t creation_count, const std::vector<doub
     neuron_model->create_neurons(creation_count);
     extra_info->create_neurons(creation_count);
 
+    translator->create_neurons(creation_count);
+
     network_graph->create_neurons(creation_count);
 
     axons->create_neurons(creation_count);
@@ -656,7 +658,7 @@ StatisticalMeasures Neurons::get_statistics(NeuronAttribute attribute) const {
         return global_statistics_integral(dendrites_inh->get_connected_elements(), 0, disable_flags);
     }
 
-    RelearnException::fail("Neurons::get_statistics: Got an unsupported attribute: {}", attribute);
+    RelearnException::fail("Neurons::get_statistics: Got an unsupported attribute: {}", static_cast<int>(attribute));
 
     return {};
 }

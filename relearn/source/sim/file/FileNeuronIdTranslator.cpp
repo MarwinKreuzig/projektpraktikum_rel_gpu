@@ -167,3 +167,15 @@ std::map<RankNeuronId, NeuronID> FileNeuronIdTranslator::translate_rank_neuron_i
     RelearnException::fail("FileNeuronIdTranslator::translate_rank_neuron_ids: Should not be here");
     return {};
 }
+
+void FileNeuronIdTranslator::create_neurons(size_t number_local_creations) {
+    const auto num_ranks = MPIWrapper::get_num_ranks();
+    RelearnException::check(num_ranks == 1, "FileNeuronIdTranslator::create_neurons: Can only create neurons for files with one mpi rank, but there were {}", num_ranks);
+
+    const auto current_number_ids = global_neuron_ids.size();
+    const auto new_ids = NeuronID::range_global(current_number_ids, current_number_ids + number_local_creations);
+
+    for (const auto& neuron_id : new_ids) {
+        global_neuron_ids[0].emplace_back(neuron_id);
+    }
+}

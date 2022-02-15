@@ -38,8 +38,32 @@
  * Solving the problem is future work. Until it is solved the total number of neurons is limited to 2^31-1.
  */
 
+static std::unique_ptr<MPI_Win> mpi_window{ nullptr }; // RMA window object
+
+static std::unique_ptr<MPI_Op> minsummax{ nullptr };
+
 static std::map<MPIWrapper::AsyncToken, MPI_Request> translation_map{};
 static size_t current_token{ 0 };
+
+std::unique_ptr<MPI_Op> translate_reduce_function(const MPIWrapper::ReduceFunction rf) {
+    switch (rf) {
+    case MPIWrapper::ReduceFunction::min:
+        return std::make_unique<MPI_Op>(MPI_MIN);
+
+    case MPIWrapper::ReduceFunction::max:
+        return std::make_unique<MPI_Op>(MPI_MAX);
+
+    case MPIWrapper::ReduceFunction::sum:
+        return std::make_unique<MPI_Op>(MPI_SUM);
+
+    case MPIWrapper::ReduceFunction::minsummax:
+        return std::make_unique<MPI_Op>(*minsummax);
+
+    default:
+        RelearnException::fail("In reduce, got wrong function");
+        return nullptr;
+    }
+}
 
 void MPIWrapper::init(int argc, char** argv) {
     MPI_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &thread_level_provided);
@@ -276,26 +300,6 @@ void MPIWrapper::wait_all_tokens(const std::vector<AsyncToken>& tokens) {
     }
 
     RelearnException::check(errorcode == 0, "MPIWrapper::wait_all_tokens: Error code received: {}", errorcode);
-}
-
-std::unique_ptr<MPI_Op> MPIWrapper::translate_reduce_function(const ReduceFunction rf) {
-    switch (rf) {
-    case ReduceFunction::min:
-        return std::make_unique<MPI_Op>(MPI_MIN);
-
-    case ReduceFunction::max:
-        return std::make_unique<MPI_Op>(MPI_MAX);
-
-    case ReduceFunction::sum:
-        return std::make_unique<MPI_Op>(MPI_SUM);
-
-    case ReduceFunction::minsummax:
-        return std::make_unique<MPI_Op>(*minsummax);
-
-    default:
-        RelearnException::fail("In reduce, got wrong function");
-        return nullptr;
-    }
 }
 
 void MPIWrapper::register_custom_function() {

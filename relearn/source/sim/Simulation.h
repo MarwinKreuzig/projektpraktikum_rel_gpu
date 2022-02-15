@@ -213,7 +213,7 @@ public:
      */
     [[nodiscard]] const std::vector<StatisticalMeasures>& get_statistics(NeuronAttribute neuron_attribute_to_observe) const {
         if (statistics.find(neuron_attribute_to_observe) == statistics.end()) {
-            RelearnException::fail("Simulation::get_statistics: The attribute was not observed: {}", neuron_attribute_to_observe);
+            RelearnException::fail("Simulation::get_statistics: The attribute was not observed: {}", static_cast<int>(neuron_attribute_to_observe));
         }
 
         const auto& return_value = statistics.at(neuron_attribute_to_observe);

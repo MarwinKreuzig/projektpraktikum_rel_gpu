@@ -60,7 +60,7 @@ public:
      */
     static double get_random_uniform_double(const RandomHolderKey key, const double lower_inclusive, const double upper_exclusive) {
         RelearnException::check(lower_inclusive < upper_exclusive,
-            "RandomHolder::get_random_uniform_double: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, key);
+            "RandomHolder::get_random_uniform_double: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
         std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
 
         return urd(random_number_generators[static_cast<int>(key)]);
@@ -77,7 +77,7 @@ public:
      */
     static unsigned int get_random_uniform_integer(const RandomHolderKey key, const unsigned int lower_inclusive, const unsigned int upper_exclusive) {
         RelearnException::check(lower_inclusive <= upper_exclusive,
-            "RandomHolder::get_random_uniform_integer: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, key);
+            "RandomHolder::get_random_uniform_integer: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
         std::uniform_int_distribution<unsigned int> uid(lower_inclusive, upper_exclusive);
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         return uid(random_number_generators[static_cast<int>(key)]);
@@ -93,7 +93,7 @@ public:
      * @return A normally distributed double with specified mean and standard deviation
      */
     static double get_random_normal_double(const RandomHolderKey key, const double mean, const double stddev) {
-        RelearnException::check(0.0 < stddev, "RandomHolder::get_random_normal_double: Random number with invalid standard deviation {} for key {}", stddev, key);
+        RelearnException::check(0.0 < stddev, "RandomHolder::get_random_normal_double: Random number with invalid standard deviation {} for key {}", stddev, static_cast<int>(key));
         std::normal_distribution<double> nd(mean, stddev);
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -127,7 +127,7 @@ public:
      */
     template <typename IteratorType>
     static void fill(const RandomHolderKey key, const IteratorType begin, const IteratorType end, const double lower_inclusive, const double upper_exclusive) {
-        RelearnException::check(lower_inclusive < upper_exclusive, "RandomHolder::fill: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, key);
+        RelearnException::check(lower_inclusive < upper_exclusive, "RandomHolder::fill: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
         std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         auto& gen = random_number_generators[static_cast<int>(key)];

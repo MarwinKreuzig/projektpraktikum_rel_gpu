@@ -124,7 +124,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
         const auto signal_type = signal_types[i];
 
-        Node node{ pos, NeuronID{ i }, signal_type, "random" };
+        Node node{ pos, NeuronID{ true, false, i }, signal_type, "random" };
         nodes.emplace(node);
 
         placed_neurons++;
