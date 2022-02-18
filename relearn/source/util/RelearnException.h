@@ -22,7 +22,7 @@
  * Log messages can be disabled via RelearnException::hide_messages.
  * In case a condition evaluated to false and it logs the message, it calls MPIWrapper::get_num_ranks and MPIWrapper::get_my_rank.
  */
-class RelearnException : std::exception {
+class RelearnException : public std::exception {
 private:
     std::string message{};
 
