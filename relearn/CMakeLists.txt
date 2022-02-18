@@ -80,33 +80,42 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(spdlog)
 target_link_libraries(project_options INTERFACE spdlog)
 
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(project_options INTERFACE OpenMP::OpenMP_CXX)
+endif()
+
 get_target_property(spdlog_includes spdlog INTERFACE_INCLUDE_DIRECTORIES)
 set_target_properties(spdlog PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${spdlog_includes}")
 
-# relearn executable
-add_executable(relearn
-	${SRC_ALG}
-	${SRC_IO}
-	${SRC_MPI}
-	${SRC_SIM}
-	${SRC_STR}
-	${SRC_UTIL}
-	${SRC_NEU}
-	${SRC_NEU_MOD}
-	${SRC_NEU_HEL}
-	${SRC_MAIN}
-	${SRC_CONF}
-	${SRC_SIM_FILE}
-	${SRC_SIM_RANDOM}
+add_library(relearn_lib STATIC
+${SRC_ALG}
+${SRC_IO}
+${SRC_MPI}
+${SRC_SIM}
+${SRC_STR}
+${SRC_UTIL}
+${SRC_NEU}
+${SRC_NEU_MOD}
+${SRC_NEU_HEL}
+${SRC_CONF}
+${SRC_SIM_FILE}
+${SRC_SIM_RANDOM}
 )
 
+target_include_directories(relearn_lib PUBLIC "source/")
+
+set_target_properties(relearn_lib PROPERTIES ENABLE_EXPORTS 1)
+
+target_link_libraries(relearn_lib PUBLIC project_options)
+
+# relearn executable
+add_executable(relearn
+	${SRC_MAIN}
+)
+
+target_link_libraries(relearn PRIVATE relearn_lib)
+
 set_target_properties(relearn PROPERTIES ENABLE_EXPORTS 1)
-
-target_link_libraries(relearn PRIVATE project_options)
-
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(relearn PUBLIC OpenMP::OpenMP_CXX)
-endif()
 
 FetchContent_Declare(
   CLI11
@@ -142,22 +151,11 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
 		EXCLUDE_FROM_ALL)
 
 add_executable(runTests
-	${SRC_ALG}
-	${SRC_IO}
-	${SRC_MPI}
-	${SRC_SIM}
-	${SRC_STR}
-	${SRC_UTIL}
-	${SRC_NEU}
-	${SRC_NEU_MOD}
-	${SRC_NEU_HEL}
-	${SRC_CONF}
 	${SRC_TST}
-	${SRC_SIM_FILE}
-	${SRC_SIM_RANDOM}
 )
 
 target_link_libraries(runTests PRIVATE project_options)
+target_link_libraries(runTests PRIVATE relearn_lib)
 target_link_libraries(runTests PRIVATE gtest_main)
 
 add_test(NAME SerialTests COMMAND runTests)
