@@ -132,14 +132,14 @@ int main(int argc, char** argv) {
     CLI::App app{ "" };
 
     AlgorithmEnum algorithm = AlgorithmEnum::BarnesHut;
-    std::map<std::string, AlgorithmEnum> cli_parse_map{
+    std::map<std::string, AlgorithmEnum> cli_parse_algorithm{
         { "naive", AlgorithmEnum::Naive },
         { "barnes-hut", AlgorithmEnum::BarnesHut },
         { "fast-multipole-methods", AlgorithmEnum::FastMultipoleMethods }
     };
 
     NeuronModelEnum neuron_model = NeuronModelEnum::Poisson;
-    std::map<std::string, NeuronModelEnum> cli_parse_map_neuron_model{
+    std::map<std::string, NeuronModelEnum> cli_parse_neuron_model{
         { "poisson", NeuronModelEnum::Poisson },
         { "izhikevich", NeuronModelEnum::Izhikevich },
         { "aeif", NeuronModelEnum::AEIF },
@@ -147,10 +147,10 @@ int main(int argc, char** argv) {
     };
 
     auto* opt_neuron_model = app.add_option("--neuron-model", neuron_model, "The neuron model");
-    opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_map_neuron_model, CLI::ignore_case));
+    opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_neuron_model, CLI::ignore_case));
 
     auto* opt_algorithm = app.add_option("-a,--algorithm", algorithm, "The algorithm that is used for finding the targets");
-    opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_map, CLI::ignore_case));
+    opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_algorithm, CLI::ignore_case));
 
     double accept_criterion{ BarnesHut::default_theta };
     auto* opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Required Barnes-Hut.");
