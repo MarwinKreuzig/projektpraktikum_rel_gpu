@@ -23,7 +23,9 @@ enum class ElementType { AXON,
 inline std::ostream& operator<<(std::ostream& out, const ElementType& element_type) {
     if (element_type == ElementType::AXON) {
         return out << "AXON";
-    } else if (element_type == ElementType::DENDRITE) {
+    } 
+
+    if (element_type == ElementType::DENDRITE) {
         return out << "DENDRITE";
     }
 

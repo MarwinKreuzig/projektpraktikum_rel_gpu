@@ -21,8 +21,6 @@
 
 #include <algorithm>
 #include <array>
-#include <ranges>
-#include <stack>
 
 [[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz, const SignalType dendrite_type_needed) {
     OctreeNode<BarnesHutCell>* node_selected = nullptr;
@@ -337,7 +335,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
         const auto is_local = node->is_local();
         const auto& children = is_local ? node->get_children() : NodeCache::download_children<BarnesHutCell>(node);
 
-        for (auto it : std::ranges::reverse_view(children)) {
+        for (auto* it : children) {
             if (it != nullptr) {
                 vector.emplace_back(it);
             }

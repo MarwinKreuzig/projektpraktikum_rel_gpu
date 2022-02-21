@@ -463,7 +463,7 @@ public:
     }
 
     template <std::size_t Index>
-    auto& get() & {
+    [[nodiscard]] auto& get() & {
         if constexpr (Index == 0) {
             return x;
         }
@@ -476,7 +476,7 @@ public:
     }
 
     template <std::size_t Index>
-    auto const& get() const& {
+    [[nodiscard]] auto const& get() const& {
         if constexpr (Index == 0) {
             return x;
         }
@@ -489,7 +489,7 @@ public:
     }
 
     template <std::size_t Index>
-    auto&& get() && {
+    [[nodiscard]] auto&& get() && {
         if constexpr (Index == 0) {
             return std::move(x);
         }

@@ -21,8 +21,6 @@
 
 #include <algorithm>
 #include <array>
-#include <ranges>
-#include <stack>
 
 [[nodiscard]] std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz, const SignalType dendrite_type_needed) {
     OctreeNode<NaiveCell>* node_selected = nullptr;
@@ -316,7 +314,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
             children = NodeCache::download_children<NaiveCell>(node);
         }
 
-        for (auto it : std::ranges::reverse_view(children)) {
+        for (auto* it : children) {
             if (it != nullptr) {
                 stack.push(it);
             }

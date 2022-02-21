@@ -15,8 +15,8 @@
 #include "../neurons/ElementType.h"
 #include "../neurons/SignalType.h"
 #include "../util/RelearnException.h"
-#include "../util/Vec3.h"
 #include "../util/TaggedID.h"
+#include "../util/Vec3.h"
 
 #include <optional>
 #include <ostream>

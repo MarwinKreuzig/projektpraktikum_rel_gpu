@@ -25,7 +25,7 @@ using MPIWrapper = MPINoWrapper;
 
 #include <array>
 #include <cstdint>
-#include <ranges>
+#include <numeric>
 #include <span>
 #include <string>
 #include <vector>
@@ -418,18 +418,14 @@ public:
      *
      * @return auto the range of all ranks
      */
-    [[nodiscard]] static auto get_ranks() {
-        return std::views::iota(0, get_num_ranks());
-    }
+    [[nodiscard]] static const std::vector<int>& get_ranks() {
+        static std::vector<int> ranks = []() {
+            std::vector<int> r(get_num_ranks());
+            std::iota(r.begin(), r.end(), 0);
+            return r;
+        }();
 
-    /**
-     * @brief Get a range of all ranks [0, num_ranks) without the own rank
-     *
-     * @return auto the range of all ranks except the own rank
-     */
-    [[nodiscard]] static auto get_ranks_without_my_rank() {
-        return std::views::iota(0, get_num_ranks())
-            | std::views::filter([my_rank = get_my_rank()](const auto& rank) { return rank != my_rank; });
+        return ranks;
     }
 
     /**

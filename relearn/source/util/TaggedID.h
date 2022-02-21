@@ -15,7 +15,6 @@
 #include <concepts>
 #include <cstdint>
 #include <ostream>
-#include <ranges>
 #include <type_traits>
 
 #include <spdlog/fmt/bundled/core.h>
@@ -99,49 +98,55 @@ public:
     [[nodiscard]] static constexpr TaggedID virtual_id() noexcept { return TaggedID{ false, true, 0 }; }
 
     /**
-     * @brief Create a range of local TaggedIDs within the range [0, size)
+     * @brief Create a vector of local TaggedIDs within the range [0, size)
      *
-     * @param size size of the range
-     * @return constexpr auto range of TaggedIDs
+     * @param size size of the vector
+     * @return constexpr auto vector of TaggedIDs
      */
     [[nodiscard]] static constexpr auto range(size_t size) {
-        return std::views::iota(size_t{ 0 }, size)
-            | std::views::transform([](const size_t id) { return TaggedID{ id }; });
+        return range(0, size);
     }
 
     /**
-     * @brief Create a range of global TaggedIDs within the range [0, size)
+     * @brief Create a vector of global TaggedIDs within the range [0, size)
      *
-     * @param size size of the range
-     * @return constexpr auto range of TaggedIDs
+     * @param size size of the vector
+     * @return constexpr auto vector of TaggedIDs
      */
     [[nodiscard]] static constexpr auto global_range(size_t size) {
-        return std::views::iota(size_t{ 0 }, size)
-            | std::views::transform([](const size_t id) { return TaggedID{ true, false, id }; });
+        return range_global(0, size);
     }
 
     /**
-     * @brief Create a range of TaggedIDs within the range [begin, end)
+     * @brief Create a vector of TaggedIDs within the range [begin, end)
      *
-     * @param begin begin of the range
-     * @param end end of the range
-     * @return constexpr auto range of TaggedIDs
+     * @param begin begin of the vector
+     * @param end end of the vector
+     * @return constexpr auto vector of TaggedIDs
      */
     [[nodiscard]] static constexpr auto range(size_t begin, size_t end) {
-        return std::views::iota(begin, end)
-            | std::views::transform([](const size_t id) { return TaggedID{ id }; });
+        std::vector<TaggedID> ids;
+        for (auto i = begin; i < end; i++) {
+            ids.emplace_back(i);
+        }
+
+        return ids;
     }
 
     /**
-     * @brief Create a global range of TaggedIDs within the range [begin, end)
+     * @brief Create a vector of global TaggedIDs within the range [begin, end)
      *
-     * @param begin begin of the range
-     * @param end end of the range
-     * @return constexpr auto range of TaggedIDs
+     * @param begin begin of the vector
+     * @param end end of the vector
+     * @return constexpr auto vector of TaggedIDs
      */
     [[nodiscard]] static constexpr auto range_global(size_t begin, size_t end) {
-        return std::views::iota(begin, end)
-            | std::views::transform([](const size_t id) { return TaggedID{ true, false, id }; });
+        std::vector<TaggedID> ids;
+        for (auto i = begin; i < end; i++) {
+            ids.emplace_back(true, false, i);
+        }
+
+        return ids;
     }
 
     /**

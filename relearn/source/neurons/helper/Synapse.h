@@ -62,33 +62,42 @@ public:
     }
 
     template <std::size_t Index>
-    auto& get() & {
-        if constexpr (Index == 0)
+    [[nodiscard]] auto& get() & {
+        if constexpr (Index == 0) {
             return target;
-        if constexpr (Index == 1)
+        }
+        if constexpr (Index == 1) {
             return source;
-        if constexpr (Index == 2)
+        }
+        if constexpr (Index == 2) {
             return weight;
+        }
     }
 
     template <std::size_t Index>
-    auto const& get() const& {
-        if constexpr (Index == 0)
+    [[nodiscard]] auto const& get() const& {
+        if constexpr (Index == 0) {
             return target;
-        if constexpr (Index == 1)
+        }
+        if constexpr (Index == 1) {
             return source;
-        if constexpr (Index == 2)
+        }
+        if constexpr (Index == 2) {
             return weight;
+        }
     }
 
     template <std::size_t Index>
-    auto&& get() && {
-        if constexpr (Index == 0)
+    [[nodiscard]] auto&& get() && {
+        if constexpr (Index == 0) {
             return std::move(target);
-        if constexpr (Index == 1)
+        }
+        if constexpr (Index == 1) {
             return std::move(source);
-        if constexpr (Index == 2)
+        }
+        if constexpr (Index == 2) {
             return std::move(weight);
+        }
     }
 };
 
@@ -114,5 +123,3 @@ struct tuple_element<2, ::Synapse<Target, Source, Weight>> {
 };
 
 } //namespace std
-
-
