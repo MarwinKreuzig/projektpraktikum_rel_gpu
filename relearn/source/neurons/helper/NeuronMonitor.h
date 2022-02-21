@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,10 +10,8 @@
  *
  */
 
-#pragma once
-
-#include "../Neurons.h"
-#include "../models/NeuronModels.h"
+#include "neurons/Neurons.h"
+#include "neurons/models/NeuronModels.h"
 
 #include <memory>
 #include <vector>

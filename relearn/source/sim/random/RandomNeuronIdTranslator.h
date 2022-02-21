@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,10 +10,10 @@
  *
  */
 
-#include "../NeuronIdTranslator.h"
-#include "../../Config.h"
-#include "../../neurons/helper/RankNeuronId.h"
-#include "../../util/TaggedID.h"
+#include "Config.h"
+#include "neurons/helper/RankNeuronId.h"
+#include "sim/NeuronIdTranslator.h"
+#include "util/TaggedID.h"
 
 #include <functional>
 #include <map>

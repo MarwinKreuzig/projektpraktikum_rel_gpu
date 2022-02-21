@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -7,8 +9,6 @@
  * See the LICENSE file in the base directory for details.
  *
  */
-
-#pragma once
 
 #include "Config.h"
 #include "neurons/ElementType.h"

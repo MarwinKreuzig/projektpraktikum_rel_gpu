@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,13 +10,11 @@
  *
  */
 
-#pragma once
+#include "spdlog/fmt/bundled/core.h"
 
 #include <exception>
 #include <string>
 #include <utility>
-
-#include "spdlog/fmt/bundled/core.h"
 
 /**
  * This class serves as a collective exception class that can check for conditions,

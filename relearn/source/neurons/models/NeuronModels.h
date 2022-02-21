@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,12 +10,10 @@
  *
  */
 
-#pragma once
-
-#include "../../mpi/CommunicationMap.h"
-#include "../../util/RelearnException.h"
-#include "../../util/TaggedID.h"
-#include "../UpdateStatus.h"
+#include "mpi/CommunicationMap.h"
+#include "neurons/UpdateStatus.h"
+#include "util/RelearnException.h"
+#include "util/TaggedID.h"
 #include "ModelParameter.h"
 
 #include <algorithm>

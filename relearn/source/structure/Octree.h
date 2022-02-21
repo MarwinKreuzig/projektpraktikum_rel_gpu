@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,22 +10,20 @@
  *
  */
 
-#pragma once
-
-#include "../Config.h"
-#include "../Types.h"
-#include "../io/LogFiles.h"
-#include "../mpi/MPIWrapper.h"
-#include "../neurons/Neurons.h"
-#include "../neurons/SignalType.h"
-#include "../neurons/helper/RankNeuronId.h"
-#include "../neurons/models/SynapticElements.h"
-#include "../structure/OctreeNode.h"
-#include "../structure/SpaceFillingCurve.h"
-#include "../util/Random.h"
-#include "../util/RelearnException.h"
-#include "../util/Timers.h"
-#include "../util/Vec3.h"
+#include "Config.h"
+#include "OctreeNode.h"
+#include "SpaceFillingCurve.h"
+#include "Types.h"
+#include "io/LogFiles.h"
+#include "mpi/MPIWrapper.h"
+#include "neurons/Neurons.h"
+#include "neurons/SignalType.h"
+#include "neurons/helper/RankNeuronId.h"
+#include "neurons/models/SynapticElements.h"
+#include "util/Random.h"
+#include "util/RelearnException.h"
+#include "util/Timers.h"
+#include "util/Vec3.h"
 
 #include <functional>
 #include <map>

@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,12 +10,10 @@
  *
  */
 
-#pragma once
-
-#include "../../Config.h"
-#include "../SynapseLoader.h"
-#include "../NeuronIdTranslator.h"
-#include "../NeuronToSubdomainAssignment.h"
+#include "Config.h"
+#include "sim/SynapseLoader.h"
+#include "sim/NeuronIdTranslator.h"
+#include "sim/NeuronToSubdomainAssignment.h"
 
 #include <filesystem>
 #include <fstream>

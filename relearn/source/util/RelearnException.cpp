@@ -8,9 +8,9 @@
  *
  */
 
-#include "../util/RelearnException.h"
+#include "RelearnException.h"
 
-#include "../mpi/MPIWrapper.h"
+#include "mpi/MPIWrapper.h"
 
 #include <spdlog/spdlog.h>
 

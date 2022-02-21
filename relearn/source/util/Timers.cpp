@@ -10,9 +10,9 @@
 
 #include "Timers.h"
 
-#include "../Config.h"
-#include "../io/LogFiles.h"
-#include "../mpi/MPIWrapper.h"
+#include "Config.h"
+#include "io/LogFiles.h"
+#include "mpi/MPIWrapper.h"
 
 #include <array>
 #include <iomanip>

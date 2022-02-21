@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,10 +10,7 @@
  *
  */
 
-#pragma once
-
-#include "../neurons/helper/RankNeuronId.h"
-#include "../util/TaggedID.h"
+#include "Types.h"
 
 #include <map>
 #include <memory>

@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,9 +10,7 @@
  *
  */
 
-#pragma once
-
-#include "../SynapseLoader.h"
+#include "sim/SynapseLoader.h"
 
 #include <memory>
 #include <utility>

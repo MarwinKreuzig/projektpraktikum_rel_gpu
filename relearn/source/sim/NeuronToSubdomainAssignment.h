@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,14 +10,10 @@
  *
  */
 
-#pragma once
-
-#include "../Config.h"
-#include "../Types.h"
-#include "../neurons/SignalType.h"
-#include "../util/RelearnException.h"
-#include "../util/Vec3.h"
-#include "../util/TaggedID.h"
+#include "Config.h"
+#include "Types.h"
+#include "neurons/SignalType.h"
+#include "util/RelearnException.h"
 
 #include <filesystem>
 #include <functional>

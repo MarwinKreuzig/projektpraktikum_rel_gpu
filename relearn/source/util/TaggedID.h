@@ -1,3 +1,4 @@
+#pragma once
 
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
@@ -9,7 +10,10 @@
  *
  */
 
-#pragma once
+#include "RelearnException.h"
+
+#include <spdlog/fmt/bundled/core.h>
+#include <spdlog/fmt/bundled/ostream.h>
 
 #include <compare>
 #include <concepts>
@@ -17,11 +21,6 @@
 #include <ostream>
 #include <type_traits>
 #include <vector>
-
-#include <spdlog/fmt/bundled/core.h>
-#include <spdlog/fmt/bundled/ostream.h>
-
-#include "RelearnException.h"
 
 template<typename U>
 class TaggedIDTest;

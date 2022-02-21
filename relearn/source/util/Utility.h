@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,14 +10,12 @@
  *
  */
 
-#pragma once
+#include "RelearnException.h"
+#include "neurons/UpdateStatus.h"
 
 #include <vector>
 #include <tuple>
 #include <type_traits>
-
-#include "../neurons/UpdateStatus.h"
-#include "RelearnException.h"
 
 namespace Util {
 

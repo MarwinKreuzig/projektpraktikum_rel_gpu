@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,10 +10,8 @@
  *
  */
 
-#pragma once
-
-#include "../Config.h"
-#include "../util/RelearnException.h"
+#include "Config.h"
+#include "RelearnException.h"
 
 #include <spdlog/fmt/bundled/ostream.h>
 

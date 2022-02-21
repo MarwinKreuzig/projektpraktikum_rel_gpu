@@ -10,12 +10,12 @@
 
 #include "NeuronModels.h"
 
-#include "../../Config.h"
-#include "../../mpi/MPIWrapper.h"
-#include "../../util/Random.h"
-#include "../../util/Timers.h"
-#include "../NetworkGraph.h"
-#include "../Neurons.h"
+#include "Config.h"
+#include "mpi/MPIWrapper.h"
+#include "neurons/NetworkGraph.h"
+#include "neurons/Neurons.h"
+#include "util/Random.h"
+#include "util/Timers.h"
 
 NeuronModel::NeuronModel(const double k, const double tau_C, const double beta, const unsigned int h, const double base_background_activity, const double background_activity_mean, const double background_activity_stddev)
     : k(k)
