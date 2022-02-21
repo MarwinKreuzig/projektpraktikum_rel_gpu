@@ -9,6 +9,14 @@ build-mpi:
     paths:
       - relearn/build-docker
 
+build-clang-tidy:
+  image: relearn-ci-gcc-11
+  stage: build
+  before_script:
+    - cd relearn && mkdir build-clang-tidy && cd build-clang-tidy  
+  script:
+    - cmake -DENABLE_CLANG_TIDY=1 .. && make
+
 # run tests using the binary built before
 test-mpi-once:
   image: relearn-ci-gcc-11
