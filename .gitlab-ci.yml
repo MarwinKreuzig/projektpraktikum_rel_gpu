@@ -15,7 +15,7 @@ build-clang-tidy:
   before_script:
     - cd relearn && mkdir build-clang-tidy && cd build-clang-tidy  
   script:
-    - cmake -DENABLE_CLANG_TIDY=1 .. && make
+    - cmake -DENABLE_CLANG_TIDY=0 .. && ../apply_tidy.sh
 
 # run tests using the binary built before
 test-mpi-once:

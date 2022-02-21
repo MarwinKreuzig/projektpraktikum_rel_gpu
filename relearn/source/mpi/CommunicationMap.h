@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,9 +10,7 @@
  *
  */
 
-#pragma once
-
-#include "../util/RelearnException.h"
+#include "util/RelearnException.h"
 
 #include <map>
 #include <span>
@@ -34,7 +34,7 @@ public:
      * @param number_ranks The number of MPI ranks. Is used to check later one for correct usage
      * @exception Throws a RelearnException if number_ranks is smaller than 1
      */
-    CommunicationMap(const int number_ranks)
+    explicit CommunicationMap(const int number_ranks)
         : number_ranks(number_ranks) {
         RelearnException::check(number_ranks > 0, "CommunicationMap::CommunicationMap: number_ranks is too small: {}", number_ranks);
     }
@@ -179,11 +179,11 @@ public:
         return requests.at(mpi_rank).data();
     }
 
-    std::span<RequestType> get_span(const int mpi_rank) {
+    [[nodiscard]] std::span<RequestType> get_span(const int mpi_rank) {
         return std::span<RequestType>{ requests.at(mpi_rank) };
     }
 
-    std::span<const RequestType> get_span(const int mpi_rank) const {
+    [[nodiscard]] std::span<const RequestType> get_span(const int mpi_rank) const {
         return std::span<const RequestType>{ requests.at(mpi_rank) };
     }
 

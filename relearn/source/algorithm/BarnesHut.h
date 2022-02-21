@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,17 +10,15 @@
  *
  */
 
-#pragma once
-
-#include "../Types.h"
-#include "../neurons/SignalType.h"
-#include "../neurons/helper/RankNeuronId.h"
-#include "../neurons/helper/SynapseCreationRequests.h"
-#include "../structure/OctreeNode.h"
-#include "../util/RelearnException.h"
-#include "../util/Vec3.h"
 #include "Algorithm.h"
 #include "BarnesHutCell.h"
+#include "Types.h"
+#include "neurons/SignalType.h"
+#include "neurons/helper/RankNeuronId.h"
+#include "neurons/helper/SynapseCreationRequests.h"
+#include "structure/OctreeNode.h"
+#include "util/RelearnException.h"
+#include "util/Vec3.h"
 
 #include <memory>
 #include <optional>

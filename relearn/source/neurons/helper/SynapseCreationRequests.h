@@ -10,9 +10,9 @@
 
 #pragma once
 
-#include "../SignalType.h"
-#include "../../Types.h"
-#include "../../util/TaggedID.h"
+#include "Types.h"
+#include "neurons/SignalType.h"
+#include "util/TaggedID.h"
 
 #include <utility>
 

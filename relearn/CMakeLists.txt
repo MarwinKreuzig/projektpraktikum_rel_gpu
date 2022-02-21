@@ -48,13 +48,14 @@ file(GLOB_RECURSE SRC_NEU_HEL "source/neurons/helper/*")
 
 file(GLOB_RECURSE SRC_MAIN "source/main.cpp")
 file(GLOB_RECURSE SRC_CONF "source/Config.h")
+file(GLOB_RECURSE SRC_TYPES "source/Types.h")
 
 file(GLOB_RECURSE SRC_TST "test/*")
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES 
 ${SRC_ALG} ${SRC_IO} ${SRC_MPI} ${SRC_SIM} 
 ${SRC_STR} ${SRC_UTIL} ${SRC_NEU} ${SRC_NEU_MOD} 
-${SRC_NEU_HEL} ${SRC_MAIN} ${SRC_CONF} ${SRC_SIM_FILE} ${SRC_SIM_RANDOM})
+${SRC_NEU_HEL} ${SRC_MAIN} ${SRC_CONF} ${SRC_TYPES} ${SRC_SIM_FILE} ${SRC_SIM_RANDOM})
 
 source_group("tests\\" FILES ${SRC_TST})
 
@@ -62,6 +63,7 @@ source_group("tests\\" FILES ${SRC_TST})
 add_library(project_options INTERFACE)
 
 target_include_directories (project_options SYSTEM INTERFACE ${MPI_CXX_INCLUDE_PATH})
+target_include_directories(project_options SYSTEM INTERFACE "source/")
 
 target_compile_options (project_options INTERFACE ${MPI_CXX_COMPILE_FLAGS})
 
@@ -98,6 +100,7 @@ ${SRC_NEU}
 ${SRC_NEU_MOD}
 ${SRC_NEU_HEL}
 ${SRC_CONF}
+${SRC_TYPES} 
 ${SRC_SIM_FILE}
 ${SRC_SIM_RANDOM}
 )

@@ -10,13 +10,13 @@
 
 #pragma once
 
-#include "../../util/Random.h"
-#include "../../util/RelearnException.h"
-#include "../ElementType.h"
-#include "../UpdateStatus.h"
-#include "../SignalType.h"
 #include "ModelParameter.h"
-#include "../../util/TaggedID.h"
+#include "neurons/ElementType.h"
+#include "neurons/SignalType.h"
+#include "neurons/UpdateStatus.h"
+#include "util/Random.h"
+#include "util/RelearnException.h"
+#include "util/TaggedID.h"
 
 #include <cmath>
 #include <memory>
@@ -476,8 +476,8 @@ private:
     std::vector<double> deltas_since_last_update{}; // Keeps track of changes in number of elements until those changes are applied in next connectivity update
     std::vector<unsigned int> connected_elements{};
     std::vector<SignalType> signal_types{}; // Signal type of synaptic elements, i.e., EXCITATORY or INHIBITORY.
-                                            // Note: Given that current exc. and inh. dendrites are in different objects, this would only be needed for axons.
-                                            //       A more memory-efficient solution would be to use a different class for axons which has the signal_types array.
+        // Note: Given that current exc. and inh. dendrites are in different objects, this would only be needed for axons.
+        //       A more memory-efficient solution would be to use a different class for axons which has the signal_types array.
 
     // Parameters
     double min_C_level_to_grow{ 0.0 }; // Minimum level of calcium needed for elements to grow

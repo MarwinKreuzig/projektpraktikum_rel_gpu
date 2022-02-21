@@ -9,8 +9,9 @@
  */
 
 #include "LogFiles.h"
+#include "mpi/MPIWrapper.h"
+
 #include "spdlog/sinks/basic_file_sink.h"
-#include "../mpi/MPIWrapper.h"
 
 #include <filesystem>
 #include <iostream>

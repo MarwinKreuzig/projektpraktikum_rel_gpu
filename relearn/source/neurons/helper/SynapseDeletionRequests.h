@@ -10,10 +10,10 @@
 
 #pragma once
 
-#include "../ElementType.h"
-#include "../SignalType.h"
-#include "../../Config.h"
-#include "../../util/RelearnException.h"
+#include "Config.h"
+#include "neurons/ElementType.h"
+#include "neurons/SignalType.h"
+#include "util/RelearnException.h"
 
 #include <utility>
 

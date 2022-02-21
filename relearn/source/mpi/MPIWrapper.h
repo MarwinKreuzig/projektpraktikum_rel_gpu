@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,9 +10,7 @@
  *
  */
 
-#pragma once
-
-#include "../Config.h"
+#include "Config.h"
 
 #if !RELEARN_MPI_FOUND
 #include "MPINoWrapper.h"
@@ -18,9 +18,9 @@
 using MPIWrapper = MPINoWrapper;
 #else // #if MPI_FOUND
 
-#include "../io/LogFiles.h"
-#include "../util/MemoryHolder.h"
-#include "../util/RelearnException.h"
+#include "io/LogFiles.h"
+#include "util/MemoryHolder.h"
+#include "util/RelearnException.h"
 #include "CommunicationMap.h"
 
 #include <array>

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "../Config.h"
+#include "Config.h"
 
 #if !RELEARN_MPI_FOUND
 
-#include "../io/LogFiles.h"
-#include "../util/MemoryHolder.h"
-#include "../util/RelearnException.h"
+#include "io/LogFiles.h"
+#include "util/MemoryHolder.h"
+#include "util/RelearnException.h"
 #include "CommunicationMap.h"
 
 #include <array>

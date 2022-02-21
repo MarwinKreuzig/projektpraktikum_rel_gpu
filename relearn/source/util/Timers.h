@@ -145,7 +145,9 @@ public:
 #ifdef __linux__
         time_t rawtime = 0;
         time(&rawtime);
+        // NOLINTNEXTLINE
         struct tm* timeinfo = localtime(&rawtime);
+        // NOLINTNEXTLINE
         char* string = asctime(timeinfo);
 
         // Remove linebreak in string

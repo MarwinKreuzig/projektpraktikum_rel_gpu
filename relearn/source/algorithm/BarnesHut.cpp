@@ -10,14 +10,14 @@
 
 #include "BarnesHut.h"
 
-#include "../io/LogFiles.h"
-#include "../neurons/NeuronsExtraInfo.h"
-#include "../neurons/models/SynapticElements.h"
-#include "../structure/NodeCache.h"
-#include "../structure/Octree.h"
-#include "../structure/OctreeNode.h"
-#include "../util/Random.h"
-#include "../util/Timers.h"
+#include "io/LogFiles.h"
+#include "neurons/NeuronsExtraInfo.h"
+#include "neurons/models/SynapticElements.h"
+#include "structure/NodeCache.h"
+#include "structure/Octree.h"
+#include "structure/OctreeNode.h"
+#include "util/Random.h"
+#include "util/Timers.h"
 
 #include <algorithm>
 #include <array>
@@ -329,7 +329,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     }
 
     std::vector<OctreeNode<BarnesHutCell>*> vector{};
-    vector.reserve(30);
+    vector.reserve(Constants::number_prealloc_space);
 
     const auto add_children_to_vector = [&vector](OctreeNode<BarnesHutCell>* node) {
         const auto is_local = node->is_local();
@@ -346,7 +346,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     add_children_to_vector(root);
 
     std::vector<OctreeNode<BarnesHutCell>*> nodes_to_consider{};
-    nodes_to_consider.reserve(30);
+    nodes_to_consider.reserve(Constants::number_prealloc_space);
 
     while (!vector.empty()) {
         // Get top-of-stack node and remove it

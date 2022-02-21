@@ -10,15 +10,14 @@
 
 #include "FastMultipoleMethods.h"
 
-#include "../structure/NodeCache.h"
-#include "../structure/Octree.h"
-#include "../structure/OctreeNode.h"
-#include "../util/Timers.h"
+#include "structure/NodeCache.h"
+#include "structure/Octree.h"
+#include "structure/OctreeNode.h"
+#include "util/Timers.h"
 
 CommunicationMap<SynapseCreationRequest> FastMultipoleMethods::find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 
-    const auto my_rank = MPIWrapper::get_my_rank();
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks);
@@ -183,18 +182,18 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
             interaction_list_type new_interaction_list = Utilities::get_children_to_interaction_list(target);
             get_rid_of_null_elements(ElementType::DENDRITE, new_interaction_list);
 
-            for (auto& source_child_node : source_children) {
+            for (const auto& source_child_node : source_children) {
                 if (source_child_node == nullptr) {
                     continue;
                 }
                 if (source_child_node->get_cell().get_number_axons_for(signal_type_needed) == 0) {
                     continue;
                 }
-                nodes_with_axons.emplace_back(source_child_node, std::move(new_interaction_list));
+                nodes_with_axons.emplace_back(source_child_node, new_interaction_list);
             }
         } else {
             // target_node is a leaf node
-            std::vector<double> attractiveness(8);
+            std::vector<double> attractiveness(Constants::number_oct);
 
             interaction_list_type new_interaction_list{ nullptr };
             new_interaction_list[0] = target;

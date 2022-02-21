@@ -12,9 +12,9 @@
 
 #if RELEARN_MPI_FOUND
 
-#include "spdlog/fmt/bundled/core.h"
-#include "../util/Utility.h"
+#include "util/Utility.h"
 
+#include "spdlog/fmt/bundled/core.h"
 #include <mpi.h>
 
 #include <bitset>

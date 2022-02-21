@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <ostream>
 #include <type_traits>
+#include <vector>
 
 #include <spdlog/fmt/bundled/core.h>
 #include <spdlog/fmt/bundled/ostream.h>
@@ -125,7 +126,7 @@ public:
      * @return constexpr auto vector of TaggedIDs
      */
     [[nodiscard]] static constexpr auto range(size_t begin, size_t end) {
-        std::vector<TaggedID> ids;
+        std::vector<TaggedID<T>> ids;
         for (auto i = begin; i < end; i++) {
             ids.emplace_back(i);
         }
@@ -141,7 +142,7 @@ public:
      * @return constexpr auto vector of TaggedIDs
      */
     [[nodiscard]] static constexpr auto range_global(size_t begin, size_t end) {
-        std::vector<TaggedID> ids;
+        std::vector<TaggedID<T>> ids;
         for (auto i = begin; i < end; i++) {
             ids.emplace_back(true, false, i);
         }

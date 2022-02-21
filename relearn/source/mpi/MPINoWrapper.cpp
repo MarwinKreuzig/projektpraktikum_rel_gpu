@@ -2,12 +2,12 @@
 
 #if !RELEARN_MPI_FOUND
 
-#include "../algorithm/BarnesHutCell.h"
-#include "../io/LogFiles.h"
-#include "../structure/OctreeNode.h"
-#include "../util/MemoryHolder.h"
-#include "../util/RelearnException.h"
-#include "../util/Utility.h"
+#include "algorithm/BarnesHutCell.h"
+#include "io/LogFiles.h"
+#include "structure/OctreeNode.h"
+#include "util/MemoryHolder.h"
+#include "util/RelearnException.h"
+#include "util/Utility.h"
 
 #include <bitset>
 #include <cstdlib>

@@ -10,14 +10,14 @@
 
 #include "Naive.h"
 
-#include "../io/LogFiles.h"
-#include "../neurons/NeuronsExtraInfo.h"
-#include "../neurons/models/SynapticElements.h"
-#include "../structure/NodeCache.h"
-#include "../structure/Octree.h"
-#include "../structure/OctreeNode.h"
-#include "../util/Random.h"
-#include "../util/Timers.h"
+#include "io/LogFiles.h"
+#include "neurons/NeuronsExtraInfo.h"
+#include "neurons/models/SynapticElements.h"
+#include "structure/NodeCache.h"
+#include "structure/Octree.h"
+#include "structure/OctreeNode.h"
+#include "util/Random.h"
+#include "util/Timers.h"
 
 #include <algorithm>
 #include <array>
@@ -90,7 +90,6 @@
 CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 
-    const auto my_rank = MPIWrapper::get_my_rank();
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks);

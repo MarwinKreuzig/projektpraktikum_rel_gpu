@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,14 +10,12 @@
  *
  */
 
-#pragma once
-
-#include "../Types.h"
-#include "../mpi/CommunicationMap.h"
-#include "../neurons/UpdateStatus.h"
-#include "../neurons/helper/SynapseCreationRequests.h"
-#include "../neurons/models/SynapticElements.h"
-#include "../util/RelearnException.h"
+#include "Types.h"
+#include "mpi/CommunicationMap.h"
+#include "neurons/UpdateStatus.h"
+#include "neurons/helper/SynapseCreationRequests.h"
+#include "neurons/models/SynapticElements.h"
+#include "util/RelearnException.h"
 
 #include <memory>
 #include <vector>
@@ -112,9 +112,9 @@ private:
     DistantOutSynapses create_synapses_process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests, const CommunicationMap<SynapseCreationResponse>& creation_responses);
 
 protected:
-    std::shared_ptr<SynapticElements> axons{};
-    std::shared_ptr<SynapticElements> excitatory_dendrites{};
-    std::shared_ptr<SynapticElements> inhibitory_dendrites{};
+    std::shared_ptr<SynapticElements> axons{}; //NOLINTLINE
+    std::shared_ptr<SynapticElements> excitatory_dendrites{}; //NOLINTLINE
+    std::shared_ptr<SynapticElements> inhibitory_dendrites{}; //NOLINTLINE
 
 public:
     constexpr static double default_sigma{ 750.0 };

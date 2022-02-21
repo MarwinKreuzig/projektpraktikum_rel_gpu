@@ -336,7 +336,7 @@ protected:
      * @param neuron_id The local neuron id
      * @param new_value The new membrane potential
      */
-    void set_x(const NeuronID& neuron_id, const double new_value) noexcept {
+    void set_x(const NeuronID& neuron_id, const double new_value) {
         const auto local_neuron_id = neuron_id.get_local_id();
         x[local_neuron_id] = new_value;
     }
@@ -346,7 +346,7 @@ protected:
      * @param neuron_id The local neuron id
      * @param new_value True iff the neuron fired in the current simulation step
      */
-    void set_fired(const NeuronID& neuron_id, const char new_value) noexcept {
+    void set_fired(const NeuronID& neuron_id, const char new_value) {
         const auto local_neuron_id = neuron_id.get_local_id();
         fired[local_neuron_id] = new_value;
     }

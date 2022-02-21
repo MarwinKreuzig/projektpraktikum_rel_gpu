@@ -10,7 +10,8 @@
 
 #include "InteractiveNeuronIO.h"
 
-#include "../util/RelearnException.h"
+#include "util/RelearnException.h"
+
 #include "spdlog/spdlog.h"
 
 #include <fstream>
