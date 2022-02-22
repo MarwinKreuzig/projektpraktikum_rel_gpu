@@ -11,9 +11,9 @@
  */
 
 #include "Config.h"
-#include "sim/SynapseLoader.h"
 #include "sim/NeuronIdTranslator.h"
 #include "sim/NeuronToSubdomainAssignment.h"
+#include "sim/SynapseLoader.h"
 
 #include <filesystem>
 #include <fstream>

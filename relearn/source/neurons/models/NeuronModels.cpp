@@ -138,7 +138,6 @@ void NeuronModel::update_electrical_activity_calculate_background(const std::vec
 
 CommunicationMap<NeuronID> NeuronModel::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
     const auto mpi_ranks = MPIWrapper::get_num_ranks();
-    const auto my_rank = MPIWrapper::get_my_rank();
 
     CommunicationMap<NeuronID> spiking_ids(mpi_ranks);
 

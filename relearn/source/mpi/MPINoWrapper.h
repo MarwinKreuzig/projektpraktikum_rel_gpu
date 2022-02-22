@@ -4,10 +4,10 @@
 
 #if !RELEARN_MPI_FOUND
 
+#include "CommunicationMap.h"
 #include "io/LogFiles.h"
 #include "util/MemoryHolder.h"
 #include "util/RelearnException.h"
-#include "CommunicationMap.h"
 
 #include <array>
 #include <map>

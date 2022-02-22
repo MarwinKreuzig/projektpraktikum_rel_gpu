@@ -13,8 +13,8 @@
 #include "Algorithm.h"
 #include "FastMultipoleMethodsCell.h"
 #include "structure/OctreeNode.h"
-#include "util/RelearnException.h"
 #include "util/Random.h"
+#include "util/RelearnException.h"
 #include "util/Utility.h"
 
 #include <array>

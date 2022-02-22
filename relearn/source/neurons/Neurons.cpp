@@ -95,8 +95,6 @@ void Neurons::init_synaptic_elements() {
 size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
     neuron_model->disable_neurons(neuron_ids);
 
-    const auto my_rank = MPIWrapper::get_my_rank();
-
     std::vector<unsigned int> deleted_axon_connections(number_neurons, 0);
     std::vector<unsigned int> deleted_dend_ex_connections(number_neurons, 0);
     std::vector<unsigned int> deleted_dend_in_connections(number_neurons, 0);

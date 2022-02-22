@@ -183,8 +183,6 @@ void SubdomainFromNeuronDensity::fill_subdomain(const size_t local_subdomain_ind
 
 void SubdomainFromNeuronDensity::calculate_total_number_neurons() const {
     const auto number_local_neurons = get_number_placed_neurons();
-    const auto num_ranks = MPIWrapper::get_num_ranks();
-
     const auto& all_number_local_neurons = MPIWrapper::all_gather(number_local_neurons);
 
     const auto total_number = std::reduce(all_number_local_neurons.begin(), all_number_local_neurons.end(), size_t(0), std::plus{});

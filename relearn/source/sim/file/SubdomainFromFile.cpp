@@ -10,13 +10,14 @@
 
 #include "SubdomainFromFile.h"
 
-#include "../../Config.h"
-#include "../../io/LogFiles.h"
-#include "../../sim/NeuronToSubdomainAssignment.h"
-#include "../../sim/file/FileNeuronIdTranslator.h"
-#include "../../sim/file/FileSynapseLoader.h"
-#include "../../structure/Partition.h"
-#include "../../util/RelearnException.h"
+#include "Config.h"
+#include "io/LogFiles.h"
+#include "sim/NeuronToSubdomainAssignment.h"
+#include "sim/file/FileNeuronIdTranslator.h"
+#include "sim/file/FileSynapseLoader.h"
+#include "structure/Partition.h"
+#include "util/RelearnException.h"
+
 #include "spdlog/spdlog.h"
 
 #include <cmath>

@@ -10,9 +10,9 @@
 
 #include "FileNeuronIdTranslator.h"
 
-#include "../../mpi/MPIWrapper.h"
-#include "../../structure/Partition.h"
-#include "../../util/RelearnException.h"
+#include "mpi/MPIWrapper.h"
+#include "structure/Partition.h"
+#include "util/RelearnException.h"
 
 #include "spdlog/spdlog.h"
 

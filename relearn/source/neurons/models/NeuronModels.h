@@ -10,11 +10,11 @@
  *
  */
 
+#include "ModelParameter.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/UpdateStatus.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
-#include "ModelParameter.h"
 
 #include <algorithm>
 #include <memory>

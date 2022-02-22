@@ -15,8 +15,8 @@
 #include "algorithm/Naive.h"
 #include "io/InteractiveNeuronIO.h"
 #include "io/LogFiles.h"
-#include "mpi/MPIWrapper.h"
 #include "mpi/CommunicationMap.h"
+#include "mpi/MPIWrapper.h"
 #include "neurons/ElementType.h"
 #include "neurons/helper/NeuronMonitor.h"
 #include "neurons/models/NeuronModels.h"
@@ -180,13 +180,13 @@ int main(int argc, char** argv) {
     auto* opt_file_creation_interrups = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
 
     double base_background_activity{ NeuronModel::default_base_background_activity };
-    auto* opt_base_background_activity = app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+    app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
     double background_activity_mean{ NeuronModel::default_background_activity_mean };
-    auto* opt_background_activity_mean = app.add_option("--background-activity-mean", background_activity_mean, "The mean background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+    app.add_option("--background-activity-mean", background_activity_mean, "The mean background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
     double background_activity_stddev{ NeuronModel::default_background_activity_stddev };
-    auto* opt_background_activity_stddev = app.add_option("--background-activity-stddev", background_activity_stddev, "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+    app.add_option("--background-activity-stddev", background_activity_stddev, "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
     double synapse_conductance{ NeuronModel::default_k };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transfered to its neighbors when a neuron spikes. Default is 0.03");

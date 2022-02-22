@@ -13,9 +13,9 @@
 #include "RelearnException.h"
 #include "neurons/UpdateStatus.h"
 
-#include <vector>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 
 namespace Util {
 
