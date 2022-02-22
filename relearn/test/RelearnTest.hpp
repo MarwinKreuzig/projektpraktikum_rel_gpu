@@ -58,7 +58,7 @@ protected:
 protected:
     template <typename AdditionalCellAttributes>
     static void SetUpTestCaseTemplate() {
-        RelearnException::hide_messages = false;
+        RelearnException::hide_messages = true;
         LogFiles::disable = true;
 
         init<AdditionalCellAttributes>();

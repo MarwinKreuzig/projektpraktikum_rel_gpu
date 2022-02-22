@@ -36,7 +36,7 @@ public:
      * @param file_path The path to the file to load
      * @exception Throws a RelearnException if there occurred some erros while processing the file
      */
-    SubdomainFromFile(const std::filesystem::path& file_path, const std::optional<std::filesystem::path>& file_path_positions, std::shared_ptr<Partition> partition);
+    SubdomainFromFile(const std::filesystem::path& file_path, std::optional<std::filesystem::path> file_path_positions, std::shared_ptr<Partition> partition);
 
     SubdomainFromFile(const SubdomainFromFile& other) = delete;
     SubdomainFromFile(SubdomainFromFile&& other) = delete;

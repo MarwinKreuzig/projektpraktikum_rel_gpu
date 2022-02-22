@@ -22,10 +22,10 @@
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
 #include "sim/NeuronToSubdomainAssignment.h"
+#include "sim/Simulation.h"
 #include "sim/file/SubdomainFromFile.h"
 #include "sim/random/SubdomainFromNeuronDensity.h"
 #include "sim/random/SubdomainFromNeuronPerRank.h"
-#include "sim/Simulation.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
 #include "util/Random.h"
@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
     double accept_criterion{ BarnesHut::default_theta };
     auto* opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Required Barnes-Hut.");
 
-    double scaling_const{ Algorithm::default_sigma };
+    double scaling_const{ Constants::default_sigma };
     app.add_option("--sigma", scaling_const, "Scaling parameter for the probabilty kernel. Default: 750");
 
     size_t number_neurons{};
@@ -463,7 +463,7 @@ int main(int argc, char** argv) {
             path_to_network = file_network;
         }
 
-        auto sff = std::make_unique<SubdomainFromFile>(file_positions, path_to_network, partition);
+        auto sff = std::make_unique<SubdomainFromFile>(file_positions, std::move(path_to_network), partition);
         sim.set_subdomain_assignment(std::move(sff));
     }
 

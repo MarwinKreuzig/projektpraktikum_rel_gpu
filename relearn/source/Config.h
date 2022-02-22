@@ -35,6 +35,8 @@ public:
 
     constexpr static size_t print_width = 22;
     constexpr static size_t print_precision = 8;
+        
+    constexpr static double default_sigma = 750.0;
 
     constexpr static size_t mpi_alloc_mem = 1024 * 1024 * 300;
 

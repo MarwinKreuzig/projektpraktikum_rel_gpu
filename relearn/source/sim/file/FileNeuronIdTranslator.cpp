@@ -22,14 +22,10 @@
 #include <string>
 
 bool FileNeuronIdTranslator::is_neuron_local(NeuronID global_id) const {
-    for (const auto& global_ids : global_neuron_ids) {
-        const bool found = std::binary_search(global_ids.begin(), global_ids.end(), global_id);
-        if (found) {
-            return true;
-        }
-    }
+    const auto total_found = std::ranges::any_of(global_neuron_ids.begin(), global_neuron_ids.end(),
+        [global_id](const auto& global_ids) { return std::binary_search(global_ids.begin(), global_ids.end(), global_id); });
 
-    return false;
+    return total_found;
 }
 
 NeuronID FileNeuronIdTranslator::get_local_id(NeuronID global_id) const {

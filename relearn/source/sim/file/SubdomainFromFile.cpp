@@ -25,7 +25,7 @@
 #include <sstream>
 
 SubdomainFromFile::SubdomainFromFile(
-    const std::filesystem::path& file_path, const std::optional<std::filesystem::path>& file_path_positions, std::shared_ptr<Partition> partition)
+    const std::filesystem::path& file_path, std::optional<std::filesystem::path> file_path_positions, std::shared_ptr<Partition> partition)
     : NeuronToSubdomainAssignment(std::move(partition))
     , path(file_path) {
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, "Loading: {} \n", file_path);

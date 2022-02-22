@@ -303,7 +303,7 @@ public:
      *      Performs communication with MPI
      * @param step The current simulation step
      */
-    void print_neurons_overview_to_log_file_on_rank_0(size_t step);
+    void print_neurons_overview_to_log_file_on_rank_0(size_t step) const;
 
     /**
      * @brief Prints the calcium statistics to LogFiles::EventType::Essentials

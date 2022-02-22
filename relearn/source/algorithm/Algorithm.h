@@ -104,7 +104,7 @@ public:
     }
 
 private:
-    double sigma{ default_sigma };
+    double sigma{ Constants::default_sigma };
 
     std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
     create_synapses_process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& synapse_creation_requests_incoming);
@@ -115,7 +115,4 @@ protected:
     std::shared_ptr<SynapticElements> axons{}; //NOLINTLINE
     std::shared_ptr<SynapticElements> excitatory_dendrites{}; //NOLINTLINE
     std::shared_ptr<SynapticElements> inhibitory_dendrites{}; //NOLINTLINE
-
-public:
-    constexpr static double default_sigma{ 750.0 };
 };

@@ -30,12 +30,12 @@
 #include <optional>
 #include <sstream>
 
-void Neurons::init(const size_t num_neurons, std::vector<double> target_calcium_values, std::vector<double> initial_calcium_values) {
-    RelearnException::check(num_neurons > 0, "Neurons::init: num_neurons was 0");
-    RelearnException::check(num_neurons == target_calcium_values.size(), "Neurons::init: num_neurons was different than target_calcium_values.size()");
-    RelearnException::check(num_neurons == initial_calcium_values.size(), "Neurons::init: num_neurons was different than initial_calcium_values.size()");
+void Neurons::init(const size_t number_neurons, std::vector<double> target_calcium_values, std::vector<double> initial_calcium_values) {
+    RelearnException::check(number_neurons > 0, "Neurons::init: number_neurons was 0");
+    RelearnException::check(number_neurons == target_calcium_values.size(), "Neurons::init: number_neurons was different than target_calcium_values.size()");
+    RelearnException::check(number_neurons == initial_calcium_values.size(), "Neurons::init: number_neurons was different than initial_calcium_values.size()");
 
-    number_neurons = num_neurons;
+    this->number_neurons = number_neurons;
 
     neuron_model->init(number_neurons);
     extra_info->init(number_neurons);
@@ -336,7 +336,7 @@ StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_
 }
 
 size_t Neurons::delete_synapses() {
-    auto deletion_helper = [this](std::shared_ptr<SynapticElements> synaptic_elements) {
+    auto deletion_helper = [this](const std::shared_ptr<SynapticElements>& synaptic_elements) {
         Timers::start(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
 
         Timers::start(TimerRegion::COMMIT_NUM_SYNAPTIC_ELEMENTS);
@@ -465,6 +465,8 @@ std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
     RelearnException::check(num_synapses_to_delete <= current_synapses.size(), "Neurons::delete_synapses_find_synapses_on_neuron:: num_synapses_to_delete > last_synapses.size()");
 
     std::vector<unsigned int> drawn_indices{};
+    drawn_indices.reserve(num_synapses_to_delete);
+
     std::uniform_int_distribution<unsigned int> uid{};
 
     for (unsigned int i = 0; i < num_synapses_to_delete; i++) {
@@ -477,6 +479,8 @@ std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
     }
 
     std::vector<RankNeuronId> affected_neurons{};
+    affected_neurons.reserve(num_synapses_to_delete);
+
     for (const auto index : drawn_indices) {
         affected_neurons.emplace_back(current_synapses[index]);
     }
@@ -491,8 +495,7 @@ size_t Neurons::delete_synapses_commit_deletions(const CommunicationMap<SynapseD
     for (const auto& [other_rank, requests] : list) {
         num_synapses_deleted += requests.size();
 
-        for (auto i = 0; i < requests.size(); i++) {
-            const auto& [other_neuron_id, my_neuron_id, element_type, signal_type] = requests[i];
+        for (const auto& [other_neuron_id, my_neuron_id, element_type, signal_type] : requests) {
             const auto weight = (SignalType::EXCITATORY == signal_type) ? -1 : 1;
 
             /**
@@ -764,7 +767,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const si
     }
 }
 
-void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) {
+void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) const {
     const StatisticalMeasures& calcium_statistics = get_statistics(NeuronAttribute::Calcium);
     const StatisticalMeasures& axons_statistics = get_statistics(NeuronAttribute::Axons);
     const StatisticalMeasures& axons_connected_statistics = get_statistics(NeuronAttribute::AxonsConnected);
