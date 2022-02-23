@@ -46,6 +46,7 @@ enum class RandomHolderKey : char {
 class RandomHolder {
     RandomHolder() = default;
 
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
     thread_local static inline std::array<std::mt19937, 8> random_number_generators{};
 
 public:
@@ -63,7 +64,9 @@ public:
             "RandomHolder::get_random_uniform_double: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
         std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
 
-        return urd(random_number_generators[static_cast<int>(key)]);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+        auto& generator = random_number_generators[static_cast<int>(key)];
+        return urd(generator);
     }
 
     /**
@@ -79,8 +82,10 @@ public:
         RelearnException::check(lower_inclusive <= upper_exclusive,
             "RandomHolder::get_random_uniform_integer: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
         std::uniform_int_distribution<unsigned int> uid(lower_inclusive, upper_exclusive);
+
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-        return uid(random_number_generators[static_cast<int>(key)]);
+        auto& generator = random_number_generators[static_cast<int>(key)];
+        return uid(generator);
     }
 
     /**
@@ -97,7 +102,8 @@ public:
         std::normal_distribution<double> nd(mean, stddev);
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-        return nd(random_number_generators[static_cast<int>(key)]);
+        auto& generator = random_number_generators[static_cast<int>(key)];
+        return nd(generator);
     }
 
     /**
@@ -111,7 +117,8 @@ public:
     template <typename IteratorType>
     static void shuffle(const RandomHolderKey key, const IteratorType begin, const IteratorType end) {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-        std::shuffle(begin, end, random_number_generators[static_cast<int>(key)]);
+        auto& generator = random_number_generators[static_cast<int>(key)];
+        std::shuffle(begin, end, generator);
     }
 
     /**
@@ -130,10 +137,10 @@ public:
         RelearnException::check(lower_inclusive < upper_exclusive, "RandomHolder::fill: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
         std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-        auto& gen = random_number_generators[static_cast<int>(key)];
+        auto& generator = random_number_generators[static_cast<int>(key)];
 
         for (auto it = begin; it != end; it++) {
-            *it = urd(gen);
+            *it = urd(generator);
         }
     }
 
@@ -149,7 +156,8 @@ public:
         {
             const auto thread_id = omp_get_thread_num();
             // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-            random_number_generators[static_cast<int>(key)].seed(seed + thread_id);
+            auto& generator = random_number_generators[static_cast<int>(key)];
+            generator.seed(seed + thread_id);
         }
     }
 };

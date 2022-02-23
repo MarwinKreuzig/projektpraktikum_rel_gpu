@@ -75,7 +75,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
     const double desired_ex = get_requested_ratio_excitatory_neurons();
 
-    const size_t expected_number_in = number_neurons - static_cast<size_t>(ceil(number_neurons * desired_ex));
+    const size_t expected_number_in = number_neurons - static_cast<size_t>(ceil(static_cast<double>(number_neurons) * desired_ex));
     const size_t expected_number_ex = number_neurons - expected_number_in;
 
     size_t placed_neurons = 0;
@@ -113,9 +113,9 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
         const size_t y_it = (pos_bitmask >> 16U) & max_short;
         const size_t z_it = pos_bitmask & max_short;
 
-        const box_size_type::value_type x_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::Subdomain, 0.0, 1.0) + x_it;
-        const box_size_type::value_type y_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::Subdomain, 0.0, 1.0) + y_it;
-        const box_size_type::value_type z_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::Subdomain, 0.0, 1.0) + z_it;
+        const box_size_type::value_type x_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::Subdomain, 0.0, 1.0) + static_cast<double>(x_it);
+        const box_size_type::value_type y_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::Subdomain, 0.0, 1.0) + static_cast<double>(y_it);
+        const box_size_type::value_type z_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::Subdomain, 0.0, 1.0) + static_cast<double>(z_it);
 
         box_size_type pos_rnd{ x_pos_rnd, y_pos_rnd, z_pos_rnd };
         pos_rnd *= um_per_neuron_;
@@ -171,7 +171,7 @@ void SubdomainFromNeuronDensity::fill_subdomain(const size_t local_subdomain_ind
     const auto total_number_boxes = total_volume / (um_per_neuron_ * um_per_neuron_ * um_per_neuron_);
 
     const auto free_neurons = requested_number_neurons - number_subdomains;
-    const auto proposed_number_local_neurons = floor(free_neurons * number_boxes / total_number_boxes);
+    const auto proposed_number_local_neurons = floor(static_cast<double>(free_neurons) * number_boxes / total_number_boxes);
 
     const auto adjustment_neuron = (proposed_number_local_neurons == 0) ? 2 : 1;
 

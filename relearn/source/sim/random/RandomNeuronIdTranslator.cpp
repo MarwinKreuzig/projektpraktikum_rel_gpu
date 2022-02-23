@@ -21,7 +21,7 @@
 RandomNeuronIdTranslator::RandomNeuronIdTranslator(std::shared_ptr<Partition> partition)
     : RandomNeuronIdTranslator(std::move(partition), MPIWrapper::all_gather<size_t>) { }
 
-RandomNeuronIdTranslator::RandomNeuronIdTranslator(std::shared_ptr<Partition> partition, std::function<std::vector<size_t>(size_t)> gather_function)
+RandomNeuronIdTranslator::RandomNeuronIdTranslator(std::shared_ptr<Partition> partition, const std::function<std::vector<size_t>(size_t)>& gather_function)
     : partition(std::move(partition)) {
     number_local_neurons = this->partition->get_number_local_neurons();
 

@@ -37,6 +37,6 @@ public:
     FileSynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator,
         std::optional<std::filesystem::path> path_to_synapses)
         : SynapseLoader(std::move(partition), std::move(neuron_id_translator))
-        , optional_path_to_file(path_to_synapses) { }
+        , optional_path_to_file(std::move(path_to_synapses)) { }
 };
 
