@@ -100,11 +100,12 @@ std::vector<std::tuple<Vec3d, size_t>> extract_virtual_neurons(OctreeNode<Additi
     octree_nodes.emplace(root, 0);
 
     while (!octree_nodes.empty()) {
-        const auto& [current_node, level] = octree_nodes.top();
+        // Don't change this to a reference
+        const auto [current_node, level] = octree_nodes.top();
         octree_nodes.pop();
 
         if (current_node->get_cell().get_neuron_id().is_virtual()) {
-            return_value.emplace_back(current_node->get_cell().get_dendrites_position().value(), level);
+            return_value.push_back(std::make_pair(current_node->get_cell().get_dendrites_position().value(), level));
         }
 
         if (current_node->is_parent()) {
