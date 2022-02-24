@@ -1044,21 +1044,24 @@ void Neurons::print_info_for_algorithm() {
 }
 
 void Neurons::print_local_network_histogram(const size_t current_step) {
-    const auto& in_histogram = network_graph->get_edges_histogram(NetworkGraph::EdgeDirection::In);
-    const auto& out_histogram = network_graph->get_edges_histogram(NetworkGraph::EdgeDirection::Out);
+    const auto& out_histogram = axons->get_historgram();
+    const auto& in_inhibitory_histogram = dendrites_inh->get_historgram();
+    const auto& in_excitatory_histogram = dendrites_exc->get_historgram();
 
-    const auto conv_hist = [current_step](const std::vector<unsigned int>& hist) -> std::string {
+    const auto print_histogram = [current_step](const std::map<std::pair<unsigned int, unsigned int>, uint64_t>& hist) -> std::string {
         std::stringstream ss{};
         ss << '#' << current_step;
-        for (auto val : hist) {
-            ss << ';' << val;
+        for (const auto& [val, occurences] : hist) {
+            const auto& [connected, grown] = val;
+            ss << ";(" << connected << ',' << grown << "):" << occurences;
         }
 
         return ss.str();
     };
 
-    LogFiles::write_to_file(LogFiles::EventType::NetworkInHistogramLocal, false, conv_hist(in_histogram));
-    LogFiles::write_to_file(LogFiles::EventType::NetworkOutHistogramLocal, false, conv_hist(out_histogram));
+    LogFiles::write_to_file(LogFiles::EventType::NetworkOutHistogramLocal, false, print_histogram(out_histogram));
+    LogFiles::write_to_file(LogFiles::EventType::NetworkInInhibitoryHistogramLocal, false, print_histogram(in_inhibitory_histogram));
+    LogFiles::write_to_file(LogFiles::EventType::NetworkInExcitatoryHistogramLocal, false, print_histogram(in_excitatory_histogram));
 }
 
 void Neurons::print_calcium_values_to_file(const size_t current_step) {

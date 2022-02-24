@@ -19,6 +19,7 @@
 #include "util/TaggedID.h"
 
 #include <cmath>
+#include <map>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -431,6 +432,31 @@ public:
 
             deltas_since_last_update[neuron_id] += inc;
         }
+    }
+
+    /**
+     * @brief Calculates and returns the historgram of the synaptic elements, i.e.,
+     *      a mapping (x, y) -> z which indicates that there are z neurons
+     *      that have x connected elements and y total elements (rounded down).
+     * @exception Throws a RelearnException if the internal data structures are corrupted
+     * @return The connection histogram
+     */
+    std::map<std::pair<unsigned int, unsigned int>, uint64_t> get_historgram() const {
+        RelearnException::check(size == grown_elements.size(), "SynapticElements::get_historgram: size did not match the number of grown elements");
+        RelearnException::check(size == deltas_since_last_update.size(), "SynapticElements::get_historgram: size did not match the number of deltas");
+        RelearnException::check(size == connected_elements.size(), "SynapticElements::get_historgram: size did not match the number of connected elements");
+        RelearnException::check(size == signal_types.size(), "SynapticElements::get_historgram: size did not match the number of signal types");
+
+        std::map<std::pair<unsigned int, unsigned int>, uint64_t> result{};
+
+        for (size_t i = 0; i < size; i++) {
+            const auto number_connected_elements = connected_elements[i];
+            const auto number_grown_elements = static_cast<unsigned int>(grown_elements[i]);
+
+            result[{ number_connected_elements, number_grown_elements }] += 1;
+        }
+
+        return result;
     }
 
 private:
