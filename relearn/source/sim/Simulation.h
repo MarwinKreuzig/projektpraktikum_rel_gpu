@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,11 +10,8 @@
  *
  */
 
-#pragma once
-
-#include "../Types.h"
-#include "../util/StatisticalMeasures.h"
-#include "../util/TaggedID.h"
+#include "Config.h"
+#include "Types.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -263,7 +262,7 @@ private:
     std::function<double(NeuronID::value_type)> target_calcium_calculator{};
     std::function<double(NeuronID::value_type)> initial_calcium_initiator{};
 
-    double sigma{ 750 };
+    double sigma{ Constants::default_sigma };
     double accept_criterion{ 0.0 };
 
     AlgorithmEnum algorithm_enum{};

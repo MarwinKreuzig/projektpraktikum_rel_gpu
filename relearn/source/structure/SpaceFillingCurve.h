@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,11 +10,9 @@
  *
  */
 
-#pragma once
-
-#include "../Config.h"
-#include "../util/RelearnException.h"
-#include "../util/Vec3.h"
+#include "Config.h"
+#include "util/RelearnException.h"
+#include "util/Vec3.h"
 
 #include <cstdint>
 #include <type_traits>

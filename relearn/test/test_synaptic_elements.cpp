@@ -638,6 +638,31 @@ TEST_F(SynapticElementsTest, testSynapticElementsSingleUpdate) {
     }
 }
 
+TEST_F(SynapticElementsTest, testSynapticElementsHistogram) {
+    const auto& number_neurons = get_random_number_neurons();
+    const auto& element_type = get_random_element_type();
+
+    std::stringstream ss{};
+    ss << number_neurons << ' ' << element_type << '\n';
+
+    auto [synaptic_elements, golden_counts, golden_connected_counts, golden_signal_types]
+        = create_random_synaptic_elements(number_neurons, element_type, 0.0);
+
+    const auto& histogram = synaptic_elements.get_historgram();
+
+    std::vector<std::pair<unsigned int, unsigned int>> golden_histogram{};
+
+    for (auto i = 0; i < number_neurons; i++) {
+        golden_histogram.emplace_back(golden_connected_counts[i], golden_counts[i]);
+    }
+
+    for (const auto& [pair, count] : histogram) {
+        const auto golden_count = std::count(golden_histogram.begin(), golden_histogram.end(), pair);
+
+        ASSERT_EQ(count, golden_count) << ss.str() << ' ' << pair.first << ' ' << pair.second;
+    }
+}
+
 TEST_F(SynapticElementsTest, testSynapticElementsUpdateException) {
     const auto& number_neurons = get_random_number_neurons();
     const auto& element_type = get_random_element_type();

@@ -9,6 +9,19 @@ build-mpi:
     paths:
       - relearn/build-docker
 
+build-clang-tidy:
+  rules:
+  - if: '$CLANG_TIDY == "FALSE"'
+    when: never
+  - if: '$CLANG_TIDY == "TRUE"'
+    when: always
+  image: relearn-ci-gcc-11
+  stage: build
+  before_script:
+    - cd relearn && mkdir build-clang-tidy && cd build-clang-tidy  
+  script:
+    - cmake -DENABLE_CLANG_TIDY=0 .. && chmod 755 ../check_tidy.sh && ../check_tidy.sh
+
 # run tests using the binary built before
 test-mpi-once:
   image: relearn-ci-gcc-11
@@ -74,31 +87,7 @@ test-nompi-multiple:
     - build-nompi
   artifacts:
     paths:
-      - relearn/build-docker-nompi
-
-build-graph:
-  image: relearn-ci-gcc-11
-  stage: build
-  before_script:
-    - cd graph && mkdir build-docker && cd build-docker  
-  script:
-    - cmake -DENABLE_CLANG_TIDY=0 .. && make -j 16
-  artifacts:
-    paths:
-      - graph/build-docker
-      
-# run tests using the binary built before
-test-graph:
-  image: relearn-ci-gcc-11
-  stage: test
-  script:
-    - graph/build-docker/test/runTests
-  dependencies: 
-    - build-graph
-  artifacts:
-    paths:
-      - graph/build-docker
-      
+      - relearn/build-docker-nompi      
    
 deploy-single:
   image: relearn-ci-gcc-11

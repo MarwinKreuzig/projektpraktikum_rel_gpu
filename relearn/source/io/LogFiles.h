@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -7,8 +9,6 @@
  * See the LICENSE file in the base directory for details.
  *
  */
-
-#pragma once
 
 #include "spdlog/fmt/bundled/core.h"
 #include "spdlog/spdlog.h"
@@ -46,7 +46,8 @@ public:
         Cout,
         Timers,
         TimersLocal,
-        NetworkInHistogramLocal,
+        NetworkInInhibitoryHistogramLocal,
+        NetworkInExcitatoryHistogramLocal,
         NetworkOutHistogramLocal,
         Essentials,
         CalciumValues,

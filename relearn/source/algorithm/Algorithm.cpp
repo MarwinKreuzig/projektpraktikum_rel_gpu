@@ -10,8 +10,8 @@
 
 #include "Algorithm.h"
 
-#include "../mpi/MPIWrapper.h"
-#include "../util/Timers.h"
+#include "mpi/MPIWrapper.h"
+#include "util/Timers.h"
 
 std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> Algorithm::update_connectivity(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
@@ -24,8 +24,6 @@ std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> Algorithm::upda
 
     auto [responses_outgoing, synapses] = create_synapses_process_requests(number_neurons, synapse_creation_requests_incoming);
     auto& [local_synapses, distant_in_synapses] = synapses;
-
-    const auto num_synapses_created = local_synapses.size() + distant_in_synapses.size();
 
     const auto& responses_incoming = MPIWrapper::exchange_requests(responses_outgoing);
 
@@ -57,7 +55,7 @@ Algorithm::create_synapses_process_requests(size_t number_neurons, const Communi
     distant_synapses.reserve(number_neurons);
 
     // For all requests I received
-    for (auto& [source_rank, requests] : synapse_creation_requests_incoming) {
+    for (const auto& [source_rank, requests] : synapse_creation_requests_incoming) {
         const auto num_requests = requests.size();
 
         // All requests of a rank

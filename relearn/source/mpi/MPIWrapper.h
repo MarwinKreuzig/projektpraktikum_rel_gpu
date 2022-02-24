@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,9 +10,7 @@
  *
  */
 
-#pragma once
-
-#include "../Config.h"
+#include "Config.h"
 
 #if !RELEARN_MPI_FOUND
 #include "MPINoWrapper.h"
@@ -18,14 +18,15 @@
 using MPIWrapper = MPINoWrapper;
 #else // #if MPI_FOUND
 
-#include "../io/LogFiles.h"
-#include "../util/MemoryHolder.h"
-#include "../util/RelearnException.h"
 #include "CommunicationMap.h"
+#include "io/LogFiles.h"
+#include "util/MemoryHolder.h"
+#include "util/RelearnException.h"
 
 #include <array>
+#include <atomic>
 #include <cstdint>
-#include <ranges>
+#include <numeric>
 #include <span>
 #include <string>
 #include <vector>
@@ -102,6 +103,10 @@ private:
     // NOLINTNEXTLINE
     static inline std::string my_rank_str{ "-1" };
 
+    static inline std::atomic<uint64_t> bytes_sent{ 0 };
+    static inline std::atomic<uint64_t> bytes_received{ 0 };
+    static inline std::atomic<uint64_t> bytes_remote{ 0 };
+
     static void all_gather(const void* own_data, void* buffer, int size);
 
     static void all_gather_inl(void* ptr, int count);
@@ -140,7 +145,7 @@ private:
      */
     template <typename T>
     [[nodiscard]] static AsyncToken async_send(std::span<T> buffer, const int rank) {
-        return async_s(buffer.data(), static_cast<int>( buffer.size_bytes()), rank);
+        return async_s(buffer.data(), static_cast<int>(buffer.size_bytes()), rank);
     }
 
     /**
@@ -418,18 +423,14 @@ public:
      *
      * @return auto the range of all ranks
      */
-    [[nodiscard]] static auto get_ranks() {
-        return std::views::iota(0, get_num_ranks());
-    }
+    [[nodiscard]] static const std::vector<int>& get_ranks() {
+        static std::vector<int> ranks = []() {
+            std::vector<int> r(get_num_ranks());
+            std::iota(r.begin(), r.end(), 0);
+            return r;
+        }();
 
-    /**
-     * @brief Get a range of all ranks [0, num_ranks) without the own rank
-     *
-     * @return auto the range of all ranks except the own rank
-     */
-    [[nodiscard]] static auto get_ranks_without_my_rank() {
-        return std::views::iota(0, get_num_ranks())
-            | std::views::filter([my_rank = get_my_rank()](const auto& rank) { return rank != my_rank; });
+        return ranks;
     }
 
     /**
@@ -460,6 +461,32 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
     static void unlock_window(int rank);
+
+    /**
+     * @brief Returns an approximation of how many bytes were sent.
+     *      E.g., it only counts reduce once, so this is an underapproximation.
+     * @return The number of bytes sent
+     */
+    static uint64_t get_number_bytes_sent() noexcept {
+        return bytes_sent.load(std::memory_order::relaxed);
+    }
+
+    /**
+     * @brief Returns an approximation of how many bytes were received.
+     *      E.g., it only counts reduce on the root rank, so this is an underapproximation.
+     * @return The number of bytes received
+     */
+    static uint64_t get_number_bytes_received() noexcept {
+        return bytes_received.load(std::memory_order::relaxed);
+    }
+
+    /**
+     * @brief Returns the number of bytes accessed remotely in windows
+     * @return The number of bytes remotely accessed
+     */
+    static uint64_t get_number_bytes_remote_accessed() noexcept {
+        return bytes_remote.load(std::memory_order::relaxed);
+    }
 
     /**
      * @brief Finalizes the local MPI implementation.

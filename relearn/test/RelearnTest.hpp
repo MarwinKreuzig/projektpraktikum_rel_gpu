@@ -235,7 +235,7 @@ protected:
         std::vector<unsigned int> connected_elements(number_elements);
         std::vector<SignalType> signal_types(number_elements);
 
-        for (auto neuron_id : NeuronID::range(number_elements)) { 
+        for (auto neuron_id : NeuronID::range(number_elements)) {
             const auto number_grown_elements = get_random_synaptic_element_count();
             const auto number_connected_elements = get_random_synaptic_element_connected_count(static_cast<unsigned int>(number_grown_elements));
             const auto signal_type = get_random_signal_type();

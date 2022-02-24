@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,17 +10,15 @@
  *
  */
 
-#pragma once
-
-#include "../Types.h"
-#include "../neurons/SignalType.h"
-#include "../neurons/helper/RankNeuronId.h"
-#include "../neurons/helper/SynapseCreationRequests.h"
-#include "../structure/OctreeNode.h"
-#include "../util/RelearnException.h"
-#include "../util/Vec3.h"
 #include "Algorithm.h"
 #include "BarnesHutCell.h"
+#include "Types.h"
+#include "neurons/SignalType.h"
+#include "neurons/helper/RankNeuronId.h"
+#include "neurons/helper/SynapseCreationRequests.h"
+#include "structure/OctreeNode.h"
+#include "util/RelearnException.h"
+#include "util/Vec3.h"
 
 #include <memory>
 #include <optional>
@@ -36,6 +36,19 @@ class SynapticElements;
  */
 class BarnesHut : public Algorithm {
 public:
+    /**
+     * This enum indicates for an OctreeNode what the acceptance status is 
+     * It can be:
+     * - Discard (no dendrites there)
+     * - Expand (would be too much approximation, need to expand)
+     * - Accept (can use the node for the algorithm)
+     */
+    enum class AcceptanceStatus: char {
+        Discard = 0,
+        Expand = 1,
+        Accept = 2,
+    };
+
     using AdditionalCellAttributes = BarnesHutCell;
 
     using position_type = BarnesHutCell::position_type;
@@ -210,7 +223,7 @@ private:
         SignalType dendrite_type_needed,
         const std::vector<OctreeNode<BarnesHutCell>*>& vector) const;
 
-    [[nodiscard]] std::tuple<bool, bool> acceptance_criterion_test(
+    [[nodiscard]] AcceptanceStatus acceptance_criterion_test(
         const position_type& axon_pos_xyz,
         const OctreeNode<BarnesHutCell>* node_with_dendrite,
         SignalType dendrite_type_needed) const;

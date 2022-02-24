@@ -8,8 +8,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_BUILD_TYPE Debug)
-#set(CMAKE_BUILD_TYPE Release)
+# Set a default build type if none was specified
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(
+    STATUS "Setting build type to 'RelWithDebInfo' as none was specified.")
+  set(CMAKE_BUILD_TYPE
+      RelWithDebInfo
+      CACHE STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type for cmake-gui, ccmake
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
+                                               "MinSizeRel" "RelWithDebInfo")
+endif()
 
 option(ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
 if(ENABLE_CLANG_TIDY)
@@ -39,13 +48,14 @@ file(GLOB_RECURSE SRC_NEU_HEL "source/neurons/helper/*")
 
 file(GLOB_RECURSE SRC_MAIN "source/main.cpp")
 file(GLOB_RECURSE SRC_CONF "source/Config.h")
+file(GLOB_RECURSE SRC_TYPES "source/Types.h")
 
 file(GLOB_RECURSE SRC_TST "test/*")
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES 
 ${SRC_ALG} ${SRC_IO} ${SRC_MPI} ${SRC_SIM} 
 ${SRC_STR} ${SRC_UTIL} ${SRC_NEU} ${SRC_NEU_MOD} 
-${SRC_NEU_HEL} ${SRC_MAIN} ${SRC_CONF} ${SRC_SIM_FILE} ${SRC_SIM_RANDOM})
+${SRC_NEU_HEL} ${SRC_MAIN} ${SRC_CONF} ${SRC_TYPES} ${SRC_SIM_FILE} ${SRC_SIM_RANDOM})
 
 source_group("tests\\" FILES ${SRC_TST})
 
@@ -53,6 +63,7 @@ source_group("tests\\" FILES ${SRC_TST})
 add_library(project_options INTERFACE)
 
 target_include_directories (project_options SYSTEM INTERFACE ${MPI_CXX_INCLUDE_PATH})
+target_include_directories(project_options SYSTEM INTERFACE "source/")
 
 target_compile_options (project_options INTERFACE ${MPI_CXX_COMPILE_FLAGS})
 
@@ -71,33 +82,43 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(spdlog)
 target_link_libraries(project_options INTERFACE spdlog)
 
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(project_options INTERFACE OpenMP::OpenMP_CXX)
+endif()
+
 get_target_property(spdlog_includes spdlog INTERFACE_INCLUDE_DIRECTORIES)
 set_target_properties(spdlog PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${spdlog_includes}")
 
-# relearn executable
-add_executable(relearn
-	${SRC_ALG}
-	${SRC_IO}
-	${SRC_MPI}
-	${SRC_SIM}
-	${SRC_STR}
-	${SRC_UTIL}
-	${SRC_NEU}
-	${SRC_NEU_MOD}
-	${SRC_NEU_HEL}
-	${SRC_MAIN}
-	${SRC_CONF}
-	${SRC_SIM_FILE}
-	${SRC_SIM_RANDOM}
+add_library(relearn_lib STATIC
+${SRC_ALG}
+${SRC_IO}
+${SRC_MPI}
+${SRC_SIM}
+${SRC_STR}
+${SRC_UTIL}
+${SRC_NEU}
+${SRC_NEU_MOD}
+${SRC_NEU_HEL}
+${SRC_CONF}
+${SRC_TYPES} 
+${SRC_SIM_FILE}
+${SRC_SIM_RANDOM}
 )
 
+target_include_directories(relearn_lib PUBLIC "source/")
+
+set_target_properties(relearn_lib PROPERTIES ENABLE_EXPORTS 1)
+
+target_link_libraries(relearn_lib PUBLIC project_options)
+
+# relearn executable
+add_executable(relearn
+	${SRC_MAIN}
+)
+
+target_link_libraries(relearn PRIVATE relearn_lib)
+
 set_target_properties(relearn PROPERTIES ENABLE_EXPORTS 1)
-
-target_link_libraries(relearn PRIVATE project_options)
-
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(relearn PUBLIC OpenMP::OpenMP_CXX)
-endif()
 
 FetchContent_Declare(
   CLI11
@@ -133,22 +154,11 @@ add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
 		EXCLUDE_FROM_ALL)
 
 add_executable(runTests
-	${SRC_ALG}
-	${SRC_IO}
-	${SRC_MPI}
-	${SRC_SIM}
-	${SRC_STR}
-	${SRC_UTIL}
-	${SRC_NEU}
-	${SRC_NEU_MOD}
-	${SRC_NEU_HEL}
-	${SRC_CONF}
 	${SRC_TST}
-	${SRC_SIM_FILE}
-	${SRC_SIM_RANDOM}
 )
 
 target_link_libraries(runTests PRIVATE project_options)
+target_link_libraries(runTests PRIVATE relearn_lib)
 target_link_libraries(runTests PRIVATE gtest_main)
 
 add_test(NAME SerialTests COMMAND runTests)

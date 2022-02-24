@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,11 +10,9 @@
  *
  */
 
-#include "../NeuronIdTranslator.h"
-#include "../../Config.h"
-#include "../../Types.h"
-#include "../../neurons/helper/RankNeuronId.h"
-#include "../../util/Vec3.h"
+#include "Config.h"
+#include "Types.h"
+#include "sim/NeuronIdTranslator.h"
 
 #include <filesystem>
 #include <map>
@@ -58,21 +58,21 @@ public:
      * @param global_id The global neuron id 
      * @return True iff the global neuron id belongs to the current MPI rank
      */
-    [[nodiscard]] virtual bool is_neuron_local(NeuronID global_id) const;
+    [[nodiscard]] bool is_neuron_local(NeuronID global_id) const override;
 
     /**
      * @brief Translated the global neuron id to the local neuron id
      * @param global_id The global neuron id
      * @return The local neuron id
      */
-    [[nodiscard]] virtual NeuronID get_local_id(NeuronID global_id) const;
+    [[nodiscard]] NeuronID get_local_id(NeuronID global_id) const override;
 
     /**
      * @brief Translated the local neuron id to the global neuron id
      * @param global_id The local neuron id
      * @return The global neuron id
      */
-    [[nodiscard]] virtual NeuronID get_global_id(NeuronID local_id) const;
+    [[nodiscard]] NeuronID get_global_id(NeuronID local_id) const override;
 
     /**
      * @brief Translated a bunch of global neuron ids to RankNeuronIds

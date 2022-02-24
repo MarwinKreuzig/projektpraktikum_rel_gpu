@@ -73,9 +73,9 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons_FMM(OctreeNode<Additional
         octree_nodes.pop();
 
         if (current_node->is_parent()) {
-            const auto childs = current_node->get_children();
+            const auto& childs = current_node->get_children();
             for (auto i = 0; i < 8; i++) {
-                const auto child = childs[i];
+                const auto& child = childs[i];
                 if (child != nullptr) {
                     octree_nodes.push(child);
                 }
@@ -87,7 +87,7 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons_FMM(OctreeNode<Additional
 
             EXPECT_TRUE(opt_position.has_value());
 
-            const auto position = opt_position.value();
+            const auto& position = opt_position.value();
 
             if (neuron_id.get_local_id() < Constants::uninitialized) {
                 return_value.emplace_back(position, neuron_id);

@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,23 +10,21 @@
  *
  */
 
-#pragma once
-
-#include "../Config.h"
-#include "../algorithm/Algorithm.h"
-#include "../mpi/CommunicationMap.h"
-#include "../util/RelearnException.h"
-#include "../util/StatisticalMeasures.h"
-#include "../util/Vec3.h"
+#include "Config.h"
 #include "ElementType.h"
 #include "NeuronsExtraInfo.h"
 #include "SignalType.h"
 #include "UpdateStatus.h"
+#include "algorithm/Algorithm.h"
 #include "helper/RankNeuronId.h"
 #include "helper/SynapseCreationRequests.h"
 #include "helper/SynapseDeletionRequests.h"
 #include "models/NeuronModels.h"
 #include "models/SynapticElements.h"
+#include "mpi/CommunicationMap.h"
+#include "util/RelearnException.h"
+#include "util/StatisticalMeasures.h"
+#include "util/Vec3.h"
 
 #include <array>
 #include <memory>
@@ -303,7 +303,7 @@ public:
      *      Performs communication with MPI
      * @param step The current simulation step
      */
-    void print_neurons_overview_to_log_file_on_rank_0(size_t step);
+    void print_neurons_overview_to_log_file_on_rank_0(size_t step) const;
 
     /**
      * @brief Prints the calcium statistics to LogFiles::EventType::Essentials

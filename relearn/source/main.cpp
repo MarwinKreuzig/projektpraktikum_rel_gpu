@@ -15,17 +15,17 @@
 #include "algorithm/Naive.h"
 #include "io/InteractiveNeuronIO.h"
 #include "io/LogFiles.h"
-#include "mpi/MPIWrapper.h"
 #include "mpi/CommunicationMap.h"
+#include "mpi/MPIWrapper.h"
 #include "neurons/ElementType.h"
 #include "neurons/helper/NeuronMonitor.h"
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
 #include "sim/NeuronToSubdomainAssignment.h"
+#include "sim/Simulation.h"
 #include "sim/file/SubdomainFromFile.h"
 #include "sim/random/SubdomainFromNeuronDensity.h"
 #include "sim/random/SubdomainFromNeuronPerRank.h"
-#include "sim/Simulation.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
 #include "util/Random.h"
@@ -132,14 +132,14 @@ int main(int argc, char** argv) {
     CLI::App app{ "" };
 
     AlgorithmEnum algorithm = AlgorithmEnum::BarnesHut;
-    std::map<std::string, AlgorithmEnum> cli_parse_map{
+    std::map<std::string, AlgorithmEnum> cli_parse_algorithm{
         { "naive", AlgorithmEnum::Naive },
         { "barnes-hut", AlgorithmEnum::BarnesHut },
         { "fast-multipole-methods", AlgorithmEnum::FastMultipoleMethods }
     };
 
     NeuronModelEnum neuron_model = NeuronModelEnum::Poisson;
-    std::map<std::string, NeuronModelEnum> cli_parse_map_neuron_model{
+    std::map<std::string, NeuronModelEnum> cli_parse_neuron_model{
         { "poisson", NeuronModelEnum::Poisson },
         { "izhikevich", NeuronModelEnum::Izhikevich },
         { "aeif", NeuronModelEnum::AEIF },
@@ -147,15 +147,15 @@ int main(int argc, char** argv) {
     };
 
     auto* opt_neuron_model = app.add_option("--neuron-model", neuron_model, "The neuron model");
-    opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_map_neuron_model, CLI::ignore_case));
+    opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_neuron_model, CLI::ignore_case));
 
     auto* opt_algorithm = app.add_option("-a,--algorithm", algorithm, "The algorithm that is used for finding the targets");
-    opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_map, CLI::ignore_case));
+    opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_algorithm, CLI::ignore_case));
 
     double accept_criterion{ BarnesHut::default_theta };
     auto* opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Required Barnes-Hut.");
 
-    double scaling_const{ Algorithm::default_sigma };
+    double scaling_const{ Constants::default_sigma };
     app.add_option("--sigma", scaling_const, "Scaling parameter for the probabilty kernel. Default: 750");
 
     size_t number_neurons{};
@@ -180,13 +180,13 @@ int main(int argc, char** argv) {
     auto* opt_file_creation_interrups = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
 
     double base_background_activity{ NeuronModel::default_base_background_activity };
-    auto* opt_base_background_activity = app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+    app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
     double background_activity_mean{ NeuronModel::default_background_activity_mean };
-    auto* opt_background_activity_mean = app.add_option("--background-activity-mean", background_activity_mean, "The mean background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+    app.add_option("--background-activity-mean", background_activity_mean, "The mean background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
     double background_activity_stddev{ NeuronModel::default_background_activity_stddev };
-    auto* opt_background_activity_stddev = app.add_option("--background-activity-stddev", background_activity_stddev, "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+    app.add_option("--background-activity-stddev", background_activity_stddev, "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
     double synapse_conductance{ NeuronModel::default_k };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transfered to its neighbors when a neuron spikes. Default is 0.03");
@@ -463,7 +463,7 @@ int main(int argc, char** argv) {
             path_to_network = file_network;
         }
 
-        auto sff = std::make_unique<SubdomainFromFile>(file_positions, path_to_network, partition);
+        auto sff = std::make_unique<SubdomainFromFile>(file_positions, std::move(path_to_network), partition);
         sim.set_subdomain_assignment(std::move(sff));
     }
 

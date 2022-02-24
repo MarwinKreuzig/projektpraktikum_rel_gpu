@@ -10,12 +10,12 @@
 
 #include "NeuronModels.h"
 
-#include "../../Config.h"
-#include "../../mpi/MPIWrapper.h"
-#include "../../util/Random.h"
-#include "../../util/Timers.h"
-#include "../NetworkGraph.h"
-#include "../Neurons.h"
+#include "Config.h"
+#include "mpi/MPIWrapper.h"
+#include "neurons/NetworkGraph.h"
+#include "neurons/Neurons.h"
+#include "util/Random.h"
+#include "util/Timers.h"
 
 NeuronModel::NeuronModel(const double k, const double tau_C, const double beta, const unsigned int h, const double base_background_activity, const double background_activity_mean, const double background_activity_stddev)
     : k(k)
@@ -138,7 +138,6 @@ void NeuronModel::update_electrical_activity_calculate_background(const std::vec
 
 CommunicationMap<NeuronID> NeuronModel::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
     const auto mpi_ranks = MPIWrapper::get_num_ranks();
-    const auto my_rank = MPIWrapper::get_my_rank();
 
     CommunicationMap<NeuronID> spiking_ids(mpi_ranks);
 

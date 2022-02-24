@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,16 +10,14 @@
  *
  */
 
-#pragma once
-
-#include "../neurons/SignalType.h"
-#include "../neurons/helper/RankNeuronId.h"
-#include "../neurons/helper/SynapseCreationRequests.h"
-#include "../structure/OctreeNode.h"
-#include "../util/RelearnException.h"
-#include "../util/Vec3.h"
 #include "Algorithm.h"
 #include "NaiveCell.h"
+#include "neurons/SignalType.h"
+#include "neurons/helper/RankNeuronId.h"
+#include "neurons/helper/SynapseCreationRequests.h"
+#include "structure/OctreeNode.h"
+#include "util/RelearnException.h"
+#include "util/Vec3.h"
 
 #include <memory>
 #include <optional>
@@ -129,7 +129,7 @@ private:
         const OctreeNode<NaiveCell>* node_with_dendrite,
         SignalType dendrite_type_needed);
 
-    [[nodiscard]] std::vector<OctreeNode<NaiveCell>*> get_nodes_for_interval(
+    [[nodiscard]] static std::vector<OctreeNode<NaiveCell>*> get_nodes_for_interval(
         const position_type& axon_pos_xyz,
         OctreeNode<NaiveCell>* root,
         SignalType dendrite_type_needed);

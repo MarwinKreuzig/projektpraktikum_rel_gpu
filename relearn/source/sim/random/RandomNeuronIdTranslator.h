@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,10 +10,10 @@
  *
  */
 
-#include "../NeuronIdTranslator.h"
-#include "../../Config.h"
-#include "../../neurons/helper/RankNeuronId.h"
-#include "../../util/TaggedID.h"
+#include "Config.h"
+#include "neurons/helper/RankNeuronId.h"
+#include "sim/NeuronIdTranslator.h"
+#include "util/TaggedID.h"
 
 #include <functional>
 #include <map>
@@ -43,7 +45,7 @@ public:
      * @param partition The Partition object 
      * @param gather_function A function that maps the local number of neurons to a vector containing the local number of neurons per MPI rank
      */
-    RandomNeuronIdTranslator(std::shared_ptr<Partition> partition, std::function<std::vector<size_t>(size_t)> gather_function);
+    RandomNeuronIdTranslator(std::shared_ptr<Partition> partition, const std::function<std::vector<size_t>(size_t)>& gather_function);
 
     /**
      * @brief Checks if a global_id belongs to the current MPI rank

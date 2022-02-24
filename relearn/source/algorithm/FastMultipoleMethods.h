@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,14 +10,12 @@
  *
  */
 
-#pragma once
-
-#include "../structure/OctreeNode.h"
-#include "../util/RelearnException.h"
-#include "../util/Random.h"
-#include "../util/Utility.h"
 #include "Algorithm.h"
 #include "FastMultipoleMethodsCell.h"
+#include "structure/OctreeNode.h"
+#include "util/Random.h"
+#include "util/RelearnException.h"
+#include "util/Utility.h"
 
 #include <array>
 #include <memory>

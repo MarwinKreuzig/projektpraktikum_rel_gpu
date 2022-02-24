@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,17 +10,16 @@
  *
  */
 
-#pragma once
-
-#include "../../util/Random.h"
-#include "../../util/RelearnException.h"
-#include "../ElementType.h"
-#include "../UpdateStatus.h"
-#include "../SignalType.h"
 #include "ModelParameter.h"
-#include "../../util/TaggedID.h"
+#include "neurons/ElementType.h"
+#include "neurons/SignalType.h"
+#include "neurons/UpdateStatus.h"
+#include "util/Random.h"
+#include "util/RelearnException.h"
+#include "util/TaggedID.h"
 
 #include <cmath>
+#include <map>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -433,6 +434,31 @@ public:
         }
     }
 
+    /**
+     * @brief Calculates and returns the historgram of the synaptic elements, i.e.,
+     *      a mapping (x, y) -> z which indicates that there are z neurons
+     *      that have x connected elements and y total elements (rounded down).
+     * @exception Throws a RelearnException if the internal data structures are corrupted
+     * @return The connection histogram
+     */
+    std::map<std::pair<unsigned int, unsigned int>, uint64_t> get_historgram() const {
+        RelearnException::check(size == grown_elements.size(), "SynapticElements::get_historgram: size did not match the number of grown elements");
+        RelearnException::check(size == deltas_since_last_update.size(), "SynapticElements::get_historgram: size did not match the number of deltas");
+        RelearnException::check(size == connected_elements.size(), "SynapticElements::get_historgram: size did not match the number of connected elements");
+        RelearnException::check(size == signal_types.size(), "SynapticElements::get_historgram: size did not match the number of signal types");
+
+        std::map<std::pair<unsigned int, unsigned int>, uint64_t> result{};
+
+        for (size_t i = 0; i < size; i++) {
+            const auto number_connected_elements = connected_elements[i];
+            const auto number_grown_elements = static_cast<unsigned int>(grown_elements[i]);
+
+            result[{ number_connected_elements, number_grown_elements }] += 1;
+        }
+
+        return result;
+    }
+
 private:
     /**
      * @brief Updates the number of synaptic elements for the specified neuron.
@@ -448,11 +474,11 @@ private:
     [[nodiscard]] unsigned int update_number_elements(const NeuronID& neuron_id);
 
 public:
-    static constexpr double default_C_target{ 0.7 }; // gold 0.5;
-    static constexpr double default_eta_Axons{ 0.4 }; // gold 0.0;
-    static constexpr double default_eta_Dendrites_exc{ 0.1 }; // gold 0.0;
-    static constexpr double default_eta_Dendrites_inh{ 0.0 }; // gold 0.0;
-    static constexpr double default_nu{ 1e-5 }; // gold 1e-5;
+    static constexpr double default_C_target{ 0.7 }; // In Sebastians work: 0.5
+    static constexpr double default_eta_Axons{ 0.4 }; // In Sebastians work: 0.0
+    static constexpr double default_eta_Dendrites_exc{ 0.1 }; // In Sebastians work: 0.0
+    static constexpr double default_eta_Dendrites_inh{ 0.0 }; // In Sebastians work: 0.0
+    static constexpr double default_nu{ 1e-5 }; // In Sebastians work: 1e-5
     static constexpr double default_vacant_retract_ratio{ 0.0 };
     static constexpr double default_vacant_elements_initially_lower_bound{ 0.0 };
     static constexpr double default_vacant_elements_initially_upper_bound{ 0.0 };
@@ -476,8 +502,8 @@ private:
     std::vector<double> deltas_since_last_update{}; // Keeps track of changes in number of elements until those changes are applied in next connectivity update
     std::vector<unsigned int> connected_elements{};
     std::vector<SignalType> signal_types{}; // Signal type of synaptic elements, i.e., EXCITATORY or INHIBITORY.
-                                            // Note: Given that current exc. and inh. dendrites are in different objects, this would only be needed for axons.
-                                            //       A more memory-efficient solution would be to use a different class for axons which has the signal_types array.
+        // Note: Given that current exc. and inh. dendrites are in different objects, this would only be needed for axons.
+        //       A more memory-efficient solution would be to use a different class for axons which has the signal_types array.
 
     // Parameters
     double min_C_level_to_grow{ 0.0 }; // Minimum level of calcium needed for elements to grow

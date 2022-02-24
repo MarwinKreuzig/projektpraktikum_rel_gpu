@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,13 +10,11 @@
  *
  */
 
-#pragma once
-
-#include "../../mpi/CommunicationMap.h"
-#include "../../util/RelearnException.h"
-#include "../../util/TaggedID.h"
-#include "../UpdateStatus.h"
 #include "ModelParameter.h"
+#include "mpi/CommunicationMap.h"
+#include "neurons/UpdateStatus.h"
+#include "util/RelearnException.h"
+#include "util/TaggedID.h"
 
 #include <algorithm>
 #include <memory>
@@ -281,8 +281,8 @@ public:
     }
 
     static constexpr double default_k{ 0.03 };
-    static constexpr double default_tau_C{ 10000 }; // 5000;   //very old 60.0;
-    static constexpr double default_beta{ 0.001 }; // very old 0.05;
+    static constexpr double default_tau_C{ 10000 }; // In Sebastians work: 5000
+    static constexpr double default_beta{ 0.001 }; // In Sebastians work: 0.001
     static constexpr unsigned int default_h{ 10 };
 
     static constexpr double default_base_background_activity{ 0.0 };
@@ -336,7 +336,7 @@ protected:
      * @param neuron_id The local neuron id
      * @param new_value The new membrane potential
      */
-    void set_x(const NeuronID& neuron_id, const double new_value) noexcept {
+    void set_x(const NeuronID& neuron_id, const double new_value) {
         const auto local_neuron_id = neuron_id.get_local_id();
         x[local_neuron_id] = new_value;
     }
@@ -346,7 +346,7 @@ protected:
      * @param neuron_id The local neuron id
      * @param new_value True iff the neuron fired in the current simulation step
      */
-    void set_fired(const NeuronID& neuron_id, const char new_value) noexcept {
+    void set_fired(const NeuronID& neuron_id, const char new_value) {
         const auto local_neuron_id = neuron_id.get_local_id();
         fired[local_neuron_id] = new_value;
     }
@@ -484,7 +484,7 @@ public:
 
     static constexpr double default_x_0{ 0.05 };
     static constexpr double default_tau_x{ 5.0 };
-    static constexpr unsigned int default_refrac_time{ 4 };
+    static constexpr unsigned int default_refrac_time{ 4 }; // In Sebastians work: 4
 
     static constexpr double min_x_0{ 0.0 };
     static constexpr double min_tau_x{ 0.0 };

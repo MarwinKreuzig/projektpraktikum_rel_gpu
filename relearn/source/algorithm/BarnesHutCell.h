@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,11 +10,9 @@
  *
  */
 
-#pragma once
-
-#include "../Types.h"
-#include "../neurons/SignalType.h"
+#include "Types.h"
 #include "VirtualPlasticityElement.h"
+#include "neurons/SignalType.h"
 
 #include <optional>
 

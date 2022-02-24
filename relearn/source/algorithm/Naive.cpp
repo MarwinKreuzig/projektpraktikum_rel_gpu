@@ -10,19 +10,17 @@
 
 #include "Naive.h"
 
-#include "../io/LogFiles.h"
-#include "../neurons/NeuronsExtraInfo.h"
-#include "../neurons/models/SynapticElements.h"
-#include "../structure/NodeCache.h"
-#include "../structure/Octree.h"
-#include "../structure/OctreeNode.h"
-#include "../util/Random.h"
-#include "../util/Timers.h"
+#include "io/LogFiles.h"
+#include "neurons/NeuronsExtraInfo.h"
+#include "neurons/models/SynapticElements.h"
+#include "structure/NodeCache.h"
+#include "structure/Octree.h"
+#include "structure/OctreeNode.h"
+#include "util/Random.h"
+#include "util/Timers.h"
 
 #include <algorithm>
 #include <array>
-#include <ranges>
-#include <stack>
 
 [[nodiscard]] std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz, const SignalType dendrite_type_needed) {
     OctreeNode<NaiveCell>* node_selected = nullptr;
@@ -92,7 +90,6 @@
 CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 
-    const auto my_rank = MPIWrapper::get_my_rank();
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks);
@@ -316,7 +313,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
             children = NodeCache::download_children<NaiveCell>(node);
         }
 
-        for (auto it : std::ranges::reverse_view(children)) {
+        for (auto* it : children) {
             if (it != nullptr) {
                 stack.push(it);
             }

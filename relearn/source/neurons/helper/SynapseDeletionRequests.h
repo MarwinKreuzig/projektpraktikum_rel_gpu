@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,12 +10,10 @@
  *
  */
 
-#pragma once
-
-#include "../../Config.h"
-#include "../../util/RelearnException.h"
-#include "../ElementType.h"
-#include "../SignalType.h"
+#include "Config.h"
+#include "neurons/ElementType.h"
+#include "neurons/SignalType.h"
+#include "util/RelearnException.h"
 
 #include <utility>
 
@@ -93,39 +93,51 @@ public:
     }
 
     template <std::size_t Index>
-    auto& get() & {
-        if constexpr (Index == 0)
+    [[nodiscard]] auto& get() & {
+        if constexpr (Index == 0) {
             return initiator_neuron_id;
-        if constexpr (Index == 1)
+        }
+        if constexpr (Index == 1) {
             return affected_neuron_id;
-        if constexpr (Index == 2)
+        }
+        if constexpr (Index == 2) {
             return initiator_element_type;
-        if constexpr (Index == 3)
+        }
+        if constexpr (Index == 3) {
             return signal_type;
+        }
     }
 
     template <std::size_t Index>
-    auto const& get() const& {
-        if constexpr (Index == 0)
+    [[nodiscard]] auto const& get() const& {
+        if constexpr (Index == 0) {
             return initiator_neuron_id;
-        if constexpr (Index == 1)
+        }
+        if constexpr (Index == 1) {
             return affected_neuron_id;
-        if constexpr (Index == 2)
+        }
+        if constexpr (Index == 2) {
             return initiator_element_type;
-        if constexpr (Index == 3)
+        }
+        if constexpr (Index == 3) {
             return signal_type;
+        }
     }
 
     template <std::size_t Index>
-    auto&& get() && {
-        if constexpr (Index == 0)
-            return std::move(initiator_neuron_id);
-        if constexpr (Index == 1)
-            return std::move(affected_neuron_id);
-        if constexpr (Index == 2)
-            return std::move(initiator_element_type);
-        if constexpr (Index == 3)
-            return std::move(signal_type);
+    [[nodiscard]] auto&& get() && {
+        if constexpr (Index == 0) {
+            return initiator_neuron_id;
+        }
+        if constexpr (Index == 1) {
+            return affected_neuron_id;
+        }
+        if constexpr (Index == 2) {
+            return initiator_element_type;
+        }
+        if constexpr (Index == 3) {
+            return signal_type;
+        }
     }
 };
 

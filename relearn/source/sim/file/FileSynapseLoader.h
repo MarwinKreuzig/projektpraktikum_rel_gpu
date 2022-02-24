@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,9 +10,7 @@
  *
  */
 
-#pragma once
-
-#include "../SynapseLoader.h"
+#include "sim/SynapseLoader.h"
 
 #include <filesystem>
 #include <memory>
@@ -35,8 +35,8 @@ public:
      * @param path_to_synapses The path to the synapses, can be empty
      */
     FileSynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator,
-        const std::optional<std::filesystem::path>& path_to_synapses)
+        std::optional<std::filesystem::path> path_to_synapses)
         : SynapseLoader(std::move(partition), std::move(neuron_id_translator))
-        , optional_path_to_file(path_to_synapses) { }
+        , optional_path_to_file(std::move(path_to_synapses)) { }
 };
 

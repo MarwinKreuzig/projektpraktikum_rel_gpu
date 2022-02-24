@@ -56,9 +56,9 @@ std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons(OctreeNode<AdditionalCe
         octree_nodes.pop();
 
         if (current_node->is_parent()) {
-            const auto childs = current_node->get_children();
+            const auto& childs = current_node->get_children();
             for (auto i = 0; i < 8; i++) {
-                const auto child = childs[i];
+                const auto& child = childs[i];
                 if (child != nullptr) {
                     octree_nodes.push(child);
                 }
@@ -70,7 +70,7 @@ std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons(OctreeNode<AdditionalCe
 
             EXPECT_TRUE(opt_position.has_value());
 
-            const auto position = opt_position.value();
+            const auto& position = opt_position.value();
 
             if (neuron_id.is_initialized() && !neuron_id.is_virtual()) {
                 return_value.emplace_back(position, neuron_id);
@@ -100,15 +100,16 @@ std::vector<std::tuple<Vec3d, size_t>> extract_virtual_neurons(OctreeNode<Additi
     octree_nodes.emplace(root, 0);
 
     while (!octree_nodes.empty()) {
+        // Don't change this to a reference
         const auto [current_node, level] = octree_nodes.top();
         octree_nodes.pop();
 
         if (current_node->get_cell().get_neuron_id().is_virtual()) {
-            return_value.emplace_back(current_node->get_cell().get_dendrites_position().value(), level);
+            return_value.push_back(std::make_pair(current_node->get_cell().get_dendrites_position().value(), level));
         }
 
         if (current_node->is_parent()) {
-            const auto childs = current_node->get_children();
+            const auto& childs = current_node->get_children();
             for (auto i = 0; i < 8; i++) {
                 const auto child = childs[i];
                 if (child != nullptr) {
@@ -132,7 +133,7 @@ std::vector<OctreeNode<AdditionalCellAttributes>*> extract_branch_nodes(OctreeNo
         octree_nodes.pop();
 
         if (current_node->is_parent()) {
-            const auto childs = current_node->get_children();
+            const auto& childs = current_node->get_children();
             for (auto i = 0; i < 8; i++) {
                 const auto child = childs[i];
                 if (child != nullptr) {
@@ -689,7 +690,7 @@ TEST_F(OctreeTest, testOctreeStructure) {
         ASSERT_EQ(current_node->get_rank(), my_rank);
 
         if (current_node->is_parent()) {
-            const auto childs = current_node->get_children();
+            const auto& childs = current_node->get_children();
             auto one_child_exists = false;
 
             for (auto i = 0; i < 8; i++) {

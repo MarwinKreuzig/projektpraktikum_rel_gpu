@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -7,8 +9,6 @@
  * See the LICENSE file in the base directory for details.
  *
  */
-
-#pragma once
 
 #include <ostream>
 
@@ -23,7 +23,9 @@ enum class ElementType { AXON,
 inline std::ostream& operator<<(std::ostream& out, const ElementType& element_type) {
     if (element_type == ElementType::AXON) {
         return out << "AXON";
-    } else if (element_type == ElementType::DENDRITE) {
+    } 
+
+    if (element_type == ElementType::DENDRITE) {
         return out << "DENDRITE";
     }
 

@@ -10,19 +10,17 @@
 
 #include "BarnesHut.h"
 
-#include "../io/LogFiles.h"
-#include "../neurons/NeuronsExtraInfo.h"
-#include "../neurons/models/SynapticElements.h"
-#include "../structure/NodeCache.h"
-#include "../structure/Octree.h"
-#include "../structure/OctreeNode.h"
-#include "../util/Random.h"
-#include "../util/Timers.h"
+#include "io/LogFiles.h"
+#include "neurons/NeuronsExtraInfo.h"
+#include "neurons/models/SynapticElements.h"
+#include "structure/NodeCache.h"
+#include "structure/Octree.h"
+#include "structure/OctreeNode.h"
+#include "util/Random.h"
+#include "util/Timers.h"
 
 #include <algorithm>
 #include <array>
-#include <ranges>
-#include <stack>
 
 [[nodiscard]] std::optional<RankNeuronId> BarnesHut::find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz, const SignalType dendrite_type_needed) {
     OctreeNode<BarnesHutCell>* node_selected = nullptr;
@@ -259,7 +257,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     return { sum, std::move(probabilities) };
 }
 
-[[nodiscard]] std::tuple<bool, bool> BarnesHut::acceptance_criterion_test(const position_type& axon_pos_xyz, const OctreeNode<BarnesHutCell>* const node_with_dendrite,
+[[nodiscard]] BarnesHut::AcceptanceStatus BarnesHut::acceptance_criterion_test(const position_type& axon_pos_xyz, const OctreeNode<BarnesHutCell>* const node_with_dendrite,
     const SignalType dendrite_type_needed) const {
 
     RelearnException::check(node_with_dendrite != nullptr, "BarnesHut::update_leaf_nodes:  node_with_dendrite was nullptr");
@@ -269,7 +267,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     const auto is_parent = node_with_dendrite->is_parent();
 
     if (!has_vacant_dendrites) {
-        return std::make_tuple(false, false);
+        return AcceptanceStatus::Discard;
     }
 
     /**
@@ -277,7 +275,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
      * Thus the node is precise. Accept it no matter what.
      */
     if (!is_parent) {
-        return std::make_tuple(true, true);
+        return AcceptanceStatus::Accept;
     }
 
     // Check distance between neuron with axon and neuron with dendrite
@@ -292,15 +290,15 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     const auto distance = distance_vector.calculate_2_norm();
 
     if (distance == 0.0) {
-        return std::make_tuple(false, false);
+        return AcceptanceStatus::Discard;
     }
 
     const auto length = cell.get_maximal_dimension_difference();
 
     // Original Barnes-Hut acceptance criterion
     const auto ret_val = (length / distance) < acceptance_criterion;
-
-    return std::make_tuple(ret_val, has_vacant_dendrites);
+    
+    return ret_val ? AcceptanceStatus::Accept : AcceptanceStatus::Expand;
 }
 
 [[nodiscard]] std::vector<OctreeNode<BarnesHutCell>*> BarnesHut::get_nodes_for_interval(const position_type& axon_pos_xyz, OctreeNode<BarnesHutCell>* root,
@@ -321,9 +319,9 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
          * Without pushing root onto the stack, it would not make it into the "vector" of nodes.
          */
 
-        const auto [accept, _] = acceptance_criterion_test(axon_pos_xyz, root, dendrite_type_needed);
+        const auto status = acceptance_criterion_test(axon_pos_xyz, root, dendrite_type_needed);
 
-        if (accept) {
+        if (status == AcceptanceStatus::Accept) {
             return { root };
         }
 
@@ -331,13 +329,13 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     }
 
     std::vector<OctreeNode<BarnesHutCell>*> vector{};
-    vector.reserve(30);
+    vector.reserve(Constants::number_prealloc_space);
 
     const auto add_children_to_vector = [&vector](OctreeNode<BarnesHutCell>* node) {
         const auto is_local = node->is_local();
         const auto& children = is_local ? node->get_children() : NodeCache::download_children<BarnesHutCell>(node);
 
-        for (auto it : std::ranges::reverse_view(children)) {
+        for (auto* it : children) {
             if (it != nullptr) {
                 vector.emplace_back(it);
             }
@@ -348,7 +346,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
     add_children_to_vector(root);
 
     std::vector<OctreeNode<BarnesHutCell>*> nodes_to_consider{};
-    nodes_to_consider.reserve(30);
+    nodes_to_consider.reserve(Constants::number_prealloc_space);
 
     while (!vector.empty()) {
         // Get top-of-stack node and remove it
@@ -359,18 +357,19 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
          * Should node be used for probability interval?
          * Only take those that have dendrites available
          */
-        const auto [accept, has_vacant_dendrites] = acceptance_criterion_test(axon_pos_xyz, node, dendrite_type_needed);
+        const auto status = acceptance_criterion_test(axon_pos_xyz, node, dendrite_type_needed);
 
-        if (accept) {
+        if (status == AcceptanceStatus::Discard) {
+            continue;
+        }
+
+        if (status == AcceptanceStatus::Accept) {
             // Insert node into vector
             nodes_to_consider.emplace_back(node);
             continue;
         }
 
-        if (!has_vacant_dendrites) {
-            continue;
-        }
-
+        // Need to expand
         add_children_to_vector(node);
     } // while
 

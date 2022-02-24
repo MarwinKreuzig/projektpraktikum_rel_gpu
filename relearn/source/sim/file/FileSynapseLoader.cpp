@@ -10,10 +10,10 @@
 
 #include "FileSynapseLoader.h"
 
-#include "../NeuronIdTranslator.h"
-#include "../../structure/Partition.h"
-#include "../../util/RelearnException.h"
-#include "../../util/Timers.h"
+#include "sim/NeuronIdTranslator.h"
+#include "structure/Partition.h"
+#include "util/RelearnException.h"
+#include "util/Timers.h"
 
 #include <fstream>
 #include <set>

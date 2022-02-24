@@ -10,23 +10,23 @@
 
 #include "Simulation.h"
 
-#include "../algorithm/Algorithm.h"
-#include "../algorithm/BarnesHut.h"
-#include "../algorithm/FastMultipoleMethods.h"
-#include "../Config.h"
-#include "../io/LogFiles.h"
-#include "../mpi/MPIWrapper.h"
-#include "../neurons/NetworkGraph.h"
-#include "../neurons/Neurons.h"
-#include "../neurons/helper/NeuronMonitor.h"
-#include "../neurons/models/NeuronModels.h"
-#include "../sim/SynapseLoader.h"
-#include "../structure/Octree.h"
-#include "../structure/Partition.h"
-#include "../util/RelearnException.h"
-#include "../util/Timers.h"
+#include "Config.h"
 #include "NeuronIdTranslator.h"
 #include "NeuronToSubdomainAssignment.h"
+#include "SynapseLoader.h"
+#include "algorithm/Algorithm.h"
+#include "algorithm/BarnesHut.h"
+#include "algorithm/FastMultipoleMethods.h"
+#include "io/LogFiles.h"
+#include "mpi/MPIWrapper.h"
+#include "neurons/NetworkGraph.h"
+#include "neurons/Neurons.h"
+#include "neurons/helper/NeuronMonitor.h"
+#include "neurons/models/NeuronModels.h"
+#include "structure/Octree.h"
+#include "structure/Partition.h"
+#include "util/RelearnException.h"
+#include "util/Timers.h"
 
 #include <fstream>
 #include <iomanip>
@@ -253,7 +253,7 @@ void Simulation::simulate(const size_t number_steps) {
             if (disable_step == step) {
                 LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Disabling {} neurons in step {}", disable_ids.size(), disable_step);
                 const auto num_deleted_synapses = neurons->disable_neurons(disable_ids);
-                total_synapse_deletions += num_deleted_synapses;
+                total_synapse_deletions += static_cast<int64_t>(num_deleted_synapses);
             }
         }
 

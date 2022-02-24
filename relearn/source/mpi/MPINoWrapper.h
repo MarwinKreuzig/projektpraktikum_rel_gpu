@@ -1,18 +1,17 @@
 #pragma once
 
-#include "../Config.h"
+#include "Config.h"
 
 #if !RELEARN_MPI_FOUND
 
-#include "../io/LogFiles.h"
-#include "../util/MemoryHolder.h"
-#include "../util/RelearnException.h"
 #include "CommunicationMap.h"
+#include "io/LogFiles.h"
+#include "util/MemoryHolder.h"
+#include "util/RelearnException.h"
 
 #include <array>
 #include <map>
 #include <memory>
-#include <ranges>
 #include <span>
 #include <string>
 #include <vector>
@@ -133,13 +132,8 @@ public:
 
     [[nodiscard]] static int get_num_ranks();
 
-    [[nodiscard]] static auto get_ranks() {
-        return std::views::iota(0, get_num_ranks());
-    }
-
-    [[nodiscard]] static auto get_ranks_without_my_rank() {
-        return std::views::iota(0, get_num_ranks())
-            | std::views::filter([my_rank = get_my_rank()](const auto& rank) { return rank != my_rank; });
+    [[nodiscard]] static std::vector<int> get_ranks() {
+        return { 0 };
     }
 
     [[nodiscard]] static int get_my_rank();
@@ -164,6 +158,18 @@ public:
     static void lock_window(int rank, MPI_Locktype lock_type);
 
     static void unlock_window(int rank);
+
+    static uint64_t get_number_bytes_sent() noexcept {
+        return 0;
+    }
+
+    static uint64_t get_number_bytes_received() noexcept {
+        return 0;
+    }
+
+    static uint64_t get_number_bytes_remote_accessed() noexcept {
+        return 0;
+    }
 
     static void finalize();
 };

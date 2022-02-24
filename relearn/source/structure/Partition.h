@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,14 +10,10 @@
  *
  */
 
-#pragma once
-
-#include "../Config.h"
-#include "../Types.h"
-#include "../structure/SpaceFillingCurve.h"
-#include "../util/RelearnException.h"
-#include "../util/Vec3.h"
-#include "../util/TaggedID.h"
+#include "Config.h"
+#include "SpaceFillingCurve.h"
+#include "Types.h"
+#include "util/RelearnException.h"
 
 #include <functional>
 #include <tuple>

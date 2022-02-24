@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,9 +10,7 @@
  *
  */
 
-#pragma once
-
-#include "../util/RelearnException.h"
+#include "RelearnException.h"
 
 #include <array>
 #include <chrono>
@@ -145,7 +145,9 @@ public:
 #ifdef __linux__
         time_t rawtime = 0;
         time(&rawtime);
+        // NOLINTNEXTLINE
         struct tm* timeinfo = localtime(&rawtime);
+        // NOLINTNEXTLINE
         char* string = asctime(timeinfo);
 
         // Remove linebreak in string
