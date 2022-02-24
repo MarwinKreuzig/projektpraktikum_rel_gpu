@@ -159,6 +159,18 @@ public:
 
     static void unlock_window(int rank);
 
+    static uint64_t get_number_bytes_sent() noexcept {
+        return 0;
+    }
+
+    static uint64_t get_number_bytes_received() noexcept {
+        return 0;
+    }
+
+    static uint64_t get_number_bytes_remote_accessed() noexcept {
+        return 0;
+    }
+
     static void finalize();
 };
 
