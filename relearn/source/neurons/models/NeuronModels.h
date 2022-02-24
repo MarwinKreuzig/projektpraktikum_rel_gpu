@@ -281,8 +281,8 @@ public:
     }
 
     static constexpr double default_k{ 0.03 };
-    static constexpr double default_tau_C{ 10000 }; // 5000;   //very old 60.0;
-    static constexpr double default_beta{ 0.001 }; // very old 0.05;
+    static constexpr double default_tau_C{ 10000 }; // In Sebastians work: 5000
+    static constexpr double default_beta{ 0.001 }; // In Sebastians work: 0.001
     static constexpr unsigned int default_h{ 10 };
 
     static constexpr double default_base_background_activity{ 0.0 };
@@ -484,7 +484,7 @@ public:
 
     static constexpr double default_x_0{ 0.05 };
     static constexpr double default_tau_x{ 5.0 };
-    static constexpr unsigned int default_refrac_time{ 4 };
+    static constexpr unsigned int default_refrac_time{ 4 }; // In Sebastians work: 4
 
     static constexpr double min_x_0{ 0.0 };
     static constexpr double min_tau_x{ 0.0 };

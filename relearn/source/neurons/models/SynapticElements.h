@@ -448,11 +448,11 @@ private:
     [[nodiscard]] unsigned int update_number_elements(const NeuronID& neuron_id);
 
 public:
-    static constexpr double default_C_target{ 0.7 }; // gold 0.5;
-    static constexpr double default_eta_Axons{ 0.4 }; // gold 0.0;
-    static constexpr double default_eta_Dendrites_exc{ 0.1 }; // gold 0.0;
-    static constexpr double default_eta_Dendrites_inh{ 0.0 }; // gold 0.0;
-    static constexpr double default_nu{ 1e-5 }; // gold 1e-5;
+    static constexpr double default_C_target{ 0.7 }; // In Sebastians work: 0.5
+    static constexpr double default_eta_Axons{ 0.4 }; // In Sebastians work: 0.0
+    static constexpr double default_eta_Dendrites_exc{ 0.1 }; // In Sebastians work: 0.0
+    static constexpr double default_eta_Dendrites_inh{ 0.0 }; // In Sebastians work: 0.0
+    static constexpr double default_nu{ 1e-5 }; // In Sebastians work: 1e-5
     static constexpr double default_vacant_retract_ratio{ 0.0 };
     static constexpr double default_vacant_elements_initially_lower_bound{ 0.0 };
     static constexpr double default_vacant_elements_initially_upper_bound{ 0.0 };
