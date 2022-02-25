@@ -12,6 +12,7 @@
 
 #include "../io/LogFiles.h"
 
+#include <cmath>
 #include <sstream>
 
 Partition::Partition(const size_t num_ranks, const size_t my_rank)
@@ -24,7 +25,7 @@ Partition::Partition(const size_t num_ranks, const size_t my_rank)
      * Total number of local_subdomains is smallest power of 8 that is >= num_ranks.
      * We choose power of 8 as every domain subdivision creates 8 local_subdomains (in 3d).
      */
-    const double smallest_exponent = ceil(log(num_ranks) / log(8.0));
+    const double smallest_exponent = std::ceil(std::log(num_ranks) / std::log(8.0));
     level_of_subdomain_trees = static_cast<size_t>(smallest_exponent);
     total_number_subdomains = 1ULL << (3 * level_of_subdomain_trees); // 8^level_of_subdomain_trees
 

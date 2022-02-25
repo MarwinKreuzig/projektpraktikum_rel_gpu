@@ -43,7 +43,7 @@ SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank(const size_t number_neuro
     const auto number_boxes_per_subdomain_one_dimension = static_cast<size_t>(ceil(pow(static_cast<double>(number_neurons_per_subdomain), 1. / 3)));
     const auto number_boxes_one_dimension = this->partition->get_number_subdomains_per_dimension() * number_boxes_per_subdomain_one_dimension;
 
-    const auto simulation_box_length_ = number_boxes_one_dimension * um_per_neuron;
+    const auto simulation_box_length_ = static_cast<double>(number_boxes_one_dimension) * um_per_neuron;
 
     this->partition->set_simulation_box_size({ 0, 0, 0 }, box_size_type(simulation_box_length_));
 
@@ -110,7 +110,7 @@ void SubdomainFromNeuronPerRank::place_neurons_in_area(const NeuronToSubdomainAs
 
     const double desired_ex = get_requested_ratio_excitatory_neurons();
 
-    const size_t expected_number_in = number_neurons - static_cast<size_t>(ceil(number_neurons * desired_ex));
+    const size_t expected_number_in = number_neurons - static_cast<size_t>(ceil(static_cast<double>(number_neurons) * desired_ex));
     const size_t expected_number_ex = number_neurons - expected_number_in;
 
     size_t placed_neurons = 0;
@@ -145,9 +145,9 @@ void SubdomainFromNeuronPerRank::place_neurons_in_area(const NeuronToSubdomainAs
         const size_t y_it = (pos_bitmask >> 16U) & max_short;
         const size_t z_it = pos_bitmask & max_short;
 
-        const box_size_type::value_type x_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::Subdomain, 0.0, 1.0) + x_it;
-        const box_size_type::value_type y_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::Subdomain, 0.0, 1.0) + y_it;
-        const box_size_type::value_type z_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::Subdomain, 0.0, 1.0) + z_it;
+        const box_size_type::value_type x_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::Subdomain, 0.0, 1.0) + static_cast<double>(x_it);
+        const box_size_type::value_type y_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::Subdomain, 0.0, 1.0) + static_cast<double>(y_it);
+        const box_size_type::value_type z_pos_rnd = RandomHolder::get_random_uniform_double(RandomHolderKey::Subdomain, 0.0, 1.0) + static_cast<double>(z_it);
 
         box_size_type pos_rnd{ x_pos_rnd, y_pos_rnd, z_pos_rnd };
         pos_rnd *= um_per_neuron_;
@@ -170,7 +170,7 @@ void SubdomainFromNeuronPerRank::place_neurons_in_area(const NeuronToSubdomainAs
 
         if (placed_neurons == number_neurons) {
             const auto current_num_neurons = get_number_placed_neurons();
-            const auto former_ex_neurons = current_num_neurons * get_ratio_placed_excitatory_neurons();
+            const auto former_ex_neurons = static_cast<unsigned long long>(current_num_neurons * get_ratio_placed_excitatory_neurons());
 
             const auto new_num_neurons = current_num_neurons + placed_neurons;
 
