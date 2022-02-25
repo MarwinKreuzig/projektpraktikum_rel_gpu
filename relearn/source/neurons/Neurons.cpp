@@ -286,13 +286,13 @@ void Neurons::update_calcium() {
 
         // Update calcium depending on the firing
         auto c = calcium[neuron_id];
-        if (fired[neuron_id] == 1) {
+        if (fired[neuron_id] == FiredStatus::Inactive) {
             for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-                c += val * (-c / tau_C + beta);
+                c += val * (-c / tau_C);
             }
         } else {
             for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-                c += val * (-c / tau_C);
+                c += val * (-c / tau_C + beta);
             }
         }
         calcium[neuron_id] = c;

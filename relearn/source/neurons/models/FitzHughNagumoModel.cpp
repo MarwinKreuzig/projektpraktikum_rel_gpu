@@ -71,9 +71,9 @@ void FitzHughNagumoModel::update_activity(const NeuronID& neuron_id) {
     }
 
     if (FitzHughNagumoModel::spiked(x, w[local_neuron_id])) {
-        set_fired(neuron_id, 1);
+        set_fired(neuron_id, FiredStatus::Fired);
     } else {
-        set_fired(neuron_id, 0);
+        set_fired(neuron_id, FiredStatus::Inactive);
     }
 
     set_x(neuron_id, x);
@@ -81,12 +81,9 @@ void FitzHughNagumoModel::update_activity(const NeuronID& neuron_id) {
 
 void FitzHughNagumoModel::init_neurons(const size_t start_id, const size_t end_id) {
     for (size_t neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
-        const auto x = FitzHughNagumoModel::init_x;
-        w[neuron_id] = iter_refrac(FitzHughNagumoModel::init_w, x);
-        const auto f = spiked(x, w[neuron_id]);
         const auto id = NeuronID{ neuron_id };
-        set_fired(id, static_cast<char>(f));
-        set_x(id, x);
+        w[neuron_id] = FitzHughNagumoModel::init_w;
+        set_x(id, FitzHughNagumoModel::init_x);
     }
 }
 

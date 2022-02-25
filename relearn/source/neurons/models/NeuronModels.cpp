@@ -85,7 +85,7 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
         auto I = I_syn[neuron_id];
         for (const auto& [src_neuron_id, edge_val] : local_in_edges) {
             const auto spike = fired[src_neuron_id.get_local_id()];
-            if (spike != 0) {
+            if (spike == FiredStatus::Fired) {
                 I += k * edge_val;
             }
         }
@@ -159,7 +159,7 @@ CommunicationMap<NeuronID> NeuronModel::update_electrical_activity_prepare_sendi
             continue;
         }
 
-        if (fired[neuron_id] == 0) {
+        if (fired[neuron_id] == FiredStatus::Inactive) {
             continue;
         }
 
@@ -207,7 +207,7 @@ std::vector<ModelParameter> NeuronModel::get_parameter() {
 void NeuronModel::init(size_t number_neurons) {
     number_local_neurons = number_neurons;
     x.resize(number_neurons, 0.0);
-    fired.resize(number_neurons, 0);
+    fired.resize(number_neurons, FiredStatus::Inactive);
     I_syn.resize(number_neurons, 0.0);
 }
 
@@ -217,6 +217,6 @@ void NeuronModel::create_neurons(size_t creation_count) {
     number_local_neurons = new_size;
 
     x.resize(new_size, 0.0);
-    fired.resize(new_size, 0);
+    fired.resize(new_size, FiredStatus::Inactive);
     I_syn.resize(new_size, 0.0);
 }

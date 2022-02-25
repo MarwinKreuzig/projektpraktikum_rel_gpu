@@ -78,12 +78,16 @@ void PoissonModel::update_activity(const NeuronID& neuron_id) {
     // Neuron ready to fire again
     if (refrac[local_neuron_id] == 0) {
         const bool f = x >= theta_values[local_neuron_id];
-        set_fired(neuron_id, static_cast<char>(f)); // Decide whether a neuron fires depending on its firing rate
-        refrac[local_neuron_id] = static_cast<unsigned int>(f) * refrac_time; // After having fired, a neuron is in a refractory state
+        if (f) {
+            set_fired(neuron_id, FiredStatus::Fired);
+            refrac[local_neuron_id] = refrac_time;
+        } else {
+            set_fired(neuron_id, FiredStatus::Inactive);
+        }
     }
     // Neuron now/still in refractory state
     else {
-        set_fired(neuron_id, 0); // Set neuron inactive
+        set_fired(neuron_id, FiredStatus::Inactive); // Set neuron inactive
         --refrac[local_neuron_id]; // Decrease refractory time
     }
 
@@ -91,15 +95,7 @@ void PoissonModel::update_activity(const NeuronID& neuron_id) {
 }
 
 void PoissonModel::init_neurons(const size_t start_id, const size_t end_id) {
-    for (size_t neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
-        const auto x = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
-        const double threshold = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
-        const bool f = x >= threshold;
-        const auto id = NeuronID{ neuron_id };
-        set_fired(id, static_cast<char>(f)); // Decide whether a neuron fires depending on its firing rate
-        refrac[neuron_id] = f ? refrac_time : 0; // After having fired, a neuron is in a refractory state
-        set_x(id, x);
-    }
+
 }
 
 void models::PoissonModel::update_electrical_activity_serial_initialize(const std::vector<UpdateStatus>& disable_flags) {

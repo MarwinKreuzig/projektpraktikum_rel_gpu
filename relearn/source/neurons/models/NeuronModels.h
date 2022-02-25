@@ -24,6 +24,11 @@
 class NetworkGraph;
 class NeuronMonitor;
 
+enum class FiredStatus : char {
+    Fired = 0,
+    Inactive = 1,
+};
+
 /**
  * This class provides the basic interface for every neuron model, that is, the rules by which a neuron spikes.
  * The calculations should focus solely on the spiking behavior, and should not account for any plasticity changes.
@@ -108,14 +113,14 @@ public:
         const auto local_neuron_id = neuron_id.get_local_id();
 
         RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::get_fired: id is too large: {}", neuron_id);
-        return fired[local_neuron_id] == 1;
+        return fired[local_neuron_id] == FiredStatus::Fired;
     }
 
     /**
      * @brief Returns a vector of flags that indicate if the neuron with the local id spiked in the current simulation step
      * @return A constant reference to the vector of flags. It is not invalidated by calls to other methods
      */
-    [[nodiscard]] const std::vector<char>& get_fired() const noexcept {
+    [[nodiscard]] const std::vector<FiredStatus>& get_fired() const noexcept {
         return fired;
     }
 
@@ -276,7 +281,7 @@ public:
             const auto local_neuron_id = neuron_id.get_local_id();
 
             RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::disable_neurons: There is a too large id: {} vs {}", neuron_id, number_local_neurons);
-            fired[local_neuron_id] = 0;
+            fired[local_neuron_id] = FiredStatus::Inactive;
         }
     }
 
@@ -346,7 +351,7 @@ protected:
      * @param neuron_id The local neuron id
      * @param new_value True iff the neuron fired in the current simulation step
      */
-    void set_fired(const NeuronID& neuron_id, const char new_value) {
+    void set_fired(const NeuronID& neuron_id, const FiredStatus new_value) {
         const auto local_neuron_id = neuron_id.get_local_id();
         fired[local_neuron_id] = new_value;
     }
@@ -376,7 +381,7 @@ private:
     // Variables for each neuron where the array index denotes the local neuron ID
     std::vector<double> I_syn{}; // Synaptic input
     std::vector<double> x{}; // membrane potential v
-    std::vector<char> fired{}; // 0: neuron is inactive, != 0: neuron fired
+    std::vector<FiredStatus> fired{}; // 0: neuron is inactive, != 0: neuron fired
 };
 
 namespace models {

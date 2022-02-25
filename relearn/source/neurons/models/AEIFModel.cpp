@@ -83,7 +83,7 @@ void AEIFModel::update_activity(const NeuronID& neuron_id) {
     const auto I_syn = get_I_syn(neuron_id);
     auto x = get_x(neuron_id);
 
-    auto has_spiked = false;
+    auto has_spiked = FiredStatus::Inactive;
 
     const auto local_neuron_id = neuron_id.get_local_id();
 
@@ -94,23 +94,21 @@ void AEIFModel::update_activity(const NeuronID& neuron_id) {
         if (x >= V_spike) {
             x = E_L;
             w[local_neuron_id] += b;
-            has_spiked = true;
+            has_spiked = FiredStatus::Fired;
             break;
         }
     }
 
-    set_fired(neuron_id, static_cast<char>(has_spiked));
+    set_fired(neuron_id, has_spiked);
     set_x(neuron_id, x);
 }
 
 void AEIFModel::init_neurons(const size_t start_id, const size_t end_id) {
     for (size_t neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
-        const auto x = E_L;
-        w[neuron_id] = iter_refrac(0, x);
-
         const auto id = NeuronID{ neuron_id };
-        set_fired(id, static_cast<char>(x >= V_spike));
-        set_x(id, x);
+
+        w[neuron_id] = 0.0;
+        set_x(id, E_L);
     }
 }
 

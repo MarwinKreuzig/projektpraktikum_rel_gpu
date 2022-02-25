@@ -204,7 +204,7 @@ public:
 
         const double& calcium = neurons_to_monitor->calcium[local_neuron_id];
         const double& x = neurons_to_monitor->neuron_model->x[local_neuron_id];
-        const bool& fired = neurons_to_monitor->neuron_model->fired[local_neuron_id] == 1;
+        const bool& fired = neurons_to_monitor->neuron_model->fired[local_neuron_id] == FiredStatus::Fired;
         const double& secondary = neurons_to_monitor->neuron_model->get_secondary_variable(target_neuron_id);
         const double& I_sync = neurons_to_monitor->neuron_model->I_syn[local_neuron_id];
 
