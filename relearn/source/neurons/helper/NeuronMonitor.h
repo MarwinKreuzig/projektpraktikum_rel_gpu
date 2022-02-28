@@ -25,7 +25,8 @@ class NeuronInformation {
     double x{};
     bool fired{};
     double secondary{};
-    double I_sync{};
+    double synaptic_input{};
+    double background_activity{};
 
     double axons{};
     double axons_connected{};
@@ -42,6 +43,7 @@ public:
      * @param f The current fire status
      * @param s The current secondary variable of the model
      * @param i The current synaptic input
+     * @param b The current background activity
      * @param ax The current number of axonal elements
      * @param ax_c The current number of connected axonal elements
      * @param de The current number of excitatory dendritic elements
@@ -49,13 +51,14 @@ public:
      * @param di The current number of inhibitory dendritic elements
      * @param di_c The current number of connected inhibitory dendritic elements
      */
-    NeuronInformation(const double c, const double x, const bool f, const double s, const double i,
+    NeuronInformation(const double c, const double x, const bool f, const double s, const double i, const double b,
         const double ax, const double ax_c, const double de, const double de_c, const double di, const double di_c) noexcept
         : calcium(c)
         , x(x)
         , fired(f)
         , secondary(s)
-        , I_sync(i)
+        , synaptic_input(i)
+        , background_activity(b)
         , axons(ax)
         , axons_connected(ax_c)
         , dendrites_exc(de)
@@ -100,8 +103,16 @@ public:
      * @brief Returns the stored synaptic input
      * @return The stored synaptic input
      */
-    [[nodiscard]] double get_I_sync() const noexcept {
-        return I_sync;
+    [[nodiscard]] double get_synaptic_input() const noexcept {
+        return synaptic_input;
+    }
+
+    /**
+     * @brief Returns the stored synaptic input
+     * @return The stored synaptic input
+     */
+    [[nodiscard]] double get_background_activity() const noexcept {
+        return background_activity;
     }
 
     /**
@@ -206,7 +217,8 @@ public:
         const double& x = neurons_to_monitor->neuron_model->x[local_neuron_id];
         const bool& fired = neurons_to_monitor->neuron_model->fired[local_neuron_id] == FiredStatus::Fired;
         const double& secondary = neurons_to_monitor->neuron_model->get_secondary_variable(target_neuron_id);
-        const double& I_sync = neurons_to_monitor->neuron_model->I_syn[local_neuron_id];
+        const double& synaptic_input = neurons_to_monitor->neuron_model->synaptic_input[local_neuron_id];
+        const double& background_activity = neurons_to_monitor->neuron_model->synaptic_input[local_neuron_id];
 
         const double& axons = neurons_to_monitor->axons->grown_elements[local_neuron_id];
         const unsigned int& axons_connected = neurons_to_monitor->axons->connected_elements[local_neuron_id];
@@ -215,7 +227,7 @@ public:
         const double& dendrites_inh = neurons_to_monitor->dendrites_inh->grown_elements[local_neuron_id];
         const unsigned int& dendrites_inh_connected = neurons_to_monitor->dendrites_inh->connected_elements[local_neuron_id];
 
-        informations.emplace_back(calcium, x, fired, secondary, I_sync, axons, axons_connected, dendrites_exc, dendrites_exc_connected, dendrites_inh, dendrites_inh_connected);
+        informations.emplace_back(calcium, x, fired, secondary, synaptic_input, background_activity, axons, axons_connected, dendrites_exc, dendrites_exc_connected, dendrites_inh, dendrites_inh_connected);
     }
 
     /**

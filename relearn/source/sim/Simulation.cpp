@@ -240,7 +240,7 @@ void Simulation::simulate(const size_t number_steps) {
     const auto final_step_count = step + number_steps;
     for (; step <= final_step_count; ++step) { // NOLINT(altera-id-dependent-backward-branch)
         if (step % Config::monitor_step == 0) {
-            const auto number_neurons = neurons->get_num_neurons();
+            const auto number_neurons = neurons->get_number_neurons();
 
             for (auto& mn : *monitors) {
                 if (mn.get_target_id().get_local_id() < number_neurons) {
@@ -395,7 +395,7 @@ void Simulation::print_neuron_monitors() {
 
         outfile.imbue(std::locale());
 
-        outfile << "Step;Fired;Refrac;x;Ca;I_sync;axons;axons_connected;dendrites_exc;dendrites_exc_connected;dendrites_inh;dendrites_inh_connected";
+        outfile << "Step;Fired;Refrac;x;Ca;SynapticInput;background;axons;axons_connected;dendrites_exc;dendrites_exc_connected;dendrites_inh;dendrites_inh_connected";
         outfile << "\n";
 
         const auto& infos = monitor.get_informations();
@@ -411,7 +411,8 @@ void Simulation::print_neuron_monitors() {
             outfile << info.get_secondary() << filler;
             outfile << info.get_x() << filler;
             outfile << info.get_calcium() << filler;
-            outfile << info.get_I_sync() << filler;
+            outfile << info.get_synaptic_input() << filler;
+            outfile << info.get_background_activity() << filler;
             outfile << info.get_axons() << filler;
             outfile << info.get_axons_connected() << filler;
             outfile << info.get_dendrites_exc() << filler;

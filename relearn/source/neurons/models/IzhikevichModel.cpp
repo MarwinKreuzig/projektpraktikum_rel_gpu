@@ -66,8 +66,8 @@ void IzhikevichModel::init(const size_t number_neurons) {
     init_neurons(0, number_neurons);
 }
 
-void models::IzhikevichModel::create_neurons(const size_t creation_count) {
-    const auto old_size = NeuronModel::get_num_neurons();
+void IzhikevichModel::create_neurons(const size_t creation_count) {
+    const auto old_size = NeuronModel::get_number_neurons();
     NeuronModel::create_neurons(creation_count);
     u.resize(old_size + creation_count);
     init_neurons(old_size, creation_count);
@@ -75,7 +75,11 @@ void models::IzhikevichModel::create_neurons(const size_t creation_count) {
 
 void IzhikevichModel::update_activity(const NeuronID& neuron_id) {
     const auto h = get_h();
-    const auto I_syn = get_I_syn(neuron_id);
+
+    const auto synaptic_input = get_synaptic_input(neuron_id);
+    const auto background = get_background_activity(neuron_id);
+    const auto input = synaptic_input + background;
+
     auto x = get_x(neuron_id);
 
     const auto local_neuron_id = neuron_id.get_local_id();
@@ -83,7 +87,7 @@ void IzhikevichModel::update_activity(const NeuronID& neuron_id) {
     auto has_spiked = FiredStatus::Inactive;
 
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-        x += iter_x(x, u[local_neuron_id], I_syn) / h;
+        x += iter_x(x, u[local_neuron_id], input) / h;
         u[local_neuron_id] += iter_refrac(u[local_neuron_id], x) / h;
 
         if (spiked(x)) {
@@ -106,8 +110,8 @@ void IzhikevichModel::init_neurons(const size_t start_id, const size_t end_id) {
     }
 }
 
-[[nodiscard]] double IzhikevichModel::iter_x(const double x, const double u, const double I_syn) const noexcept {
-    return k1 * x * x + k2 * x + k3 - u + I_syn;
+[[nodiscard]] double IzhikevichModel::iter_x(const double x, const double u, const double input) const noexcept {
+    return k1 * x * x + k2 * x + k3 - u + input;
 }
 
 [[nodiscard]] double IzhikevichModel::iter_refrac(const double u, const double x) const noexcept {

@@ -82,11 +82,11 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
         // Walk through the local in-edges of my neuron
         const NetworkGraph::LocalEdges& local_in_edges = network_graph.get_local_in_edges(id);
 
-        auto I = I_syn[neuron_id];
+        auto total_input = 0.0;
         for (const auto& [src_neuron_id, edge_val] : local_in_edges) {
             const auto spike = fired[src_neuron_id.get_local_id()];
             if (spike == FiredStatus::Fired) {
-                I += k * edge_val;
+                total_input += k * edge_val;
             }
         }
 
@@ -105,11 +105,11 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
             const auto contains_id = std::binary_search(firing_ids.begin(), firing_ids.end(), initiator_neuron_id);
 
             if (contains_id) {
-                I_syn[neuron_id] += k * edge_val;
+                total_input += k * edge_val;
             }
         }
 
-        I_syn[neuron_id] = I;
+        synaptic_input[neuron_id] = total_input;
     }
 
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
@@ -127,10 +127,10 @@ void NeuronModel::update_electrical_activity_calculate_background(const std::vec
 
             const double rnd = RandomHolder::get_random_normal_double(RandomHolderKey::NeuronModel, background_activity_mean, background_activity_stddev);
             const double input = base_background_activity + rnd;
-            I_syn[neuron_id] = input;
+            background_activity[neuron_id] = input;
         }
     } else {
-        std::fill(I_syn.begin(), I_syn.end(), base_background_activity);
+        std::fill(background_activity.begin(), background_activity.end(), base_background_activity);
     }
 
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
@@ -208,7 +208,8 @@ void NeuronModel::init(size_t number_neurons) {
     number_local_neurons = number_neurons;
     x.resize(number_neurons, 0.0);
     fired.resize(number_neurons, FiredStatus::Inactive);
-    I_syn.resize(number_neurons, 0.0);
+    synaptic_input.resize(number_neurons, 0.0);
+    background_activity.resize(number_neurons, 0.0);
 }
 
 void NeuronModel::create_neurons(size_t creation_count) {
@@ -218,5 +219,6 @@ void NeuronModel::create_neurons(size_t creation_count) {
 
     x.resize(new_size, 0.0);
     fired.resize(new_size, FiredStatus::Inactive);
-    I_syn.resize(new_size, 0.0);
+    synaptic_input.resize(new_size, 0.0);
+    background_activity.resize(new_size, 0.0);
 }

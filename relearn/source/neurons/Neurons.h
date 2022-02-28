@@ -151,7 +151,7 @@ public:
      * @brief Returns the number of neurons in this object
      * @return The number of neurons in this object
      */
-    [[nodiscard]] size_t get_num_neurons() const noexcept {
+    [[nodiscard]] size_t get_number_neurons() const noexcept {
         return number_neurons;
     }
 

@@ -19,10 +19,10 @@
 #include <vector>
 
 void assert_getter_equality(const std::unique_ptr<NeuronModel>& model) {
-    const auto number_neurons = model->get_num_neurons();
+    const auto number_neurons = model->get_number_neurons();
 
     const auto& all_fired = model->get_fired();
-    const auto& all_i_syn = model->get_I_syn();
+    const auto& all_i_syn = model->get_synaptic_input();
     const auto& all_x = model->get_x();
 
     ASSERT_EQ(all_fired.size(), number_neurons);
@@ -32,25 +32,25 @@ void assert_getter_equality(const std::unique_ptr<NeuronModel>& model) {
     const auto& valid_ids = NeuronID::range(number_neurons);
     for (const auto& neuron_id : valid_ids) {
         ASSERT_NO_THROW(const auto fired = model->get_fired(neuron_id););
-        ASSERT_NO_THROW(const auto i_syn = model->get_I_syn(neuron_id););
+        ASSERT_NO_THROW(const auto i_syn = model->get_synaptic_input(neuron_id););
         ASSERT_NO_THROW(const auto x = model->get_x(neuron_id););
         ASSERT_NO_THROW(const auto secondary = model->get_secondary_variable(neuron_id););
     }
 
     for (const auto& neuron_id : valid_ids) {
         ASSERT_EQ(model->get_fired(neuron_id), all_fired[neuron_id.get_local_id()] == FiredStatus::Fired);
-        ASSERT_EQ(model->get_I_syn(neuron_id), all_i_syn[neuron_id.get_local_id()]);
+        ASSERT_EQ(model->get_synaptic_input(neuron_id), all_i_syn[neuron_id.get_local_id()]);
         ASSERT_EQ(model->get_x(neuron_id), all_x[neuron_id.get_local_id()]);
     }
 }
 
 void assert_getter_throws(const std::unique_ptr<NeuronModel>& model) {
-    const auto number_neurons = model->get_num_neurons();
+    const auto number_neurons = model->get_number_neurons();
 
     const auto& invalid_local_ids = NeuronID::range(number_neurons, number_neurons + number_neurons);
     for (const auto& neuron_id : invalid_local_ids) {
         ASSERT_THROW(const auto fired = model->get_fired(neuron_id), RelearnException);
-        ASSERT_THROW(const auto i_syn = model->get_I_syn(neuron_id), RelearnException);
+        ASSERT_THROW(const auto i_syn = model->get_synaptic_input(neuron_id), RelearnException);
         ASSERT_THROW(const auto x = model->get_x(neuron_id), RelearnException);
         ASSERT_THROW(const auto secondary = model->get_secondary_variable(neuron_id), RelearnException);
     }
@@ -58,14 +58,14 @@ void assert_getter_throws(const std::unique_ptr<NeuronModel>& model) {
     const auto& invalid_global_ids = NeuronID::global_range(number_neurons + number_neurons);
     for (const auto& neuron_id : invalid_global_ids) {
         ASSERT_THROW(const auto fired = model->get_fired(neuron_id), RelearnException);
-        ASSERT_THROW(const auto i_syn = model->get_I_syn(neuron_id), RelearnException);
+        ASSERT_THROW(const auto i_syn = model->get_synaptic_input(neuron_id), RelearnException);
         ASSERT_THROW(const auto x = model->get_x(neuron_id), RelearnException);
         ASSERT_THROW(const auto secondary = model->get_secondary_variable(neuron_id), RelearnException);
     }
 }
 
 void test_initialization(std::unique_ptr<NeuronModel> model, size_t number_neurons) {
-    const auto number_neurons_pre_init = model->get_num_neurons();
+    const auto number_neurons_pre_init = model->get_number_neurons();
     ASSERT_EQ(number_neurons_pre_init, 0);
 
     model->init(number_neurons);
@@ -75,7 +75,7 @@ void test_initialization(std::unique_ptr<NeuronModel> model, size_t number_neuro
     const auto& valid_ids = NeuronID::range(number_neurons);
     for (const auto& neuron_id : valid_ids) {
         ASSERT_EQ(model->get_fired(neuron_id), false);
-        ASSERT_EQ(model->get_I_syn(neuron_id), 0.0);
+        ASSERT_EQ(model->get_synaptic_input(neuron_id), 0.0);
     }
 
     assert_getter_throws(model);
@@ -86,7 +86,7 @@ void test_creation(std::unique_ptr<NeuronModel> model, size_t number_neurons_ini
 
     // Copy on purpose
     const auto initial_fired = model->get_fired();
-    const auto initial_i_syn = model->get_I_syn();
+    const auto initial_i_syn = model->get_synaptic_input();
     const auto initial_x = model->get_x();
     std::vector<double> initial_secondary(number_neurons_init);
 
@@ -100,28 +100,28 @@ void test_creation(std::unique_ptr<NeuronModel> model, size_t number_neurons_ini
     model->create_neurons(number_neurons_create);
 
     const auto golden_number_neurons = number_neurons_init + number_neurons_create;
-    const auto total_number_neurons = model->get_num_neurons();
+    const auto total_number_neurons = model->get_number_neurons();
 
     ASSERT_EQ(golden_number_neurons, total_number_neurons);
 
     const auto& all_fired = model->get_fired();
-    const auto& all_i_syn = model->get_I_syn();
+    const auto& all_i_syn = model->get_synaptic_input();
     const auto& all_x = model->get_x();
 
     const auto& valid_ids = NeuronID::range(golden_number_neurons);
 
     for (const auto& neuron_id : valid_ids) {
         ASSERT_NO_THROW(const auto fired = model->get_fired(neuron_id););
-        ASSERT_NO_THROW(const auto i_syn = model->get_I_syn(neuron_id););
+        ASSERT_NO_THROW(const auto i_syn = model->get_synaptic_input(neuron_id););
         ASSERT_NO_THROW(const auto x = model->get_x(neuron_id););
         ASSERT_NO_THROW(const auto secondary = model->get_secondary_variable(neuron_id););
     }
 
     for (const auto& neuron_id : valid_ids) {
         ASSERT_EQ(model->get_fired(neuron_id), all_fired[neuron_id.get_local_id()] == FiredStatus::Fired);
-        ASSERT_EQ(model->get_I_syn(neuron_id), all_i_syn[neuron_id.get_local_id()]);
+        ASSERT_EQ(model->get_synaptic_input(neuron_id), all_i_syn[neuron_id.get_local_id()]);
         ASSERT_EQ(model->get_fired(neuron_id), false);
-        ASSERT_EQ(model->get_I_syn(neuron_id), 0.0);
+        ASSERT_EQ(model->get_synaptic_input(neuron_id), 0.0);
         ASSERT_EQ(model->get_x(neuron_id), all_x[neuron_id.get_local_id()]);
     }
 
@@ -135,6 +135,59 @@ void test_creation(std::unique_ptr<NeuronModel> model, size_t number_neurons_ini
     }
 
     assert_getter_throws(model);
+}
+
+void NeuronModelsTest::test_update(std::unique_ptr<NeuronModel> model, std::shared_ptr<NetworkGraph> ng, size_t number_neurons) {
+    model->init(number_neurons);
+
+    const auto conductance = model->get_k();
+    const auto number_disabled_neurons = get_random_neuron_id(number_neurons).get_local_id() * 0;
+
+    const auto status_flags = get_update_status(number_neurons, number_disabled_neurons);
+
+    for (const auto& input : model->get_synaptic_input()) {
+        ASSERT_EQ(input, 0.0);
+    }
+
+    const auto& fired_status = model->get_fired();
+
+    for (const auto& fired : fired_status) {
+        ASSERT_EQ(fired, FiredStatus::Inactive);
+    }
+
+    model->update_electrical_activity(*ng, status_flags);
+
+    std::vector<double> expected_input(number_neurons, 0.0);
+
+    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        if (status_flags[neuron_id] == UpdateStatus::DISABLED) {
+            expected_input[neuron_id] = 0.0;
+        }
+
+        const auto& in_edges = ng->get_local_in_edges(NeuronID(neuron_id));
+
+        for (const auto& [source_id, weight] : in_edges) {
+            const auto id = source_id.get_local_id();
+
+            if (fired_status[id] == FiredStatus::Inactive) {
+                continue;
+            }
+
+            const auto transfered = conductance * weight;
+            expected_input[neuron_id] += transfered;
+        }
+    }
+
+    model->update_electrical_activity(*ng, status_flags);
+
+    const auto& input = model->get_synaptic_input();
+
+    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        const auto golden_input = expected_input[neuron_id];
+        const auto calculated_input = input[neuron_id];
+
+        ASSERT_EQ(golden_input, calculated_input);
+    }
 }
 
 TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorPoisson) {
@@ -1069,3 +1122,32 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsAEIF) {
     test_creation(std::move(model), number_neurons_init, number_neurons_create);
 }
 
+TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputEmptyPoisson) {
+    using namespace models;
+    auto model = std::make_unique<PoissonModel>();
+
+    const auto number_neurons = get_random_number_neurons();
+
+    auto ng = create_empty_network_graph(number_neurons, 0);
+
+    test_update(std::move(model), std::move(ng), number_neurons);
+}
+
+
+TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullPoisson) {
+    using namespace models;
+    auto model = std::make_unique<PoissonModel>(
+        NeuronModel::default_k, 
+        NeuronModel::default_tau_C, 
+        NeuronModel::default_beta, 
+        NeuronModel::default_h, 
+        0.5,
+        0.0, 0.0, 
+        PoissonModel::default_x_0, PoissonModel::default_tau_x, PoissonModel::default_refrac_time);
+
+    const auto number_neurons = get_random_number_neurons() * 0 + 5;
+
+    auto ng = create_network_graph_all_to_all(number_neurons, 0);
+
+    test_update(std::move(model), std::move(ng), number_neurons);
+}

@@ -31,6 +31,7 @@
 #include <tuple>
 #include <vector>
 
+class NeuronModel;
 class NeuronsExtraInfo;
 
 inline bool initialized = false;
@@ -327,6 +328,11 @@ protected:
         return ptr;
     }
 
+    std::shared_ptr<NetworkGraph> create_empty_network_graph(size_t number_neurons, int mpi_rank) {
+        auto ptr = std::make_shared<NetworkGraph>(number_neurons, mpi_rank);
+        return ptr;
+    }
+
     constexpr static double min_grown_elements = 0.0;
     constexpr static double max_grown_elements = 10.0;
 
@@ -419,6 +425,8 @@ protected:
     static void SetUpTestCase() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
+
+    void test_update(std::unique_ptr<NeuronModel> model, std::shared_ptr<NetworkGraph> ng, size_t number_neurons);
 };
 
 class RankNeuronIdTest : public RelearnTest {

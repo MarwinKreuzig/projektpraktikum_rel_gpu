@@ -55,8 +55,8 @@ void PoissonModel::init(const size_t number_neurons) {
     init_neurons(0, number_neurons);
 }
 
-void models::PoissonModel::create_neurons(const size_t creation_count) {
-    const auto old_size = NeuronModel::get_num_neurons();
+void PoissonModel::create_neurons(const size_t creation_count) {
+    const auto old_size = NeuronModel::get_number_neurons();
     NeuronModel::create_neurons(creation_count);
     refrac.resize(old_size + creation_count, 0);
     theta_values.resize(old_size + creation_count, 0.0);
@@ -65,12 +65,16 @@ void models::PoissonModel::create_neurons(const size_t creation_count) {
 
 void PoissonModel::update_activity(const NeuronID& neuron_id) {
     const auto h = get_h();
-    const auto I_syn = get_I_syn(neuron_id);
+    
+    const auto synaptic_input = get_synaptic_input(neuron_id);
+    const auto background = get_background_activity(neuron_id);
+    const auto input = synaptic_input + background;
+
     auto x = get_x(neuron_id);
 
     for (unsigned int integration_steps = 0; integration_steps < h; integration_steps++) {
         // Update the membrane potential
-        x += iter_x(x, I_syn) / h;
+        x += iter_x(x, input) / h;
     }
 
     const auto local_neuron_id = neuron_id.get_local_id();
@@ -98,7 +102,7 @@ void PoissonModel::init_neurons(const size_t start_id, const size_t end_id) {
 
 }
 
-void models::PoissonModel::update_electrical_activity_serial_initialize(const std::vector<UpdateStatus>& disable_flags) {
+void PoissonModel::update_electrical_activity_serial_initialize(const std::vector<UpdateStatus>& disable_flags) {
     Timers::start(TimerRegion::CALC_SERIAL_ACTIVITY);
 
 #pragma omp parallel for shared(disable_flags) default(none) // NOLINTNEXTLINE

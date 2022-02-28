@@ -96,14 +96,6 @@ public:
     [[nodiscard]] virtual std::unique_ptr<NeuronModel> clone() const = 0;
 
     /**
-     * @brief Returns beta (The factor by which the Calcium is increased whenever a neuron spikes in Neurons)
-     * @return Beta (The factor by which the Calcium is increased whenever a neuron spikes in Neurons)
-     */
-    [[nodiscard]] double get_beta() const noexcept {
-        return beta;
-    }
-
-    /**
      * @brief Returns a bool that indicates if the neuron with the passed local id spiked in the current simulation step
      * @param neuron_id The local neuron id that should be queried
      * @exception Throws a RelearnException if neuron_id is too large
@@ -143,6 +135,56 @@ public:
      */
     [[nodiscard]] const std::vector<double>& get_x() const noexcept {
         return x;
+    }
+
+    /**
+     * @brief Returns the synaptic input the specified neuron receives in the current simulation step
+     * @param neuron_id The local neuron id for the neuron that should be queried
+     * @exception Throws a RelearnException if neuron_id is too large
+     * @return A double that indicates the synaptic input for the specified neuron
+     */
+    [[nodiscard]] double get_synaptic_input(const NeuronID& neuron_id) const {
+        const auto local_neuron_id = neuron_id.get_local_id();
+
+        RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::get_synaptic_input: id is too large: {}", neuron_id);
+        return synaptic_input[local_neuron_id];
+    }
+
+    /**
+     * @brief Returns a vector of doubles that indicate the neurons' respective synaptic input in the current simulation step
+     * @return A constant reference to the vector of doubles. It is not invalidated by calls to other methods
+     */
+    [[nodiscard]] const std::vector<double>& get_synaptic_input() const noexcept {
+        return synaptic_input;
+    }
+
+    /**
+     * @brief Returns the background activity the specified neuron receives in the current simulation step
+     * @param neuron_id The local neuron id for the neuron that should be queried
+     * @exception Throws a RelearnException if neuron_id is too large
+     * @return A double that indicates the background activity for the specified neuron
+     */
+    [[nodiscard]] double get_background_activity(const NeuronID& neuron_id) const {
+        const auto local_neuron_id = neuron_id.get_local_id();
+
+        RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::get_background_activity: id is too large: {}", neuron_id);
+        return background_activity[local_neuron_id];
+    }
+
+    /**
+     * @brief Returns a vector of doubles that indicate the neurons' respective background activity in the current simulation step
+     * @return A constant reference to the vector of doubles. It is not invalidated by calls to other methods
+     */
+    [[nodiscard]] const std::vector<double>& get_background_activity() const noexcept {
+        return background_activity;
+    }
+
+    /**
+     * @brief Returns beta (The factor by which the Calcium is increased whenever a neuron spikes in Neurons)
+     * @return Beta (The factor by which the Calcium is increased whenever a neuron spikes in Neurons)
+     */
+    [[nodiscard]] double get_beta() const noexcept {
+        return beta;
     }
 
     /**
@@ -194,31 +236,10 @@ public:
     }
 
     /**
-     * @brief Returns the synaptic input the specified neuron receives in the current simulation step
-     * @param neuron_id The local neuron id for the neuron that should be queried
-     * @exception Throws a RelearnException if neuron_id is too large
-     * @return A double that indicates the synaptic input for the specified neuron
-     */
-    [[nodiscard]] double get_I_syn(const NeuronID& neuron_id) const {
-        const auto local_neuron_id = neuron_id.get_local_id();
-
-        RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::get_I_syn: id is too large: {}", neuron_id);
-        return I_syn[local_neuron_id];
-    }
-
-    /**
-     * @brief Returns a vector of doubles that indicate the neurons' respective synaptic input in the current simulation step
-     * @return A constant reference to the vector of doubles. It is not invalidated by calls to other methods
-     */
-    [[nodiscard]] const std::vector<double>& get_I_syn() const noexcept {
-        return I_syn;
-    }
-
-    /**
      * @brief Returns the number of neurons that are stored in the object
      * @return The number of neurons that are stored in the object
      */
-    [[nodiscard]] size_t get_num_neurons() const noexcept {
+    [[nodiscard]] size_t get_number_neurons() const noexcept {
         return number_local_neurons;
     }
 
@@ -379,9 +400,10 @@ private:
     double background_activity_stddev{ default_background_activity_stddev };
 
     // Variables for each neuron where the array index denotes the local neuron ID
-    std::vector<double> I_syn{}; // Synaptic input
-    std::vector<double> x{}; // membrane potential v
-    std::vector<FiredStatus> fired{}; // 0: neuron is inactive, != 0: neuron fired
+    std::vector<double> background_activity{}; // The static background activity
+    std::vector<double> synaptic_input{}; // The synaptic input from other neurons
+    std::vector<double> x{}; // The membrane potential (in equations usually v(t))
+    std::vector<FiredStatus> fired{}; // If the neuron fired in the current update step
 };
 
 namespace models {
@@ -434,7 +456,7 @@ public:
     [[nodiscard]] double get_secondary_variable(const NeuronID& neuron_id) const final {
         const auto local_neuron_id = neuron_id.get_local_id();
 
-        RelearnException::check(local_neuron_id < get_num_neurons(), "PoissonModel::get_secondary_variable: id is too large: {}", neuron_id);
+        RelearnException::check(local_neuron_id < get_number_neurons(), "PoissonModel::get_secondary_variable: id is too large: {}", neuron_id);
         return refrac[local_neuron_id];
     }
 
@@ -507,8 +529,8 @@ protected:
     void init_neurons(size_t start_id, size_t end_id) final;
 
 private:
-    [[nodiscard]] double iter_x(const double x, const double I_syn) const noexcept {
-        return ((x_0 - x) / tau_x + I_syn);
+    [[nodiscard]] double iter_x(const double x, const double input) const noexcept {
+        return ((x_0 - x) / tau_x + input);
     }
 
     std::vector<unsigned int> refrac{}; // refractory time
@@ -523,7 +545,7 @@ private:
 /**
  * This class inherits from NeuronModel and implements the spiking model from Izhikevich.
  * The differential equations are:
- *      d/dt v(t) = k1 * v(t)^2 + k2 * v(t) + k3 - u(t) + I_syn
+ *      d/dt v(t) = k1 * v(t)^2 + k2 * v(t) + k3 - u(t) + input
  *      d/dt u(t) = a * (b * x - u(t))
  * If v(t) >= V_spike:
  *      v(t) = c
@@ -585,7 +607,7 @@ public:
     [[nodiscard]] double get_secondary_variable(const NeuronID& neuron_id) const final {
         const auto local_neuron_id = neuron_id.get_local_id();
 
-        RelearnException::check(local_neuron_id < get_num_neurons(), "IzhikevichModel::get_secondary_variable: id is too large: {}", neuron_id);
+        RelearnException::check(local_neuron_id < get_number_neurons(), "IzhikevichModel::get_secondary_variable: id is too large: {}", neuron_id);
         return u[local_neuron_id];
     }
 
@@ -710,7 +732,7 @@ protected:
     void init_neurons(size_t start_id, size_t end_id) final;
 
 private:
-    [[nodiscard]] double iter_x(double x, double u, double I_syn) const noexcept;
+    [[nodiscard]] double iter_x(double x, double u, double input) const noexcept;
 
     [[nodiscard]] double iter_refrac(double u, double x) const noexcept;
 
@@ -733,7 +755,7 @@ private:
 /**
  * This class inherits from NeuronModel and implements the spiking model from Fitz, Hugh, Nagumo.
  * The differential equations are:
- *      d/dt v(t) = v(t) - (v(t)^3)/3 - w(t) + I_syn
+ *      d/dt v(t) = v(t) - (v(t)^3)/3 - w(t) + input
  *      d/dt w(t) = phi * (v(t) + a - b * w(t))
  */
 class FitzHughNagumoModel : public NeuronModel {
@@ -782,7 +804,7 @@ public:
     [[nodiscard]] double get_secondary_variable(const NeuronID& neuron_id) const final {
         const auto local_neuron_id = neuron_id.get_local_id();
 
-        RelearnException::check(local_neuron_id < get_num_neurons(), "In FitzHughNagumoModel::get_secondary_variable, id is too large");
+        RelearnException::check(local_neuron_id < get_number_neurons(), "In FitzHughNagumoModel::get_secondary_variable, id is too large");
         return w[local_neuron_id];
     }
 
@@ -855,7 +877,7 @@ protected:
     void init_neurons(size_t start_id, size_t end_id) final;
 
 private:
-    [[nodiscard]] static double iter_x(double x, double w, double I_syn) noexcept;
+    [[nodiscard]] static double iter_x(double x, double w, double input) noexcept;
 
     [[nodiscard]] double iter_refrac(double w, double x) const noexcept;
 
@@ -871,7 +893,7 @@ private:
 /**
  * This class inherits from NeuronModel and implements an exponential spiking model from Brette and Gerstner.
  * The differential equations are:
- *      d/dt v(t) = (-g_L * (v(t) - E_L) + g_L * d_T * exp((v(t) - V_T) / d_T) - w(t) + I_syn) / C
+ *      d/dt v(t) = (-g_L * (v(t) - E_L) + g_L * d_T * exp((v(t) - V_T) / d_T) - w(t) + input) / C
  *      d/dt w(t) = (a * (v(t) - E_L) - w(t)) / tau_W
  * If v(t) >= V_spike:
  *      v(t) = E_L
@@ -935,7 +957,7 @@ public:
     [[nodiscard]] double get_secondary_variable(const NeuronID& neuron_id) const final {
         const auto local_neuron_id = neuron_id.get_local_id();
 
-        RelearnException::check(local_neuron_id < get_num_neurons(), "In AEIFModel::get_secondary_variable, id is too large");
+        RelearnException::check(local_neuron_id < get_number_neurons(), "In AEIFModel::get_secondary_variable, id is too large");
         return w[local_neuron_id];
     }
 
@@ -1073,7 +1095,7 @@ protected:
 private:
     [[nodiscard]] double f(double x) const noexcept;
 
-    [[nodiscard]] double iter_x(double x, double w, double I_syn) const noexcept;
+    [[nodiscard]] double iter_x(double x, double w, double input) const noexcept;
 
     [[nodiscard]] double iter_refrac(double w, double x) const noexcept;
 

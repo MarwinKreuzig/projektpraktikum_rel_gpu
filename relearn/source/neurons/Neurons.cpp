@@ -637,8 +637,11 @@ StatisticalMeasures Neurons::get_statistics(NeuronAttribute attribute) const {
     case NeuronAttribute::Fired:
         return global_statistics_integral(neuron_model->get_fired(), 0, disable_flags);
 
-    case NeuronAttribute::I_sync:
-        return global_statistics(neuron_model->get_I_syn(), 0, disable_flags);
+    case NeuronAttribute::SynapticInput:
+        return global_statistics(neuron_model->get_synaptic_input(), 0, disable_flags);
+
+    case NeuronAttribute::Background:
+        return global_statistics(neuron_model->get_background_activity(), 0, disable_flags);
 
     case NeuronAttribute::Axons:
         return global_statistics(axons->get_grown_elements(), 0, disable_flags);
