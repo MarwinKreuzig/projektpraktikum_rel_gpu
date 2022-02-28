@@ -335,7 +335,7 @@ StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_
     return { d_min, d_max, avg, var, std };
 }
 
-size_t Neurons::delete_synapses() {
+std::pair<uint64_t, uint64_t> Neurons::delete_synapses() {
     auto deletion_helper = [this](const std::shared_ptr<SynapticElements>& synaptic_elements) {
         Timers::start(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
 
@@ -364,7 +364,7 @@ size_t Neurons::delete_synapses() {
     const auto excitatory_dendrites_deleted = deletion_helper(dendrites_exc);
     const auto inhibitory_dendrites_deleted = deletion_helper(dendrites_inh);
 
-    return axons_deleted + excitatory_dendrites_deleted + inhibitory_dendrites_deleted;
+    return { axons_deleted, excitatory_dendrites_deleted + inhibitory_dendrites_deleted };
 }
 
 CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) {
@@ -667,24 +667,24 @@ StatisticalMeasures Neurons::get_statistics(NeuronAttribute attribute) const {
     return {};
 }
 
-std::tuple<size_t, size_t> Neurons::update_connectivity() {
+std::tuple<uint64_t, uint64_t, uint64_t> Neurons::update_connectivity() {
     RelearnException::check(network_graph != nullptr, "Network graph is nullptr");
     RelearnException::check(global_tree != nullptr, "Global octree is nullptr");
     RelearnException::check(algorithm != nullptr, "Algorithm is nullptr");
 
     debug_check_counts();
     network_graph->debug_check();
-    size_t num_synapses_deleted = delete_synapses();
+    const auto& [num_axons_deleted, num_dendrites_deleted] = delete_synapses();
     debug_check_counts();
     network_graph->debug_check();
     size_t num_synapses_created = create_synapses();
     debug_check_counts();
     network_graph->debug_check();
 
-    return std::make_tuple(num_synapses_deleted, num_synapses_created);
+    return { num_axons_deleted, num_dendrites_deleted, num_synapses_created };
 }
 
-void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const size_t step, const size_t sum_synapses_deleted, const size_t sum_synapses_created) {
+void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, uint64_t sum_axon_deleted, uint64_t sum_dendrites_deleted, uint64_t sum_synapses_created) {
     int64_t sum_axons_excitatory_counts = 0;
     int64_t sum_axons_excitatory_connected_counts = 0;
     int64_t sum_axons_inhibitory_counts = 0;
@@ -729,14 +729,15 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const si
     int64_t sum_axons_inh_vacant = sum_axons_inhibitory_counts - sum_axons_inhibitory_connected_counts;
 
     // Get global sums at rank 0
-    std::array<int64_t, 6> sums_local = { sum_axons_exc_vacant,
+    std::array<int64_t, 7> sums_local = { sum_axons_exc_vacant,
         sum_axons_inh_vacant,
         sum_dends_exc_vacant,
         sum_dends_inh_vacant,
-        static_cast<int64_t>(sum_synapses_deleted),
+        static_cast<int64_t>(sum_axon_deleted),
+        static_cast<int64_t>(sum_dendrites_deleted),
         static_cast<int64_t>(sum_synapses_created) };
 
-    std::array<int64_t, 6> sums_global = MPIWrapper::reduce(sums_local, MPIWrapper::ReduceFunction::sum, 0);
+    std::array<int64_t, 7> sums_global = MPIWrapper::reduce(sums_local, MPIWrapper::ReduceFunction::sum, 0);
 
     // Output data
     if (0 == MPIWrapper::get_my_rank()) {
@@ -745,19 +746,20 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const si
         // Write headers to file if not already done so
         if (0 == step) {
             LogFiles::write_to_file(LogFiles::EventType::Sums, false,
-                "# SUMS OVER ALL NEURONS\n{1:{0}}{2:{0}}{3:{0}}{4:{0}}{5:{0}}{6:{0}}{7:{0}}",
+                "# SUMS OVER ALL NEURONS\n{1:{0}}{2:{0}}{3:{0}}{4:{0}}{5:{0}}{6:{0}}{7:{0}}{8:{0}}",
                 cwidth,
                 "# step",
                 "Axons exc. (vacant)",
                 "Axons inh. (vacant)",
                 "Dends exc. (vacant)",
                 "Dends inh. (vacant)",
-                "Synapses deleted",
+                "Synapses (axons) deleted",
+                "Synapses (dendrites) deleted",
                 "Synapses created");
         }
 
         LogFiles::write_to_file(LogFiles::EventType::Sums, false,
-            "{2:<{0}}{3:<{0}}{4:<{0}}{5:<{0}}{6:<{0}}{7:<{0}}{8:<{0}}",
+            "{2:<{0}}{3:<{0}}{4:<{0}}{5:<{0}}{6:<{0}}{7:<{0}}{8:<{0}}{9:<{0}}",
             cwidth,
             Constants::print_precision,
             step,
@@ -766,7 +768,8 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const si
             sums_global[2],
             sums_global[3],
             sums_global[4] / 2,
-            sums_global[5] / 2);
+            sums_global[5] / 2,
+            sums_global[6] / 2);
     }
 }
 
