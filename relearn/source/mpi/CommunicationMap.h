@@ -59,6 +59,20 @@ public:
     }
 
     /**
+     * @brief Returns the total number of requests
+     * @return The total number of requests
+     */
+    [[nodiscard]] size_t get_total_number_requests() const {
+        size_t total_size = 0;
+
+        for (auto mpi_rank = 0; mpi_rank < number_ranks; mpi_rank++) {
+            total_size += size(mpi_rank);
+        }
+
+        return total_size;
+    }
+
+    /**
      * @brief Checks if there is data at all
      * @return True iff there is some data
      */
@@ -85,7 +99,7 @@ public:
      *      if the index is too large, or if there is no data for the MPI rank at all
      * @return The data package
      */
-    [[nodiscard]] RequestType get_request(const int mpi_rank, const size_t request_index) const {
+    [[nodiscard]] RequestType get_request(const int mpi_rank, const unsigned int request_index) const {
         RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::get_request: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
         RelearnException::check(contains(mpi_rank), "CommunicationMap::get_request: There are no requests for rank {}", mpi_rank);
 

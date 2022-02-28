@@ -20,14 +20,22 @@ std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> Algorithm::upda
 
     Timers::start(TimerRegion::CREATE_SYNAPSES);
 
+    Timers::start(TimerRegion::CREATE_SYNAPSES_EXCHANGE_REQUESTS);
     const auto& synapse_creation_requests_incoming = MPIWrapper::exchange_requests(synapse_creation_requests_outgoing);
+    Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_EXCHANGE_REQUESTS);
 
+    Timers::start(TimerRegion::CREATE_SYNAPSES_PROCESS_REQUESTS);
     auto [responses_outgoing, synapses] = create_synapses_process_requests(number_neurons, synapse_creation_requests_incoming);
     auto& [local_synapses, distant_in_synapses] = synapses;
+    Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_PROCESS_REQUESTS);
 
+    Timers::start(TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES);
     const auto& responses_incoming = MPIWrapper::exchange_requests(responses_outgoing);
+    Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES);
 
+    Timers::start(TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES);
     auto out_synapses = create_synapses_process_responses(synapse_creation_requests_outgoing, responses_incoming);
+    Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES);
 
     Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES);
 
@@ -54,39 +62,46 @@ Algorithm::create_synapses_process_requests(size_t number_neurons, const Communi
     DistantInSynapses distant_synapses{};
     distant_synapses.reserve(number_neurons);
 
-    // For all requests I received
+    std::vector<std::pair<int, unsigned int>> indices{};
+    indices.reserve(synapse_creation_requests_incoming.get_total_number_requests());
+
     for (const auto& [source_rank, requests] : synapse_creation_requests_incoming) {
-        const auto num_requests = requests.size();
-
-        // All requests of a rank
-        for (auto request_index = 0; request_index < num_requests; request_index++) {
-            const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = requests[request_index];
-            RelearnException::check(target_neuron_id.get_local_id() < number_neurons, "Neurons::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
-
-            const auto& dendrites = (SignalType::INHIBITORY == dendrite_type_needed) ? inhibitory_dendrites : excitatory_dendrites;
-
-            const auto weight = (SignalType::INHIBITORY == dendrite_type_needed) ? -1 : 1;
-            const auto number_free_elements = dendrites->get_free_elements(target_neuron_id);
-
-            if (number_free_elements == 0) {
-                // Other axons were faster and came first
-                responses.append(source_rank, SynapseCreationResponse::failed);
-                continue;
-            }
-
-            // Increment number of connected dendrites
-            dendrites->update_connected_elements(target_neuron_id, 1);
-
-            // Set response to "connected" (success)
-            responses.append(source_rank, SynapseCreationResponse::succeeded);
-
-            if (source_rank == my_rank) {
-                local_synapses.emplace_back(target_neuron_id, source_neuron_id, weight);
-                continue;
-            }
-
-            distant_synapses.emplace_back(target_neuron_id, RankNeuronId{ source_rank, source_neuron_id }, weight);
+        for (unsigned int request_index = 0; request_index < requests.size(); request_index++) {
+            indices.emplace_back(source_rank, request_index);
         }
+    }
+
+    // We need to shuffle the request indices so we do not prefer those from smaller MPI ranks and lower neuron ids
+    RandomHolder::shuffle(RandomHolderKey::Algorithm, indices.begin(), indices.end());
+
+    for (const auto& [source_rank, request_index] : indices) {
+        const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = synapse_creation_requests_incoming.get_request(source_rank, request_index);
+
+        RelearnException::check(target_neuron_id.get_local_id() < number_neurons, "Neurons::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
+
+        const auto& dendrites = (SignalType::INHIBITORY == dendrite_type_needed) ? inhibitory_dendrites : excitatory_dendrites;
+
+        const auto weight = (SignalType::INHIBITORY == dendrite_type_needed) ? -1 : 1;
+        const auto number_free_elements = dendrites->get_free_elements(target_neuron_id);
+
+        if (number_free_elements == 0) {
+            // Other axons were faster and came first
+            responses.append(source_rank, SynapseCreationResponse::failed);
+            continue;
+        }
+
+        // Increment number of connected dendrites
+        dendrites->update_connected_elements(target_neuron_id, 1);
+
+        // Set response to "connected" (success)
+        responses.append(source_rank, SynapseCreationResponse::succeeded);
+
+        if (source_rank == my_rank) {
+            local_synapses.emplace_back(target_neuron_id, source_neuron_id, weight);
+            continue;
+        }
+
+        distant_synapses.emplace_back(target_neuron_id, RankNeuronId{ source_rank, source_neuron_id }, weight);
     }
 
     return { responses, { local_synapses, distant_synapses } };
