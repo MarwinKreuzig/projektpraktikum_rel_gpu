@@ -1133,19 +1133,155 @@ TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputEmptyPoisson) {
     test_update(std::move(model), std::move(ng), number_neurons);
 }
 
+TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputEmptyIzhikevich) {
+    using namespace models;
+    auto model = std::make_unique<IzhikevichModel>();
+
+    const auto number_neurons = get_random_number_neurons();
+
+    auto ng = create_empty_network_graph(number_neurons, 0);
+
+    test_update(std::move(model), std::move(ng), number_neurons);
+}
+
+TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputEmptyFitzHughNagumo) {
+    using namespace models;
+    auto model = std::make_unique<FitzHughNagumoModel>();
+
+    const auto number_neurons = get_random_number_neurons();
+
+    auto ng = create_empty_network_graph(number_neurons, 0);
+
+    test_update(std::move(model), std::move(ng), number_neurons);
+}
+
+TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputEmptyAEIF) {
+    using namespace models;
+    auto model = std::make_unique<AEIFModel>();
+
+    const auto number_neurons = get_random_number_neurons();
+
+    auto ng = create_empty_network_graph(number_neurons, 0);
+
+    test_update(std::move(model), std::move(ng), number_neurons);
+}
+
+TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputSomePoisson) {
+    using namespace models;
+    auto model = std::make_unique<PoissonModel>();
+
+    const auto number_neurons = get_random_number_neurons();
+    const auto number_synapses = get_random_neuron_id(number_neurons);
+
+    auto ng = create_network_graph(number_neurons, 0, number_synapses.get_local_id());
+
+    test_update(std::move(model), std::move(ng), number_neurons);
+}
+
+TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputSomeIzhikevich) {
+    using namespace models;
+    auto model = std::make_unique<IzhikevichModel>();
+
+    const auto number_neurons = get_random_number_neurons();
+    const auto number_synapses = get_random_neuron_id(number_neurons);
+
+    auto ng = create_network_graph(number_neurons, 0, number_synapses.get_local_id());
+
+    test_update(std::move(model), std::move(ng), number_neurons);
+}
+
+TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputSomeFitzHughNagumo) {
+    using namespace models;
+    auto model = std::make_unique<FitzHughNagumoModel>();
+
+    const auto number_neurons = get_random_number_neurons();
+    const auto number_synapses = get_random_neuron_id(number_neurons);
+
+    auto ng = create_network_graph(number_neurons, 0, number_synapses.get_local_id());
+
+    test_update(std::move(model), std::move(ng), number_neurons);
+}
+
+TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputSomeAEIF) {
+    using namespace models;
+    auto model = std::make_unique<AEIFModel>();
+
+    const auto number_neurons = get_random_number_neurons();
+    const auto number_synapses = get_random_neuron_id(number_neurons);
+
+    auto ng = create_network_graph(number_neurons, 0, number_synapses.get_local_id());
+
+    test_update(std::move(model), std::move(ng), number_neurons);
+}
 
 TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullPoisson) {
     using namespace models;
     auto model = std::make_unique<PoissonModel>(
-        NeuronModel::default_k, 
-        NeuronModel::default_tau_C, 
-        NeuronModel::default_beta, 
-        NeuronModel::default_h, 
-        0.5,
-        0.0, 0.0, 
+        NeuronModel::default_k,
+        NeuronModel::default_tau_C,
+        NeuronModel::default_beta,
+        NeuronModel::default_h,
+        0.5, 0.0, 0.0,
         PoissonModel::default_x_0, PoissonModel::default_tau_x, PoissonModel::default_refrac_time);
 
-    const auto number_neurons = get_random_number_neurons() * 0 + 5;
+    const auto number_neurons = get_random_number_neurons();
+
+    auto ng = create_network_graph_all_to_all(number_neurons, 0);
+
+    test_update(std::move(model), std::move(ng), number_neurons);
+}
+
+TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullIzhikevich) {
+    using namespace models;
+    auto model = std::make_unique<IzhikevichModel>(
+        NeuronModel::default_k,
+        NeuronModel::default_tau_C,
+        NeuronModel::default_beta,
+        NeuronModel::default_h,
+        60.0, 0.0, 0.0,
+        IzhikevichModel::default_a, IzhikevichModel::default_b,
+        IzhikevichModel::default_c, IzhikevichModel::default_d,
+        IzhikevichModel::default_V_spike, IzhikevichModel::default_k1,
+        IzhikevichModel::default_k2, IzhikevichModel::default_k3);
+
+    const auto number_neurons = get_random_number_neurons();
+
+    auto ng = create_network_graph_all_to_all(number_neurons, 0);
+
+    test_update(std::move(model), std::move(ng), number_neurons);
+}
+
+TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullFitzHughNagumo) {
+    using namespace models;
+    auto model = std::make_unique<FitzHughNagumoModel>(
+        NeuronModel::default_k,
+        NeuronModel::default_tau_C,
+        NeuronModel::default_beta,
+        NeuronModel::default_h,
+        60.0, 0.0, 0.0,
+        FitzHughNagumoModel::default_a, FitzHughNagumoModel::default_b, FitzHughNagumoModel::default_phi);
+
+    const auto number_neurons = get_random_number_neurons();
+
+    auto ng = create_network_graph_all_to_all(number_neurons, 0);
+
+    test_update(std::move(model), std::move(ng), number_neurons);
+}
+
+TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullAEIF) {
+    using namespace models;
+    auto model = std::make_unique<AEIFModel>(
+        NeuronModel::default_k,
+        NeuronModel::default_tau_C,
+        NeuronModel::default_beta,
+        NeuronModel::default_h,
+        60.0, 0.0, 0.0,
+        AEIFModel::default_C, AEIFModel::default_g_L,
+        AEIFModel::default_E_L, AEIFModel::default_V_T,
+        AEIFModel::default_d_T, AEIFModel::default_tau_w,
+        AEIFModel::default_a, AEIFModel::default_b, AEIFModel::default_V_spike);
+
+    const auto number_neurons = get_random_number_neurons();
 
     auto ng = create_network_graph_all_to_all(number_neurons, 0);
 
