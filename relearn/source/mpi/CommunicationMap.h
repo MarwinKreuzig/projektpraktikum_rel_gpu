@@ -158,7 +158,7 @@ public:
     void resize(std::vector<size_t> sizes) {
         RelearnException::check(sizes.size() <= number_ranks, "CommunicationMap::resize: number of sizes {} is larger than the number of ranks {}", sizes.size(), number_ranks);
         for (auto mpi_rank = 0; mpi_rank < sizes.size(); mpi_rank++) {
-            if (sizes[mpi_rank] == 0) {
+            if (sizes[mpi_rank] == 0 && !contains(mpi_rank)) {
                 // Don't want to insert an empty element into the container
                 continue;
             }
