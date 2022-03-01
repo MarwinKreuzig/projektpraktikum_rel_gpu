@@ -26,8 +26,9 @@ template <typename RequestType>
 class CommunicationMap {
 
 public:
-    using iterator = typename std::map<int, std::vector<RequestType>>::iterator;
-    using const_iterator = typename std::map<int, std::vector<RequestType>>::const_iterator;
+    using container_type = std::map<int, std::vector<RequestType>>;
+    using iterator = typename container_type::iterator;
+    using const_iterator = typename container_type::const_iterator;
 
     /**
      * @brief Constructs a new communication map 
@@ -312,5 +313,5 @@ public:
 
 private:
     int number_ranks{};
-    std::map<int, std::vector<RequestType>> requests{};
+    container_type requests{};
 };
