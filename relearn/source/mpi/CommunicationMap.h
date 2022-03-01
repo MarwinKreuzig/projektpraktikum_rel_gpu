@@ -92,6 +92,22 @@ public:
     }
 
     /**
+     * @brief Sets the request for the specified position
+     * @param mpi_rank The MPI rank
+     * @param request_index The index of the data package
+     * @param request The data for the MPI rank
+     * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
+     *      if the index is too large, or if there is no data for the MPI rank at all
+     */
+    void set_request(const int mpi_rank, const unsigned int request_index, const RequestType& request) {
+        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::set_request: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
+        RelearnException::check(contains(mpi_rank), "CommunicationMap::set_request: Does not contain a buffer for rank {}", mpi_rank);
+        RelearnException::check(request_index < size(mpi_rank), "CommunicationMap::set_request: The index was too large: {} vs {}", request_index, requests[mpi_rank].size());
+
+        requests[mpi_rank][request_index] = request;
+    }
+
+    /**
      * @brief Returns the data for the specified rank and the specified index
      * @param mpi_rank The MPI rank
      * @param request_index The index of the data package
@@ -126,11 +142,29 @@ public:
     /**
      * @brief Resized the buffer for the data packages for a specified MPI rank
      * @param mpi_rank The MPI rank
+     * @param size The number of elements the buffer should be able to hold
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
      */
     void resize(const int mpi_rank, const size_t size) {
         RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::resize: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
         requests[mpi_rank].resize(size);
+    }
+
+    /**
+     * @brief Resized the buffer for the data packages for all specified MPI ranks
+     * @param sizes The sizes for the respective MPI ranks.
+     * @exception Throws a RelearnException if sizes.size() > number_ranks
+     */
+    void resize(std::vector<size_t> sizes) {
+        RelearnException::check(sizes.size() <= number_ranks, "CommunicationMap::resize: number of sizes {} is larger than the number of ranks {}", sizes.size(), number_ranks);
+        for (auto mpi_rank = 0; mpi_rank < sizes.size(); mpi_rank++) {
+            if (sizes[mpi_rank] == 0) {
+                // Don't want to insert an empty element into the container
+                continue;
+            }
+
+            requests[mpi_rank].resize(sizes[mpi_rank]);
+        }
     }
 
     /**
@@ -193,11 +227,23 @@ public:
         return requests.at(mpi_rank).data();
     }
 
+    /**
+     * @brief Returns a span on the buffer for the specified rank
+     * @param mpi_rank The MPI rank whose buffer should be queried
+     * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
+     */
     [[nodiscard]] std::span<RequestType> get_span(const int mpi_rank) {
+        RelearnException::check(contains(mpi_rank), "CommunicationMap::get_span: There are no requests for rank {}", mpi_rank);
         return std::span<RequestType>{ requests.at(mpi_rank) };
     }
 
+    /**
+     * @brief Returns a constant span on the buffer for the specified rank
+     * @param mpi_rank The MPI rank whose buffer should be queried
+     * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
+     */
     [[nodiscard]] std::span<const RequestType> get_span(const int mpi_rank) const {
+        RelearnException::check(contains(mpi_rank), "CommunicationMap::get_span const: There are no requests for rank {}", mpi_rank);
         return std::span<const RequestType>{ requests.at(mpi_rank) };
     }
 
@@ -265,6 +311,6 @@ public:
     }
 
 private:
-    std::map<int, std::vector<RequestType>> requests{};
     int number_ranks{};
+    std::map<int, std::vector<RequestType>> requests{};
 };

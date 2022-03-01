@@ -462,7 +462,7 @@ std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
         current_synapses = register_edges(in_edges);
     }
 
-    RelearnException::check(num_synapses_to_delete <= current_synapses.size(), "Neurons::delete_synapses_find_synapses_on_neuron:: num_synapses_to_delete > last_synapses.size()");
+    RelearnException::check(num_synapses_to_delete <= current_synapses.size(), "Neurons::delete_synapses_find_synapses_on_neuron:: num_synapses_to_delete > current_synapses.size()");
 
     std::vector<unsigned int> drawn_indices{};
     drawn_indices.reserve(num_synapses_to_delete);

@@ -56,6 +56,8 @@ Algorithm::create_synapses_process_requests(size_t number_neurons, const Communi
         return { responses, {} };
     }
 
+    responses.resize(synapse_creation_requests_incoming.get_request_sizes());
+
     LocalSynapses local_synapses{};
     local_synapses.reserve(number_neurons);
 
@@ -86,7 +88,8 @@ Algorithm::create_synapses_process_requests(size_t number_neurons, const Communi
 
         if (number_free_elements == 0) {
             // Other axons were faster and came first
-            responses.append(source_rank, SynapseCreationResponse::failed);
+            responses.set_request(source_rank, request_index, SynapseCreationResponse::failed);
+            //responses.append(source_rank, SynapseCreationResponse::failed);
             continue;
         }
 
@@ -94,7 +97,8 @@ Algorithm::create_synapses_process_requests(size_t number_neurons, const Communi
         dendrites->update_connected_elements(target_neuron_id, 1);
 
         // Set response to "connected" (success)
-        responses.append(source_rank, SynapseCreationResponse::succeeded);
+        //responses.append(source_rank, SynapseCreationResponse::succeeded);
+        responses.set_request(source_rank, request_index, SynapseCreationResponse::succeeded);
 
         if (source_rank == my_rank) {
             local_synapses.emplace_back(target_neuron_id, source_neuron_id, weight);
