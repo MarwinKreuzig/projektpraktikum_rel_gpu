@@ -51,6 +51,7 @@ file(GLOB_RECURSE SRC_CONF "source/Config.h")
 file(GLOB_RECURSE SRC_TYPES "source/Types.h")
 
 file(GLOB_RECURSE SRC_TST "test/*")
+file(GLOB_RECURSE SRC_BENCH "benchmark/*")
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES 
 ${SRC_ALG} ${SRC_IO} ${SRC_MPI} ${SRC_SIM} 
@@ -58,6 +59,7 @@ ${SRC_STR} ${SRC_UTIL} ${SRC_NEU} ${SRC_NEU_MOD}
 ${SRC_NEU_HEL} ${SRC_MAIN} ${SRC_CONF} ${SRC_TYPES} ${SRC_SIM_FILE} ${SRC_SIM_RANDOM})
 
 source_group("tests\\" FILES ${SRC_TST})
+source_group("benchmark\\" FILES ${SRC_BENCH})
 
 # project options
 add_library(project_options INTERFACE)
@@ -138,8 +140,18 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+FetchContent_Declare(googlebenchmark
+        GIT_REPOSITORY https://github.com/google/benchmark.git
+        GIT_TAG v1.6.1)
+        
+FetchContent_MakeAvailable(googlebenchmark)
+
 add_executable(runTests
 	${SRC_TST}
+)
+
+add_executable(benchmarks
+	${SRC_BENCH}
 )
 
 target_link_libraries(runTests PRIVATE project_options)
@@ -148,3 +160,6 @@ target_link_libraries(runTests PRIVATE gtest_main)
 
 add_test(NAME SerialTests COMMAND runTests)
 
+target_link_libraries(benchmarks PRIVATE project_options)
+target_link_libraries(benchmarks PRIVATE relearn_lib)
+target_link_libraries(benchmarks PRIVATE benchmark::benchmark)
