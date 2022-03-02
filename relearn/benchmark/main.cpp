@@ -38,8 +38,8 @@ DistantInSynapses generate_distant_in_synapses(int number_neurons, int number_sy
             auto random_id = uid(mt);
             auto random_rank = uid_rank(mt);
 
-            const NeuronID source_id{ neuron_id };
-            const NeuronID target_id{ random_id };
+            const NeuronID source_id{ random_id };
+            const NeuronID target_id{ neuron_id };
 
             const RankNeuronId rni{ random_rank, source_id };
 

@@ -1,6 +1,6 @@
 #include "main.h"
 
-constexpr auto number_iterations = 1000;
+constexpr auto number_iterations = 200;
 
 static void BM_NetworkGraph_InsertLocal(benchmark::State& state) {
     const auto number_neurons = state.range(0);

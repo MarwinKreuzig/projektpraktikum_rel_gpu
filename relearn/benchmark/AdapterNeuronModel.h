@@ -16,6 +16,20 @@ public:
         return model.get_background_activity();
     }
 
+    const std::vector<double>& get_synaptic_input() {
+        return model.get_synaptic_input();
+    }
+
+    const std::vector<double>& get_x() {
+        return model.get_x();
+    }
+
+    void set_fired_status(FiredStatus fs) {
+        for (auto& fired_status : model.fired) {
+            fired_status = fs;
+        }
+    }
+
     void calculate_serial_initialize(const std::vector<UpdateStatus>& disable_flags) {
         model.update_electrical_activity_serial_initialize(disable_flags);
     }

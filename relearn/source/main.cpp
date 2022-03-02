@@ -84,24 +84,43 @@ void print_sizes() {
     const auto sizeof_bh_octreenode = sizeof(OctreeNode<BarnesHutCell>);
     const auto sizeof_naive_octreenode = sizeof(OctreeNode<NaiveCell>);
 
+    const auto sizeof_neuron_id = sizeof(NeuronID);
+    const auto sizeof_rank_neuron_id = sizeof(RankNeuronId);
+
+    const auto sizeof_local_synapse = sizeof(LocalSynapse);
+    const auto sizeof_distant_in_synapse = sizeof(DistantInSynapse);
+    const auto sizeof_distant_out_synapse = sizeof(DistantOutSynapse);
+
     std::stringstream ss{};
 
     ss << '\n';
+
     ss << "Size of Vec3d: " << sizeof_vec3_double << '\n';
     ss << "Size of Vec3s: " << sizeof_vec3_size_t << '\n';
+
     ss << "Size of VirtualPlasticityElement: " << sizeof_virtual_plasticity_element << "\n";
     ss << "Size of FastMultipoleMethodsCell: " << sizeof_fmm_cell_attributes << '\n';
+
     ss << "Size of empty_t: " << sizeof_empty_t << '\n';
     ss << "Size of BarnesHutCell: " << sizeof_bh_cell_attributes << '\n';
     ss << "Size of NaiveCell: " << sizeof_bh_naive_attributes << "\n";
+
     ss << "Size of Cell<empty_t>: " << sizeof_empty_cell << '\n';
     ss << "Size of Cell<FastMultipoleMethodsCell>: " << sizeof_fmm_cell << '\n';
     ss << "Size of Cell<BarnesHutCell>: " << sizeof_bh_cell << '\n';
     ss << "Size of Cell<NaiveCell>: " << sizeof_naive_cell << "\n";
+
     ss << "Size of OctreeNode<empty_t>: " << sizeof_octreenode << '\n';
     ss << "Size of OctreeNode<FastMultipoleMethodsCell>: " << sizeof_fmm_octreenode << '\n';
     ss << "Size of OctreeNode<BarnesHutCell>: " << sizeof_bh_octreenode << '\n';
-    ss << "Size of OctreeNode<NaiveCell>: " << sizeof_naive_octreenode;
+    ss << "Size of OctreeNode<NaiveCell>: " << sizeof_naive_octreenode << '\n';
+
+    ss << "Size of NeuronID: " << sizeof_neuron_id << '\n';
+    ss << "Size of RankNeuronID: " << sizeof_rank_neuron_id << '\n';
+
+    ss << "Size of LocalSynapse: " << sizeof_local_synapse << '\n';
+    ss << "Size of DistantInSynapse: " << sizeof_distant_in_synapse << '\n';
+    ss << "Size of DistantOutSynapse: " << sizeof_distant_out_synapse << "\n";
 
     LogFiles::print_message_rank(0, ss.str());
 }
