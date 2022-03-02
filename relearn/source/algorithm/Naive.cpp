@@ -97,7 +97,6 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t
 
     const std::vector<double>& axons_cnts = axons->get_grown_elements();
     const std::vector<unsigned int>& axons_connected_cnts = axons->get_connected_elements();
-    const std::vector<SignalType>& axons_signal_types = axons->get_signal_types();
 
     // For my neurons
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {

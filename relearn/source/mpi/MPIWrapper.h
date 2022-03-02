@@ -355,12 +355,7 @@ public:
         std::vector<size_t> number_requests_incoming = all_to_all(number_requests_outgoing);
 
         CommunicationMap<RequestType> incoming_requests(number_ranks);
-
-        for (auto rank_id = 0; rank_id < number_ranks; rank_id++) {
-            if (const auto num_requests = number_requests_incoming[rank_id]; 0 != num_requests) {
-                incoming_requests.resize(rank_id, number_requests_incoming[rank_id]);
-            }
-        }
+        incoming_requests.resize(number_requests_incoming);
 
         std::vector<AsyncToken> async_tokens{};
 

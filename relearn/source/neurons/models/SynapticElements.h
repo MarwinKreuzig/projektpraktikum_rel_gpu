@@ -399,7 +399,8 @@ public:
              * Create and delete synaptic elements as required.
              * This function only deletes elements (bound and unbound), no synapses.
              */
-            const auto num_synapses_to_delete = update_number_elements(NeuronID{ neuron_id });
+            NeuronID converted_id{ neuron_id };
+            const auto num_synapses_to_delete = update_number_elements(converted_id);
 
             number_deletions[neuron_id] = num_synapses_to_delete;
             sum_to_delete += num_synapses_to_delete;
@@ -441,7 +442,7 @@ public:
      * @exception Throws a RelearnException if the internal data structures are corrupted
      * @return The connection histogram
      */
-    std::map<std::pair<unsigned int, unsigned int>, uint64_t> get_historgram() const {
+    [[nodiscard]] std::map<std::pair<unsigned int, unsigned int>, uint64_t> get_historgram() const {
         RelearnException::check(size == grown_elements.size(), "SynapticElements::get_historgram: size did not match the number of grown elements");
         RelearnException::check(size == deltas_since_last_update.size(), "SynapticElements::get_historgram: size did not match the number of deltas");
         RelearnException::check(size == connected_elements.size(), "SynapticElements::get_historgram: size did not match the number of connected elements");

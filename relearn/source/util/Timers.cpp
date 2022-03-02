@@ -161,8 +161,20 @@ void Timers::print() {
     sstring << "      Empty remote nodes cache                 : ";
     print_timer(sstring, TimerRegion::EMPTY_REMOTE_NODES_CACHE, timers_global);
 
-    sstring << "      Create synapses (w/ Alltoall)            : ";
+    sstring << "      Create synapses                          : ";
     print_timer(sstring, TimerRegion::CREATE_SYNAPSES, timers_global);
+
+    sstring << "        Create synapses Exchange Requests      : ";
+    print_timer(sstring, TimerRegion::CREATE_SYNAPSES_EXCHANGE_REQUESTS, timers_global);
+
+    sstring << "        Create synapses Process Requests       : ";
+    print_timer(sstring, TimerRegion::CREATE_SYNAPSES_PROCESS_REQUESTS, timers_global);
+
+    sstring << "        Create synapses Exchange Responses     : ";
+    print_timer(sstring, TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES, timers_global);
+
+    sstring << "        Create synapses Process Responses      : ";
+    print_timer(sstring, TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES, timers_global);
 
     sstring << "      Add synapses in local network graphs     : ";
     print_timer(sstring, TimerRegion::ADD_SYNAPSES_TO_NETWORKGRAPH, timers_global);

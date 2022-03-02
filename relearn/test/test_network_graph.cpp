@@ -201,11 +201,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
     std::map<size_t, std::map<size_t, int>> outgoing_edges{};
 
     for (size_t synapse_id = 0; synapse_id < num_synapses; synapse_id++) {
-        auto weight = get_random_synapse_weight();
-        if (weight == 0) {
-            weight++;
-        }
-
+        const auto weight = get_random_synapse_weight();
         const auto source_id = get_random_neuron_id(number_neurons);
         const auto target_id = get_random_neuron_id(number_neurons);
 
@@ -321,11 +317,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
         const auto my_neuron_id = get_random_neuron_id(number_neurons);
         const auto other_neuron_id = get_random_neuron_id(number_neurons);
 
-        auto weight = get_random_synapse_weight();
-        while (weight == 0) {
-            weight = get_random_synapse_weight();
-        }
-
+        const auto weight = get_random_synapse_weight();
         const auto is_in_synapse = weight < 0;
 
         RankNeuronId my_id{ 0, my_neuron_id };
@@ -399,11 +391,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesSplit) {
         const auto neuron_id = get_random_neuron_id(number_neurons);
         const auto other_neuron_id = get_random_neuron_id(number_neurons);
 
-        auto weight = get_random_synapse_weight();
-        while (weight == 0) {
-            weight = get_random_synapse_weight();
-        }
-
+        const auto weight = get_random_synapse_weight();
         const auto is_in_synapse = weight < 0;
 
         RankNeuronId my_id{ 0, neuron_id };
@@ -484,11 +472,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
         const auto neuron_id = get_random_neuron_id(number_neurons);
         const auto other_neuron_id = get_random_neuron_id(number_neurons);
 
-        auto weight = get_random_synapse_weight();
-        while (weight == 0) {
-            weight = get_random_synapse_weight();
-        }
-
+        const auto weight = get_random_synapse_weight();
         const auto is_in_synapse = weight < 0;
 
         RankNeuronId my_id{ 0, neuron_id };
@@ -562,11 +546,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
         const auto neuron_id = get_random_neuron_id(number_neurons);
         const auto other_neuron_id = get_random_neuron_id(number_neurons);
 
-        auto weight = get_random_synapse_weight();
-        while (weight == 0) {
-            weight = get_random_synapse_weight();
-        }
-
+        const auto weight = get_random_synapse_weight();
         const auto is_in_synapse = weight < 0;
 
         RankNeuronId my_id{ 0, neuron_id };
@@ -594,11 +574,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
         const auto neuron_id = get_random_neuron_id(number_neurons);
         const auto other_neuron_id = get_random_neuron_id(number_neurons);
 
-        auto weight = get_random_synapse_weight();
-        while (weight == 0) {
-            weight = get_random_synapse_weight();
-        }
-
+        const auto weight = get_random_synapse_weight();
         const auto is_in_synapse = weight < 0;
 
         RankNeuronId my_id{ 0, neuron_id };

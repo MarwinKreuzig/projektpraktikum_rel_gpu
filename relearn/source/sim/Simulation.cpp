@@ -223,7 +223,7 @@ void Simulation::initialize() {
     neurons->init_synaptic_elements();
     neurons->debug_check_counts();
     neurons->print_neurons_overview_to_log_file_on_rank_0(0);
-    neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0);
+    neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0, 0);
 }
 
 void Simulation::simulate(const size_t number_steps) {
@@ -240,7 +240,7 @@ void Simulation::simulate(const size_t number_steps) {
     const auto final_step_count = step + number_steps;
     for (; step <= final_step_count; ++step) { // NOLINT(altera-id-dependent-backward-branch)
         if (step % Config::monitor_step == 0) {
-            const auto number_neurons = neurons->get_num_neurons();
+            const auto number_neurons = neurons->get_number_neurons();
 
             for (auto& mn : *monitors) {
                 if (mn.get_target_id().get_local_id() < number_neurons) {
@@ -299,24 +299,30 @@ void Simulation::simulate(const size_t number_steps) {
         if (step % Config::plasticity_update_step == 0) {
             Timers::start(TimerRegion::UPDATE_CONNECTIVITY);
 
-            const auto& [num_synapses_deleted, num_synapses_created] = neurons->update_connectivity();
+            const auto& [num_axons_deleted, num_dendrites_deleted, num_synapses_created] = neurons->update_connectivity();
 
             Timers::stop_and_add(TimerRegion::UPDATE_CONNECTIVITY);
 
             // Get total number of synapses deleted and created
-            const std::array<int64_t, 2> local_cnts = { static_cast<int64_t>(num_synapses_deleted), static_cast<int64_t>(num_synapses_created) };
-            const std::array<int64_t, 2> global_cnts = MPIWrapper::reduce(local_cnts, MPIWrapper::ReduceFunction::sum, 0);
+            const std::array<int64_t, 3> local_cnts = { static_cast<int64_t>(num_axons_deleted), static_cast<int64_t>(num_dendrites_deleted), static_cast<int64_t>(num_synapses_created) };
+            const std::array<int64_t, 3> global_cnts = MPIWrapper::reduce(local_cnts, MPIWrapper::ReduceFunction::sum, 0);
+
+            const auto local_deletions = local_cnts[0] + local_cnts[1];
+            const auto local_creations = local_cnts[2];
+
+            const auto global_deletions = global_cnts[0] + global_cnts[1];
+            const auto global_creations = global_cnts[2];
 
             if (0 == MPIWrapper::get_my_rank()) {
-                total_synapse_deletions += global_cnts[0];
-                total_synapse_creations += global_cnts[1];
+                total_synapse_deletions += local_deletions;
+                total_synapse_creations += local_creations;
             }
 
-            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "{}: {} {} {}", step, global_cnts[1], global_cnts[0], global_cnts[1] - global_cnts[0]);
-            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateCSV, false, "{};{};{};{}", step, global_cnts[1], global_cnts[0], global_cnts[1] - global_cnts[0]);
-            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false, "{}: {} {} {}", step, local_cnts[1], local_cnts[0], local_cnts[1] - local_cnts[0]);
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "{}: {} {} {}", step, global_creations, global_deletions, global_creations - global_deletions);
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateCSV, false, "{};{};{};{}", step, global_creations, global_deletions, global_creations - global_deletions);
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false, "{}: {} {} {}", step, local_creations, local_deletions, local_creations - local_deletions);
 
-            neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_synapses_deleted, num_synapses_created);
+            neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_axons_deleted, num_dendrites_deleted, num_synapses_created);
 
             network_graph->debug_check();
         }
@@ -395,7 +401,7 @@ void Simulation::print_neuron_monitors() {
 
         outfile.imbue(std::locale());
 
-        outfile << "Step;Fired;Refrac;x;Ca;I_sync;axons;axons_connected;dendrites_exc;dendrites_exc_connected;dendrites_inh;dendrites_inh_connected";
+        outfile << "Step;Fired;Refrac;x;Ca;SynapticInput;background;axons;axons_connected;dendrites_exc;dendrites_exc_connected;dendrites_inh;dendrites_inh_connected";
         outfile << "\n";
 
         const auto& infos = monitor.get_informations();
@@ -411,7 +417,8 @@ void Simulation::print_neuron_monitors() {
             outfile << info.get_secondary() << filler;
             outfile << info.get_x() << filler;
             outfile << info.get_calcium() << filler;
-            outfile << info.get_I_sync() << filler;
+            outfile << info.get_synaptic_input() << filler;
+            outfile << info.get_background_activity() << filler;
             outfile << info.get_axons() << filler;
             outfile << info.get_axons_connected() << filler;
             outfile << info.get_dendrites_exc() << filler;

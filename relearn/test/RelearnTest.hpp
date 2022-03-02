@@ -10,17 +10,18 @@
 
 #include "gtest/gtest.h"
 
-#include "../source/algorithm/BarnesHutCell.h"
-#include "../source/algorithm/FastMultipoleMethodsCell.h"
-#include "../source/io/LogFiles.h"
-#include "../source/mpi/MPIWrapper.h"
-#include "../source/neurons/ElementType.h"
-#include "../source/neurons/SignalType.h"
-#include "../source/neurons/models/SynapticElements.h"
-#include "../source/structure/OctreeNode.h"
-#include "../source/util/MemoryHolder.h"
-#include "../source/util/RelearnException.h"
-#include "../source/util/TaggedID.h"
+#include "algorithm/BarnesHutCell.h"
+#include "algorithm/FastMultipoleMethodsCell.h"
+#include "io/LogFiles.h"
+#include "mpi/MPIWrapper.h"
+#include "neurons/ElementType.h"
+#include "neurons/NetworkGraph.h"
+#include "neurons/SignalType.h"
+#include "neurons/models/SynapticElements.h"
+#include "structure/OctreeNode.h"
+#include "util/MemoryHolder.h"
+#include "util/RelearnException.h"
+#include "util/TaggedID.h"
 
 #include <chrono>
 #include <cmath>
@@ -30,6 +31,7 @@
 #include <tuple>
 #include <vector>
 
+class NeuronModel;
 class NeuronsExtraInfo;
 
 inline bool initialized = false;
@@ -169,7 +171,13 @@ protected:
     }
 
     int get_random_synapse_weight() {
-        return uid_synapse_weight(mt);
+        int weight = uid_synapse_weight(mt);
+
+        while (weight == 0) {
+            weight = uid_synapse_weight(mt);
+        }
+
+        return weight;
     }
 
     unsigned int get_random_synaptic_element_connected_count(unsigned int maximum) {
@@ -252,6 +260,77 @@ protected:
         }
 
         return std::make_tuple<SynapticElements, std::vector<double>, std::vector<unsigned int>, std::vector<SignalType>>(std::move(se), std::move(grown_elements), std::move(connected_elements), std::move(signal_types));
+    }
+
+    std::vector<size_t> get_random_derangement(size_t size) {
+        std::vector<size_t> derangement(size);
+        std::iota(derangement.begin(), derangement.end(), 0);
+
+        auto check = [](const std::vector<size_t>& vec) -> bool {
+            for (auto i = 0; i < vec.size(); i++) {
+                if (i == vec[i]) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        do {
+            std::shuffle(derangement.begin(), derangement.end(), mt);
+        } while (!check(derangement));
+
+        return derangement;
+    }
+
+    std::vector<UpdateStatus> get_update_status(size_t number_neurons, size_t number_disabled) {
+        std::vector<UpdateStatus> status(number_disabled, UpdateStatus::DISABLED);
+        status.resize(number_neurons, UpdateStatus::ENABLED);
+
+        std::shuffle(status.begin(), status.end(), mt);
+
+        return status;
+    }
+
+    std::shared_ptr<NetworkGraph> create_network_graph_all_to_all(size_t number_neurons, int mpi_rank) {
+        auto ptr = std::make_shared<NetworkGraph>(number_neurons, mpi_rank);
+
+        for (const auto& source_id : NeuronID::range(number_neurons)) {
+            for (const auto& target_id : NeuronID::range(number_neurons)) {
+                if (source_id.get_local_id() == target_id.get_local_id()) {
+                    continue;
+                }
+
+                const auto weight = get_random_synapse_weight();
+                LocalSynapse ls(target_id, source_id, weight);
+
+                ptr->add_synapse(ls);
+            }
+        }
+
+        return ptr;
+    }
+
+    std::shared_ptr<NetworkGraph> create_network_graph(size_t number_neurons, int mpi_rank, unsigned long long number_connections_per_vertex) {
+        auto ptr = std::make_shared<NetworkGraph>(number_neurons, mpi_rank);
+
+        for (auto i = 0ULL; i < number_connections_per_vertex; i++) {
+            const auto& source_ids = NeuronID::range(number_neurons);
+            const auto& target_ids = get_random_derangement(number_neurons);
+
+            for (auto j = 0; j < number_neurons; j++) {
+
+                const auto weight = get_random_synapse_weight();
+                LocalSynapse ls(NeuronID(false, false, target_ids[j]), source_ids[j], weight);
+                ptr->add_synapse(ls);
+            }
+        }
+
+        return ptr;
+    }
+
+    std::shared_ptr<NetworkGraph> create_empty_network_graph(size_t number_neurons, int mpi_rank) {
+        auto ptr = std::make_shared<NetworkGraph>(number_neurons, mpi_rank);
+        return ptr;
     }
 
     constexpr static double min_grown_elements = 0.0;
@@ -346,6 +425,8 @@ protected:
     static void SetUpTestCase() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
+
+    void test_update(std::unique_ptr<NeuronModel> model, std::shared_ptr<NetworkGraph> ng, size_t number_neurons);
 };
 
 class RankNeuronIdTest : public RelearnTest {

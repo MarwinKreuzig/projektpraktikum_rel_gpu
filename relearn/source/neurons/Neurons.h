@@ -151,7 +151,7 @@ public:
      * @brief Returns the number of neurons in this object
      * @return The number of neurons in this object
      */
-    [[nodiscard]] size_t get_num_neurons() const noexcept {
+    [[nodiscard]] size_t get_number_neurons() const noexcept {
         return number_neurons;
     }
 
@@ -287,7 +287,7 @@ public:
      *      or something unexpected happens
      * @return Returns a tuple with (1) the number of deleted synapses, and (2) the number of created synapses
      */
-    [[nodiscard]] std::tuple<size_t, size_t> update_connectivity();
+    [[nodiscard]] std::tuple<uint64_t, uint64_t, uint64_t> update_connectivity();
 
     /**
      * @brief Calculates the number vacant axons and dendrites (excitatory, inhibitory) and prints them to LogFiles::EventType::Sums
@@ -296,7 +296,7 @@ public:
      * @param sum_synapses_deleted The number of deleted synapses (locally)
      * @param sum_synapses_created The number of created synapses (locally)
      */
-    void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, size_t sum_synapses_deleted, size_t sum_synapses_created);
+    void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, uint64_t sum_axon_deleted, uint64_t sum_dendrites_deleted, uint64_t sum_synapses_created);
 
     /**
      * @brief Prints the overview of the neurons to LogFiles::EventType::NeuronsOverview
@@ -374,7 +374,7 @@ private:
         return global_statistics(converted_values, root, disable_flags);
     }
 
-    [[nodiscard]] size_t delete_synapses();
+    [[nodiscard]] std::pair<uint64_t, uint64_t> delete_synapses();
 
     [[nodiscard]] CommunicationMap<SynapseDeletionRequest> delete_synapses_find_synapses(const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete);
 
