@@ -21,6 +21,7 @@
 #include <span>
 #include <vector>
 
+class AdapterNeuronModel;
 class NetworkGraph;
 class NeuronMonitor;
 
@@ -36,6 +37,7 @@ enum class FiredStatus : char {
  * This class performs communication with MPI.
  */
 class NeuronModel {
+    friend class AdapterNeuronModel;
     friend class NeuronMonitor;
 
 public:
