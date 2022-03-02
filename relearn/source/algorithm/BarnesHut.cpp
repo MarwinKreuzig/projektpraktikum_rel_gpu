@@ -98,7 +98,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(
             continue;
         }
 
-        const auto id = NeuronID{ neuron_id };
+        const NeuronID id{ neuron_id };
 
         const auto number_vacant_axons = axons->get_free_elements(id);
         if (number_vacant_axons == 0) {

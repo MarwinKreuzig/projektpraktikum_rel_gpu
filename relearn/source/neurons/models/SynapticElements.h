@@ -399,7 +399,8 @@ public:
              * Create and delete synaptic elements as required.
              * This function only deletes elements (bound and unbound), no synapses.
              */
-            const auto num_synapses_to_delete = update_number_elements(NeuronID{ neuron_id });
+            NeuronID converted_id{ neuron_id };
+            const auto num_synapses_to_delete = update_number_elements(converted_id);
 
             number_deletions[neuron_id] = num_synapses_to_delete;
             sum_to_delete += num_synapses_to_delete;

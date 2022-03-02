@@ -59,7 +59,8 @@ void NeuronModel::update_electrical_activity_update_activity(const std::vector<U
             continue;
         }
 
-        update_activity(NeuronID{ neuron_id });
+        NeuronID converted_id{ neuron_id };
+        update_activity(converted_id);
     }
 
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);

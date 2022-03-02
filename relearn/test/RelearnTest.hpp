@@ -310,10 +310,10 @@ protected:
         return ptr;
     }
 
-    std::shared_ptr<NetworkGraph> create_network_graph(size_t number_neurons, int mpi_rank, unsigned int number_connections_per_vertex) {
+    std::shared_ptr<NetworkGraph> create_network_graph(size_t number_neurons, int mpi_rank, unsigned long long number_connections_per_vertex) {
         auto ptr = std::make_shared<NetworkGraph>(number_neurons, mpi_rank);
 
-        for (auto i = 0; i < number_connections_per_vertex; i++) {
+        for (auto i = 0ULL; i < number_connections_per_vertex; i++) {
             const auto& source_ids = NeuronID::range(number_neurons);
             const auto& target_ids = get_random_derangement(number_neurons);
 
