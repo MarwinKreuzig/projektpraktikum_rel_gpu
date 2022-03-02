@@ -1,5 +1,4 @@
 #include "main.h"
-#include "config.h"
 
 constexpr auto number_iterations = 1000;
 
