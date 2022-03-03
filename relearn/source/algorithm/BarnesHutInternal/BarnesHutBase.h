@@ -137,7 +137,7 @@ protected:
      * @exception Throws a RelearnEception if there was an algorithmic error
      * @return The acceptance status for the node, i.e., if it must be discarded, can be accepted, or must be expanded.
      */
-    [[nodicard]] AcceptanceStatus test_acceptance_criterion(const position_type& source_position, const OctreeNode<AdditionalCellAttributes>* target_node,
+    [[nodiscard]] AcceptanceStatus test_acceptance_criterion(const position_type& source_position, const OctreeNode<AdditionalCellAttributes>* target_node,
         const ElementType element_type, const SignalType signal_type) const {
         RelearnException::check(target_node != nullptr, "BarnesHutBase::test_acceptance_criterion: target_node was nullptr");
 
