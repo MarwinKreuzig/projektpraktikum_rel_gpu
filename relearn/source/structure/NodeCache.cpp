@@ -22,6 +22,14 @@ void NodeCache::empty_barnes_hut() {
     remote_nodes_cache_barnes_hut.clear();
 }
 
+void NodeCache::empty_barnes_hut_inverted() {
+    for (auto& remode_node_in_cache : remote_nodes_cache_barnes_hut_inverted) {
+        OctreeNode<BarnesHutInvertedCell>::free(remode_node_in_cache.second);
+    }
+
+    remote_nodes_cache_barnes_hut.clear();
+}
+
 void NodeCache::empty_fmm() {
     for (auto& remode_node_in_cache : remote_nodes_cache_fmm) {
         OctreeNode<FastMultipoleMethodsCell>::free(remode_node_in_cache.second);
@@ -66,6 +74,55 @@ void NodeCache::empty_fmm() {
             auto* local_child_addr = iterator->second;
 
             MPIWrapper::download_octree_node<BarnesHutCell>(local_child_addr, target_rank, node->get_child(child_index));
+        }
+
+        // Remember address of node
+        // NOLINTNEXTLINE
+        local_children[child_index] = iterator->second;
+    }
+
+    // Complete access epoch
+    MPIWrapper::unlock_window(target_rank);
+
+    return local_children;
+}
+
+[[nodiscard]] std::array<OctreeNode<BarnesHutInvertedCell>*, Constants::number_oct> NodeCache::download_children_barnes_hut_inverted(OctreeNode<BarnesHutInvertedCell>* node) {
+    std::array<OctreeNode<BarnesHutInvertedCell>*, Constants::number_oct> local_children{ nullptr };
+
+    const auto target_rank = node->get_rank();
+
+    RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "NodeCache::download_children_barnes_hut: Tried to download a local node");
+
+    // Start access epoch to remote rank
+    MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
+
+    // Fetch remote children if they exist
+    // NOLINTNEXTLINE
+    for (auto i = Constants::number_oct; i >= 1; i--) {
+        const auto child_index = i - 1;
+
+        if (nullptr == node->get_child(child_index)) {
+            // NOLINTNEXTLINE
+            local_children[child_index] = nullptr;
+            continue;
+        }
+
+        NodesCacheKey<BarnesHutInvertedCell> rank_addr_pair{ target_rank, node->get_child(child_index) };
+        std::pair<NodesCacheKey<BarnesHutInvertedCell>, NodesCacheValue<BarnesHutInvertedCell>> cache_key_val_pair{ rank_addr_pair, nullptr };
+
+        // Get cache entry for "cache_key_val_pair"
+        // It is created if it does not exist yet
+        const auto& [iterator, inserted] = remote_nodes_cache_barnes_hut_inverted.insert(cache_key_val_pair);
+
+        // Cache entry just inserted as it was not in cache
+        // So, we still need to init the entry by fetching
+        // from the target rank
+        if (inserted) {
+            iterator->second = OctreeNode<BarnesHutInvertedCell>::create();
+            auto* local_child_addr = iterator->second;
+
+            MPIWrapper::download_octree_node<BarnesHutInvertedCell>(local_child_addr, target_rank, node->get_child(child_index));
         }
 
         // Remember address of node

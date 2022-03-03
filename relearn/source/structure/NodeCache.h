@@ -11,8 +11,7 @@
  */
 
 #include "Config.h"
-#include "algorithm/BarnesHutCell.h"
-#include "algorithm/FastMultipoleMethodsCell.h"
+#include "algorithm/Cells.h"
 
 #include <array>
 #include <map>
@@ -37,6 +36,10 @@ public:
     static void empty() {
         if constexpr (std::is_same_v<AdditionalCellAttributes, BarnesHutCell>) {
             empty_barnes_hut();
+        }
+
+        if constexpr (std::is_same_v<AdditionalCellAttributes, BarnesHutInvertedCell>) {
+            empty_barnes_hut_inverted();
         }
 
         if constexpr (std::is_same_v<AdditionalCellAttributes, FastMultipoleMethodsCell>) {
@@ -64,6 +67,16 @@ public:
 
             return ret_value;
         }
+        if constexpr (std::is_same_v<AdditionalCellAttributes, BarnesHutInvertedCell>) {
+            std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> ret_value{};
+
+            {
+#pragma omp critical
+                ret_value = download_children_barnes_hut_inverted(node);
+            }
+
+            return ret_value;
+        }
 
         if constexpr (std::is_same_v<AdditionalCellAttributes, FastMultipoleMethodsCell>) {
             return download_children_fmm(node);
@@ -73,9 +86,13 @@ public:
 private:
     static void empty_barnes_hut();
 
+    static void empty_barnes_hut_inverted();
+
     static void empty_fmm();
 
     [[nodiscard]] static std::array<OctreeNode<BarnesHutCell>*, Constants::number_oct> download_children_barnes_hut(OctreeNode<BarnesHutCell>* node);
+
+    [[nodiscard]] static std::array<OctreeNode<BarnesHutInvertedCell>*, Constants::number_oct> download_children_barnes_hut_inverted(OctreeNode<BarnesHutInvertedCell>* node);
 
     [[nodiscard]] static std::array<OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> download_children_fmm(OctreeNode<FastMultipoleMethodsCell>* node);
 
@@ -89,5 +106,6 @@ private:
     using NodesCache = std::map<NodesCacheKey<AdditionalCellAttributes>, NodesCacheValue<AdditionalCellAttributes>>;
 
     static inline NodesCache<BarnesHutCell> remote_nodes_cache_barnes_hut{};
+    static inline NodesCache<BarnesHutInvertedCell> remote_nodes_cache_barnes_hut_inverted{};
     static inline NodesCache<FastMultipoleMethodsCell> remote_nodes_cache_fmm{};
 };

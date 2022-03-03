@@ -10,8 +10,8 @@
 
 #include "gtest/gtest.h"
 
-#include "algorithm/BarnesHutCell.h"
-#include "algorithm/FastMultipoleMethodsCell.h"
+#include "algorithm/BarnesHutInternal/BarnesHutCell.h"
+#include "algorithm/FMMInternal/FastMultipoleMethodsCell.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/ElementType.h"

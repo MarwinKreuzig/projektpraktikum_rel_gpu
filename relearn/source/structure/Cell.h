@@ -440,6 +440,15 @@ public:
     }
 
     /**
+     * @brief Sets the axon position for both inhibitory and excitatory
+     * @param opt_position The axon position, can be empty
+     */
+    void set_axons_position(const std::optional<position_type>& opt_position) {
+        set_excitatory_axons_position(opt_position);
+        set_inhibitory_axons_position(opt_position);
+    }
+
+    /**
      * @brief Returns the axons position, for which either both positions must be empty or equal
      * @exception Throws a RelearnException if one position is valid and the other one invalid or if both are valid with different values
      * @return The position of the axons, can be empty
@@ -477,5 +486,14 @@ public:
      */
     void set_neuron_position(const std::optional<position_type>& opt_position) noexcept {
         additional_cell_attributes.set_neuron_position(opt_position);
+    }
+
+    /**
+     * @brief Gets the position of the neuron for every necessary part of the cell
+     * @exception Throws a RelearnException if one position if the positions do not agree with one another
+     * @return opt_position The position, can be empty
+     */
+    [[nodiscard]] std::optional<position_type> get_neuron_position() const {
+        return additional_cell_attributes.get_neuron_position();
     }
 };

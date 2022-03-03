@@ -10,7 +10,7 @@
  *
  */
 
-#include "VirtualPlasticityElement.h"
+#include "algorithm/VirtualPlasticityElement.h"
 #include "neurons/SignalType.h"
 
 #include <optional>
@@ -122,6 +122,38 @@ public:
     void set_neuron_position(const std::optional<position_type>& opt_position) noexcept {
         set_excitatory_axons_position(opt_position);
         set_inhibitory_axons_position(opt_position);
+    }
+
+    /**
+     * @brief Returns the position of the cell, which can be empty
+     * @exception Throws a RelearnException if one position is valid and the other is not, or if they are at different points
+     * @return The position of the excitatory dendrite
+     */
+    [[nodiscard]] std::optional<position_type> get_neuron_position() const {
+        const auto& excitatory_position_opt = get_excitatory_axons_position();
+        const auto& inhibitory_position_opt = get_inhibitory_axons_position();
+
+        const bool ex_valid = excitatory_position_opt.has_value();
+        const bool in_valid = inhibitory_position_opt.has_value();
+
+        if (!ex_valid && !in_valid) {
+            return {};
+        }
+
+        if (ex_valid && in_valid) {
+            const auto& pos_ex = excitatory_position_opt.value();
+            const auto& pos_in = inhibitory_position_opt.value();
+
+            const auto diff = pos_ex - pos_in;
+            const bool exc_position_equals_inh_position = diff.get_x() == 0.0 && diff.get_y() == 0.0 && diff.get_z() == 0.0;
+            RelearnException::check(exc_position_equals_inh_position, "BarnesHutCell::get_neuron_position: positions are unequal");
+
+            return pos_ex;
+        }
+
+        RelearnException::fail("BarnesHutCell::get_neuron_position: one pos was valid and one was not");
+
+        return {};
     }
 
 private:

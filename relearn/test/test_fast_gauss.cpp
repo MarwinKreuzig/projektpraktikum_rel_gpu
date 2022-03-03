@@ -2,7 +2,8 @@
 
 #include "RelearnTest.hpp"
 
-#include "../source/algorithm/FastMultipoleMethods.h"
+#include "../source/algorithm/Algorithms.h"
+#include "../source/algorithm/Cells.h"
 #include "../source/neurons/models/SynapticElements.h"
 #include "../source/structure/Cell.h"
 #include "../source/structure/Partition.h"

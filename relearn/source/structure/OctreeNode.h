@@ -182,7 +182,7 @@ public:
                  */
 
                 // Determine octant for neuron
-                const auto& cell_own_position = parent_node->get_cell().get_dendrites_position();
+                const auto& cell_own_position = parent_node->get_cell().get_neuron_position();
                 RelearnException::check(cell_own_position.has_value(), "OctreeNode::insert: While building the octree, the cell doesn't have a position");
 
                 idx = parent_node->get_cell().get_octant_for_position(cell_own_position.value());

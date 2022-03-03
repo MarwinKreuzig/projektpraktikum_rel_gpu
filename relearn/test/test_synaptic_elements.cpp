@@ -653,7 +653,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsHistogram) {
     std::vector<std::pair<unsigned int, unsigned int>> golden_histogram{};
 
     for (auto i = 0; i < number_neurons; i++) {
-        golden_histogram.emplace_back(golden_connected_counts[i], golden_counts[i]);
+        golden_histogram.emplace_back(golden_connected_counts[i], static_cast<unsigned int>(golden_counts[i]));
     }
 
     for (const auto& [pair, count] : histogram) {

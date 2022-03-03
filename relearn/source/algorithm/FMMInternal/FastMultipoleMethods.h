@@ -10,8 +10,8 @@
  *
  */
 
-#include "Algorithm.h"
 #include "FastMultipoleMethodsCell.h"
+#include "algorithm/Algorithm.h"
 #include "structure/OctreeNode.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"

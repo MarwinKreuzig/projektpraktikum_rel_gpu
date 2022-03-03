@@ -2,7 +2,8 @@
 
 #include "RelearnTest.hpp"
 
-#include "../source/algorithm/BarnesHut.h"
+#include "../source/algorithm/Algorithms.h"
+#include "../source/algorithm/Cells.h"
 #include "../source/structure/Cell.h"
 #include "../source/util/Vec3.h"
 

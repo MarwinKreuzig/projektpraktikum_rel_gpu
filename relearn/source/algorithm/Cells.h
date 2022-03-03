@@ -10,7 +10,7 @@
  *
  */
 
-#include "BarnesHutCell.h"
-
-// We need more or less the same attributes
-using NaiveCell = BarnesHutCell;
+#include "BarnesHutInternal/BarnesHutCell.h"
+#include "BarnesHutInternal/BarnesHutInvertedCell.h"
+#include "FMMInternal/FastMultipoleMethodsCell.h"
+#include "NaiveInternal/NaiveCell.h"

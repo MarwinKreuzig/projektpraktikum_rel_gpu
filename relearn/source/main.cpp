@@ -10,9 +10,7 @@
 
 #include "Config.h"
 #include "Types.h"
-#include "algorithm/BarnesHut.h"
-#include "algorithm/FastMultipoleMethods.h"
-#include "algorithm/Naive.h"
+#include "algorithm/Algorithms.h"
 #include "io/InteractiveNeuronIO.h"
 #include "io/LogFiles.h"
 #include "mpi/CommunicationMap.h"
