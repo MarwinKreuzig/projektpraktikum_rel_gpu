@@ -29,8 +29,8 @@
 template <typename AdditionalCellAttributes>
 class Cell {
 public:
-    using position_type = typename AdditionalCellAttributes::position_type;
-    using counter_type = typename AdditionalCellAttributes::counter_type;
+    using position_type = typename RelearnTypes::position_type;
+    using counter_type = typename RelearnTypes::counter_type;
     using box_size_type = RelearnTypes::box_size_type;
 
     /**
@@ -495,5 +495,27 @@ public:
      */
     [[nodiscard]] std::optional<position_type> get_neuron_position() const {
         return additional_cell_attributes.get_neuron_position();
+    }
+
+    /**
+     * @brief Returns the number of free elements for the associated type in this cell
+     * @param axon_type The requested element type
+     * @param signal_type The requested signal type
+     * @exception Might throw a RelearnException if this operation is not supported
+     * @return The number of free elements for the associated signal type
+     */
+    [[nodiscard]] counter_type get_number_elements_for(const ElementType element_type, const SignalType signal_type) const {
+        return additional_cell_attributes.get_number_elements_for(element_type, signal_type);
+    }
+
+    /**
+     * @brief Returns the position of the specified element with the given signal type
+     * @param axon_type The requested element type
+     * @param signal_type The requested signal type
+     * @exception Might throw a RelearnException if this operation is not supported
+     * @return The position of the associated element, can be empty
+     */
+    [[nodiscard]] std::optional<position_type> get_position_for(const ElementType element_type, const SignalType signal_type) const {
+        return additional_cell_attributes.get_position_for(element_type, signal_type);
     }
 };

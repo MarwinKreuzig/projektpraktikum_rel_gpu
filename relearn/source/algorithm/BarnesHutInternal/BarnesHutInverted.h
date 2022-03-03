@@ -11,8 +11,8 @@
  */
 
 #include "BarnesHutInvertedCell.h"
+#include "BarnesHutBase.h"
 #include "Types.h"
-#include "algorithm/Algorithm.h"
 #include "neurons/SignalType.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseCreationRequests.h"
@@ -34,24 +34,11 @@ class SynapticElements;
  * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
  * It is strongly tied to Octree, which might perform MPI communication via NodeCache::download_children()
  */
-class BarnesHutInverted : public Algorithm {
+class BarnesHutInverted : public BarnesHutBase<BarnesHutInvertedCell> {
 public:
-    /**
-     * This enum indicates for an OctreeNode what the acceptance status is
-     * It can be:
-     * - Discard (no axons there)
-     * - Expand (would be too much approximation, need to expand)
-     * - Accept (can use the node for the algorithm)
-     */
-    enum class AcceptanceStatus : char {
-        Discard = 0,
-        Expand = 1,
-        Accept = 2,
-    };
-
     using AdditionalCellAttributes = BarnesHutInvertedCell;
-
-    using position_type = BarnesHutInvertedCell::position_type;
+    using position_type = typename RelearnTypes::position_type;
+    using counter_type = typename RelearnTypes::counter_type;
 
     /**
      * @brief Constructs a new instance with the given octree
@@ -61,24 +48,6 @@ public:
     explicit BarnesHutInverted(const std::shared_ptr<OctreeImplementation<BarnesHutInverted>>& octree)
         : global_tree(octree) {
         RelearnException::check(octree != nullptr, "BarnesHutInverted::BarnesHutInverted: octree was null");
-    }
-
-    /**
-     * @brief Sets acceptance criterion for cells in the tree
-     * @param acceptance_criterion The acceptance criterion, >= 0.0
-     * @exception Throws a RelearnException if acceptance_criterion < 0.0
-     */
-    void set_acceptance_criterion(const double acceptance_criterion) {
-        RelearnException::check(acceptance_criterion > 0.0, "BarnesHutInverted::set_acceptance_criterion: acceptance_criterion was less than or equal to 0 ({})", acceptance_criterion);
-        this->acceptance_criterion = acceptance_criterion;
-    }
-
-    /**
-     * @brief Returns the currently used acceptance criterion
-     * @return The currently used acceptance criterion
-     */
-    [[nodiscard]] double get_acceptance_criterion() const noexcept {
-        return acceptance_criterion;
     }
 
     /**
@@ -197,46 +166,5 @@ public:
     }
 
 private:
-    /**
-     * @brief Returns an optional RankNeuronId that the algorithm determined for the given source neuron. No actual request is made.
-     *      Might perform MPI communication via NodeCache::download_children()
-     * @param initiator_neuron_id The neuron's id that wants to connect. Is used to disallow autapses (connections to itself)
-     * @param dendrite_position The neuron's position that wants to connect. Is used in probability computations
-     * @param axon_type_needed The signal type that is searched.
-     * @return If the algorithm didn't find a matching neuron, the return value is empty.
-     *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
-     */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& src_neuron_id, const position_type& dendrite_position, SignalType axon_type_needed);
-
-    [[nodiscard]] double
-    calc_attractiveness_to_connect(
-        const NeuronID& src_neuron_id,
-        const position_type& dendrite_position,
-        const OctreeNode<BarnesHutInvertedCell>& node_with_axon,
-        SignalType axon_type_needed) const;
-
-    [[nodiscard]] std::pair<double, std::vector<double>> create_interval(
-        const NeuronID& src_neuron_id,
-        const position_type& dendrite_position,
-        SignalType axon_type_needed,
-        const std::vector<OctreeNode<BarnesHutInvertedCell>*>& vector) const;
-
-    [[nodiscard]] AcceptanceStatus acceptance_criterion_test(
-        const position_type& dendrite_position,
-        const OctreeNode<BarnesHutInvertedCell>* node_with_axon,
-        SignalType axon_type_needed) const;
-
-    [[nodiscard]] std::vector<OctreeNode<BarnesHutInvertedCell>*> get_nodes_for_interval(
-        const position_type& dendrite_position,
-        OctreeNode<BarnesHutInvertedCell>* root,
-        SignalType axon_type_needed);
-
-    double acceptance_criterion{ default_theta }; // Acceptance criterion
-
     std::shared_ptr<OctreeImplementation<BarnesHutInverted>> global_tree{};
-
-public:
-    constexpr static double default_theta{ 0.3 };
-
-    constexpr static double max_theta{ 0.5 };
 };

@@ -38,6 +38,8 @@ using position_type = Vec3d;
 
 using synapse_weight = int;
 
+using counter_type = unsigned int;
+
 } // namespace RelearnTypes
 
 using LocalSynapse = Synapse<NeuronID, NeuronID, RelearnTypes::synapse_weight>;

@@ -21,8 +21,8 @@
  */
 class VirtualPlasticityElementManual {
 public:
-    using position_type = RelearnTypes::position_type;
-    using counter_type = unsigned int;
+    using position_type = typename RelearnTypes::position_type;
+    using counter_type = typename RelearnTypes::counter_type;
 
 private:
     // Avoiding std::optional<> saves 8 bytes, which translates to 32 bytes per FFM-cell
@@ -81,8 +81,8 @@ public:
  */
 class VirtualPlasticityElementOptional {
 public:
-    using position_type = RelearnTypes::position_type;
-    using counter_type = unsigned int;
+    using position_type = typename RelearnTypes::position_type;
+    using counter_type = typename RelearnTypes::counter_type;
 
 private:
     std::optional<position_type> position{};

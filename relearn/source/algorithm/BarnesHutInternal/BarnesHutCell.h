@@ -11,6 +11,7 @@
  */
 
 #include "algorithm/VirtualPlasticityElement.h"
+#include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
 
 #include <optional>
@@ -22,8 +23,8 @@
  */
 class BarnesHutCell {
 public:
-    using position_type = VirtualPlasticityElement::position_type;
-    using counter_type = VirtualPlasticityElement::counter_type;
+    using position_type = typename RelearnTypes::position_type;
+    using counter_type = typename RelearnTypes::counter_type;
 
     /**
      * @brief Sets the number of free excitatory dendrites in this cell
@@ -154,6 +155,34 @@ public:
         RelearnException::fail("BarnesHutCell::get_neuron_position: one pos was valid and one was not");
 
         return {};
+    }
+
+    /**
+     * @brief Returns the number of free elements for the associated type in this cell
+     * @param axon_type The requested axons type
+     * @return The number of free axons for the associated type
+     */
+    [[nodiscard]] counter_type get_number_elements_for(const ElementType element_type, const SignalType signal_type) const {
+        if (element_type == ElementType::AXON) {
+            RelearnException::fail("BarnesHutCell::get_number_elements_for: Does not support axons");
+        }
+
+        return get_number_dendrites_for(signal_type);
+    }
+
+    /**
+     * @brief Returns the position of the specified element with the given signal type
+     * @param axon_type The requested element type
+     * @param signal_type The requested signal type
+     * @exception Might throw a RelearnException if this operation is not supported
+     * @return The position of the associated element, can be empty
+     */
+    [[nodiscard]] std::optional<position_type> get_position_for(const ElementType element_type, const SignalType signal_type) const {
+        if (element_type == ElementType::AXON) {
+            RelearnException::fail("BarnesHutCell::get_position_for: Does not support axons");
+        }
+
+        return get_dendrites_position_for(signal_type);
     }
 
 private:

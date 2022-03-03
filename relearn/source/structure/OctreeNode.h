@@ -72,6 +72,14 @@ public:
     }
 
     /**
+     * @brief Returns a flag that indicates if this node is an inner node or a leaf node
+     * @return True iff it is a leaf node
+     */
+    [[nodiscard]] bool is_child() const noexcept {
+        return !parent;
+    }
+
+    /**
      * @brief Returns a constant view on the associated child nodes. This reference is not invalidated by calls to other methods
      * @return A constant view on the associated child nodes
      */
