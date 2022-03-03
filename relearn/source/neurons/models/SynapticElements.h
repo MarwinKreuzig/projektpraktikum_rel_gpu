@@ -153,9 +153,9 @@ public:
     }
 
     /**
-	 * @brief Returns a vector with an std::shared_ptr for each significant instance (axons, dendrites (excitatory, inhibitory))
+     * @brief Returns a vector with an std::shared_ptr for each significant instance (axons, dendrites (excitatory, inhibitory))
      * @return A vector with all significant instances
-	 */
+     */
     [[nodiscard]] static std::vector<std::shared_ptr<SynapticElements>> get_elements() {
         std::vector<std::shared_ptr<SynapticElements>> res;
         res.emplace_back(std::make_shared<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons));
@@ -339,6 +339,29 @@ public:
 
         RelearnException::check(local_neuron_id < connected_elements.size(), "SynapticElements::get_free_elements: neuron_id is too large: {}", neuron_id);
         RelearnException::check(connected_elements[local_neuron_id] <= grown_elements[local_neuron_id], "SynapticElements::get_free_elements: More elements were connected then free: {}, {} vs {}", neuron_id, connected_elements[local_neuron_id], grown_elements[local_neuron_id]);
+        
+        return static_cast<unsigned int>(grown_elements[local_neuron_id] - connected_elements[local_neuron_id]);
+    }
+
+    /**
+     * @brief Returns the number of free elements for the specified neuron id and a signal type
+     * @param neuron_id The neuron
+     * @param signal_type The signal type
+     * @exception Throws a RelearnException if neuron_id is too large or if the number of connected elements exceeds the number of grown elements
+     * @return The number of free elements for the signal type
+     */
+    [[nodiscard]] unsigned int get_free_elements(const NeuronID& neuron_id, const SignalType signal_type) const {
+        const auto local_neuron_id = neuron_id.get_local_id();
+
+        RelearnException::check(local_neuron_id < signal_types.size(), "SynapticElements::get_free_elements: neuron_id is too large for the signal types: {}", neuron_id);
+
+        if (signal_type != signal_types[local_neuron_id]) {
+            return 0;
+        }
+
+        RelearnException::check(local_neuron_id < connected_elements.size(), "SynapticElements::get_free_elements: neuron_id is too large: {}", neuron_id);
+        RelearnException::check(connected_elements[local_neuron_id] <= grown_elements[local_neuron_id], "SynapticElements::get_free_elements: More elements were connected then free: {}, {} vs {}", neuron_id, connected_elements[local_neuron_id], grown_elements[local_neuron_id]);
+        
         return static_cast<unsigned int>(grown_elements[local_neuron_id] - connected_elements[local_neuron_id]);
     }
 
@@ -503,8 +526,8 @@ private:
     std::vector<double> deltas_since_last_update{}; // Keeps track of changes in number of elements until those changes are applied in next connectivity update
     std::vector<unsigned int> connected_elements{};
     std::vector<SignalType> signal_types{}; // Signal type of synaptic elements, i.e., EXCITATORY or INHIBITORY.
-        // Note: Given that current exc. and inh. dendrites are in different objects, this would only be needed for axons.
-        //       A more memory-efficient solution would be to use a different class for axons which has the signal_types array.
+                                            // Note: Given that current exc. and inh. dendrites are in different objects, this would only be needed for axons.
+                                            //       A more memory-efficient solution would be to use a different class for axons which has the signal_types array.
 
     // Parameters
     double min_C_level_to_grow{ 0.0 }; // Minimum level of calcium needed for elements to grow

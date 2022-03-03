@@ -22,7 +22,7 @@
 #include <algorithm>
 #include <array>
 
-[[nodiscard]] std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz, const SignalType dendrite_type_needed) {
+[[nodiscard]] std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_position, const SignalType dendrite_type_needed) {
     OctreeNode<NaiveCell>* node_selected = nullptr;
     OctreeNode<NaiveCell>* root_of_subtree = global_tree->get_root();
 
@@ -33,7 +33,7 @@
          * Create vector with nodes that have at least one dendrite and are
          * precise enough given the position of an axon
          */
-        const auto& vector = get_nodes_for_interval(axon_pos_xyz, root_of_subtree, dendrite_type_needed);
+        const auto& vector = get_nodes_for_interval(axon_position, root_of_subtree, dendrite_type_needed);
 
         /**
          * Assign a probability to each node in the vector.
@@ -41,7 +41,7 @@
          * Nodes with 0 probability are removed.
          * The probabilities of all vector elements sum up to 1.
          */
-        const auto& prob = create_interval(src_neuron_id, axon_pos_xyz, dendrite_type_needed, vector);
+        const auto& prob = create_interval(src_neuron_id, axon_position, dendrite_type_needed, vector);
 
         if (prob.empty()) {
             return {};
@@ -198,7 +198,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
     }
 }
 
-[[nodiscard]] double Naive::calc_attractiveness_to_connect(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz,
+[[nodiscard]] double Naive::calc_attractiveness_to_connect(const NeuronID& src_neuron_id, const position_type& axon_position,
     const OctreeNode<NaiveCell>& node_with_dendrite, const SignalType dendrite_type_needed) const {
 
     /**
@@ -218,7 +218,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
 
     const auto num_dendrites = node_with_dendrite.get_cell().get_number_dendrites_for(dendrite_type_needed);
 
-    const auto position_diff = target_xyz.value() - axon_pos_xyz;
+    const auto position_diff = target_xyz.value() - axon_position;
 
     // const auto eucl_length = position_diff.calculate_p_norm(2.0);
     // const auto numerator = pow(eucl_length, 2.0);
@@ -229,7 +229,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
     return ret_val;
 }
 
-[[nodiscard]] std::vector<double> Naive::create_interval(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz,
+[[nodiscard]] std::vector<double> Naive::create_interval(const NeuronID& src_neuron_id, const position_type& axon_position,
     const SignalType dendrite_type_needed, const std::vector<OctreeNode<NaiveCell>*>& vector) const {
 
     if (vector.empty()) {
@@ -241,7 +241,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
     std::vector<double> probabilities;
     std::for_each(vector.cbegin(), vector.cend(), [&](const OctreeNode<NaiveCell>* target_node) {
         RelearnException::check(target_node != nullptr, "Naive::update_leaf_nodes: target_node was nullptr");
-        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_pos_xyz, *target_node, dendrite_type_needed);
+        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_position, *target_node, dendrite_type_needed);
         probabilities.push_back(prob);
         sum += prob;
     });
@@ -259,7 +259,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
     return probabilities;
 }
 
-[[nodiscard]] std::tuple<bool, bool> Naive::acceptance_criterion_test(const position_type& /*axon_pos_xyz*/, const OctreeNode<NaiveCell>* const node_with_dendrite,
+[[nodiscard]] std::tuple<bool, bool> Naive::acceptance_criterion_test(const position_type& /*axon_position*/, const OctreeNode<NaiveCell>* const node_with_dendrite,
     const SignalType dendrite_type_needed) {
 
     RelearnException::check(node_with_dendrite != nullptr, "Naive::update_leaf_nodes:  node_with_dendrite was nullptr");
@@ -272,7 +272,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
     return std::make_tuple(!is_parent, has_vacant_dendrites);
 }
 
-[[nodiscard]] std::vector<OctreeNode<NaiveCell>*> Naive::get_nodes_for_interval(const position_type& axon_pos_xyz, OctreeNode<NaiveCell>* root,
+[[nodiscard]] std::vector<OctreeNode<NaiveCell>*> Naive::get_nodes_for_interval(const position_type& axon_position, OctreeNode<NaiveCell>* root,
     const SignalType dendrite_type_needed) {
     if (root == nullptr) {
         return {};
@@ -290,7 +290,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
          * Without pushing root onto the stack, it would not make it into the "vector" of nodes.
          */
 
-        const auto [accept, _] = acceptance_criterion_test(axon_pos_xyz, root, dendrite_type_needed);
+        const auto [accept, _] = acceptance_criterion_test(axon_position, root, dendrite_type_needed);
         if (accept) {
             return { root };
         }
@@ -335,7 +335,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
          *
          * Only take those that have dendrites available
          */
-        const auto [accept, has_vacant_dendrites] = acceptance_criterion_test(axon_pos_xyz, stack_elem, dendrite_type_needed);
+        const auto [accept, has_vacant_dendrites] = acceptance_criterion_test(axon_position, stack_elem, dendrite_type_needed);
 
         if (accept) {
             // Insert node into vector

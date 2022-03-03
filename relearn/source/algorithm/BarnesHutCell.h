@@ -10,7 +10,6 @@
  *
  */
 
-#include "Types.h"
 #include "VirtualPlasticityElement.h"
 #include "neurons/SignalType.h"
 
