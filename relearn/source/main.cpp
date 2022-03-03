@@ -144,6 +144,12 @@ int main(int argc, char** argv) {
     print_arguments(argc, argv);
     print_sizes();
 
+    if constexpr (Config::do_debug_checks) {
+        std::cout << "I'm performing Debug Checks\n";
+    } else {
+        std::cout << "I'm skipping Debug Checks\n";
+    }
+
     const int my_rank = MPIWrapper::get_my_rank();
     const int num_ranks = MPIWrapper::get_num_ranks();
 
@@ -344,6 +350,7 @@ int main(int argc, char** argv) {
             "Chosen target calcium value: {}\n"
             "Chosen beta value: {}\n"
             "Chosen nu value: {}\n"
+            "Chosen retract ratio: {}\n"
             "Chosen synapse conductance: {}\n"
             "Chosen background activity base: {}\n"
             "Chosen background activity mean: {}\n"
@@ -354,6 +361,7 @@ int main(int argc, char** argv) {
             target_calcium,
             beta,
             nu,
+            retract_ratio,
             synapse_conductance,
             base_background_activity,
             background_activity_mean,
@@ -366,6 +374,7 @@ int main(int argc, char** argv) {
             "Chosen target calcium value: {}\n"
             "Chosen beta value: {}\n"
             "Chosen nu value: {}\n"
+            "Chosen retract ratio: {}\n"
             "Chosen synapse conductance: {}\n"
             "Chosen background activity base: {}\n"
             "Chosen background activity mean: {}\n"
@@ -376,6 +385,7 @@ int main(int argc, char** argv) {
             target_calcium,
             beta,
             nu,
+            retract_ratio,
             synapse_conductance,
             base_background_activity,
             background_activity_mean,
