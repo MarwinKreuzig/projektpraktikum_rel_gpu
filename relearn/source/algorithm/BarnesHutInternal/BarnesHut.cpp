@@ -50,36 +50,8 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(
             continue;
         }
 
-        std::vector<std::pair<int, SynapseCreationRequest>> resquests{};
-        resquests.reserve(number_vacant_axons);
-
-        // For all vacant axons of neuron "neuron_id"
-        for (unsigned int j = 0; j < number_vacant_axons; j++) {
-            /**
-             * Find target neuron for connecting and
-             * connect if target neuron has still dendrite available.
-             *
-             * The target neuron might not have any dendrites left
-             * as other axons might already have connected to them.
-             * Right now, those collisions are handled in a first-come-first-served fashion.
-             */
-            std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(id, axon_position, root, ElementType::DENDRITE, dendrite_type_needed);
-            if (!rank_neuron_id.has_value()) {
-                // If finding failed, it won't succeed in later iterations
-                break;
-            }
-
-            const auto& [target_rank, target_id] = rank_neuron_id.value();
-            const SynapseCreationRequest creation_request(target_id, id, dendrite_type_needed);
-
-            resquests.emplace_back(target_rank, creation_request);
-        }
-
-        for (const auto& [target_rank, creation_request] : resquests) {
-            /**
-             * Append request for synapse creation to rank "target_rank"
-             * Note that "target_rank" could also be my own rank.
-             */
+        const auto& requests = FIND(id, axon_position, number_vacant_axons, root, ElementType::DENDRITE, dendrite_type_needed);
+        for (const auto& [target_rank, creation_request] : requests) {
 #pragma omp critical
             synapse_creation_requests_outgoing.append(target_rank, creation_request);
         }

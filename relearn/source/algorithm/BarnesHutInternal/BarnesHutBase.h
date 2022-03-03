@@ -15,6 +15,7 @@
 #include "algorithm/Algorithm.h"
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
+#include "neurons/models/SynapticElements.h"
 #include "structure/NodeCache.h"
 #include "structure/OctreeNode.h"
 #include "util/RelearnException.h"
@@ -332,7 +333,7 @@ protected:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorihtm found a matching neuron, its RankNeuronId is returned
      */
-    std::optional<RankNeuronId> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* root,
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* root,
         const ElementType element_type, const SignalType signal_type) const {
         OctreeNode<AdditionalCellAttributes>* node_selected = nullptr;
         OctreeNode<AdditionalCellAttributes>* root_of_subtree = root;
@@ -367,5 +368,38 @@ protected:
         }
 
         return RankNeuronId{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
+    }
+
+    /**
+     * @brief Finds target neurons for a specified source neuron
+     * @param source_neuron_id The source neuron's id
+     * @param source_position The source neuron's position
+     * @param number_vacant_elements The number of vacant elements of the source neuron
+     * @param root Where the source neuron should start to search for targets
+     * @param element_type The element type the source neuron searches
+     * @param signal_type The signal type the source neuron searches
+     * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
+     */
+    [[nodiscard]] std::vector<std::pair<int, SynapseCreationRequest>> FIND(const NeuronID& source_neuron_id, const position_type& source_position, const counter_type& number_vacant_elements,
+        OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type) {
+
+        std::vector<std::pair<int, SynapseCreationRequest>> requests{};
+        requests.reserve(number_vacant_elements);
+
+        for (unsigned int j = 0; j < number_vacant_elements; j++) {
+            // Find one target at the time
+            std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type);
+            if (!rank_neuron_id.has_value()) {
+                // If finding failed, it won't succeed in later iterations
+                break;
+            }
+
+            const auto& [target_rank, target_id] = rank_neuron_id.value();
+            const SynapseCreationRequest creation_request(target_id, source_neuron_id, signal_type);
+
+            requests.emplace_back(target_rank, creation_request);
+        }
+
+        return requests;
     }
 };

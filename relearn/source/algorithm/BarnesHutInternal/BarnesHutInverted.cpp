@@ -29,10 +29,6 @@ CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(
 
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
-    auto work = []() -> std::vector<std::pair<int, SynapseCreationRequest>> {
-        return {};
-    };
-
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks);
     Timers::start(TimerRegion::FIND_TARGET_NEURONS);
 
@@ -47,44 +43,23 @@ CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(
 
         const NeuronID id{ neuron_id };
 
-        const auto number_vacant_axons = axons->get_free_elements(id);
-        if (number_vacant_axons == 0) {
+        const auto number_vacant_excitatory_dendrites = excitatory_dendrites->get_free_elements(id);
+        const auto number_vacant_inhibitory_dendrites = inhibitory_dendrites->get_free_elements(id);
+
+        if (number_vacant_excitatory_dendrites + number_vacant_inhibitory_dendrites == 0) {
             continue;
         }
 
-        const auto axon_type_needed = axons->get_signal_type(id);
-        const auto& axon_position = extra_infos->get_position(id);
+        const auto& dendrite_position = extra_infos->get_position(id);
 
-        std::vector<std::pair<int, SynapseCreationRequest>> resquests{};
-        resquests.reserve(number_vacant_axons);
-
-        // For all vacant axons of neuron "neuron_id"
-        for (unsigned int j = 0; j < number_vacant_axons; j++) {
-            /**
-             * Find target neuron for connecting and
-             * connect if target neuron has still axon available.
-             *
-             * The target neuron might not have any axons left
-             * as other axons might already have connected to them.
-             * Right now, those collisions are handled in a first-come-first-served fashion.
-             */
-            std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(id, axon_position, root, ElementType::AXON, axon_type_needed);
-            if (!rank_neuron_id.has_value()) {
-                // If finding failed, it won't succeed in later iterations
-                break;
-            }
-
-            const auto& [target_rank, target_id] = rank_neuron_id.value();
-            const SynapseCreationRequest creation_request(target_id, id, axon_type_needed);
-
-            resquests.emplace_back(target_rank, creation_request);
+        const auto& excitatory_requests = FIND(id, dendrite_position, number_vacant_excitatory_dendrites, root, ElementType::AXON, SignalType::EXCITATORY);
+        for (const auto& [target_rank, creation_request] : excitatory_requests) {
+#pragma omp critical
+            synapse_creation_requests_outgoing.append(target_rank, creation_request);
         }
 
-        for (const auto& [target_rank, creation_request] : resquests) {
-            /**
-             * Append request for synapse creation to rank "target_rank"
-             * Note that "target_rank" could also be my own rank.
-             */
+        const auto& inhibitory_requests = FIND(id, dendrite_position, number_vacant_excitatory_dendrites, root, ElementType::AXON, SignalType::INHIBITORY);
+        for (const auto& [target_rank, creation_request] : inhibitory_requests) {
 #pragma omp critical
             synapse_creation_requests_outgoing.append(target_rank, creation_request);
         }
