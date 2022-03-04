@@ -64,7 +64,7 @@ public:
      * @return The number of free axons
      */
     [[nodiscard]] counter_type get_number_axons_for(const SignalType axon_type) const noexcept {
-        if (axon_type == SignalType::EXCITATORY) {
+        if (axon_type == SignalType::Excitatory) {
             return excitatory_axons.get_number_free_elements();
         }
 
@@ -109,7 +109,7 @@ public:
      * @return The position of the axon
      */
     [[nodiscard]] std::optional<position_type> get_axons_position_for(const SignalType axon_type) const noexcept {
-        if (axon_type == SignalType::EXCITATORY) {
+        if (axon_type == SignalType::Excitatory) {
             return excitatory_axons.get_position();
         }
 
@@ -164,7 +164,7 @@ public:
      * @return The number of free axons for the associated type
      */
     [[nodiscard]] counter_type get_number_elements_for(const ElementType element_type, const SignalType signal_type) const {
-        if (element_type == ElementType::DENDRITE) {
+        if (element_type == ElementType::Dendrite) {
             RelearnException::fail("BarnesHutInvertedCell::get_number_elements_for: Does not support dendrites");
         }
 
@@ -179,7 +179,7 @@ public:
      * @return The position of the associated element, can be empty
      */
     [[nodiscard]] std::optional<position_type> get_position_for(const ElementType element_type, const SignalType signal_type) const {
-        if (element_type == ElementType::DENDRITE) {
+        if (element_type == ElementType::Dendrite) {
             RelearnException::fail("BarnesHutInvertedCell::get_position_for: Does not support axons");
         }
 

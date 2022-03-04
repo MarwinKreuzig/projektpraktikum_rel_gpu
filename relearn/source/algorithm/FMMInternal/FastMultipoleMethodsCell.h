@@ -64,7 +64,7 @@ public:
      * @return The number of free dendrites
      */
     [[nodiscard]] counter_type get_number_dendrites_for(const SignalType dendrite_type) const noexcept {
-        if (dendrite_type == SignalType::EXCITATORY) {
+        if (dendrite_type == SignalType::Excitatory) {
             return excitatory_dendrites.get_number_free_elements();
         }
 
@@ -109,7 +109,7 @@ public:
      * @return The position of the dendrite
      */
     [[nodiscard]] std::optional<position_type> get_dendrites_position_for(const SignalType dendrite_type) const noexcept {
-        if (dendrite_type == SignalType::EXCITATORY) {
+        if (dendrite_type == SignalType::Excitatory) {
             return excitatory_dendrites.get_position();
         }
 
@@ -154,7 +154,7 @@ public:
      * @return The number of free axons
      */
     [[nodiscard]] counter_type get_number_axons_for(const SignalType axon_type) const noexcept {
-        if (axon_type == SignalType::EXCITATORY) {
+        if (axon_type == SignalType::Excitatory) {
             return excitatory_axons.get_number_free_elements();
         }
 
@@ -199,7 +199,7 @@ public:
      * @return The position of the dendrite
      */
     [[nodiscard]] std::optional<position_type> get_axons_position_for(const SignalType axon_type) const noexcept {
-        if (axon_type == SignalType::EXCITATORY) {
+        if (axon_type == SignalType::Excitatory) {
             return excitatory_axons.get_position();
         }
 
@@ -270,7 +270,7 @@ public:
      * @return The position of the associated element, can be empty
      */
     [[nodiscard]] std::optional<position_type> get_position_for(const ElementType element_type, const SignalType signal_type) const noexcept {
-        if (element_type == ElementType::DENDRITE) {
+        if (element_type == ElementType::Dendrite) {
             return get_dendrites_position_for(signal_type);
         }
 
@@ -283,7 +283,7 @@ public:
      * @return The number of free axons for the associated type
      */
     [[nodiscard]] counter_type get_number_elements_for(const ElementType element_type, const SignalType signal_type) const noexcept {
-        if (element_type == ElementType::DENDRITE) {
+        if (element_type == ElementType::Dendrite) {
             return get_number_dendrites_for(signal_type);
         }
 

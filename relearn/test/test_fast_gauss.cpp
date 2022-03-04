@@ -100,9 +100,9 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons_FMM(OctreeNode<Additional
 }
 
 std::vector<SynapticElements> create_synaptic_elements(size_t size, std::mt19937& mt, double max_free) {
-    SynapticElements ax(ElementType::AXON, 0.0);
-    SynapticElements dend_ex(ElementType::DENDRITE, 0.0);
-    SynapticElements dend_in(ElementType::DENDRITE, 0.0);
+    SynapticElements ax(ElementType::Axon, 0.0);
+    SynapticElements dend_ex(ElementType::Dendrite, 0.0);
+    SynapticElements dend_in(ElementType::Dendrite, 0.0);
 
     ax.init(size);
     dend_ex.init(size);
@@ -113,16 +113,16 @@ std::vector<SynapticElements> create_synaptic_elements(size_t size, std::mt19937
 
     for (auto i : NeuronID::range(size)) {
         if (st(mt) == 0) {
-            ax.set_signal_type(i, SignalType::EXCITATORY);
-            dend_ex.set_signal_type(i, SignalType::EXCITATORY);
-            dend_in.set_signal_type(i, SignalType::EXCITATORY);
+            ax.set_signal_type(i, SignalType::Excitatory);
+            dend_ex.set_signal_type(i, SignalType::Excitatory);
+            dend_in.set_signal_type(i, SignalType::Excitatory);
 
             ax.update_grown_elements(i, urd(mt));
             dend_ex.update_grown_elements(i, urd(mt));
         } else {
-            ax.set_signal_type(i, SignalType::INHIBITORY);
-            dend_ex.set_signal_type(i, SignalType::INHIBITORY);
-            dend_in.set_signal_type(i, SignalType::INHIBITORY);
+            ax.set_signal_type(i, SignalType::Inhibitory);
+            dend_ex.set_signal_type(i, SignalType::Inhibitory);
+            dend_in.set_signal_type(i, SignalType::Inhibitory);
 
             ax.update_grown_elements(i, urd(mt));
             dend_in.update_grown_elements(i, urd(mt));
@@ -137,7 +137,7 @@ std::vector<SynapticElements> create_synaptic_elements(size_t size, std::mt19937
 }
 
 SynapticElements create_axons(size_t size, std::mt19937& mt, double max_free) {
-    SynapticElements se(ElementType::AXON, 0.0);
+    SynapticElements se(ElementType::Axon, 0.0);
 
     se.init(size);
 
@@ -145,9 +145,9 @@ SynapticElements create_axons(size_t size, std::mt19937& mt, double max_free) {
 
     for (auto i = 0; i < size; i++) {
         if (i % 2 == 0) {
-            se.set_signal_type(NeuronID(i), SignalType::EXCITATORY);
+            se.set_signal_type(NeuronID(i), SignalType::Excitatory);
         } else {
-            se.set_signal_type(NeuronID(i), SignalType::INHIBITORY);
+            se.set_signal_type(NeuronID(i), SignalType::Inhibitory);
         }
         se.update_grown_elements(NeuronID(i), urd(mt));
     }
@@ -451,15 +451,15 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
             } else {
                 auto const id = current->get_cell_neuron_id();
                 auto const st = unique_ax->get_signal_type(id);
-                if (st == SignalType::EXCITATORY) {
+                if (st == SignalType::Excitatory) {
                     sum_axons_exc = static_cast<size_t>(unique_ax->get_grown_elements(id));
                 } else {
                     sum_axons_inh = static_cast<size_t>(unique_ax->get_grown_elements(id));
                 }
             }
 
-            ASSERT_EQ(current->get_cell().get_number_axons_for(SignalType::EXCITATORY), sum_axons_exc);
-            ASSERT_EQ(current->get_cell().get_number_axons_for(SignalType::INHIBITORY), sum_axons_inh);
+            ASSERT_EQ(current->get_cell().get_number_axons_for(SignalType::Excitatory), sum_axons_exc);
+            ASSERT_EQ(current->get_cell().get_number_axons_for(SignalType::Inhibitory), sum_axons_inh);
         }
 
         make_mpi_mem_available<AdditionalCellAttributes>();
@@ -667,23 +667,23 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
 //             if (source != nullptr) {
 //                 auto const num_ax_ex = source->get_cell().get_number_excitatory_axons();
 //                 if (num_ax_ex > 0) {
-//                     auto const coef = fmm.calc_hermite_coefficients(source, cur_sigma, SignalType::EXCITATORY);
+//                     auto const coef = fmm.calc_hermite_coefficients(source, cur_sigma, SignalType::Excitatory);
 //                     for (auto j = 0; j < Constants::number_oct; j++) {
 //                         auto const target = children[j];
 //                         if (i != j && target != nullptr && target->get_cell().get_number_excitatory_dendrites() > 0) {
-//                             CalculationType current_calculation = fmm.check_calculation_requirements(source, target, SignalType::EXCITATORY);
+//                             CalculationType current_calculation = fmm.check_calculation_requirements(source, target, SignalType::Excitatory);
 
-//                             auto const direct = fmm.calc_direct_gauss(fmm.get_all_axon_positions_for(source, SignalType::EXCITATORY),
-//                                 fmm.get_all_dendrite_positions_for(target, SignalType::EXCITATORY), cur_sigma);
+//                             auto const direct = fmm.calc_direct_gauss(fmm.get_all_axon_positions_for(source, SignalType::Excitatory),
+//                                 fmm.get_all_dendrite_positions_for(target, SignalType::Excitatory), cur_sigma);
 //                             const auto eps = direct * 0.10;
 
 //                             switch (current_calculation) {
 //                             case CalculationType::HERMITE: {
-//                                 auto const hermite = fmm.calc_hermite(source, target, coef, cur_sigma, SignalType::EXCITATORY);
+//                                 auto const hermite = fmm.calc_hermite(source, target, coef, cur_sigma, SignalType::Excitatory);
 //                                 ASSERT_NEAR(direct, hermite, eps);
 //                             }
 //                             case CalculationType::TAYLOR: {
-//                                 auto const taylor = fmm.calc_taylor(source, target, cur_sigma, SignalType::EXCITATORY);
+//                                 auto const taylor = fmm.calc_taylor(source, target, cur_sigma, SignalType::Excitatory);
 //                                 ASSERT_NEAR(direct, taylor, eps);
 //                             }
 //                             case CalculationType::DIRECT: {

@@ -224,11 +224,11 @@ protected:
     }
 
     ElementType get_random_element_type() noexcept {
-        return get_random_bool() ? ElementType::AXON : ElementType::DENDRITE;
+        return get_random_bool() ? ElementType::Axon : ElementType::Dendrite;
     }
 
     SignalType get_random_signal_type() noexcept {
-        return get_random_bool() ? SignalType::EXCITATORY : SignalType::INHIBITORY;
+        return get_random_bool() ? SignalType::Excitatory : SignalType::Inhibitory;
     }
 
     std::tuple<SynapticElements, std::vector<double>, std::vector<unsigned int>, std::vector<SignalType>>

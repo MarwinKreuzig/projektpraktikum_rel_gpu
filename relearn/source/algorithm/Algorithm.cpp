@@ -81,9 +81,9 @@ Algorithm::create_synapses_process_requests(size_t number_neurons, const Communi
 
         RelearnException::check(target_neuron_id.get_local_id() < number_neurons, "Neurons::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
 
-        const auto& dendrites = (SignalType::INHIBITORY == dendrite_type_needed) ? inhibitory_dendrites : excitatory_dendrites;
+        const auto& dendrites = (SignalType::Inhibitory == dendrite_type_needed) ? inhibitory_dendrites : excitatory_dendrites;
 
-        const auto weight = (SignalType::INHIBITORY == dendrite_type_needed) ? -1 : 1;
+        const auto weight = (SignalType::Inhibitory == dendrite_type_needed) ? -1 : 1;
         const auto number_free_elements = dendrites->get_free_elements(target_neuron_id);
 
         if (number_free_elements == 0) {
@@ -137,7 +137,7 @@ DistantOutSynapses Algorithm::create_synapses_process_responses(const Communicat
             }
 
             // Mark this synapse for later use (must be added to the network graph)
-            const auto weight = (SignalType::INHIBITORY == dendrite_type_needed) ? -1 : +1;
+            const auto weight = (SignalType::Inhibitory == dendrite_type_needed) ? -1 : +1;
             synapses.emplace_back(RankNeuronId{ target_rank, target_neuron_id }, source_neuron_id, weight);
         }
     }

@@ -33,10 +33,10 @@ CommunicationMap<SynapseCreationRequest> FastMultipoleMethods::find_target_neuro
     const auto total_number_dendrites_in = root->get_cell().get_number_inhibitory_dendrites();
 
     if (total_number_dendrites_ex > 0) {
-        make_creation_request_for(SignalType::EXCITATORY, synapse_creation_requests_outgoing);
+        make_creation_request_for(SignalType::Excitatory, synapse_creation_requests_outgoing);
     }
     if (total_number_dendrites_in > 0) {
-        make_creation_request_for(SignalType::INHIBITORY, synapse_creation_requests_outgoing);
+        make_creation_request_for(SignalType::Inhibitory, synapse_creation_requests_outgoing);
     }
 
     Timers::stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
@@ -101,7 +101,7 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<UpdateStatus>& di
 
         const auto signal_type = axons->get_signal_type(neuron_id);
 
-        if (signal_type == SignalType::EXCITATORY) {
+        if (signal_type == SignalType::Excitatory) {
             const auto number_vacant_excitatory_axons = static_cast<counter_type>(axons_counts[neuron_id.get_local_id()] - axons_connected_counts[neuron_id.get_local_id()]);
             const auto number_vacant_inhibitory_axons = 0;
 
@@ -131,11 +131,11 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
             if (i == nullptr) {
                 continue;
             }
-            if (type == ElementType::AXON && i->get_cell().get_number_axons_for(signal_type_needed) == 0) {
+            if (type == ElementType::Axon && i->get_cell().get_number_axons_for(signal_type_needed) == 0) {
                 i = nullptr;
                 continue;
             }
-            if (type == ElementType::DENDRITE && i->get_cell().get_number_dendrites_for(signal_type_needed) == 0) {
+            if (type == ElementType::Dendrite && i->get_cell().get_number_dendrites_for(signal_type_needed) == 0) {
                 i = nullptr;
                 continue;
             }
@@ -182,7 +182,7 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
         //target is a inner node
         if (target->is_parent()) {
             interaction_list_type new_interaction_list = Utilities::get_children_to_interaction_list(target);
-            get_rid_of_null_elements(ElementType::DENDRITE, new_interaction_list);
+            get_rid_of_null_elements(ElementType::Dendrite, new_interaction_list);
 
             for (const auto& source_child_node : source_children) {
                 if (source_child_node == nullptr) {
@@ -227,8 +227,8 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
             // only one MPI Process
             interaction_list_type source_list = root_children;
             interaction_list_type target_list = root_children;
-            get_rid_of_null_elements(ElementType::DENDRITE, target_list);
-            get_rid_of_null_elements(ElementType::AXON, source_list);
+            get_rid_of_null_elements(ElementType::Dendrite, target_list);
+            get_rid_of_null_elements(ElementType::Axon, source_list);
 
             const auto count = Utilities::count_non_zero_elements(source_list);
             for (unsigned int i = 0; i < count; i++) {
@@ -238,7 +238,7 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
             // multiple MPI processes
 
             // align level of branch nodes and target nodes
-            get_rid_of_null_elements(ElementType::DENDRITE, root_children);
+            get_rid_of_null_elements(ElementType::Dendrite, root_children);
 
             for (const auto* current_branch_node : local_roots) {
                 interaction_list_type temp_interaction_list = root_children;
@@ -249,7 +249,7 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
                     const OctreeNode<FastMultipoleMethodsCell>* target = Utilities::extract_element(temp_interaction_list, chosen_index);
 
                     temp_interaction_list = Utilities::get_children_to_interaction_list(target);
-                    get_rid_of_null_elements(ElementType::DENDRITE, temp_interaction_list);
+                    get_rid_of_null_elements(ElementType::Dendrite, temp_interaction_list);
                 }
 
                 // TODO(hannah): Was passiert hier mit der temp_interaction_list?
@@ -316,7 +316,7 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect(const O
         const auto current_calculation = check_calculation_requirements(source, current_target, signal_type_needed);
 
         switch (current_calculation) {
-        case CalculationType::HERMITE: {
+        case CalculationType::Hermite: {
             if (!init) {
                 // When the Calculation Type is Hermite, initialize the coefficients once.
                 coefficents = calc_hermite_coefficients(source, sigma, signal_type_needed);
@@ -326,12 +326,12 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect(const O
             break;
         }
 
-        case CalculationType::TAYLOR: {
+        case CalculationType::Taylor: {
             result[i] = calc_taylor(source, current_target, sigma, signal_type_needed);
             break;
         }
 
-        case CalculationType::DIRECT: {
+        case CalculationType::Direct: {
             result[i] = calc_direct_gauss(source, current_target, sigma, signal_type_needed);
             break;
         }
@@ -343,18 +343,18 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect(const O
 
 CalculationType FastMultipoleMethods::check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, SignalType signal_type_needed) {
     if (!source->is_parent() || !target->is_parent()) {
-        return CalculationType::DIRECT;
+        return CalculationType::Direct;
     }
 
     if (target->get_cell().get_number_dendrites_for(signal_type_needed) > Constants::max_neurons_in_target) {
         if (source->get_cell().get_number_axons_for(signal_type_needed) > Constants::max_neurons_in_source) {
-            return CalculationType::HERMITE;
+            return CalculationType::Hermite;
         }
 
-        return CalculationType::TAYLOR;
+        return CalculationType::Taylor;
     }
 
-    return CalculationType::DIRECT;
+    return CalculationType::Direct;
 }
 
 double FastMultipoleMethods::calc_taylor(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const double sigma, const SignalType signal_type_needed) {
@@ -579,7 +579,7 @@ FastMultipoleMethods::Utilities::get_all_positions_for(const OctreeNode<FastMult
             auto num_of_ports = 0;
             std::optional<VirtualPlasticityElementManual::position_type> opt_position;
 
-            if (type == ElementType::DENDRITE) {
+            if (type == ElementType::Dendrite) {
                 num_of_ports = cell.get_number_dendrites_for(signal_type_needed);
                 opt_position = cell.get_dendrites_position();
             } else {
@@ -602,7 +602,7 @@ FastMultipoleMethods::Utilities::get_all_positions_for(const OctreeNode<FastMult
             if (*it == nullptr) {
                 continue;
             }
-            auto number_syn_elemts = type == ElementType::DENDRITE ? (*it)->get_cell().get_number_dendrites_for(signal_type_needed) : (*it)->get_cell().get_number_axons_for(signal_type_needed);
+            auto number_syn_elemts = type == ElementType::Dendrite ? (*it)->get_cell().get_number_dendrites_for(signal_type_needed) : (*it)->get_cell().get_number_axons_for(signal_type_needed);
             if (number_syn_elemts == 0) {
                 continue;
             }

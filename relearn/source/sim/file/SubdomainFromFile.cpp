@@ -155,10 +155,10 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
         }
 
         if (signal_type == "ex") {
-            node.signal_type = SignalType::EXCITATORY;
+            node.signal_type = SignalType::Excitatory;
             ++placed_ex_neurons;
         } else {
-            node.signal_type = SignalType::INHIBITORY;
+            node.signal_type = SignalType::Inhibitory;
             ++placed_in_neurons;
         }
 

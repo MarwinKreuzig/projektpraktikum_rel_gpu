@@ -136,11 +136,11 @@ public:
      * @return The model parameters for the specified synaptic elements
      */
     [[nodiscard]] std::vector<ModelParameter> get_parameter(const ElementType element_type, const SignalType signal_type) {
-        if (element_type == ElementType::AXON) {
+        if (element_type == ElementType::Axon) {
             return axons->get_parameter();
         }
 
-        if (signal_type == SignalType::EXCITATORY) {
+        if (signal_type == SignalType::Excitatory) {
             return dendrites_exc->get_parameter();
         }
 

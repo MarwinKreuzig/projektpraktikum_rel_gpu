@@ -13,5 +13,5 @@
 /**
  * An instance of this enum classifies a synaptic elements as either excitatory or inhibitory.
  */
-enum class SignalType { EXCITATORY,
-    INHIBITORY };
+enum class SignalType { Excitatory,
+    Inhibitory };

@@ -454,13 +454,13 @@ int main(int argc, char** argv) {
             models::AEIFModel::default_V_spike);
     }
 
-    auto axon_models = std::make_shared<SynapticElements>(ElementType::AXON, min_calcium_axons,
+    auto axon_models = std::make_shared<SynapticElements>(ElementType::Axon, min_calcium_axons,
         nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-    auto dend_ex_models = std::make_shared<SynapticElements>(ElementType::DENDRITE, min_calcium_excitatory_dendrites,
+    auto dend_ex_models = std::make_shared<SynapticElements>(ElementType::Dendrite, min_calcium_excitatory_dendrites,
         nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-    auto dend_in_models = std::make_shared<SynapticElements>(ElementType::DENDRITE, min_calcium_inhibitory_dendrites,
+    auto dend_in_models = std::make_shared<SynapticElements>(ElementType::Dendrite, min_calcium_inhibitory_dendrites,
         nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     // Lock local RMA memory for local stores

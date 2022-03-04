@@ -48,8 +48,8 @@ void Neurons::init(const size_t number_neurons, std::vector<double> target_calci
      * Mark dendrites as exc./inh.
      */
     for (const auto& id : NeuronID::range(number_neurons)) {
-        dendrites_exc->set_signal_type(id, SignalType::EXCITATORY);
-        dendrites_inh->set_signal_type(id, SignalType::INHIBITORY);
+        dendrites_exc->set_signal_type(id, SignalType::Excitatory);
+        dendrites_inh->set_signal_type(id, SignalType::Inhibitory);
     }
 
     disable_flags.resize(number_neurons, UpdateStatus::ENABLED);
@@ -229,8 +229,8 @@ void Neurons::create_neurons(const size_t creation_count, const std::vector<doub
 
     for (size_t i = current_size; i < new_size; i++) {
         const auto id = NeuronID{ i };
-        dendrites_exc->set_signal_type(id, SignalType::EXCITATORY);
-        dendrites_inh->set_signal_type(id, SignalType::INHIBITORY);
+        dendrites_exc->set_signal_type(id, SignalType::Excitatory);
+        dendrites_inh->set_signal_type(id, SignalType::Inhibitory);
     }
 
     disable_flags.resize(new_size, UpdateStatus::ENABLED);
@@ -407,8 +407,8 @@ CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(
                 continue;
             }
 
-            const auto weight = (SignalType::EXCITATORY == signal_type) ? -1 : 1;
-            if (ElementType::AXON == element_type) {
+            const auto weight = (SignalType::Excitatory == signal_type) ? -1 : 1;
+            if (ElementType::Axon == element_type) {
                 network_graph->add_synapse(DistantOutSynapse(RankNeuronId(rank, other_neuron_id), id, weight));
             } else {
                 network_graph->add_synapse(DistantInSynapse(id, RankNeuronId(rank, other_neuron_id), weight));
@@ -437,7 +437,7 @@ std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
         for (const auto& [rni, weight] : edges) {
             /**
 		     * Create "edge weight" number of synapses and add them to the synapse list
-		     * NOTE: We take abs(it->second) here as DendriteType::INHIBITORY synapses have count < 0
+		     * NOTE: We take abs(it->second) here as DendriteType::Inhibitory synapses have count < 0
 		     */
 
             const auto abs_synapse_weight = std::abs(weight);
@@ -452,7 +452,7 @@ std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
     };
 
     std::vector<RankNeuronId> current_synapses{};
-    if (element_type == ElementType::AXON) {
+    if (element_type == ElementType::Axon) {
         // Walk through outgoing edges
         NetworkGraph::DistantEdges out_edges = network_graph->get_all_out_edges(neuron_id);
         current_synapses = register_edges(out_edges);
@@ -496,19 +496,19 @@ size_t Neurons::delete_synapses_commit_deletions(const CommunicationMap<SynapseD
         num_synapses_deleted += requests.size();
 
         for (const auto& [other_neuron_id, my_neuron_id, element_type, signal_type] : requests) {
-            const auto weight = (SignalType::EXCITATORY == signal_type) ? -1 : 1;
+            const auto weight = (SignalType::Excitatory == signal_type) ? -1 : 1;
 
             /**
 		     *  Update network graph
 		     */
             if (my_rank == other_rank) {
-                if (ElementType::DENDRITE == element_type) {
+                if (ElementType::Dendrite == element_type) {
                     network_graph->add_synapse(LocalSynapse(other_neuron_id, my_neuron_id, weight));
                 } else {
                     network_graph->add_synapse(LocalSynapse(my_neuron_id, other_neuron_id, weight));
                 }
             } else {
-                if (ElementType::DENDRITE == element_type) {
+                if (ElementType::Dendrite == element_type) {
                     network_graph->add_synapse(DistantOutSynapse(RankNeuronId(other_rank, other_neuron_id), my_neuron_id, weight));
                     //network_graph->add_edge_weight(RankNeuronId(other_rank, other_neuron_id), RankNeuronId(my_rank, my_neuron_id), weight);
                 } else {
@@ -517,12 +517,12 @@ size_t Neurons::delete_synapses_commit_deletions(const CommunicationMap<SynapseD
                 }
             }
 
-            if (ElementType::DENDRITE == element_type) {
+            if (ElementType::Dendrite == element_type) {
                 axons->update_connected_elements(my_neuron_id, -1);
                 continue;
             }
 
-            if (SignalType::EXCITATORY == signal_type) {
+            if (SignalType::Excitatory == signal_type) {
                 dendrites_exc->update_connected_elements(my_neuron_id, -1);
             } else {
                 dendrites_inh->update_connected_elements(my_neuron_id, -1);
@@ -695,7 +695,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
     const auto& axons_signal_types = axons->get_signal_types();
 
     for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
-        if (SignalType::EXCITATORY == axons_signal_types[neuron_id]) {
+        if (SignalType::Excitatory == axons_signal_types[neuron_id]) {
             sum_axons_excitatory_counts += static_cast<int64_t>(axon_counts[neuron_id]);
             sum_axons_excitatory_connected_counts += static_cast<int64_t>(axons_connected_counts[neuron_id]);
         } else {
@@ -966,7 +966,7 @@ void Neurons::print_positions_to_log_file() {
 
     for (auto neuron_id : NeuronID::range(number_neurons)) {
         const auto global_id = translator->get_global_id(neuron_id);
-        const auto& signal_type_name = (signal_types[neuron_id.get_local_id()] == SignalType::EXCITATORY) ? std::string("ex") : std::string("in");
+        const auto& signal_type_name = (signal_types[neuron_id.get_local_id()] == SignalType::Excitatory) ? std::string("ex") : std::string("in");
 
         const auto& pos = extra_info->get_position(neuron_id);
 

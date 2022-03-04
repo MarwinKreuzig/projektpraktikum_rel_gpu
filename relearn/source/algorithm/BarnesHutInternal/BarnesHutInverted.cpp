@@ -52,13 +52,13 @@ CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(
 
         const auto& dendrite_position = extra_infos->get_position(id);
 
-        const auto& excitatory_requests = BarnesHutBase::find_target_neurons(id, dendrite_position, number_vacant_excitatory_dendrites, root, ElementType::AXON, SignalType::EXCITATORY);
+        const auto& excitatory_requests = BarnesHutBase::find_target_neurons(id, dendrite_position, number_vacant_excitatory_dendrites, root, ElementType::Axon, SignalType::Excitatory);
         for (const auto& [target_rank, creation_request] : excitatory_requests) {
 #pragma omp critical
             synapse_creation_requests_outgoing.append(target_rank, creation_request);
         }
 
-        const auto& inhibitory_requests = BarnesHutBase::find_target_neurons(id, dendrite_position, number_vacant_excitatory_dendrites, root, ElementType::AXON, SignalType::INHIBITORY);
+        const auto& inhibitory_requests = BarnesHutBase::find_target_neurons(id, dendrite_position, number_vacant_excitatory_dendrites, root, ElementType::Axon, SignalType::Inhibitory);
         for (const auto& [target_rank, creation_request] : inhibitory_requests) {
 #pragma omp critical
             synapse_creation_requests_outgoing.append(target_rank, creation_request);
@@ -117,8 +117,8 @@ void BarnesHutInverted::update_leaf_nodes(const std::vector<UpdateStatus>& disab
         RelearnException::check(excitatory_position_in_box, "BarnesHutInverted::update_leaf_nodes: Excitatory position ({}) is not in cell: [({}), ({})]", excitatory_position, cell_xyz_min, cell_xyz_max);
         RelearnException::check(inhibitory_position_in_box, "BarnesHutInverted::update_leaf_nodes: Inhibitory position ({}) is not in cell: [({}), ({})]", inhibitory_position, cell_xyz_min, cell_xyz_max);
 
-        const auto number_vacant_axons_excitatory = axons->get_free_elements(neuron_id, SignalType::EXCITATORY);
-        const auto number_vacant_axons_inhibitory = axons->get_free_elements(neuron_id, SignalType::INHIBITORY);
+        const auto number_vacant_axons_excitatory = axons->get_free_elements(neuron_id, SignalType::Excitatory);
+        const auto number_vacant_axons_inhibitory = axons->get_free_elements(neuron_id, SignalType::Inhibitory);
 
         node->set_cell_number_axons(number_vacant_axons_excitatory, number_vacant_axons_inhibitory);
     }

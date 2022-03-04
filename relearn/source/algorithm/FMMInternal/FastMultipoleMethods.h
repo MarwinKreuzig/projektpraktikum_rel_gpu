@@ -22,9 +22,9 @@
 #include <vector>
 #include <cmath>
 
-enum class CalculationType { DIRECT,
-    HERMITE,
-    TAYLOR,
+enum class CalculationType { Direct,
+    Hermite,
+    Taylor,
 };
 
 template <typename T>
@@ -251,8 +251,8 @@ private:
     static double
     calc_direct_gauss(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed) {
 
-        const std::vector<std::pair<Vec3d, unsigned int>>& sources = Utilities::get_all_positions_for(source, ElementType::AXON, signal_type_needed);
-        const std::vector<std::pair<Vec3d, unsigned int>>& targets = Utilities::get_all_positions_for(target, ElementType::DENDRITE, signal_type_needed);
+        const std::vector<std::pair<Vec3d, unsigned int>>& sources = Utilities::get_all_positions_for(source, ElementType::Axon, signal_type_needed);
+        const std::vector<std::pair<Vec3d, unsigned int>>& targets = Utilities::get_all_positions_for(target, ElementType::Dendrite, signal_type_needed);
 
         auto result = 0.0;
 

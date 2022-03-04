@@ -158,9 +158,9 @@ public:
      */
     [[nodiscard]] static std::vector<std::shared_ptr<SynapticElements>> get_elements() {
         std::vector<std::shared_ptr<SynapticElements>> res;
-        res.emplace_back(std::make_shared<SynapticElements>(ElementType::AXON, SynapticElements::default_eta_Axons));
-        res.emplace_back(std::make_shared<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_exc));
-        res.emplace_back(std::make_shared<SynapticElements>(ElementType::DENDRITE, SynapticElements::default_eta_Dendrites_inh));
+        res.emplace_back(std::make_shared<SynapticElements>(ElementType::Axon, SynapticElements::default_eta_Axons));
+        res.emplace_back(std::make_shared<SynapticElements>(ElementType::Dendrite, SynapticElements::default_eta_Dendrites_exc));
+        res.emplace_back(std::make_shared<SynapticElements>(ElementType::Dendrite, SynapticElements::default_eta_Dendrites_inh));
         return res;
     }
 
@@ -520,12 +520,12 @@ public:
     static constexpr double max_vacant_elements_initially{ 1000.0 };
 
 private:
-    ElementType type{}; // Denotes the type of all synaptic elements, which is AXON or DENDRITE
+    ElementType type{}; // Denotes the type of all synaptic elements, which is Axon or Dendrite
     size_t size{ 0 };
     std::vector<double> grown_elements{};
     std::vector<double> deltas_since_last_update{}; // Keeps track of changes in number of elements until those changes are applied in next connectivity update
     std::vector<unsigned int> connected_elements{};
-    std::vector<SignalType> signal_types{}; // Signal type of synaptic elements, i.e., EXCITATORY or INHIBITORY.
+    std::vector<SignalType> signal_types{}; // Signal type of synaptic elements, i.e., Excitatory or Inhibitory.
                                             // Note: Given that current exc. and inh. dendrites are in different objects, this would only be needed for axons.
                                             //       A more memory-efficient solution would be to use a different class for axons which has the signal_types array.
 

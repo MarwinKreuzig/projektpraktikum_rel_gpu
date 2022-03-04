@@ -176,21 +176,21 @@ public:
         filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
 
         for (const auto& [neuron_id, edge_val] : all_local_edges) {
-            if (signal_type == SignalType::EXCITATORY && edge_val > 0) {
+            if (signal_type == SignalType::Excitatory && edge_val > 0) {
                 filtered_edges.emplace_back(RankNeuronId(my_rank, neuron_id), edge_val);
             }
 
-            if (signal_type == SignalType::INHIBITORY && edge_val < 0) {
+            if (signal_type == SignalType::Inhibitory && edge_val < 0) {
                 filtered_edges.emplace_back(RankNeuronId(my_rank, neuron_id), edge_val);
             }
         }
 
         for (const auto& [edge_key, edge_val] : all_distant_edges) {
-            if (signal_type == SignalType::EXCITATORY && edge_val > 0) {
+            if (signal_type == SignalType::Excitatory && edge_val > 0) {
                 filtered_edges.emplace_back(edge_key, edge_val);
             }
 
-            if (signal_type == SignalType::INHIBITORY && edge_val < 0) {
+            if (signal_type == SignalType::Inhibitory && edge_val < 0) {
                 filtered_edges.emplace_back(edge_key, edge_val);
             }
         }
@@ -217,21 +217,21 @@ public:
         filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
 
         for (const auto& [edge_key, edge_val] : all_local_edges) {
-            if (signal_type == SignalType::EXCITATORY && edge_val > 0) {
+            if (signal_type == SignalType::Excitatory && edge_val > 0) {
                 filtered_edges.emplace_back(RankNeuronId(my_rank, edge_key), edge_val);
             }
 
-            if (signal_type == SignalType::INHIBITORY && edge_val < 0) {
+            if (signal_type == SignalType::Inhibitory && edge_val < 0) {
                 filtered_edges.emplace_back(RankNeuronId(my_rank, edge_key), edge_val);
             }
         }
 
         for (const auto& [edge_key, edge_val] : all_distant_edges) {
-            if (signal_type == SignalType::EXCITATORY && edge_val > 0) {
+            if (signal_type == SignalType::Excitatory && edge_val > 0) {
                 filtered_edges.emplace_back(edge_key, edge_val);
             }
 
-            if (signal_type == SignalType::INHIBITORY && edge_val < 0) {
+            if (signal_type == SignalType::Inhibitory && edge_val < 0) {
                 filtered_edges.emplace_back(edge_key, edge_val);
             }
         }

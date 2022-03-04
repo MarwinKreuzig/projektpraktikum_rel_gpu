@@ -47,28 +47,28 @@ void CellTest::test_cell_dendrites_position() {
     ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
     ASSERT_EQ(pos_ex_1, cell.get_excitatory_dendrites_position().value());
 
-    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_EQ(pos_ex_1, cell.get_dendrites_position_for(SignalType::EXCITATORY).value());
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_1, cell.get_dendrites_position_for(SignalType::Excitatory).value());
 
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY));
-    ASSERT_TRUE(cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY).has_value());
-    ASSERT_EQ(pos_ex_1, cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY).value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_1, cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).value());
 
     ASSERT_FALSE(cell.get_inhibitory_dendrites_position().has_value());
-    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY).has_value());
+    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
 
     cell.set_excitatory_dendrites_position({});
     ASSERT_FALSE(cell.get_excitatory_dendrites_position().has_value());
-    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY).has_value());
+    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).has_value());
 
     ASSERT_FALSE(cell.get_inhibitory_dendrites_position().has_value());
-    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY).has_value());
+    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
 
     const auto& pos_ex_2 = get_random_position_in_box(min, max);
     cell.set_excitatory_dendrites_position(pos_ex_2);
@@ -76,28 +76,28 @@ void CellTest::test_cell_dendrites_position() {
     ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
     ASSERT_EQ(pos_ex_2, cell.get_excitatory_dendrites_position().value());
 
-    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_EQ(pos_ex_2, cell.get_dendrites_position_for(SignalType::EXCITATORY).value());
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_2, cell.get_dendrites_position_for(SignalType::Excitatory).value());
 
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY));
-    ASSERT_TRUE(cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY).has_value());
-    ASSERT_EQ(pos_ex_2, cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY).value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_2, cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).value());
 
     ASSERT_FALSE(cell.get_inhibitory_dendrites_position().has_value());
-    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY).has_value());
+    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
 
     cell.set_excitatory_dendrites_position({});
     ASSERT_FALSE(cell.get_excitatory_dendrites_position().has_value());
-    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY).has_value());
+    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).has_value());
 
     ASSERT_FALSE(cell.get_inhibitory_dendrites_position().has_value());
-    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY).has_value());
+    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
 
     const auto& pos_in_1 = get_random_position_in_box(min, max);
     cell.set_inhibitory_dendrites_position(pos_in_1);
@@ -105,28 +105,28 @@ void CellTest::test_cell_dendrites_position() {
     ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
     ASSERT_EQ(pos_in_1, cell.get_inhibitory_dendrites_position().value());
 
-    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_EQ(pos_in_1, cell.get_dendrites_position_for(SignalType::INHIBITORY).value());
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_1, cell.get_dendrites_position_for(SignalType::Inhibitory).value());
 
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY));
-    ASSERT_TRUE(cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY).has_value());
-    ASSERT_EQ(pos_in_1, cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY).value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_1, cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).value());
 
     ASSERT_FALSE(cell.get_excitatory_dendrites_position().has_value());
-    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY).has_value());
+    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).has_value());
 
     cell.set_inhibitory_dendrites_position({});
     ASSERT_FALSE(cell.get_excitatory_dendrites_position().has_value());
-    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY).has_value());
+    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).has_value());
 
     ASSERT_FALSE(cell.get_inhibitory_dendrites_position().has_value());
-    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY).has_value());
+    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
 
     const auto& pos_in_2 = get_random_position_in_box(min, max);
     cell.set_inhibitory_dendrites_position(pos_in_2);
@@ -134,28 +134,28 @@ void CellTest::test_cell_dendrites_position() {
     ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
     ASSERT_EQ(pos_in_2, cell.get_inhibitory_dendrites_position().value());
 
-    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_EQ(pos_in_2, cell.get_dendrites_position_for(SignalType::INHIBITORY).value());
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_2, cell.get_dendrites_position_for(SignalType::Inhibitory).value());
 
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY));
-    ASSERT_TRUE(cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY).has_value());
-    ASSERT_EQ(pos_in_2, cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY).value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_2, cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).value());
 
     ASSERT_FALSE(cell.get_excitatory_dendrites_position().has_value());
-    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY).has_value());
+    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).has_value());
 
     cell.set_inhibitory_dendrites_position({});
     ASSERT_FALSE(cell.get_excitatory_dendrites_position().has_value());
-    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY).has_value());
+    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).has_value());
 
     ASSERT_FALSE(cell.get_inhibitory_dendrites_position().has_value());
-    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY).has_value());
+    ASSERT_FALSE(cell.get_dendrites_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
 
     const auto& pos_ex_3 = get_random_position_in_box(min, max);
     cell.set_excitatory_dendrites_position(pos_ex_3);
@@ -166,22 +166,22 @@ void CellTest::test_cell_dendrites_position() {
     ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
     ASSERT_EQ(pos_ex_3, cell.get_excitatory_dendrites_position().value());
 
-    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_EQ(pos_ex_3, cell.get_dendrites_position_for(SignalType::EXCITATORY).value());
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_3, cell.get_dendrites_position_for(SignalType::Excitatory).value());
 
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY));
-    ASSERT_TRUE(cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY).has_value());
-    ASSERT_EQ(pos_ex_3, cell.get_position_for(ElementType::DENDRITE, SignalType::EXCITATORY).value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_3, cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).value());
 
     ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
     ASSERT_EQ(pos_in_3, cell.get_inhibitory_dendrites_position().value());
 
-    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_EQ(pos_in_3, cell.get_dendrites_position_for(SignalType::INHIBITORY).value());
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_3, cell.get_dendrites_position_for(SignalType::Inhibitory).value());
 
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY));
-    ASSERT_TRUE(cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY).has_value());
-    ASSERT_EQ(pos_in_3, cell.get_position_for(ElementType::DENDRITE, SignalType::INHIBITORY).value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_3, cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).value());
 }
 
 template <typename AdditionalCellAttributes>
@@ -229,8 +229,8 @@ void CellTest::test_cell_dendrites_position_exception() {
     ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
     ASSERT_EQ(pos_ex_1, cell.get_excitatory_dendrites_position().value());
 
-    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_EQ(pos_ex_1, cell.get_dendrites_position_for(SignalType::EXCITATORY).value());
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_1, cell.get_dendrites_position_for(SignalType::Excitatory).value());
 
     const auto& pos_ex_2 = get_random_position_in_box(min, max);
     cell.set_excitatory_dendrites_position(pos_ex_2);
@@ -270,8 +270,8 @@ void CellTest::test_cell_dendrites_position_exception() {
     ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
     ASSERT_EQ(pos_ex_2, cell.get_excitatory_dendrites_position().value());
 
-    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_EQ(pos_ex_2, cell.get_dendrites_position_for(SignalType::EXCITATORY).value());
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_2, cell.get_dendrites_position_for(SignalType::Excitatory).value());
 
     const auto& pos_in_1 = get_random_position_in_box(min, max);
     cell.set_inhibitory_dendrites_position(pos_in_1);
@@ -311,8 +311,8 @@ void CellTest::test_cell_dendrites_position_exception() {
     ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
     ASSERT_EQ(pos_in_1, cell.get_inhibitory_dendrites_position().value());
 
-    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_EQ(pos_in_1, cell.get_dendrites_position_for(SignalType::INHIBITORY).value());
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_1, cell.get_dendrites_position_for(SignalType::Inhibitory).value());
 
     const auto& pos_in_2 = get_random_position_in_box(min, max);
     cell.set_inhibitory_dendrites_position(pos_in_2);
@@ -352,8 +352,8 @@ void CellTest::test_cell_dendrites_position_exception() {
     ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
     ASSERT_EQ(pos_in_2, cell.get_inhibitory_dendrites_position().value());
 
-    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_EQ(pos_in_2, cell.get_dendrites_position_for(SignalType::INHIBITORY).value());
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_2, cell.get_dendrites_position_for(SignalType::Inhibitory).value());
 }
 
 template <typename AdditionalCellAttributes>
@@ -367,11 +367,11 @@ void CellTest::test_cell_set_number_dendrites() {
     cell.set_number_inhibitory_dendrites(static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_dends_in_1));
 
     ASSERT_EQ(num_dends_ex_1, cell.get_number_excitatory_dendrites());
-    ASSERT_EQ(num_dends_ex_1, cell.get_number_dendrites_for(SignalType::EXCITATORY));
-    ASSERT_EQ(num_dends_ex_1, cell.get_number_elements_for(ElementType::DENDRITE, SignalType::EXCITATORY));
+    ASSERT_EQ(num_dends_ex_1, cell.get_number_dendrites_for(SignalType::Excitatory));
+    ASSERT_EQ(num_dends_ex_1, cell.get_number_elements_for(ElementType::Dendrite, SignalType::Excitatory));
     ASSERT_EQ(num_dends_in_1, cell.get_number_inhibitory_dendrites());
-    ASSERT_EQ(num_dends_in_1, cell.get_number_dendrites_for(SignalType::INHIBITORY));
-    ASSERT_EQ(num_dends_in_1, cell.get_number_elements_for(ElementType::DENDRITE, SignalType::INHIBITORY));
+    ASSERT_EQ(num_dends_in_1, cell.get_number_dendrites_for(SignalType::Inhibitory));
+    ASSERT_EQ(num_dends_in_1, cell.get_number_elements_for(ElementType::Dendrite, SignalType::Inhibitory));
 
     const auto num_dends_ex_2 = get_random_number_neurons();
     const auto num_dends_in_2 = get_random_number_neurons();
@@ -380,11 +380,11 @@ void CellTest::test_cell_set_number_dendrites() {
     cell.set_number_inhibitory_dendrites(static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_dends_in_2));
 
     ASSERT_EQ(num_dends_ex_2, cell.get_number_excitatory_dendrites());
-    ASSERT_EQ(num_dends_ex_2, cell.get_number_dendrites_for(SignalType::EXCITATORY));
-    ASSERT_EQ(num_dends_ex_2, cell.get_number_elements_for(ElementType::DENDRITE, SignalType::EXCITATORY));
+    ASSERT_EQ(num_dends_ex_2, cell.get_number_dendrites_for(SignalType::Excitatory));
+    ASSERT_EQ(num_dends_ex_2, cell.get_number_elements_for(ElementType::Dendrite, SignalType::Excitatory));
     ASSERT_EQ(num_dends_in_2, cell.get_number_inhibitory_dendrites());
-    ASSERT_EQ(num_dends_in_2, cell.get_number_dendrites_for(SignalType::INHIBITORY));
-    ASSERT_EQ(num_dends_in_2, cell.get_number_elements_for(ElementType::DENDRITE, SignalType::INHIBITORY));
+    ASSERT_EQ(num_dends_in_2, cell.get_number_dendrites_for(SignalType::Inhibitory));
+    ASSERT_EQ(num_dends_in_2, cell.get_number_elements_for(ElementType::Dendrite, SignalType::Inhibitory));
 }
 
 template <typename AdditionalCellAttributes>
@@ -451,28 +451,28 @@ void CellTest::test_cell_axons_position() {
     ASSERT_TRUE(cell.get_excitatory_axons_position().has_value());
     ASSERT_EQ(pos_ex_1, cell.get_excitatory_axons_position().value());
 
-    ASSERT_TRUE(cell.get_axons_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_EQ(pos_ex_1, cell.get_axons_position_for(SignalType::EXCITATORY).value());
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_1, cell.get_axons_position_for(SignalType::Excitatory).value());
 
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY));
-    ASSERT_TRUE(cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY).has_value());
-    ASSERT_EQ(pos_ex_1, cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY).value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Excitatory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Axon, SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_1, cell.get_position_for(ElementType::Axon, SignalType::Excitatory).value());
 
     ASSERT_FALSE(cell.get_inhibitory_axons_position().has_value());
-    ASSERT_FALSE(cell.get_axons_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY).has_value());
+    ASSERT_FALSE(cell.get_axons_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
 
     cell.set_excitatory_axons_position({});
     ASSERT_FALSE(cell.get_excitatory_axons_position().has_value());
-    ASSERT_FALSE(cell.get_axons_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY).has_value());
+    ASSERT_FALSE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Excitatory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Axon, SignalType::Excitatory).has_value());
 
     ASSERT_FALSE(cell.get_inhibitory_axons_position().has_value());
-    ASSERT_FALSE(cell.get_axons_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY).has_value());
+    ASSERT_FALSE(cell.get_axons_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
 
     const auto& pos_ex_2 = get_random_position_in_box(min, max);
     cell.set_excitatory_axons_position(pos_ex_2);
@@ -480,28 +480,28 @@ void CellTest::test_cell_axons_position() {
     ASSERT_TRUE(cell.get_excitatory_axons_position().has_value());
     ASSERT_EQ(pos_ex_2, cell.get_excitatory_axons_position().value());
 
-    ASSERT_TRUE(cell.get_axons_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_EQ(pos_ex_2, cell.get_axons_position_for(SignalType::EXCITATORY).value());
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_2, cell.get_axons_position_for(SignalType::Excitatory).value());
 
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY));
-    ASSERT_TRUE(cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY).has_value());
-    ASSERT_EQ(pos_ex_2, cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY).value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Excitatory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Axon, SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_2, cell.get_position_for(ElementType::Axon, SignalType::Excitatory).value());
 
     ASSERT_FALSE(cell.get_inhibitory_axons_position().has_value());
-    ASSERT_FALSE(cell.get_axons_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY).has_value());
+    ASSERT_FALSE(cell.get_axons_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
 
     cell.set_excitatory_axons_position({});
     ASSERT_FALSE(cell.get_excitatory_axons_position().has_value());
-    ASSERT_FALSE(cell.get_axons_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY).has_value());
+    ASSERT_FALSE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Excitatory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Axon, SignalType::Excitatory).has_value());
 
     ASSERT_FALSE(cell.get_inhibitory_axons_position().has_value());
-    ASSERT_FALSE(cell.get_axons_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY).has_value());
+    ASSERT_FALSE(cell.get_axons_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
 
     const auto& pos_in_1 = get_random_position_in_box(min, max);
     cell.set_inhibitory_axons_position(pos_in_1);
@@ -509,28 +509,28 @@ void CellTest::test_cell_axons_position() {
     ASSERT_TRUE(cell.get_inhibitory_axons_position().has_value());
     ASSERT_EQ(pos_in_1, cell.get_inhibitory_axons_position().value());
 
-    ASSERT_TRUE(cell.get_axons_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_EQ(pos_in_1, cell.get_axons_position_for(SignalType::INHIBITORY).value());
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_1, cell.get_axons_position_for(SignalType::Inhibitory).value());
 
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY));
-    ASSERT_TRUE(cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY).has_value());
-    ASSERT_EQ(pos_in_1, cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY).value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_1, cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).value());
 
     ASSERT_FALSE(cell.get_excitatory_axons_position().has_value());
-    ASSERT_FALSE(cell.get_axons_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY).has_value());
+    ASSERT_FALSE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Excitatory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Axon, SignalType::Excitatory).has_value());
 
     cell.set_inhibitory_axons_position({});
     ASSERT_FALSE(cell.get_excitatory_axons_position().has_value());
-    ASSERT_FALSE(cell.get_axons_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY).has_value());
+    ASSERT_FALSE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Excitatory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Axon, SignalType::Excitatory).has_value());
 
     ASSERT_FALSE(cell.get_inhibitory_axons_position().has_value());
-    ASSERT_FALSE(cell.get_axons_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY).has_value());
+    ASSERT_FALSE(cell.get_axons_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
 
     const auto& pos_in_2 = get_random_position_in_box(min, max);
     cell.set_inhibitory_axons_position(pos_in_2);
@@ -538,28 +538,28 @@ void CellTest::test_cell_axons_position() {
     ASSERT_TRUE(cell.get_inhibitory_axons_position().has_value());
     ASSERT_EQ(pos_in_2, cell.get_inhibitory_axons_position().value());
 
-    ASSERT_TRUE(cell.get_axons_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_EQ(pos_in_2, cell.get_axons_position_for(SignalType::INHIBITORY).value());
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_2, cell.get_axons_position_for(SignalType::Inhibitory).value());
 
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY));
-    ASSERT_TRUE(cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY).has_value());
-    ASSERT_EQ(pos_in_2, cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY).value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_2, cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).value());
 
     ASSERT_FALSE(cell.get_excitatory_axons_position().has_value());
-    ASSERT_FALSE(cell.get_axons_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY).has_value());
+    ASSERT_FALSE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Excitatory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Axon, SignalType::Excitatory).has_value());
 
     cell.set_inhibitory_axons_position({});
     ASSERT_FALSE(cell.get_excitatory_axons_position().has_value());
-    ASSERT_FALSE(cell.get_axons_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY).has_value());
+    ASSERT_FALSE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Excitatory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Axon, SignalType::Excitatory).has_value());
 
     ASSERT_FALSE(cell.get_inhibitory_axons_position().has_value());
-    ASSERT_FALSE(cell.get_axons_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY));
-    ASSERT_FALSE(cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY).has_value());
+    ASSERT_FALSE(cell.get_axons_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
+    ASSERT_FALSE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
 
     const auto& pos_ex_3 = get_random_position_in_box(min, max);
     cell.set_excitatory_axons_position(pos_ex_3);
@@ -570,22 +570,22 @@ void CellTest::test_cell_axons_position() {
     ASSERT_TRUE(cell.get_excitatory_axons_position().has_value());
     ASSERT_EQ(pos_ex_3, cell.get_excitatory_axons_position().value());
 
-    ASSERT_TRUE(cell.get_axons_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_EQ(pos_ex_3, cell.get_axons_position_for(SignalType::EXCITATORY).value());
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_3, cell.get_axons_position_for(SignalType::Excitatory).value());
 
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY));
-    ASSERT_TRUE(cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY).has_value());
-    ASSERT_EQ(pos_ex_3, cell.get_position_for(ElementType::AXON, SignalType::EXCITATORY).value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Excitatory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Axon, SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_3, cell.get_position_for(ElementType::Axon, SignalType::Excitatory).value());
 
     ASSERT_TRUE(cell.get_inhibitory_axons_position().has_value());
     ASSERT_EQ(pos_in_3, cell.get_inhibitory_axons_position().value());
 
-    ASSERT_TRUE(cell.get_axons_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_EQ(pos_in_3, cell.get_axons_position_for(SignalType::INHIBITORY).value());
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_3, cell.get_axons_position_for(SignalType::Inhibitory).value());
 
-    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY));
-    ASSERT_TRUE(cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY).has_value());
-    ASSERT_EQ(pos_in_3, cell.get_position_for(ElementType::AXON, SignalType::INHIBITORY).value());
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_3, cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).value());
 }
 
 template <typename AdditionalCellAttributes>
@@ -633,8 +633,8 @@ void CellTest::test_cell_axons_position_exception() {
     ASSERT_TRUE(cell.get_excitatory_axons_position().has_value());
     ASSERT_EQ(pos_ex_1, cell.get_excitatory_axons_position().value());
 
-    ASSERT_TRUE(cell.get_axons_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_EQ(pos_ex_1, cell.get_axons_position_for(SignalType::EXCITATORY).value());
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_1, cell.get_axons_position_for(SignalType::Excitatory).value());
 
     const auto& pos_ex_2 = get_random_position_in_box(min, max);
     cell.set_excitatory_axons_position(pos_ex_2);
@@ -674,8 +674,8 @@ void CellTest::test_cell_axons_position_exception() {
     ASSERT_TRUE(cell.get_excitatory_axons_position().has_value());
     ASSERT_EQ(pos_ex_2, cell.get_excitatory_axons_position().value());
 
-    ASSERT_TRUE(cell.get_axons_position_for(SignalType::EXCITATORY).has_value());
-    ASSERT_EQ(pos_ex_2, cell.get_axons_position_for(SignalType::EXCITATORY).value());
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_2, cell.get_axons_position_for(SignalType::Excitatory).value());
 
     const auto& pos_in_1 = get_random_position_in_box(min, max);
     cell.set_inhibitory_axons_position(pos_in_1);
@@ -715,8 +715,8 @@ void CellTest::test_cell_axons_position_exception() {
     ASSERT_TRUE(cell.get_inhibitory_axons_position().has_value());
     ASSERT_EQ(pos_in_1, cell.get_inhibitory_axons_position().value());
 
-    ASSERT_TRUE(cell.get_axons_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_EQ(pos_in_1, cell.get_axons_position_for(SignalType::INHIBITORY).value());
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_1, cell.get_axons_position_for(SignalType::Inhibitory).value());
 
     const auto& pos_in_2 = get_random_position_in_box(min, max);
     cell.set_inhibitory_axons_position(pos_in_2);
@@ -756,8 +756,8 @@ void CellTest::test_cell_axons_position_exception() {
     ASSERT_TRUE(cell.get_inhibitory_axons_position().has_value());
     ASSERT_EQ(pos_in_2, cell.get_inhibitory_axons_position().value());
 
-    ASSERT_TRUE(cell.get_axons_position_for(SignalType::INHIBITORY).has_value());
-    ASSERT_EQ(pos_in_2, cell.get_axons_position_for(SignalType::INHIBITORY).value());
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_2, cell.get_axons_position_for(SignalType::Inhibitory).value());
 }
 
 template <typename AdditionalCellAttributes>
@@ -771,11 +771,11 @@ void CellTest::test_cell_set_number_axons() {
     cell.set_number_inhibitory_axons(static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_axs_in_1));
 
     ASSERT_EQ(num_axs_ex_1, cell.get_number_excitatory_axons());
-    ASSERT_EQ(num_axs_ex_1, cell.get_number_axons_for(SignalType::EXCITATORY));
-    ASSERT_EQ(num_axs_ex_1, cell.get_number_elements_for(ElementType::AXON, SignalType::EXCITATORY));
+    ASSERT_EQ(num_axs_ex_1, cell.get_number_axons_for(SignalType::Excitatory));
+    ASSERT_EQ(num_axs_ex_1, cell.get_number_elements_for(ElementType::Axon, SignalType::Excitatory));
     ASSERT_EQ(num_axs_in_1, cell.get_number_inhibitory_axons());
-    ASSERT_EQ(num_axs_in_1, cell.get_number_axons_for(SignalType::INHIBITORY));
-    ASSERT_EQ(num_axs_in_1, cell.get_number_elements_for(ElementType::AXON, SignalType::INHIBITORY));
+    ASSERT_EQ(num_axs_in_1, cell.get_number_axons_for(SignalType::Inhibitory));
+    ASSERT_EQ(num_axs_in_1, cell.get_number_elements_for(ElementType::Axon, SignalType::Inhibitory));
 
     const auto num_axs_ex_2 = get_random_number_neurons();
     const auto num_axs_in_2 = get_random_number_neurons();
@@ -784,11 +784,11 @@ void CellTest::test_cell_set_number_axons() {
     cell.set_number_inhibitory_axons(static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_axs_in_2));
 
     ASSERT_EQ(num_axs_ex_2, cell.get_number_excitatory_axons());
-    ASSERT_EQ(num_axs_ex_2, cell.get_number_axons_for(SignalType::EXCITATORY));
-    ASSERT_EQ(num_axs_ex_2, cell.get_number_elements_for(ElementType::AXON, SignalType::EXCITATORY));
+    ASSERT_EQ(num_axs_ex_2, cell.get_number_axons_for(SignalType::Excitatory));
+    ASSERT_EQ(num_axs_ex_2, cell.get_number_elements_for(ElementType::Axon, SignalType::Excitatory));
     ASSERT_EQ(num_axs_in_2, cell.get_number_inhibitory_axons());
-    ASSERT_EQ(num_axs_in_2, cell.get_number_axons_for(SignalType::INHIBITORY));
-    ASSERT_EQ(num_axs_in_2, cell.get_number_elements_for(ElementType::AXON, SignalType::INHIBITORY));
+    ASSERT_EQ(num_axs_in_2, cell.get_number_axons_for(SignalType::Inhibitory));
+    ASSERT_EQ(num_axs_in_2, cell.get_number_elements_for(ElementType::Axon, SignalType::Inhibitory));
 }
 
 template <typename AdditionalCellAttributes>

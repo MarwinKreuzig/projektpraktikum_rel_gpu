@@ -133,7 +133,7 @@ void NeuronToSubdomainAssignment::write_neurons_to_file(const std::filesystem::p
                 << z << "\t"
                 << node.area_name << "\t";
 
-            if (node.signal_type == SignalType::EXCITATORY) {
+            if (node.signal_type == SignalType::Excitatory) {
                 of << "ex\n";
             } else {
                 of << "in\n";
