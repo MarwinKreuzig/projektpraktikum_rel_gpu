@@ -88,8 +88,8 @@ Algorithm::create_synapses_process_requests(size_t number_neurons, const Communi
 
         if (number_free_elements == 0) {
             // Other axons were faster and came first
-            responses.set_request(source_rank, request_index, SynapseCreationResponse::failed);
-            //responses.append(source_rank, SynapseCreationResponse::failed);
+            responses.set_request(source_rank, request_index, SynapseCreationResponse::Failed);
+            //responses.append(source_rank, SynapseCreationResponse::Failed);
             continue;
         }
 
@@ -97,8 +97,8 @@ Algorithm::create_synapses_process_requests(size_t number_neurons, const Communi
         dendrites->update_connected_elements(target_neuron_id, 1);
 
         // Set response to "connected" (success)
-        //responses.append(source_rank, SynapseCreationResponse::succeeded);
-        responses.set_request(source_rank, request_index, SynapseCreationResponse::succeeded);
+        //responses.append(source_rank, SynapseCreationResponse::Succeeded);
+        responses.set_request(source_rank, request_index, SynapseCreationResponse::Succeeded);
 
         if (source_rank == my_rank) {
             local_synapses.emplace_back(target_neuron_id, source_neuron_id, weight);
@@ -122,7 +122,7 @@ DistantOutSynapses Algorithm::create_synapses_process_responses(const Communicat
         // All responses from a rank
         for (auto request_index = 0; request_index < num_requests; request_index++) {
             const auto connected = requests[request_index];
-            if (connected == SynapseCreationResponse::failed) {
+            if (connected == SynapseCreationResponse::Failed) {
                 continue;
             }
 

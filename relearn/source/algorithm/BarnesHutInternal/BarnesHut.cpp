@@ -37,7 +37,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
 #pragma omp parallel for default(none) shared(root, number_neurons, extra_infos, disable_flags, synapse_creation_requests_outgoing)
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
 
@@ -83,7 +83,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
         auto* node = leaf_nodes[local_neuron_id];
         RelearnException::check(node != nullptr, "BarnesHut::update_leaf_nodes: node was nullptr: {}", neuron_id);
 
-        if (disable_flags[local_neuron_id] == UpdateStatus::DISABLED) {
+        if (disable_flags[local_neuron_id] == UpdateStatus::Disabled) {
             node->set_cell_number_dendrites(0, 0);
             continue;
         }

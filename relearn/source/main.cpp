@@ -464,7 +464,7 @@ int main(int argc, char** argv) {
         nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     // Lock local RMA memory for local stores
-    MPIWrapper::lock_window(my_rank, MPI_Locktype::exclusive);
+    MPIWrapper::lock_window(my_rank, MPI_Locktype::Exclusive);
 
     Simulation sim(partition);
     sim.set_neuron_model(std::move(neuron_models));

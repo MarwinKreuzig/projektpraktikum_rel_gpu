@@ -52,7 +52,7 @@ void Neurons::init(const size_t number_neurons, std::vector<double> target_calci
         dendrites_inh->set_signal_type(id, SignalType::Inhibitory);
     }
 
-    disable_flags.resize(number_neurons, UpdateStatus::ENABLED);
+    disable_flags.resize(number_neurons, UpdateStatus::Enabled);
     calcium = std::move(initial_calcium_values);
     target_calcium = std::move(target_calcium_values);
 
@@ -152,7 +152,7 @@ size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
 
     for (const auto neuron_id : neuron_ids) {
         RelearnException::check(neuron_id.get_local_id() < number_neurons, "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
-        disable_flags[neuron_id.get_local_id()] = UpdateStatus::DISABLED;
+        disable_flags[neuron_id.get_local_id()] = UpdateStatus::Disabled;
 
         const auto local_in_edges = network_graph->get_local_in_edges(neuron_id);
         const auto distant_in_edges = network_graph->get_distant_in_edges(neuron_id);
@@ -205,7 +205,7 @@ size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
 void Neurons::enable_neurons(const std::vector<NeuronID>& neuron_ids) {
     for (const auto neuron_id : neuron_ids) {
         RelearnException::check(neuron_id.get_local_id() < number_neurons, "Neurons::enable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
-        disable_flags[neuron_id.get_local_id()] = UpdateStatus::ENABLED;
+        disable_flags[neuron_id.get_local_id()] = UpdateStatus::Enabled;
     }
 }
 
@@ -233,7 +233,7 @@ void Neurons::create_neurons(const size_t creation_count, const std::vector<doub
         dendrites_inh->set_signal_type(id, SignalType::Inhibitory);
     }
 
-    disable_flags.resize(new_size, UpdateStatus::ENABLED);
+    disable_flags.resize(new_size, UpdateStatus::Enabled);
 
     calcium.insert(calcium.cend(), new_initial_calcium_values.begin(), new_initial_calcium_values.end());
     target_calcium.insert(target_calcium.cend(), new_target_calcium_values.begin(), new_target_calcium_values.end());
@@ -280,7 +280,7 @@ void Neurons::update_calcium() {
 
 #pragma omp parallel for default(none) shared(fired, h, val, tau_C, beta)
     for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
 
@@ -318,7 +318,7 @@ StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_
      */
     double my_var = 0;
     for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
 
@@ -382,7 +382,7 @@ CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(
     const auto element_type = synaptic_elements.get_element_type();
 
     for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
 
@@ -537,7 +537,7 @@ size_t Neurons::create_synapses() {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     // Lock local RMA memory for local stores
-    MPIWrapper::lock_window(my_rank, MPI_Locktype::exclusive);
+    MPIWrapper::lock_window(my_rank, MPI_Locktype::Exclusive);
 
     // Update my leaf nodes
     Timers::start(TimerRegion::UPDATE_LEAF_NODES);

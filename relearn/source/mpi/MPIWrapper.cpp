@@ -245,9 +245,9 @@ MPIWrapper::AsyncToken MPIWrapper::async_recv(void* buffer, const int count, con
 
 int MPIWrapper::translate_lock_type(const MPI_Locktype lock_type) {
     switch (lock_type) {
-    case MPI_Locktype::exclusive:
+    case MPI_Locktype::Exclusive:
         return MPI_LOCK_EXCLUSIVE;
-    case MPI_Locktype::shared:
+    case MPI_Locktype::Shared:
         return MPI_LOCK_SHARED;
     }
 

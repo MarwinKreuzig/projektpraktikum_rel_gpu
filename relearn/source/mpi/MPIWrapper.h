@@ -39,8 +39,8 @@ class RelearnTest;
  * This enum allows a type safe choice of locking types for memory windows
  */
 enum class MPI_Locktype {
-    exclusive,
-    shared,
+    Exclusive,
+    Shared,
 };
 
 namespace MPIUserDefinedOperation {

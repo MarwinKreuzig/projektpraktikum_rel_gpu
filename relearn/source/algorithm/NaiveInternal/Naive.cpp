@@ -100,7 +100,7 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t
 
     // For my neurons
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
 
@@ -179,7 +179,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
 
     for (const auto neuron_id : NeuronID::range(num_leaf_nodes)) {
         const auto local_neuron_id = neuron_id.get_local_id();
-        if (disable_flags[local_neuron_id] == UpdateStatus::DISABLED) {
+        if (disable_flags[local_neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
 

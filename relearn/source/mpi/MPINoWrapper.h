@@ -26,8 +26,8 @@ class OctreeNode;
 class RelearnTest;
 
 enum class MPI_Locktype : int {
-    exclusive = MPI_LOCK_EXCLUSIVE,
-    shared = MPI_LOCK_SHARED,
+    Exclusive = MPI_LOCK_EXCLUSIVE,
+    Shared = MPI_LOCK_SHARED,
 };
 
 class MPINoWrapper {

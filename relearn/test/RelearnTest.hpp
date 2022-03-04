@@ -283,8 +283,8 @@ protected:
     }
 
     std::vector<UpdateStatus> get_update_status(size_t number_neurons, size_t number_disabled) {
-        std::vector<UpdateStatus> status(number_disabled, UpdateStatus::DISABLED);
-        status.resize(number_neurons, UpdateStatus::ENABLED);
+        std::vector<UpdateStatus> status(number_disabled, UpdateStatus::Disabled);
+        status.resize(number_neurons, UpdateStatus::Enabled);
 
         std::shuffle(status.begin(), status.end(), mt);
 

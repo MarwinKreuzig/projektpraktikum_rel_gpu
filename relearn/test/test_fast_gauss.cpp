@@ -187,7 +187,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
 
         FastMultipoleMethods fmm{ octree_ptr };
 
-        std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::ENABLED);
+        std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::Enabled);
 
         const auto max_vacant_elements = uid_max_vacant(mt);
 
@@ -272,7 +272,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
 
         FastMultipoleMethods fmm{ octree_ptr };
 
-        std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::ENABLED);
+        std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::Enabled);
         fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
         fmm.update_leaf_nodes(disable_flags);
         octree.update_local_trees();
@@ -414,7 +414,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
 
         FastMultipoleMethods fmm{ octree_ptr };
 
-        std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::ENABLED);
+        std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::Enabled);
 
         const auto max_vacant_elements = uid_max_vacant(mt);
 
@@ -502,7 +502,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
 
         FastMultipoleMethods fmm{ octree_ptr };
 
-        std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::ENABLED);
+        std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::Enabled);
         fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
         fmm.update_leaf_nodes(disable_flags);
         octree.update_local_trees();

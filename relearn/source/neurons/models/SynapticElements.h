@@ -414,7 +414,7 @@ public:
 #pragma omp parallel for reduction(+ \
                                    : sum_to_delete) shared(number_deletions, disable_flags) default(none)
         for (auto neuron_id = 0; neuron_id < size; ++neuron_id) {
-            if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
+            if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
                 continue;
             }
 
@@ -446,7 +446,7 @@ public:
 
 #pragma omp parallel for shared(calcium, target_calcium, disable_flags) default(none)
         for (auto neuron_id = 0; neuron_id < size; ++neuron_id) {
-            if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
+            if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
                 continue;
             }
 

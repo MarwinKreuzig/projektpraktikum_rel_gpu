@@ -132,6 +132,6 @@ struct tuple_element<2, typename ::SynapseCreationRequest> {
  * The response for a SynapseCreationRequest can be that it failed or succeeded
  */
 enum class SynapseCreationResponse : char {
-    failed = 0,
-    succeeded = 1,
+    Failed = 0,
+    Succeeded = 1,
 };

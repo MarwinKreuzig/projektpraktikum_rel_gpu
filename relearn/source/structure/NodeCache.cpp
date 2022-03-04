@@ -46,7 +46,7 @@ void NodeCache::empty_fmm() {
     RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "NodeCache::download_children_barnes_hut: Tried to download a local node");
 
     // Start access epoch to remote rank
-    MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
+    MPIWrapper::lock_window(target_rank, MPI_Locktype::Shared);
 
     // Fetch remote children if they exist
     // NOLINTNEXTLINE
@@ -95,7 +95,7 @@ void NodeCache::empty_fmm() {
     RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "NodeCache::download_children_barnes_hut: Tried to download a local node");
 
     // Start access epoch to remote rank
-    MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
+    MPIWrapper::lock_window(target_rank, MPI_Locktype::Shared);
 
     // Fetch remote children if they exist
     // NOLINTNEXTLINE
@@ -147,7 +147,7 @@ std::array<OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> NodeCac
     rank_addr_pair.first = target_rank;
 
     // Start access epoch to remote rank
-    MPIWrapper::lock_window(target_rank, MPI_Locktype::shared);
+    MPIWrapper::lock_window(target_rank, MPI_Locktype::Shared);
 
     // Fetch remote children if they exist
     // NOLINTNEXTLINE

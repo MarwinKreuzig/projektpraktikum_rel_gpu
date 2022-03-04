@@ -90,7 +90,7 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<UpdateStatus>& di
 
         RelearnException::check(neuron_id == other_neuron_id, "FastMultipoleMethods::update_leaf_nodes: The nodes are not in order");
 
-        if (disable_flags[neuron_id.get_local_id()] == UpdateStatus::DISABLED) {
+        if (disable_flags[neuron_id.get_local_id()] == UpdateStatus::Disabled) {
             continue;
         }
 

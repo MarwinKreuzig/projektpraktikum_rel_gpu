@@ -12,7 +12,7 @@ static void BM_NeuronModel_SerialInitialize(benchmark::State& state) {
 
     const auto number_neurons = state.range(0);
 
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::ENABLED);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
     for (auto _ : state) {
         state.PauseTiming();
@@ -33,7 +33,7 @@ static void BM_NeuronModel_BackgroundActivity0(benchmark::State& state) {
 
     const auto number_neurons = state.range(0);
 
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::ENABLED);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
     for (auto _ : state) {
         state.PauseTiming();
@@ -63,7 +63,7 @@ static void BM_NeuronModel_BackgroundActivityConstant(benchmark::State& state) {
 
     const auto number_neurons = state.range(0);
 
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::ENABLED);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
     for (auto _ : state) {
         state.PauseTiming();
@@ -97,7 +97,7 @@ static void BM_NeuronModel_BackgroundActivityVariable(benchmark::State& state) {
 
     const auto number_neurons = state.range(0);
 
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::ENABLED);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
     for (auto _ : state) {
         state.PauseTiming();
@@ -138,7 +138,7 @@ static void BM_NeuronModel_LocalInputNoFired(benchmark::State& state) {
     const auto number_neurons = state.range(0);
     const auto number_synapses = state.range(1);
 
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::ENABLED);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
     for (auto _ : state) {
         state.PauseTiming();
@@ -175,7 +175,7 @@ static void BM_NeuronModel_LocalInputFired(benchmark::State& state) {
     const auto number_neurons = state.range(0);
     const auto number_synapses = state.range(1);
 
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::ENABLED);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
     for (auto _ : state) {
         state.PauseTiming();
@@ -211,7 +211,7 @@ template <typename NeuronModelType>
 static void BM_NeuronModel_UpdateActivity(benchmark::State& state) {
     const auto number_neurons = state.range(0);
 
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::ENABLED);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
     for (auto _ : state) {
         state.PauseTiming();
