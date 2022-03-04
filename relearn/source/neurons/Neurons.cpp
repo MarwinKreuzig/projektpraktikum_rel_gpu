@@ -305,13 +305,13 @@ StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_
     const auto [d_my_min, d_my_max, d_my_acc, d_num_values] = Util::min_max_acc(local_values, disable_flags);
     const double my_avg = d_my_acc / d_num_values;
 
-    const double d_min = MPIWrapper::reduce(d_my_min, MPIWrapper::ReduceFunction::min, root);
-    const double d_max = MPIWrapper::reduce(d_my_max, MPIWrapper::ReduceFunction::max, root);
+    const double d_min = MPIWrapper::reduce(d_my_min, MPIWrapper::ReduceFunction::Min, root);
+    const double d_max = MPIWrapper::reduce(d_my_max, MPIWrapper::ReduceFunction::Max, root);
 
-    const auto num_values = static_cast<double>(MPIWrapper::all_reduce_uint64(d_num_values, MPIWrapper::ReduceFunction::sum));
+    const auto num_values = static_cast<double>(MPIWrapper::all_reduce_uint64(d_num_values, MPIWrapper::ReduceFunction::Sum));
 
     // Get global avg at all ranks (needed for variance)
-    const double avg = MPIWrapper::all_reduce_double(my_avg, MPIWrapper::ReduceFunction::sum) / MPIWrapper::get_num_ranks();
+    const double avg = MPIWrapper::all_reduce_double(my_avg, MPIWrapper::ReduceFunction::Sum) / MPIWrapper::get_num_ranks();
 
     /**
      * Calc variance
@@ -327,7 +327,7 @@ StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_
     my_var /= num_values;
 
     // Get global variance at rank "root"
-    const double var = MPIWrapper::reduce(my_var, MPIWrapper::ReduceFunction::sum, root);
+    const double var = MPIWrapper::reduce(my_var, MPIWrapper::ReduceFunction::Sum, root);
 
     // Calc standard deviation
     const double std = sqrt(var);
@@ -737,7 +737,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
         static_cast<int64_t>(sum_dendrites_deleted),
         static_cast<int64_t>(sum_synapses_created) };
 
-    std::array<int64_t, 7> sums_global = MPIWrapper::reduce(sums_local, MPIWrapper::ReduceFunction::sum, 0);
+    std::array<int64_t, 7> sums_global = MPIWrapper::reduce(sums_local, MPIWrapper::ReduceFunction::Sum, 0);
 
     // Output data
     if (0 == MPIWrapper::get_my_rank()) {

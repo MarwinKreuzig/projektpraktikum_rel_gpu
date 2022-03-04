@@ -303,7 +303,7 @@ void Simulation::simulate(const size_t number_steps) {
 
             // Get total number of synapses deleted and created
             const std::array<int64_t, 3> local_cnts = { static_cast<int64_t>(num_axons_deleted), static_cast<int64_t>(num_dendrites_deleted), static_cast<int64_t>(num_synapses_created) };
-            const std::array<int64_t, 3> global_cnts = MPIWrapper::reduce(local_cnts, MPIWrapper::ReduceFunction::sum, 0);
+            const std::array<int64_t, 3> global_cnts = MPIWrapper::reduce(local_cnts, MPIWrapper::ReduceFunction::Sum, 0);
 
             const auto local_deletions = local_cnts[0] + local_cnts[1];
             const auto local_creations = local_cnts[2];

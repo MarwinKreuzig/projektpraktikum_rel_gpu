@@ -47,16 +47,16 @@ static size_t current_token{ 0 };
 
 std::unique_ptr<MPI_Op> translate_reduce_function(const MPIWrapper::ReduceFunction rf) {
     switch (rf) {
-    case MPIWrapper::ReduceFunction::min:
+    case MPIWrapper::ReduceFunction::Min:
         return std::make_unique<MPI_Op>(MPI_MIN);
 
-    case MPIWrapper::ReduceFunction::max:
+    case MPIWrapper::ReduceFunction::Max:
         return std::make_unique<MPI_Op>(MPI_MAX);
 
-    case MPIWrapper::ReduceFunction::sum:
+    case MPIWrapper::ReduceFunction::Sum:
         return std::make_unique<MPI_Op>(MPI_SUM);
 
-    case MPIWrapper::ReduceFunction::minsummax:
+    case MPIWrapper::ReduceFunction::MinSumMax:
         return std::make_unique<MPI_Op>(*minsummax);
 
     default:

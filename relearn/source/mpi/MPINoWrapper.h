@@ -35,12 +35,11 @@ class MPINoWrapper {
 
 public:
     enum class ReduceFunction : char {
-        min = 0,
-        max = 1,
-        avg = 2,
-        sum = 3,
-        none = 4,
-        minsummax = 100
+        Min = 0,
+        Max = 1,
+        Sum = 2,
+        None = 3,
+        MinSumMax = 100
     };
 
     using AsyncToken = MPI_Request;
