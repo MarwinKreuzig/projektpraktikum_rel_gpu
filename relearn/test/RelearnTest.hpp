@@ -458,16 +458,28 @@ protected:
     void test_cell_size();
 
     template <typename AdditionalCellAttributes>
-    void test_cell_position();
+    void test_cell_dendrites_position();
 
     template <typename AdditionalCellAttributes>
-    void test_cell_position_exception();
-
-    template <typename AdditionalCellAttributes>
-    void test_cell_position_combined();
+    void test_cell_dendrites_position_exception();
 
     template <typename AdditionalCellAttributes>
     void test_cell_set_number_dendrites();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_dendrites_position_combined();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_axons_position();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_axons_position_exception();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_set_number_axons();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_axons_position_combined();
 
     template <typename AdditionalCellAttributes>
     void test_cell_set_neuron_id();

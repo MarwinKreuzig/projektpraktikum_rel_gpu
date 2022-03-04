@@ -160,6 +160,7 @@ public:
     /**
      * @brief Returns the number of free elements for the associated type in this cell
      * @param axon_type The requested axons type
+     * @exception Might throw a RelearnException if this operation is not supported
      * @return The number of free axons for the associated type
      */
     [[nodiscard]] counter_type get_number_elements_for(const ElementType element_type, const SignalType signal_type) const {

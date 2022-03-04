@@ -401,7 +401,13 @@ public:
      * @param opt_position The new position of the excitatory axons
      * @exception Throws a RelearnException if the position is valid but not within the box
      */
-    void set_excitatory_axons_position(const std::optional<position_type>& opt_position) noexcept {
+    void set_excitatory_axons_position(const std::optional<position_type>& opt_position) {
+        if (opt_position.has_value()) {
+            const auto& position = opt_position.value();
+            const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
+            RelearnException::check(is_in_box, "Cell::set_excitatory_axons_position: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
+        }
+
         additional_cell_attributes.set_excitatory_axons_position(opt_position);
     }
 
@@ -418,7 +424,13 @@ public:
      * @param opt_position The new position of the inhibitory axons
      * @exception Throws a RelearnException if the position is valid but not within the box
      */
-    void set_inhibitory_axons_position(const std::optional<position_type>& opt_position) noexcept {
+    void set_inhibitory_axons_position(const std::optional<position_type>& opt_position) {
+        if (opt_position.has_value()) {
+            const auto& position = opt_position.value();
+            const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
+            RelearnException::check(is_in_box, "Cell::set_inhibitory_axons_position: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
+        }
+
         additional_cell_attributes.set_inhibitory_axons_position(opt_position);
     }
 
@@ -483,8 +495,15 @@ public:
     /**
      * @brief Sets the position of the neuron for every necessary part of the cell
      * @param opt_position The position, can be empty
+     * @exception Throws a RelearnException if the position is outside of the size
      */
-    void set_neuron_position(const std::optional<position_type>& opt_position) noexcept {
+    void set_neuron_position(const std::optional<position_type>& opt_position) {
+        if (opt_position.has_value()) {
+            const auto& position = opt_position.value();
+            const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
+            RelearnException::check(is_in_box, "Cell::set_neuron_position: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
+        }
+
         additional_cell_attributes.set_neuron_position(opt_position);
     }
 

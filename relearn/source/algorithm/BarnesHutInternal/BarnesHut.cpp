@@ -50,7 +50,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(
             continue;
         }
 
-        const auto& requests = FIND(id, axon_position, number_vacant_axons, root, ElementType::DENDRITE, dendrite_type_needed);
+        const auto& requests = BarnesHutBase::find_target_neurons(id, axon_position, number_vacant_axons, root, ElementType::DENDRITE, dendrite_type_needed);
         for (const auto& [target_rank, creation_request] : requests) {
 #pragma omp critical
             synapse_creation_requests_outgoing.append(target_rank, creation_request);
