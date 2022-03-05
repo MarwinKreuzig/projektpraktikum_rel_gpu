@@ -11,6 +11,7 @@
  */
 
 #include "NaiveCell.h"
+#include "Types.h"
 #include "algorithm/ExchangingAlgorithm.h"
 #include "neurons/SignalType.h"
 #include "neurons/helper/RankNeuronId.h"
@@ -33,10 +34,11 @@ class SynapticElements;
  * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
  * It is strongly tied to Octree, and might perform MPI communication via NodeCache::download_children()
  */
-class Naive : public ExchangingAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
+class Naive : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
 public:
     using AdditionalCellAttributes = NaiveCell;
-    using position_type = AdditionalCellAttributes::position_type;
+    using position_type = typename RelearnTypes::position_type;
+    using counter_type = typename RelearnTypes::counter_type;
 
     /**
      * @brief Constructs a new instance with the given octree
@@ -45,7 +47,7 @@ public:
      */
     explicit Naive(const std::shared_ptr<OctreeImplementation<Naive>>& octree)
         : global_tree(octree) {
-        RelearnException::check(octree != nullptr, "BarnesHut::BarnesHut: octree was null");
+        RelearnException::check(octree != nullptr, "Naive::Naive: octree was null");
     }
 
     /**
@@ -65,8 +67,6 @@ public:
      */
     static void update_functor(OctreeNode<NaiveCell>* node) {
         RelearnException::check(node != nullptr, "Naive::update_functor: node is nullptr");
-
-        using counter_type = NaiveCell::counter_type;
 
         counter_type my_number_dendrites_excitatory = 0;
         counter_type my_number_dendrites_inhibitory = 0;
@@ -108,7 +108,7 @@ protected:
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
      */
     [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
-    create_synapses_process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& RequestType) override;
+    process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& RequestType) override;
 
     /**
      * @brief Processes all incoming responses from the MPI ranks locally
@@ -117,7 +117,7 @@ protected:
      * @exception Can throw a RelearnException
      * @return All synapses from this MPI rank to other MPI ranks
      */
-    [[nodiscard]] DistantOutSynapses create_synapses_process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
+    [[nodiscard]] DistantOutSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
         const CommunicationMap<SynapseCreationResponse>& creation_responses) override;
 
 private:

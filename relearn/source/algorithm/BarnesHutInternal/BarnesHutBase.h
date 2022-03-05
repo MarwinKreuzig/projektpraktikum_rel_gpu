@@ -14,9 +14,9 @@
 #include "Types.h"
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
-#include "neurons/models/SynapticElements.h"
 #include "structure/NodeCache.h"
 #include "structure/OctreeNode.h"
+#include "util/Random.h"
 #include "util/RelearnException.h"
 
 #include <algorithm>
@@ -116,7 +116,6 @@ protected:
      */
     [[nodiscard]] double calculate_attractiveness_to_connect(const NeuronID& source_neuron_id, const position_type& source_position,
         const OctreeNode<AdditionalCellAttributes>* target_node, const ElementType element_type, const SignalType signal_type, const double sigma) const {
-
         // A neuron must not form an autapse, i.e., a synapse to itself
         if (target_node->is_child() && source_neuron_id == target_node->get_cell_neuron_id()) {
             return 0.0;

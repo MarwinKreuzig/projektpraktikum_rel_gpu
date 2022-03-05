@@ -10,14 +10,11 @@
  *
  */
 
-#include "Types.h"
-#include "mpi/CommunicationMap.h"
 #include "neurons/UpdateStatus.h"
-#include "neurons/helper/SynapseCreationRequests.h"
-#include "neurons/models/SynapticElements.h"
 #include "util/RelearnException.h"
 
 #include <memory>
+#include <tuple>
 #include <vector>
 
 class NeuronsExtraInfo;

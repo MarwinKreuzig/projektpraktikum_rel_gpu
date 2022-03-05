@@ -10,17 +10,22 @@
  *
  */
 
+#include "Config.h"
 #include "FastMultipoleMethodsCell.h"
+#include "Types.h"
 #include "algorithm/ExchangingAlgorithm.h"
+#include "neurons/UpdateStatus.h"
+#include "neurons/helper/SynapseCreationRequests.h"
 #include "structure/OctreeNode.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
 #include "util/Utility.h"
 
 #include <array>
-#include <memory>
-#include <vector>
 #include <cmath>
+#include <memory>
+#include <utility>
+#include <vector>
 
 enum class CalculationType { Direct,
     Hermite,
@@ -34,7 +39,7 @@ class OctreeImplementation;
  * This class represents the implementation and adaptation of fast multipole methods. The parameters can be set on the fly.
  * It is strongly tied to Octree, and might perform MPI communication via NodeCache::download_children()
  */
-class FastMultipoleMethods : public ExchangingAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
+class FastMultipoleMethods : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
     friend class FMMPrivateFunctionTest;
 
     std::shared_ptr<OctreeImplementation<FastMultipoleMethods>> global_tree{};
@@ -70,12 +75,11 @@ public:
      * @param node The node to update, must not be nullptr
      * @exception Throws a RelearnException if node is nullptr
      */
-    static void
-    update_functor(OctreeNode<FastMultipoleMethodsCell>* node) {
+    static void update_functor(OctreeNode<FastMultipoleMethodsCell>* node) {
         RelearnException::check(node != nullptr, "FastMultipoleMethods::update_functor: node is nullptr");
 
         // NOLINTNEXTLINE
-        if (!node->is_parent()) {
+        if (node->is_child()) {
             return;
         }
 
@@ -209,7 +213,7 @@ protected:
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
      */
     [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
-    create_synapses_process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& RequestType) override;
+    process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& RequestType) override;
 
     /**
      * @brief Processes all incoming responses from the MPI ranks locally
@@ -218,7 +222,7 @@ protected:
      * @exception Can throw a RelearnException
      * @return All synapses from this MPI rank to other MPI ranks
      */
-    [[nodiscard]] DistantOutSynapses create_synapses_process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
+    [[nodiscard]] DistantOutSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
         const CommunicationMap<SynapseCreationResponse>& creation_responses) override;
 
 private:

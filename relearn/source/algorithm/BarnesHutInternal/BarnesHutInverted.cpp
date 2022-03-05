@@ -143,103 +143,114 @@ std::vector<std::pair<int, SynapseCreationRequest>> BarnesHutInverted::find_targ
     return requests;
 }
 
-std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
-BarnesHutInverted::create_synapses_process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& synapse_creation_requests_incoming) {
+std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantOutSynapses>>
+BarnesHutInverted::process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& synapse_creation_requests_incoming) {
 
+    RelearnException::fail("BarnesHutInverted::process_responses: Not implemented yet");
     const auto my_rank = MPIWrapper::get_my_rank();
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
     CommunicationMap<SynapseCreationResponse> responses(number_ranks);
 
-    if (synapse_creation_requests_incoming.empty()) {
-        return { responses, {} };
-    }
+    return { responses, {} };
 
-    responses.resize(synapse_creation_requests_incoming.get_request_sizes());
+    // const auto my_rank = MPIWrapper::get_my_rank();
+    // const auto number_ranks = MPIWrapper::get_num_ranks();
 
-    LocalSynapses local_synapses{};
-    local_synapses.reserve(number_neurons);
+    // CommunicationMap<SynapseCreationResponse> responses(number_ranks);
 
-    DistantInSynapses distant_synapses{};
-    distant_synapses.reserve(number_neurons);
+    // if (synapse_creation_requests_incoming.empty()) {
+    //     return { responses, {} };
+    // }
 
-    std::vector<std::pair<int, unsigned int>> indices{};
-    indices.reserve(synapse_creation_requests_incoming.get_total_number_requests());
+    // responses.resize(synapse_creation_requests_incoming.get_request_sizes());
 
-    for (const auto& [source_rank, requests] : synapse_creation_requests_incoming) {
-        for (unsigned int request_index = 0; request_index < requests.size(); request_index++) {
-            indices.emplace_back(source_rank, request_index);
-        }
-    }
+    // LocalSynapses local_synapses{};
+    // local_synapses.reserve(number_neurons);
 
-    // We need to shuffle the request indices so we do not prefer those from smaller MPI ranks and lower neuron ids
-    RandomHolder::shuffle(RandomHolderKey::Algorithm, indices.begin(), indices.end());
+    // DistantInSynapses distant_synapses{};
+    // distant_synapses.reserve(number_neurons);
 
-    for (const auto& [source_rank, request_index] : indices) {
-        const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = synapse_creation_requests_incoming.get_request(source_rank, request_index);
+    // std::vector<std::pair<int, unsigned int>> indices{};
+    // indices.reserve(synapse_creation_requests_incoming.get_total_number_requests());
 
-        RelearnException::check(target_neuron_id.get_local_id() < number_neurons, "BarnesHut::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
+    // for (const auto& [source_rank, requests] : synapse_creation_requests_incoming) {
+    //     for (unsigned int request_index = 0; request_index < requests.size(); request_index++) {
+    //         indices.emplace_back(source_rank, request_index);
+    //     }
+    // }
 
-        const auto& dendrites = (SignalType::Inhibitory == dendrite_type_needed) ? inhibitory_dendrites : excitatory_dendrites;
+    //// We need to shuffle the request indices so we do not prefer those from smaller MPI ranks and lower neuron ids
+    // RandomHolder::shuffle(RandomHolderKey::Algorithm, indices.begin(), indices.end());
 
-        const auto weight = (SignalType::Inhibitory == dendrite_type_needed) ? -1 : 1;
-        const auto number_free_elements = dendrites->get_free_elements(target_neuron_id);
+    // for (const auto& [source_rank, request_index] : indices) {
+    //     const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = synapse_creation_requests_incoming.get_request(source_rank, request_index);
 
-        if (number_free_elements == 0) {
-            // Other axons were faster and came first
-            responses.set_request(source_rank, request_index, SynapseCreationResponse::Failed);
-            // responses.append(source_rank, SynapseCreationResponse::Failed);
-            continue;
-        }
+    //    RelearnException::check(target_neuron_id.get_local_id() < number_neurons, "BarnesHut::process_requests: Target_neuron_id exceeds my neurons");
 
-        // Increment number of connected dendrites
-        dendrites->update_connected_elements(target_neuron_id, 1);
+    //    const auto& dendrites = (SignalType::Inhibitory == dendrite_type_needed) ? inhibitory_dendrites : excitatory_dendrites;
 
-        // Set response to "connected" (success)
-        // responses.append(source_rank, SynapseCreationResponse::Succeeded);
-        responses.set_request(source_rank, request_index, SynapseCreationResponse::Succeeded);
+    //    const auto weight = (SignalType::Inhibitory == dendrite_type_needed) ? -1 : 1;
+    //    const auto number_free_elements = dendrites->get_free_elements(target_neuron_id);
 
-        if (source_rank == my_rank) {
-            local_synapses.emplace_back(target_neuron_id, source_neuron_id, weight);
-            continue;
-        }
+    //    if (number_free_elements == 0) {
+    //        // Other axons were faster and came first
+    //        responses.set_request(source_rank, request_index, SynapseCreationResponse::Failed);
+    //        // responses.append(source_rank, SynapseCreationResponse::Failed);
+    //        continue;
+    //    }
 
-        distant_synapses.emplace_back(target_neuron_id, RankNeuronId{ source_rank, source_neuron_id }, weight);
-    }
+    //    // Increment number of connected dendrites
+    //    dendrites->update_connected_elements(target_neuron_id, 1);
 
-    return { responses, { local_synapses, distant_synapses } };
+    //    // Set response to "connected" (success)
+    //    // responses.append(source_rank, SynapseCreationResponse::Succeeded);
+    //    responses.set_request(source_rank, request_index, SynapseCreationResponse::Succeeded);
+
+    //    if (source_rank == my_rank) {
+    //        local_synapses.emplace_back(target_neuron_id, source_neuron_id, weight);
+    //        continue;
+    //    }
+
+    //    distant_synapses.emplace_back(target_neuron_id, RankNeuronId{ source_rank, source_neuron_id }, weight);
+    //}
+
+    // return { responses, { local_synapses, distant_synapses } };
 }
 
-DistantOutSynapses BarnesHutInverted::create_synapses_process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests, const CommunicationMap<SynapseCreationResponse>& creation_responses) {
-    const auto my_rank = MPIWrapper::get_my_rank();
-    DistantOutSynapses synapses{};
+DistantInSynapses BarnesHutInverted::process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests, const CommunicationMap<SynapseCreationResponse>& creation_responses) {
+    RelearnException::fail("BarnesHutInverted::process_responses: Not implemented yet");
+    return {};
 
-    // Process the responses of all mpi ranks
-    for (const auto& [target_rank, requests] : creation_responses) {
-        const auto num_requests = requests.size();
+    // const auto my_rank = MPIWrapper::get_my_rank();
+    // DistantOutSynapses synapses{};
 
-        // All responses from a rank
-        for (auto request_index = 0; request_index < num_requests; request_index++) {
-            const auto connected = requests[request_index];
-            if (connected == SynapseCreationResponse::Failed) {
-                continue;
-            }
+    //// Process the responses of all mpi ranks
+    // for (const auto& [target_rank, requests] : creation_responses) {
+    //     const auto num_requests = requests.size();
 
-            const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = creation_requests.get_request(target_rank, request_index);
+    //    // All responses from a rank
+    //    for (auto request_index = 0; request_index < num_requests; request_index++) {
+    //        const auto connected = requests[request_index];
+    //        if (connected == SynapseCreationResponse::Failed) {
+    //            continue;
+    //        }
 
-            // Increment number of connected axons
-            axons->update_connected_elements(source_neuron_id, 1);
+    //        const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = creation_requests.get_request(target_rank, request_index);
 
-            if (target_rank == my_rank) {
-                // I have already created the synapse in the network if the response comes from myself
-                continue;
-            }
+    //        // Increment number of connected axons
+    //        axons->update_connected_elements(source_neuron_id, 1);
 
-            // Mark this synapse for later use (must be added to the network graph)
-            const auto weight = (SignalType::Inhibitory == dendrite_type_needed) ? -1 : +1;
-            synapses.emplace_back(RankNeuronId{ target_rank, target_neuron_id }, source_neuron_id, weight);
-        }
-    }
+    //        if (target_rank == my_rank) {
+    //            // I have already created the synapse in the network if the response comes from myself
+    //            continue;
+    //        }
 
-    return synapses;
+    //        // Mark this synapse for later use (must be added to the network graph)
+    //        const auto weight = (SignalType::Inhibitory == dendrite_type_needed) ? -1 : +1;
+    //        synapses.emplace_back(RankNeuronId{ target_rank, target_neuron_id }, source_neuron_id, weight);
+    //    }
+    //}
+
+    // return synapses;
 }

@@ -10,16 +10,18 @@
  *
  */
 
-#include "BarnesHutInvertedCell.h"
+#include "BarnesHutCell.h"
 #include "BarnesHutBase.h"
 #include "Types.h"
 #include "algorithm/ExchangingAlgorithm.h"
+#include "mpi/CommunicationMap.h"
+#include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
+#include "neurons/UpdateStatus.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "structure/OctreeNode.h"
 #include "util/RelearnException.h"
-#include "util/Vec3.h"
 
 #include <memory>
 #include <optional>
@@ -35,7 +37,7 @@ class SynapticElements;
  * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
  * It is strongly tied to Octree, which might perform MPI communication via NodeCache::download_children()
  */
-class BarnesHutInverted : public BarnesHutBase<BarnesHutInvertedCell>, public ExchangingAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
+class BarnesHutInverted : public BarnesHutBase<BarnesHutInvertedCell>, public BackwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
 public:
     using AdditionalCellAttributes = BarnesHutInvertedCell;
     using position_type = typename RelearnTypes::position_type;
@@ -70,12 +72,9 @@ public:
         RelearnException::check(node != nullptr, "BarnesHutInverted::update_functor: node is nullptr");
 
         // NOLINTNEXTLINE
-        if (!node->is_parent()) {
+        if (node->is_child()) {
             return;
         }
-
-        using position_type = BarnesHutInvertedCell::position_type;
-        using counter_type = BarnesHutInvertedCell::counter_type;
 
         // I'm inner node, i.e., I have a super neuron
         position_type my_position_axons_excitatory = { 0., 0., 0. };
@@ -185,19 +184,19 @@ protected:
      * @param number_neurons The number of local neurons
      * @param creation_requests The requests from all MPI ranks
      * @exception Can throw a RelearnException
-     * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
+     * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses from the local rank
      */
-    [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
-    create_synapses_process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& RequestType) override;
+    [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantOutSynapses>>
+    process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& RequestType) override;
 
     /**
      * @brief Processes all incoming responses from the MPI ranks locally
      * @param creation_requests The requests from this MPI rank
      * @param creation_responses The responses from the other MPI ranks
      * @exception Can throw a RelearnException
-     * @return All synapses from this MPI rank to other MPI ranks
+     * @return All synapses to this MPI rank from other MPI ranks
      */
-    [[nodiscard]] DistantOutSynapses create_synapses_process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
+    [[nodiscard]] DistantInSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
         const CommunicationMap<SynapseCreationResponse>& creation_responses) override;
 
 private:

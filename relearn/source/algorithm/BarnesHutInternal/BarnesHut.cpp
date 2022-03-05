@@ -136,7 +136,7 @@ std::vector<std::pair<int, SynapseCreationRequest>> BarnesHut::find_target_neuro
 }
 
 std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
-BarnesHut::create_synapses_process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& synapse_creation_requests_incoming) {
+BarnesHut::process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& synapse_creation_requests_incoming) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
     const auto number_ranks = MPIWrapper::get_num_ranks();
@@ -170,7 +170,7 @@ BarnesHut::create_synapses_process_requests(size_t number_neurons, const Communi
     for (const auto& [source_rank, request_index] : indices) {
         const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = synapse_creation_requests_incoming.get_request(source_rank, request_index);
 
-        RelearnException::check(target_neuron_id.get_local_id() < number_neurons, "BarnesHut::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
+        RelearnException::check(target_neuron_id.get_local_id() < number_neurons, "BarnesHut::process_requests: Target_neuron_id exceeds my neurons");
 
         const auto& dendrites = (SignalType::Inhibitory == dendrite_type_needed) ? inhibitory_dendrites : excitatory_dendrites;
 
@@ -202,7 +202,7 @@ BarnesHut::create_synapses_process_requests(size_t number_neurons, const Communi
     return { responses, { local_synapses, distant_synapses } };
 }
 
-DistantOutSynapses BarnesHut::create_synapses_process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests, const CommunicationMap<SynapseCreationResponse>& creation_responses) {
+DistantOutSynapses BarnesHut::process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests, const CommunicationMap<SynapseCreationResponse>& creation_responses) {
     const auto my_rank = MPIWrapper::get_my_rank();
     DistantOutSynapses synapses{};
 
