@@ -49,7 +49,7 @@ public:
 
 class Config {
 public:
-    constexpr static bool do_debug_checks = false;
+    constexpr static bool do_debug_checks = true;
 
     // Update connectivity every <plasticity_update_step> ms
     inline static size_t plasticity_update_step = 100; // NOLINTLINE

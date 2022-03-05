@@ -13,6 +13,7 @@
 #include "BarnesHutCell.h"
 #include "BarnesHutBase.h"
 #include "Types.h"
+#include "algorithm/Connector.h"
 #include "algorithm/ExchangingAlgorithm.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/ElementType.h"
@@ -186,7 +187,9 @@ protected:
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses from the local rank
      */
     [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantOutSynapses>>
-    process_requests(const CommunicationMap<SynapseCreationRequest>& RequestType) override;
+    process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) override {
+        return BackwardConnector::process_requests(creation_requests, axons);
+    }
 
     /**
      * @brief Processes all incoming responses from the MPI ranks locally
@@ -196,7 +199,9 @@ protected:
      * @return All synapses to this MPI rank from other MPI ranks
      */
     [[nodiscard]] DistantInSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
-        const CommunicationMap<SynapseCreationResponse>& creation_responses) override;
+        const CommunicationMap<SynapseCreationResponse>& creation_responses) override {
+        return BackwardConnector::process_responses(creation_requests, creation_responses, excitatory_dendrites, inhibitory_dendrites);
+    }
 
 private:
     std::shared_ptr<OctreeImplementation<BarnesHutInverted>> global_tree{};

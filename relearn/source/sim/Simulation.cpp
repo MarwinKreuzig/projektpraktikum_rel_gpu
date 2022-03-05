@@ -164,8 +164,12 @@ void Simulation::initialize() {
 
     if (algorithm_enum == AlgorithmEnum::BarnesHut) {
         global_tree = std::make_shared<OctreeImplementation<BarnesHut>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
-    } else {
+    } else if (algorithm_enum == AlgorithmEnum::BarnesHutInverted) {
+        global_tree = std::make_shared<OctreeImplementation<BarnesHutInverted>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+    } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
         global_tree = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+    } else if (algorithm_enum == AlgorithmEnum::Naive) {
+        global_tree = std::make_shared<OctreeImplementation<Naive>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     }
 
     for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
@@ -185,6 +189,12 @@ void Simulation::initialize() {
         algorithm_barnes_hut->set_acceptance_criterion(accept_criterion);
         algorithm_barnes_hut->set_probability_parameter(sigma);
         algorithm = std::move(algorithm_barnes_hut);
+    } else if (algorithm_enum == AlgorithmEnum::BarnesHutInverted) {
+        auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutInverted>>(global_tree);
+        auto algorithm_barnes_hut_inverted = std::make_shared<BarnesHutInverted>(std::move(cast));
+        algorithm_barnes_hut_inverted->set_acceptance_criterion(accept_criterion);
+        algorithm_barnes_hut_inverted->set_probability_parameter(sigma);
+        algorithm = std::move(algorithm_barnes_hut_inverted);
     } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
         auto cast = std::static_pointer_cast<OctreeImplementation<FastMultipoleMethods>>(global_tree);
         auto algorithm_barnes_hut = std::make_shared<FastMultipoleMethods>(std::move(cast));

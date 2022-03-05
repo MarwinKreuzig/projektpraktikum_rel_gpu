@@ -21,6 +21,7 @@
 enum class AlgorithmEnum {
     Naive,
     BarnesHut,
+    BarnesHutInverted,
     FastMultipoleMethods,
 };
 

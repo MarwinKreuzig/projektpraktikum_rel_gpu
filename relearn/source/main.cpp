@@ -158,6 +158,7 @@ int main(int argc, char** argv) {
     std::map<std::string, AlgorithmEnum> cli_parse_algorithm{
         { "naive", AlgorithmEnum::Naive },
         { "barnes-hut", AlgorithmEnum::BarnesHut },
+        { "barnes-hut-inverted", AlgorithmEnum::BarnesHutInverted },
         { "fast-multipole-methods", AlgorithmEnum::FastMultipoleMethods }
     };
 
@@ -299,7 +300,7 @@ int main(int argc, char** argv) {
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
     RelearnException::check(calcium_decay > 0.0, "The calcium decay constant must be greater than 0.");
 
-    if (algorithm == AlgorithmEnum::BarnesHut) {
+    if (algorithm == AlgorithmEnum::BarnesHut || algorithm == AlgorithmEnum::BarnesHutInverted) {
         RelearnException::check(accept_criterion <= BarnesHut::max_theta, "Acceptance criterion must be smaller or equal to {}", BarnesHut::max_theta);
         RelearnException::check(accept_criterion > 0.0, "Acceptance criterion must be larger than 0.0");
     } else if (algorithm == AlgorithmEnum::FastMultipoleMethods) {
@@ -411,6 +412,15 @@ int main(int argc, char** argv) {
 
         // Create MPI RMA memory allocator
         MPIWrapper::init_buffer_octree<BarnesHutCell>();
+    } else if (algorithm == AlgorithmEnum::BarnesHutInverted) {
+        // Check if int type can contain total size of branch nodes to receive in bytes
+        // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
+        if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<BarnesHutInvertedCell>))) {
+            RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
+        }
+
+        // Create MPI RMA memory allocator
+        MPIWrapper::init_buffer_octree<BarnesHutInvertedCell>();
     } else if (algorithm == AlgorithmEnum::FastMultipoleMethods) {
         // Check if int type can contain total size of branch nodes to receive in bytes
         // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
@@ -472,7 +482,7 @@ int main(int argc, char** argv) {
     sim.set_dendrites_ex(std::move(dend_ex_models));
     sim.set_dendrites_in(std::move(dend_in_models));
 
-    if (algorithm == AlgorithmEnum::BarnesHut) {
+    if (algorithm == AlgorithmEnum::BarnesHut || algorithm == AlgorithmEnum::BarnesHutInverted) {
         sim.set_acceptance_criterion_for_barnes_hut(accept_criterion);
     }
 
