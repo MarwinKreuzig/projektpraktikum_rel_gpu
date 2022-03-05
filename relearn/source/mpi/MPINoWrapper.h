@@ -26,8 +26,8 @@ class OctreeNode;
 class RelearnTest;
 
 enum class MPI_Locktype : int {
-    exclusive = MPI_LOCK_EXCLUSIVE,
-    shared = MPI_LOCK_SHARED,
+    Exclusive = MPI_LOCK_EXCLUSIVE,
+    Shared = MPI_LOCK_SHARED,
 };
 
 class MPINoWrapper {
@@ -35,12 +35,11 @@ class MPINoWrapper {
 
 public:
     enum class ReduceFunction : char {
-        min = 0,
-        max = 1,
-        avg = 2,
-        sum = 3,
-        none = 4,
-        minsummax = 100
+        Min = 0,
+        Max = 1,
+        Sum = 2,
+        None = 3,
+        MinSumMax = 100
     };
 
     using AsyncToken = MPI_Request;

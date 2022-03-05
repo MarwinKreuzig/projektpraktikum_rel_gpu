@@ -160,7 +160,7 @@ void NeuronModelsTest::test_update(std::unique_ptr<NeuronModel> model, std::shar
     std::vector<double> expected_input(number_neurons, 0.0);
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        if (status_flags[neuron_id] == UpdateStatus::DISABLED) {
+        if (status_flags[neuron_id] == UpdateStatus::Disabled) {
             expected_input[neuron_id] = 0.0;
         }
 

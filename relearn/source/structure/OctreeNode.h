@@ -72,6 +72,14 @@ public:
     }
 
     /**
+     * @brief Returns a flag that indicates if this node is an inner node or a leaf node
+     * @return True iff it is a leaf node
+     */
+    [[nodiscard]] bool is_child() const noexcept {
+        return !parent;
+    }
+
+    /**
      * @brief Returns a constant view on the associated child nodes. This reference is not invalidated by calls to other methods
      * @return A constant view on the associated child nodes
      */
@@ -182,7 +190,7 @@ public:
                  */
 
                 // Determine octant for neuron
-                const auto& cell_own_position = parent_node->get_cell().get_dendrites_position();
+                const auto& cell_own_position = parent_node->get_cell().get_neuron_position();
                 RelearnException::check(cell_own_position.has_value(), "OctreeNode::insert: While building the octree, the cell doesn't have a position");
 
                 idx = parent_node->get_cell().get_octant_for_position(cell_own_position.value());

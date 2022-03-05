@@ -14,9 +14,7 @@
 #include "NeuronIdTranslator.h"
 #include "NeuronToSubdomainAssignment.h"
 #include "SynapseLoader.h"
-#include "algorithm/Algorithm.h"
-#include "algorithm/BarnesHut.h"
-#include "algorithm/FastMultipoleMethods.h"
+#include "algorithm/Algorithms.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/NetworkGraph.h"
@@ -166,8 +164,12 @@ void Simulation::initialize() {
 
     if (algorithm_enum == AlgorithmEnum::BarnesHut) {
         global_tree = std::make_shared<OctreeImplementation<BarnesHut>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
-    } else {
+    } else if (algorithm_enum == AlgorithmEnum::BarnesHutInverted) {
+        global_tree = std::make_shared<OctreeImplementation<BarnesHutInverted>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+    } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
         global_tree = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+    } else if (algorithm_enum == AlgorithmEnum::Naive) {
+        global_tree = std::make_shared<OctreeImplementation<Naive>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     }
 
     for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
@@ -187,6 +189,12 @@ void Simulation::initialize() {
         algorithm_barnes_hut->set_acceptance_criterion(accept_criterion);
         algorithm_barnes_hut->set_probability_parameter(sigma);
         algorithm = std::move(algorithm_barnes_hut);
+    } else if (algorithm_enum == AlgorithmEnum::BarnesHutInverted) {
+        auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutInverted>>(global_tree);
+        auto algorithm_barnes_hut_inverted = std::make_shared<BarnesHutInverted>(std::move(cast));
+        algorithm_barnes_hut_inverted->set_acceptance_criterion(accept_criterion);
+        algorithm_barnes_hut_inverted->set_probability_parameter(sigma);
+        algorithm = std::move(algorithm_barnes_hut_inverted);
     } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
         auto cast = std::static_pointer_cast<OctreeImplementation<FastMultipoleMethods>>(global_tree);
         auto algorithm_barnes_hut = std::make_shared<FastMultipoleMethods>(std::move(cast));
@@ -305,7 +313,7 @@ void Simulation::simulate(const size_t number_steps) {
 
             // Get total number of synapses deleted and created
             const std::array<int64_t, 3> local_cnts = { static_cast<int64_t>(num_axons_deleted), static_cast<int64_t>(num_dendrites_deleted), static_cast<int64_t>(num_synapses_created) };
-            const std::array<int64_t, 3> global_cnts = MPIWrapper::reduce(local_cnts, MPIWrapper::ReduceFunction::sum, 0);
+            const std::array<int64_t, 3> global_cnts = MPIWrapper::reduce(local_cnts, MPIWrapper::ReduceFunction::Sum, 0);
 
             const auto local_deletions = local_cnts[0] + local_cnts[1];
             const auto local_creations = local_cnts[2];

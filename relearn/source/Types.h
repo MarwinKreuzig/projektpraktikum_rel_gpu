@@ -21,6 +21,7 @@
 enum class AlgorithmEnum {
     Naive,
     BarnesHut,
+    BarnesHutInverted,
     FastMultipoleMethods,
 };
 
@@ -37,6 +38,8 @@ using box_size_type = Vec3d;
 using position_type = Vec3d;
 
 using synapse_weight = int;
+
+using counter_type = unsigned int;
 
 } // namespace RelearnTypes
 

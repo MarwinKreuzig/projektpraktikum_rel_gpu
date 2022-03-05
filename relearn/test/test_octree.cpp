@@ -2,7 +2,8 @@
 
 #include "RelearnTest.hpp"
 
-#include "../source/algorithm/BarnesHut.h"
+#include "../source/algorithm/Algorithms.h"
+#include "../source/algorithm/Cells.h"
 #include "../source/neurons/models/SynapticElements.h"
 #include "../source/structure/Cell.h"
 #include "../source/structure/Partition.h"
@@ -149,7 +150,7 @@ std::vector<OctreeNode<AdditionalCellAttributes>*> extract_branch_nodes(OctreeNo
 }
 
 SynapticElements create_synaptic_elements(size_t size, std::mt19937& mt, double max_free, SignalType st) {
-    SynapticElements se(ElementType::DENDRITE, 0.0);
+    SynapticElements se(ElementType::Dendrite, 0.0);
 
     se.init(size);
 
@@ -927,14 +928,14 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
     octree.initializes_leaf_nodes(number_neurons);
 
     const auto max_vacant_exc = uid_max_vacant(mt);
-    auto dends_exc = create_synaptic_elements(number_neurons, mt, max_vacant_exc, SignalType::EXCITATORY);
+    auto dends_exc = create_synaptic_elements(number_neurons, mt, max_vacant_exc, SignalType::Excitatory);
 
     const auto max_vacant_inh = uid_max_vacant(mt);
-    auto dends_inh = create_synaptic_elements(number_neurons, mt, max_vacant_inh, SignalType::INHIBITORY);
+    auto dends_inh = create_synaptic_elements(number_neurons, mt, max_vacant_inh, SignalType::Inhibitory);
 
     BarnesHut bh{ octree_ptr };
 
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::ENABLED);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
     auto unique_exc = std::make_shared<SynapticElements>(std::move(dends_exc));
     auto unique_inh = std::make_shared<SynapticElements>(std::move(dends_inh));
@@ -999,15 +1000,15 @@ TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
 
     octree.initializes_leaf_nodes(number_neurons);
 
-    auto dends_exc = create_synaptic_elements(number_neurons, mt, 1, SignalType::EXCITATORY);
-    auto dends_inh = create_synaptic_elements(number_neurons, mt, 1, SignalType::INHIBITORY);
+    auto dends_exc = create_synaptic_elements(number_neurons, mt, 1, SignalType::Excitatory);
+    auto dends_inh = create_synaptic_elements(number_neurons, mt, 1, SignalType::Inhibitory);
 
     auto unique_exc = std::make_shared<SynapticElements>(std::move(dends_exc));
     auto unique_inh = std::make_shared<SynapticElements>(std::move(dends_inh));
 
     BarnesHut bh{ octree_ptr };
 
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::ENABLED);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
     bh.set_synaptic_elements(unique_exc, unique_exc, unique_inh);
     bh.update_leaf_nodes(disable_flags);

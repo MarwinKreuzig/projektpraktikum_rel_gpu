@@ -12,9 +12,9 @@ TEST_F(NeuronsTest, testNeuronsConstructor) {
 
     auto model = std::make_unique<models::PoissonModel>();
 
-    auto dends_ex = std::make_unique<SynapticElements>(ElementType::DENDRITE, 0.2);
-    auto dends_in = std::make_unique<SynapticElements>(ElementType::DENDRITE, 0.2);
-    auto axs = std::make_unique<SynapticElements>(ElementType::AXON, 0.2);
+    auto dends_ex = std::make_unique<SynapticElements>(ElementType::Dendrite, 0.2);
+    auto dends_in = std::make_unique<SynapticElements>(ElementType::Dendrite, 0.2);
+    auto axs = std::make_unique<SynapticElements>(ElementType::Axon, 0.2);
 
     Neurons neurons{ partition, std::move(model), std::move(axs), std::move(dends_ex), std::move(dends_in) };
 }

@@ -268,7 +268,7 @@ protected:
     struct Node {
         position_type pos{ 0 };
         NeuronID id{ NeuronID::uninitialized_id() };
-        SignalType signal_type{ SignalType::EXCITATORY };
+        SignalType signal_type{ SignalType::Excitatory };
         std::string area_name{ "NOT SET" };
 
         struct less {

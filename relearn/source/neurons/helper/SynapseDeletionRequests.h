@@ -26,8 +26,8 @@
 class SynapseDeletionRequest {
     NeuronID initiator_neuron_id{};
     NeuronID affected_neuron_id{};
-    ElementType initiator_element_type{ ElementType::AXON };
-    SignalType signal_type{ SignalType::EXCITATORY };
+    ElementType initiator_element_type{ ElementType::Axon };
+    SignalType signal_type{ SignalType::Excitatory };
 
 public:
     /**

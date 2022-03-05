@@ -10,8 +10,8 @@
  *
  */
 
-/**
- * An instance of this enum classifies a synaptic elements as either excitatory or inhibitory.
- */
-enum class SignalType { Excitatory,
-    Inhibitory };
+#include "Algorithm.h"
+#include "BarnesHutInternal/BarnesHut.h"
+#include "BarnesHutInternal/BarnesHutInverted.h"
+#include "FMMInternal/FastMultipoleMethods.h"
+#include "NaiveInternal/Naive.h"

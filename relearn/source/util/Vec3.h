@@ -38,14 +38,14 @@ public:
     /**
      * @brief Constructs a new instance and initializes all values with 0
      */
-    Vec3() = default;
-    ~Vec3() = default;
+    constexpr Vec3() = default;
+    constexpr ~Vec3() = default;
 
     /**
      * @brief Constructs a new instance and initializes all values with val
      * @param val The value that is used to initialize all values
      */
-    explicit Vec3(const T& val) noexcept
+    constexpr explicit Vec3(const T& val) noexcept
         : x(val)
         , y(val)
         , z(val) {
@@ -57,23 +57,23 @@ public:
      * @param _y The value for y
      * @param _z The value for z
      */
-    Vec3(const T& _x, const T& _y, const T& _z) noexcept
+    constexpr Vec3(const T& _x, const T& _y, const T& _z) noexcept
         : x(_x)
         , y(_y)
         , z(_z) {
     }
 
-    Vec3(const Vec3<T>& other) = default;
-    Vec3<T>& operator=(const Vec3<T>& other) = default;
+    constexpr Vec3(const Vec3<T>& other) = default;
+    constexpr Vec3<T>& operator=(const Vec3<T>& other) = default;
 
-    Vec3(Vec3<T>&& other) noexcept = default;
-    Vec3<T>& operator=(Vec3<T>&& other) noexcept = default;
+    constexpr Vec3(Vec3<T>&& other) noexcept = default;
+    constexpr Vec3<T>& operator=(Vec3<T>&& other) noexcept = default;
 
     /**
      * @brief Returns a constant reference to the x component. The reference is only invalidated by destruction of the object
      * @return The x value
      */
-    [[nodiscard]] const T& get_x() const noexcept {
+    [[nodiscard]] constexpr const T& get_x() const noexcept {
         return x;
     }
 
@@ -81,7 +81,7 @@ public:
      * @brief Returns a constant reference to the y component. The reference is only invalidated by destruction of the object
      * @return The y value
      */
-    [[nodiscard]] const T& get_y() const noexcept {
+    [[nodiscard]] constexpr const T& get_y() const noexcept {
         return y;
     }
 
@@ -89,7 +89,7 @@ public:
      * @brief Returns a constant reference to the z component. The reference is only invalidated by destruction of the object
      * @return The z value
      */
-    [[nodiscard]] const T& get_z() const noexcept {
+    [[nodiscard]] constexpr const T& get_z() const noexcept {
         return z;
     }
 
@@ -97,7 +97,7 @@ public:
      * @brief Sets the x component to the new value
      * @param _x The new value
      */
-    void set_x(const T& _x) noexcept {
+    constexpr void set_x(const T& _x) noexcept {
         x = _x;
     }
 
@@ -105,7 +105,7 @@ public:
      * @brief Sets the y component to the new value
      * @param _y The new value
      */
-    void set_y(const T& _y) noexcept {
+    constexpr void set_y(const T& _y) noexcept {
         y = _y;
     }
 
@@ -113,7 +113,7 @@ public:
      * @brief Sets the z component to the new value
      * @param _z The new value
      */
-    void set_z(const T& _z) noexcept {
+    constexpr void set_z(const T& _z) noexcept {
         z = _z;
     }
 
@@ -123,7 +123,7 @@ public:
      * @return A castet version of the current object
      */
     template <typename K>
-    [[nodiscard]] explicit operator Vec3<K>() const noexcept {
+    [[nodiscard]] constexpr explicit operator Vec3<K>() const noexcept {
         Vec3<K> res{ static_cast<K>(x), static_cast<K>(y), static_cast<K>(z) };
         return res;
     }
@@ -133,7 +133,7 @@ public:
      * @param other The other vector
      * @return True iff all components are equal
      */
-    [[nodiscard]] bool operator==(const Vec3<T>& other) const noexcept {
+    [[nodiscard]] constexpr bool operator==(const Vec3<T>& other) const noexcept {
         return (x == other.x) && (y == other.y) && (z == other.z);
     }
 
@@ -143,7 +143,7 @@ public:
      * @param rhs The vector that should be subtracted
      * @return The difference of both vectors as a new object
      */
-    [[nodiscard]] friend Vec3<T> operator-(const Vec3<T>& lhs, const Vec3<T>& rhs) noexcept {
+    [[nodiscard]] constexpr friend Vec3<T> operator-(const Vec3<T>& lhs, const Vec3<T>& rhs) noexcept {
         return { lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z };
     }
 
@@ -153,7 +153,7 @@ public:
      * @param rhs The vector that should be summed
      * @return The sum of both vectors as a new object
      */
-    [[nodiscard]] friend Vec3<T> operator+(const Vec3<T>& lhs, const Vec3<T>& rhs) noexcept {
+    [[nodiscard]] constexpr friend Vec3<T> operator+(const Vec3<T>& lhs, const Vec3<T>& rhs) noexcept {
         return { lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z };
     }
 
@@ -162,7 +162,7 @@ public:
      * @param scalar The value that should be added to each component
      * @return The sum as a new object
      */
-    [[nodiscard]] Vec3<T> operator+(const T& scalar) const noexcept {
+    [[nodiscard]] constexpr Vec3<T> operator+(const T& scalar) const noexcept {
         Vec3<T> res = *this;
         res += scalar;
         return res;
@@ -173,7 +173,7 @@ public:
      * @param scalar The value that should be subtracted from each component
      * @return The difference as a new object
      */
-    [[nodiscard]] Vec3<T> operator-(const T& scalar) const noexcept {
+    [[nodiscard]] constexpr Vec3<T> operator-(const T& scalar) const noexcept {
         Vec3<T> res = *this;
         res -= scalar;
         return res;
@@ -184,7 +184,7 @@ public:
      * @param scalar The value that should be multiplied to each component
      * @return The product as a new object
      */
-    [[nodiscard]] Vec3<T> operator*(const T& scalar) const noexcept {
+    [[nodiscard]] constexpr Vec3<T> operator*(const T& scalar) const noexcept {
         Vec3<T> res = *this;
         res *= scalar;
         return res;
@@ -195,7 +195,7 @@ public:
      * @param scalar The value that should be divided by, is not checked for 0
      * @return The quotient as a new object
      */
-    [[nodiscard]] Vec3<T> operator/(const T& scalar) const noexcept {
+    [[nodiscard]] constexpr Vec3<T> operator/(const T& scalar) const noexcept {
         Vec3<T> res = *this;
         res /= scalar;
         return res;
@@ -206,7 +206,7 @@ public:
      *      This is effectively an ugly function and should only be used with enough care
      * @param value The value of which the components should be rounded to (a multiple of)
      */
-    void round_to_larger_multiple(const T& value) noexcept {
+    constexpr void round_to_larger_multiple(const T& value) noexcept {
         x = ceil((x - Constants::eps) / value) * value;
         y = ceil((y - Constants::eps) / value) * value;
         z = ceil((z - Constants::eps) / value) * value;
@@ -218,7 +218,7 @@ public:
      * @exception Throws a RelearnException if any of the components are < 0
      * @return A newly created object with the floored values
      */
-    [[nodiscard]] Vec3<size_t> floor_componentwise() const {
+    [[nodiscard]] constexpr Vec3<size_t> floor_componentwise() const {
         RelearnException::check(x >= 0, "Vec3::floor_componentwise: x was negative: {}", x);
         RelearnException::check(y >= 0, "Vec3::floor_componentwise: y was negative: {}", y);
         RelearnException::check(z >= 0, "Vec3::floor_componentwise: z was negative: {}", z);
@@ -234,7 +234,7 @@ public:
      * @brief Calculates the (signed) volume of the cube with the side length of the current object
      * @return The volume, calculated by x * y * z
      */
-    [[nodiscard]] T get_volume() const noexcept {
+    [[nodiscard]] constexpr T get_volume() const noexcept {
         return x * y * z;
     }
 
@@ -243,7 +243,7 @@ public:
      * @param scalar The value that should be multiplied to each component
      * @return A reference to the current object
      */
-    Vec3<T>& operator*=(const T& scalar) noexcept {
+    constexpr Vec3<T>& operator*=(const T& scalar) noexcept {
         x *= scalar;
         y *= scalar;
         z *= scalar;
@@ -255,7 +255,7 @@ public:
      * @param scalar The value that should be divided by for each component
      * @return A reference to the current object
      */
-    Vec3<T>& operator/=(const T& scalar) noexcept {
+    constexpr Vec3<T>& operator/=(const T& scalar) noexcept {
         x /= scalar;
         y /= scalar;
         z /= scalar;
@@ -267,7 +267,7 @@ public:
      * @param scalar The value that should be added to each component
      * @return A reference to the current object
      */
-    Vec3<T>& operator+=(const T& scalar) noexcept {
+    constexpr Vec3<T>& operator+=(const T& scalar) noexcept {
         x += scalar;
         y += scalar;
         z += scalar;
@@ -279,7 +279,7 @@ public:
      * @param other The other vector that should be added componentwise
      * @return A reference to the current object
      */
-    Vec3<T>& operator+=(const Vec3<T>& other) noexcept {
+    constexpr Vec3<T>& operator+=(const Vec3<T>& other) noexcept {
         x += other.x;
         y += other.y;
         z += other.z;
@@ -291,7 +291,7 @@ public:
      * @param scalar The value that should be subtracted from each component
      * @return A reference to the current object
      */
-    Vec3<T>& operator-=(const T& scalar) noexcept {
+    constexpr Vec3<T>& operator-=(const T& scalar) noexcept {
         x -= scalar;
         y -= scalar;
         z -= scalar;
@@ -303,7 +303,7 @@ public:
      * @param other The other vector that should be subtracted componentwise
      * @return A reference to the current object
      */
-    Vec3<T>& operator-=(const Vec3<T>& other) noexcept {
+    constexpr Vec3<T>& operator-=(const Vec3<T>& other) noexcept {
         x -= other.x;
         y -= other.y;
         z -= other.z;
@@ -319,12 +319,12 @@ public:
     [[nodiscard]] double calculate_p_norm(const double p) const {
         RelearnException::check(p >= 1.0, "Vec3::calculate_p_norm: p-norm is only valid for p >= 1.0, but it was: {}", p);
 
-        const auto xx = pow(std::abs(static_cast<double>(x)), p);
-        const auto yy = pow(std::abs(static_cast<double>(y)), p);
-        const auto zz = pow(std::abs(static_cast<double>(z)), p);
+        const auto xx = std::pow(std::abs(static_cast<double>(x)), p);
+        const auto yy = std::pow(std::abs(static_cast<double>(y)), p);
+        const auto zz = std::pow(std::abs(static_cast<double>(z)), p);
 
         const auto sum = xx + yy + zz;
-        const auto norm = pow(sum, 1.0 / p);
+        const auto norm = std::pow(sum, 1.0 / p);
         return norm;
     }
 
@@ -338,7 +338,7 @@ public:
         const auto zz = z * z;
 
         const auto sum = xx + yy + zz;
-        const auto norm = sqrt(sum);
+        const auto norm = std::sqrt(sum);
         return norm;
     }
 
@@ -346,7 +346,7 @@ public:
      * @brief Calculates the squared 2-norm of the vector, i.e., ||this||^2_2
      * @return The squared calculated 2-norm
      */
-    [[nodiscard]] double calculate_squared_2_norm() const noexcept {
+    [[nodiscard]] constexpr double calculate_squared_2_norm() const noexcept {
         const auto xx = x * x;
         const auto yy = y * y;
         const auto zz = z * z;
@@ -359,7 +359,7 @@ public:
      * @brief Calculates the maximum of both vectors componentwise and changes the current object
      * @param other The other vector
      */
-    void calculate_componentwise_maximum(const Vec3<T>& other) noexcept {
+    constexpr void calculate_componentwise_maximum(const Vec3<T>& other) noexcept {
         if (other.x > x) {
             x = other.x;
         }
@@ -375,7 +375,7 @@ public:
      * @brief Calculates the minimum of both vectors componentwise and changes the current object
      * @param other The other vector
      */
-    void calculate_componentwise_minimum(const Vec3<T>& other) noexcept {
+    constexpr void calculate_componentwise_minimum(const Vec3<T>& other) noexcept {
         if (other.x < x) {
             x = other.x;
         }
@@ -391,7 +391,7 @@ public:
      * @brief Returns the maximum out of x, y, and z
      * @return The maximum out of x, y, and z
      */
-    [[nodiscard]] T get_maximum() const noexcept {
+    [[nodiscard]] constexpr T get_maximum() const noexcept {
         return std::max({ x, y, z });
     }
 
@@ -399,7 +399,7 @@ public:
      * @brief Returns the minimum out of x, y, and z
      * @return The minimum out of x, y, and z
      */
-    [[nodiscard]] T get_minimum() const noexcept {
+    [[nodiscard]] constexpr T get_minimum() const noexcept {
         return std::min({ x, y, z });
     }
 
@@ -408,7 +408,7 @@ public:
      * @param other The other vector that should be compared
      * @return True iff the current vector is smaller than the other
      */
-    [[nodiscard]] bool operator<(const Vec3<T>& other) const noexcept {
+    [[nodiscard]] constexpr bool operator<(const Vec3<T>& other) const noexcept {
         return x < other.x || (x == other.x && y < other.y) || (x == other.x && y == other.y && z < other.z);
     }
 
@@ -419,7 +419,7 @@ public:
      * @exception Throws a RelearnException if lower <= upper is violated
      * @return True iff *this is in [lower, upper]
      */
-    [[nodiscard]] bool check_in_box(const Vec3<T>& lower, const Vec3<T>& upper) const {
+    [[nodiscard]] constexpr bool check_in_box(const Vec3<T>& lower, const Vec3<T>& upper) const {
         RelearnException::check(lower.x <= upper.x, "Vec3::check_in_box: lower.x ({}) is larger than upper.x ({})", lower.x, upper.x);
         RelearnException::check(lower.y <= upper.y, "Vec3::check_in_box: lower.y ({}) is larger than upper.y ({})", lower.y, upper.y);
         RelearnException::check(lower.z <= upper.z, "Vec3::check_in_box: lower.z ({}) is larger than upper.z ({})", lower.z, upper.z);
@@ -443,7 +443,7 @@ public:
          * @param rhs The second Vec3 that should be compared
          * @return True iff lhs < rhs
          */
-        [[nodiscard]] bool operator()(const Vec3<T>& lhs, const Vec3<T>& rhs) const noexcept {
+        [[nodiscard]] constexpr bool operator()(const Vec3<T>& lhs, const Vec3<T>& rhs) const noexcept {
             return lhs < rhs;
         }
     };
@@ -463,7 +463,7 @@ public:
     }
 
     template <std::size_t Index>
-    [[nodiscard]] auto& get() & {
+    [[nodiscard]] constexpr auto& get() & {
         if constexpr (Index == 0) {
             return x;
         }
@@ -476,7 +476,7 @@ public:
     }
 
     template <std::size_t Index>
-    [[nodiscard]] auto const& get() const& {
+    [[nodiscard]] constexpr auto const& get() const& {
         if constexpr (Index == 0) {
             return x;
         }
@@ -489,7 +489,7 @@ public:
     }
 
     template <std::size_t Index>
-    [[nodiscard]] auto&& get() && {
+    [[nodiscard]] constexpr auto&& get() && {
         if constexpr (Index == 0) {
             return std::move(x);
         }

@@ -37,6 +37,7 @@ enum class RandomHolderKey : char {
     NeuronModel = 5,
     SynapticElements = 6,
     NeuronsExtraInformation = 7,
+    Connector = 8,
 };
 
 /**
@@ -47,7 +48,7 @@ class RandomHolder {
     RandomHolder() = default;
 
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
-    thread_local static inline std::array<std::mt19937, 8> random_number_generators{};
+    thread_local static inline std::array<std::mt19937, 9> random_number_generators{};
 
 public:
     /**

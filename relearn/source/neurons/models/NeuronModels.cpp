@@ -55,7 +55,7 @@ void NeuronModel::update_electrical_activity_update_activity(const std::vector<U
     // For my neurons
 #pragma omp parallel for shared(disable_flags) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
 
@@ -71,7 +71,7 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
 
 #pragma omp parallel for shared(firing_neuron_ids_incoming, network_graph, disable_flags) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
 
@@ -122,7 +122,7 @@ void NeuronModel::update_electrical_activity_calculate_background(const std::vec
     // There might be background activity
     if (background_activity_stddev > 0.0) {
         for (size_t neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
-            if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
+            if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
                 continue;
             }
 
@@ -156,7 +156,7 @@ CommunicationMap<NeuronID> NeuronModel::update_electrical_activity_prepare_sendi
 
     // For my neurons
     for (size_t neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
 

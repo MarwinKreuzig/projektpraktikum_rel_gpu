@@ -63,7 +63,7 @@ public:
      * @brief Returns the total number of requests
      * @return The total number of requests
      */
-    [[nodiscard]] size_t get_total_number_requests() const {
+    [[nodiscard]] size_t get_total_number_requests() const noexcept {
         size_t total_size = 0;
 
         for (auto mpi_rank = 0; mpi_rank < number_ranks; mpi_rank++) {

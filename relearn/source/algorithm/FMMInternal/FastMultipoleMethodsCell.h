@@ -10,7 +10,8 @@
  *
  */
 
-#include "VirtualPlasticityElement.h"
+#include "algorithm/VirtualPlasticityElement.h"
+#include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
 
 #include <optional>
@@ -63,7 +64,7 @@ public:
      * @return The number of free dendrites
      */
     [[nodiscard]] counter_type get_number_dendrites_for(const SignalType dendrite_type) const noexcept {
-        if (dendrite_type == SignalType::EXCITATORY) {
+        if (dendrite_type == SignalType::Excitatory) {
             return excitatory_dendrites.get_number_free_elements();
         }
 
@@ -108,7 +109,7 @@ public:
      * @return The position of the dendrite
      */
     [[nodiscard]] std::optional<position_type> get_dendrites_position_for(const SignalType dendrite_type) const noexcept {
-        if (dendrite_type == SignalType::EXCITATORY) {
+        if (dendrite_type == SignalType::Excitatory) {
             return excitatory_dendrites.get_position();
         }
 
@@ -153,7 +154,7 @@ public:
      * @return The number of free axons
      */
     [[nodiscard]] counter_type get_number_axons_for(const SignalType axon_type) const noexcept {
-        if (axon_type == SignalType::EXCITATORY) {
+        if (axon_type == SignalType::Excitatory) {
             return excitatory_axons.get_number_free_elements();
         }
 
@@ -198,7 +199,7 @@ public:
      * @return The position of the dendrite
      */
     [[nodiscard]] std::optional<position_type> get_axons_position_for(const SignalType axon_type) const noexcept {
-        if (axon_type == SignalType::EXCITATORY) {
+        if (axon_type == SignalType::Excitatory) {
             return excitatory_axons.get_position();
         }
 
@@ -214,6 +215,79 @@ public:
         set_inhibitory_dendrites_position(opt_position);
         set_excitatory_axons_position(opt_position);
         set_inhibitory_axons_position(opt_position);
+    }
+
+    /**
+     * @brief Returns the position of the cell, which can be empty
+     * @exception Throws a RelearnException if one position is valid and the others are not, or if they are at different points
+     * @return The position of the excitatory dendrite
+     */
+    [[nodiscard]] std::optional<position_type> get_neuron_position() const {
+        const auto& excitatory_axon_position_opt = get_excitatory_axons_position();
+        const auto& inhibitory_axon_position_opt = get_inhibitory_axons_position();
+
+        const auto& excitatory_dendrites_position_opt = get_excitatory_dendrites_position();
+        const auto& inhibitory_dendrites_position_opt = get_inhibitory_dendrites_position();
+
+        const bool ex_axon_valid = excitatory_axon_position_opt.has_value();
+        const bool in_axon_valid = inhibitory_axon_position_opt.has_value();
+
+        const bool ex_dendrite_valid = excitatory_dendrites_position_opt.has_value();
+        const bool in_dendrite_valid = inhibitory_dendrites_position_opt.has_value();
+
+        if (!ex_axon_valid && !in_axon_valid && !ex_dendrite_valid && !in_dendrite_valid) {
+            return {};
+        }
+
+        if (ex_axon_valid && in_axon_valid && ex_dendrite_valid && in_dendrite_valid) {
+            const auto& pos_ex_axon = excitatory_axon_position_opt.value();
+            const auto& pos_in_axon = inhibitory_axon_position_opt.value();
+
+            const auto& pos_ex_dendrite = excitatory_dendrites_position_opt.value();
+            const auto& pos_in_dendrite = inhibitory_dendrites_position_opt.value();
+
+            const auto diff1 = pos_ex_axon - pos_in_axon;
+            const auto diff2 = pos_ex_axon - pos_ex_dendrite;
+            const auto diff3 = pos_ex_axon - pos_in_dendrite;
+
+            constexpr position_type null_position{ 0 };
+
+            const auto all_equal = (diff1 == null_position) && (diff2 == null_position) && (diff3 == null_position);
+            RelearnException::check(all_equal, "FastMultipoleMethodCell::get_neuron_position: positions are unequal");
+
+            return pos_ex_axon;
+        }
+
+        RelearnException::fail("FastMultipoleMethodCell::get_neuron_position: one pos was valid and one was not");
+
+        return {};
+    }
+
+    /**
+     * @brief Returns the position of the specified element with the given signal type
+     * @param axon_type The requested element type
+     * @param signal_type The requested signal type
+     * @return The position of the associated element, can be empty
+     */
+    [[nodiscard]] std::optional<position_type> get_position_for(const ElementType element_type, const SignalType signal_type) const noexcept {
+        if (element_type == ElementType::Dendrite) {
+            return get_dendrites_position_for(signal_type);
+        }
+
+        return get_axons_position_for(signal_type);
+    }
+
+    /**
+     * @brief Returns the number of free elements for the associated type in this cell
+     * @param axon_type The requested axons type
+     * @return The number of free axons for the associated type
+     */
+    [[nodiscard]] counter_type get_number_elements_for(const ElementType element_type, const SignalType signal_type) const noexcept {
+        if (element_type == ElementType::Dendrite) {
+            return get_number_dendrites_for(signal_type);
+        }
+
+        return get_number_axons_for(signal_type);
     }
 
 private:

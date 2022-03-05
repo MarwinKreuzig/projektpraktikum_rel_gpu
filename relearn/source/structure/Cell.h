@@ -29,8 +29,8 @@
 template <typename AdditionalCellAttributes>
 class Cell {
 public:
-    using position_type = typename AdditionalCellAttributes::position_type;
-    using counter_type = typename AdditionalCellAttributes::counter_type;
+    using position_type = typename RelearnTypes::position_type;
+    using counter_type = typename RelearnTypes::counter_type;
     using box_size_type = RelearnTypes::box_size_type;
 
     /**
@@ -401,7 +401,13 @@ public:
      * @param opt_position The new position of the excitatory axons
      * @exception Throws a RelearnException if the position is valid but not within the box
      */
-    void set_excitatory_axons_position(const std::optional<position_type>& opt_position) noexcept {
+    void set_excitatory_axons_position(const std::optional<position_type>& opt_position) {
+        if (opt_position.has_value()) {
+            const auto& position = opt_position.value();
+            const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
+            RelearnException::check(is_in_box, "Cell::set_excitatory_axons_position: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
+        }
+
         additional_cell_attributes.set_excitatory_axons_position(opt_position);
     }
 
@@ -418,7 +424,13 @@ public:
      * @param opt_position The new position of the inhibitory axons
      * @exception Throws a RelearnException if the position is valid but not within the box
      */
-    void set_inhibitory_axons_position(const std::optional<position_type>& opt_position) noexcept {
+    void set_inhibitory_axons_position(const std::optional<position_type>& opt_position) {
+        if (opt_position.has_value()) {
+            const auto& position = opt_position.value();
+            const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
+            RelearnException::check(is_in_box, "Cell::set_inhibitory_axons_position: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
+        }
+
         additional_cell_attributes.set_inhibitory_axons_position(opt_position);
     }
 
@@ -437,6 +449,15 @@ public:
      */
     [[nodiscard]] std::optional<position_type> get_axons_position_for(const SignalType axon_type) const {
         return additional_cell_attributes.get_axons_position_for(axon_type);
+    }
+
+    /**
+     * @brief Sets the axon position for both inhibitory and excitatory
+     * @param opt_position The axon position, can be empty
+     */
+    void set_axons_position(const std::optional<position_type>& opt_position) {
+        set_excitatory_axons_position(opt_position);
+        set_inhibitory_axons_position(opt_position);
     }
 
     /**
@@ -474,8 +495,46 @@ public:
     /**
      * @brief Sets the position of the neuron for every necessary part of the cell
      * @param opt_position The position, can be empty
+     * @exception Throws a RelearnException if the position is outside of the size
      */
-    void set_neuron_position(const std::optional<position_type>& opt_position) noexcept {
+    void set_neuron_position(const std::optional<position_type>& opt_position) {
+        if (opt_position.has_value()) {
+            const auto& position = opt_position.value();
+            const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
+            RelearnException::check(is_in_box, "Cell::set_neuron_position: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
+        }
+
         additional_cell_attributes.set_neuron_position(opt_position);
+    }
+
+    /**
+     * @brief Gets the position of the neuron for every necessary part of the cell
+     * @exception Throws a RelearnException if one position if the positions do not agree with one another
+     * @return opt_position The position, can be empty
+     */
+    [[nodiscard]] std::optional<position_type> get_neuron_position() const {
+        return additional_cell_attributes.get_neuron_position();
+    }
+
+    /**
+     * @brief Returns the number of free elements for the associated type in this cell
+     * @param axon_type The requested element type
+     * @param signal_type The requested signal type
+     * @exception Might throw a RelearnException if this operation is not supported
+     * @return The number of free elements for the associated signal type
+     */
+    [[nodiscard]] counter_type get_number_elements_for(const ElementType element_type, const SignalType signal_type) const {
+        return additional_cell_attributes.get_number_elements_for(element_type, signal_type);
+    }
+
+    /**
+     * @brief Returns the position of the specified element with the given signal type
+     * @param axon_type The requested element type
+     * @param signal_type The requested signal type
+     * @exception Might throw a RelearnException if this operation is not supported
+     * @return The position of the associated element, can be empty
+     */
+    [[nodiscard]] std::optional<position_type> get_position_for(const ElementType element_type, const SignalType signal_type) const {
+        return additional_cell_attributes.get_position_for(element_type, signal_type);
     }
 };

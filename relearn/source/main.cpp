@@ -10,9 +10,7 @@
 
 #include "Config.h"
 #include "Types.h"
-#include "algorithm/BarnesHut.h"
-#include "algorithm/FastMultipoleMethods.h"
-#include "algorithm/Naive.h"
+#include "algorithm/Algorithms.h"
 #include "io/InteractiveNeuronIO.h"
 #include "io/LogFiles.h"
 #include "mpi/CommunicationMap.h"
@@ -84,24 +82,43 @@ void print_sizes() {
     const auto sizeof_bh_octreenode = sizeof(OctreeNode<BarnesHutCell>);
     const auto sizeof_naive_octreenode = sizeof(OctreeNode<NaiveCell>);
 
+    const auto sizeof_neuron_id = sizeof(NeuronID);
+    const auto sizeof_rank_neuron_id = sizeof(RankNeuronId);
+
+    const auto sizeof_local_synapse = sizeof(LocalSynapse);
+    const auto sizeof_distant_in_synapse = sizeof(DistantInSynapse);
+    const auto sizeof_distant_out_synapse = sizeof(DistantOutSynapse);
+
     std::stringstream ss{};
 
     ss << '\n';
+
     ss << "Size of Vec3d: " << sizeof_vec3_double << '\n';
     ss << "Size of Vec3s: " << sizeof_vec3_size_t << '\n';
+
     ss << "Size of VirtualPlasticityElement: " << sizeof_virtual_plasticity_element << "\n";
     ss << "Size of FastMultipoleMethodsCell: " << sizeof_fmm_cell_attributes << '\n';
+
     ss << "Size of empty_t: " << sizeof_empty_t << '\n';
     ss << "Size of BarnesHutCell: " << sizeof_bh_cell_attributes << '\n';
     ss << "Size of NaiveCell: " << sizeof_bh_naive_attributes << "\n";
+
     ss << "Size of Cell<empty_t>: " << sizeof_empty_cell << '\n';
     ss << "Size of Cell<FastMultipoleMethodsCell>: " << sizeof_fmm_cell << '\n';
     ss << "Size of Cell<BarnesHutCell>: " << sizeof_bh_cell << '\n';
     ss << "Size of Cell<NaiveCell>: " << sizeof_naive_cell << "\n";
+
     ss << "Size of OctreeNode<empty_t>: " << sizeof_octreenode << '\n';
     ss << "Size of OctreeNode<FastMultipoleMethodsCell>: " << sizeof_fmm_octreenode << '\n';
     ss << "Size of OctreeNode<BarnesHutCell>: " << sizeof_bh_octreenode << '\n';
-    ss << "Size of OctreeNode<NaiveCell>: " << sizeof_naive_octreenode;
+    ss << "Size of OctreeNode<NaiveCell>: " << sizeof_naive_octreenode << '\n';
+
+    ss << "Size of NeuronID: " << sizeof_neuron_id << '\n';
+    ss << "Size of RankNeuronID: " << sizeof_rank_neuron_id << '\n';
+
+    ss << "Size of LocalSynapse: " << sizeof_local_synapse << '\n';
+    ss << "Size of DistantInSynapse: " << sizeof_distant_in_synapse << '\n';
+    ss << "Size of DistantOutSynapse: " << sizeof_distant_out_synapse << "\n";
 
     LogFiles::print_message_rank(0, ss.str());
 }
@@ -125,6 +142,12 @@ int main(int argc, char** argv) {
     print_arguments(argc, argv);
     print_sizes();
 
+    if constexpr (Config::do_debug_checks) {
+        std::cout << "I'm performing Debug Checks\n";
+    } else {
+        std::cout << "I'm skipping Debug Checks\n";
+    }
+
     const int my_rank = MPIWrapper::get_my_rank();
     const int num_ranks = MPIWrapper::get_num_ranks();
 
@@ -135,6 +158,7 @@ int main(int argc, char** argv) {
     std::map<std::string, AlgorithmEnum> cli_parse_algorithm{
         { "naive", AlgorithmEnum::Naive },
         { "barnes-hut", AlgorithmEnum::BarnesHut },
+        { "barnes-hut-inverted", AlgorithmEnum::BarnesHutInverted },
         { "fast-multipole-methods", AlgorithmEnum::FastMultipoleMethods }
     };
 
@@ -276,7 +300,7 @@ int main(int argc, char** argv) {
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
     RelearnException::check(calcium_decay > 0.0, "The calcium decay constant must be greater than 0.");
 
-    if (algorithm == AlgorithmEnum::BarnesHut) {
+    if (algorithm == AlgorithmEnum::BarnesHut || algorithm == AlgorithmEnum::BarnesHutInverted) {
         RelearnException::check(accept_criterion <= BarnesHut::max_theta, "Acceptance criterion must be smaller or equal to {}", BarnesHut::max_theta);
         RelearnException::check(accept_criterion > 0.0, "Acceptance criterion must be larger than 0.0");
     } else if (algorithm == AlgorithmEnum::FastMultipoleMethods) {
@@ -325,6 +349,7 @@ int main(int argc, char** argv) {
             "Chosen target calcium value: {}\n"
             "Chosen beta value: {}\n"
             "Chosen nu value: {}\n"
+            "Chosen retract ratio: {}\n"
             "Chosen synapse conductance: {}\n"
             "Chosen background activity base: {}\n"
             "Chosen background activity mean: {}\n"
@@ -335,6 +360,7 @@ int main(int argc, char** argv) {
             target_calcium,
             beta,
             nu,
+            retract_ratio,
             synapse_conductance,
             base_background_activity,
             background_activity_mean,
@@ -347,6 +373,7 @@ int main(int argc, char** argv) {
             "Chosen target calcium value: {}\n"
             "Chosen beta value: {}\n"
             "Chosen nu value: {}\n"
+            "Chosen retract ratio: {}\n"
             "Chosen synapse conductance: {}\n"
             "Chosen background activity base: {}\n"
             "Chosen background activity mean: {}\n"
@@ -357,6 +384,7 @@ int main(int argc, char** argv) {
             target_calcium,
             beta,
             nu,
+            retract_ratio,
             synapse_conductance,
             base_background_activity,
             background_activity_mean,
@@ -384,6 +412,15 @@ int main(int argc, char** argv) {
 
         // Create MPI RMA memory allocator
         MPIWrapper::init_buffer_octree<BarnesHutCell>();
+    } else if (algorithm == AlgorithmEnum::BarnesHutInverted) {
+        // Check if int type can contain total size of branch nodes to receive in bytes
+        // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
+        if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<BarnesHutInvertedCell>))) {
+            RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
+        }
+
+        // Create MPI RMA memory allocator
+        MPIWrapper::init_buffer_octree<BarnesHutInvertedCell>();
     } else if (algorithm == AlgorithmEnum::FastMultipoleMethods) {
         // Check if int type can contain total size of branch nodes to receive in bytes
         // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
@@ -427,17 +464,17 @@ int main(int argc, char** argv) {
             models::AEIFModel::default_V_spike);
     }
 
-    auto axon_models = std::make_shared<SynapticElements>(ElementType::AXON, min_calcium_axons,
+    auto axon_models = std::make_shared<SynapticElements>(ElementType::Axon, min_calcium_axons,
         nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-    auto dend_ex_models = std::make_shared<SynapticElements>(ElementType::DENDRITE, min_calcium_excitatory_dendrites,
+    auto dend_ex_models = std::make_shared<SynapticElements>(ElementType::Dendrite, min_calcium_excitatory_dendrites,
         nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-    auto dend_in_models = std::make_shared<SynapticElements>(ElementType::DENDRITE, min_calcium_inhibitory_dendrites,
+    auto dend_in_models = std::make_shared<SynapticElements>(ElementType::Dendrite, min_calcium_inhibitory_dendrites,
         nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     // Lock local RMA memory for local stores
-    MPIWrapper::lock_window(my_rank, MPI_Locktype::exclusive);
+    MPIWrapper::lock_window(my_rank, MPI_Locktype::Exclusive);
 
     Simulation sim(partition);
     sim.set_neuron_model(std::move(neuron_models));
@@ -445,7 +482,7 @@ int main(int argc, char** argv) {
     sim.set_dendrites_ex(std::move(dend_ex_models));
     sim.set_dendrites_in(std::move(dend_in_models));
 
-    if (algorithm == AlgorithmEnum::BarnesHut) {
+    if (algorithm == AlgorithmEnum::BarnesHut || algorithm == AlgorithmEnum::BarnesHutInverted) {
         sim.set_acceptance_criterion_for_barnes_hut(accept_criterion);
     }
 

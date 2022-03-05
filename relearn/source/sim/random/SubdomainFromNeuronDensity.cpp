@@ -100,8 +100,8 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
     RandomHolder::shuffle(RandomHolderKey::Subdomain, positions.begin(), positions.end());
 
-    std::vector<SignalType> signal_types(expected_number_ex, SignalType::EXCITATORY);
-    signal_types.insert(signal_types.cend(), expected_number_in, SignalType::INHIBITORY);
+    std::vector<SignalType> signal_types(expected_number_ex, SignalType::Excitatory);
+    signal_types.insert(signal_types.cend(), expected_number_in, SignalType::Inhibitory);
 
     RandomHolder::shuffle(RandomHolderKey::Subdomain, signal_types.begin(), signal_types.end());
 

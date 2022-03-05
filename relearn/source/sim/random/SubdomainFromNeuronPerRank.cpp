@@ -157,11 +157,11 @@ void SubdomainFromNeuronPerRank::place_neurons_in_area(const NeuronToSubdomainAs
         const double type_indicator = RandomHolder::get_random_uniform_double(RandomHolderKey::Subdomain, 0.0, 1.0);
 
         if (placed_ex_neurons < expected_number_ex && (type_indicator < desired_ex || placed_in_neurons == expected_number_in)) {
-            Node node{ pos, NeuronID{ i }, SignalType::EXCITATORY, "random" };
+            Node node{ pos, NeuronID{ i }, SignalType::Excitatory, "random" };
             placed_ex_neurons++;
             nodes.emplace(node);
         } else {
-            Node node{ pos, NeuronID{ i }, SignalType::INHIBITORY, "random" };
+            Node node{ pos, NeuronID{ i }, SignalType::Inhibitory, "random" };
             placed_in_neurons++;
             nodes.emplace(node);
         }

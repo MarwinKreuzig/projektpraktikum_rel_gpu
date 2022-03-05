@@ -10,8 +10,8 @@
  *
  */
 
-#include "Types.h"
-#include "VirtualPlasticityElement.h"
+#include "algorithm/VirtualPlasticityElement.h"
+#include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
 
 #include <optional>
@@ -23,8 +23,8 @@
  */
 class BarnesHutCell {
 public:
-    using position_type = VirtualPlasticityElement::position_type;
-    using counter_type = VirtualPlasticityElement::counter_type;
+    using position_type = typename RelearnTypes::position_type;
+    using counter_type = typename RelearnTypes::counter_type;
 
     /**
      * @brief Sets the number of free excitatory dendrites in this cell
@@ -64,7 +64,7 @@ public:
      * @return The number of free dendrites
      */
     [[nodiscard]] counter_type get_number_dendrites_for(const SignalType dendrite_type) const noexcept {
-        if (dendrite_type == SignalType::EXCITATORY) {
+        if (dendrite_type == SignalType::Excitatory) {
             return excitatory_dendrites.get_number_free_elements();
         }
 
@@ -109,7 +109,7 @@ public:
      * @return The position of the dendrite
      */
     [[nodiscard]] std::optional<position_type> get_dendrites_position_for(const SignalType dendrite_type) const noexcept {
-        if (dendrite_type == SignalType::EXCITATORY) {
+        if (dendrite_type == SignalType::Excitatory) {
             return excitatory_dendrites.get_position();
         }
 
@@ -123,6 +123,67 @@ public:
     void set_neuron_position(const std::optional<position_type>& opt_position) noexcept {
         set_excitatory_dendrites_position(opt_position);
         set_inhibitory_dendrites_position(opt_position);
+    }
+
+    /**
+     * @brief Returns the position of the cell, which can be empty
+     * @exception Throws a RelearnException if one position is valid and the other is not, or if they are at different points
+     * @return The position of the excitatory dendrite
+     */
+    [[nodiscard]] std::optional<position_type> get_neuron_position() const {
+        const auto& excitatory_position_opt = get_excitatory_dendrites_position();
+        const auto& inhibitory_position_opt = get_inhibitory_dendrites_position();
+
+        const bool ex_valid = excitatory_position_opt.has_value();
+        const bool in_valid = inhibitory_position_opt.has_value();
+
+        if (!ex_valid && !in_valid) {
+            return {};
+        }
+
+        if (ex_valid && in_valid) {
+            const auto& pos_ex = excitatory_position_opt.value();
+            const auto& pos_in = inhibitory_position_opt.value();
+
+            const auto diff = pos_ex - pos_in;
+            const bool exc_position_equals_inh_position = diff.get_x() == 0.0 && diff.get_y() == 0.0 && diff.get_z() == 0.0;
+            RelearnException::check(exc_position_equals_inh_position, "BarnesHutCell::get_neuron_position: positions are unequal");
+
+            return pos_ex;
+        }
+
+        RelearnException::fail("BarnesHutCell::get_neuron_position: one pos was valid and one was not");
+
+        return {};
+    }
+
+    /**
+     * @brief Returns the number of free elements for the associated type in this cell
+     * @param axon_type The requested axons type
+     * @exception Might throw a RelearnException if this operation is not supported
+     * @return The number of free axons for the associated type
+     */
+    [[nodiscard]] counter_type get_number_elements_for(const ElementType element_type, const SignalType signal_type) const {
+        if (element_type == ElementType::Axon) {
+            RelearnException::fail("BarnesHutCell::get_number_elements_for: Does not support axons");
+        }
+
+        return get_number_dendrites_for(signal_type);
+    }
+
+    /**
+     * @brief Returns the position of the specified element with the given signal type
+     * @param axon_type The requested element type
+     * @param signal_type The requested signal type
+     * @exception Might throw a RelearnException if this operation is not supported
+     * @return The position of the associated element, can be empty
+     */
+    [[nodiscard]] std::optional<position_type> get_position_for(const ElementType element_type, const SignalType signal_type) const {
+        if (element_type == ElementType::Axon) {
+            RelearnException::fail("BarnesHutCell::get_position_for: Does not support axons");
+        }
+
+        return get_dendrites_position_for(signal_type);
     }
 
 private:

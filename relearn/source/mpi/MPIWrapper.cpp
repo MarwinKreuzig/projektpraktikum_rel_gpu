@@ -47,16 +47,16 @@ static size_t current_token{ 0 };
 
 std::unique_ptr<MPI_Op> translate_reduce_function(const MPIWrapper::ReduceFunction rf) {
     switch (rf) {
-    case MPIWrapper::ReduceFunction::min:
+    case MPIWrapper::ReduceFunction::Min:
         return std::make_unique<MPI_Op>(MPI_MIN);
 
-    case MPIWrapper::ReduceFunction::max:
+    case MPIWrapper::ReduceFunction::Max:
         return std::make_unique<MPI_Op>(MPI_MAX);
 
-    case MPIWrapper::ReduceFunction::sum:
+    case MPIWrapper::ReduceFunction::Sum:
         return std::make_unique<MPI_Op>(MPI_SUM);
 
-    case MPIWrapper::ReduceFunction::minsummax:
+    case MPIWrapper::ReduceFunction::MinSumMax:
         return std::make_unique<MPI_Op>(*minsummax);
 
     default:
@@ -245,9 +245,9 @@ MPIWrapper::AsyncToken MPIWrapper::async_recv(void* buffer, const int count, con
 
 int MPIWrapper::translate_lock_type(const MPI_Locktype lock_type) {
     switch (lock_type) {
-    case MPI_Locktype::exclusive:
+    case MPI_Locktype::Exclusive:
         return MPI_LOCK_EXCLUSIVE;
-    case MPI_Locktype::shared:
+    case MPI_Locktype::Shared:
         return MPI_LOCK_SHARED;
     }
 

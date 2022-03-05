@@ -10,8 +10,8 @@
 
 #include "gtest/gtest.h"
 
-#include "algorithm/BarnesHutCell.h"
-#include "algorithm/FastMultipoleMethodsCell.h"
+#include "algorithm/BarnesHutInternal/BarnesHutCell.h"
+#include "algorithm/FMMInternal/FastMultipoleMethodsCell.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/ElementType.h"
@@ -224,11 +224,11 @@ protected:
     }
 
     ElementType get_random_element_type() noexcept {
-        return get_random_bool() ? ElementType::AXON : ElementType::DENDRITE;
+        return get_random_bool() ? ElementType::Axon : ElementType::Dendrite;
     }
 
     SignalType get_random_signal_type() noexcept {
-        return get_random_bool() ? SignalType::EXCITATORY : SignalType::INHIBITORY;
+        return get_random_bool() ? SignalType::Excitatory : SignalType::Inhibitory;
     }
 
     std::tuple<SynapticElements, std::vector<double>, std::vector<unsigned int>, std::vector<SignalType>>
@@ -283,8 +283,8 @@ protected:
     }
 
     std::vector<UpdateStatus> get_update_status(size_t number_neurons, size_t number_disabled) {
-        std::vector<UpdateStatus> status(number_disabled, UpdateStatus::DISABLED);
-        status.resize(number_neurons, UpdateStatus::ENABLED);
+        std::vector<UpdateStatus> status(number_disabled, UpdateStatus::Disabled);
+        status.resize(number_neurons, UpdateStatus::Enabled);
 
         std::shuffle(status.begin(), status.end(), mt);
 
@@ -458,16 +458,28 @@ protected:
     void test_cell_size();
 
     template <typename AdditionalCellAttributes>
-    void test_cell_position();
+    void test_cell_dendrites_position();
 
     template <typename AdditionalCellAttributes>
-    void test_cell_position_exception();
-
-    template <typename AdditionalCellAttributes>
-    void test_cell_position_combined();
+    void test_cell_dendrites_position_exception();
 
     template <typename AdditionalCellAttributes>
     void test_cell_set_number_dendrites();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_dendrites_position_combined();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_axons_position();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_axons_position_exception();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_set_number_axons();
+
+    template <typename AdditionalCellAttributes>
+    void test_cell_axons_position_combined();
 
     template <typename AdditionalCellAttributes>
     void test_cell_set_neuron_id();

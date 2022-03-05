@@ -62,7 +62,7 @@ double calculate_excitatory_fraction(const std::vector<SignalType>& types) {
     auto number_inhibitory = 0;
 
     for (const auto& type : types) {
-        if (type == SignalType::EXCITATORY) {
+        if (type == SignalType::Excitatory) {
             number_excitatory++;
         } else {
             number_inhibitory++;
@@ -470,9 +470,9 @@ TEST_F(NeuronAssignmentTest, testDensityWriteToFileSingleSubdomain) {
 
         SignalType type;
         if (type_string == "ex") {
-            type = SignalType::EXCITATORY;
+            type = SignalType::Excitatory;
         } else if (type_string == "in") {
-            type = SignalType::INHIBITORY;
+            type = SignalType::Inhibitory;
         } else {
             ASSERT_TRUE(false);
         }

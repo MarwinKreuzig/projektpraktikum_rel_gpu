@@ -2,7 +2,7 @@
 
 #if !RELEARN_MPI_FOUND
 
-#include "algorithm/BarnesHutCell.h"
+#include "algorithm/Cells.h"
 #include "io/LogFiles.h"
 #include "structure/OctreeNode.h"
 #include "util/MemoryHolder.h"

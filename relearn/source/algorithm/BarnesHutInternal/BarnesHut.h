@@ -10,15 +10,19 @@
  *
  */
 
-#include "Algorithm.h"
 #include "BarnesHutCell.h"
+#include "BarnesHutBase.h"
 #include "Types.h"
+#include "algorithm/Connector.h"
+#include "algorithm/ExchangingAlgorithm.h"
+#include "mpi/CommunicationMap.h"
+#include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
+#include "neurons/UpdateStatus.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "structure/OctreeNode.h"
 #include "util/RelearnException.h"
-#include "util/Vec3.h"
 
 #include <memory>
 #include <optional>
@@ -32,26 +36,13 @@ class SynapticElements;
 
 /**
  * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
- * It is strongly tied to Octree, which might perform MPI communication via NodeCache::download_children()
+ * It is strongly tied to Octree, and might perform MPI communication via NodeCache::download_children()
  */
-class BarnesHut : public Algorithm {
+class BarnesHut : public BarnesHutBase<BarnesHutCell>, public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
 public:
-    /**
-     * This enum indicates for an OctreeNode what the acceptance status is 
-     * It can be:
-     * - Discard (no dendrites there)
-     * - Expand (would be too much approximation, need to expand)
-     * - Accept (can use the node for the algorithm)
-     */
-    enum class AcceptanceStatus: char {
-        Discard = 0,
-        Expand = 1,
-        Accept = 2,
-    };
-
     using AdditionalCellAttributes = BarnesHutCell;
-
-    using position_type = BarnesHutCell::position_type;
+    using position_type = typename RelearnTypes::position_type;
+    using counter_type = typename RelearnTypes::counter_type;
 
     /**
      * @brief Constructs a new instance with the given octree
@@ -62,36 +53,6 @@ public:
         : global_tree(octree) {
         RelearnException::check(octree != nullptr, "BarnesHut::BarnesHut: octree was null");
     }
-
-    /**
-     * @brief Sets acceptance criterion for cells in the tree
-     * @param acceptance_criterion The acceptance criterion, >= 0.0
-     * @exception Throws a RelearnException if acceptance_criterion < 0.0
-     */
-    void set_acceptance_criterion(const double acceptance_criterion) {
-        RelearnException::check(acceptance_criterion > 0.0, "BarnesHut::set_acceptance_criterion: acceptance_criterion was less than or equal to 0 ({})", acceptance_criterion);
-        this->acceptance_criterion = acceptance_criterion;
-    }
-
-    /**
-     * @brief Returns the currently used acceptance criterion
-     * @return The currently used acceptance criterion
-     */
-    [[nodiscard]] double get_acceptance_criterion() const noexcept {
-        return acceptance_criterion;
-    }
-
-    /**
-     * @brief Returns a collection of proposed synapse creations for each neuron with vacant axons
-     * @param number_neurons The number of local neurons
-     * @param disable_flags Flags that indicate if a local neuron is disabled. If so (== 0), the neuron is ignored
-     * @param extra_infos Used to access the positions of the local neurons
-     * @param axons The axon model that is used
-     * @exception Can throw a RelearnException
-     * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
-     */
-    [[nodiscard]] CommunicationMap<SynapseCreationRequest> find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
-        const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override;
 
     /**
      * @brief Updates all leaf nodes in the octree by the algorithm
@@ -112,12 +73,9 @@ public:
         RelearnException::check(node != nullptr, "BarnesHut::update_functor: node is nullptr");
 
         // NOLINTNEXTLINE
-        if (!node->is_parent()) {
+        if (node->is_child()) {
             return;
         }
-
-        using position_type = BarnesHutCell::position_type;
-        using counter_type = BarnesHutCell::counter_type;
 
         // I'm inner node, i.e., I have a super neuron
         position_type my_position_dendrites_excitatory = { 0., 0., 0. };
@@ -146,9 +104,7 @@ public:
             std::optional<position_type> opt_child_position_dendrites_excitatory = child_cell.get_excitatory_dendrites_position();
             std::optional<position_type> opt_child_position_dendrites_inhibitory = child_cell.get_inhibitory_dendrites_position();
 
-            /**
-             * We can use position if it's valid or if corresponding num of dendrites is 0
-             */
+            // We can use position if it's valid or if corresponding num of axons is 0
             RelearnException::check(opt_child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "BarnesHut::update_functor: The child had excitatory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
             RelearnException::check(opt_child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "BarnesHut::update_functor: The child had inhibitory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
 
@@ -198,47 +154,56 @@ public:
         }
     }
 
-private:
+protected:
     /**
-     * @brief Returns an optional RankNeuronId that the algorithm determined for the given source neuron. No actual request is made.
-     *      Might perform MPI communication via NodeCache::download_children()
-     * @param initiator_neuron_id The neuron's id that wants to connect. Is used to disallow autapses (connections to itself)
-     * @param axon_pos_xyz The neuron's position that wants to connect. Is used in probability computations
-     * @param dendrite_type_needed The signal type that is searched.
-     * @return If the algorithm didn't find a matching neuron, the return value is empty.
-     *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
+     * @brief Returns a collection of proposed synapse creations for each neuron with vacant axons
+     * @param number_neurons The number of local neurons
+     * @param disable_flags Flags that indicate if a local neuron is disabled. If so (== 0), the neuron is ignored
+     * @param extra_infos Used to access the positions of the local neurons
+     * @param axons The axon model that is used
+     * @exception Can throw a RelearnException
+     * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_pos_xyz, SignalType dendrite_type_needed);
+    [[nodiscard]] CommunicationMap<SynapseCreationRequest> find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+        const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override;
 
-    [[nodiscard]] double
-    calc_attractiveness_to_connect(
-        const NeuronID& src_neuron_id,
-        const position_type& axon_pos_xyz,
-        const OctreeNode<BarnesHutCell>& node_with_dendrite,
-        SignalType dendrite_type_needed) const;
+    /**
+     * @brief Finds target neurons for a specified source neuron
+     * @param source_neuron_id The source neuron's id
+     * @param source_position The source neuron's position
+     * @param number_vacant_elements The number of vacant elements of the source neuron
+     * @param root Where the source neuron should start to search for targets
+     * @param element_type The element type the source neuron searches
+     * @param signal_type The signal type the source neuron searches
+     * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
+     */
+    [[nodiscard]] std::vector<std::pair<int, SynapseCreationRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position, const counter_type& number_vacant_elements,
+        OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type, const double sigma);
 
-    [[nodiscard]] std::pair<double, std::vector<double>> create_interval(
-        const NeuronID& src_neuron_id,
-        const position_type& axon_pos_xyz,
-        SignalType dendrite_type_needed,
-        const std::vector<OctreeNode<BarnesHutCell>*>& vector) const;
+    /**
+     * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses
+     * @param number_neurons The number of local neurons
+     * @param creation_requests The requests from all MPI ranks
+     * @exception Can throw a RelearnException
+     * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
+     */
+    [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>> 
+        process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) override {
+        return ForwardConnector::process_requests(creation_requests, excitatory_dendrites, inhibitory_dendrites);
+    }
 
-    [[nodiscard]] AcceptanceStatus acceptance_criterion_test(
-        const position_type& axon_pos_xyz,
-        const OctreeNode<BarnesHutCell>* node_with_dendrite,
-        SignalType dendrite_type_needed) const;
+    /**
+     * @brief Processes all incoming responses from the MPI ranks locally
+     * @param creation_requests The requests from this MPI rank
+     * @param creation_responses The responses from the other MPI ranks
+     * @exception Can throw a RelearnException
+     * @return All synapses from this MPI rank to other MPI ranks
+     */
+    [[nodiscard]] DistantOutSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
+        const CommunicationMap<SynapseCreationResponse>& creation_responses) override {
+        return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
+    }
 
-    [[nodiscard]] std::vector<OctreeNode<BarnesHutCell>*> get_nodes_for_interval(
-        const position_type& axon_pos_xyz,
-        OctreeNode<BarnesHutCell>* root,
-        SignalType dendrite_type_needed);
-
-    double acceptance_criterion{ default_theta }; // Acceptance criterion
-
+ private:
     std::shared_ptr<OctreeImplementation<BarnesHut>> global_tree{};
-
-public:
-    constexpr static double default_theta{ 0.3 };
-
-    constexpr static double max_theta{ 0.5 };
 };

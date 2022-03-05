@@ -39,8 +39,8 @@ class RelearnTest;
  * This enum allows a type safe choice of locking types for memory windows
  */
 enum class MPI_Locktype {
-    exclusive,
-    shared,
+    Exclusive,
+    Shared,
 };
 
 namespace MPIUserDefinedOperation {
@@ -68,15 +68,14 @@ class MPIWrapper {
 public:
     /**
      * This enum serves as a marker for the function that should be used in reductions.
-     * ReduceFunction::none is not supported and always triggers a RelearnException.
+     * ReduceFunction::None is not supported and always triggers a RelearnException.
      */
     enum class ReduceFunction : char {
-        min = 0,
-        max = 1,
-        avg = 2,
-        sum = 3,
-        none = 4,
-        minsummax = 100
+        Min = 0,
+        Max = 1,
+        Sum = 2,
+        None = 3,
+        MinSumMax = 100
     };
 
     using AsyncToken = size_t;

@@ -34,14 +34,14 @@ FileSynapseLoader::internal_load_synapses() {
     out_synapses_type out_synapses{};
 
     enum class f_status : char {
-        not_known = 0,
-        local = 1,
-        not_local = 2,
+        Unknown = 0,
+        Local = 1,
+        Distant = 2,
     };
 
     std::string line{};
 
-    std::vector<f_status> id_is_local(partition->get_total_number_neurons(), f_status::not_known);
+    std::vector<f_status> id_is_local(partition->get_total_number_neurons(), f_status::Unknown);
 
     std::ifstream file_synapses(path_to_file, std::ios::binary | std::ios::in);
 
@@ -78,29 +78,29 @@ FileSynapseLoader::internal_load_synapses() {
         bool source_is_local = false;
         bool target_is_local = false;
 
-        if (source_f == f_status::local) {
+        if (source_f == f_status::Local) {
             source_is_local = true;
-        } else if (source_f == f_status::not_local) {
+        } else if (source_f == f_status::Distant) {
             source_is_local = false;
         } else {
             source_is_local = nit->is_neuron_local(source_id);
             if (source_is_local) {
-                id_is_local[source_id.get_global_id()] = f_status::local;
+                id_is_local[source_id.get_global_id()] = f_status::Local;
             } else {
-                id_is_local[source_id.get_global_id()] = f_status::not_local;
+                id_is_local[source_id.get_global_id()] = f_status::Distant;
             }
         }
 
-        if (target_f == f_status::local) {
+        if (target_f == f_status::Local) {
             target_is_local = true;
-        } else if (target_f == f_status::not_local) {
+        } else if (target_f == f_status::Distant) {
             target_is_local = false;
         } else {
             target_is_local = nit->is_neuron_local(target_id);
             if (target_is_local) {
-                id_is_local[target_id.get_global_id()] = f_status::local;
+                id_is_local[target_id.get_global_id()] = f_status::Local;
             } else {
-                id_is_local[target_id.get_global_id()] = f_status::not_local;
+                id_is_local[target_id.get_global_id()] = f_status::Distant;
             }
         }
 

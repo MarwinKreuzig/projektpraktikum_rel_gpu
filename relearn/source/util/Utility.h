@@ -36,7 +36,7 @@ std::tuple<T, T, T, size_t> min_max_acc(const std::vector<T>& values, const std:
 
     size_t first_index = 0;
 
-    while (disable_flags[first_index] == UpdateStatus::DISABLED) {
+    while (disable_flags[first_index] == UpdateStatus::Disabled) {
         first_index++;
     }
 
@@ -49,7 +49,7 @@ std::tuple<T, T, T, size_t> min_max_acc(const std::vector<T>& values, const std:
     size_t num_values = 1;
 
     for (auto i = first_index + 1; i < values.size(); i++) {
-        if (disable_flags[i] == UpdateStatus::DISABLED) {
+        if (disable_flags[i] == UpdateStatus::Disabled) {
             continue;
         }
 
