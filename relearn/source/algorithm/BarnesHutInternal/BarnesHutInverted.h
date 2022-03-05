@@ -181,13 +181,12 @@ protected:
 
     /**
      * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses
-     * @param number_neurons The number of local neurons
      * @param creation_requests The requests from all MPI ranks
      * @exception Can throw a RelearnException
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses from the local rank
      */
     [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantOutSynapses>>
-    process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& RequestType) override;
+    process_requests(const CommunicationMap<SynapseCreationRequest>& RequestType) override;
 
     /**
      * @brief Processes all incoming responses from the MPI ranks locally

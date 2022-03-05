@@ -144,7 +144,7 @@ std::vector<std::pair<int, SynapseCreationRequest>> BarnesHutInverted::find_targ
 }
 
 std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantOutSynapses>>
-BarnesHutInverted::process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& synapse_creation_requests_incoming) {
+BarnesHutInverted::process_requests(const CommunicationMap<SynapseCreationRequest>& synapse_creation_requests_incoming) {
 
     RelearnException::fail("BarnesHutInverted::process_responses: Not implemented yet");
     const auto my_rank = MPIWrapper::get_my_rank();

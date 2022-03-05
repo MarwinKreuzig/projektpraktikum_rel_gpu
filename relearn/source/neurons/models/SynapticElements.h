@@ -400,6 +400,14 @@ public:
     }
 
     /**
+     * @brief Returns the size
+     * @return The size
+     */
+    [[nodiscard]] size_t get_size() const noexcept {
+        return size;
+    }
+
+    /**
      * @brief Commits the accumulated differences for all neurons that are not disabled and returns the number of total deletions and neuron-wise deletions
      * @param disable_flags Indicates that a neuron should not be updated (= 0)
      * @exception Throws a RelearnException if disable_flags.size() does not match the number of stored neurons
