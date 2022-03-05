@@ -13,6 +13,7 @@
 #include "BarnesHutCell.h"
 #include "BarnesHutBase.h"
 #include "Types.h"
+#include "algorithm/ExchangingAlgorithm.h"
 #include "neurons/SignalType.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseCreationRequests.h"
@@ -32,9 +33,9 @@ class SynapticElements;
 
 /**
  * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
- * It is strongly tied to Octree, which might perform MPI communication via NodeCache::download_children()
+ * It is strongly tied to Octree, and might perform MPI communication via NodeCache::download_children()
  */
-class BarnesHut : public BarnesHutBase<BarnesHutCell> {
+class BarnesHut : public BarnesHutBase<BarnesHutCell>, public ExchangingAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
 public:
     using AdditionalCellAttributes = BarnesHutCell;
     using position_type = typename RelearnTypes::position_type;
@@ -49,18 +50,6 @@ public:
         : global_tree(octree) {
         RelearnException::check(octree != nullptr, "BarnesHut::BarnesHut: octree was null");
     }
-
-    /**
-     * @brief Returns a collection of proposed synapse creations for each neuron with vacant axons
-     * @param number_neurons The number of local neurons
-     * @param disable_flags Flags that indicate if a local neuron is disabled. If so (== 0), the neuron is ignored
-     * @param extra_infos Used to access the positions of the local neurons
-     * @param axons The axon model that is used
-     * @exception Can throw a RelearnException
-     * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
-     */
-    [[nodiscard]] CommunicationMap<SynapseCreationRequest> find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
-        const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override;
 
     /**
      * @brief Updates all leaf nodes in the octree by the algorithm
@@ -165,6 +154,52 @@ public:
         }
     }
 
-private:
+protected:
+    /**
+     * @brief Returns a collection of proposed synapse creations for each neuron with vacant axons
+     * @param number_neurons The number of local neurons
+     * @param disable_flags Flags that indicate if a local neuron is disabled. If so (== 0), the neuron is ignored
+     * @param extra_infos Used to access the positions of the local neurons
+     * @param axons The axon model that is used
+     * @exception Can throw a RelearnException
+     * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
+     */
+    [[nodiscard]] CommunicationMap<SynapseCreationRequest> find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+        const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override;
+
+    /**
+     * @brief Finds target neurons for a specified source neuron
+     * @param source_neuron_id The source neuron's id
+     * @param source_position The source neuron's position
+     * @param number_vacant_elements The number of vacant elements of the source neuron
+     * @param root Where the source neuron should start to search for targets
+     * @param element_type The element type the source neuron searches
+     * @param signal_type The signal type the source neuron searches
+     * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
+     */
+    [[nodiscard]] std::vector<std::pair<int, SynapseCreationRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position, const counter_type& number_vacant_elements,
+        OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type, const double sigma);
+
+    /**
+     * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses
+     * @param number_neurons The number of local neurons
+     * @param creation_requests The requests from all MPI ranks
+     * @exception Can throw a RelearnException
+     * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
+     */
+    [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>> 
+        create_synapses_process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& RequestType) override;
+
+    /**
+     * @brief Processes all incoming responses from the MPI ranks locally
+     * @param creation_requests The requests from this MPI rank
+     * @param creation_responses The responses from the other MPI ranks
+     * @exception Can throw a RelearnException
+     * @return All synapses from this MPI rank to other MPI ranks
+     */
+    [[nodiscard]] DistantOutSynapses create_synapses_process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
+        const CommunicationMap<SynapseCreationResponse>& creation_responses) override;
+
+ private:
     std::shared_ptr<OctreeImplementation<BarnesHut>> global_tree{};
 };

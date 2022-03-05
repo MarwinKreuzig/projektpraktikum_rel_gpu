@@ -22,58 +22,6 @@
 #include <algorithm>
 #include <array>
 
-CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(
-    const size_t number_neurons,
-    const std::vector<UpdateStatus>& disable_flags,
-    const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
-
-    const auto number_ranks = MPIWrapper::get_num_ranks();
-
-    CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks);
-    Timers::start(TimerRegion::FIND_TARGET_NEURONS);
-
-    const auto root = global_tree->get_root();
-
-    // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
-#pragma omp parallel for default(none) shared(root, number_neurons, extra_infos, disable_flags, synapse_creation_requests_outgoing)
-    for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
-            continue;
-        }
-
-        const NeuronID id{ neuron_id };
-
-        const auto number_vacant_excitatory_dendrites = excitatory_dendrites->get_free_elements(id);
-        const auto number_vacant_inhibitory_dendrites = inhibitory_dendrites->get_free_elements(id);
-
-        if (number_vacant_excitatory_dendrites + number_vacant_inhibitory_dendrites == 0) {
-            continue;
-        }
-
-        const auto& dendrite_position = extra_infos->get_position(id);
-
-        const auto& excitatory_requests = BarnesHutBase::find_target_neurons(id, dendrite_position, number_vacant_excitatory_dendrites, root, ElementType::Axon, SignalType::Excitatory);
-        for (const auto& [target_rank, creation_request] : excitatory_requests) {
-#pragma omp critical
-            synapse_creation_requests_outgoing.append(target_rank, creation_request);
-        }
-
-        const auto& inhibitory_requests = BarnesHutBase::find_target_neurons(id, dendrite_position, number_vacant_excitatory_dendrites, root, ElementType::Axon, SignalType::Inhibitory);
-        for (const auto& [target_rank, creation_request] : inhibitory_requests) {
-#pragma omp critical
-            synapse_creation_requests_outgoing.append(target_rank, creation_request);
-        }
-    }
-
-    Timers::stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
-
-    // Make cache empty for next connectivity update
-    Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
-    NodeCache::empty<BarnesHutInvertedCell>();
-    Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
-    return synapse_creation_requests_outgoing;
-}
-
 void BarnesHutInverted::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
     RelearnException::check(global_tree != nullptr, "BarnesHutInverted::update_leaf_nodes: global_tree was nullptr");
 
@@ -122,4 +70,176 @@ void BarnesHutInverted::update_leaf_nodes(const std::vector<UpdateStatus>& disab
 
         node->set_cell_number_axons(number_vacant_axons_excitatory, number_vacant_axons_inhibitory);
     }
+}
+
+CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+    const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
+
+    const auto number_ranks = MPIWrapper::get_num_ranks();
+
+    CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks);
+
+    const auto root = global_tree->get_root();
+    const auto sigma = get_probabilty_parameter();
+
+    // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
+#pragma omp parallel for default(none) shared(root, sigma, number_neurons, extra_infos, disable_flags, synapse_creation_requests_outgoing)
+    for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+            continue;
+        }
+
+        const NeuronID id{ neuron_id };
+
+        const auto number_vacant_excitatory_dendrites = excitatory_dendrites->get_free_elements(id);
+        const auto number_vacant_inhibitory_dendrites = inhibitory_dendrites->get_free_elements(id);
+
+        if (number_vacant_excitatory_dendrites + number_vacant_inhibitory_dendrites == 0) {
+            continue;
+        }
+
+        const auto& dendrite_position = extra_infos->get_position(id);
+
+        const auto& excitatory_requests = find_target_neurons(id, dendrite_position, number_vacant_excitatory_dendrites, root, ElementType::Axon, SignalType::Excitatory, sigma);
+        for (const auto& [target_rank, creation_request] : excitatory_requests) {
+#pragma omp critical
+            synapse_creation_requests_outgoing.append(target_rank, creation_request);
+        }
+
+        const auto& inhibitory_requests = find_target_neurons(id, dendrite_position, number_vacant_excitatory_dendrites, root, ElementType::Axon, SignalType::Inhibitory, sigma);
+        for (const auto& [target_rank, creation_request] : inhibitory_requests) {
+#pragma omp critical
+            synapse_creation_requests_outgoing.append(target_rank, creation_request);
+        }
+    }
+
+    // Make cache empty for next connectivity update
+    Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
+    NodeCache::empty<BarnesHutInvertedCell>();
+    Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
+    return synapse_creation_requests_outgoing;
+}
+
+std::vector<std::pair<int, SynapseCreationRequest>> BarnesHutInverted::find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
+    const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type, const double sigma) {
+
+    std::vector<std::pair<int, SynapseCreationRequest>> requests{};
+    requests.reserve(number_vacant_elements);
+
+    for (unsigned int j = 0; j < number_vacant_elements; j++) {
+        // Find one target at the time
+        std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type, sigma);
+        if (!rank_neuron_id.has_value()) {
+            // If finding failed, it won't succeed in later iterations
+            break;
+        }
+
+        const auto& [target_rank, target_id] = rank_neuron_id.value();
+        const SynapseCreationRequest creation_request(target_id, source_neuron_id, signal_type);
+
+        requests.emplace_back(target_rank, creation_request);
+    }
+
+    return requests;
+}
+
+std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
+BarnesHutInverted::create_synapses_process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& synapse_creation_requests_incoming) {
+
+    const auto my_rank = MPIWrapper::get_my_rank();
+    const auto number_ranks = MPIWrapper::get_num_ranks();
+
+    CommunicationMap<SynapseCreationResponse> responses(number_ranks);
+
+    if (synapse_creation_requests_incoming.empty()) {
+        return { responses, {} };
+    }
+
+    responses.resize(synapse_creation_requests_incoming.get_request_sizes());
+
+    LocalSynapses local_synapses{};
+    local_synapses.reserve(number_neurons);
+
+    DistantInSynapses distant_synapses{};
+    distant_synapses.reserve(number_neurons);
+
+    std::vector<std::pair<int, unsigned int>> indices{};
+    indices.reserve(synapse_creation_requests_incoming.get_total_number_requests());
+
+    for (const auto& [source_rank, requests] : synapse_creation_requests_incoming) {
+        for (unsigned int request_index = 0; request_index < requests.size(); request_index++) {
+            indices.emplace_back(source_rank, request_index);
+        }
+    }
+
+    // We need to shuffle the request indices so we do not prefer those from smaller MPI ranks and lower neuron ids
+    RandomHolder::shuffle(RandomHolderKey::Algorithm, indices.begin(), indices.end());
+
+    for (const auto& [source_rank, request_index] : indices) {
+        const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = synapse_creation_requests_incoming.get_request(source_rank, request_index);
+
+        RelearnException::check(target_neuron_id.get_local_id() < number_neurons, "BarnesHut::create_synapses_process_requests: Target_neuron_id exceeds my neurons");
+
+        const auto& dendrites = (SignalType::Inhibitory == dendrite_type_needed) ? inhibitory_dendrites : excitatory_dendrites;
+
+        const auto weight = (SignalType::Inhibitory == dendrite_type_needed) ? -1 : 1;
+        const auto number_free_elements = dendrites->get_free_elements(target_neuron_id);
+
+        if (number_free_elements == 0) {
+            // Other axons were faster and came first
+            responses.set_request(source_rank, request_index, SynapseCreationResponse::Failed);
+            // responses.append(source_rank, SynapseCreationResponse::Failed);
+            continue;
+        }
+
+        // Increment number of connected dendrites
+        dendrites->update_connected_elements(target_neuron_id, 1);
+
+        // Set response to "connected" (success)
+        // responses.append(source_rank, SynapseCreationResponse::Succeeded);
+        responses.set_request(source_rank, request_index, SynapseCreationResponse::Succeeded);
+
+        if (source_rank == my_rank) {
+            local_synapses.emplace_back(target_neuron_id, source_neuron_id, weight);
+            continue;
+        }
+
+        distant_synapses.emplace_back(target_neuron_id, RankNeuronId{ source_rank, source_neuron_id }, weight);
+    }
+
+    return { responses, { local_synapses, distant_synapses } };
+}
+
+DistantOutSynapses BarnesHutInverted::create_synapses_process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests, const CommunicationMap<SynapseCreationResponse>& creation_responses) {
+    const auto my_rank = MPIWrapper::get_my_rank();
+    DistantOutSynapses synapses{};
+
+    // Process the responses of all mpi ranks
+    for (const auto& [target_rank, requests] : creation_responses) {
+        const auto num_requests = requests.size();
+
+        // All responses from a rank
+        for (auto request_index = 0; request_index < num_requests; request_index++) {
+            const auto connected = requests[request_index];
+            if (connected == SynapseCreationResponse::Failed) {
+                continue;
+            }
+
+            const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = creation_requests.get_request(target_rank, request_index);
+
+            // Increment number of connected axons
+            axons->update_connected_elements(source_neuron_id, 1);
+
+            if (target_rank == my_rank) {
+                // I have already created the synapse in the network if the response comes from myself
+                continue;
+            }
+
+            // Mark this synapse for later use (must be added to the network graph)
+            const auto weight = (SignalType::Inhibitory == dendrite_type_needed) ? -1 : +1;
+            synapses.emplace_back(RankNeuronId{ target_rank, target_neuron_id }, source_neuron_id, weight);
+        }
+    }
+
+    return synapses;
 }

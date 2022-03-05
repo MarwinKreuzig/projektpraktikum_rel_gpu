@@ -11,7 +11,7 @@
  */
 
 #include "FastMultipoleMethodsCell.h"
-#include "algorithm/Algorithm.h"
+#include "algorithm/ExchangingAlgorithm.h"
 #include "structure/OctreeNode.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
@@ -32,9 +32,9 @@ class OctreeImplementation;
 
 /**
  * This class represents the implementation and adaptation of fast multipole methods. The parameters can be set on the fly.
- * It is strongly tied to Octree, which might perform MPI communication via NodeCache::download_children()
+ * It is strongly tied to Octree, and might perform MPI communication via NodeCache::download_children()
  */
-class FastMultipoleMethods : public Algorithm {
+class FastMultipoleMethods : public ExchangingAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
     friend class FMMPrivateFunctionTest;
 
     std::shared_ptr<OctreeImplementation<FastMultipoleMethods>> global_tree{};
@@ -188,6 +188,7 @@ public:
         }
     }
 
+protected:
     /**
      * @brief Returns a collection of proposed synapse creations for each neuron with vacant axons.
      * @param number_neurons The number of local neurons
@@ -195,10 +196,30 @@ public:
      * @param extra_infos Used to access the positions of the local neurons
      * @param axons The axon model that is used
      * @exception Can throw a RelearnException
-     * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. 
+     * @return Returns a map, indicating for every MPI rank all requests that are made from this rank.
      */
     CommunicationMap<SynapseCreationRequest> find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override;
+
+    /**
+     * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses
+     * @param number_neurons The number of local neurons
+     * @param creation_requests The requests from all MPI ranks
+     * @exception Can throw a RelearnException
+     * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
+     */
+    [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
+    create_synapses_process_requests(size_t number_neurons, const CommunicationMap<SynapseCreationRequest>& RequestType) override;
+
+    /**
+     * @brief Processes all incoming responses from the MPI ranks locally
+     * @param creation_requests The requests from this MPI rank
+     * @param creation_responses The responses from the other MPI ranks
+     * @exception Can throw a RelearnException
+     * @return All synapses from this MPI rank to other MPI ranks
+     */
+    [[nodiscard]] DistantOutSynapses create_synapses_process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
+        const CommunicationMap<SynapseCreationResponse>& creation_responses) override;
 
 private:
     /**
@@ -214,7 +235,7 @@ private:
      * @param source Node with vacant axons.
      * @param interaction_list List of Nodes with vacant dendrites.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
-     * @exception Can throw a RelearnException 
+     * @exception Can throw a RelearnException
      * @return Returns a vector with the calculated forces of attraction. This contains as many elements as the interaction list.
      */
     std::vector<double> calc_attractiveness_to_connect(const OctreeNode<FastMultipoleMethodsCell>* source, const interaction_list_type& interaction_list, SignalType signal_type_needed);
@@ -340,7 +361,7 @@ private:
          * @brief Returns the OctreeNode at the given index, nullptr elements are not counted.
          * @param arr Interaction list containing OctreeNodes.
          * @param index Index of the desired node.
-         * @return const OctreeNode<AdditionalCellAttributes>* 
+         * @return const OctreeNode<AdditionalCellAttributes>*
          */
         static const OctreeNode<AdditionalCellAttributes>* extract_element(const interaction_list_type& arr, unsigned int index);
 
@@ -352,7 +373,7 @@ private:
         static interaction_list_type get_children_to_interaction_list(const OctreeNode<AdditionalCellAttributes>* node);
 
         /**
-         * @brief Returns a vector of all positions of the selected type that have a free port of the requested SignalType. 
+         * @brief Returns a vector of all positions of the selected type that have a free port of the requested SignalType.
          * @param node OctreeNode from which the elements are to be counted.
          * @param type Type of synaptic elements (axon or dendrite).
          * @param needed The requested SignalType.
@@ -389,10 +410,10 @@ private:
                 std::vector<int64_t> current_sequence(i + 2);
                 std::fill(std::begin(current_sequence), std::end(current_sequence), 0);
 
-            for (auto j = 0; j <= i; j++) {
-                if (j != i) {
-                    current_sequence[j] = sequences[i - 1][j + 1ULL] * (j + 1ULL);
-                }
+                for (auto j = 0; j <= i; j++) {
+                    if (j != i) {
+                        current_sequence[j] = sequences[i - 1][j + 1ULL] * (j + 1ULL);
+                    }
 
                     if (j > 0) {
                         current_sequence[j] += sequences[i - 1][j - 1ULL] * (-2);
@@ -405,15 +426,15 @@ private:
             return sequences[derivative_order];
         }
 
-    /**
-     * @brief Calculates the value of a certain derivative of e^(-t^2) at a desired point.
-     * @param t Point for which the calculation is made.
-     * @param derivative_order Order of the deriative.
-     * @return Returns the value of the deriative.
-     */
-    static double
-    function_derivative(double t, unsigned int derivative_order) noexcept {
-        const auto& coefficients = calculate_coefficients_for_deriative(derivative_order);
+        /**
+         * @brief Calculates the value of a certain derivative of e^(-t^2) at a desired point.
+         * @param t Point for which the calculation is made.
+         * @param derivative_order Order of the deriative.
+         * @return Returns the value of the deriative.
+         */
+        static double
+        function_derivative(double t, unsigned int derivative_order) noexcept {
+            const auto& coefficients = calculate_coefficients_for_deriative(derivative_order);
 
             auto result = 0.0;
             for (unsigned int monom_exponent = 0; monom_exponent <= derivative_order; monom_exponent++) {
@@ -434,15 +455,15 @@ private:
             return result;
         }
 
-    /**
-     * @brief Calculates the n-th Hermite function at the point t, if t is one of the real numbers.
-     * @param n Order of the Hermite function.
-     * @param t Point of evaluation.
-     * @return Value of the Hermite function of the n-th order at the point t.
-     */
-    static double
-    h(unsigned int n, double t) {
-        const auto t_squared = t * t;
+        /**
+         * @brief Calculates the n-th Hermite function at the point t, if t is one of the real numbers.
+         * @param n Order of the Hermite function.
+         * @param t Point of evaluation.
+         * @return Value of the Hermite function of the n-th order at the point t.
+         */
+        static double
+        h(unsigned int n, double t) {
+            const auto t_squared = t * t;
 
             const auto fac_1 = exp(-t_squared);
             const auto fac_2 = exp(t_squared);
@@ -457,17 +478,17 @@ private:
             return -product;
         }
 
-    /**
-     * @brief Calculates the Hermite function for a multi index and a 3D vector.
-     * @param multi_index A tuple of three natural numbers.
-     * @param vector A 3D vector.
-     * @return Value of the Hermite function.
-     */
-    static double
-    h_multiindex(const std::array<unsigned int, 3>& multi_index, const Vec3d& vector) {
-        const auto h1 = h(multi_index[0], vector.get_x());
-        const auto h2 = h(multi_index[1], vector.get_y());
-        const auto h3 = h(multi_index[2], vector.get_z());
+        /**
+         * @brief Calculates the Hermite function for a multi index and a 3D vector.
+         * @param multi_index A tuple of three natural numbers.
+         * @param vector A 3D vector.
+         * @return Value of the Hermite function.
+         */
+        static double
+        h_multiindex(const std::array<unsigned int, 3>& multi_index, const Vec3d& vector) {
+            const auto h1 = h(multi_index[0], vector.get_x());
+            const auto h2 = h(multi_index[1], vector.get_y());
+            const auto h3 = h(multi_index[2], vector.get_z());
 
             const auto h_total = h1 * h2 * h3;
 
@@ -490,17 +511,17 @@ private:
             return product;
         }
 
-    /**
-     * @brief Calculates base_vector^exponent.
-     * @param base_vector A 3D vector.
-     * @param exponent A 3D multi index.
-     * @return The result of base_vector^exponent.
-     */
-    static double
-    pow_multiindex(const Vec3d& base_vector, const std::array<unsigned int, 3>& exponent) {
-        const auto fac_1 = pow(base_vector.get_x(), exponent[0]);
-        const auto fac_2 = pow(base_vector.get_y(), exponent[1]);
-        const auto fac_3 = pow(base_vector.get_z(), exponent[2]);
+        /**
+         * @brief Calculates base_vector^exponent.
+         * @param base_vector A 3D vector.
+         * @param exponent A 3D multi index.
+         * @return The result of base_vector^exponent.
+         */
+        static double
+        pow_multiindex(const Vec3d& base_vector, const std::array<unsigned int, 3>& exponent) {
+            const auto fac_1 = pow(base_vector.get_x(), exponent[0]);
+            const auto fac_2 = pow(base_vector.get_y(), exponent[1]);
+            const auto fac_3 = pow(base_vector.get_z(), exponent[2]);
 
             const auto product = fac_1 * fac_2 * fac_3;
 

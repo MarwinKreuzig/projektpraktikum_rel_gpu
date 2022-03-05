@@ -12,7 +12,6 @@
 
 #include "Config.h"
 #include "Types.h"
-#include "algorithm/Algorithm.h"
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
 #include "neurons/models/SynapticElements.h"
@@ -25,8 +24,13 @@
 #include <optional>
 #include <vector>
 
+/**
+ * This class provides all computational elements of the Barnes-Hut algorithm. 
+ * It purely calculates things, but does not change any state.
+ * @tparam AdditionalCellAttributes The cell attributes that are 
+ */
 template <typename AdditionalCellAttributes>
-class BarnesHutBase : public Algorithm {
+class BarnesHutBase {
 public:
     constexpr static double default_theta{ 0.3 };
     constexpr static double max_theta{ 0.5 };
@@ -111,7 +115,7 @@ protected:
      * @return The calculated attractiveness
      */
     [[nodiscard]] double calculate_attractiveness_to_connect(const NeuronID& source_neuron_id, const position_type& source_position,
-        const OctreeNode<AdditionalCellAttributes>* target_node, const ElementType element_type, const SignalType signal_type) const {
+        const OctreeNode<AdditionalCellAttributes>* target_node, const ElementType element_type, const SignalType signal_type, const double sigma) const {
 
         // A neuron must not form an autapse, i.e., a synapse to itself
         if (target_node->is_child() && source_neuron_id == target_node->get_cell_neuron_id()) {
@@ -124,7 +128,6 @@ protected:
 
         RelearnException::check(target_position.has_value(), "BarnesHutBase::calculate_attractiveness_to_connect: target_xyz is bad");
 
-        const auto sigma = get_probabilty_parameter();
         return calculate_attractiveness_to_connect(source_position, target_position.value(), number_elements, sigma);
     }
 
@@ -183,11 +186,12 @@ protected:
      * @param nodes All nodes from which the source neuron can pick
      * @param element_type The element type the source neuron searches
      * @param signal_type The signal type the source neuron searches
+     * @param sigma The probability parameter for the calculation
      * @exception Can Throw a RelearnException if an algorithmic errors occurs
      * @return A pair of (a) the total probability of all targets and (b) the respective probability of each target
      */
     [[nodiscard]] std::pair<double, std::vector<double>> create_probability_interval(const NeuronID& source_neuron_id, const position_type& source_position,
-        const std::vector<OctreeNode<AdditionalCellAttributes>*>& nodes, const ElementType element_type, const SignalType signal_type) const {
+        const std::vector<OctreeNode<AdditionalCellAttributes>*>& nodes, const ElementType element_type, const SignalType signal_type, const double sigma) const {
 
         if (nodes.empty()) {
             return { 0.0, {} };
@@ -200,7 +204,7 @@ protected:
 
         std::transform(nodes.begin(), nodes.cend(), std::back_inserter(probabilities), [&](const OctreeNode<AdditionalCellAttributes>* target_node) {
             RelearnException::check(target_node != nullptr, "BarnesHut::update_leaf_nodes: target_node was nullptr");
-            const auto prob = calculate_attractiveness_to_connect(source_neuron_id, source_position, target_node, element_type, signal_type);
+            const auto prob = calculate_attractiveness_to_connect(source_neuron_id, source_position, target_node, element_type, signal_type, sigma);
             sum += prob;
             return prob;
         });
@@ -330,11 +334,12 @@ protected:
      * @param root The starting position where to look
      * @param element_type The element type the source is looking for
      * @param signal_type The signal type the source is looking for
+     * @param sigma The probability parameter for the calculation
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorihtm found a matching neuron, its RankNeuronId is returned
      */
     [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* root,
-        const ElementType element_type, const SignalType signal_type) const {
+        const ElementType element_type, const SignalType signal_type, const double sigma) const {
         OctreeNode<AdditionalCellAttributes>* node_selected = nullptr;
         OctreeNode<AdditionalCellAttributes>* root_of_subtree = root;
 
@@ -351,7 +356,7 @@ protected:
              * Assign a probability to each node in the vector.
              * The probability for connecting to the same neuron (i.e., the axon's neuron) is set 0.
              */
-            const auto& probability = create_probability_interval(source_neuron_id, source_position, vector, element_type, signal_type);
+            const auto& probability = create_probability_interval(source_neuron_id, source_position, vector, element_type, signal_type, sigma);
 
             node_selected = pick_target(vector, probability);
             if (node_selected == nullptr) {
@@ -368,38 +373,5 @@ protected:
         }
 
         return RankNeuronId{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
-    }
-
-    /**
-     * @brief Finds target neurons for a specified source neuron
-     * @param source_neuron_id The source neuron's id
-     * @param source_position The source neuron's position
-     * @param number_vacant_elements The number of vacant elements of the source neuron
-     * @param root Where the source neuron should start to search for targets
-     * @param element_type The element type the source neuron searches
-     * @param signal_type The signal type the source neuron searches
-     * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
-     */
-    [[nodiscard]] std::vector<std::pair<int, SynapseCreationRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position, const counter_type& number_vacant_elements,
-        OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type) {
-
-        std::vector<std::pair<int, SynapseCreationRequest>> requests{};
-        requests.reserve(number_vacant_elements);
-
-        for (unsigned int j = 0; j < number_vacant_elements; j++) {
-            // Find one target at the time
-            std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type);
-            if (!rank_neuron_id.has_value()) {
-                // If finding failed, it won't succeed in later iterations
-                break;
-            }
-
-            const auto& [target_rank, target_id] = rank_neuron_id.value();
-            const SynapseCreationRequest creation_request(target_id, source_neuron_id, signal_type);
-
-            requests.emplace_back(target_rank, creation_request);
-        }
-
-        return requests;
     }
 };
