@@ -2,15 +2,14 @@
 
 #include "RelearnTest.hpp"
 
-#include "../source/algorithm/Algorithms.h"
-#include "../source/algorithm/Cells.h"
-#include "../source/neurons/models/SynapticElements.h"
-#include "../source/structure/Cell.h"
-#include "../source/structure/Partition.h"
-#include "../source/structure/Octree.h"
-
-#include "../source/util/RelearnException.h"
-#include "../source/util/Vec3.h"
+#include "algorithm/Algorithms.h"
+#include "algorithm/Cells.h"
+#include "neurons/models/SynapticElements.h"
+#include "structure/Cell.h"
+#include "structure/Partition.h"
+#include "structure/Octree.h"
+#include "util/RelearnException.h"
+#include "util/Vec3.h"
 
 #include <algorithm>
 #include <map>
@@ -22,151 +21,7 @@
 
 using AdditionalCellAttributes = BarnesHutCell;
 
-std::vector<std::tuple<Vec3d, NeuronID>> generate_random_neurons(const Vec3d& min, const Vec3d& max, size_t count, size_t max_id, std::mt19937& mt) {
-    std::uniform_real_distribution<double> urd_x(min.get_x(), max.get_x());
-    std::uniform_real_distribution<double> urd_y(min.get_y(), max.get_y());
-    std::uniform_real_distribution<double> urd_z(min.get_z(), max.get_z());
-
-    std::vector<NeuronID> ids(max_id);
-    for (auto i = 0; i < max_id; i++) {
-        ids[i] = NeuronID(i);
-    }
-    std::shuffle(ids.begin(), ids.end(), mt);
-
-    std::vector<std::tuple<Vec3d, NeuronID>> return_value(count);
-
-    for (auto i = 0; i < count; i++) {
-        const auto rand_x = urd_x(mt);
-        const auto rand_y = urd_y(mt);
-        const auto rand_z = urd_z(mt);
-
-        return_value[i] = { { rand_x, rand_y, rand_z }, ids[i] };
-    }
-
-    return return_value;
-}
-
-std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons(OctreeNode<AdditionalCellAttributes>* root) {
-    std::vector<std::tuple<Vec3d, NeuronID>> return_value;
-
-    std::stack<OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
-    octree_nodes.push(root);
-
-    while (!octree_nodes.empty()) {
-        OctreeNode<AdditionalCellAttributes>* current_node = octree_nodes.top();
-        octree_nodes.pop();
-
-        if (current_node->is_parent()) {
-            const auto& childs = current_node->get_children();
-            for (auto i = 0; i < 8; i++) {
-                const auto& child = childs[i];
-                if (child != nullptr) {
-                    octree_nodes.push(child);
-                }
-            }
-        } else {
-            const auto& cell = current_node->get_cell();
-            const auto neuron_id = cell.get_neuron_id();
-            const auto& opt_position = cell.get_dendrites_position();
-
-            EXPECT_TRUE(opt_position.has_value());
-
-            const auto& position = opt_position.value();
-
-            if (neuron_id.is_initialized() && !neuron_id.is_virtual()) {
-                return_value.emplace_back(position, neuron_id);
-            }
-        }
-    }
-
-    return return_value;
-}
-
-template <typename T>
-std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons(const OctreeImplementation<T>& octree) {
-    std::vector<std::tuple<Vec3d, NeuronID>> return_value;
-
-    const auto root = octree.get_root();
-    if (root == nullptr) {
-        return return_value;
-    }
-
-    return extract_neurons(root);
-}
-
-std::vector<std::tuple<Vec3d, size_t>> extract_virtual_neurons(OctreeNode<AdditionalCellAttributes>* root) {
-    std::vector<std::tuple<Vec3d, size_t>> return_value;
-
-    std::stack<std::pair<OctreeNode<AdditionalCellAttributes>*, size_t>> octree_nodes{};
-    octree_nodes.emplace(root, 0);
-
-    while (!octree_nodes.empty()) {
-        // Don't change this to a reference
-        const auto [current_node, level] = octree_nodes.top();
-        octree_nodes.pop();
-
-        if (current_node->get_cell().get_neuron_id().is_virtual()) {
-            return_value.push_back(std::make_pair(current_node->get_cell().get_dendrites_position().value(), level));
-        }
-
-        if (current_node->is_parent()) {
-            const auto& childs = current_node->get_children();
-            for (auto i = 0; i < 8; i++) {
-                const auto child = childs[i];
-                if (child != nullptr) {
-                    octree_nodes.emplace(child, level + 1);
-                }
-            }
-        }
-    }
-
-    return return_value;
-}
-
-std::vector<OctreeNode<AdditionalCellAttributes>*> extract_branch_nodes(OctreeNode<AdditionalCellAttributes>* root) {
-    std::vector<OctreeNode<AdditionalCellAttributes>*> return_value;
-
-    std::stack<OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
-    octree_nodes.push(root);
-
-    while (!octree_nodes.empty()) {
-        OctreeNode<AdditionalCellAttributes>* current_node = octree_nodes.top();
-        octree_nodes.pop();
-
-        if (current_node->is_parent()) {
-            const auto& childs = current_node->get_children();
-            for (auto i = 0; i < 8; i++) {
-                const auto child = childs[i];
-                if (child != nullptr) {
-                    octree_nodes.push(child);
-                }
-            }
-        } else {
-            return_value.emplace_back(current_node);
-        }
-    }
-
-    return return_value;
-}
-
-SynapticElements create_synaptic_elements(size_t size, std::mt19937& mt, double max_free, SignalType st) {
-    SynapticElements se(ElementType::Dendrite, 0.0);
-
-    se.init(size);
-
-    std::uniform_real_distribution<double> urd(0, max_free);
-
-    for (auto i = 0; i < size; i++) {
-        const auto id = NeuronID{ i };
-        se.set_signal_type(id, st);
-        se.update_grown_elements(id, urd(mt));
-    }
-
-    return se;
-}
-
 TEST_F(OctreeTest, testOctreeNodeReset) {
-
     OctreeNode<AdditionalCellAttributes> node{};
 
     ASSERT_FALSE(node.is_parent());
@@ -182,12 +37,12 @@ TEST_F(OctreeTest, testOctreeNodeReset) {
 
     node.set_parent();
 
-    std::uniform_int_distribution<size_t> uid_level(0, 1000);
-    std::uniform_int_distribution<int> uid_rank(0, 1000);
+    const auto number_ranks = get_random_number_ranks();
+    const auto rank = get_random_rank(number_ranks);
 
-    node.set_rank(uid_rank(mt));
+    node.set_rank(rank);
 
-    std::vector<OctreeNode<AdditionalCellAttributes>> other_nodes(Constants::number_oct);
+    std::array<OctreeNode<AdditionalCellAttributes>, Constants::number_oct> other_nodes{};
     for (auto i = 0; i < Constants::number_oct; i++) {
         node.set_child(&(other_nodes[i]), i);
     }
@@ -207,27 +62,21 @@ TEST_F(OctreeTest, testOctreeNodeReset) {
 }
 
 TEST_F(OctreeTest, testOctreeNodeSetterGetter) {
-
     OctreeNode<AdditionalCellAttributes> node{};
 
     node.set_parent();
 
-    std::uniform_int_distribution<size_t> uid_level(0, 1000);
-    std::uniform_int_distribution<int> uid_rank(0, 1000);
-
-    const auto lvl = uid_level(mt);
-    const auto rank = uid_rank(mt);
+    const auto number_ranks = get_random_number_ranks();
+    const auto rank = get_random_rank(number_ranks);
 
     node.set_rank(rank);
 
-    std::vector<OctreeNode<AdditionalCellAttributes>> other_nodes(Constants::number_oct);
+    std::array<OctreeNode<AdditionalCellAttributes>, Constants::number_oct> other_nodes{};
     for (auto i = 0; i < Constants::number_oct; i++) {
         node.set_child(&(other_nodes[i]), i);
     }
 
-    if (rank != 0) {
-        ASSERT_THROW(node.set_rank(-rank), RelearnException) << rank;
-    }
+    ASSERT_THROW(node.set_rank(-rank - 1), RelearnException) << rank;
 
     ASSERT_TRUE(node.is_parent());
     ASSERT_TRUE(node.get_rank() == rank);
@@ -240,11 +89,10 @@ TEST_F(OctreeTest, testOctreeNodeSetterGetter) {
         ASSERT_TRUE(children[i] == &(other_nodes[i]));
     }
 
-    const auto lb = -uid_rank(mt);
-    const auto ub = uid_rank(mt);
+    const auto ub = Constants::number_oct * 100 + 100;
 
-    for (auto i = lb; i < ub; i++) {
-        if (i >= 0 && i < Constants::number_oct) {
+    for (auto i = 0; i < ub; i++) {
+        if (i < Constants::number_oct) {
             continue;
         }
 
@@ -255,19 +103,13 @@ TEST_F(OctreeTest, testOctreeNodeSetterGetter) {
 }
 
 TEST_F(OctreeTest, testOctreeNodeLocal) {
-
     OctreeNode<AdditionalCellAttributes> node{};
-
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    std::uniform_int_distribution<int> uid_rank(0, 1000);
-
     for (auto i = 0; i < 1000; i++) {
-        const auto rank = uid_rank(mt);
+        node.set_rank(i);
 
-        node.set_rank(rank);
-
-        if (rank == my_rank) {
+        if (i == my_rank) {
             ASSERT_TRUE(node.is_local());
         } else {
             ASSERT_FALSE(node.is_local());
@@ -276,32 +118,27 @@ TEST_F(OctreeTest, testOctreeNodeLocal) {
 }
 
 TEST_F(OctreeTest, testOctreeNodeSetterCell) {
-
     OctreeNode<AdditionalCellAttributes> node{};
 
-    const Cell<AdditionalCellAttributes>& cell = node.get_cell();
+    const auto& cell = node.get_cell();
 
-    std::uniform_int_distribution<unsigned int> uid_dends(0, 1000);
+    const auto& [min, max] = get_random_simulation_box_size();
 
-    const auto& box_sizes = get_random_simulation_box_size();
-
-    const auto id = get_random_neuron_id(1000);
-    const auto dends_ex = uid_dends(mt);
-    const auto dends_in = uid_dends(mt);
-
-    const auto& min = std::get<0>(box_sizes);
-    const auto& max = std::get<1>(box_sizes);
+    const auto number_neurons = get_random_number_neurons();
+    const auto id = get_random_neuron_id(number_neurons);
+    const auto dends_ex = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
+    const auto dends_in = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
 
     std::uniform_real_distribution urd_x(min.get_x(), max.get_x());
     std::uniform_real_distribution urd_y(min.get_y(), max.get_y());
     std::uniform_real_distribution urd_z(min.get_z(), max.get_z());
 
-    const Vec3d pos_ex{ urd_x(mt), urd_y(mt), urd_z(mt) };
-    const Vec3d pos_in{ urd_x(mt), urd_y(mt), urd_z(mt) };
+    const auto& pos_ex = get_random_position_in_box(min, max);
+    const auto& pos_in = get_random_position_in_box(min, max);
 
     node.set_cell_neuron_id(id);
-    node.set_cell_number_dendrites(dends_ex, dends_in);
     node.set_cell_size(min, max);
+    node.set_cell_number_dendrites(dends_ex, dends_in);
     node.set_cell_excitatory_dendrites_position(pos_ex);
     node.set_cell_inhibitory_dendrites_position(pos_in);
 
@@ -314,8 +151,13 @@ TEST_F(OctreeTest, testOctreeNodeSetterCell) {
     ASSERT_TRUE(node.get_cell().get_number_inhibitory_dendrites() == dends_in);
     ASSERT_TRUE(cell.get_number_inhibitory_dendrites() == dends_in);
 
-    ASSERT_TRUE(node.get_cell().get_size() == box_sizes);
-    ASSERT_TRUE(cell.get_size() == box_sizes);
+    const auto& [min1, max1] = node.get_cell().get_size();
+    const auto& [min2, max2] = cell.get_size();
+
+    ASSERT_EQ(min, min1);
+    ASSERT_EQ(min, min2);
+    ASSERT_EQ(max, max1);
+    ASSERT_EQ(max, max2);
 
     ASSERT_TRUE(node.get_cell().get_excitatory_dendrites_position().has_value());
     ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
@@ -340,23 +182,11 @@ TEST_F(OctreeTest, testOctreeNodeSetterCell) {
 }
 
 TEST_F(OctreeTest, testOctreeNodeInsert) {
-
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    Vec3d min{};
-    Vec3d max{};
-
-    std::tie(min, max) = get_random_simulation_box_size();
+    const auto& [min, max] = get_random_simulation_box_size();
+    const auto& own_position = get_random_position_in_box(min, max);
     size_t level = get_small_refinement_level();
-
-    std::uniform_real_distribution<double> urd_x(min.get_x(), max.get_x());
-    std::uniform_real_distribution<double> urd_y(min.get_y(), max.get_y());
-    std::uniform_real_distribution<double> urd_z(min.get_z(), max.get_z());
-
-    Vec3d own_position{ urd_x(mt), urd_y(mt), urd_z(mt) };
 
     OctreeNode<AdditionalCellAttributes> node{};
     node.set_rank(my_rank);
@@ -367,13 +197,13 @@ TEST_F(OctreeTest, testOctreeNodeInsert) {
     size_t number_neurons = get_random_number_neurons();
     size_t num_additional_ids = get_random_number_neurons();
 
-    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
+    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids);
 
     for (const auto& [pos, id] : neurons_to_place) {
         auto tmp = node.insert(pos, id, my_rank);
     }
 
-    std::vector<std::tuple<Vec3d, NeuronID>> placed_neurons = extract_neurons(&node);
+    std::vector<std::tuple<Vec3d, NeuronID>> placed_neurons = extract_neurons<AdditionalCellAttributes>(&node);
 
     std::sort(neurons_to_place.begin(), neurons_to_place.end(), [](std::tuple<Vec3d, NeuronID> a, std::tuple<Vec3d, NeuronID> b) { return std::get<1>(a) > std::get<1>(b); });
     std::sort(placed_neurons.begin(), placed_neurons.end(), [](std::tuple<Vec3d, NeuronID> a, std::tuple<Vec3d, NeuronID> b) { return std::get<1>(a) > std::get<1>(b); });
@@ -389,209 +219,74 @@ TEST_F(OctreeTest, testOctreeNodeInsert) {
 }
 
 TEST_F(OctreeTest, testOctreeConstructor) {
-
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    {
-        Vec3d min{};
-        Vec3d max{};
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        size_t level_of_branch_nodes = get_small_refinement_level();
-
-        OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
-
-        ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
-        ASSERT_EQ(octree.get_xyz_max(), max);
-        ASSERT_EQ(octree.get_xyz_min(), min);
-
-        const auto virtual_neurons = extract_virtual_neurons(octree.get_root());
-
-        std::map<size_t, size_t> level_to_count{};
-
-        for (const auto& [pos, id] : virtual_neurons) {
-            level_to_count[id]++;
-        }
-
-        ASSERT_EQ(level_to_count.size(), level_of_branch_nodes + 1);
-
-        for (auto level = 0; level <= level_of_branch_nodes; level++) {
-            auto expected_elements = 1;
-
-            for (auto it = 0; it < level; it++) {
-                expected_elements *= 8;
-            }
-
-            ASSERT_EQ(level_to_count[level], expected_elements);
-        }
-
-        make_mpi_mem_available<AdditionalCellAttributes>();
-    }
-
-    {
-        Vec3d min{};
-        Vec3d max{};
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        size_t level_of_branch_nodes = get_small_refinement_level();
-
-        OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
-
-        ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
-        ASSERT_EQ(octree.get_xyz_max(), max);
-        ASSERT_EQ(octree.get_xyz_min(), min);
-
-        const auto virtual_neurons = extract_virtual_neurons(octree.get_root());
-
-        std::map<size_t, size_t> level_to_count{};
-
-        for (const auto& [pos, id] : virtual_neurons) {
-            level_to_count[id]++;
-        }
-
-        ASSERT_EQ(level_to_count.size(), level_of_branch_nodes + 1);
-
-        for (auto level = 0; level <= level_of_branch_nodes; level++) {
-            size_t expected_elements = 1;
-
-            for (auto it = 0; it < level; it++) {
-                expected_elements *= 8;
-            }
-
-            if (level == level_of_branch_nodes) {
-                ASSERT_EQ(octree.get_num_local_trees(), expected_elements);
-            }
-
-            ASSERT_EQ(level_to_count[level], expected_elements);
-        }
-
-        make_mpi_mem_available<AdditionalCellAttributes>();
-    }
-}
-
-TEST_F(OctreeTest, testOctreeConstructorExceptions) {
-
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    Vec3d min_xyz{};
-    Vec3d max_xyz{};
-
-    std::tie(min_xyz, max_xyz) = get_random_simulation_box_size();
-
-    size_t level_of_branch_nodes = get_small_refinement_level();
-
-    ASSERT_THROW(OctreeImplementation<BarnesHut> octree(max_xyz, min_xyz, level_of_branch_nodes), RelearnException);
-
-    make_mpi_mem_available<AdditionalCellAttributes>();
-}
-
-TEST_F(OctreeTest, testOctreeSetterGetter) {
-
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    Vec3d min{};
-    Vec3d max{};
-
-    std::tie(min, max) = get_random_simulation_box_size();
-
-    size_t level_of_branch_nodes = get_small_refinement_level();
+    const auto& [min, max] = get_random_simulation_box_size();
+    const auto level_of_branch_nodes = get_small_refinement_level();
 
     OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
     ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
-    ASSERT_EQ(octree.get_xyz_max(), max);
     ASSERT_EQ(octree.get_xyz_min(), min);
+    ASSERT_EQ(octree.get_xyz_max(), max);
+
+    const auto virtual_neurons = extract_virtual_neurons(octree.get_root());
+
+    std::map<size_t, size_t> level_to_count{};
+
+    for (const auto& [pos, id] : virtual_neurons) {
+        level_to_count[id]++;
+    }
+
+    ASSERT_EQ(level_to_count.size(), level_of_branch_nodes + 1);
+
+    for (auto level = 0; level <= level_of_branch_nodes; level++) {
+        size_t expected_elements = 1;
+
+        for (auto it = 0; it < level; it++) {
+            expected_elements *= 8;
+        }
+
+        if (level == level_of_branch_nodes) {
+            ASSERT_EQ(octree.get_num_local_trees(), expected_elements);
+        }
+
+        ASSERT_EQ(level_to_count[level], expected_elements);
+    }
 
     make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
-TEST_F(OctreeTest, testOctreeSetterGetterExceptions) {
+TEST_F(OctreeTest, testOctreeConstructorExceptions) {
+    const auto& [min, max] = get_random_simulation_box_size();
+    const auto level_of_branch_nodes = get_small_refinement_level();
 
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+    ASSERT_THROW(OctreeImplementation<BarnesHut> octree(max, min, level_of_branch_nodes), RelearnException);
 
-    {
-        Vec3d min{};
-        Vec3d max{};
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        size_t level_of_branch_nodes = get_small_refinement_level();
-
-        OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        make_mpi_mem_available<AdditionalCellAttributes>();
-    }
-
-    {
-        Vec3d min{};
-        Vec3d max{};
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        size_t level_of_branch_nodes = get_small_refinement_level();
-
-        OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        make_mpi_mem_available<AdditionalCellAttributes>();
-    }
-
-    {
-        Vec3d min{};
-        Vec3d max{};
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        size_t level_of_branch_nodes = get_small_refinement_level();
-
-        OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
-
-        std::tie(min, max) = get_random_simulation_box_size();
-
-        make_mpi_mem_available<AdditionalCellAttributes>();
-    }
+    make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TEST_F(OctreeTest, testOctreeInsertNeurons) {
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    Vec3d min{};
-    Vec3d max{};
-
-    std::tie(min, max) = get_random_simulation_box_size();
-
-    size_t level_of_branch_nodes = get_small_refinement_level();
+    const auto& [min, max] = get_random_simulation_box_size();
+    const auto level_of_branch_nodes = get_small_refinement_level();
 
     OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
     size_t number_neurons = get_random_number_neurons();
     size_t num_additional_ids = get_random_number_neurons();
 
-    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
+    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids);
+
+    const auto my_rank = MPIWrapper::get_my_rank();
 
     for (const auto& [position, id] : neurons_to_place) {
         octree.insert(position, id, my_rank);
     }
 
-    std::vector<std::tuple<Vec3d, NeuronID>> placed_neurons = extract_neurons(octree);
+    std::vector<std::tuple<Vec3d, NeuronID>> placed_neurons = extract_neurons_tree<BarnesHut>(octree);
+
+    ASSERT_EQ(neurons_to_place.size(), placed_neurons.size());
 
     std::sort(neurons_to_place.begin(), neurons_to_place.end(), [](std::tuple<Vec3d, NeuronID> a, std::tuple<Vec3d, NeuronID> b) { return std::get<1>(a) > std::get<1>(b); });
     std::sort(placed_neurons.begin(), placed_neurons.end(), [](std::tuple<Vec3d, NeuronID> a, std::tuple<Vec3d, NeuronID> b) { return std::get<1>(a) > std::get<1>(b); });
-
-    ASSERT_EQ(neurons_to_place.size(), placed_neurons.size());
 
     for (auto i = 0; i < neurons_to_place.size(); i++) {
         const auto& expected_neuron = neurons_to_place[i];
@@ -604,28 +299,20 @@ TEST_F(OctreeTest, testOctreeInsertNeurons) {
 }
 
 TEST_F(OctreeTest, testOctreeInsertNeuronsExceptions) {
-
-    std::uniform_int_distribution<int> uid_rank(0, 1000);
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    Vec3d min{};
-    Vec3d max{};
-
-    std::tie(min, max) = get_random_simulation_box_size();
-
-    size_t level_of_branch_nodes = get_small_refinement_level();
-    ;
+    const auto& [min, max] = get_random_simulation_box_size();
+    const auto level_of_branch_nodes = get_small_refinement_level();
 
     OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
     size_t number_neurons = get_random_number_neurons();
     size_t num_additional_ids = get_random_number_neurons();
 
-    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
+    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids);
+
+    const auto number_ranks = get_random_number_ranks();
 
     for (const auto& [position, id] : neurons_to_place) {
-        const auto rank = uid_rank(mt);
+        const auto rank = get_random_rank(number_ranks);
 
         const Vec3d pos_invalid_x_max = max + Vec3d{ 1, 0, 0 };
         const Vec3d pos_invalid_y_max = max + Vec3d{ 0, 1, 0 };
@@ -651,27 +338,17 @@ TEST_F(OctreeTest, testOctreeInsertNeuronsExceptions) {
 }
 
 TEST_F(OctreeTest, testOctreeStructure) {
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    Vec3d min{};
-    Vec3d max{};
-
-    std::tie(min, max) = get_random_simulation_box_size();
-
-    size_t level_of_branch_nodes = get_small_refinement_level();
-    ;
+    const auto& [min, max] = get_random_simulation_box_size();
+    const auto level_of_branch_nodes = get_small_refinement_level();
 
     OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
     size_t number_neurons = get_random_number_neurons();
     size_t num_additional_ids = get_random_number_neurons();
 
-    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
+    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids);
 
+    const auto my_rank = MPIWrapper::get_my_rank();
     for (const auto& [position, id] : neurons_to_place) {
         octree.insert(position, id, my_rank);
     }
@@ -743,16 +420,8 @@ TEST_F(OctreeTest, testOctreeStructure) {
 }
 
 TEST_F(OctreeTest, testOctreeLocalTrees) {
-
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    Vec3d min{};
-    Vec3d max{};
-
-    std::tie(min, max) = get_random_simulation_box_size();
-
-    size_t level_of_branch_nodes = get_small_refinement_level();
+    const auto& [min, max] = get_random_simulation_box_size();
+    const auto level_of_branch_nodes = get_small_refinement_level();
 
     OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
@@ -786,25 +455,17 @@ TEST_F(OctreeTest, testOctreeLocalTrees) {
 }
 
 TEST_F(OctreeTest, testOctreeInsertLocalTree) {
-    const auto my_rank = MPIWrapper::get_my_rank();
-
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    Vec3d min{};
-    Vec3d max{};
-
-    std::tie(min, max) = get_random_simulation_box_size();
-
-    size_t level_of_branch_nodes = get_small_refinement_level();
+    const auto& [min, max] = get_random_simulation_box_size();
+    const auto level_of_branch_nodes = get_small_refinement_level();
 
     OctreeImplementation<BarnesHut> octree(min, max, level_of_branch_nodes);
 
     size_t number_neurons = get_random_number_neurons();
     size_t num_additional_ids = get_random_number_neurons();
 
-    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
+    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids);
 
+    const auto my_rank = MPIWrapper::get_my_rank();
     for (const auto& [position, id] : neurons_to_place) {
         octree.insert(position, id, my_rank);
     }
@@ -896,224 +557,6 @@ TEST_F(OctreeTest, testOctreeInsertLocalTree) {
     for (auto i = 0; i < num_local_trees; i++) {
         delete nodes_to_save_local_trees[i];
         delete nodes_to_save_new_local_trees[i];
-    }
-
-    make_mpi_mem_available<AdditionalCellAttributes>();
-}
-
-TEST_F(OctreeTest, testOctreeUpdateLocalTreesNumberDendrites) {
-    const auto my_rank = MPIWrapper::get_my_rank();
-
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    std::uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
-
-    Vec3d min{};
-    Vec3d max{};
-
-    std::tie(min, max) = get_random_simulation_box_size();
-
-    auto octree_ptr = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
-    auto& octree = *octree_ptr;
-
-    const size_t number_neurons = get_random_number_neurons();
-
-    const std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons, mt);
-
-    for (const auto& [position, id] : neurons_to_place) {
-        octree.insert(position, id, my_rank);
-    }
-
-    octree.initializes_leaf_nodes(number_neurons);
-
-    const auto max_vacant_exc = uid_max_vacant(mt);
-    auto dends_exc = create_synaptic_elements(number_neurons, mt, max_vacant_exc, SignalType::Excitatory);
-
-    const auto max_vacant_inh = uid_max_vacant(mt);
-    auto dends_inh = create_synaptic_elements(number_neurons, mt, max_vacant_inh, SignalType::Inhibitory);
-
-    BarnesHut bh{ octree_ptr };
-
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
-
-    auto unique_exc = std::make_shared<SynapticElements>(std::move(dends_exc));
-    auto unique_inh = std::make_shared<SynapticElements>(std::move(dends_inh));
-    bh.set_synaptic_elements(unique_exc, unique_exc, unique_inh);
-    bh.update_leaf_nodes(disable_flags);
-    octree.update_local_trees();
-
-    std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
-    stack.emplace(octree.get_root());
-
-    while (!stack.empty()) {
-        const auto* current = stack.top();
-        stack.pop();
-
-        size_t sum_dends_exc = 0;
-        size_t sum_dends_inh = 0;
-
-        if (current->is_parent()) {
-            for (auto* child : current->get_children()) {
-                if (child == nullptr) {
-                    continue;
-                }
-
-                sum_dends_exc += child->get_cell().get_number_excitatory_dendrites();
-                sum_dends_inh += child->get_cell().get_number_inhibitory_dendrites();
-
-                stack.emplace(child);
-            }
-        } else {
-            sum_dends_exc = static_cast<size_t>(unique_exc->get_grown_elements(current->get_cell_neuron_id()));
-            sum_dends_inh = static_cast<size_t>(unique_inh->get_grown_elements(current->get_cell_neuron_id()));
-        }
-
-        ASSERT_EQ(current->get_cell().get_number_excitatory_dendrites(), sum_dends_exc);
-        ASSERT_EQ(current->get_cell().get_number_inhibitory_dendrites(), sum_dends_inh);
-    }
-
-    make_mpi_mem_available<AdditionalCellAttributes>();
-}
-
-TEST_F(OctreeTest, testOctreeUpdateLocalTreesPositionDendrites) {
-    const auto my_rank = MPIWrapper::get_my_rank();
-
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    Vec3d min{};
-    Vec3d max{};
-
-    std::tie(min, max) = get_random_simulation_box_size();
-
-    auto octree_ptr = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
-    auto& octree = *octree_ptr;
-
-    const size_t number_neurons = get_random_number_neurons();
-
-    const std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons, mt);
-
-    for (const auto& [position, id] : neurons_to_place) {
-        octree.insert(position, id, my_rank);
-    }
-
-    octree.initializes_leaf_nodes(number_neurons);
-
-    auto dends_exc = create_synaptic_elements(number_neurons, mt, 1, SignalType::Excitatory);
-    auto dends_inh = create_synaptic_elements(number_neurons, mt, 1, SignalType::Inhibitory);
-
-    auto unique_exc = std::make_shared<SynapticElements>(std::move(dends_exc));
-    auto unique_inh = std::make_shared<SynapticElements>(std::move(dends_inh));
-
-    BarnesHut bh{ octree_ptr };
-
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
-
-    bh.set_synaptic_elements(unique_exc, unique_exc, unique_inh);
-    bh.update_leaf_nodes(disable_flags);
-    octree.update_local_trees();
-
-    std::stack<std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool>> stack{};
-    const auto flag_exc = octree.get_root()->get_cell().get_number_excitatory_dendrites() != 0;
-    const auto flag_inh = octree.get_root()->get_cell().get_number_inhibitory_dendrites() != 0;
-    stack.emplace(octree.get_root(), flag_exc, flag_inh);
-
-    while (!stack.empty()) {
-        std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool> tup = stack.top();
-        stack.pop();
-
-        auto* current = std::get<0>(tup);
-        auto has_exc = std::get<1>(tup);
-        auto has_inh = std::get<2>(tup);
-
-        Vec3d pos_dends_exc{ 0.0 };
-        Vec3d pos_dends_inh{ 0.0 };
-
-        bool changed_exc = false;
-        bool changed_inh = false;
-
-        if (current->is_parent()) {
-            double num_dends_exc = 0.0;
-            double num_dends_inh = 0.0;
-
-            for (auto* child : current->get_children()) {
-                if (child == nullptr) {
-                    continue;
-                }
-
-                const auto& cell = child->get_cell();
-
-                const auto& opt_exc = cell.get_excitatory_dendrites_position();
-                const auto& opt_inh = cell.get_inhibitory_dendrites_position();
-
-                if (!has_exc) {
-                    ASSERT_EQ(cell.get_number_excitatory_dendrites(), 0);
-                }
-
-                if (!has_inh) {
-                    ASSERT_EQ(cell.get_number_inhibitory_dendrites(), 0);
-                }
-
-                if (opt_exc.has_value() && cell.get_number_excitatory_dendrites() != 0) {
-                    changed_exc = true;
-                    pos_dends_exc += (opt_exc.value() * cell.get_number_excitatory_dendrites());
-                    num_dends_exc += cell.get_number_excitatory_dendrites();
-                }
-
-                if (opt_inh.has_value() && cell.get_number_inhibitory_dendrites() != 0) {
-                    changed_inh = true;
-                    pos_dends_inh += (opt_inh.value() * cell.get_number_inhibitory_dendrites());
-                    num_dends_inh += cell.get_number_inhibitory_dendrites();
-                }
-
-                stack.emplace(child, cell.get_number_excitatory_dendrites() != 0, cell.get_number_inhibitory_dendrites() != 0);
-            }
-
-            pos_dends_exc /= num_dends_exc;
-            pos_dends_inh /= num_dends_inh;
-
-        } else {
-            const auto& cell = current->get_cell();
-
-            const auto& opt_exc = cell.get_excitatory_dendrites_position();
-            const auto& opt_inh = cell.get_inhibitory_dendrites_position();
-
-            if (!has_exc) {
-                ASSERT_EQ(cell.get_number_excitatory_dendrites(), 0);
-            }
-
-            if (!has_inh) {
-                ASSERT_EQ(cell.get_number_inhibitory_dendrites(), 0);
-            }
-
-            if (opt_exc.has_value() && cell.get_number_excitatory_dendrites() != 0) {
-                changed_exc = true;
-                pos_dends_exc += (opt_exc.value() * cell.get_number_excitatory_dendrites());
-            }
-
-            if (opt_inh.has_value() && cell.get_number_inhibitory_dendrites() != 0) {
-                changed_inh = true;
-                pos_dends_inh += (opt_inh.value() * cell.get_number_inhibitory_dendrites());
-            }
-        }
-
-        ASSERT_EQ(has_exc, changed_exc);
-        ASSERT_EQ(has_inh, changed_inh);
-
-        if (has_exc) {
-            const auto& diff = current->get_cell().get_excitatory_dendrites_position().value() - pos_dends_exc;
-            ASSERT_NEAR(diff.get_x(), 0.0, eps);
-            ASSERT_NEAR(diff.get_y(), 0.0, eps);
-            ASSERT_NEAR(diff.get_z(), 0.0, eps);
-        }
-
-        if (has_inh) {
-            const auto& diff = current->get_cell().get_inhibitory_dendrites_position().value() - pos_dends_inh;
-            ASSERT_NEAR(diff.get_x(), 0.0, eps);
-            ASSERT_NEAR(diff.get_y(), 0.0, eps);
-            ASSERT_NEAR(diff.get_z(), 0.0, eps);
-        }
     }
 
     make_mpi_mem_available<AdditionalCellAttributes>();

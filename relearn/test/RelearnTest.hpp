@@ -7,7 +7,6 @@
  * See the LICENSE file in the base directory for details.
  *
  */
-
 #include "gtest/gtest.h"
 
 #include "algorithm/BarnesHutInternal/BarnesHutCell.h"
@@ -18,6 +17,9 @@
 #include "neurons/NetworkGraph.h"
 #include "neurons/SignalType.h"
 #include "neurons/models/SynapticElements.h"
+#include "structure/Cell.h"
+#include "structure/Partition.h"
+#include "structure/Octree.h"
 #include "structure/OctreeNode.h"
 #include "util/MemoryHolder.h"
 #include "util/RelearnException.h"
@@ -152,6 +154,11 @@ protected:
         return uid_num_ranks(mt);
     }
 
+    int get_random_rank(size_t number_ranks) {
+        std::uniform_int_distribution<int> uid(0, static_cast<int>(number_ranks) - 1);
+        return uid(mt);
+    }
+
     size_t get_adjusted_random_number_ranks() {
         const auto random_rank = get_random_number_ranks();
         return round_to_next_exponent(random_rank, 2);
@@ -262,6 +269,21 @@ protected:
         return std::make_tuple<SynapticElements, std::vector<double>, std::vector<unsigned int>, std::vector<SignalType>>(std::move(se), std::move(grown_elements), std::move(connected_elements), std::move(signal_types));
     }
 
+    std::vector<std::tuple<Vec3d, NeuronID>> generate_random_neurons(const Vec3d& min, const Vec3d& max, size_t count, size_t max_id) {
+        std::vector<NeuronID> ids(max_id);
+        for (auto i = 0; i < max_id; i++) {
+            ids[i] = NeuronID(i);
+        }
+        std::shuffle(ids.begin(), ids.end(), mt);
+
+        std::vector<std::tuple<Vec3d, NeuronID>> return_value(count);
+        for (auto i = 0; i < count; i++) {
+            return_value[i] = { get_random_position_in_box(min, max), ids[i] };
+        }
+
+        return return_value;
+    }
+
     std::vector<size_t> get_random_derangement(size_t size) {
         std::vector<size_t> derangement(size);
         std::iota(derangement.begin(), derangement.end(), 0);
@@ -331,6 +353,109 @@ protected:
     std::shared_ptr<NetworkGraph> create_empty_network_graph(size_t number_neurons, int mpi_rank) {
         auto ptr = std::make_shared<NetworkGraph>(number_neurons, mpi_rank);
         return ptr;
+    }
+
+    template <typename AdditionalCellAttributes>
+    std::vector<std::tuple<Vec3d, size_t>> extract_virtual_neurons(OctreeNode<AdditionalCellAttributes>* root) {
+        std::vector<std::tuple<Vec3d, size_t>> return_value{};
+
+        std::stack<std::pair<OctreeNode<AdditionalCellAttributes>*, size_t>> octree_nodes{};
+        octree_nodes.emplace(root, 0);
+
+        while (!octree_nodes.empty()) {
+            // Don't change this to a reference
+            const auto [current_node, level] = octree_nodes.top();
+            octree_nodes.pop();
+
+            if (current_node->get_cell().get_neuron_id().is_virtual()) {
+                return_value.emplace_back(current_node->get_cell().get_dendrites_position().value(), level);
+            }
+
+            if (current_node->is_parent()) {
+                const auto& childs = current_node->get_children();
+                for (auto i = 0; i < 8; i++) {
+                    const auto child = childs[i];
+                    if (child != nullptr) {
+                        octree_nodes.emplace(child, level + 1);
+                    }
+                }
+            }
+        }
+
+        return return_value;
+    }
+
+    template <typename AdditionalCellAttributes>
+    std::vector<OctreeNode<AdditionalCellAttributes>*> extract_branch_nodes(OctreeNode<AdditionalCellAttributes>* root) {
+        std::vector<OctreeNode<AdditionalCellAttributes>*> return_value{};
+
+        std::stack<OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
+        octree_nodes.push(root);
+
+        while (!octree_nodes.empty()) {
+            OctreeNode<AdditionalCellAttributes>* current_node = octree_nodes.top();
+            octree_nodes.pop();
+
+            if (current_node->is_child()) {
+                return_value.emplace_back(current_node);
+                continue;
+            }
+
+            const auto& childs = current_node->get_children();
+            for (auto* child : childs) {
+                if (child != nullptr) {
+                    octree_nodes.push(child);
+                }
+            }
+        }
+
+        return return_value;
+    }
+
+    template <typename AdditionalCellAttributes>
+    std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons(OctreeNode<AdditionalCellAttributes>* root) {
+        std::vector<std::tuple<Vec3d, NeuronID>> return_value{};
+
+        std::stack<OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
+        octree_nodes.push(root);
+
+        while (!octree_nodes.empty()) {
+            OctreeNode<AdditionalCellAttributes>* current_node = octree_nodes.top();
+            octree_nodes.pop();
+
+            if (current_node->is_parent()) {
+                const auto& childs = current_node->get_children();
+                for (auto* child : childs) {
+                    if (child != nullptr) {
+                        octree_nodes.push(child);
+                    }
+                }
+            } else {
+                const Cell<AdditionalCellAttributes>& cell = current_node->get_cell();
+                const auto neuron_id = cell.get_neuron_id();
+                const auto& opt_position = cell.get_dendrites_position();
+
+                EXPECT_TRUE(opt_position.has_value());
+
+                const auto& position = opt_position.value();
+
+                if (neuron_id.is_initialized() && !neuron_id.is_virtual()) {
+                    return_value.emplace_back(position, neuron_id);
+                }
+            }
+        }
+
+        return return_value;
+    }
+
+    template <typename Algorithm>
+    std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons_tree(const OctreeImplementation<Algorithm>& octree) {
+        const auto root = octree.get_root();
+        if (root == nullptr) {
+            return {};
+        }
+
+        return extract_neurons<typename Algorithm::AdditionalCellAttributes>(root);
     }
 
     constexpr static double min_grown_elements = 0.0;
@@ -514,6 +639,13 @@ class OctreeTestFMM : public RelearnTest {
 protected:
     static void SetUpTestCase() {
         SetUpTestCaseTemplate<FastMultipoleMethodsCell>();
+    }
+};
+
+class BarnesHutTest : public RelearnTest {
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
