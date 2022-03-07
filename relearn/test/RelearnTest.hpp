@@ -368,7 +368,7 @@ protected:
             octree_nodes.pop();
 
             if (current_node->get_cell().get_neuron_id().is_virtual()) {
-                return_value.emplace_back(current_node->get_cell().get_dendrites_position().value(), level);
+                return_value.emplace_back(current_node->get_cell().get_neuron_position().value(), level);
             }
 
             if (current_node->is_parent()) {
@@ -433,7 +433,7 @@ protected:
             } else {
                 const Cell<AdditionalCellAttributes>& cell = current_node->get_cell();
                 const auto neuron_id = cell.get_neuron_id();
-                const auto& opt_position = cell.get_dendrites_position();
+                const auto& opt_position = cell.get_neuron_position();
 
                 EXPECT_TRUE(opt_position.has_value());
 
@@ -628,10 +628,11 @@ protected:
     void test_vpe_mixed();
 };
 
+template <typename AlgorithmType>
 class OctreeTest : public RelearnTest {
 protected:
     static void SetUpTestCase() {
-        SetUpTestCaseTemplate<BarnesHutCell>();
+        SetUpTestCaseTemplate<typename AlgorithmType::AdditionalCellAttributes>();
     }
 };
 
