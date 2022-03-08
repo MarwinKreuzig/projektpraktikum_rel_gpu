@@ -148,7 +148,7 @@ TYPED_TEST(OctreeTest, testOctreeNodeInsert) {
         auto tmp = node.insert(pos, id, my_rank);
     }
 
-    std::vector<std::tuple<Vec3d, NeuronID>> placed_neurons = this->extract_neurons<AdditionalCellAttributes>(&node);
+    std::vector<std::tuple<Vec3d, NeuronID>> placed_neurons = this->template extract_neurons<AdditionalCellAttributes>(&node);
 
     std::sort(neurons_to_place.begin(), neurons_to_place.end(), [](std::tuple<Vec3d, NeuronID> a, std::tuple<Vec3d, NeuronID> b) { return std::get<1>(a) > std::get<1>(b); });
     std::sort(placed_neurons.begin(), placed_neurons.end(), [](std::tuple<Vec3d, NeuronID> a, std::tuple<Vec3d, NeuronID> b) { return std::get<1>(a) > std::get<1>(b); });
@@ -199,7 +199,7 @@ TYPED_TEST(OctreeTest, testOctreeConstructor) {
         ASSERT_EQ(level_to_count[level], expected_elements);
     }
 
-    this->make_mpi_mem_available<AdditionalCellAttributes>();
+    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeTest, testOctreeConstructorExceptions) {
@@ -210,7 +210,7 @@ TYPED_TEST(OctreeTest, testOctreeConstructorExceptions) {
 
     ASSERT_THROW(OctreeImplementation<TypeParam> octree(max, min, level_of_branch_nodes), RelearnException);
 
-    this->make_mpi_mem_available<AdditionalCellAttributes>();
+    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeTest, testOctreeInsertNeurons) {
@@ -232,7 +232,7 @@ TYPED_TEST(OctreeTest, testOctreeInsertNeurons) {
         octree.insert(position, id, my_rank);
     }
 
-    std::vector<std::tuple<Vec3d, NeuronID>> placed_neurons = this->extract_neurons_tree<TypeParam>(octree);
+    std::vector<std::tuple<Vec3d, NeuronID>> placed_neurons = this->template extract_neurons_tree<TypeParam>(octree);
 
     ASSERT_EQ(neurons_to_place.size(), placed_neurons.size());
 
@@ -246,7 +246,7 @@ TYPED_TEST(OctreeTest, testOctreeInsertNeurons) {
         ASSERT_EQ(expected_neuron, found_neuron);
     }
 
-    this->make_mpi_mem_available<AdditionalCellAttributes>();
+    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeTest, testOctreeInsertNeuronsExceptions) {
@@ -287,7 +287,7 @@ TYPED_TEST(OctreeTest, testOctreeInsertNeuronsExceptions) {
         ASSERT_THROW(octree.insert(pos_invalid_z_min, id, rank), RelearnException);
     }
 
-    this->make_mpi_mem_available<AdditionalCellAttributes>();
+    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeTest, testOctreeStructure) {
@@ -371,7 +371,7 @@ TYPED_TEST(OctreeTest, testOctreeStructure) {
         }
     }
 
-    this->make_mpi_mem_available<AdditionalCellAttributes>();
+    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeTest, testOctreeLocalTrees) {
@@ -408,7 +408,7 @@ TYPED_TEST(OctreeTest, testOctreeLocalTrees) {
         ASSERT_EQ(local_tree, branch_node);
     }
 
-    this->make_mpi_mem_available<AdditionalCellAttributes>();
+    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeTest, testOctreeInsertLocalTree) {
@@ -510,5 +510,5 @@ TYPED_TEST(OctreeTest, testOctreeInsertLocalTree) {
         delete nodes_to_save_new_local_trees[i];
     }
 
-    this->make_mpi_mem_available<AdditionalCellAttributes>();
+    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
