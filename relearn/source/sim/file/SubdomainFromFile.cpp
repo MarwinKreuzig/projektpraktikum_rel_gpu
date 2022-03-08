@@ -73,6 +73,10 @@ void SubdomainFromFile::read_dimensions_from_file() {
             continue;
         }
 
+        RelearnException::check(pos_x >= 0, "SubdomainFromFile::read_dimensions_from_file: x position of neuron {} was negative: {}", id, pos_x);
+        RelearnException::check(pos_y >= 0, "SubdomainFromFile::read_dimensions_from_file: y position of neuron {} was negative: {}", id, pos_y);
+        RelearnException::check(pos_z >= 0, "SubdomainFromFile::read_dimensions_from_file: z position of neuron {} was negative: {}", id, pos_z);
+
         total_number_neurons++;
 
         minimum.calculate_componentwise_minimum({ pos_x, pos_y, pos_z });
