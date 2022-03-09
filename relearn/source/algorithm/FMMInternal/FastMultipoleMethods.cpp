@@ -13,6 +13,7 @@
 #include "structure/NodeCache.h"
 #include "structure/Octree.h"
 #include "structure/OctreeNode.h"
+#include "util/Stack.h"
 #include "util/Timers.h"
 
 CommunicationMap<SynapseCreationRequest> FastMultipoleMethods::find_target_neurons([[maybe_unused]] size_t number_neurons, 
@@ -114,8 +115,7 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<UpdateStatus>& di
 }
 
 void FastMultipoleMethods::make_creation_request_for(const SignalType signal_type_needed, CommunicationMap<SynapseCreationRequest>& request) {
-    std::vector<std::pair<const OctreeNode<FastMultipoleMethodsCell>*, interaction_list_type>> nodes_with_axons{};
-    nodes_with_axons.reserve(200);
+    Stack<std::pair<const OctreeNode<FastMultipoleMethodsCell>*, interaction_list_type>> nodes_with_axons{ 200 };
 
     OctreeNode<FastMultipoleMethodsCell>* root = global_tree->get_root();
     const auto local_roots = global_tree->get_local_branch_nodes();
@@ -261,8 +261,7 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
     // start the calculation
     while (!nodes_with_axons.empty()) {
         // get node and interaction list from stack
-        const auto& [source_node, interaction_list] = nodes_with_axons[nodes_with_axons.size() - 1];
-        nodes_with_axons.pop_back();
+        const auto& [source_node, interaction_list] = nodes_with_axons.pop_back();
 
         //interaction list is empty
         if (Utilities::count_non_zero_elements(interaction_list) == 0) {
@@ -562,13 +561,11 @@ FastMultipoleMethods::Utilities::get_all_positions_for(const OctreeNode<FastMult
 
     std::vector<std::pair<position_type, counter_type>> result{};
 
-    std::vector<const OctreeNode<FastMultipoleMethodsCell>*> stack{};
-    stack.reserve(30);
+    Stack<const OctreeNode<FastMultipoleMethodsCell>*> stack{ 30 };
     stack.emplace_back(node);
 
     while (!stack.empty()) {
-        const auto* current_node = stack[stack.size() - 1];
-        stack.pop_back();
+        const auto* current_node = stack.pop_back();
 
         // node is leaf
         if (!current_node->is_parent()) {

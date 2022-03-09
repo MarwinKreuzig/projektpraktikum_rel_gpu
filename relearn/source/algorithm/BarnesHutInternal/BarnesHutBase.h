@@ -18,6 +18,7 @@
 #include "structure/OctreeNode.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
+#include "util/Stack.h"
 
 #include <algorithm>
 #include <cmath>
@@ -277,30 +278,28 @@ protected:
             return {};
         }
 
-        std::vector<OctreeNode<AdditionalCellAttributes>*> vector{};
-        vector.reserve(Constants::number_prealloc_space);
+        Stack<OctreeNode<AdditionalCellAttributes>*> stack(Constants::number_prealloc_space);
 
-        const auto add_children_to_vector = [&vector](OctreeNode<AdditionalCellAttributes>* node) {
+        const auto add_children = [&stack](OctreeNode<AdditionalCellAttributes>* node) {
             const auto is_local = node->is_local();
             const auto& children = is_local ? node->get_children() : NodeCache<AdditionalCellAttributes>::download_children(node);
 
             for (auto* it : children) {
                 if (it != nullptr) {
-                    vector.emplace_back(it);
+                    stack.emplace_back(it);
                 }
             }
         };
 
         // The algorithm expects that root is not considered directly, rather its children
-        add_children_to_vector(root);
+        add_children(root);
 
         std::vector<OctreeNode<AdditionalCellAttributes>*> nodes_to_consider{};
         nodes_to_consider.reserve(Constants::number_prealloc_space);
 
-        while (!vector.empty()) {
+        while (!stack.empty()) {
             // Get top-of-stack node and remove it
-            auto* node = vector[vector.size() - 1];
-            vector.pop_back();
+            auto* node = stack.pop_back();
 
             /**
              * Should node be used for probability interval?
@@ -319,7 +318,7 @@ protected:
             }
 
             // Need to expand
-            add_children_to_vector(node);
+            add_children(node);
         } // while
 
         return nodes_to_consider;
