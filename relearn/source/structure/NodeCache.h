@@ -12,100 +12,99 @@
 
 #include "Config.h"
 #include "algorithm/Cells.h"
+#include "mpi/MPIWrapper.h"
+#include "structure/OctreeNode.h"
+#include "util/RelearnException.h"
 
 #include <array>
 #include <map>
 #include <type_traits>
 #include <utility>
 
-template <typename T>
-class OctreeNode;
-
 /**
  * This class caches octree nodes from other MPI ranks on the local MPI rank.
- * Some methods have the template parameter AdditionalCellAttributes, which must be
- * BarnesHutCell or FastMultipoleMethodsCell, violating the Open-Close priinciple.
+ * @tparam AdditionalCellAttributes The additional cell attributes that are used for the plasticity algorithm
  */
+template <typename AdditionalCellAttributes>
 class NodeCache {
 public:
+    using NodesCacheKey = std::pair<int, OctreeNode<AdditionalCellAttributes>*>;
+    using NodesCacheValue = OctreeNode<AdditionalCellAttributes>*;
+    using NodesCache = std::map<NodesCacheKey, NodesCacheValue>;
+
     /**
      * @brief Empties the cache that was built during the connection phase and frees all local copies
-     * @tparam AdditionalCellAttributes The additional cell attributes that are used for the plasticity algorithm
      */
-    template <typename AdditionalCellAttributes>
     static void empty() {
-        if constexpr (std::is_same_v<AdditionalCellAttributes, BarnesHutCell>) {
-            empty_barnes_hut();
+        for (const auto& [_, ptr] : remote_nodes_cache) {
+            OctreeNode<AdditionalCellAttributes>::free(ptr);
         }
 
-        if constexpr (std::is_same_v<AdditionalCellAttributes, BarnesHutInvertedCell>) {
-            empty_barnes_hut_inverted();
-        }
-
-        if constexpr (std::is_same_v<AdditionalCellAttributes, FastMultipoleMethodsCell>) {
-            empty_fmm();
-        }
+        remote_nodes_cache.clear();
     }
 
     /**
      * @brief Downloads the children of the node (must be on another MPI rank) and returns the children.
      *      Also saves to nodes locally in order to save bandwidth
      * @param node The node for which the children should be downloaded
-     * @tparam AdditionalCellAttributes The additional cell attributes that are used for the plasticity algorithm
      * @exception Throws a RelearnException if node is on the current MPI process
      * @return The downloaded children (perfect copies of the actual children), does not transfer ownership
      */
-    template <typename AdditionalCellAttributes>
     [[nodiscard]] static std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> download_children(OctreeNode<AdditionalCellAttributes>* node) {
-        if constexpr (std::is_same_v<AdditionalCellAttributes, BarnesHutCell>) {
-            std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> ret_value{};
+        const auto target_rank = node->get_rank();
+        RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "NodeCache::download_children: Tried to download a local node");
 
-            {
-#pragma omp critical
-                ret_value = download_children_barnes_hut(node);
+        auto actual_download = [target_rank](OctreeNode<AdditionalCellAttributes>* node) {
+            std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> local_children{ nullptr };
+
+            // Start access epoch to remote rank
+            MPIWrapper::lock_window(target_rank, MPI_Locktype::Shared);
+
+            // Fetch remote children if they exist
+            for (auto child_index = 0; child_index < Constants::number_oct; child_index++) {
+                auto* unusable_child_pointer = node->get_child(child_index);
+                if (nullptr == unusable_child_pointer) {
+                    // NOLINTNEXTLINE
+                    local_children[child_index] = nullptr;
+                    continue;
+                }
+
+                NodesCacheKey rank_addr_pair{ target_rank, unusable_child_pointer };
+                std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair{ rank_addr_pair, nullptr };
+
+                // Get cache entry for "cache_key_val_pair"
+                // It is created if it does not exist yet
+                const auto& [iterator, inserted] = remote_nodes_cache.insert(cache_key_val_pair);
+
+                // Cache entry just inserted as it was not in cache
+                // So, we still need to init the entry by fetching
+                // from the target rank
+                if (inserted) {
+                    iterator->second = OctreeNode<AdditionalCellAttributes>::create();
+                    auto* local_child_addr = iterator->second;
+
+                    MPIWrapper::download_octree_node<AdditionalCellAttributes>(local_child_addr, target_rank, unusable_child_pointer);
+                }
+
+                // Remember address of node
+                // NOLINTNEXTLINE
+                local_children[child_index] = iterator->second;
             }
 
-            return ret_value;
-        }
-        if constexpr (std::is_same_v<AdditionalCellAttributes, BarnesHutInvertedCell>) {
-            std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> ret_value{};
+            // Complete access epoch
+            MPIWrapper::unlock_window(target_rank);
 
-            {
-#pragma omp critical
-                ret_value = download_children_barnes_hut_inverted(node);
-            }
+            return local_children;
+        };
 
-            return ret_value;
-        }
+        std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> local_children{ nullptr };
 
-        if constexpr (std::is_same_v<AdditionalCellAttributes, FastMultipoleMethodsCell>) {
-            return download_children_fmm(node);
-        }
+#pragma omp critical(node_cache_download)
+        local_children = actual_download(node);
+
+        return local_children;
     }
 
 private:
-    static void empty_barnes_hut();
-
-    static void empty_barnes_hut_inverted();
-
-    static void empty_fmm();
-
-    [[nodiscard]] static std::array<OctreeNode<BarnesHutCell>*, Constants::number_oct> download_children_barnes_hut(OctreeNode<BarnesHutCell>* node);
-
-    [[nodiscard]] static std::array<OctreeNode<BarnesHutInvertedCell>*, Constants::number_oct> download_children_barnes_hut_inverted(OctreeNode<BarnesHutInvertedCell>* node);
-
-    [[nodiscard]] static std::array<OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct> download_children_fmm(OctreeNode<FastMultipoleMethodsCell>* node);
-
-    template <typename AdditionalCellAttributes>
-    using NodesCacheKey = std::pair<int, OctreeNode<AdditionalCellAttributes>*>;
-
-    template <typename AdditionalCellAttributes>
-    using NodesCacheValue = OctreeNode<AdditionalCellAttributes>*;
-
-    template <typename AdditionalCellAttributes>
-    using NodesCache = std::map<NodesCacheKey<AdditionalCellAttributes>, NodesCacheValue<AdditionalCellAttributes>>;
-
-    static inline NodesCache<BarnesHutCell> remote_nodes_cache_barnes_hut{};
-    static inline NodesCache<BarnesHutInvertedCell> remote_nodes_cache_barnes_hut_inverted{};
-    static inline NodesCache<FastMultipoleMethodsCell> remote_nodes_cache_fmm{};
+    static inline NodesCache remote_nodes_cache{};
 };

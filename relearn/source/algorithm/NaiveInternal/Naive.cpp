@@ -142,7 +142,7 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t
 
     // Make cache empty for next connectivity update
     Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
-    NodeCache::empty<NaiveCell>();
+    NodeCache<NaiveCell>::empty();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
     return synapse_creation_requests_outgoing;
@@ -306,7 +306,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
             children = node->get_children();
         } else {
             // Node owned by different rank, so we have do download the data to local nodes
-            children = NodeCache::download_children<NaiveCell>(node);
+            children = NodeCache<NaiveCell>::download_children(node);
         }
 
         for (auto* it : children) {

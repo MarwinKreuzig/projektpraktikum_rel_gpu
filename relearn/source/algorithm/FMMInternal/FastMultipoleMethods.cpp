@@ -41,7 +41,7 @@ CommunicationMap<SynapseCreationRequest> FastMultipoleMethods::find_target_neuro
 
     // Stop Timer and make cache empty for next connectivity update
     Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
-    NodeCache::empty<FastMultipoleMethodsCell>();
+    NodeCache<FastMultipoleMethodsCell>::empty();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
     return synapse_creation_requests_outgoing;
@@ -544,7 +544,7 @@ FastMultipoleMethods::interaction_list_type FastMultipoleMethods::Utilities::get
     interaction_list_type result{ nullptr };
 
     const auto is_local = node->is_local();
-    const auto& children = is_local ? node->get_children() : NodeCache::download_children<FastMultipoleMethodsCell>(const_cast<OctreeNode<FastMultipoleMethodsCell>*>(node));
+    const auto& children = is_local ? node->get_children() : NodeCache<FastMultipoleMethodsCell>::download_children(const_cast<OctreeNode<FastMultipoleMethodsCell>*>(node));
 
     unsigned int i = 0;
 
@@ -593,7 +593,7 @@ FastMultipoleMethods::Utilities::get_all_positions_for(const OctreeNode<FastMult
 
         // node is inner node
         const auto is_local = current_node->is_local();
-        const auto& children = is_local ? current_node->get_children() : NodeCache::download_children<AdditionalCellAttributes>(const_cast<OctreeNode<AdditionalCellAttributes>*>(current_node));
+        const auto& children = is_local ? current_node->get_children() : NodeCache<AdditionalCellAttributes>::download_children(const_cast<OctreeNode<AdditionalCellAttributes>*>(current_node));
 
         // push children to stack
         for (auto it = children.crbegin(); it != children.crend(); ++it) {

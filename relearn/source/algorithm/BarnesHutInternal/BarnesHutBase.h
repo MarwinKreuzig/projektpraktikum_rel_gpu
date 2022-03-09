@@ -282,7 +282,7 @@ protected:
 
         const auto add_children_to_vector = [&vector](OctreeNode<AdditionalCellAttributes>* node) {
             const auto is_local = node->is_local();
-            const auto& children = is_local ? node->get_children() : NodeCache::download_children<AdditionalCellAttributes>(node);
+            const auto& children = is_local ? node->get_children() : NodeCache<AdditionalCellAttributes>::download_children(node);
 
             for (auto* it : children) {
                 if (it != nullptr) {
