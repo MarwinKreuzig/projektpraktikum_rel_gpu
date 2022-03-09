@@ -203,7 +203,7 @@ size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
 }
 
 void Neurons::enable_neurons(const std::vector<NeuronID>& neuron_ids) {
-    for (const auto neuron_id : neuron_ids) {
+    for (const auto& neuron_id : neuron_ids) {
         RelearnException::check(neuron_id.get_local_id() < number_neurons, "Neurons::enable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
         disable_flags[neuron_id.get_local_id()] = UpdateStatus::Enabled;
     }
