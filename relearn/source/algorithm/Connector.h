@@ -96,7 +96,6 @@ public:
             if (number_free_elements == 0) {
                 // Other axons were faster and came first
                 responses.set_request(source_rank, request_index, SynapseCreationResponse::Failed);
-                // responses.append(source_rank, SynapseCreationResponse::Failed);
                 continue;
             }
 
@@ -104,7 +103,6 @@ public:
             dendrites->update_connected_elements(target_neuron_id, 1);
 
             // Set response to "connected" (success)
-            // responses.append(source_rank, SynapseCreationResponse::Succeeded);
             responses.set_request(source_rank, request_index, SynapseCreationResponse::Succeeded);
 
             if (source_rank == my_rank) {
@@ -240,7 +238,6 @@ public:
             if (number_free_elements == 0) {
                 // Other axons were faster and came first
                 responses.set_request(source_rank, request_index, SynapseCreationResponse::Failed);
-                // responses.append(source_rank, SynapseCreationResponse::Failed);
                 continue;
             }
 
@@ -248,7 +245,6 @@ public:
             axons->update_connected_elements(target_neuron_id, 1);
 
             // Set response to "connected" (success)
-            // responses.append(source_rank, SynapseCreationResponse::Succeeded);
             responses.set_request(source_rank, request_index, SynapseCreationResponse::Succeeded);
 
             if (source_rank == my_rank) {

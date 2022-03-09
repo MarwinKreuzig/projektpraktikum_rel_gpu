@@ -250,7 +250,7 @@ protected:
         std::vector<unsigned int> connected_elements(number_elements);
         std::vector<SignalType> signal_types(number_elements);
 
-        for (auto neuron_id : NeuronID::range(number_elements)) {
+        for (const auto& neuron_id : NeuronID::range(number_elements)) {
             const auto number_grown_elements = get_random_synaptic_element_count();
             const auto number_connected_elements = get_random_synaptic_element_connected_count(static_cast<unsigned int>(number_grown_elements));
             const auto signal_type = get_random_signal_type();
@@ -267,6 +267,68 @@ protected:
         }
 
         return std::make_tuple<SynapticElements, std::vector<double>, std::vector<unsigned int>, std::vector<SignalType>>(std::move(se), std::move(grown_elements), std::move(connected_elements), std::move(signal_types));
+    }
+
+    std::shared_ptr<SynapticElements> create_axons(size_t number_elements, double minimal_grown, double maximal_grown) {
+        SynapticElements axons(ElementType::Axon, SynapticElements::default_C_target);
+        axons.init(number_elements);
+
+        for (const auto& neuron_id : NeuronID::range(number_elements)) {
+            const auto number_grown_elements = get_random_double(minimal_grown, maximal_grown);
+            const auto signal_type = get_random_signal_type();
+
+            axons.update_grown_elements(neuron_id, number_grown_elements);
+            axons.update_connected_elements(neuron_id, 0);
+            axons.set_signal_type(neuron_id, signal_type);
+        }
+
+        return std::make_shared<SynapticElements>(std::move(axons));
+    }
+
+    std::shared_ptr<SynapticElements> create_dendrites(size_t number_elements, SignalType signal_type, double minimal_grown, double maximal_grown) {
+        SynapticElements dendrites(ElementType::Axon, SynapticElements::default_C_target);
+        dendrites.init(number_elements);
+
+        for (const auto& neuron_id : NeuronID::range(number_elements)) {
+            const auto number_grown_elements = get_random_double(minimal_grown, maximal_grown);
+
+            dendrites.update_grown_elements(neuron_id, number_grown_elements);
+            dendrites.update_connected_elements(neuron_id, 0);
+            dendrites.set_signal_type(neuron_id, signal_type);
+        }
+
+        return std::make_shared<SynapticElements>(std::move(dendrites));
+    }
+
+        std::shared_ptr<SynapticElements> create_axons(size_t number_elements) {
+        SynapticElements axons(ElementType::Axon, SynapticElements::default_C_target);
+        axons.init(number_elements);
+
+        for (const auto& neuron_id : NeuronID::range(number_elements)) {
+            const auto number_grown_elements = get_random_synaptic_element_count();
+            const auto signal_type = get_random_signal_type();
+
+            axons.update_grown_elements(neuron_id, number_grown_elements);
+            axons.update_connected_elements(neuron_id, 0);
+            axons.set_signal_type(neuron_id, signal_type);
+        }
+
+        return std::make_shared<SynapticElements>(std::move(axons));
+    }
+
+    std::shared_ptr<SynapticElements> create_dendrites(size_t number_elements, SignalType signal_type) {
+        SynapticElements dendrites(ElementType::Axon, SynapticElements::default_C_target);
+        dendrites.init(number_elements);
+
+        for (const auto& neuron_id : NeuronID::range(number_elements)) {
+            const auto number_grown_elements = get_random_synaptic_element_count();
+
+            dendrites.update_grown_elements(neuron_id, number_grown_elements);
+            dendrites.update_connected_elements(neuron_id, 0);
+            dendrites.set_signal_type(neuron_id, signal_type);
+        }
+
+        return std::make_shared<SynapticElements>(std::move(dendrites));
     }
 
     std::vector<std::tuple<Vec3d, NeuronID>> generate_random_neurons(const Vec3d& min, const Vec3d& max, size_t count, size_t max_id) {
@@ -311,6 +373,11 @@ protected:
         std::shuffle(status.begin(), status.end(), mt);
 
         return status;
+    }
+
+    std::vector<UpdateStatus> get_update_status(size_t number_neurons) {
+        const auto number_disabled = get_random_integer<size_t>(0, number_neurons);
+        return get_update_status(number_neurons, number_disabled);
     }
 
     std::shared_ptr<NetworkGraph> create_network_graph_all_to_all(size_t number_neurons, int mpi_rank) {
