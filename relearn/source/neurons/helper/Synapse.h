@@ -10,6 +10,7 @@
  *
  */
 
+#include <compare>
 #include <utility>
 
 /**
@@ -60,6 +61,8 @@ public:
     [[nodiscard]] const Weight& get_weight() const noexcept {
         return weight;
     }
+
+    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const Synapse& first, const Synapse& second) noexcept = default;
 
     template <std::size_t Index>
     [[nodiscard]] auto& get() & {

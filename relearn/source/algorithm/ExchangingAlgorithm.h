@@ -42,7 +42,7 @@ public:
      * @return A tuple with the created synapses that must be committed to the network graph
      */
     [[nodiscard]] std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
-        const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
+        const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override {
 
         Timers::start(TimerRegion::CREATE_SYNAPSES);
 

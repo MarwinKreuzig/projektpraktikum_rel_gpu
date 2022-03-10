@@ -322,8 +322,8 @@ void Simulation::simulate(const size_t number_steps) {
             const auto global_creations = global_cnts[2];
 
             if (0 == MPIWrapper::get_my_rank()) {
-                total_synapse_deletions += local_deletions;
-                total_synapse_creations += local_creations;
+                total_synapse_deletions += global_deletions;
+                total_synapse_creations += global_creations;
             }
 
             LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "{}: {} {} {}", step, global_creations, global_deletions, global_creations - global_deletions);

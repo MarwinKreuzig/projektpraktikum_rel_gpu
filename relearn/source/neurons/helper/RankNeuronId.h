@@ -15,6 +15,7 @@
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
+#include <compare>
 #include <ostream>
 #include <utility>
 
@@ -66,32 +67,7 @@ public:
         return neuron_id;
     }
 
-    /**
-     * @brief Compares two objects by rank and id
-     * @param other The other RankNeuronId
-     * @return True iff both ranks and both neuron ids are equal
-     */
-    [[nodiscard]] bool operator==(const RankNeuronId& other) const noexcept {
-        return (this->rank == other.rank && this->neuron_id == other.neuron_id);
-    }
-
-    /**
-     * @brief Compares two objects by rank and id
-     * @param other The other RankNeuronId
-     * @return False iff both ranks and both neuron ids are equal
-     */
-    [[nodiscard]] bool operator!=(const RankNeuronId& other) const noexcept {
-        return !(*this == other);
-    }
-
-    /**
-     * @brief Compares two objects first by rank and then by id
-     * @param other The other RankNeuronId
-     * @return True iff this' rank is smaller than the other's or if the ranks are equal and this' neuron_id is smaller
-     */
-    [[nodiscard]] bool operator<(const RankNeuronId& other) const noexcept {
-        return (this->rank < other.rank) || (this->rank == other.rank && this->neuron_id < other.neuron_id);
-    }
+    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const RankNeuronId& first, const RankNeuronId& second) noexcept = default;
 
     /**
      * @brief Prints the object's rank and id; inserts \n

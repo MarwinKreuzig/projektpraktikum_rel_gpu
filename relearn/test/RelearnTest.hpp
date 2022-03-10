@@ -12,6 +12,7 @@
 #include "algorithm/BarnesHutInternal/BarnesHutCell.h"
 #include "algorithm/FMMInternal/FastMultipoleMethodsCell.h"
 #include "io/LogFiles.h"
+#include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/ElementType.h"
 #include "neurons/NetworkGraph.h"
@@ -159,6 +160,17 @@ protected:
         return uid(mt);
     }
 
+    int get_random_rank(size_t number_ranks, int exclude_rank) {
+        std::uniform_int_distribution<int> uid(0, static_cast<int>(number_ranks) - 1);
+
+        auto rank = uid(mt);
+        while (rank == exclude_rank) {
+            rank = uid(mt);
+        }
+
+        return rank;
+    }
+
     size_t get_adjusted_random_number_ranks() {
         const auto random_rank = get_random_number_ranks();
         return round_to_next_exponent(random_rank, 2);
@@ -238,6 +250,27 @@ protected:
         return get_random_bool() ? SignalType::Excitatory : SignalType::Inhibitory;
     }
 
+    CommunicationMap<SynapseCreationRequest> create_incoming_requests(size_t number_ranks, int current_rank,
+        size_t number_neurons, size_t number_requests_lower_bound, size_t number_requests_upper_bound) {
+
+        CommunicationMap<SynapseCreationRequest> cm(static_cast<int>(number_ranks));
+
+        for (const auto& target_id : NeuronID::range(number_neurons)) {
+            const auto number_requests = get_random_integer<size_t>(number_requests_lower_bound, number_requests_upper_bound);
+
+            for (auto r = 0; r < number_requests; r++) {
+                const auto source_rank = get_random_rank(number_ranks);
+                const auto source_id = get_random_neuron_id(number_neurons);
+
+                const SynapseCreationRequest scr{ target_id, source_id, get_random_signal_type() };
+
+                cm.append(source_rank, scr);
+            }
+        }
+
+        return cm;
+    }
+
     std::tuple<SynapticElements, std::vector<double>, std::vector<unsigned int>, std::vector<SignalType>>
     create_random_synaptic_elements(size_t number_elements, ElementType element_type, double min_calcium_to_grow,
         double growth_factor = SynapticElements::default_nu, double retract_ratio = SynapticElements::default_vacant_retract_ratio,
@@ -300,7 +333,7 @@ protected:
         return std::make_shared<SynapticElements>(std::move(dendrites));
     }
 
-        std::shared_ptr<SynapticElements> create_axons(size_t number_elements) {
+    std::shared_ptr<SynapticElements> create_axons(size_t number_elements) {
         SynapticElements axons(ElementType::Axon, SynapticElements::default_C_target);
         axons.init(number_elements);
 
@@ -725,6 +758,13 @@ protected:
 };
 
 class NeuronIdTest : public RelearnTest {
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
+class ConnectorTest : public RelearnTest {
 protected:
     static void SetUpTestCase() {
         SetUpTestCaseTemplate<BarnesHutCell>();
