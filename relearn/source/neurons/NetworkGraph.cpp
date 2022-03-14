@@ -173,10 +173,9 @@ void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTransla
 
             // <target neuron id>  <source neuron id>  <weight>
             os
-            << (global_target_id + 1) << "\t"
-            << (distant_rank + 1) << "\t"
-            << (distant_local_neuron_id + 1) << "\t"
-            << edge_val << "\n";
+                << (global_target_id + 1) << "\t"
+                << (global_source_id + 1) << "\t"
+                << edge_val << "\n";
         }
     }
 }
