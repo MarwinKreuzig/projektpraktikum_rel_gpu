@@ -92,15 +92,17 @@ TEST_F(PartitionTest, testPartitionNumberNeurons) {
     for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
         const auto& local_neurons = number_local_neurons[my_rank];
 
-        std::vector<size_t> local_ids_start(my_subdomains, 0);
-        std::vector<size_t> local_ids_ends(my_subdomains, 0);
+        std::vector<NeuronID> local_ids_start(my_subdomains, NeuronID{ 0 });
+        std::vector<NeuronID> local_ids_ends(my_subdomains, NeuronID{ 0 });
 
         for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
             if (my_subdomain > 0) {
-                local_ids_start[my_subdomain] = local_ids_ends[my_subdomain - 1] + 1;
+                const auto local_start = local_ids_ends[static_cast<size_t>(my_subdomain) - 1].get_local_id() + 1;
+                local_ids_start[my_subdomain] = NeuronID(false, false, local_start);
             }
 
-            local_ids_ends[my_subdomain] = local_ids_start[my_subdomain] + local_neurons[my_subdomain] - 1;
+            const auto local_end = local_ids_start[my_subdomain].get_local_id() + local_neurons[my_subdomain] - 1;
+            local_ids_ends[my_subdomain] = NeuronID(false, false, local_end);
         }
 
         Partition partition(num_ranks, my_rank);

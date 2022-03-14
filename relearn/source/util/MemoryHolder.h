@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -7,8 +9,6 @@
  * See the LICENSE file in the base directory for details.
  *
  */
-
-#pragma once
 
 #include "RelearnException.h"
 
@@ -22,9 +22,9 @@ class OctreeNode;
  * This class manages a portion of memory of a specified size and can hand out new objects
  * of the specified type as long as there is space available in the memory portion.
  * Hands out pointers via get_available(), which have to be reclaimed with make_available() or make_all_available() later on.
- * 
+ *
  * In effect calls OctreeNode<AdditionalCellAttributes>::reset()
- * 
+ *
  * @tparam AdditionalCellAttributes The template parameter of the objects
  */
 template <typename AdditionalCellAttributes>
@@ -118,8 +118,8 @@ public:
     }
 
     /**
-     * @brief Returns the number of currently available objects 
-     * @return The number of currently available objects 
+     * @brief Returns the number of currently available objects
+     * @return The number of currently available objects
      */
     [[nodiscard]] static size_t get_number_available_objects() noexcept {
         return available.size();

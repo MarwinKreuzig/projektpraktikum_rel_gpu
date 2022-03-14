@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,10 +10,8 @@
  *
  */
 
-#pragma once
-
-#include "../Config.h"
-#include "../util/RelearnException.h"
+#include "Config.h"
+#include "RelearnException.h"
 
 #include <algorithm>
 #include <array>
@@ -37,6 +37,7 @@ enum class RandomHolderKey : char {
     NeuronModel = 5,
     SynapticElements = 6,
     NeuronsExtraInformation = 7,
+    Connector = 8,
 };
 
 /**
@@ -46,7 +47,8 @@ enum class RandomHolderKey : char {
 class RandomHolder {
     RandomHolder() = default;
 
-    thread_local static inline std::array<std::mt19937, 8> random_number_generators{};
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
+    thread_local static inline std::array<std::mt19937, 9> random_number_generators{};
 
 public:
     /**
@@ -60,10 +62,31 @@ public:
      */
     static double get_random_uniform_double(const RandomHolderKey key, const double lower_inclusive, const double upper_exclusive) {
         RelearnException::check(lower_inclusive < upper_exclusive,
-            "RandomHolder::get_random_uniform_double: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, key);
+            "RandomHolder::get_random_uniform_double: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
         std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
 
-        return urd(random_number_generators[static_cast<int>(key)]);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+        auto& generator = random_number_generators[static_cast<int>(key)];
+        return urd(generator);
+    }
+
+    /**
+     * @brief Generates a random integer (uniformly distributed in [lower_inclusive, upper_exclusive]).
+     *      Uses the RNG that is associated with the key.
+     * @param key The type which's RNG shall be used
+     * @param lower_inclusive The lower inclusive bound for the random integer
+     * @param upper_exclusive The upper inclusive bound for the random integer
+     * @exception Throws a RelearnException if lower_inclusive > upper_exclusive
+     * @return A uniformly integer double in [lower_inclusive, upper_exclusive)
+     */
+    static unsigned int get_random_uniform_integer(const RandomHolderKey key, const unsigned int lower_inclusive, const unsigned int upper_exclusive) {
+        RelearnException::check(lower_inclusive <= upper_exclusive,
+            "RandomHolder::get_random_uniform_integer: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
+        std::uniform_int_distribution<unsigned int> uid(lower_inclusive, upper_exclusive);
+
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+        auto& generator = random_number_generators[static_cast<int>(key)];
+        return uid(generator);
     }
 
     /**
@@ -76,10 +99,12 @@ public:
      * @return A normally distributed double with specified mean and standard deviation
      */
     static double get_random_normal_double(const RandomHolderKey key, const double mean, const double stddev) {
-        RelearnException::check(0.0 < stddev, "RandomHolder::get_random_normal_double: Random number with invalid standard deviation {} for key {}", stddev, key);
+        RelearnException::check(0.0 < stddev, "RandomHolder::get_random_normal_double: Random number with invalid standard deviation {} for key {}", stddev, static_cast<int>(key));
         std::normal_distribution<double> nd(mean, stddev);
 
-        return nd(random_number_generators[static_cast<int>(key)]);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+        auto& generator = random_number_generators[static_cast<int>(key)];
+        return nd(generator);
     }
 
     /**
@@ -92,13 +117,15 @@ public:
      */
     template <typename IteratorType>
     static void shuffle(const RandomHolderKey key, const IteratorType begin, const IteratorType end) {
-        std::shuffle(begin, end, random_number_generators[static_cast<int>(key)]);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+        auto& generator = random_number_generators[static_cast<int>(key)];
+        std::shuffle(begin, end, generator);
     }
 
     /**
      * @brief Fills all values in [begin, end) with uniformly distributed doubles from [lower_inclusive, upper_exclusive).
      *      Uses the RNG that is associated with the key. There should be a natural number n st. begin + n = end.
-     * @param key The type which's RNG shall be used 
+     * @param key The type which's RNG shall be used
      * @param begin The iterator that marks the inclusive begin
      * @param end the iterator that marks the exclusive end
      * @param lower_inclusive The lower inclusive bound for the random doubles
@@ -108,19 +135,20 @@ public:
      */
     template <typename IteratorType>
     static void fill(const RandomHolderKey key, const IteratorType begin, const IteratorType end, const double lower_inclusive, const double upper_exclusive) {
-        RelearnException::check(lower_inclusive < upper_exclusive, "RandomHolder::fill: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, key);
+        RelearnException::check(lower_inclusive < upper_exclusive, "RandomHolder::fill: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
         std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
-        auto& gen = random_number_generators[static_cast<int>(key)];
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+        auto& generator = random_number_generators[static_cast<int>(key)];
 
         for (auto it = begin; it != end; it++) {
-            *it = urd(gen);
+            *it = urd(generator);
         }
     }
 
     /**
      * @brief Seeds the random number generators associated with the key.
      *      The seed used is seed + omp_get_thread_num()
-     * @param key The type which's RNG shall be seeded 
+     * @param key The type which's RNG shall be seeded
      * @param seed The base seed that should be used
      */
     static void seed(const RandomHolderKey key, const unsigned int seed) {
@@ -128,7 +156,9 @@ public:
 #pragma omp parallel shared(key, seed)
         {
             const auto thread_id = omp_get_thread_num();
-            random_number_generators[static_cast<int>(key)].seed(seed + thread_id);
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+            auto& generator = random_number_generators[static_cast<int>(key)];
+            generator.seed(seed + thread_id);
         }
     }
 };

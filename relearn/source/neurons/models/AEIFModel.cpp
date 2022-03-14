@@ -71,28 +71,34 @@ void AEIFModel::init(const size_t number_neurons) {
     init_neurons(0, number_neurons);
 }
 
-void models::AEIFModel::create_neurons(const size_t creation_count) {
-    const auto old_size = NeuronModel::get_num_neurons();
+void AEIFModel::create_neurons(const size_t creation_count) {
+    const auto old_size = NeuronModel::get_number_neurons();
     NeuronModel::create_neurons(creation_count);
     w.resize(old_size + creation_count);
     init_neurons(old_size, creation_count);
 }
 
-void AEIFModel::update_activity(const size_t neuron_id) {
+void AEIFModel::update_activity(const NeuronID& neuron_id) {
     const auto h = get_h();
-    const auto I_syn = get_I_syn(neuron_id);
+
+    const auto synaptic_input = get_synaptic_input(neuron_id);
+    const auto background = get_background_activity(neuron_id);
+    const auto input = synaptic_input + background;
+
     auto x = get_x(neuron_id);
 
-    auto has_spiked = false;
+    auto has_spiked = FiredStatus::Inactive;
+
+    const auto local_neuron_id = neuron_id.get_local_id();
 
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-        x += iter_x(x, w[neuron_id], I_syn) / h;
-        w[neuron_id] += iter_refrac(w[neuron_id], x) / h;
+        x += iter_x(x, w[local_neuron_id], input) / h;
+        w[local_neuron_id] += iter_refrac(w[local_neuron_id], x) / h;
 
         if (x >= V_spike) {
             x = E_L;
-            w[neuron_id] += b;
-            has_spiked = true;
+            w[local_neuron_id] += b;
+            has_spiked = FiredStatus::Fired;
             break;
         }
     }
@@ -103,11 +109,10 @@ void AEIFModel::update_activity(const size_t neuron_id) {
 
 void AEIFModel::init_neurons(const size_t start_id, const size_t end_id) {
     for (size_t neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
-        const auto x = E_L;
-        w[neuron_id] = iter_refrac(0, x);
+        const auto id = NeuronID{ neuron_id };
 
-        set_fired(neuron_id, x >= V_spike);
-        set_x(neuron_id, x);
+        w[neuron_id] = 0.0;
+        set_x(id, E_L);
     }
 }
 
@@ -117,9 +122,8 @@ void AEIFModel::init_neurons(const size_t start_id, const size_t end_id) {
     return linear_part + exp_part;
 }
 
-[[nodiscard]] double AEIFModel::iter_x(const double x, const double w, const double I_syn) const noexcept {
-    const auto f_x = f(x);
-    return (f(x) - w + I_syn) / C;
+[[nodiscard]] double AEIFModel::iter_x(const double x, const double w, const double input) const noexcept {
+    return (f(x) - w + input) / C;
 }
 
 [[nodiscard]] double AEIFModel::iter_refrac(const double w, const double x) const noexcept {

@@ -10,22 +10,21 @@
 
 #include "Simulation.h"
 
-#include "../algorithm/Algorithm.h"
-#include "../algorithm/BarnesHut.h"
-#include "../algorithm/FastMultipoleMethods.h"
-#include "../Config.h"
-#include "../io/LogFiles.h"
-#include "../mpi/MPIWrapper.h"
-#include "../neurons/NetworkGraph.h"
-#include "../neurons/Neurons.h"
-#include "../neurons/helper/NeuronMonitor.h"
-#include "../neurons/models/NeuronModels.h"
-#include "../structure/Octree.h"
-#include "../structure/Partition.h"
-#include "../structure/SynapseLoader.h"
-#include "../util/RelearnException.h"
-#include "../util/Timers.h"
+#include "Config.h"
+#include "NeuronIdTranslator.h"
 #include "NeuronToSubdomainAssignment.h"
+#include "SynapseLoader.h"
+#include "algorithm/Algorithms.h"
+#include "io/LogFiles.h"
+#include "mpi/MPIWrapper.h"
+#include "neurons/NetworkGraph.h"
+#include "neurons/Neurons.h"
+#include "neurons/helper/NeuronMonitor.h"
+#include "neurons/models/NeuronModels.h"
+#include "structure/Octree.h"
+#include "structure/Partition.h"
+#include "util/RelearnException.h"
+#include "util/Timers.h"
 
 #include <fstream>
 #include <iomanip>
@@ -37,7 +36,7 @@ Simulation::Simulation(std::shared_ptr<Partition> partition)
     monitors = std::make_shared<std::vector<NeuronMonitor>>();
 }
 
-void Simulation::register_neuron_monitor(const size_t neuron_id) {
+void Simulation::register_neuron_monitor(const NeuronID& neuron_id) {
     monitors->emplace_back(neuron_id);
 }
 
@@ -58,27 +57,27 @@ void Simulation::set_neuron_model(std::unique_ptr<NeuronModel>&& nm) noexcept {
     neuron_models = std::move(nm);
 }
 
-void Simulation::set_axons(std::unique_ptr<SynapticElements>&& se) noexcept {
+void Simulation::set_axons(std::shared_ptr<SynapticElements>&& se) noexcept {
     axons = std::move(se);
 }
 
-void Simulation::set_dendrites_ex(std::unique_ptr<SynapticElements>&& se) noexcept {
+void Simulation::set_dendrites_ex(std::shared_ptr<SynapticElements>&& se) noexcept {
     dendrites_ex = std::move(se);
 }
 
-void Simulation::set_dendrites_in(std::unique_ptr<SynapticElements>&& se) noexcept {
+void Simulation::set_dendrites_in(std::shared_ptr<SynapticElements>&& se) noexcept {
     dendrites_in = std::move(se);
 }
 
-void Simulation::set_target_calcium_calculator(std::function<double(size_t)> calculator) noexcept {
+void Simulation::set_target_calcium_calculator(std::function<double(NeuronID::value_type)> calculator) noexcept {
     target_calcium_calculator = std::move(calculator);
 }
 
-void Simulation::set_initial_calcium_calculator(std::function<double(size_t)> initiator) noexcept {
+void Simulation::set_initial_calcium_calculator(std::function<double(NeuronID::value_type)> initiator) noexcept {
     initial_calcium_initiator = std::move(initiator);
 }
 
-void Simulation::set_enable_interrupts(std::vector<std::pair<size_t, std::vector<size_t>>> interrupts) {
+void Simulation::set_enable_interrupts(std::vector<std::pair<size_t, std::vector<NeuronID>>> interrupts) {
     enable_interrupts = std::move(interrupts);
 
     for (auto& [step, ids] : enable_interrupts) {
@@ -86,7 +85,7 @@ void Simulation::set_enable_interrupts(std::vector<std::pair<size_t, std::vector
     }
 }
 
-void Simulation::set_disable_interrupts(std::vector<std::pair<size_t, std::vector<size_t>>> interrupts) {
+void Simulation::set_disable_interrupts(std::vector<std::pair<size_t, std::vector<NeuronID>>> interrupts) {
     disable_interrupts = std::move(interrupts);
 
     for (auto& [step, ids] : disable_interrupts) {
@@ -114,6 +113,7 @@ void Simulation::initialize() {
     RelearnException::check(neuron_to_subdomain_assignment != nullptr, "Simulation::initialize: neuron_to_subdomain_assignment is nullptr");
 
     neuron_to_subdomain_assignment->initialize();
+    neuron_id_translator = neuron_to_subdomain_assignment->get_neuron_id_translator();
     const auto number_total_neurons = neuron_to_subdomain_assignment->get_total_number_placed_neurons();
 
     partition->set_total_number_neurons(number_total_neurons);
@@ -123,16 +123,18 @@ void Simulation::initialize() {
     RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank);
 
     std::vector<double> target_calcium_values(number_local_neurons, 0.0);
-    for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
-        target_calcium_values[neuron_id] = target_calcium_calculator(neuron_id);
+    for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
+        const auto global_id = neuron_id_translator->get_global_id(neuron_id);
+        target_calcium_values[neuron_id.get_local_id()] = target_calcium_calculator(global_id.get_global_id());
     }
 
     std::vector<double> initial_calcium_values(number_local_neurons, 0.0);
-    for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
-        initial_calcium_values[neuron_id] = initial_calcium_initiator(neuron_id);
+    for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
+        const auto global_id = neuron_id_translator->get_global_id(neuron_id);
+        initial_calcium_values[neuron_id.get_local_id()] = initial_calcium_initiator(global_id.get_global_id());
     }
 
-    neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons->clone(), dendrites_ex->clone(), dendrites_in->clone());
+    neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons, dendrites_ex, dendrites_in);
     neurons->init(number_local_neurons, std::move(target_calcium_values), std::move(initial_calcium_values));
     NeuronMonitor::neurons_to_monitor = neurons;
 
@@ -162,12 +164,16 @@ void Simulation::initialize() {
 
     if (algorithm_enum == AlgorithmEnum::BarnesHut) {
         global_tree = std::make_shared<OctreeImplementation<BarnesHut>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
-    } else {
+    } else if (algorithm_enum == AlgorithmEnum::BarnesHutInverted) {
+        global_tree = std::make_shared<OctreeImplementation<BarnesHutInverted>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+    } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
         global_tree = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+    } else if (algorithm_enum == AlgorithmEnum::Naive) {
+        global_tree = std::make_shared<OctreeImplementation<Naive>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     }
 
-    for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
-        const auto& position = neuron_positions[neuron_id];
+    for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
+        const auto& position = neuron_positions[neuron_id.get_local_id()];
         global_tree->insert(position, neuron_id, my_rank);
     }
 
@@ -183,14 +189,24 @@ void Simulation::initialize() {
         algorithm_barnes_hut->set_acceptance_criterion(accept_criterion);
         algorithm_barnes_hut->set_probability_parameter(sigma);
         algorithm = std::move(algorithm_barnes_hut);
-    } else {
+    } else if (algorithm_enum == AlgorithmEnum::BarnesHutInverted) {
+        auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutInverted>>(global_tree);
+        auto algorithm_barnes_hut_inverted = std::make_shared<BarnesHutInverted>(std::move(cast));
+        algorithm_barnes_hut_inverted->set_acceptance_criterion(accept_criterion);
+        algorithm_barnes_hut_inverted->set_probability_parameter(sigma);
+        algorithm = std::move(algorithm_barnes_hut_inverted);
+    } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
         auto cast = std::static_pointer_cast<OctreeImplementation<FastMultipoleMethods>>(global_tree);
         auto algorithm_barnes_hut = std::make_shared<FastMultipoleMethods>(std::move(cast));
         algorithm_barnes_hut->set_probability_parameter(sigma);
         algorithm = std::move(algorithm_barnes_hut);
+    } else {
+        RelearnException::fail("Simulation::initialize: AlgorithmEnum {} not yet implemented!", static_cast<int>(algorithm_enum));
     }
 
     network_graph = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
+
+    algorithm->set_synaptic_elements(axons, dendrites_ex, dendrites_in);
 
     neurons->set_area_names(std::move(area_names));
     neurons->set_signal_types(std::move(signal_types));
@@ -200,7 +216,6 @@ void Simulation::initialize() {
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
-    neuron_id_translator = neuron_to_subdomain_assignment->get_neuron_id_translator();
     neurons->set_neuron_id_translator(neuron_id_translator);
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
 
@@ -216,7 +231,7 @@ void Simulation::initialize() {
     neurons->init_synaptic_elements();
     neurons->debug_check_counts();
     neurons->print_neurons_overview_to_log_file_on_rank_0(0);
-    neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0);
+    neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0, 0);
 }
 
 void Simulation::simulate(const size_t number_steps) {
@@ -230,12 +245,13 @@ void Simulation::simulate(const size_t number_steps) {
     /**
      * Simulation loop
      */
-    for (size_t step = 1; step <= number_steps; step++) {
+    const auto final_step_count = step + number_steps;
+    for (; step <= final_step_count; ++step) { // NOLINT(altera-id-dependent-backward-branch)
         if (step % Config::monitor_step == 0) {
-            const auto number_neurons = neurons->get_num_neurons();
+            const auto number_neurons = neurons->get_number_neurons();
 
             for (auto& mn : *monitors) {
-                if (mn.get_target_id() < number_neurons) {
+                if (mn.get_target_id().get_local_id() < number_neurons) {
                     mn.record_data();
                 }
             }
@@ -245,7 +261,7 @@ void Simulation::simulate(const size_t number_steps) {
             if (disable_step == step) {
                 LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Disabling {} neurons in step {}", disable_ids.size(), disable_step);
                 const auto num_deleted_synapses = neurons->disable_neurons(disable_ids);
-                total_synapse_deletions += num_deleted_synapses;
+                total_synapse_deletions += static_cast<int64_t>(num_deleted_synapses);
             }
         }
 
@@ -270,7 +286,7 @@ void Simulation::simulate(const size_t number_steps) {
                     new_initial_calcium_values[neuron_id] = initial_calcium_initiator(neuron_id);
                 }
 
-                neurons->create_neurons(creation_count, std::move(new_target_calcium_values), std::move(new_initial_calcium_values));
+                neurons->create_neurons(creation_count, new_target_calcium_values, new_initial_calcium_values);
             }
         }
 
@@ -291,25 +307,30 @@ void Simulation::simulate(const size_t number_steps) {
         if (step % Config::plasticity_update_step == 0) {
             Timers::start(TimerRegion::UPDATE_CONNECTIVITY);
 
-            const auto& [num_synapses_deleted, num_synapses_created] = neurons->update_connectivity();
+            const auto& [num_axons_deleted, num_dendrites_deleted, num_synapses_created] = neurons->update_connectivity();
 
             Timers::stop_and_add(TimerRegion::UPDATE_CONNECTIVITY);
 
             // Get total number of synapses deleted and created
-            const std::array<int64_t, 2> local_cnts = { static_cast<int64_t>(num_synapses_deleted), static_cast<int64_t>(num_synapses_created) };
-            const std::array<int64_t, 2> global_cnts = MPIWrapper::reduce(local_cnts, MPIWrapper::ReduceFunction::sum, 0);
-            const std::array<int64_t, 2> adjusted_global_cnts = { global_cnts[0] / 2, global_cnts[1] / 2 };
+            const std::array<int64_t, 3> local_cnts = { static_cast<int64_t>(num_axons_deleted), static_cast<int64_t>(num_dendrites_deleted), static_cast<int64_t>(num_synapses_created) };
+            const std::array<int64_t, 3> global_cnts = MPIWrapper::reduce(local_cnts, MPIWrapper::ReduceFunction::Sum, 0);
+
+            const auto local_deletions = local_cnts[0] + local_cnts[1];
+            const auto local_creations = local_cnts[2];
+
+            const auto global_deletions = global_cnts[0] + global_cnts[1];
+            const auto global_creations = global_cnts[2];
 
             if (0 == MPIWrapper::get_my_rank()) {
-                total_synapse_deletions += adjusted_global_cnts[0];
-                total_synapse_creations += adjusted_global_cnts[1];
+                total_synapse_deletions += global_deletions;
+                total_synapse_creations += global_creations;
             }
 
-            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "{}: {} {} {}", step, adjusted_global_cnts[1], adjusted_global_cnts[0], adjusted_global_cnts[1] - adjusted_global_cnts[0]);
-            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateCSV, false, "{};{};{};{}", step, adjusted_global_cnts[1], adjusted_global_cnts[0], adjusted_global_cnts[1] - adjusted_global_cnts[0]);
-            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false, "{}: {} {} {}", step, local_cnts[1], local_cnts[0], local_cnts[1] - local_cnts[0]);
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "{}: {} {} {}", step, global_creations, global_deletions, global_creations - global_deletions);
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateCSV, false, "{};{};{};{}", step, global_creations, global_deletions, global_creations - global_deletions);
+            LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false, "{}: {} {} {}", step, local_creations, local_deletions, local_creations - local_deletions);
 
-            neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_synapses_deleted, num_synapses_created);
+            neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_axons_deleted, num_dendrites_deleted, num_synapses_created);
 
             network_graph->debug_check();
         }
@@ -350,7 +371,7 @@ void Simulation::simulate(const size_t number_steps) {
     Timers::stop_and_add(TimerRegion::SIMULATION_LOOP);
 
     print_neuron_monitors();
-    
+
     neurons->print_positions_to_log_file();
     neurons->print_network_graph_to_log_file();
 }
@@ -383,12 +404,12 @@ std::vector<std::unique_ptr<NeuronModel>> Simulation::get_models() {
 void Simulation::print_neuron_monitors() {
     for (auto& monitor : *monitors) {
         auto path = LogFiles::get_output_path();
-        std::ofstream outfile(path + std::to_string(monitor.get_target_id()) + ".csv", std::ios::trunc);
+        std::ofstream outfile(path + std::to_string(monitor.get_target_id().get_local_id()) + ".csv", std::ios::trunc);
         outfile << std::setprecision(Constants::print_precision);
 
         outfile.imbue(std::locale());
 
-        outfile << "Step;Fired;Refrac;x;Ca;I_sync;axons;axons_connected;dendrites_exc;dendrites_exc_connected;dendrites_inh;dendrites_inh_connected";
+        outfile << "Step;Fired;Refrac;x;Ca;SynapticInput;background;axons;axons_connected;dendrites_exc;dendrites_exc_connected;dendrites_inh;dendrites_inh_connected";
         outfile << "\n";
 
         const auto& infos = monitor.get_informations();
@@ -404,7 +425,8 @@ void Simulation::print_neuron_monitors() {
             outfile << info.get_secondary() << filler;
             outfile << info.get_x() << filler;
             outfile << info.get_calcium() << filler;
-            outfile << info.get_I_sync() << filler;
+            outfile << info.get_synaptic_input() << filler;
+            outfile << info.get_background_activity() << filler;
             outfile << info.get_axons() << filler;
             outfile << info.get_axons_connected() << filler;
             outfile << info.get_dendrites_exc() << filler;
@@ -427,8 +449,8 @@ void Simulation::increase_monitoring_capacity(const size_t size) {
 }
 
 void Simulation::snapshot_monitors() {
-    if (monitors->size() > 0) {
-        //record data at step 0
+    if (!monitors->empty()) {
+        // record data at step 0
         for (auto& m : *monitors) {
             m.record_data();
         }
@@ -436,7 +458,7 @@ void Simulation::snapshot_monitors() {
 }
 
 void Simulation::save_network_graph(size_t current_steps) {
-    //Check wether there are multiple runs or not
+    // Check wether there are multiple runs or not
     if (current_steps == 0) {
         neurons->print_network_graph_to_log_file();
     } else {

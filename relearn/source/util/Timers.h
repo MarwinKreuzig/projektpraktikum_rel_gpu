@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,9 +10,7 @@
  *
  */
 
-#pragma once
-
-#include "../util/RelearnException.h"
+#include "RelearnException.h"
 
 #include <array>
 #include <chrono>
@@ -26,10 +26,7 @@ enum class TimerRegion : int {
     SIMULATION_LOOP = 1,
     UPDATE_ELECTRICAL_ACTIVITY = 2,
     PREPARE_SENDING_SPIKES = 3,
-    PREPARE_NUM_NEURON_IDS = 4,
-    ALL_TO_ALL = 5,
-    ALLOC_MEM_FOR_NEURON_IDS = 6,
-    EXCHANGE_NEURON_IDS = 7,
+    EXCHANGE_NEURON_IDS = 4,
     CALC_SYNAPTIC_BACKGROUND = 8,
     CALC_SERIAL_ACTIVITY = 9,
     CALC_SYNAPTIC_INPUT = 10,
@@ -49,13 +46,22 @@ enum class TimerRegion : int {
     CALC_HERMITE_COEFFICIENTS = 24,
     LOAD_SYNAPSES = 25,
     TRANSLATE_GLOBAL_IDS = 26,
-    INITIALIZE_NETWORK_GRAPH = 27
+    INITIALIZE_NETWORK_GRAPH = 27,
+    ADD_SYNAPSES_TO_NETWORKGRAPH = 28,
+    DELETE_SYNAPSES_ALL_TO_ALL = 29,
+    FIND_SYNAPSES_TO_DELETE = 7,
+    PROCESS_DELETE_REQUESTS = 6,
+    COMMIT_NUM_SYNAPTIC_ELEMENTS = 5,
+    CREATE_SYNAPSES_EXCHANGE_REQUESTS = 30,
+    CREATE_SYNAPSES_EXCHANGE_RESPONSES = 31,
+    CREATE_SYNAPSES_PROCESS_REQUESTS = 32,
+    CREATE_SYNAPSES_PROCESS_RESPONSES = 33,
 };
 
 /**
  * This number is used as a shortcut to count the number of values valid for TimerRegion
  */
-constexpr size_t NUM_TIMERS = 28;
+constexpr size_t NUM_TIMERS = 34;
 
 /**
  * This class is used to collect all sorts of different timers (see TimerRegion).
@@ -136,14 +142,16 @@ public:
     static void print();
 
     /**
-	 * @brief Returns the current time as a string
+     * @brief Returns the current time as a string
      * @return The current time as a string
-	 */
+     */
     [[nodiscard]] static std::string wall_clock_time() {
 #ifdef __linux__
         time_t rawtime = 0;
         time(&rawtime);
+        // NOLINTNEXTLINE
         struct tm* timeinfo = localtime(&rawtime);
+        // NOLINTNEXTLINE
         char* string = asctime(timeinfo);
 
         // Remove linebreak in string

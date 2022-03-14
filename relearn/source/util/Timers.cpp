@@ -10,9 +10,9 @@
 
 #include "Timers.h"
 
-#include "../Config.h"
-#include "../io/LogFiles.h"
-#include "../mpi/MPIWrapper.h"
+#include "Config.h"
+#include "io/LogFiles.h"
+#include "mpi/MPIWrapper.h"
 
 #include <array>
 #include <iomanip>
@@ -26,8 +26,8 @@ void Timers::print_timer(std::stringstream& sstream, const TimerRegion timer_ind
 
 void Timers::print() {
     /**
-	 * Print timers and memory usage
-	 */
+     * Print timers and memory usage
+     */
     constexpr size_t expected_num_timers = size_t(3) * NUM_TIMERS;
 
     std::array<double, expected_num_timers> timers_local{};
@@ -49,7 +49,7 @@ void Timers::print() {
 
     LogFiles::write_to_file(LogFiles::EventType::TimersLocal, false, local_timer_output.str());
 
-    std::array<double, expected_num_timers> timers_global = MPIWrapper::reduce(timers_local, MPIWrapper::ReduceFunction::minsummax, 0);
+    std::array<double, expected_num_timers> timers_global = MPIWrapper::reduce(timers_local, MPIWrapper::ReduceFunction::MinSumMax, 0);
     std::stringstream sstring{};
 
     // Divide second entry of (min, sum, max), i.e., sum, by the number of ranks
@@ -65,7 +65,6 @@ void Timers::print() {
     }
 
     // Set precision for aligned double output
-    const auto old_precision = sstring.precision();
     sstring.precision(Constants::print_precision);
 
     sstring << "\n======== TIMERS GLOBAL OVER ALL RANKS ========\n";
@@ -99,15 +98,6 @@ void Timers::print() {
     sstring << "      Prepare sending spikes                   : ";
     print_timer(sstring, TimerRegion::PREPARE_SENDING_SPIKES, timers_global);
 
-    sstring << "      Prepare num neuron ids                   : ";
-    print_timer(sstring, TimerRegion::PREPARE_NUM_NEURON_IDS, timers_global);
-
-    sstring << "      All to all                               : ";
-    print_timer(sstring, TimerRegion::ALL_TO_ALL, timers_global);
-
-    sstring << "      Alloc mem for neuron ids                 : ";
-    print_timer(sstring, TimerRegion::ALLOC_MEM_FOR_NEURON_IDS, timers_global);
-
     sstring << "      Exchange neuron ids                      : ";
     print_timer(sstring, TimerRegion::EXCHANGE_NEURON_IDS, timers_global);
 
@@ -129,8 +119,20 @@ void Timers::print() {
     sstring << "    Connectivity update                        : ";
     print_timer(sstring, TimerRegion::UPDATE_CONNECTIVITY, timers_global);
 
-    sstring << "      Update #synaptic elements + del synapses : ";
+    sstring << "      Delete synapses                          : ";
     print_timer(sstring, TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES, timers_global);
+
+    sstring << "        Commit #synaptic elements              : ";
+    print_timer(sstring, TimerRegion::COMMIT_NUM_SYNAPTIC_ELEMENTS, timers_global);
+
+    sstring << "        Find synapses to delete                : ";
+    print_timer(sstring, TimerRegion::FIND_SYNAPSES_TO_DELETE, timers_global);
+
+    sstring << "        Exchange deletions (w/ alltoall)       : ";
+    print_timer(sstring, TimerRegion::PROCESS_DELETE_REQUESTS, timers_global);
+
+    sstring << "        Process deletion requests              : ";
+    print_timer(sstring, TimerRegion::PROCESS_DELETE_REQUESTS, timers_global);
 
     sstring << "      Update leaf nodes                        : ";
     print_timer(sstring, TimerRegion::UPDATE_LEAF_NODES, timers_global);
@@ -159,8 +161,23 @@ void Timers::print() {
     sstring << "      Empty remote nodes cache                 : ";
     print_timer(sstring, TimerRegion::EMPTY_REMOTE_NODES_CACHE, timers_global);
 
-    sstring << "      Create synapses (w/ Alltoall)            : ";
+    sstring << "      Create synapses                          : ";
     print_timer(sstring, TimerRegion::CREATE_SYNAPSES, timers_global);
+
+    sstring << "        Create synapses Exchange Requests      : ";
+    print_timer(sstring, TimerRegion::CREATE_SYNAPSES_EXCHANGE_REQUESTS, timers_global);
+
+    sstring << "        Create synapses Process Requests       : ";
+    print_timer(sstring, TimerRegion::CREATE_SYNAPSES_PROCESS_REQUESTS, timers_global);
+
+    sstring << "        Create synapses Exchange Responses     : ";
+    print_timer(sstring, TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES, timers_global);
+
+    sstring << "        Create synapses Process Responses      : ";
+    print_timer(sstring, TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES, timers_global);
+
+    sstring << "      Add synapses in local network graphs     : ";
+    print_timer(sstring, TimerRegion::ADD_SYNAPSES_TO_NETWORKGRAPH, timers_global);
 
     sstring << "\n\n";
 

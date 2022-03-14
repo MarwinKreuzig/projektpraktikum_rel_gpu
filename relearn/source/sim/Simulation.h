@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,11 +10,10 @@
  *
  */
 
-#pragma once
+#include "Config.h"
+#include "Types.h"
 
-#include "../algorithm/Types.h"
-#include "../util/StatisticalMeasures.h"
-
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <functional>
@@ -52,7 +53,7 @@ public:
      *      Does not check for duplicates, etc.
      * @param neuron_id The local neuron id that should be monitored
      */
-    void register_neuron_monitor(size_t neuron_id);
+    void register_neuron_monitor(const NeuronID& neuron_id);
 
     /**
      * @brief Sets the acceptance criterion (theta) for the barnes hut algorithm
@@ -77,45 +78,45 @@ public:
      * @brief Sets the synaptic elements model for the axons
      * @param se The synaptic elements model
      */
-    void set_axons(std::unique_ptr<SynapticElements>&& se) noexcept;
+    void set_axons(std::shared_ptr<SynapticElements>&& se) noexcept;
 
     /**
      * @brief Sets the synaptic elements model for the excitatory dendrites
      * @param se The synaptic elements model
      */
-    void set_dendrites_ex(std::unique_ptr<SynapticElements>&& se) noexcept;
+    void set_dendrites_ex(std::shared_ptr<SynapticElements>&& se) noexcept;
 
     /**
      * @brief Sets the synaptic elements model for the inhibitory dendrites
      * @param se The synaptic elements model
      */
-    void set_dendrites_in(std::unique_ptr<SynapticElements>&& se) noexcept;
+    void set_dendrites_in(std::shared_ptr<SynapticElements>&& se) noexcept;
 
     /**
      * @brief Sets the function that is used to determine the target calcium value of the neurons
      * @param calculator The function that maps neuron id to target calcium value
      */
-    void set_target_calcium_calculator(std::function<double(size_t)> calculator) noexcept;
+    void set_target_calcium_calculator(std::function<double(NeuronID::value_type)> calculator) noexcept;
 
     /**
      * @brief Sets the function that is used to determine the initial calcium value of the neurons
      * @param calculator The function that maps neuron id to initial calcium value
      */
-    void set_initial_calcium_calculator(std::function<double(size_t)> initiator) noexcept;
+    void set_initial_calcium_calculator(std::function<double(NeuronID::value_type)> initiator) noexcept;
 
     /**
      * @brief Sets the enable interrupts during the simulation.
      *      An enable interrupt is a pair of (1) the simulation set (2) all local ids that should be enabled
      * @param interrupts The enable interrupts
      */
-    void set_enable_interrupts(std::vector<std::pair<size_t, std::vector<size_t>>> interrupts);
+    void set_enable_interrupts(std::vector<std::pair<size_t, std::vector<NeuronID>>> interrupts);
 
     /**
      * @brief Sets the disable interrupts during the simulation.
      *      An disable interrupt is a pair of (1) the simulation set (2) all local ids that should be disabled
      * @param interrupts The disable interrupts
      */
-    void set_disable_interrupts(std::vector<std::pair<size_t, std::vector<size_t>>> interrupts);
+    void set_disable_interrupts(std::vector<std::pair<size_t, std::vector<NeuronID>>> interrupts);
 
     /**
      * @brief Sets the creation interrupts during the simulation.
@@ -209,9 +210,9 @@ public:
      * @exception Throws a RelearnException if the statistics have not been observed
      * @return A constants reference to the statistics
      */
-    const std::vector<StatisticalMeasures>& get_statistics(NeuronAttribute neuron_attribute_to_observe) const {
+    [[nodiscard]] const std::vector<StatisticalMeasures>& get_statistics(NeuronAttribute neuron_attribute_to_observe) const {
         if (statistics.find(neuron_attribute_to_observe) == statistics.end()) {
-            RelearnException::fail("Simulation::get_statistics: The attribute was not observed: {}", neuron_attribute_to_observe);
+            RelearnException::fail("Simulation::get_statistics: The attribute was not observed: {}", static_cast<int>(neuron_attribute_to_observe));
         }
 
         const auto& return_value = statistics.at(neuron_attribute_to_observe);
@@ -238,9 +239,9 @@ private:
     std::unique_ptr<NeuronToSubdomainAssignment> neuron_to_subdomain_assignment{};
     std::shared_ptr<NeuronIdTranslator> neuron_id_translator{};
 
-    std::unique_ptr<SynapticElements> axons{};
-    std::unique_ptr<SynapticElements> dendrites_ex{};
-    std::unique_ptr<SynapticElements> dendrites_in{};
+    std::shared_ptr<SynapticElements> axons{};
+    std::shared_ptr<SynapticElements> dendrites_ex{};
+    std::shared_ptr<SynapticElements> dendrites_in{};
 
     std::unique_ptr<NeuronModel> neuron_models{};
     std::shared_ptr<Neurons> neurons{};
@@ -252,16 +253,16 @@ private:
 
     std::shared_ptr<std::vector<NeuronMonitor>> monitors{};
 
-    std::vector<std::pair<size_t, std::vector<size_t>>> enable_interrupts{};
-    std::vector<std::pair<size_t, std::vector<size_t>>> disable_interrupts{};
+    std::vector<std::pair<size_t, std::vector<NeuronID>>> enable_interrupts{};
+    std::vector<std::pair<size_t, std::vector<NeuronID>>> disable_interrupts{};
     std::vector<std::pair<size_t, size_t>> creation_interrupts{};
 
     std::map<NeuronAttribute, std::vector<StatisticalMeasures>> statistics{};
 
-    std::function<double(size_t)> target_calcium_calculator{};
-    std::function<double(size_t)> initial_calcium_initiator{};
+    std::function<double(NeuronID::value_type)> target_calcium_calculator{};
+    std::function<double(NeuronID::value_type)> initial_calcium_initiator{};
 
-    double sigma{ 750 };
+    double sigma{ Constants::default_sigma };
     double accept_criterion{ 0.0 };
 
     AlgorithmEnum algorithm_enum{};
@@ -271,4 +272,6 @@ private:
 
     int64_t delta_synapse_creations{ 0 };
     int64_t delta_synapse_deletions{ 0 };
+
+    size_t step{ 1 };
 };

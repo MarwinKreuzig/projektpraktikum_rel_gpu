@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,10 +10,8 @@
  *
  */
 
-#pragma once
-
 /**
   * An instance of this enum signals if a neuron should be updated or not.
   */
-enum class UpdateStatus : char { DISABLED = 0,
-    ENABLED = 1};
+enum class UpdateStatus : char { Disabled = 0,
+    Enabled = 1};

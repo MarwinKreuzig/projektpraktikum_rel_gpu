@@ -9,22 +9,21 @@
  */
 
 #include "Config.h"
-#include "algorithm/BarnesHut.h"
-#include "algorithm/FastMultipoleMethods.h"
-#include "algorithm/Naive.h"
-#include "algorithm/Types.h"
+#include "Types.h"
+#include "algorithm/Algorithms.h"
 #include "io/InteractiveNeuronIO.h"
 #include "io/LogFiles.h"
+#include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/ElementType.h"
 #include "neurons/helper/NeuronMonitor.h"
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
 #include "sim/NeuronToSubdomainAssignment.h"
-#include "sim/SubdomainFromFile.h"
-#include "sim/SubdomainFromNeuronDensity.h"
-#include "sim/SubdomainFromNeuronPerRank.h"
 #include "sim/Simulation.h"
+#include "sim/file/SubdomainFromFile.h"
+#include "sim/random/SubdomainFromNeuronDensity.h"
+#include "sim/random/SubdomainFromNeuronPerRank.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
 #include "util/Random.h"
@@ -83,24 +82,43 @@ void print_sizes() {
     const auto sizeof_bh_octreenode = sizeof(OctreeNode<BarnesHutCell>);
     const auto sizeof_naive_octreenode = sizeof(OctreeNode<NaiveCell>);
 
+    const auto sizeof_neuron_id = sizeof(NeuronID);
+    const auto sizeof_rank_neuron_id = sizeof(RankNeuronId);
+
+    const auto sizeof_local_synapse = sizeof(LocalSynapse);
+    const auto sizeof_distant_in_synapse = sizeof(DistantInSynapse);
+    const auto sizeof_distant_out_synapse = sizeof(DistantOutSynapse);
+
     std::stringstream ss{};
 
     ss << '\n';
+
     ss << "Size of Vec3d: " << sizeof_vec3_double << '\n';
     ss << "Size of Vec3s: " << sizeof_vec3_size_t << '\n';
+
     ss << "Size of VirtualPlasticityElement: " << sizeof_virtual_plasticity_element << "\n";
     ss << "Size of FastMultipoleMethodsCell: " << sizeof_fmm_cell_attributes << '\n';
+
     ss << "Size of empty_t: " << sizeof_empty_t << '\n';
     ss << "Size of BarnesHutCell: " << sizeof_bh_cell_attributes << '\n';
     ss << "Size of NaiveCell: " << sizeof_bh_naive_attributes << "\n";
+
     ss << "Size of Cell<empty_t>: " << sizeof_empty_cell << '\n';
     ss << "Size of Cell<FastMultipoleMethodsCell>: " << sizeof_fmm_cell << '\n';
     ss << "Size of Cell<BarnesHutCell>: " << sizeof_bh_cell << '\n';
     ss << "Size of Cell<NaiveCell>: " << sizeof_naive_cell << "\n";
+
     ss << "Size of OctreeNode<empty_t>: " << sizeof_octreenode << '\n';
     ss << "Size of OctreeNode<FastMultipoleMethodsCell>: " << sizeof_fmm_octreenode << '\n';
     ss << "Size of OctreeNode<BarnesHutCell>: " << sizeof_bh_octreenode << '\n';
-    ss << "Size of OctreeNode<NaiveCell>: " << sizeof_naive_octreenode;
+    ss << "Size of OctreeNode<NaiveCell>: " << sizeof_naive_octreenode << '\n';
+
+    ss << "Size of NeuronID: " << sizeof_neuron_id << '\n';
+    ss << "Size of RankNeuronID: " << sizeof_rank_neuron_id << '\n';
+
+    ss << "Size of LocalSynapse: " << sizeof_local_synapse << '\n';
+    ss << "Size of DistantInSynapse: " << sizeof_distant_in_synapse << '\n';
+    ss << "Size of DistantOutSynapse: " << sizeof_distant_out_synapse << "\n";
 
     LogFiles::print_message_rank(0, ss.str());
 }
@@ -117,12 +135,18 @@ void print_arguments(int argc, char** argv) {
 
 int main(int argc, char** argv) {
     /**
-	 * Init MPI and store some MPI infos
-	 */
+     * Init MPI and store some MPI infos
+     */
     MPIWrapper::init(argc, argv);
 
     print_arguments(argc, argv);
     print_sizes();
+
+    if constexpr (Config::do_debug_checks) {
+        std::cout << "I'm performing Debug Checks\n";
+    } else {
+        std::cout << "I'm skipping Debug Checks\n";
+    }
 
     const int my_rank = MPIWrapper::get_my_rank();
     const int num_ranks = MPIWrapper::get_num_ranks();
@@ -131,19 +155,31 @@ int main(int argc, char** argv) {
     CLI::App app{ "" };
 
     AlgorithmEnum algorithm = AlgorithmEnum::BarnesHut;
-    std::map<std::string, AlgorithmEnum> cli_parse_map{
+    std::map<std::string, AlgorithmEnum> cli_parse_algorithm{
         { "naive", AlgorithmEnum::Naive },
         { "barnes-hut", AlgorithmEnum::BarnesHut },
+        { "barnes-hut-inverted", AlgorithmEnum::BarnesHutInverted },
         { "fast-multipole-methods", AlgorithmEnum::FastMultipoleMethods }
     };
 
+    NeuronModelEnum neuron_model = NeuronModelEnum::Poisson;
+    std::map<std::string, NeuronModelEnum> cli_parse_neuron_model{
+        { "poisson", NeuronModelEnum::Poisson },
+        { "izhikevich", NeuronModelEnum::Izhikevich },
+        { "aeif", NeuronModelEnum::AEIF },
+        { "fitzhughnagumo", NeuronModelEnum::FitzHughNagumo }
+    };
+
+    auto* opt_neuron_model = app.add_option("--neuron-model", neuron_model, "The neuron model");
+    opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_neuron_model, CLI::ignore_case));
+
     auto* opt_algorithm = app.add_option("-a,--algorithm", algorithm, "The algorithm that is used for finding the targets");
-    opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_map, CLI::ignore_case));
+    opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_algorithm, CLI::ignore_case));
 
     double accept_criterion{ BarnesHut::default_theta };
     auto* opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Required Barnes-Hut.");
 
-    double scaling_const{ Algorithm::default_sigma };
+    double scaling_const{ Constants::default_sigma };
     app.add_option("--sigma", scaling_const, "Scaling parameter for the probabilty kernel. Default: 750");
 
     size_t number_neurons{};
@@ -168,7 +204,13 @@ int main(int argc, char** argv) {
     auto* opt_file_creation_interrups = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
 
     double base_background_activity{ NeuronModel::default_base_background_activity };
-    auto* opt_base_background_activity = app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are exited");
+    app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+
+    double background_activity_mean{ NeuronModel::default_background_activity_mean };
+    app.add_option("--background-activity-mean", background_activity_mean, "The mean background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+
+    double background_activity_stddev{ NeuronModel::default_background_activity_stddev };
+    app.add_option("--background-activity-stddev", background_activity_stddev, "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
     double synapse_conductance{ NeuronModel::default_k };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transfered to its neighbors when a neuron spikes. Default is 0.03");
@@ -177,7 +219,7 @@ int main(int argc, char** argv) {
     app.add_option("--calcium-decay", calcium_decay, "The decay constant for the intercellular calcium");
 
     double retract_ratio{ SynapticElements::default_vacant_retract_ratio };
-    auto* opt_vacant_retract_ratio = app.add_option("--retract-ratio", retract_ratio, "The ratio by which vacant synapses retract.");
+    app.add_option("--retract-ratio", retract_ratio, "The ratio by which vacant synapses retract.");
 
     std::string log_prefix{};
     auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
@@ -197,7 +239,7 @@ int main(int argc, char** argv) {
     auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
 
     size_t first_plasticity_step{ Config::first_plasticity_update };
-    auto* opt_first_plasticity_update_step = app.add_option("--first-plasticity-step", first_plasticity_step, "The first step in which the plasticity is updated.");
+    app.add_option("--first-plasticity-step", first_plasticity_step, "The first step in which the plasticity is updated.");
 
     opt_num_neurons->excludes(opt_file_positions);
     opt_num_neurons->excludes(opt_file_network);
@@ -256,10 +298,9 @@ int main(int argc, char** argv) {
     RelearnException::check(static_cast<bool>(*opt_num_neurons) || static_cast<bool>(*opt_file_positions) || static_cast<bool>(*opt_num_neurons_per_rank),
         "Missing command line option, need a total number of neurons (-n,--num-neurons), a number of neurons per rank (--num-neurons-per-rank), or file_positions (-f,--file).");
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
-    RelearnException::check(base_background_activity >= 0.0, "The base background activity must be non-negative.");
     RelearnException::check(calcium_decay > 0.0, "The calcium decay constant must be greater than 0.");
 
-    if (algorithm == AlgorithmEnum::BarnesHut) {
+    if (algorithm == AlgorithmEnum::BarnesHut || algorithm == AlgorithmEnum::BarnesHutInverted) {
         RelearnException::check(accept_criterion <= BarnesHut::max_theta, "Acceptance criterion must be smaller or equal to {}", BarnesHut::max_theta);
         RelearnException::check(accept_criterion > 0.0, "Acceptance criterion must be larger than 0.0");
     } else if (algorithm == AlgorithmEnum::FastMultipoleMethods) {
@@ -283,8 +324,8 @@ int main(int argc, char** argv) {
     omp_set_num_threads(openmp_threads);
 
     /**
-	 * Initialize the simuliation log files
-	 */
+     * Initialize the simuliation log files
+     */
     if (static_cast<bool>(*opt_log_path)) {
         LogFiles::set_output_path(log_path);
     }
@@ -308,9 +349,22 @@ int main(int argc, char** argv) {
             "Chosen target calcium value: {}\n"
             "Chosen beta value: {}\n"
             "Chosen nu value: {}\n"
+            "Chosen retract ratio: {}\n"
             "Chosen synapse conductance: {}\n"
-            "Chosen background activity: {}",
-            Timers::wall_clock_time(), synaptic_elements_init_lb, synaptic_elements_init_ub, target_calcium, beta, nu, synapse_conductance, base_background_activity);
+            "Chosen background activity base: {}\n"
+            "Chosen background activity mean: {}\n"
+            "Chosen background activity stddev: {}",
+            Timers::wall_clock_time(),
+            synaptic_elements_init_lb,
+            synaptic_elements_init_ub,
+            target_calcium,
+            beta,
+            nu,
+            retract_ratio,
+            synapse_conductance,
+            base_background_activity,
+            background_activity_mean,
+            background_activity_stddev);
 
         LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
             "Number of steps: {}\n"
@@ -319,16 +373,22 @@ int main(int argc, char** argv) {
             "Chosen target calcium value: {}\n"
             "Chosen beta value: {}\n"
             "Chosen nu value: {}\n"
+            "Chosen retract ratio: {}\n"
             "Chosen synapse conductance: {}\n"
-            "Chosen background activity: {}",
+            "Chosen background activity base: {}\n"
+            "Chosen background activity mean: {}\n"
+            "Chosen background activity stddev: {}",
             simulation_steps,
             synaptic_elements_init_lb,
             synaptic_elements_init_ub,
             target_calcium,
             beta,
             nu,
+            retract_ratio,
             synapse_conductance,
-            base_background_activity);
+            base_background_activity,
+            background_activity_mean,
+            background_activity_stddev);
     }
 
     LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "#step: creations deletions netto");
@@ -338,28 +398,34 @@ int main(int argc, char** argv) {
     Timers::start(TimerRegion::INITIALIZATION);
 
     /**
-	 * Calculate what my partition of the domain consist of
-	 */
+     * Calculate what my partition of the domain consist of
+     */
     auto partition = std::make_shared<Partition>(num_ranks, my_rank);
     const size_t number_local_subdomains = partition->get_number_local_subdomains();
-    const size_t total_number_subdomains = partition->get_total_number_subdomains();
 
     if (algorithm == AlgorithmEnum::BarnesHut) {
         // Check if int type can contain total size of branch nodes to receive in bytes
         // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
         if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<BarnesHutCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
-            exit(EXIT_FAILURE);
         }
 
         // Create MPI RMA memory allocator
         MPIWrapper::init_buffer_octree<BarnesHutCell>();
+    } else if (algorithm == AlgorithmEnum::BarnesHutInverted) {
+        // Check if int type can contain total size of branch nodes to receive in bytes
+        // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
+        if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<BarnesHutInvertedCell>))) {
+            RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
+        }
+
+        // Create MPI RMA memory allocator
+        MPIWrapper::init_buffer_octree<BarnesHutInvertedCell>();
     } else if (algorithm == AlgorithmEnum::FastMultipoleMethods) {
         // Check if int type can contain total size of branch nodes to receive in bytes
         // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
         if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<FastMultipoleMethodsCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
-            exit(EXIT_FAILURE);
         }
 
         // Create MPI RMA memory allocator
@@ -369,28 +435,46 @@ int main(int argc, char** argv) {
         // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
         if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<NaiveCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
-            exit(EXIT_FAILURE);
         }
 
         // Create MPI RMA memory allocator
         MPIWrapper::init_buffer_octree<NaiveCell>();
     }
 
-    auto neuron_models = std::make_unique<models::PoissonModel>(synapse_conductance, calcium_decay, beta, NeuronModel::default_h,
-        base_background_activity, NeuronModel::default_background_activity_mean, NeuronModel::default_background_activity_stddev,
-        models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
+    std::unique_ptr<NeuronModel> neuron_models;
+    if (neuron_model == NeuronModelEnum::Poisson) {
+        neuron_models = std::make_unique<models::PoissonModel>(synapse_conductance, NeuronModel::default_tau_C, beta, NeuronModel::default_h,
+            base_background_activity, background_activity_mean, background_activity_stddev,
+            models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
+    } else if (neuron_model == NeuronModelEnum::Izhikevich) {
+        neuron_models = std::make_unique<models::IzhikevichModel>(synapse_conductance, NeuronModel::default_tau_C, beta, NeuronModel::default_h,
+            base_background_activity, background_activity_mean, background_activity_stddev,
+            models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
+            models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
+            models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
+    } else if (neuron_model == NeuronModelEnum::FitzHughNagumo) {
+        neuron_models = std::make_unique<models::FitzHughNagumoModel>(synapse_conductance, NeuronModel::default_tau_C, NeuronModel::default_beta, NeuronModel::default_h,
+            base_background_activity, background_activity_mean, background_activity_stddev,
+            models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
+    } else if (neuron_model == NeuronModelEnum::AEIF) {
+        neuron_models = std::make_unique<models::AEIFModel>(synapse_conductance, NeuronModel::default_tau_C, NeuronModel::default_beta, NeuronModel::default_h,
+            base_background_activity, background_activity_mean, background_activity_stddev,
+            models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
+            models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
+            models::AEIFModel::default_V_spike);
+    }
 
-    auto axon_models = std::make_unique<SynapticElements>(ElementType::AXON, min_calcium_axons,
+    auto axon_models = std::make_shared<SynapticElements>(ElementType::Axon, min_calcium_axons,
         nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-    auto dend_ex_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, min_calcium_excitatory_dendrites,
+    auto dend_ex_models = std::make_shared<SynapticElements>(ElementType::Dendrite, min_calcium_excitatory_dendrites,
         nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-    auto dend_in_models = std::make_unique<SynapticElements>(ElementType::DENDRITE, min_calcium_inhibitory_dendrites,
+    auto dend_in_models = std::make_shared<SynapticElements>(ElementType::Dendrite, min_calcium_inhibitory_dendrites,
         nu, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     // Lock local RMA memory for local stores
-    MPIWrapper::lock_window(my_rank, MPI_Locktype::exclusive);
+    MPIWrapper::lock_window(my_rank, MPI_Locktype::Exclusive);
 
     Simulation sim(partition);
     sim.set_neuron_model(std::move(neuron_models));
@@ -398,7 +482,7 @@ int main(int argc, char** argv) {
     sim.set_dendrites_ex(std::move(dend_ex_models));
     sim.set_dendrites_in(std::move(dend_in_models));
 
-    if (algorithm == AlgorithmEnum::BarnesHut) {
+    if (algorithm == AlgorithmEnum::BarnesHut || algorithm == AlgorithmEnum::BarnesHutInverted) {
         sim.set_acceptance_criterion_for_barnes_hut(accept_criterion);
     }
 
@@ -416,7 +500,7 @@ int main(int argc, char** argv) {
             path_to_network = file_network;
         }
 
-        auto sff = std::make_unique<SubdomainFromFile>(file_positions, path_to_network, partition);
+        auto sff = std::make_unique<SubdomainFromFile>(file_positions, std::move(path_to_network), partition);
         sim.set_subdomain_assignment(std::move(sff));
     }
 
@@ -435,10 +519,10 @@ int main(int argc, char** argv) {
         sim.set_creation_interrupts(std::move(creation_interrups));
     }
 
-    auto target_calcium_calculator = [target = target_calcium](size_t neuron_id) { return target; };
+    auto target_calcium_calculator = [target = target_calcium](NeuronID::value_type /*neuron_id*/) { return target; };
     sim.set_target_calcium_calculator(std::move(target_calcium_calculator));
 
-    auto initial_calcium_calculator = [inital = initial_calcium](size_t neuron_id) { return inital; };
+    auto initial_calcium_calculator = [inital = initial_calcium](NeuronID::value_type /*neuron_id*/) { return inital; };
     sim.set_initial_calcium_calculator(std::move(initial_calcium_calculator));
 
     /**********************************************************************************/
@@ -458,9 +542,9 @@ int main(int argc, char** argv) {
 
     Timers::stop_and_add(TimerRegion::INITIALIZATION);
 
-    sim.register_neuron_monitor(6);
-    sim.register_neuron_monitor(1164);
-    sim.register_neuron_monitor(28001);
+    sim.register_neuron_monitor(NeuronID{ 6 });
+    sim.register_neuron_monitor(NeuronID{ 1164 });
+    sim.register_neuron_monitor(NeuronID{ 28001 });
 
     auto simulate = [&]() {
         sim.simulate(simulation_steps);
@@ -478,8 +562,7 @@ int main(int argc, char** argv) {
         while (true) {
             spdlog::info("Interactive run. Run another {} simulation steps? [y/n]\n", simulation_steps);
             char yn{ 'n' };
-            auto n = scanf(" %c", &yn);
-            RelearnException::check(static_cast<bool>(n), "Error on while reading input with scanf.");
+            std::cin >> std::ws >> yn;
 
             if (yn == 'n' || yn == 'N') {
                 break;

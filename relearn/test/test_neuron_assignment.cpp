@@ -11,9 +11,9 @@
 
 #include "../source/sim/NeuronToSubdomainAssignment.h"
 #include "../source/structure/Partition.h"
-#include "../source/sim/SubdomainFromNeuronDensity.h"
-#include "../source/sim/SubdomainFromNeuronPerRank.h"
-#include "../source/sim/SubdomainFromFile.h"
+#include "../source/sim/random/SubdomainFromNeuronDensity.h"
+#include "../source/sim/random/SubdomainFromNeuronPerRank.h"
+#include "../source/sim/file/SubdomainFromFile.h"
 
 void NeuronAssignmentTest::generate_neuron_positions(std::vector<Vec3d>& positions,
     std::vector<std::string>& area_names, std::vector<SignalType>& types) {
@@ -34,10 +34,10 @@ void NeuronAssignmentTest::generate_neuron_positions(std::vector<Vec3d>& positio
     sfnd.write_neurons_to_file("neurons.tmp");
 }
 
-void NeuronAssignmentTest::generate_synapses(std::vector<std::tuple<size_t, size_t, int>>& synapses, size_t number_neurons) {
+void NeuronAssignmentTest::generate_synapses(std::vector<std::tuple<NeuronID, NeuronID, int>>& synapses, size_t number_neurons) {
     const auto number_synapses = get_random_number_synapses();
 
-    std::map<std::pair<size_t, size_t>, int> synapse_map{};
+    std::map<std::pair<NeuronID, NeuronID>, int> synapse_map{};
 
     for (auto i = 0; i < number_synapses; i++) {
         const auto source = get_random_neuron_id(number_neurons);
@@ -62,7 +62,7 @@ double calculate_excitatory_fraction(const std::vector<SignalType>& types) {
     auto number_inhibitory = 0;
 
     for (const auto& type : types) {
-        if (type == SignalType::EXCITATORY) {
+        if (type == SignalType::Excitatory) {
             number_excitatory++;
         } else {
             number_inhibitory++;
@@ -73,11 +73,11 @@ double calculate_excitatory_fraction(const std::vector<SignalType>& types) {
     return ratio;
 }
 
-void write_synapses_to_file(const std::vector<std::tuple<size_t, size_t, int>>& synapses, std::filesystem::path path) {
+void write_synapses_to_file(const std::vector<std::tuple<NeuronID, NeuronID, int>>& synapses, std::filesystem::path path) {
     std::ofstream of(path);
 
     for (const auto& [source, target, weight] : synapses) {
-        of << (source + 1) << ' ' << (target + 1) << ' ' << weight << '\n';
+        of << (target.get_local_id() + 1) << ' ' << (source.get_local_id() + 1) << ' ' << weight << '\n';
     }
 }
 
@@ -470,9 +470,9 @@ TEST_F(NeuronAssignmentTest, testDensityWriteToFileSingleSubdomain) {
 
         SignalType type;
         if (type_string == "ex") {
-            type = SignalType::EXCITATORY;
+            type = SignalType::Excitatory;
         } else if (type_string == "in") {
-            type = SignalType::INHIBITORY;
+            type = SignalType::Inhibitory;
         } else {
             ASSERT_TRUE(false);
         }
@@ -876,10 +876,10 @@ TEST_F(NeuronAssignmentTest, testFileLoadMultipleSubdomains) {
             for (auto it = 0; it < loaded_neurons; it++) {
                 const auto neuron_id = loaded_global_ids[it];
 
-                ASSERT_EQ(types[neuron_id], loaded_types[it]);
-                ASSERT_EQ(area_names[neuron_id], loaded_area_names[it]);
+                ASSERT_EQ(types[neuron_id.get_global_id()], loaded_types[it]);
+                ASSERT_EQ(area_names[neuron_id.get_global_id()], loaded_area_names[it]);
 
-                const auto& difference_position = positions[neuron_id] - loaded_positions[it];
+                const auto& difference_position = positions[neuron_id.get_global_id()] - loaded_positions[it];
                 const auto norm = difference_position.calculate_2_norm();
 
                 ASSERT_NEAR(norm, 0.0, eps);
@@ -901,10 +901,10 @@ TEST_F(NeuronAssignmentTest, testFileLoadMultipleSubdomains) {
         for (auto it = 0; it < loaded_neurons; it++) {
             const auto neuron_id = loaded_global_ids[it];
 
-            ASSERT_EQ(types[neuron_id], loaded_types[it]);
-            ASSERT_EQ(area_names[neuron_id], loaded_area_names[it]);
+            ASSERT_EQ(types[neuron_id.get_global_id()], loaded_types[it]);
+            ASSERT_EQ(area_names[neuron_id.get_global_id()], loaded_area_names[it]);
 
-            const auto& difference_position = positions[neuron_id] - loaded_positions[it];
+            const auto& difference_position = positions[neuron_id.get_global_id()] - loaded_positions[it];
             const auto norm = difference_position.calculate_2_norm();
 
             ASSERT_NEAR(norm, 0.0, eps);
@@ -931,13 +931,13 @@ TEST_F(NeuronAssignmentTest, testFileNeuronIdTranslatorSingleSubdomain) {
 
     for (auto local_neuron_id = 0; local_neuron_id < global_ids.size(); local_neuron_id++) {
         const auto global_neuron_id = global_ids[local_neuron_id];
-        const auto translated_global_neuron_id = translator->get_global_id(local_neuron_id);
+        const auto translated_global_neuron_id = translator->get_global_id(NeuronID{ local_neuron_id });
 
         ASSERT_EQ(global_neuron_id, translated_global_neuron_id);
 
         const auto translated_local_neuron_id = translator->get_local_id(global_neuron_id);
 
-        ASSERT_EQ(translated_local_neuron_id, local_neuron_id);
+        ASSERT_EQ(translated_local_neuron_id, NeuronID{ local_neuron_id });
 
         ASSERT_TRUE(translator->is_neuron_local(global_neuron_id));
     }
@@ -952,7 +952,7 @@ TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
 
     const auto number_neurons = positions.size();
 
-    std::vector<std::tuple<size_t, size_t, int>> synapses{};
+    std::vector<std::tuple<NeuronID, NeuronID, int>> synapses{};
 
     generate_synapses(synapses, number_neurons);
     write_synapses_to_file(synapses, "synapses.tmp");
@@ -970,14 +970,14 @@ TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
     ASSERT_TRUE(in_synapses.empty());
     ASSERT_TRUE(out_synapses.empty());
 
-    std::map<std::pair<size_t, size_t>, int> synapse_map{};
+    std::map<std::pair<NeuronID, NeuronID>, int> synapse_map{};
 
-    for (const auto& [source, target, weight] : local_synapses) {
-        synapse_map[{ source, target }] += weight;
+    for (const auto& [target, source, weight] : local_synapses) {
+        synapse_map[{ target, source }] += weight;
     }
 
-    for (const auto& [source, target, weight] : synapses) {
-        synapse_map[{ source, target }] -= weight;
+    for (const auto& [target, source, weight] : synapses) {
+        synapse_map[{ target, source }] -= weight;
     }
 
     for (const auto& [_, weight] : synapse_map) {
@@ -1017,8 +1017,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi14SingleSubdomainONCE) {
     std::vector<int> found_out_synapses(426124, 0);
 
     for (const auto& [source_id, target_id, weight] : local_synapses) {
-        found_in_synapses[target_id] += weight;
-        found_out_synapses[source_id] += weight;
+        found_in_synapses[target_id.get_local_id()] += weight;
+        found_out_synapses[source_id.get_local_id()] += weight;
     }
 
     ASSERT_EQ(found_in_synapses.size(), 426124);
@@ -1062,8 +1062,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi15SingleSubdomainONCE) {
     std::vector<int> found_out_synapses(426124, 0);
 
     for (const auto& [source_id, target_id, weight] : local_synapses) {
-        found_in_synapses[target_id] += weight;
-        found_out_synapses[source_id] += weight;
+        found_in_synapses[target_id.get_local_id()] += weight;
+        found_out_synapses[source_id.get_local_id()] += weight;
     }
 
     ASSERT_EQ(found_in_synapses.size(), 426124);
@@ -1107,8 +1107,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi16SingleSubdomainONCE) {
     std::vector<int> found_out_synapses(426124, 0);
 
     for (const auto& [source_id, target_id, weight] : local_synapses) {
-        found_in_synapses[target_id] += weight;
-        found_out_synapses[source_id] += weight;
+        found_in_synapses[target_id.get_local_id()] += weight;
+        found_out_synapses[source_id.get_local_id()] += weight;
     }
 
     ASSERT_EQ(found_in_synapses.size(), 426124);
@@ -1152,8 +1152,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi17SingleSubdomainONCE) {
     std::vector<int> found_out_synapses(426124, 0);
 
     for (const auto& [source_id, target_id, weight] : local_synapses) {
-        found_in_synapses[target_id] += weight;
-        found_out_synapses[source_id] += weight;
+        found_in_synapses[target_id.get_local_id()] += weight;
+        found_out_synapses[source_id.get_local_id()] += weight;
     }
 
     ASSERT_EQ(found_in_synapses.size(), 426124);

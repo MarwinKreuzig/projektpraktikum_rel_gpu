@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,23 +10,23 @@
  *
  */
 
-#pragma once
-
 #include <ostream>
 
 /**
-  * An instance of this enum classifies the synaptic elements of a neuron.
-  * In this simulation, there exists exaclty two different ones: axonal elements and dendritic elements.
-  * The distinction excitatory / inhibitory is made by the type SignalType.
-  */
-enum class ElementType { AXON,
-    DENDRITE };
+ * An instance of this enum classifies the synaptic elements of a neuron.
+ * In this simulation, there exists exaclty two different ones: axonal elements and dendritic elements.
+ * The distinction excitatory / inhibitory is made by the type SignalType.
+ */
+enum class ElementType { Axon,
+    Dendrite };
 
 inline std::ostream& operator<<(std::ostream& out, const ElementType& element_type) {
-    if (element_type == ElementType::AXON) {
-        return out << "AXON";
-    } else if (element_type == ElementType::DENDRITE) {
-        return out << "DENDRITE";
+    if (element_type == ElementType::Axon) {
+        return out << "Axon";
+    } 
+
+    if (element_type == ElementType::Dendrite) {
+        return out << "Dendrite";
     }
 
     return out;

@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,12 +10,10 @@
  *
  */
 
-#pragma once
-
-#include "../Config.h"
-#include "../neurons/SignalType.h"
-#include "../util/RelearnException.h"
-#include "../util/Vec3.h"
+#include "Config.h"
+#include "Types.h"
+#include "neurons/SignalType.h"
+#include "util/RelearnException.h"
 
 #include <filesystem>
 #include <functional>
@@ -36,7 +36,7 @@ public:
     using position_type = RelearnTypes::position_type;
     using box_size_type = RelearnTypes::box_size_type;
 
-    NeuronToSubdomainAssignment(std::shared_ptr<Partition> partition);
+    explicit NeuronToSubdomainAssignment(std::shared_ptr<Partition> partition);
 
     virtual ~NeuronToSubdomainAssignment() = default;
 
@@ -55,7 +55,7 @@ public:
     /**
      * @brief Returns the associated SynapseLoader (some type that inherites from SynapseLoader)
      * @exception Throws a RelearnException if synapse_loader is nullptr
-     * @return The associated SynapseLoader 
+     * @return The associated SynapseLoader
      */
     std::shared_ptr<SynapseLoader> get_synapse_loader() const {
         RelearnException::check(synapse_loader.operator bool(), "NeuronToSubdomainAssignment::get_synapse_loader: synapse_loader is empty");
@@ -65,7 +65,7 @@ public:
     /**
      * @brief Returns the associated NeuronIdTranslator (some type that inherites from NeuronIdTranslator)
      * @exception Throws a RelearnException if neuron_id_translator is nullptr
-     * @return The associated NeuronIdTranslator 
+     * @return The associated NeuronIdTranslator
      */
     std::shared_ptr<NeuronIdTranslator> get_neuron_id_translator() const {
         RelearnException::check(neuron_id_translator.operator bool(), "NeuronToSubdomainAssignment::get_neuron_id_translator: neuron_id_translator is empty");
@@ -236,7 +236,7 @@ public:
      * @exception Might throw a RelearnException
      * @return The global ids for the specified subdomain
      */
-    [[nodiscard]] virtual std::vector<size_t> get_neuron_global_ids_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const = 0;
+    [[nodiscard]] virtual std::vector<NeuronID> get_neuron_global_ids_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const = 0;
 
     /**
      * @brief Returns the global ids of the neurons which are in the specified subdomains.
@@ -245,36 +245,36 @@ public:
      * @param subdomain_index_1d_end The 1d index of the last subdomain which is inquired
      * @param total_number_subdomains The total number of subdomains
      * @exception Might throw a RelearnException
-     * @return The  global ids of the neurons in the subdomains
+     * @return The global ids of the neurons in the subdomains
      */
-    [[nodiscard]] std::vector<size_t> get_neuron_global_ids_in_subdomains(size_t subdomain_index_1d_start, size_t subdomain_index_1d_end, size_t total_number_subdomains) const {
+    [[nodiscard]] std::vector<NeuronID> get_neuron_global_ids_in_subdomains(size_t subdomain_index_1d_start, size_t subdomain_index_1d_end, size_t total_number_subdomains) const {
         auto function = [this](size_t subdomain_index_1d, size_t total_number_subdomains) {
             return get_neuron_global_ids_in_subdomain(subdomain_index_1d, total_number_subdomains);
         };
 
-        return get_all_values<size_t>(subdomain_index_1d_start, subdomain_index_1d_end, total_number_subdomains, function);
+        return get_all_values<NeuronID>(subdomain_index_1d_start, subdomain_index_1d_end, total_number_subdomains, function);
     }
 
     /**
      * @brief Writes all loaded neurons into the specified file.
      *      The format is
-     *      # ID, Position (x y z),	Area, type 
+     *      # ID, Position (x y z),	Area, type
      * @param file_path The filepath where to write the neurons
      * @exception Might throw a RelearnException
-    */
+     */
     virtual void write_neurons_to_file(const std::filesystem::path& file_path) const;
 
 protected:
     struct Node {
         position_type pos{ 0 };
-        size_t id{ Constants::uninitialized };
-        SignalType signal_type{ SignalType::EXCITATORY };
+        NeuronID id{ NeuronID::uninitialized_id() };
+        SignalType signal_type{ SignalType::Excitatory };
         std::string area_name{ "NOT SET" };
 
         struct less {
             bool operator()(const Node& lhs, const Node& rhs) const {
-                RelearnException::check(lhs.id != Constants::uninitialized, "Node::less::operator(): lhs id is a dummy one");
-                RelearnException::check(rhs.id != Constants::uninitialized, "Node::less::operator(): rhs id is a dummy one");
+                RelearnException::check(lhs.id.is_initialized(), "Node::less::operator(): lhs id is a dummy one");
+                RelearnException::check(rhs.id.is_initialized(), "Node::less::operator(): rhs id is a dummy one");
 
                 return lhs.id < rhs.id;
             }
@@ -326,11 +326,7 @@ protected:
 
     [[nodiscard]] bool is_subdomain_loaded(const size_t subdomain_index_1d) const noexcept {
         const auto contains = neurons_in_subdomain.find(subdomain_index_1d) != neurons_in_subdomain.end();
-        if (!contains) {
-            return false;
-        }
-
-        return true;
+        return contains;
     }
 
     virtual void calculate_total_number_neurons() const = 0;

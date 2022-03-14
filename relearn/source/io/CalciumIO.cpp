@@ -10,7 +10,8 @@
 
 #include "CalciumIO.h"
 
-#include "../util/RelearnException.h"
+#include "util/RelearnException.h"
+
 #include "spdlog/spdlog.h"
 
 #include <fstream>
@@ -40,8 +41,8 @@ CalciumIO::load_initial_and_target_function(const std::filesystem::path& path_to
     std::optional<double> default_initial_calcium{};
     std::optional<double> default_target_calcium{};
 
-    std::map<size_t, double> id_to_initial{};
-    std::map<size_t, double> id_to_target{};
+    std::map<NeuronID::value_type, double> id_to_initial{};
+    std::map<NeuronID::value_type, double> id_to_target{};
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
@@ -51,7 +52,7 @@ CalciumIO::load_initial_and_target_function(const std::filesystem::path& path_to
 
         std::stringstream sstream(line);
 
-        size_t neuron_id{};
+        NeuronID::value_type neuron_id{};
         double initial_calcium{};
         double target_calcium{};
 
@@ -63,7 +64,7 @@ CalciumIO::load_initial_and_target_function(const std::filesystem::path& path_to
         }
 
         if (neuron_id == 0) {
-            RelearnException::check(!default_initial_calcium.has_value(), 
+            RelearnException::check(!default_initial_calcium.has_value(),
                 "CalciumIO: {} had more than one default neuron (with id 0)", path_to_file.string());
 
             default_initial_calcium = initial_calcium;
@@ -82,7 +83,7 @@ CalciumIO::load_initial_and_target_function(const std::filesystem::path& path_to
         id_to_target[neuron_id] = target_calcium;
     }
 
-    auto initial_calculator = [lookup = std::move(id_to_initial), default_initial = std::move(default_initial_calcium)](size_t neuron_id) {
+    auto initial_calculator = [lookup = std::move(id_to_initial), default_initial = default_initial_calcium](NeuronID::value_type neuron_id) {
         const auto& contains = lookup.find(neuron_id) != lookup.end();
         if (contains) {
             const double initial = lookup.at(neuron_id);
@@ -93,7 +94,7 @@ CalciumIO::load_initial_and_target_function(const std::filesystem::path& path_to
         return default_initial.value();
     };
 
-    auto target_calculator = [lookup = std::move(id_to_target), default_target = std::move(default_target_calcium)](size_t neuron_id) {
+    auto target_calculator = [lookup = std::move(id_to_target), default_target = default_target_calcium](NeuronID::value_type neuron_id) {
         const auto& contains = lookup.find(neuron_id) != lookup.end();
         if (contains) {
             const double target = lookup.at(neuron_id);

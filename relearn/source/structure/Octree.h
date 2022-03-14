@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,21 +10,20 @@
  *
  */
 
-#pragma once
-
-#include "../Config.h"
-#include "../io/LogFiles.h"
-#include "../mpi/MPIWrapper.h"
-#include "../neurons/Neurons.h"
-#include "../neurons/SignalType.h"
-#include "../neurons/helper/RankNeuronId.h"
-#include "../neurons/models/SynapticElements.h"
-#include "../structure/OctreeNode.h"
-#include "../structure/SpaceFillingCurve.h"
-#include "../util/Random.h"
-#include "../util/RelearnException.h"
-#include "../util/Timers.h"
-#include "../util/Vec3.h"
+#include "Config.h"
+#include "OctreeNode.h"
+#include "SpaceFillingCurve.h"
+#include "Types.h"
+#include "io/LogFiles.h"
+#include "mpi/MPIWrapper.h"
+#include "neurons/Neurons.h"
+#include "neurons/SignalType.h"
+#include "neurons/helper/RankNeuronId.h"
+#include "neurons/models/SynapticElements.h"
+#include "util/Random.h"
+#include "util/RelearnException.h"
+#include "util/Timers.h"
+#include "util/Vec3.h"
 
 #include <functional>
 #include <map>
@@ -113,7 +114,7 @@ public:
      *      (e) Something went wrong within the insertion
      * @return A pointer to the newly created and inserted node
      */
-    virtual void insert(const box_size_type& position, size_t neuron_id, int rank) = 0;
+    virtual void insert(const box_size_type& position, const NeuronID& neuron_id, int rank) = 0;
 
     /**
      * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes
@@ -176,8 +177,8 @@ public:
 
 protected:
     /**
-	 * Type for stack used in postorder tree walk
-	 */
+     * Type for stack used in postorder tree walk
+     */
     struct StackElement {
     private:
         OctreeNode<AdditionalCellAttributes>* ptr{ nullptr };
@@ -195,7 +196,7 @@ protected:
          * @param octree_node The node that should be visited, not nullptr
          * @param depth_in_tree The depth of the current node
          * @exception Throws a RelearnException if octree_node is nullptr or depth_in_tree is larger than Cosntants::unitialized
-        */
+         */
         StackElement(OctreeNode<AdditionalCellAttributes>* octree_node, const size_t depth_in_tree)
             : ptr(octree_node)
             , depth(depth_in_tree) {
@@ -286,7 +287,7 @@ public:
      * @brief Get all local branch nodes
      * @return a vector the local branch nodes
      */
-    std::vector<const OctreeNode<AdditionalCellAttributes>*> get_local_branch_nodes() const {
+    [[nodiscard]] std::vector<const OctreeNode<AdditionalCellAttributes>*> get_local_branch_nodes() const {
         std::vector<const OctreeNode<AdditionalCellAttributes>*> result;
         for (const auto& node: branch_nodes){
             if(! node->is_local()){
@@ -342,7 +343,7 @@ public:
                         continue;
                     }
 
-                    if (!child->is_parent() && child->get_cell_neuron_id() >= Constants::uninitialized) {
+                    if (const auto neuron_id = child->get_cell_neuron_id(); !child->is_parent() && (neuron_id.is_virtual() || !neuron_id.is_initialized())) {
                         continue;
                     }
 
@@ -350,8 +351,8 @@ public:
                 }
             } else {
                 const auto neuron_id = node->get_cell_neuron_id();
-                RelearnException::check(neuron_id < leaf_nodes.size(), "Octree::initializes_leaf_nodes: Neuron id was too large for leaf nodes: {}", neuron_id);
-                leaf_nodes[neuron_id] = node;
+                RelearnException::check(neuron_id.get_local_id() < leaf_nodes.size(), "Octree::initializes_leaf_nodes: Neuron id was too large for leaf nodes: {}", neuron_id);
+                leaf_nodes[neuron_id.get_local_id()] = node;
             }
         }
 
@@ -379,7 +380,7 @@ public:
         // Allgather in-place branch nodes from every rank
         RelearnException::check(num_local_trees < static_cast<size_t>(std::numeric_limits<int>::max()),
             "Octree::synchronize_local_trees: Too many branch nodes: {}", num_local_trees);
-        MPIWrapper::all_gather_inline(exchange_branch_nodes.data(), static_cast<int>(num_local_trees));
+        MPIWrapper::all_gather_inline(std::span{ exchange_branch_nodes.data(), num_local_trees });
 
         Timers::stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
 
@@ -422,7 +423,7 @@ public:
      *      The reference is never invalidated
      * @return All leaf nodes
      */
-    const std::vector<OctreeNode<AdditionalCellAttributes>*>& get_leaf_nodes() const noexcept {
+    [[nodiscard]] const std::vector<OctreeNode<AdditionalCellAttributes>*>& get_leaf_nodes() const noexcept {
         return all_leaf_nodes;
     }
 
@@ -432,7 +433,7 @@ public:
      * @param neuron_id The local neuron id
      * @param rank The MPI rank that the neuron belongs to
      */
-    void insert(const box_size_type& position, const size_t neuron_id, const int rank) override {
+    void insert(const box_size_type& position, const NeuronID& neuron_id, const int rank) override {
         const auto& xyz_min = get_xyz_min();
         const auto& xyz_max = get_xyz_max();
 
@@ -445,7 +446,7 @@ public:
         RelearnException::check(min_z <= pos_z && pos_z <= max_z, "Octree::insert: z was not in range: {} vs [{}, {}]", pos_z, min_z, max_z);
 
         RelearnException::check(rank >= 0, "Octree::insert: rank was smaller than 0 ({})", rank);
-        RelearnException::check(neuron_id < Constants::uninitialized, "Octree::insert: neuron_id was {}", neuron_id);
+        RelearnException::check(neuron_id.is_initialized(), "Octree::insert: neuron_id {} was uninitialized", neuron_id);
 
         // Tree is empty
         if (nullptr == root) {
@@ -580,7 +581,7 @@ protected:
         OctreeNode<AdditionalCellAttributes>* local_root = OctreeNode<AdditionalCellAttributes>::create();
         RelearnException::check(local_root != nullptr, "Octree::construct_global_tree_part: local_root is nullptr");
 
-        local_root->set_cell_neuron_id(Constants::uninitialized);
+        local_root->set_cell_neuron_id(NeuronID::virtual_id());
         local_root->set_cell_size(xyz_min, xyz_max);
         local_root->set_rank(my_rank);
         local_root->set_cell_neuron_position(xyz_min + (cell_length / 2));
@@ -601,10 +602,10 @@ protected:
                     const auto& cell_min = xyz_min + cell_offset;
                     const auto& cell_position = cell_min + (cell_length / 2);
 
-                    auto* current_node = root->insert(cell_position, Constants::uninitialized, my_rank);
+                    auto* current_node = root->insert(cell_position, NeuronID::virtual_id(), my_rank);
 
-                    //const auto index1d = space_curve.map_3d_to_1d(Vec3s{ id_x, id_y, id_z });
-                    //branch_nodes[index1d] = current_node;
+                    // const auto index1d = space_curve.map_3d_to_1d(Vec3s{ id_x, id_y, id_z });
+                    // branch_nodes[index1d] = current_node;
                 }
             }
         }

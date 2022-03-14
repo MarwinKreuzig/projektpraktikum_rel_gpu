@@ -10,8 +10,8 @@
 
 #include "NeuronModels.h"
 
-#include "../../util/Random.h"
-#include "../../util/Timers.h"
+#include "util/Random.h"
+#include "util/Timers.h"
 
 using models::PoissonModel;
 
@@ -55,57 +55,59 @@ void PoissonModel::init(const size_t number_neurons) {
     init_neurons(0, number_neurons);
 }
 
-void models::PoissonModel::create_neurons(const size_t creation_count) {
-    const auto old_size = NeuronModel::get_num_neurons();
+void PoissonModel::create_neurons(const size_t creation_count) {
+    const auto old_size = NeuronModel::get_number_neurons();
     NeuronModel::create_neurons(creation_count);
     refrac.resize(old_size + creation_count, 0);
     theta_values.resize(old_size + creation_count, 0.0);
     init_neurons(old_size, creation_count);
 }
 
-void PoissonModel::update_activity(const size_t neuron_id) {
+void PoissonModel::update_activity(const NeuronID& neuron_id) {
     const auto h = get_h();
-    const auto I_syn = get_I_syn(neuron_id);
+    
+    const auto synaptic_input = get_synaptic_input(neuron_id);
+    const auto background = get_background_activity(neuron_id);
+    const auto input = synaptic_input + background;
+
     auto x = get_x(neuron_id);
 
     for (unsigned int integration_steps = 0; integration_steps < h; integration_steps++) {
         // Update the membrane potential
-        x += iter_x(x, I_syn) / h;
+        x += iter_x(x, input) / h;
     }
 
+    const auto local_neuron_id = neuron_id.get_local_id();
+
     // Neuron ready to fire again
-    if (refrac[neuron_id] == 0) {
-        const bool f = x >= theta_values[neuron_id];
-        set_fired(neuron_id, f); // Decide whether a neuron fires depending on its firing rate
-        refrac[neuron_id] = f ? refrac_time : 0; // After having fired, a neuron is in a refractory state
+    if (refrac[local_neuron_id] == 0) {
+        const bool f = x >= theta_values[local_neuron_id];
+        if (f) {
+            set_fired(neuron_id, FiredStatus::Fired);
+            refrac[local_neuron_id] = refrac_time;
+        } else {
+            set_fired(neuron_id, FiredStatus::Inactive);
+        }
     }
     // Neuron now/still in refractory state
     else {
-        set_fired(neuron_id, false); // Set neuron inactive
-        --refrac[neuron_id]; // Decrease refractory time
+        set_fired(neuron_id, FiredStatus::Inactive); // Set neuron inactive
+        --refrac[local_neuron_id]; // Decrease refractory time
     }
 
     set_x(neuron_id, x);
 }
 
 void PoissonModel::init_neurons(const size_t start_id, const size_t end_id) {
-    for (size_t neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
-        const auto x = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
-        const double threshold = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
-        const bool f = x >= threshold;
-        set_fired(neuron_id, f); // Decide whether a neuron fires depending on its firing rate
-        refrac[neuron_id] = f ? refrac_time : 0; // After having fired, a neuron is in a refractory state
 
-        set_x(neuron_id, x);
-    }
 }
 
-void models::PoissonModel::update_electrical_activity_serial_initialize(const std::vector<UpdateStatus>& disable_flags) {
+void PoissonModel::update_electrical_activity_serial_initialize(const std::vector<UpdateStatus>& disable_flags) {
     Timers::start(TimerRegion::CALC_SERIAL_ACTIVITY);
 
 #pragma omp parallel for shared(disable_flags) default(none) // NOLINTNEXTLINE
     for (int neuron_id = 0; neuron_id < theta_values.size(); neuron_id++) {
-        if (disable_flags[neuron_id] == UpdateStatus::DISABLED) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
 

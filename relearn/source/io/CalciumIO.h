@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,7 +10,7 @@
  *
  */
 
-#pragma once
+#include "Types.h"
 
 #include <filesystem>
 #include <functional>
@@ -16,8 +18,8 @@
 
 class CalciumIO {
 public:
-    using initial_value_calculator = std::function<double(size_t)>;
-    using target_value_calculator = std::function<double(size_t)>;
+    using initial_value_calculator = std::function<double(NeuronID::value_type)>;
+    using target_value_calculator = std::function<double(NeuronID::value_type)>;
 
     static initial_value_calculator load_initial_function(const std::filesystem::path& path_to_file);
 

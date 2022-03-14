@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,22 +10,22 @@
  *
  */
 
-#pragma once
-
-#include "../util/RelearnException.h"
-#include "../util/Vec3.h"
+#include "Types.h"
 #include "helper/RankNeuronId.h"
+#include "util/RelearnException.h"
+#include "util/TaggedID.h"
+#include "util/Vec3.h"
 
 #include <optional>
 #include <string>
 #include <vector>
 
 /**
-  * An object of type NeuronsExtraInfo additional informations of neurons.
-  * For a single neuron, these additional informations are: its x-, y-, and z- position and the name of the area the neuron is in.
-  * It furthermore stores a map from the MPI rank to the (global) starting neuron id. 
-  * This is useful whenever one wants to print all neurons across multiple MPI ranks, while ommiting the MPI rank itself.
-  */
+ * An object of type NeuronsExtraInfo additional informations of neurons.
+ * For a single neuron, these additional informations are: its x-, y-, and z- position and the name of the area the neuron is in.
+ * It furthermore stores a map from the MPI rank to the (global) starting neuron id.
+ * This is useful whenever one wants to print all neurons across multiple MPI ranks, while ommiting the MPI rank itself.
+ */
 class NeuronsExtraInfo {
 public:
     using position_type = RelearnTypes::position_type;
@@ -56,7 +58,7 @@ public:
     /**
      * @brief Overwrites the current area names with the supplied ones
      * @param names The new area names, must have the same size as neurons are stored
-     * @exception Throws an RelearnAxception if names.empty() or if the number of supplied elements does not match the number of stored neurons 
+     * @exception Throws an RelearnAxception if names.empty() or if the number of supplied elements does not match the number of stored neurons
      */
     void set_area_names(std::vector<std::string> names) {
         RelearnException::check(!names.empty(), "NeuronsExtraInformation::set_area_names: New area names are empty");
@@ -75,7 +77,7 @@ public:
     /**
      * @brief Overwrites the current positions with the supplied ones
      * @param names The new positions, must have the same size as neurons are stored
-     * @exception Throws an RelearnAxception if pos.empty() or if the number of supplied elements does not match the number of stored neurons 
+     * @exception Throws an RelearnAxception if pos.empty() or if the number of supplied elements does not match the number of stored neurons
      */
     void set_positions(std::vector<position_type> pos) {
         RelearnException::check(!pos.empty(), "NeuronsExtraInformation::set_x_dims: New x dimensions are empty");
@@ -96,10 +98,11 @@ public:
      * @param neuron_id The local id of the neuron, i.e., from [0, num_local_neurons)
      * @exception Throws an RelearnAxception if the specified id exceeds the number of stored neurons
      */
-    [[nodiscard]] position_type get_position(const size_t neuron_id) const {
-        RelearnException::check(neuron_id < size, "NeuronsExtraInfo::get_position: neuron_id must be smaller than size but was {}", neuron_id);
-        RelearnException::check(neuron_id < positions.size(), "NeuronsExtraInfo::get_position: neuron_id must be smaller than positions.size() but was {}", neuron_id);
-        return positions[neuron_id];
+    [[nodiscard]] position_type get_position(const NeuronID& neuron_id) const {
+        const auto local_neuron_id = neuron_id.get_local_id();
+        RelearnException::check(local_neuron_id < size, "NeuronsExtraInfo::get_position: neuron_id must be smaller than size but was {}", neuron_id);
+        RelearnException::check(local_neuron_id < positions.size(), "NeuronsExtraInfo::get_position: neuron_id must be smaller than positions.size() but was {}", neuron_id);
+        return positions[local_neuron_id];
     }
 
     /**
@@ -107,8 +110,9 @@ public:
      * @param neuron_id The local id of the neuron, i.e., from [0, num_local_neurons)
      * @exception Throws an RelearnAxception if the specified id exceeds the number of stored neurons
      */
-    [[nodiscard]] const std::string& get_area_name(const size_t neuron_id) const {
-        RelearnException::check(neuron_id < area_names.size(), "NeuronsExtraInfo::get_area_name: neuron_id must be smaller than size but was {}", neuron_id);
-        return area_names[neuron_id];
+    [[nodiscard]] const std::string& get_area_name(const NeuronID& neuron_id) const {
+        const auto local_neuron_id = neuron_id.get_local_id();
+        RelearnException::check(local_neuron_id < area_names.size(), "NeuronsExtraInfo::get_area_name: neuron_id must be smaller than size but was {}", neuron_id);
+        return area_names[local_neuron_id];
     }
 };

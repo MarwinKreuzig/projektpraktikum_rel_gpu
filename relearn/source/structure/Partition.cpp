@@ -12,6 +12,7 @@
 
 #include "../io/LogFiles.h"
 
+#include <cmath>
 #include <sstream>
 
 Partition::Partition(const size_t num_ranks, const size_t my_rank)
@@ -21,10 +22,10 @@ Partition::Partition(const size_t num_ranks, const size_t my_rank)
     RelearnException::check(num_ranks > my_rank, "Partition::Partition: My rank must be smaller than number of ranks: {} vs {}", num_ranks, my_rank);
 
     /**
-	 * Total number of local_subdomains is smallest power of 8 that is >= num_ranks.
-	 * We choose power of 8 as every domain subdivision creates 8 local_subdomains (in 3d).
-	 */
-    const double smallest_exponent = ceil(log(num_ranks) / log(8.0));
+     * Total number of local_subdomains is smallest power of 8 that is >= num_ranks.
+     * We choose power of 8 as every domain subdivision creates 8 local_subdomains (in 3d).
+     */
+    const double smallest_exponent = std::ceil(std::log(num_ranks) / std::log(8.0));
     level_of_subdomain_trees = static_cast<size_t>(smallest_exponent);
     total_number_subdomains = 1ULL << (3 * level_of_subdomain_trees); // 8^level_of_subdomain_trees
 
@@ -32,15 +33,15 @@ Partition::Partition(const size_t num_ranks, const size_t my_rank)
     RelearnException::check(total_number_subdomains >= num_ranks, "Partition::Partition: Total num local_subdomains is smaller than number ranks: {} vs {}", total_number_subdomains, num_ranks);
 
     /**
-	 * Calc my number of local_subdomains
-	 *
-	 * NOTE:
-	 * Every rank gets the same number of local_subdomains first.
-	 * The remaining m local_subdomains are then assigned to the first m ranks,
-	 * one subdomain more per rank.
-	 *
-	 * For #procs = 2^n and 8^level_of_subdomain_trees local_subdomains, every proc's #local_subdomains is the same power of two of {1, 2, 4}.
-	 */
+     * Calc my number of local_subdomains
+     *
+     * NOTE:
+     * Every rank gets the same number of local_subdomains first.
+     * The remaining m local_subdomains are then assigned to the first m ranks,
+     * one subdomain more per rank.
+     *
+     * For #procs = 2^n and 8^level_of_subdomain_trees local_subdomains, every proc's #local_subdomains is the same power of two of {1, 2, 4}.
+     */
     // NOLINTNEXTLINE
     number_local_subdomains = total_number_subdomains / num_ranks;
     const size_t rest = total_number_subdomains % num_ranks;
@@ -52,10 +53,10 @@ Partition::Partition(const size_t num_ranks, const size_t my_rank)
     }
 
     /**
-	 * Set parameter of space filling curve before it can be used.
-	 * total_number_subdomains = 8^level_of_subdomain_trees = (2^3)^level_of_subdomain_trees = 2^(3*level_of_subdomain_trees).
-	 * Thus, number of local_subdomains per dimension (3d) is (2^(3*level_of_subdomain_trees))^(1/3) = 2^level_of_subdomain_trees.
-	 */
+     * Set parameter of space filling curve before it can be used.
+     * total_number_subdomains = 8^level_of_subdomain_trees = (2^3)^level_of_subdomain_trees = 2^(3*level_of_subdomain_trees).
+     * Thus, number of local_subdomains per dimension (3d) is (2^(3*level_of_subdomain_trees))^(1/3) = 2^level_of_subdomain_trees.
+     */
     number_subdomains_per_dimension = 1ULL << level_of_subdomain_trees;
 
     if (level_of_subdomain_trees > std::numeric_limits<uint8_t>::max()) {
@@ -82,7 +83,7 @@ Partition::Partition(const size_t num_ranks, const size_t my_rank)
     LogFiles::print_message_rank(0, "Number subdomains per dimension: {}", number_subdomains_per_dimension);
 }
 
-void Partition::print_my_subdomains_info_rank(const int rank) {
+void Partition::print_my_subdomains_info_rank(const int  /*rank*/) {
     std::stringstream sstream{};
 
     sstream << "My number of neurons   : " << number_local_neurons << "\n";

@@ -12,9 +12,9 @@
 
 #if RELEARN_MPI_FOUND
 
-#include "spdlog/fmt/bundled/core.h"
-#include "../util/Utility.h"
+#include "util/Utility.h"
 
+#include "spdlog/fmt/bundled/core.h"
 #include <mpi.h>
 
 #include <bitset>
@@ -23,22 +23,47 @@
 #include <iostream>
 #include <limits>
 #include <map>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
 /**
-  * IMPORTANT: MPI expects int array with receive counts and displacements for vector operations
-  *
-  * The int receive count limits the number of neurons per rank to ~2e9 (2^31 - 1).
-  * The int displacement limits the *total* number of neurons to ~2e9 (2^31 - 1) which is a problem.
-  * A way to solve this problem is to use communication operations without displacement.
-  *
-  * Solving the problem is future work. Until it is solved the total number of neurons is limited to 2^31-1.
-  */
+ * IMPORTANT: MPI expects int array with receive counts and displacements for vector operations
+ *
+ * The int receive count limits the number of neurons per rank to ~2e9 (2^31 - 1).
+ * The int displacement limits the *total* number of neurons to ~2e9 (2^31 - 1) which is a problem.
+ * A way to solve this problem is to use communication operations without displacement.
+ *
+ * Solving the problem is future work. Until it is solved the total number of neurons is limited to 2^31-1.
+ */
 
-std::map<MPIWrapper::AsyncToken, MPI_Request> translation_map{};
-size_t current_token{ 0 };
+static std::unique_ptr<MPI_Win> mpi_window{ nullptr }; // RMA window object
+
+static std::unique_ptr<MPI_Op> minsummax{ nullptr };
+
+static std::map<MPIWrapper::AsyncToken, MPI_Request> translation_map{};
+static size_t current_token{ 0 };
+
+std::unique_ptr<MPI_Op> translate_reduce_function(const MPIWrapper::ReduceFunction rf) {
+    switch (rf) {
+    case MPIWrapper::ReduceFunction::Min:
+        return std::make_unique<MPI_Op>(MPI_MIN);
+
+    case MPIWrapper::ReduceFunction::Max:
+        return std::make_unique<MPI_Op>(MPI_MAX);
+
+    case MPIWrapper::ReduceFunction::Sum:
+        return std::make_unique<MPI_Op>(MPI_SUM);
+
+    case MPIWrapper::ReduceFunction::MinSumMax:
+        return std::make_unique<MPI_Op>(*minsummax);
+
+    default:
+        RelearnException::fail("In reduce, got wrong function");
+        return nullptr;
+    }
+}
 
 void MPIWrapper::init(int argc, char** argv) {
     MPI_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &thread_level_provided);
@@ -76,29 +101,26 @@ size_t MPIWrapper::init_window(const size_t size_requested, const size_t octree_
 
     // Store size of MPI_COMM_WORLD
     int my_num_ranks = -1;
-    // NOLINTNEXTLINE
     const int error_code_1 = MPI_Comm_size(MPI_COMM_WORLD, &my_num_ranks);
     RelearnException::check(error_code_1 == 0, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_1);
 
     const auto num_ranks = static_cast<size_t>(my_num_ranks);
 
     // Allocate block of memory which is managed later on
-    // NOLINTNEXTLINE
-    if (MPI_SUCCESS != MPI_Alloc_mem(max_size, MPI_INFO_NULL, &base_ptr)) {
+    if (MPI_SUCCESS != MPI_Alloc_mem(static_cast<std::int64_t>(max_size), MPI_INFO_NULL, &base_ptr)) {
         RelearnException::fail("MPI_Alloc_mem failed");
     }
 
     // Set window's displacement unit
-    mpi_window = new MPI_Win;
+    mpi_window = std::make_unique<MPI_Win>();
 
     // NOLINTNEXTLINE
-    const int error_code_2 = MPI_Win_create(base_ptr, max_size, 1, MPI_INFO_NULL, MPI_COMM_WORLD, (MPI_Win*)mpi_window);
+    const int error_code_2 = MPI_Win_create(base_ptr, max_size, 1, MPI_INFO_NULL, MPI_COMM_WORLD, mpi_window.get());
     RelearnException::check(error_code_2 == 0, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_2);
 
     // Vector must have space for one pointer from each rank
     base_pointers.resize(num_ranks);
 
-    // NOLINTNEXTLINE
     const int error_code_3 = MPI_Allgather(&base_ptr, 1, MPI_AINT, base_pointers.data(), 1, MPI_AINT, MPI_COMM_WORLD);
     RelearnException::check(error_code_3 == 0, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_3);
 
@@ -112,106 +134,120 @@ void MPIWrapper::barrier() {
 
 double MPIWrapper::reduce(double value, const ReduceFunction function, const int root_rank) {
     RelearnException::check(root_rank >= 0, "MPIWrapper::reduce: root_rank was negative");
-    const MPI_Op* mpi_reduce_function = (MPI_Op*)translate_reduce_function(function);
+    const auto mpi_reduce_function = translate_reduce_function(function);
 
     double result = 0.0;
-    // NOLINTNEXTLINE
     const int errorcode = MPI_Reduce(&value, &result, 1, MPI_DOUBLE, *mpi_reduce_function, root_rank, MPI_COMM_WORLD);
     RelearnException::check(errorcode == 0, "MPIWrapper::reduce: Error code received: {}", errorcode);
 
-    delete mpi_reduce_function;
+    bytes_sent.fetch_add(sizeof(double), std::memory_order::relaxed);
+    if (my_rank == root_rank) {
+        bytes_received.fetch_add(sizeof(double), std::memory_order::relaxed);
+    }
 
     return result;
 }
 
 double MPIWrapper::all_reduce_double(const double value, const ReduceFunction function) {
-    const MPI_Op* mpi_reduce_function = (MPI_Op*)translate_reduce_function(function);
+    const auto mpi_reduce_function = translate_reduce_function(function);
 
     double result = 0.0;
-    // NOLINTNEXTLINE
     const int errorcode = MPI_Allreduce(&value, &result, 1, MPI_DOUBLE, *mpi_reduce_function, MPI_COMM_WORLD);
     RelearnException::check(errorcode == 0, "MPIWrapper::all_reduce_double: Error code received: {}", errorcode);
 
-    delete mpi_reduce_function;
+    bytes_sent.fetch_add(sizeof(double), std::memory_order::relaxed);
+    bytes_received.fetch_add(sizeof(double), std::memory_order::relaxed);
 
     return result;
 }
 
 uint64_t MPIWrapper::all_reduce_uint64(const uint64_t value, const ReduceFunction function) {
-    const MPI_Op* mpi_reduce_function = (MPI_Op*)translate_reduce_function(function);
+    const auto mpi_reduce_function = translate_reduce_function(function);
 
     uint64_t result = 0;
-    // NOLINTNEXTLINE
     const int errorcode = MPI_Allreduce(&value, &result, 1, MPI_UINT64_T, *mpi_reduce_function, MPI_COMM_WORLD);
     RelearnException::check(errorcode == 0, "MPIWrapper::all_reduce_uint64: Error code received: {}", errorcode);
 
-    delete mpi_reduce_function;
+    bytes_sent.fetch_add(sizeof(uint64_t), std::memory_order::relaxed);
+    bytes_received.fetch_add(sizeof(uint64_t), std::memory_order::relaxed);
 
     return result;
 }
 
 void MPIWrapper::reduce_double(const double* src, double* dst, const size_t size, const ReduceFunction function, const int root_rank) {
-    const MPI_Op* mpi_reduce_function = (MPI_Op*)translate_reduce_function(function);
+    const auto mpi_reduce_function = translate_reduce_function(function);
 
     RelearnException::check(size < static_cast<size_t>(std::numeric_limits<int>::max()), "MPIWrapper::reduce_double: Too much to reduce");
 
-    // NOLINTNEXTLINE
     const int errorcode = MPI_Reduce(src, dst, static_cast<int>(size), MPI_DOUBLE, *mpi_reduce_function, root_rank, MPI_COMM_WORLD);
     RelearnException::check(errorcode == 0, "MPIWrapper::reduce_double: Error code received: {}", errorcode);
 
-    delete mpi_reduce_function;
+    bytes_sent.fetch_add(sizeof(double) * size, std::memory_order::relaxed);
+    if (my_rank == root_rank) {
+        bytes_received.fetch_add(sizeof(double) * size, std::memory_order::relaxed);
+    }
 }
 
 void MPIWrapper::reduce_int64(const int64_t* src, int64_t* dst, const size_t size, const ReduceFunction function, const int root_rank) {
-    const MPI_Op* mpi_reduce_function = (MPI_Op*)translate_reduce_function(function);
+    const auto mpi_reduce_function = translate_reduce_function(function);
 
     RelearnException::check(size < static_cast<size_t>(std::numeric_limits<int>::max()), "MPIWrapper::reduce_int64: Too much to reduce");
 
-    // NOLINTNEXTLINE
     const int errorcode = MPI_Reduce(src, dst, static_cast<int>(size), MPI_INT64_T, *mpi_reduce_function, root_rank, MPI_COMM_WORLD);
     RelearnException::check(errorcode == 0, "MPIWrapper::reduce_int64: Error code received: {}", errorcode);
 
-    delete mpi_reduce_function;
+    bytes_sent.fetch_add(sizeof(int64_t) * size, std::memory_order::relaxed);
+    if (my_rank == root_rank) {
+        bytes_received.fetch_add(sizeof(int64_t) * size, std::memory_order::relaxed);
+    }
 }
 
-void MPIWrapper::all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst) {
+std::vector<size_t> MPIWrapper::all_to_all(const std::vector<size_t>& src) {
     const size_t count_src = src.size();
-    const size_t count_dst = dst.size();
+    std::vector<size_t> dst(count_src, 0);
 
-    RelearnException::check(count_src == count_dst, "MPIWrapper::all_to_all: src and dst are not of the same size");
-
-    // NOLINTNEXTLINE
     const int errorcode = MPI_Alltoall(src.data(), sizeof(size_t), MPI_CHAR, dst.data(), sizeof(size_t), MPI_CHAR, MPI_COMM_WORLD);
     RelearnException::check(errorcode == 0, "MPIWrapper::all_to_all: Error code received: {}", errorcode);
+
+    bytes_sent.fetch_add(sizeof(size_t) * count_src, std::memory_order::relaxed);
+    bytes_received.fetch_add(sizeof(size_t) * count_src, std::memory_order::relaxed);
+
+    return dst;
 }
 
-void MPIWrapper::async_s(const void* buffer, const int count, const int rank, AsyncToken& token) {
+MPIWrapper::AsyncToken MPIWrapper::async_s(const void* buffer, const int count, const int rank) {
     RelearnException::check(rank >= 0, "MPIWrapper::async_s: Error in async s, rank is <= 0");
 
-    token = current_token++;
+    const auto token = current_token++;
     MPI_Request& translated_token = translation_map[token];
 
-    // NOLINTNEXTLINE
     const int errorcode = MPI_Isend(buffer, count, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &translated_token);
     RelearnException::check(errorcode == 0, "MPIWrapper::async_s: Error code received: {}", errorcode);
+
+    bytes_sent.fetch_add(count, std::memory_order::relaxed);
+
+    return token;
 }
 
-void MPIWrapper::async_recv(void* buffer, const int count, const int rank, AsyncToken& token) {
+MPIWrapper::AsyncToken MPIWrapper::async_recv(void* buffer, const int count, const int rank) {
     RelearnException::check(rank >= 0, "MPIWrapper::async_recv: Error in async recv, rank is <= 0");
 
-    token = current_token++;
+    const auto token = current_token++;
     MPI_Request& translated_token = translation_map[token];
 
-    // NOLINTNEXTLINE
     const int errorcode = MPI_Irecv(buffer, count, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &translated_token);
     RelearnException::check(errorcode == 0, "MPIWrapper::async_recv: Error code received: {}", errorcode);
+
+    bytes_received.fetch_add(count, std::memory_order::relaxed);
+
+    return token;
 }
 
 int MPIWrapper::translate_lock_type(const MPI_Locktype lock_type) {
     switch (lock_type) {
-    case MPI_Locktype::exclusive:
+    case MPI_Locktype::Exclusive:
         return MPI_LOCK_EXCLUSIVE;
-    case MPI_Locktype::shared:
+    case MPI_Locktype::Shared:
         return MPI_LOCK_SHARED;
     }
 
@@ -219,40 +255,48 @@ int MPIWrapper::translate_lock_type(const MPI_Locktype lock_type) {
 }
 
 void MPIWrapper::reduce(const void* src, void* dst, const int size, const ReduceFunction function, const int root_rank) {
-    const MPI_Op* mpi_reduce_function = (MPI_Op*)translate_reduce_function(function);
+    const auto mpi_reduce_function = translate_reduce_function(function);
 
-    const auto* s_ptr = reinterpret_cast<const int64_t*>(src);
+    const auto* s_ptr = static_cast<const int64_t*>(src);
 
-    // NOLINTNEXTLINE
     const int errorcode = MPI_Reduce(src, dst, size, MPI_CHAR, *mpi_reduce_function, root_rank, MPI_COMM_WORLD);
     RelearnException::check(errorcode == 0, "MPIWrapper::reduce: Error code received: {}", errorcode);
 
-    delete mpi_reduce_function;
+    bytes_sent.fetch_add(size, std::memory_order::relaxed);
+    if (my_rank == root_rank) {
+        bytes_received.fetch_add(size, std::memory_order::relaxed);
+    }
 }
 
 void MPIWrapper::all_gather(const void* own_data, void* buffer, const int size) {
-    // NOLINTNEXTLINE
     const int errorcode = MPI_Allgather(own_data, size, MPI_CHAR, buffer, size, MPI_CHAR, MPI_COMM_WORLD);
     RelearnException::check(errorcode == 0, "MPIWrapper::all_gather: Error code received: {}", errorcode);
+
+    bytes_sent.fetch_add(size, std::memory_order::relaxed);
+    bytes_received.fetch_add(size, std::memory_order::relaxed);
 }
 
 void MPIWrapper::all_gather_inl(void* ptr, const int count) {
     RelearnException::check(count > 0, "MPIWrapper::all_gather_inl: Error in all gather , count is not greater than 0");
 
-    // NOLINTNEXTLINE
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast)
     const int errorcode = MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, ptr, count, MPI_CHAR, MPI_COMM_WORLD);
     RelearnException::check(errorcode == 0, "MPIWrapper::all_gather_inl: Error code received: {}", errorcode);
+
+    bytes_sent.fetch_add(count, std::memory_order::relaxed);
+    bytes_received.fetch_add(count, std::memory_order::relaxed);
 }
 
 void MPIWrapper::get(void* origin, const size_t size, const int target_rank, const int64_t displacement) {
-
     const MPI_Aint displacement_mpi(displacement);
-    const auto window = *(MPI_Win*)(mpi_window);
+    const auto window = *mpi_window; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
 
     RelearnException::check(size < static_cast<size_t>(std::numeric_limits<int>::max()), "MPIWrapper::get: Too much to reduce");
 
     const int errorcode = MPI_Get(origin, static_cast<int>(size), MPI_CHAR, target_rank, displacement_mpi, static_cast<int>(size), MPI_CHAR, window);
     RelearnException::check(errorcode == 0, "MPIWrapper::get: Error code received: {}", errorcode);
+
+    bytes_remote.fetch_add(size, std::memory_order::relaxed);
 }
 
 int MPIWrapper::get_num_ranks() {
@@ -270,18 +314,8 @@ std::string MPIWrapper::get_my_rank_str() {
     return my_rank_str;
 }
 
-void MPIWrapper::wait_request(AsyncToken& request) {
-    MPI_Request translated_token = translation_map[request];
-    translation_map.erase(request);
-
-    // NOLINTNEXTLINE
-    const int errorcode = MPI_Wait(&translated_token, MPI_STATUS_IGNORE);
-    RelearnException::check(errorcode == 0, "MPIWrapper::wait_request: Error code received: {}", errorcode);
-}
-
-void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
+void MPIWrapper::wait_all_tokens(const std::vector<AsyncToken>& tokens) {
     const int size = static_cast<int>(tokens.size());
-    // NOLINTNEXTLINE
 
     std::vector<MPI_Request> requests(size);
 
@@ -295,66 +329,43 @@ void MPIWrapper::wait_all_tokens(std::vector<AsyncToken>& tokens) {
     std::vector<MPI_Status> statuses(size);
     const int errorcode = MPI_Waitall(size, requests.data(), statuses.data());
 
+    if (errorcode != 0) {
+        std::stringstream ss{};
+        ss << "I'm " << my_rank << ", i have " << size << " tokens and my errors are:\n";
+        for (const auto& status : statuses) {
+            ss << status.MPI_ERROR << ' ' << status.MPI_SOURCE << ' ' << status.MPI_TAG << '\n';
+        }
+
+        std::cout << ss.str();
+        fflush(stdout);
+    }
+
     RelearnException::check(errorcode == 0, "MPIWrapper::wait_all_tokens: Error code received: {}", errorcode);
 }
 
-void* MPIWrapper::translate_reduce_function(const ReduceFunction rf) {
-    MPI_Op* op = new MPI_Op;
-
-    switch (rf) {
-    case ReduceFunction::min:
-        // NOLINTNEXTLINE
-        *op = MPI_MIN;
-        break;
-
-    case ReduceFunction::max:
-        // NOLINTNEXTLINE
-        *op = MPI_MAX;
-        break;
-
-    case ReduceFunction::sum:
-        // NOLINTNEXTLINE
-        *op = MPI_SUM;
-        break;
-
-    case ReduceFunction::minsummax:
-        *op = *(MPI_Op*)minsummax;
-        break;
-
-    default:
-        RelearnException::fail("In reduce, got wrong function");
-        // NOLINTNEXTLINE
-        return nullptr;
-    }
-
-    return op;
-}
-
 void MPIWrapper::register_custom_function() {
-    minsummax = new MPI_Op;
-    // NOLINTNEXTLINE
-    MPI_Op_create((MPI_User_function*)MPIUserDefinedOperation::min_sum_max, 1, (MPI_Op*)minsummax);
+    minsummax = std::make_unique<MPI_Op>();
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    MPI_Op_create(reinterpret_cast<MPI_User_function*>(MPIUserDefinedOperation::min_sum_max), 1, minsummax.get());
 }
 
 void MPIWrapper::free_custom_function() {
-    auto* cast = reinterpret_cast<MPI_Op*>(minsummax);
-    MPI_Op_free(cast);
-    delete cast;
+    MPI_Op_free(minsummax.get());
+    minsummax.reset();
 }
 
 void MPIWrapper::lock_window(const int rank, const MPI_Locktype lock_type) {
     RelearnException::check(rank >= 0, "MPIWrapper::lock_window: rank was: {}", rank);
     const auto lock_type_int = translate_lock_type(lock_type);
 
-    // NOLINTNEXTLINE
-    const auto window = *(MPI_Win*)(mpi_window);
+    const auto window = *mpi_window; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
     const int errorcode = MPI_Win_lock(lock_type_int, rank, MPI_MODE_NOCHECK, window);
     RelearnException::check(errorcode == 0, "MPIWrapper::lock_window: Error code received: {}", errorcode);
 }
 
 void MPIWrapper::unlock_window(const int rank) {
     RelearnException::check(rank >= 0, "MPIWrapper::unlock_window: rank was: {}", rank);
-    const auto window = *(MPI_Win*)(mpi_window);
+    const auto window = *mpi_window; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
     const int errorcode = MPI_Win_unlock(rank, window);
     RelearnException::check(errorcode == 0, "MPIWrapper::unlock_window: Error code received: {}", errorcode);
 }
@@ -362,11 +373,9 @@ void MPIWrapper::unlock_window(const int rank) {
 void MPIWrapper::finalize() {
     free_custom_function();
 
-    auto* cast = reinterpret_cast<MPI_Win*>(mpi_window);
-
-    const int error_code_1 = MPI_Win_free(cast);
+    const int error_code_1 = MPI_Win_free(mpi_window.get());
     RelearnException::check(error_code_1 == 0, "MPIWrapper::finalize: Error code received: {}", error_code_1);
-    delete cast;
+
     const int error_code_2 = MPI_Free_mem(base_ptr);
     RelearnException::check(error_code_2 == 0, "MPIWrapper::finalize: Error code received: {}", error_code_2);
 
@@ -386,10 +395,8 @@ void MPIUserDefinedOperation::min_sum_max(const void* invec, void* inoutvec, con
     for (int i = 0; i < real_length; i++) {
         // NOLINTNEXTLINE
         inout[3 * i] = std::min(in[3 * i], inout[3 * i]);
-
         // NOLINTNEXTLINE
         inout[3 * i + 1] += in[3 * i + 1];
-
         // NOLINTNEXTLINE
         inout[3 * i + 2] = std::max(in[3 * i + 2], inout[3 * i + 2]);
     }

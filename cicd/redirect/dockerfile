@@ -1,0 +1,10 @@
+FROM ubuntu:21.04
+
+RUN apt-get -y update
+RUN apt-get -y upgrade
+
+RUN apt-get -y install ssh --no-install-recommends
+RUN apt-get -y install sshpass
+
+
+CMD [ "/bin/bash" ]

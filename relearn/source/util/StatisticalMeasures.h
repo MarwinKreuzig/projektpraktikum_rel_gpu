@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -7,8 +9,6 @@
  * See the LICENSE file in the base directory for details.
  *
  */
-
-#pragma once
 
 /**
  * @brief This struct is used to aggregate different statistical parameters
@@ -29,7 +29,8 @@ enum class NeuronAttribute {
     Calcium,
     X,
     Fired,
-    I_sync,
+    SynapticInput,
+    Background,
     Axons,
     AxonsConnected,
     DendritesExcitatory,

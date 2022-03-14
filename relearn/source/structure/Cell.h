@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,13 +10,11 @@
  *
  */
 
-#pragma once
-
-#include "../Config.h"
-#include "../neurons/ElementType.h"
-#include "../neurons/SignalType.h"
-#include "../util/RelearnException.h"
-#include "../util/Vec3.h"
+#include "Config.h"
+#include "Types.h"
+#include "neurons/ElementType.h"
+#include "neurons/SignalType.h"
+#include "util/RelearnException.h"
 
 #include <optional>
 #include <ostream>
@@ -29,15 +29,17 @@
 template <typename AdditionalCellAttributes>
 class Cell {
 public:
-    using position_type = typename AdditionalCellAttributes::position_type;
-    using counter_type = typename AdditionalCellAttributes::counter_type;
+    using position_type = typename RelearnTypes::position_type;
+    using counter_type = typename RelearnTypes::counter_type;
     using box_size_type = RelearnTypes::box_size_type;
 
     /**
-     * @brief Sets the neuron id for the associated cell. Can be set to Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
-     * @param neuron_id The neuron id, can be Constants::uninitialized
+     * @brief Sets the neuron id for the associated cell
+     * @param neuron_id The neuron id
+     * @exception Throws a RelearnException if the neuron_id is not initialized
      */
-    void set_neuron_id(const size_t neuron_id) noexcept {
+    void set_neuron_id(const NeuronID& neuron_id) {
+        RelearnException::check(neuron_id.is_initialized(), "Cell::set:neuron_id: The neuron id was not initialized: {}", neuron_id);
         this->neuron_id = neuron_id;
     }
 
@@ -45,7 +47,7 @@ public:
      * @brief Returns the neuron id for the associated cell. Is Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
      * @return The neuron id
      */
-    [[nodiscard]] size_t get_neuron_id() const noexcept {
+    [[nodiscard]] NeuronID get_neuron_id() const noexcept {
         return neuron_id;
     }
 
@@ -58,7 +60,7 @@ public:
     void set_size(const box_size_type& min, const box_size_type& max) {
         const auto& [min_x, min_y, min_z] = min;
         const auto& [max_x, max_y, max_z] = max;
-        
+
         RelearnException::check(min_x <= max_x, "Cell::set_size: x was not ok");
         RelearnException::check(min_y <= max_y, "Cell::set_size: y was not ok");
         RelearnException::check(min_z <= max_z, "Cell::set_size: z was not ok");
@@ -76,9 +78,9 @@ public:
     }
 
     /**
-	 * @brief Returns maximum edge length of the cell, i.e., ||max - min||_1
-	 * @return The maximum edge length of the cell
-	 */
+     * @brief Returns maximum edge length of the cell, i.e., ||max - min||_1
+     * @return The maximum edge length of the cell
+     */
     [[nodiscard]] double get_maximal_dimension_difference() const noexcept {
         const auto diff_vector = maximum_position - minimum_position;
         const auto diff = diff_vector.get_maximum();
@@ -91,29 +93,28 @@ public:
      * @param position The position inside the current cell which's octant position should be found
      * @exception Throws a RelearnException if the position is not within the current cell
      * @return A value from 0 to 7 that indicates which octant the position is
-     * 
+     *
      * The binary numbering is computed as follows:
-     * 
+     *
      * 		   110 ----- 111
-	 *		   /|        /|
-	 *		  / |       / |
-	 *		 /  |      /  |
-	 *	   010 ----- 011  |    y
-	 *		|  100 ---|- 101   ^   z
-	 *		|  /      |  /     |
-	 *		| /       | /      | /
-	 *		|/        |/       |/
-	 *	   000 ----- 001       +-----> x
+     *		   /|        /|
+     *		  / |       / |
+     *		 /  |      /  |
+     *	   010 ----- 011  |    y
+     *		|  100 ---|- 101   ^   z
+     *		|  /      |  /     |
+     *		| /       | /      | /
+     *		|/        |/       |/
+     *	   000 ----- 001       +-----> x
      */
-    [[nodiscard]] unsigned char get_octant_for_position(const box_size_type& position) const
-    {
+    [[nodiscard]] unsigned char get_octant_for_position(const box_size_type& position) const {
         const auto& [x, y, z] = position;
 
         /**
-	     * Sanity check: Make sure that the position is within this cell
-	     * This check returns false if negative coordinates are used.
-	     * Thus make sure to use positions >= 0.
-	     */
+         * Sanity check: Make sure that the position is within this cell
+         * This check returns false if negative coordinates are used.
+         * Thus make sure to use positions >= 0.
+         */
         const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
         RelearnException::check(is_in_box, "Cell::get_octant_for_position: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
 
@@ -121,13 +122,13 @@ public:
         const auto& [max_x, max_y, max_z] = maximum_position;
 
         unsigned char idx = 0;
-        //NOLINTNEXTLINE
+        // NOLINTNEXTLINE
         idx = idx | ((x < (min_x + max_x) / 2.0) ? 0 : 1); // idx | (pos_x < midpoint_dim_x) ? 0 : 1
 
-        //NOLINTNEXTLINE
+        // NOLINTNEXTLINE
         idx = idx | ((y < (min_y + max_y) / 2.0) ? 0 : 2); // idx | (pos_y < midpoint_dim_y) ? 0 : 2
 
-        //NOLINTNEXTLINE
+        // NOLINTNEXTLINE
         idx = idx | ((z < (min_z + max_z) / 2.0) ? 0 : 4); // idx | (pos_z < midpoint_dim_z) ? 0 : 4
 
         RelearnException::check(idx < Constants::number_oct, "Cell::get_octant_for_position: Calculated octant is too large: {}", idx);
@@ -204,12 +205,12 @@ public:
 
 private:
     /**
-	 * ID of the neuron in the cell.
-	 * This is only valid for cells that contain a normal neuron.
-	 * For those with a super neuron, it has no meaning.
-	 * This info is used to identify (return) the target neuron for a given axon
-	 */
-    size_t neuron_id{ Constants::uninitialized };
+     * ID of the neuron in the cell.
+     * This is only valid for cells that contain a normal neuron.
+     * For those with a super neuron, it has no meaning.
+     * This info is used to identify (return) the target neuron for a given axon
+     */
+    NeuronID neuron_id{ NeuronID::uninitialized_id() };
 
     // Two points describe size of cell
     box_size_type minimum_position{ Constants::uninitialized };
@@ -400,7 +401,13 @@ public:
      * @param opt_position The new position of the excitatory axons
      * @exception Throws a RelearnException if the position is valid but not within the box
      */
-    void set_excitatory_axons_position(const std::optional<position_type>& opt_position) noexcept {
+    void set_excitatory_axons_position(const std::optional<position_type>& opt_position) {
+        if (opt_position.has_value()) {
+            const auto& position = opt_position.value();
+            const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
+            RelearnException::check(is_in_box, "Cell::set_excitatory_axons_position: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
+        }
+
         additional_cell_attributes.set_excitatory_axons_position(opt_position);
     }
 
@@ -417,7 +424,13 @@ public:
      * @param opt_position The new position of the inhibitory axons
      * @exception Throws a RelearnException if the position is valid but not within the box
      */
-    void set_inhibitory_axons_position(const std::optional<position_type>& opt_position) noexcept {
+    void set_inhibitory_axons_position(const std::optional<position_type>& opt_position) {
+        if (opt_position.has_value()) {
+            const auto& position = opt_position.value();
+            const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
+            RelearnException::check(is_in_box, "Cell::set_inhibitory_axons_position: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
+        }
+
         additional_cell_attributes.set_inhibitory_axons_position(opt_position);
     }
 
@@ -436,6 +449,15 @@ public:
      */
     [[nodiscard]] std::optional<position_type> get_axons_position_for(const SignalType axon_type) const {
         return additional_cell_attributes.get_axons_position_for(axon_type);
+    }
+
+    /**
+     * @brief Sets the axon position for both inhibitory and excitatory
+     * @param opt_position The axon position, can be empty
+     */
+    void set_axons_position(const std::optional<position_type>& opt_position) {
+        set_excitatory_axons_position(opt_position);
+        set_inhibitory_axons_position(opt_position);
     }
 
     /**
@@ -473,8 +495,46 @@ public:
     /**
      * @brief Sets the position of the neuron for every necessary part of the cell
      * @param opt_position The position, can be empty
+     * @exception Throws a RelearnException if the position is outside of the size
      */
-    void set_neuron_position(const std::optional<position_type>& opt_position) noexcept {
+    void set_neuron_position(const std::optional<position_type>& opt_position) {
+        if (opt_position.has_value()) {
+            const auto& position = opt_position.value();
+            const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
+            RelearnException::check(is_in_box, "Cell::set_neuron_position: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
+        }
+
         additional_cell_attributes.set_neuron_position(opt_position);
+    }
+
+    /**
+     * @brief Gets the position of the neuron for every necessary part of the cell
+     * @exception Throws a RelearnException if one position if the positions do not agree with one another
+     * @return opt_position The position, can be empty
+     */
+    [[nodiscard]] std::optional<position_type> get_neuron_position() const {
+        return additional_cell_attributes.get_neuron_position();
+    }
+
+    /**
+     * @brief Returns the number of free elements for the associated type in this cell
+     * @param axon_type The requested element type
+     * @param signal_type The requested signal type
+     * @exception Might throw a RelearnException if this operation is not supported
+     * @return The number of free elements for the associated signal type
+     */
+    [[nodiscard]] counter_type get_number_elements_for(const ElementType element_type, const SignalType signal_type) const {
+        return additional_cell_attributes.get_number_elements_for(element_type, signal_type);
+    }
+
+    /**
+     * @brief Returns the position of the specified element with the given signal type
+     * @param axon_type The requested element type
+     * @param signal_type The requested signal type
+     * @exception Might throw a RelearnException if this operation is not supported
+     * @return The position of the associated element, can be empty
+     */
+    [[nodiscard]] std::optional<position_type> get_position_for(const ElementType element_type, const SignalType signal_type) const {
+        return additional_cell_attributes.get_position_for(element_type, signal_type);
     }
 };

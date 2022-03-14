@@ -27,18 +27,20 @@ public:
     constexpr static size_t number_oct = 8;
     constexpr static size_t uninitialized = 1111222233334444;
 
-    constexpr static size_t max_lvl_subdomains = 20;
+    constexpr static size_t number_prealloc_space = 30;
 
-    constexpr static size_t num_items_per_request = 6;
+    constexpr static size_t max_lvl_subdomains = 20;
 
     constexpr static double eps = 0.00001;
 
     constexpr static size_t print_width = 22;
     constexpr static size_t print_precision = 8;
+        
+    constexpr static double default_sigma = 750.0; // In Sebastians work: 750
 
     constexpr static size_t mpi_alloc_mem = 1024 * 1024 * 300;
 
-    //Constants for Fast Gauss
+    // Constants for Fast Gauss
     constexpr static unsigned int p = 4;
     constexpr static unsigned int p3 = p * p * p;
     constexpr static unsigned int max_neurons_in_target = 70; //cutoff for target box
@@ -50,23 +52,23 @@ public:
     constexpr static bool do_debug_checks = false;
 
     // Update connectivity every <plasticity_update_step> ms
-    inline static size_t plasticity_update_step = 100;
+    inline static size_t plasticity_update_step = 100; // NOLINTLINE
 
     // Update connectivity starting at <first_plasticity_update> ms
-    inline static size_t first_plasticity_update = 0;
+    inline static size_t first_plasticity_update = 0; // NOLINTLINE
 
     // Print details every <logfile_update_step> ms
-    inline static size_t logfile_update_step = 100;
+    inline static size_t logfile_update_step = 100; // NOLINTLINE
 
     // Print to cout every <console_update_step> ms
-    inline static size_t console_update_step = 100;
+    inline static size_t console_update_step = 100; // NOLINTLINE
 
     // Capture individual neuron informations ever <monitor_step> ms
-    inline static size_t monitor_step = 100;
+    inline static size_t monitor_step = 100; // NOLINTLINE
 
     // Capture the global statistics every <statistics_step> ms
-    inline static size_t statistics_step = 100;
+    inline static size_t statistics_step = 100; // NOLINTLINE
 
     // Capture the calcium values every <calcium_step> ms
-    inline static size_t calcium_step = 1000000;
+    inline static size_t calcium_step = 1000000; // NOLINTLINE
 };

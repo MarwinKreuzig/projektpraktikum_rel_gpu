@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,13 +10,11 @@
  *
  */
 
-#pragma once
+#include "spdlog/fmt/bundled/core.h"
 
 #include <exception>
 #include <string>
 #include <utility>
-
-#include "spdlog/fmt/bundled/core.h"
 
 /**
  * This class serves as a collective exception class that can check for conditions,
@@ -22,7 +22,7 @@
  * Log messages can be disabled via RelearnException::hide_messages.
  * In case a condition evaluated to false and it logs the message, it calls MPIWrapper::get_num_ranks and MPIWrapper::get_my_rank.
  */
-class RelearnException : std::exception {
+class RelearnException : public std::exception {
 private:
     std::string message{};
 
@@ -79,7 +79,7 @@ public:
      * @param format The format string. Placeholders can used: "{}"
      * @param ...args The values that shall be substituted for the placeholders
      * @exception Throws an exception if the number of args does not match the number of placeholders in format
-     *      Throws a RelearnException 
+     *      Throws a RelearnException
      */
     template <typename FormatString, typename... Args>
     static void fail(FormatString&& format, Args&&... args) {
@@ -87,7 +87,7 @@ public:
             throw RelearnException{};
         }
 
-        auto message = fmt::format(std::forward<FormatString>(format), std::forward<Args>(args)...);
+        auto message = fmt::format(fmt::runtime(std::forward<FormatString>(format)), std::forward<Args>(args)...);
         log_message(message);
         throw RelearnException{ std::move(message) };
     }

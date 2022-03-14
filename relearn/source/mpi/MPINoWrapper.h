@@ -1,16 +1,18 @@
 #pragma once
 
-#include "../Config.h"
+#include "Config.h"
 
 #if !RELEARN_MPI_FOUND
 
-#include "../io/LogFiles.h"
-#include "../util/MemoryHolder.h"
-#include "../util/RelearnException.h"
+#include "CommunicationMap.h"
+#include "io/LogFiles.h"
+#include "util/MemoryHolder.h"
+#include "util/RelearnException.h"
 
 #include <array>
 #include <map>
 #include <memory>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -24,8 +26,8 @@ class OctreeNode;
 class RelearnTest;
 
 enum class MPI_Locktype : int {
-    exclusive = MPI_LOCK_EXCLUSIVE,
-    shared = MPI_LOCK_SHARED,
+    Exclusive = MPI_LOCK_EXCLUSIVE,
+    Shared = MPI_LOCK_SHARED,
 };
 
 class MPINoWrapper {
@@ -33,12 +35,11 @@ class MPINoWrapper {
 
 public:
     enum class ReduceFunction : char {
-        min = 0,
-        max = 1,
-        avg = 2,
-        sum = 3,
-        none = 4,
-        minsummax = 100
+        Min = 0,
+        Max = 1,
+        Sum = 2,
+        None = 3,
+        MinSumMax = 100
     };
 
     using AsyncToken = MPI_Request;
@@ -56,19 +57,11 @@ private:
 
     static inline int64_t base_pointers{}; // RMA window base pointers of all procs
 
-    using async_type = std::tuple<const void*, void*, int>;
-
-    static inline std::map<AsyncToken, async_type> tuple_map{};
-
     static inline std::string my_rank_str{ '0' };
 
     static void all_gather(const void* own_data, void* buffer, int size);
 
     static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank);
-
-    static void async_s(const void* buffer, int count, int rank, AsyncToken& token);
-
-    static void async_recv(void* buffer, int count, int rank, AsyncToken& token);
 
 public:
     static void init(int argc, char** argv);
@@ -99,20 +92,7 @@ public:
 
     [[nodiscard]] static uint64_t all_reduce_uint64(uint64_t value, ReduceFunction function);
 
-    // NOLINTNEXTLINE
-    static void all_to_all(const std::vector<size_t>& src, std::vector<size_t>& dst);
-
-    template <typename T>
-    // NOLINTNEXTLINE
-    static void async_send(const T* buffer, size_t size_in_bytes, int rank, AsyncToken& token) {
-        async_s(buffer, static_cast<int>(size_in_bytes), rank, token);
-    }
-
-    template <typename T>
-    // NOLINTNEXTLINE
-    static void async_receive(T* buffer, size_t size_in_bytes, int rank, AsyncToken& token) {
-        async_recv(buffer, static_cast<int>(size_in_bytes), rank, token);
-    }
+    [[nodiscard]] static std::vector<size_t> all_to_all(const std::vector<size_t>& src);
 
     template <typename T, size_t size>
     [[nodiscard]] static std::array<T, size> reduce(const std::array<T, size>& src, ReduceFunction function, int root_rank) {
@@ -124,13 +104,20 @@ public:
         return dst;
     }
 
-    template <typename T>
-    static void all_gather(T own_data, std::vector<T>& results) {
-        all_gather(&own_data, results.data(), sizeof(T));
+    template <typename RequestType>
+    [[nodiscard]] static CommunicationMap<RequestType> exchange_requests(const CommunicationMap<RequestType>& outgoing_requests) {
+        return outgoing_requests;
     }
 
     template <typename T>
-    static void all_gather_inline(T* ptr, int count) {
+    static std::vector<T> all_gather(T own_data) {
+        std::vector<T> results(1);
+        all_gather(&own_data, results.data(), sizeof(T));
+        return results;
+    }
+
+    template <typename T>
+    static void all_gather_inline(std::span<T> buffer) {
     }
 
     template <typename AdditionalCellAttributes>
@@ -144,6 +131,10 @@ public:
 
     [[nodiscard]] static int get_num_ranks();
 
+    [[nodiscard]] static std::vector<int> get_ranks() {
+        return { 0 };
+    }
+
     [[nodiscard]] static int get_my_rank();
 
     [[nodiscard]] static size_t get_num_neurons();
@@ -156,12 +147,6 @@ public:
 
     [[nodiscard]] static std::string get_my_rank_str();
 
-    // NOLINTNEXTLINE
-    static void wait_request(AsyncToken& request);
-
-    // NOLINTNEXTLINE
-    static void wait_all_tokens(std::vector<AsyncToken>& tokens);
-
     template <typename T>
     static std::vector<std::vector<T>> exchange_values(const std::vector<std::vector<T>>& values) {
         RelearnException::check(values.size() == 1 && values[0].size() == 0, "MPINoWrapper::exchange_values: There were values!");
@@ -172,6 +157,18 @@ public:
     static void lock_window(int rank, MPI_Locktype lock_type);
 
     static void unlock_window(int rank);
+
+    static uint64_t get_number_bytes_sent() noexcept {
+        return 0;
+    }
+
+    static uint64_t get_number_bytes_received() noexcept {
+        return 0;
+    }
+
+    static uint64_t get_number_bytes_remote_accessed() noexcept {
+        return 0;
+    }
 
     static void finalize();
 };

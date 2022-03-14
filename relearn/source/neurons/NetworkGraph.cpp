@@ -11,7 +11,7 @@
 #include "NetworkGraph.h"
 
 #include "../io/LogFiles.h"
-#include "../structure/NeuronIdTranslator.h"
+#include "../sim/NeuronIdTranslator.h"
 #include "Neurons.h"
 
 #include "spdlog/spdlog.h"
@@ -31,7 +31,7 @@ bool NetworkGraph::check_edges_from_file(const std::filesystem::path& path_synap
 
     for (std::string line{}; std::getline(file_synapses, line);) {
         // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
+        if (line.empty() || '#' == line[0]) {
             continue;
         }
 
@@ -74,9 +74,9 @@ void NetworkGraph::debug_check() const {
     const auto my_rank = mpi_rank;
 
     // Golden map that stores all local edges
-    std::map<std::pair<size_t, size_t>, EdgeWeight> edges{};
+    std::map<std::pair<NeuronID, NeuronID>, RelearnTypes::synapse_weight> edges{};
 
-    for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
+    for (auto neuron_id : NeuronID::range(number_local_neurons)) {
         const auto& local_out_edges = get_local_out_edges(neuron_id);
         const auto& distant_out_edges = get_distant_out_edges(neuron_id);
 
@@ -86,14 +86,14 @@ void NetworkGraph::debug_check() const {
         }
     }
 
-    for (size_t neuron_id = 0; neuron_id < number_local_neurons; neuron_id++) {
-        const auto local_in_edges = get_local_in_edges(neuron_id);
-        const auto distant_in_edges = get_distant_in_edges(neuron_id);
+    for (auto id : NeuronID::range(number_local_neurons)) {
+        const auto local_in_edges = get_local_in_edges(id);
+        const auto distant_in_edges = get_distant_in_edges(id);
 
         for (const auto& [source_neuron_id, edge_val] : local_in_edges) {
             RelearnException::check(edge_val != 0, "NetworkGraph::debug_check: Value is zero (out)");
 
-            const std::pair<size_t, size_t> id_pair(source_neuron_id, neuron_id);
+            const std::pair<NeuronID, NeuronID> id_pair(source_neuron_id, id);
             const auto it = edges.find(id_pair);
 
             const bool found = it != edges.cend();
@@ -113,7 +113,6 @@ void NetworkGraph::debug_check() const {
 }
 
 void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTranslator>& translator) const {
-    const auto my_rank = mpi_rank;
     const auto num_ranks = MPIWrapper::get_num_ranks();
 
     std::map<int, std::set<size_t>> required_ids{};
@@ -139,9 +138,9 @@ void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTransla
     const auto& exchange_ids_others_requests = MPIWrapper::exchange_values(exchange_id_my_requests);
 
     std::vector<std::vector<size_t>> exchange_id_my_responses(num_ranks);
-    for (auto rank = 0; rank < num_ranks; rank++) {
+    for (auto rank : MPIWrapper::get_ranks()) {
         for (const auto& local_id : exchange_ids_others_requests[rank]) {
-            const auto& global_id = translator->get_global_id(local_id);
+            const auto& global_id = translator->get_global_id(NeuronID{ local_id });
             exchange_id_my_responses[rank].emplace_back(global_id);
         }
     }
@@ -149,23 +148,22 @@ void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTransla
     const auto& exchange_ids_other_responses = MPIWrapper::exchange_values(exchange_id_my_responses);
 
     // For my neurons
-    for (size_t target_neuron_id = 0; target_neuron_id < number_local_neurons; target_neuron_id++) {
+    for (auto target_neuron_id : NeuronID::range(number_local_neurons)) {
         const auto global_target_id = translator->get_global_id(target_neuron_id);
 
-        for (const auto& [local_source_id, edge_val] : neuron_local_in_neighborhood[target_neuron_id]) {
+        for (const auto& [local_source_id, edge_val] : neuron_local_in_neighborhood[target_neuron_id.get_local_id()]) {
             const auto global_source_id = translator->get_global_id(local_source_id);
-          
-            os << (global_target_id + 1) << "\t"
-               << (global_source_id + 1) << "\t"
+
+            os << (global_target_id.get_global_id() + 1) << "\t"
+               << (global_source_id.get_global_id() + 1) << "\t"
                << edge_val << "\n";
         }
 
-        for (const auto& [distant_neuron_id, edge_val] : neuron_distant_in_neighborhood[target_neuron_id]) {
+        for (const auto& [distant_neuron_id, edge_val] : neuron_distant_in_neighborhood[target_neuron_id.get_local_id()]) {
             const auto& [distant_rank, distant_local_neuron_id] = distant_neuron_id;
 
-            const auto& request_iterator =
-                std::find(exchange_id_my_requests[distant_rank].begin(), 
-                    exchange_id_my_requests[distant_rank].end(), distant_local_neuron_id);
+            const auto& request_iterator = std::find(exchange_id_my_requests[distant_rank].begin(),
+                exchange_id_my_requests[distant_rank].end(), distant_local_neuron_id.get_local_id());
 
             const auto& distance = std::distance(exchange_id_my_requests[distant_rank].begin(), request_iterator);
 
@@ -173,7 +171,7 @@ void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTransla
 
             // <target neuron id>  <source neuron id>  <weight>
             os
-                << (global_target_id + 1) << "\t"
+                << (global_target_id.get_global_id() + 1) << "\t"
                 << (global_source_id + 1) << "\t"
                 << edge_val << "\n";
         }

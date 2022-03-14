@@ -10,7 +10,8 @@
 
 #include "InteractiveNeuronIO.h"
 
-#include "../util/RelearnException.h"
+#include "util/RelearnException.h"
+
 #include "spdlog/spdlog.h"
 
 #include <fstream>
@@ -18,7 +19,7 @@
 #include <sstream>
 #include <string>
 
-std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_enable_interrups(const std::filesystem::path& path_to_file) {
+std::vector<std::pair<size_t, std::vector<NeuronID>>> InteractiveNeuronIO::load_enable_interrups(const std::filesystem::path& path_to_file) {
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();
@@ -26,11 +27,11 @@ std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_en
 
     RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_enable_interrups: Opening the file was not successful");
 
-    std::vector<std::pair<size_t, std::vector<size_t>>> return_value;
+    std::vector<std::pair<size_t, std::vector<NeuronID>>> return_value{};
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
+        if (line.empty() || '#' == line[0]) {
             continue;
         }
 
@@ -53,9 +54,9 @@ std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_en
             continue;
         }
 
-        std::vector<size_t> indices;
+        std::vector<NeuronID> indices{};
 
-        for (size_t id{}; sstream >> id;) {
+        for (NeuronID::value_type id{}; sstream >> id;) {
             indices.emplace_back(id);
         }
 
@@ -65,7 +66,7 @@ std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_en
     return return_value;
 }
 
-std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_disable_interrups(const std::filesystem::path& path_to_file) {
+std::vector<std::pair<size_t, std::vector<NeuronID>>> InteractiveNeuronIO::load_disable_interrups(const std::filesystem::path& path_to_file) {
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();
@@ -73,11 +74,11 @@ std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_di
 
     RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_disable_interrups: Opening the file was not successful");
 
-    std::vector<std::pair<size_t, std::vector<size_t>>> return_value;
+    std::vector<std::pair<size_t, std::vector<NeuronID>>> return_value{};
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
+        if (line.empty() || '#' == line[0]) {
             continue;
         }
 
@@ -100,9 +101,9 @@ std::vector<std::pair<size_t, std::vector<size_t>>> InteractiveNeuronIO::load_di
             continue;
         }
 
-        std::vector<size_t> indices;
+        std::vector<NeuronID> indices{};
 
-        for (size_t id{}; sstream >> id;) {
+        for (NeuronID::value_type id{}; sstream >> id;) {
             indices.emplace_back(id);
         }
 
@@ -124,7 +125,7 @@ std::vector<std::pair<size_t, size_t>> InteractiveNeuronIO::load_creation_interr
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
-        if (!line.empty() && '#' == line[0]) {
+        if (line.empty() || '#' == line[0]) {
             continue;
         }
 

@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,11 +10,9 @@
  *
  */
 
-#pragma once
-
-#include "../Config.h"
-#include "../util/RelearnException.h"
-#include "../util/Vec3.h"
+#include "Config.h"
+#include "util/RelearnException.h"
+#include "util/Vec3.h"
 
 #include <cstdint>
 #include <type_traits>
@@ -30,7 +30,7 @@ public:
      * @param idx The one dimensional index
      * @return The three dimensional index
      */
-    [[nodiscard]] static BoxCoordinates map_1d_to_3d(uint64_t idx) noexcept;
+    [[nodiscard]] static BoxCoordinates map_1d_to_3d(uint64_t idx);
 
     /**
      * @brief Maps a three dimensional index into the one dimensional domain.

@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,10 +10,8 @@
  *
  */
 
-#pragma once
-
 /**
-  * An instance of this enum classifies a synaptic elements as either excitatory or inhibitory.
-  */
-enum class SignalType { EXCITATORY,
-    INHIBITORY };
+ * An instance of this enum classifies a synaptic elements as either excitatory or inhibitory.
+ */
+enum class SignalType { Excitatory,
+    Inhibitory };
