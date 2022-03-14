@@ -60,6 +60,14 @@ public:
     }
 
     /**
+     * @brief Returns the number of ranks that are saved in this map
+     * @return The number of ranks
+     */
+    [[nodiscard]] int get_number_ranks() const noexcept {
+        return number_ranks;
+    }
+
+    /**
      * @brief Returns the total number of requests
      * @return The total number of requests
      */

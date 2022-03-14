@@ -250,25 +250,37 @@ protected:
         return get_random_bool() ? SignalType::Excitatory : SignalType::Inhibitory;
     }
 
-    CommunicationMap<SynapseCreationRequest> create_incoming_requests(size_t number_ranks, int current_rank,
+    std::tuple<CommunicationMap<SynapseCreationRequest>, std::vector<size_t>, std::vector<size_t>> create_incoming_requests(size_t number_ranks, int current_rank,
         size_t number_neurons, size_t number_requests_lower_bound, size_t number_requests_upper_bound) {
 
         CommunicationMap<SynapseCreationRequest> cm(static_cast<int>(number_ranks));
+        std::vector<size_t> number_excitatory_requests(number_neurons, 0);
+        std::vector<size_t> number_inhibitory_requests(number_neurons, 0);
 
         for (const auto& target_id : NeuronID::range(number_neurons)) {
             const auto number_requests = get_random_integer<size_t>(number_requests_lower_bound, number_requests_upper_bound);
+
+            const auto id = target_id.get_local_id();
 
             for (auto r = 0; r < number_requests; r++) {
                 const auto source_rank = get_random_rank(number_ranks);
                 const auto source_id = get_random_neuron_id(number_neurons);
 
-                const SynapseCreationRequest scr{ target_id, source_id, get_random_signal_type() };
+                const auto signal_type = get_random_signal_type();
+
+                const SynapseCreationRequest scr{ target_id, source_id, signal_type };
+
+                if (signal_type == SignalType::Excitatory) {
+                    number_excitatory_requests[id]++;
+                } else {
+                    number_inhibitory_requests[id]++;
+                }
 
                 cm.append(source_rank, scr);
             }
         }
 
-        return cm;
+        return { cm, number_excitatory_requests, number_inhibitory_requests };
     }
 
     std::tuple<SynapticElements, std::vector<double>, std::vector<unsigned int>, std::vector<SignalType>>

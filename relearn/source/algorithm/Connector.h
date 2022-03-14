@@ -50,10 +50,11 @@ public:
         const auto number_neurons = excitatory_dendrites->get_size();
         const auto number_neurons_2 = inhibitory_dendrites->get_size();
 
-        RelearnException::check(number_neurons == number_neurons_2, "ForwardConnector::process_requests: The sizes of the synaptic elements don't match: {} and {}", number_neurons, number_neurons_2);
+        RelearnException::check(number_neurons == number_neurons_2, 
+            "ForwardConnector::process_requests: The sizes of the synaptic elements don't match: {} and {}", number_neurons, number_neurons_2);
 
         const auto my_rank = MPIWrapper::get_my_rank();
-        const auto number_ranks = MPIWrapper::get_num_ranks();
+        const auto number_ranks = creation_requests.get_number_ranks();
 
         CommunicationMap<SynapseCreationResponse> responses(number_ranks);
 
@@ -122,7 +123,8 @@ public:
      * @param creation_requests The requests from this MPI rank
      * @param creation_responses The responses from the other MPI ranks
      * @param axons The axons
-     * @exception Throws a RelearnException if (a) The axons are empty, (b) One of the source ids that are accepted are too large
+     * @exception Throws a RelearnException if (a) The axons are empty, (b) The requests and responses don't have the same size,
+     *      (c) One of the source ids that are accepted are too large, (d) An accepted request targets an axon with not enough vacant elements
      * @return All synapses from this MPI rank to other MPI ranks
      */
     [[nodiscard]] static DistantOutSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
@@ -130,6 +132,14 @@ public:
 
         const auto axons_empty = axons.operator bool();
         RelearnException::check(axons_empty, "ForwardConnector::process_requests: The axons are empty");
+
+        RelearnException::check(creation_requests.size() == creation_responses.size(), 
+            "ForwardConnector::process_requests: Requests and Responses had different sizes");
+
+        for (auto rank = 0; rank < creation_requests.size(); rank++) {
+            RelearnException::check(creation_requests.size(rank) == creation_responses.size(rank),
+                "ForwardConnector::process_requests: Requests and Responses for rank {} had different sizes", rank);
+        }
 
         const auto number_neurons = axons->get_size();
         const auto my_rank = MPIWrapper::get_my_rank();
@@ -154,6 +164,9 @@ public:
 
                 RelearnException::check(source_neuron_id.get_local_id() < number_neurons,
                     "ForwardConnector::process_responses: The source neuron id was too large: {} vs {}", source_neuron_id.get_local_id(), number_neurons);
+
+                RelearnException::check(axons->get_free_elements(source_neuron_id) > 0, 
+                    "ForwardConnector::process_responses: The source neuron did not have a vacant element: {}", source_neuron_id);
 
                 // Increment number of connected axons
                 axons->update_connected_elements(source_neuron_id, 1);

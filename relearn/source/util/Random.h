@@ -71,18 +71,18 @@ public:
     }
 
     /**
-     * @brief Generates a random integer (uniformly distributed in [lower_inclusive, upper_exclusive]).
+     * @brief Generates a random integer (uniformly distributed in [lower_inclusive, upper_inclusive]).
      *      Uses the RNG that is associated with the key.
      * @param key The type which's RNG shall be used
      * @param lower_inclusive The lower inclusive bound for the random integer
-     * @param upper_exclusive The upper inclusive bound for the random integer
-     * @exception Throws a RelearnException if lower_inclusive > upper_exclusive
-     * @return A uniformly integer double in [lower_inclusive, upper_exclusive)
+     * @param upper_inclusive The upper inclusive bound for the random integer
+     * @exception Throws a RelearnException if lower_inclusive > upper_inclusive
+     * @return A uniformly integer double in [lower_inclusive, upper_inclusive)
      */
-    static unsigned int get_random_uniform_integer(const RandomHolderKey key, const unsigned int lower_inclusive, const unsigned int upper_exclusive) {
-        RelearnException::check(lower_inclusive <= upper_exclusive,
-            "RandomHolder::get_random_uniform_integer: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
-        std::uniform_int_distribution<unsigned int> uid(lower_inclusive, upper_exclusive);
+    static unsigned int get_random_uniform_integer(const RandomHolderKey key, const unsigned int lower_inclusive, const unsigned int upper_inclusive) {
+        RelearnException::check(lower_inclusive <= upper_inclusive,
+            "RandomHolder::get_random_uniform_integer: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_inclusive, static_cast<int>(key));
+        std::uniform_int_distribution<unsigned int> uid(lower_inclusive, upper_inclusive);
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         auto& generator = random_number_generators[static_cast<int>(key)];
