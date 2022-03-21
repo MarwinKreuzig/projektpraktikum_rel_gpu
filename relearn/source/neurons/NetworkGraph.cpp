@@ -148,7 +148,7 @@ void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTransla
     const auto& exchange_ids_other_responses = MPIWrapper::exchange_values(exchange_id_my_responses);
 
     // For my neurons
-    for (auto target_neuron_id : NeuronID::range(number_local_neurons)) {
+    for (const auto& target_neuron_id : NeuronID::range(number_local_neurons)) {
         const auto global_target_id = translator->get_global_id(target_neuron_id);
 
         for (const auto& [local_source_id, edge_val] : neuron_local_in_neighborhood[target_neuron_id.get_local_id()]) {
@@ -170,10 +170,47 @@ void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTransla
             const auto global_source_id = exchange_ids_other_responses[distant_rank][distance];
 
             // <target neuron id>  <source neuron id>  <weight>
-            os
-                << (global_target_id.get_global_id() + 1) << "\t"
-                << (global_source_id + 1) << "\t"
-                << edge_val << "\n";
+            os << (global_target_id.get_global_id() + 1) << "\t"
+               << (global_source_id + 1) << "\t"
+               << edge_val << "\n";
+        }
+    }
+}
+
+void NetworkGraph::print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges) const noexcept {
+    const auto my_rank = mpi_rank;
+
+    for (const auto& source_id : NeuronID::range(number_local_neurons)) {
+        const auto& source_local_id = source_id.get_local_id();
+
+        for (const auto& [target_id, weight] : neuron_local_out_neighborhood[source_local_id]) {
+            const auto& target_local_id = target_id.get_local_id();
+
+            os_out_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << source_local_id << '\t' << weight << '\n';
+        }
+
+        for (const auto& [target_neuron, weight] : neuron_distant_out_neighborhood[source_local_id]) {
+            const auto& [target_rank, target_id] = target_neuron;
+            const auto& target_local_id = source_id.get_local_id();
+
+            os_out_edges << target_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << source_local_id << '\t' << weight << '\n';
+        }
+    }
+
+    for (const auto& target_id : NeuronID::range(number_local_neurons)) {
+        const auto& target_local_id = target_id.get_local_id();
+
+        for (const auto& [source_id, weight] : neuron_local_in_neighborhood[target_local_id]) {
+            const auto& source_local_id = source_id.get_local_id();
+
+            os_in_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << source_local_id << '\t' << weight << '\n';
+        }
+
+        for (const auto& [source_neuron, weight] : neuron_distant_in_neighborhood[target_local_id]) {
+            const auto& [source_rank, source_id] = source_neuron;
+            const auto& source_local_id = source_id.get_local_id();
+
+            os_in_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << source_rank << ' ' << source_local_id << '\t' << weight << '\n';
         }
     }
 }
