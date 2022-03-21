@@ -512,3 +512,30 @@ TYPED_TEST(OctreeTest, testOctreeInsertLocalTree) {
 
     this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
+
+TYPED_TEST(OctreeTest, testOctreeLevel) {
+    using AdditionalCellAttributes = TypeParam::AdditionalCellAttributes;
+
+    const auto my_rank = MPIWrapper::get_my_rank();
+
+    const auto& [min, max] = this->get_random_simulation_box_size();
+    const auto& own_position = this->get_random_position_in_box(min, max);
+    size_t level = this->get_small_refinement_level();
+
+    OctreeNode<AdditionalCellAttributes> node{};
+    node.set_rank(my_rank);
+    node.set_cell_size(min, max);
+    node.set_cell_neuron_id(NeuronID::virtual_id());
+    node.set_cell_neuron_position(own_position);
+
+    size_t number_neurons = this->get_random_number_neurons();
+    size_t num_additional_ids = this->get_random_number_neurons();
+
+    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = this->generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids);
+
+    for (const auto& [pos, id] : neurons_to_place) {
+        auto tmp = node.insert(pos, id, my_rank);
+    }
+
+    ASSERT_EQ(node.get_level(), 0);
+}

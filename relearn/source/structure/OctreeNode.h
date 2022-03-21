@@ -194,6 +194,7 @@ public:
                 RelearnException::check(cell_own_position.has_value(), "OctreeNode::insert: While building the octree, the cell doesn't have a position");
 
                 idx = parent_node->get_cell().get_octant_for_position(cell_own_position.value());
+                const auto parent_level = parent_node->get_level();
                 auto* new_node = OctreeNode<AdditionalCellAttributes>::create();
                 parent_node->set_child(new_node, idx);
 
@@ -204,6 +205,7 @@ public:
 
                 new_node->set_cell_size(minimum_position, maximum_position);
                 new_node->set_cell_neuron_position(cell_own_position);
+                new_node->set_level(parent_level+1);
 
                 // Neuron ID
                 const auto prev_neuron_id = parent_node->get_cell_neuron_id();
@@ -236,6 +238,7 @@ public:
          * add myself to the array now
          */
         parent_node->set_child(new_node_to_insert, new_position_octant);
+        const auto parent_level = parent_node->get_level();
 
         const auto& [minimum_position, maximum_position] = parent_node->get_cell().get_size_for_octant(new_position_octant);
 
@@ -243,6 +246,7 @@ public:
         new_node_to_insert->set_cell_neuron_position({ position });
         new_node_to_insert->set_cell_neuron_id(neuron_id);
         new_node_to_insert->set_rank(rank);
+        new_node_to_insert->set_level(parent_level+1);
 
         bool has_children = false;
 
@@ -297,6 +301,22 @@ public:
     }
 
     /**
+     * @brief Set the level attribute.
+     * @param value The new value of the level.
+     */
+    void set_level(const uint16_t value){
+        level = value;
+    }
+
+    /**
+     * @brief Get the level attribute.
+     * @return The current value of level.
+     */
+    [[nodiscard]] uint16_t get_level() const noexcept{
+        return level;
+    }
+
+    /**
      * @brief Resets the current object:
      *      (a) The cell is newly constructed
      *      (b) The children are newly constructed
@@ -338,6 +358,7 @@ private:
     Cell<AdditionalCellAttributes> cell{};
 
     bool parent{ false };
+    u_int16_t level{0};
 
     int rank{ -1 }; // MPI rank who owns this octree node
 

@@ -47,7 +47,8 @@ class FastMultipoleMethods : public ForwardAlgorithm<SynapseCreationRequest, Syn
 
 public:
     using AdditionalCellAttributes = FastMultipoleMethodsCell;
-    using interaction_list_type = std::array<const OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>;
+    using interaction_list_type = std::array<const OctreeNode<AdditionalCellAttributes>*, Constants::number_oct>;
+    using stack_entry = std::pair<const OctreeNode<AdditionalCellAttributes>*, const OctreeNode<AdditionalCellAttributes>*>;
     using position_type = typename Cell<AdditionalCellAttributes>::position_type;
     using counter_type = typename Cell<AdditionalCellAttributes>::counter_type;
 
@@ -356,6 +357,7 @@ private:
      * This class contains service functions that are independent of class attributes, but are required for the FMM class.
      */
     class Utilities {
+        using AdditionalCellAttributes = FastMultipoleMethodsCell;
         friend class FMMPrivateFunctionTest;
 
     public:
