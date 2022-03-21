@@ -53,11 +53,8 @@ public:
 
     /**
      * @brief Updates all leaf nodes in the octree by the algorithm
-     * @param disable_flags Flags that indicate if a neuron id disabled (0) or enabled (otherwise)
-     * @param axons The model for the axons
-     * @param excitatory_dendrites The model for the excitatory dendrites
-     * @param inhibitory_dendrites The model for the inhibitory dendrites
-     * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
+     * @param disable_flags Flags that indicate if a neuron id disabled or enabled. If disabled, it won't be updated
+     * @exception Throws a RelearnException if the number of flags is different than the number of leaf nodes, or if there is an internal error
      */
     void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) override;
 
@@ -92,9 +89,8 @@ protected:
     /**
      * @brief Returns a collection of proposed synapse creations for each neuron with vacant axons
      * @param number_neurons The number of local neurons
-     * @param disable_flags Flags that indicate if a local neuron is disabled. If so (== 0), the neuron is ignored
+     * @param disable_flags Flags that indicate if a local neuron is disabled. If so, the neuron is ignored
      * @param extra_infos Used to access the positions of the local neurons
-     * @param axons The axon model that is used
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
@@ -129,7 +125,7 @@ private:
     /**
      * @brief Returns an optional RankNeuronId that the algorithm determined for the given source neuron. No actual request is made.
      *      Might perform MPI communication via NodeCache::download_children()
-     * @param initiator_neuron_id The neuron's id that wants to connect. Is used to disallow autapses (connections to itself)
+     * @param src_neuron_id The neuron's id that wants to connect. Is used to disallow autapses (connections to itself)
      * @param axon_position The neuron's position that wants to connect. Is used in probability computations
      * @param dendrite_type_needed The signal type that is searched.
      * @return If the algorithm didn't find a matching neuron, the return value is empty.

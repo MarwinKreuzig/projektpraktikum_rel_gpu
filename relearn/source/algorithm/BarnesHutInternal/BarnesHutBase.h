@@ -58,8 +58,8 @@ public:
 
     /**
      * @brief Sets acceptance criterion for cells in the tree
-     * @param acceptance_criterion The acceptance criterion, >= 0.0
-     * @exception Throws a RelearnException if acceptance_criterion < 0.0
+     * @param acceptance_criterion The acceptance criterion, > 0.0
+     * @exception Throws a RelearnException if acceptance_criterion <= 0.0
      */
     void set_acceptance_criterion(const double acceptance_criterion) {
         RelearnException::check(acceptance_criterion > 0.0, "BarnesHut::set_acceptance_criterion: acceptance_criterion was less than or equal to 0 ({})", acceptance_criterion);
