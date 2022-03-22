@@ -329,6 +329,7 @@ public:
         children = std::array<OctreeNodePtr, Constants::number_oct>{ nullptr };
         parent = false;
         rank = -1;
+        level = 0;
     }
 
     /**

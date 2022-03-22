@@ -538,4 +538,26 @@ TYPED_TEST(OctreeTest, testOctreeLevel) {
     }
 
     ASSERT_EQ(node.get_level(), 0);
+    Stack<std::pair<const OctreeNode<AdditionalCellAttributes>*, const OctreeNode<AdditionalCellAttributes>*>> stack;
+    for (const auto* child : node.get_children()) {
+        if (child != nullptr) {
+            stack.emplace_back(&node, child);
+        }
+    }
+
+    while (!stack.empty()) {
+        const auto& [parent, child] = stack.pop_back();
+        const auto parent_level = parent->get_level();
+        const auto child_level = child->get_level();
+        ASSERT_EQ(parent_level + 1, child_level);
+        if (child->is_parent()) {
+            for (const auto* new_child : child->get_children()) {
+                if (new_child != nullptr) {
+                    stack.emplace_back(child, new_child);
+                }
+            }
+        }
+    }
+
+    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
