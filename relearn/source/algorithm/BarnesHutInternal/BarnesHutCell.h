@@ -128,7 +128,7 @@ public:
     /**
      * @brief Returns the position of the cell, which can be empty
      * @exception Throws a RelearnException if one position is valid and the other is not, or if they are at different points
-     * @return The position of the excitatory dendrite
+     * @return The position of the dendrite
      */
     [[nodiscard]] std::optional<position_type> get_neuron_position() const {
         const auto& excitatory_position_opt = get_excitatory_dendrites_position();
@@ -159,9 +159,10 @@ public:
 
     /**
      * @brief Returns the number of free elements for the associated type in this cell
-     * @param axon_type The requested axons type
-     * @exception Might throw a RelearnException if this operation is not supported
-     * @return The number of free axons for the associated type
+     * @param element_type The requested element type (for this cell, must be dendrite)
+     * @param signal_type The requested signal type
+     * @exception Throws a RelearnException if element_type is ElementType::Axon
+     * @return The number of free dendrites for the associated type
      */
     [[nodiscard]] counter_type get_number_elements_for(const ElementType element_type, const SignalType signal_type) const {
         if (element_type == ElementType::Axon) {
@@ -173,10 +174,10 @@ public:
 
     /**
      * @brief Returns the position of the specified element with the given signal type
-     * @param axon_type The requested element type
+     * @param element_type The requested element type
      * @param signal_type The requested signal type
-     * @exception Might throw a RelearnException if this operation is not supported
-     * @return The position of the associated element, can be empty
+     * @exception Throws a RelearnException if element_type is ElementType::Axon
+     * @return The position of the requested dendrite, can be empty
      */
     [[nodiscard]] std::optional<position_type> get_position_for(const ElementType element_type, const SignalType signal_type) const {
         if (element_type == ElementType::Axon) {

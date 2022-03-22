@@ -187,18 +187,15 @@ void Simulation::initialize() {
         auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHut>>(global_tree);
         auto algorithm_barnes_hut = std::make_shared<BarnesHut>(std::move(cast));
         algorithm_barnes_hut->set_acceptance_criterion(accept_criterion);
-        algorithm_barnes_hut->set_probability_parameter(sigma);
         algorithm = std::move(algorithm_barnes_hut);
     } else if (algorithm_enum == AlgorithmEnum::BarnesHutInverted) {
         auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutInverted>>(global_tree);
         auto algorithm_barnes_hut_inverted = std::make_shared<BarnesHutInverted>(std::move(cast));
         algorithm_barnes_hut_inverted->set_acceptance_criterion(accept_criterion);
-        algorithm_barnes_hut_inverted->set_probability_parameter(sigma);
         algorithm = std::move(algorithm_barnes_hut_inverted);
     } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
         auto cast = std::static_pointer_cast<OctreeImplementation<FastMultipoleMethods>>(global_tree);
         auto algorithm_barnes_hut = std::make_shared<FastMultipoleMethods>(std::move(cast));
-        algorithm_barnes_hut->set_probability_parameter(sigma);
         algorithm = std::move(algorithm_barnes_hut);
     } else {
         RelearnException::fail("Simulation::initialize: AlgorithmEnum {} not yet implemented!", static_cast<int>(algorithm_enum));
@@ -206,6 +203,7 @@ void Simulation::initialize() {
 
     network_graph = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
 
+    algorithm->set_probability_parameter(sigma);
     algorithm->set_synaptic_elements(axons, dendrites_ex, dendrites_in);
 
     neurons->set_area_names(std::move(area_names));

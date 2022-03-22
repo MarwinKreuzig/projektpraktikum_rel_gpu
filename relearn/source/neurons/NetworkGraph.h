@@ -604,13 +604,22 @@ public:
     }
 
     /**
-     * @brief Prints all stored connections to the out-stream. Uses the global neuron ids and starts with 1. The format is <target_id id> <source_id id> <weight>
+     * @brief Prints all stored in-connections to the out-stream. Performs communication via MPI.
+     *      Uses the global neuron ids and starts with 1. The format is <target_id id> <source_id id> <weight>
      * @param os The out-stream to which the network graph is printed
      * @param informations The NeuronsExtraInfo that is used to translate between local neuron id and global neuron id
      * @exception Throws a RelearnException if the translation of a neuron id fails
      *      Might throw an exception related to the out-stream
      */
     void print(std::ostream& os, const std::shared_ptr<NeuronIdTranslator>& translator) const;
+
+    /**
+     * @brief Prints all stored connections to the streams. Does not perform communication via MPI. Uses the local neuron ids and starts with 1. The formats are:
+     *      <target_rank> <target_id>\t<source_rank> <source_id>\tweight
+     * @param os_out_edges The out-stream to which the out-connections are printed
+     * @param os_in_edges The out-stream to which the in-connections are printed
+     */
+    void print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges) const noexcept;
 
     /**
      * @brief Returns directly if !Config::do_debug_checks

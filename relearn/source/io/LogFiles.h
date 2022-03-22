@@ -42,6 +42,8 @@ public:
         NeuronsOverviewCSV,
         Sums,
         Network,
+        InNetwork,
+        OutNetwork,
         Positions,
         Cout,
         Timers,

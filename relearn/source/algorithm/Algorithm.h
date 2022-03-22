@@ -31,8 +31,8 @@ class Algorithm {
 public:
     /**
      * @brief Sets probability parameter used to determine the probability for a cell of being selected
-     * @param sigma The probability parameter, >= 0.0
-     * @exception Throws a RelearnExeption if sigma < 0.0
+     * @param sigma The probability parameter, > 0.0
+     * @exception Throws a RelearnExeption if sigma <= 0.0
      */
     void set_probability_parameter(const double sigma) {
         RelearnException::check(sigma > 0.0, "In Algorithm::set_probability_parameter, sigma was not greater than 0");

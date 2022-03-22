@@ -56,11 +56,8 @@ public:
 
     /**
      * @brief Updates all leaf nodes in the octree by the algorithm
-     * @param disable_flags Flags that indicate if a neuron id disabled (0) or enabled (otherwise)
-     * @param axons The model for the axons
-     * @param excitatory_dendrites The model for the excitatory dendrites
-     * @param inhibitory_dendrites The model for the inhibitory dendrites
-     * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
+     * @param disable_flags Flags that indicate if a neuron id disabled or enabled. If disabled, it won't be updated
+     * @exception Throws a RelearnException if the number of flags is different than the number of leaf nodes, or if there is an internal error
      */
     void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) override;
 
@@ -158,9 +155,8 @@ protected:
     /**
      * @brief Returns a collection of proposed synapse creations for each neuron with vacant axons
      * @param number_neurons The number of local neurons
-     * @param disable_flags Flags that indicate if a local neuron is disabled. If so (== 0), the neuron is ignored
+     * @param disable_flags Flags that indicate if a local neuron is disabled. If so, the neuron is ignored
      * @param extra_infos Used to access the positions of the local neurons
-     * @param axons The axon model that is used
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
@@ -172,7 +168,7 @@ protected:
      * @param source_neuron_id The source neuron's id
      * @param source_position The source neuron's position
      * @param number_vacant_elements The number of vacant elements of the source neuron
-     * @param root Where the source neuron should start to search for targets
+     * @param root Where the source neuron should start to search for targets. It is not const because the children might be changed if the node is 
      * @param element_type The element type the source neuron searches
      * @param signal_type The signal type the source neuron searches
      * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
@@ -182,7 +178,6 @@ protected:
 
     /**
      * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses
-     * @param number_neurons The number of local neurons
      * @param creation_requests The requests from all MPI ranks
      * @exception Can throw a RelearnException
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank

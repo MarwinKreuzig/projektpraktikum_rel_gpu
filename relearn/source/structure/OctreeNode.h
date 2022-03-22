@@ -171,7 +171,7 @@ public:
          * I'm the very first child of that node.
          * I.e., the node is a leaf.
          */
-        if (!parent_node->is_parent()) {
+        if (parent_node->is_child()) {
             /**
              * The found parent node is virtual and can just be substituted,
              * i.e., it was constructed while constructing the upper part to the branch nodes.
@@ -253,6 +253,7 @@ public:
         for (auto* child : children) {
             if (child != nullptr) {
                 has_children = true;
+                break;
             }
         }
 
