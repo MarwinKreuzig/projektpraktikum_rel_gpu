@@ -21,6 +21,7 @@
 #include "util/Random.h"
 #include "util/RelearnException.h"
 #include "util/Utility.h"
+#include "util/Stack.h"
 
 #include <array>
 #include <cmath>
@@ -48,7 +49,7 @@ class FastMultipoleMethods : public ForwardAlgorithm<SynapseCreationRequest, Syn
 public:
     using AdditionalCellAttributes = FastMultipoleMethodsCell;
     using interaction_list_type = std::array<const OctreeNode<AdditionalCellAttributes>*, Constants::number_oct>;
-    using stack_entry = std::pair<const OctreeNode<AdditionalCellAttributes>*, const OctreeNode<AdditionalCellAttributes>*>;
+    using node_pair = std::pair<const OctreeNode<AdditionalCellAttributes>*, const OctreeNode<AdditionalCellAttributes>*>;
     using position_type = typename Cell<AdditionalCellAttributes>::position_type;
     using counter_type = typename Cell<AdditionalCellAttributes>::counter_type;
 
@@ -238,7 +239,36 @@ private:
      * @param request SynapseCreationRequest which should be extended. This must be created before the method is called.
      * @exception Can throw a RelearnException.
      */
-    void make_creation_request_for(SignalType signal_type_needed, CommunicationMap<SynapseCreationRequest>& request);
+    void make_creation_request_for(const SignalType signal_type_needed, CommunicationMap<SynapseCreationRequest>& request);
+
+    /**
+     * @brief Creates an initialized stack for the make_creation_request_for method. Source nodes and target nodes are paired based on their level in the octree.
+     * It also depends on the level_offset specified in the config file.
+     * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
+     * @return Returns the initalised stack.
+     */
+    Stack<node_pair> align_sources_and_targets(const SignalType signal_type_needed);
+
+    /**
+     * @brief Creates a list of possible targets for a source node, which is a leaf,
+     * such that the number of axons in source is at least as large as the number of all dendrites in the targets.
+     * @param source Node with vacant axons. Must be a leaf node.
+     * @param interaction_list List of all possible targets.
+     * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
+     * @return Returns selected targets, which were chosen according to probability and together have more dendrites than there are axons.
+     */
+    std::vector<const OctreeNode<AdditionalCellAttributes>*> make_target_list(const OctreeNode<AdditionalCellAttributes>* source_node, interaction_list_type interaction_list, const SignalType signal_type_needed);
+
+    /**
+     * @brief If a target is a leaf node but the source is not, a pair of a selected source child and the target must be pushed back on the stack.
+     * How many pairs are made depends on how many dendrites the target has and how many axons the individual sources children have.
+     * 
+     * @param target_node Node with vacant dendrites. Must be a leaf node.
+     * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
+     * @param stack Reference to the stack on which the pairs must be pushed back.
+     * @param source_children Refernce on the children of the source node.
+     */
+    void make_stack_entries_for_leaf(const OctreeNode<AdditionalCellAttributes>* target_node, const SignalType signal_type_needed, Stack<node_pair>& stack, const std::array<OctreeNode<FastMultipoleMethods::AdditionalCellAttributes> *, 8UL>& source_children);
 
     /**
      * @brief Calculates the attraction between a single source neuron and all target neurons in the interaction list.
