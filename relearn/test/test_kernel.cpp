@@ -5,8 +5,10 @@
 #include "algorithm/Kernel/Gaussian.h"
 #include "algorithm/Kernel/Kernel.h"
 #include "algorithm/Cells.h"
+#include "util/Random.h"
 
 #include <array>
+#include <iostream>
 #include <tuple>
 
 TEST_F(KernelTest, testGaussianSamePosition) {
@@ -424,5 +426,217 @@ TEST_F(KernelTest, testGaussianRandomVector) {
 
     for (auto i = 0; i < number_nodes; i++) {
         ASSERT_NEAR(attrs[i], attractivenesses[i], eps);
+    }
+}
+
+TEST_F(KernelTest, testPickTargetEmpty) {
+    const std::vector<OctreeNode<BarnesHutCell>*> targets{};
+    const std::vector<double> probabilities{};
+
+    const auto random_number = get_random_double(0.0, 100.0);
+
+    using TT = Kernel<BarnesHutCell, GaussianKernel<BarnesHutCell>>;
+
+    ASSERT_THROW(const auto& val = TT::pick_target(targets, probabilities, random_number);, RelearnException);
+}
+
+TEST_F(KernelTest, testPickTargetMismatchSize) {
+    const auto number_targets = get_random_integer<size_t>(1, 1000);
+    auto number_probabilities = get_random_integer<size_t>(1, 1000);
+    while (number_probabilities == number_targets) {
+        number_probabilities = get_random_integer<size_t>(1, 1000);
+    }
+
+    std::vector<OctreeNode<BarnesHutCell>*> targets{ number_targets };
+    std::vector<double> probabilities = std::vector<double>(number_probabilities, 0.0);
+
+    const auto random_number = get_random_double(0.0, 100.0);
+
+    using TT = Kernel<BarnesHutCell, GaussianKernel<BarnesHutCell>>;
+
+    ASSERT_THROW(const auto& val = TT::pick_target(targets, probabilities, random_number);, RelearnException);
+}
+
+TEST_F(KernelTest, testPickTargetNegativeRandomNumber) {
+    const auto number_targets = get_random_integer<size_t>(1, 1000);
+
+    std::vector<OctreeNode<BarnesHutCell>*> targets{ number_targets };
+    std::vector<double> probabilities = std::vector<double>(number_targets, 0.0);
+
+    const auto random_number = -get_random_double(0.001, 100.0);
+
+    using TT = Kernel<BarnesHutCell, GaussianKernel<BarnesHutCell>>;
+
+    ASSERT_THROW(const auto& val = TT::pick_target(targets, probabilities, random_number);, RelearnException);
+}
+
+TEST_F(KernelTest, testPickTargetRandom) {
+    const auto number_nodes = get_random_number_neurons();
+
+    std::vector<OctreeNode<BarnesHutCell>> nodes{ number_nodes, OctreeNode<BarnesHutCell>{} };
+    std::vector<OctreeNode<BarnesHutCell>*> node_pointers{ number_nodes, nullptr };
+    std::vector<double> probabilities{};
+
+    for (auto i = 0; i < number_nodes; i++) {
+        node_pointers[i] = &nodes[i];
+        probabilities.emplace_back(get_random_percentage());
+    }
+
+    const auto total_probability = std::reduce(probabilities.begin(), probabilities.end(), 0.0);
+
+    for (auto it = 0; it < number_nodes; it++) {
+        const auto random_number = get_random_double(0.0, total_probability);
+
+        auto current_probability = random_number;
+        auto index = -1;
+
+        for (auto i = 0; i < number_nodes; i++) {
+            current_probability -= probabilities[i];
+            if (current_probability <= 0.0) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index == -1) {
+            std::cerr << "testPickTargetRandom: the index was -1\n";
+            index = number_nodes - 1;
+        }
+
+        const auto* chosen_node = Kernel<BarnesHutCell, GaussianKernel<BarnesHutCell>>::pick_target(node_pointers, probabilities, random_number);
+
+        ASSERT_EQ(chosen_node, node_pointers[index]);
+    }
+}
+
+TEST_F(KernelTest, testPickTargetTooLarge) {
+    const auto number_nodes = get_random_number_neurons();
+
+    std::vector<OctreeNode<BarnesHutCell>> nodes{ number_nodes, OctreeNode<BarnesHutCell>{} };
+    std::vector<OctreeNode<BarnesHutCell>*> node_pointers{ number_nodes, nullptr };
+    std::vector<double> probabilities{};
+
+    for (auto i = 0; i < number_nodes; i++) {
+        node_pointers[i] = &nodes[i];
+        probabilities.emplace_back(get_random_percentage());
+    }
+
+    const auto total_probability = std::reduce(probabilities.begin(), probabilities.end(), 0.0);
+    
+
+    for (auto it = 0; it < number_nodes; it++) {
+        const auto random_number = get_random_double(total_probability + eps, (total_probability + eps + 1) * 2);
+        const auto* chosen_node = Kernel<BarnesHutCell, GaussianKernel<BarnesHutCell>>::pick_target(node_pointers, probabilities, random_number);
+
+        ASSERT_EQ(chosen_node, node_pointers[number_nodes - 1]);
+    }
+}
+
+TEST_F(KernelTest, testPickTargetEmpty2) {
+    const auto& neuron_id = get_random_neuron_id(1000);
+
+    const auto& position = get_random_position();
+
+    const auto element_type = get_random_element_type();
+    const auto signal_type = get_random_signal_type();
+
+    const auto sigma = get_random_double(0.001, 100000);
+
+    auto* result = Kernel<BarnesHutCell, GaussianKernel<BarnesHutCell>>::pick_target(neuron_id, position, {}, element_type, signal_type, sigma);
+
+    ASSERT_EQ(result, nullptr);
+}
+
+TEST_F(KernelTest, testPickTargetException) {
+    const auto number_nodes = get_random_number_neurons();
+    const auto& neuron_id = get_random_neuron_id(1000);
+
+    const auto& position = get_random_position();
+
+    const auto element_type = get_random_element_type();
+    const auto signal_type = get_random_signal_type();
+
+    const auto sigma = get_random_double(0.001, 100000);
+
+    std::vector<OctreeNode<FastMultipoleMethodsCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodsCell>{} };
+    std::vector<OctreeNode<FastMultipoleMethodsCell>*> node_pointers{ number_nodes, nullptr };
+
+    for (auto i = 0; i < number_nodes; i++) {
+        nodes[i].set_cell_neuron_id(get_random_neuron_id(1000, 1000));
+        nodes[i].set_cell_size(get_minimum_position(), get_maximum_position());
+
+        const auto& target_excitatory_axon_position = get_random_position();
+        const auto& target_inhibitory_axon_position = get_random_position();
+        const auto& target_excitatory_dendrite_position = get_random_position();
+        const auto& target_inhibitory_dendrite_position = get_random_position();
+
+        const auto& number_vacant_excitatory_axons = get_random_synaptic_element_count();
+        const auto& number_vacant_inhibitory_axons = get_random_synaptic_element_count();
+        const auto& number_vacant_excitatory_dendrites = get_random_synaptic_element_count();
+        const auto& number_vacant_inhibitory_dendrites = get_random_synaptic_element_count();
+
+        nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
+        nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
+        nodes[i].set_cell_excitatory_dendrites_position(target_excitatory_dendrite_position);
+        nodes[i].set_cell_inhibitory_dendrites_position(target_inhibitory_dendrite_position);
+
+        nodes[i].set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
+        nodes[i].set_cell_number_dendrites(number_vacant_excitatory_dendrites, number_vacant_inhibitory_dendrites);
+
+        node_pointers[i] = &nodes[i];
+    }
+
+    const auto nullptr_index = get_random_integer<size_t>(0, number_nodes - 1);
+    node_pointers[nullptr_index] = nullptr;
+
+    using TT = Kernel<FastMultipoleMethodsCell, GaussianKernel<FastMultipoleMethodsCell>>;
+    ASSERT_THROW(auto* result = TT::pick_target(neuron_id, position, node_pointers, element_type, signal_type, sigma);, RelearnException);
+}
+
+TEST_F(KernelTest, testPickTargetRandom2) {
+    const auto number_nodes = get_random_number_neurons();
+    const auto& neuron_id = get_random_neuron_id(1000);
+
+    const auto& position = get_random_position();
+
+    const auto element_type = get_random_element_type();
+    const auto signal_type = get_random_signal_type();
+
+    const auto sigma = get_random_double(0.001, 100000);
+
+    std::vector<OctreeNode<FastMultipoleMethodsCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodsCell>{} };
+    std::vector<OctreeNode<FastMultipoleMethodsCell>*> node_pointers{ number_nodes, nullptr };
+
+    for (auto i = 0; i < number_nodes; i++) {
+        nodes[i].set_cell_neuron_id(get_random_neuron_id(1000, 1000));
+        nodes[i].set_cell_size(get_minimum_position(), get_maximum_position());
+
+        const auto& target_excitatory_axon_position = get_random_position();
+        const auto& target_inhibitory_axon_position = get_random_position();
+        const auto& target_excitatory_dendrite_position = get_random_position();
+        const auto& target_inhibitory_dendrite_position = get_random_position();
+
+        const auto& number_vacant_excitatory_axons = get_random_synaptic_element_count();
+        const auto& number_vacant_inhibitory_axons = get_random_synaptic_element_count();
+        const auto& number_vacant_excitatory_dendrites = get_random_synaptic_element_count();
+        const auto& number_vacant_inhibitory_dendrites = get_random_synaptic_element_count();
+
+        nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
+        nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
+        nodes[i].set_cell_excitatory_dendrites_position(target_excitatory_dendrite_position);
+        nodes[i].set_cell_inhibitory_dendrites_position(target_inhibitory_dendrite_position);
+
+        nodes[i].set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
+        nodes[i].set_cell_number_dendrites(number_vacant_excitatory_dendrites, number_vacant_inhibitory_dendrites);
+
+        node_pointers[i] = &nodes[i];
+    }
+
+    for (auto i = 0; i < number_nodes; i++) {
+        auto* result = Kernel<FastMultipoleMethodsCell, GaussianKernel<FastMultipoleMethodsCell>>::
+            pick_target(neuron_id, position, node_pointers, element_type, signal_type, sigma);
+
+        auto pos = std::find(node_pointers.begin(), node_pointers.end(), result);
+        ASSERT_NE(pos, node_pointers.end());
     }
 }

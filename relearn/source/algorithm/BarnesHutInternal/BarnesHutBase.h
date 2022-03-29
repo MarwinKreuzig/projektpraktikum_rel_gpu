@@ -41,6 +41,8 @@ public:
     using position_type = typename RelearnTypes::position_type;
     using counter_type = typename RelearnTypes::counter_type;
 
+    using kernel_type = typename Kernel<AdditionalCellAttributes, GaussianKernel<AdditionalCellAttributes>>;
+
 protected:
     double acceptance_criterion{ default_theta };
 
@@ -122,34 +124,6 @@ protected:
         // Original Barnes-Hut acceptance criterion
         const auto ret_val = (length / distance) < acceptance_criterion;
         return ret_val ? AcceptanceStatus::Accept : AcceptanceStatus::Expand;
-    }
-
-    /**
-     * @brief Picks a target based on the supplied probabilities
-     * @param nodes The target nodes
-     * @param probability A pair of (a) the total probability of all targets and (b) the respective probability of each target
-     * @exception Throws a RelearnException if the sizes of the vectors didn't match, or if one OctreeNode* was nullptr
-     * @return The selected target node or nullptr in case that the total probability was 0.0
-     */
-    [[nodiscard]] OctreeNode<AdditionalCellAttributes>* pick_target(const std::vector<OctreeNode<AdditionalCellAttributes>*>& nodes, const std::pair<double, std::vector<double>>& probability) const {
-        const auto& [total_prob, probability_values] = probability;
-
-        if (total_prob == 0.0) {
-            return nullptr;
-        }
-
-        RelearnException::check(nodes.size() == probability_values.size(), "BarnesHutBase::pick_target: Had a different number of probabilities than nodes: {} vs {}", nodes.size(), probability_values.size());
-
-        const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(total_prob, Constants::eps));
-        auto counter = 0;
-        for (auto sum_probabilities = 0.0; counter < probability_values.size() && sum_probabilities < random_number; counter++) {
-            sum_probabilities += probability_values[counter];
-        }
-        auto* node_selected = nodes[counter - 1ULL];
-
-        RelearnException::check(node_selected != nullptr, "BarnesHutBase::pick_target: node_selected was nullptr");
-
-        return node_selected;
     }
 
     /**
@@ -241,44 +215,27 @@ protected:
      * @param signal_type The signal type the source is looking for
      * @param sigma The probability parameter for the calculation
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
-     *      If the algorihtm found a matching neuron, its RankNeuronId is returned
+     *      If the algorithm found a matching neuron, its RankNeuronId is returned
      */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* root,
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
         const ElementType element_type, const SignalType signal_type, const double sigma) const {
-        OctreeNode<AdditionalCellAttributes>* node_selected = nullptr;
-        OctreeNode<AdditionalCellAttributes>* root_of_subtree = root;
+        RelearnException::check(root != nullptr, "BarnesHutBase::find_target_neuron: root was nullptr");
 
-        RelearnException::check(root_of_subtree != nullptr, "BarnesHut::find_target_neuron: root_of_subtree was nullptr");
-
-        while (true) {
-            /**
-             * Create vector with nodes that have at least one axon and are
-             * precise enough given the position of an axon
-             */
+        for (auto root_of_subtree = root; true;) {
             const auto& vector = get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type);
 
-            /**
-             * Assign a probability to each node in the vector.
-             * The probability for connecting to the same neuron (i.e., the axon's neuron) is set 0.
-             */
-            const auto& probability
-                = Kernel<AdditionalCellAttributes, GaussianKernel<AdditionalCellAttributes>>::
-                    create_probability_interval(source_neuron_id, source_position, vector, element_type, signal_type, sigma);
-
-            node_selected = pick_target(vector, probability);
+            auto* node_selected = kernel_type::pick_target(source_neuron_id, source_position, vector, element_type, signal_type, sigma);
             if (node_selected == nullptr) {
                 return {};
             }
 
-            // Leave loop if the selected node is leaf node, i.e., contains normal neuron.
+            // A chosen child is a valid target
             if (const auto done = node_selected->is_child(); done) {
-                break;
+                return RankNeuronId{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
             }
 
-            // Update root of subtree, we need to choose starting from this root again
+            // We need to choose again, starting from the chosen virtual neuron
             root_of_subtree = node_selected;
         }
-
-        return RankNeuronId{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
     }
 };
