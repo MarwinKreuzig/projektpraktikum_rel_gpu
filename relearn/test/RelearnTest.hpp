@@ -135,12 +135,25 @@ protected:
         };
     }
 
+    double get_random_position_element() {
+        const auto val = get_random_double(-position_bounary, +position_bounary);
+        return val;
+    }
+
     Vec3d get_random_position() {
         const auto x = get_random_double(-position_bounary, +position_bounary);
         const auto y = get_random_double(-position_bounary, +position_bounary);
         const auto z = get_random_double(-position_bounary, +position_bounary);
 
         return { x, y, z };
+    }
+
+    Vec3d get_minimum_position() {
+        return { -position_bounary, -position_bounary, -position_bounary };
+    }
+
+    Vec3d get_maximum_position() {
+        return { position_bounary, position_bounary, position_bounary };
     }
 
     Vec3d get_random_position_in_box(const Vec3d& min, const Vec3d& max) {
@@ -783,6 +796,13 @@ protected:
     }
 };
 
+class KernelTest : public RelearnTest {
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
 class SynapticElementsTest : public RelearnTest {
 protected:
     static void SetUpTestCase() {
@@ -795,15 +815,6 @@ protected:
     static void SetUpTestCase() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
-    double get_random_vector_element() noexcept {
-        return uniform_vector_elements(mt);
-    }
-
-private:
-    constexpr static double lower_bound = -100.0;
-    constexpr static double upper_bound = 100.0;
-
-    static std::uniform_real_distribution<double> uniform_vector_elements;
 };
 
 class SpaceFillingCurveTest : public RelearnTest {

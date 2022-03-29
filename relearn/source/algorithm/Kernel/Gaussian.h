@@ -41,11 +41,10 @@ public:
             return 0.0;
         }
 
-        const auto squared_sigma = sigma * sigma;
-
         const auto position_diff = target_position - source_position;
-
         const auto numerator = position_diff.calculate_squared_2_norm();
+
+        const auto squared_sigma = sigma * sigma;
         const auto exponent = -numerator / squared_sigma;
 
         // Criterion from Markus' paper with doi: 10.3389/fnsyn.2014.00007
@@ -58,13 +57,17 @@ public:
     /**
      * @brief Calculates the attractiveness to connect on the basis of
      *      k * exp(-||s - t||_2^2 / sigma^2)
-     *      It also prevents autapses and checks for algorithmic errors
+     *      where t is the position of the target_node for the element_type and signal_type
+     *      and k is the number of free elements of the target_node for the element_type and signal_type.
+     *      It also prevents autapses by comparing the ids (returns 0.0 if they are equal) and checks for algorithmic errors
+     * @param source_neuron_id The source neuron id
      * @param source_position The source position s
-     * @param target_position The target position t
-     * @param number_free_elements The linear scaling factor k
+     * @param target_node The target node
+     * @param element_type The element type
+     * @param signal_type The signal type
      * @param sigma The exponential scaling factor sigma
-     * @exception Throws a RelearnException if there was an algorithmic error somewhere
-     * @return The calculated attractiveness
+     * @exception Throws a RelearnException if the position for (element_type, signal_type) from target_node is empty or not supported
+     * @return The calculated attractiveness, might be 0.0 to avoid autapses
      */
     [[nodiscard]] static double calculate_attractiveness_to_connect(const NeuronID& source_neuron_id, const position_type& source_position,
         const OctreeNode<AdditionalCellAttributes>* target_node, const ElementType element_type, const SignalType signal_type, const double sigma) {

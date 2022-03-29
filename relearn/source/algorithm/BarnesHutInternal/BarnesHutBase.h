@@ -271,7 +271,7 @@ protected:
             }
 
             // Leave loop if the selected node is leaf node, i.e., contains normal neuron.
-            if (const auto done = !node_selected->is_parent(); done) {
+            if (const auto done = node_selected->is_child(); done) {
                 break;
             }
 

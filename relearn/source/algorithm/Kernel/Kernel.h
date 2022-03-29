@@ -38,7 +38,7 @@ public:
      * @param element_type The element type the source neuron searches
      * @param signal_type The signal type the source neuron searches
      * @param sigma The probability parameter for the calculation
-     * @exception Can Throw a RelearnException if an algorithmic errors occurs
+     * @exception Throws a RelearnException if one of the pointer in nodes is a nullptr, or if KernelType::calculate_attractiveness_to_connect throws
      * @return A pair of (a) the total probability of all targets and (b) the respective probability of each target
      */
     [[nodiscard]] static std::pair<double, std::vector<double>> create_probability_interval(const NeuronID& source_neuron_id, const position_type& source_position,

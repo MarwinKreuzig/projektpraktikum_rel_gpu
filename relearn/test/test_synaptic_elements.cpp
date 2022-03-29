@@ -299,7 +299,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialize) {
     SynapticElements synaptic_elements(element_type, 0.0);
     synaptic_elements.init(number_neurons);
 
-    for (auto neuron_id : NeuronID::range(number_neurons)) {
+    for (const auto& neuron_id : NeuronID::range(number_neurons)) {
         const auto& grown_element = synaptic_elements.get_grown_elements(neuron_id);
         const auto& connected_grown_element = synaptic_elements.get_connected_elements(neuron_id);
         const auto& delta_grown_element = synaptic_elements.get_delta(neuron_id);

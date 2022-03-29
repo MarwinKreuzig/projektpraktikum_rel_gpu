@@ -15,7 +15,7 @@ TEST_F(VectorTest, testVectorEmptyConstructor) {
 }
 
 TEST_F(VectorTest, testVectorSameValueConstructor) {
-    const auto val = get_random_vector_element();
+    const auto val = get_random_position_element();
 
     const Vec3<double> v{ val };
 
@@ -28,9 +28,9 @@ TEST_F(VectorTest, testVectorSameValueConstructor) {
 }
 
 TEST_F(VectorTest, testVectorThreeValuesConstructor) {
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
+    const auto x = get_random_position_element();
+    const auto y = get_random_position_element();
+    const auto z = get_random_position_element();
 
     const Vec3<double> v{ x, y, z };
 
@@ -43,9 +43,9 @@ TEST_F(VectorTest, testVectorThreeValuesConstructor) {
 }
 
 TEST_F(VectorTest, testVectorStructuredBinding) {
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
+    const auto x = get_random_position_element();
+    const auto y = get_random_position_element();
+    const auto z = get_random_position_element();
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -70,9 +70,9 @@ TEST_F(VectorTest, testVectorStructuredBinding) {
     ASSERT_EQ(y, y4) << ss.str();
     ASSERT_EQ(z, z4) << ss.str();
 
-    const auto new_x = get_random_vector_element();
-    const auto new_y = get_random_vector_element();
-    const auto new_z = get_random_vector_element();
+    const auto new_x = get_random_position_element();
+    const auto new_y = get_random_position_element();
+    const auto new_z = get_random_position_element();
 
     ss << new_x << ' ' << new_y << ' ' << new_z;
 
@@ -86,9 +86,9 @@ TEST_F(VectorTest, testVectorStructuredBinding) {
 }
 
 TEST_F(VectorTest, testVectorCopyConstructor) {
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
+    const auto x = get_random_position_element();
+    const auto y = get_random_position_element();
+    const auto z = get_random_position_element();
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -103,9 +103,9 @@ TEST_F(VectorTest, testVectorCopyConstructor) {
 }
 
 TEST_F(VectorTest, testVectorCopyAssignment) {
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
+    const auto x = get_random_position_element();
+    const auto y = get_random_position_element();
+    const auto z = get_random_position_element();
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -121,9 +121,9 @@ TEST_F(VectorTest, testVectorCopyAssignment) {
 }
 
 TEST_F(VectorTest, testVectorMoveConstructor) {
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
+    const auto x = get_random_position_element();
+    const auto y = get_random_position_element();
+    const auto z = get_random_position_element();
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -138,9 +138,9 @@ TEST_F(VectorTest, testVectorMoveConstructor) {
 }
 
 TEST_F(VectorTest, testVectorMoveAssignment) {
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
+    const auto x = get_random_position_element();
+    const auto y = get_random_position_element();
+    const auto z = get_random_position_element();
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -156,13 +156,13 @@ TEST_F(VectorTest, testVectorMoveAssignment) {
 }
 
 TEST_F(VectorTest, testVectorSetComponents) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const auto x1 = get_random_position_element();
+    const auto y1 = get_random_position_element();
+    const auto z1 = get_random_position_element();
 
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
+    const auto x2 = get_random_position_element();
+    const auto y2 = get_random_position_element();
+    const auto z2 = get_random_position_element();
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
@@ -180,21 +180,15 @@ TEST_F(VectorTest, testVectorSetComponents) {
 }
 
 TEST_F(VectorTest, testVectorOperatorPlusVector) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const Vec3<double> v = get_random_position();
+    const auto& [x1, y1, z1] = v;
 
-    const Vec3<double> v{ x1, y1, z1 };
-
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
+    const Vec3<double> w = get_random_position();
+    const auto& [x2, y2, z2] = v;
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
     ss << x2 << ' ' << y2 << ' ' << z2 << '\n';
-
-    const Vec3<double> w{ x2, y2, z2 };
 
     const auto sum = v + w;
 
@@ -212,21 +206,15 @@ TEST_F(VectorTest, testVectorOperatorPlusVector) {
 }
 
 TEST_F(VectorTest, testVectorOperatorMinusVector) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const Vec3<double> v = get_random_position();
+    const auto& [x1, y1, z1] = v;
 
-    const Vec3<double> v{ x1, y1, z1 };
-
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
+    const Vec3<double> w = get_random_position();
+    const auto& [x2, y2, z2] = v;
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
     ss << x2 << ' ' << y2 << ' ' << z2 << '\n';
-
-    const Vec3<double> w{ x2, y2, z2 };
 
     const auto diff = v - w;
 
@@ -244,13 +232,10 @@ TEST_F(VectorTest, testVectorOperatorMinusVector) {
 }
 
 TEST_F(VectorTest, testVectorOperatorPlusScalar) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const Vec3<double> v = get_random_position();
+    const auto& [x1, y1, z1] = v;
 
-    const Vec3<double> v{ x1, y1, z1 };
-
-    const auto scalar = get_random_vector_element();
+    const auto scalar = get_random_position_element();
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
@@ -268,13 +253,10 @@ TEST_F(VectorTest, testVectorOperatorPlusScalar) {
 }
 
 TEST_F(VectorTest, testVectorOperatorMinusScalar) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const Vec3<double> v = get_random_position();
+    const auto& [x1, y1, z1] = v;
 
-    const Vec3<double> v{ x1, y1, z1 };
-
-    const auto scalar = get_random_vector_element();
+    const auto scalar = get_random_position_element();
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
@@ -292,12 +274,10 @@ TEST_F(VectorTest, testVectorOperatorMinusScalar) {
 }
 
 TEST_F(VectorTest, testVectorOperatorMultiplyScalar) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const Vec3<double> v = get_random_position();
+    const auto& [x1, y1, z1] = v;
 
-    const Vec3<double> v{ x1, y1, z1 };
-    const auto scalar = get_random_vector_element();
+    const auto scalar = get_random_position_element();
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
@@ -315,15 +295,12 @@ TEST_F(VectorTest, testVectorOperatorMultiplyScalar) {
 }
 
 TEST_F(VectorTest, testVectorOperatorDivideScalar) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const Vec3<double> v = get_random_position();
+    const auto& [x1, y1, z1] = v;
 
-    const Vec3<double> v{ x1, y1, z1 };
-
-    auto scalar = get_random_vector_element();
+    auto scalar = get_random_position_element();
     while (scalar == 0.0) {
-        scalar = get_random_vector_element();
+        scalar = get_random_position_element();
     }
 
     std::stringstream ss{};
@@ -342,17 +319,11 @@ TEST_F(VectorTest, testVectorOperatorDivideScalar) {
 }
 
 TEST_F(VectorTest, testVectorOperatorPlusAssignVector) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    Vec3<double> v = get_random_position();
+    const auto [x1, y1, z1] = v;
 
-    Vec3<double> v{ x1, y1, z1 };
-
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
-
-    const Vec3<double> w{ x2, y2, z2 };
+    const Vec3<double> w = get_random_position();
+    const auto [x2, y2, z2] = v;
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
@@ -366,13 +337,10 @@ TEST_F(VectorTest, testVectorOperatorPlusAssignVector) {
 }
 
 TEST_F(VectorTest, testVectorOperatorPlusAssignScalar) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    Vec3<double> v = get_random_position();
+    const auto [x1, y1, z1] = v;
 
-    Vec3<double> v{ x1, y1, z1 };
-
-    const auto scalar = get_random_vector_element();
+    const auto scalar = get_random_position_element();
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
@@ -386,17 +354,11 @@ TEST_F(VectorTest, testVectorOperatorPlusAssignScalar) {
 }
 
 TEST_F(VectorTest, testVectorOperatorMinusAssignVector) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    Vec3<double> v = get_random_position();
+    const auto [x1, y1, z1] = v;
 
-    Vec3<double> v{ x1, y1, z1 };
-
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
-
-    const Vec3<double> w{ x2, y2, z2 };
+    const Vec3<double> w = get_random_position();
+    const auto [x2, y2, z2] = v;
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
@@ -410,13 +372,10 @@ TEST_F(VectorTest, testVectorOperatorMinusAssignVector) {
 }
 
 TEST_F(VectorTest, testVectorOperatorMinusAssignScalar) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    Vec3<double> v = get_random_position();
+    const auto [x1, y1, z1] = v;
 
-    Vec3<double> v{ x1, y1, z1 };
-
-    const auto scalar = get_random_vector_element();
+    const auto scalar = get_random_position_element();
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
@@ -430,13 +389,10 @@ TEST_F(VectorTest, testVectorOperatorMinusAssignScalar) {
 }
 
 TEST_F(VectorTest, testVectorOperatorMultiplyAssignScalar) {
-    auto x1 = get_random_vector_element();
-    auto y1 = get_random_vector_element();
-    auto z1 = get_random_vector_element();
+    Vec3<double> v = get_random_position();
+    const auto [x1, y1, z1] = v;
 
-    Vec3<double> v{ x1, y1, z1 };
-
-    const auto scalar = get_random_vector_element();
+    const auto scalar = get_random_position_element();
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
@@ -450,15 +406,12 @@ TEST_F(VectorTest, testVectorOperatorMultiplyAssignScalar) {
 }
 
 TEST_F(VectorTest, testVectorOperatorDivideAssignScalar) {
-    auto x1 = get_random_vector_element();
-    auto y1 = get_random_vector_element();
-    auto z1 = get_random_vector_element();
+    Vec3<double> v = get_random_position();
+    const auto [x1, y1, z1] = v;
 
-    Vec3<double> v{ x1, y1, z1 };
-
-    auto scalar = get_random_vector_element();
+    auto scalar = get_random_position_element();
     while (scalar == 0.0) {
-        scalar = get_random_vector_element();
+        scalar = get_random_position_element();
     }
 
     std::stringstream ss{};
@@ -473,11 +426,8 @@ TEST_F(VectorTest, testVectorOperatorDivideAssignScalar) {
 }
 
 TEST_F(VectorTest, testVectorVolume) {
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
-
-    const Vec3<double> v{ x, y, z };
+    Vec3<double> v = get_random_position();
+    const auto [x, y, z] = v;
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -492,9 +442,9 @@ TEST_F(VectorTest, testVectorVolume) {
 }
 
 TEST_F(VectorTest, testVectorEqual) {
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
+    const auto x = get_random_position_element();
+    const auto y = get_random_position_element();
+    const auto z = get_random_position_element();
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -508,7 +458,7 @@ TEST_F(VectorTest, testVectorEqual) {
 }
 
 TEST_F(VectorTest, testVectorUnequal) {
-    const auto x = get_random_vector_element();
+    const auto x = get_random_position_element();
     const auto y = x + 1;
     const auto z = y + 1;
 
@@ -536,13 +486,13 @@ TEST_F(VectorTest, testVectorUnequal) {
 }
 
 TEST_F(VectorTest, testVectorComponentwiseMinMax) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const auto x1 = get_random_position_element();
+    const auto y1 = get_random_position_element();
+    const auto z1 = get_random_position_element();
 
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
+    const auto x2 = get_random_position_element();
+    const auto y2 = get_random_position_element();
+    const auto z2 = get_random_position_element();
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
@@ -573,14 +523,11 @@ TEST_F(VectorTest, testVectorComponentwiseMinMax) {
 }
 
 TEST_F(VectorTest, testVectorMinMax) {
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
+    const Vec3<double> v = get_random_position();
+    const auto [x, y, z] = v;
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
-
-    const Vec3<double> v{ x, y, z };
 
     const auto max = v.get_maximum();
     const auto min = v.get_minimum();
@@ -601,9 +548,9 @@ TEST_F(VectorTest, testVectorMinMax) {
 }
 
 TEST_F(VectorTest, testVectorComponentwiseFloor) {
-    const auto x = std::abs(get_random_vector_element()) + eps;
-    const auto y = std::abs(get_random_vector_element()) + eps;
-    const auto z = std::abs(get_random_vector_element()) + eps;
+    const auto x = std::abs(get_random_position_element()) + eps;
+    const auto y = std::abs(get_random_position_element()) + eps;
+    const auto z = std::abs(get_random_position_element()) + eps;
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -627,9 +574,9 @@ TEST_F(VectorTest, testVectorComponentwiseFloor) {
 }
 
 TEST_F(VectorTest, testVectorComponentwiseFloorExceptionX) {
-    auto x = std::abs(get_random_vector_element()) + eps;
-    const auto y = std::abs(get_random_vector_element()) + eps;
-    const auto z = std::abs(get_random_vector_element()) + eps;
+    auto x = std::abs(get_random_position_element()) + eps;
+    const auto y = std::abs(get_random_position_element()) + eps;
+    const auto z = std::abs(get_random_position_element()) + eps;
 
     x *= -1.0;
 
@@ -641,9 +588,9 @@ TEST_F(VectorTest, testVectorComponentwiseFloorExceptionX) {
 }
 
 TEST_F(VectorTest, testVectorComponentwiseFloorExceptionY) {
-    const auto x = std::abs(get_random_vector_element()) + eps;
-    auto y = std::abs(get_random_vector_element()) + eps;
-    const auto z = std::abs(get_random_vector_element()) + eps;
+    const auto x = std::abs(get_random_position_element()) + eps;
+    auto y = std::abs(get_random_position_element()) + eps;
+    const auto z = std::abs(get_random_position_element()) + eps;
 
     y *= -1.0;
 
@@ -655,9 +602,9 @@ TEST_F(VectorTest, testVectorComponentwiseFloorExceptionY) {
 }
 
 TEST_F(VectorTest, testVectorComponentwiseFloorExceptionZ) {
-    const auto x = std::abs(get_random_vector_element()) + eps;
-    const auto y = std::abs(get_random_vector_element()) + eps;
-    auto z = std::abs(get_random_vector_element()) + eps;
+    const auto x = std::abs(get_random_position_element()) + eps;
+    const auto y = std::abs(get_random_position_element()) + eps;
+    auto z = std::abs(get_random_position_element()) + eps;
 
     z *= -1.0;
 
@@ -671,9 +618,9 @@ TEST_F(VectorTest, testVectorComponentwiseFloorExceptionZ) {
 TEST_F(VectorTest, testVectorNorm) {
     std::uniform_real_distribution<double> urd_p(1.0, 10.1);
 
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
+    const auto x = get_random_position_element();
+    const auto y = get_random_position_element();
+    const auto z = get_random_position_element();
 
     const auto p = urd_p(mt);
 
@@ -696,9 +643,9 @@ TEST_F(VectorTest, testVectorNorm) {
 }
 
 TEST_F(VectorTest, testVectorNorm2) {
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
+    const auto x = get_random_position_element();
+    const auto y = get_random_position_element();
+    const auto z = get_random_position_element();
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -722,9 +669,9 @@ TEST_F(VectorTest, testVectorNorm2) {
 TEST_F(VectorTest, testVectorNormException) {
     std::uniform_real_distribution<double> urd_bad_p(-10.0, 1.0);
 
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
+    const auto x = get_random_position_element();
+    const auto y = get_random_position_element();
+    const auto z = get_random_position_element();
 
     const auto p = urd_bad_p(mt);
 
@@ -740,9 +687,9 @@ TEST_F(VectorTest, testVectorNormException) {
 TEST_F(VectorTest, testVectorRound) {
     std::uniform_real_distribution<double> urd_multiple(1.0, 10.1);
 
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
+    const auto x = get_random_position_element();
+    const auto y = get_random_position_element();
+    const auto z = get_random_position_element();
 
     const auto multiple = urd_multiple(mt);
 
@@ -786,9 +733,9 @@ TEST_F(VectorTest, testVectorRound) {
 TEST_F(VectorTest, testVectorOrderEqual) {
     std::uniform_real_distribution<double> urd_offset(1.0, 10.1);
 
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
+    const auto x = get_random_position_element();
+    const auto y = get_random_position_element();
+    const auto z = get_random_position_element();
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -803,9 +750,9 @@ TEST_F(VectorTest, testVectorOrderEqual) {
 TEST_F(VectorTest, testVectorOrderSmallerX) {
     std::uniform_real_distribution<double> urd_offset(1.0, 10.1);
 
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
+    const auto x = get_random_position_element();
+    const auto y = get_random_position_element();
+    const auto z = get_random_position_element();
 
     const auto offset = urd_offset(mt);
 
@@ -826,9 +773,9 @@ TEST_F(VectorTest, testVectorOrderSmallerX) {
 TEST_F(VectorTest, testVectorOrderSmallerY) {
     std::uniform_real_distribution<double> urd_offset(1.0, 10.1);
 
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
+    const auto x = get_random_position_element();
+    const auto y = get_random_position_element();
+    const auto z = get_random_position_element();
 
     const auto offset = urd_offset(mt);
 
@@ -849,9 +796,9 @@ TEST_F(VectorTest, testVectorOrderSmallerY) {
 TEST_F(VectorTest, testVectorOrderSmallerZ) {
     std::uniform_real_distribution<double> urd_offset(1.0, 10.1);
 
-    const auto x = get_random_vector_element();
-    const auto y = get_random_vector_element();
-    const auto z = get_random_vector_element();
+    const auto x = get_random_position_element();
+    const auto y = get_random_position_element();
+    const auto z = get_random_position_element();
 
     const auto offset = urd_offset(mt);
 
@@ -870,13 +817,13 @@ TEST_F(VectorTest, testVectorOrderSmallerZ) {
 }
 
 TEST_F(VectorTest, testVectorOrder) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const auto x1 = get_random_position_element();
+    const auto y1 = get_random_position_element();
+    const auto z1 = get_random_position_element();
 
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
+    const auto x2 = get_random_position_element();
+    const auto y2 = get_random_position_element();
+    const auto z2 = get_random_position_element();
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
@@ -899,9 +846,9 @@ TEST_F(VectorTest, testVectorOrder) {
 }
 
 TEST_F(VectorTest, testVectorCast) {
-    const auto x = std::abs(get_random_vector_element());
-    const auto y = std::abs(get_random_vector_element());
-    const auto z = std::abs(get_random_vector_element());
+    const auto x = std::abs(get_random_position_element());
+    const auto y = std::abs(get_random_position_element());
+    const auto z = std::abs(get_random_position_element());
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -919,13 +866,13 @@ TEST_F(VectorTest, testVectorCast) {
 }
 
 TEST_F(VectorTest, testVectorInBoxNoThrow) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const auto x1 = get_random_position_element();
+    const auto y1 = get_random_position_element();
+    const auto z1 = get_random_position_element();
 
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
+    const auto x2 = get_random_position_element();
+    const auto y2 = get_random_position_element();
+    const auto z2 = get_random_position_element();
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
@@ -938,13 +885,13 @@ TEST_F(VectorTest, testVectorInBoxNoThrow) {
 }
 
 TEST_F(VectorTest, testVectorInBoxTrue) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const auto x1 = get_random_position_element();
+    const auto y1 = get_random_position_element();
+    const auto z1 = get_random_position_element();
 
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
+    const auto x2 = get_random_position_element();
+    const auto y2 = get_random_position_element();
+    const auto z2 = get_random_position_element();
 
     const auto x_max = std::max(x1, x2);
     const auto x_min = std::min(x1, x2);
@@ -976,13 +923,13 @@ TEST_F(VectorTest, testVectorInBoxTrue) {
 }
 
 TEST_F(VectorTest, testVectorInBoxFalseXlarge) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const auto x1 = get_random_position_element();
+    const auto y1 = get_random_position_element();
+    const auto z1 = get_random_position_element();
 
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
+    const auto x2 = get_random_position_element();
+    const auto y2 = get_random_position_element();
+    const auto z2 = get_random_position_element();
 
     const auto x_max = std::max(x1, x2);
     const auto x_min = std::min(x1, x2);
@@ -1014,13 +961,13 @@ TEST_F(VectorTest, testVectorInBoxFalseXlarge) {
 }
 
 TEST_F(VectorTest, testVectorInBoxFalseYlarge) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const auto x1 = get_random_position_element();
+    const auto y1 = get_random_position_element();
+    const auto z1 = get_random_position_element();
 
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
+    const auto x2 = get_random_position_element();
+    const auto y2 = get_random_position_element();
+    const auto z2 = get_random_position_element();
 
     const auto x_max = std::max(x1, x2);
     const auto x_min = std::min(x1, x2);
@@ -1052,13 +999,13 @@ TEST_F(VectorTest, testVectorInBoxFalseYlarge) {
 }
 
 TEST_F(VectorTest, testVectorInBoxFalseZlarge) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const auto x1 = get_random_position_element();
+    const auto y1 = get_random_position_element();
+    const auto z1 = get_random_position_element();
 
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
+    const auto x2 = get_random_position_element();
+    const auto y2 = get_random_position_element();
+    const auto z2 = get_random_position_element();
 
     const auto x_max = std::max(x1, x2);
     const auto x_min = std::min(x1, x2);
@@ -1090,13 +1037,13 @@ TEST_F(VectorTest, testVectorInBoxFalseZlarge) {
 }
 
 TEST_F(VectorTest, testVectorInBoxFalseXsmall) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const auto x1 = get_random_position_element();
+    const auto y1 = get_random_position_element();
+    const auto z1 = get_random_position_element();
 
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
+    const auto x2 = get_random_position_element();
+    const auto y2 = get_random_position_element();
+    const auto z2 = get_random_position_element();
 
     const auto x_max = std::max(x1, x2);
     const auto x_min = std::min(x1, x2);
@@ -1128,13 +1075,13 @@ TEST_F(VectorTest, testVectorInBoxFalseXsmall) {
 }
 
 TEST_F(VectorTest, testVectorInBoxFalseYsmall) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const auto x1 = get_random_position_element();
+    const auto y1 = get_random_position_element();
+    const auto z1 = get_random_position_element();
 
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
+    const auto x2 = get_random_position_element();
+    const auto y2 = get_random_position_element();
+    const auto z2 = get_random_position_element();
 
     const auto x_max = std::max(x1, x2);
     const auto x_min = std::min(x1, x2);
@@ -1166,13 +1113,13 @@ TEST_F(VectorTest, testVectorInBoxFalseYsmall) {
 }
 
 TEST_F(VectorTest, testVectorInBoxFalseZsmall) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const auto x1 = get_random_position_element();
+    const auto y1 = get_random_position_element();
+    const auto z1 = get_random_position_element();
 
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
+    const auto x2 = get_random_position_element();
+    const auto y2 = get_random_position_element();
+    const auto z2 = get_random_position_element();
 
     const auto x_max = std::max(x1, x2);
     const auto x_min = std::min(x1, x2);
@@ -1204,13 +1151,13 @@ TEST_F(VectorTest, testVectorInBoxFalseZsmall) {
 }
 
 TEST_F(VectorTest, testVectorInBoxExceptionX) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const auto x1 = get_random_position_element();
+    const auto y1 = get_random_position_element();
+    const auto z1 = get_random_position_element();
 
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
+    const auto x2 = get_random_position_element();
+    const auto y2 = get_random_position_element();
+    const auto z2 = get_random_position_element();
 
     const auto x_max = std::max(x1, x2);
     const auto x_min = std::min(x1, x2);
@@ -1241,13 +1188,13 @@ TEST_F(VectorTest, testVectorInBoxExceptionX) {
 }
 
 TEST_F(VectorTest, testVectorInBoxExceptionY) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const auto x1 = get_random_position_element();
+    const auto y1 = get_random_position_element();
+    const auto z1 = get_random_position_element();
 
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
+    const auto x2 = get_random_position_element();
+    const auto y2 = get_random_position_element();
+    const auto z2 = get_random_position_element();
 
     const auto x_max = std::max(x1, x2);
     const auto x_min = std::min(x1, x2);
@@ -1278,13 +1225,13 @@ TEST_F(VectorTest, testVectorInBoxExceptionY) {
 }
 
 TEST_F(VectorTest, testVectorInBoxExceptionZ) {
-    const auto x1 = get_random_vector_element();
-    const auto y1 = get_random_vector_element();
-    const auto z1 = get_random_vector_element();
+    const auto x1 = get_random_position_element();
+    const auto y1 = get_random_position_element();
+    const auto z1 = get_random_position_element();
 
-    const auto x2 = get_random_vector_element();
-    const auto y2 = get_random_vector_element();
-    const auto z2 = get_random_vector_element();
+    const auto x2 = get_random_position_element();
+    const auto y2 = get_random_position_element();
+    const auto z2 = get_random_position_element();
 
     const auto x_max = std::max(x1, x2);
     const auto x_min = std::min(x1, x2);
