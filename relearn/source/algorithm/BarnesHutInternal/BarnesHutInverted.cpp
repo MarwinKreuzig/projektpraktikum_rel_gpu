@@ -23,8 +23,6 @@
 #include <array>
 #include <iostream>
 
-std::vector<double> inverted_length{};
-
 void BarnesHutInverted::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
     RelearnException::check(global_tree != nullptr, "BarnesHutInverted::update_leaf_nodes: global_tree was nullptr");
 
@@ -78,7 +76,7 @@ void BarnesHutInverted::update_leaf_nodes(const std::vector<UpdateStatus>& disab
 CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 
-    inverted_length.clear();
+    std::vector<double> lengths{};
 
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
@@ -88,7 +86,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(
     const auto sigma = get_probabilty_parameter();
 
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
-#pragma omp parallel for default(none) shared(root, sigma, number_neurons, extra_infos, disable_flags, synapse_creation_requests_outgoing)
+#pragma omp parallel for default(none) shared(root, sigma, number_neurons, extra_infos, disable_flags, synapse_creation_requests_outgoing, lengths)
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
@@ -106,15 +104,19 @@ CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(
         const auto& dendrite_position = extra_infos->get_position(id);
 
         const auto& excitatory_requests = find_target_neurons(id, dendrite_position, number_vacant_excitatory_dendrites, root, ElementType::Axon, SignalType::Excitatory, sigma);
-        for (const auto& [target_rank, creation_request] : excitatory_requests) {
-#pragma omp critical
+        for (const auto& [target_rank, creation_request, length] : excitatory_requests) {
+#pragma omp critical(BHIrequests)
             synapse_creation_requests_outgoing.append(target_rank, creation_request);
+#pragma omp critical(BHIlengths)
+            lengths.emplace_back(length);
         }
 
         const auto& inhibitory_requests = find_target_neurons(id, dendrite_position, number_vacant_inhibitory_dendrites, root, ElementType::Axon, SignalType::Inhibitory, sigma);
-        for (const auto& [target_rank, creation_request] : inhibitory_requests) {
-#pragma omp critical
+        for (const auto& [target_rank, creation_request, length] : inhibitory_requests) {
+#pragma omp critical(BHIrequests)
             synapse_creation_requests_outgoing.append(target_rank, creation_request);
+#pragma omp critical(BHIlengths)
+            lengths.emplace_back(length);
         }
     }
 
@@ -123,9 +125,9 @@ CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(
     NodeCache<BarnesHutInvertedCell>::empty();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
-    if (!inverted_length.empty()) {
-        auto total_length = std::reduce(inverted_length.begin(), inverted_length.end(), 0.0, std::plus<double>{});
-        auto average_length = total_length / inverted_length.size();
+    if (!lengths.empty()) {
+        auto total_length = std::reduce(lengths.begin(), lengths.end(), 0.0, std::plus<double>{});
+        auto average_length = total_length / lengths.size();
 
         std::cout << "Average length is: " << average_length << '\n';
     }
@@ -133,10 +135,10 @@ CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(
     return synapse_creation_requests_outgoing;
 }
 
-std::vector<std::pair<int, SynapseCreationRequest>> BarnesHutInverted::find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
+std::vector<std::tuple<int, SynapseCreationRequest, double>> BarnesHutInverted::find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
     const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type, const double sigma) {
 
-    std::vector<std::pair<int, SynapseCreationRequest>> requests{};
+    std::vector<std::tuple<int, SynapseCreationRequest, double>> requests{};
     requests.reserve(number_vacant_elements);
 
     for (unsigned int j = 0; j < number_vacant_elements; j++) {
@@ -150,8 +152,8 @@ std::vector<std::pair<int, SynapseCreationRequest>> BarnesHutInverted::find_targ
         const auto& [rni, length] = rank_neuron_id.value();
         const auto& [target_rank, target_id] = rni;
         const SynapseCreationRequest creation_request(target_id, source_neuron_id, signal_type);
-        inverted_length.emplace_back(length);
-        requests.emplace_back(target_rank, creation_request);
+
+        requests.emplace_back(target_rank, creation_request, length);
     }
 
     return requests;

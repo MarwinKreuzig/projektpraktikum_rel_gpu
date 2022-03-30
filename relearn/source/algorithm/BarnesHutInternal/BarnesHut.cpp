@@ -23,8 +23,6 @@
 #include <array>
 #include <iostream>
 
-std::vector<double> lengths{};
-
 void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
     RelearnException::check(global_tree != nullptr, "BarnesHut::update_leaf_nodes: global_tree was nullptr");
 
@@ -78,7 +76,7 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
 CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 
-    lengths.clear();
+    std::vector<double> lengths{};
 
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
@@ -88,7 +86,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const si
     const auto sigma = get_probabilty_parameter();
 
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
-#pragma omp parallel for default(none) shared(root, sigma, number_neurons, extra_infos, disable_flags, synapse_creation_requests_outgoing)
+#pragma omp parallel for default(none) shared(root, sigma, number_neurons, extra_infos, disable_flags, synapse_creation_requests_outgoing, lengths)
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
@@ -104,9 +102,11 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const si
         }
 
         const auto& requests = find_target_neurons(id, axon_position, number_vacant_axons, root, ElementType::Dendrite, dendrite_type_needed, sigma);
-        for (const auto& [target_rank, creation_request] : requests) {
-#pragma omp critical
+        for (const auto& [target_rank, creation_request, length] : requests) {
+#pragma omp critical(BHrequests)
             synapse_creation_requests_outgoing.append(target_rank, creation_request);
+#pragma omp critical(BHlengths)
+            lengths.emplace_back(length);
         }
     }
 
@@ -125,10 +125,10 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const si
     return synapse_creation_requests_outgoing;
 }
 
-std::vector<std::pair<int, SynapseCreationRequest>> BarnesHut::find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
+std::vector<std::tuple<int, SynapseCreationRequest, double>> BarnesHut::find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
     const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type, const double sigma) {
 
-    std::vector<std::pair<int, SynapseCreationRequest>> requests{};
+    std::vector<std::tuple<int, SynapseCreationRequest, double>> requests{};
     requests.reserve(number_vacant_elements);
 
     for (unsigned int j = 0; j < number_vacant_elements; j++) {
@@ -142,9 +142,8 @@ std::vector<std::pair<int, SynapseCreationRequest>> BarnesHut::find_target_neuro
         const auto& [rni, length] = rank_neuron_id.value();
         const auto& [target_rank, target_id] = rni;
         const SynapseCreationRequest creation_request(target_id, source_neuron_id, signal_type);
-        lengths.emplace_back(length);
 
-        requests.emplace_back(target_rank, creation_request);
+        requests.emplace_back(target_rank, creation_request, length);
     }
 
     return requests;
