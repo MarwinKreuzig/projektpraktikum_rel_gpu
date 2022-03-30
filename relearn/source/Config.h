@@ -71,4 +71,7 @@ public:
 
     // Capture the calcium values every <calcium_step> ms
     inline static size_t calcium_step = 1000000; // NOLINTLINE
+
+    // Capture the average local euclidean distance every <distance_step> ms
+    inline static size_t distance_step = 10000; // NOLINTLINE
 };

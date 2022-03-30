@@ -115,12 +115,12 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const si
     NodeCache<BarnesHutCell>::empty();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
-    if (!lengths.empty()) {
-        auto total_length = std::reduce(lengths.begin(), lengths.end(), 0.0, std::plus<double>{});
-        auto average_length = total_length / lengths.size();
+    //if (!lengths.empty()) {
+    //    auto total_length = std::reduce(lengths.begin(), lengths.end(), 0.0, std::plus<double>{});
+    //    auto average_length = total_length / lengths.size();
 
-        std::cout << "Average length is: " << average_length << '\n';
-    }
+    //    std::cout << "Average length is: " << average_length << '\n';
+    //}
 
     return synapse_creation_requests_outgoing;
 }

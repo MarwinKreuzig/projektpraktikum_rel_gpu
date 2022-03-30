@@ -53,6 +53,7 @@ public:
         NetworkOutHistogramLocal,
         Essentials,
         CalciumValues,
+        LocalEuclideanDistance,
     };
 
 private:

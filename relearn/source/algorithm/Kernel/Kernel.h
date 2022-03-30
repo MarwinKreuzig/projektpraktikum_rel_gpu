@@ -117,6 +117,11 @@ public:
         const auto& [total_probability, all_probabilities]
             = create_probability_interval(source_neuron_id, source_position, nodes, element_type, signal_type, sigma);
 
+        // Short cut to avoid exceptions later on
+        if (total_probability == 0.0) {
+            return nullptr;
+        }
+
         const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(total_probability, Constants::eps));
 
         auto* node_selected = pick_target(nodes, all_probabilities, random_number);
