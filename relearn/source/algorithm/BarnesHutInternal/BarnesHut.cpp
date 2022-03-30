@@ -21,6 +21,9 @@
 
 #include <algorithm>
 #include <array>
+#include <iostream>
+
+std::vector<double> lengths{};
 
 void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
     RelearnException::check(global_tree != nullptr, "BarnesHut::update_leaf_nodes: global_tree was nullptr");
@@ -75,11 +78,13 @@ void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags
 CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 
+    lengths.clear();
+
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks);
 
-    const auto root = global_tree->get_root();
+    auto* const root = global_tree->get_root();
     const auto sigma = get_probabilty_parameter();
 
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
@@ -109,6 +114,14 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const si
     Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
     NodeCache<BarnesHutCell>::empty();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
+
+    if (!lengths.empty()) {
+        auto total_length = std::reduce(lengths.begin(), lengths.end(), 0.0, std::plus<double>{});
+        auto average_length = total_length / lengths.size();
+
+        std::cout << "Average length is: " << average_length << '\n';
+    }
+
     return synapse_creation_requests_outgoing;
 }
 
@@ -120,14 +133,16 @@ std::vector<std::pair<int, SynapseCreationRequest>> BarnesHut::find_target_neuro
 
     for (unsigned int j = 0; j < number_vacant_elements; j++) {
         // Find one target at the time
-        std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type, sigma);
+        const auto& rank_neuron_id = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type, sigma);
         if (!rank_neuron_id.has_value()) {
             // If finding failed, it won't succeed in later iterations
             break;
         }
 
-        const auto& [target_rank, target_id] = rank_neuron_id.value();
+        const auto& [rni, length] = rank_neuron_id.value();
+        const auto& [target_rank, target_id] = rni;
         const SynapseCreationRequest creation_request(target_id, source_neuron_id, signal_type);
+        lengths.emplace_back(length);
 
         requests.emplace_back(target_rank, creation_request);
     }

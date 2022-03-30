@@ -217,7 +217,7 @@ protected:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorithm found a matching neuron, its RankNeuronId is returned
      */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
+    [[nodiscard]] std::optional<std::pair<RankNeuronId, double>> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
         const ElementType element_type, const SignalType signal_type, const double sigma) const {
         RelearnException::check(root != nullptr, "BarnesHutBase::find_target_neuron: root was nullptr");
 
@@ -231,7 +231,14 @@ protected:
 
             // A chosen child is a valid target
             if (const auto done = node_selected->is_child(); done) {
-                return RankNeuronId{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
+                const auto& cell = node_selected->get_cell();
+                const auto& pos = cell.get_position_for(element_type, signal_type);
+                const auto& position = pos.value();
+
+                const auto& diff = source_position - position;
+                const auto& length = diff.calculate_2_norm();
+
+                return std::make_pair(RankNeuronId{ node_selected->get_rank(), node_selected->get_cell_neuron_id() }, length);
             }
 
             // We need to choose again, starting from the chosen virtual neuron

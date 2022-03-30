@@ -21,6 +21,9 @@
 
 #include <algorithm>
 #include <array>
+#include <iostream>
+
+std::vector<double> inverted_length{};
 
 void BarnesHutInverted::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
     RelearnException::check(global_tree != nullptr, "BarnesHutInverted::update_leaf_nodes: global_tree was nullptr");
@@ -75,6 +78,8 @@ void BarnesHutInverted::update_leaf_nodes(const std::vector<UpdateStatus>& disab
 CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 
+    inverted_length.clear();
+
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks);
@@ -117,6 +122,14 @@ CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(
     Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
     NodeCache<BarnesHutInvertedCell>::empty();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
+
+    if (!inverted_length.empty()) {
+        auto total_length = std::reduce(inverted_length.begin(), inverted_length.end(), 0.0, std::plus<double>{});
+        auto average_length = total_length / inverted_length.size();
+
+        std::cout << "Average length is: " << average_length << '\n';
+    }
+
     return synapse_creation_requests_outgoing;
 }
 
@@ -128,15 +141,16 @@ std::vector<std::pair<int, SynapseCreationRequest>> BarnesHutInverted::find_targ
 
     for (unsigned int j = 0; j < number_vacant_elements; j++) {
         // Find one target at the time
-        std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type, sigma);
+        const auto& rank_neuron_id = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type, sigma);
         if (!rank_neuron_id.has_value()) {
             // If finding failed, it won't succeed in later iterations
             break;
         }
 
-        const auto& [target_rank, target_id] = rank_neuron_id.value();
+        const auto& [rni, length] = rank_neuron_id.value();
+        const auto& [target_rank, target_id] = rni;
         const SynapseCreationRequest creation_request(target_id, source_neuron_id, signal_type);
-
+        inverted_length.emplace_back(length);
         requests.emplace_back(target_rank, creation_request);
     }
 
