@@ -184,7 +184,7 @@ TEST_F(VectorTest, testVectorOperatorPlusVector) {
     const auto& [x1, y1, z1] = v;
 
     const Vec3<double> w = get_random_position();
-    const auto& [x2, y2, z2] = v;
+    const auto& [x2, y2, z2] = w;
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
@@ -210,7 +210,7 @@ TEST_F(VectorTest, testVectorOperatorMinusVector) {
     const auto& [x1, y1, z1] = v;
 
     const Vec3<double> w = get_random_position();
-    const auto& [x2, y2, z2] = v;
+    const auto& [x2, y2, z2] = w;
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
@@ -323,7 +323,7 @@ TEST_F(VectorTest, testVectorOperatorPlusAssignVector) {
     const auto [x1, y1, z1] = v;
 
     const Vec3<double> w = get_random_position();
-    const auto [x2, y2, z2] = v;
+    const auto [x2, y2, z2] = w;
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
@@ -358,7 +358,7 @@ TEST_F(VectorTest, testVectorOperatorMinusAssignVector) {
     const auto [x1, y1, z1] = v;
 
     const Vec3<double> w = get_random_position();
-    const auto [x2, y2, z2] = v;
+    const auto [x2, y2, z2] = w;
 
     std::stringstream ss{};
     ss << x1 << ' ' << y1 << ' ' << z1 << '\n';
