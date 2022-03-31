@@ -82,10 +82,17 @@ public:
         RelearnException::check(!nodes.empty(), "Kernel::pick_target: There were no nodes to pick from");
         RelearnException::check(random_number >= 0.0, "Kernel::pick_target: random_number was smaller than 0.0");
 
+        if (!(0.0 < random_number)) {
+            auto* node_selected = nodes[0];
+            RelearnException::check(node_selected != nullptr, "Kernel::pick_target: node_selected was nullptr");
+            return node_selected;
+        }
+
         auto counter = 0;
         for (auto sum_probabilities = 0.0; counter < probabilities.size() && sum_probabilities < random_number; counter++) {
             sum_probabilities += probabilities[counter];
         }
+
         auto* node_selected = nodes[counter - 1ULL];
 
         RelearnException::check(node_selected != nullptr, "Kernel::pick_target: node_selected was nullptr");
