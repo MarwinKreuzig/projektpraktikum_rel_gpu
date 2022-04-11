@@ -22,7 +22,6 @@
 #include "util/RelearnException.h"
 #include "util/Utility.h"
 #include "util/Stack.h"
-
 #include <array>
 #include <cmath>
 #include <memory>
@@ -43,7 +42,7 @@ class OctreeImplementation;
  */
 class FastMultipoleMethods : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
     friend class FMMPrivateFunctionTest;
-
+    friend class OctreeTestFMM;
     std::shared_ptr<OctreeImplementation<FastMultipoleMethods>> global_tree{};
 
 public:
@@ -52,6 +51,7 @@ public:
     using node_pair = std::pair<const OctreeNode<AdditionalCellAttributes>*, const OctreeNode<AdditionalCellAttributes>*>;
     using position_type = typename Cell<AdditionalCellAttributes>::position_type;
     using counter_type = typename Cell<AdditionalCellAttributes>::counter_type;
+    
 
     /**
      * @brief Constructs a new instance with the given octree
@@ -284,10 +284,11 @@ private:
      * @brief Checks which calculation type is suitable for a given source and target node.
      * @param source Node with vacant axons.
      * @param target Node with vacant dendrites.
+     * @param sigma Scaling constant.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory)
      * @return CalculationType
      */
-    static CalculationType check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, SignalType signal_type_needed);
+    static CalculationType check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed);
 
     /**
      * @brief Calculates the force of attraction between two nodes of the octree using a Taylor series expansion.
@@ -389,6 +390,7 @@ private:
     class Utilities {
         using AdditionalCellAttributes = FastMultipoleMethodsCell;
         friend class FMMPrivateFunctionTest;
+        friend class OctreeTestFMM;
 
     public:
         /**
