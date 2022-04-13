@@ -18,7 +18,7 @@ TEST_F(KernelTest, testGaussianSamePosition) {
 
     const auto& position = get_random_position();
 
-    GaussianKernel::set_probability_parameter(sigma);
+    GaussianKernel::set_sigma(sigma);
     const auto attractiveness = GaussianKernel::calculate_attractiveness_to_connect(position, position, number_elements);
 
     ASSERT_NEAR(attractiveness, converted_double, eps);
@@ -30,7 +30,7 @@ TEST_F(KernelTest, testGaussianNoFreeElements) {
     const auto& source_position = get_random_position();
     const auto& target_position = get_random_position();
 
-    GaussianKernel::set_probability_parameter(sigma);
+    GaussianKernel::set_sigma(sigma);
     const auto attractiveness = GaussianKernel::calculate_attractiveness_to_connect(source_position, target_position, 0);
 
     ASSERT_EQ(attractiveness, 0.0);
@@ -42,7 +42,7 @@ TEST_F(KernelTest, testGaussianConstantSigma) {
     const auto& source_position = get_random_position();
     const auto& target_position = get_random_position();
 
-    GaussianKernel::set_probability_parameter(sigma);
+    GaussianKernel::set_sigma(sigma);
     const auto attractiveness_one = GaussianKernel::calculate_attractiveness_to_connect(source_position, target_position, 1);
 
     for (auto number_free_elements = 0U; number_free_elements < 10000U; number_free_elements++) {
@@ -69,7 +69,7 @@ TEST_F(KernelTest, testGaussianVariableSigma) {
 
     std::vector<double> attractivenesses{};
     for (auto i = 0; i < 100; i++) {
-        GaussianKernel::set_probability_parameter(sigmas[i]);
+        GaussianKernel::set_sigma(sigmas[i]);
         attractivenesses.emplace_back(GaussianKernel::calculate_attractiveness_to_connect(source_position, target_position, number_elements));
     }
 
@@ -83,7 +83,7 @@ TEST_F(KernelTest, testGaussianVariableSigma) {
 
 TEST_F(KernelTest, testGaussianVariablePosition) {
     const auto sigma = get_random_double(0.001, 100000);
-    GaussianKernel::set_probability_parameter(sigma);
+    GaussianKernel::set_sigma(sigma);
 
     const auto& source_position = get_random_position();
 
@@ -120,7 +120,7 @@ TEST_F(KernelTest, testGaussianVariablePosition) {
 
 TEST_F(KernelTest, testGaussianConstantDistance) {
     const auto sigma = get_random_double(0.001, 100000);
-    GaussianKernel::set_probability_parameter(sigma);
+    GaussianKernel::set_sigma(sigma);
 
     const auto& source_position = get_random_position();
     const auto& [x, y, z] = source_position;
@@ -163,7 +163,7 @@ TEST_F(KernelTest, testGaussianPrecalculatedValues) {
         const auto& source_position = get_random_position();
         const auto& target_position = source_position + (position_difference / sqrt3);
 
-        GaussianKernel::set_probability_parameter(sigma);
+        GaussianKernel::set_sigma(sigma);
         const auto attractiveness = GaussianKernel::calculate_attractiveness_to_connect(source_position, target_position, 1);
         ASSERT_NEAR(attractiveness, golden_attractiveness, eps);
     }
@@ -178,12 +178,12 @@ TEST_F(KernelTest, testGaussianSameNode) {
     const auto signal_type = get_random_signal_type();
 
     const auto sigma = get_random_double(0.001, 100000);
-    GaussianKernel::set_probability_parameter(sigma);
+    GaussianKernel::set_sigma(sigma);
 
     OctreeNode<BarnesHutCell> node{};
     node.set_cell_neuron_id(neuron_id);
 
-    const auto attractiveness = GaussianKernel::calculate_attractiveness_to_connect<BarnesHutCell>(neuron_id, position, &node, element_type, signal_type);
+    const auto attractiveness = Kernel<BarnesHutCell, GaussianKernel>::calculate_attractiveness_to_connect(neuron_id, position, &node, element_type, signal_type);
     ASSERT_EQ(attractiveness, 0.0);
 }
 
@@ -194,7 +194,7 @@ TEST_F(KernelTest, testGaussianDifferentNode) {
     const auto& source_position = get_random_position();
 
     const auto sigma = get_random_double(0.001, 100000);
-    GaussianKernel::set_probability_parameter(sigma);
+    GaussianKernel::set_sigma(sigma);
 
     const auto& target_excitatory_axon_position = get_random_position();
     const auto& target_inhibitory_axon_position = get_random_position();
@@ -218,10 +218,10 @@ TEST_F(KernelTest, testGaussianDifferentNode) {
     node.set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
     node.set_cell_number_dendrites(number_vacant_excitatory_dendrites, number_vacant_inhibitory_dendrites);
 
-    const auto attr_exc_axons = GaussianKernel::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Axon, SignalType::Excitatory);
-    const auto attr_inh_axons = GaussianKernel::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Axon, SignalType::Inhibitory);
-    const auto attr_exc_dendrites = GaussianKernel::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Dendrite, SignalType::Excitatory);
-    const auto attr_inh_dendrites = GaussianKernel::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Dendrite, SignalType::Inhibitory);
+    const auto attr_exc_axons = Kernel<FastMultipoleMethodsCell, GaussianKernel>::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Axon, SignalType::Excitatory);
+    const auto attr_inh_axons = Kernel<FastMultipoleMethodsCell, GaussianKernel>::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Axon, SignalType::Inhibitory);
+    const auto attr_exc_dendrites = Kernel<FastMultipoleMethodsCell, GaussianKernel>::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Dendrite, SignalType::Excitatory);
+    const auto attr_inh_dendrites = Kernel<FastMultipoleMethodsCell, GaussianKernel>::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Dendrite, SignalType::Inhibitory);
 
     const auto golden_attr_exc_axons = GaussianKernel::calculate_attractiveness_to_connect(source_position, target_excitatory_axon_position, number_vacant_excitatory_axons);
     const auto golden_attr_inh_axons = GaussianKernel::calculate_attractiveness_to_connect(source_position, target_inhibitory_axon_position, number_vacant_inhibitory_axons);
@@ -241,7 +241,7 @@ TEST_F(KernelTest, testGaussianException) {
     const auto& source_position = get_random_position();
 
     const auto sigma = get_random_double(0.001, 100000);
-    GaussianKernel::set_probability_parameter(sigma);
+    GaussianKernel::set_sigma(sigma);
 
     const auto& number_vacant_excitatory_axons = get_random_synaptic_element_count();
     const auto& number_vacant_inhibitory_axons = get_random_synaptic_element_count();
@@ -260,10 +260,11 @@ TEST_F(KernelTest, testGaussianException) {
     node.set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
     node.set_cell_number_dendrites(number_vacant_excitatory_dendrites, number_vacant_inhibitory_dendrites);
 
-    ASSERT_THROW(const auto attr_exc_axons = GaussianKernel::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Axon, SignalType::Excitatory);, RelearnException);
-    ASSERT_THROW(const auto attr_inh_axons = GaussianKernel::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Axon, SignalType::Inhibitory);, RelearnException);
-    ASSERT_THROW(const auto attr_exc_dendrites = GaussianKernel::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Dendrite, SignalType::Excitatory);, RelearnException);
-    ASSERT_THROW(const auto attr_inh_dendrites = GaussianKernel::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Dendrite, SignalType::Inhibitory);, RelearnException);
+    using type = Kernel<FastMultipoleMethodsCell, GaussianKernel>;
+    ASSERT_THROW(const auto attr_exc_axons = type::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Axon, SignalType::Excitatory);, RelearnException);
+    ASSERT_THROW(const auto attr_inh_axons = type::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Axon, SignalType::Inhibitory);, RelearnException);
+    ASSERT_THROW(const auto attr_exc_dendrites = type::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Dendrite, SignalType::Excitatory);, RelearnException);
+    ASSERT_THROW(const auto attr_inh_dendrites = type::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Dendrite, SignalType::Inhibitory);, RelearnException);
 }
 
 TEST_F(KernelTest, testGaussianEmptyVector) {
@@ -275,7 +276,7 @@ TEST_F(KernelTest, testGaussianEmptyVector) {
     const auto signal_type = get_random_signal_type();
 
     const auto sigma = get_random_double(0.001, 100000);
-    GaussianKernel::set_probability_parameter(sigma);
+    GaussianKernel::set_sigma(sigma);
 
     const auto number_nodes = get_random_number_neurons();
 
@@ -295,7 +296,7 @@ TEST_F(KernelTest, testGaussianAutapseVector) {
     const auto signal_type = get_random_signal_type();
 
     const auto sigma = get_random_double(0.001, 100000);
-    GaussianKernel::set_probability_parameter(sigma);
+    GaussianKernel::set_sigma(sigma);
 
     const auto number_nodes = get_random_number_neurons();
 
@@ -343,7 +344,7 @@ TEST_F(KernelTest, testGaussianVectorException) {
     const auto signal_type = get_random_signal_type();
 
     const auto sigma = get_random_double(0.001, 100000);
-    GaussianKernel::set_probability_parameter(sigma);
+    GaussianKernel::set_sigma(sigma);
 
     const auto number_nodes = get_random_number_neurons();
 
@@ -392,7 +393,7 @@ TEST_F(KernelTest, testGaussianRandomVector) {
     const auto signal_type = get_random_signal_type();
 
     const auto sigma = get_random_double(0.001, 100000);
-    GaussianKernel::set_probability_parameter(sigma);
+    GaussianKernel::set_sigma(sigma);
 
     const auto number_nodes = get_random_number_neurons();
 
@@ -427,7 +428,7 @@ TEST_F(KernelTest, testGaussianRandomVector) {
     auto total_attractiveness = 0.0;
     std::vector<double> attractivenesses{};
     for (auto i = 0; i < number_nodes; i++) {
-        const auto attr = GaussianKernel::calculate_attractiveness_to_connect(neuron_id, position, &nodes[i], element_type, signal_type);
+        const auto attr = Kernel<FastMultipoleMethodsCell, GaussianKernel>::calculate_attractiveness_to_connect(neuron_id, position, &nodes[i], element_type, signal_type);
         attractivenesses.emplace_back(attr);
         total_attractiveness += attr;
     }
@@ -555,7 +556,7 @@ TEST_F(KernelTest, testPickTargetEmpty2) {
     const auto signal_type = get_random_signal_type();
 
     const auto sigma = get_random_double(0.001, 100000);
-    GaussianKernel::set_probability_parameter(sigma);
+    GaussianKernel::set_sigma(sigma);
 
     auto* result = Kernel<BarnesHutCell, GaussianKernel>::pick_target(neuron_id, position, {}, element_type, signal_type);
 
@@ -572,7 +573,7 @@ TEST_F(KernelTest, testPickTargetException) {
     const auto signal_type = get_random_signal_type();
 
     const auto sigma = get_random_double(0.001, 100000);
-    GaussianKernel::set_probability_parameter(sigma);
+    GaussianKernel::set_sigma(sigma);
 
     std::vector<OctreeNode<FastMultipoleMethodsCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodsCell>{} };
     std::vector<OctreeNode<FastMultipoleMethodsCell>*> node_pointers{ number_nodes, nullptr };
@@ -619,7 +620,7 @@ TEST_F(KernelTest, testPickTargetRandom2) {
     const auto signal_type = get_random_signal_type();
 
     const auto sigma = get_random_double(0.001, 100000);
-    GaussianKernel::set_probability_parameter(sigma);
+    GaussianKernel::set_sigma(sigma);
 
     std::vector<OctreeNode<FastMultipoleMethodsCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodsCell>{} };
     std::vector<OctreeNode<FastMultipoleMethodsCell>*> node_pointers{ number_nodes, nullptr };

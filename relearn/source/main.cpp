@@ -179,7 +179,7 @@ int main(int argc, char** argv) {
     double accept_criterion{ BarnesHut::default_theta };
     auto* opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Required Barnes-Hut.");
 
-    double scaling_constant{ Constants::default_sigma };
+    double scaling_constant{ GaussianKernel::default_sigma };
     app.add_option("--sigma", scaling_constant, "Scaling parameter for the probabilty kernel. Default: 750");
 
     size_t number_neurons{};
@@ -482,7 +482,7 @@ int main(int argc, char** argv) {
     sim.set_dendrites_ex(std::move(dend_ex_models));
     sim.set_dendrites_in(std::move(dend_in_models));
     
-    GaussianKernel::set_probability_parameter(scaling_constant);
+    GaussianKernel::set_sigma(scaling_constant);
 
     if (algorithm == AlgorithmEnum::BarnesHut || algorithm == AlgorithmEnum::BarnesHutInverted) {
         sim.set_acceptance_criterion_for_barnes_hut(accept_criterion);

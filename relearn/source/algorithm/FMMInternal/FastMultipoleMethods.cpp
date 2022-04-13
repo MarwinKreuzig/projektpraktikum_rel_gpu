@@ -303,7 +303,7 @@ std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect(const O
     const auto target_list_length = Utilities::count_non_zero_elements(interaction_list);
     std::vector<double> result(target_list_length, 0.0);
 
-    const auto sigma = GaussianKernel::get_probabilty_parameter();
+    const auto sigma = GaussianKernel::get_sigma();
 
     std::array<double, Constants::p3> coefficents{ 0 };
     bool init = false;

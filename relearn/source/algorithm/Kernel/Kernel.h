@@ -31,6 +31,33 @@ public:
     using position_type = RelearnTypes::position_type;
 
     /**
+     * @brief Calculates the attractiveness to connect on the basis of KernelType.
+     *      Performs all necessary checks and passes the values to the actual kernel.
+     * @param source_neuron_id The source neuron id
+     * @param source_position The source position s
+     * @param target_node The target node
+     * @param element_type The element type
+     * @param signal_type The signal type
+     * @exception Throws a RelearnException if the position for (element_type, signal_type) from target_node is empty or not supported
+     * @return The calculated attractiveness, might be 0.0 to avoid autapses
+     */
+    [[nodiscard]] static double calculate_attractiveness_to_connect(const NeuronID& source_neuron_id, const position_type& source_position,
+        const OctreeNode<AdditionalCellAttributes>* target_node, const ElementType element_type, const SignalType signal_type) {
+        // A neuron must not form an autapse, i.e., a synapse to itself
+        if (target_node->is_child() && source_neuron_id == target_node->get_cell_neuron_id()) {
+            return 0.0;
+        }
+
+        const auto& cell = target_node->get_cell();
+        const auto& target_position = cell.get_position_for(element_type, signal_type);
+        const auto& number_elements = cell.get_number_elements_for(element_type, signal_type);
+
+        RelearnException::check(target_position.has_value(), "GaussianKernel::calculate_attractiveness_to_connect: target_position is bad");
+
+        return KernelType::calculate_attractiveness_to_connect(source_position, target_position.value(), number_elements);
+    }
+
+    /**
      * @brief Calculates the probability for the source neuron to connect to each of the OctreeNodes in the vector,
      *      searching the specified element_type and signal_type
      * @param source_neuron_id The id of the source neuron, is used to prevent autapses
@@ -55,7 +82,7 @@ public:
 
         std::transform(nodes.begin(), nodes.cend(), std::back_inserter(probabilities), [&](const OctreeNode<AdditionalCellAttributes>* target_node) {
             RelearnException::check(target_node != nullptr, "Kernel::create_probability_interval: target_node was nullptr");
-            const auto prob = KernelType::calculate_attractiveness_to_connect(source_neuron_id, source_position, target_node, element_type, signal_type);
+            const auto prob = calculate_attractiveness_to_connect(source_neuron_id, source_position, target_node, element_type, signal_type);
             sum += prob;
             return prob;
         });
