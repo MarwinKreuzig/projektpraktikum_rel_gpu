@@ -10,6 +10,7 @@
  *
  */
 
+#include "Config.h"
 #include "Types.h"
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
@@ -20,7 +21,6 @@
 
 #include <numeric>
 
-template <typename AdditionalCellAttributes>
 class GaussianKernel {
 public:
     using counter_type = RelearnTypes::counter_type;
@@ -66,9 +66,11 @@ public:
      * @param element_type The element type
      * @param signal_type The signal type
      * @param sigma The exponential scaling factor sigma
+     * @tparam AdditionalCellAttributes The additional cell attributes, doesn't affect the functionality of this method
      * @exception Throws a RelearnException if the position for (element_type, signal_type) from target_node is empty or not supported
      * @return The calculated attractiveness, might be 0.0 to avoid autapses
      */
+    template <typename AdditionalCellAttributes>
     [[nodiscard]] static double calculate_attractiveness_to_connect(const NeuronID& source_neuron_id, const position_type& source_position,
         const OctreeNode<AdditionalCellAttributes>* target_node, const ElementType element_type, const SignalType signal_type, const double sigma) {
         // A neuron must not form an autapse, i.e., a synapse to itself
@@ -84,4 +86,7 @@ public:
 
         return calculate_attractiveness_to_connect(source_position, target_position.value(), number_elements, sigma);
     }
+
+private:
+    static inline double sigma{ Constants::default_sigma };
 };

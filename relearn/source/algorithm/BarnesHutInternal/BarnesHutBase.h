@@ -41,7 +41,7 @@ public:
     using position_type = typename RelearnTypes::position_type;
     using counter_type = typename RelearnTypes::counter_type;
 
-    using kernel_type = Kernel<AdditionalCellAttributes, GaussianKernel<AdditionalCellAttributes>>;
+    using kernel_type = Kernel<AdditionalCellAttributes, GaussianKernel>;
 
 protected:
     double acceptance_criterion{ default_theta };
