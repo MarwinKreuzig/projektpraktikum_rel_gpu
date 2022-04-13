@@ -30,24 +30,6 @@ class SynapticElements;
 class Algorithm {
 public:
     /**
-     * @brief Sets probability parameter used to determine the probability for a cell of being selected
-     * @param sigma The probability parameter, > 0.0
-     * @exception Throws a RelearnExeption if sigma <= 0.0
-     */
-    void set_probability_parameter(const double sigma) {
-        RelearnException::check(sigma > 0.0, "In Algorithm::set_probability_parameter, sigma was not greater than 0");
-        this->sigma = sigma;
-    }
-
-    /**
-     * @brief Returns the currently used probability parameter
-     * @return The currently used probability parameter
-     */
-    [[nodiscard]] double get_probabilty_parameter() const noexcept {
-        return sigma;
-    }
-
-    /**
      * @brief Registeres the synaptic elements with the algorithm
      * @param axons The model for the axons
      * @param excitatory_dendrites The model for the excitatory dendrites
@@ -86,9 +68,6 @@ public:
      * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
      */
     virtual void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) = 0;
-
-private:
-    double sigma{ Constants::default_sigma };
 
 protected:
     std::shared_ptr<SynapticElements> axons{}; //NOLINTLINE

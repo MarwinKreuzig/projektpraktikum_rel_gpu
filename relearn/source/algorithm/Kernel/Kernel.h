@@ -38,12 +38,11 @@ public:
      * @param nodes All nodes from which the source neuron can pick
      * @param element_type The element type the source neuron searches
      * @param signal_type The signal type the source neuron searches
-     * @param sigma The probability parameter for the calculation
      * @exception Throws a RelearnException if one of the pointer in nodes is a nullptr, or if KernelType::calculate_attractiveness_to_connect throws
      * @return A pair of (a) the total probability of all targets and (b) the respective probability of each target
      */
     [[nodiscard]] static std::pair<double, std::vector<double>> create_probability_interval(const NeuronID& source_neuron_id, const position_type& source_position,
-        const std::vector<OctreeNode<AdditionalCellAttributes>*>& nodes, const ElementType element_type, const SignalType signal_type, const double sigma) {
+        const std::vector<OctreeNode<AdditionalCellAttributes>*>& nodes, const ElementType element_type, const SignalType signal_type) {
 
         if (nodes.empty()) {
             return { 0.0, {} };
@@ -56,7 +55,7 @@ public:
 
         std::transform(nodes.begin(), nodes.cend(), std::back_inserter(probabilities), [&](const OctreeNode<AdditionalCellAttributes>* target_node) {
             RelearnException::check(target_node != nullptr, "Kernel::create_probability_interval: target_node was nullptr");
-            const auto prob = KernelType::calculate_attractiveness_to_connect(source_neuron_id, source_position, target_node, element_type, signal_type, sigma);
+            const auto prob = KernelType::calculate_attractiveness_to_connect(source_neuron_id, source_position, target_node, element_type, signal_type);
             sum += prob;
             return prob;
         });
@@ -107,12 +106,11 @@ public:
      * @param nodes The target nodes, must not be empty
      * @param element_type The element type the source neuron searches
      * @param signal_type The signal type the source neuron searches
-     * @param sigma The probability parameter for the calculation
      * @exception Throws a RelearnException if one of the pointer in nodes is a nullptr, or if KernelType::calculate_attractiveness_to_connect throws
      * @return The selected target node, is nullptr if nodes.empty()
      */
     [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* pick_target(const NeuronID& source_neuron_id, const position_type& source_position, const std::vector<OctreeNode<AdditionalCellAttributes>*>& nodes, 
-        const ElementType element_type, const SignalType signal_type, const double sigma) {
+        const ElementType element_type, const SignalType signal_type) {
         if (nodes.empty()) {
             return nullptr;
         }
@@ -122,7 +120,7 @@ public:
          * The probability for connecting to the same neuron (i.e., the axon's neuron) is set 0.
          */
         const auto& [total_probability, all_probabilities]
-            = create_probability_interval(source_neuron_id, source_position, nodes, element_type, signal_type, sigma);
+            = create_probability_interval(source_neuron_id, source_position, nodes, element_type, signal_type);
 
         // Short cut to avoid exceptions later on
         if (total_probability == 0.0) {

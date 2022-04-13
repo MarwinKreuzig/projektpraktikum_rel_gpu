@@ -481,7 +481,8 @@ int main(int argc, char** argv) {
     sim.set_axons(std::move(axon_models));
     sim.set_dendrites_ex(std::move(dend_ex_models));
     sim.set_dendrites_in(std::move(dend_in_models));
-    sim.set_probabilty_scaling_parameter(scaling_constant);
+    
+    GaussianKernel::set_probability_parameter(scaling_constant);
 
     if (algorithm == AlgorithmEnum::BarnesHut || algorithm == AlgorithmEnum::BarnesHutInverted) {
         sim.set_acceptance_criterion_for_barnes_hut(accept_criterion);

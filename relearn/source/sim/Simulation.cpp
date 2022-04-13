@@ -49,10 +49,6 @@ void Simulation::set_acceptance_criterion_for_barnes_hut(const double value) {
     accept_criterion = value;
 }
 
-void Simulation::set_probabilty_scaling_parameter(const double value) {
-    sigma = value;
-}
-
 void Simulation::set_neuron_model(std::unique_ptr<NeuronModel>&& nm) noexcept {
     neuron_models = std::move(nm);
 }
@@ -203,7 +199,6 @@ void Simulation::initialize() {
 
     network_graph = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
 
-    algorithm->set_probability_parameter(sigma);
     algorithm->set_synaptic_elements(axons, dendrites_ex, dendrites_in);
 
     neurons->set_area_names(std::move(area_names));

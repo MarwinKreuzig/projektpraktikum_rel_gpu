@@ -213,18 +213,17 @@ protected:
      * @param root The starting position where to look
      * @param element_type The element type the source is looking for
      * @param signal_type The signal type the source is looking for
-     * @param sigma The probability parameter for the calculation
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorithm found a matching neuron, its RankNeuronId is returned
      */
     [[nodiscard]] std::optional<std::pair<RankNeuronId, double>> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
-        const ElementType element_type, const SignalType signal_type, const double sigma) const {
+        const ElementType element_type, const SignalType signal_type) const {
         RelearnException::check(root != nullptr, "BarnesHutBase::find_target_neuron: root was nullptr");
 
         for (auto root_of_subtree = root; true;) {
             const auto& vector = get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type);
 
-            auto* node_selected = kernel_type::pick_target(source_neuron_id, source_position, vector, element_type, signal_type, sigma);
+            auto* node_selected = kernel_type::pick_target(source_neuron_id, source_position, vector, element_type, signal_type);
             if (node_selected == nullptr) {
                 return {};
             }
