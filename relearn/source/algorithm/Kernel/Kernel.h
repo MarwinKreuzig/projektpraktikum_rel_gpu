@@ -52,7 +52,7 @@ public:
         const auto& target_position = cell.get_position_for(element_type, signal_type);
         const auto& number_elements = cell.get_number_elements_for(element_type, signal_type);
 
-        RelearnException::check(target_position.has_value(), "GaussianKernel::calculate_attractiveness_to_connect: target_position is bad");
+        RelearnException::check(target_position.has_value(), "Kernel::calculate_attractiveness_to_connect: target_position is bad");
 
         return KernelType::calculate_attractiveness_to_connect(source_position, target_position.value(), number_elements);
     }
