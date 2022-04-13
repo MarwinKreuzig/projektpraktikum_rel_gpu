@@ -650,7 +650,7 @@ TEST_F(OctreeTestFMM, testAccuracyFMM) {
         ASSERT_NO_THROW(fmm.update_leaf_nodes(update_status));
         ASSERT_NO_THROW(octree->update_local_trees());
 
-        const auto cur_sigma = urd_sigma(mt);
+        const auto cur_sigma = 750;// urd_sigma(mt);
 
         OctreeNode<AdditionalCellAttributes>* root = octree->get_root();
         unsigned int num_ax = root->get_cell().get_number_axons_for(SignalType::Inhibitory);

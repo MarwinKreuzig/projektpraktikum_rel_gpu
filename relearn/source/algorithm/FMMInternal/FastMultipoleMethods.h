@@ -47,8 +47,8 @@ class FastMultipoleMethods : public ForwardAlgorithm<SynapseCreationRequest, Syn
 
 public:
     using AdditionalCellAttributes = FastMultipoleMethodsCell;
-    using interaction_list_type = std::array<const OctreeNode<AdditionalCellAttributes>*, Constants::number_oct>;
-    using node_pair = std::pair<const OctreeNode<AdditionalCellAttributes>*, const OctreeNode<AdditionalCellAttributes>*>;
+    using interaction_list_type = std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct>;
+    using node_pair = std::array<OctreeNode<AdditionalCellAttributes>*, 2>;
     using position_type = typename Cell<AdditionalCellAttributes>::position_type;
     using counter_type = typename Cell<AdditionalCellAttributes>::counter_type;
     
@@ -257,7 +257,7 @@ private:
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @return Returns selected targets, which were chosen according to probability and together have more dendrites than there are axons.
      */
-    std::vector<const OctreeNode<AdditionalCellAttributes>*> make_target_list(const OctreeNode<AdditionalCellAttributes>* source_node, interaction_list_type interaction_list, const SignalType signal_type_needed);
+    std::vector<OctreeNode<AdditionalCellAttributes>*> make_target_list(OctreeNode<AdditionalCellAttributes>* source_node, interaction_list_type interaction_list, const SignalType signal_type_needed);
 
     /**
      * @brief If a target is a leaf node but the source is not, a pair of a selected source child and the target must be pushed back on the stack.
@@ -268,7 +268,7 @@ private:
      * @param stack Reference to the stack on which the pairs must be pushed back.
      * @param source_children Refernce on the children of the source node.
      */
-    void make_stack_entries_for_leaf(const OctreeNode<AdditionalCellAttributes>* target_node, const SignalType signal_type_needed, Stack<node_pair>& stack, const std::array<OctreeNode<FastMultipoleMethods::AdditionalCellAttributes> *, 8UL>& source_children);
+    void make_stack_entries_for_leaf(OctreeNode<AdditionalCellAttributes>* target_node, const SignalType signal_type_needed, Stack<node_pair>& stack, const std::array<OctreeNode<FastMultipoleMethods::AdditionalCellAttributes> *, 8UL>& source_children);
 
     /**
      * @brief Calculates the attraction between a single source neuron and all target neurons in the interaction list.
@@ -278,7 +278,7 @@ private:
      * @exception Can throw a RelearnException
      * @return Returns a vector with the calculated forces of attraction. This contains as many elements as the interaction list.
      */
-    std::vector<double> calc_attractiveness_to_connect(const OctreeNode<FastMultipoleMethodsCell>* source, const interaction_list_type& interaction_list, SignalType signal_type_needed);
+    std::vector<double> calc_attractiveness_to_connect(OctreeNode<FastMultipoleMethodsCell>* source, const interaction_list_type& interaction_list, SignalType signal_type_needed);
 
     /**
      * @brief Checks which calculation type is suitable for a given source and target node.
@@ -299,7 +299,7 @@ private:
      * @exception Can throw a RelearnException.
      * @return Returns the attraction force.
      */
-    static double calc_taylor(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed);
+    static double calc_taylor(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed);
 
     /**
      * @brief Calculates the force of attraction between two sets of neurons by using the kernel
@@ -311,7 +311,7 @@ private:
      * @return Returns the total attraction of the neurons.
      */
     static double
-    calc_direct_gauss(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed) {
+    calc_direct_gauss(OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed) {
 
         const std::vector<std::pair<Vec3d, unsigned int>>& sources = Utilities::get_all_positions_for(source, ElementType::Axon, signal_type_needed);
         const std::vector<std::pair<Vec3d, unsigned int>>& targets = Utilities::get_all_positions_for(target, ElementType::Dendrite, signal_type_needed);
@@ -349,7 +349,7 @@ private:
      * @exception Can throw a RelearnException.
      * @return Retunrs the attraction force.
      */
-    static double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, double sigma, SignalType signal_type_needed);
+    static double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, double sigma, SignalType signal_type_needed);
 
     /**
      * @brief Randomly selects one of the different target nodes, to which the source node should connect.
@@ -406,14 +406,14 @@ private:
          * @param index Index of the desired node.
          * @return const OctreeNode<AdditionalCellAttributes>*
          */
-        static const OctreeNode<AdditionalCellAttributes>* extract_element(const interaction_list_type& arr, unsigned int index);
+        static OctreeNode<AdditionalCellAttributes>* extract_element(const interaction_list_type& arr, unsigned int index);
 
         /**
          * @brief Checks whether a node is already in the cache and reloads the child nodes if necessary. Sets a children to nullptr, when it has no vacant dendrites.
          * @param node Node which is checked.
          * @return Interaction list with all children.
          */
-        static interaction_list_type get_children_to_interaction_list(const OctreeNode<AdditionalCellAttributes>* node);
+        static interaction_list_type get_children_to_interaction_list(OctreeNode<AdditionalCellAttributes>* node);
 
         /**
          * @brief Returns a vector of all positions of the selected type that have a free port of the requested SignalType.
@@ -422,7 +422,7 @@ private:
          * @param needed The requested SignalType.
          * @return A vector of all actual positions.
          */
-        static const std::vector<std::pair<position_type, counter_type>> get_all_positions_for(const OctreeNode<AdditionalCellAttributes>* node, const ElementType type, const SignalType signal_type_needed);
+        static const std::vector<std::pair<position_type, counter_type>> get_all_positions_for(OctreeNode<AdditionalCellAttributes>* node, const ElementType type, const SignalType signal_type_needed);
 
         /**
          * @brief Calculates the coefficients which are needed for the derivatives of e^(-t^2).
