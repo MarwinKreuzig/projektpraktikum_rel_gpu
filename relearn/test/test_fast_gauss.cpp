@@ -155,8 +155,7 @@ SynapticElements create_axons(size_t size, std::mt19937& mt, double max_free) {
     return se;
 }
 
-TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
-
+TEST_F(FMMTest, testOctreeUpdateLocalTreesNumberDendritesFMM) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     std::uniform_int_distribution<size_t> uid_lvl(0, 6);
@@ -236,8 +235,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
     }
 }
 
-TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
-
+TEST_F(FMMTest, testOctreeUpdateLocalTreesPositionDendritesFMM) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     std::uniform_int_distribution<size_t> uid_lvl(0, 6);
@@ -383,7 +381,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
     }
 }
 
-TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
+TEST_F(FMMTest, testOctreeUpdateLocalTreesNumberAxonsFMM) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -466,7 +464,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
     }
 }
 
-TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
+TEST_F(FMMTest, testOctreeUpdateLocalTreesPositionAxonsFMM) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -613,7 +611,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
     }
 }
 
-TEST_F(OctreeTestFMM, testAccuracyFMM) {
+TEST_F(FMMTest, testAccuracyFMM) {
 
     std::uniform_int_distribution<size_t> uid_lvl(0, 6);
     std::uniform_int_distribution<size_t> uid(0, 10000);
@@ -671,10 +669,10 @@ TEST_F(OctreeTestFMM, testAccuracyFMM) {
             auto const coef = calc_hermite_coefficients(source, cur_sigma, SignalType::Excitatory);
             std::vector<double> direct_arr;
             direct_arr.reserve(7);
-            std::vector<double> series_arr;
-            series_arr.reserve(7);
-            std::vector<CalculationType> calc_type;
-            calc_type.reserve(7);
+            std::vector<double> hermite_arr;
+            hermite_arr.reserve(7);
+            std::vector<double> taylor_arr;
+            taylor_arr.reserve(7);
             std::vector<double> distance;
             distance.reserve(7);
 
@@ -702,42 +700,35 @@ TEST_F(OctreeTestFMM, testAccuracyFMM) {
                 const auto d = source_pos.value() - dend_pos.value();
                 distance.push_back(d.calculate_2_norm());
 
-                switch (current_calculation) {
-                case CalculationType::Hermite: {
-                    auto const hermite = calc_hermite(source, target, coef, cur_sigma, SignalType::Excitatory);
-                    series_arr.push_back(hermite);
-                    calc_type.push_back(CalculationType::Hermite);
-                    continue;
-                }
-                case CalculationType::Taylor: {
-                    auto const taylor = calc_taylor(source, target, cur_sigma, SignalType::Excitatory);
-                    series_arr.push_back(taylor);
-                    calc_type.push_back(CalculationType::Taylor);
-                    continue;
-                }
-                case CalculationType::Direct: {
-                    series_arr.push_back(direct);
-                    calc_type.push_back(CalculationType::Direct);
-                }
-                }
+                auto const hermite = calc_hermite(source, target, coef, cur_sigma, SignalType::Excitatory);
+                hermite_arr.push_back(hermite);
+                auto const taylor = calc_taylor(source, target, cur_sigma, SignalType::Excitatory);
+                taylor_arr.push_back(taylor);
             }
 
             double direct_sum = 0;
-            double series_sum = 0;
+            double hermite_sum = 0;
+            double taylor_sum = 0;
             for (size_t k = 0; k < direct_arr.size(); k++) {
                 direct_sum += direct_arr[k];
-                series_sum += series_arr[k];
+                hermite_sum += hermite_arr[k];
+                taylor_sum += taylor_arr[k];
             }
 
-            ASSERT_EQ(direct_arr.size(), series_arr.size());
             for (size_t l = 0; l < direct_arr.size(); l++) {
                 double val1 = (direct_arr[l] * 100) / direct_sum;
-                double val2 = (series_arr[l] * 100) / series_sum;
+                double val2 = (hermite_arr[l] * 100) / hermite_sum;
+                double val3 = (taylor_arr[l] * 100) / taylor_sum;
                 if (std::abs(val1 - val2) > 5) {
                     printf("index: %i \n", l);
-                    printf("Calculation Type: %d \n", calc_type[l]);
+                    printf("Calculation Type: hermite\n");
+                }
+                if (std::abs(val1 - val3) > 5) {
+                    printf("index: %i \n", l);
+                    printf("Calculation Type: taylor \n");
                 }
                 ASSERT_NEAR(val1, val2, 5);
+                ASSERT_NEAR(val1, val3, 5);
             }
         }
 
@@ -745,52 +736,7 @@ TEST_F(OctreeTestFMM, testAccuracyFMM) {
     }
 }
 
-class FMMPrivateFunctionTest : public ::testing::Test {
-
-protected:
-    double function_derivative(double t, unsigned int derivative_order) { return FastMultipoleMethods::Utilities::function_derivative(t, derivative_order); }
-    double kernel(const Vec3d& a, const Vec3d& b, double sigma) { return FastMultipoleMethods::Utilities::kernel(a, b, sigma); }
-    unsigned int get_number_of_indices() { return FastMultipoleMethods::Multiindex::get_number_of_indices(); }
-    std::array<std::array<unsigned int, 3>, Constants::p3> get_indices() { return FastMultipoleMethods::Multiindex::get_indices(); }
-    size_t fac_multiindex(const std::array<unsigned int, 3>& x) { return FastMultipoleMethods::Utilities::fac_multiindex(x); }
-    size_t abs_multiindex(const std::array<unsigned int, 3>& x) { return FastMultipoleMethods::Utilities::abs_multiindex(x); }
-    double pow_multiindex(const Vec3d& base_vector, const std::array<unsigned int, 3>& exponent) { return FastMultipoleMethods::Utilities::pow_multiindex(base_vector, exponent); }
-};
-
-TEST_F(FMMPrivateFunctionTest, test_static_functions) {
-    // function_derivative test
-    double result[] = {
-        0.74, 0, -0.74,
-        0.74, -2, 0.74,
-        -1.47, 0, 1.47,
-        -7.36, 12, -7.36,
-        -2.94, 0, 2.94,
-        67.69, -120, 67.69,
-        170.7, 0, -170.7,
-        -606.27, 1680, -606.27,
-        -3943.67, 0, 3943.67,
-        3025.44, -30240, 3025.44,
-        84924.23, 0, -84924.23,
-        103288.77, 665280, 103288.77,
-        -1831604.05, 0, 1831604.05,
-        -6348716.24, -17297280, -6348716.24,
-        38587480.85, 0, -38587480.85,
-        267636449.02, 518918400, 267636449.02
-    };
-
-    for (int i = 0; i < 16; i++) {
-        const auto res0 = result[(i * 3) + 0];
-        const auto res1 = result[(i * 3) + 1];
-        const auto res2 = result[(i * 3) + 2];
-
-        const auto val_new0 = function_derivative(-1, i + 1);
-        const auto val_new1 = function_derivative(0, i + 1);
-        const auto val_new2 = function_derivative(1, i + 1);
-
-        EXPECT_NEAR(val_new0, res0, 0.01) << i;
-        EXPECT_NEAR(val_new1, res1, 0.01) << i;
-        EXPECT_NEAR(val_new2, res2, 0.01) << i;
-    }
+TEST_F(FMMTest, test_static_functions) {
 
     // kernel test
     Vec3d a = { 0, 0, 0 };
@@ -801,9 +747,29 @@ TEST_F(FMMPrivateFunctionTest, test_static_functions) {
     Vec3d e = { 6, 4.5, -3.4 };
     Vec3d f = { 0, -8.3, 2 };
     EXPECT_NEAR(kernel(e, f, sigma), 0.9898, 0.01);
+
+    // h-functions test
+    std::uniform_real_distribution<double> urd_x(-20, 20);
+    for (size_t i = 0; i < iterations; i++){
+        double x = urd_x(mt);
+        double fac = exp(-(x*x));
+
+        //for n=0
+        EXPECT_NEAR(fac * std::hermite(0,x), h(0,x), 0.001);
+
+        //for n=1
+        EXPECT_NEAR(fac * std::hermite(1,x), h(1,x), 0.001);
+
+        //for n=2
+        EXPECT_NEAR(fac * std::hermite(2,x), h(2,x), 0.001);
+
+        //for n=3
+        EXPECT_NEAR(fac * std::hermite(3,x), h(3,x), 0.001);
+    }
+    
 }
 
-TEST_F(FMMPrivateFunctionTest, test_multiIndex) {
+TEST_F(FMMTest, test_multiIndex) {
     EXPECT_EQ(get_number_of_indices(), Constants::p3);
 
     const auto& indices = get_indices();
@@ -819,7 +785,7 @@ TEST_F(FMMPrivateFunctionTest, test_multiIndex) {
     EXPECT_EQ(temp1.at(2), Constants::p - 1);
 }
 
-TEST_F(FMMPrivateFunctionTest, test_static_multiindex_functions) {
+TEST_F(FMMTest, test_static_multiindex_functions) {
     const std::array<unsigned int, 3> test_index1 = { 0, 0, 0 };
     const std::array<unsigned int, 3> test_index2 = { 1, 2, 3 };
     const std::array<unsigned int, 3> test_index3 = { 3, 3, 3 };

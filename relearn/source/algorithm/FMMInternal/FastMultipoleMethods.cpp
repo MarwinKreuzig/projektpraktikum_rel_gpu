@@ -409,7 +409,7 @@ double FastMultipoleMethods::calc_taylor(const OctreeNode<FastMultipoleMethodsCe
 
             const auto& child_pos = source_child->get_cell().get_axons_position_for(signal_type_needed);
             RelearnException::check(child_pos.has_value(), "FastMultipoleMethods::calc_taylor: source child has no position.");
-            const auto& temp_vec = (child_pos.value() - target_center).positive_vector() / sigma;
+            const auto& temp_vec = (child_pos.value() - target_center) / sigma;
             temp += number_axons * Utilities::h_multiindex(current_index, temp_vec);
         }
 
@@ -481,7 +481,7 @@ std::array<double, Constants::p3> FastMultipoleMethods::calc_hermite_coefficient
             const auto& child_pos = child->get_cell().get_axons_position_for(signal_type_needed);
             RelearnException::check(child_pos.has_value(), "FastMultipoleMethods::calc_hermite_coefficients: source child has no valid position.");
             
-            const auto& temp_vec = (child_pos.value() - source_center.value()).positive_vector() / sigma;
+            const auto& temp_vec = (child_pos.value() - source_center.value()) / sigma;
             temp += child_number_axons * Utilities::pow_multiindex(temp_vec, indices[a]);
         }
         const auto hermite_coefficient = (1.0/Utilities::fac_multiindex(indices[a])) * temp;

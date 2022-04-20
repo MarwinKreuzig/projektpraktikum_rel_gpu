@@ -41,8 +41,7 @@ class OctreeImplementation;
  * It is strongly tied to Octree, and might perform MPI communication via NodeCache::download_children()
  */
 class FastMultipoleMethods : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
-    friend class FMMPrivateFunctionTest;
-    friend class OctreeTestFMM;
+    friend class FMMTest;
     std::shared_ptr<OctreeImplementation<FastMultipoleMethods>> global_tree{};
 
 public:
@@ -310,6 +309,7 @@ private:
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @return Returns the total attraction of the neurons.
      */
+
     static double
     calc_direct_gauss(OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed) {
 
@@ -319,10 +319,12 @@ private:
         auto result = 0.0;
 
         for (const auto& target : targets) {
+            double temp = 0;
             for (const auto& source : sources) {
                 const auto kernel_value = Utilities::kernel(target.first, source.first, sigma);
-                result += kernel_value * source.second * target.second;
+                temp += source.second * kernel_value;
             }
+            result += target.second * temp;
         }
 
         return result;
@@ -389,8 +391,7 @@ private:
      */
     class Utilities {
         using AdditionalCellAttributes = FastMultipoleMethodsCell;
-        friend class FMMPrivateFunctionTest;
-        friend class OctreeTestFMM;
+        friend class FMMTest;
 
     public:
         /**
@@ -425,80 +426,6 @@ private:
         static const std::vector<std::pair<position_type, counter_type>> get_all_positions_for(OctreeNode<AdditionalCellAttributes>* node, const ElementType type, const SignalType signal_type_needed);
 
         /**
-         * @brief Calculates the coefficients which are needed for the derivatives of e^(-t^2).
-         * @param derivative_order Order of the needed deriative (>0).
-         * @return Retruns a vector with the coefficients.
-         */
-        static std::vector<int64_t>
-        calculate_coefficients_for_deriative(unsigned int derivative_order) {
-            static std::vector<std::vector<int64_t>> sequences{};
-
-            if (sequences.empty()) {
-                std::vector<int64_t> initial_sequence(2);
-                std::fill(std::begin(initial_sequence), std::end(initial_sequence), 0);
-                initial_sequence[0] = 1;
-
-                sequences.emplace_back(std::move(initial_sequence));
-            }
-
-            const auto old_size = sequences.size();
-
-            if (old_size > derivative_order) {
-                return sequences[derivative_order];
-            }
-
-            sequences.resize(derivative_order + 1ULL);
-
-            for (auto i = old_size; i <= derivative_order; i++) {
-                std::vector<int64_t> current_sequence(i + 2);
-                std::fill(std::begin(current_sequence), std::end(current_sequence), 0);
-
-                for (auto j = 0; j <= i; j++) {
-                    if (j != i) {
-                        current_sequence[j] = sequences[i - 1][j + 1ULL] * (j + 1ULL);
-                    }
-
-                    if (j > 0) {
-                        current_sequence[j] += sequences[i - 1][j - 1ULL] * (-2);
-                    }
-                }
-
-                sequences[i] = std::move(current_sequence);
-            }
-
-            return sequences[derivative_order];
-        }
-
-        /**
-         * @brief Calculates the value of a certain derivative of e^(-t^2) at a desired point.
-         * @param t Point for which the calculation is made.
-         * @param derivative_order Order of the deriative.
-         * @return Returns the value of the deriative.
-         */
-        static double
-        function_derivative(double t, unsigned int derivative_order) noexcept {
-            const auto& coefficients = calculate_coefficients_for_deriative(derivative_order);
-
-            auto result = 0.0;
-            for (unsigned int monom_exponent = 0; monom_exponent <= derivative_order; monom_exponent++) {
-                const auto current_coefficient = coefficients[monom_exponent];
-
-                if (current_coefficient == 0) {
-                    continue;
-                }
-
-                const auto powered = pow(t, monom_exponent);
-                const auto term = powered * current_coefficient;
-                result += term;
-            }
-
-            const auto factor = exp(-(t * t));
-            result *= factor;
-
-            return result;
-        }
-
-        /**
          * @brief Calculates the n-th Hermite function at the point t, if t is one of the real numbers.
          * @param n Order of the Hermite function.
          * @param t Point of evaluation.
@@ -506,19 +433,14 @@ private:
          */
         static double
         h(unsigned int n, double t) {
-            const auto t_squared = t * t;
+            double t_squared = t * t;
 
-            const auto fac_1 = exp(-t_squared);
-            const auto fac_2 = exp(t_squared);
-            const auto fac_3 = function_derivative(t, n);
+            double fac_1 = exp(-t_squared);
+            double fac_2 = std::hermite(n, t);
 
-            const auto product = fac_1 * fac_2 * fac_3;
+            double product = fac_1 * fac_2;
 
-            if (n % 2 == 0) {
-                return product;
-            }
-
-            return -product;
+            return product;
         }
 
         /**
@@ -529,11 +451,11 @@ private:
          */
         static double
         h_multiindex(const std::array<unsigned int, 3>& multi_index, const Vec3d& vector) {
-            const auto h1 = h(multi_index[0], vector.get_x());
-            const auto h2 = h(multi_index[1], vector.get_y());
-            const auto h3 = h(multi_index[2], vector.get_z());
+            double h1 = h(multi_index[0], vector.get_x());
+            double h2 = h(multi_index[1], vector.get_y());
+            double h3 = h(multi_index[2], vector.get_z());
 
-            const auto h_total = h1 * h2 * h3;
+            double h_total = h1 * h2 * h3;
 
             return h_total;
         }
@@ -562,9 +484,9 @@ private:
          */
         static double
         pow_multiindex(const Vec3d& base_vector, const std::array<unsigned int, 3>& exponent) {
-            const auto fac_1 = pow(base_vector.get_x(), exponent[0]);
-            const auto fac_2 = pow(base_vector.get_y(), exponent[1]);
-            const auto fac_3 = pow(base_vector.get_z(), exponent[2]);
+            const auto fac_1 = pow(std::abs(base_vector.get_x()), exponent[0]);
+            const auto fac_2 = pow(std::abs(base_vector.get_y()), exponent[1]);
+            const auto fac_3 = pow(std::abs(base_vector.get_z()), exponent[2]);
 
             const auto product = fac_1 * fac_2 * fac_3;
 
@@ -604,7 +526,7 @@ private:
      * series expansions and coefficient calculations.
      */
     class Multiindex {
-        friend class FMMPrivateFunctionTest;
+        friend class FMMTest;
 
     public:
         /**

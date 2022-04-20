@@ -367,7 +367,7 @@ protected:
         dendrites.init(number_elements);
 
         for (const auto& neuron_id : NeuronID::range(number_elements)) {
-            const auto number_grown_elements = get_random_synaptic_element_count();
+            const auto number_grown_elements = 1;//get_random_synaptic_element_count();
 
             dendrites.update_grown_elements(neuron_id, number_grown_elements);
             dendrites.update_connected_elements(neuron_id, 0);
@@ -749,7 +749,14 @@ protected:
     }
 };
 
-class OctreeTestFMM : public RelearnTest {
+class BarnesHutTest : public RelearnTest {
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
+class FMMTest : public RelearnTest {
 protected:
     static void SetUpTestCase() {
         SetUpTestCaseTemplate<FastMultipoleMethodsCell>();
@@ -761,13 +768,14 @@ protected:
     double calc_taylor(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_taylor(source, target, sigma, signal_type_needed);}
     double calc_direct_gauss(OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_direct_gauss(source, target, sigma, signal_type_needed);}
     double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_hermite(source, target, coefficients_buffer, sigma, signal_type_needed);}
-};
 
-class BarnesHutTest : public RelearnTest {
-protected:
-    static void SetUpTestCase() {
-        SetUpTestCaseTemplate<BarnesHutCell>();
-    }
+    double kernel(const Vec3d& a, const Vec3d& b, double sigma) { return FastMultipoleMethods::Utilities::kernel(a, b, sigma); }
+    unsigned int get_number_of_indices() { return FastMultipoleMethods::Multiindex::get_number_of_indices(); }
+    std::array<std::array<unsigned int, 3>, Constants::p3> get_indices() { return FastMultipoleMethods::Multiindex::get_indices(); }
+    size_t fac_multiindex(const std::array<unsigned int, 3>& x) { return FastMultipoleMethods::Utilities::fac_multiindex(x); }
+    size_t abs_multiindex(const std::array<unsigned int, 3>& x) { return FastMultipoleMethods::Utilities::abs_multiindex(x); }
+    double pow_multiindex(const Vec3d& base_vector, const std::array<unsigned int, 3>& exponent) { return FastMultipoleMethods::Utilities::pow_multiindex(base_vector, exponent); }
+    double h(unsigned int n, double t) {return FastMultipoleMethods::Utilities::h(n,t); }
 };
 
 class PartitionTest : public RelearnTest {
