@@ -40,6 +40,7 @@ public:
     static void set_sigma(const double sigma) {
         RelearnException::check(sigma > 0.0, "In GaussianKernel::set_sigma, sigma was not greater than 0.0");
         GaussianKernel::sigma = sigma;
+        GaussianKernel::squared_sigma = sigma * sigma;
     }
 
     /**
@@ -67,7 +68,6 @@ public:
         const auto position_diff = target_position - source_position;
         const auto numerator = position_diff.calculate_squared_2_norm();
 
-        const auto squared_sigma = sigma * sigma;
         const auto exponent = -numerator / squared_sigma;
 
         // Criterion from Markus' paper with doi: 10.3389/fnsyn.2014.00007
@@ -79,4 +79,5 @@ public:
 
 private:
     static inline double sigma{ default_sigma };
+    static inline double squared_sigma{ default_sigma * default_sigma };
 };

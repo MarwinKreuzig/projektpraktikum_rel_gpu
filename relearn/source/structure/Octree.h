@@ -288,9 +288,25 @@ public:
      * @return a vector the local branch nodes
      */
     [[nodiscard]] std::vector<const OctreeNode<AdditionalCellAttributes>*> get_local_branch_nodes() const {
-        std::vector<const OctreeNode<AdditionalCellAttributes>*> result;
-        for (const auto& node: branch_nodes){
-            if(! node->is_local()){
+        std::vector<const OctreeNode<AdditionalCellAttributes>*> result{};
+        for (const auto* node : branch_nodes) {
+            if (!node->is_local()) {
+                continue;
+            }
+            result.emplace_back(node);
+        }
+
+        return result;
+    }
+
+    /**
+     * @brief Get all local branch nodes
+     * @return a vector the local branch nodes
+     */
+    [[nodiscard]] std::vector<OctreeNode<AdditionalCellAttributes>*> get_local_branch_nodes() {
+        std::vector<OctreeNode<AdditionalCellAttributes>*> result{};
+        for (auto* node : branch_nodes) {
+            if (!node->is_local()) {
                 continue;
             }
             result.emplace_back(node);
