@@ -404,11 +404,49 @@ private:
         /**
          * @brief Returns a vector of all positions of the selected type that have a free port of the requested SignalType.
          * @param node OctreeNode from which the elements are to be counted.
-         * @param type Type of synaptic elements (axon or dendrite).
-         * @param needed The requested SignalType.
+         * @param element_type Type of synaptic elements (axon or dendrite).
+         * @param signal_type The requested SignalType.
          * @return A vector of all actual positions.
          */
-        static const std::vector<std::pair<position_type, counter_type>> get_all_positions_for(OctreeNode<AdditionalCellAttributes>* node, const ElementType type, const SignalType signal_type_needed);
+        static std::vector<std::pair<position_type, counter_type>> get_all_positions_for(OctreeNode<AdditionalCellAttributes>* node, const ElementType element_type, const SignalType signal_type) {
+            std::vector<std::pair<position_type, counter_type>> result{};
+            result.reserve(30);
+
+            Stack<OctreeNode<FastMultipoleMethodsCell>*> stack{ 30 };
+            stack.emplace_back(node);
+
+            while (!stack.empty()) {
+                auto* current_node = stack.pop_back();
+
+                // node is leaf
+                if (current_node->is_child()) {
+                    // Get number and position, depending on which types were chosen.
+                    const auto& cell = current_node->get_cell();
+                    const auto& opt_position = cell.get_position_for(element_type, signal_type);
+                    RelearnException::check(opt_position.has_value(), "FastMultipoleMethods::Utilities::get_all_positions_for: opt_position has no value.");
+
+                    const auto number_elements = cell.get_number_elements_for(element_type, signal_type);
+                    result.emplace_back(opt_position.value(), number_elements);
+                    continue;
+                }
+
+                // node is inner node
+                const auto& children = get_children_to_interaction_list(current_node);
+
+                // push children to stack
+                for (auto* child : children) {
+                    if (child == nullptr) {
+                        continue;
+                    }
+
+                    if (const auto number_elements = child->get_cell().get_number_elements_for(element_type, signal_type); number_elements == 0) {
+                        continue;
+                    }
+                    stack.emplace_back(child);
+                }
+            }
+            return result;
+        }
 
         /**
          * @brief Calculates the coefficients which are needed for the derivatives of e^(-t^2).
