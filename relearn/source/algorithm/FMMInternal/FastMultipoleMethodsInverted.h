@@ -29,16 +29,19 @@
 #include <utility>
 #include <vector>
 
+class NeuronsExtraInfo;
 template <typename T>
 class OctreeImplementation;
+class SynapticElements;
 
 /**
- * This class represents the implementation and adaptation of fast multipole methods. The parameters can be set on the fly.
- * It is strongly tied to Octree, and might perform MPI communication via NodeCache::download_children()
+ * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
+ * It is strongly tied to Octree, which might perform MPI communication via NodeCache::download_children()
  */
-class FastMultipoleMethods : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
-    friend class FMMTest;
-    std::shared_ptr<OctreeImplementation<FastMultipoleMethods>> global_tree{};
+class FastMultipoleMethodsInverted : public BackwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
+
+private:
+    std::shared_ptr<OctreeImplementation<FastMultipoleMethodsInverted>> global_tree{};
 
 public:
     using AdditionalCellAttributes = FastMultipoleMethodsCell;
@@ -53,9 +56,9 @@ public:
      * @param octree The octree on which the algorithm is to be performed, not null
      * @exception Throws a RelearnException if octree is nullptr
      */
-    explicit FastMultipoleMethods(const std::shared_ptr<OctreeImplementation<FastMultipoleMethods>>& octree)
+    explicit FastMultipoleMethodsInverted(const std::shared_ptr<OctreeImplementation<FastMultipoleMethodsInverted>>& octree)
         : global_tree(octree) {
-        RelearnException::check(octree != nullptr, "FastMultipoleMethods::FastMultipoleMethods: octree was null");
+        RelearnException::check(octree != nullptr, "FastMultipoleMethodsInverted::FastMultipoleMethodsInverted: octree was null");
     }
 
     /**
@@ -205,14 +208,13 @@ protected:
 
     /**
      * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses
-     * @param number_neurons The number of local neurons
      * @param creation_requests The requests from all MPI ranks
      * @exception Can throw a RelearnException
-     * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
+     * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses from the local rank
      */
-    [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
+    [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantOutSynapses>>
     process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) override {
-        return ForwardConnector::process_requests(creation_requests, excitatory_dendrites, inhibitory_dendrites);
+        return BackwardConnector::process_requests(creation_requests, axons);
     }
 
     /**
@@ -220,11 +222,11 @@ protected:
      * @param creation_requests The requests from this MPI rank
      * @param creation_responses The responses from the other MPI ranks
      * @exception Can throw a RelearnException
-     * @return All synapses from this MPI rank to other MPI ranks
+     * @return All synapses to this MPI rank from other MPI ranks
      */
-    [[nodiscard]] DistantOutSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
+    [[nodiscard]] DistantInSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
         const CommunicationMap<SynapseCreationResponse>& creation_responses) override {
-        return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
+        return BackwardConnector::process_responses(creation_requests, creation_responses, excitatory_dendrites, inhibitory_dendrites);
     }
 
 private:
@@ -247,7 +249,7 @@ private:
     /**
      * @brief Creates a list of possible targets for a source node, which is a leaf,
      * such that the number of axons in source is at least as large as the number of all dendrites in the targets.
-     * @param source Node with vacant axons. Must be a leaf node.
+     * @param source Node with vacant dendrites. Must be a leaf node.
      * @param interaction_list List of all possible targets.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @return Returns selected targets, which were chosen according to probability and together have more dendrites than there are axons.
@@ -256,18 +258,18 @@ private:
 
     /**
      * @brief If a target is a leaf node but the source is not, a pair of a selected source child and the target must be pushed back on the stack.
-     * How many pairs are made depends on how many dendrites the target has and how many axons the individual sources children have.
+     * How many pairs are made depends on how many axons the target has and how many dendrites the individual sources children have.
      * 
-     * @param target_node Node with vacant dendrites. Must be a leaf node.
+     * @param target_node Node with vacant axons. Must be a leaf node.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @param stack Reference to the stack on which the pairs must be pushed back.
-     * @param source_children Refernce on the children of the source node.
+     * @param source_children Reference on the children of the source node (dendrites).
      */
-    void make_stack_entries_for_leaf(OctreeNode<AdditionalCellAttributes>* target_node, const SignalType signal_type_needed, Stack<node_pair>& stack, const std::array<OctreeNode<FastMultipoleMethods::AdditionalCellAttributes> *, 8UL>& source_children);
+    void make_stack_entries_for_leaf(OctreeNode<AdditionalCellAttributes>* target_node, const SignalType signal_type_needed, Stack<node_pair>& stack, const std::array<OctreeNode<AdditionalCellAttributes> *, 8UL>& source_children);
 
     /**
      * @brief Calculates the attraction between a single source neuron and all target neurons in the interaction list.
-     * @param source Node with vacant axons.
+     * @param source Node with vacant dendrites.
      * @param interaction_list List of Nodes with vacant dendrites.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @exception Can throw a RelearnException
@@ -277,8 +279,8 @@ private:
 
     /**
      * @brief Checks which calculation type is suitable for a given source and target node.
-     * @param source Node with vacant axons.
-     * @param target Node with vacant dendrites.
+     * @param target Vector of pairs with 3D position and number of vacant axons.
+     * @param source Vector of pairs with 3D position and number of vacant dendrites.
      * @param sigma Scaling constant.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory)
      * @return CalculationType
@@ -287,8 +289,8 @@ private:
 
     /**
      * @brief Calculates the force of attraction between two nodes of the octree using a Taylor series expansion.
-     * @param source Node with vacant axons.
-     * @param target Node with vacant dendrites.
+     * @param target Vector of pairs with 3D position and number of vacant axons.
+     * @param source Vector of pairs with 3D position and number of vacant dendrites.
      * @param sigma Scaling constant.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @exception Can throw a RelearnException.
@@ -299,8 +301,8 @@ private:
     /**
      * @brief Calculates the force of attraction between two sets of neurons by using the kernel
      * presented by Butz and van Oooyen.
-     * @param sources Vector of pairs with 3D position and number of vacant axons.
-     * @param targets Vector of pairs with 3D position and number of vacant dendrites.
+     * @param targets Vector of pairs with 3D position and number of vacant axons.
+     * @param sources Vector of pairs with 3D position and number of vacant dendrites.
      * @param sigma Scaling constant.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @return Returns the total attraction of the neurons.
@@ -311,7 +313,7 @@ private:
     /**
      * @brief Calculates the hermite coefficients for a source node. The calculation of coefficients and series
      * expansion is executed separately, since the coefficients can be reused.
-     * @param source Node with vacant axons.
+     * @param source Node with vacant dendrites.
      * @param sigma Scaling constant.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @exception Can throw a RelearnException.
@@ -321,8 +323,8 @@ private:
 
     /**
      * @brief Calculates the force of attraction between two nodes of the octree using a Hermite series expansion.
-     * @param source Node with vacant axons.
-     * @param target Node with vacant dendrites.
+     * @param target Vector of pairs with 3D position and number of vacant axons.
+     * @param source Vector of pairs with 3D position and number of vacant dendrites.
      * @param coefficients_buffer Memory location where the coefficients are stored.
      * @param sigma Scaling constant.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
@@ -330,5 +332,6 @@ private:
      * @return Retunrs the attraction force.
      */
     static double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, double sigma, SignalType signal_type_needed);
+
 
 };

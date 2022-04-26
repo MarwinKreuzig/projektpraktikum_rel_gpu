@@ -12,6 +12,7 @@
 #include "algorithm/BarnesHutInternal/BarnesHutCell.h"
 #include "algorithm/FMMInternal/FastMultipoleMethodsCell.h"
 #include "algorithm/FMMInternal/FastMultipoleMethods.h"
+#include "algorithm/FMMInternal/FastMultipoleMethodsBase.h"
 #include "io/LogFiles.h"
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
@@ -764,18 +765,18 @@ protected:
 
     std::array<double, Constants::p3> calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, double sigma, SignalType signal_type_needed) { return FastMultipoleMethods::calc_hermite_coefficients(source, sigma, signal_type_needed); }
     CalculationType check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::check_calculation_requirements(source, target, sigma, signal_type_needed);}
-    const std::vector<std::pair<FastMultipoleMethods::position_type, FastMultipoleMethods::counter_type>> get_all_positions_for(OctreeNode<FastMultipoleMethodsCell>* node, const ElementType type, const SignalType signal_type_needed){return FastMultipoleMethods::Utilities::get_all_positions_for(node, type, signal_type_needed);}
+    const std::vector<std::pair<FastMultipoleMethods::position_type, FastMultipoleMethods::counter_type>> get_all_positions_for(OctreeNode<FastMultipoleMethodsCell>* node, const ElementType type, const SignalType signal_type_needed){return FastMultipoleMethodsBase<FastMultipoleMethodsCell>::get_all_positions_for(node, type, signal_type_needed);}
     double calc_taylor(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_taylor(source, target, sigma, signal_type_needed);}
     double calc_direct_gauss(OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_direct_gauss(source, target, sigma, signal_type_needed);}
     double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_hermite(source, target, coefficients_buffer, sigma, signal_type_needed);}
 
-    double kernel(const Vec3d& a, const Vec3d& b, double sigma) { return FastMultipoleMethods::Utilities::kernel(a, b, sigma); }
-    unsigned int get_number_of_indices() { return FastMultipoleMethods::Multiindex::get_number_of_indices(); }
-    std::array<std::array<unsigned int, 3>, Constants::p3> get_indices() { return FastMultipoleMethods::Multiindex::get_indices(); }
-    size_t fac_multiindex(const std::array<unsigned int, 3>& x) { return FastMultipoleMethods::Utilities::fac_multiindex(x); }
-    size_t abs_multiindex(const std::array<unsigned int, 3>& x) { return FastMultipoleMethods::Utilities::abs_multiindex(x); }
-    double pow_multiindex(const Vec3d& base_vector, const std::array<unsigned int, 3>& exponent) { return FastMultipoleMethods::Utilities::pow_multiindex(base_vector, exponent); }
-    double h(unsigned int n, double t) {return FastMultipoleMethods::Utilities::h(n,t); }
+    double kernel(const Vec3d& a, const Vec3d& b, double sigma) { return FastMultipoleMethodsBase<FastMultipoleMethodsCell>::kernel(a, b, sigma); }
+    unsigned int get_number_of_indices() { return Multiindex::get_number_of_indices(); }
+    std::array<std::array<unsigned int, 3>, Constants::p3> get_indices() { return Multiindex::get_indices(); }
+    size_t fac_multiindex(const std::array<unsigned int, 3>& x) { return FastMultipoleMethodsBase<FastMultipoleMethodsCell>::fac_multiindex(x); }
+    size_t abs_multiindex(const std::array<unsigned int, 3>& x) { return FastMultipoleMethodsBase<FastMultipoleMethodsCell>::abs_multiindex(x); }
+    double pow_multiindex(const Vec3d& base_vector, const std::array<unsigned int, 3>& exponent) { return FastMultipoleMethodsBase<FastMultipoleMethodsCell>::pow_multiindex(base_vector, exponent); }
+    double h(unsigned int n, double t) {return FastMultipoleMethodsBase<FastMultipoleMethodsCell>::h(n,t); }
 };
 
 class PartitionTest : public RelearnTest {

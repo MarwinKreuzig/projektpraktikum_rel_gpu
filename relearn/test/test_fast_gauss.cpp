@@ -648,10 +648,12 @@ TEST_F(FMMTest, testAccuracyFMM) {
         ASSERT_NO_THROW(fmm.update_leaf_nodes(update_status));
         ASSERT_NO_THROW(octree->update_local_trees());
 
-        const auto cur_sigma = 750;// urd_sigma(mt);
+        const auto cur_sigma = urd_sigma(mt);
 
         OctreeNode<AdditionalCellAttributes>* root = octree->get_root();
         unsigned int num_ax = root->get_cell().get_number_axons_for(SignalType::Inhibitory);
+        unsigned int num_dend = root->get_cell().get_number_dendrites_for(SignalType::Inhibitory);
+        printf("Axons: %i    Dendrites: %i \n", num_ax, num_dend);
         auto const children = root->get_children();
 
         for (auto i = 0; i < Constants::number_oct; i++) {
@@ -706,29 +708,14 @@ TEST_F(FMMTest, testAccuracyFMM) {
                 taylor_arr.push_back(taylor);
             }
 
-            double direct_sum = 0;
-            double hermite_sum = 0;
-            double taylor_sum = 0;
-            for (size_t k = 0; k < direct_arr.size(); k++) {
-                direct_sum += direct_arr[k];
-                hermite_sum += hermite_arr[k];
-                taylor_sum += taylor_arr[k];
-            }
 
             for (size_t l = 0; l < direct_arr.size(); l++) {
-                double val1 = (direct_arr[l] * 100) / direct_sum;
-                double val2 = (hermite_arr[l] * 100) / hermite_sum;
-                double val3 = (taylor_arr[l] * 100) / taylor_sum;
-                if (std::abs(val1 - val2) > 5) {
-                    printf("index: %i \n", l);
-                    printf("Calculation Type: hermite\n");
-                }
-                if (std::abs(val1 - val3) > 5) {
-                    printf("index: %i \n", l);
-                    printf("Calculation Type: taylor \n");
-                }
-                ASSERT_NEAR(val1, val2, 5);
-                ASSERT_NEAR(val1, val3, 5);
+                //calc relative error
+                double val1 = (std::abs(direct_arr[l]-hermite_arr[l])*100)/direct_arr[l];
+                double val2 = (std::abs(direct_arr[l]-taylor_arr[l])*100)/direct_arr[l];;
+
+                EXPECT_LE(val1, 5);
+                EXPECT_LE(val2, 5);
             }
         }
 
