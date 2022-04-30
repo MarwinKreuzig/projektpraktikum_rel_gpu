@@ -209,7 +209,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
         return 0.0;
     }
 
-    const auto sigma = GaussianKernel::get_sigma();
+    const auto sigma = GaussianDistributionKernel::get_sigma();
 
     const auto& target_xyz = node_with_dendrite.get_cell().get_dendrites_position_for(dendrite_type_needed);
     RelearnException::check(target_xyz.has_value(), "Naive::update_leaf_nodes: target_xyz is bad");

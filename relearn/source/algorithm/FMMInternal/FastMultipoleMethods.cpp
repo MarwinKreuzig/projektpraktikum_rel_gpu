@@ -290,7 +290,7 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
 }
 
 std::vector<double> FastMultipoleMethods::calc_attractiveness_to_connect(OctreeNode<FastMultipoleMethodsCell>* source, const interaction_list_type& interaction_list, const SignalType signal_type_needed) {
-    const auto sigma = GaussianKernel::get_sigma();
+    const auto sigma = GaussianDistributionKernel::get_sigma();
 
     std::array<double, Constants::p3> hermite_coefficients{ 0.0 };
     bool hermite_coefficients_init = false;

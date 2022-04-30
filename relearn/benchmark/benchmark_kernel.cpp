@@ -27,7 +27,7 @@ static void BM_Gaussian_Kernel(benchmark::State& state) {
 
         for (auto i = 0; i < number_pairs; i++) {
             const auto& [source, target] = pairs[i];
-            const auto attr = GaussianKernel::calculate_attractiveness_to_connect(source, target, 3);
+            const auto attr = GaussianDistributionKernel::calculate_attractiveness_to_connect(source, target, 3);
 
             attractivenesses[i] = attr;
         }

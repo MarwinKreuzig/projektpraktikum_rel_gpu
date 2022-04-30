@@ -20,6 +20,7 @@
 #include "structure/OctreeNode.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
+#include "util/Stack.h"
 #include "util/Utility.h"
 
 #include <array>

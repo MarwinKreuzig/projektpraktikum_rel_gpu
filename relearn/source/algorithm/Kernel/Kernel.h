@@ -11,6 +11,10 @@
  */
 
 #include "Types.h"
+#include "algorithm/Kernel/Gamma.h"
+#include "algorithm/Kernel/Gaussian.h"
+#include "algorithm/Kernel/Linear.h"
+#include "algorithm/Kernel/Weibull.h"
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
 #include "structure/OctreeNode.h"
@@ -24,11 +28,34 @@
 #include <utility>
 #include <vector>
 
-template <typename AdditionalCellAttributes, typename KernelType>
+enum class KernelType {
+    Gaussian,
+    Linear,
+    Gamma,
+    Weibull
+};
+
+template <typename AdditionalCellAttributes, typename OldKernelType>
 class Kernel {
 public:
     using counter_type = RelearnTypes::counter_type;
     using position_type = RelearnTypes::position_type;
+
+    /**
+     * @brief Sets the type of kernel that shall be used for calculations
+     * @param kernel_type The kernel type that from now on shall be used
+     */
+    static void set_kernel_type(KernelType kernel_type) noexcept {
+        currently_used_kernel = kernel_type;
+    }
+
+    /**
+     * @brief Returns the currently used kernel type
+     * @return The currently used kernel type
+     */
+    [[nodiscard]] KernelType get_kernel_type() noexcept {
+        return currently_used_kernel;
+    }
 
     /**
      * @brief Calculates the attractiveness to connect on the basis of KernelType.
@@ -54,7 +81,18 @@ public:
 
         RelearnException::check(target_position.has_value(), "Kernel::calculate_attractiveness_to_connect: target_position is bad");
 
-        return KernelType::calculate_attractiveness_to_connect(source_position, target_position.value(), number_elements);
+        switch (currently_used_kernel) {
+        case KernelType::Gamma:
+            return GammaDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position.value(), number_elements);
+        case KernelType::Gaussian:
+            return GaussianDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position.value(), number_elements);
+        case KernelType::Linear:
+            return LinearDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position.value(), number_elements);
+        case KernelType::Weibull:
+            return WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position.value(), number_elements);
+        }
+
+        return OldKernelType::calculate_attractiveness_to_connect(source_position, target_position.value(), number_elements);
     }
 
     /**
@@ -125,7 +163,7 @@ public:
 
         return node_selected;
     }
-    
+
     /**
      * @brief Picks a target based on the the KernelType
      * @param source_neuron_id The id of the source neuron, is used to prevent autapses
@@ -136,12 +174,12 @@ public:
      * @exception Throws a RelearnException if one of the pointer in nodes is a nullptr, or if KernelType::calculate_attractiveness_to_connect throws
      * @return The selected target node, is nullptr if nodes.empty()
      */
-    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* pick_target(const NeuronID& source_neuron_id, const position_type& source_position, const std::vector<OctreeNode<AdditionalCellAttributes>*>& nodes, 
+    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* pick_target(const NeuronID& source_neuron_id, const position_type& source_position, const std::vector<OctreeNode<AdditionalCellAttributes>*>& nodes,
         const ElementType element_type, const SignalType signal_type) {
         if (nodes.empty()) {
             return nullptr;
         }
-        
+
         /**
          * Assign a probability to each node in the vector.
          * The probability for connecting to the same neuron (i.e., the axon's neuron) is set 0.
@@ -159,4 +197,7 @@ public:
         auto* node_selected = pick_target(nodes, all_probabilities, random_number);
         return node_selected;
     }
+
+private:
+    static inline KernelType currently_used_kernel{ KernelType::Gaussian };
 };
