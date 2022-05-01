@@ -151,6 +151,26 @@ public:
     static const std::vector<std::pair<position_type, counter_type>> get_all_positions_for(OctreeNode<AdditionalCellAttributes>* node, const ElementType type, const SignalType signal_type_needed) {
         std::vector<std::pair<position_type, counter_type>> result{};
 
+        //for (auto* current_node : node->get_children()) {
+        //    const auto& cell = current_node->get_cell();
+        //    unsigned int num_of_ports = 0;
+        //    std::optional<VirtualPlasticityElementManual::position_type> opt_position;
+
+        //    if (type == ElementType::Dendrite) {
+        //        num_of_ports = cell.get_number_dendrites_for(signal_type_needed);
+        //        opt_position = cell.get_dendrites_position_for(signal_type_needed);
+        //    } else {
+        //        num_of_ports = cell.get_number_axons_for(signal_type_needed);
+        //        opt_position = cell.get_axons_position_for(signal_type_needed);
+        //    }
+
+        //    RelearnException::check(opt_position.has_value(), "FastMultipoleMethods::Utilities::get_all_positions_for: opt_position has no value.");
+        //    // push number and position of dendritic elements to result
+        //    result.emplace_back(std::pair<position_type, counter_type>(opt_position.value(), num_of_ports));
+        //}
+
+        //return result;
+
         Stack<OctreeNode<FastMultipoleMethodsCell>*> stack{ 30 };
         stack.emplace_back(node);
 

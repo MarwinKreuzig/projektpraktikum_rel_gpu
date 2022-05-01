@@ -17,6 +17,7 @@
 #include "util/RelearnException.h"
 
 #include <array>
+#include <cstdint>
 #include <optional>
 #include <ostream>
 #include <stack>
@@ -360,7 +361,7 @@ private:
     Cell<AdditionalCellAttributes> cell{};
 
     bool parent{ false };
-    u_int16_t level{0};
+    uint16_t level{0};
 
     int rank{ -1 }; // MPI rank who owns this octree node
 

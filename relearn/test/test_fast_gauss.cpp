@@ -618,9 +618,7 @@ TEST_F(FMMTest, testAccuracyFMM) {
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
     std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
-    unsigned int test_counter = 0;
-
-    for (auto i = 0; i < iterations; i++) {
+    for (auto i = 0; i < 1; i++) {
         const auto number_neurons = get_random_number_neurons();
         const auto& [min, max] = get_random_simulation_box_size();
 
@@ -656,6 +654,18 @@ TEST_F(FMMTest, testAccuracyFMM) {
         printf("Axons: %i    Dendrites: %i \n", num_ax, num_dend);
         auto const children = root->get_children();
 
+        std::vector<double> direct_arr;
+        direct_arr.reserve(56);
+        std::vector<double> hermite_arr;
+        hermite_arr.reserve(56);
+        std::vector<double> taylor_arr;
+        taylor_arr.reserve(56);
+        std::vector<double> distance;
+        distance.reserve(56);
+        std::vector<CalculationType> types;
+        types.reserve(56);
+
+
         for (auto i = 0; i < Constants::number_oct; i++) {
 
             const auto source = children[i];
@@ -669,14 +679,6 @@ TEST_F(FMMTest, testAccuracyFMM) {
             }
 
             auto const coef = calc_hermite_coefficients(source, cur_sigma, SignalType::Excitatory);
-            std::vector<double> direct_arr;
-            direct_arr.reserve(7);
-            std::vector<double> hermite_arr;
-            hermite_arr.reserve(7);
-            std::vector<double> taylor_arr;
-            taylor_arr.reserve(7);
-            std::vector<double> distance;
-            distance.reserve(7);
 
             const auto box_length = std::sqrt(2 * cur_sigma * cur_sigma);
 
@@ -693,6 +695,7 @@ TEST_F(FMMTest, testAccuracyFMM) {
                 }
 
                 CalculationType current_calculation = check_calculation_requirements(source, target, cur_sigma, SignalType::Excitatory);
+                types.push_back(current_calculation);
 
                 auto const direct = calc_direct_gauss(source, target, cur_sigma, SignalType::Excitatory);
                 direct_arr.push_back(direct);
@@ -707,16 +710,18 @@ TEST_F(FMMTest, testAccuracyFMM) {
                 auto const taylor = calc_taylor(source, target, cur_sigma, SignalType::Excitatory);
                 taylor_arr.push_back(taylor);
             }
+        }
 
+        for (size_t l = 0; l < direct_arr.size(); l++) {
+            if (types[l] == CalculationType::Direct)
+                continue;
 
-            for (size_t l = 0; l < direct_arr.size(); l++) {
-                //calc relative error
-                double val1 = (std::abs(direct_arr[l]-hermite_arr[l])*100)/direct_arr[l];
-                double val2 = (std::abs(direct_arr[l]-taylor_arr[l])*100)/direct_arr[l];;
+            // calc relative error
+            double val1 = (std::abs(direct_arr[l] - hermite_arr[l]) * 100) / direct_arr[l];
+            double val2 = (std::abs(direct_arr[l] - taylor_arr[l]) * 100) / direct_arr[l];
 
-                EXPECT_LE(val1, 5);
-                EXPECT_LE(val2, 5);
-            }
+            EXPECT_LE(val1, 0);
+            EXPECT_LE(val2, 0);
         }
 
         make_mpi_mem_available<AdditionalCellAttributes>();
@@ -737,23 +742,22 @@ TEST_F(FMMTest, test_static_functions) {
 
     // h-functions test
     std::uniform_real_distribution<double> urd_x(-20, 20);
-    for (size_t i = 0; i < iterations; i++){
+    for (size_t i = 0; i < iterations; i++) {
         double x = urd_x(mt);
-        double fac = exp(-(x*x));
+        double fac = exp(-(x * x));
 
-        //for n=0
-        EXPECT_NEAR(fac * std::hermite(0,x), h(0,x), 0.001);
+        // for n=0
+        EXPECT_NEAR(fac * std::hermite(0, x), h(0, x), 0.001);
 
-        //for n=1
-        EXPECT_NEAR(fac * std::hermite(1,x), h(1,x), 0.001);
+        // for n=1
+        EXPECT_NEAR(fac * std::hermite(1, x), h(1, x), 0.001);
 
-        //for n=2
-        EXPECT_NEAR(fac * std::hermite(2,x), h(2,x), 0.001);
+        // for n=2
+        EXPECT_NEAR(fac * std::hermite(2, x), h(2, x), 0.001);
 
-        //for n=3
-        EXPECT_NEAR(fac * std::hermite(3,x), h(3,x), 0.001);
+        // for n=3
+        EXPECT_NEAR(fac * std::hermite(3, x), h(3, x), 0.001);
     }
-    
 }
 
 TEST_F(FMMTest, test_multiIndex) {
