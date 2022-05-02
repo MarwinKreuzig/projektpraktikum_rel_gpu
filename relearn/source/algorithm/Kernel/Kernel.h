@@ -25,9 +25,14 @@
 
 #include <algorithm>
 #include <numeric>
+#include <ostream>
 #include <utility>
 #include <vector>
 
+/**
+ * This enum reflects the different probabilty kernels, it must 
+ * be kept in sync with the classes to allow a seemless integration
+ */
 enum class KernelType {
     Gaussian,
     Linear,
@@ -35,7 +40,28 @@ enum class KernelType {
     Weibull
 };
 
-template <typename AdditionalCellAttributes, typename OldKernelType>
+inline std::ostream& operator<<(std::ostream& out, const KernelType& kernel_type) {
+    switch (kernel_type) {
+    case KernelType::Gamma:
+        return out << "Gamma";
+    case KernelType::Gaussian:
+        return out << "Gaussian";
+    case KernelType::Linear:
+        return out << "Linear";
+    case KernelType::Weibull:
+        return out << "Weibull";
+    }
+
+    return out << "UNKOWN";
+}
+
+/**
+ * This class encapsulates the necessary probability kernels that determine how
+ * likely it is that two neurons form a synapse.
+ * It handles different use cases, depending on where in the pipeline it is inserted.
+ * @tparam AdditionalCellAttributes The AdditionalCellAttributes for the OctreeNode.
+ */
+template <typename AdditionalCellAttributes>
 class Kernel {
 public:
     using counter_type = RelearnTypes::counter_type;
@@ -58,7 +84,7 @@ public:
     }
 
     /**
-     * @brief Calculates the attractiveness to connect on the basis of KernelType.
+     * @brief Calculates the attractiveness to connect on the basis of the set kernel type.
      *      Performs all necessary checks and passes the values to the actual kernel.
      * @param source_neuron_id The source neuron id
      * @param source_position The source position s
@@ -92,7 +118,9 @@ public:
             return WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position.value(), number_elements);
         }
 
-        return OldKernelType::calculate_attractiveness_to_connect(source_position, target_position.value(), number_elements);
+        RelearnException::fail("Kernel::calculate_attractiveness_to_connect: {} is an unkown kernel type!", currently_used_kernel);
+
+        return 0.0;
     }
 
     /**

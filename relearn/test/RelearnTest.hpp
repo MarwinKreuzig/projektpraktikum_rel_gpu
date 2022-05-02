@@ -11,6 +11,11 @@
 
 #include "algorithm/BarnesHutInternal/BarnesHutCell.h"
 #include "algorithm/FMMInternal/FastMultipoleMethodsCell.h"
+#include "algorithm/Kernel/Gamma.h"
+#include "algorithm/Kernel/Gaussian.h"
+#include "algorithm/Kernel/Kernel.h"
+#include "algorithm/Kernel/Linear.h"
+#include "algorithm/Kernel/Weibull.h"
 #include "io/LogFiles.h"
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
@@ -261,6 +266,27 @@ protected:
 
     SignalType get_random_signal_type() noexcept {
         return get_random_bool() ? SignalType::Excitatory : SignalType::Inhibitory;
+    }
+
+    KernelType get_random_kernel_type() noexcept {
+        const auto choice = get_random_integer<int>(0, 3);
+        
+        switch (choice) {
+        case 0:
+            return KernelType::Gamma;
+        case 1:
+            return KernelType::Gaussian;
+        case 2:
+            return KernelType::Linear;
+        case 3:
+            return KernelType::Weibull;
+        }
+
+        return KernelType::Gamma;
+    }
+
+    std::string set_random_kernel() {
+        return "";
     }
 
     std::tuple<CommunicationMap<SynapseCreationRequest>, std::vector<size_t>, std::vector<size_t>> create_incoming_requests(size_t number_ranks, int current_rank,
@@ -797,6 +823,13 @@ protected:
 };
 
 class KernelTest : public RelearnTest {
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
+class ProbabilityKernelTest : public RelearnTest {
 protected:
     static void SetUpTestCase() {
         SetUpTestCaseTemplate<BarnesHutCell>();

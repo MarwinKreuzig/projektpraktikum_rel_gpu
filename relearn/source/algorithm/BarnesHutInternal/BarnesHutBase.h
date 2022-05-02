@@ -41,8 +41,6 @@ public:
     using position_type = typename RelearnTypes::position_type;
     using counter_type = typename RelearnTypes::counter_type;
 
-    using kernel_type = Kernel<AdditionalCellAttributes, GaussianDistributionKernel>;
-
 protected:
     double acceptance_criterion{ default_theta };
 
@@ -223,7 +221,7 @@ protected:
         for (auto root_of_subtree = root; true;) {
             const auto& vector = get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type);
 
-            auto* node_selected = kernel_type::pick_target(source_neuron_id, source_position, vector, element_type, signal_type);
+            auto* node_selected = Kernel<AdditionalCellAttributes>::pick_target(source_neuron_id, source_position, vector, element_type, signal_type);
             if (node_selected == nullptr) {
                 return {};
             }
