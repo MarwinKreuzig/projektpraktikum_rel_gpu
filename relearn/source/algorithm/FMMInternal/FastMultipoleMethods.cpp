@@ -116,8 +116,44 @@ void FastMultipoleMethods::update_leaf_nodes(const std::vector<UpdateStatus>& di
     }
 }
 
+void FastMultipoleMethods::print_calculations(OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, SignalType needed) {
+    const auto sigma = get_probabilty_parameter();
+
+    if (source == nullptr || target == nullptr) {
+        return;
+    }
+
+    try {
+        auto calc_type = check_calculation_requirements(source, target, sigma, needed);
+
+        double direct = calc_direct_gauss(source, target, sigma, needed);
+        double taylor = calc_taylor(source, target, sigma, needed);
+        const auto& coefficients = calc_hermite_coefficients(source, sigma, needed);
+        double hermite = calc_hermite(source, target, coefficients, sigma, needed);
+
+        if (hermite != 0) {
+            std::stringstream ss;
+            ss << std::fixed;
+            ss << direct << ",\t";
+            ss << taylor << ",\t";
+            ss << hermite << ",\t" << calc_type << '\n';
+
+            LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
+        }
+    }
+    catch (...) {
+
+    }
+}
+
 void FastMultipoleMethods::make_creation_request_for(const SignalType signal_type_needed, CommunicationMap<SynapseCreationRequest>& request) {
-    Stack<node_pair> stack = align_sources_and_targets(signal_type_needed);
+    // Stack<node_pair> stack = align_sources_and_targets(signal_type_needed);
+    Stack<node_pair> stack{ 200 };
+
+    for (auto* child : global_tree->get_root()->get_children()) {
+        node_pair pair = { child, global_tree->get_root() };
+        stack.emplace_back(pair);
+    }
 
     while (!stack.empty()) {
         // get node and interaction list from stack
@@ -145,6 +181,10 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
             // when target is a leaf put it in the interaction_list
         } else {
             interaction_list[0] = target_parent;
+        }
+
+        for (auto* target : interaction_list) {
+            print_calculations(source_node, target, signal_type_needed);
         }
 
         // current source node is a leaf node
@@ -206,7 +246,7 @@ Stack<FastMultipoleMethods::node_pair> FastMultipoleMethods::align_sources_and_t
     interaction_list_type root_children = FastMultipoleMethodsBase<AdditionalCellAttributes>::get_children_to_interaction_list(root);
     auto const branch_level = global_tree->get_level_of_branch_nodes();
 
-    if (branch_level - Constants::level_diff < 1) {
+    if (branch_level < 1 + Constants::level_diff) {
         auto* const target_node = root;
         const auto new_source_level = 1 + Constants::level_diff;
 
@@ -248,7 +288,7 @@ Stack<FastMultipoleMethods::node_pair> FastMultipoleMethods::align_sources_and_t
 std::vector<OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>*> FastMultipoleMethods::make_target_list(OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>* source_node, FastMultipoleMethods::interaction_list_type interaction_list, const SignalType signal_type_needed) {
 
     auto target_num = FastMultipoleMethodsBase<AdditionalCellAttributes>::count_non_zero_elements(interaction_list);
-    std::vector<OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>*> target_list{ target_num };
+    std::vector<OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>*> target_list{ };
     target_list.reserve(target_num);
 
     unsigned int source_number = source_node->get_cell().get_number_axons_for(signal_type_needed);
@@ -437,7 +477,7 @@ double FastMultipoleMethods::calc_taylor(const OctreeNode<FastMultipoleMethodsCe
     for (unsigned int j = 0; j < Constants::number_oct; j++) {
         const auto* target_child = target_children[j];
 
-        if(target_child == nullptr){
+        if (target_child == nullptr) {
             continue;
         }
 

@@ -203,6 +203,8 @@ protected:
     CommunicationMap<SynapseCreationRequest> find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override;
 
+    void print_calculations(OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, SignalType needed);
+
     /**
      * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses
      * @param number_neurons The number of local neurons

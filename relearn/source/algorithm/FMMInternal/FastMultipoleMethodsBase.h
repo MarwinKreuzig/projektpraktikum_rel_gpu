@@ -24,12 +24,26 @@
 #include <algorithm>
 #include <cmath>
 #include <optional>
+#include <ostream>
 #include <vector>
 
 enum class CalculationType { Direct,
     Hermite,
     Taylor,
 };
+
+inline std::ostream& operator<<(std::ostream& out, const CalculationType& calc_type) {
+    if (calc_type == CalculationType::Direct) {
+        return out << "Direct";
+    }
+
+    if (calc_type == CalculationType::Hermite) {
+        return out << "Hermite";
+    }
+
+    return out << "Taylor";
+}
+
 
 /**
  * This class represents a mathematical three-dimensional multi-index, which is required for the
@@ -176,6 +190,10 @@ public:
 
         while (!stack.empty()) {
             auto* current_node = stack.pop_back();
+
+            if (current_node == nullptr) {
+                continue;
+            }
 
             // node is leaf
             if (!current_node->is_parent()) {
