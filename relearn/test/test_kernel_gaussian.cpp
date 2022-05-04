@@ -53,7 +53,7 @@ TEST_F(ProbabilityKernelTest, testGaussianGetterSetterExceptions) {
 TEST_F(ProbabilityKernelTest, testGaussianNoFreeElements) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
- 
+
     const auto sigma = get_random_gaussian_sigma();
 
     const auto& source_position = get_random_position();
@@ -68,7 +68,7 @@ TEST_F(ProbabilityKernelTest, testGaussianNoFreeElements) {
 TEST_F(ProbabilityKernelTest, testGaussianLinearFreeElements) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
- 
+
     const auto sigma = get_random_gaussian_sigma();
 
     const auto& source_position = get_random_position();
@@ -88,7 +88,7 @@ TEST_F(ProbabilityKernelTest, testGaussianLinearFreeElements) {
 TEST_F(ProbabilityKernelTest, testGaussianSamePosition) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
- 
+
     const auto sigma = get_random_gaussian_sigma();
     const auto number_elements = get_random_integer<unsigned int>(0, 10000);
     const auto converted_double = static_cast<double>(number_elements);
@@ -104,7 +104,7 @@ TEST_F(ProbabilityKernelTest, testGaussianSamePosition) {
 TEST_F(ProbabilityKernelTest, testGaussianVariableSigma) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
- 
+
     const auto number_elements = get_random_integer<unsigned int>(0, 10000);
     const auto converted_double = static_cast<double>(number_elements);
 
@@ -135,7 +135,7 @@ TEST_F(ProbabilityKernelTest, testGaussianVariableSigma) {
 TEST_F(ProbabilityKernelTest, testGaussianVariablePosition) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
- 
+
     const auto sigma = get_random_gaussian_sigma();
     GaussianDistributionKernel::set_sigma(sigma);
 
@@ -175,7 +175,7 @@ TEST_F(ProbabilityKernelTest, testGaussianVariablePosition) {
 TEST_F(ProbabilityKernelTest, testGaussianConstantDistance) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
- 
+
     const auto sigma = get_random_gaussian_sigma();
     GaussianDistributionKernel::set_sigma(sigma);
 
@@ -203,10 +203,35 @@ TEST_F(ProbabilityKernelTest, testGaussianConstantDistance) {
     ASSERT_NEAR(attr_1, attr_4, eps);
 }
 
+TEST_F(ProbabilityKernelTest, testGaussianShiftedMu) {
+    GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
+    GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
+
+    const auto sigma = get_random_gaussian_sigma();
+    GaussianDistributionKernel::set_sigma(sigma);
+
+    const auto number_elements = get_random_integer<unsigned int>(0, 10000);
+
+    const Vec3d source{ 0.0, 0.0, 0.0 };
+    const Vec3d target{ get_random_double(0.0, 100.0), 0.0, 0.0 };
+
+    for (auto i = 0; i < 100; i++) {
+        const auto mu = get_random_gaussian_mu();
+        GaussianDistributionKernel::set_mu(mu);
+
+        const auto attr_a = GaussianDistributionKernel::calculate_attractiveness_to_connect(source, target, number_elements);
+
+        GaussianDistributionKernel::set_mu(0.0);
+        const auto attr_b = GaussianDistributionKernel::calculate_attractiveness_to_connect(source, target - Vec3d{ mu, 0.0, 0.0 }, number_elements);
+
+        ASSERT_NEAR(attr_a, attr_b, eps);
+    }
+}
+
 TEST_F(ProbabilityKernelTest, testGaussianPrecalculatedValues) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
- 
+
     std::array<std::tuple<double, double, double>, 5> precalculated_values{
         {
             { 100.0, 250.0, 0.85214378896621133 },
@@ -232,7 +257,7 @@ TEST_F(ProbabilityKernelTest, testGaussianPrecalculatedValues) {
 TEST_F(KernelTest, testGaussianKernelIntegration) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
- 
+
     const auto& neuron_id_1 = get_random_neuron_id(1000);
     const auto& neuron_id_2 = get_random_neuron_id(1000, 1000);
 
