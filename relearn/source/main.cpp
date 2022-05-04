@@ -170,17 +170,46 @@ int main(int argc, char** argv) {
         { "fitzhughnagumo", NeuronModelEnum::FitzHughNagumo }
     };
 
+    KernelType kernel_type = KernelType::Gaussian;
+    std::map<std::string, KernelType> cli_parse_kernel_type{
+        { "gamma", KernelType::Gamma },
+        { "gaussian", KernelType::Gaussian },
+        { "linear", KernelType::Linear },
+        { "weibull", KernelType::Weibull }
+    };
+
+    auto* opt_kernel_type = app.add_option("--kernel-type", kernel_type, "The probability kernel type, cannot be set for the fast multipole methods.");
+    opt_kernel_type->transform(CLI::CheckedTransformer(cli_parse_kernel_type, CLI::ignore_case));
+
     auto* opt_neuron_model = app.add_option("--neuron-model", neuron_model, "The neuron model");
     opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_neuron_model, CLI::ignore_case));
 
     auto* opt_algorithm = app.add_option("-a,--algorithm", algorithm, "The algorithm that is used for finding the targets");
     opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_algorithm, CLI::ignore_case));
 
+    double gamma_k{ GammaDistributionKernel::default_k };
+    app.add_option("--gamma-k", gamma_k, "Shape parameter for the gamma probability kernel.");
+
+    double gamma_theta{ GammaDistributionKernel::default_theta };
+    app.add_option("--gamma-theta", gamma_theta, "Scale parameter for the gamma probability kernel.");
+
+    double gaussian_sigma{ GaussianDistributionKernel::default_sigma };
+    app.add_option("--gaussian-sigma", gaussian_sigma, "Scaling parameter for the gaussian probability kernel. Default: 750");
+
+    double gaussian_mu{ GaussianDistributionKernel::default_mu };
+    app.add_option("--gaussian-mu", gaussian_mu, "Translation parameter for the gaussian probability kernel. Default: 0");
+
+    double linear_cutoff{ LinearDistributionKernel::default_cutoff };
+    app.add_option("--linear-cutoff", linear_cutoff, "Cut-off parameter for the linear probability kernel. Default: +inf");
+
+    double weibull_k{ WeibullDistributionKernel::default_k };
+    app.add_option("--weibull-k", weibull_k, "Shape parameter for the weibull probability kernel.");
+
+    double weibull_b{ WeibullDistributionKernel::default_b };
+    app.add_option("--weibull-b", weibull_b, "Scale parameter for the weibull probability kernel.");
+
     double accept_criterion{ BarnesHut::default_theta };
     auto* opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Required Barnes-Hut.");
-
-    double scaling_constant{ GaussianDistributionKernel::default_sigma };
-    app.add_option("--sigma", scaling_constant, "Scaling parameter for the probabilty kernel. Default: 750");
 
     size_t number_neurons{};
     auto* opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons. This option is only advised when using one MPI rank!");
@@ -410,6 +439,8 @@ int main(int argc, char** argv) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
         }
 
+        Kernel<BarnesHutCell>::set_kernel_type(kernel_type);
+
         // Create MPI RMA memory allocator
         MPIWrapper::init_buffer_octree<BarnesHutCell>();
     } else if (algorithm == AlgorithmEnum::BarnesHutInverted) {
@@ -419,14 +450,22 @@ int main(int argc, char** argv) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
         }
 
+        Kernel<BarnesHutInvertedCell>::set_kernel_type(kernel_type);
+
         // Create MPI RMA memory allocator
         MPIWrapper::init_buffer_octree<BarnesHutInvertedCell>();
     } else if (algorithm == AlgorithmEnum::FastMultipoleMethods) {
+        if (kernel_type != KernelType::Gaussian) {
+            RelearnException::fail("Setting the probability kernel type is not supported for the fast multipole methods!");
+        }
+
         // Check if int type can contain total size of branch nodes to receive in bytes
         // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
         if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<FastMultipoleMethodsCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
         }
+
+        Kernel<FastMultipoleMethodsCell>::set_kernel_type(kernel_type);
 
         // Create MPI RMA memory allocator
         MPIWrapper::init_buffer_octree<FastMultipoleMethodsCell>();
@@ -436,6 +475,8 @@ int main(int argc, char** argv) {
         if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<NaiveCell>))) {
             RelearnException::fail("int type is too small to hold the size in bytes of the branch nodes that are received from every rank in MPI_Allgather()");
         }
+
+        Kernel<NaiveCell>::set_kernel_type(kernel_type);
 
         // Create MPI RMA memory allocator
         MPIWrapper::init_buffer_octree<NaiveCell>();
@@ -481,8 +522,17 @@ int main(int argc, char** argv) {
     sim.set_axons(std::move(axon_models));
     sim.set_dendrites_ex(std::move(dend_ex_models));
     sim.set_dendrites_in(std::move(dend_in_models));
-    
-    GaussianDistributionKernel::set_sigma(scaling_constant);
+
+    GammaDistributionKernel::set_k(gamma_k);
+    GammaDistributionKernel::set_theta(gamma_theta);
+
+    GaussianDistributionKernel::set_sigma(gaussian_sigma);
+    GaussianDistributionKernel::set_mu(gaussian_mu);
+
+    LinearDistributionKernel::set_cutoff(linear_cutoff);
+
+    WeibullDistributionKernel::set_b(weibull_b);
+    WeibullDistributionKernel::set_k(weibull_k);
 
     if (algorithm == AlgorithmEnum::BarnesHut || algorithm == AlgorithmEnum::BarnesHutInverted) {
         sim.set_acceptance_criterion_for_barnes_hut(accept_criterion);
