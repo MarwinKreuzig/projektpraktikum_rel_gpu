@@ -27,7 +27,7 @@ public:
     using counter_type = RelearnTypes::counter_type;
     using position_type = RelearnTypes::position_type;
 
-    static constexpr double default_cutoff = std::numeric_limits<double>::max();
+    static constexpr double default_cutoff = std::numeric_limits<double>::infinity();
 
     /**
      * @brief Sets cut-off, must be greater than or egal to 0.0
@@ -63,7 +63,7 @@ public:
 
         const auto cast_number_elements = static_cast<double>(number_free_elements);
 
-        if (std::isnan(cutoff_point)) {
+        if (std::isinf(cutoff_point)) {
             return cast_number_elements;
         }
 
@@ -74,7 +74,7 @@ public:
 
         const auto factor = x / cutoff_point;
 
-        return factor * cast_number_elements;
+        return (1 - factor) * cast_number_elements;
     }
 
 private:

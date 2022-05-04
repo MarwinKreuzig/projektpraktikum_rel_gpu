@@ -212,19 +212,22 @@ TEST_F(ProbabilityKernelTest, testGaussianShiftedMu) {
 
     const auto number_elements = get_random_integer<unsigned int>(0, 10000);
 
-    const Vec3d source{ 0.0, 0.0, 0.0 };
-    const Vec3d target{ get_random_double(0.0, 100.0), 0.0, 0.0 };
+    const Vec3d source = get_random_position();
 
     for (auto i = 0; i < 100; i++) {
         const auto mu = get_random_gaussian_mu();
         GaussianDistributionKernel::set_mu(mu);
 
-        const auto attr_a = GaussianDistributionKernel::calculate_attractiveness_to_connect(source, target, number_elements);
+        const auto attr_a = GaussianDistributionKernel::calculate_attractiveness_to_connect(source, source, number_elements);
 
         GaussianDistributionKernel::set_mu(0.0);
-        const auto attr_b = GaussianDistributionKernel::calculate_attractiveness_to_connect(source, target - Vec3d{ mu, 0.0, 0.0 }, number_elements);
+        const auto attr_b = GaussianDistributionKernel::calculate_attractiveness_to_connect(source, source - Vec3d{ mu, 0.0, 0.0 }, number_elements);
+        const auto attr_c = GaussianDistributionKernel::calculate_attractiveness_to_connect(source, source - Vec3d{ 0.0, mu, 0.0 }, number_elements);
+        const auto attr_d = GaussianDistributionKernel::calculate_attractiveness_to_connect(source, source - Vec3d{ 0.0, 0.0, mu }, number_elements);
 
         ASSERT_NEAR(attr_a, attr_b, eps);
+        ASSERT_NEAR(attr_a, attr_c, eps);
+        ASSERT_NEAR(attr_a, attr_d, eps);
     }
 }
 
