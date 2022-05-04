@@ -13,6 +13,8 @@
 TEST_F(KernelTest, testKernelSameNode) {
     const auto& neuron_id = get_random_neuron_id(1000);
 
+    const auto& debug_kernel_string = set_random_kernel<BarnesHutCell>();
+
     const auto& position = get_random_position();
 
     const auto element_type = get_random_element_type();
@@ -24,6 +26,7 @@ TEST_F(KernelTest, testKernelSameNode) {
     const auto attractiveness = Kernel<BarnesHutCell>::calculate_attractiveness_to_connect(neuron_id, position, &node, element_type, signal_type);
     ASSERT_EQ(attractiveness, 0.0);
 }
+
 TEST_F(KernelTest, testKernelException) {
     const auto& neuron_id_1 = get_random_neuron_id(1000);
     const auto& neuron_id_2 = get_random_neuron_id(1000, 1000);
@@ -47,6 +50,8 @@ TEST_F(KernelTest, testKernelException) {
     node.set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
     node.set_cell_number_dendrites(number_vacant_excitatory_dendrites, number_vacant_inhibitory_dendrites);
 
+    const auto& debug_kernel_string = set_random_kernel<FastMultipoleMethodsCell>();
+
     using type = Kernel<FastMultipoleMethodsCell>;
     ASSERT_THROW(const auto attr_exc_axons = type::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Axon, SignalType::Excitatory);, RelearnException);
     ASSERT_THROW(const auto attr_inh_axons = type::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Axon, SignalType::Inhibitory);, RelearnException);
@@ -63,6 +68,8 @@ TEST_F(KernelTest, testKernelEmptyVector) {
     const auto signal_type = get_random_signal_type();
 
     const auto number_nodes = get_random_number_neurons();
+
+    const auto& debug_kernel_string = set_random_kernel<FastMultipoleMethodsCell>();
 
     const auto& [sum, attrs] = Kernel<FastMultipoleMethodsCell>::create_probability_interval(
         neuron_id, position, {}, element_type, signal_type);
@@ -108,6 +115,8 @@ TEST_F(KernelTest, testKernelAutapseVector) {
 
         node_pointers[i] = &nodes[i];
     }
+
+    const auto& debug_kernel_string = set_random_kernel<FastMultipoleMethodsCell>();
 
     const auto& [sum, attrs] = Kernel<FastMultipoleMethodsCell>::create_probability_interval(
         neuron_id, position, node_pointers, element_type, signal_type);
@@ -157,6 +166,8 @@ TEST_F(KernelTest, testKernelVectorException) {
     const auto nullptr_index = get_random_integer<size_t>(0, number_nodes - 1);
     node_pointers[nullptr_index] = nullptr;
 
+    const auto& debug_kernel_string = set_random_kernel<FastMultipoleMethodsCell>();
+
     using TT = Kernel<FastMultipoleMethodsCell>;
 
     ASSERT_THROW(const auto& val = TT::create_probability_interval(neuron_id, position, node_pointers, element_type, signal_type);, RelearnException);
@@ -200,10 +211,17 @@ TEST_F(KernelTest, testKernelRandomVector) {
         node_pointers[i] = &nodes[i];
     }
 
+    const auto& debug_kernel_string = set_random_kernel<FastMultipoleMethodsCell>();
+
     auto total_attractiveness = 0.0;
     std::vector<double> attractivenesses{};
     for (auto i = 0; i < number_nodes; i++) {
         const auto attr = Kernel<FastMultipoleMethodsCell>::calculate_attractiveness_to_connect(neuron_id, position, &nodes[i], element_type, signal_type);
+        
+        if (attr == 0.0) {
+            continue;
+        }
+        
         attractivenesses.emplace_back(attr);
         total_attractiveness += attr;
     }
@@ -214,7 +232,7 @@ TEST_F(KernelTest, testKernelRandomVector) {
     ASSERT_NEAR(sum, total_attractiveness, eps);
     ASSERT_EQ(attractivenesses.size(), attrs.size());
 
-    for (auto i = 0; i < number_nodes; i++) {
+    for (auto i = 0; i < attrs.size(); i++) {
         ASSERT_NEAR(attrs[i], attractivenesses[i], eps);
     }
 }
@@ -224,6 +242,8 @@ TEST_F(KernelTest, testPickTargetEmpty) {
     const std::vector<double> probabilities{};
 
     const auto random_number = get_random_double(0.0, 100.0);
+
+    const auto& debug_kernel_string = set_random_kernel<BarnesHutCell>();
 
     using TT = Kernel<BarnesHutCell>;
 
@@ -242,6 +262,8 @@ TEST_F(KernelTest, testPickTargetMismatchSize) {
 
     const auto random_number = get_random_double(0.0, 100.0);
 
+    const auto& debug_kernel_string = set_random_kernel<BarnesHutCell>();
+
     using TT = Kernel<BarnesHutCell>;
 
     ASSERT_THROW(const auto& val = TT::pick_target(targets, probabilities, random_number);, RelearnException);
@@ -254,6 +276,8 @@ TEST_F(KernelTest, testPickTargetNegativeRandomNumber) {
     std::vector<double> probabilities = std::vector<double>(number_targets, 0.0);
 
     const auto random_number = -get_random_double(0.001, 100.0);
+
+    const auto& debug_kernel_string = set_random_kernel<BarnesHutCell>();
 
     using TT = Kernel<BarnesHutCell>;
 
@@ -273,6 +297,8 @@ TEST_F(KernelTest, testPickTargetRandom) {
     }
 
     const auto total_probability = std::reduce(probabilities.begin(), probabilities.end(), 0.0);
+
+    const auto& debug_kernel_string = set_random_kernel<BarnesHutCell>();
 
     for (auto it = 0; it < number_nodes; it++) {
         const auto random_number = get_random_double(0.0, total_probability);
@@ -313,6 +339,8 @@ TEST_F(KernelTest, testPickTargetTooLarge) {
 
     const auto total_probability = std::reduce(probabilities.begin(), probabilities.end(), 0.0);
 
+    const auto& debug_kernel_string = set_random_kernel<BarnesHutCell>();
+
     for (auto it = 0; it < number_nodes; it++) {
         const auto random_number = get_random_double(total_probability + eps, (total_probability + eps + 1) * 2);
         const auto* chosen_node = Kernel<BarnesHutCell>::pick_target(node_pointers, probabilities, random_number);
@@ -328,6 +356,8 @@ TEST_F(KernelTest, testPickTargetEmpty2) {
 
     const auto element_type = get_random_element_type();
     const auto signal_type = get_random_signal_type();
+
+    const auto& debug_kernel_string = set_random_kernel<BarnesHutCell>();
 
     auto* result = Kernel<BarnesHutCell>::pick_target(neuron_id, position, {}, element_type, signal_type);
 
@@ -374,6 +404,8 @@ TEST_F(KernelTest, testPickTargetException) {
     const auto nullptr_index = get_random_integer<size_t>(0, number_nodes - 1);
     node_pointers[nullptr_index] = nullptr;
 
+    const auto& debug_kernel_string = set_random_kernel<FastMultipoleMethodsCell>();
+
     using TT = Kernel<FastMultipoleMethodsCell>;
     ASSERT_THROW(auto* result = TT::pick_target(neuron_id, position, node_pointers, element_type, signal_type);, RelearnException);
 }
@@ -415,9 +447,20 @@ TEST_F(KernelTest, testPickTargetRandom2) {
         node_pointers[i] = &nodes[i];
     }
 
+    const auto& debug_kernel_string = set_random_kernel<FastMultipoleMethodsCell>();
+
     for (auto i = 0; i < number_nodes; i++) {
         auto* result = Kernel<FastMultipoleMethodsCell>::
             pick_target(neuron_id, position, node_pointers, element_type, signal_type);
+
+        if (result == nullptr) {
+            for (auto* ptr : node_pointers) {
+                const auto attraction = Kernel<FastMultipoleMethodsCell>::calculate_attractiveness_to_connect(neuron_id, position, ptr, element_type, signal_type);
+                ASSERT_EQ(attraction, 0.0);
+            }
+
+            continue;
+        }
 
         auto pos = std::find(node_pointers.begin(), node_pointers.end(), result);
         ASSERT_NE(pos, node_pointers.end());

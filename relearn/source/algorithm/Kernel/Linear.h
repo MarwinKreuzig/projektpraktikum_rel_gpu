@@ -14,9 +14,13 @@
 #include "util/RelearnException.h"
 #include "util/Vec3.h"
 
+#include <cmath>
+
 /**
  * Offers a static interface to calculate the attraction linearly with
- * a cut-off, i.e., set the attraction to 0 if the distance is too large
+ * a cut-off, i.e., the attraction is 0 if the distance is larger then the cut-off,
+ * constant if the cut-off is infinite, and linear interpolated based on the
+ * distance is neither is the case
  */
 class LinearDistributionKernel {
 public:
@@ -57,12 +61,20 @@ public:
             return 0.0;
         }
 
+        const auto cast_number_elements = static_cast<double>(number_free_elements);
+
+        if (std::isnan(cutoff_point)) {
+            return cast_number_elements;
+        }
+
         const auto x = (source_position - target_position).calculate_2_norm();
         if (x > cutoff_point) {
             return 0.0;
         }
 
-        return static_cast<double>(number_free_elements);
+        const auto factor = x / cutoff_point;
+
+        return factor * cast_number_elements;
     }
 
 private:

@@ -12,8 +12,11 @@
 #include <tuple>
 
 TEST_F(ProbabilityKernelTest, testGaussianGetterSetter) {
-    const auto sigma = get_random_double(0.001, 10000);
-    const auto mu = get_random_double(-10000, 10000);
+    GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
+    GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
+
+    const auto sigma = get_random_gaussian_sigma();
+    const auto mu = get_random_gaussian_mu();
 
     ASSERT_EQ(GaussianDistributionKernel::get_mu(), GaussianDistributionKernel::default_mu);
     ASSERT_EQ(GaussianDistributionKernel::get_sigma(), GaussianDistributionKernel::default_sigma);
@@ -30,8 +33,11 @@ TEST_F(ProbabilityKernelTest, testGaussianGetterSetter) {
 }
 
 TEST_F(ProbabilityKernelTest, testGaussianGetterSetterExceptions) {
-    const auto sigma = -get_random_double(0.001, 10000);
-    const auto mu = get_random_double(-10000, 10000);
+    GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
+    GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
+
+    const auto sigma = -get_random_gaussian_sigma();
+    const auto mu = get_random_gaussian_mu();
 
     ASSERT_THROW(GaussianDistributionKernel::set_sigma(0.0), RelearnException);
 
@@ -45,7 +51,10 @@ TEST_F(ProbabilityKernelTest, testGaussianGetterSetterExceptions) {
 }
 
 TEST_F(ProbabilityKernelTest, testGaussianNoFreeElements) {
-    const auto sigma = get_random_double(0.001, 100000);
+    GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
+    GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
+ 
+    const auto sigma = get_random_gaussian_sigma();
 
     const auto& source_position = get_random_position();
     const auto& target_position = get_random_position();
@@ -57,7 +66,10 @@ TEST_F(ProbabilityKernelTest, testGaussianNoFreeElements) {
 }
 
 TEST_F(ProbabilityKernelTest, testGaussianLinearFreeElements) {
-    const auto sigma = get_random_double(0.001, 100000);
+    GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
+    GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
+ 
+    const auto sigma = get_random_gaussian_sigma();
 
     const auto& source_position = get_random_position();
     const auto& target_position = get_random_position();
@@ -74,7 +86,10 @@ TEST_F(ProbabilityKernelTest, testGaussianLinearFreeElements) {
 }
 
 TEST_F(ProbabilityKernelTest, testGaussianSamePosition) {
-    const auto sigma = get_random_double(0.001, 100000);
+    GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
+    GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
+ 
+    const auto sigma = get_random_gaussian_sigma();
     const auto number_elements = get_random_integer<unsigned int>(0, 10000);
     const auto converted_double = static_cast<double>(number_elements);
 
@@ -87,6 +102,9 @@ TEST_F(ProbabilityKernelTest, testGaussianSamePosition) {
 }
 
 TEST_F(ProbabilityKernelTest, testGaussianVariableSigma) {
+    GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
+    GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
+ 
     const auto number_elements = get_random_integer<unsigned int>(0, 10000);
     const auto converted_double = static_cast<double>(number_elements);
 
@@ -95,7 +113,7 @@ TEST_F(ProbabilityKernelTest, testGaussianVariableSigma) {
 
     std::vector<double> sigmas{};
     for (auto i = 0; i < 100; i++) {
-        sigmas.emplace_back(get_random_double(0.001, 100000));
+        sigmas.emplace_back(get_random_gaussian_sigma());
     }
 
     std::sort(sigmas.begin(), sigmas.end());
@@ -115,7 +133,10 @@ TEST_F(ProbabilityKernelTest, testGaussianVariableSigma) {
 }
 
 TEST_F(ProbabilityKernelTest, testGaussianVariablePosition) {
-    const auto sigma = get_random_double(0.001, 100000);
+    GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
+    GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
+ 
+    const auto sigma = get_random_gaussian_sigma();
     GaussianDistributionKernel::set_sigma(sigma);
 
     const auto& source_position = get_random_position();
@@ -152,7 +173,10 @@ TEST_F(ProbabilityKernelTest, testGaussianVariablePosition) {
 }
 
 TEST_F(ProbabilityKernelTest, testGaussianConstantDistance) {
-    const auto sigma = get_random_double(0.001, 100000);
+    GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
+    GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
+ 
+    const auto sigma = get_random_gaussian_sigma();
     GaussianDistributionKernel::set_sigma(sigma);
 
     const auto& source_position = get_random_position();
@@ -180,6 +204,9 @@ TEST_F(ProbabilityKernelTest, testGaussianConstantDistance) {
 }
 
 TEST_F(ProbabilityKernelTest, testGaussianPrecalculatedValues) {
+    GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
+    GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
+ 
     std::array<std::tuple<double, double, double>, 5> precalculated_values{
         {
             { 100.0, 250.0, 0.85214378896621133 },
@@ -203,12 +230,17 @@ TEST_F(ProbabilityKernelTest, testGaussianPrecalculatedValues) {
 }
 
 TEST_F(KernelTest, testGaussianKernelIntegration) {
+    GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
+    GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
+ 
     const auto& neuron_id_1 = get_random_neuron_id(1000);
     const auto& neuron_id_2 = get_random_neuron_id(1000, 1000);
 
     const auto& source_position = get_random_position();
 
-    const auto sigma = get_random_double(0.001, 100000);
+    Kernel<FastMultipoleMethodsCell>::set_kernel_type(KernelType::Gaussian);
+
+    const auto sigma = get_random_gaussian_sigma();
     GaussianDistributionKernel::set_sigma(sigma);
 
     const auto& target_excitatory_axon_position = get_random_position();
