@@ -285,7 +285,7 @@ protected:
     }
 
     double get_random_linear_cutoff() noexcept {
-        return get_random_double(0.0, 1000.0);
+        return get_random_double(0.001, 1000.0);
     }
 
     double get_random_weibull_k() noexcept {

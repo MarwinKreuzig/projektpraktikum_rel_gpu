@@ -39,6 +39,49 @@ TEST_F(ProbabilityKernelTest, testLinearGetterSetterException) {
     ASSERT_EQ(LinearDistributionKernel::get_cutoff(), LinearDistributionKernel::default_cutoff);
 }
 
+TEST_F(ProbabilityKernelTest, testLinearNoFreeElements) {
+    const auto cutoff_point = get_random_linear_cutoff();
+    LinearDistributionKernel::set_cutoff(cutoff_point);
+
+    const auto& source_position = get_random_position();
+    const auto& target_position = get_random_position();
+
+    const auto attractiveness = LinearDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, 0);
+
+    ASSERT_EQ(attractiveness, 0.0);
+}
+
+TEST_F(ProbabilityKernelTest, testLinearLinearFreeElements) {
+    const auto cutoff_point = get_random_linear_cutoff();
+    LinearDistributionKernel::set_cutoff(cutoff_point);
+
+    const auto& source_position = get_random_position();
+    const auto& target_position = get_random_position();
+
+    const auto attractiveness_one = LinearDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, 1);
+
+    for (auto number_free_elements = 0U; number_free_elements < 10000U; number_free_elements++) {
+        const auto attractiveness = LinearDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, number_free_elements);
+
+        const auto expected_attractiveness = attractiveness_one * number_free_elements;
+        ASSERT_NEAR(attractiveness, expected_attractiveness, eps);
+    }
+}
+
+TEST_F(ProbabilityKernelTest, testLinearSamePosition) {
+    const auto cutoff_point = get_random_linear_cutoff();
+    LinearDistributionKernel::set_cutoff(cutoff_point);
+
+    const auto number_elements = get_random_integer<unsigned int>(0, 10000);
+    const auto converted_double = static_cast<double>(number_elements);
+
+    const auto& position = get_random_position();
+
+    const auto attractiveness = LinearDistributionKernel::calculate_attractiveness_to_connect(position, position, number_elements);
+
+    ASSERT_NEAR(attractiveness, converted_double, eps);
+}
+
 TEST_F(ProbabilityKernelTest, testLinearInf) {
     constexpr auto cutoff_point_inf = std::numeric_limits<double>::infinity();
     LinearDistributionKernel::set_cutoff(cutoff_point_inf);

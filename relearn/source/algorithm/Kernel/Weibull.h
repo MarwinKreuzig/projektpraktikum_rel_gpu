@@ -54,6 +54,7 @@ public:
      * @exception Throws a RelearnExeption if b <= 0.0
      */
     static void set_b(const double b) {
+        RelearnException::check(b > 0.0, "In WeibullDistributionKernel::set_b, b was not greater than 0.0");
         WeibullDistributionKernel::b = b;
     }
 

@@ -218,10 +218,6 @@ TEST_F(KernelTest, testKernelRandomVector) {
     for (auto i = 0; i < number_nodes; i++) {
         const auto attr = Kernel<FastMultipoleMethodsCell>::calculate_attractiveness_to_connect(neuron_id, position, &nodes[i], element_type, signal_type);
         
-        if (attr == 0.0) {
-            continue;
-        }
-        
         attractivenesses.emplace_back(attr);
         total_attractiveness += attr;
     }
@@ -230,10 +226,13 @@ TEST_F(KernelTest, testKernelRandomVector) {
         neuron_id, position, node_pointers, element_type, signal_type);
 
     ASSERT_NEAR(sum, total_attractiveness, eps);
-    ASSERT_EQ(attractivenesses.size(), attrs.size());
 
-    for (auto i = 0; i < attrs.size(); i++) {
-        ASSERT_NEAR(attrs[i], attractivenesses[i], eps);
+    if (sum != 0.0) {
+        ASSERT_EQ(attractivenesses.size(), attrs.size());
+
+        for (auto i = 0; i < attrs.size(); i++) {
+            ASSERT_NEAR(attrs[i], attractivenesses[i], eps);
+        }
     }
 }
 
