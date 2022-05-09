@@ -178,38 +178,25 @@ int main(int argc, char** argv) {
         { "weibull", KernelType::Weibull }
     };
 
-    auto* opt_kernel_type = app.add_option("--kernel-type", kernel_type, "The probability kernel type, cannot be set for the fast multipole methods.");
-    opt_kernel_type->transform(CLI::CheckedTransformer(cli_parse_kernel_type, CLI::ignore_case));
+    size_t simulation_steps{};
+    app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();
 
-    auto* opt_neuron_model = app.add_option("--neuron-model", neuron_model, "The neuron model");
-    opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_neuron_model, CLI::ignore_case));
+    size_t first_plasticity_step{ Config::first_plasticity_update };
+    app.add_option("--first-plasticity-step", first_plasticity_step, "The first step in which the plasticity is updated.");
 
-    auto* opt_algorithm = app.add_option("-a,--algorithm", algorithm, "The algorithm that is used for finding the targets");
-    opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_algorithm, CLI::ignore_case));
+    auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
 
-    double gamma_k{ GammaDistributionKernel::default_k };
-    app.add_option("--gamma-k", gamma_k, "Shape parameter for the gamma probability kernel.");
+    unsigned int random_seed{ 0 };
+    app.add_option("-r,--random-seed", random_seed, "Random seed. Default: 0.");
 
-    double gamma_theta{ GammaDistributionKernel::default_theta };
-    app.add_option("--gamma-theta", gamma_theta, "Scale parameter for the gamma probability kernel.");
+    int openmp_threads{ 1 };
+    app.add_option("--openmp", openmp_threads, "Number of OpenMP Threads.");
 
-    double gaussian_sigma{ GaussianDistributionKernel::default_sigma };
-    app.add_option("--gaussian-sigma", gaussian_sigma, "Scaling parameter for the gaussian probability kernel. Default: 750");
+    std::string log_path{};
+    auto* opt_log_path = app.add_option("-l,--log-path", log_path, "Path for log files.");
 
-    double gaussian_mu{ GaussianDistributionKernel::default_mu };
-    app.add_option("--gaussian-mu", gaussian_mu, "Translation parameter for the gaussian probability kernel. Default: 0");
-
-    double linear_cutoff{ LinearDistributionKernel::default_cutoff };
-    app.add_option("--linear-cutoff", linear_cutoff, "Cut-off parameter for the linear probability kernel. Default: +inf");
-
-    double weibull_k{ WeibullDistributionKernel::default_k };
-    app.add_option("--weibull-k", weibull_k, "Shape parameter for the weibull probability kernel.");
-
-    double weibull_b{ WeibullDistributionKernel::default_b };
-    app.add_option("--weibull-b", weibull_b, "Scale parameter for the weibull probability kernel.");
-
-    double accept_criterion{ BarnesHut::default_theta };
-    auto* opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Required Barnes-Hut.");
+    std::string log_prefix{};
+    auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
 
     size_t number_neurons{};
     auto* opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons. This option is only advised when using one MPI rank!");
@@ -232,6 +219,39 @@ int main(int argc, char** argv) {
     std::string file_creation_interrupts{};
     auto* opt_file_creation_interrups = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
 
+    auto* opt_algorithm = app.add_option("-a,--algorithm", algorithm, "The algorithm that is used for finding the targets");
+    opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_algorithm, CLI::ignore_case));
+
+    double accept_criterion{ BarnesHut::default_theta };
+    auto* opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Requires Barnes-Hut or inverted Barnes-Hut.");
+
+    auto* opt_kernel_type = app.add_option("--kernel-type", kernel_type, "The probability kernel type, cannot be set for the fast multipole methods.");
+    opt_kernel_type->transform(CLI::CheckedTransformer(cli_parse_kernel_type, CLI::ignore_case));
+
+    double gamma_k{ GammaDistributionKernel::default_k };
+    app.add_option("--gamma-k", gamma_k, "Shape parameter for the gamma probability kernel.");
+
+    double gamma_theta{ GammaDistributionKernel::default_theta };
+    app.add_option("--gamma-theta", gamma_theta, "Scale parameter for the gamma probability kernel.");
+
+    double gaussian_sigma{ GaussianDistributionKernel::default_sigma };
+    app.add_option("--gaussian-sigma", gaussian_sigma, "Scaling parameter for the gaussian probability kernel. Default: 750");
+
+    double gaussian_mu{ GaussianDistributionKernel::default_mu };
+    app.add_option("--gaussian-mu", gaussian_mu, "Translation parameter for the gaussian probability kernel. Default: 0");
+
+    double linear_cutoff{ LinearDistributionKernel::default_cutoff };
+    app.add_option("--linear-cutoff", linear_cutoff, "Cut-off parameter for the linear probability kernel. Default: +inf");
+
+    double weibull_k{ WeibullDistributionKernel::default_k };
+    app.add_option("--weibull-k", weibull_k, "Shape parameter for the weibull probability kernel.");
+
+    double weibull_b{ WeibullDistributionKernel::default_b };
+    app.add_option("--weibull-b", weibull_b, "Scale parameter for the weibull probability kernel.");
+
+    auto* opt_neuron_model = app.add_option("--neuron-model", neuron_model, "The neuron model");
+    opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_neuron_model, CLI::ignore_case));
+
     double base_background_activity{ NeuronModel::default_base_background_activity };
     app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
@@ -247,28 +267,35 @@ int main(int argc, char** argv) {
     double calcium_decay{ NeuronModel::default_tau_C };
     app.add_option("--calcium-decay", calcium_decay, "The decay constant for the intercellular calcium");
 
+    double target_calcium{ SynapticElements::default_C_target };
+    app.add_option("--target-ca", target_calcium, "The target Ca2+ ions in each neuron. Default is 0.7.");
+
+    double initial_calcium{ 0.0 };
+    app.add_option("--initial-ca", initial_calcium, "The initial Ca2+ ions in each neuron. Default is 0.0.");
+
+    double beta{ NeuronModel::default_beta };
+    app.add_option("--beta", beta, "The amount of calcium ions gathered when a neuron fires. Default is 0.001");
+
     double retract_ratio{ SynapticElements::default_vacant_retract_ratio };
     app.add_option("--retract-ratio", retract_ratio, "The ratio by which vacant synapses retract.");
 
-    std::string log_prefix{};
-    auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
+    double synaptic_elements_init_lb{ 0.0 };
+    app.add_option("--synaptic-elements-lower-bound", synaptic_elements_init_lb, "The minimum number of vacant synaptic elements per neuron. Must be smaller of equal to synaptic-elements-upper-bound.");
 
-    std::string log_path{};
-    auto* opt_log_path = app.add_option("-l,--log-path", log_path, "Path for log files.");
+    double synaptic_elements_init_ub{ 0.0 };
+    app.add_option("--synaptic-elements-upper-bound", synaptic_elements_init_ub, "The maximum number of vacant synaptic elements per neuron. Must be larger or equal to synaptic-elements-lower-bound.");
 
-    size_t simulation_steps{};
-    app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();
+    double nu{ SynapticElements::default_nu };
+    app.add_option("--growth-rate", nu, "The growth rate for the synaptic elements. Default is 1e-5");
 
-    unsigned int random_seed{ 0 };
-    app.add_option("-r,--random-seed", random_seed, "Random seed. Default: 0.");
+    double min_calcium_axons{ SynapticElements::default_eta_Axons };
+    app.add_option("--min-calcium-axons", min_calcium_axons, "The minimum intercellular calcium for axons to grow. Default is 0.4");
 
-    int openmp_threads{ 1 };
-    app.add_option("--openmp", openmp_threads, "Number of OpenMP Threads.");
+    double min_calcium_excitatory_dendrites{ SynapticElements::default_eta_Dendrites_exc };
+    app.add_option("--min-calcium-excitatory-dendrites", min_calcium_excitatory_dendrites, "The minimum intercellular calcium for excitatory dendrites to grow. Default is 0.1");
 
-    auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
-
-    size_t first_plasticity_step{ Config::first_plasticity_update };
-    app.add_option("--first-plasticity-step", first_plasticity_step, "The first step in which the plasticity is updated.");
+    double min_calcium_inhibitory_dendrites{ SynapticElements::default_eta_Dendrites_inh };
+    app.add_option("--min-calcium-inhibitory-dendrites", min_calcium_inhibitory_dendrites, "The minimum intercellular calcium for inhibitory dendrites to grow. Default is 0.0");
 
     opt_num_neurons->excludes(opt_file_positions);
     opt_num_neurons->excludes(opt_file_network);
@@ -293,32 +320,6 @@ int main(int argc, char** argv) {
     opt_file_creation_interrups->check(CLI::ExistingFile);
 
     opt_log_path->check(CLI::ExistingDirectory);
-
-    double synaptic_elements_init_lb{ 0.0 };
-    double synaptic_elements_init_ub{ 0.0 };
-    app.add_option("--synaptic-elements-lower-bound", synaptic_elements_init_lb, "The minimum number of vacant synaptic elements per neuron. Must be smaller of equal to synaptic-elements-upper-bound.");
-    app.add_option("--synaptic-elements-upper-bound", synaptic_elements_init_ub, "The maximum number of vacant synaptic elements per neuron. Must be larger or equal to synaptic-elements-lower-bound.");
-
-    double target_calcium{ SynapticElements::default_C_target };
-    app.add_option("--target-ca", target_calcium, "The target Ca2+ ions in each neuron. Default is 0.7.");
-
-    double initial_calcium{ 0.0 };
-    app.add_option("--initial-ca", initial_calcium, "The initial Ca2+ ions in each neuron. Default is 0.0.");
-
-    double nu{ SynapticElements::default_nu };
-    app.add_option("--growth-rate", nu, "The growth rate for the synaptic elements. Default is 1e-5");
-
-    double beta{ NeuronModel::default_beta };
-    app.add_option("--beta", beta, "The amount of calcium ions gathered when a neuron fires. Default is 0.001");
-
-    double min_calcium_axons{ SynapticElements::default_eta_Axons };
-    app.add_option("--min-calcium-axons", min_calcium_axons, "The minimum intercellular calcium for axons to grow. Default is 0.4");
-
-    double min_calcium_excitatory_dendrites{ SynapticElements::default_eta_Dendrites_exc };
-    app.add_option("--min-calcium-excitatory-dendrites", min_calcium_excitatory_dendrites, "The minimum intercellular calcium for excitatory dendrites to grow. Default is 0.1");
-
-    double min_calcium_inhibitory_dendrites{ SynapticElements::default_eta_Dendrites_inh };
-    app.add_option("--min-calcium-inhibitory-dendrites", min_calcium_inhibitory_dendrites, "The minimum intercellular calcium for inhibitory dendrites to grow. Default is 0.0");
 
     CLI11_PARSE(app, argc, argv);
 
