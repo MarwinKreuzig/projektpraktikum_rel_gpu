@@ -270,7 +270,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
     return std::make_tuple(!is_parent, has_vacant_dendrites);
 }
 
-[[nodiscard]] std::vector<OctreeNode<NaiveCell>*> Naive::get_nodes_for_interval(const position_type& axon_position, OctreeNode<NaiveCell>* root,
+[[nodiscard]] std::vector<OctreeNode<NaiveCell>*> Naive::get_nodes_for_interval(const position_type& axon_position, OctreeNode<NaiveCell>* const root,
     const SignalType dendrite_type_needed) {
     if (root == nullptr) {
         return {};

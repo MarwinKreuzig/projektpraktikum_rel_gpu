@@ -86,20 +86,22 @@ TEST_F(ProbabilityKernelTest, testGammaLinearElements) {
 }
 
 TEST_F(ProbabilityKernelTest, testGammaSamePosition) {
-    GammaDistributionKernel::set_k(GammaDistributionKernel::default_k);
-    GammaDistributionKernel::set_theta(GammaDistributionKernel::default_theta);
+    // Unfortunately, this test does not make sense for a gamma distribution
 
-    const auto k = get_random_gamma_k();
-    const auto theta = get_random_gamma_theta();
+    //GammaDistributionKernel::set_k(GammaDistributionKernel::default_k);
+    //GammaDistributionKernel::set_theta(GammaDistributionKernel::default_theta);
 
-    GammaDistributionKernel::set_k(k);
-    GammaDistributionKernel::set_theta(theta);
+    //const auto k = get_random_gamma_k();
+    //const auto theta = get_random_gamma_theta();
 
-    const auto number_elements = get_random_integer<unsigned int>(0, 10000);
-    const auto& position = get_random_position();
-    const auto attractiveness = GammaDistributionKernel::calculate_attractiveness_to_connect(position, position, number_elements);
+    //GammaDistributionKernel::set_k(k);
+    //GammaDistributionKernel::set_theta(theta);
 
-    ASSERT_NEAR(attractiveness, 0.0, eps);
+    //const auto number_elements = get_random_integer<unsigned int>(0, 10000);
+    //const auto& position = get_random_position();
+    //const auto attractiveness = GammaDistributionKernel::calculate_attractiveness_to_connect(position, position, number_elements);
+
+    //ASSERT_NEAR(attractiveness, 0.0, eps);
 }
 
 TEST_F(ProbabilityKernelTest, testGammaPrecalculatedValues) {

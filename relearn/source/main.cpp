@@ -524,6 +524,7 @@ int main(int argc, char** argv) {
     sim.set_dendrites_ex(std::move(dend_ex_models));
     sim.set_dendrites_in(std::move(dend_in_models));
 
+    // Set the parameters for all kernel types, even though only one is used later one
     GammaDistributionKernel::set_k(gamma_k);
     GammaDistributionKernel::set_theta(gamma_theta);
 

@@ -18,7 +18,7 @@ int RelearnTest::iterations = 10;
 double RelearnTest::eps = 0.00001;
 
 bool RelearnTest::use_predetermined_seed = false;
-unsigned int RelearnTest::predetermined_seed = 1998003584;
+unsigned int RelearnTest::predetermined_seed = 1313494444;
 
 std::uniform_int_distribution<size_t> RelearnTest::uid_num_ranks(1, upper_bound_num_ranks);
 std::uniform_int_distribution<size_t> RelearnTest::uid_num_neurons(1, upper_bound_num_neurons);

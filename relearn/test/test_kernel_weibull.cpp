@@ -86,20 +86,22 @@ TEST_F(ProbabilityKernelTest, testWeibullLinearElements) {
 }
 
 TEST_F(ProbabilityKernelTest, testWeibullSamePosition) {
-    WeibullDistributionKernel::set_k(WeibullDistributionKernel::default_k);
-    WeibullDistributionKernel::set_b(WeibullDistributionKernel::default_b);
+    // Unfortunately, this test does not make sense for a gamma distribution
 
-    const auto k = get_random_weibull_k();
-    const auto b = get_random_weibull_b();
+    //WeibullDistributionKernel::set_k(WeibullDistributionKernel::default_k);
+    //WeibullDistributionKernel::set_b(WeibullDistributionKernel::default_b);
 
-    WeibullDistributionKernel::set_k(k);
-    WeibullDistributionKernel::set_b(b);
+    //const auto k = get_random_weibull_k();
+    //const auto b = get_random_weibull_b();
 
-    const auto number_elements = get_random_integer<unsigned int>(0, 10000);
-    const auto& position = get_random_position();
-    const auto attractiveness = WeibullDistributionKernel::calculate_attractiveness_to_connect(position, position, number_elements);
+    //WeibullDistributionKernel::set_k(k);
+    //WeibullDistributionKernel::set_b(b);
 
-    ASSERT_NEAR(attractiveness, 0.0, eps);
+    //const auto number_elements = get_random_integer<unsigned int>(0, 10000);
+    //const auto& position = get_random_position();
+    //const auto attractiveness = WeibullDistributionKernel::calculate_attractiveness_to_connect(position, position, number_elements);
+
+    //ASSERT_NEAR(attractiveness, 0.0, eps);
 }
 
 TEST_F(ProbabilityKernelTest, testWeibullPrecalculatedValues) {

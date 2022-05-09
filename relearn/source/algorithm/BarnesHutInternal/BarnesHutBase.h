@@ -64,7 +64,7 @@ public:
      * @exception Throws a RelearnException if acceptance_criterion <= 0.0
      */
     void set_acceptance_criterion(const double acceptance_criterion) {
-        RelearnException::check(acceptance_criterion > 0.0, "BarnesHut::set_acceptance_criterion: acceptance_criterion was less than or equal to 0 ({})", acceptance_criterion);
+        RelearnException::check(acceptance_criterion > 0.0, "BarnesHutBase::set_acceptance_criterion: acceptance_criterion was less than or equal to 0 ({})", acceptance_criterion);
         this->acceptance_criterion = acceptance_criterion;
     }
 
@@ -182,7 +182,7 @@ protected:
 
             /**
              * Should node be used for probability interval?
-             * Only take those that have axons available
+             * Only take those that have the required elements
              */
             const auto status = test_acceptance_criterion(source_position, node, element_type, signal_type);
 
@@ -214,7 +214,7 @@ protected:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorithm found a matching neuron, its RankNeuronId is returned
      */
-    [[nodiscard]] std::optional<std::pair<RankNeuronId, double>> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
         const ElementType element_type, const SignalType signal_type) const {
         RelearnException::check(root != nullptr, "BarnesHutBase::find_target_neuron: root was nullptr");
 
@@ -228,14 +228,7 @@ protected:
 
             // A chosen child is a valid target
             if (const auto done = node_selected->is_child(); done) {
-                const auto& cell = node_selected->get_cell();
-                const auto& pos = cell.get_position_for(element_type, signal_type);
-                const auto& position = pos.value();
-
-                const auto& diff = source_position - position;
-                const auto& length = diff.calculate_2_norm();
-
-                return std::make_pair(RankNeuronId{ node_selected->get_rank(), node_selected->get_cell_neuron_id() }, length);
+                return RankNeuronId{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
             }
 
             // We need to choose again, starting from the chosen virtual neuron

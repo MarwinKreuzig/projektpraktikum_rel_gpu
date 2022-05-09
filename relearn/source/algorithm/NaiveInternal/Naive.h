@@ -53,7 +53,7 @@ public:
 
     /**
      * @brief Updates all leaf nodes in the octree by the algorithm
-     * @param disable_flags Flags that indicate if a neuron id disabled or enabled. If disabled, it won't be updated
+     * @param disable_flags Flags that indicate if a neuron is disabled or enabled. If disabled, it won't be updated
      * @exception Throws a RelearnException if the number of flags is different than the number of leaf nodes, or if there is an internal error
      */
     void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) override;
@@ -131,30 +131,30 @@ private:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
      */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_position, SignalType dendrite_type_needed);
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_position, const SignalType dendrite_type_needed);
 
     [[nodiscard]] double
     calc_attractiveness_to_connect(
         const NeuronID& src_neuron_id,
         const position_type& axon_position,
         const OctreeNode<NaiveCell>& node_with_dendrite,
-        SignalType dendrite_type_needed) const;
+        const SignalType dendrite_type_needed) const;
 
     [[nodiscard]] std::vector<double> create_interval(
         const NeuronID& src_neuron_id,
         const position_type& axon_position,
-        SignalType dendrite_type_needed,
+        const SignalType dendrite_type_needed,
         const std::vector<OctreeNode<NaiveCell>*>& vector) const;
 
     [[nodiscard]] static std::tuple<bool, bool> acceptance_criterion_test(
         const position_type& axon_position,
         const OctreeNode<NaiveCell>* node_with_dendrite,
-        SignalType dendrite_type_needed);
+        const SignalType dendrite_type_needed);
 
     [[nodiscard]] static std::vector<OctreeNode<NaiveCell>*> get_nodes_for_interval(
         const position_type& axon_position,
-        OctreeNode<NaiveCell>* root,
-        SignalType dendrite_type_needed);
+        OctreeNode<NaiveCell>* const root,
+        const SignalType dendrite_type_needed);
 
     std::shared_ptr<OctreeImplementation<Naive>> global_tree{};
 };
