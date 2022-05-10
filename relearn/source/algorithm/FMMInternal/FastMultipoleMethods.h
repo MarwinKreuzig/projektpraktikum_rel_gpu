@@ -203,6 +203,12 @@ protected:
     CommunicationMap<SynapseCreationRequest> find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override;
 
+    /**
+     * @brief Outputs the calculation results for the different calculation methods and also which would be the calculation method used by the simulation. Used for debugging.
+     * @param source Node with vacant axons.
+     * @param target Node with vacant dendrites.
+     * @param needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
+     */
     void print_calculations(OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, SignalType needed);
 
     /**

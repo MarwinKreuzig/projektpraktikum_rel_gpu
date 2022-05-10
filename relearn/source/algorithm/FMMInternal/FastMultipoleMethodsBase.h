@@ -44,7 +44,6 @@ inline std::ostream& operator<<(std::ostream& out, const CalculationType& calc_t
     return out << "Taylor";
 }
 
-
 /**
  * This class represents a mathematical three-dimensional multi-index, which is required for the
  * series expansions and coefficient calculations.
@@ -294,9 +293,9 @@ public:
      */
     static double
     pow_multiindex(const Vec3d& base_vector, const std::array<unsigned int, 3>& exponent) {
-        const auto fac_1 = pow(std::abs(base_vector.get_x()), exponent[0]);
-        const auto fac_2 = pow(std::abs(base_vector.get_y()), exponent[1]);
-        const auto fac_3 = pow(std::abs(base_vector.get_z()), exponent[2]);
+        const auto fac_1 = pow(base_vector.get_x(), exponent[0]);
+        const auto fac_2 = pow(base_vector.get_y(), exponent[1]);
+        const auto fac_3 = pow(base_vector.get_z(), exponent[2]);
 
         const auto product = fac_1 * fac_2 * fac_3;
 

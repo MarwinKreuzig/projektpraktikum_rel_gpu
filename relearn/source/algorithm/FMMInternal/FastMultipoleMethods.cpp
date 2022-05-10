@@ -147,13 +147,8 @@ void FastMultipoleMethods::print_calculations(OctreeNode<FastMultipoleMethodsCel
 }
 
 void FastMultipoleMethods::make_creation_request_for(const SignalType signal_type_needed, CommunicationMap<SynapseCreationRequest>& request) {
-    // Stack<node_pair> stack = align_sources_and_targets(signal_type_needed);
-    Stack<node_pair> stack{ 200 };
-
-    for (auto* child : global_tree->get_root()->get_children()) {
-        node_pair pair = { child, global_tree->get_root() };
-        stack.emplace_back(pair);
-    }
+    
+    Stack<node_pair> stack = align_sources_and_targets(signal_type_needed);
 
     while (!stack.empty()) {
         // get node and interaction list from stack
@@ -252,17 +247,24 @@ Stack<FastMultipoleMethods::node_pair> FastMultipoleMethods::align_sources_and_t
 
         Stack<OctreeNode<AdditionalCellAttributes>*> temp{ 200 };
         for (auto* current_branch_node : local_roots) {
+            if(current_branch_node == nullptr){
+                continue;
+            }
             temp.emplace_back(current_branch_node);
         }
-        while (temp.empty()) {
+        while (!temp.empty()) {
             auto current_node = temp.pop_back();
-            if (current_node->get_level() == new_source_level) {
+            if (current_node->get_level() == new_source_level || !current_node->is_parent()) {
                 node_pair p = { current_node, target_node };
                 stack.emplace_back(p);
                 continue;
             }
             const auto children = FastMultipoleMethodsBase<AdditionalCellAttributes>::get_children_to_interaction_list(current_node);
             for (auto* child : children) {
+                if (child == nullptr){           
+                    continue;
+                }
+                
                 temp.emplace_back(child);
             }
         }

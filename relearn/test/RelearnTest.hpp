@@ -763,20 +763,15 @@ protected:
         SetUpTestCaseTemplate<FastMultipoleMethodsCell>();
     }
 
-    std::array<double, Constants::p3> calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, double sigma, SignalType signal_type_needed) { return FastMultipoleMethods::calc_hermite_coefficients(source, sigma, signal_type_needed); }
-    CalculationType check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::check_calculation_requirements(source, target, sigma, signal_type_needed);}
-    const std::vector<std::pair<FastMultipoleMethods::position_type, FastMultipoleMethods::counter_type>> get_all_positions_for(OctreeNode<FastMultipoleMethodsCell>* node, const ElementType type, const SignalType signal_type_needed){return FastMultipoleMethodsBase<FastMultipoleMethodsCell>::get_all_positions_for(node, type, signal_type_needed);}
-    double calc_taylor(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_taylor(source, target, sigma, signal_type_needed);}
-    double calc_direct_gauss(OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_direct_gauss(source, target, sigma, signal_type_needed);}
-    double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_hermite(source, target, coefficients_buffer, sigma, signal_type_needed);}
 
-    double kernel(const Vec3d& a, const Vec3d& b, double sigma) { return FastMultipoleMethodsBase<FastMultipoleMethodsCell>::kernel(a, b, sigma); }
-    unsigned int get_number_of_indices() { return Multiindex::get_number_of_indices(); }
-    std::array<std::array<unsigned int, 3>, Constants::p3> get_indices() { return Multiindex::get_indices(); }
-    size_t fac_multiindex(const std::array<unsigned int, 3>& x) { return FastMultipoleMethodsBase<FastMultipoleMethodsCell>::fac_multiindex(x); }
-    size_t abs_multiindex(const std::array<unsigned int, 3>& x) { return FastMultipoleMethodsBase<FastMultipoleMethodsCell>::abs_multiindex(x); }
-    double pow_multiindex(const Vec3d& base_vector, const std::array<unsigned int, 3>& exponent) { return FastMultipoleMethodsBase<FastMultipoleMethodsCell>::pow_multiindex(base_vector, exponent); }
-    double h(unsigned int n, double t) {return FastMultipoleMethodsBase<FastMultipoleMethodsCell>::h(n,t); }
+    Stack<std::array<OctreeNode<FastMultipoleMethodsCell>*, 2>> align_sources_and_targets(FastMultipoleMethods fmm, const SignalType signal_type_needed){return fmm.align_sources_and_targets(signal_type_needed);}
+    // std::array<double, Constants::p3> calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, double sigma, SignalType signal_type_needed) { return FastMultipoleMethods::calc_hermite_coefficients(source, sigma, signal_type_needed); }
+    // CalculationType check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::check_calculation_requirements(source, target, sigma, signal_type_needed);}
+    // const std::vector<std::pair<FastMultipoleMethods::position_type, FastMultipoleMethods::counter_type>> get_all_positions_for(OctreeNode<FastMultipoleMethodsCell>* node, const ElementType type, const SignalType signal_type_needed){return FastMultipoleMethodsBase<FastMultipoleMethodsCell>::get_all_positions_for(node, type, signal_type_needed);}
+    // double calc_taylor(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_taylor(source, target, sigma, signal_type_needed);}
+    // double calc_direct_gauss(OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_direct_gauss(source, target, sigma, signal_type_needed);}
+    // double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_hermite(source, target, coefficients_buffer, sigma, signal_type_needed);}
+
 };
 
 class PartitionTest : public RelearnTest {
