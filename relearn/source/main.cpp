@@ -219,7 +219,7 @@ int main(int argc, char** argv) {
     std::string file_creation_interrupts{};
     auto* opt_file_creation_interrups = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
 
-    auto* opt_algorithm = app.add_option("-a,--chosen_algorithm", chosen_algorithm, "The chosen_algorithm that is used for finding the targets");
+    auto* opt_algorithm = app.add_option("-a,--algorithm", chosen_algorithm, "The algorithm that is used for finding the targets");
     opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_algorithm, CLI::ignore_case));
 
     double accept_criterion{ BarnesHut::default_theta };
