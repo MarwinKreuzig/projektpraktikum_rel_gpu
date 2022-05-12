@@ -20,6 +20,12 @@
 enum class ElementType { Axon,
     Dendrite };
 
+/**
+ * @brief Pretty-prints the element type to the chosen stream
+ * @param out The stream to which to print the element type
+ * @param element_type The element type to print
+ * @return The argument out, now altered with the element type
+ */
 inline std::ostream& operator<<(std::ostream& out, const ElementType& element_type) {
     if (element_type == ElementType::Axon) {
         return out << "Axon";

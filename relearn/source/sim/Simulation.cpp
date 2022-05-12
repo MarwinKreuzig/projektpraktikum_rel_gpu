@@ -344,11 +344,11 @@ void Simulation::simulate(const size_t number_steps) {
             }
         }
 
-        if (step % Config::distance_step == 0) {
-            const auto average_euclidean_distance = network_graph->get_average_euclidean_distance(neurons->get_extra_info());
-            LogFiles::write_to_file(LogFiles::EventType::LocalEuclideanDistance, true,
-                "[Step: {}\t] The average euclidean distance for all local synapses is {}", step, average_euclidean_distance);
-        }
+        //if (step % Config::distance_step == 0) {
+        //    const auto average_euclidean_distance = network_graph->get_average_euclidean_distance(neurons->get_extra_info());
+        //    LogFiles::write_to_file(LogFiles::EventType::LocalEuclideanDistance, true,
+        //        "[Step: {}\t] The average euclidean distance for all local synapses is {}", step, average_euclidean_distance);
+        //}
 
         if (step % Config::console_update_step == 0) {
             if (MPIWrapper::get_my_rank() != 0) {

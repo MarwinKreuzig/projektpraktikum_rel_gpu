@@ -16,6 +16,7 @@
 #include <spdlog/fmt/bundled/ostream.h>
 
 #include <algorithm>
+#include <cmath>
 #include <ostream>
 #include <type_traits>
 #include <utility>

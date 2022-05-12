@@ -50,7 +50,7 @@ public:
      * @exception Throws a RelearnException if node is on the current MPI process
      * @return The downloaded children (perfect copies of the actual children), does not transfer ownership
      */
-    [[nodiscard]] static std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> download_children(OctreeNode<AdditionalCellAttributes>* node) {
+    [[nodiscard]] static std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> download_children(OctreeNode<AdditionalCellAttributes>* const node) {
         const auto target_rank = node->get_rank();
         RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "NodeCache::download_children: Tried to download a local node");
 
