@@ -378,7 +378,7 @@ int main(int argc, char** argv) {
             "Chosen background activity base: {}\n"
             "Chosen background activity mean: {}\n"
             "Chosen background activity stddev: {}\n"
-            "Chosen kernel type {}",
+            "Chosen kernel type: {}",
             Timers::wall_clock_time(),
             simulation_steps,
             synaptic_elements_init_lb,
