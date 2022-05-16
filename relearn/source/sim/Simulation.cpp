@@ -49,10 +49,6 @@ void Simulation::set_acceptance_criterion_for_barnes_hut(const double value) {
     accept_criterion = value;
 }
 
-void Simulation::set_probabilty_scaling_parameter(const double value) {
-    sigma = value;
-}
-
 void Simulation::set_neuron_model(std::unique_ptr<NeuronModel>&& nm) noexcept {
     neuron_models = std::move(nm);
 }
@@ -203,7 +199,6 @@ void Simulation::initialize() {
 
     network_graph = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
 
-    algorithm->set_probability_parameter(sigma);
     algorithm->set_synaptic_elements(axons, dendrites_ex, dendrites_in);
 
     neurons->set_area_names(std::move(area_names));
@@ -348,6 +343,12 @@ void Simulation::simulate(const size_t number_steps) {
                 vector.emplace_back(neurons->get_statistics(attribute));
             }
         }
+
+        //if (step % Config::distance_step == 0) {
+        //    const auto average_euclidean_distance = network_graph->get_average_euclidean_distance(neurons->get_extra_info());
+        //    LogFiles::write_to_file(LogFiles::EventType::LocalEuclideanDistance, true,
+        //        "[Step: {}\t] The average euclidean distance for all local synapses is {}", step, average_euclidean_distance);
+        //}
 
         if (step % Config::console_update_step == 0) {
             if (MPIWrapper::get_my_rank() != 0) {

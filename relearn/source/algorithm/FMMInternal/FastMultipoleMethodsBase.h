@@ -138,19 +138,11 @@ public:
     static interaction_list_type get_children_to_interaction_list(OctreeNode<AdditionalCellAttributes>* node) {
         RelearnException::check(node != nullptr, "FastMultipoleMethods::Utilities::get_children_to_interaction_list: Node was a nullptr.");
         RelearnException::check(node->is_parent(), "FastMultipoleMethods::Utilities::get_children_to_interaction_list: Node has no children.");
+        
         interaction_list_type result{ nullptr };
-
         const auto is_local = node->is_local();
-        const auto& children = is_local ? node->get_children() : NodeCache<FastMultipoleMethodsCell>::download_children(node);
+        result = is_local ? node->get_children() : NodeCache<FastMultipoleMethodsCell>::download_children(node);
 
-        unsigned int i = 0;
-
-        for (auto it = children.crbegin(); it != children.crend(); ++it) {
-            if (*it != nullptr) {
-                result[i] = (*it);
-            }
-            i++;
-        }
         return result;
     }
 
@@ -161,28 +153,9 @@ public:
      * @param needed The requested SignalType.
      * @return A vector of all actual positions.
      */
-    static const std::vector<std::pair<position_type, counter_type>> get_all_positions_for(OctreeNode<AdditionalCellAttributes>* node, const ElementType type, const SignalType signal_type_needed) {
+    static const std::vector<std::pair<position_type, counter_type>> get_all_positions_for(OctreeNode<AdditionalCellAttributes>* node, const ElementType element_type, const SignalType signal_type) {
         std::vector<std::pair<position_type, counter_type>> result{};
-
-        //for (auto* current_node : node->get_children()) {
-        //    const auto& cell = current_node->get_cell();
-        //    unsigned int num_of_ports = 0;
-        //    std::optional<VirtualPlasticityElementManual::position_type> opt_position;
-
-        //    if (type == ElementType::Dendrite) {
-        //        num_of_ports = cell.get_number_dendrites_for(signal_type_needed);
-        //        opt_position = cell.get_dendrites_position_for(signal_type_needed);
-        //    } else {
-        //        num_of_ports = cell.get_number_axons_for(signal_type_needed);
-        //        opt_position = cell.get_axons_position_for(signal_type_needed);
-        //    }
-
-        //    RelearnException::check(opt_position.has_value(), "FastMultipoleMethods::Utilities::get_all_positions_for: opt_position has no value.");
-        //    // push number and position of dendritic elements to result
-        //    result.emplace_back(std::pair<position_type, counter_type>(opt_position.value(), num_of_ports));
-        //}
-
-        //return result;
+        result.reserve(30);
 
         Stack<OctreeNode<FastMultipoleMethodsCell>*> stack{ 30 };
         stack.emplace_back(node);
@@ -195,40 +168,30 @@ public:
             }
 
             // node is leaf
-            if (!current_node->is_parent()) {
+            if (current_node->is_child()) {
                 // Get number and position, depending on which types were chosen.
                 const auto& cell = current_node->get_cell();
-                unsigned int num_of_ports = 0;
-                std::optional<VirtualPlasticityElementManual::position_type> opt_position;
-
-                if (type == ElementType::Dendrite) {
-                    num_of_ports = cell.get_number_dendrites_for(signal_type_needed);
-                    opt_position = cell.get_dendrites_position();
-                } else {
-                    num_of_ports = cell.get_number_axons_for(signal_type_needed);
-                    opt_position = cell.get_axons_position();
-                }
-
+                const auto& opt_position = cell.get_position_for(element_type, signal_type);
                 RelearnException::check(opt_position.has_value(), "FastMultipoleMethods::Utilities::get_all_positions_for: opt_position has no value.");
-                // push number and position of dendritic elements to result
-                result.emplace_back(std::pair<position_type, counter_type>(opt_position.value(), num_of_ports));
+
+                const auto number_elements = cell.get_number_elements_for(element_type, signal_type);
+                result.emplace_back(opt_position.value(), number_elements);
                 continue;
             }
 
             // node is inner node
-            const auto is_local = current_node->is_local();
-            const auto& children = is_local ? current_node->get_children() : NodeCache<AdditionalCellAttributes>::download_children(current_node);
+            const auto& children = get_children_to_interaction_list(current_node);
 
             // push children to stack
-            for (auto it = children.crbegin(); it != children.crend(); ++it) {
-                if (*it == nullptr) {
+            for (auto* child : children) {
+                if (child == nullptr) {
                     continue;
                 }
-                auto number_syn_elemts = type == ElementType::Dendrite ? (*it)->get_cell().get_number_dendrites_for(signal_type_needed) : (*it)->get_cell().get_number_axons_for(signal_type_needed);
-                if (number_syn_elemts == 0) {
+
+                if (const auto number_elements = child->get_cell().get_number_elements_for(element_type, signal_type); number_elements == 0) {
                     continue;
                 }
-                stack.emplace_back(*it);
+                stack.emplace_back(child);
             }
         }
         return result;

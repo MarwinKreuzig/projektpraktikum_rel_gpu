@@ -13,6 +13,7 @@
 #include "Config.h"
 #include "SignalType.h"
 #include "Types.h"
+#include "neurons/NeuronsExtraInfo.h"
 #include "util/RelearnException.h"
 
 #include <filesystem>
@@ -91,6 +92,35 @@ public:
         neuron_local_out_neighborhood.resize(new_size);
 
         number_local_neurons = new_size;
+    }
+
+    [[nodiscard]] double get_average_euclidean_distance(const std::unique_ptr<NeuronsExtraInfo>& infos) {
+        auto total_euclidean_distance = 0.0;
+        auto number_edges = 0;
+
+        const auto& positions = infos->get_positions();
+
+        for (auto target_id = 0; target_id < neuron_local_in_neighborhood.size(); target_id++) {
+            const auto& neighborhood = neuron_local_in_neighborhood[target_id];
+
+            for (const auto& [source_neuron_id, weight] : neighborhood) {
+                const auto& source_id = source_neuron_id.get_local_id();
+
+                const auto& source_position = positions[source_id];
+                const auto& target_position = positions[target_id];
+
+                const auto& difference = target_position - source_position;
+                const auto& length = difference.calculate_2_norm();
+
+                const auto& abs_weight = std::abs(weight);
+
+                number_edges += abs_weight;
+                total_euclidean_distance += (abs_weight * length);
+            }
+        }
+
+        const auto average_euclidean_distance = total_euclidean_distance / number_edges;
+        return average_euclidean_distance;
     }
 
     /**

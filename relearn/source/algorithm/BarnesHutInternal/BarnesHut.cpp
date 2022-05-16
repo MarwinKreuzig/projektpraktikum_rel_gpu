@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <array>
+#include <iostream>
 
 void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
     RelearnException::check(global_tree != nullptr, "BarnesHut::update_leaf_nodes: global_tree was nullptr");
@@ -79,11 +80,10 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const si
 
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks);
 
-    const auto root = global_tree->get_root();
-    const auto sigma = get_probabilty_parameter();
+    auto* const root = global_tree->get_root();
 
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
-#pragma omp parallel for default(none) shared(root, sigma, number_neurons, extra_infos, disable_flags, synapse_creation_requests_outgoing)
+#pragma omp parallel for default(none) shared(root, number_neurons, extra_infos, disable_flags, synapse_creation_requests_outgoing)
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
@@ -98,9 +98,9 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const si
             continue;
         }
 
-        const auto& requests = find_target_neurons(id, axon_position, number_vacant_axons, root, ElementType::Dendrite, dendrite_type_needed, sigma);
+        const auto& requests = find_target_neurons(id, axon_position, number_vacant_axons, root, ElementType::Dendrite, dendrite_type_needed);
         for (const auto& [target_rank, creation_request] : requests) {
-#pragma omp critical
+#pragma omp critical(BHrequests)
             synapse_creation_requests_outgoing.append(target_rank, creation_request);
         }
     }
@@ -109,18 +109,19 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const si
     Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
     NodeCache<BarnesHutCell>::empty();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
+
     return synapse_creation_requests_outgoing;
 }
 
-std::vector<std::pair<int, SynapseCreationRequest>> BarnesHut::find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
-    const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type, const double sigma) {
+std::vector<std::tuple<int, SynapseCreationRequest>> BarnesHut::find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
+    const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type) {
 
-    std::vector<std::pair<int, SynapseCreationRequest>> requests{};
+    std::vector<std::tuple<int, SynapseCreationRequest>> requests{};
     requests.reserve(number_vacant_elements);
 
     for (unsigned int j = 0; j < number_vacant_elements; j++) {
         // Find one target at the time
-        std::optional<RankNeuronId> rank_neuron_id = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type, sigma);
+        const auto& rank_neuron_id = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type);
         if (!rank_neuron_id.has_value()) {
             // If finding failed, it won't succeed in later iterations
             break;

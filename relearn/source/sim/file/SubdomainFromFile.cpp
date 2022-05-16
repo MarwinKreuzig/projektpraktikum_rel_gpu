@@ -66,7 +66,7 @@ void SubdomainFromFile::read_dimensions_from_file() {
         std::string signal_type{};
 
         std::stringstream sstream(line);
-        bool success = (sstream >> id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> area_name) && (sstream >> signal_type);
+        const auto success = (sstream >> id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> area_name) && (sstream >> signal_type);
 
         if (!success) {
             spdlog::info("Skipping line: {}", line);

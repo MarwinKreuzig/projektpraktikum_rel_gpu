@@ -36,8 +36,6 @@ public:
     constexpr static size_t print_width = 22;
     constexpr static size_t print_precision = 8;
         
-    constexpr static double default_sigma = 750.0; // In Sebastians work: 750
-
     constexpr static size_t mpi_alloc_mem = 1024 * 1024 * 300;
 
     // Constants for Fast Gauss
@@ -72,4 +70,7 @@ public:
 
     // Capture the calcium values every <calcium_step> ms
     inline static size_t calcium_step = 1000000; // NOLINTLINE
+
+    // Capture the average local euclidean distance every <distance_step> ms
+    inline static size_t distance_step = 10000; // NOLINTLINE
 };

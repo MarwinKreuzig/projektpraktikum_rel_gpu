@@ -29,7 +29,6 @@ void NeuronToSubdomainAssignment::initialize() {
 
     std::vector<size_t> number_neurons_in_subdomains(total_number_subdomains);
 
-
     for (auto i = 0; i < total_number_subdomains; i++) {
         const auto& index_1d = partition->get_1d_index_of_subdomain(i);
 

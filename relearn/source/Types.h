@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,8 +10,7 @@
  *
  */
 
-#pragma once
-
+#include "algorithm/AlgorithmEnum.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/Synapse.h"
 #include "util/StatisticalMeasures.h"
@@ -17,13 +18,6 @@
 #include "util/Vec3.h"
 
 #include <vector>
-
-enum class AlgorithmEnum {
-    Naive,
-    BarnesHut,
-    BarnesHutInverted,
-    FastMultipoleMethods,
-};
 
 enum class NeuronModelEnum {
     Poisson,

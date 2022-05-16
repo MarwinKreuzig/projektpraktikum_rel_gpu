@@ -24,16 +24,11 @@ TEST_F(BarnesHutTest, testGetterSetter) {
     BarnesHut algorithm(octree);
 
     ASSERT_EQ(algorithm.get_acceptance_criterion(), BarnesHut::default_theta);
-    ASSERT_EQ(algorithm.get_probabilty_parameter(), Constants::default_sigma);
 
     const auto random_acceptance_criterion = get_random_double(0.0, BarnesHut::max_theta);
 
     ASSERT_NO_THROW(algorithm.set_acceptance_criterion(random_acceptance_criterion));
     ASSERT_EQ(algorithm.get_acceptance_criterion(), random_acceptance_criterion);
-
-    const auto random_sigma = get_random_double(0.0, 1000000.0);
-    ASSERT_NO_THROW(algorithm.set_probability_parameter(random_sigma));
-    ASSERT_EQ(algorithm.get_probabilty_parameter(), random_sigma);
 
     make_mpi_mem_available<BarnesHutCell>();
 }

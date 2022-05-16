@@ -12,6 +12,8 @@
 
 #include "Config.h"
 #include "Types.h"
+#include "algorithm/Kernel/Gaussian.h"
+#include "algorithm/Kernel/Kernel.h"
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
 #include "structure/NodeCache.h"
@@ -26,9 +28,9 @@
 #include <vector>
 
 /**
- * This class provides all computational elements of the Barnes-Hut algorithm. 
+ * This class provides all computational elements of the Barnes-Hut algorithm.
  * It purely calculates things, but does not change any state.
- * @tparam AdditionalCellAttributes The cell attributes that are 
+ * @tparam AdditionalCellAttributes The cell attributes that are
  */
 template <typename AdditionalCellAttributes>
 class BarnesHutBase {
@@ -62,7 +64,7 @@ public:
      * @exception Throws a RelearnException if acceptance_criterion <= 0.0
      */
     void set_acceptance_criterion(const double acceptance_criterion) {
-        RelearnException::check(acceptance_criterion > 0.0, "BarnesHut::set_acceptance_criterion: acceptance_criterion was less than or equal to 0 ({})", acceptance_criterion);
+        RelearnException::check(acceptance_criterion > 0.0, "BarnesHutBase::set_acceptance_criterion: acceptance_criterion was less than or equal to 0 ({})", acceptance_criterion);
         this->acceptance_criterion = acceptance_criterion;
     }
 
@@ -75,62 +77,6 @@ public:
     }
 
 protected:
-    /**
-     * @brief Calculates the attractiveness to connect on the basis of
-     *      k * exp(-||s - t||_2^2 / sigma^2)
-     * @param source_position The source position s
-     * @param target_position The target position t
-     * @param number_free_elements The linear scaling factor k
-     * @param sigma The exponential scaling factor sigma
-     * @return The calculated attractiveness
-     */
-    [[nodiscard]] double calculate_attractiveness_to_connect(const position_type& source_position, const position_type& target_position,
-        const counter_type& number_free_elements, const double sigma) const noexcept {
-        if (number_free_elements == 0) {
-            return 0.0;
-        }
-
-        const auto squared_sigma = sigma * sigma;
-
-        const auto position_diff = target_position - source_position;
-
-        const auto numerator = position_diff.calculate_squared_2_norm();
-        const auto exponent = -numerator / squared_sigma;
-
-        // Criterion from Markus' paper with doi: 10.3389/fnsyn.2014.00007
-        const auto exp_val = std::exp(exponent);
-        const auto ret_val = number_free_elements * exp_val;
-
-        return ret_val;
-    }
-
-    /**
-     * @brief Calculates the attractiveness to connect on the basis of
-     *      k * exp(-||s - t||_2^2 / sigma^2)
-     *      It also prevents autapses and checks for algorithmic errors
-     * @param source_position The source position s
-     * @param target_position The target position t
-     * @param number_free_elements The linear scaling factor k
-     * @param sigma The exponential scaling factor sigma
-     * @exception Throws a RelearnException if there was an algorithmic error somewhere
-     * @return The calculated attractiveness
-     */
-    [[nodiscard]] double calculate_attractiveness_to_connect(const NeuronID& source_neuron_id, const position_type& source_position,
-        const OctreeNode<AdditionalCellAttributes>* target_node, const ElementType element_type, const SignalType signal_type, const double sigma) const {
-        // A neuron must not form an autapse, i.e., a synapse to itself
-        if (target_node->is_child() && source_neuron_id == target_node->get_cell_neuron_id()) {
-            return 0.0;
-        }
-
-        const auto& cell = target_node->get_cell();
-        const auto& target_position = cell.get_position_for(element_type, signal_type);
-        const auto& number_elements = cell.get_number_elements_for(element_type, signal_type);
-
-        RelearnException::check(target_position.has_value(), "BarnesHutBase::calculate_attractiveness_to_connect: target_xyz is bad");
-
-        return calculate_attractiveness_to_connect(source_position, target_position.value(), number_elements, sigma);
-    }
-
     /**
      * @brief Tests the Barnes-Hut criterion on the source position and the target wrt. to required element type and signal type
      * @param source_position The source position of the calculation
@@ -176,73 +122,6 @@ protected:
         // Original Barnes-Hut acceptance criterion
         const auto ret_val = (length / distance) < acceptance_criterion;
         return ret_val ? AcceptanceStatus::Accept : AcceptanceStatus::Expand;
-    }
-
-    /**
-     * @brief Calculates the probability for the source neuron to connect to each of the OctreeNodes in the vector,
-     *      searching the specified element_type and signal_type
-     * @param source_neuron_id The id of the source neuron, is used to prevent autapses
-     * @param source_position The position of the source neuron
-     * @param nodes All nodes from which the source neuron can pick
-     * @param element_type The element type the source neuron searches
-     * @param signal_type The signal type the source neuron searches
-     * @param sigma The probability parameter for the calculation
-     * @exception Can Throw a RelearnException if an algorithmic errors occurs
-     * @return A pair of (a) the total probability of all targets and (b) the respective probability of each target
-     */
-    [[nodiscard]] std::pair<double, std::vector<double>> create_probability_interval(const NeuronID& source_neuron_id, const position_type& source_position,
-        const std::vector<OctreeNode<AdditionalCellAttributes>*>& nodes, const ElementType element_type, const SignalType signal_type, const double sigma) const {
-
-        if (nodes.empty()) {
-            return { 0.0, {} };
-        }
-
-        double sum = 0.0;
-
-        std::vector<double> probabilities{};
-        probabilities.reserve(nodes.size());
-
-        std::transform(nodes.begin(), nodes.cend(), std::back_inserter(probabilities), [&](const OctreeNode<AdditionalCellAttributes>* target_node) {
-            RelearnException::check(target_node != nullptr, "BarnesHut::update_leaf_nodes: target_node was nullptr");
-            const auto prob = calculate_attractiveness_to_connect(source_neuron_id, source_position, target_node, element_type, signal_type, sigma);
-            sum += prob;
-            return prob;
-        });
-
-        // Short-cut an empty vector here for later uses
-        if (sum == 0.0) {
-            return { 0.0, {} };
-        }
-
-        return { sum, std::move(probabilities) };
-    }
-
-    /**
-     * @brief Picks a target based on the supplied probabilities
-     * @param nodes The target nodes
-     * @param probability A pair of (a) the total probability of all targets and (b) the respective probability of each target
-     * @exception Throws a RelearnException if the sizes of the vectors didn't match, or if one OctreeNode* was nullptr
-     * @return The selected target node or nullptr in case that the total probability was 0.0
-     */
-    [[nodiscard]] OctreeNode<AdditionalCellAttributes>* pick_target(const std::vector<OctreeNode<AdditionalCellAttributes>*>& nodes, const std::pair<double, std::vector<double>>& probability) const {
-        const auto& [total_prob, probability_values] = probability;
-
-        if (total_prob == 0.0) {
-            return nullptr;
-        }
-
-        RelearnException::check(nodes.size() == probability_values.size(), "BarnesHutBase::pick_target: Had a different number of probabilities than nodes: {} vs {}", nodes.size(), probability_values.size());
-
-        const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(total_prob, Constants::eps));
-        auto counter = 0;
-        for (auto sum_probabilities = 0.0; counter < probability_values.size() && sum_probabilities < random_number; counter++) {
-            sum_probabilities += probability_values[counter];
-        }
-        auto* node_selected = nodes[counter - 1ULL];
-
-        RelearnException::check(node_selected != nullptr, "BarnesHutBase::pick_target: node_selected was nullptr");
-
-        return node_selected;
     }
 
     /**
@@ -303,7 +182,7 @@ protected:
 
             /**
              * Should node be used for probability interval?
-             * Only take those that have axons available
+             * Only take those that have the required elements
              */
             const auto status = test_acceptance_criterion(source_position, node, element_type, signal_type);
 
@@ -332,44 +211,28 @@ protected:
      * @param root The starting position where to look
      * @param element_type The element type the source is looking for
      * @param signal_type The signal type the source is looking for
-     * @param sigma The probability parameter for the calculation
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
-     *      If the algorihtm found a matching neuron, its RankNeuronId is returned
+     *      If the algorithm found a matching neuron, its RankNeuronId is returned
      */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* root,
-        const ElementType element_type, const SignalType signal_type, const double sigma) const {
-        OctreeNode<AdditionalCellAttributes>* node_selected = nullptr;
-        OctreeNode<AdditionalCellAttributes>* root_of_subtree = root;
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
+        const ElementType element_type, const SignalType signal_type) const {
+        RelearnException::check(root != nullptr, "BarnesHutBase::find_target_neuron: root was nullptr");
 
-        RelearnException::check(root_of_subtree != nullptr, "BarnesHut::find_target_neuron: root_of_subtree was nullptr");
-
-        while (true) {
-            /**
-             * Create vector with nodes that have at least one axon and are
-             * precise enough given the position of an axon
-             */
+        for (auto root_of_subtree = root; true;) {
             const auto& vector = get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type);
 
-            /**
-             * Assign a probability to each node in the vector.
-             * The probability for connecting to the same neuron (i.e., the axon's neuron) is set 0.
-             */
-            const auto& probability = create_probability_interval(source_neuron_id, source_position, vector, element_type, signal_type, sigma);
-
-            node_selected = pick_target(vector, probability);
+            auto* node_selected = Kernel<AdditionalCellAttributes>::pick_target(source_neuron_id, source_position, vector, element_type, signal_type);
             if (node_selected == nullptr) {
                 return {};
             }
 
-            // Leave loop if the selected node is leaf node, i.e., contains normal neuron.
-            if (const auto done = !node_selected->is_parent(); done) {
-                break;
+            // A chosen child is a valid target
+            if (const auto done = node_selected->is_child(); done) {
+                return RankNeuronId{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
             }
 
-            // Update root of subtree, we need to choose starting from this root again
+            // We need to choose again, starting from the chosen virtual neuron
             root_of_subtree = node_selected;
         }
-
-        return RankNeuronId{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
     }
 };

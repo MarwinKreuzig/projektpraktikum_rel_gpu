@@ -82,6 +82,9 @@ void LogFiles::init() {
 
     // Create log file for all calcium values
     LogFiles::add_logfile(EventType::CalciumValues, "calcium_values", -1);
+
+    // Create log file for the euclidean distance
+    LogFiles::add_logfile(EventType::LocalEuclideanDistance, "euclidean_distance", -1);
 }
 
 std::string LogFiles::get_specific_file_prefix() {

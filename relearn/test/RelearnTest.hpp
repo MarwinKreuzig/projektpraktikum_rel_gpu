@@ -13,6 +13,11 @@
 #include "algorithm/FMMInternal/FastMultipoleMethodsCell.h"
 #include "algorithm/FMMInternal/FastMultipoleMethods.h"
 #include "algorithm/FMMInternal/FastMultipoleMethodsBase.h"
+#include "algorithm/Kernel/Gamma.h"
+#include "algorithm/Kernel/Gaussian.h"
+#include "algorithm/Kernel/Kernel.h"
+#include "algorithm/Kernel/Linear.h"
+#include "algorithm/Kernel/Weibull.h"
 #include "io/LogFiles.h"
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
@@ -137,12 +142,25 @@ protected:
         };
     }
 
+    double get_random_position_element() {
+        const auto val = get_random_double(-position_bounary, +position_bounary);
+        return val;
+    }
+
     Vec3d get_random_position() {
         const auto x = get_random_double(-position_bounary, +position_bounary);
         const auto y = get_random_double(-position_bounary, +position_bounary);
         const auto z = get_random_double(-position_bounary, +position_bounary);
 
         return { x, y, z };
+    }
+
+    Vec3d get_minimum_position() {
+        return { -position_bounary, -position_bounary, -position_bounary };
+    }
+
+    Vec3d get_maximum_position() {
+        return { position_bounary, position_bounary, position_bounary };
     }
 
     Vec3d get_random_position_in_box(const Vec3d& min, const Vec3d& max) {
@@ -250,6 +268,102 @@ protected:
 
     SignalType get_random_signal_type() noexcept {
         return get_random_bool() ? SignalType::Excitatory : SignalType::Inhibitory;
+    }
+    
+    double get_random_gamma_k() noexcept {
+        return get_random_double(0.001, 10.0);
+    }
+
+    double get_random_gamma_theta() noexcept {
+        return get_random_double(0.001, 100.0);
+    }
+
+    double get_random_gaussian_mu() noexcept {
+        return get_random_double(-10000.0, 10000.0);
+    }
+
+    double get_random_gaussian_sigma() noexcept {
+        return get_random_double(0.001, 10000.0);
+    }
+
+    double get_random_linear_cutoff() noexcept {
+        return get_random_double(0.001, 1000.0);
+    }
+
+    double get_random_weibull_k() noexcept {
+        return get_random_double(0.001, 10.0);
+    }
+
+    double get_random_weibull_b() noexcept {
+        return get_random_double(0.001, 10000.0);
+    }
+
+    KernelType get_random_kernel_type() noexcept {
+        const auto choice = get_random_integer<int>(0, 3);
+
+        switch (choice) {
+        case 0:
+            return KernelType::Gamma;
+        case 1:
+            return KernelType::Gaussian;
+        case 2:
+            return KernelType::Linear;
+        case 3:
+            return KernelType::Weibull;
+        }
+
+        return KernelType::Gamma;
+    }
+
+    template <typename AdditionalCellAttributes>
+    std::string set_random_kernel() {
+        const auto kernel_choice = get_random_kernel_type();
+
+        Kernel<AdditionalCellAttributes>::set_kernel_type(kernel_choice);
+
+        std::stringstream ss{};
+
+        ss << kernel_choice;
+
+        if (kernel_choice == KernelType::Gamma) {
+            const auto k = get_random_gamma_k();
+            const auto theta = get_random_gamma_theta();
+
+            ss << '\t' << k << '\t' << theta;
+
+            GammaDistributionKernel::set_k(k);
+            GammaDistributionKernel::set_theta(theta);
+        }
+
+        if (kernel_choice == KernelType::Gaussian) {
+            const auto sigma = get_random_gaussian_sigma();
+            const auto mu = get_random_gaussian_mu();
+
+            ss << '\t' << sigma << '\t' << mu;
+
+            GaussianDistributionKernel::set_sigma(sigma);
+            GaussianDistributionKernel::set_mu(mu);
+        }
+
+        if (kernel_choice == KernelType::Linear) {
+            const auto cutoff = get_random_linear_cutoff();
+
+            ss << '\t' << cutoff;
+
+            LinearDistributionKernel::set_cutoff(cutoff);
+        }
+
+        if (kernel_choice == KernelType::Weibull) {
+            const auto k = get_random_weibull_k();
+            const auto b = get_random_weibull_b();
+
+            ss << '\t' << k << '\t' << b;
+
+            WeibullDistributionKernel::set_k(k);
+            WeibullDistributionKernel::set_b(b);
+        }
+
+        return ss.str();
     }
 
     std::tuple<CommunicationMap<SynapseCreationRequest>, std::vector<size_t>, std::vector<size_t>> create_incoming_requests(size_t number_ranks, int current_rank,
@@ -763,7 +877,6 @@ protected:
         SetUpTestCaseTemplate<FastMultipoleMethodsCell>();
     }
 
-
     Stack<std::array<OctreeNode<FastMultipoleMethodsCell>*, 2>> align_sources_and_targets(FastMultipoleMethods fmm, const SignalType signal_type_needed){return fmm.align_sources_and_targets(signal_type_needed);}
     // std::array<double, Constants::p3> calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, double sigma, SignalType signal_type_needed) { return FastMultipoleMethods::calc_hermite_coefficients(source, sigma, signal_type_needed); }
     // CalculationType check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::check_calculation_requirements(source, target, sigma, signal_type_needed);}
@@ -795,6 +908,20 @@ protected:
     }
 };
 
+class KernelTest : public RelearnTest {
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
+class ProbabilityKernelTest : public RelearnTest {
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
 class SynapticElementsTest : public RelearnTest {
 protected:
     static void SetUpTestCase() {
@@ -807,15 +934,6 @@ protected:
     static void SetUpTestCase() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
-    double get_random_vector_element() noexcept {
-        return uniform_vector_elements(mt);
-    }
-
-private:
-    constexpr static double lower_bound = -100.0;
-    constexpr static double upper_bound = 100.0;
-
-    static std::uniform_real_distribution<double> uniform_vector_elements;
 };
 
 class SpaceFillingCurveTest : public RelearnTest {

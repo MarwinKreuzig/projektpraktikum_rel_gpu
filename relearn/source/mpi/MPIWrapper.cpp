@@ -371,6 +371,7 @@ void MPIWrapper::unlock_window(const int rank) {
 }
 
 void MPIWrapper::finalize() {
+    barrier();
     free_custom_function();
 
     const int error_code_1 = MPI_Win_free(mpi_window.get());

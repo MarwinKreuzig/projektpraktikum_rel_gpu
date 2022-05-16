@@ -10,8 +10,28 @@
  *
  */
 
+#include <ostream>
+
 /**
  * An instance of this enum classifies a synaptic elements as either excitatory or inhibitory.
  */
 enum class SignalType { Excitatory,
     Inhibitory };
+
+/**
+ * @brief Pretty-prints the signal type to the chosen stream
+ * @param out The stream to which to print the signal type
+ * @param signal_type The signal type to print
+ * @return The argument out, now altered with the signal type
+ */
+inline std::ostream& operator<<(std::ostream& out, const SignalType& signal_type) {
+    if (signal_type == SignalType::Excitatory) {
+        return out << "Excitatory";
+    }
+
+    if (signal_type == SignalType::Inhibitory) {
+        return out << "Inhibitory";
+    }
+
+    return out;
+}

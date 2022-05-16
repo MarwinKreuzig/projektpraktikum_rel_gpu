@@ -38,6 +38,7 @@ file(GLOB_RECURSE SRC_ALG "source/algorithm/*")
 file(GLOB_RECURSE SRC_ALG_NAIVE "source/algorithm/NaiveInternal/*")
 file(GLOB_RECURSE SRC_ALG_BH "source/algorithm/BarnesHutInternal/*")
 file(GLOB_RECURSE SRC_ALG_FMM "source/algorithm/FMMInternal/*")
+file(GLOB_RECURSE SRC_ALG_KERNEL "source/algorithm/Kernel/*")
 file(GLOB_RECURSE SRC_IO "source/io/*")
 file(GLOB_RECURSE SRC_MPI "source/mpi/*")
 file(GLOB_RECURSE SRC_SIM "source/sim/*")
@@ -57,7 +58,7 @@ file(GLOB_RECURSE SRC_TST "test/*")
 file(GLOB_RECURSE SRC_BENCH "benchmark/*")
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES 
-${SRC_ALG} ${SRC_ALG_NAIVE} ${SRC_ALG_BH} ${SRC_ALG_FMM} ${SRC_IO} ${SRC_MPI} ${SRC_SIM} 
+${SRC_ALG} ${SRC_ALG_NAIVE} ${SRC_ALG_BH} ${SRC_ALG_FMM} ${SRC_ALG_KERNEL} ${SRC_IO} ${SRC_MPI} ${SRC_SIM} 
 ${SRC_STR} ${SRC_UTIL} ${SRC_NEU} ${SRC_NEU_MOD} 
 ${SRC_NEU_HEL} ${SRC_MAIN} ${SRC_CONF} ${SRC_TYPES} ${SRC_SIM_FILE} ${SRC_SIM_RANDOM})
 
@@ -99,6 +100,7 @@ ${SRC_ALG}
 ${SRC_ALG_NAIVE}
 ${SRC_ALG_BH}
 ${SRC_ALG_FMM}
+${SRC_ALG_KERNEL}
 ${SRC_IO}
 ${SRC_MPI}
 ${SRC_SIM}

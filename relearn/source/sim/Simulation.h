@@ -63,12 +63,6 @@ public:
     void set_acceptance_criterion_for_barnes_hut(double value);
 
     /**
-     * @brief Set the probabilty scaling parameter (sigma).
-     * @param value The probabilty scaling parameter
-     */
-    void set_probabilty_scaling_parameter(double value);
-
-    /**
      * @brief Sets the neuron model used for the simulation
      * @param nm The neuron model
      */
@@ -262,7 +256,6 @@ private:
     std::function<double(NeuronID::value_type)> target_calcium_calculator{};
     std::function<double(NeuronID::value_type)> initial_calcium_initiator{};
 
-    double sigma{ Constants::default_sigma };
     double accept_criterion{ 0.0 };
 
     AlgorithmEnum algorithm_enum{};

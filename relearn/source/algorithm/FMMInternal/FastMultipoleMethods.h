@@ -21,6 +21,7 @@
 #include "structure/OctreeNode.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
+#include "util/Stack.h"
 #include "util/Utility.h"
 #include "util/Stack.h"
 #include <array>
@@ -287,56 +288,62 @@ private:
      * @brief Checks which calculation type is suitable for a given source and target node.
      * @param source Node with vacant axons.
      * @param target Node with vacant dendrites.
-     * @param sigma Scaling constant.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory)
      * @return CalculationType
      */
-    static CalculationType check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed);
+    static CalculationType check_calculation_requirements(OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, SignalType signal_type_needed);
 
+    /**
+     * @brief Calculates the taylor coefficients for a pair of nodes. The calculation of coefficients and series
+     * expansion is executed separately.
+     * 
+     * @param source Node with vacant axons.
+     * @param target_center Position of the target node.
+     * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
+     * @return Returns an array of the taylor coefficients.
+     */
+    static std::array<double, Constants::p3> calc_taylor_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, const position_type& target_center, const SignalType& signal_type_needed);
+   
     /**
      * @brief Calculates the force of attraction between two nodes of the octree using a Taylor series expansion.
      * @param source Node with vacant axons.
      * @param target Node with vacant dendrites.
-     * @param sigma Scaling constant.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @exception Can throw a RelearnException.
      * @return Returns the attraction force.
      */
-    static double calc_taylor(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed);
-
+    double calc_taylor(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, const SignalType signal_type_needed);
     /**
      * @brief Calculates the force of attraction between two sets of neurons by using the kernel
      * presented by Butz and van Oooyen.
      * @param sources Vector of pairs with 3D position and number of vacant axons.
      * @param targets Vector of pairs with 3D position and number of vacant dendrites.
-     * @param sigma Scaling constant.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @return Returns the total attraction of the neurons.
      */
 
-    static double calc_direct_gauss(OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed);
+    static double calc_direct_gauss(OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, SignalType signal_type_needed);
 
     /**
      * @brief Calculates the hermite coefficients for a source node. The calculation of coefficients and series
      * expansion is executed separately, since the coefficients can be reused.
      * @param source Node with vacant axons.
-     * @param sigma Scaling constant.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @exception Can throw a RelearnException.
      * @returns Returns an array of the hermite coefficients.
      */
-    static std::array<double, Constants::p3> calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, double sigma, SignalType signal_type_needed);
+    static std::array<double, Constants::p3> calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, SignalType signal_type_needed);
 
     /**
      * @brief Calculates the force of attraction between two nodes of the octree using a Hermite series expansion.
      * @param source Node with vacant axons.
      * @param target Node with vacant dendrites.
      * @param coefficients_buffer Memory location where the coefficients are stored.
-     * @param sigma Scaling constant.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @exception Can throw a RelearnException.
      * @return Retunrs the attraction force.
      */
-    static double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, double sigma, SignalType signal_type_needed);
+    static double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, 
+    const std::array<double, Constants::p3>& coefficients_buffer, SignalType signal_type_needed);
 
 };

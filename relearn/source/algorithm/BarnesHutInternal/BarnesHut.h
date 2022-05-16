@@ -36,6 +36,7 @@ class SynapticElements;
 
 /**
  * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
+ * In this instance, axons search for dendrites.
  * It is strongly tied to Octree, and might perform MPI communication via NodeCache::download_children()
  */
 class BarnesHut : public BarnesHutBase<BarnesHutCell>, public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
@@ -56,7 +57,7 @@ public:
 
     /**
      * @brief Updates all leaf nodes in the octree by the algorithm
-     * @param disable_flags Flags that indicate if a neuron id disabled or enabled. If disabled, it won't be updated
+     * @param disable_flags Flags that indicate if a neuron is disabled or enabled. If disabled, it won't be updated
      * @exception Throws a RelearnException if the number of flags is different than the number of leaf nodes, or if there is an internal error
      */
     void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) override;
@@ -66,7 +67,7 @@ public:
      * @param node The node to update, must not be nullptr
      * @exception Throws a RelearnException if node is nullptr
      */
-    static void update_functor(OctreeNode<BarnesHutCell>* node) {
+    static void update_functor(OctreeNode<BarnesHutCell>* const node) {
         RelearnException::check(node != nullptr, "BarnesHut::update_functor: node is nullptr");
 
         // NOLINTNEXTLINE
@@ -168,13 +169,13 @@ protected:
      * @param source_neuron_id The source neuron's id
      * @param source_position The source neuron's position
      * @param number_vacant_elements The number of vacant elements of the source neuron
-     * @param root Where the source neuron should start to search for targets. It is not const because the children might be changed if the node is 
+     * @param root Where the source neuron should start to search for targets. It is not const because the children might be changed if the node is remote
      * @param element_type The element type the source neuron searches
      * @param signal_type The signal type the source neuron searches
      * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
      */
-    [[nodiscard]] std::vector<std::pair<int, SynapseCreationRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position, const counter_type& number_vacant_elements,
-        OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type, const double sigma);
+    [[nodiscard]] std::vector<std::tuple<int, SynapseCreationRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position, const counter_type& number_vacant_elements,
+        OctreeNode<AdditionalCellAttributes>* const root, const ElementType element_type, const SignalType signal_type);
 
     /**
      * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses
@@ -182,8 +183,8 @@ protected:
      * @exception Can throw a RelearnException
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
      */
-    [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>> 
-        process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) override {
+    [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
+    process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) override {
         return ForwardConnector::process_requests(creation_requests, excitatory_dendrites, inhibitory_dendrites);
     }
 
@@ -199,6 +200,6 @@ protected:
         return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
     }
 
- private:
+private:
     std::shared_ptr<OctreeImplementation<BarnesHut>> global_tree{};
 };
