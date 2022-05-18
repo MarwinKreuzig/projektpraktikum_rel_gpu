@@ -208,7 +208,7 @@ int main(int argc, char** argv) {
     auto* opt_fraction_excitatory_neurons = app.add_option("--fraction-excitatory-neurons", fraction_excitatory_neurons, "The fraction of excitatory neurons, must be from [0.0, 1.0]. Required --num-neurons or --num-neurons-per-rank to take effect.");
 
     double um_per_neuron{ 1.0 };
-    auto* opt_um_per_neuron = app.add_option("--um-per-neuron", um_per_neuron, "The micrometer per neuron in one dimension, must be from (0.0, \inf). Required --num-neurons or --num-neurons-per-rank to take effect.");
+    auto* opt_um_per_neuron = app.add_option("--um-per-neuron", um_per_neuron, "The micrometer per neuron in one dimension, must be from (0.0, \\inf). Required --num-neurons or --num-neurons-per-rank to take effect.");
 
     std::string file_positions{};
     auto* opt_file_positions = app.add_option("-f,--file", file_positions, "File with neuron positions.");
