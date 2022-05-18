@@ -65,8 +65,6 @@ public:
         return lambda;
     }
 
-    constexpr static double default_um_per_neuron = 26.0;
-
 protected:
     void post_initialization() override;
 
@@ -81,7 +79,7 @@ protected:
     void calculate_total_number_neurons() const override;
 
 private:
-    const double um_per_neuron_{ default_um_per_neuron }; // Micrometer per neuron in one dimension
+    const double um_per_neuron_{}; // Micrometer per neuron in one dimension
 
     void place_neurons_in_area(
         const NeuronToSubdomainAssignment::box_size_type& offset,

@@ -204,6 +204,12 @@ int main(int argc, char** argv) {
     size_t number_neurons_per_rank{};
     auto* opt_num_neurons_per_rank = app.add_option("--num-neurons-per-rank", number_neurons_per_rank, "Number neurons per MPI rank.");
 
+    double fraction_excitatory_neurons{ 1.0 };
+    auto* opt_fraction_excitatory_neurons = app.add_option("--fraction-excitatory-neurons", fraction_excitatory_neurons, "The fraction of excitatory neurons, must be from [0.0, 1.0]. Required --num-neurons or --num-neurons-per-rank to take effect.");
+
+    double um_per_neuron{ 1.0 };
+    auto* opt_um_per_neuron = app.add_option("--um-per-neuron", um_per_neuron, "The micrometer per neuron in one dimension, must be from (0.0, \inf). Required --num-neurons or --num-neurons-per-rank to take effect.");
+
     std::string file_positions{};
     auto* opt_file_positions = app.add_option("-f,--file", file_positions, "File with neuron positions.");
 
@@ -328,6 +334,9 @@ int main(int argc, char** argv) {
         RelearnException::check(accept_criterion <= BarnesHut::max_theta, "Acceptance criterion must be smaller or equal to {}", BarnesHut::max_theta);
         RelearnException::check(accept_criterion > 0.0, "Acceptance criterion must be larger than 0.0");
     }
+
+    RelearnException::check(fraction_excitatory_neurons >= 0.0 && fraction_excitatory_neurons <= 1.0, "The fraction of excitatory neurons must be from [0.0, 1.0]");
+    RelearnException::check(um_per_neuron > 0.0, "The micrometer per neuron must be greater than 0.0.");
 
     RelearnException::check(synaptic_elements_init_lb >= 0.0, "The minimum number of vacant synaptic elements must not be negative");
     RelearnException::check(synaptic_elements_init_ub >= synaptic_elements_init_lb, "The minimum number of vacant synaptic elements must not be larger than the maximum number");
@@ -506,10 +515,10 @@ int main(int argc, char** argv) {
     sim.set_algorithm(chosen_algorithm);
 
     if (static_cast<bool>(*opt_num_neurons)) {
-        auto sfnd = std::make_unique<SubdomainFromNeuronDensity>(number_neurons, 0.8, SubdomainFromNeuronDensity::default_um_per_neuron, partition);
+        auto sfnd = std::make_unique<SubdomainFromNeuronDensity>(number_neurons, fraction_excitatory_neurons, um_per_neuron, partition);
         sim.set_subdomain_assignment(std::move(sfnd));
     } else if (static_cast<bool>(*opt_num_neurons_per_rank)) {
-        auto sfdpr = std::make_unique<SubdomainFromNeuronPerRank>(number_neurons_per_rank, 0.8, SubdomainFromNeuronPerRank::default_um_per_neuron, partition);
+        auto sfdpr = std::make_unique<SubdomainFromNeuronPerRank>(number_neurons_per_rank, fraction_excitatory_neurons, um_per_neuron, partition);
         sim.set_subdomain_assignment(std::move(sfdpr));
     } else {
         std::optional<std::filesystem::path> path_to_network{};
