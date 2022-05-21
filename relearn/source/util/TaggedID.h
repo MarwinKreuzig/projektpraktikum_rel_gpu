@@ -314,19 +314,19 @@ public:
         case 'i':
             break;
         case 's':
-            fmt::v8::format_to(
+            fmt::format_to(
                 ctx.out(),
                 "{:1b}{:1b}{:1b}:",
                 id.is_initialized(), id.is_global(), id.is_virtual());
             break;
         case 'm':
-            fmt::v8::format_to(
+            fmt::format_to(
                 ctx.out(),
                 "i{:1b}g{:1b}v{:1b}:",
                 id.is_initialized(), id.is_global(), id.is_virtual());
             break;
         case 'l':
-            fmt::v8::format_to(
+            fmt::format_to(
                 ctx.out(),
                 "initialized: {:5}, global: {:5}, virtual: {:5}, id: ",
                 id.is_initialized(), id.is_global(), id.is_virtual());

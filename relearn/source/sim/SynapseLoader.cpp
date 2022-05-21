@@ -64,8 +64,12 @@ std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> SynapseLoader::
         total_out_weight += weight;
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded {} local synapses, {} in synapses, and {} out synapses", local_synapses.size(), in_synapses.size(), out_synapses.size());
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "They had a total weight of: {}, {}, {}", total_local_weight, total_in_weight, total_out_weight);
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded local synapses: {}", local_synapses.size());
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "The local synapses had a weight of: {}", total_local_weight);
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded in synapses: {}", in_synapses.size());
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "The in synapses had a weight of: {}", total_in_weight);
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded out synapses: {}", out_synapses.size());
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "The out synapses had a weight of: {}", total_out_weight);
 
     return { return_local_synapses, return_in_synapses, return_out_synapses };
 }
