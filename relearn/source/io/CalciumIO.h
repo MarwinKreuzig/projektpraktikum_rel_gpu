@@ -18,8 +18,8 @@
 
 class CalciumIO {
 public:
-    using initial_value_calculator = std::function<double(NeuronID::value_type)>;
-    using target_value_calculator = std::function<double(NeuronID::value_type)>;
+    using initial_value_calculator = std::function<double(int, NeuronID::value_type)>;
+    using target_value_calculator = std::function<double(int, NeuronID::value_type)>;
 
     static initial_value_calculator load_initial_function(const std::filesystem::path& path_to_file);
 

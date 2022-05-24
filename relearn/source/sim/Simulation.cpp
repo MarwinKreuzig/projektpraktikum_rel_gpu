@@ -65,11 +65,11 @@ void Simulation::set_dendrites_in(std::shared_ptr<SynapticElements>&& se) noexce
     dendrites_in = std::move(se);
 }
 
-void Simulation::set_target_calcium_calculator(std::function<double(NeuronID::value_type)> calculator) noexcept {
+void Simulation::set_target_calcium_calculator(std::function<double(int, NeuronID::value_type)> calculator) noexcept {
     target_calcium_calculator = std::move(calculator);
 }
 
-void Simulation::set_initial_calcium_calculator(std::function<double(NeuronID::value_type)> initiator) noexcept {
+void Simulation::set_initial_calcium_calculator(std::function<double(int, NeuronID::value_type)> initiator) noexcept {
     initial_calcium_initiator = std::move(initiator);
 }
 
@@ -121,13 +121,13 @@ void Simulation::initialize() {
     std::vector<double> target_calcium_values(number_local_neurons, 0.0);
     for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
         const auto global_id = neuron_id_translator->get_global_id(neuron_id);
-        target_calcium_values[neuron_id.get_local_id()] = target_calcium_calculator(global_id.get_global_id());
+        target_calcium_values[neuron_id.get_local_id()] = target_calcium_calculator(my_rank, global_id.get_global_id());
     }
 
     std::vector<double> initial_calcium_values(number_local_neurons, 0.0);
     for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
         const auto global_id = neuron_id_translator->get_global_id(neuron_id);
-        initial_calcium_values[neuron_id.get_local_id()] = initial_calcium_initiator(global_id.get_global_id());
+        initial_calcium_values[neuron_id.get_local_id()] = initial_calcium_initiator(my_rank, global_id.get_global_id());
     }
 
     neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons, dendrites_ex, dendrites_in);
@@ -229,6 +229,7 @@ void Simulation::initialize() {
 
 void Simulation::simulate(const size_t number_steps) {
     RelearnException::check(number_steps > 0, "Simulation::simulate: number_steps must be greater than 0");
+    const auto my_rank = MPIWrapper::get_my_rank();
 
     Timers::start(TimerRegion::SIMULATION_LOOP);
 
@@ -271,12 +272,12 @@ void Simulation::simulate(const size_t number_steps) {
 
                 std::vector<double> new_target_calcium_values(creation_count, 0.0);
                 for (size_t neuron_id = 0; neuron_id < creation_count; neuron_id++) {
-                    new_target_calcium_values[neuron_id] = target_calcium_calculator(neuron_id);
+                    new_target_calcium_values[neuron_id] = target_calcium_calculator(my_rank, neuron_id);
                 }
 
                 std::vector<double> new_initial_calcium_values(creation_count, 0.0);
                 for (size_t neuron_id = 0; neuron_id < creation_count; neuron_id++) {
-                    new_initial_calcium_values[neuron_id] = initial_calcium_initiator(neuron_id);
+                    new_initial_calcium_values[neuron_id] = initial_calcium_initiator(my_rank, neuron_id);
                 }
 
                 neurons->create_neurons(creation_count, new_target_calcium_values, new_initial_calcium_values);
@@ -314,7 +315,7 @@ void Simulation::simulate(const size_t number_steps) {
             const auto global_deletions = global_cnts[0] + global_cnts[1];
             const auto global_creations = global_cnts[2];
 
-            if (0 == MPIWrapper::get_my_rank()) {
+            if (0 == my_rank) {
                 total_synapse_deletions += global_deletions;
                 total_synapse_creations += global_creations;
             }
@@ -351,7 +352,7 @@ void Simulation::simulate(const size_t number_steps) {
         //}
 
         if (step % Config::console_update_step == 0) {
-            if (MPIWrapper::get_my_rank() != 0) {
+            if (my_rank != 0) {
                 continue;
             }
 

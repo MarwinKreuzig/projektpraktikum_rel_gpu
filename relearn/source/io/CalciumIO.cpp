@@ -83,7 +83,7 @@ CalciumIO::load_initial_and_target_function(const std::filesystem::path& path_to
         id_to_target[neuron_id] = target_calcium;
     }
 
-    auto initial_calculator = [lookup = std::move(id_to_initial), default_initial = default_initial_calcium](NeuronID::value_type neuron_id) {
+    auto initial_calculator = [lookup = std::move(id_to_initial), default_initial = default_initial_calcium](int mpi_rank, NeuronID::value_type neuron_id) {
         const auto& contains = lookup.find(neuron_id) != lookup.end();
         if (contains) {
             const double initial = lookup.at(neuron_id);
@@ -94,7 +94,7 @@ CalciumIO::load_initial_and_target_function(const std::filesystem::path& path_to
         return default_initial.value();
     };
 
-    auto target_calculator = [lookup = std::move(id_to_target), default_target = default_target_calcium](NeuronID::value_type neuron_id) {
+    auto target_calculator = [lookup = std::move(id_to_target), default_target = default_target_calcium](int mpi_rank, NeuronID::value_type neuron_id) {
         const auto& contains = lookup.find(neuron_id) != lookup.end();
         if (contains) {
             const double target = lookup.at(neuron_id);

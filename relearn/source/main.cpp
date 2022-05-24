@@ -45,6 +45,7 @@ void omp_set_num_threads(int num) { }
 #include <array>
 #include <bitset>
 #include <cerrno>
+#include <climits>
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
@@ -62,36 +63,40 @@ void print_sizes() {
         using counter_type = VirtualPlasticityElement::counter_type;
     };
 
-    const auto sizeof_vec3_double = sizeof(Vec3d);
-    const auto sizeof_vec3_size_t = sizeof(Vec3s);
+    constexpr auto number_bits_in_byte = CHAR_BIT;
 
-    const auto sizeof_virtual_plasticity_element = sizeof(VirtualPlasticityElement);
+    constexpr auto sizeof_vec3_double = sizeof(Vec3d);
+    constexpr auto sizeof_vec3_size_t = sizeof(Vec3s);
 
-    const auto sizeof_empty_t = sizeof(empty_t);
-    const auto sizeof_fmm_cell_attributes = sizeof(FastMultipoleMethodsCell);
-    const auto sizeof_bh_cell_attributes = sizeof(BarnesHutCell);
-    const auto sizeof_bh_naive_attributes = sizeof(NaiveCell);
+    constexpr auto sizeof_virtual_plasticity_element = sizeof(VirtualPlasticityElement);
 
-    const auto sizeof_empty_cell = sizeof(Cell<empty_t>);
-    const auto sizeof_fmm_cell = sizeof(Cell<FastMultipoleMethodsCell>);
-    const auto sizeof_bh_cell = sizeof(Cell<BarnesHutCell>);
-    const auto sizeof_naive_cell = sizeof(Cell<NaiveCell>);
+    constexpr auto sizeof_empty_t = sizeof(empty_t);
+    constexpr auto sizeof_fmm_cell_attributes = sizeof(FastMultipoleMethodsCell);
+    constexpr auto sizeof_bh_cell_attributes = sizeof(BarnesHutCell);
+    constexpr auto sizeof_bh_naive_attributes = sizeof(NaiveCell);
 
-    const auto sizeof_octreenode = sizeof(OctreeNode<empty_t>);
-    const auto sizeof_fmm_octreenode = sizeof(OctreeNode<FastMultipoleMethodsCell>);
-    const auto sizeof_bh_octreenode = sizeof(OctreeNode<BarnesHutCell>);
-    const auto sizeof_naive_octreenode = sizeof(OctreeNode<NaiveCell>);
+    constexpr auto sizeof_empty_cell = sizeof(Cell<empty_t>);
+    constexpr auto sizeof_fmm_cell = sizeof(Cell<FastMultipoleMethodsCell>);
+    constexpr auto sizeof_bh_cell = sizeof(Cell<BarnesHutCell>);
+    constexpr auto sizeof_naive_cell = sizeof(Cell<NaiveCell>);
 
-    const auto sizeof_neuron_id = sizeof(NeuronID);
-    const auto sizeof_rank_neuron_id = sizeof(RankNeuronId);
+    constexpr auto sizeof_octreenode = sizeof(OctreeNode<empty_t>);
+    constexpr auto sizeof_fmm_octreenode = sizeof(OctreeNode<FastMultipoleMethodsCell>);
+    constexpr auto sizeof_bh_octreenode = sizeof(OctreeNode<BarnesHutCell>);
+    constexpr auto sizeof_naive_octreenode = sizeof(OctreeNode<NaiveCell>);
 
-    const auto sizeof_local_synapse = sizeof(LocalSynapse);
-    const auto sizeof_distant_in_synapse = sizeof(DistantInSynapse);
-    const auto sizeof_distant_out_synapse = sizeof(DistantOutSynapse);
+    constexpr auto sizeof_neuron_id = sizeof(NeuronID);
+    constexpr auto sizeof_rank_neuron_id = sizeof(RankNeuronId);
+
+    constexpr auto sizeof_local_synapse = sizeof(LocalSynapse);
+    constexpr auto sizeof_distant_in_synapse = sizeof(DistantInSynapse);
+    constexpr auto sizeof_distant_out_synapse = sizeof(DistantOutSynapse);
 
     std::stringstream ss{};
 
     ss << '\n';
+
+    ss << "Number of bits in a byte: " << number_bits_in_byte << '\n';
 
     ss << "Size of Vec3d: " << sizeof_vec3_double << '\n';
     ss << "Size of Vec3s: " << sizeof_vec3_size_t << '\n';
@@ -199,7 +204,7 @@ int main(int argc, char** argv) {
     auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
 
     size_t number_neurons{};
-    auto* opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons. This option is only advised when using one MPI rank!");
+    auto* opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons. This option only works with one MPI rank!");
 
     size_t number_neurons_per_rank{};
     auto* opt_num_neurons_per_rank = app.add_option("--num-neurons-per-rank", number_neurons_per_rank, "Number neurons per MPI rank.");
@@ -333,6 +338,10 @@ int main(int argc, char** argv) {
         RelearnException::check(is_barnes_hut(chosen_algorithm), "Acceptance criterion can only be set if Barnes-Hut is used");
         RelearnException::check(accept_criterion <= BarnesHut::max_theta, "Acceptance criterion must be smaller or equal to {}", BarnesHut::max_theta);
         RelearnException::check(accept_criterion > 0.0, "Acceptance criterion must be larger than 0.0");
+    }
+
+    if (static_cast<bool>(*opt_num_neurons)) {
+        RelearnException::check(num_ranks == 1, "The option --num-neurons can only be used for one MPI rank. There are {} ranks.", num_ranks);
     }
 
     RelearnException::check(fraction_excitatory_neurons >= 0.0 && fraction_excitatory_neurons <= 1.0, "The fraction of excitatory neurons must be from [0.0, 1.0]");
