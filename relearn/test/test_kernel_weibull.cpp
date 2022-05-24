@@ -151,10 +151,10 @@ TEST_F(KernelTest, testWeibullKernelIntegration) {
     const auto& target_excitatory_dendrite_position = get_random_position();
     const auto& target_inhibitory_dendrite_position = get_random_position();
 
-    const auto& number_vacant_excitatory_axons = get_random_synaptic_element_count();
-    const auto& number_vacant_inhibitory_axons = get_random_synaptic_element_count();
-    const auto& number_vacant_excitatory_dendrites = get_random_synaptic_element_count();
-    const auto& number_vacant_inhibitory_dendrites = get_random_synaptic_element_count();
+    const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+    const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+    const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+    const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
 
     OctreeNode<FastMultipoleMethodsCell> node{};
     node.set_cell_neuron_id(neuron_id_1);

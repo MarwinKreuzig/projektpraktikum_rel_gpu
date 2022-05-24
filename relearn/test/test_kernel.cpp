@@ -33,10 +33,10 @@ TEST_F(KernelTest, testKernelException) {
 
     const auto& source_position = get_random_position();
 
-    const auto& number_vacant_excitatory_axons = get_random_synaptic_element_count();
-    const auto& number_vacant_inhibitory_axons = get_random_synaptic_element_count();
-    const auto& number_vacant_excitatory_dendrites = get_random_synaptic_element_count();
-    const auto& number_vacant_inhibitory_dendrites = get_random_synaptic_element_count();
+    const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+    const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+    const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+    const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
 
     OctreeNode<FastMultipoleMethodsCell> node{};
     node.set_cell_neuron_id(neuron_id_1);
@@ -100,10 +100,10 @@ TEST_F(KernelTest, testKernelAutapseVector) {
         const auto& target_excitatory_dendrite_position = get_random_position();
         const auto& target_inhibitory_dendrite_position = get_random_position();
 
-        const auto& number_vacant_excitatory_axons = get_random_synaptic_element_count();
-        const auto& number_vacant_inhibitory_axons = get_random_synaptic_element_count();
-        const auto& number_vacant_excitatory_dendrites = get_random_synaptic_element_count();
-        const auto& number_vacant_inhibitory_dendrites = get_random_synaptic_element_count();
+        const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+        const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+        const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+        const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
 
         nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
         nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -147,10 +147,10 @@ TEST_F(KernelTest, testKernelVectorException) {
         const auto& target_excitatory_dendrite_position = get_random_position();
         const auto& target_inhibitory_dendrite_position = get_random_position();
 
-        const auto& number_vacant_excitatory_axons = get_random_synaptic_element_count();
-        const auto& number_vacant_inhibitory_axons = get_random_synaptic_element_count();
-        const auto& number_vacant_excitatory_dendrites = get_random_synaptic_element_count();
-        const auto& number_vacant_inhibitory_dendrites = get_random_synaptic_element_count();
+        const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+        const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+        const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+        const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
 
         nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
         nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -195,10 +195,10 @@ TEST_F(KernelTest, testKernelRandomVector) {
         const auto& target_excitatory_dendrite_position = get_random_position();
         const auto& target_inhibitory_dendrite_position = get_random_position();
 
-        const auto& number_vacant_excitatory_axons = get_random_synaptic_element_count();
-        const auto& number_vacant_inhibitory_axons = get_random_synaptic_element_count();
-        const auto& number_vacant_excitatory_dendrites = get_random_synaptic_element_count();
-        const auto& number_vacant_inhibitory_dendrites = get_random_synaptic_element_count();
+        const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+        const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+        const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+        const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
 
         nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
         nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -303,7 +303,7 @@ TEST_F(KernelTest, testPickTargetRandom) {
         const auto random_number = get_random_double(0.0, total_probability);
 
         auto current_probability = random_number;
-        auto index = -1;
+        auto index = std::numeric_limits<size_t>::max();
 
         for (auto i = 0; i < number_nodes; i++) {
             current_probability -= probabilities[i];
@@ -313,7 +313,7 @@ TEST_F(KernelTest, testPickTargetRandom) {
             }
         }
 
-        if (index == -1) {
+        if (index == std::numeric_limits<size_t>::max()) {
             std::cerr << "testPickTargetRandom: the index was -1\n";
             index = number_nodes - 1;
         }
@@ -384,10 +384,10 @@ TEST_F(KernelTest, testPickTargetException) {
         const auto& target_excitatory_dendrite_position = get_random_position();
         const auto& target_inhibitory_dendrite_position = get_random_position();
 
-        const auto& number_vacant_excitatory_axons = get_random_synaptic_element_count();
-        const auto& number_vacant_inhibitory_axons = get_random_synaptic_element_count();
-        const auto& number_vacant_excitatory_dendrites = get_random_synaptic_element_count();
-        const auto& number_vacant_inhibitory_dendrites = get_random_synaptic_element_count();
+        const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+        const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+        const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+        const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
 
         nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
         nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -430,10 +430,10 @@ TEST_F(KernelTest, testPickTargetRandom2) {
         const auto& target_excitatory_dendrite_position = get_random_position();
         const auto& target_inhibitory_dendrite_position = get_random_position();
 
-        const auto& number_vacant_excitatory_axons = get_random_synaptic_element_count();
-        const auto& number_vacant_inhibitory_axons = get_random_synaptic_element_count();
-        const auto& number_vacant_excitatory_dendrites = get_random_synaptic_element_count();
-        const auto& number_vacant_inhibitory_dendrites = get_random_synaptic_element_count();
+        const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+        const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+        const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+        const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
 
         nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
         nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);

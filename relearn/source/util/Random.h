@@ -79,10 +79,11 @@ public:
      * @exception Throws a RelearnException if lower_inclusive > upper_inclusive
      * @return A uniformly integer double in [lower_inclusive, upper_inclusive)
      */
-    static unsigned int get_random_uniform_integer(const RandomHolderKey key, const unsigned int lower_inclusive, const unsigned int upper_inclusive) {
+    template<typename integer_type>
+    static integer_type get_random_uniform_integer(const RandomHolderKey key, const integer_type lower_inclusive, const integer_type upper_inclusive) {
         RelearnException::check(lower_inclusive <= upper_inclusive,
             "RandomHolder::get_random_uniform_integer: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_inclusive, static_cast<int>(key));
-        std::uniform_int_distribution<unsigned int> uid(lower_inclusive, upper_inclusive);
+        std::uniform_int_distribution<integer_type> uid(lower_inclusive, upper_inclusive);
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         auto& generator = random_number_generators[static_cast<int>(key)];

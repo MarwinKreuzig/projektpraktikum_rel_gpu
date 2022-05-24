@@ -151,7 +151,7 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
 
         // Ids start with 1
         --id;
-        node.id = NeuronID{ true, false, id };
+        node.id = NeuronID{ false, id };
         node.pos = { pos_x, pos_y, pos_z };
 
         if (bool is_in_subdomain = node.pos.check_in_box(min, max); !is_in_subdomain) {
@@ -265,14 +265,14 @@ std::optional<std::vector<NeuronID>> SubdomainFromFile::read_neuron_ids_from_fil
         }
 
         if (!ids.empty()) {
-            const auto last_id = ids[ids.size() - 1].get_global_id();
+            const auto last_id = ids[ids.size() - 1].get_local_id();
 
             if (last_id >= id) {
                 return {};
             }
         }
 
-        ids.emplace_back(true, false, id);
+        ids.emplace_back(false, id);
     }
 
     return ids;

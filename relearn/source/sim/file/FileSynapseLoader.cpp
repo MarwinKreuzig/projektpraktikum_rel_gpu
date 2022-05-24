@@ -60,8 +60,8 @@ FileSynapseLoader::synapses_tuple_type FileSynapseLoader::internal_load_synapses
         // The neurons start with 1
         --read_source_id;
         --read_target_id;
-        auto source_id = NeuronID{ false, false, read_source_id };
-        auto target_id = NeuronID{ false, false, read_target_id };
+        auto source_id = NeuronID{ false, read_source_id };
+        auto target_id = NeuronID{ false, read_target_id };
         
         local_synapses.emplace_back(source_id, target_id, weight);
     }

@@ -107,7 +107,7 @@ TEST_F(BarnesHutTest, testUpdateLeafNodes) {
 
     auto octree = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
 
-    std::map<int, Vec3d> positions{};
+    std::map<NeuronID::value_type, Vec3d> positions{};
     for (const auto& [position, id] : neurons_to_place) {
         octree->insert(position, id, 0);
         positions[id.get_local_id()] = position;
@@ -164,7 +164,7 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
 
     auto octree = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
 
-    std::map<int, Vec3d> positions{};
+    std::map<NeuronID::value_type, Vec3d> positions{};
     for (const auto& [position, id] : neurons_to_place) {
         octree->insert(position, id, 0);
         positions[id.get_local_id()] = position;

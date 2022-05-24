@@ -27,16 +27,16 @@ TEST_F(ConnectorTest, testForwardConnectorExceptions) {
 
     CommunicationMap<SynapseCreationRequest> incoming_requests{ static_cast<int>(number_ranks_1) };
 
-    ASSERT_THROW(ForwardConnector::process_requests(incoming_requests, empty, empty), RelearnException);
-    ASSERT_THROW(ForwardConnector::process_requests(incoming_requests, excitatory_dendrites, empty), RelearnException);
-    ASSERT_THROW(ForwardConnector::process_requests(incoming_requests, empty, inhibitory_dendrites), RelearnException);
-    ASSERT_THROW(ForwardConnector::process_requests(incoming_requests, excitatory_dendrites, inhibitory_dendrites), RelearnException);
+    ASSERT_THROW(auto val = ForwardConnector::process_requests(incoming_requests, empty, empty), RelearnException);
+    ASSERT_THROW(auto val = ForwardConnector::process_requests(incoming_requests, excitatory_dendrites, empty), RelearnException);
+    ASSERT_THROW(auto val = ForwardConnector::process_requests(incoming_requests, empty, inhibitory_dendrites), RelearnException);
+    ASSERT_THROW(auto val = ForwardConnector::process_requests(incoming_requests, excitatory_dendrites, inhibitory_dendrites), RelearnException);
 
     CommunicationMap<SynapseCreationResponse> incoming_responses{ static_cast<int>(number_ranks_1) };
-    ASSERT_THROW(ForwardConnector::process_responses(incoming_requests, incoming_responses, empty), RelearnException);
+    ASSERT_THROW(auto val = ForwardConnector::process_responses(incoming_requests, incoming_responses, empty), RelearnException);
 
     CommunicationMap<SynapseCreationResponse> wrong_incoming_responses{ static_cast<int>(final_number_ranks) };
-    ASSERT_THROW(ForwardConnector::process_responses(incoming_requests, wrong_incoming_responses, empty), RelearnException);
+    ASSERT_THROW(auto val = ForwardConnector::process_responses(incoming_requests, wrong_incoming_responses, empty), RelearnException);
 }
 
 TEST_F(ConnectorTest, testForwardConnectorEmptyMap) {
@@ -113,7 +113,7 @@ TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
         const auto number_vacant_excitatory = excitatory_dendrites->get_free_elements(id);
         number_excitatory_requests += number_vacant_excitatory;
 
-        for (auto i = 0; i < number_vacant_excitatory; i++) {
+        for (auto i = 0U; i < number_vacant_excitatory; i++) {
             SynapseCreationRequest scr(id, NeuronID{ i }, SignalType::Excitatory);
             incoming_requests.append(1, scr);
 
@@ -123,7 +123,7 @@ TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
         const auto number_vacant_inhibitory = inhibitory_dendrites->get_free_elements(id);
         number_inhibitory_requests += number_vacant_inhibitory;
 
-        for (auto i = 0; i < number_vacant_inhibitory; i++) {
+        for (auto i = 0U; i < number_vacant_inhibitory; i++) {
             SynapseCreationRequest scr(id, NeuronID{ i }, SignalType::Inhibitory);
             incoming_requests.append(1, scr);
 

@@ -568,7 +568,7 @@ protected:
             for (auto j = 0; j < number_neurons; j++) {
 
                 const auto weight = get_random_synapse_weight();
-                LocalSynapse ls(NeuronID(false, false, target_ids[j]), source_ids[j], weight);
+                LocalSynapse ls(NeuronID(false, target_ids[j]), source_ids[j], weight);
                 ptr->add_synapse(ls);
             }
         }

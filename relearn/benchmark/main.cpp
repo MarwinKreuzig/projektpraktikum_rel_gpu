@@ -2,15 +2,15 @@
 
 #include <random>
 
-LocalSynapses generate_local_synapses(int number_neurons, int number_synapses) {
+LocalSynapses generate_local_synapses(uint64_t number_neurons, uint64_t number_synapses) {
     std::vector<LocalSynapse> synapses{};
     synapses.reserve(number_neurons * number_synapses);
 
     std::mt19937 mt{};
-    std::uniform_int_distribution<int> uid(0, number_neurons - 1);
+    std::uniform_int_distribution<uint64_t> uid(0, number_neurons - 1);
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        for (auto synapse_id = 0; synapse_id < number_synapses; synapse_id++) {
+    for (auto neuron_id = 0ULL; neuron_id < number_neurons; neuron_id++) {
+        for (auto synapse_id = 0ULL; synapse_id < number_synapses; synapse_id++) {
             auto random_id = uid(mt);
 
             const NeuronID source_id{ neuron_id };
@@ -25,16 +25,16 @@ LocalSynapses generate_local_synapses(int number_neurons, int number_synapses) {
     return synapses;
 }
 
-DistantInSynapses generate_distant_in_synapses(int number_neurons, int number_synapses) {
+DistantInSynapses generate_distant_in_synapses(uint64_t number_neurons, uint64_t number_synapses) {
     std::vector<DistantInSynapse> synapses{};
     synapses.reserve(number_neurons * number_synapses);
 
     std::mt19937 mt{};
-    std::uniform_int_distribution<int> uid(0, number_neurons - 1);
+    std::uniform_int_distribution<uint64_t> uid(0, number_neurons - 1);
     std::uniform_int_distribution<int> uid_rank(1, 32);
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        for (auto synapse_id = 0; synapse_id < number_synapses; synapse_id++) {
+    for (auto neuron_id = 0ULL; neuron_id < number_neurons; neuron_id++) {
+        for (auto synapse_id = 0ULL; synapse_id < number_synapses; synapse_id++) {
             auto random_id = uid(mt);
             auto random_rank = uid_rank(mt);
 
@@ -52,16 +52,16 @@ DistantInSynapses generate_distant_in_synapses(int number_neurons, int number_sy
     return synapses;
 }
 
-DistantOutSynapses generate_distant_out_synapses(int number_neurons, int number_synapses) {
+DistantOutSynapses generate_distant_out_synapses(uint64_t number_neurons, uint64_t number_synapses) {
     std::vector<DistantOutSynapse> synapses{};
     synapses.reserve(number_neurons * number_synapses);
 
     std::mt19937 mt{};
-    std::uniform_int_distribution<int> uid(0, number_neurons - 1);
+    std::uniform_int_distribution<uint64_t> uid(0, number_neurons - 1);
     std::uniform_int_distribution<int> uid_rank(1, 32);
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        for (auto synapse_id = 0; synapse_id < number_synapses; synapse_id++) {
+    for (auto neuron_id = 0ULL; neuron_id < number_neurons; neuron_id++) {
+        for (auto synapse_id = 0ULL; synapse_id < number_synapses; synapse_id++) {
             auto random_id = uid(mt);
             auto random_rank = uid_rank(mt);
 

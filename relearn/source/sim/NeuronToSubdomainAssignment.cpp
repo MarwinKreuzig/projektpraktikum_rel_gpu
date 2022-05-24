@@ -121,7 +121,7 @@ void NeuronToSubdomainAssignment::write_neurons_to_file(const std::filesystem::p
 
     for (const auto& [_, nodes] : neurons_in_subdomain) {
         for (const auto& node : nodes) {
-            const auto id = node.id.get_global_id() + 1;
+            const auto id = node.id.get_local_id() + 1;
             const auto& [x, y, z] = node.pos;
 
             of

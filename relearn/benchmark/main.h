@@ -10,11 +10,11 @@
 
 constexpr bool excessive_testing = false;
 
-LocalSynapses generate_local_synapses(int number_neurons, int number_synapses);
+LocalSynapses generate_local_synapses(uint64_t number_neurons, uint64_t number_synapses);
 
-DistantInSynapses generate_distant_in_synapses(int number_neurons, int number_synapses);
+DistantInSynapses generate_distant_in_synapses(uint64_t number_neurons, uint64_t number_synapses);
 
-DistantOutSynapses generate_distant_out_synapses(int number_neurons, int number_synapses);
+DistantOutSynapses generate_distant_out_synapses(uint64_t number_neurons, uint64_t number_synapses);
 
 template <typename SynapseType>
 std::vector<SynapseType> invert_synapses(const std::vector<SynapseType>& synapses) {

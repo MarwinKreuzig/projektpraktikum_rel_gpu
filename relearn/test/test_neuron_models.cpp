@@ -54,14 +54,6 @@ void assert_getter_throws(const std::unique_ptr<NeuronModel>& model) {
         ASSERT_THROW(const auto x = model->get_x(neuron_id), RelearnException);
         ASSERT_THROW(const auto secondary = model->get_secondary_variable(neuron_id), RelearnException);
     }
-
-    const auto& invalid_global_ids = NeuronID::global_range(number_neurons + number_neurons);
-    for (const auto& neuron_id : invalid_global_ids) {
-        ASSERT_THROW(const auto fired = model->get_fired(neuron_id), RelearnException);
-        ASSERT_THROW(const auto i_syn = model->get_synaptic_input(neuron_id), RelearnException);
-        ASSERT_THROW(const auto x = model->get_x(neuron_id), RelearnException);
-        ASSERT_THROW(const auto secondary = model->get_secondary_variable(neuron_id), RelearnException);
-    }
 }
 
 void test_initialization(std::unique_ptr<NeuronModel> model, size_t number_neurons) {

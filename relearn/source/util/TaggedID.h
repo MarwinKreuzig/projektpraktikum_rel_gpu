@@ -22,7 +22,7 @@
 #include <type_traits>
 #include <vector>
 
-template<typename U>
+template <typename U>
 class TaggedIDTest;
 
 namespace detail {
@@ -63,10 +63,10 @@ struct TaggedIDNumericalLimits : public std::conditional_t<
 /**
  * @brief ID class to represent a tagged id value.
  *
- * Flag members include is_global, is_virtual and is_initialized.
+ * Flag members include is_virtual and is_initialized.
  * The limits type can be used to query the range of id values the tagged id can represent.
  *
- * The flags is_virtual and is_global are false by default and can only be specified in the constructor.
+ * The flag is_virtual is false by default and can only be specified in the constructor.
  * The is_initialized flag is true when the id was explicitly initialized with an id value,
  * or the id object gets an id assigned.
  *
@@ -79,7 +79,7 @@ class TaggedID {
 
 public:
     using value_type = T;
-    static constexpr auto num_flags = 3;
+    static constexpr auto num_flags = 2;
     static constexpr auto id_bit_count = sizeof(value_type) * 8 - num_flags;
     using limits = detail::TaggedIDNumericalLimits<value_type, id_bit_count>;
 
@@ -95,7 +95,7 @@ public:
      *
      * @return constexpr TaggedID virtual id
      */
-    [[nodiscard]] static constexpr TaggedID virtual_id() noexcept { return TaggedID{ false, true, 0 }; }
+    [[nodiscard]] static constexpr TaggedID virtual_id() noexcept { return TaggedID{ true, 0 }; }
 
     /**
      * @brief Create a vector of local TaggedIDs within the range [0, size)
@@ -105,16 +105,6 @@ public:
      */
     [[nodiscard]] static constexpr auto range(size_t size) {
         return range(0, size);
-    }
-
-    /**
-     * @brief Create a vector of global TaggedIDs within the range [0, size)
-     *
-     * @param size size of the vector
-     * @return constexpr auto vector of TaggedIDs
-     */
-    [[nodiscard]] static constexpr auto global_range(size_t size) {
-        return range_global(0, size);
     }
 
     /**
@@ -128,22 +118,6 @@ public:
         std::vector<TaggedID<T>> ids;
         for (auto i = begin; i < end; i++) {
             ids.emplace_back(i);
-        }
-
-        return ids;
-    }
-
-    /**
-     * @brief Create a vector of global TaggedIDs within the range [begin, end)
-     *
-     * @param begin begin of the vector
-     * @param end end of the vector
-     * @return constexpr auto vector of TaggedIDs
-     */
-    [[nodiscard]] static constexpr auto range_global(size_t begin, size_t end) {
-        std::vector<TaggedID<T>> ids;
-        for (auto i = begin; i < end; i++) {
-            ids.emplace_back(true, false, i);
         }
 
         return ids;
@@ -167,14 +141,12 @@ public:
     /**
      * @brief Construct a new initialized TaggedID object with the given flags and id
      *
-     * @param is_global flag if the id should be marked global
      * @param is_virtual flag if the id should be marked virtual
      * @param id the id value
      */
-    constexpr explicit TaggedID(bool is_global, bool is_virtual, std::integral auto id) noexcept
+    constexpr explicit TaggedID(bool is_virtual, std::integral auto id) noexcept
         : is_initialized_{ true }
         , is_virtual_{ is_virtual }
-        , is_global_{ is_global }
         , id_{ static_cast<value_type>(id) } { }
 
     TaggedID(const TaggedID&) noexcept = default;
@@ -205,18 +177,6 @@ public:
     }
 
     /**
-     * @brief Get the global id
-     *
-     * @exception RelearnException if the id is not global
-     * @return constexpr value_type id
-     */
-    [[nodiscard]] constexpr value_type get_global_id() const {
-        RelearnException::check(is_global(), "TaggedID::get_global_id is not global {:s}", *this);
-        RelearnException::check(!is_virtual(), "TaggedID::get_global_id is virtual {:s}", *this);
-        return id_;
-    }
-
-    /**
      * @brief Get the local id
      *
      * @exception RelearnException if the id is not local
@@ -224,7 +184,7 @@ public:
      */
     [[nodiscard]] constexpr value_type get_local_id() const {
         RelearnException::check(is_local(), "TaggedID::get_local_id is not local {:s}", *this);
-        RelearnException::check(!is_virtual(), "TaggedID::get_global_id is virtual {:s}", *this);
+        RelearnException::check(!is_virtual(), "TaggedID::get_local_id is virtual {:s}", *this);
         return id_;
     }
 
@@ -243,18 +203,11 @@ public:
     [[nodiscard]] constexpr bool is_virtual() const noexcept { return is_virtual_; }
 
     /**
-     * @brief Check if the id is global
-     *
-     * @return true iff the id is global
-     */
-    [[nodiscard]] constexpr bool is_global() const noexcept { return is_global_ && is_initialized_ && !is_virtual_; }
-
-    /**
      * @brief Check if the id is local
      *
      * @return true iff the id is local
      */
-    [[nodiscard]] constexpr bool is_local() const noexcept { return !is_global_ && is_initialized_ && !is_virtual_; }
+    [[nodiscard]] constexpr bool is_local() const noexcept { return is_initialized_ && !is_virtual_; }
 
     /**
      * @brief Compare two TaggedIDs
@@ -269,7 +222,6 @@ private:
 
     bool is_initialized_ : 1 = false;
     bool is_virtual_ : 1 = false;
-    bool is_global_ : 1 = false;
     value_type id_ : id_bit_count = 0;
 };
 
@@ -277,14 +229,14 @@ private:
  * @brief Formatter for TaggedID
  *
  * TaggedID is represented as follows:
- * is_initialized is_global is_virtual : id
+ * is_initialized is_virtual : id
  * printing the flags is optional
  *
  * Formatting options are:
  * - i (default): id only   -> 123456
  * - s: small               -> 000:123456
  * - m: medium              -> i0g0v0:123456
- * - l: large               -> initialized: bool, global: bool, virtual: bool:123456
+ * - l: large               -> initialized: bool, virtual: bool:123456
  *
  * The id can be formatted with the appropriate
  * formatting for its type.
@@ -316,20 +268,20 @@ public:
         case 's':
             fmt::format_to(
                 ctx.out(),
-                "{:1b}{:1b}{:1b}:",
-                id.is_initialized(), id.is_global(), id.is_virtual());
+                "{:1b}{:1b}:",
+                id.is_initialized(), id.is_virtual());
             break;
         case 'm':
             fmt::format_to(
                 ctx.out(),
-                "i{:1b}g{:1b}v{:1b}:",
-                id.is_initialized(), id.is_global(), id.is_virtual());
+                "i{:1b}v{:1b}:",
+                id.is_initialized(), id.is_virtual());
             break;
         case 'l':
             fmt::format_to(
                 ctx.out(),
-                "initialized: {:5}, global: {:5}, virtual: {:5}, id: ",
-                id.is_initialized(), id.is_global(), id.is_virtual());
+                "initialized: {:5}, virtual: {:5}, id: ",
+                id.is_initialized(), id.is_virtual());
             break;
         default:
             throw format_error("unrecognized format for TaggedID<T>");
@@ -345,8 +297,6 @@ public:
             id_ = std::numeric_limits<type>::max() - 1;
         } else if (id.is_local()) {
             id_ = id.get_local_id();
-        } else if (id.is_global()) {
-            id_ = id.get_global_id();
         } else {
             RelearnException::fail("Format of neuron id failed!");
         }

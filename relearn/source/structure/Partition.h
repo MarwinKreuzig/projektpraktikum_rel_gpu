@@ -259,14 +259,14 @@ public:
             // Set start and end of local neuron ids
             // 0-th subdomain starts with neuron id 0
             if (subdomain_index == 0) {
-                current_subdomain.neuron_local_id_start = NeuronID(false, false, 0);
+                current_subdomain.neuron_local_id_start = NeuronID(false, 0);
             } else {
                 const auto& last_subdomain_end = local_subdomains[subdomain_index - 1].neuron_local_id_end;
-                current_subdomain.neuron_local_id_start = NeuronID(false, false, last_subdomain_end.get_local_id() + 1);
+                current_subdomain.neuron_local_id_start = NeuronID(false, last_subdomain_end.get_local_id() + 1);
             }
 
             const auto local_end = current_subdomain.neuron_local_id_start.get_local_id() + current_subdomain.number_neurons - 1;
-            current_subdomain.neuron_local_id_end = NeuronID(false, false, local_end);
+            current_subdomain.neuron_local_id_end = NeuronID(false, local_end);
         }
     }
 
