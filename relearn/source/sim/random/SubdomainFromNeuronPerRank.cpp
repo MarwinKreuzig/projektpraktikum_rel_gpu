@@ -60,7 +60,7 @@ std::vector<NeuronID> SubdomainFromNeuronPerRank::get_neuron_global_ids_in_subdo
 
 void SubdomainFromNeuronPerRank::post_initialization() {
     neuron_id_translator = std::make_shared<RandomNeuronIdTranslator>(partition);
-    synapse_loader = std::make_shared<RandomSynapseLoader>(partition, neuron_id_translator);
+    synapse_loader = std::make_shared<RandomSynapseLoader>(partition);
 }
 
 void SubdomainFromNeuronPerRank::fill_subdomain(const size_t local_subdomain_index, const size_t /*total_number_subdomains*/) {

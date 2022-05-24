@@ -173,5 +173,5 @@ std::vector<NeuronID> SubdomainFromNeuronDensity::get_neuron_global_ids_in_subdo
 
 void SubdomainFromNeuronDensity::post_initialization() {
     neuron_id_translator = std::make_shared<RandomNeuronIdTranslator>(partition);
-    synapse_loader = std::make_shared<RandomSynapseLoader>(partition, neuron_id_translator);
+    synapse_loader = std::make_shared<RandomSynapseLoader>(partition);
 }

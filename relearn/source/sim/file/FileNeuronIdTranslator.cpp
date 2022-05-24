@@ -62,61 +62,6 @@ NeuronID FileNeuronIdTranslator::get_global_id(NeuronID local_id) const {
     return local_id;
 }
 
-std::map<NeuronID, RankNeuronId> FileNeuronIdTranslator::translate_global_ids(const std::vector<NeuronID>& global_ids) {
-    if (global_ids.empty()) {
-        return {};
-    }
-
-    const int my_rank = MPIWrapper::get_my_rank();
-    const int num_ranks = MPIWrapper::get_num_ranks();
-
-    const auto& id_to_position = load_neuron_positions(global_ids);
-
-    CommunicationMap<NeuronID> foreign_ids_send{ num_ranks };
-
-    for (const auto& [neuron_id, neuron_position] : id_to_position) {
-        const auto rank = partition->get_mpi_rank_from_position(neuron_position);
-        foreign_ids_send.append(rank, neuron_id);
-    }
-
-    const auto& foreign_ids_receive = MPIWrapper::exchange_requests(foreign_ids_send);
-
-    CommunicationMap<NeuronID> translated_ids_send{ num_ranks };
-
-    for (const auto& [rank, neuron_ids] : foreign_ids_receive) {
-        for (const auto& neuron_id : neuron_ids) {
-            const auto& translated_id = get_local_id(neuron_id);
-            translated_ids_send.append(rank, translated_id);
-        }
-    }
-
-    const auto& translated_ids_receive = MPIWrapper::exchange_requests(translated_ids_send);
-
-    std::map<NeuronID, RankNeuronId> result{};
-
-    for (const auto& mpi_rank : MPIWrapper::get_ranks()) {
-        const auto number_requested = foreign_ids_send.size(mpi_rank);
-        const auto number_responses = translated_ids_receive.size(mpi_rank);
-
-        RelearnException::check(number_requested == number_responses, "FileNeuronIdTranslator::translate_global_ids: I ({}) have sent {} requests to {} but received {} responses.", 
-            my_rank, number_requested, mpi_rank, number_responses);
-
-        for (auto request_id = 0; request_id < number_requested; request_id++) {
-            const auto& request = foreign_ids_send.get_request(mpi_rank, request_id);
-            const auto& response = translated_ids_receive.get_request(mpi_rank, request_id);
-
-            result.emplace(request, RankNeuronId{ mpi_rank, response });
-        }
-    }
-
-    return result;
-}
-
-NeuronID FileNeuronIdTranslator::translate_rank_neuron_id(const RankNeuronId& /*rni*/) {
-    RelearnException::fail("FileNeuronIdTranslator::translate_rank_neuron_id: Should not be here");
-    return {};
-}
-
 std::map<NeuronID, FileNeuronIdTranslator::position_type> FileNeuronIdTranslator::load_neuron_positions(const std::vector<NeuronID>& global_ids) {
     std::map<NeuronID, position_type> translation_map{};
 
@@ -157,11 +102,6 @@ std::map<NeuronID, FileNeuronIdTranslator::position_type> FileNeuronIdTranslator
     }
 
     return translation_map;
-}
-
-std::map<RankNeuronId, NeuronID> FileNeuronIdTranslator::translate_rank_neuron_ids(const std::vector<RankNeuronId>& /*ids*/) {
-    RelearnException::fail("FileNeuronIdTranslator::translate_rank_neuron_ids: Should not be here");
-    return {};
 }
 
 void FileNeuronIdTranslator::create_neurons(size_t number_local_creations) {

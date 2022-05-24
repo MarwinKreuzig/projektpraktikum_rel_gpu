@@ -18,6 +18,13 @@
 #include <sstream>
 #include <string>
 
+FileSynapseLoader::FileSynapseLoader(std::shared_ptr<Partition> partition, std::optional<std::filesystem::path> path_to_synapses)
+    : SynapseLoader(std::move(partition))
+    , optional_path_to_file(std::move(path_to_synapses)) {
+    RelearnException::check(this->partition->get_number_mpi_ranks() == 1 && this->partition->get_my_mpi_rank() == 0,
+        "FileSynapseLoader::FileSynapseLoader: Can only use this class with 1 MPI rank.");
+}
+
 FileSynapseLoader::synapses_tuple_type FileSynapseLoader::internal_load_synapses() {
     if (!optional_path_to_file.has_value()) {
         return {};

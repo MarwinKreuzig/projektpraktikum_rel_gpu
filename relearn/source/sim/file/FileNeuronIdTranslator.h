@@ -73,27 +73,6 @@ public:
      * @return The global neuron id
      */
     [[nodiscard]] NeuronID get_global_id(NeuronID local_id) const override;
-
-    /**
-     * @brief Translated a bunch of global neuron ids to RankNeuronIds
-     * @param global_ids The global neuron ids
-     * @return A translation map from global neuron id to RankNeuronId
-     */
-    [[nodiscard]] std::map<NeuronID, RankNeuronId> translate_global_ids(const std::vector<NeuronID>& global_ids) override;
-
-    /**
-     * @brief Translated a RankNeuronId to a global neuron id 
-     * @param rni The rank neuron id
-     * @return The global neuron id of that neuron
-     */
-    [[nodiscard]] NeuronID translate_rank_neuron_id(const RankNeuronId& rni) override;
-
-    /**
-     * @brief Translated a bunch of RankNeuronIds to global neuron ids
-     * @param ids The RankNeuronIds
-     * @return A translation map from RankNeuronId to global neuron id
-     */
-    [[nodiscard]] std::map<RankNeuronId, NeuronID> translate_rank_neuron_ids(const std::vector<RankNeuronId>& ids) override;
    
     /**
      * @brief Creates the number of neurons locally, i.e., every MPI rank must specify its own number of creations.

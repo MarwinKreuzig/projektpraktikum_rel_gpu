@@ -239,29 +239,4 @@ TEST_F(NeuronIdTest, testRandomNeuronIdTranslatorGlobalIdToRankNeuronId) {
     for (const auto& id : NeuronID::range(number_total_neurons)) {
         global_ids.emplace_back(true, false, id.get_local_id());
     }
-
-    for (auto rank_id = 0; rank_id < num_ranks; rank_id++) {
-        auto partition = partitions[rank_id];
-
-        RandomNeuronIdTranslator rnit(partition, translator);
-
-        const auto number_local_neurons = number_neurons[rank_id];
-        const auto start_local_ids = start_ids[rank_id];
-
-        const auto& rnis = rnit.translate_global_ids(global_ids);
-        ASSERT_EQ(rnis.size(), global_ids.size());
-
-        for (const auto& neuron_id : global_ids) {
-            ASSERT_TRUE(rnis.find(neuron_id) != rnis.end()) << neuron_id;
-
-            const auto& [rank, local_id] = rnis.at(neuron_id);
-
-            ASSERT_LT(rank, num_ranks) << rank << ' ' << num_ranks;
-
-            const auto remote_start = start_ids[rank];
-            const auto expected_local_id = NeuronID(false, false, neuron_id.get_global_id() - remote_start);
-
-            ASSERT_EQ(local_id, expected_local_id) << rank << ' ' << expected_local_id << " vs. " << local_id << " for: " << neuron_id;
-        }
-    }
 }

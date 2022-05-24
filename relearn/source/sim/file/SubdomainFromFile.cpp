@@ -33,7 +33,7 @@ SubdomainFromFile::SubdomainFromFile(
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, "Loading: {} \n", file_path);
 
     neuron_id_translator = std::make_shared<FileNeuronIdTranslator>(this->partition, file_path);
-    synapse_loader = std::make_shared<FileSynapseLoader>(this->partition, neuron_id_translator, std::move(file_path_positions));
+    synapse_loader = std::make_shared<FileSynapseLoader>(this->partition, std::move(file_path_positions));
 
     read_dimensions_from_file();
 }
