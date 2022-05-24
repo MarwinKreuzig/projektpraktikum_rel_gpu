@@ -26,31 +26,12 @@ class Partition;
  * It provides load_synapses and relies on NeuronIdTranslator.
  */
 class SynapseLoader {
-public:
-    using LocalSynapse = std::tuple<NeuronID, NeuronID, int>;
-    using InSynapse = std::tuple<RankNeuronId, NeuronID, int>;
-    using OutSynapse = std::tuple<NeuronID, RankNeuronId, int>;
-
 protected:
-    using source_neuron_id = NeuronID;
-    using target_neuron_id = NeuronID;
-
-    using synapse_weight = int;
-
-    using synapse_type = std::tuple<source_neuron_id, target_neuron_id, synapse_weight>;
-
-    using synapses_type = std::vector<synapse_type>;
-
-    using local_synapses_type = synapses_type;
-    using in_synapses_type = synapses_type;
-    using out_synapses_type = synapses_type;
-
-    using synapses_tuple_type = std::tuple<local_synapses_type, in_synapses_type, out_synapses_type>;
+    using synapses_tuple_type = std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>;
 
     std::shared_ptr<Partition> partition{};
-    std::shared_ptr<NeuronIdTranslator> nit{};
 
-    virtual std::pair<synapses_tuple_type, std::vector<NeuronID>> internal_load_synapses() = 0;
+    virtual synapses_tuple_type internal_load_synapses() = 0;
 
 public:
     /**
@@ -58,17 +39,8 @@ public:
      * @param partition The partition to use
      * @param neuron_id_translator The neuron id translator that is used to determine if neuron ids are local
      */
-    SynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator)
-        : partition(std::move(partition))
-        , nit(std::move(neuron_id_translator)) { }
-
-    SynapseLoader(const SynapseLoader&) = default;
-
-    SynapseLoader& operator=(const SynapseLoader&) = default;
-
-    SynapseLoader(SynapseLoader&&) = default;
-
-    SynapseLoader& operator=(SynapseLoader&&) = default;
+    SynapseLoader(std::shared_ptr<Partition> partition)
+        : partition(std::move(partition)) { }
 
     virtual ~SynapseLoader() = default;
 

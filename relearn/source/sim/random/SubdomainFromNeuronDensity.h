@@ -21,11 +21,8 @@
 class Partition;
 
 /**
- * This class fills every subdomain with neurons at random positions. The size of the simulation box and the number of neurons per
- * subdomain depend on the requested neuron density, i.e., micrometer per neuron in each of the three dimensions.
- * It does not necessarily place the requested number of neurons, but it always places a number of neurons in
- * [number_neurons - number_subdomains + 1, number_neurons + number_subdomains - 1].
- * It inherits from NeuronToSubdomainAssignment.
+ * This class a subdomain with randomly positioned neurons and sticks to the requested ratio of excitatory to inhibitory neurons.
+ * Requires only one MPI rank. It inherits from NeuronToSubdomainAssignment.
  */
 class SubdomainFromNeuronDensity : public NeuronToSubdomainAssignment {
 public:
@@ -34,7 +31,7 @@ public:
      * @param number_neurons The number of neurons
      * @param fraction_excitatory_neurons The fraction of excitatory neurons, must be in [0.0, 1.0]
      * @param um_per_neuron The box length in which a single neuron is placed, must be > 0.0
-     * @exception Throws a RelearnException if fraction_excitatory_neurons if not from [0.0, 1.0] or um_per_neuron <= 0.0
+     * @exception Throws a RelearnException if fraction_excitatory_neurons if not from [0.0, 1.0], um_per_neuron <= 0.0, or if more than 1 MPI rank is active
      */
     SubdomainFromNeuronDensity(size_t number_neurons, double fraction_excitatory_neurons, double um_per_neuron, std::shared_ptr<Partition> partition);
 

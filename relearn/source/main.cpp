@@ -216,10 +216,10 @@ int main(int argc, char** argv) {
     auto* opt_um_per_neuron = app.add_option("--um-per-neuron", um_per_neuron, "The micrometer per neuron in one dimension, must be from (0.0, \\inf). Required --num-neurons or --num-neurons-per-rank to take effect.");
 
     std::string file_positions{};
-    auto* opt_file_positions = app.add_option("-f,--file", file_positions, "File with neuron positions.");
+    auto* opt_file_positions = app.add_option("-f,--file", file_positions, "File with neuron positions. This option only works with one MPI rank!");
 
     std::string file_network{};
-    auto* opt_file_network = app.add_option("-g,--graph", file_network, "File with neuron connections.");
+    auto* opt_file_network = app.add_option("-g,--graph", file_network, "File with neuron connections. This option only works with one MPI rank!");
 
     std::string file_enable_interrupts{};
     auto* opt_file_enable_interrupts = app.add_option("--enable-interrupts", file_enable_interrupts, "File with the enable interrupts.");
@@ -342,6 +342,10 @@ int main(int argc, char** argv) {
 
     if (static_cast<bool>(*opt_num_neurons)) {
         RelearnException::check(num_ranks == 1, "The option --num-neurons can only be used for one MPI rank. There are {} ranks.", num_ranks);
+    }
+
+    if (static_cast<bool>(*opt_file_positions)) {
+        RelearnException::check(num_ranks == 1, "The option --file can only be used for one MPI rank. There are {} ranks.", num_ranks);
     }
 
     RelearnException::check(fraction_excitatory_neurons >= 0.0 && fraction_excitatory_neurons <= 1.0, "The fraction of excitatory neurons must be from [0.0, 1.0]");
@@ -554,10 +558,10 @@ int main(int argc, char** argv) {
         sim.set_creation_interrupts(std::move(creation_interrups));
     }
 
-    auto target_calcium_calculator = [target = target_calcium](NeuronID::value_type /*neuron_id*/) { return target; };
+    auto target_calcium_calculator = [target = target_calcium](int mpi_rank, NeuronID::value_type /*neuron_id*/) { return target; };
     sim.set_target_calcium_calculator(std::move(target_calcium_calculator));
 
-    auto initial_calcium_calculator = [inital = initial_calcium](NeuronID::value_type /*neuron_id*/) { return inital; };
+    auto initial_calcium_calculator = [inital = initial_calcium](int mpi_rank, NeuronID::value_type /*neuron_id*/) { return inital; };
     sim.set_initial_calcium_calculator(std::move(initial_calcium_calculator));
 
     const auto steps_per_simulation = simulation_steps / Config::monitor_step;

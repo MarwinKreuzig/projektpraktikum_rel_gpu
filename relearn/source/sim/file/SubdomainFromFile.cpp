@@ -28,6 +28,8 @@ SubdomainFromFile::SubdomainFromFile(
     const std::filesystem::path& file_path, std::optional<std::filesystem::path> file_path_positions, std::shared_ptr<Partition> partition)
     : NeuronToSubdomainAssignment(std::move(partition))
     , path(file_path) {
+    RelearnException::check(this->partition->get_my_mpi_rank() == 0 && this->partition->get_number_mpi_ranks() == 1, "SubdomainFromFile::SubdomainFromFile: Can only be used for 1 MPI rank.");
+    
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, "Loading: {} \n", file_path);
 
     neuron_id_translator = std::make_shared<FileNeuronIdTranslator>(this->partition, file_path);
@@ -197,6 +199,9 @@ std::vector<NeuronID> SubdomainFromFile::get_neuron_global_ids_in_subdomain(cons
 }
 
 void SubdomainFromFile::fill_subdomain(const size_t local_subdomain_index, [[maybe_unused]] const size_t total_number_subdomains) {
+    const auto number_subdomains = partition->get_total_number_subdomains();
+    RelearnException::check(number_subdomains == 1, "SubdomainFromNeuronDensity::fill_subdomain: The total number of subdomains was not 1 but {}.", number_subdomains);
+
     const auto subdomain_index_1d = partition->get_1d_index_of_subdomain(local_subdomain_index);
     const bool subdomain_already_filled = is_subdomain_loaded(subdomain_index_1d);
     if (subdomain_already_filled) {

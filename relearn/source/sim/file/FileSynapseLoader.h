@@ -11,6 +11,7 @@
  */
 
 #include "sim/SynapseLoader.h"
+#include "util/RelearnException.h"
 
 #include <filesystem>
 #include <memory>
@@ -24,7 +25,7 @@ class FileSynapseLoader : public SynapseLoader {
     std::optional<std::filesystem::path> optional_path_to_file{};
 
 protected:
-    std::pair<synapses_tuple_type, std::vector<NeuronID>> internal_load_synapses() override;
+    synapses_tuple_type internal_load_synapses() override;
 
 public:
     /**
@@ -34,9 +35,11 @@ public:
      * @param neuron_id_translator The neuron id translator that is used to determine if neuron ids are local
      * @param path_to_synapses The path to the synapses, can be empty
      */
-    FileSynapseLoader(std::shared_ptr<Partition> partition, std::shared_ptr<NeuronIdTranslator> neuron_id_translator,
-        std::optional<std::filesystem::path> path_to_synapses)
-        : SynapseLoader(std::move(partition), std::move(neuron_id_translator))
-        , optional_path_to_file(std::move(path_to_synapses)) { }
+    FileSynapseLoader(std::shared_ptr<Partition> partition, std::optional<std::filesystem::path> path_to_synapses)
+        : SynapseLoader(std::move(partition))
+        , optional_path_to_file(std::move(path_to_synapses)) {
+        RelearnException::check(this->partition->get_number_mpi_ranks() == 1 && this->partition->get_my_mpi_rank() == 0,
+            "FileSynapseLoader::FileSynapseLoader: Can only use this class with 1 MPI rank.");
+    }
 };
 
