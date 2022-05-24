@@ -10,15 +10,14 @@
 
 #include "Neurons.h"
 
-#include "../io/LogFiles.h"
-#include "../mpi/MPIWrapper.h"
-#include "../sim/NeuronIdTranslator.h"
-#include "../structure/NodeCache.h"
-#include "../structure/Octree.h"
-#include "../structure/Partition.h"
-#include "../util/Random.h"
-#include "../util/Timers.h"
-#include "../util/Utility.h"
+#include "io/LogFiles.h"
+#include "mpi/MPIWrapper.h"
+#include "structure/NodeCache.h"
+#include "structure/Octree.h"
+#include "structure/Partition.h"
+#include "util/Random.h"
+#include "util/Timers.h"
+#include "util/Utility.h"
 #include "NetworkGraph.h"
 #include "helper/RankNeuronId.h"
 #include "models/NeuronModels.h"
@@ -218,8 +217,6 @@ void Neurons::create_neurons(const size_t creation_count, const std::vector<doub
 
     neuron_model->create_neurons(creation_count);
     extra_info->create_neurons(creation_count);
-
-    translator->create_neurons(creation_count);
 
     network_graph->create_neurons(creation_count);
 
@@ -961,14 +958,14 @@ void Neurons::print_network_graph_to_log_file() {
 
 void Neurons::print_positions_to_log_file() {
     // Write total number of neurons to log file
-    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# {}\n#<global id> <pos x> <pos y> <pos z> <area> <type>", partition->get_total_number_neurons());
+    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# {}\n#<local id> <pos x> <pos y> <pos z> <area> <type>", partition->get_total_number_neurons());
 
     const std::vector<std::string>& area_names = extra_info->get_area_names();
     const std::vector<SignalType>& signal_types = axons->get_signal_types();
 
-    for (auto neuron_id : NeuronID::range(number_neurons)) {
-        const auto global_id = translator->get_global_id(neuron_id);
-        const auto& signal_type_name = (signal_types[neuron_id.get_local_id()] == SignalType::Excitatory) ? std::string("ex") : std::string("in");
+    for (const auto& neuron_id : NeuronID::range(number_neurons)) {
+        const auto& local_neuron_id = neuron_id.get_local_id();
+        const auto& signal_type_name = (signal_types[local_neuron_id] == SignalType::Excitatory) ? std::string("ex") : std::string("in");
 
         const auto& pos = extra_info->get_position(neuron_id);
 
@@ -978,7 +975,7 @@ void Neurons::print_positions_to_log_file() {
 
         LogFiles::write_to_file(LogFiles::EventType::Positions, false,
             "{1:<} {2:<.{0}} {3:<.{0}} {4:<.{0}} {5:<} {6:<}",
-            Constants::print_precision, (global_id.get_global_id() + 1), x, y, z, area_names[neuron_id.get_local_id()], signal_type_name);
+            Constants::print_precision, (local_neuron_id + 1), x, y, z, area_names[local_neuron_id], signal_type_name);
     }
 }
 

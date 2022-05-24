@@ -10,7 +10,6 @@
  *
  */
 
-#include "sim/NeuronIdTranslator.h"
 #include "sim/NeuronToSubdomainAssignment.h"
 #include "sim/SynapseLoader.h"
 

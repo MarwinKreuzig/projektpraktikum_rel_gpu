@@ -13,7 +13,6 @@
 #include "Config.h"
 #include "io/LogFiles.h"
 #include "sim/NeuronToSubdomainAssignment.h"
-#include "sim/file/FileNeuronIdTranslator.h"
 #include "sim/file/FileSynapseLoader.h"
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
@@ -32,7 +31,6 @@ SubdomainFromFile::SubdomainFromFile(
     
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, "Loading: {} \n", file_path);
 
-    neuron_id_translator = std::make_shared<FileNeuronIdTranslator>(this->partition, file_path);
     synapse_loader = std::make_shared<FileSynapseLoader>(this->partition, std::move(file_path_positions));
 
     read_dimensions_from_file();
@@ -221,8 +219,6 @@ void SubdomainFromFile::fill_subdomain(const size_t local_subdomain_index, [[may
 }
 
 void SubdomainFromFile::post_initialization() {
-    auto casted_ptr = std::static_pointer_cast<FileNeuronIdTranslator>(neuron_id_translator);
-
     const auto total_number_subdomains = partition->get_number_local_subdomains();
     std::vector<std::vector<NeuronID>> global_ids(total_number_subdomains);
 
@@ -234,8 +230,6 @@ void SubdomainFromFile::post_initialization() {
 
         global_ids[i] = std::move(global_ids_in_subdomain);
     }
-
-    casted_ptr->set_global_ids(std::move(global_ids));
 }
 
 std::optional<std::vector<NeuronID>> SubdomainFromFile::read_neuron_ids_from_file(const std::filesystem::path& file_path) {

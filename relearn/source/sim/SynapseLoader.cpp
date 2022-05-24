@@ -10,7 +10,6 @@
 
 #include "SynapseLoader.h"
 
-#include "NeuronIdTranslator.h"
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 #include "util/Timers.h"

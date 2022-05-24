@@ -662,37 +662,6 @@ TEST_F(NeuronAssignmentTest, testFileLoadSingleSubdomain) {
     }
 }
 
-TEST_F(NeuronAssignmentTest, testFileNeuronIdTranslatorSingleSubdomain) {
-    std::vector<Vec3d> positions{};
-    std::vector<std::string> area_names{};
-    std::vector<SignalType> types{};
-
-    generate_neuron_positions(positions, area_names, types);
-
-    const auto number_neurons = positions.size();
-
-    const auto part = std::make_shared<Partition>(1, 0);
-    SubdomainFromFile sff{ "neurons.tmp", {}, part };
-
-    sff.initialize();
-
-    const auto translator = sff.get_neuron_id_translator();
-    const auto& global_ids = sff.get_neuron_global_ids_in_subdomain(0, 1);
-
-    for (auto local_neuron_id = 0; local_neuron_id < global_ids.size(); local_neuron_id++) {
-        const auto global_neuron_id = global_ids[local_neuron_id];
-        const auto translated_global_neuron_id = translator->get_global_id(NeuronID{ local_neuron_id });
-
-        ASSERT_EQ(global_neuron_id, translated_global_neuron_id);
-
-        const auto translated_local_neuron_id = translator->get_local_id(global_neuron_id);
-
-        ASSERT_EQ(translated_local_neuron_id, NeuronID{ local_neuron_id });
-
-        ASSERT_TRUE(translator->is_neuron_local(global_neuron_id));
-    }
-}
-
 TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
     std::vector<Vec3d> positions{};
     std::vector<std::string> area_names{};

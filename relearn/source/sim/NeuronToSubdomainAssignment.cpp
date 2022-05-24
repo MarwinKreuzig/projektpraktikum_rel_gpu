@@ -11,7 +11,6 @@
 #include "NeuronToSubdomainAssignment.h"
 
 #include "neurons/models/SynapticElements.h"
-#include "sim/NeuronIdTranslator.h"
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 

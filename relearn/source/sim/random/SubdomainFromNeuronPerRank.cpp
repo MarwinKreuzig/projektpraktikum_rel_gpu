@@ -10,7 +10,6 @@
 
 #include "SubdomainFromNeuronPerRank.h"
 
-#include "sim/random/RandomNeuronIdTranslator.h"
 #include "sim/random/RandomSynapseLoader.h"
 #include "structure/Partition.h"
 #include "util/Random.h"
@@ -59,7 +58,6 @@ std::vector<NeuronID> SubdomainFromNeuronPerRank::get_neuron_global_ids_in_subdo
 }
 
 void SubdomainFromNeuronPerRank::post_initialization() {
-    neuron_id_translator = std::make_shared<RandomNeuronIdTranslator>(partition);
     synapse_loader = std::make_shared<RandomSynapseLoader>(partition);
 }
 

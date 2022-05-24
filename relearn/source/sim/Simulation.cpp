@@ -11,7 +11,6 @@
 #include "Simulation.h"
 
 #include "Config.h"
-#include "NeuronIdTranslator.h"
 #include "NeuronToSubdomainAssignment.h"
 #include "SynapseLoader.h"
 #include "algorithm/Algorithms.h"
@@ -120,14 +119,12 @@ void Simulation::initialize() {
 
     std::vector<double> target_calcium_values(number_local_neurons, 0.0);
     for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
-        const auto global_id = neuron_id_translator->get_global_id(neuron_id);
-        target_calcium_values[neuron_id.get_local_id()] = target_calcium_calculator(my_rank, global_id.get_global_id());
+        target_calcium_values[neuron_id.get_local_id()] = target_calcium_calculator(my_rank, neuron_id.get_local_id());
     }
 
     std::vector<double> initial_calcium_values(number_local_neurons, 0.0);
     for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
-        const auto global_id = neuron_id_translator->get_global_id(neuron_id);
-        initial_calcium_values[neuron_id.get_local_id()] = initial_calcium_initiator(my_rank, global_id.get_global_id());
+        initial_calcium_values[neuron_id.get_local_id()] = initial_calcium_initiator(my_rank, neuron_id.get_local_id());
     }
 
     neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons, dendrites_ex, dendrites_in);
