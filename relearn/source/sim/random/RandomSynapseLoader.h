@@ -16,7 +16,6 @@
 #include <utility>
 #include <vector>
 
-class NeuronIdTranslator;
 class Partition;
 
 class RandomSynapseLoader : public SynapseLoader {
@@ -27,10 +26,9 @@ protected:
 
 public:
     /**
-     * @brief Constructs a RandomSynapseLoader with the given Partition and NeuronIdTranslator.
+     * @brief Constructs a RandomSynapseLoader with the given Partition.
      *      Does not provide any synapses
      * @param partition The partition to use
-     * @param neuron_id_translator The neuron id translator that is used to determine if neuron ids are local
      */
     RandomSynapseLoader(std::shared_ptr<Partition> partition)
         : SynapseLoader(std::move(partition)) { }

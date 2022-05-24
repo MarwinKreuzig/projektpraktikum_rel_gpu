@@ -24,7 +24,6 @@
 #include <tuple>
 #include <vector>
 
-class NeuronIdTranslator;
 class Partition;
 class SynapseLoader;
 
@@ -60,16 +59,6 @@ public:
     std::shared_ptr<SynapseLoader> get_synapse_loader() const {
         RelearnException::check(synapse_loader.operator bool(), "NeuronToSubdomainAssignment::get_synapse_loader: synapse_loader is empty");
         return synapse_loader;
-    }
-
-    /**
-     * @brief Returns the associated NeuronIdTranslator (some type that inherites from NeuronIdTranslator)
-     * @exception Throws a RelearnException if neuron_id_translator is nullptr
-     * @return The associated NeuronIdTranslator
-     */
-    std::shared_ptr<NeuronIdTranslator> get_neuron_id_translator() const {
-        RelearnException::check(neuron_id_translator.operator bool(), "NeuronToSubdomainAssignment::get_neuron_id_translator: neuron_id_translator is empty");
-        return neuron_id_translator;
     }
 
     /**
@@ -336,7 +325,6 @@ protected:
     std::shared_ptr<Partition> partition{};
 
     std::shared_ptr<SynapseLoader> synapse_loader{};
-    std::shared_ptr<NeuronIdTranslator> neuron_id_translator{};
 
 private:
     template <typename T>

@@ -26,7 +26,6 @@
 
 class Algorithm;
 class NetworkGraph;
-class NeuronIdTranslator;
 class NeuronModel;
 class NeuronMonitor;
 class NeuronToSubdomainAssignment;
@@ -231,7 +230,6 @@ private:
     std::shared_ptr<Partition> partition{};
 
     std::unique_ptr<NeuronToSubdomainAssignment> neuron_to_subdomain_assignment{};
-    std::shared_ptr<NeuronIdTranslator> neuron_id_translator{};
 
     std::shared_ptr<SynapticElements> axons{};
     std::shared_ptr<SynapticElements> dendrites_ex{};

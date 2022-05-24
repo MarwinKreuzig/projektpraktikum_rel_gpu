@@ -18,12 +18,10 @@
 #include <utility>
 #include <vector>
 
-class NeuronIdTranslator;
 class Partition;
 
 /**
  * SynapseLoader is a type that abstracts away the mechanics of how synapses are loaded.
- * It provides load_synapses and relies on NeuronIdTranslator.
  */
 class SynapseLoader {
 protected:
@@ -35,9 +33,8 @@ protected:
 
 public:
     /**
-     * @brief Constructs a SynapseLoader with the given Partition and NeuronIdTranslator
+     * @brief Constructs a SynapseLoader with the given Partition
      * @param partition The partition to use
-     * @param neuron_id_translator The neuron id translator that is used to determine if neuron ids are local
      */
     SynapseLoader(std::shared_ptr<Partition> partition)
         : partition(std::move(partition)) { }

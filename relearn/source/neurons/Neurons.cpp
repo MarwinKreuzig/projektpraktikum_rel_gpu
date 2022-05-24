@@ -948,11 +948,6 @@ void Neurons::print_network_graph_to_log_file() {
     ss << "# " << partition->get_total_number_neurons() << "\n"; // Total number of neurons
     ss << "# <target neuron id> <source neuron id> <weight>\n";
 
-    if (translator != nullptr) {
-        // Write network graph to file
-        network_graph->print(ss, translator);
-    }
-
     LogFiles::write_to_file(LogFiles::EventType::Network, false, ss.str());
 }
 

@@ -35,7 +35,6 @@
 #include <vector>
 
 class NetworkGraph;
-class NeuronIdTranslator;
 class NeuronMonitor;
 class Octree;
 class Partition;
@@ -119,14 +118,6 @@ public:
      */
     void set_network_graph(std::shared_ptr<NetworkGraph> network) noexcept {
         network_graph = std::move(network);
-    }
-
-    /**
-     * @brief Sets the neuron id translator for the neurons are stored
-     * @param neuron_id_translator The translator
-     */
-    void set_neuron_id_translator(std::shared_ptr<NeuronIdTranslator> neuron_id_translator) {
-        translator = std::move(neuron_id_translator);
     }
 
     /**
@@ -392,7 +383,6 @@ private:
     std::shared_ptr<Algorithm> algorithm{};
 
     std::shared_ptr<NetworkGraph> network_graph{};
-    std::shared_ptr<NeuronIdTranslator> translator{};
 
     std::unique_ptr<NeuronModel> neuron_model{};
 

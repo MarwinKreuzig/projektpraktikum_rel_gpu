@@ -24,8 +24,6 @@
 #include <utility>
 #include <vector>
 
-class NeuronIdTranslator;
-
 /**
  * An object of type NetworkGraph stores the synaptic connections between neurons, that are relevant for the current MPI rank.
  * The neurons are refered to by indices in the range [0, num_local_neurons).
@@ -632,16 +630,6 @@ public:
         result.resize(largest_number_edges + 1ULL);
         return result;
     }
-
-    /**
-     * @brief Prints all stored in-connections to the out-stream. Performs communication via MPI.
-     *      Uses the global neuron ids and starts with 1. The format is <target_id id> <source_id id> <weight>
-     * @param os The out-stream to which the network graph is printed
-     * @param informations The NeuronsExtraInfo that is used to translate between local neuron id and global neuron id
-     * @exception Throws a RelearnException if the translation of a neuron id fails
-     *      Might throw an exception related to the out-stream
-     */
-    void print(std::ostream& os, const std::shared_ptr<NeuronIdTranslator>& translator) const;
 
     /**
      * @brief Prints all stored connections to the streams. Does not perform communication via MPI. Uses the local neuron ids and starts with 1. The formats are:

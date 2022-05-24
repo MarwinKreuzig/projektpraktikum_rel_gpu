@@ -111,10 +111,6 @@ void NetworkGraph::debug_check() const {
     RelearnException::check(edges.empty(), "NetworkGraph::debug_check: Edges is not empty");
 }
 
-void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTranslator>& translator) const {
-    // TODO(fabian): Write print here
-}
-
 void NetworkGraph::print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges) const noexcept {
     const auto my_rank = mpi_rank;
 

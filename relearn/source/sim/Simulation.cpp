@@ -108,7 +108,6 @@ void Simulation::initialize() {
     RelearnException::check(neuron_to_subdomain_assignment != nullptr, "Simulation::initialize: neuron_to_subdomain_assignment is nullptr");
 
     neuron_to_subdomain_assignment->initialize();
-    neuron_id_translator = neuron_to_subdomain_assignment->get_neuron_id_translator();
     const auto number_total_neurons = neuron_to_subdomain_assignment->get_total_number_placed_neurons();
 
     partition->set_total_number_neurons(number_total_neurons);
@@ -206,7 +205,6 @@ void Simulation::initialize() {
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
-    neurons->set_neuron_id_translator(neuron_id_translator);
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
 
     auto [local_synapses, in_synapses, out_synapses] = synapse_loader->load_synapses();

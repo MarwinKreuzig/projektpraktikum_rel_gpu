@@ -18,7 +18,6 @@
 #include <optional>
 #include <utility>
 
-class NeuronIdTranslator;
 class Partition;
 
 class FileSynapseLoader : public SynapseLoader {
@@ -29,10 +28,9 @@ protected:
 
 public:
     /**
-     * @brief Constructs a FileSynapseLoader with the given Partition and NeuronIdTranslator.
+     * @brief Constructs a FileSynapseLoader with the given Partition.
      *      Can load synapses from a file
      * @param partition The partition to use
-     * @param neuron_id_translator The neuron id translator that is used to determine if neuron ids are local
      * @param path_to_synapses The path to the synapses, can be empty
      */
     FileSynapseLoader(std::shared_ptr<Partition> partition, std::optional<std::filesystem::path> path_to_synapses);

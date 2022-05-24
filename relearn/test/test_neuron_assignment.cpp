@@ -681,7 +681,6 @@ TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
 
     sff.initialize();
 
-    const auto translator = sff.get_neuron_id_translator();
     const auto loader = sff.get_synapse_loader();
 
     const auto& [local_synapses, in_synapses, out_synapses] = loader->load_synapses();
@@ -724,7 +723,6 @@ TEST_F(NeuronAssignmentTest, testFileRoi14SingleSubdomainONCE) {
     ASSERT_EQ(global_ids.size(), 426124);
     ASSERT_EQ(positions.size(), 426124);
 
-    const auto nit = sff.get_neuron_id_translator();
     const auto sl = sff.get_synapse_loader();
 
     const auto& [local_synapses, in_synapses, out_synapses] = sl->load_synapses();
@@ -769,7 +767,6 @@ TEST_F(NeuronAssignmentTest, testFileRoi15SingleSubdomainONCE) {
     ASSERT_EQ(global_ids.size(), 426124);
     ASSERT_EQ(positions.size(), 426124);
 
-    const auto nit = sff.get_neuron_id_translator();
     const auto sl = sff.get_synapse_loader();
 
     const auto& [local_synapses, in_synapses, out_synapses] = sl->load_synapses();
@@ -814,7 +811,6 @@ TEST_F(NeuronAssignmentTest, testFileRoi16SingleSubdomainONCE) {
     ASSERT_EQ(global_ids.size(), 426124);
     ASSERT_EQ(positions.size(), 426124);
 
-    const auto nit = sff.get_neuron_id_translator();
     const auto sl = sff.get_synapse_loader();
 
     const auto& [local_synapses, in_synapses, out_synapses] = sl->load_synapses();
@@ -859,7 +855,6 @@ TEST_F(NeuronAssignmentTest, testFileRoi17SingleSubdomainONCE) {
     ASSERT_EQ(global_ids.size(), 426124);
     ASSERT_EQ(positions.size(), 426124);
 
-    const auto nit = sff.get_neuron_id_translator();
     const auto sl = sff.get_synapse_loader();
 
     const auto& [local_synapses, in_synapses, out_synapses] = sl->load_synapses();
