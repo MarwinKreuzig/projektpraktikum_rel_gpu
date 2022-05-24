@@ -8,7 +8,7 @@
 #include "util/Random.h"
 
 #include <array>
-#include <iostream>
+#include <sstream>
 #include <tuple>
 
 TEST_F(ProbabilityKernelTest, testLinearGetterSetter) {
@@ -16,9 +16,12 @@ TEST_F(ProbabilityKernelTest, testLinearGetterSetter) {
 
     const auto cutoff_point = get_random_linear_cutoff();
 
-    ASSERT_EQ(LinearDistributionKernel::get_cutoff(), LinearDistributionKernel::default_cutoff);
-    ASSERT_NO_THROW(LinearDistributionKernel::set_cutoff(cutoff_point));
-    ASSERT_EQ(LinearDistributionKernel::get_cutoff(), cutoff_point);
+    std::stringstream ss{};
+    ss << "Cutoff Point: " << cutoff_point << '\n';
+
+    ASSERT_EQ(LinearDistributionKernel::get_cutoff(), LinearDistributionKernel::default_cutoff) << ss.str();
+    ASSERT_NO_THROW(LinearDistributionKernel::set_cutoff(cutoff_point)) << ss.str();
+    ASSERT_EQ(LinearDistributionKernel::get_cutoff(), cutoff_point) << ss.str();
 }
 
 TEST_F(ProbabilityKernelTest, testLinearGetterSetterInf) {
@@ -26,8 +29,11 @@ TEST_F(ProbabilityKernelTest, testLinearGetterSetterInf) {
 
     constexpr auto cutoff_point_inf = std::numeric_limits<double>::infinity();
 
-    ASSERT_NO_THROW(LinearDistributionKernel::set_cutoff(cutoff_point_inf));
-    ASSERT_EQ(LinearDistributionKernel::get_cutoff(), cutoff_point_inf);
+    std::stringstream ss{};
+    ss << "Cutoff Point: " << cutoff_point_inf << '\n';
+
+    ASSERT_NO_THROW(LinearDistributionKernel::set_cutoff(cutoff_point_inf)) << ss.str();
+    ASSERT_EQ(LinearDistributionKernel::get_cutoff(), cutoff_point_inf) << ss.str();
 }
 
 TEST_F(ProbabilityKernelTest, testLinearGetterSetterException) {
@@ -35,8 +41,11 @@ TEST_F(ProbabilityKernelTest, testLinearGetterSetterException) {
 
     const auto cutoff_point = -get_random_linear_cutoff();
 
-    ASSERT_THROW(LinearDistributionKernel::set_cutoff(cutoff_point), RelearnException);
-    ASSERT_EQ(LinearDistributionKernel::get_cutoff(), LinearDistributionKernel::default_cutoff);
+    std::stringstream ss{};
+    ss << "Cutoff Point: " << cutoff_point << '\n';
+
+    ASSERT_THROW(LinearDistributionKernel::set_cutoff(cutoff_point), RelearnException) << ss.str();
+    ASSERT_EQ(LinearDistributionKernel::get_cutoff(), LinearDistributionKernel::default_cutoff) << ss.str();
 }
 
 TEST_F(ProbabilityKernelTest, testLinearNoFreeElements) {
@@ -46,9 +55,14 @@ TEST_F(ProbabilityKernelTest, testLinearNoFreeElements) {
     const auto& source_position = get_random_position();
     const auto& target_position = get_random_position();
 
+    std::stringstream ss{};
+    ss << "Cutoff Point: " << cutoff_point << '\n';
+    ss << "Source Position: " << source_position << '\n';
+    ss << "Target Position: " << target_position << '\n';
+
     const auto attractiveness = LinearDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, 0);
 
-    ASSERT_EQ(attractiveness, 0.0);
+    ASSERT_EQ(attractiveness, 0.0) << ss.str();
 }
 
 TEST_F(ProbabilityKernelTest, testLinearLinearFreeElements) {
@@ -60,11 +74,20 @@ TEST_F(ProbabilityKernelTest, testLinearLinearFreeElements) {
 
     const auto attractiveness_one = LinearDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, 1);
 
-    for (auto number_free_elements = 0U; number_free_elements < 10000U; number_free_elements++) {
-        const auto attractiveness = LinearDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, number_free_elements);
+    for (auto number_elements = 0U; number_elements < 10000U; number_elements++) {
+        const auto attractiveness = LinearDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, number_elements);
 
-        const auto expected_attractiveness = attractiveness_one * number_free_elements;
-        ASSERT_NEAR(attractiveness, expected_attractiveness, eps);
+        const auto expected_attractiveness = attractiveness_one * number_elements;
+        
+        std::stringstream ss{};
+        ss << "Cutoff Point: " << cutoff_point << '\n';
+        ss << "Source Position: " << source_position << '\n';
+        ss << "Target Position: " << target_position << '\n';
+        ss << "Number Elements: " << number_elements << '\n';
+        ss << "Attractiveness: " << attractiveness << '\n';
+        ss << "Expected Attractiveness: " << expected_attractiveness << '\n';
+
+        ASSERT_NEAR(attractiveness, expected_attractiveness, eps) << ss.str();
     }
 }
 
@@ -79,7 +102,15 @@ TEST_F(ProbabilityKernelTest, testLinearSamePosition) {
 
     const auto attractiveness = LinearDistributionKernel::calculate_attractiveness_to_connect(position, position, number_elements);
 
-    ASSERT_NEAR(attractiveness, converted_double, eps);
+    std::stringstream ss{};
+    ss << "Cutoff Point: " << cutoff_point << '\n';
+    ss << "Source Position: " << position << '\n';
+    ss << "Target Position: " << position << '\n';
+    ss << "Number Elements: " << number_elements << '\n';
+    ss << "Attractiveness: " << attractiveness << '\n';
+    ss << "Expected Attractiveness: " << converted_double << '\n';
+
+    ASSERT_NEAR(attractiveness, converted_double, eps) << ss.str();
 }
 
 TEST_F(ProbabilityKernelTest, testLinearInf) {
@@ -91,9 +122,17 @@ TEST_F(ProbabilityKernelTest, testLinearInf) {
 
     const auto number_elements = get_random_integer<unsigned int>(0, 10000);
 
-    const auto attraction = LinearDistributionKernel::calculate_attractiveness_to_connect(source, target, number_elements);
+    const auto attractiveness = LinearDistributionKernel::calculate_attractiveness_to_connect(source, target, number_elements);
 
-    ASSERT_EQ(attraction, static_cast<double>(number_elements));
+    std::stringstream ss{};
+    ss << "Cutoff Point: " << cutoff_point_inf << '\n';
+    ss << "Source Position: " << source << '\n';
+    ss << "Target Position: " << target << '\n';
+    ss << "Number Elements: " << number_elements << '\n';
+    ss << "Attractiveness: " << attractiveness << '\n';
+    ss << "Expected Attractiveness: " << static_cast<double>(number_elements) << '\n';
+
+    ASSERT_EQ(attractiveness, static_cast<double>(number_elements)) << ss.str();
 }
 
 TEST_F(ProbabilityKernelTest, testLinearFinite) {
@@ -106,18 +145,29 @@ TEST_F(ProbabilityKernelTest, testLinearFinite) {
         const auto& source = get_random_position();
         const auto& target = get_random_position();
 
-        const auto attraction = LinearDistributionKernel::calculate_attractiveness_to_connect(source, target, number_elements);
+        const auto attractiveness = LinearDistributionKernel::calculate_attractiveness_to_connect(source, target, number_elements);
 
         const auto difference = (source - target).calculate_2_norm();
 
+        std::stringstream ss{};
+        ss << "Cutoff Point: " << cutoff_point << '\n';
+        ss << "Source Position: " << source << '\n';
+        ss << "Target Position: " << target << '\n';
+        ss << "Number Elements: " << number_elements << '\n';
+        ss << "Attractiveness: " << attractiveness << '\n';
+        ss << "Difference: " << difference << '\n';
+
         if (difference > cutoff_point) {
-            ASSERT_EQ(attraction, 0.0);
+            ss << "Expected Attractiveness: 0.0\n";
+            ASSERT_EQ(attractiveness, 0.0) << ss.str();
             continue;
         }
 
-        const auto fixed_attraction = attraction * cutoff_point / difference;
+        const auto fixed_attraction = attractiveness * cutoff_point / difference;
 
-        ASSERT_NEAR(attraction, fixed_attraction, eps);
+        ss << "Expected Attractiveness: " << fixed_attraction << '\n';
+
+        ASSERT_NEAR(attractiveness, fixed_attraction, eps) << ss.str();
     }
 }
 

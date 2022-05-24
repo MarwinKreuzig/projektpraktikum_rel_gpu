@@ -76,7 +76,7 @@ double calculate_excitatory_fraction(const std::vector<SignalType>& types) {
 void write_synapses_to_file(const std::vector<std::tuple<NeuronID, NeuronID, int>>& synapses, std::filesystem::path path) {
     std::ofstream of(path);
 
-    for (const auto& [source, target, weight] : synapses) {
+    for (const auto& [target, source, weight] : synapses) {
         of << (target.get_local_id() + 1) << ' ' << (source.get_local_id() + 1) << ' ' << weight << '\n';
     }
 }
