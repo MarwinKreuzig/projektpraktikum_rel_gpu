@@ -178,24 +178,6 @@ std::vector<NeuronToSubdomainAssignment::Node> SubdomainFromFile::read_nodes_fro
     return nodes;
 }
 
-std::vector<NeuronID> SubdomainFromFile::get_neuron_global_ids_in_subdomain(const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {
-    const bool contains = is_subdomain_loaded(subdomain_index_1d);
-    if (!contains) {
-        RelearnException::fail("SubdomainFromFile::get_neuron_global_ids_in_subdomain: Wanted to have neuron_global_ids of subdomain_index_1d that is not present");
-        return {};
-    }
-
-    const Nodes& nodes = get_nodes_for_subdomain(subdomain_index_1d);
-    std::vector<NeuronID> global_ids{};
-    global_ids.reserve(nodes.size());
-
-    for (const Node& node : nodes) {
-        global_ids.push_back(node.id);
-    }
-
-    return global_ids;
-}
-
 void SubdomainFromFile::fill_subdomain(const size_t local_subdomain_index, [[maybe_unused]] const size_t total_number_subdomains) {
     const auto number_subdomains = partition->get_total_number_subdomains();
     RelearnException::check(number_subdomains == 1, "SubdomainFromNeuronDensity::fill_subdomain: The total number of subdomains was not 1 but {}.", number_subdomains);
@@ -207,29 +189,10 @@ void SubdomainFromFile::fill_subdomain(const size_t local_subdomain_index, [[may
         return;
     }
 
-    Nodes nodes{};
-
     const auto& [min, max] = partition->get_subdomain_boundaries(local_subdomain_index);
     auto nodes_vector = read_nodes_from_file(min, max);
-    for (const auto& node : nodes_vector) {
-        nodes.emplace(node);
-    }
 
-    set_nodes_for_subdomain(subdomain_index_1d, std::move(nodes));
-}
-
-void SubdomainFromFile::post_initialization() {
-    const auto total_number_subdomains = partition->get_number_local_subdomains();
-    std::vector<std::vector<NeuronID>> global_ids(total_number_subdomains);
-
-    for (auto i = 0; i < total_number_subdomains; i++) {
-        const auto& index_1d = partition->get_1d_index_of_subdomain(i);
-
-        auto global_ids_in_subdomain = get_neuron_global_ids_in_subdomain(index_1d, total_number_subdomains);
-        std::sort(global_ids_in_subdomain.begin(), global_ids_in_subdomain.end());
-
-        global_ids[i] = std::move(global_ids_in_subdomain);
-    }
+    set_nodes_for_subdomain(subdomain_index_1d, std::move(nodes_vector));
 }
 
 std::optional<std::vector<NeuronID>> SubdomainFromFile::read_neuron_ids_from_file(const std::filesystem::path& file_path) {

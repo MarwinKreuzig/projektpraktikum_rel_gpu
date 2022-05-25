@@ -717,10 +717,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi14SingleSubdomainONCE) {
 
     sff.initialize();
 
-    const auto& global_ids = sff.get_neuron_global_ids_in_subdomain(0, 1);
     const auto& positions = sff.get_neuron_positions_in_subdomain(0, 1);
 
-    ASSERT_EQ(global_ids.size(), 426124);
     ASSERT_EQ(positions.size(), 426124);
 
     const auto sl = sff.get_synapse_loader();
@@ -761,10 +759,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi15SingleSubdomainONCE) {
 
     sff.initialize();
 
-    const auto& global_ids = sff.get_neuron_global_ids_in_subdomain(0, 1);
     const auto& positions = sff.get_neuron_positions_in_subdomain(0, 1);
 
-    ASSERT_EQ(global_ids.size(), 426124);
     ASSERT_EQ(positions.size(), 426124);
 
     const auto sl = sff.get_synapse_loader();
@@ -805,10 +801,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi16SingleSubdomainONCE) {
 
     sff.initialize();
 
-    const auto& global_ids = sff.get_neuron_global_ids_in_subdomain(0, 1);
     const auto& positions = sff.get_neuron_positions_in_subdomain(0, 1);
 
-    ASSERT_EQ(global_ids.size(), 426124);
     ASSERT_EQ(positions.size(), 426124);
 
     const auto sl = sff.get_synapse_loader();
@@ -849,10 +843,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi17SingleSubdomainONCE) {
 
     sff.initialize();
 
-    const auto& global_ids = sff.get_neuron_global_ids_in_subdomain(0, 1);
     const auto& positions = sff.get_neuron_positions_in_subdomain(0, 1);
 
-    ASSERT_EQ(global_ids.size(), 426124);
     ASSERT_EQ(positions.size(), 426124);
 
     const auto sl = sff.get_synapse_loader();

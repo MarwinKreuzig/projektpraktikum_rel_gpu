@@ -218,33 +218,6 @@ public:
     }
 
     /**
-     * @brief Returns the global ids for a given subdomain.
-     *      Might not be implemented
-     * @param subdomain_index_1d The 1d index of the subdomain which is inquired
-     * @param total_number_subdomains The total number of subdomains
-     * @exception Might throw a RelearnException
-     * @return The global ids for the specified subdomain
-     */
-    [[nodiscard]] virtual std::vector<NeuronID> get_neuron_global_ids_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const = 0;
-
-    /**
-     * @brief Returns the global ids of the neurons which are in the specified subdomains.
-     *      Might not be implemented
-     * @param subdomain_index_1d_start The 1d index of the first subdomain which is inquired
-     * @param subdomain_index_1d_end The 1d index of the last subdomain which is inquired
-     * @param total_number_subdomains The total number of subdomains
-     * @exception Might throw a RelearnException
-     * @return The global ids of the neurons in the subdomains
-     */
-    [[nodiscard]] std::vector<NeuronID> get_neuron_global_ids_in_subdomains(size_t subdomain_index_1d_start, size_t subdomain_index_1d_end, size_t total_number_subdomains) const {
-        auto function = [this](size_t subdomain_index_1d, size_t total_number_subdomains) {
-            return get_neuron_global_ids_in_subdomain(subdomain_index_1d, total_number_subdomains);
-        };
-
-        return get_all_values<NeuronID>(subdomain_index_1d_start, subdomain_index_1d_end, total_number_subdomains, function);
-    }
-
-    /**
      * @brief Writes all loaded neurons into the specified file.
      *      The format is
      *      # ID, Position (x y z),	Area, type
@@ -270,7 +243,7 @@ protected:
         };
     };
 
-    using Nodes = std::set<Node, Node::less>;
+    using Nodes = std::vector<Node>;
 
     /**
      * @brief Fills the subdomain with the given index and the boundaries. The implementation is left to the inhereting classes
@@ -320,7 +293,7 @@ protected:
 
     virtual void calculate_total_number_neurons() const = 0;
 
-    virtual void post_initialization() = 0;
+    virtual void post_initialization(){};
 
     std::shared_ptr<Partition> partition{};
 

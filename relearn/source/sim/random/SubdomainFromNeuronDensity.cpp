@@ -21,10 +21,10 @@
 #include <numeric>
 
 SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t number_neurons, const double fraction_excitatory_neurons, const double um_per_neuron, std::shared_ptr<Partition> partition)
-    : NeuronToSubdomainAssignment(std::move(partition))
+    : NeuronToSubdomainAssignment(partition)
     , um_per_neuron_(um_per_neuron) {
 
-    RelearnException::check(this->partition->get_my_mpi_rank() == 0 && this->partition->get_number_mpi_ranks() == 1, "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: Can only be used for 1 MPI rank.");
+    RelearnException::check(partition->get_my_mpi_rank() == 0 && partition->get_number_mpi_ranks() == 1, "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: Can only be used for 1 MPI rank.");
 
     RelearnException::check(fraction_excitatory_neurons >= 0.0 && fraction_excitatory_neurons <= 1.0,
         "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: The requested fraction of excitatory neurons is not in [0.0, 1.0]: {}", fraction_excitatory_neurons);
@@ -39,13 +39,15 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t number_neuro
     const auto approx_number_of_neurons_per_dimension = ceil(pow(static_cast<double>(number_neurons), 1. / 3));
     const auto simulation_box_length_ = approx_number_of_neurons_per_dimension * um_per_neuron;
 
-    this->partition->set_simulation_box_size({ 0, 0, 0 }, box_size_type(simulation_box_length_));
+    partition->set_simulation_box_size({ 0, 0, 0 }, box_size_type(simulation_box_length_));
 
     set_requested_ratio_excitatory_neurons(fraction_excitatory_neurons);
     set_requested_number_neurons(number_neurons);
 
     set_ratio_placed_excitatory_neurons(0.0);
     set_number_placed_neurons(0);
+
+    synapse_loader = std::make_shared<RandomSynapseLoader>(std::move(partition));
 }
 
 void SubdomainFromNeuronDensity::place_neurons_in_area(
@@ -119,11 +121,9 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
         pos_rnd *= um_per_neuron_;
 
         const box_size_type pos = pos_rnd + offset;
-
         const auto signal_type = signal_types[i];
 
-        Node node{ pos, NeuronID{ false, i }, signal_type, "random" };
-        nodes.emplace(node);
+        nodes.emplace_back(pos, NeuronID{ false, i }, signal_type, "random");
 
         placed_neurons++;
     }
@@ -165,11 +165,3 @@ void SubdomainFromNeuronDensity::calculate_total_number_neurons() const {
     set_total_number_placed_neurons(number_local_neurons);
 }
 
-std::vector<NeuronID> SubdomainFromNeuronDensity::get_neuron_global_ids_in_subdomain([[maybe_unused]] const size_t subdomain_index_1d, [[maybe_unused]] const size_t total_number_subdomains) const {
-
-    return {};
-}
-
-void SubdomainFromNeuronDensity::post_initialization() {
-    synapse_loader = std::make_shared<RandomSynapseLoader>(partition);
-}

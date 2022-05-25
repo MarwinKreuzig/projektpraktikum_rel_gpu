@@ -43,11 +43,6 @@ public:
     ~SubdomainFromNeuronDensity() override = default;
 
     /**
-     * @brief This method is not implemented for this class
-     */
-    [[nodiscard]] std::vector<NeuronID> get_neuron_global_ids_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const override;
-
-    /**
      * @brief Returns a function object that is used to fix calculated subdomain boundaries.
      *      It rounds the boundaries up to the next multiple of um_per_neuron
      * @return A function object that corrects subdomain boundaries
@@ -62,8 +57,6 @@ public:
     }
 
 protected:
-    void post_initialization() override;
-
     /**
      * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
      * @param local_subdomain_index The local index of the subdomain which's neurons are to be filled
