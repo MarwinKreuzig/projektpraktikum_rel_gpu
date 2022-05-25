@@ -20,7 +20,7 @@ class Stack {
     std::vector<T> container{};
 
 public:
-    using size_type = std::vector<T>::size_type;
+    using size_type = typename std::vector<T>::size_type;
 
     Stack(size_type reserved_size = 0) {
         container.reserve(reserved_size);

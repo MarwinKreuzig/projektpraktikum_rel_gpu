@@ -36,10 +36,16 @@ public:
      * @brief Constructs a SynapseLoader with the given Partition
      * @param partition The partition to use
      */
-    SynapseLoader(std::shared_ptr<Partition> partition)
+    explicit SynapseLoader(std::shared_ptr<Partition> partition)
         : partition(std::move(partition)) { }
 
     virtual ~SynapseLoader() = default;
+
+    SynapseLoader(const SynapseLoader& other) = default;
+    SynapseLoader(SynapseLoader&& other) = default;
+
+    SynapseLoader& operator=(const SynapseLoader& other) = default;
+    SynapseLoader& operator=(SynapseLoader&& other) = default;
 
     /**
      * @brief Loads all synapses that affect the local neurons, which are

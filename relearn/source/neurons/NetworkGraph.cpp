@@ -10,8 +10,8 @@
 
 #include "NetworkGraph.h"
 
-#include "io/LogFiles.h"
 #include "Neurons.h"
+#include "io/LogFiles.h"
 
 #include "spdlog/spdlog.h"
 
@@ -111,7 +111,7 @@ void NetworkGraph::debug_check() const {
     RelearnException::check(edges.empty(), "NetworkGraph::debug_check: Edges is not empty");
 }
 
-void NetworkGraph::print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges) const noexcept {
+void NetworkGraph::print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges) const {
     const auto my_rank = mpi_rank;
 
     for (const auto& source_id : NeuronID::range(number_local_neurons)) {

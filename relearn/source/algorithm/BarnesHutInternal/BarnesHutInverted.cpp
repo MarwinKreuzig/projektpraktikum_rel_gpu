@@ -80,7 +80,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(
 
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks);
 
-    const auto root = global_tree->get_root();
+    auto* const root = global_tree->get_root();
 
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
 #pragma omp parallel for default(none) shared(root, number_neurons, extra_infos, disable_flags, synapse_creation_requests_outgoing)

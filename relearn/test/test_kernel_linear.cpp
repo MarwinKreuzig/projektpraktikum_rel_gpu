@@ -163,11 +163,11 @@ TEST_F(ProbabilityKernelTest, testLinearFinite) {
             continue;
         }
 
-        const auto fixed_attraction = attractiveness * cutoff_point / difference;
+        const auto expected_attraction = number_elements * (cutoff_point - difference) / cutoff_point;
 
-        ss << "Expected Attractiveness: " << fixed_attraction << '\n';
+        ss << "Expected Attractiveness: " << expected_attraction << '\n';
 
-        ASSERT_NEAR(attractiveness, fixed_attraction, eps) << ss.str();
+        ASSERT_NEAR(attractiveness, expected_attraction, eps) << ss.str();
     }
 }
 

@@ -197,7 +197,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
 }
 
 [[nodiscard]] double Naive::calc_attractiveness_to_connect(const NeuronID& src_neuron_id, const position_type& axon_position,
-    const OctreeNode<NaiveCell>& node_with_dendrite, const SignalType dendrite_type_needed) const {
+    const OctreeNode<NaiveCell>& node_with_dendrite, const SignalType dendrite_type_needed) {
 
     /**
      * If the axon's neuron itself is considered as target neuron, set attractiveness to 0 to avoid forming an autapse (connection to itself).

@@ -168,7 +168,7 @@ void SubdomainFromNeuronPerRank::place_neurons_in_area(const NeuronToSubdomainAs
 
         if (placed_neurons == number_neurons) {
             const auto current_num_neurons = get_number_placed_neurons();
-            const auto former_ex_neurons = static_cast<unsigned long long>(current_num_neurons * get_ratio_placed_excitatory_neurons());
+            const auto former_ex_neurons = static_cast<std::uint64_t>(current_num_neurons * get_ratio_placed_excitatory_neurons());
 
             const auto new_num_neurons = current_num_neurons + placed_neurons;
 

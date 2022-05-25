@@ -30,6 +30,6 @@ public:
      *      Does not provide any synapses
      * @param partition The partition to use
      */
-    RandomSynapseLoader(std::shared_ptr<Partition> partition)
+    explicit RandomSynapseLoader(std::shared_ptr<Partition> partition)
         : SynapseLoader(std::move(partition)) { }
 };

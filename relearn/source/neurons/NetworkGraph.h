@@ -637,7 +637,7 @@ public:
      * @param os_out_edges The out-stream to which the out-connections are printed
      * @param os_in_edges The out-stream to which the in-connections are printed
      */
-    void print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges) const noexcept;
+    void print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges) const;
 
     /**
      * @brief Returns directly if !Config::do_debug_checks

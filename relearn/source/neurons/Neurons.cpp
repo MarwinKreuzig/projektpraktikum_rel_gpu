@@ -10,6 +10,7 @@
 
 #include "Neurons.h"
 
+#include "NetworkGraph.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
 #include "structure/NodeCache.h"
@@ -18,7 +19,6 @@
 #include "util/Random.h"
 #include "util/Timers.h"
 #include "util/Utility.h"
-#include "NetworkGraph.h"
 #include "helper/RankNeuronId.h"
 #include "models/NeuronModels.h"
 
