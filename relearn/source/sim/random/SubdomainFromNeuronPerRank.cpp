@@ -83,7 +83,6 @@ void SubdomainFromNeuronPerRank::calculate_total_number_neurons() const {
 
 void SubdomainFromNeuronPerRank::place_neurons_in_area(const NeuronToSubdomainAssignment::box_size_type& offset, const NeuronToSubdomainAssignment::box_size_type& length_of_box,
     const size_t number_neurons, const size_t subdomain_idx) {
-    constexpr uint16_t max_short = std::numeric_limits<uint16_t>::max();
 
     const auto& [min, max] = partition->get_simulation_box_size();
     const auto& simulation_box_length_ = (max - min).get_maximum();
@@ -99,16 +98,14 @@ void SubdomainFromNeuronPerRank::place_neurons_in_area(const NeuronToSubdomainAs
 
     const auto calculated_num_neurons = neurons_on_x * neurons_on_y * neurons_on_z;
     RelearnException::check(calculated_num_neurons >= number_neurons, "SubdomainFromNeuronPerRank::place_neurons_in_area: Should emplace more neurons than space in box");
+
+    constexpr auto max_short = std::numeric_limits<uint16_t>::max();
     RelearnException::check(neurons_on_x <= max_short && neurons_on_y <= max_short && neurons_on_z <= max_short, "SubdomainFromNeuronPerRank::place_neurons_in_area: Should emplace more neurons in a dimension than possible");
 
-    const double desired_ex = get_requested_ratio_excitatory_neurons();
+    const auto desired_ex = get_requested_ratio_excitatory_neurons();
 
-    const size_t expected_number_in = number_neurons - static_cast<size_t>(ceil(static_cast<double>(number_neurons) * desired_ex));
-    const size_t expected_number_ex = number_neurons - expected_number_in;
-
-    size_t placed_neurons = 0;
-    size_t placed_in_neurons = 0;
-    size_t placed_ex_neurons = 0;
+    const auto expected_number_in = number_neurons - static_cast<size_t>(ceil(static_cast<double>(number_neurons) * desired_ex));
+    const auto expected_number_ex = number_neurons - expected_number_in;
 
     size_t random_counter = 0;
     std::vector<size_t> positions(calculated_num_neurons);
@@ -131,7 +128,10 @@ void SubdomainFromNeuronPerRank::place_neurons_in_area(const NeuronToSubdomainAs
     RandomHolder::shuffle(RandomHolderKey::Subdomain, positions.begin(), positions.end());
 
     Nodes nodes{};
+    nodes.reserve(number_neurons);
 
+    size_t placed_in_neurons = 0;
+    size_t placed_ex_neurons = 0;
     for (size_t i = 0; i < number_neurons; i++) {
         const size_t pos_bitmask = positions[i];
         const size_t x_it = (pos_bitmask >> 32U) & max_short;
@@ -156,27 +156,20 @@ void SubdomainFromNeuronPerRank::place_neurons_in_area(const NeuronToSubdomainAs
             placed_in_neurons++;
             nodes.emplace_back(pos, NeuronID{ i }, SignalType::Inhibitory, "random");
         }
-
-        placed_neurons++;
-
-        if (placed_neurons == number_neurons) {
-            const auto current_num_neurons = get_number_placed_neurons();
-            const auto former_ex_neurons = static_cast<std::uint64_t>(current_num_neurons * get_ratio_placed_excitatory_neurons());
-
-            const auto new_num_neurons = current_num_neurons + placed_neurons;
-
-            set_number_placed_neurons(new_num_neurons);
-
-            const auto now_ex_neurons = former_ex_neurons + placed_ex_neurons;
-            // const auto now_in_neurons = former_in_neurons + placed_in_neurons;
-
-            const auto current_frac_ex = static_cast<double>(now_ex_neurons) / static_cast<double>(new_num_neurons);
-
-            set_ratio_placed_excitatory_neurons(current_frac_ex);
-            set_nodes_for_subdomain(subdomain_idx, std::move(nodes));
-            return;
-        }
     }
 
-    RelearnException::fail("SubdomainFromNeuronPerRank::place_neurons_in_area: Subdomain {} does not have enough neurons: {}!", subdomain_idx, number_neurons);
+    const auto current_num_neurons = get_number_placed_neurons();
+    const auto former_ex_neurons = static_cast<std::uint64_t>(current_num_neurons * get_ratio_placed_excitatory_neurons());
+
+    const auto new_num_neurons = current_num_neurons + placed_in_neurons + placed_ex_neurons;
+
+    set_number_placed_neurons(new_num_neurons);
+
+    const auto now_ex_neurons = former_ex_neurons + placed_ex_neurons;
+    // const auto now_in_neurons = former_in_neurons + placed_in_neurons;
+
+    const auto current_frac_ex = static_cast<double>(now_ex_neurons) / static_cast<double>(new_num_neurons);
+
+    set_ratio_placed_excitatory_neurons(current_frac_ex);
+    set_nodes_for_subdomain(subdomain_idx, std::move(nodes));
 }

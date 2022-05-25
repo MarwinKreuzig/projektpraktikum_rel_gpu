@@ -106,6 +106,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
     RandomHolder::shuffle(RandomHolderKey::Subdomain, signal_types.begin(), signal_types.end());
 
     Nodes nodes{};
+    nodes.reserve(number_neurons);
 
     for (size_t i = 0; i < number_neurons; i++) {
         const size_t pos_bitmask = positions[i];
@@ -164,4 +165,3 @@ void SubdomainFromNeuronDensity::calculate_total_number_neurons() const {
     const auto number_local_neurons = get_number_placed_neurons();
     set_total_number_placed_neurons(number_local_neurons);
 }
-

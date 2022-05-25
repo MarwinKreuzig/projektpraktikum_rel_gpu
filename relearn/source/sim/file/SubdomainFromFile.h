@@ -31,11 +31,13 @@ class SubdomainFromFile : public NeuronToSubdomainAssignment {
 public:
     /**
      * @brief Constructs a new object and reads the specified file to determine the simulation box' size.
-     *      Does not load any neurons.
-     * @param file_path The path to the file to load
-     * @exception Throws a RelearnException if there occurred some erros while processing the file
+     *      Loads all neurons in the file to prevent reading it twice.
+     * @param path_to_neurons The path to the file with the neurons to load
+     * @param path_to_synapses The file path to the synapses, can be empty if none should be loaded
+     * @param partition The partition
+     * @exception Throws a RelearnException if some erros occurred while processing the file
      */
-    SubdomainFromFile(const std::filesystem::path& file_path, std::optional<std::filesystem::path> file_path_positions, std::shared_ptr<Partition> partition);
+    SubdomainFromFile(const std::filesystem::path& path_to_neurons, std::optional<std::filesystem::path> path_to_synapses, std::shared_ptr<Partition> partition);
 
     SubdomainFromFile(const SubdomainFromFile& other) = delete;
     SubdomainFromFile(SubdomainFromFile&& other) = delete;
@@ -60,17 +62,12 @@ protected:
      * @param total_number_subdomains The total number of subdomains
      * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file
      */
-    void fill_subdomain(size_t local_subdomain_index, size_t total_number_subdomains) override;
+    void fill_subdomain([[maybe_unused]] size_t local_subdomain_index, [[maybe_unused]] size_t total_number_subdomains) override { }
 
     void calculate_total_number_neurons() const override {
-        set_total_number_placed_neurons(total_num_neurons_in_file);
+        
     }
 
 private:
-    void read_dimensions_from_file();
-
-    [[nodiscard]] std::vector<NeuronToSubdomainAssignment::Node> read_nodes_from_file(const box_size_type& min, const box_size_type& max);
-
-    std::filesystem::path path{};
-    size_t total_num_neurons_in_file{ Constants::uninitialized };
+    void read_neurons_from_file(const std::filesystem::path& path_to_neurons);
 };
