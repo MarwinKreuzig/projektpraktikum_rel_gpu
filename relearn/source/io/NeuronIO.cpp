@@ -268,7 +268,7 @@ std::optional<std::vector<NeuronID>> NeuronIO::read_neuron_ids(const std::filesy
     return ids;
 }
 
-LocalSynapses NeuronIO::read_local_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons) {
+LocalSynapses NeuronIO::read_local_synapses(const std::filesystem::path& file_path, const NeuronID::value_type number_local_neurons) {
     LocalSynapses local_synapses{};
 
     std::ifstream file_synapses(file_path, std::ios::binary | std::ios::in);
@@ -320,5 +320,147 @@ void NeuronIO::write_local_synapses(const LocalSynapses& local_synapses, const s
 
     for (const auto& [target_id, source_id, weight] : local_synapses) {
         file_synapses << (target_id.get_local_id() + 1) << ' ' << (source_id.get_local_id() + 1) << ' ' << weight << '\n';
+    }
+}
+
+DistantInSynapses NeuronIO::read_distant_in_synapses(const std::filesystem::path& file_path, const NeuronID::value_type number_local_neurons, const int my_rank, const int number_mpi_ranks) {
+    DistantInSynapses distant_in_synapses{};
+
+    std::ifstream file_synapses(file_path, std::ios::binary | std::ios::in);
+
+    const auto is_good = file_synapses.good();
+    const auto is_bad = file_synapses.bad();
+
+    RelearnException::check(is_good && !is_bad, "NeuronIO::read_distant_in_synapses: The ofstream failed to open");
+
+    for (std::string line{}; std::getline(file_synapses, line);) {
+        // Skip line with comments
+        if (line.empty() || '#' == line[0]) {
+            continue;
+        }
+
+        int read_target_rank = 0;
+        NeuronID::value_type read_target_id = 0;
+        int read_source_rank = 0;
+        NeuronID::value_type read_source_id = 0;
+        RelearnTypes::synapse_weight weight = 0;
+
+        std::stringstream sstream(line);
+        const bool success = (sstream >> read_target_rank) && (sstream >> read_target_id) && (sstream >> read_source_rank) && (sstream >> read_source_id) && (sstream >> weight);
+
+        if (!success) {
+            spdlog::info("Skipping line: {}", line);
+            continue;
+        }
+
+        RelearnException::check(read_target_rank == my_rank, "NeuronID::read_distant_in_synapses: target_rank is not equal to my_rank: {} vs {}", read_target_rank, my_rank);
+        RelearnException::check(read_target_id > 0 && read_target_id <= number_local_neurons, "NeuronIO::read_distant_in_synapses: target_id was not from [1, {}]: {}", number_local_neurons, read_target_id);
+
+        RelearnException::check(read_source_rank < number_mpi_ranks, "NeuronID::read_distant_in_synapses: source rank is not smaller than the number of mpi ranks: {} vs {}", read_source_rank, number_mpi_ranks);
+
+        RelearnException::check(weight != 0, "NeuronIO::read_distant_in_synapses: weight was 0");
+
+        // The neurons start with 1
+        --read_source_id;
+        --read_target_id;
+        
+        auto source_id = NeuronID{ false, read_source_id };
+        auto target_id = NeuronID{ false, read_target_id };
+
+        distant_in_synapses.emplace_back(target_id, RankNeuronId{ read_source_rank, source_id }, weight);
+    }
+
+    return distant_in_synapses;
+}
+
+void NeuronIO::write_distant_in_synapses(const DistantInSynapses& distant_in_synapses, const int target_rank, const std::filesystem::path& file_path) {
+    std::ofstream file_synapses(file_path, std::ios::binary | std::ios::out);
+
+    const auto is_good = file_synapses.good();
+    const auto is_bad = file_synapses.bad();
+
+    RelearnException::check(is_good && !is_bad, "NeuronIO::write_distant_in_synapses: The ofstream failed to open");
+
+    file_synapses << "# " << distant_in_synapses.size() << '\n';
+    file_synapses << "# <target rank> <target neuron id>\t<source rank> <source neuron id>\t<weight>\n";
+
+    for (const auto& [target_id, source_rni, weight] : distant_in_synapses) {
+        const auto target_neuron_id = target_id.get_local_id();
+
+        const auto& [source_rank, source_id] = source_rni;
+        const auto source_neuron_id = source_id.get_local_id();
+
+        file_synapses << target_rank << ' ' << (target_neuron_id + 1) << '\t' << source_rank << ' ' << (source_neuron_id + 1) << '\t' << weight << '\n';
+    }
+}
+
+DistantOutSynapses NeuronIO::read_distant_out_synapses(const std::filesystem::path& file_path, const NeuronID::value_type number_local_neurons, const int my_rank, const int number_mpi_ranks) {
+    DistantOutSynapses distant_out_synapses{};
+
+    std::ifstream file_synapses(file_path, std::ios::binary | std::ios::in);
+
+    const auto is_good = file_synapses.good();
+    const auto is_bad = file_synapses.bad();
+
+    RelearnException::check(is_good && !is_bad, "NeuronIO::read_distant_out_synapses: The ofstream failed to open");
+
+    for (std::string line{}; std::getline(file_synapses, line);) {
+        // Skip line with comments
+        if (line.empty() || '#' == line[0]) {
+            continue;
+        }
+
+        int read_target_rank = 0;
+        NeuronID::value_type read_target_id = 0;
+        int read_source_rank = 0;
+        NeuronID::value_type read_source_id = 0;
+        RelearnTypes::synapse_weight weight = 0;
+
+        std::stringstream sstream(line);
+        const bool success = (sstream >> read_target_rank) && (sstream >> read_target_id) && (sstream >> read_source_rank) && (sstream >> read_source_id) && (sstream >> weight);
+
+        if (!success) {
+            spdlog::info("Skipping line: {}", line);
+            continue;
+        }
+
+        RelearnException::check(read_source_rank == my_rank, "NeuronID::read_distant_out_synapses: source_rank is not equal to my_rank: {} vs {}", read_target_rank, my_rank);
+        RelearnException::check(read_source_id > 0 && read_source_id <= number_local_neurons, "NeuronIO::read_distant_out_synapses: source_id was not from [1, {}]: {}", number_local_neurons, read_source_id);
+
+        RelearnException::check(read_target_rank < number_mpi_ranks, "NeuronID::read_distant_out_synapses: target rank is not smaller than the number of mpi ranks: {} vs {}", read_source_rank, number_mpi_ranks);
+
+        RelearnException::check(weight != 0, "NeuronIO::read_distant_out_synapses: weight was 0");
+
+        // The neurons start with 1
+        --read_source_id;
+        --read_target_id;
+
+        auto source_id = NeuronID{ false, read_source_id };
+        auto target_id = NeuronID{ false, read_target_id };
+
+        distant_out_synapses.emplace_back(RankNeuronId{ read_target_rank, target_id }, source_id, weight);
+    }
+
+    return distant_out_synapses;
+}
+
+void NeuronIO::write_distant_out_synapses(const DistantOutSynapses& distant_out_synapses, const int source_rank, const std::filesystem::path& file_path) {
+    std::ofstream file_synapses(file_path, std::ios::binary | std::ios::out);
+
+    const auto is_good = file_synapses.good();
+    const auto is_bad = file_synapses.bad();
+
+    RelearnException::check(is_good && !is_bad, "NeuronIO::write_distant_out_synapses: The ofstream failed to open");
+
+    file_synapses << "# " << distant_out_synapses.size() << '\n';
+    file_synapses << "# <target rank> <target neuron id>\t<source rank> <source neuron id>\t<weight>\n";
+
+    for (const auto& [target_rni, source_id, weight] : distant_out_synapses) {
+        const auto& [target_rank, target_id] = target_rni;
+        const auto target_neuron_id = target_id.get_local_id();
+
+        const auto source_neuron_id = source_id.get_local_id();
+
+        file_synapses << target_rank << ' ' << (target_neuron_id + 1) << '\t' << source_rank << ' ' << (source_neuron_id + 1) << '\t' << weight << '\n';
     }
 }

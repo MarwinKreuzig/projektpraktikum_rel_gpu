@@ -85,8 +85,8 @@ public:
      *      Checks that no id is larger or equal to number_local_neurons.
      * @param file_path The path to the file to load
      * @param number_local_neurons The number of local neurons
-     * @exception Throws a RelearnException if the weight of one synapse is 0 or a loaded id is not from [1, number_local_neurons].
-     * @return All empty synapses
+     * @exception Throws a RelearnException if opening the file failed, the weight of one synapse is 0, or a loaded id is not from [1, number_local_neurons].
+     * @return All local synapses
      */
     [[nodiscard]] static LocalSynapses read_local_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons);
 
@@ -97,4 +97,56 @@ public:
      * @exception Throws a RelearnException if opening the file failed
      */
     static void write_local_synapses(const LocalSynapses& local_synapses, const std::filesystem::path& file_path);
+
+    /**
+     * @brief Reads all distant in-synapses from a file and returns those.
+     *      Checks that no target id is larger or equal to number_local_neurons and that no source rank is larger or equal to number_mpi_ranks.
+     * @param file_path The path to the file to load
+     * @param number_local_neurons The number of local neurons
+     * @param my_rank The current MPI rank
+     * @param number_mpi_ranks The number of MPI ranks
+     * @exception Throws a RelearnException if
+     *      (1) opening the file failed
+     *      (2) the weight of one synpapse is 0
+     *      (3) a target rank is not my_rank
+     *      (4) a source rank is not from [0, number_mpi_ranks)
+     *      (5) or a target id is not from [0, number_local_neurons)
+     * @return All distant in-synapses
+     */
+    static DistantInSynapses read_distant_in_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons, int my_rank, int number_mpi_ranks);
+
+    /**
+     * @brief Writes all distant in-synapses to the specified file
+     * @param distant_in_synapses The distant in-synapses
+     * @param target_rank The current MPI rank
+     * @param file_path The path to the file
+     * @exception Throws a RelearnException if opening the file failed
+     */
+    static void write_distant_in_synapses(const DistantInSynapses& distant_in_synapses, int target_rank, const std::filesystem::path& file_path);
+
+    /**
+     * @brief Reads all distant out-synapses from a file and returns those.
+     *      Checks that no source id is larger or equal to number_local_neurons and that no target rank is larger or equal to number_mpi_ranks.
+     * @param file_path The path to the file to load
+     * @param number_local_neurons The number of local neurons
+     * @param my_rank The current MPI rank
+     * @param number_mpi_ranks The number of MPI ranks
+     * @exception Throws a RelearnException if
+     *      (1) opening the file failed
+     *      (2) the weight of one synpapse is 0
+     *      (3) a source rank is not my_rank
+     *      (4) a target rank is not from [0, number_mpi_ranks)
+     *      (5) or a source id is not from [0, number_local_neurons)
+     * @return All distant out-synapses
+     */
+    static DistantOutSynapses read_distant_out_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons, int my_rank, int number_mpi_ranks);
+
+    /**
+     * @brief Writes all distant out-synapses to the specified file
+     * @param distant_out_synapses The distant out-synapses
+     * @param source_rank The current MPI rank
+     * @param file_path The path to the file
+     * @exception Throws a RelearnException if opening the file failed
+     */
+    static void write_distant_out_synapses(const DistantOutSynapses& distant_out_synapses, int source_rank, const std::filesystem::path& file_path);
 };
