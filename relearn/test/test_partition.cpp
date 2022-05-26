@@ -111,15 +111,10 @@ TEST_F(PartitionTest, testPartitionNumberNeurons) {
         partition.set_total_number_neurons(number_total_neurons);
         ASSERT_EQ(partition.get_total_number_neurons(), number_total_neurons);
 
-        partition.set_subdomain_number_neurons(local_neurons);
         const auto num_local_neurons = std::reduce(local_neurons.begin(), local_neurons.end(), size_t(0));
+        partition.set_number_local_neurons(num_local_neurons);
 
         ASSERT_EQ(partition.get_number_local_neurons(), num_local_neurons);
-
-        for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
-            ASSERT_EQ(partition.get_local_subdomain_local_neuron_id_start(my_subdomain), local_ids_start[my_subdomain]);
-            ASSERT_EQ(partition.get_local_subdomain_local_neuron_id_end(my_subdomain), local_ids_ends[my_subdomain]);
-        }
     }
 }
 

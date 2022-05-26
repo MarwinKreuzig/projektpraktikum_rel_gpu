@@ -13,7 +13,6 @@
 #include "Config.h"
 #include "io/LogFiles.h"
 #include "io/NeuronIO.h"
-#include "sim/NeuronToSubdomainAssignment.h"
 #include "sim/file/FileSynapseLoader.h"
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
@@ -39,20 +38,17 @@ void SubdomainFromFile::read_neurons_from_file(const std::filesystem::path& path
 
     const auto total_number_neurons = loaded_ex_neurons + loaded_in_neurons;
     set_total_number_placed_neurons(total_number_neurons);
-
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded neurons: {}", total_number_neurons);
-
-    const auto requested_ratio_excitatory_neurons = static_cast<double>(loaded_ex_neurons) / static_cast<double>(total_number_neurons);
-
     set_requested_number_neurons(total_number_neurons);
-    set_requested_ratio_excitatory_neurons(requested_ratio_excitatory_neurons);
-
-    const auto ratio_placed_excitatory_neurons = loaded_ex_neurons / static_cast<double>(total_number_neurons);
-
     set_number_placed_neurons(total_number_neurons);
-    set_ratio_placed_excitatory_neurons(ratio_placed_excitatory_neurons);
+
+    const auto ratio_excitatory_neurons = static_cast<double>(loaded_ex_neurons) / static_cast<double>(total_number_neurons);
+
+    set_requested_ratio_excitatory_neurons(ratio_excitatory_neurons);
+    set_ratio_placed_excitatory_neurons(ratio_excitatory_neurons);
 
     partition->set_total_number_neurons(total_number_neurons);
 
-    set_nodes_for_subdomain(0, std::move(nodes));
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded neurons: {}", total_number_neurons);
+
+    set_loaded_nodes(std::move(nodes));
 }

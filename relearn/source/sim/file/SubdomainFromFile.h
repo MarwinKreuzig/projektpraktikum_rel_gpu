@@ -12,14 +12,9 @@
 
 #include "Config.h"
 #include "sim/NeuronToSubdomainAssignment.h"
-#include "sim/SynapseLoader.h"
 
 #include <filesystem>
-#include <fstream>
 #include <memory>
-#include <optional>
-#include <string>
-#include <vector>
 
 class Partition;
 
@@ -48,16 +43,8 @@ public:
     ~SubdomainFromFile() override = default;
 
 protected:
-    /**
-     * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box
-     * @param local_subdomain_index The local index of the subdomain which's neurons are to be filled
-     * @param total_number_subdomains The total number of subdomains
-     * @exception Throws a RelearnException if the subdomain is already loaded or if some erros while processing the file
-     */
-    void fill_subdomain([[maybe_unused]] size_t local_subdomain_index, [[maybe_unused]] size_t total_number_subdomains) override { }
-
-    void calculate_total_number_neurons() const override {
-        
+    void fill_all_subdomains() override {
+        // This method is empty as the loading actually happens in the constructor
     }
 
 private:

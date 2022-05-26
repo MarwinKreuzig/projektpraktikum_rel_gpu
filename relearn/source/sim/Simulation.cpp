@@ -130,18 +130,14 @@ void Simulation::initialize() {
     neurons->init(number_local_neurons, std::move(target_calcium_values), std::move(initial_calcium_values));
     NeuronMonitor::neurons_to_monitor = neurons;
 
-    const auto number_local_subdomains = partition->get_number_local_subdomains();
-    const auto local_subdomain_id_start = partition->get_local_subdomain_id_start();
-    const auto local_subdomain_id_end = partition->get_local_subdomain_id_end();
-
-    auto number_local_neurons_ntsa = neuron_to_subdomain_assignment->get_number_neurons_in_subdomains(local_subdomain_id_start, local_subdomain_id_end, number_local_subdomains);
+    auto number_local_neurons_ntsa = neuron_to_subdomain_assignment->get_number_neurons_in_subdomains();
 
     RelearnException::check(number_local_neurons_ntsa == number_local_neurons,
         "Simulation::initialize: The partition and the NTSA had a disagreement about the number of local neurons");
 
-    auto neuron_positions = neuron_to_subdomain_assignment->get_neuron_positions_in_subdomains(local_subdomain_id_start, local_subdomain_id_end, number_local_subdomains);
-    auto area_names = neuron_to_subdomain_assignment->get_neuron_area_names_in_subdomains(local_subdomain_id_start, local_subdomain_id_end, number_local_subdomains);
-    auto signal_types = neuron_to_subdomain_assignment->get_neuron_types_in_subdomains(local_subdomain_id_start, local_subdomain_id_end, number_local_subdomains);
+    auto neuron_positions = neuron_to_subdomain_assignment->get_neuron_positions_in_subdomains();
+    auto area_names = neuron_to_subdomain_assignment->get_neuron_area_names_in_subdomains();
+    auto signal_types = neuron_to_subdomain_assignment->get_neuron_types_in_subdomains();
 
     RelearnException::check(neuron_positions.size() == number_local_neurons, "Simulation::initialize: neuron_positions had the wrong size");
     RelearnException::check(area_names.size() == number_local_neurons, "Simulation::initialize: area_names had the wrong size");

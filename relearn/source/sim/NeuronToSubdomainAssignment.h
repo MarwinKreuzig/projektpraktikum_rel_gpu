@@ -11,18 +11,15 @@
  */
 
 #include "Config.h"
-#include "LoadedNeuron.h"
 #include "Types.h"
 #include "neurons/SignalType.h"
+#include "sim/LoadedNeuron.h"
 #include "util/RelearnException.h"
 
 #include <filesystem>
 #include <functional>
-#include <map>
 #include <memory>
-#include <set>
 #include <string>
-#include <tuple>
 #include <vector>
 
 class Partition;
@@ -36,7 +33,9 @@ public:
     using position_type = RelearnTypes::position_type;
     using box_size_type = RelearnTypes::box_size_type;
 
-    explicit NeuronToSubdomainAssignment(std::shared_ptr<Partition> partition);
+    explicit NeuronToSubdomainAssignment(std::shared_ptr<Partition> partition)
+        : partition(std::move(partition)) {
+    }
 
     virtual ~NeuronToSubdomainAssignment() = default;
 
@@ -67,7 +66,7 @@ public:
      *      This might be necessary if special boundaries must be considered
      * @return A function object that corrects subdomain boundaries
      */
-    virtual std::function<Vec3d(Vec3d)> get_subdomain_boundary_fix() const {
+    virtual std::function<box_size_type(box_size_type)> get_subdomain_boundary_fix() const {
         return [](Vec3d arg) { return arg; };
     }
 
@@ -92,10 +91,6 @@ public:
      * @return The total number of placed neurons across all MPI ranks
      */
     [[nodiscard]] size_t get_total_number_placed_neurons() const {
-        if (total_number_neurons == Constants::uninitialized) {
-            calculate_total_number_neurons();
-        }
-
         return total_number_neurons;
     }
 
@@ -108,114 +103,65 @@ public:
     }
 
     /**
-     * @brief Returns the current fraction of placed excitatory neurons
-     * @return The total current fraction of placed excitatory neurons
+     * @brief Returns the current fraction of placed excitatory neurons in the local subdomains
+     * @return The total current fraction of placed excitatory neurons in the local subdomains
      */
     [[nodiscard]] double get_ratio_placed_excitatory_neurons() const noexcept {
         return ratio_placed_excitatory_neurons;
     }
 
-    /**
-     * @brief Returns number of neurons which are in the specified subdomain
-     * @param subdomain_index_1d The 1d index of the subdomain which is inquired
-     * @param total_number_subdomains The total number of subdomains
-     * @exception Might throw a RelearnException
-     * @return The number of neurons in the subdomain
+    /** 
+     * @brief Returns the total number of neurons in the local subdomains
+     * @return The total number of neurons in the local subdomains
      */
-    [[nodiscard]] virtual size_t get_number_neurons_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const;
-
-    /**
-     * @brief Returns number of neurons which are in the specified subdomains
-     * @param subdomain_index_1d_start The 1d index of the first subdomain which is inquired
-     * @param subdomain_index_1d_end The 1d index of the last subdomain which is inquired
-     * @param total_number_subdomains The total number of subdomains
-     * @exception Might throw a RelearnException
-     * @return The number of neurons in the subdomains
-     */
-    [[nodiscard]] size_t get_number_neurons_in_subdomains(size_t subdomain_index_1d_start, size_t subdomain_index_1d_end, size_t total_number_subdomains) const {
-        size_t total_number_neurons_in_subdomains = 0;
-
-        for (size_t subdomain_id = subdomain_index_1d_start; subdomain_id <= subdomain_index_1d_end; subdomain_id++) {
-            const auto number_neurons_in_subdomain = get_number_neurons_in_subdomain(subdomain_id, total_number_subdomains);
-            total_number_neurons_in_subdomains += number_neurons_in_subdomain;
-        }
-
+    [[nodiscard]] size_t get_number_neurons_in_subdomains() const {
+        const auto total_number_neurons_in_subdomains = loaded_neurons.size();
         return total_number_neurons_in_subdomains;
     }
 
     /**
-     * @brief Returns the positions of the neurons which are in the specified subdomain
-     * @param subdomain_index_1d The 1d index of the subdomain which is inquired
-     * @param total_number_subdomains The total number of subdomains
-     * @exception Might throw a RelearnException
-     * @return The positions of the neurons in the subdomain
+     * @brief Returns all positions of neurons in the local subdomains, indexed by the neuron id
+     * @return The all position of neurons in the local subdomains
      */
-    [[nodiscard]] virtual std::vector<position_type> get_neuron_positions_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const;
+    [[nodiscard]] std::vector<position_type> get_neuron_positions_in_subdomains() const {
+        std::vector<position_type> positions{};
+        positions.reserve(loaded_neurons.size());
 
-    /**
-     * @brief Returns the positions of the neurons which are in the specified subdomains
-     * @param subdomain_index_1d_start The 1d index of the first subdomain which is inquired
-     * @param subdomain_index_1d_end The 1d index of the last subdomain which is inquired
-     * @param total_number_subdomains The total number of subdomains
-     * @exception Might throw a RelearnException
-     * @return The positions of the neurons in the subdomains
-     */
-    [[nodiscard]] std::vector<position_type> get_neuron_positions_in_subdomains(size_t subdomain_index_1d_start, size_t subdomain_index_1d_end, size_t total_number_subdomains) const {
-        auto function = [this](size_t subdomain_index_1d, size_t total_number_subdomains) {
-            return get_neuron_positions_in_subdomain(subdomain_index_1d, total_number_subdomains);
-        };
+        for (const auto& loaded_neuron : loaded_neurons) {
+            positions.push_back(loaded_neuron.pos);
+        }
 
-        return get_all_values<position_type>(subdomain_index_1d_start, subdomain_index_1d_end, total_number_subdomains, function);
+        return positions;
     }
 
     /**
-     * @brief Returns the signal type of the neurons which are in the specified subdomain
-     * @param subdomain_index_1d The 1d index of the subdomain which is inquired
-     * @param total_number_subdomains The total number of subdomains
-     * @exception Might throw a RelearnException
-     * @return The signal types of the neurons in the subdomain
+     * @brief Returns all signal types of neurons in the local subdomains, indexed by the neuron id
+     * @return The all position of neurons in the local subdomains
      */
-    [[nodiscard]] virtual std::vector<SignalType> get_neuron_types_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const;
+    [[nodiscard]] std::vector<SignalType> get_neuron_types_in_subdomains() const {
+        std::vector<SignalType> types{};
+        types.reserve(loaded_neurons.size());
 
-    /**
-     * @brief Returns the signal type of the neurons which are in the specified subdomains
-     * @param subdomain_index_1d_start The 1d index of the first subdomain which is inquired
-     * @param subdomain_index_1d_end The 1d index of the last subdomain which is inquired
-     * @param total_number_subdomains The total number of subdomains
-     * @exception Might throw a RelearnException
-     * @return The signal types of the neurons in the subdomains
-     */
-    [[nodiscard]] std::vector<SignalType> get_neuron_types_in_subdomains(size_t subdomain_index_1d_start, size_t subdomain_index_1d_end, size_t total_number_subdomains) const {
-        auto function = [this](size_t subdomain_index_1d, size_t total_number_subdomains) {
-            return get_neuron_types_in_subdomain(subdomain_index_1d, total_number_subdomains);
-        };
+        for (const auto& loaded_neuron : loaded_neurons) {
+            types.push_back(loaded_neuron.signal_type);
+        }
 
-        return get_all_values<SignalType>(subdomain_index_1d_start, subdomain_index_1d_end, total_number_subdomains, function);
+        return types;
     }
 
     /**
-     * @brief Returns the area names of the neurons which are in the specified subdomain
-     * @param subdomain_index_1d The 1d index of the subdomain which is inquired
-     * @param total_number_subdomains The total number of subdomains
-     * @exception Might throw a RelearnException
-     * @return The area names of the neurons in the subdomain
+     * @brief Returns all area names of neurons in the local subdomains, indexed by the neuron id
+     * @return The all position of neurons in the local subdomains
      */
-    [[nodiscard]] virtual std::vector<std::string> get_neuron_area_names_in_subdomain(size_t subdomain_index_1d, size_t total_number_subdomains) const;
+    [[nodiscard]] std::vector<std::string> get_neuron_area_names_in_subdomains() const {
+        std::vector<std::string> areas{};
+        areas.reserve(loaded_neurons.size());
 
-    /**
-     * @brief Returns the area names of the neurons which are in the specified subdomains
-     * @param subdomain_index_1d_start The 1d index of the first subdomain which is inquired
-     * @param subdomain_index_1d_end The 1d index of the last subdomain which is inquired
-     * @param total_number_subdomains The total number of subdomains
-     * @exception Might throw a RelearnException
-     * @return The area names of the neurons in the subdomains
-     */
-    [[nodiscard]] std::vector<std::string> get_neuron_area_names_in_subdomains(size_t subdomain_index_1d_start, size_t subdomain_index_1d_end, size_t total_number_subdomains) const {
-        auto function = [this](size_t subdomain_index_1d, size_t total_number_subdomains) {
-            return get_neuron_area_names_in_subdomain(subdomain_index_1d, total_number_subdomains);
-        };
+        for (const auto& loaded_neuron : loaded_neurons) {
+            areas.push_back(loaded_neuron.area_name);
+        }
 
-        return get_all_values<std::string>(subdomain_index_1d_start, subdomain_index_1d_end, total_number_subdomains, function);
+        return areas;
     }
 
     /**
@@ -228,15 +174,7 @@ public:
     virtual void write_neurons_to_file(const std::filesystem::path& file_path) const;
 
 protected:
-    /**
-     * @brief Fills the subdomain with the given index and the boundaries. The implementation is left to the inhereting classes
-     * @param subdomain_index_1d The 1d index of the subdomain which's neurons are to be filled
-     * @param total_number_subdomains The total number of subdomains
-     * @param min The subdomain's minimum position
-     * @param max The subdomain's maximum position
-     * @exception Might throw a RelearnException
-     */
-    virtual void fill_subdomain(size_t local_subdomain_index, size_t total_number_subdomains) = 0;
+    virtual void fill_all_subdomains() = 0;
 
     void set_requested_ratio_excitatory_neurons(const double desired_frac_neurons_exc) noexcept {
         requested_ratio_excitatory_neurons = desired_frac_neurons_exc;
@@ -258,46 +196,18 @@ protected:
         total_number_neurons = total_number_placed_neurons;
     }
 
-    [[nodiscard]] const std::vector<LoadedNeuron>& get_nodes_for_subdomain(const size_t subdomain_index_1d) const {
-        const auto subdomain_is_loaded = is_subdomain_loaded(subdomain_index_1d);
-        RelearnException::check(subdomain_is_loaded, "NeuronToSubdomainAssignment::get_nodes_for_subdomain: Cannot fetch nodes for id {}", subdomain_index_1d);
-
-        return neurons_in_subdomain.at(subdomain_index_1d);
+    void set_loaded_nodes(std::vector<LoadedNeuron>&& neurons) {
+        loaded_neurons = std::move(neurons);
     }
-
-    void set_nodes_for_subdomain(const size_t subdomain_index_1d, std::vector<LoadedNeuron>&& nodes) {
-        neurons_in_subdomain[subdomain_index_1d] = std::move(nodes);
-    }
-
-    [[nodiscard]] bool is_subdomain_loaded(const size_t subdomain_index_1d) const noexcept {
-        const auto contains = neurons_in_subdomain.find(subdomain_index_1d) != neurons_in_subdomain.end();
-        return contains;
-    }
-
-    virtual void calculate_total_number_neurons() const = 0;
-
-    virtual void post_initialization(){};
 
     std::shared_ptr<Partition> partition{};
 
     std::shared_ptr<SynapseLoader> synapse_loader{};
 
+    bool initialized{ false };
+
 private:
-    template <typename T>
-    std::vector<T> get_all_values(size_t subdomain_index_1d_start, size_t subdomain_index_1d_end, size_t total_number_subdomains, std::function<std::vector<T>(size_t, size_t)> subdomain_function) const {
-        RelearnException::check(subdomain_index_1d_end >= subdomain_index_1d_start, "NeuronToSubdomainAssignment::get_all_values: end was smaller than start");
-
-        std::vector<T> all_values;
-
-        for (size_t subdomain_id = subdomain_index_1d_start; subdomain_id <= subdomain_index_1d_end; subdomain_id++) {
-            const auto& partial_values = subdomain_function(subdomain_id, total_number_subdomains);
-            all_values.insert(all_values.cend(), partial_values.begin(), partial_values.end());
-        }
-
-        return all_values;
-    }
-
-    std::map<size_t, std::vector<LoadedNeuron>> neurons_in_subdomain{};
+    std::vector<LoadedNeuron> loaded_neurons{};
 
     double requested_ratio_excitatory_neurons{ 0.0 };
     size_t requested_number_neurons{ 0 };
