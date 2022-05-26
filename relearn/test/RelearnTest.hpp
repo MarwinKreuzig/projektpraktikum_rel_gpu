@@ -765,7 +765,7 @@ protected:
         return ceil(pow(static_cast<double>(number_neurons), 1 / 3.)) * um_per_neuron;
     }
 
-    void generate_neuron_positions(std::vector<Vec3d>& positions,
+    void generate_random_neurons(std::vector<Vec3d>& positions,
         std::vector<std::string>& area_names, std::vector<SignalType>& types);
 
     void generate_synapses(std::vector<std::tuple<NeuronID, NeuronID, int>>& synapses, size_t number_neurons);

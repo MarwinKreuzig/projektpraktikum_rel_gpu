@@ -14,6 +14,7 @@
 #include "Types.h"
 #include "neurons/SignalType.h"
 #include "sim/LoadedNeuron.h"
+#include "sim/SynapseLoader.h"
 #include "util/RelearnException.h"
 
 #include <filesystem>
@@ -23,7 +24,6 @@
 #include <vector>
 
 class Partition;
-class SynapseLoader;
 
 /**
  * This class provides an interface for every algorithm that is used to assign neurons to MPI processes
