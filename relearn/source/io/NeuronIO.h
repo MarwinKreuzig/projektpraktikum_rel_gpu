@@ -52,7 +52,7 @@ public:
     read_neurons_componentwise(const std::filesystem::path& file_path);
 
     /**
-     * @brief Writes all neurons to the file. The IDs must start at 0 and be ascending.
+     * @brief Writes all neurons to the file
      * @param neurons The neurons
      * @param file_path The path to the file
      * @exception Throws a RelearnException if opening the file failed
@@ -61,6 +61,7 @@ public:
 
     /**
      * @brief Writes all neurons to the file. The IDs must start at 0 and be ascending. All vectors must have the same length.
+     *      Does not check for correct IDs or non-negative positions.
      * @param ids The IDs
      * @param positions The positions
      * @param area_names The area names
@@ -87,5 +88,13 @@ public:
      * @exception Throws a RelearnException if the weight of one synapse is 0 or a loaded id is not from [1, number_local_neurons].
      * @return All empty synapses
      */
-    [[nodiscard]] static LocalSynapses read_local_synapses(const std::filesystem::path& file_path, std::uint64_t number_local_neurons);
+    [[nodiscard]] static LocalSynapses read_local_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons);
+
+    /**
+     * @brief Write all local synapses to the specified file
+     * @param local_synapses The local synapses
+     * @param file_path The path to the file
+     * @exception Throws a RelearnException if opening the file failed
+     */
+    static void write_local_synapses(const LocalSynapses& local_synapses, const std::filesystem::path& file_path);
 };

@@ -73,11 +73,7 @@ std::tuple<std::vector<LoadedNeuron>, LoadedNeuronsInfo> NeuronIO::read_neurons(
         }
     }
 
-    const auto new_max_x = std::nextafter(maximum.get_x(), maximum.get_x() + Constants::eps);
-    const auto new_max_y = std::nextafter(maximum.get_y(), maximum.get_y() + Constants::eps);
-    const auto new_max_z = std::nextafter(maximum.get_z(), maximum.get_z() + Constants::eps);
-
-    return { std::move(nodes), LoadedNeuronsInfo{ minimum, { new_max_x, new_max_y, new_max_z }, found_ex_neurons, found_in_neurons } };
+    return { std::move(nodes), LoadedNeuronsInfo{ minimum, maximum, found_ex_neurons, found_in_neurons } };
 }
 
 std::tuple<std::vector<NeuronID>, std::vector<NeuronIO::position_type>, std::vector<std::string>, std::vector<SignalType>, LoadedNeuronsInfo>
@@ -152,11 +148,7 @@ NeuronIO::read_neurons_componentwise(const std::filesystem::path& file_path) {
         }
     }
 
-    const auto new_max_x = std::nextafter(maximum.get_x(), maximum.get_x() + Constants::eps);
-    const auto new_max_y = std::nextafter(maximum.get_y(), maximum.get_y() + Constants::eps);
-    const auto new_max_z = std::nextafter(maximum.get_z(), maximum.get_z() + Constants::eps);
-
-    return { std::move(ids), std::move(positions), std::move(area_names), std::move(signal_types), LoadedNeuronsInfo{ minimum, { new_max_x, new_max_y, new_max_z }, found_ex_neurons, found_in_neurons } };
+    return { std::move(ids), std::move(positions), std::move(area_names), std::move(signal_types), LoadedNeuronsInfo{ minimum, maximum, found_ex_neurons, found_in_neurons } };
 }
 
 void NeuronIO::write_neurons(const std::vector<LoadedNeuron>& neurons, const std::filesystem::path& file_path) {
@@ -165,7 +157,7 @@ void NeuronIO::write_neurons(const std::vector<LoadedNeuron>& neurons, const std
     const auto is_good = of.good();
     const auto is_bad = of.bad();
 
-    RelearnException::check(is_good && !is_bad, "NeuronToSubdomainAssignment::write_neurons_to_file: The ofstream failed to open");
+    RelearnException::check(is_good && !is_bad, "NeuronIO::write_neurons_to_file: The ofstream failed to open");
 
     of << std::setprecision(std::numeric_limits<double>::digits10);
     of << "# ID, Position (x y z),  Area,   type \n";
@@ -198,14 +190,14 @@ void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, con
 
     const auto all_same_size = size_ids == size_positions && size_ids == size_area_names && size_ids == size_signal_types;
 
-    RelearnException::check(all_same_size, "NeuronToSubdomainAssignment::write_neurons_componentwise: The vectors had different sizes.");
+    RelearnException::check(all_same_size, "NeuronIO::write_neurons_componentwise: The vectors had different sizes.");
 
     std::ofstream of(file_path, std::ios::binary | std::ios::out);
 
     const auto is_good = of.good();
     const auto is_bad = of.bad();
 
-    RelearnException::check(is_good && !is_bad, "NeuronToSubdomainAssignment::write_neurons_componentwise: The ofstream failed to open");
+    RelearnException::check(is_good && !is_bad, "NeuronIO::write_neurons_componentwise: The ofstream failed to open");
 
     of << std::setprecision(std::numeric_limits<double>::digits10);
     of << "# ID, Position (x y z),  Area,   type \n";
@@ -260,10 +252,12 @@ std::optional<std::vector<NeuronID>> NeuronIO::read_neuron_ids(const std::filesy
             return {};
         }
 
+        id--;
+
         if (!ids.empty()) {
             const auto last_id = ids[ids.size() - 1].get_local_id();
 
-            if (last_id >= id) {
+            if (last_id + 1 != id) {
                 return {};
             }
         }
@@ -274,7 +268,7 @@ std::optional<std::vector<NeuronID>> NeuronIO::read_neuron_ids(const std::filesy
     return ids;
 }
 
-LocalSynapses NeuronIO::read_local_synapses(const std::filesystem::path& file_path, std::uint64_t number_local_neurons) {
+LocalSynapses NeuronIO::read_local_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons) {
     LocalSynapses local_synapses{};
 
     std::ifstream file_synapses(file_path, std::ios::binary | std::ios::in);
@@ -312,4 +306,19 @@ LocalSynapses NeuronIO::read_local_synapses(const std::filesystem::path& file_pa
     }
 
     return local_synapses;
+}
+
+void NeuronIO::write_local_synapses(const LocalSynapses& local_synapses, const std::filesystem::path& file_path) {
+    std::ofstream file_synapses(file_path, std::ios::binary | std::ios::out);
+
+    const auto is_good = file_synapses.good();
+    const auto is_bad = file_synapses.bad();
+
+    RelearnException::check(is_good && !is_bad, "NeuronIO::write_local_synapses: The ofstream failed to open");
+
+    file_synapses << "# target_id source_id weight\n";
+
+    for (const auto& [target_id, source_id, weight] : local_synapses) {
+        file_synapses << (target_id.get_local_id() + 1) << ' ' << (source_id.get_local_id() + 1) << ' ' << weight << '\n';
+    }
 }

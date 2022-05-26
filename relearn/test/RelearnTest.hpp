@@ -957,3 +957,10 @@ protected:
 
     static_assert(sizeof(typename TaggedID<T>::value_type) == sizeof(T));
 };
+
+class IOTest : public RelearnTest {
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
