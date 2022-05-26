@@ -127,7 +127,7 @@ void SubdomainFromNeuronPerRank::place_neurons_in_area(const NeuronToSubdomainAs
 
     RandomHolder::shuffle(RandomHolderKey::Subdomain, positions.begin(), positions.end());
 
-    Nodes nodes{};
+    std::vector<LoadedNeuron> nodes{};
     nodes.reserve(number_neurons);
 
     size_t placed_in_neurons = 0;

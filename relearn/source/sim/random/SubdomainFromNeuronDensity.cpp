@@ -105,7 +105,7 @@ void SubdomainFromNeuronDensity::place_neurons_in_area(
 
     RandomHolder::shuffle(RandomHolderKey::Subdomain, signal_types.begin(), signal_types.end());
 
-    Nodes nodes{};
+    std::vector<LoadedNeuron> nodes{};
     nodes.reserve(number_neurons);
 
     for (size_t i = 0; i < number_neurons; i++) {

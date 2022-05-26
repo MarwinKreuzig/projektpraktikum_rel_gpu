@@ -47,14 +47,6 @@ public:
 
     ~SubdomainFromFile() override = default;
 
-    /**
-     * @brief Reads all neuron ids from a file and returns those.
-     *      The file must be ascendingly sorted
-     * @param file_path The path to the file to load
-     * @return Empty if the file did not meet the sorting requirement, the ascending ids otherwise
-     */
-    [[nodiscard]] static std::optional<std::vector<NeuronID>> read_neuron_ids_from_file(const std::filesystem::path& file_path);
-
 protected:
     /**
      * @brief Fills the subdomain with the given index and the boundaries. Reads the whole file to determine the which neuron fall into the specified box

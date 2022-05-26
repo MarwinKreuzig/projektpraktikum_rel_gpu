@@ -11,6 +11,7 @@
  */
 
 #include "Config.h"
+#include "LoadedNeuron.h"
 #include "Types.h"
 #include "neurons/SignalType.h"
 #include "util/RelearnException.h"
@@ -227,24 +228,6 @@ public:
     virtual void write_neurons_to_file(const std::filesystem::path& file_path) const;
 
 protected:
-    struct Node {
-        position_type pos{ 0 };
-        NeuronID id{ NeuronID::uninitialized_id() };
-        SignalType signal_type{ SignalType::Excitatory };
-        std::string area_name{ "NOT SET" };
-
-        struct less {
-            bool operator()(const Node& lhs, const Node& rhs) const {
-                RelearnException::check(lhs.id.is_initialized(), "Node::less::operator(): lhs id is a dummy one");
-                RelearnException::check(rhs.id.is_initialized(), "Node::less::operator(): rhs id is a dummy one");
-
-                return lhs.id < rhs.id;
-            }
-        };
-    };
-
-    using Nodes = std::vector<Node>;
-
     /**
      * @brief Fills the subdomain with the given index and the boundaries. The implementation is left to the inhereting classes
      * @param subdomain_index_1d The 1d index of the subdomain which's neurons are to be filled
@@ -275,14 +258,14 @@ protected:
         total_number_neurons = total_number_placed_neurons;
     }
 
-    [[nodiscard]] const Nodes& get_nodes_for_subdomain(const size_t subdomain_index_1d) const {
+    [[nodiscard]] const std::vector<LoadedNeuron>& get_nodes_for_subdomain(const size_t subdomain_index_1d) const {
         const auto subdomain_is_loaded = is_subdomain_loaded(subdomain_index_1d);
         RelearnException::check(subdomain_is_loaded, "NeuronToSubdomainAssignment::get_nodes_for_subdomain: Cannot fetch nodes for id {}", subdomain_index_1d);
 
         return neurons_in_subdomain.at(subdomain_index_1d);
     }
 
-    void set_nodes_for_subdomain(const size_t subdomain_index_1d, Nodes&& nodes) {
+    void set_nodes_for_subdomain(const size_t subdomain_index_1d, std::vector<LoadedNeuron>&& nodes) {
         neurons_in_subdomain[subdomain_index_1d] = std::move(nodes);
     }
 
@@ -314,7 +297,7 @@ private:
         return all_values;
     }
 
-    std::map<size_t, Nodes> neurons_in_subdomain{};
+    std::map<size_t, std::vector<LoadedNeuron>> neurons_in_subdomain{};
 
     double requested_ratio_excitatory_neurons{ 0.0 };
     size_t requested_number_neurons{ 0 };

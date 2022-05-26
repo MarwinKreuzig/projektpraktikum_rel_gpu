@@ -11,12 +11,10 @@
  */
 
 #include "sim/SynapseLoader.h"
-#include "util/RelearnException.h"
 
 #include <filesystem>
 #include <memory>
 #include <optional>
-#include <utility>
 
 class Partition;
 
