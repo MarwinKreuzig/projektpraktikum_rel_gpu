@@ -36,6 +36,8 @@ public:
      */
     [[nodiscard]] static std::tuple<std::vector<LoadedNeuron>, LoadedNeuronsInfo> load_neurons_from_file(const std::filesystem::path& file_path);
 
+    static void store_neurons_to_file(const std::vector<LoadedNeuron>& neurons, const std::filesystem::path& file_path);
+
     /**
      * @brief Reads all neuron ids from a file and returns those.
      *      The file must be ascendingly sorted wrt. to the neuron ids (starting at 1).

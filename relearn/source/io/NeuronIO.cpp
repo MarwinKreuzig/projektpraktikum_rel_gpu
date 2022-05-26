@@ -5,7 +5,9 @@
 #include "spdlog/spdlog.h"
 
 #include <cmath>
+#include <climits>
 #include <fstream>
+#include <iomanip>
 #include <sstream>
 
 std::tuple<std::vector<LoadedNeuron>, LoadedNeuronsInfo> NeuronIO::load_neurons_from_file(const std::filesystem::path& file_path) {
@@ -76,6 +78,35 @@ std::tuple<std::vector<LoadedNeuron>, LoadedNeuronsInfo> NeuronIO::load_neurons_
     const auto new_max_z = std::nextafter(maximum.get_z(), maximum.get_z() + Constants::eps);
 
     return { std::move(nodes), LoadedNeuronsInfo{ minimum, { new_max_x, new_max_y, new_max_z }, found_ex_neurons, found_in_neurons } };
+}
+
+void NeuronIO::store_neurons_to_file(const std::vector<LoadedNeuron>& neurons, const std::filesystem::path& file_path) {
+    std::ofstream of(file_path, std::ios::binary | std::ios::out);
+
+    const auto is_good = of.good();
+    const auto is_bad = of.bad();
+
+    RelearnException::check(is_good && !is_bad, "NeuronToSubdomainAssignment::write_neurons_to_file: The ofstream failed to open");
+
+    of << std::setprecision(std::numeric_limits<double>::digits10);
+    of << "# ID, Position (x y z),  Area,   type \n";
+
+    for (const auto& node : neurons) {
+        const auto id = node.id.get_local_id() + 1;
+        const auto& [x, y, z] = node.pos;
+
+        of << id << "\t"
+           << x << " "
+           << y << " "
+           << z << "\t"
+           << node.area_name << "\t";
+
+        if (node.signal_type == SignalType::Excitatory) {
+            of << "ex\n";
+        } else {
+            of << "in\n";
+        }
+    }
 }
 
 std::optional<std::vector<NeuronID>> NeuronIO::read_neuron_ids_from_file(const std::filesystem::path& file_path) {
