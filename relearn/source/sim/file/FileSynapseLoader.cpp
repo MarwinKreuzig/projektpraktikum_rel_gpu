@@ -29,7 +29,7 @@ FileSynapseLoader::synapses_tuple_type FileSynapseLoader::internal_load_synapses
     const auto total_number_neurons = partition->get_total_number_neurons();
 
     const auto& path_to_file = optional_path_to_file.value();
-    auto local_synapses = NeuronIO::read_local_synapses_from_file(path_to_file, total_number_neurons);
+    auto local_synapses = NeuronIO::read_local_synapses(path_to_file, total_number_neurons);
 
     auto return_synapses = std::make_tuple(std::move(local_synapses), DistantInSynapses{}, DistantOutSynapses{});
     return return_synapses;

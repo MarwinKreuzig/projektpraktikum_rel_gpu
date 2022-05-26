@@ -31,7 +31,7 @@ SubdomainFromFile::SubdomainFromFile(const std::filesystem::path& path_to_neuron
 }
 
 void SubdomainFromFile::read_neurons_from_file(const std::filesystem::path& path_to_neurons) {
-    auto [nodes, additional_infos] = NeuronIO::load_neurons_from_file(path_to_neurons);
+    auto [nodes, additional_infos] = NeuronIO::read_neurons(path_to_neurons);
     const auto& [min_position, max_position, loaded_ex_neurons, loaded_in_neurons] = additional_infos;
 
     partition->set_simulation_box_size({ 0.0, 0.0, 0.0 }, max_position);
