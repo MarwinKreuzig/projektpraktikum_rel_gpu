@@ -41,6 +41,12 @@ public:
         }
 
         remote_nodes_cache.clear();
+        inverse_remote_nodes_cache.clear();
+    }
+
+    // translator function 
+    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* translate(int mpi_rank, OctreeNode<AdditionalCellAttributes>* node) {
+        return inverse_remote_nodes_cache[std::make_pair(mpi_rank, node)];
     }
 
     /**
@@ -83,6 +89,7 @@ public:
                     iterator->second = OctreeNode<AdditionalCellAttributes>::create();
                     auto* local_child_addr = iterator->second;
 
+                    inverse_remote_nodes_cache.emplace(std::make_pair(target_rank, local_child_addr), unusable_child_pointer);
                     MPIWrapper::download_octree_node<AdditionalCellAttributes>(local_child_addr, target_rank, unusable_child_pointer);
                 }
 
@@ -107,4 +114,5 @@ public:
 
 private:
     static inline NodesCache remote_nodes_cache{};
+    static inline NodesCache inverse_remote_nodes_cache{};
 };

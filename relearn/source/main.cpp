@@ -159,6 +159,7 @@ int main(int argc, char** argv) {
         { "naive", AlgorithmEnum::Naive },
         { "barnes-hut", AlgorithmEnum::BarnesHut },
         { "barnes-hut-inverted", AlgorithmEnum::BarnesHutInverted },
+        { "barnes-hut-location-aware", AlgorithmEnum::BarnesHutLocationAware },
         { "fast-multipole-methods", AlgorithmEnum::FastMultipoleMethods }
     };
 
@@ -300,7 +301,7 @@ int main(int argc, char** argv) {
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
     RelearnException::check(calcium_decay > 0.0, "The calcium decay constant must be greater than 0.");
 
-    if (algorithm == AlgorithmEnum::BarnesHut || algorithm == AlgorithmEnum::BarnesHutInverted) {
+    if (algorithm == AlgorithmEnum::BarnesHut || algorithm == AlgorithmEnum::BarnesHutInverted || algorithm == AlgorithmEnum::BarnesHutLocationAware) {
         RelearnException::check(accept_criterion <= BarnesHut::max_theta, "Acceptance criterion must be smaller or equal to {}", BarnesHut::max_theta);
         RelearnException::check(accept_criterion > 0.0, "Acceptance criterion must be larger than 0.0");
     } else if (algorithm == AlgorithmEnum::FastMultipoleMethods) {
@@ -403,7 +404,7 @@ int main(int argc, char** argv) {
     auto partition = std::make_shared<Partition>(num_ranks, my_rank);
     const size_t number_local_subdomains = partition->get_number_local_subdomains();
 
-    if (algorithm == AlgorithmEnum::BarnesHut) {
+    if (algorithm == AlgorithmEnum::BarnesHut || algorithm == AlgorithmEnum::BarnesHutLocationAware) {
         // Check if int type can contain total size of branch nodes to receive in bytes
         // Every rank sends the same number of branch nodes, which is Partition::get_number_local_subdomains()
         if (std::numeric_limits<int>::max() < (number_local_subdomains * sizeof(OctreeNode<BarnesHutCell>))) {
@@ -483,7 +484,7 @@ int main(int argc, char** argv) {
     sim.set_dendrites_in(std::move(dend_in_models));
     sim.set_probabilty_scaling_parameter(scaling_constant);
 
-    if (algorithm == AlgorithmEnum::BarnesHut || algorithm == AlgorithmEnum::BarnesHutInverted) {
+    if (algorithm == AlgorithmEnum::BarnesHut || algorithm == AlgorithmEnum::BarnesHutInverted || algorithm == AlgorithmEnum::BarnesHutLocationAware) {
         sim.set_acceptance_criterion_for_barnes_hut(accept_criterion);
     }
 
@@ -577,6 +578,8 @@ int main(int argc, char** argv) {
             }
         }
     }
+
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "number of bytes send: {}, number of bytes received: {}, {}", MPIWrapper::get_number_bytes_sent(), MPIWrapper::get_number_bytes_received(), MPIWrapper::get_number_bytes_remote_accessed());
 
     MPIWrapper::finalize();
 

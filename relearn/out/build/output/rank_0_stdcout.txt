@@ -1,0 +1,373 @@
+[INFO:Rank 0] START: Wed Jun  1 12:54:23 2022
+Chosen lower bound for vacant synaptic elements: 1.1
+Chosen upper bound for vacant synaptic elements: 1.3
+Chosen target calcium value: 0.7
+Chosen beta value: 0.001
+Chosen nu value: 1e-05
+Chosen retract ratio: 0
+Chosen synapse conductance: 0.03
+Chosen background activity base: 0
+Chosen background activity mean: 0
+Chosen background activity stddev: 0
+[INFO:Rank 0] Total number local_subdomains        : 8
+[INFO:Rank 0] Number subdomains per dimension: 2
+[INFO:Rank 0] MPI RMA MemAllocator: max_num_objects: 1512369  sizeof(OctreeNode): 208
+[INFO:Rank 0] Simulation box length (height, width, depth)	: (156, 156, 156)
+[INFO:Rank 0] Subdomain length (height, width, depth)	: (78, 78, 78)
+My number of neurons   : 100
+My number of local_subdomains: 4
+My subdomain ids       : [ 0 , 3 ]
+Subdomain: 0
+    number_neurons: 25
+    index_1d   : 0
+    index_3d   : ( 0 , 0 , 0 )
+    minimum_position    : ( -0 , -0 , -0 )
+    maximum_position    : ( 78 , 78 , 78 )
+Subdomain: 1
+    number_neurons: 25
+    index_1d   : 1
+    index_3d   : ( 1 , 0 , 0 )
+    minimum_position    : ( 78 , -0 , -0 )
+    maximum_position    : ( 156 , 78 , 78 )
+Subdomain: 2
+    number_neurons: 25
+    index_1d   : 2
+    index_3d   : ( 0 , 1 , 0 )
+    minimum_position    : ( -0 , 78 , -0 )
+    maximum_position    : ( 78 , 156 , 78 )
+Subdomain: 3
+    number_neurons: 25
+    index_1d   : 3
+    index_3d   : ( 1 , 1 , 0 )
+    minimum_position    : ( 78 , 78 , -0 )
+    maximum_position    : ( 156 , 156 , 78 )
+
+[INFO:Rank 0] Neurons created
+[INFO:Rank 0] Inserted a total of 200 neurons
+[INFO:Rank 0] Neurons inserted into subdomains
+[INFO:Rank 0] Subdomains inserted into global tree
+[INFO:Rank 0] Network graph created
+[INFO:Rank 0] Synaptic elements initialized
+[Step: 100	] Total up to now     (creations, deletions, netto):	143		0		143
+[INFO:Rank 0] Total up to now     (creations, deletions, netto): 143	0	143
+Diff. from previous (creations, deletions, netto): 143	0	143
+END: Wed Jun  1 12:54:24 2022
+[INFO:Rank 0] START: Wed Jun  1 12:56:08 2022
+Chosen lower bound for vacant synaptic elements: 1.1
+Chosen upper bound for vacant synaptic elements: 1.3
+Chosen target calcium value: 0.7
+Chosen beta value: 0.001
+Chosen nu value: 1e-05
+Chosen retract ratio: 0
+Chosen synapse conductance: 0.03
+Chosen background activity base: 0
+Chosen background activity mean: 0
+Chosen background activity stddev: 0
+[INFO:Rank 0] Total number local_subdomains        : 8
+[INFO:Rank 0] Number subdomains per dimension: 2
+[INFO:Rank 0] MPI RMA MemAllocator: max_num_objects: 1512369  sizeof(OctreeNode): 208
+[INFO:Rank 0] Simulation box length (height, width, depth)	: (156, 156, 156)
+[INFO:Rank 0] Subdomain length (height, width, depth)	: (78, 78, 78)
+My number of neurons   : 100
+My number of local_subdomains: 4
+My subdomain ids       : [ 0 , 3 ]
+Subdomain: 0
+    number_neurons: 25
+    index_1d   : 0
+    index_3d   : ( 0 , 0 , 0 )
+    minimum_position    : ( -0 , -0 , -0 )
+    maximum_position    : ( 78 , 78 , 78 )
+Subdomain: 1
+    number_neurons: 25
+    index_1d   : 1
+    index_3d   : ( 1 , 0 , 0 )
+    minimum_position    : ( 78 , -0 , -0 )
+    maximum_position    : ( 156 , 78 , 78 )
+Subdomain: 2
+    number_neurons: 25
+    index_1d   : 2
+    index_3d   : ( 0 , 1 , 0 )
+    minimum_position    : ( -0 , 78 , -0 )
+    maximum_position    : ( 78 , 156 , 78 )
+Subdomain: 3
+    number_neurons: 25
+    index_1d   : 3
+    index_3d   : ( 1 , 1 , 0 )
+    minimum_position    : ( 78 , 78 , -0 )
+    maximum_position    : ( 156 , 156 , 78 )
+
+[INFO:Rank 0] Neurons created
+[INFO:Rank 0] Inserted a total of 200 neurons
+[INFO:Rank 0] Neurons inserted into subdomains
+[INFO:Rank 0] Subdomains inserted into global tree
+[INFO:Rank 0] Network graph created
+[INFO:Rank 0] Synaptic elements initialized
+[Step: 100	] Total up to now     (creations, deletions, netto):	143		0		143
+[Step: 200	] Total up to now     (creations, deletions, netto):	179		0		179
+[Step: 300	] Total up to now     (creations, deletions, netto):	197		0		197
+[Step: 400	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 500	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 600	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 700	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 800	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 900	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 1000	] Total up to now     (creations, deletions, netto):	200		0		200
+[INFO:Rank 0] Total up to now     (creations, deletions, netto): 200	0	200
+Diff. from previous (creations, deletions, netto): 200	0	200
+END: Wed Jun  1 12:56:09 2022
+[INFO:Rank 0] START: Wed Jun  1 13:02:07 2022
+Chosen lower bound for vacant synaptic elements: 1.1
+Chosen upper bound for vacant synaptic elements: 1.3
+Chosen target calcium value: 0.7
+Chosen beta value: 0.001
+Chosen nu value: 1e-05
+Chosen retract ratio: 0
+Chosen synapse conductance: 0.03
+Chosen background activity base: 0
+Chosen background activity mean: 0
+Chosen background activity stddev: 0
+[INFO:Rank 0] Total number local_subdomains        : 8
+[INFO:Rank 0] Number subdomains per dimension: 2
+[INFO:Rank 0] MPI RMA MemAllocator: max_num_objects: 1512369  sizeof(OctreeNode): 208
+[INFO:Rank 0] Simulation box length (height, width, depth)	: (156, 156, 156)
+[INFO:Rank 0] Subdomain length (height, width, depth)	: (78, 78, 78)
+My number of neurons   : 100
+My number of local_subdomains: 4
+My subdomain ids       : [ 0 , 3 ]
+Subdomain: 0
+    number_neurons: 25
+    index_1d   : 0
+    index_3d   : ( 0 , 0 , 0 )
+    minimum_position    : ( -0 , -0 , -0 )
+    maximum_position    : ( 78 , 78 , 78 )
+Subdomain: 1
+    number_neurons: 25
+    index_1d   : 1
+    index_3d   : ( 1 , 0 , 0 )
+    minimum_position    : ( 78 , -0 , -0 )
+    maximum_position    : ( 156 , 78 , 78 )
+Subdomain: 2
+    number_neurons: 25
+    index_1d   : 2
+    index_3d   : ( 0 , 1 , 0 )
+    minimum_position    : ( -0 , 78 , -0 )
+    maximum_position    : ( 78 , 156 , 78 )
+Subdomain: 3
+    number_neurons: 25
+    index_1d   : 3
+    index_3d   : ( 1 , 1 , 0 )
+    minimum_position    : ( 78 , 78 , -0 )
+    maximum_position    : ( 156 , 156 , 78 )
+
+[INFO:Rank 0] Neurons created
+[INFO:Rank 0] Inserted a total of 200 neurons
+[INFO:Rank 0] Neurons inserted into subdomains
+[INFO:Rank 0] Subdomains inserted into global tree
+[INFO:Rank 0] Network graph created
+[INFO:Rank 0] Synaptic elements initialized
+[Step: 100	] Total up to now     (creations, deletions, netto):	143		0		143
+[Step: 200	] Total up to now     (creations, deletions, netto):	179		0		179
+[Step: 300	] Total up to now     (creations, deletions, netto):	197		0		197
+[Step: 400	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 500	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 600	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 700	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 800	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 900	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 1000	] Total up to now     (creations, deletions, netto):	200		0		200
+[INFO:Rank 0] Total up to now     (creations, deletions, netto): 200	0	200
+Diff. from previous (creations, deletions, netto): 200	0	200
+END: Wed Jun  1 13:02:08 2022
+number of bytes send: 76376, number of bytes received: 79872, 89024
+[INFO:Rank 0] START: Wed Jun  1 13:02:25 2022
+Chosen lower bound for vacant synaptic elements: 1.1
+Chosen upper bound for vacant synaptic elements: 1.3
+Chosen target calcium value: 0.7
+Chosen beta value: 0.001
+Chosen nu value: 1e-05
+Chosen retract ratio: 0
+Chosen synapse conductance: 0.03
+Chosen background activity base: 0
+Chosen background activity mean: 0
+Chosen background activity stddev: 0
+[INFO:Rank 0] Total number local_subdomains        : 8
+[INFO:Rank 0] Number subdomains per dimension: 2
+[INFO:Rank 0] MPI RMA MemAllocator: max_num_objects: 1512369  sizeof(OctreeNode): 208
+[INFO:Rank 0] Simulation box length (height, width, depth)	: (156, 156, 156)
+[INFO:Rank 0] Subdomain length (height, width, depth)	: (78, 78, 78)
+My number of neurons   : 100
+My number of local_subdomains: 4
+My subdomain ids       : [ 0 , 3 ]
+Subdomain: 0
+    number_neurons: 25
+    index_1d   : 0
+    index_3d   : ( 0 , 0 , 0 )
+    minimum_position    : ( -0 , -0 , -0 )
+    maximum_position    : ( 78 , 78 , 78 )
+Subdomain: 1
+    number_neurons: 25
+    index_1d   : 1
+    index_3d   : ( 1 , 0 , 0 )
+    minimum_position    : ( 78 , -0 , -0 )
+    maximum_position    : ( 156 , 78 , 78 )
+Subdomain: 2
+    number_neurons: 25
+    index_1d   : 2
+    index_3d   : ( 0 , 1 , 0 )
+    minimum_position    : ( -0 , 78 , -0 )
+    maximum_position    : ( 78 , 156 , 78 )
+Subdomain: 3
+    number_neurons: 25
+    index_1d   : 3
+    index_3d   : ( 1 , 1 , 0 )
+    minimum_position    : ( 78 , 78 , -0 )
+    maximum_position    : ( 156 , 156 , 78 )
+
+[INFO:Rank 0] Neurons created
+[INFO:Rank 0] Inserted a total of 200 neurons
+[INFO:Rank 0] Neurons inserted into subdomains
+[INFO:Rank 0] Subdomains inserted into global tree
+[INFO:Rank 0] Network graph created
+[INFO:Rank 0] Synaptic elements initialized
+[Step: 100	] Total up to now     (creations, deletions, netto):	133		0		133
+[Step: 200	] Total up to now     (creations, deletions, netto):	176		0		176
+[Step: 300	] Total up to now     (creations, deletions, netto):	197		0		197
+[Step: 400	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 500	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 600	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 700	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 800	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 900	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 1000	] Total up to now     (creations, deletions, netto):	200		0		200
+[INFO:Rank 0] Total up to now     (creations, deletions, netto): 200	0	200
+Diff. from previous (creations, deletions, netto): 200	0	200
+END: Wed Jun  1 13:02:26 2022
+number of bytes send: 63401, number of bytes received: 65817, 91104
+[INFO:Rank 0] START: Wed Jun  1 17:37:23 2022
+Chosen lower bound for vacant synaptic elements: 1.1
+Chosen upper bound for vacant synaptic elements: 1.3
+Chosen target calcium value: 0.7
+Chosen beta value: 0.001
+Chosen nu value: 1e-05
+Chosen retract ratio: 0
+Chosen synapse conductance: 0.03
+Chosen background activity base: 0
+Chosen background activity mean: 0
+Chosen background activity stddev: 0
+[INFO:Rank 0] Total number local_subdomains        : 8
+[INFO:Rank 0] Number subdomains per dimension: 2
+[INFO:Rank 0] MPI RMA MemAllocator: max_num_objects: 1512369  sizeof(OctreeNode): 208
+[INFO:Rank 0] Simulation box length (height, width, depth)	: (156, 156, 156)
+[INFO:Rank 0] Subdomain length (height, width, depth)	: (78, 78, 78)
+My number of neurons   : 100
+My number of local_subdomains: 4
+My subdomain ids       : [ 0 , 3 ]
+Subdomain: 0
+    number_neurons: 25
+    index_1d   : 0
+    index_3d   : ( 0 , 0 , 0 )
+    minimum_position    : ( -0 , -0 , -0 )
+    maximum_position    : ( 78 , 78 , 78 )
+Subdomain: 1
+    number_neurons: 25
+    index_1d   : 1
+    index_3d   : ( 1 , 0 , 0 )
+    minimum_position    : ( 78 , -0 , -0 )
+    maximum_position    : ( 156 , 78 , 78 )
+Subdomain: 2
+    number_neurons: 25
+    index_1d   : 2
+    index_3d   : ( 0 , 1 , 0 )
+    minimum_position    : ( -0 , 78 , -0 )
+    maximum_position    : ( 78 , 156 , 78 )
+Subdomain: 3
+    number_neurons: 25
+    index_1d   : 3
+    index_3d   : ( 1 , 1 , 0 )
+    minimum_position    : ( 78 , 78 , -0 )
+    maximum_position    : ( 156 , 156 , 78 )
+
+[INFO:Rank 0] Neurons created
+[INFO:Rank 0] Inserted a total of 200 neurons
+[INFO:Rank 0] Neurons inserted into subdomains
+[INFO:Rank 0] Subdomains inserted into global tree
+[INFO:Rank 0] Network graph created
+[INFO:Rank 0] Synaptic elements initialized
+[Step: 100	] Total up to now     (creations, deletions, netto):	133		0		133
+[Step: 200	] Total up to now     (creations, deletions, netto):	176		0		176
+[Step: 300	] Total up to now     (creations, deletions, netto):	197		0		197
+[Step: 400	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 500	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 600	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 700	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 800	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 900	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 1000	] Total up to now     (creations, deletions, netto):	200		0		200
+[INFO:Rank 0] Total up to now     (creations, deletions, netto): 200	0	200
+Diff. from previous (creations, deletions, netto): 200	0	200
+END: Wed Jun  1 17:37:24 2022
+number of bytes send: 63401, number of bytes received: 65817, 91104
+[INFO:Rank 0] START: Wed Jun  1 17:38:33 2022
+Chosen lower bound for vacant synaptic elements: 1.1
+Chosen upper bound for vacant synaptic elements: 1.3
+Chosen target calcium value: 0.7
+Chosen beta value: 0.001
+Chosen nu value: 1e-05
+Chosen retract ratio: 0
+Chosen synapse conductance: 0.03
+Chosen background activity base: 0
+Chosen background activity mean: 0
+Chosen background activity stddev: 0
+[INFO:Rank 0] Total number local_subdomains        : 8
+[INFO:Rank 0] Number subdomains per dimension: 2
+[INFO:Rank 0] MPI RMA MemAllocator: max_num_objects: 1512369  sizeof(OctreeNode): 208
+[INFO:Rank 0] Simulation box length (height, width, depth)	: (156, 156, 156)
+[INFO:Rank 0] Subdomain length (height, width, depth)	: (78, 78, 78)
+My number of neurons   : 100
+My number of local_subdomains: 4
+My subdomain ids       : [ 0 , 3 ]
+Subdomain: 0
+    number_neurons: 25
+    index_1d   : 0
+    index_3d   : ( 0 , 0 , 0 )
+    minimum_position    : ( -0 , -0 , -0 )
+    maximum_position    : ( 78 , 78 , 78 )
+Subdomain: 1
+    number_neurons: 25
+    index_1d   : 1
+    index_3d   : ( 1 , 0 , 0 )
+    minimum_position    : ( 78 , -0 , -0 )
+    maximum_position    : ( 156 , 78 , 78 )
+Subdomain: 2
+    number_neurons: 25
+    index_1d   : 2
+    index_3d   : ( 0 , 1 , 0 )
+    minimum_position    : ( -0 , 78 , -0 )
+    maximum_position    : ( 78 , 156 , 78 )
+Subdomain: 3
+    number_neurons: 25
+    index_1d   : 3
+    index_3d   : ( 1 , 1 , 0 )
+    minimum_position    : ( 78 , 78 , -0 )
+    maximum_position    : ( 156 , 156 , 78 )
+
+[INFO:Rank 0] Neurons created
+[INFO:Rank 0] Inserted a total of 200 neurons
+[INFO:Rank 0] Neurons inserted into subdomains
+[INFO:Rank 0] Subdomains inserted into global tree
+[INFO:Rank 0] Network graph created
+[INFO:Rank 0] Synaptic elements initialized
+[Step: 100	] Total up to now     (creations, deletions, netto):	143		0		143
+[Step: 200	] Total up to now     (creations, deletions, netto):	179		0		179
+[Step: 300	] Total up to now     (creations, deletions, netto):	197		0		197
+[Step: 400	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 500	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 600	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 700	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 800	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 900	] Total up to now     (creations, deletions, netto):	200		0		200
+[Step: 1000	] Total up to now     (creations, deletions, netto):	200		0		200
+[INFO:Rank 0] Total up to now     (creations, deletions, netto): 200	0	200
+Diff. from previous (creations, deletions, netto): 200	0	200
+END: Wed Jun  1 17:38:34 2022
+number of bytes send: 72920, number of bytes received: 76392, 89024

@@ -128,6 +128,22 @@ public:
     }
 
     /**
+     * @brief Returns the level of this node
+     * @return The level
+     */
+    [[nodiscard]] uint16_t get_level() const noexcept {
+        return level;
+    }
+
+    /**
+     * @brief Returns the level of this node
+     * @return The level
+     */
+    void set_level(uint16_t new_level) noexcept {
+        level = new_level;
+    }
+
+    /**
      * @brief Inserts a neuron with the specified id and the specified MPI rank into the subtree that is induced by this object.
      * @param position The position of the new neuron
      * @param neuron_id The id of the new neuron (can be Constants::uninitialized to inidicate a virtual neuron), <= Constants::uninitialized
@@ -165,6 +181,8 @@ public:
         }
 
         RelearnException::check(parent_node != nullptr, "OctreeNode::insert: parent_node is nullptr");
+
+        auto level = parent_node->get_level();
 
         /**
          * Found my octant, but
@@ -219,6 +237,9 @@ public:
                 // MPI rank who owns this node
                 new_node->set_rank(parent_node->get_rank());
 
+                // Node level
+                new_node->set_level(level + 1);
+
                 // Determine my octant
                 new_position_octant = parent_node->get_cell().get_octant_for_position(position);
 
@@ -243,6 +264,7 @@ public:
         new_node_to_insert->set_cell_neuron_position({ position });
         new_node_to_insert->set_cell_neuron_id(neuron_id);
         new_node_to_insert->set_rank(rank);
+        new_node_to_insert->set_level(level + 1);
 
         bool has_children = false;
 
@@ -309,6 +331,7 @@ public:
         children = std::array<OctreeNodePtr, Constants::number_oct>{ nullptr };
         parent = false;
         rank = -1;
+        level = 0;
     }
 
     /**
@@ -341,6 +364,8 @@ private:
     bool parent{ false };
 
     int rank{ -1 }; // MPI rank who owns this octree node
+
+    uint16_t level{ 0 };
 
 public:
     /**

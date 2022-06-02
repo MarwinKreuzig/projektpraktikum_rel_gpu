@@ -354,3 +354,4 @@ ASALocalRun/
 /output-clang-tidy/
 /relearn/googletest/
 /build
+/relearn/out/build/x64-Debug

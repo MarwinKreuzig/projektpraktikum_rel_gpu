@@ -19,6 +19,7 @@
 /**
  * One SynapseCreationRequest always consists of a target neuron, a source neuron, and a signal type
  */
+
 class SynapseCreationRequest {
     NeuronID target{};
     NeuronID source{};
