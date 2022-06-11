@@ -199,9 +199,6 @@ protected:
         CommunicationMap<SynapseCreationRequest> creation_requests(number_ranks);
         creation_requests.resize(neuron_requests.get_request_sizes());
 
-        //std::vector<RankNeuronId> target_neuron_ids;
-        //target_neuron_ids.reserve(neuron_requests.get_total_number_requests());
-
         for (const auto& [source_rank, requests] : neuron_requests) {
             const auto num_requests = requests.size();
 
@@ -214,6 +211,7 @@ protected:
                 // If the request comes from myself, get target from the request
                 if (source_rank == my_rank) {
                     const auto target_neuron_id = requests[request_index].get_target_id();
+                    
                     creation_requests.set_request(my_rank, request_index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
                     
                     continue;
@@ -227,10 +225,10 @@ protected:
                 // If the local search is successful, create a SynapseCreationRequest
                 if (const auto& local_search = find_local_target_neuron(source_neuron_id, source_position, root_of_subtree, ElementType::Dendrite, signal_type, sigma); local_search.has_value()) {
                     const auto target_neuron_id = local_search.value();
+                    
                     creation_requests.set_request(source_rank, request_index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
-                } else {
-                    const auto target_neuron_id = requests[request_index].get_target_id();
-                    creation_requests.set_request(my_rank, request_index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
+                } else {                  
+                    creation_requests.set_request(my_rank, request_index, SynapseCreationRequest{ source_neuron_id, source_neuron_id, signal_type });
                 }      
             }
         }
@@ -248,6 +246,7 @@ protected:
             for (auto response_index = 0; response_index < num_responses; response_index++) {
                 const auto [target_neuron_id, source_neuron_id, dendrite_type_needed] = creation_requests.get_request(source_rank, response_index);
                 const auto response = responses[response_index];
+                
                 neuron_responses.set_request(source_rank, response_index, DistantNeuronResponse{ target_neuron_id, responses[response_index] });
             }
         }
@@ -284,7 +283,15 @@ protected:
                 const auto target_neuron_id = responses[index].get_source_id();
                 const auto creation_response = responses[index].get_creation_response();
 
-                creation_requests.set_request(rank, index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
+                // If the creation succeeded set the corresponding target neuron
+                if (creation_response == SynapseCreationResponse::Succeeded) {
+                    creation_requests.set_request(rank, index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
+                }
+                // Otherwise set the source as the target
+                else {
+                    creation_requests.set_request(rank, index, SynapseCreationRequest{ source_neuron_id, source_neuron_id, signal_type });
+                }
+
                 creation_responses.set_request(rank, index, creation_response);
             }
         }

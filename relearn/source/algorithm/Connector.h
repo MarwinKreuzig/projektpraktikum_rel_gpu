@@ -87,6 +87,11 @@ public:
         for (const auto& [source_rank, request_index] : indices) {
             const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = creation_requests.get_request(source_rank, request_index);
 
+            if (target_neuron_id == source_neuron_id) {
+                responses.set_request(source_rank, request_index, SynapseCreationResponse::Failed);
+                continue;
+            }
+
             RelearnException::check(target_neuron_id.get_local_id() < number_neurons, "ForwardConnector::process_requests: target_neuron_id exceeds my neurons");
 
             const auto& dendrites = (SignalType::Inhibitory == dendrite_type_needed) ? inhibitory_dendrites : excitatory_dendrites;
