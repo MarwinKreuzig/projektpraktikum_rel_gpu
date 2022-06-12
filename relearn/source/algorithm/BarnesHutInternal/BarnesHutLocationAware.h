@@ -266,11 +266,6 @@ protected:
 
         RelearnException::check(neuron_requests.size() == neuron_responses.size(), "BarnesHutLocationAware::process_responses: Requests and Responses had different sizes");
 
-        for (auto rank = 0; rank < neuron_requests.size(); rank++) {
-            RelearnException::check(neuron_requests.size(rank) == neuron_responses.size(rank),
-                "BarnesHutLocationAware::process_responses: Requests and Responses for rank {} had different sizes", rank);
-        }
-
         const auto my_rank = MPIWrapper::get_my_rank();
         const auto number_ranks = neuron_requests.get_number_ranks();
 
