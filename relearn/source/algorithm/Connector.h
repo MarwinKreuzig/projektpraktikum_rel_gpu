@@ -136,14 +136,14 @@ public:
         const CommunicationMap<SynapseCreationResponse>& creation_responses, const std::shared_ptr<SynapticElements>& axons) {
 
         const auto axons_empty = axons.operator bool();
-        RelearnException::check(axons_empty, "ForwardConnector::process_requests: The axons are empty");
+        RelearnException::check(axons_empty, "ForwardConnector::process_responses: The axons are empty");
 
         RelearnException::check(creation_requests.size() == creation_responses.size(), 
-            "ForwardConnector::process_requests: Requests and Responses had different sizes");
+            "ForwardConnector::process_responses: Requests and Responses had different sizes");
 
         for (auto rank = 0; rank < creation_requests.size(); rank++) {
             RelearnException::check(creation_requests.size(rank) == creation_responses.size(rank),
-                "ForwardConnector::process_requests: Requests and Responses for rank {} had different sizes", rank);
+                "ForwardConnector::process_responses: Requests and Responses for rank {} had different sizes", rank);
         }
 
         const auto number_neurons = axons->get_size();

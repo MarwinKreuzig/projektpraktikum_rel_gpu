@@ -355,3 +355,4 @@ ASALocalRun/
 /relearn/googletest/
 /build
 /relearn/out/build/x64-Debug
+/relearn/out/build/output

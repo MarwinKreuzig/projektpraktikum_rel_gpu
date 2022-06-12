@@ -579,7 +579,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "number of bytes send: {}, number of bytes received: {}, {}", MPIWrapper::get_number_bytes_sent(), MPIWrapper::get_number_bytes_received(), MPIWrapper::get_number_bytes_remote_accessed());
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "number of bytes send: {}, number of bytes received: {}, number of bytes accessed remotely: {}", MPIWrapper::get_number_bytes_sent(), MPIWrapper::get_number_bytes_received(), MPIWrapper::get_number_bytes_remote_accessed());
 
     MPIWrapper::finalize();
 

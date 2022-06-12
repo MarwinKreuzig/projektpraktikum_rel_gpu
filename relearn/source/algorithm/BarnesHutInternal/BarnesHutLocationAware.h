@@ -212,7 +212,7 @@ protected:
                 if (source_rank == my_rank) {
                     const auto target_neuron_id = requests[request_index].get_target_id();
                     
-                    creation_requests.set_request(my_rank, request_index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
+                    creation_requests.set_request(source_rank, request_index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
                     
                     continue;
                 }
@@ -228,7 +228,7 @@ protected:
                     
                     creation_requests.set_request(source_rank, request_index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
                 } else {                  
-                    creation_requests.set_request(my_rank, request_index, SynapseCreationRequest{ source_neuron_id, source_neuron_id, signal_type });
+                    creation_requests.set_request(source_rank, request_index, SynapseCreationRequest{ source_neuron_id, source_neuron_id, signal_type });
                 }      
             }
         }
@@ -237,7 +237,7 @@ protected:
         auto [creation_responses, synapses] = ForwardConnector::process_requests(creation_requests, excitatory_dendrites, inhibitory_dendrites);
 
         // Translate the responses back by adding the found neuron id
-        neuron_responses.resize(creation_requests.get_request_sizes());
+        neuron_responses.resize(creation_responses.get_request_sizes());
 
         for (const auto& [source_rank, responses] : creation_responses) {
             const auto num_responses = responses.size();
@@ -263,7 +263,13 @@ protected:
      */
     [[nodiscard]] DistantOutSynapses process_responses(const CommunicationMap<DistantNeuronRequest<AdditionalCellAttributes>>& neuron_requests,
         const CommunicationMap<DistantNeuronResponse>& neuron_responses) {
+
         RelearnException::check(neuron_requests.size() == neuron_responses.size(), "BarnesHutLocationAware::process_responses: Requests and Responses had different sizes");
+
+        for (auto rank = 0; rank < neuron_requests.size(); rank++) {
+            RelearnException::check(neuron_requests.size(rank) == neuron_responses.size(rank),
+                "BarnesHutLocationAware::process_responses: Requests and Responses for rank {} had different sizes", rank);
+        }
 
         const auto my_rank = MPIWrapper::get_my_rank();
         const auto number_ranks = neuron_requests.get_number_ranks();
