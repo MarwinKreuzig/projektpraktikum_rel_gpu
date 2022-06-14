@@ -189,6 +189,9 @@ int main(int argc, char** argv) {
     size_t first_plasticity_step{ Config::first_plasticity_update };
     app.add_option("--first-plasticity-step", first_plasticity_step, "The first step in which the plasticity is updated.");
 
+    size_t calcium_log_step{ Config::calcium_log_step };
+    app.add_option("--calcium-log-step", calcium_log_step, "Sets the interval for logging all calcium values.");
+
     auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
 
     unsigned int random_seed{ 0 };
@@ -365,6 +368,7 @@ int main(int argc, char** argv) {
     RelearnException::check(growth_rate <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
 
     Config::first_plasticity_update = first_plasticity_step;
+    Config::calcium_log_step = calcium_log_step;
 
     omp_set_num_threads(openmp_threads);
 

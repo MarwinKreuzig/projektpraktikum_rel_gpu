@@ -131,7 +131,7 @@ protected:
      * @param element_type The element type that the source searches
      * @param signal_type The signal type that the source searches
      */
-    [[nodiscard]] std::vector<OctreeNode<AdditionalCellAttributes>*> get_nodes_to_consider(const position_type& source_position, OctreeNode<AdditionalCellAttributes>* root,
+    [[nodiscard]] std::vector<OctreeNode<AdditionalCellAttributes>*> get_nodes_to_consider(const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
         const ElementType element_type, const SignalType signal_type) const {
         if (root == nullptr) {
             return {};

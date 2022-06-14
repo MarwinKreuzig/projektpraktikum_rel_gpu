@@ -364,6 +364,31 @@ protected:
         return ss.str();
     }
 
+    std::vector<LocalSynapse> generate_local_synapses(size_t number_neurons) {
+        const auto number_synapses = get_random_number_synapses();
+
+        std::map<std::pair<NeuronID, NeuronID>, int> synapse_map{};
+        for (auto i = 0; i < number_synapses; i++) {
+            const auto source = get_random_neuron_id(number_neurons);
+            const auto target = get_random_neuron_id(number_neurons);
+            const auto weight = get_random_synapse_weight();
+
+            synapse_map[{ target, source }] += weight;
+        }
+
+        std::vector<LocalSynapse> synapses{};
+        synapses.reserve(synapse_map.size());
+
+        for (const auto& [pair, weight] : synapse_map) {
+            const auto& [target, source] = pair;
+            if (weight != 0) {
+                synapses.emplace_back(target, source, weight);
+            }
+        }
+
+        return synapses;
+    }
+
     std::tuple<CommunicationMap<SynapseCreationRequest>, std::vector<size_t>, std::vector<size_t>> create_incoming_requests(size_t number_ranks, int current_rank,
         size_t number_neurons, size_t number_requests_lower_bound, size_t number_requests_upper_bound) {
 
@@ -767,8 +792,6 @@ protected:
 
     void generate_random_neurons(std::vector<Vec3d>& positions,
         std::vector<std::string>& area_names, std::vector<SignalType>& types);
-
-    void generate_synapses(std::vector<std::tuple<NeuronID, NeuronID, int>>& synapses, size_t number_neurons);
 };
 
 class NeuronModelsTest : public RelearnTest {

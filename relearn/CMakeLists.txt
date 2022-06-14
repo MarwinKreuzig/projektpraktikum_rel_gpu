@@ -51,6 +51,7 @@ file(GLOB_RECURSE SRC_NEU_MOD "source/neurons/models/*")
 file(GLOB_RECURSE SRC_NEU_HEL "source/neurons/helper/*")
 
 file(GLOB_RECURSE SRC_MAIN "source/main.cpp")
+file(GLOB_RECURSE SRC_ANALYSIS "source/analysis.cpp")
 file(GLOB_RECURSE SRC_CONF "source/Config.h")
 file(GLOB_RECURSE SRC_TYPES "source/Types.h")
 
@@ -60,7 +61,7 @@ file(GLOB_RECURSE SRC_BENCH "benchmark/*")
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES 
 ${SRC_ALG} ${SRC_ALG_NAIVE} ${SRC_ALG_BH} ${SRC_ALG_FMM} ${SRC_ALG_KERNEL} ${SRC_IO} ${SRC_MPI} ${SRC_SIM} 
 ${SRC_STR} ${SRC_UTIL} ${SRC_NEU} ${SRC_NEU_MOD} 
-${SRC_NEU_HEL} ${SRC_MAIN} ${SRC_CONF} ${SRC_TYPES} ${SRC_SIM_FILE} ${SRC_SIM_RANDOM})
+${SRC_NEU_HEL} ${SRC_MAIN} ${SRC_ANALYSIS} ${SRC_CONF} ${SRC_TYPES} ${SRC_SIM_FILE} ${SRC_SIM_RANDOM})
 
 source_group("tests\\" FILES ${SRC_TST})
 source_group("benchmark\\" FILES ${SRC_BENCH})
@@ -126,9 +127,15 @@ add_executable(relearn
 	${SRC_MAIN}
 )
 
+add_executable(relearn_analysis
+	${SRC_ANALYSIS}
+)
+
 target_link_libraries(relearn PRIVATE relearn_lib)
+target_link_libraries(relearn_analysis PRIVATE relearn_lib)
 
 set_target_properties(relearn PROPERTIES ENABLE_EXPORTS 1)
+set_target_properties(relearn_analysis PROPERTIES ENABLE_EXPORTS 1)
 
 FetchContent_Declare(
   CLI11
@@ -137,6 +144,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(CLI11)
 target_include_directories(relearn SYSTEM PRIVATE ${CLI11_SOURCE_DIR}/include)
+target_include_directories(relearn_analysis SYSTEM PRIVATE ${CLI11_SOURCE_DIR}/include)
 
 #Download and unpack googletest at configure time
 FetchContent_Declare(

@@ -142,8 +142,8 @@ public:
      * @return All data for the specified rank
      */
     [[nodiscard]] const std::vector<RequestType>& get_requests(const int mpi_rank) const {
-        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::get_request: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
-        RelearnException::check(contains(mpi_rank), "CommunicationMap::get_request: There are no requests for rank {}", mpi_rank);
+        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::get_requests: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
+        RelearnException::check(contains(mpi_rank), "CommunicationMap::get_requests: There are no requests for rank {}", mpi_rank);
 
         return requests.at(mpi_rank);
     }

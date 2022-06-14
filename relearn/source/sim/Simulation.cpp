@@ -324,7 +324,7 @@ void Simulation::simulate(const size_t number_steps) {
             neurons->print_local_network_histogram(step);
         }
 
-        if (step % Config::calcium_step == 0) {
+        if (step % Config::calcium_log_step == 0) {
             neurons->print_calcium_values_to_file(step);
         }
 

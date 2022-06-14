@@ -34,29 +34,6 @@ void NeuronAssignmentTest::generate_random_neurons(std::vector<Vec3d>& positions
     sfnd.write_neurons_to_file("neurons.tmp");
 }
 
-void NeuronAssignmentTest::generate_synapses(std::vector<std::tuple<NeuronID, NeuronID, int>>& synapses, size_t number_neurons) {
-    const auto number_synapses = get_random_number_synapses();
-
-    std::map<std::pair<NeuronID, NeuronID>, int> synapse_map{};
-
-    for (auto i = 0; i < number_synapses; i++) {
-        const auto source = get_random_neuron_id(number_neurons);
-        const auto target = get_random_neuron_id(number_neurons);
-        const auto weight = get_random_synapse_weight();
-
-        synapse_map[{ source, target }] += weight;
-    }
-
-    synapses.resize(0);
-
-    for (const auto& [pair, weight] : synapse_map) {
-        const auto& [source, target] = pair;
-        if (weight != 0) {
-            synapses.emplace_back(source, target, weight);
-        }
-    }
-}
-
 double calculate_excitatory_fraction(const std::vector<SignalType>& types) {
     auto number_excitatory = 0;
     auto number_inhibitory = 0;
@@ -73,7 +50,7 @@ double calculate_excitatory_fraction(const std::vector<SignalType>& types) {
     return ratio;
 }
 
-void write_synapses_to_file(const std::vector<std::tuple<NeuronID, NeuronID, int>>& synapses, std::filesystem::path path) {
+void write_synapses_to_file(const std::vector<LocalSynapse>& synapses, std::filesystem::path path) {
     std::ofstream of(path);
 
     for (const auto& [target, source, weight] : synapses) {
@@ -606,9 +583,8 @@ TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
 
     const auto number_neurons = positions.size();
 
-    std::vector<std::tuple<NeuronID, NeuronID, int>> synapses{};
+    const auto& synapses = generate_local_synapses(number_neurons);
 
-    generate_synapses(synapses, number_neurons);
     write_synapses_to_file(synapses, "synapses.tmp");
 
     const auto part = std::make_shared<Partition>(1, 0);
