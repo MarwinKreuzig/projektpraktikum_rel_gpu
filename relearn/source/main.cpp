@@ -398,6 +398,7 @@ int main(int argc, char** argv) {
             "Chosen upper bound for vacant synaptic elements: {}\n"
             "Chosen target calcium value: {}\n"
             "Chosen beta value: {}\n"
+            "Chosen calcium decay: {}\n"
             "Chosen growth_rate value: {}\n"
             "Chosen retract ratio: {}\n"
             "Chosen synapse conductance: {}\n"
@@ -411,6 +412,7 @@ int main(int argc, char** argv) {
             synaptic_elements_init_ub,
             target_calcium,
             beta,
+            calcium_decay,
             growth_rate,
             retract_ratio,
             synapse_conductance,
