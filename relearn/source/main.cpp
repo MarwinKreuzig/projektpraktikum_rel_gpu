@@ -474,21 +474,21 @@ int main(int argc, char** argv) {
 
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {
-        neuron_model = std::make_unique<models::PoissonModel>(synapse_conductance, NeuronModel::default_tau_C, beta, NeuronModel::default_h,
+        neuron_model = std::make_unique<models::PoissonModel>(synapse_conductance, calcium_decay, beta, NeuronModel::default_h,
             base_background_activity, background_activity_mean, background_activity_stddev,
             models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
     } else if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
-        neuron_model = std::make_unique<models::IzhikevichModel>(synapse_conductance, NeuronModel::default_tau_C, beta, NeuronModel::default_h,
+        neuron_model = std::make_unique<models::IzhikevichModel>(synapse_conductance, calcium_decay, beta, NeuronModel::default_h,
             base_background_activity, background_activity_mean, background_activity_stddev,
             models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
             models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
             models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
     } else if (chosen_neuron_model == NeuronModelEnum::FitzHughNagumo) {
-        neuron_model = std::make_unique<models::FitzHughNagumoModel>(synapse_conductance, NeuronModel::default_tau_C, NeuronModel::default_beta, NeuronModel::default_h,
+        neuron_model = std::make_unique<models::FitzHughNagumoModel>(synapse_conductance, calcium_decay, NeuronModel::default_beta, NeuronModel::default_h,
             base_background_activity, background_activity_mean, background_activity_stddev,
             models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
     } else if (chosen_neuron_model == NeuronModelEnum::AEIF) {
-        neuron_model = std::make_unique<models::AEIFModel>(synapse_conductance, NeuronModel::default_tau_C, NeuronModel::default_beta, NeuronModel::default_h,
+        neuron_model = std::make_unique<models::AEIFModel>(synapse_conductance, calcium_decay, NeuronModel::default_beta, NeuronModel::default_h,
             base_background_activity, background_activity_mean, background_activity_stddev,
             models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
             models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
