@@ -250,6 +250,10 @@ protected:
                 return {};
             }
 
+            if (node_selected == root_of_subtree) {
+                return {};
+            }
+
             // If the level of the selected node is too low, continue the search
             if (level_of_branch_nodes < node_selected->get_level()) {
 
@@ -283,11 +287,6 @@ protected:
 
                     return std::make_pair(target_rank, neuron_request);
                 }
-            }
-
-            // To avoid a deadlock
-            if (root_of_subtree->get_level() == node_selected->get_level()) {
-                return {};
             }
 
             // We need to choose again, starting from the chosen virtual neuron
