@@ -131,15 +131,15 @@ public:
      * @brief Returns the level of this node
      * @return The level
      */
-    [[nodiscard]] uint16_t get_level() const noexcept {
+    [[nodiscard]] size_t get_level() const noexcept {
         return level;
     }
 
     /**
-     * @brief Returns the level of this node
-     * @return The level
+     * @brief Sets the level of this node
+     * @param new_level The new level of this node
      */
-    void set_level(uint16_t new_level) noexcept {
+    void set_level(size_t new_level) noexcept {
         level = new_level;
     }
 
@@ -365,7 +365,7 @@ private:
 
     int rank{ -1 }; // MPI rank who owns this octree node
 
-    uint16_t level{ 0 };
+    size_t level{ 0 };
 
 public:
     /**

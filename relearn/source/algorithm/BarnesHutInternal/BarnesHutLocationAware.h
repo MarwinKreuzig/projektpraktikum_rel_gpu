@@ -266,7 +266,6 @@ protected:
 
         RelearnException::check(neuron_requests.size() == neuron_responses.size(), "BarnesHutLocationAware::process_responses: Requests and Responses had different sizes");
 
-        const auto my_rank = MPIWrapper::get_my_rank();
         const auto number_ranks = neuron_requests.get_number_ranks();
 
         CommunicationMap<SynapseCreationRequest> creation_requests(number_ranks);

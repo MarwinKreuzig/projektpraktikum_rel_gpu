@@ -242,9 +242,6 @@ protected:
         const ElementType element_type, const SignalType signal_type, const double sigma, size_t level_of_branch_nodes) const {
         RelearnException::check(root != nullptr, "BarnesHutLocationAwareBase::find_target_neuron: root was nullptr");
 
-        const auto my_rank = MPIWrapper::get_my_rank();
-        const auto num_ranks = MPIWrapper::get_num_ranks();
-
         for (auto root_of_subtree = root; true;) {
             const auto& vector = get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type);
 
@@ -264,7 +261,6 @@ protected:
 
                 // If the node is not local, send request to the owning rank 
                 if (const auto is_local = node_selected->is_local(); !is_local) {
-                    RelearnException::check(source_neuron_id.is_local(), "BarnesHutLocationAwareBase::find_target_neuron: Source id is not local");
 
                     const DistantNeuronRequest<AdditionalCellAttributes> neuron_request(
                         target_neuron_id,
@@ -277,8 +273,6 @@ protected:
                 } 
                 // If the node is a child, send request to yourself
                 else if (const auto is_child = node_selected->is_child(); is_child) {
-                    RelearnException::check(source_neuron_id.is_local(), "BarnesHutLocationAwareBase::find_target_neuron: Source id is not local");
-                    RelearnException::check(target_neuron_id.is_local(), "BarnesHutLocationAwareBase::find_target_neuron: Target id is not local");
 
                     const DistantNeuronRequest<AdditionalCellAttributes> neuron_request(
                         target_neuron_id,
@@ -289,6 +283,11 @@ protected:
 
                     return std::make_pair(target_rank, neuron_request);
                 }
+            }
+
+            // To avoid a deadlock
+            if (root_of_subtree->get_level() == node_selected->get_level()) {
+                return {};
             }
 
             // We need to choose again, starting from the chosen virtual neuron
