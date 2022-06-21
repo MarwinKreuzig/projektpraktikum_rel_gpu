@@ -288,7 +288,10 @@ int main(int argc, char** argv) {
     app.add_option("--initial-ca", initial_calcium, "The initial Ca2+ ions in each neuron. Default is 0.0.");
 
     double beta{ NeuronModel::default_beta };
-    app.add_option("--beta", beta, "The amount of calcium ions gathered when a neuron fires. Default is 0.001");
+    app.add_option("--beta", beta, "The amount of calcium ions gathered when a neuron fires. Default is 0.001.");
+
+    size_t h{ NeuronModel::default_h };
+    app.add_option("--integration-step-size", h, "The step size for the numerical integration of the electrical acticity. Default is 10.");
 
     double retract_ratio{ SynapticElements::default_vacant_retract_ratio };
     app.add_option("--retract-ratio", retract_ratio, "The ratio by which vacant synapses retract.");
@@ -474,21 +477,21 @@ int main(int argc, char** argv) {
 
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {
-        neuron_model = std::make_unique<models::PoissonModel>(synapse_conductance, calcium_decay, beta, NeuronModel::default_h,
+        neuron_model = std::make_unique<models::PoissonModel>(synapse_conductance, calcium_decay, beta, h,
             base_background_activity, background_activity_mean, background_activity_stddev,
             models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
     } else if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
-        neuron_model = std::make_unique<models::IzhikevichModel>(synapse_conductance, calcium_decay, beta, NeuronModel::default_h,
+        neuron_model = std::make_unique<models::IzhikevichModel>(synapse_conductance, calcium_decay, beta, h,
             base_background_activity, background_activity_mean, background_activity_stddev,
             models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
             models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
             models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
     } else if (chosen_neuron_model == NeuronModelEnum::FitzHughNagumo) {
-        neuron_model = std::make_unique<models::FitzHughNagumoModel>(synapse_conductance, calcium_decay, NeuronModel::default_beta, NeuronModel::default_h,
+        neuron_model = std::make_unique<models::FitzHughNagumoModel>(synapse_conductance, calcium_decay, beta, h,
             base_background_activity, background_activity_mean, background_activity_stddev,
             models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
     } else if (chosen_neuron_model == NeuronModelEnum::AEIF) {
-        neuron_model = std::make_unique<models::AEIFModel>(synapse_conductance, calcium_decay, NeuronModel::default_beta, NeuronModel::default_h,
+        neuron_model = std::make_unique<models::AEIFModel>(synapse_conductance, calcium_decay, beta, h,
             base_background_activity, background_activity_mean, background_activity_stddev,
             models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
             models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,

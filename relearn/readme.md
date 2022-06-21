@@ -39,6 +39,7 @@ Command | Shortcut | Effect | Notes
 `--target-ca <double>` | | Sets the target calcium for all neurons | Must be from `[0, 100]`. Default is `0.7`
 `--initial-ca <double>`| | Sets the initial calcium for all neurons. | Default is `0.0`
 `--beta <double>` | | Specifies the amount of calcium ions that are gathered whenever a neuron spikes |
+`--integration-step-size <uint32>` | | Specifies the numerical integration steps that are used for calculating the electrical activity | Default is `10`
 `--retract-ratio <double>`| | The ratio by which vacant synapses retract. | Default is `0.0`
 `--synaptic-elements-lower-bound <double>` | | Sets the lower bound of initial synaptic elements | Must be from `[0, $\infty$)`
 `--synaptic-elements-upper-bound <double>` | | Sets the upper bound of initial synaptic elements | Must be from `[0, $\infty$)` and not less than the lower bound
