@@ -20,7 +20,10 @@
 
 void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, unsigned int number_bins) {
     const auto& [ids, positions, area_names, signal_types, infos] = NeuronIO::read_neurons_componentwise(neuron_file);
+    const auto number_neurons = positions.size();
     
+    std::cout << "Found " << number_neurons << " neurons.\n";
+
     auto min = positions[0];
     auto max = positions[0];
 
@@ -28,6 +31,9 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
         min.calculate_componentwise_minimum(pos);
         max.calculate_componentwise_maximum(pos);
     }
+
+    std::cout << "Minimum position is: " << min << '\n';
+    std::cout << "Maximum position is: " << max << '\n';
     
     const auto max_distance = (max - min).calculate_2_norm();
     const auto bin_width = max_distance / static_cast<double>(number_bins);
@@ -40,8 +46,6 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
     upper_borders[number_bins - 1] = std::numeric_limits<double>::infinity();
 
     std::vector<size_t> counts(number_bins, 0);
-
-    const auto number_neurons = positions.size();
 
     for (auto i = 0; i < number_neurons; i++) {
         const auto& source_position = positions[i];
@@ -79,8 +83,7 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
     print(std::cout);
 }
 
-void compute_all_distances() {
-    std::filesystem::path neuron_file = "D:\\source\\repos\\relearn\\relearn\\input\\distributed_8\\rank_0_positions.txt";
+void compute_all_distances(std::filesystem::path neuron_file) {
     const auto& [ids, positions, area_names, signal_types, infos] = NeuronIO::read_neurons_componentwise(neuron_file);
     const auto number_neurons = positions.size();
 
@@ -159,7 +162,12 @@ void compute_all_distances() {
 }
 
 int main(int argc, char** argv) {
-    const auto& path_426124_nodes = std::filesystem::path{ "D:\\relearn-output\\output_2022_05_23\\output\\gaussian_mu_50_gaussian_sigma_200_steps_4000000\\rank_0_positions.txt" };
+    if (argc == 1) {
+        std::cerr << "Please pass arguments!\n";
+        return 1;
+    }
+
+    const auto& path_426124_nodes = std::filesystem::path{ argv[1] };
 
     compute_all_distances_fixed_number_bins(path_426124_nodes, 10000);
     return 0;
