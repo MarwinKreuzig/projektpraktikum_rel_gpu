@@ -9,20 +9,24 @@
  */
 
 #include "io/NeuronIO.h"
+#include "mpi/MPIWrapper.h"
 
 #include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <filesystem>
 #include <vector>
 
 void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, unsigned int number_bins) {
+    const auto number_ranks = MPIWrapper::get_num_ranks();
+    const auto my_rank = MPIWrapper::get_my_rank();
+
     const auto& [ids, positions, area_names, signal_types, infos] = NeuronIO::read_neurons_componentwise(neuron_file);
     const auto number_neurons = positions.size();
-    
-    std::cout << "Found " << number_neurons << " neurons.\n";
+    const auto number_neurons_per_rank = number_neurons / number_ranks;
 
     auto min = positions[0];
     auto max = positions[0];
@@ -32,9 +36,6 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
         max.calculate_componentwise_maximum(pos);
     }
 
-    std::cout << "Minimum position is: " << min << '\n';
-    std::cout << "Maximum position is: " << max << '\n';
-    
     const auto max_distance = (max - min).calculate_2_norm();
     const auto bin_width = max_distance / static_cast<double>(number_bins);
 
@@ -47,9 +48,11 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
 
     std::vector<size_t> counts(number_bins, 0);
 
-    for (auto i = 0; i < number_neurons; i++) {
+    const auto start_id = my_rank * number_neurons_per_rank;
+    const auto end_id = (my_rank + 1 == number_ranks) ? number_neurons : (my_rank + 1) * number_neurons_per_rank;
+
+    for (auto i = start_id; i < end_id; i++) {
         const auto& source_position = positions[i];
-        const auto offset = i * number_neurons;
 
         for (auto j = 0; j < number_neurons; j++) {
             if (i == j) {
@@ -61,16 +64,14 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
 
             const auto distance = difference.calculate_2_norm();
 
-            for (auto boundary_id = 0; boundary_id < number_bins; boundary_id++) {
-                const auto boundary = upper_borders[boundary_id];
-                if (boundary > distance) {
-                    counts[boundary_id]++;
-                    break;
-                }
-            }
-        }
+            const auto boundary_it = std::upper_bound(upper_borders.begin(), upper_borders.end(), distance);
+            const auto iterator_distance = std::distance(upper_borders.begin(), boundary_it);
 
-        std::cout << "Finished " << (i + 1) << " of " << number_neurons << " neurons.\n";
+            auto counts_it = counts.begin();
+            std::advance(counts_it, iterator_distance);
+
+            (*counts_it)++;
+        }
     }
 
     auto print = [&](std::ostream& out) {
@@ -80,7 +81,8 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
         }
     };
 
-    print(std::cout);
+    std::ofstream file("histogram_" + std::to_string(my_rank) + ".txt");
+    print(file);
 }
 
 void compute_all_distances(std::filesystem::path neuron_file) {
@@ -142,13 +144,13 @@ void compute_all_distances(std::filesystem::path neuron_file) {
 
     std::vector<size_t> counts(number_of_bins_cast, 0);
     for (const auto distance : pairwise_distances) {
-        for (auto boundary_id = 0; boundary_id < number_of_bins_cast; boundary_id++) {
-            const auto boundary = upper_borders[boundary_id];
-            if (boundary > distance) {
-                counts[boundary_id]++;
-                break;
-            }
-        }
+        const auto boundary_it = std::upper_bound(upper_borders.begin(), upper_borders.end(), distance);
+        const auto iterator_distance = std::distance(upper_borders.begin(), boundary_it);
+
+        auto counts_it = counts.begin();
+        std::advance(counts_it, iterator_distance);
+
+        (*counts_it)++;
     }
 
     auto print = [&](std::ostream& out) {
@@ -167,8 +169,13 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    MPIWrapper::init(argc, argv);
+
     const auto& path_426124_nodes = std::filesystem::path{ argv[1] };
 
     compute_all_distances_fixed_number_bins(path_426124_nodes, 10000);
+    
+    MPIWrapper::finalize();
+
     return 0;
 }

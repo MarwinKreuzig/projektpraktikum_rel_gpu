@@ -374,11 +374,19 @@ void MPIWrapper::finalize() {
     barrier();
     free_custom_function();
 
-    const int error_code_1 = MPI_Win_free(mpi_window.get());
-    RelearnException::check(error_code_1 == 0, "MPIWrapper::finalize: Error code received: {}", error_code_1);
+    if (mpi_window != nullptr) {
+        const int error_code_1 = MPI_Win_free(mpi_window.get());
+        RelearnException::check(error_code_1 == 0, "MPIWrapper::finalize: Error code received: {}", error_code_1);
 
-    const int error_code_2 = MPI_Free_mem(base_ptr);
-    RelearnException::check(error_code_2 == 0, "MPIWrapper::finalize: Error code received: {}", error_code_2);
+        mpi_window.release();
+    }
+
+    if (base_ptr != nullptr) {
+        const int error_code_2 = MPI_Free_mem(base_ptr);
+        RelearnException::check(error_code_2 == 0, "MPIWrapper::finalize: Error code received: {}", error_code_2);
+
+        base_ptr = nullptr;
+    }
 
     const int errorcode = MPI_Finalize();
     RelearnException::check(errorcode == 0, "MPIWrapper::finalize: Error code received: {}", errorcode);
