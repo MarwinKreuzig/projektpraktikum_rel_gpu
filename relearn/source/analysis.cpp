@@ -18,6 +18,67 @@
 #include <filesystem>
 #include <vector>
 
+void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, unsigned int number_bins) {
+    const auto& [ids, positions, area_names, signal_types, infos] = NeuronIO::read_neurons_componentwise(neuron_file);
+    
+    auto min = positions[0];
+    auto max = positions[0];
+
+    for (const auto& pos : positions) {
+        min.calculate_componentwise_minimum(pos);
+        max.calculate_componentwise_maximum(pos);
+    }
+    
+    const auto max_distance = (max - min).calculate_2_norm();
+    const auto bin_width = max_distance / static_cast<double>(number_bins);
+
+    std::vector<double> upper_borders(number_bins, 0.0);
+    for (auto i = 0; i < number_bins; i++) {
+        const auto border = static_cast<double>(i) * bin_width;
+        upper_borders[i] = border;
+    }
+    upper_borders[number_bins - 1] = std::numeric_limits<double>::infinity();
+
+    std::vector<size_t> counts(number_bins, 0);
+
+    const auto number_neurons = positions.size();
+
+    for (auto i = 0; i < number_neurons; i++) {
+        const auto& source_position = positions[i];
+        const auto offset = i * number_neurons;
+
+        for (auto j = 0; j < number_neurons; j++) {
+            if (i == j) {
+                continue;
+            }
+
+            const auto& target_position = positions[j];
+            const auto& difference = source_position - target_position;
+
+            const auto distance = difference.calculate_2_norm();
+
+            for (auto boundary_id = 0; boundary_id < number_bins; boundary_id++) {
+                const auto boundary = upper_borders[boundary_id];
+                if (boundary > distance) {
+                    counts[boundary_id]++;
+                    break;
+                }
+            }
+        }
+
+        std::cout << "Finished " << (i + 1) << " of " << number_neurons << " neurons.\n";
+    }
+
+    auto print = [&](std::ostream& out) {
+        out << std::setprecision(6);
+        for (auto i = 1; i < number_bins; i++) {
+            out << '[' << upper_borders[i - 1] << ", " << upper_borders[i] << "): " << counts[i - 1] << '\n';
+        }
+    };
+
+    print(std::cout);
+}
+
 void compute_all_distances() {
     std::filesystem::path neuron_file = "D:\\source\\repos\\relearn\\relearn\\input\\distributed_8\\rank_0_positions.txt";
     const auto& [ids, positions, area_names, signal_types, infos] = NeuronIO::read_neurons_componentwise(neuron_file);
@@ -98,6 +159,8 @@ void compute_all_distances() {
 }
 
 int main(int argc, char** argv) {
-    compute_all_distances();
+    const auto& path_426124_nodes = std::filesystem::path{ "D:\\relearn-output\\output_2022_05_23\\output\\gaussian_mu_50_gaussian_sigma_200_steps_4000000\\rank_0_positions.txt" };
+
+    compute_all_distances_fixed_number_bins(path_426124_nodes, 10000);
     return 0;
 }
