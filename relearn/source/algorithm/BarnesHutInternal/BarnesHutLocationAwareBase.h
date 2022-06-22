@@ -267,7 +267,6 @@ protected:
                 if (const auto is_local = node_selected->is_local(); !is_local) {
 
                     const DistantNeuronRequest<AdditionalCellAttributes> neuron_request(
-                        target_neuron_id,
                         source_neuron_id,
                         source_position,
                         NodeCache<AdditionalCellAttributes>::translate(target_rank, node_selected),
@@ -279,7 +278,6 @@ protected:
                 else if (const auto is_child = node_selected->is_child(); is_child) {
 
                     const DistantNeuronRequest<AdditionalCellAttributes> neuron_request(
-                        target_neuron_id,
                         source_neuron_id,
                         source_position,
                         node_selected,

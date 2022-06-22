@@ -39,7 +39,6 @@
 
 template <typename AdditionalCellAttributes>
 class DistantNeuronRequest {
-    NeuronID target_id{};
     NeuronID source_id{};
     RelearnTypes::position_type source_position{};
     OctreeNode<AdditionalCellAttributes>* target_node{};
@@ -56,21 +55,12 @@ public:
      * @param target_node The targeted node of the request
      * @param signal_type The signal type
      */
-    DistantNeuronRequest(NeuronID target_id, NeuronID source_id, RelearnTypes::position_type source_position, OctreeNode<AdditionalCellAttributes>* target_node, SignalType signal_type)
-        : target_id(target_id)
-        , source_id(source_id)
+    DistantNeuronRequest(NeuronID source_id, RelearnTypes::position_type source_position, OctreeNode<AdditionalCellAttributes>* target_node, SignalType signal_type)
+        : source_id(source_id)
         , source_position(source_position)
         , target_node(target_node)
         , signal_type(signal_type) {
         RelearnException::check(target_node != nullptr, "DistantNeuronRequest::DistantNeuronRequest: target_node was nullptr");
-    }
-
-    /**
-     * @brief Returns the target of the request
-     * @return The target
-     */
-    [[nodiscard]] NeuronID get_target_id() const noexcept {
-        return target_id;
     }
 
     /**

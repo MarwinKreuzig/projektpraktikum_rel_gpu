@@ -210,8 +210,7 @@ protected:
 
                 // If the request comes from myself, get target from the request
                 if (source_rank == my_rank) {
-                    const auto target_neuron_id = requests[request_index].get_target_id();
-                    
+                    const auto target_neuron_id = requests[request_index].get_target_node()->get_cell_neuron_id();
                     creation_requests.set_request(source_rank, request_index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
                     
                     continue;
