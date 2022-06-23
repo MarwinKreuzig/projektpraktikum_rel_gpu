@@ -11,6 +11,7 @@
 #include "Config.h"
 #include "Types.h"
 #include "algorithm/Algorithms.h"
+#include "io/CalciumIO.h"
 #include "io/InteractiveNeuronIO.h"
 #include "io/LogFiles.h"
 #include "mpi/CommunicationMap.h"
@@ -282,10 +283,13 @@ int main(int argc, char** argv) {
     app.add_option("--calcium-decay", calcium_decay, "The decay constant for the intercellular calcium. Must be greater than 0.0");
 
     double target_calcium{ SynapticElements::default_C_target };
-    app.add_option("--target-ca", target_calcium, "The target Ca2+ ions in each neuron. Default is 0.7.");
+    auto* opt_target_calcium = app.add_option("--target-ca", target_calcium, "The target Ca2+ ions in each neuron. Default is 0.7.");
 
     double initial_calcium{ 0.0 };
-    app.add_option("--initial-ca", initial_calcium, "The initial Ca2+ ions in each neuron. Default is 0.0.");
+    auto* opt_initial_calcium = app.add_option("--initial-ca", initial_calcium, "The initial Ca2+ ions in each neuron. Default is 0.0.");
+
+    std::string file_calcium{};
+    auto* opt_file_calcium = app.add_option("--file_calcium", file_calcium, "File with calcium values.");
 
     double beta{ NeuronModel::default_beta };
     app.add_option("--beta", beta, "The amount of calcium ions gathered when a neuron fires. Default is 0.001.");
@@ -332,6 +336,13 @@ int main(int argc, char** argv) {
     opt_file_positions->check(CLI::ExistingFile);
     opt_file_network->check(CLI::ExistingFile);
 
+    opt_file_calcium->excludes(opt_initial_calcium);
+    opt_file_calcium->excludes(opt_target_calcium);
+    opt_initial_calcium->excludes(opt_file_calcium);
+    opt_target_calcium->excludes(opt_file_calcium);
+
+    opt_file_calcium->check(CLI::ExistingFile);
+
     opt_file_enable_interrupts->check(CLI::ExistingFile);
     opt_file_disable_interrupts->check(CLI::ExistingFile);
     opt_file_creation_interrups->check(CLI::ExistingFile);
@@ -364,8 +375,10 @@ int main(int argc, char** argv) {
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
     RelearnException::check(calcium_decay > 0.0, "The calcium decay constant must be greater than 0.");
 
-    RelearnException::check(target_calcium >= SynapticElements::min_C_target, "Target calcium is smaller than {}", SynapticElements::min_C_target);
-    RelearnException::check(target_calcium <= SynapticElements::max_C_target, "Target calcium is larger than {}", SynapticElements::max_C_target);
+    if (static_cast<bool>(*opt_target_calcium)) {
+        RelearnException::check(target_calcium >= SynapticElements::min_C_target, "Target calcium is smaller than {}", SynapticElements::min_C_target);
+        RelearnException::check(target_calcium <= SynapticElements::max_C_target, "Target calcium is larger than {}", SynapticElements::max_C_target);
+    }
 
     RelearnException::check(growth_rate >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
     RelearnException::check(growth_rate <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
@@ -567,11 +580,19 @@ int main(int argc, char** argv) {
         sim.set_creation_interrupts(std::move(creation_interrups));
     }
 
-    auto target_calcium_calculator = [target = target_calcium](int mpi_rank, NeuronID::value_type /*neuron_id*/) { return target; };
-    sim.set_target_calcium_calculator(std::move(target_calcium_calculator));
+    if (*opt_file_calcium) {
+        auto [initial_calcium_calculator, target_calcium_calculator] = CalciumIO::load_initial_and_target_function(file_calcium);
 
-    auto initial_calcium_calculator = [inital = initial_calcium](int mpi_rank, NeuronID::value_type /*neuron_id*/) { return inital; };
-    sim.set_initial_calcium_calculator(std::move(initial_calcium_calculator));
+        sim.set_initial_calcium_calculator(std::move(initial_calcium_calculator));
+        sim.set_target_calcium_calculator(std::move(target_calcium_calculator));
+    } else {
+        auto initial_calcium_calculator = [inital = initial_calcium](int mpi_rank, NeuronID::value_type /*neuron_id*/) { return inital; };
+        sim.set_initial_calcium_calculator(std::move(initial_calcium_calculator));
+
+        auto target_calcium_calculator = [target = target_calcium](int mpi_rank, NeuronID::value_type /*neuron_id*/) { return target; };
+        sim.set_target_calcium_calculator(std::move(target_calcium_calculator));    
+    }
+
 
     const auto steps_per_simulation = simulation_steps / Config::monitor_step;
     sim.increase_monitoring_capacity(steps_per_simulation);

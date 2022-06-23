@@ -13,11 +13,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
-#include <filesystem>
+#include <sstream>
 #include <vector>
 
 void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, unsigned int number_bins) {
@@ -72,6 +73,10 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
 
             (*counts_it)++;
         }
+
+        std::stringstream ss{};
+        ss << my_rank << ": " << (i - start_id) << " of " << (end_id - start_id) << '\n';
+        std::cout << ss.str();
     }
 
     auto print = [&](std::ostream& out) {
@@ -174,7 +179,7 @@ int main(int argc, char** argv) {
     const auto& path_426124_nodes = std::filesystem::path{ argv[1] };
 
     compute_all_distances_fixed_number_bins(path_426124_nodes, 10000);
-    
+
     MPIWrapper::finalize();
 
     return 0;
