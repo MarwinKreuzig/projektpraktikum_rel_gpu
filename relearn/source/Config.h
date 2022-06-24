@@ -43,7 +43,7 @@ public:
     constexpr static unsigned int p3 = p * p * p;
     constexpr static unsigned int max_neurons_in_target = 70; //cutoff for target box
     constexpr static unsigned int max_neurons_in_source = 70; //cutoff for source box
-    constexpr static unsigned int level_diff = 2; //ofsett between source and target level
+    constexpr static unsigned int unpacking = 2; //indicates how many levels a node is unpacked to give the synaptic elements more choice to connect
 };
 
 class Config {

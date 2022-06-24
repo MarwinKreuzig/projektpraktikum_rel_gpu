@@ -155,6 +155,20 @@ SynapticElements create_axons(size_t size, std::mt19937& mt, double max_free) {
     return se;
 }
 
+OctreeNode<AdditionalCellAttributes>* get_random_node_on_level (OctreeNode<AdditionalCellAttributes>* root, size_t level, std::mt19937& mt){
+    auto* current_node = root;
+    std::uniform_real_distribution<double> urd(0, 8);
+    for(size_t i = 0; i < level +1; i++){
+        if(current_node != nullptr && current_node->is_parent()){
+            current_node = current_node->get_child(urd(mt));
+        }
+        else{
+            return nullptr;
+        }   
+    }
+    return current_node;
+}
+
 TEST_F(FMMTest, testOctreeUpdateLocalTreesNumberDendritesFMM) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -849,22 +863,57 @@ TEST_F(FMMTest, test_init_stack) {
     ASSERT_NO_THROW(octree->update_local_trees());
 
     // start testing
-    Stack<FastMultipoleMethods::node_pair> stack = align_sources_and_targets(fmm, SignalType::Excitatory);
-    unsigned int level_diff = Constants::level_diff;
-
-    while (!stack.empty()) {
+    Stack<FastMultipoleMethods::node_pair> stack = init_stack(fmm, SignalType::Excitatory);
+    while (!stack.empty()){
         const auto& p = stack.pop_back();
         auto* source_node = p[0];
         auto* target_parent = p[1];
 
-        uint64_t source_level = source_node->get_level();
-        uint64_t target_level = target_parent->get_level() + 1;
-        int res = source_level - target_level;
-
-        if (source_node->is_parent()) {
-            ASSERT_EQ(res, level_diff);
-        }else{
-            ASSERT_LE(res, level_diff);
-        }        
+        EXPECT_NE(source_node, nullptr);
+        EXPECT_NE(target_parent, nullptr);
+        EXPECT_GT(source_node->get_cell().get_number_axons_for(SignalType::Excitatory), 0);
+        EXPECT_GT(target_parent->get_cell().get_number_dendrites_for(SignalType::Excitatory), 0);
+        EXPECT_EQ(source_node->get_level(), target_parent->get_level() + 1);
     }
+}
+
+TEST_F(FMMTest, unpack_nodes) {
+    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
+    std::uniform_int_distribution<size_t> uid(0, 10000);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+
+    // make test tree
+    const auto number_neurons = get_random_number_neurons();
+    const auto& [min, max] = get_random_simulation_box_size();
+
+    const auto& axons = create_axons(number_neurons);
+    const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
+    const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);
+
+    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons);
+
+    auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
+
+    std::map<int, Vec3d> positions{};
+    for (const auto& [position, id] : neurons_to_place) {
+        octree->insert(position, id, 0);
+        positions[id.get_local_id()] = position;
+    }
+
+    octree->initializes_leaf_nodes(number_neurons);
+
+    FastMultipoleMethods fmm(octree);
+    fmm.set_synaptic_elements(axons, excitatory_dendrites, inhibitory_dendrites);
+
+    const auto update_status = get_update_status(number_neurons);
+
+    ASSERT_NO_THROW(fmm.update_leaf_nodes(update_status));
+    ASSERT_NO_THROW(octree->update_local_trees());
+
+    // start testing
+    auto& leaf_nodes = octree->get_leaf_nodes();
+    const auto leaf_level = leaf_nodes[0]->get_level();
+    Stack<FastMultipoleMethods::node_pair> stack = init_stack(fmm, SignalType::Excitatory);
+    //TODO
 }

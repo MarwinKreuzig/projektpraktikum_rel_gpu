@@ -91,7 +91,7 @@ public:
 template <typename AdditionalCellAttributes>
 class FastMultipoleMethodsBase {
 public:
-    using interaction_list_type = std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct>;
+    using interaction_list_type = std::vector<OctreeNode<AdditionalCellAttributes>*>;
     using node_pair = std::array<OctreeNode<AdditionalCellAttributes>*, 2>;
     using position_type = typename Cell<AdditionalCellAttributes>::position_type;
     using counter_type = typename Cell<AdditionalCellAttributes>::counter_type;
@@ -135,11 +135,11 @@ public:
      * @param node Node which is checked.
      * @return Interaction list with all children.
      */
-    static interaction_list_type get_children_to_interaction_list(OctreeNode<AdditionalCellAttributes>* node) {
+    static std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> get_children_to_array(OctreeNode<AdditionalCellAttributes>* node) {
         RelearnException::check(node != nullptr, "FastMultipoleMethods::Utilities::get_children_to_interaction_list: Node was a nullptr.");
         RelearnException::check(node->is_parent(), "FastMultipoleMethods::Utilities::get_children_to_interaction_list: Node has no children.");
         
-        interaction_list_type result{ nullptr };
+        std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> result{ nullptr };
         const auto is_local = node->is_local();
         result = is_local ? node->get_children() : NodeCache<FastMultipoleMethodsCell>::download_children(node);
 
@@ -180,7 +180,7 @@ public:
             }
 
             // node is inner node
-            const auto& children = get_children_to_interaction_list(current_node);
+            const auto& children = get_children_to_array(current_node);
 
             // push children to stack
             for (auto* child : children) {

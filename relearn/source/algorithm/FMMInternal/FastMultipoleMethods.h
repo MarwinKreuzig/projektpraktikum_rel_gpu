@@ -43,7 +43,7 @@ class FastMultipoleMethods : public ForwardAlgorithm<SynapseCreationRequest, Syn
 
 public:
     using AdditionalCellAttributes = FastMultipoleMethodsCell;
-    using interaction_list_type = std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct>;
+    using interaction_list_type = std::vector<OctreeNode<AdditionalCellAttributes>*>;
     using node_pair = std::array<OctreeNode<AdditionalCellAttributes>*, 2>;
     using position_type = typename Cell<AdditionalCellAttributes>::position_type;
     using counter_type = typename Cell<AdditionalCellAttributes>::counter_type;
@@ -251,7 +251,25 @@ private:
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @return Returns the initalised stack.
      */
-    Stack<node_pair> align_sources_and_targets(const SignalType signal_type_needed);
+    Stack<node_pair> init_stack(const SignalType signal_type_needed);
+
+    /**
+     * @brief Takes the top node pair from the stack and unpacks them as many times as specified in the config file. 
+     * This serves to give the neurons more freedom of choice. After that, the resulting pairs are put back on the stack.
+     * When unpacking == 0 the stack is not changed.
+     * @param stack Stack on which node pairs are located and on which is worked on.
+     */
+    void unpack_node_pair(Stack<node_pair> stack);
+
+    /**
+     * @brief Aligns the level of source and target node and thereby creates the associated interaction list. 
+     * This ist due to the reason that only the target parent is pushed to the stack to reduce the size.
+     * @param source_node Node with vacant axons and the desired level.
+     * @param target_parent Node with vacant dendrite and smaller level.
+     * @param signal_type  Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
+     * @return The corresponding interaction list suitable for one source node.
+     */
+    interaction_list_type align_interaction_list(OctreeNode<AdditionalCellAttributes>* source_node, OctreeNode<AdditionalCellAttributes>* target_parent, const SignalType signal_type);
 
     /**
      * @brief Creates a list of possible targets for a source node, which is a leaf,
@@ -302,7 +320,7 @@ private:
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @return Returns an array of the taylor coefficients.
      */
-    static std::array<double, Constants::p3> calc_taylor_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, const position_type& target_center, const SignalType& signal_type_needed);
+    static std::vector<double> calc_taylor_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, const position_type& target_center, const SignalType& signal_type_needed);
    
     /**
      * @brief Calculates the force of attraction between two nodes of the octree using a Taylor series expansion.
@@ -332,7 +350,7 @@ private:
      * @exception Can throw a RelearnException.
      * @returns Returns an array of the hermite coefficients.
      */
-    static std::array<double, Constants::p3> calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, SignalType signal_type_needed);
+    static std::vector<double> calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, SignalType signal_type_needed);
 
     /**
      * @brief Calculates the force of attraction between two nodes of the octree using a Hermite series expansion.
@@ -344,6 +362,6 @@ private:
      * @return Retunrs the attraction force.
      */
     static double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, 
-    const std::array<double, Constants::p3>& coefficients_buffer, SignalType signal_type_needed);
+    const std::vector<double>& coefficients_buffer, SignalType signal_type_needed);
 
 };

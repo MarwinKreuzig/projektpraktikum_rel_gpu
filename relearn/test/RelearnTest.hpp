@@ -877,7 +877,15 @@ protected:
         SetUpTestCaseTemplate<FastMultipoleMethodsCell>();
     }
 
-    Stack<std::array<OctreeNode<FastMultipoleMethodsCell>*, 2>> align_sources_and_targets(FastMultipoleMethods fmm, const SignalType signal_type_needed){return fmm.align_sources_and_targets(signal_type_needed);}
+    Stack<std::array<OctreeNode<FastMultipoleMethodsCell>*, 2>> init_stack(FastMultipoleMethods fmm, const SignalType signal_type_needed)
+        {return fmm.init_stack(signal_type_needed);}
+
+    void unpack_node_pair(FastMultipoleMethods fmm, Stack<FastMultipoleMethods::node_pair> stack){return fmm.unpack_node_pair(stack);}
+    
+    FastMultipoleMethods::interaction_list_type align_interaction_list
+        (FastMultipoleMethods fmm, OctreeNode<AdditionalCellAttributes>* source_node, OctreeNode<AdditionalCellAttributes>* target_parent, const SignalType signal_type)
+        {fmm.align_interaction_list(source_node, target_parent, signal_type);}
+    
     // std::array<double, Constants::p3> calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, double sigma, SignalType signal_type_needed) { return FastMultipoleMethods::calc_hermite_coefficients(source, sigma, signal_type_needed); }
     // CalculationType check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::check_calculation_requirements(source, target, sigma, signal_type_needed);}
     // const std::vector<std::pair<FastMultipoleMethods::position_type, FastMultipoleMethods::counter_type>> get_all_positions_for(OctreeNode<FastMultipoleMethodsCell>* node, const ElementType type, const SignalType signal_type_needed){return FastMultipoleMethodsBase<FastMultipoleMethodsCell>::get_all_positions_for(node, type, signal_type_needed);}
