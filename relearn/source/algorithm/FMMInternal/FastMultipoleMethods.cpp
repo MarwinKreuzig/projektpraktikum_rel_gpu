@@ -141,14 +141,14 @@ void FastMultipoleMethods::print_calculations(OctreeNode<FastMultipoleMethodsCel
 
 void FastMultipoleMethods::make_creation_request_for(const SignalType signal_type_needed, CommunicationMap<SynapseCreationRequest>& request) {
 
-    Stack<node_pair> stack = init_stack(signal_type_needed);
+    Stack<FastMultipoleMethods::stack_entry> stack = init_stack(signal_type_needed);
 
     while (!stack.empty()) {
         unpack_node_pair(stack);
         // get node and interaction list from stack
         const auto& p = stack.pop_back();
-        auto* source_node = p[0];
-        auto* target_parent = p[1];
+        auto* source_node = p.source;
+        auto* target_parent = p.target;
 
         if (source_node == nullptr) {
             continue;
@@ -173,7 +173,7 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
 
             for (auto* target : target_list) {
                 if (target->is_parent()) {
-                    node_pair p = { source_node, target };
+                    FastMultipoleMethods::stack_entry p = { source_node, target, false };
                     stack.emplace_back(p);
                     continue;
                 }
@@ -206,14 +206,14 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
 
         // target is inner node
         for (const auto& source_child_node : source_children) {
-            node_pair p = { source_child_node, target_node };
+            FastMultipoleMethods::stack_entry p = { source_child_node, target_node, false };
             stack.emplace_back(p);
         }
     }
 }
 
-Stack<FastMultipoleMethods::node_pair> FastMultipoleMethods::init_stack(SignalType signal_type_needed) {
-    Stack<node_pair> stack{ 200 };
+Stack<FastMultipoleMethods::stack_entry> FastMultipoleMethods::init_stack(SignalType signal_type_needed) {
+    Stack<stack_entry> stack{ 200 };
 
     OctreeNode<FastMultipoleMethodsCell>* root = global_tree->get_root();
     const auto local_roots = global_tree->get_local_branch_nodes();
@@ -234,7 +234,7 @@ Stack<FastMultipoleMethods::node_pair> FastMultipoleMethods::init_stack(SignalTy
             if (child->get_cell().get_number_axons_for(signal_type_needed) == 0) {
                 continue;
             }
-            node_pair p = { child, root };
+            FastMultipoleMethods::stack_entry p = {child, root, false};
             stack.emplace_back(p);
         }
         return stack;
@@ -257,45 +257,54 @@ Stack<FastMultipoleMethods::node_pair> FastMultipoleMethods::init_stack(SignalTy
                 continue;
             }
 
-            node_pair p = { child, node };
+            FastMultipoleMethods::stack_entry p = {child, node, false};
             stack.emplace_back(p);
         }
     }
     return stack;
 }
 
-void FastMultipoleMethods::unpack_node_pair(Stack<node_pair> stack) {
+void FastMultipoleMethods::unpack_node_pair(Stack<FastMultipoleMethods::stack_entry>& stack) {
     if (Constants::unpacking == 0) {
         return;
     }
 
-    const auto& p = stack.pop_back();
-    auto* source_node = p[0];
-    if (!source_node->is_parent()) {
+    const auto& init_pair = stack.pop_back();
+    auto* source_node = init_pair.source;
+    RelearnException::check(source_node != nullptr, "FastMultipoleMethods::unpack_node_pair: Source node was null!");
+    if (!source_node->is_parent() || init_pair.unpacked == true) {
+        stack.emplace_back(FastMultipoleMethods::stack_entry{source_node, init_pair.target, true});
         return;
     }
-    const auto initial_level = source_node->get_level();
-    Stack<node_pair> unpacking_stack{ 80 };
-    unpacking_stack.emplace_back(p);
+
+    const auto target_level = source_node->get_level() + Constants::unpacking;
+    Stack<FastMultipoleMethods::stack_entry> unpacking_stack{};
+    unpacking_stack.emplace_back(init_pair);
 
     while (!unpacking_stack.empty()) {
         const auto& p = unpacking_stack.pop_back();
-        auto* source_node = p[0];
-        auto* target_parent = p[1];
-        if (source_node->get_level() == initial_level + Constants::unpacking || !source_node->is_parent()) {
+        auto* new_source = p.source;
+        auto* new_target = p.target;
+        if ( new_source == nullptr){
+            continue;
+        }
+        if ( new_source->get_level() == target_level || !new_source->is_parent()) {
             stack.emplace_back(p);
             continue;
         }
 
-        const auto& source_children = source_node->get_children();
+        const auto& source_children =  new_source->get_children();
         for (auto* child : source_children) {
-            node_pair p = { child, target_parent };
-            unpacking_stack.emplace_back(p);
+            FastMultipoleMethods::stack_entry new_entry = { child, new_target, true };
+            unpacking_stack.emplace_back(new_entry);
         }
     }
 }
 
 FastMultipoleMethods::interaction_list_type FastMultipoleMethods::align_interaction_list(OctreeNode<AdditionalCellAttributes>* source_node, OctreeNode<AdditionalCellAttributes>* target_parent, const SignalType signal_type) {
+    RelearnException::check(source_node != nullptr, "FastMultipoleMethods::align_interaction_list: source_node was null!");
+    RelearnException::check(target_parent != nullptr, "FastMultipoleMethods::align_interaction_list: target_parent was null!");
+    
     interaction_list_type result{};
     result.reserve(pow(Constants::number_oct, Constants::unpacking + 1));
     if (!target_parent->is_parent()) {
@@ -349,7 +358,7 @@ std::vector<OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>*> FastMul
 }
 
 void FastMultipoleMethods::make_stack_entries_for_leaf(OctreeNode<AdditionalCellAttributes>* target_node, const SignalType signal_type_needed,
-    Stack<node_pair>& stack, const std::array<OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>*, 8UL>& source_children) {
+    Stack<FastMultipoleMethods::stack_entry>& stack, const std::array<OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>*, 8UL>& source_children) {
 
     unsigned int target_number = target_node->get_cell().get_number_dendrites_for(signal_type_needed);
     std::vector<double> attractiveness(Constants::number_oct, 0);
@@ -375,7 +384,7 @@ void FastMultipoleMethods::make_stack_entries_for_leaf(OctreeNode<AdditionalCell
         unsigned int chosen_index = FastMultipoleMethodsBase<AdditionalCellAttributes>::choose_interval(attractiveness);
         target_number -= source_children[chosen_index]->get_cell().get_number_axons_for(signal_type_needed);
         attractiveness[chosen_index] = 0;
-        node_pair p = { source_children[chosen_index], target_node };
+        FastMultipoleMethods::stack_entry p = { source_children[chosen_index], target_node, false };
         stack.emplace_back(p);
     }
 }

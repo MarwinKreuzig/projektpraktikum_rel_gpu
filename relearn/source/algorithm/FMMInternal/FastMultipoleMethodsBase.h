@@ -95,6 +95,11 @@ public:
     using node_pair = std::array<OctreeNode<AdditionalCellAttributes>*, 2>;
     using position_type = typename Cell<AdditionalCellAttributes>::position_type;
     using counter_type = typename Cell<AdditionalCellAttributes>::counter_type;
+    struct stack_entry {
+        OctreeNode<AdditionalCellAttributes>* source;
+        OctreeNode<AdditionalCellAttributes>* target;
+        bool unpacked = {false};
+    };
 
     /**
      * @brief Counts the elements in an interaction list that are not nullptr.
