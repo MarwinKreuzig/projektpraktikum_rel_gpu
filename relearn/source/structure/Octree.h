@@ -22,6 +22,7 @@
 #include "neurons/models/SynapticElements.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
+#include "util/Stack.h"
 #include "util/Timers.h"
 #include "util/Vec3.h"
 
@@ -582,6 +583,11 @@ protected:
 
         const auto level_of_branch_nodes = get_level_of_branch_nodes();
 
+        const auto number_nodes_in_upper_part = (std::pow(8.0, level_of_branch_nodes + 1) - 1.0) / 7.0;
+        const auto number_nodes_cast = static_cast<size_t>(number_nodes_in_upper_part);
+
+        upper_portion_holder.reserve(number_nodes_cast);
+
         SpaceFillingCurve<Morton> space_curve{ static_cast<uint8_t>(level_of_branch_nodes) };
 
         const auto my_rank = MPIWrapper::get_my_rank();
@@ -591,47 +597,79 @@ protected:
         const auto& xyz_min = get_xyz_min();
         const auto& xyz_max = get_xyz_max();
 
-        const auto& cell_length = (xyz_max - xyz_min) / static_cast<box_size_type::value_type>(num_cells_per_dimension);
-        const auto& [cell_length_x, cell_length_y, cell_length_z] = cell_length;
+        const auto& box_size = (xyz_max - xyz_min);
 
-        OctreeNode<AdditionalCellAttributes>* local_root = OctreeNode<AdditionalCellAttributes>::create();
-        RelearnException::check(local_root != nullptr, "Octree::construct_global_tree_part: local_root is nullptr");
+        auto& root_node = upper_portion_holder.emplace_back();
+        root_node.set_cell_size(xyz_min, xyz_max);
+        root_node.set_cell_neuron_id(NeuronID::virtual_id());
+        root_node.set_cell_neuron_position(xyz_min + (box_size / 2.0));
+        root_node.set_rank(my_rank);
 
-        local_root->set_cell_neuron_id(NeuronID::virtual_id());
-        local_root->set_cell_size(xyz_min, xyz_max);
-        local_root->set_rank(my_rank);
-        local_root->set_cell_neuron_position(xyz_min + (cell_length / 2));
+        Stack<std::pair<OctreeNode<AdditionalCellAttributes>*, size_t>> stack_upper_part{ number_nodes_cast };
+        stack_upper_part.emplace_back(&root_node, 0);
 
-        const auto root_index1d = space_curve.map_3d_to_1d(Vec3s{ 0, 0, 0 });
-        branch_nodes[root_index1d] = local_root;
+        while (!stack_upper_part.empty()) {
+            const auto [current_node, current_level] = stack_upper_part.pop_back();
 
-        root = local_root;
+            for (unsigned char child_id = 0; child_id < Constants::number_oct; child_id++) {
+                const auto& [child_min, child_max] = current_node->get_cell().get_size_for_octant(child_id);
 
-        for (size_t id_x = 0; id_x < num_cells_per_dimension; id_x++) {
-            for (size_t id_y = 0; id_y < num_cells_per_dimension; id_y++) {
-                for (size_t id_z = 0; id_z < num_cells_per_dimension; id_z++) {
-                    if (id_x == 0 && id_y == 0 && id_z == 0) {
-                        continue;
-                    }
+                auto& child_node = upper_portion_holder.emplace_back();
+                child_node.set_cell_size(child_min, child_max);
+                child_node.set_cell_neuron_id(NeuronID::virtual_id());
+                child_node.set_cell_neuron_position((child_max + child_min) / 2.0);
+                child_node.set_rank(my_rank);
 
-                    const box_size_type cell_offset{ id_x * cell_length_x, id_y * cell_length_y, id_z * cell_length_z };
-                    const auto& cell_min = xyz_min + cell_offset;
-                    const auto& cell_position = cell_min + (cell_length / 2);
+                current_node->set_child(&child_node, child_id);
 
-                    auto* current_node = root->insert(cell_position, NeuronID::virtual_id(), my_rank);
-
-                    // const auto index1d = space_curve.map_3d_to_1d(Vec3s{ id_x, id_y, id_z });
-                    // branch_nodes[index1d] = current_node;
+                if (current_level + 1 < level_of_branch_nodes) {
+                    stack_upper_part.emplace_back(&child_node, current_level + 1);
                 }
             }
         }
 
-        std::stack<std::pair<OctreeNode<AdditionalCellAttributes>*, Vec3s>> stack{};
-        stack.emplace(root, Vec3s{ 0, 0, 0 });
+        root = &root_node;
+
+        // const auto& cell_length = (xyz_max - xyz_min) / static_cast<box_size_type::value_type>(num_cells_per_dimension);
+        // const auto& [cell_length_x, cell_length_y, cell_length_z] = cell_length;
+
+        // OctreeNode<AdditionalCellAttributes>* local_root = OctreeNode<AdditionalCellAttributes>::create();
+        // RelearnException::check(local_root != nullptr, "Octree::construct_global_tree_part: local_root is nullptr");
+
+        // local_root->set_cell_neuron_id(NeuronID::virtual_id());
+        // local_root->set_cell_size(xyz_min, xyz_max);
+        // local_root->set_rank(my_rank);
+        // local_root->set_cell_neuron_position(xyz_min + (cell_length / 2));
+
+        // const auto root_index1d = space_curve.map_3d_to_1d(Vec3s{ 0, 0, 0 });
+        // branch_nodes[root_index1d] = local_root;
+
+        // root = local_root;
+
+        // for (size_t id_x = 0; id_x < num_cells_per_dimension; id_x++) {
+        //     for (size_t id_y = 0; id_y < num_cells_per_dimension; id_y++) {
+        //         for (size_t id_z = 0; id_z < num_cells_per_dimension; id_z++) {
+        //             if (id_x == 0 && id_y == 0 && id_z == 0) {
+        //                 continue;
+        //             }
+
+        //            const box_size_type cell_offset{ id_x * cell_length_x, id_y * cell_length_y, id_z * cell_length_z };
+        //            const auto& cell_min = xyz_min + cell_offset;
+        //            const auto& cell_position = cell_min + (cell_length / 2);
+
+        //            auto* current_node = root->insert(cell_position, NeuronID::virtual_id(), my_rank);
+
+        //            // const auto index1d = space_curve.map_3d_to_1d(Vec3s{ id_x, id_y, id_z });
+        //            // branch_nodes[index1d] = current_node;
+        //        }
+        //    }
+        //}
+
+        Stack<std::pair<OctreeNode<AdditionalCellAttributes>*, Vec3s>> stack{ number_nodes_cast };
+        stack.emplace_back(root, Vec3s{ 0, 0, 0 });
 
         while (!stack.empty()) {
-            const auto [ptr, index3d] = stack.top();
-            stack.pop();
+            const auto [ptr, index3d] = stack.pop_back();
 
             if (!ptr->is_parent()) {
                 const auto index1d = space_curve.map_3d_to_1d(index3d);
@@ -642,13 +680,13 @@ protected:
             for (size_t id = 0; id < Constants::number_oct; id++) {
                 auto child_node = ptr->get_child(id);
 
-                const size_t larger_x = ((id & 1ULL) == 0) ? 0ULL : 1ULL;
-                const size_t larger_y = ((id & 2ULL) == 0) ? 0ULL : 1ULL;
-                const size_t larger_z = ((id & 4ULL) == 0) ? 0ULL : 1ULL;
+                const auto larger_x = ((id & 1ULL) == 0) ? 0ULL : 1ULL;
+                const auto larger_y = ((id & 2ULL) == 0) ? 0ULL : 1ULL;
+                const auto larger_z = ((id & 4ULL) == 0) ? 0ULL : 1ULL;
 
                 const Vec3s offset{ larger_x, larger_y, larger_z };
                 const Vec3s pos = (index3d * 2) + offset;
-                stack.emplace(child_node, pos);
+                stack.emplace_back(child_node, pos);
             }
         }
     }
@@ -657,7 +695,7 @@ private:
     // Root of the tree
     OctreeNode<AdditionalCellAttributes>* root{ nullptr };
 
+    std::vector<OctreeNode<AdditionalCellAttributes>> upper_portion_holder{};
     std::vector<OctreeNode<AdditionalCellAttributes>*> branch_nodes{};
-
     std::vector<OctreeNode<AdditionalCellAttributes>*> all_leaf_nodes{};
 };
