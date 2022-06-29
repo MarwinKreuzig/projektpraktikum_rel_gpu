@@ -942,13 +942,24 @@ void Neurons::print_calcium_statistics_to_essentials() {
 }
 
 void Neurons::print_network_graph_to_log_file() {
-    std::stringstream ss{};
+    std::stringstream ss_in_network{};
 
-    // Write output format to file
-    ss << "# " << partition->get_total_number_neurons() << "\n"; // Total number of neurons
-    ss << "# <target neuron id> <source neuron id> <weight>\n";
+    ss_in_network << "# Total number neurons: " << partition->get_total_number_neurons() << "\n";
+    ss_in_network << "# Local number neurons: " << partition->get_number_local_neurons() << "\n";
+    ss_in_network << "# Number MPI ranks: " << partition->get_number_mpi_ranks() << "\n";
+    ss_in_network << "# <target_rank> <target_id>\t<source_rank> <source_id>\t<weight> \n";
+        
+    std::stringstream ss_out_network{};
 
-    LogFiles::write_to_file(LogFiles::EventType::Network, false, ss.str());
+    ss_out_network << "# Total number neurons: " << partition->get_total_number_neurons() << "\n";
+    ss_out_network << "# Local number neurons: " << partition->get_number_local_neurons() << "\n";
+    ss_out_network << "# Number MPI ranks: " << partition->get_number_mpi_ranks() << "\n";
+    ss_out_network << "# <target_rank> <target_id>\t<source_rank> <source_id>\t<weight> \n";
+
+    network_graph->print_with_ranks(ss_out_network, ss_in_network);
+
+    LogFiles::write_to_file(LogFiles::EventType::InNetwork, false, ss_in_network.str());
+    LogFiles::write_to_file(LogFiles::EventType::OutNetwork, false, ss_out_network.str());
 }
 
 void Neurons::print_positions_to_log_file() {
@@ -979,7 +990,7 @@ void Neurons::print() {
     const int cwidth_left = 6;
     const int cwidth = 20;
 
-    std::stringstream ss;
+    std::stringstream ss{};
 
     // Heading
     LogFiles::write_to_file(LogFiles::EventType::Cout, true, "{2:<{1}}{3:<{0}}{4:<{0}}{5:<{0}}{6:<{0}}{7:<{0}}{8:<{0}}{9:<{0}}", cwidth, cwidth_left, "gid", "x", "AP", "refrac", "C", "A", "D_ex", "D_in");
@@ -1008,17 +1019,16 @@ void Neurons::print_info_for_algorithm() {
     const int cwidth_medium = 16;
     const int cwidth_big = 27;
 
-    std::stringstream ss;
-    std::string my_string;
+    std::stringstream ss{};
+    std::string my_string{};
 
     // Heading
     ss << std::left << std::setw(cwidth_small) << "gid" << std::setw(cwidth_small) << "region" << std::setw(cwidth_medium) << "position";
     ss << std::setw(cwidth_big) << "axon (exist|connected)" << std::setw(cwidth_big) << "exc_den (exist|connected)";
-    ss << std::setw(cwidth_big) << "inh_den (exist|connected)"
-       << "\n";
+    ss << std::setw(cwidth_big) << "inh_den (exist|connected)\n";
 
     // Values
-    for (auto neuron_id : NeuronID::range(number_neurons)) {
+    for (const auto& neuron_id : NeuronID::range(number_neurons)) {
         const auto local_neuron_id = neuron_id.get_local_id();
 
         ss << std::left << std::setw(cwidth_small) << neuron_id;

@@ -393,9 +393,17 @@ std::vector<std::unique_ptr<NeuronModel>> Simulation::get_models() {
 }
 
 void Simulation::print_neuron_monitors() {
+    const auto& path = LogFiles::get_output_path();
+
     for (auto& monitor : *monitors) {
-        auto path = LogFiles::get_output_path();
-        std::ofstream outfile(path + std::to_string(monitor.get_target_id().get_local_id()) + ".csv", std::ios::trunc);
+        const auto& file_path = path / (std::to_string(monitor.get_target_id().get_local_id()) + ".csv");
+        std::ofstream outfile(file_path, std::ios::trunc);
+
+        const auto file_is_good = outfile.good();
+        const auto file_is_bad = outfile.bad();
+
+        RelearnException::check(file_is_good && !file_is_bad, "Simulation::print_neuron_monitors: The file is bad: {}", file_path);
+
         outfile << std::setprecision(Constants::print_precision);
 
         outfile.imbue(std::locale());

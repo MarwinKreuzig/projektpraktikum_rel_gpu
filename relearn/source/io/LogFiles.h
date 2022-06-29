@@ -60,13 +60,13 @@ private:
     using Logger = std::shared_ptr<spdlog::logger>;
     static inline std::map<EventType, Logger> log_files{};
     // NOLINTNEXTLINE
-    static inline std::string output_path{ "../output/" };
+    static inline std::filesystem::path output_path{ "../output/" };
     // NOLINTNEXTLINE
     static inline std::string general_prefix{ "rank_" };
 
     static std::string get_specific_file_prefix();
 
-    static void add_logfile(EventType type, const std::string& file_name, int rank, const std::string& file_ending = ".txt");
+    static void add_logfile(EventType type, const std::string& file_name, int rank, const std::string& file_ending = ".txt", const std::string& directory_prefix = "");
 
     static bool disable;
 
@@ -81,15 +81,11 @@ public:
      *      Default is: "../output/"
      * @param path_to_containing_folder The path to the folder in which the files should be generated
      */
-    static void set_output_path(const std::string& path_to_containing_folder) {
-        if (path_to_containing_folder.back() != '/') {
-            output_path = path_to_containing_folder + '/';
-        } else {
-            output_path = path_to_containing_folder;
-        }
+    static void set_output_path(const std::filesystem::path& path_to_containing_folder) {
+        output_path = path_to_containing_folder;
     }
 
-    static std::string get_output_path() noexcept {
+    static std::filesystem::path get_output_path() noexcept {
         return output_path;
     }
 

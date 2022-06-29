@@ -120,14 +120,14 @@ void NetworkGraph::print_with_ranks(std::ostream& os_out_edges, std::ostream& os
         for (const auto& [target_id, weight] : neuron_local_out_neighborhood[source_local_id]) {
             const auto& target_local_id = target_id.get_local_id();
 
-            os_out_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << source_local_id << '\t' << weight << '\n';
+            os_out_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\n';
         }
 
         for (const auto& [target_neuron, weight] : neuron_distant_out_neighborhood[source_local_id]) {
             const auto& [target_rank, target_id] = target_neuron;
             const auto& target_local_id = source_id.get_local_id();
 
-            os_out_edges << target_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << source_local_id << '\t' << weight << '\n';
+            os_out_edges << target_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\n';
         }
     }
 
@@ -137,14 +137,14 @@ void NetworkGraph::print_with_ranks(std::ostream& os_out_edges, std::ostream& os
         for (const auto& [source_id, weight] : neuron_local_in_neighborhood[target_local_id]) {
             const auto& source_local_id = source_id.get_local_id();
 
-            os_in_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << source_local_id << '\t' << weight << '\n';
+            os_in_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\n';
         }
 
         for (const auto& [source_neuron, weight] : neuron_distant_in_neighborhood[target_local_id]) {
             const auto& [source_rank, source_id] = source_neuron;
             const auto& source_local_id = source_id.get_local_id();
 
-            os_in_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << source_rank << ' ' << source_local_id << '\t' << weight << '\n';
+            os_in_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << source_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\n';
         }
     }
 }
