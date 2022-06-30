@@ -90,7 +90,7 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons_FMM(OctreeNode<Additional
 
             const auto& position = opt_position.value();
 
-            if (neuron_id.get_local_id() < Constants::uninitialized) {
+            if (neuron_id.get_neuron_id() < Constants::uninitialized) {
                 return_value.emplace_back(position, neuron_id);
             }
         }

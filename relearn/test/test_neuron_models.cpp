@@ -38,9 +38,9 @@ void assert_getter_equality(const std::unique_ptr<NeuronModel>& model) {
     }
 
     for (const auto& neuron_id : valid_ids) {
-        ASSERT_EQ(model->get_fired(neuron_id), all_fired[neuron_id.get_local_id()] == FiredStatus::Fired);
-        ASSERT_EQ(model->get_synaptic_input(neuron_id), all_i_syn[neuron_id.get_local_id()]);
-        ASSERT_EQ(model->get_x(neuron_id), all_x[neuron_id.get_local_id()]);
+        ASSERT_EQ(model->get_fired(neuron_id), all_fired[neuron_id.get_neuron_id()] == FiredStatus::Fired);
+        ASSERT_EQ(model->get_synaptic_input(neuron_id), all_i_syn[neuron_id.get_neuron_id()]);
+        ASSERT_EQ(model->get_x(neuron_id), all_x[neuron_id.get_neuron_id()]);
     }
 }
 
@@ -86,7 +86,7 @@ void test_creation(std::unique_ptr<NeuronModel> model, size_t number_neurons_ini
 
     for (const auto& neuron_id : valid_init_ids) {
         const auto secondary = model->get_secondary_variable(neuron_id);
-        initial_secondary[neuron_id.get_local_id()] = secondary;
+        initial_secondary[neuron_id.get_neuron_id()] = secondary;
     }
 
     model->create_neurons(number_neurons_create);
@@ -110,15 +110,15 @@ void test_creation(std::unique_ptr<NeuronModel> model, size_t number_neurons_ini
     }
 
     for (const auto& neuron_id : valid_ids) {
-        ASSERT_EQ(model->get_fired(neuron_id), all_fired[neuron_id.get_local_id()] == FiredStatus::Fired);
-        ASSERT_EQ(model->get_synaptic_input(neuron_id), all_i_syn[neuron_id.get_local_id()]);
+        ASSERT_EQ(model->get_fired(neuron_id), all_fired[neuron_id.get_neuron_id()] == FiredStatus::Fired);
+        ASSERT_EQ(model->get_synaptic_input(neuron_id), all_i_syn[neuron_id.get_neuron_id()]);
         ASSERT_EQ(model->get_fired(neuron_id), false);
         ASSERT_EQ(model->get_synaptic_input(neuron_id), 0.0);
-        ASSERT_EQ(model->get_x(neuron_id), all_x[neuron_id.get_local_id()]);
+        ASSERT_EQ(model->get_x(neuron_id), all_x[neuron_id.get_neuron_id()]);
     }
 
     for (const auto& neuron_id : valid_init_ids) {
-        const auto id = neuron_id.get_local_id();
+        const auto id = neuron_id.get_neuron_id();
 
         ASSERT_EQ(initial_fired[id], all_fired[id]);
         ASSERT_EQ(initial_i_syn[id], all_i_syn[id]);
@@ -133,7 +133,7 @@ void NeuronModelsTest::test_update(std::unique_ptr<NeuronModel> model, std::shar
     model->init(number_neurons);
 
     const auto conductance = model->get_k();
-    const auto number_disabled_neurons = get_random_neuron_id(number_neurons).get_local_id() * 0;
+    const auto number_disabled_neurons = get_random_neuron_id(number_neurons).get_neuron_id() * 0;
 
     const auto status_flags = get_update_status(number_neurons, number_disabled_neurons);
 
@@ -159,7 +159,7 @@ void NeuronModelsTest::test_update(std::unique_ptr<NeuronModel> model, std::shar
         const auto& in_edges = ng->get_local_in_edges(NeuronID(neuron_id));
 
         for (const auto& [source_id, weight] : in_edges) {
-            const auto id = source_id.get_local_id();
+            const auto id = source_id.get_neuron_id();
 
             if (fired_status[id] == FiredStatus::Inactive) {
                 continue;
@@ -1165,7 +1165,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputSomePoisson) {
     const auto number_neurons = get_random_number_neurons();
     const auto number_synapses = get_random_neuron_id(number_neurons);
 
-    auto ng = create_network_graph(number_neurons, 0, number_synapses.get_local_id());
+    auto ng = create_network_graph(number_neurons, 0, number_synapses.get_neuron_id());
 
     test_update(std::move(model), std::move(ng), number_neurons);
 }
@@ -1177,7 +1177,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputSomeIzhikevich) {
     const auto number_neurons = get_random_number_neurons();
     const auto number_synapses = get_random_neuron_id(number_neurons);
 
-    auto ng = create_network_graph(number_neurons, 0, number_synapses.get_local_id());
+    auto ng = create_network_graph(number_neurons, 0, number_synapses.get_neuron_id());
 
     test_update(std::move(model), std::move(ng), number_neurons);
 }
@@ -1189,7 +1189,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputSomeFitzHughNagumo) {
     const auto number_neurons = get_random_number_neurons();
     const auto number_synapses = get_random_neuron_id(number_neurons);
 
-    auto ng = create_network_graph(number_neurons, 0, number_synapses.get_local_id());
+    auto ng = create_network_graph(number_neurons, 0, number_synapses.get_neuron_id());
 
     test_update(std::move(model), std::move(ng), number_neurons);
 }
@@ -1201,7 +1201,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputSomeAEIF) {
     const auto number_neurons = get_random_number_neurons();
     const auto number_synapses = get_random_neuron_id(number_neurons);
 
-    auto ng = create_network_graph(number_neurons, 0, number_synapses.get_local_id());
+    auto ng = create_network_graph(number_neurons, 0, number_synapses.get_neuron_id());
 
     test_update(std::move(model), std::move(ng), number_neurons);
 }

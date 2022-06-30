@@ -399,7 +399,7 @@ protected:
         for (const auto& target_id : NeuronID::range(number_neurons)) {
             const auto number_requests = get_random_integer<size_t>(number_requests_lower_bound, number_requests_upper_bound);
 
-            const auto id = target_id.get_local_id();
+            const auto id = target_id.get_neuron_id();
 
             for (auto r = 0; r < number_requests; r++) {
                 const auto source_rank = get_random_rank(number_ranks);
@@ -443,7 +443,7 @@ protected:
             se.update_connected_elements(neuron_id, number_connected_elements);
             se.set_signal_type(neuron_id, signal_type);
 
-            const auto i = neuron_id.get_local_id();
+            const auto i = neuron_id.get_neuron_id();
 
             grown_elements[i] = number_grown_elements;
             connected_elements[i] = number_connected_elements;
@@ -569,7 +569,7 @@ protected:
 
         for (const auto& source_id : NeuronID::range(number_neurons)) {
             for (const auto& target_id : NeuronID::range(number_neurons)) {
-                if (source_id.get_local_id() == target_id.get_local_id()) {
+                if (source_id.get_neuron_id() == target_id.get_neuron_id()) {
                     continue;
                 }
 
@@ -647,7 +647,7 @@ protected:
             OctreeNode<AdditionalCellAttributes>* current_node = octree_nodes.top();
             octree_nodes.pop();
 
-            if (current_node->is_child()) {
+            if (current_node->is_leaf()) {
                 return_value.emplace_back(current_node);
                 continue;
             }

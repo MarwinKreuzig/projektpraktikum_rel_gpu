@@ -77,7 +77,7 @@ void PoissonModel::update_activity(const NeuronID& neuron_id) {
         x += iter_x(x, input) / h;
     }
 
-    const auto local_neuron_id = neuron_id.get_local_id();
+    const auto local_neuron_id = neuron_id.get_neuron_id();
 
     // Neuron ready to fire again
     if (refrac[local_neuron_id] == 0) {

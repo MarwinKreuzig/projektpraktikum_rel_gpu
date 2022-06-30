@@ -163,7 +163,7 @@ void NeuronIO::write_neurons(const std::vector<LoadedNeuron>& neurons, const std
     of << "# ID, Position (x y z),  Area,   type \n";
 
     for (const auto& node : neurons) {
-        const auto id = node.id.get_local_id() + 1;
+        const auto id = node.id.get_neuron_id() + 1;
         const auto& [x, y, z] = node.pos;
 
         of << id << "\t"
@@ -203,7 +203,7 @@ void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, con
     of << "# ID, Position (x y z),  Area,   type \n";
 
     for (size_t i = 0; i < size_ids; i++) {
-        const auto id = ids[i].get_local_id() + 1;
+        const auto id = ids[i].get_neuron_id() + 1;
         const auto& [x, y, z] = positions[i];
 
         of << id << "\t"
@@ -255,7 +255,7 @@ std::optional<std::vector<NeuronID>> NeuronIO::read_neuron_ids(const std::filesy
         id--;
 
         if (!ids.empty()) {
-            const auto last_id = ids[ids.size() - 1].get_local_id();
+            const auto last_id = ids[ids.size() - 1].get_neuron_id();
 
             if (last_id + 1 != id) {
                 return {};
@@ -319,7 +319,7 @@ void NeuronIO::write_local_synapses(const LocalSynapses& local_synapses, const s
     file_synapses << "# target_id source_id weight\n";
 
     for (const auto& [target_id, source_id, weight] : local_synapses) {
-        file_synapses << (target_id.get_local_id() + 1) << ' ' << (source_id.get_local_id() + 1) << ' ' << weight << '\n';
+        file_synapses << (target_id.get_neuron_id() + 1) << ' ' << (source_id.get_neuron_id() + 1) << ' ' << weight << '\n';
     }
 }
 
@@ -385,10 +385,10 @@ void NeuronIO::write_distant_in_synapses(const DistantInSynapses& distant_in_syn
     file_synapses << "# <target rank> <target neuron id>\t<source rank> <source neuron id>\t<weight>\n";
 
     for (const auto& [target_id, source_rni, weight] : distant_in_synapses) {
-        const auto target_neuron_id = target_id.get_local_id();
+        const auto target_neuron_id = target_id.get_neuron_id();
 
         const auto& [source_rank, source_id] = source_rni;
-        const auto source_neuron_id = source_id.get_local_id();
+        const auto source_neuron_id = source_id.get_neuron_id();
 
         file_synapses << target_rank << ' ' << (target_neuron_id + 1) << '\t' << source_rank << ' ' << (source_neuron_id + 1) << '\t' << weight << '\n';
     }
@@ -457,9 +457,9 @@ void NeuronIO::write_distant_out_synapses(const DistantOutSynapses& distant_out_
 
     for (const auto& [target_rni, source_id, weight] : distant_out_synapses) {
         const auto& [target_rank, target_id] = target_rni;
-        const auto target_neuron_id = target_id.get_local_id();
+        const auto target_neuron_id = target_id.get_neuron_id();
 
-        const auto source_neuron_id = source_id.get_local_id();
+        const auto source_neuron_id = source_id.get_neuron_id();
 
         file_synapses << target_rank << ' ' << (target_neuron_id + 1) << '\t' << source_rank << ' ' << (source_neuron_id + 1) << '\t' << weight << '\n';
     }

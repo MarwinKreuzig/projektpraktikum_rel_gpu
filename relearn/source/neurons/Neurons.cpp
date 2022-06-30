@@ -60,7 +60,7 @@ void Neurons::init(const size_t number_neurons, std::vector<double> target_calci
         // Set calcium concentration
         const auto fired = neuron_model->get_fired(id);
         if (fired) {
-            calcium[id.get_local_id()] += neuron_model->get_beta();
+            calcium[id.get_neuron_id()] += neuron_model->get_beta();
         }
     }
 }
@@ -83,7 +83,7 @@ void Neurons::init_synaptic_elements() {
         dendrites_exc->update_connected_elements(id, static_cast<int>(dendrites_ex_connections));
         dendrites_inh->update_connected_elements(id, static_cast<int>(dendrites_in_connections));
 
-        const auto local_id = id.get_local_id();
+        const auto local_id = id.get_neuron_id();
 
         RelearnException::check(axons_cnts[local_id] >= axons->get_connected_elements()[local_id], "Error is with: %d", local_id);
         RelearnException::check(dendrites_inh_cnts[local_id] >= dendrites_inh->get_connected_elements()[local_id], "Error is with: %d", local_id);
@@ -120,7 +120,7 @@ size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
             network_graph->add_synapse(LocalSynapse(target_neuron_id, neuron_id, -weight));
 
             bool is_within = std::binary_search(neuron_ids.begin(), neuron_ids.end(), target_neuron_id);
-            const auto local_target_neuron_id = target_neuron_id.get_local_id();
+            const auto local_target_neuron_id = target_neuron_id.get_neuron_id();
 
             if (is_within) {
                 if (weight > 0) {
@@ -150,8 +150,8 @@ size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
     size_t weight_deleted_in_edges_from_outside = 0;
 
     for (const auto neuron_id : neuron_ids) {
-        RelearnException::check(neuron_id.get_local_id() < number_neurons, "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
-        disable_flags[neuron_id.get_local_id()] = UpdateStatus::Disabled;
+        RelearnException::check(neuron_id.get_neuron_id() < number_neurons, "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
+        disable_flags[neuron_id.get_neuron_id()] = UpdateStatus::Disabled;
 
         const auto local_in_edges = network_graph->get_local_in_edges(neuron_id);
         const auto distant_in_edges = network_graph->get_distant_in_edges(neuron_id);
@@ -160,7 +160,7 @@ size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
         for (const auto& [source_neuron_id, weight] : local_in_edges) {
             network_graph->add_synapse(LocalSynapse(neuron_id, source_neuron_id, -weight));
 
-            deleted_axon_connections[source_neuron_id.get_local_id()] += std::abs(weight);
+            deleted_axon_connections[source_neuron_id.get_neuron_id()] += std::abs(weight);
 
             bool is_within = std::binary_search(neuron_ids.begin(), neuron_ids.end(), source_neuron_id);
 
@@ -203,8 +203,8 @@ size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
 
 void Neurons::enable_neurons(const std::vector<NeuronID>& neuron_ids) {
     for (const auto& neuron_id : neuron_ids) {
-        RelearnException::check(neuron_id.get_local_id() < number_neurons, "Neurons::enable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
-        disable_flags[neuron_id.get_local_id()] = UpdateStatus::Enabled;
+        RelearnException::check(neuron_id.get_neuron_id() < number_neurons, "Neurons::enable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
+        disable_flags[neuron_id.get_neuron_id()] = UpdateStatus::Enabled;
     }
 }
 
@@ -600,7 +600,7 @@ void Neurons::debug_check_counts() {
     }
 
     for (const auto neuron_id : NeuronID::range(number_neurons)) {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         const double connected_axons_neuron = connected_axons[local_neuron_id];
         const double connected_excitatory_dendrites_neuron = connected_excitatory_dendrites[local_neuron_id];
@@ -970,7 +970,7 @@ void Neurons::print_positions_to_log_file() {
     const std::vector<SignalType>& signal_types = axons->get_signal_types();
 
     for (const auto& neuron_id : NeuronID::range(number_neurons)) {
-        const auto& local_neuron_id = neuron_id.get_local_id();
+        const auto& local_neuron_id = neuron_id.get_neuron_id();
         const auto& signal_type_name = (signal_types[local_neuron_id] == SignalType::Excitatory) ? std::string("ex") : std::string("in");
 
         const auto& pos = extra_info->get_position(neuron_id);
@@ -1029,7 +1029,7 @@ void Neurons::print_info_for_algorithm() {
 
     // Values
     for (const auto& neuron_id : NeuronID::range(number_neurons)) {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         ss << std::left << std::setw(cwidth_small) << neuron_id;
 

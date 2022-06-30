@@ -98,7 +98,7 @@ protected:
         }
 
         // Always accept a leaf noce
-        if (const auto is_child = target_node->is_child(); is_child) {
+        if (const auto is_leaf = target_node->is_leaf(); is_leaf) {
             return AcceptanceStatus::Accept;
         }
 
@@ -141,7 +141,7 @@ protected:
             return {};
         }
 
-        if (root->is_child()) {
+        if (root->is_leaf()) {
             /**
              * The root node is a leaf and thus contains the target neuron.
              *
@@ -227,7 +227,7 @@ protected:
             }
 
             // A chosen child is a valid target
-            if (const auto done = node_selected->is_child(); done) {
+            if (const auto done = node_selected->is_leaf(); done) {
                 return RankNeuronId{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
             }
 

@@ -118,12 +118,12 @@ void Simulation::initialize() {
 
     std::vector<double> target_calcium_values(number_local_neurons, 0.0);
     for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
-        target_calcium_values[neuron_id.get_local_id()] = target_calcium_calculator(my_rank, neuron_id.get_local_id());
+        target_calcium_values[neuron_id.get_neuron_id()] = target_calcium_calculator(my_rank, neuron_id.get_neuron_id());
     }
 
     std::vector<double> initial_calcium_values(number_local_neurons, 0.0);
     for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
-        initial_calcium_values[neuron_id.get_local_id()] = initial_calcium_initiator(my_rank, neuron_id.get_local_id());
+        initial_calcium_values[neuron_id.get_neuron_id()] = initial_calcium_initiator(my_rank, neuron_id.get_neuron_id());
     }
 
     neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons, dendrites_ex, dendrites_in);
@@ -161,7 +161,7 @@ void Simulation::initialize() {
     }
 
     for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
-        const auto& position = neuron_positions[neuron_id.get_local_id()];
+        const auto& position = neuron_positions[neuron_id.get_neuron_id()];
         global_tree->insert(position, neuron_id, my_rank);
     }
 
@@ -236,7 +236,7 @@ void Simulation::simulate(const size_t number_steps) {
             const auto number_neurons = neurons->get_number_neurons();
 
             for (auto& mn : *monitors) {
-                if (mn.get_target_id().get_local_id() < number_neurons) {
+                if (mn.get_target_id().get_neuron_id() < number_neurons) {
                     mn.record_data();
                 }
             }
@@ -396,7 +396,7 @@ void Simulation::print_neuron_monitors() {
     const auto& path = LogFiles::get_output_path();
 
     for (auto& monitor : *monitors) {
-        const auto& file_path = path / (std::to_string(monitor.get_target_id().get_local_id()) + ".csv");
+        const auto& file_path = path / (std::to_string(monitor.get_target_id().get_neuron_id()) + ".csv");
         std::ofstream outfile(file_path, std::ios::trunc);
 
         const auto file_is_good = outfile.good();

@@ -54,7 +54,7 @@ void write_synapses_to_file(const std::vector<LocalSynapse>& synapses, std::file
     std::ofstream of(path);
 
     for (const auto& [target, source, weight] : synapses) {
-        of << (target.get_local_id() + 1) << ' ' << (source.get_local_id() + 1) << ' ' << weight << '\n';
+        of << (target.get_neuron_id() + 1) << ' ' << (source.get_neuron_id() + 1) << ' ' << weight << '\n';
     }
 }
 
@@ -643,8 +643,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi14SingleSubdomainONCE) {
     std::vector<int> found_out_synapses(426124, 0);
 
     for (const auto& [source_id, target_id, weight] : local_synapses) {
-        found_in_synapses[target_id.get_local_id()] += weight;
-        found_out_synapses[source_id.get_local_id()] += weight;
+        found_in_synapses[target_id.get_neuron_id()] += weight;
+        found_out_synapses[source_id.get_neuron_id()] += weight;
     }
 
     ASSERT_EQ(found_in_synapses.size(), 426124);
@@ -685,8 +685,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi15SingleSubdomainONCE) {
     std::vector<int> found_out_synapses(426124, 0);
 
     for (const auto& [source_id, target_id, weight] : local_synapses) {
-        found_in_synapses[target_id.get_local_id()] += weight;
-        found_out_synapses[source_id.get_local_id()] += weight;
+        found_in_synapses[target_id.get_neuron_id()] += weight;
+        found_out_synapses[source_id.get_neuron_id()] += weight;
     }
 
     ASSERT_EQ(found_in_synapses.size(), 426124);
@@ -727,8 +727,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi16SingleSubdomainONCE) {
     std::vector<int> found_out_synapses(426124, 0);
 
     for (const auto& [source_id, target_id, weight] : local_synapses) {
-        found_in_synapses[target_id.get_local_id()] += weight;
-        found_out_synapses[source_id.get_local_id()] += weight;
+        found_in_synapses[target_id.get_neuron_id()] += weight;
+        found_out_synapses[source_id.get_neuron_id()] += weight;
     }
 
     ASSERT_EQ(found_in_synapses.size(), 426124);
@@ -769,8 +769,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi17SingleSubdomainONCE) {
     std::vector<int> found_out_synapses(426124, 0);
 
     for (const auto& [source_id, target_id, weight] : local_synapses) {
-        found_in_synapses[target_id.get_local_id()] += weight;
-        found_out_synapses[source_id.get_local_id()] += weight;
+        found_in_synapses[target_id.get_neuron_id()] += weight;
+        found_out_synapses[source_id.get_neuron_id()] += weight;
     }
 
     ASSERT_EQ(found_in_synapses.size(), 426124);

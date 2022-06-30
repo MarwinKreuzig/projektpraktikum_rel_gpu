@@ -82,7 +82,7 @@ void IzhikevichModel::update_activity(const NeuronID& neuron_id) {
 
     auto x = get_x(neuron_id);
 
-    const auto local_neuron_id = neuron_id.get_local_id();
+    const auto local_neuron_id = neuron_id.get_neuron_id();
 
     auto has_spiked = FiredStatus::Inactive;
 

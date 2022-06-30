@@ -110,7 +110,7 @@ TEST_F(BarnesHutTest, testUpdateLeafNodes) {
     std::map<NeuronID::value_type, Vec3d> positions{};
     for (const auto& [position, id] : neurons_to_place) {
         octree->insert(position, id, 0);
-        positions[id.get_local_id()] = position;
+        positions[id.get_neuron_id()] = position;
     }
 
     octree->initializes_leaf_nodes(number_neurons);
@@ -127,7 +127,7 @@ TEST_F(BarnesHutTest, testUpdateLeafNodes) {
         const auto& cell = node->get_cell();
 
         const auto id = cell.get_neuron_id();
-        const auto local_id = id.get_local_id();
+        const auto local_id = id.get_neuron_id();
 
         ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
         ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
@@ -167,7 +167,7 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
     std::map<NeuronID::value_type, Vec3d> positions{};
     for (const auto& [position, id] : neurons_to_place) {
         octree->insert(position, id, 0);
-        positions[id.get_local_id()] = position;
+        positions[id.get_neuron_id()] = position;
     }
 
     octree->initializes_leaf_nodes(number_neurons);
@@ -189,9 +189,9 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
 
         const auto& cell = node->get_cell();
 
-        if (node->is_child()) {
+        if (node->is_leaf()) {
             const auto id = cell.get_neuron_id();
-            const auto local_id = id.get_local_id();
+            const auto local_id = id.get_neuron_id();
 
             ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
             ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());

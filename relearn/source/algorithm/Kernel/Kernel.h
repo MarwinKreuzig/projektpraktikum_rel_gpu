@@ -97,7 +97,7 @@ public:
     [[nodiscard]] static double calculate_attractiveness_to_connect(const NeuronID& source_neuron_id, const position_type& source_position,
         const OctreeNode<AdditionalCellAttributes>* target_node, const ElementType element_type, const SignalType signal_type) {
         // A neuron must not form an autapse, i.e., a synapse to itself
-        if (target_node->is_child() && source_neuron_id == target_node->get_cell_neuron_id()) {
+        if (target_node->is_leaf() && source_neuron_id == target_node->get_cell_neuron_id()) {
             return 0.0;
         }
 

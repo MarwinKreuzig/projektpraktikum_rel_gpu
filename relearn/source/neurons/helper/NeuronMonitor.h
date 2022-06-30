@@ -210,7 +210,7 @@ public:
     void record_data() {
         RelearnException::check(neurons_to_monitor.operator bool(), "NeuronMonitor::record_data: The shared pointer is empty");
         
-        const auto local_neuron_id = target_neuron_id.get_local_id();
+        const auto local_neuron_id = target_neuron_id.get_neuron_id();
         RelearnException::check(local_neuron_id < neurons_to_monitor->number_neurons, "NeuronMonitor::record_data: The target id is too large for the neurons class");
 
         const double& calcium = neurons_to_monitor->calcium[local_neuron_id];

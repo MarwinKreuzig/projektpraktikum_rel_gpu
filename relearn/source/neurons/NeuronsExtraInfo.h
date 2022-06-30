@@ -99,7 +99,7 @@ public:
      * @exception Throws an RelearnAxception if the specified id exceeds the number of stored neurons
      */
     [[nodiscard]] position_type get_position(const NeuronID& neuron_id) const {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
         RelearnException::check(local_neuron_id < size, "NeuronsExtraInfo::get_position: neuron_id must be smaller than size but was {}", neuron_id);
         RelearnException::check(local_neuron_id < positions.size(), "NeuronsExtraInfo::get_position: neuron_id must be smaller than positions.size() but was {}", neuron_id);
         return positions[local_neuron_id];
@@ -111,7 +111,7 @@ public:
      * @exception Throws an RelearnAxception if the specified id exceeds the number of stored neurons
      */
     [[nodiscard]] const std::string& get_area_name(const NeuronID& neuron_id) const {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
         RelearnException::check(local_neuron_id < area_names.size(), "NeuronsExtraInfo::get_area_name: neuron_id must be smaller than size but was {}", neuron_id);
         return area_names[local_neuron_id];
     }

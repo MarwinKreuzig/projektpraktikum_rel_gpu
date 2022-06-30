@@ -176,7 +176,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
     RelearnException::check(all_same_size, "Naive::update_leaf_nodes: The vectors were of different sizes");
 
     for (const auto neuron_id : NeuronID::range(num_leaf_nodes)) {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
         if (disable_flags[local_neuron_id] == UpdateStatus::Disabled) {
             continue;
         }

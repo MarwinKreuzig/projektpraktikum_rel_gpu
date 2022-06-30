@@ -67,7 +67,7 @@ void FitzHughNagumoModel::update_activity(const NeuronID& neuron_id) {
 
     auto x = get_x(neuron_id);
 
-    const auto local_neuron_id = neuron_id.get_local_id();
+    const auto local_neuron_id = neuron_id.get_neuron_id();
 
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
         x += iter_x(x, w[local_neuron_id], input) / h;

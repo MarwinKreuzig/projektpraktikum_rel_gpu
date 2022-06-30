@@ -97,11 +97,11 @@ TEST_F(PartitionTest, testPartitionNumberNeurons) {
 
         for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
             if (my_subdomain > 0) {
-                const auto local_start = local_ids_ends[static_cast<size_t>(my_subdomain) - 1].get_local_id() + 1;
+                const auto local_start = local_ids_ends[static_cast<size_t>(my_subdomain) - 1].get_neuron_id() + 1;
                 local_ids_start[my_subdomain] = NeuronID(false, local_start);
             }
 
-            const auto local_end = local_ids_start[my_subdomain].get_local_id() + local_neurons[my_subdomain] - 1;
+            const auto local_end = local_ids_start[my_subdomain].get_neuron_id() + local_neurons[my_subdomain] - 1;
             local_ids_ends[my_subdomain] = NeuronID(false, local_end);
         }
 

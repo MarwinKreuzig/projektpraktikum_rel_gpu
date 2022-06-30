@@ -35,7 +35,7 @@ void BarnesHutInverted::update_leaf_nodes(const std::vector<UpdateStatus>& disab
     using counter_type = BarnesHutInvertedCell::counter_type;
 
     for (const auto& neuron_id : NeuronID::range(num_leaf_nodes)) {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         auto* node = leaf_nodes[local_neuron_id];
         RelearnException::check(node != nullptr, "BarnesHutInverted::update_leaf_nodes: node was nullptr: {}", neuron_id);

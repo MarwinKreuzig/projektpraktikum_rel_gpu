@@ -368,8 +368,8 @@ public:
                 }
             } else {
                 const auto neuron_id = node->get_cell_neuron_id();
-                RelearnException::check(neuron_id.get_local_id() < leaf_nodes.size(), "Octree::initializes_leaf_nodes: Neuron id was too large for leaf nodes: {}", neuron_id);
-                leaf_nodes[neuron_id.get_local_id()] = node;
+                RelearnException::check(neuron_id.get_neuron_id() < leaf_nodes.size(), "Octree::initializes_leaf_nodes: Neuron id was too large for leaf nodes: {}", neuron_id);
+                leaf_nodes[neuron_id.get_neuron_id()] = node;
             }
         }
 
@@ -503,7 +503,7 @@ public:
         while (!stack.empty()) {
             const auto* current_node = stack.pop_back();
 
-            if (current_node->is_child()) {
+            if (current_node->is_leaf()) {
                 // The space is for the leaf nodes is calculated at the parent
                 continue;
             }

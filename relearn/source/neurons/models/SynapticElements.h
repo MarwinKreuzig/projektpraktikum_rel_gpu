@@ -218,7 +218,7 @@ public:
      * @exception Throws a RelearnException if (a) neuron_id is too large, (b) the counts for the neuron are negative afterwards
      */
     void update_grown_elements(const NeuronID& neuron_id, const double delta) {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < grown_elements.size(), "SynapticElements::update_grown_elements: neuron_id is too large: {}", neuron_id);
         grown_elements[local_neuron_id] += delta;
@@ -232,7 +232,7 @@ public:
      * @exception Throws a RelearnException if (a) neuron_id is too large, (b) the counts for the neuron are negative afterwards
      */
     void update_connected_elements(const NeuronID& neuron_id, const int delta) {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < connected_elements.size(), "SynapticElements::update_connected_elements: neuron_id is too large: {}", neuron_id);
         if (delta < 0) {
@@ -255,7 +255,7 @@ public:
      * @exception Throws a RelearnException if neuron_id is too large
      */
     void set_signal_type(const NeuronID& neuron_id, const SignalType type) {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < signal_types.size(), "SynapticElements::set_signal_type: neuron_id is too large: {}", neuron_id);
         signal_types[local_neuron_id] = type;
@@ -293,7 +293,7 @@ public:
         }
 
         for (const auto& neuron_id : disabled_neuron_ids) {
-            const auto local_neuron_id = neuron_id.get_local_id();
+            const auto local_neuron_id = neuron_id.get_neuron_id();
 
             RelearnException::check(local_neuron_id < size, "SynapticElements::update_after_deletion: Cannot disable a neuron with a too large id");
             connected_elements[local_neuron_id] = 0;
@@ -309,7 +309,7 @@ public:
      * @return The number of grown elements
      */
     [[nodiscard]] double get_grown_elements(const NeuronID& neuron_id) const {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < grown_elements.size(), "SynapticElements::get_grown_elements: neuron_id is too large: {}", neuron_id);
         return grown_elements[local_neuron_id];
@@ -322,7 +322,7 @@ public:
      * @return The number of connected elements
      */
     [[nodiscard]] unsigned int get_connected_elements(const NeuronID& neuron_id) const {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < connected_elements.size(), "SynapticElements::get_connected_elements: neuron_id is too large: {}", neuron_id);
         return connected_elements[local_neuron_id];
@@ -335,7 +335,7 @@ public:
      * @return The number of free elements
      */
     [[nodiscard]] unsigned int get_free_elements(const NeuronID& neuron_id) const {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < connected_elements.size(), "SynapticElements::get_free_elements: neuron_id is too large: {}", neuron_id);
         RelearnException::check(connected_elements[local_neuron_id] <= grown_elements[local_neuron_id], "SynapticElements::get_free_elements: More elements were connected then free: {}, {} vs {}", neuron_id, connected_elements[local_neuron_id], grown_elements[local_neuron_id]);
@@ -351,7 +351,7 @@ public:
      * @return The number of free elements for the signal type
      */
     [[nodiscard]] unsigned int get_free_elements(const NeuronID& neuron_id, const SignalType signal_type) const {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < signal_types.size(), "SynapticElements::get_free_elements: neuron_id is too large for the signal types: {}", neuron_id);
 
@@ -372,7 +372,7 @@ public:
      * @return The accumulated delta
      */
     [[nodiscard]] double get_delta(const NeuronID& neuron_id) const {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < deltas_since_last_update.size(), "SynapticElements::get_delta: neuron_id is too large: {}", neuron_id);
         return deltas_since_last_update[local_neuron_id];
@@ -385,7 +385,7 @@ public:
      * @return The signal type
      */
     [[nodiscard]] SignalType get_signal_type(const NeuronID& neuron_id) const {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < signal_types.size(), "SynapticElements::get_signal_type: neuron_id is too large: {}", neuron_id);
         return signal_types[local_neuron_id];

@@ -87,7 +87,7 @@ public:
         for (const auto& [source_rank, request_index] : indices) {
             const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = creation_requests.get_request(source_rank, request_index);
 
-            RelearnException::check(target_neuron_id.get_local_id() < number_neurons, "ForwardConnector::process_requests: target_neuron_id exceeds my neurons");
+            RelearnException::check(target_neuron_id.get_neuron_id() < number_neurons, "ForwardConnector::process_requests: target_neuron_id exceeds my neurons");
 
             const auto& dendrites = (SignalType::Inhibitory == dendrite_type_needed) ? inhibitory_dendrites : excitatory_dendrites;
 
@@ -162,8 +162,8 @@ public:
 
                 const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = creation_requests.get_request(target_rank, request_index);
 
-                RelearnException::check(source_neuron_id.get_local_id() < number_neurons,
-                    "ForwardConnector::process_responses: The source neuron id was too large: {} vs {}", source_neuron_id.get_local_id(), number_neurons);
+                RelearnException::check(source_neuron_id.get_neuron_id() < number_neurons,
+                    "ForwardConnector::process_responses: The source neuron id was too large: {} vs {}", source_neuron_id.get_neuron_id(), number_neurons);
 
                 RelearnException::check(axons->get_free_elements(source_neuron_id) > 0, 
                     "ForwardConnector::process_responses: The source neuron did not have a vacant element: {}", source_neuron_id);
@@ -242,8 +242,8 @@ public:
         for (const auto& [source_rank, request_index] : indices) {
             const auto& [target_neuron_id, source_neuron_id, axon_type_needed] = creation_requests.get_request(source_rank, request_index);
 
-            RelearnException::check(target_neuron_id.get_local_id() < number_neurons, "ForwardConnector::process_requests: target_neuron_id exceeds my neurons");
-            RelearnException::check(signal_types[target_neuron_id.get_local_id()] == axon_type_needed, "ForwardConnector::process_requests: Request had the wrong signal type");
+            RelearnException::check(target_neuron_id.get_neuron_id() < number_neurons, "ForwardConnector::process_requests: target_neuron_id exceeds my neurons");
+            RelearnException::check(signal_types[target_neuron_id.get_neuron_id()] == axon_type_needed, "ForwardConnector::process_requests: Request had the wrong signal type");
 
             const auto weight = (SignalType::Inhibitory == axon_type_needed) ? -1 : 1;
             const auto number_free_elements = axons->get_free_elements(target_neuron_id);
@@ -317,8 +317,8 @@ public:
 
                 const auto& dendrites = (SignalType::Inhibitory == axon_type_needed) ? inhibitory_dendrites : excitatory_dendrites;
 
-                RelearnException::check(source_neuron_id.get_local_id() < number_neurons,
-                    "ForwardConnector::process_responses: The source neuron id was too large: {} vs {}", source_neuron_id.get_local_id(), number_neurons);
+                RelearnException::check(source_neuron_id.get_neuron_id() < number_neurons,
+                    "ForwardConnector::process_responses: The source neuron id was too large: {} vs {}", source_neuron_id.get_neuron_id(), number_neurons);
 
                 // Increment number of connected axons
                 dendrites->update_connected_elements(source_neuron_id, 1);

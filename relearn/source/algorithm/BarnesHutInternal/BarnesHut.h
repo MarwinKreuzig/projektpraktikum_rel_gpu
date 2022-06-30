@@ -71,7 +71,7 @@ public:
         RelearnException::check(node != nullptr, "BarnesHut::update_functor: node is nullptr");
 
         // NOLINTNEXTLINE
-        if (node->is_child()) {
+        if (node->is_leaf()) {
             return;
         }
 

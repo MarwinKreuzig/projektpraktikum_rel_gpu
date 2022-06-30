@@ -75,7 +75,7 @@ public:
      * @brief Returns a flag that indicates if this node is an inner node or a leaf node
      * @return True iff it is a leaf node
      */
-    [[nodiscard]] bool is_child() const noexcept {
+    [[nodiscard]] bool is_leaf() const noexcept {
         return !parent;
     }
 
@@ -171,7 +171,7 @@ public:
          * I'm the very first child of that node.
          * I.e., the node is a leaf.
          */
-        if (parent_node->is_child()) {
+        if (parent_node->is_leaf()) {
             /**
              * The found parent node is virtual and can just be substituted,
              * i.e., it was constructed while constructing the upper part to the branch nodes.

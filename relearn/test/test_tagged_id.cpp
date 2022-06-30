@@ -17,7 +17,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDUninitialized) { // NOLINT
     ASSERT_FALSE(id.is_virtual());
     ASSERT_FALSE(id.is_local());
 
-    ASSERT_THROW(auto val = id.get_local_id(), RelearnException);
+    ASSERT_THROW(auto val = id.get_neuron_id(), RelearnException);
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDVirtual) { // NOLINT
@@ -28,7 +28,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDVirtual) { // NOLINT
     ASSERT_TRUE(id.is_virtual());
     ASSERT_FALSE(id.is_local());
 
-    ASSERT_THROW(auto val = id.get_local_id(), RelearnException);
+    ASSERT_THROW(auto val = id.get_neuron_id(), RelearnException);
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDConstructorDefault) { // NOLINT
@@ -39,7 +39,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorDefault) { // NOLINT
     ASSERT_FALSE(id.is_virtual());
     ASSERT_FALSE(id.is_local());
 
-    ASSERT_THROW(auto val = id.get_local_id(), RelearnException);
+    ASSERT_THROW(auto val = id.get_neuron_id(), RelearnException);
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDConstructorOnlyID) { // NOLINT
@@ -52,7 +52,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorOnlyID) { // NOLINT
     ASSERT_FALSE(id.is_virtual());
     ASSERT_TRUE(id.is_local());
 
-    ASSERT_EQ(id.get_local_id(), id_val);
+    ASSERT_EQ(id.get_neuron_id(), id_val);
     ASSERT_EQ(static_cast<TypeParam>(id), id_val);
 }
 
@@ -66,7 +66,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorLocal) {
     ASSERT_FALSE(id.is_virtual());
     ASSERT_TRUE(id.is_local());
 
-    ASSERT_EQ(id.get_local_id(), id_val);
+    ASSERT_EQ(id.get_neuron_id(), id_val);
     ASSERT_EQ(static_cast<TypeParam>(id), id_val);
 }
 
@@ -80,7 +80,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorVirtual) {
     ASSERT_TRUE(id.is_virtual());
     ASSERT_FALSE(id.is_local());
 
-    ASSERT_THROW(auto val = id.get_local_id(), RelearnException);
+    ASSERT_THROW(auto val = id.get_neuron_id(), RelearnException);
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDComparisons1) { // NOLINT
@@ -92,7 +92,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDComparisons1) { // NOLINT
     const auto id1 = get_random_id();
     const auto id2 = get_random_id();
 
-    EXPECT_EQ(id1 <=> id2, id1.get_local_id() <=> id2.get_local_id());
+    EXPECT_EQ(id1 <=> id2, id1.get_neuron_id() <=> id2.get_neuron_id());
     EXPECT_EQ(TaggedID<TypeParam>{}, TaggedID<TypeParam>{});
 }
 

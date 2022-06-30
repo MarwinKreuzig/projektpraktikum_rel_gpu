@@ -177,14 +177,26 @@ public:
     }
 
     /**
-     * @brief Get the local id
+     * @brief Get the neuron id
      *
-     * @exception RelearnException if the id is not local
+     * @exception RelearnException if the id is not initialized or is virtual
      * @return constexpr value_type id
      */
-    [[nodiscard]] constexpr value_type get_local_id() const {
-        RelearnException::check(is_local(), "TaggedID::get_local_id is not local {:s}", *this);
-        RelearnException::check(!is_virtual(), "TaggedID::get_local_id is virtual {:s}", *this);
+    [[nodiscard]] constexpr value_type get_neuron_id() const {
+        RelearnException::check(is_initialized(), "TaggedID::get_neuron_id: Is not initialized {:s}", *this);
+        RelearnException::check(!is_virtual(), "TaggedID::get_neuron_id: Is virtual {:s}", *this);
+        return id_;
+    }
+
+    /**
+     * @brief Get the virtual offset
+     *
+     * @exception RelearnException if the id is not initialized or is not virtual
+     * @return constexpr value_type The virtual id
+     */
+    [[nodiscard]] constexpr value_type get_virtual_id() const {
+        RelearnException::check(is_initialized(), "TaggedID::get_virtual_id: Is not initialized {:s}", *this);
+        RelearnException::check(is_virtual(), "TaggedID::get_virtual_id: Is not virtual {:s}", *this);
         return id_;
     }
 
@@ -296,7 +308,7 @@ public:
         } else if (id.is_virtual()) {
             id_ = std::numeric_limits<type>::max() - 1;
         } else if (id.is_local()) {
-            id_ = id.get_local_id();
+            id_ = id.get_neuron_id();
         } else {
             RelearnException::fail("Format of neuron id failed!");
         }

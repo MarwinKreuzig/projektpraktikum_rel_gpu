@@ -459,7 +459,7 @@ TYPED_TEST(OctreeTest, testOctreeInsertLocalTree) {
         nodes_to_save_new_local_trees[i]->set_rank(my_rank);
 
         for (auto j = 0; j < 8; j++) {
-            const auto id_nodes = this->get_random_neuron_id(2000).get_local_id();
+            const auto id_nodes = this->get_random_neuron_id(2000).get_neuron_id();
             if (id_nodes < 1000) {
                 node.set_child(nodes_to_refer_to[id_nodes], j);
                 nodes_to_save_new_local_trees[i]->set_child(nodes_to_refer_to[id_nodes], j);

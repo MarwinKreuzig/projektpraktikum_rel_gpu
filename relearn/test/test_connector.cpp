@@ -254,8 +254,8 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
                 continue;
             }
 
-            const auto& target_id = target_index.get_local_id();
-            const auto& source_id = source_index.get_local_id();
+            const auto& target_id = target_index.get_neuron_id();
+            const auto& source_id = source_index.get_neuron_id();
 
             if (signal_type == SignalType::Excitatory) {
                 accepted_excitatory_requests[target_id]++;

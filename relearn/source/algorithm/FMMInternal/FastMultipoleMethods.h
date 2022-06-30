@@ -81,7 +81,7 @@ public:
         RelearnException::check(node != nullptr, "FastMultipoleMethods::update_functor: node is nullptr");
 
         // NOLINTNEXTLINE
-        if (node->is_child()) {
+        if (node->is_leaf()) {
             return;
         }
 
@@ -420,7 +420,7 @@ private:
                 auto* current_node = stack.pop_back();
 
                 // node is leaf
-                if (current_node->is_child()) {
+                if (current_node->is_leaf()) {
                     // Get number and position, depending on which types were chosen.
                     const auto& cell = current_node->get_cell();
                     const auto& opt_position = cell.get_position_for(element_type, signal_type);
