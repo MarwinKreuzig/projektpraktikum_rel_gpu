@@ -17,7 +17,7 @@ double RelearnTest::position_bounary = 10000;
 int RelearnTest::iterations = 10;
 double RelearnTest::eps = 0.00001;
 
-bool RelearnTest::use_predetermined_seed = true;
+bool RelearnTest::use_predetermined_seed = false;
 unsigned int RelearnTest::predetermined_seed = 3206063744;
 
 std::uniform_int_distribution<size_t> RelearnTest::uid_num_ranks(1, upper_bound_num_ranks);
