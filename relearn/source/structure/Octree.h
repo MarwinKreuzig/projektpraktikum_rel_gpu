@@ -611,6 +611,10 @@ protected:
         while (!stack_upper_part.empty()) {
             const auto [current_node, current_level] = stack_upper_part.pop_back();
 
+            if (current_level == level_of_branch_nodes) {
+                continue;
+            }
+
             for (unsigned char child_id = 0; child_id < Constants::number_oct; child_id++) {
                 const auto& [child_min, child_max] = current_node->get_cell().get_size_for_octant(child_id);
 
