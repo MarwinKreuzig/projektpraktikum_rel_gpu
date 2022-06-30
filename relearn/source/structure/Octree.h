@@ -486,6 +486,42 @@ public:
         RelearnException::check(res != nullptr, "Octree::insert: res was nullptr");
     }
 
+    /**
+     * @brief Determine the size of the memory window if all local nodes,
+     *      which are below the branch nodes, were to be saved in contiguous memory
+     *      while if a node has at least one child, it reserves enough space for all 
+     * @return The number of bytes the memory window needs
+    */
+    size_t determine_size_memory_window() const {
+        Stack<const OctreeNode<AdditionalCellAttributes>*> stack{ 500 };
+        for (const auto* branch_node : get_local_branch_nodes()) {
+            stack.emplace_back(branch_node);
+        }
+
+        size_t required_memory_slots = 0;
+
+        while (!stack.empty()) {
+            const auto* current_node = stack.pop_back();
+
+            if (current_node->is_child()) {
+                // The space is for the leaf nodes is calculated at the parent
+                continue;
+            }
+
+            // Has children, reserve space for all possibly existing
+            required_memory_slots += Constants::number_oct;
+
+            for (const auto* child : current_node->get_children()) {
+                if (child != nullptr) {
+                    stack.emplace_back(child);
+                }
+            }
+        }
+
+        const auto required_size_memory_window = required_memory_slots * sizeof(OctreeNode<AdditionalCellAttributes>);
+        return required_size_memory_window;
+    }
+
 protected:
     void tree_walk_postorder(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function,
         OctreeNode<AdditionalCellAttributes>* root, const size_t max_level = std::numeric_limits<size_t>::max()) {
