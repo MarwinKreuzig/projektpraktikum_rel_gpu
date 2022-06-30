@@ -162,7 +162,7 @@ void Simulation::initialize() {
 
     for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
         const auto& position = neuron_positions[neuron_id.get_neuron_id()];
-        global_tree->insert(position, neuron_id, my_rank);
+        global_tree->insert(position, neuron_id);
     }
 
     global_tree->initializes_leaf_nodes(number_local_neurons);

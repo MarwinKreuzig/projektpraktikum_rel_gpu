@@ -145,7 +145,7 @@ TYPED_TEST(OctreeTest, testOctreeNodeInsert) {
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = this->generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids);
 
     for (const auto& [pos, id] : neurons_to_place) {
-        auto tmp = node.insert(pos, id, my_rank);
+        auto tmp = node.insert(pos, id);
     }
 
     std::vector<std::tuple<Vec3d, NeuronID>> placed_neurons = this->template extract_neurons<AdditionalCellAttributes>(&node);
@@ -229,7 +229,7 @@ TYPED_TEST(OctreeTest, testOctreeInsertNeurons) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     for (const auto& [position, id] : neurons_to_place) {
-        octree.insert(position, id, my_rank);
+        octree.insert(position, id);
     }
 
     std::vector<std::tuple<Vec3d, NeuronID>> placed_neurons = this->template extract_neurons_tree<TypeParam>(octree);
@@ -275,16 +275,15 @@ TYPED_TEST(OctreeTest, testOctreeInsertNeuronsExceptions) {
         const Vec3d pos_invalid_y_min = min - Vec3d{ 0, 1, 0 };
         const Vec3d pos_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
-        ASSERT_THROW(octree.insert(position, id, -rank - 1), RelearnException);
-        ASSERT_THROW(octree.insert(position, NeuronID::uninitialized_id(), rank), RelearnException);
+        ASSERT_THROW(octree.insert(position, NeuronID::uninitialized_id()), RelearnException);
 
-        ASSERT_THROW(octree.insert(pos_invalid_x_max, id, rank), RelearnException);
-        ASSERT_THROW(octree.insert(pos_invalid_y_max, id, rank), RelearnException);
-        ASSERT_THROW(octree.insert(pos_invalid_z_max, id, rank), RelearnException);
+        ASSERT_THROW(octree.insert(pos_invalid_x_max, id), RelearnException);
+        ASSERT_THROW(octree.insert(pos_invalid_y_max, id), RelearnException);
+        ASSERT_THROW(octree.insert(pos_invalid_z_max, id), RelearnException);
 
-        ASSERT_THROW(octree.insert(pos_invalid_x_min, id, rank), RelearnException);
-        ASSERT_THROW(octree.insert(pos_invalid_y_min, id, rank), RelearnException);
-        ASSERT_THROW(octree.insert(pos_invalid_z_min, id, rank), RelearnException);
+        ASSERT_THROW(octree.insert(pos_invalid_x_min, id), RelearnException);
+        ASSERT_THROW(octree.insert(pos_invalid_y_min, id), RelearnException);
+        ASSERT_THROW(octree.insert(pos_invalid_z_min, id), RelearnException);
     }
 
     this->template make_mpi_mem_available<AdditionalCellAttributes>();
@@ -305,7 +304,7 @@ TYPED_TEST(OctreeTest, testOctreeStructure) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
     for (const auto& [position, id] : neurons_to_place) {
-        octree.insert(position, id, my_rank);
+        octree.insert(position, id);
     }
 
     const auto root = octree.get_root();
@@ -374,6 +373,62 @@ TYPED_TEST(OctreeTest, testOctreeStructure) {
     this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
+TYPED_TEST(OctreeTest, testOctreeMemoryStructure) {
+    using AdditionalCellAttributes = TypeParam::AdditionalCellAttributes;
+
+    const auto& [min, max] = this->get_random_simulation_box_size();
+    const auto level_of_branch_nodes = this->get_small_refinement_level();
+
+    OctreeImplementation<TypeParam> octree(min, max, level_of_branch_nodes);
+
+    size_t number_neurons = this->get_random_number_neurons();
+    size_t num_additional_ids = this->get_random_number_neurons();
+
+    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = this->generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids);
+
+    const auto my_rank = MPIWrapper::get_my_rank();
+    for (const auto& [position, id] : neurons_to_place) {
+        octree.insert(position, id);
+    }
+
+    const auto root = octree.get_root();
+
+    std::stack<OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
+
+    while (!octree_nodes.empty()) {
+        const auto* current_node = octree_nodes.top();
+        octree_nodes.pop();
+
+        if (current_node->is_leaf()) {
+            continue;
+        }
+
+        const auto& children = current_node->get_children();
+
+        OctreeNode<AdditionalCellAttributes>* child_pointer = nullptr;
+        int child_id = -1;
+
+        for (auto i = 0; i < 8; i++) {
+            const auto child = children[i];
+            if (child == nullptr) {
+                continue;
+            }
+
+            octree_nodes.emplace(child);
+
+            if (child_pointer == nullptr) {
+                child_pointer = child;
+                child_id = i;
+            }
+
+            auto ptr = child_pointer + i - child_id;
+            ASSERT_EQ(ptr, child);
+        }
+    }
+
+    this->template make_mpi_mem_available<AdditionalCellAttributes>();
+}
+
 TYPED_TEST(OctreeTest, testOctreeLocalTrees) {
     using AdditionalCellAttributes = TypeParam::AdditionalCellAttributes;
 
@@ -426,7 +481,7 @@ TYPED_TEST(OctreeTest, testOctreeInsertLocalTree) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
     for (const auto& [position, id] : neurons_to_place) {
-        octree.insert(position, id, my_rank);
+        octree.insert(position, id);
     }
 
     const auto num_local_trees = octree.get_num_local_trees();

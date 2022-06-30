@@ -180,7 +180,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
         const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
 
         for (const auto& [position, id] : neurons_to_place) {
-            octree.insert(position, NeuronID(id), my_rank);
+            octree.insert(position, NeuronID(id));
         }
 
         octree.initializes_leaf_nodes(num_neurons);
@@ -259,7 +259,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
         const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
 
         for (const auto& [position, id] : neurons_to_place) {
-            octree.insert(position, NeuronID(id), my_rank);
+            octree.insert(position, NeuronID(id));
         }
 
         octree.initializes_leaf_nodes(num_neurons);
@@ -407,7 +407,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
         const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
 
         for (const auto& [position, id] : neurons_to_place) {
-            octree.insert(position, NeuronID(id), my_rank);
+            octree.insert(position, NeuronID(id));
         }
 
         octree.initializes_leaf_nodes(num_neurons);
@@ -489,7 +489,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
         const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
 
         for (const auto& [position, id] : neurons_to_place) {
-            octree.insert(position, NeuronID(id), my_rank);
+            octree.insert(position, NeuronID(id));
         }
 
         octree.initializes_leaf_nodes(num_neurons);

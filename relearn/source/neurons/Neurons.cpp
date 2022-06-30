@@ -248,7 +248,7 @@ void Neurons::create_neurons(const size_t creation_count, const std::vector<doub
     for (size_t i = current_size; i < new_size; i++) {
         auto id = NeuronID{ i };
         const auto& pos = extra_info->get_position(id);
-        global_tree->insert(pos, id, my_rank);
+        global_tree->insert(pos, id);
     }
 
     global_tree->initializes_leaf_nodes(new_size);

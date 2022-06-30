@@ -10,8 +10,10 @@
  *
  */
 
+#include "Config.h"
 #include "RelearnException.h"
 
+#include <unordered_map>
 #include <queue>
 #include <vector>
 
@@ -19,9 +21,9 @@ template <typename T>
 class OctreeNode;
 
 /**
- * This class manages a portion of memory of a specified size and can hand out new objects
- * of the specified type as long as there is space available in the memory portion.
- * Hands out pointers via get_available(), which have to be reclaimed with make_available() or make_all_available() later on.
+ * This class manages a portion of memory of a specified size and can hand out OctreeNodes as long as there is space left.
+ * Hands out pointers via get_available(), which have to be reclaimed with make_all_available() later on.
+ * get_available() makes sure that memory is really handled in portions, and all children are next to each other.
  *
  * In effect calls OctreeNode<AdditionalCellAttributes>::reset()
  *
@@ -30,11 +32,12 @@ class OctreeNode;
 template <typename AdditionalCellAttributes>
 class MemoryHolder {
     // NOLINTNEXTLINE
-    static inline std::queue<OctreeNode<AdditionalCellAttributes>*> available{};
-    static inline std::vector<OctreeNode<AdditionalCellAttributes>*> non_available{};
     static inline OctreeNode<AdditionalCellAttributes>* base_ptr{ nullptr };
 
+    static inline size_t current_filling{ 0 };
     static inline size_t total{ Constants::uninitialized };
+
+    static inline std::unordered_map<OctreeNode<AdditionalCellAttributes>*, size_t> parent_to_offset{};
 
 public:
     /**
@@ -44,69 +47,44 @@ public:
      * @param length The number of objects that fit into the memory
      */
     static void init(OctreeNode<AdditionalCellAttributes>* ptr, const size_t length) {
-        non_available.resize(length, nullptr);
         base_ptr = ptr;
         total = length;
+    }
 
-        for (size_t counter = 0; counter < length; counter++) {
-            // NOLINTNEXTLINE
-            auto* current_value = ptr + counter;
-            current_value->reset();
-            available.push(current_value);
+    /**
+     * @brief Returns the pointer for the octant-th child of parent.
+     *      Is deterministic if called repeatedly without calls to make_all_available inbetween.
+     * @param parent The OctreeNode whose child the newly created node shall be
+     * @param octant The octant of the newly created child
+     * @exception Throws a RelearnException if parent == nullptr, octant >= Constants::number_oct, or if there is no more space left
+     * @return Returns a pointer to the newly created child
+     */
+    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_available(OctreeNode<AdditionalCellAttributes>* parent, unsigned int octant) {
+        RelearnException::check(parent != nullptr, "MemoryHolder::get_available: parent is nullptr");
+        RelearnException::check(octant < Constants::number_oct, "MemoryHolder::get_available: octant is too large: {} vs {}", octant, Constants::number_oct);
+
+        if (parent_to_offset.find(parent) == parent_to_offset.end()) {
+            parent_to_offset[parent] = current_filling;
+            current_filling += Constants::number_oct;
         }
-    }
 
-    /**
-     * @brief Returns a non-null pointer to a new object, which has to be reclaimed later.
-     *      Does not transfer ownership
-     * @exception Throws a RelearnException if all objects are in use
-     * @return A non-null pointer to a new object
-     */
-    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_available() {
-        RelearnException::check(!available.empty(), "MemoryHolder::get_available: There are no free nodes.");
+        const auto offset = parent_to_offset[parent];
+        RelearnException::check(offset + Constants::number_oct <= total, 
+            "MemoryHolder::get_available: The offset is too large: {} + {} vs {}", offset, Constants::number_oct, total);
 
-        // Get last available element and save it
-        OctreeNode<AdditionalCellAttributes>* ptr = available.front();
-        available.pop();
-        const size_t dist = std::distance(base_ptr, ptr);
-
-        RelearnException::check(dist < non_available.size(), "MemoryHolder::get_available: The distance was too large: {} vs {}.", dist, non_available.size());
-        non_available[dist] = ptr;
-
-        return ptr;
-    }
-
-    /**
-     * @brief Returns the pointer to the available ones and destroys the object pointed to.
-     * @param ptr The pointer that should be freed, not null, must have been retrieved via get_available()
-     * @exception Throws a RelearnException if ptr is nullptr or ptr did not come from get_available()
-     */
-    static void make_available(OctreeNode<AdditionalCellAttributes>* ptr) {
-        RelearnException::check(ptr != nullptr, "MemoryHolder::make_available: ptr was nullptr");
-
-        const size_t dist = std::distance(base_ptr, ptr);
-
-        RelearnException::check(dist < non_available.size(), "MemoryHolder::get_available: The distance was too large: {} vs {}.", dist, non_available.size());
-        available.push(ptr);
-        non_available[dist] = nullptr;
-
-        ptr->reset();
+        return base_ptr + (offset + octant);
     }
 
     /**
      * @brief Destroys all objects that were handed out via get_available. All pointers are invalidated.
      */
     static void make_all_available() noexcept {
-        for (OctreeNode<AdditionalCellAttributes>*& ptr : non_available) {
-            if (ptr == nullptr) {
-                continue;
-            }
-
-            available.push(ptr);
-
-            ptr->reset();
-            ptr = nullptr;
+        for (size_t i = 0; i < total; i++) {
+            base_ptr[i].reset();
         }
+
+        current_filling = 0;
+        parent_to_offset.clear();
     }
 
     /**
@@ -115,13 +93,5 @@ public:
      */
     [[nodiscard]] static size_t get_size() noexcept {
         return total;
-    }
-
-    /**
-     * @brief Returns the number of currently available objects
-     * @return The number of currently available objects
-     */
-    [[nodiscard]] static size_t get_number_available_objects() noexcept {
-        return available.size();
     }
 };

@@ -109,7 +109,7 @@ TEST_F(BarnesHutTest, testUpdateLeafNodes) {
 
     std::map<NeuronID::value_type, Vec3d> positions{};
     for (const auto& [position, id] : neurons_to_place) {
-        octree->insert(position, id, 0);
+        octree->insert(position, id);
         positions[id.get_neuron_id()] = position;
     }
 
@@ -166,7 +166,7 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
 
     std::map<NeuronID::value_type, Vec3d> positions{};
     for (const auto& [position, id] : neurons_to_place) {
-        octree->insert(position, id, 0);
+        octree->insert(position, id);
         positions[id.get_neuron_id()] = position;
     }
 
