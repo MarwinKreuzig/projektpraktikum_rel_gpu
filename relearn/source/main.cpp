@@ -29,6 +29,7 @@
 #include "structure/Partition.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
+#include "util/StepParser.h"
 #include "util/Timers.h"
 
 #include "spdlog/spdlog.h"

@@ -29,6 +29,7 @@
 #include "structure/OctreeNode.h"
 #include "util/MemoryHolder.h"
 #include "util/RelearnException.h"
+#include "util/StepParser.h"
 #include "util/TaggedID.h"
 
 #include <chrono>
@@ -267,7 +268,7 @@ protected:
     SignalType get_random_signal_type() noexcept {
         return get_random_bool() ? SignalType::Excitatory : SignalType::Inhibitory;
     }
-    
+
     double get_random_gamma_k() noexcept {
         return get_random_double(0.001, 10.0);
     }
@@ -985,5 +986,38 @@ class IOTest : public RelearnTest {
 protected:
     static void SetUpTestCase() {
         SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
+class StepParserTest : public RelearnTest, public StepParser {
+
+protected:
+    static void SetUpTestCase() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+
+    Interval generate_random_interval() {
+        using int_type = Interval::step_type;
+
+        constexpr auto min = std::numeric_limits<int_type>::min();
+        constexpr auto max = std::numeric_limits<int_type>::max();
+
+        const auto begin = get_random_integer<int_type>(min, max);
+        const auto end = get_random_integer<int_type>(min, max);
+        const auto frequency = get_random_integer<int_type>(min, max);
+
+        return Interval{ std::min(begin, end), std::max(begin, end), frequency };
+    }
+
+    std::string codify_interval(const Interval& interval) {
+        std::stringstream ss{};
+        ss << interval.begin << '-' << interval.end << ':' << interval.frequency;
+        return ss.str();
+    }
+
+    std::pair<Interval, std::string> generate_random_interval_description() {
+        auto interval = generate_random_interval();
+        auto description = codify_interval(interval);
+        return { std::move(interval), std::move(description) };
     }
 };
