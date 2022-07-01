@@ -105,6 +105,8 @@ TYPED_TEST(OctreeTest, testOctreeNodeSetterGetter) {
         ASSERT_THROW(node.set_child(&node, i), RelearnException);
         ASSERT_THROW(auto tmp = node.get_child(i), RelearnException);
     }
+
+    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeTest, testOctreeNodeLocal) {
@@ -122,6 +124,8 @@ TYPED_TEST(OctreeTest, testOctreeNodeLocal) {
             ASSERT_FALSE(node.is_local());
         }
     }
+
+    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeTest, testOctreeNodeInsert) {
@@ -161,6 +165,8 @@ TYPED_TEST(OctreeTest, testOctreeNodeInsert) {
 
         ASSERT_EQ(expected_neuron, found_neuron);
     }
+
+    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeTest, testOctreeConstructor) {
