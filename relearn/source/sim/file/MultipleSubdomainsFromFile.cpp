@@ -49,6 +49,7 @@ void MultipleSubdomainsFromFile::read_neurons_from_file(const std::filesystem::p
         }
 
         RelearnException::fail("MultipleSubdomainsFromFile::read_neurons_from_file: Did not find comment containing {}", specifier);
+        return 0.0;
     };
 
     auto check = [](double value) -> bool {
