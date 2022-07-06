@@ -150,9 +150,9 @@ int main(int argc, char** argv) {
     print_sizes();
 
     if constexpr (Config::do_debug_checks) {
-        std::cout << "I'm performing Debug Checks\n";
+        LogFiles::print_message_rank(0, "I'm performing Debug Checks");
     } else {
-        std::cout << "I'm skipping Debug Checks\n";
+        LogFiles::print_message_rank(0, "I'm skipping Debug Checks");
     }
 
     const auto my_rank = MPIWrapper::get_my_rank();

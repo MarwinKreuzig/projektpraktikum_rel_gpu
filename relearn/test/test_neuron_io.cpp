@@ -419,7 +419,7 @@ TEST_F(IOTest, testNeuronIORead) {
 
     ASSERT_EQ(number_excitatory, read_excitatory_neurons);
     ASSERT_EQ(number_inhibitory, read_inhibitory_neurons);
-    
+
     ASSERT_EQ(minimum, read_min_position);
     ASSERT_EQ(maximum, read_max_position);
 }
@@ -641,4 +641,56 @@ TEST_F(IOTest, testNeuronIOReadIDsFileNotFound) {
     std::filesystem::path path{ "" };
     const auto& ids = NeuronIO::read_neuron_ids(path);
     ASSERT_FALSE(ids.has_value());
+}
+
+TEST_F(IOTest, testNeuronIOReadCommentsFileNotFound) {
+    std::filesystem::path path{ "" };
+    ASSERT_THROW(const auto& comments = NeuronIO::read_comments(path);, RelearnException);
+}
+
+TEST_F(IOTest, testNeuronIOReadComments1) {
+    std::filesystem::path path{ "./comments.tmp" };
+
+    {
+        std::ofstream out_file{ path };
+        out_file << "# 1\n# 2\n# #\n#";
+    }
+
+    const auto& comments = NeuronIO::read_comments(path);
+
+    ASSERT_EQ(comments.size(), 4);
+    ASSERT_EQ(comments[0], std::string("# 1"));
+    ASSERT_EQ(comments[1], std::string("# 2"));
+    ASSERT_EQ(comments[2], std::string("# #"));
+    ASSERT_EQ(comments[3], std::string("#"));
+}
+
+TEST_F(IOTest, testNeuronIOReadComments2) {
+    std::filesystem::path path{ "./comments.tmp" };
+
+    {
+        std::ofstream out_file{ path };
+        out_file << "Hallo\n# 1\n# 2\n# #\n#";
+    }
+
+    const auto& comments = NeuronIO::read_comments(path);
+
+    ASSERT_TRUE(comments.empty());
+}
+
+TEST_F(IOTest, testNeuronIOReadComments3) {
+    std::filesystem::path path{ "./comments.tmp" };
+
+    {
+        std::ofstream out_file{ path };
+        for (auto i = 0; i < 10; i++) {
+            out_file << "# 1\n";
+            out_file << "Hallo\n";
+        }
+    }
+
+    const auto& comments = NeuronIO::read_comments(path);
+
+    ASSERT_EQ(comments.size(), 1);
+    ASSERT_EQ(comments[0], std::string("# 1"));
 }

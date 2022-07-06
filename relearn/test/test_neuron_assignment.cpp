@@ -13,6 +13,7 @@
 #include "../source/structure/Partition.h"
 #include "../source/sim/random/SubdomainFromNeuronDensity.h"
 #include "../source/sim/random/SubdomainFromNeuronPerRank.h"
+#include "../source/sim/file/MultipleSubdomainsFromFile.h"
 #include "../source/sim/file/SubdomainFromFile.h"
 
 void NeuronAssignmentTest::generate_random_neurons(std::vector<Vec3d>& positions,
@@ -524,7 +525,7 @@ TEST_F(NeuronAssignmentTest, testPerRankNeuronAttributesSemanticMultipleSubdomai
 
         const auto calculated_ratio_excitatory_neurons = calculate_excitatory_fraction(all_types);
         ASSERT_NEAR(placed_ratio_excitatory_neurons, calculated_ratio_excitatory_neurons, static_cast<double>(number_subdomains) / golden_number_neurons) << golden_number_neurons;
-        
+
         const auto& positions = sfnpr.get_neuron_positions_in_subdomains();
         const auto& types = sfnpr.get_neuron_types_in_subdomains();
         const auto& area_names = sfnpr.get_neuron_area_names_in_subdomains();
@@ -779,5 +780,76 @@ TEST_F(NeuronAssignmentTest, testFileRoi17SingleSubdomainONCE) {
     for (auto neuron_id = 0; neuron_id < 426124; neuron_id++) {
         ASSERT_EQ(found_in_synapses[neuron_id], 8) << neuron_id;
         ASSERT_EQ(found_out_synapses[neuron_id], 8) << neuron_id;
+    }
+}
+
+TEST_F(NeuronAssignmentTest, testMultipleFilesEmptyPositionPath) {
+    const auto golden_number_ranks = get_adjusted_random_number_ranks();
+
+    for (auto rank = 0; rank < golden_number_ranks; rank++) {
+        auto partition = std::make_shared<Partition>(golden_number_ranks, rank);
+        ASSERT_THROW(MultipleSubdomainsFromFile msff(std::filesystem::path(""), {}, partition);, RelearnException);
+    }
+}
+
+TEST_F(NeuronAssignmentTest, testMultipleFilesNonExistentPositionPath) {
+    const auto golden_number_ranks = get_adjusted_random_number_ranks();
+
+    for (auto rank = 0; rank < golden_number_ranks; rank++) {
+        auto partition = std::make_shared<Partition>(golden_number_ranks, rank);
+        ASSERT_THROW(MultipleSubdomainsFromFile msff(std::filesystem::path("./asfhasdfböaslidhsdjfnasd"), {}, partition);, RelearnException);
+    }
+}
+
+TEST_F(NeuronAssignmentTest, testMultipleFilesNonExistentFiles) {
+    namespace fs = std::filesystem;
+
+    const auto golden_number_ranks = get_adjusted_random_number_ranks();
+    const auto directory = fs::path("./temp_dir");
+
+    if (fs::exists(directory)) {
+        for (const auto& path : directory) {
+            if (path.string()[0] == '.') {
+                continue;
+            }
+            fs::remove_all(path);
+        }
+    } else {
+        fs::create_directory(directory);
+    }
+
+    for (auto rank = 0; rank < golden_number_ranks; rank++) {
+        auto partition = std::make_shared<Partition>(golden_number_ranks, rank);
+        ASSERT_THROW(MultipleSubdomainsFromFile msff(directory, {}, partition);, RelearnException);
+    }
+}
+
+TEST_F(NeuronAssignmentTest, testMultipleFilesEmptyFiles) {
+    namespace fs = std::filesystem;
+
+    const auto golden_number_ranks = get_adjusted_random_number_ranks();
+    const auto directory = fs::path("./temp_dir");
+
+    if (fs::exists(directory)) {
+        for (const auto& path : directory) {
+            if (path.string()[0] == '.') {
+                continue;
+            }
+
+            fs::remove_all(path);
+        }
+    } else {
+        fs::create_directory(directory);
+    }
+
+    for (auto rank = 0; rank < golden_number_ranks; rank++) {
+        auto position_path = directory / ("rank_" + std::to_string(rank) + "_positions.txt");
+        std::ofstream out_file{ position_path };
+        out_file.flush();
+    }
+
+    for (auto rank = 0; rank < golden_number_ranks; rank++) {
+        auto partition = std::make_shared<Partition>(golden_number_ranks, rank);
+        ASSERT_THROW(MultipleSubdomainsFromFile msff(directory, {}, partition);, RelearnException);
     }
 }

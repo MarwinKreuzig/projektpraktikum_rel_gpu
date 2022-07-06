@@ -16,6 +16,7 @@
 
 #include <filesystem>
 #include <optional>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -26,6 +27,15 @@
 class NeuronIO {
 public:
     using position_type = RelearnTypes::position_type;
+
+    /**
+     * @brief Reads all comments from the beginning of the file and returns those.
+     *      Comments start with '#'. It stops at the file end or the fist non-comment line
+     * @param file_path The path to the file to load
+     * @exception Throws a RelearnException if opening the file failed
+     * @return Returns all comments at the beginning of the file
+     */
+    [[nodiscard]] static std::vector<std::string> read_comments(const std::filesystem::path& file_path);
 
     /**
      * @brief Reads all neurons from the file and returns those.

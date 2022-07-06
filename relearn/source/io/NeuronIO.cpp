@@ -10,6 +10,32 @@
 #include <iomanip>
 #include <sstream>
 
+std::vector<std::string> NeuronIO::read_comments(const std::filesystem::path& file_path) {
+    std::ifstream file(file_path);
+
+    const auto file_is_good = file.good();
+    const auto file_is_not_good = file.fail() || file.eof();
+
+    RelearnException::check(file_is_good && !file_is_not_good, "NeuronIO::read_comments: Opening the file was not successful");
+
+    std::vector<std::string> comments{};
+
+    for (std::string line{}; std::getline(file, line);) {
+        if (line.empty()) {
+            continue;
+        }
+
+        if (line[0] == '#') {
+            comments.emplace_back(std::move(line));
+            continue;
+        }
+
+        break;
+    }
+
+    return comments;
+}
+
 std::tuple<std::vector<LoadedNeuron>, LoadedNeuronsInfo> NeuronIO::read_neurons(const std::filesystem::path& file_path) {
     std::ifstream file(file_path);
 
