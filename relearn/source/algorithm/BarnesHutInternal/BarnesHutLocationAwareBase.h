@@ -82,13 +82,12 @@ protected:
         Stack<OctreeNode<AdditionalCellAttributes>*> stack(Constants::number_prealloc_space);
 
         const auto add_children = [&stack](OctreeNode<AdditionalCellAttributes>* node) {
-            if (const auto is_local = node->is_local(); is_local) {
-                const auto& children = node->get_children();
+            const auto is_local = node->is_local();
+            const auto& children = is_local ? node->get_children() : NodeCache<AdditionalCellAttributes>::download_children(node);
 
-                for (auto* it : children) {
-                    if (it != nullptr) {
-                        stack.emplace_back(it);
-                    }
+            for (auto* it : children) {
+                if (it != nullptr) {
+                    stack.emplace_back(it);
                 }
             }
         };
@@ -113,7 +112,9 @@ protected:
                 continue;
             }
 
-            if (status == BarnesHutBase<AdditionalCellAttributes>::AcceptanceStatus::Accept) {
+            const auto is_local = node->is_local();
+
+            if (status == BarnesHutBase<AdditionalCellAttributes>::AcceptanceStatus::Accept || !is_local) {
                 // Insert node into vector
                 nodes_to_consider.emplace_back(node);
                 continue;

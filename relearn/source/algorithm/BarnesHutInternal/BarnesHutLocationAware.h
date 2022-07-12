@@ -226,7 +226,7 @@ protected:
                     const auto target_neuron_id = local_search.value();
                     
                     creation_requests.set_request(source_rank, request_index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
-                } else {                  
+                } else {        
                     creation_requests.set_request(source_rank, request_index, SynapseCreationRequest{ source_neuron_id, source_neuron_id, signal_type });
                 }      
             }
