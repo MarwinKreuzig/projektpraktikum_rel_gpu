@@ -47,6 +47,86 @@ public:
 
 protected:
     /**
+     * @brief Searches all neurons that must be considered as targets starting at root
+     * @param source_position The position of the source
+     * @param root The start where the source searches for targets
+     * @param element_type The element type that the source searches
+     * @param signal_type The signal type that the source searches
+     */
+    [[nodiscard]] std::vector<OctreeNode<AdditionalCellAttributes>*> get_nodes_to_consider(const position_type& source_position, OctreeNode<AdditionalCellAttributes>* root,
+        const ElementType element_type, const SignalType signal_type) const {
+        if (root == nullptr) {
+            return {};
+        }
+
+        if (root->get_cell().get_number_elements_for(element_type, signal_type) == 0) {
+            return {};
+        }
+
+        if (root->is_child()) {
+            /**
+             * The root node is a leaf and thus contains the target neuron.
+             *
+             * NOTE: Root is not intended to be a leaf but we handle this as well.
+             * Without pushing root onto the stack, it would not make it into the "vector" of nodes.
+             */
+
+            const auto status = BarnesHutBase<AdditionalCellAttributes>::test_acceptance_criterion(source_position, root, element_type, signal_type);
+            if (status == BarnesHutBase<AdditionalCellAttributes>::AcceptanceStatus::Accept) {
+                return { root };
+            }
+
+            return {};
+        }
+
+        Stack<OctreeNode<AdditionalCellAttributes>*> stack(Constants::number_prealloc_space);
+
+        const auto add_children = [&stack](OctreeNode<AdditionalCellAttributes>* node) {
+            if (const auto is_local = node->is_local(); is_local) {
+                const auto& children = node->get_children();
+
+                for (auto* it : children) {
+                    if (it != nullptr) {
+                        stack.emplace_back(it);
+                    }
+                }
+            }
+        };
+
+        // The algorithm expects that root is not considered directly, rather its children
+        add_children(root);
+
+        std::vector<OctreeNode<AdditionalCellAttributes>*> nodes_to_consider{};
+        nodes_to_consider.reserve(Constants::number_prealloc_space);
+
+        while (!stack.empty()) {
+            // Get top-of-stack node and remove it
+            auto* node = stack.pop_back();
+
+            /**
+             * Should node be used for probability interval?
+             * Only take those that have axons available
+             */
+            const auto status = BarnesHutBase<AdditionalCellAttributes>::test_acceptance_criterion(source_position, node, element_type, signal_type);
+
+            if (status == BarnesHutBase<AdditionalCellAttributes>::AcceptanceStatus::Discard) {
+                continue;
+            }
+
+            if (status == BarnesHutBase<AdditionalCellAttributes>::AcceptanceStatus::Accept) {
+                // Insert node into vector
+                nodes_to_consider.emplace_back(node);
+                continue;
+            }
+
+            // Need to expand
+            add_children(node);
+        } // while
+
+        return nodes_to_consider;
+    }
+
+    /**
      * @brief Returns an optional RankNeuronId that the algorithm determined for the given source neuron. No actual request is made.
      *      Might perform MPI communication via NodeCache::download_children()
      * @param source_neuron_id The source neuron id
@@ -63,7 +143,7 @@ protected:
         RelearnException::check(root != nullptr, "BarnesHutLocationAwareBase::find_target_neuron: root was nullptr");
 
         for (auto root_of_subtree = root; true;) {
-            const auto& vector = BarnesHutBase<AdditionalCellAttributes>::get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type);
+            const auto& vector = get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type);
 
             auto* node_selected = kernel_type::pick_target(source_neuron_id, source_position, vector, element_type, signal_type, sigma);
             if (node_selected == nullptr) {
@@ -137,7 +217,7 @@ public:
 
         // Otherwise continue the search in the subdomain of the target node
         for (auto root_of_subtree = root; true;) {
-            const auto& vector = BarnesHutBase<AdditionalCellAttributes>::get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type);
+            const auto& vector = get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type);
 
             auto* node_selected = kernel_type::pick_target(source_neuron_id, source_position, vector, element_type, signal_type, sigma);
             if (node_selected == nullptr) {
