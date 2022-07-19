@@ -10,8 +10,8 @@
  *
  */
 
-#include "BarnesHutCell.h"
 #include "BarnesHutBase.h"
+#include "BarnesHutInvertedCell.h"
 #include "Types.h"
 #include "algorithm/Connector.h"
 #include "algorithm/ExchangingAlgorithm.h"
@@ -19,7 +19,6 @@
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
 #include "neurons/UpdateStatus.h"
-#include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "structure/OctreeNode.h"
 #include "util/RelearnException.h"
@@ -169,7 +168,7 @@ protected:
      * @param source_neuron_id The source neuron's id
      * @param source_position The source neuron's position
      * @param number_vacant_elements The number of vacant elements of the source neuron
-     * @param root Where the source neuron should start to search for targets. It is not const because the children might be changed if the node is 
+     * @param root Where the source neuron should start to search for targets. It is not const because the children might be changed if the node is
      * @param element_type The element type the source neuron searches
      * @param signal_type The signal type the source neuron searches
      * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank

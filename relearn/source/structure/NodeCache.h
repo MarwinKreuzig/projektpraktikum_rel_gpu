@@ -11,10 +11,10 @@
  */
 
 #include "Config.h"
-#include "algorithm/Cells.h"
 #include "mpi/MPIWrapper.h"
 #include "structure/OctreeNode.h"
 #include "util/RelearnException.h"
+#include "util/SemiStableVector.h"
 
 #include <array>
 #include <map>
@@ -34,18 +34,6 @@ public:
     using NodesCacheKey = std::pair<int, node_type*>;
     using NodesCacheValue = node_type*;
     using NodesCache = std::map<NodesCacheKey, NodesCacheValue>;
-
-    /**
-     * @brief Sets the number of nodes that can be cached. Can only be called once
-     * @param number_cached_nodes The number of nodes that shall be cached, must be larger than 0
-     * @exception Throws a RelearnException if called more than once or number_cached_nodes == 0
-     */
-    static void set_cache_size(std::vector<node_type>::size_type number_cached_nodes) {
-        RelearnException::check(number_cached_nodes > 0, "NodeCache::set_cache_size: Should reserve 0 elements");
-        RelearnException::check(memory.capacity() == 0, "NodeCache::set_cache_size: The capacity is not 0");
-
-        memory.reserve(number_cached_nodes);
-    }
 
     /**
      * @brief Empties the cache that was built during the connection phase and frees all local copies
@@ -92,8 +80,6 @@ public:
                 // So, we still need to init the entry by fetching
                 // from the target rank
                 if (inserted) {
-                    RelearnException::check(memory.capacity() > memory.size(), "NodeCache::download_children: All {} cache places are full.", memory.capacity());
-
                     auto& ref = memory.emplace_back();
                     iterator->second = &ref;
                     auto* local_child_addr = iterator->second;
@@ -121,6 +107,6 @@ public:
     }
 
 private:
-    static inline std::vector<node_type> memory{};
+    static inline SemiStableVector<node_type> memory{};
     static inline NodesCache remote_nodes_cache{};
 };
