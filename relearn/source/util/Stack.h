@@ -10,8 +10,6 @@
  *
  */
 
-#include "RelearnException.h"
-
 #include <utility>
 #include <vector>
 
@@ -22,17 +20,17 @@ class Stack {
 public:
     using size_type = typename std::vector<T>::size_type;
 
-    Stack(size_type reserved_size = 0) {
+    explicit Stack(size_type reserved_size = 0) {
         container.reserve(reserved_size);
     }
 
-    template <class... _Valty>
-    constexpr decltype(auto) emplace_back(_Valty&&... _Val) {
-        container.emplace_back(std::forward<_Valty>(_Val)...);
+    template <class... ValueType>
+    constexpr decltype(auto) emplace_back(ValueType&&... Val) {
+        container.emplace_back(std::forward<ValueType>(Val)...);
     }
 
     constexpr T pop_back() {
-        T result = container[container.size() - 1];
+        auto result = std::move(container.back());
         container.pop_back();
         return result;
     }
