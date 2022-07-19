@@ -92,10 +92,17 @@ public:
 
     /**
      * @brief Get a virtual id (is initialized, but virtual)
-     *
+     * @param id The offset in the RMA window
      * @return constexpr TaggedID virtual id
      */
     [[nodiscard]] static constexpr TaggedID virtual_id() noexcept { return TaggedID{ true, 0 }; }
+
+    /**
+     * @brief Get a virtual id (is initialized, but virtual)
+     * @param id The offset in the RMA window
+     * @return constexpr TaggedID virtual id
+     */
+    [[nodiscard]] static constexpr TaggedID virtual_id(std::integral auto offset) noexcept { return TaggedID{ true, offset }; }
 
     /**
      * @brief Create a vector of local TaggedIDs within the range [0, size)
@@ -189,14 +196,13 @@ public:
     }
 
     /**
-     * @brief Get the virtual offset
-     *
+     * @brief Get the offset in the RMA window. The neuron id must be virtual
      * @exception RelearnException if the id is not initialized or is not virtual
      * @return constexpr value_type The virtual id
      */
-    [[nodiscard]] constexpr value_type get_virtual_id() const {
-        RelearnException::check(is_initialized(), "TaggedID::get_virtual_id: Is not initialized {:s}", *this);
-        RelearnException::check(is_virtual(), "TaggedID::get_virtual_id: Is not virtual {:s}", *this);
+    [[nodiscard]] constexpr value_type get_rma_offset() const {
+        RelearnException::check(is_initialized(), "TaggedID::get_rma_offset: Is not initialized {:s}", *this);
+        RelearnException::check(is_virtual(), "TaggedID::get_rma_offset: Is not virtual {:s}", *this);
         return id_;
     }
 

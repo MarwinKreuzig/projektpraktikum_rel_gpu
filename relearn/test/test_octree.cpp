@@ -138,6 +138,7 @@ TYPED_TEST(OctreeTest, testOctreeNodeInsert) {
     size_t level = this->get_small_refinement_level();
 
     OctreeNode<AdditionalCellAttributes> node{};
+    node.set_level(0);
     node.set_rank(my_rank);
     node.set_cell_size(min, max);
     node.set_cell_neuron_id(NeuronID::virtual_id());
@@ -324,7 +325,7 @@ TYPED_TEST(OctreeTest, testOctreeStructure) {
         auto level = elem.second;
 
         octree_nodes.pop();
-
+        ASSERT_EQ(level, current_node->get_level());
         ASSERT_EQ(current_node->get_rank(), my_rank);
 
         if (current_node->is_parent()) {

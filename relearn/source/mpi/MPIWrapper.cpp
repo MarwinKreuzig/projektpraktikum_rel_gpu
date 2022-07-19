@@ -287,13 +287,16 @@ void MPIWrapper::all_gather_inl(void* ptr, const int count) {
     bytes_received.fetch_add(count, std::memory_order::relaxed);
 }
 
-void MPIWrapper::get(void* origin, const size_t size, const int target_rank, const int64_t displacement) {
+void MPIWrapper::get(void* origin, const size_t size, const int target_rank, const int64_t displacement, const int number_elements) {
     const MPI_Aint displacement_mpi(displacement);
     const auto window = *mpi_window; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
+    const auto download_size = size * number_elements;
 
-    RelearnException::check(size < static_cast<size_t>(std::numeric_limits<int>::max()), "MPIWrapper::get: Too much to reduce");
+    RelearnException::check(download_size < std::numeric_limits<int>::max(), "MPIWrapper::get: Too much to download via RMA");
 
-    const int errorcode = MPI_Get(origin, static_cast<int>(size), MPI_CHAR, target_rank, displacement_mpi, static_cast<int>(size), MPI_CHAR, window);
+    const auto download_size_int = static_cast<int>(download_size);
+
+    const auto errorcode = MPI_Get(origin, download_size_int, MPI_CHAR, target_rank, displacement_mpi, download_size_int, MPI_CHAR, window);
     RelearnException::check(errorcode == 0, "MPIWrapper::get: Error code received: {}", errorcode);
 
     bytes_remote.fetch_add(size, std::memory_order::relaxed);

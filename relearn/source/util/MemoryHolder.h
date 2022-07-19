@@ -94,4 +94,20 @@ public:
     [[nodiscard]] static size_t get_size() noexcept {
         return total;
     }
+
+    /**
+     * @brief Returns the offset of node wrt. the base pointer
+     * @param node The node for which we want to have the offset
+     * @exception Throws a RelearnException if the offset were negative
+     * @return The offset of node wrt. the base pointer
+     */
+    [[nodiscard]] static std::uint64_t get_offset(OctreeNode<AdditionalCellAttributes>* node) {
+        const auto base = reinterpret_cast<std::uint64_t>(base_ptr);
+        const auto ptr = reinterpret_cast<std::uint64_t>(node);
+
+        RelearnException::check(ptr >= base, "MemoryHolder::get_offset: node is smaller than base: {:X} vs {:X}", ptr, base);
+
+        const auto offset = ptr - base;
+        return offset;
+    }
 };

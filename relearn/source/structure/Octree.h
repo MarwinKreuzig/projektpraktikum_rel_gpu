@@ -465,8 +465,24 @@ public:
 
         RelearnException::check(neuron_id.is_initialized(), "Octree::insert: neuron_id {} was uninitialized", neuron_id);
 
-        auto* res = root->insert(position, neuron_id);
+        auto* res = root->insert(position, neuron_id, get_level_of_branch_nodes());
         RelearnException::check(res != nullptr, "Octree::insert: res was nullptr");
+    }
+
+    void print() {
+        std::stringstream ss{};
+
+        ss << "I'm rank " << MPIWrapper::get_my_rank() << '\n';
+        ss << "root: " << root << '\n';
+
+        for (auto* child : root->get_children()) {
+            ss << "\tchild: " << child << '\n';
+            for (auto* grandchild : child->get_children()) {
+                ss << "\t\tgrandchild: " << grandchild << '\n';
+            }
+        }
+
+        LogFiles::print_message_rank(-1, ss.str());
     }
 
 protected:
@@ -587,12 +603,14 @@ protected:
         root_node.set_cell_neuron_id(NeuronID::virtual_id());
         root_node.set_cell_neuron_position(xyz_min + (box_size / 2.0));
         root_node.set_rank(my_rank);
+        root_node.set_level(0);
 
-        Stack<std::pair<OctreeNode<AdditionalCellAttributes>*, size_t>> stack_upper_part{ number_nodes_cast };
-        stack_upper_part.emplace_back(&root_node, 0);
+        Stack<OctreeNode<AdditionalCellAttributes>*> stack_upper_part{ number_nodes_cast };
+        stack_upper_part.emplace_back(&root_node);
 
         while (!stack_upper_part.empty()) {
-            const auto [current_node, current_level] = stack_upper_part.pop_back();
+            const auto current_node = stack_upper_part.pop_back();
+            const auto current_level = current_node->get_level();
 
             if (current_level == level_of_branch_nodes) {
                 continue;
@@ -606,11 +624,12 @@ protected:
                 child_node.set_cell_neuron_id(NeuronID::virtual_id());
                 child_node.set_cell_neuron_position((child_max + child_min) / 2.0);
                 child_node.set_rank(my_rank);
+                child_node.set_level(current_level + 1);
 
                 current_node->set_child(&child_node, child_id);
 
                 if (current_level + 1 < level_of_branch_nodes) {
-                    stack_upper_part.emplace_back(&child_node, current_level + 1);
+                    stack_upper_part.emplace_back(&child_node);
                 }
             }
         }

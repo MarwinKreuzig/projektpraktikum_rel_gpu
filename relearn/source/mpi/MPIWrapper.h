@@ -120,7 +120,7 @@ private:
 
     [[nodiscard]] static int translate_lock_type(MPI_Locktype lock_type);
 
-    static void get(void* origin, size_t size, int target_rank, int64_t displacement);
+    static void get(void* origin, size_t size, int target_rank, int64_t displacement, int number_elements);
 
     static void reduce_int64(const int64_t* src, int64_t* dst, size_t size, ReduceFunction function, int root_rank);
 
@@ -388,21 +388,46 @@ public:
         return incoming_requests;
     }
 
-    /** 
+    /**
      * @brief Downloads an OctreeNode on another MPI rank
      * @param dst The local node which shall be the copy of the remote node
      * @param target_rank The other MPI rank
      * @param src The pointer to the remote node, must be inside the remote's memory window
-     * @exception Throws a RelearnException if an MPI error occurs or if target_rank < 0
+     * @param number_elements The number of elements to download
+     * @exception Throws a RelearnException if an MPI error occurs, if number_elements <= 0, or if target_rank < 0
      */
     template <typename AdditionalCellAttributes>
-    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const OctreeNode<AdditionalCellAttributes>* src) {
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const OctreeNode<AdditionalCellAttributes>* src, const int number_elements) {
+        RelearnException::check(number_elements > 0, "MPIWrapper::download_octree_node: number_elements is not positive");
         RelearnException::check(target_rank >= 0, "MPIWrapper::download_octree_node: target_rank is negative");
+
         const auto& base_ptrs = get_base_pointers();
         RelearnException::check(target_rank < base_ptrs.size(), "MPIWrapper::download_octree_node: target_rank is larger than the pointers");
         const auto displacement = int64_t(src) - base_ptrs[target_rank];
 
-        get(dst, sizeof(OctreeNode<AdditionalCellAttributes>), target_rank, displacement);
+        RelearnException::check(displacement >= 0, "MPIWrapper::download_octree_node: displacement is too small: {:X} - {:X}", int64_t(src), base_ptrs[target_rank]);
+
+        get(dst, sizeof(OctreeNode<AdditionalCellAttributes>), target_rank, displacement, number_elements);
+    }
+
+    /**
+     * @brief Downloads an OctreeNode on another MPI rank
+     * @param dst The local node which shall be the copy of the remote node
+     * @param target_rank The other MPI rank
+     * @param offset The offset in the remote's memory window
+     * @param number_elements The number of elements to download
+     * @exception Throws a RelearnException if an MPI error occurs, if number_elements <= 0, if offset < 0, or if target_rank < 0
+     */
+    template <typename AdditionalCellAttributes>
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const int offset, const int number_elements) {
+        RelearnException::check(number_elements > 0, "MPIWrapper::download_octree_node: number_elements is not positive");
+        RelearnException::check(target_rank >= 0, "MPIWrapper::download_octree_node: target_rank is negative");
+        RelearnException::check(offset >= 0, "MPIWrapper::download_octree_node: offset is negative: {}", offset);
+
+        const auto& base_ptrs = get_base_pointers();
+        RelearnException::check(target_rank < base_ptrs.size(), "MPIWrapper::download_octree_node: target_rank is larger than the pointers");
+
+        get(dst, sizeof(OctreeNode<AdditionalCellAttributes>), target_rank, offset, number_elements);
     }
 
     /**

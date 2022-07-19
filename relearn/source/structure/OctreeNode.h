@@ -17,6 +17,8 @@
 #include "util/RelearnException.h"
 
 #include <array>
+#include <cstdint>
+#include <limits>
 #include <optional>
 #include <ostream>
 #include <stack>
@@ -112,6 +114,7 @@ public:
      * @brief Inserts a neuron with the specified id and the specified position into the subtree that is induced by this object.
      * @param position The position of the new neuron
      * @param neuron_id The id of the new neuron (can be Constants::uninitialized to inidicate a virtual neuron), <= Constants::uninitialized
+     * @param level_of_branch_nodes The level of the branch nodes in the Octree, is optional
      * @exception Throws a RelearnException if one of the following happens:
      *      (a) The position is not within the cell's boundaries
      *      (b) neuron_id > Constants::uninitialized
@@ -119,7 +122,7 @@ public:
      *      (d) Something went wrong within the insertion
      * @return A pointer to the newly created and inserted node
      */
-    [[nodiscard]] OctreeNodePtr insert(const box_size_type& position, const NeuronID& neuron_id) {
+    [[nodiscard]] OctreeNodePtr insert(const box_size_type& position, const NeuronID& neuron_id, std::uint16_t level_of_branch_nodes = 0) {
         const auto& [cell_xyz_min, cell_xyz_max] = cell.get_size();
         const auto is_in_box = position.check_in_box(cell_xyz_min, cell_xyz_max);
 
@@ -178,10 +181,18 @@ public:
                 new_node->set_cell_neuron_position(parent_position);
                 new_node->set_cell_neuron_id(parent_neuron_id);
                 new_node->set_rank(parent_node->get_rank());
+                new_node->set_level(parent_node->get_level() + 1);
 
                 // Set the child and mark the parent as virtual
                 parent_node->set_child(new_node, parent_own_octant);
-                parent_node->set_cell_neuron_id(NeuronID::virtual_id());
+
+                // If parent_node is larger than level_of_branch_nodes, it is in the RMA window and thus needs its offset
+                if (parent_node->get_level() > level_of_branch_nodes) {
+                    const auto parent_node_offset = MemoryHolder<AdditionalCellAttributes>::get_offset(parent_node);
+                    parent_node->set_cell_neuron_id(NeuronID::virtual_id(parent_node_offset));
+                } else {
+                    parent_node->set_cell_neuron_id(NeuronID::virtual_id());
+                }
 
                 if (const auto insert_octant = parent_cell.get_octant_for_position(position); insert_octant == parent_own_octant) {
                     // The moved parent and the position to insert still are in the same octant -> try again
@@ -199,12 +210,13 @@ public:
         RelearnException::check(new_node_to_insert != nullptr, "OctreeNode::insert: new_node_to_insert is nullptr");
 
         parent_node->set_child(new_node_to_insert, new_position_octant);
-                
+
         const auto& [minimum_position, maximum_position] = parent_node->get_cell().get_size_for_octant(new_position_octant);
         new_node_to_insert->set_cell_size(minimum_position, maximum_position);
         new_node_to_insert->set_cell_neuron_position({ position });
         new_node_to_insert->set_cell_neuron_id(neuron_id);
         new_node_to_insert->set_rank(rank);
+        new_node_to_insert->set_level(parent_node->get_level() + 1);
 
         return new_node_to_insert;
     }
@@ -249,6 +261,22 @@ public:
     }
 
     /**
+     * @brief Returns the level of this node
+     * @return The level
+     */
+    [[nodiscard]] std::uint16_t get_level() const noexcept {
+        return level;
+    }
+
+    /**
+     * @brief Sets the level of this node
+     * @param new_level The new level of this node
+     */
+    void set_level(std::uint16_t new_level) noexcept {
+        level = new_level;
+    }
+
+    /**
      * @brief Resets the current object:
      *      (a) The cell is newly constructed
      *      (b) The children are newly constructed
@@ -260,6 +288,7 @@ public:
         children = std::array<OctreeNodePtr, Constants::number_oct>{ nullptr };
         parent = false;
         rank = -1;
+        level = -1;
     }
 
     /**
@@ -289,6 +318,7 @@ private:
     std::array<OctreeNodePtr, Constants::number_oct> children{ nullptr };
     Cell<AdditionalCellAttributes> cell{};
 
+    std::uint16_t level{ std::numeric_limits<std::uint16_t>::max() };
     bool parent{ false };
 
     int rank{ -1 }; // MPI rank who owns this octree node
@@ -388,5 +418,4 @@ public:
     [[nodiscard]] std::tuple<box_size_type, box_size_type> get_size() const noexcept {
         return cell.get_size();
     }
-
 };

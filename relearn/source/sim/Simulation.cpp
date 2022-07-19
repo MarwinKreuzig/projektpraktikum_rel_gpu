@@ -160,6 +160,8 @@ void Simulation::initialize() {
         global_tree = std::make_shared<OctreeImplementation<Naive>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     }
 
+    LogFiles::print_message_rank(0, "Level of branch nodes is: {}", global_tree->get_level_of_branch_nodes());
+
     for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
         const auto& position = neuron_positions[neuron_id.get_neuron_id()];
         global_tree->insert(position, neuron_id);
@@ -168,8 +170,6 @@ void Simulation::initialize() {
     global_tree->initializes_leaf_nodes(number_local_neurons);
 
     LogFiles::print_message_rank(0, "Inserted a total of {} neurons", number_total_neurons);
-    LogFiles::print_message_rank(0, "Neurons inserted into subdomains");
-    LogFiles::print_message_rank(0, "Subdomains inserted into global tree");
 
     if (algorithm_enum == AlgorithmEnum::BarnesHut) {
         auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHut>>(global_tree);

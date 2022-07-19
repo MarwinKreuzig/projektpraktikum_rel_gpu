@@ -29,10 +29,11 @@
 template <typename AdditionalCellAttributes>
 class NodeCache {
     using node_type = OctreeNode<AdditionalCellAttributes>;
+    using children_type = std::array<node_type*, Constants::number_oct>;
 
 public:
     using NodesCacheKey = std::pair<int, node_type*>;
-    using NodesCacheValue = node_type*;
+    using NodesCacheValue = children_type;
     using NodesCache = std::map<NodesCacheKey, NodesCacheValue>;
 
     /**
@@ -58,61 +59,56 @@ public:
     /**
      * @brief Downloads the children of the node (must be on another MPI rank) and returns the children.
      *      Also saves to nodes locally in order to save bandwidth
-     * @param node The node for which the children should be downloaded
-     * @exception Throws a RelearnException if node is on the current MPI process
+     * @param node The node for which the children should be downloaded, must be virtual
+     * @exception Throws a RelearnException if node is on the current MPI process or if the saved neuron_id is not virtual
      * @return The downloaded children (perfect copies of the actual children), does not transfer ownership
      */
     [[nodiscard]] static std::array<node_type*, Constants::number_oct> download_children(node_type* const node) {
         const auto target_rank = node->get_rank();
+        RelearnException::check(node->get_cell_neuron_id().is_virtual(), "NodeCache::download_children: Tried to download from a non-virtual node");
         RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "NodeCache::download_children: Tried to download a local node");
 
-        auto actual_download = [target_rank](node_type* node) {
-            std::array<node_type*, Constants::number_oct> local_children{ nullptr };
+        auto actual_download = [target_rank](node_type* const node) {
+            children_type local_children{ nullptr };
+            NodesCacheKey rank_address_pair{ target_rank, node };
+
+            const auto& [iterator, inserted] = remote_nodes_cache.insert({ rank_address_pair, local_children });
+
+            if (!inserted) {
+                return iterator->second;
+            }
 
             // Start access epoch to remote rank
             MPIWrapper::lock_window(target_rank, MPI_Locktype::Shared);
 
-            // Fetch remote children if they exist
+            const auto current_memory_filling = memory.size();
+            const auto required_memory_filling = current_memory_filling + Constants::number_oct;
+
+            RelearnException::check(memory.capacity() >= required_memory_filling, "NodeCache::download_children: All {} cache places are full.", memory.capacity());
+            memory.resize(required_memory_filling);
+
+            auto offset = node->get_cell_neuron_id().get_rma_offset();
+            auto* where_to_insert = memory.data() + current_memory_filling;
+
+            MPIWrapper::download_octree_node(where_to_insert, target_rank, offset, Constants::number_oct);
+
             for (auto child_index = 0; child_index < Constants::number_oct; child_index++) {
-                auto* unusable_child_pointer_on_other_rank = node->get_child(child_index);
-                if (nullptr == unusable_child_pointer_on_other_rank) {
-                    // NOLINTNEXTLINE
+                if (node->get_child(child_index) == nullptr) {
                     local_children[child_index] = nullptr;
                     continue;
                 }
 
-                NodesCacheKey rank_addr_pair{ target_rank, unusable_child_pointer_on_other_rank };
-                std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair{ rank_addr_pair, nullptr };
-
-                // Get cache entry for "cache_key_val_pair"
-                // It is created if it does not exist yet
-                const auto& [iterator, inserted] = remote_nodes_cache.insert(cache_key_val_pair);
-
-                // Cache entry just inserted as it was not in cache
-                // So, we still need to init the entry by fetching
-                // from the target rank
-                if (inserted) {
-                    RelearnException::check(memory.capacity() > memory.size(), "NodeCache::download_children: All {} cache places are full.", memory.capacity());
-
-                    auto& ref = memory.emplace_back();
-                    iterator->second = &ref;
-                    auto* local_child_addr = iterator->second;
-
-                    MPIWrapper::download_octree_node<AdditionalCellAttributes>(local_child_addr, target_rank, unusable_child_pointer_on_other_rank);
-                }
-
-                // Remember address of node
-                // NOLINTNEXTLINE
-                local_children[child_index] = iterator->second;
+                local_children[child_index] = where_to_insert + child_index;
             }
 
-            // Complete access epoch
+            iterator->second = local_children;
+
             MPIWrapper::unlock_window(target_rank);
 
             return local_children;
         };
 
-        std::array<node_type*, Constants::number_oct> local_children{ nullptr };
+        children_type local_children{ nullptr };
 
 #pragma omp critical(node_cache_download)
         local_children = actual_download(node);

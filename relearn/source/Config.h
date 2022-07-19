@@ -63,7 +63,7 @@ public:
     inline static size_t console_update_step = 100; // NOLINTLINE
 
     // Capture individual neuron informations ever <monitor_step> ms
-    inline static size_t monitor_step = 100; // NOLINTLINE
+    inline static size_t monitor_step = 1; // NOLINTLINE
 
     // Capture the global statistics every <statistics_step> ms
     inline static size_t statistics_step = 100; // NOLINTLINE
