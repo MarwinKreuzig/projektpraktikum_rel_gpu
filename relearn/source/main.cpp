@@ -494,20 +494,16 @@ int main(int argc, char** argv) {
     // Set the correct kernel and initalize the MPIWrapper to return the correct type
     if (chosen_algorithm == AlgorithmEnum::BarnesHut || chosen_algorithm == AlgorithmEnum::BarnesHutLocationAware) {
         Kernel<BarnesHutCell>::set_kernel_type(chosen_kernel_type);
-        NodeCache<BarnesHutCell>::set_cache_size(Constants::number_cache_slots);
         MPIWrapper::init_buffer_octree<BarnesHutCell>();
     } else if (chosen_algorithm == AlgorithmEnum::BarnesHutInverted) {
         Kernel<BarnesHutInvertedCell>::set_kernel_type(chosen_kernel_type);
-        NodeCache<BarnesHutInvertedCell>::set_cache_size(Constants::number_cache_slots);
         MPIWrapper::init_buffer_octree<BarnesHutInvertedCell>();
     } else if (chosen_algorithm == AlgorithmEnum::FastMultipoleMethods) {
         Kernel<FastMultipoleMethodsCell>::set_kernel_type(chosen_kernel_type);
-        NodeCache<FastMultipoleMethodsCell>::set_cache_size(Constants::number_cache_slots);
         MPIWrapper::init_buffer_octree<FastMultipoleMethodsCell>();
     } else {
         RelearnException::check(chosen_algorithm == AlgorithmEnum::Naive, "An algorithm was chosen that is not supported");
         Kernel<NaiveCell>::set_kernel_type(chosen_kernel_type);
-        NodeCache<NaiveCell>::set_cache_size(Constants::number_cache_slots);
         MPIWrapper::init_buffer_octree<NaiveCell>();
     }
 

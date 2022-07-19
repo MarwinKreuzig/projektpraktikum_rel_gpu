@@ -36,7 +36,6 @@ public:
     constexpr static size_t print_width = 22;
     constexpr static size_t print_precision = 8;
 
-    constexpr static size_t number_cache_slots = 1024 * 1024;
     constexpr static size_t mpi_alloc_mem = 1024 * 1024 * 300;
 
     // Constants for Fast Gauss
