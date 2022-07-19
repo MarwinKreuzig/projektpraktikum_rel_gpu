@@ -27,6 +27,7 @@
 #include <iostream>
 #include <numeric>
 #include <optional>
+#include <ranges>
 #include <sstream>
 
 void Neurons::init(const size_t number_neurons, std::vector<double> target_calcium_values, std::vector<double> initial_calcium_values) {
@@ -119,7 +120,7 @@ size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
         for (const auto& [target_neuron_id, weight] : local_out_edges) {
             network_graph->add_synapse(LocalSynapse(target_neuron_id, neuron_id, -weight));
 
-            bool is_within = std::binary_search(neuron_ids.begin(), neuron_ids.end(), target_neuron_id);
+            bool is_within = std::ranges::binary_search(neuron_ids, target_neuron_id);
             const auto local_target_neuron_id = target_neuron_id.get_neuron_id();
 
             if (is_within) {
@@ -162,7 +163,7 @@ size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
 
             deleted_axon_connections[source_neuron_id.get_neuron_id()] += std::abs(weight);
 
-            bool is_within = std::binary_search(neuron_ids.begin(), neuron_ids.end(), source_neuron_id);
+            bool is_within = std::ranges::binary_search(neuron_ids, source_neuron_id);
 
             if (is_within) {
                 RelearnException::fail("Neurons::disable_neurons: While disabling neurons, found a within-in-edge that has not been deleted");
@@ -433,9 +434,9 @@ std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
 
         for (const auto& [rni, weight] : edges) {
             /**
-		     * Create "edge weight" number of synapses and add them to the synapse list
-		     * NOTE: We take abs(it->second) here as DendriteType::Inhibitory synapses have count < 0
-		     */
+             * Create "edge weight" number of synapses and add them to the synapse list
+             * NOTE: We take abs(it->second) here as DendriteType::Inhibitory synapses have count < 0
+             */
 
             const auto abs_synapse_weight = std::abs(weight);
             RelearnException::check(abs_synapse_weight > 0, "Neurons::delete_synapses_find_synapses_on_neuron::delete_synapses_register_edges: The absolute weight was 0");
@@ -470,7 +471,7 @@ std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
 
     for (unsigned int i = 0; i < num_synapses_to_delete; i++) {
         auto random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::Neurons, size_t(0), number_synapses - 1);
-        while (std::find(drawn_indices.begin(), drawn_indices.end(), random_number) != drawn_indices.end()) {
+        while (std::ranges::find(drawn_indices, random_number) != drawn_indices.end()) {
             random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::Neurons, size_t(0), number_synapses - 1);
         }
 
@@ -498,8 +499,8 @@ size_t Neurons::delete_synapses_commit_deletions(const CommunicationMap<SynapseD
             const auto weight = (SignalType::Excitatory == signal_type) ? -1 : 1;
 
             /**
-		     *  Update network graph
-		     */
+             *  Update network graph
+             */
             if (my_rank == other_rank) {
                 if (ElementType::Dendrite == element_type) {
                     network_graph->add_synapse(LocalSynapse(other_neuron_id, my_neuron_id, weight));
@@ -509,10 +510,10 @@ size_t Neurons::delete_synapses_commit_deletions(const CommunicationMap<SynapseD
             } else {
                 if (ElementType::Dendrite == element_type) {
                     network_graph->add_synapse(DistantOutSynapse(RankNeuronId(other_rank, other_neuron_id), my_neuron_id, weight));
-                    //network_graph->add_edge_weight(RankNeuronId(other_rank, other_neuron_id), RankNeuronId(my_rank, my_neuron_id), weight);
+                    // network_graph->add_edge_weight(RankNeuronId(other_rank, other_neuron_id), RankNeuronId(my_rank, my_neuron_id), weight);
                 } else {
                     network_graph->add_synapse(DistantInSynapse(my_neuron_id, RankNeuronId(other_rank, other_neuron_id), weight));
-                    //network_graph->add_edge_weight(RankNeuronId(my_rank, my_neuron_id), RankNeuronId(other_rank, other_neuron_id), weight);
+                    // network_graph->add_edge_weight(RankNeuronId(my_rank, my_neuron_id), RankNeuronId(other_rank, other_neuron_id), weight);
                 }
             }
 
@@ -948,7 +949,7 @@ void Neurons::print_network_graph_to_log_file() {
     ss_in_network << "# Local number neurons: " << partition->get_number_local_neurons() << "\n";
     ss_in_network << "# Number MPI ranks: " << partition->get_number_mpi_ranks() << "\n";
     ss_in_network << "# <target_rank> <target_id>\t<source_rank> <source_id>\t<weight> \n";
-        
+
     std::stringstream ss_out_network{};
 
     ss_out_network << "# Total number neurons: " << partition->get_total_number_neurons() << "\n";
@@ -964,7 +965,7 @@ void Neurons::print_network_graph_to_log_file() {
 
 void Neurons::print_positions_to_log_file() {
     const auto& total_number_neurons = partition->get_total_number_neurons();
-    
+
     const auto& [simulation_box_min, simulation_box_max] = partition->get_simulation_box_size();
     const auto& [min_x, min_y, min_z] = simulation_box_min;
     const auto& [max_x, max_y, max_z] = simulation_box_max;
@@ -985,7 +986,7 @@ void Neurons::print_positions_to_log_file() {
 
     RelearnException::check(positions.size() == number_neurons,
         "Neurons::print_positions_to_log_file: positions had size {}, but there were {} local neurons.", positions.size(), number_neurons);
-    RelearnException::check(area_names.size() == number_neurons, 
+    RelearnException::check(area_names.size() == number_neurons,
         "Neurons::print_positions_to_log_file: area_names had size {}, but there were {} local neurons.", area_names.size(), number_neurons);
     RelearnException::check(signal_types.size() == number_neurons,
         "Neurons::print_positions_to_log_file: signal_types had size {}, but there were {} local neurons.", signal_types.size(), number_neurons);

@@ -53,16 +53,9 @@ bool NetworkGraph::check_edges_from_file(const std::filesystem::path& path_synap
         ids_in_file.insert(target_id);
     }
 
-    bool found_everything = true;
-
-    std::for_each(ids_in_file.begin(), ids_in_file.end(), [&neuron_ids, &found_everything](size_t val) {
-        const auto found = std::binary_search(neuron_ids.begin(), neuron_ids.end(), val);
-        if (!found) {
-            found_everything = false;
-        }
+    return std::ranges::all_of(ids_in_file, [&neuron_ids](size_t val) {
+        return std::ranges::binary_search(neuron_ids, val);
     });
-
-    return found_everything;
 }
 
 void NetworkGraph::debug_check() const {
@@ -77,7 +70,6 @@ void NetworkGraph::debug_check() const {
 
     for (auto neuron_id : NeuronID::range(number_local_neurons)) {
         const auto& local_out_edges = get_local_out_edges(neuron_id);
-        const auto& distant_out_edges = get_distant_out_edges(neuron_id);
 
         for (const auto& [target_neuron_id, edge_val] : local_out_edges) {
             RelearnException::check(edge_val != 0, "NetworkGraph::debug_check: Value is zero (out)");

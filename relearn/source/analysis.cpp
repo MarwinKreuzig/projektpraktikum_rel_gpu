@@ -65,7 +65,7 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
 
             const auto distance = difference.calculate_2_norm();
 
-            const auto boundary_it = std::upper_bound(upper_borders.begin(), upper_borders.end(), distance);
+            const auto boundary_it = std::ranges::upper_bound(upper_borders, distance);
             const auto iterator_distance = std::distance(upper_borders.begin(), boundary_it);
 
             auto counts_it = counts.begin();
@@ -74,20 +74,13 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
             (*counts_it)++;
         }
 
-        std::stringstream ss{};
-        ss << my_rank << ": " << (i - start_id) << " of " << (end_id - start_id) << '\n';
-        std::cout << ss.str();
+        fmt::print("{}:{} of {}\n", my_rank, (i - start_id), (end_id - start_id));
     }
 
-    auto print = [&](std::ostream& out) {
-        out << std::setprecision(6);
-        for (auto i = 1; i < number_bins; i++) {
-            out << '[' << upper_borders[i - 1] << ", " << upper_borders[i] << "): " << counts[i - 1] << '\n';
-        }
-    };
-
     std::ofstream file("histogram_" + std::to_string(my_rank) + ".txt");
-    print(file);
+    for (auto i = 1; i < number_bins; i++) {
+        fmt::print(file, "[{:.6}, {:.6}): {}\n", upper_borders[i - 1], upper_borders[i], counts[i - 1]);
+    }
 }
 
 void compute_all_distances(std::filesystem::path neuron_file) {
@@ -149,7 +142,7 @@ void compute_all_distances(std::filesystem::path neuron_file) {
 
     std::vector<size_t> counts(number_of_bins_cast, 0);
     for (const auto distance : pairwise_distances) {
-        const auto boundary_it = std::upper_bound(upper_borders.begin(), upper_borders.end(), distance);
+        const auto boundary_it = std::ranges::upper_bound(upper_borders, distance);
         const auto iterator_distance = std::distance(upper_borders.begin(), boundary_it);
 
         auto counts_it = counts.begin();
