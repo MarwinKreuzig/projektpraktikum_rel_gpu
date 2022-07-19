@@ -121,8 +121,15 @@ public:
     }
 
     template <typename AdditionalCellAttributes>
-    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, [[maybe_unused]] int target_rank, const OctreeNode<AdditionalCellAttributes>* src) {
-        *dst = *src;
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const OctreeNode<AdditionalCellAttributes>* src, const int number_elements) {
+        for (auto i = 0; i < number_elements; i++) {
+            dst[i] = src[i];
+        }
+    }
+
+    template <typename AdditionalCellAttributes>
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const int offset, const int number_elements) {
+        RelearnException::fail("MPINoWrapper::download_octree_node: Cannot perform the offset version without MPI.");
     }
 
     [[nodiscard]] static int64_t get_base_pointers() noexcept {
