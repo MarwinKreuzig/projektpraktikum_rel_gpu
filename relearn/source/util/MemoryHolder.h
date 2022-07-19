@@ -97,17 +97,16 @@ public:
 
     /**
      * @brief Returns the offset of node wrt. the base pointer
-     * @param node The node for which we want to have the offset
-     * @exception Throws a RelearnException if the offset were negative
+     * @param parent_node The node for whose children we want to have the offset
+     * @exception Throws a RelearnException if parent_node does not have an associated children array
      * @return The offset of node wrt. the base pointer
      */
-    [[nodiscard]] static std::uint64_t get_offset(OctreeNode<AdditionalCellAttributes>* node) {
-        const auto base = reinterpret_cast<std::uint64_t>(base_ptr);
-        const auto ptr = reinterpret_cast<std::uint64_t>(node);
+    [[nodiscard]] static std::uint64_t get_offset(OctreeNode<AdditionalCellAttributes>* parent_node) {
+        const auto iterator = parent_to_offset.find(parent_node);
 
-        RelearnException::check(ptr >= base, "MemoryHolder::get_offset: node is smaller than base: {:X} vs {:X}", ptr, base);
+        RelearnException::check(iterator != parent_to_offset.end(), "MemoryHolder::get_offset: parent_node didn't have an offset.");
 
-        const auto offset = ptr - base;
-        return offset;
+        const auto offset = iterator->second;
+        return offset * sizeof(OctreeNode<AdditionalCellAttributes>);
     }
 };

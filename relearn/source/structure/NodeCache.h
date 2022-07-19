@@ -17,7 +17,9 @@
 #include "util/RelearnException.h"
 
 #include <array>
+#include <iostream>
 #include <map>
+#include <sstream>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -73,13 +75,12 @@ public:
             NodesCacheKey rank_address_pair{ target_rank, node };
 
             const auto& [iterator, inserted] = remote_nodes_cache.insert({ rank_address_pair, local_children });
-
+            
             if (!inserted) {
                 return iterator->second;
             }
 
-            // Start access epoch to remote rank
-            MPIWrapper::lock_window(target_rank, MPI_Locktype::Shared);
+            auto offset = node->get_cell_neuron_id().get_rma_offset();
 
             const auto current_memory_filling = memory.size();
             const auto required_memory_filling = current_memory_filling + Constants::number_oct;
@@ -87,10 +88,12 @@ public:
             RelearnException::check(memory.capacity() >= required_memory_filling, "NodeCache::download_children: All {} cache places are full.", memory.capacity());
             memory.resize(required_memory_filling);
 
-            auto offset = node->get_cell_neuron_id().get_rma_offset();
             auto* where_to_insert = memory.data() + current_memory_filling;
 
+            // Start access epoch to remote rank
+            MPIWrapper::lock_window(target_rank, MPI_Locktype::Shared);
             MPIWrapper::download_octree_node(where_to_insert, target_rank, offset, Constants::number_oct);
+            MPIWrapper::unlock_window(target_rank);
 
             for (auto child_index = 0; child_index < Constants::number_oct; child_index++) {
                 if (node->get_child(child_index) == nullptr) {
@@ -103,7 +106,6 @@ public:
 
             iterator->second = local_children;
 
-            MPIWrapper::unlock_window(target_rank);
 
             return local_children;
         };

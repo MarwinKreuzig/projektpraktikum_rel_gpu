@@ -187,12 +187,8 @@ public:
                 parent_node->set_child(new_node, parent_own_octant);
 
                 // If parent_node is larger than level_of_branch_nodes, it is in the RMA window and thus needs its offset
-                if (parent_node->get_level() > level_of_branch_nodes) {
-                    const auto parent_node_offset = MemoryHolder<AdditionalCellAttributes>::get_offset(parent_node);
-                    parent_node->set_cell_neuron_id(NeuronID::virtual_id(parent_node_offset));
-                } else {
-                    parent_node->set_cell_neuron_id(NeuronID::virtual_id());
-                }
+                const auto parent_node_offset = MemoryHolder<AdditionalCellAttributes>::get_offset(parent_node);
+                parent_node->set_cell_neuron_id(NeuronID::virtual_id(parent_node_offset));
 
                 if (const auto insert_octant = parent_cell.get_octant_for_position(position); insert_octant == parent_own_octant) {
                     // The moved parent and the position to insert still are in the same octant -> try again

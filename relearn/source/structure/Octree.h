@@ -467,6 +467,8 @@ public:
 
         auto* res = root->insert(position, neuron_id, get_level_of_branch_nodes());
         RelearnException::check(res != nullptr, "Octree::insert: res was nullptr");
+
+        // LogFiles::print_message_rank(-1, "Inserted {:X} into the octree", reinterpret_cast<unsigned long long int>(res));
     }
 
     void print() {
