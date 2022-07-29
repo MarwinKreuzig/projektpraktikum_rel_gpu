@@ -33,6 +33,7 @@ if(ENABLE_MPI)
 endif()
 
 find_package(OpenMP)
+find_package(Boost REQUIRED COMPONENTS RANDOM)
 
 file(GLOB_RECURSE SRC_ALG "source/algorithm/*")
 file(GLOB_RECURSE SRC_ALG_NAIVE "source/algorithm/NaiveInternal/*")
@@ -80,6 +81,7 @@ target_link_libraries (project_options INTERFACE ${MPI_CXX_LIBRARIES} ${MPI_CXX_
 if (UNIX)
 	target_link_libraries (project_options INTERFACE stdc++fs)
 endif ()
+target_link_libraries(project_options INTERFACE Boost::random)
 
 FetchContent_Declare(
   spdlog

@@ -13,9 +13,13 @@
 #include "Config.h"
 #include "RelearnException.h"
 
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+#include <boost/random/uniform_real_distribution.hpp>
+#include <boost/random/normal_distribution.hpp>
+
 #include <algorithm>
 #include <array>
-#include <random>
 #include <thread>
 
 #ifdef _OPENMP
@@ -48,7 +52,7 @@ class RandomHolder {
     RandomHolder() = default;
 
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
-    thread_local static inline std::array<std::mt19937, 9> random_number_generators{};
+    thread_local static inline std::array<boost::mt19937, 9> random_number_generators{};
 
 public:
     /**
@@ -63,11 +67,11 @@ public:
     static double get_random_uniform_double(const RandomHolderKey key, const double lower_inclusive, const double upper_exclusive) {
         RelearnException::check(lower_inclusive < upper_exclusive,
             "RandomHolder::get_random_uniform_double: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
-        std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
+        boost::random::uniform_real_distribution<double> dist(lower_inclusive, upper_exclusive);
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         auto& generator = random_number_generators[static_cast<int>(key)];
-        return urd(generator);
+        return dist(generator);
     }
 
     /**
@@ -83,7 +87,7 @@ public:
     static integer_type get_random_uniform_integer(const RandomHolderKey key, const integer_type lower_inclusive, const integer_type upper_inclusive) {
         RelearnException::check(lower_inclusive <= upper_inclusive,
             "RandomHolder::get_random_uniform_integer: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_inclusive, static_cast<int>(key));
-        std::uniform_int_distribution<integer_type> uid(lower_inclusive, upper_inclusive);
+        boost::random::uniform_int_distribution<integer_type> uid(lower_inclusive, upper_inclusive);
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         auto& generator = random_number_generators[static_cast<int>(key)];
@@ -101,7 +105,7 @@ public:
      */
     static double get_random_normal_double(const RandomHolderKey key, const double mean, const double stddev) {
         RelearnException::check(0.0 < stddev, "RandomHolder::get_random_normal_double: Random number with invalid standard deviation {} for key {}", stddev, static_cast<int>(key));
-        std::normal_distribution<double> nd(mean, stddev);
+        boost::random::normal_distribution<double> nd(mean, stddev);
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         auto& generator = random_number_generators[static_cast<int>(key)];
@@ -137,7 +141,7 @@ public:
     template <typename IteratorType>
     static void fill(const RandomHolderKey key, const IteratorType begin, const IteratorType end, const double lower_inclusive, const double upper_exclusive) {
         RelearnException::check(lower_inclusive < upper_exclusive, "RandomHolder::fill: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
-        std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
+        boost::random::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         auto& generator = random_number_generators[static_cast<int>(key)];
 
