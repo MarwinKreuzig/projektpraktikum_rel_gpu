@@ -42,7 +42,6 @@ TEST_F(ConnectorTest, testForwardConnectorExceptions) {
 TEST_F(ConnectorTest, testForwardConnectorEmptyMap) {
     const auto number_neurons = get_random_number_neurons();
     const auto number_ranks = get_random_number_ranks() + 1;
-    const auto current_rank = get_random_rank(number_ranks);
 
     const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
     const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);
@@ -96,7 +95,6 @@ TEST_F(ConnectorTest, testForwardConnectorEmptyMap) {
 TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
     const auto number_neurons = get_random_number_neurons();
     const auto number_ranks = get_random_number_ranks() + 1;
-    const auto current_rank = get_random_rank(number_ranks);
 
     const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
     const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);

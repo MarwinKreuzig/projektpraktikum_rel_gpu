@@ -243,8 +243,6 @@ void Neurons::create_neurons(const size_t creation_count, const std::vector<doub
         }
     }
 
-    const auto my_rank = MPIWrapper::get_my_rank();
-
     for (size_t i = current_size; i < new_size; i++) {
         auto id = NeuronID{ i };
         const auto& pos = extra_info->get_position(id);

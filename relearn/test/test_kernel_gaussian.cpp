@@ -37,7 +37,6 @@ TEST_F(ProbabilityKernelTest, testGaussianGetterSetterExceptions) {
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
 
     const auto sigma = -get_random_gaussian_sigma();
-    const auto mu = get_random_gaussian_mu();
 
     ASSERT_THROW(GaussianDistributionKernel::set_sigma(0.0), RelearnException);
 
@@ -106,7 +105,6 @@ TEST_F(ProbabilityKernelTest, testGaussianVariableSigma) {
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
 
     const auto number_elements = get_random_integer<unsigned int>(0, 10000);
-    const auto converted_double = static_cast<double>(number_elements);
 
     const auto& source_position = get_random_position();
     const auto& target_position = get_random_position();
@@ -142,7 +140,6 @@ TEST_F(ProbabilityKernelTest, testGaussianVariablePosition) {
     const auto& source_position = get_random_position();
 
     const auto number_elements = get_random_integer<unsigned int>(0, 10000);
-    const auto converted_double = static_cast<double>(number_elements);
 
     std::vector<Vec3d> positions{};
     for (auto i = 0; i < 100; i++) {

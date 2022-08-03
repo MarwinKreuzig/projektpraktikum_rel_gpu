@@ -405,10 +405,6 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesSplit) {
     }
 
     for (auto neuron_id : NeuronID::range(number_neurons)) {
-        const auto exc_in_edges_count_ng = ng.get_number_excitatory_in_edges(neuron_id);
-        const auto inh_in_edges_count_ng = ng.get_number_inhibitory_in_edges(neuron_id);
-        const auto out_edges_count_ng = ng.get_number_out_edges(neuron_id);
-
         const auto& in_edges_ng = ng.get_all_in_edges(neuron_id);
         const auto& out_edges_ng = ng.get_all_out_edges(neuron_id);
 

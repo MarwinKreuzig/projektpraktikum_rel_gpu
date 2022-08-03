@@ -67,8 +67,6 @@ TEST_F(KernelTest, testKernelEmptyVector) {
     const auto element_type = get_random_element_type();
     const auto signal_type = get_random_signal_type();
 
-    const auto number_nodes = get_random_number_neurons();
-
     const auto& debug_kernel_string = set_random_kernel<FastMultipoleMethodsCell>();
 
     const auto& [sum, attrs] = Kernel<FastMultipoleMethodsCell>::create_probability_interval(
