@@ -59,8 +59,8 @@ void SubdomainFromNeuronPerRank::fill_all_subdomains() {
     const auto number_local_subdomains = partition->get_number_local_subdomains();
     const auto preliminary_number_neurons_per_subdomain = number_neurons_per_rank / number_local_subdomains;
 
-    auto currently_placed_neurons = 0;
-    auto currently_placed_excitatory_neurons = 0;
+    size_t currently_placed_neurons = 0;
+    size_t currently_placed_excitatory_neurons = 0;
 
     std::vector<LoadedNeuron> loaded_neurons{};
     loaded_neurons.reserve(number_neurons_per_rank);
