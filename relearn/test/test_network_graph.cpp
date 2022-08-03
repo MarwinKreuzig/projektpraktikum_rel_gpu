@@ -222,7 +222,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
         const auto out_edges_count = ng.get_number_out_edges(neuron_id);
 
         const auto golden_excitatory_in_edges_count = std::accumulate(golden_in_edges.cbegin(), golden_in_edges.cend(),
-            size_t(0), [](const std::size_t previous, const std::pair<size_t, int>& p) {
+            size_t{ 0 }, [](const std::size_t previous, const std::pair<size_t, int>& p) {
                 if (p.second < 0) {
                     return previous;
                 }
@@ -230,7 +230,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
             });
 
         const auto golden_inhibitory_in_edges_count = std::accumulate(golden_in_edges.cbegin(), golden_in_edges.cend(),
-            size_t(0), [](const std::size_t previous, const std::pair<size_t, int>& p) {
+            size_t{ 0 }, [](const std::size_t previous, const std::pair<size_t, int>& p) {
                 if (p.second > 0) {
                     return previous;
                 }
@@ -238,7 +238,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
             });
 
         const auto golden_out_edges_count = std::accumulate(golden_out_edges.cbegin(), golden_out_edges.cend(),
-            size_t(0), [](const std::size_t previous, const std::pair<size_t, int>& p) {
+            size_t{ 0 }, [](const std::size_t previous, const std::pair<size_t, int>& p) {
                 return previous + std::abs(p.second);
             });
 

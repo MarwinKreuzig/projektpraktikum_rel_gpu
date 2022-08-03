@@ -182,7 +182,7 @@ TEST_F(NeuronAssignmentTest, testDensityNeuronAttributesSemantic) {
 
     for (const auto& position : positions) {
         ASSERT_TRUE(position.check_in_box(sim_box_min, sim_box_max));
-        Vec3s cast_position = (Vec3s)(position / golden_um_per_neuron);
+        auto cast_position = Vec3s{ position / golden_um_per_neuron };
 
         const auto x = cast_position.get_x();
         const auto y = cast_position.get_y();
@@ -485,7 +485,7 @@ TEST_F(NeuronAssignmentTest, testPerRankNeuronAttributesSemanticSingleSubdomain)
 
     for (const auto& position : positions) {
         ASSERT_TRUE(position.check_in_box(sim_box_min, sim_box_max));
-        Vec3s cast_position = (Vec3s)(position / golden_um_per_neuron);
+        auto cast_position = Vec3s{ position / golden_um_per_neuron };
 
         const auto x = cast_position.get_x();
         const auto y = cast_position.get_y();

@@ -1,5 +1,6 @@
 #include "../googletest/include/gtest/gtest.h"
 
+#include <cstddef>
 #include <numeric>
 
 #include "RelearnTest.hpp"
@@ -111,7 +112,7 @@ TEST_F(PartitionTest, testPartitionNumberNeurons) {
         partition.set_total_number_neurons(number_total_neurons);
         ASSERT_EQ(partition.get_total_number_neurons(), number_total_neurons);
 
-        const auto num_local_neurons = std::reduce(local_neurons.begin(), local_neurons.end(), size_t(0));
+        const auto num_local_neurons = std::reduce(local_neurons.begin(), local_neurons.end(), size_t{ 0 });
         partition.set_number_local_neurons(num_local_neurons);
 
         ASSERT_EQ(partition.get_number_local_neurons(), num_local_neurons);
