@@ -23,8 +23,8 @@ using AdditionalCellAttributes = FastMultipoleMethodsCell;
 
 const static double sigma = 750;
 
-std::tuple<Vec3d, Vec3d> get_random_simulation_box_size_FMM(std::mt19937& mt) {
-    std::uniform_real_distribution<double> urd(-10000.0, +10000.0);
+std::tuple<Vec3d, Vec3d> get_random_simulation_box_size_FMM(mt19937& mt) {
+    uniform_real_distribution<double> urd(-10000.0, +10000.0);
 
     const auto rand_x_1 = urd(mt);
     const auto rand_x_2 = urd(mt);
@@ -41,10 +41,10 @@ std::tuple<Vec3d, Vec3d> get_random_simulation_box_size_FMM(std::mt19937& mt) {
     };
 }
 
-std::vector<std::tuple<Vec3d, size_t>> generate_random_neurons_FMM(const Vec3d& min, const Vec3d& max, size_t count, size_t max_id, std::mt19937& mt) {
-    std::uniform_real_distribution<double> urd_x(min.get_x(), max.get_x());
-    std::uniform_real_distribution<double> urd_y(min.get_y(), max.get_y());
-    std::uniform_real_distribution<double> urd_z(min.get_z(), max.get_z());
+std::vector<std::tuple<Vec3d, size_t>> generate_random_neurons_FMM(const Vec3d& min, const Vec3d& max, size_t count, size_t max_id, mt19937& mt) {
+    uniform_real_distribution<double> urd_x(min.get_x(), max.get_x());
+    uniform_real_distribution<double> urd_y(min.get_y(), max.get_y());
+    uniform_real_distribution<double> urd_z(min.get_z(), max.get_z());
 
     std::vector<size_t> ids(max_id);
     std::iota(ids.begin(), ids.end(), 0);
@@ -99,7 +99,7 @@ std::vector<std::tuple<Vec3d, size_t>> extract_neurons_FMM(OctreeNode<Additional
     return return_value;
 }
 
-std::vector<SynapticElements> create_synaptic_elements(size_t size, std::mt19937& mt, double max_free) {
+std::vector<SynapticElements> create_synaptic_elements(size_t size, mt19937& mt, double max_free) {
     SynapticElements ax(ElementType::Axon, 0.0);
     SynapticElements dend_ex(ElementType::Dendrite, 0.0);
     SynapticElements dend_in(ElementType::Dendrite, 0.0);
@@ -108,8 +108,8 @@ std::vector<SynapticElements> create_synaptic_elements(size_t size, std::mt19937
     dend_ex.init(size);
     dend_in.init(size);
 
-    std::uniform_real_distribution<double> urd(0, max_free);
-    std::uniform_int_distribution<unsigned int> st(0, 1);
+    uniform_real_distribution<double> urd(0, max_free);
+    uniform_int_distribution<unsigned int> st(0, 1);
 
     for (auto i : NeuronID::range(size)) {
         if (st(mt) == 0) {
@@ -136,12 +136,12 @@ std::vector<SynapticElements> create_synaptic_elements(size_t size, std::mt19937
     return result;
 }
 
-SynapticElements create_axons(size_t size, std::mt19937& mt, double max_free) {
+SynapticElements create_axons(size_t size, mt19937& mt, double max_free) {
     SynapticElements se(ElementType::Axon, 0.0);
 
     se.init(size);
 
-    std::uniform_real_distribution<double> urd(0, max_free);
+    uniform_real_distribution<double> urd(0, max_free);
 
     for (auto i = 0; i < size; i++) {
         if (i % 2 == 0) {
@@ -159,12 +159,12 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
-    std::uniform_int_distribution<size_t> uid(0, 10000);
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+    uniform_int_distribution<size_t> uid_lvl(0, 6);
+    uniform_int_distribution<size_t> uid(0, 10000);
+    uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
-    std::uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
+    uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
 
     for (auto i = 0; i < iterations; i++) {
         Vec3d min{};
@@ -240,10 +240,10 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
-    std::uniform_int_distribution<size_t> uid(0, 10000);
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+    uniform_int_distribution<size_t> uid_lvl(0, 6);
+    uniform_int_distribution<size_t> uid(0, 10000);
+    uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
     for (auto i = 0; i < iterations; i++) {
         Vec3d min{};
@@ -387,11 +387,11 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
-    std::uniform_int_distribution<size_t> uid(0, 10000);
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    uniform_int_distribution<size_t> uid_lvl(0, 6);
+    uniform_int_distribution<size_t> uid(0, 10000);
+    uniform_real_distribution<double> urd_sigma(1, 10000.0);
 
-    std::uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
+    uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
 
     for (auto i = 0; i < iterations; i++) {
         Vec3d min{};
@@ -470,10 +470,10 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
-    std::uniform_int_distribution<size_t> uid(0, 10000);
-    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+    uniform_int_distribution<size_t> uid_lvl(0, 6);
+    uniform_int_distribution<size_t> uid(0, 10000);
+    uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
     for (auto i = 0; i < iterations; i++) {
         Vec3d min{};
@@ -617,10 +617,10 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
 
 //     const auto my_rank = MPIWrapper::get_my_rank();
 
-//     std::uniform_int_distribution<size_t> uid_lvl(0, 6);
-//     std::uniform_int_distribution<size_t> uid(0, 10000);
-//     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
-//     std::uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
+//     uniform_int_distribution<size_t> uid_lvl(0, 6);
+//     uniform_int_distribution<size_t> uid(0, 10000);
+//     uniform_real_distribution<double> urd_sigma(1, 10000.0);
+//     uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
 
 //     for (auto i = 0; i < iterations; i++) {
 //         Vec3d min{};

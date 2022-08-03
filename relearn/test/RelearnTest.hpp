@@ -115,13 +115,13 @@ protected:
     }
 
     double get_random_double(double min, double max) {
-        std::uniform_real_distribution<double> urd(min, max);
+        uniform_real_distribution<double> urd(min, max);
         return urd(mt);
     }
 
     template <typename T>
     T get_random_integer(T min, T max) {
-        std::uniform_int_distribution<T> uid(min, max);
+        uniform_int_distribution<T> uid(min, max);
         return uid(mt);
     }
 
@@ -175,12 +175,12 @@ protected:
     }
 
     int get_random_rank(size_t number_ranks) {
-        std::uniform_int_distribution<int> uid(0, static_cast<int>(number_ranks) - 1);
+        uniform_int_distribution<int> uid(0, static_cast<int>(number_ranks) - 1);
         return uid(mt);
     }
 
     int get_random_rank(size_t number_ranks, int exclude_rank) {
-        std::uniform_int_distribution<int> uid(0, static_cast<int>(number_ranks) - 1);
+        uniform_int_distribution<int> uid(0, static_cast<int>(number_ranks) - 1);
 
         auto rank = uid(mt);
         while (rank == exclude_rank) {
@@ -204,7 +204,7 @@ protected:
     }
 
     NeuronID get_random_neuron_id(size_t number_neurons, size_t offset = 0) {
-        std::uniform_int_distribution<size_t> uid(offset, offset + number_neurons - 1);
+        uniform_int_distribution<size_t> uid(offset, offset + number_neurons - 1);
         return NeuronID{ uid(mt) };
     }
 
@@ -257,7 +257,7 @@ protected:
     }
 
     bool get_random_bool() noexcept {
-        std::uniform_int_distribution<unsigned short> uid_bool(0, 1);
+        uniform_int_distribution<unsigned short> uid_bool(0, 1);
         return uid_bool(mt) == 0;
     }
 
@@ -726,21 +726,21 @@ protected:
 
     constexpr static int bound_synapse_weight = 10;
 
-    std::mt19937 mt;
+    mt19937 mt;
 
     static int iterations;
     static double eps;
 
 private:
-    static std::uniform_int_distribution<unsigned short> uid_refinement;
-    static std::uniform_int_distribution<unsigned short> uid_small_refinement;
-    static std::uniform_int_distribution<unsigned short> uid_large_refinement;
+    static uniform_int_distribution<unsigned short> uid_refinement;
+    static uniform_int_distribution<unsigned short> uid_small_refinement;
+    static uniform_int_distribution<unsigned short> uid_large_refinement;
 
-    static std::uniform_int_distribution<size_t> uid_num_ranks;
-    static std::uniform_int_distribution<size_t> uid_num_neurons;
-    static std::uniform_int_distribution<size_t> uid_num_synapses;
+    static uniform_int_distribution<size_t> uid_num_ranks;
+    static uniform_int_distribution<size_t> uid_num_neurons;
+    static uniform_int_distribution<size_t> uid_num_synapses;
 
-    static std::uniform_int_distribution<int> uid_synapse_weight;
+    static uniform_int_distribution<int> uid_synapse_weight;
 
     static double position_bounary;
 

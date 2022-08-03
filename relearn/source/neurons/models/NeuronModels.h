@@ -862,13 +862,13 @@ public:
     static constexpr double default_b{ 0.8 };
     static constexpr double default_phi{ 0.08 };
 
-    static constexpr double min_a{ 0.7 };
-    static constexpr double min_b{ 0.8 };
-    static constexpr double min_phi{ 0.08 };
+    static constexpr double min_a{ 0.6 };
+    static constexpr double min_b{ 0.7 };
+    static constexpr double min_phi{ 0.07 };
 
-    static constexpr double max_a{ 0.7 };
-    static constexpr double max_b{ 0.8 };
-    static constexpr double max_phi{ 0.08 };
+    static constexpr double max_a{ 0.8 };
+    static constexpr double max_b{ 0.9 };
+    static constexpr double max_phi{ 0.09 };
 
     static constexpr double init_x{ -1.2 };
     static constexpr double init_w{ -0.6 };
