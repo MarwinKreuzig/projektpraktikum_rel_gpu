@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <array>
+#include <random>
 #include <thread>
 
 #ifdef _OPENMP
@@ -36,7 +37,7 @@ using uniform_real_distribution = boost::random::uniform_real_distribution<T>;
 template <typename T>
 using normal_distribution = boost::random::normal_distribution<T>;
 
-using mt19937 = boost::random::mt19937;
+using mt19937 = std::mt19937;
 
 /**
  * This enum allows a type safe differentiation between the types that require access to random numbers.
