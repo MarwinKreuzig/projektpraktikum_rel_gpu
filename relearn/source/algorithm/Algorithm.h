@@ -38,8 +38,8 @@ public:
      */
     void set_synaptic_elements(std::shared_ptr<SynapticElements> axons, std::shared_ptr<SynapticElements> excitatory_dendrites, std::shared_ptr<SynapticElements> inhibitory_dendrites) {
         const bool axons_full = axons.operator bool();
-        const bool excitatory_dendrites_full = axons.operator bool();
-        const bool inhibitory_dendrites_full = axons.operator bool();
+        const bool excitatory_dendrites_full = excitatory_dendrites.operator bool();
+        const bool inhibitory_dendrites_full = inhibitory_dendrites.operator bool();
 
         RelearnException::check(axons_full, "Algorithm::set_synaptic_elements: axons was empty");
         RelearnException::check(excitatory_dendrites_full, "Algorithm::set_synaptic_elements: excitatory_dendrites was empty");
