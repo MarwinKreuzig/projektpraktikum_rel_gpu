@@ -70,7 +70,7 @@ public:
     virtual void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) = 0;
 
 protected:
-    std::shared_ptr<SynapticElements> axons{}; //NOLINTLINE
-    std::shared_ptr<SynapticElements> excitatory_dendrites{}; //NOLINTLINE
-    std::shared_ptr<SynapticElements> inhibitory_dendrites{}; //NOLINTLINE
+    std::shared_ptr<SynapticElements> axons{}; // NOLINT
+    std::shared_ptr<SynapticElements> excitatory_dendrites{}; // NOLINT
+    std::shared_ptr<SynapticElements> inhibitory_dendrites{}; // NOLINT
 };

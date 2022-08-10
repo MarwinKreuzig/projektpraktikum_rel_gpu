@@ -35,15 +35,15 @@ public:
 
     constexpr static size_t print_width = 22;
     constexpr static size_t print_precision = 8;
-        
+
     constexpr static size_t number_cache_slots = 1024 * 1024;
     constexpr static size_t mpi_alloc_mem = 1024 * 1024 * 300;
 
     // Constants for Fast Gauss
     constexpr static unsigned int p = 4;
     constexpr static unsigned int p3 = p * p * p;
-    constexpr static unsigned int max_neurons_in_target = 70; //cutoff for target box
-    constexpr static unsigned int max_neurons_in_source = 70; //cutoff for source box
+    constexpr static unsigned int max_neurons_in_target = 70; // cutoff for target box
+    constexpr static unsigned int max_neurons_in_source = 70; // cutoff for source box
 };
 
 class Config {
@@ -51,26 +51,26 @@ public:
     constexpr static bool do_debug_checks = false;
 
     // Update connectivity every <plasticity_update_step> ms
-    inline static size_t plasticity_update_step = 100; // NOLINTLINE
+    inline static size_t plasticity_update_step = 100; // NOLINT
 
     // Update connectivity starting at <first_plasticity_update> ms
-    inline static size_t first_plasticity_update = 0; // NOLINTLINE
+    inline static size_t first_plasticity_update = 0; // NOLINT
 
     // Print details every <logfile_update_step> ms
-    inline static size_t logfile_update_step = 100; // NOLINTLINE
+    inline static size_t logfile_update_step = 100; // NOLINT
 
     // Print to cout every <console_update_step> ms
-    inline static size_t console_update_step = 100; // NOLINTLINE
+    inline static size_t console_update_step = 100; // NOLINT
 
     // Capture individual neuron informations ever <monitor_step> ms
-    inline static size_t monitor_step = 100; // NOLINTLINE
+    inline static size_t monitor_step = 100; // NOLINT
 
     // Capture the global statistics every <statistics_step> ms
-    inline static size_t statistics_step = 100; // NOLINTLINE
+    inline static size_t statistics_step = 100; // NOLINT
 
     // Capture the calcium values every <calcium_log_step> ms
-    inline static size_t calcium_log_step = 1000000; // NOLINTLINE
+    inline static size_t calcium_log_step = 1000000; // NOLINT
 
     // Capture the average local euclidean distance every <distance_step> ms
-    inline static size_t distance_step = 10000; // NOLINTLINE
+    inline static size_t distance_step = 10000; // NOLINT
 };
