@@ -6,9 +6,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-set(BOOST_ENABLE_CMAKE ON) 
+set(BOOST_ENABLE_CMAKE ON)
 
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -27,12 +25,16 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
              "RelWithDebInfo")
 endif()
 
+# project options
+add_library(project_options INTERFACE)
+
 option(ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
 if(ENABLE_CLANG_TIDY)
   set(CMAKE_CXX_CLANG_TIDY clang-tidy)
 endif()
 
 include(FetchContent)
+find_package(OpenMP)
 
 option(ENABLE_MPI "Enable mpi" ON)
 if(ENABLE_MPI)
@@ -40,24 +42,62 @@ if(ENABLE_MPI)
 endif()
 
 if(WIN32)
-    FetchContent_Declare(
-        boostorg
-        GIT_REPOSITORY https://github.com/boostorg/boost.git
-        GIT_TAG        master
-    )
+  FetchContent_Declare(
+    boostorg
+    GIT_REPOSITORY https://github.com/boostorg/boost.git
+    GIT_TAG master)
 
-    FetchContent_GetProperties(boostorg)
-    if (NOT boostorg_POPULATED)
-        FetchContent_Populate(boostorg)
-        add_subdirectory(${boostorg_SOURCE_DIR} ${boostorg_BINARY_DIR})
-    endif ()
+  FetchContent_GetProperties(boostorg)
+  if(NOT boostorg_POPULATED)
+    FetchContent_Populate(boostorg)
+    add_subdirectory(${boostorg_SOURCE_DIR} ${boostorg_BINARY_DIR})
+  endif()
 
-    include_directories(${boostorg_SOURCE_DIR})
+  include_directories(${boostorg_SOURCE_DIR})
 else()
   find_package(Boost REQUIRED COMPONENTS RANDOM)
 endif()
 
-find_package(OpenMP)
+option(ENABLE_SCOREP "Enable scorep" OFF)
+if(ENABLE_SCOREP)
+  set(SCOREP_ARGS
+      ""
+      CACHE STRING "Arguments for scorep")
+  string(
+    REPLACE ";"
+            " "
+            SCOREP_ARGS
+            "${SCOREP_ARGS}")
+  message(STATUS "scorep command: scorep ${SCOREP_ARGS}")
+  message(
+    NOTICE
+    "scorep instrumentation enabled; targets test and benchmarks are disabled")
+  message(
+    NOTICE
+    "Using compiler/linker launcher to run scorep triggers rebuilds, to avoid rebuilds reconfigure with:\n\tSCOREP_WRAPPER=off CC=scorep-gcc CXX=scorep-g++ cmake .. -DENABLE_SCOREP=OFF \n\tSCOREP_WRAPPER_INSTRUMENTER_FLAGS=\"--thread=omp...\" make"
+  )
+  file(WRITE ${CMAKE_BINARY_DIR}/scorep_launcher.sh
+       "#!/bin/sh\nscorep ${SCOREP_ARGS} $@\n")
+  file(
+    CHMOD
+    ${CMAKE_BINARY_DIR}/scorep_launcher.sh
+    FILE_PERMISSIONS
+    OWNER_EXECUTE
+    OWNER_READ
+    OWNER_WRITE)
+  set(SCOREP_CMD ${CMAKE_BINARY_DIR}/scorep_launcher.sh)
+  add_custom_target(scorep_launcher
+                    DEPENDS ${CMAKE_BINARY_DIR}/scorep_launcher.sh)
+  add_dependencies(project_options scorep_launcher)
+  set(CMAKE_C_COMPILER_LAUNCHER ${SCOREP_CMD})
+  set(CMAKE_CXX_COMPILER_LAUNCHER ${SCOREP_CMD})
+  set(CMAKE_C_LINKER_LAUNCHER ${SCOREP_CMD})
+  set(CMAKE_CXX_LINKER_LAUNCHER ${SCOREP_CMD})
+endif()
+
+include(FetchContent)
+
+find_package(Threads REQUIRED)
 
 file(GLOB_RECURSE SRC_ALG "source/algorithm/*")
 file(GLOB_RECURSE SRC_ALG_NAIVE "source/algorithm/NaiveInternal/*")
@@ -80,7 +120,8 @@ file(GLOB_RECURSE SRC_NEU_MOD "source/neurons/models/*")
 file(GLOB_RECURSE SRC_NEU_HEL "source/neurons/helper/*")
 
 file(GLOB_RECURSE SRC_MAIN "source/main.cpp")
-file(GLOB_RECURSE SRC_ANALYSIS "source/analysis.cpp")
+file(GLOB_RECURSE SRC_RELEARN "source/main_relearn.cpp")
+file(GLOB_RECURSE SRC_ANALYSIS "source/main_analysis.cpp")
 file(GLOB_RECURSE SRC_CONF "source/Config.h")
 file(GLOB_RECURSE SRC_TYPES "source/Types.h")
 
@@ -111,11 +152,10 @@ source_group(
 source_group("tests\\" FILES ${SRC_TST})
 source_group("benchmark\\" FILES ${SRC_BENCH})
 
-# project options
-add_library(project_options INTERFACE)
-
 target_include_directories(project_options SYSTEM
                            INTERFACE ${MPI_CXX_INCLUDE_PATH})
+target_link_libraries(project_options INTERFACE Threads::Threads)
+
 target_include_directories(
   project_options
   PUBLIC
@@ -126,10 +166,11 @@ target_compile_options(project_options INTERFACE ${MPI_CXX_COMPILE_FLAGS})
 target_compile_definitions(project_options
                            INTERFACE -DMPI_FOUND=$<BOOL:${MPI_FOUND}>)
 
-target_link_libraries (project_options INTERFACE ${MPI_CXX_LIBRARIES} ${MPI_CXX_LINK_FLAGS})
-if (UNIX)
-	target_link_libraries (project_options INTERFACE stdc++fs)
-endif ()
+target_link_libraries(project_options INTERFACE ${MPI_CXX_LIBRARIES}
+                                                ${MPI_CXX_LINK_FLAGS})
+if(UNIX)
+  target_link_libraries(project_options INTERFACE stdc++fs)
+endif()
 target_link_libraries(project_options INTERFACE Boost::random)
 
 FetchContent_Declare(
@@ -167,22 +208,17 @@ add_library(
   ${SRC_SIM_FILE}
   ${SRC_SIM_RANDOM})
 
-target_include_directories(relearn_lib PUBLIC "source/")
+target_include_directories(relearn_lib PUBLIC ${CMAKE_SOURCE_DIR}/source)
 
 set_target_properties(relearn_lib PROPERTIES ENABLE_EXPORTS 1)
 
 target_link_libraries(relearn_lib PUBLIC project_options)
 
 # relearn executable
-add_executable(relearn ${SRC_MAIN})
-
-add_executable(relearn_analysis ${SRC_ANALYSIS})
-
-target_link_libraries(relearn PRIVATE relearn_lib)
-target_link_libraries(relearn_analysis PRIVATE relearn_lib)
-
+add_executable(relearn)
+target_sources(relearn PRIVATE source/relearn.cpp)
+target_link_libraries(relearn PUBLIC relearn_lib)
 set_target_properties(relearn PROPERTIES ENABLE_EXPORTS 1)
-set_target_properties(relearn_analysis PROPERTIES ENABLE_EXPORTS 1)
 
 FetchContent_Declare(
   CLI11
@@ -190,26 +226,25 @@ FetchContent_Declare(
   GIT_TAG 815553211b644b2a64b5dc671c602233c49c065f)
 FetchContent_MakeAvailable(CLI11)
 target_include_directories(relearn SYSTEM PRIVATE ${CLI11_SOURCE_DIR}/include)
-target_include_directories(relearn_analysis SYSTEM
-                           PRIVATE ${CLI11_SOURCE_DIR}/include)
 
-# Download and unpack googletest at configure time
-FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG release-1.11.0)
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt
-    ON
-    CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
+if(NOT ENABLE_SCOREP)
+  # # Download and unpack googletest at configure time
+  FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG release-1.11.0) # For Windows: Prevent overriding the parent
+                            # project's compiler/linker settings
+  set(gtest_force_shared_crt
+      ON
+      CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
 
-FetchContent_Declare(
-  googlebenchmark
-  GIT_REPOSITORY https://github.com/google/benchmark.git
-  GIT_TAG v1.6.1)
+  FetchContent_Declare(
+    googlebenchmark
+    GIT_REPOSITORY https://github.com/google/benchmark.git
+    GIT_TAG v1.6.1)
 
-FetchContent_MakeAvailable(googlebenchmark)
+  FetchContent_MakeAvailable(googlebenchmark)
 
 add_executable(relearn_tests ${SRC_TST})
 
