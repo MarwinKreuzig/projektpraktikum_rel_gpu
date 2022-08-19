@@ -12,6 +12,12 @@
 
 #include "Config.h"
 #include "RelearnException.h"
+#include "util/shuffle/shuffle.h"
+
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+#include <boost/random/uniform_real_distribution.hpp>
+#include <boost/random/normal_distribution.hpp>
 
 #include <algorithm>
 #include <array>
@@ -23,6 +29,15 @@
 #else
 inline int omp_get_thread_num() { return 0; }
 #endif
+
+template <typename T>
+using uniform_int_distribution = boost::random::uniform_int_distribution<T>;
+template <typename T>
+using uniform_real_distribution = boost::random::uniform_real_distribution<T>;
+template <typename T>
+using normal_distribution = boost::random::normal_distribution<T>;
+
+using mt19937 = std::mt19937;
 
 /**
  * This enum allows a type safe differentiation between the types that require access to random numbers.
@@ -48,7 +63,7 @@ class RandomHolder {
     RandomHolder() = default;
 
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
-    thread_local static inline std::array<std::mt19937, 9> random_number_generators{};
+    thread_local static inline std::array<mt19937, 9> random_number_generators{};
 
 public:
     /**
@@ -63,11 +78,11 @@ public:
     static double get_random_uniform_double(const RandomHolderKey key, const double lower_inclusive, const double upper_exclusive) {
         RelearnException::check(lower_inclusive < upper_exclusive,
             "RandomHolder::get_random_uniform_double: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
-        std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
+        uniform_real_distribution<double> dist(lower_inclusive, upper_exclusive);
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         auto& generator = random_number_generators[static_cast<int>(key)];
-        return urd(generator);
+        return dist(generator);
     }
 
     /**
@@ -79,11 +94,11 @@ public:
      * @exception Throws a RelearnException if lower_inclusive > upper_inclusive
      * @return A uniformly integer double in [lower_inclusive, upper_inclusive)
      */
-    template<typename integer_type>
+    template <typename integer_type>
     static integer_type get_random_uniform_integer(const RandomHolderKey key, const integer_type lower_inclusive, const integer_type upper_inclusive) {
         RelearnException::check(lower_inclusive <= upper_inclusive,
             "RandomHolder::get_random_uniform_integer: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_inclusive, static_cast<int>(key));
-        std::uniform_int_distribution<integer_type> uid(lower_inclusive, upper_inclusive);
+        uniform_int_distribution<integer_type> uid(lower_inclusive, upper_inclusive);
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         auto& generator = random_number_generators[static_cast<int>(key)];
@@ -101,7 +116,7 @@ public:
      */
     static double get_random_normal_double(const RandomHolderKey key, const double mean, const double stddev) {
         RelearnException::check(0.0 < stddev, "RandomHolder::get_random_normal_double: Random number with invalid standard deviation {} for key {}", stddev, static_cast<int>(key));
-        std::normal_distribution<double> nd(mean, stddev);
+        normal_distribution<double> nd(mean, stddev);
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         auto& generator = random_number_generators[static_cast<int>(key)];
@@ -120,7 +135,7 @@ public:
     static void shuffle(const RandomHolderKey key, const IteratorType begin, const IteratorType end) {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         auto& generator = random_number_generators[static_cast<int>(key)];
-        std::shuffle(begin, end, generator);
+        detail::shuffle(begin, end, generator);
     }
 
     /**
@@ -137,7 +152,7 @@ public:
     template <typename IteratorType>
     static void fill(const RandomHolderKey key, const IteratorType begin, const IteratorType end, const double lower_inclusive, const double upper_exclusive) {
         RelearnException::check(lower_inclusive < upper_exclusive, "RandomHolder::fill: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
-        std::uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
+        uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         auto& generator = random_number_generators[static_cast<int>(key)];
 

@@ -695,7 +695,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateException) {
 }
 
 TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
-    std::uniform_int_distribution<unsigned int> uid_connected(0, 10);
+    uniform_int_distribution<unsigned int> uid_connected(0, 10);
 
     const auto& number_neurons = get_random_number_neurons();
     const auto& element_type = get_random_element_type();

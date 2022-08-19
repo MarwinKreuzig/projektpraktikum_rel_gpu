@@ -616,7 +616,7 @@ TEST_F(VectorTest, testVectorComponentwiseFloorExceptionZ) {
 }
 
 TEST_F(VectorTest, testVectorNorm) {
-    std::uniform_real_distribution<double> urd_p(1.0, 10.1);
+    uniform_real_distribution<double> urd_p(1.0, 10.1);
 
     const auto x = get_random_position_element();
     const auto y = get_random_position_element();
@@ -667,7 +667,7 @@ TEST_F(VectorTest, testVectorNorm2) {
 }
 
 TEST_F(VectorTest, testVectorNormException) {
-    std::uniform_real_distribution<double> urd_bad_p(-10.0, 1.0);
+    uniform_real_distribution<double> urd_bad_p(-10.0, 1.0);
 
     const auto x = get_random_position_element();
     const auto y = get_random_position_element();
@@ -685,7 +685,7 @@ TEST_F(VectorTest, testVectorNormException) {
 }
 
 TEST_F(VectorTest, testVectorRound) {
-    std::uniform_real_distribution<double> urd_multiple(1.0, 10.1);
+    uniform_real_distribution<double> urd_multiple(1.0, 10.1);
 
     const auto x = get_random_position_element();
     const auto y = get_random_position_element();
@@ -731,7 +731,7 @@ TEST_F(VectorTest, testVectorRound) {
 }
 
 TEST_F(VectorTest, testVectorOrderEqual) {
-    std::uniform_real_distribution<double> urd_offset(1.0, 10.1);
+    uniform_real_distribution<double> urd_offset(1.0, 10.1);
 
     const auto x = get_random_position_element();
     const auto y = get_random_position_element();
@@ -748,7 +748,7 @@ TEST_F(VectorTest, testVectorOrderEqual) {
 }
 
 TEST_F(VectorTest, testVectorOrderSmallerX) {
-    std::uniform_real_distribution<double> urd_offset(1.0, 10.1);
+    uniform_real_distribution<double> urd_offset(1.0, 10.1);
 
     const auto x = get_random_position_element();
     const auto y = get_random_position_element();
@@ -771,7 +771,7 @@ TEST_F(VectorTest, testVectorOrderSmallerX) {
 }
 
 TEST_F(VectorTest, testVectorOrderSmallerY) {
-    std::uniform_real_distribution<double> urd_offset(1.0, 10.1);
+    uniform_real_distribution<double> urd_offset(1.0, 10.1);
 
     const auto x = get_random_position_element();
     const auto y = get_random_position_element();
@@ -794,7 +794,7 @@ TEST_F(VectorTest, testVectorOrderSmallerY) {
 }
 
 TEST_F(VectorTest, testVectorOrderSmallerZ) {
-    std::uniform_real_distribution<double> urd_offset(1.0, 10.1);
+    uniform_real_distribution<double> urd_offset(1.0, 10.1);
 
     const auto x = get_random_position_element();
     const auto y = get_random_position_element();
@@ -903,9 +903,9 @@ TEST_F(VectorTest, testVectorInBoxTrue) {
     const Vec3<double> v_min{ x_min, y_min, z_min };
     const Vec3<double> v_max{ x_max, y_max, z_max };
 
-    std::uniform_real_distribution<double> urd_x(x_min, x_max);
-    std::uniform_real_distribution<double> urd_y(y_min, y_max);
-    std::uniform_real_distribution<double> urd_z(z_min, z_max);
+    uniform_real_distribution<double> urd_x(x_min, x_max);
+    uniform_real_distribution<double> urd_y(y_min, y_max);
+    uniform_real_distribution<double> urd_z(z_min, z_max);
 
     const auto x3 = urd_x(mt);
     const auto y3 = urd_y(mt);
@@ -941,9 +941,9 @@ TEST_F(VectorTest, testVectorInBoxFalseXlarge) {
     const Vec3<double> v_min{ x_min, y_min, z_min };
     const Vec3<double> v_max{ x_max, y_max, z_max };
 
-    std::uniform_real_distribution<double> urd_x(x_min, x_max);
-    std::uniform_real_distribution<double> urd_y(y_min, y_max);
-    std::uniform_real_distribution<double> urd_z(z_min, z_max);
+    uniform_real_distribution<double> urd_x(x_min, x_max);
+    uniform_real_distribution<double> urd_y(y_min, y_max);
+    uniform_real_distribution<double> urd_z(z_min, z_max);
 
     const auto x3 = urd_x(mt) + x_max - x_min;
     const auto y3 = urd_y(mt);
@@ -979,9 +979,9 @@ TEST_F(VectorTest, testVectorInBoxFalseYlarge) {
     const Vec3<double> v_min{ x_min, y_min, z_min };
     const Vec3<double> v_max{ x_max, y_max, z_max };
 
-    std::uniform_real_distribution<double> urd_x(x_min, x_max);
-    std::uniform_real_distribution<double> urd_y(y_min, y_max);
-    std::uniform_real_distribution<double> urd_z(z_min, z_max);
+    uniform_real_distribution<double> urd_x(x_min, x_max);
+    uniform_real_distribution<double> urd_y(y_min, y_max);
+    uniform_real_distribution<double> urd_z(z_min, z_max);
 
     const auto x3 = urd_x(mt);
     const auto y3 = urd_y(mt) + y_max - y_min;
@@ -1017,9 +1017,9 @@ TEST_F(VectorTest, testVectorInBoxFalseZlarge) {
     const Vec3<double> v_min{ x_min, y_min, z_min };
     const Vec3<double> v_max{ x_max, y_max, z_max };
 
-    std::uniform_real_distribution<double> urd_x(x_min, x_max);
-    std::uniform_real_distribution<double> urd_y(y_min, y_max);
-    std::uniform_real_distribution<double> urd_z(z_min, z_max);
+    uniform_real_distribution<double> urd_x(x_min, x_max);
+    uniform_real_distribution<double> urd_y(y_min, y_max);
+    uniform_real_distribution<double> urd_z(z_min, z_max);
 
     const auto x3 = urd_x(mt);
     const auto y3 = urd_y(mt);
@@ -1055,9 +1055,9 @@ TEST_F(VectorTest, testVectorInBoxFalseXsmall) {
     const Vec3<double> v_min{ x_min, y_min, z_min };
     const Vec3<double> v_max{ x_max, y_max, z_max };
 
-    std::uniform_real_distribution<double> urd_x(x_min, x_max);
-    std::uniform_real_distribution<double> urd_y(y_min, y_max);
-    std::uniform_real_distribution<double> urd_z(z_min, z_max);
+    uniform_real_distribution<double> urd_x(x_min, x_max);
+    uniform_real_distribution<double> urd_y(y_min, y_max);
+    uniform_real_distribution<double> urd_z(z_min, z_max);
 
     const auto x3 = urd_x(mt) - x_max + x_min;
     const auto y3 = urd_y(mt);
@@ -1093,9 +1093,9 @@ TEST_F(VectorTest, testVectorInBoxFalseYsmall) {
     const Vec3<double> v_min{ x_min, y_min, z_min };
     const Vec3<double> v_max{ x_max, y_max, z_max };
 
-    std::uniform_real_distribution<double> urd_x(x_min, x_max);
-    std::uniform_real_distribution<double> urd_y(y_min, y_max);
-    std::uniform_real_distribution<double> urd_z(z_min, z_max);
+    uniform_real_distribution<double> urd_x(x_min, x_max);
+    uniform_real_distribution<double> urd_y(y_min, y_max);
+    uniform_real_distribution<double> urd_z(z_min, z_max);
 
     const auto x3 = urd_x(mt);
     const auto y3 = urd_y(mt) - y_max + y_min;
@@ -1131,9 +1131,9 @@ TEST_F(VectorTest, testVectorInBoxFalseZsmall) {
     const Vec3<double> v_min{ x_min, y_min, z_min };
     const Vec3<double> v_max{ x_max, y_max, z_max };
 
-    std::uniform_real_distribution<double> urd_x(x_min, x_max);
-    std::uniform_real_distribution<double> urd_y(y_min, y_max);
-    std::uniform_real_distribution<double> urd_z(z_min, z_max);
+    uniform_real_distribution<double> urd_x(x_min, x_max);
+    uniform_real_distribution<double> urd_y(y_min, y_max);
+    uniform_real_distribution<double> urd_z(z_min, z_max);
 
     const auto x3 = urd_x(mt);
     const auto y3 = urd_y(mt);
@@ -1169,9 +1169,9 @@ TEST_F(VectorTest, testVectorInBoxExceptionX) {
     const Vec3<double> v_min{ x_max, y_min, z_min };
     const Vec3<double> v_max{ x_min, y_max, z_max };
 
-    std::uniform_real_distribution<double> urd_x(x_min, x_max);
-    std::uniform_real_distribution<double> urd_y(y_min, y_max);
-    std::uniform_real_distribution<double> urd_z(z_min, z_max);
+    uniform_real_distribution<double> urd_x(x_min, x_max);
+    uniform_real_distribution<double> urd_y(y_min, y_max);
+    uniform_real_distribution<double> urd_z(z_min, z_max);
 
     const auto x3 = urd_x(mt);
     const auto y3 = urd_y(mt);
@@ -1206,9 +1206,9 @@ TEST_F(VectorTest, testVectorInBoxExceptionY) {
     const Vec3<double> v_min{ x_min, y_max, z_min };
     const Vec3<double> v_max{ x_max, y_min, z_max };
 
-    std::uniform_real_distribution<double> urd_x(x_min, x_max);
-    std::uniform_real_distribution<double> urd_y(y_min, y_max);
-    std::uniform_real_distribution<double> urd_z(z_min, z_max);
+    uniform_real_distribution<double> urd_x(x_min, x_max);
+    uniform_real_distribution<double> urd_y(y_min, y_max);
+    uniform_real_distribution<double> urd_z(z_min, z_max);
 
     const auto x3 = urd_x(mt);
     const auto y3 = urd_y(mt);
@@ -1243,9 +1243,9 @@ TEST_F(VectorTest, testVectorInBoxExceptionZ) {
     const Vec3<double> v_min{ x_min, y_min, z_max };
     const Vec3<double> v_max{ x_max, y_max, z_min };
 
-    std::uniform_real_distribution<double> urd_x(x_min, x_max);
-    std::uniform_real_distribution<double> urd_y(y_min, y_max);
-    std::uniform_real_distribution<double> urd_z(z_min, z_max);
+    uniform_real_distribution<double> urd_x(x_min, x_max);
+    uniform_real_distribution<double> urd_y(y_min, y_max);
+    uniform_real_distribution<double> urd_z(z_min, z_max);
 
     const auto x3 = urd_x(mt);
     const auto y3 = urd_y(mt);
