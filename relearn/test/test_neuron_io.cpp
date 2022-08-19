@@ -572,7 +572,7 @@ TEST_F(IOTest, testNeuronIOReadIDs) {
 }
 
 TEST_F(IOTest, testNeuronIOReadIDsEmpty1) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = get_random_integer(2, upper_bound_num_neurons);
 
     auto golden_ids = std::vector<NeuronID>{};
     auto golden_position = std::vector<RelearnTypes::position_type>{};

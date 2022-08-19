@@ -31,7 +31,6 @@ TEST_F(RankNeuronIdTest, testNeuronRankIdInvalidRank) {
 TEST_F(RankNeuronIdTest, testNeuronRankIdInvalidId) {
     for (auto i = 0; i < 1000; i++) {
         const auto rank = static_cast<int>(get_random_number_ranks());
-        const auto id = get_random_number_neurons();
 
         RankNeuronId rni(rank, NeuronID::uninitialized_id());
 

@@ -194,7 +194,7 @@ int main(int argc, char** argv) {
     size_t calcium_log_step{ Config::calcium_log_step };
     app.add_option("--calcium-log-step", calcium_log_step, "Sets the interval for logging all calcium values.");
 
-    auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
+    const auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
 
     unsigned int random_seed{ 0 };
     app.add_option("-r,--random-seed", random_seed, "Random seed. Default: 0.");
@@ -202,46 +202,46 @@ int main(int argc, char** argv) {
     int openmp_threads{ 1 };
     app.add_option("--openmp", openmp_threads, "Number of OpenMP Threads.");
 
-    std::string log_path{};
-    auto* opt_log_path = app.add_option("-l,--log-path", log_path, "Path for log files.");
+    std::filesystem::path log_path{};
+    auto* const opt_log_path = app.add_option("-l,--log-path", log_path, "Path for log files.");
 
     std::string log_prefix{};
-    auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
+    const auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
 
     size_t number_neurons{};
-    auto* opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons. This option only works with one MPI rank!");
+    auto* const opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons. This option only works with one MPI rank!");
 
     size_t number_neurons_per_rank{};
-    auto* opt_num_neurons_per_rank = app.add_option("--num-neurons-per-rank", number_neurons_per_rank, "Number neurons per MPI rank.");
+    auto* const opt_num_neurons_per_rank = app.add_option("--num-neurons-per-rank", number_neurons_per_rank, "Number neurons per MPI rank.");
 
     double fraction_excitatory_neurons{ 1.0 };
-    auto* opt_fraction_excitatory_neurons = app.add_option("--fraction-excitatory-neurons", fraction_excitatory_neurons, "The fraction of excitatory neurons, must be from [0.0, 1.0]. Required --num-neurons or --num-neurons-per-rank to take effect.");
+    app.add_option("--fraction-excitatory-neurons", fraction_excitatory_neurons, "The fraction of excitatory neurons, must be from [0.0, 1.0]. Required --num-neurons or --num-neurons-per-rank to take effect.");
 
     double um_per_neuron{ 1.0 };
-    auto* opt_um_per_neuron = app.add_option("--um-per-neuron", um_per_neuron, "The micrometer per neuron in one dimension, must be from (0.0, \\inf). Required --num-neurons or --num-neurons-per-rank to take effect.");
+    app.add_option("--um-per-neuron", um_per_neuron, "The micrometer per neuron in one dimension, must be from (0.0, \\inf). Required --num-neurons or --num-neurons-per-rank to take effect.");
 
-    std::string file_positions{};
-    auto* opt_file_positions = app.add_option("-f,--file", file_positions, "File with neuron positions. This option only works with one MPI rank!");
+    std::filesystem::path file_positions{};
+    auto* const opt_file_positions = app.add_option("-f,--file", file_positions, "File with neuron positions. This option only works with one MPI rank!");
 
-    std::string file_network{};
-    auto* opt_file_network = app.add_option("-g,--graph", file_network, "File with neuron connections. This option only works with one MPI rank!");
+    std::filesystem::path file_network{};
+    auto* const opt_file_network = app.add_option("-g,--graph", file_network, "File with neuron connections. This option only works with one MPI rank!");
 
-    std::string file_enable_interrupts{};
-    auto* opt_file_enable_interrupts = app.add_option("--enable-interrupts", file_enable_interrupts, "File with the enable interrupts.");
+    std::filesystem::path file_enable_interrupts{};
+    auto* const opt_file_enable_interrupts = app.add_option("--enable-interrupts", file_enable_interrupts, "File with the enable interrupts.");
 
-    std::string file_disable_interrupts{};
-    auto* opt_file_disable_interrupts = app.add_option("--disable-interrupts", file_disable_interrupts, "File with the disable interrupts.");
+    std::filesystem::path file_disable_interrupts{};
+    auto* const opt_file_disable_interrupts = app.add_option("--disable-interrupts", file_disable_interrupts, "File with the disable interrupts.");
 
-    std::string file_creation_interrupts{};
-    auto* opt_file_creation_interrups = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
+    std::filesystem::path file_creation_interrupts{};
+    auto* const opt_file_creation_interrups = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
 
-    auto* opt_algorithm = app.add_option("-a,--algorithm", chosen_algorithm, "The algorithm that is used for finding the targets");
+    auto* const opt_algorithm = app.add_option("-a,--algorithm", chosen_algorithm, "The algorithm that is used for finding the targets");
     opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_algorithm, CLI::ignore_case));
 
     double accept_criterion{ BarnesHut::default_theta };
-    auto* opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Requires Barnes-Hut or inverted Barnes-Hut.");
+    const auto* const opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Requires Barnes-Hut or inverted Barnes-Hut.");
 
-    auto* opt_kernel_type = app.add_option("--kernel-type", chosen_kernel_type, "The probability kernel type, cannot be set for the fast multipole methods.");
+    auto* const opt_kernel_type = app.add_option("--kernel-type", chosen_kernel_type, "The probability kernel type, cannot be set for the fast multipole methods.");
     opt_kernel_type->transform(CLI::CheckedTransformer(cli_parse_kernel_type, CLI::ignore_case));
 
     double gamma_k{ GammaDistributionKernel::default_k };
@@ -265,7 +265,7 @@ int main(int argc, char** argv) {
     double weibull_b{ WeibullDistributionKernel::default_b };
     app.add_option("--weibull-b", weibull_b, "Scale parameter for the weibull probability kernel.");
 
-    auto* opt_neuron_model = app.add_option("--neuron-model", chosen_neuron_model, "The neuron model");
+    auto* const opt_neuron_model = app.add_option("--neuron-model", chosen_neuron_model, "The neuron model");
     opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_neuron_model, CLI::ignore_case));
 
     double base_background_activity{ NeuronModel::default_base_background_activity };
@@ -284,13 +284,13 @@ int main(int argc, char** argv) {
     app.add_option("--calcium-decay", calcium_decay, "The decay constant for the intercellular calcium. Must be greater than 0.0");
 
     double target_calcium{ SynapticElements::default_C_target };
-    auto* opt_target_calcium = app.add_option("--target-ca", target_calcium, "The target Ca2+ ions in each neuron. Default is 0.7.");
+    auto* const opt_target_calcium = app.add_option("--target-ca", target_calcium, "The target Ca2+ ions in each neuron. Default is 0.7.");
 
     double initial_calcium{ 0.0 };
-    auto* opt_initial_calcium = app.add_option("--initial-ca", initial_calcium, "The initial Ca2+ ions in each neuron. Default is 0.0.");
+    auto* const opt_initial_calcium = app.add_option("--initial-ca", initial_calcium, "The initial Ca2+ ions in each neuron. Default is 0.0.");
 
     std::string file_calcium{};
-    auto* opt_file_calcium = app.add_option("--file_calcium", file_calcium, "File with calcium values.");
+    auto* const opt_file_calcium = app.add_option("--file_calcium", file_calcium, "File with calcium values.");
 
     double beta{ NeuronModel::default_beta };
     app.add_option("--beta", beta, "The amount of calcium ions gathered when a neuron fires. Default is 0.001.");
@@ -591,13 +591,12 @@ int main(int argc, char** argv) {
         sim.set_initial_calcium_calculator(std::move(initial_calcium_calculator));
         sim.set_target_calcium_calculator(std::move(target_calcium_calculator));
     } else {
-        auto initial_calcium_calculator = [inital = initial_calcium](int mpi_rank, NeuronID::value_type /*neuron_id*/) { return inital; };
+        auto initial_calcium_calculator = [inital = initial_calcium](int /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return inital; };
         sim.set_initial_calcium_calculator(std::move(initial_calcium_calculator));
 
-        auto target_calcium_calculator = [target = target_calcium](int mpi_rank, NeuronID::value_type /*neuron_id*/) { return target; };
-        sim.set_target_calcium_calculator(std::move(target_calcium_calculator));    
+        auto target_calcium_calculator = [target = target_calcium](int /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return target; };
+        sim.set_target_calcium_calculator(std::move(target_calcium_calculator));
     }
-
 
     const auto steps_per_simulation = simulation_steps / Config::monitor_step;
     sim.increase_monitoring_capacity(steps_per_simulation);
@@ -623,7 +622,7 @@ int main(int argc, char** argv) {
     sim.register_neuron_monitor(NeuronID{ 1164 });
     sim.register_neuron_monitor(NeuronID{ 28001 });
 
-    auto simulate = [&]() {
+    auto simulate = [&sim, &simulation_steps]() {
         sim.simulate(simulation_steps);
 
         Timers::print();

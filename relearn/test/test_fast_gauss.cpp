@@ -156,9 +156,6 @@ SynapticElements create_axons(size_t size, std::mt19937& mt, double max_free) {
 }
 
 TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
     std::uniform_int_distribution<size_t> uid_lvl(0, 6);
     std::uniform_int_distribution<size_t> uid(0, 10000);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
@@ -237,9 +234,6 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
 }
 
 TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
     std::uniform_int_distribution<size_t> uid_lvl(0, 6);
     std::uniform_int_distribution<size_t> uid(0, 10000);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
@@ -384,9 +378,6 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
 }
 
 TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
     std::uniform_int_distribution<size_t> uid_lvl(0, 6);
     std::uniform_int_distribution<size_t> uid(0, 10000);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
@@ -467,9 +458,6 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
 }
 
 TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
     std::uniform_int_distribution<size_t> uid_lvl(0, 6);
     std::uniform_int_distribution<size_t> uid(0, 10000);
     std::uniform_real_distribution<double> urd_sigma(1, 10000.0);

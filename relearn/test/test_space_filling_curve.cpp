@@ -30,7 +30,7 @@ TEST_F(SpaceFillingCurveTest, testMortonTranslationBruteForce) {
         std::stringstream ss{};
         ss << "Refinement level: " << refinement_level;
 
-        const size_t num_boxes_per_dimension = size_t(1) << refinement_level;
+        const size_t num_boxes_per_dimension = size_t{ 1 } << refinement_level;
         const size_t total_num_boxes = num_boxes_per_dimension * num_boxes_per_dimension * num_boxes_per_dimension;
 
         for (size_t x = 0; x < num_boxes_per_dimension; x++) {
@@ -56,7 +56,7 @@ TEST_F(SpaceFillingCurveTest, testMortonTranslationStochastic) {
     const auto refinement_level = get_large_refinement_level();
     morton.set_refinement_level(refinement_level);
 
-    const size_t num_boxes_per_dimension = size_t(1) << refinement_level;
+    const size_t num_boxes_per_dimension = size_t{ 1 } << refinement_level;
     const size_t total_num_boxes = num_boxes_per_dimension * num_boxes_per_dimension * num_boxes_per_dimension;
 
     for (auto rep = 0; rep < 1000; rep++) {
@@ -151,7 +151,7 @@ TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonTranslationBruteForce) 
         std::stringstream ss{};
         ss << "Refinement level: " << refinement_level;
 
-        const size_t num_boxes_per_dimension = size_t(1) << refinement_level;
+        const size_t num_boxes_per_dimension = size_t{ 1 } << refinement_level;
         const size_t total_num_boxes = num_boxes_per_dimension * num_boxes_per_dimension * num_boxes_per_dimension;
 
         for (size_t x = 0; x < num_boxes_per_dimension; x++) {
@@ -177,7 +177,7 @@ TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonTranslationStochastic) 
     const auto refinement_level = get_large_refinement_level();
     sfc.set_refinement_level(refinement_level);
 
-    const size_t num_boxes_per_dimension = size_t(1) << refinement_level;
+    const size_t num_boxes_per_dimension = size_t{ 1 } << refinement_level;
     const size_t total_num_boxes = num_boxes_per_dimension * num_boxes_per_dimension * num_boxes_per_dimension;
 
     for (auto rep = 0; rep < 1000; rep++) {

@@ -75,9 +75,9 @@ protected:
         init<AdditionalCellAttributes>();
     }
 
-    static void SetUpTestCase();
+    static void SetUpTestSuite();
 
-    static void TearDownTestCase() {
+    static void TearDownTestSuite() {
         RelearnException::hide_messages = false;
         LogFiles::disable = false;
     }
@@ -753,7 +753,7 @@ protected:
     static int num_ranks;
     static int num_synapses_per_neuron;
 
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 
@@ -784,7 +784,7 @@ protected:
 
 class NeuronAssignmentTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
     double calculate_box_length(const size_t number_neurons, const double um_per_neuron) const noexcept {
@@ -797,7 +797,7 @@ protected:
 
 class NeuronModelsTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 
@@ -806,14 +806,14 @@ protected:
 
 class RankNeuronIdTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class NeuronsTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 
@@ -825,7 +825,7 @@ protected:
 
 class CellTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 
@@ -881,77 +881,77 @@ protected:
 template <typename AlgorithmType>
 class OctreeTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<typename AlgorithmType::AdditionalCellAttributes>();
     }
 };
 
 class OctreeTestFMM : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<FastMultipoleMethodsCell>();
     }
 };
 
 class BarnesHutTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class PartitionTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class NeuronIdTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class ConnectorTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class KernelTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class ProbabilityKernelTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class SynapticElementsTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class VectorTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class SpaceFillingCurveTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
@@ -959,7 +959,7 @@ protected:
 template <typename T>
 class TaggedIDTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 
@@ -975,7 +975,7 @@ protected:
         return id.is_global_;
     }
 
-    static TaggedID<T>::value_type get_id(const TaggedID<T>& id) {
+    static typename TaggedID<T>::value_type get_id(const TaggedID<T>& id) {
         return id.id_;
     }
 
@@ -984,7 +984,7 @@ protected:
 
 class IOTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
@@ -992,7 +992,7 @@ protected:
 class StepParserTest : public RelearnTest, public StepParser {
 
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 
