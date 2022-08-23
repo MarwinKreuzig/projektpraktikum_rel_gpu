@@ -8,6 +8,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(BOOST_ENABLE_CMAKE ON) 
+
 # Set a default build type if none was specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(
@@ -37,8 +39,22 @@ if(ENABLE_MPI)
   find_package(MPI)
 endif()
 
+FetchContent_Declare(
+        boostorg
+        GIT_REPOSITORY https://github.com/boostorg/boost.git
+        GIT_TAG        master
+)
+
+FetchContent_GetProperties(boostorg)
+if (NOT boostorg_POPULATED)
+    FetchContent_Populate(boostorg)
+    add_subdirectory(${boostorg_SOURCE_DIR} ${boostorg_BINARY_DIR})
+endif ()
+
+include_directories(${boostorg_SOURCE_DIR})
+
 find_package(OpenMP)
-find_package(Boost REQUIRED COMPONENTS RANDOM)
+#find_package(Boost REQUIRED COMPONENTS RANDOM)
 
 file(GLOB_RECURSE SRC_ALG "source/algorithm/*")
 file(GLOB_RECURSE SRC_ALG_NAIVE "source/algorithm/NaiveInternal/*")
