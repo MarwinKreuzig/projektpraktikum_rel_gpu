@@ -41,7 +41,7 @@ class SynapticElements;
  * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
  * It is strongly tied to Octree, and performs MPI communication
  */
-class BarnesHutLocationAware : public BarnesHutLocationAwareBase<BarnesHutCell>, public ForwardAlgorithm<DistantNeuronRequest<BarnesHutCell>, DistantNeuronResponse> {
+class BarnesHutLocationAware : public BarnesHutLocationAwareBase<BarnesHutCell>, public ForwardAlgorithm<DistantNeuronRequest, DistantNeuronResponse> {
 public:
     using AdditionalCellAttributes = BarnesHutCell;
     using position_type = typename RelearnTypes::position_type;
@@ -73,7 +73,7 @@ public:
         RelearnException::check(node != nullptr, "BarnesHutLocationAware::update_functor: node is nullptr");
 
         // NOLINTNEXTLINE
-        if (node->is_child()) {
+        if (node->is_leaf()) {
             return;
         }
 
@@ -163,7 +163,7 @@ protected:
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
-    [[nodiscard]] CommunicationMap<DistantNeuronRequest<AdditionalCellAttributes>> find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+    [[nodiscard]] CommunicationMap<DistantNeuronRequest> find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override;
 
     /**
@@ -176,8 +176,8 @@ protected:
      * @param signal_type The signal type the source neuron searches
      * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
      */
-    [[nodiscard]] std::vector<std::tuple<int, DistantNeuronRequest<AdditionalCellAttributes>, double>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position, const counter_type& number_vacant_elements,
-        OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type, const double sigma);
+    [[nodiscard]] std::vector<std::tuple<int, DistantNeuronRequest, double>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position, const counter_type& number_vacant_elements,
+        OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type);
 
     /**
      * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses
@@ -186,72 +186,7 @@ protected:
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
      */
     [[nodiscard]] std::pair<CommunicationMap<DistantNeuronResponse>, std::pair<LocalSynapses, DistantInSynapses>>
-    process_requests(const CommunicationMap<DistantNeuronRequest<AdditionalCellAttributes>>& neuron_requests) {
-        const auto my_rank = MPIWrapper::get_my_rank();
-        const auto number_ranks = neuron_requests.get_number_ranks();
-
-        CommunicationMap<DistantNeuronResponse> neuron_responses(number_ranks);
-
-        if (neuron_requests.empty()) {
-            return { neuron_responses, {} };
-        }
-
-        CommunicationMap<SynapseCreationRequest> creation_requests(number_ranks);
-        creation_requests.resize(neuron_requests.get_request_sizes());
-
-        for (const auto& [source_rank, requests] : neuron_requests) {
-            const auto num_requests = requests.size();
-
-            // All requests from a rank
-            for (auto request_index = 0; request_index < num_requests; request_index++) {
-
-                const auto source_neuron_id = requests[request_index].get_source_id();
-                const auto signal_type = requests[request_index].get_signal_type();
-
-                // If the request comes from myself, get target from the request
-                if (source_rank == my_rank) {
-                    const auto target_neuron_id = requests[request_index].get_target_node()->get_cell_neuron_id();
-                    creation_requests.set_request(source_rank, request_index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
-                    
-                    continue;
-                }
-
-                // Otherwise get target through local barnes hut
-                const auto source_position = requests[request_index].get_source_position();
-                const auto root_of_subtree = requests[request_index].get_target_node();
-                const auto sigma = get_probabilty_parameter();
-
-                // If the local search is successful, create a SynapseCreationRequest
-                if (const auto& local_search = find_local_target_neuron(source_neuron_id, source_position, root_of_subtree, ElementType::Dendrite, signal_type, sigma); local_search.has_value()) {
-                    const auto target_neuron_id = local_search.value();
-                    
-                    creation_requests.set_request(source_rank, request_index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
-                } else {        
-                    creation_requests.set_request(source_rank, request_index, SynapseCreationRequest{ source_neuron_id, source_neuron_id, signal_type });
-                }      
-            }
-        }
-
-        // Pass the translated requests to the forward connector
-        auto [creation_responses, synapses] = ForwardConnector::process_requests(creation_requests, excitatory_dendrites, inhibitory_dendrites);
-
-        // Translate the responses back by adding the found neuron id
-        neuron_responses.resize(creation_responses.get_request_sizes());
-
-        for (const auto& [source_rank, responses] : creation_responses) {
-            const auto num_responses = responses.size();
-
-            // All responses for a rank
-            for (auto response_index = 0; response_index < num_responses; response_index++) {
-                const auto [target_neuron_id, source_neuron_id, dendrite_type_needed] = creation_requests.get_request(source_rank, response_index);
-                const auto response = responses[response_index];
-                
-                neuron_responses.set_request(source_rank, response_index, DistantNeuronResponse{ target_neuron_id, responses[response_index] });
-            }
-        }
-
-        return std::make_pair(neuron_responses, synapses);
-    }
+    process_requests(const CommunicationMap<DistantNeuronRequest>& neuron_requests);
 
     /**
      * @brief Processes all incoming responses from the MPI ranks locally
@@ -260,7 +195,7 @@ protected:
      * @exception Can throw a RelearnException
      * @return All synapses from this MPI rank to other MPI ranks
      */
-    [[nodiscard]] DistantOutSynapses process_responses(const CommunicationMap<DistantNeuronRequest<AdditionalCellAttributes>>& neuron_requests,
+    [[nodiscard]] DistantOutSynapses process_responses(const CommunicationMap<DistantNeuronRequest>& neuron_requests,
         const CommunicationMap<DistantNeuronResponse>& neuron_responses) {
 
         RelearnException::check(neuron_requests.size() == neuron_responses.size(), "BarnesHutLocationAware::process_responses: Requests and Responses had different sizes");

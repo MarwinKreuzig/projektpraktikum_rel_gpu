@@ -160,7 +160,6 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     uniform_int_distribution<size_t> uid_lvl(0, 6);
-    uniform_int_distribution<size_t> uid(0, 10000);
     uniform_real_distribution<double> urd_sigma(1, 10000.0);
     uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -175,7 +174,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
         auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
         auto& octree = *octree_ptr;
 
-        const size_t num_neurons = uid(mt);
+        const size_t num_neurons = get_random_number_neurons();
 
         const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
 
@@ -241,7 +240,6 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     uniform_int_distribution<size_t> uid_lvl(0, 6);
-    uniform_int_distribution<size_t> uid(0, 10000);
     uniform_real_distribution<double> urd_sigma(1, 10000.0);
     uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -254,7 +252,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
         auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
         auto& octree = *octree_ptr;
 
-        const size_t num_neurons = uid(mt);
+        const size_t num_neurons = get_random_number_neurons();
 
         const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
 
@@ -388,7 +386,6 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     uniform_int_distribution<size_t> uid_lvl(0, 6);
-    uniform_int_distribution<size_t> uid(0, 10000);
     uniform_real_distribution<double> urd_sigma(1, 10000.0);
 
     uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
@@ -402,7 +399,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
         auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
         auto& octree = *octree_ptr;
 
-        const size_t num_neurons = uid(mt);
+        const size_t num_neurons = get_random_number_neurons();
 
         const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
 
@@ -471,7 +468,6 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     uniform_int_distribution<size_t> uid_lvl(0, 6);
-    uniform_int_distribution<size_t> uid(0, 10000);
     uniform_real_distribution<double> urd_sigma(1, 10000.0);
     uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
@@ -484,7 +480,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
         auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
         auto& octree = *octree_ptr;
 
-        const size_t num_neurons = uid(mt);
+        const size_t num_neurons = get_random_number_neurons();
 
         const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
 
@@ -618,7 +614,6 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
 //     const auto my_rank = MPIWrapper::get_my_rank();
 
 //     uniform_int_distribution<size_t> uid_lvl(0, 6);
-//     uniform_int_distribution<size_t> uid(0, 10000);
 //     uniform_real_distribution<double> urd_sigma(1, 10000.0);
 //     uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
 
@@ -632,7 +627,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
 
 //         auto& octree = *octree_ptr;
 
-//         const size_t num_neurons = uid(mt);
+//         const size_t num_neurons = get_random_number_neurons();
 
 //         const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
 

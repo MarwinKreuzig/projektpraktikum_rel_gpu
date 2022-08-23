@@ -19,6 +19,7 @@ enum class AlgorithmEnum {
     Naive,
     BarnesHut,
     BarnesHutInverted,
+    BarnesHutLocationAware,
     FastMultipoleMethods,
 };
 
@@ -33,6 +34,10 @@ constexpr inline bool is_barnes_hut(const AlgorithmEnum algorithm_enum) {
     }
 
     if (algorithm_enum == AlgorithmEnum::BarnesHutInverted) {
+        return true;
+    }
+
+    if (algorithm_enum == AlgorithmEnum::BarnesHutLocationAware) {
         return true;
     }
 

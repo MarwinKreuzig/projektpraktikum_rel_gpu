@@ -26,6 +26,8 @@
 #include "util/Timers.h"
 #include "util/Vec3.h"
 
+#include <climits>
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <optional>
@@ -59,7 +61,7 @@ public:
      * @param level_of_branch_nodes The level at which the branch nodes (that are exchanged via MPI) are
      * @exception Throws a RelearnException if xyz_min is not componentwise smaller than xyz_max
      */
-    Octree(const box_size_type& xyz_min, const box_size_type& xyz_max, const size_t level_of_branch_nodes)
+    Octree(const box_size_type& xyz_min, const box_size_type& xyz_max, const std::uint16_t level_of_branch_nodes)
         : level_of_branch_nodes(level_of_branch_nodes) {
         set_size(xyz_min, xyz_max);
     }
@@ -98,7 +100,7 @@ public:
      * @brief Returns the level at which the branch nodes (that are exchanged via MPI) are
      * @return The level at which the branch nodes (that are exchanged via MPI) are
      */
-    [[nodiscard]] size_t get_level_of_branch_nodes() const noexcept {
+    [[nodiscard]] std::uint16_t get_level_of_branch_nodes() const noexcept {
         return level_of_branch_nodes;
     }
 
@@ -139,6 +141,8 @@ public:
      */
     virtual void initializes_leaf_nodes(size_t num_neurons) = 0;
 
+    virtual void* get_branch_node_pointer(size_t index) = 0;
+
 protected:
     // Set simulation box size of the tree
     void set_size(const box_size_type& min, const box_size_type& max) {
@@ -158,7 +162,7 @@ private:
     box_size_type xyz_min{ 0 };
     box_size_type xyz_max{ 0 };
 
-    size_t level_of_branch_nodes{ Constants::uninitialized };
+    std::uint16_t level_of_branch_nodes{ std::numeric_limits<std::uint16_t>::max() };
 };
 
 /**
@@ -245,7 +249,7 @@ public:
      * @param level_of_branch_nodes The level at which the branch nodes (that are exchanged via MPI) are
      * @exception Throws a RelearnException if xyz_min is not componentwise smaller than xyz_max
      */
-    OctreeImplementation(const box_size_type& xyz_min, const box_size_type& xyz_max, const size_t level_of_branch_nodes)
+    OctreeImplementation(const box_size_type& xyz_min, const box_size_type& xyz_max, const std::uint16_t level_of_branch_nodes)
         : Octree(xyz_min, xyz_max, level_of_branch_nodes) {
 
         const auto num_local_trees = 1ULL << (3 * level_of_branch_nodes);
@@ -440,6 +444,11 @@ public:
      */
     [[nodiscard]] const std::vector<OctreeNode<AdditionalCellAttributes>*>& get_leaf_nodes() const noexcept {
         return all_leaf_nodes;
+    }
+
+    virtual void* get_branch_node_pointer(size_t index) {
+        RelearnException::check(index >= branch_nodes.size(), "OctreeImplementation::get_branch_node_pointer(): index ({}) is larger than or equal to the number of branch nodes ({}).", index, branch_nodes.size());
+        return branch_nodes[index];
     }
 
     /**

@@ -16,51 +16,53 @@
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "util/TaggedID.h"
 
+#include <cstdint>
 #include <utility>
 
-//template <typename AdditionalCellAttributes>
-//struct NeuronRequestInformation {
-//    RankNeuronId source_rank_neuron_id;
-//    RankNeuronId target_rank_neuron_id;
-//    RelearnTypes::position_type source_neuron_position;
-//    OctreeNode<AdditionalCellAttributes>* target_node;
-//    ElementType element_type;
-//    SignalType signal_type;
-//};
-//
-//struct NeuronResponseInformation {
-//    SynapseCreationResponse response;
-//    NeuronID target_id;
-//};
-
 /**
- * One DistantNeuronRequest always consists of a target neuron, a source neuron, the position of the source, the target node and a signal type
+ * One DistantNeuronRequest always consists of a source neuron and its position, which initiates the request,
+ * the signal type which it looks for, and an identifier for the target neuron.
+ * This identifier changes based on the height of the target neuron in the octree.
+ * There are 3 distinct cases (with descending priority):
+ * (a) The target is on the branch node level
+ * (b) The target is a leaf node
+ * (c) The target is a virtual node
  */
-
-template <typename AdditionalCellAttributes>
 class DistantNeuronRequest {
+public:
+    enum class TargetNeuronType : char {
+        BranchNode = 0,
+        Leaf = 1,
+        VirtualNode = 2
+    };
+
+private:
     NeuronID source_id{};
     RelearnTypes::position_type source_position{};
-    OctreeNode<AdditionalCellAttributes>* target_node{};
+    std::uint32_t target_neuron_identifier{};
+    TargetNeuronType target_neuron_type{};
     SignalType signal_type{};
 
 public:
     DistantNeuronRequest() = default;
 
     /**
-     * @brief Constructs a new request with the arguments
-     * @param target_id The RankNeuronId of the target 
+     * @brief Constructs a new request with the arguments. A request can be built for three different use cases:
+     *      (a) The target node is a branch node -- target_neuron_type should be TargetNeuronType::BranchNode and target_neuron_identifier the index of it when considering all branch nodes
+     *      (b) The target node is a leaf node -- target_neuron_type should be TargetNeuronType::Leaf and target_neuron_identifier the index of it in the local neurons
+     *      (c) The target node is a virtual node -- target_neuron_type should be TargetNeuronType::VirtualNode and target_neuron_identifier the RMA offset
      * @param source_id The RankNeuronId of the source 
      * @param source_position The position of the source
-     * @param target_node The targeted node of the request
+     * @param target_neuron_identifier The identifier of the target node
+     * @param target_neuron_type The type of the target node
      * @param signal_type The signal type
      */
-    DistantNeuronRequest(NeuronID source_id, RelearnTypes::position_type source_position, OctreeNode<AdditionalCellAttributes>* target_node, SignalType signal_type)
+    DistantNeuronRequest(NeuronID source_id, RelearnTypes::position_type source_position, std::uint32_t target_neuron_identifier, TargetNeuronType target_neuron_type, SignalType signal_type) noexcept
         : source_id(source_id)
         , source_position(source_position)
-        , target_node(target_node)
+        , target_neuron_identifier(target_neuron_identifier)
+        , target_neuron_type(target_neuron_type)
         , signal_type(signal_type) {
-        RelearnException::check(target_node != nullptr, "DistantNeuronRequest::DistantNeuronRequest: target_node was nullptr");
     }
 
     /**
@@ -80,11 +82,37 @@ public:
     }
 
     /**
-     * @brief Returns the targeted node of the request
-     * @return The target node
+     * @brief Returns the id of the target node, if it is a branch node.
+     * @exception Throws a RelearnException if the target node type is not TargetNeuronType::BranchNode
+     * @return The branch node id
      */
-    [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_target_node() const noexcept {
-        return target_node;
+    [[nodiscard]] std::uint32_t get_branch_node_id() const {
+        RelearnException::check(target_neuron_type == TargetNeuronType::BranchNode, "");
+        return target_neuron_identifier;
+    }
+
+    /**
+     * @brief Returns the id of the target node, if it is a leaf node.
+     * @exception Throws a RelearnException if the target node type is not TargetNeuronType::Leaf
+     * @return The leaf node id
+     */
+    [[nodiscard]] std::uint32_t get_leaf_node_id() const {
+        RelearnException::check(target_neuron_type == TargetNeuronType::Leaf, "");
+        return target_neuron_identifier;
+    }
+
+    /**
+     * @brief Returns the RMA offset of the target node, if it is a virtual node.
+     * @exception Throws a RelearnException if the target node type is not TargetNeuronType::VirtualNode
+     * @return The RMA offset
+     */
+    [[nodiscard]] std::uint32_t get_rma_offset() const {
+        RelearnException::check(target_neuron_type == TargetNeuronType::VirtualNode, "");
+        return target_neuron_identifier;
+    }
+
+    [[nodiscard]] TargetNeuronType get_target_neuron_type() const noexcept {
+        return target_neuron_type;
     }
 
     /**
@@ -99,7 +127,6 @@ public:
 /**
  * The response for a DistantNeuronRequest consists of the source of the response and a SynapseCreationResponse
  */
-
 class DistantNeuronResponse {
     NeuronID source_id{};
     SynapseCreationResponse creation_response{};

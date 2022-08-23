@@ -87,7 +87,7 @@ public:
         for (const auto& [source_rank, request_index] : indices) {
             const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = creation_requests.get_request(source_rank, request_index);
 
-            if (target_neuron_id == source_neuron_id) {
+            if (source_rank == my_rank && target_neuron_id == source_neuron_id) {
                 responses.set_request(source_rank, request_index, SynapseCreationResponse::Failed);
                 continue;
             }

@@ -109,4 +109,9 @@ public:
         const auto offset = iterator->second;
         return offset * sizeof(OctreeNode<AdditionalCellAttributes>);
     }
+
+    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_node_from_offset(std::uint64_t offset) {
+        RelearnException::check(offset < total, "MemoryHolder::get_node_from_offset(): offset ({}) is too large: ({}).", offset, total);
+        return base_ptr + offset;
+    }
 };
