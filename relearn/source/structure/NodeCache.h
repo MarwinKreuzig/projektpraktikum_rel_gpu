@@ -121,4 +121,5 @@ public:
 private:
     static inline std::vector<node_type> memory{};
     static inline NodesCache remote_nodes_cache{};
+    static inline NodesCache inverse_remote_nodes_cache{};
 };

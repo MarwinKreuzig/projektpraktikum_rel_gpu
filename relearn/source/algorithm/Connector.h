@@ -87,6 +87,11 @@ public:
         for (const auto& [source_rank, request_index] : indices) {
             const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = creation_requests.get_request(source_rank, request_index);
 
+            if (target_neuron_id == source_neuron_id) {
+                responses.set_request(source_rank, request_index, SynapseCreationResponse::Failed);
+                continue;
+            }
+
             RelearnException::check(target_neuron_id.get_neuron_id() < number_neurons, "ForwardConnector::process_requests: target_neuron_id exceeds my neurons");
 
             const auto& dendrites = (SignalType::Inhibitory == dendrite_type_needed) ? inhibitory_dendrites : excitatory_dendrites;
@@ -131,14 +136,14 @@ public:
         const CommunicationMap<SynapseCreationResponse>& creation_responses, const std::shared_ptr<SynapticElements>& axons) {
 
         const auto axons_empty = axons.operator bool();
-        RelearnException::check(axons_empty, "ForwardConnector::process_requests: The axons are empty");
+        RelearnException::check(axons_empty, "ForwardConnector::process_responses: The axons are empty");
 
         RelearnException::check(creation_requests.size() == creation_responses.size(), 
-            "ForwardConnector::process_requests: Requests and Responses had different sizes");
+            "ForwardConnector::process_responses: Requests and Responses had different sizes");
 
         for (auto rank = 0; rank < creation_requests.size(); rank++) {
             RelearnException::check(creation_requests.size(rank) == creation_responses.size(rank),
-                "ForwardConnector::process_requests: Requests and Responses for rank {} had different sizes", rank);
+                "ForwardConnector::process_responses: Requests and Responses for rank {} had different sizes", rank);
         }
 
         const auto number_neurons = axons->get_size();

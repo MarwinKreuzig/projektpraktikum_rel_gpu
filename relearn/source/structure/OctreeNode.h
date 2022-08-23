@@ -319,6 +319,8 @@ private:
 
     int rank{ -1 }; // MPI rank who owns this octree node
 
+    size_t level{ 0 };
+
 public:
     /**
      * @brief Sets the optional position for both the excitatory and inhibitory positions in the associated cell

@@ -166,6 +166,7 @@ int main(int argc, char** argv) {
         { "naive", AlgorithmEnum::Naive },
         { "barnes-hut", AlgorithmEnum::BarnesHut },
         { "barnes-hut-inverted", AlgorithmEnum::BarnesHutInverted },
+        { "barnes-hut-location-aware", AlgorithmEnum::BarnesHutLocationAware },
         { "fast-multipole-methods", AlgorithmEnum::FastMultipoleMethods }
     };
 
@@ -470,7 +471,7 @@ int main(int argc, char** argv) {
     Timers::start(TimerRegion::INITIALIZATION);
 
     // Set the correct kernel and initalize the MPIWrapper to return the correct type
-    if (chosen_algorithm == AlgorithmEnum::BarnesHut) {
+    if (chosen_algorithm == AlgorithmEnum::BarnesHut || chosen_algorithm == AlgorithmEnum::BarnesHutLocationAware) {
         Kernel<BarnesHutCell>::set_kernel_type(chosen_kernel_type);
         NodeCache<BarnesHutCell>::set_cache_size(Constants::number_cache_slots);
         MPIWrapper::init_buffer_octree<BarnesHutCell>();
@@ -652,6 +653,8 @@ int main(int argc, char** argv) {
             }
         }
     }
+
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "number of bytes send: {}, number of bytes received: {}, number of bytes accessed remotely: {}", MPIWrapper::get_number_bytes_sent(), MPIWrapper::get_number_bytes_received(), MPIWrapper::get_number_bytes_remote_accessed());
 
     MPIWrapper::finalize();
 
