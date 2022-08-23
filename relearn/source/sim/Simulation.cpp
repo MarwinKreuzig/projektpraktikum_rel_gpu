@@ -396,7 +396,7 @@ void Simulation::print_neuron_monitors() {
     const auto& path = LogFiles::get_output_path();
 
     for (auto& monitor : *monitors) {
-        const auto& file_path = path / (std::to_string(monitor.get_target_id().get_neuron_id()) + ".csv");
+        const auto& file_path = path / (MPIWrapper::get_my_rank_str() + '_' + std::to_string(monitor.get_target_id().get_neuron_id()) + ".csv");
         std::ofstream outfile(file_path, std::ios::trunc);
 
         const auto file_is_good = outfile.good();

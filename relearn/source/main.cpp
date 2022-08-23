@@ -618,9 +618,9 @@ int main(int argc, char** argv) {
 
     Timers::stop_and_add(TimerRegion::INITIALIZATION);
 
-    sim.register_neuron_monitor(NeuronID{ 6 });
-    sim.register_neuron_monitor(NeuronID{ 1164 });
-    sim.register_neuron_monitor(NeuronID{ 28001 });
+    //sim.register_neuron_monitor(NeuronID{ 6 });
+    //sim.register_neuron_monitor(NeuronID{ 1164 });
+    //sim.register_neuron_monitor(NeuronID{ 28001 });
 
     auto simulate = [&sim, &simulation_steps]() {
         sim.simulate(simulation_steps);
