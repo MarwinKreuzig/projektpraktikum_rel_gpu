@@ -39,22 +39,25 @@ if(ENABLE_MPI)
   find_package(MPI)
 endif()
 
-FetchContent_Declare(
+if(WIN32)
+    FetchContent_Declare(
         boostorg
         GIT_REPOSITORY https://github.com/boostorg/boost.git
         GIT_TAG        master
-)
+    )
 
-FetchContent_GetProperties(boostorg)
-if (NOT boostorg_POPULATED)
-    FetchContent_Populate(boostorg)
-    add_subdirectory(${boostorg_SOURCE_DIR} ${boostorg_BINARY_DIR})
-endif ()
+    FetchContent_GetProperties(boostorg)
+    if (NOT boostorg_POPULATED)
+        FetchContent_Populate(boostorg)
+        add_subdirectory(${boostorg_SOURCE_DIR} ${boostorg_BINARY_DIR})
+    endif ()
 
-include_directories(${boostorg_SOURCE_DIR})
+    include_directories(${boostorg_SOURCE_DIR})
+else()
+  find_package(Boost REQUIRED COMPONENTS RANDOM)
+endif()
 
 find_package(OpenMP)
-#find_package(Boost REQUIRED COMPONENTS RANDOM)
 
 file(GLOB_RECURSE SRC_ALG "source/algorithm/*")
 file(GLOB_RECURSE SRC_ALG_NAIVE "source/algorithm/NaiveInternal/*")
