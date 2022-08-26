@@ -79,7 +79,8 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
 
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
-    CommunicationMap<DistantNeuronRequest> neuron_requests_outgoing(number_ranks);
+    const auto size_hint = std::min(number_neurons, size_t(number_ranks));
+    CommunicationMap<DistantNeuronRequest> neuron_requests_outgoing(number_ranks, size_hint);
 
     auto* const root = global_tree->get_root();
 
@@ -150,13 +151,14 @@ BarnesHutLocationAware::process_requests(const CommunicationMap<DistantNeuronReq
     const auto my_rank = MPIWrapper::get_my_rank();
     const auto number_ranks = neuron_requests.get_number_ranks();
 
-    CommunicationMap<DistantNeuronResponse> neuron_responses(number_ranks);
+    const auto size_hint = neuron_requests.size();
+    CommunicationMap<DistantNeuronResponse> neuron_responses(number_ranks, size_hint);
 
     if (neuron_requests.empty()) {
         return { neuron_responses, {} };
     }
 
-    CommunicationMap<SynapseCreationRequest> creation_requests(number_ranks);
+    CommunicationMap<SynapseCreationRequest> creation_requests(number_ranks, size_hint);
     creation_requests.resize(neuron_requests.get_request_sizes());
 
     for (const auto& [source_rank, requests] : neuron_requests) {

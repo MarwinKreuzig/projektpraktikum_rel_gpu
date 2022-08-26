@@ -24,7 +24,8 @@ CommunicationMap<SynapseCreationRequest> FastMultipoleMethods::find_target_neuro
 
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
-    CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks);
+    const auto size_hint = std::min(size_t(number_ranks), number_neurons);
+    CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks, size_hint);
 
     OctreeNode<FastMultipoleMethodsCell>* root = global_tree->get_root();
     RelearnException::check(root != nullptr, "FastMultpoleMethods::find_target_neurons: root was nullptr");

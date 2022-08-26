@@ -78,7 +78,8 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const si
 
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
-    CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks);
+    const auto size_hint = std::min(number_neurons, size_t(number_ranks));
+    CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks, size_hint);
 
     auto* const root = global_tree->get_root();
 

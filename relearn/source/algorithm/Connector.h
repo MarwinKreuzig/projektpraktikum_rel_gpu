@@ -56,7 +56,8 @@ public:
         const auto my_rank = MPIWrapper::get_my_rank();
         const auto number_ranks = creation_requests.get_number_ranks();
 
-        CommunicationMap<SynapseCreationResponse> responses(number_ranks);
+        const auto size_hint = creation_requests.size();
+        CommunicationMap<SynapseCreationResponse> responses(number_ranks, size_hint);
 
         if (creation_requests.empty()) {
             return { responses, {} };
@@ -215,7 +216,8 @@ public:
         const auto my_rank = MPIWrapper::get_my_rank();
         const auto number_ranks = MPIWrapper::get_num_ranks();
 
-        CommunicationMap<SynapseCreationResponse> responses(number_ranks);
+        const auto size_hint = creation_requests.size();
+        CommunicationMap<SynapseCreationResponse> responses(number_ranks, size_hint);
         if (creation_requests.empty()) {
             return { responses, {} };
         }

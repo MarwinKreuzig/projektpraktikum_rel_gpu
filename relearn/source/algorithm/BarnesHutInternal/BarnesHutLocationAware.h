@@ -202,10 +202,11 @@ protected:
 
         const auto number_ranks = neuron_requests.get_number_ranks();
 
-        CommunicationMap<SynapseCreationRequest> creation_requests(number_ranks);
+        const auto size_hint = neuron_requests.size();
+        CommunicationMap<SynapseCreationRequest> creation_requests(number_ranks, size_hint);
         creation_requests.resize(neuron_requests.get_request_sizes());
 
-        CommunicationMap<SynapseCreationResponse> creation_responses(number_ranks);
+        CommunicationMap<SynapseCreationResponse> creation_responses(number_ranks, size_hint);
         creation_responses.resize(neuron_responses.get_request_sizes());
 
         for (const auto& [rank, requests] : neuron_requests) {

@@ -93,7 +93,8 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t
 
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
-    CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks);
+    const auto size_hint = std::min(size_t(number_ranks), number_neurons);
+    CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks, size_hint);
 
     const std::vector<double>& axons_cnts = axons->get_grown_elements();
     const std::vector<unsigned int>& axons_connected_cnts = axons->get_connected_elements();

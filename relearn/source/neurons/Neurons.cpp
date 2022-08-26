@@ -368,6 +368,7 @@ CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(
     const auto number_ranks = MPIWrapper::get_num_ranks();
     const auto my_rank = MPIWrapper::get_my_rank();
 
+    const auto size_hint = std::min(size_t(number_ranks), synaptic_elements.get_size());
     CommunicationMap<SynapseDeletionRequest> deletion_requests(number_ranks);
 
     if (sum_to_delete == 0) {

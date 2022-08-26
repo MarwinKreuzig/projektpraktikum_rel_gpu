@@ -12,8 +12,8 @@
 
 #include "util/RelearnException.h"
 
-#include <map>
 #include <span>
+#include <unordered_map>
 #include <vector>
 
 /**
@@ -26,18 +26,21 @@ template <typename RequestType>
 class CommunicationMap {
 
 public:
-    using container_type = std::map<int, std::vector<RequestType>>;
+    using container_type = std::unordered_map<int, std::vector<RequestType>>;
     using iterator = typename container_type::iterator;
     using const_iterator = typename container_type::const_iterator;
 
     /**
      * @brief Constructs a new communication map 
      * @param number_ranks The number of MPI ranks. Is used to check later one for correct usage
+     * @param size_hint The hint how many different ranks will have values stored in here. Does not need to match the final number.
+     *      Can be ignored depending on the container_type.
      * @exception Throws a RelearnException if number_ranks is smaller than 1
      */
-    explicit CommunicationMap(const int number_ranks)
+    explicit CommunicationMap(const int number_ranks, typename const container_type::size_type size_hint = 1)
         : number_ranks(number_ranks) {
         RelearnException::check(number_ranks > 0, "CommunicationMap::CommunicationMap: number_ranks is too small: {}", number_ranks);
+        requests.reserve(size_hint);
     }
 
     /**
@@ -60,7 +63,7 @@ public:
     }
 
     /**
-     * @brief Returns the number of ranks that are saved in this map
+     * @brief Returns the number of ranks that this map can hold
      * @return The number of ranks
      */
     [[nodiscard]] int get_number_ranks() const noexcept {

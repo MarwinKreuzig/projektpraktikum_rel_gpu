@@ -138,12 +138,13 @@ void NeuronModel::update_electrical_activity_calculate_background(const std::vec
 }
 
 CommunicationMap<NeuronID> NeuronModel::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
-    const auto mpi_ranks = MPIWrapper::get_num_ranks();
+    const auto number_ranks = MPIWrapper::get_num_ranks();
 
-    CommunicationMap<NeuronID> spiking_ids(mpi_ranks);
+    const auto size_hint = std::min(size_t(number_ranks), number_local_neurons);
+    CommunicationMap<NeuronID> spiking_ids(number_ranks, size_hint);
 
     // If there is no other rank, then we can just skip
-    if (mpi_ranks == 1) {
+    if (number_ranks == 1) {
         return spiking_ids;
     }
 
