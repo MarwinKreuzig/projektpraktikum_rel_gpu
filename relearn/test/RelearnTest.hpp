@@ -405,10 +405,11 @@ protected:
             for (auto r = 0; r < number_requests; r++) {
                 const auto source_rank = get_random_rank(number_ranks);
                 const auto source_id = get_random_neuron_id(number_neurons);
+                const auto fixed_source_id = (source_id.get_neuron_id() == target_id.get_neuron_id() && current_rank == source_rank) ? NeuronID{ (source_id.get_neuron_id() + 1) % number_neurons } : source_id;
 
                 const auto signal_type = get_random_signal_type();
 
-                const SynapseCreationRequest scr{ target_id, source_id, signal_type };
+                const SynapseCreationRequest scr{ target_id, fixed_source_id, signal_type };
 
                 if (signal_type == SignalType::Excitatory) {
                     number_excitatory_requests[id]++;
