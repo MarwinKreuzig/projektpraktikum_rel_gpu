@@ -58,6 +58,9 @@ public:
 private:
     using Logger = std::shared_ptr<spdlog::logger>;
     static inline std::map<EventType, Logger> log_files{};
+    static inline std::map<EventType, bool> log_disable{};
+    static inline bool disable{ false };
+
     // NOLINTNEXTLINE
     static inline std::filesystem::path output_path{ "../output/" };
     // NOLINTNEXTLINE
@@ -66,8 +69,6 @@ private:
     static std::string get_specific_file_prefix();
 
     static void add_logfile(EventType type, const std::string& file_name, int rank, const std::string& file_ending = ".txt", const std::string& directory_prefix = "");
-
-    static bool disable;
 
     [[nodiscard]] static bool do_i_print(int rank);
 
@@ -84,6 +85,10 @@ public:
         output_path = path_to_containing_folder;
     }
 
+    /**
+     * @brief Returns the currently used output path
+     * @return The output path
+     */
     static std::filesystem::path get_output_path() noexcept {
         return output_path;
     }
@@ -105,16 +110,44 @@ public:
      */
     static void init();
 
+    /**
+     * @brief Saves the specified file, closes it, and opens a new file as sink with the specified file name
+     * @param type The event type whose file should be replaced
+     * @param new_file_name The new file name
+     * @exception Throws a RelearnException if the specified event type didn't have a file associated with it
+     */
     static void save_and_open_new(EventType type, const std::string& new_file_name);
 
-    // Clear log_files to create new files in future runs
+    /**
+     * @brief Clears all log files to create new files in future runs
+     */
     static void clear_log_files() {
         log_files.clear();
+        log_disable.clear();
+    }
+
+    /**
+     * @brief Sets the status of the event type, i.e., if the log for that type is disabled
+     * @param type The event type
+     * @param status True iff the log shall be disabled
+     */
+    static void set_log_status(const EventType type, const bool disabled) noexcept {
+        log_disable[type] = disabled;
+    }
+
+    /**
+     * @brief Returns the current log status for the event type
+     * @param type The event type
+     * @return True iff the log is disabled
+     */
+    static bool get_log_status(const EventType type) noexcept {
+        return log_disable[type];
     }
 
     /**
      * @brief Write the message into the file which is associated with the type.
      *      Optionally prints the message also to std::cout. The message can have place-holders of the form "{}", which are filled with additional arguments in the order of occurrence.
+     *      If the log is disabled, nothing is written to the file (but to std::cout if specified so).
      * @param type The event type to which the message belongs
      * @param also_to_cout A flag that indicates if the formatted string should also be print to std::cout
      * @param format Some type of string, optionally with place-holders of the form {}
@@ -126,6 +159,11 @@ public:
 
         if (also_to_cout) {
             spdlog::info(message);
+        }
+
+        const auto disabled = log_disable[type];
+        if (disabled) {
+            return;
         }
 
         // Not all ranks have all log files

@@ -95,8 +95,8 @@ public:
     /**
      * @brief Returns a constant reference to all distant in-edges to a neuron, i.e., a view on neurons that connect to the specified one via a synapse
      *      and belong to another MPI rank
-     * @param local_neuron_id The id of the neuron
-     * @exception Throws a RelearnException if local_neuron_id is larger or equal to the number of neurons stored
+     * @param neuron_id The id of the neuron
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      * @return A constant view of all distant in-edges.
      */
     [[nodiscard]] const DistantEdges& get_distant_in_edges(const NeuronID& neuron_id) const {
@@ -111,8 +111,8 @@ public:
     /**
      * @brief Returns a constant reference to all distant out-edges to a neuron, i.e., a view on all neurons that the specified one connectes to via a synapse
      *      and belong to another MPI rank
-     * @param local_neuron_id The id of the neuron
-     * @exception Throws a RelearnException if local_neuron_id is larger or equal to the number of neurons stored
+     * @param neuron_id The id of the neuron
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      * @return A constant view of all distant out-edges.
      */
     [[nodiscard]] const DistantEdges& get_distant_out_edges(const NeuronID& neuron_id) const {
@@ -127,8 +127,8 @@ public:
     /**
      * @brief Returns a constant reference to all local in-edges to a neuron, i.e., a view on neurons that connect to the specified one via a synapse
      *      and belong to the current MPI rank
-     * @param local_neuron_id The id of the neuron
-     * @exception Throws a RelearnException if local_neuron_id is larger or equal to the number of neurons stored
+     * @param neuron_id The id of the neuron
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      * @return A constant view of all local in-edges.
      */
     [[nodiscard]] const LocalEdges& get_local_in_edges(const NeuronID& neuron_id) const {
@@ -143,8 +143,8 @@ public:
     /**
      * @brief Returns a constant reference to all local out-edges to a neuron, i.e., a view on all neurons that the specified one connectes to via a synapse
      *      and belong to the current MPI rank
-     * @param local_neuron_id The id of the neuron
-     * @exception Throws a RelearnException if local_neuron_id is larger or equal to the number of neurons stored
+     * @param neuron_id The id of the neuron
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      * @return A constant view of all local out-edges.
      */
     [[nodiscard]] const LocalEdges& get_local_out_edges(const NeuronID& neuron_id) const {
@@ -159,17 +159,17 @@ public:
     /**
      * @brief Returns a copy of all in-edges to a neuron, i.e., a copy of all neurons that connect to the specified one via a synapse, of a specified type.
      *      All local in-edges are added with the current MPI rank.
-     * @param local_neuron_id The id of the neuron
+     * @param neuron_id The id of the neuron
      * @param signal_type The type of neurons that should be returned
-     * @exception Throws a ReleanException if local_neuron_id is larger or equal to the number of neurons stored
+     * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
      *      Throws an exception if the allocation of memory fails
      * @return A copy of all in-edges from a certain neuron signal type
      */
-    [[nodiscard]] DistantEdges get_all_in_edges(const NeuronID& local_neuron_id, const SignalType signal_type) const {
+    [[nodiscard]] DistantEdges get_all_in_edges(const NeuronID& neuron_id, const SignalType signal_type) const {
         const auto my_rank = mpi_rank;
 
-        const DistantEdges& all_distant_edges = get_distant_in_edges(local_neuron_id);
-        const LocalEdges& all_local_edges = get_local_in_edges(local_neuron_id);
+        const DistantEdges& all_distant_edges = get_distant_in_edges(neuron_id);
+        const LocalEdges& all_local_edges = get_local_in_edges(neuron_id);
 
         DistantEdges filtered_edges{};
         filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
@@ -200,17 +200,17 @@ public:
     /**
      * @brief Returns a copy of all out-edges from a neuron, i.e., a copy of all neurons that the specified one connectes to via a synapse, of a specified type
      *      All local in-edges are added with the current MPI rank.
-     * @param local_neuron_id The id of the neuron
+     * @param neuron_id The id of the neuron
      * @param signal_type The type of neurons that should be returned
-     * @exception Throws a ReleanException if local_neuron_id is larger or equal to the number of neurons stored
+     * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
      *      Throws an exception if the allocation of memory fails
      * @return A copy of all out-edges to a certain neuron signal type
      */
-    [[nodiscard]] DistantEdges get_all_out_edges(const NeuronID& local_neuron_id, const SignalType signal_type) const {
+    [[nodiscard]] DistantEdges get_all_out_edges(const NeuronID& neuron_id, const SignalType signal_type) const {
         const auto my_rank = mpi_rank;
 
-        const DistantEdges& all_distant_edges = get_distant_out_edges(local_neuron_id);
-        const LocalEdges& all_local_edges = get_local_out_edges(local_neuron_id);
+        const DistantEdges& all_distant_edges = get_distant_out_edges(neuron_id);
+        const LocalEdges& all_local_edges = get_local_out_edges(neuron_id);
 
         DistantEdges filtered_edges{};
         filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
@@ -241,17 +241,17 @@ public:
     /**
      * @brief Returns a copy of all in-edges to a neuron, i.e., a copy of all neurons that connect to the specified one via a synapse.
      *      All local in-edges are added with the current MPI rank.
-     * @param local_neuron_id The id of the neuron
+     * @param neuron_id The id of the neuron
      * @param signal_type The type of neurons that should be returned
-     * @exception Throws a ReleanException if local_neuron_id is larger or equal to the number of neurons stored
+     * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
      *      Throws an exception if the allocation of memory fails
      * @return A copy of all in-edges
      */
-    [[nodiscard]] DistantEdges get_all_in_edges(const NeuronID& local_neuron_id) const {
+    [[nodiscard]] DistantEdges get_all_in_edges(const NeuronID& neuron_id) const {
         const auto my_rank = mpi_rank;
 
-        const DistantEdges& all_distant_edges = get_distant_in_edges(local_neuron_id);
-        const LocalEdges& all_local_edges = get_local_in_edges(local_neuron_id);
+        const DistantEdges& all_distant_edges = get_distant_in_edges(neuron_id);
+        const LocalEdges& all_local_edges = get_local_in_edges(neuron_id);
 
         DistantEdges filtered_edges{};
         filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
@@ -270,17 +270,17 @@ public:
     /**
      * @brief Returns a copy of all out-edges from a neuron, i.e., a copy of all neurons that the specified one connectes to via a synapse
      *      All local in-edges are added with the current MPI rank.
-     * @param local_neuron_id The id of the neuron
+     * @param neuron_id The id of the neuron
      * @param signal_type The type of neurons that should be returned
-     * @exception Throws a ReleanException if local_neuron_id is larger or equal to the number of neurons stored
+     * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
      *      Throws an exception if the allocation of memory fails
      * @return A copy of all out-edges
      */
-    [[nodiscard]] DistantEdges get_all_out_edges(const NeuronID& local_neuron_id) const {
+    [[nodiscard]] DistantEdges get_all_out_edges(const NeuronID& neuron_id) const {
         const auto my_rank = mpi_rank;
 
-        const DistantEdges& all_distant_edges = get_distant_out_edges(local_neuron_id);
-        const LocalEdges& all_local_edges = get_local_out_edges(local_neuron_id);
+        const DistantEdges& all_distant_edges = get_distant_out_edges(neuron_id);
+        const LocalEdges& all_local_edges = get_local_out_edges(neuron_id);
 
         DistantEdges filtered_edges{};
         filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
@@ -298,13 +298,13 @@ public:
 
     /**
      * @brief Returns the number of all in-edges to a neuron (countings multiplicities) from excitatory neurons
-     * @param local_neuron_id The id of the neuron
-     * @exception Throws a ReleanException if local_neuron_id is larger or equal to the number of neurons stored
+     * @param neuron_id The id of the neuron
+     * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
      * @return The number of incoming synapses that the specified neuron formed from excitatory neurons
      */
-    [[nodiscard]] size_t get_number_excitatory_in_edges(const NeuronID& local_neuron_id) const {
-        const DistantEdges& all_distant_edges = get_distant_in_edges(local_neuron_id);
-        const LocalEdges& all_local_edges = get_local_in_edges(local_neuron_id);
+    [[nodiscard]] size_t get_number_excitatory_in_edges(const NeuronID& neuron_id) const {
+        const DistantEdges& all_distant_edges = get_distant_in_edges(neuron_id);
+        const LocalEdges& all_local_edges = get_local_in_edges(neuron_id);
 
         size_t total_num_ports = 0;
 
@@ -325,13 +325,13 @@ public:
 
     /**
      * @brief Returns the number of all in-edges to a neuron (countings multiplicities) from inhibitory neurons
-     * @param local_neuron_id The id of the neuron
-     * @exception Throws a ReleanException if local_neuron_id is larger or equal to the number of neurons stored
+     * @param neuron_id The id of the neuron
+     * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
      * @return The number of incoming synapses that the specified neuron formed from inhibitory neurons
      */
-    [[nodiscard]] size_t get_number_inhibitory_in_edges(const NeuronID& local_neuron_id) const {
-        const DistantEdges& all_distant_edges = get_distant_in_edges(local_neuron_id);
-        const LocalEdges& all_local_edges = get_local_in_edges(local_neuron_id);
+    [[nodiscard]] size_t get_number_inhibitory_in_edges(const NeuronID& neuron_id) const {
+        const DistantEdges& all_distant_edges = get_distant_in_edges(neuron_id);
+        const LocalEdges& all_local_edges = get_local_in_edges(neuron_id);
 
         size_t total_num_ports = 0;
 
@@ -352,13 +352,13 @@ public:
 
     /**
      * @brief Returns the number of all out-edges from a neuron (countings multiplicities)
-     * @param local_neuron_id The id of the neuron
-     * @exception Throws a ReleanException if local_neuron_id is larger or equal to the number of neurons stored
+     * @param neuron_id The id of the neuron
+     * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
      * @return The number of outgoing synapses that the specified neuron formed
      */
-    [[nodiscard]] size_t get_number_out_edges(const NeuronID& local_neuron_id) const {
-        const DistantEdges& all_distant_edges = get_distant_out_edges(local_neuron_id);
-        const LocalEdges& all_local_edges = get_local_out_edges(local_neuron_id);
+    [[nodiscard]] size_t get_number_out_edges(const NeuronID& neuron_id) const {
+        const DistantEdges& all_distant_edges = get_distant_out_edges(neuron_id);
+        const LocalEdges& all_local_edges = get_local_out_edges(neuron_id);
 
         size_t total_num_ports = 0;
 
@@ -400,7 +400,8 @@ public:
         const auto my_rank = mpi_rank;
 
         if (target_rank != my_rank && source_rank != my_rank) {
-            RelearnException::fail("NetworkGraph::add_edge_weight: In NetworkGraph::add_edge_weight, neither the target {} nor the source rank {} were for me.", target_rank, source_rank);
+            RelearnException::fail("NetworkGraph::add_edge_weight: Neither the target rank {} nor the source rank {} were for me ({}).", 
+                target_rank, source_rank, my_rank);
         }
 
         if (target_rank == my_rank) {

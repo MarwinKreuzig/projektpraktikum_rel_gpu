@@ -209,6 +209,10 @@ int main(int argc, char** argv) {
     std::string log_prefix{};
     const auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
 
+    const auto* flag_disable_positions = app.add_flag("--no-print-positions", "Disables printing the positions to a file.");
+    const auto* flag_disable_network = app.add_flag("--no-print-network", "Disables printing the network to a file.");
+    const auto* flag_disable_plasticity = app.add_flag("--no-print-plasticity", "Disables printing the plasticity changes to a file.");
+
     size_t number_neurons{};
     auto* const opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons. This option only works with one MPI rank!");
 
@@ -398,6 +402,23 @@ int main(int argc, char** argv) {
     }
     if (static_cast<bool>(*opt_log_prefix)) {
         LogFiles::set_general_prefix(log_prefix);
+    }
+
+    if (static_cast<bool>(*flag_disable_positions)) {
+        LogFiles::set_log_status(LogFiles::EventType::Positions, true);
+    }
+    if (static_cast<bool>(*flag_disable_network)) {
+        LogFiles::set_log_status(LogFiles::EventType::InNetwork, true);
+        LogFiles::set_log_status(LogFiles::EventType::OutNetwork, true);
+        LogFiles::set_log_status(LogFiles::EventType::Network, true);
+        LogFiles::set_log_status(LogFiles::EventType::NetworkInExcitatoryHistogramLocal, true);
+        LogFiles::set_log_status(LogFiles::EventType::NetworkInInhibitoryHistogramLocal, true);
+        LogFiles::set_log_status(LogFiles::EventType::NetworkOutHistogramLocal, true);
+    }
+    if (static_cast<bool>(*flag_disable_plasticity)) {
+        LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdate, true);
+        LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdateCSV, true);
+        LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdateLocal, true);
     }
 
     LogFiles::init();

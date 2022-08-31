@@ -16,8 +16,6 @@
 #include <filesystem>
 #include <iostream>
 
-bool LogFiles::disable = false;
-
 bool LogFiles::do_i_print(const int rank) {
     if (disable) {
         return false;
