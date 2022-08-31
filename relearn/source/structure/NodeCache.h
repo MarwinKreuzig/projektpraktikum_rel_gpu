@@ -17,12 +17,9 @@
 #include "util/SemiStableVector.h"
 
 #include <array>
-#include <iostream>
 #include <map>
-#include <sstream>
 #include <type_traits>
 #include <utility>
-#include <vector>
 
 /**
  * This class caches octree nodes from other MPI ranks on the local MPI rank.
@@ -34,6 +31,7 @@ class NodeCache {
     using children_type = std::array<node_type*, Constants::number_oct>;
 
 public:
+    using array_type = std::array<node_type, Constants::number_oct>;
     using NodesCacheKey = std::pair<int, node_type*>;
     using NodesCacheValue = children_type;
     using NodesCache = std::map<NodesCacheKey, NodesCacheValue>;
@@ -68,15 +66,10 @@ public:
                 return iterator->second;
             }
 
+            array_type& ref = memory.emplace_back();
+            node_type* where_to_insert = ref.data();
+
             auto offset = node->get_cell_neuron_id().get_rma_offset();
-
-            const auto current_memory_filling = memory.size();
-            const auto required_memory_filling = current_memory_filling + Constants::number_oct;
-
-            RelearnException::check(memory.capacity() >= required_memory_filling, "NodeCache::download_children: All {} cache places are full.", memory.capacity());
-            memory.resize(required_memory_filling);
-
-            auto* where_to_insert = memory.data() + current_memory_filling;
 
             // Start access epoch to remote rank
             MPIWrapper::lock_window(target_rank, MPI_Locktype::Shared);
@@ -89,7 +82,7 @@ public:
                     continue;
                 }
 
-                local_children[child_index] = where_to_insert + child_index;
+                local_children[child_index] = &(ref[child_index]);
             }
 
             iterator->second = local_children;
@@ -107,7 +100,7 @@ public:
     }
 
 private:
-    static inline std::vector<node_type> memory{};
+    static inline SemiStableVector<array_type> memory{};
     static inline NodesCache remote_nodes_cache{};
     static inline NodesCache inverse_remote_nodes_cache{};
 };
