@@ -6,6 +6,7 @@
 #include "mpi/CommunicationMap.h"
 #include "neurons/models/SynapticElements.h"
 
+#include <algorithm>
 #include <map>
 #include <vector>
 
@@ -137,8 +138,13 @@ TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
     const auto& request_sizes = incoming_requests.get_request_sizes();
     const auto& response_sizes = responses.get_request_sizes();
 
-    for (auto i = 0; i < incoming_requests.size(); i++) {
-        ASSERT_EQ(request_sizes[i], response_sizes[i]);
+    // For each saved rank: The number of responses matches the number of requests
+    ASSERT_EQ(request_sizes.size(), response_sizes.size());
+    for (const auto& [rank, size] : request_sizes) {
+        const auto found_in_responses = response_sizes.contains(rank);
+        ASSERT_TRUE(found_in_responses);
+
+        ASSERT_EQ(size, response_sizes.at(rank));
     }
 
     for (const auto& [rank, resps] : responses) {
@@ -192,9 +198,13 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
     const auto& request_sizes = incoming_requests.get_request_sizes();
     const auto& response_sizes = responses.get_request_sizes();
 
-    // For each rank: The number of responses matches the number of requests
-    for (auto i = 0; i < incoming_requests.size(); i++) {
-        ASSERT_EQ(request_sizes[i], response_sizes[i]);
+    // For each saved rank: The number of responses matches the number of requests
+    ASSERT_EQ(request_sizes.size(), response_sizes.size());
+    for (const auto& [rank, size] : request_sizes) {
+        const auto found_in_responses = response_sizes.contains(rank);
+        ASSERT_TRUE(found_in_responses);
+
+        ASSERT_EQ(size, response_sizes.at(rank));
     }
 
     const auto& now_connected_excitatory_counts = excitatory_dendrites->get_connected_elements();
@@ -243,7 +253,12 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
 
     // Extract things from the return value
     for (auto rank = 0; rank < number_ranks; rank++) {
-        for (auto index = 0; index < request_sizes[rank]; index++) {
+        const auto found_in_requests = request_sizes.contains(rank);
+        if (!found_in_requests) {
+            continue;
+        }
+
+        for (auto index = 0; index < request_sizes.at(rank); index++) {
             const auto& [target_index, source_index, signal_type] = incoming_requests.get_request(rank, index);
             const auto& response = responses.get_request(rank, index);
 

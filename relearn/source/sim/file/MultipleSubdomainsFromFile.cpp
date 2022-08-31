@@ -53,8 +53,8 @@ void MultipleSubdomainsFromFile::read_neurons_from_file(const std::filesystem::p
     };
 
     auto check = [](double value) -> bool {
-        const auto min = MPIWrapper::reduce(value, MPIWrapper::ReduceFunction::Min, value);
-        const auto max = MPIWrapper::reduce(value, MPIWrapper::ReduceFunction::Max, value);
+        const auto min = MPIWrapper::reduce(value, MPIWrapper::ReduceFunction::Min, 0);
+        const auto max = MPIWrapper::reduce(value, MPIWrapper::ReduceFunction::Max, 0);
 
         return min != max;
     };

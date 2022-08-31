@@ -29,6 +29,9 @@ public:
     using container_type = std::unordered_map<int, std::vector<RequestType>>;
     using iterator = typename container_type::iterator;
     using const_iterator = typename container_type::const_iterator;
+    using size_type = typename container_type::size_type;
+    using requests_size_type = typename std::vector<RequestType>::size_type;
+    using sizes_type = std::unordered_map<int, requests_size_type>;
 
     /**
      * @brief Constructs a new communication map 
@@ -37,7 +40,7 @@ public:
      *      Can be ignored depending on the container_type.
      * @exception Throws a RelearnException if number_ranks is smaller than 1
      */
-    explicit CommunicationMap(const int number_ranks, typename const container_type::size_type size_hint = 1)
+    explicit CommunicationMap(const int number_ranks, const size_type size_hint = 1)
         : number_ranks(number_ranks) {
         RelearnException::check(number_ranks > 0, "CommunicationMap::CommunicationMap: number_ranks is too small: {}", number_ranks);
         requests.reserve(size_hint);
@@ -58,7 +61,7 @@ public:
      * @brief Returns the number of data packages for MPI ranks
      * @return The number of ranks
      */
-    [[nodiscard]] size_t size() const noexcept {
+    [[nodiscard]] size_type size() const noexcept {
         return requests.size();
     }
 
@@ -74,11 +77,11 @@ public:
      * @brief Returns the total number of requests
      * @return The total number of requests
      */
-    [[nodiscard]] size_t get_total_number_requests() const noexcept {
-        size_t total_size = 0;
+    [[nodiscard]] requests_size_type get_total_number_requests() const noexcept {
+        requests_size_type total_size = 0;
 
-        for (auto mpi_rank = 0; mpi_rank < number_ranks; mpi_rank++) {
-            total_size += size(mpi_rank);
+        for (const auto& [_, requests_for_rank] : requests) {
+            total_size += requests_for_rank.size();
         }
 
         return total_size;
@@ -93,7 +96,7 @@ public:
     }
 
     /**
-     * @brief Appends the request to the data for the specified MPI rank
+     * @brief Appends the request to the data for the specified MPI rank, inserts the requests for that rank if not yet present
      * @param mpi_rank The MPI rank
      * @param request The data for the MPI rank
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
@@ -108,10 +111,10 @@ public:
      * @param mpi_rank The MPI rank
      * @param request_index The index of the data package
      * @param request The data for the MPI rank
-     * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
-     *      if the index is too large, or if there is no data for the MPI rank at all
+     * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks,
+     *      if the index is too large within the requests for that rank, or if there is no data for the MPI rank at all
      */
-    void set_request(const int mpi_rank, const unsigned int request_index, const RequestType& request) {
+    void set_request(const int mpi_rank, const requests_size_type request_index, const RequestType& request) {
         RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::set_request: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
         RelearnException::check(contains(mpi_rank), "CommunicationMap::set_request: Does not contain a buffer for rank {}", mpi_rank);
         RelearnException::check(request_index < size(mpi_rank), "CommunicationMap::set_request: The index was too large: {} vs {}", request_index, requests[mpi_rank].size());
@@ -124,10 +127,10 @@ public:
      * @param mpi_rank The MPI rank
      * @param request_index The index of the data package
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks,
-     *      if the index is too large, or if there is no data for the MPI rank at all
+     *      if the index is too large within the requests for that rank, or if there is no data for the MPI rank at all
      * @return The data package
      */
-    [[nodiscard]] RequestType get_request(const int mpi_rank, const unsigned int request_index) const {
+    [[nodiscard]] RequestType get_request(const int mpi_rank, const requests_size_type request_index) const {
         RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::get_request: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
         RelearnException::check(contains(mpi_rank), "CommunicationMap::get_request: There are no requests for rank {}", mpi_rank);
 
@@ -152,12 +155,12 @@ public:
     }
 
     /**
-     * @brief Resized the buffer for the data packages for a specified MPI rank
+     * @brief Resized the buffer for the data packages for a specified MPI rank, inserts the requests for that rank if not yet present
      * @param mpi_rank The MPI rank
      * @param size The number of elements the buffer should be able to hold
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
      */
-    void resize(const int mpi_rank, const size_t size) {
+    void resize(const int mpi_rank, const requests_size_type size) {
         RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::resize: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
         requests[mpi_rank].resize(size);
     }
@@ -167,7 +170,7 @@ public:
      * @param sizes The sizes for the respective MPI ranks.
      * @exception Throws a RelearnException if sizes.size() > number_ranks
      */
-    void resize(std::vector<size_t> sizes) {
+    void resize(std::vector<requests_size_type> sizes) {
         RelearnException::check(sizes.size() <= number_ranks, "CommunicationMap::resize: number of sizes {} is larger than the number of ranks {}", sizes.size(), number_ranks);
         for (auto mpi_rank = 0; mpi_rank < sizes.size(); mpi_rank++) {
             if (sizes[mpi_rank] == 0 && !contains(mpi_rank)) {
@@ -179,13 +182,22 @@ public:
         }
     }
 
+    void resize(sizes_type sizes) {
+        requests.clear();
+
+        for (const auto& [mpi_rank, size] : sizes) {
+            RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "");
+            requests[mpi_rank].resize(size);
+        }
+    }
+
     /**
      * @brief Returns the number of packages for the specified MPI rank
      * @param mpi_rank The MPI rank
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
      * @return The number of packages for the specified MPI rank. Is 0 if there is no data present
      */
-    [[nodiscard]] size_t size(const int mpi_rank) const {
+    [[nodiscard]] requests_size_type size(const int mpi_rank) const {
         RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::size: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
         if (!contains(mpi_rank)) {
             return 0;
@@ -200,7 +212,7 @@ public:
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
      * @return The number of bytes for the packages for the specified MPI rank. Is 0 if there is no data present
      */
-    [[nodiscard]] size_t get_size_in_bytes(const int mpi_rank) const {
+    [[nodiscard]] requests_size_type get_size_in_bytes(const int mpi_rank) const {
         RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::get_data: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
         if (!contains(mpi_rank)) {
             return 0;
@@ -243,6 +255,7 @@ public:
      * @brief Returns a span on the buffer for the specified rank
      * @param mpi_rank The MPI rank whose buffer should be queried
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
+     * @exception Throws a RelearnException if mpi_rank is negative, the rank does not have saved requests, or the value is too large with respect to the number of ranks
      */
     [[nodiscard]] std::span<RequestType> get_span(const int mpi_rank) {
         RelearnException::check(contains(mpi_rank), "CommunicationMap::get_span: There are no requests for rank {}", mpi_rank);
@@ -252,7 +265,7 @@ public:
     /**
      * @brief Returns a constant span on the buffer for the specified rank
      * @param mpi_rank The MPI rank whose buffer should be queried
-     * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
+     * @exception Throws a RelearnException if mpi_rank is negative, the rank does not have saved requests, or the value is too large with respect to the number of ranks
      */
     [[nodiscard]] std::span<const RequestType> get_span(const int mpi_rank) const {
         RelearnException::check(contains(mpi_rank), "CommunicationMap::get_span const: There are no requests for rank {}", mpi_rank);
@@ -260,12 +273,22 @@ public:
     }
 
     /**
-     * @brief Returns the number of requests for each MPI rank
+     * @brief Returns the number of requests for each MPI rank (includes those without requests with size 0)
      * @return Returns the number of requests for each MPI rank, i.e.,
      *      <return>[i] = k indicates that there are k requests for rank i
      */
-    [[nodiscard]] std::vector<size_t> get_request_sizes() const noexcept {
-        std::vector<size_t> number_requests(number_ranks, 0);
+    [[nodiscard]] std::vector<requests_size_type> get_request_sizes_vector() const noexcept {
+        std::vector<requests_size_type> number_requests(number_ranks, 0);
+
+        for (const auto& [rank, requests_for_rank] : requests) {
+            number_requests[rank] = requests_for_rank.size();
+        }
+
+        return number_requests;
+    }
+
+    [[nodiscard]] sizes_type get_request_sizes() const noexcept {
+        sizes_type number_requests{};
 
         for (const auto& [rank, requests_for_rank] : requests) {
             number_requests[rank] = requests_for_rank.size();
@@ -291,7 +314,7 @@ public:
     }
 
     /**
-     * @brief Returns the begin-iterator
+     * @brief Returns the constant begin-iterator
      * @return The begin-iterator
      */
     [[nodiscard]] const_iterator begin() const noexcept {
@@ -299,7 +322,7 @@ public:
     }
 
     /**
-     * @brief Returns the end-iterator
+     * @brief Returns the constant end-iterator
      * @return The end-iterator
      */
     [[nodiscard]] const_iterator end() const noexcept {
@@ -307,7 +330,7 @@ public:
     }
 
     /**
-     * @brief Returns the begin-iterator
+     * @brief Returns the constant begin-iterator
      * @return The begin-iterator
      */
     [[nodiscard]] const_iterator cbegin() const noexcept {
@@ -315,7 +338,7 @@ public:
     }
 
     /**
-     * @brief Returns the end-iterator
+     * @brief Returns the constant end-iterator
      * @return The end-iterator
      */
     [[nodiscard]] const_iterator cend() const noexcept {
