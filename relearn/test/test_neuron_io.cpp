@@ -141,7 +141,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwiseFileNotFound) {
 }
 
 TEST_F(IOTest, testNeuronIOReadComponentwiseIDException) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = get_random_number_neurons() + 1;
 
     auto golden_ids = std::vector<NeuronID>{};
     auto golden_position = std::vector<RelearnTypes::position_type>{};
@@ -430,7 +430,7 @@ TEST_F(IOTest, testNeuronIOReadFileNotFound) {
 }
 
 TEST_F(IOTest, testNeuronIOReadIDException) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = get_random_number_neurons() + 3;
 
     auto golden_ids = std::vector<NeuronID>{};
     auto golden_position = std::vector<RelearnTypes::position_type>{};
