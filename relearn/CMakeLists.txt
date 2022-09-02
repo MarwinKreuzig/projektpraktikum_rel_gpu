@@ -211,16 +211,16 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(googlebenchmark)
 
-add_executable(runTests ${SRC_TST})
+add_executable(relearn_tests ${SRC_TST})
 
-add_executable(benchmarks ${SRC_BENCH})
+add_executable(relearn_benchmarks ${SRC_BENCH})
 
-target_link_libraries(runTests PRIVATE project_options)
-target_link_libraries(runTests PRIVATE relearn_lib)
-target_link_libraries(runTests PRIVATE gtest_main)
+target_link_libraries(relearn_tests PRIVATE project_options)
+target_link_libraries(relearn_tests PRIVATE relearn_lib)
+target_link_libraries(relearn_tests PRIVATE gtest_main)
 
-add_test(NAME SerialTests COMMAND runTests)
+add_test(NAME SerialTests COMMAND relearn_tests)
 
-target_link_libraries(benchmarks PRIVATE project_options)
-target_link_libraries(benchmarks PRIVATE relearn_lib)
-target_link_libraries(benchmarks PRIVATE benchmark::benchmark)
+target_link_libraries(relearn_benchmarks PRIVATE project_options)
+target_link_libraries(relearn_benchmarks PRIVATE relearn_lib)
+target_link_libraries(relearn_benchmarks PRIVATE benchmark::benchmark)
