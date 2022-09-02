@@ -258,7 +258,7 @@ public:
     OctreeImplementation(const box_size_type& xyz_min, const box_size_type& xyz_max, const std::uint16_t level_of_branch_nodes)
         : Octree(xyz_min, xyz_max, level_of_branch_nodes) {
 
-        const auto num_local_trees = 1ULL << (3 * level_of_branch_nodes);
+        const auto num_local_trees = 1ULL << (3U * level_of_branch_nodes);
         branch_nodes.resize(num_local_trees, nullptr);
 
         construct_global_tree_part();
@@ -458,7 +458,7 @@ public:
      * @exception Throws a RelearnException if index is larger than or equal to the number of branch nodes
      * @return The requested branch node
      */
-    virtual void* get_branch_node_pointer(size_t index) override {
+    void* get_branch_node_pointer(size_t index) override {
         RelearnException::check(index >= branch_nodes.size(), "OctreeImplementation::get_branch_node_pointer(): index ({}) is larger than or equal to the number of branch nodes ({}).", index, branch_nodes.size());
         return branch_nodes[index];
     }

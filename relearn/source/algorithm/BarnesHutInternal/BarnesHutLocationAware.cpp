@@ -115,13 +115,6 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
     NodeCache<BarnesHutCell>::empty();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
-    // if (!lengths.empty()) {
-    //     auto total_length = std::reduce(lengths.begin(), lengths.end(), 0.0, std::plus<double>{});
-    //     auto average_length = total_length / lengths.size();
-
-    //    std::cout << "Average length is: " << average_length << '\n';
-    //}
-
     return neuron_requests_outgoing;
 }
 
@@ -193,8 +186,8 @@ BarnesHutLocationAware::process_requests(const CommunicationMap<DistantNeuronReq
             const auto source_position = current_request.get_source_position();
 
             // If the local search is successful, create a SynapseCreationRequest
-            if (const auto& local_search = find_local_target_neuron(source_neuron_id, source_position, chosen_target, ElementType::Dendrite, signal_type); local_search.has_value()) {
-                const auto target_neuron_id = local_search.value();
+            if (const auto& local_search = BarnesHutBase<BarnesHutCell>::find_target_neuron(source_neuron_id, source_position, chosen_target, ElementType::Dendrite, signal_type); local_search.has_value()) {
+                const const auto& [targer_rank, target_neuron_id] = local_search.value();
 
                 creation_requests.set_request(source_rank, request_index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
             } else {

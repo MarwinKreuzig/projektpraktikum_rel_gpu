@@ -10,8 +10,8 @@
  *
  */
 
+#include "BarnesHutBase.h"
 #include "BarnesHutCell.h"
-#include "BarnesHutLocationAwareBase.h"
 #include "Types.h"
 #include "algorithm/Connector.h"
 #include "algorithm/ExchangingAlgorithm.h"
@@ -29,8 +29,6 @@
 #include <optional>
 #include <tuple>
 #include <vector>
-#include <iostream>
-#include <sstream>
 
 class NeuronsExtraInfo;
 template <typename T>
@@ -41,7 +39,7 @@ class SynapticElements;
  * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
  * It is strongly tied to Octree, and performs MPI communication
  */
-class BarnesHutLocationAware : public BarnesHutLocationAwareBase<BarnesHutCell>, public ForwardAlgorithm<DistantNeuronRequest, DistantNeuronResponse> {
+class BarnesHutLocationAware : public BarnesHutBase<BarnesHutCell>, public ForwardAlgorithm<DistantNeuronRequest, DistantNeuronResponse> {
 public:
     using AdditionalCellAttributes = BarnesHutCell;
     using position_type = typename RelearnTypes::position_type;

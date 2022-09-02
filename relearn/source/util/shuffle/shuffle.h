@@ -37,7 +37,7 @@ void shuffle(RandomAccessIterator first, RandomAccessIterator last,
 
     if (difference_type distance = last - first; distance > 1) {
         distribution_type uid;
-        for (--last, --distance; first < last; ++first, --distance) {
+        for (--last, --distance; first < last; ++first, --distance) { // NOLINT(hicpp-use-nullptr,modernize-use-nullptr)
             if (difference_type random_val = uid(gen, distribution_param_type(0, distance));
                 random_val != difference_type(0)) {
                 swap(*first, *(first + random_val));

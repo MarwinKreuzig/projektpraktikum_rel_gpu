@@ -4,8 +4,8 @@
 
 #include "spdlog/spdlog.h"
 
-#include <cmath>
 #include <climits>
+#include <cmath>
 #include <fstream>
 #include <iomanip>
 #include <sstream>

@@ -16,6 +16,7 @@
 #include "algorithm/Kernel/Kernel.h"
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
+#include "neurons/helper/DistantNeuronRequests.h"
 #include "structure/NodeCache.h"
 #include "structure/OctreeNode.h"
 #include "util/Random.h"
@@ -130,9 +131,10 @@ protected:
      * @param root The start where the source searches for targets
      * @param element_type The element type that the source searches
      * @param signal_type The signal type that the source searches
+     * @param accept_early_far_node If true, then nodes that belong to another MPI rank and (don't) satisfy the acceptance criterion are still returned
      */
     [[nodiscard]] std::vector<OctreeNode<AdditionalCellAttributes>*> get_nodes_to_consider(const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
-        const ElementType element_type, const SignalType signal_type) const {
+        const ElementType element_type, const SignalType signal_type, const bool accept_early_far_node = false) const {
         if (root == nullptr) {
             return {};
         }
@@ -196,6 +198,11 @@ protected:
                 continue;
             }
 
+            if (accept_early_far_node && !node->is_local()) {
+                nodes_to_consider.emplace_back(node);
+                continue;
+            }
+
             // Need to expand
             add_children(node);
         } // while
@@ -218,6 +225,10 @@ protected:
         const ElementType element_type, const SignalType signal_type) const {
         RelearnException::check(root != nullptr, "BarnesHutBase::find_target_neuron: root was nullptr");
 
+        if (root->is_leaf()) {
+            return RankNeuronId{ root->get_rank(), root->get_cell_neuron_id() };
+        }
+
         for (auto root_of_subtree = root; true;) {
             const auto& vector = get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type);
 
@@ -231,6 +242,67 @@ protected:
                 return RankNeuronId{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
             }
 
+            // We need to choose again, starting from the chosen virtual neuron
+            root_of_subtree = node_selected;
+        }
+    }
+
+    /**
+     * @brief Returns an optional pair of target rank and request. This is used for sending the request to the other rank and calculating further. No actual request is sent yet.
+     *      Might perform MPI communication via NodeCache::download_children()
+     * @param source_neuron_id The source neuron id
+     * @param source_position The source position
+     * @param root The starting position where to look
+     * @param element_type The element type the source is looking for
+     * @param signal_type The signal type the source is looking for
+     * @param level_of_branch_nodes The level of branch nodes in the Octree
+     * @return If the algorithm didn't find a matching neuron, the return value is empty.
+     *      If the algorithm found a matching neuron, its RankNeuronId is returned
+     */
+    [[nodiscard]] std::optional<std::pair<int, DistantNeuronRequest>> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
+        const ElementType element_type, const SignalType signal_type, size_t level_of_branch_nodes) const {
+        RelearnException::check(root != nullptr, "BarnesHutLocationAwareBase::find_target_neuron: root was nullptr");
+
+        for (auto root_of_subtree = root; true;) {
+            const auto& vector = BarnesHutBase<AdditionalCellAttributes>::get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type, true);
+
+            auto* node_selected = Kernel<AdditionalCellAttributes>::pick_target(source_neuron_id, source_position, vector, element_type, signal_type);
+            if (node_selected == nullptr) {
+                return {};
+            }
+
+            if (node_selected == root_of_subtree) {
+                return {};
+            }
+
+            if (level_of_branch_nodes < node_selected->get_level()) {
+                const auto& cell = node_selected->get_cell();
+                const auto target_rank = node_selected->get_rank();
+                const auto is_local = node_selected->is_local();
+                const auto is_leaf = node_selected->is_leaf();
+
+                if (is_leaf) {
+                    const DistantNeuronRequest neuron_request(
+                        source_neuron_id,
+                        source_position,
+                        cell.get_neuron_id().get_neuron_id(),
+                        DistantNeuronRequest::TargetNeuronType::Leaf,
+                        signal_type);
+
+                    return std::make_pair(target_rank, neuron_request);
+                }
+
+                const DistantNeuronRequest neuron_request(
+                    source_neuron_id,
+                    source_position,
+                    cell.get_neuron_id().get_rma_offset(),
+                    DistantNeuronRequest::TargetNeuronType::Leaf,
+                    signal_type);
+
+                return std::make_pair(target_rank, neuron_request);
+            }
+
+            // If the level of the selected node is too low, continue the search
             // We need to choose again, starting from the chosen virtual neuron
             root_of_subtree = node_selected;
         }

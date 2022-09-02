@@ -180,7 +180,7 @@ public:
      * @param args Variably many additional arguments that are inserted for the place-holders
      */
     template <typename FormatString, typename... Args>
-    static void print_message_rank(const int rank, FormatString&& format, Args&&... args) {
+    static void print_message_rank(const int rank, FormatString&& format, Args&&... args) { // NOLINT(readability-avoid-const-params-in-decls)
         if (do_i_print(rank)) {
             write_to_file(LogFiles::EventType::Cout, true, "[INFO:Rank {}] {}", get_my_rank_str(), fmt::format(fmt::runtime(std::forward<FormatString>(format)), std::forward<Args>(args)...));
         }

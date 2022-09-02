@@ -233,7 +233,7 @@ public:
      * Compares the members in order of declaration
      * @return std::strong_ordering ordering
      */
-    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const TaggedID& first, const TaggedID& second) noexcept = default;
+    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const TaggedID& first, const TaggedID& second) noexcept = default; // NOLINT(hicpp-use-nullptr,modernize-use-nullptr)
 
 private:
     // the ordering of members is important for the defaulted <=> comparison
