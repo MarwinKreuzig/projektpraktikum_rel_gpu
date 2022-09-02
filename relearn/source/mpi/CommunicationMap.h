@@ -99,11 +99,25 @@ public:
      * @brief Appends the request to the data for the specified MPI rank, inserts the requests for that rank if not yet present
      * @param mpi_rank The MPI rank
      * @param request The data for the MPI rank
-     * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
+     * @exception Throws a RelearnException 
      */
     void append(const int mpi_rank, const RequestType& request) {
         RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::append: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
         requests[mpi_rank].emplace_back(request);
+    }
+
+    /**
+     * @brief Emplaces a newly created element in the communication map
+     * @tparam ...ValueType The type for the constructor of the element
+     * @param mpi_rank The MPI rank
+     * @param ...Val The values for the constructor of the element
+     * @exception Throws an exception if mpi_rank is negative or too large with respect to the number of ranks, if the memory allocation fails, or the constructor of the element throws
+     * @return A reference to the newly created element
+     */
+    template <class... ValueType>
+    constexpr decltype(auto) emplace_back(const int mpi_rank, ValueType&&... Val) {
+        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::emplace_back: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
+        return requests[mpi_rank].emplace_back(std::forward<ValueType>(Val)...);
     }
 
     /**

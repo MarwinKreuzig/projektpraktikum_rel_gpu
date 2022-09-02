@@ -72,6 +72,10 @@ inline std::ostream& operator<<(std::ostream& out, const AlgorithmEnum& algorith
         return out << "BarnesHutInverted";
     }
 
+    if (algorithm_enum == AlgorithmEnum::BarnesHutLocationAware) {
+        return out << "BarnesHutLocationAware";
+    }
+
     if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
         return out << "FastMultipoleMethods";
     }

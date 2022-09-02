@@ -40,6 +40,12 @@ enum class KernelType {
     Weibull
 };
 
+/**
+ * @brief Pretty-prints the kernel type to the chosen stream
+ * @param out The stream to which to print the kernel type
+ * @param kernel_type The kernel type to print
+ * @return The argument out, now altered with the kernel type
+ */
 inline std::ostream& operator<<(std::ostream& out, const KernelType& kernel_type) {
     switch (kernel_type) {
     case KernelType::Gamma:
