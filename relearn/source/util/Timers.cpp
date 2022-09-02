@@ -16,8 +16,9 @@
 
 #include <array>
 #include <iomanip>
+#include <sstream>
 
-void Timers::print_timer(std::stringstream& sstream, const TimerRegion timer_index, const std::array<double, size_t(3) * NUM_TIMERS>& timers) {
+void Timers::print_timer(std::stringstream& sstream, const TimerRegion timer_index, const std::array<double, size_t(3) * NUMBER_TIMERS>& timers) {
     sstream
         << std::setw(Constants::print_width) << timers[3 * static_cast<size_t>(timer_index)] << " | "
         << std::setw(Constants::print_width) << timers[3 * static_cast<size_t>(timer_index) + 1] << " | "
@@ -28,13 +29,13 @@ void Timers::print() {
     /**
      * Print timers and memory usage
      */
-    constexpr size_t expected_num_timers = size_t(3) * NUM_TIMERS;
+    constexpr size_t expected_num_timers = size_t(3) * NUMBER_TIMERS;
 
     std::array<double, expected_num_timers> timers_local{};
 
     std::stringstream local_timer_output{};
 
-    for (size_t i = 0; i < NUM_TIMERS; ++i) {
+    for (size_t i = 0; i < NUMBER_TIMERS; ++i) {
         const auto timer = static_cast<TimerRegion>(i);
         const double elapsed = get_elapsed(timer);
 
@@ -54,7 +55,7 @@ void Timers::print() {
 
     // Divide second entry of (min, sum, max), i.e., sum, by the number of ranks
     // so that sum becomes average
-    for (size_t i = 0; i < NUM_TIMERS; i++) {
+    for (size_t i = 0; i < NUMBER_TIMERS; i++) {
         const size_t idx = 3 * i + 1;
         // NOLINTNEXTLINE
         timers_global[idx] /= MPIWrapper::get_num_ranks();

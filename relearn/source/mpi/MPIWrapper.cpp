@@ -287,7 +287,7 @@ void MPIWrapper::all_gather_inl(void* ptr, const int count) {
     bytes_received.fetch_add(count, std::memory_order::relaxed);
 }
 
-void MPIWrapper::get(void* origin, const size_t size, const int target_rank, const int64_t displacement, const int number_elements) {
+void MPIWrapper::get(void* origin, const size_t size, const int target_rank, const uint64_t displacement, const int number_elements) {
     const MPI_Aint displacement_mpi(displacement);
     const auto window = *mpi_window; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
     const auto download_size = size * number_elements;

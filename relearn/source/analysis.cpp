@@ -41,7 +41,7 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
     const auto bin_width = max_distance / static_cast<double>(number_bins);
 
     std::vector<double> upper_borders(number_bins, 0.0);
-    for (auto i = 0; i < number_bins; i++) {
+    for (auto i = 0U; i < number_bins; i++) {
         const auto border = static_cast<double>(i) * bin_width;
         upper_borders[i] = border;
     }
@@ -81,7 +81,7 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
 
     auto print = [&](std::ostream& out) {
         out << std::setprecision(6);
-        for (auto i = 1; i < number_bins; i++) {
+        for (auto i = 1U; i < number_bins; i++) {
             out << '[' << upper_borders[i - 1] << ", " << upper_borders[i] << "): " << counts[i - 1] << '\n';
         }
     };
@@ -124,8 +124,8 @@ void compute_all_distances(std::filesystem::path neuron_file) {
     const auto quartile_25_index = 0.25 * static_cast<double>(number_distances);
     const auto quartile_75_index = 0.75 * static_cast<double>(number_distances);
 
-    const auto quartile_25 = pairwise_distances[quartile_25_index];
-    const auto quartile_75 = pairwise_distances[quartile_75_index];
+    const auto quartile_25 = pairwise_distances[static_cast<size_t>(quartile_25_index)];
+    const auto quartile_75 = pairwise_distances[static_cast<size_t>(quartile_75_index)];
 
     const auto interquartile_range = quartile_75 - quartile_25;
     const auto double_interquartile_range = 2 * interquartile_range;
@@ -141,7 +141,7 @@ void compute_all_distances(std::filesystem::path neuron_file) {
     const auto number_of_bins_cast = static_cast<unsigned int>(number_of_bins);
 
     std::vector<double> upper_borders(number_of_bins_cast, 0.0);
-    for (auto i = 0; i < number_of_bins_cast; i++) {
+    for (auto i = 0U; i < number_of_bins_cast; i++) {
         const auto border = min_distance + static_cast<double>(i) * bin_width;
         upper_borders[i] = border;
     }
@@ -160,7 +160,7 @@ void compute_all_distances(std::filesystem::path neuron_file) {
 
     auto print = [&](std::ostream& out) {
         out << std::setprecision(6);
-        for (auto i = 1; i < number_of_bins_cast; i++) {
+        for (auto i = 1U; i < number_of_bins_cast; i++) {
             out << '[' << upper_borders[i - 1] << ", " << upper_borders[i] << "): " << counts[i - 1] << '\n';
         }
     };

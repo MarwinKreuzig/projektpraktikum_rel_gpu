@@ -120,7 +120,7 @@ private:
 
     [[nodiscard]] static int translate_lock_type(MPI_Locktype lock_type);
 
-    static void get(void* origin, size_t size, int target_rank, int64_t displacement, int number_elements);
+    static void get(void* origin, size_t size, int target_rank, uint64_t displacement, int number_elements);
 
     static void reduce_int64(const int64_t* src, int64_t* dst, size_t size, ReduceFunction function, int root_rank);
 
@@ -420,10 +420,9 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs, if number_elements <= 0, if offset < 0, or if target_rank < 0
      */
     template <typename AdditionalCellAttributes>
-    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const int offset, const int number_elements) {
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const uint64_t offset, const int number_elements) {
         RelearnException::check(number_elements > 0, "MPIWrapper::download_octree_node: number_elements is not positive");
         RelearnException::check(target_rank >= 0, "MPIWrapper::download_octree_node: target_rank is negative");
-        RelearnException::check(offset >= 0, "MPIWrapper::download_octree_node: offset is negative: {}", offset);
 
         const auto& base_ptrs = get_base_pointers();
         RelearnException::check(target_rank < base_ptrs.size(), "MPIWrapper::download_octree_node: target_rank is larger than the pointers");

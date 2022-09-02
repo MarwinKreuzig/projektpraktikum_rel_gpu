@@ -19,10 +19,8 @@
 #include <boost/random/uniform_int_distribution.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
 
-#include <algorithm>
 #include <array>
 #include <random>
-#include <thread>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -54,6 +52,8 @@ enum class RandomHolderKey : char {
     Connector = 8,
 };
 
+constexpr size_t NUMBER_RANDOM_HOLDER_KEYS = 9;
+
 /**
  * This type provides a static thread-safe interface for generating random numbers.
  * Each instance of RandomHolderKey and each thread in an OMP parallel region has its own random number generator.
@@ -61,8 +61,7 @@ enum class RandomHolderKey : char {
 class RandomHolder {
     RandomHolder() = default;
 
-    // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
-    thread_local static inline std::array<mt19937, 9> random_number_generators{};
+    thread_local static inline std::array<mt19937, NUMBER_RANDOM_HOLDER_KEYS> random_number_generators{};
 
 public:
     /**

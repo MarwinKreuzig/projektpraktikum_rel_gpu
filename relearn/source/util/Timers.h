@@ -14,7 +14,7 @@
 
 #include <array>
 #include <chrono>
-#include <sstream>
+#include <iosfwd>
 #include <string>
 #include <vector>
 
@@ -61,7 +61,7 @@ enum class TimerRegion : int {
 /**
  * This number is used as a shortcut to count the number of values valid for TimerRegion
  */
-constexpr size_t NUM_TIMERS = 34;
+constexpr size_t NUMBER_TIMERS = 34;
 
 /**
  * This class is used to collect all sorts of different timers (see TimerRegion).
@@ -72,29 +72,29 @@ public:
     /**
      * @brief Starts the respective timer
      * @param timer The timer to start
-     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUM_TIMERS
+     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUMBER_TIMERS
      */
     static void start(const TimerRegion timer) {
         const auto timer_id = static_cast<size_t>(timer);
-        RelearnException::check(timer_id < NUM_TIMERS, "Timers::start: timer_id was {}", timer_id);
+        RelearnException::check(timer_id < NUMBER_TIMERS, "Timers::start: timer_id was {}", timer_id);
         time_start[timer_id] = std::chrono::high_resolution_clock::now();
     }
 
     /**
      * @brief Stops the respective timer
      * @param timer The timer to stops
-     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUM_TIMERS
+     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUMBER_TIMERS
      */
     static void stop(const TimerRegion timer) {
         const auto timer_id = static_cast<size_t>(timer);
-        RelearnException::check(timer_id < NUM_TIMERS, "Timers::stop: timer_id was: {}", timer_id);
+        RelearnException::check(timer_id < NUMBER_TIMERS, "Timers::stop: timer_id was: {}", timer_id);
         time_stop[timer_id] = std::chrono::high_resolution_clock::now();
     }
 
     /**
      * @brief Stops the respective timer and adds the elapsed time
      * @param timer The timer to stops
-     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUM_TIMERS
+     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUMBER_TIMERS
      */
     static void stop_and_add(const TimerRegion timer) {
         stop(timer);
@@ -104,34 +104,34 @@ public:
     /**
      * @brief Adds the difference between the current start and stop time points to the elapsed time
      * @param timer The timer for which to add the difference
-     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUM_TIMERS
+     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUMBER_TIMERS
      */
     static void add_start_stop_diff_to_elapsed(const TimerRegion timer) {
         const auto timer_id = static_cast<size_t>(timer);
-        RelearnException::check(timer_id < NUM_TIMERS, "Timers::add_start_stop_diff_to_elapsed: timer_id was: {}", timer_id);
+        RelearnException::check(timer_id < NUMBER_TIMERS, "Timers::add_start_stop_diff_to_elapsed: timer_id was: {}", timer_id);
         time_elapsed[timer_id] += std::chrono::duration_cast<std::chrono::duration<double>>(time_stop[timer_id] - time_start[timer_id]);
     }
 
     /**
      * @brief Resets the elapsed time for the timer
      * @param timer The timer for which to reset the elapsed time
-     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUM_TIMERS
+     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUMBER_TIMERS
      */
     static void reset_elapsed(const TimerRegion timer) {
         const auto timer_id = static_cast<size_t>(timer);
-        RelearnException::check(timer_id < NUM_TIMERS, "Timers::reset_elapsed: timer_id was: {}", timer_id);
+        RelearnException::check(timer_id < NUMBER_TIMERS, "Timers::reset_elapsed: timer_id was: {}", timer_id);
         time_elapsed[timer_id] = std::chrono::duration<double>::zero();
     }
 
     /**
      * @brief Returns the elapsed time for the respecive timer
      * @param timer The timer for which to return the elapsed time
-     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUM_TIMERS
+     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUMBER_TIMERS
      * @return The elapsed time
      */
     [[nodiscard]] static double get_elapsed(const TimerRegion timer) {
         const auto timer_id = static_cast<size_t>(timer);
-        RelearnException::check(timer_id < NUM_TIMERS, "Timers::get_elapsed: timer_id was: {}", timer_id);
+        RelearnException::check(timer_id < NUMBER_TIMERS, "Timers::get_elapsed: timer_id was: {}", timer_id);
         return time_elapsed[timer_id].count();
     }
 
@@ -177,13 +177,13 @@ public:
     }
 
 private:
-    static void print_timer(std::stringstream& sstream, TimerRegion timer_index, const std::array<double, size_t(3) * NUM_TIMERS>& timers);
+    static void print_timer(std::stringstream& sstream, TimerRegion timer_index, const std::array<double, size_t(3) * NUMBER_TIMERS>& timers);
 
     // NOLINTNEXTLINE
-    static inline std::vector<std::chrono::high_resolution_clock::time_point> time_start{ NUM_TIMERS };
+    static inline std::vector<std::chrono::high_resolution_clock::time_point> time_start{ NUMBER_TIMERS };
     // NOLINTNEXTLINE
-    static inline std::vector<std::chrono::high_resolution_clock::time_point> time_stop{ NUM_TIMERS };
+    static inline std::vector<std::chrono::high_resolution_clock::time_point> time_stop{ NUMBER_TIMERS };
 
     // NOLINTNEXTLINE
-    static inline std::vector<std::chrono::duration<double>> time_elapsed{ NUM_TIMERS };
+    static inline std::vector<std::chrono::duration<double>> time_elapsed{ NUMBER_TIMERS };
 };

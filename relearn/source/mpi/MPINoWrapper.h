@@ -128,7 +128,7 @@ public:
     }
 
     template <typename AdditionalCellAttributes>
-    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const int offset, const int number_elements) {
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const uint64_t offset, const int number_elements) {
         RelearnException::fail("MPINoWrapper::download_octree_node: Cannot perform the offset version without MPI.");
     }
 

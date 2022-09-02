@@ -41,7 +41,7 @@ public:
      * @return A reference to the newly created element
     */
     template <class... ValueType>
-    [[nodiscard]] constexpr decltype(auto) emplace_back(ValueType&&... Val) {
+    constexpr decltype(auto) emplace_back(ValueType&&... Val) {
         return container.emplace_back(std::forward<ValueType>(Val)...);
     }
 

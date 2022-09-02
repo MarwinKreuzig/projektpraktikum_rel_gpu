@@ -23,8 +23,17 @@
 #include <string_view>
 #include <vector>
 
+/**
+ * This class parses string that describe at which step a function shall be executed, and returns an std::function which encapsulates this logic.
+ * It uses intervals of the form [begin, end] (in predetermined step sizes) to check
+ */
 class StepParser {
 protected:
+    /**
+     * This struct represents an interval, i.e., it has a begin step, an end step, and a frequency
+     * with which during [begin, end] the function shall be executed, i.e., at steps:
+     * begin, begin + frequency, begin + 2*frequency, ...
+     */
     struct Interval {
         using step_type = std::uint64_t;
 
@@ -35,11 +44,22 @@ protected:
         bool operator==(const Interval& other) const noexcept = default;
     };
 
-    [[nodiscard]] static bool check_intervals_for_intersection(const Interval& first, const Interval& second) {
+    /**
+     * @brief Checks if two intervals intersect (ignoring the frequences)
+     * @param first The first interval
+     * @param second The second interval
+     * @return True iff the intervals intersect
+     */
+    [[nodiscard]] static bool check_intervals_for_intersection(const Interval& first, const Interval& second) noexcept {
         return first.begin <= second.end && second.begin <= first.end;
     }
 
-    [[nodiscard]] static bool check_intervals_for_intersection(const std::vector<Interval>& intervals) {
+    /**
+     * @brief Checks if any two intervals intersect
+     * @param intervals All intervals
+     * @return True iff any two intervals intersect
+     */
+    [[nodiscard]] static bool check_intervals_for_intersection(const std::vector<Interval>& intervals) noexcept {
         for (auto i = 0; i < intervals.size(); i++) {
             for (auto j = i + 1; j < intervals.size(); j++) {
                 const auto intervals_intersect = check_intervals_for_intersection(intervals[i], intervals[j]);
@@ -52,6 +72,12 @@ protected:
         return false;
     }
 
+    /**
+     * @brief Parses an interval from a description. The description must have the form
+     *      <begin>-<end>:<frequency> with <begin> <= <end>
+     * @param description The description of the interval
+     * @return An optional which is empty if no interval could be parsed, and contains the interval if the parsing succeeded
+     */
     [[nodiscard]] static std::optional<Interval> parse_interval(std::string_view description) {
         const auto hyphen_position = description.find('-');
         const auto colon_position = description.find(':');
@@ -90,6 +116,12 @@ protected:
         return {};
     }
 
+    /** 
+     * @brief Parses multiple intervals from the description. Each interval must have the form
+     *      <begin>-<end>:<frequency> with ; separating the intervals
+     * @param description The description of the intervals
+     * @return A vector with all successfully parsed intervals
+     */
     [[nodiscard]] static std::vector<Interval> parse_description_as_intervals(const std::string& description) {
         std::vector<Interval> intervals{};
         std::string::size_type current_position = 0;
@@ -117,7 +149,13 @@ protected:
         return intervals;
     }
 
-    [[nodiscard]] static std::function<bool(std::uint64_t)> generate_step_check_function(std::vector<Interval> intervals) {
+    /**
+     * @brief Converts a vector of intervals to a function which maps the current simulation step to
+     *      whether or not it is matched by the intervals. If the intervals intersect themselves, the empty std::function is returned
+     * @param intervals The intervals that specify if an event shall occur
+     * @return A std::function object that maps the current step to true or false, indicating if the event shall occur
+     */
+    [[nodiscard]] static std::function<bool(std::uint64_t)> generate_step_check_function(std::vector<Interval> intervals) noexcept {
         const auto intervals_intersect = check_intervals_for_intersection(intervals);
         if (intervals_intersect) {
             return {};
@@ -129,7 +167,7 @@ protected:
 
         std::sort(intervals.begin(), intervals.end(), comparison);
 
-        auto step_check_function = [intervals = std::move(intervals)](std::uint64_t step) -> bool {
+        auto step_check_function = [intervals = std::move(intervals)](std::uint64_t step) noexcept -> bool {
             for (const auto& [begin, end, frequency] : intervals) {
                 if (step < begin) {
                     return false;
@@ -150,6 +188,12 @@ protected:
     }
 
 public:
+    /**
+     * @brief Parses a description of intervals to a std::function which returns true whenever the current simulation step
+     *      falls into one of the intervals. The format must be: <begin>-<end>:<frequency> with ; separating the intervals
+     * @param description The description of the intervals
+     * @return The function indicating if the event shall occur
+     */
     [[nodiscard]] static std::function<bool(std::uint64_t)> generate_step_check_function(const std::string& description) {
         auto intervals = parse_description_as_intervals(description);
         auto function = generate_step_check_function(std::move(intervals));
