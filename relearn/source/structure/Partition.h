@@ -214,6 +214,10 @@ public:
         return local_subdomains[local_subdomain_index].index_3d;
     }
 
+    /**
+     * @brief Sets the number of local neurons (i.e., on this MPI rank)
+     * @param number_neurons The number of local neurons
+     */
     void set_number_local_neurons(const size_t number_neurons) noexcept {
         number_local_neurons = number_neurons;
     }

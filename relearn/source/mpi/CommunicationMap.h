@@ -167,7 +167,7 @@ public:
 
     /**
      * @brief Resized the buffer for the data packages for all specified MPI ranks
-     * @param sizes The sizes for the respective MPI ranks.
+     * @param sizes The sizes for the respective MPI ranks
      * @exception Throws a RelearnException if sizes.size() > number_ranks
      */
     void resize(std::vector<requests_size_type> sizes) {
@@ -182,6 +182,11 @@ public:
         }
     }
 
+    /**
+     * @brief Resized the buffer for the data packages for all specified MPI ranks
+     * @param sizes The sizes for the respective MPI ranks (not specified ranks won't be added)
+     * @exception Throws a RelearnException if sizes.size() > number_ranks
+     */
     void resize(sizes_type sizes) {
         requests.clear();
 
@@ -287,6 +292,11 @@ public:
         return number_requests;
     }
 
+    /**
+     * @brief Returns the number of requests for each stored MPI rank (leaves out those that are not stored)
+     * @return Returhs the number of requestes for the stored MPI rank, i.e., 
+     *      <return>[i] = k indicates that there are k requests for rank i
+     */
     [[nodiscard]] sizes_type get_request_sizes() const noexcept {
         sizes_type number_requests{};
 

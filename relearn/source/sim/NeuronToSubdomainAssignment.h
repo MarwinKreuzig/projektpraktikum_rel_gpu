@@ -33,6 +33,10 @@ public:
     using position_type = RelearnTypes::position_type;
     using box_size_type = RelearnTypes::box_size_type;
 
+    /**
+     * @brief Constructs a new object with the given partition
+     * @param partition The partition to use
+     */
     explicit NeuronToSubdomainAssignment(std::shared_ptr<Partition> partition)
         : partition(std::move(partition)) {
     }

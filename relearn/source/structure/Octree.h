@@ -141,6 +141,12 @@ public:
      */
     virtual void initializes_leaf_nodes(size_t num_neurons) = 0;
 
+    /**
+     * @brief Returns the branch node with the (global) index, cast to a void*
+     * @param index The global index of the requested branch node
+     * @exception Throws a RelearnException if index is larger than or equal to the number of branch nodes
+     * @return The requested branch node
+     */
     virtual void* get_branch_node_pointer(size_t index) = 0;
 
 protected:
@@ -446,6 +452,12 @@ public:
         return all_leaf_nodes;
     }
 
+    /**
+     * @brief Returns the branch node with the (global) index, cast to a void*
+     * @param index The global index of the requested branch node
+     * @exception Throws a RelearnException if index is larger than or equal to the number of branch nodes
+     * @return The requested branch node
+     */
     virtual void* get_branch_node_pointer(size_t index) override {
         RelearnException::check(index >= branch_nodes.size(), "OctreeImplementation::get_branch_node_pointer(): index ({}) is larger than or equal to the number of branch nodes ({}).", index, branch_nodes.size());
         return branch_nodes[index];
