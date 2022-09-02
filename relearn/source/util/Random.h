@@ -15,9 +15,9 @@
 #include "util/shuffle/shuffle.h"
 
 #include <boost/random/mersenne_twister.hpp>
+#include <boost/random/normal_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
-#include <boost/random/normal_distribution.hpp>
 
 #include <algorithm>
 #include <array>
@@ -41,7 +41,6 @@ using mt19937 = std::mt19937;
 
 /**
  * This enum allows a type safe differentiation between the types that require access to random numbers.
- * Can be extended without requiring an extension at a different place.
  */
 enum class RandomHolderKey : char {
     Algorithm = 0,
@@ -77,7 +76,7 @@ public:
      */
     static double get_random_uniform_double(const RandomHolderKey key, const double lower_inclusive, const double upper_exclusive) {
         RelearnException::check(lower_inclusive < upper_exclusive,
-            "RandomHolder::get_random_uniform_double: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
+            "RandomHolder::get_random_uniform_double: Random number from invalid interval [{}, {}) for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
         uniform_real_distribution<double> dist(lower_inclusive, upper_exclusive);
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -151,7 +150,7 @@ public:
      */
     template <typename IteratorType>
     static void fill(const RandomHolderKey key, const IteratorType begin, const IteratorType end, const double lower_inclusive, const double upper_exclusive) {
-        RelearnException::check(lower_inclusive < upper_exclusive, "RandomHolder::fill: Random number from invalid interval [{}, {}] for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
+        RelearnException::check(lower_inclusive < upper_exclusive, "RandomHolder::fill: Random number from invalid interval [{}, {}) for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
         uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         auto& generator = random_number_generators[static_cast<int>(key)];

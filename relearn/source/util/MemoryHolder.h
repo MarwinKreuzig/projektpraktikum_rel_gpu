@@ -14,8 +14,6 @@
 #include "RelearnException.h"
 
 #include <unordered_map>
-#include <queue>
-#include <vector>
 
 template <typename T>
 class OctreeNode;
@@ -46,7 +44,7 @@ public:
      * @param ptr The pointer to the memory location in which objects should be created and deleted
      * @param length The number of objects that fit into the memory
      */
-    static void init(OctreeNode<AdditionalCellAttributes>* ptr, const size_t length) {
+    static void init(OctreeNode<AdditionalCellAttributes>* ptr, const size_t length) noexcept {
         base_ptr = ptr;
         total = length;
     }
@@ -96,7 +94,7 @@ public:
     }
 
     /**
-     * @brief Returns the offset of node wrt. the base pointer
+     * @brief Returns the offset of the specified node's children with respect to the base pointer
      * @param parent_node The node for whose children we want to have the offset
      * @exception Throws a RelearnException if parent_node does not have an associated children array
      * @return The offset of node wrt. the base pointer
@@ -110,8 +108,15 @@ public:
         return offset * sizeof(OctreeNode<AdditionalCellAttributes>);
     }
 
+    /**
+     * @brief Returns the OctreeNode at the specified offset 
+     * @param offset The offset at which the OctreeNode shall be returned
+     * @exception Throws a RelaernException if offset is larger or equal to the total number of objects or to the current filling
+     * @return The OctreeNode with the specified offset
+     */
     [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_node_from_offset(std::uint64_t offset) {
         RelearnException::check(offset < total, "MemoryHolder::get_node_from_offset(): offset ({}) is too large: ({}).", offset, total);
+        RelearnException::check(offset < current_filling, "MemoryHolder::get_node_from_offset(): offset ({}) is too large: ({}).", offset, current_filling);
         return base_ptr + offset;
     }
 };

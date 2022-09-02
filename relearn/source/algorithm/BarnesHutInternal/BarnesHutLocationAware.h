@@ -19,9 +19,9 @@
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
 #include "neurons/UpdateStatus.h"
+#include "neurons/helper/DistantNeuronRequests.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseCreationRequests.h"
-#include "neurons/helper/DistantNeuronRequests.h"
 #include "structure/OctreeNode.h"
 #include "util/RelearnException.h"
 
@@ -177,7 +177,7 @@ protected:
      * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
      */
     [[nodiscard]] std::vector<std::tuple<int, DistantNeuronRequest, double>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position, const counter_type& number_vacant_elements,
-        OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type);
+        OctreeNode<AdditionalCellAttributes>* root, ElementType element_type, SignalType signal_type);
 
     /**
      * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses
@@ -186,7 +186,7 @@ protected:
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
      */
     [[nodiscard]] std::pair<CommunicationMap<DistantNeuronResponse>, std::pair<LocalSynapses, DistantInSynapses>>
-    process_requests(const CommunicationMap<DistantNeuronRequest>& neuron_requests);
+    process_requests(const CommunicationMap<DistantNeuronRequest>& neuron_requests) override;
 
     /**
      * @brief Processes all incoming responses from the MPI ranks locally
@@ -196,7 +196,7 @@ protected:
      * @return All synapses from this MPI rank to other MPI ranks
      */
     [[nodiscard]] DistantOutSynapses process_responses(const CommunicationMap<DistantNeuronRequest>& neuron_requests,
-        const CommunicationMap<DistantNeuronResponse>& neuron_responses) {
+        const CommunicationMap<DistantNeuronResponse>& neuron_responses) override {
 
         RelearnException::check(neuron_requests.size() == neuron_responses.size(), "BarnesHutLocationAware::process_responses: Requests and Responses had different sizes");
 

@@ -18,6 +18,7 @@
 #include "structure/OctreeNode.h"
 #include "util/Random.h"
 #include "util/Timers.h"
+
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -148,7 +149,6 @@ std::vector<std::tuple<int, DistantNeuronRequest, double>> BarnesHutLocationAwar
 
     [[nodiscard]] std::pair<CommunicationMap<DistantNeuronResponse>, std::pair<LocalSynapses, DistantInSynapses>>
 BarnesHutLocationAware::process_requests(const CommunicationMap<DistantNeuronRequest>& neuron_requests) {
-    const auto my_rank = MPIWrapper::get_my_rank();
     const auto number_ranks = neuron_requests.get_number_ranks();
 
     const auto size_hint = neuron_requests.size();
@@ -217,7 +217,7 @@ BarnesHutLocationAware::process_requests(const CommunicationMap<DistantNeuronReq
             const auto [target_neuron_id, source_neuron_id, dendrite_type_needed] = creation_requests.get_request(source_rank, response_index);
             const auto response = responses[response_index];
 
-            neuron_responses.set_request(source_rank, response_index, DistantNeuronResponse{ target_neuron_id, responses[response_index] });
+            neuron_responses.set_request(source_rank, response_index, DistantNeuronResponse{ target_neuron_id, response });
         }
     }
 

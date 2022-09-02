@@ -11,7 +11,9 @@
 #include "Neurons.h"
 
 #include "NetworkGraph.h"
+#include "helper/RankNeuronId.h"
 #include "io/LogFiles.h"
+#include "models/NeuronModels.h"
 #include "mpi/MPIWrapper.h"
 #include "structure/NodeCache.h"
 #include "structure/Octree.h"
@@ -19,8 +21,6 @@
 #include "util/Random.h"
 #include "util/Timers.h"
 #include "util/Utility.h"
-#include "helper/RankNeuronId.h"
-#include "models/NeuronModels.h"
 
 #include <algorithm>
 #include <iomanip>
@@ -369,7 +369,7 @@ CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(
     const auto my_rank = MPIWrapper::get_my_rank();
 
     const auto size_hint = std::min(size_t(number_ranks), synaptic_elements.get_size());
-    CommunicationMap<SynapseDeletionRequest> deletion_requests(number_ranks);
+    CommunicationMap<SynapseDeletionRequest> deletion_requests(number_ranks, size_hint);
 
     if (sum_to_delete == 0) {
         return deletion_requests;

@@ -446,7 +446,7 @@ public:
         return all_leaf_nodes;
     }
 
-    virtual void* get_branch_node_pointer(size_t index) {
+    virtual void* get_branch_node_pointer(size_t index) override {
         RelearnException::check(index >= branch_nodes.size(), "OctreeImplementation::get_branch_node_pointer(): index ({}) is larger than or equal to the number of branch nodes ({}).", index, branch_nodes.size());
         return branch_nodes[index];
     }

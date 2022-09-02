@@ -50,11 +50,7 @@ constexpr inline bool is_barnes_hut(const AlgorithmEnum algorithm_enum) {
  * @return True iff the specified algorithm implements the Fast Multipole Method
  */
 constexpr inline bool is_fast_multipole_method(const AlgorithmEnum algorithm_enum) {
-    if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
-        return true;
-    }
-
-    return false;
+    return algorithm_enum == AlgorithmEnum::FastMultipoleMethods;
 }
 
 /**

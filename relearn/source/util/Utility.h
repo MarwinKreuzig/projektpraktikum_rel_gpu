@@ -78,12 +78,13 @@ template <typename T>
 constexpr unsigned int num_digits(T val) noexcept {
     static_assert(std::is_integral<T>::value);
 
+    constexpr const auto number_system_base = 10;
     unsigned int num_digits = 1;
 
-    while (val >= T(10)) {
+    while (val >= T(number_system_base)) {
         ++num_digits;
         // NOLINTNEXTLINE
-        val /= 10;
+        val /= number_system_base;
     }
 
     return num_digits;

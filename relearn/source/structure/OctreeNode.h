@@ -324,7 +324,7 @@ public:
      * @brief Sets the optional position for both the excitatory and inhibitory positions in the associated cell
      * @param opt_position The optional position, can be empty
      */
-    void set_cell_neuron_position(const std::optional<position_type>& opt_position) noexcept {
+    void set_cell_neuron_position(const std::optional<position_type>& opt_position) {
         cell.set_neuron_position(opt_position);
     }
 

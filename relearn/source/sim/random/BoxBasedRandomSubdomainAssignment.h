@@ -65,7 +65,7 @@ public:
         return um_per_neuron_;
     }
 
-    std::pair<std::vector<LoadedNeuron>, NeuronID::value_type> place_neurons_in_box(const box_size_type& min, const box_size_type& max, NeuronID::value_type number_neurons, NeuronID::value_type first_id);
+    std::pair<std::vector<LoadedNeuron>, NeuronID::value_type> place_neurons_in_box(const box_size_type& offset, const box_size_type& length_of_box, NeuronID::value_type number_neurons, NeuronID::value_type first_id);
 
 private:
     const double um_per_neuron_{}; // Micrometer per neuron in one dimension
