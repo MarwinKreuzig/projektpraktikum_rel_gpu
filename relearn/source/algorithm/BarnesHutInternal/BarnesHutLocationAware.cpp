@@ -187,7 +187,7 @@ BarnesHutLocationAware::process_requests(const CommunicationMap<DistantNeuronReq
 
             // If the local search is successful, create a SynapseCreationRequest
             if (const auto& local_search = BarnesHutBase<BarnesHutCell>::find_target_neuron(source_neuron_id, source_position, chosen_target, ElementType::Dendrite, signal_type); local_search.has_value()) {
-                const const auto& [targer_rank, target_neuron_id] = local_search.value();
+                const auto& [targer_rank, target_neuron_id] = local_search.value();
 
                 creation_requests.set_request(source_rank, request_index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
             } else {
