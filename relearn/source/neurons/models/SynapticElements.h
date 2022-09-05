@@ -106,7 +106,7 @@ public:
         if (initial_vacant_elements_lower_bound < initial_vacant_elements_upper_bound) {
             RandomHolder::fill(RandomHolderKey::SynapticElements, grown_elements.begin(), grown_elements.end(), initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
         } else if (initial_vacant_elements_lower_bound == initial_vacant_elements_upper_bound) {
-            std::fill(grown_elements.begin(), grown_elements.end(), initial_vacant_elements_lower_bound);
+            std::ranges::fill(grown_elements, initial_vacant_elements_lower_bound);
         } else {
             RelearnException::fail("SynapticElements::init: Should initialize synaptic elements with values between in the wrong order (lower is larger than upper)");
         }
@@ -339,7 +339,7 @@ public:
 
         RelearnException::check(local_neuron_id < connected_elements.size(), "SynapticElements::get_free_elements: neuron_id is too large: {}", neuron_id);
         RelearnException::check(connected_elements[local_neuron_id] <= grown_elements[local_neuron_id], "SynapticElements::get_free_elements: More elements were connected then free: {}, {} vs {}", neuron_id, connected_elements[local_neuron_id], grown_elements[local_neuron_id]);
-        
+
         return static_cast<unsigned int>(grown_elements[local_neuron_id] - connected_elements[local_neuron_id]);
     }
 
@@ -361,7 +361,7 @@ public:
 
         RelearnException::check(local_neuron_id < connected_elements.size(), "SynapticElements::get_free_elements: neuron_id is too large: {}", neuron_id);
         RelearnException::check(connected_elements[local_neuron_id] <= grown_elements[local_neuron_id], "SynapticElements::get_free_elements: More elements were connected then free: {}, {} vs {}", neuron_id, connected_elements[local_neuron_id], grown_elements[local_neuron_id]);
-        
+
         return static_cast<unsigned int>(grown_elements[local_neuron_id] - connected_elements[local_neuron_id]);
     }
 

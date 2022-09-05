@@ -165,14 +165,14 @@ protected:
             return first.begin < second.begin;
         };
 
-        std::sort(intervals.begin(), intervals.end(), comparison);
+        std::ranges::sort(intervals, comparison);
 
         auto step_check_function = [intervals = std::move(intervals)](std::uint64_t step) noexcept -> bool {
             for (const auto& [begin, end, frequency] : intervals) {
                 if (step < begin) {
                     return false;
                 }
-            
+
                 if (step > end) {
                     continue;
                 }

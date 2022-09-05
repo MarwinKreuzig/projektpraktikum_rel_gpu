@@ -69,7 +69,7 @@ void NeuronModel::update_electrical_activity_update_activity(const std::vector<U
 void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const CommunicationMap<NeuronID>& firing_neuron_ids_incoming, const std::vector<UpdateStatus>& disable_flags) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
-#pragma omp parallel for shared(firing_neuron_ids_incoming, network_graph, disable_flags) default(none)
+#pragma omp parallel for shared(firing_neuron_ids_incoming, network_graph, disable_flags, std::ranges::binary_search) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
@@ -103,7 +103,7 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
             const auto& initiator_neuron_id = key.get_neuron_id();
 
             const auto& firing_ids = firing_neuron_ids_incoming.get_requests(rank);
-            const auto contains_id = std::binary_search(firing_ids.begin(), firing_ids.end(), initiator_neuron_id);
+            const auto contains_id = std::ranges::binary_search(firing_ids, initiator_neuron_id);
 
             if (contains_id) {
                 total_input += k * edge_val;
@@ -131,7 +131,7 @@ void NeuronModel::update_electrical_activity_calculate_background(const std::vec
             background_activity[neuron_id] = input;
         }
     } else {
-        std::fill(background_activity.begin(), background_activity.end(), base_background_activity);
+        std::ranges::fill(background_activity, base_background_activity);
     }
 
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);

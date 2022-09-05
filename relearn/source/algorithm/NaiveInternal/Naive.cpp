@@ -253,7 +253,7 @@ void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
         return {};
     }
 
-    std::transform(probabilities.begin(), probabilities.end(), probabilities.begin(), [sum](double prob) { return prob / sum; });
+    std::ranges::transform(probabilities, probabilities.begin(), [sum](double prob) { return prob / sum; });
 
     return probabilities;
 }
