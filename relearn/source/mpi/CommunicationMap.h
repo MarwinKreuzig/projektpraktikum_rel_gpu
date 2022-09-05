@@ -12,6 +12,8 @@
 
 #include "util/RelearnException.h"
 
+#include <functional>
+#include <optional>
 #include <span>
 #include <unordered_map>
 #include <vector>
@@ -19,7 +21,7 @@
 /**
  * This type accumulates multiple values that should be exchanged between different MPI ranks.
  * It does not perform MPI communication on its own.
- * 
+ *
  * @tparam RequestType The type of the values that should be exchanged
  */
 template <typename RequestType>
@@ -34,7 +36,7 @@ public:
     using sizes_type = std::unordered_map<int, requests_size_type>;
 
     /**
-     * @brief Constructs a new communication map 
+     * @brief Constructs a new communication map
      * @param number_ranks The number of MPI ranks. Is used to check later one for correct usage
      * @param size_hint The hint how many different ranks will have values stored in here. Does not need to match the final number.
      *      Can be ignored depending on the container_type.
@@ -99,7 +101,7 @@ public:
      * @brief Appends the request to the data for the specified MPI rank, inserts the requests for that rank if not yet present
      * @param mpi_rank The MPI rank
      * @param request The data for the MPI rank
-     * @exception Throws a RelearnException 
+     * @exception Throws a RelearnException
      */
     void append(const int mpi_rank, const RequestType& request) {
         RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::append: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
@@ -157,7 +159,7 @@ public:
     /**
      * @brief Returns all data for the specified MPI rank
      * @param mpi_rank The MPI rank
-     * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks, 
+     * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks,
      *      or if there is no data for the MPI rank at all
      * @return All data for the specified rank
      */
@@ -166,6 +168,26 @@ public:
         RelearnException::check(contains(mpi_rank), "CommunicationMap::get_requests: There are no requests for rank {}", mpi_rank);
 
         return requests.at(mpi_rank);
+    }
+
+    /**
+     * @brief Returns all data for the specified MPI rank wrapped in an std::optional. If the MPI rank is not saved, returns the empty state.
+     * @param mpi_rank The MPI rank
+     * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
+     * @return All data for the specified rank (might be empty)
+     */
+    [[nodiscard]] std::optional<std::reference_wrapper<const std::vector<RequestType>>> get_optional_request(const int mpi_rank) const {
+        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::get_requests: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
+
+        const auto find_it = requests.find(mpi_rank);
+        if (find_it == requests.end()) {
+            return {};
+        }
+
+        const auto& reference = find_it->second;
+        return {
+            std::reference_wrapper{ reference }
+        };
     }
 
     /**
@@ -241,7 +263,7 @@ public:
     }
 
     /**
-     * @brief Returns a non-owning pointer to the buffer for the specified MPI rank. 
+     * @brief Returns a non-owning pointer to the buffer for the specified MPI rank.
      *      The pointer is invalidated by calls to resize or append.
      * @param mpi_rank The MPI rank
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks,
@@ -256,7 +278,7 @@ public:
     }
 
     /**
-     * @brief Returns a non-owning pointer to the buffer for the specified MPI rank. 
+     * @brief Returns a non-owning pointer to the buffer for the specified MPI rank.
      *      The pointer is invalidated by calls to resize or append.
      * @param mpi_rank The MPI rank
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks,
@@ -308,7 +330,7 @@ public:
 
     /**
      * @brief Returns the number of requests for each stored MPI rank (leaves out those that are not stored)
-     * @return Returhs the number of requestes for the stored MPI rank, i.e., 
+     * @return Returhs the number of requestes for the stored MPI rank, i.e.,
      *      <return>[i] = k indicates that there are k requests for rank i
      */
     [[nodiscard]] sizes_type get_request_sizes() const noexcept {

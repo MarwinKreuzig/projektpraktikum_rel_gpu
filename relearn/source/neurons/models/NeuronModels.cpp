@@ -96,13 +96,14 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
 
         for (const auto& [key, edge_val] : in_edges) {
             const auto& rank = key.get_rank();
-            if (!firing_neuron_ids_incoming.contains(rank)) {
+            const auto& firings_ids_opt = firing_neuron_ids_incoming.get_optional_request(rank);
+            if (!firings_ids_opt.has_value()) {
                 continue;
             }
 
             const auto& initiator_neuron_id = key.get_neuron_id();
 
-            const auto& firing_ids = firing_neuron_ids_incoming.get_requests(rank);
+            const auto& firing_ids = firings_ids_opt.value().get();
             const auto contains_id = std::ranges::binary_search(firing_ids, initiator_neuron_id);
 
             if (contains_id) {
