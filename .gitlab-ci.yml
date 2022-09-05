@@ -29,7 +29,7 @@ test-mpi-once:
   before_script:
     - cd relearn/build-docker
   script:
-    - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 ./runTests --gtest_filter=*ONCE
+    - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 ./relearn_tests --gtest_filter=*ONCE
   dependencies: 
     - build-mpi
   artifacts:
@@ -43,7 +43,7 @@ test-mpi-multiple:
   before_script:
     - cd relearn/build-docker
   script:
-    - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 ./runTests --gtest_filter=*-*ONCE  --gtest_repeat=10 --gtest_shuffle
+    - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 ./relearn_tests --gtest_filter=*-*ONCE  --gtest_repeat=10 --gtest_shuffle
   dependencies: 
     - build-mpi
   artifacts:
@@ -68,7 +68,7 @@ test-nompi-once:
   before_script:
     - cd relearn/build-docker-nompi
   script:
-    - ./runTests --gtest_filter=*ONCE
+    - ./relearn_tests --gtest_filter=*ONCE
   dependencies: 
     - build-nompi
   artifacts:
@@ -82,7 +82,7 @@ test-nompi-multiple:
   before_script:
     - cd relearn/build-docker-nompi
   script:
-    - ./runTests --gtest_filter=*-*ONCE  --gtest_repeat=10 --gtest_shuffle
+    - ./relearn_tests --gtest_filter=*-*ONCE  --gtest_repeat=10 --gtest_shuffle
   dependencies: 
     - build-nompi
   artifacts:
