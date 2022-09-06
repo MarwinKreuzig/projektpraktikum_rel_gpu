@@ -118,19 +118,6 @@ public:
     virtual void insert(const box_size_type& position, const NeuronID& neuron_id) = 0;
 
     /**
-     * @brief Updates all local (!) branch nodes and their induced subtrees.
-     * @exception Throws a RelearnException if the functor throws
-     */
-    virtual void update_local_trees() = 0;
-
-    /**
-     * @brief Synchronizes all (locally) updated branch nodes with all other MPI ranks
-     */
-    virtual void synchronize_local_trees() = 0;
-
-    virtual void synchronize_tree() = 0;
-
-    /**
      * @brief Gathers all leaf nodes and makes them available via get_leaf_nodes
      * @param num_neurons The number of neurons
      */
@@ -174,11 +161,9 @@ private:
  * Algorithm::AdditionalCellAttributes - will be used to template the Cell
  * void Algorithm::update_functor(OctreeNode<Algorithm::AdditionalCellAttributes>*)
  */
-template <typename Algorithm>
+template <typename AdditionalCellAttributes>
 class OctreeImplementation : public Octree {
 public:
-    using AdditionalCellAttributes = typename Algorithm::AdditionalCellAttributes;
-
 protected:
     /**
      * Type for stack used in postorder tree walk
@@ -320,22 +305,6 @@ public:
     }
 
     /**
-     * @brief Updates all local (!) branch nodes and their induced subtrees.
-     * @exception Throws a RelearnException if the functor throws
-     */
-    void update_local_trees() override {
-        Timers::start(TimerRegion::UPDATE_LOCAL_TREES);
-        for (auto* local_tree : branch_nodes) {
-            if (!local_tree->is_local()) {
-                continue;
-            }
-
-            tree_walk_postorder(Algorithm::update_functor, local_tree);
-        }
-        Timers::stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
-    }
-
-    /**
      * @brief Gathers all leaf nodes and makes them available via get_leaf_nodes
      * @param num_neurons The number of neurons
      */
@@ -372,58 +341,12 @@ public:
         all_leaf_nodes = std::move(leaf_nodes);
     }
 
-    /**
-     * @brief Synchronizes all (locally) updated branch nodes with all other MPI ranks
-     */
-    void synchronize_local_trees() override {
-        /**
-         * Exchange branch nodes
-         */
-        Timers::start(TimerRegion::EXCHANGE_BRANCH_NODES);
-        const size_t num_rma_buffer_branch_nodes = branch_nodes.size();
-        // Copy local trees' root nodes to correct positions in receive buffer
-
-        std::vector<OctreeNode<AdditionalCellAttributes>> exchange_branch_nodes(num_rma_buffer_branch_nodes);
-
-        const size_t num_local_trees = num_rma_buffer_branch_nodes / MPIWrapper::get_num_ranks();
-        for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
-            exchange_branch_nodes[i] = *branch_nodes[i];
-        }
-
-        // Allgather in-place branch nodes from every rank
-        RelearnException::check(num_local_trees < static_cast<size_t>(std::numeric_limits<int>::max()),
-            "Octree::synchronize_local_trees: Too many branch nodes: {}", num_local_trees);
-        MPIWrapper::all_gather_inline(std::span{ exchange_branch_nodes.data(), num_local_trees });
-
-        Timers::stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
-
-        // Insert only received branch nodes into global tree
-        // The local ones are already in the global tree
-        Timers::start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
-        for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
-            *branch_nodes[i] = exchange_branch_nodes[i];
-        }
-        Timers::stop_and_add(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
-
-        // Update global tree
-        Timers::start(TimerRegion::UPDATE_GLOBAL_TREE);
-
-        const auto level_of_branch_nodes = get_level_of_branch_nodes();
-
-        // Only update whenever there are other branches to update
-        if (level_of_branch_nodes > 0) {
-            update_from_level(level_of_branch_nodes - 1);
-        }
-
-        Timers::stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
-    }
-
-    void synchronize_tree() override {
+    void synchronize_tree(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function) {
         // Update my local trees bottom-up
-        update_local_trees();
+        update_local_trees(function);
 
         // Exchange the local trees
-        synchronize_local_trees();
+        synchronize_local_trees(function);
     }
 
     /**
@@ -506,12 +429,74 @@ public:
 
 protected:
     /**
+     * @brief Updates all local (!) branch nodes and their induced subtrees.
+     * @exception Throws a RelearnException if the functor throws
+     */
+    void update_local_trees(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function) {
+        Timers::start(TimerRegion::UPDATE_LOCAL_TREES);
+        for (auto* local_tree : branch_nodes) {
+            if (!local_tree->is_local()) {
+                continue;
+            }
+
+            tree_walk_postorder(function, local_tree);
+        }
+        Timers::stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
+    }
+    
+    /**
+     * @brief Synchronizes all (locally) updated branch nodes with all other MPI ranks
+     */
+    void synchronize_local_trees(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function) {
+        /**
+         * Exchange branch nodes
+         */
+        Timers::start(TimerRegion::EXCHANGE_BRANCH_NODES);
+        const size_t num_rma_buffer_branch_nodes = branch_nodes.size();
+        // Copy local trees' root nodes to correct positions in receive buffer
+
+        std::vector<OctreeNode<AdditionalCellAttributes>> exchange_branch_nodes(num_rma_buffer_branch_nodes);
+
+        const size_t num_local_trees = num_rma_buffer_branch_nodes / MPIWrapper::get_num_ranks();
+        for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
+            exchange_branch_nodes[i] = *branch_nodes[i];
+        }
+
+        // Allgather in-place branch nodes from every rank
+        RelearnException::check(num_local_trees < static_cast<size_t>(std::numeric_limits<int>::max()),
+            "Octree::synchronize_local_trees: Too many branch nodes: {}", num_local_trees);
+        MPIWrapper::all_gather_inline(std::span{ exchange_branch_nodes.data(), num_local_trees });
+
+        Timers::stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
+
+        // Insert only received branch nodes into global tree
+        // The local ones are already in the global tree
+        Timers::start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
+        for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
+            *branch_nodes[i] = exchange_branch_nodes[i];
+        }
+        Timers::stop_and_add(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
+
+        // Update global tree
+        Timers::start(TimerRegion::UPDATE_GLOBAL_TREE);
+
+        const auto level_of_branch_nodes = get_level_of_branch_nodes();
+
+        // Only update whenever there are other branches to update
+        if (level_of_branch_nodes > 0) {
+            update_from_level(function, level_of_branch_nodes - 1);
+        }
+
+        Timers::stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
+    }
+
+    /**
      * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes
      * @param max_level The maximum level (inclusive) on which the nodes should be updated
      * @exception Throws a RelearnException if the functor throws
      */
-    void update_from_level(const size_t max_level) {
-        tree_walk_postorder(Algorithm::update_functor, root, max_level);
+    void update_from_level(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function, const size_t max_level) {
+        tree_walk_postorder(function, root, max_level);
     }
 
     void tree_walk_postorder(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function,

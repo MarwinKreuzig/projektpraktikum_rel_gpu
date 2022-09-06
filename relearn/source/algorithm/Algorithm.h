@@ -69,6 +69,8 @@ public:
      */
     virtual void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) = 0;
 
+    virtual void update_octree(const std::vector<UpdateStatus>& disable_flags) = 0;
+
 protected:
     std::shared_ptr<SynapticElements> axons{}; // NOLINT
     std::shared_ptr<SynapticElements> excitatory_dendrites{}; // NOLINT

@@ -151,15 +151,15 @@ void Simulation::initialize() {
     const auto level_of_branch_nodes = partition->get_level_of_subdomain_trees();
 
     if (algorithm_enum == AlgorithmEnum::BarnesHut) {
-        global_tree = std::make_shared<OctreeImplementation<BarnesHut>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+        global_tree = std::make_shared<OctreeImplementation<BarnesHutCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     } else if (algorithm_enum == AlgorithmEnum::BarnesHutInverted) {
-        global_tree = std::make_shared<OctreeImplementation<BarnesHutInverted>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+        global_tree = std::make_shared<OctreeImplementation<BarnesHutInvertedCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     } else if (algorithm_enum == AlgorithmEnum::BarnesHutLocationAware) {
-        global_tree = std::make_shared<OctreeImplementation<BarnesHutLocationAware>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+        global_tree = std::make_shared<OctreeImplementation<BarnesHutCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
-        global_tree = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+        global_tree = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     } else if (algorithm_enum == AlgorithmEnum::Naive) {
-        global_tree = std::make_shared<OctreeImplementation<Naive>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+        global_tree = std::make_shared<OctreeImplementation<NaiveCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     }
 
     LogFiles::print_message_rank(0, "Level of branch nodes is: {}", global_tree->get_level_of_branch_nodes());
@@ -174,22 +174,22 @@ void Simulation::initialize() {
     LogFiles::print_message_rank(0, "Inserted a total of {} neurons", number_total_neurons);
 
     if (algorithm_enum == AlgorithmEnum::BarnesHut) {
-        auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHut>>(global_tree);
+        auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutCell>>(global_tree);
         auto algorithm_barnes_hut = std::make_shared<BarnesHut>(std::move(cast));
         algorithm_barnes_hut->set_acceptance_criterion(accept_criterion);
         algorithm = std::move(algorithm_barnes_hut);
     } else if (algorithm_enum == AlgorithmEnum::BarnesHutInverted) {
-        auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutInverted>>(global_tree);
+        auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutInvertedCell>>(global_tree);
         auto algorithm_barnes_hut_inverted = std::make_shared<BarnesHutInverted>(std::move(cast));
         algorithm_barnes_hut_inverted->set_acceptance_criterion(accept_criterion);
         algorithm = std::move(algorithm_barnes_hut_inverted);
     } else if (algorithm_enum == AlgorithmEnum::BarnesHutLocationAware) {
-        auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutLocationAware>>(global_tree);
+        auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutCell>>(global_tree);
         auto algorithm_barnes_hut_location_aware = std::make_shared<BarnesHutLocationAware>(std::move(cast));
         algorithm_barnes_hut_location_aware->set_acceptance_criterion(accept_criterion);
         algorithm = std::move(algorithm_barnes_hut_location_aware);
     } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
-        auto cast = std::static_pointer_cast<OctreeImplementation<FastMultipoleMethods>>(global_tree);
+        auto cast = std::static_pointer_cast<OctreeImplementation<FastMultipoleMethodsCell>>(global_tree);
         auto algorithm_barnes_hut = std::make_shared<FastMultipoleMethods>(std::move(cast));
         algorithm = std::move(algorithm_barnes_hut);
     } else {

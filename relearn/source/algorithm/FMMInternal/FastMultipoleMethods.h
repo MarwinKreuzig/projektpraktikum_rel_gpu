@@ -44,7 +44,7 @@ class OctreeImplementation;
 class FastMultipoleMethods : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
     friend class FMMPrivateFunctionTest;
 
-    std::shared_ptr<OctreeImplementation<FastMultipoleMethods>> global_tree{};
+    std::shared_ptr<OctreeImplementation<FastMultipoleMethodsCell>> global_tree{};
 
 public:
     using AdditionalCellAttributes = FastMultipoleMethodsCell;
@@ -57,7 +57,7 @@ public:
      * @param octree The octree on which the algorithm is to be performed, not null
      * @exception Throws a RelearnException if octree is nullptr
      */
-    explicit FastMultipoleMethods(const std::shared_ptr<OctreeImplementation<FastMultipoleMethods>>& octree)
+    explicit FastMultipoleMethods(const std::shared_ptr<OctreeImplementation<FastMultipoleMethodsCell>>& octree)
         : global_tree(octree) {
         RelearnException::check(octree != nullptr, "FastMultipoleMethods::FastMultipoleMethods: octree was null");
     }
@@ -71,6 +71,8 @@ public:
      * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
      */
     void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) override;
+
+    void update_octree(const std::vector<UpdateStatus>& disable_flags) override;
 
     /**
      * @brief Updates the passed node with the values of its children according to the algorithm

@@ -73,6 +73,16 @@ void BarnesHutLocationAware::update_leaf_nodes(const std::vector<UpdateStatus>& 
     }
 }
 
+void BarnesHutLocationAware::update_octree(const std::vector<UpdateStatus>& disable_flags) {
+    // Update my leaf nodes
+    Timers::start(TimerRegion::UPDATE_LEAF_NODES);
+    update_leaf_nodes(disable_flags);
+    Timers::stop_and_add(TimerRegion::UPDATE_LEAF_NODES);
+
+    // Update the octree
+    global_tree->synchronize_tree(update_functor);
+}
+
 CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 

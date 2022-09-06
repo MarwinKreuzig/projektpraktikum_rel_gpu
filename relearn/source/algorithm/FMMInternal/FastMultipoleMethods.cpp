@@ -49,6 +49,16 @@ CommunicationMap<SynapseCreationRequest> FastMultipoleMethods::find_target_neuro
     return synapse_creation_requests_outgoing;
 }
 
+void FastMultipoleMethods::update_octree(const std::vector<UpdateStatus>& disable_flags) {
+    // Update my leaf nodes
+    Timers::start(TimerRegion::UPDATE_LEAF_NODES);
+    update_leaf_nodes(disable_flags);
+    Timers::stop_and_add(TimerRegion::UPDATE_LEAF_NODES);
+
+    // Update the octree
+    global_tree->synchronize_tree(update_functor);
+}
+
 void FastMultipoleMethods::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
 
     const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_grown_elements();

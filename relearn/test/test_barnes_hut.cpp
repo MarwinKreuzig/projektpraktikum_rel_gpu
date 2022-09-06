@@ -17,7 +17,7 @@
 
 TEST_F(BarnesHutTest, testGetterSetter) {
     const auto& [min, max] = get_random_simulation_box_size();
-    auto octree = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
+    auto octree = std::make_shared<OctreeImplementation<BarnesHutCell>>(min, max, 0);
 
     ASSERT_NO_THROW(BarnesHut algorithm(octree););
 
@@ -105,7 +105,7 @@ TEST_F(BarnesHutTest, testUpdateLeafNodes) {
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons);
 
-    auto octree = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
+    auto octree = std::make_shared<OctreeImplementation<BarnesHutCell>>(min, max, 0);
 
     std::map<NeuronID::value_type, Vec3d> positions{};
     for (const auto& [position, id] : neurons_to_place) {
@@ -162,7 +162,7 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons);
 
-    auto octree = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
+    auto octree = std::make_shared<OctreeImplementation<BarnesHutCell>>(min, max, 0);
 
     std::map<NeuronID::value_type, Vec3d> positions{};
     for (const auto& [position, id] : neurons_to_place) {
@@ -178,7 +178,7 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
     const auto update_status = get_update_status(number_neurons);
 
     ASSERT_NO_THROW(barnes_hut.update_leaf_nodes(update_status));
-    ASSERT_NO_THROW(octree->update_local_trees());
+    ASSERT_NO_THROW(octree->update_());
 
     std::stack<OctreeNode<BarnesHutCell>*> stack{};
     stack.push(octree->get_root());

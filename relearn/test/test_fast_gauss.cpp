@@ -171,7 +171,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
 
         std::tie(min, max) = get_random_simulation_box_size_FMM(mt);
 
-        auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
+        auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
         auto& octree = *octree_ptr;
 
         const size_t num_neurons = get_random_number_neurons();
@@ -249,7 +249,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
 
         std::tie(min, max) = get_random_simulation_box_size_FMM(mt);
 
-        auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
+        auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
         auto& octree = *octree_ptr;
 
         const size_t num_neurons = get_random_number_neurons();
@@ -396,7 +396,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
 
         std::tie(min, max) = get_random_simulation_box_size_FMM(mt);
 
-        auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
+        auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
         auto& octree = *octree_ptr;
 
         const size_t num_neurons = get_random_number_neurons();
@@ -477,7 +477,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
 
         std::tie(min, max) = get_random_simulation_box_size_FMM(mt);
 
-        auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
+        auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
         auto& octree = *octree_ptr;
 
         const size_t num_neurons = get_random_number_neurons();
@@ -623,7 +623,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
 
 //         std::tie(min, max) = get_random_simulation_box_size_FMM(mt);
 
-//         auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
+//         auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
 
 //         auto& octree = *octree_ptr;
 

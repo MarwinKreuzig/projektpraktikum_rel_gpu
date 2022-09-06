@@ -49,7 +49,7 @@ public:
      * @param octree The octree on which the algorithm is to be performed, not null
      * @exception Throws a RelearnException if octree is nullptr
      */
-    explicit BarnesHutInverted(const std::shared_ptr<OctreeImplementation<BarnesHutInverted>>& octree)
+    explicit BarnesHutInverted(const std::shared_ptr<OctreeImplementation<BarnesHutInvertedCell>>& octree)
         : global_tree(octree) {
         RelearnException::check(octree != nullptr, "BarnesHutInverted::BarnesHutInverted: octree was null");
     }
@@ -60,6 +60,8 @@ public:
      * @exception Throws a RelearnException if the number of flags is different than the number of leaf nodes, or if there is an internal error
      */
     void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) override;
+
+    void update_octree(const std::vector<UpdateStatus>& disable_flags) override;
 
     /**
      * @brief Updates the passed node with the values of its children according to the algorithm
@@ -200,5 +202,5 @@ protected:
     }
 
 private:
-    std::shared_ptr<OctreeImplementation<BarnesHutInverted>> global_tree{};
+    std::shared_ptr<OctreeImplementation<BarnesHutInvertedCell>> global_tree{};
 };

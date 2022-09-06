@@ -19,11 +19,11 @@
 #include <tuple>
 #include <vector>
 
-using test_types = ::testing::Types<BarnesHut, BarnesHutInverted, FastMultipoleMethods, Naive>;
+using test_types = ::testing::Types<BarnesHutCell, BarnesHutInvertedCell, FastMultipoleMethodsCell, NaiveCell>;
 TYPED_TEST_SUITE(OctreeTest, test_types);
 
 TYPED_TEST(OctreeTest, testOctreeNodeReset) {
-    using AdditionalCellAttributes = typename TypeParam::AdditionalCellAttributes;
+    using AdditionalCellAttributes = TypeParam;
 
     OctreeNode<AdditionalCellAttributes> node{};
 
@@ -65,7 +65,7 @@ TYPED_TEST(OctreeTest, testOctreeNodeReset) {
 }
 
 TYPED_TEST(OctreeTest, testOctreeNodeSetterGetter) {
-    using AdditionalCellAttributes = typename TypeParam::AdditionalCellAttributes;
+    using AdditionalCellAttributes = TypeParam;
 
     OctreeNode<AdditionalCellAttributes> node{};
 
@@ -110,7 +110,7 @@ TYPED_TEST(OctreeTest, testOctreeNodeSetterGetter) {
 }
 
 TYPED_TEST(OctreeTest, testOctreeNodeLocal) {
-    using AdditionalCellAttributes = typename TypeParam::AdditionalCellAttributes;
+    using AdditionalCellAttributes = TypeParam;
 
     OctreeNode<AdditionalCellAttributes> node{};
     const auto my_rank = MPIWrapper::get_my_rank();
@@ -129,7 +129,7 @@ TYPED_TEST(OctreeTest, testOctreeNodeLocal) {
 }
 
 TYPED_TEST(OctreeTest, testOctreeNodeInsert) {
-    using AdditionalCellAttributes = typename TypeParam::AdditionalCellAttributes;
+    using AdditionalCellAttributes = TypeParam;
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -171,7 +171,7 @@ TYPED_TEST(OctreeTest, testOctreeNodeInsert) {
 }
 
 TYPED_TEST(OctreeTest, testOctreeConstructor) {
-    using AdditionalCellAttributes = typename TypeParam::AdditionalCellAttributes;
+    using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = this->get_random_simulation_box_size();
     const auto level_of_branch_nodes = this->get_small_refinement_level();
@@ -210,7 +210,7 @@ TYPED_TEST(OctreeTest, testOctreeConstructor) {
 }
 
 TYPED_TEST(OctreeTest, testOctreeConstructorExceptions) {
-    using AdditionalCellAttributes = typename TypeParam::AdditionalCellAttributes;
+    using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = this->get_random_simulation_box_size();
     const auto level_of_branch_nodes = this->get_small_refinement_level();
@@ -221,7 +221,7 @@ TYPED_TEST(OctreeTest, testOctreeConstructorExceptions) {
 }
 
 TYPED_TEST(OctreeTest, testOctreeInsertNeurons) {
-    using AdditionalCellAttributes = typename TypeParam::AdditionalCellAttributes;
+    using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = this->get_random_simulation_box_size();
     const auto level_of_branch_nodes = this->get_small_refinement_level();
@@ -257,7 +257,7 @@ TYPED_TEST(OctreeTest, testOctreeInsertNeurons) {
 }
 
 TYPED_TEST(OctreeTest, testOctreeInsertNeuronsExceptions) {
-    using AdditionalCellAttributes = typename TypeParam::AdditionalCellAttributes;
+    using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = this->get_random_simulation_box_size();
     const auto level_of_branch_nodes = this->get_small_refinement_level();
@@ -297,7 +297,7 @@ TYPED_TEST(OctreeTest, testOctreeInsertNeuronsExceptions) {
 }
 
 TYPED_TEST(OctreeTest, testOctreeStructure) {
-    using AdditionalCellAttributes = typename TypeParam::AdditionalCellAttributes;
+    using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = this->get_random_simulation_box_size();
     const auto level_of_branch_nodes = this->get_small_refinement_level();
@@ -381,7 +381,7 @@ TYPED_TEST(OctreeTest, testOctreeStructure) {
 }
 
 TYPED_TEST(OctreeTest, testOctreeMemoryStructure) {
-    using AdditionalCellAttributes = typename TypeParam::AdditionalCellAttributes;
+    using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = this->get_random_simulation_box_size();
     const auto level_of_branch_nodes = this->get_small_refinement_level();
@@ -437,7 +437,7 @@ TYPED_TEST(OctreeTest, testOctreeMemoryStructure) {
 }
 
 TYPED_TEST(OctreeTest, testOctreeLocalTrees) {
-    using AdditionalCellAttributes = typename TypeParam::AdditionalCellAttributes;
+    using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = this->get_random_simulation_box_size();
     const auto level_of_branch_nodes = this->get_small_refinement_level();
@@ -474,7 +474,7 @@ TYPED_TEST(OctreeTest, testOctreeLocalTrees) {
 }
 
 TYPED_TEST(OctreeTest, testOctreeInsertLocalTree) {
-    using AdditionalCellAttributes = typename TypeParam::AdditionalCellAttributes;
+    using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = this->get_random_simulation_box_size();
     const auto level_of_branch_nodes = this->get_small_refinement_level();

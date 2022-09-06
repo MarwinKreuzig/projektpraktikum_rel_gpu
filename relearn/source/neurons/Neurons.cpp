@@ -535,18 +535,9 @@ size_t Neurons::delete_synapses_commit_deletions(const CommunicationMap<SynapseD
 size_t Neurons::create_synapses() {
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    // Lock local RMA memory for local stores
+    // Lock local RMA memory for local stores and make them visible afterwards
     MPIWrapper::lock_window(my_rank, MPI_Locktype::Exclusive);
-
-    // Update my leaf nodes
-    Timers::start(TimerRegion::UPDATE_LEAF_NODES);
-    algorithm->update_leaf_nodes(disable_flags);
-    Timers::stop_and_add(TimerRegion::UPDATE_LEAF_NODES);
-
-    // Update the octree
-    global_tree->synchronize_tree();
-
-    // Unlock local RMA memory and make local stores visible in public window copy
+    algorithm->update_octree(disable_flags);
     MPIWrapper::unlock_window(my_rank);
 
     // Makes sure that all ranks finished their local access epoch
