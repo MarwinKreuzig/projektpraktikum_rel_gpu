@@ -76,8 +76,6 @@ void BarnesHutLocationAware::update_leaf_nodes(const std::vector<UpdateStatus>& 
 CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 
-    std::vector<double> lengths{};
-
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
     const auto size_hint = std::min(number_neurons, size_t(number_ranks));
@@ -86,7 +84,7 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
     auto* const root = global_tree->get_root();
 
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
-#pragma omp parallel for default(none) shared(root, number_neurons, extra_infos, disable_flags, neuron_requests_outgoing, lengths)
+#pragma omp parallel for default(none) shared(root, number_neurons, extra_infos, disable_flags, neuron_requests_outgoing)
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
@@ -102,11 +100,9 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
         }
 
         const auto& requests = find_target_neurons(id, axon_position, number_vacant_axons, root, ElementType::Dendrite, dendrite_type_needed);
-        for (const auto& [target_rank, creation_request, length] : requests) {
+        for (const auto& [target_rank, creation_request] : requests) {
 #pragma omp critical(BHrequests)
             neuron_requests_outgoing.append(target_rank, creation_request);
-#pragma omp critical(BHlengths)
-            lengths.emplace_back(length);
         }
     }
 
@@ -118,10 +114,10 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
     return neuron_requests_outgoing;
 }
 
-std::vector<std::tuple<int, DistantNeuronRequest, double>> BarnesHutLocationAware::find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
+std::vector<std::tuple<int, DistantNeuronRequest>> BarnesHutLocationAware::find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
     const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type) {
 
-    std::vector<std::tuple<int, DistantNeuronRequest, double>> requests{};
+    std::vector<std::tuple<int, DistantNeuronRequest>> requests{};
     requests.reserve(number_vacant_elements);
 
     for (unsigned int j = 0; j < number_vacant_elements; j++) {
@@ -134,13 +130,13 @@ std::vector<std::tuple<int, DistantNeuronRequest, double>> BarnesHutLocationAwar
 
         const auto& [target_rank, request] = neuron_request.value();
 
-        requests.emplace_back(target_rank, request, 0);
+        requests.emplace_back(target_rank, request);
     }
 
     return requests;
 }
 
-    [[nodiscard]] std::pair<CommunicationMap<DistantNeuronResponse>, std::pair<LocalSynapses, DistantInSynapses>>
+[[nodiscard]] std::pair<CommunicationMap<DistantNeuronResponse>, std::pair<LocalSynapses, DistantInSynapses>>
 BarnesHutLocationAware::process_requests(const CommunicationMap<DistantNeuronRequest>& neuron_requests) {
     const auto number_ranks = neuron_requests.get_number_ranks();
 
@@ -187,7 +183,7 @@ BarnesHutLocationAware::process_requests(const CommunicationMap<DistantNeuronReq
 
             // If the local search is successful, create a SynapseCreationRequest
             if (const auto& local_search = BarnesHutBase<BarnesHutCell>::find_target_neuron(source_neuron_id, source_position, chosen_target, ElementType::Dendrite, signal_type); local_search.has_value()) {
-                const auto& [targer_rank, target_neuron_id] = local_search.value();
+                const auto& [target_rank, target_neuron_id] = local_search.value();
 
                 creation_requests.set_request(source_rank, request_index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
             } else {

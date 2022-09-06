@@ -275,6 +275,10 @@ protected:
                 return {};
             }
 
+            if (level_of_branch_nodes == node_selected->get_level()) {
+                // TODO
+            }
+
             if (level_of_branch_nodes < node_selected->get_level()) {
                 const auto& cell = node_selected->get_cell();
                 const auto target_rank = node_selected->get_rank();
@@ -296,7 +300,7 @@ protected:
                     source_neuron_id,
                     source_position,
                     cell.get_neuron_id().get_rma_offset(),
-                    DistantNeuronRequest::TargetNeuronType::Leaf,
+                    DistantNeuronRequest::TargetNeuronType::VirtualNode,
                     signal_type);
 
                 return std::make_pair(target_rank, neuron_request);

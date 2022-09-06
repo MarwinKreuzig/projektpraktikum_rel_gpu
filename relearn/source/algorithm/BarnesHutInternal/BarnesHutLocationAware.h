@@ -174,7 +174,7 @@ protected:
      * @param signal_type The signal type the source neuron searches
      * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
      */
-    [[nodiscard]] std::vector<std::tuple<int, DistantNeuronRequest, double>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position, const counter_type& number_vacant_elements,
+    [[nodiscard]] std::vector<std::tuple<int, DistantNeuronRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position, const counter_type& number_vacant_elements,
         OctreeNode<AdditionalCellAttributes>* root, ElementType element_type, SignalType signal_type);
 
     /**
@@ -216,12 +216,11 @@ protected:
                 const auto target_neuron_id = responses[index].get_source_id();
                 const auto creation_response = responses[index].get_creation_response();
 
-                // If the creation succeeded set the corresponding target neuron
                 if (creation_response == SynapseCreationResponse::Succeeded) {
+                    // If the creation succeeded set the corresponding target neuron
                     creation_requests.set_request(rank, index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
-                }
-                // Otherwise set the source as the target
-                else {
+                } else {
+                    // Otherwise set the source as the target
                     creation_requests.set_request(rank, index, SynapseCreationRequest{ source_neuron_id, source_neuron_id, signal_type });
                 }
 

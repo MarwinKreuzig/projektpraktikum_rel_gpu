@@ -543,13 +543,8 @@ size_t Neurons::create_synapses() {
     algorithm->update_leaf_nodes(disable_flags);
     Timers::stop_and_add(TimerRegion::UPDATE_LEAF_NODES);
 
-    // Update my local trees bottom-up
-    Timers::start(TimerRegion::UPDATE_LOCAL_TREES);
-    global_tree->update_local_trees();
-    Timers::stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
-
-    // Exchange the local trees
-    global_tree->synchronize_local_trees();
+    // Update the octree
+    global_tree->synchronize_tree();
 
     // Unlock local RMA memory and make local stores visible in public window copy
     MPIWrapper::unlock_window(my_rank);

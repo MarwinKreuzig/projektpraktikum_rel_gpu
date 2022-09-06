@@ -118,13 +118,6 @@ public:
     virtual void insert(const box_size_type& position, const NeuronID& neuron_id) = 0;
 
     /**
-     * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes
-     * @param max_level The maximum level (inclusive) on which the nodes should be updated
-     * @exception Throws a RelearnException if the functor throws
-     */
-    virtual void update_from_level(size_t max_level) = 0;
-
-    /**
      * @brief Updates all local (!) branch nodes and their induced subtrees.
      * @exception Throws a RelearnException if the functor throws
      */
@@ -134,6 +127,8 @@ public:
      * @brief Synchronizes all (locally) updated branch nodes with all other MPI ranks
      */
     virtual void synchronize_local_trees() = 0;
+
+    virtual void synchronize_tree() = 0;
 
     /**
      * @brief Gathers all leaf nodes and makes them available via get_leaf_nodes
@@ -325,19 +320,11 @@ public:
     }
 
     /**
-     * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes
-     * @param max_level The maximum level (inclusive) on which the nodes should be updated
-     * @exception Throws a RelearnException if the functor throws
-     */
-    void update_from_level(const size_t max_level) override {
-        tree_walk_postorder(Algorithm::update_functor, root, max_level);
-    }
-
-    /**
      * @brief Updates all local (!) branch nodes and their induced subtrees.
      * @exception Throws a RelearnException if the functor throws
      */
     void update_local_trees() override {
+        Timers::start(TimerRegion::UPDATE_LOCAL_TREES);
         for (auto* local_tree : branch_nodes) {
             if (!local_tree->is_local()) {
                 continue;
@@ -345,6 +332,7 @@ public:
 
             tree_walk_postorder(Algorithm::update_functor, local_tree);
         }
+        Timers::stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
     }
 
     /**
@@ -430,6 +418,14 @@ public:
         Timers::stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
     }
 
+    void synchronize_tree() override {
+        // Update my local trees bottom-up
+        update_local_trees();
+
+        // Exchange the local trees
+        synchronize_local_trees();
+    }
+
     /**
      * @brief Sets the branch node with the specified local id
      * @param node_to_insert The node to insert as local tree, not nullptr, ownership is not taken, must be a parent node
@@ -509,6 +505,15 @@ public:
     }
 
 protected:
+    /**
+     * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes
+     * @param max_level The maximum level (inclusive) on which the nodes should be updated
+     * @exception Throws a RelearnException if the functor throws
+     */
+    void update_from_level(const size_t max_level) {
+        tree_walk_postorder(Algorithm::update_functor, root, max_level);
+    }
+
     void tree_walk_postorder(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function,
         OctreeNode<AdditionalCellAttributes>* root, const size_t max_level = std::numeric_limits<size_t>::max()) {
         RelearnException::check(root != nullptr, "Octree::tree_walk_postorder: octree was nullptr");
