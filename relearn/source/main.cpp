@@ -25,6 +25,7 @@
 #include "sim/file/SubdomainFromFile.h"
 #include "sim/random/SubdomainFromNeuronDensity.h"
 #include "sim/random/SubdomainFromNeuronPerRank.h"
+#include "structure/BaseCell.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
 #include "util/Random.h"
@@ -94,6 +95,11 @@ void print_sizes() {
     constexpr auto sizeof_distant_in_synapse = sizeof(DistantInSynapse);
     constexpr auto sizeof_distant_out_synapse = sizeof(DistantOutSynapse);
 
+    constexpr auto sizeof_empty_base_cell = sizeof(BaseCell<false, false, false, false>);
+    constexpr auto sizeof_full_base_cell = sizeof(BaseCell<true, true, true, true>);
+    constexpr auto sizeof_dendrites_base_cell = sizeof(BaseCell<true, true, false, false>);
+    constexpr auto sizeof_axons_base_cell = sizeof(BaseCell<false, false, true, true>);
+
     std::stringstream ss{};
 
     ss << '\n';
@@ -126,6 +132,11 @@ void print_sizes() {
     ss << "Size of LocalSynapse: " << sizeof_local_synapse << '\n';
     ss << "Size of DistantInSynapse: " << sizeof_distant_in_synapse << '\n';
     ss << "Size of DistantOutSynapse: " << sizeof_distant_out_synapse << "\n";
+
+    ss << "Size of BaseCell<false, false, false, false>: " << sizeof_empty_base_cell << '\n';
+    ss << "Size of BaseCell<true, true, true, true>: " << sizeof_full_base_cell << '\n';
+    ss << "Size of BaseCell<true, true, false, false>: " << sizeof_dendrites_base_cell << '\n';
+    ss << "Size of BaseCell<false, false, true, true>: " << sizeof_axons_base_cell << '\n';
 
     LogFiles::print_message_rank(0, ss.str());
 }
@@ -636,9 +647,9 @@ int main(int argc, char** argv) {
 
     Timers::stop_and_add(TimerRegion::INITIALIZATION);
 
-    //sim.register_neuron_monitor(NeuronID{ 6 });
-    //sim.register_neuron_monitor(NeuronID{ 1164 });
-    //sim.register_neuron_monitor(NeuronID{ 28001 });
+    // sim.register_neuron_monitor(NeuronID{ 6 });
+    // sim.register_neuron_monitor(NeuronID{ 1164 });
+    // sim.register_neuron_monitor(NeuronID{ 28001 });
 
     auto simulate = [&sim, &simulation_steps]() {
         sim.simulate(simulation_steps);

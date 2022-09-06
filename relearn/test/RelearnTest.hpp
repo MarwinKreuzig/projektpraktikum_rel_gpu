@@ -701,14 +701,14 @@ protected:
         return return_value;
     }
 
-    template <typename Algorithm>
-    std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons_tree(const OctreeImplementation<Algorithm>& octree) {
+    template <typename AdditionalCellAttributes>
+    std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons_tree(const OctreeImplementation<AdditionalCellAttributes>& octree) {
         const auto root = octree.get_root();
         if (root == nullptr) {
             return {};
         }
 
-        return extract_neurons<typename Algorithm::AdditionalCellAttributes>(root);
+        return extract_neurons<AdditionalCellAttributes>(root);
     }
 
     constexpr static double min_grown_elements = 0.0;
@@ -879,11 +879,11 @@ protected:
     void test_vpe_mixed();
 };
 
-template <typename AlgorithmType>
+template <typename AdditionalCellAttributes>
 class OctreeTest : public RelearnTest {
 protected:
     static void SetUpTestSuite() {
-        SetUpTestCaseTemplate<typename AlgorithmType::AdditionalCellAttributes>();
+        SetUpTestCaseTemplate<AdditionalCellAttributes>();
     }
 };
 

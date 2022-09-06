@@ -198,8 +198,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
 
         fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
 
-        fmm.update_leaf_nodes(disable_flags);
-        octree.update_local_trees();
+        fmm.update_octree(disable_flags);
 
         std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
         stack.emplace(octree.get_root());
@@ -272,8 +271,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
 
         std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::Enabled);
         fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
-        fmm.update_leaf_nodes(disable_flags);
-        octree.update_local_trees();
+        fmm.update_octree(disable_flags);
 
         std::stack<std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool>> stack{};
         const auto flag_exc = octree.get_root()->get_cell().get_number_excitatory_dendrites() != 0;
@@ -421,8 +419,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
         auto unique_dend_exc = std::make_shared<SynapticElements>(std::move(elements[1]));
         auto unique_dend_inh = std::make_shared<SynapticElements>(std::move(elements[2]));
         fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
-        fmm.update_leaf_nodes(disable_flags);
-        octree.update_local_trees();
+        fmm.update_octree(disable_flags);
 
         std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
         stack.emplace(octree.get_root());
@@ -500,8 +497,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
 
         std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::Enabled);
         fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
-        fmm.update_leaf_nodes(disable_flags);
-        octree.update_local_trees();
+        fmm.update_octree(disable_flags);
 
         std::stack<std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool>> stack{};
         const auto flag_exc = octree.get_root()->get_cell().get_number_excitatory_axons() != 0;

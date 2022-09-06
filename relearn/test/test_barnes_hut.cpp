@@ -177,8 +177,7 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
 
     const auto update_status = get_update_status(number_neurons);
 
-    ASSERT_NO_THROW(barnes_hut.update_leaf_nodes(update_status));
-    ASSERT_NO_THROW(octree->update_());
+    ASSERT_NO_THROW(barnes_hut.update_octree(update_status));
 
     std::stack<OctreeNode<BarnesHutCell>*> stack{};
     stack.push(octree->get_root());

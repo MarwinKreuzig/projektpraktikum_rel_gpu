@@ -82,7 +82,7 @@ public:
      *      Throws a RelearnException
      */
     template <typename FormatString, typename... Args>
-    static void fail(FormatString&& format, Args&&... args) {
+    [[noreturn]] static void fail(FormatString&& format, Args&&... args) {
         if (hide_messages) {
             throw RelearnException{};
         }
