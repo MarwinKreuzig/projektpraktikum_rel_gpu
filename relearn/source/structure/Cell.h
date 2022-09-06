@@ -33,6 +33,11 @@ public:
     using counter_type = typename RelearnTypes::counter_type;
     using box_size_type = RelearnTypes::box_size_type;
 
+    constexpr static bool has_excitatory_dendrite = AdditionalCellAttributes::has_excitatory_dendrite;
+    constexpr static bool has_inhibitory_dendrite = AdditionalCellAttributes::has_inhibitory_dendrite;
+    constexpr static bool has_excitatory_axon = AdditionalCellAttributes::has_excitatory_axon;
+    constexpr static bool has_inhibitory_axon = AdditionalCellAttributes::has_inhibitory_axon;
+
     /**
      * @brief Sets the neuron id for the associated cell
      * @param neuron_id The neuron id
@@ -197,8 +202,8 @@ public:
         // NOLINTNEXTLINE
         output_stream << "  == Cell (" << reinterpret_cast<size_t>(&cell) << " ==\n";
         output_stream << "\tMin: " << minimum_position << "\n\tMax: " << maximum_position << '\n';
-        output_stream << "\tnumber_excitatory_dendrites: " << number_excitatory_dendrites << "\tPosition: " << position_excitatory_dendrites << '\n';
-        output_stream << "\tnumber_inhibitory_dendrites: " << number_inhibitory_dendrites << "\tPosition: " << position_inhibitory_dendrites << '\n';
+        output_stream << "\tNeuronID: " << cell.get_neuron_id() << '\n';
+        output_stream << cell.additional_cell_attributes;
 
         return output_stream;
     }

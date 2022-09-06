@@ -38,6 +38,11 @@ public:
     using counter_type = typename Cell<AdditionalCellAttributes>::counter_type;
     using box_size_type = typename Cell<AdditionalCellAttributes>::box_size_type;
 
+    constexpr static bool has_excitatory_dendrite = AdditionalCellAttributes::has_excitatory_dendrite;
+    constexpr static bool has_inhibitory_dendrite = AdditionalCellAttributes::has_inhibitory_dendrite;
+    constexpr static bool has_excitatory_axon = AdditionalCellAttributes::has_excitatory_axon;
+    constexpr static bool has_inhibitory_axon = AdditionalCellAttributes::has_inhibitory_axon;
+
     /**
      * @brief Returns the MPI rank this node belongs to
      * @return The MPI rank
@@ -215,6 +220,196 @@ public:
         new_node_to_insert->set_level(parent_node->get_level() + 1);
 
         return new_node_to_insert;
+    }
+
+    void update() {
+        if constexpr (has_excitatory_dendrite) {
+            position_type my_position = { 0., 0., 0. };
+            counter_type my_free_elements = 0;
+
+            for (const auto& child : children) {
+                if (child == nullptr) {
+                    continue;
+                }
+
+                const auto& child_cell = child->get_cell();
+
+                // Sum up number of free elements
+                const auto child_free_elements = child_cell.get_number_excitatory_dendrites();
+                my_free_elements += child_free_elements;
+
+                const auto& opt_child_position = child_cell.get_excitatory_dendrites_position();
+
+                // We can use position if it's valid or if corresponding number of elements is 0
+                RelearnException::check(opt_child_position.has_value() || (0 == child_free_elements), "OctreeNode::update(): The child had excitatory dendrites, but no position. ID: {}", child_cell.get_neuron_id());
+
+                if (opt_child_position.has_value()) {
+                    const auto& child_position = opt_child_position.value();
+
+                    const auto& [child_cell_xyz_min, child_cell_xyz_max] = child_cell.get_size();
+                    const auto is_in_box = child_position.check_in_box(child_cell_xyz_min, child_cell_xyz_max);
+
+                    RelearnException::check(is_in_box, "OctreeNode::update(): The excitatory dendrites of the child are not in its cell");
+
+                    const auto& scaled_position = child_position * static_cast<double>(child_free_elements);
+                    my_position += scaled_position;
+                }
+            }
+
+            cell.set_number_excitatory_dendrites(my_free_elements);
+
+            /**
+             * For calculating the new weighted position, make sure that we don't
+             * divide by 0. This happens if the my number of dendrites is 0.
+             */
+            if (0 == my_free_elements) {
+                cell.set_excitatory_dendrites_position({});
+            } else {
+                const auto scaled_position = my_position / my_free_elements;
+                cell.set_excitatory_dendrites_position(std::optional<position_type>{ scaled_position });
+            }
+        }
+
+        if constexpr (has_inhibitory_dendrite) {
+            position_type my_position = { 0., 0., 0. };
+            counter_type my_free_elements = 0;
+
+            for (const auto& child : children) {
+                if (child == nullptr) {
+                    continue;
+                }
+
+                const auto& child_cell = child->get_cell();
+
+                // Sum up number of free elements
+                const auto child_free_elements = child_cell.get_number_inhibitory_dendrites();
+                my_free_elements += child_free_elements;
+
+                const auto& opt_child_position = child_cell.get_inhibitory_dendrites_position();
+
+                // We can use position if it's valid or if corresponding number of elements is 0
+                RelearnException::check(opt_child_position.has_value() || (0 == child_free_elements), "OctreeNode::update(): The child had inhibitory dendrites, but no position. ID: {}", child_cell.get_neuron_id());
+
+                if (opt_child_position.has_value()) {
+                    const auto& child_position = opt_child_position.value();
+
+                    const auto& [child_cell_xyz_min, child_cell_xyz_max] = child_cell.get_size();
+                    const auto is_in_box = child_position.check_in_box(child_cell_xyz_min, child_cell_xyz_max);
+
+                    RelearnException::check(is_in_box, "OctreeNode::update(): The inhibitory dendrites of the child are not in its cell");
+
+                    const auto& scaled_position = child_position * static_cast<double>(child_free_elements);
+                    my_position += scaled_position;
+                }
+            }
+
+            cell.set_number_inhibitory_dendrites(my_free_elements);
+
+            /**
+             * For calculating the new weighted position, make sure that we don't
+             * divide by 0. This happens if the my number of dendrites is 0.
+             */
+            if (0 == my_free_elements) {
+                cell.set_inhibitory_dendrites_position({});
+            } else {
+                const auto scaled_position = my_position / my_free_elements;
+                cell.set_inhibitory_dendrites_position(std::optional<position_type>{ scaled_position });
+            }
+        }
+
+        if constexpr (has_excitatory_axon) {
+            position_type my_position = { 0., 0., 0. };
+            counter_type my_free_elements = 0;
+
+            for (const auto& child : children) {
+                if (child == nullptr) {
+                    continue;
+                }
+
+                const auto& child_cell = child->get_cell();
+
+                // Sum up number of free elements
+                const auto child_free_elements = child_cell.get_number_excitatory_axons();
+                my_free_elements += child_free_elements;
+
+                const auto& opt_child_position = child_cell.get_excitatory_axons_position();
+
+                // We can use position if it's valid or if corresponding number of elements is 0
+                RelearnException::check(opt_child_position.has_value() || (0 == child_free_elements), "OctreeNode::update(): The child had excitatory axons, but no position. ID: {}", child_cell.get_neuron_id());
+
+                if (opt_child_position.has_value()) {
+                    const auto& child_position = opt_child_position.value();
+
+                    const auto& [child_cell_xyz_min, child_cell_xyz_max] = child_cell.get_size();
+                    const auto is_in_box = child_position.check_in_box(child_cell_xyz_min, child_cell_xyz_max);
+
+                    RelearnException::check(is_in_box, "OctreeNode::update(): The excitatory axons of the child are not in its cell");
+
+                    const auto& scaled_position = child_position * static_cast<double>(child_free_elements);
+                    my_position += scaled_position;
+                }
+            }
+
+            cell.set_number_excitatory_axons(my_free_elements);
+
+            /**
+             * For calculating the new weighted position, make sure that we don't
+             * divide by 0. This happens if the my number of axons is 0.
+             */
+            if (0 == my_free_elements) {
+                cell.set_excitatory_axons_position({});
+            } else {
+                const auto scaled_position = my_position / my_free_elements;
+                cell.set_excitatory_axons_position(std::optional<position_type>{ scaled_position });
+            }
+        }
+
+        if constexpr (has_inhibitory_axon) {
+            position_type my_position = { 0., 0., 0. };
+            counter_type my_free_elements = 0;
+
+            for (const auto& child : children) {
+                if (child == nullptr) {
+                    continue;
+                }
+
+                const auto& child_cell = child->get_cell();
+
+                // Sum up number of free elements
+                const auto child_free_elements = child_cell.get_number_inhibitory_axons();
+                my_free_elements += child_free_elements;
+
+                const auto& opt_child_position = child_cell.get_inhibitory_axons_position();
+
+                // We can use position if it's valid or if corresponding number of elements is 0
+                RelearnException::check(opt_child_position.has_value() || (0 == child_free_elements), "OctreeNode::update(): The child had inhibitory axons, but no position. ID: {}", child_cell.get_neuron_id());
+
+                if (opt_child_position.has_value()) {
+                    const auto& child_position = opt_child_position.value();
+
+                    const auto& [child_cell_xyz_min, child_cell_xyz_max] = child_cell.get_size();
+                    const auto is_in_box = child_position.check_in_box(child_cell_xyz_min, child_cell_xyz_max);
+
+                    RelearnException::check(is_in_box, "OctreeNode::update(): The inhibitory axons of the child are not in its cell");
+
+                    const auto& scaled_position = child_position * static_cast<double>(child_free_elements);
+                    my_position += scaled_position;
+                }
+            }
+
+            cell.set_number_inhibitory_axons(my_free_elements);
+
+            /**
+             * For calculating the new weighted position, make sure that we don't
+             * divide by 0. This happens if the my number of axons is 0.
+             */
+            if (0 == my_free_elements) {
+                cell.set_inhibitory_axons_position({});
+            } else {
+                const auto scaled_position = my_position / my_free_elements;
+                cell.set_inhibitory_axons_position(std::optional<position_type>{ scaled_position });
+            }
+        }
     }
 
     /**

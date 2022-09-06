@@ -60,12 +60,17 @@ void omp_set_num_threads(int num) { }
 #include <locale>
 #include <memory>
 
-void print_sizes() {
-    struct empty_t {
-        using position_type = VirtualPlasticityElement::position_type;
-        using counter_type = VirtualPlasticityElement::counter_type;
-    };
+struct empty_t {
+    using position_type = VirtualPlasticityElement::position_type;
+    using counter_type = VirtualPlasticityElement::counter_type;
 
+    constexpr static bool has_excitatory_dendrite = false;
+    constexpr static bool has_inhibitory_dendrite = false;
+    constexpr static bool has_excitatory_axon = false;
+    constexpr static bool has_inhibitory_axon = false;
+};
+
+void print_sizes() {
     constexpr auto number_bits_in_byte = CHAR_BIT;
 
     constexpr auto sizeof_vec3_double = sizeof(Vec3d);

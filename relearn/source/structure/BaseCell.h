@@ -16,6 +16,7 @@
 #include "util/RelearnException.h"
 
 #include <optional>
+#include <ostream>
 #include <type_traits>
 
 #ifdef WIN32
@@ -37,19 +38,14 @@
  */
 template <bool has_excitatory_dendrite, bool has_inhibitory_dendrite, bool has_excitatory_axon, bool has_inhibitory_axon>
 class BaseCell {
-    struct empty_type_1 { };
-    struct empty_type_2 { };
-    struct empty_type_3 { };
-    struct empty_type_4 { };
-
-    RELEARN_NUA std::conditional_t<has_excitatory_dendrite, VirtualPlasticityElement, empty_type_1> excitatory_dendrite{};
-    RELEARN_NUA std::conditional_t<has_inhibitory_dendrite, VirtualPlasticityElement, empty_type_2> inhibitory_dendrite{};
-    RELEARN_NUA std::conditional_t<has_excitatory_axon, VirtualPlasticityElement, empty_type_3> excitatory_axon{};
-    RELEARN_NUA std::conditional_t<has_inhibitory_axon, VirtualPlasticityElement, empty_type_4> inhibitory_axon{};
-
 public:
     using counter_type = VirtualPlasticityElement::counter_type;
     using position_type = VirtualPlasticityElement::position_type;
+
+    constexpr static bool has_excitatory_dendrite = has_excitatory_dendrite;
+    constexpr static bool has_inhibitory_dendrite = has_inhibitory_dendrite;
+    constexpr static bool has_excitatory_axon = has_excitatory_axon;
+    constexpr static bool has_inhibitory_axon = has_inhibitory_axon;
 
     /**
      * @brief Sets the number of free excitatory dendrites in this cell
@@ -572,4 +568,48 @@ public:
 
         return current_position;
     }
+
+    /**
+     * @brief Prints the base cell to the output stream
+     * @param output_stream The output stream
+     * @param base_cell The base cell to print
+     * @return The output stream after printing the base cell
+     */
+    friend std::ostream& operator<<(std::ostream& output_stream, const BaseCell<has_excitatory_dendrite, has_inhibitory_dendrite, has_excitatory_axon, has_inhibitory_axon>& base_cell) {
+        // NOLINTNEXTLINE
+        output_stream << "  == BaseCell (" << reinterpret_cast<size_t>(&base_cell) << " ==\n";
+
+        if constexpr (has_excitatory_dendrite) {
+            output_stream << "\tNumber excitatory dendrites: " << base_cell.get_number_excitatory_dendrites() << '\n';
+            output_stream << "\tPosition excitatory dendrites: " << base_cell.get_excitatory_dendrites_position() << '\n';
+        }
+
+        if constexpr (has_inhibitory_dendrite) {
+            output_stream << "\tNumber inhibitory dendrites: " << base_cell.get_number_inhibitory_dendrites() << '\n';
+            output_stream << "\tPosition inhibitory dendrites: " << base_cell.get_inhibitory_dendrites_position() << '\n';
+        }
+
+        if constexpr (has_excitatory_axon) {
+            output_stream << "\tNumber excitatory axons: " << base_cell.get_number_excitatory_axons() << '\n';
+            output_stream << "\tPosition excitatory axons: " << base_cell.get_excitatory_axons_position() << '\n';
+        }
+
+        if constexpr (has_inhibitory_axon) {
+            output_stream << "\tNumber inhibitory axons: " << base_cell.get_number_inhibitory_axons() << '\n';
+            output_stream << "\tPosition inhibitory axons: " << base_cell.get_inhibitory_axons_position() << '\n';
+        }
+
+        return output_stream;
+    }
+
+private:
+    struct empty_type_1 { };
+    struct empty_type_2 { };
+    struct empty_type_3 { };
+    struct empty_type_4 { };
+
+    RELEARN_NUA std::conditional_t<has_excitatory_dendrite, VirtualPlasticityElement, empty_type_1> excitatory_dendrite{};
+    RELEARN_NUA std::conditional_t<has_inhibitory_dendrite, VirtualPlasticityElement, empty_type_2> inhibitory_dendrite{};
+    RELEARN_NUA std::conditional_t<has_excitatory_axon, VirtualPlasticityElement, empty_type_3> excitatory_axon{};
+    RELEARN_NUA std::conditional_t<has_inhibitory_axon, VirtualPlasticityElement, empty_type_4> inhibitory_axon{};
 };
