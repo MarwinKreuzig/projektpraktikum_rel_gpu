@@ -60,7 +60,7 @@ public:
 
     /**
      * @brief Sets the position of the excitatory position, which can be empty
-     * @param opt_position The new position of the excitatory dendrites
+     * @param virtual_position The new position of the excitatory dendrites
      */
     void set_excitatory_dendrites_position(const std::optional<position_type>& virtual_position) noexcept requires(has_excitatory_dendrite) {
         excitatory_dendrite.set_position(virtual_position);
@@ -92,7 +92,7 @@ public:
 
     /**
      * @brief Sets the position of the inhibitory position, which can be empty
-     * @param opt_position The new position of the inhibitory dendrites
+     * @param virtual_position The new position of the inhibitory dendrites
      */
     void set_inhibitory_dendrites_position(const std::optional<position_type>& virtual_position) noexcept requires(has_inhibitory_dendrite) {
         inhibitory_dendrite.set_position(virtual_position);
@@ -208,7 +208,7 @@ public:
 
     /**
      * @brief Sets the position of the excitatory position, which can be empty
-     * @param opt_position The new position of the excitatory axons
+     * @param virtual_position The new position of the excitatory axons
      */
     void set_excitatory_axons_position(const std::optional<position_type>& virtual_position) noexcept requires(has_excitatory_axon) {
         excitatory_axon.set_position(virtual_position);
@@ -240,7 +240,7 @@ public:
 
     /**
      * @brief Sets the position of the inhibitory position, which can be empty
-     * @param opt_position The new position of the inhibitory axons
+     * @param virtual_position The new position of the inhibitory axons
      */
     void set_inhibitory_axons_position(const std::optional<position_type>& virtual_position) noexcept requires(has_inhibitory_axon) {
         inhibitory_axon.set_position(virtual_position);
@@ -419,7 +419,7 @@ public:
      * @param virtual_position The position of the free elements
      * @exception Throws a RelearnException if the requested type is not in this cell
      */
-    void set_elements_position_for(const ElementType element_type, const SignalType signal_type, const std::optional<position_type>& virtual_position) requires(has_excitatory_dendrite || has_inhibitory_dendrite || has_excitatory_axon || has_inhibitory_axon) {
+    void set_position_for(const ElementType element_type, const SignalType signal_type, const std::optional<position_type>& virtual_position) requires(has_excitatory_dendrite || has_inhibitory_dendrite || has_excitatory_axon || has_inhibitory_axon) {
         if (element_type == ElementType::Axon && signal_type == SignalType::Excitatory) {
             if constexpr (has_excitatory_axon) {
                 excitatory_axon.set_position(virtual_position);
@@ -458,7 +458,7 @@ public:
      * @exception Throws a RelearnException if the requested type is not in this cell
      * @return The position of the free elements for the associated type
      */
-    [[nodiscard]] std::optional<position_type> get_elements_position_for(const ElementType element_type, const SignalType signal_type) const requires(has_excitatory_dendrite || has_inhibitory_dendrite || has_excitatory_axon || has_inhibitory_axon) {
+    [[nodiscard]] std::optional<position_type> get_position_for(const ElementType element_type, const SignalType signal_type) const requires(has_excitatory_dendrite || has_inhibitory_dendrite || has_excitatory_axon || has_inhibitory_axon) {
         if (element_type == ElementType::Axon && signal_type == SignalType::Excitatory) {
             if constexpr (has_excitatory_axon) {
                 return excitatory_axon.get_position();
@@ -484,5 +484,83 @@ public:
         }
 
         RelearnException::fail("BaseCell::get_elements_position_for(): element_type {} with signal_type {} is not present in the cell!", element_type, signal_type);
+    }
+
+    /**
+     * @brief Sets the position of every element in the cell
+     * @param virtual_position The position, can be empty
+     */
+    void set_neuron_position(const std::optional<position_type>& virtual_position) noexcept {
+        if constexpr (has_excitatory_dendrite) {
+            excitatory_dendrite.set_position(virtual_position);
+        }
+
+        if constexpr (has_inhibitory_dendrite) {
+            inhibitory_dendrite.set_position(virtual_position);
+        }
+
+        if constexpr (has_excitatory_axon) {
+            excitatory_axon.set_position(virtual_position);
+        }
+
+        if constexpr (has_inhibitory_axon) {
+            inhibitory_axon.set_position(virtual_position);
+        }
+    }
+
+    /**
+     * @brief Returns the position of all elements, which can be empty
+     * @exception Throws a RelearnException if not all stored positions are equal
+     * @return The position of the elements. Is empty, if no element is present.
+     */
+    [[nodiscard]] std::optional<position_type> get_neuron_position() const {
+        std::optional<position_type> current_position{};
+        bool current_position_valid = false;
+
+        if constexpr (has_excitatory_dendrite) {
+            if (!current_position_valid) {
+                current_position = excitatory_dendrite.get_position();
+                current_position_valid = true;
+            } else {
+                const auto& other_position = excitatory_dendrite.get_position();
+                const auto position_matches = current_position == other_position;
+                RelearnException::check(position_matches, "BaseCell::get_neuron_position(): The positions don't match.");
+            }
+        }
+
+        if constexpr (has_inhibitory_dendrite) {
+            if (!current_position_valid) {
+                current_position = inhibitory_dendrite.get_position();
+                current_position_valid = true;
+            } else {
+                const auto& other_position = inhibitory_dendrite.get_position();
+                const auto position_matches = current_position == other_position;
+                RelearnException::check(position_matches, "BaseCell::get_neuron_position(): The positions don't match.");
+            }
+        }
+
+        if constexpr (has_excitatory_axon) {
+            if (!current_position_valid) {
+                current_position = excitatory_axon.get_position();
+                current_position_valid = true;
+            } else {
+                const auto& other_position = excitatory_axon.get_position();
+                const auto position_matches = current_position == other_position;
+                RelearnException::check(position_matches, "BaseCell::get_neuron_position(): The positions don't match.");
+            }
+        }
+
+        if constexpr (has_inhibitory_axon) {
+            if (!current_position_valid) {
+                current_position = inhibitory_axon.get_position();
+                current_position_valid = true;
+            } else {
+                const auto& other_position = inhibitory_axon.get_position();
+                const auto position_matches = current_position == other_position;
+                RelearnException::check(position_matches, "BaseCell::get_neuron_position(): The positions don't match.");
+            }
+        }
+
+        return current_position;
     }
 };
