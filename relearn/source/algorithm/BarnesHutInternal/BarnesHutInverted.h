@@ -14,7 +14,7 @@
 #include "BarnesHutInvertedCell.h"
 #include "Types.h"
 #include "algorithm/Connector.h"
-#include "algorithm/ExchangingAlgorithm.h"
+#include "algorithm/Internal/ExchangingAlgorithm.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"

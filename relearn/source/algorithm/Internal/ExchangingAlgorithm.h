@@ -10,7 +10,7 @@
  *
  */
 
-#include "Algorithm.h"
+#include "algorithm/Algorithm.h"
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/UpdateStatus.h"

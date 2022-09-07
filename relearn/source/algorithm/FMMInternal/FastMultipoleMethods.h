@@ -14,7 +14,7 @@
 #include "FastMultipoleMethodsCell.h"
 #include "Types.h"
 #include "algorithm/Connector.h"
-#include "algorithm/ExchangingAlgorithm.h"
+#include "algorithm/Internal/ExchangingAlgorithm.h"
 #include "neurons/UpdateStatus.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "structure/OctreeNode.h"

@@ -13,7 +13,7 @@
 #include "NaiveCell.h"
 #include "Types.h"
 #include "algorithm/Connector.h"
-#include "algorithm/ExchangingAlgorithm.h"
+#include "algorithm/Internal/ExchangingAlgorithm.h"
 #include "neurons/SignalType.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseCreationRequests.h"

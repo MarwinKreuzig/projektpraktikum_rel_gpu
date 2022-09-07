@@ -276,6 +276,8 @@ public:
      */
     [[nodiscard]] std::vector<const OctreeNode<AdditionalCellAttributes>*> get_local_branch_nodes() const {
         std::vector<const OctreeNode<AdditionalCellAttributes>*> result{};
+        result.reserve(4);
+
         for (const auto* node : branch_nodes) {
             if (!node->is_local()) {
                 continue;
@@ -292,6 +294,8 @@ public:
      */
     [[nodiscard]] std::vector<OctreeNode<AdditionalCellAttributes>*> get_local_branch_nodes() {
         std::vector<OctreeNode<AdditionalCellAttributes>*> result{};
+        result.reserve(4);
+
         for (auto* node : branch_nodes) {
             if (!node->is_local()) {
                 continue;
