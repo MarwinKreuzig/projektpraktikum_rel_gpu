@@ -36,16 +36,16 @@
  * @tparam has_excitatory_axon Determines if the cell will have excitatory axons
  * @tparam has_inhibitory_axon Determines if the cell will have inhibitory axons
  */
-template <bool has_excitatory_dendrite, bool has_inhibitory_dendrite, bool has_excitatory_axon, bool has_inhibitory_axon>
+template <bool has_excitatory_dendrite_, bool has_inhibitory_dendrite_, bool has_excitatory_axon_, bool has_inhibitory_axon_>
 class BaseCell {
 public:
     using counter_type = VirtualPlasticityElement::counter_type;
     using position_type = VirtualPlasticityElement::position_type;
 
-    constexpr static bool has_excitatory_dendrite = has_excitatory_dendrite;
-    constexpr static bool has_inhibitory_dendrite = has_inhibitory_dendrite;
-    constexpr static bool has_excitatory_axon = has_excitatory_axon;
-    constexpr static bool has_inhibitory_axon = has_inhibitory_axon;
+    constexpr static bool has_excitatory_dendrite = has_excitatory_dendrite_;
+    constexpr static bool has_inhibitory_dendrite = has_inhibitory_dendrite_;
+    constexpr static bool has_excitatory_axon = has_excitatory_axon_;
+    constexpr static bool has_inhibitory_axon = has_inhibitory_axon_;
 
     /**
      * @brief Sets the number of free excitatory dendrites in this cell
