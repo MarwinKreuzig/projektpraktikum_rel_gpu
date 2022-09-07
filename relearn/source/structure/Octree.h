@@ -547,7 +547,9 @@ protected:
             auto* node = tree_upper_part.top();
             tree_upper_part.pop();
 
-            node->update();
+            if (node->is_parent()) {
+                node->update();
+            }
         }
     }
 
@@ -566,7 +568,9 @@ protected:
             // Node should be visited now?
             if (current_element.get_visited()) {
                 // Apply action to node
-                current_octree_node->update();
+                if (current_octree_node->is_parent()) {
+                    current_octree_node->update();
+                }
 
                 // Pop node from stack
                 stack.pop();

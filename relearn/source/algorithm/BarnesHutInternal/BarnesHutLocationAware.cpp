@@ -31,7 +31,7 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
     const auto size_hint = std::min(number_neurons, size_t(number_ranks));
     CommunicationMap<DistantNeuronRequest> neuron_requests_outgoing(number_ranks, size_hint);
 
-    auto* const root = global_tree->get_root();
+    auto* const root = get_octree()->get_root();
 
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
 #pragma omp parallel for default(none) shared(root, number_neurons, extra_infos, disable_flags, neuron_requests_outgoing)
@@ -72,7 +72,7 @@ std::vector<std::tuple<int, DistantNeuronRequest>> BarnesHutLocationAware::find_
 
     for (unsigned int j = 0; j < number_vacant_elements; j++) {
         // Find one target at the time
-        const auto& neuron_request = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type, global_tree->get_level_of_branch_nodes());
+        const auto& neuron_request = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type, get_octree()->get_level_of_branch_nodes());
         if (!neuron_request.has_value()) {
             // If finding failed, it won't succeed in later iterations
             break;
@@ -122,7 +122,7 @@ BarnesHutLocationAware::process_requests(const CommunicationMap<DistantNeuronReq
 
             if (target_neuron_type == DistantNeuronRequest::TargetNeuronType::BranchNode) {
                 const auto branch_node_id = current_request.get_branch_node_id();
-                chosen_target = static_cast<OctreeNode<AdditionalCellAttributes>*>(global_tree->get_branch_node_pointer(branch_node_id));
+                chosen_target = static_cast<OctreeNode<AdditionalCellAttributes>*>(get_octree()->get_branch_node_pointer(branch_node_id));
             } else {
                 const auto rma_offset = current_request.get_rma_offset();
                 chosen_target = MemoryHolder<AdditionalCellAttributes>::get_node_from_offset(rma_offset);

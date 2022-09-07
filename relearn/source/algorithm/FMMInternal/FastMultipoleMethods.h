@@ -44,8 +44,6 @@ class OctreeImplementation;
 class FastMultipoleMethods : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, FastMultipoleMethodsCell> {
     friend class FMMPrivateFunctionTest;
 
-    std::shared_ptr<OctreeImplementation<FastMultipoleMethodsCell>> global_tree{};
-
 public:
     using AdditionalCellAttributes = FastMultipoleMethodsCell;
     using interaction_list_type = std::array<OctreeNode<FastMultipoleMethodsCell>*, Constants::number_oct>;
@@ -58,9 +56,7 @@ public:
      * @exception Throws a RelearnException if octree is nullptr
      */
     explicit FastMultipoleMethods(const std::shared_ptr<OctreeImplementation<FastMultipoleMethodsCell>>& octree)
-        : ForwardAlgorithm(octree), global_tree(octree) {
-        RelearnException::check(octree != nullptr, "FastMultipoleMethods::FastMultipoleMethods: octree was null");
-    }
+        : ForwardAlgorithm(octree) { }
 
 protected:
     /**

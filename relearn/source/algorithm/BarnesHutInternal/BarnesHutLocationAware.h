@@ -51,10 +51,7 @@ public:
      * @exception Throws a RelearnException if octree is nullptr
      */
     explicit BarnesHutLocationAware(const std::shared_ptr<OctreeImplementation<BarnesHutCell>>& octree)
-        : ForwardAlgorithm(octree)
-        , global_tree(octree) {
-        RelearnException::check(octree != nullptr, "BarnesHutLocationAware::BarnesHutLocationAware: octree was null");
-    }
+        : ForwardAlgorithm(octree) { }
 
 protected:
     /**
@@ -134,7 +131,4 @@ protected:
 
         return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
     }
-
-private:
-    std::shared_ptr<OctreeImplementation<BarnesHutCell>> global_tree{};
 };

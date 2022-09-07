@@ -50,9 +50,7 @@ public:
      * @exception Throws a RelearnException if octree is nullptr
      */
     explicit BarnesHutInverted(const std::shared_ptr<OctreeImplementation<BarnesHutInvertedCell>>& octree)
-        : BackwardAlgorithm(octree), global_tree(octree) {
-        RelearnException::check(octree != nullptr, "BarnesHutInverted::BarnesHutInverted: octree was null");
-    }
+        : BackwardAlgorithm(octree) { }
 
 protected:
     /**
@@ -101,7 +99,4 @@ protected:
         const CommunicationMap<SynapseCreationResponse>& creation_responses) override {
         return BackwardConnector::process_responses(creation_requests, creation_responses, excitatory_dendrites, inhibitory_dendrites);
     }
-
-private:
-    std::shared_ptr<OctreeImplementation<BarnesHutInvertedCell>> global_tree{};
 };

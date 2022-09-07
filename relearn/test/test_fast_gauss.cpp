@@ -156,184 +156,140 @@ SynapticElements create_axons(size_t size, mt19937& mt, double max_free) {
 }
 
 TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
     uniform_int_distribution<size_t> uid_lvl(0, 6);
     uniform_real_distribution<double> urd_sigma(1, 10000.0);
     uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
     uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
 
-    for (auto i = 0; i < iterations; i++) {
-        Vec3d min{};
-        Vec3d max{};
+    const auto& [min, max] = get_random_simulation_box_size_FMM(mt);
 
-        std::tie(min, max) = get_random_simulation_box_size_FMM(mt);
+    auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
+    auto& octree = *octree_ptr;
 
-        auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
-        auto& octree = *octree_ptr;
+    const size_t num_neurons = get_random_number_neurons();
 
-        const size_t num_neurons = get_random_number_neurons();
+    const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
 
-        const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
-
-        for (const auto& [position, id] : neurons_to_place) {
-            octree.insert(position, NeuronID(id));
-        }
-
-        octree.initializes_leaf_nodes(num_neurons);
-
-        FastMultipoleMethods fmm{ octree_ptr };
-
-        std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::Enabled);
-
-        const auto max_vacant_elements = uid_max_vacant(mt);
-
-        auto elements = create_synaptic_elements(num_neurons, mt, max_vacant_elements);
-
-        auto unique_ax = std::make_shared<SynapticElements>(std::move(elements[0]));
-        auto unique_dend_exc = std::make_shared<SynapticElements>(std::move(elements[1]));
-        auto unique_dend_inh = std::make_shared<SynapticElements>(std::move(elements[2]));
-
-        fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
-
-        fmm.update_octree(disable_flags);
-
-        std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
-        stack.emplace(octree.get_root());
-
-        while (!stack.empty()) {
-            const auto* current = stack.top();
-            stack.pop();
-
-            size_t sum_dends_exc = 0;
-            size_t sum_dends_inh = 0;
-
-            if (current->is_parent()) {
-                for (auto* child : current->get_children()) {
-                    if (child == nullptr) {
-                        continue;
-                    }
-
-                    sum_dends_exc += child->get_cell().get_number_excitatory_dendrites();
-                    sum_dends_inh += child->get_cell().get_number_inhibitory_dendrites();
-
-                    stack.emplace(child);
-                }
-            } else {
-                sum_dends_exc = static_cast<size_t>(unique_dend_exc->get_grown_elements(current->get_cell_neuron_id()));
-                sum_dends_inh = static_cast<size_t>(unique_dend_inh->get_grown_elements(current->get_cell_neuron_id()));
-            }
-
-            ASSERT_EQ(current->get_cell().get_number_excitatory_dendrites(), sum_dends_exc);
-            ASSERT_EQ(current->get_cell().get_number_inhibitory_dendrites(), sum_dends_inh);
-        }
-
-        make_mpi_mem_available<AdditionalCellAttributes>();
+    for (const auto& [position, id] : neurons_to_place) {
+        octree.insert(position, NeuronID(id));
     }
+
+    octree.initializes_leaf_nodes(num_neurons);
+
+    FastMultipoleMethods fmm{ octree_ptr };
+
+    std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::Enabled);
+
+    const auto max_vacant_elements = uid_max_vacant(mt);
+
+    auto elements = create_synaptic_elements(num_neurons, mt, max_vacant_elements);
+
+    auto unique_ax = std::make_shared<SynapticElements>(std::move(elements[0]));
+    auto unique_dend_exc = std::make_shared<SynapticElements>(std::move(elements[1]));
+    auto unique_dend_inh = std::make_shared<SynapticElements>(std::move(elements[2]));
+
+    fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
+
+    fmm.update_octree(disable_flags);
+
+    std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
+    stack.emplace(octree.get_root());
+
+    while (!stack.empty()) {
+        const auto* current = stack.top();
+        stack.pop();
+
+        size_t sum_dends_exc = 0;
+        size_t sum_dends_inh = 0;
+
+        if (current->is_parent()) {
+            for (auto* child : current->get_children()) {
+                if (child == nullptr) {
+                    continue;
+                }
+
+                sum_dends_exc += child->get_cell().get_number_excitatory_dendrites();
+                sum_dends_inh += child->get_cell().get_number_inhibitory_dendrites();
+
+                stack.emplace(child);
+            }
+        } else {
+            sum_dends_exc = static_cast<size_t>(unique_dend_exc->get_grown_elements(current->get_cell_neuron_id()));
+            sum_dends_inh = static_cast<size_t>(unique_dend_inh->get_grown_elements(current->get_cell_neuron_id()));
+        }
+
+        const auto saved_dends_exc = current->get_cell().get_number_excitatory_dendrites();
+        ASSERT_EQ(saved_dends_exc, sum_dends_exc);
+
+        const auto saved_dends_inh = current->get_cell().get_number_inhibitory_dendrites();
+        ASSERT_EQ(saved_dends_inh, sum_dends_inh);
+    }
+
+    make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
     uniform_int_distribution<size_t> uid_lvl(0, 6);
     uniform_real_distribution<double> urd_sigma(1, 10000.0);
     uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
-    for (auto i = 0; i < iterations; i++) {
-        Vec3d min{};
-        Vec3d max{};
+    const auto& [min, max] = get_random_simulation_box_size_FMM(mt);
 
-        std::tie(min, max) = get_random_simulation_box_size_FMM(mt);
+    auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
+    auto& octree = *octree_ptr;
 
-        auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
-        auto& octree = *octree_ptr;
+    const size_t num_neurons = get_random_number_neurons();
 
-        const size_t num_neurons = get_random_number_neurons();
+    const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
 
-        const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
+    for (const auto& [position, id] : neurons_to_place) {
+        octree.insert(position, NeuronID(id));
+    }
 
-        for (const auto& [position, id] : neurons_to_place) {
-            octree.insert(position, NeuronID(id));
-        }
+    octree.initializes_leaf_nodes(num_neurons);
 
-        octree.initializes_leaf_nodes(num_neurons);
+    auto elements = create_synaptic_elements(num_neurons, mt, 1);
 
-        auto elements = create_synaptic_elements(num_neurons, mt, 1);
+    auto unique_ax = std::make_shared<SynapticElements>(std::move(elements[0]));
+    auto unique_dend_exc = std::make_shared<SynapticElements>(std::move(elements[1]));
+    auto unique_dend_inh = std::make_shared<SynapticElements>(std::move(elements[2]));
 
-        auto unique_ax = std::make_shared<SynapticElements>(std::move(elements[0]));
-        auto unique_dend_exc = std::make_shared<SynapticElements>(std::move(elements[1]));
-        auto unique_dend_inh = std::make_shared<SynapticElements>(std::move(elements[2]));
+    FastMultipoleMethods fmm{ octree_ptr };
 
-        FastMultipoleMethods fmm{ octree_ptr };
+    std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::Enabled);
+    fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
+    fmm.update_octree(disable_flags);
 
-        std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::Enabled);
-        fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
-        fmm.update_octree(disable_flags);
+    std::stack<std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool>> stack{};
+    const auto flag_exc = octree.get_root()->get_cell().get_number_excitatory_dendrites() != 0;
+    const auto flag_inh = octree.get_root()->get_cell().get_number_inhibitory_dendrites() != 0;
+    stack.emplace(octree.get_root(), flag_exc, flag_inh);
 
-        std::stack<std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool>> stack{};
-        const auto flag_exc = octree.get_root()->get_cell().get_number_excitatory_dendrites() != 0;
-        const auto flag_inh = octree.get_root()->get_cell().get_number_inhibitory_dendrites() != 0;
-        stack.emplace(octree.get_root(), flag_exc, flag_inh);
+    while (!stack.empty()) {
+        std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool> tup = stack.top();
+        stack.pop();
 
-        while (!stack.empty()) {
-            std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool> tup = stack.top();
-            stack.pop();
+        auto* current = std::get<0>(tup);
+        auto has_exc = std::get<1>(tup);
+        auto has_inh = std::get<2>(tup);
 
-            auto* current = std::get<0>(tup);
-            auto has_exc = std::get<1>(tup);
-            auto has_inh = std::get<2>(tup);
+        Vec3d pos_dends_exc{ 0.0 };
+        Vec3d pos_dends_inh{ 0.0 };
 
-            Vec3d pos_dends_exc{ 0.0 };
-            Vec3d pos_dends_inh{ 0.0 };
+        bool changed_exc = false;
+        bool changed_inh = false;
 
-            bool changed_exc = false;
-            bool changed_inh = false;
+        if (current->is_parent()) {
+            double num_dends_exc = 0.0;
+            double num_dends_inh = 0.0;
 
-            if (current->is_parent()) {
-                double num_dends_exc = 0.0;
-                double num_dends_inh = 0.0;
-
-                for (auto* child : current->get_children()) {
-                    if (child == nullptr) {
-                        continue;
-                    }
-
-                    const auto& cell = child->get_cell();
-
-                    const auto& opt_exc = cell.get_excitatory_dendrites_position();
-                    const auto& opt_inh = cell.get_inhibitory_dendrites_position();
-
-                    if (!has_exc) {
-                        ASSERT_EQ(cell.get_number_excitatory_dendrites(), 0);
-                    }
-
-                    if (!has_inh) {
-                        ASSERT_EQ(cell.get_number_inhibitory_dendrites(), 0);
-                    }
-
-                    if (opt_exc.has_value() && cell.get_number_excitatory_dendrites() != 0) {
-                        changed_exc = true;
-                        pos_dends_exc += (opt_exc.value() * cell.get_number_excitatory_dendrites());
-                        num_dends_exc += cell.get_number_excitatory_dendrites();
-                    }
-
-                    if (opt_inh.has_value() && cell.get_number_inhibitory_dendrites() != 0) {
-                        changed_inh = true;
-                        pos_dends_inh += (opt_inh.value() * cell.get_number_inhibitory_dendrites());
-                        num_dends_inh += cell.get_number_inhibitory_dendrites();
-                    }
-
-                    stack.emplace(child, cell.get_number_excitatory_dendrites() != 0, cell.get_number_inhibitory_dendrites() != 0);
+            for (auto* child : current->get_children()) {
+                if (child == nullptr) {
+                    continue;
                 }
 
-                pos_dends_exc /= num_dends_exc;
-                pos_dends_inh /= num_dends_inh;
-
-            } else {
-                const auto& cell = current->get_cell();
+                const auto& cell = child->get_cell();
 
                 const auto& opt_exc = cell.get_excitatory_dendrites_position();
                 const auto& opt_inh = cell.get_inhibitory_dendrites_position();
@@ -349,217 +305,209 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
                 if (opt_exc.has_value() && cell.get_number_excitatory_dendrites() != 0) {
                     changed_exc = true;
                     pos_dends_exc += (opt_exc.value() * cell.get_number_excitatory_dendrites());
+                    num_dends_exc += cell.get_number_excitatory_dendrites();
                 }
 
                 if (opt_inh.has_value() && cell.get_number_inhibitory_dendrites() != 0) {
                     changed_inh = true;
                     pos_dends_inh += (opt_inh.value() * cell.get_number_inhibitory_dendrites());
+                    num_dends_inh += cell.get_number_inhibitory_dendrites();
                 }
+
+                stack.emplace(child, cell.get_number_excitatory_dendrites() != 0, cell.get_number_inhibitory_dendrites() != 0);
             }
 
-            ASSERT_EQ(has_exc, changed_exc);
-            ASSERT_EQ(has_inh, changed_inh);
+            pos_dends_exc /= num_dends_exc;
+            pos_dends_inh /= num_dends_inh;
 
-            if (has_exc) {
-                const auto& diff = current->get_cell().get_excitatory_dendrites_position().value() - pos_dends_exc;
-                ASSERT_NEAR(diff.get_x(), 0.0, eps);
-                ASSERT_NEAR(diff.get_y(), 0.0, eps);
-                ASSERT_NEAR(diff.get_z(), 0.0, eps);
+        } else {
+            const auto& cell = current->get_cell();
+
+            const auto& opt_exc = cell.get_excitatory_dendrites_position();
+            const auto& opt_inh = cell.get_inhibitory_dendrites_position();
+
+            if (!has_exc) {
+                ASSERT_EQ(cell.get_number_excitatory_dendrites(), 0);
             }
 
-            if (has_inh) {
-                const auto& diff = current->get_cell().get_inhibitory_dendrites_position().value() - pos_dends_inh;
-                ASSERT_NEAR(diff.get_x(), 0.0, eps);
-                ASSERT_NEAR(diff.get_y(), 0.0, eps);
-                ASSERT_NEAR(diff.get_z(), 0.0, eps);
+            if (!has_inh) {
+                ASSERT_EQ(cell.get_number_inhibitory_dendrites(), 0);
+            }
+
+            if (opt_exc.has_value() && cell.get_number_excitatory_dendrites() != 0) {
+                changed_exc = true;
+                pos_dends_exc += (opt_exc.value() * cell.get_number_excitatory_dendrites());
+            }
+
+            if (opt_inh.has_value() && cell.get_number_inhibitory_dendrites() != 0) {
+                changed_inh = true;
+                pos_dends_inh += (opt_inh.value() * cell.get_number_inhibitory_dendrites());
             }
         }
 
-        make_mpi_mem_available<AdditionalCellAttributes>();
+        ASSERT_EQ(has_exc, changed_exc);
+        ASSERT_EQ(has_inh, changed_inh);
+
+        if (has_exc) {
+            const auto& diff = current->get_cell().get_excitatory_dendrites_position().value() - pos_dends_exc;
+            ASSERT_NEAR(diff.get_x(), 0.0, eps);
+            ASSERT_NEAR(diff.get_y(), 0.0, eps);
+            ASSERT_NEAR(diff.get_z(), 0.0, eps);
+        }
+
+        if (has_inh) {
+            const auto& diff = current->get_cell().get_inhibitory_dendrites_position().value() - pos_dends_inh;
+            ASSERT_NEAR(diff.get_x(), 0.0, eps);
+            ASSERT_NEAR(diff.get_y(), 0.0, eps);
+            ASSERT_NEAR(diff.get_z(), 0.0, eps);
+        }
     }
+
+    make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
     uniform_int_distribution<size_t> uid_lvl(0, 6);
     uniform_real_distribution<double> urd_sigma(1, 10000.0);
 
     uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
 
-    for (auto i = 0; i < iterations; i++) {
-        Vec3d min{};
-        Vec3d max{};
+    const auto& [min, max] = get_random_simulation_box_size_FMM(mt);
 
-        std::tie(min, max) = get_random_simulation_box_size_FMM(mt);
+    auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
+    auto& octree = *octree_ptr;
 
-        auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
-        auto& octree = *octree_ptr;
+    const size_t num_neurons = get_random_number_neurons();
 
-        const size_t num_neurons = get_random_number_neurons();
+    const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
 
-        const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
+    for (const auto& [position, id] : neurons_to_place) {
+        octree.insert(position, NeuronID(id));
+    }
 
-        for (const auto& [position, id] : neurons_to_place) {
-            octree.insert(position, NeuronID(id));
-        }
+    octree.initializes_leaf_nodes(num_neurons);
 
-        octree.initializes_leaf_nodes(num_neurons);
+    FastMultipoleMethods fmm{ octree_ptr };
 
-        FastMultipoleMethods fmm{ octree_ptr };
+    std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::Enabled);
 
-        std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::Enabled);
+    const auto max_vacant_elements = uid_max_vacant(mt);
 
-        const auto max_vacant_elements = uid_max_vacant(mt);
+    auto elements = create_synaptic_elements(num_neurons, mt, max_vacant_elements);
 
-        auto elements = create_synaptic_elements(num_neurons, mt, max_vacant_elements);
+    auto unique_ax = std::make_shared<SynapticElements>(std::move(elements[0]));
+    auto unique_dend_exc = std::make_shared<SynapticElements>(std::move(elements[1]));
+    auto unique_dend_inh = std::make_shared<SynapticElements>(std::move(elements[2]));
+    fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
+    fmm.update_octree(disable_flags);
 
-        auto unique_ax = std::make_shared<SynapticElements>(std::move(elements[0]));
-        auto unique_dend_exc = std::make_shared<SynapticElements>(std::move(elements[1]));
-        auto unique_dend_inh = std::make_shared<SynapticElements>(std::move(elements[2]));
-        fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
-        fmm.update_octree(disable_flags);
+    std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
+    stack.emplace(octree.get_root());
 
-        std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
-        stack.emplace(octree.get_root());
+    while (!stack.empty()) {
+        const auto* current = stack.top();
+        stack.pop();
 
-        while (!stack.empty()) {
-            const auto* current = stack.top();
-            stack.pop();
-
+        if (current->is_parent()) {
             size_t sum_axons_exc = 0;
             size_t sum_axons_inh = 0;
 
-            if (current->is_parent()) {
-                for (auto* child : current->get_children()) {
-                    if (child == nullptr) {
-                        continue;
-                    }
-
-                    sum_axons_exc += child->get_cell().get_number_excitatory_axons();
-                    sum_axons_inh += child->get_cell().get_number_inhibitory_axons();
-
-                    stack.emplace(child);
+            for (auto* child : current->get_children()) {
+                if (child == nullptr) {
+                    continue;
                 }
-            } else {
-                auto const id = current->get_cell_neuron_id();
-                auto const st = unique_ax->get_signal_type(id);
-                if (st == SignalType::Excitatory) {
-                    sum_axons_exc = static_cast<size_t>(unique_ax->get_grown_elements(id));
-                } else {
-                    sum_axons_inh = static_cast<size_t>(unique_ax->get_grown_elements(id));
-                }
+
+                sum_axons_exc += child->get_cell().get_number_excitatory_axons();
+                sum_axons_inh += child->get_cell().get_number_inhibitory_axons();
+
+                stack.emplace(child);
             }
 
             ASSERT_EQ(current->get_cell().get_number_axons_for(SignalType::Excitatory), sum_axons_exc);
             ASSERT_EQ(current->get_cell().get_number_axons_for(SignalType::Inhibitory), sum_axons_inh);
+
+            continue;
         }
 
-        make_mpi_mem_available<AdditionalCellAttributes>();
+        auto const id = current->get_cell_neuron_id();
+        auto const st = unique_ax->get_signal_type(id);
+        if (st == SignalType::Excitatory) {
+            const auto grown_axons = static_cast<size_t>(unique_ax->get_grown_elements(id));
+
+            ASSERT_EQ(current->get_cell().get_number_axons_for(SignalType::Excitatory), grown_axons);
+            ASSERT_EQ(current->get_cell().get_number_axons_for(SignalType::Inhibitory), 0);
+        } else {
+            const auto grown_axons = static_cast<size_t>(unique_ax->get_grown_elements(id));
+
+            ASSERT_EQ(current->get_cell().get_number_axons_for(SignalType::Excitatory), 0);
+            ASSERT_EQ(current->get_cell().get_number_axons_for(SignalType::Inhibitory), grown_axons);
+        }
     }
+
+    make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
     uniform_int_distribution<size_t> uid_lvl(0, 6);
     uniform_real_distribution<double> urd_sigma(1, 10000.0);
     uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
-    for (auto i = 0; i < iterations; i++) {
-        Vec3d min{};
-        Vec3d max{};
+    const auto& [min, max] = get_random_simulation_box_size_FMM(mt);
 
-        std::tie(min, max) = get_random_simulation_box_size_FMM(mt);
+    auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
+    auto& octree = *octree_ptr;
 
-        auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
-        auto& octree = *octree_ptr;
+    const size_t num_neurons = get_random_number_neurons();
 
-        const size_t num_neurons = get_random_number_neurons();
+    const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
 
-        const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
+    for (const auto& [position, id] : neurons_to_place) {
+        octree.insert(position, NeuronID(id));
+    }
 
-        for (const auto& [position, id] : neurons_to_place) {
-            octree.insert(position, NeuronID(id));
-        }
+    octree.initializes_leaf_nodes(num_neurons);
 
-        octree.initializes_leaf_nodes(num_neurons);
+    auto elements = create_synaptic_elements(num_neurons, mt, 1);
 
-        auto elements = create_synaptic_elements(num_neurons, mt, 1);
+    auto unique_ax = std::make_shared<SynapticElements>(std::move(elements[0]));
+    auto unique_dend_exc = std::make_shared<SynapticElements>(std::move(elements[1]));
+    auto unique_dend_inh = std::make_shared<SynapticElements>(std::move(elements[2]));
 
-        auto unique_ax = std::make_shared<SynapticElements>(std::move(elements[0]));
-        auto unique_dend_exc = std::make_shared<SynapticElements>(std::move(elements[1]));
-        auto unique_dend_inh = std::make_shared<SynapticElements>(std::move(elements[2]));
+    FastMultipoleMethods fmm{ octree_ptr };
 
-        FastMultipoleMethods fmm{ octree_ptr };
+    std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::Enabled);
+    fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
+    fmm.update_octree(disable_flags);
 
-        std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::Enabled);
-        fmm.set_synaptic_elements(unique_ax, unique_dend_exc, unique_dend_inh);
-        fmm.update_octree(disable_flags);
+    std::stack<std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool>> stack{};
+    const auto flag_exc = octree.get_root()->get_cell().get_number_excitatory_axons() != 0;
+    const auto flag_inh = octree.get_root()->get_cell().get_number_inhibitory_axons() != 0;
+    stack.emplace(octree.get_root(), flag_exc, flag_inh);
 
-        std::stack<std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool>> stack{};
-        const auto flag_exc = octree.get_root()->get_cell().get_number_excitatory_axons() != 0;
-        const auto flag_inh = octree.get_root()->get_cell().get_number_inhibitory_axons() != 0;
-        stack.emplace(octree.get_root(), flag_exc, flag_inh);
+    while (!stack.empty()) {
+        std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool> tup = stack.top();
+        stack.pop();
 
-        while (!stack.empty()) {
-            std::tuple<OctreeNode<AdditionalCellAttributes>*, bool, bool> tup = stack.top();
-            stack.pop();
+        auto* current = std::get<0>(tup);
+        auto has_exc = std::get<1>(tup);
+        auto has_inh = std::get<2>(tup);
 
-            auto* current = std::get<0>(tup);
-            auto has_exc = std::get<1>(tup);
-            auto has_inh = std::get<2>(tup);
+        Vec3d pos_ax_exc{ 0.0 };
+        Vec3d pos_ax_inh{ 0.0 };
 
-            Vec3d pos_ax_exc{ 0.0 };
-            Vec3d pos_ax_inh{ 0.0 };
+        bool changed_exc = false;
+        bool changed_inh = false;
 
-            bool changed_exc = false;
-            bool changed_inh = false;
+        if (current->is_parent()) {
+            double num_ax_exc = 0.0;
+            double num_ax_inh = 0.0;
 
-            if (current->is_parent()) {
-                double num_ax_exc = 0.0;
-                double num_ax_inh = 0.0;
-
-                for (auto* child : current->get_children()) {
-                    if (child == nullptr) {
-                        continue;
-                    }
-
-                    const auto& cell = child->get_cell();
-
-                    const auto& opt_exc = cell.get_excitatory_axons_position();
-                    const auto& opt_inh = cell.get_inhibitory_axons_position();
-
-                    if (!has_exc) {
-                        ASSERT_EQ(cell.get_number_excitatory_axons(), 0);
-                    }
-
-                    if (!has_inh) {
-                        ASSERT_EQ(cell.get_number_inhibitory_axons(), 0);
-                    }
-
-                    if (opt_exc.has_value() && cell.get_number_excitatory_axons() != 0) {
-                        changed_exc = true;
-                        pos_ax_exc += (opt_exc.value() * cell.get_number_excitatory_axons());
-                        num_ax_exc += cell.get_number_excitatory_axons();
-                    }
-
-                    if (opt_inh.has_value() && cell.get_number_inhibitory_axons() != 0) {
-                        changed_inh = true;
-                        pos_ax_inh += (opt_inh.value() * cell.get_number_inhibitory_axons());
-                        num_ax_inh += cell.get_number_inhibitory_axons();
-                    }
-
-                    stack.emplace(child, cell.get_number_excitatory_axons() != 0, cell.get_number_inhibitory_axons() != 0);
+            for (auto* child : current->get_children()) {
+                if (child == nullptr) {
+                    continue;
                 }
 
-                pos_ax_exc /= num_ax_exc;
-                pos_ax_inh /= num_ax_inh;
-
-            } else {
-                const auto& cell = current->get_cell();
+                const auto& cell = child->get_cell();
 
                 const auto& opt_exc = cell.get_excitatory_axons_position();
                 const auto& opt_inh = cell.get_inhibitory_axons_position();
@@ -575,34 +523,65 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
                 if (opt_exc.has_value() && cell.get_number_excitatory_axons() != 0) {
                     changed_exc = true;
                     pos_ax_exc += (opt_exc.value() * cell.get_number_excitatory_axons());
+                    num_ax_exc += cell.get_number_excitatory_axons();
                 }
 
                 if (opt_inh.has_value() && cell.get_number_inhibitory_axons() != 0) {
                     changed_inh = true;
                     pos_ax_inh += (opt_inh.value() * cell.get_number_inhibitory_axons());
+                    num_ax_inh += cell.get_number_inhibitory_axons();
                 }
+
+                stack.emplace(child, cell.get_number_excitatory_axons() != 0, cell.get_number_inhibitory_axons() != 0);
             }
 
-            ASSERT_EQ(has_exc, changed_exc);
-            ASSERT_EQ(has_inh, changed_inh);
+            pos_ax_exc /= num_ax_exc;
+            pos_ax_inh /= num_ax_inh;
 
-            if (has_exc) {
-                const auto& diff = current->get_cell().get_excitatory_axons_position().value() - pos_ax_exc;
-                ASSERT_NEAR(diff.get_x(), 0.0, eps);
-                ASSERT_NEAR(diff.get_y(), 0.0, eps);
-                ASSERT_NEAR(diff.get_z(), 0.0, eps);
+        } else {
+            const auto& cell = current->get_cell();
+
+            const auto& opt_exc = cell.get_excitatory_axons_position();
+            const auto& opt_inh = cell.get_inhibitory_axons_position();
+
+            if (!has_exc) {
+                ASSERT_EQ(cell.get_number_excitatory_axons(), 0);
             }
 
-            if (has_inh) {
-                const auto& diff = current->get_cell().get_inhibitory_axons_position().value() - pos_ax_inh;
-                ASSERT_NEAR(diff.get_x(), 0.0, eps);
-                ASSERT_NEAR(diff.get_y(), 0.0, eps);
-                ASSERT_NEAR(diff.get_z(), 0.0, eps);
+            if (!has_inh) {
+                ASSERT_EQ(cell.get_number_inhibitory_axons(), 0);
+            }
+
+            if (opt_exc.has_value() && cell.get_number_excitatory_axons() != 0) {
+                changed_exc = true;
+                pos_ax_exc += (opt_exc.value() * cell.get_number_excitatory_axons());
+            }
+
+            if (opt_inh.has_value() && cell.get_number_inhibitory_axons() != 0) {
+                changed_inh = true;
+                pos_ax_inh += (opt_inh.value() * cell.get_number_inhibitory_axons());
             }
         }
 
-        make_mpi_mem_available<AdditionalCellAttributes>();
+        ASSERT_EQ(has_exc, changed_exc);
+        ASSERT_EQ(has_inh, changed_inh);
+
+        if (has_exc) {
+            const auto& diff = current->get_cell().get_excitatory_axons_position().value() - pos_ax_exc;
+            ASSERT_NEAR(diff.get_x(), 0.0, eps);
+            ASSERT_NEAR(diff.get_y(), 0.0, eps);
+            ASSERT_NEAR(diff.get_z(), 0.0, eps);
+        }
+
+        if (has_inh) {
+            const auto& diff = current->get_cell().get_inhibitory_axons_position().value() - pos_ax_inh;
+            ASSERT_NEAR(diff.get_x(), 0.0, eps);
+            ASSERT_NEAR(diff.get_y(), 0.0, eps);
+            ASSERT_NEAR(diff.get_z(), 0.0, eps);
+        }
     }
+
+    make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 // TEST_F(OctreeTestFMM, testOctreeSeriesExpansionsFMM) {
@@ -614,10 +593,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
 //     uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
 
 //     for (auto i = 0; i < iterations; i++) {
-//         Vec3d min{};
-//         Vec3d max{};
-
-//         std::tie(min, max) = get_random_simulation_box_size_FMM(mt);
+//          const auto& [min, max] = get_random_simulation_box_size_FMM(mt);
 
 //         auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
 

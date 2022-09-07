@@ -47,10 +47,7 @@ public:
      * @exception Throws a RelearnException if octree is nullptr
      */
     explicit Naive(const std::shared_ptr<OctreeImplementation<NaiveCell>>& octree)
-        : ForwardAlgorithm(octree)
-        , global_tree(octree) {
-        RelearnException::check(octree != nullptr, "Naive::Naive: octree was null");
-    }
+        : ForwardAlgorithm(octree) { }
 
 protected:
     /**
@@ -122,6 +119,4 @@ private:
         const position_type& axon_position,
         OctreeNode<NaiveCell>* root,
         SignalType dendrite_type_needed);
-
-    std::shared_ptr<OctreeImplementation<NaiveCell>> global_tree{};
 };

@@ -51,9 +51,7 @@ public:
      * @exception Throws a RelearnException if octree is nullptr
      */
     explicit BarnesHut(const std::shared_ptr<OctreeImplementation<BarnesHutCell>>& octree)
-        : ForwardAlgorithm(octree), global_tree(octree) {
-        RelearnException::check(octree != nullptr, "BarnesHut::BarnesHut: octree was null");
-    }
+        : ForwardAlgorithm(octree) { }
 
 protected:
     /**
@@ -102,7 +100,4 @@ protected:
         const CommunicationMap<SynapseCreationResponse>& creation_responses) override {
         return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
     }
-
-private:
-    std::shared_ptr<OctreeImplementation<BarnesHutCell>> global_tree{};
 };

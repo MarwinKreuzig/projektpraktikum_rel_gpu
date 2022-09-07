@@ -27,7 +27,7 @@ CommunicationMap<SynapseCreationRequest> FastMultipoleMethods::find_target_neuro
     const auto size_hint = std::min(size_t(number_ranks), number_neurons);
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks, size_hint);
 
-    OctreeNode<FastMultipoleMethodsCell>* root = global_tree->get_root();
+    OctreeNode<FastMultipoleMethodsCell>* root = get_octree()->get_root();
     RelearnException::check(root != nullptr, "FastMultpoleMethods::find_target_neurons: root was nullptr");
 
     // Get number of dendrites
@@ -52,8 +52,8 @@ CommunicationMap<SynapseCreationRequest> FastMultipoleMethods::find_target_neuro
 void FastMultipoleMethods::make_creation_request_for(const SignalType signal_type_needed, CommunicationMap<SynapseCreationRequest>& request) {
     Stack<std::pair<OctreeNode<FastMultipoleMethodsCell>*, interaction_list_type>> nodes_with_axons{ 200 };
 
-    OctreeNode<FastMultipoleMethodsCell>* root = global_tree->get_root();
-    const auto local_roots = global_tree->get_local_branch_nodes();
+    OctreeNode<FastMultipoleMethodsCell>* root = get_octree()->get_root();
+    const auto local_roots = get_octree()->get_local_branch_nodes();
 
     if (local_roots.empty()) {
         return;
@@ -149,7 +149,7 @@ void FastMultipoleMethods::make_creation_request_for(const SignalType signal_typ
 
     auto init_stack = [get_rid_of_null_elements, this, &nodes_with_axons, &root, &local_roots, signal_type_needed]() {
         interaction_list_type root_children = Utilities::get_children_to_interaction_list(root);
-        auto const branch_level = global_tree->get_level_of_branch_nodes();
+        auto const branch_level = get_octree()->get_level_of_branch_nodes();
 
         if (branch_level == 0) {
             // only one MPI Process
