@@ -56,7 +56,7 @@ void FastMultipoleMethods::update_octree(const std::vector<UpdateStatus>& disabl
     Timers::stop_and_add(TimerRegion::UPDATE_LEAF_NODES);
 
     // Update the octree
-    global_tree->synchronize_tree(update_functor);
+    global_tree->synchronize_tree();
 }
 
 void FastMultipoleMethods::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {

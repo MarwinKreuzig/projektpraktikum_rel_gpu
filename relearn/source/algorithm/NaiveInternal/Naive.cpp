@@ -95,7 +95,7 @@ void Naive::update_octree(const std::vector<UpdateStatus>& disable_flags) {
     Timers::stop_and_add(TimerRegion::UPDATE_LEAF_NODES);
 
     // Update the octree
-    global_tree->synchronize_tree(update_functor);
+    global_tree->synchronize_tree();
 }
 
 CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,

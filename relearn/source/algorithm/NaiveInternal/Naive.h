@@ -60,33 +60,6 @@ public:
 
     void update_octree(const std::vector<UpdateStatus>& disable_flags) override;
 
-    /**
-     * @brief Updates the passed node with the values of its children according to the algorithm
-     * @param node The node to update, must not be nullptr
-     * @exception Throws a RelearnException if node is nullptr
-     */
-    static void update_functor(OctreeNode<NaiveCell>* node) {
-        RelearnException::check(node != nullptr, "Naive::update_functor: node is nullptr");
-
-        counter_type my_number_dendrites_excitatory = 0;
-        counter_type my_number_dendrites_inhibitory = 0;
-
-        for (const auto& child : node->get_children()) {
-            if (child == nullptr) {
-                continue;
-            }
-
-            // Sum up number of dendrites
-            const auto child_number_dendrites_excitatory = child->get_cell().get_number_excitatory_dendrites();
-            const auto child_number_dendrites_inhibitory = child->get_cell().get_number_inhibitory_dendrites();
-
-            my_number_dendrites_excitatory += child_number_dendrites_excitatory;
-            my_number_dendrites_inhibitory += child_number_dendrites_inhibitory;
-        }
-
-        node->set_cell_number_dendrites(my_number_dendrites_excitatory, my_number_dendrites_inhibitory);
-    }
-
 protected:
     /**
      * @brief Returns a collection of proposed synapse creations for each neuron with vacant axons

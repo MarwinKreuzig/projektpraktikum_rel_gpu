@@ -157,9 +157,7 @@ private:
  * This type represents the (spatial) Octree in which the neurons are organised.
  * It offers general informations about the structure, the functionality to insert new neurons,
  * update from the bottom up, and synchronize parts with MPI.
- * It is templated by the algorithm with which it is used. The type must provide
- * Algorithm::AdditionalCellAttributes - will be used to template the Cell
- * void Algorithm::update_functor(OctreeNode<Algorithm::AdditionalCellAttributes>*)
+ * It is templated by the additional cell attributes that the algorithm will need the cell to have.
  */
 template <typename AdditionalCellAttributes>
 class OctreeImplementation : public Octree {
@@ -341,12 +339,12 @@ public:
         all_leaf_nodes = std::move(leaf_nodes);
     }
 
-    void synchronize_tree(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function) {
+    void synchronize_tree() {
         // Update my local trees bottom-up
-        update_local_trees(function);
+        update_local_trees();
 
         // Exchange the local trees
-        synchronize_local_trees(function);
+        synchronize_local_trees();
     }
 
     /**
@@ -432,22 +430,22 @@ protected:
      * @brief Updates all local (!) branch nodes and their induced subtrees.
      * @exception Throws a RelearnException if the functor throws
      */
-    void update_local_trees(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function) {
+    void update_local_trees() {
         Timers::start(TimerRegion::UPDATE_LOCAL_TREES);
         for (auto* local_tree : branch_nodes) {
             if (!local_tree->is_local()) {
                 continue;
             }
 
-            tree_walk_postorder(function, local_tree);
+            tree_walk_postorder(local_tree);
         }
         Timers::stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
     }
-    
+
     /**
      * @brief Synchronizes all (locally) updated branch nodes with all other MPI ranks
      */
-    void synchronize_local_trees(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function) {
+    void synchronize_local_trees() {
         /**
          * Exchange branch nodes
          */
@@ -484,7 +482,7 @@ protected:
 
         // Only update whenever there are other branches to update
         if (level_of_branch_nodes > 0) {
-            update_from_level(function, level_of_branch_nodes - 1);
+            update_from_level(level_of_branch_nodes - 1);
         }
 
         Timers::stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
@@ -495,24 +493,22 @@ protected:
      * @param max_level The maximum level (inclusive) on which the nodes should be updated
      * @exception Throws a RelearnException if the functor throws
      */
-    void update_from_level(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function, const size_t max_level) {
-        tree_walk_postorder(function, root, max_level);
+    void update_from_level(const size_t max_level) {
+        tree_walk_postorder(root, max_level);
     }
 
-    void tree_walk_postorder(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function,
-        OctreeNode<AdditionalCellAttributes>* root, const size_t max_level = std::numeric_limits<size_t>::max()) {
+    void tree_walk_postorder(OctreeNode<AdditionalCellAttributes>* root, const size_t max_level = std::numeric_limits<size_t>::max()) {
         RelearnException::check(root != nullptr, "Octree::tree_walk_postorder: octree was nullptr");
 
         if (max_level > 2) {
-            tree_walk_postorder_parallel(function, root, max_level);
+            tree_walk_postorder_parallel(root, max_level);
             return;
         }
 
-        walk_post_order(root, 0, max_level, function);
+        walk_post_order(root, 0, max_level);
     }
 
-    void tree_walk_postorder_parallel(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function,
-        OctreeNode<AdditionalCellAttributes>* root, const size_t max_level = std::numeric_limits<size_t>::max()) {
+    void tree_walk_postorder_parallel(OctreeNode<AdditionalCellAttributes>* root, const size_t max_level = std::numeric_limits<size_t>::max()) {
 
         std::vector<OctreeNode<AdditionalCellAttributes>*> subtrees{};
         std::stack<OctreeNode<AdditionalCellAttributes>*> tree_upper_part{};
@@ -536,23 +532,22 @@ protected:
             }
         }
 
-#pragma omp parallel for shared(subtrees, max_level, function) default(none)
+#pragma omp parallel for shared(subtrees, max_level) default(none)
         for (auto i = 0; i < subtrees.size(); i++) {
             auto* local_tree_root = subtrees[i];
 
-            walk_post_order(local_tree_root, 2, max_level, function);
+            walk_post_order(local_tree_root, 2, max_level);
         }
 
         while (!tree_upper_part.empty()) {
             auto* node = tree_upper_part.top();
             tree_upper_part.pop();
 
-            function(node);
+            node->update();
         }
     }
 
-    void walk_post_order(OctreeNode<AdditionalCellAttributes>* local_tree_root,
-        const size_t current_level, const size_t max_level, std::function<void(OctreeNode<AdditionalCellAttributes>*)> function) {
+    void walk_post_order(OctreeNode<AdditionalCellAttributes>* local_tree_root, const size_t current_level, const size_t max_level) {
         std::stack<StackElement> stack{};
 
         // Push node onto stack
@@ -567,7 +562,7 @@ protected:
             // Node should be visited now?
             if (current_element.get_visited()) {
                 // Apply action to node
-                function(current_octree_node);
+                current_octree_node->update();
 
                 // Pop node from stack
                 stack.pop();
