@@ -45,6 +45,11 @@ public:
         return container.emplace_back(std::forward<ValueType>(Val)...);
     }
 
+    [[nodiscard]] constexpr T& top() {
+        RelearnException::check(!empty(), "Stack::top(): The stack was empty!");
+        return container.back();
+    }
+
     /**
      * @brief Returns the latest element stored in the stack and pops it as well.
      * @exception Throws a RelearnException if the stack was empty

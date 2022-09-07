@@ -10,11 +10,8 @@
 
 #include "BarnesHut.h"
 
-#include "io/LogFiles.h"
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/models/SynapticElements.h"
 #include "structure/NodeCache.h"
-#include "structure/Octree.h"
 #include "structure/OctreeNode.h"
 #include "util/Random.h"
 #include "util/Timers.h"
@@ -31,7 +28,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const si
     const auto size_hint = std::min(number_neurons, size_t(number_ranks));
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks, size_hint);
 
-    auto* const root = get_octree()->get_root();
+    auto* const root = get_octree_root();
 
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
 #pragma omp parallel for default(none) shared(root, number_neurons, extra_infos, disable_flags, synapse_creation_requests_outgoing)

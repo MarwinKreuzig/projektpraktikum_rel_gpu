@@ -10,11 +10,8 @@
 
 #include "BarnesHutLocationAware.h"
 
-#include "io/LogFiles.h"
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/models/SynapticElements.h"
 #include "structure/NodeCache.h"
-#include "structure/Octree.h"
 #include "structure/OctreeNode.h"
 #include "util/Random.h"
 #include "util/Timers.h"
@@ -31,7 +28,7 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
     const auto size_hint = std::min(number_neurons, size_t(number_ranks));
     CommunicationMap<DistantNeuronRequest> neuron_requests_outgoing(number_ranks, size_hint);
 
-    auto* const root = get_octree()->get_root();
+    auto* const root = get_octree_root();
 
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
 #pragma omp parallel for default(none) shared(root, number_neurons, extra_infos, disable_flags, neuron_requests_outgoing)
@@ -70,9 +67,11 @@ std::vector<std::tuple<int, DistantNeuronRequest>> BarnesHutLocationAware::find_
     std::vector<std::tuple<int, DistantNeuronRequest>> requests{};
     requests.reserve(number_vacant_elements);
 
+    const auto level_of_branch_nodes = get_level_of_branch_nodes();
+
     for (unsigned int j = 0; j < number_vacant_elements; j++) {
         // Find one target at the time
-        const auto& neuron_request = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type, get_octree()->get_level_of_branch_nodes());
+        const auto& neuron_request = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type, level_of_branch_nodes);
         if (!neuron_request.has_value()) {
             // If finding failed, it won't succeed in later iterations
             break;

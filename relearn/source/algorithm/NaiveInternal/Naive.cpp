@@ -11,11 +11,8 @@
 #include "Naive.h"
 
 #include "algorithm/Kernel/Gaussian.h"
-#include "io/LogFiles.h"
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/models/SynapticElements.h"
 #include "structure/NodeCache.h"
-#include "structure/Octree.h"
 #include "structure/OctreeNode.h"
 #include "util/Random.h"
 #include "util/Timers.h"
@@ -25,7 +22,7 @@
 
 [[nodiscard]] std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_position, const SignalType dendrite_type_needed) {
     OctreeNode<NaiveCell>* node_selected = nullptr;
-    OctreeNode<NaiveCell>* root_of_subtree = get_octree()->get_root();
+    OctreeNode<NaiveCell>* root_of_subtree = get_octree_root();
 
     RelearnException::check(root_of_subtree != nullptr, "Naive::find_target_neuron: root_of_subtree was nullptr");
 

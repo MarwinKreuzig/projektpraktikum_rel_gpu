@@ -22,7 +22,7 @@ class SynapticElements;
 
 /**
  * This is a virtual interface for all algorithms that can be used to create new synapses.
- * It provides Algorithm::update_connectivity, Algorithm::update_leaf_nodes and Algorithm::update_octree.
+ * It provides Algorithm::update_connectivity and Algorithm::update_octree.
  */
 class Algorithm {
 public:
@@ -60,12 +60,11 @@ public:
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos) = 0;
 
     /**
-     * @brief Updates all leaf nodes in the octree by the algorithm
-     * @param disable_flags Flags that indicate if a neuron is disabled or enabled
-     * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
+     * @brief Updates the octree according to the necessities of the algorithm.
+     *      Performs communication via MPI
+     * @param disable_flags Flags that indicate if a neuron id disabled or enabled. If disabled, it is ignored for all purposes
+     * @exception Can throw a RelearnException
      */
-    virtual void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) = 0;
-
     virtual void update_octree(const std::vector<UpdateStatus>& disable_flags) = 0;
 
 protected:

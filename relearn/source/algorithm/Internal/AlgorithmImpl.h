@@ -13,20 +13,36 @@
 #include "algorithm/Algorithm.h"
 #include "neurons/UpdateStatus.h"
 #include "structure/Octree.h"
+#include "structure/OctreeNode.h"
 #include "util/RelearnException.h"
 #include "util/Timers.h"
 
 #include <memory>
 #include <vector>
 
+/**
+ * This class captures the common functionality of updating the Octree according
+ * to the necessities of the respective algorithm.
+ * @tparam AdditionalCellAttributes The additional cell attributes of the nodes stored in the octree
+ */
 template <typename AdditionalCellAttributes>
 class AlgorithmImpl : public Algorithm {
 public:
+    /**
+     * @brief Constructs the object and sets the necessary octree
+     * @param octree The octree that is used for the algorithm
+     */
     explicit AlgorithmImpl(const std::shared_ptr<OctreeImplementation<AdditionalCellAttributes>>& octree)
         : global_tree(octree) {
         RelearnException::check(octree != nullptr, "AlgorithmImpl::AlgorithmImpl: octree was null");
     }
 
+    /**
+     * @brief Updates the octree according to the necessities of the algorithm.
+     *      Performs communication via MPI
+     * @param disable_flags Flags that indicate if a neuron id disabled or enabled. If disabled, it is ignored for all purposes
+     * @exception Can throw a RelearnException
+     */
     void update_octree(const std::vector<UpdateStatus>& disable_flags) override {
         // Update my leaf nodes
         Timers::start(TimerRegion::UPDATE_LEAF_NODES);
@@ -37,12 +53,38 @@ public:
         global_tree->synchronize_tree();
     }
 
+protected:
+    /**
+     * @brief Returns the stored octree
+     * @return The octree
+     */
+    constexpr const std::shared_ptr<OctreeImplementation<AdditionalCellAttributes>>& get_octree() const noexcept {
+        return global_tree;
+    }
+
+    /**
+     * @brief Returns the root of the stored octree
+     * @return The root
+     */
+    constexpr OctreeNode<AdditionalCellAttributes>* get_octree_root() const noexcept {
+        return global_tree->get_root();
+    }
+
+    /**
+     * @brief Returns the level of branch nodes of the stored octree
+     * @return The level of branch nodes
+     */
+    constexpr std::uint16_t get_level_of_branch_nodes() const noexcept {
+        return global_tree->get_level_of_branch_nodes();
+    }
+
+private:
     /**
      * @brief Updates all leaf nodes in the octree by the algorithm
-     * @param disable_flags Flags that indicate if a neuron id disabled or enabled. If disabled, it won't be updated
+     * @param disable_flags Flags that indicate if a neuron id disabled or enabled. If disabled, the cell is set to 0 free elements
      * @exception Throws a RelearnException if the number of flags is different than the number of leaf nodes, or if there is an internal error
      */
-    void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) override {
+    void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
         const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_grown_elements();
         const std::vector<unsigned int>& dendrites_excitatory_connected_counts = excitatory_dendrites->get_connected_elements();
 
@@ -133,11 +175,5 @@ public:
         }
     }
 
-protected:
-    constexpr const std::shared_ptr<OctreeImplementation<AdditionalCellAttributes>>& get_octree() const noexcept {
-        return global_tree;
-    }
-
-private:
     std::shared_ptr<OctreeImplementation<AdditionalCellAttributes>> global_tree{};
 };

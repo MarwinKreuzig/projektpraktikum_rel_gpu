@@ -19,7 +19,6 @@
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
 #include "neurons/UpdateStatus.h"
-#include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "structure/OctreeNode.h"
 #include "util/RelearnException.h"
