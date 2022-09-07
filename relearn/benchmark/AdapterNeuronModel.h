@@ -39,7 +39,7 @@ public:
     }
 
     void calculate_input(const NetworkGraph& network_graph, const CommunicationMap<NeuronID>& firing_neuron_ids_incoming, const std::vector<UpdateStatus>& disable_flags) {
-        model.update_electrical_activity_calculate_input(network_graph, firing_neuron_ids_incoming, disable_flags);
+        model.update_electrical_activity_calculate_input(network_graph, disable_flags);
     }
 
     void update_activity(const std::vector<UpdateStatus>& disable_flags) {

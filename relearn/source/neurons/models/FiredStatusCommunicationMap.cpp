@@ -1,0 +1,83 @@
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
+
+#include "FiredStatusCommunicationMap.h"
+
+#include "mpi/MPIWrapper.h"
+#include "neurons/NetworkGraph.h"
+#include "util/Timers.h"
+
+#include <ranges>
+
+void FiredStatusCommunicationMap::set_local_fired_status(const std::vector<FiredStatus>& fired_status, const std::vector<UpdateStatus>& disable_flags, const NetworkGraph& network_graph) {
+    outgoing_ids.clear();
+
+    if (const auto number_ranks = get_number_ranks(); number_ranks == 1) {
+        return;
+    }
+
+    /**
+     * Check which of my neurons fired and determine which ranks need to know about it.
+     * That is, they contain the neurons connecting the axons of my firing neurons.
+     */
+
+    const auto number_local_neurons = get_number_local_neurons();
+
+    Timers::start(TimerRegion::PREPARE_SENDING_SPIKES);
+
+    // For my neurons
+    for (size_t neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+            continue;
+        }
+
+        if (fired_status[neuron_id] == FiredStatus::Inactive) {
+            continue;
+        }
+
+        const auto id = NeuronID{ neuron_id };
+
+        // Don't send firing neuron id to myself as I already have this info
+        const NetworkGraph::DistantEdges& distant_out_edges = network_graph.get_distant_out_edges(id);
+
+        // Find all target neurons which should receive the signal fired.
+        // That is, neurons which connect axons from neuron "neuron_id"
+        for (const auto& [edge_key, _] : distant_out_edges) {
+            const auto target_rank = edge_key.get_rank();
+
+            // Function expects to insert neuron ids in sorted order
+            // Append if it is not already in
+            outgoing_ids.append(target_rank, id);
+        }
+    } // For my neurons
+    Timers::stop_and_add(TimerRegion::PREPARE_SENDING_SPIKES);
+}
+
+void FiredStatusCommunicationMap::exchange_fired_status() {
+    Timers::start(TimerRegion::EXCHANGE_NEURON_IDS);
+    incoming_ids = MPIWrapper::exchange_requests(outgoing_ids);
+    Timers::stop_and_add(TimerRegion::EXCHANGE_NEURON_IDS);
+}
+
+bool FiredStatusCommunicationMap::contains(int rank, NeuronID neuron_id) const {
+    const auto number_ranks = get_number_ranks();
+    RelearnException::check(0 <= rank && rank < number_ranks, "FiredStatusCommunicationMap::contains: rank {} is larger than the number of ranks {} (or negative)", rank, number_ranks);
+    RelearnException::check(neuron_id.is_initialized(), "FiredStatusCommunicationMap::contains: The neuron id is not initialized: {}", neuron_id);
+
+    const auto& firings_ids_opt = incoming_ids.get_optional_request(rank);
+    if (!firings_ids_opt.has_value()) {
+        return false;
+    }
+
+    const auto& firing_ids = firings_ids_opt.value().get();
+    const auto contains_id = std::ranges::binary_search(firing_ids, neuron_id);
+
+    return contains_id;
+}

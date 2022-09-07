@@ -11,6 +11,7 @@
 #include "NeuronModels.h"
 
 #include "Config.h"
+#include "FiredStatusCommunicationMap.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/Neurons.h"
@@ -27,12 +28,34 @@ NeuronModel::NeuronModel(const double k, const double tau_C, const double beta, 
     , background_activity_stddev(background_activity_stddev) {
 }
 
-void NeuronModel::update_electrical_activity(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
-    const auto& firing_neuron_ids_outgoing = update_electrical_activity_prepare_sending_spikes(network_graph, disable_flags);
+void NeuronModel::init(size_t number_neurons) {
+    number_local_neurons = number_neurons;
 
-    Timers::start(TimerRegion::EXCHANGE_NEURON_IDS);
-    const auto& firing_neuron_ids_incoming = MPIWrapper::exchange_requests(firing_neuron_ids_outgoing);
-    Timers::stop_and_add(TimerRegion::EXCHANGE_NEURON_IDS);
+    x.resize(number_neurons, 0.0);
+    fired.resize(number_neurons, FiredStatus::Inactive);
+    synaptic_input.resize(number_neurons, 0.0);
+    background_activity.resize(number_neurons, 0.0);
+
+    fired_status_comm = std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_num_ranks(), number_neurons);
+}
+
+void NeuronModel::create_neurons(size_t creation_count) {
+    const auto current_size = number_local_neurons;
+    const auto new_size = current_size + creation_count;
+    number_local_neurons = new_size;
+
+    x.resize(new_size, 0.0);
+    fired.resize(new_size, FiredStatus::Inactive);
+    synaptic_input.resize(new_size, 0.0);
+    background_activity.resize(new_size, 0.0);
+
+    fired_status_comm = std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_num_ranks(), new_size);
+}
+
+void NeuronModel::update_electrical_activity(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
+
+    fired_status_comm->set_local_fired_status(fired, disable_flags, network_graph);
+    fired_status_comm->exchange_fired_status();
 
     /**
      * Now fired contains spikes only from my own neurons
@@ -45,7 +68,7 @@ void NeuronModel::update_electrical_activity(const NetworkGraph& network_graph, 
     update_electrical_activity_serial_initialize(disable_flags);
 
     update_electrical_activity_calculate_background(disable_flags);
-    update_electrical_activity_calculate_input(network_graph, firing_neuron_ids_incoming, disable_flags);
+    update_electrical_activity_calculate_input(network_graph, disable_flags);
     update_electrical_activity_update_activity(disable_flags);
 }
 
@@ -66,10 +89,10 @@ void NeuronModel::update_electrical_activity_update_activity(const std::vector<U
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
 }
 
-void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const CommunicationMap<NeuronID>& firing_neuron_ids_incoming, const std::vector<UpdateStatus>& disable_flags) {
+void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
-#pragma omp parallel for shared(firing_neuron_ids_incoming, network_graph, disable_flags, std::ranges::binary_search) default(none)
+#pragma omp parallel for shared(network_graph, disable_flags, std::ranges::binary_search) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
@@ -96,16 +119,9 @@ void NeuronModel::update_electrical_activity_calculate_input(const NetworkGraph&
 
         for (const auto& [key, edge_val] : in_edges) {
             const auto& rank = key.get_rank();
-            const auto& firings_ids_opt = firing_neuron_ids_incoming.get_optional_request(rank);
-            if (!firings_ids_opt.has_value()) {
-                continue;
-            }
-
             const auto& initiator_neuron_id = key.get_neuron_id();
 
-            const auto& firing_ids = firings_ids_opt.value().get();
-            const auto contains_id = std::ranges::binary_search(firing_ids, initiator_neuron_id);
-
+            const auto contains_id = fired_status_comm->contains(rank, initiator_neuron_id);
             if (contains_id) {
                 total_input += k * edge_val;
             }
@@ -138,54 +154,6 @@ void NeuronModel::update_electrical_activity_calculate_background(const std::vec
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
 }
 
-CommunicationMap<NeuronID> NeuronModel::update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
-    const auto number_ranks = MPIWrapper::get_num_ranks();
-
-    const auto size_hint = std::min(size_t(number_ranks), number_local_neurons);
-    CommunicationMap<NeuronID> spiking_ids(number_ranks, size_hint);
-
-    // If there is no other rank, then we can just skip
-    if (number_ranks == 1) {
-        return spiking_ids;
-    }
-
-    /**
-     * Check which of my neurons fired and determine which ranks need to know about it.
-     * That is, they contain the neurons connecting the axons of my firing neurons.
-     */
-
-    Timers::start(TimerRegion::PREPARE_SENDING_SPIKES);
-
-    // For my neurons
-    for (size_t neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
-            continue;
-        }
-
-        if (fired[neuron_id] == FiredStatus::Inactive) {
-            continue;
-        }
-
-        const auto id = NeuronID{ neuron_id };
-
-        // Don't send firing neuron id to myself as I already have this info
-        const NetworkGraph::DistantEdges& distant_out_edges = network_graph.get_distant_out_edges(id);
-
-        // Find all target neurons which should receive the signal fired.
-        // That is, neurons which connect axons from neuron "neuron_id"
-        for (const auto& [edge_key, _] : distant_out_edges) {
-            const auto target_rank = edge_key.get_rank();
-
-            // Function expects to insert neuron ids in sorted order
-            // Append if it is not already in
-            spiking_ids.append(target_rank, id);
-        }
-    } // For my neurons
-    Timers::stop_and_add(TimerRegion::PREPARE_SENDING_SPIKES);
-
-    return spiking_ids;
-}
-
 std::vector<std::unique_ptr<NeuronModel>> NeuronModel::get_models() {
     std::vector<std::unique_ptr<NeuronModel>> res;
     res.push_back(NeuronModel::create<models::PoissonModel>());
@@ -205,23 +173,4 @@ std::vector<ModelParameter> NeuronModel::get_parameter() {
         Parameter<double>{ "Background activity mean", background_activity_mean, NeuronModel::min_background_activity_mean, NeuronModel::max_background_activity_mean },
         Parameter<double>{ "Background activity standard deviation", background_activity_stddev, NeuronModel::min_background_activity_stddev, NeuronModel::max_background_activity_stddev },
     };
-}
-
-void NeuronModel::init(size_t number_neurons) {
-    number_local_neurons = number_neurons;
-    x.resize(number_neurons, 0.0);
-    fired.resize(number_neurons, FiredStatus::Inactive);
-    synaptic_input.resize(number_neurons, 0.0);
-    background_activity.resize(number_neurons, 0.0);
-}
-
-void NeuronModel::create_neurons(size_t creation_count) {
-    const auto current_size = number_local_neurons;
-    const auto new_size = current_size + creation_count;
-    number_local_neurons = new_size;
-
-    x.resize(new_size, 0.0);
-    fired.resize(new_size, FiredStatus::Inactive);
-    synaptic_input.resize(new_size, 0.0);
-    background_activity.resize(new_size, 0.0);
 }

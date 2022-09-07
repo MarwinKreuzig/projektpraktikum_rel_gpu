@@ -10,6 +10,7 @@
  *
  */
 
+#include "FiredStatusCommunicator.h"
 #include "ModelParameter.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/FiredStatus.h"
@@ -376,11 +377,9 @@ protected:
     }
 
 private:
-    [[nodiscard]] CommunicationMap<NeuronID> update_electrical_activity_prepare_sending_spikes(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags);
-
     void update_electrical_activity_update_activity(const std::vector<UpdateStatus>& disable_flags);
 
-    void update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const CommunicationMap<NeuronID>& firing_neuron_ids_incoming, const std::vector<UpdateStatus>& disable_flags);
+    void update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags);
 
     void update_electrical_activity_calculate_background(const std::vector<UpdateStatus>& disable_flags);
 
@@ -402,6 +401,8 @@ private:
     std::vector<double> synaptic_input{}; // The synaptic input from other neurons
     std::vector<double> x{}; // The membrane potential (in equations usually v(t))
     std::vector<FiredStatus> fired{}; // If the neuron fired in the current update step
+
+    std::unique_ptr<FiredStatusCommunicator> fired_status_comm{};
 };
 
 namespace models {

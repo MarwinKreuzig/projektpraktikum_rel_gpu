@@ -233,6 +233,13 @@ public:
     }
 
     /**
+     * @brief Clears the requests
+     */
+    void clear() {
+        requests.clear();
+    }
+
+    /**
      * @brief Returns the number of packages for the specified MPI rank
      * @param mpi_rank The MPI rank
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
