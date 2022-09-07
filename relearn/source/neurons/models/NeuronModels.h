@@ -12,6 +12,7 @@
 
 #include "ModelParameter.h"
 #include "mpi/CommunicationMap.h"
+#include "neurons/FiredStatus.h"
 #include "neurons/UpdateStatus.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
@@ -24,11 +25,6 @@
 class AdapterNeuronModel;
 class NetworkGraph;
 class NeuronMonitor;
-
-enum class FiredStatus : char {
-    Fired = 0,
-    Inactive = 1,
-};
 
 /**
  * This class provides the basic interface for every neuron model, that is, the rules by which a neuron spikes.
@@ -55,7 +51,7 @@ public:
      * @param h The step size for the numerical integration
      * @param base_background_activity The base background activity that all neurons are exited with. Is only used if background_activity_stddev > 0.0
      * @param background_activity_mean The mean of background activity taht all neurons are exited with. Is only used if background_activity_stddev > 0.0
-     * @param background_activity_stddev The standard deviation of background activity taht all neurons are exited with. Is only used if background_activity_stddev > 0.0
+     * @param background_activity_stddev The standard deviation of background activity that all neurons are exited with. Is only used if background_activity_stddev > 0.0
      *
      * If background_activity_stddev > 0.0, all neurons are exited with
      *      base_background_activity + N(background_activity_mean, background_activity_stddev)
