@@ -35,7 +35,7 @@ class SynapticElements;
  * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
  * It is strongly tied to Octree, and might perform MPI communication via NodeCache::download_children()
  */
-class Naive : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
+class Naive : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, NaiveCell> {
 public:
     using AdditionalCellAttributes = NaiveCell;
     using position_type = typename RelearnTypes::position_type;
@@ -47,18 +47,10 @@ public:
      * @exception Throws a RelearnException if octree is nullptr
      */
     explicit Naive(const std::shared_ptr<OctreeImplementation<NaiveCell>>& octree)
-        : global_tree(octree) {
+        : ForwardAlgorithm(octree)
+        , global_tree(octree) {
         RelearnException::check(octree != nullptr, "Naive::Naive: octree was null");
     }
-
-    /**
-     * @brief Updates all leaf nodes in the octree by the algorithm
-     * @param disable_flags Flags that indicate if a neuron is disabled or enabled. If disabled, it won't be updated
-     * @exception Throws a RelearnException if the number of flags is different than the number of leaf nodes, or if there is an internal error
-     */
-    void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) override;
-
-    void update_octree(const std::vector<UpdateStatus>& disable_flags) override;
 
 protected:
     /**

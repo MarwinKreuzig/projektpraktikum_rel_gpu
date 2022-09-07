@@ -23,66 +23,6 @@
 #include <array>
 #include <iostream>
 
-void BarnesHut::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
-    RelearnException::check(global_tree != nullptr, "BarnesHut::update_leaf_nodes: global_tree was nullptr");
-
-    const auto& leaf_nodes = global_tree->get_leaf_nodes();
-    const auto num_leaf_nodes = leaf_nodes.size();
-    const auto num_disable_flags = disable_flags.size();
-
-    RelearnException::check(num_leaf_nodes == num_disable_flags, "BarnesHut::update_leaf_nodes: The vectors were of different sizes");
-
-    using counter_type = BarnesHutCell::counter_type;
-
-    for (const auto& neuron_id : NeuronID::range(num_leaf_nodes)) {
-        const auto local_neuron_id = neuron_id.get_neuron_id();
-
-        auto* node = leaf_nodes[local_neuron_id];
-        RelearnException::check(node != nullptr, "BarnesHut::update_leaf_nodes: node was nullptr: {}", neuron_id);
-
-        if (disable_flags[local_neuron_id] == UpdateStatus::Disabled) {
-            node->set_cell_number_dendrites(0, 0);
-            continue;
-        }
-
-        const auto& cell = node->get_cell();
-        const auto other_neuron_id = cell.get_neuron_id();
-
-        RelearnException::check(neuron_id == other_neuron_id, "BarnesHut::update_leaf_nodes: The nodes are not in order");
-
-        const auto& [cell_xyz_min, cell_xyz_max] = cell.get_size();
-        const auto& opt_excitatory_position = cell.get_excitatory_dendrites_position();
-        const auto& opt_inhibitory_position = cell.get_inhibitory_dendrites_position();
-
-        RelearnException::check(opt_excitatory_position.has_value(), "BarnesHut::update_leaf_nodes: Neuron {} does not have an excitatory position", neuron_id);
-        RelearnException::check(opt_inhibitory_position.has_value(), "BarnesHut::update_leaf_nodes: Neuron {} does not have an inhibitory position", neuron_id);
-
-        const auto& excitatory_position = opt_excitatory_position.value();
-        const auto& inhibitory_position = opt_inhibitory_position.value();
-
-        const auto excitatory_position_in_box = excitatory_position.check_in_box(cell_xyz_min, cell_xyz_max);
-        const auto inhibitory_position_in_box = inhibitory_position.check_in_box(cell_xyz_min, cell_xyz_max);
-
-        RelearnException::check(excitatory_position_in_box, "BarnesHut::update_leaf_nodes: Excitatory position ({}) is not in cell: [({}), ({})]", excitatory_position, cell_xyz_min, cell_xyz_max);
-        RelearnException::check(inhibitory_position_in_box, "BarnesHut::update_leaf_nodes: Inhibitory position ({}) is not in cell: [({}), ({})]", inhibitory_position, cell_xyz_min, cell_xyz_max);
-
-        const auto number_vacant_dendrites_excitatory = excitatory_dendrites->get_free_elements(neuron_id);
-        const auto number_vacant_dendrites_inhibitory = inhibitory_dendrites->get_free_elements(neuron_id);
-
-        node->set_cell_number_dendrites(number_vacant_dendrites_excitatory, number_vacant_dendrites_inhibitory);
-    }
-}
-
-void BarnesHut::update_octree(const std::vector<UpdateStatus>& disable_flags) {
-    // Update my leaf nodes
-    Timers::start(TimerRegion::UPDATE_LEAF_NODES);
-    update_leaf_nodes(disable_flags);
-    Timers::stop_and_add(TimerRegion::UPDATE_LEAF_NODES);
-
-    // Update the octree
-    global_tree->synchronize_tree();
-}
-
 CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 

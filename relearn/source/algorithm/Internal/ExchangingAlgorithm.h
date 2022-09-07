@@ -10,10 +10,11 @@
  *
  */
 
-#include "algorithm/Algorithm.h"
+#include "AlgorithmImpl.h"
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/UpdateStatus.h"
+#include "structure/Octree.h"
 #include "util/Timers.h"
 
 #include <memory>
@@ -29,9 +30,12 @@ class NeuronsExtraInfo;
  * @tparam RequestType The type of creation requests
  * @tparam ResponseType The type of creation responses
  */
-template <typename RequestType, typename ResponseType>
-class ForwardAlgorithm : public Algorithm {
+template <typename RequestType, typename ResponseType, typename AdditionalCellAttributes>
+class ForwardAlgorithm : public AlgorithmImpl<AdditionalCellAttributes> {
 public:
+    explicit ForwardAlgorithm(const std::shared_ptr<OctreeImplementation<AdditionalCellAttributes>>& octree)
+        : AlgorithmImpl<AdditionalCellAttributes>(octree) { }
+
     /**
      * @brief Updates the connectivity with the algorithm. Already updates the synaptic elements, i.e., the axons and dendrites (both excitatory and inhibitory).
      *      Does not update the network graph. Performs communication with MPI
@@ -112,9 +116,12 @@ protected:
  * @tparam RequestType The type of creation requests
  * @tparam ResponseType The type of creation responses
  */
-template <typename RequestType, typename ResponseType>
-class BackwardAlgorithm : public Algorithm {
+template <typename RequestType, typename ResponseType, typename AdditionalCellAttributes>
+class BackwardAlgorithm : public AlgorithmImpl<AdditionalCellAttributes> {
 public:
+    explicit BackwardAlgorithm(const std::shared_ptr<OctreeImplementation<AdditionalCellAttributes>>& octree)
+        : AlgorithmImpl<AdditionalCellAttributes>(octree) { }
+
     /**
      * @brief Updates the connectivity with the algorithm. Already updates the synaptic elements, i.e., the axons and dendrites (both excitatory and inhibitory).
      *      Does not update the network graph. Performs communication with MPI

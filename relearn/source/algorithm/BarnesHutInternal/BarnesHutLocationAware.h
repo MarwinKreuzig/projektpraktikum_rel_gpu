@@ -39,7 +39,7 @@ class SynapticElements;
  * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
  * It is strongly tied to Octree, and performs MPI communication
  */
-class BarnesHutLocationAware : public BarnesHutBase<BarnesHutCell>, public ForwardAlgorithm<DistantNeuronRequest, DistantNeuronResponse> {
+class BarnesHutLocationAware : public BarnesHutBase<BarnesHutCell>, public ForwardAlgorithm<DistantNeuronRequest, DistantNeuronResponse, BarnesHutCell> {
 public:
     using AdditionalCellAttributes = BarnesHutCell;
     using position_type = typename RelearnTypes::position_type;
@@ -51,18 +51,10 @@ public:
      * @exception Throws a RelearnException if octree is nullptr
      */
     explicit BarnesHutLocationAware(const std::shared_ptr<OctreeImplementation<BarnesHutCell>>& octree)
-        : global_tree(octree) {
+        : ForwardAlgorithm(octree)
+        , global_tree(octree) {
         RelearnException::check(octree != nullptr, "BarnesHutLocationAware::BarnesHutLocationAware: octree was null");
     }
-
-    /**
-     * @brief Updates all leaf nodes in the octree by the algorithm
-     * @param disable_flags Flags that indicate if a neuron id disabled or enabled. If disabled, it won't be updated
-     * @exception Throws a RelearnException if the number of flags is different than the number of leaf nodes, or if there is an internal error
-     */
-    void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) override;
-
-    void update_octree(const std::vector<UpdateStatus>& disable_flags) override;
 
 protected:
     /**
@@ -120,7 +112,7 @@ protected:
         creation_responses.resize(neuron_responses.get_request_sizes());
 
         for (const auto& [rank, requests] : neuron_requests) {
-            const auto& responses = neuron_responses.get_requests(rank); 
+            const auto& responses = neuron_responses.get_requests(rank);
 
             for (auto index = 0; index < requests.size(); index++) {
                 const auto source_neuron_id = requests[index].get_source_id();

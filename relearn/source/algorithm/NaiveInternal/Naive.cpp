@@ -88,16 +88,6 @@
     return rank_neuron_id;
 }
 
-void Naive::update_octree(const std::vector<UpdateStatus>& disable_flags) {
-    // Update my leaf nodes
-    Timers::start(TimerRegion::UPDATE_LEAF_NODES);
-    update_leaf_nodes(disable_flags);
-    Timers::stop_and_add(TimerRegion::UPDATE_LEAF_NODES);
-
-    // Update the octree
-    global_tree->synchronize_tree();
-}
-
 CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 
@@ -158,53 +148,6 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
     return synapse_creation_requests_outgoing;
-}
-
-void Naive::update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
-
-    const std::vector<double>& dendrites_excitatory_counts = excitatory_dendrites->get_grown_elements();
-    const std::vector<unsigned int>& dendrites_excitatory_connected_counts = excitatory_dendrites->get_connected_elements();
-
-    const std::vector<double>& dendrites_inhibitory_counts = inhibitory_dendrites->get_grown_elements();
-    const std::vector<unsigned int>& dendrites_inhibitory_connected_counts = inhibitory_dendrites->get_connected_elements();
-
-    RelearnException::check(global_tree != nullptr, "Naive::update_leaf_nodes: global_tree was nullptr");
-
-    const auto& leaf_nodes = global_tree->get_leaf_nodes();
-    const auto num_leaf_nodes = leaf_nodes.size();
-    const auto num_disable_flags = disable_flags.size();
-    const auto num_dendrites_excitatory_counts = dendrites_excitatory_counts.size();
-    const auto num_dendrites_excitatory_connected_counts = dendrites_excitatory_connected_counts.size();
-    const auto num_dendrites_inhibitory_counts = dendrites_inhibitory_counts.size();
-    const auto num_dendrites_inhibitory_connected_counts = dendrites_inhibitory_connected_counts.size();
-
-    const auto all_same_size = num_leaf_nodes == num_disable_flags
-        && num_leaf_nodes == num_dendrites_excitatory_counts
-        && num_leaf_nodes == num_dendrites_excitatory_connected_counts
-        && num_leaf_nodes == num_dendrites_inhibitory_counts
-        && num_leaf_nodes == num_dendrites_inhibitory_connected_counts;
-
-    RelearnException::check(all_same_size, "Naive::update_leaf_nodes: The vectors were of different sizes");
-
-    for (const auto neuron_id : NeuronID::range(num_leaf_nodes)) {
-        const auto local_neuron_id = neuron_id.get_neuron_id();
-        if (disable_flags[local_neuron_id] == UpdateStatus::Disabled) {
-            continue;
-        }
-
-        auto* node = leaf_nodes[local_neuron_id];
-
-        RelearnException::check(node != nullptr, "Naive::update_leaf_nodes: node was nullptr: ", neuron_id);
-
-        const auto other_neuron_id = node->get_cell().get_neuron_id();
-
-        RelearnException::check(neuron_id == other_neuron_id, "Naive::update_leaf_nodes: The nodes are not in order");
-
-        const auto number_vacant_dendrites_excitatory = excitatory_dendrites->get_free_elements(neuron_id);
-        const auto number_vacant_dendrites_inhibitory = inhibitory_dendrites->get_free_elements(neuron_id);
-
-        node->set_cell_number_dendrites(number_vacant_dendrites_excitatory, number_vacant_dendrites_inhibitory);
-    }
 }
 
 [[nodiscard]] double Naive::calc_attractiveness_to_connect(const NeuronID& src_neuron_id, const position_type& axon_position,

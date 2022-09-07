@@ -544,6 +544,22 @@ public:
         cell.set_number_inhibitory_axons(num_in);
     }
 
+    constexpr void set_cell_number_excitatory_dendrites(const counter_type number_dendrites) noexcept {
+        cell.set_number_excitatory_dendrites(number_dendrites);
+    }
+
+    constexpr void set_cell_number_excitatory_axons(const counter_type number_axons) noexcept {
+        cell.set_number_excitatory_axons(number_axons);
+    }
+
+    constexpr void set_cell_number_inhibitory_dendrites(const counter_type number_dendrites) noexcept {
+        cell.set_number_inhibitory_dendrites(number_dendrites);
+    }
+
+    constexpr void set_cell_number_inhibitory_axons(const counter_type number_axons) noexcept {
+        cell.set_number_inhibitory_axons(number_axons);
+    }
+
     /**
      * @brief Sets the optional position for the excitatory dendrites position in the associated cell
      * @param opt_position The optional position, can be empty

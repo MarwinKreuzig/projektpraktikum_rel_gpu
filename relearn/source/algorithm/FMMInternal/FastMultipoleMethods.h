@@ -41,7 +41,7 @@ class OctreeImplementation;
  * This class represents the implementation and adaptation of fast multipole methods. The parameters can be set on the fly.
  * It is strongly tied to Octree, and might perform MPI communication via NodeCache::download_children()
  */
-class FastMultipoleMethods : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
+class FastMultipoleMethods : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, FastMultipoleMethodsCell> {
     friend class FMMPrivateFunctionTest;
 
     std::shared_ptr<OctreeImplementation<FastMultipoleMethodsCell>> global_tree{};
@@ -58,21 +58,9 @@ public:
      * @exception Throws a RelearnException if octree is nullptr
      */
     explicit FastMultipoleMethods(const std::shared_ptr<OctreeImplementation<FastMultipoleMethodsCell>>& octree)
-        : global_tree(octree) {
+        : ForwardAlgorithm(octree), global_tree(octree) {
         RelearnException::check(octree != nullptr, "FastMultipoleMethods::FastMultipoleMethods: octree was null");
     }
-
-    /**
-     * @brief Updates all leaf nodes in the octree by the algorithm
-     * @param disable_flags Flags that indicate if a neuron id disabled (0) or enabled (otherwise)
-     * @param axons The model for the axons
-     * @param excitatory_dendrites The model for the excitatory dendrites
-     * @param inhibitory_dendrites The model for the inhibitory dendrites
-     * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
-     */
-    void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) override;
-
-    void update_octree(const std::vector<UpdateStatus>& disable_flags) override;
 
 protected:
     /**
@@ -140,7 +128,7 @@ private:
     static CalculationType check_calculation_requirements(OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, SignalType signal_type_needed);
 
     static std::array<double, Constants::p3> calc_taylor_coefficients(OctreeNode<FastMultipoleMethodsCell>* source, const SignalType& signal_type_needed, const position_type& target_center, const double sigma);
-   
+
     /**
      * @brief Calculates the force of attraction between two nodes of the octree using a Taylor series expansion.
      * @param source Node with vacant axons.
