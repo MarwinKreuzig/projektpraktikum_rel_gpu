@@ -47,7 +47,7 @@ public:
      * @brief Returns the MPI rank this node belongs to
      * @return The MPI rank
      */
-    [[nodiscard]] int get_rank() const noexcept {
+    [[nodiscard]] constexpr int get_rank() const noexcept {
         return rank;
     }
 
@@ -55,7 +55,7 @@ public:
      * @brief Returns a flag that indicates if this node is an inner node or a leaf node
      * @return True iff it is an inner node
      */
-    [[nodiscard]] bool is_parent() const noexcept {
+    [[nodiscard]] constexpr bool is_parent() const noexcept {
         return parent;
     }
 
@@ -63,7 +63,7 @@ public:
      * @brief Returns a flag that indicates if this node is an inner node or a leaf node
      * @return True iff it is a leaf node
      */
-    [[nodiscard]] bool is_leaf() const noexcept {
+    [[nodiscard]] constexpr bool is_leaf() const noexcept {
         return !parent;
     }
 
@@ -71,7 +71,7 @@ public:
      * @brief Returns a constant view on the associated child nodes. This reference is not invalidated by calls to other methods
      * @return A constant view on the associated child nodes
      */
-    [[nodiscard]] const std::array<OctreeNodePtr, Constants::number_oct>& get_children() const noexcept {
+    [[nodiscard]] constexpr const std::array<OctreeNodePtr, Constants::number_oct>& get_children() const noexcept {
         return children;
     }
 
@@ -101,7 +101,7 @@ public:
      * @brief Returns a constant view on the associated cell. This reference is not invalidated by calls to other methods
      * @return A constant view on the associated cell
      */
-    [[nodiscard]] const Cell<AdditionalCellAttributes>& get_cell() const noexcept {
+    [[nodiscard]] constexpr const Cell<AdditionalCellAttributes>& get_cell() const noexcept {
         return cell;
     }
 
@@ -425,7 +425,7 @@ public:
     /**
      * @brief Marks this node as a parent (an inner node)
      */
-    void set_parent() noexcept {
+    constexpr void set_parent() noexcept {
         parent = true;
     }
 
@@ -455,7 +455,7 @@ public:
      * @brief Returns the level of this node
      * @return The level
      */
-    [[nodiscard]] std::uint16_t get_level() const noexcept {
+    [[nodiscard]] constexpr std::uint16_t get_level() const noexcept {
         return level;
     }
 
@@ -463,23 +463,24 @@ public:
      * @brief Sets the level of this node
      * @param new_level The new level of this node
      */
-    void set_level(std::uint16_t new_level) noexcept {
+    constexpr void set_level(std::uint16_t new_level) noexcept {
         level = new_level;
     }
 
     /**
      * @brief Resets the current object:
-     *      (a) The cell is newly constructed
-     *      (b) The children are newly constructed
-     *      (c) parent is false
-     *      (d) rank is -1
+     *      (a) The children are newly constructed with nullptr
+     *      (b) The cell is newly constructed
+     *      (c) level is -1
+     *      (d) parent is false
+     *      (e) rank is -1
      */
-    void reset() noexcept {
-        cell = Cell<AdditionalCellAttributes>{};
+    constexpr void reset() noexcept {
         children = std::array<OctreeNodePtr, Constants::number_oct>{ nullptr };
+        cell = Cell<AdditionalCellAttributes>{};
+        level = -1;
         parent = false;
         rank = -1;
-        level = -1;
     }
 
     /**
@@ -528,7 +529,7 @@ public:
      * @param num_ex The number of free excitatory dendrites
      * @param num_in The number of free inhibitory dendrites
      */
-    void set_cell_number_dendrites(const counter_type num_ex, const counter_type num_in) noexcept {
+    constexpr void set_cell_number_dendrites(const counter_type num_ex, const counter_type num_in) noexcept {
         cell.set_number_excitatory_dendrites(num_ex);
         cell.set_number_inhibitory_dendrites(num_in);
     }
@@ -538,7 +539,7 @@ public:
      * @param num_ex The number of free excitatory axons
      * @param num_in The number of free inhibitory axons
      */
-    void set_cell_number_axons(const counter_type num_ex, const counter_type num_in) noexcept {
+    constexpr void set_cell_number_axons(const counter_type num_ex, const counter_type num_in) noexcept {
         cell.set_number_excitatory_axons(num_ex);
         cell.set_number_inhibitory_axons(num_in);
     }
@@ -547,7 +548,7 @@ public:
      * @brief Sets the optional position for the excitatory dendrites position in the associated cell
      * @param opt_position The optional position, can be empty
      */
-    void set_cell_excitatory_dendrites_position(const std::optional<position_type>& opt_position) {
+    constexpr void set_cell_excitatory_dendrites_position(const std::optional<position_type>& opt_position) {
         cell.set_excitatory_dendrites_position(opt_position);
     }
 
@@ -555,7 +556,7 @@ public:
      * @brief Sets the optional position for the inhibitory dendrites position in the associated cell
      * @param opt_position The optional position, can be empty
      */
-    void set_cell_inhibitory_dendrites_position(const std::optional<position_type>& opt_position) {
+    constexpr void set_cell_inhibitory_dendrites_position(const std::optional<position_type>& opt_position) {
         cell.set_inhibitory_dendrites_position(opt_position);
     }
 
@@ -563,7 +564,7 @@ public:
      * @brief Sets the optional position for the excitatory axons position in the associated cell
      * @param opt_position The optional position, can be empty
      */
-    void set_cell_excitatory_axons_position(const std::optional<position_type>& opt_position) {
+    constexpr void set_cell_excitatory_axons_position(const std::optional<position_type>& opt_position) {
         cell.set_excitatory_axons_position(opt_position);
     }
 
@@ -571,7 +572,7 @@ public:
      * @brief Sets the optional position for the inhibitory axons position in the associated cell
      * @param opt_position The optional position, can be empty
      */
-    void set_cell_inhibitory_axons_position(const std::optional<position_type>& opt_position) {
+    constexpr void set_cell_inhibitory_axons_position(const std::optional<position_type>& opt_position) {
         cell.set_inhibitory_axons_position(opt_position);
     }
 
@@ -579,7 +580,7 @@ public:
      * @brief Returns the neuron id for the associated cell
      * @return The neuron id
      */
-    [[nodiscard]] NeuronID get_cell_neuron_id() const noexcept {
+    [[nodiscard]] constexpr NeuronID get_cell_neuron_id() const noexcept {
         return cell.get_neuron_id();
     }
 
@@ -588,7 +589,7 @@ public:
      * @param neuron_id The neuron id
      * @exception Throws a RelearnException if the neuron_id is not initialized
      */
-    void set_cell_neuron_id(const NeuronID& neuron_id) {
+    constexpr void set_cell_neuron_id(const NeuronID& neuron_id) {
         cell.set_neuron_id(neuron_id);
     }
 
@@ -606,7 +607,7 @@ public:
      * @brief Returns the size of the associated cell
      * @return The size of the cell
      */
-    [[nodiscard]] std::tuple<box_size_type, box_size_type> get_size() const noexcept {
+    [[nodiscard]] constexpr std::tuple<box_size_type, box_size_type> get_size() const noexcept {
         return cell.get_size();
     }
 };

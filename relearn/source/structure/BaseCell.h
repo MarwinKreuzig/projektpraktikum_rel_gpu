@@ -117,7 +117,7 @@ public:
      * @param num_dendrites The number of free dendrites
      * @exception Throws a RelearnException if the requested type is not in this cell
      */
-    constexpr void set_number_dendrites_for(const SignalType dendrite_type, const counter_type num_dendrites) requires(has_excitatory_dendrite || has_inhibitory_dendrite) {
+    void set_number_dendrites_for(const SignalType dendrite_type, const counter_type num_dendrites) requires(has_excitatory_dendrite || has_inhibitory_dendrite) {
         if (dendrite_type == SignalType::Excitatory) {
             if constexpr (has_excitatory_dendrite) {
                 excitatory_dendrite.set_number_free_elements(num_dendrites);
@@ -139,7 +139,7 @@ public:
      * @exception Throws a RelearnException if the requested type is not in this cell
      * @return The number of free dendrites for the associated type
      */
-    [[nodiscard]] constexpr counter_type get_number_dendrites_for(const SignalType dendrite_type) const requires(has_excitatory_dendrite || has_inhibitory_dendrite) {
+    [[nodiscard]] counter_type get_number_dendrites_for(const SignalType dendrite_type) const requires(has_excitatory_dendrite || has_inhibitory_dendrite) {
         if (dendrite_type == SignalType::Excitatory) {
             if constexpr (has_excitatory_dendrite) {
                 return excitatory_dendrite.get_number_free_elements();
@@ -159,7 +159,7 @@ public:
      * @param virtual_position The position of the free dendrites
      * @exception Throws a RelearnException if the requested type is not in this cell
      */
-    constexpr void set_dendrites_position_for(const SignalType dendrite_type, const std::optional<position_type>& virtual_position) requires(has_excitatory_dendrite || has_inhibitory_dendrite) {
+    void set_dendrites_position_for(const SignalType dendrite_type, const std::optional<position_type>& virtual_position) requires(has_excitatory_dendrite || has_inhibitory_dendrite) {
         if (dendrite_type == SignalType::Excitatory) {
             if constexpr (has_excitatory_dendrite) {
                 excitatory_dendrite.set_position(virtual_position);
@@ -181,7 +181,7 @@ public:
      * @exception Throws a RelearnException if the requested type is not in this cell
      * @return The position of the free dendrites for the associated type
      */
-    [[nodiscard]] constexpr std::optional<position_type> get_dendrites_position_for(const SignalType dendrite_type) const requires(has_excitatory_dendrite || has_inhibitory_dendrite) {
+    [[nodiscard]] std::optional<position_type> get_dendrites_position_for(const SignalType dendrite_type) const requires(has_excitatory_dendrite || has_inhibitory_dendrite) {
         if (dendrite_type == SignalType::Excitatory) {
             if constexpr (has_excitatory_dendrite) {
                 return excitatory_dendrite.get_position();
@@ -265,7 +265,7 @@ public:
      * @param num_axons The number of free axons
      * @exception Throws a RelearnException if the requested type is not in this cell
      */
-    constexpr void set_number_axons_for(const SignalType axon_type, const counter_type num_axons) requires(has_excitatory_axon || has_inhibitory_axon) {
+    void set_number_axons_for(const SignalType axon_type, const counter_type num_axons) requires(has_excitatory_axon || has_inhibitory_axon) {
         if (axon_type == SignalType::Excitatory) {
             if constexpr (has_excitatory_axon) {
                 excitatory_axon.set_number_free_elements(num_axons);
@@ -287,7 +287,7 @@ public:
      * @exception Throws a RelearnException if the requested type is not in this cell
      * @return The number of free axons for the associated type
      */
-    [[nodiscard]] constexpr counter_type get_number_axons_for(const SignalType axon_type) const requires(has_excitatory_axon || has_inhibitory_axon) {
+    [[nodiscard]] counter_type get_number_axons_for(const SignalType axon_type) const requires(has_excitatory_axon || has_inhibitory_axon) {
         if (axon_type == SignalType::Excitatory) {
             if constexpr (has_excitatory_axon) {
                 return excitatory_axon.get_number_free_elements();
@@ -307,7 +307,7 @@ public:
      * @param virtual_position The position of the free axons
      * @exception Throws a RelearnException if the requested type is not in this cell
      */
-    constexpr void set_axons_position_for(const SignalType axon_type, const std::optional<position_type>& virtual_position) requires(has_excitatory_axon || has_inhibitory_axon) {
+    void set_axons_position_for(const SignalType axon_type, const std::optional<position_type>& virtual_position) requires(has_excitatory_axon || has_inhibitory_axon) {
         if (axon_type == SignalType::Excitatory) {
             if constexpr (has_excitatory_axon) {
                 excitatory_axon.set_position(virtual_position);
@@ -329,7 +329,7 @@ public:
      * @exception Throws a RelearnException if the requested type is not in this cell
      * @return The position of the free axons for the associated type
      */
-    [[nodiscard]] constexpr std::optional<position_type> get_axons_position_for(const SignalType axon_type) const requires(has_excitatory_axon || has_inhibitory_axon) {
+    [[nodiscard]] std::optional<position_type> get_axons_position_for(const SignalType axon_type) const requires(has_excitatory_axon || has_inhibitory_axon) {
         if (axon_type == SignalType::Excitatory) {
             if constexpr (has_excitatory_axon) {
                 return excitatory_axon.get_position();
@@ -350,7 +350,7 @@ public:
      * @param num_elements The number of free elements
      * @exception Throws a RelearnException if the requested type is not in this cell
      */
-    constexpr void set_number_elements_for(const ElementType element_type, const SignalType signal_type, const counter_type num_elements) requires(has_excitatory_dendrite || has_inhibitory_dendrite || has_excitatory_axon || has_inhibitory_axon) {
+    void set_number_elements_for(const ElementType element_type, const SignalType signal_type, const counter_type num_elements) requires(has_excitatory_dendrite || has_inhibitory_dendrite || has_excitatory_axon || has_inhibitory_axon) {
         if (element_type == ElementType::Axon && signal_type == SignalType::Excitatory) {
             if constexpr (has_excitatory_axon) {
                 excitatory_axon.set_number_free_elements(num_elements);
@@ -389,7 +389,7 @@ public:
      * @exception Throws a RelearnException if the requested type is not in this cell
      * @return The number of free elements for the associated type
      */
-    [[nodiscard]] constexpr counter_type get_number_elements_for(const ElementType element_type, const SignalType signal_type) const requires(has_excitatory_dendrite || has_inhibitory_dendrite || has_excitatory_axon || has_inhibitory_axon) {
+    [[nodiscard]] counter_type get_number_elements_for(const ElementType element_type, const SignalType signal_type) const requires(has_excitatory_dendrite || has_inhibitory_dendrite || has_excitatory_axon || has_inhibitory_axon) {
         if (element_type == ElementType::Axon && signal_type == SignalType::Excitatory) {
             if constexpr (has_excitatory_axon) {
                 return excitatory_axon.get_number_free_elements();
@@ -424,7 +424,7 @@ public:
      * @param virtual_position The position of the free elements
      * @exception Throws a RelearnException if the requested type is not in this cell
      */
-    constexpr void set_position_for(const ElementType element_type, const SignalType signal_type, const std::optional<position_type>& virtual_position) requires(has_excitatory_dendrite || has_inhibitory_dendrite || has_excitatory_axon || has_inhibitory_axon) {
+    void set_position_for(const ElementType element_type, const SignalType signal_type, const std::optional<position_type>& virtual_position) requires(has_excitatory_dendrite || has_inhibitory_dendrite || has_excitatory_axon || has_inhibitory_axon) {
         if (element_type == ElementType::Axon && signal_type == SignalType::Excitatory) {
             if constexpr (has_excitatory_axon) {
                 excitatory_axon.set_position(virtual_position);
@@ -463,7 +463,7 @@ public:
      * @exception Throws a RelearnException if the requested type is not in this cell
      * @return The position of the free elements for the associated type
      */
-    [[nodiscard]] constexpr std::optional<position_type> get_position_for(const ElementType element_type, const SignalType signal_type) const requires(has_excitatory_dendrite || has_inhibitory_dendrite || has_excitatory_axon || has_inhibitory_axon) {
+    [[nodiscard]] std::optional<position_type> get_position_for(const ElementType element_type, const SignalType signal_type) const requires(has_excitatory_dendrite || has_inhibitory_dendrite || has_excitatory_axon || has_inhibitory_axon) {
         if (element_type == ElementType::Axon && signal_type == SignalType::Excitatory) {
             if constexpr (has_excitatory_axon) {
                 return excitatory_axon.get_position();
@@ -518,7 +518,7 @@ public:
      * @exception Throws a RelearnException if not all stored positions are equal
      * @return The position of the elements. Is empty, if no element is present.
      */
-    [[nodiscard]] constexpr std::optional<position_type> get_neuron_position() const {
+    [[nodiscard]] std::optional<position_type> get_neuron_position() const {
         std::optional<position_type> current_position{};
         bool current_position_valid = false;
 

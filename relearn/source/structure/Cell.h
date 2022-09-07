@@ -43,7 +43,7 @@ public:
      * @param neuron_id The neuron id
      * @exception Throws a RelearnException if the neuron_id is not initialized
      */
-    void set_neuron_id(const NeuronID& neuron_id) {
+    constexpr void set_neuron_id(const NeuronID& neuron_id) {
         RelearnException::check(neuron_id.is_initialized(), "Cell::set:neuron_id: The neuron id was not initialized: {}", neuron_id);
         this->neuron_id = neuron_id;
     }
@@ -52,7 +52,7 @@ public:
      * @brief Returns the neuron id for the associated cell. Is Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
      * @return The neuron id
      */
-    [[nodiscard]] NeuronID get_neuron_id() const noexcept {
+    [[nodiscard]] constexpr NeuronID get_neuron_id() const noexcept {
         return neuron_id;
     }
 
@@ -78,7 +78,7 @@ public:
      * @brief Returns the size of the cell as tuple of (1) min and (2) max
      * @return The size of the cell as tuple of (1) min and (2) max
      */
-    [[nodiscard]] std::tuple<box_size_type, box_size_type> get_size() const noexcept {
+    [[nodiscard]] constexpr std::tuple<box_size_type, box_size_type> get_size() const noexcept {
         return std::make_tuple(minimum_position, maximum_position);
     }
 
@@ -86,7 +86,7 @@ public:
      * @brief Returns maximum edge length of the cell, i.e., ||max - min||_1
      * @return The maximum edge length of the cell
      */
-    [[nodiscard]] double get_maximal_dimension_difference() const noexcept {
+    [[nodiscard]] constexpr double get_maximal_dimension_difference() const noexcept {
         const auto diff_vector = maximum_position - minimum_position;
         const auto diff = diff_vector.get_maximum();
 
@@ -226,33 +226,33 @@ private:
 public:
     /**
      * @brief Sets the number of free excitatory dendrites in this cell
-     * @param num_dendrites The number of free excitatory dendrites
+     * @param number_dendrites The number of free excitatory dendrites
      */
-    void set_number_excitatory_dendrites(const counter_type num_dendrites) noexcept {
-        additional_cell_attributes.set_number_excitatory_dendrites(num_dendrites);
+    constexpr void set_number_excitatory_dendrites(const counter_type number_dendrites) noexcept {
+        additional_cell_attributes.set_number_excitatory_dendrites(number_dendrites);
     }
 
     /**
      * @brief Returns the number of free excitatory dendrites in this cell
      * @return The number of free excitatory dendrites
      */
-    [[nodiscard]] counter_type get_number_excitatory_dendrites() const noexcept {
+    [[nodiscard]] constexpr counter_type get_number_excitatory_dendrites() const noexcept {
         return additional_cell_attributes.get_number_excitatory_dendrites();
     }
 
     /**
      * @brief Sets the number of free inhibitory dendrites in this cell
-     * @param num_dendrites The number of free inhibitory dendrites
+     * @param number_dendrites The number of free inhibitory dendrites
      */
-    void set_number_inhibitory_dendrites(const counter_type num_dendrites) noexcept {
-        additional_cell_attributes.set_number_inhibitory_dendrites(num_dendrites);
+    constexpr void set_number_inhibitory_dendrites(const counter_type number_dendrites) noexcept {
+        additional_cell_attributes.set_number_inhibitory_dendrites(number_dendrites);
     }
 
     /**
      * @brief Returns the number of free inhibitory dendrites in this cell
      * @return The number of free inhibitory dendrites
      */
-    [[nodiscard]] counter_type get_number_inhibitory_dendrites() const noexcept {
+    [[nodiscard]] constexpr counter_type get_number_inhibitory_dendrites() const noexcept {
         return additional_cell_attributes.get_number_inhibitory_dendrites();
     }
 
@@ -284,7 +284,7 @@ public:
      * @brief Returns the position of the excitatory dendrite
      * @return The position of the excitatory dendrite
      */
-    [[nodiscard]] std::optional<position_type> get_excitatory_dendrites_position() const noexcept {
+    [[nodiscard]] constexpr std::optional<position_type> get_excitatory_dendrites_position() const noexcept {
         return additional_cell_attributes.get_excitatory_dendrites_position();
     }
 
@@ -307,7 +307,7 @@ public:
      * @brief Returns the position of the inhibitory dendrite
      * @return The position of the inhibitory dendrite
      */
-    [[nodiscard]] std::optional<position_type> get_inhibitory_dendrites_position() const noexcept {
+    [[nodiscard]] constexpr std::optional<position_type> get_inhibitory_dendrites_position() const noexcept {
         return additional_cell_attributes.get_inhibitory_dendrites_position();
     }
 
@@ -362,33 +362,33 @@ public:
 
     /**
      * @brief Sets the number of free excitatory axons in this cell
-     * @param num_axons The number of free excitatory axons
+     * @param number_axons The number of free excitatory axons
      */
-    void set_number_excitatory_axons(const counter_type num_axons) noexcept {
-        additional_cell_attributes.set_number_excitatory_axons(num_axons);
+    constexpr void set_number_excitatory_axons(const counter_type number_axons) noexcept {
+        additional_cell_attributes.set_number_excitatory_axons(number_axons);
     }
 
     /**
      * @brief Returns the number of free excitatory axons in this cell
      * @return The number of free excitatory axons
      */
-    [[nodiscard]] counter_type get_number_excitatory_axons() const noexcept {
+    [[nodiscard]] constexpr counter_type get_number_excitatory_axons() const noexcept {
         return additional_cell_attributes.get_number_excitatory_axons();
     }
 
     /**
      * @brief Sets the number of free inhibitory axons in this cell
-     * @param num_dendrites The number of free inhibitory axons
+     * @param number_dendrites The number of free inhibitory axons
      */
-    void set_number_inhibitory_axons(const counter_type num_axons) noexcept {
-        additional_cell_attributes.set_number_inhibitory_axons(num_axons);
+    constexpr void set_number_inhibitory_axons(const counter_type number_axons) noexcept {
+        additional_cell_attributes.set_number_inhibitory_axons(number_axons);
     }
 
     /**
      * @brief Returns the number of free inhibitory axons in this cell
      * @return The number of free inhibitory axons
      */
-    [[nodiscard]] counter_type get_number_inhibitory_axons() const noexcept {
+    [[nodiscard]] constexpr counter_type get_number_inhibitory_axons() const noexcept {
         return additional_cell_attributes.get_number_inhibitory_axons();
     }
 
@@ -420,7 +420,7 @@ public:
      * @brief Returns the position of the excitatory axons
      * @return The position of the excitatory axons
      */
-    [[nodiscard]] std::optional<position_type> get_excitatory_axons_position() const noexcept {
+    [[nodiscard]] constexpr std::optional<position_type> get_excitatory_axons_position() const noexcept {
         return additional_cell_attributes.get_excitatory_axons_position();
     }
 
@@ -443,7 +443,7 @@ public:
      * @brief Returns the position of the inhibitory axons
      * @return The position of the inhibitory axons
      */
-    [[nodiscard]] std::optional<position_type> get_inhibitory_axons_position() const noexcept {
+    [[nodiscard]] constexpr std::optional<position_type> get_inhibitory_axons_position() const noexcept {
         return additional_cell_attributes.get_inhibitory_axons_position();
     }
 
