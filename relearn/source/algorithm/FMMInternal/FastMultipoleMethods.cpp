@@ -10,6 +10,7 @@
 
 #include "FastMultipoleMethods.h"
 
+#include "algorithm/Connector.h"
 #include "algorithm/Kernel/Gaussian.h"
 #include "structure/NodeCache.h"
 #include "structure/Octree.h"
@@ -462,4 +463,14 @@ FastMultipoleMethods::interaction_list_type FastMultipoleMethods::Utilities::get
     auto result = is_local ? node->get_children() : NodeCache<FastMultipoleMethodsCell>::download_children(node);
 
     return result;
+}
+
+std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
+FastMultipoleMethods::process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) {
+    return ForwardConnector::process_requests(creation_requests, excitatory_dendrites, inhibitory_dendrites);
+}
+
+DistantOutSynapses FastMultipoleMethods::process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
+    const CommunicationMap<SynapseCreationResponse>& creation_responses) {
+    return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
 }

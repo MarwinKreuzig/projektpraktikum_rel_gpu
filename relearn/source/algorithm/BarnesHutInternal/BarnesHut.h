@@ -13,19 +13,13 @@
 #include "BarnesHutBase.h"
 #include "BarnesHutCell.h"
 #include "Types.h"
-#include "algorithm/Connector.h"
 #include "algorithm/Internal/ExchangingAlgorithm.h"
 #include "mpi/CommunicationMap.h"
-#include "neurons/ElementType.h"
-#include "neurons/SignalType.h"
 #include "neurons/UpdateStatus.h"
 #include "neurons/helper/SynapseCreationRequests.h"
-#include "structure/OctreeNode.h"
-#include "util/RelearnException.h"
 
 #include <memory>
-#include <optional>
-#include <tuple>
+#include <utility>
 #include <vector>
 
 class NeuronsExtraInfo;
@@ -65,28 +59,13 @@ protected:
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override;
 
     /**
-     * @brief Finds target neurons for a specified source neuron
-     * @param source_neuron_id The source neuron's id
-     * @param source_position The source neuron's position
-     * @param number_vacant_elements The number of vacant elements of the source neuron
-     * @param root Where the source neuron should start to search for targets. It is not const because the children might be changed if the node is remote
-     * @param element_type The element type the source neuron searches
-     * @param signal_type The signal type the source neuron searches
-     * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
-     */
-    [[nodiscard]] std::vector<std::tuple<int, SynapseCreationRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position, const counter_type& number_vacant_elements,
-        OctreeNode<AdditionalCellAttributes>* root, ElementType element_type, SignalType signal_type);
-
-    /**
      * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses
      * @param creation_requests The requests from all MPI ranks
      * @exception Can throw a RelearnException
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
      */
     [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
-    process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) override {
-        return ForwardConnector::process_requests(creation_requests, excitatory_dendrites, inhibitory_dendrites);
-    }
+    process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) override;
 
     /**
      * @brief Processes all incoming responses from the MPI ranks locally
@@ -96,7 +75,5 @@ protected:
      * @return All synapses from this MPI rank to other MPI ranks
      */
     [[nodiscard]] DistantOutSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
-        const CommunicationMap<SynapseCreationResponse>& creation_responses) override {
-        return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
-    }
+        const CommunicationMap<SynapseCreationResponse>& creation_responses) override;
 };

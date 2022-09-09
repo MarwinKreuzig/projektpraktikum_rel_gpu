@@ -13,20 +13,17 @@
 #include "BarnesHutBase.h"
 #include "BarnesHutCell.h"
 #include "Types.h"
-#include "algorithm/Connector.h"
 #include "algorithm/Internal/ExchangingAlgorithm.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
 #include "neurons/UpdateStatus.h"
 #include "neurons/helper/DistantNeuronRequests.h"
-#include "neurons/helper/SynapseCreationRequests.h"
 #include "structure/OctreeNode.h"
-#include "util/RelearnException.h"
 
 #include <memory>
-#include <optional>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 class NeuronsExtraInfo;
@@ -94,40 +91,5 @@ protected:
      * @return All synapses from this MPI rank to other MPI ranks
      */
     [[nodiscard]] DistantOutSynapses process_responses(const CommunicationMap<DistantNeuronRequest>& neuron_requests,
-        const CommunicationMap<DistantNeuronResponse>& neuron_responses) override {
-
-        RelearnException::check(neuron_requests.size() == neuron_responses.size(), "BarnesHutLocationAware::process_responses: Requests and Responses had different sizes");
-
-        const auto number_ranks = neuron_requests.get_number_ranks();
-
-        const auto size_hint = neuron_requests.size();
-        CommunicationMap<SynapseCreationRequest> creation_requests(number_ranks, size_hint);
-        creation_requests.resize(neuron_requests.get_request_sizes());
-
-        CommunicationMap<SynapseCreationResponse> creation_responses(number_ranks, size_hint);
-        creation_responses.resize(neuron_responses.get_request_sizes());
-
-        for (const auto& [rank, requests] : neuron_requests) {
-            const auto& responses = neuron_responses.get_requests(rank);
-
-            for (auto index = 0; index < requests.size(); index++) {
-                const auto source_neuron_id = requests[index].get_source_id();
-                const auto signal_type = requests[index].get_signal_type();
-                const auto target_neuron_id = responses[index].get_source_id();
-                const auto creation_response = responses[index].get_creation_response();
-
-                if (creation_response == SynapseCreationResponse::Succeeded) {
-                    // If the creation succeeded set the corresponding target neuron
-                    creation_requests.set_request(rank, index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
-                } else {
-                    // Otherwise set the source as the target
-                    creation_requests.set_request(rank, index, SynapseCreationRequest{ source_neuron_id, source_neuron_id, signal_type });
-                }
-
-                creation_responses.set_request(rank, index, creation_response);
-            }
-        }
-
-        return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
-    }
+        const CommunicationMap<DistantNeuronResponse>& neuron_responses) override;
 };

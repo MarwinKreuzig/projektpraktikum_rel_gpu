@@ -10,15 +10,15 @@
 
 #include "BarnesHut.h"
 
+#include "algorithm/Connector.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "structure/NodeCache.h"
 #include "structure/OctreeNode.h"
 #include "util/Random.h"
+#include "util/RelearnException.h"
 #include "util/Timers.h"
 
 #include <algorithm>
-#include <array>
-#include <iostream>
 
 CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
@@ -38,15 +38,16 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const si
         }
 
         const NeuronID id{ neuron_id };
-        const auto& axon_position = extra_infos->get_position(id);
-        const auto dendrite_type_needed = axons->get_signal_type(id);
 
         const auto number_vacant_axons = axons->get_free_elements(id);
         if (number_vacant_axons == 0) {
             continue;
         }
 
-        const auto& requests = find_target_neurons(id, axon_position, number_vacant_axons, root, ElementType::Dendrite, dendrite_type_needed);
+        const auto& axon_position = extra_infos->get_position(id);
+        const auto dendrite_type_needed = axons->get_signal_type(id);
+
+        const auto& requests = BarnesHutBase::find_target_neurons(id, axon_position, number_vacant_axons, root, ElementType::Dendrite, dendrite_type_needed);
         for (const auto& [target_rank, creation_request] : requests) {
 #pragma omp critical(BHrequests)
             synapse_creation_requests_outgoing.append(target_rank, creation_request);
@@ -61,25 +62,12 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const si
     return synapse_creation_requests_outgoing;
 }
 
-std::vector<std::tuple<int, SynapseCreationRequest>> BarnesHut::find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
-    const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type) {
+ std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
+BarnesHut::process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) {
+    return ForwardConnector::process_requests(creation_requests, excitatory_dendrites, inhibitory_dendrites);
+}
 
-    std::vector<std::tuple<int, SynapseCreationRequest>> requests{};
-    requests.reserve(number_vacant_elements);
-
-    for (unsigned int j = 0; j < number_vacant_elements; j++) {
-        // Find one target at the time
-        const auto& rank_neuron_id = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type);
-        if (!rank_neuron_id.has_value()) {
-            // If finding failed, it won't succeed in later iterations
-            break;
-        }
-
-        const auto& [target_rank, target_id] = rank_neuron_id.value();
-        const SynapseCreationRequest creation_request(target_id, source_neuron_id, signal_type);
-
-        requests.emplace_back(target_rank, creation_request);
-    }
-
-    return requests;
+ DistantOutSynapses BarnesHut::process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
+    const CommunicationMap<SynapseCreationResponse>& creation_responses) {
+    return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
 }

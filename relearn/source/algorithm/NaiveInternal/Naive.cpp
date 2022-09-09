@@ -10,7 +10,9 @@
 
 #include "Naive.h"
 
+#include "algorithm/Connector.h"
 #include "algorithm/Kernel/Gaussian.h"
+#include "algorithm/Kernel/Kernel.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "structure/NodeCache.h"
 #include "structure/OctreeNode.h"
@@ -20,7 +22,7 @@
 #include <algorithm>
 #include <array>
 
-[[nodiscard]] std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_position, const SignalType dendrite_type_needed) {
+std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_position, const SignalType dendrite_type_needed) {
     OctreeNode<NaiveCell>* node_selected = nullptr;
     OctreeNode<NaiveCell>* root_of_subtree = get_octree_root();
 
@@ -39,38 +41,11 @@
          * Nodes with 0 probability are removed.
          * The probabilities of all vector elements sum up to 1.
          */
-        const auto& prob = create_interval(src_neuron_id, axon_position, dendrite_type_needed, vector);
-
-        if (prob.empty()) {
+        auto* node_selected = Kernel<AdditionalCellAttributes>::pick_target(src_neuron_id, axon_position, vector, ElementType::Dendrite, dendrite_type_needed);
+        if (node_selected == nullptr) {
             return {};
         }
 
-        const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(1.0, Constants::eps));
-
-        /**
-         * This is done in case of rounding errors.
-         */
-        auto counter = 0;
-        auto sum_probabilities = 0.0;
-        while (counter < prob.size()) {
-            if (sum_probabilities >= random_number) {
-                break;
-            }
-
-            sum_probabilities += prob[counter];
-            counter++;
-        }
-        node_selected = vector[counter - 1ULL];
-
-        RelearnException::check(node_selected != nullptr, "Naive::find_target_neuron: node_selected was nullptr");
-
-        /**
-         * Leave loop if no node was selected OR
-         * the selected node is leaf node, i.e., contains normal neuron.
-         *
-         * No node is selected when all nodes in the interval, created in
-         * get_nodes_for_interval(), have probability 0 to connect.
-         */
         const auto done = !node_selected->is_parent();
 
         if (done) {
@@ -147,71 +122,9 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t
     return synapse_creation_requests_outgoing;
 }
 
-[[nodiscard]] double Naive::calc_attractiveness_to_connect(const NeuronID& src_neuron_id, const position_type& axon_position,
-    const OctreeNode<NaiveCell>& node_with_dendrite, const SignalType dendrite_type_needed) {
-
-    /**
-     * If the axon's neuron itself is considered as target neuron, set attractiveness to 0 to avoid forming an autapse (connection to itself).
-     * This can be done as the axon's neuron cells are always resolved until the normal (vs. super) axon's neuron is reached.
-     * That is, the dendrites of the axon's neuron are not included in any super neuron considered.
-     * However, this only works under the requirement that "acceptance_criterion" is <= 0.5.
-     */
-    if ((!node_with_dendrite.is_parent()) && (src_neuron_id == node_with_dendrite.get_cell_neuron_id())) {
-        return 0.0;
-    }
-
-    const auto sigma = GaussianDistributionKernel::get_sigma();
-
-    const auto& target_xyz = node_with_dendrite.get_cell().get_dendrites_position_for(dendrite_type_needed);
-    RelearnException::check(target_xyz.has_value(), "Naive::update_leaf_nodes: target_xyz is bad");
-
-    const auto num_dendrites = node_with_dendrite.get_cell().get_number_dendrites_for(dendrite_type_needed);
-
-    const auto position_diff = target_xyz.value() - axon_position;
-
-    // const auto eucl_length = position_diff.calculate_p_norm(2.0);
-    // const auto numerator = pow(eucl_length, 2.0);
-    const auto numerator = position_diff.calculate_squared_2_norm();
-
-    // Criterion from Markus' paper with doi: 10.3389/fnsyn.2014.00007
-    const auto ret_val = (num_dendrites * exp(-numerator / (sigma * sigma)));
-    return ret_val;
-}
-
-[[nodiscard]] std::vector<double> Naive::create_interval(const NeuronID& src_neuron_id, const position_type& axon_position,
-    const SignalType dendrite_type_needed, const std::vector<OctreeNode<NaiveCell>*>& vector) const {
-
-    if (vector.empty()) {
-        return {};
-    }
-
-    double sum = 0.0;
-
-    std::vector<double> probabilities;
-    std::for_each(vector.cbegin(), vector.cend(), [&](const OctreeNode<NaiveCell>* target_node) {
-        RelearnException::check(target_node != nullptr, "Naive::update_leaf_nodes: target_node was nullptr");
-        const auto prob = calc_attractiveness_to_connect(src_neuron_id, axon_position, *target_node, dendrite_type_needed);
-        probabilities.push_back(prob);
-        sum += prob;
-    });
-
-    /**
-     * Make sure that we don't divide by 0 in case all probabilities from above are 0.
-     * There is no neuron to connect to in that case.
-     */
-    if (sum == 0.0) {
-        return {};
-    }
-
-    std::ranges::transform(probabilities, probabilities.begin(), [sum](double prob) { return prob / sum; });
-
-    return probabilities;
-}
-
-[[nodiscard]] std::tuple<bool, bool> Naive::acceptance_criterion_test(const position_type& /*axon_position*/, const OctreeNode<NaiveCell>* const node_with_dendrite,
+std::tuple<bool, bool> Naive::acceptance_criterion_test(const position_type& /*axon_position*/, const OctreeNode<NaiveCell>* const node_with_dendrite,
     const SignalType dendrite_type_needed) {
-
-    RelearnException::check(node_with_dendrite != nullptr, "Naive::update_leaf_nodes:  node_with_dendrite was nullptr");
+    RelearnException::check(node_with_dendrite != nullptr, "Naive::acceptance_criterion_test: node_with_dendrite was nullptr");
 
     const auto& cell = node_with_dendrite->get_cell();
     const auto has_vacant_dendrites = cell.get_number_dendrites_for(dendrite_type_needed) != 0;
@@ -221,7 +134,7 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t
     return std::make_tuple(!is_parent, has_vacant_dendrites);
 }
 
-[[nodiscard]] std::vector<OctreeNode<NaiveCell>*> Naive::get_nodes_for_interval(const position_type& axon_position, OctreeNode<NaiveCell>* const root,
+std::vector<OctreeNode<NaiveCell>*> Naive::get_nodes_for_interval(const position_type& axon_position, OctreeNode<NaiveCell>* const root,
     const SignalType dendrite_type_needed) {
     if (root == nullptr) {
         return {};
@@ -231,7 +144,7 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t
         return {};
     }
 
-    if (!root->is_parent()) {
+    if (root->is_leaf()) {
         /**
          * The root node is a leaf and thus contains the target neuron.
          *
@@ -300,4 +213,14 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t
     } // while
 
     return nodes_to_consider;
+}
+
+std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
+Naive::process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) {
+    return ForwardConnector::process_requests(creation_requests, excitatory_dendrites, inhibitory_dendrites);
+}
+
+DistantOutSynapses Naive::process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
+    const CommunicationMap<SynapseCreationResponse>& creation_responses) {
+    return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
 }

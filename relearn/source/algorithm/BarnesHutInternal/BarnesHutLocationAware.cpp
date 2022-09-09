@@ -10,15 +10,16 @@
 
 #include "BarnesHutLocationAware.h"
 
+#include "algorithm/Connector.h"
 #include "neurons/NeuronsExtraInfo.h"
+#include "neurons/helper/SynapseCreationRequests.h"
 #include "structure/NodeCache.h"
 #include "structure/OctreeNode.h"
 #include "util/Random.h"
+#include "util/RelearnException.h"
 #include "util/Timers.h"
 
 #include <algorithm>
-#include <array>
-#include <iostream>
 
 CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
@@ -38,13 +39,14 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
         }
 
         const NeuronID id{ neuron_id };
-        const auto& axon_position = extra_infos->get_position(id);
-        const auto dendrite_type_needed = axons->get_signal_type(id);
 
         const auto number_vacant_axons = axons->get_free_elements(id);
         if (number_vacant_axons == 0) {
             continue;
         }
+
+        const auto& axon_position = extra_infos->get_position(id);
+        const auto dendrite_type_needed = axons->get_signal_type(id);
 
         const auto& requests = find_target_neurons(id, axon_position, number_vacant_axons, root, ElementType::Dendrite, dendrite_type_needed);
         for (const auto& [target_rank, creation_request] : requests) {
@@ -69,7 +71,7 @@ std::vector<std::tuple<int, DistantNeuronRequest>> BarnesHutLocationAware::find_
 
     const auto level_of_branch_nodes = get_level_of_branch_nodes();
 
-    for (unsigned int j = 0; j < number_vacant_elements; j++) {
+    for (counter_type j = 0; j < number_vacant_elements; j++) {
         // Find one target at the time
         const auto& neuron_request = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type, level_of_branch_nodes);
         if (!neuron_request.has_value()) {
@@ -160,4 +162,42 @@ BarnesHutLocationAware::process_requests(const CommunicationMap<DistantNeuronReq
     }
 
     return std::make_pair(neuron_responses, synapses);
+}
+
+DistantOutSynapses BarnesHutLocationAware::process_responses(const CommunicationMap<DistantNeuronRequest>& neuron_requests,
+    const CommunicationMap<DistantNeuronResponse>& neuron_responses) {
+
+    RelearnException::check(neuron_requests.size() == neuron_responses.size(), "BarnesHutLocationAware::process_responses: Requests and Responses had different sizes");
+
+    const auto number_ranks = neuron_requests.get_number_ranks();
+
+    const auto size_hint = neuron_requests.size();
+    CommunicationMap<SynapseCreationRequest> creation_requests(number_ranks, size_hint);
+    creation_requests.resize(neuron_requests.get_request_sizes());
+
+    CommunicationMap<SynapseCreationResponse> creation_responses(number_ranks, size_hint);
+    creation_responses.resize(neuron_responses.get_request_sizes());
+
+    for (const auto& [rank, requests] : neuron_requests) {
+        const auto& responses = neuron_responses.get_requests(rank);
+
+        for (auto index = 0; index < requests.size(); index++) {
+            const auto source_neuron_id = requests[index].get_source_id();
+            const auto signal_type = requests[index].get_signal_type();
+            const auto target_neuron_id = responses[index].get_source_id();
+            const auto creation_response = responses[index].get_creation_response();
+
+            if (creation_response == SynapseCreationResponse::Succeeded) {
+                // If the creation succeeded set the corresponding target neuron
+                creation_requests.set_request(rank, index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });
+            } else {
+                // Otherwise set the source as the target
+                creation_requests.set_request(rank, index, SynapseCreationRequest{ source_neuron_id, source_neuron_id, signal_type });
+            }
+
+            creation_responses.set_request(rank, index, creation_response);
+        }
+    }
+
+    return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
 }

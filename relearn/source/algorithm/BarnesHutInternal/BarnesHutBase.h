@@ -12,20 +12,20 @@
 
 #include "Config.h"
 #include "Types.h"
-#include "algorithm/Kernel/Gaussian.h"
 #include "algorithm/Kernel/Kernel.h"
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
 #include "neurons/helper/DistantNeuronRequests.h"
+#include "neurons/helper/SynapseCreationRequests.h"
 #include "structure/NodeCache.h"
 #include "structure/OctreeNode.h"
-#include "util/Random.h"
 #include "util/RelearnException.h"
 #include "util/Stack.h"
 
 #include <algorithm>
 #include <cmath>
 #include <optional>
+#include <tuple>
 #include <vector>
 
 /**
@@ -245,6 +245,39 @@ protected:
             // We need to choose again, starting from the chosen virtual neuron
             root_of_subtree = node_selected;
         }
+    }
+    
+    /**
+     * @brief Finds target neurons for a specified source neuron
+     * @param source_neuron_id The source neuron's id
+     * @param source_position The source neuron's position
+     * @param number_vacant_elements The number of vacant elements of the source neuron
+     * @param root Where the source neuron should start to search for targets. It is not const because the children might be changed if the node is remote
+     * @param element_type The element type the source neuron searches
+     * @param signal_type The signal type the source neuron searches
+     * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
+     */
+    [[nodiscard]] std::vector<std::tuple<int, SynapseCreationRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
+        const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type) {
+
+        std::vector<std::tuple<int, SynapseCreationRequest>> requests{};
+        requests.reserve(number_vacant_elements);
+
+        for (counter_type j = 0; j < number_vacant_elements; j++) {
+            // Find one target at the time
+            const auto& rank_neuron_id = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type);
+            if (!rank_neuron_id.has_value()) {
+                // If finding failed, it won't succeed in later iterations
+                break;
+            }
+
+            const auto& [target_rank, target_id] = rank_neuron_id.value();
+            const SynapseCreationRequest creation_request(target_id, source_neuron_id, signal_type);
+
+            requests.emplace_back(target_rank, creation_request);
+        }
+
+        return requests;
     }
 
     /**

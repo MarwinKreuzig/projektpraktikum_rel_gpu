@@ -12,7 +12,6 @@
 
 #include "NaiveCell.h"
 #include "Types.h"
-#include "algorithm/Connector.h"
 #include "algorithm/Internal/ExchangingAlgorithm.h"
 #include "neurons/SignalType.h"
 #include "neurons/helper/RankNeuronId.h"
@@ -69,9 +68,7 @@ protected:
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
      */
     [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
-    process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) override {
-        return ForwardConnector::process_requests(creation_requests, excitatory_dendrites, inhibitory_dendrites);
-    }
+    process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) override;
 
     /**
      * @brief Processes all incoming responses from the MPI ranks locally
@@ -81,9 +78,7 @@ protected:
      * @return All synapses from this MPI rank to other MPI ranks
      */
     [[nodiscard]] DistantOutSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
-        const CommunicationMap<SynapseCreationResponse>& creation_responses) override {
-        return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
-    }
+        const CommunicationMap<SynapseCreationResponse>& creation_responses) override;
 
 private:
     /**
@@ -96,19 +91,6 @@ private:
      *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
      */
     [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_position, SignalType dendrite_type_needed);
-
-    [[nodiscard]] static double
-    calc_attractiveness_to_connect(
-        const NeuronID& src_neuron_id,
-        const position_type& axon_position,
-        const OctreeNode<NaiveCell>& node_with_dendrite,
-        SignalType dendrite_type_needed);
-
-    [[nodiscard]] std::vector<double> create_interval(
-        const NeuronID& src_neuron_id,
-        const position_type& axon_position,
-        SignalType dendrite_type_needed,
-        const std::vector<OctreeNode<NaiveCell>*>& vector) const;
 
     [[nodiscard]] static std::tuple<bool, bool> acceptance_criterion_test(
         const position_type& axon_position,
