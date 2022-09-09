@@ -100,7 +100,7 @@ public:
     }
 
 private:
-    static inline SemiStableVector<array_type> memory{};
+    static inline SemiStableVector<array_type> memory{}; // NOLINT
     static inline NodesCache remote_nodes_cache{};
     static inline NodesCache inverse_remote_nodes_cache{};
 };

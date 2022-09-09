@@ -157,7 +157,7 @@ public:
         auto octant_xyz_min = this->minimum_position;
         auto octant_xyz_max = this->maximum_position;
         // NOLINTNEXTLINE
-        const auto& octant_xyz_middle = (octant_xyz_min + octant_xyz_max) / 2.0;
+        const auto& octant_xyz_middle = octant_xyz_min.get_midpoint(octant_xyz_max);
         const auto& [middle_x, middle_y, middle_z] = octant_xyz_middle;
 
         if (x_over_halfway_point) {
@@ -261,7 +261,7 @@ public:
      * @param dendrite_type The requested dendrite type
      * @return The number of free dendrites for the associated type
      */
-    [[nodiscard]] counter_type get_number_dendrites_for(const SignalType dendrite_type) const noexcept {
+    [[nodiscard]] counter_type get_number_dendrites_for(const SignalType dendrite_type) const {
         return additional_cell_attributes.get_number_dendrites_for(dendrite_type);
     }
 
@@ -316,7 +316,7 @@ public:
      * @param dendrite_type The type of dendrite which's position should be returned
      * @return The position of the associated dendrite, can be empty
      */
-    [[nodiscard]] std::optional<position_type> get_dendrites_position_for(const SignalType dendrite_type) const noexcept {
+    [[nodiscard]] std::optional<position_type> get_dendrites_position_for(const SignalType dendrite_type) const {
         return additional_cell_attributes.get_dendrites_position_for(dendrite_type);
     }
 
@@ -397,7 +397,7 @@ public:
      * @param axon_type The requested axons type
      * @return The number of free axons for the associated type
      */
-    [[nodiscard]] counter_type get_number_axons_for(const SignalType axon_type) const noexcept {
+    [[nodiscard]] counter_type get_number_axons_for(const SignalType axon_type) const {
         return additional_cell_attributes.get_number_axons_for(axon_type);
     }
 

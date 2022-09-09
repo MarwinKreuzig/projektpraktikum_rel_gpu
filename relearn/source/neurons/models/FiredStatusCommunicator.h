@@ -77,6 +77,8 @@ public:
         return number_local_neurons;
     }
 
+    virtual ~FiredStatusCommunicator() = default;
+
 private:
     int number_ranks{ -1 };
     size_t number_local_neurons{ 0 };

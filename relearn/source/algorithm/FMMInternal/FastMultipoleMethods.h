@@ -118,7 +118,7 @@ private:
      */
     static CalculationType check_calculation_requirements(OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, SignalType signal_type_needed);
 
-    static std::array<double, Constants::p3> calc_taylor_coefficients(OctreeNode<FastMultipoleMethodsCell>* source, const SignalType& signal_type_needed, const position_type& target_center, const double sigma);
+    static std::array<double, Constants::p3> calc_taylor_coefficients(OctreeNode<FastMultipoleMethodsCell>* source, const SignalType& signal_type_needed, const position_type& target_center, double sigma);
 
     /**
      * @brief Calculates the force of attraction between two nodes of the octree using a Taylor series expansion.
@@ -270,9 +270,9 @@ private:
          */
         static std::vector<std::pair<position_type, counter_type>> get_all_positions_for(OctreeNode<AdditionalCellAttributes>* node, const ElementType element_type, const SignalType signal_type) {
             std::vector<std::pair<position_type, counter_type>> result{};
-            result.reserve(30);
+            result.reserve(Constants::number_prealloc_space);
 
-            Stack<OctreeNode<FastMultipoleMethodsCell>*> stack{ 30 };
+            Stack<OctreeNode<FastMultipoleMethodsCell>*> stack{ Constants::number_prealloc_space };
             stack.emplace_back(node);
 
             while (!stack.empty()) {

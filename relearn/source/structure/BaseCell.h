@@ -20,10 +20,12 @@
 #include <type_traits>
 
 #ifdef WIN32
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define RELEARN_NUA [[msvc::no_unique_address]]
 #endif
 
 #ifndef WIN32
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define RELEARN_NUA [[no_unique_address]]
 #endif
 

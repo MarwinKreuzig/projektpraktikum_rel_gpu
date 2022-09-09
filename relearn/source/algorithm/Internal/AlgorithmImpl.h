@@ -59,7 +59,7 @@ protected:
      * @brief Returns the stored octree
      * @return The octree
      */
-    constexpr const std::shared_ptr<OctreeImplementation<AdditionalCellAttributes>>& get_octree() const noexcept {
+    [[nodiscard]] constexpr const std::shared_ptr<OctreeImplementation<AdditionalCellAttributes>>& get_octree() const noexcept {
         return global_tree;
     }
 
@@ -67,7 +67,7 @@ protected:
      * @brief Returns the root of the stored octree
      * @return The root
      */
-    constexpr OctreeNode<AdditionalCellAttributes>* get_octree_root() const noexcept {
+    [[nodiscard]] constexpr OctreeNode<AdditionalCellAttributes>* get_octree_root() const noexcept {
         return global_tree->get_root();
     }
 
@@ -75,7 +75,7 @@ protected:
      * @brief Returns the level of branch nodes of the stored octree
      * @return The level of branch nodes
      */
-    constexpr std::uint16_t get_level_of_branch_nodes() const noexcept {
+    [[nodiscard]] constexpr std::uint16_t get_level_of_branch_nodes() const noexcept {
         return global_tree->get_level_of_branch_nodes();
     }
 
@@ -111,7 +111,7 @@ private:
 
         RelearnException::check(all_same_size, "AlgorithmImpl::update_leaf_nodes: The vectors were of different sizes");
 
-        using counter_type = AdditionalCellAttributes::counter_type;
+        using counter_type = typename AdditionalCellAttributes::counter_type;
 
         for (const auto& neuron_id : NeuronID::range(num_leaf_nodes)) {
             const auto local_neuron_id = neuron_id.get_neuron_id();

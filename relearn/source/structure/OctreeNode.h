@@ -125,7 +125,7 @@ public:
      *      (d) Something went wrong within the insertion
      * @return A pointer to the newly created and inserted node
      */
-    [[nodiscard]] OctreeNodePtr insert(const box_size_type& position, const NeuronID& neuron_id, std::uint16_t level_of_branch_nodes = 0) {
+    [[nodiscard]] OctreeNodePtr insert(const box_size_type& position, const NeuronID& neuron_id, [[maybe_unused]] std::uint16_t level_of_branch_nodes = 0) {
         const auto& [cell_xyz_min, cell_xyz_max] = cell.get_size();
         const auto is_in_box = position.check_in_box(cell_xyz_min, cell_xyz_max);
 

@@ -11,8 +11,8 @@
  */
 
 #include "Config.h"
-#include "io/LogFiles.h"
 #include "RelearnException.h"
+#include "io/LogFiles.h"
 
 #include <algorithm>
 #include <charconv>

@@ -372,12 +372,10 @@ protected:
         const auto& xyz_min = get_xyz_min();
         const auto& xyz_max = get_xyz_max();
 
-        const auto& box_size = (xyz_max - xyz_min);
-
         auto& root_node = upper_portion_holder.emplace_back();
         root_node.set_cell_size(xyz_min, xyz_max);
         root_node.set_cell_neuron_id(NeuronID::virtual_id());
-        root_node.set_cell_neuron_position(xyz_min + (box_size / 2.0));
+        root_node.set_cell_neuron_position(xyz_min.get_midpoint(xyz_max));
         root_node.set_rank(my_rank);
         root_node.set_level(0);
 
@@ -398,7 +396,7 @@ protected:
                 auto& child_node = upper_portion_holder.emplace_back();
                 child_node.set_cell_size(child_min, child_max);
                 child_node.set_cell_neuron_id(NeuronID::virtual_id());
-                child_node.set_cell_neuron_position((child_max + child_min) / 2.0);
+                child_node.set_cell_neuron_position(child_min.get_midpoint(child_max));
                 child_node.set_rank(my_rank);
                 child_node.set_level(current_level + 1);
 
@@ -573,7 +571,7 @@ protected:
              * @param octree_node The node that should be visited, not nullptr
              * @exception Throws a RelearnException if octree_node is nullptr
              */
-            StackElement(OctreeNode<AdditionalCellAttributes>* octree_node)
+            explicit StackElement(OctreeNode<AdditionalCellAttributes>* octree_node)
                 : ptr(octree_node) {
                 RelearnException::check(octree_node != nullptr, "StackElement::StackElement: octree_node was nullptr");
             }

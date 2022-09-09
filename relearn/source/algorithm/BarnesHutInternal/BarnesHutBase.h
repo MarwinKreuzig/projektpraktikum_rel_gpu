@@ -309,7 +309,7 @@ protected:
             }
 
             if (level_of_branch_nodes == node_selected->get_level()) {
-                // TODO
+                // TODO(fabian)
             }
 
             if (level_of_branch_nodes < node_selected->get_level()) {

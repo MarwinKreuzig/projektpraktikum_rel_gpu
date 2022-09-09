@@ -186,7 +186,8 @@ public:
         // NOLINTNEXTLINE
         auto* cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr);
 
-        MemoryHolder<AdditionalCellAttributes>::init(cast, max_num_objects);
+        std::span<OctreeNode<AdditionalCellAttributes>> span{ cast, max_num_objects };
+        MemoryHolder<AdditionalCellAttributes>::init(span);
 
         LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
     }

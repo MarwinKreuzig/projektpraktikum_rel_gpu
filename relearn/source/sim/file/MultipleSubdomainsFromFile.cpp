@@ -86,7 +86,7 @@ void MultipleSubdomainsFromFile::read_neurons_from_file(const std::filesystem::p
     auto [nodes, additional_infos] = NeuronIO::read_neurons(path_to_neurons);
     const auto& [_1, _2, loaded_ex_neurons, loaded_in_neurons] = additional_infos;
 
-    // TODO: Let partition calculate the local portion and then check if all neurons are in it
+    // TODO(future): Let partition calculate the local portion and then check if all neurons are in it
 
     partition->set_simulation_box_size(minimum, maximum);
 

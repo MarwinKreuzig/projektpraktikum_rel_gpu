@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numeric>
 #include <ostream>
 #include <type_traits>
 #include <utility>
@@ -402,6 +403,19 @@ public:
      */
     [[nodiscard]] constexpr T get_minimum() const noexcept {
         return std::min({ x, y, z });
+    }
+
+    /**
+     * @brief Returns the midpoint between this and other, effectively the same as (*this + other) / 2.
+     * @param other The other vector
+     * @return The middle between this and other
+     */
+    [[nodiscard]] constexpr Vec3 get_midpoint(const Vec3& other) const noexcept {
+        const auto mid_x = std::midpoint(x, other.x);
+        const auto mid_y = std::midpoint(y, other.y);
+        const auto mid_z = std::midpoint(z, other.z);
+
+        return Vec3{ mid_x, mid_y, mid_z };
     }
 
     /**

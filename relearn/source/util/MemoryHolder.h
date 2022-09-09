@@ -13,6 +13,7 @@
 #include "Config.h"
 #include "RelearnException.h"
 
+#include <span>
 #include <unordered_map>
 
 template <typename T>
@@ -30,10 +31,8 @@ class OctreeNode;
 template <typename AdditionalCellAttributes>
 class MemoryHolder {
     // NOLINTNEXTLINE
-    static inline OctreeNode<AdditionalCellAttributes>* base_ptr{ nullptr };
-
+    static inline std::span<OctreeNode<AdditionalCellAttributes>> memory_holder{ };
     static inline size_t current_filling{ 0 };
-    static inline size_t total{ Constants::uninitialized };
 
     static inline std::unordered_map<OctreeNode<AdditionalCellAttributes>*, size_t> parent_to_offset{};
 
@@ -44,9 +43,8 @@ public:
      * @param ptr The pointer to the memory location in which objects should be created and deleted
      * @param length The number of objects that fit into the memory
      */
-    static void init(OctreeNode<AdditionalCellAttributes>* ptr, const size_t length) noexcept {
-        base_ptr = ptr;
-        total = length;
+    static void init(std::span<OctreeNode<AdditionalCellAttributes>> memory) noexcept {
+        memory_holder = memory;
     }
 
     /**
@@ -67,18 +65,18 @@ public:
         }
 
         const auto offset = parent_to_offset[parent];
-        RelearnException::check(offset + Constants::number_oct <= total, 
-            "MemoryHolder::get_available: The offset is too large: {} + {} vs {}", offset, Constants::number_oct, total);
+        RelearnException::check(offset + Constants::number_oct <= memory_holder.size(),
+            "MemoryHolder::get_available: The offset is too large: {} + {} vs {}", offset, Constants::number_oct, memory_holder.size());
 
-        return base_ptr + (offset + octant);
+        return &memory_holder[offset + octant];
     }
 
     /**
      * @brief Destroys all objects that were handed out via get_available. All pointers are invalidated.
      */
     static void make_all_available() noexcept {
-        for (size_t i = 0; i < total; i++) {
-            base_ptr[i].reset();
+        for (size_t i = 0; i < memory_holder.size(); i++) {
+            memory_holder[i].reset();
         }
 
         current_filling = 0;
@@ -90,7 +88,7 @@ public:
      * @return The number of objects that fit into the memory portion
      */
     [[nodiscard]] static size_t get_size() noexcept {
-        return total;
+        return memory_holder.size();
     }
 
     /**
@@ -109,14 +107,14 @@ public:
     }
 
     /**
-     * @brief Returns the OctreeNode at the specified offset 
+     * @brief Returns the OctreeNode at the specified offset
      * @param offset The offset at which the OctreeNode shall be returned
      * @exception Throws a RelaernException if offset is larger or equal to the total number of objects or to the current filling
      * @return The OctreeNode with the specified offset
      */
     [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_node_from_offset(std::uint64_t offset) {
-        RelearnException::check(offset < total, "MemoryHolder::get_node_from_offset(): offset ({}) is too large: ({}).", offset, total);
+        RelearnException::check(offset < memory_holder.size(), "MemoryHolder::get_node_from_offset(): offset ({}) is too large: ({}).", offset, memory_holder.size());
         RelearnException::check(offset < current_filling, "MemoryHolder::get_node_from_offset(): offset ({}) is too large: ({}).", offset, current_filling);
-        return base_ptr + offset;
+        return &memory_holder[offset];
     }
 };
