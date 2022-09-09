@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <array>
+#include <stack>
 
 std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_position, const SignalType dendrite_type_needed) {
     OctreeNode<NaiveCell>* node_selected = nullptr;

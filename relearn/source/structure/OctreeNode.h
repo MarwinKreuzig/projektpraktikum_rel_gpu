@@ -21,8 +21,6 @@
 #include <limits>
 #include <optional>
 #include <ostream>
-#include <stack>
-#include <vector>
 
 /**
  * This class serves as the basic building blocks of the Octree.

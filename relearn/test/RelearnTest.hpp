@@ -22,6 +22,7 @@
 #include "neurons/ElementType.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/SignalType.h"
+#include "neurons/helper/SynapseCreationRequests.h"
 #include "neurons/models/SynapticElements.h"
 #include "structure/Cell.h"
 #include "structure/Partition.h"
@@ -37,6 +38,7 @@
 #include <cstdint>
 #include <map>
 #include <random>
+#include <stack>
 #include <tuple>
 #include <vector>
 

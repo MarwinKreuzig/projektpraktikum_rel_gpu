@@ -29,7 +29,6 @@
 #include <array>
 #include <memory>
 #include <optional>
-#include <stack>
 #include <string>
 #include <tuple>
 #include <vector>

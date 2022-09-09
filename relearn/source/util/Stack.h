@@ -50,6 +50,11 @@ public:
         return container.back();
     }
 
+    constexpr void pop() {
+        RelearnException::check(!empty(), "Stack::pop(): The stack was empty!");
+        container.pop_back();
+    }
+
     /**
      * @brief Returns the latest element stored in the stack and pops it as well.
      * @exception Throws a RelearnException if the stack was empty
