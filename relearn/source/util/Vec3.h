@@ -217,7 +217,7 @@ public:
     /**
      * @brief Floors the current vector and returns the results in a newly created object.
      *      Can only be used if the values are non-negative
-     * @exception Throws a RelearnException if any of the components are < 0
+     * @exception Throws a RelearnException if any of the components is < 0
      * @return A newly created object with the floored values
      */
     [[nodiscard]] constexpr Vec3<size_t> floor_componentwise() const {
@@ -254,7 +254,7 @@ public:
 
     /**
      * @brief Componentwise divides by the scalar value and changes the current object
-     * @param scalar The value that should be divided by for each component
+     * @param scalar The value that should be divided by for each component, is not checked for 0
      * @return A reference to the current object
      */
     constexpr Vec3<T>& operator/=(const T& scalar) noexcept {
@@ -313,7 +313,7 @@ public:
     }
 
     /**
-     * @brief Calculated the p norm of the current obejct
+     * @brief Calculated the p norm of the (absolute value of the) current obejct
      * @param p The exponent of the norm, must be >= 1.0
      * @exception Throws a RelearnException if p < 1.0
      * @return The calculated norm
@@ -465,13 +465,13 @@ public:
 
     /**
      * @brief Prints the object to the ostream in the format (x, y, z)
-     * @param os The stream to which the object should be printed
-     * @param vec The object that should be printed
-     * @return A reference to os that allows chaining.
+     * @param output_stream The stream to which the object should be printed
+     * @param vector The object that should be printed
+     * @return A reference to output_stream that allows chaining.
      *      Is not marked as [[nodiscard]] as that typically does happen when chaining <<
      */
-    friend std::ostream& operator<<(std::ostream& output_stream, const Vec3<T>& vec) {
-        const auto& [x, y, z] = vec;
+    friend std::ostream& operator<<(std::ostream& output_stream, const Vec3<T>& vector) {
+        const auto& [x, y, z] = vector;
         output_stream << '(' << x << ", " << y << ", " << z << ')';
 
         return output_stream;
