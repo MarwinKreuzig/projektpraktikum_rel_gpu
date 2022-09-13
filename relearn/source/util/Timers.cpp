@@ -29,11 +29,8 @@ std::string Timers::wall_clock_time() {
     // NOLINTNEXTLINE
     char* string = asctime(timeinfo);
 
-    // Remove linebreak in string
-    // NOLINTNEXTLINE
-    string[24] = '\0';
-
-    return std::string(string);
+    // Only copy 24 characters
+    return std::string(string, 24);
 #else
     time_t rawtime = 0;
     struct tm timeinfo;

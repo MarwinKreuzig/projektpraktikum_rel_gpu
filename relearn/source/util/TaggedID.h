@@ -156,13 +156,13 @@ public:
         , is_virtual_{ is_virtual }
         , id_{ static_cast<value_type>(id) } { }
 
-    TaggedID(const TaggedID&) noexcept = default;
-    TaggedID& operator=(const TaggedID&) noexcept = default;
+    constexpr TaggedID(const TaggedID&) noexcept = default;
+    constexpr TaggedID& operator=(const TaggedID&) noexcept = default;
 
-    TaggedID(TaggedID&&) noexcept = default;
-    TaggedID& operator=(TaggedID&&) noexcept = default;
+    constexpr TaggedID(TaggedID&&) noexcept = default;
+    constexpr TaggedID& operator=(TaggedID&&) noexcept = default;
 
-    ~TaggedID() = default;
+    constexpr ~TaggedID() = default;
 
     /**
      * @brief Get the id

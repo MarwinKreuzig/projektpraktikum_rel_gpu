@@ -64,7 +64,7 @@ public:
      *      Throws a RelearnException if the condition evaluates to false
      */
     template <typename FormatString, typename... Args>
-    static void check(bool condition, FormatString&& format, Args&&... args) {
+    static constexpr void check(bool condition, FormatString&& format, Args&&... args) {
         if (condition) {
             return;
         }
@@ -82,7 +82,7 @@ public:
      *      Throws a RelearnException
      */
     template <typename FormatString, typename... Args>
-    [[noreturn]] static void fail(FormatString&& format, Args&&... args) {
+    [[noreturn]] static constexpr void fail(FormatString&& format, Args&&... args) {
         if (hide_messages) {
             throw RelearnException{};
         }
