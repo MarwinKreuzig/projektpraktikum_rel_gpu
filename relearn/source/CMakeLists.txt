@@ -18,6 +18,7 @@ target_sources(
           # neurons
           neurons/models/AEIFModel.cpp
           neurons/models/FitzHughNagumoModel.cpp
+          neurons/models/FiredStatusCommunicationMap.cpp
           neurons/models/IzhikevichModel.cpp
           neurons/models/NeuronModels.cpp
           neurons/models/PoissonModel.cpp
