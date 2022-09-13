@@ -32,6 +32,11 @@ set(gtest_force_shared_crt
     CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+file(
+  WRITE ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp
+  "#include <filesystem>\nstd::filesystem::path get_relearn_path() { return \"${CMAKE_SOURCE_DIR}\"; }"
+)
+
 add_executable(relearn_tests ${SRC_TST})
 target_sources(
   relearn_tests
@@ -59,6 +64,7 @@ target_sources(
           test_tagged_id.cpp
           test_vector.cpp
           test_kernel_gamma.cpp
+          ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp
           RelearnTest.cpp)
 target_link_libraries(relearn_tests PRIVATE project_options project_libraries)
 target_link_libraries(relearn_tests PRIVATE relearn_lib)

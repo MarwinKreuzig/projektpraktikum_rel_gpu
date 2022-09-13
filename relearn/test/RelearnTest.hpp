@@ -47,6 +47,13 @@ class NeuronsExtraInfo;
 
 inline bool initialized = false;
 
+/**
+ * @brief Get the path to relearn/relearn
+ *
+ * @return std::filesystem::path path
+ */
+[[nodiscard]] std::filesystem::path get_relearn_path();
+
 class RelearnTest : public ::testing::Test {
 protected:
     template <typename AdditionalCellAttributes>
