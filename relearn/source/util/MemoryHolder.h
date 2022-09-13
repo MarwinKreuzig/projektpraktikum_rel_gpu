@@ -13,6 +13,7 @@
 #include "Config.h"
 #include "RelearnException.h"
 
+#include <memory>
 #include <span>
 #include <unordered_map>
 
@@ -31,7 +32,7 @@ class OctreeNode;
 template <typename AdditionalCellAttributes>
 class MemoryHolder {
     // NOLINTNEXTLINE
-    static inline std::span<OctreeNode<AdditionalCellAttributes>> memory_holder{ };
+    static inline std::span<OctreeNode<AdditionalCellAttributes>> memory_holder{};
     static inline size_t current_filling{ 0 };
 
     static inline std::unordered_map<OctreeNode<AdditionalCellAttributes>*, size_t> parent_to_offset{};
@@ -45,6 +46,7 @@ public:
      */
     static void init(std::span<OctreeNode<AdditionalCellAttributes>> memory) noexcept {
         memory_holder = memory;
+        std::ranges::uninitialized_default_construct(memory_holder);
     }
 
     /**
@@ -59,7 +61,7 @@ public:
         RelearnException::check(parent != nullptr, "MemoryHolder::get_available: parent is nullptr");
         RelearnException::check(octant < Constants::number_oct, "MemoryHolder::get_available: octant is too large: {} vs {}", octant, Constants::number_oct);
 
-        if (parent_to_offset.find(parent) == parent_to_offset.end()) {
+        if (!parent_to_offset.contains(parent)) {
             parent_to_offset[parent] = current_filling;
             current_filling += Constants::number_oct;
         }
