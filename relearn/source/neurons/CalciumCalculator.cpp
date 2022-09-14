@@ -11,7 +11,6 @@
 #include "CalciumCalculator.h"
 
 #include "mpi/MPIWrapper.h"
-#include "util/RelearnException.h"
 #include "util/Timers.h"
 
 void CalciumCalculator::init(size_t number_neurons) {

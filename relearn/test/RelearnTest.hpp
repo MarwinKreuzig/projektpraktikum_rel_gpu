@@ -992,6 +992,13 @@ protected:
     }
 };
 
+class CalciumCalculatorTest : public RelearnTest {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
 class StepParserTest : public RelearnTest, public StepParser {
 
 protected:

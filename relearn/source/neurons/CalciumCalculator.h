@@ -13,6 +13,7 @@
 #include "TargetCalciumDecay.h"
 #include "neurons/FiredStatus.h"
 #include "neurons/UpdateStatus.h"
+#include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
 #include <functional>
@@ -29,12 +30,27 @@ class CalciumCalculator {
 
 public:
     /**
-     * @brief Sets the type of target value decay
-     * @param new_decay_type The new decay type
+     * @brief Constructs a new object with the given parameters
+     * @param decay_type The type of decay (abolute, relative, none)
+     * @param decay_amount The amount of decay
+     * @param decay_step The steps when the decay occurs
+     * @exception Throws a RelearnException if
+     *      (a) The decay_type is Relative, but the amount is not from (0, 1] and the step is not larger than 0
+     *      (b) The decay_type is Absolute, but the amount is not from (0, inf) and the step is not larger than 0
      */
-    constexpr void set_decay_type(const TargetCalciumDecay new_decay_type) noexcept {
-        decay_type = new_decay_type;
-    }
+    explicit CalciumCalculator(const TargetCalciumDecay decay_type = TargetCalciumDecay::None, const double decay_amount = 0.1, const size_t decay_step = 1000)
+        : decay_type(decay_type)
+        , decay_amount(decay_amount)
+        , decay_step(decay_step) {
+
+        if (decay_type == TargetCalciumDecay::Absolute) {
+            RelearnException::check(decay_amount > 0, "CalciumCalculator::CalciumCalculator: The decay type is absolute, but the amount was not larger than 0! {}", decay_amount);
+            RelearnException::check(decay_step > 0, "CalciumCalculator::CalciumCalculator: The decay type is absolute, but the step is 0!");
+        } else if (decay_type == TargetCalciumDecay::Relative) {
+            RelearnException::check(decay_amount > 0 && decay_amount <= 1.0, "CalciumCalculator::CalciumCalculator: The decay type is relative, but the amount was not from (0, 1]! {}", decay_amount);
+            RelearnException::check(decay_step > 0, "CalciumCalculator::CalciumCalculator: The decay type is relative, but the step is 0!");
+        }
+     }
 
     /**
      * @brief Returns the type of target value decay
@@ -45,27 +61,11 @@ public:
     }
 
     /**
-     * @brief Sets the amount of target value decay
-     * @param new_decay_amount The new decay amount
-     */
-    constexpr void set_decay_amount(const double new_decay_amount) noexcept {
-        decay_amount = new_decay_amount;
-    }
-
-    /**
      * @brief Returns the amount of target value decay
      * @return The decay amount
      */
     [[nodiscard]] constexpr double get_decay_amount() const noexcept {
         return decay_amount;
-    }
-
-    /**
-     * @brief Sets the steps of target value decay
-     * @param new_decay_step The new decay steps, i.e., a decay happens every new_decay_step steps
-     */
-    constexpr void set_decay_step(const size_t new_decay_step) noexcept {
-        decay_step = new_decay_step;
     }
 
     /**
@@ -79,8 +79,11 @@ public:
     /**
      * @brief Sets beta, the constant by which the calcium increases every time a neuron spikes
      * @param new_beta The new value for beta
+     * @exception Throws a RelearnException if the new value is not in the given interval by minimum and maximum
      */
-    constexpr void set_beta(const double new_beta) noexcept {
+    constexpr void set_beta(const double new_beta) {
+        RelearnException::check(min_beta <= new_beta, "CalciumCalculator::set_beta: new_beta was smaller than the minimum: {} vs {}", new_beta, min_beta);
+        RelearnException::check(new_beta <= max_beta, "CalciumCalculator::set_beta: new_beta was larger than the maximum: {} vs {}", new_beta, max_beta);
         beta = new_beta;
     }
 
@@ -95,8 +98,11 @@ public:
     /**
      * @brief Sets the dampening factor for the calcium decrease (the decay constant)
      * @param new_tau_C The dampening factor
+     * @exception Throws a RelearnException if the new value is not in the given interval by minimum and maximum
      */
-    constexpr void set_tau_C(const double new_tau_C) noexcept {
+    constexpr void set_tau_C(const double new_tau_C) {
+        RelearnException::check(min_tau_C <= new_tau_C, "CalciumCalculator::set_tau_C: new_tau_C was smaller than the minimum: {} vs {}", new_tau_C, min_tau_C);
+        RelearnException::check(new_tau_C <= max_tau_C, "CalciumCalculator::set_tau_C: new_tau_C was larger than the maximum: {} vs {}", new_tau_C, max_tau_C);
         tau_C = new_tau_C;
     }
 
@@ -111,8 +117,11 @@ public:
     /**
      * @brief Sets the numerical integration's step size
      * @param new_h The new step size
+     * @exception Throws a RelearnException if the new value is not in the given interval by minimum and maximum
      */
-    constexpr void set_h(const unsigned int new_h) noexcept {
+    constexpr void set_h(const unsigned int new_h) {
+        RelearnException::check(min_h <= new_h, "CalciumCalculator::set_h: new_h was smaller than the minimum: {} vs {}", new_h, min_h);
+        RelearnException::check(new_h <= max_h, "CalciumCalculator::set_h: new_h was larger than the maximum: {} vs {}", new_h, max_h);
         h = new_h;
     }
 
@@ -141,7 +150,8 @@ public:
     }
 
     /**
-     * @brief Sets the function that is used to determine the initial calcium value of the neurons
+     * @brief Sets the function that is used to determine the initial calcium value of the neurons.
+     *      When calling init(...), the initial calcium calculator must not be empty. It can be so inbetween.
      * @param calculator The function that maps neuron id to initial calcium value
      */
     void set_initial_calcium_calculator(std::function<double(int, NeuronID::value_type)> initiator) noexcept {
@@ -150,6 +160,7 @@ public:
 
     /**
      * @brief Sets the function that is used to determine the target calcium value of the neurons
+     *      When calling init(...), the target calcium calculator must not be empty. It can be so inbetween.
      * @param calculator The function that maps neuron id to target calcium value
      */
     void set_target_calcium_calculator(std::function<double(int, NeuronID::value_type)> calculator) noexcept {
