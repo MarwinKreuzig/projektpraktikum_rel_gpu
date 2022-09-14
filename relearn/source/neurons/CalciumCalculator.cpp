@@ -16,6 +16,9 @@
 
 void CalciumCalculator::init(size_t number_neurons) {
     RelearnException::check(number_neurons > 0, "CalciumCalculator::init: number_neurons was 0");
+    RelearnException::check(initial_calcium_initiator.operator bool(), "CalciumCalculator::init: initial_calcium_initiator is empty");
+    RelearnException::check(target_calcium_calculator.operator bool(), "CalciumCalculator::init: target_calcium_calculator is empty");
+
     calcium.resize(number_neurons);
     target_calcium.resize(number_neurons);
 
@@ -29,6 +32,8 @@ void CalciumCalculator::init(size_t number_neurons) {
 
 void CalciumCalculator::create_neurons(size_t number_neurons) {
     RelearnException::check(number_neurons > 0, "CalciumCalculator::create_neurons: number_neurons was 0");
+    RelearnException::check(initial_calcium_initiator.operator bool(), "CalciumCalculator::create_neurons: initial_calcium_initiator is empty");
+    RelearnException::check(target_calcium_calculator.operator bool(), "CalciumCalculator::create_neurons: target_calcium_calculator is empty");
 
     const auto old_size = calcium.size();
     const auto new_size = old_size + number_neurons;
@@ -45,6 +50,14 @@ void CalciumCalculator::create_neurons(size_t number_neurons) {
 }
 
 void CalciumCalculator::update_calcium(size_t step, const std::vector<UpdateStatus>& disable_flags, const std::vector<FiredStatus>& fired_status) {
+    const auto disable_size = disable_flags.size();
+    const auto fired_size = fired_status.size();
+    const auto calcium_size = calcium.size();
+    const auto target_calcium_size = target_calcium.size();
+
+    const auto all_same_size = disable_size == fired_size && fired_size == calcium_size && calcium_size == target_calcium_size;
+    RelearnException::check(all_same_size, "CalciumCalculator::update_calcium: The vectors had different sizes!");
+
     Timers::start(TimerRegion::CALC_ACTIVITY);
 
     const auto val = (1.0 / static_cast<double>(h));

@@ -68,6 +68,10 @@ public:
      */
     void set_neuron_model(std::unique_ptr<NeuronModel>&& nm) noexcept;
 
+    /**
+     * @brief Sets the calcium calculator used for the simulation
+     * @param calculator The calcium calculator
+     */
     void set_calcium_calculator(std::unique_ptr<CalciumCalculator>&& calculator) noexcept;
 
     /**
@@ -87,18 +91,6 @@ public:
      * @param se The synaptic elements model
      */
     void set_dendrites_in(std::shared_ptr<SynapticElements>&& se) noexcept;
-
-    /**
-     * @brief Sets the function that is used to determine the target calcium value of the neurons
-     * @param calculator The function that maps neuron id to target calcium value
-     */
-    void set_target_calcium_calculator(std::function<double(int, NeuronID::value_type)> calculator) noexcept;
-
-    /**
-     * @brief Sets the function that is used to determine the initial calcium value of the neurons
-     * @param calculator The function that maps neuron id to initial calcium value
-     */
-    void set_initial_calcium_calculator(std::function<double(int, NeuronID::value_type)> initiator) noexcept;
 
     /**
      * @brief Sets the enable interrupts during the simulation.

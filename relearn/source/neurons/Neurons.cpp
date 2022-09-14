@@ -234,7 +234,9 @@ void Neurons::create_neurons(const size_t creation_count) {
 
 void Neurons::update_electrical_activity(const size_t step) {
     neuron_model->update_electrical_activity(*network_graph, disable_flags);
-    update_calcium(step);
+
+    const auto& fired = neuron_model->get_fired();
+    calcium_calculator->update_calcium(step, disable_flags, fired);
 }
 
 void Neurons::update_number_synaptic_elements_delta() {
@@ -244,11 +246,6 @@ void Neurons::update_number_synaptic_elements_delta() {
     axons->update_number_elements_delta(calcium, target_calcium, disable_flags);
     dendrites_exc->update_number_elements_delta(calcium, target_calcium, disable_flags);
     dendrites_inh->update_number_elements_delta(calcium, target_calcium, disable_flags);
-}
-
-void Neurons::update_calcium(const size_t step) {
-    const auto& fired = neuron_model->get_fired();
-    calcium_calculator->update_calcium(step, disable_flags, fired);
 }
 
 StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, const int root, const std::vector<UpdateStatus>& disable_flags) const {

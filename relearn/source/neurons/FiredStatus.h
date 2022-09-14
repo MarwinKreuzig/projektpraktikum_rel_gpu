@@ -16,8 +16,8 @@
  * An instance of this enum symbolizes if a neuron spiked in the current simulation step.
  */
 enum class FiredStatus : char {
-    Fired = 0,
-    Inactive = 1,
+    Inactive = 0,
+    Fired = 1,
 };
 
 /**

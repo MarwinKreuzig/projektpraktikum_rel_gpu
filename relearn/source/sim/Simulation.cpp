@@ -68,14 +68,6 @@ void Simulation::set_dendrites_in(std::shared_ptr<SynapticElements>&& se) noexce
     dendrites_in = std::move(se);
 }
 
-void Simulation::set_target_calcium_calculator(std::function<double(int, NeuronID::value_type)> calculator) noexcept {
-    target_calcium_calculator = std::move(calculator);
-}
-
-void Simulation::set_initial_calcium_calculator(std::function<double(int, NeuronID::value_type)> initiator) noexcept {
-    initial_calcium_initiator = std::move(initiator);
-}
-
 void Simulation::set_enable_interrupts(std::vector<std::pair<size_t, std::vector<NeuronID>>> interrupts) {
     enable_interrupts = std::move(interrupts);
 
