@@ -16,6 +16,7 @@
 #include "io/LogFiles.h"
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
+#include "neurons/CalciumCalculator.h"
 #include "neurons/ElementType.h"
 #include "neurons/helper/NeuronMonitor.h"
 #include "neurons/models/NeuronModels.h"
@@ -301,7 +302,7 @@ int main(int argc, char** argv) {
     double synapse_conductance{ NeuronModel::default_k };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transfered to its neighbors when a neuron spikes. Default is 0.03");
 
-    double calcium_decay{ NeuronModel::default_tau_C };
+    double calcium_decay{ CalciumCalculator::default_tau_C };
     app.add_option("--calcium-decay", calcium_decay, "The decay constant for the intercellular calcium. Must be greater than 0.0");
 
     double target_calcium{ SynapticElements::default_C_target };
@@ -313,7 +314,7 @@ int main(int argc, char** argv) {
     std::string file_calcium{};
     auto* const opt_file_calcium = app.add_option("--file_calcium", file_calcium, "File with calcium values.");
 
-    double beta{ NeuronModel::default_beta };
+    double beta{ CalciumCalculator::default_beta };
     app.add_option("--beta", beta, "The amount of calcium ions gathered when a neuron fires. Default is 0.001.");
 
     size_t h{ NeuronModel::default_h };
@@ -529,25 +530,43 @@ int main(int argc, char** argv) {
 
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {
-        neuron_model = std::make_unique<models::PoissonModel>(synapse_conductance, calcium_decay, beta, h,
+        neuron_model = std::make_unique<models::PoissonModel>(synapse_conductance, h,
             base_background_activity, background_activity_mean, background_activity_stddev,
             models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
     } else if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
-        neuron_model = std::make_unique<models::IzhikevichModel>(synapse_conductance, calcium_decay, beta, h,
+        neuron_model = std::make_unique<models::IzhikevichModel>(synapse_conductance, h,
             base_background_activity, background_activity_mean, background_activity_stddev,
             models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
             models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
             models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
     } else if (chosen_neuron_model == NeuronModelEnum::FitzHughNagumo) {
-        neuron_model = std::make_unique<models::FitzHughNagumoModel>(synapse_conductance, calcium_decay, beta, h,
+        neuron_model = std::make_unique<models::FitzHughNagumoModel>(synapse_conductance, h,
             base_background_activity, background_activity_mean, background_activity_stddev,
             models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
     } else if (chosen_neuron_model == NeuronModelEnum::AEIF) {
-        neuron_model = std::make_unique<models::AEIFModel>(synapse_conductance, calcium_decay, beta, h,
+        neuron_model = std::make_unique<models::AEIFModel>(synapse_conductance, h,
             base_background_activity, background_activity_mean, background_activity_stddev,
             models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
             models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
             models::AEIFModel::default_V_spike);
+    }
+
+    auto calcium_calculator = std::make_unique<CalciumCalculator>();
+    calcium_calculator->set_beta(beta);
+    calcium_calculator->set_tau_C(calcium_decay);
+    calcium_calculator->set_h(h);
+
+    if (*opt_file_calcium) {
+        auto [initial_calcium_calculator, target_calcium_calculator] = CalciumIO::load_initial_and_target_function(file_calcium);
+
+        calcium_calculator->set_initial_calcium_calculator(std::move(initial_calcium_calculator));
+        calcium_calculator->set_target_calcium_calculator(std::move(target_calcium_calculator));
+    } else {
+        auto initial_calcium_calculator = [inital = initial_calcium](int /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return inital; };
+        calcium_calculator->set_initial_calcium_calculator(std::move(initial_calcium_calculator));
+
+        auto target_calcium_calculator = [target = target_calcium](int /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return target; };
+        calcium_calculator->set_target_calcium_calculator(std::move(target_calcium_calculator));
     }
 
     auto axons_model = std::make_shared<SynapticElements>(ElementType::Axon, min_calcium_axons,
@@ -566,6 +585,7 @@ int main(int argc, char** argv) {
 
     Simulation sim(partition);
     sim.set_neuron_model(std::move(neuron_model));
+    sim.set_calcium_calculator(std::move(calcium_calculator));
     sim.set_axons(std::move(axons_model));
     sim.set_dendrites_ex(std::move(excitatory_dendrites_model));
     sim.set_dendrites_in(std::move(inhibitory_dendrites_model));
@@ -617,19 +637,6 @@ int main(int argc, char** argv) {
     if (*opt_file_creation_interrups) {
         auto creation_interrups = InteractiveNeuronIO::load_creation_interrups(file_creation_interrupts);
         sim.set_creation_interrupts(std::move(creation_interrups));
-    }
-
-    if (*opt_file_calcium) {
-        auto [initial_calcium_calculator, target_calcium_calculator] = CalciumIO::load_initial_and_target_function(file_calcium);
-
-        sim.set_initial_calcium_calculator(std::move(initial_calcium_calculator));
-        sim.set_target_calcium_calculator(std::move(target_calcium_calculator));
-    } else {
-        auto initial_calcium_calculator = [inital = initial_calcium](int /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return inital; };
-        sim.set_initial_calcium_calculator(std::move(initial_calcium_calculator));
-
-        auto target_calcium_calculator = [target = target_calcium](int /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return target; };
-        sim.set_target_calcium_calculator(std::move(target_calcium_calculator));
     }
 
     const auto steps_per_simulation = simulation_steps / Config::monitor_step;

@@ -52,6 +52,10 @@ void Simulation::set_neuron_model(std::unique_ptr<NeuronModel>&& nm) noexcept {
     neuron_models = std::move(nm);
 }
 
+void Simulation::set_calcium_calculator(std::unique_ptr<CalciumCalculator>&& calculator) noexcept {
+    calcium_calculator = std::move(calcium_calculator);
+}
+
 void Simulation::set_axons(std::shared_ptr<SynapticElements>&& se) noexcept {
     axons = std::move(se);
 }
@@ -102,6 +106,7 @@ void Simulation::set_subdomain_assignment(std::unique_ptr<NeuronToSubdomainAssig
 
 void Simulation::initialize() {
     RelearnException::check(neuron_models != nullptr, "Simulation::initialize: neuron_models is nullptr");
+    RelearnException::check(calcium_calculator != nullptr, "Simulation::initialize: calcium_calculator is nullptr");
     RelearnException::check(axons != nullptr, "Simulation::initialize: axons is nullptr");
     RelearnException::check(dendrites_ex != nullptr, "Simulation::initialize: dendrites_ex is nullptr");
     RelearnException::check(dendrites_in != nullptr, "Simulation::initialize: dendrites_in is nullptr");
@@ -116,18 +121,8 @@ void Simulation::initialize() {
     const auto my_rank = MPIWrapper::get_my_rank();
     RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank);
 
-    std::vector<double> target_calcium_values(number_local_neurons, 0.0);
-    for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
-        target_calcium_values[neuron_id.get_neuron_id()] = target_calcium_calculator(my_rank, neuron_id.get_neuron_id());
-    }
-
-    std::vector<double> initial_calcium_values(number_local_neurons, 0.0);
-    for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
-        initial_calcium_values[neuron_id.get_neuron_id()] = initial_calcium_initiator(my_rank, neuron_id.get_neuron_id());
-    }
-
-    neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons, dendrites_ex, dendrites_in);
-    neurons->init(number_local_neurons, std::move(target_calcium_values), std::move(initial_calcium_values));
+    neurons = std::make_shared<Neurons>(partition, std::move(neuron_models), std::move(calcium_calculator), axons, dendrites_ex, dendrites_in);
+    neurons->init(number_local_neurons);
     NeuronMonitor::neurons_to_monitor = neurons;
 
     auto number_local_neurons_ntsa = neuron_to_subdomain_assignment->get_number_neurons_in_subdomains();
@@ -160,6 +155,8 @@ void Simulation::initialize() {
         global_tree = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     } else if (algorithm_enum == AlgorithmEnum::Naive) {
         global_tree = std::make_shared<OctreeImplementation<NaiveCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+    } else {
+        RelearnException::fail("Simulation::initialize: Cannot construct the octree for an unknown algorithm.");
     }
 
     LogFiles::print_message_rank(0, "Level of branch nodes is: {}", global_tree->get_level_of_branch_nodes());
@@ -267,24 +264,13 @@ void Simulation::simulate(const size_t number_steps) {
         for (const auto& [creation_step, creation_count] : creation_interrupts) {
             if (creation_step == step) {
                 LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Creating {} neurons in step {}", creation_count, creation_step);
-
-                std::vector<double> new_target_calcium_values(creation_count, 0.0);
-                for (size_t neuron_id = 0; neuron_id < creation_count; neuron_id++) {
-                    new_target_calcium_values[neuron_id] = target_calcium_calculator(my_rank, neuron_id);
-                }
-
-                std::vector<double> new_initial_calcium_values(creation_count, 0.0);
-                for (size_t neuron_id = 0; neuron_id < creation_count; neuron_id++) {
-                    new_initial_calcium_values[neuron_id] = initial_calcium_initiator(my_rank, neuron_id);
-                }
-
-                neurons->create_neurons(creation_count, new_target_calcium_values, new_initial_calcium_values);
+                neurons->create_neurons(creation_count);
             }
         }
 
         // Provide neuronal network to neuron models for one iteration step
         Timers::start(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
-        neurons->update_electrical_activity();
+        neurons->update_electrical_activity(step);
         Timers::stop_and_add(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
 
         // Calc how many synaptic elements grow/retract

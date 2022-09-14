@@ -18,10 +18,8 @@
 #include "util/Random.h"
 #include "util/Timers.h"
 
-NeuronModel::NeuronModel(const double k, const double tau_C, const double beta, const unsigned int h, const double base_background_activity, const double background_activity_mean, const double background_activity_stddev)
+NeuronModel::NeuronModel(const double k, const unsigned int h, const double base_background_activity, const double background_activity_mean, const double background_activity_stddev)
     : k(k)
-    , tau_C(tau_C)
-    , beta(beta)
     , h(h)
     , base_background_activity(base_background_activity)
     , background_activity_mean(background_activity_mean)
@@ -166,8 +164,6 @@ std::vector<std::unique_ptr<NeuronModel>> NeuronModel::get_models() {
 std::vector<ModelParameter> NeuronModel::get_parameter() {
     return {
         Parameter<double>{ "k", k, NeuronModel::min_k, NeuronModel::max_k },
-        Parameter<double>{ "tau_C", tau_C, NeuronModel::min_tau_C, NeuronModel::max_tau_C },
-        Parameter<double>{ "beta", beta, NeuronModel::min_beta, NeuronModel::max_beta },
         Parameter<unsigned int>{ "Number integration steps", h, NeuronModel::min_h, NeuronModel::max_h },
         Parameter<double>{ "Base background activity", base_background_activity, NeuronModel::min_base_background_activity, NeuronModel::max_base_background_activity },
         Parameter<double>{ "Background activity mean", background_activity_mean, NeuronModel::min_background_activity_mean, NeuronModel::max_background_activity_mean },

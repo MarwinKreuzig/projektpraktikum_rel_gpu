@@ -25,6 +25,7 @@
 #include <vector>
 
 class Algorithm;
+class CalciumCalculator;
 class NetworkGraph;
 class NeuronModel;
 class NeuronMonitor;
@@ -66,6 +67,8 @@ public:
      * @param nm The neuron model
      */
     void set_neuron_model(std::unique_ptr<NeuronModel>&& nm) noexcept;
+
+    void set_calcium_calculator(std::unique_ptr<CalciumCalculator>&& calculator) noexcept;
 
     /**
      * @brief Sets the synaptic elements model for the axons
@@ -236,6 +239,7 @@ private:
     std::shared_ptr<SynapticElements> dendrites_in{};
 
     std::unique_ptr<NeuronModel> neuron_models{};
+    std::unique_ptr<CalciumCalculator> calcium_calculator{};
     std::shared_ptr<Neurons> neurons{};
 
     std::shared_ptr<Algorithm> algorithm{};

@@ -47,8 +47,6 @@ public:
      * @brief Construcs a new instance of type NeuronModel with 0 neurons and the passed values for all parameters.
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
      * @param k The factor by which the input of a neighboring spiking neuron is weighted
-     * @param tau_C The dampening factor by which the Calcium decreases in Neurons. @Todo(Fabian): Move that parameter into Neurons
-     * @param beta The factor by which the Calcium is increased whenever a neuron spikes in Neurons. @Todo(Fabian): Move that parameter into Neurons
      * @param h The step size for the numerical integration
      * @param base_background_activity The base background activity that all neurons are exited with. Is only used if background_activity_stddev > 0.0
      * @param background_activity_mean The mean of background activity taht all neurons are exited with. Is only used if background_activity_stddev > 0.0
@@ -59,8 +57,6 @@ public:
      */
     NeuronModel(
         double k,
-        double tau_C,
-        double beta,
         unsigned int h,
         double base_background_activity,
         double background_activity_mean,
@@ -179,27 +175,11 @@ public:
     }
 
     /**
-     * @brief Returns beta (The factor by which the Calcium is increased whenever a neuron spikes in Neurons)
-     * @return Beta (The factor by which the Calcium is increased whenever a neuron spikes in Neurons)
-     */
-    [[nodiscard]] double get_beta() const noexcept {
-        return beta;
-    }
-
-    /**
      * @brief Returns k (The factor by which the input of a neighboring spiking neuron is weighted)
      * @return k (The factor by which the input of a neighboring spiking neuron is weighted)
      */
     [[nodiscard]] double get_k() const noexcept {
         return k;
-    }
-
-    /**
-     * @brief Returns tau_C (The dampening factor by which the Calcium decreases in Neurons)
-     * @return tau_C (The dampening factor by which the Calcium decreases in Neurons)
-     */
-    [[nodiscard]] double get_tau_C() const noexcept {
-        return tau_C;
     }
 
     /**
@@ -306,8 +286,6 @@ public:
     }
 
     static constexpr double default_k{ 0.03 };
-    static constexpr double default_tau_C{ 10000 }; // In Sebastians work: 5000
-    static constexpr double default_beta{ 0.001 }; // In Sebastians work: 0.001
     static constexpr unsigned int default_h{ 10 };
 
     static constexpr double default_base_background_activity{ 0.0 };
@@ -315,8 +293,6 @@ public:
     static constexpr double default_background_activity_stddev{ 0.0 };
 
     static constexpr double min_k{ 0.0 };
-    static constexpr double min_tau_C{ 0 };
-    static constexpr double min_beta{ 0.0 };
     static constexpr unsigned int min_h{ 1 };
 
     static constexpr double min_base_background_activity{ -10000.0 };
@@ -324,8 +300,6 @@ public:
     static constexpr double min_background_activity_stddev{ 0.0 };
 
     static constexpr double max_k{ 1.0 };
-    static constexpr double max_tau_C{ 10.0e+6 };
-    static constexpr double max_beta{ 1.0 };
     static constexpr unsigned int max_h{ 1000 };
 
     static constexpr double max_base_background_activity{ 10000.0 };
@@ -388,8 +362,6 @@ private:
 
     // Model parameters for all neurons
     double k{ default_k }; // Proportionality factor for synapses in Hz
-    double tau_C{ default_tau_C }; // Decay time of calcium
-    double beta{ default_beta }; // Increase in calcium each time a neuron fires
     unsigned int h{ default_h }; // Precision for Euler integration
 
     double base_background_activity{ default_base_background_activity };
@@ -420,8 +392,6 @@ public:
      * @brief Construcs a new instance of type PoissonModel with 0 neurons and the passed values for all parameters.
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
      * @param k See NeuronModel(...)
-     * @param tau_C See NeuronModel(...)
-     * @param beta See NeuronModel(...)
      * @param h See NeuronModel(...)
      * @param base_background_activity See NeuronModel(...)
      * @param background_activity_mean See NeuronModel(...)
@@ -432,8 +402,6 @@ public:
      */
     PoissonModel(
         double k,
-        double tau_C,
-        double beta,
         unsigned int h,
         double base_background_activity,
         double background_activity_mean,
@@ -561,8 +529,6 @@ public:
      * @brief Construcs a new instance of type IzhikevichModel with 0 neurons and the passed values for all parameters.
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
      * @param k See NeuronModel(...)
-     * @param tau_C See NeuronModel(...)
-     * @param beta See NeuronModel(...)
      * @param h See NeuronModel(...)
      * @param base_background_activity See NeuronModel(...)
      * @param background_activity_mean See NeuronModel(...)
@@ -578,8 +544,6 @@ public:
      */
     IzhikevichModel(
         double k,
-        double tau_C,
-        double beta,
         unsigned int h,
         double base_background_activity,
         double background_activity_mean,
@@ -768,8 +732,6 @@ public:
      * @brief Construcs a new instance of type IzhikevichModel with 0 neurons and the passed values for all parameters.
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
      * @param k See NeuronModel(...)
-     * @param tau_C See NeuronModel(...)
-     * @param beta See NeuronModel(...)
      * @param h See NeuronModel(...)
      * @param base_background_activity See NeuronModel(...)
      * @param background_activity_mean See NeuronModel(...)
@@ -780,8 +742,6 @@ public:
      */
     FitzHughNagumoModel(
         double k,
-        double tau_C,
-        double beta,
         unsigned int h,
         double base_background_activity,
         double background_activity_mean,
@@ -909,8 +869,6 @@ public:
      * @brief Construcs a new instance of type IzhikevichModel with 0 neurons and the passed values for all parameters.
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
      * @param k See NeuronModel(...)
-     * @param tau_C See NeuronModel(...)
-     * @param beta See NeuronModel(...)
      * @param h See NeuronModel(...)
      * @param base_background_activity See NeuronModel(...)
      * @param background_activity_mean See NeuronModel(...)
@@ -927,8 +885,6 @@ public:
      */
     AEIFModel(
         double k,
-        double tau_C,
-        double beta,
         unsigned int h,
         double base_background_activity,
         double background_activity_mean,

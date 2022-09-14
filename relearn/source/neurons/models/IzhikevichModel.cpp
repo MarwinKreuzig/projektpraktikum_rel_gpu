@@ -14,8 +14,6 @@ using models::IzhikevichModel;
 
 IzhikevichModel::IzhikevichModel(
     const double k,
-    const double tau_C,
-    const double beta,
     const unsigned int h,
     const double base_background_activity,
     const double background_activity_mean,
@@ -28,7 +26,7 @@ IzhikevichModel::IzhikevichModel(
     const double k1,
     const double k2,
     const double k3)
-    : NeuronModel{ k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev }
+    : NeuronModel{ k, h, base_background_activity, background_activity_mean, background_activity_stddev }
     , a{ a }
     , b{ b }
     , c{ c }
@@ -40,7 +38,7 @@ IzhikevichModel::IzhikevichModel(
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> IzhikevichModel::clone() const {
-    return std::make_unique<IzhikevichModel>(get_k(), get_tau_C(), get_beta(), get_h(), get_base_background_activity(), get_background_activity_mean(), get_background_activity_stddev(), a, b, c, d, V_spike, k1, k2, k3);
+    return std::make_unique<IzhikevichModel>(get_k(), get_h(), get_base_background_activity(), get_background_activity_mean(), get_background_activity_stddev(), a, b, c, d, V_spike, k1, k2, k3);
 }
 
 [[nodiscard]] std::vector<ModelParameter> IzhikevichModel::get_parameter() {

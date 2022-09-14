@@ -186,8 +186,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorPoisson) {
     using namespace models;
 
     const auto expected_k = NeuronModel::default_k;
-    const auto expected_tau_C = NeuronModel::default_tau_C;
-    const auto expected_beta = NeuronModel::default_beta;
     const auto expected_h = NeuronModel::default_h;
     const auto expected_base_background_activity = NeuronModel::default_base_background_activity;
     const auto expected_background_activity_mean = NeuronModel::default_background_activity_mean;
@@ -196,8 +194,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorPoisson) {
     auto model = std::make_unique<PoissonModel>();
 
     ASSERT_EQ(expected_k, model->get_k());
-    ASSERT_EQ(expected_tau_C, model->get_tau_C());
-    ASSERT_EQ(expected_beta, model->get_beta());
     ASSERT_EQ(expected_h, model->get_h());
     ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
@@ -216,8 +212,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorIzhikevich) {
     using namespace models;
 
     const auto expected_k = NeuronModel::default_k;
-    const auto expected_tau_C = NeuronModel::default_tau_C;
-    const auto expected_beta = NeuronModel::default_beta;
     const auto expected_h = NeuronModel::default_h;
     const auto expected_base_background_activity = NeuronModel::default_base_background_activity;
     const auto expected_background_activity_mean = NeuronModel::default_background_activity_mean;
@@ -226,8 +220,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorIzhikevich) {
     auto model = std::make_unique<IzhikevichModel>();
 
     ASSERT_EQ(expected_k, model->get_k());
-    ASSERT_EQ(expected_tau_C, model->get_tau_C());
-    ASSERT_EQ(expected_beta, model->get_beta());
     ASSERT_EQ(expected_h, model->get_h());
     ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
@@ -256,8 +248,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorFitzHughNagumo) {
     using namespace models;
 
     const auto expected_k = NeuronModel::default_k;
-    const auto expected_tau_C = NeuronModel::default_tau_C;
-    const auto expected_beta = NeuronModel::default_beta;
     const auto expected_h = NeuronModel::default_h;
     const auto expected_base_background_activity = NeuronModel::default_base_background_activity;
     const auto expected_background_activity_mean = NeuronModel::default_background_activity_mean;
@@ -266,8 +256,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorFitzHughNagumo) {
     auto model = std::make_unique<FitzHughNagumoModel>();
 
     ASSERT_EQ(expected_k, model->get_k());
-    ASSERT_EQ(expected_tau_C, model->get_tau_C());
-    ASSERT_EQ(expected_beta, model->get_beta());
     ASSERT_EQ(expected_h, model->get_h());
     ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
@@ -286,8 +274,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorAEIF) {
     using namespace models;
 
     const auto expected_k = NeuronModel::default_k;
-    const auto expected_tau_C = NeuronModel::default_tau_C;
-    const auto expected_beta = NeuronModel::default_beta;
     const auto expected_h = NeuronModel::default_h;
     const auto expected_base_background_activity = NeuronModel::default_base_background_activity;
     const auto expected_background_activity_mean = NeuronModel::default_background_activity_mean;
@@ -296,8 +282,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorAEIF) {
     auto model = std::make_unique<AEIFModel>();
 
     ASSERT_EQ(expected_k, model->get_k());
-    ASSERT_EQ(expected_tau_C, model->get_tau_C());
-    ASSERT_EQ(expected_beta, model->get_beta());
     ASSERT_EQ(expected_h, model->get_h());
     ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
@@ -330,8 +314,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorPoisson) {
     using uid = uniform_int_distribution<unsigned int>;
 
     uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
-    uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
-    uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
     uniform_int_distribution<unsigned int> uid_desired_h(NeuronModel::min_h, NeuronModel::max_h);
     uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModel::min_base_background_activity, NeuronModel::max_base_background_activity);
     uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModel::min_background_activity_mean, NeuronModel::max_background_activity_mean);
@@ -342,8 +324,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorPoisson) {
     uniform_real_distribution<double> urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
 
     const auto expected_k = urd_desired_k(mt);
-    const auto expected_tau_C = urd_desired_tau_C(mt);
-    const auto expected_beta = urd_desired_beta(mt);
     const auto expected_h = uid_desired_h(mt);
     const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
     const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
@@ -353,12 +333,10 @@ TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorPoisson) {
     const auto expected_refrac = urd_desired_refrac(mt);
     const auto expected_tau_x = urd_desired_tau_x(mt);
 
-    auto model = std::make_unique<PoissonModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+    auto model = std::make_unique<PoissonModel>(expected_k, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
         expected_x0, expected_tau_x, expected_refrac);
 
     ASSERT_EQ(expected_k, model->get_k());
-    ASSERT_EQ(expected_tau_C, model->get_tau_C());
-    ASSERT_EQ(expected_beta, model->get_beta());
     ASSERT_EQ(expected_h, model->get_h());
     ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
@@ -375,8 +353,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorIzhikevich) {
     using uid = uniform_int_distribution<unsigned int>;
 
     uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
-    uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
-    uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
     uniform_int_distribution<unsigned int> uid_desired_h(NeuronModel::min_h, NeuronModel::max_h);
     uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModel::min_base_background_activity, NeuronModel::max_base_background_activity);
     uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModel::min_background_activity_mean, NeuronModel::max_background_activity_mean);
@@ -392,8 +368,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorIzhikevich) {
     uniform_real_distribution<double> urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
 
     const auto expected_k = urd_desired_k(mt);
-    const auto expected_tau_C = urd_desired_tau_C(mt);
-    const auto expected_beta = urd_desired_beta(mt);
     const auto expected_h = uid_desired_h(mt);
     const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
     const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
@@ -408,12 +382,10 @@ TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorIzhikevich) {
     const auto expected_k2 = urd_desired_k2(mt);
     const auto expected_k3 = urd_desired_k3(mt);
 
-    auto model = std::make_unique<IzhikevichModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+    auto model = std::make_unique<IzhikevichModel>(expected_k, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
         expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
 
     ASSERT_EQ(expected_k, model->get_k());
-    ASSERT_EQ(expected_tau_C, model->get_tau_C());
-    ASSERT_EQ(expected_beta, model->get_beta());
     ASSERT_EQ(expected_h, model->get_h());
     ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
@@ -435,8 +407,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorFitzHughNagumo) {
     using uid = uniform_int_distribution<unsigned int>;
 
     uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
-    uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
-    uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
     uniform_int_distribution<unsigned int> uid_desired_h(NeuronModel::min_h, NeuronModel::max_h);
     uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModel::min_base_background_activity, NeuronModel::max_base_background_activity);
     uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModel::min_background_activity_mean, NeuronModel::max_background_activity_mean);
@@ -447,8 +417,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorFitzHughNagumo) {
     uniform_real_distribution<double> urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
 
     const auto expected_k = urd_desired_k(mt);
-    const auto expected_tau_C = urd_desired_tau_C(mt);
-    const auto expected_beta = urd_desired_beta(mt);
     const auto expected_h = uid_desired_h(mt);
     const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
     const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
@@ -458,12 +426,10 @@ TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorFitzHughNagumo) {
     const auto expected_b = urd_desired_b(mt);
     const auto expected_phi = urd_desired_phi(mt);
 
-    auto model = std::make_unique<FitzHughNagumoModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+    auto model = std::make_unique<FitzHughNagumoModel>(expected_k, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
         expected_a, expected_b, expected_phi);
 
     ASSERT_EQ(expected_k, model->get_k());
-    ASSERT_EQ(expected_tau_C, model->get_tau_C());
-    ASSERT_EQ(expected_beta, model->get_beta());
     ASSERT_EQ(expected_h, model->get_h());
     ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
@@ -480,8 +446,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorAEIF) {
     using uid = uniform_int_distribution<unsigned int>;
 
     uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
-    uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
-    uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
     uniform_int_distribution<unsigned int> uid_desired_h(NeuronModel::min_h, NeuronModel::max_h);
     uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModel::min_base_background_activity, NeuronModel::max_base_background_activity);
     uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModel::min_background_activity_mean, NeuronModel::max_background_activity_mean);
@@ -498,8 +462,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorAEIF) {
     uniform_real_distribution<double> urd_desired_V_spike(AEIFModel::min_V_spike, AEIFModel::max_V_spike);
 
     const auto expected_k = urd_desired_k(mt);
-    const auto expected_tau_C = urd_desired_tau_C(mt);
-    const auto expected_beta = urd_desired_beta(mt);
     const auto expected_h = uid_desired_h(mt);
     const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
     const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
@@ -515,12 +477,10 @@ TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorAEIF) {
     const auto expected_b = urd_desired_b(mt);
     const auto expected_V_spike = urd_desired_V_spike(mt);
 
-    auto model = std::make_unique<AEIFModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+    auto model = std::make_unique<AEIFModel>(expected_k, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
         expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_spike);
 
     ASSERT_EQ(expected_k, model->get_k());
-    ASSERT_EQ(expected_tau_C, model->get_tau_C());
-    ASSERT_EQ(expected_beta, model->get_beta());
     ASSERT_EQ(expected_h, model->get_h());
     ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
@@ -543,8 +503,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsClonePoisson) {
     using uid = uniform_int_distribution<unsigned int>;
 
     uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
-    uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
-    uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
     uniform_int_distribution<unsigned int> uid_desired_h(NeuronModel::min_h, NeuronModel::max_h);
     uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModel::min_base_background_activity, NeuronModel::max_base_background_activity);
     uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModel::min_background_activity_mean, NeuronModel::max_background_activity_mean);
@@ -555,8 +513,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsClonePoisson) {
     uniform_real_distribution<double> urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
 
     const auto expected_k = urd_desired_k(mt);
-    const auto expected_tau_C = urd_desired_tau_C(mt);
-    const auto expected_beta = urd_desired_beta(mt);
     const auto expected_h = uid_desired_h(mt);
     const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
     const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
@@ -566,7 +522,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsClonePoisson) {
     const auto expected_refrac = urd_desired_refrac(mt);
     const auto expected_tau_x = urd_desired_tau_x(mt);
 
-    auto model = std::make_unique<PoissonModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+    auto model = std::make_unique<PoissonModel>(expected_k,expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
         expected_x0, expected_tau_x, expected_refrac);
 
     auto cloned_model = model->clone();
@@ -574,8 +530,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsClonePoisson) {
     auto cast_cloned_model = std::dynamic_pointer_cast<PoissonModel>(shared_version);
 
     ASSERT_EQ(expected_k, model->get_k());
-    ASSERT_EQ(expected_tau_C, model->get_tau_C());
-    ASSERT_EQ(expected_beta, model->get_beta());
     ASSERT_EQ(expected_h, model->get_h());
     ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
@@ -586,8 +540,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsClonePoisson) {
     ASSERT_EQ(expected_tau_x, model->get_tau_x());
 
     ASSERT_EQ(expected_k, cast_cloned_model->get_k());
-    ASSERT_EQ(expected_tau_C, cast_cloned_model->get_tau_C());
-    ASSERT_EQ(expected_beta, cast_cloned_model->get_beta());
     ASSERT_EQ(expected_h, cast_cloned_model->get_h());
     ASSERT_EQ(expected_base_background_activity, cast_cloned_model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, cast_cloned_model->get_background_activity_mean());
@@ -604,8 +556,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneIzhikevich) {
     using uid = uniform_int_distribution<unsigned int>;
 
     uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
-    uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
-    uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
     uniform_int_distribution<unsigned int> uid_desired_h(NeuronModel::min_h, NeuronModel::max_h);
     uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModel::min_base_background_activity, NeuronModel::max_base_background_activity);
     uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModel::min_background_activity_mean, NeuronModel::max_background_activity_mean);
@@ -621,8 +571,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneIzhikevich) {
     uniform_real_distribution<double> urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
 
     const auto expected_k = urd_desired_k(mt);
-    const auto expected_tau_C = urd_desired_tau_C(mt);
-    const auto expected_beta = urd_desired_beta(mt);
     const auto expected_h = uid_desired_h(mt);
     const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
     const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
@@ -637,7 +585,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneIzhikevich) {
     const auto expected_k2 = urd_desired_k2(mt);
     const auto expected_k3 = urd_desired_k3(mt);
 
-    auto model = std::make_unique<IzhikevichModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+    auto model = std::make_unique<IzhikevichModel>(expected_k, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
         expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
 
     auto cloned_model = model->clone();
@@ -645,8 +593,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneIzhikevich) {
     auto cast_cloned_model = std::dynamic_pointer_cast<IzhikevichModel>(shared_version);
 
     ASSERT_EQ(expected_k, model->get_k());
-    ASSERT_EQ(expected_tau_C, model->get_tau_C());
-    ASSERT_EQ(expected_beta, model->get_beta());
     ASSERT_EQ(expected_h, model->get_h());
     ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
@@ -662,8 +608,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneIzhikevich) {
     ASSERT_EQ(expected_k3, model->get_k3());
 
     ASSERT_EQ(expected_k, cast_cloned_model->get_k());
-    ASSERT_EQ(expected_tau_C, cast_cloned_model->get_tau_C());
-    ASSERT_EQ(expected_beta, cast_cloned_model->get_beta());
     ASSERT_EQ(expected_h, cast_cloned_model->get_h());
     ASSERT_EQ(expected_base_background_activity, cast_cloned_model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, cast_cloned_model->get_background_activity_mean());
@@ -685,8 +629,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneFitzHughNagumo) {
     using uid = uniform_int_distribution<unsigned int>;
 
     uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
-    uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
-    uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
     uniform_int_distribution<unsigned int> uid_desired_h(NeuronModel::min_h, NeuronModel::max_h);
     uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModel::min_base_background_activity, NeuronModel::max_base_background_activity);
     uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModel::min_background_activity_mean, NeuronModel::max_background_activity_mean);
@@ -697,8 +639,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneFitzHughNagumo) {
     uniform_real_distribution<double> urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
 
     const auto expected_k = urd_desired_k(mt);
-    const auto expected_tau_C = urd_desired_tau_C(mt);
-    const auto expected_beta = urd_desired_beta(mt);
     const auto expected_h = uid_desired_h(mt);
     const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
     const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
@@ -708,7 +648,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneFitzHughNagumo) {
     const auto expected_b = urd_desired_b(mt);
     const auto expected_phi = urd_desired_phi(mt);
 
-    auto model = std::make_unique<FitzHughNagumoModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+    auto model = std::make_unique<FitzHughNagumoModel>(expected_k,expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
         expected_a, expected_b, expected_phi);
 
     auto cloned_model = model->clone();
@@ -716,8 +656,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneFitzHughNagumo) {
     auto cast_cloned_model = std::dynamic_pointer_cast<FitzHughNagumoModel>(shared_version);
 
     ASSERT_EQ(expected_k, model->get_k());
-    ASSERT_EQ(expected_tau_C, model->get_tau_C());
-    ASSERT_EQ(expected_beta, model->get_beta());
     ASSERT_EQ(expected_h, model->get_h());
     ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
@@ -728,8 +666,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneFitzHughNagumo) {
     ASSERT_EQ(expected_phi, model->get_phi());
 
     ASSERT_EQ(expected_k, cast_cloned_model->get_k());
-    ASSERT_EQ(expected_tau_C, cast_cloned_model->get_tau_C());
-    ASSERT_EQ(expected_beta, cast_cloned_model->get_beta());
     ASSERT_EQ(expected_h, cast_cloned_model->get_h());
     ASSERT_EQ(expected_base_background_activity, cast_cloned_model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, cast_cloned_model->get_background_activity_mean());
@@ -746,8 +682,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneAEIF) {
     using uid = uniform_int_distribution<unsigned int>;
 
     uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
-    uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
-    uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
     uniform_int_distribution<unsigned int> uid_desired_h(NeuronModel::min_h, NeuronModel::max_h);
     uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModel::min_base_background_activity, NeuronModel::max_base_background_activity);
     uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModel::min_background_activity_mean, NeuronModel::max_background_activity_mean);
@@ -764,8 +698,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneAEIF) {
     uniform_real_distribution<double> urd_desired_V_spike(AEIFModel::min_V_spike, AEIFModel::max_V_spike);
 
     const auto expected_k = urd_desired_k(mt);
-    const auto expected_tau_C = urd_desired_tau_C(mt);
-    const auto expected_beta = urd_desired_beta(mt);
     const auto expected_h = uid_desired_h(mt);
     const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
     const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
@@ -781,7 +713,7 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneAEIF) {
     const auto expected_b = urd_desired_b(mt);
     const auto expected_V_spike = urd_desired_V_spike(mt);
 
-    auto model = std::make_unique<AEIFModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+    auto model = std::make_unique<AEIFModel>(expected_k, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
         expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_spike);
 
     auto cloned_model = model->clone();
@@ -789,8 +721,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneAEIF) {
     auto cast_cloned_model = std::dynamic_pointer_cast<AEIFModel>(shared_version);
 
     ASSERT_EQ(expected_k, model->get_k());
-    ASSERT_EQ(expected_tau_C, model->get_tau_C());
-    ASSERT_EQ(expected_beta, model->get_beta());
     ASSERT_EQ(expected_h, model->get_h());
     ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
@@ -807,8 +737,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCloneAEIF) {
     ASSERT_EQ(expected_V_spike, model->get_V_spike());
 
     ASSERT_EQ(expected_k, cast_cloned_model->get_k());
-    ASSERT_EQ(expected_tau_C, cast_cloned_model->get_tau_C());
-    ASSERT_EQ(expected_beta, cast_cloned_model->get_beta());
     ASSERT_EQ(expected_h, cast_cloned_model->get_h());
     ASSERT_EQ(expected_base_background_activity, cast_cloned_model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, cast_cloned_model->get_background_activity_mean());
@@ -831,8 +759,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreatePoisson) {
     using uid = uniform_int_distribution<unsigned int>;
 
     uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
-    uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
-    uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
     uniform_int_distribution<unsigned int> uid_desired_h(NeuronModel::min_h, NeuronModel::max_h);
     uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModel::min_base_background_activity, NeuronModel::max_base_background_activity);
     uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModel::min_background_activity_mean, NeuronModel::max_background_activity_mean);
@@ -843,8 +769,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreatePoisson) {
     uniform_real_distribution<double> urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
 
     const auto expected_k = urd_desired_k(mt);
-    const auto expected_tau_C = urd_desired_tau_C(mt);
-    const auto expected_beta = urd_desired_beta(mt);
     const auto expected_h = uid_desired_h(mt);
     const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
     const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
@@ -854,12 +778,10 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreatePoisson) {
     const auto expected_refrac = urd_desired_refrac(mt);
     const auto expected_tau_x = urd_desired_tau_x(mt);
 
-    auto model = NeuronModel::create<PoissonModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+    auto model = NeuronModel::create<PoissonModel>(expected_k, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
         expected_x0, expected_tau_x, expected_refrac);
 
     ASSERT_EQ(expected_k, model->get_k());
-    ASSERT_EQ(expected_tau_C, model->get_tau_C());
-    ASSERT_EQ(expected_beta, model->get_beta());
     ASSERT_EQ(expected_h, model->get_h());
     ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
@@ -876,8 +798,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateIzhikevich) {
     using uid = uniform_int_distribution<unsigned int>;
 
     uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
-    uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
-    uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
     uniform_int_distribution<unsigned int> uid_desired_h(NeuronModel::min_h, NeuronModel::max_h);
     uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModel::min_base_background_activity, NeuronModel::max_base_background_activity);
     uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModel::min_background_activity_mean, NeuronModel::max_background_activity_mean);
@@ -893,8 +813,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateIzhikevich) {
     uniform_real_distribution<double> urd_desired_k3(IzhikevichModel::min_k3, IzhikevichModel::max_k3);
 
     const auto expected_k = urd_desired_k(mt);
-    const auto expected_tau_C = urd_desired_tau_C(mt);
-    const auto expected_beta = urd_desired_beta(mt);
     const auto expected_h = uid_desired_h(mt);
     const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
     const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
@@ -909,12 +827,10 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateIzhikevich) {
     const auto expected_k2 = urd_desired_k2(mt);
     const auto expected_k3 = urd_desired_k3(mt);
 
-    auto model = NeuronModel::create<IzhikevichModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+    auto model = NeuronModel::create<IzhikevichModel>(expected_k, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
         expected_a, expected_b, expected_c, expected_d, expected_V_spike, expected_k1, expected_k2, expected_k3);
 
     ASSERT_EQ(expected_k, model->get_k());
-    ASSERT_EQ(expected_tau_C, model->get_tau_C());
-    ASSERT_EQ(expected_beta, model->get_beta());
     ASSERT_EQ(expected_h, model->get_h());
     ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
@@ -936,8 +852,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateFitzHughNagumo) {
     using uid = uniform_int_distribution<unsigned int>;
 
     uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
-    uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
-    uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
     uniform_int_distribution<unsigned int> uid_desired_h(NeuronModel::min_h, NeuronModel::max_h);
     uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModel::min_base_background_activity, NeuronModel::max_base_background_activity);
     uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModel::min_background_activity_mean, NeuronModel::max_background_activity_mean);
@@ -948,8 +862,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateFitzHughNagumo) {
     uniform_real_distribution<double> urd_desired_phi(FitzHughNagumoModel::min_phi, FitzHughNagumoModel::max_phi);
 
     const auto expected_k = urd_desired_k(mt);
-    const auto expected_tau_C = urd_desired_tau_C(mt);
-    const auto expected_beta = urd_desired_beta(mt);
     const auto expected_h = uid_desired_h(mt);
     const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
     const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
@@ -959,12 +871,10 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateFitzHughNagumo) {
     const auto expected_b = urd_desired_b(mt);
     const auto expected_phi = urd_desired_phi(mt);
 
-    auto model = NeuronModel::create<FitzHughNagumoModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+    auto model = NeuronModel::create<FitzHughNagumoModel>(expected_k, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
         expected_a, expected_b, expected_phi);
 
     ASSERT_EQ(expected_k, model->get_k());
-    ASSERT_EQ(expected_tau_C, model->get_tau_C());
-    ASSERT_EQ(expected_beta, model->get_beta());
     ASSERT_EQ(expected_h, model->get_h());
     ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
@@ -981,8 +891,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateAEIF) {
     using uid = uniform_int_distribution<unsigned int>;
 
     uniform_real_distribution<double> urd_desired_k(NeuronModel::min_k, NeuronModel::max_k);
-    uniform_real_distribution<double> urd_desired_tau_C(NeuronModel::min_tau_C, NeuronModel::max_tau_C);
-    uniform_real_distribution<double> urd_desired_beta(NeuronModel::min_beta, NeuronModel::max_beta);
     uniform_int_distribution<unsigned int> uid_desired_h(NeuronModel::min_h, NeuronModel::max_h);
     uniform_real_distribution<double> urd_desired_base_background_activity(NeuronModel::min_base_background_activity, NeuronModel::max_base_background_activity);
     uniform_real_distribution<double> urd_desired_background_activity_mean(NeuronModel::min_background_activity_mean, NeuronModel::max_background_activity_mean);
@@ -999,8 +907,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateAEIF) {
     uniform_real_distribution<double> urd_desired_V_spike(AEIFModel::min_V_spike, AEIFModel::max_V_spike);
 
     const auto expected_k = urd_desired_k(mt);
-    const auto expected_tau_C = urd_desired_tau_C(mt);
-    const auto expected_beta = urd_desired_beta(mt);
     const auto expected_h = uid_desired_h(mt);
     const auto expected_base_background_activity = urd_desired_base_background_activity(mt);
     const auto expected_background_activity_mean = urd_desired_background_activity_mean(mt);
@@ -1016,12 +922,10 @@ TEST_F(NeuronModelsTest, testNeuronModelsCreateAEIF) {
     const auto expected_b = urd_desired_b(mt);
     const auto expected_V_spike = urd_desired_V_spike(mt);
 
-    auto model = NeuronModel::create<AEIFModel>(expected_k, expected_tau_C, expected_beta, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
+    auto model = NeuronModel::create<AEIFModel>(expected_k, expected_h, expected_base_background_activity, expected_background_activity_mean, expected_background_activity_stddev,
         expected_C, expected_g_L, expected_E_L, expected_V_T, expected_d_T, expected_tau_w, expected_a, expected_b, expected_V_spike);
 
     ASSERT_EQ(expected_k, model->get_k());
-    ASSERT_EQ(expected_tau_C, model->get_tau_C());
-    ASSERT_EQ(expected_beta, model->get_beta());
     ASSERT_EQ(expected_h, model->get_h());
     ASSERT_EQ(expected_base_background_activity, model->get_base_background_activity());
     ASSERT_EQ(expected_background_activity_mean, model->get_background_activity_mean());
@@ -1210,8 +1114,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullPoisson) {
     using namespace models;
     auto model = std::make_unique<PoissonModel>(
         NeuronModel::default_k,
-        NeuronModel::default_tau_C,
-        NeuronModel::default_beta,
         NeuronModel::default_h,
         0.5, 0.0, 0.0,
         PoissonModel::default_x_0, PoissonModel::default_tau_x, PoissonModel::default_refrac_time);
@@ -1227,8 +1129,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullIzhikevich) {
     using namespace models;
     auto model = std::make_unique<IzhikevichModel>(
         NeuronModel::default_k,
-        NeuronModel::default_tau_C,
-        NeuronModel::default_beta,
         NeuronModel::default_h,
         60.0, 0.0, 0.0,
         IzhikevichModel::default_a, IzhikevichModel::default_b,
@@ -1247,8 +1147,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullFitzHughNagumo) {
     using namespace models;
     auto model = std::make_unique<FitzHughNagumoModel>(
         NeuronModel::default_k,
-        NeuronModel::default_tau_C,
-        NeuronModel::default_beta,
         NeuronModel::default_h,
         60.0, 0.0, 0.0,
         FitzHughNagumoModel::default_a, FitzHughNagumoModel::default_b, FitzHughNagumoModel::default_phi);
@@ -1264,8 +1162,6 @@ TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullAEIF) {
     using namespace models;
     auto model = std::make_unique<AEIFModel>(
         NeuronModel::default_k,
-        NeuronModel::default_tau_C,
-        NeuronModel::default_beta,
         NeuronModel::default_h,
         60.0, 0.0, 0.0,
         AEIFModel::default_C, AEIFModel::default_g_L,

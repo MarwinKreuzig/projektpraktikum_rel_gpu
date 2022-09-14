@@ -10,6 +10,7 @@
  *
  */
 
+#include "neurons/CalciumCalculator.h"
 #include "neurons/Neurons.h"
 #include "neurons/models/NeuronModels.h"
 
@@ -213,7 +214,7 @@ public:
         const auto local_neuron_id = target_neuron_id.get_neuron_id();
         RelearnException::check(local_neuron_id < neurons_to_monitor->number_neurons, "NeuronMonitor::record_data: The target id is too large for the neurons class");
 
-        const double& calcium = neurons_to_monitor->calcium[local_neuron_id];
+        const double& calcium = neurons_to_monitor->calcium_calculator->calcium[local_neuron_id];
         const double& x = neurons_to_monitor->neuron_model->x[local_neuron_id];
         const bool& fired = neurons_to_monitor->neuron_model->fired[local_neuron_id] == FiredStatus::Fired;
         const double& secondary = neurons_to_monitor->neuron_model->get_secondary_variable(target_neuron_id);

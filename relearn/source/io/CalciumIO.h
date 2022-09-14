@@ -29,7 +29,7 @@ public:
     using target_value_calculator = std::function<double(int, NeuronID::value_type)>;
 
     /**
-     * @brief Loads from a file a function that maps the current MPI rank and a neuron's id to its initial calcium value 
+     * @brief Loads from a file a function that maps the current MPI rank and a neuron's id to its initial calcium value
      * @param path_to_file The file that contains the description
      * @return The function to calculate the initial calcium value
      */

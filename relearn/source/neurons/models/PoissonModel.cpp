@@ -17,8 +17,6 @@ using models::PoissonModel;
 
 PoissonModel::PoissonModel(
     const double k,
-    const double tau_C,
-    const double beta,
     const unsigned int h,
     const double base_background_activity,
     const double background_activity_mean,
@@ -26,14 +24,14 @@ PoissonModel::PoissonModel(
     const double x_0,
     const double tau_x,
     const unsigned int refrac_time)
-    : NeuronModel{ k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev }
+    : NeuronModel{ k, h, base_background_activity, background_activity_mean, background_activity_stddev }
     , x_0{ x_0 }
     , tau_x{ tau_x }
     , refrac_time{ refrac_time } {
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> PoissonModel::clone() const {
-    return std::make_unique<PoissonModel>(get_k(), get_tau_C(), get_beta(), get_h(), get_base_background_activity(), get_background_activity_mean(), get_background_activity_stddev(), x_0, tau_x, refrac_time);
+    return std::make_unique<PoissonModel>(get_k(), get_h(), get_base_background_activity(), get_background_activity_mean(), get_background_activity_stddev(), x_0, tau_x, refrac_time);
 }
 
 [[nodiscard]] std::vector<ModelParameter> PoissonModel::get_parameter() {

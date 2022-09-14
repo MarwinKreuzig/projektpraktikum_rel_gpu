@@ -10,6 +10,7 @@
 
 #include "Neurons.h"
 
+#include "CalciumCalculator.h"
 #include "NetworkGraph.h"
 #include "helper/RankNeuronId.h"
 #include "io/LogFiles.h"
@@ -30,11 +31,9 @@
 #include <ranges>
 #include <sstream>
 
-void Neurons::init(const size_t number_neurons, std::vector<double> target_calcium_values, std::vector<double> initial_calcium_values) {
+void Neurons::init(const size_t number_neurons) {
     RelearnException::check(number_neurons > 0, "Neurons::init: number_neurons was 0");
-    RelearnException::check(number_neurons == target_calcium_values.size(), "Neurons::init: number_neurons was different than target_calcium_values.size()");
-    RelearnException::check(number_neurons == initial_calcium_values.size(), "Neurons::init: number_neurons was different than initial_calcium_values.size()");
-
+    
     this->number_neurons = number_neurons;
 
     neuron_model->init(number_neurons);
@@ -53,17 +52,8 @@ void Neurons::init(const size_t number_neurons, std::vector<double> target_calci
     }
 
     disable_flags.resize(number_neurons, UpdateStatus::Enabled);
-    calcium = std::move(initial_calcium_values);
-    target_calcium = std::move(target_calcium_values);
-
-    // Init member variables
-    for (const auto& id : NeuronID::range(number_neurons)) {
-        // Set calcium concentration
-        const auto fired = neuron_model->get_fired(id);
-        if (fired) {
-            calcium[id.get_neuron_id()] += neuron_model->get_beta();
-        }
-    }
+    
+    calcium_calculator->init(number_neurons);
 }
 
 void Neurons::init_synaptic_elements() {
@@ -209,14 +199,12 @@ void Neurons::enable_neurons(const std::vector<NeuronID>& neuron_ids) {
     }
 }
 
-void Neurons::create_neurons(const size_t creation_count, const std::vector<double>& new_target_calcium_values, const std::vector<double>& new_initial_calcium_values) {
-    RelearnException::check(creation_count == new_target_calcium_values.size(), "Neurons::create_neurons: creation_count was unequal to new_target_calcium_values.size()");
-    RelearnException::check(creation_count == new_initial_calcium_values.size(), "Neurons::create_neurons: creation_count was unequal to new_initial_calcium_values.size()");
-
+void Neurons::create_neurons(const size_t creation_count) {
     const auto current_size = number_neurons;
     const auto new_size = current_size + creation_count;
 
     neuron_model->create_neurons(creation_count);
+    calcium_calculator->create_neurons(creation_count);
     extra_info->create_neurons(creation_count);
 
     network_graph->create_neurons(creation_count);
@@ -233,17 +221,6 @@ void Neurons::create_neurons(const size_t creation_count, const std::vector<doub
 
     disable_flags.resize(new_size, UpdateStatus::Enabled);
 
-    calcium.insert(calcium.cend(), new_initial_calcium_values.begin(), new_initial_calcium_values.end());
-    target_calcium.insert(target_calcium.cend(), new_target_calcium_values.begin(), new_target_calcium_values.end());
-
-    for (size_t i = current_size; i < new_size; i++) {
-        // Set calcium concentration
-        const auto fired = neuron_model->get_fired(NeuronID{ i });
-        if (fired) {
-            calcium[i] += neuron_model->get_beta();
-        }
-    }
-
     for (size_t i = current_size; i < new_size; i++) {
         auto id = NeuronID{ i };
         const auto& pos = extra_info->get_position(id);
@@ -255,46 +232,23 @@ void Neurons::create_neurons(const size_t creation_count, const std::vector<doub
     number_neurons = new_size;
 }
 
-void Neurons::update_electrical_activity() {
+void Neurons::update_electrical_activity(const size_t step) {
     neuron_model->update_electrical_activity(*network_graph, disable_flags);
-    update_calcium();
+    update_calcium(step);
 }
 
-void Neurons::update_calcium() {
-    Timers::start(TimerRegion::CALC_ACTIVITY);
+void Neurons::update_number_synaptic_elements_delta() {
+    const auto& calcium = calcium_calculator->get_calcium();
+    const auto& target_calcium = calcium_calculator->get_target_calcium();
 
-    const auto h = neuron_model->get_h();
-    const auto tau_C = neuron_model->get_tau_C();
-    const auto beta = neuron_model->get_beta();
+    axons->update_number_elements_delta(calcium, target_calcium, disable_flags);
+    dendrites_exc->update_number_elements_delta(calcium, target_calcium, disable_flags);
+    dendrites_inh->update_number_elements_delta(calcium, target_calcium, disable_flags);
+}
+
+void Neurons::update_calcium(const size_t step) {
     const auto& fired = neuron_model->get_fired();
-
-    // The following line is commented as compilers cannot make up their mind whether they want to have the constants shared or not
-    //#pragma omp parallel for shared(fired, h, tau_C, beta) default(none)
-    // NOLINTNEXTLINE
-
-    const auto val = (1.0 / static_cast<double>(h));
-
-#pragma omp parallel for default(none) shared(fired, h, val, tau_C, beta)
-    for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
-            continue;
-        }
-
-        // Update calcium depending on the firing
-        auto c = calcium[neuron_id];
-        if (fired[neuron_id] == FiredStatus::Inactive) {
-            for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-                c += val * (-c / tau_C);
-            }
-        } else {
-            for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-                c += val * (-c / tau_C + beta);
-            }
-        }
-        calcium[neuron_id] = c;
-    }
-
-    Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
+    calcium_calculator->update_calcium(step, disable_flags, fired);
 }
 
 StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, const int root, const std::vector<UpdateStatus>& disable_flags) const {
@@ -614,7 +568,7 @@ void Neurons::debug_check_counts() {
 StatisticalMeasures Neurons::get_statistics(NeuronAttribute attribute) const {
     switch (attribute) {
     case NeuronAttribute::Calcium:
-        return global_statistics(calcium, 0, disable_flags);
+        return global_statistics(calcium_calculator->get_calcium(), 0, disable_flags);
 
     case NeuronAttribute::X:
         return global_statistics(neuron_model->get_x(), 0, disable_flags);
@@ -911,6 +865,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) co
 }
 
 void Neurons::print_calcium_statistics_to_essentials() {
+    const auto& calcium = calcium_calculator->get_calcium();
     const StatisticalMeasures& calcium_statistics = global_statistics(calcium, 0, disable_flags);
 
     if (0 != MPIWrapper::get_my_rank()) {
@@ -990,9 +945,11 @@ void Neurons::print_positions_to_log_file() {
 }
 
 void Neurons::print() {
+    const auto& calcium = calcium_calculator->get_calcium();
+
     // Column widths
-    const int cwidth_left = 6;
-    const int cwidth = 20;
+    constexpr int cwidth_left = 6;
+    constexpr int cwidth = 20;
 
     std::stringstream ss{};
 
@@ -1079,10 +1036,12 @@ void Neurons::print_local_network_histogram(const size_t current_step) {
 }
 
 void Neurons::print_calcium_values_to_file(const size_t current_step) {
+    const auto& calcium = calcium_calculator->get_calcium();
+    
     std::stringstream ss{};
 
     ss << '#' << current_step;
-    for (auto val : calcium) {
+    for (const auto val : calcium) {
         ss << ';' << val;
     }
 

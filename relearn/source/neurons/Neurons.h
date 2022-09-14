@@ -10,6 +10,7 @@
  *
  */
 
+#include "CalciumCalculator.h"
 #include "Config.h"
 #include "ElementType.h"
 #include "NeuronsExtraInfo.h"
@@ -49,7 +50,7 @@ public:
     using DendritesExcitatory = SynapticElements;
     using DendritesInhibitory = SynapticElements;
 
-    /** 
+    /**
      * @brief Creates a new object with the passed Partition, NeuronModel, Axons, DendritesExc, and DendritesInh
      * @param partition The partition, is only used for printing, must not be empty
      * @param model_ptr The electrical model for the neurons, must not be empty
@@ -60,16 +61,18 @@ public:
      */
     Neurons(std::shared_ptr<Partition> partition,
         std::unique_ptr<NeuronModel> model_ptr,
+        std::unique_ptr<CalciumCalculator> calculator,
         std::shared_ptr<Axons> axons_ptr,
         std::shared_ptr<DendritesExcitatory> dend_ex_ptr,
         std::shared_ptr<DendritesInhibitory> dend_in_ptr)
         : partition(std::move(partition))
         , neuron_model(std::move(model_ptr))
+        , calcium_calculator(std::move(calculator))
         , axons(std::move(axons_ptr))
         , dendrites_exc(std::move(dend_ex_ptr))
         , dendrites_inh(std::move(dend_in_ptr)) {
 
-        const bool all_filled = this->partition && neuron_model && axons && dendrites_exc && dendrites_inh;
+        const bool all_filled = this->partition && neuron_model && calcium_calculator && axons && dendrites_exc && dendrites_inh;
         RelearnException::check(all_filled, "Neurons::Neurons: Neurons was constructed with some null arguments");
     }
 
@@ -91,9 +94,9 @@ public:
      * @param number_neurons The number of local neurons
      * @param target_calcium_values The target calcium values for the local neurons
      * @param initial_calcium_values The initial calcium values for the local neurons
-     * @exception Throws a RelearnException if target_calcium_values.size() != number_neurons, initial_calcium_values.size() != number_neurons, number_neurons == 0, or something unexpected happened
+     * @exception Throws a RelearnException if something unexpected happened
      */
-    void init(size_t number_neurons, std::vector<double> target_calcium_values, std::vector<double> initial_calcium_values);
+    void init(size_t number_neurons);
 
     /**
      * @brief Sets the octree in which the neurons are stored
@@ -246,28 +249,22 @@ public:
      *      (e) Calculates if the neurons fired once to initialize the calcium values to beta or 0.0
      *      (f) Inserts the newly created neurons into the octree
      * @param creation_count The number of newly created neurons
-     * @param new_target_calcium_values The target calcium values for the newly created neurons
-     * @param new_initial_calcium_values The initial calcium values for the newly created neurons
-     * @exception Throws a RelearnException if creation_count != new_target_calcium_values.size(), or if something unexpected happens
+     * @exception Throws a RelearnException if something unexpected happens
      */
-    void create_neurons(size_t creation_count, const std::vector<double>& new_target_calcium_values, const std::vector<double>& new_initial_calcium_values);
+    void create_neurons(size_t creation_count);
 
     /**
      * @brief Calls update_electrical_activity from the electrical model with the stored network graph,
      *      and updates the calcium values afterwards
      * @exception Throws a RelearnException if something unexpected happens
      */
-    void update_electrical_activity();
+    void update_electrical_activity(size_t step);
 
     /**
      * @brief Updates the delta of the synaptic elements for (1) axons, (2) excitatory dendrites, (3) inhibitory dendrites
      * @exception Throws a RelearnException if something unexpected happens
      */
-    void update_number_synaptic_elements_delta() {
-        axons->update_number_elements_delta(calcium, target_calcium, disable_flags);
-        dendrites_exc->update_number_elements_delta(calcium, target_calcium, disable_flags);
-        dendrites_inh->update_number_elements_delta(calcium, target_calcium, disable_flags);
-    }
+    void update_number_synaptic_elements_delta();
 
     /**
      * @brief Updates the plasticity by
@@ -348,7 +345,7 @@ public:
     [[nodiscard]] StatisticalMeasures get_statistics(NeuronAttribute attribute) const;
 
 private:
-    void update_calcium();
+    void update_calcium(size_t step);
 
     [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, int root, const std::vector<UpdateStatus>& disable_flags) const;
 
@@ -384,13 +381,11 @@ private:
     std::shared_ptr<NetworkGraph> network_graph{};
 
     std::unique_ptr<NeuronModel> neuron_model{};
+    std::unique_ptr<CalciumCalculator> calcium_calculator{};
 
     std::shared_ptr<Axons> axons{};
     std::shared_ptr<DendritesExcitatory> dendrites_exc{};
     std::shared_ptr<DendritesInhibitory> dendrites_inh{};
-
-    std::vector<double> target_calcium{};
-    std::vector<double> calcium{}; // Intracellular calcium concentration of every neuron
 
     std::vector<UpdateStatus> disable_flags{};
 
