@@ -57,8 +57,16 @@ void CalciumCalculator::update_calcium(size_t step, const std::vector<UpdateStat
     const auto all_same_size = disable_size == fired_size && fired_size == calcium_size && calcium_size == target_calcium_size;
     RelearnException::check(all_same_size, "CalciumCalculator::update_calcium: The vectors had different sizes!");
 
-    Timers::start(TimerRegion::CALC_ACTIVITY);
+    Timers::start(TimerRegion::UPDATE_CALCIUM);
+    update_current_calcium(disable_flags, fired_status);
+    Timers::stop_and_add(TimerRegion::UPDATE_CALCIUM);
 
+    Timers::start(TimerRegion::UPDATE_TARGET_CALCIUM);
+    update_target_calcium(step, disable_flags);
+    Timers::stop_and_add(TimerRegion::UPDATE_TARGET_CALCIUM);
+}
+
+void CalciumCalculator::update_current_calcium(const std::vector<UpdateStatus>& disable_flags, const std::vector<FiredStatus>& fired_status) noexcept {
     const auto val = (1.0 / static_cast<double>(h));
 
 #pragma omp parallel for default(none) shared(disable_flags, fired_status, val)
@@ -80,6 +88,7 @@ void CalciumCalculator::update_calcium(size_t step, const std::vector<UpdateStat
         }
         calcium[neuron_id] = c;
     }
+}
 
-    Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
+void CalciumCalculator::update_target_calcium(const size_t step, const std::vector<UpdateStatus>& disable_flags) noexcept {
 }

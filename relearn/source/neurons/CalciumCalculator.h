@@ -17,6 +17,7 @@
 #include "util/TaggedID.h"
 
 #include <functional>
+#include <limits>
 #include <vector>
 
 class NeuronMonitor;
@@ -50,7 +51,7 @@ public:
             RelearnException::check(decay_amount > 0 && decay_amount <= 1.0, "CalciumCalculator::CalciumCalculator: The decay type is relative, but the amount was not from (0, 1]! {}", decay_amount);
             RelearnException::check(decay_step > 0, "CalciumCalculator::CalciumCalculator: The decay type is relative, but the step is 0!");
         }
-     }
+    }
 
     /**
      * @brief Returns the type of target value decay
@@ -200,9 +201,13 @@ public:
 
     static constexpr double max_tau_C{ 10.0e+6 };
     static constexpr double max_beta{ 1.0 };
-    static constexpr unsigned int max_h{ 1000 };
+    static constexpr unsigned int max_h{ std::numeric_limits<unsigned int>::max() };
 
 private:
+    void update_current_calcium(const std::vector<UpdateStatus>& disable_flags, const std::vector<FiredStatus>& fired_status) noexcept;
+
+    void update_target_calcium(size_t step, const std::vector<UpdateStatus>& disable_flags) noexcept;
+
     std::function<double(int, NeuronID::value_type)> initial_calcium_initiator{};
     std::function<double(int, NeuronID::value_type)> target_calcium_calculator{};
 
