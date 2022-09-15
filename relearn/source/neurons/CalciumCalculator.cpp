@@ -91,4 +91,35 @@ void CalciumCalculator::update_current_calcium(const std::vector<UpdateStatus>& 
 }
 
 void CalciumCalculator::update_target_calcium(const size_t step, const std::vector<UpdateStatus>& disable_flags) noexcept {
+    if (decay_type == TargetCalciumDecay::None) {
+        return;
+    }
+
+    if (step % decay_step != 0) {
+        return;
+    }
+
+    if (decay_type == TargetCalciumDecay::Absolute) {
+#pragma omp parallel for default(none) shared(disable_flags)
+        for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
+            if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+                continue;
+            }
+
+            const auto new_target_calcium = target_calcium[neuron_id] - decay_amount;
+            target_calcium[neuron_id] = new_target_calcium;
+        }
+    }
+
+    if (decay_type == TargetCalciumDecay::Relative) {
+#pragma omp parallel for default(none) shared(disable_flags)
+        for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
+            if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+                continue;
+            }
+
+            const auto new_target_calcium = target_calcium[neuron_id] * decay_amount;
+            target_calcium[neuron_id] = new_target_calcium;
+        }
+    }
 }

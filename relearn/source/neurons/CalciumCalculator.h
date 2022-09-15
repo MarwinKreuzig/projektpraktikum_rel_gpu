@@ -36,7 +36,7 @@ public:
      * @param decay_amount The amount of decay
      * @param decay_step The steps when the decay occurs
      * @exception Throws a RelearnException if
-     *      (a) The decay_type is Relative, but the amount is not from (0, 1] and the step is not larger than 0
+     *      (a) The decay_type is Relative, but the amount is not from [0, 1) and the step is not larger than 0
      *      (b) The decay_type is Absolute, but the amount is not from (0, inf) and the step is not larger than 0
      */
     explicit CalciumCalculator(const TargetCalciumDecay decay_type = TargetCalciumDecay::None, const double decay_amount = 0.1, const size_t decay_step = 1000)
@@ -48,7 +48,7 @@ public:
             RelearnException::check(decay_amount > 0, "CalciumCalculator::CalciumCalculator: The decay type is absolute, but the amount was not larger than 0! {}", decay_amount);
             RelearnException::check(decay_step > 0, "CalciumCalculator::CalciumCalculator: The decay type is absolute, but the step is 0!");
         } else if (decay_type == TargetCalciumDecay::Relative) {
-            RelearnException::check(decay_amount > 0 && decay_amount <= 1.0, "CalciumCalculator::CalciumCalculator: The decay type is relative, but the amount was not from (0, 1]! {}", decay_amount);
+            RelearnException::check(decay_amount >= 0 && decay_amount < 1.0, "CalciumCalculator::CalciumCalculator: The decay type is relative, but the amount was not from [0, 1)! {}", decay_amount);
             RelearnException::check(decay_step > 0, "CalciumCalculator::CalciumCalculator: The decay type is relative, but the step is 0!");
         }
     }
