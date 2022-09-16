@@ -53,7 +53,7 @@ void Simulation::set_neuron_model(std::unique_ptr<NeuronModel>&& nm) noexcept {
 }
 
 void Simulation::set_calcium_calculator(std::unique_ptr<CalciumCalculator>&& calculator) noexcept {
-    calcium_calculator = std::move(calcium_calculator);
+    calcium_calculator = std::move(calculator);
 }
 
 void Simulation::set_axons(std::shared_ptr<SynapticElements>&& se) noexcept {

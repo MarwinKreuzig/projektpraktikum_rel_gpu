@@ -321,7 +321,7 @@ int main(int argc, char** argv) {
     auto* const opt_decay_type = app.add_option("--decay-type", target_calcium_decay_type, "The decay type for the target calcium values.");
     opt_decay_type->transform(CLI::CheckedTransformer(cli_parse_decay_type, CLI::ignore_case));
 
-    double target_calcium{ SynapticElements::default_C_target };
+    double target_calcium{ CalciumCalculator::default_C_target };
     auto* const opt_target_calcium = app.add_option("--target-ca", target_calcium, "The target Ca2+ ions in each neuron. Default is 0.7.");
 
     double initial_calcium{ 0.0 };

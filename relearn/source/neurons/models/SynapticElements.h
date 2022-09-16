@@ -460,7 +460,10 @@ public:
 
             const auto target_calcium_value = target_calcium[neuron_id];
             const auto current_calcium_value = calcium[neuron_id];
-            const auto inc = gaussian_growth_curve(current_calcium_value, min_C_level_to_grow, target_calcium_value, nu);
+
+            const auto clamped_target = std::max(target_calcium_value, min_C_level_to_grow);
+
+            const auto inc = gaussian_growth_curve(current_calcium_value, min_C_level_to_grow, clamped_target, nu);
 
             deltas_since_last_update[neuron_id] += inc;
         }
@@ -506,7 +509,6 @@ private:
     [[nodiscard]] unsigned int update_number_elements(const NeuronID& neuron_id);
 
 public:
-    static constexpr double default_C_target{ 0.7 }; // In Sebastians work: 0.5
     static constexpr double default_eta_Axons{ 0.4 }; // In Sebastians work: 0.0
     static constexpr double default_eta_Dendrites_exc{ 0.1 }; // In Sebastians work: 0.0
     static constexpr double default_eta_Dendrites_inh{ 0.0 }; // In Sebastians work: 0.0

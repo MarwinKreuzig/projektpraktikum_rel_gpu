@@ -191,6 +191,8 @@ public:
      */
     void update_calcium(size_t step, const std::vector<UpdateStatus>& disable_flags, const std::vector<FiredStatus>& fired_status);
 
+    static constexpr double default_C_target{ 0.7 }; // In Sebastians work: 0.5
+
     static constexpr double default_tau_C{ 10000 }; // In Sebastians work: 5000
     static constexpr double default_beta{ 0.001 }; // In Sebastians work: 0.001
     static constexpr unsigned int default_h{ 10 };
