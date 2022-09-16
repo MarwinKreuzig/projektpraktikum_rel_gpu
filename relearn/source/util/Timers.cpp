@@ -62,7 +62,7 @@ void Timers::print() {
         const auto timer = static_cast<TimerRegion>(i);
         const auto elapsed = get_elapsed(timer);
 
-        local_timer_output << elapsed << '\n';
+        local_timer_output << elapsed.count() << '\n';
 
         for (auto j = 0U; j < 3; ++j) {
             const auto idx = 3 * i + j;
