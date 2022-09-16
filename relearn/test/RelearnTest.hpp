@@ -22,6 +22,7 @@
 #include "neurons/ElementType.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/SignalType.h"
+#include "neurons/CalciumCalculator.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "neurons/models/SynapticElements.h"
 #include "structure/Cell.h"
@@ -458,7 +459,7 @@ protected:
     }
 
     std::shared_ptr<SynapticElements> create_axons(size_t number_elements, double minimal_grown, double maximal_grown) {
-        SynapticElements axons(ElementType::Axon, SynapticElements::default_C_target);
+        SynapticElements axons(ElementType::Axon, CalciumCalculator::default_C_target);
         axons.init(number_elements);
 
         for (const auto& neuron_id : NeuronID::range(number_elements)) {
@@ -474,7 +475,7 @@ protected:
     }
 
     std::shared_ptr<SynapticElements> create_dendrites(size_t number_elements, SignalType signal_type, double minimal_grown, double maximal_grown) {
-        SynapticElements dendrites(ElementType::Axon, SynapticElements::default_C_target);
+        SynapticElements dendrites(ElementType::Axon, CalciumCalculator::default_C_target);
         dendrites.init(number_elements);
 
         for (const auto& neuron_id : NeuronID::range(number_elements)) {
@@ -489,7 +490,7 @@ protected:
     }
 
     std::shared_ptr<SynapticElements> create_axons(size_t number_elements) {
-        SynapticElements axons(ElementType::Axon, SynapticElements::default_C_target);
+        SynapticElements axons(ElementType::Axon, CalciumCalculator::default_C_target);
         axons.init(number_elements);
 
         for (const auto& neuron_id : NeuronID::range(number_elements)) {
@@ -505,7 +506,7 @@ protected:
     }
 
     std::shared_ptr<SynapticElements> create_dendrites(size_t number_elements, SignalType signal_type) {
-        SynapticElements dendrites(ElementType::Axon, SynapticElements::default_C_target);
+        SynapticElements dendrites(ElementType::Axon, CalciumCalculator::default_C_target);
         dendrites.init(number_elements);
 
         for (const auto& neuron_id : NeuronID::range(number_elements)) {
