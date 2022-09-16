@@ -203,6 +203,13 @@ int main(int argc, char** argv) {
         { "weibull", KernelType::Weibull }
     };
 
+    TargetCalciumDecay target_calcium_decay_type = TargetCalciumDecay::None;
+    std::map<std::string, TargetCalciumDecay> cli_parse_decay_type{
+        { "none", TargetCalciumDecay::None },
+        { "relative", TargetCalciumDecay::Relative },
+        { "absolute", TargetCalciumDecay::Absolute }
+    };
+
     size_t simulation_steps{};
     app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();
 
@@ -305,6 +312,15 @@ int main(int argc, char** argv) {
     double calcium_decay{ CalciumCalculator::default_tau_C };
     app.add_option("--calcium-decay", calcium_decay, "The decay constant for the intercellular calcium. Must be greater than 0.0");
 
+    size_t target_calcium_decay_step{ 0 };
+    app.add_option("--target-calcium-decay", target_calcium_decay_step, "The decay step for the target calcium values.");
+
+    double target_calcium_decay_amount{ 0.0 };
+    app.add_option("--target-calcum-amount", target_calcium_decay_amount, "The decay amount for the target calcium values.");
+
+    auto* const opt_decay_type = app.add_option("--decay-type", target_calcium_decay_type, "The decay type for the target calcium values.");
+    opt_decay_type->transform(CLI::CheckedTransformer(cli_parse_decay_type, CLI::ignore_case));
+
     double target_calcium{ SynapticElements::default_C_target };
     auto* const opt_target_calcium = app.add_option("--target-ca", target_calcium, "The target Ca2+ ions in each neuron. Default is 0.7.");
 
@@ -401,6 +417,17 @@ int main(int argc, char** argv) {
     if (static_cast<bool>(*opt_target_calcium)) {
         RelearnException::check(target_calcium >= SynapticElements::min_C_target, "Target calcium is smaller than {}", SynapticElements::min_C_target);
         RelearnException::check(target_calcium <= SynapticElements::max_C_target, "Target calcium is larger than {}", SynapticElements::max_C_target);
+    }
+
+    if (target_calcium_decay_type == TargetCalciumDecay::Relative) {
+        RelearnException::check(target_calcium_decay_step > 0, "The target calcium decay step is 0 but must be larger than 0.");
+        RelearnException::check(target_calcium_decay_amount < 1.0, "The target calcium decay amount must be smaller than 1.0 for relative decay.");
+        RelearnException::check(target_calcium_decay_amount >= 0.0, "The target calcium decay amount must be larger than or equal to 0.0 for relative decay.");
+    }
+
+    if (target_calcium_decay_type == TargetCalciumDecay::Absolute) {
+        RelearnException::check(target_calcium_decay_step > 0, "The target calcium decay step is 0 but must be larger than 0.");
+        RelearnException::check(target_calcium_decay_amount > 0.0, "The target calcium decay amount must be larger than 0.0 for absolute decay.");
     }
 
     RelearnException::check(growth_rate >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
@@ -551,7 +578,7 @@ int main(int argc, char** argv) {
             models::AEIFModel::default_V_spike);
     }
 
-    auto calcium_calculator = std::make_unique<CalciumCalculator>();
+    auto calcium_calculator = std::make_unique<CalciumCalculator>(target_calcium_decay_type, target_calcium_decay_amount, target_calcium_decay_step);
     calcium_calculator->set_beta(beta);
     calcium_calculator->set_tau_C(calcium_decay);
     calcium_calculator->set_h(h);

@@ -24,8 +24,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorRelative) {
     const auto decay_amount = amount_distr(mt);
     const auto decay_step = step_distr(mt);
 
-    ASSERT_NO_THROW(CalciumCalculator cc1(TargetCalciumDecay::Relative, 1.0, 1000)) << 1.0 << ' ' << 1000;
-    ASSERT_NO_THROW(CalciumCalculator cc2(TargetCalciumDecay::Relative, 1.0, decay_step)) << 1.0 << ' ' << decay_step;
+    ASSERT_NO_THROW(CalciumCalculator cc1(TargetCalciumDecay::Relative, 0.0, 1000)) << 1.0 << ' ' << 1000;
+    ASSERT_NO_THROW(CalciumCalculator cc2(TargetCalciumDecay::Relative, 0.0, decay_step)) << 1.0 << ' ' << decay_step;
     ASSERT_NO_THROW(CalciumCalculator cc3(TargetCalciumDecay::Relative, decay_amount, 1000)) << decay_amount << ' ' << 1000;
     ASSERT_NO_THROW(CalciumCalculator cc4(TargetCalciumDecay::Relative, decay_amount, decay_step)) << decay_amount << ' ' << decay_step;
 }
@@ -52,7 +52,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorRelativeException)
 
     ASSERT_THROW(CalciumCalculator cc1(TargetCalciumDecay::Relative, decay_amount_low, 1000), RelearnException) << decay_amount_low << ' ' << 1000;
     ASSERT_THROW(CalciumCalculator cc2(TargetCalciumDecay::Relative, decay_amount_high, 1000), RelearnException) << decay_amount_high << ' ' << 1000;
-    ASSERT_THROW(CalciumCalculator cc2(TargetCalciumDecay::Relative, 0.0, 1000), RelearnException) << 0.0 << ' ' << 1000;
+    ASSERT_THROW(CalciumCalculator cc2(TargetCalciumDecay::Relative, 1.0, 1000), RelearnException) << 0.0 << ' ' << 1000;
     ASSERT_THROW(CalciumCalculator cc3(TargetCalciumDecay::Relative, 0.5, 0), RelearnException) << 0.5 << ' ' << 0;
 }
 
@@ -67,7 +67,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorAbsoluteException)
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructurGetter) {
-    uniform_real_distribution<double> amount_distr_relative(std::nextafter(0.0, 1.0), 1.0);
+    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
     uniform_int_distribution<size_t> step_distr(1, 10000000);
 
@@ -97,7 +97,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructurGetter) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorGetterSetter) {
-    uniform_real_distribution<double> amount_distr_relative(std::nextafter(0.0, 1.0), 1.0);
+    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
     uniform_int_distribution<size_t> step_distr(1, 10000000);
 
@@ -195,7 +195,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorGetterSetter) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorGetterSetterException) {
-    uniform_real_distribution<double> amount_distr_relative(std::nextafter(0.0, 1.0), 1.0);
+    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
     uniform_int_distribution<size_t> step_distr(1, 10000000);
 
@@ -311,7 +311,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorInitialTargetCalcium) {
         return static_cast<double>(v) * 5.98;
     };
 
-    uniform_real_distribution<double> amount_distr_relative(std::nextafter(0.0, 1.0), 1.0);
+    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
     uniform_int_distribution<size_t> step_distr(1, 10000000);
 
@@ -429,7 +429,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorCreate) {
         return static_cast<double>(v) * 86.2;
     };
 
-    uniform_real_distribution<double> amount_distr_relative(std::nextafter(0.0, 1.0), 1.0);
+    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
     uniform_int_distribution<size_t> step_distr(1, 10000000);
 
@@ -549,7 +549,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorZeroNeurons) {
         return static_cast<double>(v) * 5.98;
     };
 
-    uniform_real_distribution<double> amount_distr_relative(std::nextafter(0.0, 1.0), 1.0);
+    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
     uniform_int_distribution<size_t> step_distr(1, 10000000);
 
@@ -615,7 +615,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorEmptyFunctions) {
         return static_cast<double>(v) * 5.98;
     };
 
-    uniform_real_distribution<double> amount_distr_relative(std::nextafter(0.0, 1.0), 1.0);
+    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
     uniform_int_distribution<size_t> step_distr(1, 10000000);
 
@@ -654,7 +654,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorEmptyFunctions) {
     ASSERT_THROW(cc1.create_neurons(number_neurons), RelearnException);
     ASSERT_THROW(cc2.create_neurons(number_neurons), RelearnException);
     ASSERT_THROW(cc3.create_neurons(number_neurons), RelearnException);
-        
+
     cc1.set_initial_calcium_calculator(initiator);
     cc2.set_initial_calcium_calculator(initiator);
     cc3.set_initial_calcium_calculator(initiator);
@@ -682,4 +682,161 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorEmptyFunctions) {
     ASSERT_THROW(cc1.create_neurons(number_neurons), RelearnException);
     ASSERT_THROW(cc2.create_neurons(number_neurons), RelearnException);
     ASSERT_THROW(cc3.create_neurons(number_neurons), RelearnException);
+}
+
+TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateException) {
+    const auto number_neurons = get_random_number_neurons();
+
+    auto initiator = [number_neurons](int i, NeuronID::value_type v) {
+        return static_cast<double>(v) / 7.342;
+    };
+
+    auto calculator = [number_neurons](int i, NeuronID::value_type v) {
+        return static_cast<double>(v) * 5.98;
+    };
+
+    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
+    uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
+    uniform_int_distribution<size_t> step_distr(1, 10000000);
+
+    const auto decay_amount_relative = amount_distr_relative(mt);
+    const auto decay_amount_absolute = amount_distr_absolute(mt);
+    const auto decay_step = step_distr(mt);
+
+    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+
+    CalciumCalculator cc1(TargetCalciumDecay::None, 0.0, 0);
+    CalciumCalculator cc2(TargetCalciumDecay::Relative, decay_amount_relative, decay_step);
+    CalciumCalculator cc3(TargetCalciumDecay::Absolute, decay_amount_absolute, decay_step);
+
+    const auto beta = beta_distr(mt);
+    const auto tau_C = tau_C_distr(mt);
+    const auto h = h_distr(mt);
+
+    cc1.set_beta(beta);
+    cc1.set_tau_C(tau_C);
+    cc1.set_h(h);
+    cc1.set_initial_calcium_calculator(initiator);
+    cc1.set_target_calcium_calculator(calculator);
+
+    cc2.set_beta(beta);
+    cc2.set_tau_C(tau_C);
+    cc2.set_h(h);
+    cc2.set_initial_calcium_calculator(initiator);
+    cc2.set_target_calcium_calculator(calculator);
+
+    cc3.set_beta(beta);
+    cc3.set_tau_C(tau_C);
+    cc3.set_h(h);
+    cc3.set_initial_calcium_calculator(initiator);
+    cc3.set_target_calcium_calculator(calculator);
+
+    const auto step = step_distr(mt);
+
+    ASSERT_THROW(cc1.update_calcium(step, {}, { FiredStatus::Fired }), RelearnException);
+    ASSERT_THROW(cc1.update_calcium(step, { UpdateStatus::Disabled }, {}), RelearnException);
+    ASSERT_THROW(cc2.update_calcium(step, {}, { FiredStatus::Fired }), RelearnException);
+    ASSERT_THROW(cc2.update_calcium(step, { UpdateStatus::Disabled }, {}), RelearnException);
+    ASSERT_THROW(cc3.update_calcium(step, {}, { FiredStatus::Fired }), RelearnException);
+    ASSERT_THROW(cc3.update_calcium(step, { UpdateStatus::Disabled }, {}), RelearnException);
+
+    ASSERT_NO_THROW(cc1.init(number_neurons));
+    ASSERT_NO_THROW(cc2.init(number_neurons));
+    ASSERT_NO_THROW(cc3.init(number_neurons));
+
+    const auto fired_size = get_random_number_neurons();
+    const auto update_size = get_random_number_neurons();
+
+    std::vector<FiredStatus> fired_status(fired_size);
+    std::vector<UpdateStatus> update_status(update_size == fired_size ? update_size + 1 : update_size);
+
+    ASSERT_THROW(cc1.update_calcium(0, update_status, fired_status), RelearnException);
+    ASSERT_THROW(cc1.update_calcium(step, update_status, fired_status), RelearnException);
+    ASSERT_THROW(cc2.update_calcium(0, update_status, fired_status), RelearnException);
+    ASSERT_THROW(cc2.update_calcium(step, update_status, fired_status), RelearnException);
+    ASSERT_THROW(cc3.update_calcium(0, update_status, fired_status), RelearnException);
+    ASSERT_THROW(cc3.update_calcium(step, update_status, fired_status), RelearnException);
+}
+
+TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNone) {
+    const auto number_neurons = get_random_number_neurons();
+
+    auto initiator = [number_neurons](int i, NeuronID::value_type v) {
+        return static_cast<double>(v) / 7.342;
+    };
+
+    auto calculator = [number_neurons](int i, NeuronID::value_type v) {
+        return static_cast<double>(v) * 5.98;
+    };
+
+    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+    
+    uniform_int_distribution<size_t> step_distr(1, 10000000);
+
+    CalciumCalculator cc(TargetCalciumDecay::None, 0.0, 0);
+
+    const auto beta = beta_distr(mt);
+    const auto tau_C = tau_C_distr(mt);
+    const auto h = h_distr(mt);
+
+    cc.set_beta(beta);
+    cc.set_tau_C(tau_C);
+    cc.set_h(h);
+    cc.set_initial_calcium_calculator(initiator);
+    cc.set_target_calcium_calculator(calculator);
+
+    ASSERT_NO_THROW(cc.init(number_neurons));
+
+    std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
+    std::vector<FiredStatus> fired_status2(number_neurons, FiredStatus::Fired);
+    std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Disabled);
+
+    const auto previous_calcium = cc.get_calcium();
+    const auto previous_target = cc.get_target_calcium();
+
+    ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status));
+
+    const auto now_calcium = cc.get_calcium();
+    const auto now_target = cc.get_target_calcium();
+
+    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        EXPECT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
+        EXPECT_EQ(previous_target[neuron_id], now_target[neuron_id]);
+    }
+
+    const auto step = step_distr(mt);
+
+    ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status));
+
+    const auto now_calcium_2 = cc.get_calcium();
+    const auto now_target_2 = cc.get_target_calcium();
+
+    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        EXPECT_EQ(previous_calcium[neuron_id], now_calcium_2[neuron_id]);
+        EXPECT_EQ(previous_target[neuron_id], now_target_2[neuron_id]);
+    }
+
+    const auto now_calcium_3 = cc.get_calcium();
+    const auto now_target_3 = cc.get_target_calcium();
+
+    ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status2));
+
+    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        EXPECT_EQ(previous_calcium[neuron_id], now_calcium_3[neuron_id]);
+        EXPECT_EQ(previous_target[neuron_id], now_target_3[neuron_id]);
+    }
+
+    ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status2));
+
+    const auto now_calcium_4 = cc.get_calcium();
+    const auto now_target_4 = cc.get_target_calcium();
+
+    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        EXPECT_EQ(previous_calcium[neuron_id], now_calcium_4[neuron_id]);
+        EXPECT_EQ(previous_target[neuron_id], now_target_4[neuron_id]);
+    }
 }
