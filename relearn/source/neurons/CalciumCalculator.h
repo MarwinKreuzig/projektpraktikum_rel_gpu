@@ -203,7 +203,7 @@ public:
 
     static constexpr double max_tau_C{ 10.0e+6 };
     static constexpr double max_beta{ 1.0 };
-    static constexpr unsigned int max_h{ std::numeric_limits<unsigned int>::max() };
+    static constexpr unsigned int max_h{ 1000 };
 
 private:
     void update_current_calcium(const std::vector<UpdateStatus>& disable_flags, const std::vector<FiredStatus>& fired_status) noexcept;

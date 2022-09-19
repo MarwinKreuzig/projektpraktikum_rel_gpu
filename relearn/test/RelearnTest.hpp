@@ -20,6 +20,7 @@
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/ElementType.h"
+#include "neurons/FiredStatus.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/SignalType.h"
 #include "neurons/CalciumCalculator.h"
@@ -567,6 +568,20 @@ protected:
     std::vector<UpdateStatus> get_update_status(size_t number_neurons) {
         const auto number_disabled = get_random_integer<size_t>(0, number_neurons);
         return get_update_status(number_neurons, number_disabled);
+    }
+
+    std::vector<FiredStatus> get_fired_status(size_t number_neurons, size_t number_inactive) {
+        std::vector<FiredStatus> status(number_inactive, FiredStatus::Inactive);
+        status.resize(number_neurons, FiredStatus::Fired);
+
+        std::shuffle(status.begin(), status.end(), mt);
+
+        return status;
+    }
+
+    std::vector<FiredStatus> get_fired_status(size_t number_neurons) {
+        const auto number_disabled = get_random_integer<size_t>(0, number_neurons);
+        return get_fired_status(number_neurons, number_disabled);
     }
 
     std::shared_ptr<NetworkGraph> create_network_graph_all_to_all(size_t number_neurons, int mpi_rank) {
