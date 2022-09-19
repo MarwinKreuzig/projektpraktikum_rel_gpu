@@ -299,6 +299,8 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialize) {
     SynapticElements synaptic_elements(element_type, 0.0);
     synaptic_elements.init(number_neurons);
 
+    ASSERT_EQ(synaptic_elements.get_size(), number_neurons);
+
     for (const auto& neuron_id : NeuronID::range(number_neurons)) {
         const auto& grown_element = synaptic_elements.get_grown_elements(neuron_id);
         const auto& connected_grown_element = synaptic_elements.get_connected_elements(neuron_id);
@@ -353,6 +355,8 @@ TEST_F(SynapticElementsTest, testSynapticElementsCreateNeurons) {
     synaptic_elements.create_neurons(number_neurons_added);
 
     const auto& number_neurons = number_neurons_initially + number_neurons_added;
+
+    ASSERT_EQ(synaptic_elements.get_size(), number_neurons);
 
     for (auto neuron_id : NeuronID::range(number_neurons)) {
         const auto& grown_element = synaptic_elements.get_grown_elements(neuron_id);
@@ -745,6 +749,55 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
 
         ASSERT_EQ(golden_signal_types[neuron_id.get_neuron_id()], synaptic_elements.get_signal_type(neuron_id)) << ss.str() << neuron_id;
         ASSERT_EQ(golden_signal_types[neuron_id.get_neuron_id()], signal_types[neuron_id.get_neuron_id()]) << ss.str() << neuron_id;
+    }
+}
+
+TEST_F(SynapticElementsTest, testSynapticElementsFreeElements) {
+    uniform_int_distribution<unsigned int> uid_connected(0, 10);
+
+    const auto& number_neurons = get_random_number_neurons();
+    const auto& element_type = get_random_element_type();
+
+    std::stringstream ss{};
+    ss << number_neurons << ' ' << element_type << '\n';
+
+    SynapticElements synaptic_elements(element_type, 0.0);
+    synaptic_elements.init(number_neurons);
+
+    std::vector<double> golden_counts(number_neurons, 0.0);
+    std::vector<unsigned int> golden_connected_counts(number_neurons, 0);
+    std::vector<SignalType> golden_signal_types(number_neurons);
+
+    for (auto iteration = 0; iteration < 10; iteration++) {
+        for (auto neuron_id : NeuronID::range(number_neurons)) {
+            const auto& grown_element = get_random_synaptic_element_count();
+            const auto& connected_grown_element = get_random_synaptic_element_connected_count(static_cast<unsigned int>(grown_element));
+            const auto& signal_type = get_random_signal_type();
+
+            golden_counts[neuron_id.get_neuron_id()] += grown_element;
+            golden_connected_counts[neuron_id.get_neuron_id()] += connected_grown_element;
+            golden_signal_types[neuron_id.get_neuron_id()] = signal_type;
+
+            synaptic_elements.update_grown_elements(neuron_id, grown_element);
+            synaptic_elements.update_connected_elements(neuron_id, connected_grown_element);
+            synaptic_elements.set_signal_type(neuron_id, signal_type);
+        }
+    }
+
+    for (auto neuron_id : NeuronID::range(number_neurons)) {
+        const auto nid = neuron_id.get_neuron_id();
+        const auto expected_number_free_elements = golden_counts[nid] - golden_connected_counts[nid];
+        const auto expected_number_free_elements_cast = static_cast<unsigned int>(expected_number_free_elements);
+
+        ASSERT_EQ(expected_number_free_elements_cast, synaptic_elements.get_free_elements(neuron_id)) << ss.str() << neuron_id;
+
+        if (golden_signal_types[nid] == SignalType::Excitatory) {
+            ASSERT_EQ(expected_number_free_elements_cast, synaptic_elements.get_free_elements(neuron_id, SignalType::Excitatory)) << ss.str() << neuron_id;
+            ASSERT_EQ(0, synaptic_elements.get_free_elements(neuron_id, SignalType::Inhibitory)) << ss.str() << neuron_id;
+        } else {
+            ASSERT_EQ(expected_number_free_elements_cast, synaptic_elements.get_free_elements(neuron_id, SignalType::Inhibitory)) << ss.str() << neuron_id;
+            ASSERT_EQ(0, synaptic_elements.get_free_elements(neuron_id, SignalType::Excitatory)) << ss.str() << neuron_id;
+        }
     }
 }
 

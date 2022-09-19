@@ -10,7 +10,7 @@
  *
  */
 
-#include "ModelParameter.h"
+#include "neurons/models/ModelParameter.h"
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
 #include "neurons/UpdateStatus.h"
@@ -49,7 +49,7 @@ inline double gaussian_growth_curve(const double current, const double eta, cons
     const auto quotient = difference / zeta;
     const auto product = quotient * quotient;
 
-    const auto dz = growth_rate * (2 * exp(-product) - 1);
+    const auto dz = growth_rate * (2 * std::exp(-product) - 1);
     return dz;
 }
 
@@ -157,7 +157,7 @@ public:
      * @return A vector with all significant instances
      */
     [[nodiscard]] static std::vector<std::shared_ptr<SynapticElements>> get_elements() {
-        std::vector<std::shared_ptr<SynapticElements>> res;
+        std::vector<std::shared_ptr<SynapticElements>> res{};
         res.emplace_back(std::make_shared<SynapticElements>(ElementType::Axon, SynapticElements::default_eta_Axons));
         res.emplace_back(std::make_shared<SynapticElements>(ElementType::Dendrite, SynapticElements::default_eta_Dendrites_exc));
         res.emplace_back(std::make_shared<SynapticElements>(ElementType::Dendrite, SynapticElements::default_eta_Dendrites_inh));

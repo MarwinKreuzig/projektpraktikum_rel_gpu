@@ -11,12 +11,17 @@
  */
 
 #include "FiredStatusCommunicator.h"
+
 #include "mpi/CommunicationMap.h"
 #include "neurons/FiredStatus.h"
 #include "neurons/UpdateStatus.h"
+#include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
 #include <algorithm>
+#include <vector>
+
+class NetworkGraph;
 
 /**
  * This class communicates the fired status of the local neurons
