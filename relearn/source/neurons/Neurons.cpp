@@ -10,13 +10,11 @@
 
 #include "Neurons.h"
 
-#include "CalciumCalculator.h"
-#include "NetworkGraph.h"
 #include "helper/RankNeuronId.h"
 #include "io/LogFiles.h"
 #include "models/NeuronModels.h"
 #include "mpi/MPIWrapper.h"
-#include "structure/NodeCache.h"
+#include "neurons/NetworkGraph.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
 #include "util/Random.h"
@@ -33,7 +31,7 @@
 
 void Neurons::init(const size_t number_neurons) {
     RelearnException::check(number_neurons > 0, "Neurons::init: number_neurons was 0");
-    
+
     this->number_neurons = number_neurons;
 
     neuron_model->init(number_neurons);
@@ -52,7 +50,7 @@ void Neurons::init(const size_t number_neurons) {
     }
 
     disable_flags.resize(number_neurons, UpdateStatus::Enabled);
-    
+
     calcium_calculator->init(number_neurons);
 }
 
@@ -460,10 +458,8 @@ size_t Neurons::delete_synapses_commit_deletions(const CommunicationMap<SynapseD
             } else {
                 if (ElementType::Dendrite == element_type) {
                     network_graph->add_synapse(DistantOutSynapse(RankNeuronId(other_rank, other_neuron_id), my_neuron_id, weight));
-                    // network_graph->add_edge_weight(RankNeuronId(other_rank, other_neuron_id), RankNeuronId(my_rank, my_neuron_id), weight);
                 } else {
                     network_graph->add_synapse(DistantInSynapse(my_neuron_id, RankNeuronId(other_rank, other_neuron_id), weight));
-                    // network_graph->add_edge_weight(RankNeuronId(my_rank, my_neuron_id), RankNeuronId(other_rank, other_neuron_id), weight);
                 }
             }
 
@@ -1034,7 +1030,7 @@ void Neurons::print_local_network_histogram(const size_t current_step) {
 
 void Neurons::print_calcium_values_to_file(const size_t current_step) {
     const auto& calcium = calcium_calculator->get_calcium();
-    
+
     std::stringstream ss{};
 
     ss << '#' << current_step;

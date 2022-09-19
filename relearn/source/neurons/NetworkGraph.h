@@ -11,18 +11,17 @@
  */
 
 #include "Config.h"
-#include "SignalType.h"
 #include "Types.h"
-#include "neurons/NeuronsExtraInfo.h"
+#include "neurons/SignalType.h"
 #include "util/RelearnException.h"
 
-#include <filesystem>
-#include <map>
-#include <memory>
-#include <set>
-#include <tuple>
+#include <iosfwd>
 #include <utility>
 #include <vector>
+
+namespace std::filesystem {
+class path;
+}
 
 /**
  * An object of type NetworkGraph stores the synaptic connections between neurons, that are relevant for the current MPI rank.
@@ -36,8 +35,8 @@
 class NetworkGraph {
 public:
     /**
-	 * Type definitions
-	 */
+     * Type definitions
+     */
     using DistantEdgesKey = RankNeuronId; // Pair of (mpi rank, local neuron id)
     using DistantEdges = std::vector<std::pair<DistantEdgesKey, RelearnTypes::synapse_weight>>;
 
@@ -374,68 +373,6 @@ public:
     }
 
     /**
-     * @brief Adds the specified weight to the synapse from the neuron specified by source_id to the neuron specified by target_id.
-     *      If there was no edge before, it is created. If the updated weight is 0, it is deleted. Only updates the local part of the network graph.
-     *      A call to this method can change the order in which the edges are stored.
-     * @param target_id The target_id neuron's id and rank
-     * @param source_id The source_id neuron's id and rank
-     * @param weight The weight that should be added onto the current connections, not zero
-     * @exception Throws a RelearnException if:
-     *      (a) the weight is zero,
-     *      (b) neither the target_id nor the source_id are on the current rank,
-     *      (c) a local neuron id is larger than the number of neurons
-     *      Throws an exception if the allocation of memory fails
-	 */
-    void add_edge_weight(const RankNeuronId& target_id, const RankNeuronId& source_id, const RelearnTypes::synapse_weight& weight) {
-        RelearnException::check(weight != 0, "NetworkGraph::add_edge_weight: weight of edge to add is zero");
-
-        const auto target_rank = target_id.get_rank();
-        const auto target_neuron_id = target_id.get_neuron_id();
-        const auto local_target_neuron_id = target_neuron_id.get_neuron_id();
-
-        const auto source_rank = source_id.get_rank();
-        const auto source_neuron_id = source_id.get_neuron_id();
-        const auto local_source_neuron_id = source_neuron_id.get_neuron_id();
-
-        const auto my_rank = mpi_rank;
-
-        if (target_rank != my_rank && source_rank != my_rank) {
-            RelearnException::fail("NetworkGraph::add_edge_weight: Neither the target rank {} nor the source rank {} were for me ({}).", 
-                target_rank, source_rank, my_rank);
-        }
-
-        if (target_rank == my_rank) {
-            RelearnException::check(local_target_neuron_id < number_local_neurons,
-                "NetworkGraph::add_edge_weight: Want to add an in-edge with a too large target id: {} {}", target_neuron_id, number_local_neurons);
-        }
-
-        if (source_rank == my_rank) {
-            RelearnException::check(local_source_neuron_id < number_local_neurons,
-                "NetworkGraph::add_edge_weight: Want to add an out-edge with a too large source id: {} {}", source_neuron_id, number_local_neurons);
-        }
-
-        if (target_rank == source_rank) {
-            LocalEdges& in_edges = neuron_local_in_neighborhood[local_target_neuron_id];
-            LocalEdges& out_edges = neuron_local_out_neighborhood[local_source_neuron_id];
-
-            add_edge<LocalEdges, NeuronID>(in_edges, source_neuron_id, weight);
-            add_edge<LocalEdges, NeuronID>(out_edges, target_neuron_id, weight);
-        }
-
-        // Target neuron is mine but source neuron is not
-        if (target_rank == my_rank && source_rank != my_rank) {
-            DistantEdges& distant_in_edges = neuron_distant_in_neighborhood[local_target_neuron_id];
-            add_edge<DistantEdges, DistantEdgesKey>(distant_in_edges, source_id, weight);
-        }
-
-        // Source neuron is mine but target neuron is not
-        if (source_rank == my_rank && target_rank != my_rank) {
-            DistantEdges& distant_out_edges = neuron_distant_out_neighborhood[local_source_neuron_id];
-            add_edge<DistantEdges, DistantEdgesKey>(distant_out_edges, target_id, weight);
-        }
-    }
-
-    /**
      * @brief Adds a local synapse to the networgh graph
      * @param synapse The local synapse
      * @exception Throws a RelearnException if
@@ -509,7 +446,7 @@ public:
      * @param local_edges All edges between two neurons on the current MPI rank
      * @param in_edges All edges that have a target on the current MPI rank and a source from another rank
      * @param out_edges All edges that have a source on the current MPI rank and a target from another rank
-    */
+     */
     void add_edges(const LocalSynapses& local_edges, const DistantInSynapses& in_edges, const DistantOutSynapses& out_edges) {
         for (const auto& [target_id, source_id, weight] : local_edges) {
             const auto local_target_id = target_id.get_neuron_id();
@@ -555,7 +492,7 @@ public:
      * @exception Throws an exception if the allocation of memory fails
      * @return Returns true iff the file has the correct format and only ids in neuron_ids are present
      */
-    [[nodiscard]] static bool check_edges_from_file(const std::filesystem::path& path_synapses, const std::vector<size_t>& neuron_ids);
+    [[nodiscard]] static bool check_edges_from_file(const std::filesystem::path& path_synapses, const std::vector<NeuronID::value_type>& neuron_ids);
 
     /**
      * @brief Returns a histogram of the local neurons' connectivity

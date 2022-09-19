@@ -11,12 +11,10 @@
  */
 
 #include "Types.h"
-#include "helper/RankNeuronId.h"
+#include "neurons/helper/RankNeuronId.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
-#include "util/Vec3.h"
 
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -80,8 +78,8 @@ public:
      * @exception Throws an RelearnAxception if pos.empty() or if the number of supplied elements does not match the number of stored neurons
      */
     void set_positions(std::vector<position_type> pos) {
-        RelearnException::check(!pos.empty(), "NeuronsExtraInformation::set_x_dims: New x dimensions are empty");
-        RelearnException::check(size == pos.size(), "NeuronsExtraInformation::set_x_dims: Size does not match area names count");
+        RelearnException::check(!pos.empty(), "NeuronsExtraInformation::set_positions: New positions are empty");
+        RelearnException::check(size == pos.size(), "NeuronsExtraInformation::set_positions: Size does not match area names count");
         positions = std::move(pos);
     }
 

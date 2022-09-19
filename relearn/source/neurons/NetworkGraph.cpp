@@ -10,23 +10,25 @@
 
 #include "NetworkGraph.h"
 
-#include "Neurons.h"
 #include "io/LogFiles.h"
+#include "neurons/Neurons.h"
 
 #include "spdlog/spdlog.h"
 
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <set>
 #include <sstream>
 #include <string>
 
-bool NetworkGraph::check_edges_from_file(const std::filesystem::path& path_synapses, const std::vector<size_t>& neuron_ids) {
+bool NetworkGraph::check_edges_from_file(const std::filesystem::path& path_synapses, const std::vector<NeuronID::value_type>& neuron_ids) {
     std::ifstream file_synapses(path_synapses, std::ios::binary | std::ios::in);
 
-    std::set<size_t> ids_in_file{};
+    std::set<NeuronID::value_type> ids_in_file{};
 
     for (std::string line{}; std::getline(file_synapses, line);) {
         // Skip line with comments
@@ -34,9 +36,9 @@ bool NetworkGraph::check_edges_from_file(const std::filesystem::path& path_synap
             continue;
         }
 
-        size_t source_id = 0;
-        size_t target_id = 0;
-        int weight = 0;
+        NeuronID::value_type source_id = 0;
+        NeuronID::value_type target_id = 0;
+        RelearnTypes::synapse_weight weight = 0;
 
         std::stringstream sstream(line);
         const bool success = (sstream >> source_id) && (sstream >> target_id) && (sstream >> weight);
@@ -53,7 +55,7 @@ bool NetworkGraph::check_edges_from_file(const std::filesystem::path& path_synap
         ids_in_file.insert(target_id);
     }
 
-    return std::ranges::all_of(ids_in_file, [&neuron_ids](size_t val) {
+    return std::ranges::all_of(ids_in_file, [&neuron_ids](NeuronID::value_type val) {
         return std::ranges::binary_search(neuron_ids, val);
     });
 }
@@ -68,7 +70,7 @@ void NetworkGraph::debug_check() const {
     // Golden map that stores all local edges
     std::map<std::pair<NeuronID, NeuronID>, RelearnTypes::synapse_weight> edges{};
 
-    for (auto neuron_id : NeuronID::range(number_local_neurons)) {
+    for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
         const auto& local_out_edges = get_local_out_edges(neuron_id);
 
         for (const auto& [target_neuron_id, edge_val] : local_out_edges) {
@@ -77,9 +79,9 @@ void NetworkGraph::debug_check() const {
         }
     }
 
-    for (auto id : NeuronID::range(number_local_neurons)) {
-        const auto local_in_edges = get_local_in_edges(id);
-        const auto distant_in_edges = get_distant_in_edges(id);
+    for (const auto& id : NeuronID::range(number_local_neurons)) {
+        const auto& local_in_edges = get_local_in_edges(id);
+        const auto& distant_in_edges = get_distant_in_edges(id);
 
         for (const auto& [source_neuron_id, edge_val] : local_in_edges) {
             RelearnException::check(edge_val != 0, "NetworkGraph::debug_check: Value is zero (out)");

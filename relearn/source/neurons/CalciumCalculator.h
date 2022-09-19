@@ -10,9 +10,9 @@
  *
  */
 
-#include "TargetCalciumDecay.h"
 #include "neurons/FiredStatus.h"
 #include "neurons/UpdateStatus.h"
+#include "neurons/TargetCalciumDecay.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 

@@ -10,6 +10,7 @@
  *
  */
 
+#include "Types.h"
 #include "neurons/UpdateStatus.h"
 #include "util/RelearnException.h"
 

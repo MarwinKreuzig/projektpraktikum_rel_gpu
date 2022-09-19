@@ -12,6 +12,8 @@
 
 #include "Config.h"
 #include "Types.h"
+#include "algorithm/AlgorithmEnum.h"
+#include "util/StatisticalMeasures.h"
 
 #include <cstddef>
 #include <cstdint>

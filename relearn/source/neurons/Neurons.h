@@ -10,26 +10,23 @@
  *
  */
 
-#include "CalciumCalculator.h"
 #include "Config.h"
-#include "ElementType.h"
-#include "NeuronsExtraInfo.h"
-#include "SignalType.h"
-#include "UpdateStatus.h"
 #include "algorithm/Algorithm.h"
-#include "helper/RankNeuronId.h"
-#include "helper/SynapseCreationRequests.h"
-#include "helper/SynapseDeletionRequests.h"
 #include "models/NeuronModels.h"
 #include "models/SynapticElements.h"
 #include "mpi/CommunicationMap.h"
+#include "neurons/helper/RankNeuronId.h"
+#include "neurons/helper/SynapseCreationRequests.h"
+#include "neurons/helper/SynapseDeletionRequests.h"
+#include "neurons/CalciumCalculator.h"
+#include "neurons/ElementType.h"
+#include "neurons/NeuronsExtraInfo.h"
+#include "neurons/SignalType.h"
+#include "neurons/UpdateStatus.h"
 #include "util/RelearnException.h"
 #include "util/StatisticalMeasures.h"
-#include "util/Vec3.h"
 
-#include <array>
 #include <memory>
-#include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
