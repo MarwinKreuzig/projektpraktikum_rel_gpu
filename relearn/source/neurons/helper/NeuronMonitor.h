@@ -26,6 +26,7 @@ public:
     /**
      * @brief Constructs a NeuronInformation that holds the arguments in one class
      * @param c The current calcium concentration
+     * @param tc The current calcium target
      * @param x The current membrane potential
      * @param f The current fire status
      * @param s The current secondary variable of the model
@@ -38,9 +39,10 @@ public:
      * @param di The current number of inhibitory dendritic elements
      * @param di_c The current number of connected inhibitory dendritic elements
      */
-    NeuronInformation(const double c, const double x, const bool f, const double s, const double i, const double b,
+    NeuronInformation(const double c, const double tc, const double x, const bool f, const double s, const double i, const double b,
         const double ax, const double ax_c, const double de, const double de_c, const double di, const double di_c) noexcept
         : calcium(c)
+        , target_calcium(tc)
         , x(x)
         , fired(f)
         , secondary(s)
@@ -60,6 +62,14 @@ public:
      */
     [[nodiscard]] double get_calcium() const noexcept {
         return calcium;
+    }
+
+    /**
+     * @brief Returns the stored calcium target
+     * @return The stored calcium target
+     */
+    [[nodiscard]] double get_target_calcium() const noexcept {
+        return target_calcium;
     }
 
     /**
@@ -152,6 +162,7 @@ public:
 
 private:
     double calcium{};
+    double target_calcium{};
     double x{};
     bool fired{};
     double secondary{};
@@ -212,6 +223,7 @@ public:
         RelearnException::check(local_neuron_id < neurons_to_monitor->number_neurons, "NeuronMonitor::record_data: The target id is too large for the neurons class");
 
         const double& calcium = neurons_to_monitor->calcium_calculator->calcium[local_neuron_id];
+        const double& target_calcium = neurons_to_monitor->calcium_calculator->target_calcium[local_neuron_id];
         const double& x = neurons_to_monitor->neuron_model->x[local_neuron_id];
         const bool& fired = neurons_to_monitor->neuron_model->fired[local_neuron_id] == FiredStatus::Fired;
         const double& secondary = neurons_to_monitor->neuron_model->get_secondary_variable(target_neuron_id);
@@ -225,7 +237,7 @@ public:
         const double& dendrites_inh = neurons_to_monitor->dendrites_inh->grown_elements[local_neuron_id];
         const unsigned int& dendrites_inh_connected = neurons_to_monitor->dendrites_inh->connected_elements[local_neuron_id];
 
-        informations.emplace_back(calcium, x, fired, secondary, synaptic_input, background_activity, axons, axons_connected, dendrites_exc, dendrites_exc_connected, dendrites_inh, dendrites_inh_connected);
+        informations.emplace_back(calcium, target_calcium, x, fired, secondary, synaptic_input, background_activity, axons, axons_connected, dendrites_exc, dendrites_exc_connected, dendrites_inh, dendrites_inh_connected);
     }
 
     /**

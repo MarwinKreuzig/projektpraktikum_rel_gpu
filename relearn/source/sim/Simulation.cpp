@@ -386,8 +386,7 @@ void Simulation::print_neuron_monitors() {
 
         outfile.imbue(std::locale());
 
-        outfile << "Step;Fired;Refrac;x;Ca;SynapticInput;background;axons;axons_connected;dendrites_exc;dendrites_exc_connected;dendrites_inh;dendrites_inh_connected";
-        outfile << "\n";
+        outfile << "Step;Fired;Refrac;x;Ca;TCa;SynapticInput;background;axons;axons_connected;dendrites_exc;dendrites_exc_connected;dendrites_inh;dendrites_inh_connected\n";
 
         const auto& infos = monitor.get_informations();
 
@@ -402,6 +401,7 @@ void Simulation::print_neuron_monitors() {
             outfile << info.get_secondary() << filler;
             outfile << info.get_x() << filler;
             outfile << info.get_calcium() << filler;
+            outfile << info.get_target_calcium() << filler;
             outfile << info.get_synaptic_input() << filler;
             outfile << info.get_background_activity() << filler;
             outfile << info.get_axons() << filler;
