@@ -28,13 +28,6 @@ class NeuronsExtraInfo {
 public:
     using position_type = RelearnTypes::position_type;
 
-private:
-    size_t size{ 0 };
-
-    std::vector<std::string> area_names{};
-    std::vector<position_type> positions{};
-
-public:
     /**
      * @brief Initializes a NeuronsExtraInfo that holds at most the given number of neurons.
      *      Must only be called once. Does not initialize dimensions or area names.
@@ -113,4 +106,10 @@ public:
         RelearnException::check(local_neuron_id < area_names.size(), "NeuronsExtraInfo::get_area_name: neuron_id must be smaller than size but was {}", neuron_id);
         return area_names[local_neuron_id];
     }
+
+private:
+    size_t size{ 0 };
+
+    std::vector<std::string> area_names{};
+    std::vector<position_type> positions{};
 };

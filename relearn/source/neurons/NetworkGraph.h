@@ -14,6 +14,7 @@
 #include "Types.h"
 #include "neurons/SignalType.h"
 #include "util/RelearnException.h"
+#include "util/TaggedID.h"
 
 #include <iosfwd>
 #include <utility>
@@ -47,8 +48,6 @@ public:
 
     using NeuronLocalInNeighborhood = std::vector<LocalEdges>;
     using NeuronLocalOutNeighborhood = std::vector<LocalEdges>;
-
-    using position_type = RelearnTypes::position_type;
 
     enum class EdgeDirection {
         In,

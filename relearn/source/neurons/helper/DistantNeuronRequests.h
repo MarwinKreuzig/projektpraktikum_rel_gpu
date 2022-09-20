@@ -36,14 +36,6 @@ public:
         VirtualNode = 2
     };
 
-private:
-    NeuronID source_id{};
-    RelearnTypes::position_type source_position{};
-    std::uint32_t target_neuron_identifier{};
-    TargetNeuronType target_neuron_type{};
-    SignalType signal_type{};
-
-public:
     DistantNeuronRequest() = default;
 
     /**
@@ -51,7 +43,7 @@ public:
      *      (a) The target node is a branch node -- target_neuron_type should be TargetNeuronType::BranchNode and target_neuron_identifier the index of it when considering all branch nodes
      *      (b) The target node is a leaf node -- target_neuron_type should be TargetNeuronType::Leaf and target_neuron_identifier the index of it in the local neurons
      *      (c) The target node is a virtual node -- target_neuron_type should be TargetNeuronType::VirtualNode and target_neuron_identifier the RMA offset
-     * @param source_id The RankNeuronId of the source 
+     * @param source_id The RankNeuronId of the source
      * @param source_position The position of the source
      * @param target_neuron_identifier The identifier of the target node
      * @param target_neuron_type The type of the target node
@@ -62,8 +54,7 @@ public:
         , source_position(source_position)
         , target_neuron_identifier(target_neuron_identifier)
         , target_neuron_type(target_neuron_type)
-        , signal_type(signal_type) {
-    }
+        , signal_type(signal_type) { }
 
     /**
      * @brief Returns the source of the request
@@ -122,15 +113,19 @@ public:
     [[nodiscard]] SignalType get_signal_type() const noexcept {
         return signal_type;
     }
+
+private:
+    NeuronID source_id{};
+    RelearnTypes::position_type source_position{};
+    std::uint32_t target_neuron_identifier{};
+    TargetNeuronType target_neuron_type{};
+    SignalType signal_type{};
 };
 
 /**
  * The response for a DistantNeuronRequest consists of the source of the response and a SynapseCreationResponse
  */
 class DistantNeuronResponse {
-    NeuronID source_id{};
-    SynapseCreationResponse creation_response{};
-
 public:
     DistantNeuronResponse() = default;
 
@@ -141,9 +136,7 @@ public:
      */
     DistantNeuronResponse(NeuronID source_id, SynapseCreationResponse creation_response)
         : source_id(source_id)
-        , creation_response(creation_response) {
-
-    };
+        , creation_response(creation_response) { }
 
     /**
      * @brief Returns the source of the response
@@ -160,4 +153,8 @@ public:
     [[nodiscard]] SynapseCreationResponse get_creation_response() const noexcept {
         return creation_response;
     }
+
+private:
+    NeuronID source_id{};
+    SynapseCreationResponse creation_response{};
 };

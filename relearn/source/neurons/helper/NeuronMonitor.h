@@ -22,20 +22,6 @@
  * It stores all necessary superficial informations as a plain-old-data class.
  */
 class NeuronInformation {
-    double calcium{};
-    double x{};
-    bool fired{};
-    double secondary{};
-    double synaptic_input{};
-    double background_activity{};
-
-    double axons{};
-    double axons_connected{};
-    double dendrites_exc{};
-    double dendrites_exc_connected{};
-    double dendrites_inh{};
-    double dendrites_inh_connected{};
-
 public:
     /**
      * @brief Constructs a NeuronInformation that holds the arguments in one class
@@ -163,6 +149,21 @@ public:
     [[nodiscard]] double get_dendrites_inh_connected() const noexcept {
         return dendrites_inh_connected;
     }
+
+private:
+    double calcium{};
+    double x{};
+    bool fired{};
+    double secondary{};
+    double synaptic_input{};
+    double background_activity{};
+
+    double axons{};
+    double axons_connected{};
+    double dendrites_exc{};
+    double dendrites_exc_connected{};
+    double dendrites_inh{};
+    double dendrites_inh_connected{};
 };
 
 /**
@@ -173,10 +174,6 @@ public:
  * neurons_to_monitor - an std::shared_ptr to the neurons to monitor. Has to be set before a call to record_data()
  */
 class NeuronMonitor {
-    NeuronID target_neuron_id{ NeuronID::uninitialized_id() };
-
-    std::vector<NeuronInformation> informations{};
-
 public:
     static inline std::shared_ptr<Neurons> neurons_to_monitor{};
 
@@ -210,7 +207,7 @@ public:
      */
     void record_data() {
         RelearnException::check(neurons_to_monitor.operator bool(), "NeuronMonitor::record_data: The shared pointer is empty");
-        
+
         const auto local_neuron_id = target_neuron_id.get_neuron_id();
         RelearnException::check(local_neuron_id < neurons_to_monitor->number_neurons, "NeuronMonitor::record_data: The target id is too large for the neurons class");
 
@@ -253,4 +250,9 @@ public:
     [[nodiscard]] const std::vector<NeuronInformation>& get_informations() const noexcept {
         return informations;
     }
+
+private:
+    NeuronID target_neuron_id{ NeuronID::uninitialized_id() };
+
+    std::vector<NeuronInformation> informations{};
 };

@@ -20,18 +20,13 @@
 /**
  * This type represents a synapse deletion request.
  * It is exchanged via MPI ranks but does not perform MPI communication on its own.
- * A synapse is represented as 
+ * A synapse is represented as
  *      (initiator_neuron_id, initiator_element_type, signal_type) <---> (affected_neuron_id, !initiator_element_type, signal_type)
  */
 class SynapseDeletionRequest {
-    NeuronID initiator_neuron_id{};
-    NeuronID affected_neuron_id{};
-    ElementType initiator_element_type{ ElementType::Axon };
-    SignalType signal_type{ SignalType::Excitatory };
-
 public:
     /**
-     * Creates a new object 
+     * Creates a new object
      */
     SynapseDeletionRequest() = default;
 
@@ -43,7 +38,7 @@ public:
      * @param signal_type The signal type of the synapse
      * @exception Throws a RelearnException if any neuron id is invalid
      */
-    SynapseDeletionRequest(NeuronID initiator_neuron, NeuronID affected_neuron, const ElementType element_type, const SignalType signal_type)
+    SynapseDeletionRequest(const NeuronID initiator_neuron, const NeuronID affected_neuron, const ElementType element_type, const SignalType signal_type)
         : initiator_neuron_id(initiator_neuron)
         , affected_neuron_id(affected_neuron)
         , initiator_element_type(element_type)
@@ -139,6 +134,12 @@ public:
             return signal_type;
         }
     }
+
+private:
+    NeuronID initiator_neuron_id{};
+    NeuronID affected_neuron_id{};
+    ElementType initiator_element_type{ ElementType::Axon };
+    SignalType signal_type{ SignalType::Excitatory };
 };
 
 namespace std {
@@ -167,4 +168,4 @@ struct tuple_element<3, typename ::SynapseDeletionRequest> {
     using type = SignalType;
 };
 
-} //namespace std
+} // namespace std
