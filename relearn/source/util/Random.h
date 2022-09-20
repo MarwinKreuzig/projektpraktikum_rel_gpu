@@ -59,10 +59,6 @@ constexpr size_t NUMBER_RANDOM_HOLDER_KEYS = 9;
  * Each instance of RandomHolderKey and each thread in an OMP parallel region has its own random number generator.
  */
 class RandomHolder {
-    RandomHolder() = default;
-
-    thread_local static inline std::array<mt19937, NUMBER_RANDOM_HOLDER_KEYS> random_number_generators{};
-
 public:
     /**
      * @brief Generates a random double (uniformly distributed in [lower_inclusive, upper_exclusive)).
@@ -175,4 +171,9 @@ public:
             generator.seed(seed + thread_id);
         }
     }
+
+private:
+    RandomHolder() = default;
+
+    thread_local static inline std::array<mt19937, NUMBER_RANDOM_HOLDER_KEYS> random_number_generators{};
 };

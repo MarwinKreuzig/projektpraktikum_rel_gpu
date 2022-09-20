@@ -24,14 +24,6 @@ public:
     using position_type = typename RelearnTypes::position_type;
     using counter_type = typename RelearnTypes::counter_type;
 
-private:
-    // Avoiding std::optional<> saves 8 bytes, which translates to 32 bytes per FFM-cell
-
-    position_type position{};
-    counter_type num_free_elements{ 0 };
-    bool is_valid{ false };
-
-public:
     /**
      * @brief Sets the number of free elements
      * @param number_free_elements The number of free elements
@@ -72,6 +64,13 @@ public:
 
         return position;
     }
+
+private:
+    // Avoiding std::optional<> saves 8 bytes, which translates to 32 bytes per FFM-cell
+
+    position_type position{};
+    counter_type num_free_elements{ 0 };
+    bool is_valid{ false };
 };
 
 /**
@@ -84,11 +83,6 @@ public:
     using position_type = typename RelearnTypes::position_type;
     using counter_type = typename RelearnTypes::counter_type;
 
-private:
-    std::optional<position_type> position{};
-    counter_type num_free_elements{ 0 };
-
-public:
     /**
      * @brief Sets the number of free elements
      * @param number_free_elements The number of free elements
@@ -120,6 +114,10 @@ public:
     [[nodiscard]] constexpr std::optional<position_type> get_position() const noexcept {
         return position;
     }
+
+private:
+    std::optional<position_type> position{};
+    counter_type num_free_elements{ 0 };
 };
 
 // Switch for the implementation of VPE (space vs. time trade-off)

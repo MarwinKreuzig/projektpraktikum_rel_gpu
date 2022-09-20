@@ -16,13 +16,10 @@
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
+#include <filesystem>
 #include <iosfwd>
 #include <utility>
 #include <vector>
-
-namespace std::filesystem {
-class path;
-}
 
 /**
  * An object of type NetworkGraph stores the synaptic connections between neurons, that are relevant for the current MPI rank.

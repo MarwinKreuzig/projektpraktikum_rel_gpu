@@ -19,11 +19,6 @@
 class Partition;
 
 class RandomSynapseLoader : public SynapseLoader {
-protected:
-    synapses_tuple_type internal_load_synapses() override {
-        return synapses_tuple_type{};
-    }
-
 public:
     /**
      * @brief Constructs a RandomSynapseLoader with the given Partition.
@@ -32,4 +27,9 @@ public:
      */
     explicit RandomSynapseLoader(std::shared_ptr<Partition> partition)
         : SynapseLoader(std::move(partition)) { }
+
+protected:
+    synapses_tuple_type internal_load_synapses() override {
+        return synapses_tuple_type{};
+    }
 };

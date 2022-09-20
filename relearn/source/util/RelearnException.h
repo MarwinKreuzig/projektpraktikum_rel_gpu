@@ -23,24 +23,6 @@
  * In case a condition evaluated to false and it logs the message, it calls MPIWrapper::get_num_ranks and MPIWrapper::get_my_rank.
  */
 class RelearnException : public std::exception {
-private:
-    std::string message{};
-
-    /**
-     * @brief Default constructs an instance with empty message
-     */
-    RelearnException() = default;
-
-    /**
-     * @brief Construcs an instance with the associated message
-     * @param mes The message of the exception
-     */
-    explicit RelearnException(std::string&& mes)
-        : message(std::move(mes)) {
-    }
-
-    static void log_message(const std::string& message);
-
 public:
     /**
      * @brief Allows to hide the messages, i.e., not print the messages to std::
@@ -91,4 +73,22 @@ public:
         log_message(message);
         throw RelearnException{ std::move(message) };
     }
+
+private:
+    std::string message{};
+
+    /**
+     * @brief Default constructs an instance with empty message
+     */
+    RelearnException() = default;
+
+    /**
+     * @brief Construcs an instance with the associated message
+     * @param mes The message of the exception
+     */
+    explicit RelearnException(std::string&& mes)
+        : message(std::move(mes)) {
+    }
+
+    static void log_message(const std::string& message);
 };

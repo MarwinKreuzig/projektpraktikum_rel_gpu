@@ -42,10 +42,6 @@ public:
     using position_type = typename RelearnTypes::position_type;
     using counter_type = typename RelearnTypes::counter_type;
 
-protected:
-    double acceptance_criterion{ default_theta };
-
-public:
     /**
      * This enum indicates for an OctreeNode what the acceptance status is
      * It can be:
@@ -78,6 +74,8 @@ public:
     }
 
 protected:
+    double acceptance_criterion{ default_theta };
+
     /**
      * @brief Tests the Barnes-Hut criterion on the source position and the target wrt. to required element type and signal type
      * @param source_position The source position of the calculation

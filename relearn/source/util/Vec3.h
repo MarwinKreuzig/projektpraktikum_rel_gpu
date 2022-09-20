@@ -28,12 +28,6 @@
  */
 template <typename T>
 class Vec3 {
-    T x{ 0 };
-    T y{ 0 };
-    T z{ 0 };
-
-    static_assert(std::is_arithmetic_v<T>);
-
 public:
     using value_type = T;
 
@@ -515,6 +509,13 @@ public:
             return std::move(z);
         }
     }
+
+private:
+    T x{ 0 };
+    T y{ 0 };
+    T z{ 0 };
+
+    static_assert(std::is_arithmetic_v<T>);
 };
 
 namespace std {

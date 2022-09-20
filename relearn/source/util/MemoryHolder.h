@@ -30,12 +30,6 @@ class OctreeNode;
  */
 template <typename AdditionalCellAttributes>
 class MemoryHolder {
-    // NOLINTNEXTLINE
-    static inline std::span<OctreeNode<AdditionalCellAttributes>> memory_holder{ };
-    static inline size_t current_filling{ 0 };
-
-    static inline std::unordered_map<OctreeNode<AdditionalCellAttributes>*, size_t> parent_to_offset{};
-
 public:
     /**
      * @brief Initializes the class to hold the specified pointer.
@@ -117,4 +111,11 @@ public:
         RelearnException::check(offset < current_filling, "MemoryHolder::get_node_from_offset(): offset ({}) is too large: ({}).", offset, current_filling);
         return &memory_holder[offset];
     }
+
+private:
+    // NOLINTNEXTLINE
+    static inline std::span<OctreeNode<AdditionalCellAttributes>> memory_holder{};
+    static inline size_t current_filling{ 0 };
+
+    static inline std::unordered_map<OctreeNode<AdditionalCellAttributes>*, size_t> parent_to_offset{};
 };

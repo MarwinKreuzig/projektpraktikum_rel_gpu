@@ -16,11 +16,9 @@
 /**
  * This class provides a stack-like interface, uses an std::vector as container, and allows to reserve space before.
  * @tparam T The type of elements on the stack
-*/
+ */
 template <typename T>
 class Stack {
-    std::vector<T> container{};
-
 public:
     using size_type = typename std::vector<T>::size_type;
 
@@ -34,12 +32,12 @@ public:
     }
 
     /**
-     * @brief Emplaces a newly created element on the stack 
+     * @brief Emplaces a newly created element on the stack
      * @tparam ...ValueType The type for the constructor of the element
      * @param ...Val The values for the constructor of the element
      * @exception Throws an exception if the memory allocation fails or the constructor of the element throws
      * @return A reference to the newly created element
-    */
+     */
     template <class... ValueType>
     constexpr decltype(auto) emplace_back(ValueType&&... Val) {
         return container.emplace_back(std::forward<ValueType>(Val)...);
@@ -100,4 +98,7 @@ public:
     [[nodiscard]] constexpr bool empty() const noexcept {
         return container.empty();
     }
+
+private:
+    std::vector<T> container{};
 };

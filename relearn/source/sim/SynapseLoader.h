@@ -27,10 +27,6 @@ class SynapseLoader {
 protected:
     using synapses_tuple_type = std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>;
 
-    std::shared_ptr<Partition> partition{};
-
-    virtual synapses_tuple_type internal_load_synapses() = 0;
-
 public:
     /**
      * @brief Constructs a SynapseLoader with the given Partition
@@ -55,4 +51,9 @@ public:
      * @return A tuple of (local, in, out) synapes
      */
     std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> load_synapses();
+
+protected:
+    std::shared_ptr<Partition> partition{};
+
+    virtual synapses_tuple_type internal_load_synapses() = 0;
 };
