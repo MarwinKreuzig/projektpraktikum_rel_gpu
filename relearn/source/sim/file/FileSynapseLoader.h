@@ -19,11 +19,6 @@
 class Partition;
 
 class FileSynapseLoader : public SynapseLoader {
-    std::optional<std::filesystem::path> optional_path_to_file{};
-
-protected:
-    synapses_tuple_type internal_load_synapses() override;
-
 public:
     /**
      * @brief Constructs a FileSynapseLoader with the given Partition.
@@ -32,5 +27,10 @@ public:
      * @param path_to_synapses The path to the synapses, can be empty
      */
     FileSynapseLoader(std::shared_ptr<Partition> partition, std::optional<std::filesystem::path> path_to_synapses);
-};
 
+protected:
+    synapses_tuple_type internal_load_synapses() override;
+
+private:
+    std::optional<std::filesystem::path> optional_path_to_file{};
+};

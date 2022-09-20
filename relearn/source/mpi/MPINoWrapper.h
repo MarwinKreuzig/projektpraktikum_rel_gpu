@@ -44,26 +44,6 @@ public:
 
     using AsyncToken = MPI_Request;
 
-private:
-    MPINoWrapper() = default;
-
-    static inline const int num_ranks{ 1 }; // Number of ranks in MPI_COMM_WORLD
-    static inline const int my_rank{ 0 }; // My rank in MPI_COMM_WORLD
-
-    static inline size_t num_neurons{}; // Total number of neurons
-
-    template <typename AdditionalCellAttributes>
-    static inline std::vector<OctreeNode<AdditionalCellAttributes>> base_ptr{ 0 }; // Start address of MPI-allocated memory
-
-    static inline int64_t base_pointers{}; // RMA window base pointers of all procs
-
-    static inline std::string my_rank_str{ '0' };
-
-    static void all_gather(const void* own_data, void* buffer, int size);
-
-    static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank);
-
-public:
     static void init(int argc, char** argv);
 
     template <typename AdditionalCellAttributes>
@@ -179,6 +159,25 @@ public:
     }
 
     static void finalize();
+
+private:
+    MPINoWrapper() = default;
+
+    static inline const int num_ranks{ 1 }; // Number of ranks in MPI_COMM_WORLD
+    static inline const int my_rank{ 0 }; // My rank in MPI_COMM_WORLD
+
+    static inline size_t num_neurons{}; // Total number of neurons
+
+    template <typename AdditionalCellAttributes>
+    static inline std::vector<OctreeNode<AdditionalCellAttributes>> base_ptr{ 0 }; // Start address of MPI-allocated memory
+
+    static inline int64_t base_pointers{}; // RMA window base pointers of all procs
+
+    static inline std::string my_rank_str{ '0' };
+
+    static void all_gather(const void* own_data, void* buffer, int size);
+
+    static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank);
 };
 
 #endif

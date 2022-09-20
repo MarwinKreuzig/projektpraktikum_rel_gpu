@@ -44,6 +44,20 @@ protected:
         bool operator==(const Interval& other) const noexcept = default;
     };
 
+public:
+    /**
+     * @brief Parses a description of intervals to a std::function which returns true whenever the current simulation step
+     *      falls into one of the intervals. The format must be: <begin>-<end>:<frequency> with ; separating the intervals
+     * @param description The description of the intervals
+     * @return The function indicating if the event shall occur
+     */
+    [[nodiscard]] static std::function<bool(std::uint64_t)> generate_step_check_function(const std::string& description) {
+        auto intervals = parse_description_as_intervals(description);
+        auto function = generate_step_check_function(std::move(intervals));
+        return function;
+    }
+
+protected:
     /**
      * @brief Checks if two intervals intersect (ignoring the frequences)
      * @param first The first interval
@@ -116,7 +130,7 @@ protected:
         return {};
     }
 
-    /** 
+    /**
      * @brief Parses multiple intervals from the description. Each interval must have the form
      *      <begin>-<end>:<frequency> with ; separating the intervals
      * @param description The description of the intervals
@@ -185,18 +199,5 @@ protected:
         };
 
         return step_check_function;
-    }
-
-public:
-    /**
-     * @brief Parses a description of intervals to a std::function which returns true whenever the current simulation step
-     *      falls into one of the intervals. The format must be: <begin>-<end>:<frequency> with ; separating the intervals
-     * @param description The description of the intervals
-     * @return The function indicating if the event shall occur
-     */
-    [[nodiscard]] static std::function<bool(std::uint64_t)> generate_step_check_function(const std::string& description) {
-        auto intervals = parse_description_as_intervals(description);
-        auto function = generate_step_check_function(std::move(intervals));
-        return function;
     }
 };

@@ -55,26 +55,6 @@ public:
         CalciumValues,
     };
 
-private:
-    using Logger = std::shared_ptr<spdlog::logger>;
-    static inline std::map<EventType, Logger> log_files{};
-    static inline std::map<EventType, bool> log_disable{};
-    static inline bool disable{ false };
-
-    // NOLINTNEXTLINE
-    static inline std::filesystem::path output_path{ "../output/" };
-    // NOLINTNEXTLINE
-    static inline std::string general_prefix{ "rank_" };
-
-    static std::string get_specific_file_prefix();
-
-    static void add_logfile(EventType type, const std::string& file_name, int rank, const std::string& file_ending = ".txt", const std::string& directory_prefix = "");
-
-    [[nodiscard]] static bool do_i_print(int rank);
-
-    [[nodiscard]] static std::string get_my_rank_str();
-
-public:
     /**
      * @brief Sets the folder path in which the log files will be generated. Automatically appends '/' if necessary.
      *      Set before calling init()
@@ -185,4 +165,23 @@ public:
             write_to_file(LogFiles::EventType::Cout, true, "[INFO:Rank {}] {}", get_my_rank_str(), fmt::format(fmt::runtime(std::forward<FormatString>(format)), std::forward<Args>(args)...));
         }
     }
+
+private:
+    using Logger = std::shared_ptr<spdlog::logger>;
+    static inline std::map<EventType, Logger> log_files{};
+    static inline std::map<EventType, bool> log_disable{};
+    static inline bool disable{ false };
+
+    // NOLINTNEXTLINE
+    static inline std::filesystem::path output_path{ "../output/" };
+    // NOLINTNEXTLINE
+    static inline std::string general_prefix{ "rank_" };
+
+    static std::string get_specific_file_prefix();
+
+    static void add_logfile(EventType type, const std::string& file_name, int rank, const std::string& file_ending = ".txt", const std::string& directory_prefix = "");
+
+    [[nodiscard]] static bool do_i_print(int rank);
+
+    [[nodiscard]] static std::string get_my_rank_str();
 };
