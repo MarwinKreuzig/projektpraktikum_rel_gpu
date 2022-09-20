@@ -1015,9 +1015,10 @@ protected:
     }
 };
 
-class StepParserTest : public RelearnTest, public StepParser {
-
+class StepParserTest : public RelearnTest {
 protected:
+    using Interval = StepParser::Interval;
+
     static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
@@ -1045,5 +1046,34 @@ protected:
         auto interval = generate_random_interval();
         auto description = codify_interval(interval);
         return { std::move(interval), std::move(description) };
+    }
+};
+
+class MonitorParserTest : public RelearnTest {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+
+    RankNeuronId generate_random_rank_neuron_id() {
+        using rank_type = int;
+        using neuron_id_type = NeuronID::value_type;
+
+        const auto rank = get_random_integer<rank_type>(0, std::numeric_limits<rank_type>::max());
+        const auto neuron_id = get_random_integer<neuron_id_type>(std::numeric_limits<neuron_id_type>::min(), std::numeric_limits<neuron_id_type>::min());
+
+        return { rank, NeuronID(neuron_id) };
+    }
+
+    std::string codify_rank_neuron_id(const RankNeuronId& rni) {
+        std::stringstream ss{};
+        ss << rni.get_rank() << ':' << rni.get_neuron_id();
+        return ss.str();
+    }
+
+    std::pair<RankNeuronId, std::string> generate_random_rank_neuron_id_description() {
+        auto rank_neuron_id = generate_random_rank_neuron_id();
+        auto description = codify_rank_neuron_id(rank_neuron_id);
+        return { std::move(rank_neuron_id), std::move(description) };
     }
 };

@@ -892,7 +892,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneStep0) {
         auto expected_calcium = previous_calcium[neuron_id];
         auto update_value = fired_status[neuron_id] == FiredStatus::Fired ? beta : 0.0;
 
-        for (auto i = 0; i < h; i++) {
+        for (auto i = 0U; i < h; i++) {
             expected_calcium = expected_calcium + (1.0 / h) * (expected_calcium / -tau_C + update_value);
         }
 
@@ -957,7 +957,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNone) {
         auto expected_calcium = previous_calcium[neuron_id];
         auto update_value = fired_status[neuron_id] == FiredStatus::Fired ? beta : 0.0;
 
-        for (auto i = 0; i < h; i++) {
+        for (auto i = 0U; i < h; i++) {
             expected_calcium = expected_calcium + (1.0 / h) * (expected_calcium / -tau_C + update_value);
         }
 
@@ -1110,7 +1110,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeStep0) {
         auto expected_calcium = previous_calcium[neuron_id];
         auto update_value = fired_status[neuron_id] == FiredStatus::Fired ? beta : 0.0;
 
-        for (auto i = 0; i < h; i++) {
+        for (auto i = 0U; i < h; i++) {
             expected_calcium = expected_calcium + (1.0 / h) * (expected_calcium / -tau_C + update_value);
         }
 
@@ -1191,7 +1191,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelative) {
         auto expected_calcium = previous_calcium[neuron_id];
         auto update_value = fired_status[neuron_id] == FiredStatus::Fired ? beta : 0.0;
 
-        for (auto i = 0; i < h; i++) {
+        for (auto i = 0U; i < h; i++) {
             expected_calcium = expected_calcium + (1.0 / h) * (expected_calcium / -tau_C + update_value);
         }
 
@@ -1344,7 +1344,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteStep0) {
         auto expected_calcium = previous_calcium[neuron_id];
         auto update_value = fired_status[neuron_id] == FiredStatus::Fired ? beta : 0.0;
 
-        for (auto i = 0; i < h; i++) {
+        for (auto i = 0U; i < h; i++) {
             expected_calcium = expected_calcium + (1.0 / h) * (expected_calcium / -tau_C + update_value);
         }
 
@@ -1425,7 +1425,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsolute) {
         auto expected_calcium = previous_calcium[neuron_id];
         auto update_value = fired_status[neuron_id] == FiredStatus::Fired ? beta : 0.0;
 
-        for (auto i = 0; i < h; i++) {
+        for (auto i = 0U; i < h; i++) {
             expected_calcium = expected_calcium + (1.0 / h) * (expected_calcium / -tau_C + update_value);
         }
 

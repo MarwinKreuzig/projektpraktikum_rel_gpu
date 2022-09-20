@@ -333,3 +333,33 @@ std::ostream& operator<<(std::ostream& os, const TaggedID<T>& id) {
 }
 
 using NeuronID = TaggedID<std::uint64_t>;
+
+namespace std {
+template <typename value_type>
+struct hash<TaggedID<value_type>> {
+    using argument_type = TaggedID<value_type>;
+    using result_type = std::size_t;
+
+    result_type operator()(const argument_type& neuron_id) const {
+        // The size of the stored value inside TaggedID<value_type> has two bits less than value_type
+
+        constexpr auto max = std::numeric_limits<result_type>::max();
+        if (!neuron_id.is_initialized()) {
+            // All bits are set
+            return max;
+        }
+
+        if (neuron_id.is_virtual()) {
+            // Shift the RMA offset by +1 and subtract from max by using XOR
+            // The highest bit is set, but some others are not
+            const auto offset = neuron_id.get_rma_offset();
+            const auto hash = max ^ result_type(offset + 1);
+            return hash;
+        }
+
+        // The highest bit is cleared, but some are set
+        const auto id = neuron_id.get_neuron_id();
+        return result_type(id);
+    }
+};
+}

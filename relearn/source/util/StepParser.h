@@ -28,7 +28,7 @@
  * It uses intervals of the form [begin, end] (in predetermined step sizes) to check
  */
 class StepParser {
-protected:
+public:
     /**
      * This struct represents an interval, i.e., it has a begin step, an end step, and a frequency
      * with which during [begin, end] the function shall be executed, i.e., at steps:
@@ -44,7 +44,6 @@ protected:
         bool operator==(const Interval& other) const noexcept = default;
     };
 
-public:
     /**
      * @brief Parses a description of intervals to a std::function which returns true whenever the current simulation step
      *      falls into one of the intervals. The format must be: <begin>-<end>:<frequency> with ; separating the intervals
@@ -57,7 +56,6 @@ public:
         return function;
     }
 
-protected:
     /**
      * @brief Checks if two intervals intersect (ignoring the frequences)
      * @param first The first interval

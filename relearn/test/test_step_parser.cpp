@@ -25,26 +25,26 @@ TEST_F(StepParserTest, testIntervalIntersection) {
     Interval i1{ 10, 20, 1 };
     Interval i2{ 30, 40, 1 };
 
-    ASSERT_FALSE(check_intervals_for_intersection(i1, i2));
-    ASSERT_FALSE(check_intervals_for_intersection(i2, i1));
+    ASSERT_FALSE(StepParser::check_intervals_for_intersection(i1, i2));
+    ASSERT_FALSE(StepParser::check_intervals_for_intersection(i2, i1));
 
     Interval i3{ 100, 200, 4 };
     Interval i4{ 200, 300, 6 };
 
-    ASSERT_TRUE(check_intervals_for_intersection(i3, i4));
-    ASSERT_TRUE(check_intervals_for_intersection(i4, i3));
+    ASSERT_TRUE(StepParser::check_intervals_for_intersection(i3, i4));
+    ASSERT_TRUE(StepParser::check_intervals_for_intersection(i4, i3));
 
     Interval i5{ 1000, 10000, 5 };
     Interval i6{ 4000, 5000, 3 };
 
-    ASSERT_TRUE(check_intervals_for_intersection(i5, i6));
-    ASSERT_TRUE(check_intervals_for_intersection(i6, i5));
+    ASSERT_TRUE(StepParser::check_intervals_for_intersection(i5, i6));
+    ASSERT_TRUE(StepParser::check_intervals_for_intersection(i6, i5));
 
     Interval i7{ 2000, 3000, 70 };
     Interval i8{ 2500, 3500, 80 };
 
-    ASSERT_TRUE(check_intervals_for_intersection(i7, i8));
-    ASSERT_TRUE(check_intervals_for_intersection(i8, i7));
+    ASSERT_TRUE(StepParser::check_intervals_for_intersection(i7, i8));
+    ASSERT_TRUE(StepParser::check_intervals_for_intersection(i8, i7));
 }
 
 TEST_F(StepParserTest, testIntervalIntersecions) {
@@ -62,11 +62,11 @@ TEST_F(StepParserTest, testIntervalIntersecions) {
                 continue;
             }
 
-            golden_intersect |= check_intervals_for_intersection(intervals[i], intervals[j]);
+            golden_intersect |= StepParser::check_intervals_for_intersection(intervals[i], intervals[j]);
         }
     }
 
-    const auto all_intersect = check_intervals_for_intersection(intervals);
+    const auto all_intersect = StepParser::check_intervals_for_intersection(intervals);
 
     ASSERT_EQ(golden_intersect, all_intersect);
 }
@@ -74,7 +74,7 @@ TEST_F(StepParserTest, testIntervalIntersecions) {
 TEST_F(StepParserTest, testParseInterval) {
     const auto& [golden_interval, description] = generate_random_interval_description();
 
-    const auto& opt_interval = parse_interval(description);
+    const auto& opt_interval = StepParser::parse_interval(description);
 
     ASSERT_TRUE(opt_interval.has_value());
 
@@ -86,7 +86,7 @@ TEST_F(StepParserTest, testParseInterval) {
 }
 
 TEST_F(StepParserTest, testParseIntervalFail1) {
-    const auto& opt_interval = parse_interval({});
+    const auto& opt_interval = StepParser::parse_interval({});
 
     ASSERT_FALSE(opt_interval.has_value());
 }
@@ -105,7 +105,7 @@ TEST_F(StepParserTest, testParseIntervalFail2) {
 
     const auto& description = ss.str();
 
-    const auto& opt_interval = parse_interval(description);
+    const auto& opt_interval = StepParser::parse_interval(description);
 
     ASSERT_FALSE(opt_interval.has_value());
 }
@@ -124,7 +124,7 @@ TEST_F(StepParserTest, testParseIntervalFail3) {
 
     const auto& description = ss.str();
 
-    const auto& opt_interval = parse_interval(description);
+    const auto& opt_interval = StepParser::parse_interval(description);
 
     ASSERT_FALSE(opt_interval.has_value());
 }
@@ -144,7 +144,7 @@ TEST_F(StepParserTest, testParseIntervalFail4) {
 
     const auto& description = ss.str();
 
-    const auto& opt_interval = parse_interval(description);
+    const auto& opt_interval = StepParser::parse_interval(description);
 
     ASSERT_FALSE(opt_interval.has_value());
 }
@@ -164,7 +164,7 @@ TEST_F(StepParserTest, testParseIntervalFail5) {
 
     const auto& description = ss.str();
 
-    const auto& opt_interval = parse_interval(description);
+    const auto& opt_interval = StepParser::parse_interval(description);
 
     ASSERT_FALSE(opt_interval.has_value());
 }
@@ -183,7 +183,7 @@ TEST_F(StepParserTest, testParseIntervals1) {
         }
     }
 
-    const auto& intervals = parse_description_as_intervals(ss.str());
+    const auto& intervals = StepParser::parse_description_as_intervals(ss.str());
 
     for (auto i = 0; i < 10; i++) {
         ASSERT_EQ(golden_intervals[i], intervals[i]);
@@ -202,18 +202,18 @@ TEST_F(StepParserTest, testParseInterval2) {
         ss << ';';
     }
 
-    const auto& intervals = parse_description_as_intervals(ss.str());
+    const auto& intervals = StepParser::parse_description_as_intervals(ss.str());
 
     ASSERT_EQ(intervals.size(), 10);
 }
 
 TEST_F(StepParserTest, testParseIntervalsFail1) {
-    const auto& intervals = parse_description_as_intervals({});
+    const auto& intervals = StepParser::parse_description_as_intervals({});
     ASSERT_TRUE(intervals.empty());
 }
 
 TEST_F(StepParserTest, testParseIntervalsFail2) {
-    const auto& intervals = parse_description_as_intervals("sgahkllkrduf,'Ä.;fülsaüdf::SAfd--dfasdjf45");
+    const auto& intervals = StepParser::parse_description_as_intervals("sgahkllkrduf,'Ä.;fülsaüdf::SAfd--dfasdjf45");
     ASSERT_TRUE(intervals.empty());
 }
 
@@ -231,7 +231,7 @@ TEST_F(StepParserTest, testParseIntervalsFail3) {
         }
     }
 
-    const auto& intervals = parse_description_as_intervals(ss.str());
+    const auto& intervals = StepParser::parse_description_as_intervals(ss.str());
 
     ASSERT_TRUE(intervals.empty());
 }
@@ -250,7 +250,7 @@ TEST_F(StepParserTest, testParseIntervalsFail4) {
         }
     }
 
-    const auto& intervals = parse_description_as_intervals(ss.str());
+    const auto& intervals = StepParser::parse_description_as_intervals(ss.str());
 
     ASSERT_TRUE(intervals.empty());
 }
@@ -269,7 +269,7 @@ TEST_F(StepParserTest, testParseIntervalsFail5) {
 
     ss << "136546543135";
 
-    const auto& intervals = parse_description_as_intervals(ss.str());
+    const auto& intervals = StepParser::parse_description_as_intervals(ss.str());
 
     ASSERT_EQ(intervals.size(), 10);
 }
@@ -280,7 +280,7 @@ TEST_F(StepParserTest, testGenerateFunction1) {
     constexpr auto min = std::numeric_limits<int_type>::min();
     constexpr auto max = std::numeric_limits<int_type>::max();
 
-    auto function = generate_step_check_function(std::vector<Interval>{});
+    auto function = StepParser::generate_step_check_function(std::vector<Interval>{});
 
     for (std::uint64_t step = 0; step < 10000; step++) {
         const auto result_1 = function(step);
@@ -300,7 +300,7 @@ TEST_F(StepParserTest, testGenerateFunction2) {
 
     Interval i{ min, max, 1 };
 
-    auto function = generate_step_check_function({ i });
+    auto function = StepParser::generate_step_check_function({ i });
 
     for (std::uint64_t step = 0; step < 10000; step++) {
         const auto result_1 = function(step);
@@ -323,7 +323,7 @@ TEST_F(StepParserTest, testGenerateFunction3) {
     Interval i3{ 1000, 2689, 10 };
     Interval i4{ 2690, 10000, 10 };
 
-    auto function = generate_step_check_function({ i1, i2, i3, i4 });
+    auto function = StepParser::generate_step_check_function({ i1, i2, i3, i4 });
 
     for (std::uint64_t step = 0; step < 20000; step++) {
         const auto result_1 = function(step);
@@ -357,8 +357,8 @@ TEST_F(StepParserTest, testGenerateFunction4) {
     ss << codify_interval(i4) << ';';
     ss << codify_interval(i5);
 
-    auto function_1 = generate_step_check_function({ i1, i2, i3, i4, i5 });
-    auto function_2 = generate_step_check_function(ss.str());
+    auto function_1 = StepParser::generate_step_check_function({ i1, i2, i3, i4, i5 });
+    auto function_2 = StepParser::generate_step_check_function(ss.str());
 
     for (std::uint64_t step = 0; step < 90000; step++) {
         const auto result_1 = function_1(step);
