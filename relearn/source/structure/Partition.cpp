@@ -10,7 +10,7 @@
 
 #include "Partition.h"
 
-#include "../io/LogFiles.h"
+#include "io/LogFiles.h"
 
 #include <cmath>
 #include <sstream>

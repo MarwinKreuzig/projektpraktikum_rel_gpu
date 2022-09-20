@@ -11,9 +11,10 @@
  */
 
 #include "BarnesHutBase.h"
-#include "BarnesHutInvertedCell.h"
-#include "Types.h"
 #include "algorithm/Internal/ExchangingAlgorithm.h"
+
+#include "Types.h"
+#include "algorithm/BarnesHutInternal/BarnesHutInvertedCell.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/UpdateStatus.h"
 #include "neurons/helper/SynapseCreationRequests.h"

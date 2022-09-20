@@ -10,8 +10,8 @@
  *
  */
 
-#include "RelearnException.h"
 #include "neurons/UpdateStatus.h"
+#include "util/RelearnException.h"
 
 #include <tuple>
 #include <type_traits>

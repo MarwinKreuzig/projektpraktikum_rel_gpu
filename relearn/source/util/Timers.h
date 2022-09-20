@@ -10,7 +10,7 @@
  *
  */
 
-#include "RelearnException.h"
+#include "util/RelearnException.h"
 
 #include <chrono>
 #include <iosfwd>

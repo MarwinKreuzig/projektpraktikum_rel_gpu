@@ -10,9 +10,9 @@
  *
  */
 
-#include "Cell.h"
 #include "Config.h"
 #include "mpi/MPIWrapper.h"
+#include "structure/Cell.h"
 #include "util/MemoryHolder.h"
 #include "util/RelearnException.h"
 

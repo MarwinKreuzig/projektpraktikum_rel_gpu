@@ -10,9 +10,9 @@
  *
  */
 
-#include "Config.h"
-
 #include "sim/random/BoxBasedRandomSubdomainAssignment.h"
+
+#include "Config.h"
 
 #include <memory>
 

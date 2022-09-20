@@ -10,8 +10,9 @@
  *
  */
 
-#include "Config.h"
 #include "sim/NeuronToSubdomainAssignment.h"
+
+#include "Config.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 #include "util/Vec3.h"

@@ -11,8 +11,8 @@
  */
 
 #include "Config.h"
-#include "SpaceFillingCurve.h"
 #include "Types.h"
+#include "structure/SpaceFillingCurve.h"
 #include "util/RelearnException.h"
 
 #include <functional>

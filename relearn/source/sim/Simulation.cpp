@@ -10,9 +10,6 @@
 
 #include "Simulation.h"
 
-#include "Config.h"
-#include "NeuronToSubdomainAssignment.h"
-#include "SynapseLoader.h"
 #include "algorithm/Algorithms.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
@@ -20,6 +17,8 @@
 #include "neurons/Neurons.h"
 #include "neurons/helper/NeuronMonitor.h"
 #include "neurons/models/NeuronModels.h"
+#include "sim/NeuronToSubdomainAssignment.h"
+#include "sim/SynapseLoader.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
 #include "util/RelearnException.h"

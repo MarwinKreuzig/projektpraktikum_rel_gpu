@@ -4,8 +4,8 @@
 
 #if !RELEARN_MPI_FOUND
 
-#include "CommunicationMap.h"
 #include "io/LogFiles.h"
+#include "mpi/CommunicationMap.h"
 #include "util/MemoryHolder.h"
 #include "util/RelearnException.h"
 

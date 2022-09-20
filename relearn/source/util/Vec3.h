@@ -11,7 +11,7 @@
  */
 
 #include "Config.h"
-#include "RelearnException.h"
+#include "util/RelearnException.h"
 
 #include <spdlog/fmt/bundled/ostream.h>
 

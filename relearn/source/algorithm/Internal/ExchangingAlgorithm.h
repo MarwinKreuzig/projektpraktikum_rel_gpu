@@ -11,6 +11,7 @@
  */
 
 #include "AlgorithmImpl.h"
+
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/UpdateStatus.h"

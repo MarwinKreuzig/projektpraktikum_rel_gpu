@@ -11,11 +11,11 @@
  */
 
 #include "Config.h"
-#include "OctreeNode.h"
-#include "SpaceFillingCurve.h"
 #include "Types.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
+#include "structure/OctreeNode.h"
+#include "structure/SpaceFillingCurve.h"
 #include "util/RelearnException.h"
 #include "util/Stack.h"
 #include "util/Timers.h"

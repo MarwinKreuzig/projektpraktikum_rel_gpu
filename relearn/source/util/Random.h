@@ -11,7 +11,7 @@
  */
 
 #include "Config.h"
-#include "RelearnException.h"
+#include "util/RelearnException.h"
 #include "util/shuffle/shuffle.h"
 
 #include <boost/random/mersenne_twister.hpp>

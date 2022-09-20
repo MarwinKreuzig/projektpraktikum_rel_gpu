@@ -11,9 +11,11 @@
  */
 
 #include "BarnesHutBase.h"
-#include "BarnesHutCell.h"
-#include "Types.h"
 #include "algorithm/Internal/ExchangingAlgorithm.h"
+
+#include "Types.h"
+
+#include "algorithm/BarnesHutInternal/BarnesHutCell.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
