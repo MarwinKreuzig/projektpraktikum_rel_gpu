@@ -29,6 +29,7 @@
 #include "structure/BaseCell.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
+#include "util/MonitorParser.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
 #include "util/StepParser.h"
@@ -357,6 +358,9 @@ int main(int argc, char** argv) {
     double min_calcium_inhibitory_dendrites{ SynapticElements::default_eta_Dendrites_inh };
     app.add_option("--min-calcium-inhibitory-dendrites", min_calcium_inhibitory_dendrites, "The minimum intercellular calcium for inhibitory dendrites to grow. Default is 0.0");
 
+    std::string neuron_monitors_description{};
+    app.add_option("--neuron_monitors", neuron_monitors_description, "The description which neurons to monitor. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;... where <mpi_rank> can be -1 to indicate \"on every rank\"");
+
     opt_num_neurons->excludes(opt_file_positions);
     opt_num_neurons->excludes(opt_file_network);
     opt_num_neurons->excludes(opt_num_neurons_per_rank);
@@ -681,14 +685,16 @@ int main(int argc, char** argv) {
 
     sim.initialize();
 
+    const auto& my_neuron_ids_to_monitor = MonitorParser::parse_my_ids(neuron_monitors_description, my_rank, my_rank);
+
+    for (const auto& neuron_id : my_neuron_ids_to_monitor) {
+        sim.register_neuron_monitor(neuron_id);
+    }
+
     // Unlock local RMA memory and make local stores visible in public window copy
     MPIWrapper::unlock_window(my_rank);
 
     Timers::stop_and_add(TimerRegion::INITIALIZATION);
-
-    // sim.register_neuron_monitor(NeuronID{ 6 });
-    // sim.register_neuron_monitor(NeuronID{ 1164 });
-    // sim.register_neuron_monitor(NeuronID{ 28001 });
 
     auto simulate = [&sim, &simulation_steps]() {
         sim.simulate(simulation_steps);
