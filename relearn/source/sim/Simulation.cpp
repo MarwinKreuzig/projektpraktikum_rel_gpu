@@ -382,36 +382,35 @@ void Simulation::print_neuron_monitors() {
 
         RelearnException::check(file_is_good && !file_is_bad, "Simulation::print_neuron_monitors: The file is bad: {}", file_path);
 
-        outfile << std::setprecision(Constants::print_precision);
+        constexpr auto description = "Step;Fired;x;Secondary Variable;Calcium;Target Calcium;Synaptic Input;Background Activity;Grown Axons;Connected Axons;Grown Excitatory Dendrites;Connected Excitatory Dendrites;Grown Inhibitory Dendrites;Connected Inhibitory Dendrites\n";
 
+        constexpr auto filler = ";";
+        constexpr auto width = 6;
+
+        outfile << std::setprecision(Constants::print_precision);
         outfile.imbue(std::locale());
 
-        outfile << "Step;Fired;Refrac;x;Ca;TCa;SynapticInput;background;axons;axons_connected;dendrites_exc;dendrites_exc_connected;dendrites_inh;dendrites_inh_connected\n";
+        outfile << description;
 
         const auto& infos = monitor.get_informations();
-
-        const char* const filler = ";";
-        const auto width = 6;
-
-        auto ctr = 0;
-
+        auto current_step = 0;
         for (const auto& info : infos) {
-            outfile << ctr << filler;
+            outfile << current_step << filler;
             outfile << info.get_fired() << filler;
-            outfile << info.get_secondary() << filler;
             outfile << info.get_x() << filler;
+            outfile << info.get_secondary() << filler;
             outfile << info.get_calcium() << filler;
             outfile << info.get_target_calcium() << filler;
             outfile << info.get_synaptic_input() << filler;
             outfile << info.get_background_activity() << filler;
             outfile << info.get_axons() << filler;
             outfile << info.get_axons_connected() << filler;
-            outfile << info.get_dendrites_exc() << filler;
-            outfile << info.get_dendrites_exc_connected() << filler;
-            outfile << info.get_dendrites_inh() << filler;
-            outfile << info.get_dendrites_inh_connected() << "\n";
+            outfile << info.get_excitatory_dendrites_grown() << filler;
+            outfile << info.get_excitatory_dendrites_connected() << filler;
+            outfile << info.get_inhibitory_dendrites_grown() << filler;
+            outfile << info.get_inhibitory_dendrites_connected() << "\n";
 
-            ctr++;
+            current_step += Config::monitor_step;
         }
 
         outfile.flush();

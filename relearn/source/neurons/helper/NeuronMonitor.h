@@ -48,12 +48,12 @@ public:
         , secondary(s)
         , synaptic_input(i)
         , background_activity(b)
-        , axons(ax)
+        , axons_grown(ax)
         , axons_connected(ax_c)
-        , dendrites_exc(de)
-        , dendrites_exc_connected(de_c)
-        , dendrites_inh(di)
-        , dendrites_inh_connected(di_c) {
+        , excitatory_dendrites_grown(de)
+        , excitatory_dendrites_connected(de_c)
+        , inhibitory_dendrites_grown(di)
+        , inhibitory_dendrites_connected(di_c) {
     }
 
     /**
@@ -117,7 +117,7 @@ public:
      * @return The stored number of axonal elements
      */
     [[nodiscard]] double get_axons() const noexcept {
-        return axons;
+        return axons_grown;
     }
 
     /**
@@ -132,32 +132,32 @@ public:
      * @brief Returns the stored number of excitatory dendritic elements
      * @return The stored number of excitatory dendritic elements
      */
-    [[nodiscard]] double get_dendrites_exc() const noexcept {
-        return dendrites_exc;
+    [[nodiscard]] double get_excitatory_dendrites_grown() const noexcept {
+        return excitatory_dendrites_grown;
     }
 
     /**
      * @brief Returns the stored number of connected excitatory dendritic elements
      * @return The stored number of connected excitatory dendritic elements
      */
-    [[nodiscard]] double get_dendrites_exc_connected() const noexcept {
-        return dendrites_exc_connected;
+    [[nodiscard]] double get_excitatory_dendrites_connected() const noexcept {
+        return excitatory_dendrites_connected;
     }
 
     /**
      * @brief Returns the stored number of inhibitory dendritic elements
      * @return The stored number of inhibitory dendritic elements
      */
-    [[nodiscard]] double get_dendrites_inh() const noexcept {
-        return dendrites_inh;
+    [[nodiscard]] double get_inhibitory_dendrites_grown() const noexcept {
+        return inhibitory_dendrites_grown;
     }
 
     /**
      * @brief Returns the stored number of connected inhibitory dendritic elements
      * @return The stored number of connected inhibitory dendritic elements
      */
-    [[nodiscard]] double get_dendrites_inh_connected() const noexcept {
-        return dendrites_inh_connected;
+    [[nodiscard]] double get_inhibitory_dendrites_connected() const noexcept {
+        return inhibitory_dendrites_connected;
     }
 
 private:
@@ -169,12 +169,12 @@ private:
     double synaptic_input{};
     double background_activity{};
 
-    double axons{};
+    double axons_grown{};
     double axons_connected{};
-    double dendrites_exc{};
-    double dendrites_exc_connected{};
-    double dendrites_inh{};
-    double dendrites_inh_connected{};
+    double excitatory_dendrites_grown{};
+    double excitatory_dendrites_connected{};
+    double inhibitory_dendrites_grown{};
+    double inhibitory_dendrites_connected{};
 };
 
 /**
@@ -232,12 +232,12 @@ public:
 
         const double& axons = neurons_to_monitor->axons->grown_elements[local_neuron_id];
         const unsigned int& axons_connected = neurons_to_monitor->axons->connected_elements[local_neuron_id];
-        const double& dendrites_exc = neurons_to_monitor->dendrites_exc->grown_elements[local_neuron_id];
-        const unsigned int& dendrites_exc_connected = neurons_to_monitor->dendrites_exc->connected_elements[local_neuron_id];
-        const double& dendrites_inh = neurons_to_monitor->dendrites_inh->grown_elements[local_neuron_id];
-        const unsigned int& dendrites_inh_connected = neurons_to_monitor->dendrites_inh->connected_elements[local_neuron_id];
+        const double& excitatory_dendrites_grown = neurons_to_monitor->dendrites_exc->grown_elements[local_neuron_id];
+        const unsigned int& excitatory_dendrites_connected = neurons_to_monitor->dendrites_exc->connected_elements[local_neuron_id];
+        const double& inhibitory_dendrites_grown = neurons_to_monitor->dendrites_inh->grown_elements[local_neuron_id];
+        const unsigned int& inhibitory_dendrites_connected = neurons_to_monitor->dendrites_inh->connected_elements[local_neuron_id];
 
-        informations.emplace_back(calcium, target_calcium, x, fired, secondary, synaptic_input, background_activity, axons, axons_connected, dendrites_exc, dendrites_exc_connected, dendrites_inh, dendrites_inh_connected);
+        informations.emplace_back(calcium, target_calcium, x, fired, secondary, synaptic_input, background_activity, axons, axons_connected, excitatory_dendrites_grown, excitatory_dendrites_connected, inhibitory_dendrites_grown, inhibitory_dendrites_connected);
     }
 
     /**
