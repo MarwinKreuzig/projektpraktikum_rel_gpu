@@ -228,7 +228,7 @@ public:
         const bool& fired = neurons_to_monitor->neuron_model->fired[local_neuron_id] == FiredStatus::Fired;
         const double& secondary = neurons_to_monitor->neuron_model->get_secondary_variable(target_neuron_id);
         const double& synaptic_input = neurons_to_monitor->neuron_model->synaptic_input[local_neuron_id];
-        const double& background_activity = neurons_to_monitor->neuron_model->synaptic_input[local_neuron_id];
+        const double& background_activity = neurons_to_monitor->neuron_model->background_activity[local_neuron_id];
 
         const double& axons = neurons_to_monitor->axons->grown_elements[local_neuron_id];
         const unsigned int& axons_connected = neurons_to_monitor->axons->connected_elements[local_neuron_id];
