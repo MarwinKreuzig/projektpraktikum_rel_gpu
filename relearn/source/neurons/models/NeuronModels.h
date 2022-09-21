@@ -112,6 +112,21 @@ public:
     }
 
     /**
+     * @brief Resets the fired recorder to 0 spikes per neuron.
+     */
+    void reset_fired_recorder() noexcept {
+        std::fill(fired_recorder.begin(), fired_recorder.end(), 0U);
+    }
+
+    /**
+     * @brief Returns a vector of counts how often the neurons have spiked in the last period
+     * @return A constant reference to the vector of counts. It is not invalidated by calls to other methods
+     */
+    [[nodiscard]] const std::vector<unsigned int>& get_fired_recorder() const noexcept {
+        return fired_recorder;
+    }
+
+    /**
      * @brief Returns a double that indicates the neuron's membrane potential in the current simulation step
      * @param neuron_id The local neuron id that should be queried
      * @exception Throws a RelearnException if neuron_id is too large
@@ -282,6 +297,7 @@ public:
 
             RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::disable_neurons: There is a too large id: {} vs {}", neuron_id, number_local_neurons);
             fired[local_neuron_id] = FiredStatus::Inactive;
+            fired_recorder[local_neuron_id] = 0;
         }
     }
 
@@ -348,6 +364,10 @@ protected:
     void set_fired(const NeuronID& neuron_id, const FiredStatus new_value) {
         const auto local_neuron_id = neuron_id.get_neuron_id();
         fired[local_neuron_id] = new_value;
+
+        if (new_value == FiredStatus::Fired) {
+            fired_recorder[local_neuron_id]++;
+        }
     }
 
 private:
@@ -372,6 +392,7 @@ private:
     std::vector<double> background_activity{}; // The static background activity
     std::vector<double> synaptic_input{}; // The synaptic input from other neurons
     std::vector<double> x{}; // The membrane potential (in equations usually v(t))
+    std::vector<unsigned int> fired_recorder{}; // How often the neurons have spiked
     std::vector<FiredStatus> fired{}; // If the neuron fired in the current update step
 
     std::unique_ptr<FiredStatusCommunicator> fired_status_comm{};

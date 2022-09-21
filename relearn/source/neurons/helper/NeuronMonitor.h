@@ -29,6 +29,7 @@ public:
      * @param tc The current calcium target
      * @param x The current membrane potential
      * @param f The current fire status
+     * @param ff The fraction of spikes in during the last period
      * @param s The current secondary variable of the model
      * @param i The current synaptic input
      * @param b The current background activity
@@ -39,12 +40,13 @@ public:
      * @param di The current number of inhibitory dendritic elements
      * @param di_c The current number of connected inhibitory dendritic elements
      */
-    NeuronInformation(const double c, const double tc, const double x, const bool f, const double s, const double i, const double b,
+    NeuronInformation(const double c, const double tc, const double x, const bool f, const double ff, const double s, const double i, const double b,
         const double ax, const double ax_c, const double de, const double de_c, const double di, const double di_c) noexcept
         : calcium(c)
         , target_calcium(tc)
         , x(x)
         , fired(f)
+        , fired_fraction(ff)
         , secondary(s)
         , synaptic_input(i)
         , background_activity(b)
@@ -86,6 +88,14 @@ public:
      */
     [[nodiscard]] bool get_fired() const noexcept {
         return fired;
+    }
+
+    /**
+     * @brief Returns the fraction of spikes during the last recording period
+     * @return The fraction of spikes
+     */
+    [[nodiscard]] double get_fraction_fired() const noexcept {
+        return fired_fraction;
     }
 
     /**
@@ -165,6 +175,7 @@ private:
     double target_calcium{};
     double x{};
     bool fired{};
+    double fired_fraction{};
     double secondary{};
     double synaptic_input{};
     double background_activity{};
@@ -222,22 +233,23 @@ public:
         const auto local_neuron_id = target_neuron_id.get_neuron_id();
         RelearnException::check(local_neuron_id < neurons_to_monitor->number_neurons, "NeuronMonitor::record_data: The target id is too large for the neurons class");
 
-        const double& calcium = neurons_to_monitor->calcium_calculator->calcium[local_neuron_id];
-        const double& target_calcium = neurons_to_monitor->calcium_calculator->target_calcium[local_neuron_id];
-        const double& x = neurons_to_monitor->neuron_model->x[local_neuron_id];
-        const bool& fired = neurons_to_monitor->neuron_model->fired[local_neuron_id] == FiredStatus::Fired;
-        const double& secondary = neurons_to_monitor->neuron_model->get_secondary_variable(target_neuron_id);
-        const double& synaptic_input = neurons_to_monitor->neuron_model->synaptic_input[local_neuron_id];
-        const double& background_activity = neurons_to_monitor->neuron_model->background_activity[local_neuron_id];
+        const auto calcium = neurons_to_monitor->calcium_calculator->calcium[local_neuron_id];
+        const auto target_calcium = neurons_to_monitor->calcium_calculator->target_calcium[local_neuron_id];
+        const auto x = neurons_to_monitor->neuron_model->x[local_neuron_id];
+        const auto fired = neurons_to_monitor->neuron_model->fired[local_neuron_id] == FiredStatus::Fired;
+        const auto fired_fraction = static_cast<double>(neurons_to_monitor->neuron_model->fired_recorder[local_neuron_id]) / Config::monitor_step;
+        const auto secondary = neurons_to_monitor->neuron_model->get_secondary_variable(target_neuron_id);
+        const auto synaptic_input = neurons_to_monitor->neuron_model->synaptic_input[local_neuron_id];
+        const auto background_activity = neurons_to_monitor->neuron_model->background_activity[local_neuron_id];
 
-        const double& axons = neurons_to_monitor->axons->grown_elements[local_neuron_id];
-        const unsigned int& axons_connected = neurons_to_monitor->axons->connected_elements[local_neuron_id];
-        const double& excitatory_dendrites_grown = neurons_to_monitor->dendrites_exc->grown_elements[local_neuron_id];
-        const unsigned int& excitatory_dendrites_connected = neurons_to_monitor->dendrites_exc->connected_elements[local_neuron_id];
-        const double& inhibitory_dendrites_grown = neurons_to_monitor->dendrites_inh->grown_elements[local_neuron_id];
-        const unsigned int& inhibitory_dendrites_connected = neurons_to_monitor->dendrites_inh->connected_elements[local_neuron_id];
+        const auto axons = neurons_to_monitor->axons->grown_elements[local_neuron_id];
+        const auto axons_connected = neurons_to_monitor->axons->connected_elements[local_neuron_id];
+        const auto excitatory_dendrites_grown = neurons_to_monitor->dendrites_exc->grown_elements[local_neuron_id];
+        const auto excitatory_dendrites_connected = neurons_to_monitor->dendrites_exc->connected_elements[local_neuron_id];
+        const auto inhibitory_dendrites_grown = neurons_to_monitor->dendrites_inh->grown_elements[local_neuron_id];
+        const auto inhibitory_dendrites_connected = neurons_to_monitor->dendrites_inh->connected_elements[local_neuron_id];
 
-        informations.emplace_back(calcium, target_calcium, x, fired, secondary, synaptic_input, background_activity, axons, axons_connected, excitatory_dendrites_grown, excitatory_dendrites_connected, inhibitory_dendrites_grown, inhibitory_dendrites_connected);
+        informations.emplace_back(calcium, target_calcium, x, fired, fired_fraction, secondary, synaptic_input, background_activity, axons, axons_connected, excitatory_dendrites_grown, excitatory_dendrites_connected, inhibitory_dendrites_grown, inhibitory_dendrites_connected);
     }
 
     /**

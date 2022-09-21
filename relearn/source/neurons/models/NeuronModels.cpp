@@ -31,6 +31,7 @@ void NeuronModel::init(size_t number_neurons) {
 
     x.resize(number_neurons, 0.0);
     fired.resize(number_neurons, FiredStatus::Inactive);
+    fired_recorder.resize(number_neurons, 0);
     synaptic_input.resize(number_neurons, 0.0);
     background_activity.resize(number_neurons, 0.0);
 
@@ -44,6 +45,7 @@ void NeuronModel::create_neurons(size_t creation_count) {
 
     x.resize(new_size, 0.0);
     fired.resize(new_size, FiredStatus::Inactive);
+    fired_recorder.resize(new_size, 0);
     synaptic_input.resize(new_size, 0.0);
     background_activity.resize(new_size, 0.0);
 

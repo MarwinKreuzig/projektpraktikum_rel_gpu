@@ -234,6 +234,7 @@ void Simulation::simulate(const size_t number_steps) {
                 if (mn.get_target_id().get_neuron_id() < number_neurons) {
                     mn.record_data();
                 }
+                neurons->get_neuron_model()->reset_fired_recorder();
             }
         }
 
@@ -382,7 +383,7 @@ void Simulation::print_neuron_monitors() {
 
         RelearnException::check(file_is_good && !file_is_bad, "Simulation::print_neuron_monitors: The file is bad: {}", file_path);
 
-        constexpr auto description = "Step;Fired;x;Secondary Variable;Calcium;Target Calcium;Synaptic Input;Background Activity;Grown Axons;Connected Axons;Grown Excitatory Dendrites;Connected Excitatory Dendrites;Grown Inhibitory Dendrites;Connected Inhibitory Dendrites\n";
+        constexpr auto description = "Step;Fired;Fired Fraction;x;Secondary Variable;Calcium;Target Calcium;Synaptic Input;Background Activity;Grown Axons;Connected Axons;Grown Excitatory Dendrites;Connected Excitatory Dendrites;Grown Inhibitory Dendrites;Connected Inhibitory Dendrites\n";
 
         constexpr auto filler = ";";
         constexpr auto width = 6;
@@ -397,6 +398,7 @@ void Simulation::print_neuron_monitors() {
         for (const auto& info : infos) {
             outfile << current_step << filler;
             outfile << info.get_fired() << filler;
+            outfile << info.get_fraction_fired() << filler;
             outfile << info.get_x() << filler;
             outfile << info.get_secondary() << filler;
             outfile << info.get_calcium() << filler;
@@ -430,6 +432,8 @@ void Simulation::snapshot_monitors() {
         for (auto& m : *monitors) {
             m.record_data();
         }
+
+        neurons->get_neuron_model()->reset_fired_recorder();
     }
 }
 

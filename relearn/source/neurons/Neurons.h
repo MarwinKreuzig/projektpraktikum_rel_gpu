@@ -173,6 +173,14 @@ public:
     }
 
     /**
+     * @brief Returns a constant reference to the neuron model
+     * @return The neuron model for the neurons
+     */
+    [[nodiscard]] const std::unique_ptr<NeuronModel>& get_neuron_model() const noexcept {
+        return neuron_model;
+    }
+
+    /**
      * @brief Sets the signal types in the extra infos
      * @param names The signal types
      * @exception Throws the same RelearnException as NeuronsExtraInfo::set_signal_types
