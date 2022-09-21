@@ -359,7 +359,7 @@ int main(int argc, char** argv) {
     app.add_option("--min-calcium-inhibitory-dendrites", min_calcium_inhibitory_dendrites, "The minimum intercellular calcium for inhibitory dendrites to grow. Default is 0.0");
 
     std::string neuron_monitors_description{};
-    app.add_option("--neuron_monitors", neuron_monitors_description, "The description which neurons to monitor. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;... where <mpi_rank> can be -1 to indicate \"on every rank\"");
+    app.add_option("--neuron-monitors", neuron_monitors_description, "The description which neurons to monitor. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;... where <mpi_rank> can be -1 to indicate \"on every rank\"");
 
     opt_num_neurons->excludes(opt_file_positions);
     opt_num_neurons->excludes(opt_file_network);
