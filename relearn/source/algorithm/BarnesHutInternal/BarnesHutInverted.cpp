@@ -63,7 +63,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(
 
     // Make cache empty for next connectivity update
     Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
-    NodeCache<BarnesHutInvertedCell>::empty();
+    NodeCache<BarnesHutInvertedCell>::clear();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
     return synapse_creation_requests_outgoing;

@@ -117,7 +117,7 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t
 
     // Make cache empty for next connectivity update
     Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
-    NodeCache<NaiveCell>::empty();
+    NodeCache<NaiveCell>::clear();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
     return synapse_creation_requests_outgoing;

@@ -57,7 +57,7 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
 
     // Make cache empty for next connectivity update
     Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
-    NodeCache<BarnesHutCell>::empty();
+    NodeCache<BarnesHutCell>::clear();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
     return neuron_requests_outgoing;

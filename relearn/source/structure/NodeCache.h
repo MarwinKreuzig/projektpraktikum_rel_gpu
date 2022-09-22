@@ -21,12 +21,35 @@
 #include <type_traits>
 #include <utility>
 
+enum class NodeCacheType : char {
+    Combined,
+    Separate,
+};
+
 /**
+ * @brief Pretty-prints the node cache type to the chosen stream
+ * @param out The stream to which to print the node cache type
+ * @param cache_type The node cache type to print
+ * @return The argument out, now altered with the node cache type
+ */
+inline std::ostream& operator<<(std::ostream& out, const NodeCacheType& cache_type) {
+    switch (cache_type) {
+    case NodeCacheType::Combined:
+        return out << "Combined";
+    case NodeCacheType::Separate:
+        return out << "Separate";
+    }
+
+    return out << "UNKOWN";
+}
+
+/**
+ * DO NOT USE THIS CLASS DIRECTLY. USE NodeCache and set NodeCacheType::Combined.
  * This class caches octree nodes from other MPI ranks on the local MPI rank.
  * @tparam AdditionalCellAttributes The additional cell attributes that are used for the plasticity algorithm
  */
 template <typename AdditionalCellAttributes>
-class NodeCache {
+class NodeCacheCombined {
     using node_type = OctreeNode<AdditionalCellAttributes>;
     using children_type = std::array<node_type*, Constants::number_oct>;
 
@@ -39,7 +62,7 @@ public:
     /**
      * @brief Empties the cache that was built during the connection phase and frees all local copies
      */
-    static void empty() {
+    static void clear() {
         remote_nodes_cache.clear();
         memory.clear();
     }
@@ -61,7 +84,7 @@ public:
             NodesCacheKey rank_address_pair{ target_rank, node };
 
             const auto& [iterator, inserted] = remote_nodes_cache.insert({ rank_address_pair, local_children });
-            
+
             if (!inserted) {
                 return iterator->second;
             }
@@ -87,7 +110,6 @@ public:
 
             iterator->second = local_children;
 
-
             return local_children;
         };
 
@@ -103,4 +125,164 @@ private:
     static inline SemiStableVector<array_type> memory{}; // NOLINT
     static inline NodesCache remote_nodes_cache{};
     static inline NodesCache inverse_remote_nodes_cache{};
+};
+
+/**
+ * DO NOT USE THIS CLASS DIRECTLY. USE NodeCache and set NodeCacheType::Separate.
+ * This class caches octree nodes from other MPI ranks on the local MPI rank.
+ * @tparam AdditionalCellAttributes The additional cell attributes that are used for the plasticity algorithm
+ */
+template <typename AdditionalCellAttributes>
+class NodeCacheSeparate {
+    using node_type = OctreeNode<AdditionalCellAttributes>;
+    using children_type = std::array<node_type*, Constants::number_oct>;
+
+public:
+    using array_type = std::array<node_type, Constants::number_oct>;
+    using NodesCacheKey = std::pair<int, node_type*>;
+    using NodesCacheValue = node_type*;
+    using NodesCache = std::map<NodesCacheKey, NodesCacheValue>;
+
+    /**
+     * @brief Empties the cache that was built during the connection phase and frees all local copies
+     */
+    static void clear() {
+        remote_nodes_cache.clear();
+        memory.clear();
+    }
+
+    /**
+     * @brief Downloads the children of the node (must be on another MPI rank) and returns the children.
+     *      Also saves to nodes locally in order to save bandwidth
+     * @param node The node for which the children should be downloaded, must be virtual
+     * @exception Throws a RelearnException if node is on the current MPI process or if the saved neuron_id is not virtual
+     * @return The downloaded children (perfect copies of the actual children), does not transfer ownership
+     */
+    [[nodiscard]] static std::array<node_type*, Constants::number_oct> download_children(node_type* const node) {
+        const auto target_rank = node->get_rank();
+        RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "NodeCache::download_children: Tried to download a local node");
+
+        auto actual_download = [target_rank](node_type* node) {
+            std::array<node_type*, Constants::number_oct> local_children{ nullptr };
+
+            // Start access epoch to remote rank
+            MPIWrapper::lock_window(target_rank, MPI_Locktype::Shared);
+
+            // Fetch remote children if they exist
+            for (auto child_index = 0; child_index < Constants::number_oct; child_index++) {
+                node_type* unusable_child_pointer_on_other_rank = node->get_child(child_index);
+                if (nullptr == unusable_child_pointer_on_other_rank) {
+                    // NOLINTNEXTLINE
+                    local_children[child_index] = nullptr;
+                    continue;
+                }
+
+                NodesCacheKey rank_addr_pair{ target_rank, unusable_child_pointer_on_other_rank };
+                std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair{ rank_addr_pair, nullptr };
+
+                // Get cache entry for "cache_key_val_pair"
+                // It is created if it does not exist yet
+                const auto& [iterator, inserted] = remote_nodes_cache.insert(cache_key_val_pair);
+
+                // Cache entry just inserted as it was not in cache
+                // So, we still need to init the entry by fetching
+                // from the target rank
+                if (inserted) {
+                    node_type& ref = memory.emplace_back();
+                    iterator->second = &ref;
+                    node_type* local_child_addr = iterator->second;
+
+                    MPIWrapper::download_octree_node<AdditionalCellAttributes>(local_child_addr, target_rank, unusable_child_pointer_on_other_rank, 1);
+                }
+
+                // Remember address of node
+                // NOLINTNEXTLINE
+                local_children[child_index] = iterator->second;
+            }
+
+            // Complete access epoch
+            MPIWrapper::unlock_window(target_rank);
+
+            return local_children;
+        };
+
+        std::array<node_type*, Constants::number_oct> local_children{ nullptr };
+
+#pragma omp critical(node_cache_download)
+        local_children = actual_download(node);
+
+        return local_children;
+    }
+
+
+private:
+    static inline SemiStableVector<node_type> memory{}; // NOLINT
+    static inline NodesCache remote_nodes_cache{};
+
+    static inline NodesCache inverse_remote_nodes_cache{};
+};
+
+/**
+ * This class acts as interface to different cache implementations.
+ * @tparam AdditionalCellAttributes The additional cell attributes that are used for the plasticity algorithm
+ */
+template <typename AdditionalCellAttributes>
+class NodeCache {
+    using node_type = OctreeNode<AdditionalCellAttributes>;
+
+public:
+    /**
+     * @brief Sets the type of cache that shall be used
+     * @param cache_type The cache type that from now on shall be used
+     */
+    static void set_cache_type(NodeCacheType cache_type) noexcept {
+        currently_used_cache = cache_type;
+    }
+
+    /**
+     * @brief Returns the currently used cache type
+     * @return The currently used cache type
+     */
+    [[nodiscard]] NodeCacheType get_cache_type() noexcept {
+        return currently_used_cache;
+    }
+
+    /**
+     * @brief Empties the cache that was built during the connection phase and frees all local copies
+     */
+    static void clear() {
+        switch (currently_used_cache) {
+        case NodeCacheType::Combined:
+            NodeCacheCombined<AdditionalCellAttributes>::clear();
+            return;
+        case NodeCacheType::Separate:
+            NodeCacheSeparate<AdditionalCellAttributes>::clear();
+            return;
+        }
+
+        RelearnException::fail("NodeCache::clear: {} is an unkown cache type!", currently_used_cache);
+    }
+
+    /**
+     * @brief Downloads the children of the node (must be on another MPI rank) and returns the children.
+     *      Also saves to nodes locally in order to save bandwidth
+     * @param node The node for which the children should be downloaded, must be virtual
+     * @exception Throws a RelearnException if node is on the current MPI process or if the saved neuron_id is not virtual
+     * @return The downloaded children (perfect copies of the actual children), does not transfer ownership
+     */
+    [[nodiscard]] static std::array<node_type*, Constants::number_oct> download_children(node_type* const node) {
+        switch (currently_used_cache) {
+        case NodeCacheType::Combined:
+            return NodeCacheCombined<AdditionalCellAttributes>::download_children(node);
+        case NodeCacheType::Separate:
+            return NodeCacheSeparate<AdditionalCellAttributes>::download_children(node);
+        }
+
+        RelearnException::fail("NodeCache::download_children: {} is an unkown cache type!", currently_used_cache);
+
+        return {};
+    }
+
+private:
+    static inline NodeCacheType currently_used_cache{ NodeCacheType::Combined };
 };

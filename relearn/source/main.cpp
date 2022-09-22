@@ -27,6 +27,7 @@
 #include "sim/random/SubdomainFromNeuronDensity.h"
 #include "sim/random/SubdomainFromNeuronPerRank.h"
 #include "structure/BaseCell.h"
+#include "structure/NodeCache.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
 #include "util/MonitorParser.h"
@@ -211,6 +212,12 @@ int main(int argc, char** argv) {
         { "absolute", TargetCalciumDecay::Absolute }
     };
 
+    NodeCacheType chosen_cache_type = NodeCacheType::Combined;
+    std::map<std::string, NodeCacheType> cli_parse_cache_type{
+        { "combined", NodeCacheType::Combined },
+        { "separate", NodeCacheType::Separate },
+    };
+
     size_t simulation_steps{};
     app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();
 
@@ -267,6 +274,9 @@ int main(int argc, char** argv) {
 
     auto* const opt_algorithm = app.add_option("-a,--algorithm", chosen_algorithm, "The algorithm that is used for finding the targets");
     opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_algorithm, CLI::ignore_case));
+
+    auto* const opt_node_cache_type = app.add_option("--node-cache-type", chosen_cache_type, "The type of cache for the nodes of other ranks.");
+    opt_node_cache_type->transform(CLI::CheckedTransformer(cli_parse_cache_type, CLI::ignore_case));
 
     double accept_criterion{ BarnesHut::default_theta };
     const auto* const opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Requires Barnes-Hut or inverted Barnes-Hut.");
@@ -542,16 +552,20 @@ int main(int argc, char** argv) {
     // Set the correct kernel and initalize the MPIWrapper to return the correct type
     if (chosen_algorithm == AlgorithmEnum::BarnesHut || chosen_algorithm == AlgorithmEnum::BarnesHutLocationAware) {
         Kernel<BarnesHutCell>::set_kernel_type(chosen_kernel_type);
+        NodeCache<BarnesHutCell>::set_cache_type(chosen_cache_type);
         MPIWrapper::init_buffer_octree<BarnesHutCell>();
     } else if (chosen_algorithm == AlgorithmEnum::BarnesHutInverted) {
         Kernel<BarnesHutInvertedCell>::set_kernel_type(chosen_kernel_type);
+        NodeCache<BarnesHutInvertedCell>::set_cache_type(chosen_cache_type);
         MPIWrapper::init_buffer_octree<BarnesHutInvertedCell>();
     } else if (chosen_algorithm == AlgorithmEnum::FastMultipoleMethods) {
         Kernel<FastMultipoleMethodsCell>::set_kernel_type(chosen_kernel_type);
+        NodeCache<FastMultipoleMethodsCell>::set_cache_type(chosen_cache_type);
         MPIWrapper::init_buffer_octree<FastMultipoleMethodsCell>();
     } else {
         RelearnException::check(chosen_algorithm == AlgorithmEnum::Naive, "An algorithm was chosen that is not supported");
         Kernel<NaiveCell>::set_kernel_type(chosen_kernel_type);
+        NodeCache<NaiveCell>::set_cache_type(chosen_cache_type);
         MPIWrapper::init_buffer_octree<NaiveCell>();
     }
 

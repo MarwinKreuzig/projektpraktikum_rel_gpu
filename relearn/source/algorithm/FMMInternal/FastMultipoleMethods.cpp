@@ -44,7 +44,7 @@ CommunicationMap<SynapseCreationRequest> FastMultipoleMethods::find_target_neuro
 
     // Stop Timer and make cache empty for next connectivity update
     Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
-    NodeCache<FastMultipoleMethodsCell>::empty();
+    NodeCache<FastMultipoleMethodsCell>::clear();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
     return synapse_creation_requests_outgoing;
