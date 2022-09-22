@@ -18,9 +18,11 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
-#include <time.h>
 
 std::string Timers::wall_clock_time() {
+    // The time is printed with 24 interesting characters followed by '\n'
+    constexpr auto size_of_date_string = 24;
+
 #ifdef __linux__
     time_t rawtime = 0;
     time(&rawtime);
@@ -29,22 +31,21 @@ std::string Timers::wall_clock_time() {
     // NOLINTNEXTLINE
     char* string = asctime(timeinfo);
 
-    // Only copy 24 characters
-    return std::string(string, 24);
+    // Avoid '\n'
+    return std::string(string, size_of_date_string);
 #else
     time_t rawtime = 0;
     struct tm timeinfo;
-    char char_buff[30];
+
+    // Needs 1 char more for '\n'
+    char char_buff[size_of_date_string + 1];
 
     time(&rawtime);
     localtime_s(&timeinfo, &rawtime);
     asctime_s(char_buff, &timeinfo);
 
-    // Remove linebreak in string
-    // NOLINTNEXTLINE
-    char_buff[24] = '\0';
-
-    return std::string(char_buff);
+    // Avoid '\n'
+    return std::string(char_buff, size_of_date_string);
 #endif
 }
 

@@ -394,7 +394,7 @@ void Simulation::print_neuron_monitors() {
         outfile << description;
 
         const auto& infos = monitor.get_informations();
-        auto current_step = 0;
+        auto current_step = static_cast<decltype(Config::monitor_step)>(0);
         for (const auto& info : infos) {
             outfile << current_step << filler;
             outfile << info.get_fired() << filler;

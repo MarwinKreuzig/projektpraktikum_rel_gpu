@@ -30,8 +30,8 @@ public:
      * @param idx The one dimensional index
      * @return The three dimensional index
      */
-    [[nodiscard]] constexpr static BoxCoordinates map_1d_to_3d(const std::uint64_t idx) {
-        auto extract_coordinate = [idx](std::uint8_t offset) {
+    [[nodiscard]] constexpr static BoxCoordinates map_1d_to_3d(const std::uint64_t idx) noexcept {
+        auto extract_coordinate = [idx](std::uint8_t offset) noexcept {
             constexpr std::uint8_t loop_bound = Constants::max_lvl_subdomains * 3;
 
             std::uint64_t current_value = 0;
@@ -73,7 +73,7 @@ public:
 
             std::uint64_t block = (z_bit << 2U) + (y_bit << 1U) + x_bit;
 
-            result |= block << (3 * i);
+            result |= block << (3U * i);
         }
 
         return result;
@@ -107,10 +107,10 @@ private:
     }
 
     [[nodiscard]] constexpr static std::uint64_t select_bit(const std::uint64_t number, const std::uint8_t bit) noexcept {
-        return ((number >> bit) & 1);
+        return ((number >> bit) & 1U);
     }
 
-    [[nodiscard]] constexpr static std::uint64_t copy_bit(const std::uint64_t source, const std::uint8_t source_bit, const std::uint64_t destination, const std::uint8_t destination_bit) {
+    [[nodiscard]] constexpr static std::uint64_t copy_bit(const std::uint64_t source, const std::uint8_t source_bit, const std::uint64_t destination, const std::uint8_t destination_bit) noexcept {
         // A simpler solution might be:
         // destination ^= (-select_bit(source, source_bit) ^ destination) & (1 << destination_bit);
 
@@ -120,7 +120,6 @@ private:
             return return_value;
         }
 
-        RelearnException::check(0 == bit_in_source, "In Morton, copy_bit, bit_in_source is neither 0 nor 1");
         const auto return_value = unset_bit(destination, destination_bit);
         return return_value;
     }

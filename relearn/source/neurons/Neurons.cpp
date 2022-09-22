@@ -248,7 +248,7 @@ void Neurons::update_number_synaptic_elements_delta() {
 
 StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, const int root, const std::vector<UpdateStatus>& disable_flags) const {
     const auto [d_my_min, d_my_max, d_my_acc, d_num_values] = Util::min_max_acc(local_values, disable_flags);
-    const double my_avg = d_my_acc / d_num_values;
+    const double my_avg = d_my_acc / static_cast<double>(d_num_values);
 
     const double d_min = MPIWrapper::reduce(d_my_min, MPIWrapper::ReduceFunction::Min, root);
     const double d_max = MPIWrapper::reduce(d_my_max, MPIWrapper::ReduceFunction::Max, root);

@@ -84,7 +84,7 @@ public:
 
         std::vector<RankNeuronId> parsed_ids{};
         // The first description is at least 3 chars long, the following at least 4
-        parsed_ids.reserve(description.size() >> 2 + 1);
+        parsed_ids.reserve((description.size() >> 2U) + 1U);
 
         std::string::size_type current_position = 0;
 

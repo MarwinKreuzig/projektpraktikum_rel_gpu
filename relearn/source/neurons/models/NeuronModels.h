@@ -11,10 +11,10 @@
  */
 
 #include "mpi/CommunicationMap.h"
-#include "neurons/models/FiredStatusCommunicator.h"
-#include "neurons/models/ModelParameter.h"
 #include "neurons/FiredStatus.h"
 #include "neurons/UpdateStatus.h"
+#include "neurons/models/FiredStatusCommunicator.h"
+#include "neurons/models/ModelParameter.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 

@@ -362,4 +362,4 @@ struct hash<TaggedID<value_type>> {
         return result_type(id);
     }
 };
-}
+} // namespace std
