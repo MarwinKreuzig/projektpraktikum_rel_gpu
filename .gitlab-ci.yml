@@ -1,4 +1,9 @@
 build-mpi:
+  rules:
+  - if: '$CLANG_TIDY == "FALSE"'
+    when: always
+  - if: '$CLANG_TIDY == "TRUE"'
+    when: never
   image: relearn-ci-gcc-11
   stage: build
   before_script:
@@ -24,6 +29,11 @@ build-clang-tidy:
 
 # run tests using the binary built before
 test-mpi-once:
+  rules:
+  - if: '$CLANG_TIDY == "FALSE"'
+    when: always
+  - if: '$CLANG_TIDY == "TRUE"'
+    when: never
   image: relearn-ci-gcc-11
   stage: test
   before_script:
@@ -38,6 +48,11 @@ test-mpi-once:
       
 # run tests using the binary built before
 test-mpi-multiple:
+  rules:
+  - if: '$CLANG_TIDY == "FALSE"'
+    when: always
+  - if: '$CLANG_TIDY == "TRUE"'
+    when: never
   image: relearn-ci-gcc-11
   stage: test
   before_script:
@@ -51,6 +66,11 @@ test-mpi-multiple:
       - relearn/build-docker
 
 build-nompi:
+  rules:
+  - if: '$CLANG_TIDY == "FALSE"'
+    when: always
+  - if: '$CLANG_TIDY == "TRUE"'
+    when: never
   image: relearn-ci-gcc-11
   stage: build
   before_script:
@@ -63,6 +83,11 @@ build-nompi:
 
 # run tests using the binary built before
 test-nompi-once:
+  rules:
+  - if: '$CLANG_TIDY == "FALSE"'
+    when: always
+  - if: '$CLANG_TIDY == "TRUE"'
+    when: never
   image: relearn-ci-gcc-11
   stage: test
   before_script:
@@ -77,6 +102,11 @@ test-nompi-once:
 
 # run tests using the binary built before
 test-nompi-multiple:
+  rules:
+  - if: '$CLANG_TIDY == "FALSE"'
+    when: always
+  - if: '$CLANG_TIDY == "TRUE"'
+    when: never
   image: relearn-ci-gcc-11
   stage: test
   before_script:
@@ -90,6 +120,11 @@ test-nompi-multiple:
       - relearn/build-docker-nompi      
    
 deploy-single:
+  rules:
+  - if: '$CLANG_TIDY == "FALSE"'
+    when: always
+  - if: '$CLANG_TIDY == "TRUE"'
+    when: never
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -265,6 +300,11 @@ deploy-mpi-4:
       
    
 deploy-mpi-8:  
+  rules:
+  - if: '$CLANG_TIDY == "FALSE"'
+    when: always
+  - if: '$CLANG_TIDY == "TRUE"'
+    when: never
   image: relearn-ci-gcc-11
   stage: deploy
   script:
