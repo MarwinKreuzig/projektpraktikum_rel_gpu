@@ -15,11 +15,8 @@
 using models::AEIFModel;
 
 AEIFModel::AEIFModel(
-    const double k,
     const unsigned int h,
-    const double base_background_activity,
-    const double background_activity_mean,
-    const double background_activity_stddev,
+    std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
     const double C,
     const double g_L,
     const double E_L,
@@ -29,7 +26,7 @@ AEIFModel::AEIFModel(
     const double a,
     const double b,
     const double V_spike)
-    : NeuronModel{ k, h, base_background_activity, background_activity_mean, background_activity_stddev }
+    : NeuronModel{ h, std::move(synaptic_input_calculator) }
     , C{ C }
     , g_L{ g_L }
     , E_L{ E_L }
@@ -42,7 +39,7 @@ AEIFModel::AEIFModel(
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> AEIFModel::clone() const {
-    return std::make_unique<AEIFModel>(get_k(), get_h(), get_base_background_activity(), get_background_activity_mean(), get_background_activity_stddev(), C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike);
+    return std::make_unique<AEIFModel>(get_h(), get_synaptic_input_calculator()->clone(), C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike);
 }
 
 [[nodiscard]] std::vector<ModelParameter> AEIFModel::get_parameter() {

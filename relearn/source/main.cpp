@@ -19,8 +19,10 @@
 #include "neurons/CalciumCalculator.h"
 #include "neurons/ElementType.h"
 #include "neurons/helper/NeuronMonitor.h"
+#include "neurons/models/LinearSynapticInputCalculator.h"
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
+#include "neurons/models/SynapticInputCalculator.h"
 #include "sim/NeuronToSubdomainAssignment.h"
 #include "sim/Simulation.h"
 #include "sim/file/SubdomainFromFile.h"
@@ -308,16 +310,16 @@ int main(int argc, char** argv) {
     auto* const opt_neuron_model = app.add_option("--neuron-model", chosen_neuron_model, "The neuron model");
     opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_neuron_model, CLI::ignore_case));
 
-    double base_background_activity{ NeuronModel::default_base_background_activity };
+    double base_background_activity{ SynapticInputCalculator::default_base_background_activity };
     app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
-    double background_activity_mean{ NeuronModel::default_background_activity_mean };
+    double background_activity_mean{ SynapticInputCalculator::default_background_activity_mean };
     app.add_option("--background-activity-mean", background_activity_mean, "The mean background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
-    double background_activity_stddev{ NeuronModel::default_background_activity_stddev };
+    double background_activity_stddev{ SynapticInputCalculator::default_background_activity_stddev };
     app.add_option("--background-activity-stddev", background_activity_stddev, "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
-    double synapse_conductance{ NeuronModel::default_k };
+    double synapse_conductance{ SynapticInputCalculator::default_k };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transfered to its neighbors when a neuron spikes. Default is 0.03");
 
     double calcium_decay{ CalciumCalculator::default_tau_C };
@@ -573,24 +575,22 @@ int main(int argc, char** argv) {
         RelearnException::check(chosen_kernel_type == KernelType::Gaussian, "Setting the probability kernel type is not supported for the fast multipole methods!");
     }
 
+    auto input_calculator = std::make_unique<LinearSynapticInputCalculator>(synapse_conductance, base_background_activity, background_activity_mean, background_activity_stddev);
+
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {
-        neuron_model = std::make_unique<models::PoissonModel>(synapse_conductance, h,
-            base_background_activity, background_activity_mean, background_activity_stddev,
+        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator),
             models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
     } else if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
-        neuron_model = std::make_unique<models::IzhikevichModel>(synapse_conductance, h,
-            base_background_activity, background_activity_mean, background_activity_stddev,
+        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator),
             models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
             models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
             models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
     } else if (chosen_neuron_model == NeuronModelEnum::FitzHughNagumo) {
-        neuron_model = std::make_unique<models::FitzHughNagumoModel>(synapse_conductance, h,
-            base_background_activity, background_activity_mean, background_activity_stddev,
+        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator),
             models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
     } else if (chosen_neuron_model == NeuronModelEnum::AEIF) {
-        neuron_model = std::make_unique<models::AEIFModel>(synapse_conductance, h,
-            base_background_activity, background_activity_mean, background_activity_stddev,
+        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator),
             models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
             models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
             models::AEIFModel::default_V_spike);

@@ -13,8 +13,8 @@
 #include "mpi/CommunicationMap.h"
 #include "neurons/FiredStatus.h"
 #include "neurons/UpdateStatus.h"
-#include "neurons/models/FiredStatusCommunicator.h"
 #include "neurons/models/ModelParameter.h"
+#include "neurons/models/SynapticInputCalculator.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
@@ -44,23 +44,13 @@ public:
     NeuronModel() = default;
 
     /**
-     * @brief Construcs a new instance of type NeuronModel with 0 neurons and the passed values for all parameters.
-     *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
-     * @param k The factor by which the input of a neighboring spiking neuron is weighted
+     * @brief Construcs a new instance of type NeuronModel with 0 neurons.
      * @param h The step size for the numerical integration
-     * @param base_background_activity The base background activity that all neurons are exited with. Is only used if background_activity_stddev > 0.0
-     * @param background_activity_mean The mean of background activity taht all neurons are exited with. Is only used if background_activity_stddev > 0.0
-     * @param background_activity_stddev The standard deviation of background activity that all neurons are exited with. Is only used if background_activity_stddev > 0.0
-     *
-     * If background_activity_stddev > 0.0, all neurons are exited with
-     *      base_background_activity + N(background_activity_mean, background_activity_stddev)
+     * @param synaptic_input_calculator The object that is resonsible for calculating the synaptic input
      */
-    NeuronModel(
-        double k,
-        unsigned int h,
-        double base_background_activity,
-        double background_activity_mean,
-        double background_activity_stddev);
+    NeuronModel(unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator)
+        : h(h)
+        , input_calculator(std::move(synaptic_input_calculator)) { }
 
     virtual ~NeuronModel() = default;
 
@@ -147,54 +137,12 @@ public:
         return x;
     }
 
-    /**
-     * @brief Returns the synaptic input the specified neuron receives in the current simulation step
-     * @param neuron_id The local neuron id for the neuron that should be queried
-     * @exception Throws a RelearnException if neuron_id is too large
-     * @return A double that indicates the synaptic input for the specified neuron
-     */
-    [[nodiscard]] double get_synaptic_input(const NeuronID& neuron_id) const {
-        const auto local_neuron_id = neuron_id.get_neuron_id();
-
-        RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::get_synaptic_input: id is too large: {}", neuron_id);
-        return synaptic_input[local_neuron_id];
-    }
-
-    /**
-     * @brief Returns a vector of doubles that indicate the neurons' respective synaptic input in the current simulation step
-     * @return A constant reference to the vector of doubles. It is not invalidated by calls to other methods
-     */
     [[nodiscard]] const std::vector<double>& get_synaptic_input() const noexcept {
-        return synaptic_input;
+        return input_calculator->get_synaptic_input();
     }
 
-    /**
-     * @brief Returns the background activity the specified neuron receives in the current simulation step
-     * @param neuron_id The local neuron id for the neuron that should be queried
-     * @exception Throws a RelearnException if neuron_id is too large
-     * @return A double that indicates the background activity for the specified neuron
-     */
-    [[nodiscard]] double get_background_activity(const NeuronID& neuron_id) const {
-        const auto local_neuron_id = neuron_id.get_neuron_id();
-
-        RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::get_background_activity: id is too large: {}", neuron_id);
-        return background_activity[local_neuron_id];
-    }
-
-    /**
-     * @brief Returns a vector of doubles that indicate the neurons' respective background activity in the current simulation step
-     * @return A constant reference to the vector of doubles. It is not invalidated by calls to other methods
-     */
     [[nodiscard]] const std::vector<double>& get_background_activity() const noexcept {
-        return background_activity;
-    }
-
-    /**
-     * @brief Returns k (The factor by which the input of a neighboring spiking neuron is weighted)
-     * @return k (The factor by which the input of a neighboring spiking neuron is weighted)
-     */
-    [[nodiscard]] double get_k() const noexcept {
-        return k;
+        return input_calculator->get_background_activity();
     }
 
     /**
@@ -203,30 +151,6 @@ public:
      */
     [[nodiscard]] unsigned int get_h() const noexcept {
         return h;
-    }
-
-    /**
-     * @brief Returns the base background activity
-     * @return The base background activity
-     */
-    [[nodiscard]] double get_base_background_activity() const noexcept {
-        return base_background_activity;
-    }
-
-    /**
-     * @brief Returns the mean background activity
-     * @return The mean background activity
-     */
-    [[nodiscard]] double get_background_activity_mean() const noexcept {
-        return background_activity_mean;
-    }
-
-    /**
-     * @brief Returns the standard deviation of the background activity
-     * @return The standard deviation of the background activity
-     */
-    [[nodiscard]] double get_background_activity_stddev() const noexcept {
-        return background_activity_stddev;
     }
 
     /**
@@ -301,26 +225,9 @@ public:
         }
     }
 
-    static constexpr double default_k{ 0.03 };
     static constexpr unsigned int default_h{ 10 };
-
-    static constexpr double default_base_background_activity{ 0.0 };
-    static constexpr double default_background_activity_mean{ 0.0 };
-    static constexpr double default_background_activity_stddev{ 0.0 };
-
-    static constexpr double min_k{ 0.0 };
     static constexpr unsigned int min_h{ 1 };
-
-    static constexpr double min_base_background_activity{ -10000.0 };
-    static constexpr double min_background_activity_mean{ -10000.0 };
-    static constexpr double min_background_activity_stddev{ 0.0 };
-
-    static constexpr double max_k{ 1.0 };
     static constexpr unsigned int max_h{ 1000 };
-
-    static constexpr double max_base_background_activity{ 10000.0 };
-    static constexpr double max_background_activity_mean{ 10000.0 };
-    static constexpr double max_background_activity_stddev{ 10000.0 };
 
 protected:
     /**
@@ -362,32 +269,31 @@ protected:
         }
     }
 
+    [[nodiscard]] double get_synaptic_input(const NeuronID& neuron_id) const {
+        return input_calculator->get_synaptic_input(neuron_id);
+    }
+
+    [[nodiscard]] double get_background_activity(const NeuronID& neuron_id) const {
+        return input_calculator->get_background_activity(neuron_id);
+    }
+
+    [[nodiscard]] const std::unique_ptr<SynapticInputCalculator>& get_synaptic_input_calculator() const noexcept {
+        return input_calculator;
+    }
+
 private:
-    void update_electrical_activity_update_activity(const std::vector<UpdateStatus>& disable_flags);
-
-    void update_electrical_activity_calculate_input(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags);
-
-    void update_electrical_activity_calculate_background(const std::vector<UpdateStatus>& disable_flags);
-
     // My local number of neurons
     size_t number_local_neurons{ 0 };
 
     // Model parameters for all neurons
-    double k{ default_k }; // Proportionality factor for synapses in Hz
     unsigned int h{ default_h }; // Precision for Euler integration
 
-    double base_background_activity{ default_base_background_activity };
-    double background_activity_mean{ default_background_activity_mean };
-    double background_activity_stddev{ default_background_activity_stddev };
-
     // Variables for each neuron where the array index denotes the local neuron ID
-    std::vector<double> background_activity{}; // The static background activity
-    std::vector<double> synaptic_input{}; // The synaptic input from other neurons
     std::vector<double> x{}; // The membrane potential (in equations usually v(t))
     std::vector<unsigned int> fired_recorder{}; // How often the neurons have spiked
     std::vector<FiredStatus> fired{}; // If the neuron fired in the current update step
 
-    std::unique_ptr<FiredStatusCommunicator> fired_status_comm{};
+    std::unique_ptr<SynapticInputCalculator> input_calculator{};
 };
 
 namespace models {
@@ -404,21 +310,15 @@ public:
     /**
      * @brief Construcs a new instance of type PoissonModel with 0 neurons and the passed values for all parameters.
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
-     * @param k See NeuronModel(...)
      * @param h See NeuronModel(...)
-     * @param base_background_activity See NeuronModel(...)
-     * @param background_activity_mean See NeuronModel(...)
-     * @param background_activity_stddev See NeuronModel(...)
+     * @param synaptic_input_calculator See NeuronModel(...)
      * @param x_0 The resting membrane potential
      * @param tau_x The dampening factor by which the membrane potential decreases
      * @param refrac_time The number of steps a neuron doesn't spike after spiking
      */
     PoissonModel(
-        double k,
         unsigned int h,
-        double base_background_activity,
-        double background_activity_mean,
-        double background_activity_stddev,
+        std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         double x_0,
         double tau_x,
         unsigned int refrac_time);
@@ -537,11 +437,8 @@ public:
     /**
      * @brief Construcs a new instance of type IzhikevichModel with 0 neurons and the passed values for all parameters.
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
-     * @param k See NeuronModel(...)
      * @param h See NeuronModel(...)
-     * @param base_background_activity See NeuronModel(...)
-     * @param background_activity_mean See NeuronModel(...)
-     * @param background_activity_stddev See NeuronModel(...)
+     * @param synaptic_input_calculator See NeuronModel(...)
      * @param a The dampening factor for u(t)
      * @param b The dampening factor for v(t) inside the equation for d/dt u(t)
      * @param c The reset activity
@@ -552,11 +449,8 @@ public:
      * @param k3 The constant inside the equation for d/dt v(t)
      */
     IzhikevichModel(
-        double k,
         unsigned int h,
-        double base_background_activity,
-        double background_activity_mean,
-        double background_activity_stddev,
+        std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         double a,
         double b,
         double c,
@@ -740,21 +634,15 @@ public:
     /**
      * @brief Construcs a new instance of type IzhikevichModel with 0 neurons and the passed values for all parameters.
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
-     * @param k See NeuronModel(...)
      * @param h See NeuronModel(...)
-     * @param base_background_activity See NeuronModel(...)
-     * @param background_activity_mean See NeuronModel(...)
-     * @param background_activity_stddev See NeuronModel(...)
+     * @param synaptic_input_calculator See NeuronModel(...)
      * @param a The constant inside the equation for d/dt w(t)
      * @param b The dampening factor for w(t) inside the equation for d/dt w(t)
      * @param phi The dampening factor for w(t)
      */
     FitzHughNagumoModel(
-        double k,
-        unsigned int h,
-        double base_background_activity,
-        double background_activity_mean,
-        double background_activity_stddev,
+        unsigned int h, 
+        std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         double a,
         double b,
         double phi);
@@ -877,11 +765,8 @@ public:
     /**
      * @brief Construcs a new instance of type IzhikevichModel with 0 neurons and the passed values for all parameters.
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
-     * @param k See NeuronModel(...)
      * @param h See NeuronModel(...)
-     * @param base_background_activity See NeuronModel(...)
-     * @param background_activity_mean See NeuronModel(...)
-     * @param background_activity_stddev See NeuronModel(...)
+     * @param synaptic_input_calculator See NeuronModel(...)
      * @param C The dampening factor for v(t) (membrane capacitance)
      * @param g_T The leak conductance
      * @param E_L The reset membrane potential (leak reversal potential)
@@ -893,11 +778,8 @@ public:
      * @param V_spike The spiking threshold in the spiking check
      */
     AEIFModel(
-        double k,
         unsigned int h,
-        double base_background_activity,
-        double background_activity_mean,
-        double background_activity_stddev,
+        std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         double C,
         double g_L,
         double E_L,
