@@ -324,14 +324,6 @@ public:
 
 protected:
     /**
-     * @brief This method is called as part of the update of the electrical activity.
-     *      It provides a hook to initialize variables serially
-     * @param disable_flags The local neuron ids that should be skipped
-     */
-    virtual void update_electrical_activity_serial_initialize(const std::vector<UpdateStatus>& disable_flags) {
-    }
-
-    /**
      * @brief Provides a hook to update the activity of the neuron with the passed id
      *      If OpenMP is activated, this is called in parallel for multiple ids
      * @param neuron_id The local neuron id that should be updated
@@ -510,8 +502,6 @@ public:
     static constexpr unsigned int max_refrac_time{ 1000 };
 
 protected:
-    void update_electrical_activity_serial_initialize(const std::vector<UpdateStatus>& disable_flags) final;
-
     void update_activity(const NeuronID& neuron_id) final;
 
     void init_neurons(size_t start_id, size_t end_id) final;
@@ -522,8 +512,6 @@ private:
     }
 
     std::vector<unsigned int> refrac{}; // refractory time
-
-    std::vector<double> theta_values{};
 
     double x_0{ default_x_0 }; // Background or resting activity
     double tau_x{ default_tau_x }; // Decay time of firing rate in msec

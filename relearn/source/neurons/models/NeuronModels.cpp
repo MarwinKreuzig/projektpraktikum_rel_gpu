@@ -53,20 +53,9 @@ void NeuronModel::create_neurons(size_t creation_count) {
 }
 
 void NeuronModel::update_electrical_activity(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
-
     fired_status_comm->set_local_fired_status(fired, disable_flags, network_graph);
     fired_status_comm->exchange_fired_status();
-
-    /**
-     * Now fired contains spikes only from my own neurons
-     * (spikes from local neurons)
-     *
-     * The incoming spikes of neurons from other ranks are in firing_neuron_ids_incoming
-     * (spikes from neurons from other ranks)
-     */
-
-    update_electrical_activity_serial_initialize(disable_flags);
-
+    
     update_electrical_activity_calculate_background(disable_flags);
     update_electrical_activity_calculate_input(network_graph, disable_flags);
     update_electrical_activity_update_activity(disable_flags);
