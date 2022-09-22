@@ -1,9 +1,6 @@
 build-mpi:
   rules:
-  - if: '$CLANG_TIDY == "FALSE"'
-    when: always
-  - if: '$CLANG_TIDY == "TRUE"'
-    when: never
+  - if: '$CLANG_TIDY == null'
   image: relearn-ci-gcc-11
   stage: build
   before_script:
@@ -16,10 +13,7 @@ build-mpi:
 
 build-clang-tidy:
   rules:
-  - if: '$CLANG_TIDY == "FALSE"'
-    when: never
   - if: '$CLANG_TIDY == "TRUE"'
-    when: always
   image: relearn-ci-gcc-11
   stage: build
   before_script:
@@ -30,10 +24,7 @@ build-clang-tidy:
 # run tests using the binary built before
 test-mpi-once:
   rules:
-  - if: '$CLANG_TIDY == "FALSE"'
-    when: always
-  - if: '$CLANG_TIDY == "TRUE"'
-    when: never
+  - if: '$CLANG_TIDY == null'
   image: relearn-ci-gcc-11
   stage: test
   before_script:
@@ -49,10 +40,7 @@ test-mpi-once:
 # run tests using the binary built before
 test-mpi-multiple:
   rules:
-  - if: '$CLANG_TIDY == "FALSE"'
-    when: always
-  - if: '$CLANG_TIDY == "TRUE"'
-    when: never
+  - if: '$CLANG_TIDY == null'
   image: relearn-ci-gcc-11
   stage: test
   before_script:
@@ -67,10 +55,7 @@ test-mpi-multiple:
 
 build-nompi:
   rules:
-  - if: '$CLANG_TIDY == "FALSE"'
-    when: always
-  - if: '$CLANG_TIDY == "TRUE"'
-    when: never
+  - if: '$CLANG_TIDY == null'
   image: relearn-ci-gcc-11
   stage: build
   before_script:
@@ -84,10 +69,7 @@ build-nompi:
 # run tests using the binary built before
 test-nompi-once:
   rules:
-  - if: '$CLANG_TIDY == "FALSE"'
-    when: always
-  - if: '$CLANG_TIDY == "TRUE"'
-    when: never
+  - if: '$CLANG_TIDY == null'
   image: relearn-ci-gcc-11
   stage: test
   before_script:
@@ -103,10 +85,7 @@ test-nompi-once:
 # run tests using the binary built before
 test-nompi-multiple:
   rules:
-  - if: '$CLANG_TIDY == "FALSE"'
-    when: always
-  - if: '$CLANG_TIDY == "TRUE"'
-    when: never
+  - if: '$CLANG_TIDY == null'
   image: relearn-ci-gcc-11
   stage: test
   before_script:
@@ -121,10 +100,7 @@ test-nompi-multiple:
    
 deploy-single:
   rules:
-  - if: '$CLANG_TIDY == "FALSE"'
-    when: always
-  - if: '$CLANG_TIDY == "TRUE"'
-    when: never
+  - if: '$CLANG_TIDY == null'
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -301,10 +277,7 @@ deploy-mpi-4:
    
 deploy-mpi-8:  
   rules:
-  - if: '$CLANG_TIDY == "FALSE"'
-    when: always
-  - if: '$CLANG_TIDY == "TRUE"'
-    when: never
+  - if: '$CLANG_TIDY == null'
   image: relearn-ci-gcc-11
   stage: deploy
   script:
