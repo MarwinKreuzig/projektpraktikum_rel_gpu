@@ -306,12 +306,16 @@ void Simulation::simulate(const size_t number_steps) {
             network_graph->debug_check();
         }
 
-        if (step % Config::logfile_update_step == 0) {
+        if (Config::logfile_update_step > 0 && step % Config::logfile_update_step == 0) {
             neurons->print_local_network_histogram(step);
         }
 
-        if (step % Config::calcium_log_step == 0) {
+        if (Config::calcium_log_step > 0 && step % Config::calcium_log_step == 0) {
             neurons->print_calcium_values_to_file(step);
+        }
+
+        if (Config::synaptic_input_log_step > 0 && step % Config::synaptic_input_log_step == 0) {
+            neurons->print_synaptic_inputs_to_file(step);
         }
 
         if (step % Config::statistics_step == 0) {

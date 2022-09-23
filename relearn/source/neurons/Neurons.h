@@ -331,10 +331,16 @@ public:
     void print_local_network_histogram(size_t current_step);
 
     /**
-     * @brief Prints the histogram of out edges for the local neurons at the current simulation step
+     * @brief Prints the calcium values for the local neurons at the current simulation step
      * @param current_step The current simulation step
      */
     void print_calcium_values_to_file(size_t current_step);
+
+    /**
+     * @brief Prints the synaptic inputs for the local neurons at the current simulation step
+     * @param current_step The current simulation step
+     */
+    void print_synaptic_inputs_to_file(size_t current_step);
 
     /**
      * @brief Performs debug checks on the synaptic element models if Config::do_debug_checks

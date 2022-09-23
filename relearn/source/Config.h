@@ -70,6 +70,9 @@ public:
     // Capture the calcium values every <calcium_log_step> ms
     inline static size_t calcium_log_step = 1000000; // NOLINT
 
+    // Capture the syanptic input every <synaptic_input_log_step> ms
+    inline static size_t synaptic_input_log_step = 10000; // NOLINT
+
     // Capture the average local euclidean distance every <distance_step> ms
     inline static size_t distance_step = 10000; // NOLINT
 };

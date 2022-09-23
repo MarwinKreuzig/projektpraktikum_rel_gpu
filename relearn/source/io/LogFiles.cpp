@@ -90,6 +90,9 @@ void LogFiles::init() {
 
     // Create log file for all calcium values
     LogFiles::add_logfile(EventType::CalciumValues, "calcium_values", -1);
+
+    // Create log file for all synaptic inputs
+    LogFiles::add_logfile(EventType::SynapticInput, "synaptic_inputs", -1);
 }
 
 std::string LogFiles::get_specific_file_prefix() {

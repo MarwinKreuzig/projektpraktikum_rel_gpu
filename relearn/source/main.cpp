@@ -235,6 +235,9 @@ int main(int argc, char** argv) {
     size_t calcium_log_step{ Config::calcium_log_step };
     app.add_option("--calcium-log-step", calcium_log_step, "Sets the interval for logging all calcium values.");
 
+    size_t synaptic_input_log_step{ Config::synaptic_input_log_step };
+    app.add_option("--synaptic-input-log-step", synaptic_input_log_step, "Sets the interval for logging all synaptic inputs.");
+
     const auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
 
     unsigned int random_seed{ 0 };
@@ -460,6 +463,7 @@ int main(int argc, char** argv) {
 
     Config::first_plasticity_update = first_plasticity_step;
     Config::calcium_log_step = calcium_log_step;
+    Config::synaptic_input_log_step = synaptic_input_log_step;
 
     omp_set_num_threads(openmp_threads);
 
@@ -584,7 +588,7 @@ int main(int argc, char** argv) {
         RelearnException::check(chosen_kernel_type == KernelType::Gaussian, "Setting the probability kernel type is not supported for the fast multipole methods!");
     }
 
-    std::unique_ptr<SynapticInputCalculator> input_calculator{};    
+    std::unique_ptr<SynapticInputCalculator> input_calculator{};
     if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
         input_calculator = std::make_unique<LinearSynapticInputCalculator>(synapse_conductance, base_background_activity, background_activity_mean, background_activity_stddev);
     } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {

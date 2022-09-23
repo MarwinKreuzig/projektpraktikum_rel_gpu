@@ -572,7 +572,7 @@ StatisticalMeasures Neurons::get_statistics(NeuronAttribute attribute) const {
     case NeuronAttribute::SynapticInput:
         return global_statistics(neuron_model->get_synaptic_input(), 0, disable_flags);
 
-    case NeuronAttribute::Background:
+    case NeuronAttribute::BackgroundActivity:
         return global_statistics(neuron_model->get_background_activity(), 0, disable_flags);
 
     case NeuronAttribute::Axons:
@@ -1039,4 +1039,17 @@ void Neurons::print_calcium_values_to_file(const size_t current_step) {
     }
 
     LogFiles::write_to_file(LogFiles::EventType::CalciumValues, false, ss.str());
+}
+
+void Neurons::print_synaptic_inputs_to_file(const size_t current_step) {
+    const auto& synaptic_input = neuron_model->get_synaptic_input();
+
+    std::stringstream ss{};
+
+    ss << '#' << current_step;
+    for (const auto val : synaptic_input) {
+        ss << ';' << val;
+    }
+
+    LogFiles::write_to_file(LogFiles::EventType::SynapticInput, false, ss.str());
 }
