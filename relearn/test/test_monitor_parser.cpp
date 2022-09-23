@@ -110,7 +110,7 @@ TEST_F(MonitorParserTest, testParseDescriptionsException) {
     ASSERT_THROW(MonitorParser::parse_multiple_description(description, -3), RelearnException);
     ASSERT_THROW(MonitorParser::parse_multiple_description(description, -543), RelearnException);
     ASSERT_THROW(MonitorParser::parse_multiple_description(description, -78923), RelearnException);
-    ASSERT_THROW(MonitorParser::parse_multiple_description(description, -36464665431), RelearnException);
+    ASSERT_THROW(MonitorParser::parse_multiple_description(description, -2104927063), RelearnException);
 }
 
 TEST_F(MonitorParserTest, testExtractNeuronIDs) {
